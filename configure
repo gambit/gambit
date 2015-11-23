@@ -829,6 +829,7 @@ C_COMP_VISUALC
 C_COMP_LLVM
 C_COMP_CLANG
 C_COMP_GNUC
+CONF_MAX_PROCESSORS
 CONF_SINGLE_MULTIPLE_THREADED_VMS
 CONF_SINGLE_MULTIPLE_VMS
 CONF_BOOL
@@ -950,6 +951,7 @@ enable_poll
 enable_high_res_timing
 enable_multiple_vms
 enable_multiple_threaded_vms
+enable_max_processors
 enable_thread_system
 enable_openssl
 with_x
@@ -1660,6 +1662,9 @@ Optional Features:
   --enable-multiple-threaded-vms
                           support multiple OS threads per Gambit VM instance
                           (default is NO)
+  --enable-max-processors=N
+                          Max number of processors per Gambit VM instance
+                          (default is 64)
   --enable-thread-system[=thread-system]
                           use OS threads (default is NO)
   --enable-openssl        compile with SSL support using OpenSSL (default is
@@ -5500,6 +5505,27 @@ fi
 
 ###############################################################################
 #
+# Determine the maximum number of OS threads (processors) per
+# Gambit VM instance.
+
+# Check whether --enable-max-processors was given.
+if test "${enable_max_processors+set}" = set; then :
+  enableval=$enable_max_processors; MAX_PROCESSORS=$enableval
+else
+  MAX_PROCESSORS=64
+fi
+
+
+if test "$ENABLE_MULTIPLE_THREADED_VMS" = no; then
+  CONF_MAX_PROCESSORS=1
+else
+  CONF_MAX_PROCESSORS="$MAX_PROCESSORS"
+fi
+
+
+
+###############################################################################
+#
 # Check if OS threads are supported by the runtime system and if so
 # which thread system is to be used.
 
@@ -8760,6 +8786,7 @@ $as_echo "$as_me:
 
     CONF_SINGLE_MULTIPLE_VMS="___SINGLE_VM"
     CONF_SINGLE_MULTIPLE_THREADED_VMS="___SINGLE_THREADED_VMS"
+    CONF_MAX_PROCESSORS=1
 
   fi
 

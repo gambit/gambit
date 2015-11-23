@@ -288,6 +288,9 @@ The configure options which are specific to the Gambit system are:
                           compiles with support for having more than one
                           OS thread per Gambit VM (implies
                           --enable-thread-system)
+  --enable-max-processors=N
+                          max number of processors per Gambit VM
+                          (default is 64)
 
 The option --enable-cplusplus should be used when applications
 developped with the Gambit compiler are to be linked with code or

@@ -1276,6 +1276,17 @@
 #endif
 
 /*
+ * Determine the maximum number of OS threads (processors) that can be
+ * running in a given VM instance.
+ */
+
+#ifdef ___SINGLE_THREADED_VMS
+#define ___MAX_PROCESSORS 1
+#else
+#define ___MAX_PROCESSORS @CONF_MAX_PROCESSORS@
+#endif
+
+/*
  * Determine which thread system is being used.  This needs to be
  * known by this header file to allow the definition of macros which
  * expand to calls to thread system specific functions, thus avoiding
@@ -5246,7 +5257,7 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___
 /* Use direct access to the only pstate (this is probably fast) */
 
 #define ___FAST_GET_PSTATE
-#define ___GET_PSTATE() (&___GSTATE->vmstate0.pstate0)
+#define ___GET_PSTATE() ___GSTATE->vmstate0.pstate
 #define ___SET_PSTATE(ps)
 
 #else
@@ -5947,8 +5958,7 @@ ___PSDKR) { ___PSGET
   ___init_mod, \
   ___SCRIPT_LINE, \
   0,\
-  0,0,0,0,0,0,0,0 \
-,___MODDESCR /* TODO: move with above */ \
+  ___MODDESCR \
 }; \
 ___BEGIN_C_LINKAGE \
 ___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
@@ -6065,7 +6075,6 @@ ___LOCAL ___linkfile_struct ___linkfile_descr = { \
   sym_list, \
   key_list, \
   ___linkertbl, \
-  0,0,0,0,0,0,0,0 \
 }; \
 ___BEGIN_C_LINKAGE \
 ___EXP_FUNC(___mod_or_lnk,___LINKER_ID) \
@@ -7626,25 +7635,6 @@ typedef struct ___processor_state_struct
 
     ___pstate_mem mem; /* memory management state */
 
-    void (*dummy8) ___PVOID;
-    void (*dummy7) ___PVOID;
-    void (*dummy6) ___PVOID;
-    void (*dummy5) ___PVOID;
-    void (*dummy4) ___PVOID;
-    void (*dummy3) ___PVOID;
-    void (*dummy2) ___PVOID;
-    void (*dummy1) ___PVOID;
-
-#ifndef ___SINGLE_THREADED_VMS
-
-    /* TODO: replace circular list by array */
-    struct ___processor_state_struct *prev; /* circular list links */
-    struct ___processor_state_struct *next;
-
-    struct ___virtual_machine_state_struct *vmstate; /* this processor's VM */
-
-#endif
-
 #ifdef ___DEBUG_STACK_LIMIT
     int poll_line;
     char *poll_file;
@@ -7666,6 +7656,12 @@ typedef struct ___processor_state_struct
 
 #ifdef ___USE_SETJMP
     ___jmpbuf_struct *catcher;
+#endif
+
+#ifndef ___SINGLE_THREADED_VMS
+
+    struct ___virtual_machine_state_struct *vmstate; /* this processor's VM */
+
 #endif
   } ___processor_state_struct;
 
@@ -7716,18 +7712,7 @@ typedef struct ___module_struct
     ___WORD (*init_mod) ___P((___PSDNC),());
     ___UTF_8STRING script_line;
     struct ___module_struct *next;
-
-    void (*dummy8) ___PVOID;
-    void (*dummy7) ___PVOID;
-    void (*dummy6) ___PVOID;
-    void (*dummy5) ___PVOID;
-    void (*dummy4) ___PVOID;
-    void (*dummy3) ___PVOID;
-    void (*dummy2) ___PVOID;
-    void (*dummy1) ___PVOID;
-
     ___SCMOBJ moddescr; /* module descriptor */
-
   } ___module_struct;
 
 /* Linkfile structure */
@@ -7746,15 +7731,6 @@ typedef struct ___linkfile_struct
     ___FAKEWORD *sym_list;
     ___FAKEWORD *key_list;
     ___linkinfo *linkertbl;
-
-    void (*dummy8) ___PVOID;
-    void (*dummy7) ___PVOID;
-    void (*dummy6) ___PVOID;
-    void (*dummy5) ___PVOID;
-    void (*dummy4) ___PVOID;
-    void (*dummy3) ___PVOID;
-    void (*dummy2) ___PVOID;
-    void (*dummy1) ___PVOID;
   } ___linkfile_struct;
 
 /* Module or linkfile structure */
@@ -7786,20 +7762,13 @@ typedef struct ___program_startup_info_struct
 
 typedef struct ___virtual_machine_state_struct
   {
-    ___processor_state_struct pstate0; /* first processor of this VM */
+    ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
+
+    int nb_processors; /* number of processors in this VM */
 
     ___vmstate_mem mem; /* memory management state */
 
     ___SCMOBJ main_module_id; /* symbol identifying the VM's main module */
-
-    void (*dummy8) ___PVOID;
-    void (*dummy7) ___PVOID;
-    void (*dummy6) ___PVOID;
-    void (*dummy5) ___PVOID;
-    void (*dummy4) ___PVOID;
-    void (*dummy3) ___PVOID;
-    void (*dummy2) ___PVOID;
-    void (*dummy1) ___PVOID;
 
 #ifndef ___SINGLE_VM
 
@@ -7837,15 +7806,6 @@ typedef struct ___setup_params_struct
 
     ___UCS_2 reset_argv0[1]; /* defaults for argv */
     ___UCS_2STRING reset_argv[2];
-
-    void (*dummy8) ___PVOID;
-    void (*dummy7) ___PVOID;
-    void (*dummy6) ___PVOID;
-    void (*dummy5) ___PVOID;
-    void (*dummy4) ___PVOID;
-    void (*dummy3) ___PVOID;
-    void (*dummy2) ___PVOID;
-    void (*dummy1) ___PVOID;
   } ___setup_params_struct;
 
 #define ___DEBUG_SETTINGS_LEVEL_MASK          15
@@ -7945,15 +7905,6 @@ typedef struct ___global_state_struct
     ___SCMOBJ program_descr;  /* Program descriptor.                  */
 
     ___gstate_mem mem; /* memory management state */
-
-    void (*dummy8) ___PVOID;
-    void (*dummy7) ___PVOID;
-    void (*dummy6) ___PVOID;
-    void (*dummy5) ___PVOID;
-    void (*dummy4) ___PVOID;
-    void (*dummy3) ___PVOID;
-    void (*dummy2) ___PVOID;
-    void (*dummy1) ___PVOID;
 
 #ifndef ___CAN_IMPORT_CLIB_DYNAMICALLY
     double (*fabs)
@@ -9117,6 +9068,9 @@ typedef struct ___global_state_struct
              int nargs,
              ___SCMOBJ proc,
              ___SCMOBJ marker),
+            ());
+    ___SCMOBJ (*___run)
+       ___P((___SCMOBJ thunk),
             ());
     void (*___throw_error)
        ___P((___PSD
@@ -10377,6 +10331,9 @@ ___IMP_FUNC(___SCMOBJ,___call)
          int nargs,
          ___SCMOBJ proc,
          ___SCMOBJ marker),
+        ());
+___IMP_FUNC(___SCMOBJ,___run)
+   ___P((___SCMOBJ thunk),
         ());
 ___IMP_FUNC(void,___throw_error)
    ___P((___PSD

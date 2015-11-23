@@ -738,6 +738,25 @@ AC_SUBST(CONF_SINGLE_MULTIPLE_THREADED_VMS)
 
 ###############################################################################
 #
+# Determine the maximum number of OS threads (processors) per
+# Gambit VM instance.
+
+AC_ARG_ENABLE(max-processors,
+              AC_HELP_STRING([--enable-max-processors=N],
+                             [Max number of processors per Gambit VM instance (default is 64)]),
+              MAX_PROCESSORS=$enableval,
+              MAX_PROCESSORS=64)
+
+if test "$ENABLE_MULTIPLE_THREADED_VMS" = no; then
+  CONF_MAX_PROCESSORS=1
+else
+  CONF_MAX_PROCESSORS="$MAX_PROCESSORS"
+fi
+
+AC_SUBST(CONF_MAX_PROCESSORS)
+
+###############################################################################
+#
 # Check if OS threads are supported by the runtime system and if so
 # which thread system is to be used.
 
@@ -1518,6 +1537,7 @@ if test "$ENABLE_THREAD_SYSTEM" != no; then
 
     CONF_SINGLE_MULTIPLE_VMS="___SINGLE_VM"
     CONF_SINGLE_MULTIPLE_THREADED_VMS="___SINGLE_THREADED_VMS"
+    CONF_MAX_PROCESSORS=1
 
   fi
 

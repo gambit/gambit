@@ -3417,9 +3417,6 @@ ___virtual_machine_state ___vms;)
 
 #ifndef ___SINGLE_THREADED_VMS
 
-  ___ps->prev = ___ps;
-  ___ps->next = ___ps;
-
   ___ps->vmstate = ___vms;
 
 #endif
@@ -3654,10 +3651,10 @@ ___virtual_machine_state ___vms;)
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___vms->mem.var
 
-  ___cleanup_mem_pstate (&___vms->pstate0);
+  ___cleanup_mem_pstate (&___vms->pstate[0]);/*TODO: other processors?*/
 
   free_msections (&the_msections);
-  free_still_objs (___PSANC(&___vms->pstate0));/*TODO: other processors?*/
+  free_still_objs (___PSANC(&___vms->pstate[0]));/*TODO: other processors?*/
   cleanup_rc (___vms);
 
 #undef ___VMSTATE_MEM

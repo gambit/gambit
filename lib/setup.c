@@ -90,7 +90,7 @@ ___virtual_machine_state ___vms;
 int code;)
 {
   /*TODO: extend to all processors in the VM*/
-  ___raise_interrupt_pstate (&___vms->pstate0, code);
+  ___raise_interrupt_pstate (&___vms->pstate[0], code);
 }
 
 
@@ -2068,6 +2068,32 @@ ___SCMOBJ stack_marker;)
 }
 
 
+___EXP_FUNC(___SCMOBJ,___run)
+   ___P((___SCMOBJ thunk),
+        (thunk)
+___SCMOBJ thunk;)
+{
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ ___err;
+  ___SCMOBJ marker;
+
+  ___ps->r[0] = ___GSTATE->handler_break;
+
+  ___BEGIN_TRY
+
+  if ((___err = ___make_sfun_stack_marker (___ps, &marker, thunk))
+      == ___FIX(___NO_ERR))
+    {
+      ___err = ___call (___PSP 0, ___FIELD(marker,0), marker);
+      ___kill_sfun_stack_marker (marker);
+    }
+
+  ___END_TRY
+
+  return ___err;
+}
+
+
 #ifdef ___DEBUG_HOST_CHANGES
 
 ___EXP_FUNC(void,___register_host_entry)
@@ -2173,14 +2199,6 @@ ___setup_params_struct *setup_params;)
   setup_params->reset_argv0[0]    = 0;
   setup_params->reset_argv[0]     = setup_params->reset_argv0;
   setup_params->reset_argv[1]     = 0;
-  setup_params->dummy8            = 0;
-  setup_params->dummy7            = 0;
-  setup_params->dummy6            = 0;
-  setup_params->dummy5            = 0;
-  setup_params->dummy4            = 0;
-  setup_params->dummy3            = 0;
-  setup_params->dummy2            = 0;
-  setup_params->dummy1            = 0;
 }
 
 
@@ -2354,9 +2372,8 @@ ___EXP_FUNC(___SCMOBJ,___setup_pstate)
 ___processor_state ___ps;
 ___virtual_machine_state ___vms;)
 {
+  ___SCMOBJ err;
   int i;
-  ___SCMOBJ ___err;
-  ___SCMOBJ marker;
 
   /*
    * Setup current OS thread so that it can find the processor state
@@ -2369,7 +2386,8 @@ ___virtual_machine_state ___vms;)
    * Setup processor's memory management.
    */
 
-  ___setup_mem_pstate (___ps, ___vms);
+  if ((err = ___setup_mem_pstate (___ps, ___vms)) != ___FIX(___NO_ERR))
+    return err;
 
   /*
    * Setup green thread structures.
@@ -2401,27 +2419,7 @@ ___virtual_machine_state ___vms;)
 
   setup_interrupts_pstate (___PSPNC);
 
-  /*
-   * Start program execution by loading _kernel module.
-   */
-
-  ___ps->r[0] = ___GSTATE->handler_break;
-
-  ___BEGIN_TRY
-
-  if ((___err = ___make_sfun_stack_marker
-                  (___ps,
-                   &marker,
-                   ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1)))
-      == ___FIX(___NO_ERR))
-    {
-      ___err = ___call (___PSP 0, ___FIELD(marker,0), marker);
-      ___kill_sfun_stack_marker (marker);
-    }
-
-  ___END_TRY
-
-  return ___err;
+  return ___FIX(___NO_ERR);
 }
 
 
@@ -2439,16 +2437,22 @@ ___EXP_FUNC(___SCMOBJ,___setup_vmstate)
 ___virtual_machine_state ___vms;)
 {
   /*
+   * Virtual machine starts off with only one processor.
+   */
+
+  ___vms->nb_processors = 1;
+
+  /*
    * Setup virtual machine's memory management.
    */
 
   ___setup_mem_vmstate (___vms);
 
   /*
-   * Start the main processor of the virtual machine.
+   * Setup the main processor of the virtual machine.
    */
 
-  return ___setup_pstate (&___vms->pstate0, ___vms);
+  return  ___setup_pstate (&___vms->pstate[0], ___vms);
 }
 
 
@@ -2480,15 +2484,6 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
    * Setup global state to avoid problems on systems that don't
    * support the dynamic loading of files that import functions.
    */
-
-  ___GSTATE->dummy8 = 0;
-  ___GSTATE->dummy7 = 0;
-  ___GSTATE->dummy6 = 0;
-  ___GSTATE->dummy5 = 0;
-  ___GSTATE->dummy4 = 0;
-  ___GSTATE->dummy3 = 0;
-  ___GSTATE->dummy2 = 0;
-  ___GSTATE->dummy1 = 0;
 
 #ifndef ___CAN_IMPORT_CLIB_DYNAMICALLY
 
@@ -3389,10 +3384,17 @@ ___setup_params_struct *setup_params;)
                0);
 
     /*
-     * Start the main virtual machine.
+     * Setup the main virtual machine.
      */
 
     err = ___setup_vmstate (___vms);
+
+    /*
+     * Start virtual machine execution by loading _kernel module.
+     */
+
+    if (err == ___FIX(___NO_ERR))
+      err = ___run(___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1));
   }
 
   /*
