@@ -173,7 +173,7 @@ end-of-code
 
    /* prepare for next interrupt */
 
-   ___EXT(___begin_interrupt_service_pstate) (___PSPNC);
+   ___EXT(___begin_interrupt_service_pstate) (___ps);
 
    if (___ps->intr_enabled != ___FIX(0))
      {
@@ -182,10 +182,10 @@ end-of-code
        ___COVER_STACK_LIMIT_HANDLER_INTR_ENABLED;
 
        for (i=0; i<___NB_INTRS; i++)
-         if (___EXT(___check_interrupt_pstate) (___PSP i))
+         if (___EXT(___check_interrupt_pstate) (___ps, i))
            break;
 
-       ___EXT(___end_interrupt_service_pstate) (___PSP i+1);
+       ___EXT(___end_interrupt_service_pstate) (___ps, i+1);
 
        if (i < ___NB_INTRS)
          {
@@ -197,7 +197,7 @@ end-of-code
          }
      }
    else
-     ___EXT(___end_interrupt_service_pstate) (___PSP 0);
+     ___EXT(___end_interrupt_service_pstate) (___ps, 0);
 
    ___COVER_STACK_LIMIT_HANDLER_END;
 
@@ -1297,11 +1297,11 @@ end-of-code
 
 (define-prim (##disable-interrupts!)
   (##declare (not interrupts-enabled))
-  (##c-code "___EXT(___disable_interrupts_pstate) (___PSPNC); ___RESULT = ___VOID;"))
+  (##c-code "___EXT(___disable_interrupts_pstate) (___ps); ___RESULT = ___VOID;"))
 
 (define-prim (##enable-interrupts!)
   (##declare (not interrupts-enabled))
-  (##c-code "___EXT(___enable_interrupts_pstate) (___PSPNC); ___RESULT = ___VOID;"))
+  (##c-code "___EXT(___enable_interrupts_pstate) (___ps); ___RESULT = ___VOID;"))
 
 (define ##interrupt-vector
   (##vector #f #f #f #f #f #f #f #f))
@@ -1754,12 +1754,12 @@ end-of-code
   (let ((will
          (##c-code #<<end-of-code
 
-          ___SCMOBJ will = ___ps->executable_wills;
+          ___SCMOBJ will = ___VMSTATE_FROM_PSTATE(___ps)->mem.executable_wills_;
           if (___UNTAG(will) == 0) /* end of list? */
             ___RESULT = ___FAL;
           else
             {
-              ___ps->executable_wills = ___BODY(will)[0];
+              ___VMSTATE_FROM_PSTATE(___ps)->mem.executable_wills_ = ___BODY(will)[0];
               ___RESULT = will;
             }
 

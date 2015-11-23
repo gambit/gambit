@@ -14,6 +14,7 @@
 #include "os_base.h"
 #include "os_files.h"
 #include "os_dyn.h"
+#include "os_thread.h"
 #include "setup.h"
 #include "mem.h"
 #include "c_intf.h"
@@ -105,24 +106,22 @@ int code;)
 
 
 ___EXP_FUNC(void,___begin_interrupt_service_pstate)
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
   ___STACK_TRIP_OFF();
 }
 
 
 ___EXP_FUNC(___BOOL,___check_interrupt_pstate)
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          int code),
-        (___PSV
+        (___ps,
          code)
-___PSDKR
+___processor_state ___ps;
 int code;)
 {
-  ___PSGET
   if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
     {
       ___ps->intr_flag[code] = ___FIX(0);
@@ -134,14 +133,13 @@ int code;)
 
 
 ___EXP_FUNC(void,___end_interrupt_service_pstate)
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          int code),
-        (___PSV
+        (___ps,
          code)
-___PSDKR
+___processor_state ___ps;
 int code;)
 {
-  ___PSGET
   if (___ps->intr_enabled != ___FIX(0))
     {
 #ifdef CALL_HANDLER_AT_EVERY_POLL
@@ -162,50 +160,45 @@ int code;)
 
 
 ___EXP_FUNC(void,___disable_interrupts_pstate)
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
-
   ___ps->intr_enabled = ___FIX(0);
 
-  ___begin_interrupt_service_pstate (___PSPNC);
-  ___end_interrupt_service_pstate (___PSP 0);
+  ___begin_interrupt_service_pstate (___ps);
+  ___end_interrupt_service_pstate (___ps, 0);
 }
 
 
 ___EXP_FUNC(void,___enable_interrupts_pstate)
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
-
   ___ps->intr_enabled = ___FIX((1<<___NB_INTRS)-1);
 
-  ___begin_interrupt_service_pstate (___PSPNC);
-  ___end_interrupt_service_pstate (___PSP 0);
+  ___begin_interrupt_service_pstate (___ps);
+  ___end_interrupt_service_pstate (___ps, 0);
 }
 
 
 ___HIDDEN void setup_interrupts_pstate
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
   int i;
 
-  ___disable_interrupts_pstate (___PSPNC); /* disable all interrupts */
+  ___disable_interrupts_pstate (___ps); /* disable all interrupts */
 
   ___ps->intr_mask = ___FIX(0); /* None of the interrupts are ignored */
 
   for (i=0; i<___NB_INTRS; i++) /* None of the interrupts are requested */
     ___ps->intr_flag[i] = ___FIX(0);
 
-  ___begin_interrupt_service_pstate (___PSPNC);
-  ___end_interrupt_service_pstate (___PSP 0);
+  ___begin_interrupt_service_pstate (___ps);
+  ___end_interrupt_service_pstate (___ps, 0);
 }
 
 
@@ -2069,11 +2062,14 @@ ___SCMOBJ stack_marker;)
 
 
 ___EXP_FUNC(___SCMOBJ,___run)
-   ___P((___SCMOBJ thunk),
-        (thunk)
+   ___P((___PSD
+         ___SCMOBJ thunk),
+        (___PSV
+         thunk)
+___PSDKR
 ___SCMOBJ thunk;)
 {
-  ___processor_state ___ps = ___PSTATE;
+  ___PSGET
   ___SCMOBJ ___err;
   ___SCMOBJ marker;
 
@@ -2376,13 +2372,6 @@ ___virtual_machine_state ___vms;)
   int i;
 
   /*
-   * Setup current OS thread so that it can find the processor state
-   * it is running.
-   */
-
-  ___SET_PSTATE(___ps);
-
-  /*
    * Setup processor's memory management.
    */
 
@@ -2417,7 +2406,7 @@ ___virtual_machine_state ___vms;)
    * Setup interrupt system of this processor.
    */
 
-  setup_interrupts_pstate (___PSPNC);
+  setup_interrupts_pstate (___ps);
 
   return ___FIX(___NO_ERR);
 }
@@ -2453,6 +2442,85 @@ ___virtual_machine_state ___vms;)
    */
 
   return  ___setup_pstate (&___vms->pstate[0], ___vms);
+}
+
+
+___HIDDEN void start_processor_execution
+   ___P((___thread *self),
+        (self)
+___thread *self;)
+{
+  ___processor_state ___ps = ___CAST(___processor_state,self->data_ptr);
+  ___SCMOBJ thunk = self->data_scmobj;
+
+  /*
+   * Setup current OS thread so that it can find the processor state
+   * it is running.
+   */
+
+  ___SET_PSTATE(___ps);
+
+  /*
+   * Start processor's execution by a call to thunk.  This call will
+   * return when the processor terminates (typically when the Gambit VM
+   * terminates).
+   */
+
+  ___run(___PSP thunk); /* ignore result */
+}
+
+
+___EXP_FUNC(___SCMOBJ,___resize_vm)
+   ___P((___virtual_machine_state ___vms,
+         ___SCMOBJ thunk,
+         int target_nb_processors),
+        (___virtual_machine_state ___vms,
+         thunk,
+         target_nb_processors)
+___virtual_machine_state ___vms;
+___SCMOBJ thunk;
+int target_nb_processors;)
+{
+  ___SCMOBJ err = ___FIX(___NO_ERR);
+
+#ifndef ___SINGLE_THREADED_VMS
+
+  int initial = ___vms->nb_processors;
+  int i;
+
+  /* TODO: add 2 msections for each additional processor */
+
+  for (i=initial; i<target_nb_processors; i++)
+    {
+      ___processor_state p = &___vms->pstate[i];
+
+      if ((err = ___setup_pstate(&___vms->pstate[i], ___vms))
+          != ___FIX(___NO_ERR))
+        {
+          while (--i >= initial)
+            ___cleanup_pstate (&___vms->pstate[i]);
+
+          return err;
+        }
+    }
+
+  ___vms->nb_processors = target_nb_processors;
+
+  for (i=initial; i<target_nb_processors; i++)
+    {
+      ___processor_state p = &___vms->pstate[i];
+      ___thread *t = &p->os_thread;
+
+      t->start_fn = start_processor_execution;
+      t->data_ptr = ___CAST(void*,p);
+      t->data_scmobj = thunk;
+
+      ___thread_create(t);
+    }
+
+#endif
+
+  return err;
 }
 
 
@@ -3390,11 +3458,19 @@ ___setup_params_struct *setup_params;)
     err = ___setup_vmstate (___vms);
 
     /*
+     * Setup current OS thread so that it can find the processor state
+     * it is running.
+     */
+
+    ___SET_PSTATE(&___vms->pstate[0]);
+
+    /*
      * Start virtual machine execution by loading _kernel module.
      */
 
     if (err == ___FIX(___NO_ERR))
-      err = ___run(___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1));
+      err = ___run(___PSP
+                   ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1));
   }
 
   /*

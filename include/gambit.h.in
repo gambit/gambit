@@ -3324,10 +3324,10 @@ ___hp[-3]=name,___hp[-2]=hash,___hp[-1]=___FAL,___TAG((___hp-___KEYWORD_SIZE-1),
 
 #define ___MAKEWILL(testator,action) \
 (___hp[0]=___MAKE_HD_WORDS(___WILL_SIZE,___sWEAK), \
-___hp[1]=___ps->nonexecutable_wills, \
+___hp[1]=___ps->mem.nonexecutable_wills_, \
 ___hp[2]=testator, \
 ___hp[3]=action, \
-___ps->nonexecutable_wills=___TAG(___hp,0), \
+___ps->mem.nonexecutable_wills_=___TAG(___hp,0), \
 ___ALLOC(___WILL_SIZE+1), \
 ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 
@@ -7403,6 +7403,28 @@ ___EXT(___emulated_compare_and_swap_word)(p,oldv,newv)
 #endif
 
 
+typedef struct ___thread_struct
+  {
+    void (*start_fn) ___P((struct ___thread_struct *self),());
+
+    void *data_ptr;
+    ___SCMOBJ data_scmobj;
+
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+
+    pthread_t thread_id;
+
+#endif
+
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+
+    HANDLE thread_handle;
+    DWORD thread_id;
+
+#endif
+  } ___thread;
+
+
 /*---------------------------------------------------------------------------*/
 
 /* TODO: where to put this? */
@@ -7481,6 +7503,9 @@ ___WORD *alloc_heap_ptr_;
 /* allocation limit for movable objects in heap_msection */
 ___WORD *alloc_heap_limit_;
 
+/* list of nonexecutable wills */
+___WORD nonexecutable_wills_;
+
 #ifdef ___CALL_GC_FREQUENTLY
 int gc_calls_to_punt_;
 #endif
@@ -7543,6 +7568,9 @@ ___BOOL traverse_weak_refs_;
 
 /* GC hash tables reached by GC */
 ___WORD reached_gc_hash_tables_;
+
+/* list of executable wills */
+___WORD executable_wills_;
 
 /* Head of list of reference counted blocks of memory */
 ___rc_header rc_head_;
@@ -7630,9 +7658,6 @@ typedef struct ___processor_state_struct
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
     ___WORD intr_flag[___NB_INTRS];
 
-    ___WORD executable_wills;
-    ___WORD nonexecutable_wills;
-
     ___pstate_mem mem; /* memory management state */
 
 #ifdef ___DEBUG_STACK_LIMIT
@@ -7661,6 +7686,8 @@ typedef struct ___processor_state_struct
 #ifndef ___SINGLE_THREADED_VMS
 
     struct ___virtual_machine_state_struct *vmstate; /* this processor's VM */
+
+    ___thread os_thread;
 
 #endif
   } ___processor_state_struct;
@@ -9026,6 +9053,11 @@ typedef struct ___global_state_struct
     void (*___cleanup_and_exit_process)
        ___P((int status),
             ());
+    ___SCMOBJ (*___resize_vm)
+       ___P((___virtual_machine_state ___vms,
+            ___SCMOBJ thunk,
+            int target_nb_processors),
+           ());
     ___SCMOBJ (*___setup_vmstate)
        ___P((___virtual_machine_state ___vms),
             ());
@@ -9070,7 +9102,8 @@ typedef struct ___global_state_struct
              ___SCMOBJ marker),
             ());
     ___SCMOBJ (*___run)
-       ___P((___SCMOBJ thunk),
+       ___P((___PSD
+             ___SCMOBJ thunk),
             ());
     void (*___throw_error)
        ___P((___PSD
@@ -9099,21 +9132,21 @@ typedef struct ___global_state_struct
        ___P((int code),
             ());
     void (*___begin_interrupt_service_pstate)
-       ___P((___PSDNC),
+       ___P((___processor_state ___ps),
             ());
     ___BOOL (*___check_interrupt_pstate)
-       ___P((___PSD
+       ___P((___processor_state ___ps,
              int code),
             ());
     void (*___end_interrupt_service_pstate)
-       ___P((___PSD
+       ___P((___processor_state ___ps,
              int code),
             ());
     void (*___disable_interrupts_pstate)
-       ___P((___PSDNC),
+       ___P((___processor_state ___ps),
             ());
     void (*___enable_interrupts_pstate)
-       ___P((___PSDNC),
+       ___P((___processor_state ___ps),
             ());
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes),
@@ -10288,6 +10321,11 @@ ___IMP_FUNC(void,___cleanup) ___PVOID;
 ___IMP_FUNC(void,___cleanup_and_exit_process)
    ___P((int status),
         ());
+___IMP_FUNC(___SCMOBJ,___resize_vm)
+   ___P((___virtual_machine_state ___vms,
+         ___SCMOBJ thunk,
+         int target_nb_processors),
+        ());
 ___IMP_FUNC(___SCMOBJ,___setup_vmstate)
    ___P((___virtual_machine_state ___vms),
         ());
@@ -10362,21 +10400,21 @@ ___IMP_FUNC(void,___raise_interrupt)
    ___P((int code),
         ());
 ___IMP_FUNC(void,___begin_interrupt_service_pstate)
-   ___P((___PSDNC),
+   ___P((___processor_state ___ps),
         ());
 ___IMP_FUNC(___BOOL,___check_interrupt_pstate)
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          int code),
         ());
 ___IMP_FUNC(void,___end_interrupt_service_pstate)
-   ___P((___PSD
+   ___P((___processor_state ___ps,
          int code),
         ());
 ___IMP_FUNC(void,___disable_interrupts_pstate)
-   ___P((___PSDNC),
+   ___P((___processor_state ___ps),
         ());
 ___IMP_FUNC(void,___enable_interrupts_pstate)
-   ___P((___PSDNC),
+   ___P((___processor_state ___ps),
         ());
 #endif
 

@@ -61,27 +61,6 @@ extern ___thread_module ___thread_mod;
 /*---------------------------------------------------------------------------*/
 
 
-typedef struct ___thread_struct
-  {
-    void (*start_fn) ___P((struct ___thread_struct *self),());
-
-    void *data;
-
-#ifdef ___USE_POSIX_THREAD_SYSTEM
-
-    pthread_t thread_id;
-
-#endif
-
-#ifdef ___USE_WIN32_THREAD_SYSTEM
-
-    HANDLE thread_handle;
-    DWORD thread_id;
-
-#endif
-  } ___thread;
-
-
 extern ___SCMOBJ ___thread_init_from_self
    ___P((___thread *thread),
         ());
