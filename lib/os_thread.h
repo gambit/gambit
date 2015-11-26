@@ -73,6 +73,8 @@ extern ___SCMOBJ ___thread_join
    ___P((___thread *thread),
         ());
 
+extern void ___thread_exit ___PVOID;
+
 
 extern ___SCMOBJ ___setup_thread_module ___PVOID;
 

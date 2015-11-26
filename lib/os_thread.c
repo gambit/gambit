@@ -181,6 +181,22 @@ ___thread *thread;)
 }
 
 
+void ___thread_exit ___PVOID
+{
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+
+  pthread_exit (NULL);
+
+#endif
+
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+
+  ExitThread (0);
+
+#endif
+}
+
+
 #ifdef ___USE_emulated_compare_and_swap_word
 
 

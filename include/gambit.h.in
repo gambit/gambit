@@ -5142,13 +5142,14 @@ ___hp[0]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___END_ALLOC_VALUES(n)___ALLOC(n+1);
 #define ___GET_VALUES(n)___TAG((___hp-n-1),___tSUBTYPED)
 
-#define ___NB_INTRS 4
+#define ___NB_INTRS 5
 #define ___INTR_USER      0
 #define ___INTR_HEARTBEAT 1
 #define ___INTR_GC        2
 #define ___INTR_TERMINATE 3
+#define ___INTR_SYNC_OP   4
 
-#define ___INTERRUPT_FLAGS() (___ps->intr_flag[0]|___ps->intr_flag[1]|___ps->intr_flag[2]|___ps->intr_flag[3])
+#define ___INTERRUPT_FLAGS() (___ps->intr_flag[0]|___ps->intr_flag[1]|___ps->intr_flag[2]|___ps->intr_flag[3]|___ps->intr_flag[4])
 
 #define ___INTERRUPT_REQ(x, mask) (((x) & ___ps->intr_enabled & ~mask) != ___FIX(0))
 
@@ -7626,11 +7627,19 @@ typedef struct ___processor_state_struct *___processor_state;
 typedef struct ___virtual_machine_state_struct *___virtual_machine_state;
 typedef struct ___global_state_struct *___global_state;
 
+/* For implementation of on_all_processors */
+
+typedef struct ___sync_op_struct
+  {
+    unsigned char op; /* operation requested */
+    ___WORD arg[2];   /* arguments of the operation */
+  } ___sync_op_struct;
+
 /* Processor structure */
 
 typedef struct ___processor_state_struct
   {
-    ___WORD *stack_trip;
+    volatile ___WORD *stack_trip;
     ___WORD *stack_limit;
     ___WORD *fp;
     ___WORD *stack_start;
@@ -7656,7 +7665,7 @@ typedef struct ___processor_state_struct
 
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
-    ___WORD intr_flag[___NB_INTRS];
+    volatile ___WORD intr_flag[___NB_INTRS];
 
     ___pstate_mem mem; /* memory management state */
 
@@ -7685,9 +7694,19 @@ typedef struct ___processor_state_struct
 
 #ifndef ___SINGLE_THREADED_VMS
 
-    struct ___virtual_machine_state_struct *vmstate; /* this processor's VM */
+    /* this processor's VM */
+    ___virtual_machine_state vmstate;
 
+    /* this processor's OS thread */
     ___thread os_thread;
+
+    /* for implementation of on_all_processors */
+    volatile int sync_id0;
+    volatile ___sync_op_struct sync_op0;
+    volatile int sync_id1;
+    volatile ___sync_op_struct sync_op1;
+    volatile int sync_id2;
+    volatile ___sync_op_struct sync_op2;
 
 #endif
   } ___processor_state_struct;
@@ -7791,7 +7810,7 @@ typedef struct ___virtual_machine_state_struct
   {
     ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
 
-    int nb_processors; /* number of processors in this VM */
+    volatile int nb_processors; /* number of processors in this VM */
 
     ___vmstate_mem mem; /* memory management state */
 
@@ -7799,8 +7818,8 @@ typedef struct ___virtual_machine_state_struct
 
 #ifndef ___SINGLE_VM
 
-    struct ___virtual_machine_state_struct *prev; /* circular list links */
-    struct ___virtual_machine_state_struct *next;
+    volatile ___virtual_machine_state prev; /* circular list links */
+    volatile ___virtual_machine_state next;
 
     ___SCMOBJ *glos; /* Scheme global variables */
 
@@ -7908,7 +7927,7 @@ typedef struct ___global_state_struct
 
     int setup_state; /* 0=pre-setup, 1=post-setup, 2=post-cleanup */
 
-    struct ___setup_params_struct setup_params; /* params received by ___setup */
+    ___setup_params_struct setup_params; /* params received by ___setup */
 
     ___WORD handler_sfun_conv_error;
     ___WORD handler_cfun_conv_error;
@@ -9054,7 +9073,7 @@ typedef struct ___global_state_struct
        ___P((int status),
             ());
     ___SCMOBJ (*___resize_vm)
-       ___P((___virtual_machine_state ___vms,
+       ___P((___PSD
             ___SCMOBJ thunk,
             int target_nb_processors),
            ());
@@ -10312,17 +10331,17 @@ ___IMP_FUNC(double,___pow)
         ());
 #endif
 ___IMP_FUNC(void,___setup_params_reset)
-   ___P((struct ___setup_params_struct *setup_params),
+   ___P((___setup_params_struct *setup_params),
         ());
 ___IMP_FUNC(___SCMOBJ,___setup)
-   ___P((struct ___setup_params_struct *setup_params),
+   ___P((___setup_params_struct *setup_params),
         ());
 ___IMP_FUNC(void,___cleanup) ___PVOID;
 ___IMP_FUNC(void,___cleanup_and_exit_process)
    ___P((int status),
         ());
 ___IMP_FUNC(___SCMOBJ,___resize_vm)
-   ___P((___virtual_machine_state ___vms,
+   ___P((___PSD
          ___SCMOBJ thunk,
          int target_nb_processors),
         ());

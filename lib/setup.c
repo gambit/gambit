@@ -54,6 +54,7 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
  *   ___INTR_USER        user has interrupted the program (e.g. ctrl-C)
  *   ___INTR_HEARTBEAT   heartbeat time interval has elapsed
  *   ___INTR_GC          a garbage collection has finished
+ *   ___INTR_SYNC_OP     a synchronous op. over all processors is requested
  */
 
 ___EXP_FUNC(void,___raise_interrupt_pstate)
@@ -90,8 +91,10 @@ ___EXP_FUNC(void,___raise_interrupt_vmstate)
 ___virtual_machine_state ___vms;
 int code;)
 {
-  /*TODO: extend to all processors in the VM*/
-  ___raise_interrupt_pstate (&___vms->pstate[0], code);
+  int i;
+
+  for (i=___vms->nb_processors-1; i>=0; i--)
+    ___raise_interrupt_pstate (&___vms->pstate[i], code);
 }
 
 
@@ -100,8 +103,24 @@ ___EXP_FUNC(void,___raise_interrupt)
         (code)
 int code;)
 {
-  /*TODO: extend to all virtual machines*/
-  ___raise_interrupt_vmstate (&___GSTATE->vmstate0, code);
+  ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+
+#ifdef ___SINGLE_VM
+
+  ___raise_interrupt_vmstate (___vms, code);
+
+#else
+
+  /* TODO: add GSTATE lock to access list of VMs */
+
+  do
+    {
+      ___raise_interrupt_vmstate (___vms, code);
+      ___vms = ___vms->next;
+    }
+  while (___vms != &___GSTATE->vmstate0);
+
+#endif
 }
 
 
@@ -114,6 +133,9 @@ ___processor_state ___ps;)
 }
 
 
+/* TODO: remove this when ___INTR_SYNC_OP interrupt handled in Scheme code */
+void service_sync_op ___P((___PSDNC),());
+
 ___EXP_FUNC(___BOOL,___check_interrupt_pstate)
    ___P((___processor_state ___ps,
          int code),
@@ -124,6 +146,17 @@ int code;)
 {
   if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
     {
+#ifndef ___SINGLE_THREADED_VMS
+
+      /* TODO: remove this when ___INTR_SYNC_OP interrupt handled in Scheme code */
+      if (code == ___INTR_SYNC_OP)
+        {
+          service_sync_op (___PSP);
+          return 0;
+        }
+
+#endif
+
       ___ps->intr_flag[code] = ___FIX(0);
       return 1;
     }
@@ -199,6 +232,513 @@ ___processor_state ___ps;)
 
   ___begin_interrupt_service_pstate (___ps);
   ___end_interrupt_service_pstate (___ps, 0);
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+/*
+ * Synchronous operations.
+ */
+
+#define WASTE_TIME() \
+do { int count; for (count=10; count>0; count--) ; } while (0)
+
+#define COMBINING_OP(op) ((op)&3)
+#define COMBINING_AND 1
+#define COMBINING_ADD 2
+#define COMBINING_MAX 3
+#define OP_MAKE(priority,combining) (((priority)<<2)+(combining))
+
+#define SYNC_WAIT -1
+
+#define OP_SET_NB_PROCESSORS OP_MAKE( 0,0)
+#define OP_RESIZE_VM         OP_MAKE( 1,0)
+#define OP_NOOP              OP_MAKE(63,0)
+
+
+___HIDDEN int barrier_sync_op
+   ___P((___PSD
+         ___sync_op_struct *sop_ptr),
+        (___PSV
+         sop_ptr)
+___PSDKR
+___sync_op_struct *sop_ptr;)
+{
+#ifdef ___SINGLE_THREADED_VMS
+
+  return 0;
+
+#else
+
+  ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  int id = ___ps - ___vms->pstate; /* id of this processor */
+  int child_id1 = id*2+1;          /* id of child 1 */
+  int child_id2 = id*2+2;          /* id of child 2 */
+  int n = ___vms->nb_processors;   /* number of processors */
+  ___sync_op_struct sop = *sop_ptr;
+  int sid = id;
+
+  /*
+   * This function performs a barrier synchronization by imposing a
+   * tree structure on the set of processors in this Gambit VM.
+   */
+
+  /*
+   * Check operations from children processors and self to
+   * determine the highest priority operation.
+   */
+
+  if (child_id1 < n)
+    {
+      int sid1;
+      ___sync_op_struct sop1;
+
+      while ((sid1 = ___ps->sync_id1) == SYNC_WAIT)
+        WASTE_TIME();
+
+      sop1 = ___ps->sync_op1;
+
+      if (sop1.op < sop.op)
+        {
+          sop = sop1;
+          sid = sid1;
+        }
+      else if (sop1.op == sop.op && COMBINING_OP(sop1.op))
+        {
+          switch (COMBINING_OP(sop1.op))
+            {
+            case COMBINING_AND:
+              sop1.arg[0] &= sop.arg[0];
+              break;
+            case COMBINING_ADD:
+              sop1.arg[0] += sop.arg[0];
+              break;
+            case COMBINING_MAX:
+              if (sop1.arg[0] < sop.arg[0]) sop1.arg[0] = sop.arg[0];
+              break;
+            }
+
+          sop = sop1;
+          sid = sid1;
+        }
+
+      ___ps->sync_id1 = SYNC_WAIT;
+
+      if (child_id2 < n)
+        {
+          int sid2;
+          ___sync_op_struct sop2;
+
+          while ((sid2 = ___ps->sync_id2) == SYNC_WAIT)
+            WASTE_TIME();
+
+          sop2 = ___ps->sync_op2;
+
+          if (sop2.op < sop.op)
+            {
+              sop = sop2;
+              sid = sid2;
+            }
+          else if (sop2.op == sop.op && COMBINING_OP(sop2.op))
+            {
+              switch (COMBINING_OP(sop2.op))
+                {
+                case COMBINING_AND:
+                  sop2.arg[0] &= sop.arg[0];
+                  break;
+                case COMBINING_ADD:
+                  sop2.arg[0] += sop.arg[0];
+                  break;
+                case COMBINING_MAX:
+                  if (sop2.arg[0] < sop.arg[0]) sop2.arg[0] = sop.arg[0];
+                  break;
+                }
+
+              sop = sop2;
+              sid = sid2;
+            }
+
+          ___ps->sync_id2 = SYNC_WAIT;
+        }
+    }
+
+  /*
+   * Propagate highest priority operation to parent processor.
+   */
+
+  if (id == 0)
+    {
+      /*
+       * Special case operation that sets nb_processors because this
+       * information is used by the barrier_sync algorithm itself.
+       */
+
+      if (sop.op == OP_SET_NB_PROCESSORS)
+        ___vms->nb_processors = sop.arg[0];
+    }
+  else
+    {
+      ___processor_state parent = &___vms->pstate[(id-1)/2];
+
+      ___ps->sync_id0 = SYNC_WAIT;
+
+      if (id & 1)
+        {
+          parent->sync_op1 = sop;
+          parent->sync_id1 = sid;
+        }
+      else
+        {
+          parent->sync_op2 = sop;
+          parent->sync_id2 = sid;
+        }
+
+      /*
+       * Wait for parent to reply with winning operation.
+       */
+
+      while ((sid = ___ps->sync_id0) == SYNC_WAIT)
+        WASTE_TIME();
+
+      sop = ___ps->sync_op0;
+    }
+
+  /*
+   * Propagate winning operation to children processors.
+   */
+
+  if (child_id1 < n)
+    {
+      ___processor_state child1 = &___vms->pstate[child_id1];
+
+      child1->sync_op0 = sop;
+      child1->sync_id0 = sid;
+
+      if (child_id2 < n)
+        {
+          ___processor_state child2 = &___vms->pstate[child_id2];
+
+          child2->sync_op0 = sop;
+          child2->sync_id0 = sid;
+        }
+    }
+
+  /*
+   * Return winning operation and id of originating processor.
+   */
+
+  *sop_ptr = sop;
+
+  return sid;
+
+#endif
+}
+
+
+___SCMOBJ ___setup_pstate
+   ___P((___processor_state ___ps,
+         ___virtual_machine_state ___vms),
+        ());
+
+
+void ___cleanup_pstate
+   ___P((___processor_state ___ps),
+        ());
+
+
+___SCMOBJ ___run
+   ___P((___PSD
+         ___SCMOBJ thunk),
+        ());
+
+
+void execute_sync_op_loop
+   ___P((___PSD
+         ___sync_op_struct *sop_ptr,
+         ___BOOL first_iter),
+        ());
+
+
+___HIDDEN void start_processor_execution
+   ___P((___thread *self),
+        (self)
+___thread *self;)
+{
+  ___processor_state ___ps = ___CAST(___processor_state,self->data_ptr);
+  ___SCMOBJ thunk = self->data_scmobj;
+  ___sync_op_struct sop;
+
+  /*
+   * Setup current OS thread so that it can find the processor state
+   * it is running.
+   */
+
+  ___SET_PSTATE(___ps);
+
+  /*
+   * Participate in the synchronous operation that initiated the
+   * resizing of the VM.
+   */
+
+  sop.op = OP_NOOP;
+  execute_sync_op_loop (___PSP &sop, 0);
+
+  /*
+   * Start processor's execution by a call to thunk.  This call will
+   * return when the processor terminates (typically when the Gambit VM
+   * terminates).
+   */
+
+  ___run(___PSP thunk); /* ignore result */
+}
+
+
+___SCMOBJ resize_vm
+   ___P((___PSD
+         ___SCMOBJ thunk,
+         ___WORD target_nb_processors),
+        (___PSV
+         thunk,
+         target_nb_processors)
+___PSDKR
+___SCMOBJ thunk;
+___WORD target_nb_processors;)
+{
+  ___PSGET
+  ___SCMOBJ err = ___FIX(___NO_ERR);
+
+#ifndef ___SINGLE_THREADED_VMS
+
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  int id = ___ps - ___vms->pstate; /* id of this processor */
+  ___sync_op_struct sop;
+
+  if (id != 0)
+    {
+      /*
+       * Wait for nb_processors to be set synchronously by processor 0.
+       */
+
+      sop.op = OP_NOOP;
+      barrier_sync_op (___PSP &sop);
+
+      /*
+       * Terminate current processor if it is no longer needed.
+       */
+
+      if (id >= target_nb_processors)
+        ___thread_exit (); /* this call does not return */
+    }
+  else
+    {
+      int initial = ___vms->nb_processors;
+      int i;
+
+      /* TODO: add 2 msections for each additional processor */
+
+      for (i=initial; i<target_nb_processors; i++)
+        {
+          ___processor_state p = &___vms->pstate[i];
+
+          if ((err = ___setup_pstate (&___vms->pstate[i], ___vms))
+              != ___FIX(___NO_ERR))
+            {
+              while (--i >= initial)
+                ___cleanup_pstate (&___vms->pstate[i]);
+
+              sop.op = OP_NOOP;
+              barrier_sync_op (___PSP &sop);
+
+              return err;
+            }
+        }
+
+      /*
+       * Set nb_processors synchronously.
+       */
+
+      sop.op = OP_SET_NB_PROCESSORS;
+      sop.arg[0] = target_nb_processors;
+      barrier_sync_op (___PSP &sop);
+
+      if (target_nb_processors < initial)
+        {
+          /*
+           * Join processors that are reclaimed when number of
+           * processors shrinks.
+           */
+
+          for (i=initial-1; i>=target_nb_processors; i--)
+            {
+              ___processor_state p = &___vms->pstate[i];
+              ___thread *t = &p->os_thread;
+
+              ___thread_join (t); /* ignore error */
+            }
+        }
+      else
+        {
+          /*
+           * Create new processors when number of processors grows.
+           */
+
+          for (i=initial; i<target_nb_processors; i++)
+            {
+              ___processor_state p = &___vms->pstate[i];
+              ___thread *t = &p->os_thread;
+
+              t->start_fn = start_processor_execution;
+              t->data_ptr = ___CAST(void*,p);
+              t->data_scmobj = thunk;
+
+              if ((err = ___thread_create (t)) != ___FIX(___NO_ERR))
+                {
+                  /* TODO: improve error handling */
+                  static char *msgs[] = { "Could not create OS thread", NULL };
+                  ___fatal_error (msgs);
+                }
+            }
+        }
+    }
+
+#endif
+
+  return err;
+}
+
+
+void execute_sync_op
+   ___P((___PSD
+         ___sync_op_struct *sop_ptr),
+        (___PSV
+         sop_ptr)
+___PSDKR
+___sync_op_struct *sop_ptr;)
+{
+  ___PSGET
+
+  switch (sop_ptr->op)
+    {
+    case OP_RESIZE_VM:
+      sop_ptr->arg[0] = resize_vm (___PSP sop_ptr->arg[0], sop_ptr->arg[1]);
+      break;
+    }
+}
+
+
+void execute_sync_op_loop
+   ___P((___PSD
+         ___sync_op_struct *sop_ptr,
+         ___BOOL first_iter),
+        (___PSV
+         sop_ptr,
+         first_iter)
+___PSDKR
+___sync_op_struct *sop_ptr;
+___BOOL first_iter;)
+{
+  ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  int id = ___ps - ___vms->pstate; /* id of this processor */
+
+  for (;;)
+    {
+      ___sync_op_struct sop = *sop_ptr;
+      int winner_id = barrier_sync_op (___PSP &sop);
+
+      if (sop.op == OP_NOOP)
+        {
+          /*
+           * Stop looping when all operations performed, but
+           * must loop at least twice to reset ___INTR_SYNC_OP flag.
+           */
+
+          if (!first_iter)
+            return;
+        }
+      else
+        {
+          execute_sync_op (___PSP &sop);
+
+          if (sop.op == sop_ptr->op &&
+              (winner_id == id || COMBINING_OP(sop.op)))
+            {
+              *sop_ptr = sop; /* return result */
+              sop_ptr->op = OP_NOOP; /* mark operation as executed */
+            }
+        }
+
+      if (first_iter)
+        {
+          /*
+           * Reset ___INTR_SYNC_OP interrupt flag synchronously so that
+           * no interrupt is ignored (this would cause the barrier
+           * synchronization to get out of sync).
+           */
+
+          ___ps->intr_flag[___INTR_SYNC_OP] = ___FIX(0);
+          first_iter = 0;
+        }
+    }
+}
+
+
+void service_sync_op
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  ___sync_op_struct sop;
+
+  sop.op = OP_NOOP;
+
+  execute_sync_op_loop (___PSP &sop, 1);
+}
+
+
+void on_all_processors
+   ___P((___PSD
+         ___sync_op_struct *sop_ptr),
+        (___PSV
+         sop_ptr)
+___PSDKR
+___sync_op_struct *sop_ptr;)
+{
+  ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+
+  /* force processors to call service_sync_op */
+
+  ___raise_interrupt_vmstate (___vms, ___INTR_SYNC_OP);
+
+  execute_sync_op_loop (___PSP sop_ptr, 1);
+}
+
+
+___EXP_FUNC(___SCMOBJ,___resize_vm)
+   ___P((___PSD
+         ___SCMOBJ thunk,
+         int target_nb_processors),
+        (___PSV
+         thunk,
+         target_nb_processors)
+___PSDKR
+___SCMOBJ thunk;
+int target_nb_processors;)
+{
+  ___PSGET
+  ___sync_op_struct sop;
+
+  sop.op = OP_RESIZE_VM;
+  sop.arg[0] = thunk;
+  sop.arg[1] = target_nb_processors;
+
+  on_all_processors (___PSP &sop);
+
+  return ___FIX(___NO_ERR);
 }
 
 
@@ -2408,6 +2948,18 @@ ___virtual_machine_state ___vms;)
 
   setup_interrupts_pstate (___ps);
 
+  /*
+   * Setup synchronous operation system.
+   */
+
+#ifndef ___SINGLE_THREADED_VMS
+
+  ___ps->sync_id0 = SYNC_WAIT;
+  ___ps->sync_id1 = SYNC_WAIT;
+  ___ps->sync_id2 = SYNC_WAIT;
+
+#endif
+
   return ___FIX(___NO_ERR);
 }
 
@@ -2426,7 +2978,7 @@ ___EXP_FUNC(___SCMOBJ,___setup_vmstate)
 ___virtual_machine_state ___vms;)
 {
   /*
-   * Virtual machine starts off with only one processor.
+   * Virtual machine starts off with a single processor.
    */
 
   ___vms->nb_processors = 1;
@@ -2442,85 +2994,6 @@ ___virtual_machine_state ___vms;)
    */
 
   return  ___setup_pstate (&___vms->pstate[0], ___vms);
-}
-
-
-___HIDDEN void start_processor_execution
-   ___P((___thread *self),
-        (self)
-___thread *self;)
-{
-  ___processor_state ___ps = ___CAST(___processor_state,self->data_ptr);
-  ___SCMOBJ thunk = self->data_scmobj;
-
-  /*
-   * Setup current OS thread so that it can find the processor state
-   * it is running.
-   */
-
-  ___SET_PSTATE(___ps);
-
-  /*
-   * Start processor's execution by a call to thunk.  This call will
-   * return when the processor terminates (typically when the Gambit VM
-   * terminates).
-   */
-
-  ___run(___PSP thunk); /* ignore result */
-}
-
-
-___EXP_FUNC(___SCMOBJ,___resize_vm)
-   ___P((___virtual_machine_state ___vms,
-         ___SCMOBJ thunk,
-         int target_nb_processors),
-        (___virtual_machine_state ___vms,
-         thunk,
-         target_nb_processors)
-___virtual_machine_state ___vms;
-___SCMOBJ thunk;
-int target_nb_processors;)
-{
-  ___SCMOBJ err = ___FIX(___NO_ERR);
-
-#ifndef ___SINGLE_THREADED_VMS
-
-  int initial = ___vms->nb_processors;
-  int i;
-
-  /* TODO: add 2 msections for each additional processor */
-
-  for (i=initial; i<target_nb_processors; i++)
-    {
-      ___processor_state p = &___vms->pstate[i];
-
-      if ((err = ___setup_pstate(&___vms->pstate[i], ___vms))
-          != ___FIX(___NO_ERR))
-        {
-          while (--i >= initial)
-            ___cleanup_pstate (&___vms->pstate[i]);
-
-          return err;
-        }
-    }
-
-  ___vms->nb_processors = target_nb_processors;
-
-  for (i=initial; i<target_nb_processors; i++)
-    {
-      ___processor_state p = &___vms->pstate[i];
-      ___thread *t = &p->os_thread;
-
-      t->start_fn = start_processor_execution;
-      t->data_ptr = ___CAST(void*,p);
-      t->data_scmobj = thunk;
-
-      ___thread_create(t);
-    }
-
-#endif
-
-  return err;
 }
 
 
@@ -3353,6 +3826,9 @@ ___EXP_FUNC(___SCMOBJ,___setup)
 ___setup_params_struct *setup_params;)
 {
   ___SCMOBJ err;
+  ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+  ___processor_state ___ps = &___vms->pstate[0];
+  ___SCMOBJ module_descrs;
   ___mod_or_lnk mol;
 
   /*
@@ -3408,70 +3884,81 @@ ___setup_params_struct *setup_params;)
   init_symkey_glo1 (mol);
   init_symkey_glo2 (mol);
 
-  /*
-   * Setup each module.
-   */
-
-  ___GSTATE->program_descr = setup_modules (NULL, mol);
-
-  if (___FIXNUMP(___GSTATE->program_descr))
+  do
     {
-      ___cleanup ();
-      return ___GSTATE->program_descr;
-    }
 
-  /*
-   * Setup kernel handlers.
-   */
+      /*
+       * Setup each module.
+       */
 
-  setup_kernel_handlers ();
+      err = setup_modules (NULL, mol);
 
-  /*
-   * Create list of command line arguments (accessible through ##command-line).
-   */
+      if (___FIXNUMP(err))
+        break;
 
-  if ((err = setup_command_line_arguments ()) != ___FIX(___NO_ERR))
-    {
-      ___cleanup ();
-      return err;
-    }
+      ___GSTATE->program_descr = err;
 
-  {
-    /*
-     * By convention, the main module is the last one in the module
-     * descriptors.
-     */
+      /*
+       * Setup kernel handlers.
+       */
 
-    ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+      setup_kernel_handlers ();
 
-    ___SCMOBJ module_descrs = ___FIELD(___GSTATE->program_descr,0);
+      /*
+       * Create list of command line arguments (for ##command-line).
+       */
 
-    ___vms->main_module_id =
-      ___FIELD(___FIELD(module_descrs,
-                        ___INT(___VECTORLENGTH(module_descrs))-1),
-               0);
+      if ((err = setup_command_line_arguments ())
+          != ___FIX(___NO_ERR))
+        break;
 
-    /*
-     * Setup the main virtual machine.
-     */
+      /*
+       * Setup the main virtual machine.
+       */
 
-    err = ___setup_vmstate (___vms);
+      if ((err = ___setup_vmstate (___vms))
+          != ___FIX(___NO_ERR))
+        break;
 
-    /*
-     * Setup current OS thread so that it can find the processor state
-     * it is running.
-     */
+#ifndef ___SINGLE_THREADED_VMS
 
-    ___SET_PSTATE(&___vms->pstate[0]);
+      /*
+       * Associate the current OS thread with the processor state
+       * it is running.
+       */
 
-    /*
-     * Start virtual machine execution by loading _kernel module.
-     */
+      if ((err = ___thread_init_from_self (&___ps->os_thread))
+          != ___FIX(___NO_ERR))
+        break;
 
-    if (err == ___FIX(___NO_ERR))
+#endif
+
+      /*
+       * Setup current OS thread so that it can find the processor state
+       * it is running.
+       */
+
+      ___SET_PSTATE(___ps);
+
+      /*
+       * By convention, the main module is the last one in the module
+       * descriptors.
+       */
+
+      module_descrs = ___FIELD(___GSTATE->program_descr,0);
+
+      ___vms->main_module_id =
+        ___FIELD(___FIELD(module_descrs,
+                          ___INT(___VECTORLENGTH(module_descrs))-1),
+                 0);
+
+      /*
+       * Start virtual machine execution by loading _kernel module.
+       */
+
       err = ___run(___PSP
                    ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1));
-  }
+    } while (0);
 
   /*
    * Cleanup if there are any errors.
