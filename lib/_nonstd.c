@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_nonstd.c", produced by Gambit v4.8.1
+; File: "_nonstd.c", produced by Gambit v4.8.2
 (
-408001
+408002
 (C)
 "_nonstd"
 (("_nonstd"))
@@ -632,7 +632,7 @@
  ()
 )
 #else
-#define ___VERSION 408001
+#define ___VERSION 408002
 #define ___MODULE_NAME "_nonstd"
 #define ___LINKER_ID ____20___nonstd
 #define ___MH_PROC ___H__20___nonstd
@@ -9990,10 +9990,16 @@ ___DEF_SLBL(33,___L33__23__23_define_2d_type_2d_expand)
    ___END_IF
    ___GOTO(___L123__23__23_define_2d_type_2d_expand)
 ___DEF_GLBL(___L119__23__23_define_2d_type_2d_expand)
+   ___SET_R3(___CDR(___R3))
+   ___SET_R3(___VECTORREF(___R3,___FIX(3L)))
+   ___SET_R2(___CONS(___R3,___R2))
+   ___CHECK_HEAP(34,4096)
+___DEF_SLBL(34,___L34__23__23_define_2d_type_2d_expand)
+___DEF_GLBL(___L120__23__23_define_2d_type_2d_expand)
+   ___SET_R1(___CDR(___R1))
    ___IF(___NOT(___PAIRP(___R1)))
    ___GOTO(___L123__23__23_define_2d_type_2d_expand)
    ___END_IF
-___DEF_GLBL(___L120__23__23_define_2d_type_2d_expand)
    ___SET_R3(___CAR(___R1))
    ___SET_R4(___CDR(___R3))
    ___SET_R4(___VECTORREF(___R4,___FIX(1L)))
@@ -10006,34 +10012,26 @@ ___DEF_GLBL(___L120__23__23_define_2d_type_2d_expand)
    ___SET_R3(___CDR(___R3))
    ___SET_R3(___VECTORREF(___R3,___FIX(3L)))
    ___SET_R2(___CONS(___R3,___R2))
-   ___CHECK_HEAP(34,4096)
-___DEF_SLBL(34,___L34__23__23_define_2d_type_2d_expand)
+   ___CHECK_HEAP(35,4096)
+___DEF_SLBL(35,___L35__23__23_define_2d_type_2d_expand)
 ___DEF_GLBL(___L121__23__23_define_2d_type_2d_expand)
    ___SET_R1(___CDR(___R1))
-   ___POLL(35)
-___DEF_SLBL(35,___L35__23__23_define_2d_type_2d_expand)
+   ___POLL(36)
+___DEF_SLBL(36,___L36__23__23_define_2d_type_2d_expand)
    ___IF(___NOT(___PAIRP(___R1)))
    ___GOTO(___L123__23__23_define_2d_type_2d_expand)
    ___END_IF
 ___DEF_GLBL(___L122__23__23_define_2d_type_2d_expand)
    ___SET_R3(___CAR(___R1))
-   ___SET_R1(___CDR(___R1))
    ___SET_R4(___CDR(___R3))
    ___SET_R4(___VECTORREF(___R4,___FIX(1L)))
    ___SET_R4(___FIXAND(___R4,___FIX(8L)))
    ___SET_R4(___BOOLEAN(___FIXEQ(___R4,___FIX(0L))))
    ___SET_R4(___BOOLEAN(___FALSEP(___R4)))
-   ___IF(___NOT(___FALSEP(___R4)))
+   ___IF(___FALSEP(___R4))
    ___GOTO(___L119__23__23_define_2d_type_2d_expand)
    ___END_IF
-   ___SET_R3(___CDR(___R3))
-   ___SET_R3(___VECTORREF(___R3,___FIX(3L)))
-   ___SET_R2(___CONS(___R3,___R2))
-   ___CHECK_HEAP(36,4096)
-___DEF_SLBL(36,___L36__23__23_define_2d_type_2d_expand)
-   ___IF(___PAIRP(___R1))
    ___GOTO(___L120__23__23_define_2d_type_2d_expand)
-   ___END_IF
 ___DEF_GLBL(___L123__23__23_define_2d_type_2d_expand)
    ___SET_R1(___R2)
    ___JUMPPRM(___NOTHING,___R0)

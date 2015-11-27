@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gambitgsi.c", produced by Gambit v4.8.1
+; File: "_gambitgsi.c", produced by Gambit v4.8.2
 (
-408001
+408002
 (C)
 "_gambitgsi"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_gsilib" (preload . #t)))
@@ -1399,7 +1399,6 @@
 "##compilation-scope"
 "##compile-in-compilation-scope"
 "##compile-inner"
-"##compile-module"
 "##compile-top"
 "##cond-expand-build"
 "##cond-expand-features"
@@ -1518,7 +1517,6 @@
 "##cte-decl-value"
 "##cte-decl?"
 "##cte-frame"
-"##cte-frame-i"
 "##cte-frame-vars"
 "##cte-frame?"
 "##cte-get-top-cte"
@@ -2985,7 +2983,6 @@
 "##wrap"
 "##wrap-datum"
 "##wrap-op"
-"##wrap-op0"
 "##wrap-op1"
 "##wrap-op1*"
 "##wrap-op2"
@@ -3573,6 +3570,7 @@
 "##comp-top-export"
 "##comp-top-import"
 "##comp-top-library"
+"##compile-module"
 "##complex?"
 "##cons"
 "##continuation-capture"
@@ -3590,6 +3588,7 @@
 "##ctan"
 "##cte-decl"
 "##cte-decl-name"
+"##cte-frame-i"
 "##cte-macro"
 "##cte-macro-name"
 "##cte-namespace"
@@ -3994,6 +3993,7 @@
 "##will-testator"
 "##will-testator-set!"
 "##will?"
+"##wrap-op0"
 "abandoned-mutex-exception?"
 "abort"
 "address-info-family"
@@ -4552,7 +4552,7 @@
  #f
 )
 #else
-#define ___VERSION 408001
+#define ___VERSION 408002
 #define ___LINKFILE_NAME "_gambitgsi"
 #define ___LINKER_ID ____20___gambitgsi
 #define ___INCREMENTAL_LINKFILE

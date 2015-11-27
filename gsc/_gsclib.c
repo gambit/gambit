@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsclib.c", produced by Gambit v4.8.1
+; File: "_gsclib.c", produced by Gambit v4.8.2
 (
-408001
+408002
 (C)
 "_gsclib"
 (("_gsclib"))
@@ -101,7 +101,7 @@
  ()
 )
 #else
-#define ___VERSION 408001
+#define ___VERSION 408002
 #define ___MODULE_NAME "_gsclib"
 #define ___LINKER_ID ____20___gsclib
 #define ___MH_PROC ___H__20___gsclib
@@ -1846,11 +1846,10 @@ ___DEF_SLBL(32,___L32__23__23_compile_2d_file)
    ___SET_R0(___LBL(33))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),39,___G__23__23_path_2d_expand)
 ___DEF_SLBL(33,___L33__23__23_compile_2d_file)
-   ___SET_STK(-13,___STK(-7))
    ___IF(___EQP(___STK(-8),___SYM_obj))
    ___GOTO(___L59__23__23_compile_2d_file)
    ___END_IF
-   ___IF(___NOT(___FALSEP(___STK(-13))))
+   ___IF(___NOT(___FALSEP(___STK(-7))))
    ___GOTO(___L45__23__23_compile_2d_file)
    ___END_IF
    ___SET_R2(___FIX(1L))

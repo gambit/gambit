@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_kernel.c", produced by Gambit v4.8.1
+; File: "_kernel.c", produced by Gambit v4.8.2
 (
-408001
+408002
 (C)
 "_kernel"
 (("_kernel"))
@@ -545,7 +545,7 @@
  ()
 )
 #else
-#define ___VERSION 408001
+#define ___VERSION 408002
 #define ___MODULE_NAME "_kernel"
 #define ___LINKER_ID ____20___kernel
 #define ___MH_PROC ___H__20___kernel
@@ -3066,7 +3066,7 @@ ___DEF_SUB_VEC(___X36,6)
                ___VEC1(___REF_FAL)
                ___VEC0
 ___DEF_SUB_STR(___X37,6)
-               ___STR6(118,52,46,56,46,49)
+               ___STR6(118,52,46,56,46,50)
 ___DEF_SUB_STRUCTURE(___X38,6)
                ___VEC1(___REF_SUB(3))
                ___VEC1(___REF_SYM(8,___S__23__23_type_2d_2_2d_CA9CA020_2d_600A_2d_4516_2d_AA78_2d_CBE91EC8BE14))
@@ -4778,7 +4778,7 @@ ___DEF_SLBL(2,___L2__23__23_kernel_2d_handlers)
 
    /* prepare for next interrupt */
 
-   ___EXT(___begin_interrupt_service_pstate) (___PSPNC);
+   ___EXT(___begin_interrupt_service_pstate) (___ps);
 
    if (___ps->intr_enabled != ___FIX(0))
      {
@@ -4787,10 +4787,10 @@ ___DEF_SLBL(2,___L2__23__23_kernel_2d_handlers)
        ___COVER_STACK_LIMIT_HANDLER_INTR_ENABLED;
 
        for (i=0; i<___NB_INTRS; i++)
-         if (___EXT(___check_interrupt_pstate) (___PSP i))
+         if (___EXT(___check_interrupt_pstate) (___ps, i))
            break;
 
-       ___EXT(___end_interrupt_service_pstate) (___PSP i+1);
+       ___EXT(___end_interrupt_service_pstate) (___ps, i+1);
 
        if (i < ___NB_INTRS)
          {
@@ -4802,7 +4802,7 @@ ___DEF_SLBL(2,___L2__23__23_kernel_2d_handlers)
          }
      }
    else
-     ___EXT(___end_interrupt_service_pstate) (___PSP 0);
+     ___EXT(___end_interrupt_service_pstate) (___ps, 0);
 
    ___COVER_STACK_LIMIT_HANDLER_END;
 
@@ -6029,7 +6029,7 @@ ___DEF_SLBL(0,___L0__23__23_disable_2d_interrupts_21_)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_disable_2d_interrupts_21_)
 { ___SCMOBJ ___RESULT;
-___EXT(___disable_interrupts_pstate) (___PSPNC); ___RESULT = ___VOID;
+___EXT(___disable_interrupts_pstate) (___ps); ___RESULT = ___VOID;
    ___SET_R1(___RESULT)
 }
    ___JUMPPRM(___NOTHING,___R0)
@@ -6057,7 +6057,7 @@ ___DEF_SLBL(0,___L0__23__23_enable_2d_interrupts_21_)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_enable_2d_interrupts_21_)
 { ___SCMOBJ ___RESULT;
-___EXT(___enable_interrupts_pstate) (___PSPNC); ___RESULT = ___VOID;
+___EXT(___enable_interrupts_pstate) (___ps); ___RESULT = ___VOID;
    ___SET_R1(___RESULT)
 }
    ___JUMPPRM(___NOTHING,___R0)
@@ -9649,12 +9649,12 @@ ___DEF_SLBL(1,___L1__23__23_gc_2d_finalize_21_)
 ___DEF_GLBL(___L3__23__23_gc_2d_finalize_21_)
 { ___SCMOBJ ___RESULT;
 
-          ___SCMOBJ will = ___ps->executable_wills;
+          ___SCMOBJ will = ___VMSTATE_FROM_PSTATE(___ps)->mem.executable_wills_;
           if (___UNTAG(will) == 0) /* end of list? */
             ___RESULT = ___FAL;
           else
             {
-              ___ps->executable_wills = ___BODY(will)[0];
+              ___VMSTATE_FROM_PSTATE(___ps)->mem.executable_wills_ = ___BODY(will)[0];
               ___RESULT = will;
             }
 
@@ -15025,7 +15025,7 @@ ___DEF_SLBL(0,___L0__23__23_system_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_system_2d_version)
-   ___SET_R1(___FIX(408001L))
+   ___SET_R1(___FIX(408002L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD

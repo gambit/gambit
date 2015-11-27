@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_parms.c", produced by Gambit v4.8.1
+; File: "_parms.c", produced by Gambit v4.8.2
 (
-408001
+408002
 (C)
 "_parms"
 (("_parms"))
@@ -188,7 +188,7 @@
  ()
 )
 #else
-#define ___VERSION 408001
+#define ___VERSION 408002
 #define ___MODULE_NAME "_parms"
 #define ___LINKER_ID ____20___parms
 #define ___MH_PROC ___H__20___parms
@@ -4480,7 +4480,7 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version)
-   ___SET_R1(___FIX(408001L))
+   ___SET_R1(___FIX(408002L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD
@@ -4510,31 +4510,26 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version_2d_string)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version_2d_string)
-   ___SET_R1(___FIXQUO(___FIX(408001L),___FIX(100000L)))
-   ___SET_R2(___FIXQUO(___FIX(408001L),___FIX(1000L)))
-   ___SET_R2(___FIXMOD(___R2,___FIX(100L)))
-   ___SET_R3(___FIXMOD(___FIX(408001L),___FIX(1000L)))
    ___SET_STK(1,___SUB(320))
    ___SET_STK(2,___R0)
-   ___SET_STK(3,___R2)
-   ___SET_STK(4,___R3)
+   ___SET_R1(___FIX(4L))
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_compiler_2d_version_2d_string)
    ___JUMPPRM(___SET_NARGS(1),___PRM_number_2d__3e_string)
 ___DEF_SLBL(2,___L2_c_23_compiler_2d_version_2d_string)
-   ___SET_STK(-3,___STK(-6))
+   ___SET_STK(-5,___STK(-6))
    ___SET_STK(-6,___R1)
-   ___SET_STK(-2,___STK(-5))
+   ___SET_STK(-4,___STK(-5))
    ___SET_STK(-5,___SUB(322))
-   ___SET_R1(___STK(-2))
+   ___SET_R1(___FIX(8L))
    ___SET_R0(___LBL(3))
    ___JUMPPRM(___SET_NARGS(1),___PRM_number_2d__3e_string)
 ___DEF_SLBL(3,___L3_c_23_compiler_2d_version_2d_string)
-   ___SET_STK(-2,___STK(-4))
+   ___SET_STK(-3,___STK(-4))
    ___SET_STK(-4,___R1)
-   ___SET_R1(___STK(-2))
+   ___SET_R1(___FIX(2L))
    ___SET_R0(___LBL(4))
    ___JUMPPRM(___SET_NARGS(1),___PRM_number_2d__3e_string)
 ___DEF_SLBL(4,___L4_c_23_compiler_2d_version_2d_string)
@@ -4800,9 +4795,9 @@ ___BEGIN_LBL
 ,___DEF_LBL_INTRO(___H_c_23_compiler_2d_version_2d_string,"c#compiler-version-string",___REF_FAL,6,
 0)
 ,___DEF_LBL_PROC(___H_c_23_compiler_2d_version_2d_string,0,-1)
-,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETI,8,1,0x3f0fL))
-,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETN,5,1,0xfL))
-,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETN,5,4,0x1fL))
+,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETI,8,1,0x3f03L))
+,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETN,5,1,0x3L))
+,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETN,5,3,0xfL))
 ,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETN,5,4,0x1fL))
 ,___DEF_LBL_RET(___H_c_23_compiler_2d_version_2d_string,___IFD(___RETI,8,8,0x3f0fL))
 ___END_LBL
