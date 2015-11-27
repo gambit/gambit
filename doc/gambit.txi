@@ -13859,7 +13859,7 @@ For example:
    (repl-output-port)
    (readtable-max-unescaped-char-set rt #\U0010ffff))}
 > @b{(string (integer->char 233))}
-"é"
+"@'e"
 @end smallexample
 
 @end deffn
