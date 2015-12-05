@@ -1136,7 +1136,7 @@
   `(##run-queue))
 
 (##define-macro (macro-primordial-thread)
-  `(macro-run-queue-primordial-thread (macro-run-queue)))
+  `##primordial-thread)
 
 (##define-macro (macro-current-thread)
   `(##current-thread))
@@ -1539,7 +1539,7 @@
 ;;; Representation of the run queue.
 
 (define-type run-queue
-  id: 2dbd1deb-107f-4730-a7ba-c191bcf132fe
+  id: A6899D11-290C-42A6-B47A-57C6B908698F
   type-exhibitor: macro-type-run-queue
   constructor: macro-construct-run-queue
   implementer: implement-type-run-queue
@@ -1569,8 +1569,8 @@
   toq-parent
   toq-left
   toq-leftmost
-  primordial-thread
-  unused
+  unused1
+  unused2
   floats
 )
 

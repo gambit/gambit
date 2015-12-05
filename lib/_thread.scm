@@ -1300,6 +1300,8 @@
       (handler exc ##thread-end-with-uncaught-exception!)
       (##thread-end-with-uncaught-exception! exc))))
 
+(define ##primordial-thread #f)
+
 (define primordial-exception-handler ##primordial-exception-handler)
 
 (define ##primordial-exception-handler-hook #f)
@@ -1558,9 +1560,7 @@
      primordial-thread
      (macro-make-run-queue))
 
-    (macro-run-queue-primordial-thread-set!
-     (macro-run-queue)
-     primordial-thread)
+    (set! ##primordial-thread primordial-thread)
 
     (##btq-insert! (macro-run-queue) primordial-thread)
 
