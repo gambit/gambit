@@ -3620,6 +3620,7 @@
 (targ-op "##vector-ref"       (targ-ifjump-apply-u "VECTORREF"))
 (targ-op "##vector-set!"      (targ-apply-simp-u #f #t 1 "VECTORSET"))
 (targ-op "##vector-shrink!"   (targ-apply-simp-u #f #t #f "VECTORSHRINK"))
+(targ-op "##vector-cas!"      (targ-apply-simp-u #f 'expr 1 "VECTORCAS"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3765,6 +3766,8 @@
          (targ-ifjump-apply-u "UNCHECKEDSTRUCTUREREF"))
 (targ-op "##unchecked-structure-set!"
          (targ-apply-simp-u #f #t 1 "UNCHECKEDSTRUCTURESET"))
+(targ-op "##unchecked-structure-cas!"
+         (targ-apply-simp-u #f 'expr 1 "UNCHECKEDSTRUCTURECAS"))
 
 (targ-op "##type-id"          (targ-apply-simp-u #f #f #f "TYPEID"))
 (targ-op "##type-name"        (targ-apply-simp-u #f #f #f "TYPENAME"))

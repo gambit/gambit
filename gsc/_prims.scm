@@ -358,6 +358,8 @@
 ("unbox"                              (1)   #f 0     0    (#f)    gambit)
 ("set-box!"                           (2)   #t (1)   0    #f      gambit)
 
+("vector-cas!"                        (4)   #t (1 2 4) 0  (#f)    gambit)
+
 ("s8vector?"                          (1)   #f 0     0    boolean gambit)
 ("s8vector"                           0     #f 0     0    #f      gambit)
 ("make-s8vector"                      (1 2) #f 0     0    #f      gambit)
@@ -812,6 +814,7 @@
 ("##vector-ref"                       (2)   #f ()    0    (#f)    extended)
 ("##vector-set!"                      (3)   #t ()    0    vector  extended)
 ("##vector-shrink!"                   (2)   #t ()    0    vector  extended)
+("##vector-cas!"                      (4)   #t ()    0    (#f)    extended)
 
 ("##string"                           0     #f ()    0    string  extended)
 ("##make-string"                      (1 2) #f ()    0    string  extended)
@@ -907,10 +910,13 @@
 ("##structure-length"                 (1)   #f ()    0    fixnum  extended)
 ("##structure-ref"                    (4)   #f ()    0    (#f)    extended)
 ("##structure-set!"                   (5)   #t ()    0    (#f)    extended)
+("##structure-cas!"                   (6)   #t ()    0    (#f)    extended)
 ("##direct-structure-ref"             (4)   #f ()    0    (#f)    extended)
 ("##direct-structure-set!"            (5)   #t ()    0    (#f)    extended)
+("##direct-structure-cas!"            (6)   #t ()    0    (#f)    extended)
 ("##unchecked-structure-ref"          (4)   #f ()    0    (#f)    extended)
 ("##unchecked-structure-set!"         (5)   #t ()    0    (#f)    extended)
+("##unchecked-structure-cas!"         (6)   #t ()    0    (#f)    extended)
 
 ("##type-id"                          (1)   #f ()    0    #f      extended)
 ("##type-name"                        (1)   #f ()    0    #f      extended)
@@ -1510,9 +1516,11 @@
 
 (def-spec "##structure-ref"  (spec-u "##unchecked-structure-ref"))
 (def-spec "##structure-set!" (spec-u "##unchecked-structure-set!"))
+(def-spec "##structure-cas!" (spec-u "##unchecked-structure-cas!"))
 
 (def-spec "##direct-structure-ref"  (spec-u "##unchecked-structure-ref"))
 (def-spec "##direct-structure-set!" (spec-u "##unchecked-structure-set!"))
+(def-spec "##direct-structure-cas!" (spec-u "##unchecked-structure-cas!"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3468,19 +3476,23 @@
            vect-length-str
            vect-ref-str
            vect-set!-str
+           vect-cas!-str
            **vect?-str
            **vect-length-str
            **vect-ref-str
            **vect-set!-str
+           **vect-cas!-str
            value-checker)
     (let ((vect?-sym (string->canonical-symbol vect?-str))
           (vect-length-sym (string->canonical-symbol vect-length-str))
           (vect-ref-sym (string->canonical-symbol vect-ref-str))
           (vect-set!-sym (string->canonical-symbol vect-set!-str))
+          (vect-cas!-sym (and vect-cas!-str (string->canonical-symbol vect-cas!-str)))
           (**vect?-sym (string->canonical-symbol **vect?-str))
           (**vect-length-sym (string->canonical-symbol **vect-length-str))
           (**vect-ref-sym (string->canonical-symbol **vect-ref-str))
-          (**vect-set!-sym (string->canonical-symbol **vect-set!-str)))
+          (**vect-set!-sym (string->canonical-symbol **vect-set!-str))
+          (**vect-cas!-sym (and **vect-cas!-str (string->canonical-symbol **vect-cas!-str))))
 
       (define (gen-type-check source env vect-arg)
         (gen-call-prim-vars source env
@@ -3537,7 +3549,7 @@
                   (generate-call vars))
                 call-prim)))))
 
-      (define (make-ref-set!-expander type-check? set!?)
+      (define (make-ref-set!-cas!-expander type-check? kind)
         (lambda (ptree oper args generate-call check-run-time-binding)
           (let* ((source
                   (node-source ptree))
@@ -3553,7 +3565,7 @@
                   (and type-check?
                        (gen-type-check source env arg1)))
                  (mutability-check
-                  (and set!?
+                  (and (not (eq? kind 'ref))
                        type-check
                        (gen-mutability-check source env arg1)))
                  (index-check
@@ -3561,7 +3573,7 @@
                        (gen-index-check source env arg1 arg2)))
                  (value-check
                   (and value-checker
-                       set!?
+                       (not (eq? kind 'ref))
                        (value-checker source env (caddr vars))))
                  (index-value-check
                   (if (and index-check value-check)
@@ -3592,7 +3604,10 @@
                       type-mutability-index-value-check))
                  (call-prim
                   (gen-call-prim-vars source (add-not-inline-primitives env)
-                    (if set!? **vect-set!-sym **vect-ref-sym)
+                    (case kind
+                      ((ref)  **vect-ref-sym)
+                      ((set!) **vect-set!-sym)
+                      (else   **vect-cas!-sym))
                     vars)))
             (gen-prc source env
               vars
@@ -3609,21 +3624,28 @@
 
       (def-exp
        vect-ref-str
-       (make-ref-set!-expander #t #f))
+       (make-ref-set!-cas!-expander #t 'ref))
 
       (def-exp
        vect-set!-str
-       (make-ref-set!-expander #t #t))))
-          
+       (make-ref-set!-cas!-expander #t 'set!))
+
+      (if vect-cas!-str
+          (def-exp
+            vect-cas!-str
+            (make-ref-set!-cas!-expander #t 'cas!)))))
+
   (make-vector-expanders
    "vector?"
    "vector-length"
    "vector-ref"
    "vector-set!"
+   "vector-cas!"
    "##vector?"
    "##vector-length"
    "##vector-ref"
    "##vector-set!"
+   "##vector-cas!"
    #f)
 
   (make-vector-expanders
@@ -3631,10 +3653,12 @@
    "string-length"
    "string-ref"
    "string-set!"
+   #f
    "##string?"
    "##string-length"
    "##string-ref"
    "##string-set!"
+   #f
    (lambda (source env var)
      (gen-call-prim-vars source env
        **char?-sym
@@ -3645,10 +3669,12 @@
    "s8vector-length"
    "s8vector-ref"
    "s8vector-set!"
+   #f
    "##s8vector?"
    "##s8vector-length"
    "##s8vector-ref"
    "##s8vector-set!"
+   #f
    (make-fixnum-interval-checker -128 127))
 
   (make-vector-expanders
@@ -3656,10 +3682,12 @@
    "u8vector-length"
    "u8vector-ref"
    "u8vector-set!"
+   #f
    "##u8vector?"
    "##u8vector-length"
    "##u8vector-ref"
    "##u8vector-set!"
+   #f
    (make-fixnum-interval-checker 0 255))
 
   (make-vector-expanders
@@ -3667,10 +3695,12 @@
    "s16vector-length"
    "s16vector-ref"
    "s16vector-set!"
+   #f
    "##s16vector?"
    "##s16vector-length"
    "##s16vector-ref"
    "##s16vector-set!"
+   #f
    (make-fixnum-interval-checker -32768 32767))
 
   (make-vector-expanders
@@ -3678,10 +3708,12 @@
    "u16vector-length"
    "u16vector-ref"
    "u16vector-set!"
+   #f
    "##u16vector?"
    "##u16vector-length"
    "##u16vector-ref"
    "##u16vector-set!"
+   #f
    (make-fixnum-interval-checker 0 65535))
 
 #;
@@ -3690,10 +3722,12 @@
    "s32vector-length"
    "s32vector-ref"
    "s32vector-set!"
+   #f
    "##s32vector?"
    "##s32vector-length"
    "##s32vector-ref"
    "##s32vector-set!"
+   #f
    (make-fixnum-interval-checker -2147483648 2147483647))
 
 #;
@@ -3702,10 +3736,12 @@
    "u32vector-length"
    "u32vector-ref"
    "u32vector-set!"
+   #f
    "##u32vector?"
    "##u32vector-length"
    "##u32vector-ref"
    "##u32vector-set!"
+   #f
    (make-fixnum-interval-checker 0 4294967295))
 
 #;
@@ -3714,10 +3750,12 @@
    "s64vector-length"
    "s64vector-ref"
    "s64vector-set!"
+   #f
    "##s64vector?"
    "##s64vector-length"
    "##s64vector-ref"
    "##s64vector-set!"
+   #f
    (make-fixnum-interval-checker -9223372036854775808 9223372036854775807))
 
 #;
@@ -3726,10 +3764,12 @@
    "u64vector-length"
    "u64vector-ref"
    "u64vector-set!"
+   #f
    "##u64vector?"
    "##u64vector-length"
    "##u64vector-ref"
    "##u64vector-set!"
+   #f
    (make-fixnum-interval-checker 0 18446744073709551615))
 
   (make-vector-expanders
@@ -3737,10 +3777,12 @@
    "f32vector-length"
    "f32vector-ref"
    "f32vector-set!"
+   #f
    "##f32vector?"
    "##f32vector-length"
    "##f32vector-ref"
    "##f32vector-set!"
+   #f
    (make-flonum-checker))
 
   (make-vector-expanders
@@ -3748,10 +3790,12 @@
    "f64vector-length"
    "f64vector-ref"
    "f64vector-set!"
+   #f
    "##f64vector?"
    "##f64vector-length"
    "##f64vector-ref"
    "##f64vector-set!"
+   #f
    (make-flonum-checker))
 )
 
@@ -3769,6 +3813,9 @@
   (define **unchecked-structure-set!-sym
     (string->canonical-symbol "##unchecked-structure-set!"))
 
+  (define **unchecked-structure-cas!-sym
+    (string->canonical-symbol "##unchecked-structure-cas!"))
+
   (define (gen-type-check source env obj-arg type-arg)
     (gen-call-prim source env
       **structure-direct-instance-of?-sym
@@ -3778,7 +3825,7 @@
               **type-id-sym
               (list type-arg)))))
 
-  (define (make-ref-set!-expander set!?)
+  (define (make-ref-set!-cas!-expander kind)
     (lambda (ptree oper args generate-call check-run-time-binding)
       (let* ((source
               (node-source ptree))
@@ -3789,14 +3836,15 @@
              (obj-var
               (list-ref vars 0))
              (type-var
-              (list-ref vars (if set!? 3 2)))
+              (list-ref vars (case kind ((ref) 2) ((set!) 3) (else 4))))
              (type-check
               (gen-type-check source env obj-var type-var))
              (call-prim
               (gen-call-prim-vars source (add-not-inline-primitives env)
-                (if set!?
-                  **unchecked-structure-set!-sym
-                  **unchecked-structure-ref-sym)
+                (case kind
+                  ((ref)  **unchecked-structure-ref-sym)
+                  ((set!) **unchecked-structure-set!-sym)
+                  (else   **unchecked-structure-cas!-sym))
                 vars)))
         (gen-prc source env
           vars
@@ -3807,11 +3855,15 @@
 
   (def-exp
    "##direct-structure-ref"
-   (make-ref-set!-expander #f))
+   (make-ref-set!-cas!-expander 'ref))
 
   (def-exp
    "##direct-structure-set!"
-   (make-ref-set!-expander #t))
+   (make-ref-set!-cas!-expander 'set!))
+
+  (def-exp
+   "##direct-structure-cas!"
+   (make-ref-set!-cas!-expander 'cas!))
 )
 
 (setup-list-primitives)

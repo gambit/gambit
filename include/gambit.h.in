@@ -3152,10 +3152,11 @@ ___hp[-1]=x,___TAG((___hp-2),___tSUBTYPED))
 #define ___UNBOX(x)___BODY_AS(x,___tSUBTYPED)[0]
 #define ___SETBOX(x,y)___BODY_AS(x,___tSUBTYPED)[0]=y;
 
-#define ___VECTORLENGTH(x)___FIX(___HD_FIELDS(___HEADER(x)))
-#define ___VECTORREF(x,y)*(___WORD*)(((___WORD)___BODY_AS(x,___tSUBTYPED))+((y)<<(___LWS-___TB)))
-#define ___VECTORSET(x,y,z)*(___WORD*)(((___WORD)___BODY_AS(x,___tSUBTYPED))+((y)<<(___LWS-___TB)))=z;
-#define ___VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+___LWS));
+#define ___VECTORLENGTH(v)___FIX(___HD_FIELDS(___HEADER(v)))
+#define ___VECTORREF(v,i)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))
+#define ___VECTORSET(v,i,val)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))=val;
+#define ___VECTORSHRINK(v,i)___temp=v;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+___LWS));
+#define ___VECTORCAS(v,i,val,oldval)___COMPARE_AND_SWAP_WORD((___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB))),oldval,val)
 
 #define ___STRINGLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>___LCS))
 #define ___STRINGREF(x,y)___CHR(___CS_SELECT( \
@@ -3246,10 +3247,11 @@ ___STORE_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U64UNBOX(z));
 #define ___TYPEFIELDS(x)___VECTORREF(x,___FIX(5))
 
 #define ___STRUCTURETYPE(x)___VECTORREF(x,___FIX(0))
-#define ___STRUCTURETYPESET(x,y)___VECTORSET(x,___FIX(0),y)
+#define ___STRUCTURETYPESET(x,type)___VECTORSET(x,___FIX(0),type)
 #define ___STRUCTUREDIOP(x,typeid)(___TESTSUBTYPE(x,___sSTRUCTURE)&&___TYPEID(___STRUCTURETYPE(___temp))==(typeid))
-#define ___UNCHECKEDSTRUCTUREREF(x,y,type,proc)___VECTORREF(x,y)
-#define ___UNCHECKEDSTRUCTURESET(x,y,z,type,proc)___VECTORSET(x,z,y)
+#define ___UNCHECKEDSTRUCTUREREF(x,i,type,proc)___VECTORREF(x,i)
+#define ___UNCHECKEDSTRUCTURESET(x,val,i,type,proc)___VECTORSET(x,i,val)
+#define ___UNCHECKEDSTRUCTURECAS(x,val,oldval,i,type,proc)___VECTORCAS(x,i,val,oldval)
 
 #define ___CLOSURELENGTH(x)___FIX(___HD_FIELDS(___HEADER(x)))
 #define ___CLOSURECODE(x)___CLO(x,0)
@@ -7354,7 +7356,6 @@ typedef struct ___glo_struct
 #endif
 
 
-#if 0
 #if ___WS == 4
 #ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
 #define ___USE_sync_val_compare_and_swap
@@ -7366,7 +7367,6 @@ typedef struct ___glo_struct
 #endif
 #endif
 #endif
-#endif
 
 
 #ifndef ___USE_sync_val_compare_and_swap
@@ -7375,6 +7375,8 @@ typedef struct ___glo_struct
 #else
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 #define ___USE_emulated_compare_and_swap_word
+#else
+#define ___USE_sequential_compare_and_swap_word
 #endif
 #endif
 #endif
@@ -7382,24 +7384,32 @@ typedef struct ___glo_struct
 
 #ifdef ___USE_sync_val_compare_and_swap
 
-#define ___COMPARE_AND_SWAP_WORD(p,oldv,newv) \
-__sync_val_compare_and_swap(p,oldv,newv)
+#define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
+__sync_val_compare_and_swap(p,oldval,newval)
 
 #endif
 
 
 #ifdef ___USE_InterlockedCompareExchangePointer
 
-#define ___COMPARE_AND_SWAP_WORD(p,oldv,newv) \
-___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,oldv),___CAST(void*,newv)))
+#define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
+___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,oldval),___CAST(void*,newval)))
 
 #endif
 
 
 #ifdef ___USE_emulated_compare_and_swap_word
 
-#define ___COMPARE_AND_SWAP_WORD(p,oldv,newv) \
-___EXT(___emulated_compare_and_swap_word)(p,oldv,newv)
+#define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
+___EXT(___emulated_compare_and_swap_word)(p,oldval,newval)
+
+#endif
+
+
+#ifdef ___USE_sequential_compare_and_swap_word
+
+#define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
+((___ps->temp1 = *(p)) == (oldval) && (*(p) = (newval)), ___ps->temp1)
 
 #endif
 

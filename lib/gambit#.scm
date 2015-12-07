@@ -912,6 +912,7 @@ user-info-uid
 user-info?
 user-name
 vector-append
+vector-cas!
 vector-copy
 vector-shrink!
 void

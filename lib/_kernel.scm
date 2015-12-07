@@ -4633,6 +4633,17 @@ end-of-code
      (if proc proc ##structure-set!)
      (if proc (##list obj val) (##list obj val i type proc)))))
 
+(define-prim (##structure-cas! obj val oldval i type proc)
+  (if (##structure-instance-of? obj (##type-id type))
+    (begin
+      (##unchecked-structure-cas! obj val oldval i type proc)
+      (##void))
+    (##raise-type-exception
+     1
+     type
+     (if proc proc ##structure-cas!)
+     (if proc (##list obj val oldval) (##list obj val oldval i type proc)))))
+
 (define-prim (##direct-structure-ref obj i type proc)
   (if (##structure-direct-instance-of? obj (##type-id type))
     (##unchecked-structure-ref obj i type proc)
@@ -4653,9 +4664,24 @@ end-of-code
      (if proc proc ##direct-structure-set!)
      (if proc (##list obj val) (##list obj val i type proc)))))
 
+(define-prim (##direct-structure-cas! obj val oldval i type proc)
+  (if (##structure-direct-instance-of? obj (##type-id type))
+    (begin
+      (##unchecked-structure-cas! obj val oldval i type proc)
+      (##void))
+    (##raise-type-exception
+     1
+     type
+     (if proc proc ##direct-structure-cas!)
+     (if proc (##list obj val oldval) (##list obj val oldval i type proc)))))
+
 (define-prim (##unchecked-structure-ref obj i type proc))
 
 (define-prim (##unchecked-structure-set! obj val i type proc))
+
+(define-prim (##unchecked-structure-cas! obj val oldval i type proc)
+  ;; TODO: remove after bootstrap
+  (##vector-cas! obj i val oldval))
 
 ;;;----------------------------------------------------------------------------
 

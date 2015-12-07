@@ -125,6 +125,26 @@
   macro-check-inexact-real-list
   ##fleqv?)
 
+(define-prim (##vector-cas! vect k val oldval)
+  ;;TODO: remove after bootstrap
+  (##declare (not interrupts-enabled))
+  (let ((result (##vector-ref vect k)))
+    (if (##eq? result oldval)
+        (##vector-set! vect k val))
+    result))
+
+(define-prim (vector-cas! vect k val oldval)
+  (macro-force-vars (vect k oldval)
+    (macro-check-vector vect 1 (vector-cas! vect k val oldval)
+      (macro-check-subtyped-mutable vect 1 (vector-cas! vect k val oldval)
+        (macro-check-index-range
+          k
+          2
+          0
+          (##vector-length vect)
+          (vector-cas! vect k val oldval)
+          (##vector-cas! vect k val oldval))))))
+
 ;;;----------------------------------------------------------------------------
 
 ;; IEEE Scheme procedures:
