@@ -662,14 +662,14 @@
   (macro-btq-deq-remove! btq)
   (let ((leftmost (macro-btq-leftmost btq)))
     (if (##eq? leftmost btq)
-      (macro-btq-unlink! btq 'abandoned)
+      (macro-btq-unlink! btq (macro-mutex-state-abandoned))
       (if (macro-mutex? btq)
         (##mutex-signal-no-reschedule! btq leftmost #t)
         (begin
           (let ((owner (macro-btq-owner btq)))
             (if (macro-thread? owner)
               (thread-trace 0 (##thread-effective-priority-downgrade! owner))))
-          (macro-btq-unlink! btq 'abandoned))))))
+          (macro-btq-unlink! btq (macro-mutex-state-abandoned)))))))
 
 ;;; Implementation of timeout queues.
 
@@ -1767,12 +1767,12 @@
 (define-prim (##mutex-lock-out-of-line! mutex absrel-timeout new-owner)
   (##declare (not interrupts-enabled))
   (let ((owner (macro-btq-owner mutex)))
-    (if (##eq? owner 'abandoned)
+    (if (##eq? owner (macro-mutex-state-abandoned))
       (begin
         (if new-owner
           (if (macro-thread-end-condvar new-owner)
             (macro-btq-link! mutex new-owner))
-          (macro-btq-owner-set! mutex 'not-owned))
+          (macro-btq-owner-set! mutex (macro-mutex-state-not-owned)))
         (##thread-abandoned-mutex-action!))
       (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
         (if timeout
@@ -1789,18 +1789,18 @@
                         ;; the capturing of the continuation by
                         ;; macro-thread-save!)
 
-                        (cond ((##not owner)
+                        (cond ((##eq? owner (macro-mutex-state-not-abandoned))
                                (if new-owner
                                  (if (macro-thread-end-condvar new-owner)
                                    (macro-btq-link! mutex new-owner)
-                                   (macro-btq-owner-set! mutex 'abandoned))
-                                 (macro-btq-owner-set! mutex 'not-owned))
+                                   (macro-btq-owner-set! mutex (macro-mutex-state-abandoned)))
+                                 (macro-btq-owner-set! mutex (macro-mutex-state-not-owned)))
                                #t)
-                              ((##eq? owner 'abandoned)
+                              ((##eq? owner (macro-mutex-state-abandoned))
                                (if new-owner
                                  (if (macro-thread-end-condvar new-owner)
                                    (macro-btq-link! mutex new-owner))
-                                 (macro-btq-owner-set! mutex 'not-owned))
+                                 (macro-btq-owner-set! mutex (macro-mutex-state-not-owned)))
                                (##thread-abandoned-mutex-action!))
                               (else
                                (##btq-remove! current-thread)
@@ -1852,8 +1852,8 @@
           (let ((new-leftmost (macro-btq-leftmost mutex)))
             (if (##not (##eq? new-leftmost mutex))
               (macro-thread-inherit-priority! new-owner new-leftmost))))
-        (macro-btq-unlink! mutex 'abandoned))
-      (macro-btq-unlink! mutex 'not-owned)))
+        (macro-btq-unlink! mutex (macro-mutex-state-abandoned)))
+      (macro-btq-unlink! mutex (macro-mutex-state-not-owned))))
 
   (macro-thread-result-set!
    thread
@@ -2353,8 +2353,7 @@
 (define-prim (mutex-state mutex)
   (macro-force-vars (mutex)
     (macro-check-mutex mutex 1 (mutex-state mutex)
-      (or (macro-btq-owner mutex)
-          'not-abandoned))))
+      (macro-btq-owner mutex))))
 
 (define-prim (mutex-lock!
               mutex

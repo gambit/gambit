@@ -1274,14 +1274,15 @@
   ;; fields 1 and 2 are for maintaining this mutex in a deq of btqs
   ;; fields 3 to 5 are for maintaining a queue of blocked threads
   ;; field 6 is the leftmost thread in the queue of blocked threads
-  ;; field 7 is the owner of the mutex (or 'not-owned or 'abandoned or #f)
+  ;; field 7 is the owner of the mutex (or 'not-owned or 'abandoned
+  ;; or 'not-abandoned)
   (btq-deq-next init: #f)
   (btq-deq-prev init: #f)
   (btq-color    init: #f)
   (btq-parent   init: #f)
   (btq-left     init: #f)
   (btq-leftmost init: #f)
-  (btq-owner    init: #f)
+  (btq-owner    init: 'not-abandoned) ;; see (macro-mutex-state-not-abandoned)
 
   (name
    macro-mutex-name
@@ -1291,6 +1292,12 @@
    macro-mutex-specific-set!)
 )
 
+;; Mutex states (aside from "owned")
+
+(##define-macro (macro-mutex-state-not-owned)     ''not-owned)
+(##define-macro (macro-mutex-state-abandoned)     ''abandoned)
+(##define-macro (macro-mutex-state-not-abandoned) ''not-abandoned)
+
 (##define-macro (macro-make-mutex name)
   `(let ((name ,name))
      (let ((mutex (macro-construct-mutex name (##void))))
@@ -1299,7 +1306,7 @@
        mutex)))
 
 (##define-macro (macro-mutex-unlocked-not-abandoned-and-not-multiprocessor? mutex)
-  `(##not (macro-btq-owner ,mutex)))
+  `(##eq? (macro-btq-owner ,mutex) (macro-mutex-state-not-abandoned)))
 
 (##define-macro (macro-mutex-lock! mutex absrel-timeout owner)
   `(let ((mutex ,mutex) (absrel-timeout ,absrel-timeout) (owner ,owner))
@@ -1307,11 +1314,11 @@
      (##declare (not interrupts-enabled))
 
      (let ((state (macro-btq-owner mutex)))
-       (if state
-         (##mutex-lock-out-of-line! mutex absrel-timeout owner)
-         (begin
-           (macro-btq-link! mutex owner)
-           #t)))))
+       (if (##eq? state (macro-mutex-state-not-abandoned))
+           (begin
+             (macro-btq-link! mutex owner)
+             #t)
+           (##mutex-lock-out-of-line! mutex absrel-timeout owner)))))
 
 (##define-macro (macro-mutex-lock-anonymously! mutex absrel-timeout)
   `(let ((mutex ,mutex) (absrel-timeout ,absrel-timeout))
@@ -1319,11 +1326,11 @@
      (##declare (not interrupts-enabled))
 
      (let ((state (macro-btq-owner mutex)))
-       (if state
-         (##mutex-lock-out-of-line! mutex absrel-timeout #f)
-         (begin
-           (macro-btq-owner-set! mutex 'not-owned)
-           #t)))))
+       (if (##eq? state (macro-mutex-state-not-abandoned))
+           (begin
+             (macro-btq-owner-set! mutex (macro-mutex-state-not-owned))
+             #t)
+           (##mutex-lock-out-of-line! mutex absrel-timeout #f)))))
 
 (##define-macro (macro-mutex-unlock! mutex)
   `(let ((mutex ,mutex))
@@ -1334,7 +1341,7 @@
      (let ((leftmost (macro-btq-leftmost mutex)))
        (if (##eq? leftmost mutex)
          (begin
-           (macro-btq-unlink! mutex #f)
+           (macro-btq-unlink! mutex (macro-mutex-state-not-abandoned))
            (##void))
          (##mutex-signal! mutex leftmost #f)))))
 
@@ -1347,7 +1354,7 @@
      (let ((leftmost (macro-btq-leftmost mutex)))
        (if (##eq? leftmost mutex)
          (begin
-           (macro-btq-unlink! mutex #f)
+           (macro-btq-unlink! mutex (macro-mutex-state-not-abandoned))
            (##void))
          (##mutex-signal-no-reschedule! mutex leftmost #f)))))
 
