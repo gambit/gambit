@@ -835,6 +835,8 @@ ___device_tty *self;)
                 ___write_console_fallback (msg, sizeof(msg)-1);
 
                 fd = -1; /* redirect subsequent console output */
+
+                d->lineeditor_mode = LINEEDITOR_MODE_DISABLE; /* disable lineeditor */
               }
             else
 #endif
