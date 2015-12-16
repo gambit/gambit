@@ -2784,24 +2784,28 @@
                    ")"))
                  nl-str)
 
-                (if (void-type? result-typ)
-                    (c-preproc-define
-                     (string-append c-id-prefix "return")
-                     ""
-                     (string-append
-                      "goto " c-id-prefix "end_of_code")
-                     (string-append
-                      proc-name nl-str
-                      c-id-prefix "end_of_code:;" nl-str))
-                    (c-preproc-define
-                     (string-append c-id-prefix "return")
-                     (string-append "(" c-id-prefix "val" ")")
-                     (string-append
-                      "do { " (assign-result (string-append c-id-prefix "val"))
-                      " goto " c-id-prefix "end_of_code; } while (0)")
-                     (string-append
-                      proc-name nl-str
-                      c-id-prefix "end_of_code:;" nl-str))))))
+                (let ((end-of-code
+                       (string-append c-id-prefix
+                                      "return_"
+                                      (scheme-id->c-id scheme-name))))
+                  (if (void-type? result-typ)
+                      (c-preproc-define
+                       (string-append c-id-prefix "return")
+                       ""
+                       (string-append
+                        "goto " end-of-code)
+                       (string-append
+                        proc-name nl-str
+                        end-of-code ":;" nl-str))
+                      (c-preproc-define
+                       (string-append c-id-prefix "return")
+                       (string-append "(" c-id-prefix "val" ")")
+                       (string-append
+                        "do { " (assign-result (string-append c-id-prefix "val"))
+                        " goto " end-of-code "; } while (0)")
+                       (string-append
+                        proc-name nl-str
+                        end-of-code ":;" nl-str)))))))
 
         set-result-code
         c-id-prefix
