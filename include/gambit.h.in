@@ -6840,6 +6840,7 @@ void *___x;) \
 #define ___CFUN_CAST_AND_DEREF(type,arg)(*___CAST(type,arg))
 #define ___CFUN_CAST(type,arg)___CAST(type,arg)
 
+/* TODO: remove these obsolete definitions after bootstrap */
 #define ___CFUN_CALL_VOID(call)call;
 #define ___CFUN_CALL(r,call)r = call;
 #define ___CFUN_CALL_STRUCT(n,r,call)___ASSIGN_NEW_WITH_INIT(r,struct n,call);
@@ -6849,6 +6850,15 @@ void *___x;) \
 #define ___CFUN_CALL_NONNULLPOINTER(r,call)r = call;
 #define ___CFUN_CALL_FUNCTION(r,call)r = call;
 #define ___CFUN_CALL_NONNULLFUNCTION(r,call)r = call;
+
+#define ___CFUN_ASSIGN(r,val)r = val;
+#define ___CFUN_ASSIGN_STRUCT(n,r,val)___ASSIGN_NEW_WITH_INIT(r,struct n,val);
+#define ___CFUN_ASSIGN_UNION(n,r,val)___ASSIGN_NEW_WITH_INIT(r,union n,val);
+#define ___CFUN_ASSIGN_TYPE(n,r,val)___ASSIGN_NEW_WITH_INIT(r,n,val);
+#define ___CFUN_ASSIGN_POINTER(r,val)r = val;
+#define ___CFUN_ASSIGN_NONNULLPOINTER(r,val)r = val;
+#define ___CFUN_ASSIGN_FUNCTION(r,val)r = val;
+#define ___CFUN_ASSIGN_NONNULLFUNCTION(r,val)r = val;
 
 #define ___BEGIN_CFUN_BODY
 #define ___END_CFUN_BODY ___AT_END

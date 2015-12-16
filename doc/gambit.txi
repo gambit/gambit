@@ -8749,7 +8749,7 @@ For example:
 $ @b{cat test1.scm}
 (define weird
   (c-lambda (char-string) nonnull-char-string
-    "___result = ___arg1;"))
+    "___return(___arg1);"))
 $ @b{gsc test1.scm}
 $ @b{gsi}
 Gambit @value{VERSION}
@@ -8818,9 +8818,9 @@ For example:
 $ @b{cat test2.scm}
 (c-define (f str) (nonnull-char-string) int "f" ""
   (string->number str))
-(define t1 (c-lambda () int "___result = f (\"123\");"))
-(define t2 (c-lambda () int "___result = f (0);"))
-(define t3 (c-lambda () int "___result = f (\"1.5\");"))
+(define t1 (c-lambda () int "___return(f (\"123\"));"))
+(define t2 (c-lambda () int "___return(f (0));"))
+(define t3 (c-lambda () int "___return(f (\"1.5\"));"))
 $ @b{gsc test2.scm}
 $ @b{gsi}
 Gambit @value{VERSION}
@@ -8869,7 +8869,7 @@ $ @b{cat test3.scm}
     k))
 (define scheme-to-c-to-scheme-and-back
   (c-lambda (char-string) scheme-object
-    "___result = f (___arg1);"))
+    "___return(f (___arg1));"))
 $ @b{gsc test3.scm}
 $ @b{gsi}
 Gambit @value{VERSION}
@@ -15336,38 +15336,30 @@ conversion is not possible.  The temporary memory allocated from the C
 heap for the conversion of the arguments and result will be reclaimed
 whether there is an error or not.
 
-When @i{c-name-or-code} is not a valid C identifier, it is treated
-as an arbitrary piece of C code.  Within the C code the variables
+When @i{c-name-or-code} is not a valid C identifier, it is treated as
+an arbitrary piece of C code.  Within the C code the variables
 @samp{___arg1}, @samp{___arg2}, etc. can be referenced to access the
-converted arguments.  Similarly, the result to be returned from the
-call should be assigned to the variable @samp{___result} except when
-the result is of type @code{struct}, @code{union}, @code{type},
-@code{pointer}, @code{nonnull-pointer}, @code{function} or
-@code{nonnull-function} in which case a pointer must be assigned to
-the variable @samp{___result_voidstar} which is of type @samp{void*}.
-For results of type @code{pointer}, @code{nonnull-pointer},
-@code{function} and @code{nonnull-function}, the value assigned to the
-variable @samp{___result_voidstar} must be the pointer or function
-cast to @samp{void*}.  For results of type @code{struct},
-@code{union}, and @code{type}, the value assigned to the variable
-@samp{___result_voidstar} must be a pointer to a memory allocated
-block containing a copy of the result.  Note that this block will be
-reclaimed by the @var{release-function} associated with the type.
-If no result needs to be returned, the @i{result-type} should be
-@code{void} and no assignment to the variable @samp{___result} or
-@samp{___result_voidstar} should take place.  Note that the C code
-should not contain @code{return} statements as this is meaningless.
-Control must always fall off the end of the C code.  The C code is
-copied to the C file on a new line so it can start with preprocessor
-directives.  Moreover the C code is always placed at the head of a
-compound statement whose lifetime encloses the C to Scheme conversion of
-the result.  Consequently, temporary storage (strings in particular)
-declared at the head of the C code can be returned by assigning them to
-@samp{___result} or @samp{___result_voidstar}.  In the
-@i{c-name-or-code}, the macro @samp{___AT_END} may be defined as the
-piece of C code to execute before control is returned to Scheme but
-after the result is converted to its Scheme representation.  This is
-mainly useful to deallocate temporary storage contained in the result.
+converted arguments.  Note that the C @code{return} statement can't be
+used to return from the procedure.  Instead, the @code{___return}
+macro must be used.  A procedure whose @i{result-type} is not
+@code{void} must pass the procedure's result as the single argument to
+the @code{___return} macro, for example @samp{___return(123);} to
+return the value 123.  When @i{result-type} is @code{void}, the
+@code{___return} macro must be called without a parameter list, for
+example @samp{___return;}.
+
+The C code is copied to the C file on a new line so it can start with
+preprocessor directives.  Moreover the C code is always placed at the
+head of a compound statement whose lifetime encloses the C to Scheme
+conversion of the procedure's result.  Consequently, temporary storage
+(strings in particular) declared at the head of the C code can be
+returned with the @code{___return} macro.
+
+In the @i{c-name-or-code}, the macro @samp{___AT_END} may be defined
+as the piece of C code to execute before control is returned to Scheme
+but after the procedure's result is converted to its Scheme
+representation.  This is mainly useful to deallocate temporary storage
+contained in the result.
 
 When passed to the Scheme environment, the C @code{void} type is
 converted to the void object.
@@ -15389,13 +15381,13 @@ For example:
   (if f (write (fgetc f))))
 
 (define char-code
-  (c-lambda (char) int "___result = ___arg1;"))
+  (c-lambda (char) int "___return(___arg1);"))
 
 (define host
-  ((c-lambda () nonnull-char-string "___result = host;")))
+  ((c-lambda () nonnull-char-string "___return(host);")))
 
 (define stdin
-  ((c-lambda () (pointer "FILE") "___result_voidstar = stdin;")))
+  ((c-lambda () (pointer "FILE") "___return(stdin);")))
 
 ((c-lambda () void
 #<<c-lambda-end
@@ -15408,9 +15400,9 @@ c-lambda-end
   (c-lambda (char)
             nonnull-char-string
 #<<c-lambda-end
-   ___result = malloc (2);
-   if (___result != NULL) @{ ___result[0] = ___arg1; ___result[1] = 0; @}
-   #define ___AT_END if (___result != NULL) free (___result);
+   char *s = (char *)malloc (2);
+   if (s != NULL) @{ s[0] = ___arg1; s[1] = 0; @}
+   #define ___AT_END if (s != NULL) free (s);
 c-lambda-end
 ))
 
@@ -15422,7 +15414,7 @@ c-lambda-end
    s[0] = ___arg1;
    s[1] = ___arg2;
    s[2] = 0;
-   ___result = s;
+   ___return(s);
 c-lambda-end
 ))
 @end smallexample

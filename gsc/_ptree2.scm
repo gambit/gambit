@@ -2246,9 +2246,9 @@
 
 (define nl-str (string #\newline))
 
-(define (c-preproc-define id val body)
+(define (c-preproc-define id params val body)
   (string-append
-    "#define " id " " val nl-str
+    "#define " id params " " val nl-str
     body
     "#undef " id nl-str))
 
@@ -2315,10 +2315,12 @@
                c-id-prefix "END_SFUN_COPY_" tail))
             (c-preproc-define
              (string-append c-id "_voidstar")
+             ""
              (string-append c-id-prefix "SFUN_CAST(void*," c-id ")")
              body))
           (c-preproc-define
            c-id
+           ""
            (string-append
             c-id-prefix
             (if (vector-ref indirect-access 1)
@@ -2363,12 +2365,13 @@
             sfun?
             numbered-typ
             (if (scmobj-type? typ)
-              (c-preproc-define to from body)
+              (c-preproc-define to "" from body)
               (c-convert-representation sfun? sfun? typ from to i body)))))
     (if sfun?
       decl
       (c-preproc-define
         from
+        ""
         (string-append
           c-id-prefix
           "CFUN_ARG("
@@ -2427,6 +2430,8 @@
     (c-preproc-define
 
       (string-append c-id-prefix "NARGS")
+
+      ""
 
       (number->string (length param-typs))
 
@@ -2507,6 +2512,7 @@
 
              (c-preproc-define
               c-id
+              ""
               (string-append
                c-id-prefix
                (if sfun? "SFUN_CAST_AND_DEREF(" "CFUN_CAST_AND_DEREF(")
@@ -2731,53 +2737,72 @@
         nl-str
         (c-preproc-define-default-empty
           (string-append c-id-prefix "AT_END")
-          (string-append
-           (if (valid-c-or-c++-function-id? proc-name)
-             (let ((c-id
-                    (c-result #f #f))
-                   (indirect-access-result
-                    (type-accessed-indirectly? result-typ))
-                   (call
-                    (string-append
-                     proc-name "("
-                     (comma-separated
-                      (map c-param-id (number-from-1 stripped-param-typs)))
-                     ")")))
-               (cond ((void-type? result-typ)
-                      (string-append
-                       c-id-prefix
-                       "CFUN_CALL_VOID("
-                       call
-                       ")"))
-                     (indirect-access-result
-                      (if (vector-ref indirect-access-result 1)
-                        (string-append
-                         c-id-prefix
-                         "CFUN_CALL_"
-                         (vector-ref indirect-access-result 0)
-                         "("
-                         (vector-ref indirect-access-result 1)
-                         ","
-                         c-id "_voidstar,"
-                         call
-                         ")")
-                        (string-append
-                         c-id-prefix
-                         "CFUN_CALL_"
-                         (vector-ref indirect-access-result 0)
-                         "("
-                         c-id "_voidstar,"
-                         call
-                         ")")))
-                     (else
-                      (string-append
-                       c-id-prefix
-                       "CFUN_CALL("
-                       c-id ","
-                       call
-                       ")"))))
-             proc-name)
-           nl-str))
+          (let ((c-id
+                 (c-result #f #f))
+                (indirect-access-result
+                 (type-accessed-indirectly? result-typ)))
+
+            (define (assign-result result)
+              (cond ((void-type? result-typ)
+                     (string-append result ";"))
+                    (indirect-access-result
+                     (if (vector-ref indirect-access-result 1)
+                         (string-append
+                          c-id-prefix
+                          "CFUN_ASSIGN_"
+                          (vector-ref indirect-access-result 0)
+                          "("
+                          (vector-ref indirect-access-result 1)
+                          ","
+                          c-id "_voidstar,"
+                          result
+                          ")")
+                         (string-append
+                          c-id-prefix
+                          "CFUN_ASSIGN_"
+                          (vector-ref indirect-access-result 0)
+                          "("
+                          c-id "_voidstar,"
+                          result
+                          ")")))
+                    (else
+                     (string-append
+                      c-id-prefix
+                      "CFUN_ASSIGN("
+                      c-id ","
+                      result
+                      ")"))))
+
+            (if (valid-c-or-c++-function-id? proc-name)
+
+                (string-append
+                 (assign-result
+                  (string-append
+                   proc-name "("
+                   (comma-separated
+                    (map c-param-id (number-from-1 stripped-param-typs)))
+                   ")"))
+                 nl-str)
+
+                (if (void-type? result-typ)
+                    (c-preproc-define
+                     (string-append c-id-prefix "return")
+                     ""
+                     (string-append
+                      "goto " c-id-prefix "end_of_code")
+                     (string-append
+                      proc-name nl-str
+                      c-id-prefix "end_of_code:;" nl-str))
+                    (c-preproc-define
+                     (string-append c-id-prefix "return")
+                     (string-append "(" c-id-prefix "val" ")")
+                     (string-append
+                      "do { " (assign-result (string-append c-id-prefix "val"))
+                      " goto " c-id-prefix "end_of_code; } while (0)")
+                     (string-append
+                      proc-name nl-str
+                      c-id-prefix "end_of_code:;" nl-str))))))
+
         set-result-code
         c-id-prefix
         (if cleanup? "END_CFUN_BODY_CLEANUP" "END_CFUN_BODY")
