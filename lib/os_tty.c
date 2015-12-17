@@ -835,8 +835,6 @@ ___device_tty *self;)
                 ___write_console_fallback (msg, sizeof(msg)-1);
 
                 fd = -1; /* redirect subsequent console output */
-
-                d->lineeditor_mode = LINEEDITOR_MODE_DISABLE; /* disable lineeditor */
               }
             else
 #endif
@@ -4698,12 +4696,13 @@ ___stream_index *len_done;)
        * device will be read.  If a read error occurs (including
        * EAGAIN) an error code is returned, otherwise ___NO_ERR is
        * returned.  ___NO_ERR is returned if and only if at least one
-       * character was added to the character buffer.
+       * character was added to the character buffer, or no character
+       * was added because EOF was reached.
        */
 
       ___SCMOBJ e;
       ___stream_index len;
-      ___stream_index len_done;
+      ___stream_index done;
       ___U8 *byte_buf;
       int byte_buf_avail;
       int char_buf_avail;
@@ -4739,11 +4738,26 @@ ___stream_index *len_done;)
                      (d,
                       d->input_byte + d->input_byte_hi,
                       ___NBELEMS(d->input_byte) - d->input_byte_hi,
-                      &len_done))
+                      &done))
               != ___FIX(___NO_ERR))
             return e;
 
-          byte_buf_avail = (d->input_byte_hi += len_done) - d->input_byte_lo;
+          if (done == 0)
+            {
+              if (d->input_byte_hi > d->input_byte_lo)
+                {
+                  d->input_byte_lo = 0;
+                  d->input_byte_hi = 0;
+                  return ___FIX(___UNKNOWN_ERR);
+                }
+              else
+                {
+                  *len_done = 0;
+                  return ___FIX(___NO_ERR);
+                }
+            }
+
+          byte_buf_avail = (d->input_byte_hi += done) - d->input_byte_lo;
 
           /*
            * Extract as many characters as possible from byte buffer to
@@ -4843,35 +4857,46 @@ lineeditor_event *ev;)
 
   next_char:
 
-  if ((e = lineeditor_input_read (d, &c, 1, &len_done))
-       == ___FIX(___NO_ERR) &&
-      len_done == 1)
+  if ((e = lineeditor_input_read (d, &c, 1, &len_done)) == ___FIX(___NO_ERR))
     {
-      while (s < d->input_decoder.length)
+      if (len_done == 1)
         {
-          if (d->input_decoder.buffer[s].trigger == c)
+          while (s < d->input_decoder.length)
             {
-              int a = d->input_decoder.buffer[s].action;
-              if (a < LINEEDITOR_INPUT_DECODER_MAX_LENGTH)
+              if (d->input_decoder.buffer[s].trigger == c)
                 {
-                  s = a;
-                  first_char = 0;
-                  goto next_char;
+                  int a = d->input_decoder.buffer[s].action;
+                  if (a < LINEEDITOR_INPUT_DECODER_MAX_LENGTH)
+                    {
+                      s = a;
+                      first_char = 0;
+                      goto next_char;
+                    }
+                  d->input_decoder_state = 0;
+                  ev->event_kind = LINEEDITOR_INPUT_DECODER_STATE_MAX-a;
+                  return ___FIX(___NO_ERR);
                 }
-              d->input_decoder_state = 0;
-              ev->event_kind = LINEEDITOR_INPUT_DECODER_STATE_MAX-a;
+              else
+                s = d->input_decoder.buffer[s].next;
+            }
+          if (first_char)
+            {
+              ev->event_kind = LINEEDITOR_EV_KEY;
+              ev->event_char = c;
               return ___FIX(___NO_ERR);
             }
-          else
-            s = d->input_decoder.buffer[s].next;
+          s = 0; /* ignore the sequence including last character read */
         }
-      if (first_char)
+      else
         {
-          ev->event_kind = LINEEDITOR_EV_KEY;
-          ev->event_char = c;
+          /*
+           * EOF was reached.
+           */
+
+          d->input_decoder_state = 0;
+          ev->event_kind = LINEEDITOR_EV_EOF;
           return ___FIX(___NO_ERR);
         }
-      s = 0; /* ignore the sequence including last character read */
     }
 
   d->input_decoder_state = s;
@@ -6962,6 +6987,9 @@ lineeditor_event *ev;)
     {
     case LINEEDITOR_EV_NONE:
       return ___FIX(___NO_ERR);
+
+    case LINEEDITOR_EV_EOF:
+      return lineeditor_line_done (d, 1);
 
     case LINEEDITOR_EV_KEY:
       if (ev->event_char < ___UNICODE_SPACE || /* discard control characters */

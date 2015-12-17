@@ -1,6 +1,6 @@
 /* File: "os_tty.h" */
 
-/* Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -92,6 +92,7 @@ MAKE_TEXT_ATTRS(TEXT_STYLE_NORMAL,DEFAULT_TEXT_COLOR,DEFAULT_TEXT_COLOR)
 
 
 #define LINEEDITOR_EV_NONE            0
+#define LINEEDITOR_EV_EOF             -1
 #define LINEEDITOR_EV_KEY             1
 #define LINEEDITOR_EV_RETURN          2
 #define LINEEDITOR_EV_BACK            3
