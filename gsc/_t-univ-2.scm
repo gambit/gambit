@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2016 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -3390,6 +3390,11 @@ EOF
       "univ-main-defs, unknown target"))))
 
 (define (univ-rtlib-init ctx mods-and-flags)
+
+  ;; automatically defined global variables
+  (univ-glo-use ctx '##vm-main-module-id 'wr)
+  (univ-glo-use ctx '##program-descr 'wr)
+
   (^expr-statement
    (^call-prim
     (^rts-method-use 'module_registry_init)

@@ -3046,9 +3046,11 @@
   (if (member name
               '(println
                 real-time-milliseconds))
-      (univ-use-rtlib
-       ctx
-       (string->symbol (string-append "glo-" (symbol->string name))))))
+      (begin
+        (univ-glo-use ctx name 'wr) ;; automatically defined primitives
+        (univ-use-rtlib
+         ctx
+         (string->symbol (string-append "glo-" (symbol->string name)))))))
 
 (define (univ-glo-use ctx name dir)
   (let* ((t (ctx-glo-used ctx))
