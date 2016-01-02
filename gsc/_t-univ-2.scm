@@ -3389,26 +3389,27 @@ EOF
      (compiler-internal-error
       "univ-main-defs, unknown target"))))
 
-(define (univ-rtlib-defs ctx mods-and-flags)
-  (let ((init
-         (^expr-statement
-          (^call-prim
-           (^rts-method-use 'module_registry_init)
-           (^array-literal
-            'modlinkinfo
-            (map-index
-             (lambda (x i)
-               (let ((name (car x)))
-                 (univ-glo-use ctx
-                               (string->symbol
-                                (string-append module-prefix name))
-                               'rd)
-                 (^new (^type 'modlinkinfo) (^str name) (^int i))))
-             mods-and-flags))))))
-    (univ-add-init
-     (univ-rtlib-gen ctx)
-     (lambda (ctx)
-       init))))
+(define (univ-rtlib-init ctx mods-and-flags)
+  (^expr-statement
+   (^call-prim
+    (^rts-method-use 'module_registry_init)
+    (^array-literal
+     'modlinkinfo
+     (map-index
+      (lambda (x i)
+        (let ((name (car x)))
+          (univ-glo-use ctx
+                        (string->symbol
+                         (string-append module-prefix name))
+                        'rd)
+          (^new (^type 'modlinkinfo) (^str name) (^int i))))
+      mods-and-flags)))))
+
+(define (univ-rtlib-defs ctx init)
+  (univ-add-init
+   (univ-rtlib-gen ctx)
+   (lambda (ctx)
+     init)))
 
 (define (univ-rtlib-gen ctx)
 

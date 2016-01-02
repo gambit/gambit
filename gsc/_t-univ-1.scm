@@ -1930,8 +1930,8 @@
          (_
           (ctx-module-name-set! ctx (univ-rts-module-name ctx)))
 
-         (rtlib-defs
-          (univ-rtlib-defs ctx mods-and-flags))
+         (rtlib-init
+          (univ-rtlib-init ctx mods-and-flags))
 
          (_
           (univ-link-features-used ctx inputs warnings?))
@@ -1953,7 +1953,7 @@
           (univ-defs->code
            ctx
            (^prefix-class (univ-rts-module-name ctx))
-           rtlib-defs))
+           (univ-rtlib-defs ctx rtlib-init)))
 
          (code-decls
           (queue->list (ctx-decls ctx)))
