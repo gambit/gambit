@@ -1436,7 +1436,7 @@ if test "$ENABLE_THREAD_SYSTEM" != no; then
                pthread_mutex_unlock (&mut) == 0 &&
                pthread_mutex_destroy (&mut) == 0) {
              pthread_create (&thread, NULL, start_fn, NULL);
-             pthread_join (&thread, NULL);
+             pthread_join (thread, NULL);
            }
         ])],[
          AC_MSG_RESULT([yes])
