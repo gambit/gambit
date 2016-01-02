@@ -1,6 +1,6 @@
 # makefile for misc example.
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/misc
 rootfromhere = ../..
@@ -84,7 +84,7 @@ examples: signals
 
 .scm.o1:
 	rm -f $*.o*
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -warnings $(srcdirpfx)$*.scm
 
 signals: signals.o1
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include signals

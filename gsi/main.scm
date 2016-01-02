@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -125,7 +125,6 @@
            (obj-opt?     (##assq 'obj options))
            (dynamic-opt? (##assq 'dynamic options))
            (warnings-opt? (##assq 'warnings options)))
-      (pp warnings-opt?)
       (if (##fx< 1 (##fx+
                          (if c-opt? 1 0)
                          (if link-opt? 1 0)

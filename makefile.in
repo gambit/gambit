@@ -1,6 +1,6 @@
 # makefile for Gambit system.
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -226,7 +226,7 @@ change-version: deselect-gen-for-commit
 	  if $(MAKE) bootstrap; then \
 	    misc/changev $$version_num $$new_version_num; \
 	    touch doc/gambit.txi; \
-	    cd tests; @SETDLPATH@ ../gsc/gsc -:~~bin=../bin,~~lib=../lib,~~include=../include -f -c mix.scm; mv mix.c test5.ok; cd ..; \
+	    cd tests; @SETDLPATH@ ../gsc/gsc -:~~bin=../bin,~~lib=../lib,~~include=../include -f -warnings -c mix.scm; mv mix.c test5.ok; cd ..; \
 	    if $(MAKE) bootclean && $(MAKE) -j 2 && $(MAKE) check && $(MAKE) doc && $(MAKE) select-gen-for-commit; then \
 	      if test "$(RC)" = "$(GIT)"; then \
 	        $(GIT) commit -a -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \

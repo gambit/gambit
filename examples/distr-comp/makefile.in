@@ -1,6 +1,6 @@
 # makefile for distr-comp example.
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/distr-comp
 rootfromhere = ../..
@@ -84,7 +84,7 @@ examples: distr-comp.o1 dc.o1 run
 
 .scm.o1:
 	rm -f $*.o*
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -warnings $(srcdirpfx)$*.scm
 
 run:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -e '(load "dc") (load "distr-comp") (main)'

@@ -1,6 +1,6 @@
 # makefile for ring example.
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/ring
 rootfromhere = ../..
@@ -84,7 +84,7 @@ examples: ring.o1 run
 
 .scm.o1:
 	rm -f $*.o*
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -warnings $(srcdirpfx)$*.scm
 
 run:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:h200000,m200000,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -e '(load "ring") (main "10000")'

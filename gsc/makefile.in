@@ -1,6 +1,6 @@
 # makefile for Gambit compiler.
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsc
 rootfromhere = ..
@@ -211,13 +211,13 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	fi
 
 _$(GAMBITGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
 _gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSCLIB).c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
 
 _gsc@obj@: _gsc.c
 	@BUILD_OBJ@
@@ -229,7 +229,7 @@ _gsc_@obj@: _gsc_.c
 	@BUILD_OBJ@ -D___LIBRARY
 
 .scm.c:
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c @COMPILATION_OPTIONS@ $(srcdirpfx)$*.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c @COMPILATION_OPTIONS@ $(srcdirpfx)$*.scm
 
 _gsc.c: $(srcdirpfx)$(rootfromhere)/gsi/main.scm
 

@@ -1,6 +1,6 @@
 # makefile for GUIDE library.
 
-# Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib/guide
 rootfromhere = ../..
@@ -82,7 +82,7 @@ BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
 	@BUILD_OBJ@ -D___LIBRARY
 
 .scm.c:
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:=$(srcdirpfx)$(rootfromhere) -f -c -check $(srcdirpfx)$*.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:=$(srcdirpfx)$(rootfromhere) -f -warnings -c -check $(srcdirpfx)$*.scm
 
 NORMAL_C =
 NORMAL_CPP = guideuicodeformat.cpp guideuirepl.cpp guideuihighlighter.cpp guideuihighlighterscheme.cpp guideuischeme.cpp guideuiconsoleinfo.cpp guideuitextedit.cpp guideuicont.cpp guideuienv.cpp guideuiinspector.cpp guide.cpp
