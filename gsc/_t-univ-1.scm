@@ -1851,8 +1851,7 @@
 
   (if warnings?
 
-      (let ((undefs (make-table))
-            (unrefs (make-table)))
+      (let ((undefs (make-table)))
 
         (for-each (lambda (x)
                     (let ((info (caddr x))
@@ -1864,6 +1863,22 @@
                                           (table-set! undefs name (cons (car x) files))))))
                                 (list-ref info 5))))
                   (reverse inputs))
+
+        (for-each (lambda (x)
+                    (let ((name (car x))
+                          (files (cdr x)))
+                      (display "*** WARNING -- \"")
+                      (display (symbol->string name))
+                      (display "\" is not defined,")
+                      (newline)
+                      (display "***            referenced in: ")
+                      (write files)
+                      (newline)))
+                  (table->list undefs))))
+
+  (if (and warnings? univ-all-warnings)
+
+      (let ((unrefs (make-table)))
 
         (for-each (lambda (x)
                     (let ((info (caddr x))
@@ -1881,24 +1896,15 @@
                           (files (cdr x)))
                       (display "*** WARNING -- \"")
                       (display (symbol->string name))
-                      (display "\" is not defined,")
-                      (newline)
-                      (display "***            referenced in: ")
-                      (write files)
-                      (newline)))
-                  (table->list undefs))
-
-        (for-each (lambda (x)
-                    (let ((name (car x))
-                          (files (cdr x)))
-                      (display "*** WARNING -- \"")
-                      (display (symbol->string name))
                       (display "\" is defined but not referenced,")
                       (newline)
                       (display "***            defined in: ")
                       (write files)
                       (newline)))
                   (table->list unrefs)))))
+
+(define univ-all-warnings #t)
+(set! univ-all-warnings #f)
 
 (define (univ-link targ extension? inputs output warnings?)
   (let* ((root
