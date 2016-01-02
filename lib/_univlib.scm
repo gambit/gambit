@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -319,6 +319,242 @@
 ;;(##include "_nonstd.scm")
 ;;(##include "_thread.scm")
 ;;(##include "_repl.scm")
+
+;;;----------------------------------------------------------------------------
+
+;; Dummy definitions to avoid "undefined global variable" warnings
+
+(define-prim (##absrel-timeout->timeout absrel-timeout)
+  (error "##absrel-timeout->timeout not implemented yet"))
+
+(define-prim (##current-directory . rest)
+  (error "##current-directory not implemented yet"))
+
+(define-prim (##current-input-port . rest)
+  (error "##current-input-port not implemented yet"))
+
+(define-prim (##current-output-port . rest)
+  (error "##current-output-port not implemented yet"))
+
+(define-prim (##current-time-point)
+  (error "##current-time-point not implemented yet"))
+
+(define-prim (##dynamic-wind before thunk after)
+  (error "##dynamic-wind not implemented yet"))
+
+(define ##err-code-EAGAIN -1) ;; not implemented yet
+(define ##err-code-EINTR  -2) ;; not implemented yet
+(define ##err-code-ENOENT -3) ;; not implemented yet
+
+(define-prim (##exit #!optional (status 0))
+  (error "##exit not implemented yet"))
+
+(define-prim (##exit-abnormally)
+  (error "##exit-abnormally not implemented yet"))
+
+(define-prim (##exit-with-err-code err-code)
+  (error "##exit-with-err-code not implemented yet"))
+
+(define-prim (##explode-continuation cont)
+  (error "##explode-continuation not implemented yet"))
+
+(define-prim (##explode-frame frame)
+  (error "##explode-frame not implemented yet"))
+
+(define-prim (##fail-check-absrel-time-or-false . rest)
+  (error "##fail-check-absrel-time-or-false not implemented yet"))
+
+(define-prim (##file-info path #!optional (chase? (macro-absent-obj)))
+  (error "##file-info not implemented yet"))
+
+(define-prim (##foreign-address f)
+  (error "##foreign-address not implemented yet"))
+
+(define-prim (##get-current-time! floats i)
+  (error "##get-current-time! not implemented yet"))
+
+(define-prim (##mutex-signal-and-condvar-wait! mutex condvar timeout)
+  (error "##mutex-signal-and-condvar-wait! not implemented yet"))
+
+(define-prim (##os-device-close . rest)
+  (error "##os-device-close not implemented yet"))
+
+(define-prim (##os-device-directory-open-path . rest)
+  (error "##os-device-directory-open-path not implemented yet"))
+
+(define-prim (##os-device-directory-read . rest)
+  (error "##os-device-directory-read not implemented yet"))
+
+(define-prim (##os-device-event-queue-open . rest)
+  (error "##os-device-event-queue-open not implemented yet"))
+
+(define-prim (##os-device-event-queue-read . rest)
+  (error "##os-device-event-queue-read not implemented yet"))
+
+(define-prim (##os-device-force-output . rest)
+  (error "##os-device-force-output not implemented yet"))
+
+(define-prim (##os-device-kind . rest)
+  (error "##os-device-kind not implemented yet"))
+
+(define-prim (##os-device-process-pid . rest)
+  (error "##os-device-process-pid not implemented yet"))
+
+(define-prim (##os-device-process-status . rest)
+  (error "##os-device-process-status not implemented yet"))
+
+(define-prim (##os-device-stream-default-options . rest)
+  (error "##os-device-stream-default-options not implemented yet"))
+
+(define-prim (##os-device-stream-open-path . rest)
+  (error "##os-device-stream-open-path not implemented yet"))
+
+(define-prim (##os-device-stream-open-predefined . rest)
+  (error "##os-device-stream-open-predefined not implemented yet"))
+
+(define-prim (##os-device-stream-open-process . rest)
+  (error "##os-device-stream-open-process not implemented yet"))
+
+(define-prim (##os-device-stream-options-set! . rest)
+  (error "##os-device-stream-options-set! not implemented yet"))
+
+(define-prim (##os-device-stream-read . rest)
+  (error "##os-device-stream-read not implemented yet"))
+
+(define-prim (##os-device-stream-seek . rest)
+  (error "##os-device-stream-seek not implemented yet"))
+
+(define-prim (##os-device-stream-width . rest)
+  (error "##os-device-stream-width not implemented yet"))
+
+(define-prim (##os-device-stream-write . rest)
+  (error "##os-device-stream-write not implemented yet"))
+
+(define-prim (##os-device-tty-history . rest)
+  (error "##os-device-tty-history not implemented yet"))
+
+(define-prim (##os-device-tty-history-set! . rest)
+  (error "##os-device-tty-history-set! not implemented yet"))
+
+(define-prim (##os-device-tty-history-max-length-set! . rest)
+  (error "##os-device-tty-history-max-length-set! not implemented yet"))
+
+(define-prim (##os-device-tty-history-max-length-set! . rest)
+  (error "##os-device-tty-history-max-length-set! not implemented yet"))
+
+(define-prim (##os-device-tty-history-set! . rest)
+  (error "##os-device-tty-history-set! not implemented yet"))
+
+(define-prim (##os-device-tty-mode-set! . rest)
+  (error "##os-device-tty-mode-set! not implemented yet"))
+
+(define-prim (##os-device-tty-paren-balance-duration-set! . rest)
+  (error "##os-device-tty-paren-balance-duration-set! not implemented yet"))
+
+(define-prim (##os-device-tty-text-attributes-set! . rest)
+  (error "##os-device-tty-text-attributes-set! not implemented yet"))
+
+(define-prim (##os-device-tty-type-set! . rest)
+  (error "##os-device-tty-type-set! not implemented yet"))
+
+(define-prim (##os-host-info . rest)
+  (error "##os-host-info not implemented yet"))
+
+(define-prim (##os-host-name . rest)
+  (error "##os-host-name not implemented yet"))
+
+(define-prim (##os-load-object-file . rest)
+  (error "##os-load-object-file not implemented yet"))
+
+(define-prim (##os-network-info . rest)
+  (error "##os-network-info not implemented yet"))
+
+(define-prim (##os-port-decode-chars! . rest)
+  (error "##os-port-decode-chars! not implemented yet"))
+
+(define-prim (##os-port-encode-chars! . rest)
+  (error "##os-port-encode-chars! not implemented yet"))
+
+(define-prim (##os-protocol-info . rest)
+  (error "##os-protocol-info not implemented yet"))
+
+(define-prim (##os-service-info . rest)
+  (error "##os-service-info not implemented yet"))
+
+(define-prim (##path-directory-end path)
+  (error "##path-directory-end not implemented yet"))
+
+(define-prim (##path-directory path)
+  (error "##path-directory not implemented yet"))
+
+(define-prim (##path-expand path #!optional (origin (macro-absent-obj)))
+  (error "##path-expand not implemented yet"))
+
+(define-prim (##path-extension path)
+  (error "##path-extension not implemented yet"))
+
+(define-prim (##path-normalize
+              path
+              #!optional
+              (allow-relative? (macro-absent-obj))
+              (origin (macro-absent-obj))
+              (raise-os-exception? (macro-absent-obj)))
+  (error "##path-normalize not implemented yet"))
+
+(define-prim (##path-resolve path)
+  (error "##path-resolve not implemented yet"))
+
+(define-prim (##path-strip-directory path)
+  (error "##path-strip-directory not implemented yet"))
+
+(define-prim (##path-unresolve path)
+  (error "##path-unresolve not implemented yet"))
+
+(define-prim (##raise-heap-overflow-exception)
+  (error "##raise-heap-overflow-exception not implemented yet"))
+
+(define-prim (##raise-keyword-expected-exception-nary proc . args)
+  (error "##raise-keyword-expected-exception-nary not implemented yet"))
+
+(define-prim (##raise-keyword-expected-exception proc args)
+  (error "##raise-keyword-expected-exception not implemented yet"))
+
+(define-prim (##raise-nonprocedure-operator-exception oper args code rte)
+  (error "##raise-nonprocedure-operator-exception not implemented yet"))
+
+(define-prim (##raise-os-exception message code proc . args)
+  (error "##raise-os-exception not implemented yet"))
+
+(define-prim (##raise-unknown-keyword-argument-exception proc args)
+  (error "##raise-unknown-keyword-argument-exception not implemented yet"))
+
+(define-prim (##raise-wrong-number-of-arguments-exception proc args)
+  (error "##raise-wrong-number-of-arguments-exception not implemented yet"))
+
+(define-prim (##repl #!optional (write-reason #f) (reason #f) (toplevel? #f))
+  (error "##repl not implemented yet"))
+
+(define-prim (##string->address-and-port-number
+              str
+              default-address
+              default-port-num)
+  (error "##string->address-and-port-number not implemented yet"))
+
+(define-prim (##thread-end-with-uncaught-exception! exc)
+  (error "##thread-end-with-uncaught-exception! not implemented yet"))
+
+(define-prim (##thread-sleep! absrel-timeout)
+  (error "##thread-sleep! not implemented yet"))
+
+(define-prim (##timeout->time absrel-timeout)
+  (error "##timeout->time not implemented yet"))
+
+(define-prim (##wait-for-io! condvar timeout)
+  (error "##wait-for-io! not implemented yet"))
+
+(define-prim (error message . parameters)
+  (println message)
+  (let loop () (loop)))
 
 ;;;----------------------------------------------------------------------------
 
