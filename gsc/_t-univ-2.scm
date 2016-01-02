@@ -3398,7 +3398,12 @@ EOF
             'modlinkinfo
             (map-index
              (lambda (x i)
-               (^new (^type 'modlinkinfo) (^str (car x)) (^int i)))
+               (let ((name (car x)))
+                 (univ-glo-use ctx
+                               (string->symbol
+                                (string-append module-prefix name))
+                               'rd)
+                 (^new (^type 'modlinkinfo) (^str name) (^int i))))
              mods-and-flags))))))
     (univ-add-init
      (univ-rtlib-gen ctx)

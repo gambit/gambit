@@ -1680,6 +1680,7 @@
            "zzz" ;;;;;;;;;;;;;;;;;
            (make-objs-used)
            (make-resource-set)
+           (make-table)
            (queue-empty)))
 
          (defs-procs
@@ -1706,6 +1707,7 @@
         module-name-str
         (list (list module-name-str))
         rtlib-features
+        (ctx-glo-used ctx)
         #f)
        code-decls
        code-module
@@ -1754,18 +1756,22 @@
      (else
       defs))))
 
-(define (univ-link-info-header ctx name mods-and-flags rtlib-features-used module-meta-info)
-  (^ (univ-link-info-prefix (target-name (ctx-target ctx)))
-     (object->string
-      (list (compiler-version)
-            (list (target-name (ctx-target ctx))
-                  (ctx-semantics-changing-options ctx))
-            name
-            mods-and-flags
-            rtlib-features-used
-            module-meta-info))
-     "\n\n"
-     (univ-external-libs ctx)))
+(define (univ-link-info-header ctx name mods-and-flags rtlib-features-used glo-used module-meta-info)
+  (let ((glos (table->list glo-used)))
+    (^ (univ-link-info-prefix (target-name (ctx-target ctx)))
+       (object->string
+        (list (compiler-version)
+              (list (target-name (ctx-target ctx))
+                    (ctx-semantics-changing-options ctx))
+              name
+              mods-and-flags
+              rtlib-features-used
+              (map car (keep (lambda (x) (not (eq? (cdr x) 'wr))) glos))
+              (map car (keep (lambda (x) (not (eq? (cdr x) 'rd))) glos))
+              (map car (keep (lambda (x) (eq? (cdr x) 'rdwr)) glos))
+              module-meta-info))
+       "\n\n"
+       (univ-external-libs ctx))))
 
 (define (univ-link-info-footer ctx)
   (univ-source-file-footer (target-name (ctx-target ctx))))
@@ -1824,13 +1830,75 @@
                   (append (list-ref info 3) mods-and-flags)))
           mods-and-flags))))
 
-(define (univ-link-features-used ctx inputs)
+(define (univ-link-features-used ctx inputs warnings?)
+
   (for-each (lambda (x)
-              (for-each (lambda (feature)
-                          (univ-use-rtlib ctx feature))
-                        (let ((info (caddr x)))
-                          (list-ref info 4))))
-            (reverse inputs)))
+              (let ((info (caddr x)))
+                (for-each (lambda (feature)
+                            (univ-use-rtlib ctx feature))
+                          (list-ref info 4))
+                (for-each (lambda (name)
+                            (univ-glo-use ctx name 'rd))
+                          (list-ref info 5))
+                (for-each (lambda (name)
+                            (univ-glo-use ctx name 'wr))
+                          (list-ref info 6))
+                (for-each (lambda (name)
+                            (univ-glo-use ctx name 'rd)
+                            (univ-glo-use ctx name 'wr))
+                          (list-ref info 7))))
+            (reverse inputs))
+
+  (if warnings?
+
+      (let ((undefs (make-table))
+            (unrefs (make-table)))
+
+        (for-each (lambda (x)
+                    (let ((info (caddr x))
+                          (t (ctx-glo-used ctx)))
+                      (for-each (lambda (name)
+                                  (let ((dir (table-ref t name 'rd)))
+                                    (if (eq? dir 'rd)
+                                        (let ((files (table-ref undefs name '())))
+                                          (table-set! undefs name (cons (car x) files))))))
+                                (list-ref info 5))))
+                  (reverse inputs))
+
+        (for-each (lambda (x)
+                    (let ((info (caddr x))
+                          (t (ctx-glo-used ctx)))
+                      (for-each (lambda (name)
+                                  (let ((dir (table-ref t name 'wr)))
+                                    (if (eq? dir 'wr)
+                                        (let ((files (table-ref unrefs name '())))
+                                          (table-set! unrefs name (cons (car x) files))))))
+                                (list-ref info 6))))
+                  (reverse inputs))
+
+        (for-each (lambda (x)
+                    (let ((name (car x))
+                          (files (cdr x)))
+                      (display "*** WARNING -- \"")
+                      (display (symbol->string name))
+                      (display "\" is not defined,")
+                      (newline)
+                      (display "***            referenced in: ")
+                      (write files)
+                      (newline)))
+                  (table->list undefs))
+
+        (for-each (lambda (x)
+                    (let ((name (car x))
+                          (files (cdr x)))
+                      (display "*** WARNING -- \"")
+                      (display (symbol->string name))
+                      (display "\" is defined but not referenced,")
+                      (newline)
+                      (display "***            defined in: ")
+                      (write files)
+                      (newline)))
+                  (table->list unrefs)))))
 
 (define (univ-link targ extension? inputs output warnings?)
   (let* ((root
@@ -1850,56 +1918,63 @@
            targ
            sem-changing-options
            '() ;; semantics-preserving-options
-           "" ;; module-name filled in later
+           ""  ;; module-name filled in later
            (univ-ns-prefix sem-changing-options)
            (univ-ns-prefix-class sem-changing-options)
            "zzz" ;;;;;;;;;;;;
            (make-objs-used)
            (make-resource-set)
-           (queue-empty))))
+           (make-table)
+           (queue-empty)))
 
-    (ctx-module-name-set! ctx (univ-rts-module-name ctx))
+         (_
+          (ctx-module-name-set! ctx (univ-rts-module-name ctx)))
 
-    (univ-link-features-used ctx inputs)
+         (rtlib-defs
+          (univ-rtlib-defs ctx mods-and-flags))
 
-    (let* ((features-used
-            (resource-set-stack (ctx-rtlib-features-used ctx)))
+         (_
+          (univ-link-features-used ctx inputs warnings?))
 
-           (code-entry
-            (case (target-name targ)
-              ((java)
-               (univ-defs->code
-                ctx
-                name
-                (univ-entry-defs ctx mods-and-flags)))
-              (else
-               (^))))
+         (features-used
+          (resource-set-stack (ctx-rtlib-features-used ctx)))
 
-           (code-rtlib
-            (univ-defs->code
-             ctx
-             (^prefix-class (univ-rts-module-name ctx))
-             (univ-rtlib-defs ctx mods-and-flags)))
+         (code-entry
+          (case (target-name targ)
+            ((java)
+             (univ-defs->code
+              ctx
+              name
+              (univ-entry-defs ctx mods-and-flags)))
+            (else
+             (^))))
 
-           (code-decls
-            (queue->list (ctx-decls ctx)))
+         (code-rtlib
+          (univ-defs->code
+           ctx
+           (^prefix-class (univ-rts-module-name ctx))
+           rtlib-defs))
 
-           (code
-            (^ (univ-link-info-header
-                ctx
-                name
-                mods-and-flags
-                features-used
-                #f)
-               code-entry
-               code-rtlib
-               code-decls
-               (univ-link-info-footer ctx))))
+         (code-decls
+          (queue->list (ctx-decls ctx)))
+
+         (code
+          (^ (univ-link-info-header
+              ctx
+              name
+              mods-and-flags
+              features-used
+              (ctx-glo-used ctx)
+              #f)
+             code-entry
+             code-rtlib
+             code-decls
+             (univ-link-info-footer ctx))))
 
       (call-with-output-file
           output
         (lambda (port)
-          (univ-display code port))))))
+          (univ-display code port)))))
 
 ;;TODO: add constants
 #;
@@ -2544,6 +2619,7 @@
                   (scheme-id->c-id (proc-obj-name p))
                   (ctx-objs-used global-ctx)
                   (ctx-rtlib-features-used global-ctx)
+                  (ctx-glo-used global-ctx)
                   (ctx-decls global-ctx))))
         (let ((x (proc-obj-code p)))
           (if (bbs? x)
@@ -2676,6 +2752,7 @@
          ns
          objs-used
          rtlib-features-used
+         glo-used
          decls)
   (vector target
           semantics-changing-options
@@ -2692,6 +2769,7 @@
           (make-resource-set)
           objs-used
           rtlib-features-used
+          glo-used
           decls))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
@@ -2739,8 +2817,11 @@
 (define (ctx-rtlib-features-used ctx)        (vector-ref ctx 14))
 (define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 14 x))
 
-(define (ctx-decls ctx)                      (vector-ref ctx 15))
-(define (ctx-decls-set! ctx x)               (vector-set! ctx 15 x))
+(define (ctx-glo-used ctx)                 (vector-ref ctx 15))
+(define (ctx-glo-used-set! ctx x)          (vector-set! ctx 15 x))
+
+(define (ctx-decls ctx)                    (vector-ref ctx 16))
+(define (ctx-decls-set! ctx x)             (vector-set! ctx 16 x))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -2953,7 +3034,8 @@
 (define (univ-emit-setclo ctx closure index val)
   (^closure-set! closure index val))
 
-(define (univ-glo-dependency ctx name)
+(define (univ-glo-dependency ctx name dir)
+  (univ-glo-use ctx name dir)
   (gvm-state-glo-use ctx 'rd)
   (if (member name
               '(println
@@ -2961,6 +3043,11 @@
       (univ-use-rtlib
        ctx
        (string->symbol (string-append "glo-" (symbol->string name))))))
+
+(define (univ-glo-use ctx name dir)
+  (let* ((t (ctx-glo-used ctx))
+         (x (table-ref t name #f)))
+    (table-set! t name (if (or (not x) (eq? dir x)) dir 'rdwr))))
 
 (define (univ-emit-getpeps ctx name)
   (^dict-get (gvm-state-peps-use ctx 'rd)
@@ -2972,12 +3059,12 @@
              val))
 
 (define (univ-emit-getglo ctx name)
-  (univ-glo-dependency ctx name)
+  (univ-glo-dependency ctx name 'rd)
   (^dict-get (gvm-state-glo-use ctx 'rd)
              (^str (symbol->string name))))
 
 (define (univ-emit-setglo ctx name val)
-  (univ-glo-dependency ctx name)
+  (univ-glo-dependency ctx name 'wr)
   (^dict-set (gvm-state-glo-use ctx 'rd)
              (^str (symbol->string name))
              val))
