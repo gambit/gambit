@@ -470,6 +470,24 @@
               (index (^local-var 'index))
               (old (^local-var 'old)))
 
+          (define (run mod-descr)
+            (^ (^assign (gvm-state-sp-use ctx 'wr)
+                        (^int -1))
+
+               (^push (univ-end-of-cont-marker ctx))
+
+               (^assign (^rts-field-use 'r0)
+                        (^rts-jumpable-use 'underflow))
+
+               (^assign (^rts-field-use 'nargs)
+                        (^int 0))
+
+               (^expr-statement
+                (^call-prim
+                 (^rts-method-use 'trampoline)
+                 (^cast*-jumpable
+                  (^vector-ref mod-descr (^int 1)))))))
+
           (^ (^var-declaration
               'str
               name
@@ -482,7 +500,9 @@
                          name
                          (^null)))
 
-             (^if (^not (^parens (^null? info)))
+             (^if (^null? info)
+
+                  (run module_descr)
 
                   (^ (^var-declaration
                       'int
@@ -522,23 +542,9 @@
                                                     (^int 1)))
                                                (^int 0)))
 
-                                     (^push (univ-end-of-cont-marker ctx))
-
-                                     (^assign (^rts-field-use 'r0)
-                                              (^rts-jumpable-use 'underflow))
-
-                                     (^assign (^rts-field-use 'nargs)
-                                              (^int 0))
-
-                                     (^expr-statement
-                                      (^call-prim
-                                       (^rts-method-use 'trampoline)
-                                       (^cast*-jumpable
-                                        (^vector-ref
-                                         (^array-index
-                                          (^rts-field-use 'module_table)
-                                          (^int 0))
-                                         (^int 1))))))))))))))))
+                                     (run (^array-index
+                                           (^rts-field-use 'module_table)
+                                           (^int 0))))))))))))))
 
     ((modlinkinfo)
      (rts-class
