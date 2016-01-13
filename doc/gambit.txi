@@ -38,7 +38,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit, a portable implementation of Scheme.
 
-Copyright (C) 1994-2015 Marc Feeley.
+Copyright (C) 1994-2016 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -70,7 +70,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2015 Marc Feeley.
+Copyright @copyright{} 1994-2016 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -3974,6 +3974,16 @@ the garbage collector will not be).  Note that due to other compiler
 optimizations some dead local variables may be removed regardless of
 this declaration.
 
+@item (@r{[}not@r{]} optimize-dead-definitions)
+@opindex optimize-dead-definitions
+Remove (or preserve) the dead toplevel definitions.  A toplevel
+definition is dead if the evaluation of its expression can't possibly
+cause a side-effect and it is not referenced by toplevel expressions
+of the programs or toplevel definitions that aren't dead.  When a
+module is separately compiled and some of its definitions are only
+used by other modules, this declaration must be used with care to keep
+definitions that are used by other modules.
+
 @item (@var{number-type} @var{primitive}@dots{})
 @opindex generic
 @opindex fixnum
@@ -4020,6 +4030,7 @@ The default declarations used by the compiler are equivalent to:
   (proper-tail-calls)
   (not generative-lambda)
   (optimize-dead-local-variables)
+  (not optimize-dead-definitions)
   (generic)
   (mostly-fixnum-flonum)
 )
@@ -16043,7 +16054,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit system release @value{VERSION} is Copyright @copyright{}
-1994-2015 by Marc Feeley, all rights reserved.  The Gambit system
+1994-2016 by Marc Feeley, all rights reserved.  The Gambit system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two

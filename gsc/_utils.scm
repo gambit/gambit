@@ -2,7 +2,7 @@
 
 ;;; File: "_utils.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -408,6 +408,9 @@
 
 (define (ptset-empty)              ; return the empty set
   '())
+
+(define (list->ptset lst)          ; convert list to set
+  lst)
 
 (define (ptset->list set)          ; convert set to list
   set)
@@ -1135,11 +1138,20 @@
 
 ;; Parse tree sets
 
-(define ptset-empty-set
-  (vector '() '() '() '() '() '() '() '() '() '() '()))
-
 (define (ptset-empty)              ; return the empty set
   (vector '() '() '() '() '() '() '() '() '() '() '()))
+
+(define ptset-empty-set
+  (ptset-empty))
+
+(define (list->ptset lst)          ; convert list to set
+  (let ((set (ptset-empty)))
+    (let loop ((lst lst))
+      (if (pair? lst)
+          (begin
+            (ptset-adjoin set (car lst))
+            (loop (cdr lst)))
+          set))))
 
 (define (ptset->list set)          ; convert set to list
   (append-lists (vect->list set)))

@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -256,7 +256,16 @@
   (if (eq? (node-fv node) #t)
     (let ((x (varset-union-multi (map free-variables (node-children node)))))
       (node-fv-set! node
-        (cond ((ref? node)
+        (cond ((cst? node)
+               (let ((val (cst-val node)))
+                 (if (proc-obj? val)
+                     (varset-adjoin
+                      x
+                      (env-lookup-global-var
+                       (node-env node)
+                       (string->symbol (proc-obj-name val))))
+                     x)))
+              ((ref? node)
                (varset-adjoin x (ref-var node)))
               ((set? node)
                (varset-adjoin x (set-var node)))
@@ -477,6 +486,8 @@
 
 (define-boolean-decl optimize-dead-local-variables-sym)
 
+(define-boolean-decl optimize-dead-definitions-sym)
+
 (define (scheme-dialect env) ; returns dialect in effect
   (declaration-value 'dialect #f gambit-scheme-sym env))
 
@@ -561,6 +572,9 @@
 
 (define (optimize-dead-local-variables? env) ; true iff dead local variables should be optimized
   (declaration-value optimize-dead-local-variables-sym #f #t env))
+
+(define (optimize-dead-definitions? env) ; true iff dead definitions should be optimized
+  (declaration-value optimize-dead-definitions-sym #f #f env))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

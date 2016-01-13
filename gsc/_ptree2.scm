@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -26,11 +26,16 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (normalize-program ptrees)
-  (let* ((lst1 (expand-primitive-calls ptrees))
-         (lst2 (assignment-convert lst1))
-         (lst3 (beta-reduce lst2))
-         (lst4 (lambda-lift lst3)))
-    lst4))
+  (let* ((lst (expand-primitive-calls ptrees))
+         (lst (assignment-convert lst))
+         (lst (beta-reduce lst))
+         (lst (lambda-lift lst))
+         (lst (remove-dead-defs lst)))
+
+    (if (null? lst) ;; must return at least one ptree
+        (list (new-cst (expression->source void-object #f) (node-env (car ptrees))
+                void-object))
+        lst)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1373,6 +1378,66 @@
   (for-each (lambda (child) (ll-rename! child))
             (node-children ptree)))
 
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;
+;; Dead definition removal:
+;; -----------------------
+
+;; (remove-dead-defs lst) takes a list of parse-trees and returns a
+;; list where dead toplevel definitions have been removed.  A toplevel
+;; definition is dead if it is in the scope of a
+;; "optimize-dead-definitions" declaration, the variable it defines is
+;; not referenced in a toplevel expression or in the expression of a
+;; non-dead toplevel definition, and the initializing expression has
+;; no possible side-effects.  The algorithm for determining deadness
+;; is thus similar to a GC which determines reachability from roots
+;; which are the toplevel expressions and definitions with possible
+;; side-effects or in the scope of a "not optimize-dead-definitions"
+;; declaration.
+
+(define (remove-dead-defs lst)
+
+  (define (initially-dead-def? ptree)
+    (and (optimize-dead-definitions? (node-env ptree))
+         (side-effects-impossible? (def-val ptree))))
+
+  (let ((useful-ptrees
+         (list->ptset
+          (keep (lambda (ptree)
+                  (if (def? ptree)
+                      (not (initially-dead-def? ptree))
+                      #t))
+                lst)))
+        (useful-vars
+         (varset-empty)))
+
+    (define (add-vars vars)
+      (for-each
+       (lambda (var)
+         (if (not (varset-member? var useful-vars))
+             (begin
+               (set! useful-vars (varset-adjoin useful-vars var))
+               (for-each (lambda (ptree)
+                           (if (not (ptset-member? ptree useful-ptrees))
+                               (begin
+                                 (ptset-adjoin useful-ptrees ptree)
+                                 (add-vars (free-variables ptree)))))
+                         (ptset->list (var-sets var))))))
+       (varset->list vars)))
+
+    (add-vars
+     (varset-union-multi
+      (map (lambda (ptree)
+             (free-variables
+              (if (def? ptree)
+                  (def-val ptree)
+                  ptree)))
+           (ptset->list useful-ptrees))))
+
+    (keep (lambda (ptree)
+            (ptset-member? ptree useful-ptrees))
+          lst)))
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; Debugging stuff:
@@ -2506,391 +2571,391 @@
                     (if sfun? "END_SFUN" "END_CFUN"))
                   nl-str
                   (if sfun?
-                    (string-append "return " c-id ";" nl-str)
+                    (string-append "return " c-id ";" nl-str) ;
                     ""))))
-           (if indirect-access-result
+               (if indirect-access-result
 
-             (c-preproc-define
-              c-id
-              ""
-              (string-append
-               c-id-prefix
-               (if sfun? "SFUN_CAST_AND_DEREF(" "CFUN_CAST_AND_DEREF(")
-               (c-type-decl result-typ "*")
-               ","
-               (if (vector-ref indirect-access-result 1)
-                   ""
-                   "&")
-               c-id "_voidstar)")
-              body)
-
-             body))))))
-
-(define (comma-separated strs)
-  (if (null? strs)
-    ""
-    (string-append
-      (car strs)
-      (apply string-append
-             (map (lambda (s) (string-append "," s)) (cdr strs))))))
-
-(define (c-type-decl typ inner)
-
-  (define (err)
-    (compiler-internal-error "c-type-decl, unknown C type"))
-
-  (define (prefix-inner str)
-    (if (and (> (string-length inner) 0)
-             (c-id-subsequent? (string-ref inner 0)))
-      (string-append str " " inner)
-      (string-append str inner)))
-
-  (let ((t (source-code typ)))
-    (cond ((pair? t)
-           (let ((head (source-code (car t))))
-             (cond ((eq? head struct-sym)
-                    (prefix-inner
-                      (string-append "struct " (source-code (cadr t)))))
-                   ((eq? head union-sym)
-                    (prefix-inner
-                      (string-append "union " (source-code (cadr t)))))
-                   ((eq? head type-sym)
-                    (prefix-inner
-                      (source-code (cadr t))))
-                   ((or (eq? head pointer-sym)
-                        (eq? head nonnull-pointer-sym))
-                    (c-type-decl (cadr t)
-                                 (string-append "*" inner)))
-                   ((or (eq? head function-sym)
-                        (eq? head nonnull-function-sym))
-                    (c-type-decl (caddr t)
-                                 (string-append
-                                   "(*" inner ") "
-                                   (c-param-list-with-types
-                                     (source-code (cadr t))))))
-                   (else
-                    (err)))))
-          ((string? t)
-           (prefix-inner t))
-          ((symbol-object? t)
-           (let ((x (assq t c-interface-types)))
-             (if x
-               (let ((def (cdr x)))
-                 (case (vector-ref def 0)
-                   ((c-type)
-                    (prefix-inner (vector-ref def 1)))
-                   (else
-                    (c-type-decl (vector-ref def 1) inner))))
-               (err))))
-          (else
-           (err)))))
-
-(define (c-param-list-with-types typs)
-  (if (null? typs)
-    (string-append c-id-prefix "PVOID")
-    (string-append
-      c-id-prefix
-      "P(("
-      (comma-separated (map (lambda (typ) (c-type-decl typ "")) typs))
-      "),())")))
-
-(define (c-param-id numbered-typ)
-  (c-argument #f numbered-typ))
-
-(define (c-param-list-with-ids numbered-typs)
-  (if (null? numbered-typs)
-    (string-append c-id-prefix "PVOID")
-    (string-append
-      c-id-prefix
-      "P(("
-      (comma-separated
-        (map (lambda (t) (c-type-decl (car t) (c-param-id t)))
-             numbered-typs))
-      "),("
-      (comma-separated (map c-param-id numbered-typs))
-      ")"
-      (apply string-append
-             (map (lambda (t)
+                   (c-preproc-define
+                    c-id
+                    ""
                     (string-append
-                     nl-str
-                     (c-type-decl (car t) (c-param-id t))
-                     ";"))
-                  numbered-typs))
-      ")")))
-
-(define (c-function-decl param-typs result-typ id scope body)
-  (let ((numbered-typs (number-from-1 param-typs)))
-    (let ((function-decl
-           (c-type-decl result-typ
-                        (string-append
-                          id
-                          " "
-                          (if body
-                            (c-param-list-with-ids numbered-typs)
-                            (c-param-list-with-types param-typs))))))
-      (if body
-        (string-append
-          scope " "
-          function-decl nl-str
-          "{" nl-str body "}" nl-str)
-        (string-append
-          function-decl ";" nl-str)))))
-
-(define (c-function param-typs result-typ proc-name c-defined? scope)
-  (let ((proc-val
-         (if c-defined?
-           (string-append
-            c-id-prefix "MLBL(" c-id-prefix "C_LBL_" proc-name ")")
-           (string-append
-            c-id-prefix "FAL"))))
-
-    (define (make-body set-result-code cleanup?)
-      (string-append
-        c-id-prefix "BEGIN_SFUN_BODY" nl-str
-        (let convert ((numbered-typs (number-from-1 param-typs)))
-          (if (null? numbered-typs)
-            (string-append
-              c-id-prefix
-              (cond ((void-type? result-typ)
-                     "SFUN_CALL_VOID")
-                    ((scmobj-type? result-typ)
-                     "SFUN_CALL_SCMOBJ")
-                    (else
-                     "SFUN_CALL"))
-              nl-str)
-            (let ((numbered-typ (car numbered-typs)))
-              (string-append
-                c-id-prefix
-                "SFUN_ARG("
-                (number->string (cdr numbered-typ))
-                ","
-                (c-argument #t numbered-typ)
-                ")" nl-str
-                (convert (cdr numbered-typs))))))
-        set-result-code
-        c-id-prefix "END_SFUN_BODY" nl-str))
-
-    (add-c-decl
-     (c-function-decl param-typs
-                      result-typ
-                      proc-name
-                      scope
-                      (c-make-function proc-val
-                                       param-typs
-                                       result-typ
-                                       make-body)))))
-
-(define (fn-param-converter typ)
-  (let ((function-c-type (c-type-decl typ "")))
-    (cond ((assoc function-c-type c-interface-converters)
-           =>
-           cdr)
-          (else
-           (let* ((t
-                   (source-code typ))
-                  (param-typs
-                   (source-code (cadr t)))
-                  (result-typ
-                   (caddr t))
-                  (i
-                   c-interface-converter-count)
-                  (converter
-                   (string-append
-                    c-id-prefix
-                    "converter"
-                    (number->string i))))
-             (set! c-interface-converter-count
-               (+ i 1))
-             (set! c-interface-converters
-               (cons (cons function-c-type converter)
-                     c-interface-converters))
-             (c-function
-              param-typs
-              result-typ
-              converter
-              #f
-              (string-append c-id-prefix "LOCAL"))
-             converter)))))
-
-(define (build-c-define param-typs result-typ proc-name scope)
-  (c-function param-typs result-typ proc-name #t scope))
-
-(define (strip-param-typs param-typs)
-  param-typs);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define (build-c-lambda param-typs result-typ proc-name)
-  (let* ((index
-           (number->string c-interface-proc-count))
-         (scheme-name
-           (string-append module-prefix c-interface-module-name "#" index))
-         (c-name
-           (string-append c-id-prefix (scheme-id->c-id scheme-name)))
-         (arity
-           (length param-typs))
-         (stripped-param-typs
-           (strip-param-typs param-typs)))
-
-    (define (make-body set-result-code cleanup?)
-      (string-append
-        c-id-prefix
-        (if cleanup? "BEGIN_CFUN_BODY_CLEANUP" "BEGIN_CFUN_BODY")
-        nl-str
-        (c-preproc-define-default-empty
-          (string-append c-id-prefix "AT_END")
-          (let ((c-id
-                 (c-result #f #f))
-                (indirect-access-result
-                 (type-accessed-indirectly? result-typ)))
-
-            (define (assign-result result)
-              (cond ((void-type? result-typ)
-                     (string-append result ";"))
-                    (indirect-access-result
+                     c-id-prefix
+                     (if sfun? "SFUN_CAST_AND_DEREF(" "CFUN_CAST_AND_DEREF(")
+                     (c-type-decl result-typ "*")
+                     ","
                      (if (vector-ref indirect-access-result 1)
-                         (string-append
-                          c-id-prefix
-                          "CFUN_ASSIGN_"
-                          (vector-ref indirect-access-result 0)
-                          "("
-                          (vector-ref indirect-access-result 1)
-                          ","
-                          c-id "_voidstar,"
-                          result
-                          ")")
-                         (string-append
-                          c-id-prefix
-                          "CFUN_ASSIGN_"
-                          (vector-ref indirect-access-result 0)
-                          "("
-                          c-id "_voidstar,"
-                          result
-                          ")")))
-                    (else
-                     (string-append
-                      c-id-prefix
-                      "CFUN_ASSIGN("
-                      c-id ","
-                      result
-                      ")"))))
+                         ""
+                         "&")
+                     c-id "_voidstar)")
+                    body)
 
-            (if (valid-c-or-c++-function-id? proc-name)
+                   body))))))
 
-                (string-append
-                 (assign-result
-                  (string-append
-                   proc-name "("
-                   (comma-separated
-                    (map c-param-id (number-from-1 stripped-param-typs)))
-                   ")"))
-                 nl-str)
+                       (define (comma-separated strs)
+                         (if (null? strs)
+                             ""
+                             (string-append
+                              (car strs)
+                              (apply string-append
+                                     (map (lambda (s) (string-append "," s)) (cdr strs))))))
 
-                (let ((end-of-code
-                       (string-append c-id-prefix
-                                      "return_"
-                                      (scheme-id->c-id scheme-name))))
-                  (if (void-type? result-typ)
-                      (c-preproc-define
-                       (string-append c-id-prefix "return")
-                       ""
-                       (string-append
-                        "goto " end-of-code)
-                       (string-append
-                        proc-name nl-str
-                        end-of-code ":;" nl-str))
-                      (c-preproc-define
-                       (string-append c-id-prefix "return")
-                       (string-append "(" c-id-prefix "val" ")")
-                       (string-append
-                        "do { " (assign-result (string-append c-id-prefix "val"))
-                        " goto " end-of-code "; } while (0)")
-                       (string-append
-                        proc-name nl-str
-                        end-of-code ":;" nl-str)))))))
+                       (define (c-type-decl typ inner)
 
-        set-result-code
-        c-id-prefix
-        (if cleanup? "END_CFUN_BODY_CLEANUP" "END_CFUN_BODY")
-        nl-str))
+                         (define (err)
+                           (compiler-internal-error "c-type-decl, unknown C type"))
 
-    (add-c-proc
-      (make-c-proc scheme-name
-                   c-name
-                   arity
-                   (c-make-function #f
-                                    stripped-param-typs
-                                    result-typ
-                                    make-body)))
-    scheme-name))
+                         (define (prefix-inner str)
+                           (if (and (> (string-length inner) 0)
+                                    (c-id-subsequent? (string-ref inner 0)))
+                               (string-append str " " inner)
+                               (string-append str inner)))
 
-(define (scheme-id->c-id s)
-  (let loop1 ((i (- (string-length s) 1)) (lst '()))
-    (if (>= i 0)
-      (let ((c (string-ref s i)))
-        (cond ((char=? c #\_)
-               (loop1 (- i 1) (cons c (cons c lst))))
-              ((c-id-subsequent? c)
-               (loop1 (- i 1) (cons c lst)))
-              (else
-               (let ((n (character->unicode c)))
-                 (if (= n 0)
-                   (loop1 (- i 1) (cons #\_ (cons #\0 (cons #\_ lst))))
-                   (let loop2 ((n n) (lst (cons #\_ lst)))
-                     (if (> n 0)
-                       (loop2 (quotient n 16)
-                              (cons (string-ref "0123456789abcdef"
-                                                (modulo n 16))
-                                    lst))
-                       (loop1 (- i 1) (cons #\_ lst)))))))))
-      (list->str lst))))
+                         (let ((t (source-code typ)))
+                           (cond ((pair? t)
+                                  (let ((head (source-code (car t))))
+                                    (cond ((eq? head struct-sym)
+                                           (prefix-inner
+                                            (string-append "struct " (source-code (cadr t)))))
+                                          ((eq? head union-sym)
+                                           (prefix-inner
+                                            (string-append "union " (source-code (cadr t)))))
+                                          ((eq? head type-sym)
+                                           (prefix-inner
+                                            (source-code (cadr t))))
+                                          ((or (eq? head pointer-sym)
+                                               (eq? head nonnull-pointer-sym))
+                                           (c-type-decl (cadr t)
+                                                        (string-append "*" inner)))
+                                          ((or (eq? head function-sym)
+                                               (eq? head nonnull-function-sym))
+                                           (c-type-decl (caddr t)
+                                                        (string-append
+                                                         "(*" inner ") "
+                                                         (c-param-list-with-types
+                                                          (source-code (cadr t))))))
+                                          (else
+                                           (err)))))
+                                 ((string? t)
+                                  (prefix-inner t))
+                                 ((symbol-object? t)
+                                  (let ((x (assq t c-interface-types)))
+                                    (if x
+                                        (let ((def (cdr x)))
+                                          (case (vector-ref def 0)
+                                            ((c-type)
+                                             (prefix-inner (vector-ref def 1)))
+                                            (else
+                                             (c-type-decl (vector-ref def 1) inner))))
+                                        (err))))
+                                 (else
+                                  (err)))))
 
-(define (c-id-initial? c) ; c is one of #\A..#\Z, #\a..#\z, #\_
-  (let ((n (character->unicode c)))
-    (or (and (>= n 65) (<= n 90))
-        (and (>= n 97) (<= n 122))
-        (= n 95))))
+                       (define (c-param-list-with-types typs)
+                         (if (null? typs)
+                             (string-append c-id-prefix "PVOID")
+                             (string-append
+                              c-id-prefix
+                              "P(("
+                              (comma-separated (map (lambda (typ) (c-type-decl typ "")) typs))
+                              "),())")))
 
-(define (c-id-subsequent? c) ; c is one of #\A..#\Z, #\a..#\z, #\_, #\0..#\9
-  (let ((n (character->unicode c)))
-    (or (and (>= n 65) (<= n 90))
-        (and (>= n 97) (<= n 122))
-        (= n 95)
-        (and (>= n 48) (<= n 57)))))
+                       (define (c-param-id numbered-typ)
+                         (c-argument #f numbered-typ))
 
-(define (valid-c-id? id type?)
-  (let ((n (string-length id)))
-    (and (> n 0)
-         (c-id-initial? (string-ref id 0))
-         (let loop ((i 1) (depth 0))
-           (if (< i n)
-               (let ((c (string-ref id i)))
-                 (cond ((and (< (+ i 2) n)
-                             (char=? #\: c)
-                             (char=? #\: (string-ref id (+ i 1)))
-                             (c-id-initial? (string-ref id (+ i 2))))
-                        (loop (+ i 3) depth))
-                       ((and type?
-                             (< (+ i 1) n)
-                             (char=? #\< c)
-                             (c-id-initial? (string-ref id (+ i 1))))
-                        (loop (+ i 2) (+ depth 1)))
-                       ((and (< (+ i 1) n)
-                             (char=? #\, c)
-                             (c-id-initial? (string-ref id (+ i 1)))
-                             (> depth 0))
-                        (loop (+ i 2) depth))
-                       ((and (char=? #\> c)
-                             (> depth 0))
-                        (loop (+ i 1) (- depth 1)))
-                       ((c-id-subsequent? c)
-                        (loop (+ i 1) depth))
-                       (else
-                        #f)))
-               (= depth 0))))))
+                       (define (c-param-list-with-ids numbered-typs)
+                         (if (null? numbered-typs)
+                             (string-append c-id-prefix "PVOID")
+                             (string-append
+                              c-id-prefix
+                              "P(("
+                              (comma-separated
+                               (map (lambda (t) (c-type-decl (car t) (c-param-id t)))
+                                    numbered-typs))
+                              "),("
+                              (comma-separated (map c-param-id numbered-typs))
+                              ")"
+                              (apply string-append
+                                     (map (lambda (t)
+                                            (string-append
+                                             nl-str
+                                             (c-type-decl (car t) (c-param-id t))
+                                             ";"))
+                                          numbered-typs))
+                              ")")))
 
-(define (valid-c-or-c++-function-id? id)
-  (valid-c-id? id #f))
+                       (define (c-function-decl param-typs result-typ id scope body)
+                         (let ((numbered-typs (number-from-1 param-typs)))
+                           (let ((function-decl
+                                  (c-type-decl result-typ
+                                               (string-append
+                                                id
+                                                " "
+                                                (if body
+                                                    (c-param-list-with-ids numbered-typs)
+                                                    (c-param-list-with-types param-typs))))))
+                             (if body
+                                 (string-append
+                                  scope " "
+                                  function-decl nl-str
+                                  "{" nl-str body "}" nl-str)
+                                 (string-append
+                                  function-decl ";" nl-str)))))
 
-(define (valid-c-or-c++-type-id? id)
-  (valid-c-id? id #t))
+                       (define (c-function param-typs result-typ proc-name c-defined? scope)
+                         (let ((proc-val
+                                (if c-defined?
+                                    (string-append
+                                     c-id-prefix "MLBL(" c-id-prefix "C_LBL_" proc-name ")")
+                                    (string-append
+                                     c-id-prefix "FAL"))))
+
+                           (define (make-body set-result-code cleanup?)
+                             (string-append
+                              c-id-prefix "BEGIN_SFUN_BODY" nl-str
+                              (let convert ((numbered-typs (number-from-1 param-typs)))
+                                (if (null? numbered-typs)
+                                    (string-append
+                                     c-id-prefix
+                                     (cond ((void-type? result-typ)
+                                            "SFUN_CALL_VOID")
+                                           ((scmobj-type? result-typ)
+                                            "SFUN_CALL_SCMOBJ")
+                                           (else
+                                            "SFUN_CALL"))
+                                     nl-str)
+                                    (let ((numbered-typ (car numbered-typs)))
+                                      (string-append
+                                       c-id-prefix
+                                       "SFUN_ARG("
+                                       (number->string (cdr numbered-typ))
+                                       ","
+                                       (c-argument #t numbered-typ)
+                                       ")" nl-str
+                                       (convert (cdr numbered-typs))))))
+                              set-result-code
+                              c-id-prefix "END_SFUN_BODY" nl-str))
+
+                           (add-c-decl
+                            (c-function-decl param-typs
+                                             result-typ
+                                             proc-name
+                                             scope
+                                             (c-make-function proc-val
+                                                              param-typs
+                                                              result-typ
+                                                              make-body)))))
+
+                       (define (fn-param-converter typ)
+                         (let ((function-c-type (c-type-decl typ "")))
+                           (cond ((assoc function-c-type c-interface-converters)
+                                  =>
+                                  cdr)
+                                 (else
+                                  (let* ((t
+                                          (source-code typ))
+                                         (param-typs
+                                          (source-code (cadr t)))
+                                         (result-typ
+                                          (caddr t))
+                                         (i
+                                          c-interface-converter-count)
+                                         (converter
+                                          (string-append
+                                           c-id-prefix
+                                           "converter"
+                                           (number->string i))))
+                                    (set! c-interface-converter-count
+                                          (+ i 1))
+                                    (set! c-interface-converters
+                                          (cons (cons function-c-type converter)
+                                                c-interface-converters))
+                                    (c-function
+                                     param-typs
+                                     result-typ
+                                     converter
+                                     #f
+                                     (string-append c-id-prefix "LOCAL"))
+                                    converter)))))
+
+                       (define (build-c-define param-typs result-typ proc-name scope)
+                         (c-function param-typs result-typ proc-name #t scope))
+
+                       (define (strip-param-typs param-typs)
+                         param-typs) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+                       (define (build-c-lambda param-typs result-typ proc-name)
+                         (let* ((index
+                                 (number->string c-interface-proc-count))
+                                (scheme-name
+                                 (string-append module-prefix c-interface-module-name "#" index))
+                                (c-name
+                                 (string-append c-id-prefix (scheme-id->c-id scheme-name)))
+                                (arity
+                                 (length param-typs))
+                                (stripped-param-typs
+                                 (strip-param-typs param-typs)))
+
+                           (define (make-body set-result-code cleanup?)
+                             (string-append
+                              c-id-prefix
+                              (if cleanup? "BEGIN_CFUN_BODY_CLEANUP" "BEGIN_CFUN_BODY")
+                              nl-str
+                              (c-preproc-define-default-empty
+                               (string-append c-id-prefix "AT_END")
+                               (let ((c-id
+                                      (c-result #f #f))
+                                     (indirect-access-result
+                                      (type-accessed-indirectly? result-typ)))
+
+                                 (define (assign-result result)
+                                   (cond ((void-type? result-typ)
+                                          (string-append result ";"))
+                                         (indirect-access-result
+                                          (if (vector-ref indirect-access-result 1)
+                                              (string-append
+                                               c-id-prefix
+                                               "CFUN_ASSIGN_"
+                                               (vector-ref indirect-access-result 0)
+                                               "("
+                                               (vector-ref indirect-access-result 1)
+                                               ","
+                                               c-id "_voidstar,"
+                                               result
+                                               ")")
+                                              (string-append
+                                               c-id-prefix
+                                               "CFUN_ASSIGN_"
+                                               (vector-ref indirect-access-result 0)
+                                               "("
+                                               c-id "_voidstar,"
+                                               result
+                                               ")")))
+                                         (else
+                                          (string-append
+                                           c-id-prefix
+                                           "CFUN_ASSIGN("
+                                           c-id ","
+                                           result
+                                           ")"))))
+
+                                 (if (valid-c-or-c++-function-id? proc-name)
+
+                                     (string-append
+                                      (assign-result
+                                       (string-append
+                                        proc-name "("
+                                        (comma-separated
+                                         (map c-param-id (number-from-1 stripped-param-typs)))
+                                        ")"))
+                                      nl-str)
+
+                                     (let ((end-of-code
+                                            (string-append c-id-prefix
+                                                           "return_"
+                                                           (scheme-id->c-id scheme-name))))
+                                       (if (void-type? result-typ)
+                                           (c-preproc-define
+                                            (string-append c-id-prefix "return")
+                                            ""
+                                            (string-append
+                                             "goto " end-of-code)
+                                            (string-append
+                                             proc-name nl-str
+                                             end-of-code ":;" nl-str))
+                                           (c-preproc-define
+                                            (string-append c-id-prefix "return")
+                                            (string-append "(" c-id-prefix "val" ")")
+                                            (string-append
+                                             "do { " (assign-result (string-append c-id-prefix "val"))
+                                             " goto " end-of-code "; } while (0)")
+                                            (string-append
+                                             proc-name nl-str
+                                             end-of-code ":;" nl-str)))))))
+
+                              set-result-code
+                              c-id-prefix
+                              (if cleanup? "END_CFUN_BODY_CLEANUP" "END_CFUN_BODY")
+                              nl-str))
+
+                           (add-c-proc
+                            (make-c-proc scheme-name
+                                         c-name
+                                         arity
+                                         (c-make-function #f
+                                                          stripped-param-typs
+                                                          result-typ
+                                                          make-body)))
+                           scheme-name))
+
+                       (define (scheme-id->c-id s)
+                         (let loop1 ((i (- (string-length s) 1)) (lst '()))
+                           (if (>= i 0)
+                               (let ((c (string-ref s i)))
+                                 (cond ((char=? c #\_)
+                                        (loop1 (- i 1) (cons c (cons c lst))))
+                                       ((c-id-subsequent? c)
+                                        (loop1 (- i 1) (cons c lst)))
+                                       (else
+                                        (let ((n (character->unicode c)))
+                                          (if (= n 0)
+                                              (loop1 (- i 1) (cons #\_ (cons #\0 (cons #\_ lst))))
+                                              (let loop2 ((n n) (lst (cons #\_ lst)))
+                                                (if (> n 0)
+                                                    (loop2 (quotient n 16)
+                                                           (cons (string-ref "0123456789abcdef"
+                                                                             (modulo n 16))
+                                                                 lst))
+                                                    (loop1 (- i 1) (cons #\_ lst)))))))))
+                               (list->str lst))))
+
+                       (define (c-id-initial? c) ; c is one of #\A..#\Z, #\a..#\z, #\_
+                         (let ((n (character->unicode c)))
+                           (or (and (>= n 65) (<= n 90))
+                               (and (>= n 97) (<= n 122))
+                               (= n 95))))
+
+                       (define (c-id-subsequent? c) ; c is one of #\A..#\Z, #\a..#\z, #\_, #\0..#\9
+                         (let ((n (character->unicode c)))
+                           (or (and (>= n 65) (<= n 90))
+                               (and (>= n 97) (<= n 122))
+                               (= n 95)
+                               (and (>= n 48) (<= n 57)))))
+
+                       (define (valid-c-id? id type?)
+                         (let ((n (string-length id)))
+                           (and (> n 0)
+                                (c-id-initial? (string-ref id 0))
+                                (let loop ((i 1) (depth 0))
+                                  (if (< i n)
+                                      (let ((c (string-ref id i)))
+                                        (cond ((and (< (+ i 2) n)
+                                                    (char=? #\: c)
+                                                    (char=? #\: (string-ref id (+ i 1)))
+                                                    (c-id-initial? (string-ref id (+ i 2))))
+                                               (loop (+ i 3) depth))
+                                              ((and type?
+                                                    (< (+ i 1) n)
+                                                    (char=? #\< c)
+                                                    (c-id-initial? (string-ref id (+ i 1))))
+                                               (loop (+ i 2) (+ depth 1)))
+                                              ((and (< (+ i 1) n)
+                                                    (char=? #\, c)
+                                                    (c-id-initial? (string-ref id (+ i 1)))
+                                                    (> depth 0))
+                                               (loop (+ i 2) depth))
+                                              ((and (char=? #\> c)
+                                                    (> depth 0))
+                                               (loop (+ i 1) (- depth 1)))
+                                              ((c-id-subsequent? c)
+                                               (loop (+ i 1) depth))
+                                              (else
+                                               #f)))
+                                      (= depth 0))))))
+
+                       (define (valid-c-or-c++-function-id? id)
+                         (valid-c-id? id #f))
+
+                       (define (valid-c-or-c++-type-id? id)
+                         (valid-c-id? id #t))
 
 ;;;============================================================================

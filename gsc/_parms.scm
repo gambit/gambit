@@ -2,7 +2,7 @@
 
 ;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -123,6 +123,8 @@
 (define generative-lambda-sym  (string->canonical-symbol "generative-lambda"))
 
 (define optimize-dead-local-variables-sym (string->canonical-symbol "optimize-dead-local-variables"))
+
+(define optimize-dead-definitions-sym (string->canonical-symbol "optimize-dead-definitions"))
 
 (define generic-sym            (string->canonical-symbol "generic"))
 (define fixnum-sym             (string->canonical-symbol "fixnum"))
