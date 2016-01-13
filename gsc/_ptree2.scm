@@ -1070,6 +1070,9 @@
         ((set? ptree) ; variable guaranteed to be a global variable
          #f)
 
+        ((def? ptree) ; variable guaranteed to be a global variable
+         (side-effects-impossible? (def-val ptree)))
+
         ((tst? ptree)
          (and (side-effects-impossible? (tst-pre ptree))
               (side-effects-impossible? (tst-con ptree))
@@ -1396,17 +1399,14 @@
 ;; declaration.
 
 (define (remove-dead-defs lst)
-
-  (define (initially-dead-def? ptree)
-    (and (optimize-dead-definitions? (node-env ptree))
-         (side-effects-impossible? (def-val ptree))))
-
   (let ((useful-ptrees
          (list->ptset
           (keep (lambda (ptree)
-                  (if (def? ptree)
-                      (not (initially-dead-def? ptree))
-                      #t))
+                  (or (not (side-effects-impossible? ptree))
+                      (and (def? ptree)
+                           (not (optimize-dead-definition?
+                                 (var-name (def-var ptree))
+                                 (node-env ptree))))))
                 lst)))
         (useful-vars
          (varset-empty)))
@@ -1434,9 +1434,28 @@
                   ptree)))
            (ptset->list useful-ptrees))))
 
-    (keep (lambda (ptree)
-            (ptset-member? ptree useful-ptrees))
-          lst)))
+    (append-lists
+     (map (lambda (ptree)
+            (if (and (def? ptree)
+                     (ptset-empty? (var-refs (def-var ptree))))
+                (let ((val (def-val ptree)))
+                  (if (side-effects-impossible? val)
+                      (begin
+                        (delete-ptree val)
+                        '())
+                      (begin
+                        (ptset-remove (var-sets (def-var ptree)) ptree)
+                        (node-parent-set! val #f) ;; no parent
+                        (list val))))
+                (list ptree)))
+          (append-lists
+           (map (lambda (ptree)
+                  (if (ptset-member? ptree useful-ptrees)
+                      (list ptree)
+                      (begin
+                        (delete-ptree ptree)
+                        '())))
+                lst))))))
 
 ;;;----------------------------------------------------------------------------
 ;;

@@ -443,6 +443,13 @@
 ;;
 ;; (optimize-dead-local-variables)     optimize dead local variables
 ;; (not optimize-dead-local-variables) don't optimize dead local variables
+;;
+;; Optimizing dead definitions declarations:
+;;
+;; (optimize-dead-definitions)                compiler can remove dead defs.
+;; (optimize-dead-definitions <var1> ...)     only for these var defs.
+;; (not optimize-dead-definitions)            can't remove dead defs.
+;; (not optimize-dead-definitions <var1> ...) only for these var defs.
 
 (define-flag-decl ieee-scheme-sym   'dialect)
 (define-flag-decl r4rs-scheme-sym   'dialect)
@@ -486,7 +493,7 @@
 
 (define-boolean-decl optimize-dead-local-variables-sym)
 
-(define-boolean-decl optimize-dead-definitions-sym)
+(define-namable-boolean-decl optimize-dead-definitions-sym)
 
 (define (scheme-dialect env) ; returns dialect in effect
   (declaration-value 'dialect #f gambit-scheme-sym env))
@@ -573,8 +580,8 @@
 (define (optimize-dead-local-variables? env) ; true iff dead local variables should be optimized
   (declaration-value optimize-dead-local-variables-sym #f #t env))
 
-(define (optimize-dead-definitions? env) ; true iff dead definitions should be optimized
-  (declaration-value optimize-dead-definitions-sym #f #f env))
+(define (optimize-dead-definition? name env) ; true iff dead definition of name should be optimized
+  (declaration-value optimize-dead-definitions-sym name #f env))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

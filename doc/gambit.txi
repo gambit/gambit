@@ -3974,15 +3974,18 @@ the garbage collector will not be).  Note that due to other compiler
 optimizations some dead local variables may be removed regardless of
 this declaration.
 
-@item (@r{[}not@r{]} optimize-dead-definitions)
+@item (@r{[}not@r{]} optimize-dead-definitions @var{var}@dots{})
 @opindex optimize-dead-definitions
-Remove (or preserve) the dead toplevel definitions.  A toplevel
+Remove (or preserve) the dead toplevel definitions of the given global
+variables (all global variables if none specified).  A toplevel
 definition is dead if the evaluation of its expression can't possibly
 cause a side-effect and it is not referenced by toplevel expressions
 of the programs or toplevel definitions that aren't dead.  When a
 module is separately compiled and some of its definitions are only
 used by other modules, this declaration must be used with care to keep
-definitions that are used by other modules.
+definitions that are used by other modules, for example if @code{foo}
+is referenced in another module the following declaration should be
+used: @samp{(declare (not optimize-dead-definitions foo))}.
 
 @item (@var{number-type} @var{primitive}@dots{})
 @opindex generic
