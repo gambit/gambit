@@ -1399,14 +1399,16 @@
 ;; declaration.
 
 (define (remove-dead-defs lst)
+
+  (define (optimizable-def? ptree)
+    (optimize-dead-definitions? (var-name (def-var ptree)) (node-env ptree)))
+
   (let ((useful-ptrees
          (list->ptset
           (keep (lambda (ptree)
                   (or (not (side-effects-impossible? ptree))
                       (and (def? ptree)
-                           (not (optimize-dead-definition?
-                                 (var-name (def-var ptree))
-                                 (node-env ptree))))))
+                           (not (optimizable-def? ptree)))))
                 lst)))
         (useful-vars
          (varset-empty)))
@@ -1437,6 +1439,7 @@
     (append-lists
      (map (lambda (ptree)
             (if (and (def? ptree)
+                     (optimizable-def? ptree)
                      (ptset-empty? (var-refs (def-var ptree))))
                 (let ((val (def-val ptree)))
                   (if (side-effects-impossible? val)

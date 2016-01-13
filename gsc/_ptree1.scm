@@ -580,7 +580,7 @@
 (define (optimize-dead-local-variables? env) ; true iff dead local variables should be optimized
   (declaration-value optimize-dead-local-variables-sym #f #t env))
 
-(define (optimize-dead-definition? name env) ; true iff dead definition of name should be optimized
+(define (optimize-dead-definitions? name env) ; true iff dead definition of name should be optimized
   (declaration-value optimize-dead-definitions-sym name #f env))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
