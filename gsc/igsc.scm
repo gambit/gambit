@@ -5,7 +5,7 @@
 
 ;;; File: "igsc.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -82,7 +82,10 @@
 "_asm"
 "_x86"
 "_codegen"
-"_t-univ"
+"_t-univ-1"
+"_t-univ-2"
+"_t-univ-3"
+"_t-univ-4"
 "_t-c-1"
 "_t-c-3"
 "_t-c-2"
