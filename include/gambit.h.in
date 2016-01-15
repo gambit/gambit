@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -49,82 +49,86 @@
  * determine byte order endianness.
  */
 
-#ifndef ___CPU_x86
+#ifndef ___CPU_x86_32
 
 #ifdef I386
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef _I386
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef i386
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef _i386
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i386
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i386__
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i486
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i486__
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i586
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i586__
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i686
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __i686__
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef __ix86
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef M_I386
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef _M_I386
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef M_I86
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef _M_I86
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef _M_IX86
-#define ___CPU_x86
+#define ___CPU_x86_32
 #else
 #ifdef _X86_
+#define ___CPU_x86_32
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+
+#ifdef ___CPU_x86_32
 #define ___CPU_x86
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 #endif
 
 #endif
@@ -139,56 +143,64 @@
 #endif
 #endif
 
+#ifdef ___CPU_x86_64
+#define ___CPU_x86
 #endif
 
-#ifndef ___CPU_ppc
+#endif
+
+#ifndef ___CPU_ppc_32
 
 #ifdef PPC
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef ppc
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef __ppc
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef __ppc__
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef _ARCH_PPC
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef __POWERPC__
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef powerpc
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef _POWER
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef _ARCH_PWR
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef _ARCH_PWR2
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef _M_PPC
-#define ___CPU_ppc
+#define ___CPU_ppc_32
 #else
 #ifdef _M_MPPC
+#define ___CPU_ppc_32
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
+
+#ifdef ___CPU_ppc_32
 #define ___CPU_ppc
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 #endif
 
 #endif
@@ -197,6 +209,10 @@
 
 #ifdef __ppc_64__
 #define ___CPU_ppc_64
+#endif
+
+#ifdef ___CPU_ppc_64
+#define ___CPU_ppc
 #endif
 
 #endif
@@ -372,23 +388,7 @@
 #define ___LITTLE_ENDIAN
 #endif
 
-#ifdef ___CPU_x86_64
-#define ___LITTLE_ENDIAN
-#endif
-
 #ifdef ___CPU_ppc
-#ifdef _LITTLE_ENDIAN
-#define ___LITTLE_ENDIAN
-#endif
-#ifdef __LITTLE_ENDIAN__
-#define ___LITTLE_ENDIAN
-#endif
-#ifdef __LITTLE_ENDIAN_DATA__
-#define ___LITTLE_ENDIAN
-#endif
-#endif
-
-#ifdef ___CPU_ppc_64
 #ifdef _LITTLE_ENDIAN
 #define ___LITTLE_ENDIAN
 #endif
@@ -3366,6 +3366,25 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___CURRENTTHREAD ___ps->current_thread
 #define ___RUNQUEUE ___ps->run_queue
 
+#ifdef ___SINGLE_THREADED_VMS
+
+#define ___BTQLOCK(btq)
+#define ___BTQUNLOCK(btq)
+
+#else
+
+#define ___BTQLOCK(btq) \
+do { \
+  ___WORD ___ticket = ___FETCH_AND_ADD_WORD((___WORD volatile *)&___FIELD(btq,___BTQ_LOCK1),___FIX(1)); \
+  while (*(___WORD volatile *)&___FIELD(btq,___BTQ_LOCK2) != ___ticket) \
+    ___CPU_RELAX(); \
+  } while (0)
+
+#define ___BTQUNLOCK(btq) \
+___FETCH_AND_ADD_WORD((___WORD volatile *)&___FIELD(btq,___BTQ_LOCK2),___FIX(1))
+
+#endif
+
 #define ___THREAD_SAVE \
 if (___R0 == ___GSTATE->handler_break) \
   frame = ___STK(-___BREAK_FRAME_NEXT); \
@@ -3486,20 +3505,39 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___SYMKEY_HASH  1
 #define ___SYMKEY_NEXT  2
 #define ___SYMBOL_GLOBAL 3
+
 #define ___PROMISE_THUNK  0
 #define ___PROMISE_RESULT 1
+
 #define ___CONTINUATION_FRAME 0
 #define ___CONTINUATION_DENV  1
+
 #define ___WILL_TESTATOR 1
 #define ___WILL_ACTION   2
-#define ___THREAD_CONT        19
-#define ___THREAD_DENV        20
-#define ___THREAD_DENV_CACHE1 21
-#define ___THREAD_DENV_CACHE2 22
-#define ___THREAD_DENV_CACHE3 23
+
+#define ___BTQ_LOCK1    1
+#define ___BTQ_DEQ_NEXT 2
+#define ___BTQ_DEQ_PREV 3
+#define ___BTQ_COLOR    4
+#define ___BTQ_PARENT   5
+#define ___BTQ_LEFT     6
+#define ___BTQ_RIGHT    7
+#define ___BTQ_LEFTMOST 7
+#define ___BTQ_OWNER    8
+#define ___BTQ_LOCK2    9
+
+#define ___CONDVAR_NAME 10
+
+#define ___THREAD_CONT        21
+#define ___THREAD_DENV        22
+#define ___THREAD_DENV_CACHE1 23
+#define ___THREAD_DENV_CACHE2 24
+#define ___THREAD_DENV_CACHE3 25
+
 #define ___ENV_NAME_VAL 0
 #define ___ENV_LEFT     1
 #define ___ENV_RIGHT    2
+
 #define ___DENV_LOCAL              0
 #define ___DENV_DYNWIND            1
 #define ___DENV_INTERRUPT_MASK     2
@@ -7368,61 +7406,100 @@ typedef struct ___glo_struct
 
 #if ___WS == 4
 #ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
-#define ___USE_sync_val_compare_and_swap
+#define ___USE_sync_builtins
 #endif
 #else
 #if ___WS == 8
 #ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_8
-#define ___USE_sync_val_compare_and_swap
+#define ___USE_sync_builtins
 #endif
 #endif
 #endif
 
 
-#ifndef ___USE_sync_val_compare_and_swap
+#ifndef ___USE_sync_builtins
 #ifdef ___USE_WIN32_THREAD_SYSTEM
-#define ___USE_InterlockedCompareExchangePointer
+#define ___USE_WIN32_sync
 #else
 #ifdef ___USE_POSIX_THREAD_SYSTEM
-#define ___USE_emulated_compare_and_swap_word
+#define ___USE_emulated_sync
 #else
-#define ___USE_sequential_compare_and_swap_word
+#define ___USE_sequential_sync
 #endif
 #endif
 #endif
 
 
-#ifdef ___USE_sync_val_compare_and_swap
+#ifdef ___USE_sync_builtins
 
 #define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
 __sync_val_compare_and_swap(p,oldval,newval)
 
+#define ___FETCH_AND_ADD_WORD(p,val) \
+__sync_fetch_and_add(p,val)
+
+#define ___FETCH_AND_CLEAR_WORD(p) \
+__sync_fetch_and_and(p,0)
+
 #endif
 
 
-#ifdef ___USE_InterlockedCompareExchangePointer
+#ifdef ___USE_WIN32_sync
 
 #define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
 ___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,oldval),___CAST(void*,newval)))
 
+#if ___WS == 4
+#define ___FETCH_AND_ADD_WORD(p,val) \
+(InterlockedAdd(___CAST(LONG volatile *,p),val)-(val))
+#define ___FETCH_AND_CLEAR_WORD(p) \
+InterlockedAnd(___CAST(LONG volatile *,p),0)
+#else
+#define ___FETCH_AND_ADD_WORD(p,val) \
+(InterlockedAdd64(___CAST(LONGLONG volatile *,p),val)-(val))
+#define ___FETCH_AND_CLEAR_WORD(p) \
+InterlockedAnd64(___CAST(LONGLONG volatile *,p),0)
+#endif
+
 #endif
 
 
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
 
 #define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
 ___EXT(___emulated_compare_and_swap_word)(p,oldval,newval)
 
+#define ___FETCH_AND_ADD_WORD(p,val) \
+___EXT(___emulated_fetch_and_add_word)(p,val)
+
+#define ___FETCH_AND_CLEAR_WORD(p) \
+___EXT(___emulated_fetch_and_clear_word)(p)
+
 #endif
 
 
-#ifdef ___USE_sequential_compare_and_swap_word
+#ifdef ___USE_sequential_sync
 
 #define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
 ((___ps->temp1 = *(p)) == (oldval) && (*(p) = (newval)), ___ps->temp1)
 
+#define ___FETCH_AND_ADD_WORD(p,val) \
+(___ps->temp1 = *(p), *(p) += (val), ___ps->temp1)
+
+#define ___FETCH_AND_CLEAR_WORD(p) \
+(___ps->temp1 = *(p), *(p) = 0, ___ps->temp1)
+
 #endif
 
+#ifdef ___CPU_x86
+#ifdef __GNUC__
+#define ___CPU_RELAX() __asm__ __volatile__ ("rep nop")
+#endif
+#endif
+
+#ifndef ___CPU_RELAX
+#define ___CPU_RELAX()
+#endif
 
 typedef struct ___thread_struct
   {
@@ -7651,15 +7728,15 @@ typedef struct ___global_state_struct *___global_state;
 
 typedef struct ___sync_op_struct
   {
-    unsigned char op; /* operation requested */
-    ___WORD arg[2];   /* arguments of the operation */
+    unsigned char volatile op; /* operation requested */
+    ___WORD volatile arg[2];   /* arguments of the operation */
   } ___sync_op_struct;
 
 /* Processor structure */
 
 typedef struct ___processor_state_struct
   {
-    volatile ___WORD *stack_trip;
+    ___WORD volatile *stack_trip;
     ___WORD *stack_limit;
     ___WORD *fp;
     ___WORD *stack_start;
@@ -7685,7 +7762,7 @@ typedef struct ___processor_state_struct
 
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
-    volatile ___WORD intr_flag[___NB_INTRS];
+    ___WORD volatile intr_flag[___NB_INTRS];
 
     ___pstate_mem mem; /* memory management state */
 
@@ -7721,12 +7798,12 @@ typedef struct ___processor_state_struct
     ___thread os_thread;
 
     /* for implementation of on_all_processors */
-    volatile int sync_id0;
-    volatile ___sync_op_struct sync_op0;
-    volatile int sync_id1;
-    volatile ___sync_op_struct sync_op1;
-    volatile int sync_id2;
-    volatile ___sync_op_struct sync_op2;
+    int volatile sync_id0;
+    ___sync_op_struct sync_op0;
+    int volatile sync_id1;
+    ___sync_op_struct sync_op1;
+    int volatile sync_id2;
+    ___sync_op_struct sync_op2;
 
 #endif
   } ___processor_state_struct;
@@ -7830,7 +7907,7 @@ typedef struct ___virtual_machine_state_struct
   {
     ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
 
-    volatile int nb_processors; /* number of processors in this VM */
+    int volatile nb_processors; /* number of processors in this VM */
 
     ___vmstate_mem mem; /* memory management state */
 
@@ -7838,8 +7915,8 @@ typedef struct ___virtual_machine_state_struct
 
 #ifndef ___SINGLE_VM
 
-    volatile ___virtual_machine_state prev; /* circular list links */
-    volatile ___virtual_machine_state next;
+    ___virtual_machine_state volatile prev; /* circular list links */
+    ___virtual_machine_state volatile next;
 
     ___SCMOBJ *glos; /* Scheme global variables */
 
@@ -9199,11 +9276,18 @@ typedef struct ___global_state_struct
     void (*___free_mem_code)
        ___P((void *ptr),
             ());
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
     ___WORD (*___emulated_compare_and_swap_word)
-       ___P((volatile ___WORD *ptr,
+       ___P((___WORD volatile *ptr,
              ___WORD oldval,
              ___WORD newval),
+            ());
+    ___WORD (*___emulated_fetch_and_add_word)
+       ___P((___WORD volatile *ptr,
+             ___WORD val),
+            ());
+    ___WORD (*___emulated_fetch_and_clear_word)
+       ___P((___WORD volatile *ptr),
             ());
 #endif
 #ifndef ___THREAD_LOCAL_STORAGE_CLASS
@@ -10473,11 +10557,18 @@ ___IMP_FUNC(void,___free_mem_code)
 #endif
 
 #ifndef ___INCLUDED_FROM_OS_THREAD
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
 ___IMP_FUNC(___WORD,___emulated_compare_and_swap_word)
-   ___P((volatile ___WORD *ptr,
+   ___P((___WORD volatile *ptr,
          ___WORD oldval,
          ___WORD newval),
+        ());
+___IMP_FUNC(___WORD,___emulated_fetch_and_add_word)
+   ___P((___WORD volatile *ptr,
+         ___WORD val),
+        ());
+___IMP_FUNC(___WORD,___emulated_fetch_and_clear_word)
+   ___P((___WORD volatile *ptr),
         ());
 #endif
 #ifndef ___THREAD_LOCAL_STORAGE_CLASS

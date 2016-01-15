@@ -1,6 +1,6 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.
@@ -197,24 +197,24 @@ void ___thread_exit ___PVOID
 }
 
 
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
 
 
 ___WORD ___emulated_compare_and_swap_word
-   ___P((volatile ___WORD *ptr,
+   ___P((___WORD volatile *ptr,
          ___WORD oldval,
          ___WORD newval),
         (ptr,
          oldval,
          newval)
-volatile ___WORD *ptr;
+___WORD volatile *ptr;
 ___WORD oldval;
 ___WORD newval;)
 {
   static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
   ___WORD temp;
   ___MUTEX *mut_ptr =
-    &___thread_mod.cas_hash_mutex[___CAST(___SIZE_T,ptr) % CAS_HASH_MUTEX_SIZE];
+    &___thread_mod.hash_mutex[___CAST(___SIZE_T,ptr) % HASH_MUTEX_SIZE];
 
   if (!___MUTEX_LOCK(*mut_ptr))
     ___fatal_error (msgs); /* should never happen, but just in case... */
@@ -223,6 +223,57 @@ ___WORD newval;)
 
   if (temp == oldval)
     *ptr = newval;
+
+  if (!___MUTEX_UNLOCK(*mut_ptr))
+    ___fatal_error (msgs); /* should never happen, but just in case... */
+
+  return temp;
+}
+
+
+___WORD ___emulated_fetch_and_add_word
+   ___P((___WORD volatile *ptr,
+         ___WORD val),
+        (ptr,
+         val)
+___WORD volatile *ptr;
+___WORD val;)
+{
+  static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
+  ___WORD temp;
+  ___MUTEX *mut_ptr =
+    &___thread_mod.hash_mutex[___CAST(___SIZE_T,ptr) % HASH_MUTEX_SIZE];
+
+  if (!___MUTEX_LOCK(*mut_ptr))
+    ___fatal_error (msgs); /* should never happen, but just in case... */
+
+  temp = *ptr;
+
+  *ptr += val;
+
+  if (!___MUTEX_UNLOCK(*mut_ptr))
+    ___fatal_error (msgs); /* should never happen, but just in case... */
+
+  return temp;
+}
+
+
+___WORD ___emulated_fetch_and_clear_word
+   ___P((___WORD volatile *ptr),
+        (ptr)
+___WORD volatile *ptr;)
+{
+  static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
+  ___WORD temp;
+  ___MUTEX *mut_ptr =
+    &___thread_mod.hash_mutex[___CAST(___SIZE_T,ptr) % HASH_MUTEX_SIZE];
+
+  if (!___MUTEX_LOCK(*mut_ptr))
+    ___fatal_error (msgs); /* should never happen, but just in case... */
+
+  temp = *ptr;
+
+  *ptr = 0;
 
   if (!___MUTEX_UNLOCK(*mut_ptr))
     ___fatal_error (msgs); /* should never happen, but just in case... */
@@ -299,7 +350,7 @@ void *ptr;)
 /*---------------------------------------------------------------------------*/
 
 
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
 
 
 ___HIDDEN void hash_mutex_destroy
@@ -349,10 +400,10 @@ ___SCMOBJ ___setup_thread_module ___PVOID
 
   if (___thread_mod.refcount == 0)
     {
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
 
-      err = hash_mutex_init (___thread_mod.cas_hash_mutex,
-                             CAS_HASH_MUTEX_SIZE);
+      err = hash_mutex_init (___thread_mod.hash_mutex,
+                             HASH_MUTEX_SIZE);
 
       if (err != ___FIX(___NO_ERR))
         return err;
@@ -366,8 +417,8 @@ ___SCMOBJ ___setup_thread_module ___PVOID
       if (pthread_key_create (&___thread_mod.tls_ptr_key, NULL) != 0)
         {
           err = err_code_from_errno ();
-          hash_mutex_destroy (___thread_mod.cas_hash_mutex,
-                              CAS_HASH_MUTEX_SIZE);
+          hash_mutex_destroy (___thread_mod.hash_mutex,
+                              HASH_MUTEX_SIZE);
         }
 
 #endif
@@ -377,8 +428,8 @@ ___SCMOBJ ___setup_thread_module ___PVOID
       if ((___thread_mod.tls_ptr_index = TlsAlloc ()) == TLS_OUT_OF_INDEXES)
         {
           err = err_code_from_GetLastError ();
-          hash_mutex_destroy (___thread_mod.cas_hash_mutex,
-                              CAS_HASH_MUTEX_SIZE);
+          hash_mutex_destroy (___thread_mod.hash_mutex,
+                              HASH_MUTEX_SIZE);
         }
 
 #endif
@@ -396,10 +447,10 @@ void ___cleanup_thread_module ___PVOID
 {
   if (--___thread_mod.refcount == 0)
     {
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
 
-      hash_mutex_destroy (___thread_mod.cas_hash_mutex,
-                          CAS_HASH_MUTEX_SIZE);
+      hash_mutex_destroy (___thread_mod.hash_mutex,
+                          HASH_MUTEX_SIZE);
 
 #endif
 

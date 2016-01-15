@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -9946,17 +9946,6 @@ ___SCMOBJ ___os_condvar_select
 ___SCMOBJ run_queue;
 ___SCMOBJ timeout;)
 {
-/******************/
-#define ___BTQ_DEQ_NEXT 1
-#define ___BTQ_DEQ_PREV 2
-#define ___BTQ_COLOR    3
-#define ___BTQ_PARENT   4
-#define ___BTQ_LEFT     5
-#define ___BTQ_RIGHT    6
-#define ___BTQ_LEFTMOST 6
-#define ___BTQ_OWNER    7
-#define ___CONDVAR_NAME 8
-
   ___SCMOBJ e;
   ___time to;
   ___device *devs[MAX_CONDVARS];

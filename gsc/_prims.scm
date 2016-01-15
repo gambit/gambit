@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -974,6 +974,9 @@
 
 ("##thread-save!"                     1     #t ()    1113 (#f)    extended)
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)
+
+("##btq-lock!"                        (1)   #t ()    0    #f      extended)
+("##btq-unlock!"                      (1)   #t ()    0    #f      extended)
 
 ("##continuation-capture"             1     #t ()    1113 (#f)    extended)
 ("##continuation-graft"               2     #t ()    2203 #f      extended)

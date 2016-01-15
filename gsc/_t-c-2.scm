@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3813,6 +3813,9 @@
 
 (targ-op "##current-thread"   (targ-apply-simp-s #f #f #f "CURRENTTHREAD"))
 (targ-op "##run-queue"        (targ-apply-simp-s #f #f #f "RUNQUEUE"))
+
+(targ-op "##btq-lock!"        (targ-apply-simp-u #f #t 0 "BTQLOCK"))
+(targ-op "##btq-unlock!"      (targ-apply-simp-u #f #t 0 "BTQUNLOCK"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

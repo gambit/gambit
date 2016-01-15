@@ -1,6 +1,6 @@
 /* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -677,7 +677,7 @@ ___LOCAL void sync_icache_and_dcache (void *start, int length)
 #ifdef ___CPU_x86
 
   /*
-   * The x86 processor automatically keeps the icache and dcache in
+   * X86 family processors automatically keeps the icache and dcache in
    * sync, as long as there's a jump instruction between the code
    * modification and the use of the modified code.
    */

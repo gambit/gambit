@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -3793,10 +3793,16 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___free_mem_code
     = ___free_mem_code;
 
-#ifdef ___USE_emulated_compare_and_swap_word
+#ifdef ___USE_emulated_sync
 
   ___GSTATE->___emulated_compare_and_swap_word
     = ___emulated_compare_and_swap_word;
+
+  ___GSTATE->___emulated_fetch_and_add_word
+    = ___emulated_fetch_and_add_word;
+
+  ___GSTATE->___emulated_fetch_and_clear_word
+    = ___emulated_fetch_and_clear_word;
 
 #endif
 

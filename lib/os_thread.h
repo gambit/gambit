@@ -1,6 +1,6 @@
 /* File: "os_thread.h" */
 
-/* Copyright (c) 2013-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_THREAD_H
 #define ___OS_THREAD_H
@@ -12,15 +12,15 @@
 
 #define DECLARE_HASH_MUTEX(name,size) ___MUTEX name[size]
 
-#define CAS_HASH_MUTEX_SIZE 67
+#define HASH_MUTEX_SIZE 67
 
 
 typedef struct ___thread_module_struct
   {
     int refcount;
 
-#ifdef ___USE_emulated_compare_and_swap_word
-    DECLARE_HASH_MUTEX(cas_hash_mutex,CAS_HASH_MUTEX_SIZE);
+#ifdef ___USE_emulated_sync
+    DECLARE_HASH_MUTEX(hash_mutex,HASH_MUTEX_SIZE);
 #endif
 
 #ifndef ___THREAD_LOCAL_STORAGE_CLASS
