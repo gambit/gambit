@@ -1627,6 +1627,8 @@
 (##define-macro (macro-make-run-queue)
   `(let ((run-queue
           (macro-construct-run-queue
+           0
+           #f
            #f
            #f
            #f
@@ -1634,8 +1636,6 @@
            #f
            #f
            0
-           0
-           #f
            #f
            #f
            #f
