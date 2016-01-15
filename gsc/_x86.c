@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_x86.c", produced by Gambit v4.8.2
+; File: "_x86.c", produced by Gambit v4.8.3
 (
-408002
+408003
 (C)
 "_x86"
 (("_x86"))
@@ -341,7 +341,7 @@
  ()
 )
 #else
-#define ___VERSION 408002
+#define ___VERSION 408003
 #define ___MODULE_NAME "_x86"
 #define ___LINKER_ID ____20___x86
 #define ___MH_PROC ___H__20___x86

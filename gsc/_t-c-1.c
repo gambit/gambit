@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-c-1.c", produced by Gambit v4.8.2
+; File: "_t-c-1.c", produced by Gambit v4.8.3
 (
-408002
+408003
 (C)
 "_t-c-1"
 (("_t-c-1"))
@@ -448,7 +448,7 @@
  ()
 )
 #else
-#define ___VERSION 408002
+#define ___VERSION 408003
 #define ___MODULE_NAME "_t-c-1"
 #define ___LINKER_ID ____20___t_2d_c_2d_1
 #define ___MH_PROC ___H__20___t_2d_c_2d_1

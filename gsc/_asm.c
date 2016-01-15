@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_asm.c", produced by Gambit v4.8.2
+; File: "_asm.c", produced by Gambit v4.8.3
 (
-408002
+408003
 (C)
 "_asm"
 (("_asm"))
@@ -152,7 +152,7 @@
  ()
 )
 #else
-#define ___VERSION 408002
+#define ___VERSION 408003
 #define ___MODULE_NAME "_asm"
 #define ___LINKER_ID ____20___asm
 #define ___MH_PROC ___H__20___asm

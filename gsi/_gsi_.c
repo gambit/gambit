@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit v4.8.2
+; File: "_gsi_.c", produced by Gambit v4.8.3
 (
-408002
+408003
 (C)
 "_gsi_"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_gsilib" (preload . #t)) ("_gsi" (preload . #t)))
@@ -75,12 +75,14 @@
 "##type-1-1bcc14ff-4be5-4573-a250-729b773bdd50"
 "##type-1-291e311e-93e0-4765-8132-56a719dc84b3"
 "##type-1-c475ff99-c959-4784-a847-b0c52aff8f2a"
+"##type-11-42fe9aac-e9c6-4227-893e-a0ad76f58932"
+"##type-11-6bd864f0-27ec-4639-8044-cf7c0135d716"
 "##type-11-f5cfcf78-bba4-4140-9aa0-1a136c50d36b"
 "##type-13-41abc50f-928b-48b9-8d2b-77f53b260e71"
 "##type-13-6bf088a7-814f-4139-860a-69a757570569"
 "##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
-"##type-14-2dbd1deb-107f-4730-a7ba-c191bcf132fe"
 "##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c"
+"##type-16-A6899D11-290C-42A6-B47A-57C6B908698F"
 "##type-18-2babe060-9af6-456f-a26e-40b592f690ec"
 "##type-2-1a1e928d-8df4-11d9-8894-00039301ba52"
 "##type-2-2138cd7f-8c42-4164-b56a-a8c7badf3323"
@@ -108,8 +110,8 @@
 "##type-20-42696abb-6729-4637-99de-cef7d3a230ae"
 "##type-20-59109ed7-6339-4c6e-8bc2-f52e9c91b9f5"
 "##type-20-deebf606-97e4-4d34-8fed-b9e5468851b9"
-"##type-26-d05e0aa7-e235-441d-aa41-c1ac02065460"
 "##type-28-0b02934e-7c23-4f9e-a629-0eede16e6987"
+"##type-28-d05e0aa7-e235-441d-aa41-c1ac02065460"
 "##type-3-10aa6857-6f27-45ab-ac38-2318ef2f277c"
 "##type-3-15d36810-b4bf-4609-83cc-761a8868e4a0"
 "##type-3-2cea29df-7f3e-489d-bf83-5925c5081151"
@@ -144,8 +146,6 @@
 "##type-6-edb28923-9aa0-4c55-9756-f1a37136f727"
 "##type-7-cd5f5bad-f96f-438d-8d63-ff887b7b39de"
 "##type-8-1b002758-f900-4e96-be5e-fa407e331fc0"
-"##type-9-42fe9aac-e9c6-4227-893e-a0ad76f58932"
-"##type-9-6bd864f0-27ec-4639-8044-cf7c0135d716"
 "##type-9-edd21ef2-ee48-407f-a9a9-c1c361078e55"
 "##type-id"
 "##type-super"
@@ -260,6 +260,8 @@
 "btq-deq-prev"
 "btq-left"
 "btq-leftmost"
+"btq-lock1"
+"btq-lock2"
 "btq-owner"
 "btq-parent"
 "buffering"
@@ -641,7 +643,6 @@
 "prev-depth"
 "prev-level"
 "primordial"
-"primordial-thread"
 "print"
 "proc"
 "procedure"
@@ -963,7 +964,6 @@
 "unsyntax"
 "unsyntax-splicing"
 "unterminated-process-exception"
-"unused"
 "unused1"
 "unused2"
 "unused3"
@@ -1623,6 +1623,7 @@
 "##desourcify"
 "##device-condvar-broadcast-no-reschedule!"
 "##digit-to-char-table"
+"##direct-structure-cas!"
 "##direct-structure-ref"
 "##direct-structure-set!"
 "##directory-files"
@@ -2388,6 +2389,7 @@
 "##pretty-print-shifting-allowed?"
 "##primordial-exception-handler"
 "##primordial-exception-handler-hook"
+"##primordial-thread"
 "##print"
 "##procedure-friendly-name"
 "##procedure-locat"
@@ -2708,6 +2710,7 @@
 "##string=?"
 "##string=?-hash"
 "##structure"
+"##structure-cas!"
 "##structure-indent"
 "##structure-instance-of?"
 "##structure-length"
@@ -3457,6 +3460,7 @@
 "user-name"
 "vector->list"
 "vector-append"
+"vector-cas!"
 "vector-fill!"
 "vector-length"
 "vector-ref"
@@ -3980,6 +3984,7 @@
 "##u8vector?"
 "##unbound?"
 "##unbox"
+"##unchecked-structure-cas!"
 "##unchecked-structure-ref"
 "##unchecked-structure-set!"
 "##values"
@@ -3987,6 +3992,7 @@
 "##var-i"
 "##vector"
 "##vector-append"
+"##vector-cas!"
 "##vector-length"
 "##vector-set!"
 "##vector-shrink!"
@@ -4556,7 +4562,7 @@
  #f
 )
 #else
-#define ___VERSION 408002
+#define ___VERSION 408003
 #define ___LINKFILE_NAME "_gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
@@ -5328,6 +5334,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_device_2d_condvar_2d_broadcast_2d_no_2d_reschedu
 ___DEF_OLD_SYM_GLO(___S__23__23_device_2d_port_2d_wait_2d_for_2d_input_21_,___G__23__23_device_2d_port_2d_wait_2d_for_2d_input_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_device_2d_port_2d_wait_2d_for_2d_output_21_,___G__23__23_device_2d_port_2d_wait_2d_for_2d_output_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_digit_2d_to_2d_char_2d_table,___G__23__23_digit_2d_to_2d_char_2d_table)
+___DEF_OLD_SYM_GLO(___S__23__23_direct_2d_structure_2d_cas_21_,___G__23__23_direct_2d_structure_2d_cas_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_direct_2d_structure_2d_ref,___G__23__23_direct_2d_structure_2d_ref)
 ___DEF_OLD_SYM_GLO(___S__23__23_direct_2d_structure_2d_set_21_,___G__23__23_direct_2d_structure_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_directory_2d_files,___G__23__23_directory_2d_files)
@@ -6311,6 +6318,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_pretty_2d_print,___G__23__23_pretty_2d_print)
 ___DEF_OLD_SYM_GLO(___S__23__23_pretty_2d_print_2d_shifting_2d_allowed_3f_,___G__23__23_pretty_2d_print_2d_shifting_2d_allowed_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_primordial_2d_exception_2d_handler,___G__23__23_primordial_2d_exception_2d_handler)
 ___DEF_OLD_SYM_GLO(___S__23__23_primordial_2d_exception_2d_handler_2d_hook,___G__23__23_primordial_2d_exception_2d_handler_2d_hook)
+___DEF_OLD_SYM_GLO(___S__23__23_primordial_2d_thread,___G__23__23_primordial_2d_thread)
 ___DEF_OLD_SYM_GLO(___S__23__23_print,___G__23__23_print)
 ___DEF_OLD_SYM_GLO(___S__23__23_print_2d_marker,___G__23__23_print_2d_marker)
 ___DEF_OLD_SYM_GLO(___S__23__23_procedure_2d__3e_continuation,___G__23__23_procedure_2d__3e_continuation)
@@ -6737,6 +6745,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_string_3d__3f_,___G__23__23_string_3d__3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_string_3d__3f__2d_hash,___G__23__23_string_3d__3f__2d_hash)
 ___DEF_OLD_SYM_GLO(___S__23__23_string_3f_,___G__23__23_string_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure,___G__23__23_structure)
+___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_cas_21_,___G__23__23_structure_2d_cas_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_direct_2d_instance_2d_of_3f_,___G__23__23_structure_2d_direct_2d_instance_2d_of_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_indent,___G__23__23_structure_2d_indent)
 ___DEF_OLD_SYM_GLO(___S__23__23_structure_2d_instance_2d_of_3f_,___G__23__23_structure_2d_instance_2d_of_3f_)
@@ -6952,12 +6961,14 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_0d164889_2d_74b4_2d_48ca_2d_b291_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_1bcc14ff_2d_4be5_2d_4573_2d_a250_2d_729b773bdd50,___G__23__23_type_2d_1_2d_1bcc14ff_2d_4be5_2d_4573_2d_a250_2d_729b773bdd50)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_291e311e_2d_93e0_2d_4765_2d_8132_2d_56a719dc84b3,___G__23__23_type_2d_1_2d_291e311e_2d_93e0_2d_4765_2d_8132_2d_56a719dc84b3)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c52aff8f2a,___G__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c52aff8f2a)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_11_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad76f58932,___G__23__23_type_2d_11_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad76f58932)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716,___G__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_11_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b,___G__23__23_type_2d_11_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_41abc50f_2d_928b_2d_48b9_2d_8d2b_2d_77f53b260e71,___G__23__23_type_2d_13_2d_41abc50f_2d_928b_2d_48b9_2d_8d2b_2d_77f53b260e71)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569,___G__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,___G__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_14_2d_2dbd1deb_2d_107f_2d_4730_2d_a7ba_2d_c191bcf132fe,___G__23__23_type_2d_14_2d_2dbd1deb_2d_107f_2d_4730_2d_a7ba_2d_c191bcf132fe)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c,___G__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_16_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F,___G__23__23_type_2d_16_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec,___G__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52,___G__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_2_2d_2138cd7f_2d_8c42_2d_4164_2d_b56a_2d_a8c7badf3323,___G__23__23_type_2d_2_2d_2138cd7f_2d_8c42_2d_4164_2d_b56a_2d_a8c7badf3323)
@@ -6985,8 +6996,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_2_2d_f9519b37_2d_d6d4_2d_4748_2d_8eb1_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_42696abb_2d_6729_2d_4637_2d_99de_2d_cef7d3a230ae,___G__23__23_type_2d_20_2d_42696abb_2d_6729_2d_4637_2d_99de_2d_cef7d3a230ae)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_59109ed7_2d_6339_2d_4c6e_2d_8bc2_2d_f52e9c91b9f5,___G__23__23_type_2d_20_2d_59109ed7_2d_6339_2d_4c6e_2d_8bc2_2d_f52e9c91b9f5)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_deebf606_2d_97e4_2d_4d34_2d_8fed_2d_b9e5468851b9,___G__23__23_type_2d_20_2d_deebf606_2d_97e4_2d_4d34_2d_8fed_2d_b9e5468851b9)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_26_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460,___G__23__23_type_2d_26_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_28_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987,___G__23__23_type_2d_28_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_28_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460,___G__23__23_type_2d_28_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_10aa6857_2d_6f27_2d_45ab_2d_ac38_2d_2318ef2f277c,___G__23__23_type_2d_3_2d_10aa6857_2d_6f27_2d_45ab_2d_ac38_2d_2318ef2f277c)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_15d36810_2d_b4bf_2d_4609_2d_83cc_2d_761a8868e4a0,___G__23__23_type_2d_3_2d_15d36810_2d_b4bf_2d_4609_2d_83cc_2d_761a8868e4a0)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_2cea29df_2d_7f3e_2d_489d_2d_bf83_2d_5925c5081151,___G__23__23_type_2d_3_2d_2cea29df_2d_7f3e_2d_489d_2d_bf83_2d_5925c5081151)
@@ -7021,8 +7032,6 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_6_2d_F3F63A41_2d_2974_2d_4D41_2d_8B24_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_6_2d_edb28923_2d_9aa0_2d_4c55_2d_9756_2d_f1a37136f727,___G__23__23_type_2d_6_2d_edb28923_2d_9aa0_2d_4c55_2d_9756_2d_f1a37136f727)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_7_2d_cd5f5bad_2d_f96f_2d_438d_2d_8d63_2d_ff887b7b39de,___G__23__23_type_2d_7_2d_cd5f5bad_2d_f96f_2d_438d_2d_8d63_2d_ff887b7b39de)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_8_2d_1b002758_2d_f900_2d_4e96_2d_be5e_2d_fa407e331fc0,___G__23__23_type_2d_8_2d_1b002758_2d_f900_2d_4e96_2d_be5e_2d_fa407e331fc0)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_9_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad76f58932,___G__23__23_type_2d_9_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad76f58932)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_9_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716,___G__23__23_type_2d_9_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_9_2d_edd21ef2_2d_ee48_2d_407f_2d_a9a9_2d_c1c361078e55,___G__23__23_type_2d_9_2d_edd21ef2_2d_ee48_2d_407f_2d_a9a9_2d_c1c361078e55)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_all_2d_fields,___G__23__23_type_2d_all_2d_fields)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_cast,___G__23__23_type_2d_cast)
@@ -7083,6 +7092,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_u8vector_3f_,___G__23__23_u8vector_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_unbound_3f_,___G__23__23_unbound_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_unbox,___G__23__23_unbox)
 ___DEF_OLD_SYM_GLO(___S__23__23_unbreak,___G__23__23_unbreak)
+___DEF_OLD_SYM_GLO(___S__23__23_unchecked_2d_structure_2d_cas_21_,___G__23__23_unchecked_2d_structure_2d_cas_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_unchecked_2d_structure_2d_ref,___G__23__23_unchecked_2d_structure_2d_ref)
 ___DEF_OLD_SYM_GLO(___S__23__23_unchecked_2d_structure_2d_set_21_,___G__23__23_unchecked_2d_structure_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_uninterned_2d_keyword_3f_,___G__23__23_uninterned_2d_keyword_3f_)
@@ -7111,6 +7121,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_vect_2d_port_2d_options,___G__23__23_vect_2d_por
 ___DEF_OLD_SYM_GLO(___S__23__23_vector,___G__23__23_vector)
 ___DEF_OLD_SYM_GLO(___S__23__23_vector_2d__3e_list,___G__23__23_vector_2d__3e_list)
 ___DEF_OLD_SYM_GLO(___S__23__23_vector_2d_append,___G__23__23_vector_2d_append)
+___DEF_OLD_SYM_GLO(___S__23__23_vector_2d_cas_21_,___G__23__23_vector_2d_cas_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_vector_2d_copy,___G__23__23_vector_2d_copy)
 ___DEF_OLD_SYM_GLO(___S__23__23_vector_2d_equal_3f_,___G__23__23_vector_2d_equal_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_vector_2d_fill_21_,___G__23__23_vector_2d_fill_21_)
@@ -7351,6 +7362,8 @@ ___DEF_OLD_SYM_GLO(___S_btq_2d_deq_2d_next,___G_btq_2d_deq_2d_next)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_deq_2d_prev,___G_btq_2d_deq_2d_prev)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_left,___G_btq_2d_left)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_leftmost,___G_btq_2d_leftmost)
+___DEF_OLD_SYM_GLO(___S_btq_2d_lock1,___G_btq_2d_lock1)
+___DEF_OLD_SYM_GLO(___S_btq_2d_lock2,___G_btq_2d_lock2)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_owner,___G_btq_2d_owner)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_parent,___G_btq_2d_parent)
 ___DEF_OLD_SYM_GLO(___S_buffering,___G_buffering)
@@ -8244,7 +8257,6 @@ ___DEF_OLD_SYM_GLO(___S_prev_2d_depth,___G_prev_2d_depth)
 ___DEF_OLD_SYM_GLO(___S_prev_2d_level,___G_prev_2d_level)
 ___DEF_OLD_SYM_GLO(___S_primordial,___G_primordial)
 ___DEF_OLD_SYM_GLO(___S_primordial_2d_exception_2d_handler,___G_primordial_2d_exception_2d_handler)
-___DEF_OLD_SYM_GLO(___S_primordial_2d_thread,___G_primordial_2d_thread)
 ___DEF_OLD_SYM_GLO(___S_print,___G_print)
 ___DEF_OLD_SYM_GLO(___S_println,___G_println)
 ___DEF_OLD_SYM_GLO(___S_proc,___G_proc)
@@ -8935,7 +8947,6 @@ ___DEF_OLD_SYM_GLO(___S_unterminated_2d_process_2d_exception_2d_arguments,___G_u
 ___DEF_OLD_SYM_GLO(___S_unterminated_2d_process_2d_exception_2d_procedure,___G_unterminated_2d_process_2d_exception_2d_procedure)
 ___DEF_OLD_SYM_GLO(___S_unterminated_2d_process_2d_exception_3f_,___G_unterminated_2d_process_2d_exception_3f_)
 ___DEF_OLD_SYM_GLO(___S_untrace,___G_untrace)
-___DEF_OLD_SYM_GLO(___S_unused,___G_unused)
 ___DEF_OLD_SYM_GLO(___S_unused1,___G_unused1)
 ___DEF_OLD_SYM_GLO(___S_unused2,___G_unused2)
 ___DEF_OLD_SYM_GLO(___S_unused3,___G_unused3)
@@ -8964,6 +8975,7 @@ ___DEF_OLD_SYM_GLO(___S_variable_2d_is_2d_immutable,___G_variable_2d_is_2d_immut
 ___DEF_OLD_SYM_GLO(___S_vector,___G_vector)
 ___DEF_OLD_SYM_GLO(___S_vector_2d__3e_list,___G_vector_2d__3e_list)
 ___DEF_OLD_SYM_GLO(___S_vector_2d_append,___G_vector_2d_append)
+___DEF_OLD_SYM_GLO(___S_vector_2d_cas_21_,___G_vector_2d_cas_21_)
 ___DEF_OLD_SYM_GLO(___S_vector_2d_copy,___G_vector_2d_copy)
 ___DEF_OLD_SYM_GLO(___S_vector_2d_fill_21_,___G_vector_2d_fill_21_)
 ___DEF_OLD_SYM_GLO(___S_vector_2d_input_2d_port,___G_vector_2d_input_2d_port)
