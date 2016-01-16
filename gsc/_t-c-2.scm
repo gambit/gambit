@@ -3282,103 +3282,6 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;;TODO: REMOVE
-(targ-op "##fixnum.max"       (targ-apply-fold-u #f #f       "FIXPOS" "FIXMAX"))
-(targ-op "##fixnum.min"       (targ-apply-fold-u #f #f       "FIXPOS" "FIXMIN"))
-
-(targ-op "##fixnum.wrap+"     (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXADD"))
-(targ-op "##fixnum.+"         (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXADD"))
-(targ-op "##fixnum.+?"        (targ-apply-fold-u #f "FIX_0"  #f       "FIXADDP"))
-(targ-op "##fixnum.wrap*"     (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXMUL"))
-(targ-op "##fixnum.*"         (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXMUL"))
-(targ-op "##fixnum.*?"        (targ-apply-fold-u #f "FIX_1"  #f       "FIXMULP"))
-(targ-op "##fixnum.wrap-"     (targ-apply-fold-u #f #f       "FIXNEG" "FIXSUB"))
-(targ-op "##fixnum.-"         (targ-apply-fold-u #f #f       "FIXNEG" "FIXSUB"))
-(targ-op "##fixnum.-?"        (targ-apply-fold-u #f #f       "FIXNEGP""FIXSUBP"))
-(targ-op "##fixnum.wrapquotient"(targ-apply-fold-u #f #f       #f       "FIXQUO"))
-(targ-op "##fixnum.quotient"  (targ-apply-fold-u #f #f       #f       "FIXQUO"))
-(targ-op "##fixnum.remainder" (targ-apply-fold-u #f #f       #f       "FIXREM"))
-(targ-op "##fixnum.modulo"    (targ-apply-fold-u #f #f       #f       "FIXMOD"))
-(targ-op "##fixnum.bitwise-ior"(targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXIOR"))
-(targ-op "##fixnum.bitwise-xor"(targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXXOR"))
-(targ-op "##fixnum.bitwise-and"(targ-apply-fold-u #f "FIX_M1" "FIXPOS" "FIXAND"))
-(targ-op "##fixnum.bitwise-not"(targ-apply-simp-u #f #f #f "FIXNOT"))
-(targ-op "##fixnum.wraparithmetic-shift"     (targ-apply-simp-u #f #f #f "FIXASH"))
-(targ-op "##fixnum.arithmetic-shift"         (targ-apply-simp-u #f #f #f "FIXASH"))
-(targ-op "##fixnum.arithmetic-shift?"        (targ-apply-simp-u #f #f #f "FIXASHP"))
-(targ-op "##fixnum.wraparithmetic-shift-left"(targ-apply-simp-u #f #f #f "FIXASHL"))
-(targ-op "##fixnum.arithmetic-shift-left"    (targ-apply-simp-u #f #f #f "FIXASHL"))
-(targ-op "##fixnum.arithmetic-shift-left?"   (targ-apply-simp-u #f #f #f "FIXASHLP"))
-(targ-op "##fixnum.arithmetic-shift-right"   (targ-apply-simp-u #f #f #f "FIXASHR"))
-(targ-op "##fixnum.arithmetic-shift-right?"  (targ-apply-simp-u #f #f #f "FIXASHRP"))
-(targ-op "##fixnum.wraplogical-shift-right"  (targ-apply-simp-u #f #f #f "FIXLSHR"))
-(targ-op "##fixnum.wraplogical-shift-right?" (targ-apply-simp-u #f #f #f "FIXLSHRP"))
-(targ-op "##fixnum.wrapabs"    (targ-apply-simp-u #f #f #f "FIXABS"))
-(targ-op "##fixnum.abs"        (targ-apply-simp-u #f #f #f "FIXABS"))
-(targ-op "##fixnum.abs?"       (targ-apply-simp-u #f #f #f "FIXABSP"))
-
-(targ-op "##fixnum.zero?"     (targ-ifjump-simp-u #f "FIXZEROP"))
-(targ-op "##fixnum.positive?" (targ-ifjump-simp-u #f "FIXPOSITIVEP"))
-(targ-op "##fixnum.negative?" (targ-ifjump-simp-u #f "FIXNEGATIVEP"))
-(targ-op "##fixnum.odd?"      (targ-ifjump-simp-u #f "FIXODDP"))
-(targ-op "##fixnum.even?"     (targ-ifjump-simp-u #f "FIXEVENP"))
-(targ-op "##fixnum.="         (targ-ifjump-fold-u #f "FIXEQ"))
-(targ-op "##fixnum.<"         (targ-ifjump-fold-u #f "FIXLT"))
-(targ-op "##fixnum.>"         (targ-ifjump-fold-u #f "FIXGT"))
-(targ-op "##fixnum.<="        (targ-ifjump-fold-u #f "FIXLE"))
-(targ-op "##fixnum.>="        (targ-ifjump-fold-u #f "FIXGE"))
-
-(targ-op "##fixnum.->char"    (targ-apply-simp-u #f #f #f "FIXTOCHR"))
-(targ-op "##fixnum.<-char"    (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;;TODO: REMOVE
-(targ-op "##flonum.->fixnum"  (targ-apply-simp-u #t #f #f "F64TOFIX"));;TODO: REMOVE
-(targ-op "##flonum.<-fixnum"  (targ-apply-simpflo-u #f "F64FROMFIX"));;TODO: REMOVE
-
-(targ-op "##flonum.max"       (targ-apply-fold-u #t #f      "F64POS" "F64MAX"))
-(targ-op "##flonum.min"       (targ-apply-fold-u #t #f      "F64POS" "F64MIN"))
-
-(targ-op "##flonum.+"         (targ-apply-fold-u #t "F64_0" "F64POS" "F64ADD"))
-(targ-op "##flonum.*"         (targ-apply-fold-u #t "F64_1" "F64POS" "F64MUL"))
-(targ-op "##flonum.-"         (targ-apply-fold-u #t #f      "F64NEG" "F64SUB"))
-(targ-op "##flonum./"         (targ-apply-fold-u #t #f      "F64INV" "F64DIV"))
-(targ-op "##flonum.abs"       (targ-apply-simpflo-u #t "F64ABS"))
-(targ-op "##flonum.floor"     (targ-apply-simpflo-u #t "F64FLOOR"))
-(targ-op "##flonum.ceiling"   (targ-apply-simpflo-u #t "F64CEILING"))
-(targ-op "##flonum.truncate"  (targ-apply-simpflo-u #t "F64TRUNCATE"))
-(targ-op "##flonum.round"     (targ-apply-simpflo-u #t "F64ROUND"))
-(targ-op "##flonum.exp"       (targ-apply-simpflo-u #t "F64EXP"))
-(targ-op "##flonum.log"       (targ-apply-simpflo-u #t "F64LOG"))
-(targ-op "##flonum.sin"       (targ-apply-simpflo-u #t "F64SIN"))
-(targ-op "##flonum.cos"       (targ-apply-simpflo-u #t "F64COS"))
-(targ-op "##flonum.tan"       (targ-apply-simpflo-u #t "F64TAN"))
-(targ-op "##flonum.asin"      (targ-apply-simpflo-u #t "F64ASIN"))
-(targ-op "##flonum.acos"      (targ-apply-simpflo-u #t "F64ACOS"))
-(targ-op "##flonum.atan"      (targ-apply-simpflo2-u #t "F64ATAN" "F64ATAN2"))
-(targ-op "##flonum.expt"      (targ-apply-simpflo-u #t "F64EXPT"))
-(targ-op "##flonum.sqrt"      (targ-apply-simpflo-u #t "F64SQRT"))
-(targ-op "##flonum.copysign"  (targ-apply-simpflo-u #t "F64COPYSIGN"))
-
-(targ-op "##flonum.integer?"  (targ-ifjump-simp-u #t "F64INTEGERP"))
-(targ-op "##flonum.zero?"     (targ-ifjump-simp-u #t "F64ZEROP"))
-(targ-op "##flonum.positive?" (targ-ifjump-simp-u #t "F64POSITIVEP"))
-(targ-op "##flonum.negative?" (targ-ifjump-simp-u #t "F64NEGATIVEP"))
-(targ-op "##flonum.odd?"      (targ-ifjump-simp-u #t "F64ODDP"))
-(targ-op "##flonum.even?"     (targ-ifjump-simp-u #t "F64EVENP"))
-(targ-op "##flonum.finite?"   (targ-ifjump-simp-u #t "F64FINITEP"))
-(targ-op "##flonum.infinite?" (targ-ifjump-simp-u #t "F64INFINITEP"))
-(targ-op "##flonum.nan?"      (targ-ifjump-simp-u #t "F64NANP"))
-(targ-op "##flonum.<-fixnum-exact?" (targ-ifjump-simp-u #f "F64FROMFIXEXACTP"))
-(targ-op "##flonum.="         (targ-ifjump-fold-u #t "F64EQ"))
-(targ-op "##flonum.<"         (targ-ifjump-fold-u #t "F64LT"))
-(targ-op "##flonum.>"         (targ-ifjump-fold-u #t "F64GT"))
-(targ-op "##flonum.<="        (targ-ifjump-fold-u #t "F64LE"))
-(targ-op "##flonum.>="        (targ-ifjump-fold-u #t "F64GE"))
-
-;; new fixnum primitives
-
 (targ-op "##fxmax"          (targ-apply-fold-u #f #f       "FIXPOS" "FIXMAX"))
 (targ-op "##fxmin"          (targ-apply-fold-u #f #f       "FIXPOS" "FIXMIN"))
 
@@ -3432,11 +3335,6 @@
 (targ-op "##fx<="        (targ-ifjump-fold-u #f "FIXLE"))
 (targ-op "##fx>="        (targ-ifjump-fold-u #f "FIXGE"))
 
-(targ-op "##fx->char"    (targ-apply-simp-u #f #f #f "FIXTOCHR"));;TODO: REMOVE
-(targ-op "##fx<-char"    (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;TODO: REMOVE
-(targ-op "##fixnum->char"   (targ-apply-simp-u #f #f #f "FIXTOCHR"));;TODO: REMOVE
-(targ-op "##char->fixnum"   (targ-apply-simp-u #f #f #f "FIXFROMCHR"));;TODO: REMOVE
-
 (targ-op "##integer->char"  (targ-apply-simp-u #f #f #f "FIXTOCHR"))
 (targ-op "##char->integer"  (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
 (targ-op "##flonum->fixnum" (targ-apply-simp-u #t #f #f "F64TOFIX"))
@@ -3444,11 +3342,6 @@
 (targ-op "##fixnum->flonum-exact?" (targ-ifjump-simp-u #f "F64FROMFIXEXACTP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;; new flonum primitives
-
-(targ-op "##fl->fx"  (targ-apply-simp-u #t #f #f "F64TOFIX"));;TODO: REMOVE
-(targ-op "##fl<-fx"  (targ-apply-simpflo-u #f "F64FROMFIX"));;TODO: REMOVE
 
 (targ-op "##flmax"       (targ-apply-fold-u #t #f      "F64POS" "F64MAX"))
 (targ-op "##flmin"       (targ-apply-fold-u #t #f      "F64POS" "F64MIN"))
@@ -3513,7 +3406,6 @@
 (targ-op "##flfinite?"   (targ-ifjump-simp-u #t "F64FINITEP"))
 (targ-op "##flinfinite?" (targ-ifjump-simp-u #t "F64INFINITEP"))
 (targ-op "##flnan?"      (targ-ifjump-simp-u #t "F64NANP"))
-(targ-op "##fl<-fx-exact?" (targ-ifjump-simp-u #f "F64FROMFIXEXACTP"));;TODO: REMOVE
 (targ-op "##fl="         (targ-ifjump-fold-u #t "F64EQ"))
 (targ-op "##fl<"         (targ-ifjump-fold-u #t "F64LT"))
 (targ-op "##fl>"         (targ-ifjump-fold-u #t "F64GT"))
@@ -3706,9 +3598,6 @@
 (targ-op "##bignum.adigit-<"         (targ-ifjump-simp-u #f "BIGALESSP"))
 (targ-op "##bignum.adigit-zero?"     (targ-ifjump-simp-u #f "BIGAZEROP"))
 (targ-op "##bignum.adigit-negative?" (targ-ifjump-simp-u #f "BIGANEGATIVEP"))
-(targ-op "##bignum.->fixnum"         (targ-apply-simp-u #f #f #f "BIGTOFIX"));;TODO: REMOVE
-(targ-op "##bignum.<-fixnum"         (targ-apply-simpbig-u "BIGFROMFIX"));;TODO: REMOVE
-(targ-op "##bignum->fixnum"          (targ-apply-simp-u #f #f #f "BIGTOFIX"));;TODO: REMOVE
 (targ-op "##fixnum->bignum"          (targ-apply-simpbig-u "BIGFROMFIX"))
 (targ-op "##bignum.adigit-shrink!"   (targ-apply-simp-u #f #t #f "BIGASHRINK"))
 (targ-op "##bignum.adigit-copy!"     (targ-apply-simp-u #f #t #f "BIGACOPY"))

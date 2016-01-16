@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2015 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2016 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -5539,187 +5539,6 @@ for a discussion of branch cuts.
 (define-prim (##integer->char x))
 (define-prim (##char->integer x))
 
-
-#;
-(begin ;;; TODO: remove this begin (the definitions it contains are redundant)
-
-  (define-prim (##fx->char x));;deprecated
-  (define-prim (##fx<-char x));;deprecated
-  (define-prim (##fixnum->char x));;deprecated
-  (define-prim (##char->fixnum x));;deprecated
-
-  (define-prim-nary-bool (##fixnum.= x y)
-    #t
-    #t
-    (##fx= x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##fixnum.< x y)
-    #t
-    #t
-    (##fx< x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##fixnum.> x y)
-    #t
-    #t
-    (##fx> x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##fixnum.<= x y)
-    #t
-    #t
-    (##fx<= x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##fixnum.>= x y)
-    #t
-    #t
-    (##fx>= x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim (##fixnum.zero? x))
-
-  (define-prim (##fixnum.positive? x))
-
-  (define-prim (##fixnum.negative? x))
-
-  (define-prim (##fixnum.odd? x))
-
-  (define-prim (##fixnum.even? x))
-
-  (define-prim-nary (##fixnum.max x y)
-    ()
-    x
-    (##fxmax x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##fixnum.min x y)
-    ()
-    x
-    (##fxmin x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##fixnum.wrap+ x y)
-    0
-    x
-    (##fxwrap+ x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##fixnum.+ x y)
-    0
-    x
-    (##fx+ x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim (##fixnum.+? x y))
-
-  (define-prim-nary (##fixnum.wrap* x y)
-    1
-    x
-    (##fxwrap* x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##fixnum.* x y)
-    1
-    x
-    (##fx* x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim (##fixnum.*? x y))
-
-  (define-prim-nary (##fixnum.wrap- x y)
-    ()
-    (##fxwrap- x)
-    (##fxwrap- x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##fixnum.- x y)
-    ()
-    (##fx- x)
-    (##fx- x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim (##fixnum.-? x #!optional (y (macro-absent-obj)))
-    (if (##eq? y (macro-absent-obj))
-        (##fx-? x)
-        (##fx-? x y)))
-
-  (define-prim (##fixnum.wrapquotient x y))
-
-  (define-prim (##fixnum.quotient x y))
-
-  (define-prim (##fixnum.remainder x y))
-
-  (define-prim (##fixnum.modulo x y))
-
-  (define-prim (##fixnum.bitwise-not x)
-    (##fx- -1 x))
-
-  (define-prim-nary (##fixnum.bitwise-and x y)
-    -1
-    x
-    (##fxand x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##fixnum.bitwise-ior x y)
-    0
-    x
-    (##fxior x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##fixnum.bitwise-xor x y)
-    0
-    x
-    (##fxxor x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim (##fixnum.wraparithmetic-shift x y))
-
-  (define-prim (##fixnum.arithmetic-shift x y))
-
-  (define-prim (##fixnum.arithmetic-shift? x y))
-
-  (define-prim (##fixnum.wraparithmetic-shift-left x y))
-
-  (define-prim (##fixnum.arithmetic-shift-left x y))
-
-  (define-prim (##fixnum.arithmetic-shift-left? x y))
-
-  (define-prim (##fixnum.arithmetic-shift-right x y))
-
-  (define-prim (##fixnum.arithmetic-shift-right? x y))
-
-  (define-prim (##fixnum.wraplogical-shift-right x y))
-
-  (define-prim (##fixnum.wraplogical-shift-right? x y))
-
-  (define-prim (##fixnum.wrapabs x))
-
-  (define-prim (##fixnum.abs x))
-
-  (define-prim (##fixnum.abs? x))
-
-  ;;(define-prim (##fixnum->char x))
-  ;;(define-prim (##char->fixnum x))
-  )
-
 ;;;----------------------------------------------------------------------------
 
 ;; Bignum operations
@@ -5758,7 +5577,6 @@ for a discussion of branch cuts.
 (define-prim (##bignum.adigit-negative? x i))
 (define-prim (##bignum.adigit-= x y i))
 (define-prim (##bignum.adigit-< x y i))
-;;(define-prim (##bignum->fixnum x));;TODO: REMOVE
 (define-prim (##fixnum->bignum x))
 (define-prim (##bignum.adigit-shrink! x n))
 (define-prim (##bignum.adigit-copy! x i y j))
@@ -10088,8 +9906,7 @@ ___RESULT = result;
   (macro-force-vars (obj)
     (##flonum? obj)))
 
-(define-prim (##fleqv? x y)
-  (##u16vector-equal? x y)) ;;TODO: remove after bootstrap
+(define-prim (##fleqv? x y))
 
 (define-prim-nary-bool (##fl= x y)
   #t
@@ -10328,9 +10145,7 @@ ___RESULT = result;
 (define-prim-flonum (flround x)
   (##flround x))
 
-(macro-case-target ;;TODO: remove after bootstrap
- ((C)
-  (define-prim (##flscalbn x n))))
+(define-prim (##flscalbn x n))
 
 (define-prim (flscalbn x n)
   (macro-force-vars (x n)
@@ -10338,9 +10153,7 @@ ___RESULT = result;
       (macro-check-fixnum n 2 (flscalbn x n)
         (##flscalbn x n)))))
 
-(macro-case-target ;;TODO: remove after bootstrap
- ((C)
-  (define-prim (##flilogb x))))
+(define-prim (##flilogb x))
 
 (define-prim-flonum (flilogb x)
   (##flilogb x))
@@ -10350,9 +10163,7 @@ ___RESULT = result;
 (define-prim-flonum (flexp x)
   (##flexp x))
 
-(macro-case-target ;;TODO: remove after bootstrap
- ((C)
-  (define-prim (##flexpm1 x))))
+(define-prim (##flexpm1 x))
 
 (define-prim-flonum (flexpm1 x)
   (##flexpm1 x))
@@ -10362,9 +10173,7 @@ ___RESULT = result;
 (define-prim-flonum (fllog x)
   (##fllog x))
 
-(macro-case-target ;;TODO: remove after bootstrap
- ((C)
-  (define-prim (##fllog1p x))))
+(define-prim (##fllog1p x))
 
 (define-prim-flonum (fllog1p x)
   (##fllog1p x))
@@ -10460,149 +10269,6 @@ ___RESULT = result;
 (define-prim (##flonum->fixnum x))
 (define-prim (##fixnum->flonum x))
 (define-prim (##fixnum->flonum-exact? x))
-
-#;
-(begin ;;; TODO: remove this begin (the definitions it contains are redundant)
-
-  (define-prim (##fl<-fx x));;deprecated
-  (define-prim (##fl->fx x));;deprecated
-  (define-prim (##fl<-fx-exact? x));;deprecated
-
-  (define-prim-nary-bool (##flonum.= x y)
-    #t
-    #t
-    (##fl= x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##flonum.< x y)
-    #t
-    #t
-    (##fl< x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##flonum.> x y)
-    #t
-    #t
-    (##fl> x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##flonum.<= x y)
-    #t
-    #t
-    (##fl<= x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary-bool (##flonum.>= x y)
-    #t
-    #t
-    (##fl>= x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim (##flonum.integer? x))
-
-  (define-prim (##flonum.zero? x))
-
-  (define-prim (##flonum.positive? x))
-
-  (define-prim (##flonum.negative? x))
-
-  (define-prim (##flonum.odd? x))
-
-  (define-prim (##flonum.even? x))
-
-  (define-prim (##flonum.finite? x))
-
-  (define-prim (##flonum.infinite? x))
-
-  (define-prim (##flonum.nan? x))
-
-  (define-prim-nary (##flonum.max x y)
-    ()
-    x
-    (##flmax x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##flonum.min x y)
-    ()
-    x
-    (##flmin x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##flonum.+ x y)
-    (macro-inexact-+0)
-    x
-    (##fl+ x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##flonum.* x y)
-    (macro-inexact-+1)
-    x
-    (##fl* x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##flonum.- x y)
-    ()
-    (##fl- x)
-    (##fl- x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim-nary (##flonum./ x y)
-    ()
-    (##fl/ x)
-    (##fl/ x y)
-    macro-no-force
-    macro-no-check)
-
-  (define-prim (##flonum.abs x))
-
-  (define-prim (##flonum.floor x))
-
-  (define-prim (##flonum.ceiling x))
-
-  (define-prim (##flonum.truncate x))
-
-  (define-prim (##flonum.round x))
-
-  (define-prim (##flonum.exp x))
-
-  (define-prim (##flonum.log x))
-
-  (define-prim (##flonum.sin x))
-
-  (define-prim (##flonum.cos x))
-
-  (define-prim (##flonum.tan x))
-
-  (define-prim (##flonum.asin x))
-
-  (define-prim (##flonum.acos x))
-
-  (define-prim (##flonum.atan x #!optional (y (macro-absent-obj)))
-    (if (##eq? y (macro-absent-obj))
-        (##flatan x)
-        (##flatan x y)))
-
-  (define-prim (##flonum.expt x y))
-
-  (define-prim (##flonum.sqrt x))
-
-  ;;(define-prim (##fixnum->flonum x))
-  ;;(define-prim (##flonum->fixnum x))
-  ;;(define-prim (##fixnum->flonum-exact? x))
-
-  (define-prim (##flonum.copysign x y))
-
-  )
 
 (define-prim (##ratnum->flonum x #!optional (nonzero-fractional-part? #f))
   (let* ((num (macro-ratnum-numerator x))
