@@ -856,9 +856,6 @@
 (##define-macro (macro-btq-lock2 node)           `(macro-slot 9 ,node))
 (##define-macro (macro-btq-lock2-set! node x)    `(macro-slot 9 ,node ,x))
 
-(##define-macro (##btq-lock! btq) #f) ;; TODO: remove after bootstrap
-(##define-macro (##btq-unlock! btq) #f)
-
 (##define-macro (macro-btq-deq-init! deq)
   `(let ((deq ,deq))
 

@@ -3374,14 +3374,14 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #else
 
 #define ___BTQLOCK(btq) \
-do { \
+{ \
   ___WORD ___ticket = ___FETCH_AND_ADD_WORD((___WORD volatile *)&___FIELD(btq,___BTQ_LOCK1),___FIX(1)); \
   while (*(___WORD volatile *)&___FIELD(btq,___BTQ_LOCK2) != ___ticket) \
     ___CPU_RELAX(); \
-  } while (0)
+}
 
 #define ___BTQUNLOCK(btq) \
-___FETCH_AND_ADD_WORD((___WORD volatile *)&___FIELD(btq,___BTQ_LOCK2),___FIX(1))
+___FETCH_AND_ADD_WORD((___WORD volatile *)&___FIELD(btq,___BTQ_LOCK2),___FIX(1));
 
 #endif
 
