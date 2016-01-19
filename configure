@@ -8698,7 +8698,7 @@ $as_echo_n "checking for thread local storage class... " >&6; }
 
     TLS_CLASS="none"
 
-    for tls_class in "__thread" "__declspec(thread)"; do
+    for tls_class in "_Thread_local" "__thread" "__declspec(thread)"; do
       cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 

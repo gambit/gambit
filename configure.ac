@@ -1487,7 +1487,7 @@ if test "$ENABLE_THREAD_SYSTEM" != no; then
 
     TLS_CLASS="none"
 
-    for tls_class in "__thread" "__declspec(thread)"; do
+    for tls_class in "_Thread_local" "__thread" "__declspec(thread)"; do
       AC_TRY_COMPILE([
         #include <stdlib.h>
         ] $tls_class [ int foo;
