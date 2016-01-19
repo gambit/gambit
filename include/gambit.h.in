@@ -2079,36 +2079,38 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 
 #define ___LF (___HTB+___SB)
 
-#define ___TMASK ((1<<___TB)-1)
-#define ___HTMASK ((1<<___HTB)-1)
-#define ___SMASK (((1<<___SB)-1)<<___HTB)
-#define ___LMASK (~___CAST(unsigned ___WORD,0)<<___LF)
-#define ___LSMASK (~___CAST(unsigned ___WORD,0)<<___HTB)
+#define ___MASK(type,bits)((___CAST(type,1)<<bits)-1)
+#define ___TMASK ___MASK(___WORD,___TB)
+#define ___HTMASK ___MASK(___WORD,___HTB)
+#define ___SMASK (___MASK(___WORD,___SB)<<___HTB)
+#define ___LMASK (~___MASK(unsigned ___WORD,___LF))
+#define ___LSMASK (~___MASK(unsigned ___WORD,___HTB))
 
 /*
  * Value constructors for object references inside executable code.
  */
 
-#define ___FAL ((___CAST(___WORD,-1)<<___TB)+___tSPECIAL)
-#define ___TRU ((___CAST(___WORD,-2)<<___TB)+___tSPECIAL)
-#define ___NUL ((___CAST(___WORD,-3)<<___TB)+___tSPECIAL)
-#define ___EOF ((___CAST(___WORD,-4)<<___TB)+___tSPECIAL)
-#define ___VOID ((___CAST(___WORD,-5)<<___TB)+___tSPECIAL)
-#define ___ABSENT ((___CAST(___WORD,-6)<<___TB)+___tSPECIAL)
-#define ___UNB1 ((___CAST(___WORD,-7)<<___TB)+___tSPECIAL)
-#define ___UNB2 ((___CAST(___WORD,-8)<<___TB)+___tSPECIAL)
-#define ___OPTIONAL ((___CAST(___WORD,-9)<<___TB)+___tSPECIAL)
-#define ___KEYOBJ ((___CAST(___WORD,-10)<<___TB)+___tSPECIAL)
-#define ___REST ((___CAST(___WORD,-11)<<___TB)+___tSPECIAL)
-#define ___UNUSED ((___CAST(___WORD,-14)<<___TB)+___tSPECIAL)
-#define ___DELETED ((___CAST(___WORD,-15)<<___TB)+___tSPECIAL)
-#define ___FIX(x)(___CAST(___WORD,x)<<___TB)
+#define ___FAL      ___SPECIAL(-1)
+#define ___TRU      ___SPECIAL(-2)
+#define ___NUL      ___SPECIAL(-3)
+#define ___EOF      ___SPECIAL(-4)
+#define ___VOID     ___SPECIAL(-5)
+#define ___ABSENT   ___SPECIAL(-6)
+#define ___UNB1     ___SPECIAL(-7)
+#define ___UNB2     ___SPECIAL(-8)
+#define ___OPTIONAL ___SPECIAL(-9)
+#define ___KEYOBJ   ___SPECIAL(-10)
+#define ___REST     ___SPECIAL(-11)
+#define ___UNUSED   ___SPECIAL(-14)
+#define ___DELETED  ___SPECIAL(-15)
+#define ___SPECIAL(x)(___FIX(x)+___tSPECIAL)
+#define ___FIX(x)___CAST(___WORD,___CAST(unsigned ___WORD,x)<<___TB)
 #if ___SCMOBJ_WIDTH == 32
 #define ___BIGFIX(i,x)___SUB(i)
 #else
 #define ___BIGFIX(i,x)___FIX(x)
 #endif
-#define ___CHR(x)((___CAST(___WORD,___CS_SELECT(___CAST_U8(x),___CAST_U16(x),___CAST_U32(x)))<<___TB)+___tSPECIAL)
+#define ___CHR(x)___SPECIAL(___CS_SELECT(___CAST_U8(x),___CAST_U16(x),___CAST_U32(x)))
 
 #define ___SYM(i,id)___CAST_FAKEWORD_TO_WORD(___symtbl[i])
 #define ___KEY(i,id)___CAST_FAKEWORD_TO_WORD(___keytbl[i])
@@ -2120,19 +2122,19 @@ ___CAST_U64((val)<<(((i)&7)<<3))
  * memory allocated objects.
  */
 
-#define ___REF_FAL ___FAL
-#define ___REF_TRU ___TRU
-#define ___REF_NUL ___NUL
-#define ___REF_EOF ___EOF
-#define ___REF_VOID ___VOID
-#define ___REF_ABSENT ___ABSENT
-#define ___REF_UNB1 ___UNB1
-#define ___REF_UNB2 ___UNB2
+#define ___REF_FAL      ___FAL
+#define ___REF_TRU      ___TRU
+#define ___REF_NUL      ___NUL
+#define ___REF_EOF      ___EOF
+#define ___REF_VOID     ___VOID
+#define ___REF_ABSENT   ___ABSENT
+#define ___REF_UNB1     ___UNB1
+#define ___REF_UNB2     ___UNB2
 #define ___REF_OPTIONAL ___OPTIONAL
-#define ___REF_KEYOBJ ___KEYOBJ
-#define ___REF_REST ___REST
-#define ___REF_UNUSED ___UNUSED
-#define ___REF_DELETED ___DELETED
+#define ___REF_KEYOBJ   ___KEYOBJ
+#define ___REF_REST     ___REST
+#define ___REF_UNUSED   ___UNUSED
+#define ___REF_DELETED  ___DELETED
 #define ___REF_FIX(x)___FIX(x)
 #if ___SCMOBJ_WIDTH == 32
 #define ___REF_BIGFIX(i,x)___REF_SUB(i)
@@ -2141,15 +2143,15 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #endif
 #define ___REF_CHR(x)___CHR(x)
 
-#define ___REF_SYM(i,id)((___CAST(___WORD,-1-i)<<___TB)+___tMEM2)
-#define ___REF_KEY(i,id)((___CAST(___WORD,-1-i)<<___TB)+___tMEM1)
-#define ___REF_CNS(i)((___CAST(___WORD,i)<<___TB)+___tMEM2)
-#define ___REF_SUB(i)((___CAST(___WORD,i)<<___TB)+___tMEM1)
+#define ___REF_SYM(i,id)(___FIX(-1-i)+___tMEM2)
+#define ___REF_KEY(i,id)(___FIX(-1-i)+___tMEM1)
+#define ___REF_CNS(i)(___FIX(i)+___tMEM2)
+#define ___REF_SUB(i)(___FIX(i)+___tMEM1)
 
 #ifdef ___SUBCOUNT
-#define ___REF_PRC(i)((___CAST(___WORD,___SUBCOUNT+i)<<___TB)+___tMEM1)
+#define ___REF_PRC(i)(___FIX(___SUBCOUNT+i)+___tMEM1)
 #else
-#define ___REF_PRC(i)((___CAST(___WORD,i)<<___TB)+___tMEM1)
+#define ___REF_PRC(i)(___FIX(i)+___tMEM1)
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -2208,7 +2210,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 /* Type tests */
 
 #define ___TAG(ptr,tag)(___CAST(___WORD,ptr)+(tag))
-#define ___UNTAG(obj)___CAST(___WORD*,(obj)&-(1<<___TB))
+#define ___UNTAG(obj)___CAST(___WORD*,(obj)&~___TMASK)
 #define ___UNTAG_AS(obj,tag)___CAST(___WORD*,(obj)-(tag))
 
 #define ___TYP(x)((x)&___TMASK)
@@ -5244,7 +5246,7 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
 #endif
 
 #define ___FORCE1(n,src) \
-if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___sPROMISE<<___TB){___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_force);
+if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_force);
 #define ___FORCE2 ___temp=___ps->temp2;}
 #define ___FORCE3 ___temp
 
@@ -5570,9 +5572,9 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #ifdef ___BIG_ENDIAN
 
-#define ___P4U8(a,b,c,d)((((((___WORD)___CAST_U8(a)<<8)+(___WORD)___CAST_U8(b))<<8)+(___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
+#define ___P4U8(a,b,c,d)((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
 
-#define ___P2U16(a,b)((___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
+#define ___P2U16(a,b)((unsigned ___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
 
 #define ___P1U32(a)a
 
@@ -5580,9 +5582,9 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #else
 
-#define ___P4U8(d,c,b,a)((((((___WORD)___CAST_U8(a)<<8)+(___WORD)___CAST_U8(b))<<8)+(___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
+#define ___P4U8(d,c,b,a)((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
 
-#define ___P2U16(b,a)((___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
+#define ___P2U16(b,a)((unsigned ___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
 
 #define ___P1U32(a)a
 
@@ -5634,23 +5636,23 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #ifdef ___BIG_ENDIAN
 
-#define ___P8U8(a,b,c,d,e,f,g,h)((((((((((((((___WORD)___CAST_U8(a)<<8)+(___WORD)___CAST_U8(b))<<8)+(___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d))<<8)+(___WORD)___CAST_U8(e))<<8)+(___WORD)___CAST_U8(f))<<8)+(___WORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
+#define ___P8U8(a,b,c,d,e,f,g,h)((((((((((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(unsigned ___WORD)___CAST_U8(d))<<8)+(unsigned ___WORD)___CAST_U8(e))<<8)+(unsigned ___WORD)___CAST_U8(f))<<8)+(unsigned ___WORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
 
-#define ___P4U16(a,b,c,d)((((((___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b))<<16)+(___WORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
+#define ___P4U16(a,b,c,d)((((((unsigned ___WORD)___CAST_U16(a)<<16)+(unsigned ___WORD)___CAST_U16(b))<<16)+(unsigned ___WORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
 
-#define ___P2U32(a,b)((___WORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
+#define ___P2U32(a,b)((unsigned ___WORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
 
 #else
 
-#define ___P8U8(h,g,f,e,d,c,b,a)((((((((((((((___WORD)___CAST_U8(a)<<8)+(___WORD)___CAST_U8(b))<<8)+(___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d))<<8)+(___WORD)___CAST_U8(e))<<8)+(___WORD)___CAST_U8(f))<<8)+(___WORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
+#define ___P8U8(h,g,f,e,d,c,b,a)((((((((((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(unsigned ___WORD)___CAST_U8(d))<<8)+(unsigned ___WORD)___CAST_U8(e))<<8)+(unsigned ___WORD)___CAST_U8(f))<<8)+(unsigned ___WORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
 
-#define ___P4U16(d,c,b,a)((((((___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b))<<16)+(___WORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
+#define ___P4U16(d,c,b,a)((((((unsigned ___WORD)___CAST_U16(a)<<16)+(unsigned ___WORD)___CAST_U16(b))<<16)+(unsigned ___WORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
 
-#define ___P2U32(b,a)((___WORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
+#define ___P2U32(b,a)((unsigned ___WORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
 
 #endif
 
-#define ___P1U64(hi,lo)((___WORD)(hi)<<32)+___CAST_U32(lo)
+#define ___P1U64(hi,lo)((unsigned ___WORD)(hi)<<32)+(___WORD)___CAST_U32(lo)
 
 #define ___S8VEC0 ___PADDING};
 #define ___S8VEC1(a),___P8U8(a,0,0,0,0,0,0,0) ___PADDING};
@@ -5826,7 +5828,7 @@ ___LOCAL ___WORD ___ofdtbl[]={
 #if ___SCMOBJ_WIDTH == 32
 #define ___GCMAP2(a,b),a,b
 #else
-#define ___GCMAP2(a,b),((___WORD)b<<32)+___CAST_U32(a)
+#define ___GCMAP2(a,b),(___CAST(unsigned ___WORD,b)<<32)+___CAST(___WORD,___CAST_U32(a))
 #endif
 
 #define ___U64VEC0 ___PADDING_64};
@@ -6178,17 +6180,17 @@ ___P((___global_state ___gs),()); ___END_C_LINKAGE
 #define ___ERR_CODE_FACILITY_TLS      317
 
 #define ___ERR_CODE_BUILD(facility,code) \
-((___CAST(___ERR_CODE,-1)<<29)+(___CAST(___ERR_CODE,facility)<<16)+(code))
+(~___MASK(___ERR_CODE,29)+(___CAST(___ERR_CODE,facility)<<16)+(code))
 
-#define ___ERR_CODE_FACILITY(err)(((err)>>16)&~(~___CAST(___ERR_CODE,0)<<9))
+#define ___ERR_CODE_FACILITY(err)(((err)>>16)&___MASK(___ERR_CODE,9))
 
 #define ___HRESULT_ERR(hresult) \
-(((hresult)&~(~___CAST(___ERR_CODE,0)<<25)) | \
-(((hresult)&~___CAST(___ERR_CODE,0)<<27)>>2))
+(((hresult)&___MASK(___ERR_CODE,25)) | \
+(((hresult)&___MASK(unsigned ___ERR_CODE,27))>>2))
 
 #define ___HRESULT_FROM_ERR_CODE(err) \
-(((err)&~(~___CAST(___ERR_CODE,0)<<25)) | \
-(((err)&~___CAST(___ERR_CODE,0)<<25)<<2))
+(((err)&___MASK(___ERR_CODE,25)) | \
+(((err)&___MASK(unsigned ___ERR_CODE,25))<<2))
 
 #define ___WIN32_ERR(win32err) \
 ___HRESULT_ERR(HRESULT_FROM_WIN32(win32err))
