@@ -2572,6 +2572,8 @@ ___HIDDEN void terminate_intr ___PVOID
 
 #ifdef USE_POSIX
 
+#ifdef ___DEBUG
+
 ___HIDDEN void log_ctrl_flow_history ___PVOID
 {
   ___print_ctrl_flow_history (___PSTATE);
@@ -2603,6 +2605,8 @@ int sig;)
 
   ___fatal_error (msgs);
 }
+
+#endif
 
 #endif
 
