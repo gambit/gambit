@@ -3785,9 +3785,31 @@ ___D_ALL
 #define ___END_COD \
 ___ps->pc=___pc; ___W_ALL return ___pc; }
 
+#ifdef ___DEBUG
+
+#define ___CTRL_FLOW_HISTORY_LENGTH 1024
+
+#define ___AM_HERE \
+do { ___processor_state ___ps = ___PSTATE; ___AM_HERE_PS } while (0)
+
+#define ___AM_HERE_PS \
+{ int ___i = ___ps->ctrl_flow_history_index; \
+  ___source_location *___ptr = ___ps->ctrl_flow_history+___i; \
+  ___ptr->file = __FILE__; \
+  ___ptr->line = __LINE__; \
+  ___ps->ctrl_flow_history_index = (___i+1) % ___CTRL_FLOW_HISTORY_LENGTH; \
+}
+
+#else
+
+#define ___AM_HERE
+#define ___AM_HERE_PS
+
+#endif
+
 #ifdef ___DEBUG_HOST_CHANGES
 #define ___REGISTER_HOST_ENTRY \
-___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME);
+___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LINE__);
 #else
 #define ___REGISTER_HOST_ENTRY
 #endif
@@ -4953,7 +4975,7 @@ switch (na) \
 #define ___MLBL(n)___lp+((n)*___LS*___WS)
 #define ___LBL(n)___start+((___PH_LBL0-___HOST_LBL0+n)*___LS*___WS)
 #define ___DEF_SLBL(n,lbl)___DEF_SW(n)___DEF_GLBL(lbl)
-#define ___DEF_GLBL(lbl)lbl:
+#define ___DEF_GLBL(lbl)lbl:___AM_HERE_PS
 #define ___GOTO(lbl)goto lbl;
 #define ___IF_GOTO(test,lbl)if (test) ___GOTO(lbl)
 #define ___JUMPINT(nargs,prc,lbl)___SM(___GOTO(lbl),{nargs ___JUMP(prc)})
@@ -5214,8 +5236,8 @@ if (___INTERRUPT_REQ(___INTERRUPT_FLAGS(), (___ps->intr_mask = mask))) \
 #define ___POLL(n) \
 if (___EXPECT_FALSE(___POLL_TRIGGER)) \
 {___ps->temp1=___LBL(n); \
-___ps->poll_file=__FILE__; \
-___ps->poll_line=__LINE__; \
+___ps->poll_location.file=__FILE__; \
+___ps->poll_location.line=__LINE__; \
 ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
 }
 #else
@@ -5233,8 +5255,8 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
 #define ___CHECK_HEAP(n,m) \
 if (___EXPECT_FALSE(___hp>___ps->heap_limit)) \
 {___ps->temp1=___LBL(n); \
-___ps->check_heap_file=__FILE__; \
-___ps->check_heap_line=__LINE__; \
+___ps->check_heap_location.file=__FILE__; \
+___ps->check_heap_location.line=__LINE__; \
 ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
 }
 #else
@@ -7217,6 +7239,16 @@ int _fltused; /* needed if floating-point used. */
 
 #endif
 
+#ifdef ___DEBUG
+
+typedef struct ___source_location
+  {
+    int line;
+    char *file;
+  } ___source_location;
+
+#endif
+
 #ifdef ___USE_SETJMP
 
 typedef struct ___jmpbuf_struct
@@ -7768,18 +7800,21 @@ typedef struct ___processor_state_struct
 
     ___pstate_mem mem; /* memory management state */
 
+#ifdef ___DEBUG
+
+    unsigned int ctrl_flow_history_index;
+    ___source_location ctrl_flow_history[___CTRL_FLOW_HISTORY_LENGTH];
+
 #ifdef ___DEBUG_STACK_LIMIT
-    int poll_line;
-    char *poll_file;
-    int stack_limit_line;
-    char *stack_limit_file;
+    ___source_location poll_location;
+    ___source_location stack_limit_location;
 #endif
 
 #ifdef ___DEBUG_HEAP_LIMIT
-    int check_heap_line;
-    char *check_heap_file;
-    int heap_limit_line;
-    char *heap_limit_file;
+    ___source_location check_heap_location;
+    ___source_location heap_limit_location;
+#endif
+
 #endif
 
 #ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
@@ -9231,12 +9266,16 @@ typedef struct ___global_state_struct
        ___P((___PSD
              ___SCMOBJ err),
             ());
+#ifdef ___DEBUG
 #ifdef ___DEBUG_HOST_CHANGES
     void (*___register_host_entry)
        ___P((___PSD
              ___WORD start,
-             char *module_name),
+             char *module_name,
+             char *file,
+             int line),
             ());
+#endif
 #endif
     void (*___raise_interrupt_pstate)
        ___P((___processor_state ___ps,
@@ -10506,12 +10545,16 @@ ___IMP_FUNC(void,___propagate_error)
    ___P((___PSD
          ___SCMOBJ err),
         ());
+#ifdef ___DEBUG
 #ifdef ___DEBUG_HOST_CHANGES
 ___IMP_FUNC(void,___register_host_entry)
    ___P((___PSD
          ___WORD start,
-         char *module_name),
+         char *module_name,
+         char *file,
+         int line),
         ());
+#endif
 #endif
 ___IMP_FUNC(void,___raise_interrupt_pstate)
    ___P((___processor_state ___ps,

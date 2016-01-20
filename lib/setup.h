@@ -1,6 +1,6 @@
 /* File: "setup.h" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___SETUP_H
 #define ___SETUP_H
@@ -12,6 +12,16 @@
 extern ___SCMOBJ ___os_load_object_file
    ___P((___SCMOBJ path,
          ___SCMOBJ modname),
+        ());
+
+
+extern void ___print_source_location
+   ___P((___source_location *loc),
+        ());
+
+
+extern void ___print_ctrl_flow_history
+   ___P((___processor_state ___ps),
         ());
 
 

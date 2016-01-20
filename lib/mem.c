@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 408003
@@ -3467,14 +3467,25 @@ ___virtual_machine_state ___vms;)
 
   nonexecutable_wills = ___TAG(0,0); /* tagged empty list */
 
+#ifdef ___DEBUG
+
+  {
+    int i;
+    ___ps->ctrl_flow_history_index = 0;
+    for (i=___CTRL_FLOW_HISTORY_LENGTH-1; i>=0; i--)
+      ___ps->ctrl_flow_history[i].line = 0;
+  }
+
 #ifdef ___DEBUG_STACK_LIMIT
-  ___ps->poll_line = 0;
-  ___ps->stack_limit_line = 0;
+  ___ps->poll_location.line = 0;
+  ___ps->stack_limit_location.line = 0;
 #endif
 
 #ifdef ___DEBUG_HEAP_LIMIT
-  ___ps->check_heap_line = 0;
-  ___ps->heap_limit_line = 0;
+  ___ps->check_heap_location.line = 0;
+  ___ps->heap_limit_location.line = 0;
+#endif
+
 #endif
 
 #ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
