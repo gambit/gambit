@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2016 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -1218,19 +1218,19 @@
         (^return-jump expr)
         (^return expr)))
 
-  (if poll?
-      (univ-emit-poll-or-continue ctx expr ret)
-      (ret)))
+  (univ-emit-poll-or-continue ctx expr poll? ret))
 
-(define (univ-emit-poll-or-continue ctx expr cont)
-  (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
-           -1
-           (lambda (inc)
-             (^if (^= inc (^int 0))
-                  (^return-call-prim
-                   (^rts-method-use 'poll)
-                   expr)
-                  (cont)))))
+(define (univ-emit-poll-or-continue ctx expr poll? cont)
+  (if poll?
+      (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
+               -1
+               (lambda (inc)
+                 (^if (^= inc (^int 0))
+                      (^return-call-prim
+                       (^rts-method-use 'poll)
+                       expr)
+                      (cont))))
+      (cont)))
 
 (define (univ-emit-return-call-prim ctx expr . params)
   (^return

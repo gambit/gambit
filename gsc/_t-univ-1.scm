@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2016 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2287,6 +2287,10 @@
                   ;; body
                   (univ-emit-fn-body ctx header gen-body))))))
 
+          (define (unwind-stack? gvm-instr)
+            (let ((node (comment-get (gvm-instr-comment gvm-instr) 'node)))
+              (and node (not (intrs-enabled? (node-env node))) 'unwind)))
+
           (define (scan-gvm-instr ctx gvm-instr)
 
             ;; TODO: combine with scan-gvm-opnd
@@ -2431,8 +2435,9 @@
                      (opnds (ifjump-opnds gvm-instr))
                      (true (ifjump-true gvm-instr))
                      (false (ifjump-false gvm-instr))
-                     (poll? (ifjump-poll? gvm-instr))
-                     (fs (frame-size (gvm-instr-frame gvm-instr))))
+                     (fs (frame-size (gvm-instr-frame gvm-instr)))
+                     (poll? (or (ifjump-poll? gvm-instr)
+                                (unwind-stack? gvm-instr))))
 
                  (let ((proc (proc-obj-test test)))
                    (if (not proc)
@@ -2462,10 +2467,11 @@
                ;; test: (jump-poll? gvm-instr)
 
                (let ((nb-args (jump-nb-args gvm-instr))
-                     (poll? (jump-poll? gvm-instr))
                      (safe? (jump-safe? gvm-instr))
                      (opnd (jump-opnd gvm-instr))
-                     (fs (frame-size (gvm-instr-frame gvm-instr))))
+                     (fs (frame-size (gvm-instr-frame gvm-instr)))
+                     (poll? (or (ifjump-poll? gvm-instr)
+                                (unwind-stack? gvm-instr))))
 
                  (or (and (obj? opnd)
                           (proc-obj? (obj-val opnd))
@@ -2556,9 +2562,7 @@
                         (^return-jump
                          (scan-gvm-opnd ctx (make-lbl n))))))
 
-               (if poll?
-                   (univ-emit-poll-or-continue ctx (scan-gvm-opnd ctx (make-lbl n)) cont)
-                   (cont)))))
+               (univ-emit-poll-or-continue ctx (scan-gvm-opnd ctx (make-lbl n)) poll? cont))))
 
           (define (scan-gvm-opnd ctx gvm-opnd)
             (if (lbl? gvm-opnd)
