@@ -15,14 +15,17 @@ extern ___SCMOBJ ___os_load_object_file
         ());
 
 
+#ifdef ___DEBUG
+
 extern void ___print_source_location
    ___P((___source_location *loc),
         ());
 
-
 extern void ___print_ctrl_flow_history
    ___P((___processor_state ___ps),
         ());
+
+#endif
 
 
 #define ___COVER(n)
