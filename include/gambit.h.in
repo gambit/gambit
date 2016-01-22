@@ -6208,11 +6208,11 @@ ___P((___global_state ___gs),()); ___END_C_LINKAGE
 
 #define ___HRESULT_ERR(hresult) \
 (((hresult)&___MASK(___ERR_CODE,25)) | \
-(((hresult)&___MASK(unsigned ___ERR_CODE,27))>>2))
+(((hresult)&~___MASK(___ERR_CODE,27))>>2))
 
 #define ___HRESULT_FROM_ERR_CODE(err) \
 (((err)&___MASK(___ERR_CODE,25)) | \
-(((err)&___MASK(unsigned ___ERR_CODE,25))<<2))
+(((err)&~___MASK(unsigned ___ERR_CODE,25))<<2))
 
 #define ___WIN32_ERR(win32err) \
 ___HRESULT_ERR(HRESULT_FROM_WIN32(win32err))
