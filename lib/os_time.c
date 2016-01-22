@@ -1,6 +1,6 @@
 /* File: "os_time.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1323,6 +1323,14 @@ ___F64 ___set_heartbeat_interval
         (seconds)
 ___F64 seconds;)
 {
+  /*
+   * By default Windows will use a 64 Hz timer to implement thread
+   * scheduling and this limits the resolution of the heartbeat.  For
+   * higher resolution heartbeats, USE_HIGH_RES_TIMING must be defined
+   * so that timeBeginPeriod(1) is called in the setup_time_management
+   * function above.
+   */
+
   ___time_mod.current_heartbeat_interval = seconds;
 
   if (seconds < 0.0) /* turn heartbeat off */
