@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -634,7 +634,7 @@
                            obj
                            (if (eq? subtype 'bigfixnum)
                              (lambda (obj i)
-                               (list "BIGFIX" i (targ-c-s64 obj)))
+                               (list "BIGFIX" i (targ-c-long-long obj)))
                              (lambda (obj i)
                                (list "SUB" i))))))
                    (case subtype
@@ -697,7 +697,7 @@
 ;;      ((body)
 ;;       '("BODYOBJ"))
       ((fixnum)
-       (list "FIX" (targ-c-s32 obj)))
+       (list "FIX" (targ-c-long obj)))
       ((char)
        (list "CHR" (targ-c-char obj)))
       (else
@@ -1440,7 +1440,7 @@
 
 (define (targ-vector-like-object def-name id chunk-name elems convert cycle)
   (let ((len (length elems)))
-    (targ-code* (list def-name id len))
+    (targ-code* (list def-name id (targ-c-unsigned-long len)))
     (targ-vector-like-object-body chunk-name elems convert cycle)))
 
 (define (targ-vector-like-object-body chunk-name elems convert cycle)
@@ -2016,8 +2016,9 @@
   (if (pair? x)
     (let ((head (car x)) (tail (cdr x)))
       (case head
-        ((c-s32)       (targ-display-c-s32       tail))
-        ((c-s64)       (targ-display-c-s64       tail))
+        ((c-long)      (targ-display-c-long      tail))
+        ((c-long-long) (targ-display-c-long-long tail))
+        ((c-unsigned-long) (targ-display-c-unsigned-long tail))
         ((c-hex-u32)   (targ-display-c-hex-u32   tail))
         ((c-hex)       (targ-display-c-hex       tail))
         ((c-char)      (targ-display-c-char      tail))
@@ -2177,11 +2178,14 @@
 (define (targ-cell-set! x y)
   (set-cdr! x y))
 
-(define (targ-c-s32 n)
-  (cons 'c-s32 n))
+(define (targ-c-long n)
+  (cons 'c-long n))
 
-(define (targ-c-s64 n)
-  (cons 'c-s64 n))
+(define (targ-c-long-long n)
+  (cons 'c-long-long n))
+
+(define (targ-c-unsigned-long n)
+  (cons 'c-unsigned-long n))
 
 (define (targ-c-hex-u32 n)
   (cons 'c-hex-u32 n))
@@ -2232,13 +2236,17 @@
   (targ-display c-id-prefix) ; c-id-prefix is defined in "_parms.scm"
   (targ-display-no-line-info str))
 
-(define (targ-display-c-s32 n)
+(define (targ-display-c-long n)
   (targ-display n)
   (targ-display-no-line-info "L"))
 
-(define (targ-display-c-s64 n)
+(define (targ-display-c-long-long n)
   (targ-display n)
   (targ-display-no-line-info "LL"))
+
+(define (targ-display-c-unsigned-long n)
+  (targ-display n)
+  (targ-display-no-line-info "UL"))
 
 (define (targ-display-c-hex-u32 n)
   (targ-display-c-hex (targ-u32-to-s32 n)))

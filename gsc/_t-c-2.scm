@@ -1121,7 +1121,7 @@
                     (let ((loc (closure-parms-loc parm))
                           (opnds (closure-parms-opnds parm)))
                       (targ-emit
-                        (targ-loc loc (list "ALLOC_CLO" (length opnds))))))
+                        (targ-loc loc (list "ALLOC_CLO" (targ-c-unsigned-long (length opnds)))))))
                   parms))))
 
   (close (reverse parms) sn)
@@ -2659,7 +2659,7 @@
              (let* ((rev-elements (reverse (map targ-opnd opnds)))
                     (n (length rev-elements)))
                (targ-emit
-                 (list "BEGIN_ALLOC_LIST" n (car rev-elements)))
+                 (list "BEGIN_ALLOC_LIST" (targ-c-unsigned-long n) (car rev-elements)))
                (for-each-index (lambda (elem i)
                                  (targ-emit
                                    (list "ADD_LIST_ELEM" (+ i 1) elem)))
@@ -2844,7 +2844,7 @@
             (let* ((flo? (or (eq? kind 'f32vector) (eq? kind 'f64vector)))
                    (elements (map (if flo? targ-opnd-flo targ-opnd) opnds)))
               (targ-emit
-                (list begin-allocator-name n))
+                (list begin-allocator-name (targ-c-unsigned-long n)))
               (for-each-index (lambda (elem i)
                                 (targ-emit
                                   (list add-element i elem)))
