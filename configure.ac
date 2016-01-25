@@ -1381,7 +1381,7 @@ else
   AC_CHECK_FUNCS(hstrerror)
 
   case "$target_os" in
-    openbsd*)
+    OpenBSD*)
       # OpenBSD/mips64(el) does have get_fpc_csr(), but lacks union fpc_csr.
       ;;
     *)
