@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_codegen.c", produced by Gambit v4.8.3
+; File: "_codegen.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "_codegen"
 (("_codegen"))
@@ -38,7 +38,7 @@
  ()
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___MODULE_NAME "_codegen"
 #define ___LINKER_ID ____20___codegen
 #define ___MH_PROC ___H__20___codegen
@@ -148,7 +148,7 @@ ___END_GLO
 #define ___GLO_vector_2d_set_21_ ___GLO(17,___G_vector_2d_set_21_)
 #define ___PRM_vector_2d_set_21_ ___PRM(17,___G_vector_2d_set_21_)
 
-___DEF_SUB_VEC(___X0,5)
+___DEF_SUB_VEC(___X0,5UL)
                ___VEC1(___REF_SYM(0,___S___codegen))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))

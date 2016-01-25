@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-c-3.c", produced by Gambit v4.8.3
+; File: "_t-c-3.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "_t-c-3"
 (("_t-c-3"))
@@ -179,7 +179,7 @@
  ()
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___MODULE_NAME "_t-c-3"
 #define ___LINKER_ID ____20___t_2d_c_2d_3
 #define ___MH_PROC ___H__20___t_2d_c_2d_3
@@ -811,33 +811,33 @@ ___END_GLO
 #define ___PRM_zero_3f_ ___PRM(120,___G_zero_3f_)
 
 ___DEF_SUB_FLO(___X0,0x3fe00000L,0x0L)
-___DEF_SUB_BIGFIX(___X1,1)
+___DEF_SUB_BIGFIX(___X1,1UL)
                ___BIGFIX1(0x7fffffffL)
-___DEF_SUB_BIGFIX(___X2,2)
+___DEF_SUB_BIGFIX(___X2,2UL)
                ___BIGFIX2(0x0L,0x1L)
                ___BIGFIX0
-___DEF_SUB_BIG(___X3,2)
+___DEF_SUB_BIG(___X3,2UL)
                ___BIG2(-0x1L,0x7fffffffL)
                ___BIG0
-___DEF_SUB_BIG(___X4,3)
+___DEF_SUB_BIG(___X4,3UL)
                ___BIG2(0x0L,0x0L)
                ___BIG1(0x1L)
-___DEF_SUB_BIGFIX(___X5,1)
+___DEF_SUB_BIGFIX(___X5,1UL)
                ___BIGFIX1(-1-0x7FFFFFFFL)
-___DEF_SUB_STR(___X6,13)
+___DEF_SUB_STR(___X6,13UL)
                ___STR8(45,49,45,48,120,55,70,70)
                ___STR5(70,70,70,70,70)
-___DEF_SUB_STR(___X7,3)
+___DEF_SUB_STR(___X7,3UL)
                ___STR3(45,48,120)
-___DEF_SUB_STR(___X8,2)
+___DEF_SUB_STR(___X8,2UL)
                ___STR2(48,120)
-___DEF_SUB_STR(___X9,38)
+___DEF_SUB_STR(___X9,38UL)
                ___STR8(116,97,114,103,45,111,98,106)
                ___STR8(45,115,117,98,116,121,112,101)
                ___STR8(44,32,117,110,107,110,111,119)
                ___STR8(110,32,111,98,106,101,99,116)
                ___STR6(32,39,111,98,106,39)
-___DEF_SUB_STR(___X10,55)
+___DEF_SUB_STR(___X10,55UL)
                ___STR8(116,97,114,103,45,111,98,106)
                ___STR8(45,115,117,98,116,121,112,101)
                ___STR8(45,105,110,116,101,103,101,114)
@@ -845,7 +845,7 @@ ___DEF_SUB_STR(___X10,55)
                ___STR8(110,32,115,117,98,116,121,112)
                ___STR8(101,100,32,111,98,106,101,99)
                ___STR7(116,32,39,111,98,106,39)
-___DEF_SUB_VEC(___X11,5)
+___DEF_SUB_VEC(___X11,5UL)
                ___VEC1(___REF_SYM(0,___S___t_2d_c_2d_3))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))
@@ -4290,7 +4290,7 @@ ___DEF_SLBL(20,___L20_c_23_targ_2d_float_2d__3e_inexact_2d_exponential_2d_format
    ___SET_R0(___STK(-10))
    ___ADJFP(-9)
 ___DEF_GLBL(___L111_c_23_targ_2d_float_2d__3e_inexact_2d_exponential_2d_format)
-   ___BEGIN_ALLOC_VECTOR(3)
+   ___BEGIN_ALLOC_VECTOR(3UL)
    ___ADD_VECTOR_ELEM(0,___STK(0))
    ___ADD_VECTOR_ELEM(1,___FIX(0L))
    ___ADD_VECTOR_ELEM(2,___FIX(1L))
@@ -4954,7 +4954,7 @@ ___DEF_GLBL(___L166_c_23_targ_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___GOTO(___L189_c_23_targ_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___END_IF
 ___DEF_GLBL(___L167_c_23_targ_2d_float_2d__3e_inexact_2d_exponential_2d_format)
-   ___BEGIN_ALLOC_VECTOR(3)
+   ___BEGIN_ALLOC_VECTOR(3UL)
    ___ADD_VECTOR_ELEM(0,___R1)
    ___ADD_VECTOR_ELEM(1,___FIX(0L))
    ___ADD_VECTOR_ELEM(2,___FIX(1L))

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsilib.c", produced by Gambit v4.8.3
+; File: "_gsilib.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "_gsilib"
 (("_gsilib"))
@@ -20,7 +20,7 @@
  ()
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___MODULE_NAME "_gsilib"
 #define ___LINKER_ID ____20___gsilib
 #define ___MH_PROC ___H__20___gsilib
@@ -50,7 +50,7 @@ ___END_GLO
 #define ___GLO__20___gsilib ___GLO(0,___G__20___gsilib)
 #define ___PRM__20___gsilib ___PRM(0,___G__20___gsilib)
 
-___DEF_SUB_VEC(___X0,5)
+___DEF_SUB_VEC(___X0,5UL)
                ___VEC1(___REF_SYM(0,___S___gsilib))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))

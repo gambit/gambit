@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_assert.c", produced by Gambit v4.8.3
+; File: "_assert.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "_assert"
 (("_assert"))
@@ -20,7 +20,7 @@
  ()
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___MODULE_NAME "_assert"
 #define ___LINKER_ID ____20___assert
 #define ___MH_PROC ___H__20___assert
@@ -50,7 +50,7 @@ ___END_GLO
 #define ___GLO__20___assert ___GLO(0,___G__20___assert)
 #define ___PRM__20___assert ___PRM(0,___G__20___assert)
 
-___DEF_SUB_VEC(___X0,5)
+___DEF_SUB_VEC(___X0,5UL)
                ___VEC1(___REF_SYM(0,___S___assert))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))

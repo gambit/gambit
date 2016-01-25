@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gambitgsi.c", produced by Gambit v4.8.3
+; File: "_gambitgsi.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "_gambitgsi"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_gsilib" (preload . #t)))
@@ -4558,7 +4558,7 @@
  #f
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___LINKFILE_NAME "_gambitgsi"
 #define ___LINKER_ID ____20___gambitgsi
 #define ___INCREMENTAL_LINKFILE
@@ -9039,11 +9039,11 @@ ___DEF_OLD_SYM_GLO(___S_zero_3f_,___G_zero_3f_)
 ___END_OLD_SYM_GLO
 
 ___BEGIN_NEW_SYM_GLO
-___DEF_SUB_NSTR(___X0,8)
+___DEF_SUB_NSTR(___X0,8UL)
                ___NSTR8(32,95,103,115,105,108,105,98)
                ___NSTR0
 ___DEF_NEW_SYM_GLO_SUP(0,___S__20___gsilib,___X0,426073108,___G__20___gsilib)
-___DEF_SUB_NSTR(___X1,7)
+___DEF_SUB_NSTR(___X1,7UL)
                ___NSTR7(95,103,115,105,108,105,98)
 ___DEF_NEW_SYM_GLO(___S__20___gsilib,___S___gsilib,___X1,479205778,___G___gsilib)
 ___END_NEW_SYM_GLO(___S___gsilib,0)

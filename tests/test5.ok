@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "mix.c", produced by Gambit v4.8.3
+; File: "mix.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "mix"
 (("mix"))
@@ -406,7 +406,7 @@
  ()
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___MODULE_NAME "mix"
 #define ___LINKER_ID ____20_mix
 #define ___MH_PROC ___H__20_mix

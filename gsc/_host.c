@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_host.c", produced by Gambit v4.8.3
+; File: "_host.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "_host"
 (("_host"))
@@ -219,7 +219,7 @@
  ()
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___MODULE_NAME "_host"
 #define ___LINKER_ID ____20___host
 #define ___MH_PROC ___H__20___host
@@ -1044,7 +1044,7 @@ ___END_GLO
 #define ___PRM_write_2d_char ___PRM(197,___G_write_2d_char)
 
 ___DEF_SUB_FLO(___X0,0x0L,0x0L)
-___DEF_SUB_VEC(___X1,5)
+___DEF_SUB_VEC(___X1,5UL)
                ___VEC1(___REF_SYM(0,___S___host))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))
@@ -1977,7 +1977,7 @@ ___DEF_SLBL(0,___L0_c_23_write_2d_returning_2d_len)
 ___DEF_GLBL(___L_c_23_write_2d_returning_2d_len)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R2)
-   ___SET_STK(3,___ALLOC_CLO(1))
+   ___SET_STK(3,___ALLOC_CLO(1UL))
    ___BEGIN_SETUP_CLO(1,___STK(3),6)
    ___ADD_CLO_ELEM(0,___R1)
    ___END_SETUP_CLO(1)
@@ -2040,7 +2040,7 @@ ___DEF_SLBL(0,___L0_c_23_display_2d_returning_2d_len)
 ___DEF_GLBL(___L_c_23_display_2d_returning_2d_len)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R2)
-   ___SET_STK(3,___ALLOC_CLO(1))
+   ___SET_STK(3,___ALLOC_CLO(1UL))
    ___BEGIN_SETUP_CLO(1,___STK(3),6)
    ___ADD_CLO_ELEM(0,___R1)
    ___END_SETUP_CLO(1)
@@ -2451,11 +2451,11 @@ ___DEF_SLBL(0,___L0_c_23_scheme_2d_global_2d_var_2d_define_21_)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23_scheme_2d_global_2d_var_2d_define_21_)
-   ___BEGIN_ALLOC_LIST(2,___R2)
+   ___BEGIN_ALLOC_LIST(2UL,___R2)
    ___ADD_LIST_ELEM(1,___SYM_quote)
    ___END_ALLOC_LIST(2)
    ___SET_R2(___GET_LIST(2))
-   ___BEGIN_ALLOC_LIST(3,___R2)
+   ___BEGIN_ALLOC_LIST(3UL,___R2)
    ___ADD_LIST_ELEM(1,___R1)
    ___ADD_LIST_ELEM(2,___SYM_define)
    ___END_ALLOC_LIST(3)

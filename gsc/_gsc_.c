@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc_.c", produced by Gambit v4.8.3
+; File: "_gsc_.c", produced by Gambit v4.8.4
 (
-408003
+408004
 (C)
 "_gsc_"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_host" (preload . #t)) ("_utils" (preload . #t)) ("_source" (preload . #t)) ("_parms" (preload . #t)) ("_env" (preload . #t)) ("_ptree1" (preload . #t)) ("_ptree2" (preload . #t)) ("_gvm" (preload . #t)) ("_back" (preload . #t)) ("_front" (preload . #t)) ("_prims" (preload . #t)) ("_assert" (preload . #t)) ("_asm" (preload . #t)) ("_x86" (preload . #t)) ("_codegen" (preload . #t)) ("_t-univ-1" (preload . #t)) ("_t-univ-2" (preload . #t)) ("_t-univ-3" (preload . #t)) ("_t-univ-4" (preload . #t)) ("_t-c-1" (preload . #t)) ("_t-c-2" (preload . #t)) ("_t-c-3" (preload . #t)) ("_gsclib" (preload . #t)) ("_gsc" (preload . #t)))
@@ -434,12 +434,13 @@
 "c-initialize"
 "c-lambda"
 "c-lbl-"
+"c-long"
+"c-long-long"
 "c-obj-"
 "c-proc"
-"c-s32"
-"c-s64"
 "c-string"
 "c-type"
+"c-unsigned-long"
 "c1"
 "c2"
 "call"
@@ -1581,6 +1582,7 @@
 "unused3"
 "unused4"
 "unused5"
+"unwind"
 "unwrapper"
 "upcase"
 "use-diffie-hellman"
@@ -4977,6 +4979,7 @@
 "c#targ-c-hex-u32"
 "c#targ-c-id-glo"
 "c#targ-c-id-glo2"
+"c#targ-c-unsigned-long"
 "c#targ-ceiling-log2"
 "c#targ-cell-set!"
 "c#targ-check-conditions"
@@ -5003,9 +5006,10 @@
 "c#targ-display-c-hex"
 "c#targ-display-c-hex-u32"
 "c#targ-display-c-id"
-"c#targ-display-c-s32"
-"c#targ-display-c-s64"
+"c#targ-display-c-long"
+"c#targ-display-c-long-long"
 "c#targ-display-c-string"
+"c#targ-display-c-unsigned-long"
 "c#targ-display-no-line-info"
 "c#targ-display-no-line-info-UTF-8"
 "c#targ-display-no-line-info-c-string"
@@ -7260,8 +7264,8 @@
 "c#targ-c-id-prm2"
 "c#targ-c-id-sym"
 "c#targ-c-id-sym2"
-"c#targ-c-s32"
-"c#targ-c-s64"
+"c#targ-c-long"
+"c#targ-c-long-long"
 "c#targ-c-string"
 "c#targ-cast-to-fixnum32"
 "c#targ-combine-checks?"
@@ -7918,7 +7922,7 @@
  #f
 )
 #else
-#define ___VERSION 408003
+#define ___VERSION 408004
 #define ___LINKFILE_NAME "_gsc_"
 #define ___LINKER_ID ____20___gsc__
 #define ___INCREMENTAL_LINKFILE
@@ -12467,9 +12471,10 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_id_2d_linker,___G_c_23_targ_2d_c_2d_id
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_id_2d_prm2,___G_c_23_targ_2d_c_2d_id_2d_prm2)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_id_2d_sym,___G_c_23_targ_2d_c_2d_id_2d_sym)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_id_2d_sym2,___G_c_23_targ_2d_c_2d_id_2d_sym2)
-___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_s32,___G_c_23_targ_2d_c_2d_s32)
-___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_s64,___G_c_23_targ_2d_c_2d_s64)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_long,___G_c_23_targ_2d_c_2d_long)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_long_2d_long,___G_c_23_targ_2d_c_2d_long_2d_long)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_string,___G_c_23_targ_2d_c_2d_string)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_c_2d_unsigned_2d_long,___G_c_23_targ_2d_c_2d_unsigned_2d_long)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_cast_2d_to_2d_fixnum32,___G_c_23_targ_2d_cast_2d_to_2d_fixnum32)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_ceiling_2d_log2,___G_c_23_targ_2d_ceiling_2d_log2)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_cell_2d_set_21_,___G_c_23_targ_2d_cell_2d_set_21_)
@@ -12498,9 +12503,10 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_char,___G_c_23_targ_2d_disp
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_hex,___G_c_23_targ_2d_display_2d_c_2d_hex)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_hex_2d_u32,___G_c_23_targ_2d_display_2d_c_2d_hex_2d_u32)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_id,___G_c_23_targ_2d_display_2d_c_2d_id)
-___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_s32,___G_c_23_targ_2d_display_2d_c_2d_s32)
-___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_s64,___G_c_23_targ_2d_display_2d_c_2d_s64)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_long,___G_c_23_targ_2d_display_2d_c_2d_long)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_long_2d_long,___G_c_23_targ_2d_display_2d_c_2d_long_2d_long)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_string,___G_c_23_targ_2d_display_2d_c_2d_string)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_c_2d_unsigned_2d_long,___G_c_23_targ_2d_display_2d_c_2d_unsigned_2d_long)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_no_2d_line_2d_info,___G_c_23_targ_2d_display_2d_no_2d_line_2d_info)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_no_2d_line_2d_info_2d_UTF_2d_8,___G_c_23_targ_2d_display_2d_no_2d_line_2d_info_2d_UTF_2d_8)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display_2d_no_2d_line_2d_info_2d_c_2d_string,___G_c_23_targ_2d_display_2d_no_2d_line_2d_info_2d_c_2d_string)
@@ -13594,12 +13600,13 @@ ___DEF_OLD_SYM_GLO(___S_c_2d_id_2d_sym2,___G_c_2d_id_2d_sym2)
 ___DEF_OLD_SYM_GLO(___S_c_2d_initialize,___G_c_2d_initialize)
 ___DEF_OLD_SYM_GLO(___S_c_2d_lambda,___G_c_2d_lambda)
 ___DEF_OLD_SYM_GLO(___S_c_2d_lbl_2d_,___G_c_2d_lbl_2d_)
+___DEF_OLD_SYM_GLO(___S_c_2d_long,___G_c_2d_long)
+___DEF_OLD_SYM_GLO(___S_c_2d_long_2d_long,___G_c_2d_long_2d_long)
 ___DEF_OLD_SYM_GLO(___S_c_2d_obj_2d_,___G_c_2d_obj_2d_)
 ___DEF_OLD_SYM_GLO(___S_c_2d_proc,___G_c_2d_proc)
-___DEF_OLD_SYM_GLO(___S_c_2d_s32,___G_c_2d_s32)
-___DEF_OLD_SYM_GLO(___S_c_2d_s64,___G_c_2d_s64)
 ___DEF_OLD_SYM_GLO(___S_c_2d_string,___G_c_2d_string)
 ___DEF_OLD_SYM_GLO(___S_c_2d_type,___G_c_2d_type)
+___DEF_OLD_SYM_GLO(___S_c_2d_unsigned_2d_long,___G_c_2d_unsigned_2d_long)
 ___DEF_OLD_SYM_GLO(___S_c1,___G_c1)
 ___DEF_OLD_SYM_GLO(___S_c2,___G_c2)
 ___DEF_OLD_SYM_GLO(___S_caaaar,___G_caaaar)
@@ -15615,6 +15622,7 @@ ___DEF_OLD_SYM_GLO(___S_unused2,___G_unused2)
 ___DEF_OLD_SYM_GLO(___S_unused3,___G_unused3)
 ___DEF_OLD_SYM_GLO(___S_unused4,___G_unused4)
 ___DEF_OLD_SYM_GLO(___S_unused5,___G_unused5)
+___DEF_OLD_SYM_GLO(___S_unwind,___G_unwind)
 ___DEF_OLD_SYM_GLO(___S_unwrapper,___G_unwrapper)
 ___DEF_OLD_SYM_GLO(___S_upcase,___G_upcase)
 ___DEF_OLD_SYM_GLO(___S_use_2d_diffie_2d_hellman,___G_use_2d_diffie_2d_hellman)
@@ -15737,20 +15745,20 @@ ___DEF_OLD_SYM_GLO(___S_zero_3f_,___G_zero_3f_)
 ___END_OLD_SYM_GLO
 
 ___BEGIN_NEW_SYM_GLO
-___DEF_SUB_NSTR(___X0,5)
+___DEF_SUB_NSTR(___X0,5UL)
                ___NSTR5(32,95,103,115,99)
 ___DEF_NEW_SYM_GLO_SUP(0,___S__20___gsc,___X0,400880959,___G__20___gsc)
-___DEF_SUB_NSTR(___X1,14)
+___DEF_SUB_NSTR(___X1,14UL)
                ___NSTR8(35,35,109,97,105,110,45,103)
                ___NSTR6(115,105,47,103,115,99)
 ___DEF_NEW_SYM_GLO_SUP(___S__20___gsc,___S__23__23_main_2d_gsi_2f_gsc,___X1,391040087,___G__23__23_main_2d_gsi_2f_gsc)
-___DEF_SUB_NSTR(___X2,4)
+___DEF_SUB_NSTR(___X2,4UL)
                ___NSTR4(95,103,115,99)
 ___DEF_NEW_SYM_GLO(___S__23__23_main_2d_gsi_2f_gsc,___S___gsc,___X2,7311246,___G___gsc)
-___DEF_SUB_NSTR(___X3,1)
+___DEF_SUB_NSTR(___X3,1UL)
                ___NSTR1(102)
 ___DEF_NEW_SYM_GLO(___S___gsc,___S_f,___X3,21188586,___G_f)
-___DEF_SUB_NSTR(___X4,9)
+___DEF_SUB_NSTR(___X4,9UL)
                ___NSTR8(110,111,112,114,101,108,111,97)
                ___NSTR1(100)
 ___DEF_NEW_SYM_GLO(___S_f,___S_nopreload,___X4,195951924,___G_nopreload)
