@@ -1,6 +1,6 @@
 /* File: "mem.h" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___MEM_H
 #define ___MEM_H
@@ -99,7 +99,7 @@ extern void ___cleanup_mem ___PVOID;
 
 #ifdef ___DEBUG_GARBAGE_COLLECT
 
-#define ___garbage_collect(ps,n) ___garbage_collect_debug (ps,n,__LINE__,__FILE__)
+#define ___garbage_collect(ps_n) ___garbage_collect_debug (ps_n,__LINE__,__FILE__)
 
 extern ___BOOL ___garbage_collect_debug
    ___P((___PSD
