@@ -254,6 +254,50 @@ AC_ARG_ENABLE(debug,
               ENABLE_DEBUG=$enableval,
               ENABLE_DEBUG=no)
 
+# Check if debugging of the control flow history is needed.
+
+AC_ARG_ENABLE(debug-ctrl-flow-history,
+              AC_HELP_STRING([--enable-debug-ctrl-flow-history],
+                             [build system so that it tracks the control flow history (default is NO)]),
+              ENABLE_DEBUG_CTRL_FLOW_HISTORY=$enableval,
+              ENABLE_DEBUG_CTRL_FLOW_HISTORY=no)
+
+if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
+  AC_DEFINE([___DEBUG_CTRL_FLOW_HISTORY],[],[Enable debugging of control flow history])
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_CTRL_FLOW_HISTORY"
+  ENABLE_DEBUG=yes
+fi
+
+# Check if debugging of the host changes is needed.
+
+AC_ARG_ENABLE(debug-host-changes,
+              AC_HELP_STRING([--enable-debug-host-changes],
+                             [build system so that it tracks the host changes (default is NO)]),
+              ENABLE_DEBUG_HOST_CHANGES=$enableval,
+              ENABLE_DEBUG_HOST_CHANGES=no)
+
+if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
+  AC_DEFINE([___DEBUG_HOST_CHANGES],[],[Enable debugging of host changes])
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_HOST_CHANGES"
+  ENABLE_DEBUG=yes
+fi
+
+# Check if debugging the garbage collector is needed.
+
+AC_ARG_ENABLE(debug-garbage-collect,
+              AC_HELP_STRING([--enable-debug-garbage-collect],
+                             [build system so that it detects issues in the garbage collect (default is NO)]),
+              ENABLE_DEBUG_GARBAGE_COLLECT=$enableval,
+              ENABLE_DEBUG_GARBAGE_COLLECT=no)
+
+if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
+  AC_DEFINE([___DEBUG_GARBAGE_COLLECT],[],[Enable debugging of garbage collect])
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_GARBAGE_COLLECT"
+  ENABLE_DEBUG=yes
+fi
+
+# Turn on debugging.
+
 if test "$ENABLE_DEBUG" = yes; then
   AC_DEFINE([___DEBUG],[],[Enable debugging])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG"

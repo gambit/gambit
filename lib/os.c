@@ -2572,7 +2572,7 @@ ___HIDDEN void terminate_intr ___PVOID
 
 #ifdef USE_POSIX
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
 ___HIDDEN void log_ctrl_flow_history ___PVOID
 {
@@ -2634,7 +2634,7 @@ ___SCMOBJ ___setup_os ___PVOID
                 if ((e = ___setup_io_module ()) == ___FIX(___NO_ERR)) {
 #ifdef USE_POSIX
                   ___set_signal_handler (SIGPIPE, SIG_IGN); /***** belongs elsewhere */
-#ifdef ___DEBUG
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
                   ___set_signal_handler (SIGTERM, crash_signal_handler);
                   ___set_signal_handler (SIGBUS,  crash_signal_handler);
                   ___set_signal_handler (SIGSEGV, crash_signal_handler);

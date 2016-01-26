@@ -919,6 +919,9 @@ enable_cplusplus
 enable_guide
 enable_c_opt
 enable_debug
+enable_debug_ctrl_flow_history
+enable_debug_host_changes
+enable_debug_garbage_collect
 enable_profile
 enable_coverage
 enable_feedback1
@@ -1593,6 +1596,15 @@ Optional Features:
   --enable-c-opt[=level]  use higher C optimization level (default is NO)
   --enable-debug          build system so that it can be debugged (default is
                           NO)
+  --enable-debug-ctrl-flow-history
+                          build system so that it tracks the control flow
+                          history (default is NO)
+  --enable-debug-host-changes
+                          build system so that it tracks the host changes
+                          (default is NO)
+  --enable-debug-garbage-collect
+                          build system so that it detects issues in the
+                          garbage collect (default is NO)
   --enable-profile        build system so that it can be profiled (default is
                           NO)
   --enable-coverage       build system to accumulate coverage statistics
@@ -4601,6 +4613,62 @@ else
   ENABLE_DEBUG=no
 fi
 
+
+# Check if debugging of the control flow history is needed.
+
+# Check whether --enable-debug-ctrl-flow-history was given.
+if test "${enable_debug_ctrl_flow_history+set}" = set; then :
+  enableval=$enable_debug_ctrl_flow_history; ENABLE_DEBUG_CTRL_FLOW_HISTORY=$enableval
+else
+  ENABLE_DEBUG_CTRL_FLOW_HISTORY=no
+fi
+
+
+if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
+
+$as_echo "#define ___DEBUG_CTRL_FLOW_HISTORY /**/" >>confdefs.h
+
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_CTRL_FLOW_HISTORY"
+  ENABLE_DEBUG=yes
+fi
+
+# Check if debugging of the host changes is needed.
+
+# Check whether --enable-debug-host-changes was given.
+if test "${enable_debug_host_changes+set}" = set; then :
+  enableval=$enable_debug_host_changes; ENABLE_DEBUG_HOST_CHANGES=$enableval
+else
+  ENABLE_DEBUG_HOST_CHANGES=no
+fi
+
+
+if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
+
+$as_echo "#define ___DEBUG_HOST_CHANGES /**/" >>confdefs.h
+
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_HOST_CHANGES"
+  ENABLE_DEBUG=yes
+fi
+
+# Check if debugging the garbage collector is needed.
+
+# Check whether --enable-debug-garbage-collect was given.
+if test "${enable_debug_garbage_collect+set}" = set; then :
+  enableval=$enable_debug_garbage_collect; ENABLE_DEBUG_GARBAGE_COLLECT=$enableval
+else
+  ENABLE_DEBUG_GARBAGE_COLLECT=no
+fi
+
+
+if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
+
+$as_echo "#define ___DEBUG_GARBAGE_COLLECT /**/" >>confdefs.h
+
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_GARBAGE_COLLECT"
+  ENABLE_DEBUG=yes
+fi
+
+# Turn on debugging.
 
 if test "$ENABLE_DEBUG" = yes; then
 

@@ -1,6 +1,6 @@
-/* File: "binpatch.c", Time-stamp: <2007-04-23 22:00:14 feeley> */
+/* File: "binpatch.c" */
 
-/* Copyright (c) 2007 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2007-2016 by Marc Feeley, All Rights Reserved. */
 
 /* This is a tool for patching binary files */
 

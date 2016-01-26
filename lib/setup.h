@@ -20,6 +20,10 @@ extern ___SCMOBJ ___os_load_object_file
 extern void ___print_source_location
    ___P((___source_location *loc),
         ());
+#endif
+
+
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
 extern void ___print_ctrl_flow_history
    ___P((___processor_state ___ps),

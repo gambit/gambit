@@ -27,7 +27,7 @@
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_GARBAGE_COLLECT
 
 /*
  * Defining the symbol ENABLE_CONSISTENCY_CHECKS will enable the GC to
@@ -3467,7 +3467,7 @@ ___virtual_machine_state ___vms;)
 
   nonexecutable_wills = ___TAG(0,0); /* tagged empty list */
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
   {
     int i;
@@ -3475,6 +3475,8 @@ ___virtual_machine_state ___vms;)
     for (i=___CTRL_FLOW_HISTORY_LENGTH-1; i>=0; i--)
       ___ps->ctrl_flow_history[i].line = 0;
   }
+
+#endif
 
 #ifdef ___DEBUG_STACK_LIMIT
   ___ps->poll_location.line = 0;
@@ -3484,8 +3486,6 @@ ___virtual_machine_state ___vms;)
 #ifdef ___DEBUG_HEAP_LIMIT
   ___ps->check_heap_location.line = 0;
   ___ps->heap_limit_location.line = 0;
-#endif
-
 #endif
 
 #ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN

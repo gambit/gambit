@@ -5,5 +5,13 @@
 *.key binary
 *.exe binary
 *.dmg binary
+*.zip binary
+*.pdf binary
+*.bat binary
+*.ai binary
+*.ico binary
+*.fdd binary
+*.nsi.in binary
+*.windows.in binary
 tests/test*.ok -text
 tests/error.scm -text

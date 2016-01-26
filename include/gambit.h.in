@@ -3785,7 +3785,7 @@ ___D_ALL
 #define ___END_COD \
 ___ps->pc=___pc; ___W_ALL return ___pc; }
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
 #define ___CTRL_FLOW_HISTORY_LENGTH 1024
 
@@ -3808,10 +3808,14 @@ do { ___processor_state ___ps = ___PSTATE; ___AM_HERE_PS } while (0)
 #endif
 
 #ifdef ___DEBUG_HOST_CHANGES
-#define ___REGISTER_HOST_ENTRY \
+
+#define ___REGISTER_HOST_ENTRY                                          \
 ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LINE__);
+
 #else
+
 #define ___REGISTER_HOST_ENTRY
+
 #endif
 
 #define ___USES_INDIRECT_GOTO 1
@@ -5233,38 +5237,46 @@ if (___INTERRUPT_REQ(___INTERRUPT_FLAGS(), (___ps->intr_mask = mask))) \
 #endif
 
 #ifdef ___DEBUG_STACK_LIMIT
-#define ___POLL(n) \
+
+#define ___POLL(n)                    \
 if (___EXPECT_FALSE(___POLL_TRIGGER)) \
 {___ps->temp1=___LBL(n); \
 ___ps->poll_location.file=__FILE__; \
 ___ps->poll_location.line=__LINE__; \
 ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
 }
+
 #else
-#define ___POLL(n) \
+
+#define ___POLL(n)                    \
 if (___EXPECT_FALSE(___POLL_TRIGGER)) \
 {___ps->temp1=___LBL(n); \
 ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
 }
+
 #endif
 
 #define ___TASK_PUSH(i)
 #define ___TASK_POP(n)
 
 #ifdef ___DEBUG_HEAP_LIMIT
-#define ___CHECK_HEAP(n,m) \
+
+#define ___CHECK_HEAP(n,m)                    \
 if (___EXPECT_FALSE(___hp>___ps->heap_limit)) \
 {___ps->temp1=___LBL(n); \
 ___ps->check_heap_location.file=__FILE__; \
 ___ps->check_heap_location.line=__LINE__; \
 ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
 }
+
 #else
-#define ___CHECK_HEAP(n,m) \
+
+#define ___CHECK_HEAP(n,m)                    \
 if (___EXPECT_FALSE(___hp>___ps->heap_limit)) \
 {___ps->temp1=___LBL(n); \
 ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
 }
+
 #endif
 
 #define ___FORCE1(n,src) \
@@ -7239,15 +7251,11 @@ int _fltused; /* needed if floating-point used. */
 
 #endif
 
-#ifdef ___DEBUG
-
 typedef struct ___source_location
   {
     int line;
     char *file;
   } ___source_location;
-
-#endif
 
 #ifdef ___USE_SETJMP
 
@@ -7800,10 +7808,10 @@ typedef struct ___processor_state_struct
 
     ___pstate_mem mem; /* memory management state */
 
-#ifdef ___DEBUG
-
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
     unsigned int ctrl_flow_history_index;
     ___source_location ctrl_flow_history[___CTRL_FLOW_HISTORY_LENGTH];
+#endif
 
 #ifdef ___DEBUG_STACK_LIMIT
     ___source_location poll_location;
@@ -7813,8 +7821,6 @@ typedef struct ___processor_state_struct
 #ifdef ___DEBUG_HEAP_LIMIT
     ___source_location check_heap_location;
     ___source_location heap_limit_location;
-#endif
-
 #endif
 
 #ifdef ___HEARTBEAT_USING_POLL_COUNTDOWN
@@ -9266,7 +9272,6 @@ typedef struct ___global_state_struct
        ___P((___PSD
              ___SCMOBJ err),
             ());
-#ifdef ___DEBUG
 #ifdef ___DEBUG_HOST_CHANGES
     void (*___register_host_entry)
        ___P((___PSD
@@ -9275,7 +9280,6 @@ typedef struct ___global_state_struct
              char *file,
              int line),
             ());
-#endif
 #endif
     void (*___raise_interrupt_pstate)
        ___P((___processor_state ___ps,
@@ -10545,7 +10549,6 @@ ___IMP_FUNC(void,___propagate_error)
    ___P((___PSD
          ___SCMOBJ err),
         ());
-#ifdef ___DEBUG
 #ifdef ___DEBUG_HOST_CHANGES
 ___IMP_FUNC(void,___register_host_entry)
    ___P((___PSD
@@ -10554,7 +10557,6 @@ ___IMP_FUNC(void,___register_host_entry)
          char *file,
          int line),
         ());
-#endif
 #endif
 ___IMP_FUNC(void,___raise_interrupt_pstate)
    ___P((___processor_state ___ps,

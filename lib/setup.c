@@ -2642,6 +2642,12 @@ ___source_location *loc;)
 }
 
 
+#endif
+
+
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
+
+
 void ___print_ctrl_flow_history
    ___P((___processor_state ___ps),
         (___ps)
@@ -3799,11 +3805,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___propagate_error
     = ___propagate_error;
 
-#ifdef ___DEBUG
 #ifdef ___DEBUG_HOST_CHANGES
   ___GSTATE->___register_host_entry
     = ___register_host_entry;
-#endif
 #endif
 
   ___GSTATE->___raise_interrupt_pstate

@@ -220,6 +220,14 @@ The configure options which are specific to the Gambit system are:
   --enable-cplusplus      compile using C++ compiler
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-debug          build system so that it can be debugged
+  --enable-debug-ctrl-flow-history
+                          build system so that it tracks the control flow
+                          history
+  --enable-debug-host-changes
+                          build system so that it tracks the host changes
+  --enable-debug-garbage-collector
+                          build system so that it detects issues in the
+                          garbage collector
   --enable-profile        build system so that it can be profiled
   --enable-coverage       build system to accumulate coverage statistics
   --enable-feedback1      build system to accumulate trial run data
@@ -278,6 +286,9 @@ The configure options which are specific to the Gambit system are:
   --enable-track-scheme   cause the inclusion of Scheme code location in
                           C code generated
                           (requires: make bootstrap; make bootclean; make)
+  --enable-poll           use poll as the select method
+  --enable-high-res-timing
+                          enable high-resolution timing on Windows
   --enable-thread-system[=thread-system]
                           cause the selection of a specific thread system
                           (either posix or win32)
@@ -291,6 +302,7 @@ The configure options which are specific to the Gambit system are:
   --enable-max-processors=N
                           max number of processors per Gambit VM
                           (default is 64)
+  --enable-openssl        compile with SSL support using OpenSSL
 
 The option --enable-cplusplus should be used when applications
 developped with the Gambit compiler are to be linked with code or

@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -15,6 +15,15 @@
 
 /* Define as 1 if you want to compile for debugging.  */
 #undef ___DEBUG
+
+/* Define as 1 if you want to compile for debugging the control flow history.  */
+#undef ___DEBUG_CTRL_FLOW_HISTORY
+
+/* Define as 1 if you want to compile for debugging the host changes.  */
+#undef ___DEBUG_HOST_CHANGES
+
+/* Define as 1 if you want to compile for debugging the garbage collector.  */
+#undef ___DEBUG_GARBAGE_COLLECT
 
 /* Define as 1 if you want to compile with profiling.  */
 #undef ___PROFILE
