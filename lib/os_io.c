@@ -974,9 +974,9 @@ ___time timeout;)
 
   ___absolute_time_to_relative_time (state.timeout, &delta);
 
-  if (___time_less (state.relative_timeout, delta))
+  if (state.relative_timeout < ___time_to_seconds (delta))
     {
-      delta = state.relative_timeout;
+      ___time_from_seconds (&delta, state.relative_timeout);
       state.timeout = ___time_mod.time_neg_infinity;
     }
   else
