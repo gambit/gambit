@@ -1076,6 +1076,7 @@ else
   AC_CHECK_HEADERS(dl.h)
   AC_CHECK_HEADERS(sys/dxe.h)
   AC_CHECK_HEADERS(mach-o/dyld.h)
+  AC_CHECK_HEADERS(mach/mach_time.h)
   AC_CHECK_HEADERS(sys/types.h)
   AC_CHECK_HEADERS(sys/time.h)
   AC_CHECK_HEADERS(sys/times.h)
@@ -1229,6 +1230,8 @@ else
 
                AC_SEARCH_LIBS(WSAStartup,ws2_32)
 
+               AC_SEARCH_LIBS(clock_gettime,rt)
+
                AC_SEARCH_LIBS(timeBeginPeriod,winmm)
                ;;
     esac
@@ -1367,6 +1370,7 @@ else
   AC_CHECK_FUNC_SIGNAL
 
   AC_CHECK_FUNCS(clock_gettime)
+  AC_CHECK_FUNCS(mach_absolute_time)
   AC_CHECK_FUNCS(getclock)
   #AC_CHECK_FUNCS(GetSystemTime)
   AC_CHECK_FUNCS(gettimeofday)

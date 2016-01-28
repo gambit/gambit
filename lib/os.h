@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -314,6 +314,7 @@
 #define HAVE_CREATETHREAD 1
 #define HAVE_GETPROCESSTIMES 1
 #define HAVE_GETSYSTEMTIMEASFILETIME 1
+#define HAVE_QUERYPERFORMANCECOUNTER 1
 #define HAVE_SETFILETIME 1
 #define HAVE_TIMEBEGINPERIOD 1
 #define HAVE_GETSYSTEMINFO 1
@@ -363,7 +364,7 @@
 /* Determine which function for getting real time is most precise.  */
 
 #ifdef HAVE_CLOCK_GETTIME
-#define USE_clock_gettime
+#define USE_clock_gettime_realtime
 #else
 #ifdef HAVE_GETCLOCK
 #define USE_getclock
@@ -382,6 +383,21 @@
 #endif
 #endif
 #endif
+#endif
+#endif
+#endif
+
+
+/* Determine which function for getting monotonic time is most precise.  */
+
+#ifdef HAVE_MACH_ABSOLUTE_TIME
+#define USE_mach_absolute_time
+#else
+#ifdef HAVE_QUERYPERFORMANCECOUNTER
+#define USE_QueryPerformanceCounter
+#else
+#ifdef HAVE_CLOCK_GETTIME
+#define USE_clock_gettime_monotonic
 #endif
 #endif
 #endif
@@ -823,9 +839,19 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_times_h
 #endif
 
-#ifdef USE_clock_gettime
+#ifdef USE_clock_gettime_realtime
 #undef INCLUDE_time_h
 #define INCLUDE_time_h
+#endif
+
+#ifdef USE_clock_gettime_monotonic
+#undef INCLUDE_time_h
+#define INCLUDE_time_h
+#endif
+
+#ifdef USE_mach_absolute_time
+#undef INCLUDE_mach_mach_time_h
+#define INCLUDE_mach_mach_time_h
 #endif
 
 #ifdef USE_getclock
@@ -1205,6 +1231,12 @@ ___END_C_LINKAGE
 #ifdef INCLUDE_time_h
 #ifdef HAVE_TIME_H
 #include <time.h>
+#endif
+#endif
+
+#ifdef INCLUDE_mach_mach_time_h
+#ifdef HAVE_MACH_MACH_TIME_H
+#include <mach/mach_time.h>
 #endif
 #endif
 

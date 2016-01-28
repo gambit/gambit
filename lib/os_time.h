@@ -1,6 +1,6 @@
 /* File: "os_time.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TIME_H
 #define ___OS_TIME_H
@@ -166,6 +166,10 @@ extern ___BOOL ___time_positive
 extern void ___time_get_current_time
    ___P((___time *tim),
         ());
+
+extern ___U64 ___time_get_monotonic_time ___PVOID;
+
+extern ___U64 ___time_get_monotonic_time_frequency ___PVOID;
 
 extern ___F64 ___time_to_seconds
    ___P((___time tim),

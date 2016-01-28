@@ -6391,6 +6391,18 @@ fi
 
 done
 
+  for ac_header in mach/mach_time.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mach/mach_time.h" "ac_cv_header_mach_mach_time_h" "$ac_includes_default"
+if test "x$ac_cv_header_mach_mach_time_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MACH_MACH_TIME_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in sys/types.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
@@ -7634,6 +7646,63 @@ if test "$ac_res" != no; then :
 fi
 
 
+               { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing clock_gettime" >&5
+$as_echo_n "checking for library containing clock_gettime... " >&6; }
+if ${ac_cv_search_clock_gettime+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char clock_gettime ();
+int
+main ()
+{
+return clock_gettime ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' rt; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_search_clock_gettime=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_clock_gettime+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_clock_gettime+:} false; then :
+
+else
+  ac_cv_search_clock_gettime=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_clock_gettime" >&5
+$as_echo "$ac_cv_search_clock_gettime" >&6; }
+ac_res=$ac_cv_search_clock_gettime
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+fi
+
+
                { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing timeBeginPeriod" >&5
 $as_echo_n "checking for library containing timeBeginPeriod... " >&6; }
 if ${ac_cv_search_timeBeginPeriod+:} false; then :
@@ -8174,6 +8243,17 @@ do :
 if test "x$ac_cv_func_clock_gettime" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CLOCK_GETTIME 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in mach_absolute_time
+do :
+  ac_fn_cxx_check_func "$LINENO" "mach_absolute_time" "ac_cv_func_mach_absolute_time"
+if test "x$ac_cv_func_mach_absolute_time" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MACH_ABSOLUTE_TIME 1
 _ACEOF
 
 fi

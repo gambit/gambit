@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3923,6 +3923,36 @@ end-of-code
 end-of-code
 
    floats
+   i))
+
+(define-prim (##get-monotonic-time! u64vect i)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___STORE_U64(___BODY_AS(___ARG1,___tSUBTYPED),
+                ___INT(___ARG2),
+                ___time_get_monotonic_time ());
+
+   ___RESULT = ___VOID;
+
+end-of-code
+
+   u64vect
+   i))
+
+(define-prim (##get-monotonic-time-frequency! u64vect i)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___STORE_U64(___BODY_AS(___ARG1,___tSUBTYPED),
+                ___INT(___ARG2),
+                ___time_get_monotonic_time_frequency ());
+
+   ___RESULT = ___VOID;
+
+end-of-code
+
+   u64vect
    i))
 
 (define-prim (##get-bytes-allocated! floats i)

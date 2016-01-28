@@ -168,7 +168,7 @@ void ___time_get_current_time
         (tim)
 ___time *tim;)
 {
-#ifndef USE_clock_gettime
+#ifndef USE_clock_gettime_realtime
 #ifndef USE_getclock
 #ifndef USE_GetSystemTimeAsFileTime
 #ifndef USE_gettimeofday
@@ -186,7 +186,7 @@ ___time *tim;)
 #endif
 #endif
 
-#ifdef USE_clock_gettime
+#ifdef USE_clock_gettime_realtime
 
   /* The clock_gettime function is in POSIX.1b (realtime programming). */
 
@@ -282,6 +282,114 @@ ___time *tim;)
     }
   else
     *tim = ___time_mod.time_neg_infinity;
+
+#endif
+}
+
+
+___U64 ___time_get_monotonic_time ___PVOID
+{
+#ifndef USE_mach_absolute_time
+#ifndef USE_QueryPerformanceCounter
+#ifndef USE_clock_gettime_monotonic
+
+  ___time tim;
+
+  ___time_get_current_time (&tim);
+
+#ifdef ___FLOAT_TIME_REPRESENTATION
+
+  return ___U64_from_ULONGLONG(tim*1e9);
+
+#endif
+
+#ifdef ___INT_TIME_REPRESENTATION
+
+  return ___U64_add_U64_U64(___U64_mul_UM32_UM32(tim.secs, 1000000000),
+                            ___U64_from_UM32(tim.nsecs));
+
+#endif
+
+#endif
+#endif
+#endif
+
+#ifdef USE_mach_absolute_time
+
+  return mach_absolute_time ();
+
+#endif
+
+#ifdef USE_QueryPerformanceCounter
+
+  LARGE_INTEGER count;
+
+  if (QueryPerformanceCounter (&count))
+    return ___U64_from_ULONGLONG(count.QuadPart);
+  else
+    return ___U64_from_UM32(0);
+
+#endif
+
+#ifdef USE_clock_gettime_monotonic
+
+  /* The clock_gettime function is in POSIX.1b (realtime programming). */
+
+  struct timespec ts;
+
+  if (clock_gettime (CLOCK_MONOTONIC, &ts) == 0)
+    return ___U64_add_U64_U64(___U64_mul_UM32_UM32(ts.tv_sec, 1000000000),
+                              ___U64_from_UM32(ts.tv_nsec));
+  else
+    return ___U64_from_UM32(0);
+
+#endif
+}
+
+
+___U64 ___time_get_monotonic_time_frequency ___PVOID
+{
+#ifndef USE_mach_absolute_time
+#ifndef USE_QueryPerformanceCounter
+#ifndef USE_clock_gettime_monotonic
+
+  return ___U64_from_UM32(1000000000);
+
+#endif
+#endif
+#endif
+
+#ifdef USE_mach_absolute_time
+
+  mach_timebase_info_data_t info;
+
+  mach_timebase_info (&info);
+
+  return ___U64_from_ULONGLONG(1000000000ULL * info.denom / info.numer);
+
+#endif
+
+#ifdef USE_QueryPerformanceCounter
+
+  LARGE_INTEGER freq;
+
+  if (QueryPerformanceFrequency (&freq))
+    return ___U64_from_ULONGLONG(freq.QuadPart);
+  else
+    return ___U64_from_UM32(1);
+
+#endif
+
+#ifdef USE_clock_gettime_monotonic
+
+  /* The clock_getres function is in POSIX.1b (realtime programming). */
+
+  struct timespec ts;
+
+  if (clock_getres (CLOCK_MONOTONIC, &ts) == 0)
+    return ___U64_from_ULONGLONG(1000000000ULL / (1000000000ULL * ts.tv_sec + ts.tv_nsec));
+  else
+    return ___U64_from_UM32(1);
 
 #endif
 }
