@@ -89,7 +89,7 @@
            (begin
              (set! nb-fail (+ nb-fail 1))
              (print "\n")
-             ;;(print "*********************** FAILED TEST " mode " " file "\n")
+             (print "********************* FAILED " file "\n")
              (print (cdr result))))
 
        (show-bar nb-good
