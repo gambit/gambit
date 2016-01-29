@@ -1473,10 +1473,16 @@
   (unused5
    macro-tgroup-unused5
    macro-tgroup-unused5-set!)
-  (threads-deq-next
+  (unused6
+   macro-tgroup-unused6
+   macro-tgroup-unused6-set!)
+  (unused7
+   macro-tgroup-unused7
+   macro-tgroup-unused7-set!)
+  (threads-deq-next ;; must be at same pos as the same name field in a thread
    macro-tgroup-threads-deq-next
    macro-tgroup-threads-deq-next-set!)
-  (threads-deq-prev
+  (threads-deq-prev ;; must be at same pos as the same name field in a thread
    macro-tgroup-threads-deq-prev
    macro-tgroup-threads-deq-prev-set!)
 )
@@ -1492,6 +1498,8 @@
               tgroups
               parent
               name
+              #f
+              #f
               #f
               #f
               #f
