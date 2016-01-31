@@ -1324,6 +1324,17 @@
 #endif
 
 
+/*
+ * Determine if an activity log should be kept or not.
+ */
+
+#ifndef ___NO_ACTIVITY_LOG
+#ifndef ___ACTIVITY_LOG
+#define @CONF_ACTIVITY_LOG@
+#endif
+#endif
+
+
 /*---------------------------------------------------------------------------*/
 
 /* Dependencies on language (i.e. C++, ANSI-C, and K&R C). */
@@ -7446,6 +7457,21 @@ typedef struct ___glo_struct
 #endif
 
 
+#ifndef ___USE_POSIX_THREAD_SYSTEM
+#ifndef ___USE_WIN32_THREAD_SYSTEM
+
+#define ___MUTEX int
+
+#define ___MUTEX_INIT(mut) 1
+#define ___MUTEX_DESTROY(mut)
+#define ___MUTEX_LOCK(mut) 1
+#define ___MUTEX_UNLOCK(mut)
+#define ___THREAD_ID 0
+
+#endif
+#endif
+
+
 #if ___WS == 4
 #ifdef __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4
 #define ___USE_sync_builtins
@@ -7563,6 +7589,117 @@ typedef struct ___thread_struct
 
 #endif
   } ___thread;
+
+
+/*---------------------------------------------------------------------------*/
+
+/*
+ * Activity log structures.
+ */
+
+#ifdef ___ACTIVITY_LOG
+
+typedef struct ___actlog_activity
+  {
+    ___U8 group;  /* group this activity belongs to */
+    ___U32 color; /* RGB color of this activity when shown visually */
+    char *name;   /* name of this activity */
+  } ___actlog_activity;
+
+typedef struct ___actlog_transition
+  {
+    ___U16 type;  /* activity type */
+    ___U64 stamp; /* time stamp when activity started */
+  } ___actlog_transition;
+
+typedef struct ___vmstate_actlog
+  {
+    ___MUTEX mut;
+    ___actlog_activity *activities;
+    int nb_activities;
+  } ___vmstate_actlog;
+
+typedef struct ___pstate_actlog
+  {
+    ___actlog_transition *transitions; /* array of transitions */
+    ___actlog_transition *last;        /* pointer to last transition */
+    ___U16 *stack;
+    int sp;
+  } ___pstate_actlog;
+
+#define ___ACTLOG_COLOR_black     0x000000
+#define ___ACTLOG_COLOR_white     0xFFFFFF
+#define ___ACTLOG_COLOR_red       0xFF0000
+#define ___ACTLOG_COLOR_green     0x00FF00
+#define ___ACTLOG_COLOR_blue      0x0000FF
+#define ___ACTLOG_COLOR_yellow    0xFFFF00
+#define ___ACTLOG_COLOR_magenta   0xFF00FF
+#define ___ACTLOG_COLOR_pink      0xFF8080
+#define ___ACTLOG_COLOR_gray      0x808080
+#define ___ACTLOG_COLOR_brown     0x800000
+#define ___ACTLOG_COLOR_orange    0xFF8000
+#define ___ACTLOG_COLOR_purple    0x803E75
+#define ___ACTLOG_COLOR_lightblue 0xA6BDD7
+#define ___ACTLOG_COLOR_violet    0x53377A
+
+#define ___ACTLOG_COLOR__         0x1000000
+
+#define ___ACTLOG_COLOR_rgb(r,g,b) (((___U32)(r)<<16)+((g)<<8)+(b))
+
+#define ___ACTLOG_COLOR(color)___ACTLOG_COLOR_##color
+
+#define ___ACTIVITY_START_STOP 0xffff
+
+#define ___ACTLOG(name,color) \
+do { \
+  ___processor_state ___ps = ___PSTATE; \
+  ___ACTLOG_PS(name,color); \
+} while (0)
+
+#define ___ACTLOG_PS(name,color) \
+do { \
+  static ___U16 ___actlog_activity_##name = ___ACTIVITY_START_STOP; \
+  ___EXT(___actlog_add_pstate)(___ps,&___actlog_activity_##name,#name,___ACTLOG_COLOR(color)); \
+} while (0)
+
+#define ___ACTLOG_BEGIN(name,color) \
+do { \
+  ___processor_state ___ps = ___PSTATE; \
+  ___ACTLOG_BEGIN_PS(name,color); \
+} while (0)
+
+#define ___ACTLOG_BEGIN_PS(name,color) \
+do { \
+  static ___U16 ___actlog_activity_##name = ___ACTIVITY_START_STOP; \
+  ___EXT(___actlog_begin_pstate)(___ps,&___actlog_activity_##name,#name,___ACTLOG_COLOR(color)); \
+} while (0)
+
+#define ___ACTLOG_END() \
+do { \
+  ___processor_state ___ps = ___PSTATE; \
+  ___ACTLOG_END_PS(); \
+} while (0)
+
+#define ___ACTLOG_END_PS() \
+do { \
+  ___EXT(___actlog_end_pstate)(___ps); \
+} while (0)
+
+#else
+
+#define ___ACTLOG(name,color)
+
+#define ___ACTLOG_PS(name,color)
+
+#define ___ACTLOG_BEGIN(name,color)
+
+#define ___ACTLOG_BEGIN_PS(name,color)
+
+#define ___ACTLOG_END()
+
+#define ___ACTLOG_END_PS()
+
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -7806,6 +7943,10 @@ typedef struct ___processor_state_struct
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
     ___WORD volatile intr_flag[___NB_INTRS];
 
+#ifdef ___ACTIVITY_LOG
+    ___pstate_actlog actlog; /* activity log state */
+#endif
+
     ___pstate_mem mem; /* memory management state */
 
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
@@ -7952,6 +8093,10 @@ typedef struct ___virtual_machine_state_struct
 
     int volatile nb_processors; /* number of processors in this VM */
 
+#ifdef ___ACTIVITY_LOG
+    ___vmstate_actlog actlog; /* activity log state */
+#endif
+
     ___vmstate_mem mem; /* memory management state */
 
     ___SCMOBJ main_module_id; /* symbol identifying the VM's main module */
@@ -8064,6 +8209,10 @@ typedef struct ___setup_params_struct
 typedef struct ___global_state_struct
   {
     ___virtual_machine_state_struct vmstate0; /* first VM */
+
+#ifndef ___SINGLE_VM
+    ___MUTEX vm_list_mut; /* mutex for accessing VM list */
+#endif
 
     int setup_state; /* 0=pre-setup, 1=post-setup, 2=post-cleanup */
 
@@ -9279,6 +9428,23 @@ typedef struct ___global_state_struct
              char *module_name,
              char *file,
              int line),
+            ());
+#endif
+#ifdef ___ACTIVITY_LOG
+    void (*___actlog_add_pstate)
+       ___P((___processor_state ___ps,
+             ___U16 *type,
+             char *name,
+             ___U32 color),
+            ());
+    void (*___actlog_begin_pstate)
+       ___P((___processor_state ___ps,
+             ___U16 *type,
+             char *name,
+             ___U32 color),
+            ());
+    void (*___actlog_end_pstate)
+       ___P((___processor_state ___ps),
             ());
 #endif
     void (*___raise_interrupt_pstate)
@@ -10556,6 +10722,23 @@ ___IMP_FUNC(void,___register_host_entry)
          char *module_name,
          char *file,
          int line),
+        ());
+#endif
+#ifdef ___ACTIVITY_LOG
+___IMP_FUNC(void,___actlog_add_pstate)
+   ___P((___processor_state ___ps,
+         ___U16 *type,
+         char *name,
+         ___U32 color),
+        ());
+___IMP_FUNC(void,___actlog_begin_pstate)
+   ___P((___processor_state ___ps,
+         ___U16 *type,
+         char *name,
+         ___U32 color),
+        ());
+___IMP_FUNC(void,___actlog_end_pstate)
+   ___P((___processor_state ___ps),
         ());
 #endif
 ___IMP_FUNC(void,___raise_interrupt_pstate)

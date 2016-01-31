@@ -18,6 +18,7 @@
 #include "setup.h"
 #include "mem.h"
 #include "c_intf.h"
+#include "actlog.h"
 
 
 /*---------------------------------------------------------------------------*/
@@ -111,14 +112,21 @@ int code;)
 
 #else
 
-  /* TODO: add GSTATE lock to access list of VMs */
+#if 0
+  /* TODO: investigate why this deadlocks the process... probably recursive locking of mutex */
+  ___MUTEX_LOCK(___GSTATE->vm_list_mut);
+#endif
 
   do
     {
+      ___vms = ___vms->prev;
       ___raise_interrupt_vmstate (___vms, code);
-      ___vms = ___vms->next;
     }
   while (___vms != &___GSTATE->vmstate0);
+
+#if 0
+  ___MUTEX_UNLOCK(___GSTATE->vm_list_mut);
+#endif
 
 #endif
 }
@@ -254,6 +262,8 @@ do { int count; for (count=10; count>0; count--) ; } while (0)
 
 #define OP_SET_NB_PROCESSORS OP_MAKE( 0,0)
 #define OP_RESIZE_VM         OP_MAKE( 1,0)
+#define OP_ACTLOG_START      OP_MAKE(61,0)
+#define OP_ACTLOG_STOP       OP_MAKE(62,0)
 #define OP_NOOP              OP_MAKE(63,0)
 
 
@@ -374,7 +384,6 @@ ___sync_op_struct *sop_ptr;)
        * Special case operation that sets nb_processors because this
        * information is used by the barrier_sync algorithm itself.
        */
-
       if (sop.op == OP_SET_NB_PROCESSORS)
         ___vms->nb_processors = sop.arg[0];
     }
@@ -495,18 +504,17 @@ ___thread *self;)
 }
 
 
-___SCMOBJ resize_vm
-   ___P((___PSD
+___HIDDEN ___SCMOBJ resize_vm
+   ___P((___processor_state ___ps,
          ___SCMOBJ thunk,
          ___WORD target_nb_processors),
-        (___PSV
+        (___ps,
          thunk,
          target_nb_processors)
-___PSDKR
+___processor_state ___ps;
 ___SCMOBJ thunk;
 ___WORD target_nb_processors;)
 {
-  ___PSGET
   ___SCMOBJ err = ___FIX(___NO_ERR);
 
 #ifndef ___SINGLE_THREADED_VMS
@@ -622,7 +630,15 @@ ___sync_op_struct *sop_ptr;)
   switch (sop_ptr->op)
     {
     case OP_RESIZE_VM:
-      sop_ptr->arg[0] = resize_vm (___PSP sop_ptr->arg[0], sop_ptr->arg[1]);
+      sop_ptr->arg[0] = resize_vm (___ps, sop_ptr->arg[0], sop_ptr->arg[1]);
+      break;
+
+    case OP_ACTLOG_START:
+      ___actlog_start_pstate (___ps);
+      break;
+
+    case OP_ACTLOG_STOP:
+      ___actlog_stop_pstate (___ps);
       break;
     }
 }
@@ -735,6 +751,38 @@ int target_nb_processors;)
   sop.op = OP_RESIZE_VM;
   sop.arg[0] = thunk;
   sop.arg[1] = target_nb_processors;
+
+  on_all_processors (___PSP &sop);
+
+  return ___FIX(___NO_ERR);
+}
+
+
+___EXP_FUNC(___SCMOBJ,___actlog_start)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  ___sync_op_struct sop;
+
+  sop.op = OP_ACTLOG_START;
+
+  on_all_processors (___PSP &sop);
+
+  return ___FIX(___NO_ERR);
+}
+
+
+___EXP_FUNC(___SCMOBJ,___actlog_stop)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  ___sync_op_struct sop;
+
+  sop.op = OP_ACTLOG_STOP;
 
   on_all_processors (___PSP &sop);
 
@@ -2736,6 +2784,132 @@ int line;)
  */
 
 
+___EXP_FUNC(void,___cleanup_pstate)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+}
+
+
+___EXP_FUNC(___SCMOBJ,___setup_pstate)
+   ___P((___processor_state ___ps,
+         ___virtual_machine_state ___vms),
+        (___ps,
+         ___vms)
+___processor_state ___ps;
+___virtual_machine_state ___vms;)
+{
+  ___SCMOBJ err;
+  int i;
+
+  /*
+   * Setup processor's activity log.
+   */
+
+  if ((err = ___setup_actlog_pstate (___ps)) != ___FIX(___NO_ERR))
+    return err;
+
+  /*
+   * Setup processor's memory management.
+   */
+
+  if ((err = ___setup_mem_pstate (___ps, ___vms)) != ___FIX(___NO_ERR))
+    return err;
+
+  ___ACTLOG_PS(idle,black);
+  ___ACTLOG_PS(run,green);
+
+  /*
+   * Setup green thread structures.
+   */
+
+  ___ps->current_thread = ___FAL;
+  ___ps->run_queue = ___FAL;
+
+  /*
+   * Setup registers.
+   */
+
+  for (i=0; i<___NB_GVM_REGS; i++)
+    ___ps->r[i] = ___VOID;
+
+  /*
+   * Setup exception handling.
+   */
+
+#ifdef ___USE_SETJMP
+
+  ___ps->catcher = 0;
+
+#endif
+
+  /*
+   * Setup interrupt system of this processor.
+   */
+
+  setup_interrupts_pstate (___ps);
+
+  /*
+   * Setup synchronous operation system.
+   */
+
+#ifndef ___SINGLE_THREADED_VMS
+
+  ___ps->sync_id0 = SYNC_WAIT;
+  ___ps->sync_id1 = SYNC_WAIT;
+  ___ps->sync_id2 = SYNC_WAIT;
+
+#endif
+
+  return ___FIX(___NO_ERR);
+}
+
+
+___EXP_FUNC(void,___cleanup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  ___cleanup_mem_vmstate (___vms);
+  ___cleanup_actlog_vmstate (___vms);
+}
+
+
+___EXP_FUNC(___SCMOBJ,___setup_vmstate)
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  ___SCMOBJ err;
+
+  /*
+   * Virtual machine starts off with a single processor.
+   */
+
+  ___vms->nb_processors = 1;
+
+  /*
+   * Setup virtual machine's activity log.
+   */
+
+  if ((err = ___setup_actlog_vmstate (___vms)) != ___FIX(___NO_ERR))
+    return err;
+
+  /*
+   * Setup virtual machine's memory management.
+   */
+
+  ___setup_mem_vmstate (___vms);
+
+  /*
+   * Setup the main processor of the virtual machine.
+   */
+
+  return ___setup_pstate (&___vms->pstate[0], ___vms);
+}
+
+
 ___EXP_FUNC(void,___cleanup) ___PVOID
 {
   /*
@@ -2746,6 +2920,29 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
     return;
 
   ___GSTATE->setup_state = 2;
+
+#ifdef ___SINGLE_VM
+
+  ___cleanup_vmstate (&___GSTATE->vmstate0);
+
+#else
+
+  ___MUTEX_LOCK(___GSTATE->vm_list_mut);
+
+  {
+    ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+
+    do
+      {
+        ___vms = ___vms->prev;
+        ___cleanup_vmstate (___vms);
+      }
+    while (___vms != &___GSTATE->vmstate0);
+  }
+
+  ___MUTEX_DESTROY(___GSTATE->vm_list_mut);
+
+#endif
 
   ___cleanup_mem ();
   ___cleanup_os ();
@@ -2942,111 +3139,6 @@ ___HIDDEN void setup_kernel_handlers ___PVOID
   ___GSTATE->dynamic_env_bind_return = ___LBL(1);
 
 #undef ___PH_LBL0
-}
-
-
-___EXP_FUNC(void,___cleanup_pstate)
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
-{
-}
-
-
-___EXP_FUNC(___SCMOBJ,___setup_pstate)
-   ___P((___processor_state ___ps,
-         ___virtual_machine_state ___vms),
-        (___ps,
-         ___vms)
-___processor_state ___ps;
-___virtual_machine_state ___vms;)
-{
-  ___SCMOBJ err;
-  int i;
-
-  /*
-   * Setup processor's memory management.
-   */
-
-  if ((err = ___setup_mem_pstate (___ps, ___vms)) != ___FIX(___NO_ERR))
-    return err;
-
-  /*
-   * Setup green thread structures.
-   */
-
-  ___ps->current_thread = ___FAL;
-  ___ps->run_queue = ___FAL;
-
-  /*
-   * Setup registers.
-   */
-
-  for (i=0; i<___NB_GVM_REGS; i++)
-    ___ps->r[i] = ___VOID;
-
-  /*
-   * Setup exception handling.
-   */
-
-#ifdef ___USE_SETJMP
-
-  ___ps->catcher = 0;
-
-#endif
-
-  /*
-   * Setup interrupt system of this processor.
-   */
-
-  setup_interrupts_pstate (___ps);
-
-  /*
-   * Setup synchronous operation system.
-   */
-
-#ifndef ___SINGLE_THREADED_VMS
-
-  ___ps->sync_id0 = SYNC_WAIT;
-  ___ps->sync_id1 = SYNC_WAIT;
-  ___ps->sync_id2 = SYNC_WAIT;
-
-#endif
-
-  return ___FIX(___NO_ERR);
-}
-
-
-___EXP_FUNC(void,___cleanup_vmstate)
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
-{
-}
-
-
-___EXP_FUNC(___SCMOBJ,___setup_vmstate)
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
-{
-  /*
-   * Virtual machine starts off with a single processor.
-   */
-
-  ___vms->nb_processors = 1;
-
-  /*
-   * Setup virtual machine's memory management.
-   */
-
-  ___setup_mem_vmstate (___vms);
-
-  /*
-   * Setup the main processor of the virtual machine.
-   */
-
-  return  ___setup_pstate (&___vms->pstate[0], ___vms);
 }
 
 
@@ -3806,8 +3898,23 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
     = ___propagate_error;
 
 #ifdef ___DEBUG_HOST_CHANGES
+
   ___GSTATE->___register_host_entry
     = ___register_host_entry;
+
+#endif
+
+#ifdef ___ACTIVITY_LOG
+
+  ___GSTATE->___actlog_add_pstate
+    = ___actlog_add_pstate;
+
+  ___GSTATE->___actlog_begin_pstate
+    = ___actlog_begin_pstate;
+
+  ___GSTATE->___actlog_end_pstate
+    = ___actlog_end_pstate;
+
 #endif
 
   ___GSTATE->___raise_interrupt_pstate
@@ -3909,6 +4016,19 @@ ___setup_params_struct *setup_params;)
    */
 
   ___GSTATE->setup_state = 2;
+
+   /*
+    * Setup virtual machine circular list.
+    */
+
+#ifndef ___SINGLE_VM
+
+  ___MUTEX_INIT(___GSTATE->vm_list_mut);
+
+  ___vms->prev = ___vms;
+  ___vms->next = ___vms;
+
+#endif
 
   /*
    * Setup the operating system and memory management modules.

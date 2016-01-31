@@ -11,6 +11,7 @@
 #include "setup.h"
 #include "mem.h"
 #include "c_intf.h"
+#include "actlog.h"
 
 /* The following includes are needed for debugging. */
 
@@ -3512,11 +3513,22 @@ ___virtual_machine_state ___vms;)
 #ifndef ___SINGLE_VM
 
   /*
-   * Initialize circular queue of VMs.
+   * Add to tail of virtual machine circular list.
    */
 
-  ___vms->prev = ___vms;
-  ___vms->next = ___vms;
+  ___MUTEX_LOCK(___GSTATE->vm_list_mut);
+
+  {
+    ___virtual_machine_state head = &___GSTATE->vmstate0;
+    ___virtual_machine_state tail = head->prev;
+
+    ___vms->prev = tail;
+    ___vms->next = head;
+    head->prev = ___vms;
+    tail->next = ___vms;
+  }
+
+  ___MUTEX_UNLOCK(___GSTATE->vm_list_mut);
 
   /* TODO: implement expansion of glos array when number of globals grows beyond 20000 */
 
@@ -3702,6 +3714,24 @@ ___virtual_machine_state ___vms;)
   free_still_objs (___PSANC(&___vms->pstate[0]));/*TODO: other processors?*/
   cleanup_rc (___vms);
 
+#ifndef ___SINGLE_VM
+
+  /*
+   * Remove from virtual machine circular list.
+   */
+
+  /* It is assumed that ___GSTATE->vm_list_mut is currently locked */
+
+  {
+    ___virtual_machine_state prev = ___vms->prev;
+    ___virtual_machine_state next = ___vms->next;
+
+    next->prev = prev;
+    prev->next = next;
+  }
+
+#endif
+
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 }
@@ -3709,7 +3739,6 @@ ___virtual_machine_state ___vms;)
 
 void ___cleanup_mem ___PVOID
 {
-  ___cleanup_mem_vmstate (&___GSTATE->vmstate0);
   free_psections ();
 }
 
@@ -4582,6 +4611,8 @@ ___SIZE_TS nonmovable_words_needed;)
   ___F64 user_time_end, sys_time_end, real_time_end;
   ___F64 user_time, sys_time, real_time;
 
+  ___ACTLOG_BEGIN_PS(gc,red);
+
   ___process_times (&user_time_start, &sys_time_start, &real_time_start);
 
   alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
@@ -4845,6 +4876,8 @@ ___SIZE_TS nonmovable_words_needed;)
   last_gc_nonmovable = ___CAST(___F64,words_nonmovable) * ___WS;
 
   ___raise_interrupt_pstate (___ps, ___INTR_GC); /* raise gc interrupt */
+
+  ___ACTLOG_END_PS();
 
   return overflow;
 }
