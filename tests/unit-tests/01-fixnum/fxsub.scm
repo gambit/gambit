@@ -24,7 +24,7 @@
 
 (check-tail-exn fixnum-overflow-exception? (lambda () (fx- ##min-fixnum 1)))
 (check-tail-exn fixnum-overflow-exception? (lambda () (fx- 0 ##min-fixnum 1 0)))
-(check-tail-exn fixnum-overflow-exception? (lambda () (fx- ##min-fixnum 1)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fx- ##min-fixnum)))
 (check-tail-exn fixnum-overflow-exception? (lambda () (fx- 0 ##min-fixnum 1 0)))
 
 (check-tail-exn type-exception? (lambda () (fx- 0.5)))
