@@ -2,8 +2,15 @@ sudo: false
 
 language: c
 
+language: c
+
+os:
+  - linux
+  - osx
+
 compiler:
   - gcc
+  - clang
 
 script: ./configure --enable-single-host && make -j2 from-scratch && make check && make clean && ./configure --enable-single-host --enable-cplusplus && make -j2 && make check && make clean && ./configure --enable-ansi-c && make -j2 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
