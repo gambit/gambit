@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -891,8 +891,9 @@ ___SCMOBJ path;)
                     e = err_code_from_errno ();
                   else
                     e = ___FIX(___NO_ERR);
+                  if (chdir (old_dir) < 0 && e == ___FIX(___NO_ERR))
+                    e = err_code_from_errno ();
                 }
-              chdir (old_dir); /* ignore error */
             }
         }
 

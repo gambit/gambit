@@ -2,8 +2,6 @@ sudo: false
 
 language: c
 
-language: c
-
 os:
   - linux
   - osx
