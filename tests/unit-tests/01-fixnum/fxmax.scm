@@ -11,4 +11,5 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxmax)))
 
 (check-tail-exn type-exception? (lambda () (fxmax 1/2)))
+(check-tail-exn type-exception? (lambda () (fxmax 0.0)))
 (check-tail-exn type-exception? (lambda () (fxmax 0.5)))

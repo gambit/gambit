@@ -10,5 +10,7 @@
 (check-eqv? (fx= ##max-fixnum ##min-fixnum) #f)
 (check-eqv? (fx= ##max-fixnum ##max-fixnum) #t)
 
+(check-tail-exn type-exception? (lambda () (fx= 0.0 1)))
+(check-tail-exn type-exception? (lambda () (fx= 0.5 1)))
 (check-tail-exn type-exception? (lambda () (fx= 1 0.5)))
 (check-tail-exn type-exception? (lambda () (fx= 1/3 1)))

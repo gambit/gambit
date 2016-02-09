@@ -10,6 +10,8 @@
 (check-eqv? (fxarithmetic-shift 1 3) 8)
 (check-eqv? (fxarithmetic-shift 1 4) 16)
 
+(check-tail-exn type-exception? (lambda () (fxarithmetic-shift 0.0 1)))
+(check-tail-exn type-exception? (lambda () (fxarithmetic-shift 0.5 1)))
 (check-tail-exn type-exception? (lambda () (fxarithmetic-shift 1 0.5)))
 (check-tail-exn type-exception? (lambda () (fxarithmetic-shift 1 1/2)))
 

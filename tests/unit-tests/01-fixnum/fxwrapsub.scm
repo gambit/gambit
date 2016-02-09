@@ -27,6 +27,7 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwrap-)))
 
+(check-tail-exn type-exception? (lambda () (fxwrap- 0.0)))
 (check-tail-exn type-exception? (lambda () (fxwrap- 0.5)))
 (check-tail-exn type-exception? (lambda () (fxwrap- 0.5 9)))
 (check-tail-exn type-exception? (lambda () (fxwrap- 9 0.5)))

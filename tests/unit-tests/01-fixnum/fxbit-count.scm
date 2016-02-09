@@ -10,6 +10,7 @@
 (check-eqv? (fxbit-count 1000) 6)
 (check-eqv? (fxbit-count ##max-fixnum) 61)
 
+(check-tail-exn type-exception? (lambda () (fxbit-count 0.0)))
 (check-tail-exn type-exception? (lambda () (fxbit-count 0.5)))
 (check-tail-exn type-exception? (lambda () (fxbit-count 1/2)))
 

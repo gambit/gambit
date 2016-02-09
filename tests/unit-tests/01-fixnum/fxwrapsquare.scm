@@ -31,4 +31,5 @@
 (check-eqv? (fxwrapsquare ##max-fixnum) 1)
 (check-eqv? (fxwrapsquare ##min-fixnum) 0)
 
+(check-tail-exn type-exception? (lambda () (fxwrapsquare 0.0)))
 (check-tail-exn type-exception? (lambda () (fxwrapsquare 0.5)))

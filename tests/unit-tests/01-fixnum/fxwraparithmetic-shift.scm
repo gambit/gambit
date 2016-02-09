@@ -19,5 +19,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraparithmetic-shift)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraparithmetic-shift 1 1 1)))
 
+(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift 1 0.0)))
 (check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift 1 0.5)))
+(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift 0.5 1)))
 (check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift 1 1/2)))

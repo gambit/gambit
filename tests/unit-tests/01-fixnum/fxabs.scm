@@ -12,6 +12,7 @@
 
 (check-tail-exn fixnum-overflow-exception? (lambda () (fxabs ##min-fixnum)))
 
+(check-tail-exn type-exception? (lambda () (fxabs 0.0)))
 (check-tail-exn type-exception? (lambda () (fxabs 0.5)))
 (check-tail-exn type-exception? (lambda () (fxabs 1/2)))
 
