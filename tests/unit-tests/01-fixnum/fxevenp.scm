@@ -6,6 +6,7 @@
 (check-eqv? (fxeven? 0) #t)
 (check-eqv? (fxeven? 1) #f)
 
+(check-tail-exn type-exception? (lambda () (fxeven? 0.0)))
 (check-tail-exn type-exception? (lambda () (fxeven? 0.5)))
 (check-tail-exn type-exception? (lambda () (fxeven? 1/2)))
 

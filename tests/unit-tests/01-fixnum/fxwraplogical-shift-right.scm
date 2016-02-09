@@ -12,7 +12,9 @@
 
 (check-tail-exn range-exception? (lambda () (fxwraplogical-shift-right 1 ##min-fixnum)))
 
+(check-tail-exn type-exception? (lambda () (fxwraplogical-shift-right 1 0.0)))
 (check-tail-exn type-exception? (lambda () (fxwraplogical-shift-right 1 0.5)))
+(check-tail-exn type-exception? (lambda () (fxwraplogical-shift-right 0.5 1)))
 (check-tail-exn type-exception? (lambda () (fxwraplogical-shift-right 1 1/2)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraplogical-shift-right)))

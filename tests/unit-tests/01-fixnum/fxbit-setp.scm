@@ -10,6 +10,8 @@
 (check-eqv? (fxbit-set? 30 ##max-fixnum) #t)
 (check-eqv? (fxbit-set? 10 ##max-fixnum) #t)
 
+(check-tail-exn type-exception? (lambda () (fxbit-set? 0.0 1)))
+(check-tail-exn type-exception? (lambda () (fxbit-set? 0.5 1)))
 (check-tail-exn type-exception? (lambda () (fxbit-set? 1 0.5)))
 (check-tail-exn type-exception? (lambda () (fxbit-set? 1 1/2)))
 

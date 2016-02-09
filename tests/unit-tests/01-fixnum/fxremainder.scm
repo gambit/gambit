@@ -10,6 +10,8 @@
 
 (check-tail-exn divide-by-zero-exception? (lambda () (fxremainder 1 0)))
 
+(check-tail-exn type-exception? (lambda () (fxremainder 1 0.0)))
+(check-tail-exn type-exception? (lambda () (fxremainder 0.5 1)))
 (check-tail-exn type-exception? (lambda () (fxremainder 1 0.5)))
 (check-tail-exn type-exception? (lambda () (fxremainder 1 1/2)))
 

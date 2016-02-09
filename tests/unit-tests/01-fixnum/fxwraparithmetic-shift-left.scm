@@ -12,6 +12,8 @@
 
 (check-tail-exn range-exception? (lambda () (fxwraparithmetic-shift-left 1 ##max-fixnum)))
 
+(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 1 0.0)))
+(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 0.5 1)))
 (check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 1 0.5)))
 (check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 1 1/2)))
 

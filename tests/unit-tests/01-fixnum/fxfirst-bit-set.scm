@@ -8,6 +8,7 @@
 (check-eqv? (fxfirst-bit-set 100) 2)
 (check-eqv? (fxfirst-bit-set -1000) 3)
 
+(check-tail-exn type-exception? (lambda () (fxfirst-bit-set 0.0)))
 (check-tail-exn type-exception? (lambda () (fxfirst-bit-set 0.5)))
 (check-tail-exn type-exception? (lambda () (fxfirst-bit-set 1/2)))
 

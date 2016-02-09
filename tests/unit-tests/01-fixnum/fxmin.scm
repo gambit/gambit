@@ -11,4 +11,5 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxmin)))
 
 (check-tail-exn type-exception? (lambda () (fxmin 1/2)))
+(check-tail-exn type-exception? (lambda () (fxmin 0.0)))
 (check-tail-exn type-exception? (lambda () (fxmin 0.5)))
