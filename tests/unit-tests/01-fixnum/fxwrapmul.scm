@@ -32,6 +32,7 @@
 (check-eqv? (fxwrap* ##min-fixnum ##min-fixnum) 0)
 (check-eqv? (fxwrap* ##min-fixnum ##max-fixnum) ##min-fixnum)
 
+(check-tail-exn type-exception? (lambda () (fxwrap* 0.0)))
 (check-tail-exn type-exception? (lambda () (fxwrap* 0.5)))
 (check-tail-exn type-exception? (lambda () (fxwrap* 0.5 9)))
 (check-tail-exn type-exception? (lambda () (fxwrap* 9 0.5)))

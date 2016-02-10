@@ -837,6 +837,7 @@ CONF_VOIDSTAR_WIDTH
 EGREP
 GREP
 CONF_MAX_CHR
+CONF_ACTIVITY_LOG
 ENABLE_GUIDE
 QTINCPATH
 C_PREPROC_BAT
@@ -922,6 +923,7 @@ enable_debug
 enable_debug_ctrl_flow_history
 enable_debug_host_changes
 enable_debug_garbage_collect
+enable_activity_log
 enable_profile
 enable_coverage
 enable_feedback1
@@ -1605,6 +1607,8 @@ Optional Features:
   --enable-debug-garbage-collect
                           build system so that it detects issues in the
                           garbage collect (default is NO)
+  --enable-activity-log   build system so it keeps an activity log (default is
+                          NO)
   --enable-profile        build system so that it can be profiled (default is
                           NO)
   --enable-coverage       build system to accumulate coverage statistics
@@ -4676,6 +4680,26 @@ $as_echo "#define ___DEBUG /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG"
 fi
+
+###############################################################################
+#
+# Check if the system should keep an activity log.
+
+# Check whether --enable-activity-log was given.
+if test "${enable_activity_log+set}" = set; then :
+  enableval=$enable_activity_log; ENABLE_ACTIVITY_LOG=$enableval
+else
+  ENABLE_ACTIVITY_LOG=no
+fi
+
+
+if test "$ENABLE_ACTIVITY_LOG" = yes; then
+  CONF_ACTIVITY_LOG="___ACTIVITY_LOG"
+else
+  CONF_ACTIVITY_LOG="___NO_ACTIVITY_LOG"
+fi
+
+
 
 ###############################################################################
 #
@@ -14080,7 +14104,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -14799,6 +14823,7 @@ do
     "examples/misc/makefile") CONFIG_FILES="$CONFIG_FILES examples/misc/makefile" ;;
     "contrib/makefile") CONFIG_FILES="$CONFIG_FILES contrib/makefile" ;;
     "contrib/GambitREPL/makefile") CONFIG_FILES="$CONFIG_FILES contrib/GambitREPL/makefile" ;;
+    "contrib/xactlog/makefile") CONFIG_FILES="$CONFIG_FILES contrib/xactlog/makefile" ;;
     "prebuilt/makefile") CONFIG_FILES="$CONFIG_FILES prebuilt/makefile" ;;
     "prebuilt/macosx/makefile") CONFIG_FILES="$CONFIG_FILES prebuilt/macosx/makefile" ;;
     "prebuilt/macosx/build-phase2") CONFIG_FILES="$CONFIG_FILES prebuilt/macosx/build-phase2" ;;

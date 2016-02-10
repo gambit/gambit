@@ -2,10 +2,16 @@ sudo: false
 
 language: c
 
+os:
+  - linux
+  - osx
+
+osx_image: xcode7.3
+
 compiler:
   - gcc
 
-script: ./configure --enable-single-host && make -j2 from-scratch && make check && make clean && ./configure --enable-single-host --enable-cplusplus && make -j2 && make check && make clean && ./configure --enable-ansi-c && make -j2 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+script: ./configure && make -j4 from-scratch && make check && make clean && ./configure --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
 notifications:
   webhooks:

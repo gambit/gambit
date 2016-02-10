@@ -8407,7 +8407,8 @@ int options;)
 
           execvp_errno = errno;
 
-          write (hdp_errno.writing_fd, &execvp_errno, sizeof (execvp_errno));
+          if (write (hdp_errno.writing_fd, &execvp_errno, sizeof (execvp_errno)) < 0)
+            execvp_errno = 0; /* dummy op to avoid compiler warning */
 
           close_half_duplex_pipe (&fdp.input, 0);
           close_half_duplex_pipe (&fdp.output, 1);

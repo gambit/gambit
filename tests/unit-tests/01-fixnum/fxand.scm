@@ -1,0 +1,20 @@
+(include "#.scm")
+
+(check-eqv? (##fxand) -1)
+(check-eqv? (##fxand 1) 1)
+(check-eqv? (##fxand 4 1) 0)
+(check-eqv? (##fxand 14 3) 2)
+(check-eqv? (##fxand 15 3) 3)
+(check-eqv? (##fxand 13 5 29) 5)
+
+(check-eqv? (fxand) -1)
+(check-eqv? (fxand 1) 1)
+(check-eqv? (fxand 4 1) 0)
+(check-eqv? (fxand 14 3) 2)
+(check-eqv? (fxand 15 3) 3)
+(check-eqv? (fxand 13 5 29) 5)
+
+(check-tail-exn type-exception? (lambda () (fxand 0.0 1)))
+(check-tail-exn type-exception? (lambda () (fxand 0.5 1)))
+(check-tail-exn type-exception? (lambda () (fxand 1 0.5)))
+(check-tail-exn type-exception? (lambda () (fxand 1 1/2)))

@@ -37,4 +37,5 @@
 (check-tail-exn fixnum-overflow-exception? (lambda () (fxsquare ##max-fixnum)))
 (check-tail-exn fixnum-overflow-exception? (lambda () (fxsquare ##min-fixnum)))
 
+(check-tail-exn type-exception? (lambda () (fxsquare 0.0)))
 (check-tail-exn type-exception? (lambda () (fxsquare 0.5)))

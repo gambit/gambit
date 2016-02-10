@@ -1,10 +1,10 @@
-# makefile for Gambit contributed softwares.
+# makefile for Gambit activity log viewer for X11.
 
-# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1997-2016 by Marc Feeley, All Rights Reserved.
 
-herefromroot = contrib
-rootfromhere = ..
-SUBDIRS = GambitREPL xactlog
+herefromroot = contrib/xactlog
+rootfromhere = ../..
+SUBDIRS =
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -28,15 +28,12 @@ FLAGS_EXE = @FLAGS_EXE_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
-GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
+GAMBCLIB_DEFS = @GAMBCLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
-LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
-LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
-
 LIB_EXTENSION = @LIB_EXTENSION@
-GAMBITLIB = @GAMBITLIB@
-GAMBITGSCLIB = @GAMBITGSCLIB@
-GAMBITGSILIB = @GAMBITGSILIB@
+GAMBCLIB = @GAMBCLIB@
+GAMBCGSCLIB = @GAMBCGSCLIB@
+GAMBCGSILIB = @GAMBCGSILIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_LIB = @INSTALL_LIB@
@@ -67,23 +64,22 @@ localedir = @localedir@
 mandir = @mandir@
 
 .SUFFIXES:
+.SUFFIXES: .c @obj@ @exe@
 
-RCFILES = makefile.in README
+RCFILES = makefile.in xactlog.c
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
-
-MDEFINES = prefix=$(prefix) exec_prefix=$(exec_prefix) \
-includedir=$(includedir) libdir=$(libdir) \
-bindir=$(bindir) docdir=$(docdir) \
-infodir=$(infodir) emacsdir=$(emacsdir)
 
 all:
 
 all-pre:
 
 all-post:
+
+xactlog@exe@: xactlog.c
+	$(C_COMPILER) -I /usr/X11/include -O -o xactlog@exe@ xactlog.c -L /usr/X11/lib -lX11
 
 bootstrap-pre:
 
@@ -108,6 +104,7 @@ deselect-gen-for-commit-post:
 mostlyclean-pre:
 
 mostlyclean-post:
+	rm -f xactlog@exe@
 
 clean-pre: mostlyclean-pre
 
