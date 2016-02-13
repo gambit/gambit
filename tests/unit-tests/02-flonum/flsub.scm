@@ -1,0 +1,28 @@
+(include "#.scm")
+
+(check-eqv? (##fl- 1.0 3.5)         -2.5)
+(check-eqv? (##fl- 1.0 -1.0)         2.0)
+(check-eqv? (##fl- 1.0 -inf.0)    +inf.0)
+(check-eqv? (##fl- 1.0 +inf.0)    -inf.0)
+(check-eqv? (##fl- 1.0)             -1.0)
+(check-eqv? (##fl- 1.0 2.5)         -1.5)
+(check-eqv? (##fl- 1.0 2.5 3.0)     -4.5)
+(check-eqv? (##fl- 1.0 2.5 3.0 4.5) -9.0)
+
+(check-eqv? (fl- 1.0 3.5)         -2.5)
+(check-eqv? (fl- 1.0 -1.0)         2.0)
+(check-eqv? (fl- 1.0 -inf.0)    +inf.0)
+(check-eqv? (fl- 1.0 +inf.0)    -inf.0)
+(check-eqv? (fl- 1.0)             -1.0)
+(check-eqv? (fl- 1.0 2.5)         -1.5)
+(check-eqv? (fl- 1.0 2.5 3.0)     -4.5)
+(check-eqv? (fl- 1.0 2.5 3.0 4.5) -9.0)
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fl-)))
+
+(check-tail-exn type-exception? (lambda () (fl- 123)))
+(check-tail-exn type-exception? (lambda () (fl- 123 9.0)))
+(check-tail-exn type-exception? (lambda () (fl- 9.0 123)))
+(check-tail-exn type-exception? (lambda () (fl- 123 3.0 9.0)))
+(check-tail-exn type-exception? (lambda () (fl- 3.0 123 9.0)))
+(check-tail-exn type-exception? (lambda () (fl- 3.0 9.0 123)))
