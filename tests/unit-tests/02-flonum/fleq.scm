@@ -1,0 +1,22 @@
+(include "#.scm")
+
+(check-eqv? (##fl= +inf.0 -inf.0) #f)
+(check-eqv? (##fl= -0.0 0.0)      #t)
+(check-eqv? (##fl= 0.0)           #t)
+(check-eqv? (##fl= 0.0 1.5)       #f)
+(check-eqv? (##fl= 2.0 -1.5 0.5)  #f)
+(check-eqv? (##fl= -1.0 1.0 1.0)  #f)
+(check-eqv? (##fl= 1.0 1.0 1.0)   #t)
+
+(check-eqv? (fl= +inf.0 -inf.0) #f)
+(check-eqv? (fl= -0.0 0.0)      #t)
+(check-eqv? (fl= 0.0)           #t)
+(check-eqv? (fl= 0.0 1.5)       #f)
+(check-eqv? (fl= 2.0 -1.5 0.5)  #f)
+(check-eqv? (fl= -1.0 1.0 1.0)  #f)
+(check-eqv? (fl= 1.0 1.0 1.0)   #t)
+
+(check-tail-exn type-exception? (lambda () (fl= 1 1.0)))
+(check-tail-exn type-exception? (lambda () (fl= 1.0 1)))
+(check-tail-exn type-exception? (lambda () (fl= 1.0 1.0 1)))
+(check-tail-exn type-exception? (lambda () (fl= 1/2)))
