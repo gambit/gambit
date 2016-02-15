@@ -30,6 +30,8 @@ MAKE="make -j 8"
 mkdir temp-gcc
 cd temp-gcc
 
+command -v wget >/dev/null 2>&1 || { echo >&2 "This script requires wget but it's not installed.  Aborting."; exit 1; }
+
 wget ftp://ftp.gnu.org/gnu/gcc/gcc-$GCCVERSION/gcc-$GCCVERSION.tar.gz
 wget ftp://ftp.gnu.org/gnu/gmp/gmp-$GMPVERSION.tar.gz
 wget ftp://ftp.gnu.org/gnu/mpfr/mpfr-$MPFRVERSION.tar.gz
