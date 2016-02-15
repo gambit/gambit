@@ -1,0 +1,25 @@
+#! /bin/sh
+
+# Generate u8vector, s16vector, u16vector, etc unit-tests from s8vector.scm
+
+sed -e "s/s8/u8/g" -e "s/-129/-1/g" -e "s/-128/0/g" -e "s/ -2/ 255/g" -e "s/127/255/g" -e "s/128/256/g" < s8vector.scm > u8vector.scm
+
+#-------------------------
+
+sed -e "s/s8/s16/g" -e "s/-129/-32769/g" -e "s/128/32768/g" -e "s/127/32767/g" < s8vector.scm > s16vector.scm
+
+sed -e "s/s8/u16/g" -e "s/-129/-1/g" -e "s/-128/0/g" -e "s/ -2/ 65535/g" -e "s/127/65535/g" -e "s/128/65536/g" < s8vector.scm > u16vector.scm
+
+#-------------------------
+
+sed -e "s/s8/s32/g" -e "s/-129/-2147483649/g" -e "s/128/2147483648/g" -e "s/127/2147483647/g" < s8vector.scm > s32vector.scm
+
+sed -e "s/s8/u32/g" -e "s/-129/-1/g" -e "s/-128/0/g" -e "s/ -2/ 4294967295/g" -e "s/127/4294967295/g" -e "s/128/4294967296/g" < s8vector.scm > u32vector.scm
+
+#-------------------------
+
+sed -e "s/s8/s64/g" -e "s/-129/-9223372036854775809/g" -e "s/128/9223372036854775808/g" -e "s/127/9223372036854775807/g" < s8vector.scm > s64vector.scm
+
+sed -e "s/s8/u64/g" -e "s/-129/-1/g" -e "s/-128/0/g" -e "s/ -2/ 18446744073709551615/g" -e "s/127/18446744073709551615/g" -e "s/128/18446744073709551616/g" < s8vector.scm > u64vector.scm
+
+#-------------------------
