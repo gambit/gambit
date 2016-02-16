@@ -142,7 +142,7 @@
       (find-files f
                   (lambda (filename)
                     (and (equal? (path-extension filename) ".scm")
-                         (not (equal? filename "#.scm"))))))
+                         (not (equal? (path-strip-directory filename) "#.scm"))))))
     args)))
 
 (define modes '())
