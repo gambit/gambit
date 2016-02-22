@@ -2,5 +2,5 @@
  * Time stamp of last source code repository commit.
  */
 
-#define ___STAMP_YMD 20160216
-#define ___STAMP_HMS 130143
+#define ___STAMP_YMD 20160222
+#define ___STAMP_HMS 222710

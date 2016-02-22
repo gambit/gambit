@@ -2,7 +2,7 @@
 
 ;;; File: "_x86.scm"
 
-;;; Copyright (c) 2010-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2010-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -136,10 +136,10 @@
                    (reg2 (x86-mem-reg2 opnd))
                    (scale (x86-mem-scale opnd))
                    (offset (x86-mem-offset opnd)))
-               (if reg1
+               (if (or reg1 reg2)
                    (let ((x
                           (cons "("
-                                (cons (opnd-format reg1)
+                                (cons (if reg1 (opnd-format reg1) "")
                                       (if reg2
                                           (cons ","
                                                 (cons (opnd-format reg2)
@@ -225,7 +225,7 @@
                          (opnd-format reg1)
                          "")
                      (if reg2
-                         (list "+"
+                         (list (if reg1 "+" "")
                                (opnd-format reg2)
                                (if (fx= scale 0)
                                    ""
@@ -366,7 +366,25 @@
                     ((x86-glo? opnd);;;;;;;;;;
                      0)
                     ((x86-mem? opnd)
-                     (let ((reg1 (x86-mem-reg1 opnd)))
+                     (let ((reg1 (x86-mem-reg1 opnd))
+                           (reg2 (x86-mem-reg2 opnd)))
+
+                       (define (reg2-rexx reg)
+                         (if reg2
+                             (begin
+                               (assert (if (x86-reg32? reg)
+                                           (x86-reg32? reg2)
+                                           (x86-reg64? reg2))
+                                       "index register must have same width as base" reg2)
+                               ;; if needed emit REX.X (Extension
+                               ;; of the SIB index field)
+                               (fxarithmetic-shift-left
+                                (fxarithmetic-shift-right
+                                 (x86-reg-field reg2)
+                                 3)
+                                1))
+                             0))
+
                        (if reg1
                            (begin
                              (assert (or (x86-reg32? reg1)
@@ -379,22 +397,8 @@
                                   (fxarithmetic-shift-right
                                    (x86-reg-field reg1)
                                    3)
-                                  (let ((reg2 (x86-mem-reg2 opnd)))
-                                    (if reg2
-                                        (begin
-                                          (assert (if (x86-reg32? reg1)
-                                                      (x86-reg32? reg2)
-                                                      (x86-reg64? reg2))
-                                                  "index register must have same width as base" reg2)
-                                          ;; if needed emit REX.X (Extension
-                                          ;; of the SIB index field)
-                                          (fxarithmetic-shift-left
-                                           (fxarithmetic-shift-right
-                                            (x86-reg-field reg2)
-                                            3)
-                                           1))
-                                        0))))
-                           0)))
+                                  (reg2-rexx reg1)))
+                           (reg2-rexx reg2))))
                     (else
                      (error "unknown operand" opnd))))))
     (x86-opnd-size-override-prefix cgc width)
@@ -466,18 +470,19 @@
 
           ((x86-mem? opnd)
            (let ((offset (x86-mem-offset opnd))
-                 (reg1   (x86-mem-reg1 opnd)))
+                 (reg1   (x86-mem-reg1 opnd))
+                 (reg2   (x86-mem-reg2 opnd)))
 
-             (if reg1
+             (if (or reg1 reg2)
 
-                 (let* ((field1    (x86-reg-field reg1))
-                        (field1-lo (fxand 7 field1))
-                        (reg2      (x86-mem-reg2 opnd)))
+                 (let* ((field1    (if reg1 (x86-reg-field reg1) 5))
+                        (field1-lo (fxand 7 field1)))
 
-                   (if (or reg2 ;; need a SIB when using an index
-                           (fx= field1-lo 4)) ;; register or base = RSP/R12
+                   (if (or reg2 ;; need a SIB when using an index register
+                           (not reg1)         ;; or no base register
+                           (fx= field1-lo 4)) ;; or base = RSP/R12
 
-                       ;; SIB needed
+                       ;; SIB with base register needed
 
                        (let ((modrm*
                               (fx+ modrm-rf 4))
@@ -495,20 +500,26 @@
                                                6)))
                                        #x20)))) ;; no index and no scaling
 
-                         (if (asm-signed8? offset)
-                             (if (or (not (fx= offset 0)) ;; non-null offset?
-                                     (fx= field1 5))      ;; or RBP
-                                 (begin ;; use 8 bit displacement
-                                   (asm-8 cgc (fx+ #x40 modrm*)) ;; ModR/M
-                                   (asm-8 cgc sib) ;; SIB
-                                   (asm-8 cgc offset))
-                                 (begin
-                                   (asm-8 cgc (fx+ #x00 modrm*)) ;; ModR/M
-                                   (asm-8 cgc sib))) ;; SIB
-                             (begin ;; use 32 bit displacement
-                               (asm-8 cgc (fx+ #x80 modrm*)) ;; ModR/M
-                               (asm-8 cgc sib)               ;; SIB
-                               (asm-32-le cgc offset))))
+                         (cond ((not reg1)
+                                ;; use 32 bit displacement
+                                (asm-8 cgc (fx+ #x00 modrm*)) ;; ModR/M
+                                (asm-8 cgc sib)               ;; SIB
+                                (asm-32-le cgc offset))
+                               ((asm-signed8? offset)
+                                (if (or (not (fx= offset 0)) ;; non-null offset?
+                                        (fx= field1 5))      ;; or RBP
+                                    (begin ;; use 8 bit displacement
+                                      (asm-8 cgc (fx+ #x40 modrm*)) ;; ModR/M
+                                      (asm-8 cgc sib) ;; SIB
+                                      (asm-8 cgc offset))
+                                    (begin
+                                      (asm-8 cgc (fx+ #x00 modrm*)) ;; ModR/M
+                                      (asm-8 cgc sib)))) ;; SIB
+                               (else
+                                ;; use 32 bit displacement
+                                (asm-8 cgc (fx+ #x80 modrm*)) ;; ModR/M
+                                (asm-8 cgc sib)               ;; SIB
+                                (asm-32-le cgc offset))))
 
                        ;; SIB not needed
 
