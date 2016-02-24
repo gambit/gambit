@@ -1827,6 +1827,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
  * GENERAL DEFINITIONS
  *
  * ___WORD           an integer type able to contain a pointer with no loss
+ * ___UWORD          unsigned ___WORD
  * ___WORD_WIDTH     is equal to the number of bits in the type ___WORD
  * ___LOG_WORD_WIDTH is equal to the base 2 logarithm of ___WORD_WIDTH
  * ___WS             is equal to sizeof (___WORD)
@@ -1839,6 +1840,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___SSIZE_T ___S32
 #define ___PTRDIFF_T ___S32
 #define ___WORD ___S32
+#define ___UWORD ___U32
 #define ___WORD_WIDTH 32
 #define ___LOG_WORD_WIDTH 5
 #define ___WS 4
@@ -1849,6 +1851,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___SSIZE_T ___S64
 #define ___PTRDIFF_T ___S64
 #define ___WORD ___S64
+#define ___UWORD ___U64
 #define ___WORD_WIDTH 64
 #define ___LOG_WORD_WIDTH 6
 #define ___WS 8
@@ -2094,8 +2097,8 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___TMASK ___MASK(___WORD,___TB)
 #define ___HTMASK ___MASK(___WORD,___HTB)
 #define ___SMASK (___MASK(___WORD,___SB)<<___HTB)
-#define ___LMASK (~___MASK(unsigned ___WORD,___LF))
-#define ___LSMASK (~___MASK(unsigned ___WORD,___HTB))
+#define ___LMASK (~___MASK(___UWORD,___LF))
+#define ___LSMASK (~___MASK(___UWORD,___HTB))
 
 /*
  * Value constructors for object references inside executable code.
@@ -2115,7 +2118,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___UNUSED   ___SPECIAL(-14)
 #define ___DELETED  ___SPECIAL(-15)
 #define ___SPECIAL(x)(___FIX(x)+___tSPECIAL)
-#define ___FIX(x)___CAST(___WORD,___CAST(unsigned ___WORD,x)<<___TB)
+#define ___FIX(x)___CAST(___WORD,___CAST(___UWORD,x)<<___TB)
 #if ___SCMOBJ_WIDTH == 32
 #define ___BIGFIX(i,x)___SUB(i)
 #else
@@ -2250,9 +2253,9 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 
 #define ___MAKE_HD(bytes,subtype,tag)(((bytes)<<___LF)+((subtype)<<___HTB)+(tag))
 #define ___HD_TYP(head)((head)&___HTMASK)
-#define ___HD_BYTES(head)(___CAST(unsigned ___WORD,head)>>___LF)
-#define ___HD_WORDS(head)(((___CAST(unsigned ___WORD,head)+((___WS-1)<<___LF)))>>(___LF+___LWS))
-#define ___HD_FIELDS(head)(___CAST(unsigned ___WORD,head)>>(___LF+___LWS))
+#define ___HD_BYTES(head)(___CAST(___UWORD,head)>>___LF)
+#define ___HD_WORDS(head)(((___CAST(___UWORD,head)+((___WS-1)<<___LF)))>>(___LF+___LWS))
+#define ___HD_FIELDS(head)(___CAST(___UWORD,head)>>(___LF+___LWS))
 #define ___HD_SUBTYPE(head)((head)>>___HTB&((1<<___SB)-1))
 
 #define ___FIELD(obj,i)(*(___BODY_AS(obj,___tSUBTYPED)+i))
@@ -2861,7 +2864,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXMUL(x,y)((___WORD)((x)*___INT(y)))
 #define ___FIXMULP(x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXMUL(x,y)),y)!=(x))?___FAL:___temp)
 #define ___FIXSQUARE(x)___FIXMUL(x,x)
-#define ___FIXSQUAREP(x)(___EXPECT_FALSE(___CAST(unsigned ___WORD,___FIXADD(x,___FIX(___SQRT_MAX_FIX)))>(___CAST(unsigned ___WORD,___FIX(___SQRT_MAX_FIX))<<1))?___FAL:___FIXSQUARE(x))
+#define ___FIXSQUAREP(x)(___EXPECT_FALSE(___CAST(___UWORD,___FIXADD(x,___FIX(___SQRT_MAX_FIX)))>(___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))<<1))?___FAL:___FIXSQUARE(x))
 #define ___FIXNEG(x)((___WORD)(-(x)))
 #define ___FIXNEGP(x)(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x))
 #define ___FIXSUB(x,y)((___WORD)((x)-(y)))
@@ -2953,7 +2956,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXASHLP2(x,y)((x)==((___temp=___FIXASHL(x,y))>>___INT(y))?___temp:___FAL)
 #define ___FIXASHR(x,y)(((x)>>___INT(y))&~___TMASK)
 #define ___FIXASHRP(x,y)((y)>=___FIX(0)?___FIXASHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
-#define ___FIXLSHR(x,y)((___WORD)(((unsigned ___WORD)(x)>>___INT(y))&~___TMASK))
+#define ___FIXLSHR(x,y)((___WORD)(((___UWORD)(x)>>___INT(y))&~___TMASK))
 #define ___FIXLSHRP(x,y)((y)>=___FIX(0)?___FIXLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
@@ -5617,9 +5620,9 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #ifdef ___BIG_ENDIAN
 
-#define ___P4U8(a,b,c,d)((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
+#define ___P4U8(a,b,c,d)((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
 
-#define ___P2U16(a,b)((unsigned ___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
+#define ___P2U16(a,b)((___UWORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
 
 #define ___P1U32(a)a
 
@@ -5627,9 +5630,9 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #else
 
-#define ___P4U8(d,c,b,a)((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
+#define ___P4U8(d,c,b,a)((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___WORD)___CAST_U8(d)
 
-#define ___P2U16(b,a)((unsigned ___WORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
+#define ___P2U16(b,a)((___UWORD)___CAST_U16(a)<<16)+(___WORD)___CAST_U16(b)
 
 #define ___P1U32(a)a
 
@@ -5681,23 +5684,23 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #ifdef ___BIG_ENDIAN
 
-#define ___P8U8(a,b,c,d,e,f,g,h)((((((((((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(unsigned ___WORD)___CAST_U8(d))<<8)+(unsigned ___WORD)___CAST_U8(e))<<8)+(unsigned ___WORD)___CAST_U8(f))<<8)+(unsigned ___WORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
+#define ___P8U8(a,b,c,d,e,f,g,h)((((((((((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___UWORD)___CAST_U8(d))<<8)+(___UWORD)___CAST_U8(e))<<8)+(___UWORD)___CAST_U8(f))<<8)+(___UWORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
 
-#define ___P4U16(a,b,c,d)((((((unsigned ___WORD)___CAST_U16(a)<<16)+(unsigned ___WORD)___CAST_U16(b))<<16)+(unsigned ___WORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
+#define ___P4U16(a,b,c,d)((((((___UWORD)___CAST_U16(a)<<16)+(___UWORD)___CAST_U16(b))<<16)+(___UWORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
 
-#define ___P2U32(a,b)((unsigned ___WORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
+#define ___P2U32(a,b)((___UWORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
 
 #else
 
-#define ___P8U8(h,g,f,e,d,c,b,a)((((((((((((((unsigned ___WORD)___CAST_U8(a)<<8)+(unsigned ___WORD)___CAST_U8(b))<<8)+(unsigned ___WORD)___CAST_U8(c))<<8)+(unsigned ___WORD)___CAST_U8(d))<<8)+(unsigned ___WORD)___CAST_U8(e))<<8)+(unsigned ___WORD)___CAST_U8(f))<<8)+(unsigned ___WORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
+#define ___P8U8(h,g,f,e,d,c,b,a)((((((((((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___UWORD)___CAST_U8(d))<<8)+(___UWORD)___CAST_U8(e))<<8)+(___UWORD)___CAST_U8(f))<<8)+(___UWORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
 
-#define ___P4U16(d,c,b,a)((((((unsigned ___WORD)___CAST_U16(a)<<16)+(unsigned ___WORD)___CAST_U16(b))<<16)+(unsigned ___WORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
+#define ___P4U16(d,c,b,a)((((((___UWORD)___CAST_U16(a)<<16)+(___UWORD)___CAST_U16(b))<<16)+(___UWORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
 
-#define ___P2U32(b,a)((unsigned ___WORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
+#define ___P2U32(b,a)((___UWORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
 
 #endif
 
-#define ___P1U64(hi,lo)((unsigned ___WORD)(hi)<<32)+(___WORD)___CAST_U32(lo)
+#define ___P1U64(hi,lo)((___UWORD)(hi)<<32)+(___WORD)___CAST_U32(lo)
 
 #define ___S8VEC0 ___PADDING};
 #define ___S8VEC1(a),___P8U8(a,0,0,0,0,0,0,0) ___PADDING};
@@ -5873,7 +5876,7 @@ ___LOCAL ___WORD ___ofdtbl[]={
 #if ___SCMOBJ_WIDTH == 32
 #define ___GCMAP2(a,b),a,b
 #else
-#define ___GCMAP2(a,b),(___CAST(unsigned ___WORD,b)<<32)+___CAST(___WORD,___CAST_U32(a))
+#define ___GCMAP2(a,b),(___CAST(___UWORD,b)<<32)+___CAST(___WORD,___CAST_U32(a))
 #endif
 
 #define ___U64VEC0 ___PADDING_64};
