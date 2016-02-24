@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -8096,12 +8096,6 @@
 (##add-exit-job! ##force-output-on-predefined)
 
 ;;;----------------------------------------------------------------------------
-
-(##define-macro (macro-peek-next-char-or-eof re) ;; possibly returns end-of-file
-  `(macro-peek-char (macro-readenv-port ,re)))
-
-(##define-macro (macro-read-next-char-or-eof re) ;; possibly returns end-of-file
-  `(macro-read-char (macro-readenv-port ,re)))
 
 (define-prim (##make-filepos line col char-count)
   (if (and (##fx< line (macro-max-lines))

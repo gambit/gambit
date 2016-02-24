@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1093,6 +1093,12 @@
        (let ()
          (##declare (interrupts-enabled))
          (##write-char c port)))))
+
+(##define-macro (macro-peek-next-char-or-eof re) ;; possibly returns end-of-file
+  `(macro-peek-char (macro-readenv-port ,re)))
+
+(##define-macro (macro-read-next-char-or-eof re) ;; possibly returns end-of-file
+  `(macro-read-char (macro-readenv-port ,re)))
 
 ;;;----------------------------------------------------------------------------
 
