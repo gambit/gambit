@@ -2973,7 +2973,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 /* APPLY-able operations */
 
-#define ___F64TOFIX(x)___FIX(x)
+#define ___F64TOFIX(x)___FIX(___CAST(___WORD,x))
 #define ___F64FROMFIX(x)___INT(x)
 #define ___F64_0 0.0
 #define ___F64POS(x)x
