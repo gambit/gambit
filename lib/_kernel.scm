@@ -1940,41 +1940,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = n + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LWS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sVECTOR, n<<___LWS);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = n + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sVECTOR, n<<___LWS);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_WORDS(n, ___sVECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_WORDS(n, ___sVECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result))
@@ -2003,41 +2006,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS((n<<___LCS)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LCS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sSTRING, n<<___LCS);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS((n<<___LCS)) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sSTRING, n<<___LCS);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<___LCS), ___sSTRING);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<___LCS), ___sSTRING);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2063,41 +2069,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS(n) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS(n) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES(n, ___sS8VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES(n, ___sS8VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2123,41 +2132,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS(n) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sU8VECTOR, n);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS(n) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sU8VECTOR, n);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES(n, ___sU8VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES(n, ___sU8VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2183,41 +2195,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS((n<<1)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2243,41 +2258,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS((n<<1)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sU16VECTOR, n<<1);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sU16VECTOR, n<<1);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<1), ___sU16VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<1), ___sU16VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2303,41 +2321,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2363,41 +2384,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sU32VECTOR, n<<2);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sU32VECTOR, n<<2);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sU32VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sU32VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2423,50 +2447,53 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-#if ___WS == 4
-___SIZE_TS words = ___WORDS((n<<3)) + 2;
-#else
-___SIZE_TS words = ___WORDS((n<<3)) + 1;
-#endif
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+#if ___WS == 4
+    ___SIZE_TS words = ___WORDS((n<<3)) + 2;
+#else
+    ___SIZE_TS words = ___WORDS((n<<3)) + 1;
+#endif
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-#if ___WS == 4
-        result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                        ___tSUBTYPED);
-#else
-        result = ___TAG(___hp, ___tSUBTYPED);
-#endif
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+#if ___WS == 4
+            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
+                            ___tSUBTYPED);
+#else
+            result = ___TAG(___hp, ___tSUBTYPED);
+#endif
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2492,50 +2519,53 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-#if ___WS == 4
-___SIZE_TS words = ___WORDS((n<<3)) + 2;
-#else
-___SIZE_TS words = ___WORDS((n<<3)) + 1;
-#endif
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sU64VECTOR, n<<3);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+#if ___WS == 4
+    ___SIZE_TS words = ___WORDS((n<<3)) + 2;
+#else
+    ___SIZE_TS words = ___WORDS((n<<3)) + 1;
+#endif
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sU64VECTOR, n<<3);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-#if ___WS == 4
-        result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                        ___tSUBTYPED);
-#else
-        result = ___TAG(___hp, ___tSUBTYPED);
-#endif
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sU64VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+#if ___WS == 4
+            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
+                            ___tSUBTYPED);
+#else
+            result = ___TAG(___hp, ___tSUBTYPED);
+#endif
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sU64VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2561,41 +2591,44 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-___SIZE_TS words = ___WORDS((n<<2)) + 1;
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sF32VECTOR, n<<2);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sF32VECTOR, n<<2);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-        result = ___TAG(___hp, ___tSUBTYPED);
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sF32VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___TAG(___hp, ___tSUBTYPED);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sF32VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
@@ -2622,50 +2655,53 @@ end-of-code
 
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-#if ___WS == 4
-___SIZE_TS words = ___WORDS((n<<3)) + 2;
-#else
-___SIZE_TS words = ___WORDS((n<<3)) + 1;
-#endif
 ___SCMOBJ result;
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-    result = ___EXT(___alloc_scmobj) (___ps, ___sF64VECTOR, n<<3);
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+#if ___WS == 4
+    ___SIZE_TS words = ___WORDS((n<<3)) + 2;
+#else
+    ___SIZE_TS words = ___WORDS((n<<3)) + 1;
+#endif
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sF64VECTOR, n<<3);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
-#if ___WS == 4
-        result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                        ___tSUBTYPED);
-#else
-        result = ___TAG(___hp, ___tSUBTYPED);
-#endif
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sF64VECTOR);
+        ___BOOL overflow = 0;
         ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+#if ___WS == 4
+            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
+                            ___tSUBTYPED);
+#else
+            result = ___TAG(___hp, ___tSUBTYPED);
+#endif
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sF64VECTOR);
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)

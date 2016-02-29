@@ -5657,67 +5657,70 @@ for a discussion of branch cuts.
   (let ((v (##c-code "
 ___SIZE_TS i;
 ___SIZE_TS n = ___INT(___ARG1);
-#if ___BIG_ABASE_WIDTH == 32
-___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
-#else
-#if ___WS == 4
-___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 2;
-#else
-___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
-#endif
-#endif
 ___SCMOBJ result;
 
 if (n > ___CAST(___WORD, ___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else if (words > ___MSECTION_BIGGEST)
-  {
-    ___FRAME_STORE_RA(___R0)
-    ___W_ALL
-#if ___BIG_ABASE_WIDTH == 32
-    result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<2);
-#else
-    result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<3);
-#endif
-    ___R_ALL
-    ___SET_R0(___FRAME_FETCH_RA)
-    if (!___FIXNUMP(result))
-      ___still_obj_refcount_dec (result);
-  }
 else
   {
-    ___BOOL overflow = 0;
-    ___hp += words;
-    if (___hp > ___ps->heap_limit)
+#if ___BIG_ABASE_WIDTH == 32
+    ___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
+#else
+#if ___WS == 4
+    ___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 2;
+#else
+    ___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
+#endif
+#endif
+    if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+#if ___BIG_ABASE_WIDTH == 32
+        result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<2);
+#else
+        result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<3);
+#endif
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
       }
     else
-      ___hp -= words;
-    if (overflow)
-      result = ___FIX(___HEAP_OVERFLOW_ERR);
-    else
       {
+        ___BOOL overflow = 0;
+        ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
 #if ___BIG_ABASE_WIDTH == 32
-        result = ___TAG(___hp, ___tSUBTYPED);
+            result = ___TAG(___hp, ___tSUBTYPED);
 #else
 #if ___WS == 4
-        result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                        ___tSUBTYPED);
+            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
+                            ___tSUBTYPED);
 #else
-        result = ___TAG(___hp, ___tSUBTYPED);
+            result = ___TAG(___hp, ___tSUBTYPED);
 #endif
 #endif
 #if ___BIG_ABASE_WIDTH == 32
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sBIGNUM);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sBIGNUM);
 #else
-        ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sBIGNUM);
+            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sBIGNUM);
 #endif
-        ___hp += words;
+            ___hp += words;
+          }
       }
   }
 if (!___FIXNUMP(result))
