@@ -413,18 +413,22 @@
 
                             (let* ((flat?
                                     (##assq 'flat options))
+                                   (link?
+                                    (##eq? type 'link))
+                                   (exe?
+                                    (##eq? type 'exe))
                                    (base
                                     (let ((x (##assq 'l options)))
                                       (cond ((##not x)
                                              #f)
-                                            ((or (##not (##eq? type 'link))
-                                                 flat?)
+                                            ((or flat?
+                                                 (##not (or link? exe?)))
                                              (warn-no-incremental-link)
                                              #f)
                                             (else
                                              (##cadr x))))))
 
-                              (if (##memq type '(link exe))
+                              (if (or link? exe?)
 
                                   (let ((gen-files
                                          (##reverse rev-gen-files)))
@@ -433,14 +437,14 @@
                                         (let* ((link-file
                                                 (if flat?
                                                     (if (and output
-                                                             (##eq? type 'link))
+                                                             link?)
                                                         (link-flat gen-files
                                                                    output: output
                                                                    warnings?: warnings-opt?)
                                                         (link-flat gen-files
                                                                    warnings?: warnings-opt?))
                                                     (if (and output
-                                                             (##eq? type 'link))
+                                                             link?)
                                                         (if base
                                                             (link-incremental
                                                              gen-files
@@ -462,7 +466,7 @@
                                           (and link-file
                                                (begin
                                                  (add-gen-file link-file)
-                                                 (if (##eq? type 'exe)
+                                                 (if exe?
                                                      (let ((obj-link-file
                                                             (do-compile-file
                                                              link-file
@@ -473,7 +477,7 @@
                                                        (if (##not (##assq 'keep-c options))
                                                            (add-tmp-file link-file))))))))
 
-                                    (if (##eq? type 'exe)
+                                    (if exe?
                                         (and (##pair? rev-obj-files)
                                              (let ((obj-files
                                                     (##reverse rev-obj-files)))
