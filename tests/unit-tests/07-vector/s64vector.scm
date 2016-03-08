@@ -424,3 +424,5 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs64vector-move! v9 0 0)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs64vector-move! v9 0 0 v9)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs64vector-move! v9 0 0 v9 0 0)))
+
+(check-tail-exn range-exception? (lambda () (make-s64vector (expt 2 64))))
