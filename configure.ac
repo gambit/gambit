@@ -1246,8 +1246,6 @@ else
 
                AC_SEARCH_LIBS(openpty,util)
 
-               AC_SEARCH_LIBS(WSAStartup,ws2_32)
-
                AC_SEARCH_LIBS(clock_gettime,rt)
 
                AC_SEARCH_LIBS(timeBeginPeriod,winmm)
