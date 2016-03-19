@@ -275,7 +275,14 @@
 #endif
 
 #endif
+#ifdef __CYGWIN__
+/*
+ * Cygwin 2.4.1 x86_64 would return ECHILD during nanosleep().
+ * Avoid it during I/O wait.
+ */
+#define USE_CYGWIN_NANOSLEEP_WORKAROUND
 
+#endif
 
 #ifdef USE_WIN32
 

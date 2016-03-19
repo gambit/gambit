@@ -1029,7 +1029,7 @@ ___time timeout;)
 
             goto select_done;
           }
-#ifdef USE_nanosleep
+#if defined(USE_nanosleep) && !defined(USE_CYGWIN_NANOSLEEP_WORKAROUND)
         else
           {
 
