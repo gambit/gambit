@@ -1230,10 +1230,16 @@ FILE *f;
   if (!read_U32 (f, &log_nb_traces))
     goto err;
 
+  if (debug_level > 1)
+    fprintf (stderr, "Activity log has %d traces\n", log_nb_traces);
+
   for (t=0; t<log_nb_traces; t++)
     {
       if (!read_U32 (f, &nb_transitions))
         goto err;
+
+      if (debug_level > 1)
+        fprintf (stderr, "Trace %d activity (%d transitions)\n", t, nb_transitions);
 
       p = malloc (nb_transitions * sizeof(struct transition));
       if (p == NULL)
@@ -2519,42 +2525,45 @@ char **argv;
               p1 = p2;
             }
       }
-    arg++;
-  }
-
-  if (!(arg < ac))
-  { fprintf( stderr, "usage: xactlog [options] program_name\n\n" );
-    fprintf( stderr, "OPTIONS: -b (b&w); -p (postscript only); -ZNNN (postscript zoom by NNN)\n" );
-    fprintf( stderr, "         -sec -ms -us -ns (time unit)\n" );
-    fprintf( stderr, "         -wNNN (width NNN); -hNNN (height NNN)\n" );
-    fprintf( stderr, "         -SNNN (histogram span NNN); -HNNN (histogram height NNN)\n" );
-    fprintf( stderr, "         -eXXX (exec keyboard commands XXX); -cN (time compression)\n" );
-    fprintf( stderr, "         -s (statistics); -dNNN (debug level NNN)\n\n" );
-    fprintf( stderr, "COMMANDS:\n\n" );
-    fprintf( stderr, "keyboard: q -- quit\n" );
-    fprintf( stderr, "          . -- redraw window\n" );
-    fprintf( stderr, "          e -- generate EPS file <program_name>.eps\n" );
+    else if (av[arg][1] == '?')
+      {
+        fprintf( stderr, "usage: xactlog [options] [file.actlog]\n\n" );
+        fprintf( stderr, "OPTIONS: -b (b&w); -p (postscript only); -ZNNN (postscript zoom by NNN)\n" );
+        fprintf( stderr, "         -sec -ms -us -ns (time unit)\n" );
+        fprintf( stderr, "         -wNNN (width NNN); -hNNN (height NNN)\n" );
+        fprintf( stderr, "         -SNNN (histogram span NNN); -HNNN (histogram height NNN)\n" );
+        fprintf( stderr, "         -eXXX (exec keyboard commands XXX); -cN (time compression)\n" );
+        fprintf( stderr, "         -s (statistics); -dNNN (debug level NNN)\n\n" );
+        fprintf( stderr, "COMMANDS:\n\n" );
+        fprintf( stderr, "keyboard: q -- quit\n" );
+        fprintf( stderr, "          . -- redraw window\n" );
+        fprintf( stderr, "          e -- generate EPS file <program_name>.eps\n" );
 #if 0
-    fprintf( stderr, "          w -- print window on postscript printer (with lpr)\n" );
+        fprintf( stderr, "          w -- print window on postscript printer (with lpr)\n" );
 #endif
-    fprintf( stderr, "          0..9 -- pass through smoothing filter 'n' times\n" );
-    fprintf( stderr, "          t -- toggle title on/off\n" );
-    fprintf( stderr, "          s -- toggle state logs on/off\n" );
-    fprintf( stderr, "          a -- toggle activity profile on/off\n" );
-    fprintf( stderr, "          p -- toggle percent profile on/off\n" );
-    fprintf( stderr, "          h -- toggle state duration histograms on/off\n" );
-    fprintf( stderr, "          l -- toggle state labels on/off\n" );
-    fprintf( stderr, "          f -- toggle first state only on/off\n" );
-    fprintf( stderr, "          i -- revert to initial display\n" );
-    fprintf( stderr, "          z -- zoom out by factor of 5\n\n" );
-    fprintf( stderr, "mouse: to zoom in, use click&drag to select section of interest\n" );
-    fprintf( stderr, "       to change state ordering, use click&drag on state names to swap states\n" );
-    exit (1);
+        fprintf( stderr, "          0..9 -- pass through smoothing filter 'n' times\n" );
+        fprintf( stderr, "          t -- toggle title on/off\n" );
+        fprintf( stderr, "          s -- toggle state logs on/off\n" );
+        fprintf( stderr, "          a -- toggle activity profile on/off\n" );
+        fprintf( stderr, "          p -- toggle percent profile on/off\n" );
+        fprintf( stderr, "          h -- toggle state duration histograms on/off\n" );
+        fprintf( stderr, "          l -- toggle state labels on/off\n" );
+        fprintf( stderr, "          f -- toggle first state only on/off\n" );
+        fprintf( stderr, "          i -- revert to initial display\n" );
+        fprintf( stderr, "          z -- zoom out by factor of 5\n\n" );
+        fprintf( stderr, "mouse: to zoom in, use click&drag to select section of interest\n" );
+        fprintf( stderr, "       to change state ordering, use click&drag on state names to swap states\n" );
+        exit (1);
+      }
+    arg++;
   }
 
   graph_init();
 
-  log_filename = av[arg];
+  if (arg < ac)
+    log_filename = av[arg];
+  else
+    log_filename = "gambit.actlog";
 
   full_plot_width = graph_screen_width - BORDER_RIGHT - BORDER_LEFT;
   plot_height = DEFAULT_PLOT_HEIGHT;
@@ -2596,7 +2605,7 @@ char **argv;
   plot_width = full_plot_width;
   smooth_passes = 0;
 
-  read_log (av[arg]);
+  read_log (log_filename);
 
   {
     int i;
