@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_system.c", produced by Gambit v4.8.4
+; File: "_system.c", produced by Gambit v4.8.5
 (
-408004
+408005
 (C)
 "_system"
 (("_system"))
@@ -10,7 +10,7 @@
 "##type-0-cd85663e-b289-472c-b943-a41768e2f8a3"
 "##type-11-42fe9aac-e9c6-4227-893e-a0ad76f58932"
 "##type-11-6bd864f0-27ec-4639-8044-cf7c0135d716"
-"##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
+"##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
 "##type-2-1a1e928d-8df4-11d9-8894-00039301ba52"
 "##type-2-3b7674e5-a6d8-11d9-930c-00039301ba52"
 "##type-2-3eb844fe-9381-11d9-b22f-00039301ba52"
@@ -301,7 +301,7 @@
  ()
 )
 #else
-#define ___VERSION 408004
+#define ___VERSION 408005
 #define ___MODULE_NAME "_system"
 #define ___LINKER_ID ____20___system
 #define ___MH_PROC ___H__20___system
@@ -320,7 +320,7 @@ ___NEED_SYM(___S__23__23_type_2d_0_2d_0bf9b656_2d_b071_2d_404a_2d_a514_2d_0fb9d0
 ___NEED_SYM(___S__23__23_type_2d_0_2d_cd85663e_2d_b289_2d_472c_2d_b943_2d_a41768e2f8a3)
 ___NEED_SYM(___S__23__23_type_2d_11_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad76f58932)
 ___NEED_SYM(___S__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716)
-___NEED_SYM(___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
+___NEED_SYM(___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
 ___NEED_SYM(___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52)
 ___NEED_SYM(___S__23__23_type_2d_2_2d_3b7674e5_2d_a6d8_2d_11d9_2d_930c_2d_00039301ba52)
 ___NEED_SYM(___S__23__23_type_2d_2_2d_3eb844fe_2d_9381_2d_11d9_2d_b22f_2d_00039301ba52)
@@ -611,7 +611,7 @@ ___DEF_SYM(2,___S__23__23_type_2d_11_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad
 
 ___DEF_SYM(3,___S__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716,"##type-11-6bd864f0-27ec-4639-8044-cf7c0135d716")
 
-___DEF_SYM(4,___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
+___DEF_SYM(4,___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
 
 ___DEF_SYM(5,___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52,"##type-2-1a1e928d-8df4-11d9-8894-00039301ba52")
 
@@ -681,7 +681,7 @@ ___END_SYM
 #define ___SYM__23__23_type_2d_0_2d_cd85663e_2d_b289_2d_472c_2d_b943_2d_a41768e2f8a3 ___SYM(1,___S__23__23_type_2d_0_2d_cd85663e_2d_b289_2d_472c_2d_b943_2d_a41768e2f8a3)
 #define ___SYM__23__23_type_2d_11_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad76f58932 ___SYM(2,___S__23__23_type_2d_11_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_a0ad76f58932)
 #define ___SYM__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716 ___SYM(3,___S__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716)
-#define ___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3 ___SYM(4,___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
+#define ___SYM__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3 ___SYM(4,___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
 #define ___SYM__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52 ___SYM(5,___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52)
 #define ___SYM__23__23_type_2d_2_2d_3b7674e5_2d_a6d8_2d_11d9_2d_930c_2d_00039301ba52 ___SYM(6,___S__23__23_type_2d_2_2d_3b7674e5_2d_a6d8_2d_11d9_2d_930c_2d_00039301ba52)
 #define ___SYM__23__23_type_2d_2_2d_3eb844fe_2d_9381_2d_11d9_2d_b22f_2d_00039301ba52 ___SYM(7,___S__23__23_type_2d_2_2d_3eb844fe_2d_9381_2d_11d9_2d_b22f_2d_00039301ba52)
@@ -11234,7 +11234,7 @@ ___DEF_SLBL(120,___L120__23__23_object_2d__3e_u8vector)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),213,___G_error)
 ___DEF_GLBL(___L373__23__23_object_2d__3e_u8vector)
    ___SET_R1(___STK(-5))
-   ___IF(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
+   ___IF(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
    ___GOTO(___L372__23__23_object_2d__3e_u8vector)
    ___END_IF
    ___GOTO(___L376__23__23_object_2d__3e_u8vector)
@@ -11244,7 +11244,7 @@ ___DEF_GLBL(___L374__23__23_object_2d__3e_u8vector)
    ___GOTO(___L378__23__23_object_2d__3e_u8vector)
    ___END_IF
 ___DEF_GLBL(___L375__23__23_object_2d__3e_u8vector)
-   ___IF(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
+   ___IF(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
    ___GOTO(___L372__23__23_object_2d__3e_u8vector)
    ___END_IF
 ___DEF_GLBL(___L376__23__23_object_2d__3e_u8vector)
@@ -16607,7 +16607,7 @@ ___DEF_MOD_SYM(2,___S__23__23_type_2d_11_2d_42fe9aac_2d_e9c6_2d_4227_2d_893e_2d_
 
 ___DEF_MOD_SYM(3,___S__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2d_cf7c0135d716,"##type-11-6bd864f0-27ec-4639-8044-cf7c0135d716")
 
-___DEF_MOD_SYM(4,___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
+___DEF_MOD_SYM(4,___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
 
 ___DEF_MOD_SYM(5,___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52,"##type-2-1a1e928d-8df4-11d9-8894-00039301ba52")
 

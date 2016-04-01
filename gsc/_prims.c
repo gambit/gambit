@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_prims.c", produced by Gambit v4.8.4
+; File: "_prims.c", produced by Gambit v4.8.5
 (
-408004
+408005
 (C)
 "_prims"
 (("_prims"))
@@ -282,7 +282,7 @@
  ()
 )
 #else
-#define ___VERSION 408004
+#define ___VERSION 408005
 #define ___MODULE_NAME "_prims"
 #define ___LINKER_ID ____20___prims
 #define ___MH_PROC ___H__20___prims

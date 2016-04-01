@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsi_.c", produced by Gambit v4.8.4
+; File: "_gsi_.c", produced by Gambit v4.8.5
 (
-408004
+408005
 (C)
 "_gsi_"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_gsilib" (preload . #t)) ("_gsi" (preload . #t)))
@@ -80,8 +80,8 @@
 "##type-11-f5cfcf78-bba4-4140-9aa0-1a136c50d36b"
 "##type-13-41abc50f-928b-48b9-8d2b-77f53b260e71"
 "##type-13-6bf088a7-814f-4139-860a-69a757570569"
-"##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
 "##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c"
+"##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
 "##type-16-A6899D11-290C-42A6-B47A-57C6B908698F"
 "##type-18-2babe060-9af6-456f-a26e-40b592f690ec"
 "##type-2-1a1e928d-8df4-11d9-8894-00039301ba52"
@@ -969,6 +969,8 @@
 "unused3"
 "unused4"
 "unused5"
+"unused6"
+"unused7"
 "unwrapper"
 "upcase"
 "use-diffie-hellman"
@@ -3763,6 +3765,8 @@
 "##get-live-percent"
 "##get-max-heap"
 "##get-min-heap"
+"##get-monotonic-time!"
+"##get-monotonic-time-frequency!"
 "##global-var-primitive-ref"
 "##global-var-primitive-set!"
 "##global-var-ref"
@@ -4562,7 +4566,7 @@
  #f
 )
 #else
-#define ___VERSION 408004
+#define ___VERSION 408005
 #define ___LINKFILE_NAME "_gsi_"
 #define ___LINKER_ID ____20___gsi__
 #define ___INCREMENTAL_LINKFILE
@@ -5856,6 +5860,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_get_2d_current_2d_time_21_,___G__23__23_get_2d_c
 ___DEF_OLD_SYM_GLO(___S__23__23_get_2d_live_2d_percent,___G__23__23_get_2d_live_2d_percent)
 ___DEF_OLD_SYM_GLO(___S__23__23_get_2d_max_2d_heap,___G__23__23_get_2d_max_2d_heap)
 ___DEF_OLD_SYM_GLO(___S__23__23_get_2d_min_2d_heap,___G__23__23_get_2d_min_2d_heap)
+___DEF_OLD_SYM_GLO(___S__23__23_get_2d_monotonic_2d_time_21_,___G__23__23_get_2d_monotonic_2d_time_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_get_2d_monotonic_2d_time_2d_frequency_21_,___G__23__23_get_2d_monotonic_2d_time_2d_frequency_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_get_2d_output_2d_string,___G__23__23_get_2d_output_2d_string)
 ___DEF_OLD_SYM_GLO(___S__23__23_get_2d_output_2d_u8vector,___G__23__23_get_2d_output_2d_u8vector)
 ___DEF_OLD_SYM_GLO(___S__23__23_get_2d_output_2d_vector,___G__23__23_get_2d_output_2d_vector)
@@ -6966,8 +6972,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_11_2d_6bd864f0_2d_27ec_2d_4639_2d_8044_2
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_11_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b,___G__23__23_type_2d_11_2d_f5cfcf78_2d_bba4_2d_4140_2d_9aa0_2d_1a136c50d36b)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_41abc50f_2d_928b_2d_48b9_2d_8d2b_2d_77f53b260e71,___G__23__23_type_2d_13_2d_41abc50f_2d_928b_2d_48b9_2d_8d2b_2d_77f53b260e71)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569,___G__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,___G__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c,___G__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,___G__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_16_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F,___G__23__23_type_2d_16_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec,___G__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52,___G__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52)
@@ -8952,6 +8958,8 @@ ___DEF_OLD_SYM_GLO(___S_unused2,___G_unused2)
 ___DEF_OLD_SYM_GLO(___S_unused3,___G_unused3)
 ___DEF_OLD_SYM_GLO(___S_unused4,___G_unused4)
 ___DEF_OLD_SYM_GLO(___S_unused5,___G_unused5)
+___DEF_OLD_SYM_GLO(___S_unused6,___G_unused6)
+___DEF_OLD_SYM_GLO(___S_unused7,___G_unused7)
 ___DEF_OLD_SYM_GLO(___S_unwrapper,___G_unwrapper)
 ___DEF_OLD_SYM_GLO(___S_upcase,___G_upcase)
 ___DEF_OLD_SYM_GLO(___S_use_2d_diffie_2d_hellman,___G_use_2d_diffie_2d_hellman)

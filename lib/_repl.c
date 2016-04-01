@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_repl.c", produced by Gambit v4.8.4
+; File: "_repl.c", produced by Gambit v4.8.5
 (
-408004
+408005
 (C)
 "_repl"
 (("_repl"))
@@ -23,8 +23,8 @@
 "##type-1-291e311e-93e0-4765-8132-56a719dc84b3"
 "##type-1-c475ff99-c959-4784-a847-b0c52aff8f2a"
 "##type-13-6bf088a7-814f-4139-860a-69a757570569"
-"##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
 "##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c"
+"##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
 "##type-18-2babe060-9af6-456f-a26e-40b592f690ec"
 "##type-2-1a1e928d-8df4-11d9-8894-00039301ba52"
 "##type-2-2138cd7f-8c42-4164-b56a-a8c7badf3323"
@@ -991,7 +991,7 @@
  ()
 )
 #else
-#define ___VERSION 408004
+#define ___VERSION 408005
 #define ___MODULE_NAME "_repl"
 #define ___LINKER_ID ____20___repl
 #define ___MH_PROC ___H__20___repl
@@ -1024,8 +1024,8 @@ ___NEED_SYM(___S__23__23_type_2d_1_2d_1bcc14ff_2d_4be5_2d_4573_2d_a250_2d_729b77
 ___NEED_SYM(___S__23__23_type_2d_1_2d_291e311e_2d_93e0_2d_4765_2d_8132_2d_56a719dc84b3)
 ___NEED_SYM(___S__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c52aff8f2a)
 ___NEED_SYM(___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569)
-___NEED_SYM(___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
 ___NEED_SYM(___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c)
+___NEED_SYM(___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
 ___NEED_SYM(___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec)
 ___NEED_SYM(___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52)
 ___NEED_SYM(___S__23__23_type_2d_2_2d_2138cd7f_2d_8c42_2d_4164_2d_b56a_2d_a8c7badf3323)
@@ -2014,9 +2014,9 @@ ___DEF_SYM(15,___S__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c5
 
 ___DEF_SYM(16,___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569,"##type-13-6bf088a7-814f-4139-860a-69a757570569")
 
-___DEF_SYM(17,___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
+___DEF_SYM(17,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c,"##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c")
 
-___DEF_SYM(18,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c,"##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c")
+___DEF_SYM(18,___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
 
 ___DEF_SYM(19,___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec,"##type-18-2babe060-9af6-456f-a26e-40b592f690ec")
 
@@ -2503,8 +2503,8 @@ ___END_SYM
 #define ___SYM__23__23_type_2d_1_2d_291e311e_2d_93e0_2d_4765_2d_8132_2d_56a719dc84b3 ___SYM(14,___S__23__23_type_2d_1_2d_291e311e_2d_93e0_2d_4765_2d_8132_2d_56a719dc84b3)
 #define ___SYM__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c52aff8f2a ___SYM(15,___S__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_b0c52aff8f2a)
 #define ___SYM__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569 ___SYM(16,___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569)
-#define ___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3 ___SYM(17,___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
-#define ___SYM__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c ___SYM(18,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c)
+#define ___SYM__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c ___SYM(17,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c)
+#define ___SYM__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3 ___SYM(18,___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
 #define ___SYM__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec ___SYM(19,___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec)
 #define ___SYM__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52 ___SYM(20,___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52)
 #define ___SYM__23__23_type_2d_2_2d_2138cd7f_2d_8c42_2d_4164_2d_b56a_2d_a8c7badf3323 ___SYM(21,___S__23__23_type_2d_2_2d_2138cd7f_2d_8c42_2d_4164_2d_b56a_2d_a8c7badf3323)
@@ -6422,7 +6422,7 @@ ___DEF_SUB_STR(___X256,14UL)
                ___STR6(45,45,45,45,45,45)
 ___DEF_SUB_STRUCTURE(___X257,6UL)
                ___VEC1(___REF_SUB(196))
-               ___VEC1(___REF_SYM(18,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c))
+               ___VEC1(___REF_SYM(17,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c))
                ___VEC1(___REF_SYM(309,___S_repl_2d_channel_2d_ports))
                ___VEC1(___REF_FIX(31))
                ___VEC1(___REF_SUB(253))
@@ -20607,7 +20607,7 @@ ___DEF_GLBL(___L16_top)
    ___GOTO(___L28_top)
    ___END_IF
 ___DEF_GLBL(___L17_top)
-   ___IF(___NOT(___STRUCTUREDIOP(___STK(0),___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
+   ___IF(___NOT(___STRUCTUREDIOP(___STK(0),___SYM__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)))
    ___GOTO(___L26_top)
    ___END_IF
 ___DEF_GLBL(___L18_top)
@@ -20698,7 +20698,7 @@ ___DEF_GLBL(___L25_top)
    ___SET_R1(___STK(-8))
    ___SET_R0(___STK(-9))
    ___ADJFP(-10)
-   ___IF(___STRUCTUREDIOP(___STK(0),___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
+   ___IF(___STRUCTUREDIOP(___STK(0),___SYM__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
    ___GOTO(___L18_top)
    ___END_IF
 ___DEF_GLBL(___L26_top)
@@ -28727,7 +28727,7 @@ ___DEF_SLBL(4,___L4__23__23_repl_2d_cmd_2d_st_2d_with_2d_1_2d_arg)
 ___DEF_SLBL(5,___L5__23__23_repl_2d_cmd_2d_st_2d_with_2d_1_2d_arg)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(5,1,0,0)
-   ___IF(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
+   ___IF(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3))
    ___GOTO(___L19__23__23_repl_2d_cmd_2d_st_2d_with_2d_1_2d_arg)
    ___END_IF
    ___GOTO(___L21__23__23_repl_2d_cmd_2d_st_2d_with_2d_1_2d_arg)
@@ -36811,9 +36811,9 @@ ___DEF_MOD_SYM(15,___S__23__23_type_2d_1_2d_c475ff99_2d_c959_2d_4784_2d_a847_2d_
 
 ___DEF_MOD_SYM(16,___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569,"##type-13-6bf088a7-814f-4139-860a-69a757570569")
 
-___DEF_MOD_SYM(17,___S__23__23_type_2d_13_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-13-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
+___DEF_MOD_SYM(17,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c,"##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c")
 
-___DEF_MOD_SYM(18,___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c,"##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c")
+___DEF_MOD_SYM(18,___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,"##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3")
 
 ___DEF_MOD_SYM(19,___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec,"##type-18-2babe060-9af6-456f-a26e-40b592f690ec")
 
