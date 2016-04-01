@@ -1556,7 +1556,7 @@
     (##c-code
      "
      ___ps->current_thread = ___ARG1;
-     ___ps->run_queue = ___ARG2;
+     ___VMSTATE_FROM_PSTATE(___ps)->run_queue = ___ARG2;
      ___RESULT = ___FAL;
      "
      primordial-thread
