@@ -344,11 +344,15 @@
   (lambda (stx)
     (syntax-case stx (else)
       ((_ . clauses)
-       (let ((target (if (and (pair? ##compilation-options)
-                              (pair? (car ##compilation-options)))
-                         (let ((t (assq 'target ##compilation-options)))
-                           (if t (cadr t) 'c))
-                         'c)))
+       (let ((target
+              (let* ((co
+                      (##global-var-ref
+                       (##make-global-var '##compilation-options)))
+                     (comp-opts
+                      (if (##unbound? co) '() co))
+                     (t
+                      (assq 'target comp-opts)))
+                (if t (cadr t) 'c))))
          (let loop ((clauses (syntax->list #'clauses)))
            (if (pair? clauses)
                (syntax-case (car clauses) (else)
@@ -364,12 +368,12 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ forces noforces)
-       (if ((if (and (pair? ##compilation-options)
-                     (pair? (car ##compilation-options)))
-                assq
-                memq)
-            'force
-            ##compilation-options)
+       (if (let* ((co
+                   (##global-var-ref
+                    (##make-global-var '##compilation-options)))
+                  (comp-opts
+                   (if (##unbound? co) '() co)))
+             (assq 'force comp-opts))
 
            #'forces
 
@@ -379,12 +383,12 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ vars expr)
-       (if ((if (and (pair? ##compilation-options)
-                     (pair? (car ##compilation-options)))
-                assq
-                memq)
-            'force
-            ##compilation-options)
+       (if (let* ((co
+                   (##global-var-ref
+                    (##make-global-var '##compilation-options)))
+                  (comp-opts
+                   (if (##unbound? co) '() co)))
+             (assq 'force comp-opts))
 
            (syntax-case (datum->syntax
                          #'vars
@@ -399,12 +403,12 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ checks nochecks)
-       (if ((if (and (pair? ##compilation-options)
-                     (pair? (car ##compilation-options)))
-                assq
-                memq)
-            'check
-            ##compilation-options)
+       (if (let* ((co
+                   (##global-var-ref
+                    (##make-global-var '##compilation-options)))
+                  (comp-opts
+                   (if (##unbound? co) '() co)))
+             (assq 'check comp-opts))
 
            #'checks
 
