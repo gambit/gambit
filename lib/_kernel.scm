@@ -181,9 +181,16 @@ end-of-code
 
        ___COVER_STACK_LIMIT_HANDLER_INTR_ENABLED;
 
+       /* TODO: remove this when ___INTR_SYNC_OP interrupt handled in Scheme code */
+       ___FRAME_STORE_RA(___R0)
+       ___W_ALL
+
        for (i=0; i<___NB_INTRS; i++)
          if (___EXT(___check_interrupt_pstate) (___ps, i))
            break;
+
+       ___R_ALL
+       ___SET_R0(___FRAME_FETCH_RA)
 
        ___EXT(___end_interrupt_service_pstate) (___ps, i+1);
 
@@ -1754,12 +1761,12 @@ end-of-code
   (let ((will
          (##c-code #<<end-of-code
 
-          ___SCMOBJ will = ___VMSTATE_FROM_PSTATE(___ps)->mem.executable_wills_;
+          ___SCMOBJ will = ___ps->mem.executable_wills_;
           if (___UNTAG(will) == 0) /* end of list? */
             ___RESULT = ___FAL;
           else
             {
-              ___VMSTATE_FROM_PSTATE(___ps)->mem.executable_wills_ = ___BODY(will)[0];
+              ___ps->mem.executable_wills_ = ___BODY(will)[0];
               ___RESULT = will;
             }
 
@@ -1858,8 +1865,8 @@ end-of-code
 
 (define-prim (##set-gambitdir! dir)
   (##declare (not interrupts-enabled))
-  ((##c-lambda (UCS-2-string) void
-               "___addref_string (___arg1); ___set_gambitdir (___arg1);")
+  ((c-lambda (UCS-2-string) void
+             "___addref_string (___arg1); ___set_gambitdir (___arg1);")
    dir))
 
 (define-prim (##set-debug-settings! mask new-settings)
@@ -3901,14 +3908,14 @@ end-of-code
       ___F64VECTORSET(result,___FIX(9),n)
       ___F64VECTORSET(result,___FIX(10),minflt)
       ___F64VECTORSET(result,___FIX(11),majflt)
-      ___F64VECTORSET(result,___FIX(12),___vms->mem.last_gc_user_time_)
-      ___F64VECTORSET(result,___FIX(13),___vms->mem.last_gc_sys_time_)
-      ___F64VECTORSET(result,___FIX(14),___vms->mem.last_gc_real_time_)
-      ___F64VECTORSET(result,___FIX(15),___vms->mem.last_gc_heap_size_)
-      ___F64VECTORSET(result,___FIX(16),___vms->mem.last_gc_alloc_)
-      ___F64VECTORSET(result,___FIX(17),___vms->mem.last_gc_live_)
-      ___F64VECTORSET(result,___FIX(18),___vms->mem.last_gc_movable_)
-      ___F64VECTORSET(result,___FIX(19),___vms->mem.last_gc_nonmovable_)
+      ___F64VECTORSET(result,___FIX(12),___vms->mem.latest_gc_user_time_)
+      ___F64VECTORSET(result,___FIX(13),___vms->mem.latest_gc_sys_time_)
+      ___F64VECTORSET(result,___FIX(14),___vms->mem.latest_gc_real_time_)
+      ___F64VECTORSET(result,___FIX(15),___vms->mem.latest_gc_heap_size_)
+      ___F64VECTORSET(result,___FIX(16),___vms->mem.latest_gc_alloc_)
+      ___F64VECTORSET(result,___FIX(17),___vms->mem.latest_gc_live_)
+      ___F64VECTORSET(result,___FIX(18),___vms->mem.latest_gc_movable_)
+      ___F64VECTORSET(result,___FIX(19),___vms->mem.latest_gc_still_)
 
       ___still_obj_refcount_dec (result);
    }

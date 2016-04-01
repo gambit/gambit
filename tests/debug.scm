@@ -1,8 +1,8 @@
-; File: "debug.scm", Time-stamp: <2007-04-04 11:39:46 feeley>
+; File: "debug.scm"
 
-; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2016 by Marc Feeley, All Rights Reserved.
 
-; Test program for Gambit-C's interpreter support for debugging.
+; Test program for Gambit's interpreter support for debugging.
 
 
 ;------------------------------------------------------------------------------

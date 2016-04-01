@@ -38,8 +38,11 @@
  * ___MSECTION_BIGGEST is the size in words beyond which an object will
  * be allocated as a still object.  It must be <= ___MSECTION_FUDGE.
  *
- * ___MIN_NB_MSECTIONS is the minimum number of msections contained
- * in the heap.
+ * ___MSECTION_CHUNK is the size in words beyond which a chunk will
+ * cause a new chunk to be started.
+ *
+ * ___MIN_NB_MSECTIONS_PER_PROCESSOR is the minimum number of msections
+ * per processor contained in the heap.
  *
  * ___PSECTION_SIZE is the size in words of sections that contain permanent
  * objects (psections).
@@ -50,6 +53,10 @@
  * ___DEFAULT_LIVE_PERCENT is the default percentage of the heap that
  * is live after a GC.  At the end of a GC the heap is resized to reach
  * this percentage.
+ *
+ * ___MAX_STILL_DEFERRED is the maximum number of words that are
+ * allocated per processor to still objects before they are accounted for
+ * at the VM level.
  */
 
 
@@ -60,11 +67,13 @@
 #define ___MSECTION_FUDGE       (___MAX_NB_FRAME_SLOTS+1+___SUBTYPED_OVERHEAD)
 #define ___MSECTION_WASTE       (___MSECTION_FUDGE/16)
 #define ___MSECTION_BIGGEST     255
-#define ___MIN_NB_MSECTIONS     1
+#define ___MSECTION_CHUNK       ___MSECTION_BIGGEST
+#define ___MIN_NB_MSECTIONS_PER_PROCESSOR 2
 #define ___PSECTION_SIZE        4096
 #define ___PSECTION_WASTE       32
 #define ___DEFAULT_LIVE_PERCENT 50
 #define ___DEFAULT_MIN_HEAP     (1*(1<<20))
+#define ___MAX_STILL_DEFERRED   1024
 
 
 /* 
@@ -97,25 +106,10 @@ extern void ___cleanup_mem_vmstate
 extern void ___cleanup_mem ___PVOID;
 
 
-#ifdef ___DEBUG_GARBAGE_COLLECT
-
-#define ___garbage_collect(ps_n) ___garbage_collect_debug (ps_n,__LINE__,__FILE__)
-
-extern ___BOOL ___garbage_collect_debug
-   ___P((___PSD
-         ___SIZE_TS nonmovable_words_needed,
-         int line,
-         char *file),
+extern ___BOOL ___garbage_collect_pstate
+   ___P((___processor_state ___ps,
+         ___SIZE_TS requested_words_still),
         ());
-
-#else
-
-extern ___BOOL ___garbage_collect
-   ___P((___PSD
-         ___SIZE_TS nonmovable_words_needed),
-        ());
-
-#endif
 
 
 #ifdef ___DEBUG_STACK_LIMIT

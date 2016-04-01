@@ -1,8 +1,8 @@
-; File: "mem.scm", Time-stamp: <2013-12-04 22:52:09 feeley>
+; File: "mem.scm"
 
-; Copyright (c) 1996-2009 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1996-2016 by Marc Feeley, All Rights Reserved.
 
-; Test program for Gambit-C's memory management system.
+; Test program for Gambit's memory management system.
 
 ;------------------------------------------------------------------------------
 

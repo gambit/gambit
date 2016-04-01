@@ -44,14 +44,6 @@
 
 
 /*
- * Defining the symbol GATHER_STATS will cause the GC to gather
- * statistics on the objects it encounters in the heap.
- */
-
-#define GATHER_STATS
-
-
-/*
  * Defining the symbol SHOW_FRAMES will cause the GC to print out a
  * trace of the continuation frames that are processed.
  */
@@ -209,17 +201,19 @@
  *
  * Symbols:
  *     subtype = ___sSYMBOL
- *     field_0 = name (a Scheme string)
- *     field_1 = hash code (fixnum)
- *     field_2 = C pointer to global variable (0 if none allocated)
+ *     field_0 = name (a string or a fixnum <n> for a symbol named "g<n>")
+ *     field_1 = hash code (non-negative fixnum)
+ *     field_2 = link to next symbol in symbol table (#f for uninterned)
+ *     field_3 = C pointer to global variable (0 if none exists)
  *
  *     Note: interned symbols must be permanently allocated;
  *           uninterned symbols can be permanent, still or movable
  *
  * Keywords:
  *     subtype = ___sKEYWORD
- *     field_0 = name (a Scheme string) not including the trailing ':'
- *     field_1 = hash code (fixnum)
+ *     field_0 = name (a string or a fixnum <n> for a keyword named "g<n>")
+ *     field_1 = hash code (non-negative fixnum)
+ *     field_2 = link to next symbol in keyword table (#f for uninterned)
  *
  * Procedures:
  *
@@ -281,6 +275,7 @@
 #define ___PSTATE_MEM(var) ___ps->mem.var
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 
+#define tospace_offset          ___PSTATE_MEM(tospace_offset_)
 #define stack_msection          ___PSTATE_MEM(stack_msection_)
 #define alloc_stack_start       ___PSTATE_MEM(alloc_stack_start_)
 #define alloc_stack_ptr         ___PSTATE_MEM(alloc_stack_ptr_)
@@ -289,65 +284,123 @@
 #define alloc_heap_start        ___PSTATE_MEM(alloc_heap_start_)
 #define alloc_heap_ptr          ___PSTATE_MEM(alloc_heap_ptr_)
 #define alloc_heap_limit        ___PSTATE_MEM(alloc_heap_limit_)
+#define alloc_heap_chunk_start  ___PSTATE_MEM(alloc_heap_chunk_start_)
+#define alloc_heap_chunk_limit  ___PSTATE_MEM(alloc_heap_chunk_limit_)
+#define movable_objs_to_scan    ___PSTATE_MEM(movable_objs_to_scan_)
+#define movable_objs_to_scan_head ___PSTATE_MEM(movable_objs_to_scan_head_)
+#define movable_objs_to_scan_tail ___PSTATE_MEM(movable_objs_to_scan_tail_)
+#define scan_ptr                ___PSTATE_MEM(scan_ptr_)
+#define still_objs_to_scan      ___PSTATE_MEM(still_objs_to_scan_)
+#define still_objs              ___PSTATE_MEM(still_objs_)
+#define words_still_objs        ___PSTATE_MEM(words_still_objs_)
+#define words_still_objs_deferred ___PSTATE_MEM(words_still_objs_deferred_)
+#define bytes_allocated_minus_occupied ___PSTATE_MEM(bytes_allocated_minus_occupied_)
+#define rc_head                 ___PSTATE_MEM(rc_head_)
+#define traverse_weak_refs      ___PSTATE_MEM(traverse_weak_refs_)
 #define nonexecutable_wills     ___PSTATE_MEM(nonexecutable_wills_)
+#define executable_wills        ___PSTATE_MEM(executable_wills_)
+#define reached_gc_hash_tables  ___PSTATE_MEM(reached_gc_hash_tables_)
+#define words_prev_msections    ___PSTATE_MEM(words_prev_msections_)
+#define stack_fudge_used        ___PSTATE_MEM(stack_fudge_used_)
+#define heap_fudge_used         ___PSTATE_MEM(heap_fudge_used_)
 
+#define alloc_mem_lock          ___VMSTATE_MEM(alloc_mem_lock_)
 #define heap_size               ___VMSTATE_MEM(heap_size_)
 #define normal_overflow_reserve ___VMSTATE_MEM(normal_overflow_reserve_)
 #define overflow_reserve        ___VMSTATE_MEM(overflow_reserve_)
-#define words_nonmovable        ___VMSTATE_MEM(words_nonmovable_)
-#define words_prev_msections    ___VMSTATE_MEM(words_prev_msections_)
-#define still_objs              ___VMSTATE_MEM(still_objs_)
-#define still_objs_to_scan      ___VMSTATE_MEM(still_objs_to_scan_)
+#define occupied_words_movable  ___VMSTATE_MEM(occupied_words_movable_)
+#define occupied_words_still    ___VMSTATE_MEM(occupied_words_still_)
 #define the_msections           ___VMSTATE_MEM(the_msections_)
-#define tospace_at_top          ___VMSTATE_MEM(tospace_at_top_)
-#define nb_msections_used       ___VMSTATE_MEM(nb_msections_used_)
 #define alloc_msection          ___VMSTATE_MEM(alloc_msection_)
-#define scan_msection           ___VMSTATE_MEM(scan_msection_)
-#define scan_ptr                ___VMSTATE_MEM(scan_ptr_)
-#define traverse_weak_refs      ___VMSTATE_MEM(traverse_weak_refs_)
-#define reached_gc_hash_tables  ___VMSTATE_MEM(reached_gc_hash_tables_)
-#define executable_wills        ___VMSTATE_MEM(executable_wills_)
-#define rc_head                 ___VMSTATE_MEM(rc_head_)
+#define nb_msections_assigned   ___VMSTATE_MEM(nb_msections_assigned_)
 
 #define nb_gcs                  ___VMSTATE_MEM(nb_gcs_)
 #define gc_user_time            ___VMSTATE_MEM(gc_user_time_)
 #define gc_sys_time             ___VMSTATE_MEM(gc_sys_time_)
 #define gc_real_time            ___VMSTATE_MEM(gc_real_time_)
-#define bytes_allocated_minus_occupied ___VMSTATE_MEM(bytes_allocated_minus_occupied_)
 
-#define last_gc_user_time       ___VMSTATE_MEM(last_gc_user_time_)
-#define last_gc_sys_time        ___VMSTATE_MEM(last_gc_sys_time_)
-#define last_gc_real_time       ___VMSTATE_MEM(last_gc_real_time_)
-#define last_gc_heap_size       ___VMSTATE_MEM(last_gc_heap_size_)
-#define last_gc_alloc           ___VMSTATE_MEM(last_gc_alloc_)
-#define last_gc_live            ___VMSTATE_MEM(last_gc_live_)
-#define last_gc_movable         ___VMSTATE_MEM(last_gc_movable_)
-#define last_gc_nonmovable      ___VMSTATE_MEM(last_gc_nonmovable_)
+#define latest_gc_user_time     ___VMSTATE_MEM(latest_gc_user_time_)
+#define latest_gc_sys_time      ___VMSTATE_MEM(latest_gc_sys_time_)
+#define latest_gc_real_time     ___VMSTATE_MEM(latest_gc_real_time_)
+#define latest_gc_heap_size     ___VMSTATE_MEM(latest_gc_heap_size_)
+#define latest_gc_alloc         ___VMSTATE_MEM(latest_gc_alloc_)
+#define latest_gc_live          ___VMSTATE_MEM(latest_gc_live_)
+#define latest_gc_movable       ___VMSTATE_MEM(latest_gc_movable_)
+#define latest_gc_still         ___VMSTATE_MEM(latest_gc_still_)
 
-/* words occupied in heap by movable objects including current msections */
-#define WORDS_MOVABLE \
-(2*(words_prev_msections + \
-(alloc_stack_start - alloc_stack_ptr) + \
-(alloc_heap_ptr - alloc_heap_start)))
+/* words occupied by this processor by movable objects */
 
-/* words occupied in heap including current msections */
-#define WORDS_OCCUPIED (words_nonmovable + WORDS_MOVABLE)
+#define words_movable_objs(ps) \
+(2*(ps->mem.words_prev_msections_ \
+    + (ps->mem.alloc_heap_ptr_ - ps->mem.alloc_heap_start_) \
+    + (ps->mem.alloc_stack_start_ - ps->mem.alloc_stack_ptr_)))
 
-/* words usable in msections */
-#define WORDS_MOVABLE_USABLE \
-(2*the_msections->nb_sections*___CAST(___SIZE_TS,((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1)))
+/* bytes occupied by this processor */
 
-/* words available in heap */
-#define WORDS_AVAILABLE \
-(words_nonmovable + WORDS_MOVABLE_USABLE - \
-overflow_reserve - 2*___MSECTION_FUDGE)
+#define bytes_occupied(ps) \
+(___CAST(___F64,ps->mem.words_still_objs_ \
+                + ps->mem.words_still_objs_deferred_ \
+                + words_movable_objs(___ps)) * ___WS)
 
 /*---------------------------------------------------------------------------*/
 
 /*
- * A given msection can be used for allocating movable objects, or for
- * allocating continuation frames, or for both.  The position of the
- * various pointers is as follows.
+ * Memory for movable objects (including continuation frames) are
+ * allocated in fixed size msections.  Each processor starts off with
+ * an msection for its stack (for allocating continuation frames) and
+ * an msection for allocating small objects.  Stack allocations are
+ * done by decrementing the stack pointer and small objects are
+ * allocated by incrementing the heap pointer.  Each msection is
+ * divided in two zones of equal size, used as a fromspace and tospace
+ * by the garbage collector.  When a processor fills a fromspace, a
+ * new msection is obtained from a list of free msections to continue
+ * allocating.  The diagram below shows a possible layout of msections
+ * for a situation with 3 processors and 12 msections:
+ *
+ *      sp                                                       hp
+ *       v                                                       v
+ *   +---+---+-------+  +-----+-+-------+  +----+--+-------+  +--+----+-------+
+ * 0 |   |###|       |  |#####| |       |  |####|  |       |  |##|    |       |
+ *   +---+---+-------+  +-----+-+-------+  +----+--+-------+  +--+----+-------+
+ *
+ *    sp                   hp
+ *     v                   v
+ *   +-+-----+-------+  +--+----+-------+
+ * 1 | |#####|       |  |##|    |       |
+ *   +-+-----+-------+  +--+----+-------+
+ *
+ *       sp                                      hp
+ *        v                                      v
+ *   +----+--+-------+  +----+--+-------+  +-----+-+-------+
+ * 2 |    |##|       |  |####|  |       |  |#####| |       |
+ *   +----+--+-------+  +----+--+-------+  +-----+-+-------+
+ *
+ *
+ * free list of msections (msections yet to be assigned to processors):
+ *   +-------+-------+  +-------+-------+  +-------+-------+
+ *   |       |       |  |       |       |  |       |       |
+ *   +-------+-------+  +-------+-------+  +-------+-------+
+ *
+ *
+ * In this example, 4 msections are assigned to processor 0.  The first one
+ * is being used as a stack to allocate continuation frames.  The other
+ * msections of that processor are being used for allocating small objects
+ * (two msections are full and the last is not yet full).  There are
+ * three msections in the free list of msections.
+ *
+ * The heap size is defined as the space occupied by still objects and
+ * msections at the end of the latest garbage collection.  To determine
+ * when to trigger a garbage collection, the memory manager needs to know
+ * approximately (but conservatively) how much of the heap is free.  The
+ * free heap space is defined as the heap size minus the space of the
+ * msections assigned to processors minus the space occupied by still
+ * objects minus the overflow reserve.  When an allocation request would
+ * cause the free heap space to become negative, a garbage collection is
+ * performed first to free space and possibly resize the heap.
+ *
+ * A given msection can be used for allocating small objects or for
+ * allocating continuation frames or for both.  The position of the
+ * various pointers is as follows (only the fromspace is shown).
  *
  * Msection only used for allocating movable objects:
  *
@@ -376,16 +429,24 @@ overflow_reserve - 2*___MSECTION_FUDGE)
  *
  *   <-------------------------- ___MSECTION_SIZE/2 ------------------------->
  *  +----+-------------------------------------------------------------+------+
- *  |objs|    |<-___MSECTION_FUDGE->| O.R. |<-___MSECTION_FUDGE->|     |frames|
+ *  |objs|        |<-___MSECTION_FUDGE->|<-___MSECTION_FUDGE->|        |frames|
  *  +----+-------------------------------------------------------------+------+
- *  ^    ^    ^                     ^      ^                     ^     ^      ^
- *  |    |    |                     |      |                     |     |      |
- *  |    |    |      alloc_heap_limit      alloc_stack_limit     |     |      |
- *  |    |    ___ps->heap_limit                 ___ps->stack_limit     |      |
+ *  ^    ^        ^                     ^                     ^        ^      ^
+ *  |    |        |                     |                     |        |      |
+ *  |    |        |     alloc_heap_limit alloc_stack_limit    |        |      |
+ *  |    |        ___ps->heap_limit          ___ps->stack_limit        |      |
  *  |    alloc_heap_ptr                                  alloc_stack_ptr      |
  *  alloc_heap_start                                          alloc_stack_start
  */
 
+#define compute_heap_space() \
+(the_msections->nb_sections * ___MSECTION_SIZE + occupied_words_still)
+
+#define compute_assigned_heap_space() \
+(nb_msections_assigned * ___MSECTION_SIZE + occupied_words_still)
+
+#define compute_free_heap_space() \
+(heap_size - compute_assigned_heap_space() - overflow_reserve)
 
 /*---------------------------------------------------------------------------*/
 
@@ -494,30 +555,21 @@ void *ptr;)
 /* Allocation of reference counted blocks of memory. */
 
 ___HIDDEN void setup_rc
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___vms->mem.var
-
   rc_head.prev = &rc_head;
   rc_head.next = &rc_head;
   rc_head.refcount = 1;
   rc_head.data = ___FAL;
-
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 }
 
 ___HIDDEN void cleanup_rc
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___vms->mem.var
-
   ___rc_header *h = rc_head.next;
 
   rc_head.prev = &rc_head;
@@ -529,9 +581,6 @@ ___virtual_machine_state ___vms;)
       ___free_mem (h);
       h = next;
     }
-
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 }
 
 
@@ -1073,7 +1122,6 @@ ___SCMOBJ ___find_global_var_bound_to
         (val)
 ___SCMOBJ val;)
 {
-  ___processor_state ___ps = ___PSTATE; /* TODO: remove */
   ___SCMOBJ sym = ___NUL;
   int i;
 
@@ -1140,11 +1188,12 @@ ___WORD obj;)
  * with a body containing 'bytes' bytes, and returns it as an encoded
  * Scheme object.  When '___ps' is NULL, a permanent object is
  * allocated, and when '___ps' is not NULL, a still object is
- * allocated in the heap of that processor.  The initialization of the
- * object's body must be done by the caller.  In the case of still
- * objects this initialization must be done before the next allocation
- * is requested.  The 'refcount' field of still objects is initially
- * 1.  A fixnum error code is returned when there is an error.
+ * allocated in the heap of that processor's VM.  The initialization
+ * of the object's body must be done by the caller.  In the case of
+ * still objects this initialization must be done before the next
+ * allocation is requested.  The 'refcount' field of still objects is
+ * initially 1.  A fixnum error code is returned when there is an
+ * error.
  */
 
 ___HIDDEN ___WORD alloc_scmobj_perm
@@ -1201,58 +1250,116 @@ ___SIZE_TS bytes;)
   void *ptr;
   ___WORD *base;
   ___SIZE_TS words = ___STILL_BODY_OFS + ___WORDS(bytes);
+  ___SIZE_TS words_including_deferred = words + words_still_objs_deferred;
 
-  alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-  alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
-
-  /*
-   * Account for words allocated only for non-permanent objects.
-   */
-
-  words_nonmovable += words;
-
-  if (WORDS_OCCUPIED > heap_size
 #ifdef CALL_GC_FREQUENTLY
-      || --___gc_calls_to_punt < 0
+  if (--___gc_calls_to_punt < 0) goto invoke_gc;
 #endif
-      )
+
+  if (words_including_deferred <= ___MAX_STILL_DEFERRED)
     {
-      ___BOOL overflow;
+      /*
+       * Allocate the still object and defer its accounting at the VM
+       * level.
+       */
 
-      words_nonmovable -= words;
+      /*
+       * Some objects, such as ___sFOREIGN, ___sS64VECTOR,
+       * ___sU64VECTOR, ___sF64VECTOR, ___sFLONUM and ___sBIGNUM, must
+       * have a body that is aligned on a multiple of 8 on some
+       * machines.  Here, we force alignment to a multiple of 8 even
+       * if not necessary in all cases because it is typically more
+       * efficient due to a better utilization of the cache.
+       */
 
-      overflow = ___garbage_collect (___PSP words);
-
-      words_nonmovable += words;
-
-      alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-      alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
-
-      if (overflow || WORDS_OCCUPIED > heap_size)
+      if ((ptr = alloc_mem_aligned (words,
+                                    8>>___LWS,
+                                    (-___STILL_BODY_OFS)&((8>>___LWS)-1)))
+          == 0)
         {
-          words_nonmovable -= words;
+          /*
+           * Couldn't allocate the still object (probably the C heap is full).
+           */
+
+          return ___FIX(___HEAP_OVERFLOW_ERR);
+        }
+
+      words_still_objs_deferred = words_including_deferred;
+    }
+  else
+    {
+      /*
+       * The space for the still object (and the deferred previous
+       * ones) is considerable, so the availability of the space must
+       * be checked at the VM level.  The VM's memory allocation lock
+       * must be acquired to ensure correct bookkeeping.
+       */
+
+      ___SPINLOCK_LOCK(alloc_mem_lock);
+
+      if (words_including_deferred <= compute_free_heap_space())
+        {
+          /*
+           * There is sufficient free heap space, so no need to call GC.
+           */
+
+          occupied_words_still += words_including_deferred;
+
+          ___SPINLOCK_UNLOCK(alloc_mem_lock);
+        }
+      else
+        {
+          /*
+           * There is insufficient free heap space, so call GC.
+           */
+
+          ___SPINLOCK_UNLOCK(alloc_mem_lock);
+
+#ifdef CALL_GC_FREQUENTLY
+        invoke_gc:
+#endif
+
+          if (___garbage_collect (___PSP words_including_deferred))
+            return ___FIX(___HEAP_OVERFLOW_ERR);
+        }
+
+      /*
+       * Space accounting for previous still objects is now accounted
+       * for at the VM level.
+       */
+
+      words_still_objs_deferred = 0;
+
+      /*
+       * Allocate the still object.  See comments above for other call
+       * to alloc_mem_aligned.
+       */
+
+      if ((ptr = alloc_mem_aligned (words,
+                                    8>>___LWS,
+                                    (-___STILL_BODY_OFS)&((8>>___LWS)-1)))
+          == 0)
+        {
+          /*
+           * Couldn't allocate the still object (probably the C heap is full).
+           * So undo its accounting at the VM level.
+           */
+
+          ___SPINLOCK_LOCK(alloc_mem_lock);
+
+          occupied_words_still -= words;
+
+          ___SPINLOCK_UNLOCK(alloc_mem_lock);
+
           return ___FIX(___HEAP_OVERFLOW_ERR);
         }
     }
 
-  /*
-   * Some objects, such as ___sFOREIGN, ___sS64VECTOR, ___sU64VECTOR,
-   * ___sF64VECTOR, ___sFLONUM and ___sBIGNUM, must have a body that
-   * is aligned on a multiple of 8 on some machines.  Here, we force
-   * alignment to a multiple of 8 even if not necessary in all cases
-   * because it is typically more efficient due to a better
-   * utilization of the cache.
-   */
+  /* Account for the space used by this still object. */
 
-  ptr = alloc_mem_aligned (words,
-                           8>>___LWS,
-                           (-___STILL_BODY_OFS)&((8>>___LWS)-1));
+  words_still_objs += words;
 
-  if (ptr == 0)
-    {
-      words_nonmovable -= words;
-      return ___FIX(___HEAP_OVERFLOW_ERR);
-    }
+  /* Initialize still object and add it to the still_objs list. */
 
   base = ___CAST(___WORD*,ptr);
 
@@ -1264,6 +1371,8 @@ ___SIZE_TS bytes;)
   base[___STILL_HAND_OFS] = ___CAST(___WORD,base+___STILL_BODY_OFS-___BODY_OFS);
 #endif
   base[___STILL_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___STILL);
+
+  /* Return tagged reference to still object. */
 
   return ___TAG((base + ___STILL_HAND_OFS - ___BODY_OFS),
                 (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
@@ -1738,119 +1847,12 @@ void *data;)
 
 /*---------------------------------------------------------------------------*/
 
-___HIDDEN ___WORD *start_of_fromspace
-   ___P((___virtual_machine_state ___vms,
-         ___msection *s),
-        (___vms,
-         s)
-___virtual_machine_state ___vms;
-___msection *s;)
-{
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___vms->mem.var
 
-  if (tospace_at_top)
-    return s->base;
-  else
-    return s->base + (___MSECTION_SIZE>>1);
+#define fromspace_offset ((___MSECTION_SIZE>>1) - tospace_offset)
 
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
-}
+#define start_of_fromspace(ms) ms->base + fromspace_offset
 
-
-___HIDDEN ___WORD *start_of_tospace
-   ___P((___virtual_machine_state ___vms,
-         ___msection *s),
-        (___vms,
-         s)
-___virtual_machine_state ___vms;
-___msection *s;)
-{
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___vms->mem.var
-
-  if (tospace_at_top)
-    return s->base + (___MSECTION_SIZE>>1);
-  else
-    return s->base;
-
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
-}
-
-
-___HIDDEN void fatal_heap_overflow ___PVOID
-{
-  char *msgs[2];
-  msgs[0] = "Heap overflow";
-  msgs[1] = 0;
-  ___fatal_error (msgs);
-}
-
-
-___HIDDEN ___msection *next_msection
-   ___P((___processor_state ___ps,
-         ___msection *ms),
-        (___ps,
-         ms)
-___processor_state ___ps;
-___msection *ms;)
-{
-  ___msection *result;
-
-  if (nb_msections_used == 0)
-    result = the_msections->head;
-  else
-    result = alloc_msection->next;
-
-  if (result == 0)
-    {
-      if (stack_msection == heap_msection)
-        fatal_heap_overflow ();
-      result = ms;
-    }
-  else
-    {
-      alloc_msection = result;
-      nb_msections_used++;
-    }
-
-  return result;
-}
-
-
-___HIDDEN void next_stack_msection
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
-{
-  if (stack_msection != 0)
-    words_prev_msections += alloc_stack_start - alloc_stack_ptr;
-
-  stack_msection = next_msection (___ps, heap_msection);
-  alloc_stack_limit = start_of_tospace (___VMSTATE_FROM_PSTATE(___ps), stack_msection);
-  alloc_stack_start = alloc_stack_limit + (___MSECTION_SIZE>>1);
-  alloc_stack_ptr = alloc_stack_start;
-}
-
-
-___HIDDEN void next_heap_msection
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
-{
-  if (heap_msection != 0)
-    {
-      words_prev_msections += alloc_heap_ptr - alloc_heap_start;
-      heap_msection->alloc = alloc_heap_ptr;
-    }
-
-  heap_msection = next_msection (___ps, stack_msection);
-  alloc_heap_start = start_of_tospace (___VMSTATE_FROM_PSTATE(___ps), heap_msection);
-  alloc_heap_limit = alloc_heap_start + (___MSECTION_SIZE>>1);
-  alloc_heap_ptr = alloc_heap_start;
-}
+#define start_of_tospace(ms) ms->base + tospace_offset
 
 
 /*---------------------------------------------------------------------------*/
@@ -1858,7 +1860,9 @@ ___processor_state ___ps;)
 #ifdef ___DEBUG
 
 
+#define ZAP_USING_INVALID_HEAD_TAG_not
 #define ZAP_PATTERN ___CAST(___WORD,0xcafebabe)
+#define INVALID_HEAD_TAG 4
 
 
 char *subtype_to_string
@@ -1927,6 +1931,7 @@ ___SCMOBJ val;)
       ___WORD* body = ___BODY(val);
       ___WORD head = body[-1];
       int subtype;
+      int shift = 0;
 
       if (___TYP(head) == ___FORW)
         {
@@ -1937,12 +1942,18 @@ ___SCMOBJ val;)
 
       if (head == ZAP_PATTERN)
         ___printf ("[WARNING: HEAD=ZAP_PATTERN] ");
+      else if (___HD_TYP(head) == INVALID_HEAD_TAG)
+        {
+          ___printf ("[WARNING: HEAD HAS INVALID TAG] ");
+          shift = ___HTB;
+        }
 
+      head >>= shift;
       subtype = ___HD_SUBTYPE(head);
 
       if (subtype == ___sPAIR)
         {
-          ___printf ("0x%08x (... . ...)", val);
+          ___printf ("0x%016x (... . ...)", val);
         }
       else
         {
@@ -1989,7 +2000,7 @@ ___SCMOBJ val;)
           else if (subtype == ___sSYMBOL)
             {
               ___printf ("#<symbol ");
-              print_value (body[___SYMKEY_NAME]);
+              print_value (body[___SYMKEY_NAME]>>shift);
               ___printf (">");
             }
           else
@@ -2007,12 +2018,15 @@ ___SCMOBJ val;)
 
 ___HIDDEN int reference_location; /* where is offending reference located */
 
-#define IN_OBJECT       0
-#define IN_REGISTER     1
-#define IN_GLOBAL_VAR   2
-#define IN_WILL_LIST    3
-#define IN_CONTINUATION 4
-#define IN_RC           5
+#define IN_OBJECT         0
+#define IN_REGISTER       1
+#define IN_CURRENT_THREAD 2
+#define IN_RUN_QUEUE      3
+#define IN_SYMKEY_TABLE   4
+#define IN_GLOBAL_VAR     5
+#define IN_WILL_LIST      6
+#define IN_CONTINUATION   7
+#define IN_RC             8
 
 ___HIDDEN ___WORD *container_body; /* pointer to body of object      */
                                    /* containing offending reference */
@@ -2094,7 +2108,21 @@ int indent;)
     {
       ___WORD* body = ___BODY(obj);
       ___WORD head = body[-1];
-      int subtype = ___HD_SUBTYPE(head);
+      int subtype;
+      int shift = 0;
+
+      if (___TYP(head) == ___FORW)
+        {
+          /* indirect forwarding pointer */
+          body = ___UNTAG_AS(head, ___FORW) + ___BODY_OFS;
+          head = body[-1];
+        }
+
+      if (___HD_TYP(head) == INVALID_HEAD_TAG)
+        shift = ___HTB;
+
+      head >>= shift;
+      subtype = ___HD_SUBTYPE(head);
 
       switch (subtype)
         {
@@ -2104,7 +2132,7 @@ int indent;)
               int i;
               ___printf ("#(\n");
               for (i=0; i<___CAST(int,___HD_WORDS(head)); i++)
-                print_object (___FIELD(obj,i), max_depth-1, prefix, indent+2);
+                print_object (___FIELD(obj,i)>>shift, max_depth-1, prefix, indent+2);
               print_prefix (prefix, indent);
               ___printf (")\n");
             }
@@ -2115,10 +2143,10 @@ int indent;)
           if (max_depth > 0)
             {
               ___printf ("(\n");
-              print_object (___CAR(obj), max_depth-1, prefix, indent+1);
+              print_object (___CAR(obj)>>shift, max_depth-1, prefix, indent+1);
               print_prefix (prefix, indent);
               ___printf (" .\n");
-              print_object (___CDR(obj), max_depth-1, prefix, indent+1);
+              print_object (___CDR(obj)>>shift, max_depth-1, prefix, indent+1);
               print_prefix (prefix, indent);
               ___printf (")\n");
             }
@@ -2141,10 +2169,12 @@ int indent;)
           ___printf ("MEROON\n");
           break;
         case ___sSYMBOL:
-          ___printf ("SYMBOL\n");
+          ___printf ("SYMBOL ");
+          print_object (___FIELD(obj,___SYMKEY_NAME)>>shift, max_depth-1, "", 0);
           break;
         case ___sKEYWORD:
-          ___printf ("KEYWORD\n");
+          ___printf ("KEYWORD ");
+          print_object (___FIELD(obj,___SYMKEY_NAME)>>shift, max_depth-1, "", 0);
           break;
         case ___sFRAME:
           ___printf ("FRAME\n");
@@ -2168,7 +2198,14 @@ int indent;)
           ___printf ("FOREIGN\n");
           break;
         case ___sSTRING:
-          ___printf ("STRING\n");
+          {
+            int i;
+            int len = ___HD_BYTES(head)>>___LCS;
+            ___printf ("STRING ");
+            for (i=0; i<len; i++)
+              ___printf ("%c", ___INT(___STRINGREF(obj,___FIX(i))));
+            ___printf ("\n");
+          }
           break;
         case ___sS8VECTOR:
           ___printf ("S8VECTOR\n");
@@ -2263,47 +2300,52 @@ ___PSDKR)
   ___printf (">>> Memory map:\n");
 
   for (i=0; i<ns; i++)
-    ___printf (">>>  msection %2d:  0x%08x .. 0x%08x .. 0x%08x\n",
+    ___printf (">>>  msection %2d:  %p .. %p .. %p\n",
                i,
                sections[i]->base,
                sections[i]->base + (___MSECTION_SIZE>>1),
                sections[i]->base + ___MSECTION_SIZE);
 
-  ___printf (">>>  alloc_msection       = 0x%08x\n", alloc_msection);
-  ___printf (">>>  stack_msection       = 0x%08x\n", stack_msection);
-  ___printf (">>>  heap_msection        = 0x%08x\n", heap_msection);
-  ___printf (">>>  scan_msection        = 0x%08x\n", scan_msection);
-  ___printf (">>>  alloc_stack_ptr      = 0x%08x\n", alloc_stack_ptr);
-  ___printf (">>>  alloc_stack_limit    = 0x%08x\n", alloc_stack_limit);
-  ___printf (">>>  alloc_heap_limit     = 0x%08x\n", alloc_heap_limit);
-  ___printf (">>>  alloc_heap_ptr       = 0x%08x\n", alloc_heap_ptr);
-  ___printf (">>>  scan_ptr             = 0x%08x\n", scan_ptr);
-  ___printf (">>>  scan_msection->alloc = 0x%08x\n", scan_msection->alloc);
+  ___printf (">>>  alloc_msection       = %p\n", alloc_msection);
+  ___printf (">>>  stack_msection       = %p\n", stack_msection);
+  ___printf (">>>  heap_msection        = %p\n", heap_msection);
+  ___printf (">>>  alloc_stack_ptr      = %p\n", alloc_stack_ptr);
+  ___printf (">>>  alloc_stack_limit    = %p\n", alloc_stack_limit);
+  ___printf (">>>  alloc_heap_limit     = %p\n", alloc_heap_limit);
+  ___printf (">>>  alloc_heap_ptr       = %p\n", alloc_heap_ptr);
+  ___printf (">>>  scan_ptr             = %p\n", scan_ptr);
 }
 
 ___HIDDEN void explain_problem
    ___P((___PSD
          ___WORD obj,
+         int shift,
          char *msg),
         (___PSV
          obj,
+         shift,
          msg)
 ___PSDKR
 ___WORD obj;
+int shift;
 char *msg;)
 {
   ___PSGET
 
   dump_memory_map (___PSPNC);
 
-  ___printf (">>> The object 0x%08x %s\n", obj, msg);
+  ___printf (">>> The object 0x%016x %s\n", obj, msg);
 
   {
     int j;
-    for (j=-1; j<10; j++)
+    ___WORD head = ___BODY(obj)[-1]>>shift;
+    ___SIZE_TS words = ___HD_WORDS(head);
+    if (words > 10)
+      words = 10;
+    for (j=-1; j<words; j++)
       {
-        ___printf (">>>  body[%2d] = 0x%08x\n", j, ___BODY(obj)[j]);
-        print_object (___BODY(obj)[j], 1, ">>>             ", 0);
+        ___printf (">>>  body[%2d] = 0x%016x\n", j, ___BODY(obj)[j]>>shift);
+        print_object (___BODY(obj)[j]>>shift, 1, ">>>             ", 0);
       }
   }
 
@@ -2335,22 +2377,22 @@ char *msg;)
           ___printf ("___FORW ");
         else
           ___printf ("UNKNOWN ");
-        ___printf ("object with body at 0x%08x:\n", container_body);
+        ___printf ("object with body at %p:\n", container_body);
 
         ___printf (">>>  subtype = %d\n", subtype);
         ___printf (">>>  length  = %ld words\n", words);
         if (words <= 100)
           {
             for (i=0; i<words; i++)
-              ___printf (">>>  body[%2d] = 0x%08x\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%016x\n", i, container_body[i]);
           }
         else
           {
             for (i=0; i<50; i++)
-              ___printf (">>>  body[%2d] = 0x%08x\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%016x\n", i, container_body[i]);
             ___printf ("...\n");
             for (i=words-50; i<words; i++)
-              ___printf (">>>  body[%2d] = 0x%08x\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%016x\n", i, container_body[i]);
           }
         ___printf (">>> container =\n");
         print_object (container, 4, ">>>   ", 0);
@@ -2359,6 +2401,18 @@ char *msg;)
 
     case IN_REGISTER:
       ___printf (">>> The reference was found in a register\n");
+      break;
+
+    case IN_CURRENT_THREAD:
+      ___printf (">>> The reference was found in a current thread\n");
+      break;
+
+    case IN_RUN_QUEUE:
+      ___printf (">>> The reference was found in the run queue\n");
+      break;
+
+    case IN_SYMKEY_TABLE:
+      ___printf (">>> The reference was found in the symbol or keyword table\n");
       break;
 
     case IN_GLOBAL_VAR:
@@ -2383,12 +2437,15 @@ char *msg;)
 ___HIDDEN void bug
    ___P((___PSD
          ___WORD obj,
+         int shift,
          char *msg),
         (___PSV
          obj,
+         shift,
          msg)
 ___PSDKR
 ___WORD obj;
+int shift;
 char *msg;)
 {
   ___PSGET
@@ -2396,7 +2453,7 @@ char *msg;)
   ___printf (">>> The GC has detected the following inconsistency\n");
   ___printf (">>> during call of mark_array on line %d of mem.c:\n",
              mark_array_call_line);
-  explain_problem (___PSP obj, msg);
+  explain_problem (___PSP obj, shift, msg);
   msgs[0] = "GC inconsistency detected";
   msgs[1] = 0;
   ___fatal_error (msgs);
@@ -2427,48 +2484,50 @@ ___WORD obj;)
               int i2 = find_msection (the_msections, hd_ptr2);
               if (i2 >= 0 && i2 < the_msections->nb_sections)
                 {
-                  ___PTRDIFF_T pos2 = hd_ptr2 - the_msections->sections[i2]->base;
-                  if (tospace_at_top
-                      ? (pos2 < ___MSECTION_SIZE>>1 ||
-                         pos2 >= ___MSECTION_SIZE)
-                      : (pos2 < 0 ||
-                         pos2 >= ___MSECTION_SIZE>>1))
-                    bug (___PSP obj, "was copied outside of tospace");
+                  ___PTRDIFF_T pos2 = hd_ptr2 -
+                                      (the_msections->sections[i2]->base +
+                                       tospace_offset);
+                  if (pos2 < 0 || pos2 >= ___MSECTION_SIZE>>1)
+                    bug (___PSP obj, 0, "was copied outside of tospace");
                   else if (___HD_TYP((*hd_ptr2)) != ___MOVABLE0)
-                    bug (___PSP obj, "was copied and copy is not ___MOVABLE0");
+                    bug (___PSP obj, 0, "was copied and copy is not ___MOVABLE0");
                 }
               else
-                bug (___PSP obj, "was copied outside of tospace");
+                bug (___PSP obj, 0, "was copied outside of tospace");
             }
           else if (___HD_TYP(head) != ___MOVABLE0)
-            bug (___PSP obj, "should be ___MOVABLE0");
-          else if (tospace_at_top
-                   ? (pos >= ___MSECTION_SIZE>>1 &&
-                      pos < ___MSECTION_SIZE)
-                   : (pos >= 0 &&
-                      pos < ___MSECTION_SIZE>>1))
-            bug (___PSP obj, "is in tospace");
+            bug (___PSP obj, ___HTB, "should be ___MOVABLE0");
+          else
+            {
+              pos -= tospace_offset;
+              if (pos >= 0 && pos < ___MSECTION_SIZE>>1)
+                bug (___PSP obj, 0, "is in tospace");
+            }
           return;
         }
     }
   head = *hd_ptr; /* this dereference will likely bomb if there is a bug */
   if (___HD_TYP(head) != ___PERM && ___HD_TYP(head) != ___STILL)
-    bug (___PSP obj, "is not ___PERM or ___STILL");
+    bug (___PSP obj, 0, "is not ___PERM or ___STILL");
 }
 
 
 ___HIDDEN void zap_section
    ___P((___WORD *start,
-         int words),
+         ___WORD *end),
         (start,
-         words)
+         end)
 ___WORD *start;
-int words;)
+___WORD *end;)
 {
-  while (words > 0)
+  while (start < end)
     {
-      *start++ = ZAP_PATTERN;
-      words--;
+#ifdef ZAP_USING_INVALID_HEAD_TAG
+      *start = (*start << ___HTB) | INVALID_HEAD_TAG;
+#else
+      *start = ZAP_PATTERN;
+#endif
+      start++;
     }
 }
 
@@ -2490,55 +2549,29 @@ int words;)
 }
 
 
-/* TODO: move to pstate */
-___HIDDEN int stack_fudge_used; /* space used in msection stack fudge */
-___HIDDEN int heap_fudge_used; /* space used in msection heap fudge */
-
-
 ___HIDDEN void check_fudge_used
    ___P((___PSDNC),
         (___PSVNC)
 ___PSDKR)
 {
   ___PSGET
-  int n;
+  int s;
+  int h;
 
-  n = unzapped_words (___ps->stack_limit - ___MSECTION_FUDGE,
+  s = unzapped_words (___ps->stack_limit - ___MSECTION_FUDGE,
                       ___MSECTION_FUDGE);
 
-  if (n > stack_fudge_used)
-    stack_fudge_used = n;
+  if (s > stack_fudge_used)
+    stack_fudge_used = s;
+
+  h = ___ps->hp - ___ps->heap_limit;
+
+  if (h > heap_fudge_used)
+    heap_fudge_used = h;
 
 #ifdef ___DEBUG_GARBAGE_COLLECT
-  ___printf ("********* used stack fudge = %d\n", n);
+  ___printf ("********* used fudge: stack = %d  heap = %d\n", s, h);
 #endif
-
-  n = ___ps->hp - ___ps->heap_limit;
-
-  if (n > heap_fudge_used)
-    heap_fudge_used = n;
-
-#ifdef ___DEBUG_GARBAGE_COLLECT
-  ___printf ("********* used heap fudge = %d\n", n);
-#endif
-}
-
-
-___HIDDEN void zap_fromspace
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
-{
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___vms->mem.var
-
-  int i;
-  for (i=0; i<the_msections->nb_sections; i++)
-    zap_section (start_of_fromspace (___vms, the_msections->sections[i]),
-                 ___MSECTION_SIZE>>1);
-
-#undef ___VMSTATE_MEM
-#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 }
 
 #endif
@@ -2546,14 +2579,278 @@ ___virtual_machine_state ___vms;)
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef GATHER_STATS
+___HIDDEN void fatal_heap_overflow ___PVOID
+{
+  char *msgs[2];
+  msgs[0] = "Heap overflow";
+  msgs[1] = 0;
+  ___fatal_error (msgs);
+}
 
-#define MAX_STAT_SIZE 20
 
-___HIDDEN ___SIZE_TS movable_pair_objs;
-___HIDDEN ___SIZE_TS movable_subtyped_objs[MAX_STAT_SIZE+2];
+___HIDDEN ___msection *next_msection
+   ___P((___processor_state ___ps,
+         ___msection *ms),
+        (___ps,
+         ms)
+___processor_state ___ps;
+___msection *ms;)
+{
+  ___msection *result;
 
+  /*
+   * This function gets the next msection out of the list of free
+   * msections.  It is called when a processor has used up all of the
+   * space in its current reserved msection (either heap_msection for
+   * a heap allocation or stack_msection for a stack allocation).
+   * This operation must be done in a critical section because
+   * multiple processors may exhaust their space concurrently.
+   *
+   * A spinlock is appropriate for this critical section because the
+   * critical section takes very little time and the requests for new
+   * msections happen relatively much less frequently.  An experiment
+   * on a 2.6 GHz Intel Core i7 using a tight allocation loop of pairs
+   * and ___MSECTION_SIZE=131072, indicates that the critical section
+   * lasts 0.2 microseconds and the function next_msection is called
+   * every 300 microseconds.
+   */
+
+#ifdef ENABLE_GC_ACTLOG_next_msection
+  ___ACTLOG_BEGIN_PS(next_msection,_);
 #endif
+
+  ___SPINLOCK_LOCK(alloc_mem_lock);
+
+  if (nb_msections_assigned == 0)
+    result = the_msections->head; /* start at head of free msections */
+  else
+    result = alloc_msection->next; /* move to next free msection */
+
+  if (result == 0)
+    {
+      /*
+       * If there are no free msections to allocate the next heap or
+       * stack msection, it is possible to use ms for both the heap
+       * allocations and stack allocations.  But if it is currently
+       * the case that both use the same msection, then it is an error
+       * because the garbage collector should have been called to free
+       * some space.
+       */
+
+      if (stack_msection == heap_msection)
+        fatal_heap_overflow ();
+
+      result = ms;
+    }
+  else
+    {
+      alloc_msection = result;
+      nb_msections_assigned++;
+    }
+
+  ___SPINLOCK_UNLOCK(alloc_mem_lock);
+
+#ifdef ENABLE_GC_ACTLOG_next_msection
+  ___ACTLOG_END_PS();
+#endif
+
+  return result;
+}
+
+
+___HIDDEN void set_stack_msection
+   ___P((___processor_state ___ps,
+         ___msection *ms),
+        (___ps,
+         ms)
+___processor_state ___ps;
+___msection *ms;)
+{
+  stack_msection = ms;
+
+  alloc_stack_limit = start_of_tospace(ms);
+  alloc_stack_start = alloc_stack_limit + (___MSECTION_SIZE>>1);
+  alloc_stack_ptr = alloc_stack_start;
+
+  if (ms == heap_msection)
+    {
+      /*
+       * The same msection will be used for the stack and the heap, so
+       * adjust the heap and stack limits accordingly.  3/4 of the
+       * remaining usable space is assigned to the stack.
+       */
+
+      ___SIZE_TS space = alloc_heap_limit - alloc_heap_ptr;
+
+      if (space < 2*___MSECTION_FUDGE)
+        fatal_heap_overflow ();
+
+      space = (space - 2*___MSECTION_FUDGE) >> 2; /* 1/4 of usable space */
+
+      alloc_heap_limit = alloc_heap_ptr + (space + ___MSECTION_FUDGE);
+      alloc_stack_limit = alloc_stack_ptr - (3*space + ___MSECTION_FUDGE);
+    }
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
+    zap_section (alloc_stack_limit, alloc_stack_ptr);
+#endif
+}
+
+
+___HIDDEN void next_stack_msection
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  words_prev_msections += alloc_stack_start - alloc_stack_ptr;
+  set_stack_msection (___ps, next_msection (___ps, heap_msection));
+}
+
+
+___HIDDEN void start_heap_chunk
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  alloc_heap_chunk_start = alloc_heap_ptr;
+  alloc_heap_chunk_limit = alloc_heap_ptr + ___MSECTION_CHUNK;
+}
+
+
+#define NULL_CHUNK_LINK ___TAG(0, ___FORW)
+
+
+___HIDDEN void end_heap_chunk
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  if (alloc_heap_ptr != alloc_heap_chunk_start)
+    {
+      /*
+       * Heap chunk is not empty.
+       */
+
+      *alloc_heap_ptr++ = NULL_CHUNK_LINK; /* leave space for next chunk's link */
+
+      if (!(scan_ptr >= alloc_heap_chunk_start && scan_ptr < alloc_heap_ptr))
+        {
+          /*
+           * The chunk being ended isn't currently being scanned, so
+           * add it to the heap chunk FIFO.
+           */
+
+          {
+            ___WORD *new_tail = alloc_heap_chunk_start-1;
+            *movable_objs_to_scan_tail = ___TAG(new_tail, ___FORW);
+            movable_objs_to_scan_tail = new_tail;
+          }
+        }
+    }
+}
+
+
+___HIDDEN void set_heap_msection
+   ___P((___processor_state ___ps,
+         ___msection *ms),
+        (___ps,
+         ms)
+___processor_state ___ps;
+___msection *ms;)
+{
+  heap_msection = ms;
+
+  alloc_heap_start = start_of_tospace(ms);
+  alloc_heap_limit = alloc_heap_start + (___MSECTION_SIZE>>1);
+  alloc_heap_ptr = alloc_heap_start;
+
+  if (ms == stack_msection)
+    {
+      /*
+       * The same msection will be used for the stack and the heap, so
+       * adjust the heap and stack limits accordingly.  3/4 of the
+       * remaining usable space is assigned to the heap.
+       */
+
+      ___SIZE_TS space = alloc_stack_ptr - alloc_stack_limit;
+
+      if (space < 2*___MSECTION_FUDGE)
+        fatal_heap_overflow ();
+
+      space = (space - 2*___MSECTION_FUDGE) >> 2; /* 1/4 of usable space */
+
+      alloc_stack_limit = alloc_stack_ptr - (space + ___MSECTION_FUDGE);
+      alloc_heap_limit = alloc_heap_ptr + (3*space + ___MSECTION_FUDGE);
+    }
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  //  if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
+  //    zap_section (alloc_heap_ptr, alloc_heap_limit);
+#endif
+}
+
+
+___HIDDEN void next_heap_msection
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  words_prev_msections += alloc_heap_ptr - alloc_heap_start;
+  set_heap_msection (___ps, next_msection (___ps, stack_msection));
+}
+
+
+___HIDDEN void prepare_heap_msection
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  *alloc_heap_ptr++ = NULL_CHUNK_LINK; /* link of msection's first chunk */
+  alloc_heap_limit--; /* leave space for end of chunk marker */
+  start_heap_chunk (___ps);
+}
+
+
+___HIDDEN void setup_stack_heap_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
+  ___msection *alloc = the_msections->head;
+  int n = ___vms->nb_processors;
+  int i;
+
+  for (i=0; i<n; i++)
+    {
+      ___processor_state ___ps = &___vms->pstate[i];
+
+      words_prev_msections = 0;
+
+      set_stack_msection (___ps, alloc);
+      alloc = alloc->next;
+
+      alloc_msection = alloc;
+
+      set_heap_msection (___ps, alloc);
+      alloc = alloc->next;
+
+      scan_ptr = alloc_heap_ptr;
+      prepare_heap_msection (___ps);
+
+      movable_objs_to_scan = NULL_CHUNK_LINK;
+      movable_objs_to_scan_head = &movable_objs_to_scan;
+      movable_objs_to_scan_tail = &movable_objs_to_scan;
+    }
+
+  nb_msections_assigned = n*2;
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -2601,97 +2898,111 @@ ___WORD n;)
 
   while (n > 0)
     {
-      ___WORD obj = *start;
+      ___WORD *cell = start;
 
-      if (___MEM_ALLOCATED(obj))
-        {
-          ___WORD *body;
-          ___WORD head;
-          int head_typ;
-          int subtype;
+    again: /* loop possible when tail marking */
+      {
+        ___WORD obj = *cell;
+
+        if (___MEM_ALLOCATED(obj))
+          {
+            ___WORD *body;
+            ___WORD head;
+            int head_typ;
+            int subtype;
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
-          if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-            validate_old_obj (___PSP obj);
+            if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
+              validate_old_obj (___PSP obj);
 #endif
 
-          body = ___UNTAG(obj) + ___BODY_OFS;
-          head = body[-1];
-          subtype = ___HD_SUBTYPE(head);
-          head_typ = ___HD_TYP(head);
+            body = ___UNTAG(obj) + ___BODY_OFS;
+            head = body[-1];
+            subtype = ___HD_SUBTYPE(head);
+            head_typ = ___HD_TYP(head);
 
-          if (head_typ == ___MOVABLE0)
-            {
-              ___SIZE_TS words = ___HD_WORDS(head);
+            if (head_typ == ___MOVABLE0)
+              {
+                ___SIZE_TS words = ___HD_WORDS(head);
 #if ___WS == 4
-              ___BOOL pad = 0;
-              while (alloc + words + (subtype >= ___sS64VECTOR ? 2 : 1) >
-                     limit)
+                ___BOOL pad = 0;
+                while (alloc + words + (subtype >= ___sS64VECTOR ? 2 : 1) >
+                       limit)
 #else
-              while (alloc + words + 1 > limit)
+                while (alloc + words + 1 > limit)
 #endif
-                {
-                  alloc_heap_ptr = alloc;
-                  next_heap_msection (___ps);
-                  alloc = alloc_heap_ptr;
-                  limit = alloc_heap_limit;
-                }
+                  {
+                    alloc_heap_ptr = alloc;
+                    end_heap_chunk (___ps);
+                    next_heap_msection (___ps);
+                    prepare_heap_msection (___ps);
+                    alloc = alloc_heap_ptr;
+                    limit = alloc_heap_limit;
+                  }
 #if ___WS != 8
-              /*
-               * ___sS64VECTOR, ___sU64VECTOR, ___sF64VECTOR,
-               * ___sFLONUM and ___sBIGNUM need to be aligned on a
-               * multiple of 8.
-               */
-              if (subtype >= ___sS64VECTOR)
-                {
-                  if ((___CAST(___WORD,alloc) & (8-1)) == 0)
-                    *alloc++ = ___MAKE_HD_WORDS(0, ___sVECTOR);
-                  else
-                    pad = 1;
-                }
+                /*
+                 * ___sS64VECTOR, ___sU64VECTOR, ___sF64VECTOR,
+                 * ___sFLONUM and ___sBIGNUM need to be aligned on a
+                 * multiple of 8.
+                 */
+                if (subtype >= ___sS64VECTOR)
+                  {
+                    if ((___CAST(___WORD,alloc) & (8-1)) == 0)
+                      *alloc++ = ___MAKE_HD_WORDS(0, ___sVECTOR);
+                    else
+                      pad = 1;
+                  }
 #endif
-#ifdef GATHER_STATS
-              if (subtype == ___sPAIR)
-                movable_pair_objs++;
-              else if (words <= MAX_STAT_SIZE)
-                movable_subtyped_objs[words]++;
-              else
-                movable_subtyped_objs[MAX_STAT_SIZE+1]++;
-#endif
-              *alloc++ = head;
-              *start = ___TAG((alloc - ___BODY_OFS), ___TYP(obj));
-              body[-1] = ___TAG((alloc - ___BODY_OFS), ___FORW);
-              while (words > 0)
-                {
-                  *alloc++ = *body++;
-                  words--;
-                }
+                *alloc++ = head;
+                *cell = ___TAG((alloc - ___BODY_OFS), ___TYP(obj));
+
+                if (words > 0 && subtype <= ___sBOXVALUES)
+                  cell = alloc;
+                else
+                  cell = 0;
+
+                body[-1] = ___TAG((alloc - ___BODY_OFS), ___FORW);
+                while (words > 0)
+                  {
+                    *alloc++ = *body++;
+                    words--;
+                  }
 #if ___WS == 4
-              if (pad)
-                *alloc++ = ___MAKE_HD_WORDS(0, ___sVECTOR);
+                if (pad)
+                  *alloc++ = ___MAKE_HD_WORDS(0, ___sVECTOR);
 #endif
-            }
-          else if (head_typ == ___STILL)
-            {
-              if (body[___STILL_MARK_OFS - ___STILL_BODY_OFS] == -1)
-                {
-                  body[___STILL_MARK_OFS - ___STILL_BODY_OFS]
-                    = ___CAST(___WORD,still_objs_to_scan);
-                  still_objs_to_scan
-                    = ___CAST(___WORD,body - ___STILL_BODY_OFS);
-                }
-            }
-          else if (___TYP(head_typ) == ___FORW)
-            {
-              ___WORD *copy_body = ___UNTAG_AS(head, ___FORW) + ___BODY_OFS;
-              *start = ___TAG((copy_body - ___BODY_OFS), ___TYP(obj));
-            }
+                if (alloc >= alloc_heap_chunk_limit)
+                  {
+                    alloc_heap_ptr = alloc;
+                    end_heap_chunk (___ps);
+                    start_heap_chunk (___ps);
+                    alloc = alloc_heap_ptr;
+                  }
+
+                if (cell != 0) goto again;
+              }
+            else if (head_typ == ___STILL)
+              {
+                if (body[___STILL_MARK_OFS - ___STILL_BODY_OFS] == -1)
+                  {
+                    body[___STILL_MARK_OFS - ___STILL_BODY_OFS]
+                      = ___CAST(___WORD,still_objs_to_scan);
+                    still_objs_to_scan
+                      = ___CAST(___WORD,body - ___STILL_BODY_OFS);
+                  }
+              }
+            else if (___TYP(head_typ) == ___FORW)
+              {
+                ___WORD *copy_body = ___UNTAG_AS(head, ___FORW) + ___BODY_OFS;
+                *cell = ___TAG((copy_body - ___BODY_OFS), ___TYP(obj));
+              }
 #ifdef ENABLE_CONSISTENCY_CHECKS
-          else if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1 &&
-                   head_typ != ___PERM)
-            bug (___PSP obj, "was not ___PERM, ___STILL, ___MOVABLE0 or ___FORW");
+            else if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1 &&
+                     head_typ != ___PERM)
+              bug (___PSP obj, 0, "was not ___PERM, ___STILL, ___MOVABLE0 or ___FORW");
 #endif
-        }
+          }
+      }
 
       start++;
       n--;
@@ -2792,7 +3103,9 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
           while (alloc + words + ___SUBTYPED_OVERHEAD > limit)
             {
               alloc_heap_ptr = alloc;
+              end_heap_chunk (___ps);
               next_heap_msection (___ps);
+              prepare_heap_msection (___ps);
               alloc = alloc_heap_ptr;
               limit = alloc_heap_limit;
             }
@@ -2834,6 +3147,14 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
           *ptr = forw;
 
           ptr = &___FP_STK(alloc,link+1);
+
+          if (alloc_heap_ptr >= alloc_heap_chunk_limit)
+            {
+              alloc_heap_ptr = alloc;
+              end_heap_chunk (___ps);
+              start_heap_chunk (___ps);
+              alloc = alloc_heap_ptr;
+            }
 
           if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
             goto next_frame;
@@ -2935,7 +3256,7 @@ ___WORD *nextgcmap;)
       {
         gcmap = *nextgcmap++;
 #ifdef SHOW_FRAMES
-  ___printf ("gcmap = 0x%08x\n", gcmap);
+  ___printf ("gcmap = 0x%016x\n", gcmap);
 #endif
       }
       else
@@ -2957,6 +3278,10 @@ ___PSDKR)
   ___WORD ra2;
   ___WORD gcmap;
   ___WORD *nextgcmap = 0;
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_CONTINUATION;
+#endif
 
   fp = ___ps->fp;
 
@@ -2982,7 +3307,7 @@ ___PSDKR)
           }
 
 #ifdef SHOW_FRAMES
-        ___printf ("fs=%d link=%d fp=0x%08x ra=", fs, link, ___CAST(___WORD,fp));
+        ___printf ("fs=%d link=%d fp=%p ra=", fs, link, fp);
         print_value (ra1);
 #endif
 
@@ -3016,6 +3341,10 @@ ___PSDKR)
 {
   ___PSGET
   ___rc_header *h = rc_head.next;
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_RC;
+#endif
 
   while (h != &rc_head)
     {
@@ -3161,7 +3490,7 @@ ___WORD *body;)
           }
 
 #ifdef SHOW_FRAMES
-        ___printf ("fs=%d link=%d fp=0x%08x ra=", fs, link, ___CAST(___WORD,fp));
+        ___printf ("fs=%d link=%d fp=%px ra=", fs, link, fp);
         print_value (ra);
         ___printf ("\n");
 #endif
@@ -3183,12 +3512,22 @@ ___WORD *body;)
       break;
 
     case ___sPROCEDURE:
-      if (___HD_TYP(head) != ___PERM) /* only scan closures */
-        mark_array (___PSP body+1, words-1); /* only scan free variables */
+
+      /*
+       * The object can only be a closure (nonclosures are permanent objects).
+       */
+
+      mark_array (___PSP body+1, words-1); /* only scan free variables */
+
       break;
 
     default:
-      mark_array (___PSP body, words);
+
+      if (___HD_TYP(head) == ___MOVABLE0 && subtype <= ___sBOXVALUES)
+        mark_array (___PSP body+1, words-1);
+      else
+        mark_array (___PSP body, words);
+
       break;
     }
 
@@ -3196,7 +3535,7 @@ ___WORD *body;)
 }
 
 
-___HIDDEN void init_still_objs_to_scan
+___HIDDEN void setup_still_objs_to_scan
    ___P((___PSDNC),
         (___PSVNC)
 ___PSDKR)
@@ -3233,7 +3572,7 @@ ___PSDKR)
     {
       still_objs_to_scan = base[___STILL_MARK_OFS];
       scan (___PSP base + ___STILL_BODY_OFS);
-    };
+    }
 }
 
 
@@ -3243,26 +3582,93 @@ ___HIDDEN void scan_movable_objs_to_scan
 ___PSDKR)
 {
   ___PSGET
-  ___WORD *body;
-  ___SIZE_TS words;
 
-  for (;;)
+  /*
+
+    SITUATION #1: scanning a complete chunk
+
+     chunk 1  chunk 2   chunk 3   incomplete chunk
+    +-------+---------+---------+------------------+-----
+    |L      |L        |L        |L                 |
+    +-------+---------+---------+------------------+-----
+                 ^                                  ^
+          scan_ptr                                  alloc_heap_ptr
+
+
+    SITUATION #2: scanning the incomplete chunk
+
+     chunk 1  chunk 2   chunk 3   incomplete chunk
+    +-------+---------+---------+------------------+-----
+    |L      |L        |L        |L                 |
+    +-------+---------+---------+------------------+-----
+                                         ^          ^
+                                  scan_ptr          alloc_heap_ptr
+
+
+    SITUATION #3: done scanning all movable objects
+
+     chunk 1  chunk 2   chunk 3   incomplete chunk
+    +-------+---------+---------+------------------+-----
+    |L      |L        |L        |L                 |
+    +-------+---------+---------+------------------+-----
+                                                    ^
+                                            scan_ptr alloc_heap_ptr
+
+     L = link to next chunk tagged with ___FORW
+
+   */
+
+  ___WORD *ptr = scan_ptr;
+
+  while (ptr != alloc_heap_ptr) /* SITUATION #1 or #2 ? */
     {
-      if (scan_msection == heap_msection)
+      while (___TYP(*ptr) != ___FORW) /* not end of complete chunk? */
         {
-          if (scan_ptr >= alloc_heap_ptr)
-            break;
+          ptr++;
+          ptr += scan (___PSP ptr);
+          if (ptr == alloc_heap_ptr) /* end of incomplete chunk? */
+            {
+              /* SITUATION #3, done scanning all movable objects */
+              scan_ptr = ptr;
+              return;
+            }
         }
-      else if (scan_ptr >= scan_msection->alloc)
+
+      /*
+       * SITUATION #1 at end of complete chunk.
+       */
+
+      while (movable_objs_to_scan_head != movable_objs_to_scan_tail)
         {
-          scan_msection = scan_msection->next;
-          scan_ptr = start_of_tospace (___VMSTATE_FROM_PSTATE(___ps), scan_msection);
-          continue;
+          /*
+           * Scan the next complete heap chunk from heap chunk FIFO.
+           */
+
+#ifdef ENABLE_GC_ACTLOG_scan_chunk
+          ___ACTLOG_BEGIN_PS(scan_chunk,_);
+#endif
+
+          ptr = ___UNTAG_AS(*movable_objs_to_scan_head, ___FORW);
+          movable_objs_to_scan_head = ptr++;
+          while (___TYP(*ptr) != ___FORW) /* not end of complete chunk? */
+            {
+              ptr++;
+              ptr += scan (___PSP ptr);
+            }
+
+#ifdef ENABLE_GC_ACTLOG_scan_chunk
+          ___ACTLOG_END_PS();
+#endif
         }
-      body = scan_ptr + 1;
-      words = scan (___PSP body);
-      scan_ptr = body + words;
-    };
+
+      /*
+       * Scan the incomplete heap chunk currently being created.
+       */
+
+      ptr = alloc_heap_chunk_start;
+
+      scan_ptr = ptr;
+    }
 }
 
 
@@ -3274,6 +3680,7 @@ ___PSDKR)
   ___PSGET
   ___WORD *last = &still_objs;
   ___WORD *base = ___CAST(___WORD*,*last);
+  ___SIZE_TS words_freed = 0;
 
   while (base != 0)
     {
@@ -3284,7 +3691,7 @@ ___PSDKR)
           if (___HD_SUBTYPE(head) == ___sFOREIGN)
             ___release_foreign
               (___TAG((base + ___STILL_BODY_OFS - ___BODY_OFS), ___tSUBTYPED));
-          words_nonmovable -= base[___STILL_LENGTH_OFS];
+          words_freed += base[___STILL_LENGTH_OFS];
           free_mem_aligned (base);
         }
       else
@@ -3296,15 +3703,29 @@ ___PSDKR)
     }
 
   *last = 0;
+
+  words_still_objs -= words_freed;
+
+  /*
+   * In principle the occupied_words_still could be updated with the code:
+   *
+   *  ___SPINLOCK_LOCK(alloc_mem_lock);
+   *  occupied_words_still -= words_freed;
+   *  ___SPINLOCK_UNLOCK(alloc_mem_lock);
+   *
+   * However, this would require acquiring a lock, so instead the
+   * occupied_words_still will be recomputed from all of the processor's
+   * words_still_objs when computing the space occupied by live
+   * objects prior to resizing the heap.
+   */
 }
 
 
 ___HIDDEN void free_still_objs
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
   ___WORD *base = ___CAST(___WORD*,still_objs);
 
   still_objs = 0;
@@ -3322,30 +3743,31 @@ ___PSDKR)
 }
 
 
+#define SET_MAX(var,val) do { if ((var) < (val)) var = val; } while (0)
+#define SET_MIN(var,val) do { if ((var) > (val)) var = val; } while (0)
+
+
 ___HIDDEN ___SIZE_TS adjust_heap
-   ___P((___SIZE_TS avail,
-         ___SIZE_TS live),
-        (avail,
-         live)
-___SIZE_TS avail;
+   ___P((___SIZE_TS live),
+        (live)
 ___SIZE_TS live;)
 {
   ___SIZE_TS target;
 
-  if (___GSTATE->setup_params.gc_hook != 0)
-    return ___GSTATE->setup_params.gc_hook (avail, live);
+  if (___GSTATE->setup_params.adjust_heap_hook != 0)
+    return ___GSTATE->setup_params.adjust_heap_hook (live);
 
   if (___GSTATE->setup_params.live_percent < 100)
     target = live / ___GSTATE->setup_params.live_percent * 100;
   else
     target = live + ___MSECTION_BIGGEST;
 
-  if (target < ___CAST(___SIZE_TS,(___GSTATE->setup_params.min_heap >> ___LWS)))
-    target = ___CAST(___SIZE_TS,(___GSTATE->setup_params.min_heap >> ___LWS));
+  SET_MAX(target,
+          ___CAST(___SIZE_TS,(___GSTATE->setup_params.min_heap >> ___LWS)));
 
-  if (___GSTATE->setup_params.max_heap > 0 &&
-      target > ___CAST(___SIZE_TS,(___GSTATE->setup_params.max_heap >> ___LWS)))
-    target = ___CAST(___SIZE_TS,(___GSTATE->setup_params.max_heap >> ___LWS));
+  if (___GSTATE->setup_params.max_heap > 0)
+    SET_MIN(target,
+            ___CAST(___SIZE_TS,(___GSTATE->setup_params.max_heap >> ___LWS)));
 
   return target;
 }
@@ -3366,10 +3788,8 @@ ___processor_state ___ps;)
   avail = 0;
   ___ps->mem.gc_calls_to_punt_ = 2000;
 #else
-  if (heap_size < WORDS_OCCUPIED)
-    avail = 0;
-  else
-    avail = (heap_size - WORDS_OCCUPIED) / 2;
+  avail = compute_free_heap_space()/2;
+  SET_MAX(avail,0);
 #endif
 
   stack_avail = avail/2;
@@ -3399,27 +3819,26 @@ ___processor_state ___ps;)
       ___WORD *start = end - ___MSECTION_FUDGE;
       if (end > alloc_stack_ptr)
         end = alloc_stack_ptr;
-      zap_section (start, end - start);
+      zap_section (start, end);
       if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) == 3)
         {
           ___printf ("heap_size          = %d\n", heap_size);
-          ___printf ("WORDS_OCCUPIED     = %d\n", WORDS_OCCUPIED);
           ___printf ("avail              = %d\n", avail);
           ___printf ("stack_avail        = %d\n", stack_avail);
           ___printf ("heap_avail         = %d\n", heap_avail);
-          ___printf ("stack_msection     = 0x%08x\n", stack_msection);
-          ___printf ("heap_msection      = 0x%08x\n", heap_msection);
-          ___printf ("___ps->stack_start = 0x%08x\n", ___ps->stack_start);
-          ___printf ("___ps->stack_break = 0x%08x\n", ___ps->stack_break);
-          ___printf ("___ps->fp          = 0x%08x\n", ___ps->fp);
-          ___printf ("alloc_stack_ptr    = 0x%08x\n", alloc_stack_ptr);
-          ___printf ("___ps->stack_limit = 0x%08x\n", ___ps->stack_limit);
-          ___printf ("alloc_stack_limit  = 0x%08x\n", alloc_stack_limit);
-          ___printf ("alloc_heap_limit   = 0x%08x\n", alloc_heap_limit);
-          ___printf ("___ps->heap_limit  = 0x%08x\n", ___ps->heap_limit);
-          ___printf ("___ps->hp          = 0x%08x\n", ___ps->hp);
-          ___printf ("alloc_heap_ptr     = 0x%08x\n", alloc_heap_ptr);
-          ___printf ("alloc_heap_start   = 0x%08x\n", alloc_heap_start);
+          ___printf ("stack_msection     = %p\n", stack_msection);
+          ___printf ("heap_msection      = %p\n", heap_msection);
+          ___printf ("___ps->stack_start = %p\n", ___ps->stack_start);
+          ___printf ("___ps->stack_break = %p\n", ___ps->stack_break);
+          ___printf ("___ps->fp          = %p\n", ___ps->fp);
+          ___printf ("alloc_stack_ptr    = %p\n", alloc_stack_ptr);
+          ___printf ("___ps->stack_limit = %p\n", ___ps->stack_limit);
+          ___printf ("alloc_stack_limit  = %p\n", alloc_stack_limit);
+          ___printf ("alloc_heap_limit   = %p\n", alloc_heap_limit);
+          ___printf ("___ps->heap_limit  = %p\n", ___ps->heap_limit);
+          ___printf ("___ps->hp          = %p\n", ___ps->hp);
+          ___printf ("alloc_heap_ptr     = %p\n", alloc_heap_ptr);
+          ___printf ("alloc_heap_start   = %p\n", alloc_heap_start);
         }
     }
 #endif
@@ -3434,6 +3853,8 @@ ___SCMOBJ ___setup_mem_pstate
 ___processor_state ___ps;
 ___virtual_machine_state ___vms;)
 {
+  ___SCMOBJ err;
+
 #ifndef ___SINGLE_THREADED_VMS
 
   ___ps->vmstate = ___vms;
@@ -3441,14 +3862,50 @@ ___virtual_machine_state ___vms;)
 #endif
 
   /*
+   * Setup processor's activity log.
+   */
+
+  if ((err = ___setup_actlog_pstate (___ps)) != ___FIX(___NO_ERR))
+    return err;
+
+  /*
+   * Setup location of tospace.
+   */
+
+  tospace_offset = ___vms->pstate[0].mem.tospace_offset_;
+
+  /*
    * Allocate processor's stack and heap.
    */
 
+  words_prev_msections = 0;
+
   stack_msection = 0;
+  alloc_stack_start = 0;
+  alloc_stack_ptr = 0;
+
   heap_msection = 0;
+  alloc_heap_start = 0;
+  alloc_heap_ptr = 0;
 
   next_stack_msection (___ps); /* allocate one msection for stack */
   next_heap_msection (___ps);  /* allocate one msection for local heap */
+
+  /* Setup list of still objects. */
+
+  still_objs = 0;
+  words_still_objs = 0;
+  words_still_objs_deferred = 0;
+
+  /* Keep track of bytes allocated */
+
+  bytes_allocated_minus_occupied = 0.0;
+
+  /*
+   * Setup reference counted memory management.
+   */
+
+  setup_rc (___ps);
 
   /*
    * Create "break frame" of initial top section.
@@ -3463,10 +3920,11 @@ ___virtual_machine_state ___vms;)
   ___ps->stack_break = alloc_stack_ptr;
 
   /*
-   * Setup nonexecutable will list.
+   * Setup will lists.
    */
 
   nonexecutable_wills = ___TAG(0,0); /* tagged empty list */
+  executable_wills = ___TAG(0,___EXECUTABLE_WILL); /* tagged empty list */
 
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
@@ -3496,7 +3954,7 @@ ___virtual_machine_state ___vms;)
 
   prepare_mem_pstate (___ps);
 
-  return ___FIX(___NO_ERR);
+  return err;
 }
 
 
@@ -3509,6 +3967,12 @@ ___virtual_machine_state ___vms;)
 #define ___VMSTATE_MEM(var) ___vms->mem.var
 
   int init_nb_sections;
+
+  /*
+   * Initialize spinlock for VM level memory allocation.
+   */
+
+  ___SPINLOCK_INIT(alloc_mem_lock);
 
 #ifndef ___SINGLE_VM
 
@@ -3540,19 +4004,18 @@ ___virtual_machine_state ___vms;)
 #endif
 
   /*
-   * It is important to initialize the following pointers first so
+   * It is important to initialize the_msections first so
    * that if the program terminates early the procedure
    * ___cleanup_mem_vmstate will not access dangling pointers.
    */
 
   the_msections = 0;
-  still_objs    = 0;
 
   /*
-   * Setup reference counted memory management.
+   * Setup location of tospace.
    */
 
-  setup_rc (___vms);
+  ___vms->pstate[0].mem.tospace_offset_ = 0;
 
   /*
    * Set the overflow reserve so that the rest parameter handler can
@@ -3570,31 +4033,20 @@ ___virtual_machine_state ___vms;)
   gc_user_time = 0.0;
   gc_sys_time = 0.0;
   gc_real_time = 0.0;
-  bytes_allocated_minus_occupied = 0.0;
 
-  last_gc_real_time = 0.0;
-  last_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
-  last_gc_live = 0.0;
-  last_gc_movable = 0.0;
-  last_gc_nonmovable = 0.0;
+  latest_gc_real_time = 0.0;
+  latest_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
+  latest_gc_live = 0.0;
+  latest_gc_movable = 0.0;
+  latest_gc_still = 0.0;
 
-  /* Allocate Gambit VM heap */
+  /* Allocate msections of VM */
 
-  init_nb_sections = ((___GSTATE->setup_params.min_heap >> ___LWS) +
-                      overflow_reserve + 2*___MSECTION_FUDGE +
-                      2*((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1) - 1) /
-                     (2*((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1));
-
-  if (init_nb_sections < ___MIN_NB_MSECTIONS)
-    init_nb_sections = ___MIN_NB_MSECTIONS;
-
-  /*
-   * Make sure there are at least 2 msections for each processor
-   * in this VM.
-   */
-
-  if (init_nb_sections < 2*___vms->nb_processors)
-    init_nb_sections = 2*___vms->nb_processors;
+  init_nb_sections =
+    ___MIN_NB_MSECTIONS_PER_PROCESSOR * ___vms->nb_processors +
+    ___CEILING_DIV((___GSTATE->setup_params.min_heap >> ___LWS) +
+                   normal_overflow_reserve,
+                   ___MSECTION_SIZE - 2*___MSECTION_FUDGE);
 
   adjust_msections (&the_msections, init_nb_sections);
 
@@ -3602,24 +4054,12 @@ ___virtual_machine_state ___vms;)
       the_msections->nb_sections != init_nb_sections)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
-#ifdef ENABLE_CONSISTENCY_CHECKS
-  if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-    {
-      zap_fromspace (___vms);
-      stack_fudge_used = 0;
-      heap_fudge_used = 0;
-    }
-#endif
+  occupied_words_movable = 0;
+  occupied_words_still = 0;
 
-  words_nonmovable = 0;
-  words_prev_msections = 0;
+  nb_msections_assigned = 0;
 
-  tospace_at_top = 0;
-  nb_msections_used = 0;
-
-  executable_wills = ___TAG(0,___EXECUTABLE_WILL); /* tagged empty list */
-
-  heap_size = WORDS_AVAILABLE;
+  heap_size = compute_heap_space();
 
   return ___FIX(___NO_ERR);
 
@@ -3630,28 +4070,26 @@ ___virtual_machine_state ___vms;)
 
 ___SCMOBJ ___setup_mem ___PVOID
 {
-  if (___GSTATE->setup_params.min_heap == 0) {
+  if (___GSTATE->setup_params.min_heap == 0)
+    {
+      /*
+       * Choose a reasonable minimum heap size.
+       */
 
-    /*
-     * Choose a reasonable minimum heap size.
-     */
+      ___GSTATE->setup_params.min_heap = ___processor_cache_size (0, 0) / 2;
 
-    ___GSTATE->setup_params.min_heap = ___processor_cache_size (0, 0) / 2;
-
-    if (___GSTATE->setup_params.min_heap < ___DEFAULT_MIN_HEAP) {
-      ___GSTATE->setup_params.min_heap = ___DEFAULT_MIN_HEAP;
+      SET_MAX(___GSTATE->setup_params.min_heap, ___DEFAULT_MIN_HEAP);
     }
-  }
 
   if (___GSTATE->setup_params.live_percent <= 0 ||
-      ___GSTATE->setup_params.live_percent > 100) {
+      ___GSTATE->setup_params.live_percent > 100)
+    {
+      /*
+       * Choose a reasonable minimum live percent.
+       */
 
-    /*
-     * Choose a reasonable minimum live percent.
-     */
-
-    ___GSTATE->setup_params.live_percent = ___DEFAULT_LIVE_PERCENT;
-  }
+      ___GSTATE->setup_params.live_percent = ___DEFAULT_LIVE_PERCENT;
+    }
 
   /*
    * Setup psections.
@@ -3697,6 +4135,8 @@ void ___cleanup_mem_pstate
         (___ps)
 ___processor_state ___ps;)
 {
+  free_still_objs (___ps);
+  cleanup_rc (___ps);
 }
 
 
@@ -3711,8 +4151,6 @@ ___virtual_machine_state ___vms;)
   ___cleanup_mem_pstate (&___vms->pstate[0]);/*TODO: other processors?*/
 
   free_msections (&the_msections);
-  free_still_objs (___PSANC(&___vms->pstate[0]));/*TODO: other processors?*/
-  cleanup_rc (___vms);
 
 #ifndef ___SINGLE_VM
 
@@ -4574,120 +5012,239 @@ ___SCMOBJ ht_dst;)
   return ht_dst;
 }
 
-#ifdef ___DEBUG_GARBAGE_COLLECT
 
-___BOOL ___garbage_collect_debug
-   ___P((___PSD
-         ___SIZE_TS nonmovable_words_needed,
-         int line,
-         char *file),
-        (___PSV
-         nonmovable_words_needed,
-         line,
-         file)
-___PSDKR
-___SIZE_TS nonmovable_words_needed;
-int line;
-char *file;)
-
-#else
-
-___BOOL ___garbage_collect
-   ___P((___PSD
-         ___SIZE_TS nonmovable_words_needed),
-        (___PSV
-         nonmovable_words_needed)
-___PSDKR
-___SIZE_TS nonmovable_words_needed;)
-
-#endif
+___HIDDEN void move_continuation
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
   ___PSGET
-  ___SIZE_TS avail;
-  int target_nb_sections;
-  int stack_msection_index;
+
+  ___WORD *start;
+  ___SIZE_TS length;
+  ___WORD *p1;
+  ___WORD *p2;
+
+  start = ___ps->fp;
+  length = (___ps->stack_break + ___BREAK_FRAME_SPACE) - start;
+
+  p1 = start + length;
+  p2 = alloc_stack_ptr;
+
+  ___ps->stack_start = alloc_stack_start;
+  ___ps->stack_break = p2 - ___BREAK_FRAME_SPACE;
+
+  while (p1 != start)
+    *--p2 = *--p1;
+
+  alloc_stack_ptr = p2;
+}
+
+
+___HIDDEN void determine_occupied_words
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
+  /*
+   * Compute space occupied by live objects.
+   */
+
+  int p;
+  ___SIZE_TS movable = 0;
+  ___SIZE_TS still = 0;
+  ___F64 bytes_allocated = 0.0;
+
+  for (p=0; p<___vms->nb_processors; p++)
+    {
+      ___processor_state ps = &___vms->pstate[p];
+
+      movable += words_movable_objs(ps);
+
+      still += ps->mem.words_still_objs_;
+
+      /*
+       * Note that at this point bytes_allocated_minus_occupied is
+       * actually the number of bytes allocated by the processor.
+       */
+
+      bytes_allocated += ps->mem.bytes_allocated_minus_occupied_;
+    }
+
+  occupied_words_movable = movable;
+  occupied_words_still = still;
+
+  latest_gc_alloc = bytes_allocated;
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
+}
+
+
+___HIDDEN ___BOOL resize_heap
+   ___P((___virtual_machine_state ___vms,
+         ___SIZE_TS requested_words_still),
+        (___vms,
+         requested_words_still)
+___virtual_machine_state ___vms;
+___SIZE_TS requested_words_still;)
+{
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
   ___BOOL overflow = 0;
-  ___F64 user_time_start, sys_time_start, real_time_start;
-  ___F64 user_time_end, sys_time_end, real_time_end;
-  ___F64 user_time, sys_time, real_time;
+  ___SIZE_TS target_heap_space;
+  ___SIZE_TS target_movable_space;
+  int target_nb_sections;
+  ___SIZE_TS live;
 
-  ___ACTLOG_BEGIN_PS(gc,red);
+  determine_occupied_words (___vms);
 
-  ___process_times (&user_time_start, &sys_time_start, &real_time_start);
+  occupied_words_still += requested_words_still; /* pretend requested space is live */
 
-  alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-  alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
+  live = occupied_words_movable + occupied_words_still;
 
-#ifdef ___DEBUG_GARBAGE_COLLECT
-  ___printf ("----------------------------------------- GC\n");
-  ___printf ("heap_size          = %d\n", heap_size);
-  ___printf ("WORDS_OCCUPIED     = %d\n", WORDS_OCCUPIED);
-  ___printf ("___ps->stack_start = 0x%08x\n", ___ps->stack_start);
-  ___printf ("___ps->stack_break = 0x%08x\n", ___ps->stack_break);
-  ___printf ("___ps->fp          = 0x%08x\n", ___ps->fp);
-  ___printf ("___ps->stack_limit = 0x%08x\n", ___ps->stack_limit);
-  ___printf ("___ps->heap_limit  = 0x%08x\n", ___ps->heap_limit);
-  ___printf ("___ps->hp          = 0x%08x\n", ___ps->hp);
-#endif
+  /*
+   * Determine the target size of the heap in msections given the
+   * space requested for the still object.
+   */
 
-  words_nonmovable += nonmovable_words_needed;
+  target_heap_space = adjust_heap (live);
 
-  bytes_allocated_minus_occupied =
-    bytes_allocated_minus_occupied +
-    ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
+  if (live > target_heap_space)
+    {
+      /*
+       * Trigger a recoverable heap overflow.
+       */
 
-#ifdef GATHER_STATS
-  movable_pair_objs = 0;
-  {
-    int i;
-    for (i=0; i<=MAX_STAT_SIZE+1; i++)
-      movable_subtyped_objs[i] = 0;
-  }
-#endif
+      overflow = 1;
 
-  stack_msection_index = stack_msection->index;
+      /*
+       * Take some space from the overflow reserve.
+       */
 
-  words_prev_msections = 0;
+      overflow_reserve >>= 5; /* make 96.875% of reserve usable */
 
-  tospace_at_top = !tospace_at_top;
-  stack_msection = 0;
-  heap_msection = 0;
-  nb_msections_used = 0;
+      if (overflow_reserve == 0)
+        fatal_heap_overflow ();
 
-  next_heap_msection (___ps);
+      /*
+       * Cancel allocation of still object.
+       */
 
-  scan_msection = heap_msection;
-  scan_ptr = alloc_heap_ptr;
+      occupied_words_still -= requested_words_still;
+      live -= requested_words_still;
 
-  /* maintain list of GC hash tables reached by GC */
+      target_heap_space = adjust_heap (live);
+    }
 
-  reached_gc_hash_tables = ___TAG(0,0);
+  if (live + normal_overflow_reserve <= target_heap_space)
+    {
+      /*
+       * Now that there is enough free space, reset the overflow
+       * reserve to its normal value.
+       */
 
-  /* trace externally referenced still objects */
+      overflow_reserve = normal_overflow_reserve;
+    }
 
-  init_still_objs_to_scan (___PSPNC);
+  target_movable_space = target_heap_space - occupied_words_still;
 
-  /* trace registers */
+  SET_MAX(target_movable_space, 0);
+
+  target_nb_sections =
+    ___MIN_NB_MSECTIONS_PER_PROCESSOR * ___vms->nb_processors +
+    ___CEILING_DIV(target_movable_space + normal_overflow_reserve,
+                   ___MSECTION_SIZE - 2*___MSECTION_FUDGE);
+
+  SET_MAX(target_nb_sections,
+          nb_msections_assigned);
+
+  adjust_msections (&the_msections, target_nb_sections);
+
+  heap_size = compute_heap_space();
+
+  /*
+   * Maintain GC statistics.
+   */
+
+  latest_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
+
+  latest_gc_live = ___CAST(___F64,live) * ___WS;
+  latest_gc_movable = ___CAST(___F64,occupied_words_movable) * ___WS;
+  latest_gc_still = ___CAST(___F64,occupied_words_still) * ___WS;
+
+  return overflow;
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
+}
+
+
+___HIDDEN void mark_registers
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   reference_location = IN_REGISTER;
 #endif
 
-  mark_array (___PSP &___ps->current_thread, 1);
-  mark_array (___PSP &___ps->run_queue, 1);
-
   mark_array (___PSP ___ps->r, ___NB_GVM_REGS);
+}
 
-  mark_array (___PSP &___GSTATE->symbol_table, 1);
-  mark_array (___PSP &___GSTATE->keyword_table, 1);
 
-  /* trace global variables */
+___HIDDEN void mark_current_thread
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_CURRENT_THREAD;
+#endif
+
+  mark_array (___PSP &___ps->current_thread, 1);
+}
+
+
+___HIDDEN void mark_run_queue
+   ___P((___PSD
+         ___virtual_machine_state ___vms),
+        (___PSV
+         ___vms)
+___PSDKR
+___virtual_machine_state ___vms;)
+{
+  ___PSGET
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_RUN_QUEUE;
+#endif
+
+  mark_array (___PSP &___vms->run_queue, 1);
+}
+
+
+___HIDDEN void mark_global_variables
+   ___P((___PSD
+         ___virtual_machine_state ___vms),
+        (___PSV
+         ___vms)
+___PSDKR
+___virtual_machine_state ___vms;)
+{
+  ___PSGET
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   reference_location = IN_GLOBAL_VAR;
 #endif
-
-  /* TODO: globals should only be scanned once when not ___SINGLE_THREADED_VMS */
 
 #ifdef ___SINGLE_VM
 
@@ -4696,8 +5253,9 @@ ___SIZE_TS nonmovable_words_needed;)
 
     while (p != 0)
       {
-#ifdef ___DEBUG_GARBAGE_COLLECT
+#ifdef ___DEBUG_GARBAGE_COLLECT_globals
         print_global_var_name (p);
+        ___printf ("\n");
 #endif
         mark_array (___PSP &___GLOCELL(p->val), 1);
         p = p->next;
@@ -4707,175 +5265,328 @@ ___SIZE_TS nonmovable_words_needed;)
 #else
 
   mark_array (___PSP
-              ___VMSTATE_FROM_PSTATE(___ps)->glos,
+              ___vms->glos,
               ___GSTATE->mem.nb_glo_vars);
 
 #endif
+}
 
-  /* trace continuation */
+
+___HIDDEN void mark_symkey_tables
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
-  reference_location = IN_CONTINUATION;
+  reference_location = IN_SYMKEY_TABLE;
 #endif
+
+  mark_array (___PSP &___GSTATE->symbol_table, 1);
+  mark_array (___PSP &___GSTATE->keyword_table, 1);
+}
+
+
+___HIDDEN void mark_reachable_from_marked
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+  do
+    {
+      scan_still_objs_to_scan (___PSPNC);
+      scan_movable_objs_to_scan (___PSPNC);
+    } while (___CAST(___WORD*,still_objs_to_scan) != 0);
+}
+
+
+___HIDDEN void garbage_collect_setup_phase
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_BEGIN_PS(gc_setup_phase,_);
+#endif
+
+  /* Flip fromspace and tospace */
+
+  tospace_offset = fromspace_offset;
+
+  /* Keep track of bytes allocated by this processor */
+
+  bytes_allocated_minus_occupied += bytes_occupied(___ps);
+
+  /* Assign initial stack and heap msections to each processor */
+
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
+    setup_stack_heap_vmstate (___vms);
+
+  /* Create list of externally referenced still objects to trace */
+
+  setup_still_objs_to_scan (___PSPNC);
+
+  /* Account for deferred accounting of still object allocation */
+
+  words_still_objs += words_still_objs_deferred;
+  words_still_objs_deferred = 0;
+
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_END_PS();
+#endif
+}
+
+
+___HIDDEN void garbage_collect_mark_strong_phase
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_BEGIN_PS(gc_mark_strong_phase,_);
+#endif
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
+    {
+      stack_fudge_used = 0;
+      heap_fudge_used = 0;
+    }
+#endif
+
+  /* maintain list of GC hash tables reached by GC */
+
+  reached_gc_hash_tables = ___TAG(0,0);
+
+  traverse_weak_refs = 0; /* don't traverse weak references in this phase */
 
   mark_continuation (___PSPNC);
 
-  /* trace reference counted objects */
+  mark_registers (___PSPNC);
 
-#ifdef ENABLE_CONSISTENCY_CHECKS
-  reference_location = IN_RC;
+  mark_current_thread (___PSPNC);
+
+  if (___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)) == 0)
+    {
+      mark_run_queue (___PSP ___VMSTATE_FROM_PSTATE(___ps));
+      mark_symkey_tables (___PSPNC);
+      mark_global_variables (___PSP ___VMSTATE_FROM_PSTATE(___ps));
+      mark_rc (___PSPNC);
+    }
+
+  mark_reachable_from_marked (___PSPNC);
+
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_END_PS();
+#endif
+}
+
+
+___HIDDEN void garbage_collect_mark_weak_phase
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+  /*
+   * At this point all of the objects accessible from the roots
+   * without having to traverse a weak reference have been scanned
+   * by the GC.
+   */
+
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_BEGIN_PS(mark_weak_phase,_);
 #endif
 
-  mark_rc (___PSPNC);
+  traverse_weak_refs = 1; /* traverse weak references in this phase */
 
-  /* mark objects reachable from marked objects */
+  process_wills (___PSPNC);
 
-  traverse_weak_refs = 0; /* don't traverse weak references in first pass */
+  mark_reachable_from_marked (___PSPNC);
 
-  again:
+  move_continuation (___PSPNC);
 
-  if (___CAST(___WORD*,still_objs_to_scan) != 0)
-    scan_still_objs_to_scan (___PSPNC);
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_END_PS();
+#endif
+}
 
-  if (scan_msection != heap_msection ||
-      scan_ptr < alloc_heap_ptr)
-    {
-      scan_movable_objs_to_scan (___PSPNC);
-      goto again;
-    }
 
-  if (!traverse_weak_refs)
-    {
-      /*
-       * At this point all of the objects accessible from the roots
-       * without having to traverse a weak reference have been scanned
-       * by the GC.
-       */
+___HIDDEN void garbage_collect_cleanup_phase
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
 
-      traverse_weak_refs = 1;
-
-      process_wills (___PSPNC);
-
-      goto again;
-    }
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_BEGIN_PS(gc_cleanup_phase,_);
+#endif
 
   process_gc_hash_tables (___PSPNC);
 
   free_unmarked_still_objs (___PSPNC);
 
-  target_nb_sections = (adjust_heap (WORDS_AVAILABLE, WORDS_OCCUPIED)
-                        - words_nonmovable
-                        + normal_overflow_reserve
-                        + 2*___MSECTION_FUDGE
-                        + 2*((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1) - 1)
-                       / (2*((___MSECTION_SIZE>>1)-___MSECTION_FUDGE+1));
+#ifdef ENABLE_GC_ACTLOG_phases
+  ___ACTLOG_END_PS();
+#endif
+}
 
-  if (target_nb_sections < nb_msections_used)
+
+___BOOL ___garbage_collect_pstate
+   ___P((___processor_state ___ps,
+         ___SIZE_TS requested_words_still),
+        (___ps,
+         requested_words_still)
+___processor_state ___ps;
+___SIZE_TS requested_words_still;)
+{
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  ___BOOL overflow = 0;
+  ___F64 user_time_start, sys_time_start, real_time_start;
+  ___F64 user_time_end, sys_time_end, real_time_end;
+  ___F64 user_time, sys_time, real_time;
+
+  ___ACTLOG_BEGIN_PS(gc,red);
+
+  /* Start measuring GC statistics */
+
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
     {
-      target_nb_sections = the_msections->nb_sections;
-      overflow = 1;
+#ifdef ___DEBUG_GARBAGE_COLLECT
+      ___printf ("----------------------------------------- GC\n");
+#endif
+      ___process_times (&user_time_start, &sys_time_start, &real_time_start);
     }
 
-  if (target_nb_sections < ___MIN_NB_MSECTIONS)
-    target_nb_sections = ___MIN_NB_MSECTIONS;
+  /* Print debugging info */
 
-  /* Move the stack */
+#ifdef ___DEBUG_GARBAGE_COLLECT
 
   {
-    ___WORD *start;
-    ___SIZE_TS length;
-    ___WORD *p1;
-    ___WORD *p2;
-
-    start = alloc_stack_ptr;
-    length = (___ps->stack_break + ___BREAK_FRAME_SPACE) - start;
-
-    if (stack_msection_index >= target_nb_sections)
+    int p;
+    for (p=0; p<___vms->nb_processors; p++)
       {
-        /*
-         * The msection currently containing the stack is about to be
-         * reclaimed by the call to 'adjust_msections'.  So we need to
-         * save the stack before moving it to its final destination.
-         */
-
-        p1 = start + length;
-        p2 = start_of_fromspace (___VMSTATE_FROM_PSTATE(___ps), the_msections->head) + length;
-
-        while (p1 != start)
-          *--p2 = *--p1;
-
-        start = p2;
+        if (___PROCESSOR_ID(___ps,___vms) == p)
+          {
+            ___printf ("heap_size          = %d\n", heap_size);
+            ___printf ("___ps->stack_start = %p\n", ___ps->stack_start);
+            ___printf ("___ps->stack_break = %p\n", ___ps->stack_break);
+            ___printf ("___ps->fp          = %p\n", ___ps->fp);
+            ___printf ("___ps->stack_limit = %p\n", ___ps->stack_limit);
+            ___printf ("___ps->heap_limit  = %p\n", ___ps->heap_limit);
+            ___printf ("___ps->hp          = %p\n", ___ps->hp);
+          }
+        barrier_sync_noop (___PSP);
       }
-
-    adjust_msections (&the_msections, target_nb_sections);
-
-    next_stack_msection (___ps);
-
-    p1 = start + length;
-    p2 = alloc_stack_ptr;
-
-    ___ps->stack_start = alloc_stack_start;
-    ___ps->stack_break = p2 - ___BREAK_FRAME_SPACE;
-
-    while (p1 != start)
-      *--p2 = *--p1;
-
-    alloc_stack_ptr = p2;
   }
 
-#ifdef ENABLE_CONSISTENCY_CHECKS
-  if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
-    zap_fromspace (___VMSTATE_FROM_PSTATE(___ps));
 #endif
 
-  if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-    next_heap_msection (___ps);
+  /* Recover processor's stack and heap pointers */
 
-  avail = WORDS_AVAILABLE + overflow_reserve - WORDS_OCCUPIED;
+  alloc_stack_ptr = ___ps->fp;
+  alloc_heap_ptr  = ___ps->hp;
 
-  if (avail <= overflow_reserve + (WORDS_MOVABLE_USABLE >> 10))
+  /* Setup the stacks and heaps of all the processors */
+
+  garbage_collect_setup_phase (___PSPNC);
+
+  barrier_sync_noop (___PSP);
+
+  /* Mark the objects that are reachable strongly */
+
+  {
+    int p;
+    for (p=0; p<___vms->nb_processors; p++)
+      {
+        if (___PROCESSOR_ID(___ps,___vms) == p)
+          garbage_collect_mark_strong_phase (___PSPNC);
+        barrier_sync_noop (___PSP);
+      }
+  }
+
+  /* Mark the objects that are reachable weakly */
+
+  {
+    int p;
+    for (p=0; p<___vms->nb_processors; p++)
+      {
+        if (___PROCESSOR_ID(___ps,___vms) == p)
+          garbage_collect_mark_weak_phase (___PSPNC);
+        barrier_sync_noop (___PSP);
+      }
+  }
+
+  /* Process gc hash tables and free unreachable still objects */
+
+  {
+    int p;
+    for (p=0; p<___vms->nb_processors; p++)
+      {
+        if (___PROCESSOR_ID(___ps,___vms) == p)
+          garbage_collect_cleanup_phase (___PSPNC);
+        barrier_sync_noop (___PSP);
+      }
+  }
+
+  /* Resize heap */
+
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
+    overflow = resize_heap (___vms, requested_words_still);
+
+  barrier_sync_noop (___PSP);
+
+  {
+    int p;
+    for (p=0; p<___vms->nb_processors; p++)
+      {
+        if (___PROCESSOR_ID(___ps,___vms) == p)
+          {
+            if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
+              next_heap_msection (___ps);
+          }
+        barrier_sync_noop (___PSP);
+      }
+  }
+
+  /* Keep track of bytes allocated by this processor */
+
+  bytes_allocated_minus_occupied -= bytes_occupied(___ps);
+
+  /* Finalize measuring GC statistics */
+
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
     {
-      overflow = 1;
-      overflow_reserve >>= 5; /* make 96.875% of reserve usable */
-      if (overflow_reserve == 0)
-        fatal_heap_overflow ();
+      ___process_times (&user_time_end, &sys_time_end, &real_time_end);
+
+      user_time = user_time_end - user_time_start;
+      sys_time = sys_time_end - sys_time_start;
+      real_time = real_time_end - real_time_start;
+
+      nb_gcs = nb_gcs + 1.0;
+      gc_user_time += user_time;
+      gc_sys_time += sys_time;
+      gc_real_time += real_time;
+
+      latest_gc_user_time = user_time;
+      latest_gc_sys_time = sys_time;
+      latest_gc_real_time = real_time;
+
+      ___raise_interrupt_pstate (___ps, ___INTR_GC); /* raise gc interrupt */
     }
-  else if (avail >= normal_overflow_reserve)
-    overflow_reserve = normal_overflow_reserve; /* restore overflow reserve */
-
-  bytes_allocated_minus_occupied =
-    bytes_allocated_minus_occupied -
-    ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
-
-  words_nonmovable -= nonmovable_words_needed;
-
-  heap_size = WORDS_AVAILABLE;
 
   prepare_mem_pstate (___ps);
-
-  ___process_times (&user_time_end, &sys_time_end, &real_time_end);
-
-  user_time = user_time_end - user_time_start;
-  sys_time = sys_time_end - sys_time_start;
-  real_time = real_time_end - real_time_start;
-
-  nb_gcs = nb_gcs + 1.0;
-  gc_user_time += user_time;
-  gc_sys_time += sys_time;
-  gc_real_time += real_time;
-
-  last_gc_user_time = user_time;
-  last_gc_sys_time = sys_time;
-  last_gc_real_time = real_time;
-  last_gc_heap_size = ___CAST(___F64,heap_size) * ___WS;
-  last_gc_alloc =
-    bytes_allocated_minus_occupied +
-    ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
-  last_gc_live = ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
-  last_gc_movable = ___CAST(___F64,WORDS_MOVABLE) * ___WS;
-  last_gc_nonmovable = ___CAST(___F64,words_nonmovable) * ___WS;
-
-  ___raise_interrupt_pstate (___ps, ___INTR_GC); /* raise gc interrupt */
 
   ___ACTLOG_END_PS();
 
@@ -4906,7 +5617,11 @@ ___PSDKR)
 #endif
 {
   ___PSGET
-  ___SIZE_TS avail;
+
+  /* Recover processor's stack and heap pointers */
+
+  alloc_stack_ptr = ___ps->fp;
+  alloc_heap_ptr  = ___ps->hp;
 
 #ifdef ___DEBUG_STACK_LIMIT
   ___ps->stack_limit_line = line;
@@ -4921,16 +5636,11 @@ ___PSDKR)
     check_fudge_used (___PSPNC);
 #endif
 
-  alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-  alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
-
-  avail = (heap_size - WORDS_OCCUPIED) / 2;
-
-  if (avail > ___MSECTION_WASTE
-#ifdef ___CALL_GC_FREQUENTLY
-      && --___ps->mem.gc_calls_to_punt_ >= 0
+  if (
+#ifdef CALL_GC_FREQUENTLY
+      --___gc_calls_to_punt >= 0 &&
 #endif
-     )
+      compute_free_heap_space() >= ___MSECTION_SIZE)
     {
       if (alloc_stack_ptr < alloc_stack_limit + ___MSECTION_FUDGE)
         {
@@ -4988,7 +5698,11 @@ ___PSDKR)
 #endif
 {
   ___PSGET
-  ___SIZE_TS avail;
+
+  /* Recover processor's stack and heap pointers */
+
+  alloc_stack_ptr = ___ps->fp;
+  alloc_heap_ptr  = ___ps->hp;
 
 #ifdef ___DEBUG_HEAP_LIMIT
   ___ps->heap_limit_line = line;
@@ -5000,16 +5714,11 @@ ___PSDKR)
     check_fudge_used (___PSPNC);
 #endif
 
-  alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-  alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
-
-  avail = (heap_size - WORDS_OCCUPIED) / 2;
-
-  if (avail > ___MSECTION_WASTE
-#ifdef ___CALL_GC_FREQUENTLY
-      && --___ps->mem.gc_calls_to_punt_ >= 0
+  if (
+#ifdef CALL_GC_FREQUENTLY
+      --___gc_calls_to_punt >= 0 &&
 #endif
-     )
+      compute_free_heap_space() >= ___MSECTION_SIZE)
     {
       if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
         next_heap_msection (___ps);
@@ -5033,11 +5742,12 @@ ___PSDKR)
 {
   ___PSGET
 
-  alloc_stack_ptr = ___ps->fp; /* needed by 'WORDS_OCCUPIED' */
-  alloc_heap_ptr  = ___ps->hp; /* needed by 'WORDS_OCCUPIED' */
+  /* Recover processor's stack and heap pointers */
 
-  return bytes_allocated_minus_occupied +
-         ___CAST(___F64,WORDS_OCCUPIED) * ___WS;
+  alloc_stack_ptr = ___ps->fp;
+  alloc_heap_ptr  = ___ps->hp;
+
+  return bytes_allocated_minus_occupied + bytes_occupied(___ps);
 }
 
 

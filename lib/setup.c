@@ -262,6 +262,7 @@ do { int count; for (count=10; count>0; count--) ; } while (0)
 
 #define OP_SET_NB_PROCESSORS OP_MAKE( 0,0)
 #define OP_RESIZE_VM         OP_MAKE( 1,0)
+#define OP_GARBAGE_COLLECT   OP_MAKE( 2,COMBINING_ADD)
 #define OP_ACTLOG_START      OP_MAKE(61,0)
 #define OP_ACTLOG_STOP       OP_MAKE(62,0)
 #define OP_NOOP              OP_MAKE(63,0)
@@ -385,7 +386,7 @@ ___sync_op_struct *sop_ptr;)
        * information is used by the barrier_sync algorithm itself.
        */
       if (sop.op == OP_SET_NB_PROCESSORS)
-        ___vms->nb_processors = sop.arg[0];
+          ___vms->nb_processors = sop.arg[0];
     }
   else
     {
@@ -441,6 +442,24 @@ ___sync_op_struct *sop_ptr;)
   *sop_ptr = sop;
 
   return sid;
+
+#endif
+}
+
+
+void barrier_sync_noop
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+#ifndef ___SINGLE_THREADED_VMS
+
+  ___PSGET
+
+  ___sync_op_struct sop;
+
+  sop.op = OP_NOOP;
+  barrier_sync_op (___PSP &sop);
 
 #endif
 }
@@ -523,10 +542,45 @@ ___WORD target_nb_processors;)
   int id = ___ps - ___vms->pstate; /* id of this processor */
   ___sync_op_struct sop;
 
-  if (id != 0)
+#if 0
+  ___BOOL overflow;
+
+  if (id == 0)
+    ___vms->mem.target_nb_processors_ = target_nb_processors;
+
+  sop.op = OP_GARBAGE_COLLECT;
+  sop.arg[0] = 0;
+  barrier_sync_op (___PSP &sop);
+
+  overflow = op.arg[0] != 0;
+
+  if (overflow)
     {
       /*
-       * Wait for nb_processors to be set synchronously by processor 0.
+       * A heap overflow occurred, indicating the VM has
+       * insufficient space to accomodate the target number of
+       * processors.
+       */
+
+      ___vms->mem.target_nb_processors_ = initial;
+    }
+#endif
+
+  if (id != 0)
+    {
+#if 0
+      /*
+       * Wait for processor 0 to set ___vms->mem.target_nb_processors_ and
+       * garbage collect synchronously to reserve space for each
+       * processor's heap and stack.
+       */
+
+      sop.op = OP_NOOP;
+      barrier_sync_op (___PSP &sop);
+#endif
+
+      /*
+       * Wait for processor 0 to set ___vms->nb_processors.
        */
 
       sop.op = OP_NOOP;
@@ -633,6 +687,10 @@ ___sync_op_struct *sop_ptr;)
       sop_ptr->arg[0] = resize_vm (___ps, sop_ptr->arg[0], sop_ptr->arg[1]);
       break;
 
+    case OP_GARBAGE_COLLECT:
+      sop_ptr->arg[0] = ___garbage_collect_pstate (___ps, sop_ptr->arg[0]);
+      break;
+
     case OP_ACTLOG_START:
       ___actlog_start_pstate (___ps);
       break;
@@ -710,8 +768,9 @@ ___PSDKR)
   ___sync_op_struct sop;
 
   sop.op = OP_NOOP;
-
+  ___ACTLOG_BEGIN(service_sync_op,_);
   execute_sync_op_loop (___PSP &sop, 1);
+  ___ACTLOG_END();
 }
 
 
@@ -728,9 +787,13 @@ ___sync_op_struct *sop_ptr;)
 
   /* force processors to call service_sync_op */
 
+  ___ACTLOG_BEGIN(on_all,_);
+
   ___raise_interrupt_vmstate (___vms, ___INTR_SYNC_OP);
 
   execute_sync_op_loop (___PSP sop_ptr, 1);
+
+  ___ACTLOG_END();
 }
 
 
@@ -755,6 +818,26 @@ int target_nb_processors;)
   on_all_processors (___PSP &sop);
 
   return ___FIX(___NO_ERR);
+}
+
+
+___EXP_FUNC(___BOOL,___garbage_collect)
+   ___P((___PSD
+         ___SIZE_TS requested_words_still),
+        (___PSV
+         requested_words_still)
+___PSDKR
+___SIZE_TS requested_words_still;)
+{
+  ___PSGET
+  ___sync_op_struct sop;
+
+  sop.op = OP_GARBAGE_COLLECT;
+  sop.arg[0] = requested_words_still;
+
+  on_all_processors (___PSP &sop);
+
+  return sop.arg[0] != 0;
 }
 
 
@@ -2804,20 +2887,12 @@ ___virtual_machine_state ___vms;)
   int i;
 
   /*
-   * Setup processor's activity log.
-   */
-
-  if ((err = ___setup_actlog_pstate (___ps)) != ___FIX(___NO_ERR))
-    return err;
-
-  /*
    * Setup processor's memory management.
    */
 
   if ((err = ___setup_mem_pstate (___ps, ___vms)) != ___FIX(___NO_ERR))
     return err;
 
-  ___ACTLOG_PS(idle,black);
   ___ACTLOG_PS(run,green);
 
   /*
@@ -2825,7 +2900,6 @@ ___virtual_machine_state ___vms;)
    */
 
   ___ps->current_thread = ___FAL;
-  ___ps->run_queue = ___FAL;
 
   /*
    * Setup registers.
@@ -2888,6 +2962,13 @@ ___virtual_machine_state ___vms;)
    */
 
   ___vms->nb_processors = 1;
+  ___vms->mem.target_nb_processors_ = 1;
+
+  /*
+   * Setup queue of runnable threads.
+   */
+
+  ___vms->run_queue = ___FAL;
 
   /*
    * Setup virtual machine's activity log.
@@ -2969,7 +3050,7 @@ ___setup_params_struct *setup_params;)
   setup_params->min_heap          = 0;
   setup_params->max_heap          = 0;
   setup_params->live_percent      = 0;
-  setup_params->gc_hook           = 0;
+  setup_params->adjust_heap_hook  = 0;
   setup_params->display_error     = 0;
   setup_params->fatal_error       = 0;
   setup_params->standard_level    = 0;
@@ -3846,6 +3927,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___cleanup_and_exit_process
     = ___cleanup_and_exit_process;
 
+  ___GSTATE->___resize_vm
+    = ___resize_vm;
+
+  ___GSTATE->___garbage_collect
+    = ___garbage_collect;
+
   ___GSTATE->___setup_vmstate
     = ___setup_vmstate;
 
@@ -4031,6 +4118,12 @@ ___setup_params_struct *setup_params;)
 #endif
 
   /*
+   * Setup support for dynamic linking.
+   */
+
+  setup_dynamic_linking ();
+
+  /*
    * Setup the operating system and memory management modules.
    */
 
@@ -4042,12 +4135,6 @@ ___setup_params_struct *setup_params;)
    */
 
   ___GSTATE->setup_state = 1;
-
-  /*
-   * Setup support for dynamic linking.
-   */
-
-  setup_dynamic_linking ();
 
   /*
    * Setup program's linker structure.

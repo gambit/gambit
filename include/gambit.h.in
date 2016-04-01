@@ -3380,24 +3380,45 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_VAL0      6
 
 #define ___CURRENTTHREAD ___ps->current_thread
-#define ___RUNQUEUE ___ps->run_queue
+#define ___RUNQUEUE ___VMSTATE_FROM_PSTATE(___ps)->run_queue
 
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ___BTQLOCK(btq)
 #define ___BTQUNLOCK(btq)
 
+#define ___SPINLOCK_DECL(id)
+#define ___SPINLOCK_INIT(lock)
+#define ___SPINLOCK_LOCK(lock)
+#define ___SPINLOCK_UNLOCK(lock)
+
 #else
 
 #define ___BTQLOCK(btq) \
-{ \
-  ___WORD ___ticket = ___FETCH_AND_ADD_WORD((___WORD volatile *)&___FIELD(btq,___BTQ_LOCK1),___FIX(1)); \
-  while (*(___WORD volatile *)&___FIELD(btq,___BTQ_LOCK2) != ___ticket) \
-    ___CPU_RELAX(); \
-}
+___SPINLOCK_LOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2));
 
 #define ___BTQUNLOCK(btq) \
-___FETCH_AND_ADD_WORD((___WORD volatile *)&___FIELD(btq,___BTQ_LOCK2),___FIX(1));
+___SPINLOCK_UNLOCK2(___FIELD(btq,___BTQ_LOCK2));
+
+#define ___SPINLOCK_DECL(id) ___WORD id[2];
+
+#define ___SPINLOCK_INIT(lock) lock[0] = lock[1] = ___FIX(0)
+
+#define ___SPINLOCK_LOCK(lock) \
+___SPINLOCK_LOCK2(lock[0],lock[1])
+
+#define ___SPINLOCK_UNLOCK(lock) \
+___SPINLOCK_UNLOCK2(lock[1])
+
+#define ___SPINLOCK_LOCK2(lock1,lock2) \
+do { \
+  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(___WORD volatile *,&lock1),___FIX(1)); \
+  while (*___CAST(___WORD volatile *,&lock2) != ___ticket) \
+    ___CPU_RELAX(); \
+} while (0)
+
+#define ___SPINLOCK_UNLOCK2(lock2) \
+___FETCH_AND_ADD_WORD(___CAST(___WORD volatile *,&lock2),___FIX(1))
 
 #endif
 
@@ -7724,7 +7745,6 @@ typedef struct ___msect
   {
     int index;             /* index in list of sections */
     int pos;               /* position in msections's 'sections' array */
-    ___WORD *alloc;        /* heap allocation pointer, grows towards high addr. */
     struct ___msect *prev; /* previous section in list of sections */
     struct ___msect *next; /* next section in list of sections */
     ___WORD base[1];       /* content of section */
@@ -7759,6 +7779,9 @@ typedef struct ___rc_header_struct
 
 typedef struct ___pstate_mem_struct {
 
+/* location of tospace in each msection */
+___SIZE_TS tospace_offset_;
+
 /* msection where continuation frames are currently being allocated */
 ___msection *stack_msection_;
 
@@ -7783,8 +7806,60 @@ ___WORD *alloc_heap_ptr_;
 /* allocation limit for movable objects in heap_msection */
 ___WORD *alloc_heap_limit_;
 
+/* start of current group of movable objects being copied by mark_array */
+___WORD *alloc_heap_chunk_start_;
+
+/* allocation limit for movable objects in current chunk */
+___WORD *alloc_heap_chunk_limit_;
+
+/* list of complete movable objects chunks to scan */
+___WORD movable_objs_to_scan_;
+
+/* fifo of complete movable object chunks remaining to scan */
+___WORD *movable_objs_to_scan_head_;
+___WORD *movable_objs_to_scan_tail_;
+
+/* scan pointer in currently scanned (possibly incomplete) chunk */
+___WORD *scan_ptr_;
+
+/* still objects remaining to scan */
+___WORD still_objs_to_scan_;
+
+/* list of still objects */
+___WORD still_objs_;
+
+/* words occupied by still objects */
+___SIZE_TS words_still_objs_;
+
+/* words occupied by still objects not yet accounted for at the VM level */
+___SIZE_TS words_still_objs_deferred_;
+
+/* bytes allocated minus occupied */
+___F64 bytes_allocated_minus_occupied_;
+
+/* head of list of reference counted blocks of memory */
+___rc_header rc_head_;
+
+/* indicates if weak references must be traversed */
+___BOOL traverse_weak_refs_;
+
 /* list of nonexecutable wills */
 ___WORD nonexecutable_wills_;
+
+/* list of executable wills */
+___WORD executable_wills_;
+
+/* GC hash tables reached by GC */
+___WORD reached_gc_hash_tables_;
+
+/* words occupied in msections of this processor excluding current msections */
+___SIZE_TS words_prev_msections_;
+
+/* space used in msection stack fudge */
+___SIZE_TS stack_fudge_used_;
+
+/* space used in msection heap fudge */
+___SIZE_TS heap_fudge_used_;
 
 #ifdef ___CALL_GC_FREQUENTLY
 int gc_calls_to_punt_;
@@ -7792,6 +7867,9 @@ int gc_calls_to_punt_;
 } ___pstate_mem;
 
 typedef struct ___vmstate_mem_struct {
+
+/* spinlock for allocation of memory at the VM level */
+___SPINLOCK_DECL(alloc_mem_lock_)
 
 /* size of heap in words (number of words that can be occupied) */
 ___SIZE_TS heap_size_;
@@ -7813,47 +7891,23 @@ ___SIZE_TS normal_overflow_reserve_;
  */
 ___SIZE_TS overflow_reserve_;
 
-/* words occupied by nonmovable objects */
-___SIZE_TS words_nonmovable_;
+/* words occupied by movable objects (only updated at end of GC) */
+___SIZE_TS occupied_words_movable_;
 
-/* words occupied in heap by movable objects excluding current msections */
-___SIZE_TS words_prev_msections_;
-
-/* list of still objects */
-___WORD still_objs_;
-
-/* still objects remaining to scan */
-___WORD still_objs_to_scan_;
+/* words occupied by still objects (excluding deferred ones) */
+___SIZE_TS occupied_words_still_;
 
 /* the msections */
 ___msections *the_msections_;
 
-/* location of tospace in each msection */
-___BOOL tospace_at_top_;
-
-/* number of msections used */
-int nb_msections_used_;
-
 /* last msection allocated */
 ___msection *alloc_msection_;
 
-/* msection currently being scanned */
-___msection *scan_msection_;
+/* number of msections assigned to processors */
+int nb_msections_assigned_;
 
-/* scan pointer in msection being scanned */
-___WORD *scan_ptr_;
-
-/* indicates if weak references must be traversed */
-___BOOL traverse_weak_refs_;
-
-/* GC hash tables reached by GC */
-___WORD reached_gc_hash_tables_;
-
-/* list of executable wills */
-___WORD executable_wills_;
-
-/* Head of list of reference counted blocks of memory */
-___rc_header rc_head_;
+/* Used for resizing VM (number of processors after the resize operation) */
+int volatile target_nb_processors_;
 
 /*
  * Garbage collection statistics.
@@ -7863,16 +7917,15 @@ ___F64 nb_gcs_;
 ___F64 gc_user_time_;
 ___F64 gc_sys_time_;
 ___F64 gc_real_time_;
-___F64 bytes_allocated_minus_occupied_;
 
-___F64 last_gc_user_time_;
-___F64 last_gc_sys_time_;
-___F64 last_gc_real_time_;
-___F64 last_gc_heap_size_;
-___F64 last_gc_alloc_;
-___F64 last_gc_live_;
-___F64 last_gc_movable_;
-___F64 last_gc_nonmovable_;
+___F64 latest_gc_user_time_;
+___F64 latest_gc_sys_time_;
+___F64 latest_gc_real_time_;
+___F64 latest_gc_heap_size_;
+___F64 latest_gc_alloc_;
+___F64 latest_gc_live_;
+___F64 latest_gc_movable_;
+___F64 latest_gc_still_;
 
 } ___vmstate_mem;
 
@@ -7928,7 +7981,6 @@ typedef struct ___processor_state_struct
     ___WORD *hp;
 
     ___WORD current_thread;
-    ___WORD run_queue;
 
     ___WORD r[___NB_GVM_REGS];
     ___WORD pc;
@@ -8096,6 +8148,8 @@ typedef struct ___virtual_machine_state_struct
 
     int volatile nb_processors; /* number of processors in this VM */
 
+    ___WORD run_queue; /* the queue of runnable threads */
+
 #ifdef ___ACTIVITY_LOG
     ___vmstate_actlog actlog; /* activity log state */
 #endif
@@ -8115,6 +8169,9 @@ typedef struct ___virtual_machine_state_struct
 
   } ___virtual_machine_state_struct;
 
+#define ___PROCESSOR_ID(ps,vms) ((ps) - (vms)->pstate)
+#define ___PSTATE_FROM_PROCESSOR_ID(id,vms) ((vms)->pstate+(id))
+
 /* Setup parameters structure */
 
 typedef struct ___setup_params_struct
@@ -8124,7 +8181,7 @@ typedef struct ___setup_params_struct
     ___SIZE_T min_heap;
     ___SIZE_T max_heap;
     int live_percent;
-    ___SIZE_TS (*gc_hook) ___P((___SIZE_TS avail, ___SIZE_TS live),());
+    ___SIZE_TS (*adjust_heap_hook) ___P((___SIZE_TS live),());
     void (*display_error) ___P((char **msgs),());
     void (*fatal_error) ___P((char **msgs),());
     int standard_level;
@@ -9369,6 +9426,10 @@ typedef struct ___global_state_struct
             ___SCMOBJ thunk,
             int target_nb_processors),
            ());
+    ___BOOL (*___garbage_collect)
+       ___P((___PSD
+             ___SIZE_TS requested_words_still),
+            ());
     ___SCMOBJ (*___setup_vmstate)
        ___P((___virtual_machine_state ___vms),
             ());
@@ -10662,6 +10723,10 @@ ___IMP_FUNC(___SCMOBJ,___resize_vm)
    ___P((___PSD
          ___SCMOBJ thunk,
          int target_nb_processors),
+        ());
+___IMP_FUNC(___BOOL,___garbage_collect)
+   ___P((___PSD
+         ___SIZE_TS requested_words_still),
         ());
 ___IMP_FUNC(___SCMOBJ,___setup_vmstate)
    ___P((___virtual_machine_state ___vms),

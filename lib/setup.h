@@ -15,6 +15,11 @@ extern ___SCMOBJ ___os_load_object_file
         ());
 
 
+extern void barrier_sync_noop
+   ___P((___PSDNC),
+        ());
+
+
 #ifdef ___DEBUG
 
 extern void ___print_source_location
@@ -80,16 +85,16 @@ extern void ___print_ctrl_flow_history
 #define ___COVER_GC_WITHOUT_EXCEPTIONS                       ___COVER(44)
 #define ___COVER_APPLY_ARGUMENT_LIMIT                        ___COVER(45)
 #define ___COVER_APPLY_ARGUMENT_LIMIT_END                    ___COVER(46)
-#define  ___COVER_MARK_CAPTURED_CONTINUATION_RETI            ___COVER(47)
-#define  ___COVER_MARK_CAPTURED_CONTINUATION_RETN            ___COVER(48)
-#define  ___COVER_MARK_CAPTURED_CONTINUATION_ALREADY_COPIED  ___COVER(49)
-#define  ___COVER_MARK_CAPTURED_CONTINUATION_COPY            ___COVER(50)
-#define  ___COVER_MARK_CAPTURED_CONTINUATION_FIRST_FRAME     ___COVER(51)
-#define  ___COVER_MARK_CAPTURED_CONTINUATION_NOT_FIRST_FRAME ___COVER(52)
-#define  ___COVER_MARK_CONTINUATION_RETI                     ___COVER(53)
-#define  ___COVER_MARK_CONTINUATION_RETN                     ___COVER(54)
-#define  ___COVER_SCAN_FRAME_RETI                            ___COVER(55)
-#define  ___COVER_SCAN_FRAME_RETN                            ___COVER(56)
+#define ___COVER_MARK_CAPTURED_CONTINUATION_RETI             ___COVER(47)
+#define ___COVER_MARK_CAPTURED_CONTINUATION_RETN             ___COVER(48)
+#define ___COVER_MARK_CAPTURED_CONTINUATION_ALREADY_COPIED   ___COVER(49)
+#define ___COVER_MARK_CAPTURED_CONTINUATION_COPY             ___COVER(50)
+#define ___COVER_MARK_CAPTURED_CONTINUATION_FIRST_FRAME      ___COVER(51)
+#define ___COVER_MARK_CAPTURED_CONTINUATION_NOT_FIRST_FRAME  ___COVER(52)
+#define ___COVER_MARK_CONTINUATION_RETI                      ___COVER(53)
+#define ___COVER_MARK_CONTINUATION_RETN                      ___COVER(54)
+#define ___COVER_SCAN_FRAME_RETI                             ___COVER(55)
+#define ___COVER_SCAN_FRAME_RETN                             ___COVER(56)
 
 /*---------------------------------------------------------------------------*/
 
