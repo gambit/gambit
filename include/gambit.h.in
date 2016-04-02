@@ -5376,22 +5376,16 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMI
 
 #ifdef ___THREAD_LOCAL_STORAGE_CLASS
 
-/* Use thread local storage class (this is probably fast) */
-
 extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 
 #define ___FAST_GET_PSTATE
-#define ___GET_PSTATE() ___CAST(___processor_state,___tls_ptr)
-#define ___SET_PSTATE(ps) ___tls_ptr = ___CAST(void*,ps)
 
-#else
+#endif
 
-/* Use thread local storage getter/setter (this is probably slow) */
+/* Always use getter/setter to access thread local storage */
 
 #define ___GET_PSTATE() ___CAST(___processor_state,___get_tls_ptr())
 #define ___SET_PSTATE(ps) ___set_tls_ptr(___CAST(void*,ps))
-
-#endif
 
 #endif
 
@@ -9565,12 +9559,10 @@ typedef struct ___global_state_struct
        ___P((___WORD volatile *ptr),
             ());
 #endif
-#ifndef ___THREAD_LOCAL_STORAGE_CLASS
     void *(*___get_tls_ptr) ___PVOID;
     void (*___set_tls_ptr)
        ___P((void *ptr),
             ());
-#endif
     void (*___disable_heartbeat_interrupts) ___PVOID;
     void (*___enable_heartbeat_interrupts) ___PVOID;
 #endif
@@ -10869,12 +10861,10 @@ ___IMP_FUNC(___WORD,___emulated_fetch_and_clear_word)
    ___P((___WORD volatile *ptr),
         ());
 #endif
-#ifndef ___THREAD_LOCAL_STORAGE_CLASS
 ___IMP_FUNC(void *,___get_tls_ptr) ___PVOID;
 ___IMP_FUNC(void,___set_tls_ptr)
    ___P((void *ptr),
         ());
-#endif
 #endif
 
 #ifndef ___INCLUDED_FROM_OS_TIME

@@ -287,15 +287,19 @@ ___WORD volatile *ptr;)
 
 #ifdef ___THREAD_LOCAL_STORAGE_CLASS
 
-
 ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 
-
-#else
+#endif
 
 
 void *___get_tls_ptr ___PVOID
 {
+#ifdef ___THREAD_LOCAL_STORAGE_CLASS
+
+  return ___tls_ptr;
+
+#else
+
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
   return pthread_getspecific (___thread_mod.tls_ptr_key); /* ignore error */
@@ -315,6 +319,8 @@ void *___get_tls_ptr ___PVOID
 
 #endif
 #endif
+
+#endif
 }
 
 void ___set_tls_ptr
@@ -322,6 +328,12 @@ void ___set_tls_ptr
         (ptr)
 void *ptr;)
 {
+#ifdef ___THREAD_LOCAL_STORAGE_CLASS
+
+  ___tls_ptr = ptr;
+
+#else
+
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
   pthread_setspecific (___thread_mod.tls_ptr_key, ptr); /* ignore error */
@@ -341,10 +353,9 @@ void *ptr;)
 
 #endif
 #endif
-}
-
 
 #endif
+}
 
 
 /*---------------------------------------------------------------------------*/

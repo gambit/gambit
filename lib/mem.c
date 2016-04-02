@@ -1122,6 +1122,7 @@ ___SCMOBJ ___find_global_var_bound_to
         (val)
 ___SCMOBJ val;)
 {
+  ___processor_state ___ps = ___PSTATE;
   ___SCMOBJ sym = ___NUL;
   int i;
 
