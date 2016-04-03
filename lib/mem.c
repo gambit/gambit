@@ -5487,7 +5487,7 @@ ___SIZE_TS requested_words_still;)
             ___printf ("___ps->heap_limit  = %p\n", ___ps->heap_limit);
             ___printf ("___ps->hp          = %p\n", ___ps->hp);
           }
-        barrier_sync_noop (___PSP);
+        barrier_sync_noop (___PSPNC);
       }
   }
 
@@ -5502,7 +5502,7 @@ ___SIZE_TS requested_words_still;)
 
   garbage_collect_setup_phase (___PSPNC);
 
-  barrier_sync_noop (___PSP);
+  barrier_sync_noop (___PSPNC);
 
   /* Mark the objects that are reachable strongly */
 
@@ -5512,7 +5512,7 @@ ___SIZE_TS requested_words_still;)
       {
         if (___PROCESSOR_ID(___ps,___vms) == p)
           garbage_collect_mark_strong_phase (___PSPNC);
-        barrier_sync_noop (___PSP);
+        barrier_sync_noop (___PSPNC);
       }
   }
 
@@ -5524,7 +5524,7 @@ ___SIZE_TS requested_words_still;)
       {
         if (___PROCESSOR_ID(___ps,___vms) == p)
           garbage_collect_mark_weak_phase (___PSPNC);
-        barrier_sync_noop (___PSP);
+        barrier_sync_noop (___PSPNC);
       }
   }
 
@@ -5536,7 +5536,7 @@ ___SIZE_TS requested_words_still;)
       {
         if (___PROCESSOR_ID(___ps,___vms) == p)
           garbage_collect_cleanup_phase (___PSPNC);
-        barrier_sync_noop (___PSP);
+        barrier_sync_noop (___PSPNC);
       }
   }
 
@@ -5545,7 +5545,7 @@ ___SIZE_TS requested_words_still;)
   if (___PROCESSOR_ID(___ps,___vms) == 0)
     overflow = resize_heap (___vms, requested_words_still);
 
-  barrier_sync_noop (___PSP);
+  barrier_sync_noop (___PSPNC);
 
   {
     int p;
@@ -5556,7 +5556,7 @@ ___SIZE_TS requested_words_still;)
             if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
               next_heap_msection (___ps);
           }
-        barrier_sync_noop (___PSP);
+        barrier_sync_noop (___PSPNC);
       }
   }
 

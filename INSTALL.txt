@@ -302,6 +302,8 @@ The configure options which are specific to the Gambit system are:
   --enable-max-processors=N
                           max number of processors per Gambit VM
                           (default is 64)
+  --enable-dynamic-tls    allow thread local storage variables to be
+                          referenced from dynamically loaded code
   --enable-openssl        compile with SSL support using OpenSSL
 
 The option --enable-cplusplus should be used when applications

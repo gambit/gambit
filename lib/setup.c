@@ -159,7 +159,7 @@ int code;)
       /* TODO: remove this when ___INTR_SYNC_OP interrupt handled in Scheme code */
       if (code == ___INTR_SYNC_OP)
         {
-          service_sync_op (___PSP);
+          service_sync_op (___PSPNC);
           return 0;
         }
 
@@ -4053,7 +4053,7 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
 #endif
 
-#ifndef ___THREAD_LOCAL_STORAGE_CLASS
+#ifdef ___DEFINE_THREAD_LOCAL_STORAGE_GETTER_SETTER
 
   ___GSTATE->___get_tls_ptr
     = ___get_tls_ptr;

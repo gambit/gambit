@@ -837,6 +837,22 @@ fi
 
 ###############################################################################
 #
+# Check if thread local storage variables can be referenced from
+# dynamically loaded code.
+
+AC_ARG_ENABLE(dynamic-tls,
+              AC_HELP_STRING([--enable-dynamic-tls],
+                             [allow thread local storage variables to be referenced from dynamically loaded code (default is NO)]),
+              ENABLE_DYNAMIC_TLS=$enableval,
+              ENABLE_DYNAMIC_TLS=no)
+
+if test "$ENABLE_DYNAMIC_TLS" = yes; then
+  AC_DEFINE([___DYNAMIC_TLS],[],[Enable dynamic linking of TLS])
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DYNAMIC_TLS"
+fi
+
+###############################################################################
+#
 # Check if SSL support should be added using OpenSSL.
 
 AC_ARG_ENABLE(openssl,

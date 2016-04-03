@@ -287,58 +287,68 @@ ___WORD volatile *ptr;)
 
 #ifdef ___THREAD_LOCAL_STORAGE_CLASS
 
-
 ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 
+#endif
 
-#else
+
+#ifdef ___DEFINE_THREAD_LOCAL_STORAGE_GETTER_SETTER
 
 
 void *___get_tls_ptr ___PVOID
 {
+#ifdef ___THREAD_LOCAL_STORAGE_CLASS
+
+  return ___tls_ptr;
+
+#else
+
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
   return pthread_getspecific (___thread_mod.tls_ptr_key); /* ignore error */
 
-#endif
+#else
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
   return TlsGetValue (___thread_mod.tls_ptr_index); /* ignore error */
 
-#endif
-
-#ifndef ___USE_POSIX_THREAD_SYSTEM
-#ifndef ___USE_WIN32_THREAD_SYSTEM
+#else
 
   return ___thread_mod.tls_ptr;
 
 #endif
 #endif
+#endif
 }
+
 
 void ___set_tls_ptr
    ___P((void *ptr),
         (ptr)
 void *ptr;)
 {
+#ifdef ___THREAD_LOCAL_STORAGE_CLASS
+
+  ___tls_ptr = ptr;
+
+#else
+
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
   pthread_setspecific (___thread_mod.tls_ptr_key, ptr); /* ignore error */
 
-#endif
+#else
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
   TlsSetValue (___thread_mod.tls_ptr_index, ptr); /* ignore error */
 
-#endif
-
-#ifndef ___USE_POSIX_THREAD_SYSTEM
-#ifndef ___USE_WIN32_THREAD_SYSTEM
+#else
 
   ___thread_mod.tls_ptr = ptr;
 
+#endif
 #endif
 #endif
 }

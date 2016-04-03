@@ -40,6 +40,9 @@
 /* Define as 1 if dynamically loaded code should not be unloaded.  */
 #undef ___DONT_UNLOAD_DYN_CODE
 
+/* Define as 1 if thread local storage variables can be referenced from dynamically loaded code */
+#undef ___DYNAMIC_TLS
+
 /*---------------------------------------------------------------------------*/
 
 /* Determine which header files are available. */

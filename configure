@@ -958,6 +958,7 @@ enable_multiple_vms
 enable_multiple_threaded_vms
 enable_max_processors
 enable_thread_system
+enable_dynamic_tls
 enable_openssl
 with_x
 '
@@ -1683,6 +1684,9 @@ Optional Features:
                           (default is 64)
   --enable-thread-system[=thread-system]
                           use OS threads (default is NO)
+  --enable-dynamic-tls    allow thread local storage variables to be
+                          referenced from dynamically loaded code (default is
+                          NO)
   --enable-openssl        compile with SSL support using OpenSSL (default is
                           NO)
 
@@ -5634,6 +5638,26 @@ if test "$ENABLE_THREAD_SYSTEM" = no; then
   if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
     ENABLE_THREAD_SYSTEM=yes
   fi
+fi
+
+###############################################################################
+#
+# Check if thread local storage variables can be referenced from
+# dynamically loaded code.
+
+# Check whether --enable-dynamic-tls was given.
+if test "${enable_dynamic_tls+set}" = set; then :
+  enableval=$enable_dynamic_tls; ENABLE_DYNAMIC_TLS=$enableval
+else
+  ENABLE_DYNAMIC_TLS=no
+fi
+
+
+if test "$ENABLE_DYNAMIC_TLS" = yes; then
+
+$as_echo "#define ___DYNAMIC_TLS /**/" >>confdefs.h
+
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DYNAMIC_TLS"
 fi
 
 ###############################################################################
