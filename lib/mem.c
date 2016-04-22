@@ -2895,7 +2895,9 @@ ___virtual_machine_state ___vms;)
 
   nb_msections_assigned = n*2;
 
+#ifndef ___SINGLE_THREADED_VMS
   heap_chunks_to_scan_count = 0;
+#endif
 
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
