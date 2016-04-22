@@ -201,13 +201,13 @@ void ___thread_exit ___PVOID
 
 
 ___WORD ___emulated_compare_and_swap_word
-   ___P((___WORD volatile *ptr,
+   ___P((volatile ___WORD *ptr,
          ___WORD oldval,
          ___WORD newval),
         (ptr,
          oldval,
          newval)
-___WORD volatile *ptr;
+volatile ___WORD *ptr;
 ___WORD oldval;
 ___WORD newval;)
 {
@@ -232,11 +232,11 @@ ___WORD newval;)
 
 
 ___WORD ___emulated_fetch_and_add_word
-   ___P((___WORD volatile *ptr,
+   ___P((volatile ___WORD *ptr,
          ___WORD val),
         (ptr,
          val)
-___WORD volatile *ptr;
+volatile ___WORD *ptr;
 ___WORD val;)
 {
   static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
@@ -259,9 +259,9 @@ ___WORD val;)
 
 
 ___WORD ___emulated_fetch_and_clear_word
-   ___P((___WORD volatile *ptr),
+   ___P((volatile ___WORD *ptr),
         (ptr)
-___WORD volatile *ptr;)
+volatile ___WORD *ptr;)
 {
   static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
   ___WORD temp;

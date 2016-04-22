@@ -249,8 +249,7 @@ ___processor_state ___ps;)
  * Synchronous operations.
  */
 
-#define WASTE_TIME() \
-do { int count; for (count=10; count>0; count--) ; } while (0)
+#define WASTE_TIME() ___CPU_RELAX()
 
 #define COMBINING_OP(op) ((op)&3)
 #define COMBINING_AND 1
@@ -390,7 +389,7 @@ ___sync_op_struct *sop_ptr;)
     }
   else
     {
-      ___processor_state parent = &___vms->pstate[(id-1)/2];
+      ___processor_state parent = &___vms->pstate[(id-1)>>1];
 
       ___ps->sync_id0 = SYNC_WAIT;
 
@@ -523,7 +522,7 @@ ___thread *self;)
 }
 
 
-___HIDDEN ___SCMOBJ resize_vm
+___SCMOBJ ___resize_vm_pstate
    ___P((___processor_state ___ps,
          ___SCMOBJ thunk,
          ___WORD target_nb_processors),
@@ -539,52 +538,40 @@ ___WORD target_nb_processors;)
 #ifndef ___SINGLE_THREADED_VMS
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-  int id = ___ps - ___vms->pstate; /* id of this processor */
+  int id = ___PROCESSOR_ID(___ps,___vms);
   ___sync_op_struct sop;
-
-#if 0
-  ___BOOL overflow;
+  int initial = ___vms->nb_processors;
 
   if (id == 0)
-    ___vms->mem.target_nb_processors_ = target_nb_processors;
-
-  sop.op = OP_GARBAGE_COLLECT;
-  sop.arg[0] = 0;
-  barrier_sync_op (___PSP &sop);
-
-  overflow = op.arg[0] != 0;
-
-  if (overflow)
     {
-      /*
-       * A heap overflow occurred, indicating the VM has
-       * insufficient space to accomodate the target number of
-       * processors.
-       */
-
-      ___vms->mem.target_nb_processors_ = initial;
+      ___vms->mem.target_nb_processors_ = target_nb_processors;
     }
-#endif
+
+  if (___vms->mem.the_msections_->nb_sections - ___vms->mem.nb_msections_assigned_ <
+      ___MIN_NB_MSECTIONS_PER_PROCESSOR * (target_nb_processors - initial))
+    {
+      if (___garbage_collect_pstate (___ps, 0))
+        {
+          /*
+           * A heap overflow occurred, indicating the VM has
+           * insufficient space to accomodate the target number of
+           * processors.
+           */
+
+          if (id == 0)
+            ___vms->mem.target_nb_processors_ = initial;
+
+          return ___FIX(___HEAP_OVERFLOW_ERR);
+        }
+    }
 
   if (id != 0)
     {
-#if 0
-      /*
-       * Wait for processor 0 to set ___vms->mem.target_nb_processors_ and
-       * garbage collect synchronously to reserve space for each
-       * processor's heap and stack.
-       */
-
-      sop.op = OP_NOOP;
-      barrier_sync_op (___PSP &sop);
-#endif
-
       /*
        * Wait for processor 0 to set ___vms->nb_processors.
        */
 
-      sop.op = OP_NOOP;
-      barrier_sync_op (___PSP &sop);
+      barrier_sync_noop (___PSPNC);
 
       /*
        * Terminate current processor if it is no longer needed.
@@ -595,14 +582,13 @@ ___WORD target_nb_processors;)
     }
   else
     {
-      int initial = ___vms->nb_processors;
       int i;
 
-      /* TODO: add 2 msections for each additional processor */
+      /* Setup processor state of each additional processor */
 
       for (i=initial; i<target_nb_processors; i++)
         {
-          ___processor_state p = &___vms->pstate[i];
+          ___processor_state ps = &___vms->pstate[i];
 
           if ((err = ___setup_pstate (&___vms->pstate[i], ___vms))
               != ___FIX(___NO_ERR))
@@ -610,8 +596,7 @@ ___WORD target_nb_processors;)
               while (--i >= initial)
                 ___cleanup_pstate (&___vms->pstate[i]);
 
-              sop.op = OP_NOOP;
-              barrier_sync_op (___PSP &sop);
+              barrier_sync_noop (___PSPNC);
 
               return err;
             }
@@ -634,8 +619,8 @@ ___WORD target_nb_processors;)
 
           for (i=initial-1; i>=target_nb_processors; i--)
             {
-              ___processor_state p = &___vms->pstate[i];
-              ___thread *t = &p->os_thread;
+              ___processor_state ps = &___vms->pstate[i];
+              ___thread *t = &ps->os_thread;
 
               ___thread_join (t); /* ignore error */
             }
@@ -648,11 +633,11 @@ ___WORD target_nb_processors;)
 
           for (i=initial; i<target_nb_processors; i++)
             {
-              ___processor_state p = &___vms->pstate[i];
-              ___thread *t = &p->os_thread;
+              ___processor_state ps = &___vms->pstate[i];
+              ___thread *t = &ps->os_thread;
 
               t->start_fn = start_processor_execution;
-              t->data_ptr = ___CAST(void*,p);
+              t->data_ptr = ___CAST(void*,ps);
               t->data_scmobj = thunk;
 
               if ((err = ___thread_create (t)) != ___FIX(___NO_ERR))
@@ -684,7 +669,7 @@ ___sync_op_struct *sop_ptr;)
   switch (sop_ptr->op)
     {
     case OP_RESIZE_VM:
-      sop_ptr->arg[0] = resize_vm (___ps, sop_ptr->arg[0], sop_ptr->arg[1]);
+      sop_ptr->arg[0] = ___resize_vm_pstate (___ps, sop_ptr->arg[0], sop_ptr->arg[1]);
       break;
 
     case OP_GARBAGE_COLLECT:
@@ -817,7 +802,7 @@ int target_nb_processors;)
 
   on_all_processors (___PSP &sop);
 
-  return ___FIX(___NO_ERR);
+  return sop.arg[0];
 }
 
 
@@ -2801,6 +2786,8 @@ ___processor_state ___ps;)
     }
 }
 
+#endif
+
 
 #ifdef ___DEBUG_HOST_CHANGES
 
@@ -2853,9 +2840,6 @@ int line;)
                ___CAST(___label_struct*,start));
 
 }
-
-#endif
-
 
 #endif
 

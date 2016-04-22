@@ -3410,13 +3410,13 @@ ___SPINLOCK_UNLOCK2(lock[1])
 
 #define ___SPINLOCK_LOCK2(lock1,lock2) \
 do { \
-  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(___WORD volatile *,&lock1),___FIX(1)); \
-  while (*___CAST(___WORD volatile *,&lock2) != ___ticket) \
+  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&lock1),___FIX(1)); \
+  while (*___CAST(volatile ___WORD*,&lock2) != ___ticket) \
     ___CPU_RELAX(); \
 } while (0)
 
 #define ___SPINLOCK_UNLOCK2(lock2) \
-___FETCH_AND_ADD_WORD(___CAST(___WORD volatile *,&lock2),___FIX(1))
+___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&lock2),___FIX(1))
 
 #endif
 
@@ -7509,11 +7509,17 @@ typedef struct ___glo_struct
 #endif
 
 #define ___MUTEX pthread_mutex_t
-
 #define ___MUTEX_INIT(mut) (pthread_mutex_init (&mut, NULL) == 0)
 #define ___MUTEX_DESTROY(mut) (pthread_mutex_destroy (&mut) == 0)
 #define ___MUTEX_LOCK(mut) (pthread_mutex_lock (&mut) == 0)
 #define ___MUTEX_UNLOCK(mut) (pthread_mutex_unlock (&mut) == 0)
+
+#define ___CONDVAR pthread_cond_t
+#define ___CONDVAR_INIT(cv) (pthread_cond_init (&cv, NULL) == 0)
+#define ___CONDVAR_DESTROY(cv) (pthread_cond_destroy (&cv) == 0)
+#define ___CONDVAR_WAIT(cv,mut) (pthread_cond_wait (&cv, &mut) == 0)
+#define ___CONDVAR_SIGNAL(cv) (pthread_cond_signal (&cv) == 0)
+
 #define ___THREAD_ID (pthread_self())
 
 #endif
@@ -7522,11 +7528,17 @@ typedef struct ___glo_struct
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
 #define ___MUTEX HANDLE
-
 #define ___MUTEX_INIT(mut) ((mut = CreateMutex (NULL, FALSE, NULL)) != NULL)
 #define ___MUTEX_DESTROY(mut) CloseHandle (mut)
 #define ___MUTEX_LOCK(mut) (WaitForSingleObject (mut, INFINITE) != WAIT_FAILED)
 #define ___MUTEX_UNLOCK(mut) ReleaseMutex (mut)
+
+#define ___CONDVAR HANDLE
+#define ___CONDVAR_INIT(cv) ((cv = CreateEvent (NULL, FALSE, FALSE, NULL)) != NULL)
+#define ___CONDVAR_DESTROY(cv) CloseHandle (cv)
+#define ___CONDVAR_WAIT(cv,mut) (WaitForSingleObject (cv, INFINITE) != WAIT_FAILED)
+#define ___CONDVAR_SIGNAL(cv) SetEvent (cv)
+
 #define ___THREAD_ID (GetCurrentThreadId())
 
 #endif
@@ -7536,11 +7548,17 @@ typedef struct ___glo_struct
 #ifndef ___USE_WIN32_THREAD_SYSTEM
 
 #define ___MUTEX int
-
 #define ___MUTEX_INIT(mut) 1
-#define ___MUTEX_DESTROY(mut)
+#define ___MUTEX_DESTROY(mut) 1
 #define ___MUTEX_LOCK(mut) 1
-#define ___MUTEX_UNLOCK(mut)
+#define ___MUTEX_UNLOCK(mut) 1
+
+#define ___CONDVAR int
+#define ___CONDVAR_INIT(cv) 1
+#define ___CONDVAR_DESTROY(cv) 1
+#define ___CONDVAR_WAIT(cv,mut) 1
+#define ___CONDVAR_SIGNAL(cv) 1
+
 #define ___THREAD_ID 0
 
 #endif
@@ -7594,14 +7612,14 @@ ___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void
 
 #if ___WS == 4
 #define ___FETCH_AND_ADD_WORD(p,val) \
-(InterlockedAdd(___CAST(LONG volatile *,p),val)-(val))
+(InterlockedAdd(___CAST(volatile LONG*,p),val)-(val))
 #define ___FETCH_AND_CLEAR_WORD(p) \
-InterlockedAnd(___CAST(LONG volatile *,p),0)
+InterlockedAnd(___CAST(volatile LONG*,p),0)
 #else
 #define ___FETCH_AND_ADD_WORD(p,val) \
-(InterlockedAdd64(___CAST(LONGLONG volatile *,p),val)-(val))
+(InterlockedAdd64(___CAST(volatile LONGLONG*,p),val)-(val))
 #define ___FETCH_AND_CLEAR_WORD(p) \
-InterlockedAnd64(___CAST(LONGLONG volatile *,p),0)
+InterlockedAnd64(___CAST(volatile LONGLONG*,p),0)
 #endif
 
 #endif
@@ -7863,12 +7881,15 @@ ___WORD *alloc_heap_chunk_start_;
 /* allocation limit for movable objects in current chunk */
 ___WORD *alloc_heap_chunk_limit_;
 
-/* list of complete movable objects chunks to scan */
-___WORD movable_objs_to_scan_;
+/* spinlock for accessing the movable object chunks remaining to scan */
+___SPINLOCK_DECL(movable_scan_lock_)
+
+/* list of complete movable object chunks to scan */
+___WORD heap_chunks_to_scan_;
 
 /* fifo of complete movable object chunks remaining to scan */
-___WORD *movable_objs_to_scan_head_;
-___WORD *movable_objs_to_scan_tail_;
+___WORD *heap_chunks_to_scan_head_;
+___WORD *heap_chunks_to_scan_tail_;
 
 /* scan pointer in currently scanned (possibly incomplete) chunk */
 ___WORD *scan_ptr_;
@@ -7919,6 +7940,9 @@ int gc_calls_to_punt_;
 
 typedef struct ___vmstate_mem_struct {
 
+/* spinlock for miscellaneous memory operations at the VM level */
+___SPINLOCK_DECL(misc_mem_lock_)
+
 /* spinlock for allocation of memory at the VM level */
 ___SPINLOCK_DECL(alloc_mem_lock_)
 
@@ -7958,7 +7982,21 @@ ___msection *alloc_msection_;
 int nb_msections_assigned_;
 
 /* Used for resizing VM (number of processors after the resize operation) */
-int volatile target_nb_processors_;
+volatile int target_nb_processors_;
+
+#ifndef ___SINGLE_THREADED_VMS
+
+/* mutex and condition variable to determine termination of GC scan */
+___MUTEX scan_termination_mutex_;
+___CONDVAR scan_termination_condvar_;
+
+/* number of processors currently doing GC scan work */
+volatile int scan_workers_count_;
+
+/* number of complete movable object chunks remaining to scan */
+volatile ___WORD heap_chunks_to_scan_count_;
+
+#endif
 
 /*
  * Garbage collection statistics.
@@ -8014,15 +8052,15 @@ typedef struct ___global_state_struct *___global_state;
 
 typedef struct ___sync_op_struct
   {
-    unsigned char volatile op; /* operation requested */
-    ___WORD volatile arg[2];   /* arguments of the operation */
+    volatile unsigned char op; /* operation requested */
+    volatile ___WORD arg[2];   /* arguments of the operation */
   } ___sync_op_struct;
 
 /* Processor structure */
 
 typedef struct ___processor_state_struct
   {
-    ___WORD volatile *stack_trip;
+    volatile ___WORD *stack_trip;
     ___WORD *stack_limit;
     ___WORD *fp;
     ___WORD *stack_start;
@@ -8047,7 +8085,7 @@ typedef struct ___processor_state_struct
 
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
-    ___WORD volatile intr_flag[___NB_INTRS];
+    volatile ___WORD intr_flag[___NB_INTRS];
 
 #ifdef ___ACTIVITY_LOG
     ___pstate_actlog actlog; /* activity log state */
@@ -8088,11 +8126,11 @@ typedef struct ___processor_state_struct
     ___thread os_thread;
 
     /* for implementation of on_all_processors */
-    int volatile sync_id0;
+    volatile int sync_id0;
     ___sync_op_struct sync_op0;
-    int volatile sync_id1;
+    volatile int sync_id1;
     ___sync_op_struct sync_op1;
-    int volatile sync_id2;
+    volatile int sync_id2;
     ___sync_op_struct sync_op2;
 
 #endif
@@ -8197,7 +8235,7 @@ typedef struct ___virtual_machine_state_struct
   {
     ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
 
-    int volatile nb_processors; /* number of processors in this VM */
+    volatile int nb_processors; /* number of processors in this VM */
 
     ___WORD run_queue; /* the queue of runnable threads */
 
@@ -8211,8 +8249,8 @@ typedef struct ___virtual_machine_state_struct
 
 #ifndef ___SINGLE_VM
 
-    ___virtual_machine_state volatile prev; /* circular list links */
-    ___virtual_machine_state volatile next;
+    volatile ___virtual_machine_state prev; /* circular list links */
+    volatile ___virtual_machine_state next;
 
     ___SCMOBJ *glos; /* Scheme global variables */
 
@@ -9604,16 +9642,16 @@ typedef struct ___global_state_struct
             ());
 #ifdef ___USE_emulated_sync
     ___WORD (*___emulated_compare_and_swap_word)
-       ___P((___WORD volatile *ptr,
+       ___P((volatile ___WORD *ptr,
              ___WORD oldval,
              ___WORD newval),
             ());
     ___WORD (*___emulated_fetch_and_add_word)
-       ___P((___WORD volatile *ptr,
+       ___P((volatile ___WORD *ptr,
              ___WORD val),
             ());
     ___WORD (*___emulated_fetch_and_clear_word)
-       ___P((___WORD volatile *ptr),
+       ___P((volatile ___WORD *ptr),
             ());
 #endif
 #ifdef ___DEFINE_THREAD_LOCAL_STORAGE_GETTER_SETTER
@@ -10908,16 +10946,16 @@ ___IMP_FUNC(void,___free_mem_code)
 #ifndef ___INCLUDED_FROM_OS_THREAD
 #ifdef ___USE_emulated_sync
 ___IMP_FUNC(___WORD,___emulated_compare_and_swap_word)
-   ___P((___WORD volatile *ptr,
+   ___P((volatile ___WORD *ptr,
          ___WORD oldval,
          ___WORD newval),
         ());
 ___IMP_FUNC(___WORD,___emulated_fetch_and_add_word)
-   ___P((___WORD volatile *ptr,
+   ___P((volatile ___WORD *ptr,
          ___WORD val),
         ());
 ___IMP_FUNC(___WORD,___emulated_fetch_and_clear_word)
-   ___P((___WORD volatile *ptr),
+   ___P((volatile ___WORD *ptr),
         ());
 #endif
 #ifdef ___DEFINE_THREAD_LOCAL_STORAGE_GETTER_SETTER

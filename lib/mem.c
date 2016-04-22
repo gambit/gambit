@@ -50,6 +50,12 @@
 
 #undef SHOW_FRAMES
 
+
+#define ENABLE_GC_TRACE_PHASES
+#define ENABLE_GC_ACTLOG_PHASES
+#define ENABLE_GC_ACTLOG_SCAN_CHUNK
+#define ENABLE_GC_ACTLOG_NEXT_MSECTION
+
 #endif
 
 
@@ -286,9 +292,10 @@
 #define alloc_heap_limit        ___PSTATE_MEM(alloc_heap_limit_)
 #define alloc_heap_chunk_start  ___PSTATE_MEM(alloc_heap_chunk_start_)
 #define alloc_heap_chunk_limit  ___PSTATE_MEM(alloc_heap_chunk_limit_)
-#define movable_objs_to_scan    ___PSTATE_MEM(movable_objs_to_scan_)
-#define movable_objs_to_scan_head ___PSTATE_MEM(movable_objs_to_scan_head_)
-#define movable_objs_to_scan_tail ___PSTATE_MEM(movable_objs_to_scan_tail_)
+#define movable_scan_lock       ___PSTATE_MEM(movable_scan_lock_)
+#define heap_chunks_to_scan     ___PSTATE_MEM(heap_chunks_to_scan_)
+#define heap_chunks_to_scan_head ___PSTATE_MEM(heap_chunks_to_scan_head_)
+#define heap_chunks_to_scan_tail ___PSTATE_MEM(heap_chunks_to_scan_tail_)
 #define scan_ptr                ___PSTATE_MEM(scan_ptr_)
 #define still_objs_to_scan      ___PSTATE_MEM(still_objs_to_scan_)
 #define still_objs              ___PSTATE_MEM(still_objs_)
@@ -304,6 +311,7 @@
 #define stack_fudge_used        ___PSTATE_MEM(stack_fudge_used_)
 #define heap_fudge_used         ___PSTATE_MEM(heap_fudge_used_)
 
+#define misc_mem_lock           ___VMSTATE_MEM(misc_mem_lock_)
 #define alloc_mem_lock          ___VMSTATE_MEM(alloc_mem_lock_)
 #define heap_size               ___VMSTATE_MEM(heap_size_)
 #define normal_overflow_reserve ___VMSTATE_MEM(normal_overflow_reserve_)
@@ -313,6 +321,14 @@
 #define the_msections           ___VMSTATE_MEM(the_msections_)
 #define alloc_msection          ___VMSTATE_MEM(alloc_msection_)
 #define nb_msections_assigned   ___VMSTATE_MEM(nb_msections_assigned_)
+#define target_nb_processors    ___VMSTATE_MEM(target_nb_processors_)
+
+#ifndef ___SINGLE_THREADED_VMS
+#define scan_termination_mutex  ___VMSTATE_MEM(scan_termination_mutex_)
+#define scan_termination_condvar ___VMSTATE_MEM(scan_termination_condvar_)
+#define scan_workers_count_     ___VMSTATE_MEM(scan_workers_count_)
+#define heap_chunks_to_scan_count ___VMSTATE_MEM(heap_chunks_to_scan_count_)
+#endif
 
 #define nb_gcs                  ___VMSTATE_MEM(nb_gcs_)
 #define gc_user_time            ___VMSTATE_MEM(gc_user_time_)
@@ -1912,21 +1928,7 @@ void print_value
 ___SCMOBJ val;)
 {
   ___SCMOBJ ___temp;
-  if (___FIXNUMP(val))
-    ___printf ("%d", ___INT(val));
-  else if (val == ___FAL)
-    ___printf ("#f");
-  else if (val == ___TRU)
-    ___printf ("#t");
-  else if (val == ___NUL)
-    ___printf ("()");
-  else if (val == ___EOF)
-    ___printf ("#!eof");
-  else if (val == ___VOID)
-    ___printf ("#!void");
-  else if (___CHARP(val))
-    ___printf ("#\\x%x", ___INT(val));
-  else
+  if (___MEM_ALLOCATED(val))
     {
       ___WORD* body = ___BODY(val);
       ___WORD head = body[-1];
@@ -2009,6 +2011,38 @@ ___SCMOBJ val;)
             }
         }
     }
+  else if (___FIXNUMP(val))
+    ___printf ("%d", ___INT(val));
+  else if (___CHARP(val))
+    ___printf ("#\\x%x", ___INT(val));
+  else if (val == ___FAL)
+    ___printf ("#f");
+  else if (val == ___TRU)
+    ___printf ("#t");
+  else if (val == ___NUL)
+    ___printf ("()");
+  else if (val == ___EOF)
+    ___printf ("#!eof");
+  else if (val == ___VOID)
+    ___printf ("#!void");
+  else if (val == ___ABSENT)
+    ___printf ("#absent");
+  else if (val == ___UNB1)
+    ___printf ("#!unbound");
+  else if (val == ___UNB2)
+    ___printf ("#!unbound2");
+  else if (val == ___OPTIONAL)
+    ___printf ("#!optional");
+  else if (val == ___KEYOBJ)
+    ___printf ("#!key");
+  else if (val == ___REST)
+    ___printf ("#!rest");
+  else if (val == ___UNUSED)
+    ___printf ("#unused");
+  else if (val == ___DELETED)
+    ___printf ("#deleted");
+  else
+    ___printf ("#unknown(0x%016x)", val);
 }
 
 #endif
@@ -2615,7 +2649,7 @@ ___msection *ms;)
    * every 300 microseconds.
    */
 
-#ifdef ENABLE_GC_ACTLOG_next_msection
+#ifdef ENABLE_GC_ACTLOG_NEXT_MSECTION
   ___ACTLOG_BEGIN_PS(next_msection,_);
 #endif
 
@@ -2650,7 +2684,7 @@ ___msection *ms;)
 
   ___SPINLOCK_UNLOCK(alloc_mem_lock);
 
-#ifdef ENABLE_GC_ACTLOG_next_msection
+#ifdef ENABLE_GC_ACTLOG_NEXT_MSECTION
   ___ACTLOG_END_PS();
 #endif
 
@@ -2743,8 +2777,17 @@ ___processor_state ___ps;)
 
           {
             ___WORD *new_tail = alloc_heap_chunk_start-1;
-            *movable_objs_to_scan_tail = ___TAG(new_tail, ___FORW);
-            movable_objs_to_scan_tail = new_tail;
+
+            ___SPINLOCK_LOCK(movable_scan_lock);
+
+            *heap_chunks_to_scan_tail = ___TAG(new_tail, ___FORW);
+            heap_chunks_to_scan_tail = new_tail;
+
+            ___SPINLOCK_UNLOCK(movable_scan_lock);
+
+#ifndef ___SINGLE_THREADED_VMS
+            ___FETCH_AND_ADD_WORD(&heap_chunks_to_scan_count, 1);
+#endif
           }
         }
     }
@@ -2828,6 +2871,8 @@ ___virtual_machine_state ___vms;)
     {
       ___processor_state ___ps = &___vms->pstate[i];
 
+      tospace_offset = fromspace_offset;  /* Flip fromspace and tospace */
+
       words_prev_msections = 0;
 
       set_stack_msection (___ps, alloc);
@@ -2841,12 +2886,16 @@ ___virtual_machine_state ___vms;)
       scan_ptr = alloc_heap_ptr;
       prepare_heap_msection (___ps);
 
-      movable_objs_to_scan = NULL_CHUNK_LINK;
-      movable_objs_to_scan_head = &movable_objs_to_scan;
-      movable_objs_to_scan_tail = &movable_objs_to_scan;
+      ___SPINLOCK_INIT(movable_scan_lock);
+
+      heap_chunks_to_scan = NULL_CHUNK_LINK;
+      heap_chunks_to_scan_head = &heap_chunks_to_scan;
+      heap_chunks_to_scan_tail = &heap_chunks_to_scan;
     }
 
   nb_msections_assigned = n*2;
+
+  heap_chunks_to_scan_count = 0;
 
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
@@ -2896,11 +2945,11 @@ ___WORD n;)
   mark_array_call_line = line;
 #endif
 
-  while (n > 0)
+  while (n-- > 0)
     {
-      ___WORD *cell = start;
+      ___WORD *cell = start++;
 
-    again: /* loop possible when tail marking */
+    again: /* looping back here is possible when tail marking */
       {
         ___WORD obj = *cell;
 
@@ -2954,6 +3003,37 @@ ___WORD n;)
                   }
 #endif
                 *alloc++ = head;
+
+#ifdef ___SINGLE_THREADED_VMS
+
+                body[-1] = ___TAG((alloc - ___BODY_OFS), ___FORW);
+
+#else
+
+                {
+                  ___WORD head_now =
+                    ___COMPARE_AND_SWAP_WORD(&body[-1],
+                                             head,
+                                             ___TAG((alloc - ___BODY_OFS), ___FORW));
+
+                  if (head_now != head)
+                    {
+                      /*
+                       * Other processor forwarded the object first so
+                       * the allocation must be undone and head_now is
+                       * the correct forwarding pointer.
+                       */
+#if 0
+                      printf ("******* movable object marking collision\n");
+#endif
+                      alloc--;
+                      *cell = ___TAG(___UNTAG_AS(head_now, ___FORW), ___TYP(obj));
+                      continue;
+                    }
+                }
+
+#endif
+
                 *cell = ___TAG((alloc - ___BODY_OFS), ___TYP(obj));
 
                 if (words > 0 && subtype <= ___sBOXVALUES)
@@ -2961,7 +3041,6 @@ ___WORD n;)
                 else
                   cell = 0;
 
-                body[-1] = ___TAG((alloc - ___BODY_OFS), ___FORW);
                 while (words > 0)
                   {
                     *alloc++ = *body++;
@@ -2983,6 +3062,8 @@ ___WORD n;)
               }
             else if (head_typ == ___STILL)
               {
+#ifdef ___SINGLE_THREADED_VMS
+
                 if (body[___STILL_MARK_OFS - ___STILL_BODY_OFS] == -1)
                   {
                     body[___STILL_MARK_OFS - ___STILL_BODY_OFS]
@@ -2990,11 +3071,22 @@ ___WORD n;)
                     still_objs_to_scan
                       = ___CAST(___WORD,body - ___STILL_BODY_OFS);
                   }
+
+#else
+
+                if (___COMPARE_AND_SWAP_WORD(&body[___STILL_MARK_OFS - ___STILL_BODY_OFS],
+                                             -1,
+                                             ___CAST(___WORD,still_objs_to_scan))
+                    == -1)
+                  {
+                    still_objs_to_scan
+                      = ___CAST(___WORD,body - ___STILL_BODY_OFS);
+                  }
+#endif
               }
             else if (___TYP(head_typ) == ___FORW)
               {
-                ___WORD *copy_body = ___UNTAG_AS(head, ___FORW) + ___BODY_OFS;
-                *cell = ___TAG((copy_body - ___BODY_OFS), ___TYP(obj));
+                *cell = ___TAG(___UNTAG_AS(head, ___FORW), ___TYP(obj));
               }
 #ifdef ENABLE_CONSISTENCY_CHECKS
             else if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1 &&
@@ -3003,9 +3095,6 @@ ___WORD n;)
 #endif
           }
       }
-
-      start++;
-      n--;
     }
 
   alloc_heap_ptr = alloc;
@@ -3031,8 +3120,8 @@ ___WORD *orig_ptr;)
   cf = *ptr;
 
 #if 0
-  printf("-------------\n");;;;;;;;;;;;;;;;;;;;;;;;;;
-  fflush(stdout);
+  printf ("-------------\n");;;;;;;;;;;;;;;;;;;;;;;;;;
+  fflush (stdout);
 #endif
 
   if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
@@ -3041,6 +3130,8 @@ ___WORD *orig_ptr;)
 
       ___WORD *alloc = alloc_heap_ptr;
       ___WORD *limit = alloc_heap_limit;
+
+      ___SPINLOCK_LOCK(misc_mem_lock);
 
       next_frame:
 
@@ -3061,26 +3152,9 @@ ___WORD *orig_ptr;)
         }
 
 #if 0
-      printf("fp=0x%08lx ra1=0x%08lx fs=%d link=%d\n", fp, ra1, fs, link);;;;;;;;;;;;;;;;;;;;;;;;;;
-      fflush(stdout);
+      printf ("fp=0x%08lx ra1=0x%08lx fs=%d link=%d\n", fp, ra1, fs, link);;;;;;;;;;;;;;;;;;;;;;;;;;
+      fflush (stdout);
 #endif
-
-      /* with reserve=1
-bash-3.2$ gsi/gsi
--------------
-Gambit v4.5.2
-
-> -------------
-fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
-fp=0x1006fff88 ra1=0x1002efc21 fs=7 link=0
-fp=0x1006fffc8 ra1=0x1002efda1 fs=3 link=0
-fp=0x1006fffe8 ra1=0x1001f4e01 fs=3 link=0
--------------
--------------
-fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
--------------
-fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
-      */
 
       ___FP_ADJFP(fp,-___FRAME_SPACE(fs)); /* get base of frame */
 
@@ -3163,6 +3237,8 @@ fp=0x1006fff68 ra1=0x1001f9bc1 fs=3 link=0
       *orig_ptr = ___TAG(___UNTAG_AS(*orig_ptr, ___tFIXNUM), ___tSUBTYPED);
 
       alloc_heap_ptr = alloc;
+
+      ___SPINLOCK_UNLOCK(misc_mem_lock);
     }
   else
     mark_array (___PSP orig_ptr, 1);
@@ -3291,7 +3367,7 @@ ___PSDKR)
         ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
 #ifdef SHOW_FRAMES
-        ___printf ("continuation frame, ");
+        ___printf ("continuation frame [fp=%p ra1=0x%016x], ", fp, ra1);
 #endif
 
         if (ra1 == ___GSTATE->internal_return)
@@ -3490,7 +3566,7 @@ ___WORD *body;)
           }
 
 #ifdef SHOW_FRAMES
-        ___printf ("fs=%d link=%d fp=%px ra=", fs, link, fp);
+        ___printf ("fs=%d link=%d fp=%p ra=", fs, link, fp);
         print_value (ra);
         ___printf ("\n");
 #endif
@@ -3507,7 +3583,7 @@ ___WORD *body;)
         if (___TYP(frame) == ___tFIXNUM && frame != ___END_OF_CONT_MARKER)
           ___FP_SET_STK(fp,link+1,___TAG(___UNTAG_AS(frame, ___tFIXNUM), ___tSUBTYPED))
 
-            mark_array (___PSP &body[0], 1);
+        mark_array (___PSP &body[0], 1);
       }
       break;
 
@@ -3635,31 +3711,44 @@ ___PSDKR)
         }
 
       /*
-       * SITUATION #1 at end of complete chunk.
+       * SITUATION #1, at end of complete chunk.
        */
 
-      while (movable_objs_to_scan_head != movable_objs_to_scan_tail)
+      ___SPINLOCK_LOCK(movable_scan_lock);
+
+      while (heap_chunks_to_scan_head != heap_chunks_to_scan_tail)
         {
           /*
            * Scan the next complete heap chunk from heap chunk FIFO.
            */
 
-#ifdef ENABLE_GC_ACTLOG_scan_chunk
+          ptr = ___UNTAG_AS(*heap_chunks_to_scan_head, ___FORW);
+          heap_chunks_to_scan_head = ptr++;
+
+          ___SPINLOCK_UNLOCK(movable_scan_lock);
+
+#ifndef ___SINGLE_THREADED_VMS
+          ___FETCH_AND_ADD_WORD(&heap_chunks_to_scan_count, -1);
+#endif
+
+#ifdef ENABLE_GC_ACTLOG_SCAN_CHUNK
           ___ACTLOG_BEGIN_PS(scan_chunk,_);
 #endif
 
-          ptr = ___UNTAG_AS(*movable_objs_to_scan_head, ___FORW);
-          movable_objs_to_scan_head = ptr++;
           while (___TYP(*ptr) != ___FORW) /* not end of complete chunk? */
             {
               ptr++;
               ptr += scan (___PSP ptr);
             }
 
-#ifdef ENABLE_GC_ACTLOG_scan_chunk
+#ifdef ENABLE_GC_ACTLOG_SCAN_CHUNK
           ___ACTLOG_END_PS();
 #endif
+
+          ___SPINLOCK_LOCK(movable_scan_lock);
         }
+
+      ___SPINLOCK_UNLOCK(movable_scan_lock);
 
       /*
        * Scan the incomplete heap chunk currently being created.
@@ -3972,6 +4061,7 @@ ___virtual_machine_state ___vms;)
    * Initialize spinlock for VM level memory allocation.
    */
 
+  ___SPINLOCK_INIT(misc_mem_lock);
   ___SPINLOCK_INIT(alloc_mem_lock);
 
 #ifndef ___SINGLE_VM
@@ -5155,8 +5245,15 @@ ___SIZE_TS requested_words_still;)
 
   SET_MAX(target_movable_space, 0);
 
+  /*
+   * Compute the number of msections required after the GC.  The code
+   * reserves ___MIN_NB_MSECTIONS_PER_PROCESSOR per processor taking
+   * the target number of processors into account in case the GC was
+   * called as part of the resizing of the VM.
+   */
+
   target_nb_sections =
-    ___MIN_NB_MSECTIONS_PER_PROCESSOR * ___vms->nb_processors +
+    ___MIN_NB_MSECTIONS_PER_PROCESSOR * target_nb_processors +
     ___CEILING_DIV(target_movable_space + normal_overflow_reserve,
                    ___MSECTION_SIZE - 2*___MSECTION_FUDGE);
 
@@ -5303,26 +5400,30 @@ ___PSDKR)
 }
 
 
+#ifdef ___SINGLE_THREADED_VMS
+#define BARRIER()
+#else
+#define BARRIER() barrier_sync_noop (___PSPNC)
+#endif
+
+
 ___HIDDEN void garbage_collect_setup_phase
    ___P((___PSDNC),
         (___PSVNC)
 ___PSDKR)
 {
   ___PSGET
-
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
 
-#ifdef ENABLE_GC_ACTLOG_phases
-  ___ACTLOG_BEGIN_PS(gc_setup_phase,_);
+#ifdef ENABLE_GC_ACTLOG_PHASES
+  ___ACTLOG_BEGIN_PS(setup_phase,_);
 #endif
 
-  /* Flip fromspace and tospace */
-
-  tospace_offset = fromspace_offset;
-
-  /* Keep track of bytes allocated by this processor */
-
-  bytes_allocated_minus_occupied += bytes_occupied(___ps);
+#ifdef ENABLE_GC_TRACE_PHASES
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
+    ___printf ("garbage_collect_setup_phase\n");
+  BARRIER();
+#endif
 
   /* Assign initial stack and heap msections to each processor */
 
@@ -5338,7 +5439,7 @@ ___PSDKR)
   words_still_objs += words_still_objs_deferred;
   words_still_objs_deferred = 0;
 
-#ifdef ENABLE_GC_ACTLOG_phases
+#ifdef ENABLE_GC_ACTLOG_PHASES
   ___ACTLOG_END_PS();
 #endif
 }
@@ -5350,9 +5451,16 @@ ___HIDDEN void garbage_collect_mark_strong_phase
 ___PSDKR)
 {
   ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
 
-#ifdef ENABLE_GC_ACTLOG_phases
-  ___ACTLOG_BEGIN_PS(gc_mark_strong_phase,_);
+#ifdef ENABLE_GC_ACTLOG_PHASES
+  ___ACTLOG_BEGIN_PS(mark_strong_phase,_);
+#endif
+
+#ifdef ENABLE_GC_TRACE_PHASES
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
+    ___printf ("garbage_collect_mark_strong_phase\n");
+  BARRIER();
 #endif
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
@@ -5385,7 +5493,7 @@ ___PSDKR)
 
   mark_reachable_from_marked (___PSPNC);
 
-#ifdef ENABLE_GC_ACTLOG_phases
+#ifdef ENABLE_GC_ACTLOG_PHASES
   ___ACTLOG_END_PS();
 #endif
 }
@@ -5397,6 +5505,7 @@ ___HIDDEN void garbage_collect_mark_weak_phase
 ___PSDKR)
 {
   ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
 
   /*
    * At this point all of the objects accessible from the roots
@@ -5404,8 +5513,14 @@ ___PSDKR)
    * by the GC.
    */
 
-#ifdef ENABLE_GC_ACTLOG_phases
+#ifdef ENABLE_GC_ACTLOG_PHASES
   ___ACTLOG_BEGIN_PS(mark_weak_phase,_);
+#endif
+
+#ifdef ENABLE_GC_TRACE_PHASES
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
+    ___printf ("garbage_collect_mark_weak_phase\n");
+  BARRIER();
 #endif
 
   traverse_weak_refs = 1; /* traverse weak references in this phase */
@@ -5416,7 +5531,7 @@ ___PSDKR)
 
   move_continuation (___PSPNC);
 
-#ifdef ENABLE_GC_ACTLOG_phases
+#ifdef ENABLE_GC_ACTLOG_PHASES
   ___ACTLOG_END_PS();
 #endif
 }
@@ -5428,16 +5543,23 @@ ___HIDDEN void garbage_collect_cleanup_phase
 ___PSDKR)
 {
   ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
 
-#ifdef ENABLE_GC_ACTLOG_phases
-  ___ACTLOG_BEGIN_PS(gc_cleanup_phase,_);
+#ifdef ENABLE_GC_ACTLOG_PHASES
+  ___ACTLOG_BEGIN_PS(cleanup_phase,_);
+#endif
+
+#ifdef ENABLE_GC_TRACE_PHASES
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
+    ___printf ("garbage_collect_cleanup_phase\n");
+  BARRIER();
 #endif
 
   process_gc_hash_tables (___PSPNC);
 
   free_unmarked_still_objs (___PSPNC);
 
-#ifdef ENABLE_GC_ACTLOG_phases
+#ifdef ENABLE_GC_ACTLOG_PHASES
   ___ACTLOG_END_PS();
 #endif
 }
@@ -5463,8 +5585,8 @@ ___SIZE_TS requested_words_still;)
 
   if (___PROCESSOR_ID(___ps,___vms) == 0)
     {
-#ifdef ___DEBUG_GARBAGE_COLLECT
-      ___printf ("----------------------------------------- GC\n");
+#ifdef ENABLE_GC_TRACE_PHASES
+      ___printf ("----------------------------------------- GC START\n");
 #endif
       ___process_times (&user_time_start, &sys_time_start, &real_time_start);
     }
@@ -5479,7 +5601,9 @@ ___SIZE_TS requested_words_still;)
       {
         if (___PROCESSOR_ID(___ps,___vms) == p)
           {
+            ___printf ("processor #%d\n", p);
             ___printf ("heap_size          = %d\n", heap_size);
+            ___printf ("tospace_offset     = %d\n", ___ps->mem.tospace_offset_);
             ___printf ("___ps->stack_start = %p\n", ___ps->stack_start);
             ___printf ("___ps->stack_break = %p\n", ___ps->stack_break);
             ___printf ("___ps->fp          = %p\n", ___ps->fp);
@@ -5487,82 +5611,72 @@ ___SIZE_TS requested_words_still;)
             ___printf ("___ps->heap_limit  = %p\n", ___ps->heap_limit);
             ___printf ("___ps->hp          = %p\n", ___ps->hp);
           }
-        barrier_sync_noop (___PSPNC);
+        BARRIER();
       }
   }
 
 #endif
+
 
   /* Recover processor's stack and heap pointers */
 
   alloc_stack_ptr = ___ps->fp;
   alloc_heap_ptr  = ___ps->hp;
 
+
+  /* Keep track of bytes allocated by this processor */
+
+  bytes_allocated_minus_occupied += bytes_occupied(___ps);
+
+  BARRIER();
+
+
   /* Setup the stacks and heaps of all the processors */
 
   garbage_collect_setup_phase (___PSPNC);
 
-  barrier_sync_noop (___PSPNC);
+  BARRIER();
+
 
   /* Mark the objects that are reachable strongly */
 
-  {
-    int p;
-    for (p=0; p<___vms->nb_processors; p++)
-      {
-        if (___PROCESSOR_ID(___ps,___vms) == p)
-          garbage_collect_mark_strong_phase (___PSPNC);
-        barrier_sync_noop (___PSPNC);
-      }
-  }
+  garbage_collect_mark_strong_phase (___PSPNC);
+
+  BARRIER();
+
 
   /* Mark the objects that are reachable weakly */
 
-  {
-    int p;
-    for (p=0; p<___vms->nb_processors; p++)
-      {
-        if (___PROCESSOR_ID(___ps,___vms) == p)
-          garbage_collect_mark_weak_phase (___PSPNC);
-        barrier_sync_noop (___PSPNC);
-      }
-  }
+  garbage_collect_mark_weak_phase (___PSPNC);
+
+  BARRIER();
+
 
   /* Process gc hash tables and free unreachable still objects */
 
-  {
-    int p;
-    for (p=0; p<___vms->nb_processors; p++)
-      {
-        if (___PROCESSOR_ID(___ps,___vms) == p)
-          garbage_collect_cleanup_phase (___PSPNC);
-        barrier_sync_noop (___PSPNC);
-      }
-  }
+  garbage_collect_cleanup_phase (___PSPNC);
+
+  BARRIER();
+
 
   /* Resize heap */
 
   if (___PROCESSOR_ID(___ps,___vms) == 0)
     overflow = resize_heap (___vms, requested_words_still);
 
-  barrier_sync_noop (___PSPNC);
+  BARRIER();
 
-  {
-    int p;
-    for (p=0; p<___vms->nb_processors; p++)
-      {
-        if (___PROCESSOR_ID(___ps,___vms) == p)
-          {
-            if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-              next_heap_msection (___ps);
-          }
-        barrier_sync_noop (___PSPNC);
-      }
-  }
+
+  /* Guarantee heap fudge */
+
+  if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
+    next_heap_msection (___ps);
+
 
   /* Keep track of bytes allocated by this processor */
 
   bytes_allocated_minus_occupied -= bytes_occupied(___ps);
+
 
   /* Finalize measuring GC statistics */
 
@@ -5584,9 +5698,16 @@ ___SIZE_TS requested_words_still;)
       latest_gc_real_time = real_time;
 
       ___raise_interrupt_pstate (___ps, ___INTR_GC); /* raise gc interrupt */
+
+#ifdef ENABLE_GC_TRACE_PHASES
+      ___printf ("----------------------------------------- GC END\n");
+#endif
     }
 
+  /* Prepare to continue executing program */
+
   prepare_mem_pstate (___ps);
+
 
   ___ACTLOG_END_PS();
 
