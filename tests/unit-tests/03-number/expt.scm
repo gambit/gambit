@@ -15,6 +15,8 @@
 (check-eqv? (expt 4.0 1/2) 2.0)
 (check-eqv? (expt 4 .5) 2.0)
 (check-eqv? (expt 1+i 1/2) (sqrt 1+i))
+(check-eqv? (expt -1 (expt 2 10000)) 1)
+(check-eqv? (expt -1 (+ 1 (expt 2 10000))) -1)
 
 ;;; Test exceptions
 

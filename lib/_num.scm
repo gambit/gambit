@@ -2962,6 +2962,10 @@ for a discussion of branch cuts.
       (cond ((or (##eqv? x 0)
                  (##eqv? x 1))
              x)
+	    ((eqv? x -1)
+	     (if (##odd? y)
+		 -1
+		 1))
             ((##ratnum? x)
              (macro-ratnum-make
               (exact-int-expt (macro-ratnum-numerator   x) y)
@@ -9817,7 +9821,7 @@ ___RESULT = result;
         (r (macro-ratnum-numerator y))
         (s (macro-ratnum-denominator y)))
     (if (##eq? x y)
-        (macro-ratnum-make (##* p p) (##* q q))     ;; already in lowest form
+        (macro-ratnum-make (##square p) (##square q))     ;; already in lowest form
         (let* ((gcd-ps (##gcd p s))
                (gcd-rq (##gcd r q))
                (num (##* (##quotient p gcd-ps) (##quotient r gcd-rq)))
