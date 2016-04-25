@@ -9405,6 +9405,7 @@ ___HIDDEN void sigchld_signal_handler
         (sig)
 int sig;)
 {
+  int save_errno = errno;
 #ifdef USE_signal
   ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
 #endif
@@ -9456,6 +9457,7 @@ int sig;)
             } while  (d != head);
         }
     }
+  errno = save_errno;
 }
 
 #endif
