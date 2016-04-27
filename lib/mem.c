@@ -1090,6 +1090,140 @@ ___HIDDEN void free_psections ___PVOID
 }
 
 
+void ___glo_list_setup ___PVOID
+{
+  int i;
+
+  ___GSTATE->mem.glo_list.count = 0;
+
+  for (i=___GLO_SUBLIST_COUNT-1; i>=0; i--)
+    {
+      ___glo_sublist_struct *sl = &___GSTATE->mem.glo_list.sublist[i];
+      sl->head = 0;
+      sl->tail = 0;
+    }
+}
+
+
+void ___glo_list_add
+   ___P((___glo_struct *glo),
+        (glo)
+___glo_struct *glo;)
+{
+  int i = ___GSTATE->mem.glo_list.count++ % ___GLO_SUBLIST_COUNT;
+  ___glo_sublist_struct *sl = &___GSTATE->mem.glo_list.sublist[i];
+
+  glo->next = 0;
+
+  if (sl->head == 0)
+    sl->head = glo;
+  else
+    sl->tail->next = glo;
+
+  sl->tail = glo;
+}
+
+
+___glo_struct *___glo_list_search_obj
+   ___P((___SCMOBJ obj,
+         ___BOOL prm),
+        (obj,
+         prm)
+___SCMOBJ obj;
+___BOOL prm;)
+{
+  ___glo_struct *glo = 0;
+  int glo_depth = 999999999;
+  int i;
+
+  for (i=___GLO_SUBLIST_COUNT-1; i>=0; i--)
+    {
+      ___glo_sublist_struct *sl = &___GSTATE->mem.glo_list.sublist[i];
+      ___glo_struct *probe = sl->head;
+      int probe_depth = 0;
+
+      if (prm)
+        {
+          while (probe != 0 && ___PRMCELL(probe->prm) != obj)
+            {
+              probe = probe->next;
+              if (++probe_depth > glo_depth) break;
+            }
+        }
+      else
+        {
+          while (probe != 0 && ___GLOCELL(probe->val) != obj)
+            {
+              probe = probe->next;
+              if (++probe_depth > glo_depth) break;
+            }
+        }
+
+      if (probe != 0)
+        {
+          if (glo == 0 || probe_depth <= glo_depth)
+            {
+              glo = probe;
+              glo_depth = probe_depth;
+            }
+        }
+    }
+
+  return glo;
+}
+
+
+___SCMOBJ ___glo_struct_to_global_var
+   ___P((___glo_struct *glo),
+        (glo)
+___glo_struct *glo;)
+{
+  ___SCMOBJ result = ___FAL;
+
+  if (glo != 0)
+    {
+      int len = ___INT(___VECTORLENGTH(___GSTATE->symbol_table));
+      int i;
+
+      for (i=1; i<len; i++)
+        {
+          ___SCMOBJ probe = ___FIELD(___GSTATE->symbol_table,i);
+
+          while (probe != ___NUL)
+            {
+              if (___GLOBALVARSTRUCT(probe) == glo)
+                {
+                  result = probe;
+                  goto end_search;
+                }
+              probe = ___FIELD(probe,___SYMKEY_NEXT);
+            }
+        }
+    end_search:;
+    }
+
+  return result;
+}
+
+
+___SCMOBJ ___obj_to_global_var
+   ___P((___SCMOBJ obj,
+         ___BOOL prm),
+        (obj,
+         prm)
+___SCMOBJ obj;
+___BOOL prm;)
+{
+  /*
+   * Find the global variable that is bound to the object obj.
+   * If prm is true then the prm field of the global variable
+   * is checked, otherwise the val field is checked.
+   */
+
+  return ___glo_struct_to_global_var (___glo_list_search_obj (obj, prm));
+}
+
+
 ___SCMOBJ ___make_global_var
    ___P((___SCMOBJ sym),
         (sym)
@@ -1097,34 +1231,26 @@ ___SCMOBJ sym;)
 {
   if (___GLOBALVARSTRUCT(sym) == 0)
     {
-      ___glo_struct *g = ___CAST(___glo_struct*,
-                                 alloc_mem_aligned_perm
-                                   (___WORDS(sizeof (___glo_struct)),
-                                    1,
-                                    0));
+      ___glo_struct *glo = ___CAST(___glo_struct*,
+                                   alloc_mem_aligned_perm
+                                     (___WORDS(sizeof (___glo_struct)),
+                                      1,
+                                      0));
 
-      if (g == 0)
+      if (glo == 0)
         return ___FIX(___HEAP_OVERFLOW_ERR);
 
 #ifdef ___SINGLE_VM
-      g->val = ___UNB1;
+      glo->val = ___UNB1;
 #else
-      g->val = ___GSTATE->mem.nb_glo_vars;
+      glo->val = ___GSTATE->mem.glo_list.count;
 #endif
 
-      ___GSTATE->mem.nb_glo_vars++;
+      ___glo_list_add (glo);
 
-      ___PRMCELL(g->prm) = ___FAL;
+      ___PRMCELL(glo->prm) = ___FAL;
 
-      g->next = 0;
-
-      if (___GSTATE->mem.glo_list_head == 0)
-        ___GSTATE->mem.glo_list_head = g;
-      else
-        ___GSTATE->mem.glo_list_tail->next = g;
-      ___GSTATE->mem.glo_list_tail = g;
-
-      ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,g);
+      ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,glo);
     }
 
   return sym;
@@ -4195,10 +4321,7 @@ ___SCMOBJ ___setup_mem ___PVOID
    * table.
    */
 
-  ___GSTATE->mem.nb_glo_vars = 0;
-
-  ___GSTATE->mem.glo_list_head = 0;
-  ___GSTATE->mem.glo_list_tail = 0;
+  ___glo_list_setup ();
 
   {
     ___SCMOBJ t = alloc_symkey_table (___sSYMBOL, INIT_SYMBOL_TABLE_LENGTH);
@@ -5314,12 +5437,9 @@ ___PSDKR)
 
 
 ___HIDDEN void mark_run_queue
-   ___P((___PSD
-         ___virtual_machine_state ___vms),
-        (___PSV
-         ___vms)
-___PSDKR
-___virtual_machine_state ___vms;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
   ___PSGET
 
@@ -5327,45 +5447,63 @@ ___virtual_machine_state ___vms;)
   reference_location = IN_RUN_QUEUE;
 #endif
 
-  mark_array (___PSP &___vms->run_queue, 1);
+  mark_array (___PSP &___VMSTATE_FROM_PSTATE(___ps)->run_queue, 1);
 }
 
 
 ___HIDDEN void mark_global_variables
-   ___P((___PSD
-         ___virtual_machine_state ___vms),
-        (___PSV
-         ___vms)
-___PSDKR
-___virtual_machine_state ___vms;)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
 {
   ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  int i = ___PROCESSOR_ID(___ps,___vms);
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   reference_location = IN_GLOBAL_VAR;
 #endif
 
+  /*
+   * Mark a portion of the global variables.
+   */
+
 #ifdef ___SINGLE_VM
 
   {
-    ___glo_struct *p = ___GSTATE->mem.glo_list_head;
+    int lo = (i * ___GLO_SUBLIST_COUNT) / ___vms->nb_processors;
+    int hi = ((i+1) * ___GLO_SUBLIST_COUNT) / ___vms->nb_processors;
 
-    while (p != 0)
+    while (lo < hi)
       {
+        ___glo_sublist_struct *sl = &___GSTATE->mem.glo_list.sublist[lo];
+        ___glo_struct *glo = sl->head;
+
+        while (glo != 0)
+          {
 #ifdef ___DEBUG_GARBAGE_COLLECT_globals
-        print_global_var_name (p);
-        ___printf ("\n");
+            print_global_var_name (glo);
+            ___printf ("\n");
 #endif
-        mark_array (___PSP &___GLOCELL(p->val), 1);
-        p = p->next;
+            mark_array (___PSP &___GLOCELL(glo->val), 1);
+            glo = glo->next;
+          }
+
+        lo++;
       }
   }
 
 #else
 
-  mark_array (___PSP
-              ___vms->glos,
-              ___GSTATE->mem.nb_glo_vars);
+  {
+    int n = ___GSTATE->mem.glo_list.count;
+    int lo = (i * n) / ___vms->nb_processors;
+    int hi = ((i+1) * n) / ___vms->nb_processors;
+
+    mark_array (___PSP
+                ___VMSTATE_FROM_PSTATE(___ps)->glos+lo,
+                hi-lo);
+  }
 
 #endif
 }
@@ -5479,19 +5617,20 @@ ___PSDKR)
 
   traverse_weak_refs = 0; /* don't traverse weak references in this phase */
 
+  if (___PROCESSOR_ID(___ps,___vms) == 0)
+    {
+      mark_run_queue (___PSPNC);
+      mark_symkey_tables (___PSPNC);
+      mark_rc (___PSPNC);
+    }
+
+  mark_global_variables (___PSPNC);
+
   mark_continuation (___PSPNC);
 
   mark_registers (___PSPNC);
 
   mark_current_thread (___PSPNC);
-
-  if (___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)) == 0)
-    {
-      mark_run_queue (___PSP ___VMSTATE_FROM_PSTATE(___ps));
-      mark_symkey_tables (___PSPNC);
-      mark_global_variables (___PSP ___VMSTATE_FROM_PSTATE(___ps));
-      mark_rc (___PSPNC);
-    }
 
   mark_reachable_from_marked (___PSPNC);
 

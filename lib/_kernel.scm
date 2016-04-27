@@ -3716,40 +3716,8 @@ end-of-code
   (##global-var->identifier (##object->global-var obj #f)))
 
 (define-prim (##object->global-var obj primitive?)
-  (##c-code #<<end-of-code
-
-   ___glo_struct *p = ___GSTATE->mem.glo_list_head;
-   if (___ARG2 == ___FAL)
-     while (p != 0 && ___GLOCELL(p->val) != ___ARG1)
-       p = p->next;
-   else
-     while (p != 0 && ___PRMCELL(p->prm) != ___ARG1)
-       p = p->next;
-   ___RESULT = ___FAL;
-   if (p != 0)
-     {
-       int len = ___INT(___VECTORLENGTH(___GSTATE->symbol_table));
-       int i;
-
-       for (i=1; i<len; i++)
-         {
-           ___SCMOBJ probe = ___FIELD(___GSTATE->symbol_table,i);
-
-           while (probe != ___NUL)
-             {
-               if (___GLOBALVARSTRUCT(probe) == p)
-                 {
-                   ___RESULT = probe;
-                   goto end_search;
-                 }
-               probe = ___FIELD(probe,___SYMKEY_NEXT);
-             }
-         }
-       end_search:;
-     }
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___obj_to_global_var (___ARG1, !___FALSEP(___ARG2));"
    obj
    primitive?))
 

@@ -2508,16 +2508,11 @@ ___mod_or_lnk mol;)
 
 #ifndef ___SINGLE_VM
 
-          glo->val = ___GSTATE->mem.nb_glo_vars++;
+          glo->val = ___GSTATE->mem.glo_list.count;
 
 #endif
 
-          glo->next = 0;
-          if (___GSTATE->mem.glo_list_head == 0)
-            ___GSTATE->mem.glo_list_head = glo;
-          else
-            ___GSTATE->mem.glo_list_tail->next = glo;
-          ___GSTATE->mem.glo_list_tail = glo;
+          ___glo_list_add (glo);
 
           *sym_ptr = ___MAKE_HD((___SYMBOL_SIZE<<___LWS),___sSYMBOL,___PERM);
 

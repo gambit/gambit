@@ -7489,12 +7489,30 @@ typedef ___FAKEWORD ___symkey_struct[5+___PADDING_SIZE];
 
 /* Global variable structure */
 
+#if ___MAX_PROCESSORS <= 2
+#define ___GLO_SUBLIST_COUNT ___MAX_PROCESSORS
+#else
+#define ___GLO_SUBLIST_COUNT (___MAX_PROCESSORS*4)
+#endif
+
 typedef struct ___glo_struct
   {
     ___WORD val;
     ___WORD prm;
     struct ___glo_struct* next;
   } ___glo_struct;
+
+typedef struct ___glo_sublist_struct
+  {
+    ___glo_struct* head;
+    ___glo_struct* tail;
+  } ___glo_sublist_struct;
+
+typedef struct ___glo_list_struct
+  {
+    ___SIZE_T count;    /* number of global variables */
+    ___glo_sublist_struct sublist[___GLO_SUBLIST_COUNT];
+  } ___glo_list_struct;
 
 /*---------------------------------------------------------------------------*/
 
@@ -8032,13 +8050,10 @@ typedef struct ___gstate_mem_struct {
   ___WORD *palloc_limit; /* allocation limit in current psection */
 
   /*
-   * Global variables.
+   * Global variable list.
    */
 
-  ___SIZE_T nb_glo_vars;    /* number of global variables */
-
-  ___glo_struct *glo_list_head;  /* list of global variables */
-  ___glo_struct *glo_list_tail;
+  ___glo_list_struct glo_list;
 
 } ___gstate_mem;
 
