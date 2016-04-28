@@ -967,7 +967,7 @@ end-of-code
 
      ___SCMOBJ unwind_destination = ___STK(2-___FRAME_SPACE(2));
 
-     if (___FIELD(unwind_destination,0) != ___FAL) /* first return? */
+     if (!___FALSEP(___FIELD(unwind_destination,0))) /* first return? */
        {
          ___COVER_RETURN_TO_C_HANDLER_FIRST_RETURN;
          ___FRAME_STORE_RA(___GSTATE->handler_return_to_c)
@@ -2779,7 +2779,7 @@ end-of-code
              (pointer void)
      #<<end-of-code
 
-     ___result = ___alloc_mem_code (___arg1);
+     ___return(___alloc_mem_code (___arg1));
 
 end-of-code
 )
@@ -2790,7 +2790,7 @@ end-of-code
              unsigned-int8
      #<<end-of-code
 
-     ___result = ___CAST(___U8*,___arg1)[___arg2];
+     ___return(___CAST(___U8*,___arg1)[___arg2]);
 
 end-of-code
 )
@@ -2815,7 +2815,7 @@ end-of-code
              scheme-object
      #<<end-of-code
 
-     ___result = ___CAST(___SCMOBJ (*)(___SCMOBJ, ___SCMOBJ, ___SCMOBJ),___arg1)(___arg2, ___arg3, ___arg4);
+     ___return(___CAST(___SCMOBJ (*)(___SCMOBJ, ___SCMOBJ, ___SCMOBJ),___arg1)(___arg2, ___arg3, ___arg4));
 
 end-of-code
 )
@@ -3657,8 +3657,8 @@ end-of-code
                     scheme-object
            #<<end-of-code
 
-           unsigned int subtype = ___arg2 != ___FAL ? ___sSYMBOL : ___sKEYWORD;
-           ___result = ___make_symkey_from_scheme_string (___arg1, subtype);
+           unsigned int subtype = ___FALSEP(___arg2) ? ___sKEYWORD : ___sSYMBOL;
+           ___return(___make_symkey_from_scheme_string (___arg1, subtype));
 
 end-of-code
 )
@@ -3682,8 +3682,8 @@ end-of-code
              scheme-object
      #<<end-of-code
 
-     unsigned int subtype = ___arg2 != ___FAL ? ___sSYMBOL : ___sKEYWORD;
-     ___result = ___find_symkey_from_scheme_string (___arg1, subtype);
+     unsigned int subtype = ___FALSEP(___arg2) ? ___sKEYWORD : ___sSYMBOL;
+     ___return(___find_symkey_from_scheme_string (___arg1, subtype));
 
 end-of-code
 )
@@ -3769,8 +3769,8 @@ end-of-code
   ((c-lambda (scheme-object)
              size_t
     "
-    ___result = ___CAST(___SIZE_T,
-                        ___CAST(void*,___FIELD(___arg1,___FOREIGN_PTR)));
+    ___return(___CAST(___SIZE_T,
+                      ___CAST(void*,___FIELD(___arg1,___FOREIGN_PTR))));
     ")
    f))
 
@@ -4025,12 +4025,12 @@ end-of-code
 (define-prim ##remote-dbg-addr
   (c-lambda ()
             UCS-2-string
-   "___result = ___GSTATE->setup_params.remote_dbg_addr;"))
+   "___return(___GSTATE->setup_params.remote_dbg_addr);"))
 
 (define-prim ##rpc-server-addr
   (c-lambda ()
             UCS-2-string
-   "___result = ___GSTATE->setup_params.rpc_server_addr;"))
+   "___return(___GSTATE->setup_params.rpc_server_addr);"))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4553,9 +4553,9 @@ end-of-code
 (define ##system-stamp-saved
   ((c-lambda ()
              unsigned-int64
-    "___result = ___U64_add_U64_U64
-                   (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
-                    ___U64_from_UM32 (___STAMP_HMS));")))
+    "___return(___U64_add_U64_U64
+                 (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
+                  ___U64_from_UM32 (___STAMP_HMS)));")))
 
 (define-prim (##system-stamp)
   ##system-stamp-saved)
