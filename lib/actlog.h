@@ -51,7 +51,8 @@ extern void ___actlog_stop_pstate
         ());
 
 extern void ___actlog_dump
-   ___P((___virtual_machine_state ___vms),
+   ___P((___virtual_machine_state ___vms,
+         char *filename),
         ());
 
 /*---------------------------------------------------------------------------*/

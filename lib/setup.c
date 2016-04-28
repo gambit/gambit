@@ -826,35 +826,29 @@ ___SIZE_TS requested_words_still;)
 }
 
 
-___EXP_FUNC(___SCMOBJ,___actlog_start)
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+___EXP_FUNC(void,___actlog_start)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
   ___sync_op_struct sop;
 
   sop.op = OP_ACTLOG_START;
 
   on_all_processors (___PSP &sop);
-
-  return ___FIX(___NO_ERR);
 }
 
 
-___EXP_FUNC(___SCMOBJ,___actlog_stop)
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
+___EXP_FUNC(void,___actlog_stop)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
-  ___PSGET
   ___sync_op_struct sop;
 
   sop.op = OP_ACTLOG_STOP;
 
   on_all_processors (___PSP &sop);
-
-  return ___FIX(___NO_ERR);
 }
 
 
@@ -3980,6 +3974,15 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___actlog_end_pstate
     = ___actlog_end_pstate;
+
+  ___GSTATE->___actlog_start
+    = ___actlog_start;
+
+  ___GSTATE->___actlog_stop
+    = ___actlog_stop;
+
+  ___GSTATE->___actlog_dump
+    = ___actlog_dump;
 
 #endif
 

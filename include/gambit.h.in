@@ -7728,6 +7728,7 @@ typedef struct ___vmstate_actlog
     ___MUTEX mut;
     ___actlog_activity *activities;
     int nb_activities;
+    ___BOOL auto_dump;
   } ___vmstate_actlog;
 
 typedef struct ___pstate_actlog
@@ -9614,6 +9615,16 @@ typedef struct ___global_state_struct
     void (*___actlog_end_pstate)
        ___P((___processor_state ___ps),
             ());
+    void (*___actlog_start)
+       ___P((___processor_state ___ps),
+            ());
+    void (*___actlog_stop)
+       ___P((___processor_state ___ps),
+            ());
+    void (*___actlog_dump)
+       ___P((___virtual_machine_state ___vms,
+            char *filename),
+           ());
 #endif
     void (*___raise_interrupt_pstate)
        ___P((___processor_state ___ps,
@@ -10911,6 +10922,16 @@ ___IMP_FUNC(void,___actlog_begin_pstate)
         ());
 ___IMP_FUNC(void,___actlog_end_pstate)
    ___P((___processor_state ___ps),
+        ());
+___IMP_FUNC(void,___actlog_start)
+   ___P((___processor_state ___ps),
+        ());
+___IMP_FUNC(void,___actlog_stop)
+   ___P((___processor_state ___ps),
+        ());
+___IMP_FUNC(void,___actlog_dump)
+   ___P((___virtual_machine_state ___vms,
+         char *filename),
         ());
 #endif
 ___IMP_FUNC(void,___raise_interrupt_pstate)

@@ -50,7 +50,6 @@ ___processor_state ___ps;)
 
   ___ps->actlog.transitions = t;
   ___ps->actlog.stack = s;
-  ___ps->actlog.sp = 0;
 
   ___actlog_start_pstate (___ps);
 
@@ -103,6 +102,7 @@ ___virtual_machine_state ___vms;)
   ___MUTEX_INIT(___vms->actlog.mut);
   ___vms->actlog.activities = ptr;
   ___vms->actlog.nb_activities = 0;
+  ___vms->actlog.auto_dump = 1;
 
 #endif
 
@@ -117,9 +117,11 @@ ___virtual_machine_state ___vms;)
 {
 #ifdef ___ACTIVITY_LOG
 
-  /* TODO: allow generation of activity log at any moment */
-  ___actlog_stop_pstate (&___vms->pstate[0]);
-  ___actlog_dump (___vms);
+  if (___vms->actlog.auto_dump)
+    {
+      ___actlog_stop_pstate (&___vms->pstate[0]);
+      ___actlog_dump (___vms, NULL);
+    }
 
   if (___vms->actlog.activities != NULL)
     {
@@ -244,7 +246,8 @@ ___U32 color;)
                                          name,
                                          color);
 
-      ___ps->actlog.stack[___ps->actlog.sp++] = last->type;
+      if (___ps->actlog.sp < ___ACTLOG_STACK_SIZE)
+        ___ps->actlog.stack[___ps->actlog.sp++] = last->type;
 
       ___ps->actlog.last = --last;
 
@@ -269,7 +272,8 @@ ___processor_state ___ps;)
     {
       ___ps->actlog.last = --last;
 
-      last->type = ___ps->actlog.stack[--___ps->actlog.sp];
+      if (___ps->actlog.sp > 0)
+        last->type = ___ps->actlog.stack[--___ps->actlog.sp];
       last->stamp = ___time_get_monotonic_time ();
     }
 
@@ -287,6 +291,7 @@ ___processor_state ___ps;)
   ___U16 type =___ACTIVITY_START_STOP;
 
   ___ps->actlog.last = ___ps->actlog.transitions + ___MAX_NB_ACTLOG_TRANSITIONS;
+  ___ps->actlog.sp = 0;
 
   ___actlog_add_pstate (___ps, &type, NULL, 0);
 
@@ -417,19 +422,24 @@ ___HIDDEN ___U32 distinct_colors[] = {
 #endif
 
 
-void ___actlog_dump
-   ___P((___virtual_machine_state ___vms),
-        (___vms)
-___virtual_machine_state ___vms;)
+___EXP_FUNC(void,___actlog_dump)
+   ___P((___virtual_machine_state ___vms,
+         char *filename),
+        (___vms,
+         filename)
+___virtual_machine_state ___vms;
+char *filename;)
 {
 #ifdef ___ACTIVITY_LOG
 
   int i;
   int c = 0;
-  ___FILE *out = ___fopen ("gambit.actlog", "w");
+  ___FILE *out = ___fopen (filename == NULL ? "gambit.actlog" : filename, "w");
 
   if (out == NULL)
     return;
+
+  ___vms->actlog.auto_dump = 0;
 
   write_U64 (out, ___time_get_monotonic_time_frequency ());
 

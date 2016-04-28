@@ -3981,6 +3981,40 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
+;;; Activity log operations.
+
+(define-prim (##actlog-start)
+  ((c-lambda ()
+             void
+    #<<end-of-code
+#ifdef ___ACTIVITY_LOG
+___actlog_start (___ps);
+#endif
+end-of-code
+   )))
+
+(define-prim (##actlog-stop)
+  ((c-lambda ()
+             void
+    #<<end-of-code
+#ifdef ___ACTIVITY_LOG
+___actlog_stop (___ps);
+#endif
+end-of-code
+   )))
+
+(define-prim (##actlog-dump #!optional (filename #f))
+  ((c-lambda (char-string)
+             void
+    #<<end-of-code
+#ifdef ___ACTIVITY_LOG
+___actlog_dump (___ps, ___arg1);
+#endif
+end-of-code
+   ) filename))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Error message formatting.
 
 (define-prim ##format-filepos
