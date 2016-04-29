@@ -7703,7 +7703,7 @@ ___EXT(___emulated_fetch_and_clear_word)(p)
 
 #ifdef ___CPU_x86
 #ifdef __GNUC__
-#define ___CPU_RELAX() __asm__ __volatile__ ("rep nop")
+#define ___CPU_RELAX() __asm__ __volatile__ ("rep;nop")
 #endif
 #endif
 
