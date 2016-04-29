@@ -8934,6 +8934,36 @@ fi
 
 
 
+###############################################################################
+#
+# Check for pthread_setaffinity_np if using posix threads.
+
+if test "$FOUND_THREAD_SYSTEM" = posix; then
+
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#define _GNU_SOURCE
+     #include <pthread.h>
+int
+main ()
+{
+cpu_set_t cpuset;
+     CPU_ZERO (&cpuset);
+     CPU_SET (0, &cpuset);
+     pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+
+$as_echo "#define HAVE_PTHREAD_SETAFFINITY_NP 1" >>confdefs.h
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+fi
 
 ###############################################################################
 #

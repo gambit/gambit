@@ -1626,6 +1626,23 @@ fi
 AC_SUBST(CONF_THREAD_SYSTEM)
 AC_SUBST(CONF_THREAD_LOCAL_STORAGE_CLASS)
 
+###############################################################################
+#
+# Check for pthread_setaffinity_np if using posix threads.
+
+if test "$FOUND_THREAD_SYSTEM" = posix; then
+
+  AC_LINK_IFELSE(
+   [AC_LANG_PROGRAM(
+    [#define _GNU_SOURCE
+     #include <pthread.h>],
+    [cpu_set_t cpuset;
+     CPU_ZERO (&cpuset);
+     CPU_SET (0, &cpuset);
+     pthread_setaffinity_np (pthread_self (), sizeof (cpu_set_t), &cpuset);])],
+    AC_DEFINE([HAVE_PTHREAD_SETAFFINITY_NP],[1],[Define if pthread_setaffinity_np is supported]))
+
+fi
 
 ###############################################################################
 #

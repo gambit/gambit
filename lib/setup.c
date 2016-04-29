@@ -502,7 +502,7 @@ ___thread *self;)
    * it is running.
    */
 
-  ___SET_PSTATE(___ps);
+  ___thread_set_pstate (___ps);
 
   /*
    * Participate in the synchronous operation that initiated the
@@ -518,7 +518,7 @@ ___thread *self;)
    * terminates).
    */
 
-  ___run(___PSP thunk); /* ignore result */
+  ___run (___PSP thunk); /* ignore result */
 }
 
 
@@ -4186,7 +4186,7 @@ ___setup_params_struct *setup_params;)
        * it is running.
        */
 
-      ___SET_PSTATE(___ps);
+      ___thread_set_pstate (___ps);
 
       /*
        * By convention, the main module is the last one in the module
@@ -4204,8 +4204,8 @@ ___setup_params_struct *setup_params;)
        * Start virtual machine execution by loading _kernel module.
        */
 
-      err = ___run(___PSP
-                   ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1));
+      err = ___run (___PSP
+                    ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1));
     } while (0);
 
   /*

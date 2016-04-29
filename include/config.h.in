@@ -226,6 +226,8 @@
 #undef HAVE_REMOVE
 #undef HAVE_RENAME
 
+#undef HAVE_PTHREAD_SETAFFINITY_NP
+
 /* Determine which types are available */
 
 #undef HAVE_STRUCT_STAT64

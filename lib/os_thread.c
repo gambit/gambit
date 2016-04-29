@@ -6,6 +6,13 @@
  * This module implements thread-related services.
  */
 
+#include "config.h"
+
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
+/* Needed to get pthread.h to define CPU_ZERO and CPU_SET */
+#define _GNU_SOURCE
+#endif
+
 #define ___INCLUDED_FROM_OS_THREAD
 #define ___VERSION 408005
 #include "gambit.h"
@@ -192,6 +199,43 @@ void ___thread_exit ___PVOID
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
   ExitThread (0);
+
+#endif
+}
+
+
+void ___thread_set_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___SET_PSTATE(___ps);
+
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
+
+  {
+    int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
+    cpu_set_t cpuset;
+
+    CPU_ZERO(&cpuset);
+    CPU_SET(id, &cpuset);
+
+    pthread_setaffinity_np (pthread_self (),
+                            sizeof (cpu_set_t),
+                            &cpuset); /* ignore error */
+  }
+
+#endif
+#endif
+
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+
+  {
+    int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
+
+    SetThreadAffinityMask (GetCurrentThread (), ___CAST(DWORD,1)<<id);
+  }
 
 #endif
 }
