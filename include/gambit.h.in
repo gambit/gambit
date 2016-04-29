@@ -3380,11 +3380,37 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___CURRENTTHREAD ___ps->current_thread
 #define ___RUNQUEUE ___VMSTATE_FROM_PSTATE(___ps)->run_queue
 
+
+#define ___TICKETLOCK ___ticketlock_struct
+
+#define ___TICKETLOCK_DECL(id) ___TICKETLOCK id;
+
+#define ___TICKETLOCK_INIT(lock) \
+(lock).next_ticket = (lock).current_ticket = ___FIX(0)
+
+#define ___TICKETLOCK_LOCK(lock) \
+___TICKETLOCK_LOCK2((lock).next_ticket, (lock).current_ticket)
+
+#define ___TICKETLOCK_UNLOCK(lock) \
+___TICKETLOCK_UNLOCK2((lock).current_ticket)
+
+#define ___TICKETLOCK_LOCK2(next,current) \
+do { \
+  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&next),___FIX(1)); \
+  while (*___CAST(volatile ___WORD*,&current) != ___ticket) \
+    ___CPU_RELAX(); \
+} while (0)
+
+#define ___TICKETLOCK_UNLOCK2(current) \
+___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&current),___FIX(1))
+
+
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ___BTQLOCK(btq)
 #define ___BTQUNLOCK(btq)
 
+#define ___SPINLOCK int
 #define ___SPINLOCK_DECL(id)
 #define ___SPINLOCK_INIT(lock)
 #define ___SPINLOCK_LOCK(lock)
@@ -3393,32 +3419,31 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #else
 
 #define ___BTQLOCK(btq) \
-___SPINLOCK_LOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2));
+___TICKETLOCK_LOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2));
 
 #define ___BTQUNLOCK(btq) \
-___SPINLOCK_UNLOCK2(___FIELD(btq,___BTQ_LOCK2));
+___TICKETLOCK_UNLOCK2(___FIELD(btq,___BTQ_LOCK2));
 
-#define ___SPINLOCK_DECL(id) ___WORD id[2];
+#ifdef ___USE_MUTEX_FOR_SPINLOCK
 
-#define ___SPINLOCK_INIT(lock) lock[0] = lock[1] = ___FIX(0)
+#define ___SPINLOCK ___MUTEX
+#define ___SPINLOCK_DECL(id) ___MUTEX_DECL(id)
+#define ___SPINLOCK_INIT(lock) ___MUTEX_INIT(lock)
+#define ___SPINLOCK_LOCK(lock) ___MUTEX_LOCK(lock)
+#define ___SPINLOCK_UNLOCK(lock) ___MUTEX_UNLOCK(lock)
 
-#define ___SPINLOCK_LOCK(lock) \
-___SPINLOCK_LOCK2(lock[0],lock[1])
+#else
 
-#define ___SPINLOCK_UNLOCK(lock) \
-___SPINLOCK_UNLOCK2(lock[1])
-
-#define ___SPINLOCK_LOCK2(lock1,lock2) \
-do { \
-  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&lock1),___FIX(1)); \
-  while (*___CAST(volatile ___WORD*,&lock2) != ___ticket) \
-    ___CPU_RELAX(); \
-} while (0)
-
-#define ___SPINLOCK_UNLOCK2(lock2) \
-___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&lock2),___FIX(1))
+#define ___SPINLOCK ___TICKETLOCK
+#define ___SPINLOCK_DECL(id) ___TICKETLOCK_DECL(id)
+#define ___SPINLOCK_INIT(lock) ___TICKETLOCK_INIT(lock)
+#define ___SPINLOCK_LOCK(lock) ___TICKETLOCK_LOCK(lock)
+#define ___SPINLOCK_UNLOCK(lock) ___TICKETLOCK_UNLOCK(lock)
 
 #endif
+
+#endif
+
 
 #define ___THREAD_SAVE \
 if (___R0 == ___GSTATE->handler_break) \
@@ -7527,12 +7552,14 @@ typedef struct ___glo_list_struct
 #endif
 
 #define ___MUTEX pthread_mutex_t
+#define ___MUTEX_DECL(id) ___MUTEX id;
 #define ___MUTEX_INIT(mut) (pthread_mutex_init (&mut, NULL) == 0)
 #define ___MUTEX_DESTROY(mut) (pthread_mutex_destroy (&mut) == 0)
 #define ___MUTEX_LOCK(mut) (pthread_mutex_lock (&mut) == 0)
 #define ___MUTEX_UNLOCK(mut) (pthread_mutex_unlock (&mut) == 0)
 
 #define ___CONDVAR pthread_cond_t
+#define ___CONDVAR_DECL(id) ___CONDVAR id;
 #define ___CONDVAR_INIT(cv) (pthread_cond_init (&cv, NULL) == 0)
 #define ___CONDVAR_DESTROY(cv) (pthread_cond_destroy (&cv) == 0)
 #define ___CONDVAR_WAIT(cv,mut) (pthread_cond_wait (&cv, &mut) == 0)
@@ -7546,12 +7573,14 @@ typedef struct ___glo_list_struct
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
 #define ___MUTEX HANDLE
+#define ___MUTEX_DECL(id) ___MUTEX id;
 #define ___MUTEX_INIT(mut) ((mut = CreateMutex (NULL, FALSE, NULL)) != NULL)
 #define ___MUTEX_DESTROY(mut) CloseHandle (mut)
 #define ___MUTEX_LOCK(mut) (WaitForSingleObject (mut, INFINITE) != WAIT_FAILED)
 #define ___MUTEX_UNLOCK(mut) ReleaseMutex (mut)
 
 #define ___CONDVAR HANDLE
+#define ___CONDVAR_DECL(id) ___CONDVAR id;
 #define ___CONDVAR_INIT(cv) ((cv = CreateEvent (NULL, FALSE, FALSE, NULL)) != NULL)
 #define ___CONDVAR_DESTROY(cv) CloseHandle (cv)
 #define ___CONDVAR_WAIT(cv,mut) (WaitForSingleObject (cv, INFINITE) != WAIT_FAILED)
@@ -7566,12 +7595,14 @@ typedef struct ___glo_list_struct
 #ifndef ___USE_WIN32_THREAD_SYSTEM
 
 #define ___MUTEX int
+#define ___MUTEX_DECL(id)
 #define ___MUTEX_INIT(mut) 1
 #define ___MUTEX_DESTROY(mut) 1
 #define ___MUTEX_LOCK(mut) 1
 #define ___MUTEX_UNLOCK(mut) 1
 
 #define ___CONDVAR int
+#define ___CONDVAR_DECL(id)
 #define ___CONDVAR_INIT(cv) 1
 #define ___CONDVAR_DESTROY(cv) 1
 #define ___CONDVAR_WAIT(cv,mut) 1
@@ -7702,6 +7733,12 @@ typedef struct ___thread_struct
   } ___thread;
 
 
+typedef struct ___ticketlock_struct
+  {
+    ___WORD current_ticket;
+    ___WORD next_ticket;
+  } ___ticketlock_struct;
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -7725,7 +7762,7 @@ typedef struct ___actlog_transition
 
 typedef struct ___vmstate_actlog
   {
-    ___MUTEX mut;
+    ___MUTEX_DECL(mut)
     ___actlog_activity *activities;
     int nb_activities;
     ___BOOL auto_dump;
@@ -8006,8 +8043,8 @@ volatile int target_nb_processors_;
 #ifndef ___SINGLE_THREADED_VMS
 
 /* mutex and condition variable to determine termination of GC scan */
-___MUTEX scan_termination_mutex_;
-___CONDVAR scan_termination_condvar_;
+___MUTEX_DECL(scan_termination_mutex_)
+___CONDVAR_DECL(scan_termination_condvar_)
 
 /* number of processors currently doing GC scan work */
 volatile int scan_workers_count_;
@@ -8376,7 +8413,7 @@ typedef struct ___global_state_struct
     ___virtual_machine_state_struct vmstate0; /* first VM */
 
 #ifndef ___SINGLE_VM
-    ___MUTEX vm_list_mut; /* mutex for accessing VM list */
+    ___MUTEX_DECL(vm_list_mut) /* mutex for accessing VM list */
 #endif
 
     int setup_state; /* 0=pre-setup, 1=post-setup, 2=post-cleanup */
@@ -9623,7 +9660,7 @@ typedef struct ___global_state_struct
             ());
     void (*___actlog_dump)
        ___P((___virtual_machine_state ___vms,
-            char *filename),
+             char *filename),
            ());
 #endif
     void (*___raise_interrupt_pstate)

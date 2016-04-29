@@ -4008,7 +4008,7 @@ end-of-code
              void
     #<<end-of-code
 #ifdef ___ACTIVITY_LOG
-___actlog_dump (___ps, ___arg1);
+___actlog_dump (___VMSTATE_FROM_PSTATE(___ps), ___arg1);
 #endif
 end-of-code
    ) filename))

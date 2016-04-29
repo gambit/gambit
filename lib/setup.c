@@ -283,7 +283,7 @@ ___sync_op_struct *sop_ptr;)
 
   ___PSGET
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-  int id = ___ps - ___vms->pstate; /* id of this processor */
+  int id = ___PROCESSOR_ID(___ps, ___vms); /* id of this processor */
   int child_id1 = id*2+1;          /* id of child 1 */
   int child_id2 = id*2+2;          /* id of child 2 */
   int n = ___vms->nb_processors;   /* number of processors */
@@ -385,11 +385,11 @@ ___sync_op_struct *sop_ptr;)
        * information is used by the barrier_sync algorithm itself.
        */
       if (sop.op == OP_SET_NB_PROCESSORS)
-          ___vms->nb_processors = sop.arg[0];
+        ___vms->nb_processors = sop.arg[0];
     }
   else
     {
-      ___processor_state parent = &___vms->pstate[(id-1)>>1];
+      ___processor_state parent = ___PSTATE_FROM_PROCESSOR_ID((id-1)>>1,___vms);
 
       ___ps->sync_id0 = SYNC_WAIT;
 
@@ -420,14 +420,14 @@ ___sync_op_struct *sop_ptr;)
 
   if (child_id1 < n)
     {
-      ___processor_state child1 = &___vms->pstate[child_id1];
+      ___processor_state child1 = ___PSTATE_FROM_PROCESSOR_ID(child_id1,___vms);
 
       child1->sync_op0 = sop;
       child1->sync_id0 = sid;
 
       if (child_id2 < n)
         {
-          ___processor_state child2 = &___vms->pstate[child_id2];
+          ___processor_state child2 = ___PSTATE_FROM_PROCESSOR_ID(child_id2,___vms);
 
           child2->sync_op0 = sop;
           child2->sync_id0 = sid;
@@ -538,7 +538,7 @@ ___WORD target_nb_processors;)
 #ifndef ___SINGLE_THREADED_VMS
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-  int id = ___PROCESSOR_ID(___ps,___vms);
+  int id = ___PROCESSOR_ID(___ps, ___vms); /* id of this processor */
   ___sync_op_struct sop;
   int initial = ___vms->nb_processors;
 
@@ -700,7 +700,7 @@ ___BOOL first_iter;)
 {
   ___PSGET
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-  int id = ___ps - ___vms->pstate; /* id of this processor */
+  int id = ___PROCESSOR_ID(___ps,___vms); /* id of this processor */
 
   for (;;)
     {
