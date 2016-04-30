@@ -312,6 +312,8 @@ ___processor_state ___ps;)
 
   ___actlog_add_pstate (___ps, &type, NULL, 0);
 
+  ___vms->actlog.auto_dump = 0;
+
 #endif
 }
 
