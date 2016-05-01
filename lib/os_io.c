@@ -9968,46 +9968,50 @@ ___SCMOBJ timeout;)
 
   read_pos = 0;
   write_pos = MAX_CONDVARS;
-  condvar = ___FIELD(run_queue,___BTQ_DEQ_NEXT);
 
-  while (condvar != run_queue)
+  if (!___FALSEP(run_queue))
     {
-      ___SCMOBJ owner = ___FIELD(condvar,___BTQ_OWNER);
-      if (read_pos < write_pos)
+      condvar = ___FIELD(run_queue,___BTQ_DEQ_NEXT);
+
+      while (condvar != run_queue)
         {
-          if (owner & ___FIX(2))
-            condvars[--write_pos] = condvar;
+          ___SCMOBJ owner = ___FIELD(condvar,___BTQ_OWNER);
+          if (read_pos < write_pos)
+            {
+              if (owner & ___FIX(2))
+                condvars[--write_pos] = condvar;
+              else
+                condvars[read_pos++] = condvar;
+              ___FIELD(condvar,___BTQ_OWNER) = owner & ~___FIX(1);
+            }
           else
-            condvars[read_pos++] = condvar;
-          ___FIELD(condvar,___BTQ_OWNER) = owner & ~___FIX(1);
+            {
+              to = ___time_mod.time_neg_infinity;
+              ___FIELD(condvar,___BTQ_OWNER) = owner | ___FIX(1);
+            }
+          condvar = ___FIELD(condvar,___BTQ_DEQ_NEXT);
         }
-      else
+
+      i = 0;
+
+      while (i < read_pos)
         {
-          to = ___time_mod.time_neg_infinity;
-          ___FIELD(condvar,___BTQ_OWNER) = owner | ___FIX(1);
+          devs[i] = ___CAST(___device*,
+                            ___FIELD(___FIELD(condvars[i],___CONDVAR_NAME),
+                                     ___FOREIGN_PTR));
+          i++;
         }
-      condvar = ___FIELD(condvar,___BTQ_DEQ_NEXT);
-    }
 
-  i = 0;
+      j = MAX_CONDVARS;
 
-  while (i < read_pos)
-    {
-      devs[i] = ___CAST(___device*,
-                        ___FIELD(___FIELD(condvars[i],___CONDVAR_NAME),
-                                 ___FOREIGN_PTR));
-      i++;
-    }
-
-  j = MAX_CONDVARS;
-
-  while (j > write_pos)
-    {
-      j--;
-      devs[i] = ___CAST(___device*,
-                        ___FIELD(___FIELD(condvars[j],___CONDVAR_NAME),
-                                 ___FOREIGN_PTR));
-      i++;
+      while (j > write_pos)
+        {
+          j--;
+          devs[i] = ___CAST(___device*,
+                            ___FIELD(___FIELD(condvars[j],___CONDVAR_NAME),
+                                     ___FOREIGN_PTR));
+          i++;
+        }
     }
 
   e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
