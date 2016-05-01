@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 
 # This shell script can be used to install the GNU gcc compiler on a
 # unix based computer.  The GNU gcc compiler is usually better at
@@ -13,13 +13,13 @@
 #
 # you should add this line to your ~/.profile and ~/.bashrc files:
 #
-#    export PATH=/usr/local/gcc-5.1.0/bin:$PATH
+#    export PATH=/usr/local/gcc-6.1.0/bin:$PATH
 
-GCCVERSION=5.1.0
-GMPVERSION=5.1.3
-MPFRVERSION=3.1.2
-MPCVERSION=1.0.1
-ISLVERSION=0.14
+GCCVERSION=6.1.0
+GMPVERSION=6.1.0
+MPFRVERSION=3.1.4
+MPCVERSION=1.0.3
+ISLVERSION=0.16.1
 CLOOGVERSION=0.18.1
 
 PREFIX=/usr/local/gcc-$GCCVERSION
@@ -33,12 +33,12 @@ cd temp-gcc
 command -v wget >/dev/null 2>&1 || { echo >&2 "This script requires wget but it's not installed.  Aborting."; exit 1; }
 
 wget ftp://ftp.gnu.org/gnu/gcc/gcc-$GCCVERSION/gcc-$GCCVERSION.tar.gz
-wget ftp://ftp.gnu.org/gnu/gmp/gmp-$GMPVERSION.tar.gz
+wget ftp://ftp.gnu.org/gnu/gmp/gmp-$GMPVERSION.tar.bz2
 wget ftp://ftp.gnu.org/gnu/mpfr/mpfr-$MPFRVERSION.tar.gz
 wget ftp://ftp.gnu.org/gnu/mpc/mpc-$MPCVERSION.tar.gz
 
 tar zxf gcc-$GCCVERSION.tar.gz
-tar zxf gmp-$GMPVERSION.tar.gz
+tar jxf gmp-$GMPVERSION.tar.bz2
 tar zxf mpfr-$MPFRVERSION.tar.gz
 tar zxf mpc-$MPCVERSION.tar.gz
 
@@ -62,8 +62,8 @@ ln -s ../cloog-$CLOOGVERSION gcc-$GCCVERSION/cloog
 
 mkdir build-dir
 cd build-dir
-../gcc-$GCCVERSION/configure --prefix=$PREFIX
-time $MAKE bootstrap &> build.log
+../gcc-$GCCVERSION/configure --prefix=$PREFIX 
+$MAKE 
 
 sudo mkdir -p $PREFIX
 sudo make install
