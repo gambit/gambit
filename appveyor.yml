@@ -53,7 +53,7 @@ build_script:
 
   - IF [%tools%]==[mingw] sh -c "gcc -v"
 
-  - sh -c "export CC=%c_comp%;./configure;make latest-release;./configure --enable-single-host;make"
+  - sh -c "export CC=%c_comp%;./configure;make -j2 latest-release;./configure;make -j2 from-scratch"
 
 
 
