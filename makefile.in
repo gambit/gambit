@@ -112,7 +112,7 @@ latest-release: fake_target
 	$(GIT) checkout tags/`$(GIT) describe --tag --abbrev=0`
 	./configure
 	$(MAKE) bootstrap
-	$(GIT) checkout master
+	$(GIT) checkout -f master
 	$(GIT) reset --hard
 
 gsc-boot@exe@:
