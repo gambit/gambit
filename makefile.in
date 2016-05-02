@@ -104,13 +104,16 @@ all-pre: gsc-boot@exe@
 all-post:
 
 from-scratch: fake_target
-	$(GIT) checkout tags/`$(GIT) describe --tag --abbrev=0`
-	$(MAKE) bootstrap # make gsc compiler of latest *release*
-	$(GIT) checkout master
-	$(MAKE) bootclean
 	$(MAKE) bootstrap # make gsc compiler corresponding to repo HEAD
 	$(MAKE) bootclean
 	$(MAKE) all       # make everything with repo HEAD gsc compiler
+
+latest-release: fake_target
+	$(GIT) checkout tags/`$(GIT) describe --tag --abbrev=0`
+	./configure
+	$(MAKE) bootstrap
+	$(GIT) checkout master
+	$(GIT) reset --hard
 
 gsc-boot@exe@:
 	rm -f gsc-boot@bat@ gsc-boot

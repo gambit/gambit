@@ -19,6 +19,8 @@ Quick-install instructions for a typical installation
 
     git clone https://github.com/feeley/gambit.git
     cd gambit
+    ./configure
+    make -j4 latest-release
     ./configure --enable-single-host
     make -j4 from-scratch
     make check
