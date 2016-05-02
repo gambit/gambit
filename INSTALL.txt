@@ -63,16 +63,15 @@ If the source code was obtained by cloning the Gambit repository, the
 following commands should then be entered to make sure that any stale
 .c files obtained from the repository are updated:
 
-  % make bootstrap
+  % make latest-release
   % make bootclean
   % make bootstrap
   % make bootclean
 
-The first "make boostrap" builds the Gambit compiler that was current
-at the last release.  The second "make boostrap" uses that compiler to
-build the Gambit compiler of the master branch.  That compiler is
-finally used in the last "make" to create up to date .c files from the
-.scm files.
+The "make latest-release" builds the Gambit compiler that was current
+at the latest release.  The "make boostrap" uses that compiler to
+build the Gambit compiler of the master branch (it creates up to date
+.c files from the .scm files).
 
 Then the system can be built by invoking "make":
 
@@ -81,6 +80,8 @@ Then the system can be built by invoking "make":
 If the source code was obtained by cloning the Gambit repository,
 these steps can be shortened to the following commands:
 
+  % ./configure
+  % make latest-release
   % ./configure
   % make from-scratch
 
