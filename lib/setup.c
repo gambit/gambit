@@ -831,6 +831,8 @@ ___EXP_FUNC(void,___actlog_start)
         (___ps)
 ___processor_state ___ps;)
 {
+#ifdef ___ACTIVITY_LOG
+
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   ___sync_op_struct sop;
 
@@ -839,6 +841,8 @@ ___processor_state ___ps;)
   on_all_processors (___PSP &sop);
 
   ___vms->actlog.auto_dump = 0;
+
+#endif
 }
 
 
@@ -847,6 +851,8 @@ ___EXP_FUNC(void,___actlog_stop)
         (___ps)
 ___processor_state ___ps;)
 {
+#ifdef ___ACTIVITY_LOG
+
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   ___sync_op_struct sop;
 
@@ -855,6 +861,8 @@ ___processor_state ___ps;)
   on_all_processors (___PSP &sop);
 
   ___vms->actlog.auto_dump = 0;
+
+#endif
 }
 
 
