@@ -2,16 +2,22 @@ environment:
   matrix:
     - arch: "x86-32"
       tools: "mingw"
-    
+
     - arch: "x86-64"
       tools: "mingw"
 
     - arch: "x86-32"
       tools: "msvc"
-    
+
     - arch: "x86-64"
       tools: "msvc"
-    
+
+    - arch: "x86-32"
+      tools: "cygwin"
+
+    - arch: "x86-64"
+      tools: "cygwin"
+
 
 
 install:
@@ -50,10 +56,13 @@ build_script:
 
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-32] SET PATH=C:\MinGW\bin;%PATH%
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-64] SET PATH=C:\mingw64\bin;%PATH%
-
   - IF [%tools%]==[mingw] sh -c "gcc -v"
 
-  - sh -c "./configure CC=%c_comp%;make latest-release;./configure CC=%c_comp%;make from-scratch"
+  - IF [%tools%]==[cygwin] IF [%arch%]==[x86-32] SET PATH=C:\cygwin\bin;%PATH%
+  - IF [%tools%]==[cygwin] IF [%arch%]==[x86-64] SET PATH=C:\cygwin64\bin;%PATH%
+  - IF [%tools%]==[cygwin] sh -c "gcc -v"
+
+  - sh -c "./configure CC=%c_comp%;make latest-release;./configure CC=%c_comp%;make"
 
 
 
