@@ -1,21 +1,21 @@
 environment:
   matrix:
-    - arch: "x86-32"
-      tools: "mingw"
-
     - arch: "x86-64"
       tools: "mingw"
-
-    - arch: "x86-32"
-      tools: "msvc"
 
     - arch: "x86-64"
       tools: "msvc"
 
-    - arch: "x86-32"
+    - arch: "x86-64"
       tools: "cygwin"
 
-    - arch: "x86-64"
+    - arch: "x86-32"
+      tools: "mingw"
+
+    - arch: "x86-32"
+      tools: "msvc"
+
+    - arch: "x86-32"
       tools: "cygwin"
 
 
@@ -69,3 +69,13 @@ build_script:
 test_script:
 
   - sh -c "make check"
+
+
+
+notifications:
+
+  - provider: Webhook
+    url: https://webhooks.gitter.im/e/10dcede290b4a8c5da07
+    on_build_success: true
+    on_build_failure: true
+    on_build_status_changed: true
