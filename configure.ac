@@ -1693,6 +1693,7 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_mieee=""
     DASH_mieee_with_inexact=""
     DASH_mieee_fp=""
+    DASH_mpc64=""
 
   else
 
@@ -1710,6 +1711,7 @@ if test "$C_COMP_GNUC" = yes; then
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
     AC_CHECK_C_COMPILER_OPT(-mieee-fp,DASH_mieee_fp)
+    AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
   fi
 
   # debugging options:
@@ -1918,6 +1920,7 @@ if test "$C_COMP_GNUC" = yes; then
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_with_inexact"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_fp"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mpc64"
 
   case "$target_os" in
 
@@ -1938,7 +1941,21 @@ else if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE"
+  OPT_LEVEL_FLAG="-Oityb1"
+
+  case "$ENABLE_C_OPT" in
+
+     yes) OPT_LEVEL_FLAG="-Oityb2"
+          ;;
+
+      no) ;;
+
+       *) OPT_LEVEL_FLAG="$ENABLE_C_OPT"
+          ;;
+
+  esac
+
+  FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -nologo $OPT_LEVEL_FLAG -MT -D_CRT_SECURE_NO_DEPRECATE"
   FLAGS_DYN="$FLAGS_DYN -LD"
 
 #else if test "$C_COMP_WATCOMC" = yes; then

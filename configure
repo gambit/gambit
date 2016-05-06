@@ -812,6 +812,7 @@ DASH_Wno_write_strings
 DASH_Wno_unused
 DASH_W
 DASH_Wall
+DASH_mpc64
 DASH_mieee_fp
 DASH_mieee_with_inexact
 DASH_mieee
@@ -9086,6 +9087,7 @@ POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG"
     DASH_mieee=""
     DASH_mieee_with_inexact=""
     DASH_mieee_fp=""
+    DASH_mpc64=""
 
   else
 
@@ -9437,6 +9439,49 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_mieee_fp" >&5
 $as_echo "$ac_cv_DASH_mieee_fp" >&6; }
 DASH_mieee_fp="$ac_cv_DASH_mieee_fp"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -mpc64" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -mpc64... " >&6; }
+if ${ac_cv_DASH_mpc64+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-mpc64"
+CXXFLAGS="-mpc64"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_mpc64=" -mpc64"
+else
+  ac_cv_DASH_mpc64=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_mpc64" >&5
+$as_echo "$ac_cv_DASH_mpc64" >&6; }
+DASH_mpc64="$ac_cv_DASH_mpc64"
 
 
   fi
@@ -10911,6 +10956,7 @@ $as_echo "#define ___DONT_UNLOAD_DYN_CODE /**/" >>confdefs.h
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_with_inexact"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_fp"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mpc64"
 
   case "$target_os" in
 
@@ -10931,7 +10977,21 @@ else if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -nologo -Oityb1 -MT -D_CRT_SECURE_NO_DEPRECATE"
+  OPT_LEVEL_FLAG="-Oityb1"
+
+  case "$ENABLE_C_OPT" in
+
+     yes) OPT_LEVEL_FLAG="-Oityb2"
+          ;;
+
+      no) ;;
+
+       *) OPT_LEVEL_FLAG="$ENABLE_C_OPT"
+          ;;
+
+  esac
+
+  FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -nologo $OPT_LEVEL_FLAG -MT -D_CRT_SECURE_NO_DEPRECATE"
   FLAGS_DYN="$FLAGS_DYN -LD"
 
 #else if test "$C_COMP_WATCOMC" = yes; then
