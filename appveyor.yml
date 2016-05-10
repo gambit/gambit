@@ -15,9 +15,6 @@ environment:
     - arch: "x86-32"
       tools: "msvc"
 
-    - arch: "x86-32"
-      tools: "cygwin"
-
 
 
 install:
