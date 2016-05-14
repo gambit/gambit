@@ -15,6 +15,21 @@ environment:
     - arch: "x86-32"
       tools: "msvc"
 
+# Tests are not performed on 32 bit cygwin because of a bug in cygwin.
+# It seems that the FPU control word is not saved/restored properly
+# when a signal is handled causing some floating point operations to
+# round the result incorrectly at seemingly random moments (when
+# heartbeat interrupts occur).  This problem causes test3 to fail with
+# error messages such as:
+#
+# Number readback failure for (+ 1e20 (* 25 16384.))
+# 1.0000000000000041e20
+#   ==> #f
+#  BUT EXPECTED #t
+
+#    - arch: "x86-32"
+#      tools: "cygwin"
+
 
 
 install:
