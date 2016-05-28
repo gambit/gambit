@@ -2941,7 +2941,7 @@ if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; t
 ***                                                               ***
 *** This is a feature that is considered experimental and of beta ***
 *** quality currently. You are encouraged to report any issues    ***
-*** encountered at https://github.com/feeley/gambit/issues .      ***
+*** encountered at https://github.com/gambit/gambit/issues .      ***
 ***                                                               ***
 *********************************************************************
 ])
@@ -2959,7 +2959,7 @@ else
 *** this feature, please activate one of those options. Note that ***
 *** this is a feature that is considered experimental and of beta ***
 *** quality currently. You are encouraged to report any issues    ***
-*** encountered at https://github.com/feeley/gambit/issues .      ***
+*** encountered at https://github.com/gambit/gambit/issues .      ***
 ***                                                               ***
 *********************************************************************
 ])

@@ -17,7 +17,7 @@ The Gambit source code can be obtained in different ways.
  - You can get the most recent version of the sources directly from
    the Gambit repository on github:
 
-     % git clone https://github.com/feeley/gambit.git
+     % git clone https://github.com/gambit/gambit.git
      % cd gambit
 
    Note that the source code obtained contains some stale .c files
