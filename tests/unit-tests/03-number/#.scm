@@ -30,3 +30,21 @@
 (define (test-acosh z)
   (declare (standard-bindings) (generic))
   (* 2 (log (+ (sqrt (/ (+ z 1) 2)) (sqrt (/ (- z 1) 2))))))
+
+(define (test-complex-+ x y)
+  (let ((a (real-part x)) (b (imag-part x))
+	(c (real-part y)) (d (imag-part y)))
+    (make-rectangular (+ a c)
+		      (+ b d))))
+
+(define (test-complex-- x y)
+  (let ((a (real-part x)) (b (imag-part x))
+	(c (real-part y)) (d (imag-part y)))
+    (make-rectangular (- a c)
+		      (- b d))))
+
+(define (test-complex-* x y)
+  (let ((a (real-part x)) (b (imag-part x))
+	(c (real-part y)) (d (imag-part y)))
+    (make-rectangular (- (* a c) (* b d))
+		      (+ (* a d) (* b c)))))
