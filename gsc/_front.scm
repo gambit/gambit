@@ -194,49 +194,48 @@
   (lambda (program)
     program))
 
-(define (compile-program
+(define (compile-program-frontend
          input
          opts
          output-filename-gen
          module-name
          unique-name
-         info-port)
+         info-port
+         inner)
 
-  (define (compiler-body)
+  (scheme-global-var-define!
+   (scheme-global-var
+    (string->canonical-symbol "##compilation-options"))
+   opts)
 
-    (scheme-global-var-define!
-      (scheme-global-var
-        (string->canonical-symbol "##compilation-options"))
-      opts)
+  (env.begin!)
+  (ptree.begin! info-port)
+  (virtual.begin!)
 
-    (env.begin!)
-    (ptree.begin! info-port)
-    (virtual.begin!)
+  (let ((target-name (cadr (assq 'target opts))))
+    (target-select! target-name info-port))
 
-    (let ((target-name (cadr (assq 'target opts))))
-      (target-select! target-name info-port))
+  (let* ((output-filename
+          (and output-filename-gen
+               (output-filename-gen)))
+         (root
+          (if output-filename
+              (path-strip-extension output-filename)
+              (path-strip-directory (path-strip-extension input))))
+         (output
+          (if output-filename
+              output-filename
+              (string-append root (caar target.file-extensions))))
+         (module-name
+          (or module-name
+              (path-strip-directory root)))
+         (unique-name
+          (or unique-name
+              module-name)))
 
-    (let* ((output-filename
-            (and output-filename-gen
-                 (output-filename-gen)))
-           (root
-            (if output-filename
-                (path-strip-extension output-filename)
-                (path-strip-directory (path-strip-extension input))))
-           (output
-            (if output-filename
-                output-filename
-                (string-append root (caar target.file-extensions))))
-           (module-name
-            (or module-name
-                (path-strip-directory root)))
-           (unique-name
-            (or unique-name
-                module-name)))
-
-      (if (not (valid-module-name? module-name))
+    (if (not (valid-module-name? module-name))
         (compiler-error
-          "Invalid characters in file name (must be a symbol with no \"#\")")
+         "Invalid characters in file name (must be a symbol with no \"#\")")
         (let ()
 
           (define (add-loading-of-required-modules ptrees source env comp-scope)
@@ -250,12 +249,12 @@
                     (append
                      (map (lambda (module-ref)
                             (new-call source env
-                              (new-ref source env
-                                (env-lookup-global-var
-                                 env
-                                 '##load-required-module))
-                              (list (new-cst source env
-                                      module-ref))))
+                                      (new-ref source env
+                                               (env-lookup-global-var
+                                                env
+                                                '##load-required-module))
+                                      (list (new-cst source env
+                                                     module-ref))))
                           required-modules)
                      ptrees))
                   ptrees)))
@@ -277,81 +276,149 @@
                  (env (vector-ref v2 1))
                  (c-intf (vector-ref v2 2))
                  (ptrees (add-loading-of-required-modules lst program env comp-scope))
-                 (parsed-program (normalize-program ptrees)))
+                 (parsed-program (normalize-program ptrees))
+                 (result
+                  (inner parsed-program
+                         env
+                         opts
+                         root
+                         output
+                         module-name
+                         unique-name
+                         c-intf
+                         comp-scope
+                         script-line)))
 
-            (if compiler-option-expansion
-                (let ((port (current-output-port)))
-                  (display "Expansion:" port)
-                  (newline port)
-                  (let loop ((l parsed-program))
-                    (if (pair? l)
-                        (let ((ptree (car l)))
-                          (newline port)
-                          (pp-expression (parse-tree->expression ptree) port)
-                          (loop (cdr l)))))
-                  (newline port)))
+            (target-unselect!)
+            (virtual.end!)
+            (ptree.end!)
+            (env.end!)
 
-            (let* ((module-procs
-                    (compile-parsed-program module-name
-                                            parsed-program
-                                            env
-                                            c-intf
-                                            info-port))
-                   (module-meta-info
-                    (append
-                     (table->list comp-scope)
-                     (if script-line
-                         (list (cons 'script-line script-line))
-                         '())))
-                   (module-descr
-                    ;; TODO: support type descriptor
-                    (vector (string->symbol module-name)
-                            (car module-procs)
-                            1 ;; preload flag, note that linker may change this
-                            module-meta-info
-                            #f ;; space for foreign pointer to ___module_struct
-                            )))
+            result)))))
 
-              (if compiler-option-report
-                  (generate-report env))
-
-              (if compiler-option-gvm
-                  (let ((gvm-port
-                         (open-output-file (string-append root ".gvm"))))
-                    (virtual.dump module-procs gvm-port)
-                    (close-output-port gvm-port)))
-
-              (target.dump
-               module-procs
-               output
-               c-intf
-               module-descr
-               unique-name
-               opts)
-
-              (dump-c-intf module-procs root c-intf)))
-
-          (target-unselect!)
-          (virtual.end!)
-          (ptree.end!)
-          (env.end!)
-
-          output))))
+(define (compile-program
+         input
+         opts
+         output-filename-gen
+         module-name
+         unique-name
+         info-port)
 
   (set! warnings-requested? compiler-option-warnings)
 
-  (let ((result (with-exception-handling compiler-body)))
+  (let ((result
+         (with-exception-handling
+          (lambda ()
+            (compile-program-frontend
+             input
+             opts
+             output-filename-gen
+             module-name
+             unique-name
+             info-port
+             (lambda (parsed-program
+                      env
+                      opts
+                      root
+                      output
+                      module-name
+                      unique-name
+                      c-intf
+                      comp-scope
+                      script-line)
+               (if compiler-option-expansion
+                   (let ((port (current-output-port)))
+                     (display "Expansion:" port)
+                     (newline port)
+                     (let loop ((l parsed-program))
+                       (if (pair? l)
+                           (let ((ptree (car l)))
+                             (newline port)
+                             (pp-expression (parse-tree->expression ptree) port)
+                             (loop (cdr l)))))
+                     (newline port)))
+
+               (let* ((module-procs
+                       (compile-parsed-program module-name
+                                               parsed-program
+                                               env
+                                               c-intf
+                                               info-port))
+                      (module-meta-info
+                       (append
+                        (table->list comp-scope)
+                        (if script-line
+                            (list (cons 'script-line script-line))
+                            '())))
+                      (module-descr
+                       ;; TODO: support type descriptor
+                       (vector (string->symbol module-name)
+                               (car module-procs)
+                               1 ;; preload flag, note that linker may change this
+                               module-meta-info
+                               #f ;; space for foreign pointer to ___module_struct
+                               )))
+
+                 (if compiler-option-report
+                     (generate-report env))
+
+                 (if compiler-option-gvm
+                     (let ((gvm-port
+                            (open-output-file (string-append root ".gvm"))))
+                       (virtual.dump module-procs gvm-port)
+                       (close-output-port gvm-port)))
+
+                 (target.dump
+                  module-procs
+                  output
+                  c-intf
+                  module-descr
+                  unique-name
+                  opts)
+
+                 (dump-c-intf module-procs root c-intf)
+
+                 output)))))))
 
     (if info-port
-      (if result
-        (begin
-          (display "Compilation finished." info-port)
-          (newline info-port))
-        (begin
-          (display "Compilation terminated abnormally." info-port)
-          (newline info-port))))
+        (if result
+            (begin
+              (display "Compilation finished." info-port)
+              (newline info-port))
+            (begin
+              (display "Compilation terminated abnormally." info-port)
+              (newline info-port))))
 
     result))
+
+(define (expand-program input . rest)
+  (let ((opts
+         (if (pair? rest)
+             (car rest)
+             (list (list 'target (c#default-target))))))
+
+    (set! warnings-requested? compiler-option-warnings)
+
+    (with-exception-handling
+     (lambda ()
+       (compile-program-frontend
+        input
+        opts
+        #f
+        #f
+        #f
+        #f
+        (lambda (parsed-program
+                 env
+                 opts
+                 root
+                 output
+                 module-name
+                 unique-name
+                 c-intf
+                 comp-scope
+                 script-line)
+          (map parse-tree->expression parsed-program)))))))
 
 (define (valid-module-name? module-name)
 
