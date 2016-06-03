@@ -1448,6 +1448,13 @@ ___SIZE_TS bytes;)
           occupied_words_still += words_including_deferred;
 
           ___SPINLOCK_UNLOCK(alloc_mem_lock);
+
+          /*
+           * Space accounting for previous still objects is now accounted
+           * for at the VM level.
+           */
+
+          words_still_objs_deferred = 0;
         }
       else
         {
@@ -1461,16 +1468,9 @@ ___SIZE_TS bytes;)
         invoke_gc:
 #endif
 
-          if (___garbage_collect (___PSP words_including_deferred))
+          if (___garbage_collect (___PSP words))
             return ___FIX(___HEAP_OVERFLOW_ERR);
         }
-
-      /*
-       * Space accounting for previous still objects is now accounted
-       * for at the VM level.
-       */
-
-      words_still_objs_deferred = 0;
 
       /*
        * Allocate the still object.  See comments above for other call
@@ -1496,10 +1496,6 @@ ___SIZE_TS bytes;)
           return ___FIX(___HEAP_OVERFLOW_ERR);
         }
     }
-
-  /* Account for the space used by this still object. */
-
-  words_still_objs += words;
 
   /* Initialize still object and add it to the still_objs list. */
 
@@ -3897,7 +3893,7 @@ ___PSDKR)
   ___PSGET
   ___WORD *last = &still_objs;
   ___WORD *base = ___CAST(___WORD*,*last);
-  ___SIZE_TS words_freed = 0;
+  ___SIZE_TS live_words_still = 0;
 
   while (base != 0)
     {
@@ -3908,11 +3904,11 @@ ___PSDKR)
           if (___HD_SUBTYPE(head) == ___sFOREIGN)
             ___release_foreign
               (___TAG((base + ___STILL_BODY_OFS - ___BODY_OFS), ___tSUBTYPED));
-          words_freed += base[___STILL_LENGTH_OFS];
           free_mem_aligned (base);
         }
       else
         {
+          live_words_still += base[___STILL_LENGTH_OFS];
           *last = ___CAST(___WORD,base);
           last = base + ___STILL_LINK_OFS;
         }
@@ -3921,19 +3917,15 @@ ___PSDKR)
 
   *last = 0;
 
-  words_still_objs -= words_freed;
+  words_still_objs = live_words_still;
+  words_still_objs_deferred = 0;
 
   /*
-   * In principle the occupied_words_still could be updated with the code:
-   *
-   *  ___SPINLOCK_LOCK(alloc_mem_lock);
-   *  occupied_words_still -= words_freed;
-   *  ___SPINLOCK_UNLOCK(alloc_mem_lock);
-   *
-   * However, this would require acquiring a lock, so instead the
-   * occupied_words_still will be recomputed from all of the processor's
-   * words_still_objs when computing the space occupied by live
-   * objects prior to resizing the heap.
+   * In principle the occupied_words_still could be updated here but
+   * this would require acquiring a lock, so instead the
+   * occupied_words_still will be recomputed from all of the
+   * processor's words_still_objs when computing the space occupied by
+   * live objects prior to resizing the heap.
    */
 }
 
@@ -5573,11 +5565,6 @@ ___PSDKR)
   /* Create list of externally referenced still objects to trace */
 
   setup_still_objs_to_scan (___PSPNC);
-
-  /* Account for deferred accounting of still object allocation */
-
-  words_still_objs += words_still_objs_deferred;
-  words_still_objs_deferred = 0;
 
 #ifdef ENABLE_GC_ACTLOG_PHASES
   ___ACTLOG_END_PS();
