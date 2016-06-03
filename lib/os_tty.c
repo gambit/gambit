@@ -742,12 +742,14 @@ ___device_tty *self;)
 }
 
 
-___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
+___HIDDEN ___BOOL env_var_defined_UCS_2
+   ___P((___UCS_2 *name),
+        (name)
+___UCS_2 *name;)
 {
-  static ___UCS_2 emacs_env_name[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
   ___UCS_2STRING cvalue;
 
-  if (___getenv_UCS_2 (emacs_env_name, &cvalue) == ___FIX(___NO_ERR))
+  if (___getenv_UCS_2 (name, &cvalue) == ___FIX(___NO_ERR))
     {
       if (cvalue != 0)
         {
@@ -757,6 +759,16 @@ ___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
     }
 
   return 0;
+}
+
+
+___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
+{
+  static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
+  static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+
+  return env_var_defined_UCS_2 (emacs_env_name_old) ||
+         env_var_defined_UCS_2 (emacs_env_name_new);
 }
 
 
