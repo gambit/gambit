@@ -1521,16 +1521,34 @@
            (if (and (prc? oper) ; applying a lambda-expr is like a 'let'
                     (prc-req-and-opt-parms-only? oper)
                     (= (length (prc-parms oper)) (length args)))
-             (let ((new-env (se-rename oper env num)))
-               (list
-                 (if (varset-intersects?
+               (let ((recursive?
+                      (varset-intersects?
                        (list->varset (prc-parms oper))
-                       (varset-union-multi (map bound-free-variables args)))
-                   letrec-sym
-                   let-sym)
-                 (se-bindings (prc-parms oper) args new-env num)
-                 (se (prc-body oper) new-env num)))
-             (map (lambda (x) (se x env num)) (cons oper args)))))
+                       (varset-union-multi (map bound-free-variables args)))))
+                 (if (and use-begin-when-possible-in-expression?
+                          (not recursive?)
+                          (= (length args) 1)
+                          (not (varset-member?
+                                (car (prc-parms oper))
+                                (bound-free-variables (prc-body oper)))))
+
+                     (let* ((expr1 (se (car args) env num))
+                            (expr2 (se (prc-body oper) env num)))
+                       (cons begin-sym
+                             (cons expr1
+                                   (if (and (pair? expr2)
+                                            (eq? (car expr2) begin-sym))
+                                       (cdr expr2)
+                                       (list expr2)))))
+
+                     (let ((new-env (se-rename oper env num)))
+                       (list (if recursive?
+                                 letrec-sym
+                                 let-sym)
+                             (se-bindings (prc-parms oper) args new-env num)
+                             (se (prc-body oper) new-env num)))))
+
+               (map (lambda (x) (se x env num)) (cons oper args)))))
 
         ((fut? ptree)
          (list future-sym (se (fut-val ptree) env num)))
@@ -1539,6 +1557,8 @@
          (compiler-internal-error "se, unknown parse tree node type"))))
 
 (define use-actual-primitives-in-expression? #t)
+
+(define use-begin-when-possible-in-expression? #t)
 
 (define (se-constant val)
   (if (self-evaluating? val)

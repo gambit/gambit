@@ -60,6 +60,7 @@
 (define letrec-sym             (string->canonical-symbol "letrec"))
 (define letrec*-sym            (string->canonical-symbol "letrec*"))
 (define future-sym             (string->canonical-symbol "future"))
+(define begin-sym              (string->canonical-symbol "begin"))
 
 (define =>-sym                 (string->canonical-symbol "=>"))
 (define else-sym               (string->canonical-symbol "else"))
