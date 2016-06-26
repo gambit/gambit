@@ -1172,7 +1172,8 @@
                         (##object->string
                          call
                          (##fx- port-width
-                                (##output-port-column port)))
+                                (##output-port-column port))
+                         port)
                         port)))))
            (##newline port)
            (##display-continuation-env
@@ -1283,7 +1284,8 @@
         (##inverse-eval-in-env val cte)
         (##inverse-eval-in-env val (##cte-parent-cte cte)))
     (##fx- (##output-port-width port)
-           (##output-port-column port)))
+           (##output-port-column port))
+    port)
    port)
   (##newline port))
 
@@ -1703,7 +1705,8 @@
                 (##write-string
                  (##object->string
                   result
-                  (##fx- (##output-port-width output-port) width))
+                  (##fx- (##output-port-width output-port) width)
+                  output-port)
                  output-port)
                 (##newline output-port)
                 #t)))
@@ -1718,7 +1721,8 @@
             (##write-string
              (##object->string
               form
-              (##fx- (##output-port-width output-port) width))
+              (##fx- (##output-port-width output-port) width)
+              output-port)
              output-port)
             (##newline output-port)
             #t)))
@@ -3233,7 +3237,7 @@
            (width
             (##output-port-width port))
            (str
-            (##object->string call width)))
+            (##object->string call width port)))
       (if (##fx< (##string-length str) width)
           (begin
             (##write-string str port)
@@ -3245,7 +3249,7 @@
                    (w
                     (##fx- width 2))
                    (s
-                    (##object->string (##car lst) w)))
+                    (##object->string (##car lst) w port)))
               (##write-string s port)
               (if last?
                   (begin
@@ -3333,7 +3337,7 @@
                    " ")
                   (params
                    (##map (lambda (p)
-                            (let ((s (##object->truncated-string p width)))
+                            (let ((s (##object->truncated-string p width port)))
                               (if (##fx= (##string-length s) width)
                                   (begin
                                     (set! sep "\n")

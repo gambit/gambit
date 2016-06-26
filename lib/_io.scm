@@ -4224,7 +4224,11 @@
     (macro-check-character-output-port port 1 (output-port-width port)
       (##output-port-width port))))
 
-(define-prim (##object->truncated-string obj max-length)
+(define-prim (##object->truncated-string
+              obj
+              max-length
+              #!optional
+              (char-encoding-limit (macro-absent-obj)))
   (let* ((port
           (##open-output-string))
          (we
@@ -4239,37 +4243,53 @@
            0
            0
            max-length
-           (##integer->char ##max-char))))
+           (cond ((##char? char-encoding-limit)
+                  char-encoding-limit)
+                 ((macro-output-port? char-encoding-limit)
+                  (macro-max-unescaped-char
+                   (macro-port-woptions char-encoding-limit)))
+                 ((macro-readtable? char-encoding-limit)
+                  (macro-readtable-max-unescaped-char char-encoding-limit))
+                 (else
+                  (##integer->char ##max-char))))))
     (##wr we obj)
     (##get-output-string port)))
 
-(define-prim (##object->string obj #!optional (max-length ##max-fixnum))
+(define-prim (##object->string
+              obj
+              #!optional
+              (max-length ##max-fixnum)
+              (char-encoding-limit (macro-absent-obj)))
   (if (##fx< 0 max-length)
       (let ((str
              (##object->truncated-string
               obj
               (if (##fx< max-length ##max-fixnum)
                   (##fx+ max-length 1)
-                  ##max-fixnum))))
+                  ##max-fixnum)
+              char-encoding-limit)))
         (##string->limited-string str max-length))
       (##string)))
 
-(define-prim (object->string obj #!optional (m (macro-absent-obj)))
-  (macro-force-vars (obj m)
-    (if (##eq? m (macro-absent-obj))
+(define-prim (object->string
+              obj
+              #!optional
+              (ml (macro-absent-obj)))
+  (macro-force-vars (obj ml)
+    (if (##eq? ml (macro-absent-obj))
         (##object->string obj)
         (let ()
 
           (define (type-error)
-            (##fail-check-exact-integer 2 object->string obj m))
+            (##fail-check-exact-integer 2 object->string obj ml))
 
           (define (range-error)
-            (##raise-range-exception 2 object->string obj m))
+            (##raise-range-exception 2 object->string obj ml))
 
-          (if (macro-exact-int? m)
-              (if (or (##not (##fixnum? m)) (##fxnegative? m))
+          (if (macro-exact-int? ml)
+              (if (or (##not (##fixnum? ml)) (##fxnegative? ml))
                   (range-error)
-                  (##object->string obj m))
+                  (##object->string obj ml))
               (type-error))))))
 
 (define-prim (##string->limited-string str max-length)
