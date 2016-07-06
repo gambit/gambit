@@ -1264,12 +1264,16 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (##comp-define cte src tail? subexpr?)
-  (if (or subexpr?
-          (##not ##allow-inner-global-define?))
+  (let* ((name (##definition-name src))
+         (val (##definition-value src))
+         (ind (##var-lookup cte name)))
+    (if (or subexpr?
+            (##not ##allow-inner-global-define?)
+            (##not (glo-access? ind)))
       (##raise-expression-parsing-exception
        'ill-placed-define
        src)
-      (let ((name (##definition-name src)))
+      (begin
         (##variable name)
         (if (##not (##eq? ##allow-inner-global-define? #t))
             (##repl
@@ -1278,12 +1282,9 @@
                (##write (##source-code name) output-port)
                (##newline output-port)
                #t)))
-        (let* ((top-cte (##cte-top-cte cte))
-               (ind (##var-lookup top-cte name))
-               (val (##definition-value src)))
-          (macro-gen ##gen-glo-def src
-            ind
-            (##comp-subexpr cte val #f))))))
+        (macro-gen ##gen-glo-def src
+          ind
+          (##comp-subexpr cte val #f))))))
 
 (define ##allow-inner-global-define? #f)
 (set! ##allow-inner-global-define? 'warn)
