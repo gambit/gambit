@@ -18,7 +18,7 @@
 /*---------------------------------------------------------------------------*/
 
 #define ___MAX_NB_ACTLOG_ACTIVITIES  256
-#define ___MAX_NB_ACTLOG_TRANSITIONS 200000
+#define ___MAX_NB_ACTLOG_TRANSITIONS 1000000
 #define ___ACTLOG_STACK_SIZE         1024
 
 
@@ -205,9 +205,12 @@ ___U32 color;)
       ___U16 t = *type;
 
       if (t == ___ACTIVITY_START_STOP && name != NULL)
-        t = ___actlog_register_activity (___VMSTATE_FROM_PSTATE(___ps),
-                                         name,
-                                         color);
+        {
+          t = ___actlog_register_activity (___VMSTATE_FROM_PSTATE(___ps),
+                                           name,
+                                           color);
+          *type = t;
+        }
 
       ___ps->actlog.last = --last;
 
@@ -242,9 +245,12 @@ ___U32 color;)
       ___U16 t = *type;
 
       if (t == ___ACTIVITY_START_STOP && name != NULL)
-        t = ___actlog_register_activity (___VMSTATE_FROM_PSTATE(___ps),
-                                         name,
-                                         color);
+        {
+          t = ___actlog_register_activity (___VMSTATE_FROM_PSTATE(___ps),
+                                           name,
+                                           color);
+          *type = t;
+        }
 
       if (___ps->actlog.sp < ___ACTLOG_STACK_SIZE)
         ___ps->actlog.stack[___ps->actlog.sp++] = last->type;
