@@ -326,6 +326,15 @@ volatile ___WORD *ptr;)
 }
 
 
+void ___emulated_shared_memory_barrier ___PVOID
+{
+  /*
+   * It is impossible to emulate a memory barrier portably, so just
+   * hope for the best...
+   */
+}
+
+
 #endif
 
 

@@ -53,7 +53,7 @@
 
 #define ENABLE_GC_TRACE_PHASES
 #define ENABLE_GC_ACTLOG_PHASES
-#define ENABLE_GC_ACTLOG_SCAN_CHUNK
+#define ENABLE_GC_ACTLOG_SCAN_COMPLETE_HEAP_CHUNK
 #define ENABLE_GC_ACTLOG_NEXT_MSECTION
 
 #endif
@@ -292,7 +292,11 @@
 #define alloc_heap_limit        ___PSTATE_MEM(alloc_heap_limit_)
 #define alloc_heap_chunk_start  ___PSTATE_MEM(alloc_heap_chunk_start_)
 #define alloc_heap_chunk_limit  ___PSTATE_MEM(alloc_heap_chunk_limit_)
-#define movable_scan_lock       ___PSTATE_MEM(movable_scan_lock_)
+
+#ifndef ___SINGLE_THREADED_VMS
+#define heap_chunks_to_scan_lock ___PSTATE_MEM(heap_chunks_to_scan_lock_)
+#endif
+
 #define heap_chunks_to_scan     ___PSTATE_MEM(heap_chunks_to_scan_)
 #define heap_chunks_to_scan_head ___PSTATE_MEM(heap_chunks_to_scan_head_)
 #define heap_chunks_to_scan_tail ___PSTATE_MEM(heap_chunks_to_scan_tail_)
@@ -311,8 +315,12 @@
 #define stack_fudge_used        ___PSTATE_MEM(stack_fudge_used_)
 #define heap_fudge_used         ___PSTATE_MEM(heap_fudge_used_)
 
-#define misc_mem_lock           ___VMSTATE_MEM(misc_mem_lock_)
-#define alloc_mem_lock          ___VMSTATE_MEM(alloc_mem_lock_)
+#ifdef ___DEBUG_GARBAGE_COLLECT
+#define reference_location      ___PSTATE_MEM(reference_location_)
+#define container_body          ___PSTATE_MEM(container_body_)
+#define mark_array_call_line    ___PSTATE_MEM(mark_array_call_line_)
+#endif
+
 #define heap_size               ___VMSTATE_MEM(heap_size_)
 #define normal_overflow_reserve ___VMSTATE_MEM(normal_overflow_reserve_)
 #define overflow_reserve        ___VMSTATE_MEM(overflow_reserve_)
@@ -324,10 +332,11 @@
 #define target_nb_processors    ___VMSTATE_MEM(target_nb_processors_)
 
 #ifndef ___SINGLE_THREADED_VMS
+#define misc_mem_lock           ___VMSTATE_MEM(misc_mem_lock_)
+#define alloc_mem_lock          ___VMSTATE_MEM(alloc_mem_lock_)
 #define scan_termination_mutex  ___VMSTATE_MEM(scan_termination_mutex_)
 #define scan_termination_condvar ___VMSTATE_MEM(scan_termination_condvar_)
-#define scan_workers_count_     ___VMSTATE_MEM(scan_workers_count_)
-#define heap_chunks_to_scan_count ___VMSTATE_MEM(heap_chunks_to_scan_count_)
+#define scan_workers_count      ___VMSTATE_MEM(scan_workers_count_)
 #endif
 
 #define nb_gcs                  ___VMSTATE_MEM(nb_gcs_)
@@ -1437,7 +1446,9 @@ ___SIZE_TS bytes;)
        * must be acquired to ensure correct bookkeeping.
        */
 
+#ifndef ___SINGLE_THREADED_VMS
       ___SPINLOCK_LOCK(alloc_mem_lock);
+#endif
 
       if (words_including_deferred <= compute_free_heap_space())
         {
@@ -1447,7 +1458,9 @@ ___SIZE_TS bytes;)
 
           occupied_words_still += words_including_deferred;
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_UNLOCK(alloc_mem_lock);
+#endif
 
           /*
            * Space accounting for previous still objects is now accounted
@@ -1462,7 +1475,9 @@ ___SIZE_TS bytes;)
            * There is insufficient free heap space, so call GC.
            */
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_UNLOCK(alloc_mem_lock);
+#endif
 
 #ifdef CALL_GC_FREQUENTLY
         invoke_gc:
@@ -1487,11 +1502,15 @@ ___SIZE_TS bytes;)
            * So undo its accounting at the VM level.
            */
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_LOCK(alloc_mem_lock);
+#endif
 
           occupied_words_still -= words;
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_UNLOCK(alloc_mem_lock);
+#endif
 
           return ___FIX(___HEAP_OVERFLOW_ERR);
         }
@@ -2172,8 +2191,6 @@ ___SCMOBJ val;)
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
 
-___HIDDEN int reference_location; /* where is offending reference located */
-
 #define IN_OBJECT         0
 #define IN_REGISTER       1
 #define IN_CURRENT_THREAD 2
@@ -2183,11 +2200,6 @@ ___HIDDEN int reference_location; /* where is offending reference located */
 #define IN_WILL_LIST      6
 #define IN_CONTINUATION   7
 #define IN_RC             8
-
-___HIDDEN ___WORD *container_body; /* pointer to body of object      */
-                                   /* containing offending reference */
-
-___HIDDEN int mark_array_call_line;
 
 
 ___HIDDEN void print_prefix
@@ -2490,7 +2502,7 @@ char *msg;)
 
   dump_memory_map (___PSPNC);
 
-  ___printf (">>> The object 0x%016x %s\n", obj, msg);
+  ___printf (">>> The object 0x%016lx %s\n", obj, msg);
 
   {
     int j;
@@ -2500,7 +2512,7 @@ char *msg;)
       words = 10;
     for (j=-1; j<words; j++)
       {
-        ___printf (">>>  body[%2d] = 0x%016x\n", j, ___BODY(obj)[j]>>shift);
+        ___printf (">>>  body[%2d] = 0x%016lx\n", j, ___BODY(obj)[j]>>shift);
         print_object (___BODY(obj)[j]>>shift, 1, ">>>             ", 0);
       }
   }
@@ -2539,16 +2551,16 @@ char *msg;)
         ___printf (">>>  length  = %ld words\n", words);
         if (words <= 100)
           {
-            for (i=0; i<words; i++)
-              ___printf (">>>  body[%2d] = 0x%016x\n", i, container_body[i]);
+            for (i=-1; i<words; i++)
+              ___printf (">>>  body[%2d] = 0x%016lx\n", i, container_body[i]);
           }
         else
           {
             for (i=0; i<50; i++)
-              ___printf (">>>  body[%2d] = 0x%016x\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%016lx\n", i, container_body[i]);
             ___printf ("...\n");
             for (i=words-50; i<words; i++)
-              ___printf (">>>  body[%2d] = 0x%016x\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%016lx\n", i, container_body[i]);
           }
         ___printf (">>> container =\n");
         print_object (container, 4, ">>>   ", 0);
@@ -2606,7 +2618,9 @@ char *msg;)
 {
   ___PSGET
   char *msgs[2];
-  ___printf (">>> The GC has detected the following inconsistency\n");
+
+  ___printf (">>> P%d: the GC has detected the following inconsistency\n",
+             ___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)));
   ___printf (">>> during call of mark_array on line %d of mem.c:\n",
              mark_array_call_line);
   explain_problem (___PSP obj, shift, msg);
@@ -2775,7 +2789,9 @@ ___msection *ms;)
   ___ACTLOG_BEGIN_PS(next_msection,_);
 #endif
 
+#ifndef ___SINGLE_THREADED_VMS
   ___SPINLOCK_LOCK(alloc_mem_lock);
+#endif
 
   if (nb_msections_assigned == 0)
     result = the_msections->head; /* start at head of free msections */
@@ -2804,7 +2820,9 @@ ___msection *ms;)
       nb_msections_assigned++;
     }
 
+#ifndef ___SINGLE_THREADED_VMS
   ___SPINLOCK_UNLOCK(alloc_mem_lock);
+#endif
 
 #ifdef ENABLE_GC_ACTLOG_NEXT_MSECTION
   ___ACTLOG_END_PS();
@@ -2882,36 +2900,57 @@ ___HIDDEN void end_heap_chunk
         (___ps)
 ___processor_state ___ps;)
 {
-  if (alloc_heap_ptr != alloc_heap_chunk_start)
+  /*
+   * Add the end of chunk marker.
+   *
+   * This is done even when the chunk is empty, in case the chunk is
+   * currently being scanned.
+   */
+
+  *alloc_heap_ptr++ = NULL_CHUNK_LINK; /* leave space for next chunk's link */
+
+  if (alloc_heap_ptr != alloc_heap_chunk_start &&
+      !(scan_ptr >= alloc_heap_chunk_start && scan_ptr < alloc_heap_ptr))
     {
       /*
-       * Heap chunk is not empty.
+       * The chunk being ended is not empty and it isn't currently
+       * being scanned, so add it to the heap chunk FIFO and wake any
+       * idle processor.
        */
 
-      *alloc_heap_ptr++ = NULL_CHUNK_LINK; /* leave space for next chunk's link */
-
-      if (!(scan_ptr >= alloc_heap_chunk_start && scan_ptr < alloc_heap_ptr))
-        {
-          /*
-           * The chunk being ended isn't currently being scanned, so
-           * add it to the heap chunk FIFO.
-           */
-
-          {
-            ___WORD *new_tail = alloc_heap_chunk_start-1;
-
-            ___SPINLOCK_LOCK(movable_scan_lock);
-
-            *heap_chunks_to_scan_tail = ___TAG(new_tail, ___FORW);
-            heap_chunks_to_scan_tail = new_tail;
-
-            ___SPINLOCK_UNLOCK(movable_scan_lock);
+      ___WORD *new_tail = alloc_heap_chunk_start-1;
 
 #ifndef ___SINGLE_THREADED_VMS
-            ___FETCH_AND_ADD_WORD(&heap_chunks_to_scan_count, 1);
+      ___SPINLOCK_LOCK(heap_chunks_to_scan_lock);
 #endif
-          }
-        }
+
+      *heap_chunks_to_scan_tail = ___TAG(new_tail, ___FORW);
+
+      /*
+       * A memory barrier is needed to ensure that the content of the
+       * chunk, including the end of chunk and the link to the chunk,
+       * is visible to other processors.
+       */
+
+      ___SHARED_MEMORY_BARRIER();
+
+      heap_chunks_to_scan_tail = new_tail;
+
+      /*
+       * A memory barrier is needed to ensure that the new tail of the
+       * heap chunk FIFO are visible to other processors.  This can't
+       * be combined with the previous memory barrier because the
+       * ordering is important (as soon as the modification of
+       * heap_chunks_to_scan_tail is observed by another processor, it
+       * may attempt to read the content of the chunk).
+       */
+
+      ___SHARED_MEMORY_BARRIER();
+
+#ifndef ___SINGLE_THREADED_VMS
+      ___SPINLOCK_UNLOCK(heap_chunks_to_scan_lock);
+      ___CONDVAR_SIGNAL(scan_termination_condvar);
+#endif
     }
 }
 
@@ -2971,8 +3010,18 @@ ___HIDDEN void prepare_heap_msection
         (___ps)
 ___processor_state ___ps;)
 {
+  /*
+   * Heap chunks are non-empty, except possibly for the last chunk in
+   * the msection.  Consequently, an msection may end with 2
+   * consecutive end of chunk markers.  One for the last non-empty
+   * chunk and one for an empty chunk.  The heap allocation limit must
+   * be adjusted to handle this case.
+   */
+
+  alloc_heap_limit -= 2; /* leave space for 2 end of chunk markers */
+
   *alloc_heap_ptr++ = NULL_CHUNK_LINK; /* link of msection's first chunk */
-  alloc_heap_limit--; /* leave space for end of chunk marker */
+
   start_heap_chunk (___ps);
 }
 
@@ -2986,10 +3035,10 @@ ___virtual_machine_state ___vms;)
 #define ___VMSTATE_MEM(var) ___vms->mem.var
 
   ___msection *alloc = the_msections->head;
-  int n = ___vms->nb_processors;
+  int np = ___vms->nb_processors;
   int i;
 
-  for (i=0; i<n; i++)
+  for (i=0; i<np; i++)
     {
       ___processor_state ___ps = &___vms->pstate[i];
 
@@ -3005,20 +3054,23 @@ ___virtual_machine_state ___vms;)
       set_heap_msection (___ps, alloc);
       alloc = alloc->next;
 
-      scan_ptr = alloc_heap_ptr;
       prepare_heap_msection (___ps);
-
-      ___SPINLOCK_INIT(movable_scan_lock);
+      scan_ptr = alloc_heap_chunk_start;
 
       heap_chunks_to_scan = NULL_CHUNK_LINK;
       heap_chunks_to_scan_head = &heap_chunks_to_scan;
       heap_chunks_to_scan_tail = &heap_chunks_to_scan;
     }
 
-  nb_msections_assigned = n*2;
+  nb_msections_assigned = np*2;
 
 #ifndef ___SINGLE_THREADED_VMS
-  heap_chunks_to_scan_count = 0;
+
+  /* Initialize the active scanning workers count */
+
+  scan_workers_count[0] = np;
+  scan_workers_count[1] = np;
+
 #endif
 
 #undef ___VMSTATE_MEM
@@ -3147,9 +3199,7 @@ ___WORD n;)
                        * the allocation must be undone and head_now is
                        * the correct forwarding pointer.
                        */
-#if 0
-                      printf ("******* movable object marking collision\n");
-#endif
+
                       alloc--;
                       *cell = ___TAG(___UNTAG_AS(head_now, ___FORW), ___TYP(obj));
                       continue;
@@ -3255,7 +3305,9 @@ ___WORD *orig_ptr;)
       ___WORD *alloc = alloc_heap_ptr;
       ___WORD *limit = alloc_heap_limit;
 
+#ifndef ___SINGLE_THREADED_VMS
       ___SPINLOCK_LOCK(misc_mem_lock);
+#endif
 
       next_frame:
 
@@ -3362,7 +3414,9 @@ ___WORD *orig_ptr;)
 
       alloc_heap_ptr = alloc;
 
+#ifndef ___SINGLE_THREADED_VMS
       ___SPINLOCK_UNLOCK(misc_mem_lock);
+#endif
     }
   else
     mark_array (___PSP orig_ptr, 1);
@@ -3776,6 +3830,33 @@ ___PSDKR)
 }
 
 
+___HIDDEN void scan_complete_heap_chunk
+   ___P((___PSD
+         ___WORD *start),
+        (___PSV
+         start)
+___PSDKR
+___WORD *start;)
+{
+  ___PSGET
+  ___WORD *ptr = start;
+
+#ifdef ENABLE_GC_ACTLOG_SCAN_COMPLETE_HEAP_CHUNK
+  ___ACTLOG_BEGIN_PS(scan_complete_heap_chunk,_);
+#endif
+
+  while (___TYP(*ptr) != ___FORW) /* not end of complete chunk? */
+    {
+      ptr++;
+      ptr += scan (___PSP ptr);
+    }
+
+#ifdef ENABLE_GC_ACTLOG_SCAN_COMPLETE_HEAP_CHUNK
+  ___ACTLOG_END_PS();
+#endif
+}
+
+
 ___HIDDEN void scan_movable_objs_to_scan
    ___P((___PSDNC),
         (___PSVNC)
@@ -3819,6 +3900,7 @@ ___PSDKR)
    */
 
   ___WORD *ptr = scan_ptr;
+  volatile ___WORD *hcsh;
 
   while (ptr != alloc_heap_ptr) /* SITUATION #1 or #2 ? */
     {
@@ -3834,45 +3916,35 @@ ___PSDKR)
             }
         }
 
+      scan_ptr = ptr; /* remember where scan ended */
+
       /*
        * SITUATION #1, at end of complete chunk.
        */
 
-      ___SPINLOCK_LOCK(movable_scan_lock);
+      ___SPINLOCK_LOCK(heap_chunks_to_scan_lock);
 
-      while (heap_chunks_to_scan_head != heap_chunks_to_scan_tail)
+      while ((hcsh=heap_chunks_to_scan_head) != heap_chunks_to_scan_tail)
         {
           /*
-           * Scan the next complete heap chunk from heap chunk FIFO.
+           * Get the next complete heap chunk from heap chunk FIFO and
+           * scan it.
            */
 
-          ptr = ___UNTAG_AS(*heap_chunks_to_scan_head, ___FORW);
-          heap_chunks_to_scan_head = ptr++;
+          ptr = ___UNTAG_AS(*hcsh, ___FORW);
 
-          ___SPINLOCK_UNLOCK(movable_scan_lock);
+          heap_chunks_to_scan_head = ptr;
 
-#ifndef ___SINGLE_THREADED_VMS
-          ___FETCH_AND_ADD_WORD(&heap_chunks_to_scan_count, -1);
-#endif
+          ___SHARED_MEMORY_BARRIER(); /* share heap_chunks_to_scan_head */
 
-#ifdef ENABLE_GC_ACTLOG_SCAN_CHUNK
-          ___ACTLOG_BEGIN_PS(scan_chunk,_);
-#endif
+          ___SPINLOCK_UNLOCK(heap_chunks_to_scan_lock);
 
-          while (___TYP(*ptr) != ___FORW) /* not end of complete chunk? */
-            {
-              ptr++;
-              ptr += scan (___PSP ptr);
-            }
+          scan_complete_heap_chunk (___PSP ptr+1);
 
-#ifdef ENABLE_GC_ACTLOG_SCAN_CHUNK
-          ___ACTLOG_END_PS();
-#endif
-
-          ___SPINLOCK_LOCK(movable_scan_lock);
+          ___SPINLOCK_LOCK(heap_chunks_to_scan_lock);
         }
 
-      ___SPINLOCK_UNLOCK(movable_scan_lock);
+      ___SPINLOCK_UNLOCK(heap_chunks_to_scan_lock);
 
       /*
        * Scan the incomplete heap chunk currently being created.
@@ -4083,6 +4155,8 @@ ___virtual_machine_state ___vms;)
 
   tospace_offset = ___vms->pstate[0].mem.tospace_offset_;
 
+  ___SPINLOCK_INIT(heap_chunks_to_scan_lock);
+
   /*
    * Allocate processor's stack and heap.
    */
@@ -4177,12 +4251,23 @@ ___virtual_machine_state ___vms;)
 
   int init_nb_sections;
 
+#ifndef ___SINGLE_THREADED_VMS
+
   /*
    * Initialize spinlock for VM level memory allocation.
    */
 
   ___SPINLOCK_INIT(misc_mem_lock);
   ___SPINLOCK_INIT(alloc_mem_lock);
+
+  /*
+   * Initialize condition variable to determine end of scan at VM level.
+   */
+
+  ___MUTEX_INIT(scan_termination_mutex);
+  ___CONDVAR_INIT(scan_termination_condvar);
+
+#endif
 
 #ifndef ___SINGLE_VM
 
@@ -4354,6 +4439,24 @@ ___virtual_machine_state ___vms;)
 {
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___vms->mem.var
+
+#ifndef ___SINGLE_THREADED_VMS
+
+  /*
+   * Destroy spinlock for VM level memory allocation.
+   */
+
+  ___SPINLOCK_DESTROY(misc_mem_lock);
+  ___SPINLOCK_DESTROY(alloc_mem_lock);
+
+  /*
+   * Destroy condition variable to determine end of scan at VM level.
+   */
+
+  ___CONDVAR_DESTROY(scan_termination_condvar);
+  ___MUTEX_DESTROY(scan_termination_mutex);
+
+#endif
 
   ___cleanup_mem_pstate (&___vms->pstate[0]);/*TODO: other processors?*/
 
@@ -5261,11 +5364,12 @@ ___virtual_machine_state ___vms;)
    */
 
   int p;
+  int np = ___vms->nb_processors;
   ___SIZE_TS movable = 0;
   ___SIZE_TS still = 0;
   ___F64 bytes_allocated = 0.0;
 
-  for (p=0; p<___vms->nb_processors; p++)
+  for (p=0; p<np; p++)
     {
       ___processor_state ps = &___vms->pstate[p];
 
@@ -5450,7 +5554,7 @@ ___PSDKR)
 {
   ___PSGET
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-  int i = ___PROCESSOR_ID(___ps,___vms);
+  int id = ___PROCESSOR_ID(___ps,___vms); /* id of this processor */
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
   reference_location = IN_GLOBAL_VAR;
@@ -5463,8 +5567,9 @@ ___PSDKR)
 #ifdef ___SINGLE_VM
 
   {
-    int lo = (i * ___GLO_SUBLIST_COUNT) / ___vms->nb_processors;
-    int hi = ((i+1) * ___GLO_SUBLIST_COUNT) / ___vms->nb_processors;
+    int np = ___vms->nb_processors;
+    int lo = (id * ___GLO_SUBLIST_COUNT) / np;
+    int hi = ((id+1) * ___GLO_SUBLIST_COUNT) / np;
 
     while (lo < hi)
       {
@@ -5489,8 +5594,9 @@ ___PSDKR)
 
   {
     int n = ___GSTATE->mem.glo_list.count;
-    int lo = (i * n) / ___vms->nb_processors;
-    int hi = ((i+1) * n) / ___vms->nb_processors;
+    int np = ___vms->nb_processors;
+    int lo = (id * n) / np;
+    int hi = ((id+1) * n) / np;
 
     mark_array (___PSP
                 ___VMSTATE_FROM_PSTATE(___ps)->glos+lo,
@@ -5524,11 +5630,102 @@ ___PSDKR)
 {
   ___PSGET
 
+#ifndef ___SINGLE_THREADED_VMS
+
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  volatile int *workers_count = &scan_workers_count[traverse_weak_refs];
+  int np = ___vms->nb_processors;
+  int id = ___PROCESSOR_ID(___ps,___vms); /* id of this processor */
+  int i;
+
+ continue_local_scan:
+
+#endif
+
   do
     {
       scan_still_objs_to_scan (___PSPNC);
       scan_movable_objs_to_scan (___PSPNC);
     } while (___CAST(___WORD*,still_objs_to_scan) != 0);
+
+#ifndef ___SINGLE_THREADED_VMS
+
+#define ___GC_SCAN_STEAL_WORK_CYCLES 1000
+
+  for (;;)
+    {
+      /* Try stealing a queued chunk from another processor */
+
+      for (i = (np-1) * ___GC_SCAN_STEAL_WORK_CYCLES - 1; i>=0; i--)
+        {
+          ___processor_state ps = &___vms->pstate[(i + i%(np-1) + 1) % np];
+          volatile ___WORD *hcsh;
+
+          if (ps->mem.heap_chunks_to_scan_head_ !=
+              ps->mem.heap_chunks_to_scan_tail_)
+            {
+              /* only try stealing when chunk FIFO is non-empty */
+
+              ___SPINLOCK_LOCK(ps->mem.heap_chunks_to_scan_lock_);
+
+              if ((hcsh=ps->mem.heap_chunks_to_scan_head_) !=
+                  ps->mem.heap_chunks_to_scan_tail_)
+                {
+                  /* chunk FIFO is really non-empty */
+
+                  ___WORD *ptr = ___UNTAG_AS(*hcsh, ___FORW);
+
+                  ps->mem.heap_chunks_to_scan_head_ = ptr;
+
+                  ___SHARED_MEMORY_BARRIER(); /* share heap_chunks_to_scan_head */
+
+                  ___SPINLOCK_UNLOCK(ps->mem.heap_chunks_to_scan_lock_);
+
+                  scan_complete_heap_chunk (___PSP ptr+1);
+
+                  goto continue_local_scan;
+                }
+              else
+                {
+                  ___SPINLOCK_UNLOCK(ps->mem.heap_chunks_to_scan_lock_);
+                }
+            }
+        }
+
+      /* Signal being idle and wait for more work or termination */
+
+      ___MUTEX_LOCK(scan_termination_mutex);
+
+      if (--(*workers_count) == 0)
+        {
+          /* Scan has terminated */
+
+          for (i=np-1; i>=0; i--)
+            ___CONDVAR_SIGNAL(scan_termination_condvar);
+
+          ___MUTEX_UNLOCK(scan_termination_mutex);
+
+          break;
+        }
+      else
+        {
+          /* Other processors are still actively scanning chunks */
+
+          ___CONDVAR_WAIT(scan_termination_condvar,scan_termination_mutex);
+
+          if (*workers_count == 0)
+            {
+              ___MUTEX_UNLOCK(scan_termination_mutex);
+              break;
+            }
+
+          (*workers_count)++;
+
+          ___MUTEX_UNLOCK(scan_termination_mutex);
+        }
+    }
+
+#endif
 }
 
 
@@ -5565,6 +5762,11 @@ ___PSDKR)
   /* Create list of externally referenced still objects to trace */
 
   setup_still_objs_to_scan (___PSPNC);
+
+  /* Account for deferred accounting of still object allocation */
+
+  words_still_objs += words_still_objs_deferred;
+  words_still_objs_deferred = 0;
 
 #ifdef ENABLE_GC_ACTLOG_PHASES
   ___ACTLOG_END_PS();
@@ -5714,7 +5916,7 @@ ___SIZE_TS requested_words_still;)
   if (___PROCESSOR_ID(___ps,___vms) == 0)
     {
 #ifdef ENABLE_GC_TRACE_PHASES
-      ___printf ("----------------------------------------- GC START\n");
+      ___printf ("----------------------------------------- GC START #%d\n", ___CAST(int,nb_gcs)+1);
 #endif
       ___process_times (&user_time_start, &sys_time_start, &real_time_start);
     }
@@ -5725,7 +5927,8 @@ ___SIZE_TS requested_words_still;)
 
   {
     int p;
-    for (p=0; p<___vms->nb_processors; p++)
+    int np = ___vms->nb_processors;
+    for (p=0; p<np; p++)
       {
         if (___PROCESSOR_ID(___ps,___vms) == p)
           {
@@ -5828,7 +6031,7 @@ ___SIZE_TS requested_words_still;)
       ___raise_interrupt_pstate (___ps, ___INTR_GC); /* raise gc interrupt */
 
 #ifdef ENABLE_GC_TRACE_PHASES
-      ___printf ("----------------------------------------- GC END\n");
+      ___printf ("----------------------------------------- GC END #%d\n", ___CAST(int,nb_gcs));
 #endif
     }
 

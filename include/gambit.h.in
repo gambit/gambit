@@ -3388,6 +3388,8 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___TICKETLOCK_INIT(lock) \
 (lock).next_ticket = (lock).current_ticket = ___FIX(0)
 
+#define ___TICKETLOCK_DESTROY(lock)
+
 #define ___TICKETLOCK_LOCK(lock) \
 ___TICKETLOCK_LOCK2((lock).next_ticket, (lock).current_ticket)
 
@@ -3413,6 +3415,7 @@ ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&current),___FIX(1))
 #define ___SPINLOCK int
 #define ___SPINLOCK_DECL(id)
 #define ___SPINLOCK_INIT(lock)
+#define ___SPINLOCK_DESTROY(lock)
 #define ___SPINLOCK_LOCK(lock)
 #define ___SPINLOCK_UNLOCK(lock)
 
@@ -3429,6 +3432,7 @@ ___TICKETLOCK_UNLOCK2(___FIELD(btq,___BTQ_LOCK2));
 #define ___SPINLOCK ___MUTEX
 #define ___SPINLOCK_DECL(id) ___MUTEX_DECL(id)
 #define ___SPINLOCK_INIT(lock) ___MUTEX_INIT(lock)
+#define ___SPINLOCK_DESTROY(lock) ___MUTEX_DESTROY(lock)
 #define ___SPINLOCK_LOCK(lock) ___MUTEX_LOCK(lock)
 #define ___SPINLOCK_UNLOCK(lock) ___MUTEX_UNLOCK(lock)
 
@@ -3437,6 +3441,7 @@ ___TICKETLOCK_UNLOCK2(___FIELD(btq,___BTQ_LOCK2));
 #define ___SPINLOCK ___TICKETLOCK
 #define ___SPINLOCK_DECL(id) ___TICKETLOCK_DECL(id)
 #define ___SPINLOCK_INIT(lock) ___TICKETLOCK_INIT(lock)
+#define ___SPINLOCK_DESTROY(lock) ___TICKETLOCK_DESTROY(lock)
 #define ___SPINLOCK_LOCK(lock) ___TICKETLOCK_LOCK(lock)
 #define ___SPINLOCK_UNLOCK(lock) ___TICKETLOCK_UNLOCK(lock)
 
@@ -7651,6 +7656,9 @@ __sync_fetch_and_add(p,val)
 #define ___FETCH_AND_CLEAR_WORD(p) \
 __sync_fetch_and_and(p,0)
 
+#define ___SHARED_MEMORY_BARRIER() \
+__sync_synchronize()
+
 #endif
 
 
@@ -7671,6 +7679,9 @@ InterlockedAnd(___CAST(volatile LONG*,p),0)
 InterlockedAnd64(___CAST(volatile LONGLONG*,p),0)
 #endif
 
+#define ___SHARED_MEMORY_BARRIER() \
+MemoryBarrier()
+
 #endif
 
 
@@ -7684,6 +7695,9 @@ ___EXT(___emulated_fetch_and_add_word)(p,val)
 
 #define ___FETCH_AND_CLEAR_WORD(p) \
 ___EXT(___emulated_fetch_and_clear_word)(p)
+
+#define ___SHARED_MEMORY_BARRIER() \
+___EXT(___emulated_shared_memory_barrier)()
 
 #endif
 
@@ -7699,17 +7713,23 @@ ___EXT(___emulated_fetch_and_clear_word)(p)
 #define ___FETCH_AND_CLEAR_WORD(p) \
 (___ps->temp1 = *(p), *(p) = 0, ___ps->temp1)
 
+#define ___SHARED_MEMORY_BARRIER()
+
 #endif
+
 
 #ifdef ___CPU_x86
 #ifdef __GNUC__
+#ifndef ___CPU_RELAX
 #define ___CPU_RELAX() __asm__ __volatile__ ("rep;nop")
+#endif
 #endif
 #endif
 
 #ifndef ___CPU_RELAX
 #define ___CPU_RELAX()
 #endif
+
 
 typedef struct ___thread_struct
   {
@@ -7937,15 +7957,19 @@ ___WORD *alloc_heap_chunk_start_;
 /* allocation limit for movable objects in current chunk */
 ___WORD *alloc_heap_chunk_limit_;
 
+#ifndef ___SINGLE_THREADED_VMS
+
 /* spinlock for accessing the movable object chunks remaining to scan */
-___SPINLOCK_DECL(movable_scan_lock_)
+___SPINLOCK_DECL(heap_chunks_to_scan_lock_)
+
+#endif
 
 /* list of complete movable object chunks to scan */
-___WORD heap_chunks_to_scan_;
+volatile ___WORD heap_chunks_to_scan_;
 
 /* fifo of complete movable object chunks remaining to scan */
-___WORD *heap_chunks_to_scan_head_;
-___WORD *heap_chunks_to_scan_tail_;
+volatile ___WORD * volatile heap_chunks_to_scan_head_;
+volatile ___WORD * volatile heap_chunks_to_scan_tail_;
 
 /* scan pointer in currently scanned (possibly incomplete) chunk */
 ___WORD *scan_ptr_;
@@ -7989,18 +8013,21 @@ ___SIZE_TS stack_fudge_used_;
 /* space used in msection heap fudge */
 ___SIZE_TS heap_fudge_used_;
 
+#ifdef ___DEBUG_GARBAGE_COLLECT
+
+/* GC state used for debugging */
+int reference_location_; /* where is offending reference located */
+___WORD *container_body_; /* body of object containing offending reference */
+int mark_array_call_line_; /* where was mark_array called */
+
+#endif
+
 #ifdef ___CALL_GC_FREQUENTLY
 int gc_calls_to_punt_;
 #endif
 } ___pstate_mem;
 
 typedef struct ___vmstate_mem_struct {
-
-/* spinlock for miscellaneous memory operations at the VM level */
-___SPINLOCK_DECL(misc_mem_lock_)
-
-/* spinlock for allocation of memory at the VM level */
-___SPINLOCK_DECL(alloc_mem_lock_)
 
 /* size of heap in words (number of words that can be occupied) */
 ___SIZE_TS heap_size_;
@@ -8042,15 +8069,18 @@ volatile int target_nb_processors_;
 
 #ifndef ___SINGLE_THREADED_VMS
 
+/* spinlock for miscellaneous memory operations at the VM level */
+___SPINLOCK_DECL(misc_mem_lock_)
+
+/* spinlock for allocation of memory at the VM level */
+___SPINLOCK_DECL(alloc_mem_lock_)
+
 /* mutex and condition variable to determine termination of GC scan */
 ___MUTEX_DECL(scan_termination_mutex_)
 ___CONDVAR_DECL(scan_termination_condvar_)
 
-/* number of processors currently doing GC scan work */
-volatile int scan_workers_count_;
-
-/* number of complete movable object chunks remaining to scan */
-volatile ___WORD heap_chunks_to_scan_count_;
+/* number of processors currently doing GC scan work (for each phase) */
+volatile int scan_workers_count_[2];
 
 #endif
 
@@ -9716,6 +9746,7 @@ typedef struct ___global_state_struct
     ___WORD (*___emulated_fetch_and_clear_word)
        ___P((volatile ___WORD *ptr),
             ());
+    void (*___emulated_shared_memory_barrier) ___PVOID;
 #endif
 #ifdef ___DEFINE_THREAD_LOCAL_STORAGE_GETTER_SETTER
     void *(*___get_tls_ptr) ___PVOID;
@@ -11030,6 +11061,7 @@ ___IMP_FUNC(___WORD,___emulated_fetch_and_add_word)
 ___IMP_FUNC(___WORD,___emulated_fetch_and_clear_word)
    ___P((volatile ___WORD *ptr),
         ());
+___IMP_FUNC(void,___emulated_shared_memory_barrier) ___PVOID;
 #endif
 #ifdef ___DEFINE_THREAD_LOCAL_STORAGE_GETTER_SETTER
 ___IMP_FUNC(void *,___get_tls_ptr) ___PVOID;
