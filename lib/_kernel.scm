@@ -4764,6 +4764,12 @@ end-of-code
 ;; in sequence.  The vector of module execution procedures is in the
 ;; program descriptor.
 
+(define ##main ;; this procedure is called after the program is loaded
+  (lambda () #f))
+
+(define-prim (##main-set! thunk)
+  (set! ##main thunk))
+
 (macro-case-target
 
  ((C)
@@ -4779,19 +4785,14 @@ end-of-code
      "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___PSPNC);"
      (##vector-ref module-descr 4)))
 
-  (define-prim (##main)
-    (##exit-cleanup)))
+  (##main-set!
+   (lambda ()
+     (##exit-cleanup))))
 
  (else
 
   (define (##module-init module-descr)
-    #f)
-
-  (define-prim (##main)
     #f)))
-
-(define-prim (##main-set! thunk)
-  (set! ##main thunk))
 
 (define-prim (##create-module name module-descr)
   (##vector #f name 0 module-descr))

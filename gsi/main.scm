@@ -719,9 +719,6 @@
 
 (##main-set! ##main-gsi/gsc)
 
-(define (main . args) ;; predefine main procedure so scripts don't have to
-  0)
-
 (##namespace (""))
 
 ;;;============================================================================
