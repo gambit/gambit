@@ -23,7 +23,7 @@
 		<string>NotEmacs-1024.png</string>
 	</array>
 	<key>CFBundleIdentifier</key>
-	<string>NotEmacs</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>1.0</string>
 	<key>CFBundleName</key>
@@ -42,6 +42,8 @@
 	<false/>
 	<key>UIMainStoryboardFile</key>
 	<string>NotEmacs</string>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UIStatusBarHidden</key>
 	<true/>
 	<key>UISupportedInterfaceOrientations</key>

@@ -23,7 +23,7 @@
 		<string>GambitREPL-1024.png</string>
 	</array>
 	<key>CFBundleIdentifier</key>
-	<string>GambitREPL</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>7.0</string>
 	<key>CFBundleName</key>
@@ -42,6 +42,8 @@
 	<false/>
 	<key>UIMainStoryboardFile</key>
 	<string>GambitREPL</string>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UIStatusBarHidden</key>
 	<true/>
 	<key>UISupportedInterfaceOrientations</key>

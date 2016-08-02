@@ -644,9 +644,9 @@ c-declare-end
                     (begin
                       ;; There is a sleeping thread, so figure out in
                       ;; how much time it needs to wake up.
-                      (##flonum.max
-                       (##flonum.- (macro-thread-timeout next-sleeper)
-                                   (##current-time-point))
+                      (##flmax
+                       (##fl- (macro-thread-timeout next-sleeper)
+                              (##current-time-point))
                        interval-min-wait))))
                (next-condvar
                 (macro-btq-deq-next run-queue))
@@ -654,7 +654,7 @@ c-declare-end
                 (if (##eq? next-condvar run-queue)
                     interval-no-io-pending ;; I/O is not pending, just relax
                     interval-io-pending))) ;; I/O is pending, so come back soon
-          (##flonum.min sleep-interval io-interval)))))
+          (##flmin sleep-interval io-interval)))))
 
 (define interval-runnable 0.0)
 (set! interval-runnable 0.0)

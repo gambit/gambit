@@ -49,7 +49,7 @@ ___END_C_LINKAGE
 
 
 extern char **main_argv;
-___UCS_2 ucs2_gambcdir[1024];
+___UCS_2 ucs2_gambitdir[1024];
 
 void gambit_setup()
 {
@@ -81,9 +81,9 @@ void gambit_setup()
     }
 
   for (i=0; i<last_dir_sep; i++)
-    ucs2_gambcdir[i] = ucs2_argv[0][i];
+    ucs2_gambitdir[i] = ucs2_argv[0][i];
 
-  ucs2_gambcdir[i] = '\0';
+  ucs2_gambitdir[i] = '\0';
 
   // Set debugging settings so that all threads with uncaught
   // exceptions start a REPL.
@@ -107,7 +107,7 @@ void gambit_setup()
   setup_params.version        = ___VERSION;
   setup_params.linker         = SCHEME_LIBRARY_LINKER;
   setup_params.argv           = ucs2_argv;
-  setup_params.gambcdir       = ucs2_gambcdir;
+  setup_params.gambitdir      = ucs2_gambitdir;
   setup_params.debug_settings = debug_settings;
 
   ___setup (&setup_params);
