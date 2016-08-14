@@ -1691,9 +1691,9 @@
            ctx
            (^prefix-class module-name)
            (univ-defs-combine
-            defs-procs
+            (univ-objs-defs ctx)
             (univ-defs-combine
-             (univ-objs-defs ctx)
+             defs-procs
              (univ-module-register ctx module-descr)))))
 
          (code-decls
