@@ -2122,11 +2122,11 @@
                 (cond ((= length 1)
                        (pt-syntax-error
                          clause-source
-                         "Else clause must have a body"))
+                         "Else clause in 'cond' must have a body"))
                       ((not (null? (cdr clauses)))
                        (pt-syntax-error
                          clause-source
-                         "Else clause must be last"))
+                         "Else clause in 'cond' must be last"))
                       (else
                        (proper-clauses (cdr clauses))))
                 (if (and (>= length 2)
@@ -2154,7 +2154,7 @@
                 (if (not (null? (cdr clauses)))
                   (pt-syntax-error
                     clause-source
-                    "Else clause must be last")
+                    "Else clause in 'case' must be last")
                   (proper-case-clauses (cdr clauses)))
                 (begin
                   (proper-selector-list? (car clause))
