@@ -465,7 +465,7 @@
  */
 
 #define compute_heap_space() \
-(the_msections->nb_sections * ___MSECTION_SIZE + occupied_words_still)
+(___CAST(___SIZE_TS,the_msections->nb_sections) * ___MSECTION_SIZE + occupied_words_still)
 
 #define compute_assigned_heap_space() \
 (nb_msections_assigned * ___MSECTION_SIZE + occupied_words_still)
