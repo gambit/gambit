@@ -2749,11 +2749,30 @@ ___PSDKR)
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef ___DEBUG_GARBAGE_COLLECT
+
+#define fatal_heap_overflow() fatal_heap_overflow_debug (__LINE__)
+
+___HIDDEN void fatal_heap_overflow_debug
+   ___P((int line),
+        (line)
+int line;)
+
+#else
+
 ___HIDDEN void fatal_heap_overflow ___PVOID
+
+#endif
 {
   char *msgs[2];
+
+#ifdef ___DEBUG_GARBAGE_COLLECT
+  ___printf ("fatal_heap_overflow called at mem.c:%d\n", line);
+#endif
+
   msgs[0] = "Heap overflow";
   msgs[1] = 0;
+
   ___fatal_error (msgs);
 }
 
