@@ -1588,6 +1588,9 @@
 #if __GNUC__ >= 3
 #define ___USE_builtin_expect
 #endif
+#if __GNUC__ >= 5
+#define ___USE_builtin_op_overflow
+#endif
 #endif
 
 #ifdef ___USE_builtin_expect
@@ -2854,22 +2857,46 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXPOS(x)((___WORD)(x))
 #define ___FIXMAX(x,y)(((x)<(y))?(y):(x))
 #define ___FIXMIN(x,y)(((x)<(y))?(x):(y))
+
+#define ___FIXWRAPADD(x,y)___CAST(___WORD,___CAST(___UWORD,x)+___CAST(___UWORD,y))
 #define ___FIXADD(x,y)((___WORD)((x)+(y)))
-#ifndef ___FIXADDP
+
+#ifdef ___USE_builtin_op_overflow
+#define ___FIXADDP(x,y)(___EXPECT_FALSE(__builtin_add_overflow((___WORD)(x),(___WORD)(y),&___temp))?___FAL:___temp)
+#else
 #define ___FIXADDP(x,y)(___temp=___FIXADD(x,y),___EXPECT_FALSE(((___temp^(x))&(___temp^(y)))<0)?___FAL:___temp)
 #endif
+
 #define ___FIX_1 ___FIX(1)
+#define ___FIXWRAPMUL(x,y)___CAST(___WORD,___CAST(___UWORD,x)*___CAST(___UWORD,___INT(y)))
 #define ___FIXMUL(x,y)((___WORD)((x)*___INT(y)))
+
+#ifdef ___USE_builtin_op_overflow
+#define ___FIXMULP(x,y)(___EXPECT_FALSE(__builtin_mul_overflow((___WORD)(x),___INT(y),&___temp))?___FAL:___temp)
+#else
 #define ___FIXMULP(x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXMUL(x,y)),y)!=(x))?___FAL:___temp)
+#endif
+
+#define ___FIXWRAPSQUARE(x)___FIXWRAPMUL(x,x)
 #define ___FIXSQUARE(x)___FIXMUL(x,x)
-#define ___FIXSQUAREP(x)(___EXPECT_FALSE(___CAST(___UWORD,___FIXADD(x,___FIX(___SQRT_MAX_FIX)))>(___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))<<1))?___FAL:___FIXSQUARE(x))
+#define ___FIXSQUAREP(x)(___EXPECT_FALSE(___CAST(___UWORD,x)+___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))>(___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))<<1))?___FAL:___FIXSQUARE(x))
+
+#define ___FIXWRAPNEG(x)___CAST(___WORD,-___CAST(___UWORD,x))
 #define ___FIXNEG(x)((___WORD)(-(x)))
 #define ___FIXNEGP(x)(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x))
+
+#define ___FIXWRAPSUB(x,y)___CAST(___WORD,___CAST(___UWORD,x)-___CAST(___UWORD,y))
 #define ___FIXSUB(x,y)((___WORD)((x)-(y)))
-#ifndef ___FIXSUBP
+
+#ifdef ___USE_builtin_op_overflow
+#define ___FIXSUBP(x,y)(___EXPECT_FALSE(__builtin_sub_overflow((___WORD)(x),(___WORD)(y),&___temp))?___FAL:___temp)
+#else
 #define ___FIXSUBP(x,y)(___temp=___FIXSUB(x,y),___EXPECT_FALSE(((___temp^(x))&((y)^(x)))<0)?___FAL:___temp)
 #endif
+
+#define ___FIXWRAPQUO(x,y)((y)==___FIX(-1)?___FIXWRAPNEG(x):___FIXQUO(x,y))
 #define ___FIXQUO(x,y)___FIX(((x)/(y)))
+
 #define ___FIXREM(x,y)((___WORD)((x)%(y)))/****is this ok?*******/
 #define ___FIXMOD(x,y)((___temp=___FIXREM((___ps->temp1=x),(___ps->temp2=y)))==0?___FIX(0):((___ps->temp1<0)==(___ps->temp2<0)?___temp:___FIXADD(___temp,___ps->temp2)))
 #define ___FIXNOT(x)((___WORD)((x)^~___TMASK))
@@ -2878,6 +2905,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXIOR(x,y)((___WORD)((x)|(y)))
 #define ___FIXXOR(x,y)((___WORD)((x)^(y)))
 #define ___FIXIF(x,y,z)((___WORD)(((x)&(y))|(~(x)&(z))))
+
+#define ___FIXWRAPABS(x)((x)<0?___FIXWRAPNEG(x):(x))
 #define ___FIXABS(x)((x)<0?___FIXNEG(x):(x))
 #define ___FIXABSP(x)((x)<0?((___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x))):(x))
 
@@ -2947,15 +2976,20 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 ((((___temp=___INT(x))<0)&&(___temp=~___temp)),___BITCOUNT_TEMP())
 #define ___FIXBITSETP(x,y)((y)&(___CAST(___SCMOBJ,1)<<(___INT(x)+___TB)))
 
+#define ___FIXWRAPASH(x,y)___FIXASH(x,y)
 #define ___FIXASH(x,y)((y)<0?___FIXASHR(x,(y)>=___FIX(-___FIX_WIDTH)?-(y):___FIX(___FIX_WIDTH)):___FIXASHL(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)))
 #define ___FIXASHP(x,y)((y)<0?___FIXASHR(x,(y)>=___FIX(-___FIX_WIDTH)?-(y):___FIX(___FIX_WIDTH)):___FIXASHLP2(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)))
+#define ___FIXWRAPASHL(x,y)___FIXASHL(x,y)
 #define ___FIXASHL(x,y)___CAST(___WORD,___CAST(___UWORD,x)<<___INT(y))
 #define ___FIXASHLP(x,y)((y)>=___FIX(0)?___FIXASHLP2(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 #define ___FIXASHLP2(x,y)((x)==((___temp=___FIXASHL(x,y))>>___INT(y))?___temp:___FAL)
+#define ___FIXWRAPASHR(x,y)___FIXASHR(x,y)
 #define ___FIXASHR(x,y)(((x)>>___INT(y))&~___TMASK)
 #define ___FIXASHRP(x,y)((y)>=___FIX(0)?___FIXASHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
-#define ___FIXLSHR(x,y)((___WORD)(((___UWORD)(x)>>___INT(y))&~___TMASK))
-#define ___FIXLSHRP(x,y)((y)>=___FIX(0)?___FIXLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
+#define ___FIXWRAPLSHR(x,y)((___WORD)(((___UWORD)(x)>>___INT(y))&~___TMASK))
+#define ___FIXWRAPLSHRP(x,y)((y)>=___FIX(0)?___FIXWRAPLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
+#define ___FIXLSHR(x,y)___FIXWRAPLSHR(x,y) /*TODO: remove*/
+#define ___FIXLSHRP(x,y)___FIXWRAPLSHRP(x,y) /*TODO: remove*/
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
 
@@ -3838,11 +3872,11 @@ ___SET_R0(___GSTATE->handler_break)
 #define ___BEGIN_COD \
 ___HIDDEN ___WORD ___HOST_PROC ___P((___processor_state ___ps),(___ps) \
 ___processor_state ___ps;) { \
-register ___WORD ___pc, ___start, ___temp; \
-register ___S32 ___s32_temp; /*******************/ \
-register ___U32 ___u32_temp; /*******************/ \
-register ___S64 ___s64_temp; /*******************/ \
-register ___U64 ___u64_temp; /*******************/ \
+___WORD ___pc, ___start, ___temp; \
+___S32 ___s32_temp; /*******************/ \
+___U32 ___u32_temp; /*******************/ \
+___S64 ___s64_temp; /*******************/ \
+___U64 ___u64_temp; /*******************/ \
 ___D_ALL
 
 #define ___END_COD \

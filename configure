@@ -797,6 +797,7 @@ DASH_fPIC
 DASH_freschedule_modulo_scheduled_loops
 DASH_fmodulo_sched
 DASH_fomit_frame_pointer
+DASH_ftrapv
 DASH_fwrapv
 DASH_fno_strict_aliasing
 DASH_fno_math_errno
@@ -10136,6 +10137,49 @@ $as_echo "$ac_cv_DASH_fwrapv" >&6; }
 DASH_fwrapv="$ac_cv_DASH_fwrapv"
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftrapv" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftrapv... " >&6; }
+if ${ac_cv_DASH_ftrapv+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftrapv"
+CXXFLAGS="-ftrapv"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftrapv=" -ftrapv"
+else
+  ac_cv_DASH_ftrapv=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftrapv" >&5
+$as_echo "$ac_cv_DASH_ftrapv" >&6; }
+DASH_ftrapv="$ac_cv_DASH_ftrapv"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fomit-frame-pointer" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fomit-frame-pointer... " >&6; }
 if ${ac_cv_DASH_fomit_frame_pointer+:} false; then :
@@ -10883,16 +10927,18 @@ DASH_shared="$ac_cv_DASH_shared"
 
   if test "$ENABLE_DEBUG" != yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$OPT_LEVEL_FLAG"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_ftrapv"
   fi
 
   if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" == yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
   fi
 
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
 
 #  if test "$ENABLE_CPLUSPLUS" = yes; then
@@ -10900,7 +10946,7 @@ DASH_shared="$ac_cv_DASH_shared"
 #  fi
 
 # It isn't clear these are useful:
-#  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
+#  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_ftrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
 
   if test "$ENABLE_GCC_OPTS" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"
