@@ -2864,7 +2864,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #ifdef ___USE_builtin_op_overflow
 #define ___FIXADDP(x,y)(___EXPECT_FALSE(__builtin_add_overflow((___WORD)(x),(___WORD)(y),&___temp))?___FAL:___temp)
 #else
-#define ___FIXADDP(x,y)(___temp=___FIXADD(x,y),___EXPECT_FALSE(((___temp^(x))&(___temp^(y)))<0)?___FAL:___temp)
+#define ___FIXADDP(x,y)(___temp=___FIXWRAPADD(x,y),___EXPECT_FALSE(((___temp^(x))&(___temp^(y)))<0)?___FAL:___temp)
 #endif
 
 #define ___FIX_1 ___FIX(1)
@@ -2874,7 +2874,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #ifdef ___USE_builtin_op_overflow
 #define ___FIXMULP(x,y)(___EXPECT_FALSE(__builtin_mul_overflow((___WORD)(x),___INT(y),&___temp))?___FAL:___temp)
 #else
-#define ___FIXMULP(x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXMUL(x,y)),y)!=(x))?___FAL:___temp)
+#define ___FIXMULP(x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXWRAPMUL(x,y)),y)!=(x))?___FAL:___temp)
 #endif
 
 #define ___FIXWRAPSQUARE(x)___FIXWRAPMUL(x,x)
@@ -2891,7 +2891,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #ifdef ___USE_builtin_op_overflow
 #define ___FIXSUBP(x,y)(___EXPECT_FALSE(__builtin_sub_overflow((___WORD)(x),(___WORD)(y),&___temp))?___FAL:___temp)
 #else
-#define ___FIXSUBP(x,y)(___temp=___FIXSUB(x,y),___EXPECT_FALSE(((___temp^(x))&((y)^(x)))<0)?___FAL:___temp)
+#define ___FIXSUBP(x,y)(___temp=___FIXWRAPSUB(x,y),___EXPECT_FALSE(((___temp^(x))&((y)^(x)))<0)?___FAL:___temp)
 #endif
 
 #define ___FIXWRAPQUO(x,y)((y)==___FIX(-1)?___FIXWRAPNEG(x):___FIXQUO(x,y))
