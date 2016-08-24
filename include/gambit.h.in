@@ -1606,7 +1606,7 @@
 #endif
 #endif
 
-#ifdef __clang__not
+#ifdef __clang__
 #if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow) && __has_builtin(__builtin_mul_overflow)
 #define ___USE_builtin_op_overflow
 #endif
