@@ -1588,9 +1588,6 @@
 #if __GNUC__ >= 3
 #define ___USE_builtin_expect
 #endif
-#if __GNUC__ >= 5
-#define ___USE_builtin_op_overflow
-#endif
 #endif
 
 #ifdef ___USE_builtin_expect
@@ -1599,6 +1596,20 @@
 #else
 #define ___EXPECT_TRUE(x) (x)
 #define ___EXPECT_FALSE(x) (x)
+#endif
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef __GNUC__
+#if __GNUC__ >= 5
+#define ___USE_builtin_op_overflow
+#endif
+#endif
+
+#ifdef __clang__not
+#if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow) && __has_builtin(__builtin_mul_overflow)
+#define ___USE_builtin_op_overflow
+#endif
 #endif
 
 /*---------------------------------------------------------------------------*/
