@@ -5831,23 +5831,23 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<3),___sF64VECTOR,___PERM)
 
 #ifdef ___BIG_ENDIAN
 
-#define ___P8U8(a,b,c,d,e,f,g,h)((((((((((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___UWORD)___CAST_U8(d))<<8)+(___UWORD)___CAST_U8(e))<<8)+(___UWORD)___CAST_U8(f))<<8)+(___UWORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
+#define ___P8U8(a,b,c,d,e,f,g,h)___CAST(___WORD,(((((((((((((___CAST(___UWORD,___CAST_U8(a))<<8)+___CAST(___UWORD,___CAST_U8(b)))<<8)+___CAST(___UWORD,___CAST_U8(c)))<<8)+___CAST(___UWORD,___CAST_U8(d)))<<8)+___CAST(___UWORD,___CAST_U8(e)))<<8)+___CAST(___UWORD,___CAST_U8(f)))<<8)+___CAST(___UWORD,___CAST_U8(g)))<<8)+___CAST(___UWORD,___CAST_U8(h)))
 
-#define ___P4U16(a,b,c,d)((((((___UWORD)___CAST_U16(a)<<16)+(___UWORD)___CAST_U16(b))<<16)+(___UWORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
+#define ___P4U16(a,b,c,d)___CAST(___WORD,(((((___CAST(___UWORD,___CAST_U16(a))<<16)+___CAST(___UWORD,___CAST_U16(b)))<<16)+___CAST(___UWORD,___CAST_U16(c)))<<16)+___CAST(___UWORD,___CAST_U16(d)))
 
-#define ___P2U32(a,b)((___UWORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
+#define ___P2U32(a,b)___CAST(___WORD,(___CAST(___UWORD,___CAST_U32(a))<<32)+___CAST(___UWORD,___CAST_U32(b)))
 
 #else
 
-#define ___P8U8(h,g,f,e,d,c,b,a)((((((((((((((___UWORD)___CAST_U8(a)<<8)+(___UWORD)___CAST_U8(b))<<8)+(___UWORD)___CAST_U8(c))<<8)+(___UWORD)___CAST_U8(d))<<8)+(___UWORD)___CAST_U8(e))<<8)+(___UWORD)___CAST_U8(f))<<8)+(___UWORD)___CAST_U8(g))<<8)+(___WORD)___CAST_U8(h)
+#define ___P8U8(h,g,f,e,d,c,b,a)___CAST(___WORD,(((((((((((((___CAST(___UWORD,___CAST_U8(a))<<8)+___CAST(___UWORD,___CAST_U8(b)))<<8)+___CAST(___UWORD,___CAST_U8(c)))<<8)+___CAST(___UWORD,___CAST_U8(d)))<<8)+___CAST(___UWORD,___CAST_U8(e)))<<8)+___CAST(___UWORD,___CAST_U8(f)))<<8)+___CAST(___UWORD,___CAST_U8(g)))<<8)+___CAST(___UWORD,___CAST_U8(h)))
 
-#define ___P4U16(d,c,b,a)((((((___UWORD)___CAST_U16(a)<<16)+(___UWORD)___CAST_U16(b))<<16)+(___UWORD)___CAST_U16(c))<<16)+(___WORD)___CAST_U16(d)
+#define ___P4U16(d,c,b,a)___CAST(___WORD,(((((___CAST(___UWORD,___CAST_U16(a))<<16)+___CAST(___UWORD,___CAST_U16(b)))<<16)+___CAST(___UWORD,___CAST_U16(c)))<<16)+___CAST(___UWORD,___CAST_U16(d)))
 
-#define ___P2U32(b,a)((___UWORD)___CAST_U32(a)<<32)+(___WORD)___CAST_U32(b)
+#define ___P2U32(b,a)___CAST(___WORD,(___CAST(___UWORD,___CAST_U32(a))<<32)+___CAST(___UWORD,___CAST_U32(b)))
 
 #endif
 
-#define ___P1U64(hi,lo)((___UWORD)(hi)<<32)+(___WORD)___CAST_U32(lo)
+#define ___P1U64(hi,lo)___CAST(___WORD,(___CAST(___UWORD,hi)<<32)+___CAST(___UWORD,___CAST_U32(lo)))
 
 #define ___S8VEC0 ___PADDING};
 #define ___S8VEC1(a),___P8U8(a,0,0,0,0,0,0,0) ___PADDING};
@@ -6023,7 +6023,7 @@ ___LOCAL ___WORD ___ofdtbl[]={
 #if ___SCMOBJ_WIDTH == 32
 #define ___GCMAP2(a,b),a,b
 #else
-#define ___GCMAP2(a,b),(___CAST(___UWORD,b)<<32)+___CAST(___WORD,___CAST_U32(a))
+#define ___GCMAP2(a,b),___CAST(___WORD,(___CAST(___UWORD,b)<<32)+___CAST(___UWORD,___CAST_U32(a)))
 #endif
 
 #define ___U64VEC0 ___PADDING_64};
