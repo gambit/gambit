@@ -2,7 +2,7 @@
 
 ;;; File: "_std.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -602,10 +602,10 @@
   ;; str must be a nonmutable string
 
   (if (##eq? hash (macro-absent-obj))
-      (let ((n (##fx+ ##symbol-counter 1)))
+      (let ((n (##fxwrap+ ##symbol-counter 1)))
         ;; Note: it is unimportant if the increment of ##symbol-counter
         ;; is not atomic; it simply means a possible close repetition
-        ;; of the same hash code
+        ;; of the same hash code.  The counter will wrap around eventually.
         (set! ##symbol-counter n)
         (macro-make-uninterned-symbol str (##partial-bit-reverse n)))
       (macro-make-uninterned-symbol str hash)))
@@ -1332,10 +1332,10 @@
   ;; str must be a nonmutable string
 
   (if (##eq? hash (macro-absent-obj))
-      (let ((n (##fx+ ##keyword-counter 1)))
+      (let ((n (##fxwrap+ ##keyword-counter 1)))
         ;; Note: it is unimportant if the increment of ##keyword-counter
         ;; is not atomic; it simply means a possible close repetition
-        ;; of the same hash code
+        ;; of the same hash code.  The counter will wrap around eventually.
         (set! ##keyword-counter n)
         (macro-make-uninterned-keyword str (##partial-bit-reverse n)))
       (macro-make-uninterned-keyword str hash)))

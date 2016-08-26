@@ -1850,20 +1850,21 @@ if test "$C_COMP_GNUC" = yes; then
     fi
   fi
 
-  if test "$ENABLE_DEBUG" != yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$OPT_LEVEL_FLAG"
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
-  else
+  if test "$ENABLE_DEBUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_ftrapv"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$OPT_LEVEL_FLAG"
+    # TODO: remove the use of -fwrapv once runtime system is cleaned up
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   fi
 
   if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" == yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
   fi
 
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
 
 #  if test "$ENABLE_CPLUSPLUS" = yes; then
