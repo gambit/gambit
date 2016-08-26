@@ -156,8 +156,8 @@ status: fake_target
 
 push: fake_target
 	@if test "$(RC)" = "$(GIT)"; then \
-	  $(GIT) push git@github.com:feeley/gambit.git; \
-	  $(GIT) push --tags git@github.com:feeley/gambit.git; \
+	  $(GIT) push git@github.com:gambit/gambit.git; \
+	  $(GIT) push --tags git@github.com:gambit/gambit.git; \
 	else \
 	  $(HG) push; \
 	fi
@@ -335,7 +335,7 @@ rc-setup-pre:
 	  echo '	ignorecase = true' >> .git/config; \
 	  echo '	autocrlf = false' >> .git/config; \
 	  echo '[remote "origin"]' >> .git/config; \
-	  echo '	url = git@github.com:feeley/gambit.git' >> .git/config; \
+	  echo '	url = git@github.com:gambit/gambit.git' >> .git/config; \
 	  echo '	fetch = +refs/heads/*:refs/remotes/origin/*' >> .git/config; \
 	  echo '[branch "master"]' >> .git/config; \
 	  echo '	remote = origin' >> .git/config; \
