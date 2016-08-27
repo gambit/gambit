@@ -109,7 +109,7 @@ from-scratch: fake_target
 	$(MAKE) all       # make everything with repo HEAD gsc compiler
 
 latest-release: fake_target
-	$(GIT) checkout -f tags/`$(GIT) describe --tag --abbrev=0`
+	$(GIT) checkout -f tags/$(PACKAGE_VERSION)
 	./configure
 	$(MAKE) bootstrap
 	$(GIT) checkout -f master
