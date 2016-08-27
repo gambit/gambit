@@ -114,7 +114,6 @@ latest-release: fake_target
 	$(MAKE) bootstrap
 	$(GIT) checkout -f master
 	$(GIT) reset --hard
-	$(MAKE) clean
 
 gsc-boot@exe@:
 	rm -f gsc-boot@bat@ gsc-boot
