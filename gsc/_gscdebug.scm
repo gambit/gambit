@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_debug-gsc.scm"
+;;; File: "_gscdebug.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
