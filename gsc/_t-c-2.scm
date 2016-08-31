@@ -3291,7 +3291,7 @@
 (targ-op "##fxwrap*"        (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXWRAPMUL"))
 (targ-op "##fx*"            (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXMUL"))
 (targ-op "##fx*?"           (targ-apply-fold-u #f "FIX_1"  #f       "FIXMULP"))
-(targ-op "##fxwrap-"        (targ-apply-fold-u #f #f       "FIXNEG" "FIXWRAPSUB"))
+(targ-op "##fxwrap-"        (targ-apply-fold-u #f #f       "FIXWRAPNEG" "FIXWRAPSUB"))
 (targ-op "##fx-"            (targ-apply-fold-u #f #f       "FIXNEG" "FIXSUB"))
 (targ-op "##fx-?"           (targ-apply-fold-u #f #f       "FIXNEGP""FIXSUBP"))
 (targ-op "##fxwrapquotient" (targ-apply-fold-u #f #f       #f       "FIXWRAPQUO"))
