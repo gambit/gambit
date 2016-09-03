@@ -17,7 +17,7 @@
 (include-adt "_ptreeadt.scm")
 (include-adt "_sourceadt.scm")
 
-(include "_gvm.scm")
+;(include "_gvm.scm")
 
 (include "_asm#.scm")
 (include "_x86#.scm")
@@ -111,8 +111,8 @@
 
 
 (define (machine-code-block->procedure mcb)
- (lambda (#!optional (arg1 0) (arg2 0) (arg3 0))
-   (##machine-code-block-exec mcb arg1 arg2 arg3)))
+  (lambda (#!optional (arg1 0) (arg2 0) (arg3 0))
+    (##machine-code-block-exec mcb arg1 arg2 arg3)))
 
 ;; Take a code generation context, assemble it,
 ;; fix the addresses, and convert the code to
@@ -129,45 +129,49 @@
 
 
 
-(define (nat-target-info-port x)               (vector-ref x 16))
-(define (nat-target-info-port-set! x y)        (vector-set! x 16 y))
-(define (nat-target-arch x)                    (vector-ref x 17))
-(define (nat-target-arch-set! x y)             (vector-set! x 17 y))
-(define (nat-target-word-width x)              (vector-ref x 18))
-(define (nat-target-word-width-set! x y)       (vector-set! x 18 y))
-(define (nat-target-nb-arg-regs x)             (vector-ref x 19))
-(define (nat-target-nb-arg-regs-set! x y)      (vector-set! x 19 y))
-(define (nat-target-gvm-reg-map x)             (vector-ref x 20))
-(define (nat-target-gvm-reg-map-set! x y)      (vector-set! x 20 y))
-(define (nat-target-pstate-ptr-reg x)          (vector-ref x 21))
-(define (nat-target-pstate-ptr-reg-set! x y)   (vector-set! x 21 y))
-(define (nat-target-heap-ptr-reg x)            (vector-ref x 22))
-(define (nat-target-heap-ptr-reg-set! x y)     (vector-set! x 22 y))
-(define (nat-target-stack-ptr-reg x)           (vector-ref x 23))
-(define (nat-target-stack-ptr-reg-set! x y)    (vector-set! x 23 y))
-(define (nat-target-prim-proc-table x)         (vector-ref x 24))
-(define (nat-target-prim-proc-table-set! x y)  (vector-set! x 24 y))
-(define (nat-target-prc-objs x)                (vector-ref x 25))
-(define (nat-target-prc-objs-set! x y)         (vector-set! x 25 y))
-(define (nat-target-prc-objs-seen x)           (vector-ref x 26))
-(define (nat-target-prc-objs-seen-set! x y)    (vector-set! x 26 y))
-(define (nat-target-prc-objs-to-scan x)        (vector-ref x 27))
-(define (nat-target-prc-objs-to-scan-set! x y) (vector-set! x 27 y))
-(define (nat-target-nb-arg-gvm-reg x)          (vector-ref x 28))
-(define (nat-target-nb-arg-gvm-reg-set! x y)   (vector-set! x 28 y))
+(define (nat-target-info-port x)               (vector-ref x 19))
+(define (nat-target-info-port-set! x y)        (vector-set! x 19 y))
+(define (nat-target-arch x)                    (vector-ref x 20))
+(define (nat-target-arch-set! x y)             (vector-set! x 20 y))
+(define (nat-target-word-width x)              (vector-ref x 21))
+(define (nat-target-word-width-set! x y)       (vector-set! x 21 y))
+(define (nat-target-nb-arg-regs x)             (vector-ref x 22))
+(define (nat-target-nb-arg-regs-set! x y)      (vector-set! x 22 y))
+(define (nat-target-gvm-reg-map x)             (vector-ref x 23))
+(define (nat-target-gvm-reg-map-set! x y)      (vector-set! x 23 y))
+(define (nat-target-pstate-ptr-reg x)          (vector-ref x 24))
+(define (nat-target-pstate-ptr-reg-set! x y)   (vector-set! x 24 y))
+(define (nat-target-heap-ptr-reg x)            (vector-ref x 25))
+(define (nat-target-heap-ptr-reg-set! x y)     (vector-set! x 25 y))
+(define (nat-target-stack-ptr-reg x)           (vector-ref x 26))
+(define (nat-target-stack-ptr-reg-set! x y)    (vector-set! x 26 y))
+(define (nat-target-prim-proc-table x)         (vector-ref x 27))
+(define (nat-target-prim-proc-table-set! x y)  (vector-set! x 27 y))
+(define (nat-target-prc-objs x)                (vector-ref x 28))
+(define (nat-target-prc-objs-set! x y)         (vector-set! x 28 y))
+(define (nat-target-prc-objs-seen x)           (vector-ref x 29))
+(define (nat-target-prc-objs-seen-set! x y)    (vector-set! x 29 y))
+(define (nat-target-prc-objs-to-scan x)        (vector-ref x 30))
+(define (nat-target-prc-objs-to-scan-set! x y) (vector-set! x 30 y))
+(define (nat-target-nb-arg-gvm-reg x)          (vector-ref x 31))
+(define (nat-target-nb-arg-gvm-reg-set! x y)   (vector-set! x 31 y))
 
 
 ;; Initialization/finalization of back-end.
-(define (x86-setup target-language arch file-extension)
-  (let ((targ (make-target 9 target-language 13))) ; We need 13 extra fields (see above).
+(define (x86-setup arch)
+  (let ((targ
+         (make-target 11
+                      arch
+                      '((".asm" . nasm))
+                      '()
+                      13))) ;; we need 13 extra fields (see above).
 
     (define (begin! info-port)
 
       (target-dump-set!
        targ
-       (lambda (procs output c-intf module-descr options)
-         (x86-dump targ procs output c-intf module-descr options)))
-
+       (lambda (procs output c-intf module-descr unique-name options)
+         (x86-dump targ procs output c-intf module-descr unique-name options)))
 
       (target-nb-regs-set! targ x86-nb-gvm-regs)
 
@@ -213,10 +217,6 @@
        (lambda (obj)
          (x86-object-type targ obj)))
 
-      (target-file-extension-set!
-       targ
-       file-extension)
-
       (nat-target-arch-set! targ arch)
       (case arch
         ((x86-32)
@@ -252,8 +252,9 @@
     (target-end!-set! targ end!)
     (target-add targ)))
 
-;; Install the backend.
-(x86-setup 'nat (auto-detect-arch) ".s")
+;; Install the backends.
+(x86-setup 'x86-32)
+(x86-setup 'x86-64)
 
 
 ;;;----------------------------------------------------------------------------
@@ -456,7 +457,7 @@
     cgc))
 
 
-(define (x86-dump targ procs output c-intf module-descr options)
+(define (x86-dump targ procs output c-intf module-descr unique-name options)
   ;; Allows gsc to fall into the REPL when there's an error.
   (set! throw-to-exception-handler
       (lambda (val) (error val)))
@@ -465,19 +466,18 @@
 
   (for-each (lambda (p) (scan-opnd (make-obj p))) procs)
   (let* ((cgc (make-cgc (nat-target-arch targ) 'le))
-         (main-lbl (nat-label-ref cgc 'main))
-         (println-lbl (nat-label-ref cgc 'println)))
+         (main-lbl (nat-label-ref cgc 'main)))
 
     (codegen-context-target-set! cgc targ)
 
-
     (x86-jmp cgc main-lbl)
     ;;(generate-primitives cgc)
-    (generate-println cgc println-lbl)
+    (generate-println cgc)
+    (generate-wrong-nargs cgc)
     (x86-translate-procs cgc)
     (entry-point cgc (list-ref procs 0))
 
-    (let ((f (create-procedure cgc #f))) ;; #f = don't generate listing
+    (let ((f (create-procedure cgc #t))) ;; #f = don't generate listing
       (f)))
   #f)
 
@@ -584,14 +584,163 @@
 
     (x86-ret cgc)))
 
-;; Pop and translate every proc in procs-not-visited.
-(define (x86-translate-procs cgc)
-  (if (queue-empty? procs-not-visited)
-      '()
-      (begin
-        (translate-proc cgc (queue-get! procs-not-visited))
-        (x86-translate-procs cgc))))
+;; Code generation for a procedure.
 
+(define (x86-translate-procs cgc)
+  (let loop ()
+    (if (not (queue-empty? procs-not-visited))
+        (begin
+          (x86-scan-procedure cgc (queue-get! procs-not-visited))
+          (loop)))))
+
+(define (x86-scan-procedure cgc proc)
+  (let ((code (proc-obj-code proc)))
+    (if (bbs? code)
+        (x86-scan-scheme-procedure cgc proc code))))
+
+(define (x86-scan-scheme-procedure cgc proc bbs)
+  (let* ((targ (codegen-context-target cgc))
+         (ctx (make-ctx targ (proc-obj-name proc))))
+    (let loop ((prev-bb #f)
+               (prev-gvm-instr #f)
+               (l (bbs->code-list bbs)))
+      (if (not (null? l))
+          (let ((pres-bb (code-bb (car l)))
+                (pres-gvm-instr (code-gvm-instr (car l)))
+                (pres-slots-needed (code-slots-needed (car l)))
+                (next-gvm-instr (if (null? (cdr l))
+                                    #f
+                                    (code-gvm-instr (cadr l)))))
+
+            (x86-gen-gvm-instr cgc
+                               ctx
+                               prev-gvm-instr
+                               pres-gvm-instr
+                               next-gvm-instr
+                               pres-slots-needed)
+
+            (loop pres-bb pres-gvm-instr (cdr l)))))))
+
+(define (x86-gen-gvm-instr cgc ctx prev-gvm-instr gvm-instr next-gvm-instr sn)
+  (let ((targ (codegen-context-target cgc)))
+    (case (gvm-instr-type gvm-instr)
+
+      ((label)
+       (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
+              (lbl-name (translate-lbl ctx lbl))
+              (asm-lbl (nat-label-ref cgc lbl-name))
+              (fs (frame-size (gvm-instr-frame gvm-instr))))
+         (codegen-context-frame-size-set! cgc fs)
+         (x86-label cgc asm-lbl)
+
+         (case (label-type gvm-instr)
+
+           ((simple)
+            #f)
+
+           ((entry)
+            (codegen-context-nargs-set! cgc 0)
+            (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int (label-entry-nb-parms gvm-instr)))
+            (x86-jne cgc (nat-label-ref cgc 'wrong_nargs))
+            #f
+            )
+
+           ((return)
+            (codegen-context-nargs-set! cgc 0)
+            #f)
+
+           ((task-entry)
+            #f)
+
+           ((task-return)
+            #f)
+
+           (else
+            (compiler-internal-error
+             "unknown label type")))))
+
+      ((copy)
+       (let* ((loc (copy-loc gvm-instr))
+              (opnd (copy-opnd gvm-instr)))
+         (scan-opnd opnd)
+         (scan-opnd loc)
+         (let ((loc* (nat-opnd cgc ctx loc))
+               (opnd* (nat-opnd cgc ctx opnd)))
+           ;; Can't move from memory to memory.
+           (if (or (x86-reg? loc*)
+                   (x86-reg? opnd*)
+                   (x86-imm-int? opnd*))
+               (x86-mov cgc
+                        (if (asm-label? loc*)  (x86-imm-lbl loc*)  loc*)
+                        (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*)
+                        (* (nat-target-word-width targ) 8))
+               (let ((temp-reg (vector-ref (nat-target-gvm-reg-map targ) 1)))
+                 (x86-push cgc temp-reg)
+                 (x86-mov  cgc temp-reg (if (asm-label? opnd*) (x86-imm-lbl opnd*) opnd*))
+                 (x86-mov  cgc (if (asm-label? loc*) (x86-imm-lbl loc*) loc*) temp-reg)
+                 (x86-pop  cgc temp-reg))))))
+
+      ((close)
+       (nat-close cgc (close-parms gvm-instr)))
+
+      ((jump)
+       (let ((opnd (jump-opnd gvm-instr))
+             (nargs (jump-nb-args gvm-instr))
+             (jump-size (frame-size (gvm-instr-frame gvm-instr))))
+         (scan-opnd opnd)
+
+         (if nargs
+             (begin
+               (codegen-context-nargs-set! cgc nargs)
+               (x86-mov cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int nargs))))
+         (adjust-frame-size cgc jump-size)
+
+         (if (or (not (lbl? opnd))
+                 (let ((next-lbl
+                        (if (and next-gvm-instr
+                                 (memq (label-type next-gvm-instr)
+                                       '(simple task-entry)))
+                            (label-lbl-num next-gvm-instr)
+                            #f)))
+                   (not (eqv? (lbl-num opnd) next-lbl))))
+             (x86-jmp cgc (nat-opnd cgc ctx opnd)))))
+
+      ((apply)
+       (let ((prim  (apply-prim gvm-instr))
+             (opnds (apply-opnds gvm-instr))
+             (loc   (apply-loc gvm-instr)))
+         (let ((proc (proc-obj-inline prim)))
+           (if proc
+               (proc cgc opnds loc)
+               (compiler-internal-error
+                "nat-gen-apply, unknown 'prim'" prim)))))
+
+
+      ((ifjump)
+       (let* ((jump-size (frame-size (gvm-instr-frame gvm-instr)))
+              (test (ifjump-test gvm-instr))
+              (opnds (ifjump-opnds gvm-instr))
+              (true (ifjump-true gvm-instr))
+              (false (ifjump-false gvm-instr))
+              (poll? (ifjump-poll? gvm-instr))
+              (next-lbl
+               (if (and next-gvm-instr
+                        (memq (label-type next-gvm-instr)
+                              '(simple task-entry)))
+                   (label-lbl-num next-gvm-instr)
+                   #f))
+              (test-proc
+               (proc-obj-test test)))
+         ;;(pp ctx)
+         (if test-proc
+             (begin
+               (adjust-frame-size cgc jump-size)
+               (test-proc cgc ctx opnds true false poll? next-lbl))
+             (compiler-internal-error "test is not a procedure"))))
+
+
+      (else
+       (compiler-internal-error "unrecognized GVM instruction type")))))
 
 ;; Do the code generation for a procedure.
 (define (translate-proc cgc proc)
@@ -745,7 +894,7 @@
   (lbl->id (lbl-num lbl) (ctx-ns ctx)))
 
 (define (lbl->id num ns)
-  (string->symbol (string-append "lbl_"
+  (string->symbol (string-append "_"
                                  (number->string num)
                                  "_"
                                  (scheme-id->c-id ns))))
@@ -759,6 +908,10 @@
         (list 'clo? (clo? opnd))))
 
 (define (nat-opnd cgc ctx opnd) ;; fetch GVM operand
+
+  (define (nat-opnd-reg cgc ctx opnd)
+    (nat-opnd cgc ctx opnd))
+
   ;; (pp (classify-opnd opnd))
   (let ((targ (codegen-context-target cgc)))
     (cond ((reg? opnd)
@@ -779,7 +932,7 @@
           ((clo? opnd)
            (let ((base (clo-base opnd))
                  (index (clo-index opnd)))
-             (let ((reg (nat-opnd-reg targ base)))
+             (let ((reg (nat-opnd-reg cgc ctx base)))
                (x86-mem (+ 1 (* (nat-target-word-width targ) index))
                         reg)))) ;;;;;;;;;;;;;;;;
 
@@ -826,22 +979,6 @@
 (define (ctx-stack-base-offset ctx)        (vector-ref ctx 2))
 (define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 2 x))
 
-(define (with-stack-base-offset ctx n proc)
-  (let ((save (ctx-stack-base-offset ctx)))
-    (ctx-stack-base-offset-set! ctx n)
-    (let ((result (proc ctx)))
-      (ctx-stack-base-offset-set! ctx save)
-      result)))
-
-(define (with-stack-pointer-adjust ctx n proc)
-  (gen (if (= n 0)
-           (gen "")
-           (x86-increment ctx (x86-global ctx (x86-prefix ctx "sp")) n))
-       (with-stack-base-offset
-        ctx
-        (- (ctx-stack-base-offset ctx) n)
-        proc)))
-
 
 
 
@@ -855,8 +992,9 @@
 
 
 
-(define (generate-println cgc println-lbl)
+(define (generate-println cgc)
   (let* ((targ (codegen-context-target cgc))
+         (println-lbl (nat-label-ref cgc 'println))
          (print-lbl (asm-make-label cgc 'print))
          (print_other-lbl (asm-make-label cgc 'print_other))
          (print_false-lbl (asm-make-label cgc 'print_false))
@@ -882,8 +1020,8 @@
 
     (x86-label cgc println-lbl)
     (codegen-context-nargs-set! cgc 0)
-    (x86-sub cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
-    ;; TODO: add "jne wrong_nb_args_handler"
+    (x86-sub  cgc (nat-target-nb-arg-gvm-reg targ) (x86-imm-int 1))
+    (x86-jne  cgc (nat-label-ref cgc 'wrong_nargs))
     (x86-call cgc print-lbl)
     (x86-mov  cgc (reg 1) (x86-imm-int 10))
     (x86-call cgc write_char-lbl)
@@ -1074,6 +1212,14 @@
            (x86-ret cgc))))
 ))
 
+(define (generate-wrong-nargs cgc)
+  (let ((wrong-nargs-lbl (nat-label-ref cgc 'wrong_nargs)))
+
+    (nat-label-set! cgc 'wrong_nargs wrong-nargs-lbl)
+
+    (x86-label cgc wrong-nargs-lbl)
+    (x86-jmp cgc wrong-nargs-lbl)))
+
 (define make-temp-label
   (let ((n 0))
     (lambda (cgc)
@@ -1139,8 +1285,8 @@
 
           (proc-obj-test-set!
            prim
-           (lambda (cgc ctx opnds true-branch false-branch)
-             (ifjump-gen cgc ctx opnds true-branch false-branch)))))
+           (lambda (cgc ctx opnds true false poll? next-lbl)
+             (ifjump-gen cgc ctx opnds true false poll? next-lbl)))))
 
     (if jump-gen
         (begin
@@ -1179,7 +1325,7 @@
       (if (not (eq? translated-loc r1))
           (x86-pop cgc r1))))
 
-  (lambda (cgc ctx opnds true-branch false-branch)
+  (lambda (cgc ctx opnds true false poll? next-lbl)
     ;;   (let* ((targ (codegen-context-target cgc))
     ;;          (true-lbl (nat-label-ref cgc (lbl->id true* (ctx-ns ctx))))
     ;;          (false-lbl (nat-label-ref cgc (lbl->id false* (ctx-ns ctx)))))
@@ -1189,8 +1335,8 @@
 
     (let* ((targ (codegen-context-target cgc))
            (opnd (nat-opnd cgc (make-ctx targ #f) (car opnds)))
-           (true-lbl  (nat-label-ref cgc (lbl->id true-branch  (ctx-ns ctx))))
-           (false-lbl (nat-label-ref cgc (lbl->id false-branch (ctx-ns ctx)))))
+           (true-lbl  (nat-label-ref cgc (lbl->id true  (ctx-ns ctx))))
+           (false-lbl (nat-label-ref cgc (lbl->id false (ctx-ns ctx)))))
       (if (x86-reg? opnd)
           (x86-cmp cgc opnd false)
           (begin
@@ -1450,7 +1596,7 @@
 ;; All fixnum primitives (<, <=, =, >=, >) are defined simply in terms
 ;; of their names and their corresponding jump operation.
 ;; TODO: variable number of arguments.
-(define (define-fxcmp-primitive name jump-op)
+(define (define-fxcmp-primitive name jump-op jump-not-op)
   (x86-prim-define name #f #f
     (lambda (cgc opnds loc)
       (let* ((targ (codegen-context-target cgc))
@@ -1483,31 +1629,41 @@
               (x86-label cgc end-if-lbl)))))
 
 
-    (lambda (cgc ctx opnds true-branch false-branch)
-      (let* ((targ (codegen-context-target cgc))
-             (true-lbl  (nat-label-ref cgc (lbl->id true-branch  (ctx-ns ctx))))
-             (false-lbl (nat-label-ref cgc (lbl->id false-branch (ctx-ns ctx))))
-             (r1 (vector-ref (nat-target-gvm-reg-map targ) 1)))
-        (if (< (length opnds) 2)
-            (x86-jmp cgc true-lbl)
+    (lambda (cgc ctx opnds true false poll? next-lbl)
+      (let* ((targ
+              (codegen-context-target cgc))
+             (flip?
+              (and (not (eqv? true next-lbl))
+                   (eqv? false next-lbl)))
+             (cond-jump
+              (if flip? jump-not-op jump-op))
+             (t
+              (if flip? false true))
+             (f
+              (if flip? true false))
+             (t-lbl
+              (nat-label-ref cgc (lbl->id t (ctx-ns ctx))))
+             (f-lbl
+              (nat-label-ref cgc (lbl->id f (ctx-ns ctx)))))
+
+        (if (>= (length opnds) 2)
             (let* ((opnds (map (lambda (opnd) (nat-opnd cgc ctx opnd)) opnds))
-                   (zipped-opnds (zip-with cons opnds (cdr opnds)))
-                   (not-true-lbl (make-temp-label cgc)))
+                   (zipped-opnds (zip-with cons opnds (cdr opnds))))
               (for-each (lambda (p)
                           (let ((a (car p))
                                 (b (cdr p)))
                             (if (or (x86-reg? a) (x86-reg? b))
                                 (x86-cmp cgc a b)
-                                (begin
+                                (let ((r1 (vector-ref (nat-target-gvm-reg-map targ) 1)))
                                   (x86-push cgc r1)
                                   (x86-mov cgc r1 a)
                                   (x86-cmp cgc r1 b)
                                   (x86-pop cgc r1)))
-                            (jump-op cgc not-true-lbl)))
-                        zipped-opnds)
-              (x86-jmp cgc true-lbl)
-              (x86-label cgc not-true-lbl)
-              (x86-jmp cgc false-lbl)))))))
+                            (cond-jump cgc f-lbl)))
+                        zipped-opnds)))
+
+        (if (not (eqv? t next-lbl))
+            (x86-jmp cgc t-lbl))))))
 
 
 (x86-prim-define "##fixnum?" #f #f
@@ -1541,10 +1697,10 @@
             (x86-label cgc end-if-lbl)
             (x86-pop cgc r1)))))
 
-  (lambda (cgc ctx opnds true-branch false-branch)
+  (lambda (cgc ctx opnds true false poll? next-lbl)
       (let* ((targ (codegen-context-target cgc))
-             (true-lbl  (nat-label-ref cgc (lbl->id true-branch  (ctx-ns ctx))))
-             (false-lbl (nat-label-ref cgc (lbl->id false-branch (ctx-ns ctx))))
+             (true-lbl  (nat-label-ref cgc (lbl->id true  (ctx-ns ctx))))
+             (false-lbl (nat-label-ref cgc (lbl->id false (ctx-ns ctx))))
              (r1 (vector-ref (nat-target-gvm-reg-map targ) 1))
              (opnd (nat-opnd cgc ctx (list-ref opnds 0))))
         (if (x86-reg? opnd)
@@ -1577,11 +1733,11 @@
 ;;   mov false, r1
 ;;   jmp end-if
 ;; end-if:
-(define-fxcmp-primitive "##fx<"  x86-jge)
-(define-fxcmp-primitive "##fx<=" x86-jg)
-(define-fxcmp-primitive "##fx>"  x86-jle)
-(define-fxcmp-primitive "##fx>=" x86-jl)
-(define-fxcmp-primitive "##fx="  x86-jne)
+(define-fxcmp-primitive "##fx<"  x86-jge  x86-jl)
+(define-fxcmp-primitive "##fx<=" x86-jg   x86-jle)
+(define-fxcmp-primitive "##fx>"  x86-jle  x86-jg)
+(define-fxcmp-primitive "##fx>=" x86-jl   x86-jge)
+(define-fxcmp-primitive "##fx="  x86-jne  x86-je)
 
 
 (x86-prim-define "##cons" #t #f
