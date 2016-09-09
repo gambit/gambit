@@ -1,0 +1,104 @@
+#!/usr/bin/awk -f
+
+function clearvars () {
+  cpu        = "";
+  real       = "";
+  codesize   = "";
+  failed     = 0;
+  crashed    = 0;
+  runtime    = 0;
+}
+
+function output () {
+  if (runtime == 1) {
+
+    failure = "";
+     
+    if ((crashed != 0) && (failed == 0)) {
+       failure = "crashed";
+    }
+    else if  ((crashed == 0) && (failed != 0)) {
+      failure = "failed";
+    }
+    else if  ((crashed != 0) && (failed != 0)) {
+      failure = "crashed-and-failed";
+    }
+    
+    if (failure == "") {
+      printf "(%-10s   %11s   %11s   %9s)\n", test, cpu, real, codesize;
+    }
+    else {
+      printf "(%-10s   %10s)\n", test, failure;
+    }
+  }
+  clearvars();
+}
+
+BEGIN {
+  test       = "";
+  clearvars();
+}
+
+/^Testing/ {
+  output();
+  test=$2;
+}
+
+/^Compiling.../ {
+  runtime = 0;
+}
+
+/^Running.../ {
+  if (runtime == 1) {
+    output();
+  }
+  runtime = 1;
+}
+
+runtime == 1 && $0 == "*** wrong result ***" {
+  failed = 1;
+}
+
+runtime == 1 && /^Command .* with non-zero/ {
+  crashed = 1;
+}
+
+runtime == 1 && /^Command terminated by signal/ {
+  crashed = 1;
+}
+
+runtime == 1 && /Abort trap/ {
+  crashed = 1;
+}
+
+runtime == 1 && / === context ===/ {
+  crashed = 1;
+}
+
+runtime == 1 && /ERROR/ && $0 !~ /^FATAL-ERROR$/ && $0 !~ /^SCHEME-ERROR$/ && $0 !~ /^SLATEX-ERROR$/ {
+  crashed = 1;
+}
+
+runtime == 1 && /^[ ]*[0-9]+ ms cpu time \([0-9]+ user, [0-9]+ system\)$/ {
+  cpu = $1;
+}
+
+runtime == 1 && /^[ ]*[0-9]+ ms real time$/ {
+  real = $1;
+}
+
+runtime == 1 && /^cpu time: ([0-9]+) real time: ([0-9]+)/ {
+  cpu = $3;
+  real = $6;
+}
+
+runtime == 1 && /^[ ]*([0-9.]+) real [ ]*([0-9.]+) user [ ]*([0-9.]+) sys$/ {
+  cpu = ($3 + $5) * 1000;
+  real = $1 * 1000;
+}
+
+runtime == 1 && /^code size = [0-9]+$/ {
+  codesize = $4;
+}
+
+END { output() }

@@ -1,0 +1,30 @@
+This directory contains the Gambit Scheme benchmarks.  It includes
+some of the Gabriel benchmarks, the Kernighan and Van Wyk benchmarks,
+some C benchmarks and other benchmarks.
+
+The "bench" script can be used to run a set of benchmarks or a single
+benchmark.  Documentation for this script is available by executing
+"bench" with no argument.
+
+As a simple example, executing
+
+  ./bench gambit "fib tak"
+
+will run the benchmarks "fib" and "tak" using the Gambit-C
+compiler.  The results are sent to standard output and to
+"results.Gambit-C-r5rs".  A summary of the results is obtained
+by executing
+
+  ./summarize results.Gambit-C-r5rs
+
+The "bench" script assumes that the Gambit Scheme system and other
+Scheme implementations have been installed cleanly and are available
+in the "PATH".
+
+The "table" script is convenient for executing the benchmarks on a set
+of Scheme implementations and generating an HTML table of the results.
+You have to modify the top of the script to specify which
+implementations of Scheme and which benchmarks are to be used.
+Then, simply execute
+
+  ./table

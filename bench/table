@@ -1,0 +1,40 @@
+#!/bin/sh
+
+SYSTEMS="gambit bigloo chicken mzscheme scheme48"
+BENCHMARKS="all"
+SETTINGS="r5rs r6rs r6rs-fixflo r6rs-fixflo-unsafe"
+
+# mostly-fixflo mostly-flofix mostly-fix mostly-flo mostly-generic sb-mostly-fixflo sb-mostly-flofix sb-mostly-fix sb-mostly-flo sb-mostly-generic 
+
+for setting in $SETTINGS ; do
+
+  rm -rf results.*-$setting
+
+  ./bench -i num-iters.scm -s $setting "$SYSTEMS" "$BENCHMARKS"
+
+  rm -f all-results.scm
+
+  echo "(define all-results '(" > all-results.scm
+
+  for result in results.*-$setting ; do
+
+    SYSTEM=`echo $result | sed s/results.//`
+
+    echo ";---------------------------------------------------" >> all-results.scm
+    echo "($SYSTEM" >> all-results.scm
+    ./summarize $result >> all-results.scm
+    echo ")" >> all-results.scm
+
+  done
+
+  echo "))" >> all-results.scm
+
+  gsi generate-html-from-all-results.scm
+
+  mv bench.html bench-$setting.html
+
+done
+
+for setting in $SETTINGS ; do
+  open bench-$setting.html
+done

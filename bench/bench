@@ -1,0 +1,1045 @@
+#!/bin/sh
+
+# "bench", a shell script to benchmark Scheme implementations
+#
+# Please report any errors or extensions to the author:
+#
+#   Marc Feeley (feeley@iro.umontreal.ca)
+#
+# The following have contributed to this benchmark suite:
+#
+#   Harvey Stein (abel@netvision.net.il)
+
+# -----------------------------------------------------------------------------
+
+error ()
+{
+  echo $1
+  echo '
+Usage: bench [-r runs] [-c clean] [-i iterfile] [-s setting] [-o options] <scheme-systems> <benchmarks>
+
+<scheme-systems> is the abbreviated name of one or more
+language implementations to use, i.e.:
+
+  gambit           for Gambit-C compiler.
+  gambit-int       for Gambit-C interpreter.
+  bigloo           for Bigloo compiler.
+  bigloo-int       for Bigloo interpreter.
+  chicken          for Chicken compiler.
+  chicken-int      for Chicken interpreter.
+  mzscheme         for MzScheme.
+  scheme48         for Scheme48.
+  larceny          for Larceny.
+  awk              for AWK.
+  cc               for '"cc"' C compiler.
+  gcc              for '"gcc"' C compiler.
+  java             for Java.
+  all              for all of the above.
+  all-interpreters for the above interpreters.
+  all-compilers    for the above compilers.
+
+<benchmarks> is the name of one or more benchmarks
+to use, i.e.:
+
+  all         for all the benchmarks
+  fib         for the fib benchmark
+  "fib boyer" for fib & boyer.
+
+runs is the number of times to run each benchmark (default is 1).
+
+clean is whether or not to clean out the build directory.
+true = clean.  Useful for testing or inspection.
+
+iterfile is the file which specifies the number of iterations in
+each benchmark.  If not supplied, we use num-iters.scm for compilers
+and num-iters-int.scm for interpreters.  For testing, you might
+want to use one-iter.scm, which runs each test once.
+
+setting is the benchmarking setting.  The possible values are:
+
+  r5rs (default):
+       - generic arithmetic operations
+       - optional overflow detection on fixnum arithmetic
+       - mutable bindings for the definitions in the benchmark
+       - mutable predefined bindings (for +, car, ...)
+
+  r6rs:
+       - generic arithmetic operations
+       - overflow detection on fixnum arithmetic (either produce a  
+         bignum or signal an exception)
+       - immutable bindings for the definitions in the benchmark
+       - immutable predefined bindings (for +, car, ...)
+       - safe execution (i.e. an exception must be signalled on errors)
+
+  r6rs-unsafe:
+       - like r6rs setting but errors are not checked, but
+         fixnum arithmetic overflows are detected
+
+  r6rs-fixflo:
+       - arithmetic operations are specialized to fixnum or flonum
+         arguments as appropriate and the fixnum operations may
+         wrap on overflow
+       - immutable bindings for the definitions in the benchmark
+       - immutable predefined bindings (for +, car, ...)
+       - safe execution (i.e. an exception must be signalled on errors)
+
+  r6rs-fixflo-unsafe:
+       - like r6rs-fixflo setting but errors are not checked'
+
+  exit
+}
+
+# -----------------------------------------------------------------------------
+
+cleanup ()
+{
+  if [ "$clean" = "true" ] ; then
+     # It's true that technically speaking, we should be in the build
+     # directory when this fcn is called.  Thus, we should be able to
+     # just do rm *.  However, that's kind of dangerous, so instead,
+     # we delete files newer than the mark file that evaluate () makes.
+
+     for x in * ; do
+        if [ $x -nt clean_newer_than_me ] ; then
+          rm -rf $x
+        fi
+     done
+  fi
+  rm clean_newer_than_me
+}
+
+evaluate ()
+{
+  echo > clean_newer_than_me
+  sleep 1
+  {
+  echo
+  echo Testing $1 under ${NAME}-${setting}
+  echo Compiling...
+  make_src_code $1
+  $COMP $1
+  i=0
+  while [ "$i" -lt "$NB_RUNS" ]
+  do
+    echo Running...
+    $EXEC $1
+    i=`expr $i + 1`
+  done
+  cleanup
+  } 2>&1 | tee -a ../../results.${NAME}-${setting}
+
+}
+
+make_src_code ()
+{
+  case "$extension" in
+     ".awk")
+       cat ../../src/$1.awk > $1.awk
+       chmod +x $1.awk ;;
+     ".c")
+       cat ../../src/$1.c > $1.c ;;
+     ".java")
+       cat ../../src/$1.java > $1.java ;;
+     ".scm")
+       printf "$PREFIXCODE\n" "$1" "$1" > $1-prefix.scm
+       printf "$SUFFIXCODE\n" "$1" "$1" > $1-suffix.scm
+       cat $1-prefix.scm ../../prefix/prefix-${system}.scm | sed "s/;INSERTCODE/$INSERTCODE/" | cat - ../../num-iters/${iterfile} ../../src/$1.scm ../../suffix/suffix-${system}.scm $1-suffix.scm > $1.scm ;;
+     ".ss")
+       printf "$PREFIXCODE\n" "$1" "$1" > $1-prefix.scm
+       printf "$SUFFIXCODE\n" "$1" "$1" > $1-suffix.scm
+       cat ../../prefix/prefix-${system}.scm | sed "s/;INSERTCODE/$INSERTCODE/" | cat - ../../num-iters/${iterfile} ../../src/$1.scm ../../suffix/suffix-${system}.scm > $1-body.ss
+       cat $1-prefix.scm $1-suffix.scm > $1.ss ;;
+  esac
+}
+
+# -----------------------------------------------------------------------------
+# For handling setting that does not exist for a given compiler
+
+nonexistent_comp ()
+{
+  :
+}
+
+nonexistent_exec ()
+{
+  :
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to Gambit-C compiler
+
+gambit_comp ()
+{
+  {
+    echo ../../../gsc/gsc -:=../../.. $COMPOPTS $1.scm
+  } | /usr/bin/time sh
+}
+
+gambit_exec ()
+{
+  if test -f ./$1.o1
+  then ../../../gsi/gsi -:m10000,d-,=../../.. ./$1.o1
+  fi
+}
+
+gambit_int_comp ()
+{
+  :
+}
+
+gambit_int_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | ../../../gsi/gsi -:m10000,d-,=../../..
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to bigloo compiler
+
+bigloo_comp ()
+{
+  case $1 in
+     compiler|ctak|dynamic|fibc|maze|puzzle|scheme) usecc="-call/cc" ;;
+     *) usecc="" ;;
+  esac
+  /usr/bin/time bigloo $usecc $COMPOPTS $1.scm -o $1
+}
+
+bigloo_exec ()
+{
+  if test -f ./$1
+  then DYLD_LIBRARY_PATH=/Users/feeley/bigloo/lib/bigloo/3.0d GC_INITIAL_HEAP_SIZE=10240000 ./$1
+  fi
+}
+
+bigloo_int_comp ()
+{
+  :
+}
+
+bigloo_int_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | GC_INITIAL_HEAP_SIZE=10240000 /usr/bin/time bigloo -heapsize 10
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to Chicken compiler
+
+chicken_comp ()
+{
+  {
+    echo csc $COMPOPTS $1.scm
+  } | /usr/bin/time sh
+}
+
+chicken_exec ()
+{
+  if test -f ./$1
+  then ./$1 -:hi10M -:hs0
+  fi
+}
+
+chicken_int_comp ()
+{
+  :
+}
+
+chicken_int_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | /usr/bin/time csi -:hi10M -:hs0
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to MzScheme
+
+mzscheme_comp ()
+{
+  :
+}
+
+mzscheme_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | mzscheme $COMPOPTS
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to Scheme48
+
+scheme48_comp ()
+{
+  :
+}
+
+scheme48_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | scheme48 $COMPOPTS
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to Larceny
+
+larceny_comp ()
+{
+  :
+}
+
+larceny_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | larceny $COMPOPTS
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to Chez Scheme
+
+chez_comp ()
+{
+  :
+}
+
+chez_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | scheme
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to Petite Chez
+
+petite_chez_comp ()
+{
+  :
+}
+
+petite_chez_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | /usr/bin/time petite
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to stalin
+
+stalin_comp ()
+{
+  mv $1.scm $1.sc
+  /usr/bin/time stalin -copt -O2 -Ob -Om -On -Or -Ot -s $1
+}
+
+stalin_exec ()
+{
+  if test -f ./$1
+  then /usr/bin/time ./$1
+  fi
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to scm
+
+scm_comp ()
+{
+  :
+}
+
+scm_exec ()
+{
+  printf "$REPLCOMMANDS" "$1" | /usr/bin/time scm -f
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to STk
+
+stk_comp ()
+{
+  :
+}
+
+stk_exec ()
+{
+  ### Need to send output to /dev/null so that it doesn't hang when there's
+  ### an error...
+  printf "$REPLCOMMANDS" "$1" | /usr/bin/time snow -f < /dev/null
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to AWK
+
+awk_comp ()
+{
+  :
+}
+
+awk_exec ()
+{
+  /usr/bin/time ./$1.awk
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to CC
+
+cc_comp ()
+{
+  {
+     echo cc -O -o $1 $1.c -lm -lpthread
+  } | /usr/bin/time sh
+  ls -l $1
+}
+
+cc_exec ()
+{
+  if test -f ./$1
+  then /usr/bin/time ./$1
+  fi
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to GCC
+
+gcc_comp ()
+{
+  {
+     echo gcc -O3 -o $1 $1.c -lm -lpthread
+  } | /usr/bin/time sh
+  ls -l $1
+}
+
+gcc_exec ()
+{
+  if test -f ./$1
+  then /usr/bin/time ./$1
+  fi
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to Java
+
+java_comp ()
+{
+  {
+     echo javac $1.java
+  } | /usr/bin/time sh
+  ls -l $1.class
+}
+
+java_exec ()
+{
+  /usr/bin/time java $1
+}
+
+# -----------------------------------------------------------------------------
+
+GABRIEL_BENCHMARKS="browse cpstak ctak dderiv deriv destruc diviter divrec puzzle takl trav1 trav2 triangl" # boyer fft tak
+
+KVW_BENCHMARKS="ack array1 cat string sum1 sumloop tail wc"
+
+C_BENCHMARKS="fft fib fibfp mbrot nucleic pnpoly sum sumfp tak tfib $KVW_BENCHMARKS"
+
+OTHER_BENCHMARKS="conform dynamic earley fibc graphs lattice matrix maze mazefun nqueens paraffins peval pi primes ray scheme simplex slatex perm9 nboyer sboyer gcbench"
+
+AWK_BENCHMARKS="$KVW_BENCHMARKS"
+
+JAVA_BENCHMARKS="tfib"
+
+ALL_BENCHMARKS="succeed fail crash $GABRIEL_BENCHMARKS $C_BENCHMARKS $OTHER_BENCHMARKS"
+
+ALL_INTERPRETERS='bigloo-int petite-chez gambit-int chicken-int scm stk'
+ALL_COMPILERS='gambit bigloo chicken mzscheme scheme48 larceny'
+ALL_GAMBIT='gambit gambit-int'
+ALL_NON_SCHEME='awk cc gcc java'
+ALL_SYSTEMS="$ALL_COMPILERS $ALL_INTERPRETERS $ALL_NON_SCHEME"
+
+## Arg processing...
+if [ "$#" -lt 2 ]; then
+  error '>>> At least two command line arguments are needed'
+fi
+
+
+cmdline="$0"
+flagsdone=0
+
+NB_RUNS=1
+clean=true
+setting=r5rs
+options=""
+
+while [ $# -gt 2 ] ; do
+   arg="$1"
+   shift
+   case $arg in
+      -r) NB_RUNS=$1    ; shift ;;
+      -c) clean=$1      ; shift ;;
+      -i) forceiters=$1 ; shift ;;
+      -s) setting=$1    ; shift ;;
+      -o) options=$1    ; shift ;;
+       *) error ">>> Unknown argument of $arg given." ;;
+   esac
+done
+
+if [ "$#" -ne 2 ]; then
+  error '>>> Last two arguments must be <systems> and <benchmarks>'
+fi
+
+case "$1" in
+               all) systems="$ALL_SYSTEMS" ;;
+  all-interpreters) systems="$ALL_INTERPRETERS" ;;
+     all-compilers) systems="$ALL_COMPILERS" ;;
+        all-gambit) systems="$ALL_GAMBIT" ;;
+                 *) systems="$1" ;;
+esac
+
+case "$2" in
+      all) benchmarks="$ALL_BENCHMARKS" ;;
+  gabriel) benchmarks="$GABRIEL_BENCHMARKS" ;;
+      kvw) benchmarks="$KVW_BENCHMARKS" ;;
+    other) benchmarks="$OTHER_BENCHMARKS" ;;
+      awk) benchmarks="$AWK_BENCHMARKS" ;;
+        c) benchmarks="$C_BENCHMARKS" ;;
+     java) benchmarks="$JAVA_BENCHMARKS" ;;
+        *) benchmarks="$2" ;;
+esac
+
+## Run each benchmark under each system...
+for system in $systems ; do
+
+   case "$system" in
+
+    gambit) NAME='Gambit-C'
+            COMP=gambit_comp
+            EXEC=gambit_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            case "$setting" in
+              mostly-fixflo)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (mostly-fixnum-flonum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              mostly-flofix)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (mostly-flonum-fixnum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              mostly-fix)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (mostly-fixnum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              mostly-flo)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (mostly-flonum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              mostly-generic)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (mostly-generic))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              sb-mostly-fixflo)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (mostly-fixnum-flonum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              sb-mostly-flofix)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (mostly-flonum-fixnum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              sb-mostly-fix)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (mostly-fixnum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              sb-mostly-flo)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (mostly-flonum))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              sb-mostly-generic)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (mostly-generic))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r5rs)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (extended-bindings) (block))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-unsafe)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (extended-bindings) (block) (not safe))(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-fixflo)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (extended-bindings) (block))(define-macro (if-fixflo yes no) yes)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-fixflo-unsafe)
+                COMPOPTS="-cc-options '$options'"
+                INSERTCODE="(declare (standard-bindings) (extended-bindings) (block) (not safe))(define-macro (if-fixflo yes no) yes)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+            esac
+            ;;
+
+gambit-int) NAME='Gambit-C-int'
+            COMP=gambit_int_comp
+            COMPOPTS=""
+            EXEC=gambit_int_exec
+            iterfile=num-iters-int.scm
+            extension=".scm"
+            case "$setting" in
+              r5rs)
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS="(load \"%s.scm\")"
+                ;;
+              r6rs)
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS="(load \"%s.scm\")"
+                ;;
+              r6rs-unsafe)
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS="(load \"%s.scm\")"
+                ;;
+              r6rs-fixflo)
+                INSERTCODE="(define-macro (if-fixflo yes no) yes)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS="(load \"%s.scm\")"
+                ;;
+              r6rs-fixflo-unsafe)
+                INSERTCODE="(define-macro (if-fixflo yes no) yes)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS="(load \"%s.scm\")"
+                ;;
+            esac
+            ;;
+
+    bigloo) NAME='Bigloo'
+            COMP=bigloo_comp
+            EXEC=bigloo_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            case "$setting" in
+              r5rs)
+                COMPOPTS="-O6 -copt -O3 -copt -fomit-frame-pointer"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+              r6rs)
+                COMPOPTS="-O6 -copt -O3 -copt -fomit-frame-pointer"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-unsafe)
+                COMPOPTS="-Obench -copt -O3 -copt -fomit-frame-pointer"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-fixflo)
+                COMPOPTS="-O6 -copt -O3 -copt -fomit-frame-pointer"
+                INSERTCODE="(define-macro (if-fixflo yes no) yes)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-fixflo-unsafe)
+                COMPOPTS="-Obench -copt -O3 -copt -fomit-frame-pointer"
+                INSERTCODE="(define-macro (if-fixflo yes no) yes)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+            esac
+            ;;
+
+bigloo-int) NAME='Bigloo-int'
+            COMP=bigloo_int_comp
+            COMPOPTS=""
+            EXEC=bigloo_int_exec
+            iterfile=num-iters-int.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
+            ;;
+
+   chicken) NAME='Chicken'
+            COMP=chicken_comp
+            EXEC=chicken_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            # Possible improvement: should -disable-interrupts be used?  What
+            # is lost when -disable-interrupts is used?  Is that a normal
+            # mode of execution?
+            case "$setting" in
+              r5rs)
+                COMPOPTS="-w -d0 -no-trace -no-usual-integrations"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs)
+                COMPOPTS="-w -d0 -O3 -no-trace -block"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-unsafe)
+                COMPOPTS="-w -d0 -O3 -no-trace -block -unsafe -unsafe-libraries"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+              r6rs-fixflo)
+                # It is impossible to use the fixnum/flonum specific
+                # procedures in this setting because they are unsafe.
+                COMPOPTS="-w -d0 -O3 -no-trace -block"
+                INSERTCODE="(define-macro (if-fixflo yes no) no)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+              r6rs-fixflo-unsafe)
+                COMPOPTS="-w -d0 -O3 -no-trace -block -unsafe -unsafe-libraries"
+                INSERTCODE="(define-macro (if-fixflo yes no) yes)"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=""
+                ;;
+            esac
+            ;;
+
+chicken-int) NAME='Chicken-int'
+            COMP=chicken_int_comp
+            COMPOPTS=""
+            EXEC=chicken_int_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
+            ;;
+
+  mzscheme) NAME='MzScheme'
+            COMP=mzscheme_comp
+            EXEC=mzscheme_exec
+            iterfile=num-iters.scm
+            extension=".ss"
+            case "$setting" in
+              r5rs)
+                COMPOPTS="-q"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="(require (lib \"include.ss\")) (include \"%s-body.ss\") (main) ; %s"
+                REPLCOMMANDS="(load \"%s.ss\")"
+                ;;
+              r6rs)
+                COMPOPTS="-q"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="(module %s mzscheme (define-syntax body-src \"%s-body.ss\")"
+                SUFFIXCODE="(require (lib \"include.ss\")) (define-syntax (include-body stx) #\`(begin (include #,(syntax-local-value #'body-src)) (main))) (include-body)) ; %s %s"
+                REPLCOMMANDS="(require \"%s.ss\")"
+                ;;
+              r6rs-unsafe)
+                # MzScheme does not seem to have an unsafe mode.
+                COMPOPTS="-q"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="(module %s mzscheme (define-syntax body-src \"%s-body.ss\")"
+                SUFFIXCODE="(require (lib \"include.ss\")) (define-syntax (include-body stx) #\`(begin (include #,(syntax-local-value #'body-src)) (main))) (include-body)) ; %s %s"
+                REPLCOMMANDS="(require \"%s.ss\")"
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+              r6rs-fixflo)
+                # MzScheme does not seem to have fixnum/flonum specific arithmetic operators.
+                COMPOPTS="-q"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="(module %s mzscheme (define-syntax body-src \"%s-body.ss\")"
+                SUFFIXCODE="(require (lib \"include.ss\")) (define-syntax (include-body stx) #\`(begin (include #,(syntax-local-value #'body-src)) (main))) (include-body)) ; %s %s"
+                REPLCOMMANDS="(require \"%s.ss\")"
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+              r6rs-fixflo-unsafe)
+                # MzScheme does not seem to have fixnum/flonum specific arithmetic operators.
+                # MzScheme does not seem to have an unsafe mode.
+                COMPOPTS="-q"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="(module %s mzscheme (define-syntax body-src \"%s-body.ss\")"
+                SUFFIXCODE="(require (lib \"include.ss\")) (define-syntax (include-body stx) #\`(begin (include #,(syntax-local-value #'body-src)) (main))) (include-body)) ; %s %s"
+                REPLCOMMANDS="(require \"%s.ss\")"
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+            esac
+            ;;
+
+  scheme48) NAME='Scheme48'
+            COMP=scheme48_comp
+            EXEC=scheme48_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            case "$setting" in
+              r5rs)
+                COMPOPTS="-h 20000000"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=",bench off\n,open time posix bitwise ascii\n,load %s.scm\n,exit\n"
+                ;;
+              r6rs)
+                COMPOPTS="-h 20000000"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=",bench on\n,open time posix bitwise ascii\n,load %s.scm\n,exit\n"
+                ;;
+              r6rs-unsafe)
+                # Scheme48 does not seem to have an unsafe mode.
+                COMPOPTS="-h 20000000"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=",bench on\n,open time posix bitwise ascii\n,load %s.scm\n,exit\n"
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+              r6rs-fixflo)
+                # Scheme48 does not seem to have fixnum/flonum specific arithmetic operators.
+                COMPOPTS="-h 20000000"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                REPLCOMMANDS=",bench on\n,open time posix bitwise ascii\n,load %s.scm\n,exit\n"
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+              r6rs-fixflo-unsafe)
+                # Scheme48 does not seem to have fixnum/flonum specific arithmetic operators.
+                # Scheme48 does not seem to have an unsafe mode.
+                COMPOPTS="-h 20000000"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                REPLCOMMANDS=",bench on\n,open time posix bitwise ascii\n,load %s.scm\n,exit\n"
+                COMP=nonexistent_comp
+                EXEC=nonexistent_exec
+                ;;
+            esac
+            ;;
+
+   larceny) NAME='Larceny'
+            COMP=larceny_comp
+            COMPOPTS=""
+            EXEC=larceny_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
+            ;;
+
+      chez) NAME='Chez-Scheme'
+            COMP=chez_comp
+            COMPOPTS=""
+            EXEC=chez_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
+            ;;
+
+petite-chez) NAME='Petite-Chez-Scheme'
+             COMP=petite_chez_comp
+             COMPOPTS=""
+             EXEC=petite_chez_exec
+             iterfile=num-iters-int.scm
+             extension=".scm"
+             INSERTCODE=""
+             PREFIXCODE="; %s %s"
+             SUFFIXCODE="; %s %s"
+             REPLCOMMANDS="(load \"%s.scm\")"
+             ;;
+
+       mit) NAME='MIT-Scheme'
+            COMP=mit_comp
+            COMPOPTS=""
+            EXEC=mit_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS=""
+            ;;
+
+   mit-int) NAME='MIT-Scheme-int'
+            COMP=mit_int_comp
+            COMPOPTS=""
+            EXEC=mit_int_exec
+            iterfile=num-iters-int.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
+            ;;
+
+       scm) NAME='SCM'
+            COMP=scm_comp
+            COMPOPTS=""
+            EXEC=scm_exec
+            iterfile=num-iters-int.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
+            ;;
+
+    stalin) NAME='Stalin'
+            COMP=stalin_comp
+            COMPOPTS=""
+            INSERTCODE=""
+            EXEC=stalin_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS=""
+            ;;
+
+       stk) NAME='STk'
+            COMP=stk_comp
+            COMPOPTS=""
+            INSERTCODE=""
+            EXEC=stk_exec
+            iterfile=num-iters-int.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
+            ;;
+
+       awk) NAME='AWK'
+            COMP=awk_comp
+            COMPOPTS=""
+            INSERTCODE=""
+            EXEC=awk_exec
+            iterfile=
+            extension=".awk"
+            ;;
+
+        cc) NAME='CC'
+            COMP=cc_comp
+            COMPOPTS=""
+            INSERTCODE=""
+            EXEC=cc_exec
+            iterfile=
+            extension=".c"
+            ;;
+
+       gcc) NAME='GCC'
+            COMP=gcc_comp
+            COMPOPTS=""
+            INSERTCODE=""
+            EXEC=gcc_exec
+            iterfile=
+            extension=".c"
+            ;;
+
+      java) NAME='Java'
+            COMP=java_comp
+            COMPOPTS=""
+            INSERTCODE=""
+            EXEC=java_exec
+            iterfile=
+            extension=".java"
+            ;;
+
+         *) error '>>> Unknown system'
+            ;;
+   esac
+
+   if [ -n "$forceiters" ] ; then iterfile="$forceiters" ; fi
+
+   cd sys/$system
+   if [ $? != 0 ] ; then
+      echo "ERROR: Can't change to directory sys/$system."
+      exit 1
+   fi
+
+   {
+      echo
+      echo '****************************'
+      echo Benchmarking ${NAME}-${setting} on `date` under `uname -a`
+   } >> ../../results.${NAME}-${setting}
+
+   for program in $benchmarks ; do
+      evaluate $program
+   done
+   cd ../..
+   if [ $? != 0 ] ; then
+      echo "ERROR: Can't change back to benchmark directory."
+      exit 1
+   fi
+done
