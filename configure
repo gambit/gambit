@@ -14220,7 +14220,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 bench/makefile bench/num-iters/makefile bench/prefix/makefile bench/src/makefile bench/suffix/makefile bench/sys/makefile bench/sys/awk/makefile bench/sys/bigloo/makefile bench/sys/bigloo-int/makefile bench/sys/cc/makefile bench/sys/chez/makefile bench/sys/chicken/makefile bench/sys/chicken-int/makefile bench/sys/gambit/makefile bench/sys/gambit-int/makefile bench/sys/gcc/makefile bench/sys/java/makefile bench/sys/larceny/makefile bench/sys/mit/makefile bench/sys/mit-int/makefile bench/sys/mzscheme/makefile bench/sys/petite-chez/makefile bench/sys/psi/makefile bench/sys/scheme48/makefile bench/sys/scm/makefile bench/sys/stalin/makefile bench/sys/stk/makefile"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 bench/makefile bench/num-iters/makefile bench/prefix/makefile bench/src/makefile bench/suffix/makefile bench/sys/makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -14951,27 +14951,6 @@ do
     "bench/src/makefile") CONFIG_FILES="$CONFIG_FILES bench/src/makefile" ;;
     "bench/suffix/makefile") CONFIG_FILES="$CONFIG_FILES bench/suffix/makefile" ;;
     "bench/sys/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/makefile" ;;
-    "bench/sys/awk/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/awk/makefile" ;;
-    "bench/sys/bigloo/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/bigloo/makefile" ;;
-    "bench/sys/bigloo-int/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/bigloo-int/makefile" ;;
-    "bench/sys/cc/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/cc/makefile" ;;
-    "bench/sys/chez/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/chez/makefile" ;;
-    "bench/sys/chicken/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/chicken/makefile" ;;
-    "bench/sys/chicken-int/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/chicken-int/makefile" ;;
-    "bench/sys/gambit/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/gambit/makefile" ;;
-    "bench/sys/gambit-int/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/gambit-int/makefile" ;;
-    "bench/sys/gcc/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/gcc/makefile" ;;
-    "bench/sys/java/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/java/makefile" ;;
-    "bench/sys/larceny/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/larceny/makefile" ;;
-    "bench/sys/mit/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/mit/makefile" ;;
-    "bench/sys/mit-int/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/mit-int/makefile" ;;
-    "bench/sys/mzscheme/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/mzscheme/makefile" ;;
-    "bench/sys/petite-chez/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/petite-chez/makefile" ;;
-    "bench/sys/psi/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/psi/makefile" ;;
-    "bench/sys/scheme48/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/scheme48/makefile" ;;
-    "bench/sys/scm/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/scm/makefile" ;;
-    "bench/sys/stalin/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/stalin/makefile" ;;
-    "bench/sys/stk/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/stk/makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
