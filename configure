@@ -896,7 +896,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -1017,7 +1016,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1270,15 +1268,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1416,7 +1405,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1569,7 +1558,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -14220,7 +14208,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 bench/makefile bench/num-iters/makefile bench/prefix/makefile bench/src/makefile bench/suffix/makefile bench/sys/makefile"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -14945,12 +14933,6 @@ do
     "prebuilt/macosx/build-phase2") CONFIG_FILES="$CONFIG_FILES prebuilt/macosx/build-phase2" ;;
     "prebuilt/windows/makefile") CONFIG_FILES="$CONFIG_FILES prebuilt/windows/makefile" ;;
     "prebuilt/windows/build-phase2") CONFIG_FILES="$CONFIG_FILES prebuilt/windows/build-phase2" ;;
-    "bench/makefile") CONFIG_FILES="$CONFIG_FILES bench/makefile" ;;
-    "bench/num-iters/makefile") CONFIG_FILES="$CONFIG_FILES bench/num-iters/makefile" ;;
-    "bench/prefix/makefile") CONFIG_FILES="$CONFIG_FILES bench/prefix/makefile" ;;
-    "bench/src/makefile") CONFIG_FILES="$CONFIG_FILES bench/src/makefile" ;;
-    "bench/suffix/makefile") CONFIG_FILES="$CONFIG_FILES bench/suffix/makefile" ;;
-    "bench/sys/makefile") CONFIG_FILES="$CONFIG_FILES bench/sys/makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
