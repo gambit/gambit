@@ -2232,6 +2232,80 @@
                   drain-output
                   allowed-settings)
 
+  ;; Vector ports (either actual vector, string or u8vector port) have a
+  ;; representation that supports various functionality:
+  ;;
+  ;; - input-only port: data is obtained from an initial vector
+  ;;
+  ;; - output-only port: data is accumulated into a resulting vector
+  ;;
+  ;; - input-output port: data written to the port can be read
+  ;;                      from the port in FIFO fashion
+  ;;
+  ;; - pipe port: each end of the pipe has a corresponding port and
+  ;;              output on one port causes data to be available on
+  ;;              the peer port (pipe ports can be unidirectional
+  ;;              or bidirectional)
+  ;;
+  ;; For efficiency, the buffering of data in the port is implemented
+  ;; as a list of limited-size chunks of data stored in a FIFO
+  ;; structure.  Writing to the port stores data into the chunk at the
+  ;; tail of the FIFO and reading from the port fetches data from the
+  ;; chunk at the head of the FIFO.  This allows the garbage
+  ;; collection of the data that has been read (at the granularity of
+  ;; chunks) and it simplifies accumulating data that is written to
+  ;; the port.  In the case of a pipe port, the FIFO is shared by the
+  ;; port and its peer port (a bidirectional pipe port has 2
+  ;; independent FIFOs).
+  ;;
+  ;; The read buffer of an input port (called rbuf) is the chunk at
+  ;; the head of the FIFO.  The counters rlo and rhi delimit the
+  ;; section of this chunk that contains data not yet read.  The write
+  ;; buffer of an output port (called wbuf) is the last chunk in the
+  ;; FIFO.  The counter whi indicates the point in the write buffer
+  ;; where new data should be added.
+  ;;
+  ;; Note that in the case of a pipe port, rbuf, rlo and rhi are part
+  ;; of the input port and the FIFO, wbuf and whi are part of the
+  ;; peer's output port.  In the case of a non-pipe input-output port,
+  ;; the "peer" is actually the port itself.  It is possible for rbuf
+  ;; and wbuf to be the same chunk.  This happens when there is little
+  ;; data left to read.
+  ;;
+  ;; As an example, for a string port created from the initial string
+  ;; "abcdefghijklmnopqrstuvwxyz" and a chunk size of 10, once the port
+  ;; is setup the structure will be:
+  ;;
+  ;;    __port__    __________________________peer__________________________
+  ;;
+  ;;                      +---------------------------------------+
+  ;;                FIFO  |                                       v
+  ;;                    +-|-+---+     +---+---+     +---+---+     +---+---+
+  ;;                    |   |  -+---> |   |  -+---> |   |  -+---> |   | ()|
+  ;;                    +---+---+     +-|-+---+     +-|-+---+     +-|-+---+
+  ;;                                    v             v             v
+  ;;    rbuf -------------------------> "abcdefghij"  "klmnopqrst"  "uvwxyz"
+  ;;                                     ^         ^                ^      ^
+  ;;    rlo -----------------------------+         |                |      |
+  ;;    rhi ---------------------------------------+             wbuf    whi
+  ;;
+  ;; To write data, the wbuf is accessed at the index indicated by
+  ;; whi.  If whi reaches the end of the chunk, a freshly allocated
+  ;; chunk is added to the tail of the FIFO and this chunk becomes the
+  ;; new wbuf and whi is set to 0.  To read data, the rbuf is accessed
+  ;; at the index indicated by rlo and rlo is increased.  When more
+  ;; data needs to be read than there is between rlo and rhi either
+  ;;
+  ;; - rbuf and wbuf are the same chunk: rhi is set to whi (this may
+  ;;   allow the read to continue)
+  ;;
+  ;; - rbuf and wbuf are not the same chunk: the chunk at the head of
+  ;;   the FIFO is removed, any data in rbuf between rlo and rhi is
+  ;;   appended to the beginning of the next chunk and it becomes the
+  ;;   new rbuf (if the FIFO is now empty and rlo != rhi then wbuf is
+  ;;   also set to this chunk and rhi and whi are adjusted
+  ;;   appropriately)
+
   (define (sym . lst)
     (string->symbol
      (apply string-append
@@ -2265,6 +2339,7 @@
     (define ##vect-set!               (sym "##" name '-set!))
     (define ##vect-length             (sym "##" name '-length))
     (define ##vect-shrink!            (sym "##" name '-shrink!))
+    (define ##vect-append             (sym "##" name '-append))
     (define ##subvect                 (sym '##sub name))
     (define ##subvect-move!           (sym '##sub name '-move!))
     (define ##subvect->fifo           (sym '##sub name '->fifo))
@@ -2384,69 +2459,153 @@
               (##declare (not interrupts-enabled))
 
               (let loop ()
-
-                #;
-                (if (##u8vector? (,',macro-vect-port-rbuf port))
-                    (pp (##list (,',macro-vect-port-rlo port)
-                                (,',macro-vect-port-rhi port)
-                                (,',macro-vect-port-wlo port)
-                                (,',macro-vect-port-whi port)
-                                (,',macro-vect-port-rbuf port)
-                                (,',macro-vect-port-wbuf port)
-                                )
-                        ##stdout-port))
-
                 (let* ((peer (,',macro-vect-port-peer port))
                        (vect-rbuf (,',macro-vect-port-rbuf port))
                        (vect-wbuf (,',macro-vect-port-wbuf peer)))
                   (if (##not (##eq? vect-rbuf vect-wbuf))
+
+                      ;; there are at least two chunks in the FIFO
+
                       (let ((vect-rhi (,',macro-vect-port-rhi port))
                             (len (,',##vect-length vect-rbuf)))
+
                         (cond ((##fx< vect-rhi len)
+
+                               ;; some elements in rbuf can be read
+                               ;; beyond rhi so make them available
+                               ;; and indicate that something was
+                               ;; added to the read buffer
+
                                (,',macro-vect-port-rhi-set! port len)
                                #t)
+
                               (else
-                               (let ((new-vect-rbuf
-                                      (macro-fifo-advance!
-                                       (,',macro-vect-port-fifo port))))
+
+                               ;; it is necessary to get data from the next
+                               ;; chunk in the FIFO
+
+                               ,',(if (eq? name 'string)
+                                      `(begin
+
+                                         ;; keep track of number of
+                                         ;; characters read
+
+                                         (macro-character-port-rchars-set!
+                                          port
+                                          (##fx+ (macro-character-port-rchars port)
+                                                 (macro-character-port-rhi port))))
+                                      #f)
+
+                               (let* ((next-chunk
+                                       (macro-fifo-advance!
+                                        (,',macro-vect-port-fifo peer)))
+                                      (vect-rlo
+                                       (,',macro-vect-port-rlo port)))
+
+                                 ;; keep track of amount of data buffered
                                  (,',macro-vect-port-wlo-set!
-                                  port
-                                  (##fx- (,',macro-vect-port-wlo port) len))
-                                 (,',macro-vect-port-rbuf-set!
-                                  port
-                                  new-vect-rbuf)
+                                  peer
+                                  (##fx- (,',macro-vect-port-wlo peer)
+                                         vect-rlo))
 
-                                 ,',(if (eq? name 'string)
-                                        `(begin
+                                 (if (##fx= vect-rlo vect-rhi)
 
-                                           ;; keep track of number of characters read
+                                     ;; no data must be carried over
 
-                                           (macro-character-port-rchars-set!
-                                            port
-                                            (##fx+ (macro-character-port-rchars port)
-                                                   (macro-character-port-rhi port))))
+                                     (let ((new-vect-rbuf next-chunk))
 
-                                        #f)
+                                       ;; install new read buffer
+                                       (,',macro-vect-port-rbuf-set!
+                                        port
+                                        new-vect-rbuf))
 
+                                     ;; data must be carried over from
+                                     ;; current read buffer
+
+                                     (let ((new-vect-rbuf
+                                            (,',##vect-append
+                                             (,',##subvect vect-rbuf vect-rlo vect-rhi)
+                                             next-chunk)))
+
+                                       ;; update chunk in FIFO
+                                       (macro-fifo-elem-set!
+                                        (macro-fifo-next
+                                         (,',macro-vect-port-fifo peer))
+                                        new-vect-rbuf)
+
+                                       ;; install new read buffer
+                                       (,',macro-vect-port-rbuf-set!
+                                        port
+                                        new-vect-rbuf)
+
+                                       ;; if needed update write buffer and whi
+
+                                       (if (##eq? next-chunk vect-wbuf)
+                                           (let ((new-whi
+                                                  (##fx+
+                                                   (,',macro-vect-port-whi peer)
+                                                   (##fx- vect-rhi vect-rlo))))
+
+                                             (,',macro-vect-port-whi-set!
+                                              peer
+                                              new-whi)
+
+                                             (,',macro-vect-port-wbuf-set!
+                                              peer
+                                              new-vect-rbuf)))))
+
+                                 ;; reset rlo and rhi to zero (note that next
+                                 ;; iteration of loop will set rhi correctly)
                                  (,',macro-vect-port-rlo-set! port 0)
                                  (,',macro-vect-port-rhi-set! port 0)
+
+                                 ;; signal any thread that may be waiting
+                                 ;; to write data on peer's output port
                                  (##condvar-signal-no-reschedule!
                                   (,',macro-vect-port-wcondvar peer)
                                   #t)
+
+                                 ;; try again
                                  (loop)))))
+
+                      ;; the FIFO contains a single chunk which is
+                      ;; both the rbuf and wbuf
+
                       (let* ((vect-rhi (,',macro-vect-port-rhi port))
                              (vect-whi (,',macro-vect-port-whi peer)))
+
                         (cond ((##fx< vect-rhi vect-whi)
+
+                               ;; some elements in rbuf can be read
+                               ;; beyond rhi so make them available
+                               ;; and indicate that something was
+                               ;; added to the read buffer
+
                                (,',macro-vect-port-rhi-set! port vect-whi)
                                #t)
+
                               ((macro-closed? (macro-port-woptions peer))
+
+                               ;; the peer's output port is closed so indicate
+                               ;; that no new data can be read (end-of-file),
+                               ;; but unclose the peer if the permanent-close
+                               ;; option is #f (this way an end-of-file can
+                               ;; be generated multiple times)
+
                                (if (##not (macro-perm-close?
                                            (macro-port-woptions peer)))
                                    (macro-port-woptions-set!
                                     peer
                                     (macro-unclose! (macro-port-woptions peer))))
                                #f)
+
                               (block?
+
+                               ;; the peer's output port is still open
+                               ;; so block the current thread, waiting
+                               ;; for new data to be added to the
+                               ;; peer's output port
+
                                (let ((continue?
                                       (or (##mutex-signal-and-condvar-wait!
                                            (macro-port-mutex port)
@@ -2457,7 +2616,13 @@
                                  (if continue?
                                      (loop)
                                      ##err-code-EAGAIN)))
+
                               (else
+
+                               ;; it is not OK to block, so indicate
+                               ;; that the operation should be tried
+                               ;; again
+
                                ##err-code-EAGAIN)))))))
 
             (define (,',vect-wbuf-drain port)
@@ -2473,8 +2638,6 @@
 
               (##declare (not interrupts-enabled))
 
-              ;;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
               (let loop ()
                 (let* ((peer
                         (,',macro-vect-port-peer port))
@@ -2482,9 +2645,14 @@
                         (,',macro-vect-port-buffering-limit port)))
                   (if (and buffering-limit
                            (let ((unread
-                                  (##fx- (,',macro-vect-port-wlo peer)
+                                  (##fx- (,',macro-vect-port-wlo port)
                                          (,',macro-vect-port-rlo peer))))
                              (##fx< buffering-limit unread)))
+
+                      ;; buffering limit has been reached, so block
+                      ;; the thread until some reads decrease the
+                      ;; amount of data buffered
+
                       (let ((continue?
                              (or (##mutex-signal-and-condvar-wait!
                                   (macro-port-mutex port)
@@ -2495,31 +2663,54 @@
                         (if continue?
                             (loop)
                             ##err-code-EAGAIN))
+
+                      ;; buffering limit is not yet reached, so allocate
+                      ;; a new write buffer and add it to the FIFO
+
                       (let* ((new-vect-wbuf
                               (,',##make-vect chunk-size))
                              (vect-wbuf
                               (,',macro-vect-port-wbuf port))
                              (vect-whi
                               (,',macro-vect-port-whi port)))
+
+                        ;; keep track of amount of data buffered
                         (,',macro-vect-port-wlo-set!
-                         peer
-                         (##fx+ (,',macro-vect-port-wlo peer) vect-whi))
-                        ,',(if (eq? name 'vector)
-                               #f
-                               `(macro-character-port-wchars-set!
-                                 port
-                                 (##fx+
-                                  (macro-character-port-wchars port)
-                                  vect-whi)))
+                         port
+                         (##fx+ (,',macro-vect-port-wlo port) vect-whi))
+
+                        ,',(if (eq? name 'string)
+                               `(begin
+                                  ;; keep track of number of
+                                  ;; characters written
+                                  (macro-character-port-wchars-set!
+                                   port
+                                   (##fx+
+                                    (macro-character-port-wchars port)
+                                    vect-whi)))
+                               #f)
+
+                        ;; trim write buffer so it only contains
+                        ;; written data
                         (,',##vect-shrink! vect-wbuf vect-whi)
+
+                        ;; install the new write buffer
                         (,',macro-vect-port-whi-set! port 0)
                         (,',macro-vect-port-wbuf-set! port new-vect-wbuf)
+
+                        ;; add new chunk to FIFO
                         (macro-fifo-insert-at-tail!
-                         (,',macro-vect-port-fifo peer)
+                         (,',macro-vect-port-fifo port)
                          new-vect-wbuf)
+
+                        ;; signal peer side in case it is blocked
+                        ;; on a read
                         (##condvar-signal-no-reschedule!
                          (,',macro-vect-port-rcondvar peer)
                          #t)
+
+                        ;; indicate that the write buffer was
+                        ;; successfully drained
                         #f)))))
 
             (define (name port)
@@ -2874,8 +3065,8 @@
          (let ((peer
                 (,macro-vect-port-peer port)))
 
-           ((macro-port-force-output peer)
-            peer
+           ((macro-port-force-output port)
+            port
             0
             ,get-output-vect
             port
@@ -2886,12 +3077,12 @@
            (macro-port-mutex-lock! port) ;; get exclusive access to port
 
            (let* ((vect-fifo
-                   (,macro-vect-port-fifo peer))
+                   (,macro-vect-port-fifo port))
                   (result
                    (,##fifo->vect
                     vect-fifo
                     (,macro-vect-port-rlo peer)
-                    (##fx+ (,macro-vect-port-wlo peer)
+                    (##fx+ (,macro-vect-port-wlo port)
                            (,macro-vect-port-whi port))))
                   (new-vect-buf
                    (macro-fifo-advance-to-tail! vect-fifo)))
@@ -2911,12 +3102,19 @@
                            (loop (##fx+ i 1)))))
                   #f)
 
+             ,(if (eq? name 'string)
+                  `(macro-character-port-wchars-set!
+                    port
+                    (##fx+ (macro-character-port-wchars port)
+                           (,macro-vect-port-whi port)))
+                  #f)
+
              (,macro-vect-port-rbuf-set! peer new-vect-buf)
              (,macro-vect-port-rlo-set! peer 0)
              (,macro-vect-port-rhi-set! peer 0)
 
              (,macro-vect-port-wbuf-set! port new-vect-buf)
-             (,macro-vect-port-wlo-set! peer 0) ;;;;;;;;;;;; peer or port ?
+             (,macro-vect-port-wlo-set! port 0)
              (,macro-vect-port-whi-set! port 0)
 
              (macro-port-mutex-unlock! port)
@@ -3466,8 +3664,6 @@
 
   (define char-buf-len 32) ;; character buffer length
   (define chunk-size 64)
-;;;  (define char-buf-len 3) ;; character buffer length
-;;;  (define chunk-size 6)
 
   (let* ((direction
           (macro-psettings-direction psettings))
@@ -5577,9 +5773,11 @@
       input-eol-encoding:
       output-eol-encoding:
       eol-encoding:
-      input-buffering:
-      output-buffering:
-      buffering:)
+      ;;disable changing buffering
+      ;;input-buffering:
+      ;;output-buffering:
+      ;;buffering:
+      )
     settings
     fail
     (lambda (psettings)
@@ -5632,6 +5830,9 @@
                       (macro-port-roptions-set! port roptions)
                       (macro-port-woptions-set! port woptions)
 
+                      ;; disable changing buffering which does not work for string ports
+
+                      #;(begin
                       ;; change character buffers if needed
 
                       (let ((rbuf (macro-character-port-rbuf port)))
@@ -5666,7 +5867,7 @@
                                             (macro-character-port-whi port)))
                                     (macro-character-port-wlo-set! port 0)
                                     (macro-character-port-whi-set! port 0)
-                                    (macro-character-port-wbuf-set! port new-wbuf))))))
+                                    (macro-character-port-wbuf-set! port new-wbuf)))))))
 
                       (macro-port-mutex-unlock! port)
                       result))))))))))
