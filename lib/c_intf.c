@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -1082,13 +1082,13 @@ int *decoding_state;)
                             if (b0 == 0xfe)
                               {
                                 state += ___CHAR_ENCODING_UTF_16BE -
-                                         ___CHAR_ENCODING_UTF;
+                                         ___CHAR_ENCODING(state);
                                 goto decode_next_UTF_16BE;
                               }
                             else
                               {
                                 state += ___CHAR_ENCODING_UTF_16LE -
-                                         ___CHAR_ENCODING_UTF;
+                                         ___CHAR_ENCODING(state);
                                 goto decode_next_UTF_16LE;
                               }
                           }
@@ -1118,7 +1118,7 @@ int *decoding_state;)
                         /* complete UTF-8 BOM */
                         blo += 3; /* skip BOM */
                         state += ___CHAR_ENCODING_UTF_8 -
-                                 ___CHAR_ENCODING_UTF;
+                                 ___CHAR_ENCODING(state);
                         goto decode_next_UTF_8;
                       }
                   }
