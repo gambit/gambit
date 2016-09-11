@@ -74,7 +74,7 @@ includedir="$(includedir)" libdir="$(libdir)" \
 bindir="$(bindir)" docdir="$(docdir)" \
 infodir="$(infodir)" emacsdir="$(emacsdir)"
 
-SUBDIRS = include lib gsi gsc bin misc doc tests examples contrib prebuilt
+SUBDIRS = include lib gsi gsc bin misc doc tests examples contrib prebuilt bench
 
 RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
@@ -128,6 +128,9 @@ doc info pdf html txt: fake_target
 
 check ut: fake_target all
 	@cd tests && $(MAKE) $(MDEFINES) $@
+
+bench: fake_target all
+	@cd bench && $(MAKE) $(MDEFINES) $@
 
 examples: fake_target all
 	@cd examples && $(MAKE) $(MDEFINES) $@
