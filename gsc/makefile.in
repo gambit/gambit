@@ -407,7 +407,7 @@ dist-pre dist-devel-pre:
 	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
 	done
 	@echo "    $(herefromroot)/tests"
-	(cd $(srcdir) ; COPYFILE_DISABLE=1 tar cf - `find tests -name "README" -print` `find tests -name "*.scm" -print`) | (cd $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) ; tar xf -)
+	(cd $(srcdir) ; COPYFILE_DISABLE=1 tar cf - `$(RC) ls-tree -r HEAD --name-only tests`) | (cd $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) ; tar xf -)
 
 dist-post dist-devel-post:
 
