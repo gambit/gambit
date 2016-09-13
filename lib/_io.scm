@@ -1299,11 +1299,21 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; Function to determine appropriate character buffer length.
+
+(define-prim (##port-char-buf-len kind unbuffered?)
+  (if unbuffered?
+      1
+      (if (##fx= kind (macro-u8vector-kind))
+          32
+          512)))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of device ports.
 
 (define-prim (##make-device-port device-name rdevice wdevice psettings)
 
-  (define char-buf-len 512) ;; character buffer length
   (define byte-buf-len 1024) ;; byte buffer length
 
   (let* ((mutex
@@ -1338,9 +1348,8 @@
           #f)
          (char-rbuf
           (and (##not (##fx= rkind (macro-none-kind)))
-               (##make-string (if (macro-unbuffered? roptions)
-                                  1
-                                  char-buf-len))))
+               (##make-string
+                (##port-char-buf-len rkind (macro-unbuffered? roptions)))))
          (char-rlo
           0)
          (char-rhi
@@ -1357,9 +1366,8 @@
           #f)
          (char-wbuf
           (and (##not (##fx= wkind (macro-none-kind)))
-               (##make-string (if (macro-unbuffered? woptions)
-                                  1
-                                  char-buf-len))))
+               (##make-string
+                (##port-char-buf-len wkind (macro-unbuffered? woptions)))))
          (char-wlo
           0)
          (char-whi
@@ -3662,7 +3670,6 @@
 
 (define-prim (##make-u8vector-port src start end psettings)
 
-  (define char-buf-len 32) ;; character buffer length
   (define chunk-size 64)
 
   (let* ((direction
@@ -3701,9 +3708,8 @@
           #f)
          (char-rbuf
           (and (##not (##fx= rkind (macro-none-kind)))
-               (##make-string (if (macro-unbuffered? roptions)
-                                  1
-                                  char-buf-len))))
+               (##make-string
+                (##port-char-buf-len rkind (macro-unbuffered? roptions)))))
          (char-rlo
           0)
          (char-rhi
@@ -3720,9 +3726,8 @@
           #f)
          (char-wbuf
           (and (##not (##fx= wkind (macro-none-kind)))
-               (##make-string (if (macro-unbuffered? woptions)
-                                  1
-                                  char-buf-len))))
+               (##make-string
+                (##port-char-buf-len wkind (macro-unbuffered? woptions)))))
          (char-wlo
           0)
          (char-whi
@@ -5773,10 +5778,9 @@
       input-eol-encoding:
       output-eol-encoding:
       eol-encoding:
-      ;;disable changing buffering
-      ;;input-buffering:
-      ;;output-buffering:
-      ;;buffering:
+      input-buffering:
+      output-buffering:
+      buffering:
       )
     settings
     fail
@@ -5811,11 +5815,13 @@
                  settings))
 
               (let ((result
-                     (##options-set!
-                      port
-                      (##fx+ roptions
-                             (##fx* woptions
-                                    (macro-stream-options-output-shift))))))
+                     (and (or (macro-device-input-port? port)
+                              (macro-device-output-port? port))
+                          (##options-set!
+                           port
+                           (##fx+ roptions
+                                  (##fx* woptions
+                                         (macro-stream-options-output-shift)))))))
                 (if (##fixnum? result)
                     (begin
                       (macro-port-mutex-unlock! port)
@@ -5830,20 +5836,18 @@
                       (macro-port-roptions-set! port roptions)
                       (macro-port-woptions-set! port woptions)
 
-                      ;; disable changing buffering which does not work for string ports
-
-                      #;(begin
                       ;; change character buffers if needed
 
                       (let ((rbuf (macro-character-port-rbuf port)))
                         (if rbuf
                             (let ((new-char-buf-len
-                                   (if (macro-unbuffered? roptions)
-                                       1
-                                       512)))
+                                   (##port-char-buf-len
+                                    (macro-port-rkind port)
+                                    (macro-unbuffered? roptions))))
                               (if (##not (##fx= (##string-length rbuf)
                                                 new-char-buf-len))
-                                  (let ((new-rbuf (##make-string new-char-buf-len)))
+                                  (let ((new-rbuf
+                                         (##make-string new-char-buf-len)))
                                     (macro-character-port-rchars-set!
                                      port
                                      (##fx+ (macro-character-port-rchars port)
@@ -5855,19 +5859,20 @@
                       (let ((wbuf (macro-character-port-wbuf port)))
                         (if wbuf
                             (let ((new-char-buf-len
-                                   (if (macro-unbuffered? woptions)
-                                       1
-                                       512)))
+                                   (##port-char-buf-len
+                                    (macro-port-wkind port)
+                                    (macro-unbuffered? woptions))))
                               (if (##not (##fx= (##string-length wbuf)
                                                 new-char-buf-len))
-                                  (let ((new-wbuf (##make-string new-char-buf-len)))
-                                    (macro-character-port-rchars-set!
+                                  (let ((new-wbuf
+                                         (##make-string new-char-buf-len)))
+                                    (macro-character-port-wchars-set!
                                      port
                                      (##fx+ (macro-character-port-wchars port)
                                             (macro-character-port-whi port)))
                                     (macro-character-port-wlo-set! port 0)
                                     (macro-character-port-whi-set! port 0)
-                                    (macro-character-port-wbuf-set! port new-wbuf)))))))
+                                    (macro-character-port-wbuf-set! port new-wbuf))))))
 
                       (macro-port-mutex-unlock! port)
                       result))))))))))
