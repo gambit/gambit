@@ -98,4 +98,16 @@
   prefix: macro-
 )
 
+;;;----------------------------------------------------------------------------
+
+;;; Auxiliary macro for computing hash key.
+
+(##define-macro (macro-hash-combine a b)
+  `(let ((a ,a)
+	 (b ,b))
+     (##fxand
+      (##fxwrap* (##fxwrap+ a (##fxwraparithmetic-shift-left b 1))
+		 331804471)
+      (macro-max-fixnum32))))
+
 ;;;============================================================================

@@ -385,12 +385,6 @@
   (macro-force-vars (obj)
     (##eq?-hash obj)))
 
-(define-prim (##hash-combine a b)
-  (##fxand
-   (##fxwrap* (##fxwrap+ a (##fxwraparithmetic-shift-left b 1))
-	      331804471)
-   (macro-max-fixnum32)))
-
 (define-prim (##eqv?-hash obj)
 
   ;; for all obj2 we must have that (##eqv? obj obj2) implies that
@@ -405,15 +399,15 @@
           (if (##fx< i 0)
               h
               (loop (##fx- i 1)
-                    (##hash-combine h (##u16vector-ref obj i))))))
-      (##hash-combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
-		      (hash (macro-ratnum-denominator obj)))
-      (##hash-combine (##u16vector-ref obj 0) ;; obj = flonum
-		      (##hash-combine (##u16vector-ref obj 1)
-				      (##hash-combine (##u16vector-ref obj 2)
-						      (##u16vector-ref obj 3))))
-      (##hash-combine (hash (macro-cpxnum-real obj)) ;; obj = cpxnum
-		      (hash (macro-cpxnum-imag obj)))))
+                    (macro-hash-combine h (##u16vector-ref obj i))))))
+      (macro-hash-combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
+			  (hash (macro-ratnum-denominator obj)))
+      (macro-hash-combine (##u16vector-ref obj 0) ;; obj = flonum
+			  (macro-hash-combine (##u16vector-ref obj 1)
+					      (macro-hash-combine (##u16vector-ref obj 2)
+								  (##u16vector-ref obj 3))))
+      (macro-hash-combine (hash (macro-cpxnum-real obj)) ;; obj = cpxnum
+			  (hash (macro-cpxnum-imag obj)))))
 
   (hash obj))
 
@@ -432,7 +426,7 @@
       (if (##fx< i 0)
           h
           (u16vect-hash (##fx- i 1)
-                        (##hash-combine (##u16vector-ref obj i) h))))
+                        (macro-hash-combine (##u16vector-ref obj i) h))))
 
     (let ((len (##u8vector-length obj)))
       (u16vect-hash (##fx- (##fxarithmetic-shift-right len 1) 1)
@@ -461,12 +455,12 @@
                   (loop (if (##fx=
                              (##fxand field-attributes 4)
                              0)
-                            (##hash-combine (hash (##unchecked-structure-ref
-						   obj
-						   len-1
-						   type
-						   #f))
-					    h)
+                            (macro-hash-combine (hash (##unchecked-structure-ref
+						       obj
+						       len-1
+						       type
+						       #f))
+						h)
                             h)
                         (##fx- i*3 3)
                         len-1)))))))
@@ -474,8 +468,8 @@
   (define (hash obj)
     (macro-force-vars (obj)
       (cond ((##pair? obj)
-             (##hash-combine (hash (##car obj))
-			     (hash (##cdr obj))))
+             (macro-hash-combine (hash (##car obj))
+				 (hash (##cdr obj))))
             ((##subtyped? obj)
              (cond ((macro-subtype-bvector? (##subtype obj))
                     (cond ((##string? obj)
@@ -495,8 +489,8 @@
                       (if (##fx< i 0)
                           h
                           (loop (##fx- i 1)
-                                (##hash-combine (hash (##vector-ref obj i))
-						h)))))
+                                (macro-hash-combine (hash (##vector-ref obj i))
+						    h)))))
                    ((macro-table? obj)
                     (##table-equal?-hash obj))
                    ((##structure? obj)
@@ -515,8 +509,8 @@
                                           (hash type-id))
                           (##eq?-hash obj))))
                    ((##box? obj)
-                    (##hash-combine (hash (##unbox obj))
-				    153391703))
+                    (macro-hash-combine (hash (##unbox obj))
+					153391703))
                    (else
                     (##eqv?-hash obj))))
             (else
@@ -1574,17 +1568,17 @@
   (##table-foldl
    (lambda (a b) ;; must be associative and commutative
      (##fxxor a b))
-   (##hash-combine
+   (macro-hash-combine
     (macro-table-flags table)
-    (##hash-combine
+    (macro-hash-combine
      (##eq?-hash (macro-table-test table))
-     (##hash-combine
+     (macro-hash-combine
       (if (macro-table-test table)
           (##eq?-hash (macro-table-hash table))
           0)
       (##table-length table))))
    (lambda (key val)
-     (##hash-combine
+     (macro-hash-combine
       (if (macro-table-test table)
           (let ((f (macro-table-hash table)))
             (f key))
