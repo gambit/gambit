@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -394,20 +394,22 @@
     (macro-number-dispatch obj
       (##eq?-hash obj) ;; obj = not a number
       (##fxmodulo obj 331804471) ;; obj = fixnum
-      (let ((len (##u16vector-length obj))) ;; obj = bignum
+      (let ((len (##bignum.mdigit-length obj))) ;; obj = bignum
         (let loop ((i (##fx- len 1)) (h 0))
           (if (##fx< i 0)
               h
               (loop (##fx- i 1)
-                    (macro-hash-combine h (##u16vector-ref obj i))))))
+                    (macro-hash-combine h (##bignum.mdigit-ref obj i))))))
       (macro-hash-combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
-			  (hash (macro-ratnum-denominator obj)))
+                          (hash (macro-ratnum-denominator obj)))
+      ;; TODO: hash flonums in a portable way
       (macro-hash-combine (##u16vector-ref obj 0) ;; obj = flonum
-			  (macro-hash-combine (##u16vector-ref obj 1)
-					      (macro-hash-combine (##u16vector-ref obj 2)
-								  (##u16vector-ref obj 3))))
+                          (macro-hash-combine (##u16vector-ref obj 1)
+                                              (macro-hash-combine
+                                               (##u16vector-ref obj 2)
+                                               (##u16vector-ref obj 3))))
       (macro-hash-combine (hash (macro-cpxnum-real obj)) ;; obj = cpxnum
-			  (hash (macro-cpxnum-imag obj)))))
+                          (hash (macro-cpxnum-imag obj)))))
 
   (hash obj))
 
@@ -455,12 +457,13 @@
                   (loop (if (##fx=
                              (##fxand field-attributes 4)
                              0)
-                            (macro-hash-combine (hash (##unchecked-structure-ref
-						       obj
-						       len-1
-						       type
-						       #f))
-						h)
+                            (macro-hash-combine
+                             (hash (##unchecked-structure-ref
+                                    obj
+                                    len-1
+                                    type
+                                    #f))
+                             h)
                             h)
                         (##fx- i*3 3)
                         len-1)))))))
@@ -469,7 +472,7 @@
     (macro-force-vars (obj)
       (cond ((##pair? obj)
              (macro-hash-combine (hash (##car obj))
-				 (hash (##cdr obj))))
+                                 (hash (##cdr obj))))
             ((##subtyped? obj)
              (cond ((macro-subtype-bvector? (##subtype obj))
                     (cond ((##string? obj)
@@ -478,6 +481,7 @@
                                (##bignum? obj))
                            (##eqv?-hash obj))
                           (else
+                           ;; TODO: hash bytevectors in a portable way
                            (bvector-hash obj))))
                    ((##symbol? obj)
                     (##symbol-hash obj))
@@ -490,7 +494,7 @@
                           h
                           (loop (##fx- i 1)
                                 (macro-hash-combine (hash (##vector-ref obj i))
-						    h)))))
+                                                    h)))))
                    ((macro-table? obj)
                     (##table-equal?-hash obj))
                    ((##structure? obj)
@@ -510,7 +514,7 @@
                           (##eq?-hash obj))))
                    ((##box? obj)
                     (macro-hash-combine (hash (##unbox obj))
-					153391703))
+                                        153391703))
                    (else
                     (##eqv?-hash obj))))
             (else

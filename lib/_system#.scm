@@ -2,7 +2,7 @@
 
 ;;; File: "_system#.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -104,10 +104,10 @@
 
 (##define-macro (macro-hash-combine a b)
   `(let ((a ,a)
-	 (b ,b))
+         (b ,b))
      (##fxand
       (##fxwrap* (##fxwrap+ a (##fxwraparithmetic-shift-left b 1))
-		 331804471)
+                 331804471)
       (macro-max-fixnum32))))
 
 ;;;============================================================================
