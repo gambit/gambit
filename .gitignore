@@ -188,3 +188,4 @@ gambit-v*.tgz
 *.idb
 *.o
 *.gvm
+gambit.log
