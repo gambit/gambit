@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "r5rs#.scm", Time-stamp: <2008-12-15 11:24:33 feeley>
+;;; File: "r5rs#.scm"
 
-;;; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2016 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
