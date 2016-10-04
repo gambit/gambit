@@ -58,7 +58,7 @@ On most Unix platforms the system is easily built using
 configure/make.  If a specific release of the system was obtained as a
 compressed tar ball (.tgz extension) the commands are simply:
 
-  % ./configure        # configure script options should be put here (see below)
+  % ./configure        # configure script options may be added here (see below)
   % make
 
 If the source code was obtained by cloning the Gambit repository, more
@@ -93,7 +93,7 @@ These steps can be shortened to the following commands:
 
   % ./configure        # no options needed here
   % make latest-release
-  % ./configure        # configure script options should be put here (see below)
+  % ./configure        # configure script options may be added here (see below)
   % make from-scratch
 
 The system can be tested and installed using the following commands:
