@@ -5543,67 +5543,195 @@ for a discussion of branch cuts.
 (define-prim (##integer->char x))
 (define-prim (##char->integer x))
 
-;;;----------------------------------------------------------------------------
+;;; ------------------------------------------------------------------------------
+;;; Bignum Operations
+;;; ------------------------------------------------------------------------------
+;;;
+;;; The bignum operations were implemented mostly by Brad Lucier
+;;; (http://www.math.purdue.edu/~lucier) with some coding guidance from
+;;; Marc Feeley.
+;;;
+;;; The low-level representation of bignums and the low-level operations on
+;;; bignums are inspired by the paper
+;;;
+;;; Reconfigurable, retargetable bignums:
+;;; a case study in efficient, portable Lisp system building
+;;; Jon L White
+;;; Conference on LISP and Functional Programming
+;;; Proceedings of the 1986 ACM conference on LISP and functional programming
+;;; Cambridge, Massachusetts, United States
+;;; Pages: 174 - 191
+;;; Year of Publication: 1986
+;;; ISBN:0-89791-200-4
+;;;
+;;; We describe here the representation for the C back end.  See _univlib.scm for
+;;; other back ends.
+;;;
+;;; Bignums are represented as vectors of "adigit"s.  Each element is an unsigned
+;;; integer containing ##bignum.adigit-width bits, which is 64 bits if a 64-bit
+;;; type is available (either as long or as long long).  Logically, the 0th adigit
+;;; of a bignum contains its least-significant bits; bignums are little-endian,
+;;; and the top bit of the last adigit is interpreted as the sign bit of the bignum.
+;;; Before being returned to the user, bignums must be normalized so that they have
+;;; no redundant all-zero or all-one high-order adigits.  Adigits are so called
+;;; because they're used in addition (among other operations).  For the purpose of
+;;; documentation we'll use "adigit-base" to represent (expt 2 ##bignum.adigit-width).
+;;;
+;;; The bits of a bignum can be accessed as a vector of "mdigit"s, which are
+;;; unsigned integers containing ##bignum.mdigit-width bits, which is 16 bits
+;;; on a 32-bit Gambit or 32 bits on a 64-bit Gambit (so an mdigit always fits
+;;; in a fixnum).  Mdigits are so called because they're used in multiplciation
+;;; (among other operations). For the purpose of documentation we'll use "mdigit-base"
+;;; to represent (expt 2 ##bignum.mdigit-width).
+;;;
+;;; Finally, the bits of a bignum can be accessed as a vector of "fdigit"s,
+;;; which are unsigned integers containing ##bignum.fdigit-width bits, which
+;;; is currently 8 on all architectures.  Fdigits are so called because a
+;;; bignum is represented as fdigits before the Fast Fourier Transforms used
+;;; in large bignum multiplications are performed.  Some comments indicate that for
+;;; bignums of larger than half a billion bits, four-bit fdigits may be useful, but that
+;;; isn't implemented.
+;;;
+;;; The global variables ##bignum.adigit-width, ##bignum.mdigit-width, and
+;;; ##bignum.fdigit-width are defined in _kernel.scm.
+;;;
+;;; All issues of big-endian or little-endian accesses are taken care of in the
+;;; C macros implementing the low-level operations, so we can program as if we're
+;;; on a little-endian machine.
+;;;
+;;; -------------------------------------------------------------------------------
 
-;; Bignum operations
-;; -----------------
+;;; These are the low-level operations on adigits, mdigits, and fdigits.
+;;; Two-argument functions are generally destructive, and overwrite part of
+;;; their first argument.  These operations are supported in the Gambit Virtual
+;;; Machine (GVM) and the Gambit Scheme Compiler (gsc).
 
-;; The bignum operations were mostly implemented by the "Uber numerical
-;; analyst Brad Lucier (http://www.math.purdue.edu/~lucier) with some
-;; coding guidance from Marc Feeley.
-
-;; Bignums are represented with 'adigit' vectors.  Each element is an
-;; integer containing ##bignum.adigit-width bits (typically 64 bits).
-;; These bits encode an integer in two's complement representation.
-;; The first element contains the least significant bits and the most
-;; significant bit of the last element is the sign (0=positive,
-;; 1=negative).
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+;;; Returns #t if x is negative, #f otherwise
 (define-prim (##bignum.negative? x))
+
+;;; Returns the number of adigits in x (always a fixnum)
 (define-prim (##bignum.adigit-length x))
+
+;;; Increments the i'th adigit of x by 1 and returns 1 if the result
+;;; overflowed, and 0 otherwise.
 (define-prim (##bignum.adigit-inc! x i))
+
+;;; Decrements the i'th digit of x by 1 and returns 1 if the result
+;;; underflowed and 0 otherwise.
 (define-prim (##bignum.adigit-dec! x i))
+
+;;; Calculate
+;;; sum = x[i] + y[j] + carry (accessing x and y as adigits)
+;;; Sets x[i] = sum modulo adigit-base; returns 1 if overflow occured,
+;;; 0 otherwise.
 (define-prim (##bignum.adigit-add! x i y j carry))
+
+;;; Calculate
+;;; difference = x[i] - y[j] - borrow (accessing x and y as adigits)
+;;; Sets x[i] = difference modulo adigit-base; returns 1 if underflow occured,
+;;; 0 otherwise.
 (define-prim (##bignum.adigit-sub! x i y j borrow))
+
+;;; Returns the number of mdigits in x (always a fixnum)
 (define-prim (##bignum.mdigit-length x))
+
+;;; Returns the i'th mdigit of x
 (define-prim (##bignum.mdigit-ref x i))
+
+;;; Sets the i'th mdigit of x to mdigit
 (define-prim (##bignum.mdigit-set! x i mdigit))
+
+;;; Calculate
+;;; z = x[i] + y[j] * multiplier + carry (accessing x and y as mdigits)
+;;; Sets x[i] = z modulo mdigit-base; returns (quotient z mdigit-base)
 (define-prim (##bignum.mdigit-mul! x i y j multiplier carry))
+
+;;; Calculate
+;;; z = x[i] - y[j] * quotient + borrow
+;;; Sets x[i] to z modulo mdigit-base; returns
+;;; (quotient (z - x[i]) mdigit-base)
 (define-prim (##bignum.mdigit-div! x i y j quotient borrow))
+
+;;; Returns
+;;; (u[j] * mdigit-base + u[j-1]) / v
+;;; (accessing u as mdigits)
 (define-prim (##bignum.mdigit-quotient u j v_n-1))
+
+;;; Returns
+;;; (u[j] * mdigit-base + u[j-1] - v_n-1 * q-hat)
+;;; (accessing u as mdigits)
 (define-prim (##bignum.mdigit-remainder u j v_n-1 q-hat))
+
+;;; Returns #t if
+;;; q-hat * v_n-2 > (r-hat * mdigit-base + u_j-2)
+;;; and #f otherwise
 (define-prim (##bignum.mdigit-test? q-hat v_n-2 r-hat u_j-2))
 
+;;; Returns #t if x[i] (accessed as adigits) is all ones, and
+;;; #f otherwise
 (define-prim (##bignum.adigit-ones? x i))
+
+;;; Returns #t if x[i] (accessed as adigits) is all zeros, and
+;;; #f otherwise
 (define-prim (##bignum.adigit-zero? x i))
+
+;;; Returns #t if the high-order bit of x[i] (accessing x as
+;;; adigits) is 1, and #f otherwise
 (define-prim (##bignum.adigit-negative? x i))
+
+;;; Returns #t if x[i]=y[i] (accessing x and y as adigits) and
+;;; #f otherwise
 (define-prim (##bignum.adigit-= x y i))
+
+;;; Returns #t if x[i]<y[i] (accessing x and y as adigits) and
+;;; #f otherwise
 (define-prim (##bignum.adigit-< x y i))
+
+;;; Convert the fixnum x to an (unnormalized) bignum with one adigit
 (define-prim (##fixnum->bignum x))
+
+;;; Sets the number of adigits in the bignum x to n; must not increase
+;;; the number of adigits in x
 (define-prim (##bignum.adigit-shrink! x n))
+
+;;; Sets x[i] to y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-copy! x i y j))
+
+;;; Calculate
+;;; z = hi[j] << divider | lo[k] >> (##bignum.adigit-width - divider)
+;;; (accessing hi and lo as adigits)
+;;; Sets x[i] to z modulo adigit-base
 (define-prim (##bignum.adigit-cat! x i hi j lo k divider))
+
+;;; Sets x[i] to x[i] & y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-bitwise-and! x i y j))
+
+;;; Sets x[i] to x[i] | y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-bitwise-ior! x i y j))
+
+;;; Sets x[i] to x[i] ^ y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-bitwise-xor! x i y j))
+
+;;; Sets x[i] to !x[i] (accessing x as adigits)
 (define-prim (##bignum.adigit-bitwise-not! x i))
 
 (macro-case-target
  ((C)
+  ;; Returns the number of fdigits in x
   (define-prim (##bignum.fdigit-length x))
+
+  ;; Returns x[i] (accessing x as fdigits)
   (define-prim (##bignum.fdigit-ref x i))
+
+  ;; Sets x[i] to fdigit (accessing x as fdigits)
   (define-prim (##bignum.fdigit-set! x i fdigit))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Bignum related constants.
 
-;;(define ##bignum.adigit-ones #xffffffffffffffff)
-;;(define ##bignum.adigit-zeros #x10000000000000000)
-(define ##bignum.adigit-ones (##fixnum->bignum -1))
-(define ##bignum.adigit-zeros (##fixnum->bignum 0))
+(define ##bignum.adigit-ones (##fixnum->bignum -1))           ;; the 0th adigit is all ones
+(define ##bignum.adigit-zeros (##fixnum->bignum 0))           ;; the 0th adigit is all zeros
 
 (macro-case-target
  ((C)
@@ -5635,6 +5763,25 @@ for a discussion of branch cuts.
 
 ;;; The following global variables control when each of the three
 ;;; multiplication algorithms are used.
+;;;
+;;; Naive (grade-school) multiplication is used as long as one of
+;;; the arguments has fewer than ##bignum.naive-mul-max-width
+;;; bits.
+;;;
+;;; Karatsuba multiplication is used if the smaller of the two
+;;; multiplication arguments has fewer than ##bignum.fft-mul-min-width
+;;; or the larger of the two arguments has more than
+;;; ##bignum.fft-mul-max-width bits
+;;;
+;;; For other sizes of the arguments use FFT multiplication.
+;;;
+;;; A "fast", reciprocal-based division is used if the divisor has
+;;; more than ##bignum.fft-mul-min-width bits and the difference in
+;;; size of the divident and divisor is more than
+;;; ##bignum.fft-mul-min-width bits.
+;;;
+;;; Note that these global variables are not constants that are
+;;; inlined, so one can change them if you like.
 
 (define ##bignum.naive-mul-max-width 1400)
 (set! ##bignum.naive-mul-max-width ##bignum.naive-mul-max-width)
@@ -5643,11 +5790,14 @@ for a discussion of branch cuts.
 (set! ##bignum.fft-mul-min-width ##bignum.fft-mul-min-width)
 
 (define ##bignum.fft-mul-max-width
-  (if (##fixnum? -1073741824) ;; to avoid creating f64vectors that are too long
+  (if (##fixnum? -1073741824) ;; #t iff using 64-bit fixnums
       536870912
+       ;; to avoid creating f64vectors that are too long
       4194304))
 (set! ##bignum.fft-mul-max-width ##bignum.fft-mul-max-width)
 
+;;; An O(N(\log N)^2) algorithm for GCD is used if both arguments have more
+;;; than ##bignum.fast-gcd-size bits
 
 (define ##bignum.fast-gcd-size ##bignum.naive-mul-max-width)  ;; must be >= 64
 (set! ##bignum.fast-gcd-size ##bignum.fast-gcd-size)
@@ -9074,7 +9224,6 @@ ___RESULT = result;
 
   #|
   Shifts x by shift bits into result.
-  Will eventually replace other "shift"ing code.
 
   Left pads by sign bit as necessary, right pads by zeros as necessary.
   Makes *no* error checks.
