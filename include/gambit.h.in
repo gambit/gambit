@@ -7391,7 +7391,7 @@ int _fltused; /* needed if floating-point used. */
 #ifdef ___OS_WIN32
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0501
+#define _WIN32_WINNT 0x0600
 #endif
 
 #ifndef ___DONT_HAVE_WINSOCK2_H
@@ -7640,19 +7640,20 @@ typedef struct ___full_duplex_pipe
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
-#define ___MUTEX HANDLE
+#define ___MUTEX CRITICAL_SECTION
 #define ___MUTEX_DECL(id) ___MUTEX id;
-#define ___MUTEX_INIT(mut) ((mut = CreateMutex (NULL, FALSE, NULL)) != NULL)
-#define ___MUTEX_DESTROY(mut) CloseHandle (mut)
-#define ___MUTEX_LOCK(mut) (WaitForSingleObject (mut, INFINITE) != WAIT_FAILED)
-#define ___MUTEX_UNLOCK(mut) ReleaseMutex (mut)
+#define ___MUTEX_INIT(mut) InitializeCriticalSection (&mut)
+#define ___MUTEX_DESTROY(mut) DeleteCriticalSection (&mut)
+#define ___MUTEX_LOCK(mut) EnterCriticalSection (&mut)
+#define ___MUTEX_UNLOCK(mut) LeaveCriticalSection (&mut)
 
-#define ___CONDVAR HANDLE
+#define ___CONDVAR CONDITION_VARIABLE
 #define ___CONDVAR_DECL(id) ___CONDVAR id;
-#define ___CONDVAR_INIT(cv) ((cv = CreateEvent (NULL, FALSE, FALSE, NULL)) != NULL)
-#define ___CONDVAR_DESTROY(cv) CloseHandle (cv)
-#define ___CONDVAR_WAIT(cv,mut) (WaitForSingleObject (cv, INFINITE) != WAIT_FAILED)
-#define ___CONDVAR_SIGNAL(cv) SetEvent (cv)
+#define ___CONDVAR_INIT(cv) InitializeConditionVariable (&cv)
+#define ___CONDVAR_DESTROY(cv)
+#define ___CONDVAR_WAIT(cv,mut) SleepConditionVariableCS (&cv, &mut, INFINITE)
+#define ___CONDVAR_SIGNAL(cv) WakeConditionVariable (&cv)
+#define ___CONDVAR_BROADCAST(cv) WakeAllConditionVariable (&cv)
 
 #define ___THREAD_ID (GetCurrentThreadId())
 
