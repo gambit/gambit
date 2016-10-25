@@ -204,6 +204,18 @@ void ___thread_exit ___PVOID
 }
 
 
+#ifdef ___USE_THREAD_POLICY_SET
+
+#include <mach/thread_act.h>
+
+kern_return_t thread_policy_set(thread_t thread,
+                                thread_policy_flavor_t flavor,
+                                thread_policy_t policy_info,
+                                mach_msg_type_number_t count);
+
+#endif
+
+
 void ___thread_set_pstate
    ___P((___processor_state ___ps),
         (___ps)
@@ -212,6 +224,21 @@ ___processor_state ___ps;)
   ___SET_PSTATE(___ps);
 
 #ifdef ___USE_POSIX_THREAD_SYSTEM
+
+#ifdef ___USE_THREAD_POLICY_SET
+
+  {
+    int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
+    mach_port_t mach_thread = pthread_mach_thread_np (pthread_self ());
+    int affinity[1];
+
+    affinity[0] = id;
+
+    thread_policy_set (mach_thread, THREAD_AFFINITY_POLICY, (thread_policy_t)&affinity, 1);
+  }
+
+#else
+
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
 
   {
@@ -227,6 +254,9 @@ ___processor_state ___ps;)
   }
 
 #endif
+
+#endif
+
 #endif
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
@@ -406,6 +436,35 @@ void *ptr;)
 #endif
 }
 
+
+#endif
+
+
+#ifdef USE_POSIX
+
+int ___thread_sigmask
+   ___P((int how,
+         ___sigset_type *set,
+         ___sigset_type *oldset),
+        (how,
+         set,
+         oldset)
+int how;
+___sigset_type *set;
+___sigset_type *oldset;)
+{
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+
+  return pthread_sigmask (how, set, oldset);
+
+#else
+
+#ifdef HAVE_SIGPROCMASK
+  return sigprocmask (how, set, oldset);
+#endif
+
+#endif
+}
 
 #endif
 

@@ -103,6 +103,7 @@ ___virtual_machine_state ___vms;)
   ___vms->actlog.activities = ptr;
   ___vms->actlog.nb_activities = 0;
   ___vms->actlog.auto_dump = 1;
+  ___vms->actlog.max_nb_processors = ___vms->nb_processors;
 
 #endif
 
@@ -428,7 +429,7 @@ ___HIDDEN ___U32 distinct_colors[] = {
 #endif
 
 
-___EXP_FUNC(void,___actlog_dump)
+void ___actlog_dump
    ___P((___virtual_machine_state ___vms,
          char *filename),
         (___vms,
@@ -464,9 +465,9 @@ char *filename;)
       write_string (out, act->name);
     }
 
-  write_U32 (out, ___vms->nb_processors);
+  write_U32 (out, ___vms->actlog.max_nb_processors);
 
-  for (i=0; i<___vms->nb_processors; i++)
+  for (i=0; i<___vms->actlog.max_nb_processors; i++)
     {
       ___processor_state ___ps = &___vms->pstate[i];
       ___actlog_transition *ptr = ___ps->actlog.transitions + ___MAX_NB_ACTLOG_TRANSITIONS;

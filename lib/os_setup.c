@@ -1,4 +1,4 @@
-/* File: "os.c" */
+/* File: "os_setup.c" */
 
 /* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
@@ -21,8 +21,8 @@
  *  - dynamic loading
  *  - dynamic C compilation
  *  - floating point environment setup
- *  - processor count
- *  - processor cache size
+ *  - CPU count
+ *  - CPU cache size
  *  - virtual memory statistics
  *  - filesystem path expansion
  *  - formatting of source code position
@@ -33,6 +33,7 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_thread.h"
 #include "os_base.h"
 #include "os_time.h"
@@ -57,6 +58,259 @@
 
 #define NBELEMS(table)(sizeof (table) / sizeof (table[0]))
 
+/*---------------------------------------------------------------------------*/
+
+/* Miscellaneous POSIX utility functions. */
+
+#ifdef USE_POSIX
+
+
+___sigset_type ___block_signal
+   ___P((int signum),
+        (signum)
+int signum;)
+{
+  ___sigset_type oldmask;
+
+#ifdef USE_sigaction
+
+  ___sigset_type toblock;
+
+  sigemptyset (&toblock);
+  sigaddset (&toblock, signum);
+
+  ___thread_sigmask (SIG_BLOCK, &toblock, &oldmask);
+
+#endif
+
+#ifdef USE_signal
+
+  oldmask = sigblock (sigmask (signum));
+
+#endif
+
+  return oldmask;
+}
+
+
+void ___restore_sigmask
+   ___P((___sigset_type oldmask),
+        (oldmask)
+___sigset_type oldmask;)
+{
+#ifdef USE_sigaction
+
+  ___thread_sigmask (SIG_SETMASK, &oldmask, 0);
+
+#endif
+
+#ifdef USE_signal
+
+  sigsetmask (oldmask);
+
+#endif
+}
+
+
+/*
+ * Some system calls can be interrupted by a signal and fail with
+ * errno == EINTR.  The following functions are wrappers for system
+ * calls which may be interrupted.  They simply ignore the EINTR and
+ * retry the operation.
+ *
+ * TODO: add wrappers for all the system calls which can fail
+ * with EINTR.
+ */
+
+pid_t ___waitpid_no_EINTR
+   ___P((pid_t pid,
+         int *stat_loc,
+         int options),
+        (pid,
+         stat_loc,
+         options)
+pid_t pid;
+int *stat_loc;
+int options;)
+{
+  pid_t result;
+
+  for (;;)
+    {
+      result = waitpid (pid, stat_loc, options);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+
+___SSIZE_T ___read_no_EINTR
+   ___P((int fd,
+         void *buf,
+         ___SIZE_T len),
+        (fd,
+         buf,
+         len)
+int fd;
+void *buf;
+___SIZE_T len;)
+{
+  char *p = ___CAST(char*,buf);
+  ___SSIZE_T result = 0;
+  int n;
+
+  while (result < len)
+    {
+      n = read (fd, p+result, len-result);
+      if (n > 0)
+        result += n;
+      else if (n == 0)
+        break;
+      else if (errno != EINTR)
+        return n; /* this forgets that some bytes were transferred */
+    }
+
+  return result;
+}
+
+
+int ___close_no_EINTR
+   ___P((int fd),
+        (fd)
+int fd;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = close (fd);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+
+int ___dup_no_EINTR
+   ___P((int fd),
+        (fd)
+int fd;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = dup (fd);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+
+int ___dup2_no_EINTR
+   ___P((int fd,
+         int fd2),
+        (fd,
+         fd2)
+int fd;
+int fd2;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = dup2 (fd, fd2);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+
+int ___set_fd_blocking_mode
+   ___P((int fd,
+         ___BOOL blocking),
+        (fd,
+         blocking)
+int fd;
+___BOOL blocking;)
+{
+  int fl;
+
+#ifdef USE_fcntl
+
+  if ((fl = fcntl (fd, F_GETFL, 0)) >= 0)
+    fl = fcntl (fd,
+                F_SETFL,
+                blocking ? (fl & ~O_NONBLOCK) : (fl | O_NONBLOCK));
+
+#else
+
+  fl = 0;
+
+#endif
+
+  return fl;
+}
+
+
+#define USE_pipe
+
+
+int ___open_half_duplex_pipe
+   ___P((___half_duplex_pipe *hdp),
+        (hdp)
+___half_duplex_pipe *hdp;)
+{
+  int fds[2];
+
+#ifdef USE_pipe
+  if (pipe (fds) < 0)
+    return -1;
+#endif
+
+#ifdef USE_socketpair
+  if (socketpair (AF_UNIX, SOCK_STREAM, 0, fds) < 0)
+    return -1;
+#endif
+
+  hdp->reading_fd = fds[0];
+  hdp->writing_fd = fds[1];
+
+  return 0;
+}
+
+
+void ___close_half_duplex_pipe
+   ___P((___half_duplex_pipe *hdp,
+         int end),
+        (hdp,
+         end)
+___half_duplex_pipe *hdp;
+int end;)
+{
+  if (end != 1 && hdp->reading_fd >= 0)
+    {
+      ___close_no_EINTR (hdp->reading_fd); /* ignore error */
+      hdp->reading_fd = -1;
+    }
+
+  if (end != 0 && hdp->writing_fd >= 0)
+    {
+      ___close_no_EINTR (hdp->writing_fd); /* ignore error */
+      hdp->writing_fd = -1;
+    }
+}
+
+
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -80,26 +334,33 @@ void ___cleanup_os_interrupt_handling ___PVOID
   ___cleanup_heartbeat_interrupt_handling ();
 }
 
-void ___disable_os_interrupts ___PVOID
+void ___mask_os_interrupts_begin
+   ___P((___mask_os_interrupts_state *state),
+        (state)
+___mask_os_interrupts_state *state;)
 {
-  ___disable_heartbeat_interrupts ();
-  ___disable_user_interrupts ();
+  ___mask_user_interrupts_begin (&state->user_interrupt);
+  ___mask_heartbeat_interrupts_begin (&state->heartbeat_interrupt);
 }
 
-void ___enable_os_interrupts ___PVOID
+
+void ___mask_os_interrupts_end
+   ___P((___mask_os_interrupts_state *state),
+        (state)
+___mask_os_interrupts_state *state;)
 {
-  ___enable_user_interrupts ();
-  ___enable_heartbeat_interrupts ();
+  ___mask_heartbeat_interrupts_end (&state->heartbeat_interrupt);
+  ___mask_user_interrupts_end (&state->user_interrupt);
 }
 
 
 /*---------------------------------------------------------------------------*/
 
-/* Processor information. */
+/* CPU information. */
 
-int ___processor_count ___PVOID
+int ___cpu_count ___PVOID
 {
-  int nb_processors = 0;
+  int nb_cpus = 0;
 
 #ifdef USE_sysconf
 
@@ -115,7 +376,7 @@ int ___processor_count ___PVOID
 
 #ifdef OP_SC_NPROCESSORS
 
-  nb_processors = sysconf (OP_SC_NPROCESSORS);
+  nb_cpus = sysconf (OP_SC_NPROCESSORS);
 
 #else
 
@@ -141,7 +402,7 @@ int ___processor_count ___PVOID
   mib[1] = OP_NB_CPU;
 
   if (sysctl (mib, 2, &n, &sizeof_n, NULL, 0) == 0) {
-    nb_processors = n;
+    nb_cpus = n;
   }
 
 #endif
@@ -156,15 +417,15 @@ int ___processor_count ___PVOID
 
  GetSystemInfo (&si);
 
- nb_processors = si.dwNumberOfProcessors;
+ nb_cpus = si.dwNumberOfProcessors;
 
 #endif
 
-  return nb_processors;
+  return nb_cpus;
 }
 
 
-int ___processor_cache_size
+int ___cpu_cache_size
    ___P((___BOOL instruction_cache,
          int level),
         (instruction_cache,
@@ -2559,7 +2820,9 @@ ___HIDDEN void heartbeat_intr ___PVOID
 ___HIDDEN void user_intr ___PVOID
 {
   /**** belongs elsewhere */
-  ___raise_interrupt (___INTR_USER);
+  /* send interrupt only to processor 0 of vm 0 */
+  ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+  ___raise_interrupt_pstate (&___vms->pstate[0], ___INTR_USER);
 }
 
 
@@ -2609,6 +2872,42 @@ int sig;)
 #endif
 
 #endif
+
+
+___SCMOBJ ___setup_os_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  return ___setup_io_pstate (___ps);
+}
+
+
+void ___cleanup_os_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___cleanup_io_pstate (___ps);
+}
+
+
+___SCMOBJ ___setup_os_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  return ___setup_io_vmstate (___vms);
+}
+
+
+void ___cleanup_os_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  ___cleanup_io_vmstate (___vms);
+}
 
 
 ___SCMOBJ ___setup_os ___PVOID

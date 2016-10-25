@@ -1,6 +1,6 @@
 /* File: "os_tty.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -485,11 +485,6 @@ extern ___SCMOBJ ___os_device_tty_mode_set
          ___SCMOBJ speed),
         ());
 
-extern ___SCMOBJ ___os_device_tty_input_set
-   ___P((___SCMOBJ dev,
-         ___SCMOBJ input),
-        ());
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -551,9 +546,22 @@ extern ___SCMOBJ ___setup_user_interrupt_handling ___PVOID;
 
 extern void ___cleanup_user_interrupt_handling ___PVOID;
 
-extern void ___disable_user_interrupts ___PVOID;
+typedef struct ___mask_user_interrupts_state_struct
+  {
+#ifdef USE_POSIX
 
-extern void ___enable_user_interrupts ___PVOID;
+    ___sigset_type oldmask;
+
+#endif
+  } ___mask_user_interrupts_state;
+
+extern void ___mask_user_interrupts_begin
+   ___P((___mask_user_interrupts_state *state),
+        ());
+
+extern void ___mask_user_interrupts_end
+   ___P((___mask_user_interrupts_state *state),
+        ());
 
 
 /*---------------------------------------------------------------------------*/

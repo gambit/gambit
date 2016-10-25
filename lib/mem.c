@@ -6,6 +6,7 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_time.h"
 #include "setup.h"
@@ -4146,20 +4147,12 @@ ___processor_state ___ps;)
 
 
 ___SCMOBJ ___setup_mem_pstate
-   ___P((___processor_state ___ps,
-         ___virtual_machine_state ___vms),
-        (___ps,
-         ___vms)
-___processor_state ___ps;
-___virtual_machine_state ___vms;)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   ___SCMOBJ err;
-
-#ifndef ___SINGLE_THREADED_VMS
-
-  ___ps->vmstate = ___vms;
-
-#endif
 
   /*
    * Setup processor's activity log.
@@ -4390,7 +4383,7 @@ ___SCMOBJ ___setup_mem ___PVOID
        * Choose a reasonable minimum heap size.
        */
 
-      ___GSTATE->setup_params.min_heap = ___processor_cache_size (0, 0) / 2;
+      ___GSTATE->setup_params.min_heap = ___cpu_cache_size (0, 0) / 2;
 
       SET_MAX(___GSTATE->setup_params.min_heap, ___DEFAULT_MIN_HEAP);
     }
@@ -5562,7 +5555,7 @@ ___PSDKR)
   reference_location = IN_RUN_QUEUE;
 #endif
 
-  mark_array (___PSP &___VMSTATE_FROM_PSTATE(___ps)->run_queue, 1);
+  mark_array (___PSP &___ps->run_queue, 1);
 }
 
 
@@ -5827,7 +5820,6 @@ ___PSDKR)
 
   if (___PROCESSOR_ID(___ps,___vms) == 0)
     {
-      mark_run_queue (___PSPNC);
       mark_symkey_tables (___PSPNC);
       mark_rc (___PSPNC);
     }
@@ -5839,6 +5831,8 @@ ___PSDKR)
   mark_registers (___PSPNC);
 
   mark_current_thread (___PSPNC);
+
+  mark_run_queue (___PSPNC);
 
   mark_reachable_from_marked (___PSPNC);
 

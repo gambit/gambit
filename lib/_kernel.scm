@@ -13,6 +13,7 @@
 (c-declare #<<c-declare-end
 
 #include "os.h"
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_time.h"
 #include "os_shell.h"
@@ -1853,6 +1854,16 @@ end-of-code
    "___set_live_percent (___INT(___ARG1)); ___RESULT = ___VOID;"
    percent))
 
+(define-prim (##get-parallelism-level)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_parallelism_level ());"))
+
+(define-prim (##set-parallelism-level! level)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_parallelism_level (___INT(___ARG1)); ___RESULT = ___VOID;"
+   level))
+
 (define-prim (##get-standard-level)
   (##declare (not interrupts-enabled))
   (##c-code "___RESULT = ___FIX(___get_standard_level ());"))
@@ -1879,23 +1890,37 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
-;;; Processor information.
+;;; CPU information.
 
-(define-prim (##processor-count)
+(define-prim (##cpu-count)
   (##declare (not interrupts-enabled))
   (##c-code
-   "___RESULT = ___FIX(___processor_count ());"))
+   "___RESULT = ___FIX(___cpu_count ());"))
 
-(define-prim (##processor-cache-size
+(define-prim (##cpu-cache-size
               #!optional
               (instruction-cache #f)
               (level 0))
   (##declare (not interrupts-enabled))
   (##c-code
    "___RESULT =
-       ___FIX(___processor_cache_size (!___FALSEP(___ARG1), ___INT(___ARG2)));"
+       ___FIX(___cpu_cache_size (!___FALSEP(___ARG1), ___INT(___ARG2)));"
    instruction-cache
    level))
+
+;;;----------------------------------------------------------------------------
+
+;;; VM resizing.
+
+(define ##resize-vm
+  (c-lambda (scheme-object int)
+            scheme-object
+     #<<end-of-code
+
+     ___return(___EXT(___resize_vm) (___PSP ___arg1, ___arg2));
+
+end-of-code
+))
 
 ;;;----------------------------------------------------------------------------
 

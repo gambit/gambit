@@ -1,15 +1,14 @@
 /* File: "os_files.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_FILES_H
 #define ___OS_FILES_H
 
+#include "os.h"
+
 
 /*---------------------------------------------------------------------------*/
-
-/**********************************/
-#include "os.h"
 
 typedef struct ___files_module_struct
   {

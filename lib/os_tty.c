@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -11,6 +11,8 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_setup.h"
+#include "os_thread.h"
 #include "os_base.h"
 #include "os_tty.h"
 #include "os_shell.h"
@@ -8029,7 +8031,7 @@ ___device_tty *self;)
           == d->base.base.direction)
         {
 #ifdef USE_POSIX
-          if (d->fd >= 0 && close_no_EINTR (d->fd) < 0)
+          if (d->fd >= 0 && ___close_no_EINTR (d->fd) < 0)
             return err_code_from_errno ();
 #endif
 
@@ -8554,41 +8556,7 @@ DWORD dwCtrlType;)
       break;
     }
 
-  SetEvent (___io_mod.abort_select); /* ignore error */
-
   return TRUE;
-
-#if 0
-#if 0
-  /**********************************/
-  switch (dwCtrlType)
-    {
-    case CTRL_C_EVENT:
-      io_mod.got_event = 1;
-      break;
-    case CTRL_BREAK_EVENT:
-      io_mod.got_event = 2;
-      break;
-    case CTRL_CLOSE_EVENT:
-      io_mod.got_event = 3;
-      break;
-    case CTRL_LOGOFF_EVENT:
-      io_mod.got_event = 4;
-      break;
-    case CTRL_SHUTDOWN_EVENT:
-      io_mod.got_event = 5;
-      break;
-    default:
-      io_mod.got_event = 999;
-    }
-
-  SetEvent (io_mod.abort_select); /* ignore error */
-
-  return TRUE;
-#else
-  return FALSE;
-#endif
-#endif
 }
 
 
@@ -8635,12 +8603,14 @@ void ___cleanup_user_interrupt_handling ___PVOID
 }
 
 
-void ___disable_user_interrupts ___PVOID
+void ___mask_user_interrupts_begin
+   ___P((___mask_user_interrupts_state *state),
+        (state)
+___mask_user_interrupts_state *state;)
 {
 #ifdef USE_POSIX
-#ifdef HAVE_SIGPROCMASK
 
-  sigset_t sigs;
+  ___sigset_type sigs;
 
   sigemptyset (&sigs);
   sigaddset (&sigs, SIGINT);
@@ -8648,28 +8618,21 @@ void ___disable_user_interrupts ___PVOID
   sigaddset (&sigs, SIGWINCH);
   sigaddset (&sigs, SIGCONT);
 
-  sigprocmask (SIG_BLOCK, &sigs, NULL);
+  ___thread_sigmask (SIG_BLOCK, &sigs, &state->oldmask);
 
-#endif
 #endif
 }
 
-void ___enable_user_interrupts ___PVOID
+
+void ___mask_user_interrupts_end
+   ___P((___mask_user_interrupts_state *state),
+        (state)
+___mask_user_interrupts_state *state;)
 {
 #ifdef USE_POSIX
-#ifdef HAVE_SIGPROCMASK
 
-  sigset_t sigs;
+  ___thread_sigmask (SIG_BLOCK, &state->oldmask, NULL);
 
-  sigemptyset (&sigs);
-  sigaddset (&sigs, SIGINT);
-  sigaddset (&sigs, SIGTERM);
-  sigaddset (&sigs, SIGWINCH);
-  sigaddset (&sigs, SIGCONT);
-
-  sigprocmask (SIG_UNBLOCK, &sigs, NULL);
-
-#endif
 #endif
 }
 

@@ -1533,7 +1533,55 @@
             (macro-check-output-port output-port 5 (make-root-thread thunk n tg ip op)
               (##make-root-thread thunk name tgroup input-port output-port))))))))
 
-(define-prim (##thread-startup!)
+(define (##startup-processor!)
+
+  (declare (not interrupts-enabled))
+
+  (let* ((tgroup
+          (##make-tgroup 'local #f))
+         (input-port
+          ##stdin-port)
+         (output-port
+          ##stdout-port)
+         (thread
+          (##make-root-thread
+           #f
+           'local
+           tgroup
+           input-port
+           output-port)))
+
+    (##c-code
+     "
+     ___CURRENTTHREAD = ___ARG1;
+     ___RUNQUEUE = ___ARG2;
+     ___RESULT = ___FAL;
+     "
+     thread
+     (macro-make-run-queue))
+
+    (##btq-insert! (macro-run-queue) thread)
+    )
+
+  (##enable-interrupts!)
+
+  (let loop ()
+    (declare (interrupts-enabled))
+    (##os-condvar-select! #f #t) ;; wait for interrupt
+    (loop)))
+
+(define (##rvm n)
+  (##resize-vm ##startup-processor! n))
+
+(define (##startup-parallelism!)
+  (let* ((level
+          (##get-parallelism-level))
+         (nb-procs
+          (if (##fx> level 0) level (##fx+ (##cpu-count) level))))
+    (if (##fx> nb-procs 1)
+        (##rvm nb-procs))))
+
+(define-prim (##startup-threading!)
 
   (##declare (not interrupts-enabled))
 
@@ -1555,16 +1603,16 @@
 
     (##c-code
      "
-     ___ps->current_thread = ___ARG1;
-     ___VMSTATE_FROM_PSTATE(___ps)->run_queue = ___ARG2;
+     ___CURRENTTHREAD = ___ARG1;
+     ___RUNQUEUE = ___ARG2;
      ___RESULT = ___FAL;
      "
      primordial-thread
      (macro-make-run-queue))
 
-    (set! ##primordial-thread primordial-thread)
-
     (##btq-insert! (macro-run-queue) primordial-thread)
+
+    (set! ##primordial-thread primordial-thread)
 
     (##interrupt-vector-set! 1 ##thread-heartbeat!)
 
@@ -1582,6 +1630,10 @@
 
     ;; assign serial number 1 to primordial thread
     (##object->serial-number primordial-thread)
+
+    (##thread-heartbeat-interval-set! (macro-default-heartbeat-interval))
+
+    (##startup-parallelism!)
 
     (##void)))
 
@@ -3297,9 +3349,7 @@
 
 (##interrupt-vector-set! 0 ##user-interrupt!)
 
-(##thread-startup!)
-
-(##thread-heartbeat-interval-set! (macro-default-heartbeat-interval))
+(##startup-threading!)
 
 ;;;============================================================================
 ;;(##include "termite/termite.scm")

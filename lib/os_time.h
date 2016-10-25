@@ -63,7 +63,6 @@ typedef struct ___time_struct
 
 /*---------------------------------------------------------------------------*/
 
-
 typedef struct ___time_module_struct
   {
     ___BOOL setup;
@@ -266,9 +265,22 @@ extern ___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID;
 
 extern void ___cleanup_heartbeat_interrupt_handling ___PVOID;
 
-extern void ___disable_heartbeat_interrupts ___PVOID;
+typedef struct ___mask_heartbeat_interrupts_state_struct
+  {
+#ifdef USE_POSIX
 
-extern void ___enable_heartbeat_interrupts ___PVOID;
+    ___sigset_type oldmask;
+
+#endif
+  } ___mask_heartbeat_interrupts_state;
+
+extern void ___mask_heartbeat_interrupts_begin
+   ___P((___mask_heartbeat_interrupts_state *state),
+        ());
+
+extern void ___mask_heartbeat_interrupts_end
+   ___P((___mask_heartbeat_interrupts_state *state),
+        ());
 
 extern ___F64 ___set_heartbeat_interval
    ___P((___F64 seconds),

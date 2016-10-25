@@ -3423,7 +3423,7 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_VAL0      6
 
 #define ___CURRENTTHREAD ___ps->current_thread
-#define ___RUNQUEUE ___VMSTATE_FROM_PSTATE(___ps)->run_queue
+#define ___RUNQUEUE ___ps->run_queue
 
 
 #define ___TICKETLOCK ___ticketlock_struct
@@ -7592,6 +7592,24 @@ typedef struct ___glo_list_struct
 /*---------------------------------------------------------------------------*/
 
 /*
+ * Structures for half and full duplex pipes on POSIX.
+ */
+
+typedef struct ___half_duplex_pipe
+  {
+    int reading_fd;
+    int writing_fd;
+  } ___half_duplex_pipe;
+
+typedef struct ___full_duplex_pipe
+  {
+    ___half_duplex_pipe input;
+    ___half_duplex_pipe output;
+  } ___full_duplex_pipe;
+
+/*---------------------------------------------------------------------------*/
+
+/*
  * Thread system inlined operations.
  */
 
@@ -7831,6 +7849,7 @@ typedef struct ___vmstate_actlog
     ___actlog_activity *activities;
     int nb_activities;
     ___BOOL auto_dump;
+    int max_nb_processors;
   } ___vmstate_actlog;
 
 typedef struct ___pstate_actlog
@@ -7967,6 +7986,20 @@ typedef struct ___rc_header_struct
     ___SCMOBJ data; /* needed for C closures */
   } ___rc_header;
 
+typedef struct ___pstate_os_struct {
+
+  /*
+   * for implementation of asynchronous interrupting the following
+   * structures are needed to force ___device_select to abort wait
+   */
+#ifdef ___OS_WIN32
+  HANDLE select_abort; /* WIN32 event */
+#else
+  ___half_duplex_pipe select_abort; /* POSIX self-pipe */
+#endif
+
+} ___pstate_os;
+
 typedef struct ___pstate_mem_struct {
 
 /* location of tospace in each msection */
@@ -8071,6 +8104,9 @@ int mark_array_call_line_; /* where was mark_array called */
 int gc_calls_to_punt_;
 #endif
 } ___pstate_mem;
+
+typedef struct ___vmstate_os_struct {
+} ___vmstate_os;
 
 typedef struct ___vmstate_mem_struct {
 
@@ -8197,7 +8233,8 @@ typedef struct ___processor_state_struct
     ___WORD *heap_limit;
     ___WORD *hp;
 
-    ___WORD current_thread;
+    ___WORD current_thread; /* the current thread of this processor */
+    ___WORD run_queue; /* the queue of runnable threads of this processor */
 
     ___WORD r[___NB_GVM_REGS];
     ___WORD pc;
@@ -8218,6 +8255,8 @@ typedef struct ___processor_state_struct
 #ifdef ___ACTIVITY_LOG
     ___pstate_actlog actlog; /* activity log state */
 #endif
+
+    ___pstate_os os; /* OS specific state */
 
     ___pstate_mem mem; /* memory management state */
 
@@ -8365,11 +8404,11 @@ typedef struct ___virtual_machine_state_struct
 
     volatile int nb_processors; /* number of processors in this VM */
 
-    ___WORD run_queue; /* the queue of runnable threads */
-
 #ifdef ___ACTIVITY_LOG
     ___vmstate_actlog actlog; /* activity log state */
 #endif
+
+    ___vmstate_os os; /* OS specific state */
 
     ___vmstate_mem mem; /* memory management state */
 
@@ -8398,6 +8437,7 @@ typedef struct ___setup_params_struct
     ___SIZE_T min_heap;
     ___SIZE_T max_heap;
     int live_percent;
+    int parallelism_level;
     ___SIZE_TS (*adjust_heap_hook) ___P((___SIZE_TS live),());
     void (*display_error) ___P((char **msgs),());
     void (*fatal_error) ___P((char **msgs),());
@@ -9672,6 +9712,10 @@ typedef struct ___global_state_struct
     void (*___set_live_percent)
        ___P((int percent),
             ());
+    int (*___get_parallelism_level) ___PVOID;
+    void (*___set_parallelism_level)
+       ___P((int level),
+            ());
     int (*___get_standard_level) ___PVOID;
     void (*___set_standard_level)
        ___P((int level),
@@ -9799,8 +9843,6 @@ typedef struct ___global_state_struct
        ___P((void *ptr),
             ());
 #endif
-    void (*___disable_heartbeat_interrupts) ___PVOID;
-    void (*___enable_heartbeat_interrupts) ___PVOID;
 #endif
 
 #ifdef ___USE_SETJMP
@@ -10981,6 +11023,10 @@ ___IMP_FUNC(int,___get_live_percent) ___PVOID;
 ___IMP_FUNC(void,___set_live_percent)
    ___P((int percent),
         ());
+___IMP_FUNC(int,___get_parallelism_level) ___PVOID;
+___IMP_FUNC(void,___set_parallelism_level)
+   ___P((int level),
+        ());
 ___IMP_FUNC(int,___get_standard_level) ___PVOID;
 ___IMP_FUNC(void,___set_standard_level)
    ___P((int level),
@@ -11114,11 +11160,6 @@ ___IMP_FUNC(void,___set_tls_ptr)
    ___P((void *ptr),
         ());
 #endif
-#endif
-
-#ifndef ___INCLUDED_FROM_OS_TIME
-___IMP_FUNC(void,___disable_heartbeat_interrupts) ___PVOID;
-___IMP_FUNC(void,___enable_heartbeat_interrupts) ___PVOID;
 #endif
 
 #endif

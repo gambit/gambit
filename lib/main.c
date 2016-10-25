@@ -44,6 +44,9 @@ int debug_settings;)
         "  mHEAPSIZE       set minimum heap size in kilobytes\n"
         "  hHEAPSIZE       set maximum heap size in kilobytes\n"
         "  lLIVEPERCENT    set heap live ratio after GC in percent\n"
+#ifndef ___SINGLE_THREADED_VMS
+        "  pLEVEL          set parallelism level (default = nb of CPUs minus 1)\n"
+#endif
         "  s|S             set standard Scheme mode (on|off)\n"
         "  d[OPT...]       set debugging options; OPT is one of:\n"
         "                    p|a       treat uncaught exceptions as errors\n"
@@ -192,6 +195,7 @@ ___mod_or_lnk (*linker)();)
   unsigned long min_heap_len;
   unsigned long max_heap_len;
   int live_percent;
+  int parallelism_level;
   int standard_level;
   int debug_settings;
   int file_settings;
@@ -212,6 +216,11 @@ ___mod_or_lnk (*linker)();)
   min_heap_len = 0;
   max_heap_len = 0;
   live_percent = 0;
+#ifdef ___SINGLE_THREADED_VMS
+  parallelism_level = 1;
+#else
+  parallelism_level = -1;
+#endif
   standard_level = 0;
   debug_settings = ___DEBUG_SETTINGS_INITIAL;
   file_settings = ___FILE_SETTINGS_INITIAL;
@@ -305,8 +314,16 @@ ___mod_or_lnk (*linker)();)
             case 'm':
             case 'h':
             case 'l':
+#ifndef ___SINGLE_THREADED_VMS
+            case 'p':
+#endif
               {
                 unsigned long argval = 0;
+#ifndef ___SINGLE_THREADED_VMS
+                int neg = *arg == '-';
+                if (neg && *s == 'p' && arg[1] >= '0' && arg[1] <= '9')
+                  arg++;
+#endif
                 while (*arg >= '0' && *arg <= '9')
                   {
                     unsigned int n = *arg - '0';
@@ -335,6 +352,9 @@ ___mod_or_lnk (*linker)();)
                               argval = 100;
                             live_percent = argval;
                             break;
+#ifndef ___SINGLE_THREADED_VMS
+                  case 'p': parallelism_level = neg ? -argval : argval;
+#endif
                   }
                 break;
               }
@@ -709,6 +729,7 @@ ___mod_or_lnk (*linker)();)
   setup_params.min_heap          = min_heap_len;
   setup_params.max_heap          = max_heap_len;
   setup_params.live_percent      = live_percent;
+  setup_params.parallelism_level = parallelism_level;
   setup_params.standard_level    = standard_level;
   setup_params.debug_settings    = debug_settings;
   setup_params.file_settings     = file_settings;

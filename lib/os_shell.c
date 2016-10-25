@@ -1,6 +1,6 @@
 /* File: "os_shell.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -11,6 +11,7 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_shell.h"
 #include "os_files.h"
@@ -825,8 +826,9 @@ ___SCMOBJ cmd;)
       == ___FIX(___NO_ERR))
     {
       int code;
+      ___mask_os_interrupts_state os_interrupts;
 
-      ___disable_os_interrupts ();
+      ___mask_os_interrupts_begin (&os_interrupts);
 
       code = system (ccmd);
 
@@ -835,7 +837,7 @@ ___SCMOBJ cmd;)
       else
         e = ___FIX(code & ___MAX_FIX);
 
-      ___enable_os_interrupts ();
+      ___mask_os_interrupts_end (&os_interrupts);
 
       ___release_string (ccmd);
     }
@@ -899,7 +901,9 @@ ___SCMOBJ dir;)
                 e = err_code_from_errno ();
               else
                 {
-                  ___disable_os_interrupts ();
+                  ___mask_os_interrupts_state os_interrupts;
+
+                  ___mask_os_interrupts_begin (&os_interrupts);
 
                   code = system (ccmd);
 
@@ -908,7 +912,7 @@ ___SCMOBJ dir;)
                   else
                     e = ___FIX(code & ___MAX_FIX);
 
-                  ___enable_os_interrupts ();
+                  ___mask_os_interrupts_end (&os_interrupts);
 
                   chdir (old_dir); /* ignore error */
                 }

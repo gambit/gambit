@@ -69,12 +69,12 @@ mandir = @mandir@
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
 
-NORMAL_C = main.c setup.c mem.c os.c os_base.c os_thread.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c actlog.c
+NORMAL_C = main.c setup.c mem.c os_setup.c os_base.c os_thread.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c actlog.c
 NORMAL_CPP =
-NORMAL_H = setup.h mem.h os.h os_base.h os_thread.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h actlog.h dead.h
-NORMAL_O = main@obj@ setup@obj@ mem@obj@ c_intf@obj@ actlog@obj@ os@obj@ os_base@obj@ os_thread@obj@ os_time@obj@ os_shell@obj@ os_files@obj@ os_dyn@obj@ os_tty@obj@ os_io@obj@
-NORMAL_O_PLUS = +main@obj@ +setup@obj@ +mem@obj@ +c_intf@obj@ +actlog@obj@ +os@obj@ +os_base@obj@ +os_thread@obj@ +os_time@obj@ +os_shell@obj@ +os_files@obj@ +os_dyn@obj@ +os_tty@obj@ +os_io@obj@
-NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,actlog@obj@,os@obj@,os_base@obj@,os_thread@obj@,os_time@obj@,os_shell@obj@,os_files@obj@,os_dyn@obj@,os_tty@obj@,os_io@obj@
+NORMAL_H = setup.h mem.h os.h os_setup.h os_base.h os_thread.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h actlog.h dead.h
+NORMAL_O = main@obj@ setup@obj@ mem@obj@ c_intf@obj@ actlog@obj@ os_setup@obj@ os_base@obj@ os_thread@obj@ os_time@obj@ os_shell@obj@ os_files@obj@ os_dyn@obj@ os_tty@obj@ os_io@obj@
+NORMAL_O_PLUS = +main@obj@ +setup@obj@ +mem@obj@ +c_intf@obj@ +actlog@obj@ +os_setup@obj@ +os_base@obj@ +os_thread@obj@ +os_time@obj@ +os_shell@obj@ +os_files@obj@ +os_dyn@obj@ +os_tty@obj@ +os_io@obj@
+NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,actlog@obj@,os_setup@obj@,os_base@obj@,os_thread@obj@,os_time@obj@,os_shell@obj@,os_files@obj@,os_dyn@obj@,os_tty@obj@,os_io@obj@
 NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
@@ -99,7 +99,7 @@ MODULES_O_PLUS = +_kernel@obj@ +_system@obj@ +_num@obj@ +_std@obj@ \
 MODULES_O_COMMA = _kernel@obj@,_system@obj@,_num@obj@,_std@obj@,\
 +_eval@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,_repl@obj@
 NORMAL_O_IN_COMPILE_ORDER = main@obj@ os_tty@obj@ c_intf@obj@ actlog@obj@ \
-os_io@obj@ setup@obj@ mem@obj@ os_files@obj@ os@obj@ os_base@obj@ \
+os_io@obj@ setup@obj@ mem@obj@ os_files@obj@ os_setup@obj@ os_base@obj@ \
 os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
 _repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@
@@ -232,7 +232,7 @@ $(srcdirpfx)$(rootfromhere)/lib/_with-syntax-boot.scm
 
 $(MODULES_O) $(NORMAL_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
-_kernel@obj@: $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+_kernel@obj@: $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_setup.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
 
 _std@obj@: os.h
 
@@ -240,31 +240,31 @@ _num@obj@: mem.h
 
 main@obj@: main.c os.h os_base.h os_shell.h setup.h
 
-setup@obj@: setup.c os.h os_base.h os_files.h os_dyn.h os_thread.h setup.h mem.h c_intf.h
+setup@obj@: setup.c os.h os_setup.h os_base.h os_files.h os_dyn.h os_thread.h setup.h mem.h c_intf.h
 
-mem@obj@: mem.c os.h os_base.h os_time.h setup.h mem.h c_intf.h actlog.h
+mem@obj@: mem.c os.h os_setup.h os_base.h os_time.h setup.h mem.h c_intf.h actlog.h
 
 c_intf@obj@: c_intf.c os.h os_base.h os_dyn.h setup.h mem.h c_intf.h
 
 actlog@obj@: actlog.c os.h os_base.h os_time.h actlog.h
 
-os@obj@: os.c os.h os_thread.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+os_setup@obj@: os_setup.c os.h os_setup.h os_thread.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
 
 os_base@obj@: os_base.c os.h os_base.h setup.h
 
 os_thread@obj@: os_thread.c os.h os_base.h os_thread.h
 
-os_time@obj@: os_time.c os.h os_base.h os_time.h
+os_time@obj@: os_time.c os.h os_thread.h os_base.h os_time.h
 
-os_shell@obj@: os_shell.c os.h os_base.h os_shell.h os_files.h
+os_shell@obj@: os_shell.c os.h os_setup.h os_base.h os_shell.h os_files.h
 
 os_files@obj@: os_files.c os.h os_base.h os_shell.h os_files.h setup.h
 
 os_dyn@obj@: os_dyn.c os.h os_base.h os_shell.h os_files.h os_dyn.h
 
-os_tty@obj@: os_tty.c os.h os_base.h os_tty.h os_shell.h os_io.h mem.h c_intf.h
+os_tty@obj@: os_tty.c os.h os_setup.h os_thread.h os_base.h os_tty.h os_shell.h os_io.h mem.h c_intf.h
 
-os_io@obj@: os_io.c os.h os_base.h os_io.h os_tty.h os_files.h setup.h c_intf.h
+os_io@obj@: os_io.c os.h os_setup.h os_base.h os_io.h os_tty.h os_files.h setup.h c_intf.h
 
 bootstrap-pre:
 

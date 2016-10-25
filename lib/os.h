@@ -592,6 +592,24 @@
 #endif
 #endif
 
+#ifdef USE_select
+#define USE_select_or_poll
+#else
+#ifdef USE_poll
+#define USE_select_or_poll
+#endif
+#endif
+
+#ifdef ___OS_WIN32
+#undef USE_ASYNC_DEVICE_SELECT_ABORT
+#define USE_ASYNC_DEVICE_SELECT_ABORT
+#endif
+
+#ifndef ___SINGLE_THREADED_VMS
+#undef USE_ASYNC_DEVICE_SELECT_ABORT
+#define USE_ASYNC_DEVICE_SELECT_ABORT
+#endif
+
 
 /* Determine which file time changing interface should be used.  */
 
@@ -1662,6 +1680,17 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #endif
 
 
+#ifdef USE_POSIX
+
+#ifdef USE_sigaction
+typedef sigset_t ___sigset_type;
+#else
+typedef int ___sigset_type;
+#endif
+
+#endif
+
+
 /*---------------------------------------------------------------------------*/
 
 #define ___CHAR_TYPE(ce) \
@@ -1677,64 +1706,6 @@ ce(___CHAR_ENCODING_ISO_8859_1, \
    ___CHAR_ENCODING_UCS_4, \
    ___CHAR_ENCODING_WCHAR, \
    ___CHAR_ENCODING_NATIVE)
-
-
-extern ___SCMOBJ ___setup_os_interrupt_handling ___PVOID;
-
-extern void ___cleanup_os_interrupt_handling ___PVOID;
-
-extern void ___disable_os_interrupts ___PVOID;
-
-extern void ___enable_os_interrupts ___PVOID;
-
-
-/*---------------------------------------------------------------------------*/
-
-/* Processor information. */
-
-extern int ___processor_count ___PVOID;
-
-extern int ___processor_cache_size
-   ___P((___BOOL instruction_cache,
-         int level),
-        ());
-
-
-/* Virtual memory statistics. */
-
-extern void ___vm_stats
-   ___P((___SIZE_TS *minflt,
-         ___SIZE_TS *majflt),
-        ());
-
-
-/* Formatting of source code position. */
-
-extern char *___format_filepos
-   ___P((char *path,
-         ___SIZE_TS filepos,
-         ___BOOL pinpoint),
-        ());
-
-
-/* System type information. */
-
-extern char **___os_system_type ___PVOID;
-extern char *___os_system_type_string ___PVOID;
-extern char *___os_configure_command_string ___PVOID;
-
-
-/* C compilation environment information. */
-
-extern char *___os_obj_extension_string ___PVOID;
-extern char *___os_exe_extension_string ___PVOID;
-extern char *___os_bat_extension_string ___PVOID;
-
-
-/* OS initialization/finalization. */
-
-extern ___SCMOBJ ___setup_os ___PVOID;
-extern void ___cleanup_os ___PVOID;
 
 
 /* Utilities for machine encoding of characters. */

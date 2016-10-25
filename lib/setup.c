@@ -11,10 +11,12 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_files.h"
 #include "os_dyn.h"
 #include "os_thread.h"
+#include "os_io.h"
 #include "setup.h"
 #include "mem.h"
 #include "c_intf.h"
@@ -80,7 +82,10 @@ int code;)
 
   if (___INTERRUPT_REQ(___ps->intr_flag[code] = ___FIX(1)<<code,
                        ___ps->intr_mask))
-    ___STACK_TRIP_ON();
+    {
+      ___STACK_TRIP_ON();
+      ___device_select_abort (___ps); /* abort ___device_select if waiting */
+    }
 }
 
 
@@ -545,6 +550,11 @@ ___WORD target_nb_processors;)
   if (id == 0)
     {
       ___vms->mem.target_nb_processors_ = target_nb_processors;
+
+#ifdef ___ACTIVITY_LOG
+      if (target_nb_processors > ___vms->actlog.max_nb_processors)
+        ___vms->actlog.max_nb_processors = target_nb_processors;
+#endif
     }
 
   if (___vms->mem.the_msections_->nb_sections - ___vms->mem.nb_msections_assigned_ <
@@ -2854,6 +2864,81 @@ int line;)
  */
 
 
+___HIDDEN void cleanup_os_and_mem_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___cleanup_mem_pstate (___ps);
+  ___cleanup_os_pstate (___ps);
+}
+
+
+___HIDDEN ___SCMOBJ setup_os_and_mem_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___SCMOBJ err;
+
+  if ((err = ___setup_os_pstate (___ps)) == ___FIX(___NO_ERR))
+    {
+      if ((err = ___setup_mem_pstate (___ps)) != ___FIX(___NO_ERR))
+        ___cleanup_os_pstate (___ps);
+    }
+
+  return err;
+}
+
+
+___HIDDEN void cleanup_os_and_mem_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  ___cleanup_mem_vmstate (___vms);
+  ___cleanup_os_vmstate (___vms);
+}
+
+
+___HIDDEN ___SCMOBJ setup_os_and_mem_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  ___SCMOBJ err;
+
+  if ((err = ___setup_os_vmstate (___vms)) == ___FIX(___NO_ERR))
+    {
+      if ((err = ___setup_mem_vmstate (___vms)) != ___FIX(___NO_ERR))
+        ___cleanup_os_vmstate (___vms);
+    }
+
+  return err;
+}
+
+
+___HIDDEN void cleanup_os_and_mem ___PVOID
+{
+  ___cleanup_mem ();
+  ___cleanup_os ();
+}
+
+
+___HIDDEN ___SCMOBJ setup_os_and_mem ___PVOID
+{
+  ___SCMOBJ err;
+
+  if ((err = ___setup_os ()) == ___FIX(___NO_ERR))
+    {
+      if ((err = ___setup_mem ()) != ___FIX(___NO_ERR))
+        ___cleanup_os ();
+    }
+
+  return err;
+}
+
+
 ___EXP_FUNC(void,___cleanup_pstate)
    ___P((___processor_state ___ps),
         (___ps)
@@ -2874,10 +2959,18 @@ ___virtual_machine_state ___vms;)
   int i;
 
   /*
-   * Setup processor's memory management.
+   * Processors need to know in which VM they are.
    */
 
-  if ((err = ___setup_mem_pstate (___ps, ___vms)) != ___FIX(___NO_ERR))
+#ifndef ___SINGLE_THREADED_VMS
+  ___ps->vmstate = ___vms;
+#endif
+
+  /*
+   * Setup processor's OS specific structures and memory management.
+   */
+
+  if ((err = setup_os_and_mem_pstate (___ps)) != ___FIX(___NO_ERR))
     return err;
 
   ___ACTLOG_PS(run,green);
@@ -2887,6 +2980,7 @@ ___virtual_machine_state ___vms;)
    */
 
   ___ps->current_thread = ___FAL;
+  ___ps->run_queue = ___FAL;
 
   /*
    * Setup registers.
@@ -2952,12 +3046,6 @@ ___virtual_machine_state ___vms;)
   ___vms->mem.target_nb_processors_ = 1;
 
   /*
-   * Setup queue of runnable threads.
-   */
-
-  ___vms->run_queue = ___FAL;
-
-  /*
    * Setup virtual machine's activity log.
    */
 
@@ -2965,10 +3053,10 @@ ___virtual_machine_state ___vms;)
     return err;
 
   /*
-   * Setup virtual machine's memory management.
+   * Setup virtual machine's OS specific structures and memory management.
    */
 
-  ___setup_mem_vmstate (___vms);
+  setup_os_and_mem_vmstate (___vms);
 
   /*
    * Setup the main processor of the virtual machine.
@@ -2980,6 +3068,18 @@ ___virtual_machine_state ___vms;)
 
 ___EXP_FUNC(void,___cleanup) ___PVOID
 {
+#ifndef ___SINGLE_THREADED_VMS
+
+  /*
+   * Shutdown processors of this VM except for processor 0.
+   */
+
+  ___processor_state ___ps = ___PSTATE;
+
+  ___resize_vm (___PSP ___FAL, 1);
+
+#endif
+
   /*
    * Only do cleanup once after successful setup.
    */
@@ -3012,8 +3112,7 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
 
 #endif
 
-  ___cleanup_mem ();
-  ___cleanup_os ();
+  cleanup_os_and_mem ();
 }
 
 
@@ -3037,6 +3136,11 @@ ___setup_params_struct *setup_params;)
   setup_params->min_heap          = 0;
   setup_params->max_heap          = 0;
   setup_params->live_percent      = 0;
+#ifdef ___SINGLE_THREADED_VMS
+  setup_params->parallelism_level = 1;
+#else
+  setup_params->parallelism_level = 0;
+#endif
   setup_params->adjust_heap_hook  = 0;
   setup_params->display_error     = 0;
   setup_params->fatal_error       = 0;
@@ -3098,6 +3202,21 @@ ___EXP_FUNC(void,___set_live_percent)
 int percent;)
 {
   ___GSTATE->setup_params.live_percent = percent;
+}
+
+
+___EXP_FUNC(int,___get_parallelism_level) ___PVOID
+{
+  return ___GSTATE->setup_params.parallelism_level;
+}
+
+
+___EXP_FUNC(void,___set_parallelism_level)
+   ___P((int level),
+        (level)
+int level;)
+{
+  ___GSTATE->setup_params.parallelism_level = level;
 }
 
 
@@ -3207,28 +3326,6 @@ ___HIDDEN void setup_kernel_handlers ___PVOID
   ___GSTATE->dynamic_env_bind_return = ___LBL(1);
 
 #undef ___PH_LBL0
-}
-
-
-___HIDDEN ___SCMOBJ setup_os_and_mem ___PVOID
-{
-  ___SCMOBJ err;
-
-  /*
-   * Setup the operating system module.
-   */
-
-  if ((err = ___setup_os ()) == ___FIX(___NO_ERR))
-    {
-      /*
-       * Setup memory management.
-       */
-
-      if ((err = ___setup_mem ()) != ___FIX(___NO_ERR))
-        ___cleanup_os ();
-    }
-
-  return err;
 }
 
 
@@ -3950,6 +4047,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___set_live_percent
     = ___set_live_percent;
 
+  ___GSTATE->___get_parallelism_level
+    = ___get_parallelism_level;
+
+  ___GSTATE->___set_parallelism_level
+    = ___set_parallelism_level;
+
   ___GSTATE->___get_standard_level
     = ___get_standard_level;
 
@@ -4058,12 +4161,6 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
     = ___set_tls_ptr;
 
 #endif
-
-  ___GSTATE->___disable_heartbeat_interrupts
-    = ___disable_heartbeat_interrupts;
-
-  ___GSTATE->___enable_heartbeat_interrupts
-    = ___enable_heartbeat_interrupts;
 
 #endif
 }

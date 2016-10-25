@@ -79,6 +79,17 @@ extern void ___thread_set_pstate
    ___P((___processor_state ___ps),
         ());
 
+#ifdef USE_POSIX
+
+extern int ___thread_sigmask
+   ___P((int how,
+         ___sigset_type *set,
+         ___sigset_type *oldset),
+        ());
+#else
+
+#endif
+
 
 extern ___SCMOBJ ___setup_thread_module ___PVOID;
 

@@ -1,12 +1,13 @@
 /* File: "os_io.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
 
-/**********************************/
+#include "os.h"
 #include "os_time.h"
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -133,6 +134,8 @@ typedef struct ___device_select_state_struct
 
     int devs_next[MAX_CONDVARS];
 
+#ifdef USE_select_or_poll
+
 #ifdef USE_select
     int highest_fd_plus_1;
     fd_set readfds;
@@ -146,6 +149,8 @@ typedef struct ___device_select_state_struct
     /* active set bitmaps */
     ___poll_fd_set readfds;
     ___poll_fd_set writefds;
+#endif
+
 #endif
 
 #ifdef USE_MsgWaitForMultipleObjects
@@ -258,9 +263,8 @@ typedef struct ___io_module_struct
 #ifdef USE_WIN32
 
     HANDLE always_signaled;  /* this event is always signaled */
-    HANDLE abort_select;     /* ___device_select exits when this is signaled */
 
-#define ___IO_MODULE_INIT , 0, 0
+#define ___IO_MODULE_INIT , 0
 
 #endif
   } ___io_module;
@@ -431,45 +435,6 @@ typedef struct ___device_stream_pump_struct
  */
 
 #define PUMP_PRIORITY THREAD_PRIORITY_ABOVE_NORMAL
-
-#endif
-
-
-/*---------------------------------------------------------------------------*/
-
-/* Miscellaneous utility functions. */
-
-#ifdef USE_POSIX
-
-extern pid_t waitpid_no_EINTR
-   ___P((pid_t pid,
-         int *stat_loc,
-         int options),
-        ());
-
-extern ___SSIZE_T read_no_EINTR
-   ___P((int fd,
-         void *buf,
-         ___SIZE_T len),
-        ());
-
-extern int close_no_EINTR
-   ___P((int fd),
-        ());
-
-extern int dup_no_EINTR
-   ___P((int fd),
-        ());
-
-extern int dup2_no_EINTR
-   ___P((int fd,
-         int fd2),
-        ());
-
-extern int set_fd_blocking_mode
-   ___P((int fd,
-         ___BOOL blocking),
-        ());
 
 #endif
 
@@ -653,41 +618,15 @@ extern ___SCMOBJ ___device_stream_setup
          int pumps_on),
         ());
 
-
-#if 0
-/* Tty stream device. */
-
-typedef struct ___device_tty_struct
-  {
-    ___device_stream base;
-    tty t;
-  } ___device_tty;
-
-typedef struct ___device_tty_vtbl_struct
-  {
-    ___device_stream_vtbl base;
-  } ___device_tty_vtbl;
-
-extern ___SCMOBJ ___device_tty_open
-   ___P((___device_tty **dev,
-         ___device_group *dgroup,
-         int fd,
-         int direction),
-        ());
-#endif
-
-
-
-
-
-
-
-
 extern ___SCMOBJ ___device_select
    ___P((___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),
+        ());
+
+extern void ___device_select_abort
+   ___P((___processor_state ___ps),
         ());
 
 extern ___SCMOBJ ___device_force_output
@@ -903,153 +842,27 @@ extern ___SCMOBJ ___os_port_encode_chars
    ___P((___SCMOBJ port),
         ());
 
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Change file times. */
-
-extern ___SCMOBJ ___os_file_times_set
-   ___P((___SCMOBJ path,
-         ___SCMOBJ modification_time,
-         ___SCMOBJ access_time),
-        ());
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to file information. */
-
-extern ___SCMOBJ ___os_file_info
-   ___P((___SCMOBJ path,
-         ___SCMOBJ chase),
-        ());
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to user information. */
-
-extern ___SCMOBJ ___os_user_info
-   ___P((___SCMOBJ user),
-        ());
-
-extern ___SCMOBJ ___os_user_name ___PVOID;
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to group information. */
-
-extern ___SCMOBJ ___os_group_info
-   ___P((___SCMOBJ group),
-        ());
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to host information. */
-
-extern ___SCMOBJ ___os_address_infos
-   ___P((___SCMOBJ host,
-         ___SCMOBJ serv,
-         ___SCMOBJ flags,
-         ___SCMOBJ family,
-         ___SCMOBJ socktype,
-         ___SCMOBJ protocol),
-        ());
-
-extern ___SCMOBJ ___os_host_info
-   ___P((___SCMOBJ host),
-        ());
-
-extern ___SCMOBJ ___os_host_name ___PVOID;
-
-#ifdef USE_NETWORKING
-
-extern ___SCMOBJ ___SCMOBJ_to_in_addr
-   ___P((___SCMOBJ addr,
-         struct in_addr *ia,
-         int arg_num),
-        ());
-
-extern ___SCMOBJ ___in_addr_to_SCMOBJ
-   ___P((struct in_addr *ia,
-         int arg_num),
-        ());
-
-#ifdef USE_IPV6
-
-extern ___SCMOBJ ___SCMOBJ_to_in6_addr
-   ___P((___SCMOBJ addr,
-         struct in6_addr *ia,
-         int arg_num),
-        ());
-
-extern ___SCMOBJ ___in6_addr_to_SCMOBJ
-   ___P((struct in6_addr *ia,
-         int arg_num),
-        ());
-
-#endif
-
-extern ___SCMOBJ ___SCMOBJ_to_sockaddr
-   ___P((___SCMOBJ addr,
-         ___SCMOBJ port_num,
-         struct sockaddr *sa,
-         int *salen,
-         int arg_num),
-        ());
-
-extern ___SCMOBJ ___sockaddr_to_SCMOBJ
-   ___P((struct sockaddr *sa,
-         int salen,
-         int arg_num),
-        ());
-
-extern ___SCMOBJ ___addr_to_SCMOBJ
-   ___P((void *sa,
-         int salen,
-         int arg_num),
-        ());
-
-#endif
-
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to service information. */
-
-extern ___SCMOBJ ___os_service_info
-   ___P((___SCMOBJ service,
-         ___SCMOBJ protocol),
-        ());
-
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to protocol information. */
-
-extern ___SCMOBJ ___os_protocol_info
-   ___P((___SCMOBJ protocol),
-        ());
-
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to network information. */
-
-extern ___SCMOBJ ___os_network_info
-   ___P((___SCMOBJ network),
-        ());
-
-
-/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
-
-/* Access to process information. */
-
-extern ___SCMOBJ ___os_getpid ___PVOID;
-extern ___SCMOBJ ___os_getppid ___PVOID;
-
 
 /*---------------------------------------------------------------------------*/
 
 /* I/O module initialization/finalization. */
 
+
+extern ___SCMOBJ ___setup_io_pstate
+   ___P((___processor_state ___ps),
+        ());
+
+extern void ___cleanup_io_pstate
+   ___P((___processor_state ___ps),
+        ());
+
+extern ___SCMOBJ ___setup_io_vmstate
+   ___P((___virtual_machine_state ___vms),
+        ());
+
+extern void ___cleanup_io_vmstate
+   ___P((___virtual_machine_state ___vms),
+        ());
 
 extern ___SCMOBJ ___setup_io_module ___PVOID;
 

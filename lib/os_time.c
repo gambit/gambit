@@ -11,6 +11,7 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_thread.h"
 #include "os_base.h"
 #include "os_time.h"
 
@@ -928,12 +929,18 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_begin
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
 }
 
 
-void ___enable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_end
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
 }
 
@@ -1022,36 +1029,61 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_begin
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
-  ___F64 save_heartbeat_interval = ___time_mod.current_heartbeat_interval;
-  ___set_heartbeat_interval (-1.0);
-  ___time_mod.current_heartbeat_interval = save_heartbeat_interval;
 #ifdef USE_POSIX
-  ___set_signal_handler (HEARTBEAT_SIG, SIG_IGN);
+
+  ___sigset_type toblock;
+
+  sigemptyset (&toblock);
+  sigaddset (&toblock, HEARTBEAT_SIG);
+
+  ___thread_sigmask (SIG_BLOCK, &toblock, &state->oldmask);
+
 #endif
 }
 
 
-void ___enable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_end
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
-  ___set_heartbeat_interval (___time_mod.current_heartbeat_interval);
 #ifdef USE_POSIX
-  ___set_signal_handler (HEARTBEAT_SIG, heartbeat_interrupt_handler);
+
+  ___thread_sigmask (SIG_SETMASK, &state->oldmask, 0);
+
 #endif
 }
 
 
 ___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
-  ___enable_heartbeat_interrupts ();
+  ___set_heartbeat_interval (___time_mod.current_heartbeat_interval);
+
+#ifdef USE_POSIX
+  ___set_signal_handler (HEARTBEAT_SIG, heartbeat_interrupt_handler);
+#endif
+
   return ___FIX(___NO_ERR);
 }
 
 
 void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
-  ___disable_heartbeat_interrupts ();
+  ___F64 save_heartbeat_interval = ___time_mod.current_heartbeat_interval;
+
+  ___set_heartbeat_interval (-1.0);
+
+  ___time_mod.current_heartbeat_interval = save_heartbeat_interval;
+
+#ifdef USE_POSIX
+  ___set_signal_handler (HEARTBEAT_SIG, SIG_IGN);
+#endif
+
 }
 
 
@@ -1112,13 +1144,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_begin
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_end
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 1;
 }
@@ -1208,13 +1246,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_begin
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_end
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 1;
 }
@@ -1349,13 +1393,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_begin
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_end
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 1;
 }
@@ -1468,13 +1518,19 @@ ___F64 seconds;)
 }
 
 
-void ___disable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_begin
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___enable_heartbeat_interrupts ___PVOID
+void ___mask_heartbeat_interrupts_end
+   ___P((___mask_heartbeat_interrupts_state *state),
+        (state)
+___mask_heartbeat_interrupts_state *state;)
 {
   ___time_mod.heartbeat_enabled = 1;
 }

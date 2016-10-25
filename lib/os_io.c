@@ -11,6 +11,8 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_setup.h"
+#include "os_thread.h"
 #include "os_base.h"
 #include "os_io.h"
 #include "os_tty.h"
@@ -647,701 +649,7 @@ ___stream_index *len_done;)
 
 /* Operations on I/O devices. */
 
-/* Miscellaneous utility functions. */
-
-#ifdef USE_POSIX
-
-
-#ifdef USE_sigaction
-typedef sigset_t sigset_type;
-#else
-typedef int sigset_type;
-#endif
-
-
-___HIDDEN sigset_type block_signal
-   ___P((int signum),
-        (signum)
-int signum;)
-{
-  sigset_type oldmask;
-
-#ifdef USE_sigaction
-
-  sigset_type toblock;
-
-  sigemptyset (&toblock);
-  sigaddset (&toblock, signum);
-  sigprocmask (SIG_BLOCK, &toblock, &oldmask);
-
-#endif
-
-#ifdef USE_signal
-
-  oldmask = sigblock (sigmask (signum));
-
-#endif
-
-  return oldmask;
-}
-
-
-___HIDDEN void restore_sigmask
-   ___P((sigset_type oldmask),
-        (oldmask)
-sigset_type oldmask;)
-{
-#ifdef USE_sigaction
-
-  sigprocmask (SIG_SETMASK, &oldmask, 0);
-
-#endif
-
-#ifdef USE_signal
-
-  sigsetmask (oldmask);
-
-#endif
-}
-
-
-/*
- * Some system calls can be interrupted by a signal and fail with
- * errno == EINTR.  The following functions are wrappers for system
- * calls which may be interrupted.  They simply ignore the EINTR and
- * retry the operation.
- *
- * TODO: add wrappers for all the system calls which can fail
- * with EINTR.  Also, move these functions to a central place.
- */
-
-pid_t waitpid_no_EINTR
-   ___P((pid_t pid,
-         int *stat_loc,
-         int options),
-        (pid,
-         stat_loc,
-         options)
-pid_t pid;
-int *stat_loc;
-int options;)
-{
-  pid_t result;
-
-  for (;;)
-    {
-      result = waitpid (pid, stat_loc, options);
-      if (result >= 0 || errno != EINTR)
-        break;
-    }
-
-  return result;
-}
-
-
-___SSIZE_T read_no_EINTR
-   ___P((int fd,
-         void *buf,
-         ___SIZE_T len),
-        (fd,
-         buf,
-         len)
-int fd;
-void *buf;
-___SIZE_T len;)
-{
-  char *p = ___CAST(char*,buf);
-  ___SSIZE_T result = 0;
-  int n;
-
-  while (result < len)
-    {
-      n = read (fd, p+result, len-result);
-      if (n > 0)
-        result += n;
-      else if (n == 0)
-        break;
-      else if (errno != EINTR)
-        return n; /* this forgets that some bytes were transferred */
-    }
-
-  return result;
-}
-
-
-int close_no_EINTR
-   ___P((int fd),
-        (fd)
-int fd;)
-{
-  int result;
-
-  for (;;)
-    {
-      result = close (fd);
-      if (result >= 0 || errno != EINTR)
-        break;
-    }
-
-  return result;
-}
-
-
-int dup_no_EINTR
-   ___P((int fd),
-        (fd)
-int fd;)
-{
-  int result;
-
-  for (;;)
-    {
-      result = dup (fd);
-      if (result >= 0 || errno != EINTR)
-        break;
-    }
-
-  return result;
-}
-
-
-int dup2_no_EINTR
-   ___P((int fd,
-         int fd2),
-        (fd,
-         fd2)
-int fd;
-int fd2;)
-{
-  int result;
-
-  for (;;)
-    {
-      result = dup2 (fd, fd2);
-      if (result >= 0 || errno != EINTR)
-        break;
-    }
-
-  return result;
-}
-
-
-int set_fd_blocking_mode
-   ___P((int fd,
-         ___BOOL blocking),
-        (fd,
-         blocking)
-int fd;
-___BOOL blocking;)
-{
-  int fl;
-
-#ifdef USE_fcntl
-
-  if ((fl = fcntl (fd, F_GETFL, 0)) >= 0)
-    fl = fcntl (fd,
-                F_SETFL,
-                blocking ? (fl & ~O_NONBLOCK) : (fl | O_NONBLOCK));
-
-#else
-
-  fl = 0;
-
-#endif
-
-  return fl;
-}
-
-#endif
-
-
-/*---------------------------------------------------------------------------*/
-
 /* Generic device operations. */
-
-___SCMOBJ ___device_select
-   ___P((___device **devs,
-         int nb_read_devs,
-         int nb_write_devs,
-         ___time timeout),
-        (devs,
-         nb_read_devs,
-         nb_write_devs,
-         timeout)
-___device **devs;
-int nb_read_devs;
-int nb_write_devs;
-___time timeout;)
-{
-  int nb_devs;
-  ___device_select_state state;
-  int pass;
-  int dev_list;
-  int i;
-  int prev;
-  ___time delta;
-
-  nb_devs = nb_read_devs + nb_write_devs;
-
-  state.devs = devs;
-
-  state.timeout = timeout;
-  state.relative_timeout = POS_INFINITY;
-
-#ifdef USE_select
-
-  state.highest_fd_plus_1 = 0;
-
-  ___FD_ZERO(&state.readfds);
-  ___FD_ZERO(&state.writefds);
-  ___FD_ZERO(&state.exceptfds);
-
-#endif
-
-#ifdef USE_poll
-
-  state.pollfd_count = 0;
-  ___FD_ZERO (&state.readfds);
-  ___FD_ZERO (&state.writefds);
-
-#endif
-
-#ifdef USE_MsgWaitForMultipleObjects
-
-  state.message_queue_mask = 0;
-  state.message_queue_dev_pos = -1;
-
-  state.wait_objs_buffer[0] = ___io_mod.abort_select;
-  state.wait_objs_buffer[1] = ___time_mod.heartbeat_thread;
-
-  state.nb_wait_objs = 2;
-
-#endif
-
-  if (nb_devs > 0)
-    {
-      state.devs_next[nb_devs-1] = -1;
-
-      for (i=nb_devs-2; i>=0; i--)
-        state.devs_next[i] = i+1;
-
-      dev_list = 0;
-    }
-  else
-    dev_list = -1;
-
-  pass = ___SELECT_PASS_1;
-
-  while (dev_list != -1)
-    {
-      i = dev_list;
-      prev = -1;
-
-      while (i != -1)
-        {
-          ___SCMOBJ e;
-          ___device *d = devs[i];
-          if ((e = ___device_select_virt
-                     (d,
-                      i>=nb_read_devs,
-                      i,
-                      pass,
-                      &state))
-              == ___FIX(___NO_ERR))
-            {
-              prev = i;
-              i = state.devs_next[i];
-            }
-          else
-            {
-              int j;
-              if (e != ___FIX(___SELECT_SETUP_DONE))
-                return e;
-              j = state.devs_next[i];
-              if (prev == -1)
-                dev_list = j;
-              else
-                state.devs_next[prev] = j;
-#ifdef USE_MsgWaitForMultipleObjects
-              state.devs_next[i] = -1;
-#endif
-              i = j;
-            }
-        }
-
-      pass++;
-    }
-
-  ___absolute_time_to_relative_time (state.timeout, &delta);
-
-  if (state.relative_timeout < ___time_to_seconds (delta))
-    {
-      ___time_from_seconds (&delta, state.relative_timeout);
-      state.timeout = ___time_mod.time_neg_infinity;
-    }
-  else
-    state.relative_timeout = NEG_INFINITY;
-
-#ifdef USE_select
-
-  /*
-   * Heartbeat interrupts must be disabled in case they are based on the
-   * real-time timer.  This is needed to bypass issues in two buggy
-   * operating systems:
-   *
-   * - On MacOS X, the virtual-time timer does not fire at the correct
-   *   rate (apparently this happens only on machines with more than
-   *   one core).
-   *
-   * - On CYGWIN, the select system call can be interrupted by the
-   *   timer and in some cases the error "No child processes" will
-   *   be returned by select.
-   */
-
-  {
-    struct timeval delta_tv_struct;
-    struct timeval *delta_tv = &delta_tv_struct;
-    int result;
-
-    ___absolute_time_to_nonnegative_timeval_maybe_NULL (delta, &delta_tv);
-
-    if (delta_tv != NULL &&
-        state.highest_fd_plus_1 == 0)
-      {
-        /*
-         * ___device_select is only being called for sleeping until a
-         * certain timeout or interrupt occurs.  This is a case that
-         * can be optimized.
-         */
-
-        if (delta_tv->tv_sec < 0 ||
-            (delta_tv->tv_sec == 0 &&
-             delta_tv->tv_usec == 0))
-          {
-            /*
-             * The timeout has already passed, so we don't need to
-             * sleep.  This simple optimization avoids doing a system
-             * call to the select or nanosleep functions (which can be
-             * expensive on some operating systems).
-             */
-
-            result = 0;
-
-            goto select_done;
-          }
-#ifdef USE_nanosleep
-        else
-          {
-
-            /*
-             * For better timeout resolution, the nanosleep function
-             * is used instead of the select function.  On some
-             * operating systems (e.g. OpenBSD 4.5) the nanosleep
-             * function can be more expensive than a call to select,
-             * but the better timeout resolution outweighs the run
-             * time cost.
-             */
-
-            struct timespec delta_ts_struct;
-            delta_ts_struct.tv_sec = delta_tv->tv_sec;
-            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
-
-            ___disable_heartbeat_interrupts ();
-
-            result = nanosleep (&delta_ts_struct, NULL);
-
-            ___enable_heartbeat_interrupts ();
-
-            goto select_done;
-          }
-#endif
-      }
-
-    ___disable_heartbeat_interrupts ();
-
-    result =
-      select (state.highest_fd_plus_1,
-              &state.readfds,
-              &state.writefds,
-              &state.exceptfds,
-              delta_tv);
-
-    ___enable_heartbeat_interrupts ();
-
-  select_done:
-
-    if (result < 0)
-      return err_code_from_errno ();
-
-    state.timeout_reached = (result == 0);
-  }
-
-#endif
-
-#ifdef USE_poll
-  {
-    struct timeval delta_tv_struct;
-    struct timeval *delta_tv = &delta_tv_struct;
-
-#ifdef USE_ppoll
-    struct timespec delta_ts_struct;
-    struct timespec *delta_ts;
-#else
-    int delta_msecs;
-#endif
-    int result;
-
-    ___absolute_time_to_nonnegative_timeval_maybe_NULL (delta, &delta_tv);
-
-    /* pure sleep optimizations */
-    if (state.pollfd_count == 0 && delta_tv != NULL)
-      {
-        if (delta_tv->tv_sec < 0 ||
-            (delta_tv->tv_sec == 0 &&
-             delta_tv->tv_usec == 0))
-          {
-            result = 0;
-            goto poll_done;
-          }
-#ifdef USE_nanosleep
-        else
-          {
-            struct timespec delta_ts_struct;
-            delta_ts_struct.tv_sec = delta_tv->tv_sec;
-            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
-
-            ___disable_heartbeat_interrupts ();
-
-            result = nanosleep (&delta_ts_struct, NULL);
-
-            ___enable_heartbeat_interrupts ();
-
-            goto poll_done;
-          }
-#endif
-      }
-
-    /* setup timeout */
-#ifdef USE_ppoll
-
-    if (delta_tv != NULL)
-      {
-        /* ppoll doesn't like negative times */
-        if (delta_tv->tv_sec < 0)
-          {
-            delta_ts_struct.tv_sec = 0;
-            delta_ts_struct.tv_nsec = 0;
-          }
-        else
-          {
-            delta_ts_struct.tv_sec = delta_tv->tv_sec;
-            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
-          }
-
-        delta_ts = &delta_ts_struct;
-      }
-    else
-      delta_ts = NULL;
-
-#else
-
-    if (delta_tv != NULL)
-      {
-        if (delta_tv->tv_sec < 0)
-          delta_msecs = 0;
-        else if (delta_tv->tv_sec < (INT_MAX / 1000))
-          delta_msecs = delta_tv->tv_sec * 1000 + delta_tv->tv_usec / 1000;
-        else
-          delta_msecs = INT_MAX;
-      }
-    else
-      delta_msecs = -1;
-
-#endif
-
-    /* see comments on select above regarding heartbeat interrupts */
-    ___disable_heartbeat_interrupts ();
-
-#ifdef USE_ppoll
-    result = ppoll (state.pollfds, state.pollfd_count, delta_ts, NULL);
-#else
-    result = poll (state.pollfds, state.pollfd_count, delta_msecs);
-#endif
-
-    ___enable_heartbeat_interrupts ();
-
-    /* Set the active bitmaps */
-    if (result > 0)
-      {
-        int errmask = (POLLERR | POLLHUP | POLLNVAL);
-        int active = result;
-        int x;
-
-        for (x = 0; active > 0; ++x)
-          {
-            if (state.pollfds[x].revents)
-              {
-                if (state.pollfds[x].events & POLLIN)
-                  {
-                    if (state.pollfds[x].revents & (POLLIN | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.readfds);
-                  }
-
-                if (state.pollfds[x].events & POLLOUT)
-                  {
-                    if (state.pollfds[x].revents & (POLLOUT | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.writefds);
-                  }
-
-                --active;
-              }
-          }
-      }
-
-  poll_done:
-
-    if (result < 0)
-      return err_code_from_errno ();
-
-    state.timeout_reached = (result == 0);
-  }
-#endif
-
-#ifdef USE_MsgWaitForMultipleObjects
-
-  {
-    DWORD delta_msecs;
-    int first_iteration = TRUE;
-
-    ___absolute_time_to_nonnegative_msecs (delta, &delta_msecs);
-
-    state.timeout_reached = 0;
-
-    while (state.nb_wait_objs > 0 || state.message_queue_mask != 0)
-      {
-        DWORD n;
-
-        n = MsgWaitForMultipleObjects
-              (state.nb_wait_objs,
-               state.wait_objs_buffer,
-               FALSE,
-               delta_msecs,
-               state.message_queue_mask);
-
-        if (n == WAIT_FAILED)
-          return err_code_from_GetLastError ();
-
-        if ((n - WAIT_OBJECT_0) <= WAIT_OBJECT_0 + state.nb_wait_objs)
-          n -= WAIT_OBJECT_0;
-        else if (n >= WAIT_ABANDONED_0 &&
-                 n <= WAIT_ABANDONED_0+state.nb_wait_objs-1)
-          n -= WAIT_ABANDONED_0;
-        else
-          {
-            /* n == WAIT_TIMEOUT */
-
-            /*
-             * The call to MsgWaitForMultipleObjects timed out.  Mark
-             * the appropriate device "ready".
-             */
-
-            if (first_iteration)
-              {
-                /* first call to MsgWaitForMultipleObjects */
-
-                state.timeout_reached = 1;
-              }
-
-            break;
-          }
-
-        if (n == state.nb_wait_objs)
-          {
-            /*
-             * The message queue contains a message that is of interest.
-             * Mark the appropriate device "ready".
-             */
-
-            i = state.message_queue_dev_pos;
-            if (i >= 0)
-              state.devs_next[i] = 0;
-
-            /*
-             * Don't check if other devices are ready because this might
-             * cause an infinite loop.
-             */
-
-            break;
-          }
-        else if (n == 0)
-          {
-            /*
-             * The call to ___device_select must be aborted because the
-             * abort_select event is set.  This occurs when an interrupt
-             * (such as a CTRL-C user interrupt) needs to be serviced
-             * promptly by the main program.
-             */
-
-            ResetEvent (___io_mod.abort_select); /* ignore error */
-
-            return ___FIX(___ERRNO_ERR(EINTR));
-          }
-        else if (n == 1)
-          {
-            /*
-             * The heartbeat thread has died.  This is normally due to
-             * the program being terminated abruptly by the user (for
-             * example by using the thread manager or the "shutdown"
-             * item in the start menu).  When this happens we must
-             * initiate a clean termination of the program.
-             */
-
-            return ___FIX(___UNKNOWN_ERR);
-          }
-        else
-          {
-            /* Mark the appropriate device "ready". */
-
-            i = state.wait_obj_to_dev_pos[n];
-            if (i >= 0)
-              state.devs_next[i] = 0;
-
-            /* Prepare to check remaining devices. */
-
-            state.nb_wait_objs--;
-
-            state.wait_objs_buffer[n] =
-              state.wait_objs_buffer[state.nb_wait_objs];
-
-            state.wait_obj_to_dev_pos[n] =
-              state.wait_obj_to_dev_pos[state.nb_wait_objs];
-          }
-
-        first_iteration = FALSE;
-        delta_msecs = 0; /* next MsgWaitForMultipleObjects will only poll */
-      }
-  }
-
-#endif
-
-  for (i=nb_devs-1; i>=0; i--)
-    {
-      ___SCMOBJ e;
-      ___device *d = devs[i];
-      if (d != NULL)
-        if ((e = ___device_select_virt
-                   (d,
-                    i>=nb_read_devs,
-                    i,
-                    ___SELECT_PASS_CHECK,
-                    &state))
-            != ___FIX(___NO_ERR))
-          return e;
-    }
-
-  return ___FIX(___NO_ERR);
-}
-
 
 void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,
@@ -1449,6 +757,569 @@ HANDLE wait_obj;)
 }
 
 #endif
+
+
+___SCMOBJ ___device_select
+   ___P((___device **devs,
+         int nb_read_devs,
+         int nb_write_devs,
+         ___time timeout),
+        (devs,
+         nb_read_devs,
+         nb_write_devs,
+         timeout)
+___device **devs;
+int nb_read_devs;
+int nb_write_devs;
+___time timeout;)
+{
+  int nb_devs;
+  ___device_select_state state;
+  int pass;
+  int dev_list;
+  int i;
+  int prev;
+  ___time delta;
+
+  nb_devs = nb_read_devs + nb_write_devs;
+
+  state.devs = devs;
+
+  state.timeout = timeout;
+  state.relative_timeout = POS_INFINITY;
+
+#ifdef USE_select_or_poll
+
+#ifdef USE_select
+
+  state.highest_fd_plus_1 = 0;
+
+  ___FD_ZERO(&state.readfds);
+  ___FD_ZERO(&state.writefds);
+  ___FD_ZERO(&state.exceptfds);
+
+#endif
+
+#ifdef USE_poll
+
+  state.pollfd_count = 0;
+  ___FD_ZERO (&state.readfds);
+  ___FD_ZERO (&state.writefds);
+
+#endif
+
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+  /* monitor self-pipe for available data to read */
+
+  ___device_select_add_fd (&state, ___PSTATE->os.select_abort.reading_fd, 0);
+
+#endif
+
+#endif
+
+#ifdef USE_MsgWaitForMultipleObjects
+
+  state.message_queue_mask = 0;
+  state.message_queue_dev_pos = -1;
+
+  state.nb_wait_objs = 0;
+
+  state.wait_objs_buffer[state.nb_wait_objs++] = ___time_mod.heartbeat_thread;
+
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+  state.wait_objs_buffer[state.nb_wait_objs++] = ___PSTATE->os.select_abort;
+
+#endif
+
+#endif
+
+  if (nb_devs > 0)
+    {
+      state.devs_next[nb_devs-1] = -1;
+
+      for (i=nb_devs-2; i>=0; i--)
+        state.devs_next[i] = i+1;
+
+      dev_list = 0;
+    }
+  else
+    dev_list = -1;
+
+  pass = ___SELECT_PASS_1;
+
+  while (dev_list != -1)
+    {
+      i = dev_list;
+      prev = -1;
+
+      while (i != -1)
+        {
+          ___SCMOBJ e;
+          ___device *d = devs[i];
+          if ((e = ___device_select_virt
+                     (d,
+                      i>=nb_read_devs,
+                      i,
+                      pass,
+                      &state))
+              == ___FIX(___NO_ERR))
+            {
+              prev = i;
+              i = state.devs_next[i];
+            }
+          else
+            {
+              int j;
+              if (e != ___FIX(___SELECT_SETUP_DONE))
+                return e;
+              j = state.devs_next[i];
+              if (prev == -1)
+                dev_list = j;
+              else
+                state.devs_next[prev] = j;
+#ifdef USE_MsgWaitForMultipleObjects
+              state.devs_next[i] = -1;
+#endif
+              i = j;
+            }
+        }
+
+      pass++;
+    }
+
+  ___absolute_time_to_relative_time (state.timeout, &delta);
+
+  if (state.relative_timeout < ___time_to_seconds (delta))
+    {
+      ___time_from_seconds (&delta, state.relative_timeout);
+      state.timeout = ___time_mod.time_neg_infinity;
+    }
+  else
+    state.relative_timeout = NEG_INFINITY;
+
+  ___ACTLOG_BEGIN(wait,gray);
+
+#ifdef USE_select_or_poll
+
+#ifdef USE_select
+
+  /*
+   * Heartbeat interrupts must be disabled in case they are based on the
+   * real-time timer.  This is needed to bypass issues in two buggy
+   * operating systems:
+   *
+   * - On MacOS X, the virtual-time timer does not fire at the correct
+   *   rate (apparently this happens only on machines with more than
+   *   one core).
+   *
+   * - On CYGWIN, the select system call can be interrupted by the
+   *   timer and in some cases the error "No child processes" will
+   *   be returned by select.
+   */
+
+  {
+    ___mask_heartbeat_interrupts_state heartbeat_interrupts;
+    struct timeval delta_tv_struct;
+    struct timeval *delta_tv = &delta_tv_struct;
+    int result;
+
+    ___absolute_time_to_nonnegative_timeval_maybe_NULL (delta, &delta_tv);
+
+    if (delta_tv != NULL &&
+        state.highest_fd_plus_1 == 0)
+      {
+        /*
+         * ___device_select is only being called for sleeping until a
+         * certain timeout or interrupt occurs.  This is a case that
+         * can be optimized.
+         */
+
+        if (delta_tv->tv_sec < 0 ||
+            (delta_tv->tv_sec == 0 &&
+             delta_tv->tv_usec == 0))
+          {
+            /*
+             * The timeout has already passed, so we don't need to
+             * sleep.  This simple optimization avoids doing a system
+             * call to the select or nanosleep functions (which can be
+             * expensive on some operating systems).
+             */
+
+            result = 0;
+
+            goto select_done;
+          }
+#ifdef USE_nanosleep
+        else
+          {
+
+            /*
+             * For better timeout resolution, the nanosleep function
+             * is used instead of the select function.  On some
+             * operating systems (e.g. OpenBSD 4.5) the nanosleep
+             * function can be more expensive than a call to select,
+             * but the better timeout resolution outweighs the run
+             * time cost.
+             */
+
+            struct timespec delta_ts_struct;
+            delta_ts_struct.tv_sec = delta_tv->tv_sec;
+            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+
+            ___mask_heartbeat_interrupts_begin (&heartbeat_interrupts);
+
+            result = nanosleep (&delta_ts_struct, NULL);
+
+            ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
+
+            goto select_done;
+          }
+#endif
+      }
+
+    ___mask_heartbeat_interrupts_begin (&heartbeat_interrupts);
+
+    result =
+      select (state.highest_fd_plus_1,
+              &state.readfds,
+              &state.writefds,
+              &state.exceptfds,
+              delta_tv);
+
+    ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
+
+  select_done:
+
+    if (result < 0)
+      return err_code_from_errno ();
+
+    state.timeout_reached = (result == 0);
+  }
+
+#endif
+
+#ifdef USE_poll
+  {
+    ___mask_heartbeat_interrupts_state heartbeat_interrupts;
+    struct timeval delta_tv_struct;
+    struct timeval *delta_tv = &delta_tv_struct;
+
+#ifdef USE_ppoll
+    struct timespec delta_ts_struct;
+    struct timespec *delta_ts;
+#else
+    int delta_msecs;
+#endif
+    int result;
+
+    ___absolute_time_to_nonnegative_timeval_maybe_NULL (delta, &delta_tv);
+
+    /* pure sleep optimizations */
+    if (state.pollfd_count == 0 && delta_tv != NULL)
+      {
+        if (delta_tv->tv_sec < 0 ||
+            (delta_tv->tv_sec == 0 &&
+             delta_tv->tv_usec == 0))
+          {
+            result = 0;
+            goto poll_done;
+          }
+#ifdef USE_nanosleep
+        else
+          {
+            struct timespec delta_ts_struct;
+            delta_ts_struct.tv_sec = delta_tv->tv_sec;
+            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+
+            ___mask_heartbeat_interrupts_begin (&heartbeat_interrupts);
+
+            result = nanosleep (&delta_ts_struct, NULL);
+
+            ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
+
+            goto poll_done;
+          }
+#endif
+      }
+
+    /* setup timeout */
+#ifdef USE_ppoll
+
+    if (delta_tv != NULL)
+      {
+        /* ppoll doesn't like negative times */
+        if (delta_tv->tv_sec < 0)
+          {
+            delta_ts_struct.tv_sec = 0;
+            delta_ts_struct.tv_nsec = 0;
+          }
+        else
+          {
+            delta_ts_struct.tv_sec = delta_tv->tv_sec;
+            delta_ts_struct.tv_nsec = delta_tv->tv_usec * 1000;
+          }
+
+        delta_ts = &delta_ts_struct;
+      }
+    else
+      delta_ts = NULL;
+
+#else
+
+    if (delta_tv != NULL)
+      {
+        if (delta_tv->tv_sec < 0)
+          delta_msecs = 0;
+        else if (delta_tv->tv_sec < (INT_MAX / 1000))
+          delta_msecs = delta_tv->tv_sec * 1000 + delta_tv->tv_usec / 1000;
+        else
+          delta_msecs = INT_MAX;
+      }
+    else
+      delta_msecs = -1;
+
+#endif
+
+    /* see comments on select above regarding heartbeat interrupts */
+    ___mask_heartbeat_interrupts_begin (&heartbeat_interrupts);
+
+#ifdef USE_ppoll
+    result = ppoll (state.pollfds, state.pollfd_count, delta_ts, NULL);
+#else
+    result = poll (state.pollfds, state.pollfd_count, delta_msecs);
+#endif
+
+    ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
+
+    /* Set the active bitmaps */
+    if (result > 0)
+      {
+        int errmask = (POLLERR | POLLHUP | POLLNVAL);
+        int active = result;
+        int x;
+
+        for (x = 0; active > 0; ++x)
+          {
+            if (state.pollfds[x].revents)
+              {
+                if (state.pollfds[x].events & POLLIN)
+                  {
+                    if (state.pollfds[x].revents & (POLLIN | errmask))
+                      ___FD_SET (state.pollfds[x].fd, &state.readfds);
+                  }
+
+                if (state.pollfds[x].events & POLLOUT)
+                  {
+                    if (state.pollfds[x].revents & (POLLOUT | errmask))
+                      ___FD_SET (state.pollfds[x].fd, &state.writefds);
+                  }
+
+                --active;
+              }
+          }
+      }
+
+  poll_done:
+
+    if (result < 0)
+      return err_code_from_errno ();
+
+    state.timeout_reached = (result == 0);
+  }
+#endif
+
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+    {
+      /* self-pipe has available data to read, discard all of it */
+
+      for (;;)
+        {
+          char buf[256];
+          int n = read (___PSTATE->os.select_abort.reading_fd, buf, sizeof(buf));
+
+          if (n < 0)
+            {
+              if (errno == EAGAIN)
+                break;
+              if (errno != EINTR)
+                return err_code_from_errno ();
+            }
+          else if (n < sizeof(buf))
+            break;
+        }
+    }
+
+#endif
+
+#endif
+
+#ifdef USE_MsgWaitForMultipleObjects
+
+  {
+    DWORD delta_msecs;
+    int first_iteration = TRUE;
+
+    ___absolute_time_to_nonnegative_msecs (delta, &delta_msecs);
+
+    state.timeout_reached = 0;
+
+    while (state.nb_wait_objs > 0 || state.message_queue_mask != 0)
+      {
+        DWORD n;
+
+        n = MsgWaitForMultipleObjects
+              (state.nb_wait_objs,
+               state.wait_objs_buffer,
+               FALSE,
+               delta_msecs,
+               state.message_queue_mask);
+
+        if (n == WAIT_FAILED)
+          return err_code_from_GetLastError ();
+
+        if ((n - WAIT_OBJECT_0) <= WAIT_OBJECT_0 + state.nb_wait_objs)
+          n -= WAIT_OBJECT_0;
+        else if (n >= WAIT_ABANDONED_0 &&
+                 n <= WAIT_ABANDONED_0+state.nb_wait_objs-1)
+          n -= WAIT_ABANDONED_0;
+        else
+          {
+            /* n == WAIT_TIMEOUT */
+
+            /*
+             * The call to MsgWaitForMultipleObjects timed out.  Mark
+             * the appropriate device "ready".
+             */
+
+            if (first_iteration)
+              {
+                /* first call to MsgWaitForMultipleObjects */
+
+                state.timeout_reached = 1;
+              }
+
+            break;
+          }
+
+        if (n == state.nb_wait_objs)
+          {
+            /*
+             * The message queue contains a message that is of interest.
+             * Mark the appropriate device "ready".
+             */
+
+            i = state.message_queue_dev_pos;
+            if (i >= 0)
+              state.devs_next[i] = 0;
+
+            /*
+             * Don't check if other devices are ready because this might
+             * cause an infinite loop.
+             */
+
+            break;
+          }
+        else if (n == 0)
+          {
+            /*
+             * The heartbeat thread has died.  This is normally due to
+             * the program being terminated abruptly by the user (for
+             * example by using the thread manager or the "shutdown"
+             * item in the start menu).  When this happens we must
+             * initiate a clean termination of the program.
+             */
+
+            return ___FIX(___UNKNOWN_ERR);
+          }
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+        else if (n == 1)
+          {
+            /*
+             * The call to ___device_select must be aborted because the
+             * select_abort event is set.  This occurs when an interrupt
+             * (such as a CTRL-C user interrupt) needs to be serviced
+             * promptly by the main program.
+             */
+
+            ResetEvent (___PSTATE->os.select_abort); /* ignore error */
+
+            return ___FIX(___ERRNO_ERR(EINTR));
+          }
+#endif
+        else
+          {
+            /* Mark the appropriate device "ready". */
+
+            i = state.wait_obj_to_dev_pos[n];
+            if (i >= 0)
+              state.devs_next[i] = 0;
+
+            /* Prepare to check remaining devices. */
+
+            state.nb_wait_objs--;
+
+            state.wait_objs_buffer[n] =
+              state.wait_objs_buffer[state.nb_wait_objs];
+
+            state.wait_obj_to_dev_pos[n] =
+              state.wait_obj_to_dev_pos[state.nb_wait_objs];
+          }
+
+        first_iteration = FALSE;
+        delta_msecs = 0; /* next MsgWaitForMultipleObjects will only poll */
+      }
+  }
+
+#endif
+
+  ___ACTLOG_END();
+
+  for (i=nb_devs-1; i>=0; i--)
+    {
+      ___SCMOBJ e;
+      ___device *d = devs[i];
+      if (d != NULL)
+        if ((e = ___device_select_virt
+                   (d,
+                    i>=nb_read_devs,
+                    i,
+                    ___SELECT_PASS_CHECK,
+                    &state))
+            != ___FIX(___NO_ERR))
+          return e;
+    }
+
+  return ___FIX(___NO_ERR);
+}
+
+
+void ___device_select_abort
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+#ifdef USE_POSIX
+
+  static char buf[] = { 0 };
+
+  write (___ps->os.select_abort.writing_fd, buf, 1); /* ignore error */
+
+#endif
+
+#ifdef USE_WIN32
+
+  SetEvent (___ps->os.select_abort); /* ignore error */
+
+#endif
+
+#endif
+}
 
 
 ___SCMOBJ ___device_force_output
@@ -2853,7 +2724,7 @@ int direction;)
 #ifdef USE_POSIX
           if (d->fd_rd >= 0 &&
               d->fd_rd != d->fd_wr &&
-              close_no_EINTR (d->fd_rd) < 0)
+              ___close_no_EINTR (d->fd_rd) < 0)
             return err_code_from_errno ();
 #endif
 
@@ -2876,7 +2747,7 @@ int direction;)
         {
 #ifdef USE_POSIX
           if (d->fd_wr >= 0 &&
-              close_no_EINTR (d->fd_wr) < 0)
+              ___close_no_EINTR (d->fd_wr) < 0)
             return err_code_from_errno ();
 #endif
 
@@ -3628,10 +3499,10 @@ int direction;)
 
   if ((fd_stdout >= 0 &&
        (direction & ___DIRECTION_RD) &&
-       (set_fd_blocking_mode (fd_stdout, 0) < 0)) ||
+       (___set_fd_blocking_mode (fd_stdout, 0) < 0)) ||
       (fd_stdin >= 0 &&
        (direction & ___DIRECTION_WR) &&
-       (set_fd_blocking_mode (fd_stdin, 0) < 0)))
+       (___set_fd_blocking_mode (fd_stdin, 0) < 0)))
     {
       ___SCMOBJ e = err_code_from_errno ();
       ___free_mem (d);
@@ -3720,7 +3591,7 @@ int direction;)
 #define CONNECT_IN_PROGRESS (errno == EINPROGRESS)
 #define CONNECT_WOULD_BLOCK (errno == EAGAIN)
 #define NOT_CONNECTED(e) ((e) == ___FIX(___ERRNO_ERR(ENOTCONN)))
-#define CLOSE_SOCKET(s) close_no_EINTR (s)
+#define CLOSE_SOCKET(s) ___close_no_EINTR (s)
 #define ERR_CODE_FROM_SOCKET_CALL err_code_from_errno ()
 #define IOCTL_SOCKET(s,cmd,argp) ioctl (s,cmd,argp)
 #define SOCKET_LEN_TYPE socklen_t
@@ -5396,7 +5267,7 @@ SOCKET_TYPE s;)
 
 #else
 
-  return set_fd_blocking_mode (s, 0);
+  return ___set_fd_blocking_mode (s, 0);
 
 #endif
 }
@@ -6510,7 +6381,7 @@ ___device_file *d;)
 
   /* set blocking mode */
 
-  set_fd_blocking_mode (d->fd, 1); /* ignore error */
+  ___set_fd_blocking_mode (d->fd, 1); /* ignore error */
 
 #endif
 }
@@ -6562,7 +6433,7 @@ int direction;)
 #endif
 
 #ifdef USE_POSIX
-          if (close_no_EINTR (d->fd) < 0)
+          if (___close_no_EINTR (d->fd) < 0)
             return err_code_from_errno ();
 #endif
 
@@ -7444,7 +7315,7 @@ int direction;)
              * Setup file descriptor to perform nonblocking I/O.
              */
 
-            if (set_fd_blocking_mode (fd, 0) != 0) /* set nonblocking mode */
+            if (___set_fd_blocking_mode (fd, 0) != 0) /* set nonblocking mode */
               return err_code_from_errno ();
 
 #endif
@@ -7806,66 +7677,6 @@ int *direction;)
 
 #ifdef USE_execvp
 
-/**********************************/
-#define USE_pipe
-
-typedef struct half_duplex_pipe
-  {
-    int reading_fd;
-    int writing_fd;
-  } half_duplex_pipe;
-
-typedef struct full_duplex_pipe
-  {
-    half_duplex_pipe input;
-    half_duplex_pipe output;
-  } full_duplex_pipe;
-
-
-___HIDDEN int open_half_duplex_pipe
-   ___P((half_duplex_pipe *hdp),
-        (hdp)
-half_duplex_pipe *hdp;)
-{
-  int fds[2];
-
-#ifdef USE_pipe
-  if (pipe (fds) < 0)
-    return -1;
-#endif
-
-#ifdef USE_socketpair
-  if (socketpair (AF_UNIX, SOCK_STREAM, 0, fds) < 0)
-    return -1;
-#endif
-
-  hdp->reading_fd = fds[0];
-  hdp->writing_fd = fds[1];
-
-  return 0;
-}
-
-___HIDDEN void close_half_duplex_pipe
-   ___P((half_duplex_pipe *hdp,
-         int end),
-        (hdp,
-         end)
-half_duplex_pipe *hdp;
-int end;)
-{
-  if (end != 1 && hdp->reading_fd >= 0)
-    {
-      close_no_EINTR (hdp->reading_fd); /* ignore error */
-      hdp->reading_fd = -1;
-    }
-
-  if (end != 0 && hdp->writing_fd >= 0)
-    {
-      close_no_EINTR (hdp->writing_fd); /* ignore error */
-      hdp->writing_fd = -1;
-    }
-}
-
 ___HIDDEN int open_pseudo_terminal_master
    ___P((int *master_fd_ptr,
          int *slave_fd_ptr),
@@ -7983,7 +7794,7 @@ int *slave_fd;)
         }
 
       tmp = errno;
-      close_no_EINTR (fd); /* ignore error */
+      ___close_no_EINTR (fd); /* ignore error */
       errno = tmp;
     }
 
@@ -7994,11 +7805,11 @@ int *slave_fd;)
 
 
 ___HIDDEN int open_full_duplex_pipe1
-   ___P((full_duplex_pipe *fdp,
+   ___P((___full_duplex_pipe *fdp,
          ___BOOL use_pty),
         (fdp,
          use_pty)
-full_duplex_pipe *fdp;
+___full_duplex_pipe *fdp;
 ___BOOL use_pty;)
 {
   fdp->input.reading_fd = -1;
@@ -8014,7 +7825,7 @@ ___BOOL use_pty;)
         {
           int master_fd_dup;
           int tmp;
-          if ((master_fd_dup = dup_no_EINTR (master_fd)) >= 0)
+          if ((master_fd_dup = ___dup_no_EINTR (master_fd)) >= 0)
             {
               fdp->input.writing_fd = master_fd;
               fdp->output.reading_fd = master_fd_dup;
@@ -8022,19 +7833,19 @@ ___BOOL use_pty;)
               return 0;
             }
           tmp = errno;
-          close_no_EINTR (master_fd); /* ignore error */
+          ___close_no_EINTR (master_fd); /* ignore error */
           if (slave_fd >= 0)
-            close_no_EINTR (slave_fd); /* ignore error */
+            ___close_no_EINTR (slave_fd); /* ignore error */
           errno = tmp;
         }
     }
   else
     {
-      if (open_half_duplex_pipe (&fdp->input) >= 0)
+      if (___open_half_duplex_pipe (&fdp->input) >= 0)
         {
-          if (open_half_duplex_pipe (&fdp->output) >= 0)
+          if (___open_half_duplex_pipe (&fdp->output) >= 0)
             return 0;
-          close_half_duplex_pipe (&fdp->input, 2);
+          ___close_half_duplex_pipe (&fdp->input, 2);
         }
     }
 
@@ -8043,11 +7854,11 @@ ___BOOL use_pty;)
 
 
 ___HIDDEN int open_full_duplex_pipe2
-   ___P((full_duplex_pipe *fdp,
+   ___P((___full_duplex_pipe *fdp,
          ___BOOL use_pty),
         (fdp,
          use_pty)
-full_duplex_pipe *fdp;
+___full_duplex_pipe *fdp;
 ___BOOL use_pty;)
 {
   if (use_pty)
@@ -8061,10 +7872,10 @@ ___BOOL use_pty;)
         {
           int tmp;
           if (setup_terminal_slave (fdp->input.reading_fd) >= 0 &&
-              (fdp->output.writing_fd = dup_no_EINTR (fdp->input.reading_fd)) >= 0)
+              (fdp->output.writing_fd = ___dup_no_EINTR (fdp->input.reading_fd)) >= 0)
             return 0;
           tmp = errno;
-          close_no_EINTR (fdp->input.reading_fd); /* ignore error */
+          ___close_no_EINTR (fdp->input.reading_fd); /* ignore error */
           errno = tmp;
         }
     }
@@ -8296,8 +8107,8 @@ int options;)
   int direction;
   ___device_process *d;
   pid_t pid = 0;
-  half_duplex_pipe hdp_errno;
-  full_duplex_pipe fdp;
+  ___half_duplex_pipe hdp_errno;
+  ___full_duplex_pipe fdp;
   int execvp_errno;
   int n;
 
@@ -8306,12 +8117,12 @@ int options;)
    * sigchld_signal_handler will find it in the device group.
    */
 
-  sigset_type oldmask = block_signal (SIGCHLD);
+  ___sigset_type oldmask = ___block_signal (SIGCHLD);
 
   fdp.input.writing_fd = -1;
   fdp.output.reading_fd = -1;
 
-  if (open_half_duplex_pipe (&hdp_errno) < 0)
+  if (___open_half_duplex_pipe (&hdp_errno) < 0)
     e = err_code_from_errno ();
   else
     {
@@ -8320,24 +8131,26 @@ int options;)
         e = err_code_from_errno ();
       else
         {
-          ___disable_os_interrupts ();
+          ___mask_os_interrupts_state os_interrupts;
+
+          ___mask_os_interrupts_begin (&os_interrupts);
 
           if ((pid = fork ()) < 0)
             {
               e = err_code_from_errno ();
               if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
                 {
-                  close_half_duplex_pipe (&fdp.input, 2);
-                  close_half_duplex_pipe (&fdp.output, 2);
+                  ___close_half_duplex_pipe (&fdp.input, 2);
+                  ___close_half_duplex_pipe (&fdp.output, 2);
                 }
             }
 
           if (pid > 0)
-            ___enable_os_interrupts ();
+            ___mask_os_interrupts_end (&os_interrupts);
         }
 
       if (e != ___FIX(___NO_ERR))
-        close_half_duplex_pipe (&hdp_errno, 2);
+        ___close_half_duplex_pipe (&hdp_errno, 2);
     }
 
   if (e == ___FIX(___NO_ERR))
@@ -8346,7 +8159,7 @@ int options;)
         {
           /* child process */
 
-          restore_sigmask (oldmask);
+          ___restore_sigmask (oldmask);
 
           ___cleanup_os_interrupt_handling ();
 
@@ -8354,11 +8167,11 @@ int options;)
             {
               if (open_full_duplex_pipe2 (&fdp, options & PSEUDO_TERM) < 0 ||
                   ((options & STDIN_REDIR) &&
-                   dup2_no_EINTR (fdp.input.reading_fd, STDIN_FILENO) < 0) ||
+                   ___dup2_no_EINTR (fdp.input.reading_fd, STDIN_FILENO) < 0) ||
                   ((options & STDOUT_REDIR) &&
-                   dup2_no_EINTR (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
+                   ___dup2_no_EINTR (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
                   ((options & (STDERR_REDIR | PSEUDO_TERM)) &&
-                   dup2_no_EINTR (fdp.output.writing_fd, STDERR_FILENO) < 0))
+                   ___dup2_no_EINTR (fdp.output.writing_fd, STDERR_FILENO) < 0))
                 goto return_errno;
             }
 
@@ -8371,9 +8184,9 @@ int options;)
 #endif
 #endif
 
-          close_half_duplex_pipe (&fdp.input, 1);
-          close_half_duplex_pipe (&fdp.output, 0);
-          close_half_duplex_pipe (&hdp_errno, 0);
+          ___close_half_duplex_pipe (&fdp.input, 1);
+          ___close_half_duplex_pipe (&fdp.output, 0);
+          ___close_half_duplex_pipe (&hdp_errno, 0);
 
           {
             /* Close all file descriptors that aren't used. */
@@ -8386,7 +8199,7 @@ int options;)
                     fd != STDOUT_FILENO &&
                     fd != STDERR_FILENO &&
                     fd != hdp_errno.writing_fd)
-                  close_no_EINTR (fd); /* ignore error */
+                  ___close_no_EINTR (fd); /* ignore error */
                 fd--;
               }
           }
@@ -8410,9 +8223,9 @@ int options;)
           if (write (hdp_errno.writing_fd, &execvp_errno, sizeof (execvp_errno)) < 0)
             execvp_errno = 0; /* dummy op to avoid compiler warning */
 
-          close_half_duplex_pipe (&fdp.input, 0);
-          close_half_duplex_pipe (&fdp.output, 1);
-          close_half_duplex_pipe (&hdp_errno, 1);
+          ___close_half_duplex_pipe (&fdp.input, 0);
+          ___close_half_duplex_pipe (&fdp.output, 1);
+          ___close_half_duplex_pipe (&hdp_errno, 1);
 
           _exit (1);
         }
@@ -8421,11 +8234,11 @@ int options;)
 
       if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
         {
-          close_half_duplex_pipe (&fdp.input, 0);
-          close_half_duplex_pipe (&fdp.output, 1);
+          ___close_half_duplex_pipe (&fdp.input, 0);
+          ___close_half_duplex_pipe (&fdp.output, 1);
         }
 
-      close_half_duplex_pipe (&hdp_errno, 1);
+      ___close_half_duplex_pipe (&hdp_errno, 1);
 
       /*
        * The following call to read has been known to fail with EINTR,
@@ -8435,9 +8248,9 @@ int options;)
        * process receives a SIGCHLD signal which interrupts the read.
        */
 
-      n = read_no_EINTR (hdp_errno.reading_fd,
-                         &execvp_errno,
-                         sizeof (execvp_errno));
+      n = ___read_no_EINTR (hdp_errno.reading_fd,
+                            &execvp_errno,
+                            sizeof (execvp_errno));
 
       if (n < 0)
         e = err_code_from_errno ();
@@ -8469,14 +8282,14 @@ int options;)
       if (e != ___FIX(___NO_ERR))
         if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
           {
-            close_half_duplex_pipe (&fdp.input, 1);
-            close_half_duplex_pipe (&fdp.output, 0);
+            ___close_half_duplex_pipe (&fdp.input, 1);
+            ___close_half_duplex_pipe (&fdp.output, 0);
           }
 
-      close_half_duplex_pipe (&hdp_errno, 0);
+      ___close_half_duplex_pipe (&hdp_errno, 0);
     }
 
-  restore_sigmask (oldmask);
+  ___restore_sigmask (oldmask);
 
   return e;
 
@@ -8774,7 +8587,7 @@ int mode;)
               ___NONE_KIND,
               direction))
       != ___FIX(___NO_ERR))
-    close_no_EINTR (fd); /* ignore error */
+    ___close_no_EINTR (fd); /* ignore error */
 
 #endif
 
@@ -9424,7 +9237,7 @@ int sig;)
     {
       int status;
       ___device *head;
-      pid_t pid = waitpid_no_EINTR (-1, &status, WNOHANG);
+      pid_t pid = ___waitpid_no_EINTR (-1, &status, WNOHANG);
 
       if (pid <= 0)
         break;
@@ -9951,13 +9764,6 @@ ___SCMOBJ timeout;)
 {
   ___SCMOBJ e;
   ___time to;
-  ___device *devs[MAX_CONDVARS];
-  ___SCMOBJ condvars[MAX_CONDVARS];
-  int read_pos;
-  int write_pos;
-  ___SCMOBJ condvar;
-  int i;
-  int j;
 
   if (timeout == ___FAL)
     to = ___time_mod.time_neg_infinity;
@@ -9966,11 +9772,20 @@ ___SCMOBJ timeout;)
   else
     ___time_from_seconds (&to, ___F64VECTORREF(timeout,___FIX(0)));
 
-  read_pos = 0;
-  write_pos = MAX_CONDVARS;
-
-  if (!___FALSEP(run_queue))
+  if (___FALSEP(run_queue))
     {
+      e = ___device_select (NULL, 0, 0, to);
+    }
+  else
+    {
+      ___device *devs[MAX_CONDVARS];
+      ___SCMOBJ condvars[MAX_CONDVARS];
+      ___SCMOBJ condvar;
+      int read_pos = 0;
+      int write_pos = MAX_CONDVARS;
+      int i;
+      int j;
+
       condvar = ___FIELD(run_queue,___BTQ_DEQ_NEXT);
 
       while (condvar != run_queue)
@@ -10012,33 +9827,33 @@ ___SCMOBJ timeout;)
                                      ___FOREIGN_PTR));
           i++;
         }
-    }
 
-  e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
+      e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
 
-  i = 0;
+      i = 0;
 
-  while (i < read_pos)
-    {
-      if (devs[i] == NULL)
+      while (i < read_pos)
         {
-          condvar = condvars[i];
-          ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
+          if (devs[i] == NULL)
+            {
+              condvar = condvars[i];
+              ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
+            }
+          i++;
         }
-      i++;
-    }
 
-  j = MAX_CONDVARS;
+      j = MAX_CONDVARS;
 
-  while (j > write_pos)
-    {
-      j--;
-      if (devs[i] == NULL)
+      while (j > write_pos)
         {
-          condvar = condvars[j];
-          ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
+          j--;
+          if (devs[i] == NULL)
+            {
+              condvar = condvars[j];
+              ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
+            }
+          i++;
         }
-      i++;
     }
 
   return e;
@@ -10288,6 +10103,83 @@ ___SCMOBJ port;)
 /* I/O module initialization/finalization. */
 
 
+___SCMOBJ ___setup_io_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+#ifdef USE_POSIX
+
+  if (___open_half_duplex_pipe (&___ps->os.select_abort) < 0 ||
+      ___set_fd_blocking_mode (___ps->os.select_abort.writing_fd, 0) < 0 ||
+      ___set_fd_blocking_mode (___ps->os.select_abort.reading_fd, 0) < 0)
+    e = err_code_from_errno ();
+
+#endif
+
+#ifdef USE_WIN32
+
+  ___ps->os.select_abort =
+    CreateEvent (NULL,  /* can't inherit */
+                 TRUE,  /* manual reset */
+                 FALSE, /* not signaled */
+                 NULL); /* no name */
+
+  if (___ps->os.select_abort == NULL)
+    e = err_code_from_GetLastError ();
+
+#endif
+
+#endif
+
+  return e;
+}
+
+
+void ___cleanup_io_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+#ifdef USE_POSIX
+
+  ___close_half_duplex_pipe (&___ps->os.select_abort, 2);
+
+#endif
+
+#ifdef USE_WIN32
+
+  CloseHandle (___ps->os.select_abort); /* ignore error */
+
+#endif
+
+#endif
+}
+
+
+___SCMOBJ ___setup_io_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+
+void ___cleanup_io_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+}
+
+
 ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 {
   ___SCMOBJ e;
@@ -10351,11 +10243,6 @@ ___SCMOBJ ___setup_io_module ___PVOID
     {
 #ifdef USE_WIN32
 
-      ___SCMOBJ e = ___FIX(___NO_ERR);
-
-      ___io_mod.always_signaled = NULL;
-      ___io_mod.abort_select = NULL;
-
       ___io_mod.always_signaled =
         CreateEvent (NULL,  /* can't inherit */
                      TRUE,  /* manual reset */
@@ -10363,21 +10250,7 @@ ___SCMOBJ ___setup_io_module ___PVOID
                      NULL); /* no name */
 
       if (___io_mod.always_signaled == NULL)
-        e = err_code_from_GetLastError ();
-      else
-        {
-          ___io_mod.abort_select =
-            CreateEvent (NULL,  /* can't inherit */
-                         TRUE,  /* manual reset */
-                         FALSE, /* not signaled */
-                         NULL); /* no name */
-
-          if (___io_mod.abort_select == NULL)
-            {
-              CloseHandle (___io_mod.always_signaled); /* ignore error */
-              e = err_code_from_GetLastError ();
-            }
-        }
+        return err_code_from_GetLastError ();
 
 #endif
 
@@ -10395,8 +10268,8 @@ void ___cleanup_io_module ___PVOID
   if (___io_mod.setup)
     {
       io_module_cleanup ();/*****************************/
+
 #ifdef USE_WIN32
-      CloseHandle (___io_mod.abort_select); /* ignore error */
       CloseHandle (___io_mod.always_signaled); /* ignore error */
 #endif
 
@@ -10405,6 +10278,7 @@ void ___cleanup_io_module ___PVOID
       EVP_cleanup();
       CRYPTO_cleanup_all_ex_data();
 #endif
+
       ___io_mod.setup = 0;
     }
 }

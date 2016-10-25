@@ -85,8 +85,7 @@
 
 
 extern ___SCMOBJ ___setup_mem_pstate
-   ___P((___processor_state ___ps,
-         ___virtual_machine_state ___vms),
+   ___P((___processor_state ___ps),
         ());
 
 extern ___SCMOBJ ___setup_mem_vmstate
