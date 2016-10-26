@@ -2835,12 +2835,27 @@ ___HIDDEN void terminate_intr ___PVOID
 
 #ifdef USE_POSIX
 
+
+#ifdef USE_backtrace_symbols_fd
+#ifdef ___DEBUG
+#define USE_CRASH_SIGNAL_HANDLER
+#endif
+#else
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
+#define USE_CRASH_SIGNAL_HANDLER
+#endif
+#endif
+
+#ifdef USE_CRASH_SIGNAL_HANDLER
+
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
 ___HIDDEN void log_ctrl_flow_history ___PVOID
 {
   ___print_ctrl_flow_history (___PSTATE);
 }
+
+#endif
 
 ___HIDDEN void crash_signal_handler
    ___P((int sig),
@@ -2849,7 +2864,22 @@ int sig;)
 {
   static char *msgs[] = { "Process crashed with ", "unknown signal", NULL };
 
+#ifdef USE_backtrace_symbols_fd
+
+  {
+    void *ret_adrs[100];
+    ___SIZE_T n = backtrace (ret_adrs, sizeof (ret_adrs) / sizeof (void*));
+
+    backtrace_symbols_fd (ret_adrs, n, STDERR_FILENO);
+  }
+
+#endif
+
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
+
   log_ctrl_flow_history ();
+
+#endif
 
   switch (sig)
     {
@@ -2933,7 +2963,7 @@ ___SCMOBJ ___setup_os ___PVOID
                 if ((e = ___setup_io_module ()) == ___FIX(___NO_ERR)) {
 #ifdef USE_POSIX
                   ___set_signal_handler (SIGPIPE, SIG_IGN); /***** belongs elsewhere */
-#ifdef ___DEBUG_CTRL_FLOW_HISTORY
+#ifdef USE_CRASH_SIGNAL_HANDLER
                   ___set_signal_handler (SIGTERM, crash_signal_handler);
                   ___set_signal_handler (SIGBUS,  crash_signal_handler);
                   ___set_signal_handler (SIGSEGV, crash_signal_handler);

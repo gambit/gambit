@@ -231,6 +231,10 @@
 #define USE_syslog
 #endif
 
+#ifdef HAVE_BACKTRACE_SYMBOLS_FD
+#define USE_backtrace_symbols_fd
+#endif
+
 #ifdef HAVE_TCGETSETATTR
 #define USE_tcgetsetattr
 #endif
@@ -1136,6 +1140,11 @@ ___END_C_LINKAGE
 #define INCLUDE_syslog_h
 #endif
 
+#ifdef USE_backtrace_symbols_fd
+#undef INCLUDE_execinfo_h
+#define INCLUDE_execinfo_h
+#endif
+
 #ifdef USE_tcgetsetattr
 #undef INCLUDE_termios_h
 #define INCLUDE_termios_h
@@ -1290,6 +1299,12 @@ ___END_C_LINKAGE
 #ifdef INCLUDE_syslog_h
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
+#endif
+
+#ifdef INCLUDE_execinfo_h
+#ifdef HAVE_EXECINFO_H
+#include <execinfo.h>
 #endif
 #endif
 

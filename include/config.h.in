@@ -67,6 +67,7 @@
 #undef HAVE_SYS_WAIT_H
 #undef HAVE_SYS_MMAN_H
 #undef HAVE_SYSLOG_H
+#undef HAVE_EXECINFO_H
 #undef HAVE_STAT_H
 #undef HAVE_SIGNAL_H
 #undef HAVE_NETDB_H
@@ -146,6 +147,7 @@
 #undef HAVE_SYSCONF
 #undef HAVE_SYSCTL
 #undef HAVE_SYSLOG
+#undef HAVE_BACKTRACE_SYMBOLS_FD
 #undef HAVE_UNLINK
 #undef HAVE_WAITPID
 #undef HAVE_MMAP

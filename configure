@@ -6561,6 +6561,18 @@ fi
 
 done
 
+  for ac_header in execinfo.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "execinfo.h" "ac_cv_header_execinfo_h" "$ac_includes_default"
+if test "x$ac_cv_header_execinfo_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_EXECINFO_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in netdb.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "netdb.h" "ac_cv_header_netdb_h" "$ac_includes_default"
@@ -7961,6 +7973,17 @@ do :
 if test "x$ac_cv_func_syslog" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYSLOG 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in backtrace_symbols_fd
+do :
+  ac_fn_cxx_check_func "$LINENO" "backtrace_symbols_fd" "ac_cv_func_backtrace_symbols_fd"
+if test "x$ac_cv_func_backtrace_symbols_fd" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_BACKTRACE_SYMBOLS_FD 1
 _ACEOF
 
 fi
