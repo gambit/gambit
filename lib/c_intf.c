@@ -17,13 +17,6 @@
 #include "mem.h"
 #include "c_intf.h"
 
-/**********************************/
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-#define ___alloc_mem(bytes) ___alloc_mem_debug(bytes,__LINE__,__FILE__)
-#endif
-#endif
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -6353,7 +6346,7 @@ ___UCS_2STRING *str_UCS_2;)
         len++;
 
       s = ___CAST(___UCS_2STRING,
-                  ___alloc_mem ((len + 1) * sizeof (___UCS_2)));
+                  ___ALLOC_MEM((len + 1) * sizeof (___UCS_2)));
 
       if (s == 0)
         return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -6406,7 +6399,7 @@ ___UCS_2STRING **str_list_UCS_2;)
     len++;
 
   lst = ___CAST(___UCS_2STRING*,
-                ___alloc_mem ((len + 1) * sizeof (___UCS_2STRING)));
+                ___ALLOC_MEM((len + 1) * sizeof (___UCS_2STRING)));
 
   if (lst != 0)
     {

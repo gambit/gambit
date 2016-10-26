@@ -48,7 +48,7 @@ ___device_group **dgroup;)
   ___device_group *g;
 
   g = ___CAST(___device_group*,
-              ___alloc_mem (sizeof (___device_group)));
+              ___ALLOC_MEM(sizeof (___device_group)));
 
   if (g == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -152,7 +152,7 @@ int size;)
   HANDLE wevent;
 
   buffer = ___CAST(___U8*,
-                   ___alloc_mem (size));
+                   ___ALLOC_MEM(size));
 
   if (buffer == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -1555,7 +1555,7 @@ ___device_group *dgroup;)
   ___device_timer *d;
 
   d = ___CAST(___device_timer*,
-              ___alloc_mem (sizeof (___device_timer)));
+              ___ALLOC_MEM(sizeof (___device_timer)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -1613,7 +1613,7 @@ LPVOID arg;)
   DWORD thread_id;
 
   p = ___CAST(___device_stream_pump*,
-              ___alloc_mem (sizeof (___device_stream_pump)));
+              ___ALLOC_MEM(sizeof (___device_stream_pump)));
 
   if (p == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -2126,7 +2126,7 @@ LPVOID param;)
                 case OOB_FORCE_OUTPUT1:
                 case OOB_FORCE_OUTPUT2:
                 case OOB_FORCE_OUTPUT3:
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
                   ___printf ("***** got OOB_FORCE_OUTPUT%d\n",
                              oob_msg.op - OOB_FORCE_OUTPUT0);
 #endif
@@ -2135,7 +2135,7 @@ LPVOID param;)
                 case OOB_SEEK_ABS:
                 case OOB_SEEK_REL:
                 case OOB_SEEK_REL_END:
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
                   ___printf ("***** got OOB_SEEK %d %d\n",
                              oob_msg.stream_index_param,
                              oob_msg.op - OOB_SEEK_ABS);
@@ -2146,7 +2146,7 @@ LPVOID param;)
                          oob_msg.op - OOB_SEEK_ABS);
                   break;
                 case OOB_EOS:
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
                   ___printf ("***** got OOB_EOS\n");
 #endif
                   break;
@@ -2594,7 +2594,7 @@ int direction;)
   COMMTIMEOUTS cto;
 
   d = ___CAST(___device_serial*,
-              ___alloc_mem (sizeof (___device_serial)));
+              ___ALLOC_MEM(sizeof (___device_serial)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -3119,7 +3119,7 @@ int direction;)
   ___device_pipe *d;
 
   d = ___CAST(___device_pipe*,
-              ___alloc_mem (sizeof (___device_pipe)));
+              ___ALLOC_MEM(sizeof (___device_pipe)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -3165,7 +3165,7 @@ int pumps_on;)
   ___device_pipe *d;
 
   d = ___CAST(___device_pipe*,
-              ___alloc_mem (sizeof (___device_pipe)));
+              ___ALLOC_MEM(sizeof (___device_pipe)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -3488,7 +3488,7 @@ int direction;)
   ___device_process *d;
 
   d = ___CAST(___device_process*,
-              ___alloc_mem (sizeof (___device_process)));
+              ___ALLOC_MEM(sizeof (___device_process)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -3553,7 +3553,7 @@ int direction;)
   ___device_process *d;
 
   d = ___CAST(___device_process*,
-              ___alloc_mem (sizeof (___device_process)));
+              ___ALLOC_MEM(sizeof (___device_process)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -5300,7 +5300,7 @@ int direction;)
   ___device_tcp_client *d;
 
   d = ___CAST(___device_tcp_client*,
-              ___alloc_mem (sizeof (___device_tcp_client)));
+              ___ALLOC_MEM(sizeof (___device_tcp_client)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -5659,7 +5659,7 @@ ___tls_context *tls_context;)
     }
 
   d = ___CAST(___device_tcp_server*,
-              ___alloc_mem (sizeof (___device_tcp_server)));
+              ___ALLOC_MEM(sizeof (___device_tcp_server)));
 
   if (d == NULL)
     {
@@ -5931,7 +5931,7 @@ int ignore_hidden;)
   ___device_directory *d;
 
   d = ___CAST(___device_directory*,
-              ___alloc_mem (sizeof (___device_directory)));
+              ___ALLOC_MEM(sizeof (___device_directory)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -6252,7 +6252,7 @@ ___SCMOBJ selector;)
   ___device_event_queue *d;
 
   d = ___CAST(___device_event_queue*,
-              ___alloc_mem (sizeof (___device_event_queue)));
+              ___ALLOC_MEM(sizeof (___device_event_queue)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -6880,7 +6880,7 @@ ___device_stream *self;)
 
 #endif
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
   ___printf ("file char_encoding_errors=%d   char_encoding=%d   eol_encoding=%d   buffering=%d\n",
              char_encoding_errors,
@@ -6957,7 +6957,7 @@ int direction;)
   ___device_file *d;
 
   d = ___CAST(___device_file*,
-              ___alloc_mem (sizeof (___device_file)));
+              ___ALLOC_MEM(sizeof (___device_file)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -6997,7 +6997,7 @@ int direction;)
   ___device_file *d;
 
   d = ___CAST(___device_file*,
-              ___alloc_mem (sizeof (___device_file)));
+              ___ALLOC_MEM(sizeof (___device_file)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -7042,7 +7042,7 @@ int pumps_on;)
   ___device_file *d;
 
   d = ___CAST(___device_file*,
-              ___alloc_mem (sizeof (___device_file)));
+              ___ALLOC_MEM(sizeof (___device_file)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -7252,7 +7252,7 @@ int direction;)
   if (direction == 0)
     direction = ___device_stream_direction_from_fd (fd);
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("fd=%d kind=%d direction=%d\n", fd, kind, direction);
 #endif
 
@@ -7414,7 +7414,7 @@ HANDLE h;)
   DCB dcb;
   BY_HANDLE_FILE_INFORMATION finfo;
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("GetFileType -> %d\n", ___CAST(int,GetFileType (h)));
 #endif
 
@@ -7501,7 +7501,7 @@ int direction;)
   if (direction == 0)
     direction = ___device_stream_direction_from_handle (h);
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("kind=%d direction=%d\n", kind, direction);
 #endif
 
@@ -7973,7 +7973,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
     }
 
   ccmd = ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT),
-                 ___alloc_mem (ccmd_len * sizeof (*ccmd)));
+                 ___ALLOC_MEM(ccmd_len * sizeof (*ccmd)));
 
   if (ccmd != NULL)
     {
@@ -8052,7 +8052,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env;)
   cenv_len++;
 
   cenv = ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT),
-                 ___alloc_mem (cenv_len * sizeof (*cenv)));
+                 ___ALLOC_MEM(cenv_len * sizeof (*cenv)));
 
   if (cenv != NULL)
     {
@@ -8538,7 +8538,7 @@ int mode;)
                           &mod,
                           &direction);
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("path=\"%s\" mode=%s\n", path, mod);
 #endif
 
@@ -8567,7 +8567,7 @@ int mode;)
                           &fl,
                           &direction);
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("path=\"%s\" fl=%d\n", path, fl);
 #endif
 

@@ -13,14 +13,6 @@
 #include "setup.h"
 
 
-/**********************************/
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-#define ___alloc_mem(bytes) ___alloc_mem_debug(bytes,__LINE__,__FILE__)
-#endif
-#endif
-
-
 /*---------------------------------------------------------------------------*/
 
 
@@ -106,7 +98,7 @@ ___UCS_2STRING *start;)
   *start = p1;
 
   result = ___CAST(___UCS_2STRING,
-                   ___alloc_mem ((n+1) * sizeof (___UCS_2)));
+                   ___ALLOC_MEM((n+1) * sizeof (___UCS_2)));
 
   if (result != 0)
     {
@@ -148,7 +140,7 @@ ___BOOL free_old;)
     while (old_strvec[n] != 0) n++;
 
   new_strvec = ___CAST(___UCS_2STRING*,
-                       ___alloc_mem ((n+nb_to_add+1) * sizeof (___UCS_2STRING)));
+                       ___ALLOC_MEM((n+nb_to_add+1) * sizeof (___UCS_2STRING)));
 
   if (new_strvec == 0)
     return 0;
@@ -771,7 +763,7 @@ ___mod_or_lnk (*linker)();)
     e = ___FIXSUB(e,___FIX(1));
   else
     {
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
       ___printf ("___setup returned error code %d\n", ___INT(e));
 #endif
       e = ___FIX(___EXIT_CODE_OSERR);

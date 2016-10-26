@@ -20,7 +20,15 @@ extern void barrier_sync_noop
         ());
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_CTRL_FLOW_HISTORY
+#define ___USE_print_source_location
+#else
+#ifdef ___DEBUG_HOST_CHANGES
+#define ___USE_print_source_location
+#endif
+#endif
+
+#ifdef ___USE_print_source_location
 
 extern void ___print_source_location
    ___P((___source_location *loc),

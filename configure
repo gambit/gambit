@@ -922,8 +922,11 @@ enable_cplusplus
 enable_guide
 enable_c_opt
 enable_debug
+enable_debug_log
+enable_debug_c_backtrace
 enable_debug_ctrl_flow_history
 enable_debug_host_changes
+enable_debug_alloc_mem
 enable_debug_garbage_collect
 enable_activity_log
 enable_profile
@@ -1601,12 +1604,20 @@ Optional Features:
   --enable-c-opt[=level]  use higher C optimization level (default is NO)
   --enable-debug          build system so that it can be debugged (default is
                           NO)
+  --enable-debug-log      build system so that it generates a debugging log
+                          file (default is NO)
+  --enable-debug-c-backtrace
+                          build system so that it generates a C backtrace when
+                          a program crashes (default is NO)
   --enable-debug-ctrl-flow-history
                           build system so that it tracks the control flow
                           history (default is NO)
   --enable-debug-host-changes
                           build system so that it tracks the host changes
                           (default is NO)
+  --enable-debug-alloc-mem
+                          build system so that it tracks the memory
+                          allocations (default is NO)
   --enable-debug-garbage-collect
                           build system so that it detects issues in the
                           garbage collect (default is NO)
@@ -4624,6 +4635,33 @@ else
 fi
 
 
+# Check if a debugging log file (gambit.log) should be generated.
+
+# Check whether --enable-debug-log was given.
+if test "${enable_debug_log+set}" = set; then :
+  enableval=$enable_debug_log; ENABLE_DEBUG_LOG=$enableval
+else
+  ENABLE_DEBUG_LOG=no
+fi
+
+
+# Check if a C backtrace should be produced when a program crashes.
+
+# Check whether --enable-debug-c-backtrace was given.
+if test "${enable_debug_c_backtrace+set}" = set; then :
+  enableval=$enable_debug_c_backtrace; ENABLE_DEBUG_C_BACKTRACE=$enableval
+else
+  ENABLE_DEBUG_C_BACKTRACE=no
+fi
+
+
+if test "$ENABLE_DEBUG_C_BACKTRACE" = yes; then
+
+$as_echo "#define ___DEBUG_C_BACKTRACE /**/" >>confdefs.h
+
+  ENABLE_DEBUG=yes
+fi
+
 # Check if debugging of the control flow history is needed.
 
 # Check whether --enable-debug-ctrl-flow-history was given.
@@ -4639,7 +4677,7 @@ if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
 $as_echo "#define ___DEBUG_CTRL_FLOW_HISTORY /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_CTRL_FLOW_HISTORY"
-  ENABLE_DEBUG=yes
+  ENABLE_DEBUG_LOG=yes
 fi
 
 # Check if debugging of the host changes is needed.
@@ -4657,7 +4695,25 @@ if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
 $as_echo "#define ___DEBUG_HOST_CHANGES /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_HOST_CHANGES"
-  ENABLE_DEBUG=yes
+  ENABLE_DEBUG_LOG=yes
+fi
+
+# Check if debugging the memory allocations is needed.
+
+# Check whether --enable-debug-alloc-mem was given.
+if test "${enable_debug_alloc_mem+set}" = set; then :
+  enableval=$enable_debug_alloc_mem; ENABLE_DEBUG_ALLOC_MEM=$enableval
+else
+  ENABLE_DEBUG_ALLOC_MEM=no
+fi
+
+
+if test "$ENABLE_DEBUG_ALLOC_MEM" = yes; then
+
+$as_echo "#define ___DEBUG_ALLOC_MEM /**/" >>confdefs.h
+
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_ALLOC_MEM"
+  ENABLE_DEBUG_LOG=yes
 fi
 
 # Check if debugging the garbage collector is needed.
@@ -4675,7 +4731,7 @@ if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
 $as_echo "#define ___DEBUG_GARBAGE_COLLECT /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_GARBAGE_COLLECT"
-  ENABLE_DEBUG=yes
+  ENABLE_DEBUG_LOG=yes
 fi
 
 # Turn on debugging.
@@ -4685,6 +4741,12 @@ if test "$ENABLE_DEBUG" = yes; then
 $as_echo "#define ___DEBUG /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG"
+fi
+
+if test "$ENABLE_DEBUG_LOG" = yes; then
+
+$as_echo "#define ___DEBUG_LOG /**/" >>confdefs.h
+
 fi
 
 ###############################################################################

@@ -19,13 +19,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**********************************/
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-#define ___alloc_mem(bytes) ___alloc_mem_debug(bytes,__LINE__,__FILE__)
-#endif
-#endif
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -539,7 +532,7 @@ unsigned int modulus;)
   if (modulus < sizeof (void*) / ___WS)
     extra += sizeof (void*);
 
-  container = ___alloc_mem (extra + (words+modulus) * ___WS);
+  container = ___ALLOC_MEM(extra + (words+modulus) * ___WS);
 
   if (container == 0)
     return 0;
@@ -620,7 +613,7 @@ ___SIZE_T bytes;)
 {
   ___PSGET
   ___rc_header *h = ___CAST(___rc_header*,
-                            ___alloc_mem (bytes + sizeof (___rc_header)));
+                            ___ALLOC_MEM(bytes + sizeof (___rc_header)));
 
   if (h != 0)
     {
@@ -1267,7 +1260,7 @@ ___SCMOBJ sym;)
 }
 
 
-#ifdef ___DEBUG
+#ifdef ___USE_find_global_var_bound_to
 
 ___SCMOBJ ___find_global_var_bound_to
    ___P((___SCMOBJ val),
@@ -2015,7 +2008,7 @@ void *data;)
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_GARBAGE_COLLECT
 
 
 #define ZAP_USING_INVALID_HEAD_TAG_not
@@ -4304,7 +4297,7 @@ ___virtual_machine_state ___vms;)
   /* TODO: implement expansion of glos array when number of globals grows beyond 20000 */
 
   { int n = 20000;
-    ___vms->glos = ___CAST(___SCMOBJ*,___alloc_mem (n * sizeof (___SCMOBJ)));
+    ___vms->glos = ___CAST(___SCMOBJ*,___ALLOC_MEM(n * sizeof (___SCMOBJ)));
     while (--n>=0) { ___vms->glos[n] = ___UNB1; }
   }
 

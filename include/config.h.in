@@ -16,11 +16,20 @@
 /* Define as 1 if you want to compile for debugging.  */
 #undef ___DEBUG
 
+/* Define as 1 if you want to generate a debugging log file.  */
+#undef ___DEBUG_LOG
+
+/* Define as 1 if you want to generate a C backtrace when a program crashes.  */
+#undef ___DEBUG_C_BACKTRACE
+
 /* Define as 1 if you want to compile for debugging the control flow history.  */
 #undef ___DEBUG_CTRL_FLOW_HISTORY
 
 /* Define as 1 if you want to compile for debugging the host changes.  */
 #undef ___DEBUG_HOST_CHANGES
+
+/* Define as 1 if you want to generate a log of the memory allocations. */
+#undef ___DEBUG_ALLOC_MEM
 
 /* Define as 1 if you want to compile for debugging the garbage collector.  */
 #undef ___DEBUG_GARBAGE_COLLECT

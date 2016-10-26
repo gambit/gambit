@@ -3917,7 +3917,7 @@ do { ___processor_state ___ps = ___PSTATE; ___AM_HERE_PS } while (0)
 
 #ifdef ___DEBUG_HOST_CHANGES
 
-#define ___REGISTER_HOST_ENTRY                                          \
+#define ___REGISTER_HOST_ENTRY \
 ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LINE__);
 
 #else
@@ -6677,11 +6677,11 @@ do { \
 
 #define ___C_ASSIGN_NEW(var,type) \
 do { \
-     var = ___CAST(type*,___EXT(___alloc_mem) (sizeof (type))); \
+     var = ___CAST(type*,___ALLOC_MEM(sizeof (type))); \
    } while (0)
 #define ___C_ASSIGN_NEW_WITH_INIT(var,type,init) \
 do { \
-     if ((var = ___CAST(type*,___EXT(___alloc_mem) (sizeof (type)))) != 0) \
+     if ((var = ___CAST(type*,___ALLOC_MEM(sizeof (type)))) != 0) \
        *___CAST(type*,var) = init; \
    } while (0)
 #define ___C_DELETE_STRUCT(name,ptr) \
@@ -9811,9 +9811,19 @@ typedef struct ___global_state_struct
     void (*___enable_interrupts_pstate)
        ___P((___processor_state ___ps),
             ());
+#ifndef ___DEBUG_ALLOC_MEM
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes),
             ());
+#define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes)
+#else
+    void *(*___alloc_mem)
+       ___P((___SIZE_T bytes,
+             int lineno,
+             char *file),
+            ());
+#define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes,__LINE__,__FILE__)
+#endif
     void (*___free_mem)
        ___P((void *ptr),
             ());
@@ -11125,9 +11135,17 @@ ___IMP_FUNC(void,___enable_interrupts_pstate)
 #endif
 
 #ifndef ___INCLUDED_FROM_OS_BASE
+#ifndef ___DEBUG_ALLOC_MEM
 ___IMP_FUNC(void *,___alloc_mem)
    ___P((___SIZE_T bytes),
         ());
+#else
+___IMP_FUNC(void *,___alloc_mem)
+   ___P((___SIZE_T bytes,
+         int lineno,
+         char *file),
+        ());
+#endif
 ___IMP_FUNC(void,___free_mem)
    ___P((void *ptr),
         ());

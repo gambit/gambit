@@ -231,11 +231,18 @@ The configure options which are specific to the Gambit system are:
   --enable-cplusplus      compile using C++ compiler
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-debug          build system so that it can be debugged
-  --enable-debug-ctrl-flow-history
+  --enable-debug-log      build system so that it generates a debugging log
+                          file
+  --enable-debug-c-backtrace
+                          build system so that it generates a C backtrace when
+                          a program crashes
+   --enable-debug-ctrl-flow-history
                           build system so that it tracks the control flow
                           history
   --enable-debug-host-changes
                           build system so that it tracks the host changes
+  --enable-debug-alloc-mem
+                          build system so that it tracks the memory allocations
   --enable-debug-garbage-collector
                           build system so that it detects issues in the
                           garbage collector

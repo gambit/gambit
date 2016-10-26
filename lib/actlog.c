@@ -33,14 +33,14 @@ ___processor_state ___ps;)
   ___U16 *s;
 
   t = ___CAST(___actlog_transition*,
-              ___alloc_mem (sizeof (___actlog_transition) *
-                            ___MAX_NB_ACTLOG_TRANSITIONS));
+              ___ALLOC_MEM(sizeof (___actlog_transition) *
+                           ___MAX_NB_ACTLOG_TRANSITIONS));
 
   if (t == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   s = ___CAST(___U16*,
-              ___alloc_mem (sizeof (___U16) * ___ACTLOG_STACK_SIZE));
+              ___ALLOC_MEM(sizeof (___U16) * ___ACTLOG_STACK_SIZE));
 
   if (s == NULL)
     {
@@ -93,8 +93,8 @@ ___virtual_machine_state ___vms;)
 
   ___actlog_activity *ptr =
     ___CAST(___actlog_activity*,
-            ___alloc_mem (sizeof (___actlog_activity) *
-                          ___MAX_NB_ACTLOG_ACTIVITIES));
+            ___ALLOC_MEM(sizeof (___actlog_activity) *
+                         ___MAX_NB_ACTLOG_ACTIVITIES));
 
   if (ptr == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);

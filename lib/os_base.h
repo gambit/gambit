@@ -48,7 +48,7 @@ extern int ___fflush
    ___P((___FILE *stream),
         ());
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 extern int ___printf
    ___P((const char *format,
@@ -65,9 +65,13 @@ typedef struct ___base_module_struct
   {
     int refcount;
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
     ___FILE *debug;
+
+#endif
+
+#ifdef ___DEBUG_ALLOC_MEM
 
     ___SIZE_TS alloc_mem_calls;
     ___SIZE_TS free_mem_calls;
@@ -109,37 +113,6 @@ extern ___base_module ___base_mod;
  */
 
 #define ___ALLOC_MEM_UP
-
-
-extern void *___alloc_mem
-   ___P((___SIZE_T bytes),
-        ());
-
-extern void ___free_mem
-   ___P((void *ptr),
-        ());
-
-
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-
-extern void * ___alloc_mem_debug
-   ___P((___SIZE_T bytes,
-         int lineno,
-         char *file),
-        ());
-
-#endif
-#endif
-
-
-extern void *___alloc_mem_code
-   ___P((___SIZE_T bytes),
-        ());
-
-extern void ___free_mem_code
-   ___P((void *ptr),
-        ());
 
 
 /*---------------------------------------------------------------------------*/
@@ -242,7 +215,7 @@ extern ___SIZE_T ___write_console_fallback
 
 #ifdef USE_errno
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 extern ___SCMOBJ ___err_code_from_errno_debug
    ___P((int lineno,
@@ -269,7 +242,7 @@ ___err_code_from_errno()
 
 #ifdef USE_h_errno
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 extern ___SCMOBJ ___err_code_from_h_errno_debug
    ___P((int lineno,
@@ -290,7 +263,7 @@ extern ___SCMOBJ ___err_code_from_h_errno ___PVOID;
 
 #ifdef USE_getaddrinfo
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 extern ___SCMOBJ ___err_code_from_gai_code_debug
    ___P((int code,
@@ -314,7 +287,7 @@ extern ___SCMOBJ ___err_code_from_gai_code
 
 #ifdef USE_GetLastError
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 extern ___SCMOBJ ___err_code_from_GetLastError_debug
    ___P((int lineno,
@@ -340,7 +313,7 @@ ___FIX(___WIN32_ERR(ERROR_FILE_NOT_FOUND))
 
 
 #ifdef USE_WSAGetLastError
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 extern ___SCMOBJ ___err_code_from_WSAGetLastError_debug
    ___P((int lineno,
@@ -359,7 +332,7 @@ extern ___SCMOBJ ___err_code_from_WSAGetLastError ___PVOID;
 
 
 #ifdef USE_OSErr
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 extern ___SCMOBJ ___err_code_from_OSErr_debug
    ___P((OSErr e,

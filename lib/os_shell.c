@@ -118,7 +118,7 @@ ___UCS_2STRING *value;)
               len++;
 
             v = ___CAST(___UCS_2STRING,
-                        ___alloc_mem (sizeof (___UCS_2) * (len+1)));
+                        ___ALLOC_MEM(sizeof (___UCS_2) * (len+1)));
 
             if (v == 0)
               return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -145,8 +145,8 @@ ___UCS_2STRING *value;)
     if (name_len >= GETENV_NAME_STATIC_SIZE)
       {
         cname_ptr = ___CAST(char*,
-                            ___alloc_mem (sizeof (*cname_ptr)
-                                          * (name_len+1)));
+                            ___ALLOC_MEM(sizeof (*cname_ptr)
+                                         * (name_len+1)));
 
         if (cname_ptr == 0)
           return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -196,7 +196,7 @@ ___UCS_2STRING *value;)
       if (n >= GETENV_VALUE_STATIC_SIZE)
         {
           cvalue_ptr = ___CAST(___CHAR_TYPE(___GETENV_CE_SELECT)*,
-                               ___alloc_mem (sizeof (*cvalue_ptr) * n));
+                               ___ALLOC_MEM(sizeof (*cvalue_ptr) * n));
 
           if (cvalue_ptr != 0)
             n = GetEnvironmentVariable
@@ -219,7 +219,7 @@ ___UCS_2STRING *value;)
             len++;
 
           v = ___CAST(___UCS_2STRING,
-                      ___alloc_mem (sizeof (___UCS_2) * (len+1)));
+                      ___ALLOC_MEM(sizeof (___UCS_2) * (len+1)));
 
           if (v == 0)
             e = ___FIX(___HEAP_OVERFLOW_ERR);
@@ -313,7 +313,7 @@ ___UCS_2STRING value;)
     char *p2;
 
     char *name_value = ___CAST(char*,
-                               ___alloc_mem (name_len + value_len + 2));
+                               ___ALLOC_MEM(name_len + value_len + 2));
 
     if (name_value == 0)
       return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -376,8 +376,8 @@ ___UCS_2STRING value;)
 
         new_environ =
           ___CAST(char**,
-                  ___alloc_mem ((n + ___shell_mod.environ_unused_at_end)
-                                * sizeof (char*)));
+                  ___ALLOC_MEM((n + ___shell_mod.environ_unused_at_end)
+                               * sizeof (char*)));
 
         if (new_environ == 0)
           {
@@ -418,8 +418,8 @@ ___UCS_2STRING value;)
     else
       {
         cname_ptr = ___CAST(char*,
-                            ___alloc_mem (sizeof (*cname_ptr)
-                                          * (name_len+1)));
+                            ___ALLOC_MEM(sizeof (*cname_ptr)
+                                         * (name_len+1)));
 
         if (cname_ptr == 0)
           return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -435,8 +435,8 @@ ___UCS_2STRING value;)
     else
       {
         cvalue_ptr = ___CAST(char*,
-                             ___alloc_mem (sizeof (*cvalue_ptr)
-                                           * (value_len+1)));
+                             ___ALLOC_MEM(sizeof (*cvalue_ptr)
+                                          * (value_len+1)));
 
         if (cvalue_ptr == 0)
           {
@@ -566,8 +566,8 @@ ___UCS_2STRING name;)
     else
       {
         cname_ptr = ___CAST(char*,
-                            ___alloc_mem (sizeof (*cname_ptr)
-                                          * (name_len+1)));
+                            ___ALLOC_MEM(sizeof (*cname_ptr)
+                                         * (name_len+1)));
 
         if (cname_ptr == 0)
           return ___FIX(___HEAP_OVERFLOW_ERR);

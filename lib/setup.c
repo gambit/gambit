@@ -1773,7 +1773,7 @@ ___SCMOBJ str2;)
 
   if (len1 + len2 + 2 > STRING_COLLATE_BUF_LENGTH)
     {
-      b1 = ___CAST(wchar_t*,___alloc_mem (len1 + 1));
+      b1 = ___CAST(wchar_t*,___ALLOC_MEM(len1 + 1));
 
       if (b1 == 0)
         return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -1785,7 +1785,7 @@ ___SCMOBJ str2;)
 
       *p = '\0';
 
-      b2 = ___CAST(wchar_t*,___alloc_mem (len1 + 1));
+      b2 = ___CAST(wchar_t*,___ALLOC_MEM(len1 + 1));
 
       if (b2 == 0)
         {
@@ -2759,7 +2759,7 @@ ___SCMOBJ thunk;)
 }
 
 
-#ifdef ___DEBUG
+#ifdef ___USE_print_source_location
 
 
 void ___print_source_location

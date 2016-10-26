@@ -10,9 +10,11 @@
 
 /* Determine subsystems to debug.  */
 
-#define ___DEBUG_not
+#define ___DEBUG_LOG_not
+
+#ifdef ___DEBUG_LOG
 #define ___DEBUG_TTY_not
-#define ___DEBUG_ALLOC_MEM_TRACE_not
+#endif
 
 
 /*---------------------------------------------------------------------------*/

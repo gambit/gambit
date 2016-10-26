@@ -40,7 +40,7 @@ int n;)
     n = EXTENSIBLE_STRING_INITIAL_BUFFER_SIZE;
 
   str->buffer = ___CAST(extensible_string_char*,
-                        ___alloc_mem (n * sizeof (extensible_string_char)));
+                        ___ALLOC_MEM(n * sizeof (extensible_string_char)));
 
   if (str->buffer == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -78,7 +78,7 @@ int fudge;)
   extensible_string_char *buf;
 
   buf = ___CAST(extensible_string_char*,
-                ___alloc_mem ((len+fudge) * sizeof (extensible_string_char)));
+                ___ALLOC_MEM((len+fudge) * sizeof (extensible_string_char)));
 
   if (buf == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -112,8 +112,8 @@ int fudge;)
       extensible_string_char *old_buffer = str->buffer;
       extensible_string_char *new_buffer =
         ___CAST(extensible_string_char*,
-                ___alloc_mem (new_max_length *
-                              sizeof (extensible_string_char)));
+                ___ALLOC_MEM(new_max_length *
+                             sizeof (extensible_string_char)));
 
       if (new_buffer == NULL)
         return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -1083,7 +1083,7 @@ ___stream_index *len_done;)
   {
     int n;
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_TTY
     ___printf ("read len=%d\n", len);
 #endif
 
@@ -1092,7 +1092,7 @@ ___stream_index *len_done;)
     else if ((n = read (d->fd, buf, len)) < 0)
       return err_code_from_errno ();
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_TTY
     ___printf ("read n=%d\n", n);
 #endif
 
@@ -1340,7 +1340,7 @@ lineeditor_input_decoder *decoder;)
   int n = LINEEDITOR_INPUT_DECODER_INITIAL_BUFFER_SIZE;
 
   decoder->buffer = ___CAST(lineeditor_input_test*,
-                            ___alloc_mem (n * sizeof (lineeditor_input_test)));
+                            ___ALLOC_MEM(n * sizeof (lineeditor_input_test)));
 
   if (decoder->buffer == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -1382,8 +1382,8 @@ int fudge;)
       lineeditor_input_test *old_buffer = decoder->buffer;
       lineeditor_input_test *new_buffer =
         ___CAST(lineeditor_input_test*,
-                ___alloc_mem (new_max_length *
-                              sizeof (lineeditor_input_test)));
+                ___ALLOC_MEM(new_max_length *
+                             sizeof (lineeditor_input_test)));
 
       if (new_buffer == NULL)
         return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -2061,7 +2061,7 @@ lineeditor_history **hist;)
   lineeditor_history *h;
 
   h = ___CAST(lineeditor_history*,
-              ___alloc_mem (sizeof (lineeditor_history)));
+              ___ALLOC_MEM(sizeof (lineeditor_history)));
 
   if (h == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -4594,7 +4594,7 @@ ___device_tty *self;)
   ___C *str;
 
   str = ___CAST(___C*,
-                ___alloc_mem ((len+1) * sizeof (___C)));
+                ___ALLOC_MEM((len+1) * sizeof (___C)));
 
   if (str == NULL)
     e = ___FIX(___HEAP_OVERFLOW_ERR);
@@ -4638,7 +4638,7 @@ ___device_tty *self;)
                     len++;
 
                   str = ___CAST(___C*,
-                                ___alloc_mem ((len+1) * sizeof (___C)));
+                                ___ALLOC_MEM((len+1) * sizeof (___C)));
 
                   if (str == NULL)
                     e = ___FIX(___HEAP_OVERFLOW_ERR);
@@ -5071,7 +5071,7 @@ ___BOOL emacs_bindings;)
               int len = 0;
               while (seq[len] != '\0')
                 len++;
-              p = ___CAST(char*,___alloc_mem (len+1));
+              p = ___CAST(char*,___ALLOC_MEM(len+1));
               if (p != NULL)
                 {
                   p[len] = '\0';
@@ -8067,7 +8067,7 @@ int direction;)
   ___SCMOBJ e;
 
   d = ___CAST(___device_tty*,
-              ___alloc_mem (sizeof (___device_tty)));
+              ___ALLOC_MEM(sizeof (___device_tty)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -8121,7 +8121,7 @@ int close_direction;)
               (fd == STDERR_FILENO);
 
   d = ___CAST(___device_tty*,
-              ___alloc_mem (sizeof (___device_tty)));
+              ___ALLOC_MEM(sizeof (___device_tty)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -8168,7 +8168,7 @@ int direction;)
   ___SCMOBJ e;
 
   d = ___CAST(___device_tty*,
-              ___alloc_mem (sizeof (___device_tty)));
+              ___ALLOC_MEM(sizeof (___device_tty)));
 
   if (d == NULL)
     return ___FIX(___HEAP_OVERFLOW_ERR);

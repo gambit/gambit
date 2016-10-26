@@ -46,13 +46,6 @@
 #include "mem.h"
 #include "c_intf.h"
 
-/**********************************/
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-#define ___alloc_mem(bytes) ___alloc_mem_debug(bytes,__LINE__,__FILE__)
-#endif
-#endif
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -2836,13 +2829,13 @@ ___HIDDEN void terminate_intr ___PVOID
 #ifdef USE_POSIX
 
 
-#ifdef USE_backtrace_symbols_fd
-#ifdef ___DEBUG
-#define USE_CRASH_SIGNAL_HANDLER
-#endif
-#else
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 #define USE_CRASH_SIGNAL_HANDLER
+#else
+#ifdef USE_backtrace_symbols_fd
+#ifdef ___DEBUG_C_BACKTRACE
+#define USE_CRASH_SIGNAL_HANDLER
+#endif
 #endif
 #endif
 
@@ -2864,6 +2857,7 @@ int sig;)
 {
   static char *msgs[] = { "Process crashed with ", "unknown signal", NULL };
 
+#ifdef ___DEBUG_C_BACKTRACE
 #ifdef USE_backtrace_symbols_fd
 
   {
@@ -2873,6 +2867,7 @@ int sig;)
     backtrace_symbols_fd (ret_adrs, n, STDERR_FILENO);
   }
 
+#endif
 #endif
 
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY

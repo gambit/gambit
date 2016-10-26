@@ -68,7 +68,7 @@ void **linker;)
   ___dl_entry *p;
 
   p = ___CAST(___dl_entry*,
-              ___alloc_mem (sizeof (___dl_entry)));
+              ___ALLOC_MEM(sizeof (___dl_entry)));
 
   if (p == 0)
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -535,8 +535,8 @@ int arg_num;)
     }
 
   r = ___CAST(___STRING_TYPE(___DL_MODNAME_CE_SELECT),
-              ___alloc_mem ((j+1) *
-                            sizeof (___CHAR_TYPE(___DL_MODNAME_CE_SELECT))));
+              ___ALLOC_MEM((j+1) *
+                           sizeof (___CHAR_TYPE(___DL_MODNAME_CE_SELECT))));
 
   if (r == 0)
     return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);

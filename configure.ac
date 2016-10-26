@@ -254,6 +254,27 @@ AC_ARG_ENABLE(debug,
               ENABLE_DEBUG=$enableval,
               ENABLE_DEBUG=no)
 
+# Check if a debugging log file (gambit.log) should be generated.
+
+AC_ARG_ENABLE(debug-log,
+              AC_HELP_STRING([--enable-debug-log],
+                             [build system so that it generates a debugging log file (default is NO)]),
+              ENABLE_DEBUG_LOG=$enableval,
+              ENABLE_DEBUG_LOG=no)
+
+# Check if a C backtrace should be produced when a program crashes.
+
+AC_ARG_ENABLE(debug-c-backtrace,
+              AC_HELP_STRING([--enable-debug-c-backtrace],
+                             [build system so that it generates a C backtrace when a program crashes (default is NO)]),
+              ENABLE_DEBUG_C_BACKTRACE=$enableval,
+              ENABLE_DEBUG_C_BACKTRACE=no)
+
+if test "$ENABLE_DEBUG_C_BACKTRACE" = yes; then
+  AC_DEFINE([___DEBUG_C_BACKTRACE],[],[Enable generation of debugging log file])
+  ENABLE_DEBUG=yes
+fi
+
 # Check if debugging of the control flow history is needed.
 
 AC_ARG_ENABLE(debug-ctrl-flow-history,
@@ -265,7 +286,7 @@ AC_ARG_ENABLE(debug-ctrl-flow-history,
 if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
   AC_DEFINE([___DEBUG_CTRL_FLOW_HISTORY],[],[Enable debugging of control flow history])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_CTRL_FLOW_HISTORY"
-  ENABLE_DEBUG=yes
+  ENABLE_DEBUG_LOG=yes
 fi
 
 # Check if debugging of the host changes is needed.
@@ -279,7 +300,21 @@ AC_ARG_ENABLE(debug-host-changes,
 if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
   AC_DEFINE([___DEBUG_HOST_CHANGES],[],[Enable debugging of host changes])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_HOST_CHANGES"
-  ENABLE_DEBUG=yes
+  ENABLE_DEBUG_LOG=yes
+fi
+
+# Check if debugging the memory allocations is needed.
+
+AC_ARG_ENABLE(debug-alloc-mem,
+              AC_HELP_STRING([--enable-debug-alloc-mem],
+                             [build system so that it tracks the memory allocations (default is NO)]),
+              ENABLE_DEBUG_ALLOC_MEM=$enableval,
+              ENABLE_DEBUG_ALLOC_MEM=no)
+
+if test "$ENABLE_DEBUG_ALLOC_MEM" = yes; then
+  AC_DEFINE([___DEBUG_ALLOC_MEM],[],[Enable debugging the memory allocations])
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_ALLOC_MEM"
+  ENABLE_DEBUG_LOG=yes
 fi
 
 # Check if debugging the garbage collector is needed.
@@ -293,7 +328,7 @@ AC_ARG_ENABLE(debug-garbage-collect,
 if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
   AC_DEFINE([___DEBUG_GARBAGE_COLLECT],[],[Enable debugging of garbage collect])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_GARBAGE_COLLECT"
-  ENABLE_DEBUG=yes
+  ENABLE_DEBUG_LOG=yes
 fi
 
 # Turn on debugging.
@@ -301,6 +336,10 @@ fi
 if test "$ENABLE_DEBUG" = yes; then
   AC_DEFINE([___DEBUG],[],[Enable debugging])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG"
+fi
+
+if test "$ENABLE_DEBUG_LOG" = yes; then
+  AC_DEFINE([___DEBUG_LOG],[],[Enable generation of debugging log file])
 fi
 
 ###############################################################################

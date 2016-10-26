@@ -21,16 +21,15 @@ ___base_module ___base_mod =
 {
   0
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ,
-  0,
-  0,
-  0
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-  ,
-  0,
   0
 #endif
+
+#ifdef ___DEBUG_ALLOC_MEM
+  ,
+  0,
+  0
 #endif
 
 #ifdef ___BASE_MODULE_INIT
@@ -110,7 +109,7 @@ ___FILE *stream;)
 }
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
 #include <stdarg.h>
 
@@ -144,24 +143,25 @@ const char *format;)
 /* Memory allocation. */
 
 
+#ifdef ___DEBUG_ALLOC_MEM
+void *___alloc_mem
+   ___P((___SIZE_T bytes,
+         int lineno,
+         char *file),
+        (bytes,
+         lineno,
+         file)
+___SIZE_T bytes;
+int lineno;
+char *file;)
+#else
 void *___alloc_mem
    ___P((___SIZE_T bytes),
         (bytes)
 ___SIZE_T bytes;)
+#endif
 {
   void *ptr;
-
-#ifdef ___DEBUG
-#ifdef USE_WIN32
-
-  InterlockedIncrement (&___base_mod.alloc_mem_calls);
-
-#else
-
-  ___base_mod.alloc_mem_calls++;
-
-#endif
-#endif
 
 #ifdef USE_TempNewHandle
 
@@ -186,6 +186,36 @@ ___SIZE_T bytes;)
 
 #endif
 
+#ifdef ___DEBUG_ALLOC_MEM
+
+  if (ptr != NULL)
+    {
+#ifdef USE_WIN32
+
+      InterlockedIncrement (&___base_mod.alloc_mem_calls);
+
+#else
+
+      ___base_mod.alloc_mem_calls++;
+
+#endif
+    }
+
+#ifdef ___DEBUG_LOG
+
+  if (file != 0)
+    ___printf ("%p (%lu bytes) ALLOCATED AT \"%s\"@%d.1\n",
+               ptr,
+               bytes,
+               file,
+               lineno);
+  else
+    ___printf ("%p (%lu bytes) ALLOCATED\n", ptr, bytes);
+
+#endif
+
+#endif
+
   return ptr;
 }
 
@@ -195,13 +225,12 @@ void ___free_mem
         (ptr)
 void *ptr;)
 {
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
+#ifdef ___DEBUG_ALLOC_MEM
+
+#ifdef ___DEBUG_LOG
   ___printf ("%p FREED\n", ptr);
 #endif
-#endif
 
-#ifdef ___DEBUG
 #ifdef USE_WIN32
 
   InterlockedIncrement (&___base_mod.free_mem_calls);
@@ -211,6 +240,7 @@ void *ptr;)
   ___base_mod.free_mem_calls++;
 
 #endif
+
 #endif
 
 #ifdef USE_TempNewHandle
@@ -231,42 +261,6 @@ void *ptr;)
 
 #endif
 }
-
-
-#ifdef ___DEBUG
-#ifdef ___DEBUG_ALLOC_MEM_TRACE
-
-
-void * ___alloc_mem_debug
-   ___P((___SIZE_T bytes,
-         int lineno,
-         char *file),
-        (bytes,
-         lineno,
-         file)
-___SIZE_T bytes;
-int lineno;
-char *file;)
-{
-  void *ptr;
-
-  ptr = ___alloc_mem (bytes);
-
-  if (file != 0)
-    ___printf ("%p (%lu bytes) ALLOCATED AT \"%s\"@%d.1\n",
-               ptr,
-               bytes,
-               file,
-               lineno);
-  else
-    ___printf ("%p (%lu bytes) ALLOCATED\n", ptr, bytes);
-
-  return ptr;
-}
-
-
-#endif
-#endif
 
 
 void *___alloc_mem_code
@@ -500,15 +494,15 @@ ___UCS_2STRING **argv_return;)
       if (pass != 0)
         {
           if ((argv = ___CAST(___UCS_2STRING*,
-                              ___alloc_mem ((argc + 1)
-                                            * sizeof (___UCS_2STRING)))) == 0)
+                              ___ALLOC_MEM((argc + 1)
+                                           * sizeof (___UCS_2STRING)))) == 0)
             return ___FIX(___HEAP_OVERFLOW_ERR);
 
           if (total_arg_len > 0)
             {
               if ((args = ___CAST(___UCS_2STRING,
-                                  ___alloc_mem (total_arg_len
-                                                * sizeof (___UCS_2)))) == 0)
+                                  ___ALLOC_MEM(total_arg_len
+                                               * sizeof (___UCS_2)))) == 0)
                 {
                   ___free_mem (argv);
                   return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -841,7 +835,7 @@ int code;)
 }
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 ___SCMOBJ ___err_code_from_errno_debug
    ___P((int lineno,
          char *file),
@@ -855,7 +849,7 @@ ___SCMOBJ ___err_code_from_errno ___PVOID
 {
   int e = errno;
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("*** OS ERROR AT \"%s\"@%d.1 -- errno=%d (%s)\n",
              file,
              lineno,
@@ -905,7 +899,7 @@ int code;)
 }
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 ___SCMOBJ ___err_code_from_h_errno_debug
    ___P((int lineno,
          char *file),
@@ -919,7 +913,7 @@ ___SCMOBJ ___err_code_from_h_errno ___PVOID
 {
   int e = h_errno;
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("*** OS ERROR AT \"%s\"@%d.1 -- h_errno=%d (%s)\n",
              file,
              lineno,
@@ -966,7 +960,7 @@ int code;)
 }
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 ___SCMOBJ ___err_code_from_gai_code_debug
    ___P((int code,
          int lineno,
@@ -994,7 +988,7 @@ int code;)
 
     e = ___GAI_CODE_ERR(code);
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("*** OS ERROR AT \"%s\"@%d.1 -- gai_code=%d (%s)\n",
              file,
              lineno,
@@ -1057,7 +1051,7 @@ int code;)
 #ifdef USE_GetLastError
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 ___SCMOBJ ___err_code_from_GetLastError_debug
    ___P((int lineno,
          char *file),
@@ -1071,7 +1065,7 @@ ___SCMOBJ ___err_code_from_GetLastError ___PVOID
 {
   DWORD e = GetLastError ();
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   char buf[___ERR_MAX_LENGTH+1];
   DWORD len = FormatMessageA
                 (FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_MAX_WIDTH_MASK,
@@ -1104,7 +1098,7 @@ ___SCMOBJ ___err_code_from_GetLastError ___PVOID
 #ifdef USE_WSAGetLastError
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 ___SCMOBJ ___err_code_from_WSAGetLastError_debug
    ___P((int lineno,
          char *file),
@@ -1118,7 +1112,7 @@ ___SCMOBJ ___err_code_from_WSAGetLastError ___PVOID
 {
   DWORD e = WSAGetLastError ();
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   char buf[___ERR_MAX_LENGTH+1];
   DWORD len = FormatMessageA
                 (FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_MAX_WIDTH_MASK,
@@ -1160,7 +1154,7 @@ int code;)
 }
 
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 ___SCMOBJ ___err_code_from_OSErr_debug
    ___P((OSErr e,
          char *file,
@@ -1178,7 +1172,7 @@ ___SCMOBJ ___err_code_from_OSErr
 OSErr e;)
 #endif
 {
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
   ___printf ("*** OS ERROR AT \"%s\"@%d.1 -- OSErr=%d (%s)\n",
              file,
              lineno,
@@ -1683,7 +1677,7 @@ ___SCMOBJ ___setup_base_module ___PVOID
 
 #endif
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
 
       ___base_mod.debug = ___fopen ("gambit.log", "w");
 
@@ -1691,6 +1685,10 @@ ___SCMOBJ ___setup_base_module ___PVOID
         ___base_mod.debug = ___stderr;
 
       ___printf ("*** START OF DEBUGGING TRACES\n");
+
+#endif
+
+#ifdef ___DEBUG_ALLOC_MEM
 
       ___base_mod.alloc_mem_calls = 0;
       ___base_mod.free_mem_calls = 0;
@@ -1712,7 +1710,9 @@ void ___cleanup_base_module ___PVOID
     {
       cleanup_fp ();
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_LOG
+
+#ifdef ___DEBUG_ALLOC_MEM
 
       if (___base_mod.alloc_mem_calls != ___base_mod.free_mem_calls)
         {
@@ -1720,6 +1720,8 @@ void ___cleanup_base_module ___PVOID
                      ___base_mod.alloc_mem_calls,
                      ___base_mod.free_mem_calls);
         }
+
+#endif
 
       if (___base_mod.debug != ___stderr)
         ___fclose (___base_mod.debug);

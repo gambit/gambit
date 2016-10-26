@@ -192,7 +192,15 @@ extern void ___for_each_symkey
          void *data),
         ());
 
-#ifdef ___DEBUG
+#ifdef ___DEBUG_GARBAGE_COLLECT
+#define ___USE_find_global_var_bound_to
+#else
+#ifdef ___DEBUG_HOST_CHANGES
+#define ___USE_find_global_var_bound_to
+#endif
+#endif
+
+#ifdef ___USE_find_global_var_bound_to
 
 extern ___SCMOBJ ___find_global_var_bound_to
    ___P((___SCMOBJ val),
