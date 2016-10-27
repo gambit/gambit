@@ -8107,6 +8107,7 @@ int gc_calls_to_punt_;
 } ___pstate_mem;
 
 typedef struct ___vmstate_os_struct {
+int dummy; /* avoid empty struct error raised by MSVC */
 } ___vmstate_os;
 
 typedef struct ___vmstate_mem_struct {

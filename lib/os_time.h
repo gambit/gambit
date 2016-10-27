@@ -271,6 +271,10 @@ typedef struct ___mask_heartbeat_interrupts_state_struct
 
     ___sigset_type oldmask;
 
+#else
+
+    int dummy; /* avoid empty struct error raised by MSVC */
+
 #endif
   } ___mask_heartbeat_interrupts_state;
 
