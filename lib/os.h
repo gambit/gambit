@@ -202,17 +202,6 @@
 #define USE_NETWORKING
 #endif
 
-#define USE_NONBLOCKING_FILE_IO
-
-#ifdef HAVE_TARGETCONDITIONALS_H
-#include <TargetConditionals.h>
-#ifdef TARGET_OS_IPHONE
-#if TARGET_OS_IPHONE == 1
-#undef USE_NONBLOCKING_FILE_IO
-#endif
-#endif
-#endif
-
 #ifdef HAVE_STRERROR
 #define USE_strerror
 #endif
@@ -362,6 +351,21 @@
 #define INCLUDE_stdint_h
 #endif
 
+#endif
+
+
+/* Make exceptions for iOS which doesn't support some features it claims to. */
+
+#define USE_NONBLOCKING_FILE_IO
+
+#ifdef HAVE_TARGETCONDITIONALS_H
+#include <TargetConditionals.h>
+#ifdef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE == 1
+#undef USE_NONBLOCKING_FILE_IO
+#undef HAVE_CLOCK_GETTIME
+#endif
+#endif
 #endif
 
 
