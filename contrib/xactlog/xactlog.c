@@ -1369,25 +1369,29 @@ char *name;
 
   time_unit_scale = (9-time_unit)-compression_scale;
 
-#define NANOSECS 1000000000
-
   { int i, j;
-    U64 compression = log_frequency;
-    for (i=0; i<compression_scale; i++)
-      compression = U64_mul_U32 (compression, 10);
+    U32 mult = 1;
+    U64 div = log_frequency;
+    for (i=compression_scale; i<9; i++) /* 1e9 nanoseconds per second */
+    {
+      if (U64_less_than_U32 (div, 1000000))
+        mult = mult * 10;
+      else
+        div = U64_div_U32(div, 10);
+    }
     for (i=0; i<log_nb_traces; i++)
       for (j=log_trace[i].len-1; j>=0; j--)
       {
         log_trace[i].event[j].time =
           U64_div_U64 (U64_mul_U32 (U64_sub_U64 (log_trace[i].event[j].time,
                                                  log_min_time),
-                                    NANOSECS),
-                       compression);
+                                    mult),
+                       div);
       }
     log_max_time = U64_div_U64 (U64_mul_U32 (U64_sub_U64 (log_max_time,
                                                           log_min_time),
-                                             NANOSECS),
-                                compression);
+                                             mult),
+                                div);
   }
 }
 
@@ -1706,7 +1710,6 @@ U64 start, end;
   U32 s, e;
   int i;
   U64 *p;
-
   if (!U64_less_than_U64 (start, max_time) ||
       !U64_less_than_U64 (min_time, end))
     return;
