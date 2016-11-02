@@ -392,10 +392,17 @@
     result))
 
 (define (expand-program input . rest)
-  (let ((opts
-         (if (pair? rest)
-             (car rest)
-             (list (list 'target (c#default-target))))))
+  (let ((opts #f)
+        (loc-table #f))
+
+    (if (pair? rest)
+        (begin
+          (set! opts (car rest))
+          (if (pair? (cdr rest))
+              (set! loc-table (car (cdr rest))))))
+
+    (if (not opts)
+        (set! opts (list (list 'target (c#default-target)))))
 
     (set! warnings-requested? compiler-option-warnings)
 
@@ -418,7 +425,9 @@
                  c-intf
                  comp-scope
                  script-line)
-          (map parse-tree->expression parsed-program)))))))
+          (map (lambda (x)
+                 (parse-tree->expression x loc-table))
+               parsed-program)))))))
 
 (define (valid-module-name? module-name)
 

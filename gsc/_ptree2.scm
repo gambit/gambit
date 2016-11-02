@@ -1466,54 +1466,81 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
-;; (parse-tree->expression ptree) returns the Scheme expression corresponding to
-;; the parse tree 'ptree'.
+;; (parse-tree->expression ptree [location-table]) returns the Scheme
+;; expression corresponding to the parse tree 'ptree' and, if
+;; location-table is supplied, it accumulates in that table the
+;; correspondence between generated expressions and the source-code
+;; location.
 
-(define (parse-tree->expression ptree)
-  (se ptree '() (list 0)))
+(define (parse-tree->expression ptree . rest)
+  (let ((loc-table (if (pair? rest) (car rest) #f)))
+    (se ptree '() (list 0) loc-table)))
 
-(define (se ptree env num)
+(define (se ptree env num loc-table)
 
   (cond ((cst? ptree)
          (let ((val (cst-val ptree)))
-           (se-constant val)))
+           (se-constant val ptree loc-table)))
 
         ((ref? ptree)
-         (se-var->id (ref-var ptree) env))
+         (se-gen
+          (se-var->id (ref-var ptree) env)
+          ptree
+          loc-table))
 
         ((set? ptree)
-         (list set!-sym
-               (se-var->id (set-var ptree) env)
-               (se (set-val ptree) env num)))
+         (se-gen
+          (list set!-sym
+                (se-var->id (set-var ptree) env)
+                (se (set-val ptree) env num loc-table))
+          ptree
+          loc-table))
 
         ((def? ptree)
-         (list define-sym
-               (se-var->id (def-var ptree) env)
-               (se (def-val ptree) env num)))
+         (se-gen
+          (list define-sym
+                (se-var->id (def-var ptree) env)
+                (se (def-val ptree) env num loc-table))
+          ptree
+          loc-table))
 
         ((tst? ptree)
-         (list if-sym (se (tst-pre ptree) env num)
-                      (se (tst-con ptree) env num)
-                      (se (tst-alt ptree) env num)))
+         (se-gen
+          (list if-sym (se (tst-pre ptree) env num loc-table)
+                       (se (tst-con ptree) env num loc-table)
+                       (se (tst-alt ptree) env num loc-table))
+          ptree
+          loc-table))
 
         ((conj? ptree)
-         (list and-sym (se (conj-pre ptree) env num)
-                       (se (conj-alt ptree) env num)))
+         (se-gen
+          (list and-sym (se (conj-pre ptree) env num loc-table)
+                        (se (conj-alt ptree) env num loc-table))
+          ptree
+          loc-table))
 
         ((disj? ptree)
-         (list or-sym (se (disj-pre ptree) env num)
-                      (se (disj-alt ptree) env num)))
+         (se-gen
+          (list or-sym (se (disj-pre ptree) env num loc-table)
+                       (se (disj-alt ptree) env num loc-table))
+          ptree
+          loc-table))
 
         ((prc? ptree)
          (let ((new-env (se-rename ptree env num)))
-           (list lambda-sym
-                 (se-parameters (prc-parms ptree)
-                                (prc-opts ptree)
-                                (prc-keys ptree)
-                                (prc-rest? ptree)
-                                new-env
-                                num)
-                 (se (prc-body ptree) new-env num))))
+           (se-gen
+            (list lambda-sym
+                  (se-parameters (prc-parms ptree)
+                                 (prc-opts ptree)
+                                 (prc-keys ptree)
+                                 (prc-rest? ptree)
+                                 new-env
+                                 num
+                                 ptree
+                                 loc-table)
+                  (se (prc-body ptree) new-env num loc-table))
+            ptree
+            loc-table)))
 
         ((app? ptree)
          (let ((oper (app-oper ptree))
@@ -1532,43 +1559,70 @@
                                 (car (prc-parms oper))
                                 (bound-free-variables (prc-body oper)))))
 
-                     (let* ((expr1 (se (car args) env num))
-                            (expr2 (se (prc-body oper) env num)))
-                       (cons begin-sym
-                             (cons expr1
-                                   (if (and (pair? expr2)
-                                            (eq? (car expr2) begin-sym))
-                                       (cdr expr2)
-                                       (list expr2)))))
+                     (let* ((expr1 (se (car args) env num loc-table))
+                            (expr2 (se (prc-body oper) env num loc-table)))
+                       (se-gen
+                        (cons begin-sym
+                              (cons expr1
+                                    (if (and (pair? expr2)
+                                             (eq? (car expr2) begin-sym))
+                                        (cdr expr2)
+                                        (list expr2))))
+                        ptree
+                        loc-table))
 
                      (let ((new-env (se-rename oper env num)))
-                       (list (if recursive?
-                                 letrec-sym
-                                 let-sym)
-                             (se-bindings (prc-parms oper) args new-env num)
-                             (se (prc-body oper) new-env num)))))
+                       (se-gen
+                        (list (if recursive?
+                                  letrec-sym
+                                  let-sym)
+                              (se-bindings (prc-parms oper) args new-env num loc-table)
+                              (se (prc-body oper) new-env num loc-table))
+                        ptree
+                        loc-table))))
 
-               (map (lambda (x) (se x env num)) (cons oper args)))))
+               (se-gen
+                (map (lambda (x) (se x env num loc-table))
+                     (cons oper args))
+                ptree
+                loc-table))))
 
         ((fut? ptree)
-         (list future-sym (se (fut-val ptree) env num)))
+         (se-gen
+          (list future-sym (se (fut-val ptree) env num loc-table))
+          ptree
+          loc-table))
 
         (else
          (compiler-internal-error "se, unknown parse tree node type"))))
+
+(define (se-gen expr ptree loc-table)
+  (if loc-table
+      (begin
+        ;(pp ptree)
+      (let ((src (node-source ptree)))
+        ;(pp src)
+        (let ((locat (source-locat src)))
+          ;(pp locat)
+          (table-set! loc-table expr locat)))))
+  expr)
 
 (define use-actual-primitives-in-expression? #t)
 
 (define use-begin-when-possible-in-expression? #t)
 
-(define (se-constant val)
-  (if (self-evaluating? val)
-    val
-    (list quote-sym
-          (if (proc-obj? val)
-            (if use-actual-primitives-in-expression?
-              (eval (string->symbol (proc-obj-name val)))
-              (list '*primitive* (proc-obj-name val)))
-            val))))
+(define (se-constant val ptree loc-table)
+  (se-gen
+   (if (self-evaluating? val)
+       val
+       (list quote-sym
+             (if (proc-obj? val)
+                 (if use-actual-primitives-in-expression?
+                     (eval (string->symbol (proc-obj-name val)))
+                     (list '*primitive* (proc-obj-name val)))
+                 val)))
+   ptree
+   loc-table))
 
 (define (se-var->id var env)
   (let ((id (let ((x (assq var env)))
@@ -1582,7 +1636,7 @@
 
 (define use-dotted-rest-parameter-when-possible? #t)
 
-(define (se-parameters parms opts keys rest? env num)
+(define (se-parameters parms opts keys rest? env num ptree loc-table)
 
   (define (se-required parms n)
     (if (= n 0)
@@ -1598,7 +1652,7 @@
               (if (null? opts)
                 (se-rest-and-keys parms)
                 (let ((parm (se-var->id (car parms) env)))
-                  (cons (list parm (se-constant (car opts)))
+                  (cons (list parm (se-constant (car opts) ptree loc-table))
                         (loop (cdr parms) (cdr opts)))))))))
 
   (define (se-rest-and-keys parms)
@@ -1625,7 +1679,7 @@
               (if (null? keys)
                 tail
                 (let ((parm (se-var->id (car parms) env)))
-                  (cons (list parm (se-constant (cdr (car keys))))
+                  (cons (list parm (se-constant (cdr (car keys)) ptree loc-table))
                         (loop (cdr parms) (cdr keys)))))))))
 
   (se-required parms
@@ -1634,11 +1688,11 @@
                   (if keys (length keys) 0)
                   (if rest? 1 0))))
 
-(define (se-bindings vars vals env num)
+(define (se-bindings vars vals env num loc-table)
   (if (null? vars)
     '()
-    (cons (list (se-var->id (car vars) env) (se (car vals) env num))
-          (se-bindings (cdr vars) (cdr vals) env num))))
+    (cons (list (se-var->id (car vars) env) (se (car vals) env num loc-table))
+          (se-bindings (cdr vars) (cdr vals) env num loc-table))))
 
 (define (se-rename proc env num)
   (let* ((parms
