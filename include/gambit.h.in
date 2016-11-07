@@ -7665,17 +7665,17 @@ typedef struct ___full_duplex_pipe
 
 #define ___MUTEX int
 #define ___MUTEX_DECL(id)
-#define ___MUTEX_INIT(mut) 1
-#define ___MUTEX_DESTROY(mut) 1
-#define ___MUTEX_LOCK(mut) 1
-#define ___MUTEX_UNLOCK(mut) 1
+#define ___MUTEX_INIT(mut)
+#define ___MUTEX_DESTROY(mut)
+#define ___MUTEX_LOCK(mut)
+#define ___MUTEX_UNLOCK(mut)
 
 #define ___CONDVAR int
 #define ___CONDVAR_DECL(id)
-#define ___CONDVAR_INIT(cv) 1
-#define ___CONDVAR_DESTROY(cv) 1
-#define ___CONDVAR_WAIT(cv,mut) 1
-#define ___CONDVAR_SIGNAL(cv) 1
+#define ___CONDVAR_INIT(cv)
+#define ___CONDVAR_DESTROY(cv)
+#define ___CONDVAR_WAIT(cv,mut)
+#define ___CONDVAR_SIGNAL(cv)
 
 #define ___THREAD_ID 0
 
@@ -8301,6 +8301,8 @@ typedef struct ___processor_state_struct
     ___sync_op_struct sync_op1;
     volatile int sync_id2;
     ___sync_op_struct sync_op2;
+    ___MUTEX_DECL(sync_mut);
+    ___CONDVAR_DECL(sync_cv);
 
 #endif
   } ___processor_state_struct;

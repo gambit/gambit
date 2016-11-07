@@ -262,14 +262,59 @@ ___processor_state ___ps;)
 #define COMBINING_MAX 3
 #define OP_MAKE(priority,combining) (((priority)<<2)+(combining))
 
-#define SYNC_WAIT -1
-
 #define OP_SET_NB_PROCESSORS OP_MAKE( 0,0)
 #define OP_RESIZE_VM         OP_MAKE( 1,0)
 #define OP_GARBAGE_COLLECT   OP_MAKE( 2,COMBINING_ADD)
 #define OP_ACTLOG_START      OP_MAKE(61,0)
 #define OP_ACTLOG_STOP       OP_MAKE(62,0)
 #define OP_NOOP              OP_MAKE(63,0)
+
+#define SYNC_WAITING -1
+
+#define SYNC_INIT_MSG(var) var = SYNC_WAITING
+
+#define SYNC_GET_MSG_SPIN_TIMEOUT 2000
+
+#define SYNC_GET_MSG(expr) \
+do { \
+     int loops_left = SYNC_GET_MSG_SPIN_TIMEOUT; \
+     while ((expr) == SYNC_WAITING) \
+       { \
+         WASTE_TIME(); \
+         if (--loops_left == 0) \
+           { \
+             loops_left = SYNC_GET_MSG_SPIN_TIMEOUT; \
+             ___MUTEX_LOCK(___ps->sync_mut); \
+             if ((expr) == SYNC_WAITING) \
+               ___sync_wait (___ps); \
+             ___MUTEX_UNLOCK(___ps->sync_mut); \
+           } \
+       } \
+   } while (0)
+
+#define SYNC_SEND_MSG(ps,field,val) \
+do { \
+     ___MUTEX_LOCK(ps->sync_mut); \
+     ps->field = val; \
+     ___SHARED_MEMORY_BARRIER(); /* make sure write happens promptly */  \
+     ___MUTEX_UNLOCK(ps->sync_mut); \
+     ___CONDVAR_SIGNAL(ps->sync_cv); \
+   } while (0)
+
+
+___HIDDEN void ___sync_wait
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+#ifndef ___SINGLE_THREADED_VMS
+
+  ___ACTLOG_BEGIN_PS(wait,gray);
+  ___CONDVAR_WAIT(___ps->sync_cv, ___ps->sync_mut);
+  ___ACTLOG_END_PS();
+
+#endif
+}
 
 
 ___HIDDEN int barrier_sync_op
@@ -310,8 +355,7 @@ ___sync_op_struct *sop_ptr;)
       int sid1;
       ___sync_op_struct sop1;
 
-      while ((sid1 = ___ps->sync_id1) == SYNC_WAIT)
-        WASTE_TIME();
+      SYNC_GET_MSG(sid1 = ___ps->sync_id1);
 
       sop1 = ___ps->sync_op1;
 
@@ -339,15 +383,14 @@ ___sync_op_struct *sop_ptr;)
           sid = sid1;
         }
 
-      ___ps->sync_id1 = SYNC_WAIT;
+      SYNC_INIT_MSG(___ps->sync_id1);
 
       if (child_id2 < n)
         {
           int sid2;
           ___sync_op_struct sop2;
 
-          while ((sid2 = ___ps->sync_id2) == SYNC_WAIT)
-            WASTE_TIME();
+          SYNC_GET_MSG(sid2 = ___ps->sync_id2);
 
           sop2 = ___ps->sync_op2;
 
@@ -375,7 +418,7 @@ ___sync_op_struct *sop_ptr;)
               sid = sid2;
             }
 
-          ___ps->sync_id2 = SYNC_WAIT;
+          SYNC_INIT_MSG(___ps->sync_id2);
         }
     }
 
@@ -396,25 +439,24 @@ ___sync_op_struct *sop_ptr;)
     {
       ___processor_state parent = ___PSTATE_FROM_PROCESSOR_ID((id-1)>>1,___vms);
 
-      ___ps->sync_id0 = SYNC_WAIT;
+      SYNC_INIT_MSG(___ps->sync_id0);
 
       if (id & 1)
         {
           parent->sync_op1 = sop;
-          parent->sync_id1 = sid;
+          SYNC_SEND_MSG(parent, sync_id1, sid);
         }
       else
         {
           parent->sync_op2 = sop;
-          parent->sync_id2 = sid;
+          SYNC_SEND_MSG(parent, sync_id2, sid);
         }
 
       /*
        * Wait for parent to reply with winning operation.
        */
 
-      while ((sid = ___ps->sync_id0) == SYNC_WAIT)
-        WASTE_TIME();
+      SYNC_GET_MSG(sid = ___ps->sync_id0);
 
       sop = ___ps->sync_op0;
     }
@@ -428,14 +470,14 @@ ___sync_op_struct *sop_ptr;)
       ___processor_state child1 = ___PSTATE_FROM_PROCESSOR_ID(child_id1,___vms);
 
       child1->sync_op0 = sop;
-      child1->sync_id0 = sid;
+      SYNC_SEND_MSG(child1, sync_id0, sid);
 
       if (child_id2 < n)
         {
           ___processor_state child2 = ___PSTATE_FROM_PROCESSOR_ID(child_id2,___vms);
 
           child2->sync_op0 = sop;
-          child2->sync_id0 = sid;
+          SYNC_SEND_MSG(child2, sync_id0, sid);
         }
     }
 
@@ -3011,9 +3053,12 @@ ___virtual_machine_state ___vms;)
 
 #ifndef ___SINGLE_THREADED_VMS
 
-  ___ps->sync_id0 = SYNC_WAIT;
-  ___ps->sync_id1 = SYNC_WAIT;
-  ___ps->sync_id2 = SYNC_WAIT;
+  SYNC_INIT_MSG(___ps->sync_id0);
+  SYNC_INIT_MSG(___ps->sync_id1);
+  SYNC_INIT_MSG(___ps->sync_id2);
+
+  ___MUTEX_INIT(___ps->sync_mut);
+  ___CONDVAR_INIT(___ps->sync_cv);
 
 #endif
 

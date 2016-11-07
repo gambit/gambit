@@ -285,21 +285,18 @@ volatile ___WORD *ptr;
 ___WORD oldval;
 ___WORD newval;)
 {
-  static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
   ___WORD temp;
   ___MUTEX *mut_ptr =
     &___thread_mod.hash_mutex[___CAST(___SIZE_T,ptr) % HASH_MUTEX_SIZE];
 
-  if (!___MUTEX_LOCK(*mut_ptr))
-    ___fatal_error (msgs); /* should never happen, but just in case... */
+  ___MUTEX_LOCK(*mut_ptr);
 
   temp = *ptr;
 
   if (temp == oldval)
     *ptr = newval;
 
-  if (!___MUTEX_UNLOCK(*mut_ptr))
-    ___fatal_error (msgs); /* should never happen, but just in case... */
+  ___MUTEX_UNLOCK(*mut_ptr);
 
   return temp;
 }
@@ -313,20 +310,17 @@ ___WORD ___emulated_fetch_and_add_word
 volatile ___WORD *ptr;
 ___WORD val;)
 {
-  static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
   ___WORD temp;
   ___MUTEX *mut_ptr =
     &___thread_mod.hash_mutex[___CAST(___SIZE_T,ptr) % HASH_MUTEX_SIZE];
 
-  if (!___MUTEX_LOCK(*mut_ptr))
-    ___fatal_error (msgs); /* should never happen, but just in case... */
+  ___MUTEX_LOCK(*mut_ptr);
 
   temp = *ptr;
 
   *ptr += val;
 
-  if (!___MUTEX_UNLOCK(*mut_ptr))
-    ___fatal_error (msgs); /* should never happen, but just in case... */
+  ___MUTEX_UNLOCK(*mut_ptr);
 
   return temp;
 }
@@ -337,20 +331,17 @@ ___WORD ___emulated_fetch_and_clear_word
         (ptr)
 volatile ___WORD *ptr;)
 {
-  static char *msgs[] = { "Mutex lock/unlock operation failed", NULL };
   ___WORD temp;
   ___MUTEX *mut_ptr =
     &___thread_mod.hash_mutex[___CAST(___SIZE_T,ptr) % HASH_MUTEX_SIZE];
 
-  if (!___MUTEX_LOCK(*mut_ptr))
-    ___fatal_error (msgs); /* should never happen, but just in case... */
+  ___MUTEX_LOCK(*mut_ptr);
 
   temp = *ptr;
 
   *ptr = 0;
 
-  if (!___MUTEX_UNLOCK(*mut_ptr))
-    ___fatal_error (msgs); /* should never happen, but just in case... */
+  ___MUTEX_UNLOCK(*mut_ptr);
 
   return temp;
 }
