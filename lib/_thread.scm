@@ -1570,8 +1570,8 @@
     (##os-condvar-select! #f #t) ;; wait for interrupt
     (loop)))
 
-(define (##rvm n)
-  (##resize-vm ##startup-processor! n))
+(define (##vmr n)
+  (##vm-resize ##startup-processor! n))
 
 (define (##startup-parallelism!)
   (let* ((level
@@ -1579,7 +1579,7 @@
          (nb-procs
           (if (##fx> level 0) level (##fx+ (##cpu-count) level))))
     (if (##fx> nb-procs 1)
-        (##rvm nb-procs))))
+        (##vmr nb-procs))))
 
 (define-prim (##startup-threading!)
 
