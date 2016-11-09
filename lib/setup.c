@@ -84,6 +84,7 @@ int code;)
                        ___ps->intr_mask))
     {
       ___STACK_TRIP_ON();
+      ___SHARED_MEMORY_BARRIER(); /* make sure write happens promptly */
       ___device_select_abort (___ps); /* abort ___device_select if waiting */
     }
 }
