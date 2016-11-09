@@ -773,7 +773,7 @@ int nb_read_devs;
 int nb_write_devs;
 ___time timeout;)
 {
-  ___SCMOBJ e = ___FIX(___NO_ERR);
+  ___SCMOBJ e;
   int nb_devs;
   ___device_select_state state;
   int pass;
@@ -898,6 +898,8 @@ ___time timeout;)
     }
   else
     state.relative_timeout = NEG_INFINITY;
+
+  e = ___FIX(___NO_ERR);
 
   ___ACTLOG_BEGIN(wait,gray);
 
