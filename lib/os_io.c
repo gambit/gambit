@@ -773,6 +773,7 @@ int nb_read_devs;
 int nb_write_devs;
 ___time timeout;)
 {
+  ___SCMOBJ e = ___FIX(___NO_ERR);
   int nb_devs;
   ___device_select_state state;
   int pass;
@@ -856,7 +857,6 @@ ___time timeout;)
 
       while (i != -1)
         {
-          ___SCMOBJ e;
           ___device *d = devs[i];
           if ((e = ___device_select_virt
                      (d,
@@ -951,10 +951,10 @@ ___time timeout;)
 
             goto select_done;
           }
+#ifndef USE_ASYNC_DEVICE_SELECT_ABORT
 #ifdef USE_nanosleep
         else
           {
-
             /*
              * For better timeout resolution, the nanosleep function
              * is used instead of the select function.  On some
@@ -962,6 +962,9 @@ ___time timeout;)
              * function can be more expensive than a call to select,
              * but the better timeout resolution outweighs the run
              * time cost.
+             *
+             * This optimization is not used when it is necessary to
+             * abort ___device_select asynchronously.
              */
 
             struct timespec delta_ts_struct;
@@ -972,10 +975,14 @@ ___time timeout;)
 
             result = nanosleep (&delta_ts_struct, NULL);
 
+            if (result < 0)
+              e = err_code_from_errno ();
+
             ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
 
             goto select_done;
           }
+#endif
 #endif
       }
 
@@ -988,12 +995,12 @@ ___time timeout;)
               &state.exceptfds,
               delta_tv);
 
+    if (result < 0)
+      e = err_code_from_errno ();
+
     ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
 
   select_done:
-
-    if (result < 0)
-      return err_code_from_errno ();
 
     state.timeout_reached = (result == 0);
   }
@@ -1017,7 +1024,8 @@ ___time timeout;)
     ___absolute_time_to_nonnegative_timeval_maybe_NULL (delta, &delta_tv);
 
     /* pure sleep optimizations */
-    if (state.pollfd_count == 0 && delta_tv != NULL)
+    if (delta_tv != NULL &&
+        state.pollfd_count == 0)
       {
         if (delta_tv->tv_sec < 0 ||
             (delta_tv->tv_sec == 0 &&
@@ -1026,6 +1034,7 @@ ___time timeout;)
             result = 0;
             goto poll_done;
           }
+#ifndef USE_ASYNC_DEVICE_SELECT_ABORT
 #ifdef USE_nanosleep
         else
           {
@@ -1037,10 +1046,14 @@ ___time timeout;)
 
             result = nanosleep (&delta_ts_struct, NULL);
 
+            if (result < 0)
+              e = err_code_from_errno ();
+
             ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
 
             goto poll_done;
           }
+#endif
 #endif
       }
 
@@ -1091,6 +1104,9 @@ ___time timeout;)
     result = poll (state.pollfds, state.pollfd_count, delta_msecs);
 #endif
 
+    if (result < 0)
+      e = err_code_from_errno ();
+
     ___mask_heartbeat_interrupts_end (&heartbeat_interrupts);
 
     /* Set the active bitmaps */
@@ -1123,9 +1139,6 @@ ___time timeout;)
 
   poll_done:
 
-    if (result < 0)
-      return err_code_from_errno ();
-
     state.timeout_reached = (result == 0);
   }
 #endif
@@ -1135,6 +1148,8 @@ ___time timeout;)
   if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
+
+      e = ___FIX(___ERRNO_ERR(EINTR));
 
       for (;;)
         {
@@ -1146,7 +1161,10 @@ ___time timeout;)
               if (errno == EAGAIN)
                 break;
               if (errno != EINTR)
-                return err_code_from_errno ();
+                {
+                  e = err_code_from_errno ();
+                  break;
+                }
             }
           else if (n < sizeof(buf))
             break;
@@ -1179,7 +1197,10 @@ ___time timeout;)
                state.message_queue_mask);
 
         if (n == WAIT_FAILED)
-          return err_code_from_GetLastError ();
+          {
+            e = err_code_from_GetLastError ();
+            break;
+          }
 
         if ((n - WAIT_OBJECT_0) <= WAIT_OBJECT_0 + state.nb_wait_objs)
           n -= WAIT_OBJECT_0;
@@ -1233,7 +1254,9 @@ ___time timeout;)
              * initiate a clean termination of the program.
              */
 
-            return ___FIX(___UNKNOWN_ERR);
+            e = ___FIX(___UNKNOWN_ERR);
+
+            break;
           }
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
         else if (n == 1)
@@ -1247,7 +1270,9 @@ ___time timeout;)
 
             ResetEvent (___PSTATE->os.select_abort); /* ignore error */
 
-            return ___FIX(___ERRNO_ERR(EINTR));
+            e = ___FIX(___ERRNO_ERR(EINTR));
+
+            break;
           }
 #endif
         else
@@ -1278,22 +1303,24 @@ ___time timeout;)
 
   ___ACTLOG_END();
 
-  for (i=nb_devs-1; i>=0; i--)
+  if (e == ___FIX(___NO_ERR))
     {
-      ___SCMOBJ e;
-      ___device *d = devs[i];
-      if (d != NULL)
-        if ((e = ___device_select_virt
-                   (d,
-                    i>=nb_read_devs,
-                    i,
-                    ___SELECT_PASS_CHECK,
-                    &state))
-            != ___FIX(___NO_ERR))
-          return e;
+      for (i=nb_devs-1; i>=0; i--)
+        {
+          ___device *d = devs[i];
+          if (d != NULL)
+            if ((e = ___device_select_virt
+                       (d,
+                        i>=nb_read_devs,
+                        i,
+                        ___SELECT_PASS_CHECK,
+                        &state))
+                != ___FIX(___NO_ERR))
+              break;
+        }
     }
 
-  return ___FIX(___NO_ERR);
+  return e;
 }
 
 
