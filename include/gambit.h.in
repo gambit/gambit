@@ -7870,6 +7870,8 @@ typedef struct ___pstate_actlog
 #define ___ACTLOG_COLOR_magenta   0xFF00FF
 #define ___ACTLOG_COLOR_pink      0xFF8080
 #define ___ACTLOG_COLOR_gray      0x808080
+#define ___ACTLOG_COLOR_lightgray 0xb0b0b0
+#define ___ACTLOG_COLOR_darkgray  0x505050
 #define ___ACTLOG_COLOR_brown     0x800000
 #define ___ACTLOG_COLOR_orange    0xFF8000
 #define ___ACTLOG_COLOR_purple    0x803E75

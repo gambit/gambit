@@ -901,7 +901,7 @@ ___time timeout;)
 
   e = ___FIX(___NO_ERR);
 
-  ___ACTLOG_BEGIN(wait,gray);
+  ___ACTLOG_BEGIN(io_wait,darkgray);
 
 #ifdef USE_select_or_poll
 

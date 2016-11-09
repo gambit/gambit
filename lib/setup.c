@@ -309,7 +309,7 @@ ___processor_state ___ps;)
 {
 #ifndef ___SINGLE_THREADED_VMS
 
-  ___ACTLOG_BEGIN_PS(wait,gray);
+  ___ACTLOG_BEGIN_PS(sync_wait,gray);
   ___CONDVAR_WAIT(___ps->sync_cv, ___ps->sync_mut);
   ___ACTLOG_END_PS();
 

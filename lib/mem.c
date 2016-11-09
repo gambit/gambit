@@ -5716,7 +5716,7 @@ ___PSDKR)
         {
           /* Other processors are still actively scanning chunks */
 
-          ___ACTLOG_BEGIN_PS(wait,gray);
+          ___ACTLOG_BEGIN_PS(gc_wait,lightgray);
           ___CONDVAR_WAIT(scan_termination_condvar,scan_termination_mutex);
           ___ACTLOG_END_PS();
 
