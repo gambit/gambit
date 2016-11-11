@@ -1598,13 +1598,9 @@
 
 (define (se-gen expr ptree loc-table)
   (if loc-table
-      (begin
-        ;(pp ptree)
       (let ((src (node-source ptree)))
-        ;(pp src)
         (let ((locat (source-locat src)))
-          ;(pp locat)
-          (table-set! loc-table expr locat)))))
+          (table-set! loc-table expr locat))))
   expr)
 
 (define use-actual-primitives-in-expression? #t)
