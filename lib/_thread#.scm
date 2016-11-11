@@ -259,6 +259,8 @@
                  right
                  right-set!
                  before?
+                 length
+                 length-set!
                  leftmost
                  leftmost-set!
                  rightmost
@@ -342,8 +344,16 @@
 
           (##declare (not interrupts-enabled))
 
-          ,',@(if leftmost
+          ,@',(if leftmost
                 `((,leftmost-set! rbtree rbtree))
+                `())
+
+          ,@',(if rightmost
+                `((,rightmost-set! rbtree rbtree))
+                `())
+
+          ,@',(if length
+                `((,length-set! rbtree 0))
                 `())
 
           (,',(blacken! 'rbtree) rbtree)
@@ -445,6 +455,10 @@
              (fixup!))
            (insert-below! right-x)))
 
+       ,@(if length
+             `((,length-set! rbtree (##fx+ (,length rbtree) 1)))
+             `())
+
        (,(reden!) node)
        (,left-set! node rbtree)
        (,right-set! node rbtree)
@@ -504,6 +518,10 @@
                         ,(rotate-right!)
                         ,left
                         ,(rotate-left!)))))
+
+         ,@(if length
+               `((,length-set! rbtree (##fx- (,length rbtree) 1)))
+               `())
 
          (let ((parent-node (,parent node))
                (left-node (,left node))

@@ -272,6 +272,8 @@
  macro-btq-right
  macro-btq-right-set!
  macro-thread-higher-prio?
+ #f
+ #f
  macro-btq-leftmost
  macro-btq-leftmost-set!
  #f

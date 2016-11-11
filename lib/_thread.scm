@@ -646,6 +646,8 @@
  macro-btq-right
  macro-btq-right-set!
  macro-thread-higher-prio?
+ #f
+ #f
  macro-btq-leftmost
  macro-btq-leftmost-set!
  #f
@@ -691,6 +693,8 @@
  macro-toq-right
  macro-toq-right-set!
  macro-thread-sooner-or-simultaneous-and-higher-prio?
+ #f
+ #f
  macro-toq-leftmost
  macro-toq-leftmost-set!
  #f
