@@ -1527,7 +1527,8 @@
   (for-each (lambda (x) (write-gvm-instr x port) (newline port))
             (bb-non-branch-instrs bb))
 
-  (write-gvm-instr (bb-branch-instr bb) port))
+  (if (not (null? (bb-branch-instr bb)))
+      (write-gvm-instr (bb-branch-instr bb) port)))
 
 (define (write-bbs bbs port)
   (bbs-for-each-bb
