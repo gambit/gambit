@@ -615,7 +615,7 @@ int ___core_count ___PVOID
 #ifdef USE_sysctlbyname
 
   ___S32 n;
-  ___SSIZE_T s = sizeof (n);
+  ___SIZE_T s = sizeof (n);
 
   if (sysctlbyname ("machdep.cpu.core_count", &n, &s, NULL, 0) == 0)
     nb_cores = n;
