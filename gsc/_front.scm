@@ -2587,40 +2587,58 @@
 
 (define (seal-bb poll? where)
 
-  (define (last-pair l)
-    (if (pair? (cdr l)) (last-pair (cdr l)) l))
-
   (define (poll-at split-point)
-    (let loop ((i 0) (l1 (bb-non-branch-instrs *bb*)) (l2 '()))
-      (if (< i split-point)
-        (loop (+ i 1) (cdr l1) (cons (car l1) l2))
-        (let* ((label-instr
-                (bb-label-instr *bb*))
-               (non-branch-instrs1
-                (reverse l2))
-               (non-branch-instrs2
-                l1)
-               (last-instr
-                (car (last-pair (cons label-instr non-branch-instrs1))))
-               (frame
-                (gvm-instr-frame last-instr))
-               (new-lbl
-                (bbs-new-lbl! *bbs*)))
-          (bb-non-branch-instrs-set! *bb* non-branch-instrs1)
-          (bb-put-branch! *bb*
-            (make-jump (make-lbl new-lbl)
-                       #f
-                       #t
-                       #f
-                       frame
-                       (gvm-instr-comment last-instr)))
-          (set! *bb* (make-bb (make-label-simple
-                               new-lbl
-                               frame
-                               (gvm-instr-comment last-instr))
-                              *bbs*))
-          (bb-non-branch-instrs-set! *bb* non-branch-instrs2)
-          (set! poll (make-poll #t 0))))))
+    (let loop ((i 0)
+               (lst1 (bb-non-branch-instrs *bb*))
+               (lst2 '()))
+      (if (and (pair? lst1)
+               (or (< i split-point)
+                   (let* ((instr
+                           (car lst1))
+                          (node
+                           (comment-get (gvm-instr-comment instr) 'node))
+                          (cant-poll-here?
+                           (not (intrs-enabled? (node-env node)))))
+                     ;; extend poll interval to outside code that
+                     ;; is with interrupts disabled
+                     cant-poll-here?)))
+
+          (loop (+ i 1)
+                (cdr lst1)
+                (cons (car lst1) lst2))
+
+          (let* ((label-instr
+                  (bb-label-instr *bb*))
+                 (non-branch-instrs1
+                  (reverse lst2))
+                 (non-branch-instrs2
+                  lst1)
+                 (last-instr
+                  (car (last-pair (cons label-instr non-branch-instrs1))))
+                 (frame
+                  (gvm-instr-frame last-instr))
+                 (new-lbl
+                  (bbs-new-lbl! *bbs*)))
+
+            (bb-non-branch-instrs-set! *bb* non-branch-instrs1)
+
+            (bb-put-branch! *bb*
+                            (make-jump (make-lbl new-lbl)
+                                       #f
+                                       #t
+                                       #f
+                                       frame
+                                       (gvm-instr-comment last-instr)))
+
+            (set! *bb* (make-bb (make-label-simple
+                                 new-lbl
+                                 frame
+                                 (gvm-instr-comment last-instr))
+                                *bbs*))
+
+            (bb-non-branch-instrs-set! *bb* non-branch-instrs2)
+
+            (set! poll (make-poll #t 0))))))
 
   (define (poll-at-end)
     (poll-at (length (bb-non-branch-instrs *bb*))))
