@@ -1219,6 +1219,7 @@
 
 (define-prim (##thread-call thread thunk)
   (let ((result-mutex (macro-make-mutex 'thread-call-result)))
+    (##check-heap-limit) ;; prevent GC while mutex is locked
     (macro-mutex-lock! result-mutex #f thread)
     (##thread-interrupt!
      thread
@@ -1802,6 +1803,7 @@
           (##thread-mailbox-get! thread))
          (mutex
           (macro-mailbox-mutex mb)))
+    (##check-heap-limit) ;; prevent GC while mutex is locked
     (macro-mutex-lock! mutex #f (macro-current-thread))
     (macro-fifo-insert-at-tail! (macro-mailbox-fifo mb) obj)
     (macro-mutex-unlock! mutex)
