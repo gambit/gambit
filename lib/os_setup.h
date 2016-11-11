@@ -96,6 +96,8 @@ extern int ___cpu_cache_size
          int level),
         ());
 
+extern int ___core_count ___PVOID;
+
 
 /* Virtual memory statistics. */
 

@@ -1908,6 +1908,11 @@ end-of-code
    instruction-cache
    level))
 
+(define-prim (##core-count)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___RESULT = ___FIX(___core_count ());"))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; VM resizing.

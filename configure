@@ -8029,6 +8029,17 @@ _ACEOF
 fi
 done
 
+  for ac_func in sysctlbyname
+do :
+  ac_fn_cxx_check_func "$LINENO" "sysctlbyname" "ac_cv_func_sysctlbyname"
+if test "x$ac_cv_func_sysctlbyname" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SYSCTLBYNAME 1
+_ACEOF
+
+fi
+done
+
   for ac_func in syslog
 do :
   ac_fn_cxx_check_func "$LINENO" "syslog" "ac_cv_func_syslog"

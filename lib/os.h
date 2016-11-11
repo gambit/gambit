@@ -218,6 +218,10 @@
 #define USE_sysctl
 #endif
 
+#ifdef HAVE_SYSCTLBYNAME
+#define USE_sysctlbyname
+#endif
+
 #ifdef HAVE_SYSLOG
 #define USE_syslog
 #endif
@@ -1135,6 +1139,13 @@ ___END_C_LINKAGE
 #endif
 
 #ifdef USE_sysctl
+#undef INCLUDE_sys_types_h
+#define INCLUDE_sys_types_h
+#undef INCLUDE_sys_sysctl_h
+#define INCLUDE_sys_sysctl_h
+#endif
+
+#ifdef USE_sysctlbyname
 #undef INCLUDE_sys_types_h
 #define INCLUDE_sys_types_h
 #undef INCLUDE_sys_sysctl_h

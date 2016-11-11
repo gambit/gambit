@@ -608,6 +608,27 @@ int level;)
 }
 
 
+int ___core_count ___PVOID
+{
+  int nb_cores = 0;
+
+#ifdef USE_sysctlbyname
+
+  ___S32 n;
+  ___SSIZE_T s = sizeof (n);
+
+  if (sysctlbyname ("machdep.cpu.core_count", &n, &s, NULL, 0) == 0)
+    nb_cores = n;
+
+#endif
+
+  if (nb_cores == 0)
+    nb_cores = ___cpu_count (); /* use the CPU count as a last resort */
+
+  return nb_cores;
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 /* Virtual memory statistics. */

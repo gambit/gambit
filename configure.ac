@@ -1328,6 +1328,7 @@ else
   AC_CHECK_FUNCS(symlink)
   AC_CHECK_FUNCS(sysconf)
   AC_CHECK_FUNCS(sysctl)
+  AC_CHECK_FUNCS(sysctlbyname)
   AC_CHECK_FUNCS(syslog)
   AC_CHECK_FUNCS(backtrace_symbols_fd)
   AC_CHECK_FUNCS(unlink)
