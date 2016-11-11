@@ -3704,6 +3704,7 @@
 (targ-op "##run-queue"        (targ-apply-simp-s #f #f #f "RUNQUEUE"))
 
 (targ-op "##btq-lock!"        (targ-apply-simp-u #f #t 0 "BTQLOCK"))
+(targ-op "##btq-trylock!"     (targ-ifjump-simp-u #f "BTQTRYLOCK"))
 (targ-op "##btq-unlock!"      (targ-apply-simp-u #f #t 0 "BTQUNLOCK"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

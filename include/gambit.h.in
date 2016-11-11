@@ -3441,12 +3441,33 @@ ___TICKETLOCK_LOCK2((lock).next_ticket, (lock).current_ticket)
 #define ___TICKETLOCK_UNLOCK(lock) \
 ___TICKETLOCK_UNLOCK2((lock).current_ticket)
 
+#ifdef ___DEBUG_TICKETLOCK
+
+#define ___TICKETLOCK_LOCK2(next,current) \
+do { \
+  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&next),___FIX(1)); \
+  int ___count = 0; \
+  while (*___CAST(volatile ___WORD*,&current) != ___ticket) \
+    { \
+      if (++___count == 100000000) printf("TICKETLOCK deadlock at line %d of %s\n",__LINE__,__FILE__); \
+      ___CPU_RELAX(); \
+    } \
+} while (0)
+
+#else
+
 #define ___TICKETLOCK_LOCK2(next,current) \
 do { \
   ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&next),___FIX(1)); \
   while (*___CAST(volatile ___WORD*,&current) != ___ticket) \
     ___CPU_RELAX(); \
 } while (0)
+
+#endif
+
+#define ___TICKETLOCK_TRYLOCK2(next,current,temp) \
+(temp=*___CAST(volatile ___WORD*,&current), \
+ ___COMPARE_AND_SWAP_WORD(___CAST(volatile ___WORD*,&next),temp,___FIXWRAPADD(temp,___FIX(1)))==temp)
 
 #define ___TICKETLOCK_UNLOCK2(current) \
 ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&current),___FIX(1))
@@ -3455,6 +3476,7 @@ ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&current),___FIX(1))
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ___BTQLOCK(btq)
+#define ___BTQTRYLOCK(btq) 1
 #define ___BTQUNLOCK(btq)
 
 #define ___SPINLOCK int
@@ -3468,6 +3490,9 @@ ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&current),___FIX(1))
 
 #define ___BTQLOCK(btq) \
 ___TICKETLOCK_LOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2));
+
+#define ___BTQTRYLOCK(btq) \
+___TICKETLOCK_TRYLOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2),___temp)
 
 #define ___BTQUNLOCK(btq) \
 ___TICKETLOCK_UNLOCK2(___FIELD(btq,___BTQ_LOCK2));

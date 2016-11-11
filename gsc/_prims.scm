@@ -878,6 +878,7 @@
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)
 
 ("##btq-lock!"                        (1)   #t ()    0    #f      extended)
+("##btq-trylock!"                     (1)   #t ()    0    #f      extended)
 ("##btq-unlock!"                      (1)   #t ()    0    #f      extended)
 
 ("##continuation-capture"             1     #t ()    1113 (#f)    extended)
