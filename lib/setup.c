@@ -849,6 +849,9 @@ int target_nb_processors;)
   ___PSGET
   ___sync_op_struct sop;
 
+  if (target_nb_processors > ___MAX_PROCESSORS)
+    target_nb_processors = ___MAX_PROCESSORS;
+
   sop.op = OP_RESIZE_VM;
   sop.arg[0] = thunk;
   sop.arg[1] = target_nb_processors;
