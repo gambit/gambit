@@ -1055,7 +1055,7 @@ ___SCMOBJ dir;)
 
 ___SCMOBJ ___setup_shell_module ___PVOID
 {
-  if (!___shell_mod.setup)
+  if (___shell_mod.refcount++ == 0)
     {
 #ifdef USE_environ
 
@@ -1063,18 +1063,15 @@ ___SCMOBJ ___setup_shell_module ___PVOID
       ___shell_mod.environ_was_extended = 0;
 
 #endif
-
-      ___shell_mod.setup = 1;
-      return ___FIX(___NO_ERR);
     }
 
-  return ___FIX(___UNKNOWN_ERR);
+  return ___FIX(___NO_ERR);
 }
 
 
 void ___cleanup_shell_module ___PVOID
 {
-  if (___shell_mod.setup)
+  if (--___shell_mod.refcount == 0)
     {
 #ifdef USE_environ
 
@@ -1082,8 +1079,6 @@ void ___cleanup_shell_module ___PVOID
         ___free_mem (environ);
 
 #endif
-
-      ___shell_mod.setup = 0;
     }
 }
 

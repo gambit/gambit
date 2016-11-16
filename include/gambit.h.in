@@ -9629,16 +9629,18 @@ typedef struct ___global_state_struct
              ___SCMOBJ *obj,
              int arg_num),
             ());
-    ___SCMOBJ (*___CHARSTRING_to_UCS_2STRING)
+    ___SCMOBJ (*___STRING_to_UCS_2STRING)
        ___P((char *str_char,
-             ___UCS_2STRING *str_UCS_2),
+             ___UCS_2STRING *str_UCS_2,
+             int char_encoding),
             ());
     void (*___free_UCS_2STRING)
        ___P((___UCS_2STRING str_UCS_2),
             ());
-    ___SCMOBJ (*___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST)
+    ___SCMOBJ (*___NONNULLSTRINGLIST_to_NONNULLUCS_2STRINGLIST)
        ___P((char **str_list_char,
-             ___UCS_2STRING **str_list_UCS_2),
+             ___UCS_2STRING **str_list_UCS_2,
+             int char_encoding),
             ());
     void (*___free_NONNULLUCS_2STRINGLIST)
        ___P((___UCS_2STRING *str_list_UCS_2),
@@ -10829,16 +10831,18 @@ ___IMP_FUNC(___SCMOBJ,___VARIANT_to_SCMOBJ)
          ___SCMOBJ *obj,
          int arg_num),
         ());
-___IMP_FUNC(___SCMOBJ,___CHARSTRING_to_UCS_2STRING)
+___IMP_FUNC(___SCMOBJ,___STRING_to_UCS_2STRING)
    ___P((char *str_char,
-         ___UCS_2STRING *str_UCS_2),
+         ___UCS_2STRING *str_UCS_2,
+         int char_encoding),
         ());
 ___IMP_FUNC(void,___free_UCS_2STRING)
    ___P((___UCS_2STRING str_UCS_2),
         ());
-___IMP_FUNC(___SCMOBJ,___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST)
+___IMP_FUNC(___SCMOBJ,___NONNULLSTRINGLIST_to_NONNULLUCS_2STRINGLIST)
    ___P((char **str_list_char,
-         ___UCS_2STRING **str_list_UCS_2),
+         ___UCS_2STRING **str_list_UCS_2,
+         int char_encoding),
         ());
 ___IMP_FUNC(void,___free_NONNULLUCS_2STRINGLIST)
    ___P((___UCS_2STRING *str_list_UCS_2),

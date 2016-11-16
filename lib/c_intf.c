@@ -6325,13 +6325,16 @@ ___UCS_2STRING str_UCS_2;)
 }
 
 
-___EXP_FUNC(___SCMOBJ,___CHARSTRING_to_UCS_2STRING)
+___EXP_FUNC(___SCMOBJ,___STRING_to_UCS_2STRING)
    ___P((char *str_char,
-         ___UCS_2STRING *str_UCS_2),
+         ___UCS_2STRING *str_UCS_2,
+         int char_encoding),
         (str_char,
-         str_UCS_2)
+         str_UCS_2,
+         char_encoding)
 char *str_char;
-___UCS_2STRING *str_UCS_2;)
+___UCS_2STRING *str_UCS_2;
+int char_encoding;)
 {
   ___UCS_2STRING s;
 
@@ -6339,11 +6342,24 @@ ___UCS_2STRING *str_UCS_2;)
     s = 0;
   else
     {
-      char *p;
+      char *p = str_char;
       int len = 0;
+      int i;
+      ___UCS_2 c;
 
-      while (str_char[len] != '\0')
-        len++;
+      switch (char_encoding)
+        {
+        case ___CHAR_ENCODING_UTF_8:
+          while (___UTF_8_get (&p) != 0) /* advance until end or error */
+            len++;
+          break;
+
+        case ___CHAR_ENCODING_ISO_8859_1:
+        default:
+          while (*p++ != '\0')
+            len++;
+          break;
+        }
 
       s = ___CAST(___UCS_2STRING,
                   ___ALLOC_MEM((len + 1) * sizeof (___UCS_2)));
@@ -6351,13 +6367,24 @@ ___UCS_2STRING *str_UCS_2;)
       if (s == 0)
         return ___FIX(___HEAP_OVERFLOW_ERR);
 
-      s[len] = '\0';
+      p = str_char;
+      i = 0;
 
-      while (len > 0)
+      switch (char_encoding)
         {
-          len--;
-          s[len] = ___CAST(___UCS_2,___CAST(unsigned char,str_char[len]));
+        case ___CHAR_ENCODING_UTF_8:
+          while ((c = ___UTF_8_get (&p)) != 0 && i<len) /* advance until end or error */
+            s[i++] = c;
+          break;
+
+        case ___CHAR_ENCODING_ISO_8859_1:
+        default:
+          while ((c = ___CAST(___UCS_2,___CAST(unsigned char,*p++))) != '\0' && i<len)
+            s[i++] = c;
+          break;
         }
+
+      s[i] = '\0';
     }
 
   *str_UCS_2 = s;
@@ -6383,13 +6410,16 @@ ___UCS_2STRING *str_list_UCS_2;)
 }
 
 
-___EXP_FUNC(___SCMOBJ,___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST)
+___EXP_FUNC(___SCMOBJ,___NONNULLSTRINGLIST_to_NONNULLUCS_2STRINGLIST)
    ___P((char **str_list_char,
-         ___UCS_2STRING **str_list_UCS_2),
+         ___UCS_2STRING **str_list_UCS_2,
+         int char_encoding),
         (str_list_char,
-         str_list_UCS_2)
+         str_list_UCS_2,
+         char_encoding)
 char **str_list_char;
-___UCS_2STRING **str_list_UCS_2;)
+___UCS_2STRING **str_list_UCS_2;
+int char_encoding;)
 {
   ___SCMOBJ e = ___FIX(___HEAP_OVERFLOW_ERR);
   ___UCS_2STRING *lst;
@@ -6409,7 +6439,7 @@ ___UCS_2STRING **str_list_UCS_2;)
 
       while ((str = *probe++) != 0 && i < len)
         {
-          if ((e = ___CHARSTRING_to_UCS_2STRING (str, &lst[i]))
+          if ((e = ___STRING_to_UCS_2STRING (str, &lst[i], char_encoding))
               != ___FIX(___NO_ERR))
             {
               lst[i] = 0;
