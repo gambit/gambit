@@ -1,6 +1,6 @@
 /* File: "os_shell.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SHELL_H
 #define ___OS_SHELL_H
@@ -13,7 +13,7 @@
 
 typedef struct ___shell_module_struct
   {
-    ___BOOL setup;
+    int refcount;
 
 #ifdef USE_environ
 

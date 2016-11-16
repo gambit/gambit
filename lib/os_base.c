@@ -11,6 +11,7 @@
 #include "gambit.h"
 
 #include "os_base.h"
+#include "os_shell.h"
 #include "setup.h"
 
 
@@ -370,6 +371,43 @@ ___program_startup_info_struct ___program_startup_info =
 };
 
 
+___HIDDEN int lang_char_encoding ___PVOID
+{
+  static ___UCS_2 lang_env_name[] = { 'L', 'A', 'N', 'G', '\0' };
+  ___UCS_2STRING cvalue;
+  int char_encoding = ___CHAR_ENCODING_ISO_8859_1; /* default char encoding */
+
+  /* check if the LANG environment variable ends in .UTF-8 or .utf8 */
+
+  if (___getenv_UCS_2 (lang_env_name, &cvalue) == ___FIX(___NO_ERR))
+    {
+      if (cvalue != 0)
+        {
+          ___UCS_2 *p = cvalue;
+          ___UCS_2 *dot = p;
+
+          while (*p != '\0')
+            {
+              if (*p == '.')
+                dot = p;
+              p++;
+            }
+
+          if (dot[0]=='.'
+              && ((dot[1]=='U' && dot[2]=='T' && dot[3]=='F') ||
+                  (dot[1]=='u' && dot[2]=='t' && dot[3]=='f'))
+              && ((dot[4]=='-' && dot[5]=='8' && dot[6]=='\0') ||
+                  (dot[4]=='8' && dot[5]=='\0')))
+            char_encoding = ___CHAR_ENCODING_UTF_8;
+
+          ___free_mem (cvalue);
+        }
+    }
+
+  return char_encoding;
+}
+
+
 ___EXP_FUNC(int,___main_char)
   ___P((int argc,
         char *argv[],
@@ -390,16 +428,20 @@ char *script_line;)
     result = ___EXIT_CODE_OSERR;
   else
     {
-      if (___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST
+      int argv_char_encoding = lang_char_encoding ();
+
+      if (___NONNULLSTRINGLIST_to_NONNULLUCS_2STRINGLIST
             (argv,
-             &___program_startup_info.argv)
+             &___program_startup_info.argv,
+             argv_char_encoding)
           != ___FIX(___NO_ERR))
         result = ___EXIT_CODE_SOFTWARE;
       else
         {
-          if (___CHARSTRING_to_UCS_2STRING
+          if (___STRING_to_UCS_2STRING
                 (script_line,
-                 &___program_startup_info.script_line)
+                 &___program_startup_info.script_line,
+                 ___CHAR_ENCODING_UTF_8)
               != ___FIX(___NO_ERR))
             result = ___EXIT_CODE_SOFTWARE;
           else
@@ -441,9 +483,10 @@ char *script_line;)
     {
       ___program_startup_info.argv = argv;
 
-      if (___CHARSTRING_to_UCS_2STRING
+      if (___STRING_to_UCS_2STRING
             (script_line,
-             &___program_startup_info.script_line)
+             &___program_startup_info.script_line,
+             ___CHAR_ENCODING_UTF_8)
           != ___FIX(___NO_ERR))
         result = ___EXIT_CODE_SOFTWARE;
       else
@@ -638,9 +681,10 @@ char *script_line;)
         result = ___EXIT_CODE_SOFTWARE;
       else
         {
-          if (___CHARSTRING_to_UCS_2STRING
+          if (___STRING_to_UCS_2STRING
                 (script_line,
-                 &___program_startup_info.script_line)
+                 &___program_startup_info.script_line,
+                 ___CHAR_ENCODING_UTF_8)
               != ___FIX(___NO_ERR))
             result = ___EXIT_CODE_SOFTWARE;
           else
@@ -1649,7 +1693,7 @@ short trap_num;)
 
 ___SCMOBJ ___setup_base_module ___PVOID
 {
-  if (___base_mod.refcount == 0)
+  if (___base_mod.refcount++ == 0)
     {
 #ifdef USE_CLASSIC_MACOS
 
@@ -1677,28 +1721,33 @@ ___SCMOBJ ___setup_base_module ___PVOID
 
 #endif
 
-#ifdef ___DEBUG_LOG
-
-      ___base_mod.debug = ___fopen ("gambit.log", "w");
-
-      if (___base_mod.debug == NULL)
-        ___base_mod.debug = ___stderr;
-
-      ___printf ("*** START OF DEBUGGING TRACES\n");
-
-#endif
-
+      if (___setup_shell_module () == ___FIX(___NO_ERR))
+        {
 #ifdef ___DEBUG_ALLOC_MEM
 
-      ___base_mod.alloc_mem_calls = 0;
-      ___base_mod.free_mem_calls = 0;
+          ___base_mod.alloc_mem_calls = 0;
+          ___base_mod.free_mem_calls = 0;
 
 #endif
 
-      setup_fp ();
-    }
+#ifdef ___DEBUG_LOG
 
-  ___base_mod.refcount++;
+          ___base_mod.debug = ___fopen ("gambit.log", "w");
+
+          if (___base_mod.debug == NULL)
+            ___base_mod.debug = ___stderr;
+
+          ___printf ("*** START OF DEBUGGING TRACES\n");
+
+#endif
+
+          setup_fp ();
+
+          return ___FIX(___NO_ERR);
+        }
+      else
+        return ___FIX(___UNKNOWN_ERR);
+    }
 
   return ___FIX(___NO_ERR);
 }
@@ -1709,6 +1758,8 @@ void ___cleanup_base_module ___PVOID
   if (--___base_mod.refcount == 0)
     {
       cleanup_fp ();
+
+      ___cleanup_shell_module ();
 
 #ifdef ___DEBUG_LOG
 
