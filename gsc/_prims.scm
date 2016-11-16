@@ -872,7 +872,9 @@
 
 ("current-thread"                     (0)   #f ()    0    #f      extended)
 ("##current-thread"                   (0)   #f ()    0    #f      extended)
+("##current-processor"                (0)   #f ()    0    #f      extended)
 ("##run-queue"                        (0)   #f ()    0    #f      extended)
+("##run-queue-of"                     (1)   #f ()    0    #f      extended)
 
 ("##thread-save!"                     1     #t ()    1113 (#f)    extended)
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)

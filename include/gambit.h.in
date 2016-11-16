@@ -3422,8 +3422,10 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_KEY0      5
 #define ___GCHASHTABLE_VAL0      6
 
+#define ___CURRENTPROCESSOR ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)))
 #define ___CURRENTTHREAD ___ps->current_thread
 #define ___RUNQUEUE ___ps->run_queue
+#define ___RUNQUEUEOF(p) ___PSTATE_FROM_PROCESSOR_ID(___INT(p),___VMSTATE_FROM_PSTATE(___ps))->run_queue
 
 
 #define ___TICKETLOCK ___ticketlock_struct

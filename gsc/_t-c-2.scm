@@ -3701,7 +3701,9 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##current-thread"   (targ-apply-simp-s #f #f #f "CURRENTTHREAD"))
+(targ-op "##current-processor" (targ-apply-simp-s #f #f #f "CURRENTPROCESSOR"))
 (targ-op "##run-queue"        (targ-apply-simp-s #f #f #f "RUNQUEUE"))
+(targ-op "##run-queue-of"     (targ-apply-simp-s #f #f #f "RUNQUEUEOF"))
 
 (targ-op "##btq-lock!"        (targ-apply-simp-u #f #t 0 "BTQLOCK"))
 (targ-op "##btq-trylock!"     (targ-ifjump-simp-u #f "BTQTRYLOCK"))
