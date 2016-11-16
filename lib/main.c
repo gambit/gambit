@@ -8,6 +8,7 @@
 #define ___VERSION 408005
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_shell.h"
 #include "setup.h"
