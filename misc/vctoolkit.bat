@@ -71,7 +71,7 @@ cd lib
 %COMP_LIB_PR% main.c
 %COMP_LIB_PR% setup.c
 %COMP_LIB_PR% mem.c
-%COMP_LIB_PR% os.c
+%COMP_LIB_PR% os_setup.c
 %COMP_LIB_PR% os_base.c
 %COMP_LIB_PR% os_time.c
 %COMP_LIB_PR% os_shell.c
@@ -94,7 +94,7 @@ cd lib
 
 %COMP_LIB_PR% _gambc.c
 
-lib -out:libgambc.lib main.obj setup.obj mem.obj os.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambc.obj
+lib -out:libgambc.lib main.obj setup.obj mem.obj os_setup.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambc.obj
 
 cd ..
 

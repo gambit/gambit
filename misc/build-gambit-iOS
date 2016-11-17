@@ -63,15 +63,15 @@ select_ios()
 
   case "$platform_type" in
 
-           iPhoneOS) config_options_extras=--host=arm-apple-darwin
-                     sdk_name="iphoneos"
+           iPhoneOS) sdk_name="iphoneos"
                      ;;
 
-    iPhoneSimulator) config_options_extras=
-                     sdk_name="iphonesimulator"
+    iPhoneSimulator) sdk_name="iphonesimulator"
                      ;;
 
   esac
+
+  config_options_extras=--host=x86_64-apple-darwin
 
   # this needs to be updated when a new Xcode is released
   iphoneos_version_min="6.0"

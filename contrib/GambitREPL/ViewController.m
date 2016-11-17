@@ -64,9 +64,10 @@ void gambit_setup()
   int last_dir_sep;
   int i;
 
-  if (___NONNULLCHARSTRINGLIST_to_NONNULLUCS_2STRINGLIST
+  if (___NONNULLSTRINGLIST_to_NONNULLUCS_2STRINGLIST
         (main_argv,
-         &ucs2_argv)
+         &ucs2_argv,
+         ___CHAR_ENCODING_UTF_8)
       != ___FIX(___NO_ERR))
     exit(1);
 
@@ -112,7 +113,7 @@ void gambit_setup()
 
   ___setup (&setup_params);
 
-  ___disable_heartbeat_interrupts ();
+  ___disable_interrupts_pstate (___PSTATE);
 }
 
 
@@ -697,7 +698,7 @@ void set_navigation(int n) {
 
   [self queue_action:^{ [self schedule_next_heartbeat_tick:heartbeat()]; }];
 
-  ___enable_heartbeat_interrupts ();
+  ___enable_interrupts_pstate (___PSTATE);
 
   while ([queuedActions count] > 0)
     {
@@ -712,7 +713,7 @@ void set_navigation(int n) {
       );
     }
 
-  ___disable_heartbeat_interrupts ();
+  ___disable_interrupts_pstate (___PSTATE);
 }
 
 

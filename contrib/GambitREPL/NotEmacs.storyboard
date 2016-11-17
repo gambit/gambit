@@ -1,8 +1,12 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="Y1T-0I-t9e">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2555" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="Y1T-0I-t9e">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11524"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -14,22 +18,22 @@
                         <viewControllerLayoutGuide type="bottom" id="Pbm-t0-t4n"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="9N3-Ce-G2j">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HOC-3A-4xZ" userLabel="Cancel button">
+                            <button hidden="YES" opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HOC-3A-4xZ" userLabel="Cancel button">
                                 <rect key="frame" x="536" y="20" width="64" height="64"/>
                                 <rect key="contentStretch" x="0.0" y="0.0" width="0.5" height="0.5"/>
                                 <state key="normal" image="button-cancel.png">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="titleShadowColor" red="0.5" green="0.5" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 </state>
                                 <connections>
                                     <action selector="touch_up_cancel:" destination="Y1T-0I-t9e" eventType="touchUpInside" id="LCJ-AU-Q0z"/>
                                 </connections>
                             </button>
-                            <toolbar hidden="YES" autoresizesSubviews="NO" opaque="NO" clearsContextBeforeDrawing="NO" alpha="0.80000000000000004" contentMode="scaleToFill" translucent="NO" translatesAutoresizingMaskIntoConstraints="NO" id="P5r-e6-oww" userLabel="Navigation toolbar">
+                            <toolbar hidden="YES" autoresizesSubviews="NO" opaque="NO" clearsContextBeforeDrawing="NO" alpha="0.80000000000000004" contentMode="scaleToFill" misplaced="YES" translucent="NO" translatesAutoresizingMaskIntoConstraints="NO" id="P5r-e6-oww" userLabel="Navigation toolbar">
                                 <rect key="frame" x="165" y="20" width="270" height="44"/>
-                                <color key="backgroundColor" red="0.52688040402172631" green="1" blue="0.29460295726676933" alpha="0.0" colorSpace="calibratedRGB"/>
+                                <color key="backgroundColor" red="0.52688040402172631" green="1" blue="0.29460295726676933" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="270" id="uWS-uj-NPm"/>
                                 </constraints>
@@ -57,7 +61,7 @@
                                 </connections>
                             </toolbar>
                         </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="P5r-e6-oww" firstAttribute="top" secondItem="Ccb-mR-Z75" secondAttribute="bottom" id="Agk-ej-p2d"/>
                             <constraint firstAttribute="trailing" secondItem="HOC-3A-4xZ" secondAttribute="trailing" id="Met-Px-1cQ"/>
