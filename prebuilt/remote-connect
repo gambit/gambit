@@ -102,6 +102,7 @@
   (append (if password
               (list "-o" "UserKnownHostsFile=/dev/null"
                     "-o" "StrictHostKeyChecking=no"
+                    "-o" "HostKeyAlgorithms=+ssh-dss"
                     "-o" "PreferredAuthentications=keyboard-interactive,password")
               '())
           (list (if scp? "-P" "-p") (number->string ssh-port))))
