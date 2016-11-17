@@ -34,22 +34,54 @@ extern ___shell_module ___shell_mod;
 /* Access to shell environment variables. */
 
 
-#ifdef USE_WIN32
-#ifdef _UNICODE
-#define ___GETENV_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#define ___SETENV_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#define ___ENVIRON_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#define ENV_CHAR_BYTES 2
+/* Determine encoding of environments. */
+
+#ifdef ___ENVIRON_ENCODING_LATIN1
+#define ___ENVIRON_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) latin1
+#define ___ENVIRON_NAME_LATIN1
 #else
-#define ___GETENV_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___SETENV_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ___ENVIRON_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define ENV_CHAR_BYTES 1
+#ifdef ___ENVIRON_ENCODING_UTF8
+#define ___ENVIRON_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) utf8
+#else
+#ifdef ___ENVIRON_ENCODING_UCS2
+#define ___ENVIRON_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#else
+#ifdef ___ENVIRON_ENCODING_UCS4
+#define ___ENVIRON_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs4
+#else
+#ifdef ___ENVIRON_ENCODING_WCHAR
+#define ___ENVIRON_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) wchar
+#else
+#ifdef ___ENVIRON_ENCODING_NATIVE
+#define ___ENVIRON_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___ENVIRON_NAME_LATIN1
+#endif
+#endif
+#endif
+#endif
 #endif
 #endif
 
-#ifndef ENV_CHAR_BYTES
-#define ENV_CHAR_BYTES 1
+#ifdef ___ENVIRON_ENCODING
+
+#define ___ENVIRON_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___ENVIRON_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native)
+
+#else
+
+#ifdef USE_WIN32
+#ifdef _UNICODE
+#define ___ENVIRON_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#else
+#define ___ENVIRON_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___ENVIRON_NAME_LATIN1
+#endif
+#endif
+
+#ifndef ___ENVIRON_CE_SELECT
+#define ___ENVIRON_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) utf8
+#endif
+
 #endif
 
 

@@ -460,10 +460,10 @@ ___SCMOBJ ___os_path_homedir ___PVOID
           int len = ___PATH_MAX_LENGTH+1;
           int n;
 
-          static ___CHAR_TYPE(___GETENV_CE_SELECT) cvar2[] =
+          static ___CHAR_TYPE(___ENVIRON_CE_SELECT) cvar2[] =
           { 'H', 'O', 'M', 'E', 'D', 'R', 'I', 'V', 'E', '\0' };
 
-          static ___CHAR_TYPE(___GETENV_CE_SELECT) cvar3[] =
+          static ___CHAR_TYPE(___ENVIRON_CE_SELECT) cvar3[] =
           { 'H', 'O', 'M', 'E', 'P', 'A', 'T', 'H', '\0' };
 
           n = GetEnvironmentVariable (cvar2, homedir, len);

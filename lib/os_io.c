@@ -16,6 +16,7 @@
 #include "os_base.h"
 #include "os_io.h"
 #include "os_tty.h"
+#include "os_shell.h"
 #include "os_files.h"
 #include "setup.h"
 #include "c_intf.h"
@@ -8060,15 +8061,15 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
   return ccmd;
 }
 
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) env_to_cenv
-   ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env),
+___STRING_TYPE(___ENVIRON_CE_SELECT) env_to_cenv
+   ___P((___STRING_TYPE(___ENVIRON_CE_SELECT) *env),
         (env)
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env;)
+___STRING_TYPE(___ENVIRON_CE_SELECT) *env;)
 {
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) cenv;
+  ___STRING_TYPE(___ENVIRON_CE_SELECT) cenv;
   int cenv_len = 0;
   int i = 0;
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) varval;
+  ___STRING_TYPE(___ENVIRON_CE_SELECT) varval;
 
   while ((varval = env[i++]) != NULL)
     {
@@ -8080,12 +8081,12 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env;)
 
   cenv_len++;
 
-  cenv = ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT),
+  cenv = ___CAST(___STRING_TYPE(___ENVIRON_CE_SELECT),
                  ___ALLOC_MEM(cenv_len * sizeof (*cenv)));
 
   if (cenv != NULL)
     {
-      ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) p = cenv;
+      ___STRING_TYPE(___ENVIRON_CE_SELECT) p = cenv;
       i = 0;
 
       while ((varval = env[i++]) != NULL)
@@ -8108,8 +8109,8 @@ ___SCMOBJ ___device_stream_setup_from_process
    ___P((___device_stream **dev,
          ___device_group *dgroup,
          ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv,
-         ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env,
-         ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) dir,
+         ___STRING_TYPE(___ENVIRON_CE_SELECT) *env,
+         ___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT) dir,
          int options),
         (dev,
          dgroup,
@@ -8120,8 +8121,8 @@ ___SCMOBJ ___device_stream_setup_from_process
 ___device_stream **dev;
 ___device_group *dgroup;
 ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *env;
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) dir;
+___STRING_TYPE(___ENVIRON_CE_SELECT) *env;
+___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT) dir;
 int options;)
 {
 #define STDIN_REDIR  1
@@ -8331,7 +8332,7 @@ int options;)
   ___device_process *d;
 
   ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) ccmd;
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) cenv = NULL;
+  ___STRING_TYPE(___ENVIRON_CE_SELECT) cenv = NULL;
 
   HANDLE hstdin_rd = NULL;
   HANDLE hstdin_wr = NULL;
@@ -9192,7 +9193,7 @@ ___SCMOBJ options;)
                environment,
                &env,
                2,
-               ___CE(___STREAM_OPEN_PROCESS_CE_SELECT)))
+	       ___CE(___ENVIRON_CE_SELECT)))
        != ___FIX(___NO_ERR)) ||
       (directory != ___FAL &&
        (e = ___SCMOBJ_to_NONNULLSTRING
@@ -9200,15 +9201,15 @@ ___SCMOBJ options;)
                directory,
                &dir,
                3,
-               ___CE(___STREAM_OPEN_PROCESS_CE_SELECT),
+	       ___CE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
                0))
        != ___FIX(___NO_ERR)) ||
       (e = ___device_stream_setup_from_process
              (&dev,
               ___global_device_group (),
               ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT)*,argv),
-              ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT)*,env),
-              ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT),dir),
+              ___CAST(___STRING_TYPE(___ENVIRON_CE_SELECT)*,env),
+              ___CAST(___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),dir),
               ___INT(options)))
       != ___FIX(___NO_ERR))
     result = e;

@@ -74,7 +74,7 @@ ___UCS_2STRING *value;)
 
   while (*p1 != '\0')
     {
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
       if (*p1 > 255)
         return ___FIX(___IMPL_LIMIT_ERR);
 #endif
@@ -136,7 +136,7 @@ ___UCS_2STRING *value;)
 #else
 
   {
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
 
     char *cvalue_ptr = 0;
     char cname[GETENV_NAME_STATIC_SIZE];
@@ -183,7 +183,7 @@ ___UCS_2STRING *value;)
 #ifdef USE_GetEnvironmentVariable
 
     {
-      ___CHAR_TYPE(___GETENV_CE_SELECT) cvalue[GETENV_VALUE_STATIC_SIZE];
+      ___CHAR_TYPE(___ENVIRON_CE_SELECT) cvalue[GETENV_VALUE_STATIC_SIZE];
       int n;
 
       cvalue_ptr = cvalue;
@@ -195,7 +195,7 @@ ___UCS_2STRING *value;)
 
       if (n >= GETENV_VALUE_STATIC_SIZE)
         {
-          cvalue_ptr = ___CAST(___CHAR_TYPE(___GETENV_CE_SELECT)*,
+          cvalue_ptr = ___CAST(___CHAR_TYPE(___ENVIRON_CE_SELECT)*,
                                ___ALLOC_MEM(sizeof (*cvalue_ptr) * n));
 
           if (cvalue_ptr != 0)
@@ -242,7 +242,7 @@ ___UCS_2STRING *value;)
 
 #endif
 
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
 
     if (cname_ptr != cname)
       ___free_mem (cname_ptr);
@@ -278,7 +278,7 @@ ___UCS_2STRING value;)
 
   while (*p1 != '\0')
     {
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
       if (*p1 > 255)
         return ___FIX(___IMPL_LIMIT_ERR);
 #endif
@@ -292,7 +292,7 @@ ___UCS_2STRING value;)
 
   while (*p1 != '\0')
     {
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
       if (*p1 > 255)
         return ___FIX(___IMPL_LIMIT_ERR);
 #endif
@@ -406,7 +406,7 @@ ___UCS_2STRING value;)
 #else
 
   {
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
 
     char *cname_ptr;
     char *cvalue_ptr;
@@ -473,7 +473,7 @@ ___UCS_2STRING value;)
 
 #endif
 
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
 
     if (cvalue_ptr != cvalue)
       ___free_mem (cvalue_ptr);
@@ -508,7 +508,7 @@ ___UCS_2STRING name;)
 
   while (*p1 != '\0')
     {
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
       if (*p1 > 255)
         return ___FIX(___IMPL_LIMIT_ERR);
 #endif
@@ -556,7 +556,7 @@ ___UCS_2STRING name;)
 #else
 
   {
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
 
     char *cname_ptr;
     char cname[UNSETENV_NAME_STATIC_SIZE];
@@ -609,7 +609,7 @@ ___UCS_2STRING name;)
 
 #endif
 
-#if ENV_CHAR_BYTES == 1
+#ifdef ___ENVIRON_NAME_LATIN1
 
     if (cname_ptr != cname)
       ___free_mem (cname_ptr);

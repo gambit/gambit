@@ -264,7 +264,7 @@ os_dyn@obj@: os_dyn.c os.h os_base.h os_shell.h os_files.h os_dyn.h
 
 os_tty@obj@: os_tty.c os.h os_setup.h os_thread.h os_base.h os_tty.h os_shell.h os_io.h mem.h c_intf.h
 
-os_io@obj@: os_io.c os.h os_setup.h os_base.h os_io.h os_tty.h os_files.h setup.h c_intf.h
+os_io@obj@: os_io.c os.h os_setup.h os_base.h os_io.h os_tty.h os_shell.h os_files.h setup.h c_intf.h
 
 bootstrap-pre:
 
