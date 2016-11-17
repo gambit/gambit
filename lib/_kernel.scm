@@ -1922,7 +1922,7 @@ end-of-code
             scheme-object
      #<<end-of-code
 
-     ___return(___EXT(___resize_vm) (___PSP ___arg1, ___arg2));
+     ___return(___EXT(___vm_resize) (___PSP ___arg1, ___arg2));
 
 end-of-code
 ))

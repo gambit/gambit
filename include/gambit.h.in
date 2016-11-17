@@ -9713,7 +9713,7 @@ typedef struct ___global_state_struct
     void (*___cleanup_and_exit_process)
        ___P((int status),
             ());
-    ___SCMOBJ (*___resize_vm)
+    ___SCMOBJ (*___vm_resize)
        ___P((___PSD
             ___SCMOBJ thunk,
             int target_nb_processors),
@@ -11036,7 +11036,7 @@ ___IMP_FUNC(void,___cleanup) ___PVOID;
 ___IMP_FUNC(void,___cleanup_and_exit_process)
    ___P((int status),
         ());
-___IMP_FUNC(___SCMOBJ,___resize_vm)
+___IMP_FUNC(___SCMOBJ,___vm_resize)
    ___P((___PSD
          ___SCMOBJ thunk,
          int target_nb_processors),

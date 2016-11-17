@@ -264,7 +264,7 @@ ___processor_state ___ps;)
 #define OP_MAKE(priority,combining) (((priority)<<2)+(combining))
 
 #define OP_SET_NB_PROCESSORS OP_MAKE( 0,0)
-#define OP_RESIZE_VM         OP_MAKE( 1,0)
+#define OP_VM_RESIZE         OP_MAKE( 1,0)
 #define OP_GARBAGE_COLLECT   OP_MAKE( 2,COMBINING_ADD)
 #define OP_ACTLOG_START      OP_MAKE(61,0)
 #define OP_ACTLOG_STOP       OP_MAKE(62,0)
@@ -570,7 +570,7 @@ ___thread *self;)
 }
 
 
-___SCMOBJ ___resize_vm_pstate
+___SCMOBJ ___vm_resize_pstate
    ___P((___processor_state ___ps,
          ___SCMOBJ thunk,
          ___WORD target_nb_processors),
@@ -721,8 +721,8 @@ ___sync_op_struct *sop_ptr;)
 
   switch (sop_ptr->op)
     {
-    case OP_RESIZE_VM:
-      sop_ptr->arg[0] = ___resize_vm_pstate (___ps, sop_ptr->arg[0], sop_ptr->arg[1]);
+    case OP_VM_RESIZE:
+      sop_ptr->arg[0] = ___vm_resize_pstate (___ps, sop_ptr->arg[0], sop_ptr->arg[1]);
       break;
 
     case OP_GARBAGE_COLLECT:
@@ -835,7 +835,7 @@ ___sync_op_struct *sop_ptr;)
 }
 
 
-___EXP_FUNC(___SCMOBJ,___resize_vm)
+___EXP_FUNC(___SCMOBJ,___vm_resize)
    ___P((___PSD
          ___SCMOBJ thunk,
          int target_nb_processors),
@@ -852,7 +852,7 @@ int target_nb_processors;)
   if (target_nb_processors > ___MAX_PROCESSORS)
     target_nb_processors = ___MAX_PROCESSORS;
 
-  sop.op = OP_RESIZE_VM;
+  sop.op = OP_VM_RESIZE;
   sop.arg[0] = thunk;
   sop.arg[1] = target_nb_processors;
 
@@ -3125,7 +3125,7 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
 
   ___processor_state ___ps = ___PSTATE;
 
-  ___resize_vm (___PSP ___FAL, 1);
+  ___vm_resize (___PSP ___FAL, 1);
 
 #endif
 
@@ -4060,8 +4060,8 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___cleanup_and_exit_process
     = ___cleanup_and_exit_process;
 
-  ___GSTATE->___resize_vm
-    = ___resize_vm;
+  ___GSTATE->___vm_resize
+    = ___vm_resize;
 
   ___GSTATE->___garbage_collect
     = ___garbage_collect;
