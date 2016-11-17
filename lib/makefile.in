@@ -238,7 +238,7 @@ _std@obj@: os.h
 
 _num@obj@: mem.h
 
-main@obj@: main.c os.h os_base.h os_shell.h setup.h
+main@obj@: main.c os.h os_setup.h os_base.h os_shell.h setup.h
 
 setup@obj@: setup.c os.h os_setup.h os_base.h os_files.h os_dyn.h os_thread.h setup.h mem.h c_intf.h
 
