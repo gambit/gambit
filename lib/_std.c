@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_std.c", produced by Gambit v4.8.5
+; File: "_std.c", produced by Gambit v4.8.6
 (
-408005
+408006
 (C)
 "_std"
 (("_std"))
@@ -773,7 +773,7 @@
  ()
 )
 #else
-#define ___VERSION 408005
+#define ___VERSION 408006
 #define ___MODULE_NAME "_std"
 #define ___LINKER_ID ____20___std
 #define ___MH_PROC ___H__20___std
@@ -37096,7 +37096,7 @@ ___DEF_GLBL(___L__23__23_string_2d__3e_uninterned_2d_symbol)
    ___IF(___NOT(___EQP(___R2,___ABSENT)))
    ___GOTO(___L6__23__23_string_2d__3e_uninterned_2d_symbol)
    ___END_IF
-   ___SET_R2(___FIXADD(___GLO__23__23_symbol_2d_counter,___FIX(1L)))
+   ___SET_R2(___FIXWRAPADD(___GLO__23__23_symbol_2d_counter,___FIX(1L)))
    ___SET_GLO(280,___G__23__23_symbol_2d_counter,___R2)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -43854,7 +43854,7 @@ ___DEF_GLBL(___L__23__23_string_2d__3e_uninterned_2d_keyword)
    ___IF(___NOT(___EQP(___R2,___ABSENT)))
    ___GOTO(___L6__23__23_string_2d__3e_uninterned_2d_keyword)
    ___END_IF
-   ___SET_R2(___FIXADD(___GLO__23__23_keyword_2d_counter,___FIX(1L)))
+   ___SET_R2(___FIXWRAPADD(___GLO__23__23_keyword_2d_counter,___FIX(1L)))
    ___SET_GLO(139,___G__23__23_keyword_2d_counter,___R2)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)

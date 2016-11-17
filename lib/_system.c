@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_system.c", produced by Gambit v4.8.5
+; File: "_system.c", produced by Gambit v4.8.6
 (
-408005
+408006
 (C)
 "_system"
 (("_system"))
@@ -301,7 +301,7 @@
  ()
 )
 #else
-#define ___VERSION 408005
+#define ___VERSION 408006
 #define ___MODULE_NAME "_system"
 #define ___LINKER_ID ____20___system
 #define ___MH_PROC ___H__20___system
@@ -311,7 +311,7 @@
 #define ___GLOCOUNT 216
 #define ___SUPCOUNT 123
 #define ___SUBCOUNT 22
-#define ___LBLCOUNT 1170
+#define ___LBLCOUNT 1162
 #define ___OFDCOUNT 46
 #define ___MODDESCR ___REF_SUB(21)
 #include "gambit.h"
@@ -1905,11 +1905,6 @@ ___DEF_M_HLBL(___L5__23__23_eqv_3f__2d_hash)
 ___DEF_M_HLBL(___L6__23__23_eqv_3f__2d_hash)
 ___DEF_M_HLBL(___L7__23__23_eqv_3f__2d_hash)
 ___DEF_M_HLBL(___L8__23__23_eqv_3f__2d_hash)
-___DEF_M_HLBL(___L9__23__23_eqv_3f__2d_hash)
-___DEF_M_HLBL(___L10__23__23_eqv_3f__2d_hash)
-___DEF_M_HLBL(___L11__23__23_eqv_3f__2d_hash)
-___DEF_M_HLBL(___L12__23__23_eqv_3f__2d_hash)
-___DEF_M_HLBL(___L13__23__23_eqv_3f__2d_hash)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_eqv_3f__2d_hash)
 ___DEF_M_HLBL(___L1_eqv_3f__2d_hash)
@@ -1943,9 +1938,6 @@ ___DEF_M_HLBL(___L25__23__23_equal_3f__2d_hash)
 ___DEF_M_HLBL(___L26__23__23_equal_3f__2d_hash)
 ___DEF_M_HLBL(___L27__23__23_equal_3f__2d_hash)
 ___DEF_M_HLBL(___L28__23__23_equal_3f__2d_hash)
-___DEF_M_HLBL(___L29__23__23_equal_3f__2d_hash)
-___DEF_M_HLBL(___L30__23__23_equal_3f__2d_hash)
-___DEF_M_HLBL(___L31__23__23_equal_3f__2d_hash)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_equal_3f__2d_hash)
 ___DEF_M_HLBL(___L1_equal_3f__2d_hash)
@@ -2939,7 +2931,7 @@ ___DEF_GLBL(___L__20___system)
    ___ADJFP(6)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__20___system)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(317),___L0__23__23_make_2d_table)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(309),___L0__23__23_make_2d_table)
 ___DEF_SLBL(2,___L2__20___system)
    ___SET_GLO(38,___G__23__23_object_2d_to_2d_serial_2d_number_2d_table,___R1)
    ___SET_STK(1,___FIX(0L))
@@ -2949,7 +2941,7 @@ ___DEF_SLBL(2,___L2__20___system)
    ___SET_R1(___FAL)
    ___SET_R0(___LBL(3))
    ___ADJFP(2)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(317),___L0__23__23_make_2d_table)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(309),___L0__23__23_make_2d_table)
 ___DEF_SLBL(3,___L3__20___system)
    ___SET_GLO(51,___G__23__23_serial_2d_number_2d_to_2d_object_2d_table,___R1)
    ___SET_R1(___VOID)
@@ -4728,7 +4720,7 @@ ___DEF_GLBL(___L75__23__23_equal_3f_)
    ___END_IF
    ___POLL(34)
 ___DEF_SLBL(34,___L34__23__23_equal_3f_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(513),___L__23__23_table_2d_equal_3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(505),___L__23__23_table_2d_equal_3f_)
 ___END_P_SW
 ___END_P_COD
 
@@ -4918,7 +4910,7 @@ ___DEF_GLBL(___L__23__23_eq_3f__2d_hash)
    ___ADJFP(4)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_eq_3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(554),___L__23__23_object_2d__3e_serial_2d_number)
+   ___JUMPINT(___SET_NARGS(1),___PRC(546),___L__23__23_object_2d__3e_serial_2d_number)
 ___DEF_SLBL(2,___L2__23__23_eq_3f__2d_hash)
    ___IF(___FIXNUMP(___R1))
    ___GOTO(___L4__23__23_eq_3f__2d_hash)
@@ -4976,11 +4968,11 @@ ___END_P_COD
 #undef ___PH_LBL0
 #define ___PH_LBL0 166
 #undef ___PD_ALL
-#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
 #undef ___PW_ALL
-#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -4993,11 +4985,6 @@ ___DEF_P_HLBL(___L5__23__23_eqv_3f__2d_hash)
 ___DEF_P_HLBL(___L6__23__23_eqv_3f__2d_hash)
 ___DEF_P_HLBL(___L7__23__23_eqv_3f__2d_hash)
 ___DEF_P_HLBL(___L8__23__23_eqv_3f__2d_hash)
-___DEF_P_HLBL(___L9__23__23_eqv_3f__2d_hash)
-___DEF_P_HLBL(___L10__23__23_eqv_3f__2d_hash)
-___DEF_P_HLBL(___L11__23__23_eqv_3f__2d_hash)
-___DEF_P_HLBL(___L12__23__23_eqv_3f__2d_hash)
-___DEF_P_HLBL(___L13__23__23_eqv_3f__2d_hash)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_eqv_3f__2d_hash)
@@ -5006,28 +4993,28 @@ ___DEF_SLBL(0,___L0__23__23_eqv_3f__2d_hash)
 ___DEF_GLBL(___L__23__23_eqv_3f__2d_hash)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_eqv_3f__2d_hash)
-   ___GOTO(___L16__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L11__23__23_eqv_3f__2d_hash)
 ___DEF_SLBL(2,___L2__23__23_eqv_3f__2d_hash)
    ___SET_STK(-5,___R1)
    ___SET_R1(___VECTORREF(___STK(-6),___FIX(1L)))
    ___SET_R0(___LBL(4))
    ___IF(___FIXNUMP(___R1))
-   ___GOTO(___L17__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L12__23__23_eqv_3f__2d_hash)
    ___END_IF
-___DEF_GLBL(___L14__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L9__23__23_eqv_3f__2d_hash)
    ___IF(___FLONUMP(___R1))
-   ___GOTO(___L19__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L13__23__23_eqv_3f__2d_hash)
    ___END_IF
    ___IF(___BIGNUMP(___R1))
-   ___GOTO(___L23__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L14__23__23_eqv_3f__2d_hash)
    ___END_IF
    ___IF(___RATNUMP(___R1))
-   ___GOTO(___L15__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L10__23__23_eqv_3f__2d_hash)
    ___END_IF
    ___IF(___NOT(___CPXNUMP(___R1)))
-   ___GOTO(___L24__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L18__23__23_eqv_3f__2d_hash)
    ___END_IF
-___DEF_GLBL(___L15__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L10__23__23_eqv_3f__2d_hash)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_R1(___VECTORREF(___R1,___FIX(0L)))
@@ -5035,88 +5022,77 @@ ___DEF_GLBL(___L15__23__23_eqv_3f__2d_hash)
    ___ADJFP(8)
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_eqv_3f__2d_hash)
-___DEF_GLBL(___L16__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L11__23__23_eqv_3f__2d_hash)
    ___IF(___NOT(___FIXNUMP(___R1)))
-   ___GOTO(___L14__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L9__23__23_eqv_3f__2d_hash)
    ___END_IF
-___DEF_GLBL(___L17__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L12__23__23_eqv_3f__2d_hash)
    ___SET_R1(___FIXMOD(___R1,___FIX(331804471L)))
    ___JUMPPRM(___NOTHING,___R0)
 ___DEF_SLBL(4,___L4__23__23_eqv_3f__2d_hash)
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-5),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___STK(-5),___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
    ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
    ___POLL(5)
 ___DEF_SLBL(5,___L5__23__23_eqv_3f__2d_hash)
-   ___GOTO(___L18__23__23_eqv_3f__2d_hash)
-___DEF_SLBL(6,___L6__23__23_eqv_3f__2d_hash)
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-5),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
-   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-6),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
-   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
-   ___POLL(7)
-___DEF_SLBL(7,___L7__23__23_eqv_3f__2d_hash)
-___DEF_GLBL(___L18__23__23_eqv_3f__2d_hash)
    ___ADJFP(-8)
    ___JUMPPRM(___NOTHING,___STK(1))
-___DEF_GLBL(___L19__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L13__23__23_eqv_3f__2d_hash)
    ___SET_R2(___U16VECTORREF(___R1,___FIX(0L)))
    ___SET_R3(___U16VECTORREF(___R1,___FIX(1L)))
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R2)
-   ___SET_STK(3,___R3)
-   ___SET_R2(___U16VECTORREF(___R1,___FIX(3L)))
-   ___SET_R1(___U16VECTORREF(___R1,___FIX(2L)))
-   ___SET_R0(___LBL(6))
-   ___ADJFP(8)
-   ___POLL(8)
-___DEF_SLBL(8,___L8__23__23_eqv_3f__2d_hash)
-   ___GOTO(___L21__23__23_eqv_3f__2d_hash)
-___DEF_SLBL(9,___L9__23__23_eqv_3f__2d_hash)
-   ___SET_R3(___R1)
-   ___SET_R2(___FIXSUB(___STK(-5),___FIX(1L)))
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___STK(-7))
-   ___ADJFP(-8)
-   ___POLL(10)
-___DEF_SLBL(10,___L10__23__23_eqv_3f__2d_hash)
-___DEF_GLBL(___L20__23__23_eqv_3f__2d_hash)
-   ___IF(___FIXLT(___R2,___FIX(0L)))
-   ___GOTO(___L22__23__23_eqv_3f__2d_hash)
-   ___END_IF
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R1)
-   ___SET_STK(3,___R2)
-   ___SET_R2(___U16VECTORREF(___R1,___R2))
-   ___SET_R1(___R3)
-   ___SET_R0(___LBL(9))
-   ___ADJFP(8)
-   ___POLL(11)
-___DEF_SLBL(11,___L11__23__23_eqv_3f__2d_hash)
-___DEF_GLBL(___L21__23__23_eqv_3f__2d_hash)
-   ___SET_R2(___FIXASHL(___R2,___FIX(1L)))
-   ___SET_R1(___FIXADD(___R1,___R2))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
+   ___SET_R4(___U16VECTORREF(___R1,___FIX(2L)))
+   ___SET_R1(___U16VECTORREF(___R1,___FIX(3L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___R4,___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___R3,___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___R2,___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
    ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
    ___JUMPPRM(___NOTHING,___R0)
-___DEF_GLBL(___L22__23__23_eqv_3f__2d_hash)
-   ___SET_R1(___R3)
-   ___JUMPPRM(___NOTHING,___R0)
-___DEF_GLBL(___L23__23__23_eqv_3f__2d_hash)
-   ___SET_R2(___U16VECTORLENGTH(___R1))
+___DEF_GLBL(___L14__23__23_eqv_3f__2d_hash)
+   ___SET_R2(___BIGMLENGTH(___R1))
    ___SET_R2(___FIXSUB(___R2,___FIX(1L)))
    ___SET_R3(___FIX(0L))
-   ___POLL(12)
-___DEF_SLBL(12,___L12__23__23_eqv_3f__2d_hash)
-   ___GOTO(___L20__23__23_eqv_3f__2d_hash)
-___DEF_GLBL(___L24__23__23_eqv_3f__2d_hash)
-   ___POLL(13)
-___DEF_SLBL(13,___L13__23__23_eqv_3f__2d_hash)
+   ___POLL(6)
+___DEF_SLBL(6,___L6__23__23_eqv_3f__2d_hash)
+   ___GOTO(___L16__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L15__23__23_eqv_3f__2d_hash)
+   ___SET_R4(___FIXSUB(___R2,___FIX(1L)))
+   ___SET_R2(___BIGMREF(___R1,___R2))
+   ___SET_R2(___FIXWRAPASHL(___R2,___FIX(1L)))
+   ___SET_R2(___FIXWRAPADD(___R3,___R2))
+   ___SET_R2(___FIXWRAPMUL(___R2,___FIX(331804471L)))
+   ___SET_R2(___FIXAND(___R2,___FIX(536870911L)))
+   ___IF(___FIXLT(___R4,___FIX(0L)))
+   ___GOTO(___L17__23__23_eqv_3f__2d_hash)
+   ___END_IF
+   ___SET_R3(___BIGMREF(___R1,___R4))
+   ___SET_R3(___FIXWRAPASHL(___R3,___FIX(1L)))
+   ___SET_R2(___FIXWRAPADD(___R2,___R3))
+   ___SET_R2(___FIXWRAPMUL(___R2,___FIX(331804471L)))
+   ___SET_R3(___FIXAND(___R2,___FIX(536870911L)))
+   ___SET_R2(___FIXSUB(___R4,___FIX(1L)))
+   ___POLL(7)
+___DEF_SLBL(7,___L7__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L16__23__23_eqv_3f__2d_hash)
+   ___IF(___NOT(___FIXLT(___R2,___FIX(0L))))
+   ___GOTO(___L15__23__23_eqv_3f__2d_hash)
+   ___END_IF
+   ___SET_R1(___R3)
+   ___JUMPPRM(___NOTHING,___R0)
+___DEF_GLBL(___L17__23__23_eqv_3f__2d_hash)
+   ___SET_R1(___R2)
+   ___JUMPPRM(___NOTHING,___R0)
+___DEF_GLBL(___L18__23__23_eqv_3f__2d_hash)
+   ___POLL(8)
+___DEF_SLBL(8,___L8__23__23_eqv_3f__2d_hash)
    ___JUMPINT(___SET_NARGS(1),___PRC(158),___L__23__23_eq_3f__2d_hash)
 ___END_P_SW
 ___END_P_COD
@@ -5124,7 +5100,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_eqv_3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 181
+#define ___PH_LBL0 176
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -5151,7 +5127,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_equal_3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 184
+#define ___PH_LBL0 179
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5190,9 +5166,6 @@ ___DEF_P_HLBL(___L25__23__23_equal_3f__2d_hash)
 ___DEF_P_HLBL(___L26__23__23_equal_3f__2d_hash)
 ___DEF_P_HLBL(___L27__23__23_equal_3f__2d_hash)
 ___DEF_P_HLBL(___L28__23__23_equal_3f__2d_hash)
-___DEF_P_HLBL(___L29__23__23_equal_3f__2d_hash)
-___DEF_P_HLBL(___L30__23__23_equal_3f__2d_hash)
-___DEF_P_HLBL(___L31__23__23_equal_3f__2d_hash)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0__23__23_equal_3f__2d_hash)
@@ -5201,270 +5174,251 @@ ___DEF_SLBL(0,___L0__23__23_equal_3f__2d_hash)
 ___DEF_GLBL(___L__23__23_equal_3f__2d_hash)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_equal_3f__2d_hash)
-   ___GOTO(___L33__23__23_equal_3f__2d_hash)
+   ___GOTO(___L30__23__23_equal_3f__2d_hash)
 ___DEF_SLBL(2,___L2__23__23_equal_3f__2d_hash)
-   ___SET_STK(-5,___R1)
-   ___SET_R1(___CDR(___STK(-6)))
-   ___SET_R0(___LBL(5))
-   ___IF(___PAIRP(___R1))
-   ___GOTO(___L34__23__23_equal_3f__2d_hash)
+   ___SET_R2(___FIXWRAPASHL(___STK(-5),___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___R1,___R2))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
+   ___IF(___FIXLT(___STK(-4),___FIX(0L)))
+   ___GOTO(___L32__23__23_equal_3f__2d_hash)
    ___END_IF
-___DEF_GLBL(___L32__23__23_equal_3f__2d_hash)
+   ___SET_STK(-5,___R1)
+   ___SET_R1(___VECTORREF(___STK(-6),___STK(-4)))
+   ___SET_R0(___LBL(9))
+   ___IF(___PAIRP(___R1))
+   ___GOTO(___L31__23__23_equal_3f__2d_hash)
+   ___END_IF
+___DEF_GLBL(___L29__23__23_equal_3f__2d_hash)
    ___IF(___NOT(___SUBTYPEDP(___R1)))
-   ___GOTO(___L42__23__23_equal_3f__2d_hash)
+   ___GOTO(___L41__23__23_equal_3f__2d_hash)
    ___END_IF
    ___SET_R2(___SUBTYPE(___R1))
    ___IF(___FIXLT(___FIX(16L),___R2))
-   ___GOTO(___L41__23__23_equal_3f__2d_hash)
+   ___GOTO(___L40__23__23_equal_3f__2d_hash)
    ___END_IF
    ___IF(___SYMBOLP(___R1))
-   ___GOTO(___L48__23__23_equal_3f__2d_hash)
+   ___GOTO(___L46__23__23_equal_3f__2d_hash)
    ___END_IF
    ___IF(___KEYWORDP(___R1))
-   ___GOTO(___L49__23__23_equal_3f__2d_hash)
+   ___GOTO(___L47__23__23_equal_3f__2d_hash)
    ___END_IF
    ___IF(___VECTORP(___R1))
-   ___GOTO(___L50__23__23_equal_3f__2d_hash)
+   ___GOTO(___L34__23__23_equal_3f__2d_hash)
    ___END_IF
    ___IF(___STRUCTUREDIOP(___R1,___SYM__23__23_type_2d_6_2d_F3F63A41_2d_2974_2d_4D41_2d_8B24_2d_1744E866741D))
-   ___GOTO(___L51__23__23_equal_3f__2d_hash)
+   ___GOTO(___L48__23__23_equal_3f__2d_hash)
    ___END_IF
    ___IF(___STRUCTUREP(___R1))
-   ___GOTO(___L52__23__23_equal_3f__2d_hash)
+   ___GOTO(___L49__23__23_equal_3f__2d_hash)
    ___END_IF
    ___IF(___NOT(___BOXP(___R1)))
-   ___GOTO(___L42__23__23_equal_3f__2d_hash)
+   ___GOTO(___L41__23__23_equal_3f__2d_hash)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_R1(___UNBOX(___R1))
-   ___SET_R0(___LBL(9))
+   ___SET_R0(___LBL(27))
    ___ADJFP(4)
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L33__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L30__23__23_equal_3f__2d_hash)
    ___IF(___NOT(___PAIRP(___R1)))
-   ___GOTO(___L32__23__23_equal_3f__2d_hash)
+   ___GOTO(___L29__23__23_equal_3f__2d_hash)
    ___END_IF
-___DEF_GLBL(___L34__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L31__23__23_equal_3f__2d_hash)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_R1(___CAR(___R1))
-   ___SET_R0(___LBL(2))
+   ___SET_R0(___LBL(5))
    ___ADJFP(8)
    ___POLL(4)
 ___DEF_SLBL(4,___L4__23__23_equal_3f__2d_hash)
-   ___GOTO(___L33__23__23_equal_3f__2d_hash)
+   ___GOTO(___L30__23__23_equal_3f__2d_hash)
 ___DEF_SLBL(5,___L5__23__23_equal_3f__2d_hash)
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-5),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
-   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
-   ___POLL(6)
-___DEF_SLBL(6,___L6__23__23_equal_3f__2d_hash)
-   ___GOTO(___L35__23__23_equal_3f__2d_hash)
-___DEF_SLBL(7,___L7__23__23_equal_3f__2d_hash)
-   ___IF(___NOT(___FIXLT(___STK(-5),___FIX(0L))))
-   ___GOTO(___L36__23__23_equal_3f__2d_hash)
+   ___SET_STK(-5,___R1)
+   ___SET_R1(___CDR(___STK(-6)))
+   ___SET_R0(___LBL(6))
+   ___IF(___PAIRP(___R1))
+   ___GOTO(___L31__23__23_equal_3f__2d_hash)
    ___END_IF
+   ___GOTO(___L29__23__23_equal_3f__2d_hash)
+___DEF_SLBL(6,___L6__23__23_equal_3f__2d_hash)
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___STK(-5),___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
+   ___POLL(7)
+___DEF_SLBL(7,___L7__23__23_equal_3f__2d_hash)
+   ___GOTO(___L33__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L32__23__23_equal_3f__2d_hash)
    ___POLL(8)
 ___DEF_SLBL(8,___L8__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L35__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L33__23__23_equal_3f__2d_hash)
    ___ADJFP(-8)
    ___JUMPPRM(___NOTHING,___STK(1))
-___DEF_GLBL(___L36__23__23_equal_3f__2d_hash)
-   ___SET_R2(___U16VECTORREF(___STK(-6),___STK(-5)))
-   ___SET_STK(-4,___R1)
-   ___SET_R1(___R2)
-   ___SET_R2(___STK(-4))
-   ___SET_R0(___LBL(11))
-   ___GOTO(___L37__23__23_equal_3f__2d_hash)
 ___DEF_SLBL(9,___L9__23__23_equal_3f__2d_hash)
-   ___SET_R2(___FIX(153391703L))
-   ___SET_R0(___STK(-3))
-   ___ADJFP(-4)
+   ___SET_R2(___FIXWRAPASHL(___STK(-5),___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___R1,___R2))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
+   ___SET_R3(___FIXAND(___R1,___FIX(536870911L)))
+   ___SET_R2(___FIXSUB(___STK(-4),___FIX(1L)))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___STK(-7))
+   ___ADJFP(-8)
    ___POLL(10)
 ___DEF_SLBL(10,___L10__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L37__23__23_equal_3f__2d_hash)
-   ___SET_R2(___FIXASHL(___R2,___FIX(1L)))
-   ___SET_R1(___FIXADD(___R1,___R2))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
-   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
-   ___JUMPPRM(___NOTHING,___R0)
-___DEF_SLBL(11,___L11__23__23_equal_3f__2d_hash)
-   ___SET_R3(___R1)
-   ___SET_R2(___FIXSUB(___STK(-5),___FIX(1L)))
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___STK(-7))
-   ___ADJFP(-8)
-   ___POLL(12)
-___DEF_SLBL(12,___L12__23__23_equal_3f__2d_hash)
-   ___IF(___FIXLT(___R2,___FIX(0L)))
-   ___GOTO(___L39__23__23_equal_3f__2d_hash)
-   ___END_IF
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R1)
-   ___SET_STK(3,___R2)
-   ___SET_R1(___U16VECTORREF(___R1,___R2))
-   ___SET_R2(___R3)
-   ___SET_R0(___LBL(11))
-   ___ADJFP(8)
-   ___POLL(13)
-___DEF_SLBL(13,___L13__23__23_equal_3f__2d_hash)
-   ___GOTO(___L37__23__23_equal_3f__2d_hash)
-___DEF_SLBL(14,___L14__23__23_equal_3f__2d_hash)
-   ___SET_R3(___R1)
-   ___SET_R2(___FIXSUB(___STK(-5),___FIX(1L)))
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___STK(-7))
-   ___ADJFP(-8)
-   ___POLL(15)
-___DEF_SLBL(15,___L15__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L38__23__23_equal_3f__2d_hash)
-   ___IF(___NOT(___FIXLT(___R2,___FIX(0L))))
-   ___GOTO(___L40__23__23_equal_3f__2d_hash)
-   ___END_IF
-___DEF_GLBL(___L39__23__23_equal_3f__2d_hash)
-   ___SET_R1(___R3)
-   ___JUMPPRM(___NOTHING,___R0)
-___DEF_GLBL(___L40__23__23_equal_3f__2d_hash)
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R1)
-   ___SET_STK(3,___R2)
-   ___SET_STK(4,___R3)
-   ___SET_R1(___VECTORREF(___R1,___R2))
-   ___SET_R0(___LBL(17))
-   ___ADJFP(8)
-   ___POLL(16)
-___DEF_SLBL(16,___L16__23__23_equal_3f__2d_hash)
-   ___GOTO(___L33__23__23_equal_3f__2d_hash)
-___DEF_SLBL(17,___L17__23__23_equal_3f__2d_hash)
-   ___SET_R2(___STK(-4))
-   ___SET_R0(___LBL(14))
-   ___GOTO(___L37__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L41__23__23_equal_3f__2d_hash)
-   ___IF(___STRINGP(___R1))
-   ___GOTO(___L43__23__23_equal_3f__2d_hash)
-   ___END_IF
-   ___IF(___FLONUMP(___R1))
-   ___GOTO(___L42__23__23_equal_3f__2d_hash)
-   ___END_IF
-   ___IF(___NOT(___BIGNUMP(___R1)))
-   ___GOTO(___L44__23__23_equal_3f__2d_hash)
-   ___END_IF
-___DEF_GLBL(___L42__23__23_equal_3f__2d_hash)
-   ___POLL(18)
-___DEF_SLBL(18,___L18__23__23_equal_3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(166),___L__23__23_eqv_3f__2d_hash)
-___DEF_GLBL(___L43__23__23_equal_3f__2d_hash)
-   ___POLL(19)
-___DEF_SLBL(19,___L19__23__23_equal_3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(220),___L__23__23_string_3d__3f__2d_hash)
-___DEF_GLBL(___L44__23__23_equal_3f__2d_hash)
-   ___SET_R2(___U8VECTORLENGTH(___R1))
-   ___SET_R3(___FIXASHR(___R2,___FIX(1L)))
-   ___SET_R3(___FIXSUB(___R3,___FIX(1L)))
-   ___IF(___NOT(___FIXODDP(___R2)))
-   ___GOTO(___L45__23__23_equal_3f__2d_hash)
-   ___END_IF
-   ___SET_R4(___FIXSUB(___R2,___FIX(1L)))
-   ___SET_R4(___U8VECTORREF(___R1,___R4))
-   ___GOTO(___L46__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L45__23__23_equal_3f__2d_hash)
-   ___SET_R4(___FIX(256L))
-___DEF_GLBL(___L46__23__23_equal_3f__2d_hash)
-   ___SET_STK(1,___SUBTYPE(___R1))
-   ___SET_STK(1,___FIXASHL(___STK(1),___FIX(20L)))
-   ___SET_R2(___FIXADD(___R2,___STK(1)))
-   ___SET_R2(___FIXXOR(___R4,___R2))
-   ___ADJFP(1)
-   ___IF(___FIXLT(___R3,___FIX(0L)))
-   ___GOTO(___L47__23__23_equal_3f__2d_hash)
-   ___END_IF
-   ___SET_R4(___FIXSUB(___R3,___FIX(1L)))
-   ___SET_STK(0,___R0)
-   ___SET_STK(1,___R1)
-   ___SET_STK(2,___R4)
-   ___SET_R1(___U16VECTORREF(___R1,___R3))
-   ___SET_R0(___LBL(7))
-   ___ADJFP(7)
-   ___POLL(20)
-___DEF_SLBL(20,___L20__23__23_equal_3f__2d_hash)
-   ___GOTO(___L37__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L47__23__23_equal_3f__2d_hash)
-   ___SET_R1(___R2)
-   ___ADJFP(-1)
-   ___JUMPPRM(___NOTHING,___R0)
-___DEF_GLBL(___L48__23__23_equal_3f__2d_hash)
-   ___SET_R1(___SYMBOLHASH(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
-___DEF_GLBL(___L49__23__23_equal_3f__2d_hash)
-   ___SET_R1(___KEYWORDHASH(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
-___DEF_GLBL(___L50__23__23_equal_3f__2d_hash)
+   ___GOTO(___L35__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L34__23__23_equal_3f__2d_hash)
    ___SET_R2(___VECTORLENGTH(___R1))
    ___SET_R2(___FIXSUB(___R2,___FIX(1L)))
    ___SET_R3(___FIX(383479237L))
-   ___POLL(21)
-___DEF_SLBL(21,___L21__23__23_equal_3f__2d_hash)
+   ___POLL(11)
+___DEF_SLBL(11,___L11__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L35__23__23_equal_3f__2d_hash)
+   ___IF(___FIXLT(___R2,___FIX(0L)))
    ___GOTO(___L38__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L51__23__23_equal_3f__2d_hash)
-   ___POLL(22)
-___DEF_SLBL(22,___L22__23__23_equal_3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(522),___L__23__23_table_2d_equal_3f__2d_hash)
-___DEF_GLBL(___L52__23__23_equal_3f__2d_hash)
+   ___END_IF
+   ___SET_R4(___FIXSUB(___R2,___FIX(1L)))
+   ___SET_STK(1,___R0)
+   ___SET_STK(2,___R1)
+   ___SET_STK(3,___R3)
+   ___SET_STK(4,___R4)
+   ___SET_R1(___VECTORREF(___R1,___R2))
+   ___SET_R0(___LBL(2))
+   ___ADJFP(8)
+   ___POLL(12)
+___DEF_SLBL(12,___L12__23__23_equal_3f__2d_hash)
+   ___GOTO(___L30__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L36__23__23_equal_3f__2d_hash)
+   ___SET_R4(___FIXSUB(___R2,___FIX(1L)))
+   ___SET_R2(___U16VECTORREF(___R1,___R2))
+   ___SET_R3(___FIXWRAPASHL(___R3,___FIX(1L)))
+   ___SET_R2(___FIXWRAPADD(___R2,___R3))
+   ___SET_R2(___FIXWRAPMUL(___R2,___FIX(331804471L)))
+   ___SET_R2(___FIXAND(___R2,___FIX(536870911L)))
+   ___IF(___FIXLT(___R4,___FIX(0L)))
+   ___GOTO(___L39__23__23_equal_3f__2d_hash)
+   ___END_IF
+   ___SET_R3(___U16VECTORREF(___R1,___R4))
+   ___SET_R2(___FIXWRAPASHL(___R2,___FIX(1L)))
+   ___SET_R2(___FIXWRAPADD(___R3,___R2))
+   ___SET_R2(___FIXWRAPMUL(___R2,___FIX(331804471L)))
+   ___SET_R3(___FIXAND(___R2,___FIX(536870911L)))
+   ___SET_R2(___FIXSUB(___R4,___FIX(1L)))
+   ___POLL(13)
+___DEF_SLBL(13,___L13__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L37__23__23_equal_3f__2d_hash)
+   ___IF(___NOT(___FIXLT(___R2,___FIX(0L))))
+   ___GOTO(___L36__23__23_equal_3f__2d_hash)
+   ___END_IF
+___DEF_GLBL(___L38__23__23_equal_3f__2d_hash)
+   ___SET_R1(___R3)
+   ___JUMPPRM(___NOTHING,___R0)
+___DEF_GLBL(___L39__23__23_equal_3f__2d_hash)
+   ___SET_R1(___R2)
+   ___JUMPPRM(___NOTHING,___R0)
+___DEF_GLBL(___L40__23__23_equal_3f__2d_hash)
+   ___IF(___STRINGP(___R1))
+   ___GOTO(___L42__23__23_equal_3f__2d_hash)
+   ___END_IF
+   ___IF(___FLONUMP(___R1))
+   ___GOTO(___L41__23__23_equal_3f__2d_hash)
+   ___END_IF
+   ___IF(___NOT(___BIGNUMP(___R1)))
+   ___GOTO(___L43__23__23_equal_3f__2d_hash)
+   ___END_IF
+___DEF_GLBL(___L41__23__23_equal_3f__2d_hash)
+   ___POLL(14)
+___DEF_SLBL(14,___L14__23__23_equal_3f__2d_hash)
+   ___JUMPINT(___SET_NARGS(1),___PRC(166),___L__23__23_eqv_3f__2d_hash)
+___DEF_GLBL(___L42__23__23_equal_3f__2d_hash)
+   ___POLL(15)
+___DEF_SLBL(15,___L15__23__23_equal_3f__2d_hash)
+   ___JUMPINT(___SET_NARGS(1),___PRC(212),___L__23__23_string_3d__3f__2d_hash)
+___DEF_GLBL(___L43__23__23_equal_3f__2d_hash)
+   ___SET_R2(___U8VECTORLENGTH(___R1))
+   ___IF(___NOT(___FIXODDP(___R2)))
+   ___GOTO(___L44__23__23_equal_3f__2d_hash)
+   ___END_IF
+   ___SET_R3(___FIXSUB(___R2,___FIX(1L)))
+   ___SET_R3(___U8VECTORREF(___R1,___R3))
+   ___GOTO(___L45__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L44__23__23_equal_3f__2d_hash)
+   ___SET_R3(___FIX(256L))
+___DEF_GLBL(___L45__23__23_equal_3f__2d_hash)
+   ___SET_R4(___SUBTYPE(___R1))
+   ___SET_R4(___FIXASHL(___R4,___FIX(20L)))
+   ___SET_R4(___FIXADD(___R2,___R4))
+   ___SET_R3(___FIXXOR(___R3,___R4))
+   ___SET_R2(___FIXASHR(___R2,___FIX(1L)))
+   ___SET_R2(___FIXSUB(___R2,___FIX(1L)))
+   ___POLL(16)
+___DEF_SLBL(16,___L16__23__23_equal_3f__2d_hash)
+   ___GOTO(___L37__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L46__23__23_equal_3f__2d_hash)
+   ___SET_R1(___SYMBOLHASH(___R1))
+   ___JUMPPRM(___NOTHING,___R0)
+___DEF_GLBL(___L47__23__23_equal_3f__2d_hash)
+   ___SET_R1(___KEYWORDHASH(___R1))
+   ___JUMPPRM(___NOTHING,___R0)
+___DEF_GLBL(___L48__23__23_equal_3f__2d_hash)
+   ___POLL(17)
+___DEF_SLBL(17,___L17__23__23_equal_3f__2d_hash)
+   ___JUMPINT(___SET_NARGS(1),___PRC(514),___L__23__23_table_2d_equal_3f__2d_hash)
+___DEF_GLBL(___L49__23__23_equal_3f__2d_hash)
    ___SET_R2(___STRUCTURETYPE(___R1))
    ___SET_R3(___TYPEID(___R2))
    ___SET_R4(___TYPEFLAGS(___R2))
    ___SET_R4(___FIXAND(___R4,___FIX(1L)))
    ___IF(___NOT(___FIXEQ(___R4,___FIX(0L))))
-   ___GOTO(___L58__23__23_equal_3f__2d_hash)
+   ___GOTO(___L55__23__23_equal_3f__2d_hash)
    ___END_IF
    ___SET_STK(1,___R1)
    ___SET_STK(2,___R0)
    ___SET_STK(3,___R1)
    ___SET_STK(4,___R2)
    ___SET_R1(___R3)
-   ___SET_R0(___LBL(24))
+   ___SET_R0(___LBL(19))
    ___ADJFP(8)
-   ___POLL(23)
-___DEF_SLBL(23,___L23__23__23_equal_3f__2d_hash)
-   ___GOTO(___L33__23__23_equal_3f__2d_hash)
-___DEF_SLBL(24,___L24__23__23_equal_3f__2d_hash)
+   ___POLL(18)
+___DEF_SLBL(18,___L18__23__23_equal_3f__2d_hash)
+   ___GOTO(___L30__23__23_equal_3f__2d_hash)
+___DEF_SLBL(19,___L19__23__23_equal_3f__2d_hash)
    ___SET_R3(___R1)
    ___SET_R2(___VECTORLENGTH(___STK(-5)))
    ___SET_R1(___STK(-4))
    ___SET_R0(___STK(-6))
    ___ADJFP(-7)
-   ___POLL(25)
-___DEF_SLBL(25,___L25__23__23_equal_3f__2d_hash)
-   ___GOTO(___L55__23__23_equal_3f__2d_hash)
-___DEF_SLBL(26,___L26__23__23_equal_3f__2d_hash)
-   ___SET_R2(___FIXASHL(___STK(-7),___FIX(1L)))
-   ___SET_R1(___FIXADD(___R1,___R2))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
+   ___POLL(20)
+___DEF_SLBL(20,___L20__23__23_equal_3f__2d_hash)
+   ___GOTO(___L52__23__23_equal_3f__2d_hash)
+___DEF_SLBL(21,___L21__23__23_equal_3f__2d_hash)
+   ___SET_R2(___FIXWRAPASHL(___STK(-7),___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___R1,___R2))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
    ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
-___DEF_GLBL(___L53__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L50__23__23_equal_3f__2d_hash)
    ___SET_R2(___FIXSUB(___R2,___FIX(3L)))
-   ___POLL(27)
-___DEF_SLBL(27,___L27__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L54__23__23_equal_3f__2d_hash)
+   ___POLL(22)
+___DEF_SLBL(22,___L22__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L51__23__23_equal_3f__2d_hash)
    ___IF(___NOT(___FIXLT(___R2,___FIX(0L))))
-   ___GOTO(___L57__23__23_equal_3f__2d_hash)
+   ___GOTO(___L54__23__23_equal_3f__2d_hash)
    ___END_IF
    ___SET_STK(0,___R3)
    ___SET_R3(___R1)
    ___SET_R2(___STK(0))
    ___SET_R1(___TYPESUPER(___STK(-1)))
    ___ADJFP(-2)
-   ___POLL(28)
-___DEF_SLBL(28,___L28__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L55__23__23_equal_3f__2d_hash)
+   ___POLL(23)
+___DEF_SLBL(23,___L23__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L52__23__23_equal_3f__2d_hash)
    ___IF(___FALSEP(___R1))
-   ___GOTO(___L56__23__23_equal_3f__2d_hash)
+   ___GOTO(___L53__23__23_equal_3f__2d_hash)
    ___END_IF
    ___SET_R3(___TYPEFIELDS(___R1))
    ___SET_STK(1,___R1)
@@ -5475,42 +5429,51 @@ ___DEF_GLBL(___L55__23__23_equal_3f__2d_hash)
    ___SET_R2(___FIXSUB(___R1,___FIX(3L)))
    ___SET_R1(___FIX(0L))
    ___ADJFP(2)
-   ___POLL(29)
-___DEF_SLBL(29,___L29__23__23_equal_3f__2d_hash)
-   ___GOTO(___L54__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L56__23__23_equal_3f__2d_hash)
+   ___POLL(24)
+___DEF_SLBL(24,___L24__23__23_equal_3f__2d_hash)
+   ___GOTO(___L51__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L53__23__23_equal_3f__2d_hash)
    ___SET_R1(___R3)
    ___ADJFP(-1)
    ___JUMPPRM(___NOTHING,___R0)
-___DEF_GLBL(___L57__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L54__23__23_equal_3f__2d_hash)
    ___SET_R4(___FIXADD(___R2,___FIX(1L)))
    ___SET_R4(___VECTORREF(___STK(0),___R4))
    ___SET_R3(___FIXSUB(___R3,___FIX(1L)))
    ___SET_R4(___FIXAND(___R4,___FIX(4L)))
    ___IF(___NOT(___FIXEQ(___R4,___FIX(0L))))
-   ___GOTO(___L53__23__23_equal_3f__2d_hash)
+   ___GOTO(___L50__23__23_equal_3f__2d_hash)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___STK(-2),___R3,___STK(-1),___FAL))
-   ___SET_R0(___LBL(26))
+   ___SET_R0(___LBL(21))
    ___ADJFP(9)
-   ___POLL(30)
-___DEF_SLBL(30,___L30__23__23_equal_3f__2d_hash)
-   ___GOTO(___L33__23__23_equal_3f__2d_hash)
-___DEF_GLBL(___L58__23__23_equal_3f__2d_hash)
-   ___POLL(31)
-___DEF_SLBL(31,___L31__23__23_equal_3f__2d_hash)
+   ___POLL(25)
+___DEF_SLBL(25,___L25__23__23_equal_3f__2d_hash)
+   ___GOTO(___L30__23__23_equal_3f__2d_hash)
+___DEF_GLBL(___L55__23__23_equal_3f__2d_hash)
+   ___POLL(26)
+___DEF_SLBL(26,___L26__23__23_equal_3f__2d_hash)
    ___JUMPINT(___SET_NARGS(1),___PRC(158),___L__23__23_eq_3f__2d_hash)
+___DEF_SLBL(27,___L27__23__23_equal_3f__2d_hash)
+   ___SET_R2(___FIXWRAPASHL(___FIX(153391703L),___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___R1,___R2))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
+   ___POLL(28)
+___DEF_SLBL(28,___L28__23__23_equal_3f__2d_hash)
+   ___ADJFP(-4)
+   ___JUMPPRM(___NOTHING,___STK(1))
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_equal_3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 217
+#define ___PH_LBL0 209
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -5530,14 +5493,14 @@ ___DEF_SLBL(0,___L0_equal_3f__2d_hash)
 ___DEF_GLBL(___L_equal_3f__2d_hash)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_equal_3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(184),___L__23__23_equal_3f__2d_hash)
+   ___JUMPINT(___SET_NARGS(1),___PRC(179),___L__23__23_equal_3f__2d_hash)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_string_3d__3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 220
+#define ___PH_LBL0 212
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5599,7 +5562,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_string_3d__3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 224
+#define ___PH_LBL0 216
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5623,7 +5586,7 @@ ___DEF_GLBL(___L_string_3d__3f__2d_hash)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_string_3d__3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(220),___L__23__23_string_3d__3f__2d_hash)
+   ___JUMPINT(___SET_NARGS(1),___PRC(212),___L__23__23_string_3d__3f__2d_hash)
 ___DEF_GLBL(___L3_string_3d__3f__2d_hash)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -5637,7 +5600,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_string_2d_ci_3d__3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 228
+#define ___PH_LBL0 220
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5701,7 +5664,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_string_2d_ci_3d__3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 232
+#define ___PH_LBL0 224
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5725,7 +5688,7 @@ ___DEF_GLBL(___L_string_2d_ci_3d__3f__2d_hash)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_string_2d_ci_3d__3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(228),___L__23__23_string_2d_ci_3d__3f__2d_hash)
+   ___JUMPINT(___SET_NARGS(1),___PRC(220),___L__23__23_string_2d_ci_3d__3f__2d_hash)
 ___DEF_GLBL(___L3_string_2d_ci_3d__3f__2d_hash)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
@@ -5739,7 +5702,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_generic_2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 236
+#define ___PH_LBL0 228
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -5764,7 +5727,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_fail_2d_check_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 238
+#define ___PH_LBL0 230
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5794,7 +5757,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception
 #undef ___PH_LBL0
-#define ___PH_LBL0 241
+#define ___PH_LBL0 233
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5824,7 +5787,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_unbound_2d_table_2d_key_2d_exception_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 244
+#define ___PH_LBL0 236
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -5849,7 +5812,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_unbound_2d_table_2d_key_2d_exception_2d_procedure
 #undef ___PH_LBL0
-#define ___PH_LBL0 246
+#define ___PH_LBL0 238
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5875,7 +5838,7 @@ ___DEF_GLBL(___L_unbound_2d_table_2d_key_2d_exception_2d_procedure)
    ___SET_R1(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_unbound_2d_table_2d_key_2d_exception_2d_procedure)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(241),___L0__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(233),___L0__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception)
 ___DEF_GLBL(___L2_unbound_2d_table_2d_key_2d_exception_2d_procedure)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(1L),___SUB(4),___FAL))
    ___JUMPPRM(___NOTHING,___R0)
@@ -5885,7 +5848,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_unbound_2d_table_2d_key_2d_exception_2d_arguments
 #undef ___PH_LBL0
-#define ___PH_LBL0 249
+#define ___PH_LBL0 241
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5911,7 +5874,7 @@ ___DEF_GLBL(___L_unbound_2d_table_2d_key_2d_exception_2d_arguments)
    ___SET_R1(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_unbound_2d_table_2d_key_2d_exception_2d_arguments)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(241),___L0__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(233),___L0__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception)
 ___DEF_GLBL(___L2_unbound_2d_table_2d_key_2d_exception_2d_arguments)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(2L),___SUB(4),___FAL))
    ___JUMPPRM(___NOTHING,___R0)
@@ -5921,7 +5884,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception
 #undef ___PH_LBL0
-#define ___PH_LBL0 252
+#define ___PH_LBL0 244
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5977,7 +5940,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 258
+#define ___PH_LBL0 250
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -6002,7 +5965,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception
 #undef ___PH_LBL0
-#define ___PH_LBL0 260
+#define ___PH_LBL0 252
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6032,7 +5995,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_invalid_2d_hash_2d_number_2d_exception_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 263
+#define ___PH_LBL0 255
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -6057,7 +6020,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_invalid_2d_hash_2d_number_2d_exception_2d_procedure
 #undef ___PH_LBL0
-#define ___PH_LBL0 265
+#define ___PH_LBL0 257
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6083,7 +6046,7 @@ ___DEF_GLBL(___L_invalid_2d_hash_2d_number_2d_exception_2d_procedure)
    ___SET_R1(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_invalid_2d_hash_2d_number_2d_exception_2d_procedure)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(260),___L0__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(252),___L0__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception)
 ___DEF_GLBL(___L2_invalid_2d_hash_2d_number_2d_exception_2d_procedure)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(1L),___SUB(10),___FAL))
    ___JUMPPRM(___NOTHING,___R0)
@@ -6093,7 +6056,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_invalid_2d_hash_2d_number_2d_exception_2d_arguments
 #undef ___PH_LBL0
-#define ___PH_LBL0 268
+#define ___PH_LBL0 260
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6119,7 +6082,7 @@ ___DEF_GLBL(___L_invalid_2d_hash_2d_number_2d_exception_2d_arguments)
    ___SET_R1(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_invalid_2d_hash_2d_number_2d_exception_2d_arguments)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(260),___L0__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(252),___L0__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception)
 ___DEF_GLBL(___L2_invalid_2d_hash_2d_number_2d_exception_2d_arguments)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(2L),___SUB(10),___FAL))
    ___JUMPPRM(___NOTHING,___R0)
@@ -6129,7 +6092,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_raise_2d_invalid_2d_hash_2d_number_2d_exception
 #undef ___PH_LBL0
-#define ___PH_LBL0 271
+#define ___PH_LBL0 263
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6185,7 +6148,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_mem_2d_allocated_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 277
+#define ___PH_LBL0 269
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -6210,7 +6173,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 279
+#define ___PH_LBL0 271
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -6235,7 +6198,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 281
+#define ___PH_LBL0 273
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6260,7 +6223,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_rehash_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 283
+#define ___PH_LBL0 275
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -6285,7 +6248,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_smallest_2d_prime_2d_no_2d_less_2d_than
 #undef ___PH_LBL0
-#define ___PH_LBL0 285
+#define ___PH_LBL0 277
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6347,7 +6310,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_resize_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 292
+#define ___PH_LBL0 284
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) ___D_F64( \
 ___F64V3)
@@ -6379,14 +6342,14 @@ ___DEF_GLBL(___L__23__23_gc_2d_hash_2d_table_2d_resize_21_)
    ___SET_R2(___FIXAND(___R2,___R4))
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_gc_2d_hash_2d_table_2d_resize_21_)
-   ___JUMPINT(___SET_NARGS(3),___PRC(295),___L__23__23_gc_2d_hash_2d_table_2d_allocate)
+   ___JUMPINT(___SET_NARGS(3),___PRC(287),___L__23__23_gc_2d_hash_2d_table_2d_allocate)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_allocate
 #undef ___PH_LBL0
-#define ___PH_LBL0 295
+#define ___PH_LBL0 287
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3) ___D_F64(___F64V4) ___D_F64(___F64V5) ___D_F64(___F64V6)
@@ -6421,7 +6384,7 @@ ___DEF_GLBL(___L__23__23_gc_2d_hash_2d_table_2d_allocate)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_gc_2d_hash_2d_table_2d_allocate)
-   ___JUMPINT(___SET_NARGS(1),___PRC(285),___L__23__23_smallest_2d_prime_2d_no_2d_less_2d_than)
+   ___JUMPINT(___SET_NARGS(1),___PRC(277),___L__23__23_smallest_2d_prime_2d_no_2d_less_2d_than)
 ___DEF_SLBL(2,___L2__23__23_gc_2d_hash_2d_table_2d_allocate)
    ___SET_F64(___F64V1,___F64VECTORREF(___STK(-4),___FIX(0L)))
    ___SET_F64(___F64V2,___F64FROMFIX(___STK(-6)))
@@ -6479,7 +6442,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_for_2d_each
 #undef ___PH_LBL0
-#define ___PH_LBL0 302
+#define ___PH_LBL0 294
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6550,7 +6513,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_search
 #undef ___PH_LBL0
-#define ___PH_LBL0 307
+#define ___PH_LBL0 299
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6631,7 +6594,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gc_2d_hash_2d_table_2d_foldl
 #undef ___PH_LBL0
-#define ___PH_LBL0 311
+#define ___PH_LBL0 303
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6717,7 +6680,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_make_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 317
+#define ___PH_LBL0 309
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3) ___D_F64(___F64V4) ___D_F64(___F64V5) ___D_F64(___F64V6) ___D_F64(___F64V7) ___D_F64( \
@@ -7034,7 +6997,7 @@ ___DEF_GLBL(___L61__23__23_make_2d_table)
    ___END_ALLOC_LIST(16)
    ___SET_R2(___GET_LIST(16))
    ___SET_R1(___STK(-5))
-   ___SET_R3(___PRC(362))
+   ___SET_R3(___PRC(354))
    ___SET_R0(___STK(-8))
    ___CHECK_HEAP(19,4096)
 ___DEF_SLBL(19,___L19__23__23_make_2d_table)
@@ -7064,7 +7027,7 @@ ___DEF_SLBL(21,___L21__23__23_make_2d_table)
    ___END_ALLOC_LIST(16)
    ___SET_R2(___GET_LIST(16))
    ___SET_R1(___STK(-6))
-   ___SET_R3(___PRC(362))
+   ___SET_R3(___PRC(354))
    ___SET_R0(___STK(-9))
    ___CHECK_HEAP(22,4096)
 ___DEF_SLBL(22,___L22__23__23_make_2d_table)
@@ -7164,7 +7127,7 @@ ___DEF_GLBL(___L72__23__23_make_2d_table)
 ___DEF_GLBL(___L73__23__23_make_2d_table)
    ___SET_STK(1,___R1)
    ___SET_R1(___R2)
-   ___SET_R2(___PRC(184))
+   ___SET_R2(___PRC(179))
    ___ADJFP(1)
    ___POLL(28)
 ___DEF_SLBL(28,___L28__23__23_make_2d_table)
@@ -7179,7 +7142,7 @@ ___DEF_GLBL(___L74__23__23_make_2d_table)
 ___DEF_GLBL(___L75__23__23_make_2d_table)
    ___SET_STK(1,___R1)
    ___SET_R1(___R2)
-   ___SET_R2(___PRC(224))
+   ___SET_R2(___PRC(216))
    ___ADJFP(1)
    ___POLL(29)
 ___DEF_SLBL(29,___L29__23__23_make_2d_table)
@@ -7194,7 +7157,7 @@ ___DEF_GLBL(___L76__23__23_make_2d_table)
 ___DEF_GLBL(___L77__23__23_make_2d_table)
    ___SET_STK(1,___R1)
    ___SET_R1(___R2)
-   ___SET_R2(___PRC(232))
+   ___SET_R2(___PRC(224))
    ___ADJFP(1)
    ___POLL(30)
 ___DEF_SLBL(30,___L30__23__23_make_2d_table)
@@ -7202,7 +7165,7 @@ ___DEF_SLBL(30,___L30__23__23_make_2d_table)
 ___DEF_GLBL(___L78__23__23_make_2d_table)
    ___SET_STK(1,___R1)
    ___SET_R1(___R2)
-   ___SET_R2(___PRC(236))
+   ___SET_R2(___PRC(228))
    ___ADJFP(1)
    ___POLL(31)
 ___DEF_SLBL(31,___L31__23__23_make_2d_table)
@@ -7237,7 +7200,7 @@ ___DEF_GLBL(___L80__23__23_make_2d_table)
    ___ADD_LIST_ELEM(13,___KEY_init)
    ___ADD_LIST_ELEM(14,___STK(-8))
    ___ADD_LIST_ELEM(15,___KEY_size)
-   ___ADD_LIST_ELEM(16,___PRC(362))
+   ___ADD_LIST_ELEM(16,___PRC(354))
    ___END_ALLOC_LIST(17)
    ___SET_R2(___GET_LIST(17))
    ___SET_R1(___R3)
@@ -7277,7 +7240,7 @@ ___DEF_GLBL(___L82__23__23_make_2d_table)
    ___ADD_LIST_ELEM(13,___KEY_init)
    ___ADD_LIST_ELEM(14,___STK(-7))
    ___ADD_LIST_ELEM(15,___KEY_size)
-   ___ADD_LIST_ELEM(16,___PRC(362))
+   ___ADD_LIST_ELEM(16,___PRC(354))
    ___END_ALLOC_LIST(17)
    ___SET_R2(___GET_LIST(17))
    ___SET_R1(___R3)
@@ -7343,7 +7306,7 @@ ___DEF_GLBL(___L90__23__23_make_2d_table)
    ___ADD_LIST_ELEM(13,___KEY_init)
    ___ADD_LIST_ELEM(14,___STK(-4))
    ___ADD_LIST_ELEM(15,___KEY_size)
-   ___ADD_LIST_ELEM(16,___PRC(362))
+   ___ADD_LIST_ELEM(16,___PRC(354))
    ___END_ALLOC_LIST(17)
    ___SET_R2(___GET_LIST(17))
    ___SET_R1(___FIX(2L))
@@ -7370,7 +7333,7 @@ ___DEF_GLBL(___L91__23__23_make_2d_table)
    ___ADD_LIST_ELEM(13,___KEY_init)
    ___ADD_LIST_ELEM(14,___STK(-4))
    ___ADD_LIST_ELEM(15,___KEY_size)
-   ___ADD_LIST_ELEM(16,___PRC(362))
+   ___ADD_LIST_ELEM(16,___PRC(354))
    ___END_ALLOC_LIST(17)
    ___SET_R2(___GET_LIST(17))
    ___SET_R1(___FIX(2L))
@@ -7386,7 +7349,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_make_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 362
+#define ___PH_LBL0 354
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7407,14 +7370,14 @@ ___ABSENT) ___SET_R2(___ABSENT) ___SET_R3(___ABSENT))
 ___DEF_GLBL(___L_make_2d_table)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_make_2d_table)
-   ___SET_NARGS(8) ___JUMPINT(___NOTHING,___PRC(317),___L0__23__23_make_2d_table)
+   ___SET_NARGS(8) ___JUMPINT(___NOTHING,___PRC(309),___L0__23__23_make_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_get_2d_eq_2d_gcht
 #undef ___PH_LBL0
-#define ___PH_LBL0 365
+#define ___PH_LBL0 357
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R2
 #undef ___PR_ALL
@@ -7434,16 +7397,16 @@ ___DEF_GLBL(___L__23__23_table_2d_get_2d_eq_2d_gcht)
    ___IF(___NOT(___MEMALLOCATEDP(___R2)))
    ___GOTO(___L1__23__23_table_2d_get_2d_eq_2d_gcht)
    ___END_IF
-   ___JUMPINT(___SET_NARGS(1),___PRC(370),___L__23__23_table_2d_get_2d_gcht)
+   ___JUMPINT(___SET_NARGS(1),___PRC(362),___L__23__23_table_2d_get_2d_gcht)
 ___DEF_GLBL(___L1__23__23_table_2d_get_2d_eq_2d_gcht)
-   ___JUMPINT(___SET_NARGS(1),___PRC(367),___L__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc)
+   ___JUMPINT(___SET_NARGS(1),___PRC(359),___L__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc
 #undef ___PH_LBL0
-#define ___PH_LBL0 367
+#define ___PH_LBL0 359
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7481,7 +7444,7 @@ ___DEF_GLBL(___L2__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___STK(0),___FIX(1L),___SUB(0),___FAL))
    ___SET_R0(___LBL(1))
    ___ADJFP(7)
-   ___JUMPINT(___SET_NARGS(3),___PRC(295),___L__23__23_gc_2d_hash_2d_table_2d_allocate)
+   ___JUMPINT(___SET_NARGS(3),___PRC(287),___L__23__23_gc_2d_hash_2d_table_2d_allocate)
 ___DEF_SLBL(1,___L1__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc)
    ___UNCHECKEDSTRUCTURESET(___STK(-7),___R1,___FIX(3L),___SUB(0),___FAL)
    ___ADJFP(-8)
@@ -7495,7 +7458,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_get_2d_gcht
 #undef ___PH_LBL0
-#define ___PH_LBL0 370
+#define ___PH_LBL0 362
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7525,7 +7488,7 @@ ___DEF_GLBL(___L__23__23_table_2d_get_2d_gcht)
    ___SET_R2(___FIXIOR(___FIX(16L),___R2))
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(295),___L__23__23_gc_2d_hash_2d_table_2d_allocate)
+   ___JUMPINT(___SET_NARGS(3),___PRC(287),___L__23__23_gc_2d_hash_2d_table_2d_allocate)
 ___DEF_SLBL(1,___L1__23__23_table_2d_get_2d_gcht)
    ___UNCHECKEDSTRUCTURESET(___STK(-6),___R1,___FIX(5L),___SUB(0),___FAL)
    ___ADJFP(-8)
@@ -7539,7 +7502,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_length
 #undef ___PH_LBL0
-#define ___PH_LBL0 373
+#define ___PH_LBL0 365
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -7595,7 +7558,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_length
 #undef ___PH_LBL0
-#define ___PH_LBL0 375
+#define ___PH_LBL0 367
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7619,21 +7582,21 @@ ___DEF_GLBL(___L_table_2d_length)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_table_2d_length)
-   ___JUMPINT(___SET_NARGS(1),___PRC(373),___L__23__23_table_2d_length)
+   ___JUMPINT(___SET_NARGS(1),___PRC(365),___L__23__23_table_2d_length)
 ___DEF_GLBL(___L3_table_2d_length)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
    ___SET_R1(___FIX(1L))
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_length)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_access
 #undef ___PH_LBL0
-#define ___PH_LBL0 379
+#define ___PH_LBL0 371
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7679,7 +7642,7 @@ ___DEF_SLBL(1,___L1__23__23_table_2d_access)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(370),___L__23__23_table_2d_get_2d_gcht)
+   ___JUMPINT(___SET_NARGS(1),___PRC(362),___L__23__23_table_2d_get_2d_gcht)
 ___DEF_SLBL(2,___L2__23__23_table_2d_access)
    ___SET_R2(___VECTORREF(___R1,___FIX(1L)))
    ___SET_R3(___FIXAND(___R2,___FIX(32L)))
@@ -7801,7 +7764,7 @@ ___DEF_GLBL(___L13__23__23_table_2d_access)
 ___DEF_GLBL(___L14__23__23_table_2d_access)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(394),___L__23__23_table_2d_resize_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(386),___L__23__23_table_2d_resize_21_)
 ___DEF_GLBL(___L15__23__23_table_2d_access)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -7810,14 +7773,14 @@ ___DEF_GLBL(___L15__23__23_table_2d_access)
    ___SET_R1(___STK(3))
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(271),___L0__23__23_raise_2d_invalid_2d_hash_2d_number_2d_exception)
+   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(263),___L0__23__23_raise_2d_invalid_2d_hash_2d_number_2d_exception)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 385
+#define ___PH_LBL0 377
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7848,7 +7811,7 @@ ___DEF_GLBL(___L__23__23_table_2d_ref)
    ___SET_STK(4,___R3)
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(365),___L__23__23_table_2d_get_2d_eq_2d_gcht)
+   ___JUMPINT(___SET_NARGS(2),___PRC(357),___L__23__23_table_2d_get_2d_eq_2d_gcht)
 ___DEF_SLBL(1,___L1__23__23_table_2d_ref)
    ___SET_R1(___GCHASHTABLEREF(___R1,___STK(-5)))
    ___IF(___NOT(___EQP(___R1,___UNUSED)))
@@ -7863,10 +7826,10 @@ ___DEF_SLBL(1,___L1__23__23_table_2d_ref)
    ___END_IF
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
-   ___SET_R1(___PRC(390))
+   ___SET_R1(___PRC(382))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(252),___L0__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(244),___L0__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception)
 ___DEF_GLBL(___L4__23__23_table_2d_ref)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___STK(-6),___FIX(6L),___SUB(0),___FAL))
    ___ADJFP(-8)
@@ -7885,7 +7848,7 @@ ___DEF_GLBL(___L7__23__23_table_2d_ref)
    ___SET_R2(___LBL(2))
    ___SET_R1(___STK(3))
    ___ADJFP(2)
-   ___JUMPINT(___SET_NARGS(5),___PRC(379),___L__23__23_table_2d_access)
+   ___JUMPINT(___SET_NARGS(5),___PRC(371),___L__23__23_table_2d_access)
 ___DEF_SLBL(2,___L2__23__23_table_2d_ref)
    ___IF_NARGS_EQ(6,___NOTHING)
    ___WRONG_NARGS(2,6,0,0)
@@ -7898,9 +7861,9 @@ ___DEF_SLBL(2,___L2__23__23_table_2d_ref)
    ___END_IF
    ___SET_R3(___STK(-1))
    ___SET_R2(___STK(-2))
-   ___SET_R1(___PRC(390))
+   ___SET_R1(___PRC(382))
    ___ADJFP(-3)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(252),___L0__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(244),___L0__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception)
 ___DEF_GLBL(___L8__23__23_table_2d_ref)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___STK(-2),___FIX(6L),___SUB(0),___FAL))
    ___ADJFP(-3)
@@ -7922,7 +7885,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 390
+#define ___PH_LBL0 382
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -7947,21 +7910,21 @@ ___DEF_GLBL(___L_table_2d_ref)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_table_2d_ref)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___DEF_GLBL(___L3_table_2d_ref)
    ___SET_STK(1,___FIX(1L))
    ___SET_STK(2,___LBL(0))
    ___ADJFP(2)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_ref)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_resize_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 394
+#define ___PH_LBL0 386
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7989,7 +7952,7 @@ ___DEF_GLBL(___L__23__23_table_2d_resize_21_)
    ___SET_R3(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(4L),___SUB(0),___FAL))
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(292),___L__23__23_gc_2d_hash_2d_table_2d_resize_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(284),___L__23__23_gc_2d_hash_2d_table_2d_resize_21_)
 ___DEF_SLBL(1,___L1__23__23_table_2d_resize_21_)
    ___UNCHECKEDSTRUCTURESET(___STK(-6),___R1,___FIX(5L),___SUB(0),___FAL)
    ___SET_R2(___STK(-5))
@@ -8035,7 +7998,7 @@ ___DEF_GLBL(___L8__23__23_table_2d_resize_21_)
    ___SET_R2(___R4)
    ___SET_R0(___LBL(2))
    ___ADJFP(8)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_GLBL(___L9__23__23_table_2d_resize_21_)
    ___SET_R1(___VOID)
    ___JUMPPRM(___NOTHING,___R0)
@@ -8045,7 +8008,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 400
+#define ___PH_LBL0 392
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8077,7 +8040,7 @@ ___DEF_GLBL(___L__23__23_table_2d_set_21_)
    ___SET_STK(4,___R3)
    ___SET_R0(___LBL(1))
    ___ADJFP(8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(365),___L__23__23_table_2d_get_2d_eq_2d_gcht)
+   ___JUMPINT(___SET_NARGS(2),___PRC(357),___L__23__23_table_2d_get_2d_eq_2d_gcht)
 ___DEF_SLBL(1,___L1__23__23_table_2d_set_21_)
    ___SET_R2(___GCHASHTABLESET(___R1,___STK(-5),___STK(-4)))
    ___IF(___FALSEP(___R2))
@@ -8088,7 +8051,7 @@ ___DEF_SLBL(1,___L1__23__23_table_2d_set_21_)
    ___SET_R3(___UNCHECKEDSTRUCTUREREF(___STK(-6),___FIX(4L),___SUB(0),___FAL))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(292),___L__23__23_gc_2d_hash_2d_table_2d_resize_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(284),___L__23__23_gc_2d_hash_2d_table_2d_resize_21_)
 ___DEF_SLBL(2,___L2__23__23_table_2d_set_21_)
    ___SET_R1(___GCHASHTABLEREHASH(___STK(-4),___R1))
    ___IF(___NOT(___MEMALLOCATEDP(___STK(-5))))
@@ -8109,7 +8072,7 @@ ___DEF_GLBL(___L7__23__23_table_2d_set_21_)
    ___SET_R2(___LBL(3))
    ___SET_R1(___STK(3))
    ___ADJFP(2)
-   ___JUMPINT(___SET_NARGS(5),___PRC(379),___L__23__23_table_2d_access)
+   ___JUMPINT(___SET_NARGS(5),___PRC(371),___L__23__23_table_2d_access)
 ___DEF_SLBL(3,___L3__23__23_table_2d_set_21_)
    ___IF_NARGS_EQ(6,___NOTHING)
    ___WRONG_NARGS(3,6,0,0)
@@ -8134,7 +8097,7 @@ ___DEF_SLBL(3,___L3__23__23_table_2d_set_21_)
    ___END_IF
    ___SET_R1(___STK(-2))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(1),___PRC(394),___L__23__23_table_2d_resize_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(386),___L__23__23_table_2d_resize_21_)
 ___DEF_GLBL(___L8__23__23_table_2d_set_21_)
    ___SET_R1(___VOID)
    ___ADJFP(-3)
@@ -8169,7 +8132,7 @@ ___DEF_SLBL(4,___L4__23__23_table_2d_set_21_)
    ___END_IF
    ___SET_R1(___STK(-1))
    ___ADJFP(-2)
-   ___JUMPINT(___SET_NARGS(1),___PRC(394),___L__23__23_table_2d_resize_21_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(386),___L__23__23_table_2d_resize_21_)
 ___DEF_GLBL(___L10__23__23_table_2d_set_21_)
    ___SET_R1(___VOID)
    ___ADJFP(-2)
@@ -8186,7 +8149,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 406
+#define ___PH_LBL0 398
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -8211,21 +8174,21 @@ ___DEF_GLBL(___L_table_2d_set_21_)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_table_2d_set_21_)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_GLBL(___L3_table_2d_set_21_)
    ___SET_STK(1,___FIX(1L))
    ___SET_STK(2,___LBL(0))
    ___ADJFP(2)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_set_21_)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_search
 #undef ___PH_LBL0
-#define ___PH_LBL0 410
+#define ___PH_LBL0 402
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -8255,7 +8218,7 @@ ___DEF_GLBL(___L__23__23_table_2d_search)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_table_2d_search)
-   ___JUMPINT(___SET_NARGS(2),___PRC(307),___L__23__23_gc_2d_hash_2d_table_2d_search)
+   ___JUMPINT(___SET_NARGS(2),___PRC(299),___L__23__23_gc_2d_hash_2d_table_2d_search)
 ___DEF_SLBL(2,___L2__23__23_table_2d_search)
    ___IF(___NOT(___FALSEP(___R1)))
    ___GOTO(___L6__23__23_table_2d_search)
@@ -8281,14 +8244,14 @@ ___DEF_GLBL(___L8__23__23_table_2d_search)
    ___POLL(5)
 ___DEF_SLBL(5,___L5__23__23_table_2d_search)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(307),___L__23__23_gc_2d_hash_2d_table_2d_search)
+   ___JUMPINT(___SET_NARGS(2),___PRC(299),___L__23__23_gc_2d_hash_2d_table_2d_search)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_search
 #undef ___PH_LBL0
-#define ___PH_LBL0 417
+#define ___PH_LBL0 409
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8316,7 +8279,7 @@ ___DEF_GLBL(___L_table_2d_search)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_table_2d_search)
-   ___JUMPINT(___SET_NARGS(2),___PRC(410),___L__23__23_table_2d_search)
+   ___JUMPINT(___SET_NARGS(2),___PRC(402),___L__23__23_table_2d_search)
 ___DEF_GLBL(___L4_table_2d_search)
    ___SET_STK(1,___FIX(2L))
    ___SET_R3(___R2)
@@ -8325,7 +8288,7 @@ ___DEF_GLBL(___L4_table_2d_search)
    ___ADJFP(1)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_search)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___DEF_GLBL(___L5_table_2d_search)
    ___SET_STK(1,___FIX(1L))
    ___SET_R3(___R2)
@@ -8341,7 +8304,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_for_2d_each
 #undef ___PH_LBL0
-#define ___PH_LBL0 422
+#define ___PH_LBL0 414
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -8370,7 +8333,7 @@ ___DEF_GLBL(___L__23__23_table_2d_for_2d_each)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_table_2d_for_2d_each)
-   ___JUMPINT(___SET_NARGS(2),___PRC(302),___L__23__23_gc_2d_hash_2d_table_2d_for_2d_each)
+   ___JUMPINT(___SET_NARGS(2),___PRC(294),___L__23__23_gc_2d_hash_2d_table_2d_for_2d_each)
 ___DEF_SLBL(2,___L2__23__23_table_2d_for_2d_each)
    ___IF(___NOT(___NOT(___FALSEP(___UNCHECKEDSTRUCTUREREF(___STK(-5),___FIX(2L),___SUB(0),___FAL))))
 )
@@ -8388,14 +8351,14 @@ ___DEF_GLBL(___L5__23__23_table_2d_for_2d_each)
    ___POLL(4)
 ___DEF_SLBL(4,___L4__23__23_table_2d_for_2d_each)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(302),___L__23__23_gc_2d_hash_2d_table_2d_for_2d_each)
+   ___JUMPINT(___SET_NARGS(2),___PRC(294),___L__23__23_gc_2d_hash_2d_table_2d_for_2d_each)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_for_2d_each
 #undef ___PH_LBL0
-#define ___PH_LBL0 428
+#define ___PH_LBL0 420
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8423,7 +8386,7 @@ ___DEF_GLBL(___L_table_2d_for_2d_each)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_table_2d_for_2d_each)
-   ___JUMPINT(___SET_NARGS(2),___PRC(422),___L__23__23_table_2d_for_2d_each)
+   ___JUMPINT(___SET_NARGS(2),___PRC(414),___L__23__23_table_2d_for_2d_each)
 ___DEF_GLBL(___L4_table_2d_for_2d_each)
    ___SET_STK(1,___FIX(2L))
    ___SET_R3(___R2)
@@ -8432,7 +8395,7 @@ ___DEF_GLBL(___L4_table_2d_for_2d_each)
    ___ADJFP(1)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_for_2d_each)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___DEF_GLBL(___L5_table_2d_for_2d_each)
    ___SET_STK(1,___FIX(1L))
    ___SET_R3(___R2)
@@ -8448,7 +8411,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_foldl
 #undef ___PH_LBL0
-#define ___PH_LBL0 433
+#define ___PH_LBL0 425
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8478,7 +8441,7 @@ ___DEF_GLBL(___L__23__23_table_2d_foldl)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_table_2d_foldl)
-   ___JUMPINT(___SET_NARGS(4),___PRC(311),___L__23__23_gc_2d_hash_2d_table_2d_foldl)
+   ___JUMPINT(___SET_NARGS(4),___PRC(303),___L__23__23_gc_2d_hash_2d_table_2d_foldl)
 ___DEF_SLBL(2,___L2__23__23_table_2d_foldl)
    ___IF(___NOT(___NOT(___FALSEP(___UNCHECKEDSTRUCTUREREF(___STK(-4),___FIX(2L),___SUB(0),___FAL))))
 )
@@ -8495,14 +8458,14 @@ ___DEF_GLBL(___L5__23__23_table_2d_foldl)
    ___POLL(4)
 ___DEF_SLBL(4,___L4__23__23_table_2d_foldl)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(311),___L__23__23_gc_2d_hash_2d_table_2d_foldl)
+   ___JUMPINT(___SET_NARGS(4),___PRC(303),___L__23__23_gc_2d_hash_2d_table_2d_foldl)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d__3e_list
 #undef ___PH_LBL0
-#define ___PH_LBL0 439
+#define ___PH_LBL0 431
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8531,7 +8494,7 @@ ___DEF_GLBL(___L__23__23_table_2d__3e_list)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_table_2d__3e_list)
-   ___JUMPINT(___SET_NARGS(4),___PRC(433),___L__23__23_table_2d_foldl)
+   ___JUMPINT(___SET_NARGS(4),___PRC(425),___L__23__23_table_2d_foldl)
 ___DEF_SLBL(2,___L2__23__23_table_2d__3e_list)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(2,2,0,0)
@@ -8552,7 +8515,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d__3e_list
 #undef ___PH_LBL0
-#define ___PH_LBL0 446
+#define ___PH_LBL0 438
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8576,21 +8539,21 @@ ___DEF_GLBL(___L_table_2d__3e_list)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_table_2d__3e_list)
-   ___JUMPINT(___SET_NARGS(1),___PRC(439),___L__23__23_table_2d__3e_list)
+   ___JUMPINT(___SET_NARGS(1),___PRC(431),___L__23__23_table_2d__3e_list)
 ___DEF_GLBL(___L3_table_2d__3e_list)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
    ___SET_R1(___FIX(1L))
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d__3e_list)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_list_2d__3e_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 450
+#define ___PH_LBL0 442
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8646,7 +8609,7 @@ ___DEF_GLBL(___L__23__23_list_2d__3e_table)
    ___ADJFP(15)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_list_2d__3e_table)
-   ___SET_NARGS(8) ___JUMPINT(___NOTHING,___PRC(317),___L0__23__23_make_2d_table)
+   ___SET_NARGS(8) ___JUMPINT(___NOTHING,___PRC(309),___L0__23__23_make_2d_table)
 ___DEF_SLBL(2,___L2__23__23_list_2d__3e_table)
    ___SET_STK(-5,___STK(-9))
    ___SET_STK(-9,___STK(-8))
@@ -8689,7 +8652,7 @@ ___DEF_GLBL(___L13__23__23_list_2d__3e_table)
    ___ADJFP(12)
    ___POLL(6)
 ___DEF_SLBL(6,___L6__23__23_list_2d__3e_table)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___DEF_SLBL(7,___L7__23__23_list_2d__3e_table)
    ___IF(___EQP(___STK(-8),___R1))
    ___GOTO(___L14__23__23_list_2d__3e_table)
@@ -8702,7 +8665,7 @@ ___DEF_GLBL(___L14__23__23_list_2d__3e_table)
    ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(4))
    ___ADJFP(-4)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_GLBL(___L15__23__23_list_2d__3e_table)
    ___BEGIN_ALLOC_LIST(17UL,___R1)
    ___ADD_LIST_ELEM(1,___KEY_max_2d_load)
@@ -8720,7 +8683,7 @@ ___DEF_GLBL(___L15__23__23_list_2d__3e_table)
    ___ADD_LIST_ELEM(13,___KEY_init)
    ___ADD_LIST_ELEM(14,___STK(-6))
    ___ADD_LIST_ELEM(15,___KEY_size)
-   ___ADD_LIST_ELEM(16,___PRC(463))
+   ___ADD_LIST_ELEM(16,___PRC(455))
    ___END_ALLOC_LIST(17)
    ___SET_R2(___GET_LIST(17))
    ___SET_R3(___STK(-7))
@@ -8751,7 +8714,7 @@ ___DEF_GLBL(___L16__23__23_list_2d__3e_table)
    ___ADD_LIST_ELEM(13,___KEY_init)
    ___ADD_LIST_ELEM(14,___STK(-6))
    ___ADD_LIST_ELEM(15,___KEY_size)
-   ___ADD_LIST_ELEM(16,___PRC(463))
+   ___ADD_LIST_ELEM(16,___PRC(455))
    ___END_ALLOC_LIST(17)
    ___SET_R2(___GET_LIST(17))
    ___SET_R3(___STK(-7))
@@ -8772,7 +8735,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_list_2d__3e_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 463
+#define ___PH_LBL0 455
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8793,14 +8756,14 @@ ___DEF_SLBL(0,___L0_list_2d__3e_table)
 ___DEF_GLBL(___L_list_2d__3e_table)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_list_2d__3e_table)
-   ___SET_NARGS(9) ___JUMPINT(___NOTHING,___PRC(450),___L0__23__23_list_2d__3e_table)
+   ___SET_NARGS(9) ___JUMPINT(___NOTHING,___PRC(442),___L0__23__23_list_2d__3e_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_copy
 #undef ___PH_LBL0
-#define ___PH_LBL0 466
+#define ___PH_LBL0 458
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2)
@@ -8833,7 +8796,7 @@ ___DEF_GLBL(___L__23__23_table_2d_copy)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_table_2d_copy)
-   ___JUMPINT(___SET_NARGS(1),___PRC(373),___L__23__23_table_2d_length)
+   ___JUMPINT(___SET_NARGS(1),___PRC(365),___L__23__23_table_2d_length)
 ___DEF_SLBL(2,___L2__23__23_table_2d_copy)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___STK(-6),___FIX(6L),___SUB(0),___FAL))
    ___SET_R3(___UNCHECKEDSTRUCTUREREF(___STK(-6),___FIX(1L),___SUB(0),___FAL))
@@ -8878,7 +8841,7 @@ ___DEF_GLBL(___L12__23__23_table_2d_copy)
    ___ADJFP(5)
    ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3__23__23_table_2d_copy)
-   ___SET_NARGS(8) ___JUMPINT(___NOTHING,___PRC(317),___L0__23__23_make_2d_table)
+   ___SET_NARGS(8) ___JUMPINT(___NOTHING,___PRC(309),___L0__23__23_make_2d_table)
 ___DEF_SLBL(4,___L4__23__23_table_2d_copy)
    ___SET_STK(-5,___R1)
    ___SET_STK(-4,___ALLOC_CLO(1UL))
@@ -8890,7 +8853,7 @@ ___DEF_SLBL(4,___L4__23__23_table_2d_copy)
    ___SET_R0(___LBL(6))
    ___CHECK_HEAP(5,4096)
 ___DEF_SLBL(5,___L5__23__23_table_2d_copy)
-   ___JUMPINT(___SET_NARGS(2),___PRC(422),___L__23__23_table_2d_for_2d_each)
+   ___JUMPINT(___SET_NARGS(2),___PRC(414),___L__23__23_table_2d_for_2d_each)
 ___DEF_SLBL(6,___L6__23__23_table_2d_copy)
    ___SET_R1(___STK(-5))
    ___POLL(7)
@@ -8905,7 +8868,7 @@ ___DEF_SLBL(8,___L8__23__23_table_2d_copy)
    ___SET_R1(___CLO(___R4,1))
    ___POLL(9)
 ___DEF_SLBL(9,___L9__23__23_table_2d_copy)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_GLBL(___L13__23__23_table_2d_copy)
    ___SET_R0(___UNCHECKEDSTRUCTUREREF(___STK(-6),___FIX(3L),___SUB(0),___FAL))
    ___GOTO(___L12__23__23_table_2d_copy)
@@ -8915,7 +8878,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_copy
 #undef ___PH_LBL0
-#define ___PH_LBL0 477
+#define ___PH_LBL0 469
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8939,21 +8902,21 @@ ___DEF_GLBL(___L_table_2d_copy)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_table_2d_copy)
-   ___JUMPINT(___SET_NARGS(1),___PRC(466),___L__23__23_table_2d_copy)
+   ___JUMPINT(___SET_NARGS(1),___PRC(458),___L__23__23_table_2d_copy)
 ___DEF_GLBL(___L3_table_2d_copy)
    ___SET_R3(___R1)
    ___SET_R2(___LBL(0))
    ___SET_R1(___FIX(1L))
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_copy)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_merge_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 481
+#define ___PH_LBL0 473
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9015,7 +8978,7 @@ ___DEF_SLBL(3,___L3__23__23_table_2d_merge_21_)
    ___POLL(4)
 ___DEF_SLBL(4,___L4__23__23_table_2d_merge_21_)
 ___DEF_GLBL(___L15__23__23_table_2d_merge_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(422),___L__23__23_table_2d_for_2d_each)
+   ___JUMPINT(___SET_NARGS(2),___PRC(414),___L__23__23_table_2d_for_2d_each)
 ___DEF_SLBL(5,___L5__23__23_table_2d_merge_21_)
    ___SET_R1(___STK(-6))
    ___POLL(6)
@@ -9039,7 +9002,7 @@ ___DEF_GLBL(___L17__23__23_table_2d_merge_21_)
    ___POLL(9)
 ___DEF_SLBL(9,___L9__23__23_table_2d_merge_21_)
    ___ADJFP(-8)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_SLBL(10,___L10__23__23_table_2d_merge_21_)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(10,2,0,0)
@@ -9048,7 +9011,7 @@ ___DEF_SLBL(10,___L10__23__23_table_2d_merge_21_)
    ___SET_R1(___CLO(___R4,1))
    ___POLL(11)
 ___DEF_SLBL(11,___L11__23__23_table_2d_merge_21_)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_SLBL(12,___L12__23__23_table_2d_merge_21_)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(12,2,0,0)
@@ -9063,14 +9026,14 @@ ___DEF_SLBL(12,___L12__23__23_table_2d_merge_21_)
    ___ADJFP(8)
    ___POLL(13)
 ___DEF_SLBL(13,___L13__23__23_table_2d_merge_21_)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_merge_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 496
+#define ___PH_LBL0 488
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9109,7 +9072,7 @@ ___DEF_GLBL(___L5_table_2d_merge_21_)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_merge_21_)
 ___DEF_GLBL(___L6_table_2d_merge_21_)
-   ___JUMPINT(___SET_NARGS(3),___PRC(481),___L__23__23_table_2d_merge_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(473),___L__23__23_table_2d_merge_21_)
 ___DEF_GLBL(___L7_table_2d_merge_21_)
    ___SET_STK(1,___FIX(2L))
    ___SET_STK(2,___LBL(0))
@@ -9124,14 +9087,14 @@ ___DEF_GLBL(___L8_table_2d_merge_21_)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_table_2d_merge_21_)
 ___DEF_GLBL(___L9_table_2d_merge_21_)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_merge
 #undef ___PH_LBL0
-#define ___PH_LBL0 502
+#define ___PH_LBL0 494
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9158,7 +9121,7 @@ ___DEF_GLBL(___L__23__23_table_2d_merge)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_table_2d_merge)
-   ___JUMPINT(___SET_NARGS(1),___PRC(466),___L__23__23_table_2d_copy)
+   ___JUMPINT(___SET_NARGS(1),___PRC(458),___L__23__23_table_2d_copy)
 ___DEF_SLBL(2,___L2__23__23_table_2d_merge)
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
@@ -9166,14 +9129,14 @@ ___DEF_SLBL(2,___L2__23__23_table_2d_merge)
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_table_2d_merge)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(481),___L__23__23_table_2d_merge_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(473),___L__23__23_table_2d_merge_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_table_2d_merge
 #undef ___PH_LBL0
-#define ___PH_LBL0 507
+#define ___PH_LBL0 499
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9212,7 +9175,7 @@ ___DEF_GLBL(___L5_table_2d_merge)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_table_2d_merge)
 ___DEF_GLBL(___L6_table_2d_merge)
-   ___JUMPINT(___SET_NARGS(3),___PRC(502),___L__23__23_table_2d_merge)
+   ___JUMPINT(___SET_NARGS(3),___PRC(494),___L__23__23_table_2d_merge)
 ___DEF_GLBL(___L7_table_2d_merge)
    ___SET_STK(1,___FIX(2L))
    ___SET_STK(2,___LBL(0))
@@ -9227,14 +9190,14 @@ ___DEF_GLBL(___L8_table_2d_merge)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_table_2d_merge)
 ___DEF_GLBL(___L9_table_2d_merge)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(238),___L0__23__23_fail_2d_check_2d_table)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(230),___L0__23__23_fail_2d_check_2d_table)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_equal_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 513
+#define ___PH_LBL0 505
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9289,12 +9252,12 @@ ___DEF_GLBL(___L9__23__23_table_2d_equal_3f_)
    ___SET_R1(___STK(0))
    ___SET_R0(___LBL(1))
    ___ADJFP(7)
-   ___JUMPINT(___SET_NARGS(1),___PRC(373),___L__23__23_table_2d_length)
+   ___JUMPINT(___SET_NARGS(1),___PRC(365),___L__23__23_table_2d_length)
 ___DEF_SLBL(1,___L1__23__23_table_2d_equal_3f_)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(373),___L__23__23_table_2d_length)
+   ___JUMPINT(___SET_NARGS(1),___PRC(365),___L__23__23_table_2d_length)
 ___DEF_SLBL(2,___L2__23__23_table_2d_equal_3f_)
    ___IF(___NOT(___FIXEQ(___STK(-4),___R1)))
    ___GOTO(___L10__23__23_table_2d_equal_3f_)
@@ -9308,7 +9271,7 @@ ___DEF_SLBL(2,___L2__23__23_table_2d_equal_3f_)
    ___SET_R0(___LBL(4))
    ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3__23__23_table_2d_equal_3f_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(410),___L__23__23_table_2d_search)
+   ___JUMPINT(___SET_NARGS(2),___PRC(402),___L__23__23_table_2d_search)
 ___DEF_SLBL(4,___L4__23__23_table_2d_equal_3f_)
    ___SET_R1(___BOOLEAN(___FALSEP(___R1)))
    ___ADJFP(-8)
@@ -9323,7 +9286,7 @@ ___DEF_SLBL(5,___L5__23__23_table_2d_equal_3f_)
    ___SET_R3(___UNUSED)
    ___SET_R0(___LBL(6))
    ___ADJFP(8)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___DEF_SLBL(6,___L6__23__23_table_2d_equal_3f_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -9350,7 +9313,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_table_2d_equal_3f__2d_hash
 #undef ___PH_LBL0
-#define ___PH_LBL0 522
+#define ___PH_LBL0 514
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9404,19 +9367,19 @@ ___DEF_GLBL(___L14__23__23_table_2d_equal_3f__2d_hash)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(4))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(373),___L__23__23_table_2d_length)
+   ___JUMPINT(___SET_NARGS(1),___PRC(365),___L__23__23_table_2d_length)
 ___DEF_SLBL(4,___L4__23__23_table_2d_equal_3f__2d_hash)
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-6),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___STK(-6),___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
    ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-7),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___STK(-7),___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
    ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-8),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___STK(-8),___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
    ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
    ___SET_STK(-8,___R1)
    ___SET_STK(-7,___ALLOC_CLO(1UL))
@@ -9433,7 +9396,7 @@ ___DEF_SLBL(5,___L5__23__23_table_2d_equal_3f__2d_hash)
    ___POLL(6)
 ___DEF_SLBL(6,___L6__23__23_table_2d_equal_3f__2d_hash)
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(4),___PRC(433),___L__23__23_table_2d_foldl)
+   ___JUMPINT(___SET_NARGS(4),___PRC(425),___L__23__23_table_2d_foldl)
 ___DEF_SLBL(7,___L7__23__23_table_2d_equal_3f__2d_hash)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(7,2,0,0)
@@ -9465,11 +9428,11 @@ ___DEF_GLBL(___L16__23__23_table_2d_equal_3f__2d_hash)
    ___ADJFP(8)
    ___POLL(10)
 ___DEF_SLBL(10,___L10__23__23_table_2d_equal_3f__2d_hash)
-   ___JUMPINT(___SET_NARGS(1),___PRC(184),___L__23__23_equal_3f__2d_hash)
+   ___JUMPINT(___SET_NARGS(1),___PRC(179),___L__23__23_equal_3f__2d_hash)
 ___DEF_SLBL(11,___L11__23__23_table_2d_equal_3f__2d_hash)
-   ___SET_R1(___FIXASHL(___R1,___FIX(1L)))
-   ___SET_R1(___FIXADD(___STK(-6),___R1))
-   ___SET_R1(___FIXMUL(___R1,___FIX(331804471L)))
+   ___SET_R1(___FIXWRAPASHL(___R1,___FIX(1L)))
+   ___SET_R1(___FIXWRAPADD(___STK(-6),___R1))
+   ___SET_R1(___FIXWRAPMUL(___R1,___FIX(331804471L)))
    ___SET_R1(___FIXAND(___R1,___FIX(536870911L)))
    ___POLL(12)
 ___DEF_SLBL(12,___L12__23__23_table_2d_equal_3f__2d_hash)
@@ -9491,7 +9454,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception
 #undef ___PH_LBL0
-#define ___PH_LBL0 537
+#define ___PH_LBL0 529
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9521,7 +9484,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_unbound_2d_serial_2d_number_2d_exception_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 540
+#define ___PH_LBL0 532
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -9546,7 +9509,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_unbound_2d_serial_2d_number_2d_exception_2d_procedure
 #undef ___PH_LBL0
-#define ___PH_LBL0 542
+#define ___PH_LBL0 534
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9572,7 +9535,7 @@ ___DEF_GLBL(___L_unbound_2d_serial_2d_number_2d_exception_2d_procedure)
    ___SET_R1(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_unbound_2d_serial_2d_number_2d_exception_2d_procedure)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(537),___L0__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(529),___L0__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception)
 ___DEF_GLBL(___L2_unbound_2d_serial_2d_number_2d_exception_2d_procedure)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(1L),___SUB(15),___FAL))
    ___JUMPPRM(___NOTHING,___R0)
@@ -9582,7 +9545,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_unbound_2d_serial_2d_number_2d_exception_2d_arguments
 #undef ___PH_LBL0
-#define ___PH_LBL0 545
+#define ___PH_LBL0 537
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9608,7 +9571,7 @@ ___DEF_GLBL(___L_unbound_2d_serial_2d_number_2d_exception_2d_arguments)
    ___SET_R1(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_unbound_2d_serial_2d_number_2d_exception_2d_arguments)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(537),___L0__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(529),___L0__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception)
 ___DEF_GLBL(___L2_unbound_2d_serial_2d_number_2d_exception_2d_arguments)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(2L),___SUB(15),___FAL))
    ___JUMPPRM(___NOTHING,___R0)
@@ -9618,7 +9581,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_raise_2d_unbound_2d_serial_2d_number_2d_exception
 #undef ___PH_LBL0
-#define ___PH_LBL0 548
+#define ___PH_LBL0 540
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9674,7 +9637,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_object_2d__3e_serial_2d_number
 #undef ___PH_LBL0
-#define ___PH_LBL0 554
+#define ___PH_LBL0 546
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9714,7 +9677,7 @@ ___DEF_GLBL(___L6__23__23_object_2d__3e_serial_2d_number)
    ___SET_R1(___GLO__23__23_object_2d_to_2d_serial_2d_number_2d_table)
    ___SET_R0(___LBL(3))
    ___ADJFP(8)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___DEF_SLBL(3,___L3__23__23_object_2d__3e_serial_2d_number)
    ___IF(___NOT(___FALSEP(___R1)))
    ___GOTO(___L8__23__23_object_2d__3e_serial_2d_number)
@@ -9732,7 +9695,7 @@ ___DEF_GLBL(___L7__23__23_object_2d__3e_serial_2d_number)
    ___SET_R3(___FAL)
    ___SET_R1(___GLO__23__23_serial_2d_number_2d_to_2d_object_2d_table)
    ___SET_R0(___LBL(2))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___DEF_GLBL(___L8__23__23_object_2d__3e_serial_2d_number)
    ___ADJFP(-8)
    ___JUMPPRM(___NOTHING,___STK(1))
@@ -9741,13 +9704,13 @@ ___DEF_GLBL(___L9__23__23_object_2d__3e_serial_2d_number)
    ___SET_R2(___STK(-6))
    ___SET_R1(___GLO__23__23_object_2d_to_2d_serial_2d_number_2d_table)
    ___SET_R0(___LBL(4))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_SLBL(4,___L4__23__23_object_2d__3e_serial_2d_number)
    ___SET_R3(___STK(-6))
    ___SET_R2(___STK(-5))
    ___SET_R1(___GLO__23__23_serial_2d_number_2d_to_2d_object_2d_table)
    ___SET_R0(___LBL(5))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_SLBL(5,___L5__23__23_object_2d__3e_serial_2d_number)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
@@ -9758,7 +9721,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_object_2d__3e_serial_2d_number
 #undef ___PH_LBL0
-#define ___PH_LBL0 561
+#define ___PH_LBL0 553
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -9778,14 +9741,14 @@ ___DEF_SLBL(0,___L0_object_2d__3e_serial_2d_number)
 ___DEF_GLBL(___L_object_2d__3e_serial_2d_number)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_object_2d__3e_serial_2d_number)
-   ___JUMPINT(___SET_NARGS(1),___PRC(554),___L__23__23_object_2d__3e_serial_2d_number)
+   ___JUMPINT(___SET_NARGS(1),___PRC(546),___L__23__23_object_2d__3e_serial_2d_number)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_serial_2d_number_2d__3e_object
 #undef ___PH_LBL0
-#define ___PH_LBL0 564
+#define ___PH_LBL0 556
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9818,7 +9781,7 @@ ___DEF_GLBL(___L__23__23_serial_2d_number_2d__3e_object)
    ___ADJFP(8)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_serial_2d_number_2d__3e_object)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___DEF_SLBL(2,___L2__23__23_serial_2d_number_2d__3e_object)
    ___IF(___NOT(___EQP(___R1,___UNUSED)))
    ___GOTO(___L7__23__23_serial_2d_number_2d__3e_object)
@@ -9827,12 +9790,12 @@ ___DEF_SLBL(2,___L2__23__23_serial_2d_number_2d__3e_object)
    ___GOTO(___L6__23__23_serial_2d_number_2d__3e_object)
    ___END_IF
    ___SET_R2(___STK(-6))
-   ___SET_R1(___PRC(571))
+   ___SET_R1(___PRC(563))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3__23__23_serial_2d_number_2d__3e_object)
    ___ADJFP(-8)
-   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(548),___L0__23__23_raise_2d_unbound_2d_serial_2d_number_2d_exception)
+   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(540),___L0__23__23_raise_2d_unbound_2d_serial_2d_number_2d_exception)
 ___DEF_GLBL(___L6__23__23_serial_2d_number_2d__3e_object)
    ___SET_R1(___STK(-5))
    ___POLL(4)
@@ -9850,7 +9813,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_serial_2d_number_2d__3e_object
 #undef ___PH_LBL0
-#define ___PH_LBL0 571
+#define ___PH_LBL0 563
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9903,14 +9866,14 @@ ___DEF_SLBL(2,___L2_serial_2d_number_2d__3e_object)
 ___DEF_GLBL(___L7_serial_2d_number_2d__3e_object)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_serial_2d_number_2d__3e_object)
-   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(564),___L0__23__23_serial_2d_number_2d__3e_object)
+   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(556),___L0__23__23_serial_2d_number_2d__3e_object)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_object_2d__3e_u8vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 576
+#define ___PH_LBL0 568
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -10262,7 +10225,7 @@ ___DEF_GLBL(___L__23__23_object_2d__3e_u8vector)
 ___DEF_SLBL(1,___L1__23__23_object_2d__3e_u8vector)
    ___POLL(2)
 ___DEF_SLBL(2,___L2__23__23_object_2d__3e_u8vector)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(317),___L0__23__23_make_2d_table)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(309),___L0__23__23_make_2d_table)
 ___DEF_SLBL(3,___L3__23__23_object_2d__3e_u8vector)
    ___IF(___NOT(___EQP(___STK(-5),___ABSENT)))
    ___GOTO(___L318__23__23_object_2d__3e_u8vector)
@@ -10485,7 +10448,7 @@ ___DEF_GLBL(___L328__23__23_object_2d__3e_u8vector)
    ___ADJFP(8)
    ___POLL(13)
 ___DEF_SLBL(13,___L13__23__23_object_2d__3e_u8vector)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(385),___L0__23__23_table_2d_ref)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(377),___L0__23__23_table_2d_ref)
 ___DEF_SLBL(14,___L14__23__23_object_2d__3e_u8vector)
    ___IF(___NOT(___FALSEP(___R1)))
    ___GOTO(___L329__23__23_object_2d__3e_u8vector)
@@ -10580,7 +10543,7 @@ ___DEF_GLBL(___L333__23__23_object_2d__3e_u8vector)
    ___SET_R1(___VECTORREF(___R1,___FIX(3L)))
    ___POLL(29)
 ___DEF_SLBL(29,___L29__23__23_object_2d__3e_u8vector)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(400),___L0__23__23_table_2d_set_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(392),___L0__23__23_table_2d_set_21_)
 ___DEF_SLBL(30,___L30__23__23_object_2d__3e_u8vector)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(108L))
@@ -12664,7 +12627,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_object_2d__3e_u8vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 895
+#define ___PH_LBL0 887
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12690,14 +12653,14 @@ ___DEF_GLBL(___L_object_2d__3e_u8vector)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_object_2d__3e_u8vector)
-   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(576),___L0__23__23_object_2d__3e_u8vector)
+   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(568),___L0__23__23_object_2d__3e_u8vector)
 ___DEF_GLBL(___L4_object_2d__3e_u8vector)
    ___IF(___NOT(___PROCEDUREP(___R2)))
    ___GOTO(___L5_object_2d__3e_u8vector)
    ___END_IF
    ___POLL(2)
 ___DEF_SLBL(2,___L2_object_2d__3e_u8vector)
-   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(576),___L0__23__23_object_2d__3e_u8vector)
+   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(568),___L0__23__23_object_2d__3e_u8vector)
 ___DEF_GLBL(___L5_object_2d__3e_u8vector)
    ___SET_STK(1,___FIX(2L))
    ___SET_R3(___R2)
@@ -12713,7 +12676,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_u8vector_2d__3e_object
 #undef ___PH_LBL0
-#define ___PH_LBL0 900
+#define ___PH_LBL0 892
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -14993,7 +14956,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_u8vector_2d__3e_object
 #undef ___PH_LBL0
-#define ___PH_LBL0 1165
+#define ___PH_LBL0 1157
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) ___D_F64( \
 ___F64V3) ___D_F64(___F64V4) ___D_F64(___F64V5) ___D_F64(___F64V6) ___D_F64(___F64V7) ___D_F64(___F64V8) ___D_F64( \
@@ -15025,14 +14988,14 @@ ___DEF_GLBL(___L_u8vector_2d__3e_object)
    ___END_IF
    ___POLL(1)
 ___DEF_SLBL(1,___L1_u8vector_2d__3e_object)
-   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(900),___L0__23__23_u8vector_2d__3e_object)
+   ___SET_NARGS(1) ___JUMPINT(___NOTHING,___PRC(892),___L0__23__23_u8vector_2d__3e_object)
 ___DEF_GLBL(___L5_u8vector_2d__3e_object)
    ___IF(___NOT(___PROCEDUREP(___R2)))
    ___GOTO(___L6_u8vector_2d__3e_object)
    ___END_IF
    ___POLL(2)
 ___DEF_SLBL(2,___L2_u8vector_2d__3e_object)
-   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(900),___L0__23__23_u8vector_2d__3e_object)
+   ___SET_NARGS(2) ___JUMPINT(___NOTHING,___PRC(892),___L0__23__23_u8vector_2d__3e_object)
 ___DEF_GLBL(___L6_u8vector_2d__3e_object)
    ___SET_STK(1,___FIX(2L))
    ___SET_R3(___R2)
@@ -15223,46 +15186,36 @@ ___BEGIN_LBL
 ,___DEF_LBL_INTRO(___H_eq_3f__2d_hash,"eq?-hash",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H_eq_3f__2d_hash,1,-1)
 ,___DEF_LBL_RET(___H_eq_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H__23__23_eqv_3f__2d_hash,"##eqv?-hash",___REF_FAL,14,0)
+,___DEF_LBL_INTRO(___H__23__23_eqv_3f__2d_hash,"##eqv?-hash",___REF_FAL,9,0)
 ,___DEF_LBL_PROC(___H__23__23_eqv_3f__2d_hash,1,-1)
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETN,5,0,0x5L))
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,8,0,0x3f01L))
-,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,8,0,0x3f01L))
-,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,8,0,0x3f07L))
-,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_eqv_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_INTRO(___H_eqv_3f__2d_hash,"eqv?-hash",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H_eqv_3f__2d_hash,1,-1)
 ,___DEF_LBL_RET(___H_eqv_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H__23__23_equal_3f__2d_hash,"##equal?-hash",___REF_FAL,32,0)
+,___DEF_LBL_INTRO(___H__23__23_equal_3f__2d_hash,"##equal?-hash",___REF_FAL,29,0)
 ,___DEF_LBL_PROC(___H__23__23_equal_3f__2d_hash,1,-1)
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0x3L))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,0,0x3f03L))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0x5L))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,0,0x3f01L))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,0,0x3f01L))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,1,0,0x1L))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,0,0x3f07L))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,0,0x3f0fL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,0,0x3f07L))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,0,0x3f0fL))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,8,1,0x3f0fL))
@@ -15274,6 +15227,8 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,3,4,0x3f7L))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___OFD(___RETI,12,3,0x3f07fL))
 ,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETN,1,0,0x1L))
+,___DEF_LBL_RET(___H__23__23_equal_3f__2d_hash,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_INTRO(___H_equal_3f__2d_hash,"equal?-hash",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H_equal_3f__2d_hash,1,-1)
 ,___DEF_LBL_RET(___H_equal_3f__2d_hash,___IFD(___RETI,0,0,0x3fL))
@@ -16397,79 +16352,79 @@ ___DEF_MOD_PRM(97,___G_keyword_2d_hash,155)
 ___DEF_MOD_PRM(6,___G__23__23_eq_3f__2d_hash,158)
 ___DEF_MOD_PRM(89,___G_eq_3f__2d_hash,163)
 ___DEF_MOD_PRM(10,___G__23__23_eqv_3f__2d_hash,166)
-___DEF_MOD_PRM(93,___G_eqv_3f__2d_hash,181)
-___DEF_MOD_PRM(8,___G__23__23_equal_3f__2d_hash,184)
-___DEF_MOD_PRM(91,___G_equal_3f__2d_hash,217)
-___DEF_MOD_PRM(55,___G__23__23_string_3d__3f__2d_hash,220)
-___DEF_MOD_PRM(104,___G_string_3d__3f__2d_hash,224)
-___DEF_MOD_PRM(54,___G__23__23_string_2d_ci_3d__3f__2d_hash,228)
-___DEF_MOD_PRM(103,___G_string_2d_ci_3d__3f__2d_hash,232)
-___DEF_MOD_PRM(28,___G__23__23_generic_2d_hash,236)
-___DEF_MOD_PRM(12,___G__23__23_fail_2d_check_2d_table,238)
-___DEF_MOD_PRM(14,___G__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception,241)
-___DEF_MOD_PRM(122,___G_unbound_2d_table_2d_key_2d_exception_3f_,244)
-___DEF_MOD_PRM(121,___G_unbound_2d_table_2d_key_2d_exception_2d_procedure,246)
-___DEF_MOD_PRM(120,___G_unbound_2d_table_2d_key_2d_exception_2d_arguments,249)
-___DEF_MOD_PRM(47,___G__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception,252)
-___DEF_MOD_PRM(115,___G_table_3f_,258)
-___DEF_MOD_PRM(11,___G__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception,260)
-___DEF_MOD_PRM(96,___G_invalid_2d_hash_2d_number_2d_exception_3f_,263)
-___DEF_MOD_PRM(95,___G_invalid_2d_hash_2d_number_2d_exception_2d_procedure,265)
-___DEF_MOD_PRM(94,___G_invalid_2d_hash_2d_number_2d_exception_2d_arguments,268)
-___DEF_MOD_PRM(45,___G__23__23_raise_2d_invalid_2d_hash_2d_number_2d_exception,271)
-___DEF_MOD_PRM(34,___G__23__23_mem_2d_allocated_3f_,277)
-___DEF_MOD_PRM(22,___G__23__23_gc_2d_hash_2d_table_2d_ref,279)
-___DEF_MOD_PRM(26,___G__23__23_gc_2d_hash_2d_table_2d_set_21_,281)
-___DEF_MOD_PRM(23,___G__23__23_gc_2d_hash_2d_table_2d_rehash_21_,283)
-___DEF_MOD_PRM(52,___G__23__23_smallest_2d_prime_2d_no_2d_less_2d_than,285)
-___DEF_MOD_PRM(24,___G__23__23_gc_2d_hash_2d_table_2d_resize_21_,292)
-___DEF_MOD_PRM(19,___G__23__23_gc_2d_hash_2d_table_2d_allocate,295)
-___DEF_MOD_PRM(21,___G__23__23_gc_2d_hash_2d_table_2d_for_2d_each,302)
-___DEF_MOD_PRM(25,___G__23__23_gc_2d_hash_2d_table_2d_search,307)
-___DEF_MOD_PRM(20,___G__23__23_gc_2d_hash_2d_table_2d_foldl,311)
-___DEF_MOD_PRM(33,___G__23__23_make_2d_table,317)
-___DEF_MOD_PRM(99,___G_make_2d_table,362)
-___DEF_MOD_PRM(73,___G__23__23_table_2d_get_2d_eq_2d_gcht,365)
-___DEF_MOD_PRM(75,___G__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc,367)
-___DEF_MOD_PRM(74,___G__23__23_table_2d_get_2d_gcht,370)
-___DEF_MOD_PRM(76,___G__23__23_table_2d_length,373)
-___DEF_MOD_PRM(109,___G_table_2d_length,375)
-___DEF_MOD_PRM(67,___G__23__23_table_2d_access,379)
-___DEF_MOD_PRM(79,___G__23__23_table_2d_ref,385)
-___DEF_MOD_PRM(112,___G_table_2d_ref,390)
-___DEF_MOD_PRM(80,___G__23__23_table_2d_resize_21_,394)
-___DEF_MOD_PRM(82,___G__23__23_table_2d_set_21_,400)
-___DEF_MOD_PRM(114,___G_table_2d_set_21_,406)
-___DEF_MOD_PRM(81,___G__23__23_table_2d_search,410)
-___DEF_MOD_PRM(113,___G_table_2d_search,417)
-___DEF_MOD_PRM(72,___G__23__23_table_2d_for_2d_each,422)
-___DEF_MOD_PRM(108,___G_table_2d_for_2d_each,428)
-___DEF_MOD_PRM(71,___G__23__23_table_2d_foldl,433)
-___DEF_MOD_PRM(66,___G__23__23_table_2d__3e_list,439)
-___DEF_MOD_PRM(106,___G_table_2d__3e_list,446)
-___DEF_MOD_PRM(32,___G__23__23_list_2d__3e_table,450)
-___DEF_MOD_PRM(98,___G_list_2d__3e_table,463)
-___DEF_MOD_PRM(68,___G__23__23_table_2d_copy,466)
-___DEF_MOD_PRM(107,___G_table_2d_copy,477)
-___DEF_MOD_PRM(78,___G__23__23_table_2d_merge_21_,481)
-___DEF_MOD_PRM(111,___G_table_2d_merge_21_,496)
-___DEF_MOD_PRM(77,___G__23__23_table_2d_merge,502)
-___DEF_MOD_PRM(110,___G_table_2d_merge,507)
-___DEF_MOD_PRM(69,___G__23__23_table_2d_equal_3f_,513)
-___DEF_MOD_PRM(70,___G__23__23_table_2d_equal_3f__2d_hash,522)
-___DEF_MOD_PRM(13,___G__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception,537)
-___DEF_MOD_PRM(119,___G_unbound_2d_serial_2d_number_2d_exception_3f_,540)
-___DEF_MOD_PRM(118,___G_unbound_2d_serial_2d_number_2d_exception_2d_procedure,542)
-___DEF_MOD_PRM(117,___G_unbound_2d_serial_2d_number_2d_exception_2d_arguments,545)
-___DEF_MOD_PRM(46,___G__23__23_raise_2d_unbound_2d_serial_2d_number_2d_exception,548)
-___DEF_MOD_PRM(36,___G__23__23_object_2d__3e_serial_2d_number,554)
-___DEF_MOD_PRM(100,___G_object_2d__3e_serial_2d_number,561)
-___DEF_MOD_PRM(50,___G__23__23_serial_2d_number_2d__3e_object,564)
-___DEF_MOD_PRM(102,___G_serial_2d_number_2d__3e_object,571)
-___DEF_MOD_PRM(37,___G__23__23_object_2d__3e_u8vector,576)
-___DEF_MOD_PRM(101,___G_object_2d__3e_u8vector,895)
-___DEF_MOD_PRM(85,___G__23__23_u8vector_2d__3e_object,900)
-___DEF_MOD_PRM(116,___G_u8vector_2d__3e_object,1165)
+___DEF_MOD_PRM(93,___G_eqv_3f__2d_hash,176)
+___DEF_MOD_PRM(8,___G__23__23_equal_3f__2d_hash,179)
+___DEF_MOD_PRM(91,___G_equal_3f__2d_hash,209)
+___DEF_MOD_PRM(55,___G__23__23_string_3d__3f__2d_hash,212)
+___DEF_MOD_PRM(104,___G_string_3d__3f__2d_hash,216)
+___DEF_MOD_PRM(54,___G__23__23_string_2d_ci_3d__3f__2d_hash,220)
+___DEF_MOD_PRM(103,___G_string_2d_ci_3d__3f__2d_hash,224)
+___DEF_MOD_PRM(28,___G__23__23_generic_2d_hash,228)
+___DEF_MOD_PRM(12,___G__23__23_fail_2d_check_2d_table,230)
+___DEF_MOD_PRM(14,___G__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception,233)
+___DEF_MOD_PRM(122,___G_unbound_2d_table_2d_key_2d_exception_3f_,236)
+___DEF_MOD_PRM(121,___G_unbound_2d_table_2d_key_2d_exception_2d_procedure,238)
+___DEF_MOD_PRM(120,___G_unbound_2d_table_2d_key_2d_exception_2d_arguments,241)
+___DEF_MOD_PRM(47,___G__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception,244)
+___DEF_MOD_PRM(115,___G_table_3f_,250)
+___DEF_MOD_PRM(11,___G__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception,252)
+___DEF_MOD_PRM(96,___G_invalid_2d_hash_2d_number_2d_exception_3f_,255)
+___DEF_MOD_PRM(95,___G_invalid_2d_hash_2d_number_2d_exception_2d_procedure,257)
+___DEF_MOD_PRM(94,___G_invalid_2d_hash_2d_number_2d_exception_2d_arguments,260)
+___DEF_MOD_PRM(45,___G__23__23_raise_2d_invalid_2d_hash_2d_number_2d_exception,263)
+___DEF_MOD_PRM(34,___G__23__23_mem_2d_allocated_3f_,269)
+___DEF_MOD_PRM(22,___G__23__23_gc_2d_hash_2d_table_2d_ref,271)
+___DEF_MOD_PRM(26,___G__23__23_gc_2d_hash_2d_table_2d_set_21_,273)
+___DEF_MOD_PRM(23,___G__23__23_gc_2d_hash_2d_table_2d_rehash_21_,275)
+___DEF_MOD_PRM(52,___G__23__23_smallest_2d_prime_2d_no_2d_less_2d_than,277)
+___DEF_MOD_PRM(24,___G__23__23_gc_2d_hash_2d_table_2d_resize_21_,284)
+___DEF_MOD_PRM(19,___G__23__23_gc_2d_hash_2d_table_2d_allocate,287)
+___DEF_MOD_PRM(21,___G__23__23_gc_2d_hash_2d_table_2d_for_2d_each,294)
+___DEF_MOD_PRM(25,___G__23__23_gc_2d_hash_2d_table_2d_search,299)
+___DEF_MOD_PRM(20,___G__23__23_gc_2d_hash_2d_table_2d_foldl,303)
+___DEF_MOD_PRM(33,___G__23__23_make_2d_table,309)
+___DEF_MOD_PRM(99,___G_make_2d_table,354)
+___DEF_MOD_PRM(73,___G__23__23_table_2d_get_2d_eq_2d_gcht,357)
+___DEF_MOD_PRM(75,___G__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc,359)
+___DEF_MOD_PRM(74,___G__23__23_table_2d_get_2d_gcht,362)
+___DEF_MOD_PRM(76,___G__23__23_table_2d_length,365)
+___DEF_MOD_PRM(109,___G_table_2d_length,367)
+___DEF_MOD_PRM(67,___G__23__23_table_2d_access,371)
+___DEF_MOD_PRM(79,___G__23__23_table_2d_ref,377)
+___DEF_MOD_PRM(112,___G_table_2d_ref,382)
+___DEF_MOD_PRM(80,___G__23__23_table_2d_resize_21_,386)
+___DEF_MOD_PRM(82,___G__23__23_table_2d_set_21_,392)
+___DEF_MOD_PRM(114,___G_table_2d_set_21_,398)
+___DEF_MOD_PRM(81,___G__23__23_table_2d_search,402)
+___DEF_MOD_PRM(113,___G_table_2d_search,409)
+___DEF_MOD_PRM(72,___G__23__23_table_2d_for_2d_each,414)
+___DEF_MOD_PRM(108,___G_table_2d_for_2d_each,420)
+___DEF_MOD_PRM(71,___G__23__23_table_2d_foldl,425)
+___DEF_MOD_PRM(66,___G__23__23_table_2d__3e_list,431)
+___DEF_MOD_PRM(106,___G_table_2d__3e_list,438)
+___DEF_MOD_PRM(32,___G__23__23_list_2d__3e_table,442)
+___DEF_MOD_PRM(98,___G_list_2d__3e_table,455)
+___DEF_MOD_PRM(68,___G__23__23_table_2d_copy,458)
+___DEF_MOD_PRM(107,___G_table_2d_copy,469)
+___DEF_MOD_PRM(78,___G__23__23_table_2d_merge_21_,473)
+___DEF_MOD_PRM(111,___G_table_2d_merge_21_,488)
+___DEF_MOD_PRM(77,___G__23__23_table_2d_merge,494)
+___DEF_MOD_PRM(110,___G_table_2d_merge,499)
+___DEF_MOD_PRM(69,___G__23__23_table_2d_equal_3f_,505)
+___DEF_MOD_PRM(70,___G__23__23_table_2d_equal_3f__2d_hash,514)
+___DEF_MOD_PRM(13,___G__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception,529)
+___DEF_MOD_PRM(119,___G_unbound_2d_serial_2d_number_2d_exception_3f_,532)
+___DEF_MOD_PRM(118,___G_unbound_2d_serial_2d_number_2d_exception_2d_procedure,534)
+___DEF_MOD_PRM(117,___G_unbound_2d_serial_2d_number_2d_exception_2d_arguments,537)
+___DEF_MOD_PRM(46,___G__23__23_raise_2d_unbound_2d_serial_2d_number_2d_exception,540)
+___DEF_MOD_PRM(36,___G__23__23_object_2d__3e_serial_2d_number,546)
+___DEF_MOD_PRM(100,___G_object_2d__3e_serial_2d_number,553)
+___DEF_MOD_PRM(50,___G__23__23_serial_2d_number_2d__3e_object,556)
+___DEF_MOD_PRM(102,___G_serial_2d_number_2d__3e_object,563)
+___DEF_MOD_PRM(37,___G__23__23_object_2d__3e_u8vector,568)
+___DEF_MOD_PRM(101,___G_object_2d__3e_u8vector,887)
+___DEF_MOD_PRM(85,___G__23__23_u8vector_2d__3e_object,892)
+___DEF_MOD_PRM(116,___G_u8vector_2d__3e_object,1157)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -16523,79 +16478,79 @@ ___DEF_MOD_GLO(97,___G_keyword_2d_hash,155)
 ___DEF_MOD_GLO(6,___G__23__23_eq_3f__2d_hash,158)
 ___DEF_MOD_GLO(89,___G_eq_3f__2d_hash,163)
 ___DEF_MOD_GLO(10,___G__23__23_eqv_3f__2d_hash,166)
-___DEF_MOD_GLO(93,___G_eqv_3f__2d_hash,181)
-___DEF_MOD_GLO(8,___G__23__23_equal_3f__2d_hash,184)
-___DEF_MOD_GLO(91,___G_equal_3f__2d_hash,217)
-___DEF_MOD_GLO(55,___G__23__23_string_3d__3f__2d_hash,220)
-___DEF_MOD_GLO(104,___G_string_3d__3f__2d_hash,224)
-___DEF_MOD_GLO(54,___G__23__23_string_2d_ci_3d__3f__2d_hash,228)
-___DEF_MOD_GLO(103,___G_string_2d_ci_3d__3f__2d_hash,232)
-___DEF_MOD_GLO(28,___G__23__23_generic_2d_hash,236)
-___DEF_MOD_GLO(12,___G__23__23_fail_2d_check_2d_table,238)
-___DEF_MOD_GLO(14,___G__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception,241)
-___DEF_MOD_GLO(122,___G_unbound_2d_table_2d_key_2d_exception_3f_,244)
-___DEF_MOD_GLO(121,___G_unbound_2d_table_2d_key_2d_exception_2d_procedure,246)
-___DEF_MOD_GLO(120,___G_unbound_2d_table_2d_key_2d_exception_2d_arguments,249)
-___DEF_MOD_GLO(47,___G__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception,252)
-___DEF_MOD_GLO(115,___G_table_3f_,258)
-___DEF_MOD_GLO(11,___G__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception,260)
-___DEF_MOD_GLO(96,___G_invalid_2d_hash_2d_number_2d_exception_3f_,263)
-___DEF_MOD_GLO(95,___G_invalid_2d_hash_2d_number_2d_exception_2d_procedure,265)
-___DEF_MOD_GLO(94,___G_invalid_2d_hash_2d_number_2d_exception_2d_arguments,268)
-___DEF_MOD_GLO(45,___G__23__23_raise_2d_invalid_2d_hash_2d_number_2d_exception,271)
-___DEF_MOD_GLO(34,___G__23__23_mem_2d_allocated_3f_,277)
-___DEF_MOD_GLO(22,___G__23__23_gc_2d_hash_2d_table_2d_ref,279)
-___DEF_MOD_GLO(26,___G__23__23_gc_2d_hash_2d_table_2d_set_21_,281)
-___DEF_MOD_GLO(23,___G__23__23_gc_2d_hash_2d_table_2d_rehash_21_,283)
-___DEF_MOD_GLO(52,___G__23__23_smallest_2d_prime_2d_no_2d_less_2d_than,285)
-___DEF_MOD_GLO(24,___G__23__23_gc_2d_hash_2d_table_2d_resize_21_,292)
-___DEF_MOD_GLO(19,___G__23__23_gc_2d_hash_2d_table_2d_allocate,295)
-___DEF_MOD_GLO(21,___G__23__23_gc_2d_hash_2d_table_2d_for_2d_each,302)
-___DEF_MOD_GLO(25,___G__23__23_gc_2d_hash_2d_table_2d_search,307)
-___DEF_MOD_GLO(20,___G__23__23_gc_2d_hash_2d_table_2d_foldl,311)
-___DEF_MOD_GLO(33,___G__23__23_make_2d_table,317)
-___DEF_MOD_GLO(99,___G_make_2d_table,362)
-___DEF_MOD_GLO(73,___G__23__23_table_2d_get_2d_eq_2d_gcht,365)
-___DEF_MOD_GLO(75,___G__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc,367)
-___DEF_MOD_GLO(74,___G__23__23_table_2d_get_2d_gcht,370)
-___DEF_MOD_GLO(76,___G__23__23_table_2d_length,373)
-___DEF_MOD_GLO(109,___G_table_2d_length,375)
-___DEF_MOD_GLO(67,___G__23__23_table_2d_access,379)
-___DEF_MOD_GLO(79,___G__23__23_table_2d_ref,385)
-___DEF_MOD_GLO(112,___G_table_2d_ref,390)
-___DEF_MOD_GLO(80,___G__23__23_table_2d_resize_21_,394)
-___DEF_MOD_GLO(82,___G__23__23_table_2d_set_21_,400)
-___DEF_MOD_GLO(114,___G_table_2d_set_21_,406)
-___DEF_MOD_GLO(81,___G__23__23_table_2d_search,410)
-___DEF_MOD_GLO(113,___G_table_2d_search,417)
-___DEF_MOD_GLO(72,___G__23__23_table_2d_for_2d_each,422)
-___DEF_MOD_GLO(108,___G_table_2d_for_2d_each,428)
-___DEF_MOD_GLO(71,___G__23__23_table_2d_foldl,433)
-___DEF_MOD_GLO(66,___G__23__23_table_2d__3e_list,439)
-___DEF_MOD_GLO(106,___G_table_2d__3e_list,446)
-___DEF_MOD_GLO(32,___G__23__23_list_2d__3e_table,450)
-___DEF_MOD_GLO(98,___G_list_2d__3e_table,463)
-___DEF_MOD_GLO(68,___G__23__23_table_2d_copy,466)
-___DEF_MOD_GLO(107,___G_table_2d_copy,477)
-___DEF_MOD_GLO(78,___G__23__23_table_2d_merge_21_,481)
-___DEF_MOD_GLO(111,___G_table_2d_merge_21_,496)
-___DEF_MOD_GLO(77,___G__23__23_table_2d_merge,502)
-___DEF_MOD_GLO(110,___G_table_2d_merge,507)
-___DEF_MOD_GLO(69,___G__23__23_table_2d_equal_3f_,513)
-___DEF_MOD_GLO(70,___G__23__23_table_2d_equal_3f__2d_hash,522)
-___DEF_MOD_GLO(13,___G__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception,537)
-___DEF_MOD_GLO(119,___G_unbound_2d_serial_2d_number_2d_exception_3f_,540)
-___DEF_MOD_GLO(118,___G_unbound_2d_serial_2d_number_2d_exception_2d_procedure,542)
-___DEF_MOD_GLO(117,___G_unbound_2d_serial_2d_number_2d_exception_2d_arguments,545)
-___DEF_MOD_GLO(46,___G__23__23_raise_2d_unbound_2d_serial_2d_number_2d_exception,548)
-___DEF_MOD_GLO(36,___G__23__23_object_2d__3e_serial_2d_number,554)
-___DEF_MOD_GLO(100,___G_object_2d__3e_serial_2d_number,561)
-___DEF_MOD_GLO(50,___G__23__23_serial_2d_number_2d__3e_object,564)
-___DEF_MOD_GLO(102,___G_serial_2d_number_2d__3e_object,571)
-___DEF_MOD_GLO(37,___G__23__23_object_2d__3e_u8vector,576)
-___DEF_MOD_GLO(101,___G_object_2d__3e_u8vector,895)
-___DEF_MOD_GLO(85,___G__23__23_u8vector_2d__3e_object,900)
-___DEF_MOD_GLO(116,___G_u8vector_2d__3e_object,1165)
+___DEF_MOD_GLO(93,___G_eqv_3f__2d_hash,176)
+___DEF_MOD_GLO(8,___G__23__23_equal_3f__2d_hash,179)
+___DEF_MOD_GLO(91,___G_equal_3f__2d_hash,209)
+___DEF_MOD_GLO(55,___G__23__23_string_3d__3f__2d_hash,212)
+___DEF_MOD_GLO(104,___G_string_3d__3f__2d_hash,216)
+___DEF_MOD_GLO(54,___G__23__23_string_2d_ci_3d__3f__2d_hash,220)
+___DEF_MOD_GLO(103,___G_string_2d_ci_3d__3f__2d_hash,224)
+___DEF_MOD_GLO(28,___G__23__23_generic_2d_hash,228)
+___DEF_MOD_GLO(12,___G__23__23_fail_2d_check_2d_table,230)
+___DEF_MOD_GLO(14,___G__23__23_fail_2d_check_2d_unbound_2d_table_2d_key_2d_exception,233)
+___DEF_MOD_GLO(122,___G_unbound_2d_table_2d_key_2d_exception_3f_,236)
+___DEF_MOD_GLO(121,___G_unbound_2d_table_2d_key_2d_exception_2d_procedure,238)
+___DEF_MOD_GLO(120,___G_unbound_2d_table_2d_key_2d_exception_2d_arguments,241)
+___DEF_MOD_GLO(47,___G__23__23_raise_2d_unbound_2d_table_2d_key_2d_exception,244)
+___DEF_MOD_GLO(115,___G_table_3f_,250)
+___DEF_MOD_GLO(11,___G__23__23_fail_2d_check_2d_invalid_2d_hash_2d_number_2d_exception,252)
+___DEF_MOD_GLO(96,___G_invalid_2d_hash_2d_number_2d_exception_3f_,255)
+___DEF_MOD_GLO(95,___G_invalid_2d_hash_2d_number_2d_exception_2d_procedure,257)
+___DEF_MOD_GLO(94,___G_invalid_2d_hash_2d_number_2d_exception_2d_arguments,260)
+___DEF_MOD_GLO(45,___G__23__23_raise_2d_invalid_2d_hash_2d_number_2d_exception,263)
+___DEF_MOD_GLO(34,___G__23__23_mem_2d_allocated_3f_,269)
+___DEF_MOD_GLO(22,___G__23__23_gc_2d_hash_2d_table_2d_ref,271)
+___DEF_MOD_GLO(26,___G__23__23_gc_2d_hash_2d_table_2d_set_21_,273)
+___DEF_MOD_GLO(23,___G__23__23_gc_2d_hash_2d_table_2d_rehash_21_,275)
+___DEF_MOD_GLO(52,___G__23__23_smallest_2d_prime_2d_no_2d_less_2d_than,277)
+___DEF_MOD_GLO(24,___G__23__23_gc_2d_hash_2d_table_2d_resize_21_,284)
+___DEF_MOD_GLO(19,___G__23__23_gc_2d_hash_2d_table_2d_allocate,287)
+___DEF_MOD_GLO(21,___G__23__23_gc_2d_hash_2d_table_2d_for_2d_each,294)
+___DEF_MOD_GLO(25,___G__23__23_gc_2d_hash_2d_table_2d_search,299)
+___DEF_MOD_GLO(20,___G__23__23_gc_2d_hash_2d_table_2d_foldl,303)
+___DEF_MOD_GLO(33,___G__23__23_make_2d_table,309)
+___DEF_MOD_GLO(99,___G_make_2d_table,354)
+___DEF_MOD_GLO(73,___G__23__23_table_2d_get_2d_eq_2d_gcht,357)
+___DEF_MOD_GLO(75,___G__23__23_table_2d_get_2d_gcht_2d_not_2d_mem_2d_alloc,359)
+___DEF_MOD_GLO(74,___G__23__23_table_2d_get_2d_gcht,362)
+___DEF_MOD_GLO(76,___G__23__23_table_2d_length,365)
+___DEF_MOD_GLO(109,___G_table_2d_length,367)
+___DEF_MOD_GLO(67,___G__23__23_table_2d_access,371)
+___DEF_MOD_GLO(79,___G__23__23_table_2d_ref,377)
+___DEF_MOD_GLO(112,___G_table_2d_ref,382)
+___DEF_MOD_GLO(80,___G__23__23_table_2d_resize_21_,386)
+___DEF_MOD_GLO(82,___G__23__23_table_2d_set_21_,392)
+___DEF_MOD_GLO(114,___G_table_2d_set_21_,398)
+___DEF_MOD_GLO(81,___G__23__23_table_2d_search,402)
+___DEF_MOD_GLO(113,___G_table_2d_search,409)
+___DEF_MOD_GLO(72,___G__23__23_table_2d_for_2d_each,414)
+___DEF_MOD_GLO(108,___G_table_2d_for_2d_each,420)
+___DEF_MOD_GLO(71,___G__23__23_table_2d_foldl,425)
+___DEF_MOD_GLO(66,___G__23__23_table_2d__3e_list,431)
+___DEF_MOD_GLO(106,___G_table_2d__3e_list,438)
+___DEF_MOD_GLO(32,___G__23__23_list_2d__3e_table,442)
+___DEF_MOD_GLO(98,___G_list_2d__3e_table,455)
+___DEF_MOD_GLO(68,___G__23__23_table_2d_copy,458)
+___DEF_MOD_GLO(107,___G_table_2d_copy,469)
+___DEF_MOD_GLO(78,___G__23__23_table_2d_merge_21_,473)
+___DEF_MOD_GLO(111,___G_table_2d_merge_21_,488)
+___DEF_MOD_GLO(77,___G__23__23_table_2d_merge,494)
+___DEF_MOD_GLO(110,___G_table_2d_merge,499)
+___DEF_MOD_GLO(69,___G__23__23_table_2d_equal_3f_,505)
+___DEF_MOD_GLO(70,___G__23__23_table_2d_equal_3f__2d_hash,514)
+___DEF_MOD_GLO(13,___G__23__23_fail_2d_check_2d_unbound_2d_serial_2d_number_2d_exception,529)
+___DEF_MOD_GLO(119,___G_unbound_2d_serial_2d_number_2d_exception_3f_,532)
+___DEF_MOD_GLO(118,___G_unbound_2d_serial_2d_number_2d_exception_2d_procedure,534)
+___DEF_MOD_GLO(117,___G_unbound_2d_serial_2d_number_2d_exception_2d_arguments,537)
+___DEF_MOD_GLO(46,___G__23__23_raise_2d_unbound_2d_serial_2d_number_2d_exception,540)
+___DEF_MOD_GLO(36,___G__23__23_object_2d__3e_serial_2d_number,546)
+___DEF_MOD_GLO(100,___G_object_2d__3e_serial_2d_number,553)
+___DEF_MOD_GLO(50,___G__23__23_serial_2d_number_2d__3e_object,556)
+___DEF_MOD_GLO(102,___G_serial_2d_number_2d__3e_object,563)
+___DEF_MOD_GLO(37,___G__23__23_object_2d__3e_u8vector,568)
+___DEF_MOD_GLO(101,___G_object_2d__3e_u8vector,887)
+___DEF_MOD_GLO(85,___G__23__23_u8vector_2d__3e_object,892)
+___DEF_MOD_GLO(116,___G_u8vector_2d__3e_object,1157)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY

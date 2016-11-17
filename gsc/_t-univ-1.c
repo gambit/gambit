@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-univ-1.c", produced by Gambit v4.8.5
+; File: "_t-univ-1.c", produced by Gambit v4.8.6
 (
-408005
+408006
 (C)
 "_t-univ-1"
 (("_t-univ-1"))
@@ -721,7 +721,7 @@
  ()
 )
 #else
-#define ___VERSION 408005
+#define ___VERSION 408006
 #define ___MODULE_NAME "_t-univ-1"
 #define ___LINKER_ID ____20___t_2d_univ_2d_1
 #define ___MH_PROC ___H__20___t_2d_univ_2d_1
@@ -20786,13 +20786,13 @@ ___DEF_SLBL(18,___L18_c_23_univ_2d_dump_2d_code)
    ___JUMPINT(___SET_NARGS(2),___PRC(1360),___L_c_23_univ_2d_module_2d_register)
 ___DEF_SLBL(19,___L19_c_23_univ_2d_dump_2d_code)
    ___SET_R2(___R1)
+   ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(20))
-   ___SET_R1(___STK(-6))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),462,___G_c_23_univ_2d_defs_2d_combine)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_dump_2d_code)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(21))
+   ___SET_R1(___STK(-6))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),462,___G_c_23_univ_2d_defs_2d_combine)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_dump_2d_code)
    ___SET_R3(___R1)
@@ -43265,7 +43265,7 @@ ___REF_FAL,12,0)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x57L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x5fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x6fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x4fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x6dL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x4dL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x45L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_dump_2d_code,___IFD(___RETN,9,2,0x47L))
