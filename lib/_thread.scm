@@ -705,13 +705,14 @@
 
 ;;; Implementation of threads.
 
-(define-prim (##run-queue)
-  (##declare (not interrupts-enabled))
-  (macro-run-queue))
+(define-prim (##current-thread))
+(define-prim (##current-processor))
+(define-prim (##run-queue))
+(define-prim (##run-queue-of processor))
 
-(define-prim (##current-thread)
-  (##declare (not interrupts-enabled))
-  (macro-current-thread))
+(define-prim (##btq-lock! btq))
+(define-prim (##btq-trylock! btq))
+(define-prim (##btq-unlock! btq))
 
 (define-prim (##make-thread thunk name tgroup)
   (##declare (not interrupts-enabled))
