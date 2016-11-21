@@ -3033,10 +3033,11 @@
               ))
 
 (define-prim (##repl-within-proc proc cont)
-  (##declare (environment-map)) ;; must be at top of procedure to have an effect
   (cond ((##interp-procedure? proc)
          (##continuation-capture
           (lambda (cont2)
+
+            (##declare (not inline)) ;; don't inline repl procedure
 
             (define (repl)
               (##continuation-capture
@@ -3051,7 +3052,7 @@
              (lambda ()
                (let* (($code (##interp-procedure-code proc))
                       (rte (##interp-procedure-rte proc)))
-                 (##declare (not interrupts-enabled))
+                 (##declare (not interrupts-enabled) (environment-map))
                  (let ((result (repl)))
                    (##first-argument result $code rte))))))))
         (else
