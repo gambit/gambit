@@ -8255,7 +8255,7 @@ typedef struct ___sync_op_struct
 
 typedef struct ___processor_state_struct
   {
-    volatile ___WORD *stack_trip;
+    ___WORD * volatile stack_trip;
     ___WORD *stack_limit;
     ___WORD *fp;
     ___WORD *stack_start;
