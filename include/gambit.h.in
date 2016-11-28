@@ -3148,13 +3148,13 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___CHARLEP(x,y)((x)<=(y))
 #define ___CHARGEP(x,y)((x)>=(y))
 
-#define ___CHARALPHABETICP(x)___EXT(___iswalpha(___INT(x)))
-#define ___CHARNUMERICP(x)___EXT(___iswdigit(___INT(x)))
-#define ___CHARWHITESPACEP(x)___EXT(___iswspace(___INT(x)))
-#define ___CHARUPPERCASEP(x)___EXT(___iswupper(___INT(x)))
-#define ___CHARLOWERCASEP(x)___EXT(___iswlower(___INT(x)))
-#define ___CHARUPCASE(x)___CHR(___EXT(___towupper(___INT(x))))
-#define ___CHARDOWNCASE(x)___CHR(___EXT(___towlower(___INT(x))))
+#define ___CHARALPHABETICP(x)___EXT(___iswalpha)(___INT(x))
+#define ___CHARNUMERICP(x)___EXT(___iswdigit)(___INT(x))
+#define ___CHARWHITESPACEP(x)___EXT(___iswspace)(___INT(x))
+#define ___CHARUPPERCASEP(x)___EXT(___iswupper)(___INT(x))
+#define ___CHARLOWERCASEP(x)___EXT(___iswlower)(___INT(x))
+#define ___CHARUPCASE(x)___CHR(___EXT(___towupper)(___INT(x)))
+#define ___CHARDOWNCASE(x)___CHR(___EXT(___towlower)(___INT(x)))
 
 /* APPLY-able operations */
 
