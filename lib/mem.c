@@ -5638,7 +5638,7 @@ ___PSDKR)
 #ifndef ___SINGLE_THREADED_VMS
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-  volatile int *workers_count = &scan_workers_count[traverse_weak_refs];
+  volatile ___WORD *workers_count = &scan_workers_count[traverse_weak_refs];
   int np = ___vms->nb_processors;
   int id = ___PROCESSOR_ID(___ps,___vms); /* id of this processor */
   int i;

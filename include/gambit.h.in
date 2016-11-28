@@ -8192,7 +8192,7 @@ ___MUTEX_DECL(scan_termination_mutex_)
 ___CONDVAR_DECL(scan_termination_condvar_)
 
 /* number of processors currently doing GC scan work (for each phase) */
-volatile int scan_workers_count_[2];
+volatile ___WORD scan_workers_count_[2];
 
 #endif
 
