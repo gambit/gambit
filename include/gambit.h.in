@@ -5346,11 +5346,11 @@ ___hp[0]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___GET_VALUES(n)___TAG((___hp-n-1),___tSUBTYPED)
 
 #define ___NB_INTRS 5
-#define ___INTR_USER      0
-#define ___INTR_HEARTBEAT 1
-#define ___INTR_GC        2
-#define ___INTR_TERMINATE 3
-#define ___INTR_SYNC_OP   4
+#define ___INTR_SYNC_OP   0
+#define ___INTR_TERMINATE 1
+#define ___INTR_HEARTBEAT 2
+#define ___INTR_USER      3
+#define ___INTR_GC        4
 
 #define ___INTERRUPT_FLAGS() (___ps->intr_flag[0]|___ps->intr_flag[1]|___ps->intr_flag[2]|___ps->intr_flag[3]|___ps->intr_flag[4])
 

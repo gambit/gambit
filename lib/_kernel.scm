@@ -1814,7 +1814,7 @@ end-of-code
     (macro-fifo-insert-at-head! registry will)
     will))
 
-(##interrupt-vector-set! 2 ;; ___INTR_GC
+(##interrupt-vector-set! 4 ;; ___INTR_GC
   (lambda ()
     (##declare (not interrupts-enabled))
     (##gc-finalize!)
@@ -4543,7 +4543,7 @@ end-of-code
 (define-prim (##exit-with-exception exc)
   (##exit-abnormally))
 
-(##interrupt-vector-set! 3 ;; ___INTR_TERMINATE
+(##interrupt-vector-set! 1 ;; ___INTR_TERMINATE
   (lambda ()
     (##declare (not interrupts-enabled))
     (##exit-abnormally)))

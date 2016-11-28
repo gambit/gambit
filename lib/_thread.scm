@@ -1620,7 +1620,7 @@
 
     (set! ##primordial-thread primordial-thread)
 
-    (##interrupt-vector-set! 1 ##thread-heartbeat!)
+    (##interrupt-vector-set! 2 ##thread-heartbeat!) ;; ___INTR_HEARTBEAT
 
     ;; These parameters are locally bound in all threads, so the value
     ;; field of the parameter descriptors are of no use and can be cleared.
@@ -3354,7 +3354,7 @@
           (##declare (not safe)) ;; avoid procedure check on the call
           (handler)))))
 
-(##interrupt-vector-set! 0 ##user-interrupt!)
+(##interrupt-vector-set! 3 ##user-interrupt!) ;; ___INTR_USER
 
 (##startup-threading!)
 
