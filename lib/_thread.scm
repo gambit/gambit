@@ -970,7 +970,7 @@
            (current-thread
             (macro-current-thread))
            (run-queue-floats
-            (macro-run-queue-floats run-queue))
+            (macro-thread-floats run-queue))
            (current-thread-floats
             (macro-thread-floats current-thread))
            (quantum-used
@@ -1564,7 +1564,7 @@
      ___RESULT = ___FAL;
      "
      thread
-     (macro-make-run-queue))
+     (macro-make-processor))
 
     (##btq-insert! (macro-run-queue) thread)
     )
@@ -1614,7 +1614,7 @@
      ___RESULT = ___FAL;
      "
      primordial-thread
-     (macro-make-run-queue))
+     (macro-make-processor))
 
     (##btq-insert! (macro-run-queue) primordial-thread)
 
