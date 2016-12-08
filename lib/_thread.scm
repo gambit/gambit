@@ -1977,7 +1977,7 @@
                    (macro-run-queue)
                    current-thread)))
               (macro-btq-deq-remove! condvar)
-              (macro-btq-deq-insert! (macro-run-queue) condvar)
+              (macro-btq-deq-insert-at-tail! (macro-run-queue) condvar)
               (##thread-schedule!))
             condvar
             timeout)))

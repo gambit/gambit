@@ -633,6 +633,100 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; Double-ended-queue generator macro.
+
+(##define-macro (define-deq
+                 init!
+                 insert-at-head!
+                 insert-at-tail!
+                 remove!
+                 empty?
+                 head
+                 tail
+                 next
+                 next-set!
+                 prev
+                 prev-set!)
+
+  `(begin
+
+     (##define-macro (,init! deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Initialize a deq.
+
+          (,',next-set! deq deq)
+          (,',prev-set! deq deq)))
+
+     (##define-macro (,insert-at-head! deq item)
+       `(let ((deq ,deq) (item ,item))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Add item to head of deq.
+
+          (let ((deq-first (,',next deq)))
+            (,',next-set! item deq-first)
+            (,',prev-set! item deq)
+            (,',next-set! deq item)
+            (,',prev-set! deq-first item))))
+
+     (##define-macro (,insert-at-tail! deq item)
+       `(let ((deq ,deq) (item ,item))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Add item to tail of deq.
+
+          (let ((deq-last (,',prev deq)))
+            (,',next-set! deq-last item)
+            (,',prev-set! deq item)
+            (,',next-set! item deq)
+            (,',prev-set! item deq-last))))
+
+     (##define-macro (,remove! item)
+       `(let ((item ,item))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Remove an item from the deq containing it.
+
+          (let ((item-next (,',next item))
+                (item-prev (,',prev item)))
+            (,',next-set! item-prev item-next)
+            (,',prev-set! item-next item-prev))))
+
+     (##define-macro (,empty? deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Test if deq is empty.
+
+          (##eq? (,',next deq) deq)))
+
+     (##define-macro (,head deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Get head of non-empty deq.
+
+          (,',next deq)))
+
+     (##define-macro (,tail deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Get tail of non-empty deq.
+
+          (,',prev deq)))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Representation of dynamic environments.
 
 ;; The dynamic environment contains the set of dynamically bound
@@ -874,43 +968,27 @@
 (##define-macro (macro-btq-lock2 node)           `(macro-slot 9 ,node))
 (##define-macro (macro-btq-lock2-set! node x)    `(macro-slot 9 ,node ,x))
 
-(##define-macro (macro-btq-deq-init! deq)
-  `(let ((deq ,deq))
+;;; Define operations on blocked thread queue double-ended-queues.
 
-     (##declare (not interrupts-enabled))
-
-     (macro-btq-deq-next-set! deq deq)
-     (macro-btq-deq-prev-set! deq deq)))
-
-(##define-macro (macro-btq-deq-remove! item)
-  `(let ((item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((item-next (macro-btq-deq-next item))
-           (item-prev (macro-btq-deq-prev item)))
-       (macro-btq-deq-next-set! item-prev item-next)
-       (macro-btq-deq-prev-set! item-next item-prev))))
-
-(##define-macro (macro-btq-deq-insert! deq item)
-  `(let ((deq ,deq) (item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     ;; add item to tail of deq
-
-     (let ((deq-last (macro-btq-deq-prev deq)))
-       (macro-btq-deq-next-set! deq-last item)
-       (macro-btq-deq-prev-set! deq item)
-       (macro-btq-deq-next-set! item deq)
-       (macro-btq-deq-prev-set! item deq-last))))
+(define-deq
+ macro-btq-deq-init!
+ macro-btq-deq-insert-at-head!
+ macro-btq-deq-insert-at-tail!
+ macro-btq-deq-remove!
+ macro-btq-deq-empty?
+ macro-btq-deq-head
+ macro-btq-deq-tail
+ macro-btq-deq-next
+ macro-btq-deq-next-set!
+ macro-btq-deq-prev
+ macro-btq-deq-prev-set!)
 
 (##define-macro (macro-btq-link! mutex thread)
   `(let ((mutex ,mutex) (thread ,thread))
 
      (##declare (not interrupts-enabled))
 
-     (macro-btq-deq-insert! thread mutex)
+     (macro-btq-deq-insert-at-tail! thread mutex)
      (macro-btq-owner-set! mutex thread)))
 
 (##define-macro (macro-btq-unlink! mutex state)
@@ -1116,7 +1194,7 @@
        (macro-thread-denv-cache2-set! thread (macro-make-thread-denv-cache2 p))
        (macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
        (macro-btq-deq-init! thread)
-       (macro-tgroup-threads-deq-insert! tgroup thread)
+       (macro-tgroup-threads-deq-insert-at-tail! tgroup thread)
        thread)))
 
 (##define-macro (macro-make-thread thunk name tgroup)
@@ -1529,72 +1607,36 @@
        (macro-tgroup-tgroups-deq-init! tgroups)
        (macro-tgroup-threads-deq-init! tgroup)
        (if parent
-         (macro-tgroup-tgroups-deq-insert!
+         (macro-tgroup-tgroups-deq-insert-at-tail!
           (macro-tgroup-tgroups parent)
           tgroup))
        tgroup)))
 
-(##define-macro (macro-tgroup-tgroups-deq-init! deq)
-  `(let ((deq ,deq))
+(define-deq
+ macro-tgroup-tgroups-deq-init!
+ macro-tgroup-tgroups-deq-insert-at-head!
+ macro-tgroup-tgroups-deq-insert-at-tail!
+ macro-tgroup-tgroups-deq-remove!
+ macro-tgroup-tgroups-deq-empty?
+ macro-tgroup-tgroups-deq-head
+ macro-tgroup-tgroups-deq-tail
+ macro-tgroup-tgroups-deq-next
+ macro-tgroup-tgroups-deq-next-set!
+ macro-tgroup-tgroups-deq-prev
+ macro-tgroup-tgroups-deq-prev-set!)
 
-     (##declare (not interrupts-enabled))
-
-     (macro-tgroup-tgroups-deq-next-set! deq deq)
-     (macro-tgroup-tgroups-deq-prev-set! deq deq)))
-
-(##define-macro (macro-tgroup-tgroups-deq-remove! item)
-  `(let ((item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((item-next (macro-tgroup-tgroups-deq-next item))
-           (item-prev (macro-tgroup-tgroups-deq-prev item)))
-       (macro-tgroup-tgroups-deq-next-set! item-prev item-next)
-       (macro-tgroup-tgroups-deq-prev-set! item-next item-prev))))
-
-(##define-macro (macro-tgroup-tgroups-deq-insert! deq item)
-  `(let ((deq ,deq) (item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     ;; add item to tail of deq
-
-     (let ((deq-last (macro-tgroup-tgroups-deq-prev deq)))
-       (macro-tgroup-tgroups-deq-next-set! deq-last item)
-       (macro-tgroup-tgroups-deq-prev-set! deq item)
-       (macro-tgroup-tgroups-deq-next-set! item deq)
-       (macro-tgroup-tgroups-deq-prev-set! item deq-last))))
-
-(##define-macro (macro-tgroup-threads-deq-init! deq)
-  `(let ((deq ,deq))
-
-     (##declare (not interrupts-enabled))
-
-     (macro-tgroup-threads-deq-next-set! deq deq)
-     (macro-tgroup-threads-deq-prev-set! deq deq)))
-
-(##define-macro (macro-tgroup-threads-deq-remove! item)
-  `(let ((item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((item-next (macro-tgroup-threads-deq-next item))
-           (item-prev (macro-tgroup-threads-deq-prev item)))
-       (macro-tgroup-threads-deq-next-set! item-prev item-next)
-       (macro-tgroup-threads-deq-prev-set! item-next item-prev))))
-
-(##define-macro (macro-tgroup-threads-deq-insert! deq item)
-  `(let ((deq ,deq) (item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     ;; add item to tail of deq
-
-     (let ((deq-last (macro-tgroup-threads-deq-prev deq)))
-       (macro-tgroup-threads-deq-next-set! deq-last item)
-       (macro-tgroup-threads-deq-prev-set! deq item)
-       (macro-tgroup-threads-deq-next-set! item deq)
-       (macro-tgroup-threads-deq-prev-set! item deq-last))))
+(define-deq
+ macro-tgroup-threads-deq-init!
+ macro-tgroup-threads-deq-insert-at-head!
+ macro-tgroup-threads-deq-insert-at-tail!
+ macro-tgroup-threads-deq-remove!
+ macro-tgroup-threads-deq-empty?
+ macro-tgroup-threads-deq-head
+ macro-tgroup-threads-deq-tail
+ macro-tgroup-threads-deq-next
+ macro-tgroup-threads-deq-next-set!
+ macro-tgroup-threads-deq-prev
+ macro-tgroup-threads-deq-prev-set!)
 
 ;;; Representation of the run queue.
 
