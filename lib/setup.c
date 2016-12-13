@@ -2630,7 +2630,7 @@ __attribute__((noinline))
 
 #endif
 
-___HIDDEN void trampoline
+void ___trampoline
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
@@ -2761,7 +2761,7 @@ ___SCMOBJ stack_marker;)
 
   ___BEGIN_TRY
 
-  trampoline (___ps);
+  ___trampoline (___ps);
 
   ___END_TRY
 
