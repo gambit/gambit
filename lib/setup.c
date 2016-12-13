@@ -2823,14 +2823,12 @@ ___source_location *loc;)
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
 
-void ___print_ctrl_flow_history
+void ___print_ctrl_flow_history_pstate
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
   int i;
-
-  ___printf ("Most recent control-flow history:\n");
 
   for (i=0; i<___CTRL_FLOW_HISTORY_LENGTH; i++)
     {
@@ -2844,6 +2842,71 @@ ___processor_state ___ps;)
         }
     }
 }
+
+
+void ___print_ctrl_flow_history_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  int i;
+
+  ___printf ("Most recent control-flow history:\n");
+
+  for (i=0; i<___vms->nb_processors; i++)
+    {
+      ___printf ("\nP%d:\n", i);
+      ___print_ctrl_flow_history_pstate (&___vms->pstate[i]);
+    }
+}
+
+
+void ___print_ctrl_flow_history ___PVOID
+{
+  ___print_ctrl_flow_history_vmstate (___VMSTATE);
+}
+
+
+void ___print_ctrl_flow_last_seen_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___source_location *loc =
+    &___ps->ctrl_flow_history[(___ps->ctrl_flow_history_index+___CTRL_FLOW_HISTORY_LENGTH-1) %
+                              ___CTRL_FLOW_HISTORY_LENGTH];
+
+  if (loc->line > 0)
+    ___print_source_location (loc);
+  else
+      ___printf ("unknown");
+
+  ___printf ("\n");
+}
+
+
+void ___print_ctrl_flow_last_seen_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  int i;
+
+  ___printf ("Control-flow last seen:\n");
+
+  for (i=0; i<___vms->nb_processors; i++)
+    {
+      ___printf ("P%d: ", i);
+      ___print_ctrl_flow_last_seen_pstate (&___vms->pstate[i]);
+    }
+}
+
+
+void ___print_ctrl_flow_last_seen ___PVOID
+{
+  ___print_ctrl_flow_last_seen_vmstate (___VMSTATE);
+}
+
 
 #endif
 

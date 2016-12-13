@@ -38,9 +38,25 @@ extern void ___print_source_location
 
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
-extern void ___print_ctrl_flow_history
+extern void ___print_ctrl_flow_history_pstate
    ___P((___processor_state ___ps),
         ());
+
+extern void ___print_ctrl_flow_history_vmstate
+   ___P((___virtual_machine_state ___vms),
+        ());
+
+extern void ___print_ctrl_flow_history ___PVOID;
+
+extern void ___print_ctrl_flow_last_seen_pstate
+   ___P((___processor_state ___ps),
+        ());
+
+extern void ___print_ctrl_flow_last_seen_vmstate
+   ___P((___virtual_machine_state ___vms),
+        ());
+
+extern void ___print_ctrl_flow_last_seen ___PVOID;
 
 #endif
 
