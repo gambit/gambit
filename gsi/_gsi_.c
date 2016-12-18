@@ -3715,6 +3715,9 @@
 "##boolean?"
 "##box"
 "##box?"
+"##btq-lock!"
+"##btq-trylock!"
+"##btq-unlock!"
 "##caaaar"
 "##caaadr"
 "##caaar"
@@ -3805,6 +3808,7 @@
 "##cte-namespace-prefix"
 "##cte-top"
 "##cte-top-cte-set!"
+"##current-processor"
 "##current-thread"
 "##define-type-construct-constant"
 "##device-port-wait-for-input!"
@@ -4059,6 +4063,7 @@
 "##return?"
 "##rpc-server-addr"
 "##run-queue"
+"##run-queue-of"
 "##s16vector"
 "##s16vector->list"
 "##s16vector-append"
@@ -5117,8 +5122,11 @@ ___DEF_OLD_SYM_GLO(___S__23__23_break,___G__23__23_break)
 ___DEF_OLD_SYM_GLO(___S__23__23_break_2d_list,___G__23__23_break_2d_list)
 ___DEF_OLD_SYM_GLO(___S__23__23_btq_2d_abandon_21_,___G__23__23_btq_2d_abandon_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_btq_2d_insert_21_,___G__23__23_btq_2d_insert_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_btq_2d_lock_21_,___G__23__23_btq_2d_lock_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_btq_2d_remove_21_,___G__23__23_btq_2d_remove_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_btq_2d_reposition_21_,___G__23__23_btq_2d_reposition_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_btq_2d_trylock_21_,___G__23__23_btq_2d_trylock_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_btq_2d_unlock_21_,___G__23__23_btq_2d_unlock_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_build_2d_cond,___G__23__23_build_2d_cond)
 ___DEF_OLD_SYM_GLO(___S__23__23_build_2d_decimal_2d_integer,___G__23__23_build_2d_decimal_2d_integer)
 ___DEF_OLD_SYM_GLO(___S__23__23_build_2d_delimited_2d_number_2f_keyword_2f_symbol,___G__23__23_build_2d_delimited_2d_number_2f_keyword_2f_symbol)
@@ -5460,6 +5468,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_error_2d_port,___G__23__23_current_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_exception_2d_handler,___G__23__23_current_2d_exception_2d_handler)
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_input_2d_port,___G__23__23_current_2d_input_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_output_2d_port,___G__23__23_current_2d_output_2d_port)
+___DEF_OLD_SYM_GLO(___S__23__23_current_2d_processor,___G__23__23_current_2d_processor)
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_readtable,___G__23__23_current_2d_readtable)
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_stepper,___G__23__23_current_2d_stepper)
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_thread,___G__23__23_current_2d_thread)
@@ -6817,6 +6826,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_reverse,___G__23__23_reverse)
 ___DEF_OLD_SYM_GLO(___S__23__23_round,___G__23__23_round)
 ___DEF_OLD_SYM_GLO(___S__23__23_rpc_2d_server_2d_addr,___G__23__23_rpc_2d_server_2d_addr)
 ___DEF_OLD_SYM_GLO(___S__23__23_run_2d_queue,___G__23__23_run_2d_queue)
+___DEF_OLD_SYM_GLO(___S__23__23_run_2d_queue_2d_of,___G__23__23_run_2d_queue_2d_of)
 ___DEF_OLD_SYM_GLO(___S__23__23_s16vector,___G__23__23_s16vector)
 ___DEF_OLD_SYM_GLO(___S__23__23_s16vector_2d__3e_list,___G__23__23_s16vector_2d__3e_list)
 ___DEF_OLD_SYM_GLO(___S__23__23_s16vector_2d_append,___G__23__23_s16vector_2d_append)

@@ -3037,6 +3037,8 @@
          (##continuation-capture
           (lambda (cont2)
 
+            (##declare (not inline)) ;; don't inline repl procedure
+
             (define (repl)
               (##continuation-capture
                (lambda (cont3)

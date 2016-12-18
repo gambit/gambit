@@ -3913,7 +3913,7 @@ ___PSDKR)
    */
 
   ___WORD *ptr = scan_ptr;
-  volatile ___WORD *hcsh;
+  ___VOLATILE ___WORD *hcsh;
 
   while (ptr != alloc_heap_ptr) /* SITUATION #1 or #2 ? */
     {
@@ -5638,7 +5638,7 @@ ___PSDKR)
 #ifndef ___SINGLE_THREADED_VMS
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-  volatile int *workers_count = &scan_workers_count[traverse_weak_refs];
+  ___VOLATILE ___WORD *workers_count = &scan_workers_count[traverse_weak_refs];
   int np = ___vms->nb_processors;
   int id = ___PROCESSOR_ID(___ps,___vms); /* id of this processor */
   int i;
@@ -5664,7 +5664,7 @@ ___PSDKR)
       for (i = (np-1) * ___GC_SCAN_STEAL_WORK_CYCLES - 1; i>=0; i--)
         {
           ___processor_state ps = &___vms->pstate[(i + i%(np-1) + 1) % np];
-          volatile ___WORD *hcsh;
+          ___VOLATILE ___WORD *hcsh;
 
           if (ps->mem.heap_chunks_to_scan_head_ !=
               ps->mem.heap_chunks_to_scan_tail_)

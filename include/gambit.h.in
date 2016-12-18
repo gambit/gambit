@@ -3148,13 +3148,13 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___CHARLEP(x,y)((x)<=(y))
 #define ___CHARGEP(x,y)((x)>=(y))
 
-#define ___CHARALPHABETICP(x)___EXT(___iswalpha(___INT(x)))
-#define ___CHARNUMERICP(x)___EXT(___iswdigit(___INT(x)))
-#define ___CHARWHITESPACEP(x)___EXT(___iswspace(___INT(x)))
-#define ___CHARUPPERCASEP(x)___EXT(___iswupper(___INT(x)))
-#define ___CHARLOWERCASEP(x)___EXT(___iswlower(___INT(x)))
-#define ___CHARUPCASE(x)___CHR(___EXT(___towupper(___INT(x))))
-#define ___CHARDOWNCASE(x)___CHR(___EXT(___towlower(___INT(x))))
+#define ___CHARALPHABETICP(x)___EXT(___iswalpha)(___INT(x))
+#define ___CHARNUMERICP(x)___EXT(___iswdigit)(___INT(x))
+#define ___CHARWHITESPACEP(x)___EXT(___iswspace)(___INT(x))
+#define ___CHARUPPERCASEP(x)___EXT(___iswupper)(___INT(x))
+#define ___CHARLOWERCASEP(x)___EXT(___iswlower)(___INT(x))
+#define ___CHARUPCASE(x)___CHR(___EXT(___towupper)(___INT(x)))
+#define ___CHARDOWNCASE(x)___CHR(___EXT(___towlower)(___INT(x)))
 
 /* APPLY-able operations */
 
@@ -3447,11 +3447,11 @@ ___TICKETLOCK_UNLOCK2((lock).current_ticket)
 
 #define ___TICKETLOCK_LOCK2(next,current) \
 do { \
-  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&next),___FIX(1)); \
+  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&next),___FIX(1)); \
   int ___count = 0; \
-  while (*___CAST(volatile ___WORD*,&current) != ___ticket) \
+  while (*___CAST(___VOLATILE ___WORD*,&current) != ___ticket) \
     { \
-      if (++___count == 100000000) printf("TICKETLOCK deadlock at line %d of %s\n",__LINE__,__FILE__); \
+      if (++___count == 100000000) printf("TICKETLOCK deadlock at line %d of %s (current=%d ticket=%d)\n",__LINE__,__FILE__,current,___ticket); \
       ___CPU_RELAX(); \
     } \
 } while (0)
@@ -3460,22 +3460,24 @@ do { \
 
 #define ___TICKETLOCK_LOCK2(next,current) \
 do { \
-  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&next),___FIX(1)); \
-  while (*___CAST(volatile ___WORD*,&current) != ___ticket) \
+  ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&next),___FIX(1)); \
+  while (*___CAST(___VOLATILE ___WORD*,&current) != ___ticket) \
     ___CPU_RELAX(); \
 } while (0)
 
 #endif
 
 #define ___TICKETLOCK_TRYLOCK2(next,current,temp) \
-(temp=*___CAST(volatile ___WORD*,&current), \
- ___COMPARE_AND_SWAP_WORD(___CAST(volatile ___WORD*,&next),temp,___FIXWRAPADD(temp,___FIX(1)))==temp)
+(temp=*___CAST(___VOLATILE ___WORD*,&current), \
+ ___COMPARE_AND_SWAP_WORD(___CAST(___VOLATILE ___WORD*,&next),temp,___FIXWRAPADD(temp,___FIX(1)))==temp)
 
 #define ___TICKETLOCK_UNLOCK2(current) \
-___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&current),___FIX(1))
+___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 
 
 #ifdef ___SINGLE_THREADED_VMS
+
+#define ___VOLATILE
 
 #define ___BTQLOCK(btq)
 #define ___BTQTRYLOCK(btq) 1
@@ -3489,6 +3491,8 @@ ___FETCH_AND_ADD_WORD(___CAST(volatile ___WORD*,&current),___FIX(1))
 #define ___SPINLOCK_UNLOCK(lock)
 
 #else
+
+#define ___VOLATILE volatile
 
 #define ___BTQLOCK(btq) \
 ___TICKETLOCK_LOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2));
@@ -5346,11 +5350,11 @@ ___hp[0]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___GET_VALUES(n)___TAG((___hp-n-1),___tSUBTYPED)
 
 #define ___NB_INTRS 5
-#define ___INTR_USER      0
-#define ___INTR_HEARTBEAT 1
-#define ___INTR_GC        2
-#define ___INTR_TERMINATE 3
-#define ___INTR_SYNC_OP   4
+#define ___INTR_SYNC_OP   0
+#define ___INTR_TERMINATE 1
+#define ___INTR_HEARTBEAT 2
+#define ___INTR_USER      3
+#define ___INTR_GC        4
 
 #define ___INTERRUPT_FLAGS() (___ps->intr_flag[0]|___ps->intr_flag[1]|___ps->intr_flag[2]|___ps->intr_flag[3]|___ps->intr_flag[4])
 
@@ -7846,8 +7850,8 @@ typedef struct ___thread_struct
 
 typedef struct ___ticketlock_struct
   {
-    ___WORD current_ticket;
-    ___WORD next_ticket;
+    ___VOLATILE ___WORD current_ticket;
+    ___VOLATILE ___WORD next_ticket;
   } ___ticketlock_struct;
 
 /*---------------------------------------------------------------------------*/
@@ -8073,11 +8077,11 @@ ___SPINLOCK_DECL(heap_chunks_to_scan_lock_)
 #endif
 
 /* list of complete movable object chunks to scan */
-volatile ___WORD heap_chunks_to_scan_;
+___VOLATILE ___WORD heap_chunks_to_scan_;
 
 /* fifo of complete movable object chunks remaining to scan */
-volatile ___WORD * volatile heap_chunks_to_scan_head_;
-volatile ___WORD * volatile heap_chunks_to_scan_tail_;
+___VOLATILE ___WORD * ___VOLATILE heap_chunks_to_scan_head_;
+___VOLATILE ___WORD * ___VOLATILE heap_chunks_to_scan_tail_;
 
 /* scan pointer in currently scanned (possibly incomplete) chunk */
 ___WORD *scan_ptr_;
@@ -8177,7 +8181,7 @@ ___msection *alloc_msection_;
 int nb_msections_assigned_;
 
 /* Used for resizing VM (number of processors after the resize operation) */
-volatile int target_nb_processors_;
+___VOLATILE int target_nb_processors_;
 
 #ifndef ___SINGLE_THREADED_VMS
 
@@ -8192,7 +8196,7 @@ ___MUTEX_DECL(scan_termination_mutex_)
 ___CONDVAR_DECL(scan_termination_condvar_)
 
 /* number of processors currently doing GC scan work (for each phase) */
-volatile int scan_workers_count_[2];
+___VOLATILE ___WORD scan_workers_count_[2];
 
 #endif
 
@@ -8247,15 +8251,15 @@ typedef struct ___global_state_struct *___global_state;
 
 typedef struct ___sync_op_struct
   {
-    volatile unsigned char op; /* operation requested */
-    volatile ___WORD arg[2];   /* arguments of the operation */
+    ___VOLATILE unsigned char op; /* operation requested */
+    ___VOLATILE ___WORD arg[2];   /* arguments of the operation */
   } ___sync_op_struct;
 
 /* Processor structure */
 
 typedef struct ___processor_state_struct
   {
-    volatile ___WORD *stack_trip;
+    ___WORD * ___VOLATILE stack_trip;
     ___WORD *stack_limit;
     ___WORD *fp;
     ___WORD *stack_start;
@@ -8281,7 +8285,7 @@ typedef struct ___processor_state_struct
 
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
-    volatile ___WORD intr_flag[___NB_INTRS];
+    ___VOLATILE ___WORD intr_flag[___NB_INTRS];
 
 #ifdef ___ACTIVITY_LOG
     ___pstate_actlog actlog; /* activity log state */
@@ -8324,11 +8328,11 @@ typedef struct ___processor_state_struct
     ___thread os_thread;
 
     /* for implementation of on_all_processors */
-    volatile int sync_id0;
+    ___VOLATILE int sync_id0;
     ___sync_op_struct sync_op0;
-    volatile int sync_id1;
+    ___VOLATILE int sync_id1;
     ___sync_op_struct sync_op1;
-    volatile int sync_id2;
+    ___VOLATILE int sync_id2;
     ___sync_op_struct sync_op2;
     ___MUTEX_DECL(sync_mut);
     ___CONDVAR_DECL(sync_cv);
@@ -8435,7 +8439,7 @@ typedef struct ___virtual_machine_state_struct
   {
     ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
 
-    volatile int nb_processors; /* number of processors in this VM */
+    ___VOLATILE int nb_processors; /* number of processors in this VM */
 
 #ifdef ___ACTIVITY_LOG
     ___vmstate_actlog actlog; /* activity log state */
@@ -8449,8 +8453,8 @@ typedef struct ___virtual_machine_state_struct
 
 #ifndef ___SINGLE_VM
 
-    volatile ___virtual_machine_state prev; /* circular list links */
-    volatile ___virtual_machine_state next;
+    ___VOLATILE ___virtual_machine_state prev; /* circular list links */
+    ___VOLATILE ___virtual_machine_state next;
 
     ___SCMOBJ *glos; /* Scheme global variables */
 
@@ -9869,16 +9873,16 @@ typedef struct ___global_state_struct
             ());
 #ifdef ___USE_emulated_sync
     ___WORD (*___emulated_compare_and_swap_word)
-       ___P((volatile ___WORD *ptr,
+       ___P((___VOLATILE ___WORD *ptr,
              ___WORD oldval,
              ___WORD newval),
             ());
     ___WORD (*___emulated_fetch_and_add_word)
-       ___P((volatile ___WORD *ptr,
+       ___P((___VOLATILE ___WORD *ptr,
              ___WORD val),
             ());
     ___WORD (*___emulated_fetch_and_clear_word)
-       ___P((volatile ___WORD *ptr),
+       ___P((___VOLATILE ___WORD *ptr),
             ());
     void (*___emulated_shared_memory_barrier) ___PVOID;
 #endif
@@ -11196,16 +11200,16 @@ ___IMP_FUNC(void,___free_mem_code)
 #ifndef ___INCLUDED_FROM_OS_THREAD
 #ifdef ___USE_emulated_sync
 ___IMP_FUNC(___WORD,___emulated_compare_and_swap_word)
-   ___P((volatile ___WORD *ptr,
+   ___P((___VOLATILE ___WORD *ptr,
          ___WORD oldval,
          ___WORD newval),
         ());
 ___IMP_FUNC(___WORD,___emulated_fetch_and_add_word)
-   ___P((volatile ___WORD *ptr,
+   ___P((___VOLATILE ___WORD *ptr,
          ___WORD val),
         ());
 ___IMP_FUNC(___WORD,___emulated_fetch_and_clear_word)
-   ___P((volatile ___WORD *ptr),
+   ___P((___VOLATILE ___WORD *ptr),
         ());
 ___IMP_FUNC(void,___emulated_shared_memory_barrier) ___PVOID;
 #endif

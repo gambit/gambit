@@ -705,13 +705,14 @@
 
 ;;; Implementation of threads.
 
-(define-prim (##run-queue)
-  (##declare (not interrupts-enabled))
-  (macro-run-queue))
+(define-prim (##current-thread))
+(define-prim (##current-processor))
+(define-prim (##run-queue))
+(define-prim (##run-queue-of processor))
 
-(define-prim (##current-thread)
-  (##declare (not interrupts-enabled))
-  (macro-current-thread))
+(define-prim (##btq-lock! btq))
+(define-prim (##btq-trylock! btq))
+(define-prim (##btq-unlock! btq))
 
 (define-prim (##make-thread thunk name tgroup)
   (##declare (not interrupts-enabled))
@@ -969,7 +970,7 @@
            (current-thread
             (macro-current-thread))
            (run-queue-floats
-            (macro-run-queue-floats run-queue))
+            (macro-thread-floats run-queue))
            (current-thread-floats
             (macro-thread-floats current-thread))
            (quantum-used
@@ -1575,7 +1576,7 @@
      ___RESULT = ___FAL;
      "
      thread
-     (macro-make-run-queue))
+     (macro-make-processor))
 
     (##btq-insert! (macro-run-queue) thread)
     )
@@ -1625,13 +1626,13 @@
      ___RESULT = ___FAL;
      "
      primordial-thread
-     (macro-make-run-queue))
+     (macro-make-processor))
 
     (##btq-insert! (macro-run-queue) primordial-thread)
 
     (set! ##primordial-thread primordial-thread)
 
-    (##interrupt-vector-set! 1 ##thread-heartbeat!)
+    (##interrupt-vector-set! 2 ##thread-heartbeat!) ;; ___INTR_HEARTBEAT
 
     ;; These parameters are locally bound in all threads, so the value
     ;; field of the parameter descriptors are of no use and can be cleared.
@@ -1990,7 +1991,7 @@
                    (macro-run-queue)
                    current-thread)))
               (macro-btq-deq-remove! condvar)
-              (macro-btq-deq-insert! (macro-run-queue) condvar)
+              (macro-btq-deq-insert-at-tail! (macro-run-queue) condvar)
               (##thread-schedule!))
             condvar
             timeout)))
@@ -3367,7 +3368,7 @@
           (##declare (not safe)) ;; avoid procedure check on the call
           (handler)))))
 
-(##interrupt-vector-set! 0 ##user-interrupt!)
+(##interrupt-vector-set! 3 ##user-interrupt!) ;; ___INTR_USER
 
 (##startup-threading!)
 

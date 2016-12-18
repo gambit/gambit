@@ -2633,11 +2633,15 @@ char **argv;
     }
   }
 
-  if (log_nb_traces > 64)
+  if (log_nb_traces >= 96)
   { bar_height  = 3;
     bar_spacing = 1;
   }
-  else if (log_nb_traces > 32)
+  else if (log_nb_traces >= 64)
+  { bar_height  = 4;
+    bar_spacing = 1;
+  }
+  else if (log_nb_traces >= 32)
   { bar_height  = 6;
     bar_spacing = 2;
   }

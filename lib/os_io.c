@@ -3702,7 +3702,7 @@ ___SCMOBJ ___release_rc_tls_context
         (x)
 void *x;)
 {
-  ___tls_context *c = x;
+  ___tls_context *c = ___CAST(___tls_context*, x);
 
   if (c->certificate_path != NULL)
     ___release_string (c->certificate_path);
@@ -3905,7 +3905,7 @@ ___SCMOBJ client_ca_path;)
   if ((scm_e = ___SCMOBJ_to_STRING
                  (___PSA(___PSTATE)
                   certificate_path,
-                  ___CAST(void*,&c->certificate_path),
+                  ___CAST(void**,&c->certificate_path),
                   3,
                   ___CE(___OPENSSL_PATH_CE_SELECT),
                   0)
@@ -3913,7 +3913,7 @@ ___SCMOBJ client_ca_path;)
       (scm_e = ___SCMOBJ_to_STRING
                  (___PSA(___PSTATE)
                   private_key_path,
-                  ___CAST(void*,&c->private_key_path),
+                  ___CAST(void**,&c->private_key_path),
                   4,
                   ___CE(___OPENSSL_PATH_CE_SELECT),
                   0)
@@ -3921,7 +3921,7 @@ ___SCMOBJ client_ca_path;)
       (scm_e = ___SCMOBJ_to_STRING
                  (___PSA(___PSTATE)
                   dh_params_path,
-                  ___CAST(void*,&c->dh_params_path),
+                  ___CAST(void**,&c->dh_params_path),
                   5,
                   ___CE(___OPENSSL_PATH_CE_SELECT),
                   0)
@@ -3935,7 +3935,7 @@ ___SCMOBJ client_ca_path;)
       (scm_e = ___SCMOBJ_to_STRING
                  (___PSA(___PSTATE)
                   client_ca_path,
-                  ___CAST(void*,&c->client_ca_path),
+                  ___CAST(void**,&c->client_ca_path),
                   7,
                   ___CE(___OPENSSL_PATH_CE_SELECT),
                   0)

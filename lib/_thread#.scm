@@ -633,6 +633,100 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; Double-ended-queue generator macro.
+
+(##define-macro (define-deq
+                 init!
+                 insert-at-head!
+                 insert-at-tail!
+                 remove!
+                 empty?
+                 head
+                 tail
+                 next
+                 next-set!
+                 prev
+                 prev-set!)
+
+  `(begin
+
+     (##define-macro (,init! deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Initialize a deq.
+
+          (,',next-set! deq deq)
+          (,',prev-set! deq deq)))
+
+     (##define-macro (,insert-at-head! deq item)
+       `(let ((deq ,deq) (item ,item))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Add item to head of deq.
+
+          (let ((deq-first (,',next deq)))
+            (,',next-set! item deq-first)
+            (,',prev-set! item deq)
+            (,',next-set! deq item)
+            (,',prev-set! deq-first item))))
+
+     (##define-macro (,insert-at-tail! deq item)
+       `(let ((deq ,deq) (item ,item))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Add item to tail of deq.
+
+          (let ((deq-last (,',prev deq)))
+            (,',next-set! deq-last item)
+            (,',prev-set! deq item)
+            (,',next-set! item deq)
+            (,',prev-set! item deq-last))))
+
+     (##define-macro (,remove! item)
+       `(let ((item ,item))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Remove an item from the deq containing it.
+
+          (let ((item-next (,',next item))
+                (item-prev (,',prev item)))
+            (,',next-set! item-prev item-next)
+            (,',prev-set! item-next item-prev))))
+
+     (##define-macro (,empty? deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Test if deq is empty.
+
+          (##eq? (,',next deq) deq)))
+
+     (##define-macro (,head deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Get head of non-empty deq.
+
+          (,',next deq)))
+
+     (##define-macro (,tail deq)
+       `(let ((deq ,deq))
+
+          (##declare (not interrupts-enabled))
+
+          ;; Get tail of non-empty deq.
+
+          (,',prev deq)))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Representation of dynamic environments.
 
 ;; The dynamic environment contains the set of dynamically bound
@@ -874,43 +968,27 @@
 (##define-macro (macro-btq-lock2 node)           `(macro-slot 9 ,node))
 (##define-macro (macro-btq-lock2-set! node x)    `(macro-slot 9 ,node ,x))
 
-(##define-macro (macro-btq-deq-init! deq)
-  `(let ((deq ,deq))
+;;; Define operations on blocked thread queue double-ended-queues.
 
-     (##declare (not interrupts-enabled))
-
-     (macro-btq-deq-next-set! deq deq)
-     (macro-btq-deq-prev-set! deq deq)))
-
-(##define-macro (macro-btq-deq-remove! item)
-  `(let ((item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((item-next (macro-btq-deq-next item))
-           (item-prev (macro-btq-deq-prev item)))
-       (macro-btq-deq-next-set! item-prev item-next)
-       (macro-btq-deq-prev-set! item-next item-prev))))
-
-(##define-macro (macro-btq-deq-insert! deq item)
-  `(let ((deq ,deq) (item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     ;; add item to tail of deq
-
-     (let ((deq-last (macro-btq-deq-prev deq)))
-       (macro-btq-deq-next-set! deq-last item)
-       (macro-btq-deq-prev-set! deq item)
-       (macro-btq-deq-next-set! item deq)
-       (macro-btq-deq-prev-set! item deq-last))))
+(define-deq
+ macro-btq-deq-init!
+ macro-btq-deq-insert-at-head!
+ macro-btq-deq-insert-at-tail!
+ macro-btq-deq-remove!
+ macro-btq-deq-empty?
+ macro-btq-deq-head
+ macro-btq-deq-tail
+ macro-btq-deq-next
+ macro-btq-deq-next-set!
+ macro-btq-deq-prev
+ macro-btq-deq-prev-set!)
 
 (##define-macro (macro-btq-link! mutex thread)
   `(let ((mutex ,mutex) (thread ,thread))
 
      (##declare (not interrupts-enabled))
 
-     (macro-btq-deq-insert! thread mutex)
+     (macro-btq-deq-insert-at-tail! thread mutex)
      (macro-btq-owner-set! mutex thread)))
 
 (##define-macro (macro-btq-unlink! mutex state)
@@ -957,7 +1035,7 @@
 
   unprintable:
 
-  (btq-lock1        init: 0)
+  (lock1            init: 0)
 
   (btq-deq-next     init: #f) ;; blocked thread queues owned by thread
   (btq-deq-prev     init: #f)
@@ -969,7 +1047,7 @@
 
   (tgroup           init: #f) ;; thread-group this thread belongs to
 
-  (btq-lock2        init: 0)
+  (lock2            init: 0)
 
   (toq-color        init: #f) ;; to keep thread in a timeout queue
   (toq-parent       init: #f)
@@ -1119,7 +1197,7 @@
        (macro-thread-denv-cache2-set! thread (macro-make-thread-denv-cache2 p))
        (macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
        (macro-btq-deq-init! thread)
-       (macro-tgroup-threads-deq-insert! tgroup thread)
+       (macro-tgroup-threads-deq-insert-at-tail! tgroup thread)
        thread)))
 
 (##define-macro (macro-make-thread thunk name tgroup)
@@ -1300,13 +1378,13 @@
 
   unprintable:
 
-  ;; field 1 and 9 are for locking the mutex in a multiprocessor system
+  ;; fields 1 and 9 are for locking in a multiprocessor system
   ;; fields 2 and 3 are for maintaining this mutex in a deq of btqs
   ;; fields 4 to 6 are for maintaining a queue of blocked threads
   ;; field 7 is the leftmost thread in the queue of blocked threads
   ;; field 8 is the owner of the mutex (or 'not-owned or 'abandoned
   ;; or 'not-abandoned)
-  (btq-lock1    init: 0)
+  (lock1        init: 0)
   (btq-deq-next init: #f)
   (btq-deq-prev init: #f)
   (btq-color    init: #f)
@@ -1314,7 +1392,7 @@
   (btq-left     init: #f)
   (btq-leftmost init: #f)
   (btq-owner    init: 'not-abandoned) ;; see (macro-mutex-state-not-abandoned)
-  (btq-lock2    init: 0)
+  (lock2        init: 0)
 
   (name
    macro-mutex-name
@@ -1417,12 +1495,12 @@
 
   unprintable:
 
-  ;; fields 1 and 9 are for locking the condition variable in a multiprocessor system
+  ;; fields 1 and 9 are for locking in a multiprocessor system
   ;; fields 2 and 3 are for maintaining this condition variable in a deq of btqs
   ;; fields 4 to 6 are for maintaining a queue of blocked threads
   ;; field 7 is the leftmost thread in the queue of blocked threads
   ;; field 8 is the owner of the condition variable
-  (btq-lock1    init: 0)
+  (lock1        init: 0)
   (btq-deq-next init: #f)
   (btq-deq-prev init: #f)
   (btq-color    init: #f)
@@ -1430,7 +1508,7 @@
   (btq-left     init: #f)
   (btq-leftmost init: #f)
   (btq-owner    init: #f)
-  (btq-lock2    init: 0)
+  (lock2        init: 0)
 
   (name
    macro-condvar-name
@@ -1532,88 +1610,64 @@
        (macro-tgroup-tgroups-deq-init! tgroups)
        (macro-tgroup-threads-deq-init! tgroup)
        (if parent
-         (macro-tgroup-tgroups-deq-insert!
+         (macro-tgroup-tgroups-deq-insert-at-tail!
           (macro-tgroup-tgroups parent)
           tgroup))
        tgroup)))
 
-(##define-macro (macro-tgroup-tgroups-deq-init! deq)
-  `(let ((deq ,deq))
+(define-deq
+ macro-tgroup-tgroups-deq-init!
+ macro-tgroup-tgroups-deq-insert-at-head!
+ macro-tgroup-tgroups-deq-insert-at-tail!
+ macro-tgroup-tgroups-deq-remove!
+ macro-tgroup-tgroups-deq-empty?
+ macro-tgroup-tgroups-deq-head
+ macro-tgroup-tgroups-deq-tail
+ macro-tgroup-tgroups-deq-next
+ macro-tgroup-tgroups-deq-next-set!
+ macro-tgroup-tgroups-deq-prev
+ macro-tgroup-tgroups-deq-prev-set!)
 
-     (##declare (not interrupts-enabled))
+(define-deq
+ macro-tgroup-threads-deq-init!
+ macro-tgroup-threads-deq-insert-at-head!
+ macro-tgroup-threads-deq-insert-at-tail!
+ macro-tgroup-threads-deq-remove!
+ macro-tgroup-threads-deq-empty?
+ macro-tgroup-threads-deq-head
+ macro-tgroup-threads-deq-tail
+ macro-tgroup-threads-deq-next
+ macro-tgroup-threads-deq-next-set!
+ macro-tgroup-threads-deq-prev
+ macro-tgroup-threads-deq-prev-set!)
 
-     (macro-tgroup-tgroups-deq-next-set! deq deq)
-     (macro-tgroup-tgroups-deq-prev-set! deq deq)))
+;;;----------------------------------------------------------------------------
 
-(##define-macro (macro-tgroup-tgroups-deq-remove! item)
-  `(let ((item ,item))
+;;; Representation of the processor state.  This is the part of the
+;;; processor state that is implemented at the Scheme level (the other
+;;; part of the processor state is implemented at the host language level).
 
-     (##declare (not interrupts-enabled))
+;;; Note that this structure used to be called a "run queue" because it
+;;; is mostly used by the scheduler to maintain the set of runnable threads.
+;;; However it also includes other information which is conceptually part
+;;; of the processor state.
 
-     (let ((item-next (macro-tgroup-tgroups-deq-next item))
-           (item-prev (macro-tgroup-tgroups-deq-prev item)))
-       (macro-tgroup-tgroups-deq-next-set! item-prev item-next)
-       (macro-tgroup-tgroups-deq-prev-set! item-next item-prev))))
+;;; TODO: consider pre-allocating this structure so there is less
+;;; pressure on the garbage collector.
 
-(##define-macro (macro-tgroup-tgroups-deq-insert! deq item)
-  `(let ((deq ,deq) (item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     ;; add item to tail of deq
-
-     (let ((deq-last (macro-tgroup-tgroups-deq-prev deq)))
-       (macro-tgroup-tgroups-deq-next-set! deq-last item)
-       (macro-tgroup-tgroups-deq-prev-set! deq item)
-       (macro-tgroup-tgroups-deq-next-set! item deq)
-       (macro-tgroup-tgroups-deq-prev-set! item deq-last))))
-
-(##define-macro (macro-tgroup-threads-deq-init! deq)
-  `(let ((deq ,deq))
-
-     (##declare (not interrupts-enabled))
-
-     (macro-tgroup-threads-deq-next-set! deq deq)
-     (macro-tgroup-threads-deq-prev-set! deq deq)))
-
-(##define-macro (macro-tgroup-threads-deq-remove! item)
-  `(let ((item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((item-next (macro-tgroup-threads-deq-next item))
-           (item-prev (macro-tgroup-threads-deq-prev item)))
-       (macro-tgroup-threads-deq-next-set! item-prev item-next)
-       (macro-tgroup-threads-deq-prev-set! item-next item-prev))))
-
-(##define-macro (macro-tgroup-threads-deq-insert! deq item)
-  `(let ((deq ,deq) (item ,item))
-
-     (##declare (not interrupts-enabled))
-
-     ;; add item to tail of deq
-
-     (let ((deq-last (macro-tgroup-threads-deq-prev deq)))
-       (macro-tgroup-threads-deq-next-set! deq-last item)
-       (macro-tgroup-threads-deq-prev-set! deq item)
-       (macro-tgroup-threads-deq-next-set! item deq)
-       (macro-tgroup-threads-deq-prev-set! item deq-last))))
-
-;;; Representation of the run queue.
-
-(define-type run-queue
+(define-type processor
   id: A6899D11-290C-42A6-B47A-57C6B908698F
-  type-exhibitor: macro-type-run-queue
-  constructor: macro-construct-run-queue
-  implementer: implement-type-run-queue
-  predicate: macro-run-queue?
+  type-exhibitor: macro-type-processor
+  constructor: macro-construct-processor
+  implementer: implement-type-processor
+  predicate: macro-processor?
   opaque:
   macros:
   prefix: macro-
 
   unprintable:
 
-  ;; fields 1 and 9 are for locking the queue in a multiprocessor system
+  ;; fields 1 and 9 are for locking in a multiprocessor system
   ;; fields 2 and 3 are the deq links of blocking device condvars
   ;; fields 4 to 6 are for maintaining a queue of runnable threads
   ;; field 7 is the leftmost thread in the queue of runnable threads
@@ -1622,7 +1676,8 @@
   ;; field 13 is the leftmost thread in the timeout queue of threads
   ;; field 16 is for storing the current time, heartbeat interval and a
   ;; temporary float
-  btq-lock1
+  ;; fields 17 and 18 are the deq links of blocked processors
+  lock1
   condvar-deq-next
   condvar-deq-prev
   btq-color
@@ -1630,14 +1685,16 @@
   btq-left
   btq-leftmost
   false
-  btq-lock2
+  lock2
   toq-color
   toq-parent
   toq-left
   toq-leftmost
-  unused1
-  unused2
+  unused-field14
+  unused-field15
   floats
+  processor-deq-next
+  processor-deq-prev
 )
 
 (##define-macro (macro-current-time f)             `(##f64vector-ref ,f 0))
@@ -1650,9 +1707,9 @@
 (##define-macro (macro-update-current-time!)
   `(##get-current-time! (macro-thread-floats (macro-run-queue)) 0))
 
-(##define-macro (macro-make-run-queue)
-  `(let ((run-queue
-          (macro-construct-run-queue
+(##define-macro (macro-make-processor)
+  `(let ((processor
+          (macro-construct-processor
            0
            #f
            #f
@@ -1670,11 +1727,109 @@
            #f
            (##f64vector (macro-inexact-+0)
                         (macro-inexact-+0)
-                        (macro-inexact-+0)))))
-     (macro-btq-deq-init! run-queue)
-     (macro-btq-init! run-queue)
-     (macro-toq-init! run-queue)
-     run-queue))
+                        (macro-inexact-+0))
+           #f
+           #f)))
+     (macro-btq-deq-init! processor)
+     (macro-btq-init! processor)
+     (macro-toq-init! processor)
+     (macro-processor-deq-init! processor)
+     processor))
+
+;;;----------------------------------------------------------------------------
+
+;;; Representation of processor queues.
+
+(##define-macro (macro-processor-deq-next node)        `(macro-slot 17 ,node))
+(##define-macro (macro-processor-deq-next-set! node x) `(macro-slot 17 ,node ,x))
+(##define-macro (macro-processor-deq-prev node)        `(macro-slot 18 ,node))
+(##define-macro (macro-processor-deq-prev-set! node x) `(macro-slot 18 ,node ,x))
+
+;;; Define operations on processor queues.
+
+(define-deq
+ macro-processor-deq-init!
+ macro-processor-deq-insert-at-head!
+ macro-processor-deq-insert-at-tail!
+ macro-processor-deq-remove!
+ macro-processor-deq-empty?
+ macro-processor-deq-head
+ macro-processor-deq-tail
+ macro-processor-deq-next
+ macro-processor-deq-next-set!
+ macro-processor-deq-prev
+ macro-processor-deq-prev-set!)
+
+;;;----------------------------------------------------------------------------
+
+;;; Representation of the VM state.  This is the part of the VM state
+;;; that is implemented at the Scheme level (the other part of the VM
+;;; state is implemented at the host language level).
+
+;;; TODO: consider pre-allocating this structure so there is less
+;;; pressure on the garbage collector.
+
+(define-type vm
+  id: F86D8C06-0129-4798-B170-49E593E6A7FD
+  type-exhibitor: macro-type-vm
+  constructor: macro-construct-vm
+  implementer: implement-type-vm
+  predicate: macro-vm?
+  opaque:
+  macros:
+  prefix: macro-
+
+  unprintable:
+
+  ;; fields 1 and 9 are for locking in a multiprocessor system
+  ;; fields 17 and 18 are the deq links of blocked processors
+  lock1
+  unused-field2
+  unused-field3
+  unused-field4
+  unused-field5
+  unused-field6
+  unused-field7
+  unused-field8
+  lock2
+  unused-field10
+  unused-field11
+  unused-field12
+  unused-field13
+  unused-field14
+  unused-field15
+  unused-field16
+  processor-deq-next
+  processor-deq-prev
+  idle-processor-count ;; count of processors blocked and not waiting for a timeout
+)
+
+(##define-macro (macro-make-vm)
+  `(let ((vm
+          (macro-construct-vm
+           0
+           #f
+           #f
+           #f
+           #f
+           #f
+           #f
+           #f
+           0
+           #f
+           #f
+           #f
+           #f
+           #f
+           #f
+           #f
+           #f
+           #f
+           0)))
+     (macro-processor-deq-init! vm)
+     vm))
+
+;;;----------------------------------------------------------------------------
 
 ;;; Representation of thread states.
 

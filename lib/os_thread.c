@@ -275,13 +275,13 @@ ___processor_state ___ps;)
 
 
 ___WORD ___emulated_compare_and_swap_word
-   ___P((volatile ___WORD *ptr,
+   ___P((___VOLATILE ___WORD *ptr,
          ___WORD oldval,
          ___WORD newval),
         (ptr,
          oldval,
          newval)
-volatile ___WORD *ptr;
+___VOLATILE ___WORD *ptr;
 ___WORD oldval;
 ___WORD newval;)
 {
@@ -303,11 +303,11 @@ ___WORD newval;)
 
 
 ___WORD ___emulated_fetch_and_add_word
-   ___P((volatile ___WORD *ptr,
+   ___P((___VOLATILE ___WORD *ptr,
          ___WORD val),
         (ptr,
          val)
-volatile ___WORD *ptr;
+___VOLATILE ___WORD *ptr;
 ___WORD val;)
 {
   ___WORD temp;
@@ -327,9 +327,9 @@ ___WORD val;)
 
 
 ___WORD ___emulated_fetch_and_clear_word
-   ___P((volatile ___WORD *ptr),
+   ___P((___VOLATILE ___WORD *ptr),
         (ptr)
-volatile ___WORD *ptr;)
+___VOLATILE ___WORD *ptr;)
 {
   ___WORD temp;
   ___MUTEX *mut_ptr =

@@ -2866,7 +2866,7 @@ ___HIDDEN void terminate_intr ___PVOID
 
 ___HIDDEN void log_ctrl_flow_history ___PVOID
 {
-  ___print_ctrl_flow_history (___PSTATE);
+  ___print_ctrl_flow_history ();
 }
 
 #endif
@@ -2909,6 +2909,10 @@ int sig;)
 
     case SIGSEGV:
       msgs[1] = "SIGSEGV";
+      break;
+
+    case SIGILL:
+      msgs[1] = "SIGILL";
       break;
     }
 
@@ -2983,6 +2987,7 @@ ___SCMOBJ ___setup_os ___PVOID
                   ___set_signal_handler (SIGTERM, crash_signal_handler);
                   ___set_signal_handler (SIGBUS,  crash_signal_handler);
                   ___set_signal_handler (SIGSEGV, crash_signal_handler);
+                  ___set_signal_handler (SIGILL,  crash_signal_handler);
 #endif
 #endif
                   return ___FIX(___NO_ERR);

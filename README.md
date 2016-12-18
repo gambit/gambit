@@ -24,6 +24,7 @@ Quick-install instructions for a typical installation
     ./configure --enable-single-host
     make -j4 from-scratch
     make check
+    make -j4 doc
     sudo make install
 
 Detailed installation instructions are given in the file "INSTALL.txt".
