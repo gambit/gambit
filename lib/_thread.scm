@@ -719,7 +719,7 @@
 
 (define-prim (##thread-start! thread)
   (##declare (not interrupts-enabled))
-  (macro-thread-result-set! thread ##thread-start-action!)
+  (macro-thread-exception?-set! thread #f)
   (##btq-insert! (macro-run-queue) thread)
   (macro-thread-reschedule-if-needed!)
   thread)
@@ -918,7 +918,7 @@
               (if (and (##not (##eq? leftmost run-queue))
                        (##not (macro-thread-sooner? run-queue leftmost)))
                   (begin
-                    (macro-thread-result-set! leftmost ##thread-timeout-action!)
+                    (macro-thread-resume-thunk-set! leftmost ##thread-timeout-action!)
                     (macro-thread-btq-remove-if-in-btq! leftmost)
                     (##thread-toq-remove! leftmost)
                     (##btq-insert! run-queue leftmost)
@@ -1000,7 +1000,7 @@
        (lambda (current-thread)
          (##btq-remove! current-thread)
          (macro-thread-unboost-and-clear-quantum-used! current-thread)
-         (macro-thread-result-set! current-thread ##thread-void-action!)
+         (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
          (##btq-insert! (macro-run-queue) current-thread)
          (##thread-schedule!))))))
 
@@ -1010,7 +1010,7 @@
 
   (macro-thread-save!
    (lambda (current-thread)
-     (macro-thread-result-set! current-thread ##thread-void-action!)
+     (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
      (##thread-schedule!))))
 
 (define-prim (##thread-sleep! absrel-timeout)
@@ -1037,6 +1037,20 @@
             (##void))))
       (##void))))
 
+(define-prim (##thread-resume-execution!)
+
+  (##declare (not interrupts-enabled))
+
+  (let ((resume-thunk (macro-thread-resume-thunk (macro-current-thread))))
+    (let loop ()
+      (let ((x (macro-thread-interrupts (macro-current-thread))))
+        (if (##null? x)
+            (resume-thunk)
+            (let ((thunk (##car x)))
+              (macro-thread-interrupts-set! (macro-current-thread) (##cdr x))
+              (thunk)
+              (loop)))))))
+
 (define-prim (##thread-schedule!)
 
   (##declare (not interrupts-enabled))
@@ -1055,7 +1069,7 @@
 
         (macro-thread-restore!
          next-thread
-         (macro-thread-result next-thread))
+         ##thread-resume-execution!)
 
         ;; there are no runnable threads, so check if there are threads
         ;; waiting for a timeout or for a device to become ready
@@ -1207,7 +1221,10 @@
   (macro-thread-btq-remove-if-in-btq! thread)
   (macro-thread-toq-remove-if-in-toq! thread)
 
-  (macro-thread-result-set! thread thunk-returning-void)
+  (macro-thread-interrupts-set!
+   thread
+   (##cons thunk-returning-void
+           (macro-thread-interrupts thread)))
 
   (##btq-insert! (macro-run-queue) thread))
 
@@ -1231,17 +1248,12 @@
     (macro-mutex-lock! result-mutex #f (macro-current-thread))
     (macro-mutex-specific result-mutex)))
 
-(define-prim (##thread-start-action!)
+(define-prim (##thread-execute-and-end! thunk)
 
   (##declare (not interrupts-enabled))
 
-  (let* ((current-thread
-          (macro-current-thread))
-         (thunk
-          (macro-thread-exception? current-thread)))
-    (macro-thread-exception?-set! current-thread #f)
-    (let ((result (thunk)))
-      (##thread-end! (macro-current-thread) #f result))))
+  (let ((result (thunk)))
+    (##thread-end! (macro-current-thread) #f result)))
 
 (define-prim (##thread-check-interrupts!)
   (##declare (interrupts-enabled))
@@ -1914,7 +1926,9 @@
             (macro-btq-unlink! mutex (macro-mutex-state-abandoned)))
         (macro-btq-unlink! mutex (macro-mutex-state-not-owned))))
 
-  (macro-thread-result-set!
+  (macro-thread-result-set! thread #f)
+
+  (macro-thread-resume-thunk-set!
    thread
    (if abandoned?
        ##thread-abandoned-mutex-action!
@@ -2013,7 +2027,7 @@
     (let ((leftmost (macro-btq-leftmost condvar)))
       (if (##not (##eq? leftmost condvar))
         (begin
-          (macro-thread-result-set!
+          (macro-thread-resume-thunk-set!
            leftmost
            ##thread-signaled-condvar-action!)
           (thread-trace 9 (##thread-btq-remove! leftmost))

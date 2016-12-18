@@ -184,7 +184,7 @@
   `(macro-thread-cont ,thread))
 
 (##define-macro (macro-started-thread-given-initialized? thread)
-  `(or (##not (##procedure? (macro-thread-exception? ,thread)))
+  `(or (##not (##eq? 'not-started (macro-thread-exception? ,thread)))
        (macro-thread-result ,thread)))
 
 (##define-macro (macro-terminated-thread-given-initialized? thread)
@@ -940,9 +940,8 @@
 ;; "end-condvar", "exception?" and "result" fields:
 ;;
 ;;  thread state               "end-condvar" "exception?" "result"
-;;  not yet started            condvar       thunk        #f
-;;  started, never run         condvar       thunk        ##thread-start-action!
-;;  started, has run           condvar       #f           action procedure/#f/#t
+;;  not yet started            condvar       'not-started #f
+;;  started                    condvar       #f           #f
 ;;  terminated with result     #f            #f           result object
 ;;  terminated with exception  #f            #t           exception object
 
@@ -983,7 +982,7 @@
   (floats           init: #f)
   (name             init: #f)
   (end-condvar      init: #f)
-  (exception?       init: #f)
+  (exception?       init: 'not-started)
   (result           init: #f)
   (cont             init: #f)
   (denv             init: #f)
@@ -993,6 +992,8 @@
   (repl-channel     init: #f)
   (mailbox          init: #f)
   (specific         init: #f)
+  (resume-thunk     init: #f)
+  (interrupts       init: '())
 )
 
 ;;; Access to floating point fields.
@@ -1109,7 +1110,9 @@
        (macro-thread-floats-set! thread (macro-make-thread-floats p))
        (macro-thread-name-set! thread name)
        (macro-thread-end-condvar-set! thread (macro-make-thread-end-condvar p))
-       (macro-thread-exception?-set! thread thunk)
+       (macro-thread-resume-thunk-set! thread
+        (lambda ()
+          (##thread-execute-and-end! thunk)))
        (macro-thread-cont-set! thread (macro-make-thread-cont p))
        (macro-thread-denv-set! thread (macro-make-thread-denv p))
        (macro-thread-denv-cache1-set! thread (macro-make-thread-denv-cache1 p))
