@@ -1024,6 +1024,7 @@
         (let ((result
                (macro-thread-save!
                 (lambda (current-thread timeout)
+                  (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
                   (##btq-remove! current-thread)
                   (macro-thread-unboost-and-clear-quantum-used!
                    current-thread)
@@ -1402,6 +1403,7 @@
 
                                (if end-condvar
                                  (begin
+                                   (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
                                    (##btq-remove! current-thread)
                                    (macro-thread-boost-and-clear-quantum-used!
                                     current-thread)
@@ -1870,6 +1872,7 @@
                                 (##thread-abandoned-mutex-action!)))
 
                           (begin
+                            (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
                             (##btq-remove! current-thread)
                             (macro-thread-boost-and-clear-quantum-used!
                              current-thread)
@@ -1947,6 +1950,8 @@
     (let ((result
            (macro-thread-save!
             (lambda (current-thread mutex condvar timeout)
+              (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
+
               (##btq-remove! current-thread)
               (macro-thread-boost-and-clear-quantum-used!
                current-thread)
@@ -1978,6 +1983,7 @@
     (let ((result
            (macro-thread-save!
             (lambda (current-thread condvar timeout)
+              (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
               (##btq-remove! current-thread)
               (macro-thread-boost-and-clear-quantum-used!
                current-thread)
