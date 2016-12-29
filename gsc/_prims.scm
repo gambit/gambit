@@ -882,10 +882,6 @@
 ("##thread-save!"                     1     #t ()    1113 (#f)    extended)
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)
 
-("##btq-lock!"                        (1)   #t ()    0    #f      extended);;deprecated
-("##btq-trylock!"                     (1)   #t ()    0    #f      extended);;deprecated
-("##btq-unlock!"                      (1)   #t ()    0    #f      extended);;deprecated
-
 ("##primitive-lock!"                  (1)   #t ()    0    #f      extended)
 ("##primitive-trylock!"               (1)   #t ()    0    #f      extended)
 ("##primitive-unlock!"                (1)   #t ()    0    #f      extended)

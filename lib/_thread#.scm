@@ -1424,15 +1424,15 @@
 
      (##declare (not interrupts-enabled))
 
-     (##btq-lock! mutex)
+     (##primitive-lock! mutex)
      (let ((owner (macro-btq-owner mutex)))
        (if (##eq? owner (macro-mutex-state-not-abandoned))
            (begin
              (macro-btq-link! mutex new-owner)
-             (##btq-unlock! mutex)
+             (##primitive-unlock! mutex)
              #t)
            (begin
-             (##btq-unlock! mutex)
+             (##primitive-unlock! mutex)
              (##mutex-lock-out-of-line! mutex absrel-timeout owner new-owner))))))
 
 (##define-macro (macro-mutex-lock-anonymously! mutex absrel-timeout)
@@ -1440,15 +1440,15 @@
 
      (##declare (not interrupts-enabled))
 
-     (##btq-lock! mutex)
+     (##primitive-lock! mutex)
      (let ((owner (macro-btq-owner mutex)))
        (if (##eq? owner (macro-mutex-state-not-abandoned))
            (begin
              (macro-btq-owner-set! mutex (macro-mutex-state-not-owned))
-             (##btq-unlock! mutex)
+             (##primitive-unlock! mutex)
              #t)
            (begin
-             (##btq-unlock! mutex)
+             (##primitive-unlock! mutex)
              (##mutex-lock-out-of-line! mutex absrel-timeout owner #f))))))
 
 (##define-macro (macro-mutex-unlock! mutex)
@@ -1456,13 +1456,13 @@
 
      (##declare (not interrupts-enabled))
 
-     (##btq-lock! mutex)
+     (##primitive-lock! mutex)
      (macro-btq-deq-remove! mutex)
      (let ((leftmost (macro-btq-leftmost mutex)))
        (if (##eq? leftmost mutex)
            (begin
              (macro-btq-unlink! mutex (macro-mutex-state-not-abandoned))
-             (##btq-unlock! mutex)
+             (##primitive-unlock! mutex)
              (##void))
            (##mutex-signal! mutex leftmost #f)))))
 
@@ -1471,13 +1471,13 @@
 
      (##declare (not interrupts-enabled))
 
-     (##btq-lock! mutex)
+     (##primitive-lock! mutex)
      (macro-btq-deq-remove! mutex)
      (let ((leftmost (macro-btq-leftmost mutex)))
        (if (##eq? leftmost mutex)
            (begin
              (macro-btq-unlink! mutex (macro-mutex-state-not-abandoned))
-             (##btq-unlock! mutex)
+             (##primitive-unlock! mutex)
              (##void))
            (##mutex-signal-no-reschedule! mutex leftmost #f)))))
 

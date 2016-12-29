@@ -3708,10 +3708,6 @@
 (targ-op "##run-queue"        (targ-apply-simp-s #f #f #f "RUNQUEUE"));;deprecated
 (targ-op "##run-queue-of"     (targ-apply-simp-s #f #f #f "RUNQUEUEOF"));;deprecated
 
-(targ-op "##btq-lock!"        (targ-apply-simp-u #f #t 0 "BTQLOCK"));;deprecated
-(targ-op "##btq-trylock!"     (targ-ifjump-simp-u #f "BTQTRYLOCK"));;deprecated
-(targ-op "##btq-unlock!"      (targ-apply-simp-u #f #t 0 "BTQUNLOCK"));;deprecated
-
 (targ-op "##primitive-lock!"    (targ-apply-simp-u #f #t 0 "PRIMITIVELOCK"))
 (targ-op "##primitive-trylock!" (targ-ifjump-simp-u #f "PRIMITIVETRYLOCK"))
 (targ-op "##primitive-unlock!"  (targ-apply-simp-u #f #t 0 "PRIMITIVEUNLOCK"))

@@ -661,7 +661,7 @@
 
 (define-prim (##btq-abandon! btq)
   (##declare (not interrupts-enabled))
-  (##btq-lock! btq)
+  (##primitive-lock! btq)
   (macro-btq-deq-remove! btq)
   (let ((leftmost (macro-btq-leftmost btq)))
     (if (##eq? leftmost btq)
@@ -673,7 +673,7 @@
             (if (macro-thread? owner)
               (thread-trace 0 (##thread-effective-priority-downgrade! owner))))
           (macro-btq-unlink! btq (macro-mutex-state-abandoned))
-          (##btq-unlock! btq))))))
+          (##primitive-unlock! btq))))))
 
 ;;; Implementation of timeout queues.
 
@@ -710,9 +710,9 @@
 (define-prim (##run-queue));;deprecated
 (define-prim (##run-queue-of processor));;deprecated
 
-(define-prim (##btq-lock! btq));;deprecated
-(define-prim (##btq-trylock! btq));;deprecated
-(define-prim (##btq-unlock! btq));;deprecated
+(define-prim (##primitive-lock! btq))
+(define-prim (##primitive-trylock! btq))
+(define-prim (##primitive-unlock! btq))
 
 (define-prim (##make-thread thunk name tgroup)
   (##declare (not interrupts-enabled))
@@ -1558,7 +1558,7 @@
   (declare (not interrupts-enabled))
 
   (macro-processor-init! (##current-processor))
-  (##btq-unlock! (##current-processor))
+  (##primitive-unlock! (##current-processor))
 
   (let* ((tgroup
           (##make-tgroup 'local #f))
@@ -1608,10 +1608,10 @@
 
   ;;TODO: uncomment
   ;;(macro-vm-init! (##current-vm))
-  ;;(##btq-unlock! (##current-vm))
+  ;;(##primitive-unlock! (##current-vm))
 
   (macro-processor-init! (##current-processor))
-  (##btq-unlock! (##current-processor))
+  (##primitive-unlock! (##current-processor))
 
   (let* ((primordial-tgroup
           (##make-tgroup 'primordial #f))
@@ -1853,7 +1853,7 @@
           (let ((result
                  (macro-thread-save!
                   (lambda (current-thread mutex timeout new-owner)
-                    (##btq-lock! mutex)
+                    (##primitive-lock! mutex)
                     (let ((owner (macro-btq-owner mutex)))
 
                       ;; do a final check of the state of the
@@ -1872,7 +1872,7 @@
                                     (macro-btq-link! mutex new-owner)
                                     (macro-btq-owner-set! mutex (macro-mutex-state-abandoned)))
                                 (macro-btq-owner-set! mutex (macro-mutex-state-not-owned)))
-                            (##btq-unlock! mutex)
+                            (##primitive-unlock! mutex)
                             (if (##eq? owner (macro-mutex-state-not-abandoned))
                                 #t
                                 (##thread-abandoned-mutex-action!)))
@@ -1895,7 +1895,7 @@
                                    (macro-run-queue)
                                    current-thread)))
                             (macro-btq-owner-set! mutex owner)
-                            (##btq-unlock! mutex)
+                            (##primitive-unlock! mutex)
                             (##thread-schedule!)))))
 
                   mutex
@@ -1923,7 +1923,7 @@
 
   (thread-trace 8 (##thread-btq-remove! thread))
 
-  (##btq-unlock! mutex)
+  (##primitive-unlock! mutex)
 
   (let ((new-owner (macro-thread-result thread)))
     (if new-owner

@@ -3484,12 +3484,6 @@ do { \
 #define ___TICKETLOCK_UNLOCK2(current) \
 ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 
-/*TODO: remove when bootstrapped*/
-#define ___BTQLOCK(obj)___PRIMITIVELOCK(obj)
-#define ___BTQTRYLOCK(obj)___PRIMITIVETRYLOCK(obj)
-#define ___BTQUNLOCK(obj)___PRIMITIVEUNLOCK(obj)
-
-
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ___VOLATILE
