@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc_.c", produced by Gambit v4.8.6
+; File: "_gsc_.c", produced by Gambit v4.8.7
 (
-408006
+408007
 (C)
 "_gsc_"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_host" (preload . #t)) ("_utils" (preload . #t)) ("_source" (preload . #t)) ("_parms" (preload . #t)) ("_env" (preload . #t)) ("_ptree1" (preload . #t)) ("_ptree2" (preload . #t)) ("_gvm" (preload . #t)) ("_back" (preload . #t)) ("_front" (preload . #t)) ("_prims" (preload . #t)) ("_assert" (preload . #t)) ("_asm" (preload . #t)) ("_x86" (preload . #t)) ("_codegen" (preload . #t)) ("_t-univ-1" (preload . #t)) ("_t-univ-2" (preload . #t)) ("_t-univ-3" (preload . #t)) ("_t-univ-4" (preload . #t)) ("_t-c-1" (preload . #t)) ("_t-c-2" (preload . #t)) ("_t-c-3" (preload . #t)) ("_gsclib" (preload . #t)) ("_gsc" (preload . #t)))
@@ -86,8 +86,8 @@
 "##type-13-6bf088a7-814f-4139-860a-69a757570569"
 "##type-14-4e2301a4-27c7-4eef-b8fd-e046e192500c"
 "##type-15-713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3"
-"##type-16-A6899D11-290C-42A6-B47A-57C6B908698F"
 "##type-18-2babe060-9af6-456f-a26e-40b592f690ec"
+"##type-18-A6899D11-290C-42A6-B47A-57C6B908698F"
 "##type-2-1a1e928d-8df4-11d9-8894-00039301ba52"
 "##type-2-2138cd7f-8c42-4164-b56a-a8c7badf3323"
 "##type-2-299ccee1-77d2-4a6d-ab24-2ebf14297315"
@@ -115,7 +115,6 @@
 "##type-20-59109ed7-6339-4c6e-8bc2-f52e9c91b9f5"
 "##type-20-deebf606-97e4-4d34-8fed-b9e5468851b9"
 "##type-28-0b02934e-7c23-4f9e-a629-0eede16e6987"
-"##type-28-d05e0aa7-e235-441d-aa41-c1ac02065460"
 "##type-3-10aa6857-6f27-45ab-ac38-2318ef2f277c"
 "##type-3-15d36810-b4bf-4609-83cc-761a8868e4a0"
 "##type-3-2cea29df-7f3e-489d-bf83-5925c5081151"
@@ -128,6 +127,7 @@
 "##type-3-ce2e418b-96c7-4562-9cb6-419ec113704e"
 "##type-3-e3dc833e-a176-42c1-bdc0-76a6c4b302f8"
 "##type-3-ffc668b5-2146-42b7-ab11-7d91641f2124"
+"##type-30-d05e0aa7-e235-441d-aa41-c1ac02065460"
 "##type-31-2fb9e1fc-693b-455f-94a2-70c617a304d1"
 "##type-36-85099702-35ec-4cb8-ae55-13c4b9b05d10"
 "##type-37-bebee95d-0da2-401d-a33a-c1afc75b9e43"
@@ -410,8 +410,6 @@
 "btq-deq-prev"
 "btq-left"
 "btq-leftmost"
-"btq-lock1"
-"btq-lock2"
 "btq-owner"
 "btq-parent"
 "buffering"
@@ -896,6 +894,7 @@
 "internal"
 "interned"
 "interpreted-procedure"
+"interrupts"
 "intlength"
 "inttemp1"
 "inttemp2"
@@ -973,6 +972,8 @@
 "load"
 "loads"
 "local"
+"lock1"
+"lock2"
 "log"
 "long"
 "loop"
@@ -1105,6 +1106,7 @@
 "not-abandoned"
 "not-found"
 "not-owned"
+"not-started"
 "nrp"
 "ns"
 "nstr"
@@ -1199,6 +1201,9 @@
 "procedure?"
 "process"
 "process-port"
+"processor"
+"processor-deq-next"
+"processor-deq-prev"
 "promise"
 "proper-tail-calls"
 "protocol"
@@ -1336,6 +1341,7 @@
 "rest_obj"
 "result"
 "result-history"
+"resume-thunk"
 "ret"
 "return"
 "return-internal"
@@ -1358,7 +1364,6 @@
 "rtimeout"
 "rtimeout-thunk"
 "ruby"
-"run-queue"
 "s"
 "s16"
 "s16-expected"
@@ -1737,6 +1742,8 @@
 "unsyntax-splicing"
 "unterminated-process-exception"
 "unused"
+"unused-field14"
+"unused-field15"
 "unused1"
 "unused2"
 "unused3"
@@ -2407,6 +2414,7 @@
 "##current-stepper"
 "##current-time-point"
 "##current-user-interrupt-handler"
+"##current-vm-resize"
 "##datum-parsing-exception-names"
 "##decomp"
 "##decomp-dispatch-table"
@@ -3721,6 +3729,7 @@
 "##thread-effective-priority-downgrade!"
 "##thread-end!"
 "##thread-end-with-uncaught-exception!"
+"##thread-execute-and-end!"
 "##thread-heartbeat!"
 "##thread-heartbeat-interval-set!"
 "##thread-int!"
@@ -3740,12 +3749,12 @@
 "##thread-report-scheduler-error!"
 "##thread-reschedule!"
 "##thread-resume!"
+"##thread-resume-execution!"
 "##thread-schedule!"
 "##thread-send"
 "##thread-signaled-condvar-action!"
 "##thread-sleep!"
 "##thread-start!"
-"##thread-start-action!"
 "##thread-state"
 "##thread-suspend!"
 "##thread-terminate!"
@@ -3843,7 +3852,6 @@
 "##vector-fill!"
 "##vector-ref"
 "##vm-main-module-id"
-"##vm-resize"
 "##void"
 "##void-constant?"
 "##wait-for-io!"
@@ -6734,6 +6742,8 @@
 "##cte-top-cte-set!"
 "##current-processor"
 "##current-thread"
+"##current-vm-processor-count"
+"##cvmr"
 "##define-type-construct-constant"
 "##device-port-wait-for-input!"
 "##device-port-wait-for-output!"
@@ -7079,8 +7089,6 @@
 "##vector-set!"
 "##vector-shrink!"
 "##vector?"
-"##vm-size"
-"##vmr"
 "##will-action"
 "##will-action-set!"
 "##will-execute!"
@@ -8121,7 +8129,7 @@
  #f
 )
 #else
-#define ___VERSION 408006
+#define ___VERSION 408007
 #define ___LINKFILE_NAME "_gsc_"
 #define ___LINKER_ID ____20___gsc__
 #define ___INCREMENTAL_LINKFILE
@@ -8864,6 +8872,9 @@ ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_stepper,___G__23__23_current_2d_stepp
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_thread,___G__23__23_current_2d_thread)
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_time_2d_point,___G__23__23_current_2d_time_2d_point)
 ___DEF_OLD_SYM_GLO(___S__23__23_current_2d_user_2d_interrupt_2d_handler,___G__23__23_current_2d_user_2d_interrupt_2d_handler)
+___DEF_OLD_SYM_GLO(___S__23__23_current_2d_vm_2d_processor_2d_count,___G__23__23_current_2d_vm_2d_processor_2d_count)
+___DEF_OLD_SYM_GLO(___S__23__23_current_2d_vm_2d_resize,___G__23__23_current_2d_vm_2d_resize)
+___DEF_OLD_SYM_GLO(___S__23__23_cvmr,___G__23__23_cvmr)
 ___DEF_OLD_SYM_GLO(___S__23__23_datum_2d_parsing_2d_exception_2d_names,___G__23__23_datum_2d_parsing_2d_exception_2d_names)
 ___DEF_OLD_SYM_GLO(___S__23__23_declare,___G__23__23_declare)
 ___DEF_OLD_SYM_GLO(___S__23__23_decomp,___G__23__23_decomp)
@@ -10510,6 +10521,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_effective_2d_priority_2d_changed_21_,_
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_effective_2d_priority_2d_downgrade_21_,___G__23__23_thread_2d_effective_2d_priority_2d_downgrade_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_end_21_,___G__23__23_thread_2d_end_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_,___G__23__23_thread_2d_end_2d_with_2d_uncaught_2d_exception_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_execute_2d_and_2d_end_21_,___G__23__23_thread_2d_execute_2d_and_2d_end_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_heartbeat_21_,___G__23__23_thread_2d_heartbeat_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_heartbeat_2d_interval_2d_set_21_,___G__23__23_thread_2d_heartbeat_2d_interval_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_int_21_,___G__23__23_thread_2d_int_21_)
@@ -10530,13 +10542,13 @@ ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_report_2d_scheduler_2d_error_21_,___G_
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_reschedule_21_,___G__23__23_thread_2d_reschedule_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_restore_21_,___G__23__23_thread_2d_restore_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_resume_21_,___G__23__23_thread_2d_resume_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_resume_2d_execution_21_,___G__23__23_thread_2d_resume_2d_execution_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_save_21_,___G__23__23_thread_2d_save_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_schedule_21_,___G__23__23_thread_2d_schedule_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_send,___G__23__23_thread_2d_send)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_signaled_2d_condvar_2d_action_21_,___G__23__23_thread_2d_signaled_2d_condvar_2d_action_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_sleep_21_,___G__23__23_thread_2d_sleep_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_start_21_,___G__23__23_thread_2d_start_21_)
-___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_start_2d_action_21_,___G__23__23_thread_2d_start_2d_action_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_state,___G__23__23_thread_2d_state)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_suspend_21_,___G__23__23_thread_2d_suspend_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_thread_2d_terminate_21_,___G__23__23_thread_2d_terminate_21_)
@@ -10589,8 +10601,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_41abc50f_2d_928b_2d_48b9_2d_8d2b_2
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569,___G__23__23_type_2d_13_2d_6bf088a7_2d_814f_2d_4139_2d_860a_2d_69a757570569)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c,___G__23__23_type_2d_14_2d_4e2301a4_2d_27c7_2d_4eef_2d_b8fd_2d_e046e192500c)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3,___G__23__23_type_2d_15_2d_713f0ba8_2d_1d76_2d_4a68_2d_8dfa_2d_eaebd4aef1e3)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_16_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F,___G__23__23_type_2d_16_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec,___G__23__23_type_2d_18_2d_2babe060_2d_9af6_2d_456f_2d_a26e_2d_40b592f690ec)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_18_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F,___G__23__23_type_2d_18_2d_A6899D11_2d_290C_2d_42A6_2d_B47A_2d_57C6B908698F)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52,___G__23__23_type_2d_2_2d_1a1e928d_2d_8df4_2d_11d9_2d_8894_2d_00039301ba52)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_2_2d_2138cd7f_2d_8c42_2d_4164_2d_b56a_2d_a8c7badf3323,___G__23__23_type_2d_2_2d_2138cd7f_2d_8c42_2d_4164_2d_b56a_2d_a8c7badf3323)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_2_2d_299ccee1_2d_77d2_2d_4a6d_2d_ab24_2d_2ebf14297315,___G__23__23_type_2d_2_2d_299ccee1_2d_77d2_2d_4a6d_2d_ab24_2d_2ebf14297315)
@@ -10618,7 +10630,6 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_42696abb_2d_6729_2d_4637_2d_99de_2
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_59109ed7_2d_6339_2d_4c6e_2d_8bc2_2d_f52e9c91b9f5,___G__23__23_type_2d_20_2d_59109ed7_2d_6339_2d_4c6e_2d_8bc2_2d_f52e9c91b9f5)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_20_2d_deebf606_2d_97e4_2d_4d34_2d_8fed_2d_b9e5468851b9,___G__23__23_type_2d_20_2d_deebf606_2d_97e4_2d_4d34_2d_8fed_2d_b9e5468851b9)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_28_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987,___G__23__23_type_2d_28_2d_0b02934e_2d_7c23_2d_4f9e_2d_a629_2d_0eede16e6987)
-___DEF_OLD_SYM_GLO(___S__23__23_type_2d_28_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460,___G__23__23_type_2d_28_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_10aa6857_2d_6f27_2d_45ab_2d_ac38_2d_2318ef2f277c,___G__23__23_type_2d_3_2d_10aa6857_2d_6f27_2d_45ab_2d_ac38_2d_2318ef2f277c)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_15d36810_2d_b4bf_2d_4609_2d_83cc_2d_761a8868e4a0,___G__23__23_type_2d_3_2d_15d36810_2d_b4bf_2d_4609_2d_83cc_2d_761a8868e4a0)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_2cea29df_2d_7f3e_2d_489d_2d_bf83_2d_5925c5081151,___G__23__23_type_2d_3_2d_2cea29df_2d_7f3e_2d_489d_2d_bf83_2d_5925c5081151)
@@ -10631,6 +10642,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_9850f1b3_2d_2e29_2d_4407_2d_af9f_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_ce2e418b_2d_96c7_2d_4562_2d_9cb6_2d_419ec113704e,___G__23__23_type_2d_3_2d_ce2e418b_2d_96c7_2d_4562_2d_9cb6_2d_419ec113704e)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_e3dc833e_2d_a176_2d_42c1_2d_bdc0_2d_76a6c4b302f8,___G__23__23_type_2d_3_2d_e3dc833e_2d_a176_2d_42c1_2d_bdc0_2d_76a6c4b302f8)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_3_2d_ffc668b5_2d_2146_2d_42b7_2d_ab11_2d_7d91641f2124,___G__23__23_type_2d_3_2d_ffc668b5_2d_2146_2d_42b7_2d_ab11_2d_7d91641f2124)
+___DEF_OLD_SYM_GLO(___S__23__23_type_2d_30_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460,___G__23__23_type_2d_30_2d_d05e0aa7_2d_e235_2d_441d_2d_aa41_2d_c1ac02065460)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_31_2d_2fb9e1fc_2d_693b_2d_455f_2d_94a2_2d_70c617a304d1,___G__23__23_type_2d_31_2d_2fb9e1fc_2d_693b_2d_455f_2d_94a2_2d_70c617a304d1)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_36_2d_85099702_2d_35ec_2d_4cb8_2d_ae55_2d_13c4b9b05d10,___G__23__23_type_2d_36_2d_85099702_2d_35ec_2d_4cb8_2d_ae55_2d_13c4b9b05d10)
 ___DEF_OLD_SYM_GLO(___S__23__23_type_2d_37_2d_bebee95d_2d_0da2_2d_401d_2d_a33a_2d_c1afc75b9e43,___G__23__23_type_2d_37_2d_bebee95d_2d_0da2_2d_401d_2d_a33a_2d_c1afc75b9e43)
@@ -10752,9 +10764,6 @@ ___DEF_OLD_SYM_GLO(___S__23__23_vector_2d_set_21_,___G__23__23_vector_2d_set_21_
 ___DEF_OLD_SYM_GLO(___S__23__23_vector_2d_shrink_21_,___G__23__23_vector_2d_shrink_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_vector_3f_,___G__23__23_vector_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_vm_2d_main_2d_module_2d_id,___G__23__23_vm_2d_main_2d_module_2d_id)
-___DEF_OLD_SYM_GLO(___S__23__23_vm_2d_resize,___G__23__23_vm_2d_resize)
-___DEF_OLD_SYM_GLO(___S__23__23_vm_2d_size,___G__23__23_vm_2d_size)
-___DEF_OLD_SYM_GLO(___S__23__23_vmr,___G__23__23_vmr)
 ___DEF_OLD_SYM_GLO(___S__23__23_void,___G__23__23_void)
 ___DEF_OLD_SYM_GLO(___S__23__23_void_2d_constant_3f_,___G__23__23_void_2d_constant_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_wait_2d_for_2d_io_21_,___G__23__23_wait_2d_for_2d_io_21_)
@@ -11354,8 +11363,6 @@ ___DEF_OLD_SYM_GLO(___S_btq_2d_deq_2d_next,___G_btq_2d_deq_2d_next)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_deq_2d_prev,___G_btq_2d_deq_2d_prev)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_left,___G_btq_2d_left)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_leftmost,___G_btq_2d_leftmost)
-___DEF_OLD_SYM_GLO(___S_btq_2d_lock1,___G_btq_2d_lock1)
-___DEF_OLD_SYM_GLO(___S_btq_2d_lock2,___G_btq_2d_lock2)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_owner,___G_btq_2d_owner)
 ___DEF_OLD_SYM_GLO(___S_btq_2d_parent,___G_btq_2d_parent)
 ___DEF_OLD_SYM_GLO(___S_buffering,___G_buffering)
@@ -14553,6 +14560,7 @@ ___DEF_OLD_SYM_GLO(___S_interaction_2d_environment,___G_interaction_2d_environme
 ___DEF_OLD_SYM_GLO(___S_internal,___G_internal)
 ___DEF_OLD_SYM_GLO(___S_interned,___G_interned)
 ___DEF_OLD_SYM_GLO(___S_interpreted_2d_procedure,___G_interpreted_2d_procedure)
+___DEF_OLD_SYM_GLO(___S_interrupts,___G_interrupts)
 ___DEF_OLD_SYM_GLO(___S_intlength,___G_intlength)
 ___DEF_OLD_SYM_GLO(___S_inttemp1,___G_inttemp1)
 ___DEF_OLD_SYM_GLO(___S_inttemp2,___G_inttemp2)
@@ -14655,6 +14663,8 @@ ___DEF_OLD_SYM_GLO(___S_live,___G_live)
 ___DEF_OLD_SYM_GLO(___S_load,___G_load)
 ___DEF_OLD_SYM_GLO(___S_loads,___G_loads)
 ___DEF_OLD_SYM_GLO(___S_local,___G_local)
+___DEF_OLD_SYM_GLO(___S_lock1,___G_lock1)
+___DEF_OLD_SYM_GLO(___S_lock2,___G_lock2)
 ___DEF_OLD_SYM_GLO(___S_log,___G_log)
 ___DEF_OLD_SYM_GLO(___S_long,___G_long)
 ___DEF_OLD_SYM_GLO(___S_loop,___G_loop)
@@ -14838,6 +14848,7 @@ ___DEF_OLD_SYM_GLO(___S_not,___G_not)
 ___DEF_OLD_SYM_GLO(___S_not_2d_abandoned,___G_not_2d_abandoned)
 ___DEF_OLD_SYM_GLO(___S_not_2d_found,___G_not_2d_found)
 ___DEF_OLD_SYM_GLO(___S_not_2d_owned,___G_not_2d_owned)
+___DEF_OLD_SYM_GLO(___S_not_2d_started,___G_not_2d_started)
 ___DEF_OLD_SYM_GLO(___S_nrp,___G_nrp)
 ___DEF_OLD_SYM_GLO(___S_ns,___G_ns)
 ___DEF_OLD_SYM_GLO(___S_nstr,___G_nstr)
@@ -14989,6 +15000,9 @@ ___DEF_OLD_SYM_GLO(___S_process_2d_pid,___G_process_2d_pid)
 ___DEF_OLD_SYM_GLO(___S_process_2d_port,___G_process_2d_port)
 ___DEF_OLD_SYM_GLO(___S_process_2d_status,___G_process_2d_status)
 ___DEF_OLD_SYM_GLO(___S_process_2d_times,___G_process_2d_times)
+___DEF_OLD_SYM_GLO(___S_processor,___G_processor)
+___DEF_OLD_SYM_GLO(___S_processor_2d_deq_2d_next,___G_processor_2d_deq_2d_next)
+___DEF_OLD_SYM_GLO(___S_processor_2d_deq_2d_prev,___G_processor_2d_deq_2d_prev)
 ___DEF_OLD_SYM_GLO(___S_promise,___G_promise)
 ___DEF_OLD_SYM_GLO(___S_proper_2d_tail_2d_calls,___G_proper_2d_tail_2d_calls)
 ___DEF_OLD_SYM_GLO(___S_protocol,___G_protocol)
@@ -15182,6 +15196,7 @@ ___DEF_OLD_SYM_GLO(___S_rest_3f_,___G_rest_3f_)
 ___DEF_OLD_SYM_GLO(___S_rest__obj,___G_rest__obj)
 ___DEF_OLD_SYM_GLO(___S_result,___G_result)
 ___DEF_OLD_SYM_GLO(___S_result_2d_history,___G_result_2d_history)
+___DEF_OLD_SYM_GLO(___S_resume_2d_thunk,___G_resume_2d_thunk)
 ___DEF_OLD_SYM_GLO(___S_ret,___G_ret)
 ___DEF_OLD_SYM_GLO(___S_return,___G_return)
 ___DEF_OLD_SYM_GLO(___S_return_2d_internal,___G_return_2d_internal)
@@ -15208,7 +15223,6 @@ ___DEF_OLD_SYM_GLO(___S_rte,___G_rte)
 ___DEF_OLD_SYM_GLO(___S_rtimeout,___G_rtimeout)
 ___DEF_OLD_SYM_GLO(___S_rtimeout_2d_thunk,___G_rtimeout_2d_thunk)
 ___DEF_OLD_SYM_GLO(___S_ruby,___G_ruby)
-___DEF_OLD_SYM_GLO(___S_run_2d_queue,___G_run_2d_queue)
 ___DEF_OLD_SYM_GLO(___S_s,___G_s)
 ___DEF_OLD_SYM_GLO(___S_s16,___G_s16)
 ___DEF_OLD_SYM_GLO(___S_s16_2d_expected,___G_s16_2d_expected)
@@ -15850,6 +15864,8 @@ ___DEF_OLD_SYM_GLO(___S_unterminated_2d_process_2d_exception_2d_procedure,___G_u
 ___DEF_OLD_SYM_GLO(___S_unterminated_2d_process_2d_exception_3f_,___G_unterminated_2d_process_2d_exception_3f_)
 ___DEF_OLD_SYM_GLO(___S_untrace,___G_untrace)
 ___DEF_OLD_SYM_GLO(___S_unused,___G_unused)
+___DEF_OLD_SYM_GLO(___S_unused_2d_field14,___G_unused_2d_field14)
+___DEF_OLD_SYM_GLO(___S_unused_2d_field15,___G_unused_2d_field15)
 ___DEF_OLD_SYM_GLO(___S_unused1,___G_unused1)
 ___DEF_OLD_SYM_GLO(___S_unused2,___G_unused2)
 ___DEF_OLD_SYM_GLO(___S_unused3,___G_unused3)

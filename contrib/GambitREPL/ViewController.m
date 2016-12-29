@@ -32,7 +32,7 @@ ViewController *theViewController = nil;
  * ___VERSION must match the version number of the Gambit header file.
  */
 
-#define ___VERSION 408006
+#define ___VERSION 408007
 #include "gambit.h"
 
 /*
