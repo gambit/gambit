@@ -1917,22 +1917,22 @@ end-of-code
 
 ;;; VM resizing.
 
-(define ##vm-resize
+(define ##current-vm-resize
   (c-lambda (scheme-object int)
             scheme-object
      #<<end-of-code
 
-     ___return(___EXT(___vm_resize) (___PSP ___arg1, ___arg2));
+     ___return(___EXT(___current_vm_resize) (___PSP ___arg1, ___arg2));
 
 end-of-code
 ))
 
-(define ##vm-size
+(define ##current-vm-processor-count
   (c-lambda ()
             scheme-object
      #<<end-of-code
 
-     ___return(___FIX(___VMSTATE_FROM_PSTATE(___ps)->nb_processors));
+     ___return(___FIX(___VMSTATE_FROM_PSTATE(___ps)->processor_count));
 
 end-of-code
 ))

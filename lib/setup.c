@@ -100,7 +100,7 @@ int code;)
 {
   int i;
 
-  for (i=___vms->nb_processors-1; i>=0; i--)
+  for (i=___vms->processor_count-1; i>=0; i--)
     ___raise_interrupt_pstate (&___vms->pstate[i], code);
 }
 
@@ -249,6 +249,56 @@ ___processor_state ___ps;)
 }
 
 
+___HIDDEN void setup_processor_scmobj_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  int i;
+  ___SCMOBJ p = ___PROCESSOR_SCMOBJ(___ps);
+
+  ___HEADER(p) = ___MAKE_HD((___PROCESSOR_SIZE<<___LWS),___sSTRUCTURE,___PERM);
+
+  for (i=0; i<___PROCESSOR_SIZE; i++)
+    ___VECTORSET(p,___FIX(i),___FAL)
+
+  /*
+   * Setup primitive lock in locked state (the processor will be
+   * unlocked in _thread.scm).
+   */
+
+  ___VECTORSET(p,___FIX(___OBJ_LOCK1),___FIX(0))
+  ___VECTORSET(p,___FIX(___OBJ_LOCK2),___FIX(0))
+
+  ___PRIMITIVELOCK(p)
+}
+
+
+___HIDDEN void setup_vm_scmobj_vmstate
+   ___P((___virtual_machine_state ___vms),
+        (___vms)
+___virtual_machine_state ___vms;)
+{
+  int i;
+  ___SCMOBJ vm = ___VM_SCMOBJ(___vms);
+
+  ___HEADER(vm) = ___MAKE_HD((___VM_SIZE<<___LWS),___sSTRUCTURE,___PERM);
+
+  for (i=0; i<___VM_SIZE; i++)
+    ___VECTORSET(vm,___FIX(i),___FAL)
+
+  /*
+   * Setup primitive lock in locked state (the VM will be
+   * unlocked in _thread.scm).
+   */
+
+  ___VECTORSET(vm,___FIX(___OBJ_LOCK1),___FIX(0))
+  ___VECTORSET(vm,___FIX(___OBJ_LOCK2),___FIX(0))
+
+  ___PRIMITIVELOCK(vm)
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -263,12 +313,12 @@ ___processor_state ___ps;)
 #define COMBINING_MAX 3
 #define OP_MAKE(priority,combining) (((priority)<<2)+(combining))
 
-#define OP_SET_NB_PROCESSORS OP_MAKE( 0,0)
-#define OP_VM_RESIZE         OP_MAKE( 1,0)
-#define OP_GARBAGE_COLLECT   OP_MAKE( 2,COMBINING_ADD)
-#define OP_ACTLOG_START      OP_MAKE(61,0)
-#define OP_ACTLOG_STOP       OP_MAKE(62,0)
-#define OP_NOOP              OP_MAKE(63,0)
+#define OP_SET_PROCESSOR_COUNT OP_MAKE( 0,0)
+#define OP_VM_RESIZE           OP_MAKE( 1,0)
+#define OP_GARBAGE_COLLECT     OP_MAKE( 2,COMBINING_ADD)
+#define OP_ACTLOG_START        OP_MAKE(61,0)
+#define OP_ACTLOG_STOP         OP_MAKE(62,0)
+#define OP_NOOP                OP_MAKE(63,0)
 
 #define SYNC_WAITING -1
 
@@ -337,7 +387,7 @@ ___sync_op_struct *sop_ptr;)
   int id = ___PROCESSOR_ID(___ps, ___vms); /* id of this processor */
   int child_id1 = id*2+1;          /* id of child 1 */
   int child_id2 = id*2+2;          /* id of child 2 */
-  int n = ___vms->nb_processors;   /* number of processors */
+  int n = ___vms->processor_count; /* processor count */
   ___sync_op_struct sop = *sop_ptr;
   int sid = id;
 
@@ -430,11 +480,11 @@ ___sync_op_struct *sop_ptr;)
   if (id == 0)
     {
       /*
-       * Special case operation that sets nb_processors because this
+       * Special case operation that sets processor_count because this
        * information is used by the barrier_sync algorithm itself.
        */
-      if (sop.op == OP_SET_NB_PROCESSORS)
-        ___vms->nb_processors = sop.arg[0];
+      if (sop.op == OP_SET_PROCESSOR_COUNT)
+        ___vms->processor_count = sop.arg[0];
     }
   else
     {
@@ -573,13 +623,13 @@ ___thread *self;)
 ___SCMOBJ ___vm_resize_pstate
    ___P((___processor_state ___ps,
          ___SCMOBJ thunk,
-         ___WORD target_nb_processors),
+         ___WORD target_processor_count),
         (___ps,
          thunk,
-         target_nb_processors)
+         target_processor_count)
 ___processor_state ___ps;
 ___SCMOBJ thunk;
-___WORD target_nb_processors;)
+___WORD target_processor_count;)
 {
   ___SCMOBJ err = ___FIX(___NO_ERR);
 
@@ -588,20 +638,20 @@ ___WORD target_nb_processors;)
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   int id = ___PROCESSOR_ID(___ps, ___vms); /* id of this processor */
   ___sync_op_struct sop;
-  int initial = ___vms->nb_processors;
+  int initial = ___vms->processor_count;
 
   if (id == 0)
     {
-      ___vms->mem.target_nb_processors_ = target_nb_processors;
+      ___vms->mem.target_processor_count_ = target_processor_count;
 
 #ifdef ___ACTIVITY_LOG
-      if (target_nb_processors > ___vms->actlog.max_nb_processors)
-        ___vms->actlog.max_nb_processors = target_nb_processors;
+      if (target_processor_count > ___vms->actlog.max_processor_count)
+        ___vms->actlog.max_processor_count = target_processor_count;
 #endif
     }
 
   if (___vms->mem.the_msections_->nb_sections - ___vms->mem.nb_msections_assigned_ <
-      ___MIN_NB_MSECTIONS_PER_PROCESSOR * (target_nb_processors - initial))
+      ___MIN_NB_MSECTIONS_PER_PROCESSOR * (target_processor_count - initial))
     {
       if (___garbage_collect_pstate (___ps, 0))
         {
@@ -612,7 +662,7 @@ ___WORD target_nb_processors;)
            */
 
           if (id == 0)
-            ___vms->mem.target_nb_processors_ = initial;
+            ___vms->mem.target_processor_count_ = initial;
 
           return ___FIX(___HEAP_OVERFLOW_ERR);
         }
@@ -621,7 +671,7 @@ ___WORD target_nb_processors;)
   if (id != 0)
     {
       /*
-       * Wait for processor 0 to set ___vms->nb_processors.
+       * Wait for processor 0 to set ___vms->processor_count.
        */
 
       barrier_sync_noop (___PSPNC);
@@ -630,7 +680,7 @@ ___WORD target_nb_processors;)
        * Terminate current processor if it is no longer needed.
        */
 
-      if (id >= target_nb_processors)
+      if (id >= target_processor_count)
         ___thread_exit (); /* this call does not return */
     }
   else
@@ -639,7 +689,7 @@ ___WORD target_nb_processors;)
 
       /* Setup processor state of each additional processor */
 
-      for (i=initial; i<target_nb_processors; i++)
+      for (i=initial; i<target_processor_count; i++)
         {
           ___processor_state ps = &___vms->pstate[i];
 
@@ -656,21 +706,21 @@ ___WORD target_nb_processors;)
         }
 
       /*
-       * Set nb_processors synchronously.
+       * Set processor_count synchronously.
        */
 
-      sop.op = OP_SET_NB_PROCESSORS;
-      sop.arg[0] = target_nb_processors;
+      sop.op = OP_SET_PROCESSOR_COUNT;
+      sop.arg[0] = target_processor_count;
       barrier_sync_op (___PSP &sop);
 
-      if (target_nb_processors < initial)
+      if (target_processor_count < initial)
         {
           /*
            * Join processors that are reclaimed when number of
            * processors shrinks.
            */
 
-          for (i=initial-1; i>=target_nb_processors; i--)
+          for (i=initial-1; i>=target_processor_count; i--)
             {
               ___processor_state ps = &___vms->pstate[i];
               ___thread *t = &ps->os_thread;
@@ -684,7 +734,7 @@ ___WORD target_nb_processors;)
            * Create new processors when number of processors grows.
            */
 
-          for (i=initial; i<target_nb_processors; i++)
+          for (i=initial; i<target_processor_count; i++)
             {
               ___processor_state ps = &___vms->pstate[i];
               ___thread *t = &ps->os_thread;
@@ -835,26 +885,26 @@ ___sync_op_struct *sop_ptr;)
 }
 
 
-___EXP_FUNC(___SCMOBJ,___vm_resize)
+___EXP_FUNC(___SCMOBJ,___current_vm_resize)
    ___P((___PSD
          ___SCMOBJ thunk,
-         int target_nb_processors),
+         int target_processor_count),
         (___PSV
          thunk,
-         target_nb_processors)
+         target_processor_count)
 ___PSDKR
 ___SCMOBJ thunk;
-int target_nb_processors;)
+int target_processor_count;)
 {
   ___PSGET
   ___sync_op_struct sop;
 
-  if (target_nb_processors > ___MAX_PROCESSORS)
-    target_nb_processors = ___MAX_PROCESSORS;
+  if (target_processor_count > ___MAX_PROCESSORS)
+    target_processor_count = ___MAX_PROCESSORS;
 
   sop.op = OP_VM_RESIZE;
   sop.arg[0] = thunk;
-  sop.arg[1] = target_nb_processors;
+  sop.arg[1] = target_processor_count;
 
   on_all_processors (___PSP &sop);
 
@@ -2853,7 +2903,7 @@ ___virtual_machine_state ___vms;)
 
   ___printf ("Most recent control-flow history:\n");
 
-  for (i=0; i<___vms->nb_processors; i++)
+  for (i=0; i<___vms->processor_count; i++)
     {
       ___printf ("\nP%d:\n", i);
       ___print_ctrl_flow_history_pstate (&___vms->pstate[i]);
@@ -2894,7 +2944,7 @@ ___virtual_machine_state ___vms;)
 
   ___printf ("Control-flow last seen:\n");
 
-  for (i=0; i<___vms->nb_processors; i++)
+  for (i=0; i<___vms->processor_count; i++)
     {
       ___printf ("P%d: ", i);
       ___print_ctrl_flow_last_seen_pstate (&___vms->pstate[i]);
@@ -3089,7 +3139,12 @@ ___virtual_machine_state ___vms;)
    */
 
   ___ps->current_thread = ___FAL;
-  ___ps->run_queue = ___FAL;
+
+  /*
+   * Setup Scheme processor object of this processor.
+   */
+
+  setup_processor_scmobj_pstate (___ps);
 
   /*
    * Setup registers.
@@ -3154,8 +3209,14 @@ ___virtual_machine_state ___vms;)
    * Virtual machine starts off with a single processor.
    */
 
-  ___vms->nb_processors = 1;
-  ___vms->mem.target_nb_processors_ = 1;
+  ___vms->processor_count = 1;
+  ___vms->mem.target_processor_count_ = 1;
+
+  /*
+   * Setup Scheme VM object.
+   */
+
+  setup_vm_scmobj_vmstate (___vms);
 
   /*
    * Setup virtual machine's activity log.
@@ -3188,7 +3249,7 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
 
   ___processor_state ___ps = ___PSTATE;
 
-  ___vm_resize (___PSP ___FAL, 1);
+  ___current_vm_resize (___PSP ___FAL, 1);
 
 #endif
 
@@ -4123,8 +4184,8 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___cleanup_and_exit_process
     = ___cleanup_and_exit_process;
 
-  ___GSTATE->___vm_resize
-    = ___vm_resize;
+  ___GSTATE->___current_vm_resize
+    = ___current_vm_resize;
 
   ___GSTATE->___garbage_collect
     = ___garbage_collect;

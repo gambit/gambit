@@ -1736,6 +1736,20 @@
      (macro-processor-deq-init! processor)
      processor))
 
+(##define-macro (macro-processor-init! processor)
+  `(let ((processor ,processor))
+     (##structure-type-set! processor (macro-type-processor))
+     (macro-processor-floats-set!
+      processor
+      (##f64vector (macro-inexact-+0)
+                   (macro-inexact-+0)
+                   (macro-inexact-+0)))
+     (macro-btq-deq-init! processor)
+     (macro-btq-init! processor)
+     (macro-toq-init! processor)
+     (macro-processor-deq-init! processor)
+     processor))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Representation of processor queues.
@@ -1783,6 +1797,7 @@
 
   ;; fields 1 and 9 are for locking in a multiprocessor system
   ;; fields 17 and 18 are the deq links of blocked processors
+  ;; field 19 is count of processors blocked and not waiting for a timeout
   lock1
   unused-field2
   unused-field3
@@ -1801,7 +1816,7 @@
   unused-field16
   processor-deq-next
   processor-deq-prev
-  idle-processor-count ;; count of processors blocked and not waiting for a timeout
+  idle-processor-count
 )
 
 (##define-macro (macro-make-vm)
@@ -1827,6 +1842,13 @@
            #f
            0)))
      (macro-processor-deq-init! vm)
+     vm))
+
+(##define-macro (macro-vm-init! vm)
+  `(let ((vm ,vm))
+     (##structure-type-set! vm (macro-type-vm))
+     (macro-processor-deq-init! vm)
+     (macro-vm-idle-processor-count-set! vm 0)
      vm))
 
 ;;;----------------------------------------------------------------------------

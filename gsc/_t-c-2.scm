@@ -3702,12 +3702,19 @@
 
 (targ-op "##current-thread"   (targ-apply-simp-s #f #f #f "CURRENTTHREAD"))
 (targ-op "##current-processor" (targ-apply-simp-s #f #f #f "CURRENTPROCESSOR"))
-(targ-op "##run-queue"        (targ-apply-simp-s #f #f #f "RUNQUEUE"))
-(targ-op "##run-queue-of"     (targ-apply-simp-s #f #f #f "RUNQUEUEOF"))
+(targ-op "##current-processor-id" (targ-apply-simp-s #f #f #f "CURRENTPROCESSORID"))
+(targ-op "##processor"        (targ-apply-simp-s #f #f #f "PROCESSOR"))
+(targ-op "##current-vm"       (targ-apply-simp-s #f #f #f "CURRENTVM"))
+(targ-op "##run-queue"        (targ-apply-simp-s #f #f #f "RUNQUEUE"));;deprecated
+(targ-op "##run-queue-of"     (targ-apply-simp-s #f #f #f "RUNQUEUEOF"));;deprecated
 
-(targ-op "##btq-lock!"        (targ-apply-simp-u #f #t 0 "BTQLOCK"))
-(targ-op "##btq-trylock!"     (targ-ifjump-simp-u #f "BTQTRYLOCK"))
-(targ-op "##btq-unlock!"      (targ-apply-simp-u #f #t 0 "BTQUNLOCK"))
+(targ-op "##btq-lock!"        (targ-apply-simp-u #f #t 0 "BTQLOCK"));;deprecated
+(targ-op "##btq-trylock!"     (targ-ifjump-simp-u #f "BTQTRYLOCK"));;deprecated
+(targ-op "##btq-unlock!"      (targ-apply-simp-u #f #t 0 "BTQUNLOCK"));;deprecated
+
+(targ-op "##primitive-lock!"    (targ-apply-simp-u #f #t 0 "PRIMITIVELOCK"))
+(targ-op "##primitive-trylock!" (targ-ifjump-simp-u #f "PRIMITIVETRYLOCK"))
+(targ-op "##primitive-unlock!"  (targ-apply-simp-u #f #t 0 "PRIMITIVEUNLOCK"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

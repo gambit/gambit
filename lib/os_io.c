@@ -9785,11 +9785,11 @@ ___SCMOBJ dev;)
 /* Waiting for I/O to become possible on a set of devices. */
 
 ___SCMOBJ ___os_condvar_select
-   ___P((___SCMOBJ run_queue,
+   ___P((___SCMOBJ devices,
          ___SCMOBJ timeout),
-        (run_queue,
+        (devices,
          timeout)
-___SCMOBJ run_queue;
+___SCMOBJ devices;
 ___SCMOBJ timeout;)
 {
   ___SCMOBJ e;
@@ -9802,7 +9802,7 @@ ___SCMOBJ timeout;)
   else
     ___time_from_seconds (&to, ___F64VECTORREF(timeout,___FIX(0)));
 
-  if (___FALSEP(run_queue))
+  if (___FALSEP(devices))
     {
       e = ___device_select (NULL, 0, 0, to);
     }
@@ -9816,9 +9816,9 @@ ___SCMOBJ timeout;)
       int i;
       int j;
 
-      condvar = ___FIELD(run_queue,___BTQ_DEQ_NEXT);
+      condvar = ___FIELD(devices,___BTQ_DEQ_NEXT);
 
-      while (condvar != run_queue)
+      while (condvar != devices)
         {
           ___SCMOBJ owner = ___FIELD(condvar,___BTQ_OWNER);
           if (read_pos < write_pos)

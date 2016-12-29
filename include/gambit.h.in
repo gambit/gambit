@@ -2291,6 +2291,8 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___FOREIGN_TAGS 0
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
+#define ___PROCESSOR_SIZE 19
+#define ___VM_SIZE 20
 
 /* Flonum boxing and unboxing */
 
@@ -3422,11 +3424,19 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_KEY0      5
 #define ___GCHASHTABLE_VAL0      6
 
-#define ___CURRENTPROCESSOR ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)))
 #define ___CURRENTTHREAD ___ps->current_thread
-#define ___RUNQUEUE ___ps->run_queue
-#define ___RUNQUEUEOF(p) ___PSTATE_FROM_PROCESSOR_ID(___INT(p),___VMSTATE_FROM_PSTATE(___ps))->run_queue
 
+#define ___PROCESSOR_SCMOBJ(ps)___TAG(___ALIGNUP((ps)->processor_scmobj+(___SUBTYPED_OVERHEAD-___BODY_OFS),___WS),___tSUBTYPED)
+
+#define ___RUNQUEUE ___CURRENTPROCESSOR
+#define ___RUNQUEUEOF(id)___PROCESSOR(id)
+#define ___CURRENTPROCESSOR ___PROCESSOR_SCMOBJ(___ps)
+#define ___CURRENTPROCESSORID ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)))
+#define ___PROCESSOR(id) ___PROCESSOR_SCMOBJ(___PSTATE_FROM_PROCESSOR_ID(___INT(id),___VMSTATE_FROM_PSTATE(___ps)))
+
+#define ___VM_SCMOBJ(vms)___TAG(___ALIGNUP((vms)->vm_scmobj+(___SUBTYPED_OVERHEAD-___BODY_OFS),___WS),___tSUBTYPED)
+
+#define ___CURRENTVM ___VM_SCMOBJ(___VMSTATE_FROM_PSTATE(___ps))
 
 #define ___TICKETLOCK ___ticketlock_struct
 
@@ -3474,14 +3484,19 @@ do { \
 #define ___TICKETLOCK_UNLOCK2(current) \
 ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 
+/*TODO: remove when bootstrapped*/
+#define ___BTQLOCK(obj)___PRIMITIVELOCK(obj)
+#define ___BTQTRYLOCK(obj)___PRIMITIVETRYLOCK(obj)
+#define ___BTQUNLOCK(obj)___PRIMITIVEUNLOCK(obj)
+
 
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ___VOLATILE
 
-#define ___BTQLOCK(btq)
-#define ___BTQTRYLOCK(btq) 1
-#define ___BTQUNLOCK(btq)
+#define ___PRIMITIVELOCK(obj)
+#define ___PRIMITIVETRYLOCK(obj) 1
+#define ___PRIMITIVEUNLOCK(obj)
 
 #define ___SPINLOCK int
 #define ___SPINLOCK_DECL(id)
@@ -3494,14 +3509,14 @@ ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 
 #define ___VOLATILE volatile
 
-#define ___BTQLOCK(btq) \
-___TICKETLOCK_LOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2));
+#define ___PRIMITIVELOCK(obj) \
+___TICKETLOCK_LOCK2(___FIELD(obj,___OBJ_LOCK1),___FIELD(obj,___OBJ_LOCK2));
 
-#define ___BTQTRYLOCK(btq) \
-___TICKETLOCK_TRYLOCK2(___FIELD(btq,___BTQ_LOCK1),___FIELD(btq,___BTQ_LOCK2),___temp)
+#define ___PRIMITIVETRYLOCK(obj) \
+___TICKETLOCK_TRYLOCK2(___FIELD(obj,___OBJ_LOCK1),___FIELD(obj,___OBJ_LOCK2),___temp)
 
-#define ___BTQUNLOCK(btq) \
-___TICKETLOCK_UNLOCK2(___FIELD(btq,___BTQ_LOCK2));
+#define ___PRIMITIVEUNLOCK(obj) \
+___TICKETLOCK_UNLOCK2(___FIELD(obj,___OBJ_LOCK2));
 
 #ifdef ___USE_MUTEX_FOR_SPINLOCK
 
@@ -3656,7 +3671,9 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___WILL_TESTATOR 1
 #define ___WILL_ACTION   2
 
-#define ___BTQ_LOCK1    1
+#define ___OBJ_LOCK1    1
+#define ___OBJ_LOCK2    9
+
 #define ___BTQ_DEQ_NEXT 2
 #define ___BTQ_DEQ_PREV 3
 #define ___BTQ_COLOR    4
@@ -3665,7 +3682,6 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___BTQ_RIGHT    7
 #define ___BTQ_LEFTMOST 7
 #define ___BTQ_OWNER    8
-#define ___BTQ_LOCK2    9
 
 #define ___CONDVAR_NAME 10
 
@@ -7881,7 +7897,7 @@ typedef struct ___vmstate_actlog
     ___actlog_activity *activities;
     int nb_activities;
     ___BOOL auto_dump;
-    int max_nb_processors;
+    int max_processor_count;
   } ___vmstate_actlog;
 
 typedef struct ___pstate_actlog
@@ -8181,7 +8197,7 @@ ___msection *alloc_msection_;
 int nb_msections_assigned_;
 
 /* Used for resizing VM (number of processors after the resize operation) */
-___VOLATILE int target_nb_processors_;
+___VOLATILE int target_processor_count_;
 
 #ifndef ___SINGLE_THREADED_VMS
 
@@ -8269,7 +8285,6 @@ typedef struct ___processor_state_struct
     ___WORD *hp;
 
     ___WORD current_thread; /* the current thread of this processor */
-    ___WORD run_queue; /* the queue of runnable threads of this processor */
 
     ___WORD r[___NB_GVM_REGS];
     ___WORD pc;
@@ -8286,6 +8301,8 @@ typedef struct ___processor_state_struct
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
     ___VOLATILE ___WORD intr_flag[___NB_INTRS];
+
+    ___WORD processor_scmobj[___SUBTYPED_OVERHEAD+___PROCESSOR_SIZE+___PADDING_SIZE]; /* Scheme processor object */
 
 #ifdef ___ACTIVITY_LOG
     ___pstate_actlog actlog; /* activity log state */
@@ -8439,7 +8456,9 @@ typedef struct ___virtual_machine_state_struct
   {
     ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
 
-    ___VOLATILE int nb_processors; /* number of processors in this VM */
+    ___VOLATILE int processor_count; /* number of processors in this VM */
+
+    ___WORD vm_scmobj[___SUBTYPED_OVERHEAD+___VM_SIZE+___PADDING_SIZE]; /* Scheme vm object */
 
 #ifdef ___ACTIVITY_LOG
     ___vmstate_actlog actlog; /* activity log state */
@@ -9717,10 +9736,10 @@ typedef struct ___global_state_struct
     void (*___cleanup_and_exit_process)
        ___P((int status),
             ());
-    ___SCMOBJ (*___vm_resize)
+    ___SCMOBJ (*___current_vm_resize)
        ___P((___PSD
             ___SCMOBJ thunk,
-            int target_nb_processors),
+            int target_processor_count),
            ());
     ___BOOL (*___garbage_collect)
        ___P((___PSD
@@ -11040,10 +11059,10 @@ ___IMP_FUNC(void,___cleanup) ___PVOID;
 ___IMP_FUNC(void,___cleanup_and_exit_process)
    ___P((int status),
         ());
-___IMP_FUNC(___SCMOBJ,___vm_resize)
+___IMP_FUNC(___SCMOBJ,___current_vm_resize)
    ___P((___PSD
          ___SCMOBJ thunk,
-         int target_nb_processors),
+         int target_processor_count),
         ());
 ___IMP_FUNC(___BOOL,___garbage_collect)
    ___P((___PSD

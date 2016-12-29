@@ -707,12 +707,12 @@
 
 (define-prim (##current-thread))
 (define-prim (##current-processor))
-(define-prim (##run-queue))
-(define-prim (##run-queue-of processor))
+(define-prim (##run-queue));;deprecated
+(define-prim (##run-queue-of processor));;deprecated
 
-(define-prim (##btq-lock! btq))
-(define-prim (##btq-trylock! btq))
-(define-prim (##btq-unlock! btq))
+(define-prim (##btq-lock! btq));;deprecated
+(define-prim (##btq-trylock! btq));;deprecated
+(define-prim (##btq-unlock! btq));;deprecated
 
 (define-prim (##make-thread thunk name tgroup)
   (##declare (not interrupts-enabled))
@@ -1557,6 +1557,9 @@
 
   (declare (not interrupts-enabled))
 
+  (macro-processor-init! (##current-processor))
+  (##btq-unlock! (##current-processor))
+
   (let* ((tgroup
           (##make-tgroup 'local #f))
          (input-port
@@ -1574,11 +1577,9 @@
     (##c-code
      "
      ___CURRENTTHREAD = ___ARG1;
-     ___RUNQUEUE = ___ARG2;
      ___RESULT = ___FAL;
      "
-     thread
-     (macro-make-processor))
+     thread)
 
     (##btq-insert! (macro-run-queue) thread)
     )
@@ -1590,8 +1591,8 @@
     (##os-condvar-select! #f #t) ;; wait for interrupt
     (loop)))
 
-(define (##vmr n)
-  (##vm-resize ##startup-processor! n))
+(define (##cvmr n)
+  (##current-vm-resize ##startup-processor! n))
 
 (define (##startup-parallelism!)
   (let* ((level
@@ -1599,11 +1600,18 @@
          (nb-procs
           (if (##fx> level 0) level (##fx+ (##cpu-count) level))))
     (if (##fx> nb-procs 1)
-        (##vmr nb-procs))))
+        (##cvmr nb-procs))))
 
 (define-prim (##startup-threading!)
 
   (##declare (not interrupts-enabled))
+
+  ;;TODO: uncomment
+  ;;(macro-vm-init! (##current-vm))
+  ;;(##btq-unlock! (##current-vm))
+
+  (macro-processor-init! (##current-processor))
+  (##btq-unlock! (##current-processor))
 
   (let* ((primordial-tgroup
           (##make-tgroup 'primordial #f))
@@ -1624,11 +1632,9 @@
     (##c-code
      "
      ___CURRENTTHREAD = ___ARG1;
-     ___RUNQUEUE = ___ARG2;
      ___RESULT = ___FAL;
      "
-     primordial-thread
-     (macro-make-processor))
+     primordial-thread)
 
     (##btq-insert! (macro-run-queue) primordial-thread)
 

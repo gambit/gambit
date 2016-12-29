@@ -323,7 +323,7 @@
 #define the_msections           ___VMSTATE_MEM(the_msections_)
 #define alloc_msection          ___VMSTATE_MEM(alloc_msection_)
 #define nb_msections_assigned   ___VMSTATE_MEM(nb_msections_assigned_)
-#define target_nb_processors    ___VMSTATE_MEM(target_nb_processors_)
+#define target_processor_count  ___VMSTATE_MEM(target_processor_count_)
 
 #ifndef ___SINGLE_THREADED_VMS
 #define misc_mem_lock           ___VMSTATE_MEM(misc_mem_lock_)
@@ -2185,15 +2185,16 @@ ___SCMOBJ val;)
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
 
-#define IN_OBJECT         0
-#define IN_REGISTER       1
-#define IN_CURRENT_THREAD 2
-#define IN_RUN_QUEUE      3
-#define IN_SYMKEY_TABLE   4
-#define IN_GLOBAL_VAR     5
-#define IN_WILL_LIST      6
-#define IN_CONTINUATION   7
-#define IN_RC             8
+#define IN_OBJECT           0
+#define IN_REGISTER         1
+#define IN_CURRENT_THREAD   2
+#define IN_PROCESSOR_SCMOBJ 3
+#define IN_VM_SCMOBJ        4
+#define IN_SYMKEY_TABLE     5
+#define IN_GLOBAL_VAR       6
+#define IN_WILL_LIST        7
+#define IN_CONTINUATION     8
+#define IN_RC               9
 
 
 ___HIDDEN void print_prefix
@@ -2569,8 +2570,12 @@ char *msg;)
       ___printf (">>> The reference was found in a current thread\n");
       break;
 
-    case IN_RUN_QUEUE:
-      ___printf (">>> The reference was found in the run queue\n");
+    case IN_PROCESSOR_SCMOBJ:
+      ___printf (">>> The reference was found in the processor object\n");
+      break;
+
+    case IN_VM_SCMOBJ:
+      ___printf (">>> The reference was found in the VM object\n");
       break;
 
     case IN_SYMKEY_TABLE:
@@ -3048,7 +3053,7 @@ ___virtual_machine_state ___vms;)
 #define ___VMSTATE_MEM(var) ___vms->mem.var
 
   ___msection *alloc = the_msections->head;
-  int np = ___vms->nb_processors;
+  int np = ___vms->processor_count;
   int i;
 
   for (i=0; i<np; i++)
@@ -4343,7 +4348,7 @@ ___virtual_machine_state ___vms;)
   /* Allocate msections of VM */
 
   init_nb_sections =
-    ___MIN_NB_MSECTIONS_PER_PROCESSOR * ___vms->nb_processors +
+    ___MIN_NB_MSECTIONS_PER_PROCESSOR * ___vms->processor_count +
     ___CEILING_DIV((___GSTATE->setup_params.min_heap >> ___LWS) +
                    normal_overflow_reserve,
                    ___MSECTION_SIZE - 2*___MSECTION_FUDGE);
@@ -5369,7 +5374,7 @@ ___virtual_machine_state ___vms;)
    */
 
   int p;
-  int np = ___vms->nb_processors;
+  int np = ___vms->processor_count;
   ___SIZE_TS movable = 0;
   ___SIZE_TS still = 0;
   ___F64 bytes_allocated = 0.0;
@@ -5479,7 +5484,7 @@ ___SIZE_TS requested_words_still;)
    */
 
   target_nb_sections =
-    ___MIN_NB_MSECTIONS_PER_PROCESSOR * target_nb_processors +
+    ___MIN_NB_MSECTIONS_PER_PROCESSOR * target_processor_count +
     ___CEILING_DIV(target_movable_space + normal_overflow_reserve,
                    ___MSECTION_SIZE - 2*___MSECTION_FUDGE);
 
@@ -5537,7 +5542,7 @@ ___PSDKR)
 }
 
 
-___HIDDEN void mark_run_queue
+___HIDDEN void mark_processor_scmobj
    ___P((___PSDNC),
         (___PSVNC)
 ___PSDKR)
@@ -5545,10 +5550,30 @@ ___PSDKR)
   ___PSGET
 
 #ifdef ENABLE_CONSISTENCY_CHECKS
-  reference_location = IN_RUN_QUEUE;
+  reference_location = IN_PROCESSOR_SCMOBJ;
 #endif
 
-  mark_array (___PSP &___ps->run_queue, 1);
+  mark_array (___PSP
+              ___BODY_AS(___PROCESSOR_SCMOBJ(___ps),___tSUBTYPED),
+              ___PROCESSOR_SIZE);
+}
+
+
+___HIDDEN void mark_vm_scmobj
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_VM_SCMOBJ;
+#endif
+
+  mark_array (___PSP
+              ___BODY_AS(___VM_SCMOBJ(___vms),___tSUBTYPED),
+              ___VM_SIZE);
 }
 
 
@@ -5572,7 +5597,7 @@ ___PSDKR)
 #ifdef ___SINGLE_VM
 
   {
-    int np = ___vms->nb_processors;
+    int np = ___vms->processor_count;
     int lo = (id * ___GLO_SUBLIST_COUNT) / np;
     int hi = ((id+1) * ___GLO_SUBLIST_COUNT) / np;
 
@@ -5599,7 +5624,7 @@ ___PSDKR)
 
   {
     int n = ___GSTATE->mem.glo_list.count;
-    int np = ___vms->nb_processors;
+    int np = ___vms->processor_count;
     int lo = (id * n) / np;
     int hi = ((id+1) * n) / np;
 
@@ -5639,7 +5664,7 @@ ___PSDKR)
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   ___VOLATILE ___WORD *workers_count = &scan_workers_count[traverse_weak_refs];
-  int np = ___vms->nb_processors;
+  int np = ___vms->processor_count;
   int id = ___PROCESSOR_ID(___ps,___vms); /* id of this processor */
   int i;
 
@@ -5815,6 +5840,7 @@ ___PSDKR)
 
   if (___PROCESSOR_ID(___ps,___vms) == 0)
     {
+      mark_vm_scmobj (___PSPNC);
       mark_symkey_tables (___PSPNC);
       mark_rc (___PSPNC);
     }
@@ -5827,7 +5853,7 @@ ___PSDKR)
 
   mark_current_thread (___PSPNC);
 
-  mark_run_queue (___PSPNC);
+  mark_processor_scmobj (___PSPNC);
 
   mark_reachable_from_marked (___PSPNC);
 
@@ -5935,7 +5961,7 @@ ___SIZE_TS requested_words_still;)
 
   {
     int p;
-    int np = ___vms->nb_processors;
+    int np = ___vms->processor_count;
     for (p=0; p<np; p++)
       {
         if (___PROCESSOR_ID(___ps,___vms) == p)

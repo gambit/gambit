@@ -103,7 +103,7 @@ ___virtual_machine_state ___vms;)
   ___vms->actlog.activities = ptr;
   ___vms->actlog.nb_activities = 0;
   ___vms->actlog.auto_dump = 1;
-  ___vms->actlog.max_nb_processors = ___vms->nb_processors;
+  ___vms->actlog.max_processor_count = ___vms->processor_count;
 
 #endif
 
@@ -465,9 +465,9 @@ char *filename;)
       write_string (out, act->name);
     }
 
-  write_U32 (out, ___vms->actlog.max_nb_processors);
+  write_U32 (out, ___vms->actlog.max_processor_count);
 
-  for (i=0; i<___vms->actlog.max_nb_processors; i++)
+  for (i=0; i<___vms->actlog.max_processor_count; i++)
     {
       ___processor_state ___ps = &___vms->pstate[i];
       ___actlog_transition *ptr = ___ps->actlog.transitions + ___MAX_NB_ACTLOG_TRANSITIONS;
