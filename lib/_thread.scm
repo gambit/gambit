@@ -707,6 +707,9 @@
 
 (define-prim (##current-thread))
 (define-prim (##current-processor))
+(define-prim (##current-processor-id))
+(define-prim (##processor id))
+(define-prim (##current-vm))
 (define-prim (##run-queue));;deprecated
 (define-prim (##run-queue-of processor));;deprecated
 
