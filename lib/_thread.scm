@@ -1609,9 +1609,8 @@
 
   (##declare (not interrupts-enabled))
 
-  ;;TODO: uncomment
-  ;;(macro-vm-init! (##current-vm))
-  ;;(##primitive-unlock! (##current-vm))
+  (macro-vm-init! (##current-vm))
+  (##primitive-unlock! (##current-vm))
 
   (macro-processor-init! (##current-processor))
   (##primitive-unlock! (##current-processor))
