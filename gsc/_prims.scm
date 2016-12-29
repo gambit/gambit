@@ -876,8 +876,6 @@
 ("##current-processor-id"             (0)   #f ()    0    fixnum  extended)
 ("##processor"                        (1)   #f ()    0    #f      extended)
 ("##current-vm"                       (0)   #f ()    0    #f      extended)
-("##run-queue"                        (0)   #f ()    0    #f      extended);;deprecated
-("##run-queue-of"                     (1)   #f ()    0    #f      extended);;deprecated
 
 ("##thread-save!"                     1     #t ()    1113 (#f)    extended)
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)

@@ -3705,8 +3705,6 @@
 (targ-op "##current-processor-id" (targ-apply-simp-s #f #f #f "CURRENTPROCESSORID"))
 (targ-op "##processor"        (targ-apply-simp-s #f #f #f "PROCESSOR"))
 (targ-op "##current-vm"       (targ-apply-simp-s #f #f #f "CURRENTVM"))
-(targ-op "##run-queue"        (targ-apply-simp-s #f #f #f "RUNQUEUE"));;deprecated
-(targ-op "##run-queue-of"     (targ-apply-simp-s #f #f #f "RUNQUEUEOF"));;deprecated
 
 (targ-op "##primitive-lock!"    (targ-apply-simp-u #f #t 0 "PRIMITIVELOCK"))
 (targ-op "##primitive-trylock!" (targ-ifjump-simp-u #f "PRIMITIVETRYLOCK"))

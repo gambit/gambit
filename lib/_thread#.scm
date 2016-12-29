@@ -1228,7 +1228,7 @@
 
      (##declare (not interrupts-enabled))
 
-     (let ((leftmost (macro-btq-leftmost (macro-run-queue))))
+     (let ((leftmost (macro-btq-leftmost (macro-current-processor))))
        (if (##not (##eq? leftmost (macro-current-thread)))
          (##thread-reschedule!)
          (##void)))))
@@ -1239,8 +1239,8 @@
 (##define-macro (macro-thread-restore! thread proc . args)
   `(##thread-restore! ,thread ,proc ,@args))
 
-(##define-macro (macro-run-queue)
-  `(##run-queue))
+(##define-macro (macro-current-processor)
+  `(##current-processor))
 
 (##define-macro (macro-primordial-thread)
   `##primordial-thread)
@@ -1291,7 +1291,7 @@
            ;; save old boosted priority for ##thread-boosted-priority-changed!
 
            (macro-temp-set!
-            (macro-thread-floats (macro-run-queue))
+            (macro-thread-floats (macro-current-processor))
             (macro-boosted-priority floats))
 
            (macro-boosted-priority-set!
@@ -1315,7 +1315,7 @@
            ;; save old boosted priority for ##thread-boosted-priority-changed!
 
            (macro-temp-set!
-            (macro-thread-floats (macro-run-queue))
+            (macro-thread-floats (macro-current-processor))
             (macro-boosted-priority floats))
 
            (macro-boosted-priority-set!
@@ -1705,7 +1705,7 @@
 (##define-macro (macro-temp-set! f x)              `(##f64vector-set! ,f 2 ,x))
 
 (##define-macro (macro-update-current-time!)
-  `(##get-current-time! (macro-thread-floats (macro-run-queue)) 0))
+  `(##get-current-time! (macro-thread-floats (macro-current-processor)) 0))
 
 (##define-macro (macro-make-processor)
   `(let ((processor

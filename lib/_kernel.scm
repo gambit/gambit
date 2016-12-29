@@ -4341,11 +4341,11 @@ end-of-code
             scheme-object
    "___os_device_tty_mode_set"))
 
-(define-prim (##os-condvar-select! run-queue timeout)
+(define-prim (##os-condvar-select! devices timeout)
   (##declare (not interrupts-enabled))
   (##c-code
    "___RESULT = ___os_condvar_select (___ARG1, ___ARG2);"
-   run-queue
+   devices
    timeout))
 
 (define-prim ##os-port-decode-chars!

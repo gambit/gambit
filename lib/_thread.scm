@@ -583,7 +583,7 @@
          (macro-update-current-time!)
          (let ((current-time
                 (macro-current-time
-                 (macro-thread-floats (macro-run-queue))))
+                 (macro-thread-floats (macro-current-processor))))
                (point
                 (macro-time-point absrel-timeout)))
            (and (##fl< current-time point)
@@ -599,7 +599,7 @@
                   (macro-update-current-time!)
                   (let ((current-time
                          (macro-current-time
-                          (macro-thread-floats (macro-run-queue)))))
+                          (macro-thread-floats (macro-current-processor)))))
                     (##fl+ current-time
                            flonum-absrel-timeout))))))))
 
@@ -614,7 +614,7 @@
            (macro-update-current-time!)
            (let ((current-time
                   (macro-current-time
-                   (macro-thread-floats (macro-run-queue)))))
+                   (macro-thread-floats (macro-current-processor)))))
              (macro-make-time
               (##fl+ current-time flonum-absrel-timeout)
               #f
@@ -710,8 +710,6 @@
 (define-prim (##current-processor-id))
 (define-prim (##processor id))
 (define-prim (##current-vm))
-(define-prim (##run-queue));;deprecated
-(define-prim (##run-queue-of processor));;deprecated
 
 (define-prim (##primitive-lock! btq))
 (define-prim (##primitive-trylock! btq))
@@ -724,7 +722,7 @@
 (define-prim (##thread-start! thread)
   (##declare (not interrupts-enabled))
   (macro-thread-exception?-set! thread #f)
-  (##btq-insert! (macro-run-queue) thread)
+  (##btq-insert! (macro-current-processor) thread)
   (macro-thread-reschedule-if-needed!)
   thread)
 
@@ -737,7 +735,7 @@
     ;; save old boosted priority for ##thread-boosted-priority-changed!
 
     (macro-temp-set!
-     (macro-thread-floats (macro-run-queue))
+     (macro-thread-floats (macro-current-processor))
      (macro-boosted-priority floats))
 
     (if (##fl= (macro-base-priority floats)
@@ -790,7 +788,7 @@
         ;; save old boosted priority for ##thread-boosted-priority-changed!
 
         (macro-temp-set!
-         (macro-thread-floats (macro-run-queue))
+         (macro-thread-floats (macro-current-processor))
          (macro-boosted-priority floats))
 
         (macro-boosted-priority-set!
@@ -819,7 +817,7 @@
            (thread-trace 3 (##thread-effective-priority-changed! thread #t)))
           ((##fl=
             (macro-effective-priority floats)
-            (macro-temp (macro-thread-floats (macro-run-queue))))
+            (macro-temp (macro-thread-floats (macro-current-processor))))
            (thread-trace 4 (##thread-effective-priority-downgrade! thread))))))
 
 (define-prim (##thread-effective-priority-changed! thread effective-priority-increased?)
@@ -857,7 +855,7 @@
     ;; save old effective priority for later
 
     (macro-temp-set!
-     (macro-thread-floats (macro-run-queue))
+     (macro-thread-floats (macro-current-processor))
      (macro-effective-priority floats))
 
     ;; compute the maximum of the boosted priority and the
@@ -881,7 +879,7 @@
           (loop (macro-btq-deq-next btq)))))
 
     (if (##not (##fl=
-                (macro-temp (macro-thread-floats (macro-run-queue)))
+                (macro-temp (macro-thread-floats (macro-current-processor)))
                 (macro-effective-priority floats)))
       (thread-trace 6 (##thread-effective-priority-changed! thread #f)))))
 
@@ -911,31 +909,31 @@
 
   (##declare (not interrupts-enabled))
 
-  (let ((run-queue (macro-run-queue)))
-    (if (##not (##eq? (macro-toq-leftmost run-queue) run-queue))
+  (let ((current-processor (macro-current-processor)))
+    (if (##not (##eq? (macro-toq-leftmost current-processor) current-processor))
         (begin
 
           (macro-update-current-time!)
 
           (let loop ()
-            (let ((leftmost (macro-toq-leftmost run-queue)))
-              (if (and (##not (##eq? leftmost run-queue))
-                       (##not (macro-thread-sooner? run-queue leftmost)))
+            (let ((leftmost (macro-toq-leftmost current-processor)))
+              (if (and (##not (##eq? leftmost current-processor))
+                       (##not (macro-thread-sooner? current-processor leftmost)))
                   (begin
                     (macro-thread-resume-thunk-set! leftmost ##thread-timeout-action!)
                     (macro-thread-btq-remove-if-in-btq! leftmost)
                     (##thread-toq-remove! leftmost)
-                    (##btq-insert! run-queue leftmost)
+                    (##btq-insert! current-processor leftmost)
                     (loop)))))))))
 
 (define-prim (##thread-check-devices! timeout)
 
   (##declare (not interrupts-enabled))
 
-  (let* ((run-queue (macro-run-queue))
-         (code (##os-condvar-select! run-queue timeout)))
-    (let loop ((condvar (macro-btq-deq-next run-queue)))
-      (if (##eq? condvar run-queue)
+  (let* ((current-processor (macro-current-processor))
+         (code (##os-condvar-select! current-processor timeout)))
+    (let loop ((condvar (macro-btq-deq-next current-processor)))
+      (if (##eq? condvar current-processor)
         code
         (let ((next (macro-btq-deq-next condvar)))
           (if (##fxodd? (macro-btq-owner condvar))
@@ -946,8 +944,8 @@
 
   (##declare (not interrupts-enabled))
 
-  (let ((run-queue (macro-run-queue)))
-    (if (##eq? (macro-btq-deq-next run-queue) run-queue) ;; no devices?
+  (let ((current-processor (macro-current-processor)))
+    (if (##eq? (macro-btq-deq-next current-processor) current-processor) ;; no devices?
         0
         (##thread-check-devices! #f))))
 
@@ -968,17 +966,17 @@
 
       (##thread-report-scheduler-error! code))
 
-    (let* ((run-queue
-            (macro-run-queue))
+    (let* ((current-processor
+            (macro-current-processor))
            (current-thread
             (macro-current-thread))
-           (run-queue-floats
-            (macro-thread-floats run-queue))
+           (current-processor-floats
+            (macro-thread-floats current-processor))
            (current-thread-floats
             (macro-thread-floats current-thread))
            (quantum-used
             (##fl+ (macro-quantum-used current-thread-floats)
-                   (macro-heartbeat-interval run-queue-floats))))
+                   (macro-heartbeat-interval current-processor-floats))))
 
       (macro-quantum-used-set! current-thread-floats quantum-used)
 
@@ -993,9 +991,9 @@
 
   (let* ((current-thread
           (macro-current-thread))
-         (run-queue
-          (macro-run-queue)))
-    (if (##eq? (macro-btq-singleton? run-queue) current-thread)
+         (current-processor
+          (macro-current-processor)))
+    (if (##eq? (macro-btq-singleton? current-processor) current-thread)
       (begin
         ;; fast case where only one thread is runnable
         (macro-thread-unboost-and-clear-quantum-used! current-thread)
@@ -1005,7 +1003,7 @@
          (##btq-remove! current-thread)
          (macro-thread-unboost-and-clear-quantum-used! current-thread)
          (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-         (##btq-insert! (macro-run-queue) current-thread)
+         (##btq-insert! (macro-current-processor) current-thread)
          (##thread-schedule!))))))
 
 (define-prim (##thread-reschedule!)
@@ -1034,7 +1032,7 @@
                   (if (##not (##eq? timeout #t))
                     (begin
                       (macro-thread-timeout-set! current-thread timeout)
-                      (##toq-insert! (macro-run-queue) current-thread)))
+                      (##toq-insert! (macro-current-processor) current-thread)))
                   (##thread-schedule!))
                 timeout)))
           (if (##eq? result (##void))
@@ -1060,14 +1058,14 @@
 
   (##declare (not interrupts-enabled))
 
-  (let ((run-queue
-         (macro-run-queue)))
+  (let ((current-processor
+         (macro-current-processor)))
 
     ;; check if there are runnable threads
 
     (let ((next-thread
-           (macro-btq-leftmost run-queue)))
-      (if (##not (##eq? next-thread run-queue))
+           (macro-btq-leftmost current-processor)))
+      (if (##not (##eq? next-thread current-processor))
 
         ;; there are runnable threads, so continue executing the next
         ;; runnable thread
@@ -1080,17 +1078,17 @@
         ;; waiting for a timeout or for a device to become ready
 
         (let ((next-sleeper
-               (macro-toq-leftmost run-queue))
+               (macro-toq-leftmost current-processor))
               (next-condvar
-               (macro-btq-deq-next run-queue)))
-          (if (or (##not (##eq? next-sleeper run-queue))
-                  (##not (##eq? next-condvar run-queue)))
+               (macro-btq-deq-next current-processor)))
+          (if (or (##not (##eq? next-sleeper current-processor))
+                  (##not (##eq? next-condvar current-processor)))
 
             ;; wait for the next timeout or for a device to become ready
 
             (let ((code
                    (##thread-check-devices!
-                    (if (##eq? next-sleeper run-queue)
+                    (if (##eq? next-sleeper current-processor)
                       #t ;; timeout is infinite
                       (macro-thread-floats next-sleeper)))))
 
@@ -1109,16 +1107,16 @@
                      ;; sure at least one thread is runnable
 
                      (let ((next-thread
-                            (macro-btq-leftmost run-queue)))
-                       (if (##eq? next-thread run-queue)
+                            (macro-btq-leftmost current-processor)))
+                       (if (##eq? next-thread current-processor)
 
                          ;; no thread is currently runnable, so wake up
                          ;; a thread that is sleeping or waiting on a
                          ;; device
 
                          (let ((next-sleeper
-                                (macro-toq-leftmost run-queue)))
-                           (if (##not (##eq? next-sleeper run-queue))
+                                (macro-toq-leftmost current-processor)))
+                           (if (##not (##eq? next-sleeper current-processor))
 
                              ;; a thread was sleeping so make it
                              ;; temporarily wake up so that it detects
@@ -1131,8 +1129,8 @@
                               ##thread-check-interrupts!)
 
                              (let ((next-condvar
-                                    (macro-btq-deq-next run-queue)))
-                               (if (##not (##eq? next-condvar run-queue))
+                                    (macro-btq-deq-next current-processor)))
+                               (if (##not (##eq? next-condvar current-processor))
 
                                  ;; a thread is blocked on a device so
                                  ;; make it temporarily wake up so that
@@ -1231,7 +1229,7 @@
    (##cons thunk-returning-void
            (macro-thread-interrupts thread)))
 
-  (##btq-insert! (macro-run-queue) thread))
+  (##btq-insert! (macro-current-processor) thread))
 
 (define-prim (##thread-continuation-capture thread)
   (##thread-call
@@ -1419,7 +1417,7 @@
                                         current-thread
                                         timeout)
                                        (##toq-insert!
-                                        (macro-run-queue)
+                                        (macro-current-processor)
                                         current-thread)))
                                    (##thread-schedule!))
                                  #t)))
@@ -1584,7 +1582,7 @@
      "
      thread)
 
-    (##btq-insert! (macro-run-queue) thread)
+    (##btq-insert! (macro-current-processor) thread)
     )
 
   (##enable-interrupts!)
@@ -1638,7 +1636,7 @@
      "
      primordial-thread)
 
-    (##btq-insert! (macro-run-queue) primordial-thread)
+    (##btq-insert! (macro-current-processor) primordial-thread)
 
     (set! ##primordial-thread primordial-thread)
 
@@ -1669,11 +1667,11 @@
   (##declare (not interrupts-enabled))
   (let* ((actual-interval
           (##heartbeat-interval-set! seconds))
-         (run-queue
-          (macro-run-queue))
-         (run-queue-floats
-          (macro-thread-floats run-queue)))
-    (macro-heartbeat-interval-set! run-queue-floats actual-interval)
+         (current-processor
+          (macro-current-processor))
+         (current-processor-floats
+          (macro-thread-floats current-processor)))
+    (macro-heartbeat-interval-set! current-processor-floats actual-interval)
     actual-interval))
 
 ;;;----------------------------------------------------------------------------
@@ -1894,7 +1892,7 @@
                                    current-thread
                                    timeout)
                                   (##toq-insert!
-                                   (macro-run-queue)
+                                   (macro-current-processor)
                                    current-thread)))
                             (macro-btq-owner-set! mutex owner)
                             (##primitive-unlock! mutex)
@@ -1948,7 +1946,7 @@
 
   (macro-thread-toq-remove-if-in-toq! thread)
 
-  (##btq-insert! (macro-run-queue) thread))
+  (##btq-insert! (macro-current-processor) thread))
 
 (define-prim (##mutex-signal-and-condvar-wait! mutex condvar timeout)
 
@@ -1970,7 +1968,7 @@
                    current-thread
                    timeout)
                   (##toq-insert!
-                   (macro-run-queue)
+                   (macro-current-processor)
                    current-thread)))
               (macro-mutex-unlock-no-reschedule! mutex)
               (##thread-schedule!))
@@ -2002,10 +2000,10 @@
                    current-thread
                    timeout)
                   (##toq-insert!
-                   (macro-run-queue)
+                   (macro-current-processor)
                    current-thread)))
               (macro-btq-deq-remove! condvar)
-              (macro-btq-deq-insert-at-tail! (macro-run-queue) condvar)
+              (macro-btq-deq-insert-at-tail! (macro-current-processor) condvar)
               (##thread-schedule!))
             condvar
             timeout)))
@@ -2047,7 +2045,7 @@
            ##thread-signaled-condvar-action!)
           (thread-trace 9 (##thread-btq-remove! leftmost))
           (macro-thread-toq-remove-if-in-toq! leftmost)
-          (##btq-insert! (macro-run-queue) leftmost)
+          (##btq-insert! (macro-current-processor) leftmost)
           (if broadcast?
             (loop)
             (##void)))
@@ -2127,7 +2125,7 @@
 
 (define-prim (##current-time-point)
   (macro-update-current-time!)
-  (macro-current-time (macro-thread-floats (macro-run-queue))))
+  (macro-current-time (macro-thread-floats (macro-current-processor))))
 
 (define-prim (current-time)
   (macro-make-time (##current-time-point) #f #f #f))
@@ -2398,7 +2396,7 @@
                              (timeout (macro-timeout floats)))
                         (macro-make-time timeout #f #f #f)))))
            (macro-make-thread-state-active
-            (cond ((##eq? btq (macro-run-queue))
+            (cond ((##eq? btq (macro-current-processor))
                    #f)
                   ((and (macro-condvar? btq)
                         (##io-condvar? btq))
