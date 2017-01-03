@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1575,11 +1575,8 @@
            input-port
            output-port)))
 
-    (##c-code
-     "
-     ___CURRENTTHREAD = ___ARG1;
-     ___RESULT = ___FAL;
-     "
+    (macro-processor-current-thread-set!
+     (macro-current-processor)
      thread)
 
     (##btq-insert! (macro-current-processor) thread)
@@ -1629,11 +1626,8 @@
            input-port
            output-port)))
 
-    (##c-code
-     "
-     ___CURRENTTHREAD = ___ARG1;
-     ___RESULT = ___FAL;
-     "
+    (macro-processor-current-thread-set!
+     (macro-current-processor)
      primordial-thread)
 
     (##btq-insert! (macro-current-processor) primordial-thread)

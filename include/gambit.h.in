@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -3424,7 +3424,10 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_KEY0      5
 #define ___GCHASHTABLE_VAL0      6
 
-#define ___CURRENTTHREAD ___ps->current_thread
+#define ___PROCESSOR_CURRENT_THREAD 14
+
+#define ___CURRENTTHREAD ___VECTORREF(___CURRENTPROCESSOR,___FIX(___PROCESSOR_CURRENT_THREAD))
+#define ___CURRENTTHREADSET(thread)___VECTORSET(___CURRENTPROCESSOR,___FIX(___PROCESSOR_CURRENT_THREAD),thread)
 
 #define ___PROCESSOR_SCMOBJ(ps)___TAG(___ALIGNUP((ps)->processor_scmobj+(___SUBTYPED_OVERHEAD-___BODY_OFS),___WS),___tSUBTYPED)
 
@@ -3545,7 +3548,7 @@ else \
     ___SET_STK(-___BREAK_FRAME_NEXT,frame) \
     ___ps->stack_break = ___fp; \
   } \
-thread = ___ps->current_thread; \
+thread = ___CURRENTTHREAD; \
 ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 
 #define ___JUMP_THREAD_SAVE1(jump) \
@@ -3600,7 +3603,7 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
   ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
   ___FIELD(cont,___CONTINUATION_FRAME) = ___END_OF_CONT_MARKER; \
   ___INTERRUPT_MASK_SET(___FIELD(___FIELD(thread,___THREAD_DENV),___DENV_INTERRUPT_MASK)); \
-  ___ps->current_thread = thread; \
+  ___CURRENTTHREADSET(thread) \
   ___SET_R0(___GSTATE->handler_break) \
 }
 
@@ -3720,7 +3723,7 @@ else \
 ___ADJFP(___ROUND_TO_MULT(___SUBTYPED_OVERHEAD+___CONTINUATION_SIZE,___FRAME_ALIGN)) \
 ___SET_STK(0,___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION)) \
 ___SET_STK(-1,frame) \
-___SET_STK(-2,___FIELD(___ps->current_thread,___THREAD_DENV)) \
+___SET_STK(-2,___FIELD(___CURRENTTHREAD,___THREAD_DENV)) \
 cont = ___TAG(&___STK(0),___tSUBTYPED); \
 ___ADJFP(___BREAK_FRAME_SPACE) \
 ___SET_STK(-___BREAK_FRAME_NEXT,frame) \
@@ -3776,7 +3779,7 @@ ___ps->stack_break = ___fp;
 ___fp = ___ps->stack_break; \
 ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
 temp = ___FIELD(cont,___CONTINUATION_DENV); \
-thread = ___ps->current_thread; \
+thread = ___CURRENTTHREAD; \
 ___FIELD(thread,___THREAD_DENV) = temp; \
 temp = ___FIELD(___FIELD(temp,___DENV_LOCAL),___ENV_NAME_VAL); \
 ___FIELD(thread,___THREAD_DENV_CACHE1) = temp; \
@@ -3843,7 +3846,7 @@ ___SET_R0(___GSTATE->handler_break)
   ___fp = ___ps->stack_break; \
   ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
   temp = ___FIELD(cont,___CONTINUATION_DENV); \
-  thread = ___ps->current_thread; \
+  thread = ___CURRENTTHREAD; \
   ___FIELD(thread,___THREAD_DENV) = temp; \
   temp = ___FIELD(___FIELD(temp,___DENV_LOCAL),___ENV_NAME_VAL); \
   ___FIELD(thread,___THREAD_DENV_CACHE1) = temp; \
@@ -8275,8 +8278,6 @@ typedef struct ___processor_state_struct
 
     ___WORD *heap_limit;
     ___WORD *hp;
-
-    ___WORD current_thread; /* the current thread of this processor */
 
     ___WORD r[___NB_GVM_REGS];
     ___WORD pc;

@@ -2,7 +2,7 @@
 
 ;;; File: "_thread#.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1674,6 +1674,7 @@
   ;; field 8 must be #f (the queue of runnable threads has no owner)
   ;; fields 10 to 11 are for maintaining a timeout queue of threads
   ;; field 13 is the leftmost thread in the timeout queue of threads
+  ;; field 14 is the thread currently running on this processor
   ;; field 16 is for storing the current time, heartbeat interval and a
   ;; temporary float
   ;; fields 17 and 18 are the deq links of blocked processors
@@ -1690,7 +1691,7 @@
   toq-parent
   toq-left
   toq-leftmost
-  unused-field14
+  current-thread
   unused-field15
   floats
   processor-deq-next

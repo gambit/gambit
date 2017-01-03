@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -3133,12 +3133,6 @@ ___virtual_machine_state ___vms;)
     return err;
 
   ___ACTLOG_PS(run,green);
-
-  /*
-   * Setup green thread structures.
-   */
-
-  ___ps->current_thread = ___FAL;
 
   /*
    * Setup Scheme processor object of this processor.

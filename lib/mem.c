@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 408007
@@ -2187,14 +2187,13 @@ ___SCMOBJ val;)
 
 #define IN_OBJECT           0
 #define IN_REGISTER         1
-#define IN_CURRENT_THREAD   2
-#define IN_PROCESSOR_SCMOBJ 3
-#define IN_VM_SCMOBJ        4
-#define IN_SYMKEY_TABLE     5
-#define IN_GLOBAL_VAR       6
-#define IN_WILL_LIST        7
-#define IN_CONTINUATION     8
-#define IN_RC               9
+#define IN_PROCESSOR_SCMOBJ 2
+#define IN_VM_SCMOBJ        3
+#define IN_SYMKEY_TABLE     4
+#define IN_GLOBAL_VAR       5
+#define IN_WILL_LIST        6
+#define IN_CONTINUATION     7
+#define IN_RC               8
 
 
 ___HIDDEN void print_prefix
@@ -2564,10 +2563,6 @@ char *msg;)
 
     case IN_REGISTER:
       ___printf (">>> The reference was found in a register\n");
-      break;
-
-    case IN_CURRENT_THREAD:
-      ___printf (">>> The reference was found in a current thread\n");
       break;
 
     case IN_PROCESSOR_SCMOBJ:
@@ -5527,21 +5522,6 @@ ___PSDKR)
 }
 
 
-___HIDDEN void mark_current_thread
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
-{
-  ___PSGET
-
-#ifdef ENABLE_CONSISTENCY_CHECKS
-  reference_location = IN_CURRENT_THREAD;
-#endif
-
-  mark_array (___PSP &___ps->current_thread, 1);
-}
-
-
 ___HIDDEN void mark_processor_scmobj
    ___P((___PSDNC),
         (___PSVNC)
@@ -5850,8 +5830,6 @@ ___PSDKR)
   mark_continuation (___PSPNC);
 
   mark_registers (___PSPNC);
-
-  mark_current_thread (___PSPNC);
 
   mark_processor_scmobj (___PSPNC);
 
