@@ -9831,6 +9831,21 @@ ___RESULT = result;
       ;; Here we assume that we have at least as much precision as
       ;; IEEE double precision, that we round to nearest, and that
       ;; fixnums have no more than 64 bits.
+      
+      ;; Here's why this works.
+      
+      ;; The three functions ##fixnum->flonum, ##flsqrt, and
+      ;; ##flonum->fixnum are all monotone, in that if the
+      ;; argument is increased, the result does not decrease.
+      ;; So for each fixnum i such that (* i i) and (+ (* i i) (* 2 i))
+      ;; are fixnums, check that
+      
+      ;; (##exact-int.sqrt (* i i)) => i and
+      ;; (##exact-int.sqrt (+ (* i i) (* 2 i))) => i
+      
+      ;; and this will be true of all fixnums in between.
+      ;; And that is all fixnums.  So we ran a code to check this.
+      
       (let* ((s (##flonum->fixnum (##flsqrt (##fixnum->flonum x))))
              (r (##fx- x (##fx* s s))))
         ;; s can be too big, so we check for that here.
