@@ -9827,17 +9827,17 @@ ___RESULT = result;
   ;; power of 2; the paper later notes that it is the lower bound that is
   ;; necessary, which we preserve.
 
-  (if (and (##fixnum? x)
-           ;; we require that
-           ;; (##< (##flsqrt (- (* y y) 1)) y) => #t
-           ;; whenever x=y^2 is in this range.  Here we assume that we
-           ;; have at least as much precision as IEEE double precision and
-           ;; we round to nearest.
-           (or (##not (##fixnum? 4294967296))          ;; 32-bit fixnums
-               (##fx<= x 4503599627370496)))      ;; 2^52
+  (if (##fixnum? x)
+      ;; Here we assume that we have at least as much precision as
+      ;; IEEE double precision, that we round to nearest, and that
+      ;; fixnums have no more than 64 bits.
       (let* ((s (##flonum->fixnum (##flsqrt (##fixnum->flonum x))))
              (r (##fx- x (##fx* s s))))
-        (##cons s r))
+        ;; s can be too big, so we check for that here.
+        (if (##fxnegative? r)
+            (##cons (##fx- s 1)
+                    (##fx+ r (##fx* s 2) -1))
+            (##cons s r)))
       (let ((length/4
              (##fxarithmetic-shift-right
               (##fx+ (##integer-length x) 1)

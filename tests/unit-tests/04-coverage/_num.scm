@@ -122,6 +122,9 @@
 (check-eqv? (sqrt -2.0i) 1.-1.i)
 (check-eqv? (sqrt (+ (expt 2 1000) 1)) (expt 2. 500))
 (check-eqv? (sqrt (+ (expt 3 60) 1)) 2.05891132094649e14)
+;; The following argument exercises the (##fxnegative? r)
+;; code path in ##exact-int.sqrt for 64-bit fixnums.
+(check-eqv? (integer-sqrt 177929191730305443) 421816537)
 
 (check-tail-exn type-exception? (lambda () (abs 'a)))
 (check-eqv? (abs -1) 1)
