@@ -73,17 +73,19 @@ For this invocation of the configure script, options are not needed.
 The following commands should then be entered to make sure that any
 stale .c files obtained from the repository are updated:
 
-  % make latest-release
+  % make current-gsc-boot
   % ./configure
+  % make bootstrap
   % make bootclean
   % make bootstrap
   % make bootclean
 
-The "make latest-release" builds the Gambit compiler that was current
-at the latest release.  The second invocation of the configure script
-may specify options (see below).  The "make boostrap" uses that compiler
-to build the Gambit compiler of the master branch (it creates up to date
-.c files from the .scm files).
+The "make current-gsc-boot" builds the Gambit compiler that was
+current at the latest release and then compiles the very latest
+commit.  The second invocation of the configure script may specify
+options (see below).  The "make boostrap" uses that compiler to build
+the Gambit compiler of the master branch (it creates up to date .c
+files from the .scm files).
 
 Then the system can be built by invoking "make":
 
@@ -92,7 +94,7 @@ Then the system can be built by invoking "make":
 These steps can be shortened to the following commands:
 
   % ./configure        # no options needed here
-  % make latest-release
+  % make current-gsc-boot
   % ./configure        # configure script options may be added here (see below)
   % make from-scratch
 
