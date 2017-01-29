@@ -3459,7 +3459,7 @@ ___TICKETLOCK_UNLOCK2((lock).next_ticket,(lock).current_ticket)
 #ifdef ___DEBUG_TICKETLOCK
 
 #define ___TICKETLOCK_LOCK2(next,current) \
-do { \
+{ \
   ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&next),___FIX(1)); \
   int ___count = 0; \
   while (*___CAST(___VOLATILE ___WORD*,&current) != ___ticket) \
@@ -3489,14 +3489,14 @@ do { \
     ___ptr->location.line = __LINE__; \
     ___SHARED_MEMORY_BARRIER(); \
   } \
-} while (0)
+}
 
 #define ___TICKETLOCK_TRYLOCK2(next,current,temp) \
 (temp=*___CAST(___VOLATILE ___WORD*,&current), \
  ___COMPARE_AND_SWAP_WORD(___CAST(___VOLATILE ___WORD*,&next),temp,___FIXWRAPADD(temp,___FIX(1)))==temp)
 
 #define ___TICKETLOCK_UNLOCK2(next,current) \
-do { \
+{ \
   if (___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1)) >= *___CAST(___VOLATILE ___WORD*,&next)) \
     { \
       ___WORD ___n = ___VMSTATE->ticketlock_history_index; \
@@ -3520,16 +3520,16 @@ do { \
     ___ptr->location.line = __LINE__; \
     ___SHARED_MEMORY_BARRIER(); \
   } \
-} while (0)
+}
 
 #else
 
 #define ___TICKETLOCK_LOCK2(next,current) \
-do { \
+{ \
   ___WORD ___ticket = ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&next),___FIX(1)); \
   while (*___CAST(___VOLATILE ___WORD*,&current) != ___ticket) \
     ___CPU_RELAX(); \
-} while (0)
+}
 
 #define ___TICKETLOCK_TRYLOCK2(next,current,temp) \
 (temp=*___CAST(___VOLATILE ___WORD*,&current), \
