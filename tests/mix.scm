@@ -1,6 +1,6 @@
-; File: "mix.scm", Time-stamp: <2015-01-16 14:02:30 feeley>
+; File: "mix.scm"
 
-; Copyright (c) 1998-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2017 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -1827,23 +1827,18 @@
 (##declare (generic))
 
 (define heartbeat-interval
-  (##thread-heartbeat-interval-set! 0.001)) ; set small interval
+  (let ((v (f64vector 0.0)))
+    (##set-heartbeat-interval! 0.001) ;; set small heartbeat interval
+    (##get-heartbeat-interval! v 0)
+    (f64vector-ref v 0)))
 
-(define intrs 0.0)
+(define intrs 0)
 
-(define interrupt-thread
- (make-thread
-  (lambda ()
-    (let loop ()
-      (thread-sleep! 0.0001) ; sleep until next heartbeat interrupt
-      (set! intrs (+ intrs 1.0))
-      (loop)))))
-
-;; The interrupt-thread priority must be above the primordial thread's
-;; priority which is 0.
-(thread-base-priority-set! interrupt-thread 1)
-
-(thread-start! interrupt-thread)
+(##interrupt-vector-set!
+ 2 ;; ___INTR_HEARTBEAT
+ (lambda ()
+   (set! intrs (+ intrs 1))
+   (##thread-heartbeat!)))
 
 (define start-time (cpu-time))
 
@@ -1854,6 +1849,10 @@
       (test2)
       (loop (- i 1)))))
 
+(##interrupt-vector-set!
+ 2 ;; ___INTR_HEARTBEAT
+ ##thread-heartbeat!)
+
 (let ((ct (time->seconds (current-time))))
   (if (< ct 964727878.343539) ; Thu Jul 27 15:57:58 EDT 2000
     (begin
@@ -1863,7 +1862,7 @@
   (newline))
 
 (let* ((i
-        intrs)
+        (exact->inexact intrs))
        (end-time
         (cpu-time))
        (cpu-time-according-to-os

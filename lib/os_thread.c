@@ -1,6 +1,6 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.

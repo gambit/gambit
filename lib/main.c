@@ -38,7 +38,7 @@ int debug_settings;)
         "  hHEAPSIZE       set maximum heap size in kilobytes\n"
         "  lLIVEPERCENT    set heap live ratio after GC in percent\n"
 #ifndef ___SINGLE_THREADED_VMS
-        "  pLEVEL          set parallelism level (default = nb of cores)\n"
+        "  pLEVEL          set parallelism level (default = nb of cpus)\n"
 #endif
         "  s|S             set standard Scheme mode (on|off)\n"
         "  d[OPT...]       set debugging options; OPT is one of:\n"
@@ -212,7 +212,7 @@ ___mod_or_lnk (*linker)();)
 #ifdef ___SINGLE_THREADED_VMS
   parallelism_level = 1;
 #else
-  parallelism_level = ___core_count ();
+  parallelism_level = ___cpu_count ();
 #endif
   standard_level = 0;
   debug_settings = ___DEBUG_SETTINGS_INITIAL;

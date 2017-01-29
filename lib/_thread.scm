@@ -6,6 +6,40 @@
 
 ;;;============================================================================
 
+;;; Special synchronization considerations for multithreaded VMs.
+;;;
+;;; In a multithreaded VM, multiple processors are executing code
+;;; simultaneously.  It is necessary to coordinate the actions of the
+;;; processors to prevent simultaneous modifications to shared state
+;;; that could lead to corrupt data structures. For this reason, so
+;;; called low-level locks are added to various data types: VM,
+;;; processor, thread, mutex and condition variables. Acquiring a
+;;; low-level lock is done with a busy wait, so low-level locks must
+;;; be held for a very short duration.
+;;;
+;;; Some operations require that more than one low-level lock be
+;;; acquired to perform the operation.  To avoid deadlocks, it is
+;;; necessary for all processors to acquire the set of low-level locks
+;;; they need in the same order.  This avoids cross locking of two
+;;; locks in opposite orders (i.e. processor 1 acquiring L1 then L2,
+;;; and processor 2 acquiring L2 then L1).
+;;;
+;;; To avoid this cross locking, when the locks are on objects of the
+;;; same type, a total order of the objects is used to order the lock
+;;; acquisitions (e.g. by sorting according to the memory address).
+;;; When the locks are on objects of different types, the order
+;;; is:
+;;;
+;;;   mutex -> condition variable -> thread -> processor -> VM
+;;;
+;;; In some situations the ordering of acquisitions is hard to achieve
+;;; because the set of objects to lock isn't known when the operation
+;;; is started.  The solution is to use non-blocking acquisition of
+;;; the locks (using a trylock) and some looping to retry the
+;;; operation.
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of exceptions.
 
 (implement-library-type-deadlock-exception)
@@ -632,7 +666,7 @@
 
 (define-rbtree
  macro-btq-init!
- macro-thread->btq
+ macro-btq->container
  ##btq-insert!
  ##btq-remove!
  ##btq-reposition!
@@ -652,6 +686,8 @@
  macro-btq-leftmost-set!
  #f
  #f
+ #f
+ #f
 )
 
 ;;;for debugging
@@ -661,25 +697,30 @@
 
 (define-prim (##btq-abandon! btq)
   (##declare (not interrupts-enabled))
-  (##primitive-lock! btq)
+  (macro-lock-btq! btq)
   (macro-btq-deq-remove! btq)
-  (let ((leftmost (macro-btq-leftmost btq)))
-    (if (##eq? leftmost btq)
-      (macro-btq-unlink! btq (macro-mutex-state-abandoned))
-      (if (macro-mutex? btq)
-        (##mutex-signal-no-reschedule! btq leftmost #t)
-        (begin
-          (let ((owner (macro-btq-owner btq)))
-            (if (macro-thread? owner)
-              (thread-trace 0 (##thread-effective-priority-downgrade! owner))))
-          (macro-btq-unlink! btq (macro-mutex-state-abandoned))
-          (##primitive-unlock! btq))))))
+  (macro-if-btq-next
+   btq
+   next-thread
+
+   ;;TODO:reenable
+   '
+   (if (macro-mutex? btq)
+       (##mutex-signal-no-reschedule! btq next-thread #t)
+       (begin
+         (let ((owner (macro-btq-owner btq)))
+           (if (macro-thread? owner)
+               (thread-trace 0 (##thread-effective-priority-downgrade! owner))))
+         (macro-btq-unlink! btq (macro-mutex-state-abandoned))
+         (macro-unlock-btq! btq)))
+
+   (macro-btq-unlink! btq (macro-mutex-state-abandoned))))
 
 ;;; Implementation of timeout queues.
 
 (define-rbtree
  macro-toq-init!
- macro-thread->toq
+ macro-toq->container
  ##toq-insert!
  ##toq-remove!
  ##toq-reposition!
@@ -699,6 +740,8 @@
  macro-toq-leftmost-set!
  #f
  #f
+ #f
+ #f
 )
 
 ;;;----------------------------------------------------------------------------
@@ -711,19 +754,31 @@
 (define-prim (##processor id))
 (define-prim (##current-vm))
 
-(define-prim (##primitive-lock! btq))
-(define-prim (##primitive-trylock! btq))
-(define-prim (##primitive-unlock! btq))
+(define-prim (##primitive-lock! btq i j))
+(define-prim (##primitive-trylock! btq i j))
+(define-prim (##primitive-unlock! btq i j))
+
+(define-prim (##object-before? x y))
 
 (define-prim (##make-thread thunk name tgroup)
   (##declare (not interrupts-enabled))
   (macro-make-thread thunk name tgroup))
 
 (define-prim (##thread-start! thread)
+
   (##declare (not interrupts-enabled))
+
+  ;;TODO: race possible with other processor starting this thread
   (macro-thread-exception?-set! thread #f)
+
+  ;; add the thread to the current processor's run queue
+  (macro-lock-current-processor!)
   (##btq-insert! (macro-current-processor) thread)
-  (macro-thread-reschedule-if-needed!)
+  (macro-unlock-current-processor!)
+
+  ;;TODO: rethink use of reschedule-if-needed!
+  ;;(macro-thread-reschedule-if-needed!)
+
   thread)
 
 (define-prim (##thread-base-priority-set! thread base-priority)
@@ -835,7 +890,7 @@
       ;; (i.e. mutex, condvar, etc) inherits the thread's effective
       ;; priority
 
-      (let ((owner (macro-btq-owner (macro-thread->btq thread))))
+      (let ((owner (macro-btq-owner (macro-btq->container thread))))
         (if (macro-thread? owner)
           (if effective-priority-increased?
             (macro-thread-inherit-priority! owner thread)
@@ -868,15 +923,16 @@
 
     (let loop ((btq (macro-btq-deq-next thread)))
       (if (##not (##eq? btq thread))
-        (let ((leftmost (macro-btq-leftmost btq)))
-          (if (##not (##eq? leftmost btq))
-            (let ((leftmost-floats (macro-thread-floats leftmost)))
-              (if (##fl< (macro-effective-priority floats)
-                         (macro-effective-priority leftmost-floats))
-                (macro-effective-priority-set!
-                 floats
-                 (macro-effective-priority leftmost-floats)))))
-          (loop (macro-btq-deq-next btq)))))
+          (macro-if-btq-next
+           btq
+           next
+           (let ((next-floats (macro-thread-floats next)))
+             (if (##fl< (macro-effective-priority floats)
+                        (macro-effective-priority next-floats))
+                 (macro-effective-priority-set!
+                  floats
+                  (macro-effective-priority next-floats)))))
+          (loop (macro-btq-deq-next btq))))
 
     (if (##not (##fl=
                 (macro-temp (macro-thread-floats (macro-current-processor)))
@@ -886,6 +942,8 @@
 (define-prim (##thread-btq-insert! btq thread)
   (##declare (not interrupts-enabled))
   (##btq-insert! btq thread)
+  ;;TODO: fix me
+  #;
   (let ((owner (macro-btq-owner btq)))
     (if (macro-thread? owner)
       (macro-thread-inherit-priority! owner thread))))
@@ -894,8 +952,12 @@
 
   (##declare (not interrupts-enabled))
 
-  (let ((owner (macro-btq-owner (macro-thread->btq thread))))
-    (##btq-remove! thread)
+  ;; Assumes the btq containing the thread has an acquired low-level lock.
+
+  (##btq-remove! thread)
+  ;;TODO:fix priority inheritance
+  #;
+  (let ((owner (macro-btq-owner (macro-btq->container thread))))
     (if (macro-thread? owner)
       (if (##fl= (macro-thread-effective-priority thread)
                  (macro-thread-effective-priority owner))
@@ -905,106 +967,287 @@
   (##declare (not interrupts-enabled))
   (##toq-remove! thread))
 
+;; The procedure ##thread-check-timeouts! checks if any of the threads
+;; with a limited time wait have expired their timeout and wakes up
+;; these threads by transferring them to the run queue.
+
 (define-prim (##thread-check-timeouts!)
 
   (##declare (not interrupts-enabled))
 
-  (let ((current-processor (macro-current-processor)))
-    (if (##not (##eq? (macro-toq-leftmost current-processor) current-processor))
-        (begin
+  ;; Assumes that exclusive access to the processor has been acquired.
 
-          (macro-update-current-time!)
+  (macro-if-toq-next
+   (macro-current-processor)
+   next
 
-          (let loop ()
-            (let ((leftmost (macro-toq-leftmost current-processor)))
-              (if (and (##not (##eq? leftmost current-processor))
-                       (##not (macro-thread-sooner? current-processor leftmost)))
+   (begin
+
+     ;; The processor's timeout queue is non-empty.
+
+     (macro-update-current-time!) ;; update time (in floats of processor)
+
+     (let loop ()
+       (macro-if-toq-next
+        (macro-current-processor)
+        next-thread
+
+        (if (##not (macro-thread-sooner? (macro-current-processor)
+                                         next-thread))
+
+            (begin
+
+              ;; Found a thread with limited time wait with a timeout
+              ;; earlier than the current time. Consequently, that
+              ;; thread must wake up.
+
+              ;;TODO: shouldn't be a trylock!
+              (if (macro-trylock-thread! next-thread)
                   (begin
-                    (macro-thread-resume-thunk-set! leftmost ##thread-timeout-action!)
-                    (macro-thread-btq-remove-if-in-btq! leftmost)
-                    (##thread-toq-remove! leftmost)
-                    (##btq-insert! current-processor leftmost)
-                    (loop)))))))))
 
-(define-prim (##thread-check-devices! timeout)
+                    (macro-thread-resume-thunk-set!
+                     next-thread
+                     ##thread-timeout-action!)
+
+                    (macro-thread-btq-remove-if-in-btq! next-thread)
+
+                    (##thread-toq-remove! next-thread)
+
+                    ;; add the thread to the current processor's run queue
+                    (##btq-insert! (macro-current-processor) next-thread)
+
+                    (macro-unlock-thread! next-thread)
+
+                    (loop))))))))))
+
+(define-prim (##wait! devices timeout)
 
   (##declare (not interrupts-enabled))
 
-  (let* ((current-processor (macro-current-processor))
-         (code (##os-condvar-select! current-processor timeout)))
-    (let loop ((condvar (macro-btq-deq-next current-processor)))
-      (if (##eq? condvar current-processor)
-        code
-        (let ((next (macro-btq-deq-next condvar)))
-          (if (##fxodd? (macro-btq-owner condvar))
-            (##device-condvar-broadcast-no-reschedule! condvar))
-          (loop next))))))
+  (let ((processor (macro-current-processor)))
+
+    (macro-lock-current-vm!)
+    (macro-processor-deq-insert-at-tail! (macro-current-vm) processor)
+    (macro-unlock-current-vm!)
+
+    (let ((code (##os-condvar-select! devices timeout)))
+
+      (macro-lock-current-vm!)
+      (macro-processor-deq-remove! processor)
+      (macro-unlock-current-vm!)
+
+      code)))
+
+(define-prim (##wait-abort! processor)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-lock-current-vm!)
+  (macro-processor-deq-remove! processor)
+  (macro-unlock-current-vm!)
+
+  (##wait-abort-no-remove! processor))
+
+(define-prim (##wait-abort-no-remove! processor)
+
+  (##declare (not interrupts-enabled))
+
+  (##device-select-abort! (macro-processor-id processor)))
+
+(define-prim (##wake-up-one-processor)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-lock-current-vm!)
+  (let ((processor (macro-processor-deq-head (macro-current-vm))))
+    (macro-unlock-current-vm!)
+    (if (##not (##eq? processor (macro-current-vm)))
+        (begin
+          (##wait-abort! processor)
+          #t)
+        #f)))
+
+(define-prim (##waiting-processors);;;;for debugging
+  (macro-lock-current-vm!)
+  (let loop ((lst '())
+             (processor (macro-processor-deq-head (macro-current-vm))))
+    (if (##eq? processor (macro-current-vm))
+        (begin
+          (macro-unlock-current-vm!)
+          lst)
+        (loop (##cons processor lst)
+              (macro-processor-deq-next processor)))))
+
+;; The procedure ##thread-poll-devices! checks without blocking if any
+;; of the devices on which the processor is waiting for an IO
+;; operation to become possible are now ready to perform the IO
+;; operation.  Any thread waiting for one of these devices to be ready
+;; to perform the IO operation will become runnable when the IO
+;; operation becomes possible.
 
 (define-prim (##thread-poll-devices!)
 
   (##declare (not interrupts-enabled))
 
-  (let ((current-processor (macro-current-processor)))
-    (if (##eq? (macro-btq-deq-next current-processor) current-processor) ;; no devices?
-        0
-        (##thread-check-devices! #f))))
+  ;; Assumes that exclusive access to the processor has been acquired.
+
+  ;; The set of devices on which the scheduler is waiting for an IO
+  ;; are held in the processor's blocked thread queue (BTQ).
+
+  (if (##eq? (macro-btq-deq-next (macro-current-processor))
+             (macro-current-processor)) ;; not waiting on devices?
+      0 ;; "no error" code
+      (##thread-check-devices! #f)))
+
+;; The procedure ##thread-check-devices! checks if any of the devices
+;; on which the processor is waiting for an IO operation to become
+;; possible are now ready to perform the IO operation.  The timeout
+;; parameter indicates how long to wait for any of the IO operations
+;; to become possible.  When timeout is #f, there is no waiting.
+
+(define-prim (##thread-check-devices! timeout)
+
+  (##declare (not interrupts-enabled))
+
+  ;;TODO: exclusive access has *NOT* been acquired!!!!
+  ;; Assumes that exclusive access to the processor has been acquired.
+
+  ;;(##c-code "printf(\"P%d ##wait! in ##thread-check-devices!\\n\",___INT(___ARG1));" (##current-processor-id));;TODO: remove
+
+  (let ((code (##wait! (macro-current-processor) timeout))) ;; wait for IO
+
+    ;; For each device, check if the IO operation is now possible.
+
+    (let loop ((condvar (macro-btq-deq-next (macro-current-processor))))
+      (if (##eq? condvar (macro-current-processor))
+          code
+          (let ((next (macro-btq-deq-next condvar)))
+
+            ;; Wakeup waiting threads when IO becomes possible on a
+            ;; device.
+            ;;(##c-code "printf(\"(macro-btq-owner condvar)=%d\\n\",___INT(___ARG1));" (macro-btq-owner condvar));;TODO: remove
+            (if (##fxodd? (macro-btq-owner condvar)) ;; IO now possible?
+                (begin
+                  ;;(##c-code "printf(\"P%d calling ##device-condvar-broadcast-no-reschedule!\\n\",___INT(___ARG1));" (##current-processor-id));;TODO: remove
+                  ;;TODO: remove possibility of deadlock!
+                  (##device-condvar-broadcast-no-reschedule! condvar))
+                ;;(##c-code "printf(\"P%d NOT calling ##device-condvar-broadcast-no-reschedule!\\n\",___INT(___ARG1));" (##current-processor-id))
+                );;TODO: remove
+
+            (loop next))))))
+
+;; The procedure ##thread-heartbeat! is called periodically, by each
+;; non-waiting processor, to perform periodic tasks such as waking up
+;; threads that have elapsed their sleep period, preempting the
+;; currently running thread, etc.
 
 (define-prim (##thread-heartbeat!)
 
   (##declare (not interrupts-enabled))
 
+  ;; acquire low-level lock of the processor
+  (macro-lock-current-processor!)
+
   (let ((code (##thread-poll-devices!)))
 
     (##thread-check-timeouts!)
 
+    ;;TODO: check this logic
+    (if (##fx= code ##err-code-EINTR)
+        (##service-interrupts!))
+
+    (macro-unlock-current-processor!)
+
     (if (and (##fx< code 0)
              (##not (##fx= code ##err-code-EINTR)))
 
-      ;; there was an error that cannot be handled, so force the
-      ;; primordial thread to wakeup and raise a "scheduler
-      ;; error" exception
+        ;; there was an error that cannot be handled, so force the
+        ;; primordial thread to wakeup and raise a "scheduler
+        ;; error" exception
 
-      (##thread-report-scheduler-error! code))
+        ;;TODO: find a better way to report a scheduler error
+        (##thread-report-scheduler-error! code))
 
-    (let* ((current-processor
-            (macro-current-processor))
-           (current-thread
-            (macro-current-thread))
-           (current-processor-floats
-            (macro-thread-floats current-processor))
-           (current-thread-floats
-            (macro-thread-floats current-thread))
+    (let* ((current-processor-floats ;; to get heartbeat interval
+            (macro-thread-floats (macro-current-processor)))
+           (current-thread-floats ;; to get current thread's quantum used
+            (macro-thread-floats (macro-current-thread)))
+           (heartbeat-interval
+            (macro-get-heartbeat-interval current-processor-floats))
            (quantum-used
             (##fl+ (macro-quantum-used current-thread-floats)
-                   (macro-heartbeat-interval current-processor-floats))))
+                   heartbeat-interval)))
 
       (macro-quantum-used-set! current-thread-floats quantum-used)
 
       (if (##fl< quantum-used
                  (macro-quantum current-thread-floats))
-        (macro-thread-reschedule-if-needed!)
-        (##thread-yield!)))))
+          (macro-thread-reschedule-if-needed!);;TODO: check what this does
+          (##thread-yield!)))))
+
+;; The procedure ##thread-yield! is called by a running thread when it
+;; wants to allow other runnable threads of equal or higher priority,
+;; on the same processor, to run.  ##thread-yield! is called when the
+;; thread's quantum is over, and it can also be called explicitly by
+;; the program.  The current thread will keep on running if there are
+;; no other runnable threads of equal or higher priority.
 
 (define-prim (##thread-yield!)
 
   (##declare (not interrupts-enabled))
 
-  (let* ((current-thread
-          (macro-current-thread))
-         (current-processor
-          (macro-current-processor)))
-    (if (##eq? (macro-btq-singleton? current-processor) current-thread)
-      (begin
-        ;; fast case where only one thread is runnable
-        (macro-thread-unboost-and-clear-quantum-used! current-thread)
-        (##void))
-      (macro-thread-save!
-       (lambda (current-thread)
-         (##btq-remove! current-thread)
-         (macro-thread-unboost-and-clear-quantum-used! current-thread)
-         (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-         (##btq-insert! (macro-current-processor) current-thread)
-         (##thread-schedule!))))))
+  ;; acquire low-level lock of the thread
+  (macro-lock-current-thread!)
+
+  ;; acquire low-level lock of the processor
+  (macro-lock-current-processor!)
+
+  ;; Check if there are other runnable threads.
+
+  (macro-if-btq-next
+   (macro-current-processor)
+   next-thread
+
+   (begin
+
+     ;; There are other runnable threads, so switch to running
+     ;; the next runnable thread.
+
+     (macro-thread-save!
+      (lambda (current-thread)
+
+        ;;TODO: reenable
+        ;;(macro-thread-unboost-and-clear-quantum-used! current-thread)
+
+        (macro-thread-resume-thunk-set!
+         current-thread
+         ##thread-void-action!)
+
+        ;; add the thread to the current processor's run queue
+        (##btq-insert! (macro-current-processor) current-thread)
+
+        ;; release low-level lock of processor
+        (macro-unlock-current-processor!)
+
+        ;; release low-level lock of the thread
+        (macro-unlock-current-thread!)
+
+        (##thread-schedule!))))
+
+   (begin
+
+     ;; Fast case where only the current thread is runnable.
+
+     ;;TODO: reenable
+     ;;(macro-thread-unboost-and-clear-quantum-used! (macro-current-thread))
+
+     ;; release low-level lock of processor
+     (macro-unlock-current-processor!)
+
+     ;; release low-level lock of the thread
+     (macro-unlock-current-thread!)
+
+     (##void))))
 
 (define-prim (##thread-reschedule!)
 
@@ -1021,24 +1264,83 @@
 
   (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
     (if timeout
-      (let loop ()
-        (let ((result
-               (macro-thread-save!
-                (lambda (current-thread timeout)
-                  (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-                  (##btq-remove! current-thread)
-                  (macro-thread-unboost-and-clear-quantum-used!
-                   current-thread)
-                  (if (##not (##eq? timeout #t))
-                    (begin
-                      (macro-thread-timeout-set! current-thread timeout)
-                      (##toq-insert! (macro-current-processor) current-thread)))
-                  (##thread-schedule!))
-                timeout)))
-          (if (##eq? result (##void))
-            (loop)
-            (##void))))
-      (##void))))
+
+        (let try-again ()
+
+          ;; acquire low-level lock of the current thread
+          (macro-lock-current-thread!)
+
+          (let ((result
+                 (macro-thread-save!
+                  (lambda (current-thread timeout)
+
+                    (macro-thread-resume-thunk-set!
+                     current-thread
+                     ##thread-void-action!)
+
+                    ;;TODO:reenable
+                    #;
+                    (macro-thread-unboost-and-clear-quantum-used!
+                    current-thread)
+
+                    (if (##not (##eq? timeout #t))
+                        (begin
+
+                          ;; save current thread's timeout
+                          (macro-thread-timeout-set!
+                           current-thread
+                           timeout)
+
+                          ;; add current thread to timeout queue
+                          (macro-lock-current-processor!)
+                          (##toq-insert!
+                           (macro-current-processor)
+                           current-thread)
+                          (macro-unlock-current-processor!)))
+
+                    ;; release low-level lock of the current thread
+                    (macro-unlock-current-thread!)
+
+                    (##thread-schedule!))
+                    timeout)))
+            (if (##eq? result (##void))
+                (try-again)
+                (##void))))
+
+          (##void))))
+
+(define-prim (##service-interrupts!)
+  (##c-code "
+
+   ___EXT(___begin_interrupt_service_pstate) (___ps);
+
+   ___AM_HERE_PS;
+
+   if (___ps->intr_enabled != ___FIX(0))
+     {
+       int i;
+
+       ___AM_HERE_PS;
+
+       ___FRAME_STORE_RA(___R0)
+       ___W_ALL
+
+       for (i=0; i<___NB_INTRS; i++)
+         if (___EXT(___check_interrupt_pstate) (___ps, i))
+           break;
+
+       ___R_ALL
+       ___SET_R0(___FRAME_FETCH_RA)
+
+       ___EXT(___end_interrupt_service_pstate) (___ps, i+1);
+     }
+   else
+     ___EXT(___end_interrupt_service_pstate) (___ps, 0);
+
+   ___AM_HERE_PS;
+
+   ___RESULT = ___FAL;
+"))
 
 (define-prim (##thread-resume-execution!)
 
@@ -1054,120 +1356,261 @@
               (thunk)
               (loop)))))))
 
+;;; The procedure ##thread-schedule! implements the central logic of
+;;; the thread scheduler.  It is called by a processor when it needs
+;;; to select a runnable thread to continue executing.  If no runnable
+;;; threads can be found, the processor will enter a wait state.
+
 (define-prim (##thread-schedule!)
 
   (##declare (not interrupts-enabled))
 
-  (let ((current-processor
-         (macro-current-processor)))
+  ;;(##c-code "printf(\"thread-schedule!\\n\");");;TODO: remove
 
-    ;; check if there are runnable threads
+  ;; acquire low-level lock of processor
+  (macro-lock-current-processor!)
 
-    (let ((next-thread
-           (macro-btq-leftmost current-processor)))
-      (if (##not (##eq? next-thread current-processor))
+  ;; Try extracting the thread at the head of this processor's run queue.
 
-        ;; there are runnable threads, so continue executing the next
-        ;; runnable thread
+  (macro-if-btq-next
+   (macro-current-processor)
+   next-thread
 
-        (macro-thread-restore!
-         next-thread
-         ##thread-resume-execution!)
+   (begin
 
-        ;; there are no runnable threads, so check if there are threads
-        ;; waiting for a timeout or for a device to become ready
+     ;; There is at least one runnable thread on the run queue of this
+     ;; processor, and next-thread is the one with highest priority
+     ;; and next in line. However, because this thread must be locked
+     ;; before it can be removed from the run queue, and it is
+     ;; possible that some other processor has locked it since the
+     ;; moment it was observed at the head of the run queue (to
+     ;; terminate it, interrupt it, or do some other operation on it),
+     ;; we must attempt to lock it but without blocking, otherwise
+     ;; this could lead to a deadlock due to a cross locking of two
+     ;; locks in opposite orders (i.e. processor followed by thread
+     ;; and thread followed by processor). If the thread can't be
+     ;; locked, the processor's lock is released and the thread
+     ;; scheduling is retried. This leaves a window for completing
+     ;; the operation of the other processor.
 
-        (let ((next-sleeper
-               (macro-toq-leftmost current-processor))
-              (next-condvar
-               (macro-btq-deq-next current-processor)))
-          (if (or (##not (##eq? next-sleeper current-processor))
-                  (##not (##eq? next-condvar current-processor)))
+     (if (##not (macro-trylock-thread! next-thread))
 
-            ;; wait for the next timeout or for a device to become ready
+         (begin
 
-            (let ((code
-                   (##thread-check-devices!
-                    (if (##eq? next-sleeper current-processor)
-                      #t ;; timeout is infinite
-                      (macro-thread-floats next-sleeper)))))
+           ;; The thread is currently locked by some other processor
+           ;; to perform an operation on the thread.
 
-              ;; ##thread-check-devices! only returns after a device
-              ;; becomes ready or the timeout is reached or an error is
-              ;; detected
+           ;;(##c-code "printf(\"next-thread couldn't be locked! will try again to schedule...\\n\");");;TODO: remove
 
-              (##thread-check-timeouts!)
+           ;; Release low-level lock of processor to allow other
+           ;; processor to complete its operation on the thread.
 
-              (cond ((##not (##fx< code 0)) ;; no error?
-                     #f)
+           (macro-unlock-current-processor!)
 
-                    ((##fx= code ##err-code-EINTR)
+           ;; Try again... next-thread may or may not be in the run
+           ;; queue, and if it is it might no longer be at the head
+           ;; (if its priority has changed).
 
-                     ;; an interrupt may need to be serviced, so make
-                     ;; sure at least one thread is runnable
+           (##thread-schedule!))
 
-                     (let ((next-thread
-                            (macro-btq-leftmost current-processor)))
-                       (if (##eq? next-thread current-processor)
+         (begin
 
-                         ;; no thread is currently runnable, so wake up
-                         ;; a thread that is sleeping or waiting on a
-                         ;; device
+           ;; The next thread in the run queue is now locked, so
+           ;; continue executing it.
 
-                         (let ((next-sleeper
-                                (macro-toq-leftmost current-processor)))
-                           (if (##not (##eq? next-sleeper current-processor))
+           ;; remove thread from processor's run queue
+           (##btq-remove! next-thread)
 
-                             ;; a thread was sleeping so make it
-                             ;; temporarily wake up so that it detects
-                             ;; the interrupt (after the interrupt is
-                             ;; processed the thread will resume
-                             ;; sleeping)
+           ;; release low-level lock of thread
+           (macro-unlock-thread! next-thread)
 
-                             (##thread-int!
-                              next-sleeper
-                              ##thread-check-interrupts!)
+           ;; release low-level lock of processor
+           (macro-unlock-current-processor!)
 
-                             (let ((next-condvar
-                                    (macro-btq-deq-next current-processor)))
-                               (if (##not (##eq? next-condvar current-processor))
+           ;; resume execution of the thread
+           (macro-thread-restore!
+            next-thread
+            ##thread-resume-execution!))))
 
-                                 ;; a thread is blocked on a device so
-                                 ;; make it temporarily wake up so that
-                                 ;; it detects the interrupt (after the
-                                 ;; interrupt is processed the thread
-                                 ;; will resume waiting)
+   (begin
 
-                                 (##device-condvar-broadcast-no-reschedule!
-                                  next-condvar)
+     ;; There are no runnable threads locally, so try to steal a
+     ;; thread from the run queue of another processor.
 
-                                 ;; no thread can possibly make further
-                                 ;; progress, so let next call of
-                                 ;; ##thread-schedule! detect and
-                                 ;; handle the deadlock
+     ;; Make a reasonable attempt to steal a thread from the run
+     ;; queues of other processors.
 
-                                 #f)))))))
+     (let loop ((i (##fx- (##current-vm-processor-count) 1)))
+       (if (##fx> i 0)
 
-                    (else
+           (let* ((id
+                   (##fxmodulo (##fx+ (##current-processor-id) i)
+                               (##current-vm-processor-count)))
+                  (victim-processor
+                   (##processor id)))
 
-                     ;; there was an error that cannot be handled, so
-                     ;; force the primordial thread to wakeup (it can't
-                     ;; be currently runnable) and raise a "scheduler
-                     ;; error" exception
+             ;; Try to lock the victim processor, but don't block.
 
-                     (##thread-report-scheduler-error! code))))
+             (if (##not (macro-trylock-processor! victim-processor))
 
-            ;; no thread can possibly make further progress, so force
-            ;; the primordial thread to wakeup (it can't be currently
-            ;; runnable) and raise a "deadlock" exception
+                 (begin
 
-            (##thread-int!
-             (macro-primordial-thread)
-             ##thread-deadlock-action!))
+                   ;; Try another victim rather than blocking.
 
-          ;; check things one more time!
+                   (loop (##fx- i 1)))
 
-          (##thread-schedule!))))))
+                 (begin
+
+                   ;; Extract the thread at the head of the victim
+                   ;; processor's run queue, if it is non-empty.
+
+                   (macro-if-btq-next
+                    victim-processor
+                    stolen-thread
+
+                    (begin
+
+                      ;; The victim processor has a thread we can
+                      ;; steal on its run queue. But to avoid
+                      ;; deadlock, for the same reasons explained
+                      ;; above, the stolen-thread must be locked first
+                      ;; without blocking.
+
+                      ;; Try to lock the stolen thread, but don't block.
+
+                      (if (##not (macro-trylock-thread! stolen-thread))
+
+                          (begin
+
+                            ;; Couldn't lock the stolen thread.
+
+                            ;;(##c-code "printf(\"stolen-thread couldn't be locked! will try another victim processor...\\n\");");;TODO: remove
+
+                            ;; release low-level lock of victim processor
+                            (macro-unlock-processor! victim-processor)
+
+                            ;; try another victim processor
+                            (loop (##fx- i 1)))
+
+                          (begin
+
+                            ;; remove the thread from the run queue
+                            (##btq-remove! stolen-thread)
+
+                            ;; release low-level lock of stolen thread
+                            (macro-unlock-thread! stolen-thread)
+
+                            ;; release low-level lock of processors
+                            (macro-unlock-processor! victim-processor)
+                            (macro-unlock-current-processor!)
+
+                            ;; resume execution of the thread
+                            (macro-thread-restore!
+                             stolen-thread
+                             ##thread-resume-execution!))))
+
+                    (begin
+
+                      ;; The victim processor's run queue is
+                      ;; empty.
+
+                      ;; release low-level lock of victim processor
+                      (macro-unlock-processor! victim-processor)
+
+                      ;; try another victim processor
+                      (loop (##fx- i 1)))))))
+
+           (begin
+
+             ;; A thread was not stolen from another processor.  Note
+             ;; that while trying to steal, some threads may have been
+             ;; added to the run queues of other processors, so at
+             ;; this point it might be possible to steal a thread. But
+             ;; it is ok to be approximative in order to avoid a
+             ;; centralized lock.
+
+             ;; Check if there are threads waiting for a timeout
+             ;; or for a device to become ready.
+
+             (let ((next-sleeper
+                    (macro-toq-leftmost (macro-current-processor)));;TODO: use (macro-if-toq-next ...)
+                   (next-condvar
+                    (macro-btq-deq-next (macro-current-processor))))
+
+               ;;(##c-code "printf(\"no runnable threads\\n\");");;TODO: remove
+
+               (if (and (##eq? next-sleeper (macro-current-processor))
+                        (##eq? next-condvar (macro-current-processor)))
+
+                   (begin
+
+                     ;; This processor has no runnable threads
+                     ;; and no sleeping threads and it is not
+                     ;; waiting for a device to become ready.
+                     ;; To avoid wasting CPU time, the processor
+                     ;; will be put in a waiting state until
+                     ;; another processor has work to share.
+
+                     ;;(##c-code "printf(\"P%d ##wait! in ##thread-schedule!\\n\",___INT(___ARG1));" (##current-processor-id));;TODO: remove
+
+                     ;; release low-level lock of processor
+                     (macro-unlock-current-processor!)
+
+                     (##wait! #f #t)
+                     (##service-interrupts!) ;;TODO:remove
+                     (##thread-schedule!))
+
+                   (begin
+
+                     ;; Wait for the next timeout or for a device
+                     ;; to become ready.
+
+                     ;;(##c-code "printf(\"check-devices!\\n\");");;TODO: remove
+
+                     ;; release low-level lock of processor
+                     (macro-unlock-current-processor!)
+
+                     (let ((code
+                            (##thread-check-devices!
+                             (if (##eq? next-sleeper
+                                        (macro-current-processor))
+                                 #t ;; no sleeper -> use infinite timeout
+                                 (macro-thread-floats next-sleeper)))))
+
+                       ;; ##thread-check-devices! only returns
+                       ;; after a device becomes ready or the
+                       ;; timeout is reached or an interrupt is
+                       ;; received or an error is detected.
+
+                       ;; acquire low-level lock of processor
+                       (macro-lock-current-processor!)
+
+                       (##thread-check-timeouts!)
+
+                       ;; release low-level lock of processor
+                       (macro-unlock-current-processor!)
+
+                       (##service-interrupts!) ;;TODO:remove
+
+                       (cond ((##not (##fx< code 0)) ;; no error?
+                              (##thread-schedule!))
+
+                             ((##fx= code ##err-code-EINTR)
+
+                              ;;(##c-code "printf(\"EINTR\\n\");")
+                              (##thread-schedule!))
+
+                             (else
+
+                              ;; there was an error that cannot
+                              ;; be handled, so force the
+                              ;; primordial thread to wakeup (it
+                              ;; can't be currently runnable) and
+                              ;; raise a "scheduler error"
+                              ;; exception
+
+                              (##thread-report-scheduler-error! code)
+                              (##thread-schedule!)))))))))))))
 
 (define-prim (##thread-report-scheduler-error! code)
 
@@ -1333,126 +1776,191 @@
 
   (##declare (not interrupts-enabled))
 
+  ;;(##c-code "printf(\"end!\\n\");")
   (if (##eq? thread (macro-primordial-thread))
 
-    ;; termination of the primordial thread causes the program to terminate
+      (begin
 
-    (if (##eq? exception? 'uncaught-exception)
-      (##exit-with-exception result)
-      (##exit))
+        ;; Termination of the primordial thread causes the program to
+        ;; terminate.
 
-    ;; perform thread termination only if thread is not already
-    ;; terminated, or in the process of terminating
+        (if (##eq? exception? 'uncaught-exception)
+            (##exit-with-exception result)
+            (##exit)))
 
-    (let ((end-condvar (macro-thread-end-condvar thread)))
-      (if (##not end-condvar)
-        (##void)
-        (begin
+      (begin
 
-          ;; the thread must abandon all the blocked thread queues
-          ;; (i.e. mutexes, condvars, etc) it owns
+        ;; Perform thread termination only if thread is not already
+        ;; terminated, or in the process of terminating.
 
-          (let loop ()
-            (let ((next-btq (macro-btq-deq-next thread)))
-              (if (##not (##eq? next-btq thread))
-                (begin
-                  (##btq-abandon! next-btq)
-                  (loop)))))
+        ;; acquire low-level lock of thread
+        (macro-lock-thread! thread)
 
-          (macro-thread-end-condvar-set! thread #f)
-          (macro-thread-exception?-set! thread exception?)
-          (macro-thread-result-set! thread result)
-          (##condvar-signal-no-reschedule! end-condvar #t)
-          (macro-thread-btq-remove-if-in-btq! thread)
-          (macro-thread-toq-remove-if-in-toq! thread)
-          (macro-tgroup-threads-deq-remove! thread)
-          (macro-tgroup-threads-deq-init! thread)
-          (macro-thread-cont-set! thread #t)
-          (macro-thread-denv-set! thread #f)
-          (macro-thread-denv-cache1-set! thread #f)
-          (macro-thread-denv-cache2-set! thread #f)
-          (macro-thread-denv-cache3-set! thread #f)
-          (cond ((##eq? thread (macro-current-thread))
-                 (##thread-schedule!))
-                (else
-                 (macro-thread-reschedule-if-needed!))))))))
+        (let ((end-condvar (macro-thread-end-condvar thread)))
+          (if (##not end-condvar)
+
+              (begin
+
+                ;; Thread is already terminated.
+
+                ;; release low-level lock of thread
+                (macro-unlock-thread! thread)
+
+                (##void))
+
+              (begin
+
+                ;; The thread must abandon all the blocked thread
+                ;; queues (i.e. mutexes, condvars, etc) it owns.
+
+                (let loop ()
+                  (let ((next-btq (macro-btq-deq-next thread)))
+                    (if (##not (##eq? next-btq thread))
+                        (begin
+                          (##btq-abandon! next-btq)
+                          (loop)))))
+
+                (macro-thread-end-condvar-set! thread #f)
+                (macro-thread-exception?-set! thread exception?)
+                (macro-thread-result-set! thread result)
+                (macro-thread-btq-remove-if-in-btq! thread)
+                (macro-thread-toq-remove-if-in-toq! thread)
+                (macro-tgroup-threads-deq-remove! thread)
+                (macro-tgroup-threads-deq-init! thread)
+                (macro-thread-cont-set! thread #t)
+                (macro-thread-denv-set! thread #f)
+                (macro-thread-denv-cache1-set! thread #f)
+                (macro-thread-denv-cache2-set! thread #f)
+                (macro-thread-denv-cache3-set! thread #f)
+
+                ;; release low-level lock of thread
+                (macro-unlock-thread! thread)
+
+                (##condvar-signal-no-reschedule! end-condvar #t)
+
+                (cond ((##eq? thread (macro-current-thread))
+                       (##thread-schedule!))
+                      (else
+                       (macro-thread-reschedule-if-needed!)))))))))
 
 (define-prim (##thread-join! thread absrel-timeout timeout-val)
+
   (##declare (not interrupts-enabled))
-  (let ((joined-before-timeout?
-         (let ((end-condvar (macro-thread-end-condvar thread)))
-           (if end-condvar
-             (let ((timeout
-                    (##absrel-timeout->timeout
-                     (if (##eq? absrel-timeout (macro-absent-obj))
-                       #f
-                       absrel-timeout))))
-               (if timeout
-                 (let loop ()
-                   (let ((result
-                          (macro-thread-save!
-                           (lambda (current-thread thread timeout)
-                             (let ((end-condvar
-                                    (macro-thread-end-condvar thread)))
 
-                               ;; do a final check of the state of
-                               ;; the thread (this double check is
-                               ;; necessary because a thread-switch
-                               ;; may occur during the capturing of
-                               ;; the continuation by
-                               ;; macro-thread-save!)
-
-                               (if end-condvar
-                                 (begin
-                                   (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-                                   (##btq-remove! current-thread)
-                                   (macro-thread-boost-and-clear-quantum-used!
-                                    current-thread)
-                                   (##thread-btq-insert!
-                                    end-condvar
-                                    current-thread)
-                                   (if (##not (##eq? timeout #t))
-                                     (begin
-                                       (macro-thread-timeout-set!
-                                        current-thread
-                                        timeout)
-                                       (##toq-insert!
-                                        (macro-current-processor)
-                                        current-thread)))
-                                   (##thread-schedule!))
-                                 #t)))
-                           thread
-                           timeout)))
-                     (if (##eq? result (##void))
-                       (loop)
-                       result)))
-                 #f))
-             #t))))
-
+  (define (done thread absrel-timeout timeout-val joined-before-timeout?)
     (if joined-before-timeout?
-      (case (macro-thread-exception? thread)
-        ((uncaught-exception)
-         (##raise-uncaught-exception
-          (macro-thread-result thread)
-          thread-join!
-          thread
-          absrel-timeout
-          timeout-val))
-        ((terminated-thread-exception)
-         (##raise-terminated-thread-exception
-          thread-join!
-          thread
-          absrel-timeout
-          timeout-val))
-        (else
-         (macro-thread-result thread)))
-      (if (##eq? timeout-val (macro-absent-obj))
-        (##raise-join-timeout-exception
-         thread-join!
-         thread
-         absrel-timeout
-         timeout-val)
-        timeout-val))))
+        (case (macro-thread-exception? thread)
+          ((uncaught-exception)
+           (##raise-uncaught-exception
+            (macro-thread-result thread)
+            thread-join!
+            thread
+            absrel-timeout
+            timeout-val))
+          ((terminated-thread-exception)
+           (##raise-terminated-thread-exception
+            thread-join!
+            thread
+            absrel-timeout
+            timeout-val))
+          (else
+           (macro-thread-result thread)))
+        (if (##eq? timeout-val (macro-absent-obj))
+            (##raise-join-timeout-exception
+             thread-join!
+             thread
+             absrel-timeout
+             timeout-val)
+            timeout-val)))
+
+  (let ((timeout
+         (##absrel-timeout->timeout
+          (if (##eq? absrel-timeout (macro-absent-obj))
+              #f
+              absrel-timeout))))
+
+    (let try-again ()
+
+      ;; acquire low-level lock of the thread
+      (macro-lock-thread! thread)
+
+      (let ((end-condvar (macro-thread-end-condvar thread)))
+        (if end-condvar
+
+            (begin
+
+              ;; release low-level lock of the thread
+              (macro-unlock-thread! thread)
+
+              ;; acquire low-level lock of end-condvar
+              (macro-lock-condvar! end-condvar)
+
+              ;; acquire low-level locks of threads
+              (##lock-2-threads! (macro-current-thread) thread)
+
+              ;; make sure thread is still not terminated
+              (if (macro-thread-end-condvar thread)
+
+                  (let ((result
+                         (macro-thread-save!
+                          (lambda (current-thread thread timeout end-condvar)
+
+                            (macro-thread-resume-thunk-set!
+                             current-thread
+                             ##thread-void-action!)
+
+                            ;;TODO: reenable
+                            ;;(macro-thread-unboost-and-clear-quantum-used! current-thread)
+
+                            ;; suspend current thread on end-condvar
+                            (##thread-btq-insert! end-condvar current-thread)
+
+                            (if (##not (##eq? timeout #t))
+                                (begin
+
+                                  ;; save current thread's timeout
+                                  (macro-thread-timeout-set!
+                                   current-thread
+                                   timeout)
+
+                                  ;; add current thread to timeout queue
+                                  (macro-lock-current-processor!)
+                                  (##toq-insert!
+                                   (macro-current-processor)
+                                   current-thread)
+                                  (macro-unlock-current-processor!)))
+
+                            ;; release low-level locks of threads
+                            (##unlock-2-threads! (macro-current-thread) thread)
+
+                            ;; release low-level lock of end-condvar
+                            (macro-unlock-condvar! end-condvar)
+
+                            (##thread-schedule!))
+                          thread
+                          timeout
+                          end-condvar)))
+
+                    (if (##eq? result (##void))
+                        (try-again)
+                        (done thread absrel-timeout timeout-val result)))
+
+                  (begin
+
+                    ;; release low-level locks of threads
+                    (##unlock-2-threads! (macro-current-thread) thread)
+
+                    ;; release low-level lock of end-condvar
+                    (macro-unlock-condvar! end-condvar)
+
+                    (done thread absrel-timeout timeout-val #t))))
+
+            (begin
+
+              ;; release low-level lock of the thread
+              (macro-unlock-thread! thread)
+
+              (done thread absrel-timeout timeout-val #t)))))))
 
 (define-prim (##make-root-thread
               thunk
@@ -1558,36 +2066,42 @@
 
   (declare (not interrupts-enabled))
 
-  (macro-processor-init! (##current-processor))
-  (##primitive-unlock! (##current-processor))
-
-  (let* ((tgroup
-          (##make-tgroup 'local #f))
-         (input-port
-          ##stdin-port)
-         (output-port
-          ##stdout-port)
-         (thread
-          (##make-root-thread
-           #f
-           'local
-           tgroup
-           input-port
-           output-port)))
-
-    (macro-processor-current-thread-set!
-     (macro-current-processor)
-     thread)
-
-    (##btq-insert! (macro-current-processor) thread)
-    )
+  (macro-processor-init! (##current-processor) (##current-processor-id))
+  (macro-unlock-current-processor!)
 
   (##enable-interrupts!)
 
-  (let loop ()
-    (declare (interrupts-enabled))
-    (##os-condvar-select! #f #t) ;; wait for interrupt
-    (loop)))
+  (##thread-schedule!))
+
+(set! ##c-return-on-other-processor-hook
+      (lambda (id)
+        (##thread-migrate-to! id)))
+
+(define-prim (##thread-migrate-to! id)
+  (##declare (not interrupts-enabled))
+  (macro-thread-save!
+   (lambda (current-thread id)
+     (let ((p (##processor id)))
+       (macro-lock-processor! p)
+       ;;TODO: reenable
+       ;;(macro-thread-unboost-and-clear-quantum-used! current-thread)
+       (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
+       (##btq-insert! p current-thread)
+       (macro-unlock-processor! p)
+       (##wait-abort! p)
+       ;;TODO: fix this
+       ;;wait a short moment so that the thread-schedule! does not steal the thread
+       (let loop ((n 10000000)) (if (##fx> n 0) (loop (##fx- n 1))))
+       (##thread-schedule!)))
+   id))
+
+(define-prim (##thread-start-on! id thread)
+  (##declare (not interrupts-enabled))
+  (let ((p (##processor id)))
+    (##btq-insert! p thread)
+    (##wait-abort! p)
+    ;;(macro-thread-reschedule-if-needed!)
+    thread))
 
 (define (##cvmr n)
   (##current-vm-resize ##startup-processor! n))
@@ -1600,15 +2114,26 @@
     (if (##fx> nb-procs 1)
         (##cvmr nb-procs))))
 
+;; The ##startup-threading! procedure initializes the thread system.
+;; It creates the primordial thread, the primordial thread group and
+;; the run queue of processor 0.  The run queue of a processor
+;; contains the runnable threads that are waiting for the processor to
+;; be available to execute them.  A thread is "running" when a
+;; processor is currently executing it.  When a processor starts
+;; executing a thread, the thread is removed from the processor's run
+;; queue.  Since the primordial thread is initially the only runnable
+;; thread, ##startup-threading! creates an empty run queue and the
+;; primordial thread becomes the current thread of processor 0.
+
 (define-prim (##startup-threading!)
 
   (##declare (not interrupts-enabled))
 
-  (macro-vm-init! (##current-vm))
-  (##primitive-unlock! (##current-vm))
+  (macro-vm-init! (macro-current-vm))
+  (macro-unlock-current-vm!)
 
-  (macro-processor-init! (##current-processor))
-  (##primitive-unlock! (##current-processor))
+  (macro-processor-init! (##current-processor) (##current-processor-id))
+  (macro-unlock-current-processor!)
 
   (let* ((primordial-tgroup
           (##make-tgroup 'primordial #f))
@@ -1630,8 +2155,6 @@
      (macro-current-processor)
      primordial-thread)
 
-    (##btq-insert! (macro-current-processor) primordial-thread)
-
     (set! ##primordial-thread primordial-thread)
 
     (##interrupt-vector-set! 2 ##thread-heartbeat!) ;; ___INTR_HEARTBEAT
@@ -1651,22 +2174,12 @@
     ;; assign serial number 1 to primordial thread
     (##object->serial-number primordial-thread)
 
-    (##thread-heartbeat-interval-set! (macro-default-heartbeat-interval))
+    ;;(##set-heartbeat-interval! 1.0)
+    (##set-heartbeat-interval! (macro-default-heartbeat-interval))
 
     (##startup-parallelism!)
 
     (##void)))
-
-(define-prim (##thread-heartbeat-interval-set! seconds)
-  (##declare (not interrupts-enabled))
-  (let* ((actual-interval
-          (##heartbeat-interval-set! seconds))
-         (current-processor
-          (macro-current-processor))
-         (current-processor-floats
-          (macro-thread-floats current-processor)))
-    (macro-heartbeat-interval-set! current-processor-floats actual-interval)
-    actual-interval))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1839,96 +2352,474 @@
   (##declare (not interrupts-enabled))
   (macro-make-mutex name))
 
-(define-prim (##mutex-lock-out-of-line! mutex absrel-timeout owner new-owner)
+;; The call (##mutex-lock-out-of-line! mutex absrel-timeout new-owner)
+;; causes the current thread to attempt locking the mutex.  The
+;; current thread will wait up to the indicated timeout for the mutex
+;; to be in an unlocked state, and ##mutex-lock-out-of-line! will
+;; return #f if the timeout is reached.  Otherwise the mutex will be
+;; locked and ##mutex-lock-out-of-line! will return #t after the
+;; thread passed in the new-owner parameter (if not #f) has been made
+;; the mutex's owner.
+
+(define-prim (##lock-2-threads! thread1 thread2)
+
   (##declare (not interrupts-enabled))
-  (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
-    (if timeout
-        (let loop ()
-          (let ((result
-                 (macro-thread-save!
-                  (lambda (current-thread mutex timeout new-owner)
-                    (##primitive-lock! mutex)
-                    (let ((owner (macro-btq-owner mutex)))
 
-                      ;; do a final check of the state of the
-                      ;; mutex and suspend if can't lock the
-                      ;; mutex (this double check is necessary
-                      ;; because a thread-switch may occur during
-                      ;; the capturing of the continuation by
-                      ;; macro-thread-save!)
+  ;; This procedure acquires the low-level locks of thread1 and
+  ;; thread2, that must be threads.  It is permitted for the
+  ;; parameters to refer to the same thread. The implementation orders
+  ;; the lock acquisitions to prevent cross locking.
 
-                      (if (or (##eq? owner (macro-mutex-state-not-abandoned))
-                              (##eq? owner (macro-mutex-state-abandoned)))
+  (define (ordered-locking t1 t2)
+    (macro-lock-thread! t1)
+    (if (##not (##eq? t1 t2)) (macro-lock-thread! t2)))
 
-                          (begin
-                            (if new-owner
-                                (if (macro-thread-end-condvar new-owner)
-                                    (macro-btq-link! mutex new-owner)
-                                    (macro-btq-owner-set! mutex (macro-mutex-state-abandoned)))
-                                (macro-btq-owner-set! mutex (macro-mutex-state-not-owned)))
-                            (##primitive-unlock! mutex)
-                            (if (##eq? owner (macro-mutex-state-not-abandoned))
-                                #t
-                                (##thread-abandoned-mutex-action!)))
+  (if (##object-before? thread1 thread2)
+      (ordered-locking thread1 thread2)
+      (ordered-locking thread2 thread1)))
 
-                          (begin
-                            (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-                            (##btq-remove! current-thread)
-                            (macro-thread-boost-and-clear-quantum-used!
-                             current-thread)
-                            (macro-thread-result-set!
-                             current-thread
-                             new-owner)
-                            (##thread-btq-insert! mutex current-thread)
-                            (if (##not (##eq? timeout #t))
-                                (begin
-                                  (macro-thread-timeout-set!
-                                   current-thread
-                                   timeout)
-                                  (##toq-insert!
-                                   (macro-current-processor)
-                                   current-thread)))
-                            (macro-btq-owner-set! mutex owner)
-                            (##primitive-unlock! mutex)
-                            (##thread-schedule!)))))
+(define-prim (##unlock-2-threads! thread1 thread2)
 
-                  mutex
-                  timeout
-                  new-owner)))
-            (if (##eq? result (##void))
-                (loop)
-                result)))
-        #f)))
+  (##declare (not interrupts-enabled))
+
+  ;; This procedure releases the low-level locks of thread1 and
+  ;; thread2, that must be threads.  It is permitted for the
+  ;; parameters to refer to the same thread.
+
+  (macro-unlock-thread! thread1)
+  (if (##not (##eq? thread1 thread2)) (macro-unlock-thread! thread2)))
+
+(define-prim (##lock-3-threads! thread1 thread2 thread3)
+
+  (##declare (not interrupts-enabled))
+
+  ;; This procedure acquires the low-level locks of thread1, thread2
+  ;; and thread3, that can be threads or #f.  It is permitted for any
+  ;; pair of parameters to refer to the same thread. The
+  ;; implementation orders the lock acquisitions to prevent cross
+  ;; locking, and also checks for a thread appearing more than once.
+
+  (define (ordered-locking t1 t2 t3)
+    (if t1 (macro-lock-thread! t1))
+    (if (and t2 (##not (##eq? t1 t2))) (macro-lock-thread! t2))
+    (if (and t3 (##not (##eq? t2 t3))) (macro-lock-thread! t3)))
+
+  (if (##fx< thread1 thread2)
+      (if (##object-before? thread2 thread3)
+          (ordered-locking thread1 thread2 thread3)
+          (if (##object-before? thread1 thread3)
+              (ordered-locking thread1 thread3 thread2)
+              (ordered-locking thread3 thread1 thread2)))
+      (if (##object-before? thread1 thread3)
+          (ordered-locking thread2 thread1 thread3)
+          (if (##object-before? thread2 thread3)
+              (ordered-locking thread2 thread3 thread1)
+              (ordered-locking thread3 thread2 thread1)))))
+
+(define-prim (##unlock-3-threads! thread1 thread2 thread3)
+
+  (##declare (not interrupts-enabled))
+
+  ;; This procedure releases the low-level locks of thread1, thread2
+  ;; and thread3, that can be threads or #f.  It is permitted for any
+  ;; pair of parameters to refer to the same thread. The
+  ;; implementation checks for a thread appearing more than once.
+
+  (if thread1
+      (macro-unlock-thread! thread1))
+
+  (if (and thread2
+           (##not (##eq? thread1 thread2)))
+      (macro-unlock-thread! thread2))
+
+  (if (and thread3
+           (##not (##eq? thread1 thread3))
+           (##not (##eq? thread2 thread3)))
+      (macro-unlock-thread! thread3)))
+
+(define-prim (##mutex-lock-anonymously-out-of-line! mutex absrel-timeout)
+  (##declare (not interrupts-enabled))
+  (##mutex-lock-out-of-line! mutex absrel-timeout #f))
+
+(define-prim (##mutex-lock-out-of-line! mutex absrel-timeout new-owner)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Assumes that the low-level lock of the mutex is acquired.
+
+  (let ((timeout
+         (if (##not absrel-timeout)
+
+             #t ;; no timeout
+
+             (begin
+
+               ;; The timeout must be computed with a call to
+               ;; ##absrel-timeout->timeout, but because this might be
+               ;; interrupted, we must release all locks currently
+               ;; held.
+
+               ;; release low-level lock of mutex
+               (macro-unlock-mutex! mutex)
+
+               (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
+
+                 ;; acquire low-level lock of mutex
+                 (macro-lock-mutex! mutex)
+
+                 timeout)))))
+
+    (let try-again ()
+
+      ;; Try to lock mutex.
+
+      (let ((result
+             (macro-thread-save!
+
+              (lambda (current-thread mutex timeout new-owner)
+
+                ;; check the state of the mutex
+                (let ((owner (macro-btq-owner mutex)))
+                  (cond ((or (##eq? owner (macro-mutex-state-not-abandoned))
+                             (##eq? owner (macro-mutex-state-abandoned)))
+
+                         ;; Mutex is unlocked, so lock it.
+
+                         ;; acquire low-level locks of threads
+                         (if new-owner
+                             (##lock-2-threads! current-thread new-owner)
+                             (macro-lock-thread! current-thread))
+
+                         (let ((state
+                                (if new-owner
+
+                                    ;; check if new owner thread is terminated
+                                    (if (macro-thread-end-condvar new-owner)
+
+                                        (begin
+
+                                          ;; Thread is not terminated.
+
+                                          ;; thread becomes the mutex's owner
+                                          (macro-btq-link! mutex new-owner)
+
+                                          ;; release low-level lock of thread
+                                          (if (##not (##eq? new-owner
+                                                            current-thread))
+                                              (macro-unlock-thread! new-owner))
+
+                                          new-owner)
+
+                                        (begin
+
+                                          ;; Thread is terminated.
+
+                                          ;; release low-level lock of thread
+                                          (if (##not (##eq? new-owner
+                                                            current-thread))
+                                              (macro-unlock-thread! new-owner))
+
+                                          ;; change the mutex's state to
+                                          ;; abandoned
+                                          (macro-btq-owner-set!
+                                           mutex
+                                           (macro-mutex-state-abandoned))
+
+                                          (macro-mutex-state-abandoned)))
+
+                                    (begin
+
+                                      ;; change the mutex's state to not-owned
+                                      (macro-btq-owner-set!
+                                       mutex
+                                       (macro-mutex-state-not-owned))
+
+                                      (macro-mutex-state-not-owned)))))
+
+                           ;; release low-level lock of current thread
+                           (macro-unlock-thread! current-thread)
+
+                           ;; release low-level lock of mutex
+                           (macro-unlock-mutex! mutex)
+
+                           ;; check if abandoned mutex exception needs
+                           ;; to be raised
+                           (if (##eq? state (macro-mutex-state-abandoned))
+                               (##thread-abandoned-mutex-action!)
+                               #t))) ;; signal success
+
+                        ((##not timeout)
+
+                         ;; Mutex is locked and timeout is already
+                         ;; reached, so don't wait.
+
+                         ;; release low-level lock of new owner thread
+                         (if (and new-owner
+                                  (##not (##eq? new-owner
+                                                current-thread)))
+                             (macro-unlock-thread! new-owner))
+
+                         ;; release low-level lock of current thread
+                         (macro-unlock-thread! current-thread)
+
+                         #f) ;; signal failure
+
+                        (else
+
+                         ;; Mutex is locked, so current thread needs
+                         ;; to wait on the blocked thread queue of the
+                         ;; mutex.
+
+                         ;; acquire low-level locks of threads
+                         (if new-owner
+                             (##lock-2-threads! current-thread new-owner)
+                             (macro-lock-thread! current-thread))
+
+                         ;;TODO: reenable
+                         #;
+                         (macro-thread-boost-and-clear-quantum-used!
+                          current-thread)
+
+                         ;; save new-owner in thread so that mutex-unlock!
+                         ;; can use this information when thread ends waiting
+                         (macro-thread-result-set!
+                          current-thread
+                          new-owner)
+
+                         ;; add current thread to blocked thread queue
+                         ;; of the mutex
+                         (##thread-btq-insert! mutex current-thread)
+
+                         ;; also add current thread to timeout queue
+                         ;; if the lock operation is time-limited
+                         (if (##not (##eq? timeout #t)) ;; finite timeout?
+                             (begin
+
+                               ;; save current thread's timeout
+                               (macro-thread-timeout-set!
+                                current-thread
+                                timeout)
+
+                               ;; add current thread to timeout queue
+                               (macro-lock-current-processor!)
+                               (##toq-insert!
+                                (macro-current-processor)
+                                current-thread)
+                               (macro-unlock-current-processor!)))
+
+                         ;; by default resuming thread should return void
+                         (macro-thread-resume-thunk-set!
+                          current-thread
+                          ##thread-void-action!)
+
+                         ;; release low-level lock of new owner thread
+                         (if (and new-owner
+                                  (##not (##eq? new-owner
+                                                current-thread)))
+                             (macro-unlock-thread! new-owner))
+
+                         ;; release low-level lock of current thread
+                         (macro-unlock-thread! current-thread)
+
+                         ;; release low-level lock of mutex
+                         (macro-unlock-mutex! mutex)
+
+                         ;; schedule next runnable thread
+                         (##thread-schedule!)))))
+
+                        mutex
+                        timeout
+                        new-owner)))
+
+        ;; When result is void, it means the scheduler woke up the
+        ;; thread not because the lock was unlocked or the timeout
+        ;; was reached, but because the thread needed to be
+        ;; interrupted to perform some other work.  In this case
+        ;; the lock operation must be restarted.
+
+        (if (##eq? result (##void))
+
+            (begin
+
+              ;;(##c-code "printf(\"try-again\\n\");")
+
+              ;; acquire low-level lock of mutex
+              (macro-lock-mutex! mutex)
+
+              (try-again))
+
+            result)))))
+
+(define-prim (##mutex-unlock-out-of-line! mutex first-thread)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Assumes that the low-level lock of the mutex is acquired.
+
+  ;; There is at least one thread waiting on the mutex, and
+  ;; first-thread is the next in line to wake up.
+
+  (let* ((new-owner (macro-thread-result first-thread)) ;; fetch saved new owner
+         (x (macro-btq-owner mutex)) ;; get current owner if any
+         (current-owner (and (macro-mutex-thread-owner? x) x)))
+
+    ;; acquire low-level locks of first-thread, new-owner and current-owner
+    (##lock-3-threads! first-thread new-owner current-owner)
+
+    ;; remove mutex from the set of mutexes owned by the owner thread
+    (if current-owner
+        (macro-btq-deq-remove! mutex))
+
+    ;; remove first-thread from mutex's blocked thread queue
+    (##thread-btq-remove! first-thread)
+
+    ;; if first-thread was blocked doing a time limited mutex-lock! then
+    ;; remove it from the timeout queue
+    (macro-thread-toq-remove-if-in-toq! first-thread)
+
+    (if new-owner
+
+        (begin
+
+          ;; The mutex-lock! operation specified a new-owner thread.
+
+          ;; check if the new-owner thread terminated
+          (if (macro-thread-end-condvar new-owner)
+
+              (begin
+
+                ;; The new-owner thread is not terminated.
+
+                ;; new-owner becomes the mutex's owner
+                (macro-btq-link! mutex new-owner)
+
+                ;; the new-owner inherits the priority of the thread
+                ;; that is next in line to wake up on the mutex
+                ;;TODO: reenable
+                #;
+                (macro-if-btq-next
+                mutex
+                new-next-thread
+                (macro-thread-inherit-priority! new-owner new-next-thread))
+
+                (macro-thread-resume-thunk-set!
+                 first-thread
+                 ##thread-locked-mutex-action!))
+
+              (begin
+
+                ;; The new-owner thread is terminated.
+
+                ;; change mutex state to unlocked/abandoned
+                (macro-btq-unlink! mutex (macro-mutex-state-abandoned))
+
+                (macro-thread-resume-thunk-set!
+                 first-thread
+                 ##thread-abandoned-mutex-action!))))
+
+        (begin
+
+          ;; The mutex-lock! operation did not specify a new-owner thread.
+
+          ;; change mutex state to locked/not-owned
+          (macro-btq-unlink! mutex (macro-mutex-state-not-owned))
+
+          (macro-thread-resume-thunk-set!
+           first-thread
+           ##thread-locked-mutex-action!)))
+
+    ;; add the thread to the current processor's run queue
+    (macro-lock-current-processor!)
+    (##btq-insert! (macro-current-processor) first-thread)
+    (macro-unlock-current-processor!)
+
+    ;; release low-level locks of first-thread, new-owner and current-owner
+    (##unlock-3-threads! first-thread new-owner current-owner)
+
+    ;; release low-level lock of mutex
+    (macro-unlock-mutex! mutex)
+
+    (##void)))
 
 (define-prim (##mutex-signal! mutex thread abandoned?)
 
   (##declare (not interrupts-enabled))
+
+  ;; Assumes that the low-level locks of the mutex and thread are acquired.
 
   (##mutex-signal-no-reschedule! mutex thread abandoned?)
 
   ;; check if the call to ##mutex-signal-no-reschedule! caused a
   ;; higher priority thread to become runnable
 
+  ;;TODO: fix me
+  #;
   (macro-thread-reschedule-if-needed!))
 
 (define-prim (##mutex-signal-no-reschedule! mutex thread abandoned?)
 
   (##declare (not interrupts-enabled))
 
+  ;; Assumes that the low-level locks of the mutex and thread are acquired.
+
+  ;;TODO: review
+  ;;(##c-code "printf(\"transferring mutex to thread %p\\n\",(void*)___ARG1);" thread);;TODO:remove
+
+  ;; remove thread from mutex's blocked thread queue
   (thread-trace 8 (##thread-btq-remove! thread))
 
-  (##primitive-unlock! mutex)
+  (macro-btq-owner-set! mutex (macro-mutex-state-not-owned))
 
-  (let ((new-owner (macro-thread-result thread)))
+  (let ((new-owner (macro-thread-result thread))) ;; fetch saved new owner
     (if new-owner
-        (if (macro-thread-end-condvar new-owner)
-            (begin
-              (macro-btq-link! mutex new-owner)
-              (let ((new-leftmost (macro-btq-leftmost mutex)))
-                (if (##not (##eq? new-leftmost mutex))
-                    (macro-thread-inherit-priority! new-owner new-leftmost))))
-            (macro-btq-unlink! mutex (macro-mutex-state-abandoned)))
-        (macro-btq-unlink! mutex (macro-mutex-state-not-owned))))
+
+        (begin
+
+          ;; the mutex-lock! operation specified a new-owner thread
+
+          (if (##not (##eq? new-owner thread))
+              (let loop ()
+                (if (##not (macro-trylock-thread! new-owner))
+                    (loop))));; TODO: trylock?
+
+          ;; is the new-owner thread terminated?
+          (if (macro-thread-end-condvar new-owner)
+
+              (begin
+
+                ;; the new-owner thread is not terminated
+
+                ;; new-owner becomes the mutex's owner
+                (macro-btq-link! mutex new-owner)
+
+                ;; the new-owner inherits the priority of the thread
+                ;; that is next in line to wake up on the mutex
+                ;;TODO: reenable
+                #;
+                (macro-if-btq-next
+                mutex
+                new-next-thread
+                (macro-thread-inherit-priority! new-owner new-next-thread)))
+
+              (begin
+
+                ;; the new-owner thread is terminated
+
+                ;; change mutex state to unlocked/abandoned
+                (macro-btq-unlink! mutex (macro-mutex-state-abandoned))))
+
+          (if (##not (##eq? new-owner thread))
+              (macro-unlock-thread! new-owner)))
+
+        (begin
+
+          ;; the mutex-lock! operation did not specify a new-owner thread
+
+          ;; change mutex state to locked/not-owned
+          (macro-btq-unlink! mutex (macro-mutex-state-not-owned)))))
+
+  ;; release low-level lock of mutex
+  (macro-unlock-mutex! mutex)
 
   (macro-thread-result-set! thread #f)
 
@@ -1938,81 +2829,159 @@
        ##thread-abandoned-mutex-action!
        ##thread-locked-mutex-action!))
 
+  ;; if thread was blocked doing a time limited mutex-lock! then
+  ;; remove it from the timeout queue
   (macro-thread-toq-remove-if-in-toq! thread)
 
-  (##btq-insert! (macro-current-processor) thread))
+  ;; add the thread to the current processor's run queue
+  (macro-lock-current-processor!)
+  (##btq-insert! (macro-current-processor) thread)
+  (macro-unlock-current-processor!)
+
+  ;; release low-level lock of thread
+  (macro-unlock-thread! thread))
 
 (define-prim (##mutex-signal-and-condvar-wait! mutex condvar timeout)
 
   (##declare (not interrupts-enabled))
 
-  (if timeout
-    (let ((result
-           (macro-thread-save!
-            (lambda (current-thread mutex condvar timeout)
-              (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
+  ;; acquire low-level lock of condition variable
+  (macro-lock-condvar! condvar)
 
-              (##btq-remove! current-thread)
-              (macro-thread-boost-and-clear-quantum-used!
-               current-thread)
-              (##thread-btq-insert! condvar current-thread)
-              (if (##not (##eq? timeout #t))
-                (begin
-                  (macro-thread-timeout-set!
-                   current-thread
-                   timeout)
-                  (##toq-insert!
-                   (macro-current-processor)
-                   current-thread)))
-              (macro-mutex-unlock-no-reschedule! mutex)
-              (##thread-schedule!))
-            mutex
-            condvar
-            timeout)))
-      (if (##eq? result (##void))
-        #t ;; abort wait when interrupted
-        result))
-    (begin
-      (macro-mutex-unlock-no-reschedule! mutex)
-      (macro-thread-reschedule-if-needed!)
-      #f)))
+  (if timeout
+      (let ((result
+             (macro-thread-save!
+              (lambda (current-thread mutex condvar timeout)
+
+                (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
+
+                (macro-lock-thread! (macro-current-thread)) ;; acquire low-level lock
+
+                ;;TODO: reenable
+                #;
+                (macro-thread-boost-and-clear-quantum-used!
+                 current-thread)
+                (##thread-btq-insert! condvar current-thread)
+                #;
+                (if (##not (##eq? timeout #t)) ;; finite timeout?
+                    (begin
+                      (macro-thread-timeout-set!
+                       current-thread
+                       timeout)
+                      (##toq-insert!
+                       (macro-current-processor)
+                       current-thread)))
+
+                (macro-unlock-thread! (macro-current-thread)) ;; release low-level lock
+
+                (macro-mutex-unlock-no-reschedule! mutex)
+
+                ;; release low-level lock of condition variable
+                (macro-unlock-condvar! condvar)
+
+                ;; schedule next runnable thread
+                (##thread-schedule!))
+              mutex
+              condvar
+              timeout)))
+        (if (##eq? result (##void))
+            #t ;; abort wait when interrupted
+            result))
+
+      (begin
+
+        (macro-mutex-unlock-no-reschedule! mutex)
+
+        ;; release low-level lock of condition variable
+        (macro-unlock-condvar! condvar)
+
+        ;;(macro-thread-reschedule-if-needed!)
+
+        #f)))
 
 (define-prim (##wait-for-io! condvar timeout)
+
   (##declare (not interrupts-enabled))
+
   (if timeout
-    (let ((result
-           (macro-thread-save!
-            (lambda (current-thread condvar timeout)
-              (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-              (##btq-remove! current-thread)
-              (macro-thread-boost-and-clear-quantum-used!
-               current-thread)
-              (##thread-btq-insert! condvar current-thread)
-              (if (##not (##eq? timeout #t))
-                (begin
-                  (macro-thread-timeout-set!
-                   current-thread
-                   timeout)
-                  (##toq-insert!
-                   (macro-current-processor)
-                   current-thread)))
-              (macro-btq-deq-remove! condvar)
-              (macro-btq-deq-insert-at-tail! (macro-current-processor) condvar)
-              (##thread-schedule!))
-            condvar
-            timeout)))
-      (##thread-check-interrupts!) ;; catch any user interrupts
-      (if (##eq? result (##void))
-          #t
-          result))
-    (begin
-      (macro-thread-reschedule-if-needed!)
-      #f)))
+
+      (let ((result
+             (macro-thread-save!
+              (lambda (current-thread condvar timeout)
+
+                ;; acquire low-level lock of condition variable
+                (macro-lock-condvar! condvar)
+
+                ;; acquire low-level lock of current thread
+                (macro-lock-current-thread!)
+
+                (macro-thread-resume-thunk-set!
+                 current-thread
+                 ##thread-void-action!)
+
+                ;;TODO: reenable
+                #;
+                (macro-thread-boost-and-clear-quantum-used!
+                current-thread)
+
+                (##thread-btq-insert! condvar current-thread)
+
+                (if (##not (##eq? timeout #t))
+                    (begin
+
+                      (macro-thread-timeout-set!
+                       current-thread
+                       timeout)
+
+                      ;; add current thread to timeout queue
+                      (macro-lock-current-processor!)
+                      (##toq-insert!
+                       (macro-current-processor)
+                       current-thread)
+                      (macro-unlock-current-processor!)))
+
+                ;; add condvar to the set of devices being monitored
+                ;; by this processor, if it isn't already being
+                ;; monitored
+                (if (##eq? (macro-btq-deq-prev condvar) condvar)
+                    (begin
+                      (macro-lock-current-processor!)
+                      (macro-btq-deq-insert-at-tail!
+                       (macro-current-processor)
+                       condvar)
+                      (macro-unlock-current-processor!))
+
+                    ;;(##c-code "printf(\"condvar already being monitored\\n\");";;TODO:remove
+)
+
+                ;; release low-level lock of current thread
+                (macro-unlock-current-thread!)
+
+                ;; release low-level lock of condition variable
+                (macro-unlock-condvar! condvar)
+
+                (##thread-schedule!))
+              condvar
+              timeout)))
+
+        (##thread-check-interrupts!) ;; catch any user interrupts
+
+        (if (##eq? result (##void))
+            #t
+            result))
+
+      (begin
+        (macro-thread-reschedule-if-needed!)
+        #f)))
 
 (define-prim (##device-condvar-broadcast-no-reschedule! condvar)
   (##declare (not interrupts-enabled))
+
+  ;; Assumes that exclusive access to the processor has been acquired.
+
   (macro-btq-deq-remove! condvar)
   (macro-btq-deq-init! condvar)
+
   (##condvar-signal-no-reschedule! condvar #t))
 
 ;;;----------------------------------------------------------------------------
@@ -2029,21 +2998,54 @@
   (macro-thread-reschedule-if-needed!))
 
 (define-prim (##condvar-signal-no-reschedule! condvar broadcast?)
+
   (##declare (not interrupts-enabled))
+  ;;(##c-code "printf(\"##condvar-signal-no-reschedule!\\n\");") ;;TODO:remove
+
+  ;; acquire low-level lock of condvar
+  (macro-lock-condvar! condvar)
+
   (let loop ()
-    (let ((leftmost (macro-btq-leftmost condvar)))
-      (if (##not (##eq? leftmost condvar))
-        (begin
-          (macro-thread-resume-thunk-set!
-           leftmost
-           ##thread-signaled-condvar-action!)
-          (thread-trace 9 (##thread-btq-remove! leftmost))
-          (macro-thread-toq-remove-if-in-toq! leftmost)
-          (##btq-insert! (macro-current-processor) leftmost)
-          (if broadcast?
-            (loop)
-            (##void)))
-        (##void)))))
+    (macro-if-btq-next
+     condvar
+     next-thread
+
+     (begin
+       ;;(##c-code "printf(\"waking up thread\\n\");") ;;TODO:remove
+
+       ;; acquire low-level lock of thread
+       (macro-lock-thread! next-thread)
+
+       (macro-thread-resume-thunk-set!
+        next-thread
+        ##thread-signaled-condvar-action!)
+
+       (thread-trace 9 (##thread-btq-remove! next-thread))
+       (macro-thread-toq-remove-if-in-toq! next-thread)
+
+       ;; add the thread to the current processor's run queue
+       (macro-lock-current-processor!)
+       (##btq-insert! (macro-current-processor) next-thread)
+       (macro-unlock-current-processor!)
+
+       ;; release low-level lock of thread
+       (macro-unlock-thread! next-thread)
+
+       (if broadcast?
+           (loop)
+           (begin
+
+             ;; release low-level lock of condvar
+             (macro-unlock-condvar! condvar)
+
+             (##void))))
+
+     (begin
+
+       ;; release low-level lock of condvar
+       (macro-unlock-condvar! condvar)
+
+       (##void)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2381,9 +3383,9 @@
          (macro-make-constant-thread-state-initialized))
         (else
          (let* ((btq
-                 (macro-thread->btq thread))
+                 (macro-btq->container thread))
                 (toq
-                 (macro-thread->toq thread))
+                 (macro-toq->container thread))
                 (timeout
                  (and toq
                       (let* ((floats (macro-thread-floats thread))
@@ -3346,9 +4348,9 @@
    (##declare (not interrupts-enabled))
    (set! ##deferred-user-interrupt? #t)
    (##void))
-     
+
 (define defer-user-interrupts ##defer-user-interrupts)
-     
+
 (define ##current-user-interrupt-handler
   (##make-parameter
    ##defer-user-interrupts

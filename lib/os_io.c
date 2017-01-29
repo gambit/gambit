@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1146,36 +1146,6 @@ ___time timeout;)
   }
 #endif
 
-#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
-
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
-    {
-      /* self-pipe has available data to read, discard all of it */
-
-      e = ___FIX(___ERRNO_ERR(EINTR));
-
-      for (;;)
-        {
-          char buf[256];
-          int n = read (___PSTATE->os.select_abort.reading_fd, buf, sizeof(buf));
-
-          if (n < 0)
-            {
-              if (errno == EAGAIN)
-                break;
-              if (errno != EINTR)
-                {
-                  e = err_code_from_errno ();
-                  break;
-                }
-            }
-          else if (n < sizeof(buf))
-            break;
-        }
-    }
-
-#endif
-
 #endif
 
 #ifdef USE_MsgWaitForMultipleObjects
@@ -1322,6 +1292,40 @@ ___time timeout;)
               break;
         }
     }
+
+#ifdef USE_select_or_poll
+
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+    {
+      /* self-pipe has available data to read, discard all of it */
+
+      e = ___FIX(___ERRNO_ERR(EINTR));
+
+      for (;;)
+        {
+          char buf[256];
+          int n = read (___PSTATE->os.select_abort.reading_fd, buf, sizeof(buf));
+
+          if (n < 0)
+            {
+              if (errno == EAGAIN)
+                break;
+              if (errno != EINTR)
+                {
+                  e = err_code_from_errno ();
+                  break;
+                }
+            }
+          else if (n < sizeof(buf))
+            break;
+        }
+    }
+
+#endif
+
+#endif
 
   return e;
 }

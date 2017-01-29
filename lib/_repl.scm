@@ -3438,6 +3438,12 @@
             port)
            (##newline port))
 
+          ((macro-wrong-processor-c-return-exception? exc)
+           (##write-string
+            "Attempt to return to a C function that was called on another processor"
+            port)
+           (##newline port))
+
           ((macro-noncontinuable-exception? exc)
            (##write-string "Computation cannot be continued" port)
            (##newline port))

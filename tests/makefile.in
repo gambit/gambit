@@ -1,6 +1,6 @@
 # makefile for regression tests.
 
-# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 herefromroot = tests
 rootfromhere = ..
@@ -111,44 +111,44 @@ check: all test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
 
 test1:
 	@echo "------------ TEST 1 (debugging support)"
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f debug.scm > test1.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f debug.scm > test1.out
 	diff $(srcdirpfx)test1.ok test1.out && rm -f test1.out
 
 test2:
 	@echo "------------ TEST 2 (error handling)"
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:m1,h4000,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f error.scm < error.scm > test2.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,m1,h4000,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f error.scm < error.scm > test2.out
 	diff $(srcdirpfx)test2.ok test2.out && rm -f test2.out
 
 test3:
 	@echo "------------ TEST 3 (interpreter and library functions)"
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:s,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e '(begin (load "r4rstest.scm") (test-cont) (test-sc4) (test-delay) (exit))' > test3.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,s,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e '(begin (load "r4rstest.scm") (test-cont) (test-sc4) (test-delay) (exit))' > test3.out
 	diff $(srcdirpfx)test3.ok test3.out && rm -f test3.out tmp*
 
 test4:
 	@echo "------------ TEST 4 (interpreter running an application)"
 	rm -f mix@obj@
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f mix.scm > test4.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f mix.scm > test4.out
 	diff $(srcdirpfx)test4.ok test4.out && rm -f test4.out
 
 test5:
 	@echo "------------ TEST 5 (compiler generating C code)"
 	rm -f mix.c
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c mix.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c mix.scm
 	diff $(srcdirpfx)test5.ok mix.c
 
 test6: test5
 	@echo "------------ TEST 6 (link and execute the code generated)"
 	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mix@exe@ -exe mix.c
-	@SETDLPATH@ ./mix@exe@ -:m4000 > test6.out
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mix@exe@ -exe mix.c
+	@SETDLPATH@ ./mix@exe@ -:p1,m4000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \
 	  rm -f test6.out mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@
 
 test7:
 	@echo "------------ TEST 7 (memory management and C-interface)"
 	rm -f mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mem@exe@ -exe mem.scm
-	@SETDLPATH@ ./mem@exe@ -:m1,h4000 > test7.out
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mem@exe@ -exe mem.scm
+	@SETDLPATH@ ./mem@exe@ -:p1,m1,h4000 > test7.out
 	diff $(srcdirpfx)test7.ok test7.out && \
 	  rm -f test7.out mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
 
@@ -156,29 +156,29 @@ test8:
 	@echo "------------ TEST 8 (use C-interface to implement a Scheme server)"
 	rm -f server.c server_.c server@obj@ server_@obj@ \
 	  client@obj@ client@exe@
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -exe -cc-options "-D___LIBRARY" -o client@exe@ client.c server.scm
-	@SETDLPATH@ ./client@exe@ > test8.out
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -exe -cc-options "-D___LIBRARY" -o client@exe@ client.c server.scm
+	@SETDLPATH@ ./client@exe@ -:p1 > test8.out
 	diff -w $(srcdirpfx)test8.ok test8.out && \
 	  rm -f test8.out client@exe@
 
 test9: test7
 	@echo "------------ TEST 9 (dynamic compilation and loading of a module)"
 	rm -rf mem@obj@ mem.o*
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings mem.scm
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:m1,h4000 -f mem.o1 > test9.out
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings mem.scm
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,m1,h4000 -f mem.o1 > test9.out
 	diff $(srcdirpfx)test9.ok test9.out && rm -f test9.out mem@obj@ mem.o1
 
 test10:
 	@echo "------------ TEST 10 (consistency of lib/gambit#.scm)"
 	rm -rf mem@obj@ mem.o*
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i test10.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:p1,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i test10.scm
 
 test11:
 	@echo "------------ TEST 11 (run unit tests)"
 	$(MAKE) ut
 
 ut:
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
 
 bootstrap-pre:
 

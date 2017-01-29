@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -880,9 +880,11 @@
 ("##thread-save!"                     1     #t ()    1113 (#f)    extended)
 ("##thread-restore!"                  2     #t ()    2203 #f      extended)
 
-("##primitive-lock!"                  (1)   #t ()    0    #f      extended)
-("##primitive-trylock!"               (1)   #t ()    0    #f      extended)
-("##primitive-unlock!"                (1)   #t ()    0    #f      extended)
+("##primitive-lock!"                  (3)   #t ()    0    #f      extended)
+("##primitive-trylock!"               (3)   #t ()    0    #f      extended)
+("##primitive-unlock!"                (3)   #t ()    0    #f      extended)
+
+("##object-before?"                   (2)   #t ()    0    boolean extended)
 
 ("##continuation-capture"             1     #t ()    1113 (#f)    extended)
 ("##continuation-graft"               2     #t ()    2203 #f      extended)
