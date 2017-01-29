@@ -245,7 +245,7 @@
 
 (##define-macro (define-rbtree
                  rbtree-init!
-                 node->rbtree
+                 node->container
                  insert!
                  remove!
                  reposition!
@@ -264,7 +264,9 @@
                  leftmost
                  leftmost-set!
                  rightmost
-                 rightmost-set!)
+                 rightmost-set!
+                 container
+                 container-set!)
 
   (define (black rbtree)
     rbtree)
@@ -360,15 +362,23 @@
           (,',parent-set! rbtree rbtree)
           (,',left-set! rbtree rbtree)))
 
-     (##define-macro (,node->rbtree node)
-       `(let ((node ,node))
+     (##define-macro (,node->container node)
+       (if ',container
 
-          (##declare (not interrupts-enabled))
+           `(let ((node ,node))
 
-          (or (,',color node)
-              (let ((parent-node (,',parent node)))
-                (and parent-node ;; make sure node is in a rbtree
-                     (,',color parent-node))))))
+              (##declare (not interrupts-enabled))
+
+              (,',container node))
+
+           `(let ((node ,node))
+
+              (##declare (not interrupts-enabled))
+
+              (or (,',color node)
+                  (let ((parent-node (,',parent node)))
+                    (and parent-node ;; make sure node is in a rbtree
+                         (,',color parent-node)))))))
 
      (define-prim (,insert! rbtree node)
 
@@ -459,6 +469,10 @@
              `((,length-set! rbtree (##fx+ (,length rbtree) 1)))
              `())
 
+       ,@(if container-set!
+             `((,container-set! node rbtree))
+             `())
+
        (,(reden!) node)
        (,left-set! node rbtree)
        (,right-set! node rbtree)
@@ -471,7 +485,7 @@
 
        (##declare (not interrupts-enabled))
 
-       (let ((rbtree (,node->rbtree node)))
+       (let ((rbtree (,node->container node)))
 
          (define (fixup! parent-node node)
 
@@ -521,6 +535,10 @@
 
          ,@(if length
                `((,length-set! rbtree (##fx- (,length rbtree) 1)))
+               `())
+
+         ,@(if container-set!
+               `((,container-set! node #f))
                `())
 
          (let ((parent-node (,parent node))
@@ -618,7 +636,7 @@
        (##declare (not interrupts-enabled))
 
        (let* ((rbtree
-               (,node->rbtree node))
+               (,node->container node))
               (predecessor-node
                (,(neighbor left right) node rbtree))
               (successor-node
@@ -968,6 +986,47 @@
 (##define-macro (macro-btq-lock2 node)           `(macro-slot 9 ,node))
 (##define-macro (macro-btq-lock2-set! node x)    `(macro-slot 9 ,node ,x))
 
+(macro-define-syntax macro-if-btq-next
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ btq next yes)
+       #'(let* ((next (macro-btq-leftmost btq)))
+           (if (##not (##eq? next btq))
+               yes)))
+      ((_ btq next yes no)
+       #'(let* ((next (macro-btq-leftmost btq)))
+           (if (##not (##eq? next btq))
+               yes
+               no))))))
+
+(##define-macro (macro-lock-btq! btq)    `(##primitive-lock! ,btq 1 9))
+(##define-macro (macro-trylock-btq! btq) `(##primitive-trylock! ,btq 1 9))
+(##define-macro (macro-unlock-btq! btq)  `(##primitive-unlock! ,btq 1 9))
+
+(##define-macro (macro-lock-toq! toq)    `(##primitive-lock! ,toq 1 9))
+(##define-macro (macro-trylock-toq! toq) `(##primitive-trylock! ,toq 1 9))
+(##define-macro (macro-unlock-toq! toq)  `(##primitive-unlock! ,toq 1 9))
+
+(##define-macro (macro-lock-mutex! mutex)    `(macro-lock-btq! ,mutex))
+(##define-macro (macro-trylock-mutex! mutex) `(macro-trylock-btq! ,mutex))
+(##define-macro (macro-unlock-mutex! mutex)  `(macro-unlock-btq! ,mutex))
+
+(##define-macro (macro-lock-condvar! condvar)    `(macro-lock-btq! ,condvar))
+(##define-macro (macro-trylock-condvar! condvar) `(macro-trylock-btq! ,condvar))
+(##define-macro (macro-unlock-condvar! condvar)  `(macro-unlock-btq! ,condvar))
+
+(##define-macro (macro-lock-thread! thread)    `(macro-lock-btq! ,thread))
+(##define-macro (macro-trylock-thread! thread) `(macro-trylock-btq! ,thread))
+(##define-macro (macro-unlock-thread! thread)  `(macro-unlock-btq! ,thread))
+
+(##define-macro (macro-lock-processor! proc)    `(macro-lock-btq! ,proc))
+(##define-macro (macro-trylock-processor! proc) `(macro-trylock-btq! ,proc))
+(##define-macro (macro-unlock-processor! proc)  `(macro-unlock-btq! ,proc))
+
+(##define-macro (macro-lock-vm! vm)    `(macro-lock-btq! ,vm))
+(##define-macro (macro-trylock-vm! vm) `(macro-trylock-btq! ,vm))
+(##define-macro (macro-unlock-vm! vm)  `(macro-unlock-btq! ,vm))
+
 ;;; Define operations on blocked thread queue double-ended-queues.
 
 (define-deq
@@ -988,6 +1047,12 @@
 
      (##declare (not interrupts-enabled))
 
+     ;; Add the mutex to the set of mutexes owned by the thread
+     ;; and remember which thread owns the mutex.
+     ;;
+     ;; Assumes that the mutex's low-level lock is acquired and
+     ;; the thread's low-level lock is acquired.
+
      (macro-btq-deq-insert-at-tail! thread mutex)
      (macro-btq-owner-set! mutex thread)))
 
@@ -995,6 +1060,10 @@
   `(let ((mutex ,mutex) (state ,state))
 
      (##declare (not interrupts-enabled))
+
+     ;; Cleanup deq links of the mutex and set the new mutex state.
+     ;;
+     ;; Assumes that the mutex's low-level lock is acquired.
 
      (macro-btq-deq-init! mutex)
      (macro-btq-owner-set! mutex state)))
@@ -1011,6 +1080,19 @@
 (##define-macro (macro-toq-right-set! node x)    `(macro-slot 13 ,node ,x))
 (##define-macro (macro-toq-leftmost node)        `(macro-slot 13 ,node))
 (##define-macro (macro-toq-leftmost-set! node x) `(macro-slot 13 ,node ,x))
+
+(macro-define-syntax macro-if-toq-next
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ toq next yes)
+       #'(let* ((next (macro-toq-leftmost toq)))
+           (if (##not (##eq? next toq))
+               yes)))
+      ((_ toq next yes no)
+       #'(let* ((next (macro-toq-leftmost toq)))
+           (if (##not (##eq? next toq))
+               yes
+               no))))))
 
 ;;; Representation of threads.
 
@@ -1212,41 +1294,97 @@
 
      (##declare (not interrupts-enabled))
 
-     (if (macro-btq-parent thread)
-       (##thread-btq-remove! thread))))
+     ;; Assumes that the thread's low-level lock is acquired.
+
+     (let ((parent (macro-btq-parent thread)))
+       (if parent
+           (begin
+
+             ;; btq is either a mutex or a condition variable
+
+             ;;TODO: find way to combine the btq lock!/unlock! with caller
+             (let ((btq (macro-btq->container thread)))
+               ;;TODO: don't busy wait!
+               (let loop ()
+                 (if (##not (macro-trylock-btq! btq))
+                     (begin
+                       ;;(##c-code "printf(\"macro-thread-btq-remove-if-in-btq! couldn't lock btq...\\n\");");;TODO: remove
+                       (loop))))
+               (##thread-btq-remove! thread)
+               (macro-unlock-btq! btq)))))))
 
 (##define-macro (macro-thread-toq-remove-if-in-toq! thread)
   `(let ((thread ,thread))
 
      (##declare (not interrupts-enabled))
 
-     (if (macro-toq-parent thread)
-       (##thread-toq-remove! thread))))
+     ;; Assumes that the thread's low-level lock is acquired.
+
+     (let ((parent (macro-toq-parent thread)))
+       (if parent
+           (begin
+
+             ;; toq is a processor
+
+             ;;TODO: find way to combine the toq lock!/unlock! with caller
+             (let ((toq (macro-toq->container thread)))
+               (macro-lock-toq! toq)
+               (##thread-toq-remove! thread)
+               (macro-unlock-toq! toq)))))))
 
 (##define-macro (macro-thread-reschedule-if-needed!)
   `(let ()
 
      (##declare (not interrupts-enabled))
 
+     ;;TODO: update this (running threads are no longer in the current-processor)
+     (##void)#;
      (let ((leftmost (macro-btq-leftmost (macro-current-processor))))
        (if (##not (##eq? leftmost (macro-current-thread)))
          (##thread-reschedule!)
          (##void)))))
 
-(##define-macro (macro-thread-save! proc . args)
-  `(##thread-save! ,proc ,@args))
+(macro-define-syntax macro-thread-save!
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ proc args ...)
+       #'(##thread-save! proc args ...)))))
 
-(##define-macro (macro-thread-restore! thread proc . args)
-  `(##thread-restore! ,thread ,proc ,@args))
-
-(##define-macro (macro-current-processor)
-  `(##current-processor))
+(macro-define-syntax macro-thread-restore!
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ thread proc args ...)
+       #'(##thread-restore! thread proc args ...)))))
 
 (##define-macro (macro-primordial-thread)
   `##primordial-thread)
 
 (##define-macro (macro-current-thread)
   `(##current-thread))
+
+(##define-macro (macro-lock-current-thread!)
+  `(macro-lock-thread! (macro-current-thread)))
+
+(##define-macro (macro-unlock-current-thread!)
+  `(macro-unlock-thread! (macro-current-thread)))
+
+(##define-macro (macro-current-processor)
+  `(##current-processor))
+
+(##define-macro (macro-lock-current-processor!)
+  `(macro-lock-processor! (macro-current-processor)))
+
+(##define-macro (macro-unlock-current-processor!)
+  `(macro-unlock-processor! (macro-current-processor)))
+
+(##define-macro (macro-current-vm)
+  `(##current-vm))
+
+(##define-macro (macro-lock-current-vm!)
+  `(macro-lock-vm! (macro-current-vm)))
+
+(##define-macro (macro-unlock-current-vm!)
+  `(macro-unlock-vm! (macro-current-vm)))
 
 (##define-macro (macro-primordial-exception-handler)
   `##primordial-exception-handler)
@@ -1322,7 +1460,7 @@
             floats
             (macro-base-priority floats))
 
-            (##thread-boosted-priority-changed! thread))))))
+           (##thread-boosted-priority-changed! thread))))))
 
 (##define-macro (macro-thread-inherit-priority! thread parent);;;;;;;;;;;;;;;
   `(let ((thread ,thread) (parent ,parent))
@@ -1408,6 +1546,9 @@
 (##define-macro (macro-mutex-state-abandoned)     ''abandoned)
 (##define-macro (macro-mutex-state-not-abandoned) ''not-abandoned)
 
+(##define-macro (macro-mutex-thread-owner? owner)
+  `(##not (##symbol? ,owner)))
+
 (##define-macro (macro-make-mutex name)
   `(let ((name ,name))
      (let ((mutex (macro-construct-mutex name (##void))))
@@ -1424,62 +1565,164 @@
 
      (##declare (not interrupts-enabled))
 
-     (##primitive-lock! mutex 1 9)
+     ;; The call
+     ;;
+     ;;   (macro-mutex-lock! mutex absrel-timeout new-owner)
+     ;;
+     ;; where new-owner is a thread, has the same effect as the call
+     ;;
+     ;;   (##mutex-lock-out-of-line! mutex absrel-timeout new-owner)
+     ;;
+     ;; However, the macro special cases the situation where the mutex's
+     ;; state is unlocked/not-abandoned, allowing this common situation
+     ;; to be handled without a function call.
+
+     (##check-heap-limit) ;; prevent GC while mutex is locked
+
+     ;; acquire low-level lock of mutex
+     (macro-lock-mutex! mutex)
+
      (let ((owner (macro-btq-owner mutex)))
        (if (##eq? owner (macro-mutex-state-not-abandoned))
+
            (begin
+
+             ;; Fast path... the mutex's state is unlocked/not-abandoned.
+
+             ;; acquire low-level lock of thread
+             (macro-lock-thread! new-owner)
+
+             ;; thread becomes the mutex's owner
              (macro-btq-link! mutex new-owner)
-             (##primitive-unlock! mutex 1 9)
-             #t)
+
+             ;; release low-level lock of thread
+             (macro-unlock-thread! new-owner)
+
+             ;; release low-level lock of mutex
+             (macro-unlock-mutex! mutex)
+
+             #t) ;; signal success
+
            (begin
-             (##primitive-unlock! mutex 1 9)
-             (##mutex-lock-out-of-line! mutex absrel-timeout owner new-owner))))))
+
+             ;; Slow path... the mutex's state is not unlocked/not-abandoned.
+
+             ;; handle this case out of line
+             (##mutex-lock-out-of-line! mutex absrel-timeout new-owner))))))
 
 (##define-macro (macro-mutex-lock-anonymously! mutex absrel-timeout)
   `(let ((mutex ,mutex) (absrel-timeout ,absrel-timeout))
 
      (##declare (not interrupts-enabled))
 
-     (##primitive-lock! mutex 1 9)
+     ;; The call
+     ;;
+     ;;   (macro-mutex-lock-anonymously! mutex absrel-timeout)
+     ;;
+     ;; has the same effect as the call
+     ;;
+     ;;   (##mutex-lock-anonymously-out-of-line! mutex absrel-timeout)
+     ;;
+     ;; However, the macro special cases the situation where the mutex's
+     ;; state is unlocked/not-abandoned, allowing this common situation
+     ;; to be handled without a function call.
+
+     (##check-heap-limit) ;; prevent GC while mutex is locked
+
+     ;; acquire low-level lock of mutex
+     (macro-lock-mutex! mutex)
+
      (let ((owner (macro-btq-owner mutex)))
        (if (##eq? owner (macro-mutex-state-not-abandoned))
+
            (begin
+
+             ;; Fast path... the mutex's state is unlocked/not-abandoned.
+
+             ;; change the mutex's state to not-owned
              (macro-btq-owner-set! mutex (macro-mutex-state-not-owned))
-             (##primitive-unlock! mutex 1 9)
-             #t)
+
+             ;; release low-level lock of mutex
+             (macro-unlock-mutex! mutex)
+
+             #t) ;; signal success
+
            (begin
-             (##primitive-unlock! mutex 1 9)
-             (##mutex-lock-out-of-line! mutex absrel-timeout owner #f))))))
+
+             ;; Slow path... the mutex's state is not unlocked/not-abandoned.
+
+             ;; handle this case out of line
+             (##mutex-lock-anonymously-out-of-line! mutex absrel-timeout))))))
 
 (##define-macro (macro-mutex-unlock! mutex)
   `(let ((mutex ,mutex))
 
      (##declare (not interrupts-enabled))
 
-     (##primitive-lock! mutex 1 9)
-     (macro-btq-deq-remove! mutex)
-     (let ((leftmost (macro-btq-leftmost mutex)))
-       (if (##eq? leftmost mutex)
-           (begin
-             (macro-btq-unlink! mutex (macro-mutex-state-not-abandoned))
-             (##primitive-unlock! mutex 1 9)
-             (##void))
-           (##mutex-signal! mutex leftmost #f)))))
+     (##check-heap-limit) ;; prevent GC while mutex is locked
+
+     ;; acquire low-level lock of mutex
+     (macro-lock-mutex! mutex)
+
+     ;; get first waiting thread
+     (macro-if-btq-next
+      mutex
+      first-thread
+
+      (begin
+
+        ;; Slow path... at least one thread is waiting on the mutex.
+
+        ;; handle this case out of line
+        (##mutex-unlock-out-of-line! mutex first-thread))
+
+      (begin
+
+        ;; Fast path... there are no threads waiting on the mutex.
+
+        (let ((owner (macro-btq-owner mutex)))
+          (if (macro-mutex-thread-owner? owner)
+
+              (begin
+
+                ;; Mutex is owned by a thread.
+
+                ;; acquire low-level lock of owner
+                (macro-lock-thread! owner)
+
+                ;; remove mutex from the set of mutexes owned by the
+                ;; thread
+                (macro-btq-deq-remove! mutex)
+
+                ;; change mutex state to unlocked/not-abandoned
+                (macro-btq-unlink!
+                 mutex
+                 (macro-mutex-state-not-abandoned))
+
+                ;; release low-level lock of thread
+                (macro-unlock-thread! owner)
+
+                ;; release low-level lock of mutex
+                (macro-unlock-mutex! mutex)
+
+                (##void))
+
+              (begin
+
+                ;; Mutex is not owned by a thread.
+
+                ;; change mutex state to unlocked/not-abandoned
+                (macro-btq-unlink!
+                 mutex
+                 (macro-mutex-state-not-abandoned))
+
+                ;; release low-level lock of mutex
+                (macro-unlock-mutex! mutex)
+
+                (##void))))))))
 
 (##define-macro (macro-mutex-unlock-no-reschedule! mutex)
-  `(let ((mutex ,mutex))
-
-     (##declare (not interrupts-enabled))
-
-     (##primitive-lock! mutex 1 9)
-     (macro-btq-deq-remove! mutex)
-     (let ((leftmost (macro-btq-leftmost mutex)))
-       (if (##eq? leftmost mutex)
-           (begin
-             (macro-btq-unlink! mutex (macro-mutex-state-not-abandoned))
-             (##primitive-unlock! mutex 1 9)
-             (##void))
-           (##mutex-signal-no-reschedule! mutex leftmost #f)))))
+  `(macro-mutex-unlock! ,mutex));;TODO: update
 
 ;;; Representation of condition variables.
 
@@ -1652,8 +1895,10 @@
 ;;; However it also includes other information which is conceptually part
 ;;; of the processor state.
 
-;;; TODO: consider pre-allocating this structure so there is less
-;;; pressure on the garbage collector.
+;;; This structure is pre-allocated by the runtime system to reduce
+;;; pressure on the garbage collector. For this reason, the length of
+;;; the structure must match the definition of ___PROCESSOR_SIZE in
+;;; include/gambit.h.in .
 
 (define-type processor
   id: A6899D11-290C-42A6-B47A-57C6B908698F
@@ -1678,6 +1923,7 @@
   ;; field 16 is for storing the current time, heartbeat interval and a
   ;; temporary float
   ;; fields 17 and 18 are the deq links of blocked processors
+  ;; field 19 is the id of the processor
   lock1
   condvar-deq-next
   condvar-deq-prev
@@ -1696,7 +1942,13 @@
   floats
   processor-deq-next
   processor-deq-prev
+  id
 )
+
+(##define-macro (macro-make-floats)
+  `(##f64vector (macro-inexact-+0)
+                (macro-inexact-+0)
+                (macro-inexact-+0)))
 
 (##define-macro (macro-current-time f)             `(##f64vector-ref ,f 0))
 (##define-macro (macro-current-time-set! f x)      `(##f64vector-set! ,f 0 ,x))
@@ -1705,10 +1957,15 @@
 (##define-macro (macro-temp f)                     `(##f64vector-ref ,f 2))
 (##define-macro (macro-temp-set! f x)              `(##f64vector-set! ,f 2 ,x))
 
+(##define-macro (macro-get-heartbeat-interval f)
+  `(begin
+     (##get-heartbeat-interval! ,f 1)
+     (macro-heartbeat-interval ,f)))
+
 (##define-macro (macro-update-current-time!)
   `(##get-current-time! (macro-thread-floats (macro-current-processor)) 0))
 
-(##define-macro (macro-make-processor)
+(##define-macro (macro-make-processor id)
   `(let ((processor
           (macro-construct-processor
            0
@@ -1726,29 +1983,27 @@
            #f
            #f
            #f
-           (##f64vector (macro-inexact-+0)
-                        (macro-inexact-+0)
-                        (macro-inexact-+0))
+           (macro-make-floats)
            #f
-           #f)))
+           #f
+           ,id)))
      (macro-btq-deq-init! processor)
      (macro-btq-init! processor)
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
      processor))
 
-(##define-macro (macro-processor-init! processor)
-  `(let ((processor ,processor))
+(##define-macro (macro-processor-init! processor id)
+  `(let ((processor ,processor) (id ,id))
      (##structure-type-set! processor (macro-type-processor))
      (macro-processor-floats-set!
       processor
-      (##f64vector (macro-inexact-+0)
-                   (macro-inexact-+0)
-                   (macro-inexact-+0)))
+      (macro-make-floats))
      (macro-btq-deq-init! processor)
      (macro-btq-init! processor)
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
+     (macro-processor-id-set! processor id)
      processor))
 
 ;;;----------------------------------------------------------------------------
@@ -1781,8 +2036,10 @@
 ;;; that is implemented at the Scheme level (the other part of the VM
 ;;; state is implemented at the host language level).
 
-;;; TODO: consider pre-allocating this structure so there is less
-;;; pressure on the garbage collector.
+;;; This structure is pre-allocated by the runtime system to reduce
+;;; pressure on the garbage collector. For this reason, the length of
+;;; the structure must match the definition of ___VM_SIZE in
+;;; include/gambit.h.in .
 
 (define-type vm
   id: F86D8C06-0129-4798-B170-49E593E6A7FD

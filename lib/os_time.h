@@ -1,6 +1,6 @@
 /* File: "os_time.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TIME_H
 #define ___OS_TIME_H
@@ -185,7 +185,9 @@ extern void ___process_times
          ___F64 *real),
         ());
 
-extern ___F64 ___set_heartbeat_interval
+extern ___F64 ___get_heartbeat_interval ___PVOID;
+
+extern void ___set_heartbeat_interval
    ___P((___F64 seconds),
         ());
 
@@ -284,10 +286,6 @@ extern void ___mask_heartbeat_interrupts_begin
 
 extern void ___mask_heartbeat_interrupts_end
    ___P((___mask_heartbeat_interrupts_state *state),
-        ());
-
-extern ___F64 ___set_heartbeat_interval
-   ___P((___F64 seconds),
         ());
 
 

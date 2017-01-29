@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel#.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -89,6 +89,12 @@
 
 (define-library-type-of-exception multiple-c-return-exception
   id: 73c66686-a08f-4c7c-a0f1-5ad7771f242a
+  constructor: #f
+  opaque:
+)
+
+(define-library-type-of-exception wrong-processor-c-return-exception
+  id: 828142df-e9a5-4ed8-a467-2f4833525b3e
   constructor: #f
   opaque:
 )

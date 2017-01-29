@@ -313,12 +313,13 @@ ___virtual_machine_state ___vms;)
 #define COMBINING_MAX 3
 #define OP_MAKE(priority,combining) (((priority)<<2)+(combining))
 
-#define OP_SET_PROCESSOR_COUNT OP_MAKE( 0,0)
-#define OP_VM_RESIZE           OP_MAKE( 1,0)
-#define OP_GARBAGE_COLLECT     OP_MAKE( 2,COMBINING_ADD)
-#define OP_ACTLOG_START        OP_MAKE(61,0)
-#define OP_ACTLOG_STOP         OP_MAKE(62,0)
-#define OP_NOOP                OP_MAKE(63,0)
+#define OP_PROCESSOR_0_THROW_ERROR OP_MAKE( 0,0)
+#define OP_SET_PROCESSOR_COUNT     OP_MAKE( 1,0)
+#define OP_VM_RESIZE               OP_MAKE( 2,0)
+#define OP_GARBAGE_COLLECT         OP_MAKE( 3,COMBINING_ADD)
+#define OP_ACTLOG_START            OP_MAKE(61,0)
+#define OP_ACTLOG_STOP             OP_MAKE(62,0)
+#define OP_NOOP                    OP_MAKE(63,0)
 
 #define SYNC_WAITING -1
 
@@ -586,6 +587,54 @@ void execute_sync_op_loop
         ());
 
 
+void on_all_processors
+   ___P((___PSD
+         ___sync_op_struct *sop_ptr),
+        ());
+
+
+void ___run_and_throw_error_on_processor_0
+   ___P((___PSD
+         ___SCMOBJ thunk),
+        (___PSV
+         thunk)
+___PSDKR
+___SCMOBJ thunk;)
+{
+  ___PSGET
+  ___SCMOBJ ___err;
+  ___sync_op_struct sop;
+
+  /*
+   * Start the processor's execution by a call to thunk.  This call
+   * will return when the processor's execution terminates, typically
+   * when the Gambit VM terminates normally or with an error.
+   */
+
+  ___err = ___run (___PSP thunk);
+
+  /*
+   * The error code must be sent to processor 0 because it is the one
+   * that must handle this error code (terminate the VM) and it has
+   * started the VM.
+   */
+
+  sop.op = OP_PROCESSOR_0_THROW_ERROR;
+  sop.arg[0] = ___err;
+
+  on_all_processors (___PSP &sop);
+
+  /*
+   * Participate in future synchronous operations (this is needed
+   * because the cleanup and termination of a processor is done using
+   * a synchronous operation).
+   */
+
+  for (;;)
+    service_sync_op (___PSPNC);
+}
+
+
 ___HIDDEN void start_processor_execution
    ___P((___thread *self),
         (self)
@@ -611,12 +660,43 @@ ___thread *self;)
   execute_sync_op_loop (___PSP &sop, 0);
 
   /*
-   * Start processor's execution by a call to thunk.  This call will
-   * return when the processor terminates (typically when the Gambit VM
-   * terminates).
+   * Start processor's execution by a call to thunk.  The processor's
+   * termination code will be propagated to processor 0 which will
+   * call ___throw_error with this code, normally terminating the VM.
    */
 
-  ___run (___PSP thunk); /* ignore result */
+  ___run_and_throw_error_on_processor_0 (___PSP thunk);
+}
+
+
+___EXP_FUNC(void,___throw_error)
+   ___P((___PSD
+         ___SCMOBJ err),
+        (___PSV
+         err)
+___PSDKR
+___SCMOBJ err;)
+{
+  ___PSGET
+
+  ___THROW (err);
+}
+
+
+___EXP_FUNC(void,___propagate_error)
+   ___P((___PSD
+         ___SCMOBJ err),
+        (___PSV
+         err)
+___PSDKR
+___SCMOBJ err;)
+{
+  ___PSGET
+
+  if (err != ___FIX(___NO_ERR))
+    {
+      ___throw_error (___PSP err);
+    }
 }
 
 
@@ -681,7 +761,10 @@ ___WORD target_processor_count;)
        */
 
       if (id >= target_processor_count)
-        ___thread_exit (); /* this call does not return */
+        {
+          ___cleanup_pstate (___ps);
+          ___thread_exit (); /* this call does not return */
+        }
     }
   else
     {
@@ -804,33 +887,12 @@ ___BOOL first_iter;)
   ___PSGET
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   int id = ___PROCESSOR_ID(___ps,___vms); /* id of this processor */
+  ___SCMOBJ ___err = ___FIX(___NO_ERR);
 
   for (;;)
     {
       ___sync_op_struct sop = *sop_ptr;
       int winner_id = barrier_sync_op (___PSP &sop);
-
-      if (sop.op == OP_NOOP)
-        {
-          /*
-           * Stop looping when all operations performed, but
-           * must loop at least twice to reset ___INTR_SYNC_OP flag.
-           */
-
-          if (!first_iter)
-            return;
-        }
-      else
-        {
-          execute_sync_op (___PSP &sop);
-
-          if (sop.op == sop_ptr->op &&
-              (winner_id == id || COMBINING_OP(sop.op)))
-            {
-              *sop_ptr = sop; /* return result */
-              sop_ptr->op = OP_NOOP; /* mark operation as executed */
-            }
-        }
 
       if (first_iter)
         {
@@ -841,9 +903,41 @@ ___BOOL first_iter;)
            */
 
           ___ps->intr_flag[___INTR_SYNC_OP] = ___FIX(0);
-          first_iter = 0;
         }
+
+      if (sop.op == OP_NOOP)
+        {
+          /*
+           * Stop looping when all operations performed, but
+           * must loop at least twice to reset ___INTR_SYNC_OP flag.
+           */
+
+          if (!first_iter)
+            break;
+        }
+      else
+        {
+          if (sop.op == OP_PROCESSOR_0_THROW_ERROR)
+            {
+              if (___err == ___FIX(___NO_ERR))
+                ___err = sop.arg[0];
+            }
+          else
+            execute_sync_op (___PSP &sop);
+
+          if (sop.op == sop_ptr->op &&
+              (winner_id == id || COMBINING_OP(sop.op)))
+            {
+              *sop_ptr = sop; /* return result */
+              sop_ptr->op = OP_NOOP; /* mark operation as executed */
+            }
+        }
+
+      first_iter = 0;
     }
+
+  if (id == 0 && ___err != ___FIX(___NO_ERR))
+    ___throw_error (___PSP ___err);
 }
 
 
@@ -2702,37 +2796,6 @@ ___processor_state ___ps;)
 }
 
 
-___EXP_FUNC(void,___throw_error)
-   ___P((___PSD
-         ___SCMOBJ err),
-        (___PSV
-         err)
-___PSDKR
-___SCMOBJ err;)
-{
-  ___PSGET
-
-  ___THROW (err);
-}
-
-
-___EXP_FUNC(void,___propagate_error)
-   ___P((___PSD
-         ___SCMOBJ err),
-        (___PSV
-         err)
-___PSDKR
-___SCMOBJ err;)
-{
-  ___PSGET
-
-  if (err != ___FIX(___NO_ERR))
-    {
-      ___throw_error (___PSP err);
-    }
-}
-
-
 ___EXP_FUNC(___SCMOBJ,___call)
    ___P((___PSD
          int nargs,
@@ -3098,11 +3161,30 @@ ___HIDDEN ___SCMOBJ setup_os_and_mem ___PVOID
 }
 
 
+#ifndef ___SINGLE_THREADED_VMS
+
+___HIDDEN void setup_sync_op_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  SYNC_INIT_MSG(___ps->sync_id0);
+  SYNC_INIT_MSG(___ps->sync_id1);
+  SYNC_INIT_MSG(___ps->sync_id2);
+
+  ___MUTEX_INIT(___ps->sync_mut);
+  ___CONDVAR_INIT(___ps->sync_cv);
+}
+
+#endif
+
+
 ___EXP_FUNC(void,___cleanup_pstate)
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
+  cleanup_os_and_mem_pstate (___ps);
 }
 
 
@@ -3169,12 +3251,7 @@ ___virtual_machine_state ___vms;)
 
 #ifndef ___SINGLE_THREADED_VMS
 
-  SYNC_INIT_MSG(___ps->sync_id0);
-  SYNC_INIT_MSG(___ps->sync_id1);
-  SYNC_INIT_MSG(___ps->sync_id2);
-
-  ___MUTEX_INIT(___ps->sync_mut);
-  ___CONDVAR_INIT(___ps->sync_cv);
+  setup_sync_op_pstate (___ps);
 
 #endif
 
@@ -3207,6 +3284,16 @@ ___virtual_machine_state ___vms;)
   ___vms->mem.target_processor_count_ = 1;
 
   /*
+   * Setup ticket lock debugging.
+   */
+
+#ifdef ___DEBUG_TICKETLOCK
+
+  ___vms->ticketlock_history_index = 0;
+
+#endif
+
+  /*
    * Setup Scheme VM object.
    */
 
@@ -3235,17 +3322,7 @@ ___virtual_machine_state ___vms;)
 
 ___EXP_FUNC(void,___cleanup) ___PVOID
 {
-#ifndef ___SINGLE_THREADED_VMS
-
-  /*
-   * Shutdown processors of this VM except for processor 0.
-   */
-
   ___processor_state ___ps = ___PSTATE;
-
-  ___current_vm_resize (___PSP ___FAL, 1);
-
-#endif
 
   /*
    * Only do cleanup once after successful setup.
@@ -3255,6 +3332,18 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
     return;
 
   ___GSTATE->setup_state = 2;
+
+#ifndef ___SINGLE_THREADED_VMS
+
+  /*
+   * Shutdown processors of this VM except for processor 0.
+   */
+
+  ___current_vm_resize (___PSP ___FAL, 1);
+
+#endif
+
+  ___cleanup_pstate (___ps);
 
 #ifdef ___SINGLE_VM
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -258,7 +258,7 @@
 
 (define-rbtree
  macro-btq-init!
- macro-thread->btq
+ macro-btq->container
  ##btq-insert!
  ##btq-remove!
  ##btq-reposition!

@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -937,6 +937,7 @@ write-u8
 wrong-number-of-arguments-exception-arguments
 wrong-number-of-arguments-exception-procedure
 wrong-number-of-arguments-exception?
+wrong-processor-c-return-exception?
 
 ))
 
