@@ -5549,7 +5549,7 @@ extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 
 /* Use thread local storage getter/setter */
 
-#define ___GET_PSTATE() ___CAST(___processor_state,___get_tls_ptr())
+#define ___GET_PSTATE() ___CAST(___processor_state,___EXT(___get_tls_ptr) ())
 #define ___SET_PSTATE(ps) ___set_tls_ptr(___CAST(void*,ps))
 
 #else
