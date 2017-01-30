@@ -2553,14 +2553,8 @@
                          ;; Mutex is locked and timeout is already
                          ;; reached, so don't wait.
 
-                         ;; release low-level lock of new owner thread
-                         (if (and new-owner
-                                  (##not (##eq? new-owner
-                                                current-thread)))
-                             (macro-unlock-thread! new-owner))
-
-                         ;; release low-level lock of current thread
-                         (macro-unlock-thread! current-thread)
+                         ;; release low-level lock of mutex
+                         (macro-unlock-mutex! mutex)
 
                          #f) ;; signal failure
 
