@@ -1262,7 +1262,7 @@ else
       LIBS="$LIBS WinMM.Lib"
     fi
 
-    FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS"
+    FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS -D_WIN32_WINNT=0x0600"
 
     # For compatibility with Windows XP
     FLAGS_OBJ="$FLAGS_OBJ -D_ATL_XP_TARGETING"
@@ -1713,6 +1713,8 @@ fi
 ###############################################################################
 #
 # Check which command line options are supported by $C_COMPILER.
+
+FLAGS_OBJ_DYN="$FLAGS_OBJ"
 
 if test "$C_COMP_GNUC" = yes; then
 
