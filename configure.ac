@@ -1,6 +1,6 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -1262,10 +1262,10 @@ else
       LIBS="$LIBS WinMM.Lib"
     fi
 
-    FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS -D_WIN32_WINNT=0x0600"
+    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
 
     # For compatibility with Windows XP
-    FLAGS_OBJ="$FLAGS_OBJ -D_ATL_XP_TARGETING"
+    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_ATL_XP_TARGETING"
 
   else
 
@@ -1281,7 +1281,7 @@ else
                  LIBS="$LIBS -lwinmm"
                fi
 
-               FLAGS_OBJ="$FLAGS_OBJ -D_WINDOWS -D_WIN32_WINNT=0x0600"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
                ;;
 
             *) # check libraries for other systems
@@ -1563,7 +1563,7 @@ if test "$ENABLE_THREAD_SYSTEM" != no; then
         ])],[
          AC_MSG_RESULT([yes])
          FOUND_THREAD_SYSTEM="posix"
-         FLAGS_OBJ="$FLAGS_OBJ $OPT_CFLAGS"
+         FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE $OPT_CFLAGS"
          break
         ],[
          AC_MSG_RESULT([no])
@@ -1713,8 +1713,6 @@ fi
 ###############################################################################
 #
 # Check which command line options are supported by $C_COMPILER.
-
-FLAGS_OBJ_DYN="$FLAGS_OBJ"
 
 if test "$C_COMP_GNUC" = yes; then
 
