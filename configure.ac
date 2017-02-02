@@ -2621,10 +2621,13 @@ OBJ_EXTENSION="$obj"
 EXE_EXTENSION="$exe"
 BAT_EXTENSION="$bat"
 
+CONFIGURE_COMMAND="$0$ac_configure_args"
+AC_SUBST(CONFIGURE_COMMAND)
+
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___SYS_TYPE_CPU=\"\\\"$target_cpu\\\"\""
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___SYS_TYPE_VENDOR=\"\\\"$target_vendor\\\"\""
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___SYS_TYPE_OS=\"\\\"$target_os\\\"\""
-GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"`echo "$0$ac_configure_args" | sed -e s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g -e s/\\\\\\\"/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"/g`\"\\\""
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___CONFIGURE_COMMAND=\"\\\"`echo "$CONFIGURE_COMMAND" | sed -e s/\\\\\\\\/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\/g -e s/\\\\\\\"/\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"/g`\"\\\""
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___OBJ_EXTENSION=\"\\\"$OBJ_EXTENSION\\\"\""
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___EXE_EXTENSION=\"\\\"$EXE_EXTENSION\\\"\""
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___BAT_EXTENSION=\"\\\"$BAT_EXTENSION\\\"\""

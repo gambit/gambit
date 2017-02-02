@@ -15,6 +15,8 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 srcdirpfx = @srcdirpfx@
 
+CONFIGURE_COMMAND = @CONFIGURE_COMMAND@
+
 C_COMPILER = @C_COMPILER_MF@
 C_PREPROC = @C_PREPROC_MF@
 FLAGS_OBJ = @FLAGS_OBJ_MF@
@@ -112,7 +114,7 @@ from-scratch: fake_target
 latest-release: fake_target
 	echo "*************** the make target latest-release is deprecated!"
 	$(GIT) checkout -f tags/$(PACKAGE_VERSION)
-	./configure
+	$(CONFIGURE_COMMAND)
 	$(MAKE) bootstrap
 	$(GIT) checkout -f master
 	$(GIT) reset --hard
@@ -121,7 +123,7 @@ current-gsc-boot: fake_target
 	current_branch=`$(GIT) rev-parse --abbrev-ref HEAD`; \
 	COPYFILE_DISABLE=1 tar chof gsc-scm.tar gsc/*.scm; \
 	$(GIT) checkout -f tags/$(PACKAGE_VERSION); \
-	./configure; \
+	$(CONFIGURE_COMMAND); \
 	rm -f gsc-boot@bat@ gsc-boot; \
 	$(MAKE) bootstrap; \
 	tar xf gsc-scm.tar; \
