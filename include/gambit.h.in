@@ -8415,8 +8415,8 @@ typedef struct ___processor_state_struct
     ___sync_op_struct sync_op1;
     ___VOLATILE int sync_id2;
     ___sync_op_struct sync_op2;
-    ___MUTEX_DECL(sync_mut);
-    ___CONDVAR_DECL(sync_cv);
+    ___MUTEX_DECL(sync_mut)
+    ___CONDVAR_DECL(sync_cv)
 
 #endif
   } ___processor_state_struct;
