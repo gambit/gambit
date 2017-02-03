@@ -270,7 +270,7 @@ ___processor_state ___ps;)
   ___VECTORSET(p,___FIX(___OBJ_LOCK1),___FIX(0))
   ___VECTORSET(p,___FIX(___OBJ_LOCK2),___FIX(0))
 
-  ___PRIMITIVELOCK(p)
+  ___PRIMITIVELOCK(p,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 }
 
 
@@ -295,7 +295,7 @@ ___virtual_machine_state ___vms;)
   ___VECTORSET(vm,___FIX(___OBJ_LOCK1),___FIX(0))
   ___VECTORSET(vm,___FIX(___OBJ_LOCK2),___FIX(0))
 
-  ___PRIMITIVELOCK(vm)
+  ___PRIMITIVELOCK(vm,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 }
 
 

@@ -2291,7 +2291,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___FOREIGN_TAGS 0
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
-#define ___PROCESSOR_SIZE 19
+#define ___PROCESSOR_SIZE 20
 #define ___VM_SIZE 20
 
 /* Flonum boxing and unboxing */
@@ -2863,6 +2863,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___CHARP(x)(___TYP((___temp=x))==___tSPECIAL&&___temp>=0)
 #define ___NUMBERP(x)___COMPLEXP(x)
 #define ___COMPLEXP(x)((___TYP((___temp=(x)))==___tFIXNUM)||(___TYP(___temp)==___tSUBTYPED&&((___temp=(___HEADER(___temp)&___SMASK))==(___sFLONUM<<___HTB)||___temp==(___sBIGNUM<<___HTB)||___temp==(___sRATNUM<<___HTB)||___temp==(___sCPXNUM<<___HTB))))
+
+#define ___OBJECTBEFOREP(x,y)((x)<(y))
 
 /* APPLY-able operations */
 
@@ -3452,7 +3454,7 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 ___TICKETLOCK_LOCK2((lock).next_ticket, (lock).current_ticket)
 
 #define ___TICKETLOCK_UNLOCK(lock) \
-___TICKETLOCK_UNLOCK2((lock).current_ticket)
+___TICKETLOCK_UNLOCK2((lock).next_ticket,(lock).current_ticket)
 
 #ifdef ___DEBUG_TICKETLOCK
 
@@ -3462,9 +3464,62 @@ do { \
   int ___count = 0; \
   while (*___CAST(___VOLATILE ___WORD*,&current) != ___ticket) \
     { \
-      if (++___count == 100000000) printf("TICKETLOCK deadlock at line %d of %s (current=%d ticket=%d)\n",__LINE__,__FILE__,current,___ticket); \
+      if (++___count == 100000000) \
+        { \
+          ___WORD ___n = ___VMSTATE->ticketlock_history_index; \
+          ___WORD ___i = ___n; \
+          while (___i > 0 && ___n-___i < ___TICKETLOCK_HISTORY_LENGTH) \
+            { \
+              ___ticketlock_location *___probe = &___VMSTATE->ticketlock_history[--___i % ___TICKETLOCK_HISTORY_LENGTH]; \
+              if (___probe->id == &current && ___probe->lock_op) \
+                { \
+                  printf("*** ERROR at \"%s\"@%d.1 -- lock attempt on TICKETLOCK %p spinning too long\ndue to successful locking at \"%s\"@%d.1 (current=%d ticket=%d)\n",__FILE__,__LINE__,&current,___probe->location.file,___probe->location.line,___INT(*___CAST(___VOLATILE ___WORD*,&current)),___INT(___ticket)); \
+                  ___i = -1; \
+                } \
+            } \
+          if (___i != -1) \
+            printf("*** ERROR at \"%s\"@%d.1 -- lock attempt on TICKETLOCK %p spinning too long (current=%d ticket=%d)\n",__FILE__,__LINE__,&current,___INT(*___CAST(___VOLATILE ___WORD*,&current)),___INT(___ticket)); \
+        } \
       ___CPU_RELAX(); \
     } \
+  { ___ticketlock_location *___ptr = &___VMSTATE->ticketlock_history[___FETCH_AND_ADD_WORD(&___VMSTATE->ticketlock_history_index,1) % ___TICKETLOCK_HISTORY_LENGTH]; \
+    ___ptr->id = &current; \
+    ___ptr->lock_op = 1; \
+    ___ptr->location.file = __FILE__; \
+    ___ptr->location.line = __LINE__; \
+    ___SHARED_MEMORY_BARRIER(); \
+  } \
+} while (0)
+
+#define ___TICKETLOCK_TRYLOCK2(next,current,temp) \
+(temp=*___CAST(___VOLATILE ___WORD*,&current), \
+ ___COMPARE_AND_SWAP_WORD(___CAST(___VOLATILE ___WORD*,&next),temp,___FIXWRAPADD(temp,___FIX(1)))==temp)
+
+#define ___TICKETLOCK_UNLOCK2(next,current) \
+do { \
+  if (___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1)) >= *___CAST(___VOLATILE ___WORD*,&next)) \
+    { \
+      ___WORD ___n = ___VMSTATE->ticketlock_history_index; \
+      ___WORD ___i = ___n; \
+      while (___i > 0 && ___n-___i < ___TICKETLOCK_HISTORY_LENGTH) \
+        { \
+          ___ticketlock_location *___probe = &___VMSTATE->ticketlock_history[--___i % ___TICKETLOCK_HISTORY_LENGTH]; \
+          if (___probe->id == &current && !___probe->lock_op) \
+            { \
+              printf("*** ERROR at \"%s\"@%d.1 -- duplicate unlock attempt on TICKETLOCK %p\nwhich was also unlocked at \"%s\"@%d.1 (current=%d next=%d)\n",__FILE__,__LINE__,&current,___probe->location.file,___probe->location.line,___INT(*___CAST(___VOLATILE ___WORD*,&current)),___INT(*___CAST(___VOLATILE ___WORD*,&next))); \
+              ___i = -1; \
+            } \
+        } \
+      if (___i != -1) \
+        printf("*** ERROR at \"%s\"@%d.1 -- duplicate unlock attempt on TICKETLOCK %p (current=%d next=%d)\n",__FILE__,__LINE__,&current,___INT(*___CAST(___VOLATILE ___WORD*,&current)),___INT(*___CAST(___VOLATILE ___WORD*,&next))); \
+    } \
+  { ___ticketlock_location *___ptr = &___VMSTATE->ticketlock_history[___FETCH_AND_ADD_WORD(&___VMSTATE->ticketlock_history_index,1) % ___TICKETLOCK_HISTORY_LENGTH]; \
+    ___ptr->id = &current; \
+    ___ptr->lock_op = 0; \
+    ___ptr->location.file = __FILE__; \
+    ___ptr->location.line = __LINE__; \
+    ___SHARED_MEMORY_BARRIER(); \
+  } \
 } while (0)
 
 #else
@@ -3476,22 +3531,22 @@ do { \
     ___CPU_RELAX(); \
 } while (0)
 
-#endif
-
 #define ___TICKETLOCK_TRYLOCK2(next,current,temp) \
 (temp=*___CAST(___VOLATILE ___WORD*,&current), \
  ___COMPARE_AND_SWAP_WORD(___CAST(___VOLATILE ___WORD*,&next),temp,___FIXWRAPADD(temp,___FIX(1)))==temp)
 
-#define ___TICKETLOCK_UNLOCK2(current) \
+#define ___TICKETLOCK_UNLOCK2(next,current) \
 ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
+
+#endif
 
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ___VOLATILE
 
-#define ___PRIMITIVELOCK(obj)
-#define ___PRIMITIVETRYLOCK(obj) 1
-#define ___PRIMITIVEUNLOCK(obj)
+#define ___PRIMITIVELOCK(obj,next,current)
+#define ___PRIMITIVETRYLOCK(obj,next,current) 1
+#define ___PRIMITIVEUNLOCK(obj,next,current)
 
 #define ___SPINLOCK int
 #define ___SPINLOCK_DECL(id)
@@ -3504,14 +3559,14 @@ ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 
 #define ___VOLATILE volatile
 
-#define ___PRIMITIVELOCK(obj) \
-___TICKETLOCK_LOCK2(___FIELD(obj,___OBJ_LOCK1),___FIELD(obj,___OBJ_LOCK2));
+#define ___PRIMITIVELOCK(obj,next,current) \
+___TICKETLOCK_LOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)));
 
-#define ___PRIMITIVETRYLOCK(obj) \
-___TICKETLOCK_TRYLOCK2(___FIELD(obj,___OBJ_LOCK1),___FIELD(obj,___OBJ_LOCK2),___temp)
+#define ___PRIMITIVETRYLOCK(obj,next,current) \
+___TICKETLOCK_TRYLOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)),___temp)
 
-#define ___PRIMITIVEUNLOCK(obj) \
-___TICKETLOCK_UNLOCK2(___FIELD(obj,___OBJ_LOCK2));
+#define ___PRIMITIVEUNLOCK(obj,next,current) \
+___TICKETLOCK_UNLOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)));
 
 #ifdef ___USE_MUTEX_FOR_SPINLOCK
 
@@ -5613,7 +5668,12 @@ extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 #endif
 
 #define ___PSTATE ___GET_PSTATE()
+
+#ifdef ___SINGLE_VM
+#define ___VMSTATE (&___GSTATE->vmstate0)
+#else
 #define ___VMSTATE ___VMSTATE_FROM_PSTATE(___PSTATE)
+#endif
 
 #ifdef ___BIND_LATE
 
@@ -7865,6 +7925,17 @@ typedef struct ___ticketlock_struct
     ___VOLATILE ___WORD next_ticket;
   } ___ticketlock_struct;
 
+
+#define ___TICKETLOCK_HISTORY_LENGTH 65536
+
+typedef struct ___ticketlock_location
+  {
+    ___VOLATILE ___WORD *id;
+    ___VOLATILE int lock_op;
+    ___VOLATILE ___source_location location;
+  } ___ticketlock_location;
+
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -8455,6 +8526,11 @@ typedef struct ___virtual_machine_state_struct
 
 #ifdef ___ACTIVITY_LOG
     ___vmstate_actlog actlog; /* activity log state */
+#endif
+
+#ifdef ___DEBUG_TICKETLOCK
+    ___VOLATILE ___WORD ticketlock_history_index;
+    ___ticketlock_location ticketlock_history[___TICKETLOCK_HISTORY_LENGTH];
 #endif
 
     ___vmstate_os os; /* OS specific state */

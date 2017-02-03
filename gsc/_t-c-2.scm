@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3709,6 +3709,8 @@
 (targ-op "##primitive-lock!"    (targ-apply-simp-u #f #t 0 "PRIMITIVELOCK"))
 (targ-op "##primitive-trylock!" (targ-ifjump-simp-u #f "PRIMITIVETRYLOCK"))
 (targ-op "##primitive-unlock!"  (targ-apply-simp-u #f #t 0 "PRIMITIVEUNLOCK"))
+
+(targ-op "##object-before?"   (targ-ifjump-simp-s #f "OBJECTBEFOREP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
