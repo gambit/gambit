@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_source.c", produced by Gambit v4.8.7
+; File: "_source.c", produced by Gambit v4.8.8
 (
-408007
+408008
 (C)
 "_source"
 (("_source"))
@@ -252,7 +252,7 @@
  ()
 )
 #else
-#define ___VERSION 408007
+#define ___VERSION 408008
 #define ___MODULE_NAME "_source"
 #define ___LINKER_ID ____20___source
 #define ___MH_PROC ___H__20___source

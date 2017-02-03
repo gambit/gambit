@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_system.c", produced by Gambit v4.8.7
+; File: "_system.c", produced by Gambit v4.8.8
 (
-408007
+408008
 (C)
 "_system"
 (("_system"))
@@ -304,7 +304,7 @@
  ()
 )
 #else
-#define ___VERSION 408007
+#define ___VERSION 408008
 #define ___MODULE_NAME "_system"
 #define ___LINKER_ID ____20___system
 #define ___MH_PROC ___H__20___system

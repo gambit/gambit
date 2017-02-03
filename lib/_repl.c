@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_repl.c", produced by Gambit v4.8.7
+; File: "_repl.c", produced by Gambit v4.8.8
 (
-408007
+408008
 (C)
 "_repl"
 (("_repl"))
@@ -994,7 +994,7 @@
  ()
 )
 #else
-#define ___VERSION 408007
+#define ___VERSION 408008
 #define ___MODULE_NAME "_repl"
 #define ___LINKER_ID ____20___repl
 #define ___MH_PROC ___H__20___repl
@@ -23582,7 +23582,7 @@ ___DEF_SLBL(1,___L1__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
    ___JUMPINT(___SET_NARGS(1),___PRC(1358),___L__23__23_thread_2d_repl_2d_channel_2d_get_21_)
 ___DEF_SLBL(2,___L2__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
    ___SET_R2(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(1L),___SUB(253),___FAL))
-   ___BTQLOCK(___R2)
+   ___PRIMITIVELOCK(___R2,___FIX(1L),___FIX(9L))
    ___SET_R3(___VECTORREF(___R2,___FIX(8L)))
    ___IF(___NOT(___EQP(___R3,___SYM_not_2d_abandoned)))
    ___GOTO(___L15__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
@@ -23593,7 +23593,7 @@ ___DEF_SLBL(2,___L2__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
    ___VECTORSET(___R2,___FIX(2L),___STK(-6))
    ___VECTORSET(___R2,___FIX(3L),___R3)
    ___VECTORSET(___R2,___FIX(8L),___STK(-6))
-   ___BTQUNLOCK(___R2)
+   ___PRIMITIVEUNLOCK(___R2,___FIX(1L),___FIX(9L))
    ___GOTO(___L13__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
 ___DEF_SLBL(3,___L3__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
    ___SET_R1(___STK(-5))
@@ -23652,7 +23652,7 @@ ___DEF_SLBL(12,___L12__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),531,___G__23__23_write_2d_string)
 ___DEF_GLBL(___L15__23__23_repl_2d_channel_2d_acquire_2d_ownership_21_)
-   ___BTQUNLOCK(___R2)
+   ___PRIMITIVEUNLOCK(___R2,___FIX(1L),___FIX(9L))
    ___SET_STK(-5,___R1)
    ___SET_STK(1,___R2)
    ___SET_STK(-4,___R3)
@@ -23696,7 +23696,7 @@ ___DEF_SLBL(1,___L1__23__23_repl_2d_channel_2d_release_2d_ownership_21_)
    ___JUMPINT(___SET_NARGS(1),___PRC(1358),___L__23__23_thread_2d_repl_2d_channel_2d_get_21_)
 ___DEF_SLBL(2,___L2__23__23_repl_2d_channel_2d_release_2d_ownership_21_)
    ___SET_R1(___UNCHECKEDSTRUCTUREREF(___R1,___FIX(1L),___SUB(253),___FAL))
-   ___BTQLOCK(___R1)
+   ___PRIMITIVELOCK(___R1,___FIX(1L),___FIX(9L))
    ___SET_R2(___VECTORREF(___R1,___FIX(2L)))
    ___SET_R3(___VECTORREF(___R1,___FIX(3L)))
    ___VECTORSET(___R3,___FIX(2L),___R2)
@@ -23708,7 +23708,7 @@ ___DEF_SLBL(2,___L2__23__23_repl_2d_channel_2d_release_2d_ownership_21_)
    ___VECTORSET(___R1,___FIX(2L),___R1)
    ___VECTORSET(___R1,___FIX(3L),___R1)
    ___VECTORSET(___R1,___FIX(8L),___SYM_not_2d_abandoned)
-   ___BTQUNLOCK(___R1)
+   ___PRIMITIVEUNLOCK(___R1,___FIX(1L),___FIX(9L))
    ___SET_R1(___VOID)
    ___ADJFP(-4)
    ___JUMPPRM(___NOTHING,___STK(1))
