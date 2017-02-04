@@ -1321,6 +1321,18 @@
 #endif
 #endif
 
+/*
+ * Determine if the WIN32 CONDITION_VARIABLE type is available.
+ */
+
+#ifdef ___USE_WIN32_THREADS
+#ifndef ___HAVE_CONDITION_VARIABLE
+#ifndef ___DONT_HAVE_CONDITION_VARIABLE
+#define @CONF_HAVE_CONDITION_VARIABLE@
+#endif
+#endif
+#endif
+
 
 /*
  * Determine if an activity log should be kept or not.
@@ -7749,6 +7761,8 @@ typedef struct ___full_duplex_pipe
 #define ___MUTEX_LOCK(mut) EnterCriticalSection (&mut)
 #define ___MUTEX_UNLOCK(mut) LeaveCriticalSection (&mut)
 
+#ifdef ___HAVE_CONDITION_VARIABLE
+
 #define ___CONDVAR CONDITION_VARIABLE
 #define ___CONDVAR_DECL(id) ___CONDVAR id;
 #define ___CONDVAR_INIT(cv) InitializeConditionVariable (&cv)
@@ -7756,6 +7770,22 @@ typedef struct ___full_duplex_pipe
 #define ___CONDVAR_WAIT(cv,mut) SleepConditionVariableCS (&cv, &mut, INFINITE)
 #define ___CONDVAR_SIGNAL(cv) WakeConditionVariable (&cv)
 #define ___CONDVAR_BROADCAST(cv) WakeAllConditionVariable (&cv)
+
+#else
+
+/*
+ * The type CONDITION_VARIABLE is not available. Use busy waiting.
+ */
+
+#define ___CONDVAR int
+#define ___CONDVAR_DECL(id) ___CONDVAR id;
+#define ___CONDVAR_INIT(cv) cv = 0
+#define ___CONDVAR_DESTROY(cv)
+#define ___CONDVAR_WAIT(cv,mut) do { ___MUTEX_UNLOCK(mut); ___MUTEX_LOCK(mut); } while (0)
+#define ___CONDVAR_SIGNAL(cv)
+#define ___CONDVAR_BROADCAST(cv)
+
+#endif
 
 #define ___THREAD_ID (GetCurrentThreadId())
 
