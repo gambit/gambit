@@ -1294,15 +1294,15 @@
 
 #ifndef ___USE_NO_THREAD_SYSTEM
 
-#ifndef ___USE_POSIX_THREADS
-#ifndef ___USE_WIN32_THREADS
+#ifndef ___USE_POSIX_THREAD_SYSTEM
+#ifndef ___USE_WIN32_THREAD_SYSTEM
 #define @CONF_THREAD_SYSTEM@
 #endif
 #endif
 
-#ifdef ___USE_POSIX_THREADS
-#ifdef ___USE_WIN32_THREADS
-#error "Define either ___USE_POSIX_THREADS or ___USE_WIN32_THREADS"
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+#error "Define either ___USE_POSIX_THREAD_SYSTEM or ___USE_WIN32_THREAD_SYSTEM"
 #endif
 #endif
 
@@ -1325,7 +1325,7 @@
  * Determine if the WIN32 CONDITION_VARIABLE type is available.
  */
 
-#ifdef ___USE_WIN32_THREADS
+#ifdef ___USE_WIN32_THREAD_SYSTEM
 #ifndef ___HAVE_CONDITION_VARIABLE
 #ifndef ___DONT_HAVE_CONDITION_VARIABLE
 #define @CONF_HAVE_CONDITION_VARIABLE@
