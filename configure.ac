@@ -1262,10 +1262,12 @@ else
       LIBS="$LIBS WinMM.Lib"
     fi
 
-    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
+    CFLAGS="$CFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
+    CXXFLAGS="$CXXFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
 
     # For compatibility with Windows XP
-    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_ATL_XP_TARGETING"
+    CFLAGS="$CFLAGS -D_ATL_XP_TARGETING"
+    CXXFLAGS="$CXXFLAGS -D_ATL_XP_TARGETING"
 
   else
 
@@ -1281,7 +1283,8 @@ else
                  LIBS="$LIBS -lwinmm"
                fi
 
-               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
+               CFLAGS="$CFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
+               CXXFLAGS="$CXXFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
                ;;
 
             *) # check libraries for other systems
