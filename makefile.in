@@ -120,8 +120,8 @@ latest-release: fake_target
 	$(GIT) reset --hard
 
 current-gsc-boot: fake_target
-	current_branch=`$(GIT) rev-parse --abbrev-ref HEAD`; \
-	echo "******** current branch is $$current_branch"; \
+	current_commit=`$(GIT) describe --all`; \
+	echo "******** current commit is $$current_commit"; \
 	COPYFILE_DISABLE=1 tar chof gsc-scm.tar gsc/*.scm; \
 	echo "******** $(GIT) checkout -f tags/$(PACKAGE_VERSION)"; \
 	$(GIT) checkout -f tags/$(PACKAGE_VERSION); \
@@ -132,8 +132,8 @@ current-gsc-boot: fake_target
 	rm -f gsc-scm.tar; \
 	cd gsc && $(MAKE) bootclean && cd ..; \
 	$(MAKE) bootstrap; \
-	echo "******** $(GIT) checkout -f $$current_branch"; \
-	$(GIT) checkout -f "$$current_branch"; \
+	echo "******** $(GIT) checkout -f $$current_commit"; \
+	$(GIT) checkout -f "$$current_commit"; \
 	$(GIT) reset --hard
 
 gsc-boot@exe@:
