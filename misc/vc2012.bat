@@ -50,7 +50,7 @@ echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #ifndef ___USE_POSIX_THREAD_SYSTEM       >> include\gambit.h
 echo #ifndef ___USE_WIN32_THREAD_SYSTEM       >> include\gambit.h
-echo #define ___USE_WIN32_THREAD_SYSTEM       >> include\gambit.h
+echo #define ___USE_NO_THREAD_SYSTEM          >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #ifndef ___NO_THREAD_LOCAL_STORAGE_CLASS >> include\gambit.h
