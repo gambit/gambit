@@ -3236,6 +3236,8 @@ ___virtual_machine_state ___vms;)
 
 ___EXP_FUNC(void,___cleanup) ___PVOID
 {
+  ___processor_state ___ps = ___PSTATE;
+
   /*
    * Only do cleanup once after successful setup.
    */
@@ -3245,21 +3247,19 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
 
   ___GSTATE->setup_state = 2;
 
+  ___cleanup_os_interrupt_handling ();
+
 #ifndef ___SINGLE_THREADED_VMS
 
   /*
    * Shutdown processors of this VM except for processor 0.
    */
 
-  {
-    ___processor_state ___ps = ___PSTATE;
-
-    ___current_vm_resize (___PSP ___FAL, 1);
-  }
+  ___current_vm_resize (___PSP ___FAL, 1);
 
 #endif
 
-  ___cleanup_os_interrupt_handling ();
+  ___cleanup_pstate (___ps);
 
 #ifdef ___SINGLE_VM
 
