@@ -4239,11 +4239,4 @@
 
           result)))))
 
-;;;----------------------------------------------------------------------------
-
-;; enable processing of heartbeat interrupts, user interrupts, GC
-;; interrupts, etc.
-
-(##enable-interrupts!)
-
 ;;;============================================================================

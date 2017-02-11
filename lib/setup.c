@@ -194,7 +194,7 @@ int code;)
 #else
       while (code < ___NB_INTRS)
         {
-          if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
+          if ((___ps->intr_flag[code] & ___ps->intr_enabled & ~___ps->intr_mask) != ___FIX(0))
             {
               ___STACK_TRIP_ON();
               break;
@@ -211,7 +211,8 @@ ___EXP_FUNC(void,___disable_interrupts_pstate)
         (___ps)
 ___processor_state ___ps;)
 {
-  ___ps->intr_enabled = ___FIX(0);
+  /* Disable all interrupts except ___INTR_SYNC_OP */
+  ___ps->intr_enabled = ___FIX(1<<___INTR_SYNC_OP);
 
   ___begin_interrupt_service_pstate (___ps);
   ___end_interrupt_service_pstate (___ps, 0);
@@ -237,11 +238,14 @@ ___processor_state ___ps;)
 {
   int i;
 
-  ___disable_interrupts_pstate (___ps); /* disable all interrupts */
+  /* Disable all interrupts except ___INTR_SYNC_OP */
+  ___ps->intr_enabled = ___FIX(1<<___INTR_SYNC_OP);
 
-  ___ps->intr_mask = ___FIX(0); /* None of the interrupts are ignored */
+  /* Mask no interrupts */
+  ___ps->intr_mask = ___FIX(0);
 
-  for (i=0; i<___NB_INTRS; i++) /* None of the interrupts are requested */
+  /* None of the interrupts are requested */
+  for (i=0; i<___NB_INTRS; i++)
     ___ps->intr_flag[i] = ___FIX(0);
 
   ___begin_interrupt_service_pstate (___ps);
@@ -408,6 +412,7 @@ ___sync_op_struct *sop_ptr;)
       ___sync_op_struct sop1;
 
       SYNC_GET_MSG(sid1 = ___ps->sync_id1);
+      SYNC_INIT_MSG(___ps->sync_id1);
 
       sop1 = ___ps->sync_op1;
 
@@ -435,14 +440,13 @@ ___sync_op_struct *sop_ptr;)
           sid = sid1;
         }
 
-      SYNC_INIT_MSG(___ps->sync_id1);
-
       if (child_id2 < n)
         {
           int sid2;
           ___sync_op_struct sop2;
 
           SYNC_GET_MSG(sid2 = ___ps->sync_id2);
+          SYNC_INIT_MSG(___ps->sync_id2);
 
           sop2 = ___ps->sync_op2;
 
@@ -469,8 +473,6 @@ ___sync_op_struct *sop_ptr;)
               sop = sop2;
               sid = sid2;
             }
-
-          SYNC_INIT_MSG(___ps->sync_id2);
         }
     }
 
@@ -491,8 +493,6 @@ ___sync_op_struct *sop_ptr;)
     {
       ___processor_state parent = ___PSTATE_FROM_PROCESSOR_ID((id-1)>>1,___vms);
 
-      SYNC_INIT_MSG(___ps->sync_id0);
-
       if (id & 1)
         {
           parent->sync_op1 = sop;
@@ -509,6 +509,7 @@ ___sync_op_struct *sop_ptr;)
        */
 
       SYNC_GET_MSG(sid = ___ps->sync_id0);
+      SYNC_INIT_MSG(___ps->sync_id0);
 
       sop = ___ps->sync_op0;
     }
@@ -3332,6 +3333,8 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
     return;
 
   ___GSTATE->setup_state = 2;
+
+  ___cleanup_os_interrupt_handling ();
 
 #ifndef ___SINGLE_THREADED_VMS
 
