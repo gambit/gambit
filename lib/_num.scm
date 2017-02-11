@@ -8981,33 +8981,60 @@ ___RESULT = result;
       ;; result-length is > the number of complex entries in a, because
       ;; otherwise the length of a would be cut in half.
 
-      (let* ((normalizer (##fl/ (##fixnum->flonum (##fxarithmetic-shift-right (##f64vector-length a) 1))))
-             (fbase (##fixnum->flonum ##bignum.fdigit-base))
-             (fbase-inverse (##fl/ fbase)))
-        (let ((loop-carry (##f64vector (macro-inexact-+0))))
-          (let loop ((i 0)
-                     (j 0)
-                     (limit (##fxarithmetic-shift-right (##f64vector-length a) 1)))  ;; here we assume that there are always at least this many fdigits
-            (##declare (not interrupts-enabled))
-            (if (##fx< i limit)
-                (let* ((t
-                        (##fl+ (##fl+ (##f64vector-ref loop-carry 0)
-                                                (macro-inexact-+1/2))
-                                    (##fl* (##f64vector-ref a j)
-                                                normalizer)))
-                       (carry
-                        (##flfloor (##fl* t fbase-inverse)))
-                       (digit
-                        (##fl- t (##fl* carry fbase))))
-                  (##bignum.fdigit-set! result i (##flonum->fixnum digit))
-                  (##f64vector-set! loop-carry 0 carry)
-                  (loop (##fx+ i 1)
-                        (##fx+ j 2)
-                        limit))
-                (if (##fxeven? j)
-                    (loop i
-                          1
-                          result-length)))))))
+      (let ((normalizer (##fl/ (##fixnum->flonum (##fxarithmetic-shift-right (##f64vector-length a) 1)))))
+        (if (and (##fixnum? (##expt 2 32))
+                 (fx= ##bignum.fdigit-base 256))
+            ;; Here we have faster code for the case of
+            ;; (1) 64-bit fixnums and
+            ;; (2) 8-bit fdigits
+            ;; So each rounded entry of a can fit into a fixnum, and
+            ;; we know how many bits to mask out and shift for fdigits.
+            (let loop ((i 0)
+                       (j 0)
+                       (carry 0)
+                       (limit (##fxarithmetic-shift-right (##f64vector-length a) 1)))
+              (##declare (not interrupts-enabled))
+              (if (##fx< i limit)
+                  (let* ((t (##fx+ carry
+                                   (##flonum->fixnum (##fl+ (macro-inexact-+1/2)
+                                                            (##fl* (##f64vector-ref a j)
+                                                                   normalizer))))))
+                    (##bignum.fdigit-set! result i (##fxand t 255))
+                    (loop (##fx+ i 1)
+                          (##fx+ j 2)
+                          (##fxarithmetic-shift-right t 8)
+                          limit))
+                  (if (##fxeven? j)
+                      (loop i
+                            1
+                            carry
+                            result-length))))
+            (let* ((fbase (##fixnum->flonum ##bignum.fdigit-base))
+                   (fbase-inverse (##fl/ fbase)))
+              (let ((loop-carry (##f64vector (macro-inexact-+0))))
+                (let loop ((i 0)
+                           (j 0)
+                           (limit (##fxarithmetic-shift-right (##f64vector-length a) 1)))
+                  (##declare (not interrupts-enabled))
+                  (if (##fx< i limit)
+                      (let* ((t
+                              (##fl+ (##fl+ (##f64vector-ref loop-carry 0)
+                                            (macro-inexact-+1/2))
+                                     (##fl* (##f64vector-ref a j)
+                                            normalizer)))
+                             (carry
+                              (##flfloor (##fl* t fbase-inverse)))
+                             (digit
+                              (##fl- t (##fl* carry fbase))))
+                        (##bignum.fdigit-set! result i (##flonum->fixnum digit))
+                        (##f64vector-set! loop-carry 0 carry)
+                        (loop (##fx+ i 1)
+                              (##fx+ j 2)
+                              limit))
+                      (if (##fxeven? j)
+                          (loop i
+                                1
+                                result-length)))))))))
 
     ;; this is the right-angle convolution method of section 6 in Percival's paper
 
