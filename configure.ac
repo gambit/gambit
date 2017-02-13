@@ -1503,7 +1503,8 @@ else
   AC_CHECK_FUNCS(hstrerror)
 
   case "$target_os" in
-    OpenBSD*)
+    # the OpenBSD test is always lowercase
+    openbsd*)
       # OpenBSD/mips64(el) does have get_fpc_csr(), but lacks union fpc_csr.
       ;;
     *)
