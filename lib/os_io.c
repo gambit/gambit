@@ -783,6 +783,14 @@ ___time timeout;)
   int prev;
   ___time delta;
 
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+#ifdef USE_MsgWaitForMultipleObjects
+
+  ___BOOL aborted = 0;
+
+#endif
+#endif
+
   nb_devs = nb_read_devs + nb_write_devs;
 
   state.devs = devs;
@@ -1238,14 +1246,14 @@ ___time timeout;)
              * The call to ___device_select must be aborted because the
              * select_abort event is set.  This occurs when an interrupt
              * (such as a CTRL-C user interrupt) needs to be serviced
-             * promptly by the main program.
+             * promptly by the main program. However, it is important
+             * to check if other devices are ready, to ensure
+             * that IO events are not ignored.
              */
 
             ResetEvent (___PSTATE->os.select_abort); /* ignore error */
 
-            e = ___FIX(___ERRNO_ERR(EINTR));
-
-            break;
+            aborted = 1;
           }
 #endif
         else
@@ -1293,9 +1301,9 @@ ___time timeout;)
         }
     }
 
-#ifdef USE_select_or_poll
-
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+#ifdef USE_select_or_poll
 
   if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
     {
@@ -1322,6 +1330,13 @@ ___time timeout;)
             break;
         }
     }
+
+#endif
+
+#ifdef USE_MsgWaitForMultipleObjects
+
+  if (aborted)
+    e = ___FIX(___ERRNO_ERR(EINTR));
 
 #endif
 
@@ -9197,7 +9212,7 @@ ___SCMOBJ options;)
                environment,
                &env,
                2,
-	       ___CE(___ENVIRON_CE_SELECT)))
+               ___CE(___ENVIRON_CE_SELECT)))
        != ___FIX(___NO_ERR)) ||
       (directory != ___FAL &&
        (e = ___SCMOBJ_to_NONNULLSTRING
@@ -9205,7 +9220,7 @@ ___SCMOBJ options;)
                directory,
                &dir,
                3,
-	       ___CE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
+               ___CE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),
                0))
        != ___FIX(___NO_ERR)) ||
       (e = ___device_stream_setup_from_process
