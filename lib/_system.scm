@@ -535,10 +535,11 @@
     (let loop ((h 0) (i 0))
       (if (##fx< i len)
           (loop (##fxand
-                 (##fx* (##fx+
-                         (##fxwraplogical-shift-right h 8)
-                         (##char->integer (##string-ref str i)))
-                        331804471)
+                 (##fxwrap*
+                  (##fxwrap+
+                   (##fxwraplogical-shift-right h 8)
+                   (##char->integer (##string-ref str i)))
+                  331804471)
                  (macro-max-fixnum32))
                 (##fx+ i 1))
           h))))
@@ -557,11 +558,12 @@
     (let loop ((h 0) (i 0))
       (if (##fx< i len)
           (loop (##fxand
-                 (##fx* (##fx+
-                         (##fxwraplogical-shift-right h 8)
-                         (##char->integer
-                          (##char-downcase (##string-ref str i))))
-                        331804471)
+                 (##fxwrap*
+                  (##fxwrap+
+                   (##fxwraplogical-shift-right h 8)
+                   (##char->integer
+                    (##char-downcase (##string-ref str i))))
+                  331804471)
                  (macro-max-fixnum32))
                 (##fx+ i 1))
           h))))
