@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2042,7 +2042,7 @@
   (let* ((settings
           (##set-debug-settings! 0 0))
          (x
-          (##fxarithmetic-shift-right
+          (##fxwraplogical-shift-right
            (##fxand
             settings
             (macro-debug-settings-repl-mask))

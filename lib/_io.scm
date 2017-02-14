@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -9433,7 +9433,7 @@
           (##fx< 1 nb-digits)
           (##fx< 15 n))
       (##wr-hex we
-                (##fxarithmetic-shift-right n 4)
+                (##fxwraplogical-shift-right n 4)
                 (and nb-digits (##fx- nb-digits 1))))
   (##wr-ch we
            (##string-ref ##digit-to-char-table (##fxand n 15))))
@@ -9443,7 +9443,7 @@
           (##fx< 1 nb-digits)
           (##fx< 7 n))
       (##wr-oct we
-                (##fxarithmetic-shift-right n 3)
+                (##fxwraplogical-shift-right n 3)
                 (and nb-digits (##fx- nb-digits 1))))
   (##wr-ch we
            (##string-ref ##digit-to-char-table (##fxand n 7))))

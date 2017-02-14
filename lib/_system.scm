@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -431,7 +431,7 @@
                         (macro-hash-combine (##u16vector-ref obj i) h))))
 
     (let ((len (##u8vector-length obj)))
-      (u16vect-hash (##fx- (##fxarithmetic-shift-right len 1) 1)
+      (u16vect-hash (##fx- (##fxwraplogical-shift-right len 1) 1)
                     (##fxxor
                      (if (##fxodd? len)
                          (##u8vector-ref obj (##fx- len 1))
@@ -536,7 +536,7 @@
       (if (##fx< i len)
           (loop (##fxand
                  (##fx* (##fx+
-                         (##fxarithmetic-shift-right h 8)
+                         (##fxwraplogical-shift-right h 8)
                          (##char->integer (##string-ref str i)))
                         331804471)
                  (macro-max-fixnum32))
@@ -558,7 +558,7 @@
       (if (##fx< i len)
           (loop (##fxand
                  (##fx* (##fx+
-                         (##fxarithmetic-shift-right h 8)
+                         (##fxwraplogical-shift-right h 8)
                          (##char->integer
                           (##char-downcase (##string-ref str i))))
                         331804471)
@@ -2178,7 +2178,7 @@
  fxand
  fxior
  fxarithmetic-shift-left
- fxarithmetic-shift-right
+ fxwraplogical-shift-right
  negative?
  +
  arithmetic-shift
@@ -2343,13 +2343,13 @@
 
   (define (serialize-shared! n)
     (let ((lo (fxand n #x7f))
-          (hi (fxarithmetic-shift-right n 7)))
+          (hi (fxwraplogical-shift-right n 7)))
       (write-u8 (fxior (shared-tag) lo))
       (serialize-nonneg-fixnum! hi)))
 
   (define (serialize-nonneg-fixnum! n)
     (let ((lo (fxand n #x7f))
-          (hi (fxarithmetic-shift-right n 7)))
+          (hi (fxwraplogical-shift-right n 7)))
       (if (fx= hi 0)
           (write-u8 lo)
           (begin
@@ -2372,8 +2372,8 @@
           (if (fx> len 0)
               (begin
                 (write-u8 (fxand n #xff))
-                (loop (fxarithmetic-shift-right n 8) (fx- len 1)))))
-        (let* ((len/2 (fxarithmetic-shift-right len 1))
+                (loop (fxwraplogical-shift-right n 8) (fx- len 1)))))
+        (let* ((len/2 (fxwraplogical-shift-right len 1))
                (len/2*8 (fx* len/2 8)))
           (serialize-exact-int-of-length!
            (extract-bit-field len/2*8 0 n)
@@ -2383,7 +2383,7 @@
            (fx- len len/2)))))
 
   (define (exact-int-length n signed?)
-    (fxarithmetic-shift-right
+    (fxwraplogical-shift-right
      (fx+ (integer-length n) (if signed? 8 7))
      3))
 
@@ -2899,7 +2899,7 @@
            (len (vector-length vect)))
       (vector-set! state 2 (fx+ n 1))
       (if (fx= n len)
-          (let* ((new-len (fx+ (fxarithmetic-shift-right (fx* len 3) 1) 1))
+          (let* ((new-len (fx+ (fxwraplogical-shift-right (fx* len 3) 1) 1))
                  (new-vect (make-vector new-len)))
             (vector-set! state 3 new-vect)
             (subvector-move! vect 0 n new-vect 0)
@@ -2917,7 +2917,7 @@
   (define (deserialize-nonneg-fixnum! n shift)
     (let loop ((n n)
                (shift shift)
-               (range (fxarithmetic-shift-right (max-fixnum) shift)))
+               (range (fxwraplogical-shift-right (max-fixnum) shift)))
       (if (fx= range 0)
           (err)
           (let ((x (read-u8)))
@@ -2930,7 +2930,7 @@
                       (err)
                       (loop (fxior n (fxarithmetic-shift-left b shift))
                             (fx+ shift 7)
-                            (fxarithmetic-shift-right range 7)))))))))
+                            (fxwraplogical-shift-right range 7)))))))))
 
   (define (deserialize-flonum-32!)
     (let ((n (deserialize-nonneg-exact-int-of-length! 4)))
@@ -2956,7 +2956,7 @@
                                   c)
                                 8))))
                     8))))
-        (let* ((len/2 (fxarithmetic-shift-right len 1))
+        (let* ((len/2 (fxwraplogical-shift-right len 1))
                (a (deserialize-nonneg-exact-int-of-length! len/2))
                (b (deserialize-nonneg-exact-int-of-length! (fx- len len/2))))
           (bitwise-ior a (arithmetic-shift b (fx* 8 len/2))))))
@@ -3317,7 +3317,7 @@
                    (let* ((len/type
                            (deserialize-nonneg-fixnum! 0 0))
                           (len
-                           (fxarithmetic-shift-right len/type 4))
+                           (fxwraplogical-shift-right len/type 4))
                           (type
                            (fxand len/type #x0f)))
                      (cond ((fx= type (s8vector-tag))
@@ -3627,7 +3627,7 @@
  fxand
  fxior
  fxarithmetic-shift-left
- fxarithmetic-shift-right
+ fxwraplogical-shift-right
  negative?
  +
  arithmetic-shift
