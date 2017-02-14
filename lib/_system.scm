@@ -2372,7 +2372,7 @@
           (if (fx> len 0)
               (begin
                 (write-u8 (fxand n #xff))
-                (loop (fxwraplogical-shift-right n 8) (fx- len 1)))))
+                (loop (fxarithmetic-shift-right n 8) (fx- len 1)))))
         (let* ((len/2 (fxwraplogical-shift-right len 1))
                (len/2*8 (fx* len/2 8)))
           (serialize-exact-int-of-length!
