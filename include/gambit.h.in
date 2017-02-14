@@ -7861,7 +7861,7 @@ __sync_synchronize()
 #ifdef ___USE_WIN32_sync
 
 #define ___COMPARE_AND_SWAP_WORD(p,oldval,newval) \
-___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,oldval),___CAST(void*,newval)))
+___CAST(___WORD,InterlockedCompareExchangePointer(___CAST(void**,p),___CAST(void*,newval),___CAST(void*,oldval)))
 
 #if ___WS == 4
 #define ___FETCH_AND_ADD_WORD(p,val) \
