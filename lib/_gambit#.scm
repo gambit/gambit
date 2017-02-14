@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -223,7 +223,7 @@
 ;; slot 5 = value of entry #0
 
 (##define-macro (macro-gc-hash-table-nb-entries ht)
-  `(##fxarithmetic-shift-right
+  `(##fxwraplogical-shift-right
     (##fx- (##vector-length ,ht) (macro-gc-hash-table-key0))
     1))
 

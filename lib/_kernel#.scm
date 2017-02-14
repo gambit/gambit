@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel#.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -181,31 +181,31 @@
 (##define-macro (macro-debug-settings-user-intr-shift)     9)
 
 (##define-macro (macro-debug-settings-level settings)
-  `(##fxarithmetic-shift-right
+  `(##fxwraplogical-shift-right
     (##fxand ,settings
              (macro-debug-settings-level-mask))
     (macro-debug-settings-level-shift)))
 
 (##define-macro (macro-debug-settings-uncaught settings)
-  `(##fxarithmetic-shift-right
+  `(##fxwraplogical-shift-right
     (##fxand ,settings
              (macro-debug-settings-uncaught-mask))
     (macro-debug-settings-uncaught-shift)))
 
 (##define-macro (macro-debug-settings-error settings)
-  `(##fxarithmetic-shift-right
+  `(##fxwraplogical-shift-right
     (##fxand ,settings
              (macro-debug-settings-error-mask))
     (macro-debug-settings-error-shift)))
 
 (##define-macro (macro-debug-settings-repl settings)
-  `(##fxarithmetic-shift-right
+  `(##fxwraplogical-shift-right
     (##fxand ,settings
              (macro-debug-settings-repl-mask))
     (macro-debug-settings-repl-shift)))
 
 (##define-macro (macro-debug-settings-user-intr settings)
-  `(##fxarithmetic-shift-right
+  `(##fxwraplogical-shift-right
     (##fxand ,settings
              (macro-debug-settings-user-intr-mask))
     (macro-debug-settings-user-intr-shift)))
@@ -219,7 +219,7 @@
 (##define-macro (macro-terminal-settings-enable-line-edit) 16)
 
 (##define-macro (macro-terminal-settings-encoding settings)
-  `(##fxarithmetic-shift-right
+  `(##fxwraplogical-shift-right
     (##fxand ,settings
              (macro-terminal-settings-encoding-mask))
     (macro-terminal-settings-encoding-shift)))
