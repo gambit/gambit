@@ -1886,82 +1886,82 @@
       (macro-lock-thread! thread)
 
       (let ((end-condvar (macro-thread-end-condvar thread)))
+
+        ;; release low-level lock of the thread
+        (macro-unlock-thread! thread)
+
         (if end-condvar
 
-            (begin
+            (if (##not timeout)
 
-              ;; release low-level lock of the thread
-              (macro-unlock-thread! thread)
+                (done thread absrel-timeout timeout-val #f)
 
-              ;; acquire low-level lock of end-condvar
-              (macro-lock-condvar! end-condvar)
+                (begin
 
-              ;; acquire low-level locks of threads
-              (##lock-2-threads! (macro-current-thread) thread)
+                  ;; acquire low-level lock of end-condvar
+                  (macro-lock-condvar! end-condvar)
 
-              ;; make sure thread is still not terminated
-              (if (macro-thread-end-condvar thread)
+                  ;; acquire low-level locks of threads
+                  (##lock-2-threads! (macro-current-thread) thread)
 
-                  (let ((result
-                         (macro-thread-save!
-                          (lambda (current-thread thread timeout end-condvar)
+                  ;; make sure thread is still not terminated
+                  (if (macro-thread-end-condvar thread)
 
-                            (macro-thread-resume-thunk-set!
-                             current-thread
-                             ##thread-void-action!)
+                      (let ((result
+                             (macro-thread-save!
+                              (lambda (current-thread thread timeout end-condvar)
 
-                            ;;TODO: reenable
-                            ;;(macro-thread-unboost-and-clear-quantum-used! current-thread)
+                                (macro-thread-resume-thunk-set!
+                                 current-thread
+                                 ##thread-void-action!)
 
-                            ;; suspend current thread on end-condvar
-                            (##thread-btq-insert! end-condvar current-thread)
+                                ;;TODO: reenable
+                                ;;(macro-thread-unboost-and-clear-quantum-used! current-thread)
 
-                            (if (##not (##eq? timeout #t))
-                                (begin
+                                ;; suspend current thread on end-condvar
+                                (##thread-btq-insert! end-condvar current-thread)
 
-                                  ;; save current thread's timeout
-                                  (macro-thread-timeout-set!
-                                   current-thread
-                                   timeout)
+                                (if (##not (##eq? timeout #t))
+                                    (begin
 
-                                  ;; add current thread to timeout queue
-                                  (macro-lock-current-processor!)
-                                  (##toq-insert!
-                                   (macro-current-processor)
-                                   current-thread)
-                                  (macro-unlock-current-processor!)))
+                                      ;; save current thread's timeout
+                                      (macro-thread-timeout-set!
+                                       current-thread
+                                       timeout)
 
-                            ;; release low-level locks of threads
-                            (##unlock-2-threads! (macro-current-thread) thread)
+                                      ;; add current thread to timeout queue
+                                      (macro-lock-current-processor!)
+                                      (##toq-insert!
+                                       (macro-current-processor)
+                                       current-thread)
+                                      (macro-unlock-current-processor!)))
 
-                            ;; release low-level lock of end-condvar
-                            (macro-unlock-condvar! end-condvar)
+                                ;; release low-level locks of threads
+                                (##unlock-2-threads! (macro-current-thread) thread)
 
-                            (##thread-schedule!))
-                          thread
-                          timeout
-                          end-condvar)))
+                                ;; release low-level lock of end-condvar
+                                (macro-unlock-condvar! end-condvar)
 
-                    (if (##eq? result (##void))
-                        (try-again)
-                        (done thread absrel-timeout timeout-val result)))
+                                (##thread-schedule!))
+                              thread
+                              timeout
+                              end-condvar)))
 
-                  (begin
+                        (if (##eq? result (##void))
+                            (try-again)
+                            (done thread absrel-timeout timeout-val result)))
 
-                    ;; release low-level locks of threads
-                    (##unlock-2-threads! (macro-current-thread) thread)
+                      (begin
 
-                    ;; release low-level lock of end-condvar
-                    (macro-unlock-condvar! end-condvar)
+                        ;; release low-level locks of threads
+                        (##unlock-2-threads! (macro-current-thread) thread)
 
-                    (done thread absrel-timeout timeout-val #t))))
+                        ;; release low-level lock of end-condvar
+                        (macro-unlock-condvar! end-condvar)
 
-            (begin
+                        (done thread absrel-timeout timeout-val #t)))))
 
-              ;; release low-level lock of the thread
-              (macro-unlock-thread! thread)
-
-              (done thread absrel-timeout timeout-val #t)))))))
+            (done thread absrel-timeout timeout-val #t))))))
 
 (define-prim (##make-root-thread
               thunk
