@@ -2988,11 +2988,9 @@ if test "$C_COMP_GNUC" = yes; then
     AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
-*** The GNU GCC compiler that is being used may have a bug in the      ***
-*** IPA optimizations when compiling Gambit as a shared library,       ***
-*** with optimizations enabled ("--enable-c-opt" without value, or     ***
-*** value >= -O2 ). For this reason, the optimization -fipa-ra         ***
-*** has been disabled.                                                 ***
+*** The GNU GCC compiler that is being used may show a bug while       ***
+*** compiling Gambit with --enable-shared and --enable-c-opt >= -O2.   ***
+*** For this reason, the optimization -fipa-ra has been disabled.      ***
 ***                                                                    ***
 **************************************************************************
 ])
