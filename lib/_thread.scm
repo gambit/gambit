@@ -1005,20 +1005,27 @@
               (if (macro-trylock-thread! next-thread)
                   (begin
 
-                    (macro-thread-resume-thunk-set!
-                     next-thread
-                     ##thread-timeout-action!)
+                    (let ((btq (macro-thread->btq next-thread)))
+                      (if (macro-trylock-btq! btq)
+                          (begin
 
-                    (macro-thread-btq-remove-if-in-btq! next-thread)
+                            (##thread-btq-remove! next-thread)
 
-                    (##thread-toq-remove! next-thread)
+                            (macro-unlock-btq! btq)
 
-                    ;; add the thread to the current processor's run queue
-                    (##btq-insert! (macro-current-processor) next-thread)
+                            (##thread-toq-remove! next-thread)
 
-                    (macro-unlock-thread! next-thread)
+                            (macro-thread-resume-thunk-set!
+                             next-thread
+                             ##thread-timeout-action!)
 
-                    (loop))))))))))
+                            ;; add the thread to the current processor's run queue
+                            (##btq-insert! (macro-current-processor) next-thread)
+
+                            (macro-unlock-thread! next-thread)
+
+                            (loop))
+                          (macro-unlock-thread! next-thread))))))))))))
 
 (define-prim (##wait! devices timeout)
 
