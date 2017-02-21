@@ -2178,10 +2178,6 @@
     ;;(##set-heartbeat-interval! 1.0)
     (##set-heartbeat-interval! (macro-default-heartbeat-interval))
 
-    (##enable-interrupts!)
-
-    (##startup-parallelism!)
-
     (##void)))
 
 ;;;----------------------------------------------------------------------------
