@@ -27,9 +27,16 @@
 
 (check-equal? (thread-join! t) 2)
 (check-equal? (thread-join! t) 2)
+(check-equal? (thread-join! t #f) 2)
 (check-equal? (thread-join! t -1) 2)
 (check-equal? (thread-join! t 0.001) 2)
 (check-equal? (thread-join! t -1 123) 2)
 (check-equal? (thread-join! t 0.001 123) 2)
 
 (check-equal? var 1)
+
+(check-tail-exn type-exception? (lambda () (thread-join! #f)))
+(check-tail-exn type-exception? (lambda () (thread-join! t 'allo)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread-join!)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread-join! #f #f #f #f)))

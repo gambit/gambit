@@ -18,6 +18,13 @@
 
 (thread-start! t)
 
+(check-tail-exn started-thread-exception? (lambda () (thread-start! t)))
+
 (waste-time 400)
 
 (check-equal? var 1)
+
+(check-tail-exn type-exception? (lambda () (thread-start! #f)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread-start!)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread-start! #f #f)))
