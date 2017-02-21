@@ -4106,6 +4106,11 @@ ___processor_state ___ps;)
                          ? heap_avail
                          : heap_left_before_fudge);
 
+  /* set stack overflow and interrupt detection limit */
+
+  ___begin_interrupt_service_pstate (___ps);
+  ___end_interrupt_service_pstate (___ps, 0);
+
 #ifdef ENABLE_CONSISTENCY_CHECKS
   if (___DEBUG_SETTINGS_LEVEL(___GSTATE->setup_params.debug_settings) >= 1)
     {
