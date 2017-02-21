@@ -245,7 +245,7 @@
 
 (##define-macro (define-rbtree
                  rbtree-init!
-                 node->container
+                 node->rbtree
                  insert!
                  remove!
                  reposition!
@@ -362,7 +362,7 @@
           (,',parent-set! rbtree rbtree)
           (,',left-set! rbtree rbtree)))
 
-     (##define-macro (,node->container node)
+     (##define-macro (,node->rbtree node)
        (if ',container
 
            `(let ((node ,node))
@@ -485,7 +485,7 @@
 
        (##declare (not interrupts-enabled))
 
-       (let ((rbtree (,node->container node)))
+       (let ((rbtree (,node->rbtree node)))
 
          (define (fixup! parent-node node)
 
@@ -636,7 +636,7 @@
        (##declare (not interrupts-enabled))
 
        (let* ((rbtree
-               (,node->container node))
+               (,node->rbtree node))
               (predecessor-node
                (,(neighbor left right) node rbtree))
               (successor-node
@@ -1140,6 +1140,11 @@
   (threads-deq-prev init: #f)
 
   (floats           init: #f)
+
+  (btq-container    init: #f) ;; processor, mutex or condvar whose blocked thread queue contains this thread or #f
+
+  (toq-container    init: #f) ;; processor whose timeout queue contains this thread or #f
+
   (name             init: #f)
   (end-condvar      init: #f)
   (exception?       init: 'not-started)
@@ -1303,7 +1308,7 @@
              ;; btq is either a mutex or a condition variable
 
              ;;TODO: find way to combine the btq lock!/unlock! with caller
-             (let ((btq (macro-btq->container thread)))
+             (let ((btq (macro-thread->btq thread)))
                ;;TODO: don't busy wait!
                (let loop ()
                  (if (##not (macro-trylock-btq! btq))
@@ -1327,7 +1332,7 @@
              ;; toq is a processor
 
              ;;TODO: find way to combine the toq lock!/unlock! with caller
-             (let ((toq (macro-toq->container thread)))
+             (let ((toq (macro-thread->toq thread)))
                (macro-lock-toq! toq)
                (##thread-toq-remove! thread)
                (macro-unlock-toq! toq)))))))
@@ -1917,7 +1922,7 @@
   ;; fields 4 to 6 are for maintaining a queue of runnable threads
   ;; field 7 is the leftmost thread in the queue of runnable threads
   ;; field 8 must be #f (the queue of runnable threads has no owner)
-  ;; fields 10 to 11 are for maintaining a timeout queue of threads
+  ;; fields 10 to 12 are for maintaining a timeout queue of threads
   ;; field 13 is the leftmost thread in the timeout queue of threads
   ;; field 14 is the thread currently running on this processor
   ;; field 16 is for storing the current time, heartbeat interval and a

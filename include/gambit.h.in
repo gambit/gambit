@@ -3438,8 +3438,6 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_KEY0      5
 #define ___GCHASHTABLE_VAL0      6
 
-#define ___PROCESSOR_CURRENT_THREAD 14
-
 #define ___CURRENTTHREAD ___VECTORREF(___CURRENTPROCESSOR,___FIX(___PROCESSOR_CURRENT_THREAD))
 #define ___CURRENTTHREADSET(thread)___VECTORSET(___CURRENTPROCESSOR,___FIX(___PROCESSOR_CURRENT_THREAD),thread)
 
@@ -3618,6 +3616,7 @@ else \
 thread = ___CURRENTTHREAD; \
 ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 
+
 #define ___JUMP_THREAD_SAVE1(jump) \
 { ___SCMOBJ proc; \
   ___SCMOBJ thread; \
@@ -3747,11 +3746,13 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 
 #define ___CONDVAR_NAME 10
 
-#define ___THREAD_CONT        21
-#define ___THREAD_DENV        22
-#define ___THREAD_DENV_CACHE1 23
-#define ___THREAD_DENV_CACHE2 24
-#define ___THREAD_DENV_CACHE3 25
+#define ___THREAD_CONT        23
+#define ___THREAD_DENV        24
+#define ___THREAD_DENV_CACHE1 25
+#define ___THREAD_DENV_CACHE2 26
+#define ___THREAD_DENV_CACHE3 27
+
+#define ___PROCESSOR_CURRENT_THREAD 14
 
 #define ___ENV_NAME_VAL 0
 #define ___ENV_LEFT     1

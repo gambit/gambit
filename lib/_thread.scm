@@ -666,7 +666,7 @@
 
 (define-rbtree
  macro-btq-init!
- macro-btq->container
+ macro-thread->btq
  ##btq-insert!
  ##btq-remove!
  ##btq-reposition!
@@ -686,8 +686,8 @@
  macro-btq-leftmost-set!
  #f
  #f
- #f
- #f
+ macro-thread-btq-container
+ macro-thread-btq-container-set!
 )
 
 ;;;for debugging
@@ -720,7 +720,7 @@
 
 (define-rbtree
  macro-toq-init!
- macro-toq->container
+ macro-thread->toq
  ##toq-insert!
  ##toq-remove!
  ##toq-reposition!
@@ -740,8 +740,8 @@
  macro-toq-leftmost-set!
  #f
  #f
- #f
- #f
+ macro-thread-toq-container
+ macro-thread-toq-container-set!
 )
 
 ;;;----------------------------------------------------------------------------
@@ -890,7 +890,7 @@
       ;; (i.e. mutex, condvar, etc) inherits the thread's effective
       ;; priority
 
-      (let ((owner (macro-btq-owner (macro-btq->container thread))))
+      (let ((owner (macro-btq-owner (macro-thread->btq thread))))
         (if (macro-thread? owner)
           (if effective-priority-increased?
             (macro-thread-inherit-priority! owner thread)
@@ -957,7 +957,7 @@
   (##btq-remove! thread)
   ;;TODO:fix priority inheritance
   #;
-  (let ((owner (macro-btq-owner (macro-btq->container thread))))
+  (let ((owner (macro-btq-owner (macro-thread->btq thread))))
     (if (macro-thread? owner)
       (if (##fl= (macro-thread-effective-priority thread)
                  (macro-thread-effective-priority owner))
@@ -3376,9 +3376,9 @@
          (macro-make-constant-thread-state-initialized))
         (else
          (let* ((btq
-                 (macro-btq->container thread))
+                 (macro-thread->btq thread))
                 (toq
-                 (macro-toq->container thread))
+                 (macro-thread->toq thread))
                 (timeout
                  (and toq
                       (let* ((floats (macro-thread-floats thread))
