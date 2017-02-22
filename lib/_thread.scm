@@ -995,37 +995,40 @@
         (if (##not (macro-thread-sooner? (macro-current-processor)
                                          next-thread))
 
-            (begin
+            (let ()
 
               ;; Found a thread with limited time wait with a timeout
               ;; earlier than the current time. Consequently, that
               ;; thread must wake up.
 
+              (define (done)
+
+                (##thread-toq-remove! next-thread)
+
+                (macro-thread-resume-thunk-set!
+                 next-thread
+                 ##thread-timeout-action!)
+
+                ;; add the thread to the current processor's run queue
+                (##btq-insert! (macro-current-processor) next-thread)
+
+                (macro-unlock-thread! next-thread)
+
+                (loop))
+
               ;;TODO: shouldn't be a trylock!
               (if (macro-trylock-thread! next-thread)
-                  (begin
+                  (let ((btq (macro-thread->btq next-thread)))
+                    (cond ((##not btq)
+                           (done))
 
-                    (let ((btq (macro-thread->btq next-thread)))
-                      (if (macro-trylock-btq! btq)
-                          (begin
+                          ((macro-trylock-btq! btq)
+                           (##thread-btq-remove! next-thread)
+                           (macro-unlock-btq! btq)
+                           (done))
 
-                            (##thread-btq-remove! next-thread)
-
-                            (macro-unlock-btq! btq)
-
-                            (##thread-toq-remove! next-thread)
-
-                            (macro-thread-resume-thunk-set!
-                             next-thread
-                             ##thread-timeout-action!)
-
-                            ;; add the thread to the current processor's run queue
-                            (##btq-insert! (macro-current-processor) next-thread)
-
-                            (macro-unlock-thread! next-thread)
-
-                            (loop))
-                          (macro-unlock-thread! next-thread))))))))))))
+                          (else
+                           (macro-unlock-thread! next-thread))))))))))))
 
 (define-prim (##wait! devices timeout)
 
