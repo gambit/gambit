@@ -8233,12 +8233,12 @@ ___RESULT = result;
       ;; combined passes in pairs to cut the number of passes through
       ;; the vector a
 
-      (let ((W (##f64vector (macro-inexact-+0)
-                            (macro-inexact-+0)
-                            (macro-inexact-+0)
-                            (macro-inexact-+0))))
+      (define (main-loop M N K SizeOfGroup)
 
-        (define (main-loop M N K SizeOfGroup)
+        (let ((W (##f64vector (macro-inexact-+0)
+                              (macro-inexact-+0)
+                              (macro-inexact-+0)
+                              (macro-inexact-+0))))
 
           (##declare (not interrupts-enabled))
 
@@ -8296,13 +8296,13 @@ ___RESULT = result;
                             ;; apart.
 
                             (let ((Temp_0 (##fl- (##fl* W_0 a_J4)
-                                                      (##fl* W_1 a_J5)))
+                                                 (##fl* W_1 a_J5)))
                                   (Temp_1 (##fl+ (##fl* W_0 a_J5)
-                                                      (##fl* W_1 a_J4)))
+                                                 (##fl* W_1 a_J4)))
                                   (Temp_2 (##fl- (##fl* W_0 a_J6)
-                                                      (##fl* W_1 a_J7)))
+                                                 (##fl* W_1 a_J7)))
                                   (Temp_3 (##fl+ (##fl* W_0 a_J7)
-                                                      (##fl* W_1 a_J6))))
+                                                 (##fl* W_1 a_J6))))
 
                               (let ((a_J0 (##fl+ a_J0 Temp_0))
                                     (a_J1 (##fl+ a_J1 Temp_1))
@@ -8329,16 +8329,16 @@ ___RESULT = result;
 
                                   (let ((Temp_0
                                          (##fl- (##fl* W_0 a_J2)
-                                                     (##fl* W_1 a_J3)))
+                                                (##fl* W_1 a_J3)))
                                         (Temp_1
                                          (##fl+ (##fl* W_0 a_J3)
-                                                     (##fl* W_1 a_J2)))
+                                                (##fl* W_1 a_J2)))
                                         (Temp_2
                                          (##fl- (##fl* W_2 a_J6)
-                                                     (##fl* W_3 a_J7)))
+                                                (##fl* W_3 a_J7)))
                                         (Temp_3
                                          (##fl+ (##fl* W_2 a_J7)
-                                                     (##fl* W_3 a_J6))))
+                                                (##fl* W_3 a_J6))))
 
                                     (let ((a_J0 (##fl+ a_J0 Temp_0))
                                           (a_J1 (##fl+ a_J1 Temp_1))
@@ -8360,80 +8360,80 @@ ___RESULT = result;
 
                                       (J-loop (##fx+ J0 2)))))))))
                         (inner-loop (##fx+ K 1)
-                                    (##fx+ JFirst (##fx* SizeOfGroup 4)))))))))
+                                    (##fx+ JFirst (##fx* SizeOfGroup 4))))))))))
 
-        (define (recursive-bit M N K SizeOfGroup)
-          (if (##fx<= 2 SizeOfGroup)
-              (begin
-                (main-loop M N K SizeOfGroup)
-                (if (##fx< 2048 (##fx- N M))
-                    (let ((new-size (##fxarithmetic-shift-right (##fx- N M) 2)))
-                      (recursive-bit M
-                                     (##fx+ M new-size)
-                                     (##fx* K 4)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2))
-                      (recursive-bit (##fx+ M new-size)
-                                     (##fx+ M (##fx* new-size 2))
-                                     (##fx+ (##fx* K 4) 1)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2))
-                      (recursive-bit (##fx+ M (##fx* new-size 2))
-                                     (##fx+ M (##fx* new-size 3))
-                                     (##fx+ (##fx* K 4) 2)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2))
-                      (recursive-bit (##fx+ M (##fx* new-size 3))
-                                     N
-                                     (##fx+ (##fx* K 4) 3)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2)))
+      (define (recursive-bit M N K SizeOfGroup)
+        (if (##fx<= 2 SizeOfGroup)
+            (begin
+              (main-loop M N K SizeOfGroup)
+              (if (##fx< 2048 (##fx- N M))
+                  (let ((new-size (##fxarithmetic-shift-right (##fx- N M) 2)))
                     (recursive-bit M
-                                   N
+                                   (##fx+ M new-size)
                                    (##fx* K 4)
-                                   (##fxarithmetic-shift-right SizeOfGroup 2))))))
+                                   (##fxarithmetic-shift-right SizeOfGroup 2))
+                    (recursive-bit (##fx+ M new-size)
+                                   (##fx+ M (##fx* new-size 2))
+                                   (##fx+ (##fx* K 4) 1)
+                                   (##fxarithmetic-shift-right SizeOfGroup 2))
+                    (recursive-bit (##fx+ M (##fx* new-size 2))
+                                   (##fx+ M (##fx* new-size 3))
+                                   (##fx+ (##fx* K 4) 2)
+                                   (##fxarithmetic-shift-right SizeOfGroup 2))
+                    (recursive-bit (##fx+ M (##fx* new-size 3))
+                                   N
+                                   (##fx+ (##fx* K 4) 3)
+                                   (##fxarithmetic-shift-right SizeOfGroup 2)))
+                  (recursive-bit M
+                                 N
+                                 (##fx* K 4)
+                                 (##fxarithmetic-shift-right SizeOfGroup 2))))))
 
-        (define (radix-2-pass a)
+      (define (radix-2-pass a)
 
-          ;; If we're here, the size of our (conceptually complex)
-          ;; array is not a power of 4, so we need to do a basic radix
-          ;; two pass with w=1 (so W[0]=1.0 and W[1] = 0.)  and then
-          ;; call recursive-bit appropriately on the two half arrays.
+        ;; If we're here, the size of our (conceptually complex)
+        ;; array is not a power of 4, so we need to do a basic radix
+        ;; two pass with w=1 (so W[0]=1.0 and W[1] = 0.)  and then
+        ;; call recursive-bit appropriately on the two half arrays.
 
-          (declare (not interrupts-enabled))
+        (declare (not interrupts-enabled))
 
-          (let ((SizeOfGroup
-                 (##fxarithmetic-shift-right (##f64vector-length a) 1)))
-            (let loop ((J0 0))
-              (if (##fx< J0 SizeOfGroup)
-                  (let ((J0 J0)
-                        (J2 (##fx+ J0 SizeOfGroup)))
-                    (let ((J1 (##fx+ J0 1))
-                          (J3 (##fx+ J2 1)))
-                      (let ((a_J0 (##f64vector-ref a J0))
-                            (a_J1 (##f64vector-ref a J1))
-                            (a_J2 (##f64vector-ref a J2))
-                            (a_J3 (##f64vector-ref a J3)))
-                        (let ((a_J0 (##fl+ a_J0 a_J2))
-                              (a_J1 (##fl+ a_J1 a_J3))
-                              (a_J2 (##fl- a_J0 a_J2))
-                              (a_J3 (##fl- a_J1 a_J3)))
-                          (##f64vector-set! a J0 a_J0)
-                          (##f64vector-set! a J1 a_J1)
-                          (##f64vector-set! a J2 a_J2)
-                          (##f64vector-set! a J3 a_J3)
-                          (loop (##fx+ J0 2))))))))))
+        (let ((SizeOfGroup
+               (##fxarithmetic-shift-right (##f64vector-length a) 1)))
+          (let loop ((J0 0))
+            (if (##fx< J0 SizeOfGroup)
+                (let ((J0 J0)
+                      (J2 (##fx+ J0 SizeOfGroup)))
+                  (let ((J1 (##fx+ J0 1))
+                        (J3 (##fx+ J2 1)))
+                    (let ((a_J0 (##f64vector-ref a J0))
+                          (a_J1 (##f64vector-ref a J1))
+                          (a_J2 (##f64vector-ref a J2))
+                          (a_J3 (##f64vector-ref a J3)))
+                      (let ((a_J0 (##fl+ a_J0 a_J2))
+                            (a_J1 (##fl+ a_J1 a_J3))
+                            (a_J2 (##fl- a_J0 a_J2))
+                            (a_J3 (##fl- a_J1 a_J3)))
+                        (##f64vector-set! a J0 a_J0)
+                        (##f64vector-set! a J1 a_J1)
+                        (##f64vector-set! a J2 a_J2)
+                        (##f64vector-set! a J3 a_J3)
+                        (loop (##fx+ J0 2))))))))))
 
-        (let* ((n (##f64vector-length a))
-               (log_n (two^p>=m n)))
+      (let* ((n (##f64vector-length a))
+             (log_n (two^p>=m n)))
 
-          ;; there are n/2 complex entries in a; if n/2 is not a power
-          ;; of 4, then do a single radix-2 pass and do the rest of
-          ;; the passes as radix-4 passes
+        ;; there are n/2 complex entries in a; if n/2 is not a power
+        ;; of 4, then do a single radix-2 pass and do the rest of
+        ;; the passes as radix-4 passes
 
-          (if (##fxodd? log_n)
-              (recursive-bit 0 n 0 (##fxarithmetic-shift-right n 2))
-              (let ((n/2 (##fxarithmetic-shift-right n 1))
-                    (n/8 (##fxarithmetic-shift-right n 3)))
-                (radix-2-pass a)
-                (recursive-bit 0 n/2 0 n/8)
-                (recursive-bit n/2 n 1 n/8))))))
+        (if (##fxodd? log_n)
+            (recursive-bit 0 n 0 (##fxarithmetic-shift-right n 2))
+            (let ((n/2 (##fxarithmetic-shift-right n 1))
+                  (n/8 (##fxarithmetic-shift-right n 3)))
+              (radix-2-pass a)
+              (recursive-bit 0 n/2 0 n/8)
+              (recursive-bit n/2 n 1 n/8)))))
 
     ;; The following routine simply reverses the operations of the
     ;; previous routine.
@@ -8451,12 +8451,12 @@ ___RESULT = result;
 
       ;; The table of "twiddle" factors is in bit-reversed order.
 
-      (let ((W (##f64vector (macro-inexact-+0)
-                            (macro-inexact-+0)
-                            (macro-inexact-+0)
-                            (macro-inexact-+0))))
+      (define (main-loop M N K SizeOfGroup)
+        (let ((W (##f64vector (macro-inexact-+0)
+                              (macro-inexact-+0)
+                              (macro-inexact-+0)
+                              (macro-inexact-+0))))
 
-        (define (main-loop M N K SizeOfGroup)
           (##declare (not interrupts-enabled))
           (let inner-loop ((K K)
                            (JFirst M))
@@ -8506,13 +8506,13 @@ ___RESULT = result;
                                       (a_J4 (##fl+ a_J4 a_J6))
                                       (a_J5 (##fl+ a_J5 a_J7))
                                       (a_J2 (##fl+ (##fl* W_00 Temp_0)
-                                                        (##fl* W_01 Temp_1)))
+                                                   (##fl* W_01 Temp_1)))
                                       (a_J3 (##fl- (##fl* W_00 Temp_1)
-                                                        (##fl* W_01 Temp_0)))
+                                                   (##fl* W_01 Temp_0)))
                                       (a_J6 (##fl+ (##fl* W_02 Temp_2)
-                                                        (##fl* W_03 Temp_3)))
+                                                   (##fl* W_03 Temp_3)))
                                       (a_J7 (##fl- (##fl* W_02 Temp_3)
-                                                        (##fl* W_03 Temp_2))))
+                                                   (##fl* W_03 Temp_2))))
                                   (let ((Temp_0 (##fl- a_J0 a_J4))
                                         (Temp_1 (##fl- a_J1 a_J5))
                                         (Temp_2 (##fl- a_J2 a_J6))
@@ -8522,13 +8522,13 @@ ___RESULT = result;
                                           (a_J2 (##fl+ a_J2 a_J6))
                                           (a_J3 (##fl+ a_J3 a_J7))
                                           (a_J4 (##fl+ (##fl* W_0 Temp_0)
-                                                            (##fl* W_1 Temp_1)))
+                                                       (##fl* W_1 Temp_1)))
                                           (a_J5 (##fl- (##fl* W_0 Temp_1)
-                                                            (##fl* W_1 Temp_0)))
+                                                       (##fl* W_1 Temp_0)))
                                           (a_J6 (##fl+ (##fl* W_0 Temp_2)
-                                                            (##fl* W_1 Temp_3)))
+                                                       (##fl* W_1 Temp_3)))
                                           (a_J7 (##fl- (##fl* W_0 Temp_3)
-                                                            (##fl* W_1 Temp_2))))
+                                                       (##fl* W_1 Temp_2))))
                                       (##f64vector-set! a J0 a_J0)
                                       (##f64vector-set! a J1 a_J1)
                                       (##f64vector-set! a J2 a_J2)
@@ -8539,68 +8539,68 @@ ___RESULT = result;
                                       (##f64vector-set! a J7 a_J7)
                                       (J-loop (##fx+ J0 2)))))))))
                         (inner-loop (##fx+ K 1)
-                                    (##fx+ JFirst (##fx* SizeOfGroup 4)))))))))
+                                    (##fx+ JFirst (##fx* SizeOfGroup 4))))))))))
 
-        (define (recursive-bit M N K SizeOfGroup)
-          (if (##fx<= 2 SizeOfGroup)
-              (begin
-                (if (##fx< 2048 (##fx- N M))
-                    (let ((new-size (##fxarithmetic-shift-right (##fx- N M) 2)))
-                      (recursive-bit M
-                                     (##fx+ M new-size)
-                                     (##fx* K 4)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2))
-                      (recursive-bit (##fx+ M new-size)
-                                     (##fx+ M (##fx* new-size 2))
-                                     (##fx+ (##fx* K 4) 1)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2))
-                      (recursive-bit (##fx+ M (##fx* new-size 2))
-                                     (##fx+ M (##fx* new-size 3))
-                                     (##fx+ (##fx* K 4) 2)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2))
-                      (recursive-bit (##fx+ M (##fx* new-size 3))
-                                     N
-                                     (##fx+ (##fx* K 4) 3)
-                                     (##fxarithmetic-shift-right SizeOfGroup 2)))
+      (define (recursive-bit M N K SizeOfGroup)
+        (if (##fx<= 2 SizeOfGroup)
+            (begin
+              (if (##fx< 2048 (##fx- N M))
+                  (let ((new-size (##fxarithmetic-shift-right (##fx- N M) 2)))
                     (recursive-bit M
-                                   N
+                                   (##fx+ M new-size)
                                    (##fx* K 4)
+                                   (##fxarithmetic-shift-right SizeOfGroup 2))
+                    (recursive-bit (##fx+ M new-size)
+                                   (##fx+ M (##fx* new-size 2))
+                                   (##fx+ (##fx* K 4) 1)
+                                   (##fxarithmetic-shift-right SizeOfGroup 2))
+                    (recursive-bit (##fx+ M (##fx* new-size 2))
+                                   (##fx+ M (##fx* new-size 3))
+                                   (##fx+ (##fx* K 4) 2)
+                                   (##fxarithmetic-shift-right SizeOfGroup 2))
+                    (recursive-bit (##fx+ M (##fx* new-size 3))
+                                   N
+                                   (##fx+ (##fx* K 4) 3)
                                    (##fxarithmetic-shift-right SizeOfGroup 2)))
-                (main-loop M N K SizeOfGroup))))
+                  (recursive-bit M
+                                 N
+                                 (##fx* K 4)
+                                 (##fxarithmetic-shift-right SizeOfGroup 2)))
+              (main-loop M N K SizeOfGroup))))
 
-        (define (radix-2-pass a)
-          (declare (not interrupts-enabled))
-          (let ((SizeOfGroup
-                 (##fxarithmetic-shift-right (##f64vector-length a) 1)))
-            (let loop ((J0 0))
-              (if (##fx< J0 SizeOfGroup)
-                  (let ((J0 J0)
-                        (J2 (##fx+ J0 SizeOfGroup)))
-                    (let ((J1 (##fx+ J0 1))
-                          (J3 (##fx+ J2 1)))
-                      (let ((a_J0 (##f64vector-ref a J0))
-                            (a_J1 (##f64vector-ref a J1))
-                            (a_J2 (##f64vector-ref a J2))
-                            (a_J3 (##f64vector-ref a J3)))
-                        (let ((a_J0 (##fl+ a_J0 a_J2))
-                              (a_J1 (##fl+ a_J1 a_J3))
-                              (a_J2 (##fl- a_J0 a_J2))
-                              (a_J3 (##fl- a_J1 a_J3)))
-                          (##f64vector-set! a J0 a_J0)
-                          (##f64vector-set! a J1 a_J1)
-                          (##f64vector-set! a J2 a_J2)
-                          (##f64vector-set! a J3 a_J3)
-                          (loop (##fx+ J0 2))))))))))
+      (define (radix-2-pass a)
+        (declare (not interrupts-enabled))
+        (let ((SizeOfGroup
+               (##fxarithmetic-shift-right (##f64vector-length a) 1)))
+          (let loop ((J0 0))
+            (if (##fx< J0 SizeOfGroup)
+                (let ((J0 J0)
+                      (J2 (##fx+ J0 SizeOfGroup)))
+                  (let ((J1 (##fx+ J0 1))
+                        (J3 (##fx+ J2 1)))
+                    (let ((a_J0 (##f64vector-ref a J0))
+                          (a_J1 (##f64vector-ref a J1))
+                          (a_J2 (##f64vector-ref a J2))
+                          (a_J3 (##f64vector-ref a J3)))
+                      (let ((a_J0 (##fl+ a_J0 a_J2))
+                            (a_J1 (##fl+ a_J1 a_J3))
+                            (a_J2 (##fl- a_J0 a_J2))
+                            (a_J3 (##fl- a_J1 a_J3)))
+                        (##f64vector-set! a J0 a_J0)
+                        (##f64vector-set! a J1 a_J1)
+                        (##f64vector-set! a J2 a_J2)
+                        (##f64vector-set! a J3 a_J3)
+                        (loop (##fx+ J0 2))))))))))
 
-        (let* ((n (##f64vector-length a))
-               (log_n (two^p>=m n)))
-          (if (##fxodd? log_n)
-              (recursive-bit 0 n 0 (##fxarithmetic-shift-right n 2))
-              (let ((n/2 (##fxarithmetic-shift-right n 1))
-                    (n/8 (##fxarithmetic-shift-right n 3)))
-                (recursive-bit 0 n/2 0 n/8)
-                (recursive-bit n/2 n 1 n/8)
-                (radix-2-pass a))))))
+      (let* ((n (##f64vector-length a))
+             (log_n (two^p>=m n)))
+        (if (##fxodd? log_n)
+            (recursive-bit 0 n 0 (##fxarithmetic-shift-right n 2))
+            (let ((n/2 (##fxarithmetic-shift-right n 1))
+                  (n/8 (##fxarithmetic-shift-right n 3)))
+              (recursive-bit 0 n/2 0 n/8)
+              (recursive-bit n/2 n 1 n/8)
+              (radix-2-pass a)))))
 
     #|
 
