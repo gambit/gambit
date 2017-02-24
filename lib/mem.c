@@ -48,7 +48,6 @@
 #define ENABLE_GC_TRACE_PHASES
 #define ENABLE_GC_ACTLOG_PHASES
 #define ENABLE_GC_ACTLOG_SCAN_COMPLETE_HEAP_CHUNK
-#define ENABLE_GC_ACTLOG_NEXT_MSECTION
 
 #endif
 
@@ -360,6 +359,27 @@
 (___CAST(___F64,ps->mem.words_still_objs_ \
                 + ps->mem.words_still_objs_deferred_ \
                 + words_movable_objs(___ps)) * ___WS)
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef ___SINGLE_THREADED_VMS
+
+#define BARRIER()
+#define ALLOC_MEM_LOCK()
+#define ALLOC_MEM_UNLOCK()
+#define MISC_MEM_LOCK()
+#define MISC_MEM_UNLOCK()
+
+#else
+
+#define BARRIER() barrier_sync_noop (___PSPNC)
+#define ALLOC_MEM_LOCK() ___SPINLOCK_LOCK(alloc_mem_lock)
+#define ALLOC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(alloc_mem_lock)
+#define MISC_MEM_LOCK() ___SPINLOCK_LOCK(misc_mem_lock)
+#define MISC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(misc_mem_lock)
+
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -1440,9 +1460,7 @@ ___SIZE_TS bytes;)
        * must be acquired to ensure correct bookkeeping.
        */
 
-#ifndef ___SINGLE_THREADED_VMS
-      ___SPINLOCK_LOCK(alloc_mem_lock);
-#endif
+      ALLOC_MEM_LOCK();
 
       if (words_including_deferred <= compute_free_heap_space())
         {
@@ -1452,9 +1470,7 @@ ___SIZE_TS bytes;)
 
           occupied_words_still += words_including_deferred;
 
-#ifndef ___SINGLE_THREADED_VMS
-          ___SPINLOCK_UNLOCK(alloc_mem_lock);
-#endif
+          ALLOC_MEM_UNLOCK();
 
           /*
            * Space accounting for previous still objects is now accounted
@@ -1469,9 +1485,7 @@ ___SIZE_TS bytes;)
            * There is insufficient free heap space, so call GC.
            */
 
-#ifndef ___SINGLE_THREADED_VMS
-          ___SPINLOCK_UNLOCK(alloc_mem_lock);
-#endif
+          ALLOC_MEM_UNLOCK();
 
 #ifdef CALL_GC_FREQUENTLY
         invoke_gc:
@@ -1496,15 +1510,11 @@ ___SIZE_TS bytes;)
            * So undo its accounting at the VM level.
            */
 
-#ifndef ___SINGLE_THREADED_VMS
-          ___SPINLOCK_LOCK(alloc_mem_lock);
-#endif
+          ALLOC_MEM_LOCK();
 
           occupied_words_still -= words;
 
-#ifndef ___SINGLE_THREADED_VMS
-          ___SPINLOCK_UNLOCK(alloc_mem_lock);
-#endif
+          ALLOC_MEM_UNLOCK();
 
           return ___FIX(___HEAP_OVERFLOW_ERR);
         }
@@ -2771,7 +2781,7 @@ ___HIDDEN void fatal_heap_overflow ___PVOID
 }
 
 
-___HIDDEN ___msection *next_msection
+___HIDDEN ___msection *next_msection_without_locking
    ___P((___processor_state ___ps,
          ___msection *ms),
         (___ps,
@@ -2782,29 +2792,24 @@ ___msection *ms;)
   ___msection *result;
 
   /*
-   * This function gets the next msection out of the list of free
-   * msections.  It is called when a processor has used up all of the
+   * This function allocates an msection from the list of free
+   * msections.  This is done when a processor has used up all of the
    * space in its current reserved msection (either heap_msection for
    * a heap allocation or stack_msection for a stack allocation).
    * This operation must be done in a critical section because
-   * multiple processors may exhaust their space concurrently.
+   * multiple processors may exhaust their space concurrently, either
+   * when doing a GC or when ___stack_limit or ___heap_limit are
+   * called.  However, this mutual exclusion is the responsibility of
+   * the caller of next_msection_without_locking.
    *
    * A spinlock is appropriate for this critical section because the
    * critical section takes very little time and the requests for new
    * msections happen relatively much less frequently.  An experiment
    * on a 2.6 GHz Intel Core i7 using a tight allocation loop of pairs
    * and ___MSECTION_SIZE=131072, indicates that the critical section
-   * lasts 0.2 microseconds and the function next_msection is called
-   * every 300 microseconds.
+   * lasts 0.2 microseconds and next_msection_without_locking
+   * is called every 300 microseconds.
    */
-
-#ifdef ENABLE_GC_ACTLOG_NEXT_MSECTION
-  ___ACTLOG_BEGIN_PS(next_msection,_);
-#endif
-
-#ifndef ___SINGLE_THREADED_VMS
-  ___SPINLOCK_LOCK(alloc_mem_lock);
-#endif
 
   if (nb_msections_assigned == 0)
     result = the_msections->head; /* start at head of free msections */
@@ -2832,14 +2837,6 @@ ___msection *ms;)
       alloc_msection = result;
       nb_msections_assigned++;
     }
-
-#ifndef ___SINGLE_THREADED_VMS
-  ___SPINLOCK_UNLOCK(alloc_mem_lock);
-#endif
-
-#ifdef ENABLE_GC_ACTLOG_NEXT_MSECTION
-  ___ACTLOG_END_PS();
-#endif
 
   return result;
 }
@@ -2885,13 +2882,29 @@ ___msection *ms;)
 }
 
 
+___HIDDEN void next_stack_msection_without_locking
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___msection *ms;
+  words_prev_msections += alloc_stack_start - alloc_stack_ptr;
+  ms = next_msection_without_locking (___ps, heap_msection);
+  set_stack_msection (___ps, ms);
+}
+
+
 ___HIDDEN void next_stack_msection
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
+  ___msection *ms;
   words_prev_msections += alloc_stack_start - alloc_stack_ptr;
-  set_stack_msection (___ps, next_msection (___ps, heap_msection));
+  ALLOC_MEM_LOCK();
+  ms = next_msection_without_locking (___ps, heap_msection);
+  ALLOC_MEM_UNLOCK();
+  set_stack_msection (___ps, ms);
 }
 
 
@@ -3008,13 +3021,29 @@ ___msection *ms;)
 }
 
 
+___HIDDEN void next_heap_msection_without_locking
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___msection *ms;
+  words_prev_msections += alloc_heap_ptr - alloc_heap_start;
+  ms = next_msection_without_locking (___ps, stack_msection);
+  set_heap_msection (___ps, ms);
+}
+
+
 ___HIDDEN void next_heap_msection
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
+  ___msection *ms;
   words_prev_msections += alloc_heap_ptr - alloc_heap_start;
-  set_heap_msection (___ps, next_msection (___ps, stack_msection));
+  ALLOC_MEM_LOCK();
+  ms = next_msection_without_locking (___ps, stack_msection);
+  ALLOC_MEM_UNLOCK();
+  set_heap_msection (___ps, ms);
 }
 
 
@@ -3321,9 +3350,7 @@ ___WORD *orig_ptr;)
       ___WORD *alloc = alloc_heap_ptr;
       ___WORD *limit = alloc_heap_limit;
 
-#ifndef ___SINGLE_THREADED_VMS
-      ___SPINLOCK_LOCK(misc_mem_lock);
-#endif
+      MISC_MEM_LOCK();
 
       next_frame:
 
@@ -3430,9 +3457,7 @@ ___WORD *orig_ptr;)
 
       alloc_heap_ptr = alloc;
 
-#ifndef ___SINGLE_THREADED_VMS
-      ___SPINLOCK_UNLOCK(misc_mem_lock);
-#endif
+      MISC_MEM_UNLOCK();
     }
   else
     mark_array (___PSP orig_ptr, 1);
@@ -5749,13 +5774,6 @@ ___PSDKR)
 }
 
 
-#ifdef ___SINGLE_THREADED_VMS
-#define BARRIER()
-#else
-#define BARRIER() barrier_sync_noop (___PSPNC)
-#endif
-
-
 ___HIDDEN void garbage_collect_setup_phase
    ___P((___PSDNC),
         (___PSVNC)
@@ -6090,6 +6108,12 @@ ___PSDKR)
 {
   ___PSGET
 
+  /*
+   * In a multithreaded VM, the function ___stack_limit can be called
+   * concurrently by multiple processors. The VM level memory allocation
+   * lock is used to implement a critical section.
+   */
+
   /* Recover processor's stack and heap pointers */
 
   alloc_stack_ptr = ___ps->fp;
@@ -6108,6 +6132,8 @@ ___PSDKR)
     check_fudge_used (___PSPNC);
 #endif
 
+  ALLOC_MEM_LOCK();
+
   if (
 #ifdef CALL_GC_FREQUENTLY
       --___gc_calls_to_punt >= 0 &&
@@ -6123,7 +6149,9 @@ ___PSDKR)
           else
             frame = ___FP_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT);
 
-          next_stack_msection (___ps);
+          next_stack_msection_without_locking (___ps);
+
+          ALLOC_MEM_UNLOCK();
 
           /*
            * Create a "break frame" in the new stack msection.
@@ -6137,10 +6165,18 @@ ___PSDKR)
 
           ___ps->stack_break = alloc_stack_ptr;
         }
+      else
+        {
+          ALLOC_MEM_UNLOCK();
+        }
 
       prepare_mem_pstate (___ps);
 
       return 0;
+    }
+  else
+    {
+      ALLOC_MEM_UNLOCK();
     }
 
   return 1;
@@ -6171,6 +6207,12 @@ ___PSDKR)
 {
   ___PSGET
 
+  /*
+   * In a multithreaded VM, the function ___heap_limit can be called
+   * concurrently by multiple processors. The VM level memory allocation
+   * lock is used to implement a critical section.
+   */
+
   /* Recover processor's stack and heap pointers */
 
   alloc_stack_ptr = ___ps->fp;
@@ -6186,6 +6228,8 @@ ___PSDKR)
     check_fudge_used (___PSPNC);
 #endif
 
+  ALLOC_MEM_LOCK();
+
   if (
 #ifdef CALL_GC_FREQUENTLY
       --___gc_calls_to_punt >= 0 &&
@@ -6193,11 +6237,18 @@ ___PSDKR)
       compute_free_heap_space() >= ___MSECTION_SIZE)
     {
       if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-        next_heap_msection (___ps);
+        next_heap_msection_without_locking (___ps);
+
+      ALLOC_MEM_UNLOCK();
 
       prepare_mem_pstate (___ps);
 
       return 0;
+    }
+  else
+    {
+
+      ALLOC_MEM_UNLOCK();
     }
 
   return 1;
