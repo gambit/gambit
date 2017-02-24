@@ -3059,6 +3059,9 @@ ___virtual_machine_state ___vms;)
 
       words_prev_msections = 0;
 
+      stack_msection = 0;
+      heap_msection = 0;
+
       set_stack_msection (___ps, alloc);
       alloc = alloc->next;
 
