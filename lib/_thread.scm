@@ -744,6 +744,42 @@
  macro-thread-toq-container-set!
 )
 
+(##define-macro (macro-add-thread-to-run-queue-of-current-processor-without-locking! thread)
+  `(##btq-insert! (macro-current-processor) ,thread))
+
+(##define-macro (macro-add-thread-to-run-queue-of-current-processor! thread)
+  `(let ((thread ,thread))
+     (macro-lock-current-processor!)
+     (macro-add-thread-to-run-queue-of-current-processor-without-locking! thread)
+     (macro-unlock-current-processor!)))
+
+(define-prim (##add-thread-to-run-queue-of-some-processor-out-of-line! thread)
+
+  (##declare (not interrupts-enabled))
+
+  (define (add-to-current-processor!)
+    (macro-add-thread-to-run-queue-of-current-processor! thread))
+
+  (if (##not (macro-trylock-current-vm!))
+      (add-to-current-processor!)
+      (let ((processor (macro-processor-deq-head (macro-current-vm))))
+        (if (##eq? processor (macro-current-vm))
+            (begin
+              ;; no processor is currently idle
+              (macro-unlock-current-vm!)
+              (add-to-current-processor!))
+            (begin
+              ;; a processor that is currently idle was found
+              (macro-processor-deq-remove! processor)
+              (macro-unlock-current-vm!)
+              (macro-lock-processor! processor)
+              (##btq-insert! processor thread)
+              (macro-unlock-processor! processor)
+              (##wait-abort-no-remove! processor))))))
+
+(##define-macro (macro-add-thread-to-run-queue-of-some-processor! thread)
+  `(##add-thread-to-run-queue-of-some-processor-out-of-line! ,thread))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Implementation of threads.
@@ -771,10 +807,8 @@
   ;;TODO: race possible with other processor starting this thread
   (macro-thread-exception?-set! thread #f)
 
-  ;; add the thread to the current processor's run queue
-  (macro-lock-current-processor!)
-  (##btq-insert! (macro-current-processor) thread)
-  (macro-unlock-current-processor!)
+  (macro-add-thread-to-run-queue-of-some-processor! thread)
+  #;(macro-add-thread-to-run-queue-of-current-processor! thread)
 
   ;;TODO: rethink use of reschedule-if-needed!
   ;;(macro-thread-reschedule-if-needed!)
@@ -1009,8 +1043,7 @@
                  next-thread
                  ##thread-timeout-action!)
 
-                ;; add the thread to the current processor's run queue
-                (##btq-insert! (macro-current-processor) next-thread)
+                (macro-add-thread-to-run-queue-of-current-processor-without-locking! next-thread)
 
                 (macro-unlock-thread! next-thread)
 
@@ -1233,8 +1266,7 @@
          current-thread
          ##thread-void-action!)
 
-        ;; add the thread to the current processor's run queue
-        (##btq-insert! (macro-current-processor) current-thread)
+        (macro-add-thread-to-run-queue-of-current-processor-without-locking! current-thread)
 
         ;; release low-level lock of processor
         (macro-unlock-current-processor!)
@@ -1683,7 +1715,7 @@
    (##cons thunk-returning-void
            (macro-thread-interrupts thread)))
 
-  (##btq-insert! (macro-current-processor) thread))
+  (macro-add-thread-to-run-queue-of-current-processor-without-locking! thread))
 
 (define-prim (##thread-continuation-capture thread)
   (##thread-call
@@ -2731,10 +2763,10 @@
            first-thread
            ##thread-locked-mutex-action!)))
 
-    ;; add the thread to the current processor's run queue
-    (macro-lock-current-processor!)
-    (##btq-insert! (macro-current-processor) first-thread)
-    (macro-unlock-current-processor!)
+    (macro-add-thread-to-run-queue-of-current-processor! first-thread)
+
+    ;;TODO: this seems slower
+    #;(macro-add-thread-to-run-queue-of-some-processor! first-thread)
 
     ;; release low-level locks of first-thread, new-owner and current-owner
     (##unlock-3-threads! first-thread new-owner current-owner)
@@ -2836,10 +2868,7 @@
   ;; remove it from the timeout queue
   (macro-thread-toq-remove-if-in-toq! thread)
 
-  ;; add the thread to the current processor's run queue
-  (macro-lock-current-processor!)
-  (##btq-insert! (macro-current-processor) thread)
-  (macro-unlock-current-processor!)
+  (macro-add-thread-to-run-queue-of-current-processor! thread)
 
   ;; release low-level lock of thread
   (macro-unlock-thread! thread))
@@ -3026,10 +3055,7 @@
        (thread-trace 9 (##thread-btq-remove! next-thread))
        (macro-thread-toq-remove-if-in-toq! next-thread)
 
-       ;; add the thread to the current processor's run queue
-       (macro-lock-current-processor!)
-       (##btq-insert! (macro-current-processor) next-thread)
-       (macro-unlock-current-processor!)
+       (macro-add-thread-to-run-queue-of-current-processor! next-thread)
 
        ;; release low-level lock of thread
        (macro-unlock-thread! next-thread)

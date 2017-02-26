@@ -1388,6 +1388,9 @@
 (##define-macro (macro-lock-current-vm!)
   `(macro-lock-vm! (macro-current-vm)))
 
+(##define-macro (macro-trylock-current-vm!)
+  `(macro-trylock-vm! (macro-current-vm)))
+
 (##define-macro (macro-unlock-current-vm!)
   `(macro-unlock-vm! (macro-current-vm)))
 
