@@ -244,6 +244,7 @@ AC_ARG_ENABLE(c-opt,
               ENABLE_C_OPT=$enableval,
               ENABLE_C_OPT=no)
 
+
 ###############################################################################
 #
 # Check if the system is to be debugged.
@@ -548,7 +549,7 @@ AC_SUBST(CONF_VOIDSTAR_WIDTH)
 # support it, the ___BOOL type will be mapped to "int".
 
 AC_CHECK_TYPE([bool])
-  
+
 if test "$ac_cv_type_bool" = yes; then
   CONF_BOOL="bool"
 else
@@ -1089,7 +1090,7 @@ AC_DEFUN([AC_CHECK_MKDIR],
   AC_CHECK_HEADERS(sys/stat.h)
   AC_CHECK_FUNCS(mkdir)
 ])
-  
+
 AC_DEFUN([AC_CHECK_OPENDIR],
 [
   AC_CHECK_HEADERS(dirent.h)
@@ -1262,12 +1263,10 @@ else
       LIBS="$LIBS WinMM.Lib"
     fi
 
-    CFLAGS="$CFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
-    CXXFLAGS="$CXXFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
+    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
 
     # For compatibility with Windows XP
-    CFLAGS="$CFLAGS -D_ATL_XP_TARGETING"
-    CXXFLAGS="$CXXFLAGS -D_ATL_XP_TARGETING"
+    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_ATL_XP_TARGETING"
 
   else
 
@@ -1283,8 +1282,7 @@ else
                  LIBS="$LIBS -lwinmm"
                fi
 
-               CFLAGS="$CFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
-               CXXFLAGS="$CXXFLAGS -D_WINDOWS -D_WIN32_WINNT=0x0600"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
                ;;
 
             *) # check libraries for other systems
@@ -1672,21 +1670,6 @@ fi
 AC_SUBST(CONF_THREAD_SYSTEM)
 AC_SUBST(CONF_THREAD_LOCAL_STORAGE_CLASS)
 
-# Check availability of WIN32 CONDITION_VARIABLE type.
-
-CONF_HAVE_CONDITION_VARIABLE="___DONT_HAVE_CONDITION_VARIABLE"
-
-if test "$OS_WIN32" = yes; then
-
-  AC_CHECK_TYPE([CONDITION_VARIABLE],
-                [CONF_HAVE_CONDITION_VARIABLE="___HAVE_CONDITION_VARIABLE"],
-                [],
-                [#include <windows.h>])
-
-fi
-
-AC_SUBST(CONF_HAVE_CONDITION_VARIABLE)
-
 ###############################################################################
 #
 # Check for pthread_setaffinity_np if using posix threads.
@@ -1714,16 +1697,15 @@ if test "$ENABLE_OPENSSL" = yes; then
   case "$target_os" in
     darwin*) # OS X ships a very old version and considers OpenSSL deprecated
              CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
-	     LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+             LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
              ;;
     mingw*) # Search in typical locations
              CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
              LIBS="$LIBS -L\"/C/OpenSSL-x64/lib\" -L\"/c/OpenSSL/lib\" -L\"/usr/local/lib/\" -lssl -lcrypto -lws2_32 -lgdi32 -lcrypt32 -mconsole"
-	     
              ;;
          *)
              LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
-	     ;;
+             ;;
   esac
 
 fi
@@ -1741,6 +1723,7 @@ if test "$C_COMP_GNUC" = yes; then
 
   AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003,GCC_42_OR_43)
   AC_CHECK_C_COMPILER_CPP_EXPR(__llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005,POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG)
+  AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=6000,GCC_60_OR_MORE)
 
   if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
@@ -1755,6 +1738,7 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_mieee_with_inexact=""
     DASH_mieee_fp=""
     DASH_mpc64=""
+    DASH_fno_ipa_ra=""
 
   else
 
@@ -1792,11 +1776,14 @@ if test "$C_COMP_GNUC" = yes; then
   # optimization options:
   AC_CHECK_C_COMPILER_OPT(-O1,DASH_O1)
   AC_CHECK_C_COMPILER_OPT(-O2,DASH_O2)
+  AC_CHECK_C_COMPILER_OPT(-O3,DASH_O3)
+  AC_CHECK_C_COMPILER_OPT(-Ofast,DASH_Ofast)
   AC_CHECK_C_COMPILER_OPT(-fno-math-errno,DASH_fno_math_errno)
   AC_CHECK_C_COMPILER_OPT(-fno-strict-aliasing,DASH_fno_strict_aliasing)
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-ftrapv,DASH_ftrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
+  AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
 
   OPT_LEVEL_FLAG="$DASH_O1"
 
@@ -1889,11 +1876,27 @@ if test "$C_COMP_GNUC" = yes; then
   esac
 
   # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
-
   case "$target_os" in
     darwin*) # avoid the default C preprocessor which is setup for Objective-C
              FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_no_cpp_precomp"
-             ;;
+
+             # avoid -fipa-ra with OSX GCC6 and -O2 or more. See warning for details.
+             ENABLE_GCC6_OSX_IPA_WORKAROUND=no
+             if test "$GCC_60_OR_MORE" = yes; then
+               if test "$DASH_fno_ipa_ra" != ""; then
+                 if test "$ENABLE_SHARED" == yes; then
+                   if test "$ENABLE_C_OPT" != ""; then
+                     if test "$ENABLE_C_OPT" = yes -o " $ENABLE_C_OPT" = "$DASH_O2" -o " $ENABLE_C_OPT" = "$DASH_O3" -o " $ENABLE_C_OPT" = "$DASH_Ofast"; then
+                       FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
+                       ENABLE_GCC6_OSX_IPA_WORKAROUND=yes
+                     fi
+                   fi
+                 fi
+               fi
+             fi
+       ;;
+    *)
+       ;;
   esac
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_unused"
@@ -2978,6 +2981,22 @@ if test "$C_COMP_GNUC" = yes; then
 **************************************************************************
 ])
   fi
+
+
+  if test "$ENABLE_GCC6_OSX_IPA_WORKAROUND" = yes ; then
+
+    AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The GNU GCC compiler that is being used may show a bug while       ***
+*** compiling Gambit with --enable-shared and --enable-c-opt >= -O2.   ***
+*** For this reason, the optimization -fipa-ra has been disabled.      ***
+***                                                                    ***
+**************************************************************************
+])
+  fi
+
+
 
 #  if test "$ENABLE_GCC_OPTS" != yes; then
 #    AC_MSG_NOTICE([
