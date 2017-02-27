@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -814,7 +814,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define (targ-link-info file)
-  (let ((in (open-input-file* file)))
+  (let ((in (open-input-file*-preserving-case file)))
     (and in
          (let* ((first-line
                  (read-line* in))
@@ -1114,7 +1114,7 @@
          glo-rsrc
          module-meta-info)
 
-  (set! targ-port (open-output-file filename))
+  (set! targ-port (open-output-file-preserving-case filename))
   (set! targ-line-size 0)
   (set! targ-line-number 1)
   (set! targ-filename filename)

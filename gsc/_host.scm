@@ -2,7 +2,7 @@
 
 ;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -165,6 +165,12 @@
 
 (define (open-input-file* path)
   (open-input-file path))
+
+(define (open-input-file*-preserving-case path)
+  (open-input-file* path))
+
+(define (open-output-file-preserving-case path)
+  (open-output-file path))
 
 ;; 'pp-expression' is used to pretty print an expression on a given
 ;; port.
@@ -719,7 +725,25 @@
    open-input-file
    path))
 
+(define (open-input-file*-preserving-case path)
+  (parameterize ((current-readtable
+                  (readtable-keywords-allowed?-set
+                   (readtable-case-conversion?-set
+                    (##make-standard-readtable)
+                    #f)
+                   #t)))
+    (open-input-file* path)))
+
 (define open-output-file ##open-output-file)
+
+(define (open-output-file-preserving-case path)
+  (parameterize ((current-readtable
+                  (readtable-keywords-allowed?-set
+                   (readtable-case-conversion?-set
+                    (##make-standard-readtable)
+                    #f)
+                   #t)))
+    (open-output-file path)))
 
 (define (pp-expression expr port)
   (pp expr port))
