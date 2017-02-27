@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -464,6 +464,11 @@
            (display x port))))
 
    (disp x))
+
+(define (univ-display-to-file x path)
+  (let ((port (open-output-file-preserving-case path)))
+    (univ-display x port)
+    (close-output-port port)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1653,10 +1658,7 @@
 (define (univ-dump targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
   (let ((code
          (univ-dump-code targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)))
-    (call-with-output-file
-        output
-      (lambda (port)
-        (univ-display code port)))
+    (univ-display-to-file code output)
     #f))
 
 (define (univ-dump-code targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
@@ -1777,7 +1779,7 @@
   (univ-source-file-footer (target-name (ctx-target ctx))))
 
 (define (univ-link-info targ file)
-  (let ((in (open-input-file* file)))
+  (let ((in (open-input-file*-preserving-case file)))
     (and in
          (let* ((pref
                  (univ-link-info-prefix (target-name targ)))
@@ -1977,10 +1979,7 @@
              code-decls
              (univ-link-info-footer ctx))))
 
-      (call-with-output-file
-          output
-        (lambda (port)
-          (univ-display code port)))))
+    (univ-display-to-file code output)))
 
 ;;TODO: add constants
 #;
