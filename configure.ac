@@ -549,7 +549,7 @@ AC_SUBST(CONF_VOIDSTAR_WIDTH)
 # support it, the ___BOOL type will be mapped to "int".
 
 AC_CHECK_TYPE([bool])
-  
+
 if test "$ac_cv_type_bool" = yes; then
   CONF_BOOL="bool"
 else
@@ -1090,7 +1090,7 @@ AC_DEFUN([AC_CHECK_MKDIR],
   AC_CHECK_HEADERS(sys/stat.h)
   AC_CHECK_FUNCS(mkdir)
 ])
-  
+
 AC_DEFUN([AC_CHECK_OPENDIR],
 [
   AC_CHECK_HEADERS(dirent.h)
@@ -1697,16 +1697,15 @@ if test "$ENABLE_OPENSSL" = yes; then
   case "$target_os" in
     darwin*) # OS X ships a very old version and considers OpenSSL deprecated
              CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
-	     LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+             LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
              ;;
     mingw*) # Search in typical locations
              CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
              LIBS="$LIBS -L\"/C/OpenSSL-x64/lib\" -L\"/c/OpenSSL/lib\" -L\"/usr/local/lib/\" -lssl -lcrypto -lws2_32 -lgdi32 -lcrypt32 -mconsole"
-	     
              ;;
          *)
              LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
-	     ;;
+             ;;
   esac
 
 fi
@@ -1778,7 +1777,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-O1,DASH_O1)
   AC_CHECK_C_COMPILER_OPT(-O2,DASH_O2)
   AC_CHECK_C_COMPILER_OPT(-O3,DASH_O3)
-  AC_CHECK_C_COMPILER_OPT(-Ofast,DASH_Ofast)  
+  AC_CHECK_C_COMPILER_OPT(-Ofast,DASH_Ofast)
   AC_CHECK_C_COMPILER_OPT(-fno-math-errno,DASH_fno_math_errno)
   AC_CHECK_C_COMPILER_OPT(-fno-strict-aliasing,DASH_fno_strict_aliasing)
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
@@ -1881,20 +1880,20 @@ if test "$C_COMP_GNUC" = yes; then
     darwin*) # avoid the default C preprocessor which is setup for Objective-C
              FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_no_cpp_precomp"
 
-	     # avoid -fipa-ra with OSX GCC6 and -O2 or more. See warning for details.
-	     ENABLE_GCC6_OSX_IPA_WORKAROUND=no
-	     if test "$GCC_60_OR_MORE" = yes; then
-	       if test "$DASH_fno_ipa_ra" != ""; then
-	         if test "$ENABLE_SHARED" == yes; then
-	           if test "$ENABLE_C_OPT" != ""; then
-	             if test "$ENABLE_C_OPT" = yes -o " $ENABLE_C_OPT" = "$DASH_O2" -o " $ENABLE_C_OPT" = "$DASH_O3" -o " $ENABLE_C_OPT" = "$DASH_Ofast"; then
-		       FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
-		       ENABLE_GCC6_OSX_IPA_WORKAROUND=yes
-		     fi
-		   fi
+             # avoid -fipa-ra with OSX GCC6 and -O2 or more. See warning for details.
+             ENABLE_GCC6_OSX_IPA_WORKAROUND=no
+             if test "$GCC_60_OR_MORE" = yes; then
+               if test "$DASH_fno_ipa_ra" != ""; then
+                 if test "$ENABLE_SHARED" == yes; then
+                   if test "$ENABLE_C_OPT" != ""; then
+                     if test "$ENABLE_C_OPT" = yes -o " $ENABLE_C_OPT" = "$DASH_O2" -o " $ENABLE_C_OPT" = "$DASH_O3" -o " $ENABLE_C_OPT" = "$DASH_Ofast"; then
+                       FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
+                       ENABLE_GCC6_OSX_IPA_WORKAROUND=yes
+                     fi
+                   fi
                  fi
-	       fi
-	     fi
+               fi
+             fi
        ;;
     *)
        ;;
