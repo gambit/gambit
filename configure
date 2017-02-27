@@ -797,11 +797,14 @@ DASH_fpic
 DASH_fPIC
 DASH_freschedule_modulo_scheduled_loops
 DASH_fmodulo_sched
+DASH_fno_ipa_ra
 DASH_fomit_frame_pointer
 DASH_ftrapv
 DASH_fwrapv
 DASH_fno_strict_aliasing
 DASH_fno_math_errno
+DASH_Ofast
+DASH_O3
 DASH_O2
 DASH_O1
 DASH_fbranch_probabilities
@@ -823,6 +826,7 @@ DASH_fno_move_loop_invariants
 DASH_fno_trapping_math
 DASH_fschedule_insns2
 DASH_no_cpp_precomp
+GCC_60_OR_MORE
 POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG
 GCC_42_OR_43
 CONF_THREAD_LOCAL_STORAGE_CLASS
@@ -4622,6 +4626,7 @@ if test "${enable_c_opt+set}" = set; then :
 else
   ENABLE_C_OPT=no
 fi
+
 
 
 ###############################################################################
@@ -9172,6 +9177,43 @@ $as_echo "$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" >&6; }
 POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG"
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking how $C_COMPILER's preprocessor evaluates (__GNUC__*1000+__GNUC_MINOR__)>=6000" >&5
+$as_echo_n "checking how $C_COMPILER's preprocessor evaluates (__GNUC__*1000+__GNUC_MINOR__)>=6000... " >&6; }
+if ${ac_cv_GCC_60_OR_MORE+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+#if (__GNUC__*1000+__GNUC_MINOR__)>=6000
+#else
+       choke me
+#endif
+
+  ;
+  return 0;
+}
+_ACEOF
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_GCC_60_OR_MORE="yes"
+else
+  ac_cv_GCC_60_OR_MORE=""
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_GCC_60_OR_MORE" >&5
+$as_echo "$ac_cv_GCC_60_OR_MORE" >&6; }
+GCC_60_OR_MORE="$ac_cv_GCC_60_OR_MORE"
+
+
 
   if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
@@ -9186,6 +9228,7 @@ POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG="$ac_cv_POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG"
     DASH_mieee_with_inexact=""
     DASH_mieee_fp=""
     DASH_mpc64=""
+    DASH_fno_ipa_ra=""
 
   else
 
@@ -10105,6 +10148,92 @@ $as_echo "$ac_cv_DASH_O2" >&6; }
 DASH_O2="$ac_cv_DASH_O2"
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -O3" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -O3... " >&6; }
+if ${ac_cv_DASH_O3+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-O3"
+CXXFLAGS="-O3"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_O3=" -O3"
+else
+  ac_cv_DASH_O3=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_O3" >&5
+$as_echo "$ac_cv_DASH_O3" >&6; }
+DASH_O3="$ac_cv_DASH_O3"
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -Ofast" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -Ofast... " >&6; }
+if ${ac_cv_DASH_Ofast+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-Ofast"
+CXXFLAGS="-Ofast"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_Ofast=" -Ofast"
+else
+  ac_cv_DASH_Ofast=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_Ofast" >&5
+$as_echo "$ac_cv_DASH_Ofast" >&6; }
+DASH_Ofast="$ac_cv_DASH_Ofast"
+
+
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-math-errno" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -fno-math-errno... " >&6; }
 if ${ac_cv_DASH_fno_math_errno+:} false; then :
@@ -10318,6 +10447,49 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fomit_frame_pointer" >&5
 $as_echo "$ac_cv_DASH_fomit_frame_pointer" >&6; }
 DASH_fomit_frame_pointer="$ac_cv_DASH_fomit_frame_pointer"
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-ipa-ra" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fno-ipa-ra... " >&6; }
+if ${ac_cv_DASH_fno_ipa_ra+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fno-ipa-ra"
+CXXFLAGS="-fno-ipa-ra"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fno_ipa_ra=" -fno-ipa-ra"
+else
+  ac_cv_DASH_fno_ipa_ra=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_ipa_ra" >&5
+$as_echo "$ac_cv_DASH_fno_ipa_ra" >&6; }
+DASH_fno_ipa_ra="$ac_cv_DASH_fno_ipa_ra"
 
 
 
@@ -11000,11 +11172,27 @@ DASH_shared="$ac_cv_DASH_shared"
   esac
 
   # determine which flags to add to CFLAGS, CXXFLAGS and LDFLAGS
-
   case "$target_os" in
     darwin*) # avoid the default C preprocessor which is setup for Objective-C
              FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_no_cpp_precomp"
-             ;;
+
+	     # avoid -fipa-ra with OSX GCC6 and -O2 or more. See warning for details.
+	     ENABLE_GCC6_OSX_IPA_WORKAROUND=no
+	     if test "$GCC_60_OR_MORE" = yes; then
+	       if test "$DASH_fno_ipa_ra" != ""; then
+	         if test "$ENABLE_SHARED" == yes; then
+	           if test "$ENABLE_C_OPT" != ""; then
+	             if test "$ENABLE_C_OPT" = yes -o " $ENABLE_C_OPT" = "$DASH_O2" -o " $ENABLE_C_OPT" = "$DASH_O3" -o " $ENABLE_C_OPT" = "$DASH_Ofast"; then
+		       FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
+		       ENABLE_GCC6_OSX_IPA_WORKAROUND=yes
+		     fi
+		   fi
+                 fi
+	       fi
+	     fi
+       ;;
+    *)
+       ;;
   esac
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_unused"
@@ -15771,6 +15959,31 @@ $as_echo "$as_me:
 **************************************************************************
 " >&6;}
   fi
+
+
+  if test "$ENABLE_GCC6_OSX_IPA_WORKAROUND" = yes ; then
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}:
+**************************************************************************
+***                                                                    ***
+*** The GNU GCC compiler that is being used may show a bug while       ***
+*** compiling Gambit with --enable-shared and --enable-c-opt >= -O2.   ***
+*** For this reason, the optimization -fipa-ra has been disabled.      ***
+***                                                                    ***
+**************************************************************************
+" >&5
+$as_echo "$as_me:
+**************************************************************************
+***                                                                    ***
+*** The GNU GCC compiler that is being used may show a bug while       ***
+*** compiling Gambit with --enable-shared and --enable-c-opt >= -O2.   ***
+*** For this reason, the optimization -fipa-ra has been disabled.      ***
+***                                                                    ***
+**************************************************************************
+" >&6;}
+  fi
+
+
 
 #  if test "$ENABLE_GCC_OPTS" != yes; then
 #    AC_MSG_NOTICE([
