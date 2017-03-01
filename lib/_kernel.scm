@@ -1277,8 +1277,27 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code "___EXT(___enable_interrupts_pstate) (___ps); ___RESULT = ___VOID;"))
 
+(define-prim (##sync-op-interrupt!)
+
+  (##declare (not interrupts-enabled))
+
+  (##c-code #<<end-of-code
+
+   ___FRAME_STORE_RA(___R0)
+   ___W_ALL
+
+   service_sync_op (___PSPNC);
+
+   ___R_ALL
+   ___SET_R0(___FRAME_FETCH_RA)
+
+   ___RESULT = ___VOID;
+
+end-of-code
+))
+
 (define ##interrupt-vector
-  (##vector #f #f #f #f #f #f #f #f))
+  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f))
 
 (define-prim (##interrupt-handler)
 

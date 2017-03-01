@@ -54,10 +54,11 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
  * has been received.  Interrupt codes are defined in "gambit.h".
  * Currently, the following codes are defined:
  *
- *   ___INTR_USER        user has interrupted the program (e.g. ctrl-C)
- *   ___INTR_HEARTBEAT   heartbeat time interval has elapsed
- *   ___INTR_GC          a garbage collection has finished
  *   ___INTR_SYNC_OP     a synchronous op. over all processors is requested
+ *   ___INTR_TERMINATE   a termination of the process is requested
+ *   ___INTR_HEARTBEAT   heartbeat time interval has elapsed
+ *   ___INTR_USER        user has interrupted the program (e.g. ctrl-C)
+ *   ___INTR_GC          a garbage collection has finished
  */
 
 ___EXP_FUNC(void,___raise_interrupt_pstate)
@@ -147,9 +148,6 @@ ___processor_state ___ps;)
 }
 
 
-/* TODO: remove this when ___INTR_SYNC_OP interrupt handled in Scheme code */
-void service_sync_op ___P((___PSDNC),());
-
 ___EXP_FUNC(___BOOL,___check_interrupt_pstate)
    ___P((___processor_state ___ps,
          int code),
@@ -160,17 +158,6 @@ int code;)
 {
   if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
     {
-#ifndef ___SINGLE_THREADED_VMS
-
-      /* TODO: remove this when ___INTR_SYNC_OP interrupt handled in Scheme code */
-      if (code == ___INTR_SYNC_OP)
-        {
-          service_sync_op (___PSPNC);
-          return 0;
-        }
-
-#endif
-
       ___ps->intr_flag[code] = ___FIX(0);
       return 1;
     }

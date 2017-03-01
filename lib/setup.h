@@ -20,6 +20,11 @@ extern void barrier_sync_noop
         ());
 
 
+extern void service_sync_op
+   ___P((___PSDNC),
+        ());
+
+
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 #define ___USE_print_source_location
 #else
