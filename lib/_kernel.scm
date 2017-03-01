@@ -172,44 +172,10 @@ end-of-code
          }
      }
 
-   /* prepare for next interrupt */
+   /* handle interrupts */
 
-   ___EXT(___begin_interrupt_service_pstate) (___ps);
-
-   if (___ps->intr_enabled != ___FIX(0))
-     {
-       int i;
-
-       ___COVER_STACK_LIMIT_HANDLER_INTR_ENABLED;
-
-       /* TODO: remove this when ___INTR_SYNC_OP interrupt handled in Scheme code */
-       ___FRAME_STORE_RA(___R0)
-       ___W_ALL
-
-       for (i=0; i<___NB_INTRS; i++)
-         if (___EXT(___check_interrupt_pstate) (___ps, i))
-           break;
-
-       ___R_ALL
-       ___SET_R0(___FRAME_FETCH_RA)
-
-       ___EXT(___end_interrupt_service_pstate) (___ps, i+1);
-
-       if (i < ___NB_INTRS)
-         {
-           ___COVER_STACK_LIMIT_HANDLER_INTERRUPT;
-
-           ___SET_R1(___FIX(i))
-           ___JUMPPRM(___SET_NARGS(1),
-                      ___PRMCELL(___G__23__23_interrupt_2d_handler.prm))
-         }
-     }
-   else
-     ___EXT(___end_interrupt_service_pstate) (___ps, 0);
-
-   ___COVER_STACK_LIMIT_HANDLER_END;
-
-   ___JUMPEXTPRM(___NOTHING,___R0)
+   ___JUMPPRM(___SET_NARGS(0),
+              ___PRMCELL(___G__23__23_interrupt_2d_handler.prm))
 
 end-of-code
 
@@ -1314,11 +1280,50 @@ end-of-code
 (define ##interrupt-vector
   (##vector #f #f #f #f #f #f #f #f))
 
-(define-prim (##interrupt-handler code)
+(define-prim (##interrupt-handler)
+
   (##declare (not interrupts-enabled))
-  (let ((proc (##vector-ref ##interrupt-vector code)))
-    (if (##procedure? proc)
-      (proc))))
+
+  (let loop ()
+    (let ((id
+           (##c-code #<<end-of-code
+
+            ___RESULT = ___FAL;
+
+            ___EXT(___begin_interrupt_service_pstate) (___ps);
+
+            if (___ps->intr_enabled != ___FIX(0))
+              {
+                int i;
+
+                for (i=0; i<___NB_INTRS; i++)
+                  if (___EXT(___check_interrupt_pstate) (___ps, i))
+                    break;
+
+                ___EXT(___end_interrupt_service_pstate) (___ps, i+1);
+
+                if (i < ___NB_INTRS)
+                  ___RESULT = ___FIX(i);
+              }
+            else
+              ___EXT(___end_interrupt_service_pstate) (___ps, 0);
+
+end-of-code
+)))
+
+      (if id
+          (let ((handler
+                 (or (##vector-ref ##interrupt-vector id)
+                     (lambda () (##void)))))
+
+            ;; As an optimization, tail-call the handler when there
+            ;; are no other interrupts pending.
+
+            (if (##c-code "___RESULT = ___BOOLEAN(___STACK_TRIPPED);")
+                (begin
+                  (handler)
+                  (loop))
+                (handler)))))))
 
 (define-prim (##interrupt-vector-set! code handler)
   (##declare (not interrupts-enabled))
