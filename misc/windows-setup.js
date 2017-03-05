@@ -1,3 +1,29 @@
+/*******************************************************************************
+ * This script generates an nmake compatible makefile at misc\makefile.windows.
+ * This makefile can be used to build gsc.exe and gsi.exe using Microsoft
+ * C compiler.
+ *
+ * Steps to build gsc.exe and gsi.exe
+ *
+ * STEP 1:
+ * Run the script:
+ * C:\gambit>cscript misc\windows-setup.js
+ *
+ * STEP 2:
+ * Ensure that C compiler is in the path by running the following program
+ * C:\gambit>"C:\Program Files (x86)\Microsoft Visual Studio 14.0\vc\bin\vcvars32.bat"
+ *
+ * STEP 3:
+ * Execute the makefile
+ * C:\gambit>nmake -f misc\makefile.windows
+ *
+ * That's it! You should have gsc.exe and gsi.exe generated under the bin directory.
+ *
+ * You can use gsc.exe to compile scheme files to standalone exe.
+ *
+ * gsc -exe hello.scm
+ *
+ ******************************************************************************/
 var fso = new ActiveXObject("Scripting.FileSystemObject")
 
 var gambitRoot = GetGambitRoot(fso);
@@ -119,6 +145,7 @@ makefileObject.WriteLine("\t" + "del lib\\*.obj");
 makefileObject.WriteLine("\t" + "del lib\\*.lib");
 makefileObject.WriteLine("\t" + "del gsi\\*.obj");
 makefileObject.WriteLine("\t" + "del gsc\\*.obj");
+makefileObject.WriteLine("\t" + "del bin\\*.exe");
 
 /////////////////
 WScript.Quit() //
@@ -143,7 +170,7 @@ function AddTarget(fileName, subdir, gambitRoot, makefileDict)
 }
 
 // Replace the pattern @ABC@ in the input file with the
-// value in the fixup dicionary for the key ABC and write
+// value in the fixup dictionary for the key ABC and write
 // out the contents to the output file
 function FixupFile(fso, inFile, outFile, fixupDictionary)
 {
