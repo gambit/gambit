@@ -2210,16 +2210,14 @@
 (define-prim (thread-specific thread)
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-specific thread)
-      (macro-check-initialized-thread thread (thread-specific thread)
-        (macro-thread-specific thread)))))
+      (macro-thread-specific thread))))
 
 (define-prim (thread-specific-set! thread obj)
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-specific-set! thread obj)
-      (macro-check-initialized-thread thread (thread-specific-set! thread obj)
-        (begin
-          (macro-thread-specific-set! thread obj)
-          (##void))))))
+      (begin
+        (macro-thread-specific-set! thread obj)
+        (##void)))))
 
 (define-prim (thread-base-priority thread)
   (macro-force-vars (thread)

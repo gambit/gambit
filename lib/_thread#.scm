@@ -1069,7 +1069,7 @@
   (denv-cache3      init: #f)
   (repl-channel     init: #f)
   (mailbox          init: #f)
-  (specific         init: #f)
+  (specific         init: '#!void)
   (resume-thunk     init: #f)
   (interrupts       init: '())
 )
