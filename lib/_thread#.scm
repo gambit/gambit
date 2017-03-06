@@ -1678,6 +1678,8 @@
   ;; field 16 is for storing the current time, heartbeat interval and a
   ;; temporary float
   ;; fields 17 and 18 are the deq links of blocked processors
+  ;; field 19 is the id of the processor
+  ;; field 20 is the queue of pending high-level interrupts
   lock1
   condvar-deq-next
   condvar-deq-prev
@@ -1696,6 +1698,8 @@
   floats
   processor-deq-next
   processor-deq-prev
+  id
+  interrupts
 )
 
 (##define-macro (macro-current-time f)             `(##f64vector-ref ,f 0))
@@ -1730,7 +1734,8 @@
                         (macro-inexact-+0)
                         (macro-inexact-+0))
            #f
-           #f)))
+           ,id
+           '())))
      (macro-btq-deq-init! processor)
      (macro-btq-init! processor)
      (macro-toq-init! processor)
@@ -1749,6 +1754,8 @@
      (macro-btq-init! processor)
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
+     (macro-processor-id-set! processor id)
+     (macro-processor-interrupts-set! processor '())
      processor))
 
 ;;;----------------------------------------------------------------------------

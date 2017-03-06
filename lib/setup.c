@@ -59,6 +59,7 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
  *   ___INTR_HEARTBEAT   heartbeat time interval has elapsed
  *   ___INTR_USER        user has interrupted the program (e.g. ctrl-C)
  *   ___INTR_GC          a garbage collection has finished
+ *   ___INTR_HIGH_LEVEL  a Scheme-level interrupt is requested
  */
 
 ___EXP_FUNC(void,___raise_interrupt_pstate)
