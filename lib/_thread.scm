@@ -1210,8 +1210,7 @@
            (##raise-inactive-thread-exception thread-interrupt! thread action))
 
           (else
-           (##thread-int! thread (lambda () (act) (##void)))
-           (##void)))))
+           (##thread-call thread act)))))
 
 (define-prim (##thread-int! thread thunk-returning-void)
 
@@ -1243,7 +1242,7 @@
   (let ((result-mutex (macro-make-mutex 'thread-call-result)))
     (##check-heap-limit) ;; prevent GC while mutex is locked
     (macro-mutex-lock! result-mutex #f thread)
-    (##thread-interrupt!
+    (##thread-int!
      thread
      (lambda ()
        (let ((result (thunk)))
