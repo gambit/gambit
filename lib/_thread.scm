@@ -628,31 +628,12 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; Implementation of blocked thread queues.
+;;; Implementation of blocked thread queues and timeout queues.
 
-(define-rbtree
- macro-btq-init!
- macro-thread->btq
- ##btq-insert!
- ##btq-remove!
- ##btq-reposition!
- macro-btq-singleton?
- macro-btq-color
- macro-btq-color-set!
- macro-btq-parent
- macro-btq-parent-set!
- macro-btq-left
- macro-btq-left-set!
- macro-btq-right
- macro-btq-right-set!
- macro-thread-higher-prio?
- #f
- #f
- macro-btq-leftmost
- macro-btq-leftmost-set!
- #f
- #f
-)
+(implement-btq) ;; defines ##btq-insert!, etc
+(implement-toq) ;; defines ##toq-insert!, etc
+
+;;;----------------------------------------------------------------------------
 
 ;;;for debugging
 (define ##thread-trace 0)
@@ -674,32 +655,6 @@
               (thread-trace 0 (##thread-effective-priority-downgrade! owner))))
           (macro-btq-unlink! btq (macro-mutex-state-abandoned))
           (##primitive-unlock! btq 1 9))))))
-
-;;; Implementation of timeout queues.
-
-(define-rbtree
- macro-toq-init!
- macro-thread->toq
- ##toq-insert!
- ##toq-remove!
- ##toq-reposition!
- macro-toq-singleton?
- macro-toq-color
- macro-toq-color-set!
- macro-toq-parent
- macro-toq-parent-set!
- macro-toq-left
- macro-toq-left-set!
- macro-toq-right
- macro-toq-right-set!
- macro-thread-sooner-or-simultaneous-and-higher-prio?
- #f
- #f
- macro-toq-leftmost
- macro-toq-leftmost-set!
- #f
- #f
-)
 
 ;;;----------------------------------------------------------------------------
 
@@ -1559,7 +1514,7 @@
 
   (declare (not interrupts-enabled))
 
-  (macro-processor-init! (##current-processor))
+  (macro-processor-init! (##current-processor) (##current-processor-id))
   (##primitive-unlock! (##current-processor) 1 9)
 
   (let* ((tgroup
@@ -1608,7 +1563,7 @@
   (macro-vm-init! (##current-vm))
   (##primitive-unlock! (##current-vm) 1 9)
 
-  (macro-processor-init! (##current-processor))
+  (macro-processor-init! (##current-processor) (##current-processor-id))
   (##primitive-unlock! (##current-processor) 1 9)
 
   (let* ((primordial-tgroup

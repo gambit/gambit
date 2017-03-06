@@ -244,6 +244,7 @@
 ;;      of stack space.
 
 (##define-macro (define-rbtree
+                 implementer
                  rbtree-init!
                  node->rbtree
                  insert!
@@ -264,7 +265,9 @@
                  leftmost
                  leftmost-set!
                  rightmost
-                 rightmost-set!)
+                 rightmost-set!
+                 container
+                 container-set!)
 
   (define (black rbtree)
     rbtree)
@@ -337,40 +340,8 @@
                  x
                  (loop other-side-x))))))))
 
-  `(begin
-
-     (##define-macro (,rbtree-init! rbtree)
-       `(let ((rbtree ,rbtree))
-
-          (##declare (not interrupts-enabled))
-
-          ,@',(if leftmost
-                `((,leftmost-set! rbtree rbtree))
-                `())
-
-          ,@',(if rightmost
-                `((,rightmost-set! rbtree rbtree))
-                `())
-
-          ,@',(if length
-                `((,length-set! rbtree 0))
-                `())
-
-          (,',(blacken! 'rbtree) rbtree)
-          (,',parent-set! rbtree rbtree)
-          (,',left-set! rbtree rbtree)))
-
-     (##define-macro (,node->rbtree node)
-       `(let ((node ,node))
-
-          (##declare (not interrupts-enabled))
-
-          (or (,',color node)
-              (let ((parent-node (,',parent node)))
-                (and parent-node ;; make sure node is in a rbtree
-                     (,',color parent-node))))))
-
-     (define-prim (,insert! rbtree node)
+  (define (def-insert!)
+    `(define-prim (,insert! rbtree node)
 
        (##declare (not interrupts-enabled))
 
@@ -459,15 +430,20 @@
              `((,length-set! rbtree (##fx+ (,length rbtree) 1)))
              `())
 
+       ,@(if container-set!
+             `((,container-set! node rbtree))
+             `())
+
        (,(reden!) node)
        (,left-set! node rbtree)
        (,right-set! node rbtree)
 
        (insert-left! (,left rbtree) rbtree)
 
-       (,parent-set! rbtree rbtree))
+       (,parent-set! rbtree rbtree)))
 
-     (define-prim (,remove! node)
+  (define (def-remove!)
+    `(define-prim (,remove! node)
 
        (##declare (not interrupts-enabled))
 
@@ -521,6 +497,10 @@
 
          ,@(if length
                `((,length-set! rbtree (##fx- (,length rbtree) 1)))
+               `())
+
+         ,@(if container-set!
+               `((,container-set! node #f))
                `())
 
          (let ((parent-node (,parent node))
@@ -600,20 +580,10 @@
                                   (fixup! parent-x right-x))))))
                         (loop left-x x)))))))
 
-         (,parent-set! rbtree rbtree)))
+         (,parent-set! rbtree rbtree))))
 
-     (##define-macro (,singleton? rbtree)
-       `(let ((rbtree ,rbtree))
-
-          (##declare (not interrupts-enabled))
-
-          (let ((root (,',left rbtree)))
-            (and (##not (##eq? root rbtree))
-                 (##eq? (,',left root) rbtree)
-                 (##eq? (,',right root) rbtree)
-                 root))))
-
-     (define-prim (,reposition! node)
+  (define (def-reposition!)
+    `(define-prim (,reposition! node)
 
        (##declare (not interrupts-enabled))
 
@@ -629,7 +599,65 @@
                       (,before? successor-node node)))
            (begin
              (,remove! node)
-             (,insert! rbtree node)))))))
+             (,insert! rbtree node))))))
+
+  `(begin
+
+     (##define-macro (,rbtree-init! rbtree)
+       `(let ((rbtree ,rbtree))
+
+          (##declare (not interrupts-enabled))
+
+          ,@',(if leftmost
+                `((,leftmost-set! rbtree rbtree))
+                `())
+
+          ,@',(if rightmost
+                `((,rightmost-set! rbtree rbtree))
+                `())
+
+          ,@',(if length
+                `((,length-set! rbtree 0))
+                `())
+
+          (,',(blacken! 'rbtree) rbtree)
+          (,',parent-set! rbtree rbtree)
+          (,',left-set! rbtree rbtree)))
+
+     (##define-macro (,node->rbtree node)
+       (if ',container
+
+           `(let ((node ,node))
+
+              (##declare (not interrupts-enabled))
+
+              (,',container node))
+
+           `(let ((node ,node))
+
+              (##declare (not interrupts-enabled))
+
+              (or (,',color node)
+                  (let ((parent-node (,',parent node)))
+                    (and parent-node ;; make sure node is in a rbtree
+                         (,',color parent-node)))))))
+
+     (##define-macro (,singleton? rbtree)
+       `(let ((rbtree ,rbtree))
+
+          (##declare (not interrupts-enabled))
+
+          (let ((root (,',left rbtree)))
+            (and (##not (##eq? root rbtree))
+                 (##eq? (,',left root) rbtree)
+                 (##eq? (,',right root) rbtree)
+                 root))))
+
+     (##define-macro (,implementer)
+       `(begin
+          ,',(def-insert!)
+          ,',(def-remove!)
+          ,',(def-reposition!)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -968,6 +996,33 @@
 (##define-macro (macro-btq-lock2 node)           `(macro-slot 9 ,node))
 (##define-macro (macro-btq-lock2-set! node x)    `(macro-slot 9 ,node ,x))
 
+(define-rbtree
+ implement-btq
+ macro-btq-init!
+ macro-thread->btq
+ ##btq-insert!
+ ##btq-remove!
+ ##btq-reposition!
+ macro-btq-singleton?
+ macro-btq-color
+ macro-btq-color-set!
+ macro-btq-parent
+ macro-btq-parent-set!
+ macro-btq-left
+ macro-btq-left-set!
+ macro-btq-right
+ macro-btq-right-set!
+ macro-thread-higher-prio?
+ #f
+ #f
+ macro-btq-leftmost
+ macro-btq-leftmost-set!
+ #f
+ #f
+ #f
+ #f
+)
+
 ;;; Define operations on blocked thread queue double-ended-queues.
 
 (define-deq
@@ -1011,6 +1066,33 @@
 (##define-macro (macro-toq-right-set! node x)    `(macro-slot 13 ,node ,x))
 (##define-macro (macro-toq-leftmost node)        `(macro-slot 13 ,node))
 (##define-macro (macro-toq-leftmost-set! node x) `(macro-slot 13 ,node ,x))
+
+(define-rbtree
+ implement-toq
+ macro-toq-init!
+ macro-thread->toq
+ ##toq-insert!
+ ##toq-remove!
+ ##toq-reposition!
+ macro-toq-singleton?
+ macro-toq-color
+ macro-toq-color-set!
+ macro-toq-parent
+ macro-toq-parent-set!
+ macro-toq-left
+ macro-toq-left-set!
+ macro-toq-right
+ macro-toq-right-set!
+ macro-thread-sooner-or-simultaneous-and-higher-prio?
+ #f
+ #f
+ macro-toq-leftmost
+ macro-toq-leftmost-set!
+ #f
+ #f
+ #f
+ #f
+)
 
 ;;; Representation of threads.
 
@@ -1742,7 +1824,7 @@
      (macro-processor-deq-init! processor)
      processor))
 
-(##define-macro (macro-processor-init! processor)
+(##define-macro (macro-processor-init! processor id)
   `(let ((processor ,processor))
      (##structure-type-set! processor (macro-type-processor))
      (macro-processor-floats-set!
@@ -1754,7 +1836,7 @@
      (macro-btq-init! processor)
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
-     (macro-processor-id-set! processor id)
+     (macro-processor-id-set! processor ,id)
      (macro-processor-interrupts-set! processor '())
      processor))
 
