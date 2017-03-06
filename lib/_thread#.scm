@@ -244,6 +244,7 @@
 ;;      of stack space.
 
 (##define-macro (define-rbtree
+                 implementer
                  rbtree-init!
                  node->rbtree
                  insert!
@@ -339,48 +340,8 @@
                  x
                  (loop other-side-x))))))))
 
-  `(begin
-
-     (##define-macro (,rbtree-init! rbtree)
-       `(let ((rbtree ,rbtree))
-
-          (##declare (not interrupts-enabled))
-
-          ,@',(if leftmost
-                `((,leftmost-set! rbtree rbtree))
-                `())
-
-          ,@',(if rightmost
-                `((,rightmost-set! rbtree rbtree))
-                `())
-
-          ,@',(if length
-                `((,length-set! rbtree 0))
-                `())
-
-          (,',(blacken! 'rbtree) rbtree)
-          (,',parent-set! rbtree rbtree)
-          (,',left-set! rbtree rbtree)))
-
-     (##define-macro (,node->rbtree node)
-       (if ',container
-
-           `(let ((node ,node))
-
-              (##declare (not interrupts-enabled))
-
-              (,',container node))
-
-           `(let ((node ,node))
-
-              (##declare (not interrupts-enabled))
-
-              (or (,',color node)
-                  (let ((parent-node (,',parent node)))
-                    (and parent-node ;; make sure node is in a rbtree
-                         (,',color parent-node)))))))
-
-     (define-prim (,insert! rbtree node)
+  (define (def-insert!)
+    `(define-prim (,insert! rbtree node)
 
        (##declare (not interrupts-enabled))
 
@@ -479,9 +440,10 @@
 
        (insert-left! (,left rbtree) rbtree)
 
-       (,parent-set! rbtree rbtree))
+       (,parent-set! rbtree rbtree)))
 
-     (define-prim (,remove! node)
+  (define (def-remove!)
+    `(define-prim (,remove! node)
 
        (##declare (not interrupts-enabled))
 
@@ -618,20 +580,10 @@
                                   (fixup! parent-x right-x))))))
                         (loop left-x x)))))))
 
-         (,parent-set! rbtree rbtree)))
+         (,parent-set! rbtree rbtree))))
 
-     (##define-macro (,singleton? rbtree)
-       `(let ((rbtree ,rbtree))
-
-          (##declare (not interrupts-enabled))
-
-          (let ((root (,',left rbtree)))
-            (and (##not (##eq? root rbtree))
-                 (##eq? (,',left root) rbtree)
-                 (##eq? (,',right root) rbtree)
-                 root))))
-
-     (define-prim (,reposition! node)
+  (define (def-reposition!)
+    `(define-prim (,reposition! node)
 
        (##declare (not interrupts-enabled))
 
@@ -647,7 +599,65 @@
                       (,before? successor-node node)))
            (begin
              (,remove! node)
-             (,insert! rbtree node)))))))
+             (,insert! rbtree node))))))
+
+  `(begin
+
+     (##define-macro (,rbtree-init! rbtree)
+       `(let ((rbtree ,rbtree))
+
+          (##declare (not interrupts-enabled))
+
+          ,@',(if leftmost
+                `((,leftmost-set! rbtree rbtree))
+                `())
+
+          ,@',(if rightmost
+                `((,rightmost-set! rbtree rbtree))
+                `())
+
+          ,@',(if length
+                `((,length-set! rbtree 0))
+                `())
+
+          (,',(blacken! 'rbtree) rbtree)
+          (,',parent-set! rbtree rbtree)
+          (,',left-set! rbtree rbtree)))
+
+     (##define-macro (,node->rbtree node)
+       (if ',container
+
+           `(let ((node ,node))
+
+              (##declare (not interrupts-enabled))
+
+              (,',container node))
+
+           `(let ((node ,node))
+
+              (##declare (not interrupts-enabled))
+
+              (or (,',color node)
+                  (let ((parent-node (,',parent node)))
+                    (and parent-node ;; make sure node is in a rbtree
+                         (,',color parent-node)))))))
+
+     (##define-macro (,singleton? rbtree)
+       `(let ((rbtree ,rbtree))
+
+          (##declare (not interrupts-enabled))
+
+          (let ((root (,',left rbtree)))
+            (and (##not (##eq? root rbtree))
+                 (##eq? (,',left root) rbtree)
+                 (##eq? (,',right root) rbtree)
+                 root))))
+
+     (##define-macro (,implementer)
+       `(begin
+          ,',(def-insert!)
+          ,',(def-remove!)
+          ,',(def-reposition!)))))
 
 ;;;----------------------------------------------------------------------------
 
