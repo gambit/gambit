@@ -1932,6 +1932,7 @@
   ;; temporary float
   ;; fields 17 and 18 are the deq links of blocked processors
   ;; field 19 is the id of the processor
+  ;; field 20 is the queue of pending high-level interrupts
   lock1
   condvar-deq-next
   condvar-deq-prev
@@ -1951,6 +1952,7 @@
   processor-deq-next
   processor-deq-prev
   id
+  interrupts
 )
 
 (##define-macro (macro-make-floats)
@@ -1994,7 +1996,8 @@
            (macro-make-floats)
            #f
            #f
-           ,id)))
+           ,id
+           '())))
      (macro-btq-deq-init! processor)
      (macro-btq-init! processor)
      (macro-toq-init! processor)
@@ -2012,6 +2015,7 @@
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
      (macro-processor-id-set! processor id)
+     (macro-processor-interrupts-set! processor '())
      processor))
 
 ;;;----------------------------------------------------------------------------

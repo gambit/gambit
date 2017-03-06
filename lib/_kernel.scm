@@ -1403,6 +1403,29 @@ end-of-code
 
    seconds))
 
+;;;----------------------------------------------------------------------------
+
+;; The high-level interrupt is used for interprocessor interruption
+;; initiated at the Scheme level.
+
+(define-prim (##raise-high-level-interrupt! processor-id)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   {
+     ___processor_state ps =
+       ___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),
+                                   ___VMSTATE_FROM_PSTATE(___ps));
+
+     ___raise_interrupt_pstate (ps, ___INTR_HIGH_LEVEL);
+
+     ___RESULT = ___VOID;
+   }
+
+end-of-code
+
+   processor-id))
+
 ))
 
 ;;;----------------------------------------------------------------------------

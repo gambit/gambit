@@ -2297,13 +2297,14 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___RATNUM_SIZE 2
 #define ___CPXNUM_SIZE 2
 #define ___CONTINUATION_SIZE 2
-#define ___THREAD_SIZE 26
 #define ___BOX_SIZE 1
 #define ___FOREIGN_SIZE 3
 #define ___FOREIGN_TAGS 0
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
-#define ___PROCESSOR_SIZE 20
+
+#define ___THREAD_SIZE 34
+#define ___PROCESSOR_SIZE 21
 #define ___VM_SIZE 20
 
 /* Flonum boxing and unboxing */
@@ -5428,14 +5429,15 @@ ___hp[0]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___END_ALLOC_VALUES(n)___ALLOC(n+1);
 #define ___GET_VALUES(n)___TAG((___hp-n-1),___tSUBTYPED)
 
-#define ___NB_INTRS 5
-#define ___INTR_SYNC_OP   0
-#define ___INTR_TERMINATE 1
-#define ___INTR_HEARTBEAT 2
-#define ___INTR_USER      3
-#define ___INTR_GC        4
+#define ___NB_INTRS 6
+#define ___INTR_SYNC_OP    0
+#define ___INTR_TERMINATE  1
+#define ___INTR_HEARTBEAT  2
+#define ___INTR_USER       3
+#define ___INTR_GC         4
+#define ___INTR_HIGH_LEVEL 5
 
-#define ___INTERRUPT_FLAGS() (___ps->intr_flag[0]|___ps->intr_flag[1]|___ps->intr_flag[2]|___ps->intr_flag[3]|___ps->intr_flag[4])
+#define ___INTERRUPT_FLAGS() (___ps->intr_flag[0]|___ps->intr_flag[1]|___ps->intr_flag[2]|___ps->intr_flag[3]|___ps->intr_flag[4]|___ps->intr_flag[5])
 
 #define ___INTERRUPT_REQ(x, mask) (((x) & ___ps->intr_enabled & ~mask) != ___FIX(0))
 
