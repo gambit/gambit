@@ -183,6 +183,9 @@
 (##define-macro (macro-initialized-thread? thread)
   `(macro-thread-cont ,thread))
 
+(##define-macro (macro-not-started-thread-given-initialized? thread)
+  `(##eq? 'not-started (macro-thread-exception? ,thread)))
+
 (##define-macro (macro-started-thread-given-initialized? thread)
   `(or (##not (##eq? 'not-started (macro-thread-exception? ,thread)))
        (macro-thread-result ,thread)))
@@ -192,19 +195,24 @@
 
 (##define-macro (macro-check-initialized-thread thread form expr)
   `(if (##not (macro-initialized-thread? ,thread))
-       (##raise-uninitialized-thread-exception ,@form)
+       (begin
+         (macro-unlock-thread! ,thread)
+         (##raise-uninitialized-thread-exception ,@form))
        ,expr))
 
 (##define-macro (macro-check-not-initialized-thread thread form expr)
   `(if (macro-initialized-thread? ,thread)
-       (##raise-initialized-thread-exception ,@form)
+       (begin
+         (macro-unlock-thread! ,thread)
+         (##raise-initialized-thread-exception ,@form))
        ,expr))
 
 (##define-macro (macro-check-not-started-thread-given-initialized thread form expr)
-  `(if (let ((thread ,thread))
-         (or (macro-terminated-thread-given-initialized? thread)
-             (macro-started-thread-given-initialized? thread)))
-       (##raise-started-thread-exception ,@form)
+  `(if (or (macro-terminated-thread-given-initialized? ,thread)
+           (macro-started-thread-given-initialized? ,thread))
+       (begin
+         (macro-unlock-thread! ,thread)
+         (##raise-started-thread-exception ,@form))
        ,expr))
 
 ;;;----------------------------------------------------------------------------
@@ -996,6 +1004,33 @@
 (##define-macro (macro-btq-lock2 node)           `(macro-slot 9 ,node))
 (##define-macro (macro-btq-lock2-set! node x)    `(macro-slot 9 ,node ,x))
 
+(define-rbtree
+ implement-btq
+ macro-btq-init!
+ macro-thread->btq
+ ##btq-insert!
+ ##btq-remove!
+ ##btq-reposition!
+ macro-btq-singleton?
+ macro-btq-color
+ macro-btq-color-set!
+ macro-btq-parent
+ macro-btq-parent-set!
+ macro-btq-left
+ macro-btq-left-set!
+ macro-btq-right
+ macro-btq-right-set!
+ macro-thread-higher-prio?
+ #f
+ #f
+ macro-btq-leftmost
+ macro-btq-leftmost-set!
+ #f
+ #f
+ macro-thread-btq-container
+ macro-thread-btq-container-set!
+)
+
 (macro-define-syntax macro-if-btq-next
   (lambda (stx)
     (syntax-case stx ()
@@ -1091,6 +1126,33 @@
 (##define-macro (macro-toq-leftmost node)        `(macro-slot 13 ,node))
 (##define-macro (macro-toq-leftmost-set! node x) `(macro-slot 13 ,node ,x))
 
+(define-rbtree
+ implement-toq
+ macro-toq-init!
+ macro-thread->toq
+ ##toq-insert!
+ ##toq-remove!
+ ##toq-reposition!
+ macro-toq-singleton?
+ macro-toq-color
+ macro-toq-color-set!
+ macro-toq-parent
+ macro-toq-parent-set!
+ macro-toq-left
+ macro-toq-left-set!
+ macro-toq-right
+ macro-toq-right-set!
+ macro-thread-sooner-or-simultaneous-and-higher-prio?
+ #f
+ #f
+ macro-toq-leftmost
+ macro-toq-leftmost-set!
+ #f
+ #f
+ macro-thread-toq-container
+ macro-thread-toq-container-set!
+)
+
 (macro-define-syntax macro-if-toq-next
   (lambda (stx)
     (syntax-case stx ()
@@ -1166,9 +1228,10 @@
   (denv-cache3      init: #f)
   (repl-channel     init: #f)
   (mailbox          init: #f)
-  (specific         init: #f)
+  (specific         init: '#!void)
   (resume-thunk     init: #f)
   (interrupts       init: '())
+  (last-processor   init: #f)
 )
 
 ;;; Access to floating point fields.
@@ -1295,6 +1358,7 @@
        (macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
        (macro-btq-deq-init! thread)
        (macro-tgroup-threads-deq-insert-at-tail! tgroup thread)
+       (macro-thread-last-processor-set! thread (macro-current-processor))
        thread)))
 
 (##define-macro (macro-make-thread thunk name tgroup)
@@ -1587,9 +1651,12 @@
      ;;
      ;;   (macro-mutex-lock! mutex absrel-timeout new-owner)
      ;;
-     ;; where new-owner is a thread, has the same effect as the call
+     ;; where new-owner is a thread, has the same effect as
      ;;
-     ;;   (##mutex-lock-out-of-line! mutex absrel-timeout new-owner)
+     ;;   (begin
+     ;;     (macro-lock-mutex! mutex)
+     ;;     (macro-lock-thread! new-owner)
+     ;;     (##mutex-lock-out-of-line! mutex absrel-timeout new-owner))
      ;;
      ;; However, the macro special cases the situation where the mutex's
      ;; state is unlocked/not-abandoned, allowing this common situation
@@ -1600,15 +1667,15 @@
      ;; acquire low-level lock of mutex
      (macro-lock-mutex! mutex)
 
-     (let ((owner (macro-btq-owner mutex)))
-       (if (##eq? owner (macro-mutex-state-not-abandoned))
+     ;; acquire low-level lock of thread
+     (macro-lock-thread! new-owner)
 
+     (let ((owner (macro-btq-owner mutex)))
+       (if (and (##eq? owner (macro-mutex-state-not-abandoned))
+                (##not (macro-terminated-thread-given-initialized? new-owner)))
            (begin
 
              ;; Fast path... the mutex's state is unlocked/not-abandoned.
-
-             ;; acquire low-level lock of thread
-             (macro-lock-thread! new-owner)
 
              ;; thread becomes the mutex's owner
              (macro-btq-link! mutex new-owner)
@@ -1639,7 +1706,9 @@
      ;;
      ;; has the same effect as the call
      ;;
-     ;;   (##mutex-lock-anonymously-out-of-line! mutex absrel-timeout)
+     ;;   (begin
+     ;;     (macro-lock-mutex! mutex)
+     ;;     (##mutex-lock-anonymously-out-of-line! mutex absrel-timeout))
      ;;
      ;; However, the macro special cases the situation where the mutex's
      ;; state is unlocked/not-abandoned, allowing this common situation

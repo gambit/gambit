@@ -9877,7 +9877,11 @@ ___SCMOBJ timeout;)
           i++;
         }
 
+      ___PRIMITIVEUNLOCK(devices,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
+
       e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
+
+      ___PRIMITIVELOCK(devices,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
       i = 0;
 
