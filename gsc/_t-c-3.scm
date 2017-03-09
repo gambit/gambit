@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-3.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -287,6 +287,9 @@
 (define (targ-nonzero-number? x)
   (and (targ-number? x)
        (not (zero? x))))
+
+(define (targ-finite? x)
+  (finite? x))
 
 ;; Extraction of object's type and subtype.
 

@@ -560,9 +560,11 @@
 ("##fxfirst-bit-set"             (1)   #f ()    0    fixnum  extended)
 ("##fxbit-set?"                  (2)   #f ()    0    fixnum  extended)
 ("##fxwraparithmetic-shift"      (2)   #f ()    0    fixnum  extended)
+("##fxwraparithmetic-shift?"     (2)   #f ()    0    #f      extended)
 ("##fxarithmetic-shift"          (2)   #f ()    0    fixnum  extended)
 ("##fxarithmetic-shift?"         (2)   #f ()    0    #f      extended)
 ("##fxwraparithmetic-shift-left" (2)   #f ()    0    fixnum  extended)
+("##fxwraparithmetic-shift-left?"(2)   #f ()    0    #f      extended)
 ("##fxarithmetic-shift-left"     (2)   #f ()    0    fixnum  extended)
 ("##fxarithmetic-shift-left?"    (2)   #f ()    0    #f      extended)
 ("##fxarithmetic-shift-right"    (2)   #f ()    0    fixnum  extended)
@@ -2625,7 +2627,11 @@
                 (list var1 var2))))))))
 
     (define case-fxwrapquotient
-      (gen-simple-case **fixnum?-sym **fxwrapquotient-sym))
+      (gen-fixnum-division-case
+       (lambda (source env vars invalid)
+         (gen-call-prim-vars source env
+           **fxwrapquotient-sym
+           vars))))
 
     (define case-fxquotient
       (gen-fixnum-division-case
@@ -2681,7 +2687,9 @@
       (gen-simple-case **fixnum?-sym **fxxor-sym))
 
     (define case-fxwraparithmetic-shift
-      (gen-simple-case **fixnum?-sym **fxwraparithmetic-shift-sym))
+      (gen-fixnum-case
+       (make-conditional-fixed-arity-generator
+        **fxwraparithmetic-shift?-sym)))
 
     (define case-fxarithmetic-shift
       (gen-fixnum-case
@@ -2689,7 +2697,9 @@
         **fxarithmetic-shift?-sym)))
 
     (define case-fxwraparithmetic-shift-left
-      (gen-simple-case **fixnum?-sym **fxwraparithmetic-shift-left-sym))
+      (gen-fixnum-case
+       (make-conditional-fixed-arity-generator
+        **fxwraparithmetic-shift-left?-sym)))
 
     (define case-fxarithmetic-shift-left
       (gen-fixnum-case
@@ -3516,13 +3526,20 @@
                       ((ref)  **vect-ref-sym)
                       ((set!) **vect-set!-sym)
                       (else   **vect-cas!-sym))
-                    vars)))
+                    vars))
+                 (value
+                  (if (eq? kind 'set!)
+                      (new-seq source env
+                        call-prim
+                        (new-cst source env
+                          void-object))
+                      call-prim)))
             (gen-prc source env
               vars
               (if checks
                   (new-tst source env
                     checks
-                    call-prim
+                    value
                     (generate-call vars))
                   call-prim)))))
 
@@ -3891,9 +3908,13 @@
 
 (define (flo? obj) (targ-flonum? obj)) ;; TODO: remove dependency on C back-end
 (define (nz-flo? obj) (targ-nonzero-flonum? obj)) ;; TODO: remove dependency on C back-end
+(define (int-flo? obj) (and (targ-flonum? obj) (targ-integer? obj))) ;; TODO: remove dependency on C back-end
+(define (fin-flo? obj) (and (targ-flonum? obj) (targ-finite? obj))) ;; TODO: remove dependency on C back-end
 
 (define (fix32? obj) (targ-fixnum32? obj)) ;; TODO: remove dependency on C back-end
 (define (nz-fix32? obj) (targ-nonzero-fixnum32? obj)) ;; TODO: remove dependency on C back-end
+
+(define (fin-real? obj) (and (real? obj) (targ-finite? obj))) ;; TODO: remove dependency on C back-end
 
 (define (not-bigfix? obj)
   (not (and (targ-fixnum64? obj) (not (targ-fixnum32? obj))))) ;; TODO: remove dependency on C back-end
@@ -4026,10 +4047,10 @@
 (def-simp "flnegative?"      (constant-folder negative?     flo?))
 (def-simp "odd?"             (constant-folder odd?           int?))
 (def-simp "fxodd?"           (constant-folder odd?           fix32?))
-(def-simp "flodd?"           (constant-folder odd?           flo?))
+(def-simp "flodd?"           (constant-folder odd?           int-flo?))
 (def-simp "even?"            (constant-folder even?          int?))
 (def-simp "fxeven?"          (constant-folder even?          fix32?))
-(def-simp "fleven?"          (constant-folder even?          flo?))
+(def-simp "fleven?"          (constant-folder even?          int-flo?))
 (def-simp "max"              (constant-folder-gen max        real?))
 (def-simp "fxmax"            (constant-folder-fix max        fix32?))
 (def-simp "flmax"            (constant-folder-flo max        flo?))
@@ -4089,14 +4110,14 @@
 (def-simp "lcm"              (constant-folder-gen lcm        int?))
 (def-simp "numerator"        (constant-folder-gen numerator  rational?))
 (def-simp "denominator"      (constant-folder-gen denominator rational?))
-(def-simp "floor"            (constant-folder-gen floor      real?))
-(def-simp "flfloor"          (constant-folder-flo floor      flo?))
-(def-simp "ceiling"          (constant-folder-gen ceiling    real?))
-(def-simp "flceiling"        (constant-folder-flo ceiling    flo?))
-(def-simp "truncate"         (constant-folder-gen truncate   real?))
-(def-simp "fltruncate"       (constant-folder-flo truncate   flo?))
-(def-simp "round"            (constant-folder-gen round      real?))
-(def-simp "flround"          (constant-folder-flo round      flo?))
+(def-simp "floor"            (constant-folder-gen floor      fin-real?))
+(def-simp "flfloor"          (constant-folder-flo floor      fin-flo?))
+(def-simp "ceiling"          (constant-folder-gen ceiling    fin-real?))
+(def-simp "flceiling"        (constant-folder-flo ceiling    fin-flo?))
+(def-simp "truncate"         (constant-folder-gen truncate   fin-real?))
+(def-simp "fltruncate"       (constant-folder-flo truncate   fin-flo?))
+(def-simp "round"            (constant-folder-gen round      fin-real?))
+(def-simp "flround"          (constant-folder-flo round      fin-flo?))
 (def-simp "rationalize"      (constant-folder-gen rationalize real?))
 (def-simp "exp"              (constant-folder-gen exp        num?))
 (def-simp "flexp"            (constant-folder-flo exp        flo?))
