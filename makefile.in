@@ -147,7 +147,7 @@ fake_target:
 doc info pdf html txt: fake_target
 	@cd doc && $(MAKE) $(MDEFINES) $@
 
-check ut: fake_target all
+check ut st: fake_target all
 	@cd tests && $(MAKE) $(MDEFINES) $@
 
 bench: fake_target all

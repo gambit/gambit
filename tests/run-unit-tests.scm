@@ -4,7 +4,7 @@
 
 ;;; File: "run-unit-tests.scm"
 
-;;; Copyright (c) 2012-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -76,7 +76,14 @@
 
 (define (test-using-mode file mode)
   (cond ((equal? mode "gsi")
-         (run "../gsi/gsi" "-:d-,flu,=.." "-f" file))))
+         (run "../gsi/gsi" "-:d-,flu,=.." "-f" file))
+        ((equal? mode "gsc")
+         (let ((result (run "../gsc/gsc" "-:d-,flu,=.." "-f" "-o" "_test.o1" file)))
+           (if (= 0 (car result))
+               (let ((result (run "../gsi/gsi" "-:d-,flu,=.." "-f" "_test.o1")))
+                 (delete-file "_test.o1")
+                 result)
+               result)))))
 
 (define (test file)
   (for-each
@@ -134,7 +141,7 @@
           (list file-or-dir)
           (list))))
 
-(define (list-of-scm-files args)
+(define (list-of-scm-files args stress?)
   (apply
    append
    (map
@@ -142,21 +149,30 @@
       (find-files f
                   (lambda (filename)
                     (and (equal? (path-extension filename) ".scm")
-                         (not (equal? (path-strip-directory filename) "#.scm"))))))
+                         (not (equal? (path-strip-directory filename) "#.scm"))
+                         (or stress?
+                             (let ((len (string-length filename)))
+                               (not (and (> len 11)
+                                         (equal? (substring filename (- len 11) len)
+                                                 "-stress.scm")))))))))
     args)))
 
 (define modes '())
 
 (define (main . args)
 
+  (define stress? #f)
+
   (let loop ()
     (if (and (pair? args)
              (> (string-length (car args)) 1)
              (char=? #\- (string-ref (car args) 0)))
-        (begin
-          (set! modes
-                (cons (substring (car args) 1 (string-length (car args)))
-                      modes))
+        (let ((word (substring (car args) 1 (string-length (car args)))))
+          (if (equal? word "stress")
+              (set! stress? #t)
+              (set! modes
+                    (cons word
+                          modes)))
           (set! args (cdr args))
           (loop))))
 
@@ -166,6 +182,6 @@
   (if (null? modes)
       (set! modes '("gsi")))
 
-  (run-tests (list-of-scm-files args)))
+  (run-tests (list-of-scm-files args stress?)))
 
 ;;;============================================================================
