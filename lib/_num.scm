@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2016 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2017 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -5464,6 +5464,9 @@ for a discussion of branch cuts.
         (fxwraparithmetic-shift x y)
         (##fxwraparithmetic-shift x y)))))
 
+;;TODO:enable after bootstrap
+;;(define-prim (##fxwraparithmetic-shift? x y))
+
 (define-prim (##fxarithmetic-shift x y))
 
 (define-prim-fixnum (fxarithmetic-shift x y)
@@ -5487,6 +5490,9 @@ for a discussion of branch cuts.
         ##fixnum-width
         (fxwraparithmetic-shift-left x y)
         (##fxwraparithmetic-shift-left x y)))))
+
+;;TODO:enable after bootstrap
+;;(define-prim (##fxwraparithmetic-shift-left? x y))
 
 (define-prim (##fxarithmetic-shift-left x y))
 
