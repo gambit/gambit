@@ -180,6 +180,9 @@ test11:
 ut:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
 
+st:
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -gsc
+
 bootstrap-pre:
 
 bootstrap-post:
