@@ -1,5 +1,7 @@
 (include "#.scm")
 
+(declare (block)) ;; needed for serialization/deserialization when compiled
+
 (define (serdes1 obj)
   (let ((ser (object->u8vector obj)))
     (let ((des (u8vector->object ser)))
