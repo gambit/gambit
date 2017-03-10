@@ -1911,11 +1911,12 @@ end-of-code
     (macro-fifo-insert-at-head! registry will)
     will))
 
-(##interrupt-vector-set! 4 ;; ___INTR_GC
-  (lambda ()
-    (##declare (not interrupts-enabled))
-    (##gc-finalize!)
-    (##execute-jobs! ##gc-interrupt-jobs)))
+(define-prim (##handle-gc-interrupt!)
+  (##declare (not interrupts-enabled))
+  (##gc-finalize!)
+  (##execute-jobs! ##gc-interrupt-jobs))
+
+(##interrupt-vector-set! 4 ##handle-gc-interrupt!) ;; ___INTR_GC
 
 ;;;----------------------------------------------------------------------------
 

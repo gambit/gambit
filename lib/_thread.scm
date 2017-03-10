@@ -3047,8 +3047,6 @@
 
     (set! ##primordial-thread primordial-thread)
 
-    (##interrupt-vector-set! 2 ##thread-heartbeat!) ;; ___INTR_HEARTBEAT
-
     ;; These parameters are locally bound in all threads, so the value
     ;; field of the parameter descriptors are of no use and can be cleared.
     (macro-parameter-descr-value-set!
@@ -3067,7 +3065,26 @@
     ;;(##set-heartbeat-interval! 1.0)
     (##set-heartbeat-interval! (macro-default-heartbeat-interval))
 
+    (##interrupt-vector-set! 2 ##thread-heartbeat!) ;; ___INTR_HEARTBEAT
+    (##interrupt-vector-set! 3 ##user-interrupt!) ;; ___INTR_USER
+    (##interrupt-vector-set! 4 ##gc-interrupt!) ;; ___INTR_GC
+    (##interrupt-vector-set! 5 ##high-level-interrupt!) ;; ___INTR_HIGH_LEVEL
+
     (##void)))
+
+(define-prim (##gc-interrupt!)
+
+  (##declare (not interrupts-enabled))
+
+  (##interrupt-some-thread-async! ##handle-gc-interrupt!))
+
+(define-prim (##interrupt-some-thread-async! thunk)
+
+  (##declare (not interrupts-enabled))
+
+  (if (macro-current-thread)
+      (thunk)
+      (##thread-intr! ##primordial-thread #t thunk)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -5138,9 +5155,7 @@
 
   (##declare (not interrupts-enabled))
 
-  (if (macro-current-thread)
-      (##handle-user-interrupt!)
-      (##thread-intr! ##primordial-thread #t ##handle-user-interrupt!)))
+  (##interrupt-some-thread-async! ##handle-user-interrupt!))
 
 (define-prim (##handle-user-interrupt!)
 
@@ -5156,9 +5171,6 @@
         (let ()
           (##declare (not safe)) ;; avoid procedure check on the call
           (handler)))))
-
-(##interrupt-vector-set! 3 ##user-interrupt!) ;; ___INTR_USER
-(##interrupt-vector-set! 5 ##high-level-interrupt!) ;; ___INTR_HIGH_LEVEL
 
 (##startup-threading!)
 
