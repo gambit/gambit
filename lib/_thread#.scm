@@ -1064,6 +1064,10 @@
 (##define-macro (macro-trylock-thread! thread) `(macro-trylock-btq! ,thread))
 (##define-macro (macro-unlock-thread! thread)  `(macro-unlock-btq! ,thread))
 
+(##define-macro (macro-lock-tgroup! tgroup)    `(macro-lock-btq! ,tgroup))
+(##define-macro (macro-trylock-tgroup! tgroup) `(macro-trylock-btq! ,tgroup))
+(##define-macro (macro-unlock-tgroup! tgroup)  `(macro-unlock-btq! ,tgroup))
+
 (##define-macro (macro-lock-processor! proc)    `(macro-lock-btq! ,proc))
 (##define-macro (macro-trylock-processor! proc) `(macro-trylock-btq! ,proc))
 (##define-macro (macro-unlock-processor! proc)  `(macro-unlock-btq! ,proc))
@@ -1357,7 +1361,9 @@
        (macro-thread-denv-cache2-set! thread (macro-make-thread-denv-cache2 p))
        (macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
        (macro-btq-deq-init! thread)
+       (macro-lock-tgroup! tgroup)
        (macro-tgroup-threads-deq-insert-at-tail! tgroup thread)
+       (macro-unlock-tgroup! tgroup)
        (macro-thread-last-processor-set! thread (macro-current-processor))
        thread)))
 
@@ -1869,49 +1875,38 @@
 
   unprintable:
 
+  (lock1
+   macro-tgroup-lock1)
+
   (tgroups-deq-next
    macro-tgroup-tgroups-deq-next
    macro-tgroup-tgroups-deq-next-set!)
   (tgroups-deq-prev
    macro-tgroup-tgroups-deq-prev
    macro-tgroup-tgroups-deq-prev-set!)
+
   (tgroups
-   macro-tgroup-tgroups
-   macro-tgroup-tgroups-set!)
-  (parent
-   macro-tgroup-parent
-   macro-tgroup-parent-set!)
+   macro-tgroup-tgroups)
   (name
-   macro-tgroup-name
-   macro-tgroup-name-set!)
-  (suspend-condvar
-   macro-tgroup-suspend-condvar
-   macro-tgroup-suspend-condvar-set!)
-  (unused1
-   macro-tgroup-unused1
-   macro-tgroup-unused1-set!)
-  (unused2
-   macro-tgroup-unused2
-   macro-tgroup-unused2-set!)
-  (unused3
-   macro-tgroup-unused3
-   macro-tgroup-unused3-set!)
-  (unused4
-   macro-tgroup-unused4
-   macro-tgroup-unused4-set!)
-  (unused5
-   macro-tgroup-unused5
-   macro-tgroup-unused5-set!)
-  (unused6
-   macro-tgroup-unused6
-   macro-tgroup-unused6-set!)
-  (unused7
-   macro-tgroup-unused7
-   macro-tgroup-unused7-set!)
-  (threads-deq-next ;; must be at same pos as the same name field in a thread
+   macro-tgroup-name)
+  unused-field6
+  unused-field7
+
+  (parent ;; thread-group this thread-group belongs to
+   macro-tgroup-parent)
+
+  (lock2
+   macro-tgroup-lock2)
+
+  unused-field10
+  unused-field11
+  unused-field12
+  unused-field13
+
+  (threads-deq-next ;; must be at same pos as those fields in a thread
    macro-tgroup-threads-deq-next
    macro-tgroup-threads-deq-next-set!)
-  (threads-deq-prev ;; must be at same pos as the same name field in a thread
+  (threads-deq-prev
    macro-tgroup-threads-deq-prev
    macro-tgroup-threads-deq-prev-set!)
 )
@@ -1919,18 +1914,18 @@
 (##define-macro (macro-make-tgroup name parent)
   `(let ((name ,name) (parent ,parent))
      (let* ((tgroups
-             (##vector #f #f #f))
+             (##vector #f #f #f #f))
             (tgroup
              (macro-construct-tgroup
+              0
               #f
               #f
               tgroups
-              parent
               name
               #f
               #f
-              #f
-              #f
+              parent
+              0
               #f
               #f
               #f

@@ -30,7 +30,7 @@
 ;;; When the locks are on objects of different types, the order
 ;;; is:
 ;;;
-;;;   mutex -> condition variable -> thread -> processor -> VM
+;;;   mutex -> condition variable -> thread -> thread group -> processor -> VM
 ;;;
 ;;; In some situations the ordering of acquisitions is hard to achieve
 ;;; because the set of objects to lock isn't known when the operation
@@ -1561,8 +1561,13 @@
            ;; Because the thread is currently executing, it can't be in
            ;; a blocked thread queue or a timeout queue.
 
-           ;;(macro-tgroup-threads-deq-remove! thread);;TODO:reenable
-           ;;(macro-tgroup-threads-deq-init! thread)
+           ;; Remove thread from its thread group.
+
+           (let ((tgroup (macro-thread-tgroup thread)))
+             (macro-lock-tgroup! tgroup)
+             (macro-tgroup-threads-deq-remove! thread)
+             (macro-tgroup-threads-deq-init! thread)
+             (macro-unlock-tgroup! tgroup))
 
            ;; The thread must abandon all the blocked thread queues
            ;; (i.e. mutexes, condvars, etc) it owns.
