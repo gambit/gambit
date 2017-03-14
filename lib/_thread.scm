@@ -1114,7 +1114,7 @@
                 thread
                 (thread-init! thread thunk n tg)
                 (begin
-                  (macro-thread-init! thread thunk name tgroup);;TODO: lock tgroup
+                  (macro-thread-init! thread thunk name tgroup)
                   (macro-unlock-thread! thread)
                   thread)))))))))
 
@@ -1124,6 +1124,9 @@
 ;; which must be an initialized thread.
 
 (define-prim (thread-name thread)
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-name thread)
       (begin
@@ -1139,6 +1142,9 @@
 ;; thread parameter, which must be an initialized thread.
 
 (define-prim (thread-thread-group thread)
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-thread-group thread)
       (begin
@@ -1154,6 +1160,9 @@
 ;; thread's specific field.
 
 (define-prim (thread-specific thread)
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-specific thread)
       (macro-thread-specific thread))))
@@ -1162,6 +1171,9 @@
 ;; thread's specific field.
 
 (define-prim (thread-specific-set! thread obj)
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-specific-set! thread obj)
       (begin
@@ -1366,10 +1378,16 @@
 
 ;;TODO:deprecated
 (define-prim (##thread-call thread thunk)
+
+  (##declare (not interrupts-enabled))
+
   (##thread-interrupt! thread thunk))
 
 ;;TODO: move to _repl.scm
 (define-prim (##thread-continuation-capture thread)
+
+  (##declare (not interrupts-enabled))
+
   (##thread-interrupt!
    thread
    (lambda ()
@@ -1603,184 +1621,6 @@
      (macro-btq-unlink! btq (macro-mutex-state-abandoned))
      (macro-unlock-btq! btq))))
 
-(define-prim (##thread-end!-old thread exception? result)
-
-  (##declare (not interrupts-enabled))
-
-  ;; TODO: current processor should be locked
-
-  ;; acquire low-level lock of thread
-  (macro-lock-thread! thread)
-
-  (if (and #f;;TODO: check
-           (##eq? thread (macro-current-thread))
-           (##not exception?)
-           (##not (##null (macro-thread-interrupts thread))))
-
-      (begin
-
-        ;; The current thread is terminating normally and it has
-        ;; pending interrupts, so handle these interrupts first.
-
-        ;;(##c-code "printf(\"ending thread has pending interrupts\\n\")")
-
-        (macro-thread-interrupts-set! thread '());;TODO:improve
-
-        ;; release low-level lock of thread
-        (macro-unlock-thread! thread)
-
-        (##thread-end! thread exception? result))
-
-      (let ((end-condvar (macro-thread-end-condvar thread))) ;; check state
-
-        (cond ((##not end-condvar)
-
-               ;; Thread is already terminated.
-
-               ;; release low-level lock of thread
-               (macro-unlock-thread! thread)
-
-               (##void))
-
-              ((##eq? thread (macro-primordial-thread))
-
-               ;; Termination of the primordial thread causes the
-               ;; program to terminate.
-
-               (if (##eq? exception? 'uncaught-exception)
-                   (##exit-with-exception result)
-                   (##exit)))
-
-              (else
-
-               ;; Change state of thread.
-
-               (macro-thread-end-condvar-set! thread #f)
-               (macro-thread-exception?-set! thread exception?)
-               (macro-thread-result-set! thread result)
-               (macro-thread-cont-set! thread #t)
-               (macro-thread-denv-set! thread #f)
-               (macro-thread-denv-cache1-set! thread #f)
-               (macro-thread-denv-cache2-set! thread #f)
-               (macro-thread-denv-cache3-set! thread #f)
-
-               ;; Remove thread from any blocked thread queue (run
-               ;; queue, mutex or condition variable).
-
-               (let ((btq (macro-thread-btq-container thread)))
-                 (if btq
-                     (cond ((macro-processor? btq)
-                            (macro-lock-processor! btq)
-                            (##btq-remove! thread)
-                            (macro-unlock-processor! btq)))))
-
-               ;; Remove thread from any timeout queue.
-
-               (let ((toq (macro-thread-toq-container thread)))
-                 (if toq
-                     (begin
-                       (macro-lock-toq! toq)
-                       (##toq-remove! thread)
-                       (macro-unlock-toq! toq))))
-
-               (macro-tgroup-threads-deq-remove! thread);;;;;;;;;;;;;;
-               (macro-tgroup-threads-deq-init! thread)
-
-               ;; The thread must abandon all the blocked thread
-               ;; queues (i.e. mutexes, condvars, etc) it owns.
-
-               (let loop ()
-                 (let ((next-btq (macro-btq-deq-next thread)))
-                   (if (##not (##eq? next-btq thread))
-                       (begin
-                         (##btq-abandon! next-btq)
-                         (loop)))))
-
-               ;; release low-level lock of thread
-               (macro-unlock-thread! thread)
-
-               (##condvar-signal-no-reschedule! end-condvar #t)
-
-               (cond ((##eq? thread (macro-current-thread))
-                      (macro-processor-current-thread-set! (macro-current-processor) #f)
-                      (##thread-schedule!))
-                     (else
-                      (macro-thread-reschedule-if-needed!))))))))
-
-#;
-(define-prim (##thread-end!-old thread exception? result)
-
-  (##declare (not interrupts-enabled))
-
-  ;; TODO: current processor should be locked
-
-  (if (##eq? thread (macro-primordial-thread))
-
-      (begin
-
-        ;; Termination of the primordial thread causes the program to
-        ;; terminate.
-
-        (if (##eq? exception? 'uncaught-exception)
-            (##exit-with-exception result)
-            (##exit)))
-
-      (begin
-
-        ;; Perform thread termination only if thread is not already
-        ;; terminated, or in the process of terminating.
-
-        ;; acquire low-level lock of thread
-        (macro-lock-thread! thread)
-
-        (let ((end-condvar (macro-thread-end-condvar thread)))
-          (if (##not end-condvar)
-
-              (begin
-
-                ;; Thread is already terminated.
-
-                ;; release low-level lock of thread
-                (macro-unlock-thread! thread)
-
-                (##void))
-
-              (begin
-
-                ;; The thread must abandon all the blocked thread
-                ;; queues (i.e. mutexes, condvars, etc) it owns.
-
-                (let loop ()
-                  (let ((next-btq (macro-btq-deq-next thread)))
-                    (if (##not (##eq? next-btq thread))
-                        (begin
-                          (##btq-abandon! next-btq)
-                          (loop)))))
-
-                (macro-thread-end-condvar-set! thread #f)
-                (macro-thread-exception?-set! thread exception?)
-                (macro-thread-result-set! thread result)
-                (macro-thread-btq-remove-if-in-btq! thread)
-                (macro-thread-toq-remove-if-in-toq! thread)
-                (macro-tgroup-threads-deq-remove! thread)
-                (macro-tgroup-threads-deq-init! thread)
-                (macro-thread-cont-set! thread #t)
-                (macro-thread-denv-set! thread #f)
-                (macro-thread-denv-cache1-set! thread #f)
-                (macro-thread-denv-cache2-set! thread #f)
-                (macro-thread-denv-cache3-set! thread #f)
-
-                ;; release low-level lock of thread
-                (macro-unlock-thread! thread)
-
-                (##condvar-signal-no-reschedule! end-condvar #t)
-
-                (cond ((##eq? thread (macro-current-thread))
-                       (macro-processor-current-thread-set! (macro-current-processor) #f)
-                       (##thread-schedule!))
-                      (else
-                       (macro-thread-reschedule-if-needed!)))))))))
-
 ;;;----------------------------------------------------------------------------
 
 ;; The procedure thread-join! causes the current thread to wait until
@@ -1792,6 +1632,9 @@
               #!optional
               (absrel-timeout (macro-absent-obj))
               (timeout-val (macro-absent-obj)))
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thread absrel-timeout)
     (macro-check-thread
      thread
