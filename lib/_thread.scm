@@ -674,14 +674,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;TODO: clean this up
-;;;for debugging
-(define ##thread-trace 0)
-(define-macro (thread-trace n expr)
-  `(begin (set! ##thread-trace (##fx+ ,n (##fx* (##fxmodulo ##thread-trace 10000000) 10))) ,expr))
-
-;;;----------------------------------------------------------------------------
-
 ;;; Inlined thread primitives.
 
 (define-prim (##current-thread))
@@ -1603,7 +1595,7 @@
        (begin
          (let ((owner (macro-btq-owner btq)))
            (if (macro-thread? owner)
-               (thread-trace 0 (##thread-effective-priority-downgrade! owner))))
+               (##thread-effective-priority-downgrade! owner)))
          (macro-btq-unlink! btq (macro-mutex-state-abandoned))
          (macro-unlock-btq! btq)))
 
@@ -2142,7 +2134,7 @@
 
     (macro-base-priority-set! floats base-priority)
 
-    (thread-trace 1 (##thread-boosted-priority-changed! thread))
+    (##thread-boosted-priority-changed! thread)
 
     ;; the change of priority may have made a higher priority
     ;; thread runnable, check for this
@@ -2188,7 +2180,7 @@
          (##fl+ (macro-base-priority floats)
                 priority-boost))
 
-        (thread-trace 2 (##thread-boosted-priority-changed! thread))
+        (##thread-boosted-priority-changed! thread)
 
         ;; the change of priority may have made a higher priority
         ;; thread runnable, check for this
@@ -2206,11 +2198,11 @@
            (macro-effective-priority-set!
             floats
             (macro-boosted-priority floats))
-           (thread-trace 3 (##thread-effective-priority-changed! thread #t)))
+           (##thread-effective-priority-changed! thread #t))
           ((##fl=
             (macro-effective-priority floats)
             (macro-temp (macro-thread-floats (macro-current-processor))))
-           (thread-trace 4 (##thread-effective-priority-downgrade! thread))))))
+           (##thread-effective-priority-downgrade! thread)))))
 
 (define-prim (##thread-effective-priority-changed! thread effective-priority-increased?)
 
@@ -2231,7 +2223,7 @@
         (if (macro-thread? owner)
           (if effective-priority-increased?
             (macro-thread-inherit-priority! owner thread)
-            (thread-trace 5 (##thread-effective-priority-downgrade! owner))))))))
+            (##thread-effective-priority-downgrade! owner)))))))
 
 ;; (##thread-effective-priority-downgrade! thread) is called to
 ;; recompute the effective priority of a thread.  It is only called in
@@ -2274,7 +2266,7 @@
     (if (##not (##fl=
                 (macro-temp (macro-thread-floats (macro-current-processor)))
                 (macro-effective-priority floats)))
-      (thread-trace 6 (##thread-effective-priority-changed! thread #f)))))
+      (##thread-effective-priority-changed! thread #f))))
 
 (define-prim (##thread-btq-insert! btq thread)
   (##declare (not interrupts-enabled))
@@ -2298,7 +2290,7 @@
     (if (macro-thread? owner)
       (if (##fl= (macro-thread-effective-priority thread)
                  (macro-thread-effective-priority owner))
-        (thread-trace 7 (##thread-effective-priority-downgrade! owner))))))
+        (##thread-effective-priority-downgrade! owner)))))
 
 (define-prim (##thread-toq-remove! thread)
   (##declare (not interrupts-enabled))
@@ -3761,7 +3753,7 @@
   ;;(##c-code "printf(\"transferring mutex to thread %p\\n\",(void*)___ARG1);" thread);;TODO:remove
 
   ;; remove thread from mutex's blocked thread queue
-  (thread-trace 8 (##thread-btq-remove! thread))
+  (##thread-btq-remove! thread)
 
   (macro-btq-owner-set! mutex (macro-mutex-state-not-owned))
 
@@ -4037,7 +4029,7 @@
         next-thread
         ##thread-signaled-condvar-action!)
 
-       (thread-trace 9 (##thread-btq-remove! next-thread))
+       (##thread-btq-remove! next-thread)
        (macro-thread-toq-remove-if-in-toq! next-thread)
 
        (macro-add-thread-to-run-queue-of-current-processor! next-thread)
