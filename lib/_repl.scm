@@ -1509,19 +1509,27 @@
                (##write-string "NORMALLY TERMINATED" port))
               ((macro-thread-state-abnormally-terminated? ts)
                (##write-string "ABNORMALLY TERMINATED" port))
-              ((macro-thread-state-active? ts)
-               (let ((wf (macro-thread-state-active-waiting-for ts))
-                     (to (macro-thread-state-active-timeout ts)))
+              ((macro-thread-state-running? ts)
+               (##write-string "RUNNING P" port)
+               (##write (macro-processor-id
+                         (macro-thread-state-running-processor ts))
+                        port))
+              ((macro-thread-state-waiting? ts)
+               (let ((wf (macro-thread-state-waiting-for ts))
+                     (to (macro-thread-state-waiting-timeout ts)))
                  (cond (wf
-                        (##write-string "WAITING " port)
-                        (##write wf port)
+                        (if (macro-processor? wf)
+                            (begin
+                              (##write-string "WAITING P" port)
+                              (##write (macro-processor-id wf) port))
+                            (begin
+                              (##write-string "WAITING " port)
+                              (##write wf port)))
                         (if to
                             (write-timeout to)))
                        (to
                         (##write-string "SLEEPING" port)
-                        (write-timeout to))
-                       (else
-                        (##write-string "RUNNING" port)))))
+                        (write-timeout to)))))
               (else
                (##write ts port))))
       (##newline port))))

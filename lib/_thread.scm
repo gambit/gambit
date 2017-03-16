@@ -172,6 +172,8 @@
 (implement-check-type-time)
 (implement-check-type-absrel-time)
 (implement-check-type-absrel-time-or-false)
+(implement-check-type-vm)
+(implement-check-type-processor)
 (implement-check-type-thread)
 (implement-check-type-mutex)
 (implement-check-type-condvar)
@@ -179,6 +181,8 @@
 
 ;;;----------------------------------------------------------------------------
 
+(implement-type-vm)
+(implement-type-processor)
 (implement-type-thread)
 (implement-type-mutex)
 (implement-type-condvar)
@@ -188,7 +192,8 @@
 (implement-library-type-thread-state-initialized)
 (implement-library-type-thread-state-normally-terminated)
 (implement-library-type-thread-state-abnormally-terminated)
-(implement-library-type-thread-state-active)
+(implement-library-type-thread-state-waiting)
+(implement-library-type-thread-state-running)
 
 (##declare (not interrupts-enabled));;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -890,6 +895,42 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; The procedure current-processor returns the processor executing the
+;; current thread.
+
+(define-prim (current-processor)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-current-processor))
+
+;;;----------------------------------------------------------------------------
+
+;; The procedure processor? returns #t when the parameter is a processor
+;; and #f otherwise.
+
+(define-prim (processor? obj)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (obj)
+    (macro-processor? obj)))
+
+;;;----------------------------------------------------------------------------
+
+;; The procedure processor? returns #t when the parameter is a processor
+;; and #f otherwise.
+
+(define-prim (processor-id processor)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (processor)
+    (macro-check-processor processor 1 (processor-id processor)
+      (macro-processor-id processor))))
+
+;;;----------------------------------------------------------------------------
+
 ;; The procedure current-thread returns the thread currently executing
 ;; on the current processor.
 
@@ -1228,9 +1269,8 @@
           ;; acquire low-level lock of thread
           (macro-lock-thread! thread)
 
-          (if (or (##not (macro-initialized-thread? thread))
-                  (macro-terminated-thread-given-initialized? thread)
-                  (##not (macro-started-thread-given-initialized? thread)))
+          (if (or (##not (macro-started-thread? thread))
+                  (macro-terminated-thread-given-initialized? thread))
               (begin
 
                 ;; Thread is inactive.
@@ -1414,7 +1454,7 @@
   (macro-lock-thread! thread)
 
   (macro-check-initialized-thread thread (thread-start! thread)
-    (macro-check-not-started-thread-given-initialized
+    (macro-check-not-started-thread
       thread
       (thread-start! thread)
       (begin
@@ -1482,7 +1522,7 @@
         ;; acquire low-level lock of thread
         (macro-lock-thread! thread)
 
-        (if (macro-not-started-thread-given-initialized? thread)
+        (if (##not (macro-started-thread? thread))
 
             (begin
 
@@ -1529,6 +1569,8 @@
 (define-prim (##thread-end-locked! thread exception? result)
 
   (##declare (not interrupts-enabled))
+
+  ;; Assumes that exclusive access to the thread has been acquired.
 
   (let ((end-condvar (macro-thread-end-condvar thread))) ;; check state
 
@@ -1948,14 +1990,220 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;*****************************************************************************
+;; The procedure thread-state returns the state of the thread, which
+;; is one of the following:
+;;
+;;  - thread-state-uninitialized          thread is uninitialized
+;;  - thread-state-initialized            thread is initialized but not started
+;;  - thread-state-waiting                thread is started and waiting
+;;  - thread-state-running                thread is running on a processor
+;;  - thread-state-normally-terminated    thread terminated normally
+;;  - thread-state-abnormally-terminated  thread terminated with an exception
 
+(define-prim (thread-state thread)
 
+  (##declare (not interrupts-enabled))
 
+  (macro-force-vars (thread)
+    (macro-check-thread thread 1 (thread-state thread)
+      (##thread-state thread))))
+
+(define-prim (##thread-state thread)
+
+  (##declare (not interrupts-enabled))
+
+  ;; acquire low-level lock of the thread
+  (macro-lock-thread! thread)
+
+  (cond ((##not (macro-initialized-thread? thread))
+
+         ;; release low-level lock of the thread
+         (macro-unlock-thread! thread)
+
+         (macro-make-constant-thread-state-uninitialized))
+
+        ((##not (macro-started-thread? thread))
+
+         ;; release low-level lock of the thread
+         (macro-unlock-thread! thread)
+
+         (macro-make-constant-thread-state-initialized))
+
+        ((macro-terminated-thread-given-initialized? thread)
+         (if (macro-thread-exception? thread)
+
+             (let ((result (macro-thread-result thread)))
+
+               ;; release low-level lock of the thread
+               (macro-unlock-thread! thread)
+
+               (macro-make-thread-state-abnormally-terminated result))
+
+             (let ((result (macro-thread-result thread)))
+
+               ;; release low-level lock of the thread
+               (macro-unlock-thread! thread)
+
+               (macro-make-thread-state-normally-terminated result))))
+
+        (else
+         (let ((last-processor (macro-thread-last-processor thread)))
+           (macro-lock-processor! last-processor)
+           (let ((last-processor-current-thread
+                  (macro-processor-current-thread last-processor)))
+             (macro-unlock-processor! last-processor)
+             (if (##eq? thread last-processor-current-thread)
+
+                 (begin
+
+                   ;; release low-level lock of the thread
+                   (macro-unlock-thread! thread)
+
+                   (macro-make-thread-state-running last-processor))
+
+                 (let* ((btq
+                         (macro-thread->btq thread))
+                        (toq
+                         (macro-thread->toq thread))
+                        (timeout
+                         (and toq
+                              (macro-timeout (macro-thread-floats thread))))
+                        (waiting-for
+                         (if (and (macro-condvar? btq)
+                                  (##io-condvar? btq))
+                             (##io-condvar-port btq)
+                             btq)))
+
+                   ;; release low-level lock of the thread
+                   (macro-unlock-thread! thread)
+
+                   (macro-make-thread-state-waiting
+                    waiting-for
+                    (and timeout
+                         (macro-make-time timeout #f #f #f))))))))))
+
+;;;----------------------------------------------------------------------------
+
+;; The procedure thread-quantum returns the quantum of the thread.
+
+(define-prim (thread-quantum thread)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (thread)
+    (macro-check-thread thread 1 (thread-quantum thread)
+      (begin
+        (macro-lock-thread! thread)
+        (macro-check-initialized-thread thread (thread-quantum thread)
+          (let ((result (macro-thread-quantum thread)))
+            (macro-unlock-thread! thread)
+            result))))))
+
+;; The procedure thread-quantum-set! changes the quantum of the thread
+;; and reschedules the thread according to its new quantum.
+
+(define-prim (thread-quantum-set! thread quantum)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (thread quantum)
+    (macro-check-thread thread 1 (thread-quantum-set! thread quantum)
+      (macro-check-real
+        quantum
+        2
+        (thread-quantum-set! thread quantum)
+        (let ((q (macro-real->inexact quantum)))
+          (if (##flnegative? q)
+              (##raise-range-exception 2 thread-quantum-set! thread quantum)
+              (begin
+                (macro-lock-thread! thread)
+                (macro-check-initialized-thread
+                  thread
+                  (thread-quantum-set! thread quantum)
+                  (##thread-quantum-set-locked! thread q)))))))))
+
+(define-prim (##thread-quantum-set! thread quantum)
+
+  (##declare (not interrupts-enabled))
+
+  ;; acquire low-level lock of the thread
+  (macro-lock-thread! thread)
+
+  (##thread-quantum-set-locked! thread quantum))
+
+(define-prim (##thread-quantum-set-locked! thread quantum)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Assumes that exclusive access to the thread has been acquired.
+
+  (macro-thread-quantum-set! thread quantum)
+
+  ;; check if the current thread's quantum is now over
+
+  (if (and (##eq? thread (macro-current-thread))
+           (##not (##fl< (macro-thread-quantum-used thread) quantum)))
+      (##thread-yield!)
+      (##void)))
+
+;;;----------------------------------------------------------------------------
+
+;; The procedure thread-base-priority returns the base priority of the
+;; thread.
+
+(define-prim (thread-base-priority thread)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (thread)
+    (macro-check-thread thread 1 (thread-base-priority thread)
+      (begin
+        (macro-lock-thread! thread)
+        (macro-check-initialized-thread thread (thread-base-priority thread)
+          (let ((result (macro-thread-base-priority thread)))
+            (macro-unlock-thread! thread)
+            result))))))
+
+;; The procedure thread-base-priority-set! changes the base priority
+;; of the thread and reschedules the thread according to its new
+;; effective priority.
+
+(define-prim (thread-base-priority-set! thread base-priority)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (thread base-priority)
+    (macro-check-thread
+      thread
+      1
+      (thread-base-priority-set! thread base-priority)
+      (macro-check-real
+        base-priority
+        2
+        (thread-base-priority-set! thread base-priority)
+        (begin
+          (macro-lock-thread! thread)
+          (macro-check-initialized-thread
+            thread
+            (thread-base-priority-set! thread base-priority)
+            (##thread-base-priority-set-locked!
+             thread
+             (macro-real->inexact base-priority))))))))
 
 (define-prim (##thread-base-priority-set! thread base-priority)
 
   (##declare (not interrupts-enabled))
+
+  ;; acquire low-level lock of the thread
+  (macro-lock-thread! thread)
+
+  (##thread-base-priority-set-locked! thread base-priority))
+
+(define-prim (##thread-base-priority-set-locked! thread base-priority)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Assumes that exclusive access to the thread has been acquired.
 
   (let ((floats (macro-thread-floats thread)))
 
@@ -1967,39 +2215,83 @@
 
     (if (##fl= (macro-base-priority floats)
                (macro-boosted-priority floats))
-      (macro-boosted-priority-set!
-       floats
-       base-priority)
-      (macro-boosted-priority-set!
-       floats
-       (##fl+ base-priority
-              (macro-priority-boost floats))))
+        (macro-boosted-priority-set!
+         floats
+         base-priority)
+        (macro-boosted-priority-set!
+         floats
+         (##fl+ base-priority
+                (macro-priority-boost floats))))
 
     (macro-base-priority-set! floats base-priority)
 
-    (##thread-boosted-priority-changed! thread)
+    (##thread-boosted-priority-changed! thread) ;;TOO:integrate rescheduling
 
     ;; the change of priority may have made a higher priority
     ;; thread runnable, check for this
 
     (macro-thread-reschedule-if-needed!)))
 
-(define-prim (##thread-quantum-set! thread quantum)
+;; The procedure thread-priority-boot returns the priority boost of
+;; the thread.
+
+(define-prim (thread-priority-boost thread)
 
   (##declare (not interrupts-enabled))
 
-  (macro-thread-quantum-set! thread quantum)
+  (macro-force-vars (thread)
+    (macro-check-thread thread 1 (thread-priority-boost thread)
+      (begin
+        (macro-lock-thread! thread)
+        (macro-check-initialized-thread thread (thread-priority-boost thread)
+          (let ((result (macro-thread-priority-boost thread)))
+            (macro-unlock-thread! thread)
+            result))))))
 
-  ;; check if the current thread's quantum is now over
+;; The procedure thread-priority-boost-set! changes the priority boost
+;; of the thread and reschedules the thread according to its new
+;; effective priority.
 
-  (if (and (##eq? thread (macro-current-thread))
-           (##not (##fl< (macro-thread-quantum-used thread) quantum)))
-    (##thread-yield!)
-    (##void)))
+(define-prim (thread-priority-boost-set! thread priority-boost)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (thread priority-boost)
+    (macro-check-thread
+     thread
+     1
+     (thread-priority-boost-set! thread priority-boost)
+     (macro-check-real
+      priority-boost
+      2
+      (thread-priority-boost-set! thread priority-boost)
+      (let ((b (macro-real->inexact priority-boost)))
+        (if (##flnegative? b)
+          (##raise-range-exception 2
+                                   thread-priority-boost-set!
+                                   thread
+                                   priority-boost)
+          (begin
+            (macro-lock-thread! thread)
+            (macro-check-initialized-thread
+              thread
+              (thread-priority-boost-set! thread priority-boost)
+              (##thread-priority-boost-set-locked! thread b)))))))))
 
 (define-prim (##thread-priority-boost-set! thread priority-boost)
 
   (##declare (not interrupts-enabled))
+
+  ;; acquire low-level lock of the thread
+  (macro-lock-thread! thread)
+
+  (##thread-priority-boost-set-locked! thread priority-boost))
+
+(define-prim (##thread-priority-boost-set-locked! thread priority-boost)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Assumes that exclusive access to the thread has been acquired.
 
   (let ((floats (macro-thread-floats thread)))
 
@@ -2110,6 +2402,8 @@
                 (macro-temp (macro-thread-floats (macro-current-processor)))
                 (macro-effective-priority floats)))
       (##thread-effective-priority-changed! thread #f))))
+
+;;;----------------------------------------------------------------------------
 
 (define-prim (##thread-btq-insert! btq thread)
   (##declare (not interrupts-enabled))
@@ -2875,6 +3169,8 @@
            primordial-tgroup
            input-port
            output-port)))
+
+    (macro-thread-exception?-set! primordial-thread #f) ;; indicate started
 
     (macro-processor-current-thread-set!
      (macro-current-processor)
@@ -3676,39 +3972,62 @@
   (macro-lock-condvar! condvar)
 
   (if timeout
+
       (let ((result
              (macro-thread-save!
               (lambda (current-thread mutex condvar timeout)
 
-                (macro-thread-resume-thunk-set!
-                 current-thread
-                 ##thread-void-action!)
-
-                (macro-lock-thread! (macro-current-thread)) ;; acquire low-level lock
+                ;; acquire low-level lock of the current thread
+                (macro-lock-thread! current-thread)
 
                 ;;TODO: reenable
                 #;
                 (macro-thread-boost-and-clear-quantum-used!
                  current-thread)
+
+                ;; add current thread to blocked thread queue
+                ;; of the condition variable
                 (##thread-btq-insert! condvar current-thread)
-                #;
+
+                ;; acquire low-level lock of processor
+                (macro-lock-current-processor!)
+
+                ;; thread is no longer the current thread
+                (macro-processor-current-thread-set!
+                 (macro-current-processor)
+                 #f)
+
+                ;; also add current thread to timeout queue
+                ;; if the lock operation is time-limited
                 (if (##not (##eq? timeout #t)) ;; finite timeout?
                     (begin
+
+                      ;; save current thread's timeout
                       (macro-thread-timeout-set!
                        current-thread
                        timeout)
+
+                      ;; add current thread to timeout queue
                       (##toq-insert!
                        (macro-current-processor)
                        current-thread)))
 
-                (macro-unlock-thread! (macro-current-thread)) ;; release low-level lock
+                ;; release low-level lock of processor
+                (macro-unlock-current-processor!)
 
-                (macro-mutex-unlock-no-reschedule! mutex)
+                ;; by default resuming thread should return void
+                (macro-thread-resume-thunk-set!
+                 current-thread
+                 ##thread-void-action!)
+
+                ;; release low-level lock of the current thread
+                (macro-unlock-thread! current-thread)
 
                 ;; release low-level lock of condition variable
                 (macro-unlock-condvar! condvar)
 
-                (macro-processor-current-thread-set! (macro-current-processor) #f)
+                ;; unlock mutex
+                (macro-mutex-unlock-no-reschedule! mutex)
 
                 ;; schedule next runnable thread
                 (##thread-schedule!))
@@ -3721,11 +4040,13 @@
 
       (begin
 
-        (macro-mutex-unlock-no-reschedule! mutex)
-
         ;; release low-level lock of condition variable
         (macro-unlock-condvar! condvar)
 
+        ;; unlock mutex
+        (macro-mutex-unlock-no-reschedule! mutex)
+
+        ;;TODO:reenable
         ;;(macro-thread-reschedule-if-needed!)
 
         #f)))
@@ -4020,101 +4341,7 @@
 
 ;;; User accessible primitives for threads.
 
-(define-prim (thread-base-priority thread)
-  (macro-force-vars (thread)
-    (macro-check-thread thread 1 (thread-base-priority thread)
-      (begin
-        (macro-lock-thread! thread)
-        (macro-check-initialized-thread thread (thread-base-priority thread)
-          (let ((result (macro-thread-base-priority thread)))
-            (macro-unlock-thread! thread)
-            result))))))
-
-(define-prim (thread-base-priority-set! thread base-priority)
-  (macro-force-vars (thread base-priority)
-    (macro-check-thread
-     thread
-     1
-     (thread-base-priority-set! thread base-priority)
-     (macro-check-real
-      base-priority
-      2
-      (thread-base-priority-set! thread base-priority)
-      (begin
-        (macro-lock-thread! thread)
-        (macro-check-initialized-thread
-          thread
-          (thread-base-priority-set! thread base-priority)
-          (begin
-            (macro-unlock-thread! thread)
-            (##thread-base-priority-set!
-             thread
-             (macro-real->inexact base-priority)))))))))
-
-(define-prim (thread-quantum thread)
-  (macro-force-vars (thread)
-    (macro-check-thread thread 1 (thread-quantum thread)
-      (begin
-        (macro-lock-thread! thread)
-        (macro-check-initialized-thread thread (thread-quantum thread)
-          (let ((result (macro-thread-quantum thread)))
-            (macro-unlock-thread! thread)
-            result))))))
-
-(define-prim (thread-quantum-set! thread quantum)
-  (macro-force-vars (thread quantum)
-    (macro-check-thread thread 1 (thread-quantum-set! thread quantum)
-      (macro-check-real
-       quantum
-       2
-       (thread-quantum-set! thread quantum)
-       (let ((q (macro-real->inexact quantum)))
-         (if (##flnegative? q)
-           (##raise-range-exception 2 thread-quantum-set! thread quantum)
-           (begin
-             (macro-lock-thread! thread)
-             (macro-check-initialized-thread
-               thread
-               (thread-quantum-set! thread quantum)
-               (begin
-                 (macro-unlock-thread! thread)
-                 (##thread-quantum-set! thread q))))))))))
-
-(define-prim (thread-priority-boost thread)
-  (macro-force-vars (thread)
-    (macro-check-thread thread 1 (thread-priority-boost thread)
-      (begin
-        (macro-lock-thread! thread)
-        (macro-check-initialized-thread thread (thread-priority-boost thread)
-          (let ((result (macro-thread-priority-boost thread)))
-            (macro-unlock-thread! thread)
-            result))))))
-
-(define-prim (thread-priority-boost-set! thread priority-boost)
-  (macro-force-vars (thread priority-boost)
-    (macro-check-thread
-     thread
-     1
-     (thread-priority-boost-set! thread priority-boost)
-     (macro-check-real
-      priority-boost
-      2
-      (thread-priority-boost-set! thread priority-boost)
-      (let ((b (macro-real->inexact priority-boost)))
-        (if (##flnegative? b)
-          (##raise-range-exception 2
-                                   thread-priority-boost-set!
-                                   thread
-                                   priority-boost)
-          (begin
-            (macro-lock-thread! thread)
-            (macro-check-initialized-thread
-              thread
-              (thread-priority-boost-set! thread priority-boost)
-              (begin
-                (macro-unlock-thread! thread)
-                (##thread-priority-boost-set! thread b))))))))))
-
+;;TODO:deprecated
 (define-prim (thread-suspend! thread)
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-suspend! thread)
@@ -4125,6 +4352,7 @@
             (macro-unlock-thread! thread)
             (##thread-suspend! thread)))))))
 
+;;TODO:deprecated
 (define-prim (thread-resume! thread)
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-resume! thread)
@@ -4135,42 +4363,7 @@
             (macro-unlock-thread! thread)
             (##thread-resume! thread)))))))
 
-(define-prim (thread-state thread)
-  (macro-force-vars (thread)
-    (macro-check-thread thread 1 (thread-state thread)
-      (##thread-state thread))))
-
-(define-prim (##thread-state thread)
-  (##declare (not interrupts-enabled))
-  (cond ((##not (macro-initialized-thread? thread))
-         (macro-make-constant-thread-state-uninitialized))
-        ((macro-terminated-thread-given-initialized? thread)
-         (if (macro-thread-exception? thread)
-             (macro-make-thread-state-abnormally-terminated
-              (macro-thread-result thread))
-             (macro-make-thread-state-normally-terminated
-              (macro-thread-result thread))))
-        ((##not (macro-started-thread-given-initialized? thread))
-         (macro-make-constant-thread-state-initialized))
-        (else
-         (let* ((btq
-                 (macro-thread->btq thread))
-                (toq
-                 (macro-thread->toq thread))
-                (timeout
-                 (and toq
-                      (let* ((floats (macro-thread-floats thread))
-                             (timeout (macro-timeout floats)))
-                        (macro-make-time timeout #f #f #f)))))
-           (macro-make-thread-state-active
-            (cond ((##eq? btq (macro-current-processor))
-                   #f)
-                  ((and (macro-condvar? btq)
-                        (##io-condvar? btq))
-                   (##io-condvar-port btq))
-                  (else
-                   btq))
-            timeout)))))
+;;;----------------------------------------------------------------------------
 
 ;;; User accessible primitives for condition variables
 

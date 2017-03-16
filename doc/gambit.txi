@@ -4244,9 +4244,11 @@ For example:
 @deffn procedure thread-state @var{thread}
 @deffnx procedure thread-state-uninitialized? @var{thread-state}
 @deffnx procedure thread-state-initialized? @var{thread-state}
-@deffnx procedure thread-state-active? @var{thread-state}
-@deffnx procedure thread-state-active-waiting-for @var{thread-state}
-@deffnx procedure thread-state-active-timeout @var{thread-state}
+@deffnx procedure thread-state-running? @var{thread-state}
+@deffnx procedure thread-state-running-processor @var{thread-state}
+@deffnx procedure thread-state-waiting? @var{thread-state}
+@deffnx procedure thread-state-waiting-for @var{thread-state}
+@deffnx procedure thread-state-waiting-timeout @var{thread-state}
 @deffnx procedure thread-state-normally-terminated? @var{thread-state}
 @deffnx procedure thread-state-normally-terminated-result @var{thread-state}
 @deffnx procedure thread-state-abnormally-terminated? @var{thread-state}
@@ -4289,6 +4291,11 @@ For example:
 @deffnx procedure rpc-remote-error-exception-procedure @var{exc}
 @deffnx procedure rpc-remote-error-exception-arguments @var{exc}
 @deffnx procedure rpc-remote-error-exception-message @var{exc}
+@end deffn
+
+@deffn procedure processor? @var{obj}
+@deffnx procedure current-processor
+@deffnx procedure processor-id @var{processor}
 @end deffn
 
 @deffn procedure timeout->time @var{timeout}
