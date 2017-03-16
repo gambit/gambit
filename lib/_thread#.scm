@@ -168,6 +168,12 @@
 (define-check-type absrel-time-or-false 'absrel-time-or-false
   macro-absrel-time-or-false?)
 
+(define-check-type vm 'vm
+  macro-vm?)
+
+(define-check-type processor 'processor
+  macro-processor?)
+
 (define-check-type thread 'thread
   macro-thread?)
 
@@ -1973,13 +1979,21 @@
   (reason printable: read-only:)
 )
 
-(define-library-type thread-state-active
-  id: dc963fdc-4b54-45a2-8af6-01654a6dc6cd
+(define-library-type thread-state-waiting
+  id: eb5a81e1-5061-4074-a27e-cc706735d39a
   constructor: #f
   opaque:
 
-  (waiting-for printable: read-only:)
-  (timeout    printable: read-only:)
+  (for     printable: read-only:)
+  (timeout printable: read-only:)
+)
+
+(define-library-type thread-state-running
+  id: f839d55a-1d42-4b64-97a6-2d16921dc0b7
+  constructor: #f
+  opaque:
+
+  (processor printable: read-only:)
 )
 
 ;;;============================================================================

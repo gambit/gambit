@@ -138,6 +138,8 @@
 (implement-check-type-time)
 (implement-check-type-absrel-time)
 (implement-check-type-absrel-time-or-false)
+(implement-check-type-vm)
+(implement-check-type-processor)
 (implement-check-type-thread)
 (implement-check-type-mutex)
 (implement-check-type-condvar)
@@ -145,6 +147,8 @@
 
 ;;;----------------------------------------------------------------------------
 
+(implement-type-vm)
+(implement-type-processor)
 (implement-type-thread)
 (implement-type-mutex)
 (implement-type-condvar)
@@ -154,7 +158,8 @@
 (implement-library-type-thread-state-initialized)
 (implement-library-type-thread-state-normally-terminated)
 (implement-library-type-thread-state-abnormally-terminated)
-(implement-library-type-thread-state-active)
+(implement-library-type-thread-state-waiting)
+(implement-library-type-thread-state-running)
 
 (##declare (not interrupts-enabled));;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2270,6 +2275,7 @@
       (macro-check-initialized-thread thread (thread-suspend! thread)
         (##thread-suspend! thread)))))
 
+;;TODO:deprecated
 (define-prim (thread-resume! thread)
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-resume! thread)
@@ -2316,42 +2322,7 @@
           (macro-check-procedure thunk 2 (thread-interrupt! thread thunk)
             (##thread-interrupt! thread thunk))))))
 
-(define-prim (thread-state thread)
-  (macro-force-vars (thread)
-    (macro-check-thread thread 1 (thread-state thread)
-      (##thread-state thread))))
-
-(define-prim (##thread-state thread)
-  (##declare (not interrupts-enabled))
-  (cond ((##not (macro-initialized-thread? thread))
-         (macro-make-constant-thread-state-uninitialized))
-        ((macro-terminated-thread-given-initialized? thread)
-         (if (macro-thread-exception? thread)
-             (macro-make-thread-state-abnormally-terminated
-              (macro-thread-result thread))
-             (macro-make-thread-state-normally-terminated
-              (macro-thread-result thread))))
-        ((##not (macro-started-thread-given-initialized? thread))
-         (macro-make-constant-thread-state-initialized))
-        (else
-         (let* ((btq
-                 (macro-thread->btq thread))
-                (toq
-                 (macro-thread->toq thread))
-                (timeout
-                 (and toq
-                      (let* ((floats (macro-thread-floats thread))
-                             (timeout (macro-timeout floats)))
-                        (macro-make-time timeout #f #f #f)))))
-           (macro-make-thread-state-active
-            (cond ((##eq? btq (macro-current-processor))
-                   #f)
-                  ((and (macro-condvar? btq)
-                        (##io-condvar? btq))
-                   (##io-condvar-port btq))
-                  (else
-                   btq))
-            timeout)))))
+;;;----------------------------------------------------------------------------
 
 ;;; User accessible primitives for mutexes.
 

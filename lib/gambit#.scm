@@ -119,6 +119,7 @@ create-symbolic-link
 current-directory
 current-error-port
 current-exception-handler
+current-processor
 current-readtable
 current-thread
 current-time
@@ -493,6 +494,8 @@ println
 process-pid
 process-status
 process-times
+processor-id
+processor?
 protocol-info
 protocol-info-aliases
 protocol-info-name
@@ -800,13 +803,15 @@ thread-start!
 thread-state
 thread-state-abnormally-terminated-reason
 thread-state-abnormally-terminated?
-thread-state-active-timeout
-thread-state-active-waiting-for
-thread-state-active?
 thread-state-initialized?
 thread-state-normally-terminated-result
 thread-state-normally-terminated?
+thread-state-running-processor
+thread-state-running?
 thread-state-uninitialized?
+thread-state-waiting-for
+thread-state-waiting-timeout
+thread-state-waiting?
 thread-suspend!
 thread-terminate!
 thread-thread-group
