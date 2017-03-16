@@ -84,7 +84,7 @@ build_script:
 
 test_script:
 
-  - sh -c "make check"
+  - sh -c "make check && make st"
 
 
 
