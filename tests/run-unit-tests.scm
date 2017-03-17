@@ -89,6 +89,11 @@
   (for-each
 
    (lambda (mode)
+
+     (print "\r\033[A"
+            file
+            "\33[K\n")
+
      (let ((result (test-using-mode file mode)))
 
        (if (= 0 (car result))
@@ -114,6 +119,8 @@
   (set! nb-other 0)
   (set! nb-total (length files))
   (set! start (time->seconds (current-time)))
+
+  (print "\n")
 
   (for-each test files)
 
