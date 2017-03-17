@@ -2139,6 +2139,9 @@
 
   (macro-thread-quantum-set! thread quantum)
 
+  ;; release low-level lock of the thread
+  (macro-unlock-thread! thread)
+
   ;; check if the current thread's quantum is now over
 
   (if (and (##eq? thread (macro-current-thread))
