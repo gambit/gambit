@@ -1587,6 +1587,8 @@
            input-port
            output-port)))
 
+    (macro-thread-exception?-set! primordial-thread #f)
+
     (macro-processor-current-thread-set!
      (macro-current-processor)
      primordial-thread)
@@ -2104,6 +2106,42 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; The procedure current-processor returns the processor executing the
+;; current thread.
+
+(define-prim (current-processor)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-current-processor))
+
+;;;----------------------------------------------------------------------------
+
+;; The procedure processor? returns #t when the parameter is a processor
+;; and #f otherwise.
+
+(define-prim (processor? obj)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (obj)
+    (macro-processor? obj)))
+
+;;;----------------------------------------------------------------------------
+
+;; The procedure processor? returns #t when the parameter is a processor
+;; and #f otherwise.
+
+(define-prim (processor-id processor)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (processor)
+    (macro-check-processor processor 1 (processor-id processor)
+      (macro-processor-id processor))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; User accessible primitives for threads.
 
 (define-prim (current-thread)
@@ -2321,6 +2359,43 @@
           (##thread-interrupt! thread)
           (macro-check-procedure thunk 2 (thread-interrupt! thread thunk)
             (##thread-interrupt! thread thunk))))))
+
+(define-prim (thread-state thread)
+  (macro-force-vars (thread)
+    (macro-check-thread thread 1 (thread-state thread)
+      (##thread-state thread))))
+
+(define-prim (##thread-state thread)
+  (##declare (not interrupts-enabled))
+  (cond ((##not (macro-initialized-thread? thread))
+         (macro-make-constant-thread-state-uninitialized))
+        ((macro-terminated-thread-given-initialized? thread)
+         (if (macro-thread-exception? thread)
+             (macro-make-thread-state-abnormally-terminated
+              (macro-thread-result thread))
+             (macro-make-thread-state-normally-terminated
+              (macro-thread-result thread))))
+        ((##not (macro-started-thread-given-initialized? thread))
+         (macro-make-constant-thread-state-initialized))
+        (else
+         (let* ((btq
+                 (macro-thread->btq thread))
+                (toq
+                 (macro-thread->toq thread))
+                (timeout
+                 (and toq
+                      (let* ((floats (macro-thread-floats thread))
+                             (timeout (macro-timeout floats)))
+                        (macro-make-time timeout #f #f #f)))))
+           (if (##eq? btq (macro-current-processor))
+               (macro-make-thread-state-running
+                btq)
+               (macro-make-thread-state-waiting
+                (if (and (macro-condvar? btq)
+                         (##io-condvar? btq))
+                    (##io-condvar-port btq)
+                    btq)
+                timeout))))))
 
 ;;;----------------------------------------------------------------------------
 

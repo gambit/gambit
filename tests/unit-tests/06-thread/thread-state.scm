@@ -90,7 +90,7 @@
       (else
        (check-false "s2 should be thread-state-running or thread-state-waiting")))
 
-(waste-time 300)
+(thread-join! t2)
 
 (check-equal? var 1)
 
