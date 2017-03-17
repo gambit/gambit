@@ -69,15 +69,15 @@ build_script:
 
   - '"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall" %vcvar_arg%'
   - SET PATH=C:\MinGW\msys\1.0\bin;%PATH%
-  - IF [%tools%]==[msvc] sh -c "%c_comp%;./configure --enable-c-opt=-Od CC=%c_comp%;make current-gsc-boot;./configure CC=%c_comp%;make"
+  - IF [%tools%]==[msvc] sh -c "%c_comp%;./configure --enable-c-opt=-Od CC=%c_comp%;make current-gsc-boot;make clean;./configure CC=%c_comp%;make"
 
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-32] SET PATH=C:\MinGW\bin;%PATH%
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-64] SET PATH=C:\mingw64\bin;%PATH%
-  - IF [%tools%]==[mingw] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;./configure CC=%c_comp%;make"
+  - IF [%tools%]==[mingw] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;make clean;./configure CC=%c_comp%;make"
 
   - IF [%tools%]==[cygwin] IF [%arch%]==[x86-32] SET PATH=C:\cygwin\bin;%PATH%
   - IF [%tools%]==[cygwin] IF [%arch%]==[x86-64] SET PATH=C:\cygwin64\bin;%PATH%
-  - IF [%tools%]==[cygwin] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;./configure CC=%c_comp%;make"
+  - IF [%tools%]==[cygwin] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;make clean;./configure CC=%c_comp%;make"
 
 
 
