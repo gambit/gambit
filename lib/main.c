@@ -38,7 +38,7 @@ int debug_settings;)
         "  hHEAPSIZE       set maximum heap size in kilobytes\n"
         "  lLIVEPERCENT    set heap live ratio after GC in percent\n"
 #ifndef ___SINGLE_THREADED_VMS
-        "  pLEVEL          set parallelism level (default = nb of cpus)\n"
+        "  pLEVEL          set parallelism level (default = 50% of cpus)\n"
 #endif
         "  s|S             set standard Scheme mode (on|off)\n"
         "  d[OPT...]       set debugging options; OPT is one of:\n"
@@ -212,7 +212,11 @@ ___mod_or_lnk (*linker)();)
 #ifdef ___SINGLE_THREADED_VMS
   parallelism_level = 1;
 #else
-  parallelism_level = ___cpu_count ();
+  {
+    int count = ___cpu_count ();
+    if (count < 1) count = 1;
+    parallelism_level = ___CEILING_DIV(count*50,100); /* default = 50% */
+  }
 #endif
   standard_level = 0;
   debug_settings = ___DEBUG_SETTINGS_INITIAL;
@@ -333,16 +337,35 @@ ___mod_or_lnk (*linker)();)
                   }
                 switch (*s)
                   {
-                  case 'm': min_heap_len = argval<<10;
-                            break;
-                  case 'h': max_heap_len = argval<<10;
-                            break;
-                  case 'l': if (argval > 100)
-                              argval = 100;
-                            live_percent = argval;
-                            break;
+                  case 'm':
+                    min_heap_len = argval<<10;
+                    break;
+                  case 'h':
+                    max_heap_len = argval<<10;
+                    break;
+                  case 'l':
+                    if (argval > 100)
+                      argval = 100;
+                    live_percent = argval;
+                    break;
+                  case 'p':
+                    if (*arg == '%')
+                      {
 #ifndef ___SINGLE_THREADED_VMS
-                  case 'p': parallelism_level = neg ? -argval : argval;
+                        int count = ___cpu_count ();
+                        if (argval > 100)
+                          argval = 100;
+                        parallelism_level = ___CEILING_DIV(count*argval,100);
+                        if (neg)
+                          parallelism_level = count - parallelism_level;
+                        if (parallelism_level < 1)
+                          parallelism_level = 1;
+#endif
+                        arg++;
+                      }
+#ifndef ___SINGLE_THREADED_VMS
+                    else
+                      parallelism_level = neg ? -argval : argval;
 #endif
                   }
                 break;
