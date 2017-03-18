@@ -181,6 +181,7 @@ ut:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
 
 st:
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -e '(pp (list processor-count: (##current-vm-processor-count) cpu-count: (##cpu-count)))'
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -gsc
 
 bootstrap-pre:
