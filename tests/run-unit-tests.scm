@@ -39,7 +39,7 @@
 
   (if (tty? (current-output-port))
 
-      (let* ((bar-width 42)
+      (let* ((bar-width 16)
              (bar-length (ratio bar-width)))
 
         (define (esc x)
@@ -47,17 +47,18 @@
 
         (print "\r"
                "["
-               (esc "\33[32;1m") (num->string nb-good 4 0) (esc "\33[0m")
+               (esc "\33[32;1m") (num->string nb-good 3 0) (esc "\33[0m")
                "|"
-               (esc "\33[31;1m") (num->string nb-fail 4 0) (esc "\33[0m")
-               "|"
-               (esc "\33[34;1m") (num->string nb-other 4 0) (esc "\33[0m")
+               (esc "\33[31;1m") (num->string nb-fail 3 0) (esc "\33[0m")
+               ;;"|"
+               ;;(esc "\33[34;1m") (num->string nb-other 4 0) (esc "\33[0m")
                "] "
                (num->string (ratio 100) 3 0)
                "% "
                (make-string bar-length #\#)
                (make-string (- bar-width bar-length) #\.)
-               (num->string elapsed 6 1)
+               " "
+               (num->string elapsed 3 1)
                "s"
                (esc "\33[K")))))
 
@@ -90,9 +91,13 @@
 
    (lambda (mode)
 
-     (print "\r\033[A"
-            file
-            "\33[K\n")
+     (print
+      " "
+      (if (and (>= (string-length file) (string-length default-dir))
+               (string=? (substring file 0 (string-length default-dir))
+                         default-dir))
+          (substring file (string-length default-dir) (string-length file))
+          file))
 
      (let ((result (test-using-mode file mode)))
 
@@ -166,6 +171,8 @@
 
 (define modes '())
 
+(define default-dir "unit-tests/")
+
 (define (main . args)
 
   (define stress? #f)
@@ -184,7 +191,7 @@
           (loop))))
 
   (if (null? args)
-      (set! args '("unit-tests")))
+      (set! args (list default-dir)))
 
   (if (null? modes)
       (set! modes '("gsi")))

@@ -83,7 +83,7 @@ build_script:
 
 test_script:
 
-  - sh -c "make check && make st"
+  - sh -c "make check && make st && gsi/gsi -e '(pp (list processor-count: (##current-vm-processor-count)))'"
 
 
 
