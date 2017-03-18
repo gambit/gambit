@@ -106,7 +106,9 @@
            (begin
              (set! nb-fail (+ nb-fail 1))
              (print "\n")
-             (print "********************* FAILED " file "\n")
+             (print "********************* FAILED " file " WITH EXIT CODE "
+                    (quotient (car result) 256)
+                    "\n")
              (print (cdr result))))
 
        (show-bar nb-good
