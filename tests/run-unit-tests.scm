@@ -75,39 +75,106 @@
     (close-port port)
     (cons status output)))
 
+(define (run-gsi-under-debugger file debug?)
+  (if debug?
+
+      (if (equal? (cadr (system-type)) 'apple)
+
+          (begin
+            (with-output-to-file
+                "clean_exit.py"
+              (lambda ()
+                (print "import lldb\n"
+                       "import os\n"
+                       "\n"
+                       "def clean_exit(debugger, command, result, internal_dict):\n"
+                       "    target = debugger.GetSelectedTarget()\n"
+                       "    process = target.GetProcess()\n"
+                       "    if not process.exit_state == -1:\n"
+                       "        os._exit(process.exit_state)\n"
+                       "\n"
+                       "def exit1(debugger, command, result, internal_dict):\n"
+                       "    os._exit(1)\n"
+                       "\n"
+                       "def __lldb_init_module(debugger, internal_dict):\n"
+                       "    debugger.HandleCommand('command script add -f clean_exit.clean_exit clean_exit')\n"
+                       "    debugger.HandleCommand('command script add -f clean_exit.exit1 exit1')\n")))
+            (with-output-to-file
+                "dbg-script"
+              (lambda ()
+                (print "settings set auto-confirm 1\n"
+                       "command script import clean_exit.py\n"
+                       "run -:d-,flu,=.. -f " file "\n"
+                       "clean_exit\n"
+                       "thread backtrace all\n"
+                       "exit1\n")))
+            (let ((result
+                   (run "lldb" "-s" "dbg-script" "../gsi/gsi")))
+              (delete-file "clean_exit.py")
+              (delete-file "dbg-script")
+              result))
+
+          (begin
+            (with-output-to-file
+                "dbg-script"
+              (lambda ()
+                (print "set $_exitcode = -1\n"
+                       "run -:d-,flu,=.. -f " file "\n"
+                       "if $_exitcode != -1\n"
+                       "  quit\n"
+                       "end\n"
+                       "thread apply all bt\n"
+                       "quit 1\n")))
+            (let ((result
+                   (if (equal? (cadr (system-type)) 'apple)
+                       (run "sudo" "gdb" "-q" "-x" "dbg-script" "../gsi/gsi")
+                       (run "gdb" "-q" "-x" "dbg-script" "../gsi/gsi"))))
+              (delete-file "dbg-script")
+              result)))
+
+      (run "../gsi/gsi" "-:d-,flu,=.." "-f" file)))
+
 (define (test-using-mode file mode)
-  (cond ((equal? mode "gsi")
-         (run "../gsi/gsi" "-:d-,flu,=.." "-f" file))
-        ((equal? mode "gsc")
+  (cond ((or (equal? mode "gsi")
+             (equal? mode "gsi-dbg"))
+         (run-gsi-under-debugger file (equal? mode "gsi-dbg")))
+        ((or (equal? mode "gsc")
+             (equal? mode "gsc-dbg"))
          (let ((result (run "../gsc/gsc" "-:d-,flu,=.." "-f" "-o" "_test.o1" file)))
            (if (= 0 (car result))
-               (let ((result (run "../gsi/gsi" "-:d-,flu,=.." "-f" "_test.o1")))
+               (let ((result (run-gsi-under-debugger "_test.o1" (equal? mode "gsc-dbg"))))
                  (delete-file "_test.o1")
                  result)
                result)))))
+
+(define (trim-filename file)
+  (if (and (>= (string-length file) (string-length default-dir))
+           (string=? (substring file 0 (string-length default-dir))
+                     default-dir))
+      (substring file (string-length default-dir) (string-length file))
+      file))
 
 (define (test file)
   (for-each
 
    (lambda (mode)
 
-     (print
-      " "
-      (if (and (>= (string-length file) (string-length default-dir))
-               (string=? (substring file 0 (string-length default-dir))
-                         default-dir))
-          (substring file (string-length default-dir) (string-length file))
-          file))
+     (print " " (trim-filename file))
 
-     (let ((result (test-using-mode file mode)))
+     (let* ((result (test-using-mode file mode))
+            (status (car result))
+            (status-hi (quotient status 256))
+            (status-lo (modulo status 256)))
 
-       (if (= 0 (car result))
+       (if (= 0 status)
            (set! nb-good (+ nb-good 1))
            (begin
              (set! nb-fail (+ nb-fail 1))
              (print "\n")
-             (print "********************* FAILED " file " WITH EXIT CODE "
-                    (quotient (car result) 256)
+             (print "*** FAILED " (trim-filename file) " WITH EXIT CODE HI="
+                    status-hi
+                    " LO="
+                    status-lo
                     "\n")
              (print (cdr result))))
 
@@ -127,7 +194,7 @@
   (set! nb-total (length files))
   (set! start (time->seconds (current-time)))
 
-  (print "\n")
+  (show-bar nb-good nb-fail nb-other nb-total 0.0)
 
   (for-each test files)
 

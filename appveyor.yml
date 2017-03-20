@@ -73,11 +73,11 @@ build_script:
 
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-32] SET PATH=C:\MinGW\bin;%PATH%
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-64] SET PATH=C:\mingw64\bin;%PATH%
-  - IF [%tools%]==[mingw] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;make clean;./configure CC=%c_comp%;make"
+  - IF [%tools%]==[mingw] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;make clean;./configure --enable-debug CC=%c_comp%;make"
 
   - IF [%tools%]==[cygwin] IF [%arch%]==[x86-32] SET PATH=C:\cygwin\bin;%PATH%
   - IF [%tools%]==[cygwin] IF [%arch%]==[x86-64] SET PATH=C:\cygwin64\bin;%PATH%
-  - IF [%tools%]==[cygwin] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;make clean;./configure CC=%c_comp%;make"
+  - IF [%tools%]==[cygwin] sh -c "%c_comp% -v;./configure CC=%c_comp%;make current-gsc-boot;make clean;./configure --enable-debug CC=%c_comp%;make"
 
 
 
