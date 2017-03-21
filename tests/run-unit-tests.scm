@@ -84,8 +84,7 @@
             (with-output-to-file
                 "clean_exit.py"
               (lambda ()
-                (print "import lldb\n"
-                       "import os\n"
+                (print "import os\n"
                        "\n"
                        "def clean_exit(debugger, command, result, internal_dict):\n"
                        "    target = debugger.GetSelectedTarget()\n"
@@ -106,6 +105,7 @@
                        "command script import clean_exit.py\n"
                        "run -:d-,flu,=.. -f " file "\n"
                        "clean_exit\n"
+                       "frame variable\n"
                        "thread backtrace all\n"
                        "exit1\n")))
             (let ((result
@@ -121,8 +121,9 @@
                 (print "set $_exitcode = -1\n"
                        "run -:d-,flu,=.. -f " file "\n"
                        "if $_exitcode != -1\n"
-                       "  quit\n"
+                       "  quit $_exitcode\n"
                        "end\n"
+                       "info locals\n"
                        "thread apply all bt\n"
                        "quit 1\n")))
             (let ((result
