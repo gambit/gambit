@@ -22,7 +22,7 @@
 
   (define (inc!)
     ;; atomic increment of element at index 0
-    (##primitive-unlock! (thread-specific (current-thread)) 0 0))
+    (##vector-inc! (thread-specific (current-thread)) 0))
 
   (define (body)
     (let loop ((n iterations))

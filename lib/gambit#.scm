@@ -919,6 +919,7 @@ user-name
 vector-append
 vector-cas!
 vector-copy
+vector-inc!
 vector-shrink!
 void
 will-execute!

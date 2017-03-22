@@ -3235,6 +3235,7 @@ ___hp[-1]=x,___TAG((___hp-2),___tSUBTYPED))
 #define ___VECTORSET(v,i,val)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))=val;
 #define ___VECTORSHRINK(v,i)___temp=v;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+___LWS));
 #define ___VECTORCAS(v,i,val,oldval)___COMPARE_AND_SWAP_WORD((___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB))),oldval,val)
+#define ___VECTORINC(v,i,val)___FETCH_AND_ADD_WORD((___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB))),val)
 
 #define ___STRINGLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>___LCS))
 #define ___STRINGREF(x,y)___CHR(___CS_SELECT( \

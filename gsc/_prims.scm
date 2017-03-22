@@ -359,6 +359,7 @@
 ("set-box!"                           (2)   #t (1)   0    #f      gambit)
 
 ("vector-cas!"                        (4)   #t (1 2 4) 0  (#f)    gambit)
+("vector-inc!"                        (2 3) #t 0     0    fixnum  gambit)
 
 ("s8vector?"                          (1)   #f 0     0    boolean gambit)
 ("s8vector"                           0     #f 0     0    #f      gambit)
@@ -719,6 +720,7 @@
 ("##vector-set!"                      (3)   #t ()    0    vector  extended)
 ("##vector-shrink!"                   (2)   #t ()    0    vector  extended)
 ("##vector-cas!"                      (4)   #t ()    0    (#f)    extended)
+("##vector-inc!"                      (2 3) #t ()    0    fixnum  extended)
 
 ("##string"                           0     #f ()    0    string  extended)
 ("##make-string"                      (1 2) #f ()    0    string  extended)
@@ -3395,22 +3397,26 @@
            vect-ref-str
            vect-set!-str
            vect-cas!-str
+           vect-inc!-str
            **vect?-str
            **vect-length-str
            **vect-ref-str
            **vect-set!-str
            **vect-cas!-str
+           **vect-inc!-str
            value-checker)
     (let ((vect?-sym (string->canonical-symbol vect?-str))
           (vect-length-sym (string->canonical-symbol vect-length-str))
           (vect-ref-sym (string->canonical-symbol vect-ref-str))
           (vect-set!-sym (string->canonical-symbol vect-set!-str))
           (vect-cas!-sym (and vect-cas!-str (string->canonical-symbol vect-cas!-str)))
+          (vect-inc!-sym (and vect-inc!-str (string->canonical-symbol vect-inc!-str)))
           (**vect?-sym (string->canonical-symbol **vect?-str))
           (**vect-length-sym (string->canonical-symbol **vect-length-str))
           (**vect-ref-sym (string->canonical-symbol **vect-ref-str))
           (**vect-set!-sym (string->canonical-symbol **vect-set!-str))
-          (**vect-cas!-sym (and **vect-cas!-str (string->canonical-symbol **vect-cas!-str))))
+          (**vect-cas!-sym (and **vect-cas!-str (string->canonical-symbol **vect-cas!-str)))
+          (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str))))
 
       (define (gen-type-check source env vect-arg)
         (gen-call-prim-vars source env
@@ -3467,7 +3473,7 @@
                   (generate-call vars))
                 call-prim)))))
 
-      (define (make-ref-set!-cas!-expander type-check? kind)
+      (define (make-ref-set!-cas!-inc!-expander type-check? kind)
         (lambda (ptree oper args generate-call check-run-time-binding)
           (let* ((source
                   (node-source ptree))
@@ -3525,7 +3531,8 @@
                     (case kind
                       ((ref)  **vect-ref-sym)
                       ((set!) **vect-set!-sym)
-                      (else   **vect-cas!-sym))
+                      ((cas!) **vect-cas!-sym)
+                      (else   **vect-inc!-sym))
                     vars))
                  (value
                   (if (eq? kind 'set!)
@@ -3549,16 +3556,21 @@
 
       (def-exp
        vect-ref-str
-       (make-ref-set!-cas!-expander #t 'ref))
+       (make-ref-set!-cas!-inc!-expander #t 'ref))
 
       (def-exp
        vect-set!-str
-       (make-ref-set!-cas!-expander #t 'set!))
+       (make-ref-set!-cas!-inc!-expander #t 'set!))
 
       (if vect-cas!-str
           (def-exp
             vect-cas!-str
-            (make-ref-set!-cas!-expander #t 'cas!)))))
+            (make-ref-set!-cas!-inc!-expander #t 'cas!)))
+
+      (if vect-inc!-str
+          (def-exp
+            vect-inc!-str
+            (make-ref-set!-cas!-inc!-expander #t 'inc!)))))
 
   (make-vector-expanders
    "vector?"
@@ -3566,11 +3578,13 @@
    "vector-ref"
    "vector-set!"
    "vector-cas!"
+   "vector-inc!"
    "##vector?"
    "##vector-length"
    "##vector-ref"
    "##vector-set!"
    "##vector-cas!"
+   "##vector-inc!"
    #f)
 
   (make-vector-expanders
@@ -3579,10 +3593,12 @@
    "string-ref"
    "string-set!"
    #f
+   #f
    "##string?"
    "##string-length"
    "##string-ref"
    "##string-set!"
+   #f
    #f
    (lambda (source env var)
      (gen-call-prim-vars source env
@@ -3595,10 +3611,12 @@
    "s8vector-ref"
    "s8vector-set!"
    #f
+   #f
    "##s8vector?"
    "##s8vector-length"
    "##s8vector-ref"
    "##s8vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker -128 127))
 
@@ -3608,10 +3626,12 @@
    "u8vector-ref"
    "u8vector-set!"
    #f
+   #f
    "##u8vector?"
    "##u8vector-length"
    "##u8vector-ref"
    "##u8vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker 0 255))
 
@@ -3621,10 +3641,12 @@
    "s16vector-ref"
    "s16vector-set!"
    #f
+   #f
    "##s16vector?"
    "##s16vector-length"
    "##s16vector-ref"
    "##s16vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker -32768 32767))
 
@@ -3634,10 +3656,12 @@
    "u16vector-ref"
    "u16vector-set!"
    #f
+   #f
    "##u16vector?"
    "##u16vector-length"
    "##u16vector-ref"
    "##u16vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker 0 65535))
 
@@ -3648,10 +3672,12 @@
    "s32vector-ref"
    "s32vector-set!"
    #f
+   #f
    "##s32vector?"
    "##s32vector-length"
    "##s32vector-ref"
    "##s32vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker -2147483648 2147483647))
 
@@ -3662,10 +3688,12 @@
    "u32vector-ref"
    "u32vector-set!"
    #f
+   #f
    "##u32vector?"
    "##u32vector-length"
    "##u32vector-ref"
    "##u32vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker 0 4294967295))
 
@@ -3676,10 +3704,12 @@
    "s64vector-ref"
    "s64vector-set!"
    #f
+   #f
    "##s64vector?"
    "##s64vector-length"
    "##s64vector-ref"
    "##s64vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker -9223372036854775808 9223372036854775807))
 
@@ -3690,10 +3720,12 @@
    "u64vector-ref"
    "u64vector-set!"
    #f
+   #f
    "##u64vector?"
    "##u64vector-length"
    "##u64vector-ref"
    "##u64vector-set!"
+   #f
    #f
    (make-fixnum-interval-checker 0 18446744073709551615))
 
@@ -3703,10 +3735,12 @@
    "f32vector-ref"
    "f32vector-set!"
    #f
+   #f
    "##f32vector?"
    "##f32vector-length"
    "##f32vector-ref"
    "##f32vector-set!"
+   #f
    #f
    (make-flonum-checker))
 
@@ -3716,10 +3750,12 @@
    "f64vector-ref"
    "f64vector-set!"
    #f
+   #f
    "##f64vector?"
    "##f64vector-length"
    "##f64vector-ref"
    "##f64vector-set!"
+   #f
    #f
    (make-flonum-checker))
 )

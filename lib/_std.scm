@@ -2,7 +2,7 @@
 
 ;;; File: "_std.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -144,6 +144,35 @@
           (##vector-length vect)
           (vector-cas! vect k val oldval)
           (##vector-cas! vect k val oldval))))))
+
+(define-prim (##vector-inc! vect k #!optional (val 1))
+  ;;TODO: remove after bootstrap
+  (##declare (not interrupts-enabled))
+  (let ((result (##vector-ref vect k)))
+    (##vector-set! vect k (##fxwrap+ result val))
+    result))
+
+(define-prim (vector-inc! vect k #!optional (v (macro-absent-obj)))
+  (macro-force-vars (vect k v)
+    (macro-check-vector vect 1 (vector-inc! vect k v)
+      (macro-check-subtyped-mutable vect 1 (vector-inc! vect k v)
+        (macro-check-index-range
+          k
+          2
+          0
+          (##vector-length vect)
+          (vector-inc! vect k v)
+          (let ((val (if (##eq? v (macro-absent-obj)) 1 v)))
+            (macro-check-fixnum
+              val
+              3
+              (vector-inc! vect k v)
+              (let ((elem (##vector-ref vect k)))
+                (macro-check-fixnum
+                  elem
+                  1
+                  (vector-inc! vect k v)
+                  (##vector-inc! vect k val))))))))))
 
 ;;;----------------------------------------------------------------------------
 

@@ -3516,6 +3516,20 @@
 (targ-op "##vector-shrink!"   (targ-apply-simp-u #f #t #f "VECTORSHRINK"))
 (targ-op "##vector-cas!"      (targ-apply-simp-u #f 'expr 1 "VECTORCAS"))
 
+(targ-op
+ "##vector-inc!"
+ (targ-setup-inlinable-proc
+  #f
+  'expr
+  #f
+  (lambda (opnds sn)
+    (let* ((arg1 (targ-opnd (car opnds)))
+           (arg2 (targ-opnd (cadr opnds)))
+           (arg3 (targ-opnd (if (= (length opnds) 3)
+                                (caddr opnds)
+                                (make-obj 1)))))
+      (list "VECTORINC" arg1 arg2 arg3)))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##s8vector"         (targ-apply-vector-u 's8vector))
