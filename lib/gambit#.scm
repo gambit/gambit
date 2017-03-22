@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -919,6 +919,7 @@ user-name
 vector-append
 vector-cas!
 vector-copy
+vector-inc!
 vector-shrink!
 void
 will-execute!
