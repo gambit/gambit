@@ -32,6 +32,32 @@
           (let ((blanks (- w (+ lsi lsf))))
             (string-append (make-string (max blanks 0) #\space) si sf)))))))
 
+(define (sort-list lst <?)
+
+  (define (mergesort lst)
+
+    (define (merge lst1 lst2)
+      (cond ((null? lst1) lst2)
+            ((null? lst2) lst1)
+            (else
+             (let ((e1 (car lst1)) (e2 (car lst2)))
+               (if (<? e1 e2)
+                 (cons e1 (merge (cdr lst1) lst2))
+                 (cons e2 (merge lst1 (cdr lst2))))))))
+
+    (define (split lst)
+      (if (or (null? lst) (null? (cdr lst)))
+        lst
+        (cons (car lst) (split (cddr lst)))))
+
+    (if (or (null? lst) (null? (cdr lst)))
+      lst
+      (let* ((lst1 (mergesort (split lst)))
+             (lst2 (mergesort (split (cdr lst)))))
+        (merge lst1 lst2))))
+
+  (mergesort lst))
+
 (define (show-bar nb-good nb-fail nb-other nb-total elapsed)
 
   (define (ratio n)
@@ -107,6 +133,7 @@
                        "clean_exit\n"
                        "frame variable\n"
                        "thread backtrace all\n"
+                       ;;"call ___print_ctrl_flow_history();"
                        "exit1\n")))
             (let ((result
                    (run "lldb" "-s" "dbg-script" "../gsi/gsi")))
@@ -125,6 +152,7 @@
                        "end\n"
                        "info locals\n"
                        "thread apply all bt\n"
+                       ;;"call ___print_ctrl_flow_history();"
                        "quit 1\n")))
             (let ((result
                    (if (equal? (cadr (system-type)) 'apple)
@@ -266,6 +294,9 @@
   (if (null? modes)
       (set! modes '("gsi")))
 
-  (run-tests (list-of-scm-files args stress?)))
+  (run-tests
+   (sort-list
+    (list-of-scm-files args stress?)
+    string<?)))
 
 ;;;============================================================================
