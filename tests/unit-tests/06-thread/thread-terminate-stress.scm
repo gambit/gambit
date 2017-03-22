@@ -64,6 +64,6 @@
                (delayed-thread-terminate! t (+ loop-delay (modulo i cycle))))))
           (loop (+ i 1))))))
 
-(go (* time-scale 60000))
+(go (* time-scale 20000))
 
 (pp (list inactive: count-inactive abandoned: count-abandoned))
