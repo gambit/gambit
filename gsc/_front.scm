@@ -1011,7 +1011,8 @@
               live))
 
 (define (make-poll since-entry? delta)
-  (cons since-entry? delta))
+  (cons since-entry?  ;; a path to here since the entry-point has a poll?
+        delta))       ;; upper bound on number of instructions since last poll
 
 (define (poll-since-entry? x) (car x))
 (define (poll-delta x) (cdr x))
@@ -1019,14 +1020,16 @@
 (define (entry-poll)
   (make-poll #f (- poll-period poll-head)))
 
-(define (return-poll poll)
+(define (return-poll poll where)
   (let ((delta (poll-delta poll)))
     (make-poll (poll-since-entry? poll)
-               (+ poll-head (max delta poll-tail)))))
+               (if (eq? where 'internal) ;; return point of call to primitive
+                   delta
+                   (+ poll-head (max delta poll-tail))))))
 
 (define (poll-merge poll other-poll)
   (make-poll
-    (or (poll-since-entry? poll) ;; shouldn't it be "and"?
+    (or (poll-since-entry? poll)
         (poll-since-entry? other-poll))
     (max (poll-delta poll)
          (poll-delta other-poll))))
@@ -3038,7 +3041,11 @@
                   (compute-live-vars-at-each-expr
                    (car live-vars-at-each-reg)
                    in-stk
-                   reason2)))
+                   reason2))
+                 (where
+                  (if (reason-tail? reason2)
+                      'tail-call
+                      (if proc 'internal 'call))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;
@@ -3294,10 +3301,7 @@
                                                  empty-var)
                                         (loop4 (- i 1)))))))
 
-                              (seal-bb (intrs-enabled? (node-env node))
-                                       (if (reason-tail? reason2)
-                                         'tail-call
-                                         'call))
+                              (seal-bb (intrs-enabled? (node-env node)) where)
 
                               (if (and (not (intrs-enabled? (node-env node)))
                                        (not (reason-tail? reason2))
@@ -3326,7 +3330,7 @@
                                 (if (reason-tail? reason2)
                                   target.proc-result
                                   (begin
-                                    (set! poll (return-poll poll))
+                                    (set! poll (return-poll poll where))
                                     (set! *bb*
                                       (make-bb
                                        (make-label-return
@@ -3904,7 +3908,7 @@
                             (drop slots (- nb-slots frame-start))
                             '()
                             closed
-                            (return-poll poll)
+                            (return-poll poll 'internal)
                             entry-bb)))
 
         (restore-context task-context)
