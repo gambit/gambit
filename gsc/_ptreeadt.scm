@@ -172,6 +172,7 @@
 
 (define (ptree? obj)
   (and (vector? obj)
+       (> (vector-length obj) 0)
        (or (c#cst? obj)
            (c#ref? obj)
            (c#set? obj)
