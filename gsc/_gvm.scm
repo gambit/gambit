@@ -276,9 +276,11 @@
 
 (define (make-bbs)
   (vector bbs-tag
-          1                            ; 1 - next assignable label number
-          (make-stretchable-vector #f) ; 2 - vector of basic blocks
-          #f))                         ; 3 - entry label number
+          bbs-first-lbl                ;; 1 - next assignable label number
+          (make-stretchable-vector #f) ;; 2 - vector of basic blocks
+          #f))                         ;; 3 - entry label number
+
+(define bbs-first-lbl 1)
 
 (define bbs-tag (list 'bbs))
 
@@ -287,12 +289,12 @@
        (> (vector-length x) 0)
        (eq? (vector-ref x 0) bbs-tag)))
 
-(define (bbs-next-lbl-num bbs)               (vector-ref bbs 1))
-(define (bbs-next-lbl-num-set! bbs lbl-num)  (vector-set! bbs 1 lbl-num))
-(define (bbs-basic-blocks bbs)               (vector-ref bbs 2))
-(define (bbs-basic-blocks-set! bbs blocks)   (vector-set! bbs 2 blocks))
-(define (bbs-entry-lbl-num bbs)              (vector-ref bbs 3))
-(define (bbs-entry-lbl-num-set! bbs lbl-num) (vector-set! bbs 3 lbl-num))
+(define (bbs-next-lbl-num bbs)             (vector-ref bbs 1))
+(define (bbs-next-lbl-num-set! bbs lbl)    (vector-set! bbs 1 lbl))
+(define (bbs-basic-blocks bbs)             (vector-ref bbs 2))
+(define (bbs-basic-blocks-set! bbs blocks) (vector-set! bbs 2 blocks))
+(define (bbs-entry-lbl-num bbs)            (vector-ref bbs 3))
+(define (bbs-entry-lbl-num-set! bbs lbl)   (vector-set! bbs 3 lbl))
 
 (define (bbs-for-each-bb proc bbs)
   (stretchable-vector-for-each
@@ -307,8 +309,8 @@
     (bbs-next-lbl-num-set! bbs (+ n 1))
     n))
 
-(define (lbl-num->bb lbl-num bbs)
-  (stretchable-vector-ref (bbs-basic-blocks bbs) lbl-num))
+(define (lbl-num->bb lbl bbs)
+  (stretchable-vector-ref (bbs-basic-blocks bbs) lbl))
 
 ;; Basic block manipulation procedures:
 
@@ -319,7 +321,7 @@
               '()           ; 2 - branch instruction
               '()           ; 3 - basic blocks referenced by this block
               '())))        ; 4 - basic blocks which jump to this block
-                            ;     (both filled in by 'bbs-purify!')
+                            ;     (both filled in by 'bbs-purify')
     (stretchable-vector-set!
       (bbs-basic-blocks bbs)
       (label-lbl-num label-instr)
@@ -327,7 +329,7 @@
     bb))
 
 (define (bb-lbl-num bb)                  (label-lbl-num (vector-ref bb 0)))
-(define (bb-label-type bb)               (label-type (vector-ref bb 0)))
+(define (bb-label-type bb)               (if (not bb) (step)) (label-type (vector-ref bb 0)))
 (define (bb-label-instr bb)              (vector-ref bb 0))
 (define (bb-label-instr-set! bb l)       (vector-set! bb 0 l))
 (define (bb-non-branch-instrs bb)        (queue->list (vector-ref bb 1)))
@@ -354,22 +356,24 @@
 (define (bb-put-branch! bb gvm-instr)
   (vector-set! bb 2 gvm-instr))
 
-(define (bb-add-reference! bb ref)
-  (if (not (memq ref (vector-ref bb 3)))
-    (vector-set! bb 3 (cons ref (vector-ref bb 3)))))
+(define (bb-add-reference! bb lbl)
+  (if (not (memv lbl (vector-ref bb 3)))
+      (vector-set! bb 3 (cons lbl (vector-ref bb 3))))
+  lbl)
 
-(define (bb-add-precedent! bb prec)
-  (if (not (memq prec (vector-ref bb 4)))
-    (vector-set! bb 4 (cons prec (vector-ref bb 4)))))
+(define (bb-add-precedent! bb lbl)
+  (if (not (memv lbl (vector-ref bb 4)))
+      (vector-set! bb 4 (cons lbl (vector-ref bb 4))))
+  lbl)
 
 (define (bb-last-non-branch-instr bb)
   (let ((non-branch-instrs (bb-non-branch-instrs bb)))
     (if (null? non-branch-instrs)
-      (bb-label-instr bb)
-      (let loop ((l non-branch-instrs))
-        (if (pair? (cdr l))
-          (loop (cdr l))
-          (car l))))))
+        (bb-label-instr bb)
+        (let loop ((lst non-branch-instrs))
+          (if (pair? (cdr lst))
+              (loop (cdr lst))
+              (car lst))))))
 
 ;; Virtual machine instruction representation:
 
@@ -462,6 +466,236 @@
        (let ((x (assq name (cdr comment))))
          (if x (cdr x) #f))))
 
+;; Cloning of basic blocks.
+
+(define (bb-clone bb bbs)
+  (let ((new-bb (make-bb (bb-label-instr bb) bbs)))
+    (bb-non-branch-instrs-set! new-bb (bb-non-branch-instrs bb))
+    (bb-branch-instr-set! new-bb (bb-branch-instr bb))
+    new-bb))
+
+(define (bb-clone-replacing-lbls bb bbs replacement-lbl-num update-label-instr?)
+
+  (let ((new-bb
+         (make-bb (if update-label-instr?
+                      (gvm-instr-clone-replacing-lbls
+                       (bb-label-instr bb)
+                       replacement-lbl-num)
+                      (bb-label-instr bb))
+                  bbs)))
+
+    (define (clone instr)
+      (gvm-instr-clone-replacing-lbls instr replacement-lbl-num))
+
+    (bb-non-branch-instrs-set! new-bb (map clone (bb-non-branch-instrs bb)))
+
+    (bb-branch-instr-set! new-bb (clone (bb-branch-instr bb)))
+
+    new-bb))
+
+(define (gvm-instr-clone-replacing-lbls instr replacement-lbl-num)
+
+  (define (clone-gvm-opnd opnd)
+    (if opnd
+        (cond ((lbl? opnd)
+               (make-lbl (replacement-lbl-num (lbl-num opnd))))
+              ((clo? opnd)
+               (make-clo (clone-gvm-opnd (clo-base opnd)) (clo-index opnd)))
+              (else
+               opnd))
+        opnd))
+
+  (define (clone-closure-parms p)
+    (make-closure-parms
+     (clone-gvm-opnd (closure-parms-loc p))
+     (replacement-lbl-num (closure-parms-lbl p))
+     (map clone-gvm-opnd (closure-parms-opnds p))))
+
+  (case (gvm-instr-type instr)
+
+    ((label)
+     (case (label-type instr)
+
+       ((simple)
+        (make-label-simple
+         (replacement-lbl-num (label-lbl-num instr))
+         (gvm-instr-frame instr)
+         (gvm-instr-comment instr)))
+
+       ((entry)
+        (make-label-entry
+         (replacement-lbl-num (label-lbl-num instr))
+         (label-entry-nb-parms instr)
+         (label-entry-opts instr)
+         (label-entry-keys instr)
+         (label-entry-rest? instr)
+         (label-entry-closed? instr)
+         (gvm-instr-frame instr)
+         (gvm-instr-comment instr)))
+
+       ((return)
+        (make-label-return
+         (replacement-lbl-num (label-lbl-num instr))
+         (gvm-instr-frame instr)
+         (gvm-instr-comment instr)))
+
+       ((task-entry)
+        (make-label-task-entry
+         (replacement-lbl-num (label-lbl-num instr))
+         (gvm-instr-frame instr)
+         (gvm-instr-comment instr)))
+
+       ((task-return)
+        (make-label-task-return
+         (replacement-lbl-num (label-lbl-num instr))
+         (gvm-instr-frame instr)
+         (gvm-instr-comment instr)))
+
+       (else
+        (compiler-internal-error
+         "gvm-instr-clone-replacing-lbls, unknown 'instr':" instr))))
+
+    ((apply)
+     (make-apply
+      (apply-prim instr)
+      (map clone-gvm-opnd (apply-opnds instr))
+      (clone-gvm-opnd (apply-loc instr))
+      (gvm-instr-frame instr)
+      (gvm-instr-comment instr)))
+
+    ((copy)
+     (make-copy
+      (clone-gvm-opnd (copy-opnd instr))
+      (clone-gvm-opnd (copy-loc instr))
+      (gvm-instr-frame instr)
+      (gvm-instr-comment instr)))
+
+    ((close)
+     (make-close
+      (map clone-closure-parms (close-parms instr))
+      (gvm-instr-frame instr)
+      (gvm-instr-comment instr)))
+
+    ((ifjump)
+     (make-ifjump
+      (ifjump-test instr)
+      (map clone-gvm-opnd (ifjump-opnds instr))
+      (replacement-lbl-num (ifjump-true instr))
+      (replacement-lbl-num (ifjump-false instr))
+      (ifjump-poll? instr)
+      (gvm-instr-frame instr)
+      (gvm-instr-comment instr)))
+
+    ((switch)
+     (make-switch
+      (clone-gvm-opnd (switch-opnd instr))
+      (map (lambda (c)
+             (make-switch-case
+              (switch-case-obj c)
+              (replacement-lbl-num (switch-case-lbl c))))
+           (switch-cases instr))
+      (replacement-lbl-num (switch-default instr))
+      (switch-poll? instr)
+      (gvm-instr-frame instr)
+      (gvm-instr-comment instr)))
+
+    ((jump)
+     (make-jump
+      (clone-gvm-opnd (jump-opnd instr))
+      (jump-nb-args instr)
+      (jump-poll? instr)
+      (jump-safe? instr)
+      (gvm-instr-frame instr)
+      (gvm-instr-comment instr)))
+
+    (else
+     (compiler-internal-error
+      "gvm-instr-clone-replacing-lbls, unknown 'instr':" instr))))
+
+;; Determining basic block references and precedents.
+
+(define (bbs-determine-refs! bbs)
+
+  (define (get-bb lbl)
+    (lbl-num->bb lbl bbs))
+
+  (bbs-for-each-bb
+   (lambda (bb)
+     (bb-precedents-set! bb '()))
+   bbs)
+
+  (bbs-for-each-bb
+   (lambda (bb)
+     (bb-determine-refs! bb get-bb))
+   bbs))
+
+(define (bb-determine-refs! bb get-bb)
+
+  (bb-references-set! bb '())
+
+  (gvm-instr-determine-refs! (bb-label-instr bb) bb get-bb)
+  (for-each (lambda (instr) (gvm-instr-determine-refs! instr bb get-bb))
+            (bb-non-branch-instrs bb))
+  (gvm-instr-determine-refs! (bb-branch-instr bb) bb get-bb))
+
+(define (gvm-instr-determine-refs! instr bb get-bb)
+
+  (define (reference lbl)
+    (bb-add-reference! bb lbl))
+
+  (define (direct-branch lbl)
+    (bb-add-precedent! (get-bb (reference lbl)) (bb-lbl-num bb)))
+
+  (define (scan-opnd gvm-opnd)
+    (cond ((not gvm-opnd))
+          ((lbl? gvm-opnd)
+           (reference (lbl-num gvm-opnd)))
+          ((clo? gvm-opnd)
+           (scan-opnd (clo-base gvm-opnd)))))
+
+  (case (gvm-instr-type instr)
+
+    ((label)
+     '())
+
+    ((apply)
+     (for-each scan-opnd (apply-opnds instr))
+     (if (apply-loc instr)
+         (scan-opnd (apply-loc instr))))
+
+    ((copy)
+     (scan-opnd (copy-opnd instr))
+     (scan-opnd (copy-loc instr)))
+
+    ((close)
+     (for-each (lambda (parm)
+                 (reference (closure-parms-lbl parm))
+                 (scan-opnd (closure-parms-loc parm))
+                 (for-each scan-opnd (closure-parms-opnds parm)))
+               (close-parms instr)))
+
+    ((ifjump)
+     (for-each scan-opnd (ifjump-opnds instr))
+     (direct-branch (ifjump-true instr))
+     (direct-branch (ifjump-false instr)))
+
+    ((switch)
+     (scan-opnd (switch-opnd instr))
+     (for-each (lambda (c)
+                 (direct-branch (switch-case-lbl c)))
+               (switch-cases instr))
+     (direct-branch (switch-default instr)))
+
+    ((jump)
+     (let ((opnd (jump-opnd instr)))
+       (if (lbl? opnd)
+           (direct-branch (lbl-num opnd))
+           (scan-opnd (jump-opnd instr)))))
+
+    (else
+     (compiler-internal-error
+      "gvm-instr-determine-refs!, unknown GVM instruction type"))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
 ;; 'Purification' of basic block sets:
@@ -475,190 +709,264 @@
 ;; through the process.  The first basic block of a 'purified' basic block set
 ;; is always the entry point.
 
-(define (bbs-purify! bbs)
-  (let loop () ; iterate until code does not change
-    (bbs-remove-jump-cascades! bbs)
-    (bbs-remove-dead-code! bbs)
-    (let* ((changed1? (bbs-remove-common-code! bbs))
-           (changed2? (bbs-remove-useless-jumps! bbs)))
-      (if (or changed1? changed2?) (loop) (bbs-order! bbs)))))
+(define (bbs-purify bbs)
+  (let loop ((bbs1 bbs))
+    (let* ((bbs2 (bbs-remove-jump-cascades bbs1))
+           (bbs3 (bbs-remove-dead-code bbs2))
+           (bbs4 (bbs-remove-common-code bbs3))
+           (bbs5 (bbs-remove-useless-jumps bbs4)))
+      (if (not (eq? bbs3 bbs5)) ;; iterate until code does not change
+          (loop bbs5)
+          (bbs-order bbs5)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;; Step 1, Jump cascade removal:
 
-(define (bbs-remove-jump-cascades! bbs)
+(define (bbs-remove-jump-cascades bbs)
 
-  (define (empty-bb? bb)
-    (and (eq? (bb-label-type bb) 'simple)     ; simple label and
-         (null? (bb-non-branch-instrs bb))))  ; no non-branching instrs
+  (let ((new-bbs (make-bbs))
+        (changed? #f)
+        (lbl-changed? #f))
 
-  (define (jump-to-non-entry-lbl? branch)
-    (and (eq? (gvm-instr-type branch) 'jump)
-         (not (first-class-jump? branch)) ; not a jump to an entry label
-         (jump-lbl? branch)))
+    (define (empty-bb? bb)
+      (and (eq? (bb-label-type bb) 'simple)     ;; simple label and
+           (null? (bb-non-branch-instrs bb))))  ;; no non-branching instrs
 
-  (define (jump-cascade-to lbl-num fs poll? seen thunk)
-    (if (memq lbl-num seen) ; infinite loop?
-      (thunk lbl-num fs poll?)
-      (let ((bb (lbl-num->bb lbl-num bbs)))
-        (if (and (empty-bb? bb) (<= (bb-slots-gained bb) 0))
-          (let ((jump-lbl-num
-                 (jump-to-non-entry-lbl? (bb-branch-instr bb))))
-            (if jump-lbl-num
-              (jump-cascade-to
-                jump-lbl-num
-                (+ fs (bb-slots-gained bb))
-                (or poll? (jump-poll? (bb-branch-instr bb)))
-                (cons lbl-num seen)
-                thunk)
-              (thunk lbl-num fs poll?)))
-          (thunk lbl-num fs poll?)))))
+    (define (jump-to-non-entry-lbl? branch)
+      (and (eq? (gvm-instr-type branch) 'jump)
+           (not (first-class-jump? branch)) ;; not a jump to an entry label
+           (jump-lbl? branch)))
 
-  (define (equiv-lbl lbl-num seen)
-    (if (memq lbl-num seen) ; infinite loop?
-      lbl-num
-      (let ((bb (lbl-num->bb lbl-num bbs)))
-        (if (empty-bb? bb)
-          (let ((jump-lbl-num
-                 (jump-to-non-entry-lbl? (bb-branch-instr bb))))
-            (if (and jump-lbl-num
-                     (not (jump-poll? (bb-branch-instr bb)))
-                     (= (bb-slots-gained bb) 0))
-              (equiv-lbl jump-lbl-num (cons lbl-num seen))
-              lbl-num))
-          lbl-num))))
+    (define (jump-cascade-to dest-lbl fs poll? thunk)
+      (let loop ((lbl dest-lbl) (fs fs) (poll? poll?) (seen '()))
+        (if (memv lbl seen) ;; infinite loop?
+            (thunk lbl fs poll?)
+            (let ((bb (lbl-num->bb lbl bbs)))
+              (if (and (empty-bb? bb) (<= (bb-slots-gained bb) 0))
+                  (let ((jump-lbl
+                         (jump-to-non-entry-lbl? (bb-branch-instr bb))))
+                    (if jump-lbl
+                        (loop
+                         jump-lbl
+                         (+ fs (bb-slots-gained bb))
+                         (or poll?
+                             (jump-poll? (bb-branch-instr bb)))
+                         (cons lbl seen))
+                        (thunk lbl fs poll?)))
+                  (thunk lbl fs poll?))))))
 
-  (define (remove-cascade! bb)
-    (let ((branch (bb-branch-instr bb)))
+    (define (find-equiv-lbl start-lbl poll?)
+      (let loop ((lbl start-lbl) (seen '()))
+        (if (memv lbl seen) ;; infinite loop?
+            lbl
+            (let ((bb (lbl-num->bb lbl bbs)))
+              (if (empty-bb? bb)
+                  (let ((jump-lbl
+                         (jump-to-non-entry-lbl? (bb-branch-instr bb))))
+                    (if (and jump-lbl
+                             (or poll?
+                                 (not (jump-poll? (bb-branch-instr bb))))
+                             (= (bb-slots-gained bb) 0))
+                        (loop jump-lbl (cons lbl seen))
+                        lbl))
+                  lbl)))))
 
-      (case (gvm-instr-type branch)
+    (define (equiv-lbl start-lbl poll?)
+      (let ((lbl (find-equiv-lbl start-lbl poll?)))
+        (if (not (eqv? lbl start-lbl))
+            (set! lbl-changed? #t))
+        lbl))
 
-        ((ifjump)  ; branch is an 'ifjump'
-         (bb-put-branch! bb
-           (make-ifjump (ifjump-test branch)
-                        (ifjump-opnds branch)
-                        (equiv-lbl (ifjump-true branch) '())
-                        (equiv-lbl (ifjump-false branch) '())
-                        (ifjump-poll? branch)
-                        (gvm-instr-frame branch)
-                        (gvm-instr-comment branch))))
+    (define (remove-cascade! bb)
+      (let ((branch (bb-branch-instr bb)))
 
-        ((switch)  ; branch is a 'switch'
-         (bb-put-branch! bb
-           (make-switch (switch-opnd branch)
-                        (map (lambda (c)
-                               (make-switch-case
-                                (switch-case-obj c)
-                                (equiv-lbl (switch-case-lbl c) '())))
-                             (switch-cases branch))
-                        (equiv-lbl (switch-default branch) '())
-                        (switch-poll? branch)
-                        (gvm-instr-frame branch)
-                        (gvm-instr-comment branch))))
+        (define (replace-branch-by new-branch-instr)
+          (set! changed? #t)
+          (let ((new-bb (make-bb (bb-label-instr bb) new-bbs)))
+            (bb-non-branch-instrs-set! new-bb (bb-non-branch-instrs bb))
+            (bb-branch-instr-set! new-bb new-branch-instr)))
 
-        ((jump)  ; branch is a 'jump'
-         (if (not (first-class-jump? branch)) ; but not to an entry label
-           (let ((dest-lbl-num (jump-lbl? branch)))
-             (if dest-lbl-num
+        (stretchable-vector-set!
+         (bbs-basic-blocks new-bbs)
+         (bb-lbl-num bb)
+         bb)
 
-               (jump-cascade-to
-                 dest-lbl-num
-                 (frame-size (gvm-instr-frame branch))
-                 (jump-poll? branch)
-                 '()
-                 (lambda (lbl-num fs poll?)
-                   (let* ((dest-bb (lbl-num->bb lbl-num bbs))
-                          (last-branch (bb-branch-instr dest-bb)))
-                     (if (and (empty-bb? dest-bb)
-                              (or (not poll?)
-                                  (case (gvm-instr-type last-branch)
-                                    ((ifjump)
-                                     (ifjump-poll? last-branch))
-                                    ((switch)
-                                     (switch-poll? last-branch))
-                                    ((jump)
-                                     (jump-poll? last-branch))
+        (case (gvm-instr-type branch)
+
+          ((ifjump) ;; branch is an 'ifjump'
+           (set! lbl-changed? #f)
+           (let* ((new-poll?
+                   (ifjump-poll? branch))
+                  (new-true
+                   (equiv-lbl (ifjump-true branch)
+                              new-poll?))
+                  (new-false
+                   (equiv-lbl (ifjump-false branch)
+                              new-poll?)))
+             (if lbl-changed?
+                 (replace-branch-by
+                  (make-ifjump
+                   (ifjump-test branch)
+                   (ifjump-opnds branch)
+                   new-true
+                   new-false
+                   new-poll?
+                   (gvm-instr-frame branch)
+                   (gvm-instr-comment branch))))))
+
+          ((switch) ;; branch is a 'switch'
+           (set! lbl-changed? #f)
+           (let* ((new-poll?
+                   (switch-poll? branch))
+                  (new-cases
+                   (map (lambda (c)
+                          (make-switch-case
+                           (switch-case-obj c)
+                           (equiv-lbl (switch-case-lbl c)
+                                      new-poll?)))
+                        (switch-cases branch)))
+                  (new-default
+                   (equiv-lbl (switch-default branch)
+                              new-poll?)))
+             (if lbl-changed?
+                 (replace-branch-by
+                  (make-switch
+                   (switch-opnd branch)
+                   new-cases
+                   new-default
+                   new-poll?
+                   (gvm-instr-frame branch)
+                   (gvm-instr-comment branch))))))
+
+          ((jump) ;; branch is a 'jump'
+           (let ((dest-lbl (jump-lbl? branch)))
+             (if (and dest-lbl
+                      (not (first-class-jump? branch))) ;; but not to an entry label
+                 (jump-cascade-to
+                  dest-lbl
+                  (frame-size (gvm-instr-frame branch))
+                  (jump-poll? branch)
+                  (lambda (lbl fs poll?)
+                    (let* ((dest-bb (lbl-num->bb lbl bbs))
+                           (last-branch (bb-branch-instr dest-bb)))
+                      (if (and (empty-bb? dest-bb)
+                               (or (not poll?) ;;TODO: remove this part
+                                   (case (gvm-instr-type last-branch)
+                                     ((ifjump)
+                                      (ifjump-poll? last-branch))
+                                     ((switch)
+                                      (switch-poll? last-branch))
+                                     ((jump)
+                                      (jump-poll? last-branch))
+                                     (else
+                                      #f))))
+
+                          (let* ((new-fs (+ fs (bb-slots-gained dest-bb)))
+                                 (new-frame (frame-truncate
+                                             (gvm-instr-frame branch)
+                                             new-fs)))
+
+                            (define (adjust-opnd opnd)
+                              (cond ((stk? opnd)
+                                     (make-stk
+                                      (+ (- fs (bb-entry-frame-size dest-bb))
+                                         (stk-num opnd))))
+                                    ((clo? opnd)
+                                     (make-clo (adjust-opnd (clo-base opnd))
+                                               (clo-index opnd)))
                                     (else
-                                     #f))))
-                       (let* ((new-fs (+ fs (bb-slots-gained dest-bb)))
-                              (new-frame (frame-truncate
-                                           (gvm-instr-frame branch)
-                                           new-fs)))
+                                     opnd)))
 
-                         (define (adjust-opnd opnd)
-                           (cond ((stk? opnd)
-                                  (make-stk
-                                    (+ (- fs (bb-entry-frame-size dest-bb))
-                                       (stk-num opnd))))
-                                 ((clo? opnd)
-                                  (make-clo (adjust-opnd (clo-base opnd))
-                                            (clo-index opnd)))
-                                 (else
-                                  opnd)))
+                            (case (gvm-instr-type last-branch)
 
-                         (case (gvm-instr-type last-branch)
+                              ((ifjump)
+                               (let* ((new-poll?
+                                       (or poll?
+                                           (ifjump-poll? last-branch)))
+                                      (new-true
+                                       (equiv-lbl (ifjump-true last-branch)
+                                                  new-poll?))
+                                      (new-false
+                                       (equiv-lbl (ifjump-false last-branch)
+                                                  new-poll?)))
+                                 (replace-branch-by
+                                  (make-ifjump
+                                   (ifjump-test last-branch)
+                                   (map adjust-opnd
+                                        (ifjump-opnds last-branch))
+                                   new-true
+                                   new-false
+                                   new-poll?
+                                   new-frame
+                                   (gvm-instr-comment last-branch)))))
 
-                           ((ifjump)
-                            (bb-put-branch! bb
-                              (make-ifjump (ifjump-test last-branch)
-                                           (map adjust-opnd
-                                                (ifjump-opnds last-branch))
-                                           (equiv-lbl
-                                             (ifjump-true last-branch)
-                                             '())
-                                           (equiv-lbl
-                                             (ifjump-false last-branch)
-                                             '())
-                                           (or poll?
-                                               (ifjump-poll? last-branch))
-                                           new-frame
-                                           (gvm-instr-comment last-branch))))
+                              ((switch)
+                               (let* ((new-poll?
+                                       (or poll?
+                                           (switch-poll? last-branch)))
+                                      (new-cases
+                                       (map (lambda (c)
+                                              (make-switch-case
+                                               (switch-case-obj c)
+                                               (equiv-lbl (switch-case-lbl c)
+                                                          new-poll?)))
+                                            (switch-cases last-branch)))
+                                      (new-default
+                                       (equiv-lbl (switch-default last-branch)
+                                                  new-poll?)))
+                                 (replace-branch-by
+                                  (make-switch
+                                   (adjust-opnd (switch-opnd last-branch))
+                                   new-cases
+                                   new-default
+                                   new-poll?
+                                   new-frame
+                                   (gvm-instr-comment last-branch)))))
 
-                           ((switch)
-                            (bb-put-branch! bb
-                              (make-switch (adjust-opnd (switch-opnd last-branch))
-                                           (map (lambda (c)
-                                                  (make-switch-case
-                                                   (switch-case-obj c)
-                                                   (equiv-lbl (switch-case-lbl c) '())))
-                                                (switch-cases last-branch))
-                                           (equiv-lbl (switch-default last-branch) '())
-                                           (or poll?
-                                               (switch-poll? last-branch))
-                                           new-frame
-                                           (gvm-instr-comment last-branch))))
+                              ((jump)
+                               (let ((new-poll?
+                                      (or poll?
+                                          (jump-poll? last-branch))))
+                                 (replace-branch-by
+                                  (make-jump
+                                   (adjust-opnd (jump-opnd last-branch))
+                                   (jump-nb-args last-branch)
+                                   new-poll?
+                                   (jump-safe? last-branch)
+                                   new-frame
+                                   (gvm-instr-comment last-branch)))))
 
-                           ((jump)
-                            (bb-put-branch! bb
-                              (make-jump (adjust-opnd (jump-opnd last-branch))
-                                         (jump-nb-args last-branch)
-                                         (or poll?
-                                             (jump-poll? last-branch))
-                                         (jump-safe? last-branch)
-                                         new-frame
-                                         (gvm-instr-comment last-branch))))
+                              (else
+                               (compiler-internal-error
+                                "bbs-remove-jump-cascades, unknown branch type"))))
 
-                           (else
-                            (compiler-internal-error
-                              "bbs-remove-jump-cascades!, unknown branch type"))))
+                          (let ((new-poll?
+                                 (or poll?
+                                     (jump-poll? branch))))
+                            (if (or (not (eqv? new-poll? poll?))
+                                    (not (= lbl dest-lbl)))
+                                (replace-branch-by
+                                 (make-jump
+                                  (make-lbl lbl)
+                                  (jump-nb-args branch)
+                                  new-poll?
+                                  (jump-safe? branch)
+                                  (frame-truncate
+                                   (gvm-instr-frame branch)
+                                   fs)
+                                  (gvm-instr-comment branch))))))))))))
 
-                       (bb-put-branch! bb
-                         (make-jump (make-lbl lbl-num)
-                                    (jump-nb-args branch)
-                                    (or poll?
-                                        (jump-poll? branch))
-                                    (jump-safe? branch)
-                                    (frame-truncate
-                                      (gvm-instr-frame branch)
-                                      fs)
-                                    (gvm-instr-comment branch)))))))))))
+          (else
+           (compiler-internal-error
+            "bbs-remove-jump-cascades, unknown branch type")))))
 
-        (else
-         (compiler-internal-error
-           "bbs-remove-jump-cascades!, unknown branch type")))))
+    (bbs-next-lbl-num-set! new-bbs (bbs-next-lbl-num bbs))
+    (bbs-entry-lbl-num-set! new-bbs (bbs-entry-lbl-num bbs))
 
-  (bbs-for-each-bb remove-cascade! bbs))
+    (bbs-for-each-bb remove-cascade! bbs)
+
+    (if changed? new-bbs bbs)))
 
 (define (jump-lbl? branch)
   (let ((opnd (jump-opnd branch)))
@@ -668,297 +976,251 @@
 
 ;; Step 2, Dead code removal:
 
-(define (bbs-remove-dead-code! bbs)
+(define (bbs-remove-dead-code bbs)
 
-  (let ((new-basic-blocks (make-stretchable-vector #f))
-        (left-to-examine (queue-empty)))
+  (let ((new-bbs (make-bbs))
+        (work-list (queue-empty)))
 
-    (define (reachable ref bb)
-      (let ((ref-lbl-num (bb-lbl-num ref)))
-        (if bb (bb-add-reference! bb ref))
-        (if (not (stretchable-vector-ref new-basic-blocks ref-lbl-num))
-          (begin
-            (bb-references-set! ref '())
-            (bb-precedents-set! ref '())
-            (stretchable-vector-set! new-basic-blocks ref-lbl-num ref)
-            (queue-put! left-to-examine ref)))))
+    (define (get-bb lbl)
+      (reachable lbl))
 
-    (define (direct-jump to-bb from-bb)
-      (reachable to-bb from-bb)
-      (bb-add-precedent! to-bb from-bb))
+    (define (reachable lbl)
+      (or (lbl-num->bb lbl new-bbs)
+          (let ((new-bb (bb-clone (lbl-num->bb lbl bbs) new-bbs)))
+            (queue-put! work-list new-bb)
+            new-bb)))
 
-    (define (scan-instr gvm-instr bb)
+    (bbs-next-lbl-num-set! new-bbs (bbs-next-lbl-num bbs))
+    (bbs-entry-lbl-num-set! new-bbs (bbs-entry-lbl-num bbs))
 
-      (define (scan-opnd gvm-opnd)
-        (cond ((not gvm-opnd))
-              ((lbl? gvm-opnd)
-               (reachable (lbl-num->bb (lbl-num gvm-opnd) bbs) bb))
-              ((clo? gvm-opnd)
-               (scan-opnd (clo-base gvm-opnd)))))
-
-      (case (gvm-instr-type gvm-instr)
-
-        ((label)
-         '())
-
-        ((apply)
-         (for-each scan-opnd (apply-opnds gvm-instr))
-         (if (apply-loc gvm-instr)
-           (scan-opnd (apply-loc gvm-instr))))
-
-        ((copy)
-         (scan-opnd (copy-opnd gvm-instr))
-         (scan-opnd (copy-loc gvm-instr)))
-
-        ((close)
-         (for-each (lambda (parm)
-                     (reachable (lbl-num->bb (closure-parms-lbl parm) bbs) bb)
-                     (scan-opnd (closure-parms-loc parm))
-                     (for-each scan-opnd (closure-parms-opnds parm)))
-                   (close-parms gvm-instr)))
-
-        ((ifjump)
-         (for-each scan-opnd (ifjump-opnds gvm-instr))
-         (direct-jump (lbl-num->bb (ifjump-true gvm-instr) bbs) bb)
-         (direct-jump (lbl-num->bb (ifjump-false gvm-instr) bbs) bb))
-
-        ((switch)
-         (scan-opnd (switch-opnd gvm-instr))
-         (for-each (lambda (c)
-                     (direct-jump (lbl-num->bb (switch-case-lbl c) bbs) bb))
-                   (switch-cases gvm-instr))
-         (direct-jump (lbl-num->bb (switch-default gvm-instr) bbs) bb))
-
-        ((jump)
-         (let ((opnd (jump-opnd gvm-instr)))
-           (if (lbl? opnd)
-             (direct-jump (lbl-num->bb (lbl-num opnd) bbs) bb)
-             (scan-opnd (jump-opnd gvm-instr)))))
-
-        (else
-         (compiler-internal-error
-           "bbs-remove-dead-code!, unknown GVM instruction type"))))
-
-    (reachable (lbl-num->bb (bbs-entry-lbl-num bbs) bbs) #f)
+    (reachable (bbs-entry-lbl-num bbs))
 
     (let loop ()
-      (if (not (queue-empty? left-to-examine))
-        (let ((bb (queue-get! left-to-examine)))
-          (begin
-            (scan-instr (bb-label-instr bb) bb)
-            (for-each (lambda (gvm-instr) (scan-instr gvm-instr bb))
-                      (bb-non-branch-instrs bb))
-            (scan-instr (bb-branch-instr bb) bb)
-            (loop)))))
+      (if (not (queue-empty? work-list))
+          (let ((bb (queue-get! work-list)))
+            (begin
+              (bb-determine-refs! bb get-bb)
+              (for-each reachable (bb-references bb))
+              (loop)))))
 
-    (bbs-basic-blocks-set! bbs new-basic-blocks)))
+    new-bbs))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;; Step 3, Useless jump removal:
+;; Step 3, Common code removal:
 
-(define (bbs-remove-useless-jumps! bbs)
-  (let ((changed? #f))
-
-    (define (remove-useless-jump bb)
-      (let ((branch (bb-branch-instr bb)))
-
-        ; is it a non-polling 'jump' to a label?
-
-        (if (and (eq? (gvm-instr-type branch) 'jump)
-                 (not (first-class-jump? branch))
-                 (not (jump-poll? branch))
-                 (jump-lbl? branch))
-          (let* ((dest-bb (lbl-num->bb (jump-lbl? branch) bbs))
-                 (frame1 (gvm-instr-frame (bb-last-non-branch-instr bb)))
-                 (frame2 (gvm-instr-frame (bb-label-instr dest-bb))))
-
-            ; is it a 'simple' label with the same frame as the last
-            ; non-branch instruction?
-
-            (if (and (eq? (bb-label-type dest-bb) 'simple)
-                     (frame-eq? frame1 frame2)
-                     (= (length (bb-precedents dest-bb)) 1))
-
-              (begin
-                (set! changed? #t)
-                (bb-non-branch-instrs-set! bb
-                  (append (bb-non-branch-instrs bb)
-                          (bb-non-branch-instrs dest-bb)
-                          '()))
-                (bb-branch-instr-set! bb
-                  (bb-branch-instr dest-bb))
-                (remove-useless-jump bb)))))))
-
-    (bbs-for-each-bb remove-useless-jump bbs)
-
-    changed?))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;; Step 4, Common code removal:
-
-(define (bbs-remove-common-code! bbs)
+(define (bbs-remove-common-code bbs)
   (let ((n (bbs-next-lbl-num bbs)))
-    (if (> n 300) ; if code is too large, don't optimize
+    (if (> n 300) ;; if code is too large, don't optimize
+        bbs
+        (bbs-remove-common-code-aux bbs))))
 
-      #f
+(define (bbs-remove-common-code-aux bbs)
 
-      (let* ((hash-table-length (if (< n 50) 43 403))
-             (hash-table (make-vector hash-table-length '()))
-             (prim-table '())
-             (lbl-map (make-stretchable-vector #f))
-             (changed? #f))
+  (let* ((n (bbs-next-lbl-num bbs))
+         (hash-table-length (if (< n 50) 43 403))
+         (hash-table (make-vector hash-table-length '()))
+         (prim-table '())
+         (lbl-map (make-stretchable-vector #f))
+         (new-bbs (make-bbs))
+         (changed? #f))
 
-      (define (hash-prim prim)
-        (let ((n (length prim-table))
-              (i (pos-in-list prim prim-table)))
-          (if i
+    (define (hash-prim prim)
+      (let ((n (length prim-table))
+            (i (pos-in-list prim prim-table)))
+        (if i
             (- n i)
             (begin
               (set! prim-table (cons prim prim-table))
               (+ n 1)))))
 
-      (define (hash-opnds l) ; this assumes that operands are encoded with nbs
-        (let loop ((l l) (n 0))
-          (if (pair? l)
+    (define (hash-opnds l)
+      ;; assumes that operands are encoded with numbers
+      (let loop ((l l) (n 0))
+        (if (pair? l)
             (loop (cdr l)
                   (let ((x (car l)))
                     (if (lbl? x)
-                      n
-                      (modulo (+ (* n 10000) x) hash-table-length))))
+                        n ;; labels must be ignored (they might end up equal)
+                        (modulo (+ (* n 10000) x) hash-table-length))))
             n)))
 
-      (define (hash-bb bb) ; compute hash address for a basic block
-        (let ((branch (bb-branch-instr bb)))
-          (modulo
-            (case (gvm-instr-type branch)
-              ((ifjump)
-               (+ (hash-opnds (ifjump-opnds branch))
-                  (* 10 (hash-prim (ifjump-test branch)))
-                  (* 100 (frame-size (gvm-instr-frame branch)))))
-              ((switch)
-               (+ (hash-opnds (list (switch-opnd branch)))
-                  (* 10 (length (switch-cases branch)))
-                  (* 100 (frame-size (gvm-instr-frame branch)))))
-              ((jump)
-               (+ (hash-opnds (list (jump-opnd branch)))
-                  (* 10 (or (jump-nb-args branch) -1))
-                  (* 100 (frame-size (gvm-instr-frame branch)))))
-              (else
-               0))
-            hash-table-length)))
+    (define (hash-bb bb)
+      ;; compute hash address for a basic block using the branch
+      ;; instruction and ignoring labels
+      (let ((branch (bb-branch-instr bb)))
+        (modulo
+         (case (gvm-instr-type branch)
+           ((ifjump)
+            (+ (hash-opnds (ifjump-opnds branch))
+               (* 10 (hash-prim (ifjump-test branch)))
+               (* 100 (frame-size (gvm-instr-frame branch)))))
+           ((switch)
+            (+ (hash-opnds (list (switch-opnd branch)))
+               (* 10 (length (switch-cases branch)))
+               (* 100 (frame-size (gvm-instr-frame branch)))))
+           ((jump)
+            (+ (hash-opnds (list (jump-opnd branch)))
+               (* 10 (or (jump-nb-args branch) -1))
+               (* 100 (frame-size (gvm-instr-frame branch)))))
+           (else
+            0))
+         hash-table-length)))
 
-      (define (replacement-lbl-num lbl)
-        (or (stretchable-vector-ref lbl-map lbl) lbl))
+    (define (replacement-lbl-num lbl)
+      (or (stretchable-vector-ref lbl-map lbl) lbl))
 
-      (define (add-map! bb1 bb2) ; bb1 should be replaced by bb2
-        (stretchable-vector-set!
-          lbl-map
-          (bb-lbl-num bb1)
-          (bb-lbl-num bb2)))
+    (define (add-map! bb1 bb2) ;; bb1 should be replaced by bb2
+      (stretchable-vector-set!
+       lbl-map
+       (bb-lbl-num bb1)
+       (bb-lbl-num bb2)))
 
-      (define (remove-map! bb)
-        (stretchable-vector-set!
-          lbl-map
-          (bb-lbl-num bb)
-          #f))
+    (define (remove-map! bb)
+      (stretchable-vector-set!
+       lbl-map
+       (bb-lbl-num bb)
+       #f))
 
-      (define (enter-bb! bb) ; enter a basic block in the hash table
-        (let ((h (hash-bb bb)))
-          (vector-set! hash-table h
-            (add-bb bb (vector-ref hash-table h)))))
+    (define (enter-bb! bb) ;; enter a basic block in the hash table
 
-      (define (add-bb bb l) ; add basic block 'bb' to list of basic blocks
-        (if (pair? l)
-          (let ((bb* (car l))) ; pick next basic block in list
+      (stretchable-vector-set!
+       (bbs-basic-blocks new-bbs)
+       (bb-lbl-num bb)
+       bb)
 
-            (add-map! bb bb*) ; for now, assume that 'bb' = 'bb*'
+      (let ((h (hash-bb bb)))
+        (vector-set! hash-table
+                     h
+                     (add-bb bb (vector-ref hash-table h)))))
 
-            (if (eqv-bb? bb bb*) ; are they the same?
+    (define (add-bb bb lst) ;; add basic block 'bb' to list of basic blocks
+      (if (pair? lst)
+          (let ((bb2 (car lst))) ;; pick next basic block in list
 
-              (begin
-                (set! changed? #t)
-                l)
+            (add-map! bb bb2) ;; for now, assume that 'bb' = 'bb2'
 
-              (begin
-                (remove-map! bb) ; they are not the same!
-                (if (eqv-gvm-instr? (bb-branch-instr bb) (bb-branch-instr bb*))
+            (if (eqv-bb? bb bb2) ;; are they the same?
 
-                  (extract-common-tail bb bb* ; check if tail is the same
-                    (lambda (head head* tail)
-                      (if (<= (length tail) 10) ; common tail long enough?
+                (begin
+                  (set! changed? #t)
+                  lst)
 
-                        ; no, so try rest of list
-                        (cons bb* (add-bb bb (cdr l)))
+                (begin
+                  (remove-map! bb) ;; they are not the same!
+                  (if (eqv-gvm-instr? (bb-branch-instr bb)
+                                      (bb-branch-instr bb2))
 
-                        ; create bb for common tail
-                        (let* ((lbl
-                                (bbs-new-lbl! bbs))
-                               (branch
-                                (bb-branch-instr bb))
-                               (fs**
-                                (need-gvm-instrs tail branch))
-                               (frame
-                                (frame-truncate
-                                 (gvm-instr-frame
-                                  (if (null? head)
-                                    (bb-label-instr bb)
-                                    (car head)))
-                                 fs**))
-                               (comment
-                                (gvm-instr-comment (car tail)))
-                               (bb**
-                                (make-bb (make-label-simple lbl frame comment)
-                                         bbs)))
-                          (bb-non-branch-instrs-set! bb** tail)
-                          (bb-branch-instr-set! bb** branch)
-                          (bb-non-branch-instrs-set! bb* (reverse head*))
-                          (bb-branch-instr-set! bb*
-                            (make-jump (make-lbl lbl) #f #f #f frame comment))
-                          (bb-non-branch-instrs-set! bb (reverse head))
-                          (bb-branch-instr-set! bb
-                            (make-jump (make-lbl lbl) #f #f #f frame comment))
-                          (set! changed? #t)
-                          (cons bb (cons bb* (add-bb bb** (cdr l))))))))
-                          ;********** bb and bb* should not be put in this list!!!!
-                    (cons bb* (add-bb bb (cdr l)))))))
+                      (extract-common-tail ;; check if tail is the same
+                       bb
+                       bb2
+                       (lambda (head head2 tail)
+                         (if (<= (length tail) 10) ;; common tail long enough?
 
-            (list bb)))
+                             ;; no, so try rest of list
+                             (cons bb2 (add-bb bb (cdr lst)))
 
-      (define (extract-common-tail bb1 bb2 cont)
-        (let loop ((l1 (reverse (bb-non-branch-instrs bb1)))
-                   (l2 (reverse (bb-non-branch-instrs bb2)))
-                   (tail '()))
-          (if (and (pair? l1) (pair? l2))
-            (let ((i1 (car l1))
-                  (i2 (car l2)))
+                             ;; create bb for common tail
+                             (let* ((lbl-common
+                                     (bbs-new-lbl! new-bbs))
+                                    (branch
+                                     (bb-branch-instr bb))
+                                    (fs-common
+                                     (need-gvm-instrs tail branch))
+                                    (frame-common
+                                     (frame-truncate
+                                      (gvm-instr-frame
+                                       (if (null? head)
+                                           (bb-label-instr bb)
+                                           (car head)))
+                                      fs-common))
+                                    (comment-common
+                                     (gvm-instr-comment (car tail)))
+                                    (bb-common
+                                     (make-bb
+                                      (make-label-simple
+                                       lbl-common
+                                       frame-common
+                                       comment-common)
+                                      new-bbs))
+                                    (new-bb
+                                     (make-bb (bb-label-instr bb) new-bbs))
+                                    (new-bb2
+                                     (make-bb (bb-label-instr bb2) new-bbs)))
+
+                               ;; create bb for common part
+                               (bb-non-branch-instrs-set! bb-common tail)
+                               (bb-branch-instr-set! bb-common branch)
+
+                               ;; create trimmed bb2 jumping to common part
+                               (bb-non-branch-instrs-set!
+                                new-bb2
+                                (reverse head2))
+                               (bb-branch-instr-set!
+                                new-bb2
+                                (make-jump
+                                 (make-lbl lbl-common)
+                                 #f
+                                 #f
+                                 #f
+                                 frame-common
+                                 comment-common))
+
+                               ;; create trimmed bb jumping to common part
+                               (bb-non-branch-instrs-set!
+                                new-bb
+                                (reverse head))
+                               (bb-branch-instr-set!
+                                new-bb
+                                (make-jump
+                                 (make-lbl lbl-common)
+                                 #f
+                                 #f
+                                 #f
+                                 frame-common
+                                 comment-common))
+
+                               (set! changed? #t)
+
+                               (add-bb bb-common (cdr lst))))))
+
+                      (cons bb2 (add-bb bb (cdr lst)))))))
+
+          (list bb)))
+
+    (define (extract-common-tail bb1 bb2 cont)
+      (let loop ((lst1 (reverse (bb-non-branch-instrs bb1)))
+                 (lst2 (reverse (bb-non-branch-instrs bb2)))
+                 (tail '()))
+        (if (and (pair? lst1) (pair? lst2))
+            (let ((i1 (car lst1))
+                  (i2 (car lst2)))
               (if (eqv-gvm-instr? i1 i2)
-                (loop (cdr l1) (cdr l2) (cons i1 tail))
-                (cont l1 l2 tail)))
-            (cont l1 l2 tail))))
+                  (loop (cdr lst1) (cdr lst2) (cons i1 tail))
+                  (cont lst1 lst2 tail)))
+            (cont lst1 lst2 tail))))
 
-      (define (eqv-bb? bb1 bb2)
-        (let ((bb1-non-branch (bb-non-branch-instrs bb1))
-              (bb2-non-branch (bb-non-branch-instrs bb2)))
-          (and (= (length bb1-non-branch) (length bb2-non-branch))
-               (eqv-gvm-instr? (bb-label-instr bb1) (bb-label-instr bb2))
-               (eqv-gvm-instr? (bb-branch-instr bb1) (bb-branch-instr bb2))
-               (eqv-list? eqv-gvm-instr? bb1-non-branch bb2-non-branch))))
+    (define (eqv-bb? bb1 bb2)
+      (let ((bb1-non-branch (bb-non-branch-instrs bb1))
+            (bb2-non-branch (bb-non-branch-instrs bb2)))
+        (and (= (length bb1-non-branch) (length bb2-non-branch))
+             (eqv-gvm-instr? (bb-label-instr bb1) (bb-label-instr bb2))
+             (eqv-gvm-instr? (bb-branch-instr bb1) (bb-branch-instr bb2))
+             (eqv-list? eqv-gvm-instr? bb1-non-branch bb2-non-branch))))
 
-      (define (eqv-list? pred? l1 l2)
-        (if (pair? l1)
-          (and (pair? l2)
-               (pred? (car l1) (car l2))
-               (eqv-list? pred? (cdr l1) (cdr l2)))
-          (not (pair? l2))))
+    (define (eqv-list? pred? lst1 lst2)
+      (if (pair? lst1)
+          (and (pair? lst2)
+               (pred? (car lst1) (car lst2))
+               (eqv-list? pred? (cdr lst1) (cdr lst2)))
+          (not (pair? lst2))))
 
-      (define (eqv-lbl-num? lbl1 lbl2)
-        (= (replacement-lbl-num lbl1)
-           (replacement-lbl-num lbl2)))
+    (define (eqv-lbl-num? lbl1 lbl2)
+      (= (replacement-lbl-num lbl1)
+         (replacement-lbl-num lbl2)))
 
-      (define (eqv-gvm-opnd? opnd1 opnd2)
-        (if (not opnd1)
+    (define (eqv-gvm-opnd? opnd1 opnd2)
+      (if (not opnd1)
           (not opnd2)
           (and opnd2
                (cond ((lbl? opnd1)
@@ -972,260 +1234,247 @@
                      (else
                       (eqv? opnd1 opnd2))))))
 
-      (define (eqv-key-pair? key-pair1 key-pair2)
-        (and (eq? (car key-pair1) (car key-pair2))
-             (eqv-gvm-opnd? (cdr key-pair1) (cdr key-pair2))))
+    (define (eqv-key-pair? key-pair1 key-pair2)
+      (and (eq? (car key-pair1) (car key-pair2))
+           (eqv-gvm-opnd? (cdr key-pair1) (cdr key-pair2))))
 
-      (define (eqv-gvm-instr? instr1 instr2)
+    (define (eqv-gvm-instr? instr1 instr2)
 
-        (define (eqv-closure-parms? p1 p2)
-          (and (eqv-gvm-opnd? (closure-parms-loc p1)
-                              (closure-parms-loc p2))
-               (eqv-lbl-num? (closure-parms-lbl p1)
-                             (closure-parms-lbl p2))
-               (eqv-list? eqv-gvm-opnd?
-                          (closure-parms-opnds p1)
-                          (closure-parms-opnds p2))))
+      (define (eqv-closure-parms? p1 p2)
+        (and (eqv-gvm-opnd? (closure-parms-loc p1)
+                            (closure-parms-loc p2))
+             (eqv-lbl-num? (closure-parms-lbl p1)
+                           (closure-parms-lbl p2))
+             (eqv-list? eqv-gvm-opnd?
+                        (closure-parms-opnds p1)
+                        (closure-parms-opnds p2))))
 
-        (define (has-debug-info? instr)
-          (let ((node (comment-get (gvm-instr-comment instr) 'node)))
-            (and node
-                 (let ((env (node-env node)))
-                   (and (debug? env)
-                        (or (debug-location? env)
-                            (debug-source? env)
-                            (debug-environments? env)))))))
+      (define (has-debug-info? instr)
+        (let ((node (comment-get (gvm-instr-comment instr) 'node)))
+          (and node
+               (let ((env (node-env node)))
+                 (and (debug? env)
+                      (or (debug-location? env)
+                          (debug-source? env)
+                          (debug-environments? env)))))))
 
-        (let ((type1 (gvm-instr-type instr1))
-              (type2 (gvm-instr-type instr2)))
-          (and (eq? type1 type2)
-               (frame-eq? (gvm-instr-frame instr1) (gvm-instr-frame instr2))
-               (not (has-debug-info? instr1))
-               (not (has-debug-info? instr2))
-               (case type1
+      (let ((type1 (gvm-instr-type instr1))
+            (type2 (gvm-instr-type instr2)))
+        (and (eq? type1 type2)
+             (frame-eq? (gvm-instr-frame instr1) (gvm-instr-frame instr2))
+             (not (has-debug-info? instr1))
+             (not (has-debug-info? instr2))
+             (case type1
 
-                 ((label)
-                  (let ((ltype1 (label-type instr1))
-                        (ltype2 (label-type instr2)))
-                    (and (eq? ltype1 ltype2)
-                         (case ltype1
-                           ((simple return task-entry task-return)
-                            #t)
-                           ((entry)
-                            (and (= (label-entry-nb-parms instr1)
-                                    (label-entry-nb-parms instr2))
-                                 (eqv-list? eqv-gvm-opnd?
-                                            (label-entry-opts instr1)
-                                            (label-entry-opts instr2))
-                                 (if (label-entry-keys instr1)
+               ((label)
+                (let ((ltype1 (label-type instr1))
+                      (ltype2 (label-type instr2)))
+                  (and (eq? ltype1 ltype2)
+                       (case ltype1
+                         ((simple return task-entry task-return)
+                          #t)
+                         ((entry)
+                          (and (= (label-entry-nb-parms instr1)
+                                  (label-entry-nb-parms instr2))
+                               (eqv-list? eqv-gvm-opnd?
+                                          (label-entry-opts instr1)
+                                          (label-entry-opts instr2))
+                               (if (label-entry-keys instr1)
                                    (and (label-entry-keys instr2)
                                         (eqv-list? eqv-key-pair?
                                                    (label-entry-keys instr1)
                                                    (label-entry-keys instr2)))
                                    (not (label-entry-keys instr2)))
-                                 (eq? (label-entry-rest? instr1)
-                                      (label-entry-rest? instr2))
-                                 (eq? (label-entry-closed? instr1)
-                                      (label-entry-closed? instr2))))
-                           (else
-                            (compiler-internal-error
-                              "eqv-gvm-instr?, unknown label type"))))))
+                               (eq? (label-entry-rest? instr1)
+                                    (label-entry-rest? instr2))
+                               (eq? (label-entry-closed? instr1)
+                                    (label-entry-closed? instr2))))
+                         (else
+                          (compiler-internal-error
+                           "eqv-gvm-instr?, unknown label type"))))))
 
-                 ((apply)
-                  (and (eq? (apply-prim instr1) (apply-prim instr2))
-                       (eqv-list? eqv-gvm-opnd?
-                                  (apply-opnds instr1)
-                                  (apply-opnds instr2))
-                       (eqv-gvm-opnd? (apply-loc instr1)
-                                      (apply-loc instr2))))
+               ((apply)
+                (and (eq? (apply-prim instr1) (apply-prim instr2))
+                     (eqv-list? eqv-gvm-opnd?
+                                (apply-opnds instr1)
+                                (apply-opnds instr2))
+                     (eqv-gvm-opnd? (apply-loc instr1)
+                                    (apply-loc instr2))))
 
-                 ((copy)
-                  (and (eqv-gvm-opnd? (copy-opnd instr1)
-                                      (copy-opnd instr2))
-                       (eqv-gvm-opnd? (copy-loc instr1)
-                                      (copy-loc instr2))))
+               ((copy)
+                (and (eqv-gvm-opnd? (copy-opnd instr1)
+                                    (copy-opnd instr2))
+                     (eqv-gvm-opnd? (copy-loc instr1)
+                                    (copy-loc instr2))))
 
-                 ((close)
-                  (eqv-list? eqv-closure-parms?
-                             (close-parms instr1)
-                             (close-parms instr2)))
+               ((close)
+                (eqv-list? eqv-closure-parms?
+                           (close-parms instr1)
+                           (close-parms instr2)))
 
-                 ((ifjump)
-                  (and (eq? (ifjump-test instr1)
-                            (ifjump-test instr2))
-                       (eqv-list? eqv-gvm-opnd?
-                                  (ifjump-opnds instr1)
-                                  (ifjump-opnds instr2))
-                       (eqv-lbl-num? (ifjump-true instr1)
-                                     (ifjump-true instr2))
-                       (eqv-lbl-num? (ifjump-false instr1)
-                                     (ifjump-false instr2))
-                       (eq? (ifjump-poll? instr1)
-                            (ifjump-poll? instr2))))
+               ((ifjump)
+                (and (eq? (ifjump-test instr1)
+                          (ifjump-test instr2))
+                     (eqv-list? eqv-gvm-opnd?
+                                (ifjump-opnds instr1)
+                                (ifjump-opnds instr2))
+                     (eqv-lbl-num? (ifjump-true instr1)
+                                   (ifjump-true instr2))
+                     (eqv-lbl-num? (ifjump-false instr1)
+                                   (ifjump-false instr2))
+                     (eq? (ifjump-poll? instr1)
+                          (ifjump-poll? instr2))))
 
-                 ((switch)
-                  (and (eqv-gvm-opnd? (switch-opnd instr1)
-                                      (switch-opnd instr2))
-                       (every? (lambda (x)
-                                 (and (eqv? (switch-case-obj (car x))
-                                            (switch-case-obj (cdr x)))
-                                      (eqv-lbl-num? (switch-case-lbl (car x))
-                                                    (switch-case-lbl (cdr x)))))
-                               (map cons
-                                    (switch-cases instr1)
-                                    (switch-cases instr2)))
-                       (eqv-lbl-num? (switch-default instr1)
-                                     (switch-default instr2))
-                       (eq? (switch-poll? instr1)
-                            (switch-poll? instr2))))
+               ((switch)
+                (and (eqv-gvm-opnd? (switch-opnd instr1)
+                                    (switch-opnd instr2))
+                     (every? (lambda (x)
+                               (and (eqv? (switch-case-obj (car x))
+                                          (switch-case-obj (cdr x)))
+                                    (eqv-lbl-num? (switch-case-lbl (car x))
+                                                  (switch-case-lbl (cdr x)))))
+                             (map cons
+                                  (switch-cases instr1)
+                                  (switch-cases instr2)))
+                     (eqv-lbl-num? (switch-default instr1)
+                                   (switch-default instr2))
+                     (eq? (switch-poll? instr1)
+                          (switch-poll? instr2))))
 
-                 ((jump)
-                  (and (eqv-gvm-opnd? (jump-opnd instr1)
-                                      (jump-opnd instr2))
-                       (eqv? (jump-nb-args instr1)
-                             (jump-nb-args instr2))
-                       (eq? (jump-poll? instr1)
-                            (jump-poll? instr2))
-                       (eq? (jump-safe? instr1)
-                            (jump-safe? instr2))))
+               ((jump)
+                (and (eqv-gvm-opnd? (jump-opnd instr1)
+                                    (jump-opnd instr2))
+                     (eqv? (jump-nb-args instr1)
+                           (jump-nb-args instr2))
+                     (eq? (jump-poll? instr1)
+                          (jump-poll? instr2))
+                     (eq? (jump-safe? instr1)
+                          (jump-safe? instr2))))
 
-                 (else
-                  (compiler-internal-error
-                    "eqv-gvm-instr?, unknown 'gvm-instr':" instr1))))))
+               (else
+                (compiler-internal-error
+                 "eqv-gvm-instr?, unknown 'gvm-instr':" instr1))))))
 
-      ; Fill hash table, remove equivalent basic blocks and common tails
+    (bbs-next-lbl-num-set! new-bbs (bbs-next-lbl-num bbs))
 
-      (bbs-for-each-bb enter-bb! bbs)
+    ;; Fill hash table, remove equivalent basic blocks and common tails
 
-      ; Reconstruct bbs
+    (bbs-for-each-bb enter-bb! bbs)
 
-      (bbs-entry-lbl-num-set! bbs
-        (replacement-lbl-num (bbs-entry-lbl-num bbs)))
+    (if changed?
 
-      (bbs-for-each-bb
-        (lambda (bb)
-          (if bb
-            (replace-label-references! bb replacement-lbl-num)))
-        bbs)
+        (begin
 
-      changed?))))
+          ;; Reconstruct bbs
 
-(define (replace-label-references! bb replacement-lbl-num)
+          (bbs-entry-lbl-num-set!
+           new-bbs
+           (replacement-lbl-num (bbs-entry-lbl-num bbs)))
 
-  (define (update-gvm-opnd opnd)
-    (if opnd
-      (cond ((lbl? opnd)
-             (make-lbl (replacement-lbl-num (lbl-num opnd))))
-            ((clo? opnd)
-             (make-clo (update-gvm-opnd (clo-base opnd)) (clo-index opnd)))
-            (else
-             opnd))
-      opnd))
+          (bbs-for-each-bb
+           (lambda (bb)
+             (bb-clone-replacing-lbls bb new-bbs replacement-lbl-num #f))
+           new-bbs)
 
-  (define (update-gvm-instr instr)
+          (bbs-determine-refs! new-bbs)
 
-    (define (update-closure-parms p)
-      (make-closure-parms
-        (update-gvm-opnd (closure-parms-loc p))
-        (replacement-lbl-num (closure-parms-lbl p))
-        (map update-gvm-opnd (closure-parms-opnds p))))
+          new-bbs)
 
-    (case (gvm-instr-type instr)
+        bbs)))
 
-      ((apply)
-       (make-apply (apply-prim instr)
-                   (map update-gvm-opnd (apply-opnds instr))
-                   (update-gvm-opnd (apply-loc instr))
-                   (gvm-instr-frame instr)
-                   (gvm-instr-comment instr)))
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      ((copy)
-       (make-copy (update-gvm-opnd (copy-opnd instr))
-                  (update-gvm-opnd (copy-loc instr))
-                  (gvm-instr-frame instr)
-                  (gvm-instr-comment instr)))
+;; Step 4, Useless jump removal:
 
-      ((close)
-       (make-close
-         (map update-closure-parms (close-parms instr))
-         (gvm-instr-frame instr)
-         (gvm-instr-comment instr)))
+(define (bbs-remove-useless-jumps bbs)
 
-      ((ifjump)
-       (make-ifjump (ifjump-test instr)
-                    (map update-gvm-opnd (ifjump-opnds instr))
-                    (replacement-lbl-num (ifjump-true instr))
-                    (replacement-lbl-num (ifjump-false instr))
-                    (ifjump-poll? instr)
-                    (gvm-instr-frame instr)
-                    (gvm-instr-comment instr)))
+  (let ((new-bbs (make-bbs))
+        (changed? #f))
 
-      ((switch)
-       (make-switch (update-gvm-opnd (switch-opnd instr))
-                    (map (lambda (c)
-                           (make-switch-case (switch-case-obj c)
-                                             (replacement-lbl-num
-                                              (switch-case-lbl c))))
-                         (switch-cases instr))
-                    (replacement-lbl-num (switch-default instr))
-                    (switch-poll? instr)
-                    (gvm-instr-frame instr)
-                    (gvm-instr-comment instr)))
+    (define (remove-useless-jump bb)
 
-      ((jump)
-       (make-jump (update-gvm-opnd (jump-opnd instr))
-                  (jump-nb-args instr)
-                  (jump-poll? instr)
-                  (jump-safe? instr)
-                  (gvm-instr-frame instr)
-                  (gvm-instr-comment instr)))
+      (stretchable-vector-set!
+       (bbs-basic-blocks new-bbs)
+       (bb-lbl-num bb)
+       bb)
 
-      (else
-       (compiler-internal-error
-         "update-gvm-instr, unknown 'instr':" instr))))
+      (let loop ((bb bb))
+        (let ((branch (bb-branch-instr bb)))
 
-  (bb-non-branch-instrs-set! bb
-    (map update-gvm-instr (bb-non-branch-instrs bb)))
-  (bb-branch-instr-set! bb
-    (update-gvm-instr (bb-branch-instr bb))))
+          ;; is it a non-polling 'jump' to a label?
+
+          (if (and (eq? (gvm-instr-type branch) 'jump)
+                   (not (first-class-jump? branch))
+                   (not (jump-poll? branch))
+                   (jump-lbl? branch))
+              (let* ((dest-bb (lbl-num->bb (jump-lbl? branch) bbs))
+                     (frame1 (gvm-instr-frame (bb-last-non-branch-instr bb)))
+                     (frame2 (gvm-instr-frame (bb-label-instr dest-bb))))
+
+                ;; is it a 'simple' label with the same frame as the last
+                ;; non-branch instruction?
+
+                (if (and (eq? (bb-label-type dest-bb) 'simple)
+                         (frame-eq? frame1 frame2)
+                         (= (length (bb-precedents dest-bb)) 1))
+
+                    (let* ((new-bb (make-bb (bb-label-instr bb) new-bbs)))
+                      (bb-non-branch-instrs-set!
+                       new-bb
+                       (append (bb-non-branch-instrs bb)
+                               (bb-non-branch-instrs dest-bb)
+                               '()))
+                      (bb-branch-instr-set!
+                       new-bb
+                       (bb-branch-instr dest-bb))
+                      (set! changed? #t)
+                      (loop new-bb))))))))
+
+    (bbs-next-lbl-num-set! new-bbs (bbs-next-lbl-num bbs))
+    (bbs-entry-lbl-num-set! new-bbs (bbs-entry-lbl-num bbs))
+
+    (bbs-for-each-bb remove-useless-jump bbs)
+
+    (if changed? new-bbs bbs)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;; Step 5, Basic block set ordering:
 
-(define (bbs-order! bbs)
+(define (bbs-order bbs)
 
   (let ((ordered-blocks (queue-empty))
         (left-to-schedule (stretchable-vector-copy (bbs-basic-blocks bbs))))
 
-    ; test if a basic block is in 'left-to-schedule' and return the
-    ; basic block if it is
+    ;; test if a basic block is in 'left-to-schedule' and return the
+    ;; basic block if it is
 
     (define (left-to-schedule? bb)
       (stretchable-vector-ref left-to-schedule (bb-lbl-num bb)))
 
-    ; remove basic block from 'left-to-schedule'
+    ;; remove basic block from 'left-to-schedule'
 
     (define (remove-bb! bb)
       (stretchable-vector-set! left-to-schedule (bb-lbl-num bb) #f)
       bb)
 
-    ; return a basic block which ends with a branch to 'bb' (and that is
-    ; still in 'left-to-schedule') or #f if there aren't any
+    ;; return a basic block which ends with a branch to 'bb' (and that is
+    ;; still in 'left-to-schedule') or #f if there aren't any
 
     (define (prec-bb bb)
       (let loop ((lst (bb-precedents bb)) (best #f) (best-fs #f))
         (if (null? lst)
           best
-          (let* ((x (car lst))
+          (let* ((lbl (car lst))
+                 (x (lbl-num->bb lbl bbs))
                  (x-fs (bb-exit-frame-size x)))
             (if (and (left-to-schedule? x)
                      (or (not best) (< x-fs best-fs)))
               (loop (cdr lst) x x-fs)
               (loop (cdr lst) best best-fs))))))
 
-    ; return the basic block which 'bb' jumps to (and that is still in
-    ; bbs) or #f if there aren't any
+    ;; return the basic block which 'bb' jumps to (and that is still in
+    ;; bbs) or #f if there aren't any
 
     (define (succ-bb bb)
 
@@ -1237,10 +1486,10 @@
             ((jump) (lbl? (jump-opnd branch)))
             (else
              (compiler-internal-error
-              "bbs-order!, unknown branch type")))))
+              "bbs-order, unknown branch type")))))
 
-      (define (best-succ bb1 bb2)   ; heuristic that determines which
-        (if (branches-to-lbl? bb1)  ; bb is most frequently executed
+      (define (best-succ bb1 bb2)   ;; heuristic that determines which
+        (if (branches-to-lbl? bb1)  ;; bb is most frequently executed
            bb1
            (if (branches-to-lbl? bb2)
              bb2
@@ -1275,10 +1524,10 @@
 
           (else
            (compiler-internal-error
-             "bbs-order!, unknown branch type")))))
+             "bbs-order, unknown branch type")))))
 
-    ; schedule a given basic block 'bb' with it's predecessors and
-    ; successors.
+    ;; schedule a given basic block 'bb' with it's predecessors and
+    ;; successors.
 
     (define (schedule-from bb)
       (queue-put! ordered-blocks bb)
@@ -1322,46 +1571,46 @@
 
     (define (schedule-refs bb)
       (for-each
-        (lambda (x)
-          (if (left-to-schedule? x)
-            (schedule-around (remove-bb! x))))
+        (lambda (lbl)
+          (let ((x (lbl-num->bb lbl bbs)))
+            (if (left-to-schedule? x)
+                (schedule-around (remove-bb! x)))))
         (bb-references bb)))
 
     (schedule-from (remove-bb! (lbl-num->bb (bbs-entry-lbl-num bbs) bbs)))
 
-    (let ((basic-blocks (make-stretchable-vector #f))
+    (let ((new-bbs (make-bbs))
+          (basic-blocks (make-stretchable-vector #f))
           (lbl-map (make-stretchable-vector #f)))
 
       (define (replacement-lbl-num lbl)
         (or (stretchable-vector-ref lbl-map lbl) lbl))
 
-      (let loop ((lst (queue->list ordered-blocks)) (i 1))
-        (if (pair? lst)
+      (for-each
+       (lambda (bb)
+         (let* ((old-num (label-lbl-num (bb-label-instr bb)))
+                (new-num (bbs-new-lbl! new-bbs)))
+           (stretchable-vector-set! basic-blocks new-num bb)
+           (stretchable-vector-set! lbl-map old-num new-num)))
+       (queue->list ordered-blocks))
 
-          (let* ((bb (car lst))
-                 (label-instr (bb-label-instr bb)))
-            (stretchable-vector-set! basic-blocks i bb)
-            (stretchable-vector-set! lbl-map (label-lbl-num label-instr) i)
-            (label-lbl-num-set! label-instr i)
-            (loop (cdr lst) (+ i 1)))
+      (let loop ((i bbs-first-lbl))
+        (if (< i (bbs-next-lbl-num new-bbs))
+            (begin
+              (bb-clone-replacing-lbls
+               (stretchable-vector-ref basic-blocks i)
+               new-bbs
+               replacement-lbl-num
+               #t)
+              (loop (+ i 1)))))
 
-          (begin
+      (bbs-entry-lbl-num-set!
+       new-bbs
+       (replacement-lbl-num (bbs-entry-lbl-num bbs)))
 
-            ; Reconstruct bbs
+      (bbs-determine-refs! new-bbs)
 
-            (bbs-next-lbl-num-set! bbs i)
-
-            (bbs-basic-blocks-set! bbs basic-blocks)
-
-            (bbs-entry-lbl-num-set! bbs
-              (replacement-lbl-num (bbs-entry-lbl-num bbs)))
-
-            (bbs-for-each-bb
-              (lambda (bb)
-                (replace-label-references!
-                  bb
-                  replacement-lbl-num))
-              bbs)))))))
+      new-bbs)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
@@ -1520,7 +1769,7 @@
 (define (write-bb bb port)
   (write-gvm-instr (bb-label-instr bb) port)
   (display " [precedents=" port)
-  (write (map bb-lbl-num (bb-precedents bb)) port)
+  (write (bb-precedents bb) port)
   (display "]" port)
   (newline port)
 
