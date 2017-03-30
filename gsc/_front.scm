@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -827,20 +827,18 @@
           (newline info-port)
           (newline info-port)))
 
-      (bbs-purify! *bbs*)
-
       (let ((proc
               (make-proc-obj
-                (string-append module-prefix module-name) ; name
-                #f           ; c-name
-                #t           ; primitive?
-                *bbs*        ; code
-                '(0)         ; call-pat
-                #t           ; side-effects?
-                '()          ; strict-pat
-                0            ; lift-pat
-                '(#f)        ; type
-                #f)))        ; standard
+                (string-append module-prefix module-name) ;; name
+                #f     ;; c-name
+                #t     ;; primitive?
+                (bbs-purify *bbs*) ;; code
+                '(0)   ;; call-pat
+                #t     ;; side-effects?
+                '()    ;; strict-pat
+                0      ;; lift-pat
+                '(#f)  ;; type
+                #f)))  ;; standard
 
         (set! *bb* '())
         (set! *bbs* '())
@@ -900,8 +898,7 @@
                 (gen-proc proc-info info-port)
                 (trace-unindent info-port)
                 (loop))))
-          (trace-unindent info-port)
-          (bbs-purify! *bbs*))
+          (trace-unindent info-port))
 
         (bbs-entry-lbl-num-set! *bbs* entry-lbl-num)
         (if (constant-var? var)
@@ -910,7 +907,7 @@
               (add-known-proc proc-info)
               (do-body)))
           (do-body))
-        (let ((bbs *bbs*)
+        (let ((bbs (bbs-purify *bbs*))
               (x (var-constant var)))
           (set! *bbs* p-bbs)
           (set! *bb* p-bb)
@@ -1348,12 +1345,12 @@
         (write (string->canonical-symbol (prc-name proc)) info-port)
         (write "unknown" info-port)))
     (set! *bb* (proc-info-bb proc-info))
-    (let ((lbl (bb-lbl-num *bb*)))
-      (restore-context (proc-info-context proc-info))
-      (gen-node (prc-body proc)
-                (varset-union (proc-body-live-varset proc)
-                              ret-var-set)
-                (make-reason-tail)))))
+    (proc-info-bb-set! proc-info #f)
+    (restore-context (proc-info-context proc-info))
+    (gen-node (prc-body proc)
+              (varset-union (proc-body-live-varset proc)
+                            ret-var-set)
+              (make-reason-tail))))
 
 (define (proc-body-live-varset proc)
   (let* ((body (prc-body proc))
@@ -1407,12 +1404,13 @@
 
 (define (make-proc-info proc lbl1 lbl2 bb context pcontext)
   (vector proc lbl1 lbl2 bb context pcontext))
-(define (proc-info-proc x) (vector-ref x 0))
-(define (proc-info-lbl1 x) (vector-ref x 1))
-(define (proc-info-lbl2 x) (vector-ref x 2))
-(define (proc-info-bb x) (vector-ref x 3))
-(define (proc-info-context x) (vector-ref x 4))
-(define (proc-info-pcontext x) (vector-ref x 5))
+(define (proc-info-proc info) (vector-ref info 0))
+(define (proc-info-lbl1 info) (vector-ref info 1))
+(define (proc-info-lbl2 info) (vector-ref info 2))
+(define (proc-info-bb info) (vector-ref info 3))
+(define (proc-info-bb-set! info x) (vector-set! info 3 x))
+(define (proc-info-context info) (vector-ref info 4))
+(define (proc-info-pcontext info) (vector-ref info 5))
 
 ;;;----------------------------------------------------------------------------
 
