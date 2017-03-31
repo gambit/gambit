@@ -8657,6 +8657,8 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; Disable old implementation of marktables based on association lists.
+#;
 (begin
 
   (define-prim (##make-marktable)
@@ -8705,6 +8707,63 @@
                        (##fx< n id))
                   (##set-cdr! x #t))
               (loop (##cdr lst)))))))
+  )
+
+;; Implementation of marktables based on eq? tables.
+
+(begin
+
+  (define-prim (##make-marktable)
+    (##declare (not interrupts-enabled))
+    (##vector -1 (##make-table 0 #f #f #f ##eq?) #f))
+
+  (define-prim (##marktable-mark! table obj)
+    (##declare (not interrupts-enabled))
+    (let* ((t (##vector-ref table 1))
+           (x (##table-ref t obj '())))
+      (if (or (##eq? x '()) (##eq? x #f))
+          (begin
+            (if (##vector-ref table 2) ;; shared table?
+                (let ((t-copy (##table-copy t)))
+                  (##vector-set! table 1 t-copy)
+                  (##vector-set! table 2 #f)
+                  (##table-set! t-copy obj (##eq? x #f)))
+                (##table-set! t obj (##eq? x #f)))
+            (##eq? x '()))
+          #f)))
+
+  (define-prim (##marktable-lookup! table obj stamp?)
+    (##declare (not interrupts-enabled))
+    (let* ((t (##vector-ref table 1))
+           (x (##table-ref t obj '())))
+      (if (##eq? x '())
+          #f
+          (if (and stamp? (##eq? x #t))
+              (let ((n (##fx+ (##vector-ref table 0) 1)))
+                (##vector-set! table 0 n)
+                (if (##vector-ref table 2) ;; shared table?
+                    (let ((t-copy (##table-copy t)))
+                      (##vector-set! table 1 t-copy)
+                      (##vector-set! table 2 #f)
+                      (##table-set! t-copy obj n))
+                    (##table-set! t obj n))
+                (##cons obj n))
+              x))))
+
+  (define-prim (##marktable-save table)
+    (##declare (not interrupts-enabled))
+    (let ((state
+           (##vector (##vector-ref table 0)
+                     (##vector-ref table 1)
+                     (##vector-ref table 2))))
+      (##vector-set! table 2 #t) ;; set "shared table" flag
+      state))
+
+  (define-prim (##marktable-restore! table state)
+    (##declare (not interrupts-enabled))
+    (##vector-set! table 0 (##vector-ref state 0))
+    (##vector-set! table 1 (##vector-ref state 1))
+    (##vector-set! table 2 (##vector-ref state 2)))
   )
 
 ;;;----------------------------------------------------------------------------
