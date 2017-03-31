@@ -257,6 +257,7 @@
 ;;; Implementation of blocked thread queues.
 
 (define-rbtree
+ implement-btq
  macro-btq-init!
  macro-thread->btq
  ##btq-insert!
@@ -278,7 +279,11 @@
  macro-btq-leftmost-set!
  #f
  #f
+ #f
+ #f
 )
+
+(implement-btq)
 
 (define-prim (##make-mutex name)
   (##declare (not interrupts-enabled))
