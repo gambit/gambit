@@ -1764,6 +1764,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-W,DASH_W)
   AC_CHECK_C_COMPILER_OPT(-Wno-unused,DASH_Wno_unused)
   AC_CHECK_C_COMPILER_OPT(-Wno-write-strings,DASH_Wno_write_strings)
+  AC_CHECK_C_COMPILER_OPT(-Wdisabled-optimization,DASH_Wdisabled_optimization)
   AC_CHECK_C_COMPILER_OPT(-g,DASH_g)
 
   # profiling options:
@@ -1901,6 +1902,7 @@ if test "$C_COMP_GNUC" = yes; then
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_unused"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_write_strings"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wdisabled_optimization"
 
   if test "$ENABLE_DEBUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
