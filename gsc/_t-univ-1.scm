@@ -1604,7 +1604,7 @@
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^ expr1 ".hasOwnProperty(" expr2 ")"))
+     (^ "Object.prototype.hasOwnProperty.call(" expr1 "," expr2 ")"))
 
     ((php)
      (^ "array_key_exists(" expr2 "," expr1 ")"))
