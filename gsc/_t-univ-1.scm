@@ -1979,7 +1979,9 @@
              code-decls
              (univ-link-info-footer ctx))))
 
-    (univ-display-to-file code output)))
+    (univ-display-to-file code output)
+
+    output))
 
 ;;TODO: add constants
 #;

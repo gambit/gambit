@@ -112,9 +112,9 @@
 
   (define (compiler-batch-mode options arguments target)
 
-    (define (c-file? file)
+    (define (target-file? file)
       (##assoc (##path-extension file)
-               (c#target-file-extensions (c#target-get 'C))))
+               (c#target-file-extensions target)))
 
     (define (obj-file? file)
       (##string=? (##path-extension file) ##os-obj-extension-string-saved))
@@ -167,7 +167,7 @@
                           ((obj-file? file)
                            (loop1 rest
                                   nb-output-files))
-                          ((c-file? file)
+                          ((target-file? file)
                            (loop1 rest
                                   (if (and (##eq? type 'obj)
                                            (c#get-link-info file #f))
@@ -260,6 +260,10 @@
                               (##cons obj-file
                                       rev-obj-files)))
 
+                      (define (add-obj-file-at-head obj-file)
+                        (set! rev-obj-files
+                              (##append rev-obj-files (##list obj-file))))
+
                       (define (add-tmp-file tmp-file)
                         (set! rev-tmp-files
                               (##cons tmp-file
@@ -349,7 +353,7 @@
                                           (else
                                            (loop2 rest))))
                                   (let ((root (##path-strip-extension file)))
-                                    (cond ((c-file? file)
+                                    (cond ((target-file? file)
                                            (if (##memq type '(exe obj))
                                                (let ((obj-file
                                                       (do-compile-file
@@ -374,15 +378,10 @@
                                           (else
                                            (case type
                                              ((dyn)
-                                              (if (##eq? (c#target-name target) 'C)
-                                                  (do-compile-file
-                                                   file
-                                                   options
-                                                   output)
-                                                  (do-compile-file-to-target
-                                                   file
-                                                   options
-                                                   output)))
+                                              (do-compile-file
+                                               file
+                                               options
+                                               output))
                                              ((obj)
                                               (let ((obj-file
                                                      (do-compile-file
@@ -398,7 +397,7 @@
                                                       (and (##eq? type 'c)
                                                            output))))
                                                 (add-gen-file gen-file)
-                                                (if (and (c-file? gen-file)
+                                                (if (and (target-file? gen-file)
                                                          (##eq? type 'exe))
                                                     (let ((obj-file
                                                            (do-compile-file
@@ -472,15 +471,17 @@
                                                              link-file
                                                              (##cons '(obj) options)
                                                              #f)))
-                                                       (add-obj-file obj-link-file)
+                                                       (add-obj-file-at-head obj-link-file)
                                                        (add-tmp-file obj-link-file)
                                                        (if (##not (##assq 'keep-c options))
                                                            (add-tmp-file link-file))))))))
+
 
                                     (if exe?
                                         (and (##pair? rev-obj-files)
                                              (let ((obj-files
                                                     (##reverse rev-obj-files)))
+
                                                (do-build-executable
                                                 obj-files
                                                 (let ((expanded-output
