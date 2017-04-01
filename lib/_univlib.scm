@@ -329,6 +329,34 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; Access to command line arguments.
+
+(define-prim (##command-line)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration
+     "
+      var g_argv;
+      if (Object.prototype.hasOwnProperty.call(function () {return this;}(),'process'))
+        g_argv = process.argv.slice(1);
+      else
+        g_argv = arguments;
+     ")
+    (##vector->list (##inline-host-expression "g_host2scm(g_argv)")))
+
+   (else
+    '())))
+
+(define ##processed-command-line '())
+(set! ##processed-command-line (##command-line))
+
+(define-prim (command-line)
+  ##processed-command-line)
+
+;;;----------------------------------------------------------------------------
+
 ;; Dummy definitions to avoid "undefined global variable" warnings
 
 (define-prim (##absrel-timeout->timeout absrel-timeout)

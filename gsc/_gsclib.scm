@@ -163,8 +163,10 @@
          cc-options
          ld-options-prelude
          ld-options)
-  (let ((options
-         (##compile-options-normalize options)))
+  (let* ((options
+          (##compile-options-normalize options))
+         (target
+          (##extract-target options)))
 
     (define type
       (cond ((##assq 'obj options)
@@ -182,24 +184,26 @@
               (loop (##fx+ version 1))
               root-with-ext))))
 
-    (define (generate-output-filename root input-is-c-file?)
+    (define (generate-output-filename root input-is-target-file?)
       (case type
         ((obj)
-         (##string-append root ##os-obj-extension-string-saved))
+         (##string-append
+          root
+          ##os-obj-extension-string-saved))
         (else
-         (if input-is-c-file?
+         (if input-is-target-file?
              root
              (generate-next-version-of-object-file root)))))
 
-    (let* ((input-is-c-file?
+    (let* ((input-is-target-file?
             (##assoc (##path-extension filename)
-                     (c#target-file-extensions (c#target-get 'C))))
-           (c-filename
-            (if input-is-c-file?
+                     (c#target-file-extensions target)))
+           (target-filename
+            (if input-is-target-file?
                 filename
                 (##string-append
                  (##path-strip-extension filename)
-                 (##caar (c#target-file-extensions (c#target-get 'C))))))
+                 (##caar (c#target-file-extensions target)))))
            (expanded-output
             (##path-normalize output))
            (output-directory?
@@ -213,7 +217,7 @@
                   (##path-strip-directory
                    (##path-strip-extension filename))
                   expanded-output)
-                 input-is-c-file?)
+                 input-is-target-file?)
                 expanded-output))
            (output-dir
             (##path-directory output-filename))
@@ -225,30 +229,30 @@
             (if (##eq? type 'dyn)
                 output-filename-no-dir
                 module-name)))
-      (and (or input-is-c-file?
+      (and (or input-is-target-file?
                (c#cf filename
                      options
-                     (lambda () c-filename)
+                     (lambda () target-filename)
                      module-name
                      unique-name))
            (let ((exit-status
                   (##gambcomp
-                   'C
+                   (c#target-name target)
                    type
                    output-dir
-                   (##list c-filename)
+                   (##list target-filename)
                    output-filename-no-dir
                    (##assq 'verbose options)
                    (##list (##cons "CC_OPTIONS" cc-options)
                            (##cons "LD_OPTIONS_PRELUDE" ld-options-prelude)
                            (##cons "LD_OPTIONS" ld-options)))))
              (if (and (##not (##assq 'keep-c options))
-                      (##not (##string=? filename c-filename)))
-                 (##delete-file c-filename))
+                      (##not (##string=? filename target-filename)))
+                 (##delete-file target-filename))
              (if (##fx= exit-status 0)
                  output-filename
                  (##raise-error-exception
-                  "C compilation or link failed while compiling"
+                  "target compilation or link failed while compiling"
                   (##list filename))))))))
 
 (define (##build-executable
@@ -260,13 +264,15 @@
          ld-options)
   (let* ((options
           (##compile-options-normalize options))
+         (target
+          (##extract-target options))
          (output-dir
           (##path-directory output-filename))
          (output-filename-no-dir
           (##path-strip-directory output-filename))
          (exit-status
           (##gambcomp
-           'C
+           (c#target-name target)
            'exe
            output-dir
            obj-files
@@ -278,7 +284,7 @@
     (if (##fx= exit-status 0)
         output-filename
         (##raise-error-exception
-         "C link failed while linking"
+         "target link failed while linking"
          obj-files))))
 
 (define (##gambcomp
@@ -377,6 +383,16 @@
              stdin-redirection: #f
              stdout-redirection: #f
              stderr-redirection: #f))))
+
+(define (##extract-target options)
+  (let ((t (##assq 'target options)))
+    (c#with-exception-handling
+     (lambda ()
+       (c#target-get
+        (if (and (##pair? t)
+                 (##pair? (##cdr t)))
+            (##cadr t)
+            (c#default-target)))))))
 
 (define (link-incremental
          modules

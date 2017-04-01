@@ -1,6 +1,6 @@
 # makefile for Gambit bin directory.
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 herefromroot = bin
 rootfromhere = ..
@@ -75,13 +75,14 @@ GSC_EXECUTABLE_INSTALLED = @ENABLE_COMPILER_NAME@@exe@
 
 RCFILES = makefile.in \
 gambcomp-C.unix.in gambcomp-C.bat.windows.in \
+gambcomp-js.unix.in gambcomp-js.bat.windows.in \
 gambdoc.unix.in gambdoc.bat.windows.in
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gambcomp-C@bat@ gambdoc@bat@
+INSTFILES_BIN_PROG = gambcomp-C@bat@ gambcomp-js@bat@ gambdoc@bat@
 INSTFILES_BIN_LINK_GSI = six@exe@ gsi-script@bat@ six-script@bat@ \
 scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 INSTFILES_BIN_LINK_GSC = gsc-script@bat@
@@ -92,7 +93,7 @@ all:
 
 all-pre:
 
-all-post: gambcomp-C@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gambcomp-C@bat@ gambcomp-js@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 
 gambcomp-C@bat@: makefile gambcomp-C.unix gambcomp-C.bat.windows
 	rm -f gambcomp-C@bat@
@@ -101,6 +102,15 @@ gambcomp-C@bat@: makefile gambcomp-C.unix gambcomp-C.bat.windows
 	  chmod +x gambcomp-C@bat@; \
 	else \
 	  cp gambcomp-C.bat.windows gambcomp-C@bat@; \
+	fi
+
+gambcomp-js@bat@: makefile gambcomp-js.unix gambcomp-js.bat.windows
+	rm -f gambcomp-js@bat@
+	if test "@bat@" = ""; then \
+	  cp gambcomp-js.unix gambcomp-js@bat@; \
+	  chmod +x gambcomp-js@bat@; \
+	else \
+	  cp gambcomp-js.bat.windows gambcomp-js@bat@; \
 	fi
 
 gambdoc@bat@: makefile gambdoc.unix gambdoc.bat.windows
@@ -265,6 +275,7 @@ clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
 	rm -f gambcomp-C@bat@ \
+	  gambcomp-js@bat@ \
 	  gambdoc@bat@ \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ \
@@ -294,6 +305,7 @@ realclean-pre: bootclean-pre
 
 realclean-post: bootclean-post
 	rm -f gambcomp-C.unix gambcomp-C.bat.windows \
+	  gambcomp-js.unix gambcomp-js.bat.windows \
 	  gambdoc.unix gambdoc.bat.windows makefile
 
 rc-setup-pre:
@@ -413,6 +425,12 @@ gambcomp-C.unix: gambcomp-C.unix.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 gambcomp-C.bat.windows: gambcomp-C.bat.windows.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambcomp-js.unix: gambcomp-js.unix.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambcomp-js.bat.windows: gambcomp-js.bat.windows.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 gambdoc.unix: gambdoc.unix.in $(rootfromhere)/config.status
