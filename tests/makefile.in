@@ -177,12 +177,20 @@ test11:
 	@echo "------------ TEST 11 (run unit tests)"
 	$(MAKE) ut
 
-ut:
+ut ut-C:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
 
-st:
+ut-js:
+	(cd ../lib; make _gambit.js)
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -js -gsc
+
+st st-C:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -e '(pretty-print (list processor-count: (##current-vm-processor-count) cpu-count: (##cpu-count)))'
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -gsc-dbg
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -gsc-dbg
+
+st-js:
+	(cd ../lib; make _gambit.js)
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:p1,tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -js -gsc
 
 bootstrap-pre:
 

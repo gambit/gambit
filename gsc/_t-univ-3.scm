@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2526,6 +2526,15 @@ tanh
 
     (else
      (^!= expr expr))))
+
+(define (univ-emit-float-eqv? ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^call-prim (^member "Object" 'is) expr1 expr2))
+
+    (else
+     (^= expr1 expr2))))
 
 (define (univ-emit-flonum-box ctx expr)
   (case (univ-flonum-representation ctx)

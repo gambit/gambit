@@ -1551,6 +1551,11 @@ end-of-code
    (lambda ()
      (macro-raise
       (macro-make-constant-stack-overflow-exception)))))
+))
+
+(macro-case-target
+
+ ((C js)
 
 (implement-library-type-nonprocedure-operator-exception)
 
@@ -1606,6 +1611,11 @@ end-of-code
   (##declare (not interrupts-enabled))
   (macro-raise
    (macro-make-unknown-keyword-argument-exception proc args)))
+))
+
+(macro-case-target
+
+ ((C)
 
 (implement-library-type-cfun-conversion-exception)
 

@@ -153,6 +153,46 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-fail-check-type string-or-nonnegative-fixnum
+  'string-or-nonnegative-fixnum)
+
+;;;----------------------------------------------------------------------------
+
+(define-fail-check-type box
+  'box)
+
+(define-prim (##box? obj))
+
+(define-prim (box? obj)
+  (macro-force-vars (obj)
+    (##box? obj)))
+
+(define-prim (##box obj))
+
+(define-prim (box obj)
+  (##box obj))
+
+(define-prim (##unbox box))
+
+(define-prim (unbox box)
+  (macro-force-vars (box)
+    (macro-check-box box 1 (unbox box)
+      (##unbox box))))
+
+(define-prim (##set-box! box val))
+
+(define-prim (set-box! box val)
+  (macro-force-vars (box)
+    (macro-check-box box 1 (set-box! box val)
+      (begin
+        (##set-box! box val)
+        (##void)))))
+
+;;;----------------------------------------------------------------------------
+
+(define-fail-check-type continuation 'continuation
+  ##continuation?)
+
 (define-prim (##call-with-current-continuation
               receiver
               #!optional
@@ -232,6 +272,244 @@
 
 (define call/cc
   call-with-current-continuation)
+
+(define-prim (##continuation-capture-aux receiver lift1 lift2 lift3 others)
+  (##declare (not interrupts-enabled))
+  (cond ((##eq? lift1 (macro-absent-obj))
+         (##continuation-capture receiver))
+        ((##eq? lift2 (macro-absent-obj))
+         (##continuation-capture receiver lift1))
+        ((##eq? lift3 (macro-absent-obj))
+         (##continuation-capture receiver lift1 lift2))
+        ((##null? others)
+         (##continuation-capture receiver lift1 lift2 lift3))
+        (else
+         (let ((lifts
+                (##cons lift1
+                        (##cons lift2
+                                (##cons lift3
+                                        others)))))
+           (##continuation-capture
+            (lambda (cont)
+              (##apply receiver (##cons cont lifts))))))))
+
+(define-prim (##continuation-capture
+              receiver
+              #!optional
+              (lift1 (macro-absent-obj))
+              (lift2 (macro-absent-obj))
+              (lift3 (macro-absent-obj))
+              #!rest
+              others)
+  (##continuation-capture-aux receiver lift1 lift2 lift3 others))
+
+(define-prim (continuation-capture
+              receiver
+              #!optional
+              (lift1 (macro-absent-obj))
+              (lift2 (macro-absent-obj))
+              (lift3 (macro-absent-obj))
+              #!rest
+              others)
+  (macro-check-procedure receiver 1 (continuation-capture receiver lift1 lift2 lift3 . others)
+    (##continuation-capture-aux receiver lift1 lift2 lift3 others)))
+
+(define-prim (##continuation-graft-no-winding
+              cont
+              proc
+              #!optional
+              (arg1 (macro-absent-obj))
+              (arg2 (macro-absent-obj))
+              (arg3 (macro-absent-obj))
+              #!rest
+              others)
+  (##declare (not interrupts-enabled) (not inline))
+  (cond ((##eq? arg1 (macro-absent-obj))
+         (##continuation-graft-no-winding cont proc))
+        ((##eq? arg2 (macro-absent-obj))
+         (##continuation-graft-no-winding cont proc arg1))
+        ((##eq? arg3 (macro-absent-obj))
+         (##continuation-graft-no-winding cont proc arg1 arg2))
+        ((##null? others)
+         (##continuation-graft-no-winding cont proc arg1 arg2 arg3))
+        (else
+         (let ((args
+                (##cons arg1
+                        (##cons arg2
+                                (##cons arg3
+                                        others)))))
+           (##continuation-graft-no-winding cont ##apply proc args)))))
+
+(define-prim ##continuation-return-no-winding
+  (##first-argument
+   (lambda (cont results)
+     (##declare (not interrupts-enabled))
+     (##continuation-return-no-winding cont results))))
+
+(define-prim (##continuation-graft
+              cont
+              proc
+              #!optional
+              (arg1 (macro-absent-obj))
+              (arg2 (macro-absent-obj))
+              (arg3 (macro-absent-obj))
+              #!rest
+              others)
+  (##continuation-graft-no-winding cont proc arg1 arg2 arg3 others))
+
+(define-prim (continuation-graft
+              cont
+              proc
+              #!optional
+              (arg1 (macro-absent-obj))
+              (arg2 (macro-absent-obj))
+              (arg3 (macro-absent-obj))
+              #!rest
+              others)
+  (macro-check-continuation cont 1 (continuation-graft cont proc arg1 arg2 arg3 . others)
+    (macro-check-procedure proc 2 (continuation-graft cont proc arg1 arg2 arg3 . others)
+      (##continuation-graft-no-winding cont proc arg1 arg2 arg3 others))))
+
+(define-prim (##continuation-return
+              cont
+              #!optional
+              (val1 (macro-absent-obj))
+              (val2 (macro-absent-obj))
+              (val3 (macro-absent-obj))
+              #!rest
+              others)
+  (##continuation-return-no-winding cont val1 val2 val3 others))
+
+(define-prim (continuation-return
+              cont
+              #!optional
+              (val1 (macro-absent-obj))
+              (val2 (macro-absent-obj))
+              (val3 (macro-absent-obj))
+              #!rest
+              others)
+  (macro-check-continuation cont 1 (continuation-return cont val1 val2 val3 . others)
+    (##continuation-return-no-winding cont val1 val2 val3 others)))
+
+(define-prim (##continuation-creator cont)
+  (and cont
+       (##continuation-parent cont)))
+
+(define-prim (##continuation-parent cont)
+  (##subprocedure-parent (##continuation-ret cont)))
+
+;;;----------------------------------------------------------------------------
+
+(define-prim (apply proc arg1 . other-args)
+
+  (define (build-arg-list i arg other-args)
+
+    (define (copy-proper-list lst)
+      (macro-force-vars (lst)
+        (if (##pair? lst)
+          (let ((tail (copy-proper-list (##cdr lst))))
+            (macro-if-checks
+              (if (##fixnum? tail)
+                tail
+                (##cons (##car lst) tail))
+              (##cons (##car lst) tail)))
+          (macro-if-checks
+            (if (##null? lst)
+              '()
+              i) ;; error: list expected
+            '()))))
+
+    (define (check-proper-list lst)
+      (macro-if-checks
+        ;; This procedure may get into an infinite loop if another thread
+        ;; mutates "lst" (if lst1 and lst2 each point to disconnected cycles).
+        (let loop ((lst1 lst) (lst2 lst))
+          (macro-force-vars (lst1)
+            (if (##not (##pair? lst1))
+                (if (##null? lst1)
+                    lst
+                    i)
+                (let ((lst1 (##cdr lst1)))
+                  (macro-force-vars (lst1 lst2)
+                    (cond ((##eq? lst1 lst2)
+                           i)
+                          ((##not (##pair? lst2))
+                          ;; this case is possible if other threads mutate the list
+                          (if (##null? lst2)
+                              lst
+                              i))
+                          ((##pair? lst1)
+                           (loop (##cdr lst1) (##cdr lst2)))
+                          (else
+                           (if (##null? lst1)
+                               lst
+                               i))))))))
+        lst))
+
+    (if (##pair? other-args)
+      (let ((tail
+             (build-arg-list (##fx+ i 1)
+                             (##car other-args)
+                             (##cdr other-args))))
+        (macro-if-checks
+          (if (##fixnum? tail)
+            tail
+            (##cons arg tail))
+          (##cons arg tail)))
+      (macro-if-forces
+        (copy-proper-list arg)
+        (check-proper-list arg))))
+
+  (macro-force-vars (proc)
+    (macro-check-procedure proc 1 (apply proc arg1 . other-args)
+      (let ((lst (build-arg-list 2 arg1 other-args)))
+        (macro-if-checks
+          (if (##fixnum? lst)
+            (macro-fail-check-list lst (apply proc arg1 . other-args))
+            (##apply proc lst))
+          (##apply proc lst))))))
+
+(define-prim (##apply proc lst1)
+  (##declare (not interrupts-enabled))
+  (if (##pair? lst1)
+      (let ((lst2 (##cdr lst1)))
+        (if (##pair? lst2)
+            (let ((lst3 (##cdr lst2)))
+              (if (##pair? lst3)
+                  (let ((lst4 (##cdr lst3)))
+                    (if (##pair? lst4)
+                        (let ((lst5 (##cdr lst4)))
+                          (if (##pair? lst5)
+                              (let ((lst6 (##cdr lst5)))
+                                (if (##pair? lst6)
+                                    (error "##apply with more than 5 parameters")
+                                    (proc (##car lst1) (##car lst2) (##car lst3) (##car lst4) (##car lst5))))
+                              (proc (##car lst1) (##car lst2) (##car lst3) (##car lst4))))
+                        (proc (##car lst1) (##car lst2) (##car lst3))))
+                  (proc (##car lst1) (##car lst2))))
+            (proc (##car lst1))))
+      (proc)))
+
+;;;----------------------------------------------------------------------------
+
+(define-prim (##exit-with-err-code-no-cleanup err-code)
+  (##exit-process (##fx- err-code 1)))
+
+(define-prim (##exit-cleanup)
+  #f)
+
+(define-prim (##exit-with-err-code err-code)
+  (##exit-cleanup)
+  (##exit-with-err-code-no-cleanup err-code))
+
+(define-prim (##exit #!optional (status (macro-EXIT-CODE-OK)))
+  (##exit-with-err-code (##fx+ status 1)))
+
+(define-prim (##exit-abnormally)
+  (##exit (macro-EXIT-CODE-SOFTWARE)))
+
+(define-prim (##exit-with-exception exc)
+  (##exit-abnormally))
 
 ;;;----------------------------------------------------------------------------
 
@@ -380,15 +658,6 @@
 (define ##err-code-EAGAIN -1) ;; not implemented yet
 (define ##err-code-EINTR  -2) ;; not implemented yet
 (define ##err-code-ENOENT -3) ;; not implemented yet
-
-(define-prim (##exit #!optional (status 0))
-  (error "##exit not implemented yet"))
-
-(define-prim (##exit-abnormally)
-  (error "##exit-abnormally not implemented yet"))
-
-(define-prim (##exit-with-err-code err-code)
-  (error "##exit-with-err-code not implemented yet"))
 
 (define-prim (##explode-continuation cont)
   (error "##explode-continuation not implemented yet"))
@@ -548,23 +817,8 @@
 (define-prim (##raise-heap-overflow-exception)
   (error "##raise-heap-overflow-exception not implemented yet"))
 
-(define-prim (##raise-keyword-expected-exception-nary proc . args)
-  (error "##raise-keyword-expected-exception-nary not implemented yet"))
-
-(define-prim (##raise-keyword-expected-exception proc args)
-  (error "##raise-keyword-expected-exception not implemented yet"))
-
-(define-prim (##raise-nonprocedure-operator-exception oper args code rte)
-  (error "##raise-nonprocedure-operator-exception not implemented yet"))
-
 (define-prim (##raise-os-exception message code proc . args)
   (error "##raise-os-exception not implemented yet"))
-
-(define-prim (##raise-unknown-keyword-argument-exception proc args)
-  (error "##raise-unknown-keyword-argument-exception not implemented yet"))
-
-(define-prim (##raise-wrong-number-of-arguments-exception proc args)
-  (error "##raise-wrong-number-of-arguments-exception not implemented yet"))
 
 (define-prim (##repl #!optional (write-reason #f) (reason #f) (toplevel? #f))
   (error "##repl not implemented yet"))
@@ -589,7 +843,7 @@
 
 (define-prim (error message . parameters)
   (println message)
-  (let loop () (loop)))
+  (##exit-abnormally))
 
 ;;;----------------------------------------------------------------------------
 
