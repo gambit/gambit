@@ -2,7 +2,7 @@
 
 ;;; File: "#.scm"
 
-;;; Copyright (c) 2013 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,26 +10,27 @@
 
 (define ##failed-check? #f)
 
-;; When there is a unit test failure, we want to exit with an error status.
-;; However, this must be done after the stdout is forced.  By creating a
-;; final will, the exit will happen after the automatic forcing of stdout
-;; by the runtime system.
+;; at exit, verify if any checks failed
+(let ((##exit-old ##exit))
+  (set! ##exit
+        (lambda rest
+          (if (pair? rest)
+              (##exit-old (car rest))
+              (##exit-with-err-code-no-cleanup
+               (if ##failed-check? 2 1))))))
 
-(define ##ut-final-will
-  (##make-final-will
-   0 ;; never GCed
-   (lambda (obj)
-     (if ##failed-check?
-         (##exit-with-err-code-no-cleanup 2)))))
+(define ##failed-check-absent '$$fake-absent-object$$)
 
-(define (##failed-check msg #!optional (actual-result (##type-cast -6 2)))
-  (let ((port (##repl-output-port)))
-    (##display msg port)
-    (if (##not (##eq? actual-result (##type-cast -6 2)))
-        (begin
-          (##display " GOT " port)
-          (##write actual-result port)))
-    (##newline port))
+(define (##failed-check msg #!optional (actual-result ##failed-check-absent))
+  (println
+   (call-with-output-string
+    ""
+    (lambda (port)
+      (##display msg port)
+      (if (##not (##eq? actual-result ##failed-check-absent))
+          (begin
+            (##display " GOT " port)
+            (##write actual-result port))))))
   (set! ##failed-check? #t))
 
 (define (##check-exn-proc exn? thunk msg tail-exn?)

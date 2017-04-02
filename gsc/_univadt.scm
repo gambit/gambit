@@ -637,6 +637,9 @@
 (define-macro (^float-nan? val)
   `(univ-emit-float-nan? ctx ,val))
 
+(define-macro (^float-eqv? val1 val2)
+  `(univ-emit-float-eqv? ctx ,val1 ,val2))
+
 (define-macro (^flonum-box val)
   `(univ-emit-flonum-box ctx ,val))
 

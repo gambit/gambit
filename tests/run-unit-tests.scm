@@ -8,7 +8,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define cleanup? #f)
+(define cleanup? #t)
 
 (define nb-good 0)
 (define nb-fail 0)
@@ -163,18 +163,26 @@
 
       (run "../gsi/gsi" "-:d-,flu,=.." "-f" file)))
 
-(define (test-using-mode file mode)
-  (cond ((or (equal? mode "gsi")
-             (equal? mode "gsi-dbg"))
-         (run-gsi-under-debugger file (equal? mode "gsi-dbg")))
-        ((or (equal? mode "gsc")
-             (equal? mode "gsc-dbg"))
-         (let ((result (run "../gsc/gsc" "-:d-,flu,=.." "-f" "-o" "_test.o1" file)))
-           (if (= 0 (car result))
-               (let ((result (run-gsi-under-debugger "_test.o1" (equal? mode "gsc-dbg"))))
-                 (delete-file "_test.o1")
-                 result)
-               result)))))
+(define (test-using-mode file mode target)
+  (case target
+    ((C)
+     (cond ((member mode '(gsi gsi-dbg))
+            (run-gsi-under-debugger file (eq? mode 'gsi-dbg)))
+           ((member mode '(gsc gsc-dbg))
+            (let ((result (run "../gsc/gsc" "-:d-,flu,=.." "-f" "-o" "_test.o1" file)))
+              (if (= 0 (car result))
+                  (let ((result (run-gsi-under-debugger "_test.o1" (eq? mode 'gsc-dbg))))
+                    (if cleanup? (delete-file "_test.o1"))
+                    result)
+                  result)))))
+    (else
+     (let ((result (run "../gsc/gsc" "-:d-,flu,=.." "-warnings" "-target" (symbol->string target) "-exe" "-o" "_test.exe" file)))
+       (if (string? (cdr result)) (print (cdr result)))
+       (if (= 0 (car result))
+           (let ((result (run "./_test.exe")))
+             (if cleanup? (delete-file "_test.exe"))
+             result)
+           result)))))
 
 (define (trim-filename file)
   (if (and (>= (string-length file) (string-length default-dir))
@@ -183,14 +191,14 @@
       (substring file (string-length default-dir) (string-length file))
       file))
 
-(define (test file)
+(define (test file target)
   (for-each
 
    (lambda (mode)
 
      (print " " (trim-filename file))
 
-     (let* ((result (test-using-mode file mode))
+     (let* ((result (test-using-mode file mode target))
             (status (car result))
             (status-hi (quotient status 256))
             (status-lo (modulo status 256)))
@@ -215,7 +223,7 @@
 
    modes))
 
-(define (run-tests files)
+(define (run-tests files target)
 
   (set! nb-good 0)
   (set! nb-fail 0)
@@ -225,7 +233,7 @@
 
   (show-bar nb-good nb-fail nb-other nb-total 0.0)
 
-  (for-each test files)
+  (for-each (lambda (file) (test file target)) files)
 
   (print "\n")
 
@@ -268,6 +276,7 @@
     args)))
 
 (define modes '())
+(define targets '())
 
 (define default-dir "unit-tests/")
 
@@ -280,11 +289,16 @@
              (> (string-length (car args)) 1)
              (char=? #\- (string-ref (car args) 0)))
         (let ((word (substring (car args) 1 (string-length (car args)))))
-          (if (equal? word "stress")
-              (set! stress? #t)
-              (set! modes
-                    (cons word
-                          modes)))
+          (cond ((equal? word "stress")
+                 (set! stress? #t))
+                ((member word '("C" "js" "python" "ruby" "php" "java"))
+                 (set! targets
+                       (cons (string->symbol word)
+                             targets)))
+                (else
+                 (set! modes
+                       (cons (string->symbol word)
+                             modes))))
           (set! args (cdr args))
           (loop))))
 
@@ -292,11 +306,18 @@
       (set! args (list default-dir)))
 
   (if (null? modes)
-      (set! modes '("gsi")))
+      (set! modes '(gsi)))
 
-  (run-tests
-   (sort-list
-    (list-of-scm-files args stress?)
-    string<?)))
+  (if (null? targets)
+      (set! targets '(C)))
+
+  (let ((files
+         (sort-list
+          (list-of-scm-files args stress?)
+          string<?)))
+    (for-each
+     (lambda (target)
+       (run-tests files target))
+     targets)))
 
 ;;;============================================================================

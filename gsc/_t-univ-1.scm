@@ -3050,7 +3050,8 @@
   (gvm-state-glo-use ctx 'rd)
   (if (member name
               '(println
-                real-time-milliseconds))
+                real-time-milliseconds
+                ##exit-process))
       (begin
         (univ-glo-use ctx name 'wr) ;; automatically defined primitives
         (univ-use-rtlib

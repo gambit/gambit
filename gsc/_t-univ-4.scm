@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-4.scm"
 
-;;; Copyright (c) 2011-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -1269,7 +1269,7 @@
 (univ-define-prim-bool "##fleqv?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (return (^= (^flonum-unbox arg1) (^flonum-unbox arg2)))))) ;; TODO: implement comparison of bit representation
+     (return (^float-eqv? (^flonum-unbox arg1) (^flonum-unbox arg2))))))
 
 (univ-define-prim-bool "##char=?" #f
   ;;TODO: implement as eq? if chars are interned

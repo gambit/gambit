@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2355,6 +2355,54 @@ EOF
          (^setglo 'println
                   (^this-mod-jumpable
                    (gvm-proc-use ctx "println")))))))
+
+    ((exit_process)
+     (rts-method
+      'exit_process
+      '(public)
+      'noresult
+      (list (univ-field 'code 'int))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((code (^local-var 'code)))
+          (case (target-name (ctx-target ctx))
+            ((js)
+             (^expr-statement
+              (^call-prim (^member (^global-var 'process) 'exit) code)))
+            ((python ruby php)
+             (^expr-statement (^call-prim "exit" code)))
+            ((java)
+             (^expr-statement (^call-prim (^member 'System 'exit) code)))
+            (else
+             (compiler-internal-error
+              "univ-rtlib-feature ##exit-process, unknown target")))))))
+
+    ((glo-##exit-process)
+     (univ-defs-combine
+      (univ-jumpable-declaration-defs
+       ctx
+       #t
+       (gvm-proc-use ctx "##exit-process")
+       'entrypt
+       '()
+       '()
+       (univ-emit-fn-body
+        ctx
+        "\n"
+        (lambda (ctx)
+          (^ (^expr-statement
+              (^call-prim
+               (^rts-method-use 'exit_process)
+               (^getreg 1)))
+             (^setreg 1 (^void-obj))
+             (^return
+              (^cast*-jumpable (^getreg 0)))))))
+      (rts-init
+       (lambda (ctx)
+         (^setglo '##exit-process
+                  (^this-mod-jumpable
+                   (gvm-proc-use ctx "##exit-process")))))))
 
     ((glo-real-time-milliseconds)
      (univ-defs-combine
