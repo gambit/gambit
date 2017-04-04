@@ -376,25 +376,42 @@
      (rts-field 'inttemp2 'int (^int 0) '(public)))
 
     ((current_thread)
-     ;;TODO: make thread structure consistent with the Gambit lib
      (rts-field 'current_thread
                 'scmobj
                 (^structure-box
                  (^array-literal
                   'scmobj
                   (list (^null)   ;; type descriptor (filled in later)
-                        (^null)   ;; btq-next
-                        (^null)   ;; btq-prev
-                        (^null)   ;; toq-next
-                        (^null)   ;; toq-prev
-                        (^null)   ;; continuation
-                        (^obj '()) ;; dynamic environment
-                        (^null)    ;; state
-                        (^null)    ;; thunk
-                        (^null)    ;; result
-                        (^null)    ;; mutex
-                        (^null)    ;; condvar
-                        (^obj 0)   ;; id
+                        (^null)   ;; lock1
+                        (^null)   ;; btq-deq-next
+                        (^null)   ;; btq-deq-prev
+                        (^null)   ;; btq-color
+                        (^null)   ;; btq-parent
+                        (^null)   ;; btq-left
+                        (^null)   ;; btq-leftmost
+                        (^null)   ;; tgroup
+                        (^null)   ;; lock2
+                        (^null)   ;; toq-color
+                        (^null)   ;; toq-parent
+                        (^null)   ;; toq-left
+                        (^null)   ;; toq-leftmost
+                        (^null)   ;; threads-deq-next
+                        (^null)   ;; threads-deq-prev
+                        (^null)   ;; floats
+                        (^null)   ;; name
+                        (^null)   ;; end-condvar
+                        (^null)   ;; exception?
+                        (^null)   ;; result
+                        (^null)   ;; cont
+                        (^obj '()) ;; denv
+                        (^null)   ;; denv-cache1
+                        (^null)   ;; denv-cache2
+                        (^null)   ;; denv-cache3
+                        (^null)   ;; repl-channel
+                        (^null)   ;; mailbox
+                        (^null)   ;; specific
+                        (^null)   ;; resume-thunk
+                        (^null)   ;; interrupts
                         )))
                 '(public)))
 
@@ -2850,6 +2867,10 @@ EOF
                                                   alist))
                          "}\n"
                          (^return alist)))))
+            ((python)
+             ;;TODO: improve!
+             (^if (^instanceof "list" obj)
+                  (^return obj)))
             (else (^)))
 
 
@@ -3567,6 +3588,7 @@ EOF
         "import ctypes\n"
         "import time\n"
         "import math\n"
+        "import sys\n"
         "\n"))
 
     ((java)

@@ -2291,7 +2291,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
 
-#define ___THREAD_SIZE 34
+#define ___THREAD_SIZE 31
 #define ___PROCESSOR_SIZE 21
 #define ___VM_SIZE 20
 

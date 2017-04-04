@@ -2075,13 +2075,10 @@
 (define (univ-emit-float-truncate ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php java)
+    ((js php java python)
      (^if-expr (^< expr (^float targ-inexact-+0))
                (^float-ceiling expr)
                (^float-floor expr)))
-
-    ((python)
-     (^ "int(" expr ")"))
 
     ((ruby)
      (^ expr ".truncate"))

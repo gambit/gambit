@@ -1141,20 +1141,30 @@
 (univ-define-prim "##flcopysign" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     ;;TODO: implement for other languages
-     (return
-      (^if-expr (^= (^parens
-                     (^or (^parens (^< (^flonum-unbox arg1)
-                                       (^float 0.0)))
-                          (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg1))
-                                       (^float 0.0)))))
-                    (^parens
-                     (^or (^parens (^< (^flonum-unbox arg2)
-                                       (^float 0.0)))
-                          (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg2))
-                                       (^float 0.0))))))
-                arg1
-                (^flonum-box (^- (^flonum-unbox arg1))))))))
+     (case (target-name (ctx-target ctx))
+
+       ((python)
+        (return
+         (^flonum-box
+           (^call-prim (^member "math" 'copysign)
+                       (^flonum-unbox arg1)
+                       (^flonum-unbox arg2)))))
+
+       (else
+        ;;TODO: implement for other languages
+        (return
+         (^if-expr (^= (^parens
+                        (^or (^parens (^< (^flonum-unbox arg1)
+                                          (^float 0.0)))
+                             (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg1))
+                                          (^float 0.0)))))
+                       (^parens
+                        (^or (^parens (^< (^flonum-unbox arg2)
+                                          (^float 0.0)))
+                             (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg2))
+                                          (^float 0.0))))))
+                   arg1
+                   (^flonum-box (^- (^flonum-unbox arg1))))))))))
 
 (univ-define-prim "##flscalbn" #f
   (make-translated-operand-generator

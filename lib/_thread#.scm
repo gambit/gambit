@@ -981,26 +981,26 @@
 
 ;;; Representation of blocked thread queues.
 
-(##define-macro (macro-btq-lock1 node)           `(macro-slot 1 ,node))
-(##define-macro (macro-btq-lock1-set! node x)    `(macro-slot 1 ,node ,x))
-(##define-macro (macro-btq-deq-next node)        `(macro-slot 2 ,node))
-(##define-macro (macro-btq-deq-next-set! node x) `(macro-slot 2 ,node ,x))
-(##define-macro (macro-btq-deq-prev node)        `(macro-slot 3 ,node))
-(##define-macro (macro-btq-deq-prev-set! node x) `(macro-slot 3 ,node ,x))
-(##define-macro (macro-btq-color node)           `(macro-slot 4 ,node))
-(##define-macro (macro-btq-color-set! node x)    `(macro-slot 4 ,node ,x))
-(##define-macro (macro-btq-parent node)          `(macro-slot 5 ,node))
-(##define-macro (macro-btq-parent-set! node x)   `(macro-slot 5 ,node ,x))
-(##define-macro (macro-btq-left node)            `(macro-slot 6 ,node))
-(##define-macro (macro-btq-left-set! node x)     `(macro-slot 6 ,node ,x))
-(##define-macro (macro-btq-right node)           `(macro-slot 7 ,node))
-(##define-macro (macro-btq-right-set! node x)    `(macro-slot 7 ,node ,x))
-(##define-macro (macro-btq-leftmost node)        `(macro-slot 7 ,node))
-(##define-macro (macro-btq-leftmost-set! node x) `(macro-slot 7 ,node ,x))
-(##define-macro (macro-btq-owner node)           `(macro-slot 8 ,node))
-(##define-macro (macro-btq-owner-set! node x)    `(macro-slot 8 ,node ,x))
-(##define-macro (macro-btq-lock2 node)           `(macro-slot 9 ,node))
-(##define-macro (macro-btq-lock2-set! node x)    `(macro-slot 9 ,node ,x))
+(##define-macro (macro-btq-lock1 node)          `(macro-struct-slot 1 ,node))
+(##define-macro (macro-btq-lock1-set! node x)   `(macro-struct-slot 1 ,node ,x))
+(##define-macro (macro-btq-deq-next node)       `(macro-struct-slot 2 ,node))
+(##define-macro (macro-btq-deq-next-set! node x)`(macro-struct-slot 2 ,node ,x))
+(##define-macro (macro-btq-deq-prev node)       `(macro-struct-slot 3 ,node))
+(##define-macro (macro-btq-deq-prev-set! node x)`(macro-struct-slot 3 ,node ,x))
+(##define-macro (macro-btq-color node)          `(macro-struct-slot 4 ,node))
+(##define-macro (macro-btq-color-set! node x)   `(macro-struct-slot 4 ,node ,x))
+(##define-macro (macro-btq-parent node)         `(macro-struct-slot 5 ,node))
+(##define-macro (macro-btq-parent-set! node x)  `(macro-struct-slot 5 ,node ,x))
+(##define-macro (macro-btq-left node)           `(macro-struct-slot 6 ,node))
+(##define-macro (macro-btq-left-set! node x)    `(macro-struct-slot 6 ,node ,x))
+(##define-macro (macro-btq-right node)          `(macro-struct-slot 7 ,node))
+(##define-macro (macro-btq-right-set! node x)   `(macro-struct-slot 7 ,node ,x))
+(##define-macro (macro-btq-leftmost node)       `(macro-struct-slot 7 ,node))
+(##define-macro (macro-btq-leftmost-set! node x)`(macro-struct-slot 7 ,node ,x))
+(##define-macro (macro-btq-owner node)          `(macro-struct-slot 8 ,node))
+(##define-macro (macro-btq-owner-set! node x)   `(macro-struct-slot 8 ,node ,x))
+(##define-macro (macro-btq-lock2 node)          `(macro-struct-slot 9 ,node))
+(##define-macro (macro-btq-lock2-set! node x)   `(macro-struct-slot 9 ,node ,x))
 
 (define-rbtree
  implement-btq
@@ -1062,16 +1062,16 @@
 
 ;;; Representation of timeout queues.
 
-(##define-macro (macro-toq-color node)           `(macro-slot 10 ,node))
-(##define-macro (macro-toq-color-set! node x)    `(macro-slot 10 ,node ,x))
-(##define-macro (macro-toq-parent node)          `(macro-slot 11 ,node))
-(##define-macro (macro-toq-parent-set! node x)   `(macro-slot 11 ,node ,x))
-(##define-macro (macro-toq-left node)            `(macro-slot 12 ,node))
-(##define-macro (macro-toq-left-set! node x)     `(macro-slot 12 ,node ,x))
-(##define-macro (macro-toq-right node)           `(macro-slot 13 ,node))
-(##define-macro (macro-toq-right-set! node x)    `(macro-slot 13 ,node ,x))
-(##define-macro (macro-toq-leftmost node)        `(macro-slot 13 ,node))
-(##define-macro (macro-toq-leftmost-set! node x) `(macro-slot 13 ,node ,x))
+(##define-macro (macro-toq-color node)         `(macro-struct-slot 10 ,node))
+(##define-macro (macro-toq-color-set! node x)  `(macro-struct-slot 10 ,node ,x))
+(##define-macro (macro-toq-parent node)        `(macro-struct-slot 11 ,node))
+(##define-macro (macro-toq-parent-set! node x) `(macro-struct-slot 11 ,node ,x))
+(##define-macro (macro-toq-left node)          `(macro-struct-slot 12 ,node))
+(##define-macro (macro-toq-left-set! node x)   `(macro-struct-slot 12 ,node ,x))
+(##define-macro (macro-toq-right node)         `(macro-struct-slot 13 ,node))
+(##define-macro (macro-toq-right-set! node x)  `(macro-struct-slot 13 ,node ,x))
+(##define-macro (macro-toq-leftmost node)      `(macro-struct-slot 13 ,node))
+(##define-macro (macro-toq-leftmost-set! node x)`(macro-struct-slot 13 ,node ,x))
 
 (define-rbtree
  implement-toq
@@ -1850,10 +1850,14 @@
 
 ;;; Representation of processor queues.
 
-(##define-macro (macro-processor-deq-next node)        `(macro-slot 17 ,node))
-(##define-macro (macro-processor-deq-next-set! node x) `(macro-slot 17 ,node ,x))
-(##define-macro (macro-processor-deq-prev node)        `(macro-slot 18 ,node))
-(##define-macro (macro-processor-deq-prev-set! node x) `(macro-slot 18 ,node ,x))
+(##define-macro (macro-processor-deq-next node)
+  `(macro-struct-slot 17 ,node))
+(##define-macro (macro-processor-deq-next-set! node x)
+  `(macro-struct-slot 17 ,node ,x))
+(##define-macro (macro-processor-deq-prev node)
+  `(macro-struct-slot 18 ,node))
+(##define-macro (macro-processor-deq-prev-set! node x)
+  `(macro-struct-slot 18 ,node ,x))
 
 ;;; Define operations on processor queues.
 

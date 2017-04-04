@@ -500,7 +500,12 @@
                                                               (##reverse gen-files)))
                                                             (##car
                                                              rev-obj-files)))
-                                                       ##os-exe-extension-string-saved))))))))
+                                                       (if (##eq?
+                                                            (c#target-name
+                                                             target)
+                                                            'C)
+                                                           ##os-exe-extension-string-saved
+                                                           ##os-bat-extension-string-saved)))))))))
 
                                   (if flat?
                                       (warn-flat-and-not-link-or-exe)))

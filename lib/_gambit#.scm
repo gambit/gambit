@@ -137,6 +137,11 @@
     `(##vector-ref ,struct ,index)
     `(##vector-set! ,struct ,index ,@val)))
 
+(##define-macro (macro-struct-slot index struct . val)
+  (if (null? val)
+    `(##unchecked-structure-ref ,struct ,index #f #f)
+    `(##unchecked-structure-set! ,struct ,@val ,index #f #f)))
+
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;; Symbol objects

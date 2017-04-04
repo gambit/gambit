@@ -1522,7 +1522,7 @@ end-of-code
 
 (macro-case-target
 
- ((C js)
+ ((C js python)
 
 (implement-library-type-nonprocedure-operator-exception)
 
