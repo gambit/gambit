@@ -206,8 +206,8 @@
         (let ((lst (string->list ns)))
           (list->string (cons (char-upcase (car lst)) (cdr lst)))))))
 
-(define univ-thread-cont-slot 5)
-(define univ-thread-denv-slot 6)
+(define univ-thread-cont-slot 21)
+(define univ-thread-denv-slot 22)
 
 (define (univ-php-pre53? ctx)
   (assq 'pre53 (ctx-semantics-changing-options ctx)))

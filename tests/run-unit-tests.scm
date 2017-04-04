@@ -37,30 +37,31 @@
   (define (ratio n)
     (quotient (* n (+ nb-good nb-fail nb-other)) nb-total))
 
-  (if (tty? (current-output-port))
+  (let* ((istty (tty? (current-output-port)))
+         (bar-width 16)
+         (bar-length (ratio bar-width)))
 
-      (let* ((bar-width 16)
-             (bar-length (ratio bar-width)))
+    (define (esc x)
+      (if istty x ""))
 
-        (define (esc x)
-          x)
+    (print (if istty "\r" "\n")
+           "["
+           (esc "\33[32;1m") (num->string nb-good 3 0) (esc "\33[0m")
+           "|"
+           (esc "\33[31;1m") (num->string nb-fail 3 0) (esc "\33[0m")
+           ;;"|"
+           ;;(esc "\33[34;1m") (num->string nb-other 4 0) (esc "\33[0m")
+           "] "
+           (num->string (ratio 100) 3 0)
+           "% "
+           (make-string bar-length #\#)
+           (make-string (- bar-width bar-length) #\.)
+           " "
+           (num->string elapsed 3 1)
+           "s"
+           (esc "\33[K"))
 
-        (print "\r"
-               "["
-               (esc "\33[32;1m") (num->string nb-good 3 0) (esc "\33[0m")
-               "|"
-               (esc "\33[31;1m") (num->string nb-fail 3 0) (esc "\33[0m")
-               ;;"|"
-               ;;(esc "\33[34;1m") (num->string nb-other 4 0) (esc "\33[0m")
-               "] "
-               (num->string (ratio 100) 3 0)
-               "% "
-               (make-string bar-length #\#)
-               (make-string (- bar-width bar-length) #\.)
-               " "
-               (num->string elapsed 3 1)
-               "s"
-               (esc "\33[K")))))
+    (force-output)))
 
 (define (run path . args)
   (let* ((port
@@ -141,18 +142,23 @@
      (cond ((member mode '(gsi gsi-dbg))
             (run-gsi-under-debugger file (eq? mode 'gsi-dbg)))
            ((member mode '(gsc gsc-dbg))
-            (let ((result (run "../gsc/gsc" "-:d-,flu,=.." "-f" "-o" "_test.o1" file)))
+            (let* ((filename "_test.o1")
+                   (result (run "../gsc/gsc" "-:d-,flu,=.." "-f" "-o" filename file)))
               (if (= 0 (car result))
-                  (let ((result (run-gsi-under-debugger "_test.o1" (eq? mode 'gsc-dbg))))
-                    (if cleanup? (delete-file "_test.o1"))
+                  (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg))))
+                    (if cleanup? (delete-file filename))
                     result)
                   result)))))
     (else
-     (let ((result (run "../gsc/gsc" "-:d-,flu,=.." "-warnings" "-target" (symbol->string target) "-exe" "-o" "_test.exe" file)))
-       (if (string? (cdr result)) (print (cdr result)))
+     (let* ((filename "_test.bat")
+            (result (run "../gsc/gsc" "-:d-,flu,=.." "-warnings" "-target" (symbol->string target) "-exe" "-o" filename file)))
+       (if (string? (cdr result))
+           (begin
+             (print (cdr result))
+             (force-output)))
        (if (= 0 (car result))
-           (let ((result (run "./_test.exe")))
-             (if cleanup? (delete-file "_test.exe"))
+           (let ((result (run (path-expand filename))))
+             (if cleanup? (delete-file filename))
              result)
            result)))))
 
@@ -169,6 +175,7 @@
    (lambda (mode)
 
      (print " " (trim-filename file))
+     (force-output)
 
      (let* ((result (test-using-mode file mode target))
             (status (car result))
@@ -250,7 +257,10 @@
 (define modes '())
 (define targets '())
 
-(define default-dir "unit-tests/")
+(define default-dir
+  (let* ((cd (current-directory))
+         (len (string-length cd)))
+    (string-append "unit-tests" (substring cd (- len 1) len))))
 
 (define (main . args)
 

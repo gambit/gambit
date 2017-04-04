@@ -511,6 +511,13 @@
 (define-prim (##exit-with-exception exc)
   (##exit-abnormally))
 
+(define-prim (exit #!optional (status (macro-absent-obj)))
+  (if (##eq? status (macro-absent-obj))
+      (##exit)
+      (macro-force-vars (status)
+        (macro-check-exact-unsigned-int8 status 1 (exit status)
+          (##exit status)))))
+
 ;;;----------------------------------------------------------------------------
 
 (define ##min-fixnum -536870912)
@@ -623,6 +630,9 @@
         g_argv = arguments;
      ")
     (##vector->list (##inline-host-expression "g_host2scm(g_argv)")))
+
+   ((python)
+    (##vector->list (##inline-host-expression "g_host2scm(sys.argv)")))
 
    (else
     '())))
