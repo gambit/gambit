@@ -1294,15 +1294,15 @@
 
 #ifndef ___USE_NO_THREAD_SYSTEM
 
-#ifndef ___USE_POSIX_THREADS
-#ifndef ___USE_WIN32_THREADS
+#ifndef ___USE_POSIX_THREAD_SYSTEM
+#ifndef ___USE_WIN32_THREAD_SYSTEM
 #define @CONF_THREAD_SYSTEM@
 #endif
 #endif
 
-#ifdef ___USE_POSIX_THREADS
-#ifdef ___USE_WIN32_THREADS
-#error "Define either ___USE_POSIX_THREADS or ___USE_WIN32_THREADS"
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+#error "Define either ___USE_POSIX_THREAD_SYSTEM or ___USE_WIN32_THREAD_SYSTEM"
 #endif
 #endif
 
@@ -1318,6 +1318,18 @@
 #ifndef ___NO_THREAD_LOCAL_STORAGE_CLASS
 #ifndef ___THREAD_LOCAL_STORAGE_CLASS
 #define @CONF_THREAD_LOCAL_STORAGE_CLASS@
+#endif
+#endif
+
+/*
+ * Determine if the WIN32 CONDITION_VARIABLE type is available.
+ */
+
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+#ifndef ___HAVE_CONDITION_VARIABLE
+#ifndef ___DONT_HAVE_CONDITION_VARIABLE
+#define @CONF_HAVE_CONDITION_VARIABLE@
+#endif
 #endif
 #endif
 
@@ -2291,7 +2303,6 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___FOREIGN_RELEASE_FN 1
 #define ___FOREIGN_PTR 2
 
-#define ___THREAD_SIZE 31
 #define ___PROCESSOR_SIZE 21
 #define ___VM_SIZE 20
 
@@ -3430,10 +3441,8 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___GCHASHTABLE_KEY0      5
 #define ___GCHASHTABLE_VAL0      6
 
-#define ___PROCESSOR_CURRENT_THREAD 14
-
-#define ___CURRENTTHREAD ___VECTORREF(___CURRENTPROCESSOR,___FIX(___PROCESSOR_CURRENT_THREAD))
-#define ___CURRENTTHREADSET(thread)___VECTORSET(___CURRENTPROCESSOR,___FIX(___PROCESSOR_CURRENT_THREAD),thread)
+#define ___CURRENTTHREAD ___FIELD(___CURRENTPROCESSOR,___PROCESSOR_CURRENT_THREAD)
+#define ___CURRENTTHREADSET(thread)___FIELD(___CURRENTPROCESSOR,___PROCESSOR_CURRENT_THREAD) = thread;
 
 #define ___PROCESSOR_SCMOBJ(ps)___TAG(___ALIGNUP((ps)->processor_scmobj+(___SUBTYPED_OVERHEAD-___BODY_OFS),___WS),___tSUBTYPED)
 
@@ -3610,6 +3619,7 @@ else \
 thread = ___CURRENTTHREAD; \
 ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 
+
 #define ___JUMP_THREAD_SAVE1(jump) \
 { ___SCMOBJ proc; \
   ___SCMOBJ thread; \
@@ -3744,6 +3754,8 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___THREAD_DENV_CACHE1 23
 #define ___THREAD_DENV_CACHE2 24
 #define ___THREAD_DENV_CACHE3 25
+
+#define ___PROCESSOR_CURRENT_THREAD 14
 
 #define ___ENV_NAME_VAL 0
 #define ___ENV_LEFT     1
@@ -7754,6 +7766,8 @@ typedef struct ___full_duplex_pipe
 #define ___MUTEX_LOCK(mut) EnterCriticalSection (&mut)
 #define ___MUTEX_UNLOCK(mut) LeaveCriticalSection (&mut)
 
+#ifdef ___HAVE_CONDITION_VARIABLE
+
 #define ___CONDVAR CONDITION_VARIABLE
 #define ___CONDVAR_DECL(id) ___CONDVAR id;
 #define ___CONDVAR_INIT(cv) InitializeConditionVariable (&cv)
@@ -7761,6 +7775,22 @@ typedef struct ___full_duplex_pipe
 #define ___CONDVAR_WAIT(cv,mut) SleepConditionVariableCS (&cv, &mut, INFINITE)
 #define ___CONDVAR_SIGNAL(cv) WakeConditionVariable (&cv)
 #define ___CONDVAR_BROADCAST(cv) WakeAllConditionVariable (&cv)
+
+#else
+
+/*
+ * The type CONDITION_VARIABLE is not available. Use busy waiting.
+ */
+
+#define ___CONDVAR int
+#define ___CONDVAR_DECL(id) ___CONDVAR id;
+#define ___CONDVAR_INIT(cv) cv = 0
+#define ___CONDVAR_DESTROY(cv)
+#define ___CONDVAR_WAIT(cv,mut) do { ___MUTEX_UNLOCK(mut); ___MUTEX_LOCK(mut); } while (0)
+#define ___CONDVAR_SIGNAL(cv)
+#define ___CONDVAR_BROADCAST(cv)
+
+#endif
 
 #define ___THREAD_ID (GetCurrentThreadId())
 
