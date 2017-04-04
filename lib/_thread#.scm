@@ -1237,6 +1237,7 @@
   (resume-thunk     init: #f)
   (interrupts       init: '())
   (last-processor   init: #f)
+  (pinned           init: #f)
 )
 
 ;;; Access to floating point fields.

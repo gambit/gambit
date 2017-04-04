@@ -706,6 +706,26 @@
      (macro-add-thread-to-run-queue-of-current-processor-without-locking! thread)
      (macro-unlock-current-processor!)))
 
+(define-prim (##add-thread-to-run-queue-of-current-processor-preferably-out-of-line! thread)
+
+  (##declare (not interrupts-enabled))
+
+  (let ((pinned (macro-thread-pinned thread)))
+    (if pinned
+        (begin
+          ;; the thread is pinned to a processor, so add it to that run queue
+          (let ((processor pinned))
+            (macro-lock-processor! processor)
+            (##btq-insert! processor thread)
+            (macro-unlock-processor! processor)
+            (##wait-abort! processor)))
+        (begin
+          ;; the thread is not pinned, so add it to the current processor
+          (macro-add-thread-to-run-queue-of-current-processor! thread)))))
+
+(##define-macro (macro-add-thread-to-run-queue-of-current-processor-preferably! thread)
+  `(##add-thread-to-run-queue-of-current-processor-preferably-out-of-line! ,thread))
+
 (define-prim (##add-thread-to-run-queue-of-some-processor-out-of-line! thread)
 
   (##declare (not interrupts-enabled))
@@ -713,22 +733,31 @@
   (define (add-to-current-processor!)
     (macro-add-thread-to-run-queue-of-current-processor! thread))
 
-  (if (##not (macro-trylock-current-vm!))
-      (add-to-current-processor!)
-      (let ((processor (macro-processor-deq-head (macro-current-vm))))
-        (if (##eq? processor (macro-current-vm))
-            (begin
-              ;; no processor is currently idle
-              (macro-unlock-current-vm!)
-              (add-to-current-processor!))
-            (begin
-              ;; a processor that is currently idle was found
-              (macro-processor-deq-remove! processor)
-              (macro-unlock-current-vm!)
-              (macro-lock-processor! processor)
-              (##btq-insert! processor thread)
-              (macro-unlock-processor! processor)
-              (##wait-abort-no-remove! processor))))))
+  (let ((pinned (macro-thread-pinned thread)))
+    (if pinned
+        (begin
+          ;; the thread is pinned to a processor, so add it to that run queue
+          (let ((processor pinned))
+            (macro-lock-processor! processor)
+            (##btq-insert! processor thread)
+            (macro-unlock-processor! processor)
+            (##wait-abort! processor)))
+        (if (##not (macro-trylock-current-vm!))
+            (add-to-current-processor!)
+            (let ((processor (macro-processor-deq-head (macro-current-vm))))
+              (if (##eq? processor (macro-current-vm))
+                  (begin
+                    ;; no processor is currently idle
+                    (macro-unlock-current-vm!)
+                    (add-to-current-processor!))
+                  (begin
+                    ;; a processor that is currently idle was found
+                    (macro-processor-deq-remove! processor)
+                    (macro-unlock-current-vm!)
+                    (macro-lock-processor! processor)
+                    (##btq-insert! processor thread)
+                    (macro-unlock-processor! processor)
+                    (##wait-abort-no-remove! processor))))))))
 
 (##define-macro (macro-add-thread-to-run-queue-of-some-processor! thread)
   `(##add-thread-to-run-queue-of-some-processor-out-of-line! ,thread))
@@ -1353,7 +1382,7 @@
                      (##set-cdr! interrupt (macro-thread-interrupts thread))
                      (macro-thread-interrupts-set! thread interrupt)
 
-                     (macro-add-thread-to-run-queue-of-current-processor! thread)
+                     (macro-add-thread-to-run-queue-of-current-processor-preferably! thread)
 
                      ;; release low-level lock of thread
                      (macro-unlock-thread! thread))))))))
@@ -1446,6 +1475,24 @@
     (macro-check-thread thread 1 (thread-start! thread)
       (##thread-start! thread))))
 
+;;TODO: find better interface
+(define-prim (##thread-pin! thread processor)
+  (macro-thread-pinned-set! thread processor)
+  (##void))
+
+;;TODO: enable this interface
+#;
+(define-prim (thread-start! thread #!optional (processor (macro-absent-obj)))
+
+  (##declare (not interrupts-enabled))
+
+  (macro-force-vars (thread processor)
+    (macro-check-thread thread 1 (thread-start! thread processor)
+      (if (##eq? processor (macro-absent-obj))
+          (##thread-start! thread processor)
+          (macro-check-processor processor 2 (thread-start! thread processor)
+            (##thread-start! thread processor))))))
+
 (define-prim (##thread-start! thread)
 
   (##declare (not interrupts-enabled))
@@ -1464,7 +1511,7 @@
         (macro-thread-exception?-set! thread #f)
 
         (macro-add-thread-to-run-queue-of-some-processor! thread)
-        #;(macro-add-thread-to-run-queue-of-current-processor! thread)
+        #;(macro-add-thread-to-run-queue-of-current-processor-preferably! thread)
 
         ;;TODO: rethink use of reschedule-if-needed!
         ;;(macro-thread-reschedule-if-needed!)
@@ -2859,11 +2906,13 @@
 
                       ;; Try to lock the stolen thread, but don't block.
 
-                      (if (##not (macro-trylock-thread! stolen-thread))
+                      (if (or (macro-thread-pinned stolen-thread)
+                              (##not (macro-trylock-thread! stolen-thread)))
 
                           (begin
 
-                            ;; Couldn't lock the stolen thread.
+                            ;; The thread is pinned or we couldn't
+                            ;; lock it.
 
                             ;; release low-level lock of victim processor
                             (macro-unlock-processor! victim-processor)
@@ -3857,7 +3906,7 @@
            first-thread
            ##thread-locked-mutex-action!)))
 
-    (macro-add-thread-to-run-queue-of-current-processor! first-thread)
+    (macro-add-thread-to-run-queue-of-current-processor-preferably! first-thread)
 
     ;;TODO: this seems slower
     #;(macro-add-thread-to-run-queue-of-some-processor! first-thread)
@@ -3962,7 +4011,7 @@
   ;; remove it from the timeout queue
   (macro-thread-toq-remove-if-in-toq! thread)
 
-  (macro-add-thread-to-run-queue-of-current-processor! thread)
+  (macro-add-thread-to-run-queue-of-current-processor-preferably! thread)
 
   ;; release low-level lock of thread
   (macro-unlock-thread! thread))
@@ -4199,7 +4248,7 @@
        (##thread-btq-remove! next-thread)
        (macro-thread-toq-remove-if-in-toq! next-thread)
 
-       (macro-add-thread-to-run-queue-of-current-processor! next-thread)
+       (macro-add-thread-to-run-queue-of-current-processor-preferably! next-thread)
 
        ;; release low-level lock of thread
        (macro-unlock-thread! next-thread)
