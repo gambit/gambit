@@ -786,6 +786,7 @@
 
     ((jump)
      (targ-gen-jump (jump-opnd gvm-instr)
+                    (jump-ret gvm-instr)
                     (jump-nb-args gvm-instr)
                     (jump-poll? gvm-instr)
                     (jump-safe? gvm-instr)
@@ -1366,7 +1367,11 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define (targ-gen-jump opnd nb-args poll? safe? next-lbl)
+(define (targ-gen-jump opnd ret nb-args poll? safe? next-lbl)
+
+  (if ret
+      (targ-emit
+       (targ-loc (make-reg 0) (targ-opnd (make-lbl ret)))))
 
   (targ-update-fr targ-proc-entry-frame)
 

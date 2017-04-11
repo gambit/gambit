@@ -2728,8 +2728,9 @@
   #f
   #f
 
-  (lambda (ctx nb-args poll? safe? fs)
+  (lambda (ctx ret nb-args poll? safe? fs)
     (univ-jump-inline ctx
+                      ret
                       nb-args
                       2
                       5
@@ -3212,8 +3213,9 @@
   #f
   #f
 
-  (lambda (ctx nb-args poll? safe? fs)
+  (lambda (ctx ret nb-args poll? safe? fs)
     (univ-jump-inline ctx
+                      ret
                       nb-args
                       1
                       4
@@ -3227,8 +3229,9 @@
   #f
   #f
 
-  (lambda (ctx nb-args poll? safe? fs)
+  (lambda (ctx ret nb-args poll? safe? fs)
     (univ-jump-inline ctx
+                      ret
                       nb-args
                       2
                       5
@@ -3242,8 +3245,9 @@
   #f
   #f
 
-  (lambda (ctx nb-args poll? safe? fs)
+  (lambda (ctx ret nb-args poll? safe? fs)
     (univ-jump-inline ctx
+                      ret
                       nb-args
                       2
                       2
@@ -3252,7 +3256,7 @@
                       fs
                       "continuation_return_no_winding")))
 
-(define (univ-jump-inline ctx nb-args min-args max-args poll? safe? fs name)
+(define (univ-jump-inline ctx ret nb-args min-args max-args poll? safe? fs name)
   (and (>= nb-args min-args)
        (<= nb-args max-args)
        (with-stack-pointer-adjust
@@ -3263,18 +3267,22 @@
           (let ((rtlib-name
                  (string->symbol
                   (string-append name (number->string nb-args)))))
-            (^return-poll
-             (^rts-jumpable-use rtlib-name)
-             poll?
-             #t))))))
+            (^ (if ret
+                   (^setloc (make-reg 0) (^getopnd (make-lbl ret)))
+                   (^))
+               (^return-poll
+                (^rts-jumpable-use rtlib-name)
+                poll?
+                #t)))))))
 
 (univ-define-prim "##thread-save!" #f
 
   #f
   #f
 
-  (lambda (ctx nb-args poll? safe? fs)
+  (lambda (ctx ret nb-args poll? safe? fs)
     (univ-jump-inline ctx
+                      ret
                       nb-args
                       1
                       4
@@ -3288,8 +3296,9 @@
   #f
   #f
 
-  (lambda (ctx nb-args poll? safe? fs)
+  (lambda (ctx ret nb-args poll? safe? fs)
     (univ-jump-inline ctx
+                      ret
                       nb-args
                       2
                       5

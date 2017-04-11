@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -447,12 +447,13 @@
 (define (switch-case-obj switch-case) (car switch-case))
 (define (switch-case-lbl switch-case) (cdr switch-case))
 
-(define (make-jump opnd nb-args poll? safe? frame comment)
-  (vector 'jump frame comment opnd nb-args poll? safe?))
+(define (make-jump opnd ret nb-args poll? safe? frame comment)
+  (vector 'jump frame comment opnd ret nb-args poll? safe?))
 (define (jump-opnd gvm-instr)    (vector-ref gvm-instr 3))
-(define (jump-nb-args gvm-instr) (vector-ref gvm-instr 4))
-(define (jump-poll? gvm-instr)   (vector-ref gvm-instr 5))
-(define (jump-safe? gvm-instr)   (vector-ref gvm-instr 6))
+(define (jump-ret gvm-instr)     (vector-ref gvm-instr 4))
+(define (jump-nb-args gvm-instr) (vector-ref gvm-instr 5))
+(define (jump-poll? gvm-instr)   (vector-ref gvm-instr 6))
+(define (jump-safe? gvm-instr)   (vector-ref gvm-instr 7))
 (define (first-class-jump? gvm-instr) (jump-nb-args gvm-instr))
 
 (define (make-comment)
@@ -602,6 +603,7 @@
     ((jump)
      (make-jump
       (clone-gvm-opnd (jump-opnd instr))
+      (and (jump-ret instr) (replacement-lbl-num (jump-ret instr)))
       (jump-nb-args instr)
       (jump-poll? instr)
       (jump-safe? instr)
@@ -690,7 +692,10 @@
      (let ((opnd (jump-opnd instr)))
        (if (lbl? opnd)
            (direct-branch (lbl-num opnd))
-           (scan-opnd (jump-opnd instr)))))
+           (scan-opnd (jump-opnd instr))))
+     (let ((ret (jump-ret instr)))
+       (if ret
+           (reference ret))))
 
     (else
      (compiler-internal-error
@@ -738,23 +743,30 @@
            (not (first-class-jump? branch)) ;; not a jump to an entry label
            (jump-lbl? branch)))
 
-    (define (jump-cascade-to dest-lbl fs poll? thunk)
-      (let loop ((lbl dest-lbl) (fs fs) (poll? poll?) (seen '()))
+    (define (jump-cascade-to dest-lbl first-jump thunk)
+      (let loop ((lbl dest-lbl)
+                 (last-jump/ret (and (jump-ret first-jump) first-jump))
+                 (fs (frame-size (gvm-instr-frame first-jump)))
+                 (poll? (jump-poll? first-jump))
+                 (seen '()))
         (if (memv lbl seen) ;; infinite loop?
-            (thunk lbl fs poll?)
+            (thunk lbl fs last-jump/ret poll?)
             (let ((bb (lbl-num->bb lbl bbs)))
               (if (and (empty-bb? bb) (<= (bb-slots-gained bb) 0))
-                  (let ((jump-lbl
-                         (jump-to-non-entry-lbl? (bb-branch-instr bb))))
+                  (let* ((branch
+                          (bb-branch-instr bb))
+                         (jump-lbl
+                          (jump-to-non-entry-lbl? branch)))
                     (if jump-lbl
                         (loop
                          jump-lbl
+                         (if (jump-ret branch) branch last-jump/ret)
                          (+ fs (bb-slots-gained bb))
-                         (or poll?
-                             (jump-poll? (bb-branch-instr bb)))
+                         (or (jump-poll? branch)
+                             poll?)
                          (cons lbl seen))
-                        (thunk lbl fs poll?)))
-                  (thunk lbl fs poll?))))))
+                        (thunk lbl fs last-jump/ret poll?)))
+                  (thunk lbl fs last-jump/ret poll?))))))
 
     (define (find-equiv-lbl start-lbl poll?)
       (let loop ((lbl start-lbl) (seen '()))
@@ -762,11 +774,14 @@
             lbl
             (let ((bb (lbl-num->bb lbl bbs)))
               (if (empty-bb? bb)
-                  (let ((jump-lbl
-                         (jump-to-non-entry-lbl? (bb-branch-instr bb))))
+                  (let* ((branch
+                          (bb-branch-instr bb))
+                         (jump-lbl
+                          (jump-to-non-entry-lbl? branch)))
                     (if (and jump-lbl
+                             (not (jump-ret branch))
                              (or poll?
-                                 (not (jump-poll? (bb-branch-instr bb))))
+                                 (not (jump-poll? branch)))
                              (= (bb-slots-gained bb) 0))
                         (loop jump-lbl (cons lbl seen))
                         lbl))
@@ -781,11 +796,32 @@
     (define (remove-cascade! bb)
       (let ((branch (bb-branch-instr bb)))
 
-        (define (replace-branch-by new-branch-instr)
+        (define (replace-branch-by last-jump/ret new-branch-instr)
           (set! changed? #t)
           (let ((new-bb (make-bb (bb-label-instr bb) new-bbs)))
             (bb-non-branch-instrs-set! new-bb (bb-non-branch-instrs bb))
-            (bb-branch-instr-set! new-bb new-branch-instr)))
+            (if (not last-jump/ret)
+                (bb-branch-instr-set! new-bb new-branch-instr)
+                (let* ((lbl2
+                        (bbs-new-lbl! new-bbs))
+                       (new-bb2
+                        (make-bb
+                         (make-label-simple
+                          lbl2
+                          (gvm-instr-frame last-jump/ret)
+                          (gvm-instr-comment last-jump/ret))
+                         new-bbs)))
+                  (bb-branch-instr-set!
+                   new-bb
+                   (make-jump
+                    (make-lbl lbl2)
+                    (jump-ret last-jump/ret)
+                    #f
+                    #f
+                    #f
+                    (gvm-instr-frame last-jump/ret)
+                    (gvm-instr-comment last-jump/ret)))
+                  (bb-branch-instr-set! new-bb2 new-branch-instr)))))
 
         (stretchable-vector-set!
          (bbs-basic-blocks new-bbs)
@@ -806,6 +842,7 @@
                               new-poll?)))
              (if lbl-changed?
                  (replace-branch-by
+                  #f
                   (make-ifjump
                    (ifjump-test branch)
                    (ifjump-opnds branch)
@@ -831,6 +868,7 @@
                               new-poll?)))
              (if lbl-changed?
                  (replace-branch-by
+                  #f
                   (make-switch
                    (switch-opnd branch)
                    new-cases
@@ -845,9 +883,8 @@
                       (not (first-class-jump? branch))) ;; but not to an entry label
                  (jump-cascade-to
                   dest-lbl
-                  (frame-size (gvm-instr-frame branch))
-                  (jump-poll? branch)
-                  (lambda (lbl fs poll?)
+                  branch
+                  (lambda (lbl fs last-jump/ret poll?)
                     (let* ((dest-bb (lbl-num->bb lbl bbs))
                            (last-branch (bb-branch-instr dest-bb)))
                       (if (and (empty-bb? dest-bb)
@@ -882,8 +919,8 @@
 
                               ((ifjump)
                                (let* ((new-poll?
-                                       (or poll?
-                                           (ifjump-poll? last-branch)))
+                                       (or (ifjump-poll? last-branch)
+                                           poll?))
                                       (new-true
                                        (equiv-lbl (ifjump-true last-branch)
                                                   new-poll?))
@@ -891,6 +928,7 @@
                                        (equiv-lbl (ifjump-false last-branch)
                                                   new-poll?)))
                                  (replace-branch-by
+                                  last-jump/ret
                                   (make-ifjump
                                    (ifjump-test last-branch)
                                    (map adjust-opnd
@@ -903,8 +941,8 @@
 
                               ((switch)
                                (let* ((new-poll?
-                                       (or poll?
-                                           (switch-poll? last-branch)))
+                                       (or (switch-poll? last-branch)
+                                           poll?))
                                       (new-cases
                                        (map (lambda (c)
                                               (make-switch-case
@@ -916,6 +954,7 @@
                                        (equiv-lbl (switch-default last-branch)
                                                   new-poll?)))
                                  (replace-branch-by
+                                  last-jump/ret
                                   (make-switch
                                    (adjust-opnd (switch-opnd last-branch))
                                    new-cases
@@ -925,12 +964,20 @@
                                    (gvm-instr-comment last-branch)))))
 
                               ((jump)
-                               (let ((new-poll?
-                                      (or poll?
-                                          (jump-poll? last-branch))))
+                               (let* ((ret
+                                       (and last-jump/ret
+                                            (jump-ret last-jump/ret)))
+                                      (new-ret
+                                       (or (jump-ret last-branch)
+                                           ret))
+                                      (new-poll?
+                                       (or (jump-poll? last-branch)
+                                           poll?)))
                                  (replace-branch-by
+                                  #f
                                   (make-jump
                                    (adjust-opnd (jump-opnd last-branch))
+                                   new-ret
                                    (jump-nb-args last-branch)
                                    new-poll?
                                    (jump-safe? last-branch)
@@ -941,14 +988,23 @@
                                (compiler-internal-error
                                 "bbs-remove-jump-cascades, unknown branch type"))))
 
-                          (let ((new-poll?
-                                 (or poll?
-                                     (jump-poll? branch))))
-                            (if (or (not (eqv? new-poll? poll?))
+                          (let* ((ret
+                                  (and last-jump/ret
+                                       (jump-ret last-jump/ret)))
+                                 (new-ret
+                                  (or (jump-ret branch)
+                                      ret))
+                                 (new-poll?
+                                  (or (jump-poll? branch)
+                                      poll?)))
+                            (if (or (not (eqv? new-ret ret))
+                                    (not (eqv? new-poll? poll?))
                                     (not (= lbl dest-lbl)))
                                 (replace-branch-by
+                                 #f
                                  (make-jump
                                   (make-lbl lbl)
+                                  new-ret
                                   (jump-nb-args branch)
                                   new-poll?
                                   (jump-safe? branch)
@@ -1163,6 +1219,7 @@
                                  #f
                                  #f
                                  #f
+                                 #f
                                  frame-common
                                  comment-common))
 
@@ -1174,6 +1231,7 @@
                                 new-bb
                                 (make-jump
                                  (make-lbl lbl-common)
+                                 #f
                                  #f
                                  #f
                                  #f
@@ -1344,6 +1402,12 @@
                ((jump)
                 (and (eqv-gvm-opnd? (jump-opnd instr1)
                                     (jump-opnd instr2))
+                     (let ((ret1 (jump-ret instr1))
+                           (ret2 (jump-ret instr2)))
+                       (if ret1
+                           (and ret2
+                                (eqv-lbl-num? ret1 ret2))
+                           (not ret2)))
                      (eqv? (jump-nb-args instr1)
                            (jump-nb-args instr2))
                      (eq? (jump-poll? instr1)
@@ -1401,10 +1465,11 @@
       (let loop ((bb bb))
         (let ((branch (bb-branch-instr bb)))
 
-          ;; is it a non-polling 'jump' to a label?
+          ;; is it a non-polling 'jump' to a label without a return address?
 
           (if (and (eq? (gvm-instr-type branch) 'jump)
                    (not (first-class-jump? branch))
+                   (not (jump-ret branch))
                    (not (jump-poll? branch))
                    (jump-lbl? branch))
               (let* ((dest-bb (lbl-num->bb (jump-lbl? branch) bbs))
@@ -2138,15 +2203,25 @@
                                port)))))
              (display " " port)
              (let ((len (+ len
-                           (+ 1 (write-gvm-opnd (jump-opnd gvm-instr) port)))))
-               (+ len
-                  (if (jump-nb-args gvm-instr)
-                    (begin
-                      (display " nargs=" port)
-                      (+ 7 (write-returning-len
-                             (jump-nb-args gvm-instr)
-                             port)))
-                    0)))))))
+                           (+ 1 (write-gvm-opnd
+                                 (jump-opnd gvm-instr)
+                                 port)))))
+               (let ((len (+ len
+                             (if (jump-ret gvm-instr)
+                               (begin
+                                 (display " r0=" port)
+                                 (+ 4 (write-gvm-opnd
+                                       (make-lbl (jump-ret gvm-instr))
+                                       port)))
+                               0))))
+                 (+ len
+                    (if (jump-nb-args gvm-instr)
+                      (begin
+                        (display " nargs=" port)
+                        (+ 7 (write-returning-len
+                               (jump-nb-args gvm-instr)
+                               port)))
+                      0))))))))
 
       (else
        (compiler-internal-error

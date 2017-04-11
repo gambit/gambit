@@ -2334,7 +2334,9 @@
                          (switch-cases gvm-instr)))
 
               ((jump)
-               (scan-opnd (jump-opnd gvm-instr))))
+               (scan-opnd (jump-opnd gvm-instr))
+               (if (jump-ret gvm-instr)
+                   (todo-lbl-num! (jump-ret gvm-instr)))))
 
             (case (gvm-instr-type gvm-instr)
 
@@ -2470,8 +2472,9 @@
                (let ((nb-args (jump-nb-args gvm-instr))
                      (safe? (jump-safe? gvm-instr))
                      (opnd (jump-opnd gvm-instr))
+                     (ret (jump-ret gvm-instr))
                      (fs (frame-size (gvm-instr-frame gvm-instr)))
-                     (poll? (or (ifjump-poll? gvm-instr)
+                     (poll? (or (jump-poll? gvm-instr)
                                 (unwind-stack? gvm-instr))))
 
                  (or (and (obj? opnd)
@@ -2480,9 +2483,13 @@
                           (let* ((proc (obj-val opnd))
                                  (jump-inliner (proc-obj-jump-inline proc)))
                             (and jump-inliner
-                                 (jump-inliner ctx nb-args poll? safe? fs))))
+                                 (jump-inliner ctx ret nb-args poll? safe? fs))))
 
-                     (^ (if nb-args
+                     (^ (if ret
+                            (^setloc (make-reg 0) (^getopnd (make-lbl ret)))
+                            (^))
+
+                        (if nb-args
                             (^setnargs nb-args)
                             (^))
 

@@ -790,6 +790,7 @@
                    #f
                    #f
                    #f
+                   #f
                    frame
                    (node->comment node1)))
 
@@ -1398,7 +1399,7 @@
                                      closed?))))
     (context-entry-bb-set! context-lbl1 bb1)
     (bb-put-branch! bb1
-      (make-jump (make-lbl lbl2) #f #f #f frame-lbl2 (node->comment proc)))
+      (make-jump (make-lbl lbl2) #f #f #f #f frame-lbl2 (node->comment proc)))
     (set! proc-queue (cons proc-info proc-queue))
     proc-info))
 
@@ -1602,6 +1603,7 @@
              (shrink-slots 0)
              (bb-put-branch! *bb*
                (make-jump ret-opnd
+                          #f
                           #f
                           #f
                           #f
@@ -2089,6 +2091,7 @@
                  #f
                  #f
                  #f
+                 #f
                  (current-frame live)
                  (node->comment node)))
     (let ((context2* (current-context)))
@@ -2102,6 +2105,7 @@
        (node->comment node))
       (bb-put-branch! *bb*
         (make-jump (make-lbl join-lbl)
+                   #f
                    #f
                    #f
                    #f
@@ -2444,6 +2448,7 @@
                                    #f
                                    #f
                                    #f
+                                   #f
                                    new-frame
                                    (node->comment node)))
 
@@ -2625,6 +2630,7 @@
 
             (bb-put-branch! *bb*
                             (make-jump (make-lbl new-lbl)
+                                       #f
                                        #f
                                        #t
                                        #f
@@ -3229,30 +3235,38 @@
                                      (cdr live-vars-at-next-regs)
                                      oper-var))
 
-                            (let ((reg (make-reg pos)))
+                            (if (and (eq? arg 'return)
+                                     (not (reason-tail? reason2)))
 
-                              (if (all-args-trivial? (cdr l))
-                                (save-opnd-to-reg opnd
-                                                  reg
-                                                  var
-                                                  needed
-                                                  (node->comment
-                                                   (if (eq? arg 'return)
-                                                     node
-                                                     arg)))
-                                (save-in-slot 111 opnd
-                                              var
-                                              needed
-                                              (node->comment
-                                               (if (eq? arg 'return)
-                                                 node
-                                                 arg))))
+                                (loop2 (cdr l)
+                                       liv
+                                       (cdr live-vars-at-next-regs)
+                                       oper-var)
 
-                              (stretchable-vector-set! reg-map pos var)
-                              (loop2 (cdr l)
-                                     (varset-adjoin liv var)
-                                     (cdr live-vars-at-next-regs)
-                                     oper-var))
+                                (let ((reg (make-reg pos)))
+
+                                  (if (all-args-trivial? (cdr l))
+                                      (save-opnd-to-reg opnd
+                                                        reg
+                                                        var
+                                                        needed
+                                                        (node->comment
+                                                         (if (eq? arg 'return)
+                                                             node
+                                                             arg)))
+                                      (save-in-slot 111 opnd
+                                                    var
+                                                    needed
+                                                    (node->comment
+                                                     (if (eq? arg 'return)
+                                                         node
+                                                         arg))))
+
+                                  (stretchable-vector-set! reg-map pos var)
+                                  (loop2 (cdr l)
+                                         (varset-adjoin liv var)
+                                         (cdr live-vars-at-next-regs)
+                                         oper-var)))
 
 ))
 
@@ -3311,6 +3325,7 @@
                               (bb-put-branch! *bb*
                                 (make-jump
                                  opnd
+                                 return-lbl
                                  (if local-proc-info #f nb-args)
                                  #f
                                  (safe? (node-env node))
@@ -3888,6 +3903,7 @@
 
       (bb-put-branch! *bb*
         (make-jump (make-lbl task-lbl)
+                   #f
                    #f
                    #f
                    #f

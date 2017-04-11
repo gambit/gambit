@@ -4,7 +4,7 @@
 
 ;;; File: "runtests.scm"
 
-;;; Copyright (c) 2012-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -32,28 +32,62 @@
           (let ((blanks (- w (+ lsi lsf))))
             (string-append (make-string (max blanks 0) #\space) si sf)))))))
 
+(define (sort-list lst <?)
+
+  (define (mergesort lst)
+
+    (define (merge lst1 lst2)
+      (cond ((null? lst1) lst2)
+            ((null? lst2) lst1)
+            (else
+             (let ((e1 (car lst1)) (e2 (car lst2)))
+               (if (<? e1 e2)
+                 (cons e1 (merge (cdr lst1) lst2))
+                 (cons e2 (merge lst1 (cdr lst2))))))))
+
+    (define (split lst)
+      (if (or (null? lst) (null? (cdr lst)))
+        lst
+        (cons (car lst) (split (cddr lst)))))
+
+    (if (or (null? lst) (null? (cdr lst)))
+      lst
+      (let* ((lst1 (mergesort (split lst)))
+             (lst2 (mergesort (split (cdr lst)))))
+        (merge lst1 lst2))))
+
+  (mergesort lst))
+
 (define (show-bar nb-good nb-fail nb-other nb-total elapsed)
 
   (define (ratio n)
     (quotient (* n (+ nb-good nb-fail nb-other)) nb-total))
 
-  (let* ((bar-width 42)
+  (let* ((istty (tty? (current-output-port)))
+         (bar-width 16)
          (bar-length (ratio bar-width)))
-    (print "\r"
+
+    (define (esc x)
+      (if istty x ""))
+
+    (print (if istty "\r" "\n")
            "["
-           "\33[32;1m" (num->string nb-good 4 0) "\33[0m"
+           (esc "\33[32;1m") (num->string nb-good 3 0) (esc "\33[0m")
            "|"
-           "\33[31;1m" (num->string nb-fail 4 0) "\33[0m"
-           "|"
-           "\33[34;1m" (num->string nb-other 4 0) "\33[0m"
+           (esc "\33[31;1m") (num->string nb-fail 3 0) (esc "\33[0m")
+           ;;"|"
+           ;;(esc "\33[34;1m") (num->string nb-other 4 0) (esc "\33[0m")
            "] "
            (num->string (ratio 100) 3 0)
            "% "
            (make-string bar-length #\#)
            (make-string (- bar-width bar-length) #\.)
-           (num->string elapsed 6 1)
+           " "
+           (num->string elapsed 3 1)
            "s"
-           "\33[K")))
+           (esc "\33[K"))
+
+    (force-output)))
 
 (define (run path . args)
   (let* ((port
@@ -68,7 +102,17 @@
     (close-port port)
     (cons status output)))
 
+(define (trim-filename file)
+  (if (and (>= (string-length file) (string-length default-dir))
+           (string=? (substring file 0 (string-length default-dir))
+                     default-dir))
+      (substring file (string-length default-dir) (string-length file))
+      file))
+
 (define (test file)
+
+  (print " " (trim-filename file))
+  (force-output)
 
   (let ((results (test-with-each-target file))
         (diff? #f))
@@ -107,7 +151,7 @@
               nb-total
               (- (time->seconds (current-time)) start))))
 
-(define (runtests files)
+(define (run-tests files)
 
   (set! nb-good 0)
   (set! nb-fail 0)
@@ -115,16 +159,18 @@
   (set! nb-total (length files))
   (set! start (time->seconds (current-time)))
 
+  (show-bar nb-good nb-fail nb-other nb-total 0.0)
+
   (for-each test files)
 
   (print "\n")
 
   (if (= nb-good nb-total)
       (begin
-        (print "PASSED ALL\n")
+        (print "PASSED ALL " nb-total " UNIT TESTS\n")
         (exit 0))
       (begin
-        (print "FAILED " nb-fail " OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
+        (print "FAILED " nb-fail " UNIT TESTS OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
         (exit 1))))
 
 (define (diff target-name target-output expected-output)
@@ -162,7 +208,7 @@
                          (if (not (equal? target "gambit"))
                              (if cleanup?
                                  (begin
-                                   (if (not (equal? target "c"))
+                                   (if (not (equal? target "C"))
                                        (delete-file out_))
                                    (delete-file out)
                                    (if (equal? target "java")
@@ -174,14 +220,14 @@
 
                      (apply run (append (cdddr t) (list file)))))))
        (keep (lambda (t)
-               (member (car t) (cons "c" back-ends)))
-             targets)))
+               (member (string->symbol (car t)) (cons 'C targets)))
+             target-configs)))
 
 (define (compile file ext target options)
   (let* ((file-no-ext
           (path-strip-extension file))
          (x
-          (if (equal? target "c")
+          (if (equal? target "C")
               (run "./gsc" "-:=.."                      file)
               (apply run
                      (append (list "./gsc" "-:=.." "-o" (path-directory file) "-target" target "-link" "-flat")
@@ -189,7 +235,7 @@
                              (list file))))))
     (if (not (= (car x) 0))
         (error "couldn't compile" file target))
-    (if (and (not (equal? target "c"))
+    (if (and (not (equal? target "C"))
              (not (equal? target "java")))
         (begin
           (shell-command
@@ -207,12 +253,12 @@
             " "
             (string-append file-no-ext ext)))))))
 
-(define targets
+(define target-configs
   '(
     ("gambit" ".scm"  ()
                       "./gsc" "-i")
 
-    ("c"      ".o1"   ()
+    ("C"      ".o1"   ()
                       "./gsc" "-i")
 
     ("x86"    #f      ()
@@ -492,26 +538,34 @@
                       "/Users/feeley/dart/dart-sdk/bin/dart")
    ))
 
-(define (list-of-files-with-extension file-or-dir extension)
+(define (find-files file-or-dir filter)
   (if (eq? (file-type file-or-dir) 'directory)
 
       (apply
        append
        (map
         (lambda (f)
-          (list-of-files-with-extension (path-expand f file-or-dir) extension))
+          (find-files (path-expand f file-or-dir) filter))
         (directory-files file-or-dir)))
 
-      (if (equal? (path-extension file-or-dir) extension)
+      (if (filter file-or-dir)
           (list file-or-dir)
           (list))))
 
-(define (list-of-scm-files args)
+(define (list-of-scm-files args stress?)
   (apply
    append
    (map
     (lambda (f)
-      (list-of-files-with-extension f ".scm"))
+      (find-files f
+                  (lambda (filename)
+                    (and (equal? (path-extension filename) ".scm")
+                         (not (equal? (path-strip-directory filename) "#.scm"))
+                         (or stress?
+                             (let ((len (string-length filename)))
+                               (not (and (> len 11)
+                                         (equal? (substring filename (- len 11) len)
+                                                 "-stress.scm")))))))))
     args)))
 
 (define (keep keep? lst)
@@ -519,9 +573,17 @@
         ((keep? (car lst)) (cons (car lst) (keep keep? (cdr lst))))
         (else              (keep keep? (cdr lst)))))
 
-(define back-ends '())
+(define modes '())
+(define targets '())
+
+(define default-dir
+  (let* ((cd (current-directory))
+         (len (string-length cd)))
+    (string-append "tests" (substring cd (- len 1) len))))
 
 (define (main . args)
+
+  (define stress? #f)
 
   (current-exception-handler
    (lambda (e)
@@ -538,19 +600,33 @@
     (if (and (pair? args)
              (> (string-length (car args)) 1)
              (char=? #\- (string-ref (car args) 0)))
-        (begin
-          (set! back-ends
-                (cons (substring (car args) 1 (string-length (car args)))
-                      back-ends))
+        (let ((word (substring (car args) 1 (string-length (car args)))))
+          (cond ((equal? word "stress")
+                 (set! stress? #t))
+                ((member word '("C" "js" "python" "ruby" "php" "java"))
+                 (set! targets
+                       (cons (string->symbol word)
+                             targets)))
+                (else
+                 (set! modes
+                       (cons (string->symbol word)
+                             modes))))
           (set! args (cdr args))
           (loop))))
 
   (if (null? args)
-      (set! args '("tests")))
+      (set! args (list default-dir)))
 
-  (if (null? back-ends)
-      (set! back-ends (map car targets)))
+  (if (null? modes)
+      (set! modes '(gsi)))
 
-  (runtests (list-of-scm-files args)))
+  (if (null? targets)
+      (set! targets '(C)))
+
+  (let ((files
+         (sort-list
+          (list-of-scm-files args stress?)
+          string<?)))
+    (run-tests files)))
 
 ;;;============================================================================
