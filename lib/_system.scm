@@ -2858,7 +2858,7 @@
               obj
               #!optional
               (transform (macro-absent-obj)))
-  (macro-force-vars (obj transform)
+  (macro-force-vars (transform)
     (if (eq? transform (macro-absent-obj))
         (##object->u8vector obj)
         (macro-check-procedure transform 2 (object->u8vector obj transform)
