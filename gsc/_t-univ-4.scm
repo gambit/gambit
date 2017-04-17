@@ -68,24 +68,7 @@
    (lambda (ctx return arg1)
      (return (^eq? (^cast*-scmobj arg1) (^eof))))))
 
-(univ-define-prim-bool "##fixnum?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^fixnum? arg1)))))
-
 ;;TODO: ("##special?"                 (1)   #f ()    0    boolean extended)
-
-(univ-define-prim-bool "##pair?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^pair? arg1)))))
-
-;; TODO: test ##pair-mutable?
-
-(univ-define-prim-bool "##pair-mutable?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^obj #t))))) ;; there are no immutable data (currently)
 
 ;;TODO: ("##subtyped?"                (1)   #f ()    0    boolean extended)
 
@@ -101,100 +84,8 @@
 ;;TODO: ("##subtyped.flonum?"         (1)   #f ()    0    boolean extended)
 ;;TODO: ("##subtyped.bignum?"         (1)   #f ()    0    boolean extended)
 
-(univ-define-prim-bool "##vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^vector? arg1)))))
-
-(univ-define-prim-bool "##u8vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^u8vector? arg1)))))
-
-(univ-define-prim-bool "##u16vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^u16vector? arg1)))))
-
-(univ-define-prim-bool "##u32vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^u32vector? arg1)))))
-
-(univ-define-prim-bool "##u64vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^u64vector? arg1)))))
-
-(univ-define-prim-bool "##s8vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^s8vector? arg1)))))
-
-(univ-define-prim-bool "##s16vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^s16vector? arg1)))))
-
-(univ-define-prim-bool "##s32vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^s32vector? arg1)))))
-
-(univ-define-prim-bool "##s64vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^s64vector? arg1)))))
-
-(univ-define-prim-bool "##f32vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^f32vector? arg1)))))
-
-(univ-define-prim-bool "##f64vector?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^f64vector? arg1)))))
-
-(univ-define-prim-bool "##structure?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^structure? arg1)))))
-
-;; TODO: test box? primitive
-
-(univ-define-prim-bool "##box?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^box? arg1)))))
-
-(univ-define-prim-bool "##values?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^values? arg1)))))
-
 ;;TODO: ("##meroon?"                  (1)   #f ()    0    boolean extended)
 ;;TODO: ("##jazz?"                    (1)   #f ()    0    boolean extended)
-
-(univ-define-prim-bool "##symbol?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^symbol? arg1)))))
-
-(univ-define-prim-bool "##keyword?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^keyword? arg1)))))
-
-(univ-define-prim-bool "##promise?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^promise? arg1)))))
-
-(univ-define-prim-bool "##will?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^will? arg1)))))
 
 ;;TODO: ("##gc-hash-table?"           (1)   #f ()    0    boolean extended)
 ;;TODO: ("##mem-allocated?"           (1)   #f ()    0    boolean extended)
@@ -206,17 +97,7 @@
    (lambda (ctx return arg1)
      (return (^procedure? arg1)))))
 
-(univ-define-prim-bool "##return?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^return? arg1)))))
-
 ;;TODO: ("##foreign?"                 (1)   #f ()    0    boolean extended)
-
-(univ-define-prim-bool "##string?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^string? arg1)))))
 
 ;;TODO: ("##s8vector?"                (1)   #f ()    0    boolean extended)
 ;;TODO: ("##s16vector?"               (1)   #f ()    0    boolean extended)
@@ -271,21 +152,6 @@
    (lambda (ctx return arg1)
      (return (^ratnum? arg1)))))
 
-(univ-define-prim-bool "##bignum?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^bignum? arg1)))))
-
-(univ-define-prim-bool "##char?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^char? arg1)))))
-
-(univ-define-prim-bool "##closure?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^closure? arg1)))))
-
 ;;TODO: ("##subprocedure?"            (1)   #f ()    0    boolean extended)
 ;;TODO: ("##return-dynamic-env-bind?" (1)   #f ()    0    boolean extended)
 ;;TODO: ("##number?"                  (1)   #f ()    0    boolean extended)
@@ -301,6 +167,11 @@
    (lambda (ctx return arg)
      (return (^flonum-box (^parens (^* (^flonum-unbox arg)
                                        (^flonum-unbox arg))))))))
+
+(univ-define-prim-bool "##fixnum?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^fixnum? arg1)))))
 
 (univ-define-prim "##fxsquare" #f
   (make-translated-operand-generator
@@ -931,6 +802,11 @@
    (lambda (ctx arg1 arg2) (^>= arg1 arg2))
    univ-emit-fixnum-unbox))
 
+(univ-define-prim-bool "##char?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^char? arg1)))))
+
 (univ-define-prim "##integer->char" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
@@ -1325,6 +1201,18 @@
 ;;TODO: ("##char-upcase"                  (1)   #f ()    0    char    extended)
 ;;TODO: ("##char-downcase"                (1)   #f ()    0    char    extended)
 
+(univ-define-prim-bool "##pair?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^pair? arg1)))))
+
+;; TODO: test ##pair-mutable?
+
+(univ-define-prim-bool "##pair-mutable?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^obj #t))))) ;; there are no immutable data (currently)
+
 (univ-define-prim "##cons" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
@@ -1386,6 +1274,13 @@
 ;;TODO: ("##gc-hash-table-set!"           (3)   #t ()    0    (#f)    extended)
 ;;TODO: ("##gc-hash-table-rehash!"        (2)   #t ()    0    (#f)    extended)
 
+;; TODO: test box? primitive
+
+(univ-define-prim-bool "##box?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^box? arg1)))))
+
 (univ-define-prim "##box" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -1401,6 +1296,11 @@
    (lambda (ctx return arg1 arg2)
      (^ (^setbox (^cast* 'box arg1) arg2)
         (return arg1)))))
+
+(univ-define-prim-bool "##values?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^values? arg1)))))
 
 (univ-define-prim "##values" #t
   (make-translated-operand-generator
@@ -1436,6 +1336,11 @@
                       (^fixnum-unbox arg2)
                       arg3)
         (return arg1)))))
+
+(univ-define-prim-bool "##vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^vector? arg1)))))
 
 (univ-define-prim "##vector" #t
   (make-translated-operand-generator
@@ -1483,6 +1388,11 @@
      (^ (^vector-shrink! arg1
                          (^fixnum-unbox arg2))
         (return arg1)))))
+
+(univ-define-prim-bool "##u8vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^u8vector? arg1)))))
 
 (univ-define-prim "##u8vector" #t
   (make-translated-operand-generator
@@ -1538,6 +1448,11 @@
                            (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim-bool "##u16vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^u16vector? arg1)))))
+
 (univ-define-prim "##u16vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -1592,6 +1507,11 @@
                             (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim-bool "##u32vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^u32vector? arg1)))))
+
 (univ-define-prim "##u32vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -1640,6 +1560,11 @@
                            (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim-bool "##u64vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^u64vector? arg1)))))
+
 (univ-define-prim "##u64vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -1687,7 +1612,13 @@
      (^ (^u64vector-shrink! arg1
                            (^fixnum-unbox arg2))
         (return arg1)))))
-+(univ-define-prim "##s8vector" #t
+
+(univ-define-prim-bool "##s8vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s8vector? arg1)))))
+
+(univ-define-prim "##s8vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
      (return
@@ -1740,6 +1671,11 @@
      (^ (^s8vector-shrink! arg1
                            (^fixnum-unbox arg2))
         (return arg1)))))
+
+(univ-define-prim-bool "##s16vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s16vector? arg1)))))
 
 (univ-define-prim "##s16vector" #t
   (make-translated-operand-generator
@@ -1795,6 +1731,11 @@
                            (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim-bool "##s32vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s32vector? arg1)))))
+
 (univ-define-prim "##s32vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -1843,6 +1784,11 @@
                            (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim-bool "##s64vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^s64vector? arg1)))))
+
 (univ-define-prim "##s64vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -1890,6 +1836,11 @@
      (^ (^s64vector-shrink! arg1
                            (^fixnum-unbox arg2))
         (return arg1)))))
+
+(univ-define-prim-bool "##f32vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^f32vector? arg1)))))
 
 (univ-define-prim "##f32vector" #t
   (make-translated-operand-generator
@@ -1944,6 +1895,11 @@
                             (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim-bool "##f64vector?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^f64vector? arg1)))))
+
 (univ-define-prim "##f64vector" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -1997,6 +1953,11 @@
                             (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim-bool "##string?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^string? arg1)))))
+
 (univ-define-prim "##string" #f
   (make-translated-operand-generator
    (lambda (ctx return . args)
@@ -2045,77 +2006,10 @@
                          (^fixnum-unbox arg2))
         (return arg1)))))
 
-;;TODO: ("##s8vector"                     0     #f ()    0    #f      extended)
-;;TODO: ("##make-s8vector"                (2)   #f ()    0    #f      extended)
-;;TODO: ("##s8vector-length"              (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##s8vector-ref"                 (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##s8vector-set!"                (3)   #t ()    0    #f      extended)
-;;TODO: ("##s8vector-shrink!"             (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##u8vector"                     0     #f ()    0    #f      extended)
-;;TODO: ("##make-u8vector"                (2)   #f ()    0    #f      extended)
-;;TODO: ("##u8vector-length"              (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##u8vector-ref"                 (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##u8vector-set!"                (3)   #t ()    0    #f      extended)
-;;TODO: ("##u8vector-shrink!"             (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##s16vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-s16vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##s16vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##s16vector-ref"                (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##s16vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##s16vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##u16vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-u16vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##u16vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##u16vector-ref"                (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##u16vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##u16vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##s32vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-s32vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##s32vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##s32vector-ref"                (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##s32vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##s32vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##u32vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-u32vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##u32vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##u32vector-ref"                (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##u32vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##u32vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##s64vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-s64vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##s64vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##s64vector-ref"                (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##s64vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##s64vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##u64vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-u64vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##u64vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##u64vector-ref"                (2)   #f ()    0    fixnum  extended)
-;;TODO: ("##u64vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##u64vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##f32vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-f32vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##f32vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##f32vector-ref"                (2)   #f ()    0    real    extended)
-;;TODO: ("##f32vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##f32vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##f64vector"                    0     #f ()    0    #f      extended)
-;;TODO: ("##make-f64vector"               (2)   #f ()    0    #f      extended)
-;;TODO: ("##f64vector-length"             (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##f64vector-ref"                (2)   #f ()    0    real    extended)
-;;TODO: ("##f64vector-set!"               (3)   #t ()    0    #f      extended)
-;;TODO: ("##f64vector-shrink!"            (2)   #t ()    0    #f      extended)
-
-;;TODO: ("##structure-direct-instance-of?"(2)   #f ()    0    boolean extended)
+(univ-define-prim-bool "##structure?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^structure? arg1)))))
 
 (univ-define-prim-bool "##structure-direct-instance-of?" #t
   (make-translated-operand-generator
@@ -2125,8 +2019,6 @@
                         (^cast*-scmobj arg2)))))))
 
 ;;TODO: ("##structure-instance-of?"       (2)   #f ()    0    boolean extended)
-;;TODO: ("##structure-type"               (1)   #f ()    0    (#f)    extended)
-;;TODO: ("##structure-type-set!"          (2)   #t ()    0    (#f)    extended)
 
 (univ-define-prim "##structure-type" #f
   (make-translated-operand-generator
@@ -2184,6 +2076,11 @@
 ;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
 
+(univ-define-prim-bool "##symbol?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^symbol? arg1)))))
+
 (univ-define-prim "##symbol->string" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -2229,6 +2126,11 @@
   (make-translated-operand-generator
    (lambda (ctx return sym)
      (return (^member (^cast* 'symbol sym) 'interned)))));;;;FIXME for host representation
+
+(univ-define-prim-bool "##keyword?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^keyword? arg1)))))
 
 (univ-define-prim "##keyword->string" #f
   (make-translated-operand-generator
@@ -2276,11 +2178,10 @@
    (lambda (ctx return key)
      (return (^member (^cast* 'keyword key) 'interned)))));;;;FIXME for host representation
 
-
-;;TODO: ("##closure-length"               (1)   #f ()    0    fixnum  extended)
-;;TODO: ("##closure-code"                 (1)   #f ()    0    #f      extended)
-;;TODO: ("##closure-ref"                  (2)   #f ()    0    (#f)    extended)
-;;TODO: ("##closure-set!"                 (3)   #t ()    0    #f      extended)
+(univ-define-prim-bool "##closure?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^closure? arg1)))))
 
 (univ-define-prim "##make-closure" #f
   (make-translated-operand-generator
@@ -2457,6 +2358,11 @@
          'info
          return))
       arg1))))
+
+(univ-define-prim-bool "##promise?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^promise? arg1)))))
 
 (univ-define-prim "##make-promise" #t
   (make-translated-operand-generator
@@ -2689,7 +2595,13 @@
            (^fixnum-box
             (univ-get-ctrlpt-attrib ctx ra-var attrib))))))))
 
-(univ-define-prim "##return-fs" #f (univ-get-return-ra-field 'fs))
+(univ-define-prim-bool "##return?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^return? arg1)))))
+
+(univ-define-prim "##return-fs" #f
+  (univ-get-return-ra-field 'fs))
 
 (univ-define-prim-bool "##will?" #t
   (make-translated-operand-generator
@@ -2795,6 +2707,11 @@
 ;;TODO: ("##quasi-list->vector"            (1)   #f 0     0    vector  extended)
 ;;TODO: ("##quasi-vector"                  0     #f ()    0    vector  extended)
 ;;TODO: ("##case-memv"                     (2)   #f 0     0    list    extended)
+
+(univ-define-prim-bool "##bignum?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^bignum? arg1)))))
 
 (univ-define-prim-bool "##bignum.negative?" #f
   (make-translated-operand-generator
