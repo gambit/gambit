@@ -123,34 +123,76 @@
       'class))
 
 (define (univ-u8vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-u8vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-u16vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-u16vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-u32vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-u32vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-u64vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-u64vector)
+      'class))
 
 (define (univ-s8vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-s8vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-s16vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-s16vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-s32vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-s32vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-s64vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-s64vector)
+      'class))
 
 (define (univ-f32vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-f32vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-f64vector-representation ctx)
-  'class)
+  (or (univ-get-semantics-changing-option ctx 'repr-f64vector)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         'host)
+        (else
+         'class))))
 
 (define (univ-structure-representation ctx)
   'class)
@@ -261,6 +303,16 @@
       (repr-fixnum    symbol)
       (repr-flonum    symbol)
       (repr-vector    symbol)
+      (repr-u8vector  symbol)
+      (repr-u16vector symbol)
+      (repr-u32vector symbol)
+      (repr-u64vector symbol)
+      (repr-s8vector  symbol)
+      (repr-s16vector symbol)
+      (repr-s32vector symbol)
+      (repr-s64vector symbol)
+      (repr-f32vector symbol)
+      (repr-f64vector symbol)
       (repr-values    symbol)
       (repr-string    symbol)
       (repr-symbol    symbol)
@@ -3449,10 +3501,39 @@
          len
          '())))
 
+(define (univ-js-typed-array-constructor ctx type)
+  (case type
+    ((s8)  "Int8Array")
+    ((u8)  "Uint8Array")
+    ((s16) "Int16Array")
+    ((u16) "Uint16Array")
+    ((s32) "Int32Array")
+    ((u32) "Uint32Array")
+    ((f32) "Float32Array")
+    ((f64) "Float64Array")
+    (else  #f)))
+
+(define (univ-array-constructor ctx type)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (or (univ-js-typed-array-constructor ctx type)
+         "Array"))
+
+    (else
+     #f)))
+
 (define (univ-emit-array-literal ctx type elems)
   (case (target-name (ctx-target ctx))
 
-    ((js python ruby)
+    ((js)
+     (let ((array (^ "[" (univ-separated-list "," elems) "]"))
+           (typed-array-constructor (univ-js-typed-array-constructor ctx type)))
+       (if typed-array-constructor
+           (^new typed-array-constructor array)
+           array)))
+
+    ((python ruby)
      (^ "[" (univ-separated-list "," elems) "]"))
 
     ((php)
@@ -3468,12 +3549,6 @@
 (define (univ-emit-extensible-array-literal ctx type elems)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby)
-     (^ "[" (univ-separated-list "," elems) "]"))
-
-    ((php)
-     (^apply "array" elems))
-
     ((python)
      (let ((key-vals
             (let loop ((i 0) (lst elems) (rev-kv '()))
@@ -3484,12 +3559,8 @@
                   (reverse rev-kv)))))
        (^ "{" (univ-separated-list "," key-vals) "}")))
 
-    ((java)
-     (^ "new " (^type (list 'array type)) "{" (univ-separated-list "," elems) "}"))
-
     (else
-     (compiler-internal-error
-      "univ-emit-extensible-array-literal, unknown target"))))
+     (univ-emit-array-literal ctx type elems))))
 
 (define (univ-emit-make-stack ctx)
   (case (target-name (ctx-target ctx))
@@ -3508,7 +3579,7 @@
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^new "Array" len))
+     (^new (^type (list 'array type)) len))
 
     ((php)
      (^if-expr (^= len (^int 0)) ;; array_fill does not like len=0

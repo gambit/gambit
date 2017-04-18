@@ -218,16 +218,18 @@
           (^ type-name " " name)
           type-name))
 
-    (define (map-type type-name)
-      (let ((x (univ-rts-type-alias ctx type-name)))
-        ;;(pp (list 'xxxxxxxxxxxxxx x))
-        (if x
-            (begin
-              (univ-use-rtlib ctx type-name)
-              (if name
-                  (tt"QQQ"(^rts-class-ref type-name))
-                  (tt"RRR"(^rts-class-ref type-name))))
-            type-name)))
+    (define (map-type type)
+      (if (and (pair? type) (eq? (car type) 'array))
+          (univ-array-constructor ctx (cadr type))
+          (let ((x (univ-rts-type-alias ctx type)))
+            ;;(pp (list 'xxxxxxxxxxxxxx x))
+            (if x
+                (begin
+                  (univ-use-rtlib ctx type)
+                  (if name
+                      (tt"QQQ"(^rts-class-ref type))
+                      (tt"RRR"(^rts-class-ref type))))
+                type))))
 
     (case (target-name (ctx-target ctx))
 
@@ -2679,8 +2681,7 @@ tanh
      (^new (^type 'u8vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u8vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u8vector-unbox ctx expr)
   (case (univ-u8vector-representation ctx)
@@ -2689,8 +2690,7 @@ tanh
      (^member (^cast* 'u8vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u8vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u8vector? ctx expr)
   (case (univ-u8vector-representation ctx)
@@ -2699,8 +2699,7 @@ tanh
      (^instanceof (^type 'u8vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u8vector?, host representation not implemented"))))
+     (^instanceof (^type '(array u8)) expr))))
 
 (define (univ-emit-u8vector-length ctx expr)
   (^array-length (^u8vector-unbox expr)))
@@ -2724,8 +2723,7 @@ tanh
      (^new (^type 'u16vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u16vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u16vector-unbox ctx expr)
   (case (univ-u16vector-representation ctx)
@@ -2734,8 +2732,7 @@ tanh
      (^member (^cast* 'u16vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u16vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u16vector? ctx expr)
   (case (univ-u16vector-representation ctx)
@@ -2744,8 +2741,7 @@ tanh
      (^instanceof (^type 'u16vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u16vector?, host representation not implemented"))))
+     (^instanceof (^type '(array u16)) expr))))
 
 (define (univ-emit-u16vector-length ctx expr)
   (^array-length (^u16vector-unbox expr)))
@@ -2769,8 +2765,7 @@ tanh
      (^new (^type 'u32vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u32vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u32vector-unbox ctx expr)
   (case (univ-u32vector-representation ctx)
@@ -2779,8 +2774,7 @@ tanh
      (^member (^cast* 'u32vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u32vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u32vector? ctx expr)
   (case (univ-u32vector-representation ctx)
@@ -2789,8 +2783,7 @@ tanh
      (^instanceof (^type 'u32vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u32vector?, host representation not implemented"))))
+     (^instanceof (^type '(array u32)) expr))))
 
 (define (univ-emit-u32vector-length ctx expr)
   (^array-length (^u32vector-unbox expr)))
@@ -2811,8 +2804,7 @@ tanh
      (^new (^type 'u64vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u64vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u64vector-unbox ctx expr)
   (case (univ-u64vector-representation ctx)
@@ -2821,8 +2813,7 @@ tanh
      (^member (^cast* 'u64vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u64vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-u64vector? ctx expr)
   (case (univ-u64vector-representation ctx)
@@ -2831,8 +2822,7 @@ tanh
      (^instanceof (^type 'u64vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-u64vector?, host representation not implemented"))))
+     (^instanceof (^type '(array u64)) expr))))
 
 (define (univ-emit-u64vector-length ctx expr)
   (^array-length (^u64vector-unbox expr)))
@@ -2853,8 +2843,7 @@ tanh
      (^new (^type 's8vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s8vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s8vector-unbox ctx expr)
   (case (univ-s8vector-representation ctx)
@@ -2863,8 +2852,7 @@ tanh
      (^member (^cast* 's8vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s8vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s8vector? ctx expr)
   (case (univ-s8vector-representation ctx)
@@ -2873,8 +2861,7 @@ tanh
      (^instanceof (^type 's8vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s8vector?, host representation not implemented"))))
+     (^instanceof (^type '(array s8)) expr))))
 
 (define (univ-emit-s8vector-length ctx expr)
   (^array-length (^s8vector-unbox expr)))
@@ -2895,8 +2882,7 @@ tanh
      (^new (^type 's16vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s16vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s16vector-unbox ctx expr)
   (case (univ-s16vector-representation ctx)
@@ -2905,8 +2891,7 @@ tanh
      (^member (^cast* 's16vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s16vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s16vector? ctx expr)
   (case (univ-s16vector-representation ctx)
@@ -2915,8 +2900,7 @@ tanh
      (^instanceof (^type 's16vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s16vector?, host representation not implemented"))))
+     (^instanceof (^type '(array s16)) expr))))
 
 (define (univ-emit-s16vector-length ctx expr)
   (^array-length (^s16vector-unbox expr)))
@@ -2937,8 +2921,7 @@ tanh
      (^new (^type 's32vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s32vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s32vector-unbox ctx expr)
   (case (univ-s32vector-representation ctx)
@@ -2947,8 +2930,7 @@ tanh
      (^member (^cast* 's32vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s32vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s32vector? ctx expr)
   (case (univ-s32vector-representation ctx)
@@ -2957,8 +2939,7 @@ tanh
      (^instanceof (^type 's32vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s32vector?, host representation not implemented"))))
+     (^instanceof (^type '(array s32)) expr))))
 
 (define (univ-emit-s32vector-length ctx expr)
   (^array-length (^s32vector-unbox expr)))
@@ -2979,8 +2960,7 @@ tanh
      (^new (^type 's64vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s64vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s64vector-unbox ctx expr)
   (case (univ-s64vector-representation ctx)
@@ -2989,8 +2969,7 @@ tanh
      (^member (^cast* 's64vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s64vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-s64vector? ctx expr)
   (case (univ-s64vector-representation ctx)
@@ -2999,8 +2978,7 @@ tanh
      (^instanceof (^type 's64vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-s64vector?, host representation not implemented"))))
+     (^instanceof (^type '(array s64)) expr))))
 
 (define (univ-emit-s64vector-length ctx expr)
   (^array-length (^s64vector-unbox expr)))
@@ -3021,8 +2999,7 @@ tanh
      (^new (^type 'f32vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-f32vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-f32vector-unbox ctx expr)
   (case (univ-f32vector-representation ctx)
@@ -3031,8 +3008,7 @@ tanh
      (^member (^cast* 'f32vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-f32vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-f32vector? ctx expr)
   (case (univ-f32vector-representation ctx)
@@ -3041,8 +3017,7 @@ tanh
      (^instanceof (^type 'f32vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-f32vector?, host representation not implemented"))))
+     (^instanceof (^type '(array f32)) expr))))
 
 (define (univ-emit-f32vector-length ctx expr)
   (^array-length (^f32vector-unbox expr)))
@@ -3064,8 +3039,7 @@ tanh
      (^new (^type 'f64vector) expr))
 
     (else
-     (compiler-internal-error
-      "univ-emit-f64vector-box, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-f64vector-unbox ctx expr)
   (case (univ-f64vector-representation ctx)
@@ -3074,8 +3048,7 @@ tanh
      (^member (^cast* 'f64vector expr) 'elems))
 
     (else
-     (compiler-internal-error
-      "univ-emit-f64vector-unbox, host representation not implemented"))))
+     expr)))
 
 (define (univ-emit-f64vector? ctx expr)
   (case (univ-f64vector-representation ctx)
@@ -3084,8 +3057,7 @@ tanh
      (^instanceof (^type 'f64vector) (^cast*-scmobj expr)))
 
     (else
-     (compiler-internal-error
-      "univ-emit-f64vector?, host representation not implemented"))))
+     (^instanceof (^type '(array f64)) expr))))
 
 (define (univ-emit-f64vector-length ctx expr)
   (^array-length (^f64vector-unbox expr)))
