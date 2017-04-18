@@ -665,10 +665,6 @@
 (define-prim (##dynamic-wind before thunk after)
   (error "##dynamic-wind not implemented yet"))
 
-(define ##err-code-EAGAIN -1) ;; not implemented yet
-(define ##err-code-EINTR  -2) ;; not implemented yet
-(define ##err-code-ENOENT -3) ;; not implemented yet
-
 (define-prim (##explode-continuation cont)
   (error "##explode-continuation not implemented yet"))
 
@@ -690,109 +686,558 @@
 (define-prim (##mutex-signal-and-condvar-wait! mutex condvar timeout)
   (error "##mutex-signal-and-condvar-wait! not implemented yet"))
 
-(define-prim (##os-device-close . rest)
-  (error "##os-device-close not implemented yet"))
+(define ##err-code-EAGAIN 35)
+(define ##err-code-EINTR   4)
+(define ##err-code-ENOENT  1)
 
-(define-prim (##os-device-directory-open-path . rest)
-  (error "##os-device-directory-open-path not implemented yet"))
+(macro-case-target
+ ((js)
 
-(define-prim (##os-device-directory-read . rest)
-  (error "##os-device-directory-read not implemented yet"))
+  (##inline-host-declaration
+   "
+var fs = require('fs');
 
-(define-prim (##os-device-event-queue-open . rest)
-  (error "##os-device-event-queue-open not implemented yet"))
+var g_CONDVAR_NAME              = 10;
 
-(define-prim (##os-device-event-queue-read . rest)
-  (error "##os-device-event-queue-read not implemented yet"))
+var g_PORT_MUTEX                = 1;
+var g_PORT_RKIND                = 2;
+var g_PORT_WKIND                = 3;
+var g_PORT_NAME                 = 4;
+var g_PORT_READ_DATUM           = 5;
+var g_PORT_WRITE_DATUM          = 6;
+var g_PORT_NEWLINE              = 7;
+var g_PORT_FORCE_OUTPUT         = 8;
+var g_PORT_CLOSE                = 9;
+var g_PORT_ROPTIONS             = 10;
+var g_PORT_RTIMEOUT             = 11;
+var g_PORT_RTIMEOUT_THUNK       = 12;
+var g_PORT_SET_RTIMEOUT         = 13;
+var g_PORT_WOPTIONS             = 14;
+var g_PORT_WTIMEOUT             = 15;
+var g_PORT_WTIMEOUT_THUNK       = 16;
+var g_PORT_SET_WTIMEOUT         = 17;
+var g_PORT_IO_EXCEPTION_HANDLER = 18;
 
-(define-prim (##os-device-force-output . rest)
-  (error "##os-device-force-output not implemented yet"))
+var g_PORT_OBJECT_OTHER1        = 19;
+var g_PORT_OBJECT_OTHER2        = 20;
+var g_PORT_OBJECT_OTHER3        = 21;
 
-(define-prim (##os-device-kind . rest)
-  (error "##os-device-kind not implemented yet"))
+var g_PORT_CHAR_RBUF            = 19;
+var g_PORT_CHAR_RLO             = 20;
+var g_PORT_CHAR_RHI             = 21;
+var g_PORT_CHAR_RCHARS          = 22;
+var g_PORT_CHAR_RLINES          = 23;
+var g_PORT_CHAR_RCURLINE        = 24;
+var g_PORT_CHAR_RBUF_FILL       = 25;
+var g_PORT_CHAR_PEEK_EOFP       = 26;
 
-(define-prim (##os-device-process-pid . rest)
-  (error "##os-device-process-pid not implemented yet"))
+var g_PORT_CHAR_WBUF            = 27;
+var g_PORT_CHAR_WLO             = 28;
+var g_PORT_CHAR_WHI             = 29;
+var g_PORT_CHAR_WCHARS          = 30;
+var g_PORT_CHAR_WLINES          = 31;
+var g_PORT_CHAR_WCURLINE        = 32;
+var g_PORT_CHAR_WBUF_DRAIN      = 33;
+var g_PORT_INPUT_READTABLE      = 34;
+var g_PORT_OUTPUT_READTABLE     = 35;
+var g_PORT_OUTPUT_WIDTH         = 36;
 
-(define-prim (##os-device-process-status . rest)
-  (error "##os-device-process-status not implemented yet"))
+var g_PORT_CHAR_OTHER1          = 37;
+var g_PORT_CHAR_OTHER2          = 38;
+var g_PORT_CHAR_OTHER3          = 39;
+var g_PORT_CHAR_OTHER4          = 40;
+var g_PORT_CHAR_OTHER5          = 41;
 
-(define-prim (##os-device-stream-default-options . rest)
-  (error "##os-device-stream-default-options not implemented yet"))
+var g_PORT_BYTE_RBUF            = 37;
+var g_PORT_BYTE_RLO             = 38;
+var g_PORT_BYTE_RHI             = 39;
+var g_PORT_BYTE_RBUF_FILL       = 40;
 
-(define-prim (##os-device-stream-open-path . rest)
-  (error "##os-device-stream-open-path not implemented yet"))
+var g_PORT_BYTE_WBUF            = 41;
+var g_PORT_BYTE_WLO             = 42;
+var g_PORT_BYTE_WHI             = 43;
+var g_PORT_BYTE_WBUF_DRAIN      = 44;
 
-(define-prim (##os-device-stream-open-predefined . rest)
-  (error "##os-device-stream-open-predefined not implemented yet"))
+var g_PORT_BYTE_OTHER1          = 45;
+var g_PORT_BYTE_OTHER2          = 46;
 
-(define-prim (##os-device-stream-open-process . rest)
-  (error "##os-device-stream-open-process not implemented yet"))
+var g_PORT_RDEVICE_CONDVAR      = 45;
+var g_PORT_WDEVICE_CONDVAR      = 46;
 
-(define-prim (##os-device-stream-options-set! . rest)
-  (error "##os-device-stream-options-set! not implemented yet"))
+var g_PORT_DEVICE_OTHER1        = 47;
+var g_PORT_DEVICE_OTHER2        = 48;
 
-(define-prim (##os-device-stream-read . rest)
-  (error "##os-device-stream-read not implemented yet"))
+function g_os_encode_errno(code) {
+  switch (code) {
+    case 'EPERM':   return -1;
+    case 'ENOENT':  return -2;
+    case 'EINTR':   return -4;
+    case 'EIO':     return -5;
+    case 'EBADF':   return -9;
+    case 'EACCESS': return -13;
+    case 'EEXIST':  return -17;
+    case 'EAGAIN':  return -35;
+  }
+  return -9999;
+}
 
-(define-prim (##os-device-stream-seek . rest)
-  (error "##os-device-stream-seek not implemented yet"))
+function g_os_decode_errno(code) {
+  switch (code) {
+    case -1:  return 'EPERM (Operation not permitted)';
+    case -2:  return 'ENOENT (No such file or directory)';
+    case -4:  return 'EINTR (Interrupted system call)';
+    case -5:  return 'EIO (Input/output error)';
+    case -9:  return 'EBADF (Bad file descriptor)';
+    case -13: return 'EACCESS (Permission denied)';
+    case -17: return 'EEXIST (File exists)';
+    case -35: return 'EAGAIN (Resource temporarily unavailable)';
+  }
+  return 'E??? (unknown error)';
+}
 
-(define-prim (##os-device-stream-width . rest)
-  (error "##os-device-stream-width not implemented yet"))
+function g_os_translate_flags(flags) {
 
-(define-prim (##os-device-stream-write . rest)
-  (error "##os-device-stream-write not implemented yet"))
+  var result;
 
-(define-prim (##os-device-tty-history . rest)
+  switch ((flags >> 4) & 3)
+    {
+    default:
+    case 1:
+      result = fs.constants.O_RDONLY;
+      break;
+    case 2:
+      result = fs.constants.O_WRONLY;
+      break;
+    case 3:
+      result = fs.constants.O_RDWR;
+      break;
+    }
+
+  if ((flags & (1 << 3)) != 0)
+    result |= fs.constants.O_APPEND;
+
+  switch ((flags >> 1) & 3)
+    {
+    default:
+    case 0: break;
+    case 1: result |= fs.constants.O_CREAT; break;
+    case 2: result |= fs.constants.O_CREAT|fs.constants.O_EXCL; break;
+    }
+
+  if ((flags & 1) != 0)
+    result |= fs.constants.O_TRUNC;
+
+  return g_host2scm(result);
+}
+
+function G_Device(fd) {
+  this.fd = fd;
+}
+
+function g_os_device_kind(dev_scm) {
+
+  var dev = dev_scm.val;
+
+  console.log('g_os_device_kind('+dev.fd+')  ***not fully implemented***');
+
+  return g_host2scm(31); // file device
+}
+
+function g_os_device_stream_default_options(dev_scm) {
+
+  var dev = dev_scm.val;
+
+  console.log('g_os_device_stream_default_options('+dev.fd+')  ***not fully implemented***');
+
+  return g_host2scm(0);
+}
+
+function g_os_device_stream_options_set(dev_scm, options_scm) {
+
+  var dev = dev_scm.val;
+  var options = g_scm2host(options_scm);
+
+  console.log('g_os_device_stream_options_set('+dev.fd+','+options+')  ***not implemented***');
+
+  return g_host2scm(-1);
+}
+
+function g_os_device_stream_open_predefined(index_scm, flags_scm) {
+
+  var index = g_scm2host(index_scm);
+  var flags = g_scm2host(flags_scm);
+  var fd;
+
+  console.log('g_os_device_stream_open_predefined('+index+','+flags+')  ***not fully implemented***');
+
+  switch (index) {
+    case -1: fd = 0; break; // stdin
+    case -2: fd = 1; break; // stdout
+    case -3: fd = 2; break; // stderr
+    case -4: fd = 1; break; // console
+  }
+
+  return new G_Foreign(new G_Device(fd), g_host2scm(false));
+}
+
+function g_os_device_stream_open_path(path_scm, flags_scm, mode_scm) {
+
+  var path = g_scm2host(path_scm);
+  var flags = g_scm2host(flags_scm);
+  var mode = g_scm2host(mode_scm);
+  var fd;
+
+  console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not fully implemented***');
+
+  try {
+    fd = fs.openSync(path, g_os_translate_flags(flags), mode);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
+  }
+
+  return new G_Foreign(new G_Device(fd), g_host2scm(false));
+}
+
+function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
+
+  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val; // condvar's name is the foreign object returned by g_os_device_stream_open_path
+  var buffer = buffer_scm;
+  var lo = g_scm2host(lo_scm);
+  var hi = g_scm2host(hi_scm);
+  var n;
+
+  console.log('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
+
+  try {
+    n = fs.readSync(dev.fd, buffer, lo, hi-lo, null);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
+  }
+
+  return g_host2scm(n);
+}
+
+function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
+
+  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var buffer = buffer_scm;
+  var lo = g_scm2host(lo_scm);
+  var hi = g_scm2host(hi_scm);
+  var n;
+
+  console.log('g_os_device_stream_write('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
+
+  try {
+    n = fs.writeSync(dev.fd, buffer, lo, hi-lo, null);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
+  }
+
+  return g_host2scm(n);
+}
+
+function g_os_device_close(dev_scm, direction_scm) {
+
+  var dev = dev_scm.val;
+  var direction = g_scm2host(direction_scm);
+
+  console.log('g_os_device_close('+dev.fd+','+direction+')  ***not fully implemented***');
+
+  if ((direction & 1) != 0 ||  // DIRECTION_RD
+      (direction & 2) != 0) {  // DIRECTION_WR
+    try {
+      fs.closeSync(dev.fd);
+    } catch (exn) {
+      if (exn instanceof Error && exn.hasOwnProperty('code')) {
+        return g_host2scm(g_os_encode_errno(exn.code));
+      } else {
+        throw exn;
+      }
+    }
+  }
+
+  return g_host2scm(0); // no error
+}
+
+function g_os_device_force_output(dev_condvar_scm, level_scm) {
+
+  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var level = g_scm2host(level_scm);
+
+  console.log('g_os_device_force_output('+dev.fd+','+level+')  ***not fully implemented***');
+
+  return g_host2scm(0); // no error
+}
+
+function g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm) {
+
+  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var pos = g_scm2host(pos_scm);
+  var whence_scm = g_scm2host(whence_scm);
+
+  console.log('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_stream_width(dev_condvar_scm) {
+
+  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+
+  console.log('g_os_device_stream_width('+dev.fd+')  ***not fully implemented***');
+
+  return g_host2scm(80);
+}
+
+function g_os_port_decode_chars(port_scm, want_scm, eof_scm) {
+
+  var want = g_scm2host(want_scm);
+  var eof = g_scm2host(eof_scm);
+
+  console.log('g_os_port_decode_chars('+port_scm+','+want+','+eof+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_port_encode_chars(port_scm) {
+
+  console.log('g_os_port_encode_chars('+port_scm+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_directory_open_path(path_scm, ignore_hidden_scm) {
+
+  var path = g_scm2host(path_scm);
+  var ignore_hidden = g_scm2host(ignore_hidden_scm);
+
+  console.log('g_os_device_directory_open_path(\\''+path+'\\','+ignore_hidden+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_directory_read(dev_condvar_scm) {
+
+  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+
+  console.log('g_os_device_directory_read('+dev.fd+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_event_queue_open(selector_scm) {
+
+  var selector = g_scm2host(selector_scm);
+
+  console.log('g_os_device_event_queue_open('+selector+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_event_queue_read(dev_condvar_scm) {
+
+  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+
+  console.log('g_os_device_event_queue_read('+dev.fd+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_stream_open_process(path_and_args_scm, environment_scm, directory_scm, options_scm) {
+
+  console.log('g_os_device_stream_open_process(...)  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_process_pid(dev_scm) {
+
+  var dev = dev_scm.val;
+
+  console.log('g_os_device_process_pid('+dev.fd+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+
+function g_os_device_process_status(dev_scm) {
+
+  var dev = dev_scm.val;
+
+  console.log('g_os_device_process_status('+dev.fd+')  ***not implemented***');
+
+  return g_host2scm(-1); // error
+}
+")))
+
+(define-prim (##os-device-close dev direction)
+  (##inline-host-expression
+   "g_os_device_close(@1@,@2@)"
+   dev
+   direction))
+
+(define-prim (##os-device-directory-open-path path ignore-hidden)
+  (##inline-host-expression
+   "g_os_device_directory_open_path(@1@,@2@)"
+   path
+   ignore-hidden))
+
+(define-prim (##os-device-directory-read dev-condvar)
+  (##inline-host-expression
+   "g_os_device_directory_read(@1@)"
+   dev-condvar))
+
+(define-prim (##os-device-event-queue-open selector)
+  (##inline-host-expression
+   "g_os_device_event_queue_open(@1@)"
+   selector))
+
+(define-prim (##os-device-event-queue-read dev-condvar)
+  (##inline-host-expression
+   "g_os_device_event_queue_read(@1@)"
+   dev-condvar))
+
+(define-prim (##os-device-force-output dev-condvar level)
+  (##inline-host-expression
+   "g_os_device_force_output(@1@,@2@)"
+   dev-condvar
+   level))
+
+(define-prim (##os-device-kind dev)
+  (##inline-host-expression
+   "g_os_device_kind(@1@)"
+   dev))
+
+(define-prim (##os-device-stream-open-process path-and-args environment directory options)
+  (##inline-host-expression
+   "g_os_device_stream_open_process(@1@,@2@,@3@,@4@)"
+   path-and-args
+   environment
+   directory
+   options))
+
+(define-prim (##os-device-process-pid dev)
+  (##inline-host-expression
+   "g_os_device_process_pid(@1@)"
+   dev))
+
+(define-prim (##os-device-process-status dev)
+  (##inline-host-expression
+   "g_os_device_process_status(@1@)"
+   dev))
+
+(define-prim (##os-device-stream-default-options dev)
+  (##inline-host-expression
+   "g_os_device_stream_default_options(@1@)"
+   dev))
+
+(define-prim (##os-device-stream-options-set! dev options)
+  (##inline-host-expression
+   "g_os_device_stream_options_set(@1@,@2@)"
+   dev
+   options))
+
+(define-prim (##os-device-stream-open-predefined index flags)
+  (##inline-host-expression
+   "g_os_device_stream_open_predefined(@1@,@2@)"
+   index
+   flags))
+
+(define-prim (##os-device-stream-open-path path flags mode)
+  (##inline-host-expression
+   "g_os_device_stream_open_path(@1@,@2@,@3@)"
+   path
+   flags
+   mode))
+
+(define-prim (##os-device-stream-read dev-condvar buffer lo hi)
+  (##inline-host-expression
+   "g_os_device_stream_read(@1@,@2@,@3@,@4@)"
+   dev-condvar
+   buffer
+   lo
+   hi))
+
+(define-prim (##os-device-stream-write dev-condvar buffer lo hi)
+  (##inline-host-expression
+   "g_os_device_stream_write(@1@,@2@,@3@,@4@)"
+   dev-condvar
+   buffer
+   lo
+   hi))
+
+(define-prim (##os-device-stream-seek dev-condvar pos whence)
+  (##inline-host-expression
+   "g_os_device_stream_seek(@1@,@2@,@3@)"
+   dev-condvar
+   pos
+   whence))
+
+(define-prim (##os-device-stream-width dev-condvar)
+  (##inline-host-expression
+   "g_os_device_stream_width(@1@)"
+   dev-condvar))
+
+(define-prim (##os-port-decode-chars! port want eof)
+  (##inline-host-expression
+   "g_os_port_decode_chars(@1@,@2@,@3@)"
+   port
+   want
+   eof))
+
+(define-prim (##os-port-encode-chars! port)
+  (##inline-host-expression
+   "g_os_port_encode_chars(@1@)"
+   port))
+
+(define-prim (##os-device-tty-history dev)
   (error "##os-device-tty-history not implemented yet"))
 
-(define-prim (##os-device-tty-history-set! . rest)
+(define-prim (##os-device-tty-history-set! dev history)
   (error "##os-device-tty-history-set! not implemented yet"))
 
-(define-prim (##os-device-tty-history-max-length-set! . rest)
+(define-prim (##os-device-tty-history-max-length-set! dev max-length)
   (error "##os-device-tty-history-max-length-set! not implemented yet"))
 
-(define-prim (##os-device-tty-history-max-length-set! . rest)
-  (error "##os-device-tty-history-max-length-set! not implemented yet"))
-
-(define-prim (##os-device-tty-history-set! . rest)
-  (error "##os-device-tty-history-set! not implemented yet"))
-
-(define-prim (##os-device-tty-mode-set! . rest)
+(define-prim (##os-device-tty-mode-set! dev input-allow-special input-echo input-raw output-raw speed)
   (error "##os-device-tty-mode-set! not implemented yet"))
 
-(define-prim (##os-device-tty-paren-balance-duration-set! . rest)
+(define-prim (##os-device-tty-paren-balance-duration-set! dev duration)
   (error "##os-device-tty-paren-balance-duration-set! not implemented yet"))
 
-(define-prim (##os-device-tty-text-attributes-set! . rest)
+(define-prim (##os-device-tty-text-attributes-set! dev input output)
   (error "##os-device-tty-text-attributes-set! not implemented yet"))
 
-(define-prim (##os-device-tty-type-set! . rest)
+(define-prim (##os-device-tty-type-set! dev term-type emacs-bindings)
   (error "##os-device-tty-type-set! not implemented yet"))
 
-(define-prim (##os-host-info . rest)
+(define-prim (##os-host-info host)
   (error "##os-host-info not implemented yet"))
 
-(define-prim (##os-host-name . rest)
+(define-prim (##os-host-name)
   (error "##os-host-name not implemented yet"))
 
-(define-prim (##os-load-object-file . rest)
+(define-prim (##os-load-object-file path modname)
   (error "##os-load-object-file not implemented yet"))
 
-(define-prim (##os-network-info . rest)
+(define-prim (##os-network-info network)
   (error "##os-network-info not implemented yet"))
 
-(define-prim (##os-port-decode-chars! . rest)
-  (error "##os-port-decode-chars! not implemented yet"))
-
-(define-prim (##os-port-encode-chars! . rest)
-  (error "##os-port-encode-chars! not implemented yet"))
-
-(define-prim (##os-protocol-info . rest)
+(define-prim (##os-protocol-info protocol)
   (error "##os-protocol-info not implemented yet"))
 
-(define-prim (##os-service-info . rest)
+(define-prim (##os-service-info service protocol)
   (error "##os-service-info not implemented yet"))
 
 (define-prim (##path-directory-end path)
@@ -816,19 +1261,16 @@
   (error "##path-normalize not implemented yet"))
 
 (define-prim (##path-resolve path)
-  (error "##path-resolve not implemented yet"))
+  path)
 
 (define-prim (##path-strip-directory path)
   (error "##path-strip-directory not implemented yet"))
 
 (define-prim (##path-unresolve path)
-  (error "##path-unresolve not implemented yet"))
+  path)
 
 (define-prim (##raise-heap-overflow-exception)
   (error "##raise-heap-overflow-exception not implemented yet"))
-
-(define-prim (##raise-os-exception message code proc . args)
-  (error "##raise-os-exception not implemented yet"))
 
 (define-prim (##repl #!optional (write-reason #f) (reason #f) (toplevel? #f))
   (error "##repl not implemented yet"))
@@ -855,6 +1297,9 @@
   (println message)
   (##exit-abnormally))
 
+(define-prim (void)
+  (##void))
+
 ;;;----------------------------------------------------------------------------
 
 (define ##current-readtable
@@ -866,6 +1311,10 @@
 
 (define current-readtable
   ##current-readtable)
+
+;;;----------------------------------------------------------------------------
+
+;;(##open-all-predefined)
 
 ;;;----------------------------------------------------------------------------
 
