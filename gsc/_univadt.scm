@@ -1066,5 +1066,11 @@
 (define-macro (^will? val)
   `(univ-emit-will? ctx ,val))
 
+(define-macro (^new-foreign expr1 expr2)
+  `(univ-emit-new-foreign ctx ,expr1 ,expr2))
+
+(define-macro (^foreign? val)
+  `(univ-emit-foreign? ctx ,val))
+
 (define-macro (^popcount! arg)
   `(univ-emit-popcount! ctx ,arg))

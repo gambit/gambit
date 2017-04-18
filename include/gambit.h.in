@@ -3416,6 +3416,8 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___WILLACTION(obj)___FIELD(obj,___WILL_ACTION)
 #define ___WILLACTIONSET(obj,val)___FIELD(obj,___WILL_ACTION) = val;
 
+#define ___FOREIGNTAGS(obj)___FIELD(obj,___FOREIGN_TAGS)
+
 #define ___EXECUTABLE_WILL        1
 #define ___UNMARKED_TESTATOR_WILL 2
 

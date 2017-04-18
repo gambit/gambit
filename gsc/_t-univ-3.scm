@@ -175,6 +175,7 @@
     ((f64vector)     'F64Vector)
     ((fixnum)        'Fixnum)
     ((flonum)        'Flonum)
+    ((foreign)       'Foreign)
     ((frame)         'Frame)
     ((jumpable)      'Jumpable)
     ((key)           'Key)
@@ -3671,6 +3672,12 @@ tanh
 
 (define (univ-emit-will? ctx expr)
   (^instanceof (^type 'will) (^cast*-scmobj expr)))
+
+(define (univ-emit-new-foreign ctx expr1 expr2)
+  (^new (^type 'foreign) expr1 expr2))
+
+(define (univ-emit-foreign? ctx expr)
+  (^instanceof (^type 'foreign) (^cast*-scmobj expr)))
 
 (define (univ-emit-call-prim ctx expr . params)
   (univ-emit-call-prim-aux ctx expr params))

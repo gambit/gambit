@@ -97,8 +97,6 @@
    (lambda (ctx return arg1)
      (return (^procedure? arg1)))))
 
-;;TODO: ("##foreign?"                 (1)   #f ()    0    boolean extended)
-
 ;;TODO: ("##s8vector?"                (1)   #f ()    0    boolean extended)
 ;;TODO: ("##s16vector?"               (1)   #f ()    0    boolean extended)
 ;;TODO: ("##s32vector?"               (1)   #f ()    0    boolean extended)
@@ -2634,6 +2632,16 @@
    (lambda (ctx return will action)
      (^ (^assign (^member (^cast* 'will will) 'action) action)
         (return will)))))
+
+(univ-define-prim-bool "##foreign?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (return (^foreign? arg1)))))
+
+(univ-define-prim "##foreign-tags" #t
+  (make-translated-operand-generator
+   (lambda (ctx return foreign)
+     (return (^member (^cast* 'foreign foreign) 'tags)))))
 
 (univ-define-prim "##apply" #f
 

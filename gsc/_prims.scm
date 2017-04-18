@@ -699,6 +699,11 @@
 ("##will-action"                      (1)   #f ()    0    (#f)    extended)
 ("##will-action-set!"                 (2)   #t ()    0    #f      extended)
 
+("##foreign-address"                  (1)   #f ()    0    #f      extended)
+("##foreign-tags"                     (1)   #f ()    0    #f      extended)
+("##foreign-release!"                 (1)   #t ()    0    #f      extended)
+("##foreign-released?"                (1)   #f ()    0    boolean extended)
+
 ("##gc-hash-table-ref"                (2)   #f ()    0    (#f)    extended)
 ("##gc-hash-table-set!"               (3)   #t ()    0    (#f)    extended)
 ("##gc-hash-table-rehash!"            (2)   #t ()    0    (#f)    extended)

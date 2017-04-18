@@ -40,6 +40,7 @@
 (define-prim (##flonum? obj))
 (define-prim (##bignum? obj))
 (define-prim (##unbound? obj))
+(define-prim (##foreign? obj))
 
 (macro-case-target
  ((C)
@@ -60,7 +61,6 @@
 (define-prim (##special? obj) #f)
 (define-prim (##meroon? obj) #f)
 (define-prim (##jazz? obj) #f)
-(define-prim (##foreign? obj) #f)
 (define-prim (##gc-hash-table? obj) #f)
 
 ;;;----------------------------------------------------------------------------

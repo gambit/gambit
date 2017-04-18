@@ -1308,6 +1308,15 @@ EOF
       (list (univ-field 'testator 'scmobj #f '(public)) ;; instance-fields
             (univ-field 'action 'scmobj #f '(public)))))
 
+    ((foreign)
+     (rts-class
+      'foreign
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'val 'object #f '(public)) ;; instance-fields
+            (univ-field 'tags 'scmobj #f '(public)))))
+
     ((fixnum)
      (rts-class
       'fixnum
