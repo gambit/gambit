@@ -4202,155 +4202,155 @@ end-of-code
 ;;; Provide access to low-level I/O operations implemented in "os.c".
 
 (define-prim ##os-device-kind
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev
+            scheme-object   ;; kind (fixnum)
    "___os_device_kind"))
 
 (define-prim ##os-device-force-output
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object) ;; level (0, 1 or 2)
+            scheme-object   ;; error code (fixnum)
    "___os_device_force_output"))
 
 (define-prim ##os-device-close
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; dev
+             scheme-object) ;; direction
+            scheme-object   ;; error code (fixnum)
    "___os_device_close"))
 
 (define-prim ##os-device-stream-seek
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; pos
+             scheme-object) ;; whence
+            scheme-object   ;; error code (fixnum)
    "___os_device_stream_seek"))
 
 (define-prim ##os-device-stream-read
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; buffer
+             scheme-object  ;; lo
+             scheme-object) ;; hi
+            scheme-object   ;; bytes read (fixnum)
    "___os_device_stream_read"))
 
 (define-prim ##os-device-stream-write
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; buffer
+             scheme-object  ;; lo
+             scheme-object) ;; hi
+            scheme-object   ;; bytes written (fixnum)
    "___os_device_stream_write"))
 
 (define-prim ##os-device-stream-width
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev_condvar
+            scheme-object   ;; width (fixnum)
    "___os_device_stream_width"))
 
 (define-prim ##os-device-stream-default-options
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev
+            scheme-object   ;; options (fixnum)
    "___os_device_stream_default_options"))
 
 (define-prim ##os-device-stream-options-set!
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; dev
+             scheme-object) ;; options
+            scheme-object   ;; error code (fixnum)
    "___os_device_stream_options_set"))
 
 (define-prim ##os-device-stream-open-predefined
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; -1=stdin -2=stdout -3=stderr -4=console
+             scheme-object) ;; flags
+            scheme-object   ;; device
    "___os_device_stream_open_predefined"))
 
 (define-prim ##os-device-stream-open-path
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; path
+             scheme-object  ;; flags
+             scheme-object) ;; mode
+            scheme-object   ;; device
    "___os_device_stream_open_path"))
 
 (define-prim ##os-device-stream-open-process
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; path_and_args
+             scheme-object  ;; environment
+             scheme-object  ;; directory
+             scheme-object) ;; options
+            scheme-object   ;; device
    "___os_device_stream_open_process"))
 
 (define-prim ##os-device-process-pid
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev
+            scheme-object   ;; pid (fixnum)
    "___os_device_process_pid"))
 
 (define-prim ##os-device-process-status
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev
+            scheme-object   ;; status (fixnum or #f if no status yet)
    "___os_device_process_status"))
 
 (define-prim ##os-make-tls-context
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object
-             scheme-object
-             scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; min_tls_version
+             scheme-object  ;; options
+             scheme-object  ;; certificate_path
+             scheme-object  ;; private_key_path
+             scheme-object  ;; dh_params_path
+             scheme-object  ;; elliptic_curve_name
+             scheme-object) ;; client_ca_path
+            scheme-object   ;; tls_context
             "___os_make_tls_context"))
 
 (define-prim ##os-device-tcp-client-open
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; server_addr
+             scheme-object  ;; port_num
+             scheme-object  ;; options
+             scheme-object) ;; tls_context
+            scheme-object   ;; device
    "___os_device_tcp_client_open"))
 
 (define-prim ##os-device-tcp-client-socket-info
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object) ;; peer
+            scheme-object   ;; addr
    "___os_device_tcp_client_socket_info"))
 
 (define-prim ##os-device-tcp-server-open
-  (c-lambda (scheme-object
-             scheme-object
-             scheme-object
-             scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; server_addr
+             scheme-object  ;; port_num
+             scheme-object  ;; backlog
+             scheme-object  ;; options
+             scheme-object) ;; tls_context
+            scheme-object   ;; device
    "___os_device_tcp_server_open"))
 
 (define-prim ##os-device-tcp-server-read
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev_condvar
+            scheme-object   ;; device
    "___os_device_tcp_server_read"))
 
 (define-prim ##os-device-tcp-server-socket-info
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev_condvar
+            scheme-object   ;; addr
    "___os_device_tcp_server_socket_info"))
 
 (define-prim ##os-device-directory-open-path
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
+  (c-lambda (scheme-object  ;; path
+             scheme-object) ;; ignore_hidden
+            scheme-object   ;; device
    "___os_device_directory_open_path"))
 
 (define-prim ##os-device-directory-read
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev_condvar
+            scheme-object   ;; filename
    "___os_device_directory_read"))
 
 (define-prim ##os-device-event-queue-open
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; selector
+            scheme-object   ;; device
    "___os_device_event_queue_open"))
 
 (define-prim ##os-device-event-queue-read
-  (c-lambda (scheme-object)
-            scheme-object
+  (c-lambda (scheme-object) ;; dev_condvar
+            scheme-object   ;; event
    "___os_device_event_queue_read"))
 
 (define-prim ##os-device-tty-type-set!

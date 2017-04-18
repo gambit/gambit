@@ -1470,8 +1470,7 @@
         (if (##fixnum? code1)
             code1
             (let* ((wdevice-condvar (macro-device-port-wdevice-condvar port))
-                   (wdevice (macro-condvar-name wdevice-condvar))
-                   (code2 (##os-device-force-output wdevice level)))
+                   (code2 (##os-device-force-output wdevice-condvar level)))
               (cond ((##fx= code2 ##err-code-EINTR)
 
                      ;; the force was interrupted, so try again
@@ -1604,8 +1603,7 @@
       (let loop ()
 
         (let* ((wdevice-condvar (macro-device-port-wdevice-condvar port))
-               (wdevice (macro-condvar-name wdevice-condvar))
-               (result (##os-device-stream-width wdevice)))
+               (result (##os-device-stream-width wdevice-condvar)))
           (if (##fx= result ##err-code-EINTR)
               (loop)
               (begin
@@ -1743,13 +1741,13 @@
     (let ((result
            (if (##eq? position (macro-absent-obj))
                (##os-device-stream-seek
-                (macro-condvar-name (macro-device-port-rdevice-condvar port))
+                (macro-device-port-rdevice-condvar port)
                 0
                 1)
                (begin
                  (##flush-input-buffering port)
                  (##os-device-stream-seek
-                  (macro-condvar-name (macro-device-port-rdevice-condvar port))
+                  (macro-device-port-rdevice-condvar port)
                   position
                   (if (##eq? whence (macro-absent-obj)) 0 whence))))))
       (if (and (##fixnum? result)
@@ -1801,13 +1799,13 @@
     (let ((result
            (if (##eq? position (macro-absent-obj))
                (##os-device-stream-seek
-                (macro-condvar-name (macro-device-port-wdevice-condvar port))
+                (macro-device-port-wdevice-condvar port)
                 0
                 1)
                (begin
                  (##force-output port)
                  (##os-device-stream-seek
-                  (macro-condvar-name (macro-device-port-wdevice-condvar port))
+                  (macro-device-port-wdevice-condvar port)
                   position
                   (if (##eq? whence (macro-absent-obj)) 0 whence))))))
       (if (and (##fixnum? result)
@@ -2030,7 +2028,7 @@
             (macro-byte-port-rhi port))
            (n
             (##os-device-stream-read
-             (macro-condvar-name (macro-device-port-rdevice-condvar port))
+             (macro-device-port-rdevice-condvar port)
              byte-rbuf
              byte-rhi
              (let ((rbuf-len (##u8vector-length byte-rbuf)))
@@ -2168,7 +2166,7 @@
 
           (let ((n
                  (##os-device-stream-write
-                  (macro-condvar-name (macro-device-port-wdevice-condvar port))
+                  (macro-device-port-wdevice-condvar port)
                   (macro-byte-port-wbuf port)
                   byte-wlo
                   byte-whi)))
@@ -7004,7 +7002,7 @@
   (let loop ()
     (let ((result
            (##os-device-tcp-client-socket-info
-            (macro-condvar-name (macro-device-port-rdevice-condvar port))
+            (macro-device-port-rdevice-condvar port)
             (##eq? prim tcp-client-peer-socket-info))))
       (if (##fixnum? result)
 
@@ -7292,8 +7290,7 @@
     ;;
     ;;          (let ((info
     ;;                 (##os-device-tcp-client-socket-info
-    ;;                  (macro-condvar-name
-    ;;                   (macro-device-port-wdevice-condvar port))
+    ;;                  (macro-device-port-wdevice-condvar port)
     ;;                  #t)))
     ;;            (if (##fixnum? info)
     ;;              (##list 'tcp-client
@@ -7319,8 +7316,7 @@
       (let loop ()
         (let ((client-device
                (##os-device-tcp-server-read
-                (macro-condvar-name
-                 (macro-tcp-server-port-rdevice-condvar port)))))
+                (macro-tcp-server-port-rdevice-condvar port))))
           (if (##fixnum? client-device)
 
               (cond ((##fx= client-device ##err-code-EINTR)
@@ -7559,7 +7555,7 @@
 (define-prim (##tcp-server-socket-info port)
   (let ((result
          (##os-device-tcp-server-socket-info
-          (macro-condvar-name (macro-tcp-server-port-rdevice-condvar port)))))
+          (macro-tcp-server-port-rdevice-condvar port))))
     (if (##fixnum? result)
 
         (##raise-os-io-exception port #f result tcp-server-socket-info port))
@@ -7680,8 +7676,7 @@
       (let loop ()
         (let ((datum
                (##os-device-directory-read
-                (macro-condvar-name
-                 (macro-directory-port-rdevice-condvar port)))))
+                (macro-directory-port-rdevice-condvar port))))
           (if (##fixnum? datum)
 
               (cond ((##fx= datum ##err-code-EINTR)
@@ -7883,8 +7878,7 @@
       (let loop ()
         (let ((datum
                (##os-device-event-queue-read
-                (macro-condvar-name
-                 (macro-event-queue-port-rdevice-condvar port)))))
+                (macro-event-queue-port-rdevice-condvar port))))
           (if (##fixnum? datum)
 
               (cond ((##fx= datum ##err-code-EINTR)

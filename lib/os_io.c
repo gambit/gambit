@@ -8734,13 +8734,14 @@ ___SCMOBJ dev;)
 
 
 ___SCMOBJ ___os_device_force_output
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ level),
-        (dev,
+        (dev_condvar,
          level)
-___SCMOBJ dev;
+___SCMOBJ dev_condvar;
 ___SCMOBJ level;)
 {
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
 
   return ___device_force_output (d, ___INT(level));
@@ -8766,16 +8767,17 @@ ___SCMOBJ direction;)
 /* Stream device operations. */
 
 ___SCMOBJ ___os_device_stream_seek
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ pos,
          ___SCMOBJ whence),
-        (dev,
+        (dev_condvar,
          pos,
          whence)
-___SCMOBJ dev;
+___SCMOBJ dev_condvar;
 ___SCMOBJ pos;
 ___SCMOBJ whence;)
 {
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_stream *d =
     ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
   ___S32 p;
@@ -8794,19 +8796,20 @@ ___SCMOBJ whence;)
 
 
 ___SCMOBJ ___os_device_stream_read
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ buffer,
          ___SCMOBJ lo,
          ___SCMOBJ hi),
-        (dev,
+        (dev_condvar,
          buffer,
          lo,
          hi)
-___SCMOBJ dev;
+___SCMOBJ dev_condvar;
 ___SCMOBJ buffer;
 ___SCMOBJ lo;
 ___SCMOBJ hi;)
 {
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_stream *d =
     ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
   ___stream_index len_done;
@@ -8825,19 +8828,20 @@ ___SCMOBJ hi;)
 
 
 ___SCMOBJ ___os_device_stream_write
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ buffer,
          ___SCMOBJ lo,
          ___SCMOBJ hi),
-        (dev,
+        (dev_condvar,
          buffer,
          lo,
          hi)
-___SCMOBJ dev;
+___SCMOBJ dev_condvar;
 ___SCMOBJ buffer;
 ___SCMOBJ lo;
 ___SCMOBJ hi;)
 {
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_stream *d =
     ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
   ___stream_index len_done;
@@ -8856,10 +8860,11 @@ ___SCMOBJ hi;)
 
 
 ___SCMOBJ ___os_device_stream_width
-   ___P((___SCMOBJ dev),
-        (dev)
-___SCMOBJ dev;)
+   ___P((___SCMOBJ dev_condvar),
+        (dev_condvar)
+___SCMOBJ dev_condvar;)
 {
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_stream *d =
     ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
 
@@ -9447,11 +9452,11 @@ ___SCMOBJ tls_context;)
 
 
 ___SCMOBJ ___os_device_tcp_client_socket_info
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ peer),
-        (dev,
+        (dev_condvar,
          peer)
-___SCMOBJ dev;
+___SCMOBJ dev_condvar;
 ___SCMOBJ peer;)
 {
 #ifndef USE_NETWORKING
@@ -9460,6 +9465,7 @@ ___SCMOBJ peer;)
 
 #else
 
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_tcp_client *d =
     ___CAST(___device_tcp_client*,___FIELD(dev,___FOREIGN_PTR));
   struct sockaddr sa;
@@ -9594,9 +9600,9 @@ ___SCMOBJ tls_context;)
 
 
 ___SCMOBJ ___os_device_tcp_server_read
-   ___P((___SCMOBJ dev),
-        (dev)
-___SCMOBJ dev;)
+   ___P((___SCMOBJ dev_condvar),
+        (dev_condvar)
+___SCMOBJ dev_condvar;)
 {
 #ifndef USE_NETWORKING
 
@@ -9604,6 +9610,7 @@ ___SCMOBJ dev;)
 
 #else
 
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_tcp_server *d =
     ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
@@ -9637,9 +9644,9 @@ ___SCMOBJ dev;)
 
 
 ___SCMOBJ ___os_device_tcp_server_socket_info
-   ___P((___SCMOBJ dev),
-        (dev)
-___SCMOBJ dev;)
+   ___P((___SCMOBJ dev_condvar),
+        (dev_condvar)
+___SCMOBJ dev_condvar;)
 {
 #ifndef USE_NETWORKING
 
@@ -9647,6 +9654,7 @@ ___SCMOBJ dev;)
 
 #else
 
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_tcp_server *d =
     ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
   struct sockaddr sa;
@@ -9735,9 +9743,9 @@ ___SCMOBJ ignore_hidden;)
 
 
 ___SCMOBJ ___os_device_directory_read
-   ___P((___SCMOBJ dev),
-        (dev)
-___SCMOBJ dev;)
+   ___P((___SCMOBJ dev_condvar),
+        (dev_condvar)
+___SCMOBJ dev_condvar;)
 {
 #ifndef ___DIR_OPEN_PATH_SUPPORTED
 
@@ -9745,6 +9753,7 @@ ___SCMOBJ dev;)
 
 #else
 
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_directory *d =
     ___CAST(___device_directory*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
@@ -9811,10 +9820,11 @@ ___SCMOBJ selector;)
 
 
 ___SCMOBJ ___os_device_event_queue_read
-   ___P((___SCMOBJ dev),
-        (dev)
-___SCMOBJ dev;)
+   ___P((___SCMOBJ dev_condvar),
+        (dev_condvar)
+___SCMOBJ dev_condvar;)
 {
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_event_queue *d =
     ___CAST(___device_event_queue*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;

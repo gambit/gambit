@@ -1,6 +1,6 @@
 /* File: "os_io.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -657,7 +657,7 @@ extern ___SCMOBJ ___os_device_kind
         ());
 
 extern ___SCMOBJ ___os_device_force_output
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ level),
         ());
 
@@ -671,27 +671,27 @@ extern ___SCMOBJ ___os_device_close
 /* Stream device operations. */
 
 extern ___SCMOBJ ___os_device_stream_seek
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ pos,
          ___SCMOBJ whence),
         ());
 
 extern ___SCMOBJ ___os_device_stream_read
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ buffer,
          ___SCMOBJ lo,
          ___SCMOBJ hi),
         ());
 
 extern ___SCMOBJ ___os_device_stream_write
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ buffer,
          ___SCMOBJ lo,
          ___SCMOBJ hi),
         ());
 
 extern ___SCMOBJ ___os_device_stream_width
-   ___P((___SCMOBJ dev),
+   ___P((___SCMOBJ dev_condvar),
         ());
 
 extern ___SCMOBJ ___os_device_stream_default_options
@@ -753,7 +753,7 @@ extern ___SCMOBJ ___os_device_tcp_client_open
         ());
 
 extern ___SCMOBJ ___os_device_tcp_client_socket_info
-   ___P((___SCMOBJ dev,
+   ___P((___SCMOBJ dev_condvar,
          ___SCMOBJ peer),
         ());
 
@@ -770,11 +770,11 @@ extern ___SCMOBJ ___os_device_tcp_server_open
         ());
 
 extern ___SCMOBJ ___os_device_tcp_server_read
-   ___P((___SCMOBJ dev),
+   ___P((___SCMOBJ dev_condvar),
         ());
 
 extern ___SCMOBJ ___os_device_tcp_server_socket_info
-   ___P((___SCMOBJ dev),
+   ___P((___SCMOBJ dev_condvar),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
@@ -801,7 +801,7 @@ extern ___SCMOBJ ___os_device_directory_open_path
         ());
 
 extern ___SCMOBJ ___os_device_directory_read
-   ___P((___SCMOBJ dev),
+   ___P((___SCMOBJ dev_condvar),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
@@ -813,7 +813,7 @@ extern ___SCMOBJ ___os_device_event_queue_open
         ());
 
 extern ___SCMOBJ ___os_device_event_queue_read
-   ___P((___SCMOBJ dev),
+   ___P((___SCMOBJ dev_condvar),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
@@ -821,7 +821,7 @@ extern ___SCMOBJ ___os_device_event_queue_read
 /* Waiting for I/O to become possible on a set of devices. */
 
 extern ___SCMOBJ ___os_condvar_select
-   ___P((___SCMOBJ run_queue,
+   ___P((___SCMOBJ devices,
          ___SCMOBJ timeout),
         ());
 
