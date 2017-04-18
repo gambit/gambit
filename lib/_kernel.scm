@@ -1578,6 +1578,36 @@ end-of-code
   (##declare (not interrupts-enabled))
   (macro-raise
    (macro-make-unknown-keyword-argument-exception proc args)))
+
+(implement-library-type-os-exception)
+
+(define-prim (##raise-os-exception message code proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   message
+   code
+   #f
+   (lambda (procedure arguments message code dummy)
+     (macro-raise
+      (if (##fx= code ##err-code-ENOENT)
+        (macro-make-no-such-file-or-directory-exception procedure arguments)
+        (macro-make-os-exception procedure arguments message code))))))
+
+(implement-library-type-no-such-file-or-directory-exception)
+
+(define-prim (##raise-no-such-file-or-directory-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-no-such-file-or-directory-exception
+       procedure
+       arguments)))))
 ))
 
 (macro-case-target
@@ -1611,21 +1641,6 @@ end-of-code
   (##declare (not interrupts-enabled))
   (macro-raise
    (macro-make-number-of-arguments-limit-exception proc args)))
-
-(implement-library-type-os-exception)
-
-(define-prim (##raise-os-exception message code proc . args)
-  (##extract-procedure-and-arguments
-   proc
-   args
-   message
-   code
-   #f
-   (lambda (procedure arguments message code dummy)
-     (macro-raise
-      (if (##fx= code ##err-code-ENOENT)
-        (macro-make-no-such-file-or-directory-exception procedure arguments)
-        (macro-make-os-exception procedure arguments message code))))))
 
 ;;; Implementation of promises.
 

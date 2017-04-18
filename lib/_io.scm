@@ -52,21 +52,6 @@
       port
       (macro-make-nonempty-input-port-character-buffer-exception procedure arguments)))))
 
-(implement-library-type-no-such-file-or-directory-exception)
-
-(define-prim (##raise-no-such-file-or-directory-exception proc . args)
-  (##extract-procedure-and-arguments
-   proc
-   args
-   #f
-   #f
-   #f
-   (lambda (procedure arguments dummy1 dummy2 dummy3)
-     (macro-raise
-      (macro-make-no-such-file-or-directory-exception
-       procedure
-       arguments)))))
-
 (define-prim (##raise-os-io-exception port message code proc . args)
   (##extract-procedure-and-arguments
    proc
