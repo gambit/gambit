@@ -3225,7 +3225,7 @@
                    (let* ((y (read-u8))
                           (name (deserialize-string! y #xff))
                           (hash (deserialize-exact-int-of-length! 4))
-                          (obj (macro-make-uninterned-symbol name hash)))
+                          (obj (##make-uninterned-symbol name hash)))
                      (create-global-var-if-needed obj)
                      (alloc! obj)
                      obj))
@@ -3240,7 +3240,7 @@
                    (let* ((y (read-u8))
                           (name (deserialize-string! y #xff))
                           (hash (deserialize-exact-int-of-length! 4))
-                          (obj (macro-make-uninterned-keyword name hash)))
+                          (obj (##make-uninterned-keyword name hash)))
                      (alloc! obj)
                      obj))
 

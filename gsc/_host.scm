@@ -897,6 +897,6 @@
   (macro-subtype-structure))
 
 (define (symbol-hash sym)
-  (macro-symbol-hash sym))
+  (##symbol-hash sym))
 
 ;"

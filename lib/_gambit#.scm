@@ -144,49 +144,6 @@
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;; Symbol objects
-
-;; A symbol is represented by an object vector of length 4
-;; slot 0 = symbol name (a string or a fixnum <n> for a symbol named "g<n>")
-;; slot 1 = hash code (non-negative fixnum)
-;; slot 2 = link to next symbol in symbol table (#f for uninterned)
-;; slot 3 = pointer to corresponding global variable (0 if none exists)
-
-(##define-macro (macro-make-uninterned-symbol name hash)
-  `(##subtype-set!
-    (##vector ,name ,hash #f 0)
-    (macro-subtype-symbol)))
-
-(##define-macro (macro-symbol-name s)        `(macro-slot 0 ,s))
-(##define-macro (macro-symbol-name-set! s x) `(macro-slot 0 ,s ,x))
-(##define-macro (macro-symbol-hash s)        `(macro-slot 1 ,s))
-(##define-macro (macro-symbol-hash-set! s x) `(macro-slot 1 ,s ,x))
-(##define-macro (macro-symbol-next s)        `(macro-slot 2 ,s))
-(##define-macro (macro-symbol-next-set! s x) `(macro-slot 2 ,s ,x))
-
-;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;; Keyword objects
-
-;; A keyword is represented by an object vector of length 3
-;; slot 0 = keyword name (a string or a fixnum <n> for a keyword named "g<n>")
-;; slot 1 = hash code (non-negative fixnum)
-;; slot 2 = link to next keyword in keyword table (#f for uninterned)
-
-(##define-macro (macro-make-uninterned-keyword name hash)
-  `(##subtype-set!
-    (##vector ,name ,hash #f)
-    (macro-subtype-keyword)))
-
-(##define-macro (macro-keyword-name k)        `(macro-slot 0 ,k))
-(##define-macro (macro-keyword-name-set! k x) `(macro-slot 0 ,k ,x))
-(##define-macro (macro-keyword-hash k)        `(macro-slot 1 ,k))
-(##define-macro (macro-keyword-hash-set! k x) `(macro-slot 1 ,k ,x))
-(##define-macro (macro-keyword-next k)        `(macro-slot 2 ,k))
-(##define-macro (macro-keyword-next-set! k x) `(macro-slot 2 ,k ,x))
-
-;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 ;; Will objects
 
 ;; A will is represented by an object vector of length 3
@@ -314,34 +271,6 @@
 
 (##define-macro (macro-continuation-denv-set! c x)
   `(##continuation-denv-set! ,c ,x))
-
-;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;; Promise objects
-
-;; A promise is represented by an object vector of length 2
-;; slot 0 = thunk
-;; slot 1 = result (eq? to promise object itself when not yet determined)
-
-(##define-macro (macro-make-promise thunk)
-  `(##make-promise thunk))
-
-(##define-macro (macro-promise-thunk p)         `(macro-slot 0 ,p))
-(##define-macro (macro-promise-thunk-set! p x)  `(macro-slot 0 ,p ,x))
-(##define-macro (macro-promise-result p)        `(macro-slot 1 ,p))
-(##define-macro (macro-promise-result-set! p x) `(macro-slot 1 ,p ,x))
-
-;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;; Foreign objects
-
-;; A foreign object is represented by an object vector of length 3
-;; slot 0 = tags
-;; slot 1 = C pointer to release function
-;; slot 2 = C pointer to foreign data
-
-(##define-macro (macro-foreign-tags f)         `(macro-slot 0 ,f))
-(##define-macro (macro-foreign-tags-set! f x)  `(macro-slot 0 ,f ,x))
 
 ;;;----------------------------------------------------------------------------
 

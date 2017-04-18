@@ -559,43 +559,29 @@
 
 (define-fail-check-type symbol 'symbol)
 
-(define-prim (##make-uninterned-symbol name hash)
-  (macro-make-uninterned-symbol name hash))
-
-(define-prim (##symbol-name sym)
-  (macro-symbol-name sym))
-
-(define-prim (##symbol-name-set! sym name)
-  (macro-symbol-name-set! sym name))
-
-(define-prim (##symbol-hash sym)
-  (macro-symbol-hash sym))
-
-(define-prim (##symbol-hash-set! sym hash)
-  (macro-symbol-hash-set! sym hash))
-
-(define-prim (##symbol-interned? sym)
-  (macro-symbol-next sym))
-
-(define-prim (##symbol? obj)
-  (and (##subtyped? obj)
-       (##eq? (##subtype obj) (macro-subtype-symbol))))
+(define-prim (##make-uninterned-symbol name hash))
+(define-prim (##symbol-name sym))
+(define-prim (##symbol-name-set! sym name))
+(define-prim (##symbol-hash sym))
+(define-prim (##symbol-hash-set! sym hash))
+(define-prim (##symbol-interned? sym))
+(define-prim (##symbol? obj))
 
 (define-prim (symbol? obj)
   (macro-force-vars (obj)
     (##symbol? obj)))
 
 (define-prim (##symbol->string sym)
-  (let ((name (macro-symbol-name sym)))
+  (let ((name (##symbol-name sym)))
     (if (##fixnum? name)
         (let ((str (##string-append "g" (##number->string name 10))))
           (##declare (not interrupts-enabled))
-          (let ((name (macro-symbol-name sym)))
+          (let ((name (##symbol-name sym)))
             ;; Double-check in case a different thread has also called
             ;; and completed the call to ##symbol->string on this symbol.
             (if (##fixnum? name)
                 (begin
-                  (macro-symbol-name-set! sym str)
+                  (##symbol-name-set! sym str)
                   str)
                 name)))
         name)))
@@ -615,7 +601,7 @@
 
 (define-prim (##uninterned-symbol? obj)
   (and (##symbol? obj)
-       (##not (macro-symbol-next obj))))
+       (##not (##symbol-interned? obj))))
 
 (define-prim (uninterned-symbol? obj)
   (macro-force-vars (obj)
@@ -636,8 +622,8 @@
         ;; is not atomic; it simply means a possible close repetition
         ;; of the same hash code.  The counter will wrap around eventually.
         (set! ##symbol-counter n)
-        (macro-make-uninterned-symbol str (##partial-bit-reverse n)))
-      (macro-make-uninterned-symbol str hash)))
+        (##make-uninterned-symbol str (##partial-bit-reverse n)))
+      (##make-uninterned-symbol str hash)))
 
 (define-prim (string->uninterned-symbol
               str
@@ -1232,31 +1218,22 @@
                 (loop (##cdr x) (##fx- i 1))))
             x)))))
 
-(define-prim (##make-promise thunk)
-  (macro-make-promise thunk))
-
-(define-prim (##promise-thunk promise)
-  (macro-promise-thunk promise))
-
-(define-prim (##promise-thunk-set! promise thunk)
-  (macro-promise-thunk-set! promise thunk))
-
-(define-prim (##promise-result promise)
-  (macro-promise-result promise))
-
-(define-prim (##promise-result-set! promise result)
-  (macro-promise-result-set! promise result))
+(define-prim (##make-promise thunk))
+(define-prim (##promise-thunk promise))
+(define-prim (##promise-thunk-set! promise thunk))
+(define-prim (##promise-result promise))
+(define-prim (##promise-result-set! promise result))
 
 (define-prim (##force obj)
   (if (##promise? obj)
-      (let ((result (macro-promise-result obj)))
+      (let ((result (##promise-result obj)))
         (if (##eq? result obj)
-            (let* ((r ((macro-promise-thunk obj)))
-                   (result2 (macro-promise-result obj)))
+            (let* ((r ((##promise-thunk obj)))
+                   (result2 (##promise-result obj)))
               (if (##eq? result2 obj)
                   (begin
-                    (macro-promise-result-set! obj r)
-                    (macro-promise-thunk-set! obj #f)
+                    (##promise-result-set! obj r)
+                    (##promise-thunk-set! obj #f)
                     r)
                   result2))))
       obj))
@@ -1290,42 +1267,28 @@
 
 (define-fail-check-type keyword 'keyword)
 
-(define-prim (##make-uninterned-keyword name hash)
-  (macro-make-uninterned-keyword name hash))
-
-(define-prim (##keyword-name key)
-  (macro-keyword-name key))
-
-(define-prim (##keyword-name-set! key name)
-  (macro-keyword-name-set! key name))
-
-(define-prim (##keyword-hash key)
-  (macro-keyword-hash key))
-
-(define-prim (##keyword-hash-set! key hash)
-  (macro-keyword-hash-set! key hash))
-
-(define-prim (##keyword-interned? key)
-  (macro-keyword-next key))
-
-(define-prim (##keyword? obj)
-  (and (##subtyped? obj)
-       (##eq? (##subtype obj) (macro-subtype-keyword))))
+(define-prim (##make-uninterned-keyword name hash))
+(define-prim (##keyword-name key))
+(define-prim (##keyword-name-set! key name))
+(define-prim (##keyword-hash key))
+(define-prim (##keyword-hash-set! key hash))
+(define-prim (##keyword-interned? key))
+(define-prim (##keyword? obj))
 
 (define-prim (keyword? obj)
   (##keyword? obj))
 
 (define-prim (##keyword->string key)
-  (let ((name (macro-keyword-name key)))
+  (let ((name (##keyword-name key)))
     (if (##fixnum? name)
         (let ((str (##string-append "g" (##number->string name 10))))
           (##declare (not interrupts-enabled))
-          (let ((name (macro-keyword-name key)))
+          (let ((name (##keyword-name key)))
             ;; Double-check in case a different thread has also called
             ;; and completed the call to ##keyword->string on this keyword.
             (if (##fixnum? name)
                 (begin
-                  (macro-keyword-name-set! key str)
+                  (##keyword-name-set! key str)
                   str)
                 name)))
         name)))
@@ -1345,7 +1308,7 @@
 
 (define-prim (##uninterned-keyword? obj)
   (and (##keyword? obj)
-       (##not (macro-keyword-next obj))))
+       (##not (##keyword-interned? obj))))
 
 (define-prim (uninterned-keyword? obj)
   (macro-force-vars (obj)
@@ -1366,8 +1329,8 @@
         ;; is not atomic; it simply means a possible close repetition
         ;; of the same hash code.  The counter will wrap around eventually.
         (set! ##keyword-counter n)
-        (macro-make-uninterned-keyword str (##partial-bit-reverse n)))
-      (macro-make-uninterned-keyword str hash)))
+        (##make-uninterned-keyword str (##partial-bit-reverse n)))
+      (##make-uninterned-keyword str hash)))
 
 (define-prim (string->uninterned-keyword
               str
