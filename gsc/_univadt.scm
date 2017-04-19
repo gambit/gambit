@@ -700,6 +700,15 @@
 (define-macro (^values-set! val1 val2 val3)
   `(univ-emit-values-set! ctx ,val1 ,val2 ,val3))
 
+(define-macro (^vect-box type val)
+  `(univ-emit-vect-box ctx ,type ,val))
+
+(define-macro (^vect-unbox type vect)
+  `(univ-emit-vect-unbox ctx ,type ,vect))
+
+(define-macro (^vect? type val)
+  `(univ-emit-vect? ctx ,type ,val))
+
 (define-macro (^vector-box val)
   `(univ-emit-vector-box ctx ,val))
 

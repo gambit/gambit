@@ -2635,6 +2635,57 @@ tanh
 (define (univ-emit-values-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (^values-unbox expr1) expr2) expr3))
 
+(define (univ-emit-vect-box ctx type expr)
+  (case type
+    ((scmobj) (univ-emit-vector-box ctx expr))
+    ((u8)     (univ-emit-u8vector-box ctx expr))
+    ((u16)    (univ-emit-u16vector-box ctx expr))
+    ((u32)    (univ-emit-u32vector-box ctx expr))
+    ((u64)    (univ-emit-u64vector-box ctx expr))
+    ((s8)     (univ-emit-s8vector-box ctx expr))
+    ((s16)    (univ-emit-s16vector-box ctx expr))
+    ((s32)    (univ-emit-s32vector-box ctx expr))
+    ((s64)    (univ-emit-s64vector-box ctx expr))
+    ((f32)    (univ-emit-f32vector-box ctx expr))
+    ((f64)    (univ-emit-f64vector-box ctx expr))
+    (else
+     (compiler-internal-error
+      "univ-emit-vect-box, type not implemented"))))
+
+(define (univ-emit-vect-unbox ctx type expr)
+  (case type
+    ((scmobj) (univ-emit-vector-unbox ctx expr))
+    ((u8)     (univ-emit-u8vector-unbox ctx expr))
+    ((u16)    (univ-emit-u16vector-unbox ctx expr))
+    ((u32)    (univ-emit-u32vector-unbox ctx expr))
+    ((u64)    (univ-emit-u64vector-unbox ctx expr))
+    ((s8)     (univ-emit-s8vector-unbox ctx expr))
+    ((s16)    (univ-emit-s16vector-unbox ctx expr))
+    ((s32)    (univ-emit-s32vector-unbox ctx expr))
+    ((s64)    (univ-emit-s64vector-unbox ctx expr))
+    ((f32)    (univ-emit-f32vector-unbox ctx expr))
+    ((f64)    (univ-emit-f64vector-unbox ctx expr))
+    (else
+     (compiler-internal-error
+      "univ-emit-vect-unbox, type not implemented"))))
+
+(define (univ-emit-vect? ctx type expr)
+  (case type
+    ((scmobj) (univ-emit-vector? ctx expr))
+    ((u8)     (univ-emit-u8vector? ctx expr))
+    ((u16)    (univ-emit-u16vector? ctx expr))
+    ((u32)    (univ-emit-u32vector? ctx expr))
+    ((u64)    (univ-emit-u64vector? ctx expr))
+    ((s8)     (univ-emit-s8vector? ctx expr))
+    ((s16)    (univ-emit-s16vector? ctx expr))
+    ((s32)    (univ-emit-s32vector? ctx expr))
+    ((s64)    (univ-emit-s64vector? ctx expr))
+    ((f32)    (univ-emit-f32vector? ctx expr))
+    ((f64)    (univ-emit-f64vector? ctx expr))
+    (else
+     (compiler-internal-error
+      "univ-emit-vect?, type not implemented"))))
+
 (define (univ-emit-vector-box ctx expr)
   (case (univ-vector-representation ctx)
 

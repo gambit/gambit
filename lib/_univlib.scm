@@ -905,7 +905,7 @@ function g_os_device_stream_open_path(path_scm, flags_scm, mode_scm) {
 function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val; // condvar's name is the foreign object returned by g_os_device_stream_open_path
-  var buffer = buffer_scm;
+  var buffer = g_scm2host(buffer_scm);
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
   var n;
@@ -928,7 +928,7 @@ function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
-  var buffer = buffer_scm;
+  var buffer = g_scm2host(buffer_scm);
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
   var n;

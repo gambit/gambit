@@ -2813,6 +2813,20 @@ EOF
         (let ((obj (^local-var 'obj))
               (alist (^local-var 'alist))
               (key (^local-var 'key)))
+
+          (define (convert-array ctx obj type)
+            (let ((constructor (univ-array-constructor ctx type)))
+              (if (and (not (eq? type 'scmobj))
+                       (equal? constructor
+                               (univ-array-constructor ctx 'scmobj)))
+                  (^)
+                  (^if (^instanceof constructor obj)
+                       (^return
+                        (^vect-box type
+                                   (if (eq? type 'scmobj)
+                                       (^map (^rts-method-ref 'host2scm) obj)
+                                       obj)))))))
+
           (^
            (if (eq? (target-name (ctx-target ctx)) 'js)
                (^if (^void? obj)
@@ -2857,25 +2871,33 @@ EOF
            (^if (^str? obj)
                 (^return (^str->string obj)))
 
-
            ; TODO: generalise for python, java, ruby and php
            (case (target-name (ctx-target ctx))
             ((js)
              (^if (^typeof "object" obj)
-                  (^if (^instanceof "Array" obj)
-                       (^return (^map (^rts-method-ref 'host2scm) obj))
-                       (^
-                         (^var-declaration '() alist (^null-obj))
-                         "for (var " key " in " obj ") {\n"
-                             (^assign alist (^cons (^cons (^call-prim
-                                                          (^rts-method-ref 'host2scm)
-                                                          key)
-                                                         (^call-prim
-                                                          (^rts-method-ref 'host2scm)
-                                                          (^array-index obj key)))
-                                                  alist))
-                         "}\n"
-                         (^return alist)))))
+                  (^ (convert-array ctx obj 'scmobj)
+                     (convert-array ctx obj 'u8)
+                     (convert-array ctx obj 'u16)
+                     (convert-array ctx obj 'u32)
+                     (convert-array ctx obj 'u64)
+                     (convert-array ctx obj 's8)
+                     (convert-array ctx obj 's16)
+                     (convert-array ctx obj 's32)
+                     (convert-array ctx obj 's64)
+                     (convert-array ctx obj 'f32)
+                     (convert-array ctx obj 'f64)
+
+                     (^var-declaration '() alist (^null-obj))
+                     "for (var " key " in " obj ") {\n"
+                     (^assign alist (^cons (^cons (^call-prim
+                                                   (^rts-method-ref 'host2scm)
+                                                   key)
+                                                  (^call-prim
+                                                   (^rts-method-ref 'host2scm)
+                                                   (^array-index obj key)))
+                                           alist))
+                     "}\n"
+                     (^return alist))))
             ((python)
              ;;TODO: improve!
              (^if (^instanceof "list" obj)
@@ -3011,6 +3033,19 @@ EOF
       '()
       (lambda (ctx)
        (let ((obj (^local-var 'obj)))
+
+         (define (convert-array ctx obj type)
+           (let ((constructor (univ-array-constructor ctx type)))
+             (if (and (not (eq? type 'scmobj))
+                      (equal? constructor
+                              (univ-array-constructor ctx 'scmobj)))
+                 (^)
+                 (^if (^vect? type obj)
+                      (if (eq? type 'scmobj)
+                          (^return (^map (^rts-method-ref 'scm2host)
+                                         (^vect-unbox type obj)))
+                          (^return (^vect-unbox type obj)))))))
+
          (^
           (^if (^void-obj? obj)
             (case (univ-void-representation ctx)
@@ -3055,8 +3090,17 @@ EOF
           ; TODO: generalise for python, ruby, php and java
           (case (target-name (ctx-target ctx))
            ((js)
-            (^if (^instanceof "Array" obj)
-                 (^return (^map (^rts-method-ref 'scm2host) obj))))
+            (^ (convert-array ctx obj 'scmobj)
+               (convert-array ctx obj 'u8)
+               (convert-array ctx obj 'u16)
+               (convert-array ctx obj 'u32)
+               (convert-array ctx obj 'u64)
+               (convert-array ctx obj 's8)
+               (convert-array ctx obj 's16)
+               (convert-array ctx obj 's32)
+               (convert-array ctx obj 's64)
+               (convert-array ctx obj 'f32)
+               (convert-array ctx obj 'f64)))
            (else (^)))
 
           ; TODO: generalise for python, ruby, php and java
