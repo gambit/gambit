@@ -292,6 +292,7 @@
          body)
   (univ-emit-defs
    ctx
+   global?
    (univ-jumpable-declaration-defs
     ctx
     global?
@@ -301,7 +302,7 @@
     attribs
     body)))
 
-(define (univ-emit-defs ctx defs)
+(define (univ-emit-defs ctx global? defs)
 
   (define (emit-method m)
     (univ-emit-function-declaration
@@ -329,11 +330,20 @@
      (univ-class-inits c)))
 
   (define (emit-field f)
-    (univ-emit-var-declaration
-     ctx
-     (univ-field-type f)
-     (^global-var (^prefix (univ-field-name f)))
-     (univ-field-init f)))
+    (let* ((nam (^prefix (univ-field-name f)))
+           (name (if global? (^global-var nam) (^local-var nam))))
+      (^
+       (univ-emit-var-declaration
+        ctx
+        (univ-field-type f)
+        name
+        (univ-field-init f))
+       (if (eq? (univ-field-type f) 'jumpable)
+           (univ-emit-function-attribs
+            ctx
+            name
+            (univ-field-properties f))
+           (^)))))
 
   (define (emit-init i)
     (i ctx))
@@ -415,15 +425,25 @@
           (^new capitalized-root-name)
           '())))
 
-      (univ-add-method
-       (univ-make-empty-defs)
-       (univ-method
-        (^prefix root-name);;;;;;;;;;;;;;;;;;;;(^mod-method (ctx-module-name ctx) root-name)
-        '()
-        'jumpable
-        params
-        attribs
-        body))))
+       (if (univ-mod-jumpable-is-field? ctx)
+
+           (univ-add-field
+            (univ-make-empty-defs)
+            (univ-field
+             root-name
+             'jumpable
+             (univ-emit-fn-decl ctx #f 'jumpable params body)
+             attribs))
+
+           (univ-add-method
+            (univ-make-empty-defs)
+            (univ-method
+             (^prefix root-name);;;;;;;;;;;;;;;;;;;;(^mod-method (ctx-module-name ctx) root-name)
+             '()
+             'jumpable
+             params
+             attribs
+             body)))))
 
 (define (univ-emit-function-attribs ctx name attribs)
   (case (target-name (ctx-target ctx))

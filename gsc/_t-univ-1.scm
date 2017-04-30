@@ -1274,14 +1274,19 @@
     (else
      (tt"333"(^global-function (^prefix name))))))
 
+(define (univ-mod-jumpable-is-field? ctx)
+  (eq? (target-name (ctx-target ctx)) 'ruby))
+
 (define (univ-emit-mod-jumpable ctx mod-name name)
   (if (eq? (univ-procedure-representation ctx) 'class)
       (let ((x (^mod-field mod-name name)))
         (use-global ctx x)
         x)
-      (univ-method-reference
-       ctx
-       (^mod-method mod-name name))))
+      (if (univ-mod-jumpable-is-field? ctx)
+          (^mod-field mod-name name)
+          (univ-method-reference
+           ctx
+           (^mod-method mod-name name)))))
 
 (define (univ-emit-mod-class ctx mod-name name)
   (case (univ-module-representation ctx)
@@ -1778,6 +1783,7 @@
 (define (univ-defs->code ctx root-name defs)
   (univ-emit-defs
    ctx
+   #t
    (case (univ-module-representation ctx)
 
      ((class)
