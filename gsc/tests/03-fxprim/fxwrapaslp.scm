@@ -1,0 +1,23 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define a 0)
+(define b 536870911)
+(define c -536870912)
+(define d 1)
+(define e -1)
+(define f 357913941)
+
+(define (test x)
+  (println (##fxwraparithmetic-shift-left? x 1))
+  (println (##fxwraparithmetic-shift-left? x 2))
+  (println (##fxwraparithmetic-shift-left? x 3))
+  (println (##fxwraparithmetic-shift-left? x 5))
+  (println (##fxwraparithmetic-shift-left? x 10))
+  (println (##fxwraparithmetic-shift-left? x 31)))
+
+(test a)
+(test b)
+(test c)
+(test d)
+(test e)
+(test f)
