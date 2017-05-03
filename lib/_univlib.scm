@@ -502,8 +502,11 @@
   (##exit-cleanup)
   (##exit-with-err-code-no-cleanup err-code))
 
-(define-prim (##exit #!optional (status (macro-EXIT-CODE-OK)))
-  (##exit-with-err-code (##fx+ status 1)))
+(define ##exit #f)
+
+(set! ##exit
+      (lambda (#!optional (status (macro-EXIT-CODE-OK)))
+        (##exit-with-err-code (##fx+ status 1))))
 
 (define-prim (##exit-abnormally)
   (##exit (macro-EXIT-CODE-SOFTWARE)))
@@ -1405,5 +1408,7 @@ function g_os_device_process_status(dev_scm) {
 ;;;----------------------------------------------------------------------------
 
 (##load-vm)
+
+(##exit)
 
 ;;;============================================================================
