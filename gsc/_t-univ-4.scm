@@ -591,10 +591,30 @@
    (lambda (ctx return arg1 arg2)
      (return
       (^fixnum-box
-        (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
-                  (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
-                  (univ-wrap ctx (^<< (^fixnum-unbox arg1)
-                                      (^fixnum-unbox arg2)))))))))
+       (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+                 (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
+                 (univ-wrap ctx (^<< (^fixnum-unbox arg1)
+                                     (^fixnum-unbox arg2)))))))))
+
+(univ-define-prim "##fxwraparithmetic-shift?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+
+                (^if-expr (^> (^- (^fixnum-unbox arg2))
+                              (^int (- univ-word-bits univ-tag-bits)))
+                          (^obj #f)
+                          (^fixnum-box
+                           (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))))
+
+                (^if-expr (^> (^fixnum-unbox arg2)
+                              (^int (- univ-word-bits univ-tag-bits)))
+                          (^obj #f)
+
+                          (^fixnum-box
+                           (univ-wrap ctx (^<< (^fixnum-unbox arg1)
+                                               (^fixnum-unbox arg2))))))))))
 
 (univ-define-prim "##fxarithmetic-shift" #f
   (make-translated-operand-generator
@@ -630,6 +650,19 @@
      (return
       (^fixnum-box (univ-wrap ctx (^<< (^fixnum-unbox arg1)
                                        (^fixnum-unbox arg2))))))))
+
+(univ-define-prim "##fxwraparithmetic-shift-left?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^if-expr (^or (^< (^fixnum-unbox arg2)
+                         (^int 0))
+                     (^> (^fixnum-unbox arg2)
+                         (^int (- univ-word-bits univ-tag-bits))))
+                (^obj #f)
+                (^fixnum-box (univ-wrap ctx
+                                        (^<< (^fixnum-unbox arg1)
+                                             (^fixnum-unbox arg2)))))))))
 
 (univ-define-prim "##fxarithmetic-shift-left" #f
   (make-translated-operand-generator

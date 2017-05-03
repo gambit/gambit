@@ -5464,8 +5464,7 @@ for a discussion of branch cuts.
         (fxwraparithmetic-shift x y)
         (##fxwraparithmetic-shift x y)))))
 
-;;TODO:enable after bootstrap
-;;(define-prim (##fxwraparithmetic-shift? x y))
+(define-prim (##fxwraparithmetic-shift? x y))
 
 (define-prim (##fxarithmetic-shift x y))
 
@@ -5491,8 +5490,7 @@ for a discussion of branch cuts.
         (fxwraparithmetic-shift-left x y)
         (##fxwraparithmetic-shift-left x y)))))
 
-;;TODO:enable after bootstrap
-;;(define-prim (##fxwraparithmetic-shift-left? x y))
+(define-prim (##fxwraparithmetic-shift-left? x y))
 
 (define-prim (##fxarithmetic-shift-left x y))
 
