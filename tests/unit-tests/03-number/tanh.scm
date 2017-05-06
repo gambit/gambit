@@ -3,6 +3,7 @@
 ;;; Test special values
 
 (check-eqv? (tanh 0) 0)
+(check-eqv? (tanh 1) (imag-part (tan +i)))
 
 ;;; Test for accuracy near 0
 
