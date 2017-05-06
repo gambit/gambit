@@ -648,8 +648,11 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^fixnum-box (univ-wrap ctx (^<< (^fixnum-unbox arg1)
-                                       (^fixnum-unbox arg2))))))))
+      (^if-expr (^= (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits 1)))
+                          (^int 0)
+                          (^fixnum-box (univ-wrap ctx
+                                                  (^<< (^fixnum-unbox arg1)
+                                                       (^fixnum-unbox arg2)))))))))
 
 (univ-define-prim "##fxwraparithmetic-shift-left?" #f
   (make-translated-operand-generator
@@ -660,9 +663,11 @@
                      (^> (^fixnum-unbox arg2)
                          (^int (- univ-word-bits univ-tag-bits))))
                 (^obj #f)
-                (^fixnum-box (univ-wrap ctx
-                                        (^<< (^fixnum-unbox arg1)
-                                             (^fixnum-unbox arg2)))))))))
+                (^if-expr (^= (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits 1)))
+                          (^int 0)
+                          (^fixnum-box (univ-wrap ctx
+                                                  (^<< (^fixnum-unbox arg1)
+                                                       (^fixnum-unbox arg2))))))))))
 
 (univ-define-prim "##fxarithmetic-shift-left" #f
   (make-translated-operand-generator
