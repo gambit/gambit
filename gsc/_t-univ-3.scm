@@ -2296,6 +2296,27 @@ Ruby:
      (compiler-internal-error
       "univ-emit-float-exp, unknown target"))))
 
+(define (univ-emit-float-expm1 ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js java)
+     (^ "Math.expm1(" expr ")"))
+
+    ((php)
+     (^ "expm1(" expr ")"))
+
+    ((python)
+     (^ "math.expm1(" expr ")"))
+
+    ;; TODO : this is not the right way to compute expm1
+    ;; there's a loss of precision here
+    ((ruby)
+     (^ "(Math.exp(" expr ") - 1)"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-expm1, unknown target"))))
+
 (define (univ-emit-float-log ctx expr)
   (case (target-name (ctx-target ctx))
 
@@ -2311,6 +2332,27 @@ Ruby:
     (else
      (compiler-internal-error
       "univ-emit-float-log, unknown target"))))
+
+(define (univ-emit-float-log1p ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js java)
+     (^ "Math.log1p(" expr ")"))
+
+    ((php)
+     (^ "log1p(" expr ")"))
+
+    ((python)
+     (^ "math.log1p(" expr ")"))
+
+    ;; TODO : this is not the right way to compute log1p,
+    ;; loss of precision here
+    ((ruby)
+     (^ "Math.log(1 + " expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-log1p, unknown target"))))
 
 (define (univ-emit-float-sin ctx expr)
   (case (target-name (ctx-target ctx))
@@ -2424,6 +2466,102 @@ Ruby:
      (compiler-internal-error
       "univ-emit-float-atan2, unknown target"))))
 
+(define (univ-emit-float-sinh ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby java)
+     (^ "Math.sinh(" expr ")"))
+
+    ((php)
+     (^ "sinh(" expr ")"))
+
+    ((python)
+     (^ "math.sinh(" expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-sinh, unknown target"))))
+
+(define (univ-emit-float-cosh ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby java)
+     (^ "Math.cosh(" expr ")"))
+
+    ((php)
+     (^ "cosh(" expr ")"))
+
+    ((python)
+     (^ "math.cosh(" expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-cosh, unknown target"))))
+
+(define (univ-emit-float-tanh ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby java)
+     (^ "Math.tanh(" expr ")"))
+
+    ((php)
+     (^ "tanh(" expr ")"))
+
+    ((python)
+     (^ "math.tanh(" expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-tanh, unknown target"))))
+
+(define (univ-emit-float-asinh ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby java)
+     (^ "Math.asinh(" expr ")"))
+
+    ((php)
+     (^ "asinh(" expr ")"))
+
+    ((python)
+     (^ "math.asinh(" expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-asinh, unknown target"))))
+
+(define (univ-emit-float-acosh ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby java)
+     (^ "Math.acosh(" expr ")"))
+
+    ((php)
+     (^ "acosh(" expr ")"))
+
+    ((python)
+     (^ "math.acosh(" expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-acosh, unknown target"))))
+
+(define (univ-emit-float-atanh ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js ruby java)
+     (^ "Math.atanh(" expr ")"))
+
+    ((php)
+     (^ "atanh(" expr ")"))
+
+    ((python)
+     (^ "math.atanh(" expr ")"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-atanh, unknown target"))))
+
 (define (univ-emit-float-expt ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -2459,6 +2597,56 @@ Ruby:
      (compiler-internal-error
       "univ-emit-float-sqrt, unknown target"))))
 
+(define (univ-emit-float-scalbn ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ;; scalbn(x,n) = x * FLT_RADIX^n
+    ;; If FLT_RADIX is 2, scalbn is equivalent to ldexp
+    ((js)
+     (^ "g_num_ldexp(" expr1 ", " expr2 ")"))
+
+    ((python)
+     (^ "ldexp(" expr1 ", " expr2 ")"))
+
+    ;; TODO : possible loss of precision here
+    ((ruby)
+     (^parens (^ expr1 " * 2 **" expr2)))
+
+    ((java)
+     (^parens (^ expr1 " * Math.pow(2, " expr2 ")")))
+
+    ((php)
+     (^parens (^ expr1 * "pow(2, " expr2 ")")))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-scalbn, unknown target"))))
+
+;; Integer exponent of a floating-point value
+(define (univ-emit-float-ilogb ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ "g_num_ilogb(" expr ")"))
+
+    ;; Since FLT_RADIX = 2, ilogb is one less than the exponent returned by frexp
+    ((python)
+     (^ "math.frexp(" expr ")[1] - 1"))
+
+    ;; TODO : implement in other languages
+    ;; Returns Not a Number to indicate this is not implemented
+    ((ruby)
+     (^ "Float::NAN"))
+
+    ((java)
+     (^ "Math.acos(2)"))
+
+    ((php)
+     (^ "acos(2)"))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-float-ilogb, unknown target"))))
 #;
 (
 ;; PHP Math functions
