@@ -1,10 +1,11 @@
 .hgignore
 .hgtags
 .hg
-bin/gambcomp-C
-bin/gambcomp-C.unix
-bin/gambcomp-C.bat
-bin/gambcomp-C.bat.windows
+
+# gambcomp
+bin/gambcomp*
+!bin/gambcomp*.in
+
 bin/gambdoc
 bin/gambdoc.unix
 bin/gambdoc.bat

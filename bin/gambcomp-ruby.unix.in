@@ -1,0 +1,50 @@
+#! /bin/sh
+
+case "$1" in
+
+  "obj")
+
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
+      echo "cat ${BUILD_OBJ_INPUT_FILENAMES} > \"${BUILD_OBJ_OUTPUT_FILENAME}\""
+    fi
+
+    cat ${BUILD_OBJ_INPUT_FILENAMES} > "${BUILD_OBJ_OUTPUT_FILENAME}"
+    ;;
+
+  "dyn")
+
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
+      echo "cat ${BUILD_DYN_INPUT_FILENAMES} > \"${BUILD_DYN_OUTPUT_FILENAME}\""
+    fi
+
+    cat ${BUILD_DYN_INPUT_FILENAMES} > "${BUILD_DYN_OUTPUT_FILENAME}"
+    ;;
+
+  "lib")
+
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
+      echo "echo BUILD_LIB not yet implemented"
+    fi
+
+    echo BUILD_LIB not yet implemented
+    ;;
+
+  "exe")
+
+    if test "${GAMBCOMP_VERBOSE}" != ""; then
+      echo "echo \"#! /usr/bin/env ruby\" > \"${BUILD_EXE_OUTPUT_FILENAME}\""
+      echo "cat ${BUILD_EXE_INPUT_FILENAMES} \"${GAMBITDIR_LIB}/_gambit.rb\" >> \"${BUILD_EXE_OUTPUT_FILENAME}\""
+      echo "chmod +x \"${BUILD_EXE_OUTPUT_FILENAME}\""
+    fi
+
+    echo "#! /usr/bin/env ruby" > "${BUILD_EXE_OUTPUT_FILENAME}"
+    cat ${BUILD_EXE_INPUT_FILENAMES} "${GAMBITDIR_LIB}/_gambit.rb" >> "${BUILD_EXE_OUTPUT_FILENAME}"
+    chmod +x "${BUILD_EXE_OUTPUT_FILENAME}"
+    ;;
+
+  *)
+    echo "gambcomp-ruby unknown operation \"$1\""
+    exit 1
+    ;;
+
+esac

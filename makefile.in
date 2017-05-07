@@ -147,7 +147,7 @@ fake_target:
 doc info pdf html txt: fake_target
 	@cd doc && $(MAKE) $(MDEFINES) $@
 
-check ut ut-C ut-js ut-python st st-C st-js st-python: fake_target all
+check ut ut-C ut-js ut-python ut-ruby ut-php st st-C st-js st-python st-ruby st-php: fake_target all
 	@cd tests && $(MAKE) $(MDEFINES) $@
 
 bench: fake_target all
