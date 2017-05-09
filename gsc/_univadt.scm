@@ -595,8 +595,14 @@
 (define-macro (^float-exp val)
   `(univ-emit-float-exp ctx ,val))
 
+(define-macro (^float-expm1 val)
+  `(univ-emit-float-expm1 ctx ,val))
+
 (define-macro (^float-log val)
   `(univ-emit-float-log ctx ,val))
+
+(define-macro (^float-log1p val)
+  `(univ-emit-float-log1p ctx ,val))
 
 (define-macro (^float-sin val)
   `(univ-emit-float-sin ctx ,val))
@@ -619,11 +625,35 @@
 (define-macro (^float-atan2 val1 val2)
   `(univ-emit-float-atan2 ctx ,val1 ,val2))
 
+(define-macro (^float-sinh val)
+  `(univ-emit-float-sinh ctx ,val))
+
+(define-macro (^float-cosh val)
+  `(univ-emit-float-cosh ctx ,val))
+
+(define-macro (^float-tanh val)
+  `(univ-emit-float-tanh ctx ,val))
+
+(define-macro (^float-asinh val)
+  `(univ-emit-float-asinh ctx ,val))
+
+(define-macro (^float-acosh val)
+  `(univ-emit-float-acosh ctx ,val))
+
+(define-macro (^float-atanh val)
+  `(univ-emit-float-atanh ctx ,val))
+
 (define-macro (^float-expt val1 val2)
   `(univ-emit-float-expt ctx ,val1 ,val2))
 
 (define-macro (^float-sqrt val)
   `(univ-emit-float-sqrt ctx ,val))
+
+(define-macro (^float-scalbn val1 val2)
+  `(univ-emit-float-scalbn ctx ,val1 ,val2))
+
+(define-macro (^float-ilogb val)
+  `(univ-emit-float-ilogb ctx ,val))
 
 (define-macro (^float-integer? val)
   `(univ-emit-float-integer? ctx ,val))

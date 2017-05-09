@@ -648,8 +648,11 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^fixnum-box (univ-wrap ctx (^<< (^fixnum-unbox arg1)
-                                       (^fixnum-unbox arg2))))))))
+      (^if-expr (^= (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits 1)))
+                          (^int 0)
+                          (^fixnum-box (univ-wrap ctx
+                                                  (^<< (^fixnum-unbox arg1)
+                                                       (^fixnum-unbox arg2)))))))))
 
 (univ-define-prim "##fxwraparithmetic-shift-left?" #f
   (make-translated-operand-generator
@@ -660,9 +663,11 @@
                      (^> (^fixnum-unbox arg2)
                          (^int (- univ-word-bits univ-tag-bits))))
                 (^obj #f)
-                (^fixnum-box (univ-wrap ctx
-                                        (^<< (^fixnum-unbox arg1)
-                                             (^fixnum-unbox arg2)))))))))
+                (^if-expr (^= (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits 1)))
+                          (^int 0)
+                          (^fixnum-box (univ-wrap ctx
+                                                  (^<< (^fixnum-unbox arg1)
+                                                       (^fixnum-unbox arg2))))))))))
 
 (univ-define-prim "##fxarithmetic-shift-left" #f
   (make-translated-operand-generator
@@ -1008,32 +1013,32 @@
 (univ-define-prim "##flsinh" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-sinh (^flonum-unbox arg)))))))
 
 (univ-define-prim "##flcosh" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-cosh (^flonum-unbox arg)))))))
 
 (univ-define-prim "##fltanh" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-tanh (^flonum-unbox arg)))))))
 
 (univ-define-prim "##flasinh" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-asinh (^flonum-unbox arg)))))))
 
 (univ-define-prim "##flacosh" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-acosh (^flonum-unbox arg)))))))
 
 (univ-define-prim "##flatanh" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-atanh (^flonum-unbox arg)))))))
 
 (univ-define-prim "##flexpt" #f
   (make-translated-operand-generator
@@ -1076,22 +1081,22 @@
 (univ-define-prim "##flscalbn" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-scalbn (^flonum-unbox arg1) (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##flilogb" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^fixnum-box (^float-ilogb (^flonum-unbox arg)))))))
 
 (univ-define-prim "##flexpm1" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-expm1 (^flonum-unbox arg)))))))
 
 (univ-define-prim "##fllog1p" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^flonum-box (^float (exact->inexact #xC0FFEE))))))) ;; TODO
+     (return (^flonum-box (^float-log1p (^flonum-unbox arg)))))))
 
 (univ-define-prim-bool "##flinteger?" #t
   (make-translated-operand-generator

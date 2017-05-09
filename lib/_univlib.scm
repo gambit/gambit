@@ -525,8 +525,8 @@
 
 (define ##min-fixnum -536870912)
 (define ##max-fixnum 536870911)
-(define ##fixnum-width 29)
-(define ##fixnum-width-neg -29)
+(define ##fixnum-width 30)
+(define ##fixnum-width-neg -30)
 (define ##bignum.adigit-width 14)
 (define ##bignum.mdigit-width 14)
 (define ##max-char 65535)

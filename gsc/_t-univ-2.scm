@@ -3467,6 +3467,59 @@ EOF
             (compiler-internal-error
              "univ-rtlib-feature get_host_global_var, unknown target"))))))
 
+    ;; Functions ilogb and ldexp adapted from :
+    ;; http://croquetweak.blogspot.ca/2014/08/deconstructing-floats-frexp-and-ldexp.html
+    ;;
+    ;; TODO : Implement ldexp and ilogb in other target languages where required
+    ((ilogb)
+     (rts-method
+      'ilogb
+      '(public)
+      'f64
+      (list (univ-field 'value 'f64))
+      "\n"
+      '()
+      (lambda (ctx)
+        (case (target-name (ctx-target ctx))
+          ((js)
+           "
+            var data = new DataView(new ArrayBuffer(8));
+            data.setFloat64(0, value);
+            var bits = (data.getUint32(0) >>> 20) & 0x7FF;
+            if (bits === 0) { // denormal
+                data.setFloat64(0, value * Math.pow(2, 64));
+                bits = ((data.getUint32(0) >>> 20) & 0x7FF) - 64;
+            }
+            var exponent = bits - 1022;
+            return exponent - 1;
+           ")
+          (else
+           (compiler-internal-error
+            "univ-rtlib-feature ilogb, unknown target"))))))
+
+    ((ldexp)
+     (rts-method
+      'ldexp
+      '(public)
+      'f64
+      (list (univ-field 'mantissa 'f64)
+            (univ-field 'exponent 'f64))
+      "\n"
+      '()
+      (lambda (ctx)
+        (case (target-name (ctx-target ctx))
+          ((js)
+           "
+            var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
+            var result = mantissa;
+            for (var i = 0; i < steps; i++)
+              result *= Math.pow(2, Math.floor((exponent + i) / steps));
+            return result;
+           ")
+          (else
+           (compiler-internal-error
+            "univ-rtlib-feature ldexp, unknown target"))))))
+
     (else
      (compiler-internal-error
       "univ-rtlib-feature, unknown runtime system feature" feature))))

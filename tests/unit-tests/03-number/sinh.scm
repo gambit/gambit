@@ -3,6 +3,7 @@
 ;;; Test special values
 
 (check-eqv? (sinh 0) 0)
+(check-eqv? (sinh 1) (imag-part (sin +i)))
 
 ;;; Test for accuracy near 0
 
