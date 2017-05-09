@@ -967,6 +967,8 @@
         (let ((dest (^local-var 'dest)))
           (^ (^assign (gvm-state-pollcount-use ctx 'wr)
                       100)
+             (if (univ-stack-resizable? ctx)
+                 (^array-shrink! (^rts-field-use 'stack) (^+ (^rts-field-use 'sp) (^int 1))))
              (^return dest))))))
 
     ((build_rest)
