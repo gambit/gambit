@@ -2284,13 +2284,13 @@ Ruby:
   (case (target-name (ctx-target ctx))
 
     ((js ruby java)
-     (^ "Math.exp(" expr ")"))
-
-    ((php)
-     (^ "exp(" expr ")"))
+     (^call-prim (^member 'Math 'exp) expr))
 
     ((python)
-     (^ "math.exp(" expr ")"))
+     (^call-prim (^member 'math 'exp) expr))
+
+    ((php)
+     (^call-prim "exp" expr))
 
     (else
      (compiler-internal-error
@@ -2300,13 +2300,13 @@ Ruby:
   (case (target-name (ctx-target ctx))
 
     ((js java)
-     (^ "Math.expm1(" expr ")"))
-
-    ((php)
-     (^ "expm1(" expr ")"))
+     (^call-prim (^member 'Math 'expm1) expr))
 
     ((python)
-     (^ "math.expm1(" expr ")"))
+     (^call-prim (^member 'math 'expm1) expr))
+
+    ((php)
+     (^call-prim "expm1" expr))
 
     ;; TODO : this is not the right way to compute expm1
     ;; there's a loss of precision here
@@ -2321,13 +2321,13 @@ Ruby:
   (case (target-name (ctx-target ctx))
 
     ((js ruby java)
-     (^ "Math.log(" expr ")"))
-
-    ((php)
-     (^ "log(" expr ")"))
+     (^call-prim (^member 'Math 'log) expr))
 
     ((python)
-     (^ "math.log(" expr ")"))
+     (^call-prim (^member 'math 'log) expr))
+
+    ((php)
+     (^call-prim "log" expr))
 
     (else
      (compiler-internal-error
@@ -2337,13 +2337,13 @@ Ruby:
   (case (target-name (ctx-target ctx))
 
     ((js java)
-     (^ "Math.log1p(" expr ")"))
-
-    ((php)
-     (^ "log1p(" expr ")"))
+     (^call-prim (^member 'Math 'log1p) expr))
 
     ((python)
-     (^ "math.log1p(" expr ")"))
+     (^call-prim (^member 'math 'log1p) expr))
+
+    ((php)
+     (^call-prim "log1p" expr))
 
     ;; TODO : this is not the right way to compute log1p,
     ;; loss of precision here
@@ -2355,224 +2355,245 @@ Ruby:
       "univ-emit-float-log1p, unknown target"))))
 
 (define (univ-emit-float-sin ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.sin(" expr ")"))
-
-    ((php)
-     (^ "sin(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'sin))
 
     ((python)
-     (^ "math.sin(" expr ")"))
+     (^member 'math 'sin))
+
+    ((php)
+     'sin)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-sin, unknown target"))))
+      "univ-emit-float-sin, unknown target")))
+   expr))
 
 (define (univ-emit-float-cos ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.cos(" expr ")"))
-
-    ((php)
-     (^ "cos(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'cos))
 
     ((python)
-     (^ "math.cos(" expr ")"))
+     (^member 'math 'cos))
+
+    ((php)
+     'cos)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-cos, unknown target"))))
+      "univ-emit-float-cos, unknown target")))
+   expr))
 
 (define (univ-emit-float-tan ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.tan(" expr ")"))
-
-    ((php)
-     (^ "tan(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'tan))
 
     ((python)
-     (^ "math.tan(" expr ")"))
+     (^member 'math 'tan))
+
+    ((php)
+     'tan)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-tan, unknown target"))))
+      "univ-emit-float-tan, unknown target")))
+   expr))
 
 (define (univ-emit-float-asin ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.asin(" expr ")"))
-
-    ((php)
-     (^ "asin(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'asin))
 
     ((python)
-     (^ "math.asin(" expr ")"))
+     (^member 'math 'asin))
+
+    ((php)
+     'asin)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-asin, unknown target"))))
+      "univ-emit-float-asin, unknown target")))
+   expr))
 
 (define (univ-emit-float-acos ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.acos(" expr ")"))
-
-    ((php)
-     (^ "acos(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'acos))
 
     ((python)
-     (^ "math.acos(" expr ")"))
+     (^member 'math 'acos))
+
+    ((php)
+     'acos)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-acos, unknown target"))))
+      "univ-emit-float-acos, unknown target")))
+   expr))
 
 (define (univ-emit-float-atan ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.atan(" expr ")"))
-
-    ((php)
-     (^ "atan(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'atan))
 
     ((python)
-     (^ "math.atan(" expr ")"))
+     (^member 'math 'atan))
+
+    ((php)
+     'atan)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-atan, unknown target"))))
+      "univ-emit-float-atan, unknown target")))
+   expr))
 
 (define (univ-emit-float-atan2 ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.atan2(" expr1 "," expr2 ")"))
+    ((js ruby java python)
+     (^call-prim (^member 'Math 'atan2) expr1 expr2))
 
     ((php)
-     (^ "atan2(" expr1 "," expr2 ")"))
-
-    ((python)
-     (^ "math.atan2(" expr1 "," expr2 ")"))
+     (^call-prim "atan2" expr1 expr2))
 
     (else
      (compiler-internal-error
       "univ-emit-float-atan2, unknown target"))))
 
 (define (univ-emit-float-sinh ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.sinh(" expr ")"))
-
-    ((php)
-     (^ "sinh(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'sinh))
 
     ((python)
-     (^ "math.sinh(" expr ")"))
+     (^member 'math 'sinh))
+
+    ((php)
+     'sinh)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-sinh, unknown target"))))
+      "univ-emit-float-sinh, unknown target")))
+   expr))
 
 (define (univ-emit-float-cosh ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.cosh(" expr ")"))
-
-    ((php)
-     (^ "cosh(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'cosh))
 
     ((python)
-     (^ "math.cosh(" expr ")"))
+     (^member 'math 'cosh))
+
+    ((php)
+     'cosh)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-cosh, unknown target"))))
+      "univ-emit-float-cosh, unknown target")))
+   expr))
 
 (define (univ-emit-float-tanh ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.tanh(" expr ")"))
-
-    ((php)
-     (^ "tanh(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'tanh))
 
     ((python)
-     (^ "math.tanh(" expr ")"))
+     (^member 'math 'tanh))
+
+    ((php)
+     'tanh)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-tanh, unknown target"))))
+      "univ-emit-float-tanh, unknown target")))
+   expr))
 
 (define (univ-emit-float-asinh ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.asinh(" expr ")"))
-
-    ((php)
-     (^ "asinh(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'asinh))
 
     ((python)
-     (^ "math.asinh(" expr ")"))
+     (^member 'math 'asinh))
+
+    ((php)
+     'asinh)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-asinh, unknown target"))))
+      "univ-emit-float-asinh, unknown target")))
+   expr))
 
 (define (univ-emit-float-acosh ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.acosh(" expr ")"))
-
-    ((php)
-     (^ "acosh(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'acosh))
 
     ((python)
-     (^ "math.acosh(" expr ")"))
+     (^member 'math 'acosh))
+
+    ((php)
+     'acosh)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-acosh, unknown target"))))
+      "univ-emit-float-acosh, unknown target")))
+   expr))
 
 (define (univ-emit-float-atanh ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.atanh(" expr ")"))
-
-    ((php)
-     (^ "atanh(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'atanh))
 
     ((python)
-     (^ "math.atanh(" expr ")"))
+     (^member 'math 'atanh))
+
+    ((php)
+     'atanh)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-atanh, unknown target"))))
+      "univ-emit-float-atanh, unknown target")))
+   expr))
 
 (define (univ-emit-float-expt ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js java)
-     (^ "Math.pow(" expr1 "," expr2 ")"))
-
-    ((php)
-     (^ "pow(" expr1 "," expr2 ")"))
+     (^call-prim (^member 'Math 'pow) expr1 expr2))
 
     ((python)
-     (^ "math.pow(" expr1 "," expr2 ")"))
+     (^call-prim (^member 'math 'pow)) expr1 expr2)
+
+    ((php)
+     (^call-prim 'pow expr1 expr2))
 
     ((ruby)
      (^ expr1 " ** " expr2))
@@ -2582,20 +2603,22 @@ Ruby:
       "univ-emit-float-expt, unknown target"))))
 
 (define (univ-emit-float-sqrt ctx expr)
-  (case (target-name (ctx-target ctx))
+  (^call-prim
+   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
-     (^ "Math.sqrt(" expr ")"))
-
-    ((php)
-     (^ "sqrt(" expr ")"))
+     ((js ruby java)
+      (^member 'Math 'sqrt))
 
     ((python)
-     (^ "math.sqrt(" expr ")"))
+     (^member 'math 'sqrt))
+
+    ((php)
+     'sqrt)
 
     (else
      (compiler-internal-error
-      "univ-emit-float-sqrt, unknown target"))))
+      "univ-emit-float-sqrt, unknown target")))
+   expr))
 
 (define (univ-emit-float-scalbn ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -2603,10 +2626,10 @@ Ruby:
     ;; scalbn(x,n) = x * FLT_RADIX^n
     ;; If FLT_RADIX is 2, scalbn is equivalent to ldexp
     ((js)
-     (^ "g_num_ldexp(" expr1 ", " expr2 ")"))
+     (^call-prim (^rts-method-use 'ldexp) expr1 expr2))
 
     ((python)
-     (^ "ldexp(" expr1 ", " expr2 ")"))
+     (^call-prim (^member 'math 'ldexp) expr1 expr2))
 
     ;; TODO : possible loss of precision here
     ((ruby)
@@ -2627,11 +2650,11 @@ Ruby:
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^ "g_num_ilogb(" expr ")"))
+     (^call-prim (^rts-method-use 'ilogb) expr))
 
     ;; Since FLT_RADIX = 2, ilogb is one less than the exponent returned by frexp
     ((python)
-     (^ "math.frexp(" expr ")[1] - 1"))
+     (^parens (^ "math.frexp(" expr ")[1] - 1")))
 
     ;; TODO : implement in other languages
     ;; Returns Not a Number to indicate this is not implemented

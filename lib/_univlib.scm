@@ -604,44 +604,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; Required numeric functions
-
-(macro-case-target
- ((js)
-  (##inline-host-declaration
-   ;; Adapted from http://croquetweak.blogspot.ca/2014/08/deconstructing-floats-frexp-and-ldexp.html
-   "
-function g_num_ilogb(value) {
-    var data = new DataView(new ArrayBuffer(8));
-    data.setFloat64(0, value);
-
-    var bits = (data.getUint32(0) >>> 20) & 0x7FF;
-    if (bits === 0) { // denormal
-        data.setFloat64(0, value * Math.pow(2, 64));
-        bits = ((data.getUint32(0) >>> 20) & 0x7FF) - 64;
-    }
-    var exponent = bits - 1022;
-
-    return exponent - 1;
-}
-
-function g_num_ldexp(mantissa, exponent) {
-    var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
-    var result = mantissa;
-    for (var i = 0; i < steps; i++)
-        result *= Math.pow(2, Math.floor((exponent + i) / steps));
-    return result;
-}
-"))
-
- ;; TODO
- ;; Implement ldexp and ilogb in other target languages where required
- ;; Also, ruby needs a correct implementation of log1p and expm1
- )
-
-;;;----------------------------------------------------------------------------
-
-
 (##include "_kernel.scm")
 (##include "_system.scm")
 (##include "_num.scm")
