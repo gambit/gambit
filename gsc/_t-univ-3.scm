@@ -2639,7 +2639,7 @@ Ruby:
      (^parens (^ expr1 " * Math.pow(2, " expr2 ")")))
 
     ((php)
-     (^parens (^ expr1 * "pow(2, " expr2 ")")))
+     (^parens (^ expr1 " * pow(2, " expr2 ")")))
 
     (else
      (compiler-internal-error
