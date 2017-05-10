@@ -967,7 +967,8 @@
         (let ((dest (^local-var 'dest)))
           (^ (^assign (gvm-state-pollcount-use ctx 'wr)
                       100)
-             (if (univ-stack-resizable? ctx)
+             (if (and (univ-stack-resizable? ctx)
+                      (not (eq? (target-name (ctx-target ctx)) 'python))) ;; TODO : find an efficient way to shrink the stack in python
                  (^array-shrink! (^rts-field-use 'stack) (^+ (^rts-field-use 'sp) (^int 1)))
                  (^))
              (^return dest))))))
