@@ -2768,20 +2768,24 @@ tanh
      (^call-prim (^member "Object" 'is) expr1 expr2))
 
     ((python)
-     (^if-expr (^= expr1 (^float 0.0)) ;; (eqv? -0.0 0.0) => #f
-               (^and (^= expr1 expr2)
-                     (^= (^call-prim (^member 'math 'copysign) (^float 1.0) expr1)
-                         (^call-prim (^member 'math 'copysign) (^float 1.0) expr2)))
-               (^if-expr (^!= expr1 expr1) ;; (eqv? +nan.0 +nan.0) => #t
-                         (^!= expr2 expr2)
-                         (^= expr1 expr2)))) ;; all other floats
+     (^if-expr (^= expr1 expr2)
+               (^= (^call-prim (^member 'math 'copysign) (^float 1.0) expr1)
+                   (^call-prim (^member 'math 'copysign) (^float 1.0) expr2))
+               (^and (^!= expr1 expr1)
+                     (^!= expr2 expr2))))
 
     ((php)
-     (^if-expr (^= expr1 (^float 0.0)) ;; (eqv? -0.0 0.0) => #f
-               (^= (^concat expr1 (^str "$")) (^concat expr2 (^str "$"))) ;; In PHP, "-0" == "0", but "-0$" != "0$"...
-               (^if-expr (^call-prim 'is_nan expr1) ;; (eqv? +nan.0 +nan.0) => #t
-                         (^call-prim 'is_nan expr2)
-                         (^= expr1 expr2))))
+     (^eq? (^call-prim "strval" expr1)
+           (^call-prim "strval" expr2)))
+
+    ((ruby)
+     (^if-expr (^= expr1 expr2)
+               (^or (^!= expr1 (^float 0.0))
+                    (^and (^= expr2 (^float 0.0))
+                          ;; 0.0.angle => 0, -0.0.angle => 3.1415...
+                          (^= (^call-prim (^member expr1 'angle)) (^call-prim (^member expr2 'angle)))))
+               (^and (^!= expr1 expr1)
+                     (^!= expr2 expr2))))
 
     (else
      (^= expr1 expr2))))
