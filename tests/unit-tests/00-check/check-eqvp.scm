@@ -9,6 +9,5 @@
 (check-eqv? '() '())
 (check-eqv? 0.0 0.0)
 (check-eqv? -0.0 -0.0)
-(check-eqv? +nan.0 +nan.0)
 (check-eqv? +inf.0 +inf.0)
 (check-eqv? -inf.0 -inf.0)
