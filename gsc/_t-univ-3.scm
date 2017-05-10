@@ -2465,11 +2465,14 @@ Ruby:
 (define (univ-emit-float-atan2 ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby java python)
+    ((js ruby java)
      (^call-prim (^member 'Math 'atan2) expr1 expr2))
 
+    ((python)
+     (^call-prim (^member 'math 'atan2) expr1 expr2))
+
     ((php)
-     (^call-prim "atan2" expr1 expr2))
+     (^call-prim 'atan2 expr1 expr2))
 
     (else
      (compiler-internal-error
@@ -2763,6 +2766,22 @@ tanh
 
     ((js)
      (^call-prim (^member "Object" 'is) expr1 expr2))
+
+    ((python)
+     (^if-expr (^= expr1 (^float 0.0)) ;; (eqv? -0.0 0.0) => #f
+               (^and (^= expr1 expr2)
+                     (^= (^call-prim (^member 'math 'copysign) (^float 1.0) expr1)
+                         (^call-prim (^member 'math 'copysign) (^float 1.0) expr2)))
+               (^if-expr (^!= expr1 expr1) ;; (eqv? +nan.0 +nan.0) => #t
+                         (^!= expr2 expr2)
+                         (^= expr1 expr2)))) ;; all other floats
+
+    ((php)
+     (^if-expr (^= expr1 (^float 0.0)) ;; (eqv? -0.0 0.0) => #f
+               (^= (^concat expr1 (^str "$")) (^concat expr2 (^str "$"))) ;; In PHP, "-0" == "0", but "-0$" != "0$"...
+               (^if-expr (^call-prim 'is_nan expr1) ;; (eqv? +nan.0 +nan.0) => #t
+                         (^call-prim 'is_nan expr2)
+                         (^= expr1 expr2))))
 
     (else
      (^= expr1 expr2))))
