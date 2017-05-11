@@ -12,7 +12,7 @@
 
 ;; Equivalent NaNs should be eqv?
 (let ((x (fl/ 0. 0.)))
-  (eqv? x x))
+  (check-eqv? x x))
 
 (check-eqv? +inf.0 +inf.0)
 (check-eqv? -inf.0 -inf.0)
