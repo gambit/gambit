@@ -1,5 +1,5 @@
-                      README file for Gambit-C
-                      ========================
+                      README file for Gambit
+                      ======================
 
 Quick-install instructions for a typical installation
 -----------------------------------------------------
@@ -7,10 +7,11 @@ Quick-install instructions for a typical installation
     git clone https://github.com/gambit/gambit.git
     cd gambit
     ./configure
-    make -j4 latest-release
+    make -j4 current-gsc-boot
     ./configure --enable-single-host
     make -j4 from-scratch
     make check
+    make -j4 doc
     sudo make install
 
 Detailed installation instructions are given in the file "INSTALL.txt".
@@ -19,15 +20,15 @@ Detailed installation instructions are given in the file "INSTALL.txt".
 General information
 -------------------
 
-Gambit-C includes a Scheme interpreter and a Scheme compiler which can
+Gambit includes a Scheme interpreter and a Scheme compiler which can
 be used to build standalone executables.  Because the compiler
 generates portable C code it is fairly easy to port to any platform
 with a decent C compiler.
 
-The Gambit-C system conforms to the R4RS, R5RS and IEEE Scheme standards.
+The Gambit system conforms to the R4RS, R5RS and IEEE Scheme standards.
 The full numeric tower is implemented, including: infinite precision
 integers (bignums), rationals, inexact reals (floating point numbers),
-and complex numbers.  Gambit-C supports a number of extensions to the
+and complex numbers.  Gambit supports a number of extensions to the
 standards including:
 
  - an optimizing compiler
@@ -79,10 +80,10 @@ standards including:
  - unhygienic macros
  - and many other things!
 
-The user manual for the Gambit-C system is available in PDF format
-(the file "doc/gambit-c.pdf"), in HTML format (the file
-"doc/gambit-c.html"), in text format (the file "doc/gambit-c.txt") and
-in "info" format (the files "doc/gambit-c.info*").
+The user manual for the Gambit system is available in PDF format
+(the file "doc/gambit.pdf"), in HTML format (the file
+"doc/gambit.html"), in text format (the file "doc/gambit.txt") and
+in "info" format (the files "doc/gambit.info*").
 
 The Gambit mailing list (gambit-list@iro.umontreal.ca) is a good
 place to ask questions about Gambit.
