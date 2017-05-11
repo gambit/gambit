@@ -2104,7 +2104,9 @@
                (^float-floor expr)))
 
     ((ruby)
-     (^ expr ".truncate"))
+     (^if-expr (^ "[0, Float::INFINITY, -Float::INFINITY, Float::NAN].include?(" expr ")")
+               expr
+               (^call-prim (^member expr 'truncate))))
 
     (else
      (compiler-internal-error
