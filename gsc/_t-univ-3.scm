@@ -2595,7 +2595,7 @@ Ruby:
      (^call-prim (^member 'Math 'pow) expr1 expr2))
 
     ((python)
-     (^call-prim (^member 'math 'pow)) expr1 expr2)
+     (^call-prim (^member 'math 'pow) expr1 expr2))
 
     ((php)
      (^call-prim 'pow expr1 expr2))
