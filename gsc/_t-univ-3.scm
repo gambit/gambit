@@ -4086,7 +4086,7 @@ tanh
      (^float-toint (^/ expr1 expr2)))
 
     ((python ruby)
-     (^float-toint (^/ (^float-fromint expr1) (^float-fromint expr2))))
+     (^float-toint (^parens (^/ (^float-fromint expr1) (^float-fromint expr2)))))
 
     ((java)
      (^/ expr1 expr2))
