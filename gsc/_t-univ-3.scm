@@ -2758,6 +2758,9 @@ tanh
     ((php)
      (^call-prim "is_nan" expr))
 
+    ((ruby)
+     (^call-prim (^member expr 'nan?)))
+
     (else
      (^!= expr expr))))
 
@@ -2780,15 +2783,11 @@ tanh
 
     ((ruby)
      (^if-expr (^= expr1 expr2)
-               (^or (^!= expr1 (^float 0.0))
-                    (^parens
-                     (^and (^= expr2 (^float 0.0))
-                           ;; -0.0 vs -0.0 is handled with : a.equal?(b) or (-a).equal?(-b)
-                           (^parens
-                            (^or (^call-prim (^member expr1 'equal?) expr2)
-                                 (^call-prim (^member (^parens (^- expr1)) 'equal?) (^- expr2)))))))
-               (^and (^!= expr1 expr1)
-                     (^!= expr2 expr2))))
+               ;; 0.0.angle => 0.0, -0.0.angle => 3.1415...
+               (^= (^call-prim (^member expr1 'angle))
+                   (^call-prim (^member expr2 'angle)))
+               (^and (^float-nan? expr1)
+                     (^float-nan? expr2))))
 
     (else
      (^= expr1 expr2))))
