@@ -568,6 +568,9 @@
 (define-macro (^float-toint val)
   `(univ-emit-float-toint ctx ,val))
 
+(define-macro (^float-math fn . params)
+  `(univ-emit-float-math ctx ,fn ,@params))
+
 (define-macro (^float-abs val)
   `(univ-emit-float-abs ctx ,val))
 

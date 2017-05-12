@@ -603,6 +603,8 @@
         (let ((word (substring (car args) 1 (string-length (car args)))))
           (cond ((equal? word "stress")
                  (set! stress? #t))
+                ((equal? word "no-cleanup")
+                 (set! cleanup? #f))
                 ((member word '("C" "js" "python" "ruby" "php" "java"))
                  (set! targets
                        (cons (string->symbol word)

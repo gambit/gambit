@@ -2,7 +2,7 @@
 
 (define (test a b)
   (let ((x (##flabs a)))
-    (println (##fl= x b))))
+    (println (##fleqv? x b))))
 
 (test  1.4  1.4)
 (test  1.5  1.5)
@@ -12,3 +12,39 @@
 (test -3.6  3.6)
 
 (test  2.2  9.1)
+
+(define a 0.0)
+(define b -0.0)
+(define c (##fl/ 1.0 a))
+(define d (##fl/ -1.0 a))
+(define e (##fl/ a a))
+
+(test a a)
+(test a b)
+(test a c)
+(test a d)
+(test a e)
+
+(test b a)
+(test b b)
+(test b c)
+(test b d)
+(test b e)
+
+(test c a)
+(test c b)
+(test c c)
+(test c d)
+(test c e)
+
+(test d a)
+(test d b)
+(test d c)
+(test d d)
+(test d e)
+
+(test e a)
+(test e b)
+(test e c)
+(test e d)
+;;(test e e)

@@ -2,11 +2,12 @@
 
 
 (define (test val expected)
-  (println (if (##fl= val expected)
+  (println (if (##fleqv? val expected)
                "same"
                "diff")))
 
 (test (##flsquare 0.0) 0.0)
+(test (##flsquare -0.0) 0.0)
 (test (##flsquare 11.0) 121.0)
 (test (##flsquare -11.0) 121.0)
 (test (##flsquare 23170.0) 536848900.0)
