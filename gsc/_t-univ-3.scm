@@ -2099,9 +2099,9 @@
                (^float-floor expr)))
 
     ((ruby)
-     (^if-expr (^ "[0, Float::INFINITY, -Float::INFINITY, Float::NAN].include?(" expr ")")
-               expr
-               (^call-prim (^member expr 'truncate))))
+     (^if-expr (^float-finite? expr)
+               (^call-prim (^member expr 'truncate))
+               expr))
 
     (else
      (compiler-internal-error
@@ -2732,6 +2732,9 @@ tanh
 
     ((php)
      (^call-prim "is_finite" expr))
+
+    ((ruby)
+     (^call-prim (^member expr 'finite?)))
 
     (else
      ;;TODO: move constants elsewhere
