@@ -11,8 +11,8 @@
 (check-eqv? -0.0 -0.0)
 
 ;; Equivalent NaNs should be eqv?
-(let ((x (fl/ 0. 0.)))
-  (check-eqv? x x))
+(define (f x y) (fl/ x y))
+(let ((x (f 0.0 0.0)) (y (f 0.0 0.0))) (check-eqv? x y))
 
 (check-eqv? +inf.0 +inf.0)
 (check-eqv? -inf.0 -inf.0)
