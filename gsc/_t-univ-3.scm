@@ -1941,58 +1941,53 @@
 (define (univ-emit-float ctx val)
   ;; TODO: generate correct syntax
   (univ-constant
-   (let ((str (number->string val)))
+   (cond
+    ((nan? val)
+     (case (target-name (ctx-target ctx))
+       ((js)     "Number.NaN")
+       ((java)   "Double.NaN")
+       ((php)    "NAN")
+       ((python) "float('nan')")
+       ((ruby)   "Float::NAN")
+       (else
+        (compiler-internal-error
+         "univ-emit-float, unknown target"))))
 
-     (cond ((string=? str "+nan.0")
-            (case (target-name (ctx-target ctx))
-              ((js)     "Number.NaN")
-              ((java)   "Double.NaN")
-              ((php)    "NAN")
-              ((python) "float('nan')")
-              ((ruby)   "Float::NAN")
-              (else
-               (compiler-internal-error
-                "univ-emit-float, unknown target"))))
+    ((eqv? val +inf.0)
+     (case (target-name (ctx-target ctx))
+       ((js)     "Number.POSITIVE_INFINITY")
+       ((java)   "Double.POSITIVE_INFINITY")
+       ((php)    "INF")
+       ((python) "float('inf')")
+       ((ruby)   "Float::INFINITY")
+       (else
+        (compiler-internal-error
+         "univ-emit-float, unknown target"))))
 
-           ((string=? str "+inf.0")
-            (case (target-name (ctx-target ctx))
-              ((js)     "Number.POSITIVE_INFINITY")
-              ((java)   "Double.POSITIVE_INFINITY")
-              ((php)    "INF")
-              ((python) "float('inf')")
-              ((ruby)   "Float::INFINITY")
-              (else
-               (compiler-internal-error
-                "univ-emit-float, unknown target"))))
+    ((eqv? val -inf.0)
+     (case (target-name (ctx-target ctx))
+       ((js)     "Number.NEGATIVE_INFINITY")
+       ((java)   "Double.NEGATIVE_INFINITY")
+       ((php)    "(-INF)")
+       ((python) "(-float('inf'))")
+       ((ruby)   "(-Float::INFINITY)")
+       (else
+        (compiler-internal-error
+         "univ-emit-float, unknown target"))))
 
-           ((string=? str "-inf.0")
-            (case (target-name (ctx-target ctx))
-              ((js)     "Number.NEGATIVE_INFINITY")
-              ((java)   "Double.NEGATIVE_INFINITY")
-              ((php)    "(-INF)")
-              ((python) "(-float('inf'))")
-              ((ruby)   "(-Float::INFINITY)")
-              (else
-               (compiler-internal-error
-                "univ-emit-float, unknown target"))))
+    ((eqv? val -0.0)
+     (case (target-name (ctx-target ctx))
+       ;; it is strange that in PHP -0.0 is the same as 0.0
+       ((php)    "(0.0*-1)")
+       (else "-0.0")))
 
-           ((and (string=? str "-0.")
-                 (eq? (target-name (ctx-target ctx)) 'php))
-            ;; it is strange that in PHP -0.0 is the same as 0.0
-            "(0.0*-1)")
-
-           ((char=? (string-ref str 0) #\.)
-            (string-append "0" str))
-
-           ((and (char=? (string-ref str 0) #\-)
-                 (char=? (string-ref str 1) #\.))
-            (string-append "-0" (substring str 1 (string-length str))))
-
-           ((char=? (string-ref str (- (string-length str) 1)) #\.)
-            (string-append str "0"))
-
-           (else
-            str)))))
+    (else
+     (let ((str (number->string (abs val))))
+       (string-append
+        (if (negative? val) "-" "")
+        (if (char=? (string-ref str 0) #\.) "0" "") ;; .17 => 0.17
+        str
+        (if (char=? (string-ref str (- (string-length str) 1)) #\.) "0" ""))))))) ;; 22. => 22.0
 
 (define (univ-emit-float-fromint ctx expr)
   (case (target-name (ctx-target ctx))
@@ -2104,7 +2099,9 @@
                (^float-floor expr)))
 
     ((ruby)
-     (^ expr ".truncate"))
+     (^if-expr (^float-finite? expr)
+               (^call-prim (^member expr 'truncate))
+               expr))
 
     (else
      (compiler-internal-error
@@ -2465,11 +2462,14 @@ Ruby:
 (define (univ-emit-float-atan2 ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby java python)
+    ((js ruby java)
      (^call-prim (^member 'Math 'atan2) expr1 expr2))
 
+    ((python)
+     (^call-prim (^member 'math 'atan2) expr1 expr2))
+
     ((php)
-     (^call-prim "atan2" expr1 expr2))
+     (^call-prim 'atan2 expr1 expr2))
 
     (else
      (compiler-internal-error
@@ -2590,7 +2590,7 @@ Ruby:
      (^call-prim (^member 'Math 'pow) expr1 expr2))
 
     ((python)
-     (^call-prim (^member 'math 'pow)) expr1 expr2)
+     (^call-prim (^member 'math 'pow) expr1 expr2))
 
     ((php)
      (^call-prim 'pow expr1 expr2))
@@ -2639,7 +2639,7 @@ Ruby:
      (^parens (^ expr1 " * Math.pow(2, " expr2 ")")))
 
     ((php)
-     (^parens (^ expr1 * "pow(2, " expr2 ")")))
+     (^parens (^ expr1 " * pow(2, " expr2 ")")))
 
     (else
      (compiler-internal-error
@@ -2733,6 +2733,9 @@ tanh
     ((php)
      (^call-prim "is_finite" expr))
 
+    ((ruby)
+     (^call-prim (^member expr 'finite?)))
+
     (else
      ;;TODO: move constants elsewhere
      (^&& (^>= expr (^float -1.7976931348623151e308))
@@ -2755,6 +2758,9 @@ tanh
     ((php)
      (^call-prim "is_nan" expr))
 
+    ((ruby)
+     (^call-prim (^member expr 'nan?)))
+
     (else
      (^!= expr expr))))
 
@@ -2763,6 +2769,25 @@ tanh
 
     ((js)
      (^call-prim (^member "Object" 'is) expr1 expr2))
+
+    ((python)
+     (^if-expr (^= expr1 expr2)
+               (^= (^call-prim (^member 'math 'copysign) (^float 1.0) expr1)
+                   (^call-prim (^member 'math 'copysign) (^float 1.0) expr2))
+               (^and (^!= expr1 expr1)
+                     (^!= expr2 expr2))))
+
+    ((php)
+     (^eq? (^call-prim "strval" expr1)
+           (^call-prim "strval" expr2)))
+
+    ((ruby)
+     (^if-expr (^= expr1 expr2)
+               ;; 0.0.angle => 0.0, -0.0.angle => 3.1415...
+               (^= (^call-prim (^member expr1 'angle))
+                   (^call-prim (^member expr2 'angle)))
+               (^and (^float-nan? expr1)
+                     (^float-nan? expr2))))
 
     (else
      (^= expr1 expr2))))
@@ -4058,7 +4083,7 @@ tanh
      (^float-toint (^/ expr1 expr2)))
 
     ((python ruby)
-     (^float-toint (^/ (^float-fromint expr1) (^float-fromint expr2))))
+     (^float-toint (^parens (^/ (^float-fromint expr1) (^float-fromint expr2)))))
 
     ((java)
      (^/ expr1 expr2))

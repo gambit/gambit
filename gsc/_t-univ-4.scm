@@ -1341,7 +1341,10 @@
 (univ-define-prim "##values" #t
   (make-translated-operand-generator
    (lambda (ctx return . args)
-     (return (^values-box (^array-literal 'scmobj args))))))
+     (return
+      (if (= (length args) 1)
+          (car args)
+          (^values-box (^array-literal 'scmobj args)))))))
 
 (univ-define-prim "##make-values" #f
   (make-translated-operand-generator
