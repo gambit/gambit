@@ -1941,58 +1941,53 @@
 (define (univ-emit-float ctx val)
   ;; TODO: generate correct syntax
   (univ-constant
-   (let ((str (number->string val)))
+   (cond
+    ((nan? val)
+     (case (target-name (ctx-target ctx))
+       ((js)     "Number.NaN")
+       ((java)   "Double.NaN")
+       ((php)    "NAN")
+       ((python) "float('nan')")
+       ((ruby)   "Float::NAN")
+       (else
+        (compiler-internal-error
+         "univ-emit-float, unknown target"))))
 
-     (cond ((string=? str "+nan.0")
-            (case (target-name (ctx-target ctx))
-              ((js)     "Number.NaN")
-              ((java)   "Double.NaN")
-              ((php)    "NAN")
-              ((python) "float('nan')")
-              ((ruby)   "Float::NAN")
-              (else
-               (compiler-internal-error
-                "univ-emit-float, unknown target"))))
+    ((eqv? val +inf.0)
+     (case (target-name (ctx-target ctx))
+       ((js)     "Number.POSITIVE_INFINITY")
+       ((java)   "Double.POSITIVE_INFINITY")
+       ((php)    "INF")
+       ((python) "float('inf')")
+       ((ruby)   "Float::INFINITY")
+       (else
+        (compiler-internal-error
+         "univ-emit-float, unknown target"))))
 
-           ((string=? str "+inf.0")
-            (case (target-name (ctx-target ctx))
-              ((js)     "Number.POSITIVE_INFINITY")
-              ((java)   "Double.POSITIVE_INFINITY")
-              ((php)    "INF")
-              ((python) "float('inf')")
-              ((ruby)   "Float::INFINITY")
-              (else
-               (compiler-internal-error
-                "univ-emit-float, unknown target"))))
+    ((eqv? val -inf.0)
+     (case (target-name (ctx-target ctx))
+       ((js)     "Number.NEGATIVE_INFINITY")
+       ((java)   "Double.NEGATIVE_INFINITY")
+       ((php)    "(-INF)")
+       ((python) "(-float('inf'))")
+       ((ruby)   "(-Float::INFINITY)")
+       (else
+        (compiler-internal-error
+         "univ-emit-float, unknown target"))))
 
-           ((string=? str "-inf.0")
-            (case (target-name (ctx-target ctx))
-              ((js)     "Number.NEGATIVE_INFINITY")
-              ((java)   "Double.NEGATIVE_INFINITY")
-              ((php)    "(-INF)")
-              ((python) "(-float('inf'))")
-              ((ruby)   "(-Float::INFINITY)")
-              (else
-               (compiler-internal-error
-                "univ-emit-float, unknown target"))))
+    ((eqv? val -0.0)
+     (case (target-name (ctx-target ctx))
+       ;; it is strange that in PHP -0.0 is the same as 0.0
+       ((php)    "(0.0*-1)")
+       (else "-0.0")))
 
-           ((and (string=? str "-0.")
-                 (eq? (target-name (ctx-target ctx)) 'php))
-            ;; it is strange that in PHP -0.0 is the same as 0.0
-            "(0.0*-1)")
-
-           ((char=? (string-ref str 0) #\.)
-            (string-append "0" str))
-
-           ((and (char=? (string-ref str 0) #\-)
-                 (char=? (string-ref str 1) #\.))
-            (string-append "-0" (substring str 1 (string-length str))))
-
-           ((char=? (string-ref str (- (string-length str) 1)) #\.)
-            (string-append str "0"))
-
-           (else
-            str)))))
+    (else
+     (let ((str (number->string (abs val))))
+       (string-append
+        (if (negative? val) "-" "")
+        (if (char=? (string-ref str 0) #\.) "0" "") ;; .17 => 0.17
+        str
+        (if (char=? (string-ref str (- (string-length str) 1)) #\.) "0" ""))))))) ;; 22. => 22.0
 
 (define (univ-emit-float-fromint ctx expr)
   (case (target-name (ctx-target ctx))
