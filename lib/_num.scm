@@ -3029,7 +3029,7 @@ for a discussion of branch cuts.
                       (macro-cpxnum-+sqrt3/2-1/2i)))))
              ;; otherwise, we punt
              (else
-              (complex-expt x y))))
+              (ratnum-complex-expt x y))))
           ((or (##fixnum? x)
                (##bignum? x))
            (let* ((y-den (macro-ratnum-denominator y))
@@ -3055,6 +3055,31 @@ for a discussion of branch cuts.
                    (##flexpt (##ratnum->flonum x)
                              (##ratnum->flonum y))))))))
 
+  (define (ratnum-complex-expt x y)
+
+    ;; y is ratnum, x is negative exact or complex
+
+    (define (power-of-two? n)
+      (if (##fixnum? n)
+          (##fxzero? (##fxand n (##fx- n 1)))
+          (##fx= (##fx+ (##first-bit-set n) 1)
+                 (##integer-length n))))
+
+    (define (exact-dyadic-root? x n)
+      (and (##exact? x)
+           (or (and (##fxzero? n) x)
+               (exact-dyadic-root? (##sqrt x)
+                                   (##fx- n 1)))))
+
+    (or (and (power-of-two? (macro-ratnum-denominator y))
+             (or (and (##= (macro-ratnum-denominator y) 2)
+                      (##= (macro-ratnum-numerator y) 1)
+                      (##sqrt x))
+                 (let ((root? (exact-dyadic-root? x (##first-bit-set (macro-ratnum-denominator y)))))
+                   (and root?
+                        (##expt root? (macro-ratnum-numerator y))))))
+        (complex-expt x y)))
+    
   (macro-number-dispatch y (##fail-check-number 2 expt x y)
 
     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a fixnum
@@ -3127,14 +3152,7 @@ for a discussion of branch cuts.
                  (complex-expt x y)))
             (else
              (##flexpt x (##ratnum->flonum y))))
-      (or (and (##eqv? 2 (macro-ratnum-denominator y))
-               (or (and (##eqv? 1 (macro-ratnum-numerator y))
-                        (##sqrt x))
-                   (and (##exact? x)
-                        (let ((sqrt-x (##sqrt x)))
-                          (and (##exact? sqrt-x)
-                               (##* sqrt-x (##expt x (##quotient (##- (macro-ratnum-numerator y) 1) 2))))))))
-          (complex-expt x y)))
+      (ratnum-complex-expt x y))
 
     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a flonum
       (cond ((##flnan? y)
