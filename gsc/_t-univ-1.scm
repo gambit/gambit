@@ -929,6 +929,9 @@
     ((js java)
      (^ expr1 " >>> " expr2))
 
+    ((python ruby php)
+     (^ expr1 " >> " expr2 " & (1 << 32 - " expr2 ") - 1"))
+
     (else
      (compiler-internal-error
       "univ-emit->>>, unknown target"))))
