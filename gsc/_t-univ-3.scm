@@ -2558,8 +2558,12 @@ tanh
 
     ((python)
      (^if-expr (^= expr1 expr2)
-               (^= (^call-prim (^member 'math 'copysign) (^float 1.0) expr1)
-                   (^call-prim (^member 'math 'copysign) (^float 1.0) expr2))
+               (^= (^float-math 'copysign
+                                (^float targ-inexact-+1)
+                                expr1)
+                   (^float-math 'copysign
+                                (^float targ-inexact-+1)
+                                expr2))
                (^and (^!= expr1 expr1)
                      (^!= expr2 expr2))))
 
