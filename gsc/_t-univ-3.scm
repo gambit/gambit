@@ -3159,8 +3159,8 @@ tanh
 (define (univ-emit-s64vector-shrink! ctx expr1 expr2)
   (case (univ-s64vector-representation ctx)
 
-    ((class)
-     (univ-shrink-by-copying-elems! ctx 's64vector expr1 expr2))
+;;    ((class)
+;;     (univ-shrink-by-copying-elems! ctx 's64vector expr1 expr2))
 
     (else
      (^array-shrink! (^s64vector-unbox expr1) expr2))))
