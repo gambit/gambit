@@ -256,14 +256,14 @@
                 ((Int)      (base 'Integer))
                 ((long)     (base 'long))
                 ((chr)      (base 'char))
-                ((u8)       (base 'byte))  ;;TODO byte is signed (-128..127)
-                ((u16)      (base 'short)) ;;TODO short is signed
-                ((u32)      (decl 'scmobj)) ;; fixnum or bignum
-                ((u64)      (decl 'scmobj)) ;; fixnum or bignum
+                ((u8)       (base 'byte))  ;;TODO: byte is signed (-128..127)
+                ((u16)      (base 'short)) ;;TODO: short is signed
+                ((u32)      (decl 'int))   ;;TODO: int is signed
+                ((u64)      (decl 'long))  ;;TODO: long is signed
                 ((s8)       (base 'byte))
                 ((s16)      (base 'short))
-                ((s32)      (decl 'scmobj)) ;; fixnum or bignum
-                ((s64)      (decl 'scmobj)) ;; fixnum or bignum
+                ((s32)      (decl 'int))
+                ((s64)      (decl 'long))
                 ((f32)      (base 'float))
                 ((f64)      (base 'double))
                 ((bool)     (base 'boolean))
@@ -2629,6 +2629,30 @@ tanh
 (define (univ-emit-bignum-digits ctx val)
   (^member (^cast* 'bignum val) 'digits))
 
+(define (univ-emit-u32-box ctx n)
+  (^call-prim (^rts-method-use 'u32_box) n))
+
+(define (univ-emit-u32-unbox ctx n)
+  (^call-prim (^rts-method-use 'u32_unbox) n))
+
+(define (univ-emit-s32-box ctx n)
+  (^call-prim (^rts-method-use 's32_box) n))
+
+(define (univ-emit-s32-unbox ctx n)
+  (^call-prim (^rts-method-use 's32_unbox) n))
+
+(define (univ-emit-u64-box ctx n)
+  n)
+
+(define (univ-emit-u64-unbox ctx n)
+  n)
+
+(define (univ-emit-s64-box ctx n)
+  n)
+
+(define (univ-emit-s64-unbox ctx n)
+  n)
+
 (define (univ-emit-box? ctx expr)
   (^instanceof (^type 'box) (^cast*-scmobj expr)))
 
@@ -2797,8 +2821,28 @@ tanh
 (define (univ-emit-u8vector-length ctx expr)
   (^array-length (^u8vector-unbox expr)))
 
+(define (univ-shrink-by-copying-elems! ctx type expr1 expr2)
+  (^assign (^member (^cast* type expr1) 'elems)
+           (case (target-name (ctx-target ctx))
+
+             ((js)
+              (^call-prim (^member (^member (^cast* type expr1) 'elems) 'subarray)
+                          (^int 0)
+                          expr2))
+
+             (else
+              (^subarray (^member (^cast* type expr1) 'elems)
+                         0
+                         expr2)))))
+
 (define (univ-emit-u8vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^u8vector-unbox expr1) expr2))
+  (case (univ-u8vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 'u8vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^u8vector-unbox expr1) expr2))))
 
 (define (univ-emit-u8vector-ref ctx expr1 expr2)
   (let ((code (^array-index (^u8vector-unbox expr1) expr2)))
@@ -2840,7 +2884,13 @@ tanh
   (^array-length (^u16vector-unbox expr)))
 
 (define (univ-emit-u16vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^u16vector-unbox expr1) expr2))
+  (case (univ-u16vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 'u16vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^u16vector-unbox expr1) expr2))))
 
 (define (univ-emit-u16vector-ref ctx expr1 expr2)
   (let ((code (^array-index (^u16vector-unbox expr1) expr2)))
@@ -2882,7 +2932,13 @@ tanh
   (^array-length (^u32vector-unbox expr)))
 
 (define (univ-emit-u32vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^u32vector-unbox expr1) expr2))
+  (case (univ-u32vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 'u32vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^u32vector-unbox expr1) expr2))))
 
 (define (univ-emit-u32vector-ref ctx expr1 expr2)
   (^array-index (^u32vector-unbox expr1) expr2))
@@ -2921,7 +2977,13 @@ tanh
   (^array-length (^u64vector-unbox expr)))
 
 (define (univ-emit-u64vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^u64vector-unbox expr1) expr2))
+  (case (univ-u64vector-representation ctx)
+
+;;    ((class)
+;;     (univ-shrink-by-copying-elems! ctx 'u64vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^u64vector-unbox expr1) expr2))))
 
 (define (univ-emit-u64vector-ref ctx expr1 expr2)
   (^array-index (^u64vector-unbox expr1) expr2))
@@ -2960,7 +3022,13 @@ tanh
   (^array-length (^s8vector-unbox expr)))
 
 (define (univ-emit-s8vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^s8vector-unbox expr1) expr2))
+  (case (univ-s8vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 's8vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^s8vector-unbox expr1) expr2))))
 
 (define (univ-emit-s8vector-ref ctx expr1 expr2)
   (^array-index (^s8vector-unbox expr1) expr2))
@@ -2999,7 +3067,13 @@ tanh
   (^array-length (^s16vector-unbox expr)))
 
 (define (univ-emit-s16vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^s16vector-unbox expr1) expr2))
+  (case (univ-s16vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 's16vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^s16vector-unbox expr1) expr2))))
 
 (define (univ-emit-s16vector-ref ctx expr1 expr2)
   (^array-index (^s16vector-unbox expr1) expr2))
@@ -3038,7 +3112,13 @@ tanh
   (^array-length (^s32vector-unbox expr)))
 
 (define (univ-emit-s32vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^s32vector-unbox expr1) expr2))
+  (case (univ-s32vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 's32vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^s32vector-unbox expr1) expr2))))
 
 (define (univ-emit-s32vector-ref ctx expr1 expr2)
   (^array-index (^s32vector-unbox expr1) expr2))
@@ -3077,7 +3157,13 @@ tanh
   (^array-length (^s64vector-unbox expr)))
 
 (define (univ-emit-s64vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^s64vector-unbox expr1) expr2))
+  (case (univ-s64vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 's64vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^s64vector-unbox expr1) expr2))))
 
 (define (univ-emit-s64vector-ref ctx expr1 expr2)
   (^array-index (^s64vector-unbox expr1) expr2))
@@ -3116,7 +3202,13 @@ tanh
   (^array-length (^f32vector-unbox expr)))
 
 (define (univ-emit-f32vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^f32vector-unbox expr1) expr2))
+  (case (univ-f32vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 'f32vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^f32vector-unbox expr1) expr2))))
 
 (define (univ-emit-f32vector-ref ctx expr1 expr2)
   (^array-index (^f32vector-unbox expr1) expr2))
@@ -3156,7 +3248,13 @@ tanh
   (^array-length (^f64vector-unbox expr)))
 
 (define (univ-emit-f64vector-shrink! ctx expr1 expr2)
-  (^array-shrink! (^f64vector-unbox expr1) expr2))
+  (case (univ-f64vector-representation ctx)
+
+    ((class)
+     (univ-shrink-by-copying-elems! ctx 'f64vector expr1 expr2))
+
+    (else
+     (^array-shrink! (^f64vector-unbox expr1) expr2))))
 
 (define (univ-emit-f64vector-ref ctx expr1 expr2)
   (^array-index (^f64vector-unbox expr1) expr2))
@@ -3389,7 +3487,7 @@ tanh
 
     (else
      (compiler-internal-error
-      "univ-emit-string-length, unknown target"))))
+      "univ-emit-string-length, host representation not implemented"))))
 
 (define (univ-emit-string-shrink! ctx expr1 expr2)
   (case (univ-string-representation ctx)

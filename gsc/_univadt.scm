@@ -703,6 +703,30 @@
 (define-macro (^bignum-digits val)
   `(univ-emit-bignum-digits ctx ,val))
 
+(define-macro (^u32-box val)
+  `(univ-emit-u32-box ctx ,val))
+
+(define-macro (^u32-unbox u32)
+  `(univ-emit-u32-unbox ctx ,u32))
+
+(define-macro (^s32-box val)
+  `(univ-emit-s32-box ctx ,val))
+
+(define-macro (^s32-unbox s32)
+  `(univ-emit-s32-unbox ctx ,s32))
+
+(define-macro (^u64-box val)
+  `(univ-emit-u64-box ctx ,val))
+
+(define-macro (^u64-unbox u64)
+  `(univ-emit-u64-unbox ctx ,u64))
+
+(define-macro (^s64-box val)
+  `(univ-emit-s64-box ctx ,val))
+
+(define-macro (^s64-unbox s64)
+  `(univ-emit-s64-unbox ctx ,s64))
+
 (define-macro (^box? val)
   `(univ-emit-box? ctx ,val))
 

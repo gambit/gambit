@@ -1353,8 +1353,7 @@
       (^call-prim
        (^rts-method-use 'make_values)
        (^fixnum-unbox arg1)
-       (if arg2
-           arg2
+       (or arg2
            (^fixnum-box (^int 0))))))))
 
 (univ-define-prim "##values-length" #f
@@ -1395,8 +1394,7 @@
       (^call-prim
        (^rts-method-use 'make_vector)
        (^fixnum-unbox arg1)
-       (if arg2
-           arg2
+       (or arg2
            (^fixnum-box (^int 0))))))))
 
 (univ-define-prim "##vector-length" #f
@@ -1558,7 +1556,9 @@
       (^u32vector-box
        (^array-literal
         'u32
-        args))))))
+        (map (lambda (arg)
+               (^u32-unbox arg))
+             args)))))))
 
 (univ-define-prim "##make-u32vector" #f
   (make-translated-operand-generator
@@ -1567,8 +1567,9 @@
       (^call-prim
        (^rts-method-use 'make_u32vector)
        (^fixnum-unbox arg1)
-       (or arg2
-           (^fixnum-box (^int 0))))))))
+       (^u32-unbox
+        (or arg2
+            (^fixnum-box (^int 0)))))))))
 
 (univ-define-prim "##u32vector-length" #f
   (make-translated-operand-generator
@@ -1581,15 +1582,16 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^u32vector-ref arg1
-                      (^fixnum-unbox arg2))))))
+      (^u32-box
+       (^u32vector-ref arg1
+                       (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##u32vector-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^u32vector-set! arg1
                          (^fixnum-unbox arg2)
-                         arg3)
+                         (^u32-unbox arg3))
         (return arg1)))))
 
 (univ-define-prim "##u32vector-shrink!" #f
@@ -1611,7 +1613,9 @@
       (^u64vector-box
        (^array-literal
         'u64
-        args))))))
+        (map (lambda (arg)
+               (^u64-unbox arg))
+             args)))))))
 
 (univ-define-prim "##make-u64vector" #f
   (make-translated-operand-generator
@@ -1620,8 +1624,9 @@
       (^call-prim
        (^rts-method-use 'make_u64vector)
        (^fixnum-unbox arg1)
-       (or arg2
-           (^fixnum-box (^int 0))))))))
+       (^u64-unbox
+        (or arg2
+            (^fixnum-box (^int 0)))))))))
 
 (univ-define-prim "##u64vector-length" #f
   (make-translated-operand-generator
@@ -1634,15 +1639,16 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^u64vector-ref arg1
-                      (^fixnum-unbox arg2))))))
+      (^u64-box
+       (^u64vector-ref arg1
+                       (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##u64vector-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^u64vector-set! arg1
                          (^fixnum-unbox arg2)
-                         arg3)
+                         (^u64-unbox arg3))
         (return arg1)))))
 
 (univ-define-prim "##u64vector-shrink!" #f
@@ -1782,7 +1788,9 @@
       (^s32vector-box
        (^array-literal
         's32
-        args))))))
+        (map (lambda (arg)
+               (^s32-unbox arg))
+             args)))))))
 
 (univ-define-prim "##make-s32vector" #f
   (make-translated-operand-generator
@@ -1791,8 +1799,9 @@
       (^call-prim
        (^rts-method-use 'make_s32vector)
        (^fixnum-unbox arg1)
-       (or arg2
-           (^fixnum-box (^int 0))))))))
+       (^s32-unbox
+        (or arg2
+            (^fixnum-box (^int 0)))))))))
 
 (univ-define-prim "##s32vector-length" #f
   (make-translated-operand-generator
@@ -1805,15 +1814,16 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^s32vector-ref arg1
-                      (^fixnum-unbox arg2))))))
+      (^s32-box
+       (^s32vector-ref arg1
+                       (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##s32vector-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^s32vector-set! arg1
                          (^fixnum-unbox arg2)
-                         arg3)
+                         (^s32-unbox arg3))
         (return arg1)))))
 
 (univ-define-prim "##s32vector-shrink!" #f
@@ -1835,7 +1845,9 @@
       (^s64vector-box
        (^array-literal
         's64
-        args))))))
+        (map (lambda (arg)
+               (^s64-unbox arg))
+             args)))))))
 
 (univ-define-prim "##make-s64vector" #f
   (make-translated-operand-generator
@@ -1844,8 +1856,9 @@
       (^call-prim
        (^rts-method-use 'make_s64vector)
        (^fixnum-unbox arg1)
-       (or arg2
-           (^fixnum-box (^int 0))))))))
+       (^s64-unbox
+        (or arg2
+            (^fixnum-box (^int 0)))))))))
 
 (univ-define-prim "##s64vector-length" #f
   (make-translated-operand-generator
@@ -1858,15 +1871,16 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^s64vector-ref arg1
-                      (^fixnum-unbox arg2))))))
+      (^s64-box
+       (^s64vector-ref arg1
+                       (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##s64vector-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3)
      (^ (^s64vector-set! arg1
                          (^fixnum-unbox arg2)
-                         arg3)
+                         (^s64-unbox arg3))
         (return arg1)))))
 
 (univ-define-prim "##s64vector-shrink!" #f
@@ -3019,7 +3033,7 @@
    (lambda (ctx return arg1)
      (return
       (^call-prim
-       (^rts-method-use 'int2bignum)
+       (^rts-method-use 'bignum_from_s32)
        (^fixnum-unbox arg1))))))
 
 (univ-define-prim "##bignum.adigit-shrink!" #f

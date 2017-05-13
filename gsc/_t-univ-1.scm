@@ -124,27 +124,15 @@
 
 (define (univ-u8vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-u8vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-u16vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-u16vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-u32vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-u32vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-u64vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-u64vector)
@@ -152,27 +140,15 @@
 
 (define (univ-s8vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-s8vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-s16vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-s16vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-s32vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-s32vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-s64vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-s64vector)
@@ -180,19 +156,11 @@
 
 (define (univ-f32vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-f32vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-f64vector-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-f64vector)
-      (case (target-name (ctx-target ctx))
-        ((js)
-         'host)
-        (else
-         'class))))
+      'class))
 
 (define (univ-structure-representation ctx)
   'class)
@@ -3365,7 +3333,7 @@
               (^u32vector-box
                (^array-literal
                 'u32
-                (map (lambda (x) (emit-obj x #f))
+                (map (lambda (x) (^int x))
                      (u32vect->list obj)))))))
 
           ((u64vect? obj)
@@ -3413,7 +3381,7 @@
               (^s32vector-box
                (^array-literal
                 's32
-                (map (lambda (x) (emit-obj x #f))
+                (map (lambda (x) (^int x))
                      (s32vect->list obj)))))))
 
           ((s64vect? obj)
@@ -3740,7 +3708,7 @@
            (^if (^> (^getnargs) (- i lo))
                 x))))))
 
-(define (univ-min-fixnum ctx) 0)
-(define (univ-max-fixnum ctx) 256)
+(define (univ-min-memoized-fixnum ctx) 0)
+(define (univ-max-memoized-fixnum ctx) 256)
 
 ;;;============================================================================

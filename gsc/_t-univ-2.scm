@@ -1390,17 +1390,17 @@ EOF
               '(array fixnum)
               tab
               (^new-array 'fixnum
-                          (^int (+ (- (univ-max-fixnum ctx)
-                                      (univ-min-fixnum ctx))
+                          (^int (+ (- (univ-max-memoized-fixnum ctx)
+                                      (univ-min-memoized-fixnum ctx))
                                    1))))
              (^var-declaration
               'int
               n
-              (^int (univ-min-fixnum ctx)))
-             (^while (^<= n (^int (univ-max-fixnum ctx)))
+              (^int (univ-min-memoized-fixnum ctx)))
+             (^while (^<= n (^int (univ-max-memoized-fixnum ctx)))
                      (^ (^assign (^array-index tab n)
                                  (^new (^type 'fixnum)
-                                       (^+ (^int (univ-min-fixnum ctx)) n)))
+                                       (^+ (^int (univ-min-memoized-fixnum ctx)) n)))
                         (^inc-by n 1)))
              (^return tab))))))
 
@@ -1549,30 +1549,34 @@ EOF
               (^new (^type 'bignum)
                     digits)))))))
 
-    ((int2bignum)
+    ((bignum_from_s32)
      (rts-method
-      'int2bignum
+      'bignum_from_s32
       '(public)
       'scmobj
-      (list (univ-field 'n 'int))
+      (list (univ-field 'n 's32))
       "\n"
       '()
       (lambda (ctx)
         (let ((n (^local-var 'n))
+              (m (^local-var 'm))
               (nbdig (^local-var 'nbdig))
               (digits (^local-var 'digits))
               (i (^local-var 'i)))
           (^ (^var-declaration
+              's32
+              m
+              n)
+             (^var-declaration
               'int
               nbdig
-              (^+ (^parens
-                   (univ-fxquotient
-                    ctx
-                    (^call-prim
-                     (^rts-method-use 'intlength)
-                     n)
-                    (^int 14)))
-                  (^int 1)))
+              (^int 0))
+             (^while (^and (^!= m (^int 0))
+                           (^!= m (^int -1)))
+                     (^ (^assign m (^>> m (^int 14)))
+                        (^inc-by nbdig 1)))
+             (^if (^= nbdig (^int 0))
+                  (^assign nbdig (^int 1)))
              (^var-declaration
               '(array bigdigit)
               digits
@@ -1591,6 +1595,202 @@ EOF
              (^return
               (^new (^type 'bignum)
                     digits)))))))
+
+    ((bignum_from_u32)
+     (rts-method
+      'bignum_from_u32
+      '(public)
+      'scmobj
+      (list (univ-field 'n 'u32))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n))
+              (m (^local-var 'm))
+              (nbdig (^local-var 'nbdig))
+              (digits (^local-var 'digits))
+              (i (^local-var 'i)))
+          (^ (^var-declaration
+              'u32
+              m
+              n)
+             (^var-declaration
+              'int
+              nbdig
+              (^int 0))
+             (^while (^!= m (^int 0))
+                     (^ (^assign m (^>>> m (^int 14)))
+                        (^inc-by nbdig 1)))
+             (^if (^= nbdig (^int 0))
+                  (^assign nbdig (^int 1)))
+             (^var-declaration
+              '(array bigdigit)
+              digits
+              (^new-array 'bigdigit nbdig))
+             (^var-declaration
+              'int
+              i
+              (^int 0))
+             (^while (^< i nbdig)
+                     (^ (^assign (^array-index digits i)
+                                 (^cast* 'bigdigit
+                                         (^bitand n (^int 16383))))
+                        (^assign n
+                                 (^>>> n (^int 14)))
+                        (^inc-by i 1)))
+             (^return
+              (^new (^type 'bignum)
+                    digits)))))))
+
+    ((bignum_to_s32)
+     (rts-method
+      'bignum_to_s32
+      '(public)
+      's32
+      (list (univ-field 'n 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n))
+              (nbdig (^local-var 'nbdig))
+              (digits (^local-var 'digits))
+              (i (^local-var 'i))
+              (result (^local-var 'result)))
+          (^ (^var-declaration
+              '(array bigdigit)
+              digits
+              (^bignum-digits n))
+             (^var-declaration
+              'int
+              nbdig
+              (^array-length digits))
+             (^var-declaration
+              'int
+              i
+              (^- nbdig (^int 1)))
+             (^var-declaration
+              's32
+              result
+              (^int 0))
+             (^while (^>= i 0)
+                     (^ (^assign result
+                                 (^+ (^parens (^<< result (^int 14)))
+                                     (^array-index digits i)))
+                        (^inc-by i -1)))
+             (^return
+              result))))))
+
+    ((bignum_to_u32)
+     (rts-method
+      'bignum_to_u32
+      '(public)
+      'u32
+      (list (univ-field 'n 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n))
+              (nbdig (^local-var 'nbdig))
+              (digits (^local-var 'digits))
+              (i (^local-var 'i))
+              (result (^local-var 'result)))
+          (^ (^var-declaration
+              '(array bigdigit)
+              digits
+              (^bignum-digits n))
+             (^var-declaration
+              'int
+              nbdig
+              (^array-length digits))
+             (^var-declaration
+              'int
+              i
+              (^- nbdig (^int 1)))
+             (^var-declaration
+              'u32
+              result
+              (^int 0))
+             (^while (^>= i 0)
+                     (^ (^assign result
+                                 (^+ (^parens (^<< result (^int 14)))
+                                     (^array-index digits i)))
+                        (^inc-by i -1)))
+             (^return
+              result))))))
+
+    ((u32_box)
+     (rts-method
+      'u32_box
+      '(public)
+      'scmobj
+      (list (univ-field 'n 'u32))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n)))
+          (^if (^and (^<= (^int 0) n)
+                     (^<= n (^int univ-fixnum-max)))
+               (^return
+                (^fixnum-box n))
+               (^return
+                (^call-prim
+                 (^rts-method-use 'bignum_from_u32)
+                 n)))))))
+
+    ((u32_unbox)
+     (rts-method
+      'u32_unbox
+      '(public)
+      'u32
+      (list (univ-field 'n 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n)))
+          (^if (^fixnum? n)
+               (^return
+                (^fixnum-unbox n))
+               (^return
+                (^call-prim
+                 (^rts-method-use 'bignum_to_u32)
+                 n)))))))
+
+    ((s32_box)
+     (rts-method
+      's32_box
+      '(public)
+      'scmobj
+      (list (univ-field 'n 's32))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n)))
+          (^if (^and (^<= (^int univ-fixnum-min) n)
+                     (^<= n (^int univ-fixnum-max)))
+               (^return
+                (^fixnum-box n))
+               (^return
+                (^call-prim
+                 (^rts-method-use 'bignum_from_s32)
+                 n)))))))
+
+    ((s32_unbox)
+     (rts-method
+      's32_unbox
+      '(public)
+      's32
+      (list (univ-field 'n 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((n (^local-var 'n)))
+          (^if (^fixnum? n)
+               (^return
+                (^fixnum-unbox n))
+               (^return
+                (^call-prim
+                 (^rts-method-use 'bignum_to_s32)
+                 n)))))))
 
     ((ratnum)
      (rts-class
