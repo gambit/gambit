@@ -903,7 +903,12 @@
 (univ-define-prim "##fl-" #f
   (univ-fold-left
    #f ;; 0 arguments impossible
-   (lambda (ctx arg1)      (^- arg1))
+   (lambda (ctx arg1)
+     (case (target-name (ctx-target ctx))
+       ((php)
+        (^* (^float -1.0) arg1))
+       (else
+        (^- arg1))))
    (lambda (ctx arg1 arg2) (^- arg1 arg2))
    univ-emit-flonum-unbox
    univ-emit-flonum-box))
@@ -1054,29 +1059,37 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (case (target-name (ctx-target ctx))
-
        ((python)
         (return
          (^flonum-box
-           (^call-prim (^member "math" 'copysign)
-                       (^flonum-unbox arg1)
-                       (^flonum-unbox arg2)))))
+          (^call-prim (^member "math" 'copysign)
+                      (^flonum-unbox arg1)
+                      (^flonum-unbox arg2)))))
+
+       ((php)
+        (return
+         (^flonum-box
+          ;; arg2 = -0.0 requires a special case
+          (^* (^if-expr (^if-expr (^= (^flonum-unbox arg2) (^float 0.0))
+                                  (^eq? (^call-prim 'strval (^flonum-unbox arg2)) (^str "-0"))
+                                  (^< (^flonum-unbox arg2) (^float targ-inexact-+0)))
+                        (^float -1.0)
+                        (^float 1.0))
+              (^call-prim 'abs (^flonum-unbox arg1))))))
 
        (else
-        ;;TODO: implement for other languages
-        (return
-         (^if-expr (^= (^parens
-                        (^or (^parens (^< (^flonum-unbox arg1)
-                                          (^float 0.0)))
-                             (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg1))
-                                          (^float 0.0)))))
-                       (^parens
-                        (^or (^parens (^< (^flonum-unbox arg2)
-                                          (^float 0.0)))
-                             (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg2))
-                                          (^float 0.0))))))
-                   arg1
-                   (^flonum-box (^- (^flonum-unbox arg1))))))))))
+        (return (^if-expr (^= (^parens
+                               (^or (^parens (^< (^flonum-unbox arg1)
+                                                 (^float 0.0)))
+                                    (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg1))
+                                                 (^float 0.0)))))
+                              (^parens
+                               (^or (^parens (^< (^flonum-unbox arg2)
+                                                 (^float 0.0)))
+                                    (^parens (^< (^/ (^float 1.0) (^flonum-unbox arg2))
+                                                 (^float 0.0))))))
+                          arg1
+                          (^flonum-box (^- (^flonum-unbox arg1))))))))))
 
 (univ-define-prim "##flscalbn" #f
   (make-translated-operand-generator
