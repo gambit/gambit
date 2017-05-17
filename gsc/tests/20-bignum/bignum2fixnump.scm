@@ -41,6 +41,8 @@
   (if (##fx> n -536870912)
       (begin
         (test (##fx- n 1))
+        (test (##fx- n 16384))
+        (test (##fx- n 16385))
         (loop (##fx* n 2)))))
 
 (let loop ((n 1))
@@ -48,4 +50,6 @@
   (if (##fx< n 536870911)
       (begin
         (test (##fx+ n 1))
+        (test (##fx+ n 16384))
+        (test (##fx+ n 16385))
         (loop (##fx+ 1 (##fx* n 2))))))
