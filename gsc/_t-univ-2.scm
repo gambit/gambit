@@ -1571,12 +1571,11 @@ EOF
               'int
               nbdig
               (^int 0))
-             (^while (^and (^!= m (^int 0))
-                           (^!= m (^int -1)))
+             (^while (^or (^< m (^int -4096))
+                          (^> m (^int 4095)))
                      (^ (^assign m (^>> m (^int 14)))
                         (^inc-by nbdig 1)))
-             (^if (^= nbdig (^int 0))
-                  (^assign nbdig (^int 1)))
+             (^inc-by nbdig 1)
              (^var-declaration
               '(array bigdigit)
               digits
@@ -1671,12 +1670,15 @@ EOF
              (^var-declaration
               's32
               result
-              (^int 0))
-             (^while (^>= i 0)
-                     (^ (^assign result
-                                 (^+ (^parens (^<< result (^int 14)))
-                                     (^array-index digits i)))
-                        (^inc-by i -1)))
+              (^array-index digits i))
+             (^if (^> result 8191)
+                  (^assign result
+                           (^inc-by i -16384)))
+             (^while (^> i 0)
+                     (^ (^inc-by i -1)
+                        (^assign result
+                                 (^+ (^* result (^int 16384))
+                                     (^array-index digits i)))))
              (^return
               result))))))
 
@@ -1712,7 +1714,7 @@ EOF
               (^int 0))
              (^while (^>= i 0)
                      (^ (^assign result
-                                 (^+ (^parens (^<< result (^int 14)))
+                                 (^+ (^* result (^int 16384))
                                      (^array-index digits i)))
                         (^inc-by i -1)))
              (^return
