@@ -340,8 +340,8 @@
     ((peps)
      (rts-field
       'peps
-      '(dict str scmobj)
-      (^empty-dict '(dict str scmobj))
+      '(dict str parententrypt)
+      (^empty-dict '(dict str parententrypt))
       '(public)))
 
     ((glo)
@@ -2237,6 +2237,32 @@ EOF
       (^new (^type 'absent))
       '(public)))
 
+    ((deleted)
+     (rts-class
+      'deleted
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((deleted_obj)
+     (rts-field
+      'deleted_obj
+      'scmobj
+      (^new (^type 'deleted))
+      '(public)))
+
+    ((unused)
+     (rts-class
+      'unused
+      '() ;; properties
+      'scmobj)) ;; extends
+
+    ((unused_obj)
+     (rts-field
+      'unused_obj
+      'scmobj
+      (^new (^type 'unused))
+      '(public)))
+
     ((unbound)
      (rts-class
       'unbound
@@ -2626,7 +2652,7 @@ EOF
           (^ (^expr-statement
               (^call-prim
                (^rts-method-use 'exit_process)
-               (^getreg 1)))
+               (^fixnum-unbox (^getreg 1))))
              (^setreg 1 (^void-obj))
              (^return
               (^cast*-jumpable (^getreg 0)))))))
@@ -2969,7 +2995,7 @@ EOF
           (^ (^if (^not (^dict-key-exists? (gvm-state-glo-use ctx 'rd)
                                            (^symbol-unbox sym)))
                   (^ (^glo-var-set! sym (^unbound1))
-                     (^glo-var-primitive-set! sym (^unbound1))))
+                     (^glo-var-primitive-set! sym (^null))))
              (^return sym))))))
 
     ((apply2)

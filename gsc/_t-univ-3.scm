@@ -170,6 +170,7 @@
     ((continuation)  'Continuation)
     ((cpxnum)        'Cpxnum)
     ((ctrlpt)        'ControlPoint)
+    ((deleted)       'Deleted)
     ((entrypt)       'EntryPoint)
     ((eof)           'Eof)
     ((f64vector)     'F64Vector)
@@ -203,6 +204,7 @@
     ((s64vector)     'S64Vector)
     ((f32vector)     'F32Vector)
     ((unbound)       'Unbound)
+    ((unused)        'Unused)
     ((values)        'Values)
     ((vector)        'Vector)
     ((void)          'Void)
@@ -259,11 +261,11 @@
                 ((u8)       (base 'byte))  ;;TODO: byte is signed (-128..127)
                 ((u16)      (base 'short)) ;;TODO: short is signed
                 ((u32)      (decl 'int))   ;;TODO: int is signed
-                ((u64)      (decl 'long))  ;;TODO: long is signed
+                ((u64)      (decl 'scmobj));;TODO: long is signed
                 ((s8)       (base 'byte))
                 ((s16)      (base 'short))
                 ((s32)      (decl 'int))
-                ((s64)      (decl 'long))
+                ((s64)      (decl 'scmobj))
                 ((f32)      (base 'float))
                 ((f64)      (base 'double))
                 ((bool)     (base 'boolean))
@@ -1440,6 +1442,26 @@
      (compiler-internal-error
       "univ-emit-absent, host representation not implemented"))))
 
+(define (univ-emit-deleted ctx)
+  (case (univ-deleted-representation ctx)
+
+    ((class)
+     (^rts-field-use 'deleted_obj))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-deleted, host representation not implemented"))))
+
+(define (univ-emit-unused ctx)
+  (case (univ-unused-representation ctx)
+
+    ((class)
+     (^rts-field-use 'unused_obj))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-unused, host representation not implemented"))))
+
 (define (univ-emit-unbound1 ctx)
   (case (univ-unbound-representation ctx)
 
@@ -2382,13 +2404,31 @@ Ruby:
   (^float-math 'tanh expr))
 
 (define (univ-emit-float-asinh ctx expr)
-  (^float-math 'asinh expr))
+  (case (target-name (ctx-target ctx))
+
+    ((java)
+     (^float targ-inexact-+0)) ;; TODO: implement
+
+    (else
+     (^float-math 'asinh expr))))
 
 (define (univ-emit-float-acosh ctx expr)
-  (^float-math 'acosh expr))
+  (case (target-name (ctx-target ctx))
+
+    ((java)
+     (^float targ-inexact-+0)) ;; TODO: implement
+
+    (else
+     (^float-math 'acosh expr))))
 
 (define (univ-emit-float-atanh ctx expr)
-  (^float-math 'atanh expr))
+  (case (target-name (ctx-target ctx))
+
+    ((java)
+     (^float targ-inexact-+0)) ;; TODO: implement
+
+    (else
+     (^float-math 'atanh expr))))
 
 (define (univ-emit-float-expt ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -2443,15 +2483,8 @@ Ruby:
      (^parens (^ "math.frexp(" expr ")[1] - 1")))
 
     ;; TODO : implement in other languages
-    ;; Returns Not a Number to indicate this is not implemented
-    ((ruby)
-     (^ "Float::NAN"))
-
-    ((java)
-     (^ "Math.acos(2)"))
-
-    ((php)
-     (^ "acos(2)"))
+    ((php ruby java)
+     (^int 0)) ;; TODO: implement
 
     (else
      (compiler-internal-error

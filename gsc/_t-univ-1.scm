@@ -75,6 +75,12 @@
 (define (univ-absent-representation ctx)
   'class)
 
+(define (univ-deleted-representation ctx)
+  'class)
+
+(define (univ-unused-representation ctx)
+  'class)
+
 (define (univ-unbound-representation ctx)
   'class)
 
@@ -2046,7 +2052,11 @@
                                         (^this-mod-field cst))
                               (univ-add-field
                                defs
-                               (univ-field cst 'scmobj val '(public))))
+                               (univ-field
+                                cst
+                                'scmobj ;; (univ-obj-type obj)
+                                val
+                                '(public))))
                             defs)))))
           defs))))
 
@@ -3267,6 +3277,12 @@
           ((absent-object? obj)
            (^absent))
 
+          ((deleted-object? obj)
+           (^deleted))
+
+          ((unused-object? obj)
+           (^unused))
+
           ((unbound1-object? obj)
            (^unbound1))
 
@@ -3456,6 +3472,126 @@
              (object->string obj))))))
 
   (emit-obj obj #t))
+
+(define (univ-obj-type obj)
+
+  (cond ((or (false-object? obj)
+             (boolean? obj))
+         'boolean)
+
+        ((number? obj)
+         (cond ((not (real? obj)) ;; non-real complex number
+                'cpxnum)
+
+               ((not (exact? obj)) ;; floating-point number
+                'flonum)
+
+               ((not (integer? obj)) ;; non-integer rational number
+                'ratnum)
+
+               (else ;; exact integer
+                (if (and (>= obj univ-fixnum-min)
+                         (<= obj univ-fixnum-max))
+                    'fixnum
+                    'bignum))))
+
+        ((char? obj)
+         'char)
+
+        ((string? obj)
+         'string)
+
+        ((symbol-object? obj)
+         'symbol)
+
+        ((keyword-object? obj)
+         'keyword)
+
+        ((null? obj)
+         'null)
+
+        ((void-object? obj)
+         'void)
+
+        ((end-of-file-object? obj)
+         'eof)
+
+        ((absent-object? obj)
+         'absent)
+
+        ((deleted-object? obj)
+         'deleted)
+
+        ((unused-object? obj)
+         'unused)
+
+        ((or (unbound1-object? obj)
+             (unbound2-object? obj))
+         'unbound)
+
+        ((optional-object? obj)
+         'optional)
+
+        ((key-object? obj)
+         'key)
+
+        ((rest-object? obj)
+         'rest)
+
+        ((proc-obj? obj)
+         (if (proc-obj-code obj) ;; procedure defined in this module?
+             'jumpable
+             'parententrypoint))
+
+        ((pair? obj)
+         'pair)
+
+        ((vector-object? obj)
+         'vector)
+
+        ((u8vect? obj)
+         'u8vector)
+
+        ((u16vect? obj)
+         'u16vector)
+
+        ((u32vect? obj)
+         'u32vector)
+
+        ((u64vect? obj)
+         'u64vector)
+
+        ((s8vect? obj)
+         's8vector)
+
+        ((s16vect? obj)
+         's16vector)
+
+        ((s32vect? obj)
+         's32vector)
+
+        ((s64vect? obj)
+         's64vector)
+
+        ((f32vect? obj)
+         'f32vector)
+
+        ((f64vect? obj)
+         'f64vector)
+
+        ((structure-object? obj)
+         'structure)
+
+        (else
+         ;;TODO: handle these types better
+         ;;  box
+         ;;  closure
+         ;;  continuation
+         ;;  foreign
+         ;;  promise
+         ;;  values
+         ;;  will
+         'scmobj)))
 
 (define univ-adigit-width 14)
 

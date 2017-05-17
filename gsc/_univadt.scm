@@ -447,6 +447,12 @@
 (define-macro (^absent)
   `(univ-emit-absent ctx))
 
+(define-macro (^deleted)
+  `(univ-emit-deleted ctx))
+
+(define-macro (^unused)
+  `(univ-emit-unused ctx))
+
 (define-macro (^unbound1)
   `(univ-emit-unbound1 ctx))
 
