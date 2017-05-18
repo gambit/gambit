@@ -930,7 +930,13 @@
      (^ expr1 " >>> " expr2))
 
     ((python ruby php)
-     (^ expr1 " >> " expr2 " & (1 << 32 - " expr2 ") - 1"))
+     (^bitand
+      (^>> expr1
+           expr2)
+      (^- (^parens
+           (^<< (^int 1)
+                (^- (^int univ-word-bits) expr2)))
+          (^int 1))))
 
     (else
      (compiler-internal-error
