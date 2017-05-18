@@ -2347,37 +2347,37 @@ for a discussion of branch cuts.
          (##fl<= (macro-flonum-min-normal) y))))
 
 (define-prim (##log x)
-
+  
   (define (type-error)
     (##fail-check-number 1 log x))
-
+  
   (define (range-error)
     (##raise-range-exception 1 log x))
-
+  
   (define (negative-log x)
     (##make-rectangular (##log (##negate x)) (macro-inexact-+pi)))
-
+  
   (define (exact-log x)
-
+    
     ;; x is positive, x is not 1.
-
+    
     ;; There are three places where just converting to a flonum and
     ;; taking the flonum logarithm doesn't work well.
     ;; 1. Overflow in the conversion
     ;; 2. Underflow in the conversion (or even loss of precision
     ;;    because of a denormalized conversion result)
     ;; 3. When the number is close to 1.
-
+    
     (let ((float-x (##exact->inexact x)))
       (cond ((##= x float-x)
              (##fllog float-x)) ;; first, we trust the builtin flonum log
-
+            
             ((##not (##flonum-full-precision? float-x))
-
+             
              ;; direct conversion to flonum could incur massive relative
              ;; rounding errors, or would just lead to an infinite result
              ;; so we tolerate more than one rounding error in the calculation
-
+             
              (let* ((wn (##integer-length (##numerator x)))
                     (wd (##integer-length (##denominator x)))
                     (p  (##fx- wn wd))
@@ -2388,25 +2388,25 @@ for a discussion of branch cuts.
                (##fl+ (##fl* float-p
                              (macro-inexact-log-2))
                       partial-result)))
-
+            
             ((or (##fl< (macro-inexact-exp-+1/2) float-x)
                  (##fl< float-x (macro-inexact-exp--1/2)))
-
+             
              ;; here the absolute value of the logarithm is at least 0.5,
              ;; so there is less rounding error in the final result.
-
+             
              (##fllog float-x))
-
+            
             (else
-
+             
              ;; use ln1p for arguments near one.
-
+             
              (##fllog1p (##exact->inexact (##- x 1)))))))
-
+  
   (define (complex-log-magnitude x)
-
+    
     (define (log-mag a b)
-      ;; both are finite, 0 <= a <= b, b is nonzero
+      ;; both are finite, 0 < a <= b
       (let* ((c (##/ a b))
              (approx-mag (##* b (##sqrt (##+ 1 (##* c c))))))
         (if (or (##exact? approx-mag)
@@ -2418,10 +2418,10 @@ for a discussion of branch cuts.
             (let ((a (##inexact->exact a))
                   (b (##inexact->exact b)))
               (##* 1/2 (exact-log (##+ (##* a a) (##* b b))))))))
-
+    
     (let ((abs-r (##abs (##real-part x)))
           (abs-i (##abs (##imag-part x))))
-
+      
       ;; abs-i is not exact 0
       (cond ((or (and (##flonum? abs-r)
                       (##fl= abs-r (macro-inexact-+inf)))
@@ -2437,18 +2437,17 @@ for a discussion of branch cuts.
                   (##flnan? abs-i))
              abs-i)
             ;; abs-i is not a NaN
-            ((##eqv? abs-r 0)
-             (##log abs-i))
-            ;; abs-r is not exact 0
-            ((and (##zero? abs-r)
-                  (##zero? abs-i))
-             (macro-inexact--inf))
-            ;; abs-i and abs-r are not both zero
+            ((##zero? abs-r)
+             (let ((temp (##log abs-i)))
+               (if (##eqv? abs-r 0)
+                   temp
+                   (##exact->inexact temp))))
+            ;; abs-r is not zero
             (else
              (if (##< abs-r abs-i)
                  (log-mag abs-r abs-i)
                  (log-mag abs-i abs-r))))))
-
+  
   (macro-number-dispatch x (type-error)
     (if (##fxzero? x)
         (range-error)
@@ -2945,16 +2944,13 @@ for a discussion of branch cuts.
 
       ;; x is an exact number and y is a positive exact integer
 
-      (define (square x)
-        (##* x x))
-
       (define (expt-aux x y)
 
         ;; x is an exact integer (not 0 or 1) and y is a nonzero exact integer
 
         (if (##eqv? y 1)
             x
-            (let ((temp (square (expt-aux x (##arithmetic-shift y -1)))))
+            (let ((temp (##square (expt-aux x (##arithmetic-shift y -1)))))
               (if (##even? y)
                   temp
                   (##* x temp)))))
@@ -9964,6 +9960,13 @@ ___RESULT = result;
 
 ;;; Ratnum operations
 ;;; -----------------
+
+;;; In the following ratnum routines we sometimes use generic numeric
+;;; operators with a mostly-fixnum declaration.  The compiler expands
+;;; these operations into inline fixnum arithmetic if the arguments
+;;; and results are fixnums.  In the common case where all
+;;; numerators and denominators are fixnums this speeds up
+;;; these routines noticeably.
 
 (define-prim (##ratnum-make num den)
   (macro-ratnum-make num den))
