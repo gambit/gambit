@@ -1229,7 +1229,7 @@
     (##raise-divide-by-zero-exception remainder x y))
 
   (define (exact-remainder x y)
-    (##cdr (##exact-int.div x y 
+    (##cdr (##exact-int.div x y
                             #f   ;; need-quotient?
                             #t   ;; keep-dividend?
                             )))
@@ -2347,37 +2347,37 @@ for a discussion of branch cuts.
          (##fl<= (macro-flonum-min-normal) y))))
 
 (define-prim (##log x)
-  
+
   (define (type-error)
     (##fail-check-number 1 log x))
-  
+
   (define (range-error)
     (##raise-range-exception 1 log x))
-  
+
   (define (negative-log x)
     (##make-rectangular (##log (##negate x)) (macro-inexact-+pi)))
-  
+
   (define (exact-log x)
-    
+
     ;; x is positive, x is not 1.
-    
+
     ;; There are three places where just converting to a flonum and
     ;; taking the flonum logarithm doesn't work well.
     ;; 1. Overflow in the conversion
     ;; 2. Underflow in the conversion (or even loss of precision
     ;;    because of a denormalized conversion result)
     ;; 3. When the number is close to 1.
-    
+
     (let ((float-x (##exact->inexact x)))
       (cond ((##= x float-x)
              (##fllog float-x)) ;; first, we trust the builtin flonum log
-            
+
             ((##not (##flonum-full-precision? float-x))
-             
+
              ;; direct conversion to flonum could incur massive relative
              ;; rounding errors, or would just lead to an infinite result
              ;; so we tolerate more than one rounding error in the calculation
-             
+
              (let* ((wn (##integer-length (##numerator x)))
                     (wd (##integer-length (##denominator x)))
                     (p  (##fx- wn wd))
@@ -2388,23 +2388,23 @@ for a discussion of branch cuts.
                (##fl+ (##fl* float-p
                              (macro-inexact-log-2))
                       partial-result)))
-            
+
             ((or (##fl< (macro-inexact-exp-+1/2) float-x)
                  (##fl< float-x (macro-inexact-exp--1/2)))
-             
+
              ;; here the absolute value of the logarithm is at least 0.5,
              ;; so there is less rounding error in the final result.
-             
+
              (##fllog float-x))
-            
+
             (else
-             
+
              ;; use ln1p for arguments near one.
-             
+
              (##fllog1p (##exact->inexact (##- x 1)))))))
-  
+
   (define (complex-log-magnitude x)
-    
+
     (define (log-mag a b)
       ;; both are finite, 0 < a <= b
       (let* ((c (##/ a b))
@@ -2418,10 +2418,10 @@ for a discussion of branch cuts.
             (let ((a (##inexact->exact a))
                   (b (##inexact->exact b)))
               (##* 1/2 (exact-log (##+ (##* a a) (##* b b))))))))
-    
+
     (let ((abs-r (##abs (##real-part x)))
           (abs-i (##abs (##imag-part x))))
-      
+
       ;; abs-i is not exact 0
       (cond ((or (and (##flonum? abs-r)
                       (##fl= abs-r (macro-inexact-+inf)))
@@ -2447,7 +2447,7 @@ for a discussion of branch cuts.
              (if (##< abs-r abs-i)
                  (log-mag abs-r abs-i)
                  (log-mag abs-i abs-r))))))
-  
+
   (macro-number-dispatch x (type-error)
     (if (##fxzero? x)
         (range-error)
@@ -2958,10 +2958,10 @@ for a discussion of branch cuts.
       (cond ((or (##eqv? x 0)
                  (##eqv? x 1))
              x)
-	    ((eqv? x -1)
-	     (if (##odd? y)
-		 -1
-		 1))
+            ((eqv? x -1)
+             (if (##odd? y)
+                 -1
+                 1))
             ((##ratnum? x)
              (macro-ratnum-make
               (exact-int-expt (macro-ratnum-numerator   x) y)
@@ -3075,7 +3075,7 @@ for a discussion of branch cuts.
                    (and root?
                         (##expt root? (macro-ratnum-numerator y))))))
         (complex-expt x y)))
-    
+
   (macro-number-dispatch y (##fail-check-number 2 expt x y)
 
     (macro-number-dispatch x (##fail-check-number 1 expt x y) ;; y a fixnum
@@ -4929,7 +4929,7 @@ for a discussion of branch cuts.
 
   ;; I've decided to be brutally simple and not optimize
   ;; for special cases, fixnums, etc.
-  
+
   (let* ((result-length
           (##fxceiling-ratio (##fx+ 1 size) ##bignum.adigit-width))  ;;  top bit is always 0
          (bignum-n
@@ -9876,21 +9876,21 @@ ___RESULT = result;
       ;; Here we assume that we have at least as much precision as
       ;; IEEE double precision, that we round to nearest, and that
       ;; fixnums have no more than 64 bits.
-      
+
       ;; Here's why this works.
-      
+
       ;; The three functions ##fixnum->flonum, ##flsqrt, and
       ;; ##flonum->fixnum are all monotone, in that if the
       ;; argument is increased, the result does not decrease.
       ;; So for each fixnum i such that (* i i) and (+ (* i i) (* 2 i))
       ;; are fixnums, check that
-      
+
       ;; (##exact-int.sqrt (* i i)) => i and
       ;; (##exact-int.sqrt (+ (* i i) (* 2 i))) => i
-      
+
       ;; and this will be true of all fixnums in between.
       ;; And that is all fixnums.  So we ran a code to check this.
-      
+
       (let* ((s (##flonum->fixnum (##flsqrt (##fixnum->flonum x))))
              (r (##fx- x (##fx* s s))))
         ;; s can be too big, so we check for that here.
@@ -9979,26 +9979,26 @@ ___RESULT = result;
 
 (define-prim (##ratnum.= x y)
   (##declare (mostly-fixnum)
-	     (not safe)
-	     (standard-bindings))
+             (not safe)
+             (standard-bindings))
   (and (= (macro-ratnum-numerator x)
-	  (macro-ratnum-numerator y))
+          (macro-ratnum-numerator y))
        (= (macro-ratnum-denominator x)
-	  (macro-ratnum-denominator y))))
+          (macro-ratnum-denominator y))))
 
 (define-prim (##ratnum.< x y)
   (##declare (mostly-fixnum)
-	     (not safe)
-	     (standard-bindings))
+             (not safe)
+             (standard-bindings))
   (< (* (macro-ratnum-numerator x)
-	(macro-ratnum-denominator y))
+        (macro-ratnum-denominator y))
      (* (macro-ratnum-denominator x)
-	(macro-ratnum-numerator y))))
+        (macro-ratnum-numerator y))))
 
 (define-prim (##ratnum.+ x y)
   (##declare (mostly-fixnum)
-	     (not safe)
-	     (standard-bindings))
+             (not safe)
+             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-numerator y))
@@ -10006,23 +10006,23 @@ ___RESULT = result;
     (let ((d1 (##gcd q s)))
       (if (eqv? d1 1)
           (macro-ratnum-make (+ (* p s)
-				(* r q))
+                                (* r q))
                              (* q s))
           (let* ((s-prime (quotient s d1))
                  (t (+ (* p s-prime)
-		       (* r (quotient q d1))))
+                       (* r (quotient q d1))))
                  (d2 (##gcd d1 t))
                  (num (quotient t d2))
                  (den (* (quotient q d2)
-			 s-prime)))
+                         s-prime)))
             (if (eqv? den 1)
                 num
                 (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.- x y)
   (##declare (mostly-fixnum)
-	     (not safe)
-	     (standard-bindings))
+             (not safe)
+             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-numerator y))
@@ -10030,23 +10030,23 @@ ___RESULT = result;
     (let ((d1 (##gcd q s)))
       (if (eqv? d1 1)
           (macro-ratnum-make (- (* p s)
-				(* r q))
+                                (* r q))
                              (* q s))
           (let* ((s-prime (quotient s d1))
                  (t (- (* p s-prime)
-		       (* r (quotient q d1))))
+                       (* r (quotient q d1))))
                  (d2 (##gcd d1 t))
                  (num (quotient t d2))
                  (den (* (quotient q d2)
-			 s-prime)))
+                         s-prime)))
             (if (eqv? den 1)
                 num
                 (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.* x y)
   (##declare (mostly-fixnum)
-	     (not safe)
-	     (standard-bindings))
+             (not safe)
+             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-numerator y))
@@ -10063,8 +10063,8 @@ ___RESULT = result;
 
 (define-prim (##ratnum./ x y)
   (##declare (mostly-fixnum)
-	     (not safe)
-	     (standard-bindings))
+             (not safe)
+             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-denominator y))
@@ -10085,8 +10085,8 @@ ___RESULT = result;
 
 (define-prim (##ratnum.normalize num den)
   (##declare (mostly-fixnum)
-	     (not safe)
-	     (standard-bindings))
+             (not safe)
+             (standard-bindings))
   (let* ((x (##gcd num den))
          (y (if (negative? den) (- x) x))
          (num (quotient num y))
@@ -10746,35 +10746,35 @@ ___RESULT = result;
   (let ((a (macro-cpxnum-real x)) (b (macro-cpxnum-imag x))
         (c (macro-cpxnum-real y)) (d (macro-cpxnum-imag y)))
     (if (and (##flonum? a) (##flonum? b)
-	     (##flonum? c) (##flonum? d))
-	(##make-rectangular (##fl+ a c) (##fl+ b d))
-	(let ()
-	  (declare (standard-bindings)
-		   (mostly-fixnum))
-	  (##make-rectangular (+ a c) (+ b d))))))
+             (##flonum? c) (##flonum? d))
+        (##make-rectangular (##fl+ a c) (##fl+ b d))
+        (let ()
+          (declare (standard-bindings)
+                   (mostly-fixnum))
+          (##make-rectangular (+ a c) (+ b d))))))
 
 (define-prim (##cpxnum.* x y)
   (let ((a (macro-cpxnum-real x)) (b (macro-cpxnum-imag x))
         (c (macro-cpxnum-real y)) (d (macro-cpxnum-imag y)))
     (if (and (##flonum? a) (##flonum? b)
-	     (##flonum? c) (##flonum? d))
-	(##make-rectangular (##fl- (##fl* a c) (##fl* b d))
-			    (##fl+ (##fl* a d) (##fl* b c)))
-	(let ()
-	  (declare (standard-bindings)
-		   (mostly-fixnum))
-	  (##make-rectangular (- (* a c) (* b d))
-			      (+ (* a d) (* b c)))))))
+             (##flonum? c) (##flonum? d))
+        (##make-rectangular (##fl- (##fl* a c) (##fl* b d))
+                            (##fl+ (##fl* a d) (##fl* b c)))
+        (let ()
+          (declare (standard-bindings)
+                   (mostly-fixnum))
+          (##make-rectangular (- (* a c) (* b d))
+                              (+ (* a d) (* b c)))))))
 (define-prim (##cpxnum.- x y)
   (let ((a (macro-cpxnum-real x)) (b (macro-cpxnum-imag x))
         (c (macro-cpxnum-real y)) (d (macro-cpxnum-imag y)))
     (if (and (##flonum? a) (##flonum? b)
-	     (##flonum? c) (##flonum? d))
-	(##make-rectangular (##fl- a c) (##fl- b d))
-	(let ()
-	  (declare (standard-bindings)
-		   (mostly-fixnum))
-	  (##make-rectangular (- a c) (- b d))))))
+             (##flonum? c) (##flonum? d))
+        (##make-rectangular (##fl- a c) (##fl- b d))
+        (let ()
+          (declare (standard-bindings)
+                   (mostly-fixnum))
+          (##make-rectangular (- a c) (- b d))))))
 
 
 (define-prim (##cpxnum./ x y)
