@@ -1618,7 +1618,12 @@ EOF
               nbdig
               (^int 0))
              (^while (^!= m (^int 0))
-                     (^ (^assign m (^>>> m (^int 14)))
+                     (^ (^assign m
+                                 (case (target-name (ctx-target ctx))
+                                   ((js java)
+                                    (^>>> m (^int 14)))
+                                   (else
+                                    (^bitand (^>> m (^int 14)) (^int (- (expt 2 (- 32 14)) 1))))))
                         (^inc-by nbdig 1)))
              (^if (^= nbdig (^int 0))
                   (^assign nbdig (^int 1)))
@@ -1635,7 +1640,11 @@ EOF
                                  (^cast* 'bigdigit
                                          (^bitand n (^int 16383))))
                         (^assign n
-                                 (^>>> n (^int 14)))
+                                 (case (target-name (ctx-target ctx))
+                                   ((js java)
+                                    (^>>> n (^int 14)))
+                                   (else
+                                    (^bitand (^>> n (^int 14)) (^int (- (expt 2 (- 32 14)) 1))))))
                         (^inc-by i 1)))
              (^return
               (^new (^type 'bignum)
