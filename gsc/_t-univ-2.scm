@@ -1672,8 +1672,7 @@ EOF
               result
               (^array-index digits i))
              (^if (^> result 8191)
-                  (^assign result
-                           (^inc-by i -16384)))
+                  (^inc-by result -16384))
              (^while (^> i 0)
                      (^ (^inc-by i -1)
                         (^assign result

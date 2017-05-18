@@ -677,28 +677,18 @@
       (^fixnum-box (^<< (^fixnum-unbox arg1)
                         (^fixnum-unbox arg2)))))))
 
-;; TODO: Use a single expression
 (univ-define-prim "##fxarithmetic-shift-left?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (^if (^< (^fixnum-unbox arg2) (^int 0))
-          (return (^obj #f))
-          (^
-            (^assign (^rts-field-use 'inttemp1)
-                     (^if-expr (^> (^fixnum-unbox arg2)
-                                   (^int (- univ-word-bits univ-tag-bits)))
-                               (^int (- univ-word-bits univ-tag-bits))
-                               (^fixnum-unbox arg2)))
-
-            (^assign (^rts-field-use 'inttemp2)
-                     (^<< (^fixnum-unbox arg1)
-                          (^rts-field-use 'inttemp1)))
-
-            (return (^if-expr (^= (^>> (univ-wrap ctx (^rts-field-use 'inttemp2))
-                                       (^rts-field-use 'inttemp1))
-                                  (^fixnum-unbox arg1))
-                              (^fixnum-box (^rts-field-use 'inttemp2))
-                              (^obj #f))))))))
+     (return
+      (^if-expr (^or (^< (^fixnum-unbox arg2) (^int 0))
+                (^> (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits))))
+           (^obj #f)
+           (^if-expr (^= (^>> (univ-wrap ctx (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2)))
+                              (^fixnum-unbox arg2))
+                         (^fixnum-unbox arg1))
+                     (^fixnum-box (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2)))
+                     (^obj #f)))))))
 
 (univ-define-prim "##fxarithmetic-shift-right" #f
   (make-translated-operand-generator

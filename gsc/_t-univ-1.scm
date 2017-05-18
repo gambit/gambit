@@ -904,9 +904,11 @@
 
 (define (univ-wrap/ ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
-   ((python php)
-    ;; Needed because php and python always round down (should round toward 0).
-    (univ-wrap ctx (^float-toint (^/ expr1 (^float-fromint expr2)))))
+
+   ((python php ruby)
+    ;; The default behavior is to round down, but it should round toward 0
+    (univ-wrap ctx (^float-toint (^parens (^/ expr1 (^float-fromint expr2))))))
+
    (else (univ-wrap ctx (^/ expr1 expr2)))))
 
 (define (univ-emit-<< ctx expr1 expr2)
@@ -934,6 +936,15 @@
 
     ((js java)
      (^ expr1 " >>> " expr2))
+
+    ((python ruby php)
+     (^bitand
+      (^>> expr1
+           expr2)
+      (^- (^parens
+           (^<< (^int 1)
+                (^- (^int univ-word-bits) expr2)))
+          (^int 1))))
 
     (else
      (compiler-internal-error

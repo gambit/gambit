@@ -9,7 +9,7 @@
 (define g -536870912)
 
 (define (test x)
-  (println (##fxwrapabs x)))
+  (println (##fxabs? x)))
 
 (test a)
 (test b)

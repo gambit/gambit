@@ -2098,16 +2098,18 @@
      (^float-math 'floor expr))
 
     ((python)
-     (univ-ident-when-special-float
-      ctx
-      expr
-      (^float-math 'floor expr)))
+     (^parens
+      (univ-ident-when-special-float
+       ctx
+       expr
+       (^float-math 'floor expr))))
 
     ((ruby)
-     (univ-ident-when-special-float
-      ctx
-      expr
-      (^float-fromint (^call-prim (^member expr 'floor)))))
+     (^parens
+      (univ-ident-when-special-float
+       ctx
+       expr
+       (^float-fromint (^call-prim (^member expr 'floor))))))
 
     (else
      (compiler-internal-error
