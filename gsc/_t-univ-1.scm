@@ -938,6 +938,7 @@
      (^ expr1 " >>> " expr2))
 
     ((python ruby php)
+     ;; These targets don't need >>>, but just in case...
      (^bitand
       (^>> expr1
            expr2)
@@ -3595,7 +3596,9 @@
          ;;  will
          'scmobj)))
 
-(define univ-adigit-width 14)
+(define univ-mdigit-width 14)
+(define univ-mdigit-base (expt 2 univ-mdigit-width))
+(define univ-mdigit-base-minus-1 (- univ-mdigit-base 1))
 
 (define (univ-bignum->digits obj)
 
@@ -3605,7 +3608,7 @@
           (else
            (let* ((hi-len (quotient len 2))
                   (lo-len (- len hi-len))
-                  (lo-len-bits (* univ-adigit-width lo-len)))
+                  (lo-len-bits (* univ-mdigit-width lo-len)))
              (let* ((hi (arithmetic-shift n (- lo-len-bits)))
                     (lo (- n (arithmetic-shift hi lo-len-bits))))
                (dig lo
@@ -3615,9 +3618,9 @@
                          rest)))))))
 
   (let* ((width (integer-length obj))
-         (len (+ (quotient width univ-adigit-width) 1)))
+         (len (+ (quotient width univ-mdigit-width) 1)))
     (dig (if (< obj 0)
-           (+ (arithmetic-shift 1 (* univ-adigit-width len)) obj)
+           (+ (arithmetic-shift 1 (* univ-mdigit-width len)) obj)
            obj)
          len
          '())))

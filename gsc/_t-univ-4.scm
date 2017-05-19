@@ -2819,7 +2819,7 @@
       (^> (^array-index (^bignum-digits arg1)
                         (^- (^array-length (^bignum-digits arg1))
                             (^int 1)))
-          (^int 8191)))))) ;;TODO: adjust for digit size
+          (^int (quotient univ-mdigit-base-minus-1 2)))))))
 
 (univ-define-prim "##bignum.adigit-length" #f
   (make-translated-operand-generator
@@ -2839,10 +2839,10 @@
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
                          (^bitand (^parens (^+ (^rts-field-use 'inttemp1) (^int 1)))
-                                  (^int 16383))))
+                                  (^int univ-mdigit-base-minus-1))))
         (return
          (^if-expr (^= (^rts-field-use 'inttemp1)
-                       (^int 16383))
+                       (^int univ-mdigit-base-minus-1))
                    (^obj 1)
                    (^obj 0)))))))
 
@@ -2856,7 +2856,7 @@
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
                          (^bitand (^parens (^- (^rts-field-use 'inttemp1) (^int 1)))
-                                  (^int 16383))))
+                                  (^int univ-mdigit-base-minus-1))))
         (return
          (^if-expr (^= (^rts-field-use 'inttemp1)
                        (^int 0))
@@ -2874,7 +2874,7 @@
                                            (^array-index (^bignum-digits arg3)
                                                          (^fixnum-unbox arg4)))
                                        (^fixnum-unbox arg5)))
-                          (^int 16383)))
+                          (^int univ-mdigit-base-minus-1)))
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
@@ -2896,7 +2896,7 @@
                                            (^array-index (^bignum-digits arg3)
                                                          (^fixnum-unbox arg4)))
                                        (^fixnum-unbox arg5)))
-                          (^int 16383)))
+                          (^int univ-mdigit-base-minus-1)))
         (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
@@ -2943,9 +2943,10 @@
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
                          (^bitand (^rts-field-use 'inttemp1)
-                                  (^int 16383))))
+                                  (^int univ-mdigit-base-minus-1))))
         (return
-         (^fixnum-box (^>> (^rts-field-use 'inttemp1) (^int 14))))))))
+         (^fixnum-box (^>> (^rts-field-use 'inttemp1)
+                           (^int univ-mdigit-width))))))))
 
 (univ-define-prim "##bignum.mdigit-div!" #f
   (make-translated-operand-generator
@@ -2961,13 +2962,13 @@
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
                          (^bitand (^rts-field-use 'inttemp1)
-                                  (^int 16383))))
+                                  (^int univ-mdigit-base-minus-1))))
         (^assign (^rts-field-use 'inttemp1)
-                 (^>> (^rts-field-use 'inttemp1) (^int 14)))
+                 (^>> (^rts-field-use 'inttemp1) (^int univ-mdigit-width)))
         (return
          (^fixnum-box
           (^if-expr (^> (^rts-field-use 'inttemp1) (^int 0))
-                    (^- (^rts-field-use 'inttemp1) (^int 16384))
+                    (^- (^rts-field-use 'inttemp1) (^int univ-mdigit-base))
                     (^rts-field-use 'inttemp1))))))))
 
 (univ-define-prim "##bignum.mdigit-quotient" #f
@@ -2980,7 +2981,7 @@
                      (^+ (^parens
                           (^<< (^array-index (^bignum-digits arg1)
                                              (^fixnum-unbox arg2))
-                               (^int 14)))
+                               (^int univ-mdigit-width)))
                          (^array-index (^bignum-digits arg1)
                                        (^- (^fixnum-unbox arg2)
                                            (^int 1)))))
@@ -2994,7 +2995,7 @@
                         (^+ (^parens
                              (^<< (^array-index (^bignum-digits arg1)
                                                 (^fixnum-unbox arg2))
-                                  (^int 14)))
+                                  (^int univ-mdigit-width)))
                             (^array-index (^bignum-digits arg1)
                                           (^- (^fixnum-unbox arg2)
                                               (^int 1)))))
@@ -3009,7 +3010,7 @@
               (^fixnum-unbox arg2))
           (^+ (^parens
                (^<< (^fixnum-unbox arg3)
-                    (^int 14)))
+                    (^int univ-mdigit-width)))
               (^fixnum-unbox arg4)))))))
 
 (univ-define-prim-bool "##bignum.adigit-ones?" #f
@@ -3018,7 +3019,7 @@
      (return
       (^= (^array-index (^bignum-digits arg1)
                         (^fixnum-unbox arg2))
-          (^int 16383))))))
+          (^int univ-mdigit-base-minus-1))))))
 
 (univ-define-prim-bool "##bignum.adigit-zero?" #f
   (make-translated-operand-generator
@@ -3034,7 +3035,7 @@
      (return
       (^> (^array-index (^bignum-digits arg1)
                         (^fixnum-unbox arg2))
-          (^int 8191))))))
+          (^int (quotient univ-mdigit-base-minus-1 2)))))))
 
 (univ-define-prim-bool "##bignum.adigit-=" #f
   (make-translated-operand-generator
@@ -3103,9 +3104,9 @@
                                (^parens
                                 (^>> (^array-index (^bignum-digits arg5)
                                                    (^fixnum-unbox arg6))
-                                     (^- (^int 14)
+                                     (^- (^int univ-mdigit-width)
                                          (^fixnum-unbox arg7))))))
-                          16383)))
+                          univ-mdigit-base-minus-1)))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-and!" #f

@@ -8,9 +8,11 @@
 
     (set! b2f?
           (lambda (bn)
-            (define ##bignum.mdigit-base 16384)
-            (define ##bignum.mdigit-base-minus-1 16383)
-            (let* ((i
+            (let* ((##bignum.mdigit-base-minus-1
+                    (##bignum.mdigit-ref (##fixnum->bignum -1) 0))
+                   (##bignum.mdigit-base
+                    (##fx+ ##bignum.mdigit-base-minus-1 1))
+                   (i
                     (##fx- (##bignum.mdigit-length bn) 1))
                    (n
                     (##bignum.mdigit-ref bn i))

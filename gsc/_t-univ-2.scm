@@ -1526,7 +1526,9 @@ EOF
               'bigdigit
               flip
               (^cast* 'bigdigit
-                      (^if-expr complement (^int 16383) (^int 0))))
+                      (^if-expr complement
+                                (^int univ-mdigit-base-minus-1)
+                                (^int 0))))
              (^if (^< n nbdig)
                   (^assign nbdig n))
              (^while (^< i nbdig)
@@ -1537,10 +1539,11 @@ EOF
                         (^inc-by i 1)))
              (^if (^and (^not (^parens (^eq? x (^obj #f))))
                         (^> (^array-index (^bignum-digits x) (^- i (^int 1)))
-                            (^int 8191)))
+                            (^int (quotient univ-mdigit-base-minus-1 2))))
                   (^assign flip
                            (^cast* 'bigdigit
-                                   (^bitxor flip (^int 16383)))))
+                                   (^bitxor flip
+                                            (^int univ-mdigit-base-minus-1)))))
              (^while (^< i n)
                      (^ (^assign (^array-index digits i)
                                  flip)
@@ -1571,9 +1574,9 @@ EOF
               'int
               nbdig
               (^int 0))
-             (^while (^or (^< m (^int -4096))
-                          (^> m (^int 4095)))
-                     (^ (^assign m (^>> m (^int 14)))
+             (^while (^or (^< m (^int (- (quotient univ-mdigit-base 4))))
+                          (^> m (^int (quotient univ-mdigit-base-minus-1 4))))
+                     (^ (^assign m (^>> m (^int univ-mdigit-width)))
                         (^inc-by nbdig 1)))
              (^inc-by nbdig 1)
              (^var-declaration
@@ -1587,9 +1590,11 @@ EOF
              (^while (^< i nbdig)
                      (^ (^assign (^array-index digits i)
                                  (^cast* 'bigdigit
-                                         (^bitand n (^int 16383))))
+                                         (^bitand
+                                          n
+                                          (^int univ-mdigit-base-minus-1))))
                         (^assign n
-                                 (^>> n (^int 14)))
+                                 (^>> n (^int univ-mdigit-width)))
                         (^inc-by i 1)))
              (^return
               (^new (^type 'bignum)
@@ -1609,6 +1614,15 @@ EOF
               (nbdig (^local-var 'nbdig))
               (digits (^local-var 'digits))
               (i (^local-var 'i)))
+
+          (define (logical-shift-u32 expr shift)
+            (case (target-name (ctx-target ctx))
+              ((js java)
+               (^>>> expr (^int shift)))
+              (else
+               (^bitand (^>> expr (^int shift))
+                        (^int (- (expt 2 (- 32 shift)) 1))))))
+
           (^ (^var-declaration
               'u32
               m
@@ -1618,12 +1632,7 @@ EOF
               nbdig
               (^int 0))
              (^while (^!= m (^int 0))
-                     (^ (^assign m
-                                 (case (target-name (ctx-target ctx))
-                                   ((js java)
-                                    (^>>> m (^int 14)))
-                                   (else
-                                    (^bitand (^>> m (^int 14)) (^int (- (expt 2 (- 32 14)) 1))))))
+                     (^ (^assign m (logical-shift-u32 m univ-mdigit-width))
                         (^inc-by nbdig 1)))
              (^if (^= nbdig (^int 0))
                   (^assign nbdig (^int 1)))
@@ -1638,13 +1647,10 @@ EOF
              (^while (^< i nbdig)
                      (^ (^assign (^array-index digits i)
                                  (^cast* 'bigdigit
-                                         (^bitand n (^int 16383))))
-                        (^assign n
-                                 (case (target-name (ctx-target ctx))
-                                   ((js java)
-                                    (^>>> n (^int 14)))
-                                   (else
-                                    (^bitand (^>> n (^int 14)) (^int (- (expt 2 (- 32 14)) 1))))))
+                                         (^bitand
+                                          n
+                                          (^int univ-mdigit-base-minus-1))))
+                        (^assign n (logical-shift-u32 n univ-mdigit-width))
                         (^inc-by i 1)))
              (^return
               (^new (^type 'bignum)
@@ -1680,12 +1686,12 @@ EOF
               's32
               result
               (^array-index digits i))
-             (^if (^> result 8191)
-                  (^inc-by result -16384))
+             (^if (^> result (quotient univ-mdigit-base-minus-1 2))
+                  (^inc-by result (- univ-mdigit-base)))
              (^while (^> i 0)
                      (^ (^inc-by i -1)
                         (^assign result
-                                 (^+ (^* result (^int 16384))
+                                 (^+ (^* result (^int univ-mdigit-base))
                                      (^array-index digits i)))))
              (^return
               result))))))
@@ -1722,7 +1728,7 @@ EOF
               (^int 0))
              (^while (^>= i 0)
                      (^ (^assign result
-                                 (^+ (^* result (^int 16384))
+                                 (^+ (^* result (^int univ-mdigit-base))
                                      (^array-index digits i)))
                         (^inc-by i -1)))
              (^return
