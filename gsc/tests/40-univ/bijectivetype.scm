@@ -44,6 +44,7 @@
   (let ((tmp (##inline-host-expression "g_scm2host(@1@)" x)))
     (let ((res (##inline-host-expression "g_host2scm(@1@)" tmp)))
       res)))
+;; TODO : java
 ; ((module)
 ;  (let ((tmp (##inline-host-expression "G_RTS.scm2host(@1@)" x)))
 ;    (let ((res (##inline-host-expression "G_RTS.host2scm(@1@)" tmp)))
@@ -63,7 +64,7 @@
 (test ##null? (bijective '()))
 
 ;; void
-;(test ##void? (bijective #!void))
+(test (lambda (a) (##eq? a #!void)) (bijective #!void))
 
 ;; boolean
 (test ##boolean? (bijective #t))
@@ -83,4 +84,4 @@
 (test ##string? (bijective "string"))
 
 ;; procedure
-;(test ##procedure? (bijective-fn id))
+(test ##procedure? (bijective-fn id))
