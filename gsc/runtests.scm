@@ -274,7 +274,7 @@
                       "/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Commands/java")
 
     ("js"     ".js"   ()
-                      "d8")
+                      "node")
 
     ;; repr-module = globals
     ("js"     ".js"   ("-repr-module"    "globals"
@@ -282,50 +282,50 @@
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "d8")
+                      "node")
     ("js"     ".js"   ("-repr-module"    "globals"
                        "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "d8")
+                      "node")
     ("js"     ".js"   ("-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
-                      "d8")
+                      "node")
     ("js"     ".js"   ("-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
-                      "d8")
+                      "node")
     ;; repr-module = class
     ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "d8")
+                      "node")
     ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
-                      "d8")
+                      "node")
     ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
-                      "d8")
+                      "node")
     ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
-                      "d8")
+                      "node")
 
     ("python" ".py"   ()
                       "python3")
