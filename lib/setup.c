@@ -3501,19 +3501,19 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->fabs  = fabs;
   ___GSTATE->floor = floor;
   ___GSTATE->ceil  = ceil;
-#ifdef ___DEFINE_SCALBN
-  ___GSTATE->scalbn= ___scalbn;
+#ifndef ___DEFINE_SCALBN
+  ___GSTATE->scalbn= scalbn;
 #endif
-#ifdef ___DEFINE_ILOGB
-  ___GSTATE->ilogb = ___ilogb;
+#ifndef ___DEFINE_ILOGB
+  ___GSTATE->ilogb = ilogb;
 #endif
   ___GSTATE->exp   = exp;
-#ifdef ___DEFINE_EXPM1
-  ___GSTATE->expm1 = ___expm1;
+#ifndef ___DEFINE_EXPM1
+  ___GSTATE->expm1 = expm1;
 #endif
   ___GSTATE->log   = log;
-#ifdef ___DEFINE_LOG1P
-  ___GSTATE->log1p = ___log1p;
+#ifndef ___DEFINE_LOG1P
+  ___GSTATE->log1p = log1p;
 #endif
   ___GSTATE->sin   = sin;
   ___GSTATE->cos   = cos;
@@ -3521,29 +3521,29 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->asin  = asin;
   ___GSTATE->acos  = acos;
   ___GSTATE->atan  = atan;
-#ifdef ___DEFINE_SINH
-  ___GSTATE->sinh  = ___sinh;
+#ifndef ___DEFINE_SINH
+  ___GSTATE->sinh  = sinh;
 #endif
-#ifdef ___DEFINE_COSH
-  ___GSTATE->cosh  = ___cosh;
+#ifndef ___DEFINE_COSH
+  ___GSTATE->cosh  = cosh;
 #endif
-#ifdef ___DEFINE_TANH
-  ___GSTATE->tanh  = ___tanh;
+#ifndef ___DEFINE_TANH
+  ___GSTATE->tanh  = tanh;
 #endif
-#ifdef ___DEFINE_ASINH
-  ___GSTATE->asinh = ___asinh;
+#ifndef ___DEFINE_ASINH
+  ___GSTATE->asinh = asinh;
 #endif
-#ifdef ___DEFINE_ACOSH
-  ___GSTATE->acosh = ___acosh;
+#ifndef ___DEFINE_ACOSH
+  ___GSTATE->acosh = acosh;
 #endif
-#ifdef ___DEFINE_ATANH
-  ___GSTATE->atanh = ___atanh;
+#ifndef ___DEFINE_ATANH
+  ___GSTATE->atanh = atanh;
 #endif
-#ifdef ___DEFINE_ATAN2
-  ___GSTATE->atan2 = ___atan2;
+#ifndef ___DEFINE_ATAN2
+  ___GSTATE->atan2 = atan2;
 #endif
-#ifdef ___DEFINE_POW
-  ___GSTATE->pow = ___pow;
+#ifndef ___DEFINE_POW
+  ___GSTATE->pow   = pow;
 #endif
   ___GSTATE->sqrt  = sqrt;
 
