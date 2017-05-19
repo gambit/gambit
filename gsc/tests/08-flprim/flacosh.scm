@@ -9,6 +9,9 @@
 (test 1.1 0.4435682543851153)
 (test 2.0 1.3169578969248166)
 
+(println (##fleqv? (##flacosh +inf.0) +inf.0))
+
 (println (##flnan? (##flacosh 0.0)))
 (println (##flnan? (##flacosh 0.99)))
 (println (##flnan? (##flacosh -1.0)))
+(println (##flnan? (##flacosh -inf.0)))
