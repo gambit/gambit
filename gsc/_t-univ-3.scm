@@ -1714,6 +1714,52 @@
 (define (univ-emit-int ctx val)
   (univ-constant val))
 
+(define (univ-emit-num-of-type ctx type val)
+  (declare (generic))
+  (case (target-name (ctx-target ctx))
+
+    ((java)
+     (case type
+       ((f32)
+        (^cast* 'f32 (^float val)))
+       ((f64)
+        (^float val))
+       ((s8 s16 s32)
+        (^int val))
+       ((u8)
+        (^int
+         (if (>= val 128)
+             (- val 256)
+             val)))
+       ((u16)
+        (^int
+         (if (>= val 32768)
+             (- val 65536)
+             val)))
+       ((u32)
+        (^int
+         (if (>= val 32768)
+             (- val 4294967296)
+             val)))
+;;       ((u64)
+;;        (^int
+;;         (if (>= val 9223372036854775808)
+;;             (- val 18446744073709551616)
+;;             val)))
+       (else
+        (univ-emit-obj* ctx val #f))))
+
+    (else
+     (case type
+       ((f32)
+        (^cast* 'f32 (^float val)))
+       ((f64)
+        (^float val))
+       ((s8 s16 s32 u8 u16 u32)
+        (^int val))
+       (else
+        (univ-emit-obj* ctx val #f))))))
+
 (define (univ-emit-fixnum-box ctx expr)
   (case (univ-fixnum-representation ctx)
 

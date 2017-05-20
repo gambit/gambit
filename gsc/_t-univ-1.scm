@@ -3210,271 +3210,270 @@
           "univ-emit-setloc, unknown 'gvm-loc':"
           gvm-loc))))
 
-(define (univ-emit-obj ctx obj)
+(define (univ-emit-obj* ctx obj force-var?)
 
-  (define (emit-obj obj force-var?)
+  (cond ((or (false-object? obj)
+             (boolean? obj))
+         (^boolean-obj obj))
 
-    (cond ((or (false-object? obj)
-               (boolean? obj))
-           (^boolean-obj obj))
+        ((number? obj)
+         (cond ((not (real? obj)) ;; non-real complex number
+                (univ-obj-use
+                 ctx
+                 obj
+                 force-var?
+                 (lambda ()
+                   (^cpxnum-make (univ-emit-obj* ctx (real-part obj) #f)
+                                 (univ-emit-obj* ctx (imag-part obj) #f)))))
 
-          ((number? obj)
-           (cond ((not (real? obj)) ;; non-real complex number
-                  (univ-obj-use
-                   ctx
-                   obj
-                   force-var?
-                   (lambda ()
-                     (^cpxnum-make (emit-obj (real-part obj) #f)
-                                   (emit-obj (imag-part obj) #f)))))
+               ((not (exact? obj)) ;; floating-point number
+                (^flonum-box (^float obj)))
 
-                 ((not (exact? obj)) ;; floating-point number
-                  (^flonum-box (^float obj)))
+               ((not (integer? obj)) ;; non-integer rational number
+                (univ-obj-use
+                 ctx
+                 obj
+                 force-var?
+                 (lambda ()
+                   (^ratnum-make (univ-emit-obj* ctx (numerator obj) #f)
+                                 (univ-emit-obj* ctx (denominator obj) #f)))))
 
-                 ((not (integer? obj)) ;; non-integer rational number
-                  (univ-obj-use
-                   ctx
-                   obj
-                   force-var?
-                   (lambda ()
-                     (^ratnum-make (emit-obj (numerator obj) #f)
-                                   (emit-obj (denominator obj) #f)))))
+               (else ;; exact integer
+                (if (and (>= obj univ-fixnum-min)
+                         (<= obj univ-fixnum-max))
 
-                 (else ;; exact integer
-                  (if (and (>= obj univ-fixnum-min)
-                           (<= obj univ-fixnum-max))
+                    (^fixnum-box (^int obj))
 
-                      (^fixnum-box (^int obj))
+                    (univ-obj-use
+                     ctx
+                     obj
+                     force-var?
+                     (lambda ()
+                       (^new (^type 'bignum)
+                             (^array-literal
+                              'bigdigit
+                              (univ-bignum->digits obj)))))))))
 
-                      (univ-obj-use
-                       ctx
-                       obj
-                       force-var?
-                       (lambda ()
-                         (^new (^type 'bignum)
-                               (^array-literal
-                                'bigdigit
-                                (univ-bignum->digits obj)))))))))
+        ((char? obj)
+         (^char-obj obj force-var?))
 
-          ((char? obj)
-           (^char-obj obj force-var?))
+        ((string? obj)
+         (^string-obj obj force-var?))
 
-          ((string? obj)
-           (^string-obj obj force-var?))
+        ((symbol-object? obj)
+         (^symbol-obj obj force-var?))
 
-          ((symbol-object? obj)
-           (^symbol-obj obj force-var?))
+        ((keyword-object? obj)
+         (^keyword-obj obj force-var?))
 
-          ((keyword-object? obj)
-           (^keyword-obj obj force-var?))
+        ((null? obj)
+         (^null-obj))
 
-          ((null? obj)
-           (^null-obj))
+        ((void-object? obj)
+         (^void-obj))
 
-          ((void-object? obj)
-           (^void-obj))
+        ((end-of-file-object? obj)
+         (^eof))
 
-          ((end-of-file-object? obj)
-           (^eof))
+        ((absent-object? obj)
+         (^absent))
 
-          ((absent-object? obj)
-           (^absent))
+        ((deleted-object? obj)
+         (^deleted))
 
-          ((deleted-object? obj)
-           (^deleted))
+        ((unused-object? obj)
+         (^unused))
 
-          ((unused-object? obj)
-           (^unused))
+        ((unbound1-object? obj)
+         (^unbound1))
 
-          ((unbound1-object? obj)
-           (^unbound1))
+        ((unbound2-object? obj)
+         (^unbound2))
 
-          ((unbound2-object? obj)
-           (^unbound2))
+        ((optional-object? obj)
+         (^optional))
 
-          ((optional-object? obj)
-           (^optional))
+        ((key-object? obj)
+         (^key))
 
-          ((key-object? obj)
-           (^key))
+        ((rest-object? obj)
+         (^rest))
 
-          ((rest-object? obj)
-           (^rest))
+        ((proc-obj? obj)
+         (let ((name (proc-obj-name obj)))
+           (if (proc-obj-code obj) ;; procedure defined in this module?
+               (^this-mod-jumpable (gvm-proc-use ctx name))
+               (^getpeps (string->symbol name)))))
 
-          ((proc-obj? obj)
-           (let ((name (proc-obj-name obj)))
-             (if (proc-obj-code obj) ;; procedure defined in this module?
-                 (^this-mod-jumpable (gvm-proc-use ctx name))
-                 (^getpeps (string->symbol name)))))
+        ((pair? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^cons (univ-emit-obj* ctx (car obj) #f)
+                   (univ-emit-obj* ctx (cdr obj) #f)))))
 
-          ((pair? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^cons (emit-obj (car obj) #f)
-                     (emit-obj (cdr obj) #f)))))
+        ((vector-object? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^vector-box
+             (^array-literal
+              'scmobj
+              (map (lambda (x) (univ-emit-obj* ctx x #f))
+                   (vector->list obj)))))))
 
-          ((vector-object? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^vector-box
+        ((u8vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^u8vector-box
+             (^array-literal
+              'u8
+              (map (lambda (x) (^num-of-type 'u8 x))
+                   (u8vect->list obj)))))))
+
+        ((u16vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^u16vector-box
+             (^array-literal
+              'u16
+              (map (lambda (x) (^num-of-type 'u16 x))
+                   (u16vect->list obj)))))))
+
+        ((u32vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^u32vector-box
+             (^array-literal
+              'u32
+              (map (lambda (x) (^num-of-type 'u32 x))
+                   (u32vect->list obj)))))))
+
+        ((u64vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^u64vector-box
+             (^array-literal
+              'u64
+              (map (lambda (x) (^num-of-type 'u64 x))
+                   (u64vect->list obj)))))))
+
+        ((s8vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^s8vector-box
+             (^array-literal
+              's8
+              (map (lambda (x) (^num-of-type 's8 x))
+                   (s8vect->list obj)))))))
+
+        ((s16vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^s16vector-box
+             (^array-literal
+              's16
+              (map (lambda (x) (^num-of-type 's16 x))
+                   (s16vect->list obj)))))))
+
+        ((s32vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^s32vector-box
+             (^array-literal
+              's32
+              (map (lambda (x) (^num-of-type 's32 x))
+                   (s32vect->list obj)))))))
+
+        ((s64vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^s64vector-box
+             (^array-literal
+              's64
+              (map (lambda (x) (^num-of-type 's64 x))
+                   (s64vect->list obj)))))))
+
+        ((f32vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^f32vector-box
+             (^array-literal
+              'f32
+              (map (lambda (x) (^num-of-type 'f32 x))
+                   (f32vect->list obj)))))))
+
+        ((f64vect? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^f64vector-box
+             (^array-literal
+              'f64
+              (map (lambda (x) (^num-of-type 'f64 x))
+                   (f64vect->list obj)))))))
+
+        ((structure-object? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (let* ((slots
+                    (##vector-copy obj)) ;;TODO: replace call of ##vector-copy
+                   (cyclic?
+                    (eq? (vector-ref slots 0) obj)))
+              (^structure-box
                (^array-literal
                 'scmobj
-                (map (lambda (x) (emit-obj x #f))
-                     (vector->list obj)))))))
+                (cons (if cyclic? ;; the root type descriptor is cyclic
+                          (^null) ;; handle this specially
+                          (univ-emit-obj* ctx (vector-ref slots 0) #f))
+                      (map (lambda (x) (univ-emit-obj* ctx x #f))
+                           (cdr (vector->list slots))))))))))
 
-          ((u8vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^u8vector-box
-               (^array-literal
-                'u8
-                (map (lambda (x) (^int x))
-                     (u8vect->list obj)))))))
+        (else
+         (compiler-user-warning #f "UNIMPLEMENTED OBJECT:" obj)
+         (^str
+          (string-append
+           "UNIMPLEMENTED OBJECT: "
+           (object->string obj))))))
 
-          ((u16vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^u16vector-box
-               (^array-literal
-                'u16
-                (map (lambda (x) (^int x))
-                     (u16vect->list obj)))))))
-
-          ((u32vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^u32vector-box
-               (^array-literal
-                'u32
-                (map (lambda (x) (^int x))
-                     (u32vect->list obj)))))))
-
-          ((u64vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^u64vector-box
-               (^array-literal
-                'u64
-                (map (lambda (x) (emit-obj x #f))
-                     (u64vect->list obj)))))))
-
-          ((s8vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^s8vector-box
-               (^array-literal
-                's8
-                (map (lambda (x) (^int x))
-                     (s8vect->list obj)))))))
-
-          ((s16vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^s16vector-box
-               (^array-literal
-                's16
-                (map (lambda (x) (^int x))
-                     (s16vect->list obj)))))))
-
-          ((s32vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^s32vector-box
-               (^array-literal
-                's32
-                (map (lambda (x) (^int x))
-                     (s32vect->list obj)))))))
-
-          ((s64vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^s64vector-box
-               (^array-literal
-                's64
-                (map (lambda (x) (emit-obj x #f))
-                     (s64vect->list obj)))))))
-
-          ((f32vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^f32vector-box
-               (^array-literal
-                'f32
-                (map (lambda (x) (^cast* 'f32 (^float x)))
-                     (f32vect->list obj)))))))
-
-          ((f64vect? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (^f64vector-box
-               (^array-literal
-                'f64
-                (map (lambda (x) (^float x))
-                     (f64vect->list obj)))))))
-
-          ((structure-object? obj)
-           (univ-obj-use
-            ctx
-            obj
-            force-var?
-            (lambda ()
-              (let* ((slots
-                      (##vector-copy obj));;TODO: replace call of ##vector-copy
-                     (cyclic?
-                      (eq? (vector-ref slots 0) obj)))
-                (^structure-box
-                 (^array-literal
-                  'scmobj
-                  (cons (if cyclic? ;; the root type descriptor is cyclic
-                            (^null) ;; handle this specially
-                            (emit-obj (vector-ref slots 0) #f))
-                        (map (lambda (x) (emit-obj x #f))
-                             (cdr (vector->list slots))))))))))
-
-          (else
-           (compiler-user-warning #f "UNIMPLEMENTED OBJECT:" obj)
-           (^str
-            (string-append
-             "UNIMPLEMENTED OBJECT: "
-             (object->string obj))))))
-
-  (emit-obj obj #t))
+(define (univ-emit-obj ctx obj)
+  (univ-emit-obj* ctx obj #t))
 
 (define (univ-obj-type obj)
 

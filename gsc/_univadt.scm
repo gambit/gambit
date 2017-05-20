@@ -519,6 +519,9 @@
 (define-macro (^int val)
   `(univ-emit-int ctx ,val))
 
+(define-macro (^num-of-type type val)
+  `(univ-emit-num-of-type ctx ,type ,val))
+
 (define-macro (^fixnum-box val)
   `(univ-emit-fixnum-box ctx ,val))
 
