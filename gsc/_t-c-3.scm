@@ -144,6 +144,7 @@
 (define targ-inexact-+2   (exact->inexact 2))
 (define targ-inexact--2   (exact->inexact -2))
 (define targ-inexact-+1   (exact->inexact 1))
+(define targ-inexact--1   (exact->inexact -1))
 (define targ-inexact-+1/2 (exact->inexact (/ 1 2)))
 (define targ-inexact-+0   (exact->inexact 0))
 

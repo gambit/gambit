@@ -921,7 +921,7 @@
      (^if-expr (^= arg2 (^float targ-inexact-+0))
                (^if-expr (^= arg1 (^float targ-inexact-+0))
                          "float('nan')"
-                         (^ "math.copysign(float('inf')," (^* arg1 arg2) ")"))
+                         (^float-copysign "float('inf')" (^* arg1 arg2)))
                (^/ arg1 arg2)))
 
     ((php)
@@ -1050,22 +1050,14 @@
 (univ-define-prim "##flcopysign" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-
-     (define (has-negative-sign expr)
-       (^parens
-        (^or (^parens (^< (^flonum-unbox expr)
-                          (^float targ-inexact-+0)))
-             (^parens (^< (^/ (^float targ-inexact-+1)
-                              (^flonum-unbox expr))
-                          (^float targ-inexact-+0))))))
-
      (case (target-name (ctx-target ctx))
-       ((python)
+
+       ((python java)
         (return
          (^flonum-box
-          (^float-math 'copysign
-                       (^flonum-unbox arg1)
-                       (^flonum-unbox arg2)))))
+          (^float-copysign
+           (^flonum-unbox arg1)
+           (^flonum-unbox arg2)))))
 
        ((php)
         (return
@@ -1088,8 +1080,10 @@
 
        (else
         (return
-         (^if-expr (^= (has-negative-sign arg1)
-                       (has-negative-sign arg2))
+         (^if-expr (univ-floats-have-same-sign?
+                    ctx
+                    (^flonum-unbox arg1)
+                    (^flonum-unbox arg2))
                    arg1
                    (^flonum-box (^- (^flonum-unbox arg1))))))))))
 

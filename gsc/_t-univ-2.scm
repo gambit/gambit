@@ -3763,6 +3763,114 @@ EOF
            (compiler-internal-error
             "univ-rtlib-feature ldexp, unknown target"))))))
 
+    ((expm1)
+     (rts-method
+      'expm1
+      '(public)
+      'f64
+      (list (univ-field 'x 'f64))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((x (^local-var 'x)))
+         (^return
+          (^if-expr (^= x (^float targ-inexact-+0))
+                    x
+                    (^if-expr (^<= (^float-abs x) (^float 1e-5)) ;; TODO: constant
+                              (^* x
+                                  (^parens
+                                   (^+ (^float targ-inexact-+1)
+                                       (^* (^* (^float targ-inexact-+1/2) x)
+                                           (^parens
+                                            (^+ (^float targ-inexact-+1)
+                                                (^* (^float (exact->inexact 1/3))
+                                                    x)))))))
+                              (^- (^float-exp x) (^float targ-inexact-+1)))))))))
+
+    ((log1p)
+     (rts-method
+      'log1p
+      '(public)
+      'f64
+      (list (univ-field 'x 'f64))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((x (^local-var 'x)))
+         (^return
+          (^float-log (^+ (^float targ-inexact-+1) x)))))))
+
+    ((asinh)
+     (rts-method
+      'asinh
+      '(public)
+      'f64
+      (list (univ-field 'x 'f64))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((x (^local-var 'x)))
+         (^return
+          (univ-ident-when-special-float
+           ctx
+           x
+           (^float-log
+            (^+ x
+                (^float-sqrt (^+ (^* x x)
+                                 (^float targ-inexact-+1)))))))))))
+
+    ((acosh)
+     (rts-method
+      'acosh
+      '(public)
+      'f64
+      (list (univ-field 'x 'f64))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((x (^local-var 'x)))
+         (^return
+          (^if-expr (^>= x (^float targ-inexact-+1))
+                    (case (target-name (ctx-target ctx))
+                      ((python ruby)
+                       (^float-math 'acosh x))
+                      (else
+                       (^float-log
+                        (^+ x
+                            (^* (^float-sqrt (^- x (^float targ-inexact-+1)))
+                                (^float-sqrt (^+ x (^float targ-inexact-+1))))))))
+                    (^float +nan.0))))))) ;;TODO: targ-nan ???
+
+    ((atanh)
+     (rts-method
+      'atanh
+      '(public)
+      'f64
+      (list (univ-field 'x 'f64))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((x (^local-var 'x)))
+         (^return
+          (^if-expr (^and (^> x (^float targ-inexact--1))
+                          (^< x (^float targ-inexact-+1)))
+                    (case (target-name (ctx-target ctx))
+                      ((python ruby)
+                       (^float-math 'atanh x))
+                      (else
+                       (^if-expr (^= x (^float targ-inexact-+0))
+                                 x
+                                 (^* (^float targ-inexact-+1/2)
+                                     (^parens
+                                      (^- (^float-log (^+ (^float targ-inexact-+1) x))
+                                          (^float-log (^- (^float targ-inexact-+1) x))))))))
+                    (^if-expr (^= x (^float targ-inexact--1))
+                              (^float -inf.0) ;;TODO: targ-inf ???
+                              (^if-expr (^= x (^float targ-inexact-+1))
+                                        (^float +inf.0) ;;TODO: targ-inf ???
+                                        (^float +nan.0))))))))) ;;TODO: targ-nan ???
+
+
     (else
      (compiler-internal-error
       "univ-rtlib-feature, unknown runtime system feature" feature))))

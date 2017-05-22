@@ -2262,8 +2262,14 @@
 
   (case (target-name (ctx-target ctx))
 
-    ((js java)
+    ((js)
      (use-round-half-up))
+
+    ((java)
+     (univ-ident-when-special-float
+      ctx
+      expr
+      (use-round-half-up)))
 
     ((php ruby)
      (univ-ident-when-special-float
@@ -2394,14 +2400,8 @@ Ruby:
     ((js python php java)
      (^float-math 'expm1 expr))
 
-    ;; TODO : this is not the right way to compute expm1
-    ;; there's a loss of precision here
-    ((ruby)
-     (^ "(Math.exp(" expr ") - 1)"))
-
     (else
-     (compiler-internal-error
-      "univ-emit-float-expm1, unknown target"))))
+     (^call-prim (^rts-method-use 'expm1) expr))))
 
 (define (univ-emit-float-log ctx expr)
   (^float-math 'log expr))
@@ -2412,14 +2412,8 @@ Ruby:
     ((js python php java)
      (^float-math 'log1p expr))
 
-    ;; TODO : this is not the right way to compute log1p,
-    ;; loss of precision here
-    ((ruby)
-     (^ "Math.log(1 + " expr ")"))
-
     (else
-     (compiler-internal-error
-      "univ-emit-float-log1p, unknown target"))))
+     (^call-prim (^rts-method-use 'log1p) expr))))
 
 (define (univ-emit-float-sin ctx expr)
   (^float-math 'sin expr))
@@ -2454,29 +2448,29 @@ Ruby:
 (define (univ-emit-float-asinh ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((java)
-     (^float targ-inexact-+0)) ;; TODO: implement
+    ((js python php ruby)
+     (^float-math 'asinh expr))
 
     (else
-     (^float-math 'asinh expr))))
+     (^call-prim (^rts-method-use 'asinh) expr))))
 
 (define (univ-emit-float-acosh ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((java)
-     (^float targ-inexact-+0)) ;; TODO: implement
+    ((js php)
+     (^float-math 'acosh expr))
 
     (else
-     (^float-math 'acosh expr))))
+     (^call-prim (^rts-method-use 'acosh) expr))))
 
 (define (univ-emit-float-atanh ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((java)
-     (^float targ-inexact-+0)) ;; TODO: implement
+    ((js php)
+     (^float-math 'atanh expr))
 
     (else
-     (^float-math 'atanh expr))))
+     (^call-prim (^rts-method-use 'atanh) expr))))
 
 (define (univ-emit-float-expt ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -2631,37 +2625,59 @@ tanh
     (else
      (^!= expr expr))))
 
+(define (univ-emit-float-copysign ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((java)
+     (^float-math 'copySign expr1 expr2))
+
+    (else
+     (^float-math 'copysign expr1 expr2))))
+
+(define (univ-float-has-negative-sign? ctx expr)
+  (^parens
+   (^or (^parens (^< expr
+                     (^float targ-inexact-+0)))
+        (^parens (^< (^/ (^float targ-inexact-+1)
+                         expr)
+                     (^float targ-inexact-+0))))))
+
+(define (univ-floats-have-same-sign? ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((python java)
+     (^= (^float-copysign
+          (^float targ-inexact-+1)
+          expr1)
+         (^float-copysign
+          (^float targ-inexact-+1)
+          expr2)))
+
+     ((ruby)
+      ;; 0.0.angle => 0.0, -0.0.angle => 3.1415...
+      (^= (^call-prim (^member expr1 'angle))
+          (^call-prim (^member expr2 'angle))))
+
+     (else
+      (^= (univ-float-has-negative-sign? ctx expr1)
+          (univ-float-has-negative-sign? ctx expr2)))))
+
 (define (univ-emit-float-eqv? ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
     ((js)
      (^call-prim (^member "Object" 'is) expr1 expr2))
 
-    ((python)
-     (^if-expr (^= expr1 expr2)
-               (^= (^float-math 'copysign
-                                (^float targ-inexact-+1)
-                                expr1)
-                   (^float-math 'copysign
-                                (^float targ-inexact-+1)
-                                expr2))
-               (^and (^!= expr1 expr1)
-                     (^!= expr2 expr2))))
-
     ((php)
      (^eq? (^call-prim "strval" expr1)
            (^call-prim "strval" expr2)))
 
-    ((ruby)
-     (^if-expr (^= expr1 expr2)
-               ;; 0.0.angle => 0.0, -0.0.angle => 3.1415...
-               (^= (^call-prim (^member expr1 'angle))
-                   (^call-prim (^member expr2 'angle)))
-               (^and (^float-nan? expr1)
-                     (^float-nan? expr2))))
-
     (else
-     (^= expr1 expr2))))
+     (^parens
+      (^if-expr (^= expr1 expr2)
+                (univ-floats-have-same-sign? ctx expr1 expr2)
+                (^and (^float-nan? expr1)
+                      (^float-nan? expr2)))))))
 
 (define (univ-emit-flonum-box ctx expr)
   (case (univ-flonum-representation ctx)
