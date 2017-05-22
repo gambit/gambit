@@ -11,6 +11,10 @@
  ((C)
   (c-declare "#include \"mem.h\"")
   (##define-macro (use-fast-bignum-algorithms) #t))
+ 
+ ((js)
+  (##define-macro (use-fast-bignum-algorithms) #t))
+ 
  (else
   (##define-macro (use-fast-bignum-algorithms) #f)))
 
@@ -5617,6 +5621,88 @@ for a discussion of branch cuts.
 ;;; C macros implementing the low-level operations, so we can program as if we're
 ;;; on a little-endian machine.
 ;;;
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;; Bignum related constants.
+
+(define ##bignum.adigit-ones (##fixnum->bignum -1))           ;; the 0th adigit is all ones
+(define ##bignum.adigit-zeros (##fixnum->bignum 0))           ;; the 0th adigit is all zeros
+
+(macro-case-target
+ ((C)
+  (define ##bignum.fdigit-base
+    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width)))
+ 
+ ((js)
+  (define ##bignum.fdigit-width 7)
+  (define ##bignum.fdigit-base
+    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width)))
+ )
+
+(define ##bignum.mdigit-base
+  (##fxarithmetic-shift-left 1 ##bignum.mdigit-width))
+
+(define ##bignum.inexact-mdigit-base
+  (##fixnum->flonum ##bignum.mdigit-base))
+
+(define ##bignum.mdigit-base-minus-1
+  (##fx- ##bignum.mdigit-base 1))
+
+(define ##bignum.minus-mdigit-base
+  (##fx- ##bignum.mdigit-base))
+
+(define ##bignum.max-fixnum-div-mdigit-base
+  (##fxquotient ##max-fixnum ##bignum.mdigit-base))
+
+(define ##bignum.min-fixnum-div-mdigit-base
+  (##fxquotient ##min-fixnum ##bignum.mdigit-base))
+
+(define ##bignum.2*min-fixnum
+  (if (##fixnum? -1073741824)
+      -4611686018427387904 ;; (- (expt 2 62))
+      -1073741824))        ;; (- (expt 2 30))
+
+;;; The following global variables control when each of the three
+;;; multiplication algorithms are used.
+;;;
+;;; Naive (grade-school) multiplication is used as long as one of
+;;; the arguments has fewer than ##bignum.naive-mul-max-width
+;;; bits.
+;;;
+;;; Karatsuba multiplication is used if the smaller of the two
+;;; multiplication arguments has fewer than ##bignum.fft-mul-min-width
+;;; or the larger of the two arguments has more than
+;;; ##bignum.fft-mul-max-width bits
+;;;
+;;; For other sizes of the arguments use FFT multiplication.
+;;;
+;;; A "fast", reciprocal-based division is used if the divisor has
+;;; more than ##bignum.fft-mul-min-width bits and the difference in
+;;; size of the divident and divisor is more than
+;;; ##bignum.fft-mul-min-width bits.
+;;;
+;;; Note that these global variables are not constants that are
+;;; inlined, so one can change them if you like.
+
+(define ##bignum.naive-mul-max-width 1400)
+(set! ##bignum.naive-mul-max-width ##bignum.naive-mul-max-width)
+
+(define ##bignum.fft-mul-min-width 20000)
+(set! ##bignum.fft-mul-min-width ##bignum.fft-mul-min-width)
+
+(define ##bignum.fft-mul-max-width
+  (if (##fixnum? -1073741824) ;; #t iff using 64-bit fixnums
+      536870912
+       ;; to avoid creating f64vectors that are too long
+      4194304))
+(set! ##bignum.fft-mul-max-width ##bignum.fft-mul-max-width)
+
+;;; An O(N(\log N)^2) algorithm for GCD is used if both arguments have more
+;;; than ##bignum.fast-gcd-size bits
+
+(define ##bignum.fast-gcd-size ##bignum.naive-mul-max-width)  ;; must be >= 64
+(set! ##bignum.fast-gcd-size ##bignum.fast-gcd-size)
+
 ;;; -------------------------------------------------------------------------------
 
 ;;; These are the low-level operations on adigits, mdigits, and fdigits.
@@ -5742,83 +5828,41 @@ for a discussion of branch cuts.
   (define-prim (##bignum.fdigit-ref x i))
 
   ;; Sets x[i] to fdigit (accessing x as fdigits)
-  (define-prim (##bignum.fdigit-set! x i fdigit))))
+  (define-prim (##bignum.fdigit-set! x i fdigit)))
+ 
+ ((js)
 
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;; assumes that mdigits are 14 bits wide and fdigits are
+  ;; halves of mdigits
 
-;;; Bignum related constants.
+  (define ##bignum.fdigit-mask
+    (##fx- ##bignum.fdigit-base 1))
+  
+  ;; Returns the number of fdigits in x
 
-(define ##bignum.adigit-ones (##fixnum->bignum -1))           ;; the 0th adigit is all ones
-(define ##bignum.adigit-zeros (##fixnum->bignum 0))           ;; the 0th adigit is all zeros
+  (define-prim (##bignum.fdigit-length x)
+    (fx* (##bignum.adigit-length x) 2))
 
-(macro-case-target
- ((C)
-  (define ##bignum.fdigit-base
-    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width))))
+  ;; Returns x[i] (accessing x as fdigits)
+  (define-prim (##bignum.fdigit-ref x i)
+    (let ((mdigit (##bignum.mdigit-ref x (##fxquotient i 2))))
+      (if (##fxeven? i)
+          (##fxand mdigit ##bignum.fdigit-mask)
+          (##fxarithmetic-shift-right mdigit ##bignum.fdigit-width))))
 
-(define ##bignum.mdigit-base
-  (##fxarithmetic-shift-left 1 ##bignum.mdigit-width))
-
-(define ##bignum.inexact-mdigit-base
-  (##fixnum->flonum ##bignum.mdigit-base))
-
-(define ##bignum.mdigit-base-minus-1
-  (##fx- ##bignum.mdigit-base 1))
-
-(define ##bignum.minus-mdigit-base
-  (##fx- ##bignum.mdigit-base))
-
-(define ##bignum.max-fixnum-div-mdigit-base
-  (##fxquotient ##max-fixnum ##bignum.mdigit-base))
-
-(define ##bignum.min-fixnum-div-mdigit-base
-  (##fxquotient ##min-fixnum ##bignum.mdigit-base))
-
-(define ##bignum.2*min-fixnum
-  (if (##fixnum? -1073741824)
-      -4611686018427387904 ;; (- (expt 2 62))
-      -1073741824))        ;; (- (expt 2 30))
-
-;;; The following global variables control when each of the three
-;;; multiplication algorithms are used.
-;;;
-;;; Naive (grade-school) multiplication is used as long as one of
-;;; the arguments has fewer than ##bignum.naive-mul-max-width
-;;; bits.
-;;;
-;;; Karatsuba multiplication is used if the smaller of the two
-;;; multiplication arguments has fewer than ##bignum.fft-mul-min-width
-;;; or the larger of the two arguments has more than
-;;; ##bignum.fft-mul-max-width bits
-;;;
-;;; For other sizes of the arguments use FFT multiplication.
-;;;
-;;; A "fast", reciprocal-based division is used if the divisor has
-;;; more than ##bignum.fft-mul-min-width bits and the difference in
-;;; size of the divident and divisor is more than
-;;; ##bignum.fft-mul-min-width bits.
-;;;
-;;; Note that these global variables are not constants that are
-;;; inlined, so one can change them if you like.
-
-(define ##bignum.naive-mul-max-width 1400)
-(set! ##bignum.naive-mul-max-width ##bignum.naive-mul-max-width)
-
-(define ##bignum.fft-mul-min-width 20000)
-(set! ##bignum.fft-mul-min-width ##bignum.fft-mul-min-width)
-
-(define ##bignum.fft-mul-max-width
-  (if (##fixnum? -1073741824) ;; #t iff using 64-bit fixnums
-      536870912
-       ;; to avoid creating f64vectors that are too long
-      4194304))
-(set! ##bignum.fft-mul-max-width ##bignum.fft-mul-max-width)
-
-;;; An O(N(\log N)^2) algorithm for GCD is used if both arguments have more
-;;; than ##bignum.fast-gcd-size bits
-
-(define ##bignum.fast-gcd-size ##bignum.naive-mul-max-width)  ;; must be >= 64
-(set! ##bignum.fast-gcd-size ##bignum.fast-gcd-size)
+  ;; Sets x[i] to fdigit (accessing x as fdigits)
+  (define-prim (##bignum.fdigit-set! x i fdigit)
+    (let* ((i/2         (##fxquotient i 2))
+           (mdigit      (##bignum.mdigit-ref x i/2))
+           (new-mdigit
+            (if (##fxeven? i)
+                (##fxior (##fxand (##fxnot ##bignum.fdigit-mask)
+                                  mdigit)
+                         fdigit)
+                (##fxior (##fxarithmetic-shift-left fdigit ##bignum.fdigit-width)
+                         (##fxand mdigit ##bignum.fdigit-mask)))))
+      (##bignum.mdigit-set! x i/2 new-mdigit))))
+  )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
