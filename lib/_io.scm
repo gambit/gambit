@@ -11541,6 +11541,30 @@
           (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
           (macro-readenv-wrap re val)))))
 
+(define (##make-readtable-char-sharp-sexp-reader-transformer transform #!optional (read ##read-datum-or-label))
+
+  (define (read-without-wrap re)
+    (let* ((old-wrapper (macro-readenv-wrapper re))
+           (old-unwrapper (macro-readenv-unwrapper re)))
+      (macro-readenv-wrapper-set! re (lambda (re x) x))
+      (macro-readenv-unwrapper-set! re (lambda (re x) x))
+      (let ((result (read re)))
+        (macro-readenv-wrapper-set! re old-wrapper)
+        (macro-readenv-unwrapper-set! re old-unwrapper)
+        result)))
+
+  (lambda (re next start-pos)
+    (macro-read-next-char-or-eof re) ;; skip char after #\#
+    (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
+    (let ((args (read-without-wrap re)))
+      (if (##label-marker? args)
+          (begin
+            (##raise-datum-parsing-exception 'datum-or-eof-expected re)
+            (##void))
+          (let ((obj (transform args)))
+            (macro-readenv-wrap re obj))))))
+
+
 (define-prim (##read-sharp-less re next start-pos)
 
   (define (eof)
