@@ -2833,7 +2833,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #else
 #define ___PAIRP(x)___TESTTYPE(x,___tPAIR)
 #endif
-#define ___PAIRMUTABLEP(obj)(___HD_TYP(*___UNTAG_AS(obj,___tPAIR))!=___PERM)
+#define ___MUTABLEP(obj)(___HD_TYP(*___UNTAG(obj))!=___PERM)
 #define ___SUBTYPEDP(x)___TESTTYPE(x,___tSUBTYPED)
 #define ___SUBTYPEDMUTABLEP(obj)(___HD_TYP(*___UNTAG_AS(obj,___tSUBTYPED))!=___PERM)
 #define ___SUBTYPEDVECTORP(x)___TESTSUBTYPETAG(x,___sVECTOR)
@@ -2858,6 +2858,13 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___GCHASHTABLEP(x)(___TYP((___temp=(x)))==___tSUBTYPED&&___TESTHEADERTAG((___temp=___HEADER(___temp)),___sWEAK)&&(___temp&___LSMASK)!=___MAKE_HD((___WILL_SIZE<<___LWS),___sWEAK,0))
 #define ___MEMALLOCATEDP(x)___MEM_ALLOCATED(x)
 #define ___PROCEDUREP(x)___TESTSUBTYPE(x,___sPROCEDURE)
+#define ___SUBPROCEDUREP(x) \
+(___PROCEDUREP(x) && \
+ ___CAST(___label_struct*,(x)-___tSUBTYPED)->entry_or_descr == x && \
+ !___TESTHEADERTAG(___CAST(___SCMOBJ*,(x)-___tSUBTYPED)[-___LS],___sVECTOR))
+#define ___CLOSUREP(x) \
+(___PROCEDUREP(x) && \
+ ___HD_TYP(___HEADER(x)) != ___PERM)
 #define ___RETURNP(x)___TESTSUBTYPE(x,___sRETURN)
 #define ___FOREIGNP(x)___TESTSUBTYPE(x,___sFOREIGN)
 #define ___STRINGP(x)___TESTSUBTYPE(x,___sSTRING)

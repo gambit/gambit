@@ -53,7 +53,6 @@
 ;; to be defined for all backends.
 
 (define-prim (##subtyped? obj) #f)
-(define-prim (##subtyped-mutable? obj) #f)
 (define-prim (##subtyped.vector? obj) #f)
 (define-prim (##subtyped.symbol? obj) #f)
 (define-prim (##subtyped.flonum? obj) #f)

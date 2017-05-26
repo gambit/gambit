@@ -3012,11 +3012,7 @@ end-of-code
 
 ;;; Closures and subprocedures.
 
-(define-prim (##closure? proc)
-  (##declare (not interrupts-enabled))
-  (##c-code
-   "___RESULT = ___BOOLEAN(___HD_TYP(___HEADER(___ARG1)) != ___PERM);"
-   proc))
+(define-prim (##closure? proc))
 
 (define-prim (##make-closure code nb-closed)
   (let ((closure (##make-vector (##fx+ nb-closed 1))))
@@ -3029,20 +3025,7 @@ end-of-code
 (define-prim (##closure-ref closure index))
 (define-prim (##closure-set! closure index val))
 
-(define-prim (##subprocedure? proc)
-  (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED &&
-       ___CAST(___label_struct*,___ARG1-___tSUBTYPED)->entry_or_descr == ___ARG1 &&
-       !___TESTHEADERTAG(___CAST(___SCMOBJ*,___ARG1-___tSUBTYPED)[-___LS],___sVECTOR))
-     ___RESULT = ___TRU;
-   else
-     ___RESULT = ___FAL;
-
-end-of-code
-
-   proc))
+(define-prim (##subprocedure? proc))
 
 (define-prim (##subprocedure-id proc)
   (##declare (not interrupts-enabled))

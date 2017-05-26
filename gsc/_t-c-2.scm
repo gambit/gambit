@@ -3231,32 +3231,22 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##fixnum?"          (targ-ifjump-simp-s #f "FIXNUMP"))
-(targ-op "##special?"         (targ-ifjump-simp-s #f "SPECIALP"))
 (targ-op "##pair?"            (targ-ifjump-simp-s #f "PAIRP"))
-(targ-op "##pair-mutable?"    (targ-ifjump-simp-s #f "PAIRMUTABLEP"))
-(targ-op "##subtyped?"        (targ-ifjump-simp-s #f "SUBTYPEDP"))
-(targ-op "##subtyped-mutable?"(targ-ifjump-simp-s #f "SUBTYPEDMUTABLEP"))
-(targ-op "##subtyped.vector?" (targ-ifjump-simp-u #f "SUBTYPEDVECTORP"))
-(targ-op "##subtyped.symbol?" (targ-ifjump-simp-u #f "SUBTYPEDSYMBOLP"))
-(targ-op "##subtyped.flonum?" (targ-ifjump-simp-u #f "SUBTYPEDFLONUMP"))
-(targ-op "##subtyped.bignum?" (targ-ifjump-simp-u #f "SUBTYPEDBIGNUMP"))
 (targ-op "##vector?"          (targ-ifjump-simp-s #f "VECTORP"))
 (targ-op "##ratnum?"          (targ-ifjump-simp-s #f "RATNUMP"))
 (targ-op "##cpxnum?"          (targ-ifjump-simp-s #f "CPXNUMP"))
 (targ-op "##structure?"       (targ-ifjump-simp-s #f "STRUCTUREP"))
 (targ-op "##box?"             (targ-ifjump-simp-s #f "BOXP"))
 (targ-op "##values?"          (targ-ifjump-simp-s #f "VALUESP"))
-(targ-op "##meroon?"          (targ-ifjump-simp-s #f "MEROONP"))
-(targ-op "##jazz?"            (targ-ifjump-simp-s #f "JAZZP"))
 (targ-op "##symbol?"          (targ-ifjump-simp-s #f "SYMBOLP"))
 (targ-op "##keyword?"         (targ-ifjump-simp-s #f "KEYWORDP"))
 (targ-op "##frame?"           (targ-ifjump-simp-s #f "FRAMEP"))
 (targ-op "##continuation?"    (targ-ifjump-simp-s #f "CONTINUATIONP"))
 (targ-op "##promise?"         (targ-ifjump-simp-s #f "PROMISEP"))
 (targ-op "##will?"            (targ-ifjump-simp-s #f "WILLP"))
-(targ-op "##gc-hash-table?"   (targ-ifjump-simp-s #f "GCHASHTABLEP"))
-(targ-op "##mem-allocated?"   (targ-ifjump-simp-s #f "MEMALLOCATEDP"))
 (targ-op "##procedure?"       (targ-ifjump-simp-s #f "PROCEDUREP"))
+(targ-op "##subprocedure?"    (targ-ifjump-simp-s #f "SUBPROCEDUREP"))
+(targ-op "##closure?"         (targ-ifjump-simp-s #f "CLOSUREP"))
 (targ-op "##return?"          (targ-ifjump-simp-s #f "RETURNP"))
 (targ-op "##foreign?"         (targ-ifjump-simp-s #f "FOREIGNP"))
 (targ-op "##string?"          (targ-ifjump-simp-s #f "STRINGP"))
@@ -3275,6 +3265,7 @@
 (targ-op "##char?"            (targ-ifjump-simp-s #f "CHARP"))
 (targ-op "##number?"          (targ-ifjump-simp-s #f "NUMBERP"))
 (targ-op "##complex?"         (targ-ifjump-simp-s #f "COMPLEXP"))
+(targ-op "##mutable?"         (targ-ifjump-simp-s #f "MUTABLEP"))
 
 ;;the following primitives can't be inlined because they have
 ;;non-trivial definitions which depend on some configuration
@@ -3284,6 +3275,19 @@
 ;;(targ-op "##integer?"         (targ-ifjump-simp-s #f "INTEGERP"))
 ;;(targ-op "##exact?"           (targ-ifjump-simp-s #f "EXACTP"))
 ;;(targ-op "##inexact?"         (targ-ifjump-simp-s #f "INEXACTP"))
+
+;; specific to C backend:
+
+(targ-op "##special?"         (targ-ifjump-simp-s #f "SPECIALP"))
+(targ-op "##meroon?"          (targ-ifjump-simp-s #f "MEROONP"))
+(targ-op "##jazz?"            (targ-ifjump-simp-s #f "JAZZP"))
+(targ-op "##gc-hash-table?"   (targ-ifjump-simp-s #f "GCHASHTABLEP"))
+(targ-op "##mem-allocated?"   (targ-ifjump-simp-s #f "MEMALLOCATEDP"))
+(targ-op "##subtyped?"        (targ-ifjump-simp-s #f "SUBTYPEDP"))
+(targ-op "##subtyped.vector?" (targ-ifjump-simp-u #f "SUBTYPEDVECTORP"))
+(targ-op "##subtyped.symbol?" (targ-ifjump-simp-u #f "SUBTYPEDSYMBOLP"))
+(targ-op "##subtyped.flonum?" (targ-ifjump-simp-u #f "SUBTYPEDFLONUMP"))
+(targ-op "##subtyped.bignum?" (targ-ifjump-simp-u #f "SUBTYPEDBIGNUMP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

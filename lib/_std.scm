@@ -136,7 +136,7 @@
 (define-prim (vector-cas! vect k val oldval)
   (macro-force-vars (vect k oldval)
     (macro-check-vector vect 1 (vector-cas! vect k val oldval)
-      (macro-check-subtyped-mutable vect 1 (vector-cas! vect k val oldval)
+      (macro-check-mutable vect 1 (vector-cas! vect k val oldval)
         (macro-check-index-range
           k
           2
@@ -155,7 +155,7 @@
 (define-prim (vector-inc! vect k #!optional (v (macro-absent-obj)))
   (macro-force-vars (vect k v)
     (macro-check-vector vect 1 (vector-inc! vect k v)
-      (macro-check-subtyped-mutable vect 1 (vector-inc! vect k v)
+      (macro-check-mutable vect 1 (vector-inc! vect k v)
         (macro-check-index-range
           k
           2
@@ -195,15 +195,14 @@
 ;; eqv? is defined in "_num.scm"
 ;; eq? and equal? are defined in "_system.scm"
 
-(define-fail-check-type pair-mutable 'mutable)
-(define-fail-check-type subtyped-mutable 'mutable)
+(define-fail-check-type mutable 'mutable)
 (define-fail-check-type pair 'pair)
 (define-fail-check-type pair-list 'pair-list)
 (define-fail-check-type list 'list)
 
-(define-prim (##pair? obj))
+(define-prim (##mutable? obj))
 
-(define-prim (##pair-mutable? obj))
+(define-prim (##pair? obj))
 
 (define-prim (pair? obj)
   (macro-force-vars (obj)
@@ -266,7 +265,7 @@
 (define-prim (set-car! pair val)
   (macro-force-vars (pair)
     (macro-check-pair pair 1 (set-car! pair val)
-      (macro-check-pair-mutable pair 1 (set-car! pair val)
+      (macro-check-mutable pair 1 (set-car! pair val)
         (begin
           (##set-car! pair val)
           (##void))))))
@@ -276,7 +275,7 @@
 (define-prim (set-cdr! pair val)
   (macro-force-vars (pair)
     (macro-check-pair pair 1 (set-cdr! pair val)
-      (macro-check-pair-mutable pair 1 (set-cdr! pair val)
+      (macro-check-mutable pair 1 (set-cdr! pair val)
         (begin
           (##set-cdr! pair val)
           (##void))))))

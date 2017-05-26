@@ -94,11 +94,8 @@
 (define-check-type f64vector-list 'f64vector-list
   ##f64vector?)
 
-(define-check-type pair-mutable 'mutable
-  ##pair-mutable?)
-
-(define-check-type subtyped-mutable 'mutable
-  ##subtyped-mutable?)
+(define-check-type mutable 'mutable
+  ##mutable?)
 
 (define-check-type pair 'pair
   ##pair?)
@@ -335,7 +332,7 @@
          (macro-force-vars (vect k)
            (,macro-force-elem (val)
              (,macro-check-vect vect 1 (,vect-set! vect k val)
-               (macro-check-subtyped-mutable vect 1 (,vect-set! vect k val)
+               (macro-check-mutable vect 1 (,vect-set! vect k val)
                  (macro-check-index-range
                    k
                    2
@@ -399,7 +396,7 @@
          (macro-force-vars (vect)
            (,macro-force-elem (fill)
              (,macro-check-vect vect 1 (,vect-fill! vect fill)
-               (macro-check-subtyped-mutable vect 1 (,vect-fill! vect fill)
+               (macro-check-mutable vect 1 (,vect-fill! vect fill)
                  (,macro-check-elem fill 2 (,vect-fill! vect fill)
                    (,##vect-fill! vect fill)))))))
 
@@ -634,7 +631,7 @@ end-of-code
                    dst-vect
                    4
                    (,subvect-move! src-vect src-start src-end dst-vect dst-start)
-                   (macro-check-subtyped-mutable
+                   (macro-check-mutable
                      dst-vect
                      4
                      (,subvect-move! src-vect src-start src-end dst-vect dst-start)
@@ -661,7 +658,7 @@ end-of-code
          (macro-force-vars (vect start end)
            (,macro-force-elem (fill)
              (,macro-check-vect vect 1 (,subvect-fill! vect start end fill)
-               (macro-check-subtyped-mutable vect 1 (,subvect-fill! vect start end fill)
+               (macro-check-mutable vect 1 (,subvect-fill! vect start end fill)
                  (macro-check-index-range-incl
                    start
                    2
@@ -685,7 +682,7 @@ end-of-code
        (define-prim (,vect-shrink! vect k)
          (macro-force-vars (vect k)
            (,macro-check-vect vect 1 (,vect-shrink! vect k)
-             (macro-check-subtyped-mutable vect 1 (,vect-shrink! vect k)
+             (macro-check-mutable vect 1 (,vect-shrink! vect k)
                (macro-check-index-range-incl
                  k
                  2

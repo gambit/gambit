@@ -72,9 +72,9 @@
 
 ;;TODO: ("##subtyped?"                (1)   #f ()    0    boolean extended)
 
-;; TODO: test ##subtyped-mutable?
+;; TODO: test ##mutable?
 
-(univ-define-prim-bool "##subtyped-mutable?" #t
+(univ-define-prim-bool "##mutable?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^bool #t))))) ;; there are no immutable data (currently)
@@ -1251,13 +1251,6 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^pair? arg1)))))
-
-;; TODO: test ##pair-mutable?
-
-(univ-define-prim-bool "##pair-mutable?" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^bool #t))))) ;; there are no immutable data (currently)
 
 (univ-define-prim "##cons" #t
   (make-translated-operand-generator

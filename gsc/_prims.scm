@@ -495,8 +495,12 @@
 ("##frame?"                           (1)   #f ()    0    boolean extended)
 ("##continuation?"                    (1)   #f ()    0    boolean extended)
 ("##promise?"                         (1)   #f ()    0    boolean extended)
+("##will?"                            (1)   #f ()    0    boolean extended)
 ("##procedure?"                       (1)   #f ()    0    boolean extended)
+("##subprocedure?"                    (1)   #f ()    0    boolean extended)
+("##closure?"                         (1)   #f ()    0    boolean extended)
 ("##return?"                          (1)   #f ()    0    boolean extended)
+("##foreign?"                         (1)   #f ()    0    boolean extended)
 ("##string?"                          (1)   #f ()    0    boolean extended)
 ("##s8vector?"                        (1)   #f ()    0    boolean extended)
 ("##u8vector?"                        (1)   #f ()    0    boolean extended)
@@ -511,8 +515,6 @@
 ("##flonum?"                          (1)   #f ()    0    boolean extended)
 ("##bignum?"                          (1)   #f ()    0    boolean extended)
 ("##char?"                            (1)   #f ()    0    boolean extended)
-("##closure?"                         (1)   #f ()    0    boolean extended)
-("##subprocedure?"                    (1)   #f ()    0    boolean extended)
 ("##number?"                          (1)   #f ()    0    boolean extended)
 ("##complex?"                         (1)   #f ()    0    boolean extended)
 ("##real?"                            (1)   #f ()    0    boolean extended)
@@ -520,17 +522,14 @@
 ("##integer?"                         (1)   #f ()    0    boolean extended)
 ("##exact?"                           (1)   #f ()    0    boolean extended)
 ("##inexact?"                         (1)   #f ()    0    boolean extended)
+("##mutable?"                         (1)   #f ()    0    boolean extended)
 
 ("##special?"                         (1)   #f ()    0    boolean extended)
 ("##meroon?"                          (1)   #f ()    0    boolean extended)
 ("##jazz?"                            (1)   #f ()    0    boolean extended)
-("##will?"                            (1)   #f ()    0    boolean extended)
 ("##gc-hash-table?"                   (1)   #f ()    0    boolean extended)
-("##foreign?"                         (1)   #f ()    0    boolean extended)
 ("##mem-allocated?"                   (1)   #f ()    0    boolean extended)
-("##pair-mutable?"                    (1)   #f ()    0    boolean extended)
 ("##subtyped?"                        (1)   #f ()    0    boolean extended)
-("##subtyped-mutable?"                (1)   #f ()    0    boolean extended)
 ("##subtyped.vector?"                 (1)   #f ()    0    boolean extended)
 ("##subtyped.symbol?"                 (1)   #f ()    0    boolean extended)
 ("##subtyped.flonum?"                 (1)   #f ()    0    boolean extended)
@@ -1558,7 +1557,7 @@
 
   (define **null?-sym (string->canonical-symbol "##null?"))
   (define **pair?-sym (string->canonical-symbol "##pair?"))
-  (define **pair-mutable?-sym (string->canonical-symbol "##pair-mutable?"))
+  (define **mutable?-sym (string->canonical-symbol "##mutable?"))
   (define **cons-sym (string->canonical-symbol "##cons"))
   (define **car-sym (string->canonical-symbol "##car"))
   (define **cdr-sym (string->canonical-symbol "##cdr"))
@@ -1676,7 +1675,7 @@
                       type-check)
                     type-check)
                   (gen-call-prim-vars source env
-                    **pair-mutable?-sym
+                    **mutable?-sym
                     (list (car vars))))
                 (gen-call-prim-vars source (add-not-inline-primitives env)
                   (op-prim pattern)
@@ -3276,7 +3275,7 @@
   (define **char?-sym   (string->canonical-symbol "##char?"))
   (define **fx<-sym     (string->canonical-symbol "##fx<"))
   (define **fx<=-sym    (string->canonical-symbol "##fx<="))
-  (define **subtyped-mutable?-sym (string->canonical-symbol "##subtyped-mutable?"))
+  (define **mutable?-sym (string->canonical-symbol "##mutable?"))
 
   (define **string?-sym          (string->canonical-symbol "##string?"))
   (define **string-length-sym    (string->canonical-symbol "##string-length"))
@@ -3430,7 +3429,7 @@
 
       (define (gen-mutability-check source env vect-arg)
         (gen-call-prim-vars source env
-          **subtyped-mutable?-sym
+          **mutable?-sym
           (list vect-arg)))
 
       (define (gen-index-check source env vect-arg index-arg)
