@@ -79,13 +79,14 @@ gambcomp-js.unix.in gambcomp-js.bat.windows.in \
 gambcomp-python.unix.in gambcomp-python.bat.windows.in \
 gambcomp-ruby.unix.in gambcomp-ruby.bat.windows.in \
 gambcomp-php.unix.in gambcomp-php.bat.windows.in \
+gambcomp-java.unix.in gambcomp-java.bat.windows.in \
 gambdoc.unix.in gambdoc.bat.windows.in
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gambcomp-C@bat@ gambcomp-js@bat@ gambcomp-python@bat@ gambcomp-ruby@bat@ gambcomp-php@bat@ gambdoc@bat@
+INSTFILES_BIN_PROG = gambcomp-C@bat@ gambcomp-js@bat@ gambcomp-python@bat@ gambcomp-ruby@bat@ gambcomp-php@bat@ gambcomp-java@bat@ gambdoc@bat@
 INSTFILES_BIN_LINK_GSI = six@exe@ gsi-script@bat@ six-script@bat@ \
 scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 INSTFILES_BIN_LINK_GSC = gsc-script@bat@
@@ -96,7 +97,7 @@ all:
 
 all-pre:
 
-all-post: gambcomp-C@bat@ gambcomp-js@bat@ gambcomp-python@bat@ gambcomp-ruby@bat@ gambcomp-php@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gambcomp-C@bat@ gambcomp-js@bat@ gambcomp-python@bat@ gambcomp-ruby@bat@ gambcomp-php@bat@ gambcomp-java@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
 
 gambcomp-C@bat@: makefile gambcomp-C.unix gambcomp-C.bat.windows
 	rm -f gambcomp-C@bat@
@@ -141,6 +142,15 @@ gambcomp-php@bat@: makefile gambcomp-php.unix gambcomp-php.bat.windows
 	  chmod +x gambcomp-php@bat@; \
 	else \
 	  cp gambcomp-php.bat.windows gambcomp-php@bat@; \
+	fi
+
+gambcomp-java@bat@: makefile gambcomp-java.unix gambcomp-java.bat.windows
+	rm -f gambcomp-java@bat@
+	if test "@bat@" = ""; then \
+	  cp gambcomp-java.unix gambcomp-java@bat@; \
+	  chmod +x gambcomp-java@bat@; \
+	else \
+	  cp gambcomp-java.bat.windows gambcomp-java@bat@; \
 	fi
 
 gambdoc@bat@: makefile gambdoc.unix gambdoc.bat.windows
@@ -309,6 +319,7 @@ clean-post: mostlyclean-post
 	  gambcomp-python@bat@ \
 	  gambcomp-ruby@bat@ \
 	  gambcomp-php@bat@ \
+	  gambcomp-java@bat@ \
 	  gambdoc@bat@ \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ \
@@ -342,6 +353,7 @@ realclean-post: bootclean-post
 	  gambcomp-python.unix gambcomp-python.bat.windows \
 	  gambcomp-ruby.unix gambcomp-ruby.bat.windows \
 	  gambcomp-php.unix gambcomp-php.bat.windows \
+	  gambcomp-java.unix gambcomp-java.bat.windows \
 	  gambdoc.unix gambdoc.bat.windows makefile
 
 rc-setup-pre:
@@ -485,6 +497,12 @@ gambcomp-php.unix: gambcomp-php.unix.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 gambcomp-php.bat.windows: gambcomp-php.bat.windows.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambcomp-java.unix: gambcomp-java.unix.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambcomp-java.bat.windows: gambcomp-java.bat.windows.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 gambdoc.unix: gambdoc.unix.in $(rootfromhere)/config.status

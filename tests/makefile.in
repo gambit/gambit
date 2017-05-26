@@ -196,6 +196,10 @@ ut-php:
 	(cd ../lib; make _gambit.php)
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -php -gsc
 
+ut-java:
+	(cd ../lib; make _gambit.java)
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -java -gsc
+
 st st-C:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -e '(pretty-print (list processor-count: (##current-vm-processor-count) cpu-count: (##cpu-count)))'
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -gsc-dbg
@@ -215,6 +219,10 @@ st-ruby:
 st-php:
 	(cd ../lib; make _gambit.php)
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -php -gsc
+
+st-java:
+	(cd ../lib; make _gambit.java)
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -stress -java -gsc
 
 bootstrap-pre:
 
