@@ -21555,7 +21555,7 @@ ___DEF_SLBL(51,___L51_run_2d_strings)
    ___IF(___NOT(___STRINGP(___R1)))
    ___GOTO(___L127_run_2d_strings)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L127_run_2d_strings)
    ___END_IF
    ___SET_R2(___STRINGLENGTH(___R1))
@@ -22415,7 +22415,7 @@ ___DEF_GLBL(___L132_run_2d_vectors)
    ___IF(___NOT(___VECTORP(___R1)))
    ___GOTO(___L134_run_2d_vectors)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L134_run_2d_vectors)
    ___END_IF
    ___SET_R2(___VECTORLENGTH(___R1))
@@ -23233,7 +23233,7 @@ ___DEF_SLBL(66,___L66_run_2d_s8vectors)
    ___IF(___NOT(___S8VECTORP(___R1)))
    ___GOTO(___L138_run_2d_s8vectors)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L138_run_2d_s8vectors)
    ___END_IF
    ___SET_R2(___S8VECTORLENGTH(___R1))
@@ -24052,7 +24052,7 @@ ___DEF_SLBL(66,___L66_run_2d_u8vectors)
    ___IF(___NOT(___U8VECTORP(___R1)))
    ___GOTO(___L138_run_2d_u8vectors)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L138_run_2d_u8vectors)
    ___END_IF
    ___SET_R2(___U8VECTORLENGTH(___R1))
@@ -24874,7 +24874,7 @@ ___DEF_SLBL(66,___L66_run_2d_s16vectors)
    ___IF(___NOT(___S16VECTORP(___R1)))
    ___GOTO(___L141_run_2d_s16vectors)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L141_run_2d_s16vectors)
    ___END_IF
    ___SET_R2(___S16VECTORLENGTH(___R1))
@@ -25717,7 +25717,7 @@ ___DEF_SLBL(66,___L66_run_2d_u16vectors)
    ___IF(___NOT(___U16VECTORP(___R1)))
    ___GOTO(___L141_run_2d_u16vectors)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L141_run_2d_u16vectors)
    ___END_IF
    ___SET_R2(___U16VECTORLENGTH(___R1))
@@ -30688,7 +30688,7 @@ ___DEF_SLBL(51,___L51_run_2d_f32vectors)
    ___IF(___NOT(___F32VECTORP(___R1)))
    ___GOTO(___L126_run_2d_f32vectors)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L126_run_2d_f32vectors)
    ___END_IF
    ___SET_R2(___F32VECTORLENGTH(___R1))
@@ -31439,7 +31439,7 @@ ___DEF_SLBL(51,___L51_run_2d_f64vectors)
    ___IF(___NOT(___F64VECTORP(___R1)))
    ___GOTO(___L126_run_2d_f64vectors)
    ___END_IF
-   ___IF(___NOT(___SUBTYPEDMUTABLEP(___R1)))
+   ___IF(___NOT(___MUTABLEP(___R1)))
    ___GOTO(___L126_run_2d_f64vectors)
    ___END_IF
    ___SET_R2(___F64VECTORLENGTH(___R1))
