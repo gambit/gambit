@@ -279,7 +279,7 @@
                              (let ((len (string-length filename)))
                                (not (and (> len 11)
                                          (equal? (substring filename (- len 11) len)
-                                                 "-stress.scm")))))))))
+                                                 "_stress.scm")))))))))
     args)))
 
 (define modes '())
