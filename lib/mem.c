@@ -1655,18 +1655,29 @@ ___WORD init;)
 /*
  * The hashing functions '___hash_UTF_8_string (str)' and
  * '___hash_scheme_string (str)' must compute the same value as the
- * function 'targ-hash' in the file "gsc/_t-c-3.scm".  A fixnum error
+ * function 'targ-hash' in the file gsc/_t-c-3.scm.  A fixnum error
  * code is returned when there is an error.
+ *
+ * These functions implement an adaptation of the FNV1a hash algorithm
+ * (see https://tools.ietf.org/html/draft-eastlake-fnv-12).  Instead
+ * of iterating over bytes, an iteration over Unicode code points is
+ * used.  This will give the same result if the string contains only
+ * ISO-8859-1 characters.  However, only the lower 29 bits of the
+ * standard 32 bit FNV1a algorithm are returned so the result fits in
+ * a fixnum on a 32 bit word architecture.
  */
 
-#define HASH_STEP(h,c) ((((h)>>8) + (c)) * 331804471) & ___MAX_FIX32
+#define FN1a_prime        0x01000193
+#define FN1a_offset_basis 0x011C9DC5
+
+#define HASH_STEP(h,c) (((h)^(c)) * FN1a_prime) & ___MAX_FIX32
 
 ___SCMOBJ ___hash_UTF_8_string
    ___P((___UTF_8STRING str),
         (str)
 ___UTF_8STRING str;)
 {
-  ___UM32 h = 0;
+  ___UM32 h = FN1a_offset_basis;
   ___UTF_8STRING p = str;
   ___UCS_4 c;
 
@@ -1691,7 +1702,7 @@ ___SCMOBJ ___hash_scheme_string
 ___SCMOBJ str;)
 {
   ___SIZE_T i, n = ___INT(___STRINGLENGTH(str));
-  ___UM32 h = 0;
+  ___UM32 h = FN1a_offset_basis;
 
   for (i=0; i<n; i++)
     h = HASH_STEP(h,___INT(___STRINGREF(str,___FIX(i))));
