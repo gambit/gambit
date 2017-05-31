@@ -392,13 +392,16 @@
   (define (hash obj)
     (macro-number-dispatch obj
       (##eq?-hash obj) ;; obj = not a number
-      (##fxmodulo obj 331804471) ;; obj = fixnum
+      (macro-hash-combine ;; obj = fixnum
+       obj
+       (macro-fnv1a-offset-basis-fixnum32))
       (let ((len (##bignum.mdigit-length obj))) ;; obj = bignum
-        (let loop ((i (##fx- len 1)) (h 0))
+        (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
+                   (i (##fx- len 1)))
           (if (##fx< i 0)
               h
-              (loop (##fx- i 1)
-                    (macro-hash-combine h (##bignum.mdigit-ref obj i))))))
+              (loop (macro-hash-combine h (##bignum.mdigit-ref obj i))
+                    (##fx- i 1)))))
       (macro-hash-combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
                           (hash (macro-ratnum-denominator obj)))
       ;; TODO: hash flonums in a portable way
@@ -423,22 +426,22 @@
 
   (define (bvector-hash obj)
 
-    (define (u16vect-hash i h)
+    (define (u16vect-hash h i)
       (if (##fx< i 0)
           h
-          (u16vect-hash (##fx- i 1)
-                        (macro-hash-combine (##u16vector-ref obj i) h))))
+          (u16vect-hash (macro-hash-combine (##u16vector-ref obj i) h)
+                        (##fx- i 1))))
 
     (let ((len (##u8vector-length obj)))
-      (u16vect-hash (##fx- (##fxwraplogical-shift-right len 1) 1)
-                    (##fxxor
+      (u16vect-hash (##fxxor
                      (if (##fxodd? len)
                          (##u8vector-ref obj (##fx- len 1))
                          256)
                      (##fx+ len
                             (##fxarithmetic-shift-left
                              (##subtype obj)
-                             20))))))
+                             20)))
+                    (##fx- (##fxwraplogical-shift-right len 1) 1))))
 
   (define (structure-hash obj type len h)
     (if (##not type) ;; have we reached root of inheritance chain?
@@ -513,7 +516,7 @@
                           (##eq?-hash obj))))
                    ((##box? obj)
                     (macro-hash-combine (hash (##unbox obj))
-                                        153391703))
+                                        (macro-fnv1a-offset-basis-fixnum32)))
                    (else
                     (##eqv?-hash obj))))
             (else
@@ -530,18 +533,16 @@
   ;; for all str2 we must have that (##string=? str str2) implies that
   ;; (= (##string=?-hash str) (##string=?-hash str2))
 
-  (let ((len (##string-length str)))
-    (let loop ((h 0) (i 0))
-      (if (##fx< i len)
-          (loop (##fxand
-                 (##fxwrap*
-                  (##fxwrap+
-                   (##fxwraplogical-shift-right h 8)
-                   (##char->integer (##string-ref str i)))
-                  331804471)
-                 (macro-max-fixnum32))
-                (##fx+ i 1))
-          h))))
+  ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
+
+  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
+             (i 0))
+    (if (##fx< i (##string-length str))
+        (loop (macro-hash-combine
+               h
+               (##char->integer (##string-ref str i)))
+              (##fx+ i 1))
+        h)))
 
 (define-prim (string=?-hash str)
   (macro-force-vars (str)
@@ -553,19 +554,16 @@
   ;; for all str2 we must have that (##string-ci=? str str2) implies that
   ;; (= (##string-ci=?-hash str) (##string-ci=?-hash str2))
 
-  (let ((len (##string-length str)))
-    (let loop ((h 0) (i 0))
-      (if (##fx< i len)
-          (loop (##fxand
-                 (##fxwrap*
-                  (##fxwrap+
-                   (##fxwraplogical-shift-right h 8)
-                   (##char->integer
-                    (##char-downcase (##string-ref str i))))
-                  331804471)
-                 (macro-max-fixnum32))
-                (##fx+ i 1))
-          h))))
+  ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
+
+  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
+             (i 0))
+    (if (##fx< i (##string-length str))
+        (loop (macro-hash-combine
+               h
+               (##char->integer (##char-downcase (##string-ref str i))))
+              (##fx+ i 1))
+        h)))
 
 (define-prim (string-ci=?-hash str)
   (macro-force-vars (str)

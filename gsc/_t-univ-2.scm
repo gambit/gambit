@@ -2047,16 +2047,21 @@ EOF
               (h (^local-var 'h))
               (i (^local-var 'i))
               (leng (^local-var 'leng)))
-          (^ (^var-declaration 'int h (^int 0))
+
+          (define fnv1a-prime-fixnum32        #x01000193)
+          (define fnv1a-offset-basis-fixnum32 #x011C9DC5)
+
+          (^ (^var-declaration 'int h (^int fnv1a-offset-basis-fixnum32))
              (^var-declaration 'int i (^int 0))
              (^var-declaration 'int leng (^str-length strng))
              (^while (^< i leng)
                      (^ (^assign h
                                  (^bitand
                                   (^parens
-                                   (^* (^parens (^+ (^parens (^>> h 8))
-                                                    (^str-index-code strng i)))
-                                       (^int 331804471)))
+                                   (^* (^parens
+                                        (^bitxor h
+                                                 (^str-index-code strng i)))
+                                       (^int fnv1a-prime-fixnum32)))
                                   (^int univ-fixnum-max)))
                         (^inc-by i 1)))
              (^return h))))))

@@ -2,7 +2,7 @@
 
 ;;; File: "_system#.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -102,12 +102,26 @@
 
 ;;; Auxiliary macro for computing hash key.
 
+;; The FNV1a hash algorithm is adapted to hash values, in
+;; particular the hashing constants are used (see
+;; https://tools.ietf.org/html/draft-eastlake-fnv-12).  Because the
+;; hash function result is a fixnum and it needs to give the same
+;; result on 32 bit and 64 bit architectures, the constants are
+;; adapted to fit in a 32 bit fixnum.
+
+;; FNV1a 32 bit constants
+(##define-macro (macro-fnv1a-prime-32bits)          #x01000193)
+(##define-macro (macro-fnv1a-offset-basis-32bits)   #x811C9DC5)
+
+;; constants adapted to fit in 29 bits (tagged 32 bit fixnums)
+(##define-macro (macro-fnv1a-prime-fixnum32)        #x01000193)
+(##define-macro (macro-fnv1a-offset-basis-fixnum32) #x011C9DC5) ;; 29 bits!
+
 (##define-macro (macro-hash-combine a b)
   `(let ((a ,a)
          (b ,b))
-     (##fxand
-      (##fxwrap* (##fxwrap+ a (##fxwraparithmetic-shift-left b 1))
-                 331804471)
-      (macro-max-fixnum32))))
+     (##fxand (##fxwrap* (macro-fnv1a-prime-fixnum32)
+                         (##fxxor a b))
+              (macro-max-fixnum32))))
 
 ;;;============================================================================

@@ -431,20 +431,36 @@
     (else
      (err))))
 
-;; Note: The following hashing function must return the same value as the
-;; functions "hash_UTF_8_string" and "hash_scheme_string" in "lib/setup.c".
+;; The targ-hash hashing function implements an adaptation of the
+;; FNV1a hash algorithm (see
+;; https://tools.ietf.org/html/draft-eastlake-fnv-12).  Instead of
+;; iterating over bytes, an iteration over Unicode code points is
+;; used.  This will give the same result if the string contains only
+;; ISO-8859-1 characters.  However, only the lower 29 bits of the
+;; standard 32 bit FNV1a algorithm are returned so the result fits in
+;; a fixnum on a 32 bit word architecture.
+;;
+;; Note: The function targ-hash must return the same value as the
+;; functions "hash_UTF_8_string" and "hash_scheme_string" in
+;; lib/setup.c, and the function "##string=?-hash" in lib/_system.scm .
 
 (define (targ-hash str)
-  (let ((len (string-length str)))
-    (let loop ((h 0) (i 0))
-      (if (< i len)
-        (loop (modulo
-               (* (+ (quotient h 256)
-                     (character->unicode (string-ref str i)))
-                  331804471); =(* (/ (- (sqrt 5) 1) 2) (+ targ-max-fixnum32 1))
-               (+ targ-max-fixnum32 1))
-              (+ i 1))
-        h))))
+
+  ;; FNV1a 32 bit constants adapted to fit in 29 bits (tagged 32 bit fixnums)
+
+  (define fnv1a-prime-fixnum32        #x01000193)
+  (define fnv1a-offset-basis-fixnum32 #x011C9DC5)
+
+  (let loop ((i 0)
+             (h fnv1a-offset-basis-fixnum32))
+    (if (< i (string-length str))
+        (loop (+ i 1)
+              (bitwise-and
+               targ-max-fixnum32
+               (* fnv1a-prime-fixnum32
+                  (bitwise-xor h
+                               (character->unicode (string-ref str i))))))
+        h)))
 
 (define (targ-build-gc-map slots live?)
   (let loop ((i 0)
