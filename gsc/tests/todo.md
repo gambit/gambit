@@ -11,9 +11,6 @@ These primitives are not yet tested :
 - ##continuation-set!
 - ##continuation-slot-live?
 - ##current-thread
-- ##flilogb
-- ##fllog1p
-- ##flscalbn
 - ##foreign?
 - ##foreign-tags
 - ##frame?
