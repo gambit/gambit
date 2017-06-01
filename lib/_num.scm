@@ -5685,23 +5685,31 @@ for a discussion of branch cuts.
 ;;; inlined, so one can change them if you like.
 
 (define ##bignum.naive-mul-max-width 1400)
-(set! ##bignum.naive-mul-max-width ##bignum.naive-mul-max-width)
+
+(define-prim (##bignum.naive-mul-max-width-set! x)
+  (set! ##bignum.naive-mul-max-width x))
 
 (define ##bignum.fft-mul-min-width 20000)
-(set! ##bignum.fft-mul-min-width ##bignum.fft-mul-min-width)
+
+(define-prim (##bignum.fft-mul-min-width-set! x)
+  (set! ##bignum.fft-mul-min-width x))
 
 (define ##bignum.fft-mul-max-width
   (if (##fixnum? -1073741824) ;; #t iff using 64-bit fixnums
       536870912
        ;; to avoid creating f64vectors that are too long
       4194304))
-(set! ##bignum.fft-mul-max-width ##bignum.fft-mul-max-width)
+
+(define-prim (##bignum.fft-mul-max-width-set! x)
+  (set! ##bignum.fft-mul-max-width x))
 
 ;;; An O(N(\log N)^2) algorithm for GCD is used if both arguments have more
 ;;; than ##bignum.fast-gcd-size bits
 
 (define ##bignum.fast-gcd-size ##bignum.naive-mul-max-width)  ;; must be >= 64
-(set! ##bignum.fast-gcd-size ##bignum.fast-gcd-size)
+
+(define-prim (##bignum.fast-gcd-size-set! x)
+  (set! ##bignum.fast-gcd-size x))
 
 ;;; -------------------------------------------------------------------------------
 
@@ -11561,19 +11569,20 @@ ___RESULT = result;
     (macro-check-random-source rs 1 (random-source-make-u8vectors rs)
       (##random-source-make-u8vectors rs))))
 
-(define default-random-source #f)
-(set! default-random-source (##make-random-source-mrg32k3a))
+(define ##default-random-source (##make-random-source-mrg32k3a))
+
+(define default-random-source ##default-random-source)
 
 (define random-integer
-  (##random-source-make-integers default-random-source))
+  (##random-source-make-integers ##default-random-source))
 
 (define random-real
-  (##random-source-make-reals default-random-source))
+  (##random-source-make-reals ##default-random-source))
 
 (define random-u8vector
-  (##random-source-make-u8vectors default-random-source))
+  (##random-source-make-u8vectors ##default-random-source))
 
 (define random-f64vector
-  (##random-source-make-f64vectors default-random-source))
+  (##random-source-make-f64vectors ##default-random-source))
 
 ;;;============================================================================

@@ -4171,8 +4171,11 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code "___RESULT = ___GSTATE->command_line;"))
 
-(define ##processed-command-line '())
-(set! ##processed-command-line (##command-line))
+(define ##processed-command-line
+  (##command-line))
+
+(define-prim (##processed-command-line-set! x)
+  (set! ##processed-command-line x))
 
 (define-prim ##os-getenv
   (c-lambda (scheme-object)
@@ -5014,8 +5017,11 @@ end-of-code
         (else
          (err))))
 
-(define ##load-required-module #f)
-(set! ##load-required-module ##default-load-required-module)
+(define ##load-required-module
+  ##default-load-required-module)
+
+(define-prim (##load-required-module-set! x)
+  (set! ##load-required-module x))
 
 (implement-library-type-module-not-found-exception)
 

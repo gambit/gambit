@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -44,7 +44,9 @@
 (define (##no-stepper) (macro-make-no-stepper))
 
 (define ##main-stepper (##no-stepper))
-(set! ##main-stepper ##main-stepper)
+
+(define-prim (##main-stepper-set! x)
+  (set! ##main-stepper x))
 
 (define (##current-stepper) ##main-stepper)
 
@@ -251,7 +253,9 @@
       port-name))
 
 (define ##path->container-hook #f)
-(set! ##path->container-hook #f)
+
+(define-prim (##path->container-hook-set! x)
+  (set! ##path->container-hook #f))
 
 (define-prim (##path->container path)
   ;; path is a string and result is an arbitrary object
@@ -261,7 +265,9 @@
         path)))
 
 (define ##container->path-hook #f)
-(set! ##container->path-hook #f)
+
+(define-prim (##container->path-hook-set! x)
+  (set! ##container->path-hook #f))
 
 (define-prim (##container->path container)
   ;; container is an arbitrary object and result must be a string or #f
@@ -276,7 +282,9 @@
            #f))))
 
 (define ##container->id-hook #f)
-(set! ##container->id-hook #f)
+
+(define-prim (##container->id-hook-set! x)
+  (set! ##container->id-hook x))
 
 (define-prim (##container->id container)
   ;; container is an arbitrary object and result must be a string
@@ -657,7 +665,9 @@
               #f)))))
 
 (define ##namespace-separators '(#\#))
-(set! ##namespace-separators ##namespace-separators)
+
+(define-prim (##namespace-separators-set! x)
+  (set! ##namespace-separators x))
 
 (define (##full-name? sym) ;; full name if it contains a namespace separator
   (let ((str (##symbol->string sym)))
@@ -717,53 +727,56 @@
 (define (##macro-descr-expander-src descr)
   (##vector-ref descr 3))
 
-(define ##macro-lookup #f)
-(set! ##macro-lookup
-      (lambda (cte name)
-        (and (##symbol? name)
-             (let ((ind (##cte-lookup cte name)))
-               (case (##vector-ref ind 0)
-                 ((macro)
-                  (##vector-ref ind 2))
-                 (else
-                  #f))))))
+(define-prim (##macro-lookup cte name)
+  (and (##symbol? name)
+       (let ((ind (##cte-lookup cte name)))
+         (case (##vector-ref ind 0)
+           ((macro)
+            (##vector-ref ind 2))
+           (else
+            #f)))))
 
-(define ##macro-expand #f)
-(set! ##macro-expand
-      (lambda (cte src descr)
-        (##shape src src (##macro-descr-size descr))
-        (##sourcify
-         (if (##macro-descr-def-syntax? descr)
-             ((##macro-descr-expander descr) src)
-             (##apply (##macro-descr-expander descr)
-                      (##cdr (##desourcify src))))
-         src)))
+(define-prim (##macro-lookup-set! x)
+  (set! ##macro-lookup x))
 
-(define ##macro-descr #f)
-(set! ##macro-descr
-      (lambda (src def-syntax?)
+(define-prim (##macro-expand cte src descr)
+  (##shape src src (##macro-descr-size descr))
+  (##sourcify
+   (if (##macro-descr-def-syntax? descr)
+       ((##macro-descr-expander descr) src)
+       (##apply (##macro-descr-expander descr)
+                (##cdr (##desourcify src))))
+   src))
 
-        (define (err)
-          (##raise-expression-parsing-exception
-           'ill-formed-macro-transformer
-           src))
+(define-prim (##macro-expand-set! x)
+  (set! ##macro-expand x))
 
-        (define (make-descr size)
-          (let ((expander (##eval-top src ##interaction-cte)))
-            (if (##not (##procedure? expander))
-                (err)
-                (##make-macro-descr def-syntax? size expander src))))
+(define-prim (##macro-descr src def-syntax?)
 
-        (if def-syntax?
-            (make-descr -1)
-            (let ((code (##source-code src)))
-              (if (and (##pair? code)
-                       (##memq (##source-code (##sourcify (##car code) src))
-                               '(##lambda lambda)))
-                  (begin
-                    (##shape src src -3)
-                    (make-descr (##form-size (##sourcify (##cadr code) src))))
-                  (err))))))
+  (define (err)
+    (##raise-expression-parsing-exception
+     'ill-formed-macro-transformer
+     src))
+
+  (define (make-descr size)
+    (let ((expander (##eval-top src ##interaction-cte)))
+      (if (##not (##procedure? expander))
+          (err)
+          (##make-macro-descr def-syntax? size expander src))))
+
+  (if def-syntax?
+      (make-descr -1)
+      (let ((code (##source-code src)))
+        (if (and (##pair? code)
+                 (##memq (##source-code (##sourcify (##car code) src))
+                         '(##lambda lambda)))
+            (begin
+              (##shape src src -3)
+              (make-descr (##form-size (##sourcify (##cadr code) src))))
+            (err)))))
+
+(define-prim (##macro-descr-set! x)
+  (set! ##macro-descr x))
 
 (define (##form-size parms-src)
   (let ((parms (##source-code parms-src)))
@@ -885,10 +898,11 @@
 
 ;;; Compiler's main entry
 
-(define ##expand-source #f)
-(set! ##expand-source
-      (lambda (src)
-        src))
+(define-prim (##expand-source src)
+  src)
+
+(define-prim (##expand-source-set! x)
+  (set! ##expand-source x))
 
 (define (##compile-module top-cte src)
   (##compile-in-compilation-scope
@@ -1017,16 +1031,17 @@
         (##sourcify (##list (##sourcify '##begin src))
                     src))))
 
-(define ##add-import-requirement #f)
-(set! ##add-import-requirement
-      (lambda (lib-name)
-        (let ((comp-scope (##compilation-scope)))
-          (##table-set!
-           comp-scope
-           'imports
-           (##cons lib-name
-                   (##table-ref comp-scope 'imports '())))
-          #f)))
+(define-prim (##add-import-requirement lib-name)
+  (let ((comp-scope (##compilation-scope)))
+    (##table-set!
+     comp-scope
+     'imports
+     (##cons lib-name
+             (##table-ref comp-scope 'imports '())))
+    #f))
+
+(define-prim (##add-import-requirement-set! x)
+  (set! ##add-import-requirement x))
 
 (define (##extract-library expr)
   #f #; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1057,10 +1072,11 @@
                                         'ill-placed-library
                                         lib-src)))))))))))))
 
-(define ##generate-library-prelude #f)
-(set! ##generate-library-prelude
-      (lambda (lib)
-        lib))
+(define-prim (##generate-library-prelude lib)
+  lib)
+
+(define-prim (##generate-library-prelude-set! x)
+  (set! ##generate-library-prelude x))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1286,8 +1302,10 @@
           ind
           (##comp-subexpr cte val #f))))))
 
-(define ##allow-inner-global-define? #f)
-(set! ##allow-inner-global-define? 'warn)
+(define ##allow-inner-global-define? 'warn)
+
+(define-prim (##allow-inner-global-define?-set! x)
+  (set! ##allow-inner-global-define? x))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3819,19 +3837,21 @@
 
 ;;; Evaluation in a top environment within the current continuation.
 
-(define ##eval-module #f)
-(set! ##eval-module
-      (lambda (src top-cte)
-        (let ((c (##compile-module top-cte (##sourcify src (##make-source #f #f)))))
-          (let ((rte #f))
-            (macro-code-run c)))))
+(define-prim (##eval-module src top-cte)
+  (let ((c (##compile-module top-cte (##sourcify src (##make-source #f #f)))))
+    (let ((rte #f))
+      (macro-code-run c))))
 
-(define ##eval-top #f)
-(set! ##eval-top
-      (lambda (src top-cte)
-        (let ((c (##compile-top top-cte (##sourcify src (##make-source #f #f)))))
-          (let ((rte #f))
-            (macro-code-run c)))))
+(define-prim (##eval-module-set! x)
+  (set! ##eval-module x))
+
+(define-prim (##eval-top src top-cte)
+  (let ((c (##compile-top top-cte (##sourcify src (##make-source #f #f)))))
+    (let ((rte #f))
+      (macro-code-run c))))
+
+(define-prim (##eval-top-set! x)
+  (set! ##eval-top x))
 
 (define-prim (##eval expr #!optional env)
   (##eval-top (##sourcify expr (##make-source #f #f))
@@ -4280,8 +4300,10 @@
                     (raise-os-exception-if-needed
                      (load-source psettings path))))))))))
 
-(define ##load-source-if-more-recent #f)
-(set! ##load-source-if-more-recent #t)
+(define ##load-source-if-more-recent #t)
+
+(define-prim (##load-source-if-more-recent-set! x)
+  (set! ##load-source-if-more-recent x))
 
 (define-prim (##load-object-file abs-path quiet?)
 

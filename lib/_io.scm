@@ -8490,27 +8490,31 @@
         (macro-readtable-start-syntax-set! new-rt start)
         new-rt))))
 
-(define ##scheme-file-extensions #f)
-(set! ##scheme-file-extensions
-      '((".scm" . #f)
-        (".six" . six)
-        ))
+(define ##scheme-file-extensions
+  '((".scm" . #f)
+    (".six" . six)
+    ))
 
-(define ##language-specs #f)
-(set! ##language-specs
-      '(
-        ;; name      keywords-allowed?       start-syntax
-        ;;  \     case-conversion?  \       /  srfi-22?
-        ;;   \                    \  \     /  /
-        #("gsi"                   #f #t scm #f)
-        #("six"                   #f #t six #f)
-        #("gsi-script"            #f #t scm #f)
-        #("six-script"            #f #t six #f)
-        #("scheme-srfi-0"         #t #f scm #t)
-        #("scheme-r5rs"           #t #f scm #t)
-        #("scheme-r4rs"           #t #f scm #t)
-        #("scheme-ieee-1178-1990" #t #f scm #t)
-        ))
+(define-prim (##scheme-file-extensions-set! x)
+  (set! ##scheme-file-extensions x))
+
+(define ##language-specs
+  '(
+    ;; name      keywords-allowed?       start-syntax
+    ;;  \     case-conversion?  \       /  srfi-22?
+    ;;   \                    \  \     /  /
+    #("gsi"                   #f #t scm #f)
+    #("six"                   #f #t six #f)
+    #("gsi-script"            #f #t scm #f)
+    #("six-script"            #f #t six #f)
+    #("scheme-srfi-0"         #t #f scm #t)
+    #("scheme-r5rs"           #t #f scm #t)
+    #("scheme-r4rs"           #t #f scm #t)
+    #("scheme-ieee-1178-1990" #t #f scm #t)
+    ))
+
+(define-prim (##language-specs-set! x)
+  (set! ##language-specs x))
 
 (define-prim (##extract-language-and-tail script-line-or-program-path)
 
@@ -8826,8 +8830,10 @@
               (else
                (##wr-other we obj))))))
 
-(define ##wr #f)
-(set! ##wr ##default-wr)
+(define ##wr ##default-wr)
+
+(define-prim (##wr-set! x)
+  (set! ##wr x))
 
 (define-prim (##wr-str we s)
   (##wr-substr we s 0 (##string-length s)))
@@ -8863,8 +8869,10 @@
 (define-prim (##wr-spaces we n)
   (##wr-filler we n "                                        "))
 
-(define ##pretty-print-shifting-allowed? #f)
-(set! ##pretty-print-shifting-allowed? #t)
+(define ##pretty-print-shifting-allowed? #t)
+
+(define-prim (##pretty-print-shifting-allowed?-set! x)
+  (set! ##pretty-print-shifting-allowed? x))
 
 (define-prim (##wr-indent we shifted-col)
   (if (##fx> (##output-port-column (macro-writeenv-port we)) 1)
@@ -10182,7 +10190,8 @@
    'meroon
    (##void)))
 
-(set! ##wr-meroon ##wr-meroon)
+(define-prim (##wr-meroon-set! x)
+  (set! ##wr-meroon x))
 
 (define-prim (##wr-jazz we obj)
   (##wr-sn
@@ -10191,7 +10200,8 @@
    'jazz
    (##void)))
 
-(set! ##wr-jazz ##wr-jazz)
+(define-prim (##wr-jazz-set! x)
+  (set! ##wr-jazz x))
 
 (define-prim (##wr-frame we obj)
   (if (##eq? (macro-readtable-sharing-allowed?
@@ -10306,10 +10316,6 @@
                     (##wr-str we "#!")
                     (##wr-str we (##car x)))
                   (##wr-str we "#<unknown>"))))))))
-
-;;;----------------------------------------------------------------------------
-
-(define ##main-readtable #f)
 
 ;;;----------------------------------------------------------------------------
 
@@ -10457,16 +10463,24 @@
     ))
 
 (define ##list-max-head 8)
-(set! ##list-max-head ##list-max-head)
+
+(define-prim (##list-max-head-set! x)
+  (set! ##list-max-head x))
 
 (define ##structure-max-head 8)
-(set! ##structure-max-head ##structure-max-head)
+
+(define-prim (##structure-max-head-set! x)
+  (set! ##structure-max-head x))
 
 (define ##structure-max-field 8)
-(set! ##structure-max-field ##structure-max-field)
+
+(define-prim (##structure-max-field-set! x)
+  (set! ##structure-max-field x))
 
 (define ##structure-indent 1)
-(set! ##structure-indent ##structure-indent)
+
+(define-prim (##structure-indent-set! x)
+  (set! ##structure-indent x))
 
 (define ##standard-escaped-char-table
   '(
@@ -13395,17 +13409,19 @@
 (define (##six-type? x)
   (assq x ##six-types))
 
-(define ##six-types '())
-(set! ##six-types
-      '(
-        (int    . #f)
-        (char   . #f)
-        (bool   . #f)
-        (void   . #f)
-        (float  . #f)
-        (double . #f)
-        (obj    . #f)
-        ))
+(define ##six-types
+  '(
+    (int    . #f)
+    (char   . #f)
+    (bool   . #f)
+    (void   . #f)
+    (float  . #f)
+    (double . #f)
+    (obj    . #f)
+    ))
+
+(define-prim (##six-types-set! x)
+  (set! ##six-types x))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -13530,9 +13546,12 @@
 
     rt))
 
-(if (not ##main-readtable)
-    (set! ##main-readtable
-          (##make-standard-readtable)))
+;;;----------------------------------------------------------------------------
+
+(define ##main-readtable (##make-standard-readtable))
+
+(define-prim (##main-readtable-set! x)
+  (set! ##main-readtable-set! x))
 
 ;;;----------------------------------------------------------------------------
 
