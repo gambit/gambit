@@ -807,9 +807,6 @@
   (and tail?
        (##cte-lookup-decl cte 'proper-tail-calls #t)))
 
-(define ##interaction-cte
-  (##make-top-cte))
-
 ;;;----------------------------------------------------------------------------
 
 ;;; Utilities
@@ -4383,90 +4380,95 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; Syntactic aliases.
+;;; Interaction environment and syntactic aliases.
 
-(define-runtime-syntax quote
-  (##make-alias-syntax '##quote))
+(define ##interaction-cte
+  (let ((##interaction-cte (##make-top-cte)))
 
-(define-runtime-syntax quasiquote
-  (##make-alias-syntax '##quasiquote))
+    (define-runtime-syntax quote
+      (##make-alias-syntax '##quote))
 
-(define-runtime-syntax set!
-  (##make-alias-syntax '##set!))
+    (define-runtime-syntax quasiquote
+      (##make-alias-syntax '##quasiquote))
 
-(define-runtime-syntax lambda
-  (##make-alias-syntax '##lambda))
+    (define-runtime-syntax set!
+      (##make-alias-syntax '##set!))
 
-(define-runtime-syntax if
-  (##make-alias-syntax '##if))
+    (define-runtime-syntax lambda
+      (##make-alias-syntax '##lambda))
 
-(define-runtime-syntax cond
-  (##make-alias-syntax '##cond))
+    (define-runtime-syntax if
+      (##make-alias-syntax '##if))
 
-(define-runtime-syntax and
-  (##make-alias-syntax '##and))
+    (define-runtime-syntax cond
+      (##make-alias-syntax '##cond))
 
-(define-runtime-syntax or
-  (##make-alias-syntax '##or))
+    (define-runtime-syntax and
+      (##make-alias-syntax '##and))
 
-(define-runtime-syntax case
-  (##make-alias-syntax '##case))
+    (define-runtime-syntax or
+      (##make-alias-syntax '##or))
 
-(define-runtime-syntax let
-  (##make-alias-syntax '##let))
+    (define-runtime-syntax case
+      (##make-alias-syntax '##case))
 
-(define-runtime-syntax let*
-  (##make-alias-syntax '##let*))
+    (define-runtime-syntax let
+      (##make-alias-syntax '##let))
 
-(define-runtime-syntax letrec
-  (##make-alias-syntax '##letrec))
+    (define-runtime-syntax let*
+      (##make-alias-syntax '##let*))
 
-(define-runtime-syntax letrec*
-  (##make-alias-syntax '##letrec*))
+    (define-runtime-syntax letrec
+      (##make-alias-syntax '##letrec))
 
-(define-runtime-syntax do
-  (##make-alias-syntax '##do))
+    (define-runtime-syntax letrec*
+      (##make-alias-syntax '##letrec*))
 
-(define-runtime-syntax delay
-  (##make-alias-syntax '##delay))
+    (define-runtime-syntax do
+      (##make-alias-syntax '##do))
 
-(define-runtime-syntax future
-  (##make-alias-syntax '##future))
+    (define-runtime-syntax delay
+      (##make-alias-syntax '##delay))
 
-(define-runtime-syntax c-define-type
-  (##make-alias-syntax '##c-define-type))
+    (define-runtime-syntax future
+      (##make-alias-syntax '##future))
 
-(define-runtime-syntax c-declare
-  (##make-alias-syntax '##c-declare))
+    (define-runtime-syntax c-define-type
+      (##make-alias-syntax '##c-define-type))
 
-(define-runtime-syntax c-initialize
-  (##make-alias-syntax '##c-initialize))
+    (define-runtime-syntax c-declare
+      (##make-alias-syntax '##c-declare))
 
-(define-runtime-syntax c-lambda
-  (##make-alias-syntax '##c-lambda))
+    (define-runtime-syntax c-initialize
+      (##make-alias-syntax '##c-initialize))
 
-(define-runtime-syntax c-define
-  (##make-alias-syntax '##c-define))
+    (define-runtime-syntax c-lambda
+      (##make-alias-syntax '##c-lambda))
 
-(define-runtime-syntax begin
-  (##make-alias-syntax '##begin))
+    (define-runtime-syntax c-define
+      (##make-alias-syntax '##c-define))
 
-(define-runtime-syntax define
-  (##make-alias-syntax '##define))
+    (define-runtime-syntax begin
+      (##make-alias-syntax '##begin))
 
-(define-runtime-syntax define-macro
-  (##make-alias-syntax '##define-macro))
+    (define-runtime-syntax define
+      (##make-alias-syntax '##define))
 
-;;(define-runtime-syntax define-syntax
-;;  (##make-alias-syntax '##define-syntax))
+    (define-runtime-syntax define-macro
+      (##make-alias-syntax '##define-macro))
 
-(define-runtime-syntax include
-  (##make-alias-syntax '##include))
+    ;;(define-runtime-syntax define-syntax
+    ;;  (##make-alias-syntax '##define-syntax))
 
-(define-runtime-syntax declare
-  (##make-alias-syntax '##declare))
+    (define-runtime-syntax include
+      (##make-alias-syntax '##include))
 
-(define-runtime-syntax namespace
-  (##make-alias-syntax '##namespace))
+    (define-runtime-syntax declare
+      (##make-alias-syntax '##declare))
+
+    (define-runtime-syntax namespace
+      (##make-alias-syntax '##namespace))
+
+    ##interaction-cte))
 
 ;;;============================================================================
