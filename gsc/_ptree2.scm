@@ -1400,15 +1400,19 @@
 
 (define (remove-dead-defs lst)
 
+  (define ignore-side-effects-in-defs? #f)
+
   (define (optimizable-def? ptree)
     (optimize-dead-definitions? (var-name (def-var ptree)) (node-env ptree)))
 
   (let ((useful-ptrees
          (list->ptset
           (keep (lambda (ptree)
-                  (or (not (side-effects-impossible? ptree))
-                      (and (def? ptree)
-                           (not (optimizable-def? ptree)))))
+                  (or (and (def? ptree)
+                           (not (optimizable-def? ptree)))
+                      (if ignore-side-effects-in-defs?
+                          (not (def? ptree))
+                          (not (side-effects-impossible? ptree)))))
                 lst)))
         (useful-vars
          (varset-empty)))
@@ -1442,7 +1446,8 @@
                      (optimizable-def? ptree)
                      (ptset-empty? (var-refs (def-var ptree))))
                 (let ((val (def-val ptree)))
-                  (if (side-effects-impossible? val)
+                  (if (or ignore-side-effects-in-defs?
+                          (side-effects-impossible? val))
                       (begin
                         (delete-ptree val)
                         '())
