@@ -502,11 +502,11 @@
   (##exit-cleanup)
   (##exit-with-err-code-no-cleanup err-code))
 
-(define ##exit #f)
+(define-prim (##exit #!optional (status (macro-EXIT-CODE-OK)))
+  (##exit-with-err-code (##fx+ status 1)))
 
-(set! ##exit
-      (lambda (#!optional (status (macro-EXIT-CODE-OK)))
-        (##exit-with-err-code (##fx+ status 1))))
+(define-prim (##exit-set! x)
+  (set! ##exit x))
 
 (define-prim (##exit-abnormally)
   (##exit (macro-EXIT-CODE-SOFTWARE)))
@@ -640,8 +640,11 @@
    (else
     '())))
 
-(define ##processed-command-line '())
-(set! ##processed-command-line (##command-line))
+(define ##processed-command-line
+  (##command-line))
+
+(define-prim (##processed-command-line-set! x)
+  (set! ##processed-command-line x))
 
 (define-prim (command-line)
   ##processed-command-line)
