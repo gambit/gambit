@@ -724,7 +724,9 @@
     expansion))
 
 (define ##define-type-expansion-show? #f)
-(set! ##define-type-expansion-show? #f)
+
+(define-prim (##define-type-expansion-show?-set! x)
+  (set! ##define-type-expansion-show? x))
 
 (define-prim (##define-type-parser
                form-name
@@ -1813,7 +1815,9 @@
 
 
 (define ##path-resolve-hook #f)
-(set! ##path-resolve-hook #f)
+
+(define-prim (##path-resolve-hook-set! x)
+  (set! ##path-resolve-hook x))
 
 (define-prim (##path-resolve path)
   (let ((pr-hook ##path-resolve-hook))
@@ -1831,7 +1835,9 @@
   (##path-expand path))
 
 (define ##path-unresolve-hook #f)
-(set! ##path-unresolve-hook #f)
+
+(define-prim (##path-unresolve-hook-set! x)
+  (set! ##path-unresolve-hook x))
 
 (define-prim (##path-unresolve path)
   (let ((pu-hook ##path-unresolve-hook))
@@ -1849,7 +1855,9 @@
   path)
 
 (define ##path-expand-hook #f)
-(set! ##path-expand-hook #f)
+
+(define-prim (##path-expand-hook-set! x)
+  (set! ##path-expand-hook x))
 
 (define-prim (##path-expand
               path
