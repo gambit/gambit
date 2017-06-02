@@ -154,7 +154,7 @@ BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
 BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS) $(GAMBITLIB_DEFS) -D___PRIMAL
 BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
 
-PRELUDE_OPT = -prelude "(\#\#include\"$(srcdirpfx)header.scm\")"
+PRELUDE_OPT = -prelude "(\#\#include\"$(srcdirpfx)header.scm\")(define-cond-expand-feature@RTLIB_COND_EXPAND_FEATURES@)"
 
 all:
 

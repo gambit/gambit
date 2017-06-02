@@ -11549,20 +11549,25 @@
              (set-box! b resolved-obj))))
       (macro-readenv-wrap re b))))
 
-(define (##read-sharp-dot re next start-pos)
-  (if (not (macro-readtable-eval-allowed? (macro-readenv-readtable re)))
-      (begin
-        (##raise-datum-parsing-exception 'invalid-token re)
-        (##read-datum-or-label-or-none-or-dot re)) ;; skip error
-      (begin
-        (macro-read-next-char-or-eof re) ;; skip char after #\#
-        (let* ((expr
-                (##read-expr-from-port
-                 (macro-readenv-port re)))
-               (val
-                (##eval expr)))
-          (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
-          (macro-readenv-wrap re val)))))
+(cond-expand
+ (enable-sharp-dot
+
+  (define (##read-sharp-dot re next start-pos)
+    (if (not (macro-readtable-eval-allowed? (macro-readenv-readtable re)))
+        (begin
+          (##raise-datum-parsing-exception 'invalid-token re)
+          (##read-datum-or-label-or-none-or-dot re)) ;; skip error
+        (begin
+          (macro-read-next-char-or-eof re) ;; skip char after #\#
+          (let* ((expr
+                  (##read-expr-from-port
+                   (macro-readenv-port re)))
+                 (val
+                  (##eval expr)))
+            (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
+            (macro-readenv-wrap re val))))))
+
+ (else))
 
 (define-prim (##read-sharp-less re next start-pos)
 
@@ -13550,8 +13555,13 @@
     (##readtable-char-sharp-handler-set! rt #\` ##read-sharp-quotation)
     (##readtable-char-sharp-handler-set! rt #\, ##read-sharp-quotation)
     (##readtable-char-sharp-handler-set! rt #\& ##read-sharp-ampersand)
-    (##readtable-char-sharp-handler-set! rt #\. ##read-sharp-dot)
     (##readtable-char-sharp-handler-set! rt #\< ##read-sharp-less)
+
+    (cond-expand
+     (enable-sharp-dot
+      (##readtable-char-sharp-handler-set! rt #\. ##read-sharp-dot))
+     (else
+      #f))
 
     rt))
 

@@ -60,6 +60,8 @@ DEFS_OBJ_DYN_LIB_EXE=""
 
 COMPILATION_OPTIONS=""
 
+RTLIB_COND_EXPAND_FEATURES=""
+
 ###############################################################################
 #
 # Check if the system must be compiled using the C compiler or C++ compiler.
@@ -702,6 +704,22 @@ if test "$ENABLE_AUTO_FORCING" = yes; then
 
   COMPILATION_OPTIONS="$COMPILATION_OPTIONS -force"
 
+fi
+
+###############################################################################
+#
+# Check if the system must support the #.<expression> syntax.
+
+AC_ARG_ENABLE(sharp-dot,
+              AC_HELP_STRING([--enable-sharp-dot],
+                             [support #.<expression> syntax (default is YES)]),
+              ENABLE_SHARP_DOT=$enableval,
+              ENABLE_SHARP_DOT=yes)
+
+if test "$ENABLE_SHARP_DOT" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-sharp-dot|"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|disable-sharp-dot|"
 fi
 
 ###############################################################################
@@ -2892,6 +2910,7 @@ AC_SUBST(ENABLE_VERSIONED_SHARED_LIBS)
 AC_SUBST(emacsdir)
 AC_SUBST(HELP_BROWSER)
 AC_SUBST(COMPILATION_OPTIONS)
+AC_SUBST(RTLIB_COND_EXPAND_FEATURES)
 
 AC_PROG_MAKE_SET
 
