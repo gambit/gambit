@@ -632,6 +632,7 @@ ac_includes_default="\
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 SET_MAKE
+RTLIB_COND_EXPAND_FEATURES
 COMPILATION_OPTIONS
 HELP_BROWSER
 emacsdir
@@ -958,6 +959,7 @@ enable_lib_suffix
 enable_help_browser
 enable_type_checking
 enable_auto_forcing
+enable_sharp_dot
 enable_rtlib_debug
 enable_rtlib_debug_location
 enable_rtlib_debug_source
@@ -1674,6 +1676,7 @@ Optional Features:
                           Browser to use for help (default is to search)
   --enable-type-checking  perform type checking (default is YES)
   --enable-auto-forcing   automatically force promises (default is NO)
+  --enable-sharp-dot      support #.<expression> syntax (default is YES)
   --enable-rtlib-debug    Include all debugging information in the code
                           generated for the Scheme runtime library (default is
                           NO)
@@ -3015,6 +3018,8 @@ DEFS_EXE=""
 DEFS_OBJ_DYN_LIB_EXE=""
 
 COMPILATION_OPTIONS=""
+
+RTLIB_COND_EXPAND_FEATURES=""
 
 ###############################################################################
 #
@@ -5512,6 +5517,24 @@ if test "$ENABLE_AUTO_FORCING" = yes; then
 
   COMPILATION_OPTIONS="$COMPILATION_OPTIONS -force"
 
+fi
+
+###############################################################################
+#
+# Check if the system must support the #.<expression> syntax.
+
+# Check whether --enable-sharp-dot was given.
+if test "${enable_sharp_dot+set}" = set; then :
+  enableval=$enable_sharp_dot; ENABLE_SHARP_DOT=$enableval
+else
+  ENABLE_SHARP_DOT=yes
+fi
+
+
+if test "$ENABLE_SHARP_DOT" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-sharp-dot|"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|disable-sharp-dot|"
 fi
 
 ###############################################################################
@@ -14394,6 +14417,7 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
+
 
 
 
