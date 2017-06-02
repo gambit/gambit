@@ -8618,18 +8618,23 @@
        val))))
 
 (define main ;; predefine main procedure so scripts don't have to
-  (lambda args 0))
+  (##first-argument
+   (lambda args 0)))
 
 (define-prim (##start-main language)
+
+  (define (call-main args)
+    (##apply-with-procedure-check main args))
+
   (cond ((macro-language-srfi-22? language)
          (lambda ()
-           (let ((status (##eval '(main (##cdr ##processed-command-line)))))
+           (let ((status (call-main (##list (##cdr ##processed-command-line)))))
              (if (##fixnum? status)
                  (##exit status)
                  (##exit-abnormally)))))
         (else
          (lambda ()
-           (##eval '(##apply main (##cdr ##processed-command-line)))
+           (call-main (##cdr ##processed-command-line))
            (##exit)))))
 
 (##define-macro (macro-ctrl-char? c)
