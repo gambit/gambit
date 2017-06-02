@@ -284,6 +284,9 @@ The configure options which are specific to the Gambit system are:
                           cause strict operations such as car, but not
                           cons, to automatically force their arguments
                           (requires: make bootstrap; make bootclean; make)
+  --enable-sharp-dot
+                          enables the support for the #.<expression> syntax
+                          (requires: make bootstrap; make bootclean; make)
   --enable-rtlib-debug
                           cause the inclusion of all debugging information
                           in the code generated for the Scheme runtime library
