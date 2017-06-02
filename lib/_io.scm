@@ -4156,6 +4156,19 @@
    (macro-absent-obj)
    (macro-absent-obj)))
 
+(define-prim (##force-output-catching-exceptions port)
+
+  ;; ignoring exceptions helps avoid infinite loops when forcing the
+  ;; output of predefined ports at program exit (for example the
+  ;; disk might be full while forcing stdout redirected to a file
+  ;; and an attempt to write an error message on stdout for this
+  ;; exception would also raise an exception)
+
+  (##with-exception-catcher
+   (lambda (e) #f)
+   (lambda ()
+     (##force-output port))))
+
 (define-prim (force-output
               #!optional
               (port (macro-absent-obj))
@@ -8261,10 +8274,17 @@
        (if (##fixnum? device)
            (##exit-with-err-code device)
            (and device
-                (##make-device-port-from-single-device
-                 name
-                 device
-                 psettings)))))))
+                (let ((port
+                       (##make-device-port-from-single-device
+                        name
+                        device
+                        psettings)))
+                  (if (##not (##eq? (macro-psettings-direction psettings)
+                                    (macro-direction-in)))
+                      (##add-exit-job!
+                       (lambda ()
+                         (##force-output-catching-exceptions port))))
+                  port)))))))
 
 (define ##stdin-port   #f)
 (define ##stdout-port  #f)
@@ -8283,22 +8303,6 @@
         (##open-predefined (macro-direction-out)   '(stderr)  -3))
   (set! ##console-port
         (##open-predefined (macro-direction-inout) '(console) -4)))
-
-(define-prim (##force-output-on-predefined)
-
-  (define (force-output-on-port port)
-    (and port
-         ;; ignore exceptions which might lead to an infinite loop
-         (##with-exception-catcher
-          (lambda (e) #f)
-          (lambda ()
-            (##force-output port)))))
-
-  (force-output-on-port ##stdout-port)
-  (force-output-on-port ##stderr-port)
-  (force-output-on-port ##console-port))
-
-(##add-exit-job! ##force-output-on-predefined)
 
 ;;;----------------------------------------------------------------------------
 
