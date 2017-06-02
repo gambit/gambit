@@ -4417,7 +4417,7 @@ For example:
 @deffn {special form} cond-expand @dots{}
 @end deffn
 
-@deffn {special form} define-cond-expand-feature @var{ident}
+@deffn {special form} define-cond-expand-feature @var{ident} @dots{}
 @end deffn
 
 @deffn procedure finite? @var{x}

@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -316,8 +316,8 @@
 (define ##cond-expand-features
   (##make-parameter (generate-cond-expand-features)))
 
-(define-runtime-macro (define-cond-expand-feature feature)
-  (##cond-expand-features (##cons feature (##cond-expand-features)))
+(define-runtime-macro (define-cond-expand-feature . features)
+  (##cond-expand-features (##append features (##cond-expand-features)))
   `(begin))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
