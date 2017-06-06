@@ -82,7 +82,7 @@ static void ___fdset_realloc (int fd)
 {
   int oldsize = ___fdset_state_size;
   int newsize = oldsize;
-  while (newsize < fd)
+  while (newsize <= fd)
     {
       newsize = newisze * 2;
     }
@@ -797,7 +797,7 @@ ___device_select_state *state;
 int fd;
 ___BOOL for_writing;)
 {
-  if (fd > state->fdset_size)
+  if (fd >= state->fdset_size)
     {
       ___fdset_realloc (fd);
       state->fdset_size = ___fdset_size ();
