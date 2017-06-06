@@ -721,8 +721,15 @@ ___device_select_state *state;
 int fd;
 ___BOOL for_writing;)
 {
-  state->pollfds[state->pollfd_count].fd = fd;
+  if (fd > state->fdset_size)
+    {
+      ___fdset_realloc (fd);
+      state->fdset_size = ___fdset_size ();
+      state->readfds = ___fdset_readfds ();
+      state->writefds = ___fdset_writefds ();
+    }
 
+  state->pollfds[state->pollfd_count].fd = fd;
   if (for_writing)
     state->pollfds[state->pollfd_count].events = POLLOUT;
   else
@@ -812,9 +819,13 @@ ___time timeout;)
 
 #ifdef USE_poll
 
+  ___fdset_alloc (MAX_CONDVARS);
   state.pollfd_count = 0;
-  ___FD_ZERO (&state.readfds);
-  ___FD_ZERO (&state.writefds);
+  state.fdset_size = ___fdset_size ();
+  state.readfds = ___fdset_readfds ();
+  state.writefds = ___fdset_writefds ();
+  ___FD_ZERO (state.readfds, state.fdset_size);
+  ___FD_ZERO (state.writefds, state.fdset_size);
 
 #endif
 
@@ -1134,13 +1145,13 @@ ___time timeout;)
                 if (state.pollfds[x].events & POLLIN)
                   {
                     if (state.pollfds[x].revents & (POLLIN | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.readfds);
+                      ___FD_SET (state.pollfds[x].fd, state.readfds);
                   }
 
                 if (state.pollfds[x].events & POLLOUT)
                   {
                     if (state.pollfds[x].revents & (POLLOUT | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.writefds);
+                      ___FD_SET (state.pollfds[x].fd, state.writefds);
                   }
 
                 --active;
