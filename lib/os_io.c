@@ -8988,6 +8988,241 @@ ___SCMOBJ options;)
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
+/* Raw device file descriptors */
+#ifdef USE_POSIX
+typedef struct ___device_raw_struct
+  {
+    ___device base;
+    int fd;
+  } ___device_raw;
+
+typedef struct ___device_raw_vtbl_struct
+  {
+    ___device_vtbl base;
+  } ___device_raw_vtbl;
+
+
+___HIDDEN int ___device_raw_kind
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  return ___RAW_KIND;
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_close_virt
+   ___P((___device *self,
+         int direction),
+        (self,
+         direction)
+        ___device *self;
+        int direction;)
+{
+  ___device_raw *d = ___CAST(___device_raw*,self);
+  int is_not_closed = 0;
+  
+  if (d->base.read_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_RD;
+
+  if (d->base.write_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_WR;
+
+  if (is_not_closed == 0)
+    return ___FIX(___NO_ERR);
+
+  if ((is_not_closed & ~direction) == 0)
+    {
+      d->base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
+      d->base.write_stage = ___STAGE_CLOSED;
+      
+      if (___close_no_EINTR (d->fd) < 0)
+        return err_code_from_errno ();
+    }
+  else if (is_not_closed & direction & ___DIRECTION_RD)
+    d->base.read_stage = ___STAGE_CLOSED;
+  else if (is_not_closed & direction & ___DIRECTION_WR)
+    d->base.write_stage = ___STAGE_CLOSED;
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_select_virt
+   ___P((___device *self,
+         ___BOOL for_writing,
+         int i,
+         int pass,
+         ___device_select_state *state),
+        (self,
+         for_writing,
+         i,
+         pass,
+         state)
+___device *self;
+___BOOL for_writing;
+int i;
+int pass;
+___device_select_state *state;)
+{
+  ___device_raw *d = ___CAST(___device_raw*,self);
+
+  int stage = (for_writing
+               ? d->base.write_stage
+               : d->base.read_stage);
+
+  if (stage == ___STAGE_OPEN)
+    {
+      if (for_writing)
+        {
+          ___device_select_add_fd (state, d->fd, 0);
+        }
+      else
+        {
+          ___device_select_add_fd (state, d->fd, 0);
+        }
+    }
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_release_virt
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___device_raw_vtbl ___device_raw_table =
+{
+  {
+    ___device_raw_kind,
+    ___device_raw_select_virt,
+    ___device_raw_release_virt,
+    ___device_raw_force_output_virt,
+    ___device_raw_close_virt
+  }
+};
+
+___SCMOBJ ___device_raw_setup_from_fd
+   ___P((___device_raw **dev,
+         ___device_group *dgroup,
+         int fd,
+         int direction),
+        (dev,
+         dgroup,
+         fd,
+         direction)
+___device_raw **dev;
+___device_group *dgroup;
+int fd;
+int direction;)
+{
+  ___device_raw *d;
+  
+  d = ___CAST(___device_raw*,
+              ___ALLOC_MEM(sizeof (___device_raw)));
+
+  if (d == NULL)
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+
+  d->base.vtbl = &___device_raw_table;
+  d->base.refcount = 1;
+  d->base.direction = direction;
+  d->base.close_direction = 0; /* prevent closing on errors */
+  
+  if (direction & ___DIRECTION_RD)
+    {
+      d->base.read_stage = ___STAGE_OPEN;
+    }
+  else
+    {
+      d->base.read_stage = ___STAGE_CLOSED;
+    }
+
+  if (direction & ___DIRECTION_WR)
+    {
+      d->base.write_stage = ___STAGE_OPEN;
+    }
+  else
+    {
+      d->base.write_stage = ___STAGE_CLOSED;
+    }
+  
+  d->fd = fd;
+  
+  *dev = d;
+
+  return ___FIX(___NO_ERR);
+}
+
+#endif
+
+___SCMOBJ ___os_device_raw_open
+   ___P((___SCMOBJ index,
+         ___SCMOBJ flags),
+        (index,
+         flags)
+___SCMOBJ fd;
+___SCMOBJ flags;)
+{
+
+#ifdef USE_POSIX
+  ___SCMOBJ e;
+  ___device_raw *dev;
+  ___SCMOBJ result;
+
+  int fd;
+  int fl;
+  int direction;
+  
+  device_translate_flags (___INT(flags),
+                          &fl,
+                          &direction);
+
+  fd = ___INT(index);
+
+  if ((e = ___device_raw_setup_from_fd
+       (&dev,
+        ___global_device_group (),
+        fd,
+        direction))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  if ((e = ___NONNULLPOINTER_to_SCMOBJ
+       (___PSTATE,
+        dev,
+        ___FAL,
+        ___device_cleanup_from_ptr,
+        &result,
+        ___RETURN_POS))
+      != ___FIX(___NO_ERR))
+    {
+      ___device_cleanup (___CAST(___device*,dev)); /* ignore error */
+      return e;
+    }
+
+  ___release_scmobj (result);
+
+  return result;
+
+#else
+  return ___FIX(___UNIMPL_ERR);
+#endif
+}
+
 /* Opening a predefined device (stdin, stdout, stderr, console, etc). */
 
 ___SCMOBJ ___os_device_stream_open_predefined
