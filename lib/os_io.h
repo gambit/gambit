@@ -29,6 +29,7 @@ typedef struct ___device_group_struct
 #define ___TTY_DEVICE_KIND        (___DEVICE_KIND+64)
 #define ___SERIAL_DEVICE_KIND     (___DEVICE_KIND+128)
 #define ___TCP_CLIENT_DEVICE_KIND (___DEVICE_KIND+256)
+#define ___RAW_KIND               (___DEVICE_KIND+512)
 #define ___TCP_SERVER_DEVICE_KIND (___OBJECT_KIND+512)
 #define ___DIRECTORY_KIND         (___OBJECT_KIND+1024)
 #define ___EVENT_QUEUE_KIND       (___OBJECT_KIND+2048)
@@ -815,6 +816,14 @@ extern ___SCMOBJ ___os_device_event_queue_open
 extern ___SCMOBJ ___os_device_event_queue_read
    ___P((___SCMOBJ dev_condvar),
         ());
+
+/* Opening a raw device (file descriptor) */
+
+extern ___SCMOBJ ___os_device_raw_open
+   ___P((___SCMOBJ index,
+         ___SCMOBJ flags),
+        ());
+
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
