@@ -46,7 +46,7 @@ void *param;)
   extern void ___fdset_state_init ();
   ___fdset_state_init ();
 #endif
-  
+
   thread->start_fn (thread);
 
   return 0;

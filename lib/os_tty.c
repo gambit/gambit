@@ -2332,7 +2332,7 @@ ___device_tty *self;)
           }
 
 #endif
-	  
+
 	  if (byte_avail ==  ___NBELEMS(d->output_byte) - d->output_byte_hi)
 	    break;  /* not enough space for a full multibyte character, first flush what we have */
 

@@ -628,7 +628,7 @@ ___WORD target_processor_count;)
   extern void ___fdset_state_init ();
   ___fdset_state_init ();
 #endif
-  
+
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   int id = ___PROCESSOR_ID(___ps, ___vms); /* id of this processor */
   ___sync_op_struct sop;
