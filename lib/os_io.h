@@ -105,21 +105,21 @@ typedef ___SIZE_TS ___fdbits;
 #define ___FD_ZERO(set, sz)                        \
   memset ((set), 0, sz/8)
 #define ___FD_SET(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] |= ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] |= ___FD_MASK (fd))
 #define ___FD_CLR(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] &= ~___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] &= ~___FD_MASK (fd))
 #define ___FD_ISSET(fd, set)                  \
-  ((set)->fds[___FD_ELT (fd)] & ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] & ___FD_MASK (fd))
 
-typedef ___fdbits *___poll_fd_set;
+typedef ___fdbits *___poll_fdset;
 
 #endif
 
 #ifdef USE_select
-#define ___FD_ZERO  FD_ZERO
-#define ___FD_ISSET FD_ISSET
-#define ___FD_CLR   FD_CLR
-#define ___FD_SET   FD_SET
+#define ___FD_ZERO(set)      FD_ZERO(&set)
+#define ___FD_ISSET(fd, set) FD_ISSET(fd, &set)
+#define ___FD_CLR(fd, set)   FD_CLR(fd, &set)
+#define ___FD_SET(fd, set)   FD_SET(fd, &set)
 #endif
 
 typedef struct ___device_select_state_struct
@@ -146,8 +146,8 @@ typedef struct ___device_select_state_struct
     int pollfd_count;
     /* active set bitmaps */
     int fdset_size;
-    ___poll_fd_set readfds;
-    ___poll_fd_set writefds;
+    ___poll_fdset readfds;
+    ___poll_fdset writefds;
 #endif
 
 #endif

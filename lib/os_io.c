@@ -84,27 +84,27 @@ static void ___fdset_realloc (int fd)
   int newsize = oldsize;
   while (newsize <= fd)
     {
-      newsize = newisze * 2;
+      newsize = newsize * 2;
     }
 
   ___fdset_state_readfds = realloc (___fdset_state_readfds, newsize/8);
   ___fdset_state_writefds = realloc (___fdset_state_writefds, newsize/8);
   ___fdset_state_size = newsize;
-  memset(___fdset_state_readfds + oldsize/8, 0, (newsize - oldsize)/8)
+  memset(___fdset_state_readfds + oldsize/8, 0, (newsize - oldsize)/8);
   memset(___fdset_state_writefds + oldsize/8, 0, (newsize - oldsize)/8);
 }
 
-static void ___fdset_size ()
+static int ___fdset_size ()
 {
   return ___fdset_state_size;
 }
 
-static void ___fdset_readfds ()
+static ___poll_fdset ___fdset_readfds ()
 {
   return ___fdset_state_readfds;
 }
 
-static void ___fdset_writefds ()
+static ___poll_fdset ___fdset_writefds ()
 {
   return ___fdset_state_writefds;
 }
@@ -774,9 +774,9 @@ int fd;
 ___BOOL for_writing;)
 {
   if (for_writing)
-    ___FD_SET(fd, &state->writefds);
+    ___FD_SET(fd, state->writefds);
   else
-    ___FD_SET(fd, &state->readfds);
+    ___FD_SET(fd, state->readfds);
 
   if (fd >= state->highest_fd_plus_1)
     state->highest_fd_plus_1 = fd+1;
@@ -1243,7 +1243,7 @@ ___time timeout;)
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -1422,7 +1422,7 @@ ___time timeout;)
 
 #ifdef USE_select_or_poll
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -3002,12 +3002,12 @@ ___device_select_state *state;)
 
       if (for_writing)
         {
-          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, &state->writefds))
+          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, state->writefds))
             state->devs[i] = NULL;
         }
       else
         {
-          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, &state->readfds))
+          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, state->readfds))
             state->devs[i] = NULL;
         }
 
@@ -4966,8 +4966,8 @@ ___device_select_state *state;)
 
       if (d->try_connect_again != 0 ||
           (for_writing
-           ? ___FD_ISSET(d->s, &state->writefds)
-           : ___FD_ISSET(d->s, &state->readfds)))
+           ? ___FD_ISSET(d->s, state->writefds)
+           : ___FD_ISSET(d->s, state->readfds)))
         {
           d->connect_done = 1;
           state->devs[i] = NULL;
@@ -5739,7 +5739,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (___FD_ISSET(d->s, &state->readfds))
+      if (___FD_ISSET(d->s, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -6677,8 +6677,8 @@ ___device_select_state *state;)
 #ifdef USE_POSIX
 
       if (for_writing
-           ? ___FD_ISSET(d->fd, &state->writefds)
-           : ___FD_ISSET(d->fd, &state->readfds))
+           ? ___FD_ISSET(d->fd, state->writefds)
+           : ___FD_ISSET(d->fd, state->readfds))
         state->devs[i] = NULL;
 
 #endif
