@@ -150,6 +150,7 @@
 (##define-macro (macro-tty-kind)         (+ 15 64))
 (##define-macro (macro-serial-kind)      (+ 15 128))
 (##define-macro (macro-tcp-client-kind)  (+ 15 256))
+(##define-macro (macro-raw-device-kind)  (+ 15 512))
 (##define-macro (macro-tcp-server-kind)  (+ 1 512))
 (##define-macro (macro-directory-kind)   (+ 1 1024))
 (##define-macro (macro-event-queue-kind) (+ 1 2048))
@@ -528,6 +529,17 @@
 
 (##define-macro (macro-tcp-client-port? obj)
   `(##port-of-kind? ,obj (macro-tcp-client-kind)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;; Representation of raw device ports.
+
+(define-check-type raw-device-port 'raw-device-port
+  macro-raw-device-port?)
+
+(##define-macro (macro-raw-device-port? obj)
+  `(##port-of-kind? ,obj (macro-raw-device-kind)))
+
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

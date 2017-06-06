@@ -8254,6 +8254,33 @@
         (macro-dynamic-bind output-port port thunk)))))
 
 ;;;----------------------------------------------------------------------------
+(define-prim (##open-raw-device
+              direction
+              name
+              fd
+              settings)
+  (define (fail)
+    (##fail-check-settings 4 ##open-raw-device direction name fd settings))
+  
+  (##make-psettings
+   direction
+   '(direction:)
+   settings
+   fail
+   (lambda (psettings)
+     (let ((device
+            (##os-device-open-raw
+             fd
+             (##psettings->device-flags psettings))))
+       (if (##fixnum? device)
+         (##exit-with-err-code device)
+         (and device
+              (##make-device-port-from-single-device
+               name
+               device
+               psettings)))))))
+
+;;;----------------------------------------------------------------------------
 
 (define-prim (##open-predefined
               direction
