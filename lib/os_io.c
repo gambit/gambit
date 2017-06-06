@@ -8982,11 +8982,22 @@ ___device_select_state *state;)
                ? d->base.write_stage
                : d->base.read_stage);
 
-  if (stage == ___STAGE_OPEN)
+  if (pass == ___SELECT_PASS_1)
     {
-      ___device_select_add_fd (state, d->fd, for_writing);
+      if (stage != ___STAGE_OPEN)
+        state->timeout = ___time_mod.time_neg_infinity;
+      else
+        ___device_select_add_fd (state, d->fd, for_writing);
+
+      return ___FIX(___SELECT_SETUP_DONE);
     }
 
+  /* pass == ___SELECT_PASS_CHECK */
+  if (stage != ___STAGE_OPEN)
+    state->devs[i] = NULL;
+  else if (___FD_ISSET(d->fd, state->readfds))
+    state->devs[i] = NULL;
+  
   return ___FIX(___NO_ERR);
 }
 
