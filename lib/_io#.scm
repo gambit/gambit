@@ -534,6 +534,23 @@
 
 ;;; Representation of raw device ports.
 
+(define-type-of-port raw-device-port
+  id: f55e3678-0414-63d0-3fda-68b9bc518bca
+  type-exhibitor: macro-type-raw-device-port
+  constructor: macro-make-raw-device-port
+  implementer: implement-type-raw-device-port
+  macros:
+  prefix: macro-
+  opaque:
+  unprintable:
+
+  extender: define-type-of-raw-device-port
+  
+  rdevice-condvar
+  wdevice-condvar
+  fd
+)
+
 (define-check-type raw-device-port 'raw-device-port
   macro-raw-device-port?)
 
