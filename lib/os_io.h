@@ -29,7 +29,7 @@ typedef struct ___device_group_struct
 #define ___TTY_DEVICE_KIND        (___DEVICE_KIND+64)
 #define ___SERIAL_DEVICE_KIND     (___DEVICE_KIND+128)
 #define ___TCP_CLIENT_DEVICE_KIND (___DEVICE_KIND+256)
-#define ___RAW_KIND               (___DEVICE_KIND+512)
+#define ___RAW_DEVICE_KIND        (___DEVICE_KIND+512)
 #define ___TCP_SERVER_DEVICE_KIND (___OBJECT_KIND+512)
 #define ___DIRECTORY_KIND         (___OBJECT_KIND+1024)
 #define ___EVENT_QUEUE_KIND       (___OBJECT_KIND+2048)

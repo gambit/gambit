@@ -8920,7 +8920,7 @@ ___HIDDEN int ___device_raw_kind
         (self)
 ___device *self;)
 {
-  return ___RAW_KIND;
+  return ___RAW_DEVICE_KIND;
 }
 
 ___HIDDEN ___SCMOBJ ___device_raw_close_virt
