@@ -9071,14 +9071,7 @@ ___device_select_state *state;)
 
   if (stage == ___STAGE_OPEN)
     {
-      if (for_writing)
-        {
-          ___device_select_add_fd (state, d->fd, 0);
-        }
-      else
-        {
-          ___device_select_add_fd (state, d->fd, 0);
-        }
+      ___device_select_add_fd (state, d->fd, for_writing);
     }
 
   return ___FIX(___NO_ERR);
