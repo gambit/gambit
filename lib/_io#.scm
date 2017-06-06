@@ -545,7 +545,7 @@
   unprintable:
 
   extender: define-type-of-raw-device-port
-  
+
   rdevice-condvar
   wdevice-condvar
   fd
