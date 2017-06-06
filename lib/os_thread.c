@@ -35,10 +35,6 @@ ___thread_module ___thread_mod =
 
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
-#ifdef USE_poll
-extern void ___fdset_state_init ();
-#endif 
-
 ___HIDDEN void *start_pthread_thread
    ___P((void *param),
         (param)
@@ -47,6 +43,7 @@ void *param;)
   ___thread *thread = ___CAST(___thread*,param);
 
 #ifdef USE_poll
+  extern void ___fdset_state_init ();
   ___fdset_state_init ();
 #endif
   
