@@ -72,9 +72,9 @@ static void ___fdset_alloc ()
 {
   if (!___fdset_state_size)
     {
-      ___fdset_state_readfds = malloc (MAX_CONDVARS/8);
-      ___fdset_state_writefds = malloc (MAX_CONDVARS/8);
-      ___fdset_state_size = MAX_CONDVARS;
+      ___fdset_state_readfds = malloc (MAX_POLLFDS/8);
+      ___fdset_state_writefds = malloc (MAX_POLLFDS/8);
+      ___fdset_state_size = MAX_POLLFDS;
     }
 }
 
