@@ -9074,9 +9074,13 @@ int direction;)
     }
   
   d->fd = fd;
-  
-  *dev = d;
 
+  device_transfer_close_responsibility (___CAST(___device*,d));
+
+  *dev = d;
+  
+  ___device_add_to_group (dgroup, &d->base);
+  
   return ___FIX(___NO_ERR);
 }
 
