@@ -103,7 +103,7 @@ typedef ___SIZE_TS ___fdbits;
 #define ___FD_MASK(fd) ((___fdbits) 1 << ((fd) % ___FDBITS))
 
 #define ___FD_ZERO(set, sz)                        \
-  memset ((set), 0, sz / ___FDBITS)
+  memset ((set), 0, sz/8)
 #define ___FD_SET(fd, set)                    \
   ((set)->fds[___FD_ELT (fd)] |= ___FD_MASK (fd))
 #define ___FD_CLR(fd, set)                    \

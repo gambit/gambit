@@ -37,6 +37,82 @@ ___io_module ___io_mod =
 
 /*---------------------------------------------------------------------------*/
 
+/* poll dynamic fdset memory management. */
+
+#ifdef USE_poll
+struct ___fdset_state {
+  int size;
+  ___fdbits *readfds;
+  ___fdbits *writefds;
+};
+
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+
+__thread struct ___fdset_state *___fdset_state;
+#define ___fdset_state_size ___fdset_state->size
+#define ___fdset_state_readfds ___fdset_state->readfds
+#define ___fdset_state_writefds ___fdset_state->writefds
+
+void ___fdset_state_init ()
+{
+  ___fdset_state = malloc (sizeof (struct ___fdset_state));
+  memset (___fdset_state, 0, sizeof (struct ___fdset_state));
+}
+
+#else
+
+static struct ___fdset_state ___fdset_state;
+#define ___fdset_state_size ___fdset_state.size
+#define ___fdset_state_readfds ___fdset_state.readfds
+#define ___fdset_state_writefds ___fdset_state.writefds
+
+#endif
+
+static void ___fdset_alloc ()
+{
+  if (!___fdset_state_size)
+    {
+      ___fdset_state_readfds = malloc (MAX_CONDVARS/8);
+      ___fdset_state_writefds = malloc (MAX_CONDVARS/8);
+      ___fdset_state_size = MAX_CONDVARS;
+    }
+}
+
+static void ___fdset_realloc (int fd)
+{
+  int oldsize = ___fdset_state_size;
+  int newsize = oldsize;
+  while (newsize < fd)
+    {
+      newsize = newisze * 2;
+    }
+
+  ___fdset_state_readfds = realloc (___fdset_state_readfds, newsize/8);
+  ___fdset_state_writefds = realloc (___fdset_state_writefds, newsize/8);
+  ___fdset_state_size = newsize;
+  memset(___fdset_state_readfds + oldsize/8, 0, (newsize - oldsize)/8)
+  memset(___fdset_state_writefds + oldsize/8, 0, (newsize - oldsize)/8);
+}
+
+static void ___fdset_size ()
+{
+  return ___fdset_state_size;
+}
+
+static void ___fdset_readfds ()
+{
+  return ___fdset_state_readfds;
+}
+
+static void ___fdset_writefds ()
+{
+  return ___fdset_state_writefds;
+}
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
 /* Device groups. */
 
 
@@ -819,7 +895,7 @@ ___time timeout;)
 
 #ifdef USE_poll
 
-  ___fdset_alloc (MAX_CONDVARS);
+  ___fdset_alloc ();
   state.pollfd_count = 0;
   state.fdset_size = ___fdset_size ();
   state.readfds = ___fdset_readfds ();
