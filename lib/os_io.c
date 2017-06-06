@@ -887,9 +887,9 @@ ___time timeout;)
 
   state.highest_fd_plus_1 = 0;
 
-  ___FD_ZERO(&state.readfds);
-  ___FD_ZERO(&state.writefds);
-  ___FD_ZERO(&state.exceptfds);
+  ___FD_ZERO(state.readfds);
+  ___FD_ZERO(state.writefds);
+  ___FD_ZERO(state.exceptfds);
 
 #endif
 
