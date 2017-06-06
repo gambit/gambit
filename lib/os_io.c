@@ -9020,7 +9020,7 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
 {
   ___device_raw *d = ___CAST(___device_raw*,self);
   int is_not_closed = 0;
-  
+
   if (d->base.read_stage != ___STAGE_CLOSED)
     is_not_closed |= ___DIRECTION_RD;
 
@@ -9034,7 +9034,7 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
     {
       d->base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
       d->base.write_stage = ___STAGE_CLOSED;
-      
+
       if (___close_no_EINTR (d->fd) < 0)
         return err_code_from_errno ();
     }
@@ -9129,7 +9129,7 @@ int fd;
 int direction;)
 {
   ___device_raw *d;
-  
+
   d = ___CAST(___device_raw*,
               ___ALLOC_MEM(sizeof (___device_raw)));
 
@@ -9141,7 +9141,7 @@ int direction;)
   d->base.refcount = 1;
   d->base.direction = direction;
   d->base.close_direction = 0; /* prevent closing on errors */
-  
+
   if (direction & ___DIRECTION_RD)
     {
       d->base.read_stage = ___STAGE_OPEN;
@@ -9159,15 +9159,15 @@ int direction;)
     {
       d->base.write_stage = ___STAGE_CLOSED;
     }
-  
+
   d->fd = fd;
 
   device_transfer_close_responsibility (___CAST(___device*,d));
 
   *dev = d;
-  
+
   ___device_add_to_group (dgroup, &d->base);
-  
+
   return ___FIX(___NO_ERR);
 }
 
@@ -9190,7 +9190,7 @@ ___SCMOBJ flags;)
   int fd;
   int fl;
   int direction;
-  
+
   device_translate_flags (___INT(flags),
                           &fl,
                           &direction);
