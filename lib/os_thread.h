@@ -95,6 +95,9 @@ extern ___SCMOBJ ___setup_thread_module ___PVOID;
 
 extern void ___cleanup_thread_module ___PVOID;
 
+#ifndef ___SINGLE_THREADED_VMS
+extern void ___setup_thread_local_state ___PVOID;
+#endif
 
 /*---------------------------------------------------------------------------*/
 

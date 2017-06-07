@@ -30,6 +30,13 @@ ___thread_module ___thread_mod =
 };
 
 
+#ifndef ___SINGLE_THREADED_VMS
+void ___setup_thread_local_state ___PVOID
+{
+  ___setup_io_thread_local_state ();
+}
+#endif
+
 /*---------------------------------------------------------------------------*/
 
 
@@ -42,10 +49,7 @@ void *param;)
 {
   ___thread *thread = ___CAST(___thread*,param);
 
-#ifdef USE_poll
-  extern void ___fdset_state_init ();
-  ___fdset_state_init ();
-#endif
+  ___setup_thread_local_state ();
 
   thread->start_fn (thread);
 
@@ -65,6 +69,8 @@ ___HIDDEN DWORD WINAPI start_win32_thread
 LPVOID param;)
 {
   ___thread *thread = ___CAST(___thread*,param);
+
+  ___setup_thread_local_state ();
 
   thread->start_fn (thread);
 

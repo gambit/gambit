@@ -110,6 +110,17 @@ static ___poll_fdset ___fdset_writefds ()
 }
 #endif
 
+/*---------------------------------------------------------------------------*/
+/* Thread-Local state setup*/
+#ifndef ___SINGLE_THREADED_VMS
+void ___setup_io_thread_local_state ___PVOID
+{
+#ifdef USE_poll
+  ___fdset_state_init ();
+#endif
+
+}
+#endif
 
 /*---------------------------------------------------------------------------*/
 
