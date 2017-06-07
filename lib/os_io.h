@@ -93,10 +93,6 @@ typedef struct ___device_struct
 #endif
 
 #ifdef USE_poll
-#ifndef MAX_POLLFDS
-#define MAX_POLLFDS MAX_CONDVARS
-#endif
-
 typedef ___SIZE_TS ___fdbits;
 
 #define ___FDBITS (8 * sizeof (___fdbits))
@@ -143,7 +139,7 @@ typedef struct ___device_select_state_struct
 #endif
 
 #ifdef USE_poll
-    struct pollfd pollfds[MAX_POLLFDS];
+    struct pollfd pollfds[MAX_CONDVARS];
     int pollfd_count;
     /* active set bitmaps */
     int fdset_size;
