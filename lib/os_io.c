@@ -121,7 +121,7 @@ int fd;)
 {
 #ifdef USE_poll
   return ___fdset_realloc (___ps, fd);
-#endf
+#endif
   return 0;
 }
 
@@ -813,15 +813,6 @@ ___device_select_state *state;
 int fd;
 ___BOOL for_writing;)
 {
-  if (fd >= state->fdset_size)
-    {
-      ___processor_state ps = ___PSTATE;
-      ___fdset_realloc (ps, fd);
-      state->fdset_size = ___fdset_size (ps);
-      state->readfds = ___fdset_readfds (ps);
-      state->writefds = ___fdset_writefds (ps);
-    }
-
   state->pollfds[state->pollfd_count].fd = fd;
   if (for_writing)
     state->pollfds[state->pollfd_count].events = POLLOUT;
@@ -3303,6 +3294,12 @@ int fd_wr;
 int direction;)
 {
   ___device_pipe *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd_rd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+  if (___fdset_resize (ps, fd_wr))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_pipe*,
               ___ALLOC_MEM(sizeof (___device_pipe)));
@@ -3672,6 +3669,12 @@ int fd_stdout;
 int direction;)
 {
   ___device_process *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd_stdin))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+  if (___fdset_resize (ps, fd_stdout))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_process*,
               ___ALLOC_MEM(sizeof (___device_process)));
@@ -5485,6 +5488,13 @@ int direction;)
   ___SCMOBJ e;
   ___device_tcp_client *d;
 
+#ifdef USE_POSIX
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, s))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+#endif
+
   d = ___CAST(___device_tcp_client*,
               ___ALLOC_MEM(sizeof (___device_tcp_client)));
 
@@ -5843,6 +5853,16 @@ ___tls_context *tls_context;)
       CLOSE_SOCKET(s); /* ignore error */
       return e;
     }
+
+#ifdef USE_POSIX
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, s))
+    {
+      CLOSE_SOCKET(s);
+      return ___FIX(___HEAP_OVERFLOW_ERR);
+    }
+#endif
 
   d = ___CAST(___device_tcp_server*,
               ___ALLOC_MEM(sizeof (___device_tcp_server)));
@@ -7181,6 +7201,10 @@ int fd;
 int direction;)
 {
   ___device_file *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_file*,
               ___ALLOC_MEM(sizeof (___device_file)));
@@ -9161,6 +9185,10 @@ int fd;
 int direction;)
 {
   ___device_raw *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_raw*,
               ___ALLOC_MEM(sizeof (___device_raw)));
