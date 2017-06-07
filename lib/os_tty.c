@@ -8123,6 +8123,11 @@ int close_direction;)
               (fd == STDOUT_FILENO) ||
               (fd == STDERR_FILENO);
 
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+  
   d = ___CAST(___device_tty*,
               ___ALLOC_MEM(sizeof (___device_tty)));
 
