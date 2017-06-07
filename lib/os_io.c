@@ -46,7 +46,7 @@ struct ___fdset_state {
   ___fdbits *writefds;
 };
 
-#ifdef ___USE_POSIX_THREAD_SYSTEM
+#ifndef ___SINGLE_THREADED_VMS
 
 __thread struct ___fdset_state *___fdset_state;
 #define ___fdset_state_size ___fdset_state->size

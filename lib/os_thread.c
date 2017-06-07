@@ -49,7 +49,9 @@ void *param;)
 {
   ___thread *thread = ___CAST(___thread*,param);
 
+#ifndef ___SINGLE_THREADED_VMS
   ___setup_thread_local_state ();
+#endif
 
   thread->start_fn (thread);
 
@@ -70,7 +72,9 @@ LPVOID param;)
 {
   ___thread *thread = ___CAST(___thread*,param);
 
+#ifndef ___SINGLE_THREADED_VMS
   ___setup_thread_local_state ();
+#endif
 
   thread->start_fn (thread);
 
