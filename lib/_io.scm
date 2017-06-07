@@ -8254,6 +8254,132 @@
         (macro-dynamic-bind output-port port thunk)))))
 
 ;;;----------------------------------------------------------------------------
+(define-prim (##open-raw-device
+              direction
+              name
+              fd)
+  (define (fail)
+    (##fail-check-settings 1 ##open-raw-device direction name fd))
+
+  (##make-psettings
+   direction
+   '()
+   '()
+   fail
+   (lambda (psettings)
+     (let ((device
+            (##os-device-open-raw
+             fd
+             (##psettings->device-flags psettings))))
+       (if (##fixnum? device)
+         (##exit-with-err-code device)
+         (##make-raw-device-port device fd name direction))))))
+
+(define-prim (##make-raw-device-port device fd uname direction)
+  (let ((mutex
+         (macro-make-port-mutex))
+        (rkind
+         (if (or (##eq? direction (macro-direction-in))
+                 (##eq? direction (macro-direction-inout)))
+           (macro-raw-device-kind)
+           (macro-none-kind)))
+        (wkind
+         (if (or (##eq? direction (macro-direction-out))
+                 (##eq? direction (macro-direction-inout)))
+           (macro-raw-device-kind)
+           (macro-none-kind)))
+        (roptions
+         0)
+        (rtimeout
+         #t)
+        (rtimeout-thunk
+         #f)
+        (woptions
+         0)
+        (wtimeout
+         #t)
+        (wtimeout-thunk
+         #f)
+        (rdevice-condvar
+         (and (or (##eq? direction (macro-direction-in))
+                  (##eq? direction (macro-direction-inout)))
+              (##make-rdevice-condvar device)))
+        (wdevice-condvar
+         (and (or (##eq? direction (macro-direction-out))
+                  (##eq? direction (macro-direction-inout)))
+              (##make-wdevice-condvar device)))
+        (uname (or uname 'raw-device)))
+
+    (define (name port)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+      (##list uname (macro-raw-device-port-fd port)))
+
+    (define read-datum #f)
+
+    (define write-datum #f)
+
+    (define newline #f)
+
+    (define force-output #f)
+
+    (define set-rtimeout #f)
+
+    (define set-wtimeout #f)
+
+    (define (close port prim arg1)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (let ((result
+             (##close-device
+              port
+              (macro-raw-device-port-rdevice-condvar port)
+              (macro-raw-device-port-wdevice-condvar port)
+              prim)))
+        (macro-port-mutex-unlock! port)
+        (if (##fixnum? result)
+            (##raise-os-io-exception port #f result prim arg1)
+            result)))
+
+    (let ((port
+           (macro-make-raw-device-port
+            mutex
+            rkind
+            wkind
+            name
+            read-datum
+            write-datum
+            newline
+            force-output
+            close
+            roptions
+            rtimeout
+            rtimeout-thunk
+            set-rtimeout
+            woptions
+            wtimeout
+            wtimeout-thunk
+            set-wtimeout
+            #f ;; io-exception-handler
+            rdevice-condvar
+            wdevice-condvar
+            fd)))
+      (if rdevice-condvar
+        (##io-condvar-port-set! rdevice-condvar port))
+      (if wdevice-condvar
+        (##io-condvar-port-set! wdevice-condvar port))
+      port)))
+
+;;;----------------------------------------------------------------------------
 
 (define-prim (##open-predefined
               direction

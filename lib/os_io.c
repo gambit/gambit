@@ -37,6 +37,115 @@ ___io_module ___io_mod =
 
 /*---------------------------------------------------------------------------*/
 
+/* poll dynamic fdset memory management. */
+
+#ifdef USE_poll
+#define ___fdset_state_size(ps)     ps->os.fdset_state.size
+#define ___fdset_state_readfds(ps)  ps->os.fdset_state.readfds
+#define ___fdset_state_writefds(ps) ps->os.fdset_state.writefds
+
+static int ___fdset_heap_overflow;
+
+static void ___fdset_state_init (___processor_state ps)
+{
+  void *readfds, *writefds;
+  readfds  = ___ALLOC_MEM (MAX_CONDVARS/8);
+  writefds = ___ALLOC_MEM (MAX_CONDVARS/8);
+  memset (readfds, 0, MAX_CONDVARS/8);
+  memset (writefds, 0, MAX_CONDVARS/8);
+  ___fdset_state_readfds (ps) = readfds;
+  ___fdset_state_writefds (ps) = writefds;
+  ___fdset_state_size (ps) = MAX_CONDVARS;
+}
+
+static int ___fdset_realloc (___processor_state ps, int fd)
+{
+  void *readfds = NULL;
+  void *writefds = NULL;
+  int oldsize = ___fdset_state_size (ps);
+  int newsize = oldsize;
+
+  while (newsize <= fd)
+    newsize = newsize * 2;
+
+  if (oldsize == newsize) /* we never shrink fdsets */
+      return;
+
+  readfds  = ___ALLOC_MEM (newsize/8);
+  if (!readfds)
+    goto error;
+  writefds = ___ALLOC_MEM (newsize/8);
+  if (!writefds)
+    goto error;
+  memcpy (readfds, ___fdset_state_readfds (ps), oldsize/8);
+  memcpy (writefds, ___fdset_state_writefds (ps), oldsize/8);
+  memset(readfds + oldsize/8, 0, (newsize - oldsize)/8);
+  memset(writefds + oldsize/8, 0, (newsize - oldsize)/8);
+
+  ___free_mem (___fdset_state_readfds (ps));
+  ___free_mem (___fdset_state_writefds (ps));
+  ___fdset_state_readfds (ps) = readfds;
+  ___fdset_state_writefds (ps) = writefds;
+  ___fdset_state_size (ps) = newsize;
+
+  return 0;
+
+ error:
+  ___free_mem (readfds);
+  ___free_mem (writefds);
+  return 1;
+}
+
+static int ___fdset_size (___processor_state ps)
+{
+  return ___fdset_state_size (ps);
+}
+
+static ___poll_fdset ___fdset_readfds (___processor_state ps)
+{
+  return ___fdset_state_readfds (ps);
+}
+
+static ___poll_fdset ___fdset_writefds (___processor_state ps)
+{
+  return ___fdset_state_writefds (ps);
+}
+
+#endif
+
+void ___fdset_resize_pstate
+   ___P((___processor_state ___ps,
+         int fd),
+        (___ps,
+         fd)
+___processor_state ___ps;
+int fd;)
+{
+#ifdef USE_poll
+  if (___fdset_realloc (___ps, fd))
+    ___fdset_heap_overflow = 1;
+#endif
+}
+
+void ___fdset_resize_heap_overflow_clear ___PVOID
+{
+#ifdef USE_poll
+  ___fdset_heap_overflow = 0;
+#endif
+}
+
+int ___fdset_resize_heap_overflow ___PVOID
+{
+#ifdef USE_poll
+  return ___fdset_heap_overflow;
+#endif
+
+  return 0;
+}
+
+
+/*---------------------------------------------------------------------------*/
+
 /* Device groups. */
 
 
@@ -698,9 +807,9 @@ int fd;
 ___BOOL for_writing;)
 {
   if (for_writing)
-    ___FD_SET(fd, &state->writefds);
+    ___FD_SET(fd, state->writefds);
   else
-    ___FD_SET(fd, &state->readfds);
+    ___FD_SET(fd, state->readfds);
 
   if (fd >= state->highest_fd_plus_1)
     state->highest_fd_plus_1 = fd+1;
@@ -722,7 +831,6 @@ int fd;
 ___BOOL for_writing;)
 {
   state->pollfds[state->pollfd_count].fd = fd;
-
   if (for_writing)
     state->pollfds[state->pollfd_count].events = POLLOUT;
   else
@@ -761,14 +869,17 @@ HANDLE wait_obj;)
 
 
 ___SCMOBJ ___device_select
-   ___P((___device **devs,
+   ___P((___processor_state ___ps,
+         ___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),
-        (devs,
+        (___ps,
+         devs,
          nb_read_devs,
          nb_write_devs,
          timeout)
+___processor_state *___ps;
 ___device **devs;
 int nb_read_devs;
 int nb_write_devs;
@@ -804,17 +915,20 @@ ___time timeout;)
 
   state.highest_fd_plus_1 = 0;
 
-  ___FD_ZERO(&state.readfds);
-  ___FD_ZERO(&state.writefds);
-  ___FD_ZERO(&state.exceptfds);
+  ___FD_ZERO(state.readfds);
+  ___FD_ZERO(state.writefds);
+  ___FD_ZERO(state.exceptfds);
 
 #endif
 
 #ifdef USE_poll
 
   state.pollfd_count = 0;
-  ___FD_ZERO (&state.readfds);
-  ___FD_ZERO (&state.writefds);
+  state.fdset_size = ___fdset_size (___ps);
+  state.readfds = ___fdset_readfds (___ps);
+  state.writefds = ___fdset_writefds (___ps);
+  ___FD_ZERO (state.readfds, state.fdset_size);
+  ___FD_ZERO (state.writefds, state.fdset_size);
 
 #endif
 
@@ -1134,13 +1248,13 @@ ___time timeout;)
                 if (state.pollfds[x].events & POLLIN)
                   {
                     if (state.pollfds[x].revents & (POLLIN | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.readfds);
+                      ___FD_SET (state.pollfds[x].fd, state.readfds);
                   }
 
                 if (state.pollfds[x].events & POLLOUT)
                   {
                     if (state.pollfds[x].revents & (POLLOUT | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.writefds);
+                      ___FD_SET (state.pollfds[x].fd, state.writefds);
                   }
 
                 --active;
@@ -1156,7 +1270,7 @@ ___time timeout;)
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -1335,7 +1449,7 @@ ___time timeout;)
 
 #ifdef USE_select_or_poll
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -1482,6 +1596,7 @@ ___device *self;)
 
   ___device_remove_from_group (self);
 
+  ___processor_state ps = ___PSTATE;
   for (;;)
     {
       e = ___device_close (self, ___DIRECTION_RD);
@@ -1491,7 +1606,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 1, 0, ___time_mod.time_pos_infinity);
+      e = ___device_select (ps, devs, 1, 0, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -1505,7 +1620,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 0, 1, ___time_mod.time_pos_infinity);
+      e = ___device_select (ps, devs, 0, 1, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -2915,12 +3030,12 @@ ___device_select_state *state;)
 
       if (for_writing)
         {
-          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, &state->writefds))
+          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, state->writefds))
             state->devs[i] = NULL;
         }
       else
         {
-          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, &state->readfds))
+          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, state->readfds))
             state->devs[i] = NULL;
         }
 
@@ -3196,6 +3311,12 @@ int fd_wr;
 int direction;)
 {
   ___device_pipe *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd_rd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+  if (___fdset_resize (ps, fd_wr))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_pipe*,
               ___ALLOC_MEM(sizeof (___device_pipe)));
@@ -3565,6 +3686,12 @@ int fd_stdout;
 int direction;)
 {
   ___device_process *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd_stdin))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+  if (___fdset_resize (ps, fd_stdout))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_process*,
               ___ALLOC_MEM(sizeof (___device_process)));
@@ -4879,8 +5006,8 @@ ___device_select_state *state;)
 
       if (d->try_connect_again != 0 ||
           (for_writing
-           ? ___FD_ISSET(d->s, &state->writefds)
-           : ___FD_ISSET(d->s, &state->readfds)))
+           ? ___FD_ISSET(d->s, state->writefds)
+           : ___FD_ISSET(d->s, state->readfds)))
         {
           d->connect_done = 1;
           state->devs[i] = NULL;
@@ -5378,6 +5505,13 @@ int direction;)
   ___SCMOBJ e;
   ___device_tcp_client *d;
 
+#ifdef USE_POSIX
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, s))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+#endif
+
   d = ___CAST(___device_tcp_client*,
               ___ALLOC_MEM(sizeof (___device_tcp_client)));
 
@@ -5652,7 +5786,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (___FD_ISSET(d->s, &state->readfds))
+      if (___FD_ISSET(d->s, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -5736,6 +5870,16 @@ ___tls_context *tls_context;)
       CLOSE_SOCKET(s); /* ignore error */
       return e;
     }
+
+#ifdef USE_POSIX
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, s))
+    {
+      CLOSE_SOCKET(s);
+      return ___FIX(___HEAP_OVERFLOW_ERR);
+    }
+#endif
 
   d = ___CAST(___device_tcp_server*,
               ___ALLOC_MEM(sizeof (___device_tcp_server)));
@@ -6590,8 +6734,8 @@ ___device_select_state *state;)
 #ifdef USE_POSIX
 
       if (for_writing
-           ? ___FD_ISSET(d->fd, &state->writefds)
-           : ___FD_ISSET(d->fd, &state->readfds))
+           ? ___FD_ISSET(d->fd, state->writefds)
+           : ___FD_ISSET(d->fd, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -7074,6 +7218,10 @@ int fd;
 int direction;)
 {
   ___device_file *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_file*,
               ___ALLOC_MEM(sizeof (___device_file)));
@@ -8901,6 +9049,253 @@ ___SCMOBJ options;)
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
+/* Raw device file descriptors */
+#ifdef USE_POSIX
+typedef struct ___device_raw_struct
+  {
+    ___device base;
+    int fd;
+  } ___device_raw;
+
+typedef struct ___device_raw_vtbl_struct
+  {
+    ___device_vtbl base;
+  } ___device_raw_vtbl;
+
+
+___HIDDEN int ___device_raw_kind
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  return ___RAW_DEVICE_KIND;
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_close_virt
+   ___P((___device *self,
+         int direction),
+        (self,
+         direction)
+        ___device *self;
+        int direction;)
+{
+  ___device_raw *d = ___CAST(___device_raw*,self);
+  int is_not_closed = 0;
+
+  if (d->base.read_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_RD;
+
+  if (d->base.write_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_WR;
+
+  if (is_not_closed == 0)
+    return ___FIX(___NO_ERR);
+
+  if ((is_not_closed & ~direction) == 0)
+    {
+      d->base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
+      d->base.write_stage = ___STAGE_CLOSED;
+
+      if (___close_no_EINTR (d->fd) < 0)
+        return err_code_from_errno ();
+    }
+  else if (is_not_closed & direction & ___DIRECTION_RD)
+    d->base.read_stage = ___STAGE_CLOSED;
+  else if (is_not_closed & direction & ___DIRECTION_WR)
+    d->base.write_stage = ___STAGE_CLOSED;
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_select_virt
+   ___P((___device *self,
+         ___BOOL for_writing,
+         int i,
+         int pass,
+         ___device_select_state *state),
+        (self,
+         for_writing,
+         i,
+         pass,
+         state)
+___device *self;
+___BOOL for_writing;
+int i;
+int pass;
+___device_select_state *state;)
+{
+  ___device_raw *d = ___CAST(___device_raw*,self);
+
+  int stage = (for_writing
+               ? d->base.write_stage
+               : d->base.read_stage);
+
+  if (pass == ___SELECT_PASS_1)
+    {
+      if (stage != ___STAGE_OPEN)
+        state->timeout = ___time_mod.time_neg_infinity;
+      else
+        ___device_select_add_fd (state, d->fd, for_writing);
+
+      return ___FIX(___SELECT_SETUP_DONE);
+    }
+
+  /* pass == ___SELECT_PASS_CHECK */
+  if (stage != ___STAGE_OPEN)
+    state->devs[i] = NULL;
+  else if (___FD_ISSET(d->fd, state->readfds))
+    state->devs[i] = NULL;
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_release_virt
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_raw_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___device_raw_vtbl ___device_raw_table =
+{
+  {
+    ___device_raw_kind,
+    ___device_raw_select_virt,
+    ___device_raw_release_virt,
+    ___device_raw_force_output_virt,
+    ___device_raw_close_virt
+  }
+};
+
+___SCMOBJ ___device_raw_setup_from_fd
+   ___P((___device_raw **dev,
+         ___device_group *dgroup,
+         int fd,
+         int direction),
+        (dev,
+         dgroup,
+         fd,
+         direction)
+___device_raw **dev;
+___device_group *dgroup;
+int fd;
+int direction;)
+{
+  ___device_raw *d;
+  ___processor_state ps = ___PSTATE;
+
+  if (___fdset_resize (ps, fd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+  d = ___CAST(___device_raw*,
+              ___ALLOC_MEM(sizeof (___device_raw)));
+
+  if (d == NULL)
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+
+  d->base.vtbl = &___device_raw_table;
+  d->base.refcount = 1;
+  d->base.direction = direction;
+  d->base.close_direction = 0; /* prevent closing on errors */
+
+  if (direction & ___DIRECTION_RD)
+    {
+      d->base.read_stage = ___STAGE_OPEN;
+    }
+  else
+    {
+      d->base.read_stage = ___STAGE_CLOSED;
+    }
+
+  if (direction & ___DIRECTION_WR)
+    {
+      d->base.write_stage = ___STAGE_OPEN;
+    }
+  else
+    {
+      d->base.write_stage = ___STAGE_CLOSED;
+    }
+
+  d->fd = fd;
+
+  device_transfer_close_responsibility (___CAST(___device*,d));
+
+  *dev = d;
+
+  ___device_add_to_group (dgroup, &d->base);
+
+  return ___FIX(___NO_ERR);
+}
+
+#endif
+
+___SCMOBJ ___os_device_raw_open
+   ___P((___SCMOBJ index,
+         ___SCMOBJ flags),
+        (index,
+         flags)
+___SCMOBJ fd;
+___SCMOBJ flags;)
+{
+
+#ifdef USE_POSIX
+  ___SCMOBJ e;
+  ___device_raw *dev;
+  ___SCMOBJ result;
+
+  int fd;
+  int fl;
+  int direction;
+
+  device_translate_flags (___INT(flags),
+                          &fl,
+                          &direction);
+
+  fd = ___INT(index);
+
+  if ((e = ___device_raw_setup_from_fd
+       (&dev,
+        ___global_device_group (),
+        fd,
+        direction))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  if ((e = ___NONNULLPOINTER_to_SCMOBJ
+       (___PSTATE,
+        dev,
+        ___FAL,
+        ___device_cleanup_from_ptr,
+        &result,
+        ___RETURN_POS))
+      != ___FIX(___NO_ERR))
+    {
+      ___device_cleanup (___CAST(___device*,dev)); /* ignore error */
+      return e;
+    }
+
+  ___release_scmobj (result);
+
+  return result;
+
+#else
+  return ___FIX(___UNIMPL_ERR);
+#endif
+}
+
 /* Opening a predefined device (stdin, stdout, stderr, console, etc). */
 
 ___SCMOBJ ___os_device_stream_open_predefined
@@ -9854,6 +10249,8 @@ ___SCMOBJ timeout;)
   ___SCMOBJ e;
   ___time to;
 
+  ___processor_state ps = ___PSTATE; /* this should be passed as argument */
+
   if (timeout == ___FAL)
     to = ___time_mod.time_neg_infinity;
   else if (timeout == ___TRU)
@@ -9863,7 +10260,7 @@ ___SCMOBJ timeout;)
 
   if (___FALSEP(devices))
     {
-      e = ___device_select (NULL, 0, 0, to);
+      e = ___device_select (ps, NULL, 0, 0, to);
     }
   else
     {
@@ -9917,7 +10314,7 @@ ___SCMOBJ timeout;)
           i++;
         }
 
-      e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
+      e = ___device_select (ps, devs, read_pos, MAX_CONDVARS-write_pos, to);
 
       i = 0;
 
@@ -10198,6 +10595,10 @@ ___SCMOBJ ___setup_io_pstate
 ___processor_state ___ps;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
+
+#ifdef USE_poll
+  ___fdset_state_init (___ps);
+#endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
