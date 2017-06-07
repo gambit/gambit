@@ -624,10 +624,7 @@ ___WORD target_processor_count;)
 
 #ifndef ___SINGLE_THREADED_VMS
 
-#ifdef USE_poll
-  extern void ___fdset_state_init ();
-  ___fdset_state_init ();
-#endif
+  ___setup_thread_local_state ();
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   int id = ___PROCESSOR_ID(___ps, ___vms); /* id of this processor */

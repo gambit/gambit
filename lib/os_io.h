@@ -165,6 +165,9 @@ typedef struct ___device_select_state_struct
 #endif
   } ___device_select_state;
 
+#ifndef ___SINGLE_THREADED_VMS
+extern void ___setup_io_thread_local_state ___PVOID;
+#endif
 
 extern void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,
