@@ -44,6 +44,8 @@ ___io_module ___io_mod =
 #define ___fdset_state_readfds(ps)  ps->os.fdset_state.readfds
 #define ___fdset_state_writefds(ps) ps->os.fdset_state.writefds
 
+static int ___fdset_heap_overflow;
+
 static void ___fdset_state_init (___processor_state ps)
 {
   void *readfds, *writefds;
@@ -89,8 +91,8 @@ static int ___fdset_realloc (___processor_state ps, int fd)
   return 0;
 
  error:
-  free (readfds);
-  free (writefds);
+  ___free_mem (readfds);
+  ___free_mem (writefds);
   return 1;
 }
 
@@ -111,7 +113,7 @@ static ___poll_fdset ___fdset_writefds (___processor_state ps)
 
 #endif
 
-int ___fdset_resize_pstate
+void ___fdset_resize_pstate
    ___P((___processor_state ___ps,
          int fd),
         (___ps,
@@ -120,11 +122,26 @@ ___processor_state ___ps;
 int fd;)
 {
 #ifdef USE_poll
-  return ___fdset_realloc (___ps, fd);
+  if (___fdset_realloc (___ps, fd))
+    ___fdset_heap_overflow = 1;
 #endif
-  return 0;
 }
 
+void ___fdset_resize_heap_overflow_clear ___PVOID
+{
+#ifdef USE_poll
+  ___fdset_heap_overflow = 0;
+#endif
+}
+
+int ___fdset_resize_heap_overflow ___PVOID
+{
+#ifdef USE_poll
+  return ___fdset_heap_overflow;
+#endif
+
+  return 0;
+}
 
 
 /*---------------------------------------------------------------------------*/
