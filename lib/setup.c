@@ -770,7 +770,7 @@ ___sync_op_struct *sop_ptr;)
       break;
 
     case OP_FDSET_RESIZE:
-      sop_ptr->arg[0] = ___fdset_resize_pstate (___ps, sop_ptr->arg[0]);
+      ___fdset_resize_pstate (___ps, sop_ptr->arg[0]);
       break;
 
     case OP_ACTLOG_START:
@@ -939,6 +939,8 @@ int fd;)
   if (fd < ___ps->os.fdset_state.size)
     return 0;
 
+  ___fdset_resize_heap_overflow_clear ();
+  
   ___PSGET
   ___sync_op_struct sop;
 
@@ -947,7 +949,7 @@ int fd;)
 
   on_all_processors (___PSP &sop);
 
-  return sop.arg[0] != 0;
+  return ___fdset_resize_heap_overflow ();
 
 #else
 
