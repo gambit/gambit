@@ -40,85 +40,56 @@ ___io_module ___io_mod =
 /* poll dynamic fdset memory management. */
 
 #ifdef USE_poll
-struct ___fdset_state {
-  int size;
-  ___fdbits *readfds;
-  ___fdbits *writefds;
-};
+#define ___fdset_state_size(ps)     ps->fdset_state.size
+#define ___fdset_state_readfds(ps)  ps->fdset_state.readfds
+#define ___fdset_state_writefds(ps) ps->fdset_state.writefds
 
-#ifdef ___USE_POSIX_THREAD_SYSTEM
-
-__thread struct ___fdset_state *___fdset_state;
-#define ___fdset_state_size ___fdset_state->size
-#define ___fdset_state_readfds ___fdset_state->readfds
-#define ___fdset_state_writefds ___fdset_state->writefds
-
-void ___fdset_state_init ()
+void ___fdset_state_init (___processor_state ps)
 {
-  ___fdset_state = malloc (sizeof (struct ___fdset_state));
-  memset (___fdset_state, 0, sizeof (struct ___fdset_state));
+  ___fdset_state_readfds (ps) = ___ALLOC_MEM (MAX_CONDVARS/8);
+  ___fdset_state_writefds (ps) = ___ALLOC_MEM (MAX_CONDVARS/8);
+  ___fdset_state_size (ps) = MAX_CONDVARS;
 }
 
-#else
-
-static struct ___fdset_state ___fdset_state;
-#define ___fdset_state_size ___fdset_state.size
-#define ___fdset_state_readfds ___fdset_state.readfds
-#define ___fdset_state_writefds ___fdset_state.writefds
-
-#endif
-
-static void ___fdset_alloc ()
+static void ___fdset_realloc (___processor_state ps, int fd)
 {
-  if (!___fdset_state_size)
-    {
-      ___fdset_state_readfds = malloc (MAX_POLLFDS/8);
-      ___fdset_state_writefds = malloc (MAX_POLLFDS/8);
-      ___fdset_state_size = MAX_POLLFDS;
-    }
-}
-
-static void ___fdset_realloc (int fd)
-{
-  int oldsize = ___fdset_state_size;
+  void *readfds, *writefds;
+  int oldsize = ___fdset_state_size (ps);
   int newsize = oldsize;
+
   while (newsize <= fd)
-    {
-      newsize = newsize * 2;
-    }
+    newsize = newsize * 2;
 
-  ___fdset_state_readfds = realloc (___fdset_state_readfds, newsize/8);
-  ___fdset_state_writefds = realloc (___fdset_state_writefds, newsize/8);
-  ___fdset_state_size = newsize;
-  memset(___fdset_state_readfds + oldsize/8, 0, (newsize - oldsize)/8);
-  memset(___fdset_state_writefds + oldsize/8, 0, (newsize - oldsize)/8);
+  if (oldsize == newsize) /* we never shrink fdsets */
+      return;
+
+  readfds  = ___ALLOC_MEM (newsize/8);
+  writefds = ___ALLOC_MEM (newsize/8);
+  memcpy (readfds, ___fdset_state_readfds (ps), oldsize/8);
+  memcpy (writefds, ___fdset_state_writefds (ps), oldsize/8);
+  memset(readfds + oldsize/8, 0, (newsize - oldsize)/8);
+  memset(writefds + oldsize/8, 0, (newsize - oldsize)/8);
+
+  ___free_mem (___fdset_state_readfds (ps));
+  ___free_mem (___fdset_state_writefds (ps));
+  ___fdset_state_readfds (ps) = readfds;
+  ___fdset_state_writefds (ps) = writefds;
+  ___fdset_state_size (ps) = newsize;
 }
 
-static int ___fdset_size ()
+static int ___fdset_size (___processor_state ps)
 {
-  return ___fdset_state_size;
+  return ___fdset_state_size (ps);
 }
 
-static ___poll_fdset ___fdset_readfds ()
+static ___poll_fdset ___fdset_readfds (___processor_state ps)
 {
-  return ___fdset_state_readfds;
+  return ___fdset_state_readfds (ps);
 }
 
-static ___poll_fdset ___fdset_writefds ()
+static ___poll_fdset ___fdset_writefds (___processor_state ps)
 {
-  return ___fdset_state_writefds;
-}
-#endif
-
-/*---------------------------------------------------------------------------*/
-/* Thread-Local state setup*/
-#ifndef ___SINGLE_THREADED_VMS
-void ___setup_io_thread_local_state ___PVOID
-{
-#ifdef USE_poll
-  ___fdset_state_init ();
-#endif
-
+  return ___fdset_state_writefds (ps);
 }
 #endif
 
@@ -810,10 +781,11 @@ ___BOOL for_writing;)
 {
   if (fd >= state->fdset_size)
     {
-      ___fdset_realloc (fd);
-      state->fdset_size = ___fdset_size ();
-      state->readfds = ___fdset_readfds ();
-      state->writefds = ___fdset_writefds ();
+      ___processor_state ps = ___PSTATE;
+      ___fdset_realloc (ps, fd);
+      state->fdset_size = ___fdset_size (ps);
+      state->readfds = ___fdset_readfds (ps);
+      state->writefds = ___fdset_writefds (ps);
     }
 
   state->pollfds[state->pollfd_count].fd = fd;
@@ -855,14 +827,17 @@ HANDLE wait_obj;)
 
 
 ___SCMOBJ ___device_select
-   ___P((___device **devs,
+   ___P((___processor_state ___ps,
+         ___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),
-        (devs,
+        (___ps,
+         devs,
          nb_read_devs,
          nb_write_devs,
          timeout)
+___processor_state *___ps;
 ___device **devs;
 int nb_read_devs;
 int nb_write_devs;
@@ -906,11 +881,10 @@ ___time timeout;)
 
 #ifdef USE_poll
 
-  ___fdset_alloc ();
   state.pollfd_count = 0;
-  state.fdset_size = ___fdset_size ();
-  state.readfds = ___fdset_readfds ();
-  state.writefds = ___fdset_writefds ();
+  state.fdset_size = ___fdset_size (___ps);
+  state.readfds = ___fdset_readfds (___ps);
+  state.writefds = ___fdset_writefds (___ps);
   ___FD_ZERO (state.readfds, state.fdset_size);
   ___FD_ZERO (state.writefds, state.fdset_size);
 
@@ -1580,6 +1554,7 @@ ___device *self;)
 
   ___device_remove_from_group (self);
 
+  ___processor_state ps = ___PSTATE;
   for (;;)
     {
       e = ___device_close (self, ___DIRECTION_RD);
@@ -1589,7 +1564,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 1, 0, ___time_mod.time_pos_infinity);
+      e = ___device_select (ps, devs, 1, 0, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -1603,7 +1578,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 0, 1, ___time_mod.time_pos_infinity);
+      e = ___device_select (ps, devs, 0, 1, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -10195,6 +10170,8 @@ ___SCMOBJ timeout;)
   ___SCMOBJ e;
   ___time to;
 
+  ___processor_state ps = ___PSTATE; /* this should be passed as argument */
+
   if (timeout == ___FAL)
     to = ___time_mod.time_neg_infinity;
   else if (timeout == ___TRU)
@@ -10204,7 +10181,7 @@ ___SCMOBJ timeout;)
 
   if (___FALSEP(devices))
     {
-      e = ___device_select (NULL, 0, 0, to);
+      e = ___device_select (ps, NULL, 0, 0, to);
     }
   else
     {
@@ -10258,7 +10235,7 @@ ___SCMOBJ timeout;)
           i++;
         }
 
-      e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
+      e = ___device_select (ps, devs, read_pos, MAX_CONDVARS-write_pos, to);
 
       i = 0;
 
@@ -10539,6 +10516,10 @@ ___SCMOBJ ___setup_io_pstate
 ___processor_state ___ps;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
+
+#ifdef USE_poll
+  ___fdset_state_init (___ps);
+#endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 

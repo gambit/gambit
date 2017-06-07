@@ -166,10 +166,6 @@ typedef struct ___device_select_state_struct
 #endif
   } ___device_select_state;
 
-#ifndef ___SINGLE_THREADED_VMS
-extern void ___setup_io_thread_local_state ___PVOID;
-#endif
-
 extern void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,
          int i,
@@ -622,7 +618,8 @@ extern ___SCMOBJ ___device_stream_setup
         ());
 
 extern ___SCMOBJ ___device_select
-   ___P((___device **devs,
+   ___P((___processor_state ___ps,
+         ___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),
