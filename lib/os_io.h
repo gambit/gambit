@@ -162,6 +162,19 @@ typedef struct ___device_select_state_struct
 #endif
   } ___device_select_state;
 
+#ifdef USE_poll
+extern int ___fdset_resize_pstate
+   ___P((___processor_state ___ps,
+         int fd),
+        ());
+#endif
+
+/* 0 if success, 1 if allocation failed in some processor */
+extern ___BOOL ___fdset_resize
+   ___P((___processor_state ___ps,
+         int fd),
+        ());
+
 extern void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,
          int i,
