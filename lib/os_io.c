@@ -9084,7 +9084,7 @@ ___device_select_state *state;)
     state->devs[i] = NULL;
   else if (___FD_ISSET(d->fd, state->readfds))
     state->devs[i] = NULL;
-  
+
   return ___FIX(___NO_ERR);
 }
 
