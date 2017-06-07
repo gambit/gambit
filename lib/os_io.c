@@ -109,6 +109,8 @@ static ___poll_fdset ___fdset_writefds (___processor_state ps)
   return ___fdset_state_writefds (ps);
 }
 
+#endif
+
 int ___fdset_resize_pstate
    ___P((___processor_state ___ps,
          int fd),
@@ -117,10 +119,13 @@ int ___fdset_resize_pstate
 ___processor_state ___ps;
 int fd;)
 {
+#ifdef USE_poll
   return ___fdset_realloc (___ps, fd);
+#endf
+  return 0;
 }
 
-#endif
+
 
 /*---------------------------------------------------------------------------*/
 
