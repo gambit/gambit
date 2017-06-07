@@ -8146,6 +8146,15 @@ typedef struct ___rc_header_struct
     ___SCMOBJ data; /* needed for C closures */
   } ___rc_header;
 
+/* fdset state */
+#ifdef USE_POLL_FOR_SELECT
+typedef struct ___fdset_state_struct {
+  int size;
+  void *readfds;
+  void *writefds;
+} ___fdset_state;
+#endif
+
 typedef struct ___pstate_os_struct {
 
   /*
@@ -8157,6 +8166,11 @@ typedef struct ___pstate_os_struct {
 #else
   ___half_duplex_pipe select_abort; /* POSIX self-pipe */
 #endif
+  
+#ifdef USE_POLL_FOR_SELECT
+    ___fdset_state fdset_state;
+#endif
+
 
 } ___pstate_os;
 

@@ -102,26 +102,24 @@ typedef ___SIZE_TS ___fdbits;
 #define ___FD_ELT(fd) ((fd) / ___FDBITS)
 #define ___FD_MASK(fd) ((___fdbits) 1 << ((fd) % ___FDBITS))
 
-#define ___FD_ZERO(set)                       \
-  memset ((set), 0, sizeof (___poll_fd_set))
+#define ___FD_ZERO(set, sz)                        \
+  memset ((set), 0, sz/8)
 #define ___FD_SET(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] |= ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] |= ___FD_MASK (fd))
 #define ___FD_CLR(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] &= ~___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] &= ~___FD_MASK (fd))
 #define ___FD_ISSET(fd, set)                  \
-  ((set)->fds[___FD_ELT (fd)] & ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] & ___FD_MASK (fd))
 
-typedef struct ___poll_fd_set {
-  ___fdbits fds[MAX_POLLFDS / ___FDBITS];
-} ___poll_fd_set;
+typedef ___fdbits *___poll_fdset;
 
 #endif
 
 #ifdef USE_select
-#define ___FD_ZERO  FD_ZERO
-#define ___FD_ISSET FD_ISSET
-#define ___FD_CLR   FD_CLR
-#define ___FD_SET   FD_SET
+#define ___FD_ZERO(set)      FD_ZERO(&set)
+#define ___FD_ISSET(fd, set) FD_ISSET(fd, &set)
+#define ___FD_CLR(fd, set)   FD_CLR(fd, &set)
+#define ___FD_SET(fd, set)   FD_SET(fd, &set)
 #endif
 
 typedef struct ___device_select_state_struct
@@ -147,8 +145,9 @@ typedef struct ___device_select_state_struct
     struct pollfd pollfds[MAX_POLLFDS];
     int pollfd_count;
     /* active set bitmaps */
-    ___poll_fd_set readfds;
-    ___poll_fd_set writefds;
+    int fdset_size;
+    ___poll_fdset readfds;
+    ___poll_fdset writefds;
 #endif
 
 #endif
@@ -165,7 +164,6 @@ typedef struct ___device_select_state_struct
     /*********************/
 #endif
   } ___device_select_state;
-
 
 extern void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,
@@ -619,7 +617,8 @@ extern ___SCMOBJ ___device_stream_setup
         ());
 
 extern ___SCMOBJ ___device_select
-   ___P((___device **devs,
+   ___P((___processor_state ___ps,
+         ___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),

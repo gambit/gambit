@@ -37,6 +37,64 @@ ___io_module ___io_mod =
 
 /*---------------------------------------------------------------------------*/
 
+/* poll dynamic fdset memory management. */
+
+#ifdef USE_poll
+#define ___fdset_state_size(ps)     ps->os.fdset_state.size
+#define ___fdset_state_readfds(ps)  ps->os.fdset_state.readfds
+#define ___fdset_state_writefds(ps) ps->os.fdset_state.writefds
+
+void ___fdset_state_init (___processor_state ps)
+{
+  ___fdset_state_readfds (ps) = ___ALLOC_MEM (MAX_CONDVARS/8);
+  ___fdset_state_writefds (ps) = ___ALLOC_MEM (MAX_CONDVARS/8);
+  ___fdset_state_size (ps) = MAX_CONDVARS;
+}
+
+static void ___fdset_realloc (___processor_state ps, int fd)
+{
+  void *readfds, *writefds;
+  int oldsize = ___fdset_state_size (ps);
+  int newsize = oldsize;
+
+  while (newsize <= fd)
+    newsize = newsize * 2;
+
+  if (oldsize == newsize) /* we never shrink fdsets */
+      return;
+
+  readfds  = ___ALLOC_MEM (newsize/8);
+  writefds = ___ALLOC_MEM (newsize/8);
+  memcpy (readfds, ___fdset_state_readfds (ps), oldsize/8);
+  memcpy (writefds, ___fdset_state_writefds (ps), oldsize/8);
+  memset(readfds + oldsize/8, 0, (newsize - oldsize)/8);
+  memset(writefds + oldsize/8, 0, (newsize - oldsize)/8);
+
+  ___free_mem (___fdset_state_readfds (ps));
+  ___free_mem (___fdset_state_writefds (ps));
+  ___fdset_state_readfds (ps) = readfds;
+  ___fdset_state_writefds (ps) = writefds;
+  ___fdset_state_size (ps) = newsize;
+}
+
+static int ___fdset_size (___processor_state ps)
+{
+  return ___fdset_state_size (ps);
+}
+
+static ___poll_fdset ___fdset_readfds (___processor_state ps)
+{
+  return ___fdset_state_readfds (ps);
+}
+
+static ___poll_fdset ___fdset_writefds (___processor_state ps)
+{
+  return ___fdset_state_writefds (ps);
+}
+#endif
+
+/*---------------------------------------------------------------------------*/
+
 /* Device groups. */
 
 
@@ -698,9 +756,9 @@ int fd;
 ___BOOL for_writing;)
 {
   if (for_writing)
-    ___FD_SET(fd, &state->writefds);
+    ___FD_SET(fd, state->writefds);
   else
-    ___FD_SET(fd, &state->readfds);
+    ___FD_SET(fd, state->readfds);
 
   if (fd >= state->highest_fd_plus_1)
     state->highest_fd_plus_1 = fd+1;
@@ -721,8 +779,16 @@ ___device_select_state *state;
 int fd;
 ___BOOL for_writing;)
 {
-  state->pollfds[state->pollfd_count].fd = fd;
+  if (fd >= state->fdset_size)
+    {
+      ___processor_state ps = ___PSTATE;
+      ___fdset_realloc (ps, fd);
+      state->fdset_size = ___fdset_size (ps);
+      state->readfds = ___fdset_readfds (ps);
+      state->writefds = ___fdset_writefds (ps);
+    }
 
+  state->pollfds[state->pollfd_count].fd = fd;
   if (for_writing)
     state->pollfds[state->pollfd_count].events = POLLOUT;
   else
@@ -761,14 +827,17 @@ HANDLE wait_obj;)
 
 
 ___SCMOBJ ___device_select
-   ___P((___device **devs,
+   ___P((___processor_state ___ps,
+         ___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),
-        (devs,
+        (___ps,
+         devs,
          nb_read_devs,
          nb_write_devs,
          timeout)
+___processor_state *___ps;
 ___device **devs;
 int nb_read_devs;
 int nb_write_devs;
@@ -804,17 +873,20 @@ ___time timeout;)
 
   state.highest_fd_plus_1 = 0;
 
-  ___FD_ZERO(&state.readfds);
-  ___FD_ZERO(&state.writefds);
-  ___FD_ZERO(&state.exceptfds);
+  ___FD_ZERO(state.readfds);
+  ___FD_ZERO(state.writefds);
+  ___FD_ZERO(state.exceptfds);
 
 #endif
 
 #ifdef USE_poll
 
   state.pollfd_count = 0;
-  ___FD_ZERO (&state.readfds);
-  ___FD_ZERO (&state.writefds);
+  state.fdset_size = ___fdset_size (___ps);
+  state.readfds = ___fdset_readfds (___ps);
+  state.writefds = ___fdset_writefds (___ps);
+  ___FD_ZERO (state.readfds, state.fdset_size);
+  ___FD_ZERO (state.writefds, state.fdset_size);
 
 #endif
 
@@ -1134,13 +1206,13 @@ ___time timeout;)
                 if (state.pollfds[x].events & POLLIN)
                   {
                     if (state.pollfds[x].revents & (POLLIN | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.readfds);
+                      ___FD_SET (state.pollfds[x].fd, state.readfds);
                   }
 
                 if (state.pollfds[x].events & POLLOUT)
                   {
                     if (state.pollfds[x].revents & (POLLOUT | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.writefds);
+                      ___FD_SET (state.pollfds[x].fd, state.writefds);
                   }
 
                 --active;
@@ -1156,7 +1228,7 @@ ___time timeout;)
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -1335,7 +1407,7 @@ ___time timeout;)
 
 #ifdef USE_select_or_poll
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -1482,6 +1554,7 @@ ___device *self;)
 
   ___device_remove_from_group (self);
 
+  ___processor_state ps = ___PSTATE;
   for (;;)
     {
       e = ___device_close (self, ___DIRECTION_RD);
@@ -1491,7 +1564,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 1, 0, ___time_mod.time_pos_infinity);
+      e = ___device_select (ps, devs, 1, 0, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -1505,7 +1578,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 0, 1, ___time_mod.time_pos_infinity);
+      e = ___device_select (ps, devs, 0, 1, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -2915,12 +2988,12 @@ ___device_select_state *state;)
 
       if (for_writing)
         {
-          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, &state->writefds))
+          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, state->writefds))
             state->devs[i] = NULL;
         }
       else
         {
-          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, &state->readfds))
+          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, state->readfds))
             state->devs[i] = NULL;
         }
 
@@ -4879,8 +4952,8 @@ ___device_select_state *state;)
 
       if (d->try_connect_again != 0 ||
           (for_writing
-           ? ___FD_ISSET(d->s, &state->writefds)
-           : ___FD_ISSET(d->s, &state->readfds)))
+           ? ___FD_ISSET(d->s, state->writefds)
+           : ___FD_ISSET(d->s, state->readfds)))
         {
           d->connect_done = 1;
           state->devs[i] = NULL;
@@ -5652,7 +5725,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (___FD_ISSET(d->s, &state->readfds))
+      if (___FD_ISSET(d->s, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -6590,8 +6663,8 @@ ___device_select_state *state;)
 #ifdef USE_POSIX
 
       if (for_writing
-           ? ___FD_ISSET(d->fd, &state->writefds)
-           : ___FD_ISSET(d->fd, &state->readfds))
+           ? ___FD_ISSET(d->fd, state->writefds)
+           : ___FD_ISSET(d->fd, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -9854,6 +9927,8 @@ ___SCMOBJ timeout;)
   ___SCMOBJ e;
   ___time to;
 
+  ___processor_state ps = ___PSTATE; /* this should be passed as argument */
+
   if (timeout == ___FAL)
     to = ___time_mod.time_neg_infinity;
   else if (timeout == ___TRU)
@@ -9863,7 +9938,7 @@ ___SCMOBJ timeout;)
 
   if (___FALSEP(devices))
     {
-      e = ___device_select (NULL, 0, 0, to);
+      e = ___device_select (ps, NULL, 0, 0, to);
     }
   else
     {
@@ -9917,7 +9992,7 @@ ___SCMOBJ timeout;)
           i++;
         }
 
-      e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
+      e = ___device_select (ps, devs, read_pos, MAX_CONDVARS-write_pos, to);
 
       i = 0;
 
@@ -10198,6 +10273,10 @@ ___SCMOBJ ___setup_io_pstate
 ___processor_state ___ps;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
+
+#ifdef USE_poll
+  ___fdset_state_init (___ps);
+#endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
