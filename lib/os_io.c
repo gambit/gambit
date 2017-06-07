@@ -46,16 +46,31 @@ ___io_module ___io_mod =
 
 static int ___fdset_heap_overflow;
 
-static void ___fdset_state_init (___processor_state ps)
+static int ___fdset_state_init (___processor_state ps)
 {
-  void *readfds, *writefds;
+  void *readfds = NULL;
+  void *writefds = NULL;
+
   readfds  = ___ALLOC_MEM (MAX_CONDVARS/8);
+  if (!readfds)
+    goto error;
+
   writefds = ___ALLOC_MEM (MAX_CONDVARS/8);
+  if (!writefds)
+    goto error;
+
   memset (readfds, 0, MAX_CONDVARS/8);
   memset (writefds, 0, MAX_CONDVARS/8);
   ___fdset_state_readfds (ps) = readfds;
   ___fdset_state_writefds (ps) = writefds;
   ___fdset_state_size (ps) = MAX_CONDVARS;
+
+  return 0;
+
+ error:
+  ___free_mem (readfds);
+  ___free_mem (writefds);
+  return 1;
 }
 
 static int ___fdset_realloc (___processor_state ps, int fd)
@@ -10604,7 +10619,8 @@ ___processor_state ___ps;)
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
 #ifdef USE_poll
-  ___fdset_state_init (___ps);
+  if (___fdset_state_init (___ps))
+    return ___FIX(___HEAP_OVERFLOW_ERR);;
 #endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
