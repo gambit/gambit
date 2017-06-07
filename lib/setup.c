@@ -624,8 +624,6 @@ ___WORD target_processor_count;)
 
 #ifndef ___SINGLE_THREADED_VMS
 
-  ___setup_thread_local_state ();
-
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   int id = ___PROCESSOR_ID(___ps, ___vms); /* id of this processor */
   ___sync_op_struct sop;

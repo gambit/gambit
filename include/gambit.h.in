@@ -8381,6 +8381,15 @@ typedef struct ___sync_op_struct
     ___VOLATILE ___WORD arg[2];   /* arguments of the operation */
   } ___sync_op_struct;
 
+/* fdset state */
+#ifdef USE_POLL_FOR_SELECT
+typedef struct ___fdset_state_struct {
+  int size;
+  void *readfds;
+  void *writefds;
+} ___fdset_state;
+#endif
+
 /* Processor structure */
 
 typedef struct ___processor_state_struct
@@ -8462,6 +8471,10 @@ typedef struct ___processor_state_struct
     ___MUTEX_DECL(sync_mut)
     ___CONDVAR_DECL(sync_cv)
 
+#endif
+
+#ifdef USE_POLL_FOR_SELECT
+    ___fdset_state fdset_state;
 #endif
   } ___processor_state_struct;
 
