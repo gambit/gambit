@@ -44,7 +44,7 @@ ___io_module ___io_mod =
 #define ___fdset_state_readfds(ps)  ps->os.fdset_state.readfds
 #define ___fdset_state_writefds(ps) ps->os.fdset_state.writefds
 
-void ___fdset_state_init (___processor_state ps)
+static void ___fdset_state_init (___processor_state ps)
 {
   void *readfds, *writefds;
   readfds  = ___ALLOC_MEM (MAX_CONDVARS/8);
@@ -56,9 +56,10 @@ void ___fdset_state_init (___processor_state ps)
   ___fdset_state_size (ps) = MAX_CONDVARS;
 }
 
-static void ___fdset_realloc (___processor_state ps, int fd)
+static int ___fdset_realloc (___processor_state ps, int fd)
 {
-  void *readfds, *writefds;
+  void *readfds = NULL;
+  void *writefds = NULL;
   int oldsize = ___fdset_state_size (ps);
   int newsize = oldsize;
 
@@ -69,7 +70,11 @@ static void ___fdset_realloc (___processor_state ps, int fd)
       return;
 
   readfds  = ___ALLOC_MEM (newsize/8);
+  if (!readfds)
+    goto error;
   writefds = ___ALLOC_MEM (newsize/8);
+  if (!writefds)
+    goto error;
   memcpy (readfds, ___fdset_state_readfds (ps), oldsize/8);
   memcpy (writefds, ___fdset_state_writefds (ps), oldsize/8);
   memset(readfds + oldsize/8, 0, (newsize - oldsize)/8);
@@ -80,6 +85,13 @@ static void ___fdset_realloc (___processor_state ps, int fd)
   ___fdset_state_readfds (ps) = readfds;
   ___fdset_state_writefds (ps) = writefds;
   ___fdset_state_size (ps) = newsize;
+
+  return 0;
+
+ error:
+  free (readfds);
+  free (writefds);
+  return 1;
 }
 
 static int ___fdset_size (___processor_state ps)
@@ -96,6 +108,18 @@ static ___poll_fdset ___fdset_writefds (___processor_state ps)
 {
   return ___fdset_state_writefds (ps);
 }
+
+int ___fdset_resize_pstate
+   ___P((___processor_state ___ps,
+         int fd),
+        (___ps,
+         fd)
+___processor_state ___ps;
+int fd;)
+{
+  return ___fdset_realloc (___ps, fd);
+}
+
 #endif
 
 /*---------------------------------------------------------------------------*/
