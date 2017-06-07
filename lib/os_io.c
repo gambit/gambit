@@ -46,8 +46,13 @@ ___io_module ___io_mod =
 
 void ___fdset_state_init (___processor_state ps)
 {
-  ___fdset_state_readfds (ps) = ___ALLOC_MEM (MAX_CONDVARS/8);
-  ___fdset_state_writefds (ps) = ___ALLOC_MEM (MAX_CONDVARS/8);
+  void *readfds, *writefds;
+  readfds  = ___ALLOC_MEM (MAX_CONDVARS/8);
+  writefds = ___ALLOC_MEM (MAX_CONDVARS/8);
+  memset (readfds, 0, MAX_CONDVARS/8);
+  memset (writefds, 0, MAX_CONDVARS/8);
+  ___fdset_state_readfds (ps) = readfds;
+  ___fdset_state_writefds (ps) = writefds;
   ___fdset_state_size (ps) = MAX_CONDVARS;
 }
 
