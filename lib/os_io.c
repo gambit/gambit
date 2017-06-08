@@ -8998,7 +8998,7 @@ ___device_select_state *state;)
   /* pass == ___SELECT_PASS_CHECK */
   if (stage != ___STAGE_OPEN)
     state->devs[i] = NULL;
-  else if (___FD_ISSET(d->fd, state->readfds))
+  else if (___FD_ISSET(d->fd, &state->readfds))
     state->devs[i] = NULL;
   
   return ___FIX(___NO_ERR);
