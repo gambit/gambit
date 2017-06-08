@@ -1001,6 +1001,78 @@
              (univ-pop-args-to-regs ctx 1)
              (^return (^bool #t)))))))
 
+    ((build_key)
+     (rts-method
+      'build_key
+      '(public)
+      'bool
+      (list (univ-field 'nb_req_opt 'int)
+            (univ-field 'key_descr '(array scmobj)))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((nb_req_opt (^local-var 'nb_req_opt))
+              (key_descr (^local-var 'key_descr))
+              (key_vals (^local-var 'key_vals))
+              (nb_key_args (^local-var 'nb_key_args))
+              (i (^local-var 'i))
+              (k (^local-var 'k))
+              (key (^local-var 'key))
+              (val (^local-var 'val)))
+          (^
+           (^var-declaration 'int nb_key_args (^- (^getnargs) nb_req_opt))
+           (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
+                     (^bitand nb_key_args (^int 1))) ;; keyword arguments must come in pairs
+                (^return (^bool #f)))
+
+           (univ-push-args ctx)
+
+           (^var-declaration 'int k (^- (^array-length key_descr) 1))
+           (^var-declaration 'int i (^int 0))
+           (^var-declaration 'scmobj key (^null-obj))
+           (^var-declaration 'scmobj val (^null-obj))
+           (^var-declaration '(array scmobj) key_vals (^new-array 'scmobj (^array-length key_descr)))
+
+           (^while (^>= k (^int 0))
+                   (^ (^assign (^array-index key_vals k) (^absent))
+                      (^inc-by k -1)))
+
+           (^assign k (^- nb_key_args 1))
+
+           (^while (^> k (^int 0))
+                   (^
+                    (^pop (lambda (expr) (^assign val expr)))
+                    (^pop (lambda (expr) (^assign key expr)))
+
+                    (^if (^not (^parens (^keyword? key)))
+                         (^return (^bool #f)))
+
+                    (^assign i (^int 0))
+                    (^while (^< i (^array-length key_descr))
+                            (^
+                             (^if (^eq? key (^array-index key_descr i))
+                                  (^ (^assign (^array-index key_vals i) val)
+                                     (^assign i (^+ (^array-length key_descr) 1))))
+                             (^inc-by i 1)))
+
+                    (^if (^= i (^array-length key_descr))
+                         (^return (^bool #f))) ;; key not found in descriptors
+
+                    (^inc-by k -2)))
+
+           (^assign k 0)
+
+           (^while (^< k (^array-length key_vals))
+                   (^
+                    (^push (^array-index key_vals k))
+                    (^inc-by k 1)))
+
+           (^assign (^getnargs) (^- (^getnargs) (^parens (^>> nb_key_args 1))))
+
+           (univ-pop-args-to-regs ctx 1)
+
+           (^return (^bool #t)))))))
+
     ((wrong_nargs)
      (rts-method
       'wrong_nargs

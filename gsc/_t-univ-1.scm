@@ -2721,20 +2721,31 @@
     (define (dispatch-on-nb-args nb-args)
       (if (> nb-args (- nb-req-and-opt (if rest? 0 1)))
 
-          (if keys
-              (compiler-internal-error
-               "univ-label-entry, keyword parameters not supported")
-              (^if (if rest?
-                       (^not (^call-prim
-                              (^rts-method-use 'build_rest)
-                              nb-parms-except-rest))
-                       (^!= (^getnargs)
-                            nb-parms-except-rest))
-                   (^return-call-prim
-                    (^rts-method-use 'wrong_nargs)
-                    (if closed?
-                        (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
-                        id))))
+          (cond
+           ((and keys rest?)
+            (compiler-internal-error
+             "univ-label-entry, keyword parameters + rest not supported"))
+           (keys
+              (^ (^if (^not (^call-prim (^rts-method-use 'build_key)
+                                        nb-req-and-opt
+                                        (^array-literal 'scmobj (map (lambda (x) (^keyword-obj (car x) #f)) keys))))
+                      (^return-call-prim
+                       (^rts-method-use 'wrong_nargs)
+                       (if closed?
+                           (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                           id)))))
+            (else
+             (^if (if rest?
+                      (^not (^call-prim
+                             (^rts-method-use 'build_rest)
+                             nb-parms-except-rest))
+                      (^!= (^getnargs)
+                           nb-parms-except-rest))
+                  (^return-call-prim
+                   (^rts-method-use 'wrong_nargs)
+                   (if closed?
+                       (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                       id)))))
 
           (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs)))
                 (nb-stacked* (max 0 (- nb-parms univ-nb-arg-regs))))
