@@ -8146,11 +8146,11 @@ typedef struct ___rc_header_struct
   } ___rc_header;
 
 /* fdset state */
-typedef struct ___fdset_state_struct {
+typedef struct ___fdset_struct {
   int size;
   void *readfds;
   void *writefds;
-} ___fdset_state;
+} ___fdset;
 
 typedef struct ___pstate_os_struct {
 
@@ -8162,7 +8162,7 @@ typedef struct ___pstate_os_struct {
   HANDLE select_abort; /* WIN32 event */
 #else
   ___half_duplex_pipe select_abort; /* POSIX self-pipe */
-  ___fdset_state fdset_state; /* Dynamic fdsets for unlimited file descriptors */
+  ___fdset fdset; /* Dynamic fdsets for unlimited file descriptors */
 #endif
 } ___pstate_os;
 

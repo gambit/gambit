@@ -936,7 +936,7 @@ int fd;)
 {
 #ifdef USE_poll
 
-  if (fd < ___ps->os.fdset_state.size)
+  if (fd < ___ps->os.fdset.size)
     return 0;
 
   ___fdset_resize_heap_overflow_clear ();

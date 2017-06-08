@@ -40,9 +40,9 @@ ___io_module ___io_mod =
 /* poll dynamic fdset memory management. */
 
 #ifdef USE_poll
-#define ___fdset_state_size(ps)     ps->os.fdset_state.size
-#define ___fdset_state_readfds(ps)  ps->os.fdset_state.readfds
-#define ___fdset_state_writefds(ps) ps->os.fdset_state.writefds
+#define ___fdset_state_size(ps)     ps->os.fdset.size
+#define ___fdset_state_readfds(ps)  ps->os.fdset.readfds
+#define ___fdset_state_writefds(ps) ps->os.fdset.writefds
 
 static int ___fdset_heap_overflow;
 
