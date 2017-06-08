@@ -934,13 +934,13 @@ ___EXP_FUNC(___BOOL, ___fdset_resize)
 ___processor_state ___ps;
 int fd;)
 {
-#ifdef ___USE_poll
+#ifdef USE_poll
 
   if (fd < ___ps->os.fdset_state.size)
     return 0;
 
   ___fdset_resize_heap_overflow_clear ();
-  
+
   ___PSGET
   ___sync_op_struct sop;
 
