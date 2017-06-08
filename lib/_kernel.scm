@@ -4281,8 +4281,8 @@ end-of-code
 
 (define-prim ##os-device-open-raw
   (c-lambda (scheme-object  ;; fd
-        scheme-object) ;; flags
-       scheme-object   ;; device
+             scheme-object) ;; flags
+            scheme-object   ;; device
    "___os_device_raw_open"))
 
 (define-prim ##os-device-process-pid
