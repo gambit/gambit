@@ -941,7 +941,6 @@ int fd;)
 
   ___fdset_resize_heap_overflow_clear ();
 
-  ___PSGET
   ___sync_op_struct sop;
 
   sop.op = OP_FDSET_RESIZE;
