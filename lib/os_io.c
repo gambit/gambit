@@ -8902,11 +8902,12 @@ ___SCMOBJ options;)
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Raw device file descriptors */
-#ifdef USE_POSIX
 typedef struct ___device_raw_struct
   {
     ___device base;
+#ifdef USE_POSIX
     int fd;
+#endif
   } ___device_raw;
 
 typedef struct ___device_raw_vtbl_struct
@@ -8948,8 +8949,10 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
       d->base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
       d->base.write_stage = ___STAGE_CLOSED;
 
+#ifdef USE_POSIX
       if (___close_no_EINTR (d->fd) < 0)
         return err_code_from_errno ();
+#endif
     }
   else if (is_not_closed & direction & ___DIRECTION_RD)
     d->base.read_stage = ___STAGE_CLOSED;
@@ -9031,6 +9034,7 @@ ___HIDDEN ___device_raw_vtbl ___device_raw_table =
   }
 };
 
+#ifdef USE_POSIX
 ___SCMOBJ ___device_raw_setup_from_fd
    ___P((___device_raw **dev,
          ___device_group *dgroup,
@@ -9087,7 +9091,6 @@ int direction;)
 
   return ___FIX(___NO_ERR);
 }
-
 #endif
 
 ___SCMOBJ ___os_device_raw_open
