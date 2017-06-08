@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -71,7 +71,7 @@ ___device_group *dgroup;)
     if (___device_cleanup (dgroup->list) != ___FIX(___NO_ERR))
       break;
 
-  ___free_mem (dgroup);
+  ___FREE_MEM(dgroup);
 }
 
 
@@ -165,7 +165,7 @@ int size;)
   if (mutex == NULL)
     {
       ___SCMOBJ e = err_code_from_GetLastError ();
-      ___free_mem (buffer);
+      ___FREE_MEM(buffer);
       return e;
     }
 
@@ -178,7 +178,7 @@ int size;)
     {
       ___SCMOBJ e = err_code_from_GetLastError ();
       CloseHandle (mutex); /* ignore error */
-      ___free_mem (buffer);
+      ___FREE_MEM(buffer);
       return e;
     }
 
@@ -192,7 +192,7 @@ int size;)
       ___SCMOBJ e = err_code_from_GetLastError ();
       CloseHandle (revent); /* ignore error */
       CloseHandle (mutex); /* ignore error */
-      ___free_mem (buffer);
+      ___FREE_MEM(buffer);
       return e;
     }
 
@@ -218,7 +218,7 @@ ___nonblocking_pipe *pipe;)
   CloseHandle (pipe->wevent); /* ignore error */
   CloseHandle (pipe->revent); /* ignore error */
   CloseHandle (pipe->mutex); /* ignore error */
-  ___free_mem (pipe->buffer);
+  ___FREE_MEM(pipe->buffer);
 
   return ___FIX(___NO_ERR);
 }
@@ -1463,7 +1463,7 @@ ___device *self;)
       )
     {
       e = ___device_release_virt (self);
-      ___free_mem (self);
+      ___FREE_MEM(self);
     }
 
   return e;
@@ -1701,7 +1701,7 @@ LPVOID arg;)
 
   if (e != ___FIX(___NO_ERR))
     {
-      ___free_mem (p);
+      ___FREE_MEM(p);
       return e;
     }
 
@@ -1720,7 +1720,7 @@ LPVOID arg;)
     {
       e = err_code_from_GetLastError ();
       ___nonblocking_pipe_cleanup (&p->pipe);
-      ___free_mem (p);
+      ___FREE_MEM(p);
       *pump = NULL; /* make sure caller does not think a pump was created */
       return e;
     }
@@ -1775,7 +1775,7 @@ ___device_stream_pump *pump;)
 {
   CloseHandle (pump->thread); /* ignore error */
   ___nonblocking_pipe_cleanup (&pump->pipe); /* ignore error */
-  ___free_mem (pump);
+  ___FREE_MEM(pump);
 
   return ___FIX(___NO_ERR);
 }
@@ -2687,7 +2687,7 @@ int direction;)
 
   if (e != ___FIX(___NO_ERR))
     {
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -2709,7 +2709,7 @@ int direction;)
      )
     {
       e = err_code_from_GetLastError ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -3584,7 +3584,7 @@ int direction;)
        (___set_fd_blocking_mode (fd_stdin, 0) < 0)))
     {
       ___SCMOBJ e = err_code_from_errno ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -5391,7 +5391,7 @@ int direction;)
   if (set_socket_non_blocking (s) != 0) /* set nonblocking mode */
     {
       e = ERR_CODE_FROM_SOCKET_CALL;
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -5431,7 +5431,7 @@ int direction;)
   if (d->io_event == NULL)
     {
       e = err_code_from_GetLastError ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -5765,7 +5765,7 @@ ___tls_context *tls_context;)
     {
       ___SCMOBJ e = err_code_from_GetLastError ();
       CLOSE_SOCKET(s); /* ignore error */
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -6031,7 +6031,7 @@ int ignore_hidden;)
   if (d->dir == NULL)
     {
       ___SCMOBJ e = fnf_or_err_code_from_errno ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -6063,7 +6063,7 @@ int ignore_hidden;)
     if (d->h == INVALID_HANDLE_VALUE)
       {
         ___SCMOBJ e = fnf_or_err_code_from_GetLastError ();
-        ___free_mem (d);
+        ___FREE_MEM(d);
         return e;
       }
   }
@@ -8519,10 +8519,10 @@ int options;)
     }
 
   if (cenv != NULL)
-    ___free_mem (cenv);
+    ___FREE_MEM(cenv);
 
   if (ccmd != NULL)
-    ___free_mem (ccmd);
+    ___FREE_MEM(ccmd);
 
   return e;
 

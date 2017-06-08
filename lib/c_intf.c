@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -6321,7 +6321,7 @@ ___EXP_FUNC(void,___free_UCS_2STRING)
 ___UCS_2STRING str_UCS_2;)
 {
   if (str_UCS_2 != 0)
-    ___free_mem (str_UCS_2);
+    ___FREE_MEM(str_UCS_2);
 }
 
 
@@ -6406,7 +6406,7 @@ ___UCS_2STRING *str_list_UCS_2;)
   while ((str = *probe++) != 0)
     ___free_UCS_2STRING (str);
 
-  ___free_mem (str_list_UCS_2);
+  ___FREE_MEM(str_list_UCS_2);
 }
 
 
