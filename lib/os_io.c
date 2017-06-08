@@ -84,7 +84,7 @@ static int ___fdset_realloc (___processor_state ps, int fd)
     newsize = newsize * 2;
 
   if (oldsize == newsize) /* we never shrink fdsets */
-      return;
+      return 0;
 
   readfds  = ___ALLOC_MEM (newsize/8);
   if (!readfds)
