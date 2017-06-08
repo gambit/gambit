@@ -4388,7 +4388,7 @@ int line;)
 {
   struct CRYPTO_dynlock_value *value;
   value = (struct CRYPTO_dynlock_value*)
-    malloc(sizeof(struct CRYPTO_dynlock_value));
+    ___ALLOC_MEM(sizeof(struct CRYPTO_dynlock_value));
 
   if (!value)
     return NULL;
@@ -4424,14 +4424,14 @@ const char *file;
 int line;)
 {
   ___MUTEX_DESTROY (l->mutex);
-  free (l);
+  ___FREE_MEM(l);
 }
 
 ___HIDDEN int tls_threading_setup
    ___PVOID
 {
   int i;
-  tls_mutex_buf = (___MUTEX*)malloc (CRYPTO_num_locks() * sizeof(___MUTEX));
+  tls_mutex_buf = (___MUTEX*)___ALLOC_MEM(CRYPTO_num_locks() * sizeof(___MUTEX));
 
   if (!tls_mutex_buf)
     return 0;
@@ -4475,7 +4475,7 @@ ___HIDDEN int tls_threading_cleanup
   for (i = 0; i < CRYPTO_num_locks(); i++)
     ___MUTEX_DESTROY (tls_mutex_buf[i]);
 
-  free (tls_mutex_buf);
+  ___FREE_MEM(tls_mutex_buf);
   tls_mutex_buf = NULL;
 
   return 1;
