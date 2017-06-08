@@ -95,7 +95,6 @@ extern ___SCMOBJ ___setup_thread_module ___PVOID;
 
 extern void ___cleanup_thread_module ___PVOID;
 
-
 /*---------------------------------------------------------------------------*/
 
 

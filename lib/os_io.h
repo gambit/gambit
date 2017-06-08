@@ -29,6 +29,7 @@ typedef struct ___device_group_struct
 #define ___TTY_DEVICE_KIND        (___DEVICE_KIND+64)
 #define ___SERIAL_DEVICE_KIND     (___DEVICE_KIND+128)
 #define ___TCP_CLIENT_DEVICE_KIND (___DEVICE_KIND+256)
+#define ___RAW_DEVICE_KIND        (___DEVICE_KIND+512)
 #define ___TCP_SERVER_DEVICE_KIND (___OBJECT_KIND+512)
 #define ___DIRECTORY_KIND         (___OBJECT_KIND+1024)
 #define ___EVENT_QUEUE_KIND       (___OBJECT_KIND+2048)
@@ -92,36 +93,30 @@ typedef struct ___device_struct
 #endif
 
 #ifdef USE_poll
-#ifndef MAX_POLLFDS
-#define MAX_POLLFDS MAX_CONDVARS
-#endif
-
 typedef ___SIZE_TS ___fdbits;
 
 #define ___FDBITS (8 * sizeof (___fdbits))
 #define ___FD_ELT(fd) ((fd) / ___FDBITS)
 #define ___FD_MASK(fd) ((___fdbits) 1 << ((fd) % ___FDBITS))
 
-#define ___FD_ZERO(set)                       \
-  memset ((set), 0, sizeof (___poll_fd_set))
+#define ___FD_ZERO(set, sz)                        \
+  memset ((set), 0, sz/8)
 #define ___FD_SET(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] |= ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] |= ___FD_MASK (fd))
 #define ___FD_CLR(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] &= ~___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] &= ~___FD_MASK (fd))
 #define ___FD_ISSET(fd, set)                  \
-  ((set)->fds[___FD_ELT (fd)] & ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] & ___FD_MASK (fd))
 
-typedef struct ___poll_fd_set {
-  ___fdbits fds[MAX_POLLFDS / ___FDBITS];
-} ___poll_fd_set;
+typedef ___fdbits *___poll_fdset;
 
 #endif
 
 #ifdef USE_select
-#define ___FD_ZERO  FD_ZERO
-#define ___FD_ISSET FD_ISSET
-#define ___FD_CLR   FD_CLR
-#define ___FD_SET   FD_SET
+#define ___FD_ZERO(set)      FD_ZERO(&set)
+#define ___FD_ISSET(fd, set) FD_ISSET(fd, &set)
+#define ___FD_CLR(fd, set)   FD_CLR(fd, &set)
+#define ___FD_SET(fd, set)   FD_SET(fd, &set)
 #endif
 
 typedef struct ___device_select_state_struct
@@ -144,11 +139,12 @@ typedef struct ___device_select_state_struct
 #endif
 
 #ifdef USE_poll
-    struct pollfd pollfds[MAX_POLLFDS];
+    struct pollfd pollfds[MAX_CONDVARS];
     int pollfd_count;
     /* active set bitmaps */
-    ___poll_fd_set readfds;
-    ___poll_fd_set writefds;
+    int fdset_size;
+    ___poll_fdset readfds;
+    ___poll_fdset writefds;
 #endif
 
 #endif
@@ -166,6 +162,19 @@ typedef struct ___device_select_state_struct
 #endif
   } ___device_select_state;
 
+extern void ___fdset_resize_pstate
+   ___P((___processor_state ___ps,
+         int fd),
+        ());
+
+extern void ___fdset_resize_heap_overflow_clear ___PVOID;
+extern int ___fdset_resize_heap_overflow ___PVOID;
+
+/* 0 if success, 1 if allocation failed in some processor */
+extern ___BOOL ___fdset_resize
+   ___P((___processor_state ___ps,
+         int fd),
+        ());
 
 extern void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,
@@ -619,7 +628,8 @@ extern ___SCMOBJ ___device_stream_setup
         ());
 
 extern ___SCMOBJ ___device_select
-   ___P((___device **devs,
+   ___P((___processor_state ___ps,
+         ___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),
@@ -815,6 +825,14 @@ extern ___SCMOBJ ___os_device_event_queue_open
 extern ___SCMOBJ ___os_device_event_queue_read
    ___P((___SCMOBJ dev_condvar),
         ());
+
+/* Opening a raw device (file descriptor) */
+
+extern ___SCMOBJ ___os_device_raw_open
+   ___P((___SCMOBJ index,
+         ___SCMOBJ flags),
+        ());
+
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 

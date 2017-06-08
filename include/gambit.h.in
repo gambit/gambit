@@ -1344,7 +1344,6 @@
 #endif
 #endif
 
-
 /*---------------------------------------------------------------------------*/
 
 /* Dependencies on language (i.e. C++, ANSI-C, and K&R C). */
@@ -8146,6 +8145,13 @@ typedef struct ___rc_header_struct
     ___SCMOBJ data; /* needed for C closures */
   } ___rc_header;
 
+/* fdset state */
+typedef struct ___fdset_state_struct {
+  int size;
+  void *readfds;
+  void *writefds;
+} ___fdset_state;
+
 typedef struct ___pstate_os_struct {
 
   /*
@@ -8156,8 +8162,8 @@ typedef struct ___pstate_os_struct {
   HANDLE select_abort; /* WIN32 event */
 #else
   ___half_duplex_pipe select_abort; /* POSIX self-pipe */
+  ___fdset_state fdset_state; /* Dynamic fdsets for unlimited file descriptors */
 #endif
-
 } ___pstate_os;
 
 typedef struct ___pstate_mem_struct {
