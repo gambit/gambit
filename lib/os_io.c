@@ -8981,6 +8981,7 @@ ___device_select_state *state;)
 {
   ___device_raw *d = ___CAST(___device_raw*,self);
 
+#ifdef USE_POSIX
   int stage = (for_writing
                ? d->base.write_stage
                : d->base.read_stage);
@@ -9002,6 +9003,9 @@ ___device_select_state *state;)
     state->devs[i] = NULL;
   
   return ___FIX(___NO_ERR);
+#endif
+
+  return ___FIX(___UNIMPL_ERR);
 }
 
 ___HIDDEN ___SCMOBJ ___device_raw_release_virt
@@ -9142,9 +9146,9 @@ ___SCMOBJ flags;)
 
   return result;
 
-#else
-  return ___FIX(___UNIMPL_ERR);
 #endif
+  
+  return ___FIX(___UNIMPL_ERR);
 }
 
 /* Opening a predefined device (stdin, stdout, stderr, console, etc). */
