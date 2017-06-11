@@ -3879,6 +3879,8 @@
     (port                         . "PORT")
     (input-port                   . "INPUT PORT")
     (output-port                  . "OUTPUT PORT")
+    (object-input-port            . "Object INPUT PORT")
+    (object-output-port           . "Object OUTPUT PORT")
     (character-input-port         . "Character INPUT PORT")
     (character-output-port        . "Character OUTPUT PORT")
     (byte-input-port              . "Byte INPUT PORT")

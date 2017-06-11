@@ -1,0 +1,38 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
+(define (test a b)
+  (let* ((x (##flilogb a)))
+    (println (##fx= x b))))
+
+(test  2.0 1)
+(test  4.0 2)
+(test  5.0 2)
+(test  5.2 2)
+(test  7.999999 2)
+(test  123456.789 16)
+
+(test -2.0 1)
+(test -4.0 2)
+(test -5.0 2)
+(test -5.2 2)
+(test -7.999999 2)
+(test -123456.789 16)
+
+(let ((max-f64 (##fl* (##flexpt 2.0 1023.0) (##fl- 2.0 (##flexpt 2.0 -52.0))))
+      (min-positive-f64 (##flexpt 2.0 -1074.0)))
+  (test max-f64 1023)
+  (test min-positive-f64 -1074))
+
+(test  0.50   -1)
+(test  0.25   -2)
+(test  0.35   -2)
+(test  0.0625 -4)
+(test  0.0624 -5)
+(test  0.01   -7)
+
+(test -0.50   -1)
+(test -0.25   -2)
+(test -0.35   -2)
+(test -0.0625 -4)
+(test -0.0624 -5)
+(test -0.01   -7)

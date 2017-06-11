@@ -1,6 +1,6 @@
 /* File: "actlog.c" */
 
-/* Copyright (c) 2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2016-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the creation of activity logs.
@@ -44,7 +44,7 @@ ___processor_state ___ps;)
 
   if (s == NULL)
     {
-      ___free_mem (t);
+      ___FREE_MEM(t);
       return ___FIX(___HEAP_OVERFLOW_ERR);
     }
 
@@ -68,13 +68,13 @@ ___processor_state ___ps;)
 
   if (___ps->actlog.transitions != NULL)
     {
-      ___free_mem (___ps->actlog.transitions);
+      ___FREE_MEM(___ps->actlog.transitions);
       ___ps->actlog.transitions = NULL;
     }
 
   if (___ps->actlog.stack != NULL)
     {
-      ___free_mem (___ps->actlog.stack);
+      ___FREE_MEM(___ps->actlog.stack);
       ___ps->actlog.stack = NULL;
     }
 
@@ -126,7 +126,7 @@ ___virtual_machine_state ___vms;)
 
   if (___vms->actlog.activities != NULL)
     {
-      ___free_mem (___vms->actlog.activities);
+      ___FREE_MEM(___vms->actlog.activities);
       ___vms->actlog.activities = NULL;
     }
 

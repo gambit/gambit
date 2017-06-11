@@ -2522,11 +2522,20 @@ Ruby:
 
     ;; Since FLT_RADIX = 2, ilogb is one less than the exponent returned by frexp
     ((python)
-     (^parens (^ "math.frexp(" expr ")[1] - 1")))
+     (^parens (^ "math.frexp(" (^float-abs expr) ")[1] - 1")))
 
-    ;; TODO : implement in other languages
-    ((php ruby java)
-     (^int 0)) ;; TODO: implement
+    ;; Most of the time, ilogb(expr) is equivalent to (int) floor(log2(abs(expr)))
+    ;; FIXME : doesn't work with maximum double
+    ((php)
+     (^call-prim 'floor (^call-prim 'log (^float-abs expr) 2)))
+
+    ((ruby)
+     (^float-toint (^call-prim (^member 'Math 'log2) (^float-abs expr))))
+
+    ((java)
+     (^cast 'int
+            (^/ (^call-prim (^member 'Math 'log) (^float-abs expr))
+                (^call-prim (^member 'Math 'log) (^float 2.0)))))
 
     (else
      (compiler-internal-error

@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -71,7 +71,7 @@ ___device_group *dgroup;)
     if (___device_cleanup (dgroup->list) != ___FIX(___NO_ERR))
       break;
 
-  ___free_mem (dgroup);
+  ___FREE_MEM(dgroup);
 }
 
 
@@ -165,7 +165,7 @@ int size;)
   if (mutex == NULL)
     {
       ___SCMOBJ e = err_code_from_GetLastError ();
-      ___free_mem (buffer);
+      ___FREE_MEM(buffer);
       return e;
     }
 
@@ -178,7 +178,7 @@ int size;)
     {
       ___SCMOBJ e = err_code_from_GetLastError ();
       CloseHandle (mutex); /* ignore error */
-      ___free_mem (buffer);
+      ___FREE_MEM(buffer);
       return e;
     }
 
@@ -192,7 +192,7 @@ int size;)
       ___SCMOBJ e = err_code_from_GetLastError ();
       CloseHandle (revent); /* ignore error */
       CloseHandle (mutex); /* ignore error */
-      ___free_mem (buffer);
+      ___FREE_MEM(buffer);
       return e;
     }
 
@@ -218,7 +218,7 @@ ___nonblocking_pipe *pipe;)
   CloseHandle (pipe->wevent); /* ignore error */
   CloseHandle (pipe->revent); /* ignore error */
   CloseHandle (pipe->mutex); /* ignore error */
-  ___free_mem (pipe->buffer);
+  ___FREE_MEM(pipe->buffer);
 
   return ___FIX(___NO_ERR);
 }
@@ -1463,7 +1463,7 @@ ___device *self;)
       )
     {
       e = ___device_release_virt (self);
-      ___free_mem (self);
+      ___FREE_MEM(self);
     }
 
   return e;
@@ -1701,7 +1701,7 @@ LPVOID arg;)
 
   if (e != ___FIX(___NO_ERR))
     {
-      ___free_mem (p);
+      ___FREE_MEM(p);
       return e;
     }
 
@@ -1720,7 +1720,7 @@ LPVOID arg;)
     {
       e = err_code_from_GetLastError ();
       ___nonblocking_pipe_cleanup (&p->pipe);
-      ___free_mem (p);
+      ___FREE_MEM(p);
       *pump = NULL; /* make sure caller does not think a pump was created */
       return e;
     }
@@ -1775,7 +1775,7 @@ ___device_stream_pump *pump;)
 {
   CloseHandle (pump->thread); /* ignore error */
   ___nonblocking_pipe_cleanup (&pump->pipe); /* ignore error */
-  ___free_mem (pump);
+  ___FREE_MEM(pump);
 
   return ___FIX(___NO_ERR);
 }
@@ -2687,7 +2687,7 @@ int direction;)
 
   if (e != ___FIX(___NO_ERR))
     {
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -2709,7 +2709,7 @@ int direction;)
      )
     {
       e = err_code_from_GetLastError ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -3584,7 +3584,7 @@ int direction;)
        (___set_fd_blocking_mode (fd_stdin, 0) < 0)))
     {
       ___SCMOBJ e = err_code_from_errno ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -4388,7 +4388,7 @@ int line;)
 {
   struct CRYPTO_dynlock_value *value;
   value = (struct CRYPTO_dynlock_value*)
-    malloc(sizeof(struct CRYPTO_dynlock_value));
+    ___ALLOC_MEM(sizeof(struct CRYPTO_dynlock_value));
 
   if (!value)
     return NULL;
@@ -4424,14 +4424,14 @@ const char *file;
 int line;)
 {
   ___MUTEX_DESTROY (l->mutex);
-  free (l);
+  ___FREE_MEM(l);
 }
 
 ___HIDDEN int tls_threading_setup
    ___PVOID
 {
   int i;
-  tls_mutex_buf = (___MUTEX*)malloc (CRYPTO_num_locks() * sizeof(___MUTEX));
+  tls_mutex_buf = (___MUTEX*)___ALLOC_MEM(CRYPTO_num_locks() * sizeof(___MUTEX));
 
   if (!tls_mutex_buf)
     return 0;
@@ -4475,7 +4475,7 @@ ___HIDDEN int tls_threading_cleanup
   for (i = 0; i < CRYPTO_num_locks(); i++)
     ___MUTEX_DESTROY (tls_mutex_buf[i]);
 
-  free (tls_mutex_buf);
+  ___FREE_MEM(tls_mutex_buf);
   tls_mutex_buf = NULL;
 
   return 1;
@@ -5391,7 +5391,7 @@ int direction;)
   if (set_socket_non_blocking (s) != 0) /* set nonblocking mode */
     {
       e = ERR_CODE_FROM_SOCKET_CALL;
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -5431,7 +5431,7 @@ int direction;)
   if (d->io_event == NULL)
     {
       e = err_code_from_GetLastError ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -5765,7 +5765,7 @@ ___tls_context *tls_context;)
     {
       ___SCMOBJ e = err_code_from_GetLastError ();
       CLOSE_SOCKET(s); /* ignore error */
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -6031,7 +6031,7 @@ int ignore_hidden;)
   if (d->dir == NULL)
     {
       ___SCMOBJ e = fnf_or_err_code_from_errno ();
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -6063,7 +6063,7 @@ int ignore_hidden;)
     if (d->h == INVALID_HANDLE_VALUE)
       {
         ___SCMOBJ e = fnf_or_err_code_from_GetLastError ();
-        ___free_mem (d);
+        ___FREE_MEM(d);
         return e;
       }
   }
@@ -8519,10 +8519,10 @@ int options;)
     }
 
   if (cenv != NULL)
-    ___free_mem (cenv);
+    ___FREE_MEM(cenv);
 
   if (ccmd != NULL)
-    ___free_mem (ccmd);
+    ___FREE_MEM(ccmd);
 
   return e;
 
@@ -10217,69 +10217,71 @@ ___SCMOBJ timeout;)
 #define ___PORT_RKIND                2
 #define ___PORT_WKIND                3
 #define ___PORT_NAME                 4
-#define ___PORT_READ_DATUM           5
-#define ___PORT_WRITE_DATUM          6
-#define ___PORT_NEWLINE              7
-#define ___PORT_FORCE_OUTPUT         8
-#define ___PORT_CLOSE                9
-#define ___PORT_ROPTIONS             10
-#define ___PORT_RTIMEOUT             11
-#define ___PORT_RTIMEOUT_THUNK       12
-#define ___PORT_SET_RTIMEOUT         13
-#define ___PORT_WOPTIONS             14
-#define ___PORT_WTIMEOUT             15
-#define ___PORT_WTIMEOUT_THUNK       16
-#define ___PORT_SET_WTIMEOUT         17
-#define ___PORT_IO_EXCEPTION_HANDLER 18
+#define ___PORT_WAIT                 5
+#define ___PORT_CLOSE                6
+#define ___PORT_ROPTIONS             7
+#define ___PORT_RTIMEOUT             8
+#define ___PORT_RTIMEOUT_THUNK       9
+#define ___PORT_SET_RTIMEOUT         10
+#define ___PORT_WOPTIONS             11
+#define ___PORT_WTIMEOUT             12
+#define ___PORT_WTIMEOUT_THUNK       13
+#define ___PORT_SET_WTIMEOUT         14
+#define ___PORT_IO_EXCEPTION_HANDLER 15
 
-#define ___PORT_OBJECT_OTHER1        19
-#define ___PORT_OBJECT_OTHER2        20
-#define ___PORT_OBJECT_OTHER3        21
+#define ___PORT_OBJECT_READ_DATUM    16
+#define ___PORT_OBJECT_WRITE_DATUM   17
+#define ___PORT_OBJECT_NEWLINE       18
+#define ___PORT_OBJECT_FORCE_OUTPUT  19
 
-#define ___PORT_CHAR_RBUF            19
-#define ___PORT_CHAR_RLO             20
-#define ___PORT_CHAR_RHI             21
-#define ___PORT_CHAR_RCHARS          22
-#define ___PORT_CHAR_RLINES          23
-#define ___PORT_CHAR_RCURLINE        24
-#define ___PORT_CHAR_RBUF_FILL       25
-#define ___PORT_CHAR_PEEK_EOFP       26
+#define ___PORT_OBJECT_OTHER1        20
+#define ___PORT_OBJECT_OTHER2        21
+#define ___PORT_OBJECT_OTHER3        22
 
-#define ___PORT_CHAR_WBUF            27
-#define ___PORT_CHAR_WLO             28
-#define ___PORT_CHAR_WHI             29
-#define ___PORT_CHAR_WCHARS          30
-#define ___PORT_CHAR_WLINES          31
-#define ___PORT_CHAR_WCURLINE        32
-#define ___PORT_CHAR_WBUF_DRAIN      33
-#define ___PORT_INPUT_READTABLE      34
-#define ___PORT_OUTPUT_READTABLE     35
-#define ___PORT_OUTPUT_WIDTH         36
+#define ___PORT_CHAR_RBUF            20
+#define ___PORT_CHAR_RLO             21
+#define ___PORT_CHAR_RHI             22
+#define ___PORT_CHAR_RCHARS          23
+#define ___PORT_CHAR_RLINES          24
+#define ___PORT_CHAR_RCURLINE        25
+#define ___PORT_CHAR_RBUF_FILL       26
+#define ___PORT_CHAR_PEEK_EOFP       27
 
-#define ___PORT_CHAR_OTHER1          37
-#define ___PORT_CHAR_OTHER2          38
-#define ___PORT_CHAR_OTHER3          39
-#define ___PORT_CHAR_OTHER4          40
-#define ___PORT_CHAR_OTHER5          41
+#define ___PORT_CHAR_WBUF            28
+#define ___PORT_CHAR_WLO             29
+#define ___PORT_CHAR_WHI             30
+#define ___PORT_CHAR_WCHARS          31
+#define ___PORT_CHAR_WLINES          32
+#define ___PORT_CHAR_WCURLINE        33
+#define ___PORT_CHAR_WBUF_DRAIN      34
+#define ___PORT_INPUT_READTABLE      35
+#define ___PORT_OUTPUT_READTABLE     36
+#define ___PORT_OUTPUT_WIDTH         37
 
-#define ___PORT_BYTE_RBUF            37
-#define ___PORT_BYTE_RLO             38
-#define ___PORT_BYTE_RHI             39
-#define ___PORT_BYTE_RBUF_FILL       40
+#define ___PORT_CHAR_OTHER1          38
+#define ___PORT_CHAR_OTHER2          39
+#define ___PORT_CHAR_OTHER3          40
+#define ___PORT_CHAR_OTHER4          41
+#define ___PORT_CHAR_OTHER5          42
 
-#define ___PORT_BYTE_WBUF            41
-#define ___PORT_BYTE_WLO             42
-#define ___PORT_BYTE_WHI             43
-#define ___PORT_BYTE_WBUF_DRAIN      44
+#define ___PORT_BYTE_RBUF            38
+#define ___PORT_BYTE_RLO             39
+#define ___PORT_BYTE_RHI             40
+#define ___PORT_BYTE_RBUF_FILL       41
 
-#define ___PORT_BYTE_OTHER1          45
-#define ___PORT_BYTE_OTHER2          46
+#define ___PORT_BYTE_WBUF            42
+#define ___PORT_BYTE_WLO             43
+#define ___PORT_BYTE_WHI             44
+#define ___PORT_BYTE_WBUF_DRAIN      45
 
-#define ___PORT_RDEVICE_CONDVAR      45
-#define ___PORT_WDEVICE_CONDVAR      46
+#define ___PORT_BYTE_OTHER1          46
+#define ___PORT_BYTE_OTHER2          47
 
-#define ___PORT_DEVICE_OTHER1        47
-#define ___PORT_DEVICE_OTHER2        48
+#define ___PORT_RDEVICE_CONDVAR      46
+#define ___PORT_WDEVICE_CONDVAR      47
+
+#define ___PORT_DEVICE_OTHER1        48
+#define ___PORT_DEVICE_OTHER2        49
 
 #define ___C ___CS_SELECT(___U8,___U16,___U32)
 

@@ -1142,8 +1142,8 @@
 ;;; (Argument 1) OUTPUT PORT expected: (close-output-port '#<input-port #6 (stdin)>)
 ;;; (Argument 1) OUTPUT PORT expected: (close-output-port #f)
 (read) => 1
-;;; (Argument 1) INPUT PORT expected: (read '#<output-port #7 (stdout)>)
-;;; (Argument 1) INPUT PORT expected: (read #f)
+;;; (Argument 1) Object INPUT PORT expected: (read '#<output-port #7 (stdout)>)
+;;; (Argument 1) Object INPUT PORT expected: (read #f)
 (read-char) => #\space
 ;;; (Argument 1) Character INPUT PORT expected: (read-char '#<output-port #7 (stdout)>)
 ;;; (Argument 1) Character INPUT PORT expected: (read-char #f)
@@ -1158,18 +1158,18 @@
 ;;; (Argument 1) Character INPUT PORT expected: (char-ready? #f)
 "abc"(write "abc") => #!void
 "abc"(write "abc" '#<output-port #7 (stdout)>) => #!void
-;;; (Argument 2) OUTPUT PORT expected: (write "abc" '#<input-port #6 (stdin)>)
-;;; (Argument 2) OUTPUT PORT expected: (write "abc" #f)
+;;; (Argument 2) Object OUTPUT PORT expected: (write "abc" '#<input-port #6 (stdin)>)
+;;; (Argument 2) Object OUTPUT PORT expected: (write "abc" #f)
 abc(display "abc") => #!void
 abc(display "abc" '#<output-port #7 (stdout)>) => #!void
-;;; (Argument 2) OUTPUT PORT expected: (display "abc" '#<input-port #6 (stdin)>)
-;;; (Argument 2) OUTPUT PORT expected: (display "abc" #f)
+;;; (Argument 2) Object OUTPUT PORT expected: (display "abc" '#<input-port #6 (stdin)>)
+;;; (Argument 2) Object OUTPUT PORT expected: (display "abc" #f)
 
 (newline) => #!void
 
 (newline '#<output-port #7 (stdout)>) => #!void
-;;; (Argument 1) OUTPUT PORT expected: (newline '#<input-port #6 (stdin)>)
-;;; (Argument 1) OUTPUT PORT expected: (newline #f)
+;;; (Argument 1) Object OUTPUT PORT expected: (newline '#<input-port #6 (stdin)>)
+;;; (Argument 1) Object OUTPUT PORT expected: (newline #f)
 A(write-char #\A) => #!void
 ;;; (Argument 1) CHARACTER expected: (write-char 123)
 A(write-char #\A '#<output-port #7 (stdout)>) => #!void

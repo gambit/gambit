@@ -585,7 +585,7 @@ void *ptr;)
   void **cptr = ___CAST(void**,
                         (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
                         -___CAST(___WORD,sizeof (void*)));
-  ___free_mem (*cptr);
+  ___FREE_MEM(*cptr);
 }
 
 
@@ -617,7 +617,7 @@ ___processor_state ___ps;)
   while (h != &rc_head)
     {
       ___rc_header *next = h->next;
-      ___free_mem (h);
+      ___FREE_MEM(h);
       h = next;
     }
 }
@@ -672,7 +672,7 @@ void *ptr;)
           next->prev = prev;
           prev->next = next;
 
-          ___free_mem (h);
+          ___FREE_MEM(h);
         }
     }
 }

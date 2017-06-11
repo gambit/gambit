@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -2572,7 +2572,7 @@ ___SCMOBJ ___os_user_name ___PVOID
         ___release_scmobj (result);
 
       if (cstr != 0)
-        ___free_mem (cstr);
+        ___FREE_MEM(cstr);
     }
 
   return result;

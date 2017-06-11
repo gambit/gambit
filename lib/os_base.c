@@ -1,6 +1,6 @@
 /* File: "os_base.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
@@ -221,15 +221,36 @@ ___SIZE_T bytes;)
 }
 
 
+#ifdef ___DEBUG_ALLOC_MEM
+void ___free_mem
+   ___P((void *ptr,
+         int lineno,
+         char *file),
+        (ptr,
+         lineno,
+         file)
+void *ptr;
+int lineno;
+char *file;)
+#else
 void ___free_mem
    ___P((void *ptr),
         (ptr)
 void *ptr;)
+#endif
 {
 #ifdef ___DEBUG_ALLOC_MEM
 
 #ifdef ___DEBUG_LOG
-  ___printf ("%p FREED\n", ptr);
+
+  if (file != 0)
+    ___printf ("%p FREED AT \"%s\"@%d.1\n",
+               ptr,
+               file,
+               lineno);
+  else
+    ___printf ("%p FREED\n", ptr);
+
 #endif
 
 #ifdef USE_WIN32
@@ -400,7 +421,7 @@ ___HIDDEN int lang_char_encoding ___PVOID
                   (dot[4]=='8' && dot[5]=='\0')))
             char_encoding = ___CHAR_ENCODING_UTF_8;
 
-          ___free_mem (cvalue);
+          ___FREE_MEM(cvalue);
         }
     }
 
@@ -547,7 +568,7 @@ ___UCS_2STRING **argv_return;)
                                   ___ALLOC_MEM(total_arg_len
                                                * sizeof (___UCS_2)))) == 0)
                 {
-                  ___free_mem (argv);
+                  ___FREE_MEM(argv);
                   return ___FIX(___HEAP_OVERFLOW_ERR);
                 }
             }
@@ -634,9 +655,9 @@ ___HIDDEN void free_windows_command_line
 ___UCS_2STRING *argv;)
 {
   if (argv[0] != 0)
-    ___free_mem (argv[0]);
+    ___FREE_MEM(argv[0]);
 
-  ___free_mem (argv);
+  ___FREE_MEM(argv);
 }
 
 

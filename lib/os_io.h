@@ -19,24 +19,25 @@ typedef struct ___device_group_struct
 
 
 #define ___NONE_KIND              0
-#define ___OBJECT_KIND            1
-#define ___CHARACTER_KIND         3
-#define ___BYTE_KIND              7
-#define ___DEVICE_KIND            15
-#define ___FILE_DEVICE_KIND       (___DEVICE_KIND+16)
-#define ___PIPE_DEVICE_KIND       (___DEVICE_KIND+32)
-#define ___PROCESS_DEVICE_KIND    (___PIPE_DEVICE_KIND+65536)
-#define ___TTY_DEVICE_KIND        (___DEVICE_KIND+64)
-#define ___SERIAL_DEVICE_KIND     (___DEVICE_KIND+128)
-#define ___TCP_CLIENT_DEVICE_KIND (___DEVICE_KIND+256)
-#define ___RAW_DEVICE_KIND        (___DEVICE_KIND+512)
-#define ___TCP_SERVER_DEVICE_KIND (___OBJECT_KIND+512)
-#define ___DIRECTORY_KIND         (___OBJECT_KIND+1024)
-#define ___EVENT_QUEUE_KIND       (___OBJECT_KIND+2048)
-#define ___TIMER_KIND             (___OBJECT_KIND+4096)
-#define ___VECTOR_KIND            (___OBJECT_KIND+8192)
-#define ___STRING_KIND            (___CHARACTER_KIND+16384)
-#define ___U8VECTOR_KIND          (___BYTE_KIND+32768)
+#define ___WAITABLE_KIND          1
+#define ___OBJECT_KIND            3
+#define ___CHARACTER_KIND         7
+#define ___BYTE_KIND              15
+#define ___DEVICE_KIND            31
+#define ___FILE_DEVICE_KIND       (___DEVICE_KIND+32)
+#define ___PIPE_DEVICE_KIND       (___DEVICE_KIND+64)
+#define ___PROCESS_DEVICE_KIND    (___PIPE_DEVICE_KIND+131072)
+#define ___TTY_DEVICE_KIND        (___DEVICE_KIND+128)
+#define ___SERIAL_DEVICE_KIND     (___DEVICE_KIND+256)
+#define ___TCP_CLIENT_DEVICE_KIND (___DEVICE_KIND+512)
+#define ___TCP_SERVER_DEVICE_KIND (___OBJECT_KIND+1024)
+#define ___DIRECTORY_KIND         (___OBJECT_KIND+2048)
+#define ___EVENT_QUEUE_KIND       (___OBJECT_KIND+4096)
+#define ___TIMER_KIND             (___OBJECT_KIND+8192)
+#define ___VECTOR_KIND            (___OBJECT_KIND+16384)
+#define ___STRING_KIND            (___CHARACTER_KIND+32768)
+#define ___U8VECTOR_KIND          (___BYTE_KIND+65536)
+#define ___RAW_DEVICE_KIND        (___WAITABLE_KIND+262144)
 
 #define ___OPEN_STATE(x)      ((x)&(1<<12))
 #define ___OPEN_STATE_MASK(x) ((x)&~(1<<12))
