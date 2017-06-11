@@ -8344,28 +8344,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##open-raw-device
-              direction
-              name
-              device)
-
-  (define (fail)
-    (##fail-check-settings 1 ##open-raw-device direction name device))
-
-  (##make-psettings
-   direction
-   '()
-   '()
-   fail
-   (lambda (psettings)
-     (let ((raw-device
-            (##os-device-open-raw
-             device
-             (##psettings->device-flags psettings))))
-       (if (##fixnum? device)
-         (##raise-os-exception #f device ##open-raw-device direction name device)
-         (##make-raw-device-port raw-device device name direction))))))
-
 (define-prim (##make-raw-device-port raw-device device uname direction)
   (let ((mutex
          (macro-make-port-mutex))
