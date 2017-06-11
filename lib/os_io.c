@@ -1610,7 +1610,6 @@ ___device *self;)
 
   ___device_remove_from_group (self);
 
-  ___processor_state ps = ___PSTATE;
   for (;;)
     {
       e = ___device_close (self, ___DIRECTION_RD);
