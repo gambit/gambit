@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -56,42 +56,48 @@
 
 ;;; Representation of ports.
 
-;; There are 5 kinds of ports, each providing a set of operations.  All
+;; There are 6 kinds of ports, each providing a set of operations.  All
 ;; port objects have the capability of being both an input port and an
 ;; output port.  The "none-port" kind provides no operation and is
 ;; mainly for internal use to indicate that no input operation is
 ;; available or that no output operation is available.
 ;;
-;; 1) An "object-port" (or simply a "port") provides operations to read
-;;    and write Scheme data (i.e. any Scheme object) to/from the port.
-;;    It also provides operations to get the name of the port, to force
-;;    output to occur, and to close the port.  This kind of port need
+;; 1) A "waitable-port" (or simply a "port") provides operations to
+;;    wait for the port being readable and/or writable.  It also provides
+;;    operations to get the name of the port and to close the port.
+;;    This kind of port need not have Scheme-level operations to read
+;;    and write data (these operations could be provided by host-level
+;;    operations made available with the FFI).
+;;
+;; 2) An "object-port" provides operations to read and write Scheme
+;;    data (i.e. any Scheme object) to/from the port.  It also provides
+;;    an operation to force output to occur.  This kind of port need
 ;;    not be connected to a character based device or file (it could
 ;;    for example be a FIFO queue linking two threads that need to
 ;;    communicate Scheme objects).
 ;;
-;; 2) A "character-port" provides all the operations of an "object-port",
+;; 3) A "character-port" provides all the operations of an "object-port",
 ;;    and also operations to read and write individual characters
 ;;    to/from the port.  When a Scheme object is written to a
 ;;    character-port, it is converted into the sequence of characters that
 ;;    corresponds to its "external-representation".  When reading a
 ;;    Scheme object, an inverse conversion occurs.
 ;;
-;; 3) A "byte-port" provides all the operations of a "character-port", and
-;;    also operations to read and write individual bytes to/from the
-;;    port.  When a **character** is written to a byte-port, some
+;; 4) A "byte-port" provides all the operations of a "character-port",
+;;    and also operations to read and write individual bytes to/from
+;;    the port.  When a **character** is written to a byte-port, some
 ;;    encoding of that character into a sequence of bytes will occur
 ;;    (for example, #\newline might be encoded as the 2 bytes CR-LF
 ;;    when using ISO-8859-1 encoding, or a non-ASCII character will
 ;;    generate more than 1 byte when using UTF-8 encoding).  When
 ;;    reading a character, a similar decoding occurs.
 ;;
-;; 4) A "device-port" provides all the operations of a "byte-port", and
+;; 5) A "device-port" provides all the operations of a "byte-port", and
 ;;    also operations to control the device (file, tty, etc) that is
 ;;    connected to the port, such as changing the tty settings.
 
 (define-type port
-  id: 2babe060-9af6-456f-a26e-40b592f690ec
+  id: fe3e988a-c59d-47ce-8592-93b02ce12af1
   type-exhibitor: macro-type-port
   constructor: macro-make-port
   implementer: implement-type-port
@@ -108,19 +114,21 @@
   wkind              ;; port kind for writing (none-port if can't write)
 
   name               ;; procedure which returns the name of the port
-  read-datum         ;; procedure to read a datum
-  write-datum        ;; procedure to write a datum
-  newline            ;; procedure to write a datum separator
-  force-output       ;; procedure to force output to occur on target device
+
+  wait               ;; procedure for waiting until port readable or writable
+
   close              ;; procedure to close the port
+
   roptions           ;; options for reading (buffering type, encoding, etc)
   rtimeout           ;; time at which a read that would block times out
   rtimeout-thunk     ;; thunk called when a read timeout occurs
   set-rtimeout       ;; procedure to set rtimeout and rtimeout-thunk
+
   woptions           ;; options for writing (buffering type, encoding, etc)
   wtimeout           ;; time at which a write that would block times out
   wtimeout-thunk     ;; thunk called when a write timeout occurs
   set-wtimeout       ;; procedure to set wtimeout and wtimeout-thunk
+
   io-exception-handler ;; procedure to handle I/O exceptions on this port
 )
 
@@ -140,28 +148,29 @@
                  ,kind))))
 
 (##define-macro (macro-none-kind)      0) ;; allows nothing
-(##define-macro (macro-object-kind)    1) ;; can read and write objects
-(##define-macro (macro-character-kind) 3) ;; can also read and write chars
-(##define-macro (macro-byte-kind)      7) ;; can also read and write bytes
-(##define-macro (macro-device-kind)   15) ;; can also do device operations
+(##define-macro (macro-waitable-kind)  1) ;; can wait until readable/writable
+(##define-macro (macro-object-kind)    3) ;; can read and write objects
+(##define-macro (macro-character-kind) 7) ;; can also read and write chars
+(##define-macro (macro-byte-kind)     15) ;; can also read and write bytes
+(##define-macro (macro-device-kind)   31) ;; can also do device operations
 
-(##define-macro (macro-file-kind)        (+ 15 16))
-(##define-macro (macro-process-kind)     (+ 15 32))
-(##define-macro (macro-tty-kind)         (+ 15 64))
-(##define-macro (macro-serial-kind)      (+ 15 128))
-(##define-macro (macro-tcp-client-kind)  (+ 15 256))
-(##define-macro (macro-raw-device-kind)  (+ 15 512))
-(##define-macro (macro-tcp-server-kind)  (+ 1 512))
-(##define-macro (macro-directory-kind)   (+ 1 1024))
-(##define-macro (macro-event-queue-kind) (+ 1 2048))
-(##define-macro (macro-timer-kind)       (+ 1 4096))
-(##define-macro (macro-vector-kind)      (+ 1 8192))
-(##define-macro (macro-string-kind)      (+ 3 16384))
-(##define-macro (macro-u8vector-kind)    (+ 7 32768))
+(##define-macro (macro-file-kind)        (+ 31 32))
+(##define-macro (macro-process-kind)     (+ 31 64))
+(##define-macro (macro-tty-kind)         (+ 31 128))
+(##define-macro (macro-serial-kind)      (+ 31 256))
+(##define-macro (macro-tcp-client-kind)  (+ 31 512))
+(##define-macro (macro-tcp-server-kind)  (+ 3 1024))
+(##define-macro (macro-directory-kind)   (+ 3 2048))
+(##define-macro (macro-event-queue-kind) (+ 3 4096))
+(##define-macro (macro-timer-kind)       (+ 3 8192))
+(##define-macro (macro-vector-kind)      (+ 3 16384))
+(##define-macro (macro-string-kind)      (+ 7 32768))
+(##define-macro (macro-u8vector-kind)    (+ 15 65536))
+(##define-macro (macro-raw-device-kind)   (+ 1 262144))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;;; Representation of object ports.
+;;; Representation of waitable ports.
 
 (define-check-type input-port 'input-port
   macro-input-port?)
@@ -169,9 +178,42 @@
   macro-output-port?)
 
 (##define-macro (macro-input-port? obj)
-  `(macro-port-of-rkind? ,obj (macro-object-kind)))
+  `(macro-port-of-rkind? ,obj (macro-waitable-kind)))
 
 (##define-macro (macro-output-port? obj)
+  `(macro-port-of-wkind? ,obj (macro-waitable-kind)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;; Representation of object ports.
+
+(define-check-type object-input-port 'object-input-port
+  macro-object-input-port?)
+(define-check-type object-output-port 'object-output-port
+  macro-object-output-port?)
+
+(define-type-of-port object-port
+  id: a4ef4750-7ce6-4388-9d5f-48e04bf3ae4b
+  type-exhibitor: macro-type-object-port
+  constructor: macro-make-object-port
+  implementer: implement-type-object-port
+  macros:
+  prefix: macro-
+  opaque:
+  unprintable:
+
+  extender: define-type-of-object-port
+
+  read-datum         ;; procedure to read a datum
+  write-datum        ;; procedure to write a datum
+  newline            ;; procedure to write a datum separator
+  force-output       ;; procedure to force output to occur on target device
+)
+
+(##define-macro (macro-object-input-port? obj)
+  `(macro-port-of-rkind? ,obj (macro-object-kind)))
+
+(##define-macro (macro-object-output-port? obj)
   `(macro-port-of-wkind? ,obj (macro-object-kind)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -183,8 +225,8 @@
 (define-check-type character-output-port 'character-output-port
   macro-character-output-port?)
 
-(define-type-of-port character-port
-  id: 85099702-35ec-4cb8-ae55-13c4b9b05d10
+(define-type-of-object-port character-port
+  id: a7e0fe95-65e9-4b00-b080-b7e6b12d9c6f
   type-exhibitor: macro-type-character-port
   constructor: macro-make-character-port
   implementer: implement-type-character-port
@@ -235,7 +277,7 @@
   macro-byte-output-port?)
 
 (define-type-of-character-port byte-port
-  id: 8a99028e-7b99-4468-b94e-728737ec1b1a
+  id: fe99424c-d1da-48f1-b613-9c735692790e
   type-exhibitor: macro-type-byte-port
   constructor: macro-make-byte-port
   implementer: implement-type-byte-port
@@ -277,7 +319,7 @@
   macro-device-output-port?)
 
 (define-type-of-byte-port device-port
-  id: b4fa842f-5da6-43b6-b447-d0b0348ae962
+  id: a1d146d0-78f6-437f-aa67-3b9b5bb333dc
   type-exhibitor: macro-type-device-port
   constructor: macro-make-device-port
   implementer: implement-type-device-port
@@ -304,8 +346,8 @@
 ;;; Representation of vector, string and u8vector ports.
 
 
-(define-type-of-port vector-port
-  id: 2fb9e1fc-693b-455f-94a2-70c617a304d1
+(define-type-of-object-port vector-port
+  id: bf2fa024-cc0a-419a-bcbf-cff3c2385050
   type-exhibitor: macro-type-vector-port
   constructor: macro-make-vector-port
   implementer: implement-type-vector-port
@@ -343,7 +385,7 @@
   `(macro-port-of-wkind? ,obj (macro-vector-kind)))
 
 (define-type-of-character-port string-port
-  id: 81e73361-b03c-4889-9d02-e340e3309934
+  id: f5264d6c-cb90-4a74-8810-9ae0b1e1f08c
   type-exhibitor: macro-type-string-port
   constructor: macro-make-string-port
   implementer: implement-type-string-port
@@ -374,7 +416,7 @@
   `(macro-port-of-wkind? ,obj (macro-string-kind)))
 
 (define-type-of-byte-port u8vector-port
-  id: 04c1b0ae-b11f-4815-b206-ce01648675bd
+  id: fd0b10bf-219c-4cde-be79-d959cec702a5
   type-exhibitor: macro-type-u8vector-port
   constructor: macro-make-u8vector-port
   implementer: implement-type-u8vector-port
@@ -562,8 +604,8 @@
 
 ;;; Representation of TCP server ports.
 
-(define-type-of-port tcp-server-port
-  id: 42696abb-6729-4637-99de-cef7d3a230ae
+(define-type-of-object-port tcp-server-port
+  id: e7f8dac4-0e85-4605-a8bd-6bd6b5262d4c
   type-exhibitor: macro-type-tcp-server-port
   constructor: macro-make-tcp-server-port
   implementer: implement-type-tcp-server-port
@@ -608,8 +650,8 @@
 
 ;;; Representation of directory ports.
 
-(define-type-of-port directory-port
-  id: deebf606-97e4-4d34-8fed-b9e5468851b9
+(define-type-of-object-port directory-port
+  id: f118f601-23ad-493f-9ef9-ac1dd259de18
   type-exhibitor: macro-type-directory-port
   constructor: macro-make-directory-port
   implementer: implement-type-directory-port
@@ -634,8 +676,8 @@
 
 ;;; Representation of event queue ports.
 
-(define-type-of-port event-queue-port
-  id: 59109ed7-6339-4c6e-8bc2-f52e9c91b9f5
+(define-type-of-object-port event-queue-port
+  id: a4a724bb-335a-42dd-8027-5ffd9eaf943c
   type-exhibitor: macro-type-event-queue-port
   constructor: macro-make-event-queue-port
   implementer: implement-type-event-queue-port
@@ -687,7 +729,7 @@
 ;;; Representation of port settings.
 
 (define-type psettings
-  id: 0b02934e-7c23-4f9e-a629-0eede16e6987
+  id: a7c86cfa-b41f-48ee-a212-9861f71b0dc1
   type-exhibitor: macro-type-psettings
   constructor: macro-make-psettings
   implementer: implement-type-psettings

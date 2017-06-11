@@ -1,6 +1,6 @@
 /* File: "os_shell.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -237,7 +237,7 @@ ___UCS_2STRING *value;)
 #ifdef USE_GetEnvironmentVariable
 
       if (cvalue_ptr != cvalue)
-        ___free_mem (cvalue_ptr);
+        ___FREE_MEM(cvalue_ptr);
     }
 
 #endif
@@ -245,7 +245,7 @@ ___UCS_2STRING *value;)
 #ifdef ___ENVIRON_NAME_LATIN1
 
     if (cname_ptr != cname)
-      ___free_mem (cname_ptr);
+      ___FREE_MEM(cname_ptr);
 
 #endif
   }
@@ -381,7 +381,7 @@ ___UCS_2STRING value;)
 
         if (new_environ == 0)
           {
-            ___free_mem (name_value);
+            ___FREE_MEM(name_value);
             return ___FIX(___HEAP_OVERFLOW_ERR);
           }
 
@@ -397,7 +397,7 @@ ___UCS_2STRING value;)
         ___shell_mod.environ_unused_at_end--;
 
         if (___shell_mod.environ_was_extended)
-          ___free_mem (old_environ);
+          ___FREE_MEM(old_environ);
 
         ___shell_mod.environ_was_extended = 1;
       }
@@ -441,7 +441,7 @@ ___UCS_2STRING value;)
         if (cvalue_ptr == 0)
           {
             if (cname_ptr != cname)
-              ___free_mem (cname_ptr);
+              ___FREE_MEM(cname_ptr);
 
             return ___FIX(___HEAP_OVERFLOW_ERR);
           }
@@ -476,10 +476,10 @@ ___UCS_2STRING value;)
 #ifdef ___ENVIRON_NAME_LATIN1
 
     if (cvalue_ptr != cvalue)
-      ___free_mem (cvalue_ptr);
+      ___FREE_MEM(cvalue_ptr);
 
     if (cname_ptr != cname)
-      ___free_mem (cname_ptr);
+      ___FREE_MEM(cname_ptr);
 
 #endif
   }
@@ -612,7 +612,7 @@ ___UCS_2STRING name;)
 #ifdef ___ENVIRON_NAME_LATIN1
 
     if (cname_ptr != cname)
-      ___free_mem (cname_ptr);
+      ___FREE_MEM(cname_ptr);
 
 #endif
   }
@@ -657,7 +657,7 @@ ___SCMOBJ name;)
             ___release_scmobj (result);
 
           if (cvalue != 0)
-            ___free_mem (cvalue);
+            ___FREE_MEM(cvalue);
         }
 
       ___release_string (cname);
@@ -1076,7 +1076,7 @@ void ___cleanup_shell_module ___PVOID
 #ifdef USE_environ
 
       if (___shell_mod.environ_was_extended)
-        ___free_mem (environ);
+        ___FREE_MEM(environ);
 
 #endif
     }

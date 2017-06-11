@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -450,7 +450,7 @@ ___SCMOBJ ___os_path_homedir ___PVOID
           else
             ___release_scmobj (result);
 
-          ___free_mem (cstr1);
+          ___FREE_MEM(cstr1);
         }
       else
         {

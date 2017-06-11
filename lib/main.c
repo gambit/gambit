@@ -1,6 +1,6 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit system */
 
@@ -157,7 +157,7 @@ ___BOOL free_old;)
   *strvec = new_strvec;
 
   if (free_old)
-    ___free_mem (old_strvec);
+    ___FREE_MEM(old_strvec);
 
   return 1;
 }
@@ -761,13 +761,13 @@ ___mod_or_lnk (*linker)();)
     ___free_UCS_2STRING (current_argv[--extra_arg_pos]);
 
   if (current_argv != argv)
-    ___free_mem (current_argv);
+    ___FREE_MEM(current_argv);
 
   while (gambitdir_map_len > 0)
     ___free_UCS_2STRING (gambitdir_map[--gambitdir_map_len]);
 
   if (gambitdir_map != 0)
-    ___free_mem (gambitdir_map);
+    ___FREE_MEM(gambitdir_map);
 
   ___free_UCS_2STRING (gambitdir);
   ___free_UCS_2STRING (gambopt);

@@ -1,6 +1,6 @@
 /* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -365,7 +365,7 @@ void **linker;)
 #endif
 
   if (result != ___FIX(___NO_ERR))
-    ___free_mem (p);
+    ___FREE_MEM(p);
   else
     {
       p->next = ___dyn_mod.dl_list;
@@ -449,7 +449,7 @@ ___HIDDEN void cleanup_dynamic_load ___PVOID
       NSUnLinkModule (p->descr, NSUNLINKMODULE_OPTION_NONE);
 #endif
 
-      ___free_mem (p);
+      ___FREE_MEM(p);
       p = next;
     }
 
@@ -619,7 +619,7 @@ void **linker;)
                       ___CAST(___STRING_TYPE(___DL_MODNAME_CE_SELECT),cmodname),
                       linker);
 
-          ___free_mem (cmodname);
+          ___FREE_MEM(cmodname);
         }
 
       ___release_string (cpath);

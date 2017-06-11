@@ -6813,15 +6813,15 @@ do { \
    } while (0)
 #define ___C_DELETE_STRUCT(name,ptr) \
 do { \
-     ___EXT(___free_mem) (ptr); \
+     ___FREE_MEM(ptr); \
    } while (0)
 #define ___C_DELETE_UNION(name,ptr) \
 do { \
-     ___EXT(___free_mem) (ptr); \
+     ___FREE_MEM(ptr); \
    } while (0)
 #define ___C_DELETE_TYPE(name,ptr) \
 do { \
-     ___EXT(___free_mem) (ptr); \
+     ___FREE_MEM(ptr); \
    } while (0)
 
 #endif
@@ -9992,6 +9992,10 @@ typedef struct ___global_state_struct
        ___P((___SIZE_T bytes),
             ());
 #define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes)
+    void (*___free_mem)
+       ___P((void *ptr),
+            ());
+#define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr)
 #else
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes,
@@ -9999,10 +10003,13 @@ typedef struct ___global_state_struct
              char *file),
             ());
 #define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes,__LINE__,__FILE__)
-#endif
     void (*___free_mem)
-       ___P((void *ptr),
+       ___P((void *ptr,
+             int lineno,
+             char *file),
             ());
+#define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr,__LINE__,__FILE__)
+#endif
     void *(*___alloc_mem_code)
        ___P((___SIZE_T bytes),
             ());
@@ -11317,16 +11324,21 @@ ___IMP_FUNC(void,___enable_interrupts_pstate)
 ___IMP_FUNC(void *,___alloc_mem)
    ___P((___SIZE_T bytes),
         ());
+___IMP_FUNC(void,___free_mem)
+   ___P((void *ptr),
+        ());
 #else
 ___IMP_FUNC(void *,___alloc_mem)
    ___P((___SIZE_T bytes,
          int lineno,
          char *file),
         ());
-#endif
 ___IMP_FUNC(void,___free_mem)
-   ___P((void *ptr),
+   ___P((void *ptr,
+         int lineno,
+         char *file),
         ());
+#endif
 ___IMP_FUNC(void *,___alloc_mem_code)
    ___P((___SIZE_T bytes),
         ());

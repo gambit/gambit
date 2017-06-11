@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -57,7 +57,7 @@ ___HIDDEN void extensible_string_cleanup
         (str)
 extensible_string *str;)
 {
-  ___free_mem (str->buffer);
+  ___FREE_MEM(str->buffer);
 }
 
 
@@ -125,7 +125,7 @@ int fudge;)
       while (i-- > 0)
         new_buffer[i] = old_buffer[i];
 
-      ___free_mem (old_buffer);
+      ___FREE_MEM(old_buffer);
       str->buffer = new_buffer;
       str->max_length = new_max_length;
     }
@@ -755,7 +755,7 @@ ___UCS_2 *name;)
     {
       if (cvalue != 0)
         {
-          ___free_mem (cvalue);
+          ___FREE_MEM(cvalue);
           return 1;
         }
     }
@@ -1357,7 +1357,7 @@ ___HIDDEN void lineeditor_input_decoder_cleanup
         (decoder)
 lineeditor_input_decoder *decoder;)
 {
-  ___free_mem (decoder->buffer);
+  ___FREE_MEM(decoder->buffer);
 }
 
 
@@ -1395,7 +1395,7 @@ int fudge;)
       while (i-- > 0)
         new_buffer[i] = old_buffer[i];
 
-      ___free_mem (old_buffer);
+      ___FREE_MEM(old_buffer);
       decoder->buffer = new_buffer;
       decoder->max_length = new_max_length;
     }
@@ -2068,7 +2068,7 @@ lineeditor_history **hist;)
 
   if ((e = extensible_string_setup (&h->actual, 0)) != ___FIX(___NO_ERR))
     {
-      ___free_mem (h);
+      ___FREE_MEM(h);
       return e;
     }
 
@@ -2097,7 +2097,7 @@ lineeditor_history *h;)
 
   extensible_string_cleanup (&h->actual);
 
-  ___free_mem (h);
+  ___FREE_MEM(h);
 
   return ___FIX(___NO_ERR);
 }
@@ -4608,7 +4608,7 @@ ___device_tty *self;)
         str[len] = d->clipboard.buffer[len];
 
       if (d->paste_text != NULL)
-        ___free_mem (d->paste_text);
+        ___FREE_MEM(d->paste_text);
 
       d->paste_index = 0;
       d->paste_text = str;
@@ -4652,7 +4652,7 @@ ___device_tty *self;)
                         str[len] = locked_copy[len];
 
                       if (d->paste_text != NULL)
-                        ___free_mem (d->paste_text);
+                        ___FREE_MEM(d->paste_text);
 
                       d->paste_index = 0;
                       d->paste_text = str;
@@ -4861,7 +4861,7 @@ lineeditor_event *ev;)
       if (d->paste_cancel ||
           (c = d->paste_text[d->paste_index++]) == 0)
         {
-          ___free_mem (d->paste_text);
+          ___FREE_MEM(d->paste_text);
           d->paste_text = NULL;
         }
       else
@@ -4997,7 +4997,7 @@ ___BOOL emacs_bindings;)
 
       if (seq != NULL)
         {
-          ___free_mem (seq);
+          ___FREE_MEM(seq);
           d->capability[i] = NULL;
         }
     }
@@ -5350,7 +5350,7 @@ ___device_tty *self;)
       {
         char *seq = d->capability[i];
         if (seq != NULL)
-          ___free_mem (seq);
+          ___FREE_MEM(seq);
       }
   }
 #endif
@@ -5370,11 +5370,11 @@ ___device_tty *self;)
     extensible_string_cleanup (&d->input_line);
 
   if (d->paste_text != NULL)
-    ___free_mem (d->paste_text); /* discard paste text */
+    ___FREE_MEM(d->paste_text); /* discard paste text */
 
 #if 0
   /******************** device should be freed elsewhere */
-  ___free_mem (d);
+  ___FREE_MEM(d);
 #endif
 }
 
@@ -8083,7 +8083,7 @@ int direction;)
 
   if ((e = ___device_tty_setup (d, 1)) != ___FIX(___NO_ERR))
     {
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -8143,7 +8143,7 @@ int close_direction;)
 
   if ((e = ___device_tty_setup (d, plain)) != ___FIX(___NO_ERR))
     {
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 
@@ -8189,7 +8189,7 @@ int direction;)
 
   if ((e = ___device_tty_setup (d, 0)) != ___FIX(___NO_ERR))
     {
-      ___free_mem (d);
+      ___FREE_MEM(d);
       return e;
     }
 

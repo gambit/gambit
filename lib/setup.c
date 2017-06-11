@@ -1910,7 +1910,7 @@ ___SCMOBJ str2;)
 
       if (b2 == 0)
         {
-          ___free_mem (b1);
+          ___FREE_MEM(b1);
           return ___FIX(___HEAP_OVERFLOW_ERR);
         }
 
@@ -1963,8 +1963,8 @@ ___SCMOBJ str2;)
 
   if (len1 + len2 + 2 > STRING_COLLATE_BUF_LENGTH)
     {
-      ___free_mem (b1);
-      ___free_mem (b2);
+      ___FREE_MEM(b1);
+      ___FREE_MEM(b2);
     }
 
   if (result < 0)
