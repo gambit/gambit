@@ -1181,6 +1181,8 @@
 (implement-check-type-port)
 (define-fail-check-type input-port 'input-port)
 (define-fail-check-type output-port 'output-port)
+(define-fail-check-type object-input-port 'object-input-port)
+(define-fail-check-type object-output-port 'object-output-port)
 (define-fail-check-type character-input-port 'character-input-port)
 (define-fail-check-type character-output-port 'character-output-port)
 (define-fail-check-type byte-port 'byte-port)
@@ -1237,6 +1239,9 @@
     (define (name port)
       'dummy)
 
+    (define (wait port direction)
+      #t)
+
     (define (read-datum port re)
       #!eof)
 
@@ -1258,15 +1263,12 @@
     (define (set-wtimeout port timeout thunk)
       (##void))
 
-    (macro-make-port
+    (macro-make-object-port
      mutex
      rkind
      wkind
      name
-     read-datum
-     write-datum
-     newline
-     force-output
+     wait
      close
      roptions
      rtimeout
@@ -1277,6 +1279,10 @@
      wtimeout-thunk
      set-wtimeout
      #f ;; io-exception-handler
+     read-datum
+     write-datum
+     newline
+     force-output
      )))
 
 (define (open-dummy)
@@ -1402,6 +1408,15 @@
       (##declare (not interrupts-enabled))
 
       (macro-device-port-name port))
+
+    (define (wait port direction)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (##wait-device port direction))
 
     (define (read-datum port re)
 
@@ -1603,10 +1618,7 @@
             rkind
             wkind
             name
-            read-datum
-            write-datum
-            newline
-            force-output
+            wait
             close
             roptions
             rtimeout
@@ -1617,6 +1629,10 @@
             wtimeout-thunk
             set-wtimeout
             #f ;; io-exception-handler
+            read-datum
+            write-datum
+            newline
+            force-output
             char-rbuf
             char-rlo
             char-rhi
@@ -1681,6 +1697,23 @@
                                device
                                device
                                psettings)))))
+
+(define-prim (##wait-device port direction)
+
+  ;; It is assumed that the thread **does not** have exclusive
+  ;; access to the port.
+
+  (##declare (not interrupts-enabled))
+
+  (if (##fx= direction (macro-direction-in))
+
+      (##wait-for-io!
+       (macro-device-port-rdevice-condvar port)
+       (macro-port-rtimeout port))
+
+      (##wait-for-io!
+       (macro-device-port-wdevice-condvar port)
+       (macro-port-wtimeout port))))
 
 (define-prim (##close-device port rdevice-condvar wdevice-condvar prim)
 
@@ -1832,53 +1865,6 @@
                2
                (output-port-byte-position port position whence)
                (##output-port-byte-position port position whence)))))))
-
-(define-prim (##device-port-wait-for-input! port)
-
-  ;; TODO: generalize this to all other types of ports.
-
-  ;; The thread will wait until there is data available to read on the
-  ;; port's device or the port's timeout is reached.  The value #f is
-  ;; returned when the timeout is reached.  The value #t is returned
-  ;; when there is data available to read on the port's device or the
-  ;; thread was interrupted (for example with thread-interrupt!).
-
-  ;; It is assumed that the thread **does not** have exclusive
-  ;; access to the port.
-
-  (##declare (not interrupts-enabled))
-
-  (##wait-for-io!
-   (macro-device-port-rdevice-condvar port)
-   (macro-port-rtimeout port)))
-
-(define-prim (##device-port-wait-for-output! port)
-
-  ;; Complement to ##device-port-wait-for-input! .
-
-  ;; The thread will wait until the port's device is writeable in the
-  ;; sense that more data can be written to it, or the port's timeout
-  ;; is reached.  The value #f is returned when the timeout is reached.
-  ;; The value #t is returned when the port's device is writeable or
-  ;; the thread was interrupted (for example with thread-interrupt!).
-
-  ;; An example of when a port is not writeable is when a TCP client
-  ;; port has full OS transmit buffers. For such a port, a
-  ;; ##device-port-wait-for-output! on it will return when space has
-  ;; become available in the buffers.
-  ;;
-  ;; Additionally, waiting for writability on a TCP client port is a way
-  ;; to ensure that the connection has been established at all in the
-  ;; first place. This may be of relevance to determine in some lowlevel
-  ;; use scenarios, as Gambit does TCP connect:s asynchronously in such
-  ;; a way that open-tcp-client returns the TCP client port object
-  ;; actually prior to the connection having been established.
-
-  (##declare (not interrupts-enabled))
-
-  (##wait-for-io!
-   (macro-device-port-wdevice-condvar port)
-   (macro-port-wtimeout port)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2713,6 +2699,15 @@
 
               '(,',name))
 
+            (define (wait port direction)
+
+              ;; It is assumed that the thread **does not** have exclusive
+              ;; access to the port.
+
+              (##declare (not interrupts-enabled))
+
+              #t) ;; TODO: implement with actual wait
+
             (define (force-output port level prim arg1 arg2 arg3 arg4)
 
               ;; It is assumed that the thread **does not** have exclusive
@@ -2747,7 +2742,7 @@
 
               (##declare (not interrupts-enabled))
 
-              ((macro-port-force-output port)
+              ((macro-object-port-force-output port)
                port
                0
                prim
@@ -3056,7 +3051,7 @@
          (let ((peer
                 (,macro-vect-port-peer port)))
 
-           ((macro-port-force-output port)
+           ((macro-object-port-force-output port)
             port
             0
             ,get-output-vect
@@ -3366,7 +3361,7 @@
                 (if (macro-unbuffered? (macro-port-woptions port))
                     (begin
                       (macro-port-mutex-unlock! port)
-                      ((macro-port-force-output port)
+                      ((macro-object-port-force-output port)
                        port
                        0
                        write
@@ -3406,10 +3401,7 @@
             rkind
             wkind
             name
-            read-datum
-            write-datum
-            newline
-            force-output
+            wait
             close
             roptions
             rtimeout
@@ -3420,6 +3412,10 @@
             wtimeout-thunk
             set-wtimeout
             #f ;; io-exception-handler
+            read-datum
+            write-datum
+            newline
+            force-output
             vector-rbuf
             vector-rlo
             vector-rhi
@@ -3579,10 +3575,7 @@
             rkind
             wkind
             name
-            read-datum
-            write-datum
-            newline
-            force-output
+            wait
             close
             roptions
             rtimeout
@@ -3593,6 +3586,10 @@
             wtimeout-thunk
             set-wtimeout
             #f ;; io-exception-handler
+            read-datum
+            write-datum
+            newline
+            force-output
             string-rbuf
             string-rlo
             string-rhi
@@ -3829,10 +3826,7 @@
              rkind
              wkind
              name
-             read-datum
-             write-datum
-             newline
-             force-output
+             wait
              close
              roptions
              rtimeout
@@ -3843,6 +3837,10 @@
              wtimeout-thunk
              set-wtimeout
              #f ;; io-exception-handler
+             read-datum
+             write-datum
+             newline
+             force-output
              char-rbuf
              char-rlo
              char-rhi
@@ -3928,7 +3926,7 @@
                    noop
                    #f
                    read-cont)))
-            ((macro-port-read-datum port) port re)))
+            ((macro-object-port-read-datum port) port re)))
 
         (let ((handler (macro-port-io-exception-handler port)))
           (if (##procedure? handler) ;; optimization: only capture continuation when using custom exception handler
@@ -3937,7 +3935,7 @@
                  (read-with-cont port read-cont)))
               (read-with-cont port #f))))
 
-      ((macro-port-read-datum port) port #f)))
+      ((macro-object-port-read-datum port) port #f)))
 
 (define-prim (read
               #!optional
@@ -3947,7 +3945,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-input-port)
                port)))
-      (macro-check-input-port p 1 (read p)
+      (macro-check-object-input-port p 1 (read p)
         (##read p)))))
 
 (define-prim (##write-generic-to-character-port style port rt force? limit obj)
@@ -3975,10 +3973,10 @@
 
     (if mt
         (let ((we1 (make-we 'mark)))
-          ((macro-port-write-datum port) port obj we1)))
+          ((macro-object-port-write-datum port) port obj we1)))
 
     (let ((we2 (make-we style)))
-      ((macro-port-write-datum port) port obj we2)
+      ((macro-object-port-write-datum port) port obj we2)
       (##fx- limit (macro-writeenv-limit we2)))))
 
 (define-prim (##write
@@ -3997,7 +3995,7 @@
          max-length
          obj)
         (##void))
-      ((macro-port-write-datum port) port obj #f)))
+      ((macro-object-port-write-datum port) port obj #f)))
 
 (define-prim (write
               obj
@@ -4008,7 +4006,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-output-port p 2 (write obj p)
+      (macro-check-object-output-port p 2 (write obj p)
         (##write obj p)))))
 
 (define-prim (##display
@@ -4027,7 +4025,7 @@
          max-length
          obj)
         (##void))
-      ((macro-port-write-datum port) port obj #f)))
+      ((macro-object-port-write-datum port) port obj #f)))
 
 (define-prim (display
               obj
@@ -4038,7 +4036,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-output-port p 2 (display obj p)
+      (macro-check-object-output-port p 2 (display obj p)
         (##display obj p)))))
 
 (define-prim (##pretty-print
@@ -4057,7 +4055,7 @@
          max-length
          obj)
         (##newline port))
-      ((macro-port-write-datum port) port obj #f)))
+      ((macro-object-port-write-datum port) port obj #f)))
 
 (define-prim (pretty-print
               obj
@@ -4068,7 +4066,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-output-port p 2 (pretty-print obj p)
+      (macro-check-object-output-port p 2 (pretty-print obj p)
         (##pretty-print obj p)))))
 
 (define-prim (##print
@@ -4087,7 +4085,7 @@
          max-length
          obj)
         (##void))
-      ((macro-port-write-datum port) port obj #f)))
+      ((macro-object-port-write-datum port) port obj #f)))
 
 (macro-case-target
 
@@ -4101,7 +4099,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-output-port p 2 (print port: p . body)
+      (macro-check-object-output-port p 2 (print port: p . body)
         (##print body p)))))
 
 (define-prim (println
@@ -4112,7 +4110,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-output-port p 2 (println port: p . body)
+      (macro-check-object-output-port p 2 (println port: p . body)
         (begin
           (##print body p)
           (##newline p))))))
@@ -4121,7 +4119,7 @@
 
 (define-prim (##newline port)
   (##declare (not interrupts-enabled))
-  ((macro-port-newline port) port))
+  ((macro-object-port-newline port) port))
 
 (define-prim (newline
               #!optional
@@ -4131,7 +4129,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-output-port p 1 (newline p)
+      (macro-check-object-output-port p 1 (newline p)
         (##newline p)))))
 
 (define-prim (##flush-input-buffering port)
@@ -4147,7 +4145,7 @@
               #!optional
               (level (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  ((macro-port-force-output port)
+  ((macro-object-port-force-output port)
    port
    (if (##eq? level (macro-absent-obj)) 0 level)
    force-output
@@ -4178,7 +4176,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-output-port
+      (macro-check-object-output-port
         p
         1
         (force-output p level)
@@ -4191,6 +4189,67 @@
               2
               (force-output p level)
               (##force-output p level)))))))
+
+(define-prim (##wait-input-port port)
+
+  ;; The thread will wait until there is data available to read on the
+  ;; port's device or the port's timeout is reached.  The value #f is
+  ;; returned when the timeout is reached.  The value #t is returned
+  ;; when there is data available to read on the port's device or the
+  ;; thread was interrupted (for example with thread-interrupt!).
+
+  ;; It is assumed that the thread **does not** have exclusive
+  ;; access to the port.
+
+  (##declare (not interrupts-enabled))
+
+  ((macro-port-wait port) port (macro-direction-in)))
+
+;;(define-prim (wait-input-port port)
+;;  (macro-force-vars (port)
+;;    (macro-check-input-port port 1 (wait-input-port port)
+;;      (##wait-input-port port))))
+
+(define-prim (##wait-output-port port)
+
+  ;; Complement to ##wait-input-port .
+
+  ;; The thread will wait until the port's device is writeable in the
+  ;; sense that more data can be written to it, or the port's timeout
+  ;; is reached.  The value #f is returned when the timeout is reached.
+  ;; The value #t is returned when the port's device is writeable or
+  ;; the thread was interrupted (for example with thread-interrupt!).
+
+  ;; An example of when a port is not writeable is when a TCP client
+  ;; port has full OS transmit buffers. For such a port, a
+  ;; ##wait-output-port on it will return when space has
+  ;; become available in the buffers.
+  ;;
+  ;; Additionally, waiting for writability on a TCP client port is a way
+  ;; to ensure that the connection has been established at all in the
+  ;; first place. This may be of relevance to determine in some lowlevel
+  ;; use scenarios, as Gambit does TCP connect:s asynchronously in such
+  ;; a way that open-tcp-client returns the TCP client port object
+  ;; actually prior to the connection having been established.
+
+  (##declare (not interrupts-enabled))
+
+  ((macro-port-wait port) port (macro-direction-out)))
+
+;;(define-prim (wait-output-port port)
+;;  (macro-force-vars (port)
+;;    (macro-check-output-port port 1 (wait-output-port port)
+;;      (##wait-output-port port))))
+
+;;TODO: deprecated interface
+(define-prim (##device-port-wait-for-input! port)
+  (##declare (not interrupts-enabled))
+  (##wait-input-port port))
+
+;;TODO: deprecated interface
+(define-prim (##device-port-wait-for-output! port)
+  (##declare (not interrupts-enabled))
+  (##wait-output-port port))
 
 (define-prim (##close-input-port port)
   (##declare (not interrupts-enabled))
@@ -5012,7 +5071,7 @@
            (if (##eq? reader (macro-absent-obj))
                ##read
                reader)))
-      (macro-check-input-port p 1 (read-all port reader)
+      (macro-check-object-input-port p 1 (read-all port reader)
         (macro-check-procedure r 2 (read-all port r)
           (##read-all p r))))))
 
@@ -5156,7 +5215,7 @@
                 (if (macro-unbuffered? (macro-port-woptions port))
                     (begin
                       (macro-port-mutex-unlock! port)
-                      ((macro-port-force-output port)
+                      ((macro-object-port-force-output port)
                        port
                        0
                        write-char
@@ -5190,7 +5249,7 @@
                               (macro-port-woptions port)))
                       (begin
                         (macro-port-mutex-unlock! port)
-                        ((macro-port-force-output port)
+                        ((macro-object-port-force-output port)
                          port
                          0
                          write-char
@@ -5549,7 +5608,7 @@
                   (if (macro-unbuffered? (macro-port-woptions port))
                       (begin
                         (macro-port-mutex-unlock! port)
-                        ((macro-port-force-output port)
+                        ((macro-object-port-force-output port)
                          port
                          0
                          write-u8
@@ -5631,7 +5690,7 @@
                            (macro-unbuffered? (macro-port-woptions port)))
                       (begin
                         (macro-port-mutex-unlock! port)
-                        ((macro-port-force-output port)
+                        ((macro-object-port-force-output port)
                          port
                          0
                          write-subu8vector
@@ -7302,6 +7361,15 @@
     ;;                        address
     ;;                        port-num)))))
 
+    (define (wait port direction)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (##wait-device port direction))
+
     (define (read-datum port re)
 
       ;; It is assumed that the thread **does not** have exclusive
@@ -7407,10 +7475,7 @@
             rkind
             wkind
             server-name
-            read-datum
-            write-datum
-            newline
-            force-output
+            wait
             close
             roptions
             rtimeout
@@ -7421,6 +7486,10 @@
             wtimeout-thunk
             set-wtimeout
             #f ;; io-exception-handler
+            read-datum
+            write-datum
+            newline
+            force-output
             rdevice-condvar
             client-psettings)))
       (##io-condvar-port-set! rdevice-condvar port)
@@ -7662,6 +7731,15 @@
 
       (macro-directory-port-path port))
 
+    (define (wait port direction)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (##wait-device port direction))
+
     (define (read-datum port re)
 
       ;; It is assumed that the thread **does not** have exclusive
@@ -7761,10 +7839,7 @@
             rkind
             wkind
             name
-            read-datum
-            write-datum
-            newline
-            force-output
+            wait
             close
             roptions
             rtimeout
@@ -7775,6 +7850,10 @@
             wtimeout-thunk
             set-wtimeout
             #f ;; io-exception-handler
+            read-datum
+            write-datum
+            newline
+            force-output
             rdevice-condvar
             path)))
       (##io-condvar-port-set! rdevice-condvar port)
@@ -7863,6 +7942,15 @@
       (##declare (not interrupts-enabled))
 
       (##list 'event-queue (macro-event-queue-port-index port)))
+
+    (define (wait port direction)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (##wait-device port direction))
 
     (define (read-datum port re)
 
@@ -7963,10 +8051,7 @@
             rkind
             wkind
             name
-            read-datum
-            write-datum
-            newline
-            force-output
+            wait
             close
             roptions
             rtimeout
@@ -7977,6 +8062,10 @@
             wtimeout-thunk
             set-wtimeout
             #f ;; io-exception-handler
+            read-datum
+            write-datum
+            newline
+            force-output
             rdevice-condvar
             index)))
       (##io-condvar-port-set! rdevice-condvar port)
