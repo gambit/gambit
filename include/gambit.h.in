@@ -8146,11 +8146,13 @@ typedef struct ___rc_header_struct
   } ___rc_header;
 
 /* fdset state */
+#ifndef ___OS_WIN32
 typedef struct ___fdset_struct {
   int size;
   void *readfds;
   void *writefds;
 } ___fdset;
+#endif
 
 typedef struct ___pstate_os_struct {
 
