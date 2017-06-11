@@ -629,8 +629,7 @@ extern ___SCMOBJ ___device_stream_setup
         ());
 
 extern ___SCMOBJ ___device_select
-   ___P((___processor_state ___ps,
-         ___device **devs,
+   ___P((___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),

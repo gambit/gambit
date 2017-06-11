@@ -884,13 +884,11 @@ HANDLE wait_obj;)
 
 
 ___SCMOBJ ___device_select
-   ___P((___processor_state ___ps,
-         ___device **devs,
+   ___P((___device **devs,
          int nb_read_devs,
          int nb_write_devs,
          ___time timeout),
-        (___ps,
-         devs,
+        (devs,
          nb_read_devs,
          nb_write_devs,
          timeout)
@@ -937,11 +935,12 @@ ___time timeout;)
 #endif
 
 #ifdef USE_poll
+  ___processor_state ps = ___PSTATE;
 
   state.pollfd_count = 0;
-  state.fdset_size = ___fdset_size (___ps);
-  state.readfds = ___fdset_readfds (___ps);
-  state.writefds = ___fdset_writefds (___ps);
+  state.fdset_size = ___fdset_size (ps);
+  state.readfds = ___fdset_readfds (ps);
+  state.writefds = ___fdset_writefds (ps);
   ___FD_ZERO (state.readfds, state.fdset_size);
   ___FD_ZERO (state.writefds, state.fdset_size);
 
@@ -1621,7 +1620,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (ps, devs, 1, 0, ___time_mod.time_pos_infinity);
+      e = ___device_select (devs, 1, 0, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -1635,7 +1634,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (ps, devs, 0, 1, ___time_mod.time_pos_infinity);
+      e = ___device_select (devs, 0, 1, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -10273,8 +10272,6 @@ ___SCMOBJ timeout;)
   ___SCMOBJ e;
   ___time to;
 
-  ___processor_state ps = ___PSTATE; /* this should be passed as argument */
-
   if (timeout == ___FAL)
     to = ___time_mod.time_neg_infinity;
   else if (timeout == ___TRU)
@@ -10284,7 +10281,7 @@ ___SCMOBJ timeout;)
 
   if (___FALSEP(devices))
     {
-      e = ___device_select (ps, NULL, 0, 0, to);
+      e = ___device_select (NULL, 0, 0, to);
     }
   else
     {
@@ -10338,7 +10335,7 @@ ___SCMOBJ timeout;)
           i++;
         }
 
-      e = ___device_select (ps, devs, read_pos, MAX_CONDVARS-write_pos, to);
+      e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
 
       i = 0;
 
