@@ -8413,8 +8413,15 @@
       ;; access to the port.
 
       (##declare (not interrupts-enabled))
+      (if (##fx= direction (macro-direction-in))
 
-      (##wait-device port direction))
+        (##wait-for-io!
+         (macro-raw-device-port-rdevice-condvar port)
+         (macro-port-rtimeout port))
+
+        (##wait-for-io!
+         (macro-raw-device-port-wdevice-condvar port)
+         (macro-port-wtimeout port))))
 
     (define (close port prim arg1)
 
