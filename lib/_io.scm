@@ -8343,12 +8343,14 @@
         (macro-dynamic-bind output-port port thunk)))))
 
 ;;;----------------------------------------------------------------------------
+
 (define-prim (##open-raw-device
               direction
               name
-              fd)
+              device)
+
   (define (fail)
-    (##fail-check-settings 1 ##open-raw-device direction name fd))
+    (##fail-check-settings 1 ##open-raw-device direction name device))
 
   (##make-psettings
    direction
@@ -8356,27 +8358,25 @@
    '()
    fail
    (lambda (psettings)
-     (let ((device
+     (let ((raw-device
             (##os-device-open-raw
-             fd
+             device
              (##psettings->device-flags psettings))))
        (if (##fixnum? device)
-         (##exit-with-err-code device)
-         (##make-raw-device-port device fd name direction))))))
+         (##raise-os-exception #f device ##open-raw-device direction name device)
+         (##make-raw-device-port raw-device device name direction))))))
 
-(define-prim (##make-raw-device-port device fd uname direction)
+(define-prim (##make-raw-device-port raw-device device uname direction)
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
-         (if (or (##eq? direction (macro-direction-in))
-                 (##eq? direction (macro-direction-inout)))
-           (macro-raw-device-kind)
-           (macro-none-kind)))
+         (if (##eq? direction (macro-direction-out))
+           (macro-none-kind)
+           (macro-raw-device-kind)))
         (wkind
-         (if (or (##eq? direction (macro-direction-out))
-                 (##eq? direction (macro-direction-inout)))
-           (macro-raw-device-kind)
-           (macro-none-kind)))
+         (if (##eq? direction (macro-direction-in))
+           (macro-none-kind)
+           (macro-raw-device-kind)))
         (roptions
          0)
         (rtimeout
@@ -8390,13 +8390,11 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (and (or (##eq? direction (macro-direction-in))
-                  (##eq? direction (macro-direction-inout)))
-              (##make-rdevice-condvar device)))
+         (and (##not (##eq? direction (macro-direction-out)))
+              (##make-rdevice-condvar raw-device)))
         (wdevice-condvar
-         (and (or (##eq? direction (macro-direction-out))
-                  (##eq? direction (macro-direction-inout)))
-              (##make-wdevice-condvar device)))
+         (and (##not (##eq? direction (macro-direction-in)))
+              (##make-wdevice-condvar raw-device)))
         (uname (or uname 'raw-device)))
 
     (define (name port)
@@ -8405,7 +8403,7 @@
       ;; access to the port.
 
       (##declare (not interrupts-enabled))
-      (##list uname (macro-raw-device-port-fd port)))
+      (##list uname (macro-raw-device-port-device port)))
 
     (define (wait port direction)
 
@@ -8496,7 +8494,7 @@
             #f ;; io-exception-handler
             rdevice-condvar
             wdevice-condvar
-            fd)))
+            device)))
       (if rdevice-condvar
         (##io-condvar-port-set! rdevice-condvar port))
       (if wdevice-condvar

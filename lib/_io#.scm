@@ -166,7 +166,7 @@
 (##define-macro (macro-vector-kind)      (+ 3 16384))
 (##define-macro (macro-string-kind)      (+ 7 32768))
 (##define-macro (macro-u8vector-kind)    (+ 15 65536))
-(##define-macro (macro-raw-device-kind)   (+ 1 262144))
+(##define-macro (macro-raw-device-kind)  (+ 1 262144))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -590,11 +590,8 @@
 
   rdevice-condvar
   wdevice-condvar
-  fd
+  device
 )
-
-(define-check-type raw-device-port 'raw-device-port
-  macro-raw-device-port?)
 
 (##define-macro (macro-raw-device-port? obj)
   `(##port-of-kind? ,obj (macro-raw-device-kind)))
