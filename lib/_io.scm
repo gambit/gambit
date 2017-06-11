@@ -8407,17 +8407,14 @@
       (##declare (not interrupts-enabled))
       (##list uname (macro-raw-device-port-fd port)))
 
-    (define read-datum #f)
+    (define (wait port direction)
 
-    (define write-datum #f)
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
 
-    (define newline #f)
+      (##declare (not interrupts-enabled))
 
-    (define force-output #f)
-
-    (define set-rtimeout #f)
-
-    (define set-wtimeout #f)
+      (##wait-device port direction))
 
     (define (close port prim arg1)
 
@@ -8439,16 +8436,47 @@
             (##raise-os-io-exception port #f result prim arg1)
             result)))
 
+    (define (set-rtimeout port timeout thunk)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (macro-port-rtimeout-set! port timeout)
+      (macro-port-rtimeout-thunk-set! port thunk)
+      (##condvar-signal-no-reschedule!
+       (macro-raw-device-port-rdevice-condvar port)
+       #t)
+      (macro-port-mutex-unlock! port)
+      (##void))
+
+    (define (set-wtimeout port timeout thunk)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (macro-port-wtimeout-set! port timeout)
+      (macro-port-wtimeout-thunk-set! port thunk)
+      (##condvar-signal-no-reschedule!
+       (macro-raw-device-port-wdevice-condvar port)
+       #t)
+      (macro-port-mutex-unlock! port)
+      (##void))
+
     (let ((port
            (macro-make-raw-device-port
             mutex
             rkind
             wkind
             name
-            read-datum
-            write-datum
-            newline
-            force-output
+            wait
             close
             roptions
             rtimeout
