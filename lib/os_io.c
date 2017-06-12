@@ -8905,9 +8905,15 @@ ___SCMOBJ options;)
 typedef struct ___device_raw_struct
   {
     ___device base;
+
 #ifdef USE_POSIX
     int fd;
 #endif
+
+#ifdef USE_WIN32
+    HANDLE h;
+#endif
+
   } ___device_raw;
 
 typedef struct ___device_raw_vtbl_struct
@@ -8953,6 +8959,12 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
       if (___close_no_EINTR (d->fd) < 0)
         return err_code_from_errno ();
 #endif
+
+#ifdef USE_WIN32
+      if (!CloseHandle (d->h))
+        return err_code_from_GetLastError ();
+#endif
+      
     }
   else if (is_not_closed & direction & ___DIRECTION_RD)
     d->base.read_stage = ___STAGE_CLOSED;
@@ -9041,6 +9053,7 @@ ___HIDDEN ___device_raw_vtbl ___device_raw_table =
 };
 
 #ifdef USE_POSIX
+
 ___SCMOBJ ___device_raw_setup_from_fd
    ___P((___device_raw **dev,
          ___device_group *dgroup,
@@ -9070,22 +9083,14 @@ int direction;)
   d->base.close_direction = 0; /* prevent closing on errors */
 
   if (direction & ___DIRECTION_RD)
-    {
-      d->base.read_stage = ___STAGE_OPEN;
-    }
+    d->base.read_stage = ___STAGE_OPEN;
   else
-    {
-      d->base.read_stage = ___STAGE_CLOSED;
-    }
+    d->base.read_stage = ___STAGE_CLOSED;
 
   if (direction & ___DIRECTION_WR)
-    {
-      d->base.write_stage = ___STAGE_OPEN;
-    }
+    d->base.write_stage = ___STAGE_OPEN;
   else
-    {
-      d->base.write_stage = ___STAGE_CLOSED;
-    }
+    d->base.write_stage = ___STAGE_CLOSED;
 
   d->fd = fd;
 
