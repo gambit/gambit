@@ -10653,7 +10653,7 @@ ___processor_state ___ps;)
 
 #ifdef USE_poll
   if (___fdset_state_init (___ps))
-    return ___FIX(___HEAP_OVERFLOW_ERR);;
+    return ___FIX(___HEAP_OVERFLOW_ERR);
 #endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
