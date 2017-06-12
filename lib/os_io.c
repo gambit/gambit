@@ -892,7 +892,6 @@ ___SCMOBJ ___device_select
          nb_read_devs,
          nb_write_devs,
          timeout)
-___processor_state *___ps;
 ___device **devs;
 int nb_read_devs;
 int nb_write_devs;
