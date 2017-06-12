@@ -591,6 +591,7 @@
   rdevice-condvar
   wdevice-condvar
   device
+  id
 )
 
 (##define-macro (macro-raw-device-port? obj)
