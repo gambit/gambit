@@ -1344,6 +1344,7 @@
 #endif
 #endif
 
+
 /*---------------------------------------------------------------------------*/
 
 /* Dependencies on language (i.e. C++, ANSI-C, and K&R C). */
@@ -8166,6 +8167,7 @@ typedef struct ___pstate_os_struct {
   ___half_duplex_pipe select_abort; /* POSIX self-pipe */
   ___fdset fdset; /* Dynamic fdsets for unlimited file descriptors */
 #endif
+
 } ___pstate_os;
 
 typedef struct ___pstate_mem_struct {
