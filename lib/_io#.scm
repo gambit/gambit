@@ -166,6 +166,7 @@
 (##define-macro (macro-vector-kind)      (+ 3 16384))
 (##define-macro (macro-string-kind)      (+ 7 32768))
 (##define-macro (macro-u8vector-kind)    (+ 15 65536))
+(##define-macro (macro-raw-device-kind)  (+ 1 262144))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -570,6 +571,32 @@
 
 (##define-macro (macro-tcp-client-port? obj)
   `(##port-of-kind? ,obj (macro-tcp-client-kind)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;; Representation of raw device ports.
+
+(define-type-of-port raw-device-port
+  id: f55e3678-0414-63d0-3fda-68b9bc518bca
+  type-exhibitor: macro-type-raw-device-port
+  constructor: macro-make-raw-device-port
+  implementer: implement-type-raw-device-port
+  macros:
+  prefix: macro-
+  opaque:
+  unprintable:
+
+  extender: define-type-of-raw-device-port
+
+  rdevice-condvar
+  wdevice-condvar
+  device
+  id
+)
+
+(##define-macro (macro-raw-device-port? obj)
+  `(##port-of-kind? ,obj (macro-raw-device-kind)))
+
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

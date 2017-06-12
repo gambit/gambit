@@ -37,6 +37,7 @@ typedef struct ___device_group_struct
 #define ___VECTOR_KIND            (___OBJECT_KIND+16384)
 #define ___STRING_KIND            (___CHARACTER_KIND+32768)
 #define ___U8VECTOR_KIND          (___BYTE_KIND+65536)
+#define ___RAW_DEVICE_KIND        (___WAITABLE_KIND+262144)
 
 #define ___OPEN_STATE(x)      ((x)&(1<<12))
 #define ___OPEN_STATE_MASK(x) ((x)&~(1<<12))
@@ -816,6 +817,14 @@ extern ___SCMOBJ ___os_device_event_queue_open
 extern ___SCMOBJ ___os_device_event_queue_read
    ___P((___SCMOBJ dev_condvar),
         ());
+
+/* Opening a raw device (file descriptor) */
+
+extern ___SCMOBJ ___os_device_raw_open_from_fd
+   ___P((___SCMOBJ fd,
+         ___SCMOBJ flags),
+        ());
+
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 

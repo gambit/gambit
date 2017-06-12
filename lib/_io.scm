@@ -8344,6 +8344,143 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim (##make-raw-device-port raw-device device id direction)
+  (let ((mutex
+         (macro-make-port-mutex))
+        (rkind
+         (if (##fx= direction (macro-direction-out))
+           (macro-none-kind)
+           (macro-raw-device-kind)))
+        (wkind
+         (if (##fx= direction (macro-direction-in))
+           (macro-none-kind)
+           (macro-raw-device-kind)))
+        (roptions
+         0)
+        (rtimeout
+         #t)
+        (rtimeout-thunk
+         #f)
+        (woptions
+         0)
+        (wtimeout
+         #t)
+        (wtimeout-thunk
+         #f)
+        (rdevice-condvar
+         (and (##not (##fx= direction (macro-direction-out)))
+              (##make-rdevice-condvar raw-device)))
+        (wdevice-condvar
+         (and (##not (##fx= direction (macro-direction-in)))
+              (##make-wdevice-condvar raw-device))))
+
+    (define (name port)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+      (##list (macro-raw-device-port-id port) (macro-raw-device-port-device port)))
+
+    (define (wait port direction)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+      (if (##fx= direction (macro-direction-in))
+
+        (##wait-for-io!
+         (macro-raw-device-port-rdevice-condvar port)
+         (macro-port-rtimeout port))
+
+        (##wait-for-io!
+         (macro-raw-device-port-wdevice-condvar port)
+         (macro-port-wtimeout port))))
+
+    (define (close port prim arg1)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (let ((result
+             (##close-device
+              port
+              (macro-raw-device-port-rdevice-condvar port)
+              (macro-raw-device-port-wdevice-condvar port)
+              prim)))
+        (macro-port-mutex-unlock! port)
+        (if (##fixnum? result)
+            (##raise-os-io-exception port #f result prim arg1)
+            result)))
+
+    (define (set-rtimeout port timeout thunk)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (macro-port-rtimeout-set! port timeout)
+      (macro-port-rtimeout-thunk-set! port thunk)
+      (##condvar-signal-no-reschedule!
+       (macro-raw-device-port-rdevice-condvar port)
+       #t)
+      (macro-port-mutex-unlock! port)
+      (##void))
+
+    (define (set-wtimeout port timeout thunk)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (macro-port-wtimeout-set! port timeout)
+      (macro-port-wtimeout-thunk-set! port thunk)
+      (##condvar-signal-no-reschedule!
+       (macro-raw-device-port-wdevice-condvar port)
+       #t)
+      (macro-port-mutex-unlock! port)
+      (##void))
+
+    (let ((port
+           (macro-make-raw-device-port
+            mutex
+            rkind
+            wkind
+            name
+            wait
+            close
+            roptions
+            rtimeout
+            rtimeout-thunk
+            set-rtimeout
+            woptions
+            wtimeout
+            wtimeout-thunk
+            set-wtimeout
+            #f ;; io-exception-handler
+            rdevice-condvar
+            wdevice-condvar
+            device
+            id)))
+      (if rdevice-condvar
+        (##io-condvar-port-set! rdevice-condvar port))
+      (if wdevice-condvar
+        (##io-condvar-port-set! wdevice-condvar port))
+      port)))
+
+;;;----------------------------------------------------------------------------
+
 (define-prim (##open-predefined
               direction
               name
