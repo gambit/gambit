@@ -8991,7 +8991,7 @@ int i;
 int pass;
 ___device_select_state *state;)
 {
-  ___device_file *d = ___CAST(___device_file*,self);
+  ___device_raw *d = ___CAST(___device_raw*,self);
   int stage = (for_writing
                ? d->base.write_stage
                : d->base.read_stage);
