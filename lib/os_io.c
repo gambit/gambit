@@ -8991,9 +8991,7 @@ int i;
 int pass;
 ___device_select_state *state;)
 {
-  ___device_raw *d = ___CAST(___device_raw*,self);
-
-#ifdef USE_POSIX
+  ___device_file *d = ___CAST(___device_file*,self);
   int stage = (for_writing
                ? d->base.write_stage
                : d->base.read_stage);
@@ -9003,23 +9001,54 @@ ___device_select_state *state;)
       if (stage != ___STAGE_OPEN)
         state->timeout = ___time_mod.time_neg_infinity;
       else
-        ___device_select_add_fd (state, d->fd, for_writing);
+        {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
 
+        state->timeout = ___time_mod.time_neg_infinity;
+
+#endif
+#endif
+
+#ifdef USE_POSIX
+          ___device_select_add_fd (state, d->fd, for_writing);
+#endif
+        }
       return ___FIX(___SELECT_SETUP_DONE);
     }
 
   /* pass == ___SELECT_PASS_CHECK */
+
   if (stage != ___STAGE_OPEN)
     state->devs[i] = NULL;
-  else if (for_writing
-           ? ___FD_ISSET(d->fd, &state->writefds)
-           : ___FD_ISSET(d->fd, &state->readfds))
-    state->devs[i] = NULL;
-  
-  return ___FIX(___NO_ERR);
+  else
+    {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
+
+      state->devs[i] = NULL;
+
+#endif
 #endif
 
-  return ___FIX(___UNIMPL_ERR);
+#ifdef USE_POSIX
+
+      if (for_writing
+           ? ___FD_ISSET(d->fd, &state->writefds)
+           : ___FD_ISSET(d->fd, &state->readfds))
+        state->devs[i] = NULL;
+
+#endif
+
+#ifdef USE_WIN32
+
+      if (state->devs_next[i] != -1)
+        state->devs[i] = NULL;
+
+#endif
+    }
+
+  return ___FIX(___NO_ERR);
 }
 
 ___HIDDEN ___SCMOBJ ___device_raw_release_virt
