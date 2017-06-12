@@ -1005,80 +1005,95 @@
      (rts-method
       'build_key
       '(public)
-      'bool
+      'jumpable
       (list (univ-field 'nb_req_opt 'int)
+            (univ-field 'nb_parms 'int)
             (univ-field 'key_descr '(array scmobj)))
       "\n"
       '()
       (lambda (ctx)
         (let ((nb_req_opt (^local-var 'nb_req_opt))
+              (nb_parms (^local-var 'nb_parms))
               (key_descr (^local-var 'key_descr))
               (key_vals (^local-var 'key_vals))
               (nb_key_args (^local-var 'nb_key_args))
+              (nb_key_parms (^local-var 'nb_key_parms))
               (i (^local-var 'i))
               (k (^local-var 'k))
               (key (^local-var 'key))
               (val (^local-var 'val)))
           (^
            (^var-declaration 'int nb_key_args (^- (^getnargs) nb_req_opt))
-           (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
-                     (^bitand nb_key_args (^int 1))) ;; keyword arguments must come in pairs
-                (^return (^bool #f)))
-
-           (univ-push-args ctx)
-
-           (^var-declaration 'int k (^- (^array-length key_descr) 1))
+           (^var-declaration 'int nb_key_parms (^- nb_parms nb_req_opt))
+           (^var-declaration 'int k (^int 0))
            (^var-declaration 'int i (^int 0))
            (^var-declaration 'scmobj key (^null-obj))
            (^var-declaration 'scmobj val (^null-obj))
-           (^var-declaration '(array scmobj) key_vals (^new-array 'scmobj (^array-length key_descr)))
+           (^var-declaration '(array scmobj) key_vals (^null-obj))
 
-           (^while (^>= k (^int 0))
-                   (^ (^assign (^array-index key_vals k) (^absent))
-                      (^inc-by k -1)))
+           (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
+                     (^!= (^bitand nb_key_args (^int 1)) (^int 0))) ;; keyword arguments must come in pairs
+                (^return (^cast*-jumpable
+                          (^getglo '##raise-wrong-number-of-arguments-exception))))
 
-           (^assign k (^- nb_key_args 1))
+           (univ-push-args ctx)
 
-           (^while (^> k (^int 0))
+           (^assign key_vals (^new-array 'scmobj nb_key_parms))
+
+           (^while (^< k nb_key_parms)
+                   (^ (^assign (^array-index key_vals k)
+                               (^array-index key_descr
+                                             (^+ (^* k 2) (^int 1))))
+                      (^inc-by k 1)))
+
+           (^assign k (^int 0))
+
+           (^while (^< k nb_key_args)
                    (^
-                    (^pop (lambda (expr) (^assign val expr)))
-                    (^pop (lambda (expr) (^assign key expr)))
+                    (^assign val (univ-stk-slot-from-tos ctx k))
+                    (^inc-by k 1)
+                    (^assign key (univ-stk-slot-from-tos ctx k))
+                    (^inc-by k 1)
 
                     (^if (^not (^parens (^keyword? key)))
-                         (^return (^bool #f)))
+                         (^return (^cast*-jumpable (^getglo '##raise-keyword-expected-exception))))
 
                     (^assign i (^int 0))
-                    (^while (^< i (^array-length key_descr))
+                    (^while (^< i nb_key_parms)
                             (^
-                             (^if (^eq? key (^array-index key_descr i))
+                             (^if (^eq? key (^array-index key_descr (^* i 2)))
                                   (^ (^assign (^array-index key_vals i) val)
-                                     (^assign i (^+ (^array-length key_descr) 1))))
+                                     (^assign i (^+ nb_key_parms (^int 1)))))
                              (^inc-by i 1)))
 
-                    (^if (^= i (^array-length key_descr))
-                         (^return (^bool #f))) ;; key not found in descriptors
+                    (^if (^= i nb_key_parms)
+                         (^return (^cast*-jumpable
+                                   (^getglo '##raise-unknown-keyword-argument-exception)))) ;; key not found in descriptors
+                    ))
 
-                    (^inc-by k -2)))
+           (^assign k (^int 0))
 
-           (^assign k 0)
+           ;; Pop old key args
+           (^inc-by (gvm-state-sp-use ctx 'rdwr) (^- nb_key_args))
 
-           (^while (^< k (^array-length key_vals))
+           (^while (^< k nb_key_parms)
                    (^
                     (^push (^array-index key_vals k))
                     (^inc-by k 1)))
 
-           (^assign (^getnargs) (^- (^getnargs) (^parens (^>> nb_key_args 1))))
+           (^assign (^getnargs) nb_parms)
 
-           (univ-pop-args-to-regs ctx 1)
+           (univ-pop-args-to-regs ctx 0)
 
-           (^return (^bool #t)))))))
+           (^return (^null-obj)))))))
 
-    ((wrong_nargs)
+    ((wrong_args)
      (rts-method
-      'wrong_nargs
+      'wrong_args
       '(public)
       'jumpable
-      (list (univ-field 'proc 'jumpable))
+      (list (univ-field 'proc 'jumpable)
+            (univ-field 'exception 'jumpable))
       "\n"
       '()
       (lambda (ctx)
@@ -1090,9 +1105,7 @@
              (^setreg 2 (^getreg 1))
              (^setreg 1 proc)
              (^setnargs 2)
-             (^return
-              (^cast*-jumpable
-               (^getglo '##raise-wrong-number-of-arguments-exception))))))))
+             (^return (^local-var 'exception)))))))
 
     ((get)
 #<<EOF

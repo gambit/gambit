@@ -2726,26 +2726,38 @@
             (compiler-internal-error
              "univ-label-entry, keyword parameters + rest not supported"))
            (keys
-              (^ (^if (^not (^call-prim (^rts-method-use 'build_key)
-                                        nb-req-and-opt
-                                        (^array-literal 'scmobj (map (lambda (x) (^keyword-obj (car x) #f)) keys))))
-                      (^return-call-prim
-                       (^rts-method-use 'wrong_nargs)
-                       (if closed?
-                           (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
-                           id)))))
-            (else
-             (^if (if rest?
-                      (^not (^call-prim
-                             (^rts-method-use 'build_rest)
-                             nb-parms-except-rest))
-                      (^!= (^getnargs)
-                           nb-parms-except-rest))
-                  (^return-call-prim
-                   (^rts-method-use 'wrong_nargs)
-                   (if closed?
-                       (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
-                       id)))))
+            (let ((error (^local-var 'error)))
+              (^
+               (^var-declaration 'jumpable error
+                                 (^call-prim (^rts-method-use 'build_key)
+                                             (^int nb-req-and-opt)
+                                             (^int nb-parms)
+                                             (^array-literal 'scmobj
+                                                             (apply append
+                                                                    (map (lambda (x)
+                                                                           (list (^obj (car x)) (^obj (obj-val (cdr x)))))
+                                                                         keys)))))
+               (^if (^not (^parens (^eq? error (^null-obj))))
+                    (^return-call-prim
+                     (^rts-method-use 'wrong_args)
+                     (if closed?
+                         (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                         id)
+                     error)))))
+           (else
+            (^if (if rest?
+                     (^not (^call-prim
+                            (^rts-method-use 'build_rest)
+                            (^int nb-parms-except-rest)))
+                     (^!= (^getnargs)
+                          (^int nb-parms-except-rest)))
+                 (^return-call-prim
+                  (^rts-method-use 'wrong_args)
+                  (if closed?
+                      (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                      id)
+                  (^cast*-jumpable
+                   (^getglo '##raise-wrong-number-of-arguments-exception))))))
 
           (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs)))
                 (nb-stacked* (max 0 (- nb-parms univ-nb-arg-regs))))
@@ -2773,7 +2785,7 @@
 
             (let ((x (setup-parameter (+ nb-stacked 1))))
               (^if (^= (^getnargs)
-                       nb-args)
+                       (^int nb-args))
                    x
                    (dispatch-on-nb-args (+ nb-args 1)))))))
 
