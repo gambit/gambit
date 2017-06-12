@@ -9105,9 +9105,9 @@ int direction;)
 #endif
 
 ___SCMOBJ ___os_device_raw_open_from_fd
-   ___P((___SCMOBJ index,
+   ___P((___SCMOBJ fd,
          ___SCMOBJ flags),
-        (index,
+        (fd,
          flags)
 ___SCMOBJ fd;
 ___SCMOBJ flags;)
@@ -9118,7 +9118,7 @@ ___SCMOBJ flags;)
   ___device_raw *dev;
   ___SCMOBJ result;
 
-  int fd;
+  int ifd;
   int fl;
   int direction;
 
@@ -9126,12 +9126,12 @@ ___SCMOBJ flags;)
                           &fl,
                           &direction);
 
-  fd = ___INT(index);
+  ifd = ___INT(fd);
 
   if ((e = ___device_raw_setup_from_fd
        (&dev,
         ___global_device_group (),
-        fd,
+        ifd,
         direction))
       != ___FIX(___NO_ERR))
     return e;

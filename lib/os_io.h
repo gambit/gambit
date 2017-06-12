@@ -821,7 +821,7 @@ extern ___SCMOBJ ___os_device_event_queue_read
 /* Opening a raw device (file descriptor) */
 
 extern ___SCMOBJ ___os_device_raw_open_from_fd
-   ___P((___SCMOBJ index,
+   ___P((___SCMOBJ fd,
          ___SCMOBJ flags),
         ());
 
