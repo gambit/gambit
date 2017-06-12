@@ -9135,7 +9135,7 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_raw_select_virt
+___HIDDEN ___SCMOBJ ___device_raw_select_raw_virt
    ___P((___device *self,
          ___BOOL for_writing,
          int i,
@@ -9153,8 +9153,6 @@ int pass;
 ___device_select_state *state;)
 {
   ___device_raw *d = ___CAST(___device_raw*,self);
-
-#ifdef USE_POSIX
   int stage = (for_writing
                ? d->base.write_stage
                : d->base.read_stage);
@@ -9164,23 +9162,54 @@ ___device_select_state *state;)
       if (stage != ___STAGE_OPEN)
         state->timeout = ___time_mod.time_neg_infinity;
       else
-        ___device_select_add_fd (state, d->fd, for_writing);
+        {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
 
+        state->timeout = ___time_mod.time_neg_infinity;
+
+#endif
+#endif
+
+#ifdef USE_POSIX
+          ___device_select_add_fd (state, d->fd, for_writing);
+#endif
+        }
       return ___FIX(___SELECT_SETUP_DONE);
     }
 
   /* pass == ___SELECT_PASS_CHECK */
+
   if (stage != ___STAGE_OPEN)
     state->devs[i] = NULL;
-  else if (for_writing
-           ? ___FD_ISSET(d->fd, state->writefds)
-           : ___FD_ISSET(d->fd, state->readfds))
-    state->devs[i] = NULL;
+  else
+    {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
 
-  return ___FIX(___NO_ERR);
+      state->devs[i] = NULL;
+
+#endif
 #endif
 
-  return ___FIX(___UNIMPL_ERR);
+#ifdef USE_POSIX
+
+      if (for_writing
+           ? ___FD_ISSET(d->fd, state->writefds)
+           : ___FD_ISSET(d->fd, state->readfds))
+        state->devs[i] = NULL;
+
+#endif
+
+#ifdef USE_WIN32
+
+      if (state->devs_next[i] != -1)
+        state->devs[i] = NULL;
+
+#endif
+    }
+
+  return ___FIX(___NO_ERR);
 }
 
 ___HIDDEN ___SCMOBJ ___device_raw_release_virt
@@ -9206,7 +9235,7 @@ ___HIDDEN ___device_raw_vtbl ___device_raw_table =
 {
   {
     ___device_raw_kind,
-    ___device_raw_select_virt,
+    ___device_raw_select_raw_virt,
     ___device_raw_release_virt,
     ___device_raw_force_output_virt,
     ___device_raw_close_virt
@@ -9269,10 +9298,10 @@ int direction;)
 }
 #endif
 
-___SCMOBJ ___os_device_raw_open
-   ___P((___SCMOBJ index,
+___SCMOBJ ___os_device_raw_open_from_fd
+   ___P((___SCMOBJ fd,
          ___SCMOBJ flags),
-        (index,
+        (fd,
          flags)
 ___SCMOBJ fd;
 ___SCMOBJ flags;)
@@ -9283,7 +9312,7 @@ ___SCMOBJ flags;)
   ___device_raw *dev;
   ___SCMOBJ result;
 
-  int fd;
+  int ifd;
   int fl;
   int direction;
 
@@ -9291,23 +9320,23 @@ ___SCMOBJ flags;)
                           &fl,
                           &direction);
 
-  fd = ___INT(index);
+  ifd = ___INT(fd);
 
   if ((e = ___device_raw_setup_from_fd
-       (&dev,
-        ___global_device_group (),
-        fd,
-        direction))
+             (&dev,
+              ___global_device_group (),
+              ifd,
+              direction))
       != ___FIX(___NO_ERR))
     return e;
 
   if ((e = ___NONNULLPOINTER_to_SCMOBJ
-       (___PSTATE,
-        dev,
-        ___FAL,
-        ___device_cleanup_from_ptr,
-        &result,
-        ___RETURN_POS))
+             (___PSTATE,
+              dev,
+              ___FAL,
+              ___device_cleanup_from_ptr,
+              &result,
+              ___RETURN_POS))
       != ___FIX(___NO_ERR))
     {
       ___device_cleanup (___CAST(___device*,dev)); /* ignore error */

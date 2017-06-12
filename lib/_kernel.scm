@@ -4279,11 +4279,11 @@ end-of-code
             scheme-object   ;; device
    "___os_device_stream_open_process"))
 
-(define-prim ##os-device-open-raw
+(define-prim ##os-device-open-raw-from-fd
   (c-lambda (scheme-object  ;; fd
              scheme-object) ;; flags
             scheme-object   ;; device
-   "___os_device_raw_open"))
+   "___os_device_raw_open_from_fd"))
 
 (define-prim ##os-device-process-pid
   (c-lambda (scheme-object) ;; dev
