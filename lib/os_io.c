@@ -9104,7 +9104,7 @@ int direction;)
 }
 #endif
 
-___SCMOBJ ___os_device_raw_open
+___SCMOBJ ___os_device_raw_open_from_fd
    ___P((___SCMOBJ index,
          ___SCMOBJ flags),
         (index,
