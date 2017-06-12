@@ -8974,7 +8974,7 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
   return ___FIX(___NO_ERR);
 }
 
-___HIDDEN ___SCMOBJ ___device_raw_select_virt
+___HIDDEN ___SCMOBJ ___device_raw_select_raw_virt
    ___P((___device *self,
          ___BOOL for_writing,
          int i,
@@ -9074,7 +9074,7 @@ ___HIDDEN ___device_raw_vtbl ___device_raw_table =
 {
   {
     ___device_raw_kind,
-    ___device_raw_select_virt,
+    ___device_raw_select_raw_virt,
     ___device_raw_release_virt,
     ___device_raw_force_output_virt,
     ___device_raw_close_virt
