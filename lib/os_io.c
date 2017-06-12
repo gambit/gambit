@@ -9158,20 +9158,20 @@ ___SCMOBJ flags;)
   ifd = ___INT(fd);
 
   if ((e = ___device_raw_setup_from_fd
-       (&dev,
-        ___global_device_group (),
-        ifd,
-        direction))
+             (&dev,
+              ___global_device_group (),
+              ifd,
+              direction))
       != ___FIX(___NO_ERR))
     return e;
 
   if ((e = ___NONNULLPOINTER_to_SCMOBJ
-       (___PSTATE,
-        dev,
-        ___FAL,
-        ___device_cleanup_from_ptr,
-        &result,
-        ___RETURN_POS))
+             (___PSTATE,
+              dev,
+              ___FAL,
+              ___device_cleanup_from_ptr,
+              &result,
+              ___RETURN_POS))
       != ___FIX(___NO_ERR))
     {
       ___device_cleanup (___CAST(___device*,dev)); /* ignore error */
