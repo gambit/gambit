@@ -8380,7 +8380,7 @@
       ;; access to the port.
 
       (##declare (not interrupts-enabled))
-      (##list (macro-raw-device-id port) (macro-raw-device-port-device port)))
+      (##list (macro-raw-device-port-id port) (macro-raw-device-port-device port)))
 
     (define (wait port direction)
 
