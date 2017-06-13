@@ -960,15 +960,16 @@ ___time timeout;)
 #endif
 
 #ifdef USE_poll
-  ___processor_state ps = ___PSTATE;
+  {
+    ___processor_state ps = ___PSTATE;
 
-  state.pollfd_count = 0;
-  state.fdset_size = ___fdset_size (ps);
-  state.readfds = ___fdset_readfds (ps);
-  state.writefds = ___fdset_writefds (ps);
-  ___FD_ZERO (state.readfds, state.fdset_size);
-  ___FD_ZERO (state.writefds, state.fdset_size);
-
+    state.pollfd_count = 0;
+    state.fdset_size = ___fdset_size (ps);
+    state.readfds = ___fdset_readfds (ps);
+    state.writefds = ___fdset_writefds (ps);
+    ___FD_ZERO (state.readfds, state.fdset_size);
+    ___FD_ZERO (state.writefds, state.fdset_size);
+  }
 #endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
