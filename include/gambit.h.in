@@ -8152,6 +8152,7 @@ typedef struct ___fdset_struct {
   int size;
   void *readfds;
   void *writefds;
+  void *exceptfds;
 } ___fdset;
 #endif
 

@@ -93,7 +93,8 @@ typedef struct ___device_struct
 #define MAX_CONDVARS 8192
 #endif
 
-#ifdef USE_poll
+#ifdef USE_select_or_poll
+
 typedef ___SIZE_TS ___fdbits;
 
 #define ___FDBITS (8 * sizeof (___fdbits))
@@ -109,15 +110,6 @@ typedef ___SIZE_TS ___fdbits;
 #define ___FD_ISSET(fd, set)                  \
   ((set)[___FD_ELT (fd)] & ___FD_MASK (fd))
 
-typedef ___fdbits *___poll_fdset;
-
-#endif
-
-#ifdef USE_select
-#define ___FD_ZERO(set)      FD_ZERO(&set)
-#define ___FD_ISSET(fd, set) FD_ISSET(fd, &set)
-#define ___FD_CLR(fd, set)   FD_CLR(fd, &set)
-#define ___FD_SET(fd, set)   FD_SET(fd, &set)
 #endif
 
 typedef struct ___device_select_state_struct
@@ -134,18 +126,17 @@ typedef struct ___device_select_state_struct
 
 #ifdef USE_select
     int highest_fd_plus_1;
-    fd_set readfds;
-    fd_set writefds;
-    fd_set exceptfds;
+    ___fdbits *readfds;
+    ___fdbits *writefds;
+    ___fdbits *exceptfds;
 #endif
 
 #ifdef USE_poll
     struct pollfd pollfds[MAX_CONDVARS];
     int pollfd_count;
     /* active set bitmaps */
-    int fdset_size;
-    ___poll_fdset readfds;
-    ___poll_fdset writefds;
+    ___fdbits *readfds;
+    ___fdbits *writefds;
 #endif
 
 #endif

@@ -39,7 +39,7 @@ ___io_module ___io_mod =
 
 /* poll dynamic fdset memory management. */
 
-#ifdef USE_poll
+#ifdef USE_select_or_poll
 
 ___HIDDEN int ___fdset_heap_overflow;
 
@@ -50,6 +50,7 @@ ___HIDDEN int ___fdset_init
 {
   void *readfds = NULL;
   void *writefds = NULL;
+  void *exceptfds = NULL;
 
   readfds  = ___ALLOC_MEM (MAX_CONDVARS/8);
   if (!readfds)
@@ -59,10 +60,17 @@ ___HIDDEN int ___fdset_init
   if (!writefds)
     goto error;
 
+  exceptfds = ___ALLOC_MEM (MAX_CONDVARS/8);
+  if (!exceptfds)
+    goto error;
+
   memset (readfds, 0, MAX_CONDVARS/8);
   memset (writefds, 0, MAX_CONDVARS/8);
+  memset (exceptfds, 0, MAX_CONDVARS/8);
+
   ps->os.fdset.readfds = readfds;
   ps->os.fdset.writefds = writefds;
+  ps->os.fdset.exceptfds = exceptfds;
   ps->os.fdset.size = MAX_CONDVARS;
 
   return 0;
@@ -72,6 +80,8 @@ ___HIDDEN int ___fdset_init
     ___FREE_MEM (readfds);
   if (writefds)
     ___FREE_MEM (writefds);
+  if (exceptfds)
+    ___FREE_MEM (exceptfds);
 
   return 1;
 }
@@ -86,6 +96,7 @@ ___HIDDEN int ___fdset_realloc
 {
   void *readfds = NULL;
   void *writefds = NULL;
+  void *exceptfds = NULL;
   int oldbytes, newbytes;
   int oldsize = ps->os.fdset.size;
   int newsize = oldsize;
@@ -102,19 +113,29 @@ ___HIDDEN int ___fdset_realloc
   readfds  = ___ALLOC_MEM (newbytes);
   if (!readfds)
     goto error;
+
   writefds = ___ALLOC_MEM (newbytes);
   if (!writefds)
     goto error;
 
+  exceptfds = ___ALLOC_MEM (newbytes);
+  if (!exceptfds)
+    goto error;
+
   memcpy (readfds, ps->os.fdset.readfds, oldbytes);
   memcpy (writefds, ps->os.fdset.writefds, oldbytes);
+  memcpy (exceptfds, ps->os.fdset.exceptfds, oldbytes);
   memset (readfds + oldbytes, 0, newbytes - oldbytes);
   memset (writefds + oldbytes, 0, newbytes - oldbytes);
+  memset (exceptfds + oldbytes, 0, newbytes - oldbytes);
 
   ___FREE_MEM (ps->os.fdset.readfds);
   ___FREE_MEM (ps->os.fdset.writefds);
+  ___FREE_MEM (ps->os.fdset.exceptfds);
+
   ps->os.fdset.readfds = readfds;
   ps->os.fdset.writefds = writefds;
+  ps->os.fdset.exceptfds = exceptfds;
   ps->os.fdset.size = newsize;
 
   return 0;
@@ -124,6 +145,8 @@ ___HIDDEN int ___fdset_realloc
     ___FREE_MEM (readfds);
   if (writefds)
   ___FREE_MEM (writefds);
+  if (exceptfds)
+    ___FREE_MEM (exceptfds);
 
   return 1;
 }
@@ -136,7 +159,7 @@ ___HIDDEN int ___fdset_size
   return ps->os.fdset.size;
 }
 
-___HIDDEN ___poll_fdset ___fdset_readfds
+___HIDDEN ___fdbits *___fdset_readfds
    ___P((___processor_state ps),
         (ps)
         ___processor_state ps;)
@@ -144,12 +167,20 @@ ___HIDDEN ___poll_fdset ___fdset_readfds
   return ps->os.fdset.readfds;
 }
 
-___HIDDEN ___poll_fdset ___fdset_writefds
+___HIDDEN ___fdbits *___fdset_writefds
    ___P((___processor_state ps),
         (ps)
         ___processor_state ps;)
 {
   return ps->os.fdset.writefds;
+}
+
+___HIDDEN ___fdbits *___fdset_exceptfds
+   ___P((___processor_state ps),
+        (ps)
+        ___processor_state ps;)
+{
+  return ps->os.fdset.exceptfds;
 }
 
 #endif
@@ -950,13 +981,17 @@ ___time timeout;)
 #ifdef USE_select_or_poll
 
 #ifdef USE_select
+  {
+    ___processor_state ps = ___PSTATE;
 
-  state.highest_fd_plus_1 = 0;
-
-  ___FD_ZERO(state.readfds);
-  ___FD_ZERO(state.writefds);
-  ___FD_ZERO(state.exceptfds);
-
+    state.highest_fd_plus_1 = 0;
+    state.readfds = ___fdset_readfds (ps);
+    state.writefds = ___fdset_writefds (ps);
+    state.exceptfds = ___fdset_exceptfds (ps);
+    ___FD_ZERO(state.readfds, ___fdset_size (ps));
+    ___FD_ZERO(state.writefds, ___fdset_size (ps));
+    ___FD_ZERO(state.exceptfds, ___fdset_size (ps));
+  }
 #endif
 
 #ifdef USE_poll
@@ -964,11 +999,10 @@ ___time timeout;)
     ___processor_state ps = ___PSTATE;
 
     state.pollfd_count = 0;
-    state.fdset_size = ___fdset_size (ps);
     state.readfds = ___fdset_readfds (ps);
     state.writefds = ___fdset_writefds (ps);
-    ___FD_ZERO (state.readfds, state.fdset_size);
-    ___FD_ZERO (state.writefds, state.fdset_size);
+    ___FD_ZERO (state.readfds, ___fdset_size (ps));
+    ___FD_ZERO (state.writefds, ___fdset_size (ps));
   }
 #endif
 
@@ -1155,9 +1189,9 @@ ___time timeout;)
 
     result =
       select (state.highest_fd_plus_1,
-              &state.readfds,
-              &state.writefds,
-              &state.exceptfds,
+              (fd_set*)state.readfds,
+              (fd_set*)state.writefds,
+              (fd_set*)state.exceptfds,
               delta_tv);
 
     if (result < 0)
@@ -10670,7 +10704,7 @@ ___processor_state ___ps;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-#ifdef USE_poll
+#ifdef USE_select_or_poll
 
   if (___fdset_init (___ps))
     return ___FIX(___HEAP_OVERFLOW_ERR);
