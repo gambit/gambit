@@ -936,11 +936,10 @@ int fd2;)
 {
 #ifdef USE_select_or_poll
 
+  ___processor_state ___ps = ___PSTATE;
   int fd = (fd2 > fd1) ? fd2 : fd1;
 
-  ___processor_state ps = ___PSTATE;
-
-  if (fd < ps->os.fdset.size)
+  if (fd < ___ps->os.fdset.size)
     return 0;
 
   ___fdset_resize_heap_overflow_clear ();
