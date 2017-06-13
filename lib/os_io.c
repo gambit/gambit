@@ -40,13 +40,10 @@ ___io_module ___io_mod =
 /* poll dynamic fdset memory management. */
 
 #ifdef USE_poll
-#define ___fdset_state_size(ps)     ps->os.fdset.size
-#define ___fdset_state_readfds(ps)  ps->os.fdset.readfds
-#define ___fdset_state_writefds(ps) ps->os.fdset.writefds
 
 static int ___fdset_heap_overflow;
 
-static int ___fdset_state_init (___processor_state ps)
+static int ___fdset_init (___processor_state ps)
 {
   void *readfds = NULL;
   void *writefds = NULL;
@@ -61,15 +58,18 @@ static int ___fdset_state_init (___processor_state ps)
 
   memset (readfds, 0, MAX_CONDVARS/8);
   memset (writefds, 0, MAX_CONDVARS/8);
-  ___fdset_state_readfds (ps) = readfds;
-  ___fdset_state_writefds (ps) = writefds;
-  ___fdset_state_size (ps) = MAX_CONDVARS;
+  ps->os.fdset.readfds = readfds;
+  ps->os.fdset.writefds = writefds;
+  ps->os.fdset.size = MAX_CONDVARS;
 
   return 0;
 
  error:
-  ___free_mem (readfds);
-  ___free_mem (writefds);
+  if (readfds)
+    ___FREE_MEM (readfds);
+  if (writefds)
+    ___FREE_MEM (writefds);
+
   return 1;
 }
 
@@ -77,53 +77,61 @@ static int ___fdset_realloc (___processor_state ps, int fd)
 {
   void *readfds = NULL;
   void *writefds = NULL;
-  int oldsize = ___fdset_state_size (ps);
+  int oldbytes, newbytes;
+  int oldsize = ps->os.fdset.size;
   int newsize = oldsize;
 
   while (newsize <= fd)
     newsize = newsize * 2;
 
-  if (oldsize == newsize) /* we never shrink fdsets */
+  if (oldsize == newsize) /* size unchanged, no need to realloc */
       return 0;
 
-  readfds  = ___ALLOC_MEM (newsize/8);
+  readfds  = ___ALLOC_MEM (newbytes);
   if (!readfds)
     goto error;
-  writefds = ___ALLOC_MEM (newsize/8);
+  writefds = ___ALLOC_MEM (newbytes);
   if (!writefds)
     goto error;
-  memcpy (readfds, ___fdset_state_readfds (ps), oldsize/8);
-  memcpy (writefds, ___fdset_state_writefds (ps), oldsize/8);
-  memset(readfds + oldsize/8, 0, (newsize - oldsize)/8);
-  memset(writefds + oldsize/8, 0, (newsize - oldsize)/8);
 
-  ___free_mem (___fdset_state_readfds (ps));
-  ___free_mem (___fdset_state_writefds (ps));
-  ___fdset_state_readfds (ps) = readfds;
-  ___fdset_state_writefds (ps) = writefds;
-  ___fdset_state_size (ps) = newsize;
+  oldbytes = ___CEILING_DIV (oldsize,8);
+  newbytes = ___CEILING_DIV (newsize,8);
+
+  memcpy (readfds, ps->os.fdset.readfds, oldbytes);
+  memcpy (writefds, ps->os.fdset.writefds, oldbytes);
+  memset (readfds + oldbytes, 0, newbytes - oldbytes);
+  memset (writefds + oldbytes, 0, newbytes - oldbytes);
+
+  ___FREE_MEM (ps->os.fdset.readfds);
+  ___FREE_MEM (ps->os.fdset.writefds);
+  ps->os.fdset.readfds = readfds;
+  ps->os.fdset.writefds = writefds;
+  ps->os.fdset.size = newsize;
 
   return 0;
 
  error:
-  ___free_mem (readfds);
-  ___free_mem (writefds);
+  if (readfds)
+    ___FREE_MEM (readfds);
+  if (writefds)
+  ___FREE_MEM (writefds);
+
   return 1;
 }
 
 static int ___fdset_size (___processor_state ps)
 {
-  return ___fdset_state_size (ps);
+  return ps->os.fdset.size;
 }
 
 static ___poll_fdset ___fdset_readfds (___processor_state ps)
 {
-  return ___fdset_state_readfds (ps);
+  return ps->os.fdset.readfds;
 }
 
 static ___poll_fdset ___fdset_writefds (___processor_state ps)
 {
-  return ___fdset_state_writefds (ps);
+  return ps->os.fdset.writefds;
 }
 
 #endif
@@ -9124,7 +9132,7 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
       if (!CloseHandle (d->h))
         return err_code_from_GetLastError ();
 #endif
-      
+
     }
   else if (is_not_closed & direction & ___DIRECTION_RD)
     d->base.read_stage = ___STAGE_CLOSED;
@@ -9347,7 +9355,7 @@ ___SCMOBJ flags;)
   return result;
 
 #endif
-  
+
   return ___FIX(___UNIMPL_ERR);
 }
 
@@ -10652,8 +10660,10 @@ ___processor_state ___ps;)
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
 #ifdef USE_poll
-  if (___fdset_state_init (___ps))
+
+  if (___fdset_init (___ps))
     return ___FIX(___HEAP_OVERFLOW_ERR);
+
 #endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
