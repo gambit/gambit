@@ -3350,11 +3350,8 @@ int fd_wr;
 int direction;)
 {
   ___device_pipe *d;
-  ___processor_state ps = ___PSTATE;
 
-  if (___fdset_resize (ps, fd_rd))
-    return ___FIX(___HEAP_OVERFLOW_ERR);
-  if (___fdset_resize (ps, fd_wr))
+  if (___fdset_resize (fd_rd, fd_wr))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_pipe*,
@@ -3725,11 +3722,8 @@ int fd_stdout;
 int direction;)
 {
   ___device_process *d;
-  ___processor_state ps = ___PSTATE;
 
-  if (___fdset_resize (ps, fd_stdin))
-    return ___FIX(___HEAP_OVERFLOW_ERR);
-  if (___fdset_resize (ps, fd_stdout))
+  if (___fdset_resize (fd_stdin, fd_stdout))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_process*,
@@ -5545,10 +5539,10 @@ int direction;)
   ___device_tcp_client *d;
 
 #ifdef USE_POSIX
-  ___processor_state ps = ___PSTATE;
 
-  if (___fdset_resize (ps, s))
+  if (___fdset_resize (s, s))
     return ___FIX(___HEAP_OVERFLOW_ERR);
+
 #endif
 
   d = ___CAST(___device_tcp_client*,
@@ -5911,13 +5905,13 @@ ___tls_context *tls_context;)
     }
 
 #ifdef USE_POSIX
-  ___processor_state ps = ___PSTATE;
 
-  if (___fdset_resize (ps, s))
+  if (___fdset_resize (s, s))
     {
       CLOSE_SOCKET(s);
       return ___FIX(___HEAP_OVERFLOW_ERR);
     }
+
 #endif
 
   d = ___CAST(___device_tcp_server*,
@@ -7257,9 +7251,8 @@ int fd;
 int direction;)
 {
   ___device_file *d;
-  ___processor_state ps = ___PSTATE;
 
-  if (___fdset_resize (ps, fd))
+  if (___fdset_resize (fd, fd))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_file*,
@@ -9285,9 +9278,8 @@ int fd;
 int direction;)
 {
   ___device_raw *d;
-  ___processor_state ps = ___PSTATE;
 
-  if (___fdset_resize (ps, fd))
+  if (___fdset_resize (fd, fd))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_raw*,

@@ -308,7 +308,7 @@ ___virtual_machine_state ___vms;)
 #define OP_SET_PROCESSOR_COUNT OP_MAKE( 0,0)
 #define OP_VM_RESIZE           OP_MAKE( 1,0)
 #define OP_GARBAGE_COLLECT     OP_MAKE( 2,COMBINING_ADD)
-#define OP_FDSET_RESIZE        OP_MAKE(10,0)
+#define OP_FDSET_RESIZE        OP_MAKE(10,COMBINING_MAX)
 #define OP_ACTLOG_START        OP_MAKE(61,0)
 #define OP_ACTLOG_STOP         OP_MAKE(62,0)
 #define OP_NOOP                OP_MAKE(63,0)
@@ -927,16 +927,29 @@ ___SIZE_TS requested_words_still;)
 
 
 ___EXP_FUNC(___BOOL, ___fdset_resize)
-   ___P((___processor_state ___ps,
-         int fd),
-        (___ps,
-         fd)
-___processor_state ___ps;
-int fd;)
+   ___P((int fd1,
+         int fd2),
+        (fd1,
+         fd2)
+int fd1;
+int fd2;)
 {
+#ifdef USE_select_or_poll
+
+  int fd = (fd2 > fd1) ? fd2 : fd1;
+
+#ifdef USE_select
+
+  /* we can't resize select fd_sets, but we can at least check for overflow */
+  return (fd >= (sizeof (fd_set) * 8));
+
+#endif
+
 #ifdef USE_poll
 
-  if (fd < ___ps->os.fdset.size)
+  ___processor_state ps = ___PSTATE;
+
+  if (fd < ps->os.fdset.size)
     return 0;
 
   ___fdset_resize_heap_overflow_clear ();
@@ -949,6 +962,8 @@ int fd;)
   on_all_processors (___PSP &sop);
 
   return ___fdset_resize_heap_overflow ();
+
+#endif
 
 #else
 

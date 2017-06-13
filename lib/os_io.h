@@ -173,8 +173,8 @@ extern int ___fdset_resize_heap_overflow ___PVOID;
 
 /* 0 if success, 1 if allocation failed in some processor */
 extern ___BOOL ___fdset_resize
-   ___P((___processor_state ___ps,
-         int fd),
+   ___P((int fd1,
+         int fd2),
         ());
 
 extern void ___device_select_add_relative_timeout
