@@ -60,13 +60,17 @@ ___HIDDEN int ___fdset_init
   if (!writefds)
     goto error;
 
+#ifdef USE_select
   exceptfds = ___ALLOC_MEM (MAX_CONDVARS/8);
   if (!exceptfds)
     goto error;
+#endif
 
   memset (readfds, 0, MAX_CONDVARS/8);
   memset (writefds, 0, MAX_CONDVARS/8);
+#ifdef USE_select
   memset (exceptfds, 0, MAX_CONDVARS/8);
+#endif
 
   ps->os.fdset.readfds = readfds;
   ps->os.fdset.writefds = writefds;
@@ -118,20 +122,26 @@ ___HIDDEN int ___fdset_realloc
   if (!writefds)
     goto error;
 
+#ifdef USE_select
   exceptfds = ___ALLOC_MEM (newbytes);
   if (!exceptfds)
     goto error;
+#endif
 
   memcpy (readfds, ps->os.fdset.readfds, oldbytes);
-  memcpy (writefds, ps->os.fdset.writefds, oldbytes);
-  memcpy (exceptfds, ps->os.fdset.exceptfds, oldbytes);
   memset (readfds + oldbytes, 0, newbytes - oldbytes);
+  memcpy (writefds, ps->os.fdset.writefds, oldbytes);
   memset (writefds + oldbytes, 0, newbytes - oldbytes);
+#ifdef USE_select
+  memcpy (exceptfds, ps->os.fdset.exceptfds, oldbytes);
   memset (exceptfds + oldbytes, 0, newbytes - oldbytes);
+#endif
 
   ___FREE_MEM (ps->os.fdset.readfds);
   ___FREE_MEM (ps->os.fdset.writefds);
+#ifdef USE_select
   ___FREE_MEM (ps->os.fdset.exceptfds);
+#endif
 
   ps->os.fdset.readfds = readfds;
   ps->os.fdset.writefds = writefds;
