@@ -1206,9 +1206,9 @@
 
            (^return (^null-obj)))))))
 
-    ((wrong_args)
+    ((wrong_key_args)
      (rts-method
-      'wrong_args
+      'wrong_key_args
       '(public)
       'jumpable
       (list (univ-field 'proc 'jumpable)
@@ -1225,6 +1225,27 @@
              (^setreg 1 proc)
              (^setnargs 2)
              (^return (^local-var 'exception)))))))
+
+    ((wrong_nargs)
+     (rts-method
+      'wrong_nargs
+      '(public)
+      'jumpable
+      (list (univ-field 'proc 'jumpable))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((proc (^local-var 'proc)))
+          (^ (^expr-statement
+              (^call-prim
+               (^rts-method-use 'build_rest)
+               0))
+             (^setreg 2 (^getreg 1))
+             (^setreg 1 proc)
+             (^setnargs 2)
+             (^return
+              (^cast*-jumpable
+               (^getglo '##raise-wrong-number-of-arguments-exception))))))))
 
     ((get)
 #<<EOF

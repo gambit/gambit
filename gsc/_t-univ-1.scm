@@ -2736,7 +2736,7 @@
                                                                          keys)))))
                (^if (^not (^parens (^eq? error (^null-obj))))
                     (^return-call-prim
-                     (^rts-method-use 'wrong_args)
+                     (^rts-method-use 'wrong_key_args)
                      (if closed?
                          (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
                          id)
@@ -2755,7 +2755,7 @@
                                                                          keys)))))
                (^if (^not (^parens (^eq? error (^null-obj))))
                     (^return-call-prim
-                     (^rts-method-use 'wrong_args)
+                     (^rts-method-use 'wrong_key_args)
                      (if closed?
                          (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
                          id)
@@ -2768,12 +2768,10 @@
                      (^!= (^getnargs)
                           (^int nb-parms-except-rest)))
                  (^return-call-prim
-                  (^rts-method-use 'wrong_args)
+                  (^rts-method-use 'wrong_nargs)
                   (if closed?
                       (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
-                      id)
-                  (^cast*-jumpable
-                   (^getglo '##raise-wrong-number-of-arguments-exception))))))
+                      id)))))
 
           (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs)))
                 (nb-stacked* (max 0 (- nb-parms univ-nb-arg-regs))))
