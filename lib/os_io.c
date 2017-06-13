@@ -41,9 +41,12 @@ ___io_module ___io_mod =
 
 #ifdef USE_poll
 
-static int ___fdset_heap_overflow;
+___HIDDEN int ___fdset_heap_overflow;
 
-static int ___fdset_init (___processor_state ps)
+___HIDDEN int ___fdset_init
+   ___P((___processor_state ps),
+        (ps)
+        ___processor_state ps;)
 {
   void *readfds = NULL;
   void *writefds = NULL;
@@ -73,7 +76,13 @@ static int ___fdset_init (___processor_state ps)
   return 1;
 }
 
-static int ___fdset_realloc (___processor_state ps, int fd)
+___HIDDEN int ___fdset_realloc
+   ___P((___processor_state ps,
+         int fd),
+        (ps,
+         fd)
+        ____processor_state ps;
+        int fd;)
 {
   void *readfds = NULL;
   void *writefds = NULL;
@@ -119,17 +128,26 @@ static int ___fdset_realloc (___processor_state ps, int fd)
   return 1;
 }
 
-static int ___fdset_size (___processor_state ps)
+___HIDDEN int ___fdset_size
+   ___P((___processor_state ps),
+        (ps)
+        ___processor_state ps;)
 {
   return ps->os.fdset.size;
 }
 
-static ___poll_fdset ___fdset_readfds (___processor_state ps)
+___HIDDEN ___poll_fdset ___fdset_readfds
+   ___P((___processor_state ps),
+        (ps)
+        ___processor_state ps;)
 {
   return ps->os.fdset.readfds;
 }
 
-static ___poll_fdset ___fdset_writefds (___processor_state ps)
+___HIDDEN ___poll_fdset ___fdset_writefds
+   ___P((___processor_state ps),
+        (ps)
+        ___processor_state ps;)
 {
   return ps->os.fdset.writefds;
 }
