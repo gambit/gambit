@@ -940,8 +940,11 @@ int fd2;)
 
 #ifdef USE_select
 
-  /* we can't resize select fd_sets, but we can at least check for overflow */
-  return (fd >= (sizeof (fd_set) * 8));
+  /* we can't resize select fd_sets, but we can at least check for overflow.
+   * Note the cast to int, as the fd can be negative, which would result
+   * in an unsigned promotion and undue failure.
+   */
+  return (fd >= (int)(sizeof (fd_set) * 8));
 
 #endif
 
