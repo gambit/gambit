@@ -973,9 +973,9 @@
                  (^))
              (^return dest))))))
 
-    ((build_rest)
+    ((build_rest_from_stack)
      (rts-method
-      'build_rest
+      'build_rest_from_stack
       '(public)
       'bool
       (list (univ-field 'nrp 'int))
@@ -988,7 +988,6 @@
              (^if (^< (^getnargs)
                       nrp)
                   (^return (^bool #f)))
-             (univ-push-args ctx)
              (^while (^> (^getnargs)
                          nrp)
                      (^ (^pop (lambda (expr)
@@ -998,12 +997,34 @@
                         (^inc-by (gvm-state-nargs-use ctx 'rdwr)
                                  -1)))
              (^push rest)
-             (univ-pop-args-to-regs ctx 1)
              (^return (^bool #t)))))))
 
-    ((build_key)
+    ((build_rest)
      (rts-method
-      'build_key
+      'build_rest
+      '(public)
+      'bool
+      (list (univ-field 'nrp 'int))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((nrp (^local-var 'nrp))
+              (ok (^local-var 'ok)))
+          (^
+           (^var-declaration 'bool ok (^bool #f))
+           (univ-push-args ctx)
+           (^assign ok (^call-prim (^rts-method-use 'build_rest_from_stack)
+                                   nrp))
+
+           (^if ok
+                (^inc-by (^getnargs) (^int 1)))
+
+           (univ-pop-args-to-regs ctx 0)
+           (^return ok))))))
+
+    ((build_key_from_stack)
+     (rts-method
+      'build_key_from_stack
       '(public)
       'jumpable
       (list (univ-field 'nb_req_opt 'int)
@@ -1035,8 +1056,6 @@
                      (^!= (^bitand nb_key_args (^int 1)) (^int 0))) ;; keyword arguments must come in pairs
                 (^return (^cast*-jumpable
                           (^getglo '##raise-wrong-number-of-arguments-exception))))
-
-           (univ-push-args ctx)
 
            (^assign key_vals (^new-array 'scmobj nb_key_parms))
 
@@ -1080,6 +1099,106 @@
                    (^
                     (^push (^array-index key_vals k))
                     (^inc-by k 1)))
+
+           (^assign (^getnargs) nb_parms)
+
+           (^return (^null-obj)))))))
+
+    ((build_key)
+     (rts-method
+      'build_key
+      '(public)
+      'jumpable
+      (list (univ-field 'nb_req_opt 'int)
+            (univ-field 'nb_parms 'int)
+            (univ-field 'key_descr '(array scmobj)))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((nb_req_opt (^local-var 'nb_req_opt))
+              (nb_parms (^local-var 'nb_parms))
+              (key_descr (^local-var 'key_descr))
+              (error (^local-var 'error)))
+          (^
+           (^var-declaration 'jumpable error (^null-obj))
+
+           (univ-push-args ctx)
+
+           (^assign error (^call-prim (^rts-method-use 'build_key_from_stack)
+                                      nb_req_opt
+                                      nb_parms
+                                      key_descr))
+
+           (univ-pop-args-to-regs ctx 0)
+
+           (^return error))))))
+
+    ((build_key_rest)
+     (rts-method
+      'build_key_rest
+      '(public)
+      'jumpable
+      (list (univ-field 'nb_req_opt 'int)
+            (univ-field 'nb_parms 'int)
+            (univ-field 'key_descr '(array scmobj)))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((nb_req_opt (^local-var 'nb_req_opt))
+              (nb_parms (^local-var 'nb_parms))
+              (key_descr (^local-var 'key_descr))
+              (k (^local-var 'k))
+              (fnk (^local-var 'fnk))
+              (rest (^local-var 'rest))
+              (empty_rest (^local-var 'empty_rest))
+              (error (^local-var 'error)))
+          (^
+           (^var-declaration 'int k (^- (^getnargs) nb_req_opt))
+           (^var-declaration 'int fnk (^- k 1))
+           (^var-declaration 'scmobj rest (^null-obj))
+           (^var-declaration 'bool empty_rest (^bool #t))
+           (^var-declaration 'jumpable error (^null-obj))
+
+           (^if (^< k (^int 0)) ;; not all required and optional arguments supplied?
+                (^return
+                 (^cast*-jumpable
+                  (^getglo '##raise-wrong-number-of-arguments-exception))))
+
+           (univ-push-args ctx)
+
+           ;; find first non-keyword pair in remaining arguments
+           (^while (^and (^>= fnk 0) empty_rest)
+                   (^
+                    (^if (^not (^parens (^keyword? (univ-stk-slot-from-tos ctx fnk))))
+                         (^assign empty_rest (^bool #f))
+                         (^inc-by fnk -2))))
+
+           (^if (^and (^not empty_rest)
+                      (^not (^call-prim (^rts-method-use 'build_rest_from_stack)
+                                        (^- (^getnargs) (^- fnk (^int 1))))))
+                (^ (univ-pop-args-to-regs ctx 0)
+                   (^return
+                    (^cast*-jumpable
+                     (^getglo '##raise-wrong-number-of-arguments-exception)))))
+
+           (^if (^not empty_rest)
+                (^pop (lambda (expr) (^assign rest expr))))
+
+           (^assign error (^call-prim (^rts-method-use 'build_key_from_stack)
+                                      nb_req_opt
+                                      (^- nb_parms (^int 1))
+                                      key_descr))
+
+           (^if (^not (^parens (^eq? error (^null-obj))))
+                (^ ;; unbundle the rest argument
+                 (^while (^not (^parens (^eq? rest (^null-obj))))
+                         (^ (^push (^getcar rest))
+                            (^assign rest (^getcdr rest))
+                            (^inc-by (gvm-state-nargs-use ctx 'rdwr) 1)))
+                 (univ-pop-args-to-regs ctx 0)
+                 (^return error)))
+
+           (^push rest)
 
            (^assign (^getnargs) nb_parms)
 

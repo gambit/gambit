@@ -2723,8 +2723,24 @@
 
           (cond
            ((and keys rest?)
-            (compiler-internal-error
-             "univ-label-entry, keyword parameters + rest not supported"))
+            (let ((error (^local-var 'error)))
+              (^
+               (^var-declaration 'jumpable error
+                                 (^call-prim (^rts-method-use 'build_key_rest)
+                                             (^int nb-req-and-opt)
+                                             (^int nb-parms)
+                                             (^array-literal 'scmobj
+                                                             (apply append
+                                                                    (map (lambda (x)
+                                                                           (list (^obj (car x)) (^obj (obj-val (cdr x)))))
+                                                                         keys)))))
+               (^if (^not (^parens (^eq? error (^null-obj))))
+                    (^return-call-prim
+                     (^rts-method-use 'wrong_args)
+                     (if closed?
+                         (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                         id)
+                     error)))))
            (keys
             (let ((error (^local-var 'error)))
               (^
