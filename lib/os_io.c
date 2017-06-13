@@ -154,7 +154,7 @@ ___HIDDEN int ___fdset_realloc
   if (readfds)
     ___FREE_MEM (readfds);
   if (writefds)
-  ___FREE_MEM (writefds);
+    ___FREE_MEM (writefds);
   if (exceptfds)
     ___FREE_MEM (exceptfds);
 
