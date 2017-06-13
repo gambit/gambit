@@ -5,8 +5,7 @@
   (println "optional :")
   (println opt)
   (println "key :")
-  (println key)
-  (println (length rest)))
+  (println key))
 
 (all 5 4 3)
 
