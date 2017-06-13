@@ -984,7 +984,7 @@
       (lambda (ctx)
         (let ((rest (^local-var 'rest))
               (nrp (^local-var 'nrp)))
-          (^ (^var-declaration 'scmobj rest (^null-obj))
+          (^ (^var-declaration 'scmobj rest (^null))
              (^if (^< (^getnargs)
                       nrp)
                   (^return (^bool #f)))
@@ -1048,12 +1048,12 @@
            (^var-declaration 'int nb_key_parms (^- nb_parms nb_req_opt))
            (^var-declaration 'int k (^int 0))
            (^var-declaration 'int i (^int 0))
-           (^var-declaration 'scmobj key (^null-obj))
-           (^var-declaration 'scmobj val (^null-obj))
-           (^var-declaration '(array scmobj) key_vals (^null-obj))
+           (^var-declaration 'scmobj key (^null))
+           (^var-declaration 'scmobj val (^null))
+           (^var-declaration '(array scmobj) key_vals (^null))
 
            (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
-                     (^!= (^bitand nb_key_args (^int 1)) (^int 0))) ;; keyword arguments must come in pairs
+                     (^!= (^parens (^bitand nb_key_args (^int 1))) (^int 0))) ;; keyword arguments must come in pairs
                 (^return (^cast*-jumpable
                           (^getglo '##raise-wrong-number-of-arguments-exception))))
 
@@ -1102,7 +1102,7 @@
 
            (^assign (^getnargs) nb_parms)
 
-           (^return (^null-obj)))))))
+           (^return (^null)))))))
 
     ((build_key)
      (rts-method
@@ -1120,7 +1120,7 @@
               (key_descr (^local-var 'key_descr))
               (error (^local-var 'error)))
           (^
-           (^var-declaration 'jumpable error (^null-obj))
+           (^var-declaration 'jumpable error (^null))
 
            (univ-push-args ctx)
 
@@ -1155,9 +1155,9 @@
           (^
            (^var-declaration 'int k (^- (^getnargs) nb_req_opt))
            (^var-declaration 'int fnk (^- k 1))
-           (^var-declaration 'scmobj rest (^null-obj))
+           (^var-declaration 'scmobj rest (^null))
            (^var-declaration 'bool empty_rest (^bool #t))
-           (^var-declaration 'jumpable error (^null-obj))
+           (^var-declaration 'jumpable error (^null))
 
            (^if (^< k (^int 0)) ;; not all required and optional arguments supplied?
                 (^return
@@ -1189,9 +1189,9 @@
                                       (^- nb_parms (^int 1))
                                       key_descr))
 
-           (^if (^not (^parens (^eq? error (^null-obj))))
+           (^if (^not (^parens (^eq? error (^null))))
                 (^ ;; unbundle the rest argument
-                 (^while (^not (^parens (^eq? rest (^null-obj))))
+                 (^while (^not (^parens (^eq? rest (^null))))
                          (^ (^push (^getcar rest))
                             (^assign rest (^getcdr rest))
                             (^inc-by (gvm-state-nargs-use ctx 'rdwr) 1)))
@@ -1204,7 +1204,7 @@
 
            (univ-pop-args-to-regs ctx 0)
 
-           (^return (^null-obj)))))))
+           (^return (^null)))))))
 
     ((wrong_key_args)
      (rts-method

@@ -2734,7 +2734,7 @@
                                                                     (map (lambda (x)
                                                                            (list (^obj (car x)) (^obj (obj-val (cdr x)))))
                                                                          keys)))))
-               (^if (^not (^parens (^eq? error (^null-obj))))
+               (^if (^not (^parens (^eq? error (^null))))
                     (^return-call-prim
                      (^rts-method-use 'wrong_key_args)
                      (if closed?
@@ -2753,7 +2753,7 @@
                                                                     (map (lambda (x)
                                                                            (list (^obj (car x)) (^obj (obj-val (cdr x)))))
                                                                          keys)))))
-               (^if (^not (^parens (^eq? error (^null-obj))))
+               (^if (^not (^parens (^eq? error (^null))))
                     (^return-call-prim
                      (^rts-method-use 'wrong_key_args)
                      (if closed?
