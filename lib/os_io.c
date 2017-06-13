@@ -193,6 +193,16 @@ ___HIDDEN ___fdbits *___fdset_exceptfds
   return ps->os.fdset.exceptfds;
 }
 
+void ___fdset_resize_heap_overflow_clear ___PVOID
+{
+  ___fdset_heap_overflow = 0;
+}
+
+int ___fdset_resize_heap_overflow ___PVOID
+{
+  return ___fdset_heap_overflow;
+}
+
 #endif
 
 void ___fdset_resize_pstate
@@ -203,27 +213,12 @@ void ___fdset_resize_pstate
 ___processor_state ___ps;
 int fd;)
 {
-#ifdef USE_poll
+#ifdef USE_select_or_poll
   if (___fdset_realloc (___ps, fd))
     ___fdset_heap_overflow = 1;
 #endif
 }
 
-void ___fdset_resize_heap_overflow_clear ___PVOID
-{
-#ifdef USE_poll
-  ___fdset_heap_overflow = 0;
-#endif
-}
-
-int ___fdset_resize_heap_overflow ___PVOID
-{
-#ifdef USE_poll
-  return ___fdset_heap_overflow;
-#endif
-
-  return 0;
-}
 
 
 /*---------------------------------------------------------------------------*/
