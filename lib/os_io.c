@@ -52,30 +52,37 @@ ___HIDDEN int ___fdset_init
   void *writefds = NULL;
   void *exceptfds = NULL;
 
-  readfds  = ___ALLOC_MEM (MAX_CONDVARS/8);
+  int size = MAX_CONDVARS;
+  int bytes;
+
+  if (size < 8 * sizeof (fd_set))
+    size = 8 * sizeof (fd_set);
+  bytes = ___CEILING_DIV (size, 8);
+  
+  readfds  = ___ALLOC_MEM (bytes);
   if (!readfds)
     goto error;
 
-  writefds = ___ALLOC_MEM (MAX_CONDVARS/8);
+  writefds = ___ALLOC_MEM (bytes);
   if (!writefds)
     goto error;
 
 #ifdef USE_select
-  exceptfds = ___ALLOC_MEM (MAX_CONDVARS/8);
+  exceptfds = ___ALLOC_MEM (bytes);
   if (!exceptfds)
     goto error;
 #endif
 
-  memset (readfds, 0, MAX_CONDVARS/8);
-  memset (writefds, 0, MAX_CONDVARS/8);
+  memset (readfds, 0, bytes);
+  memset (writefds, 0, bytes);
 #ifdef USE_select
-  memset (exceptfds, 0, MAX_CONDVARS/8);
+  memset (exceptfds, 0, bytes);
 #endif
 
   ps->os.fdset.readfds = readfds;
   ps->os.fdset.writefds = writefds;
   ps->os.fdset.exceptfds = exceptfds;
-  ps->os.fdset.size = MAX_CONDVARS;
+  ps->os.fdset.size = size;
 
   return 0;
 
