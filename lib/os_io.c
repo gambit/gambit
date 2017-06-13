@@ -136,12 +136,12 @@ ___HIDDEN int ___fdset_realloc
 #endif
 
   memcpy (readfds, ps->os.fdset.readfds, oldbytes);
-  memset ((char*)readfds + oldbytes, 0, newbytes - oldbytes);
+  memset (___CAST(char*, readfds) + oldbytes, 0, newbytes - oldbytes);
   memcpy (writefds, ps->os.fdset.writefds, oldbytes);
-  memset ((char*)writefds + oldbytes, 0, newbytes - oldbytes);
+  memset (___CAST(char*, writefds) + oldbytes, 0, newbytes - oldbytes);
 #ifdef USE_select
   memcpy (exceptfds, ps->os.fdset.exceptfds, oldbytes);
-  memset ((char*)exceptfds + oldbytes, 0, newbytes - oldbytes);
+  memset (___CAST(char*, exceptfds) + oldbytes, 0, newbytes - oldbytes);
 #endif
 
   ___FREE_MEM (ps->os.fdset.readfds);
@@ -181,7 +181,7 @@ ___HIDDEN ___fdbits *___fdset_readfds
         (ps)
         ___processor_state ps;)
 {
-  return (___fdbits*)ps->os.fdset.readfds;
+  return ___CAST(___fdbits*, ps->os.fdset.readfds);
 }
 
 ___HIDDEN ___fdbits *___fdset_writefds
@@ -189,7 +189,7 @@ ___HIDDEN ___fdbits *___fdset_writefds
         (ps)
         ___processor_state ps;)
 {
-  return (___fdbits*)ps->os.fdset.writefds;
+  return ___CAST(___fdbits*, ps->os.fdset.writefds);
 }
 
 ___HIDDEN ___fdbits *___fdset_exceptfds
@@ -197,7 +197,7 @@ ___HIDDEN ___fdbits *___fdset_exceptfds
         (ps)
         ___processor_state ps;)
 {
-  return (___fdbits*)ps->os.fdset.exceptfds;
+  return ___CAST(___fdbits*, ps->os.fdset.exceptfds);
 }
 
 void ___fdset_resize_heap_overflow_clear ___PVOID
@@ -1201,9 +1201,9 @@ ___time timeout;)
 
     result =
       select (state.highest_fd_plus_1,
-              (fd_set*)state.readfds,
-              (fd_set*)state.writefds,
-              (fd_set*)state.exceptfds,
+              ___CAST(fd_set*, state.readfds),
+              ___CAST(fd_set*, state.writefds),
+              ___CAST(fd_set*, state.exceptfds),
               delta_tv);
 
     if (result < 0)
