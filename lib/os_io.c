@@ -96,15 +96,15 @@ ___HIDDEN int ___fdset_realloc
   if (oldsize == newsize) /* size unchanged, no need to realloc */
       return 0;
 
+  oldbytes = ___CEILING_DIV (oldsize,8);
+  newbytes = ___CEILING_DIV (newsize,8);
+
   readfds  = ___ALLOC_MEM (newbytes);
   if (!readfds)
     goto error;
   writefds = ___ALLOC_MEM (newbytes);
   if (!writefds)
     goto error;
-
-  oldbytes = ___CEILING_DIV (oldsize,8);
-  newbytes = ___CEILING_DIV (newsize,8);
 
   memcpy (readfds, ps->os.fdset.readfds, oldbytes);
   memcpy (writefds, ps->os.fdset.writefds, oldbytes);
