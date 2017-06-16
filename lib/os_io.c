@@ -41,8 +41,6 @@ ___io_module ___io_mod =
 
 #ifdef USE_select_or_poll
 
-___HIDDEN int ___fdset_heap_overflow;
-
 ___HIDDEN int ___fdset_init
    ___P((___processor_state ps),
         (ps)
@@ -52,12 +50,8 @@ ___HIDDEN int ___fdset_init
   void *writefds = NULL;
   void *exceptfds = NULL;
 
-  int size = 8 * sizeof (fd_set);
-  int bytes;
-
-  if (size < MAX_CONDVARS)
-    size = MAX_CONDVARS;
-  bytes = ___CEILING_DIV (size, 8);
+  int size = ___VMSTATE_FROM_PSTATE(ps)->os.fdset.size;
+  int bytes = ___CEILING_DIV (size, 8);
 
   readfds  = ___ALLOC_MEM (bytes);
   if (readfds == NULL)
@@ -93,24 +87,20 @@ ___HIDDEN int ___fdset_init
 
 ___HIDDEN int ___fdset_realloc
    ___P((___processor_state ps,
-         int fd),
+         int newsize),
         (ps,
-         fd)
+         newsize)
         ____processor_state ps;
-        int fd;)
+        int newsize;)
 {
   void *readfds = NULL;
   void *writefds = NULL;
   void *exceptfds = NULL;
+  int oldsize = ps->os.fdset.size;
   int oldbytes;
   int newbytes;
-  int oldsize = ps->os.fdset.size;
-  int newsize = oldsize;
 
-  while (newsize <= fd)
-    newsize = newsize * 2;
-
-  if (oldsize == newsize) /* size unchanged, no need to realloc */
+  if (newsize <= oldsize) /* we don't shrink */
     return 1;
 
   oldbytes = ___CEILING_DIV (oldsize,8);
@@ -195,31 +185,41 @@ ___HIDDEN ___fdbits *___fdset_exceptfds
   return ___CAST(___fdbits*, ps->os.fdset.exceptfds);
 }
 
-void ___fdset_resize_heap_overflow_clear ___PVOID
-{
-  ___fdset_heap_overflow = 0;
-}
-
-int ___fdset_resize_heap_overflow ___PVOID
-{
-  return ___fdset_heap_overflow;
-}
-
 #endif
 
 #ifdef USE_POSIX
 
-void ___fdset_resize_pstate
-   ___P((___processor_state ___ps,
-         int fd),
-        (___ps,
-         fd)
-___processor_state ___ps;
-int fd;)
+void ___fdset_clear_overflow_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
 {
 #ifdef USE_select_or_poll
-  if (!___fdset_realloc (___ps, fd))
-    ___fdset_heap_overflow = 1;
+
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+
+  if (___PROCESSOR_ID(___ps, ___vms) == 0)
+    ___vms->os.fdset.overflow = 0;
+
+#endif
+}
+
+
+void ___fdset_resize_pstate
+   ___P((___processor_state ___ps,
+         int newsize),
+        (___ps,
+         newsize)
+___processor_state ___ps;
+int newsize;)
+{
+#ifdef USE_select_or_poll
+
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+
+  if (!___fdset_realloc (___ps, newsize))
+    ___vms->os.fdset.overflow = 1;
+
 #endif
 }
 
@@ -10779,6 +10779,17 @@ ___SCMOBJ ___setup_io_vmstate
         (___vms)
 ___virtual_machine_state ___vms;)
 {
+#ifdef USE_POSIX
+  {
+    int size = 8 * sizeof (fd_set);
+    if (size < MAX_CONDVARS)
+      size = MAX_CONDVARS;
+
+    ___vms->os.fdset.size = size;
+    ___vms->os.fdset.overflow = 0;
+  }
+#endif
+
   return ___FIX(___NO_ERR);
 }
 

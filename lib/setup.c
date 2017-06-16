@@ -308,6 +308,7 @@ ___virtual_machine_state ___vms;)
 #define OP_SET_PROCESSOR_COUNT OP_MAKE( 0,0)
 #define OP_VM_RESIZE           OP_MAKE( 1,0)
 #define OP_GARBAGE_COLLECT     OP_MAKE( 2,COMBINING_ADD)
+#define OP_FDSET_CLEAROVL      OP_MAKE( 9,COMBINING_MAX)
 #define OP_FDSET_RESIZE        OP_MAKE(10,COMBINING_MAX)
 #define OP_ACTLOG_START        OP_MAKE(61,0)
 #define OP_ACTLOG_STOP         OP_MAKE(62,0)
@@ -770,6 +771,10 @@ ___sync_op_struct *sop_ptr;)
       break;
 
 #ifdef USE_POSIX
+    case OP_FDSET_CLEAROVL:
+      ___fdset_clear_overflow_pstate (___ps);
+      break;
+
     case OP_FDSET_RESIZE:
       ___fdset_resize_pstate (___ps, sop_ptr->arg[0]);
       break;
@@ -939,21 +944,33 @@ int fd2;)
 #ifdef USE_select_or_poll
 
   ___processor_state ___ps = ___PSTATE;
-  int fd = (fd2 > fd1) ? fd2 : fd1;
-
-  if (fd < ___ps->os.fdset.size)
-    return 0;
-
-  ___fdset_resize_heap_overflow_clear ();
-
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   ___sync_op_struct sop;
 
+  int newsize;
+  int fd = (fd2 > fd1) ? fd2 : fd1;
+
+  if (fd < ___vms->os.fdset.size)
+    return 0;
+
+  newsize = ___vms->os.fdset.size;
+  while (fd >= newsize)
+    newsize = ___CEILING_DIV (3 * newsize, 2);
+  /* align newsize to ___fdbits word boundaries */
+  newsize = (newsize + 8 * sizeof (___fdbits) - 1) & ~(8 * sizeof (___fdbits) - 1);
+
+  sop.op = OP_FDSET_CLEAROVL;
+  on_all_processors (___PSP &sop);
+
   sop.op = OP_FDSET_RESIZE;
-  sop.arg[0] = fd;
+  sop.arg[0] = newsize;
 
   on_all_processors (___PSP &sop);
 
-  return ___fdset_resize_heap_overflow ();
+  if (!___vms->os.fdset.overflow && ___vms->os.fdset.size < newsize)
+    ___vms->os.fdset.size = newsize;
+
+  return ___vms->os.fdset.overflow;
 
 #else
 

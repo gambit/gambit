@@ -8276,8 +8276,19 @@ int gc_calls_to_punt_;
 #endif
 } ___pstate_mem;
 
+#ifndef ___OS_WIN32
+typedef struct ___vmstate_fdset_struct {
+  int size;
+  int overflow;
+} ___vmstate_fdset;
+#endif
+ 
 typedef struct ___vmstate_os_struct {
-int dummy; /* avoid empty struct error raised by MSVC */
+#ifdef ___OS_WIN32
+  int dummy; /* avoid empty struct error raised by MSVC */
+#else
+  ___vmstate_fdset fdset;
+#endif
 } ___vmstate_os;
 
 typedef struct ___vmstate_mem_struct {
