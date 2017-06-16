@@ -42,14 +42,6 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef ___SINGLE_THREADED_VMS
-#define BARRIER()
-#else
-#define BARRIER() barrier_sync_noop (___PSPNC)
-#endif
-
-/*---------------------------------------------------------------------------*/
-
 /*
  * Interrupt handling.
  */
@@ -961,11 +953,6 @@ int fd2;)
     newsize = ___CEILING_DIV (3 * newsize, 2);
   /* align newsize to ___fdbits word boundaries */
   newsize = (newsize + ___FDBITS - 1) & ~(___FDBITS - 1);
-
-  if (___PROCESSOR_ID(___ps, ___vms) == 0)
-    ___vms->os.fdset.overflow = 0;
-
-  BARRIER ();
 
   sop.op = OP_FDSET_RESIZE;
   sop.arg[0] = newsize;

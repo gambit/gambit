@@ -23,6 +23,14 @@
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef ___SINGLE_THREADED_VMS
+#define BARRIER()
+#else
+#define BARRIER() barrier_sync_noop (___PSPNC)
+#endif
+
+/*---------------------------------------------------------------------------*/
+
 
 ___io_module ___io_mod =
 {
@@ -200,6 +208,11 @@ int newsize;)
 #ifdef USE_select_or_poll
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+
+  if (___PROCESSOR_ID(___ps, ___vms) == 0)
+    ___vms->os.fdset.overflow = 0;
+
+  BARRIER ();
 
   if (!___fdset_realloc (___ps, newsize))
     ___vms->os.fdset.overflow = 1;
