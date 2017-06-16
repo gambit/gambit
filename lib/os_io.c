@@ -189,22 +189,6 @@ ___HIDDEN ___fdbits *___fdset_exceptfds
 
 #ifdef USE_POSIX
 
-void ___fdset_clear_overflow_pstate
-   ___P((___processor_state ___ps),
-        (___ps)
-___processor_state ___ps;)
-{
-#ifdef USE_select_or_poll
-
-  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
-
-  if (___PROCESSOR_ID(___ps, ___vms) == 0)
-    ___vms->os.fdset.overflow = 0;
-
-#endif
-}
-
-
 void ___fdset_resize_pstate
    ___P((___processor_state ___ps,
          int newsize),

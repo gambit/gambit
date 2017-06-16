@@ -42,6 +42,14 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef ___SINGLE_THREADED_VMS
+#define BARRIER()
+#else
+#define BARRIER() barrier_sync_noop (___PSPNC)
+#endif
+
+/*---------------------------------------------------------------------------*/
+
 /*
  * Interrupt handling.
  */
@@ -308,7 +316,6 @@ ___virtual_machine_state ___vms;)
 #define OP_SET_PROCESSOR_COUNT OP_MAKE( 0,0)
 #define OP_VM_RESIZE           OP_MAKE( 1,0)
 #define OP_GARBAGE_COLLECT     OP_MAKE( 2,COMBINING_ADD)
-#define OP_FDSET_CLEAROVL      OP_MAKE( 9,COMBINING_MAX)
 #define OP_FDSET_RESIZE        OP_MAKE(10,COMBINING_MAX)
 #define OP_ACTLOG_START        OP_MAKE(61,0)
 #define OP_ACTLOG_STOP         OP_MAKE(62,0)
@@ -771,10 +778,6 @@ ___sync_op_struct *sop_ptr;)
       break;
 
 #ifdef USE_POSIX
-    case OP_FDSET_CLEAROVL:
-      ___fdset_clear_overflow_pstate (___ps);
-      break;
-
     case OP_FDSET_RESIZE:
       ___fdset_resize_pstate (___ps, sop_ptr->arg[0]);
       break;
@@ -959,8 +962,10 @@ int fd2;)
   /* align newsize to ___fdbits word boundaries */
   newsize = (newsize + ___FDBITS - 1) & ~(___FDBITS - 1);
 
-  sop.op = OP_FDSET_CLEAROVL;
-  on_all_processors (___PSP &sop);
+  if (___PROCESSOR_ID(___ps, ___vms) == 0)
+    ___vms->os.fdset.overflow = 0;
+
+  BARRIER ();
 
   sop.op = OP_FDSET_RESIZE;
   sop.arg[0] = newsize;
