@@ -52,31 +52,25 @@ ___HIDDEN int ___fdset_init
   void *writefds = NULL;
   void *exceptfds = NULL;
 
-  int size = MAX_CONDVARS;
+  int size = 8 * sizeof (fd_set);
   int bytes;
 
-  if (size < 8 * sizeof (fd_set))
-    size = 8 * sizeof (fd_set);
+  if (size < MAX_CONDVARS)
+    size = MAX_CONDVARS;
   bytes = ___CEILING_DIV (size, 8);
-  
+
   readfds  = ___ALLOC_MEM (bytes);
-  if (!readfds)
+  if (readfds == NULL)
     goto error;
 
   writefds = ___ALLOC_MEM (bytes);
-  if (!writefds)
+  if (writefds == NULL)
     goto error;
 
 #ifdef USE_select
   exceptfds = ___ALLOC_MEM (bytes);
-  if (!exceptfds)
+  if (exceptfds == NULL)
     goto error;
-#endif
-
-  memset (readfds, 0, bytes);
-  memset (writefds, 0, bytes);
-#ifdef USE_select
-  memset (exceptfds, 0, bytes);
 #endif
 
   ps->os.fdset.readfds = readfds;
@@ -84,17 +78,17 @@ ___HIDDEN int ___fdset_init
   ps->os.fdset.exceptfds = exceptfds;
   ps->os.fdset.size = size;
 
-  return 0;
+  return 1;
 
  error:
-  if (readfds)
+  if (readfds != NULL)
     ___FREE_MEM (readfds);
-  if (writefds)
+  if (writefds != NULL)
     ___FREE_MEM (writefds);
-  if (exceptfds)
+  if (exceptfds != NULL)
     ___FREE_MEM (exceptfds);
 
-  return 1;
+  return 0;
 }
 
 ___HIDDEN int ___fdset_realloc
@@ -108,7 +102,8 @@ ___HIDDEN int ___fdset_realloc
   void *readfds = NULL;
   void *writefds = NULL;
   void *exceptfds = NULL;
-  int oldbytes, newbytes;
+  int oldbytes;
+  int newbytes;
   int oldsize = ps->os.fdset.size;
   int newsize = oldsize;
 
@@ -116,22 +111,22 @@ ___HIDDEN int ___fdset_realloc
     newsize = newsize * 2;
 
   if (oldsize == newsize) /* size unchanged, no need to realloc */
-      return 0;
+    return 1;
 
   oldbytes = ___CEILING_DIV (oldsize,8);
   newbytes = ___CEILING_DIV (newsize,8);
 
   readfds  = ___ALLOC_MEM (newbytes);
-  if (!readfds)
+  if (readfds == NULL)
     goto error;
 
   writefds = ___ALLOC_MEM (newbytes);
-  if (!writefds)
+  if (writefds == NULL)
     goto error;
 
 #ifdef USE_select
   exceptfds = ___ALLOC_MEM (newbytes);
-  if (!exceptfds)
+  if (exceptfds == NULL)
     goto error;
 #endif
 
@@ -155,17 +150,17 @@ ___HIDDEN int ___fdset_realloc
   ps->os.fdset.exceptfds = exceptfds;
   ps->os.fdset.size = newsize;
 
-  return 0;
+  return 1;
 
  error:
-  if (readfds)
+  if (readfds != NULL)
     ___FREE_MEM (readfds);
-  if (writefds)
+  if (writefds != NULL)
     ___FREE_MEM (writefds);
-  if (exceptfds)
+  if (exceptfds != NULL)
     ___FREE_MEM (exceptfds);
 
-  return 1;
+  return 0;
 }
 
 ___HIDDEN int ___fdset_size
@@ -221,7 +216,7 @@ ___processor_state ___ps;
 int fd;)
 {
 #ifdef USE_select_or_poll
-  if (___fdset_realloc (___ps, fd))
+  if (!___fdset_realloc (___ps, fd))
     ___fdset_heap_overflow = 1;
 #endif
 }
@@ -10718,7 +10713,7 @@ ___processor_state ___ps;)
 
 #ifdef USE_select_or_poll
 
-  if (___fdset_init (___ps))
+  if (!___fdset_init (___ps))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
 #endif
