@@ -95,11 +95,11 @@ typedef struct ___device_struct
 
 #ifdef USE_select_or_poll
 
-typedef ___SIZE_TS ___fdbits;
+typedef ___UWORD ___fdbits;
 
-#define ___FDBITS (8 * sizeof (___fdbits))
-#define ___FD_ELT(fd) ((fd) / ___FDBITS)
-#define ___FD_MASK(fd) ((___fdbits) 1 << ((fd) % ___FDBITS))
+#define ___FDBITS ___WORD_WIDTH
+#define ___FD_ELT(fd) ((fd) >> ___LOG_WORD_WIDTH)
+#define ___FD_MASK(fd) ((___fdbits) 1 << ((fd) % ___WORD_WIDTH))
 
 #define ___FD_ZERO(set, sz)                        \
   memset ((set), 0, sz/8)

@@ -957,7 +957,7 @@ int fd2;)
   while (fd >= newsize)
     newsize = ___CEILING_DIV (3 * newsize, 2);
   /* align newsize to ___fdbits word boundaries */
-  newsize = (newsize + 8 * sizeof (___fdbits) - 1) & ~(8 * sizeof (___fdbits) - 1);
+  newsize = (newsize + ___FDBITS - 1) & ~(___FDBITS - 1);
 
   sop.op = OP_FDSET_CLEAROVL;
   on_all_processors (___PSP &sop);
