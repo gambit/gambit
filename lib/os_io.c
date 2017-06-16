@@ -207,6 +207,8 @@ int ___fdset_resize_heap_overflow ___PVOID
 
 #endif
 
+#ifdef USE_POSIX
+
 void ___fdset_resize_pstate
    ___P((___processor_state ___ps,
          int fd),
@@ -221,6 +223,7 @@ int fd;)
 #endif
 }
 
+#endif
 
 
 /*---------------------------------------------------------------------------*/

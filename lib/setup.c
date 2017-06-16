@@ -769,9 +769,11 @@ ___sync_op_struct *sop_ptr;)
       sop_ptr->arg[0] = ___garbage_collect_pstate (___ps, sop_ptr->arg[0]);
       break;
 
+#ifdef USE_POSIX
     case OP_FDSET_RESIZE:
       ___fdset_resize_pstate (___ps, sop_ptr->arg[0]);
       break;
+#endif
 
     case OP_ACTLOG_START:
       ___actlog_start_pstate (___ps);

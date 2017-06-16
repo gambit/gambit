@@ -154,6 +154,9 @@ typedef struct ___device_select_state_struct
 #endif
   } ___device_select_state;
 
+
+#ifdef USE_POSIX
+
 extern void ___fdset_resize_pstate
    ___P((___processor_state ___ps,
          int fd),
@@ -161,6 +164,9 @@ extern void ___fdset_resize_pstate
 
 extern void ___fdset_resize_heap_overflow_clear ___PVOID;
 extern int ___fdset_resize_heap_overflow ___PVOID;
+
+#endif
+
 
 /* 0 if success, 1 if allocation failed in some processor */
 extern ___BOOL ___fdset_resize
