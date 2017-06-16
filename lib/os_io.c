@@ -3395,7 +3395,7 @@ int direction;)
 {
   ___device_pipe *d;
 
-  if (___fdset_resize (fd_rd, fd_wr))
+  if (!___fdset_resize (fd_rd, fd_wr))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_pipe*,
@@ -3767,7 +3767,7 @@ int direction;)
 {
   ___device_process *d;
 
-  if (___fdset_resize (fd_stdin, fd_stdout))
+  if (!___fdset_resize (fd_stdin, fd_stdout))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_process*,
@@ -5584,7 +5584,7 @@ int direction;)
 
 #ifdef USE_POSIX
 
-  if (___fdset_resize (s, s))
+  if (!___fdset_resize (s, s))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
 #endif
@@ -5950,7 +5950,7 @@ ___tls_context *tls_context;)
 
 #ifdef USE_POSIX
 
-  if (___fdset_resize (s, s))
+  if (!___fdset_resize (s, s))
     {
       CLOSE_SOCKET(s);
       return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -7296,7 +7296,7 @@ int direction;)
 {
   ___device_file *d;
 
-  if (___fdset_resize (fd, fd))
+  if (!___fdset_resize (fd, fd))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_file*,
@@ -9323,7 +9323,7 @@ int direction;)
 {
   ___device_raw *d;
 
-  if (___fdset_resize (fd, fd))
+  if (!___fdset_resize (fd, fd))
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d = ___CAST(___device_raw*,

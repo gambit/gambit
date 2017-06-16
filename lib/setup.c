@@ -951,7 +951,7 @@ int fd2;)
   int fd = (fd2 > fd1) ? fd2 : fd1;
 
   if (fd < ___vms->os.fdset.size)
-    return 0;
+    return 1;
 
   newsize = ___vms->os.fdset.size;
   while (fd >= newsize)
@@ -970,11 +970,11 @@ int fd2;)
   if (!___vms->os.fdset.overflow && ___vms->os.fdset.size < newsize)
     ___vms->os.fdset.size = newsize;
 
-  return ___vms->os.fdset.overflow;
+  return !___vms->os.fdset.overflow;
 
 #else
 
-  return 0;
+  return 1;
 
 #endif
 }
