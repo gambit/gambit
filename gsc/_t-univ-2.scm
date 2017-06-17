@@ -1055,7 +1055,7 @@
            (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
                      (^!= (^parens (^bitand nb_key_args (^int 1))) (^int 0))) ;; keyword arguments must come in pairs
                 (^return (^cast*-jumpable
-                          (^getglo '##raise-wrong-number-of-arguments-exception))))
+                          (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))
 
            (^assign key_vals (^new-array 'scmobj nb_key_parms))
 
@@ -1075,7 +1075,8 @@
                     (^inc-by k 1)
 
                     (^if (^not (^parens (^keyword? key)))
-                         (^return (^cast*-jumpable (^getglo '##raise-keyword-expected-exception))))
+                         (^return (^cast*-jumpable
+                                   (^getpeps '##raise-keyword-expected-exception-nary))))
 
                     (^assign i (^int 0))
                     (^while (^< i nb_key_parms)
@@ -1087,8 +1088,7 @@
 
                     (^if (^= i nb_key_parms)
                          (^return (^cast*-jumpable
-                                   (^getglo '##raise-unknown-keyword-argument-exception)))) ;; key not found in descriptors
-                    ))
+                                   (^getpeps '##raise-unknown-keyword-argument-exception-nary))))))
 
            (^assign k (^int 0))
 
@@ -1162,7 +1162,7 @@
            (^if (^< k (^int 0)) ;; not all required and optional arguments supplied?
                 (^return
                  (^cast*-jumpable
-                  (^getglo '##raise-wrong-number-of-arguments-exception))))
+                  (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))
 
            (univ-push-args ctx)
 
@@ -1179,7 +1179,7 @@
                 (^ (univ-pop-args-to-regs ctx 0)
                    (^return
                     (^cast*-jumpable
-                     (^getglo '##raise-wrong-number-of-arguments-exception)))))
+                     (^getpeps '##raise-wrong-number-of-arguments-exception-nary)))))
 
            (^if (^not empty_rest)
                 (^pop (lambda (expr) (^assign rest expr))))
@@ -1194,6 +1194,7 @@
                  (^while (^not (^parens (^eq? rest (^null))))
                          (^ (^push (^getcar rest))
                             (^assign rest (^getcdr rest))
+                            (^inc-by (^getnargs) 1)
                             (^inc-by (gvm-state-nargs-use ctx 'rdwr) 1)))
                  (univ-pop-args-to-regs ctx 0)
                  (^return error)))
@@ -1216,15 +1217,12 @@
       "\n"
       '()
       (lambda (ctx)
-        (let ((proc (^local-var 'proc)))
+        (let ((proc (^local-var 'proc))
+              (i (^local-var 'i))
+              (exception (^local-var 'exception)))
           (^ (^expr-statement
-              (^call-prim
-               (^rts-method-use 'build_rest)
-               0))
-             (^setreg 2 (^getreg 1))
-             (^setreg 1 proc)
-             (^setnargs 2)
-             (^return (^local-var 'exception)))))))
+              (^call-prim (^rts-method-use 'prepend_arg1) proc))
+             (^return exception))))))
 
     ((wrong_nargs)
      (rts-method
@@ -1235,17 +1233,13 @@
       "\n"
       '()
       (lambda (ctx)
-        (let ((proc (^local-var 'proc)))
+        (let ((proc (^local-var 'proc))
+              (i (^local-var 'i)))
           (^ (^expr-statement
-              (^call-prim
-               (^rts-method-use 'build_rest)
-               0))
-             (^setreg 2 (^getreg 1))
-             (^setreg 1 proc)
-             (^setnargs 2)
+              (^call-prim (^rts-method-use 'prepend_arg1) proc))
              (^return
               (^cast*-jumpable
-               (^getglo '##raise-wrong-number-of-arguments-exception))))))))
+               (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))))))
 
     ((get)
 #<<EOF
