@@ -49,70 +49,26 @@ ___io_module ___io_mod =
 
 #ifdef USE_select_or_poll
 
-___HIDDEN int ___fdset_init
-   ___P((___processor_state ps),
-        (ps)
-        ___processor_state ps;)
-{
-  void *readfds = NULL;
-  void *writefds = NULL;
-  void *exceptfds = NULL;
-
-  int size = ___VMSTATE_FROM_PSTATE(ps)->os.fdset.size;
-  int bytes = ___CEILING_DIV (size, 8);
-
-  readfds  = ___ALLOC_MEM (bytes);
-  if (readfds == NULL)
-    goto error;
-
-  writefds = ___ALLOC_MEM (bytes);
-  if (writefds == NULL)
-    goto error;
-
-#ifdef USE_select
-  exceptfds = ___ALLOC_MEM (bytes);
-  if (exceptfds == NULL)
-    goto error;
-#endif
-
-  ps->os.fdset.readfds = readfds;
-  ps->os.fdset.writefds = writefds;
-  ps->os.fdset.exceptfds = exceptfds;
-  ps->os.fdset.size = size;
-
-  return 1;
-
- error:
-  if (readfds != NULL)
-    ___FREE_MEM (readfds);
-  if (writefds != NULL)
-    ___FREE_MEM (writefds);
-  if (exceptfds != NULL)
-    ___FREE_MEM (exceptfds);
-
-  return 0;
-}
-
 ___HIDDEN int ___fdset_realloc
-   ___P((___processor_state ps,
+   ___P((___processor_state ___ps,
          int newsize),
-        (ps,
+        (___ps,
          newsize)
-        ____processor_state ps;
-        int newsize;)
+____processor_state ___ps;
+int newsize;)
 {
   void *readfds = NULL;
   void *writefds = NULL;
   void *exceptfds = NULL;
-  int oldsize = ps->os.fdset.size;
+  int oldsize = ___ps->os.fdset.size;
   int oldbytes;
   int newbytes;
 
   if (newsize <= oldsize) /* we don't shrink */
     return 1;
 
-  oldbytes = ___CEILING_DIV (oldsize,8);
-  newbytes = ___CEILING_DIV (newsize,8);
+  oldbytes = ___CEILING_DIV(oldsize,8);
+  newbytes = ___CEILING_DIV(newsize,8);
 
   readfds  = ___ALLOC_MEM (newbytes);
   if (readfds == NULL)
@@ -128,25 +84,21 @@ ___HIDDEN int ___fdset_realloc
     goto error;
 #endif
 
-  memcpy (readfds, ps->os.fdset.readfds, oldbytes);
-  memset (___CAST(char*, readfds) + oldbytes, 0, newbytes - oldbytes);
-  memcpy (writefds, ps->os.fdset.writefds, oldbytes);
-  memset (___CAST(char*, writefds) + oldbytes, 0, newbytes - oldbytes);
+  if (___ps->os.fdset.readfds != NULL)
+    ___FREE_MEM (___ps->os.fdset.readfds);
+  
+  if (___ps->os.fdset.writefds != NULL)
+    ___FREE_MEM (___ps->os.fdset.writefds);
+  
 #ifdef USE_select
-  memcpy (exceptfds, ps->os.fdset.exceptfds, oldbytes);
-  memset (___CAST(char*, exceptfds) + oldbytes, 0, newbytes - oldbytes);
+  if (___ps->os.fdset.exceptfds != NULL)
+  ___FREE_MEM (___ps->os.fdset.exceptfds);
 #endif
 
-  ___FREE_MEM (ps->os.fdset.readfds);
-  ___FREE_MEM (ps->os.fdset.writefds);
-#ifdef USE_select
-  ___FREE_MEM (ps->os.fdset.exceptfds);
-#endif
-
-  ps->os.fdset.readfds = readfds;
-  ps->os.fdset.writefds = writefds;
-  ps->os.fdset.exceptfds = exceptfds;
-  ps->os.fdset.size = newsize;
+  ___ps->os.fdset.readfds = readfds;
+  ___ps->os.fdset.writefds = writefds;
+  ___ps->os.fdset.exceptfds = exceptfds;
+  ___ps->os.fdset.size = newsize;
 
   return 1;
 
@@ -161,36 +113,19 @@ ___HIDDEN int ___fdset_realloc
   return 0;
 }
 
-___HIDDEN int ___fdset_size
-   ___P((___processor_state ps),
+___HIDDEN int ___fdset_init
+   ___P((___processor_state ___ps),
         (ps)
-        ___processor_state ps;)
+___processor_state ___ps;)
 {
-  return ps->os.fdset.size;
-}
+  int size = ___VMSTATE_FROM_PSTATE(___ps)->os.fdset.size;
 
-___HIDDEN ___fdbits *___fdset_readfds
-   ___P((___processor_state ps),
-        (ps)
-        ___processor_state ps;)
-{
-  return ___CAST(___fdbits*, ps->os.fdset.readfds);
-}
+  ___ps->os.fdset.readfds = NULL;
+  ___ps->os.fdset.writefds = NULL;
+  ___ps->os.fdset.exceptfds = NULL;
+  ___ps->os.fdset.size = 0;
 
-___HIDDEN ___fdbits *___fdset_writefds
-   ___P((___processor_state ps),
-        (ps)
-        ___processor_state ps;)
-{
-  return ___CAST(___fdbits*, ps->os.fdset.writefds);
-}
-
-___HIDDEN ___fdbits *___fdset_exceptfds
-   ___P((___processor_state ps),
-        (ps)
-        ___processor_state ps;)
-{
-  return ___CAST(___fdbits*, ps->os.fdset.exceptfds);
+  return ___fdset_realloc (___ps, size);
 }
 
 #endif
@@ -989,27 +924,27 @@ ___time timeout;)
 
 #ifdef USE_select
   {
-    ___processor_state ps = ___PSTATE;
+    ___processor_state ___ps = ___PSTATE;
 
     state.highest_fd_plus_1 = 0;
-    state.readfds = ___fdset_readfds (ps);
-    state.writefds = ___fdset_writefds (ps);
-    state.exceptfds = ___fdset_exceptfds (ps);
-    ___FD_ZERO(state.readfds, ___fdset_size (ps));
-    ___FD_ZERO(state.writefds, ___fdset_size (ps));
-    ___FD_ZERO(state.exceptfds, ___fdset_size (ps));
+    state.readfds = ___CAST(___fdbits*, ___ps->os.fdset.readfds);
+    state.writefds = ___CAST(___fdbits*, ___ps->os.fdset.writefds);
+    state.exceptfds = ___CAST(___fdbits*, ___ps->os.fdset.exceptfds);
+    ___FD_ZERO(state.readfds, ___ps->os.fdset.size);
+    ___FD_ZERO(state.writefds, ___ps->os.fdset.size);
+    ___FD_ZERO(state.exceptfds, ___ps->os.fdset.size);
   }
 #endif
 
 #ifdef USE_poll
   {
-    ___processor_state ps = ___PSTATE;
+    ___processor_state ___ps = ___PSTATE;
 
     state.pollfd_count = 0;
-    state.readfds = ___fdset_readfds (ps);
-    state.writefds = ___fdset_writefds (ps);
-    ___FD_ZERO (state.readfds, ___fdset_size (ps));
-    ___FD_ZERO (state.writefds, ___fdset_size (ps));
+    state.readfds = ___CAST(___fdbits*, ___ps->os.fdset.readfds);
+    state.writefds = ___CAST(___fdbits*, ___ps->os.fdset.writefds);
+    ___FD_ZERO (state.readfds, ___ps->os.fdset.size);
+    ___FD_ZERO (state.writefds, ___ps->os.fdset.size);
   }
 #endif
 
