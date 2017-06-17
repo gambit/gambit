@@ -86,10 +86,10 @@ int newsize;)
 
   if (___ps->os.fdset.readfds != NULL)
     ___FREE_MEM (___ps->os.fdset.readfds);
-  
+
   if (___ps->os.fdset.writefds != NULL)
     ___FREE_MEM (___ps->os.fdset.writefds);
-  
+
 #ifdef USE_select
   if (___ps->os.fdset.exceptfds != NULL)
   ___FREE_MEM (___ps->os.fdset.exceptfds);
@@ -134,15 +134,25 @@ ___processor_state ___ps;)
 
 void ___fdset_resize_pstate
    ___P((___processor_state ___ps,
-         int newsize),
+         int maxfd),
         (___ps,
-         newsize)
+         maxfd)
 ___processor_state ___ps;
-int newsize;)
+int maxfd;)
 {
 #ifdef USE_select_or_poll
 
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  int newsize;
+
+  if (maxfd < ___vms->os.fdset.size)
+    return;
+
+  newsize = ___vms->os.fdset.size;
+  while (maxfd >= newsize)
+    newsize = ___CEILING_DIV(3 * newsize, 2);
+  /* align newsize to ___fdbits word boundaries */
+  newsize = (newsize + ___FDBITS - 1) & ~(___FDBITS - 1);
 
   if (___PROCESSOR_ID(___ps, ___vms) == 0)
     ___vms->os.fdset.overflow = 0;
@@ -151,6 +161,11 @@ int newsize;)
 
   if (!___fdset_realloc (___ps, newsize))
     ___vms->os.fdset.overflow = 1;
+
+  BARRIER ();
+
+  if (!___vms->os.fdset.overflow && ___PROCESSOR_ID(___ps, ___vms) == 0)
+    ___vms->os.fdset.size = newsize;
 
 #endif
 }

@@ -928,6 +928,8 @@ ___SIZE_TS requested_words_still;)
 }
 
 
+#ifdef USE_POSIX
+
 ___EXP_FUNC(___BOOL, ___fdset_resize)
    ___P((int fd1,
          int fd2),
@@ -943,24 +945,15 @@ int fd2;)
   ___sync_op_struct sop;
 
   int newsize;
-  int fd = (fd2 > fd1) ? fd2 : fd1;
+  int maxfd = (fd2 > fd1) ? fd2 : fd1;
 
-  if (fd < ___vms->os.fdset.size)
+  if (maxfd < ___vms->os.fdset.size)
     return 1;
 
-  newsize = ___vms->os.fdset.size;
-  while (fd >= newsize)
-    newsize = ___CEILING_DIV (3 * newsize, 2);
-  /* align newsize to ___fdbits word boundaries */
-  newsize = (newsize + ___FDBITS - 1) & ~(___FDBITS - 1);
-
   sop.op = OP_FDSET_RESIZE;
-  sop.arg[0] = newsize;
+  sop.arg[0] = maxfd;
 
   on_all_processors (___PSP &sop);
-
-  if (!___vms->os.fdset.overflow && ___vms->os.fdset.size < newsize)
-    ___vms->os.fdset.size = newsize;
 
   return !___vms->os.fdset.overflow;
 
@@ -970,6 +963,8 @@ int fd2;)
 
 #endif
 }
+
+#endif
 
 ___EXP_FUNC(void,___actlog_start)
    ___P((___processor_state ___ps),
