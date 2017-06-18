@@ -60,14 +60,11 @@ int newsize;)
   void *readfds = NULL;
   void *writefds = NULL;
   void *exceptfds = NULL;
-  int oldsize = ___ps->os.fdset.size;
-  int oldbytes;
   int newbytes;
 
-  if (newsize <= oldsize) /* we don't shrink */
+  if (newsize <= ___ps->os.fdset.size) /* we don't shrink */
     return 1;
 
-  oldbytes = ___CEILING_DIV(oldsize,8);
   newbytes = ___CEILING_DIV(newsize,8);
 
   readfds  = ___ALLOC_MEM (newbytes);
