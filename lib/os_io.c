@@ -857,6 +857,7 @@ int fd;
 ___BOOL for_writing;)
 {
   state->pollfds[state->pollfd_count].fd = fd;
+
   if (for_writing)
     state->pollfds[state->pollfd_count].events = POLLOUT;
   else
