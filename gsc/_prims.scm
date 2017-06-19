@@ -1248,7 +1248,7 @@
 (def-spec "flatan" (spec-u "##flatan"))
 (def-spec "atan"   (spec-arith #f "flatan"))
 
-(def-spec "flsinh" (spec-u "##flsin"))
+(def-spec "flsinh" (spec-u "##flsinh"))
 (def-spec "sinh"   (spec-arith #f "flsinh"))
 
 (def-spec "flcosh" (spec-u "##flcosh"))
