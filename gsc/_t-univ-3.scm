@@ -1891,7 +1891,28 @@
 
     (else
      (compiler-internal-error
-      "univ-emit-dict-set, unknown target"))))
+      "univ-emit-dict-length, unknown target"))))
+
+(define (univ-emit-dict-keys ctx expr type)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^call-prim (^member 'Object 'keys) expr))
+
+    ((python ruby)
+     (^call-prim (^member expr 'keys)))
+
+    ((php)
+     (^call-prim 'array_keys expr))
+
+    ;; ((java)
+    ;; TODO :
+    ;;  expr.keySet().toArray(new Type[]);
+    ;;  )
+
+    (else
+     (compiler-internal-error
+      "univ-emit-dict-keys, unknown target"))))
 
 (define (univ-emit-member ctx expr name)
   (case (target-name (ctx-target ctx))

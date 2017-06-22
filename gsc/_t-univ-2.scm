@@ -1339,35 +1339,44 @@
       '(public)
       'scmobj
       (list (univ-field 'objdict '(dict int scmobj))
-            (univ-field 'primdict '(dict string scmobj)))
+            (univ-field 'primdict '(dict str scmobj)))
       "\n"
       '()
       (lambda (ctx)
         (let ((objdict (^local-var 'objdict))
               (primdict (^local-var 'primdict))
               (alist (^local-var 'alist))
+              (primkeys (^local-var 'primkeys))
               (primkey (^local-var 'primkey))
-              (objkey (^local-var 'objkey)))
+              (objkeys (^local-var 'objkeys))
+              (objkey (^local-var 'objkey))
+              (i (^local-var 'i)))
           (^
            (^var-declaration 'scmobj alist (^null))
-           (^var-declaration 'string primkey (^null))
+
+           (^var-declaration '(array str) primkeys (^dict-keys primdict 'str))
+           (^var-declaration 'str primkey (^null))
+
+           (^var-declaration '(array int) objkeys (^dict-keys objdict 'int))
            (^var-declaration 'int objkey (^int 0))
 
-           (case (target-name (ctx-target ctx))
-             ((js)
-              (^ "for (primkey in primdict) {"
-                 (^assign alist (^cons (^cons (^call-prim (^rts-field-use 'dict_key_to_prim) primkey)
-                                              (^dict-get primdict primkey))
-                                       alist))
-                 "}"
-                 "for (objkey in objdict) {"
-                 (^assign alist (^cons (^cons (^dict-get (^rts-field-use 'sn_table) objkey)
-                                              (^dict-get objdict objkey))
-                                       alist))
-                 "}"))
-             (else
-              (compiler-internal-error
-               "native_table_to_list unknown target")))
+           (^var-declaration 'int i (^int 0))
+
+           (^while (^< i (^array-length primkeys))
+                   (^ (^assign primkey (^array-index primkeys i))
+                      (^assign alist (^cons (^cons (^call-prim (^rts-field-use 'dict_key_to_prim) primkey)
+                                                   (^dict-get primdict primkey))
+                                            alist))
+                      (^inc-by i (^int 1))))
+
+           (^assign i (^int 0))
+
+           (^while (^< i (^array-length objkeys))
+                   (^ (^assign objkey (^array-index objkeys i))
+                      (^assign alist (^cons (^cons (^dict-get (^rts-field-use 'sn_table) objkey)
+                                                   (^dict-get objdict objkey))
+                                            alist))
+                      (^inc-by i (^int 1))))
 
            (^return alist))))))
 
