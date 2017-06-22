@@ -220,6 +220,9 @@
 (define-macro (^set obj name val)
   `(univ-emit-set ctx ,obj ,name ,val))
 
+(define-macro (^attribute-exists? obj name)
+  `(univ-emit-attribute-exists? ctx ,obj ,name))
+
 (define-macro (^obj obj)
   `(univ-emit-obj ctx ,obj))
 
@@ -546,6 +549,9 @@
 
 (define-macro (^dict-set expr1 expr2 expr3)
   `(univ-emit-dict-set ctx ,expr1 ,expr2 ,expr3))
+
+(define-macro (^dict-length expr)
+  `(univ-emit-dict-length ctx ,expr))
 
 (define-macro (^member expr name)
   `(univ-emit-member ctx ,expr ,name))
@@ -1152,3 +1158,12 @@
 
 (define-macro (^popcount! arg)
   `(univ-emit-popcount! ctx ,arg))
+
+(define-macro (^host-object? arg)
+  `(univ-emit-host-object? ctx ,arg))
+
+(define-macro (^object->id arg)
+  `(univ-emit-object->id ctx ,arg))
+
+(define-macro (^primitive->id arg)
+  `(univ-emit-primitive->id ctx ,arg))

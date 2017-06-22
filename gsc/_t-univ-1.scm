@@ -607,6 +607,14 @@
 (univ-prim-proc-add! '("##inline-host-expression" 1 #t 0 0 (#f) extended))
 (univ-prim-proc-add! '("##inline-host-declaration" (1) #t 0 0 (#f) extended))
 
+(univ-prim-proc-add! '("##table-native-make-primdict" (0) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-native-make-objdict" (0) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-native-key-exists?" (3) #f 0 0 boolean extended))
+(univ-prim-proc-add! '("##table-native-ref" (3) #f 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-native-set!" (4) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-native-length" (2) #f 0 0 number extended))
+(univ-prim-proc-add! '("##table-native-list->table" (2) #f 0 0 pair extended))
+
 (define (univ-switch-testable? targ obj)
   ;;(pretty-print (list 'univ-switch-testable? 'targ obj))
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1695,6 +1703,25 @@
      (compiler-internal-error
       "univ-emit-set, unknown target"))))
 
+(define (univ-emit-attribute-exists? ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ "Object.prototype.hasOwnProperty.call(" expr1 "," expr2 ")"))
+
+    ((php)
+     (^call-prim 'property_exists expr1 expr2))
+
+    ((python)
+     (^call-prim 'hasattr expr1 expr2))
+
+    ((ruby)
+     (^call-prim
+      (^member expr1 'instance_variable_defined?) (^ ":@" expr2)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-prop-index-exists?, unknown target"))))
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 

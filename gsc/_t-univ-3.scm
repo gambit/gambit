@@ -1880,6 +1880,19 @@
      (compiler-internal-error
       "univ-emit-dict-set, unknown target"))))
 
+(define (univ-emit-dict-length ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^array-length (^call-prim (^member 'Object 'keys) expr)))
+
+    ((python ruby php)
+     (^array-length expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-dict-set, unknown target"))))
+
 (define (univ-emit-member ctx expr name)
   (case (target-name (ctx-target ctx))
 
@@ -4050,6 +4063,64 @@ tanh
     (else
      (compiler-internal-error
       "unit-emit-instanceof, unknown target"))))
+
+(define (univ-emit-host-object? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^not (^parens
+            (^or (^typeof "number" expr)
+                 (^or (^typeof "string" expr)
+                      (^or (^typeof "boolean" expr)
+                           (^or (^typeof "undefined" expr)
+                                (^eq? expr (^null)))))))))
+
+    ((php)
+     (^not (^parens
+            (^or (^call-prim 'is_int expr)
+                 (^or (^call-prim 'is_float expr)
+                      (^or (^call-prim 'is_double expr)
+                           (^or (^call-prim 'is_bool expr)
+                                (^or (^call-prim 'is_string expr)
+                                     (^call-prim 'is_null expr)))))))))
+
+    (else
+     (compiler-internal-error
+      "unit-emit-host-object?, unknown target"))))
+
+;; Generate unique IDs for objects and primitives to be used
+;; in native hash tables
+(define (univ-emit-object->id ctx expr)
+  (case (target-name (ctx-target ctx))
+    ((ruby)
+     ;; TODO : deal with dict[-0.0] => dict[0.0]
+     expr)
+    ((python)
+     ;; Bundle type and object in a tupple to avoid 1, 1.0 and True
+     ;; to be considered as the same key in a dictionary
+     ;; TODO : deal with -0.0
+     (^parens
+      (^if-expr (^or (^instanceof (^type 'int) expr)
+                     (^or (^instanceof (^type 'bool) expr)
+                          (^instanceof (^type 'float) expr)))
+                (^ "(type(" expr "), " expr ")")
+                expr)))
+    ((js php)
+     (^call-prim (^rts-method-use 'get_serial_number) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-object->id, unknown target"))))
+
+(define (univ-emit-primitive->id ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^call-prim (^rts-method-use 'prim_to_dict_key) expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-object->id, unknown target"))))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))

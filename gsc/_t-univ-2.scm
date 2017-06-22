@@ -1241,6 +1241,136 @@
               (^cast*-jumpable
                (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))))))
 
+    ((prim_to_dict_key)
+     (rts-method
+      'prim_to_dict_key
+      '(public)
+      'string
+      (list (univ-field 'key 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((key (^local-var 'key)))
+          (^
+           (^if (^or (^int? key) (^float? key))
+                (^return key))
+
+           (^if (^eq? key (^bool #t))
+                (^return (^str "c0")))
+
+           (^if (^eq? key (^bool #f))
+                (^return (^str "c1")))
+
+           (^if (^eq? key (^null))
+                (^return (^str "c2")))
+
+           (^if (^eq? key (^void))
+                (^return (^str "c3")))
+
+           (^if (^str? key)
+                (^return (^+ (^str "s") key)))
+
+           (^return (^str "cerror")))))))
+
+    ((dict_key_to_prim)
+     (rts-method
+      'dict_key_to_prim
+      '(public)
+      'scmobj
+      (list (univ-field 'key 'string))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((key (^local-var 'key)))
+          (^
+           ;; TODO
+           (^if (^eq? (^string-ref key 0) (^chr "s"))
+                (^return (^str "string_key_not_implemented")))
+
+           (^if (^eq? key (^str "c0"))
+                (^return (^bool #t)))
+
+           (^if (^eq? key (^str "c1"))
+                (^return (^bool #f)))
+
+           (^if (^eq? key (^str "c2"))
+                (^return (^null)))
+
+           (^if (^eq? key (^str "c3"))
+                (^return (^void)))
+
+           ;; TODO : cast as int/float
+           (^return (^ "+" key)))))))
+
+    ((next_sn)
+     (rts-field
+      'next_sn
+      'int
+      (^int 0)
+      '(public)))
+
+    ((sn_table)
+     (rts-field
+      'sn_table
+      '(dict int scmobj)
+      (^empty-dict '(dict int scmobj))
+      '(public)))
+
+    ((get_serial_number)
+     (rts-method
+      'get_serial_number
+      '(public)
+      'scmobj
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((obj (^local-var 'obj)))
+          (^
+           (^if (^not (^attribute-exists? obj (^str "__sn__")))
+                (^ (^assign (^member obj '__sn__) (^rts-field-use 'next_sn))
+                   (^assign (^array-index (^rts-field-use 'sn_table) (^rts-field-use 'next_sn)) obj)
+                   (^inc-by (^rts-field-use 'next_sn) (^int 1))))
+           (^return (^member obj '__sn__)))))))
+
+    ((native_table_to_list)
+     (rts-method
+      'native_table_to_list
+      '(public)
+      'scmobj
+      (list (univ-field 'objdict '(dict int scmobj))
+            (univ-field 'primdict '(dict string scmobj)))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((objdict (^local-var 'objdict))
+              (primdict (^local-var 'primdict))
+              (alist (^local-var 'alist))
+              (primkey (^local-var 'primkey))
+              (objkey (^local-var 'objkey)))
+          (^
+           (^var-declaration 'scmobj alist (^null))
+           (^var-declaration 'string primkey (^null))
+           (^var-declaration 'int objkey (^int 0))
+
+           (case (target-name (ctx-target ctx))
+             ((js)
+              (^ "for (primkey in primdict) {"
+                 (^assign alist (^cons (^cons (^call-prim (^rts-field-use 'dict_key_to_prim) primkey)
+                                              (^dict-get primdict primkey))
+                                       alist))
+                 "}"
+                 "for (objkey in objdict) {"
+                 (^assign alist (^cons (^cons (^dict-get (^rts-field-use 'sn_table) objkey)
+                                              (^dict-get objdict objkey))
+                                       alist))
+                 "}"))
+             (else
+              (compiler-internal-error
+               "native_table_to_list unknown target")))
+
+           (^return alist))))))
+
     ((get)
 #<<EOF
 function gambit_get($obj,$name) {
