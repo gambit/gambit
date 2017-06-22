@@ -77,9 +77,7 @@
 
   (test     unprintable:)
   (init     unprintable:)
-  (alist    unprintable:)
-  (objdict  unprintable:)
-  (primdict unprintable:)
+  (gcht     unprintable:)
 )
 
 ))

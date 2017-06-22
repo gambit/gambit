@@ -1636,17 +1636,13 @@
                       arg-num)))))
 
   (define (checks-done test-fn arg-num)
-    (if (##table-native? test-fn)
-        (macro-make-table test-fn
-                          init
-                          #f
-                          (##table-native-make-objdict)
-                          (##table-native-make-primdict))
-        (macro-make-table test-fn
-                          init
-                          '()
-                          #f
-                          #f)))
+    (let ((eq-table? (##table-native? test-fn)))
+      (macro-make-table (if eq-table? #f test-fn)
+                        init
+                        ;; gcht: alist/hash-table
+                        (if eq-table?
+                            (##table-native-make-gcht)
+                            '()))))
 
   (check-test 0))
 
@@ -1677,13 +1673,10 @@
               (default-value (macro-absent-obj)))
 
   (let ((test (macro-table-test table)))
-    (if (##table-native? (macro-table-test table))
-        (let ((exists (##table-native-key-exists? (macro-table-objdict table)
-                                                  (macro-table-primdict table)
-                                                  key)))
+    (if (not (macro-table-test table))
+        (let ((exists (##table-native-key-exists? (macro-table-gcht table) key)))
           (cond (exists
-                 (##table-native-ref (macro-table-objdict table)
-                                     (macro-table-primdict table)
+                 (##table-native-ref (macro-table-gcht table)
                                      key))
                 ((##not (##eq? default-value (macro-absent-obj)))
                  default-value)
@@ -1694,7 +1687,7 @@
                   table-ref
                   table
                   key))))
-        (let loop ((probe (macro-table-alist table)))
+        (let loop ((probe (macro-table-gcht table)))
           (cond ((##pair? probe)
                  (let ((pair (##car probe)))
                    (if (test key (##car pair))
@@ -1726,12 +1719,11 @@
               (val (macro-absent-obj)))
 
   (let ((test (macro-table-test table)))
-    (if (##table-native? (macro-table-test table))
-        (##table-native-set! (macro-table-objdict table)
-                             (macro-table-primdict table)
+    (if (not (macro-table-test table))
+        (##table-native-set! (macro-table-gcht table)
                              key
                              val)
-        (let ((alist (macro-table-alist table)))
+        (let ((alist (macro-table-gcht table)))
           (let loop ((probe alist) (prev #f))
 
             (cond ((##pair? probe)
@@ -1741,13 +1733,13 @@
                            (if (##eq? val (macro-absent-obj))
                                (if prev
                                    (##set-cdr! prev (##cdr probe))
-                                   (macro-table-alist-set! table (##cdr probe)))
+                                   (macro-table-gcht-set! table (##cdr probe)))
                                (##set-cdr! pair val))
                            (##void))
                          (loop (##cdr probe) probe))))
 
                   ((##not (##eq? val (macro-absent-obj)))
-                   (macro-table-alist-set!
+                   (macro-table-gcht-set!
                     table
                     (##cons (##cons key val) alist))
                    (##void))
@@ -1768,10 +1760,9 @@
       (##table-set! table key val))))
 
 (define-prim (##table-length table)
-  (if (##table-native? (macro-table-test table))
-      (##table-native-length (macro-table-objdict table)
-                             (macro-table-primdict table))
-      (##length (macro-table-alist table))))
+  (if (not (macro-table-test table))
+      (##table-native-length (macro-table-gcht table))
+      (##length (macro-table-gcht table))))
 
 (define-prim (table-length table)
   (macro-force-vars (table)
@@ -1779,11 +1770,10 @@
       (##table-length table))))
 
 (define-prim (##table->list table)
-  (if (##table-native? (macro-table-test table))
-      (##table-native-list->table (macro-table-objdict table)
-                                  (macro-table-primdict table))
+  (if (not (macro-table-test table))
+      (##table-native-table->list (macro-table-gcht table))
       (##map (lambda (x) (##cons (##car x) (##cdr x)))
-             (macro-table-alist table))))
+             (macro-table-gcht table))))
 
 (define-prim (table->list table)
   (macro-force-vars (table)
@@ -1816,8 +1806,7 @@
           (if (null? lst)
               table
               (begin
-                (##table-native-set! (macro-table-objdict table)
-                                     (macro-table-primdict table)
+                (##table-native-set! (macro-table-gcht table)
                                      (caar lst)
                                      (cdar lst))
                 (loop (cdr lst))))))
@@ -1825,9 +1814,7 @@
        test
        init
        (##map (lambda (x) (##cons (##car x) (##cdr x)))
-              lst)
-       #f
-       #f)))
+              lst))))
 
 (define-prim (list->table lst)
   (##list->table lst))
@@ -1836,9 +1823,10 @@
   (macro-make-table
    (macro-table-init table)
    (macro-table-test table)
-   (##table->list table)
-   #f
-   #f))
+   (if (macro-table-test table)
+       (##table->list table)
+       ;; TODO : native table
+       (##table-native-make-gcht))))
 
 (define-prim (table-copy table)
   (macro-force-vars (table)
@@ -1846,7 +1834,7 @@
       (##table-copy table))))
 
 (define-prim (##table-search proc table)
-  (let loop ((lst (macro-table-alist table)))
+  (let loop ((lst (macro-table-gcht table)))
     (if (##pair? lst)
         (let ((pair (##car lst)))
           (or (proc (##car pair) (##cdr pair))
