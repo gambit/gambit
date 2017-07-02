@@ -37,7 +37,7 @@ ___io_module ___io_mod =
 
 /*---------------------------------------------------------------------------*/
 
-#ifdef USE_FDSET_RESIZING
+#ifdef USE_POSIX
 
 ___HIDDEN int ___fdset_realloc
    ___P((___processor_state ___ps,
@@ -114,6 +114,10 @@ ___processor_state ___ps;)
 
   return ___fdset_realloc (___ps, size);
 }
+
+#endif
+
+#ifdef USE_FDSET_RESIZING
 
 void ___fdset_resize_pstate
    ___P((___processor_state ___ps,
@@ -10658,7 +10662,7 @@ ___processor_state ___ps;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-#ifdef USE_FDSET_RESIZING
+#ifdef USE_POSIX
 
   if (!___fdset_init (___ps))
     return ___FIX(___HEAP_OVERFLOW_ERR);
