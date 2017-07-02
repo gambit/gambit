@@ -8279,7 +8279,7 @@ int gc_calls_to_punt_;
 #ifndef ___OS_WIN32
 typedef struct ___vmstate_fdset_struct {
   int size;
-  int overflow;
+  ___VOLATILE int overflow;
 } ___vmstate_fdset;
 #endif
  
