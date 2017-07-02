@@ -10658,7 +10658,7 @@ ___processor_state ___ps;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-#ifdef USE_select_or_poll
+#ifdef USE_FDSET_RESIZING
 
   if (!___fdset_init (___ps))
     return ___FIX(___HEAP_OVERFLOW_ERR);
