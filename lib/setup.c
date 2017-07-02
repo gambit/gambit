@@ -308,6 +308,7 @@ ___virtual_machine_state ___vms;)
 #define OP_SET_PROCESSOR_COUNT OP_MAKE( 0,0)
 #define OP_VM_RESIZE           OP_MAKE( 1,0)
 #define OP_GARBAGE_COLLECT     OP_MAKE( 2,COMBINING_ADD)
+#define OP_FDSET_RESIZE        OP_MAKE(10,COMBINING_MAX)
 #define OP_ACTLOG_START        OP_MAKE(61,0)
 #define OP_ACTLOG_STOP         OP_MAKE(62,0)
 #define OP_NOOP                OP_MAKE(63,0)
@@ -768,6 +769,12 @@ ___sync_op_struct *sop_ptr;)
       sop_ptr->arg[0] = ___garbage_collect_pstate (___ps, sop_ptr->arg[0]);
       break;
 
+#ifdef USE_FDSET_RESIZING
+    case OP_FDSET_RESIZE:
+      ___fdset_resize_pstate (___ps, sop_ptr->arg[0]);
+      break;
+#endif
+
     case OP_ACTLOG_START:
       ___actlog_start_pstate (___ps);
       break;
@@ -920,6 +927,37 @@ ___SIZE_TS requested_words_still;)
   return sop.arg[0] != 0;
 }
 
+
+#ifdef USE_FDSET_RESIZING
+
+___EXP_FUNC(___BOOL, ___fdset_resize)
+   ___P((int fd1,
+         int fd2),
+        (fd1,
+         fd2)
+int fd1;
+int fd2;)
+{
+
+  ___processor_state ___ps = ___PSTATE;
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  ___sync_op_struct sop;
+
+  int newsize;
+  int maxfd = (fd2 > fd1) ? fd2 : fd1;
+
+  if (maxfd < ___vms->os.fdset.size)
+    return 1;
+
+  sop.op = OP_FDSET_RESIZE;
+  sop.arg[0] = maxfd;
+
+  on_all_processors (___PSP &sop);
+
+  return !___vms->os.fdset.overflow;
+}
+
+#endif
 
 ___EXP_FUNC(void,___actlog_start)
    ___P((___processor_state ___ps),

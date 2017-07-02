@@ -37,6 +37,124 @@ ___io_module ___io_mod =
 
 /*---------------------------------------------------------------------------*/
 
+#ifdef USE_POSIX
+
+___HIDDEN int ___fdset_realloc
+   ___P((___processor_state ___ps,
+         int newsize),
+        (___ps,
+         newsize)
+____processor_state ___ps;
+int newsize;)
+{
+  void *readfds = NULL;
+  void *writefds = NULL;
+  void *exceptfds = NULL;
+
+  if (newsize > 0)
+    {
+      int newbytes = ___CEILING_DIV(newsize,8);
+
+      readfds  = ___ALLOC_MEM (newbytes);
+      if (readfds == NULL)
+        goto error;
+
+      writefds = ___ALLOC_MEM (newbytes);
+      if (writefds == NULL)
+        goto error;
+
+#ifdef USE_select
+      exceptfds = ___ALLOC_MEM (newbytes);
+      if (exceptfds == NULL)
+        goto error;
+#endif
+    }
+
+  if (___ps->os.fdset.readfds != NULL)
+    ___FREE_MEM (___ps->os.fdset.readfds);
+
+  if (___ps->os.fdset.writefds != NULL)
+    ___FREE_MEM (___ps->os.fdset.writefds);
+
+#ifdef USE_select
+  if (___ps->os.fdset.exceptfds != NULL)
+  ___FREE_MEM (___ps->os.fdset.exceptfds);
+#endif
+
+  ___ps->os.fdset.readfds = readfds;
+  ___ps->os.fdset.writefds = writefds;
+  ___ps->os.fdset.exceptfds = exceptfds;
+  ___ps->os.fdset.size = newsize;
+
+  return 1;
+
+ error:
+  if (readfds != NULL)
+    ___FREE_MEM (readfds);
+  if (writefds != NULL)
+    ___FREE_MEM (writefds);
+  if (exceptfds != NULL)
+    ___FREE_MEM (exceptfds);
+
+  return 0;
+}
+
+___HIDDEN int ___fdset_init
+   ___P((___processor_state ___ps),
+        (ps)
+___processor_state ___ps;)
+{
+  int size = ___VMSTATE_FROM_PSTATE(___ps)->os.fdset.size;
+
+  ___ps->os.fdset.readfds = NULL;
+  ___ps->os.fdset.writefds = NULL;
+  ___ps->os.fdset.exceptfds = NULL;
+  ___ps->os.fdset.size = 0;
+
+  return ___fdset_realloc (___ps, size);
+}
+
+#endif
+
+#ifdef USE_FDSET_RESIZING
+
+void ___fdset_resize_pstate
+   ___P((___processor_state ___ps,
+         int maxfd),
+        (___ps,
+         maxfd)
+___processor_state ___ps;
+int maxfd;)
+{
+  ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
+  int newsize;
+
+  newsize = ___vms->os.fdset.size;
+  while (maxfd >= newsize)
+    newsize = ___CEILING_DIV(3 * newsize, 2);
+  /* align newsize to ___fdbits word boundaries */
+  newsize = (newsize + ___FDBITS - 1) & ~(___FDBITS - 1);
+
+  if (___PROCESSOR_ID(___ps, ___vms) == 0)
+    ___vms->os.fdset.overflow = 0;
+
+  BARRIER();
+
+  if (newsize > ___ps->os.fdset.size && !___fdset_realloc (___ps, newsize))
+    ___vms->os.fdset.overflow = 1;
+
+  BARRIER();
+
+  if (!___vms->os.fdset.overflow && ___PROCESSOR_ID(___ps, ___vms) == 0)
+    ___vms->os.fdset.size = newsize;
+
+}
+
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
 /* Device groups. */
 
 
@@ -698,9 +816,9 @@ int fd;
 ___BOOL for_writing;)
 {
   if (for_writing)
-    ___FD_SET(fd, &state->writefds);
+    ___FD_SET(fd, state->writefds);
   else
-    ___FD_SET(fd, &state->readfds);
+    ___FD_SET(fd, state->readfds);
 
   if (fd >= state->highest_fd_plus_1)
     state->highest_fd_plus_1 = fd+1;
@@ -801,21 +919,29 @@ ___time timeout;)
 #ifdef USE_select_or_poll
 
 #ifdef USE_select
+  {
+    ___processor_state ___ps = ___PSTATE;
 
-  state.highest_fd_plus_1 = 0;
-
-  ___FD_ZERO(&state.readfds);
-  ___FD_ZERO(&state.writefds);
-  ___FD_ZERO(&state.exceptfds);
-
+    state.highest_fd_plus_1 = 0;
+    state.readfds = ___CAST(___fdbits*, ___ps->os.fdset.readfds);
+    state.writefds = ___CAST(___fdbits*, ___ps->os.fdset.writefds);
+    state.exceptfds = ___CAST(___fdbits*, ___ps->os.fdset.exceptfds);
+    ___FD_ZERO(state.readfds, ___ps->os.fdset.size);
+    ___FD_ZERO(state.writefds, ___ps->os.fdset.size);
+    ___FD_ZERO(state.exceptfds, ___ps->os.fdset.size);
+  }
 #endif
 
 #ifdef USE_poll
+  {
+    ___processor_state ___ps = ___PSTATE;
 
-  state.pollfd_count = 0;
-  ___FD_ZERO (&state.readfds);
-  ___FD_ZERO (&state.writefds);
-
+    state.pollfd_count = 0;
+    state.readfds = ___CAST(___fdbits*, ___ps->os.fdset.readfds);
+    state.writefds = ___CAST(___fdbits*, ___ps->os.fdset.writefds);
+    ___FD_ZERO(state.readfds, ___ps->os.fdset.size);
+    ___FD_ZERO(state.writefds, ___ps->os.fdset.size);
+  }
 #endif
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
@@ -1001,9 +1127,9 @@ ___time timeout;)
 
     result =
       select (state.highest_fd_plus_1,
-              &state.readfds,
-              &state.writefds,
-              &state.exceptfds,
+              ___CAST(fd_set*, state.readfds),
+              ___CAST(fd_set*, state.writefds),
+              ___CAST(fd_set*, state.exceptfds),
               delta_tv);
 
     if (result < 0)
@@ -1134,13 +1260,13 @@ ___time timeout;)
                 if (state.pollfds[x].events & POLLIN)
                   {
                     if (state.pollfds[x].revents & (POLLIN | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.readfds);
+                      ___FD_SET(state.pollfds[x].fd, state.readfds);
                   }
 
                 if (state.pollfds[x].events & POLLOUT)
                   {
                     if (state.pollfds[x].revents & (POLLOUT | errmask))
-                      ___FD_SET (state.pollfds[x].fd, &state.writefds);
+                      ___FD_SET(state.pollfds[x].fd, state.writefds);
                   }
 
                 --active;
@@ -1156,7 +1282,7 @@ ___time timeout;)
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -1335,7 +1461,7 @@ ___time timeout;)
 
 #ifdef USE_select_or_poll
 
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, &state.readfds))
+  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
     {
       /* self-pipe has available data to read, discard all of it */
 
@@ -2915,12 +3041,12 @@ ___device_select_state *state;)
 
       if (for_writing)
         {
-          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, &state->writefds))
+          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, state->writefds))
             state->devs[i] = NULL;
         }
       else
         {
-          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, &state->readfds))
+          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, state->readfds))
             state->devs[i] = NULL;
         }
 
@@ -3196,6 +3322,13 @@ int fd_wr;
 int direction;)
 {
   ___device_pipe *d;
+
+#ifdef USE_FDSET_RESIZING
+
+  if (!___fdset_resize (fd_rd, fd_wr))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_pipe*,
               ___ALLOC_MEM(sizeof (___device_pipe)));
@@ -3565,6 +3698,13 @@ int fd_stdout;
 int direction;)
 {
   ___device_process *d;
+
+#ifdef USE_FDSET_RESIZING
+
+  if (!___fdset_resize (fd_stdin, fd_stdout))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_process*,
               ___ALLOC_MEM(sizeof (___device_process)));
@@ -4879,8 +5019,8 @@ ___device_select_state *state;)
 
       if (d->try_connect_again != 0 ||
           (for_writing
-           ? ___FD_ISSET(d->s, &state->writefds)
-           : ___FD_ISSET(d->s, &state->readfds)))
+           ? ___FD_ISSET(d->s, state->writefds)
+           : ___FD_ISSET(d->s, state->readfds)))
         {
           d->connect_done = 1;
           state->devs[i] = NULL;
@@ -5378,6 +5518,13 @@ int direction;)
   ___SCMOBJ e;
   ___device_tcp_client *d;
 
+#ifdef USE_FDSET_RESIZING
+
+  if (!___fdset_resize (s, s))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
+
   d = ___CAST(___device_tcp_client*,
               ___ALLOC_MEM(sizeof (___device_tcp_client)));
 
@@ -5652,7 +5799,7 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (___FD_ISSET(d->s, &state->readfds))
+      if (___FD_ISSET(d->s, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -5736,6 +5883,16 @@ ___tls_context *tls_context;)
       CLOSE_SOCKET(s); /* ignore error */
       return e;
     }
+
+#ifdef USE_FDSET_RESIZING
+
+  if (!___fdset_resize (s, s))
+    {
+      CLOSE_SOCKET(s);
+      return ___FIX(___HEAP_OVERFLOW_ERR);
+    }
+
+#endif
 
   d = ___CAST(___device_tcp_server*,
               ___ALLOC_MEM(sizeof (___device_tcp_server)));
@@ -6590,8 +6747,8 @@ ___device_select_state *state;)
 #ifdef USE_POSIX
 
       if (for_writing
-           ? ___FD_ISSET(d->fd, &state->writefds)
-           : ___FD_ISSET(d->fd, &state->readfds))
+           ? ___FD_ISSET(d->fd, state->writefds)
+           : ___FD_ISSET(d->fd, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -7074,6 +7231,13 @@ int fd;
 int direction;)
 {
   ___device_file *d;
+
+#ifdef USE_FDSET_RESIZING
+
+  if (!___fdset_resize (fd, fd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_file*,
               ___ALLOC_MEM(sizeof (___device_file)));
@@ -8964,7 +9128,7 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
       if (!CloseHandle (d->h))
         return err_code_from_GetLastError ();
 #endif
-      
+
     }
   else if (is_not_closed & direction & ___DIRECTION_RD)
     d->base.read_stage = ___STAGE_CLOSED;
@@ -9034,8 +9198,8 @@ ___device_select_state *state;)
 #ifdef USE_POSIX
 
       if (for_writing
-           ? ___FD_ISSET(d->fd, &state->writefds)
-           : ___FD_ISSET(d->fd, &state->readfds))
+           ? ___FD_ISSET(d->fd, state->writefds)
+           : ___FD_ISSET(d->fd, state->readfds))
         state->devs[i] = NULL;
 
 #endif
@@ -9098,6 +9262,13 @@ int fd;
 int direction;)
 {
   ___device_raw *d;
+
+#ifdef USE_FDSET_RESIZING
+
+  if (!___fdset_resize (fd, fd))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_raw*,
               ___ALLOC_MEM(sizeof (___device_raw)));
@@ -9183,7 +9354,7 @@ ___SCMOBJ flags;)
   return result;
 
 #endif
-  
+
   return ___FIX(___UNIMPL_ERR);
 }
 
@@ -10487,6 +10658,13 @@ ___processor_state ___ps;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
+#ifdef USE_POSIX
+
+  if (!___fdset_init (___ps))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
+
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
 #ifdef USE_POSIX
@@ -10545,6 +10723,17 @@ ___SCMOBJ ___setup_io_vmstate
         (___vms)
 ___virtual_machine_state ___vms;)
 {
+#ifdef USE_POSIX
+  {
+    int size = 8 * sizeof (fd_set);
+    if (size < MAX_CONDVARS)
+      size = MAX_CONDVARS;
+
+    ___vms->os.fdset.size = size;
+    ___vms->os.fdset.overflow = 0;
+  }
+#endif
+
   return ___FIX(___NO_ERR);
 }
 

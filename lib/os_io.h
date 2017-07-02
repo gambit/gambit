@@ -93,37 +93,23 @@ typedef struct ___device_struct
 #define MAX_CONDVARS 8192
 #endif
 
-#ifdef USE_poll
-#ifndef MAX_POLLFDS
-#define MAX_POLLFDS MAX_CONDVARS
-#endif
+#ifdef USE_select_or_poll
 
-typedef ___SIZE_TS ___fdbits;
+typedef ___UWORD ___fdbits;
 
-#define ___FDBITS (8 * sizeof (___fdbits))
-#define ___FD_ELT(fd) ((fd) / ___FDBITS)
-#define ___FD_MASK(fd) ((___fdbits) 1 << ((fd) % ___FDBITS))
+#define ___FDBITS ___WORD_WIDTH
+#define ___FD_ELT(fd) ((fd) >> ___LOG_WORD_WIDTH)
+#define ___FD_MASK(fd) ((___fdbits) 1 << ((fd) % ___WORD_WIDTH))
 
-#define ___FD_ZERO(set)                       \
-  memset ((set), 0, sizeof (___poll_fd_set))
+#define ___FD_ZERO(set, sz)                        \
+  memset ((set), 0, sz/8)
 #define ___FD_SET(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] |= ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] |= ___FD_MASK (fd))
 #define ___FD_CLR(fd, set)                    \
-  ((set)->fds[___FD_ELT (fd)] &= ~___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] &= ~___FD_MASK (fd))
 #define ___FD_ISSET(fd, set)                  \
-  ((set)->fds[___FD_ELT (fd)] & ___FD_MASK (fd))
+  ((set)[___FD_ELT (fd)] & ___FD_MASK (fd))
 
-typedef struct ___poll_fd_set {
-  ___fdbits fds[MAX_POLLFDS / ___FDBITS];
-} ___poll_fd_set;
-
-#endif
-
-#ifdef USE_select
-#define ___FD_ZERO  FD_ZERO
-#define ___FD_ISSET FD_ISSET
-#define ___FD_CLR   FD_CLR
-#define ___FD_SET   FD_SET
 #endif
 
 typedef struct ___device_select_state_struct
@@ -140,17 +126,17 @@ typedef struct ___device_select_state_struct
 
 #ifdef USE_select
     int highest_fd_plus_1;
-    fd_set readfds;
-    fd_set writefds;
-    fd_set exceptfds;
+    ___fdbits *readfds;
+    ___fdbits *writefds;
+    ___fdbits *exceptfds;
 #endif
 
 #ifdef USE_poll
-    struct pollfd pollfds[MAX_POLLFDS];
+    struct pollfd pollfds[MAX_CONDVARS];
     int pollfd_count;
     /* active set bitmaps */
-    ___poll_fd_set readfds;
-    ___poll_fd_set writefds;
+    ___fdbits *readfds;
+    ___fdbits *writefds;
 #endif
 
 #endif
@@ -168,6 +154,20 @@ typedef struct ___device_select_state_struct
 #endif
   } ___device_select_state;
 
+
+#ifdef USE_FDSET_RESIZING
+
+extern void ___fdset_resize_pstate
+   ___P((___processor_state ___ps,
+         int maxfd),
+        ());
+
+extern ___BOOL ___fdset_resize
+   ___P((int fd1,
+         int fd2),
+        ());
+
+#endif
 
 extern void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,

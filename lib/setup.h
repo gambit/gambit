@@ -5,7 +5,6 @@
 #ifndef ___SETUP_H
 #define ___SETUP_H
 
-
 /*---------------------------------------------------------------------------*/
 
 
@@ -24,6 +23,12 @@ extern void service_sync_op
    ___P((___PSDNC),
         ());
 
+
+#ifdef ___SINGLE_THREADED_VMS
+#define BARRIER()
+#else
+#define BARRIER() barrier_sync_noop (___PSPNC)
+#endif
 
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 #define ___USE_print_source_location
@@ -64,7 +69,6 @@ extern void ___print_ctrl_flow_last_seen_vmstate
 extern void ___print_ctrl_flow_last_seen ___PVOID;
 
 #endif
-
 
 #define ___COVER(n)
 #define ___COVER_SFUN_CONVERSION_ERROR_HANDLER               ___COVER(0)

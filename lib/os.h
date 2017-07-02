@@ -145,6 +145,8 @@
 
 #ifdef USE_POSIX
 
+#define USE_FDSET_RESIZING
+
 #define USE_open
 
 /* Select features based on availability */
