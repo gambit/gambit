@@ -155,7 +155,7 @@ typedef struct ___device_select_state_struct
   } ___device_select_state;
 
 
-#ifdef USE_POSIX
+#ifdef USE_FDSET_RESIZING
 
 extern void ___fdset_resize_pstate
    ___P((___processor_state ___ps,

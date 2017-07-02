@@ -769,7 +769,7 @@ ___sync_op_struct *sop_ptr;)
       sop_ptr->arg[0] = ___garbage_collect_pstate (___ps, sop_ptr->arg[0]);
       break;
 
-#ifdef USE_POSIX
+#ifdef USE_FDSET_RESIZING
     case OP_FDSET_RESIZE:
       ___fdset_resize_pstate (___ps, sop_ptr->arg[0]);
       break;
@@ -928,7 +928,7 @@ ___SIZE_TS requested_words_still;)
 }
 
 
-#ifdef USE_POSIX
+#ifdef USE_FDSET_RESIZING
 
 ___EXP_FUNC(___BOOL, ___fdset_resize)
    ___P((int fd1,
@@ -938,7 +938,6 @@ ___EXP_FUNC(___BOOL, ___fdset_resize)
 int fd1;
 int fd2;)
 {
-#ifdef USE_select_or_poll
 
   ___processor_state ___ps = ___PSTATE;
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
@@ -956,12 +955,6 @@ int fd2;)
   on_all_processors (___PSP &sop);
 
   return !___vms->os.fdset.overflow;
-
-#else
-
-  return 1;
-
-#endif
 }
 
 #endif

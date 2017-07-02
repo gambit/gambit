@@ -8123,8 +8123,12 @@ int close_direction;)
               (fd == STDOUT_FILENO) ||
               (fd == STDERR_FILENO);
 
+#ifdef USE_FDSET_RESIZING
+
   if (!___fdset_resize (fd, fd))
     return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_tty*,
               ___ALLOC_MEM(sizeof (___device_tty)));

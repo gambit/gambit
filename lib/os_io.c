@@ -37,9 +37,7 @@ ___io_module ___io_mod =
 
 /*---------------------------------------------------------------------------*/
 
-/* poll dynamic fdset memory management. */
-
-#ifdef USE_select_or_poll
+#ifdef USE_FDSET_RESIZING
 
 ___HIDDEN int ___fdset_realloc
    ___P((___processor_state ___ps,
@@ -117,10 +115,6 @@ ___processor_state ___ps;)
   return ___fdset_realloc (___ps, size);
 }
 
-#endif
-
-#ifdef USE_POSIX
-
 void ___fdset_resize_pstate
    ___P((___processor_state ___ps,
          int maxfd),
@@ -129,8 +123,6 @@ void ___fdset_resize_pstate
 ___processor_state ___ps;
 int maxfd;)
 {
-#ifdef USE_select_or_poll
-
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   int newsize;
 
@@ -156,7 +148,6 @@ int maxfd;)
   if (!___vms->os.fdset.overflow && ___PROCESSOR_ID(___ps, ___vms) == 0)
     ___vms->os.fdset.size = newsize;
 
-#endif
 }
 
 #endif
@@ -3332,8 +3323,12 @@ int direction;)
 {
   ___device_pipe *d;
 
+#ifdef USE_FDSET_RESIZING
+
   if (!___fdset_resize (fd_rd, fd_wr))
     return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_pipe*,
               ___ALLOC_MEM(sizeof (___device_pipe)));
@@ -3704,8 +3699,12 @@ int direction;)
 {
   ___device_process *d;
 
+#ifdef USE_FDSET_RESIZING
+
   if (!___fdset_resize (fd_stdin, fd_stdout))
     return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_process*,
               ___ALLOC_MEM(sizeof (___device_process)));
@@ -5519,7 +5518,7 @@ int direction;)
   ___SCMOBJ e;
   ___device_tcp_client *d;
 
-#ifdef USE_POSIX
+#ifdef USE_FDSET_RESIZING
 
   if (!___fdset_resize (s, s))
     return ___FIX(___HEAP_OVERFLOW_ERR);
@@ -5885,7 +5884,7 @@ ___tls_context *tls_context;)
       return e;
     }
 
-#ifdef USE_POSIX
+#ifdef USE_FDSET_RESIZING
 
   if (!___fdset_resize (s, s))
     {
@@ -7233,8 +7232,12 @@ int direction;)
 {
   ___device_file *d;
 
+#ifdef USE_FDSET_RESIZING
+
   if (!___fdset_resize (fd, fd))
     return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_file*,
               ___ALLOC_MEM(sizeof (___device_file)));
@@ -9260,8 +9263,12 @@ int direction;)
 {
   ___device_raw *d;
 
+#ifdef USE_FDSET_RESIZING
+
   if (!___fdset_resize (fd, fd))
     return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
 
   d = ___CAST(___device_raw*,
               ___ALLOC_MEM(sizeof (___device_raw)));
