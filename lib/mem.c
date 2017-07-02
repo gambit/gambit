@@ -364,7 +364,6 @@
 
 #ifdef ___SINGLE_THREADED_VMS
 
-#define BARRIER()
 #define ALLOC_MEM_LOCK()
 #define ALLOC_MEM_UNLOCK()
 #define MISC_MEM_LOCK()
@@ -372,7 +371,6 @@
 
 #else
 
-#define BARRIER() barrier_sync_noop (___PSPNC)
 #define ALLOC_MEM_LOCK() ___SPINLOCK_LOCK(alloc_mem_lock)
 #define ALLOC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(alloc_mem_lock)
 #define MISC_MEM_LOCK() ___SPINLOCK_LOCK(misc_mem_lock)
