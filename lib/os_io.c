@@ -154,12 +154,12 @@ int maxfd;)
   if (___PROCESSOR_ID(___ps, ___vms) == 0)
     ___vms->os.fdset.overflow = 0;
 
-  BARRIER ();
+  BARRIER();
 
   if (!___fdset_realloc (___ps, newsize))
     ___vms->os.fdset.overflow = 1;
 
-  BARRIER ();
+  BARRIER();
 
   if (!___vms->os.fdset.overflow && ___PROCESSOR_ID(___ps, ___vms) == 0)
     ___vms->os.fdset.size = newsize;
@@ -956,8 +956,8 @@ ___time timeout;)
     state.pollfd_count = 0;
     state.readfds = ___CAST(___fdbits*, ___ps->os.fdset.readfds);
     state.writefds = ___CAST(___fdbits*, ___ps->os.fdset.writefds);
-    ___FD_ZERO (state.readfds, ___ps->os.fdset.size);
-    ___FD_ZERO (state.writefds, ___ps->os.fdset.size);
+    ___FD_ZERO(state.readfds, ___ps->os.fdset.size);
+    ___FD_ZERO(state.writefds, ___ps->os.fdset.size);
   }
 #endif
 
@@ -1277,13 +1277,13 @@ ___time timeout;)
                 if (state.pollfds[x].events & POLLIN)
                   {
                     if (state.pollfds[x].revents & (POLLIN | errmask))
-                      ___FD_SET (state.pollfds[x].fd, state.readfds);
+                      ___FD_SET(state.pollfds[x].fd, state.readfds);
                   }
 
                 if (state.pollfds[x].events & POLLOUT)
                   {
                     if (state.pollfds[x].revents & (POLLOUT | errmask))
-                      ___FD_SET (state.pollfds[x].fd, state.writefds);
+                      ___FD_SET(state.pollfds[x].fd, state.writefds);
                   }
 
                 --active;
