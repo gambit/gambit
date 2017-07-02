@@ -50,26 +50,25 @@ int newsize;)
   void *readfds = NULL;
   void *writefds = NULL;
   void *exceptfds = NULL;
-  int newbytes;
 
-  if (newsize <= ___ps->os.fdset.size) /* we don't shrink */
-    return 1;
+  if (newsize > 0)
+    {
+      int newbytes = ___CEILING_DIV(newsize,8);
 
-  newbytes = ___CEILING_DIV(newsize,8);
+      readfds  = ___ALLOC_MEM (newbytes);
+      if (readfds == NULL)
+        goto error;
 
-  readfds  = ___ALLOC_MEM (newbytes);
-  if (readfds == NULL)
-    goto error;
-
-  writefds = ___ALLOC_MEM (newbytes);
-  if (writefds == NULL)
-    goto error;
+      writefds = ___ALLOC_MEM (newbytes);
+      if (writefds == NULL)
+        goto error;
 
 #ifdef USE_select
-  exceptfds = ___ALLOC_MEM (newbytes);
-  if (exceptfds == NULL)
-    goto error;
+      exceptfds = ___ALLOC_MEM (newbytes);
+      if (exceptfds == NULL)
+        goto error;
 #endif
+    }
 
   if (___ps->os.fdset.readfds != NULL)
     ___FREE_MEM (___ps->os.fdset.readfds);
@@ -130,9 +129,6 @@ int maxfd;)
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   int newsize;
 
-  if (maxfd < ___vms->os.fdset.size)
-    return;
-
   newsize = ___vms->os.fdset.size;
   while (maxfd >= newsize)
     newsize = ___CEILING_DIV(3 * newsize, 2);
@@ -144,7 +140,7 @@ int maxfd;)
 
   BARRIER();
 
-  if (!___fdset_realloc (___ps, newsize))
+  if (newsize > ___ps->os.fdset.size && !___fdset_realloc (___ps, newsize))
     ___vms->os.fdset.overflow = 1;
 
   BARRIER();
