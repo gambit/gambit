@@ -55,30 +55,30 @@ int newsize;)
     {
       int newbytes = ___CEILING_DIV(newsize,8);
 
-      readfds  = ___ALLOC_MEM (newbytes);
+      readfds  = ___ALLOC_MEM(newbytes);
       if (readfds == NULL)
         goto error;
 
-      writefds = ___ALLOC_MEM (newbytes);
+      writefds = ___ALLOC_MEM(newbytes);
       if (writefds == NULL)
         goto error;
 
 #ifdef USE_select
-      exceptfds = ___ALLOC_MEM (newbytes);
+      exceptfds = ___ALLOC_MEM(newbytes);
       if (exceptfds == NULL)
         goto error;
 #endif
     }
 
   if (___ps->os.fdset.readfds != NULL)
-    ___FREE_MEM (___ps->os.fdset.readfds);
+    ___FREE_MEM(___ps->os.fdset.readfds);
 
   if (___ps->os.fdset.writefds != NULL)
-    ___FREE_MEM (___ps->os.fdset.writefds);
+    ___FREE_MEM(___ps->os.fdset.writefds);
 
 #ifdef USE_select
   if (___ps->os.fdset.exceptfds != NULL)
-  ___FREE_MEM (___ps->os.fdset.exceptfds);
+  ___FREE_MEM(___ps->os.fdset.exceptfds);
 #endif
 
   ___ps->os.fdset.readfds = readfds;
@@ -90,11 +90,11 @@ int newsize;)
 
  error:
   if (readfds != NULL)
-    ___FREE_MEM (readfds);
+    ___FREE_MEM(readfds);
   if (writefds != NULL)
-    ___FREE_MEM (writefds);
+    ___FREE_MEM(writefds);
   if (exceptfds != NULL)
-    ___FREE_MEM (exceptfds);
+    ___FREE_MEM(exceptfds);
 
   return 0;
 }
