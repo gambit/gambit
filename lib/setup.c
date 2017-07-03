@@ -664,7 +664,7 @@ ___WORD target_processor_count;)
        * Wait for processor 0 to set ___vms->processor_count.
        */
 
-      barrier_sync_noop (___PSPNC);
+      BARRIER();
 
       /*
        * Terminate current processor if it is no longer needed.
@@ -689,7 +689,7 @@ ___WORD target_processor_count;)
               while (--i >= initial)
                 ___cleanup_pstate (&___vms->pstate[i]);
 
-              barrier_sync_noop (___PSPNC);
+              BARRIER();
 
               return err;
             }
