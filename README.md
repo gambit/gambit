@@ -19,12 +19,11 @@ Quick-install instructions for a typical installation
 
     git clone https://github.com/gambit/gambit.git
     cd gambit
-    ./configure
-    make -j4 current-gsc-boot
     ./configure --enable-single-host
-    make -j4 from-scratch
+    make -j8 current-gsc-boot
+    make -j8 from-scratch
     make check
-    make -j4 doc
+    make doc
     sudo make install
 
 Detailed installation instructions are given in the file "INSTALL.txt".
