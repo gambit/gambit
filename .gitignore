@@ -27,6 +27,7 @@ bin/six
 bin/six.exe
 bin/six-script
 bin/six-script.bat
+boot
 config.log
 config.status
 doc/gambit.aux

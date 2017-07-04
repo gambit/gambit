@@ -119,22 +119,59 @@ latest-release: fake_target
 	$(GIT) checkout -f master
 	$(GIT) reset --hard
 
-current-gsc-boot: fake_target
-	current_commit=`$(GIT) describe --all`; \
-	echo "******** current commit is $$current_commit"; \
-	COPYFILE_DISABLE=1 tar chof gsc-scm.tar gsc/*.scm; \
-	echo "******** $(GIT) checkout -f tags/$(PACKAGE_VERSION)"; \
-	$(GIT) checkout -f tags/$(PACKAGE_VERSION); \
-	$(CONFIGURE_COMMAND); \
-	rm -f gsc-boot@bat@ gsc-boot; \
-	$(MAKE) bootstrap; \
-	tar xf gsc-scm.tar; \
-	rm -f gsc-scm.tar; \
-	cd gsc && $(MAKE) bootclean && cd ..; \
-	$(MAKE) bootstrap; \
-	echo "******** $(GIT) checkout -f $$current_commit"; \
-	$(GIT) checkout -f "$$current_commit"; \
-	$(GIT) reset --hard
+boot-most-recent-release: fake_target
+	@if test -x "boot/most-recent-release/gsc-boot"; then \
+	  if test "`boot/most-recent-release/gsc-boot -v | sed -e 's/ .*//'`" = "$(PACKAGE_VERSION)"; then \
+	    echo "**** boot/most-recent-release/gsc-boot doesn't need to be rebuilt"; \
+	  else \
+	    $(MAKE) boot-most-recent-release-gsc-boot; \
+	  fi \
+	else \
+	  $(MAKE) boot-most-recent-release-gsc-boot; \
+	fi
+
+boot-most-recent-release-gsc-boot: fake_target
+	@echo "**** building boot/most-recent-release/gsc-boot"
+	rm -rf boot
+	mkdir boot
+	$(GIT) clone --branch master . boot/most-recent-release
+	cd boot/most-recent-release && \
+	$(GIT) checkout -f tags/$(PACKAGE_VERSION) && \
+	$(CONFIGURE_COMMAND) && \
+	$(MAKE) bootstrap && \
+	cd ../..
+
+boot-wip-compiler: fake_target
+	@if test -x "boot/wip-compiler/gsc/gsc"; then \
+	  if test "`boot/wip-compiler/gsc/gsc -v | sed -e 's/ .*//'`" = "$(PACKAGE_VERSION)"; then \
+	    if test "`find gsc/makefile.in gsc/*.scm -exec diff -q \{\} boot/wip-compiler/\{\} \; 2>&1`" = ""; then \
+	      echo "**** boot/wip-compiler/gsc/gsc doesn't need to be rebuilt"; \
+	    else \
+	      $(MAKE) boot-wip-compiler-gsc-gsc; \
+	    fi \
+	  else \
+	    $(MAKE) boot-wip-compiler-gsc-gsc; \
+	  fi \
+	else \
+	  $(MAKE) boot-wip-compiler-gsc-gsc; \
+	fi
+
+boot-wip-compiler-gsc-gsc: boot-most-recent-release
+	@echo "**** building boot/wip-compiler/gsc/gsc using boot/most-recent-release/gsc-boot"
+	rm -rf boot/wip-compiler
+	$(GIT) clone --branch master . boot/wip-compiler
+	cd boot/wip-compiler && \
+	$(GIT) checkout -f tags/$(PACKAGE_VERSION) && \
+	cp ../../gsc/makefile.in ../../gsc/*.scm gsc && \
+	cp ../most-recent-release/gsc-boot . && \
+	$(CONFIGURE_COMMAND) && \
+	$(MAKE) && \
+	cd ../..
+
+wip-gsc-boot: boot-wip-compiler
+	cp boot/wip-compiler/gsc/gsc gsc-boot
+
+current-gsc-boot: wip-gsc-boot
 
 gsc-boot@exe@:
 	rm -f gsc-boot@bat@ gsc-boot

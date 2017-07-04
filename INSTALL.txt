@@ -55,37 +55,32 @@ permissions.
 =============================
 
 On most Unix platforms the system is easily built using
-configure/make.  If a specific release of the system was obtained as a
-compressed tar ball (.tgz extension) the commands are simply:
+configure/make.  First the configure script is called as in:
 
-  % ./configure        # configure script options may be added here (see below)
+  % ./configure        # add configure script options as required
+
+If a specific release of the system was obtained as a compressed tar
+ball (.tgz extension) it can be built by invoking "make":
+
   % make
 
-If the source code was obtained by cloning the Gambit repository, more
-steps are required because some of the files have to be recreated as
-they may be stale.
+If the source code was obtained by cloning the Gambit repository from
+github, more steps are required because some of the files have to be
+recreated as they may be stale.
 
-First the configure script is executed, as in:
-
-  % ./configure
-
-For this invocation of the configure script, options are not needed.
-The following commands should then be entered to make sure that any
-stale .c files obtained from the repository are updated:
+The following commands should then be entered after executing the
+configure script to make sure that any stale .c files obtained from
+the repository are updated:
 
   % make current-gsc-boot
-  % ./configure
-  % make bootstrap
-  % make bootclean
   % make bootstrap
   % make bootclean
 
 The "make current-gsc-boot" builds the Gambit compiler that was
-current at the latest release and then compiles the very latest
-commit.  The second invocation of the configure script may specify
-options (see below).  The "make boostrap" uses that compiler to build
-the Gambit compiler of the master branch (it creates up to date .c
-files from the .scm files).
+current at the latest release and then uses it to compile the very
+latest sources of the compiler cloned from github.  The "make
+boostrap" uses that compiler to build itself again from sources (it
+creates up to date .c files from the .scm files).
 
 Then the system can be built by invoking "make":
 
@@ -93,9 +88,8 @@ Then the system can be built by invoking "make":
 
 These steps can be shortened to the following commands:
 
-  % ./configure        # no options needed here
+  % ./configure        # add configure script options as required
   % make current-gsc-boot
-  % ./configure        # configure script options may be added here (see below)
   % make from-scratch
 
 The system can be tested and installed using the following commands:
@@ -107,7 +101,7 @@ On a computer with multiple cores it is normally beneficial to build
 the system in parallel by adding a "-j" option to all the invocations
 of "make" before "make check".  For example:
 
-  % make -j4 from-scratch
+  % make -j8 from-scratch
 
 
 3) Recommended "configure" script options
