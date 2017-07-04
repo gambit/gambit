@@ -19,7 +19,7 @@ Quick-install instructions for a typical installation
 
     git clone https://github.com/gambit/gambit.git
     cd gambit
-    ./configure --enable-single-host
+    ./configure
     make -j8 current-gsc-boot
     make -j8 from-scratch
     make check
