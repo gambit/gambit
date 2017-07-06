@@ -550,6 +550,9 @@
 (define-macro (^dict-set expr1 expr2 expr3)
   `(univ-emit-dict-set ctx ,expr1 ,expr2 ,expr3))
 
+(define-macro (^dict-delete expr1 expr2)
+  `(univ-emit-dict-delete ctx ,expr1 ,expr2))
+
 (define-macro (^dict-length expr)
   `(univ-emit-dict-length ctx ,expr))
 
@@ -1162,11 +1165,5 @@
 (define-macro (^popcount! arg)
   `(univ-emit-popcount! ctx ,arg))
 
-(define-macro (^host-object? arg)
-  `(univ-emit-host-object? ctx ,arg))
-
-(define-macro (^object->id arg)
-  `(univ-emit-object->id ctx ,arg))
-
-(define-macro (^primitive->id arg)
-  `(univ-emit-primitive->id ctx ,arg))
+(define-macro (^host-primitive? arg)
+  `(univ-emit-host-primitive? ctx ,arg))

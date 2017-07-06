@@ -52,10 +52,16 @@
      (univ-class
       (^rts-class root-name)
       properties
-      (and extends
-           (or (eq? (target-name (ctx-target ctx)) 'java)
-               (not (eq? extends 'scmobj)))
-           (^rts-class-use extends))
+      (cond ;; extends
+       ((and (pair? extends)
+             (eq? (car extends) 'prim))
+        (cadr extends))
+       ((and extends
+             (or (eq? (target-name (ctx-target ctx)) 'java)
+                 (not (eq? extends 'scmobj))))
+        (^rts-class-use extends))
+       (else
+        #f))
       class-fields
       instance-fields
       class-methods
@@ -1240,6 +1246,233 @@
              (^return
               (^cast*-jumpable
                (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))))))
+
+    ;; TODO ScmObjHashMap wrapper for Java
+    ((hashtable)
+     (rts-class
+      'hashtable
+      '() ;; properties
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((python)
+         '(prim dict))
+        ((ruby)
+         '(prim Hash))
+        (else
+         'scmobj))
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx)) ;; instance-methods
+        ((python)
+         (list
+          (univ-method '__getitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return dict.__getitem__(self, (type(key), key)) if " (^host-primitive? 'key) " else dict.__getitem__(self, key)"))))
+
+          (univ-method '__setitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'val 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return dict.__setitem__(self,(type(key), key),val) if " (^host-primitive? 'key) " else dict.__setitem__(self,key,val)"))))
+
+          (univ-method '__contains__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return dict.__contains__(self,(type(key), key)) if " (^host-primitive? 'key) " else dict.__contains__(self,key)"))))
+
+          (univ-method '__delitem__ '(public) 'noresult
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return dict.__delitem__(self,(type(key), key)) if " (^host-primitive? 'key) " else dict.__delitem__(self,key)"))))
+
+          (univ-method 'keys '(public) 'scmobj '() '()
+           (univ-emit-fn-body
+            ctx
+            "\n"
+            (lambda (ctx)
+              (^ "return map(lambda x: x[1] if type(x) == tuple else x,dict.keys(self))"))))
+
+          (univ-method 'keys_list '(public) 'scmobj '() '()
+           (univ-emit-fn-body
+            ctx
+            "\n"
+            (lambda (ctx)
+              (let ((lst (^local-var 'lst))
+                    (keys (^local-var 'keys))
+                    (i (^local-var 'i)))
+                (^ (^var-declaration 'scmobj lst (^null-obj))
+                   (^var-declaration 'scmobj keys (^call-prim 'list
+                                                              (^call-prim (^member (^this) 'keys))))
+                   (^var-declaration 'int i (^int 0))
+
+                   (^while (^< i (^array-length keys))
+                           (^ (^assign lst (^cons (^array-index keys i)
+                                                  lst))
+                              (^inc-by i 1)))
+
+                   (^return lst))))))))
+
+        (else
+         '()))))
+
+    ((hashtable_base)
+     (rts-class
+      'hashtable_base
+      (list
+       '(alias_method :parent_keys :keys)
+       '(alias_method :parent_get |:[]|)) ;; properties
+      ;; Ruby TODO : alias_method :parent_keys, :keys
+      ;;             alias_method :parent_get, :[]
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((ruby)
+         '(prim Hash))
+        (else
+         'scmobj))
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx)) ;; instance-methods
+        ((python)
+         (list
+          (univ-method 'keys '(public) 'scmobj '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return self.objdict.keys() + self.primdict.keys()"))))
+          (univ-method '__len__ '(public) 'scmobj '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return len(self.objdict) + len(self.primdict)"))))
+          (univ-method '__contains__ '(public) 'boolean
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict;"
+                 "return key in d"))))))
+        ((ruby)
+         (list
+          (univ-method 'cleanup '(public) 'scmobj '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "select! do |e| self.key_alive? e end;"))))
+
+          (univ-method 'keys '(public) 'scmobj '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "cleanup; parent_keys;"))))
+
+          (univ-method 'length '(public) 'scmobj '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "keys.length;"))))))
+        (else
+         (compiler-internal-error
+          "hashtable_base, unknown target")))
+      '()
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ "self.primdict = " (^new (^rts-class-use 'hashtable)))))
+        (else
+         #f))))
+
+    ((hashtable_weak_keys)
+     (rts-class
+      'hashtable_weak_keys
+      '() ;; properties
+      'hashtable_base
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx))  ;; instance-methods
+        ((python)
+         (list
+          (univ-method '__getitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict;"
+                 "return d[key] if key in d else " (^void-obj)))))
+          (univ-method '__setitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'val 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict;"
+                 "d[key] = val"))))))
+        ((ruby)
+         (list
+          (univ-method 'key_alive? '(public) 'boolean
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin;"
+                 "key.__getobj__ if key.class == WeakRef;"
+                 "true;"
+                 "rescue WeakRef::RefError => err;"
+                 "false;"
+                 "end;"))))
+          (univ-method 'has_key? '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "keys.each do |e| "
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key);"
+                 "end;"
+                 "false;"))))
+          (univ-method '|[]| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "keys.each do |e| "
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key);"
+                 "end;"
+                 "nil;"))))
+          (univ-method '|[]=| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'obj 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin;"
+                 "super WeakRef.new(key), obj;"
+                 "rescue ArgumentError;"
+                 "super key, obj;"
+                 "end;"))))))
+        (else
+         (compiler-internal-error "hashtable_weak_keys, unknown target")))
+      '() ;; class-classes
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ (^rts-class-use 'hashtable_base) ".__init__(self);"
+              "self.objdict = weakref.WeakKeyDictionary();")))
+        (else
+         #f))))
+
+    ((hashtable_weak_values)
+     (rts-class
+      'weak_values_hashtable
+      '(abstract)))
+
+    ((hashtable_weak_keys_values)
+     (rts-class
+      'hashtable_weak_keys_values
+      '(abstract)))
 
     ((prim_to_dict_key)
      (rts-method
@@ -4403,8 +4636,11 @@ EOF
 (define (univ-external-libs ctx)
   (case (target-name (ctx-target ctx))
 
-    ((js php ruby)
+    ((js php)
      (^))
+
+    ((ruby)
+     (^ "require 'weakref'\n"))
 
     ((python)
      (^ "from array import array\n"
@@ -4412,6 +4648,7 @@ EOF
         "import time\n"
         "import math\n"
         "import sys\n"
+        "import weakref\n"
         "\n"))
 
     ((java)

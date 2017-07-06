@@ -607,12 +607,16 @@
 (univ-prim-proc-add! '("##inline-host-expression" 1 #t 0 0 (#f) extended))
 (univ-prim-proc-add! '("##inline-host-declaration" (1) #t 0 0 (#f) extended))
 
-(univ-prim-proc-add! '("##table-native-make-gcht" (0) #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-native-key-exists?" (2) #f 0 0 boolean extended))
-(univ-prim-proc-add! '("##table-native-ref" (2) #f 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-native-set!" (3) #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-native-length" (1) #f 0 0 number extended))
-(univ-prim-proc-add! '("##table-native-table->list" (1) #f 0 0 pair extended))
+(univ-prim-proc-add! '("##table-univ-make-hashtable" (2) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-univ-key-exists?" (2) #f 0 0 boolean extended))
+(univ-prim-proc-add! '("##table-univ-keys" (1) #f 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-univ-ref" (2) #f 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-univ-set!" (3) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-univ-delete" (2) #f 0 0 (#f) extended))
+(univ-prim-proc-add! '("##table-univ-length" (1) #f 0 0 number extended))
+
+;; (univ-prim-proc-add! '("##table-univ->list" (1) #f 0 0 pair extended))
+;; (univ-prim-proc-add! '("##list->table-univ" (1) #f 0 0 pair extended))
 
 (define (univ-switch-testable? targ obj)
   ;;(pretty-print (list 'univ-switch-testable? 'targ obj))

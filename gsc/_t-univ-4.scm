@@ -2152,70 +2152,93 @@
 
 ;; Tables
 
-(univ-define-prim "##table-native-make-gcht" #f
+(univ-define-prim "##table-univ-make-hashtable" #f
   (make-translated-operand-generator
-   (lambda (ctx return)
-     (return
-      (case (target-name (ctx-target ctx))
-        ((python ruby)
-         (^empty-dict 'string))
-        ((js php)
-         (^array-literal 'HashMap
-                         (list
-                          (^empty-dict 'int)
-                          (^empty-dict 'string))))
-        (else
-         (compiler-internal-error
-          "##table-native-make-gcht, unknown target")))))))
+   (lambda (ctx return weak-keys weak-values)
+     (let ((weak-keys (^boolean-unbox weak-keys))
+           (weak-values (^boolean-unbox weak-values)))
+       (return
+        (case (target-name (ctx-target ctx))
+          ((python ruby)
+           ;; (^if-expr (^and weak-keys weak-values)
+           ;; (^new (^rts-class-use 'weak_keys_values_hashtable))
+           (^if-expr weak-keys
+                     (^new (^rts-class-use 'hashtable_weak_keys))
+                     ;; (^if-expr weak-values
+                     ;; (^new (^rts-class-use 'weak_values_hashtable))
+                     (^new (^rts-class-use 'hashtable))))
+          ;;)))
+          ;; ((js php)
+          ;; Note : WeakMap in javascript is a Map object with weak-keys.
+          ;; However, a WeakMap's keys are not enumerable, which makes functions
+          ;; such as table-for-each and table->list impossible to implement
+          ;; (^new (^rts-class-use 'hashtable)))
+          ;; TODO : Java
+          ;; Java will need a ScmObj wrapper in order to fit in a Structure field
+          ;; This will imply a few cast* things here and there
+          (else
+           (compiler-internal-error
+            "##table-univ-make-hashtable, unknown target"))))))))
 
-(univ-define-prim "##table-native-key-exists?" #f
+(univ-define-prim "##table-univ-key-exists?" #f
   (make-translated-operand-generator
    (lambda (ctx return dict key)
      (return
       (^boolean-box
        (case (target-name (ctx-target ctx))
          ((python ruby)
-          (^dict-key-exists? dict (^object->id key)))
-         ((js php)
-          (^if-expr (^host-object? key)
-                    (^dict-key-exists? (^array-index dict (^int 0)) (^object->id key))
-                    (^dict-key-exists? (^array-index dict (^int 1)) (^primitive->id key))))
+          (^dict-key-exists? dict key))
          (else
           (compiler-internal-error
-           "##table-native-key-exists?, unknown target"))))))))
+           "##table-univ-key-exists?, unknown target"))))))))
 
-(univ-define-prim "##table-native-ref" #f
+(univ-define-prim "##table-univ-keys" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict)
+     (return
+       (case (target-name (ctx-target ctx))
+         ((python ruby)
+          (^call-prim (^member dict 'keys_list)))
+         (else
+          (compiler-internal-error
+           "##table-univ-keys, unknown target")))))))
+
+(univ-define-prim "##table-univ-ref" #f
   (make-translated-operand-generator
    (lambda (ctx return dict key)
      (return
       (case (target-name (ctx-target ctx))
         ((python ruby)
-         (^dict-get dict (^object->id key)))
-        ((js php)
-         (^if-expr (^host-object? key)
-                   (^dict-get (^array-index dict (^int 0)) (^object->id key))
-                   (^dict-get (^array-index dict (^int 1)) (^primitive->id key))))
+         (^dict-get dict key))
         (else
          (compiler-internal-error
-          "##table-native-ref, unknown target")))))))
+          "##table-univ-ref, unknown target")))))))
 
-(univ-define-prim "##table-native-set!" #f
+(univ-define-prim "##table-univ-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return dict key val)
      (^
       (case (target-name (ctx-target ctx))
         ((python ruby)
-         (^dict-set dict (^object->id key) val))
-        ((js php)
-         (^if (^host-object? key)
-              (^dict-set (^array-index dict (^int 0)) (^object->id key) val)
-              (^dict-set (^array-index dict (^int 1)) (^primitive->id key) val)))
+         (^dict-set dict key val))
         (else
          (compiler-internal-error
-          "##table-native-set!, unknown target")))
+          "##table-univ-set!, unknown target")))
       (return (^void))))))
 
-(univ-define-prim "##table-native-length" #f
+(univ-define-prim "##table-univ-delete" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict key)
+     (^
+      (case (target-name (ctx-target ctx))
+        ((python ruby)
+         (^dict-delete dict key))
+        (else
+         (compiler-internal-error
+          "##table-univ-delete, unknown target")))
+      (return (^void))))))
+
+(univ-define-prim "##table-univ-length" #f
   (make-translated-operand-generator
    (lambda (ctx return dict)
      (return
@@ -2223,28 +2246,26 @@
        (case (target-name (ctx-target ctx))
          ((python ruby)
           (^dict-length dict))
-         ((js php)
-          (^+ (^dict-length (^array-index dict (^int 0))) (^dict-length (^array-index dict (^int 1)))))
          (else
           (compiler-internal-error
-           "##table-native-length, unknown target"))))))))
+           "##table-univ-length, unknown target"))))))))
 
-(univ-define-prim "##table-native-table->list" #f
-  (make-translated-operand-generator
-   (lambda (ctx return dict)
-     (return
-      (case (target-name (ctx-target ctx))
-        ((python ruby)
-         (^call-prim (^rts-method-use 'native_table_to_list)
-                     (^array-index dict (^int 0))
-                     (^empty-dict 'str)))
-        ((js php)
-         (^call-prim (^rts-method-use 'native_table_to_list)
-                     (^array-index dict (^int 0))
-                     (^array-index dict (^int 1))))
-        (else
-         (compiler-internal-error
-          "##table-native-table->list, unknown target")))))))
+;; (univ-define-prim "##table-univ-table->list" #f
+;;   (make-translated-operand-generator
+;;    (lambda (ctx return dict)
+;;      (return
+;;       (case (target-name (ctx-target ctx))
+;;         ((python ruby)
+;;          (^call-prim (^rts-method-use 'native_table_to_list)
+;;                      (^array-index dict (^int 0))
+;;                      (^empty-dict 'str)))
+;;         ((js php)
+;;          (^call-prim (^rts-method-use 'native_table_to_list)
+;;                      (^array-index dict (^int 0))
+;;                      (^array-index dict (^int 1))))
+;;         (else
+;;          (compiler-internal-error
+;;           "##table-native-table->list, unknown target")))))))
 
 (univ-define-prim-bool "##symbol?" #t
   (make-translated-operand-generator

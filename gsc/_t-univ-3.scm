@@ -178,6 +178,11 @@
     ((flonum)        'Flonum)
     ((foreign)       'Foreign)
     ((frame)         'Frame)
+    ((hashtable)     'HashTable)
+    ((hashtable_base) 'HashTableBase)
+    ((hashtable_weak_keys)        'HashTableWeakKeys)
+    ((hashtable_weak_values)      'HashTableWeakValues)
+    ((hashtable_weak_keys_values) 'HashTableWeakKeysValues)
     ((jumpable)      'Jumpable)
     ((key)           'Key)
     ((keyword)       'Keyword)
@@ -768,8 +773,8 @@
          (class-classes '())
          (constructor #f)
          (inits '()))
-  (let* ((name (tt"CCC"root-name)) ;; (^prefix-class root-name);;TODO: fix ^prefix
-         (abstract? (memq 'abstract properties)))
+  (let ((name (tt"CCC"root-name)) ;; (^prefix-class root-name);;TODO: fix ^prefix
+        (abstract? (memq 'abstract properties)))
 
     (define (qualifiers additional-properties decl)
       (let ((all (append additional-properties (univ-decl-properties decl))))
@@ -1119,6 +1124,17 @@
                    (not (null? class-methods))
                    (not (null? instance-methods)))
                (^ "\n"
+                  (let ((meta-attributes (keep (lambda (x)
+                                                 (and (pair? x)
+                                                      (eq? (car x) 'alias_method)))
+                                               properties)))
+                    (if (not (null? meta-attributes))
+                        (^ "\n"
+                           (map (lambda (attr)
+                                  (^ (car attr) " " (univ-separated-list "," (cdr attr)) "\n"))
+                                meta-attributes)
+                           "\n")
+                        (^)))
                   (if (or (not (null? class-fields))
                           (not (null? class-methods)))
                       (^ "\n"
@@ -1879,6 +1895,27 @@
     (else
      (compiler-internal-error
       "univ-emit-dict-set, unknown target"))))
+
+(define (univ-emit-dict-delete ctx expr1 expr2)
+  (^expr-statement
+   (case (target-name (ctx-target ctx))
+     ((js)
+      (^ "delete " (^prop-index expr1 expr2)))
+
+     ((python)
+      (^ "del " (^prop-index expr1 expr2)))
+
+     ((ruby)
+      (^call-prim (^member expr1 'delete) expr2))
+
+     ((php)
+      (^call-prim 'unset (^prop-index expr1 expr2)))
+
+     ;; TODO : Java
+
+     (else
+      (compiler-internal-error
+       "univ-emit-dict-delete, unknown target")))))
 
 (define (univ-emit-dict-length ctx expr)
   (case (target-name (ctx-target ctx))
@@ -4083,65 +4120,17 @@ tanh
 
     (else
      (compiler-internal-error
-      "unit-emit-instanceof, unknown target"))))
+      "univ-emit-instanceof, unknown target"))))
 
-(define (univ-emit-host-object? ctx expr)
+(define (univ-emit-host-primitive? ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js)
-     (^not (^parens
-            (^or (^typeof "number" expr)
-                 (^or (^typeof "string" expr)
-                      (^or (^typeof "boolean" expr)
-                           (^or (^typeof "undefined" expr)
-                                (^eq? expr (^null)))))))))
-
-    ((php)
-     (^not (^parens
-            (^or (^call-prim 'is_int expr)
-                 (^or (^call-prim 'is_float expr)
-                      (^or (^call-prim 'is_double expr)
-                           (^or (^call-prim 'is_bool expr)
-                                (^or (^call-prim 'is_string expr)
-                                     (^call-prim 'is_null expr)))))))))
-
-    (else
-     (compiler-internal-error
-      "unit-emit-host-object?, unknown target"))))
-
-;; Generate unique IDs for objects and primitives to be used
-;; in native hash tables
-(define (univ-emit-object->id ctx expr)
-  (case (target-name (ctx-target ctx))
-    ((ruby)
-     ;; TODO : deal with dict[-0.0] => dict[0.0]
-     expr)
     ((python)
-     ;; Bundle type and object in a tupple to avoid 1, 1.0 and True
-     ;; to be considered as the same key in a dictionary
-     ;; TODO : deal with -0.0
-     (^parens
-      (^if-expr (^or (^instanceof (^type 'int) expr)
-                     (^or (^instanceof (^type 'bool) expr)
-                          (^instanceof (^type 'float) expr)))
-                (^ "(type(" expr "), " expr ")")
-                expr)))
-    ((js php)
-     (^call-prim (^rts-method-use 'get_serial_number) expr))
+     (^ "(type(" expr ") == int or type(" expr ") == float or type(" expr ") == bool or " expr " is None)"))
 
     (else
      (compiler-internal-error
-      "univ-emit-object->id, unknown target"))))
-
-(define (univ-emit-primitive->id ctx expr)
-  (case (target-name (ctx-target ctx))
-
-    ((js php)
-     (^call-prim (^rts-method-use 'prim_to_dict_key) expr))
-
-    (else
-     (compiler-internal-error
-      "univ-emit-object->id, unknown target"))))
+      "univ-emit-host-primitive?, unknown target"))))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))
