@@ -1598,13 +1598,6 @@
  ;; The default representation for tables in the univ backend is an alist
  ;; However, if the target host implements hash tables, they can be used
 
-(define-prim (##table-native? test-fn)
-  (macro-case-target
-   ((js python ruby php)
-    (or (##eq? test-fn ##eq?) (##eq? test-fn eq?)))
-   (else
-    #f)))
-
 (define-prim (##make-table
               #!optional
               (size (macro-absent-obj))
@@ -1636,13 +1629,14 @@
                       arg-num)))))
 
   (define (checks-done test-fn arg-num)
-    (let ((eq-table? (##table-native? test-fn)))
-      (macro-make-table (if eq-table? #f test-fn)
-                        init
-                        ;; gcht: alist/hash-table
-                        (if eq-table?
-                            (##table-native-make-gcht)
-                            '()))))
+    (macro-make-table (if (or (##eq? test-fn eq?)
+                              (##eq? test-fn ##eq?))
+                          #f
+                          test-fn)
+                      init
+                      ;; weak-keys/values are extended booleans
+                      (##table-univ-make-hashtable (##not (##eq? weak-keys (macro-absent-obj)))
+                                                   (##not (##eq? weak-values (macro-absent-obj))))))
 
   (check-test 0))
 
@@ -1666,6 +1660,21 @@
    min-load
    max-load))
 
+(define-prim (##table-find-key
+              table
+              key
+              #!optional
+              (found (lambda (key) key))
+              (not-found (lambda () #!void)))
+  (let loop ((keys (##table-univ-keys (macro-table-hashtable table))))
+    (cond
+     ((##null? keys)
+      (not-found))
+     (((macro-table-test table) (##car keys) key)
+      (found (##car keys)))
+     (else
+      (loop (##cdr keys))))))
+
 (define-prim (##table-ref
               table
               key
@@ -1673,35 +1682,23 @@
               (default-value (macro-absent-obj)))
 
   (let ((test (macro-table-test table)))
-    (if (not (macro-table-test table))
-        (let ((exists (##table-native-key-exists? (macro-table-gcht table) key)))
-          (cond (exists
-                 (##table-native-ref (macro-table-gcht table)
-                                     key))
-                ((##not (##eq? default-value (macro-absent-obj)))
-                 default-value)
-                ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
-                 (macro-table-init table))
-                (else
-                 (##raise-unbound-table-key-exception
-                  table-ref
-                  table
-                  key))))
-        (let loop ((probe (macro-table-gcht table)))
-          (cond ((##pair? probe)
-                 (let ((pair (##car probe)))
-                   (if (test key (##car pair))
-                       (##cdr pair)
-                       (loop (##cdr probe)))))
-                ((##not (##eq? default-value (macro-absent-obj)))
-                 default-value)
-                ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
-                 (macro-table-init table))
-                (else
-                 (##raise-unbound-table-key-exception
-                  table-ref
-                  table
-                  key)))))))
+    (let* ((key (if test
+                    (##table-find-key table key)
+                    key))
+           (exists (##table-univ-key-exists? (macro-table-hashtable table) key)))
+      (cond
+       (exists
+        (##table-univ-ref (macro-table-hashtable table)
+                          key))
+       ((##not (##eq? default-value (macro-absent-obj)))
+        default-value)
+       ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
+        (macro-table-init table))
+       (else
+        (##raise-unbound-table-key-exception
+         table-ref
+         table
+         key))))))
 
 (define-prim (table-ref
               table
@@ -1719,36 +1716,16 @@
               (val (macro-absent-obj)))
 
   (let ((test (macro-table-test table)))
-    (if (not (macro-table-test table))
-        (##table-native-set! (macro-table-gcht table)
-                             key
-                             val)
-        (let ((alist (macro-table-gcht table)))
-          (let loop ((probe alist) (prev #f))
+    (if (macro-table-test table) ;; if it's not an eq?-table
+        (##table-find-key table key
+                          (lambda (k)
+                            (##table-univ-delete (macro-table-hashtable table) k))))
 
-            (cond ((##pair? probe)
-                   (let ((pair (##car probe)))
-                     (if (test key (##car pair))
-                         (begin
-                           (if (##eq? val (macro-absent-obj))
-                               (if prev
-                                   (##set-cdr! prev (##cdr probe))
-                                   (macro-table-gcht-set! table (##cdr probe)))
-                               (##set-cdr! pair val))
-                           (##void))
-                         (loop (##cdr probe) probe))))
-
-                  ((##not (##eq? val (macro-absent-obj)))
-                   (macro-table-gcht-set!
-                    table
-                    (##cons (##cons key val) alist))
-                   (##void))
-
-                  (else
-                   (##raise-unbound-table-key-exception
-                    table-ref
-                    table
-                    key))))))))
+    (if (##eq? val (macro-absent-obj))
+        (##table-univ-delete (macro-table-hashtable table) key) ;; TODO : la fonction ne doit pas crasher si la clé n'existe pas
+        (##table-univ-set! (macro-table-hashtable table)
+                           key
+                           val))))
 
 (define-prim (table-set!
               table
@@ -1760,9 +1737,7 @@
       (##table-set! table key val))))
 
 (define-prim (##table-length table)
-  (if (not (macro-table-test table))
-      (##table-native-length (macro-table-gcht table))
-      (##length (macro-table-gcht table))))
+  (##table-univ-length (macro-table-hashtable table)))
 
 (define-prim (table-length table)
   (macro-force-vars (table)
@@ -1770,10 +1745,12 @@
       (##table-length table))))
 
 (define-prim (##table->list table)
-  (if (not (macro-table-test table))
-      (##table-native-table->list (macro-table-gcht table))
-      (##map (lambda (x) (##cons (##car x) (##cdr x)))
-             (macro-table-gcht table))))
+  '())
+;; TODO
+;; (if (not (macro-table-test table))
+;;     (##table-univ-table->list (macro-table-hashtable table))
+;;     (##map (lambda (x) (##cons (##car x) (##cdr x)))
+;;            (macro-table-hashtable table))))
 
 (define-prim (table->list table)
   (macro-force-vars (table)
@@ -1791,30 +1768,24 @@
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
-  (if (##table-native? test)
-      (let ((table
-             (##make-table
-              size
-              init
-              weak-keys
-              weak-values
-              test
-              hash
-              min-load
-              max-load)))
-        (let loop ((lst lst))
-          (if (null? lst)
-              table
-              (begin
-                (##table-native-set! (macro-table-gcht table)
-                                     (caar lst)
-                                     (cdar lst))
-                (loop (cdr lst))))))
-      (macro-make-table
-       test
-       init
-       (##map (lambda (x) (##cons (##car x) (##cdr x)))
-              lst))))
+  (let ((table
+         (##make-table
+          size
+          init
+          weak-keys
+          weak-values
+          test
+          hash
+          min-load
+          max-load)))
+    (let loop ((lst lst))
+      (if (null? lst)
+          table
+          (begin
+            (##table-univ-set! (macro-table-hashtable table)
+                               (caar lst)
+                               (cdar lst))
+            (loop (cdr lst)))))))
 
 (define-prim (list->table lst)
   (##list->table lst))
@@ -1823,10 +1794,8 @@
   (macro-make-table
    (macro-table-init table)
    (macro-table-test table)
-   (if (macro-table-test table)
-       (##table->list table)
-       ;; TODO : native table
-       (##table-native-make-gcht))))
+   ;; TODO
+   (##table-univ-make-hashtable #f #f)))
 
 (define-prim (table-copy table)
   (macro-force-vars (table)
@@ -1834,7 +1803,7 @@
       (##table-copy table))))
 
 (define-prim (##table-search proc table)
-  (let loop ((lst (macro-table-gcht table)))
+  (let loop ((lst (macro-table-hashtable table)))
     (if (##pair? lst)
         (let ((pair (##car lst)))
           (or (proc (##car pair) (##cdr pair))
@@ -1857,6 +1826,9 @@
                                  (##table-ref table2 key1 unique)))
                             (##not (##equal? val1 val2))))
                         table1)))))))
+
+(define-prim (##table-dump table)
+  (##inline-host-statement "print(@1@);" (macro-table-hashtable table)))
 ))
 
 ;;;----------------------------------------------------------------------------

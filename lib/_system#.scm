@@ -63,9 +63,6 @@
 
  (else
 
-;; This representation uses an association list and does not implement
-;; key and value weakness.
-
 (define-type table
   id: A7AB629D-EAB0-422F-8005-08B2282E04FC
   type-exhibitor: macro-type-table
@@ -75,9 +72,9 @@
   macros:
   prefix: macro-
 
-  (test     unprintable:)
-  (init     unprintable:)
-  (gcht     unprintable:)
+  (test      unprintable:)
+  (init      unprintable:)
+  (hashtable unprintable:)
 )
 
 ))
