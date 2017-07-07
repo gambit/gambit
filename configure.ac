@@ -1077,9 +1077,9 @@ AC_DEFUN([AC_CHECK_ENVIRON],
 ])
 
 AC_DEFUN([AC_CHECK__NSGETENVIRON],
-[AC_CACHE_CHECK([for _NSGetEnviron], ac_cv__NSGetEnviron,
+[AC_CHECK_HEADERS(crt_externs.h)
+ AC_CACHE_CHECK([for _NSGetEnviron], ac_cv__NSGetEnviron,
 [
-  AC_CHECK_HEADERS(crt_externs.h)
   AC_TRY_COMPILE([
     #ifdef HAVE_CRT_EXTERNS_H
     #include <crt_externs.h>
