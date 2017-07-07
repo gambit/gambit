@@ -41,12 +41,7 @@
 
 (for-each (lambda (key)
             (println (table-ref t key "default")))
-          prim-keys-b)
-
-(for-each (lambda (key)
-            (println (table-ref t key "default")))
-          obj-keys)
-
+          (append prim-keys-b obj-keys))
 
 (println (table-ref t -123 "not-found"))
 (println (table-ref t 'not-found "not-found"))
