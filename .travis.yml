@@ -12,7 +12,7 @@ compiler:
 git:
   depth: 9999999
 
-script: git fetch --tags && ./configure && make -j4 current-gsc-boot && make clean && ./configure --enable-debug --enable-multiple-threaded-vms && make -j4 from-scratch && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+script: git fetch --tags && ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 current-gsc-boot && make -j4 from-scratch && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
 notifications:
   webhooks:
