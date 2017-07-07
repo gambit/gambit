@@ -4026,6 +4026,15 @@ tanh
 (define (univ-emit-call-prim ctx expr . params)
   (univ-emit-call-prim-aux ctx expr params))
 
+(define (univ-emit-call-member ctx expr fct . params)
+  (let ((name
+         (case (target-name (ctx-target ctx))
+           ((ruby)
+            ;; Avoid (^member (^this) fct) => @fct
+            (^ expr "." fct))
+           (else (^member expr fct)))))
+    (univ-emit-call-prim-aux ctx name params)))
+
 (define (univ-emit-call-prim-aux ctx expr params)
   (if (and (null? params)
            (eq? (target-name (ctx-target ctx)) 'ruby))

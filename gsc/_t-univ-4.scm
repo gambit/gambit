@@ -2168,11 +2168,13 @@
                      ;; (^new (^rts-class-use 'weak_values_hashtable))
                      (^new (^rts-class-use 'hashtable))))
           ;;)))
-          ;; ((js php)
-          ;; Note : WeakMap in javascript is a Map object with weak-keys.
-          ;; However, a WeakMap's keys are not enumerable, which makes functions
-          ;; such as table-for-each and table->list impossible to implement
-          ;; (^new (^rts-class-use 'hashtable)))
+          ((js)
+           ;; Note : WeakMap in javascript is a Map object with weak-keys.
+           ;; However, a WeakMap's keys are not enumerable, which makes functions
+           ;; such as table-for-each and table->list impossible to implement
+           ;; (^new (^rts-class-use 'hashtable)))
+           (^new 'Map))
+          ;; TODO : PHP
           ;; TODO : Java
           ;; Java will need a ScmObj wrapper in order to fit in a Structure field
           ;; This will imply a few cast* things here and there
@@ -2188,6 +2190,8 @@
        (case (target-name (ctx-target ctx))
          ((python ruby)
           (^dict-key-exists? dict key))
+         ((js)
+          (^call-member dict 'has key))
          (else
           (compiler-internal-error
            "##table-univ-key-exists?, unknown target"))))))))
@@ -2199,6 +2203,9 @@
        (case (target-name (ctx-target ctx))
          ((python ruby)
           (^call-prim (^member dict 'keys_list)))
+         ((js)
+          ;; TODO
+          (^null-obj))
          (else
           (compiler-internal-error
            "##table-univ-keys, unknown target")))))))
@@ -2210,6 +2217,8 @@
       (case (target-name (ctx-target ctx))
         ((python ruby)
          (^dict-get dict key))
+        ((js)
+         (^call-member dict 'get key))
         (else
          (compiler-internal-error
           "##table-univ-ref, unknown target")))))))
@@ -2221,6 +2230,9 @@
       (case (target-name (ctx-target ctx))
         ((python ruby)
          (^dict-set dict key val))
+        ((js)
+         (^expr-statement
+          (^call-member dict 'set key val)))
         (else
          (compiler-internal-error
           "##table-univ-set!, unknown target")))
@@ -2233,6 +2245,9 @@
       (case (target-name (ctx-target ctx))
         ((python ruby)
          (^dict-delete dict key))
+        ((js)
+         (^expr-statement
+          (^call-member dict 'delete key)))
         (else
          (compiler-internal-error
           "##table-univ-delete, unknown target")))
@@ -2246,6 +2261,8 @@
        (case (target-name (ctx-target ctx))
          ((python ruby)
           (^dict-length dict))
+         ((js)
+          (^member dict 'size))
          (else
           (compiler-internal-error
            "##table-univ-length, unknown target"))))))))

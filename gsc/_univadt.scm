@@ -241,6 +241,9 @@
 (define-macro (^call-prim expr . params)
   `(univ-emit-call-prim ctx ,expr ,@params))
 
+(define-macro (^call-member expr fct . params)
+  `(univ-emit-call-member ctx ,expr ,fct ,@params))
+
 (define-macro (^jump expr . params)
   `(univ-emit-jump ctx ,expr ,@params))
 

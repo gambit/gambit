@@ -1745,12 +1745,11 @@
       (##table-length table))))
 
 (define-prim (##table->list table)
-  '())
-;; TODO
-;; (if (not (macro-table-test table))
-;;     (##table-univ-table->list (macro-table-hashtable table))
-;;     (##map (lambda (x) (##cons (##car x) (##cdr x)))
-;;            (macro-table-hashtable table))))
+  ;; TODO this is horribly inefficient for non-eq?-table
+  ;; add a ##table-univ->list primitive
+  (map (lambda (key)
+         (cons key (##table-ref table key)))
+       (##table-univ-keys (macro-table-hashtable table))))
 
 (define-prim (table->list table)
   (macro-force-vars (table)
