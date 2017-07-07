@@ -1731,17 +1731,43 @@ fi
 
 ###############################################################################
 #
+# Check for possible presence of C compiler bugs.
+
+# For details see the messages printed at the end of the configure script.
+
+if test "$C_COMP_GNUC" = yes; then
+  AC_COMPUTE_INT(C_COMP_GNUC_VERSION,[__GNUC__*100000+__GNUC_MINOR__*1000+__GNUC_PATCHLEVEL__])
+fi
+
+if test "$C_COMP_CLANG" = yes; then
+  AC_COMPUTE_INT(C_COMP_CLANG_VERSION,[__clang_major__*100000+__clang_minor__*1000+__clang_patchlevel__])
+fi
+
+if test "$C_COMP_LLVM" = yes -a "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -lt 405000; then
+  LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG=yes
+fi
+
+if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_GNUC_VERSION" -lt 404000 -a "$ENABLE_SINGLE_HOST" = yes; then
+  GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
+fi
+
+case "$target_os" in
+  darwin*) # strangely this bug only appears on Mac OS
+    if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
+      GNU_GCC_IPA_RA_POSSIBLE_BUG=yes
+    fi
+    ;;
+esac
+
+###############################################################################
+#
 # Check which command line options are supported by $C_COMPILER.
 
 if test "$C_COMP_GNUC" = yes; then
 
   ########## Using gcc...
 
-  # Determine which gcc version is being used.
-
-  AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=4002&&(__GNUC__*1000+__GNUC_MINOR__)<=4003,GCC_42_OR_43)
-  AC_CHECK_C_COMPILER_CPP_EXPR(__llvm__ && !__clang__ && (__GNUC__*1000+__GNUC_MINOR__)<4005,POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG)
-  AC_CHECK_C_COMPILER_CPP_EXPR((__GNUC__*1000+__GNUC_MINOR__)>=6000,GCC_60_OR_MORE)
+  # Determine if GNU gcc or LLVM gcc is being used.
 
   if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
@@ -1898,24 +1924,7 @@ if test "$C_COMP_GNUC" = yes; then
   case "$target_os" in
     darwin*) # avoid the default C preprocessor which is setup for Objective-C
              FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_no_cpp_precomp"
-
-             # avoid -fipa-ra with OSX GCC6 and -O2 or more. See warning for details.
-             ENABLE_GCC6_OSX_IPA_WORKAROUND=no
-             if test "$GCC_60_OR_MORE" = yes; then
-               if test "$DASH_fno_ipa_ra" != ""; then
-                 if test "$ENABLE_SHARED" == yes; then
-                   if test "$ENABLE_C_OPT" != ""; then
-                     if test "$ENABLE_C_OPT" = yes -o " $ENABLE_C_OPT" = "$DASH_O2" -o " $ENABLE_C_OPT" = "$DASH_O3" -o " $ENABLE_C_OPT" = "$DASH_Ofast"; then
-                       FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
-                       ENABLE_GCC6_OSX_IPA_WORKAROUND=yes
-                     fi
-                   fi
-                 fi
-               fi
-             fi
-       ;;
-    *)
-       ;;
+             ;;
   esac
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_unused"
@@ -1942,7 +1951,7 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   fi
 
-  if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" == yes; then
+  if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
   fi
 
@@ -1975,12 +1984,11 @@ if test "$C_COMP_GNUC" = yes; then
              ;;
   esac
 
-  ENABLE_GCC_MOVE_LOOP_INVARIANTS=yes
-  if test "$ENABLE_SINGLE_HOST" = yes -a "$GCC_42_OR_43" = yes -a "$C_COMP_CLANG" != yes; then
-    ENABLE_GCC_MOVE_LOOP_INVARIANTS=no
+  if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes; then
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
   fi
 
-  if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
+  if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_move_loop_invariants"
   fi
 
@@ -2964,7 +2972,7 @@ fi
 
 if test "$C_COMP_GNUC" = yes; then
 
-  if test "$ENABLE_GCC_MOVE_LOOP_INVARIANTS" != yes; then
+  if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
     AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
@@ -2985,7 +2993,7 @@ if test "$C_COMP_GNUC" = yes; then
 ])
   fi
 
-  if test "$POSSIBLE_LLVM_GCC_LABEL_VALUES_BUG" = yes ; then
+  if test "$LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG" = yes; then
 
     AC_MSG_NOTICE([
 **************************************************************************
@@ -3004,7 +3012,7 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
 
-  if test "$ENABLE_GCC6_OSX_IPA_WORKAROUND" = yes ; then
+  if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes ; then
 
     AC_MSG_NOTICE([
 **************************************************************************
