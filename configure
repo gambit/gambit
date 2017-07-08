@@ -11190,7 +11190,7 @@ DASH_shared="$ac_cv_DASH_shared"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   fi
 
-  if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" == yes; then
+  if test "$ENABLE_GNU_GCC_NO_STRICT_ALIASING" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_strict_aliasing"
   fi
 
