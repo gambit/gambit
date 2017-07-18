@@ -137,7 +137,7 @@
    wrapper
    unwrapper
    allow-script?
-   '()
+   (##make-table)
    #f
    0
    read-cont))
@@ -10991,12 +10991,10 @@
        (eq? (vector-ref obj 0) ##label-marker-tag)))
 
 (define (##label-marker-enter! re n)
-  (let* ((labels (macro-readenv-labels re))
-         (x (assoc n labels)))
-    (if x
-        (cdr x)
+  (let ((labels (macro-readenv-labels re)))
+    (or (##table-ref labels n #f)
         (let ((lm (vector ##label-marker-tag #f '())))
-          (macro-readenv-labels-set! re (cons (cons n lm) labels))
+          (##table-set! labels n lm)
           lm))))
 
 (define (##label-marker-reference re n)
@@ -11044,19 +11042,17 @@
           (loop (vector-ref lst 3))))))
 
 (define (##read-check-labels! re)
-  (let loop1 ((lst (macro-readenv-labels re)))
-    (if (pair? lst)
-        (let* ((x (car lst))
-               (lm (cdr x)))
-          (let ((handlers (vector-ref lm 2)))
-            (if handlers
-                (begin
-                  (##label-marker-fixup! re handlers (##void))
-                  (##raise-datum-parsing-exception
-                   'missing-label-definition
-                   re
-                   (car x)))))
-          (loop1 (cdr lst))))))
+  (##table-for-each
+   (lambda (n lm)
+     (let ((handlers (vector-ref lm 2)))
+       (if handlers
+           (begin
+             (##label-marker-fixup! re handlers (##void))
+             (##raise-datum-parsing-exception
+              'missing-label-definition
+              re
+              n)))))
+   (macro-readenv-labels re)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
