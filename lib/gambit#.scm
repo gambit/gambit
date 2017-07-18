@@ -332,6 +332,7 @@ host-info-aliases
 host-info-name
 host-info?
 host-name
+identity
 improper-length-list-exception-arg-num
 improper-length-list-exception-arguments
 improper-length-list-exception-procedure

@@ -1210,6 +1210,14 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define-prim (##identity x)
+  x)
+
+(define-prim (identity x)
+  x)
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define-prim (##void))
 
 (define-prim (void)

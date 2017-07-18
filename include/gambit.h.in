@@ -2820,6 +2820,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 /* IFJUMP-able operations */
 
 #define ___FALSEP(x)((x)==___FAL)
+#define ___NOTFALSEP(x)((x)!=___FAL)
 #define ___BOOLEANP(x)(((x)&(___TRU-___tSPECIAL+___TMASK))==___TRU)
 #define ___NULLP(x)((x)==___NUL)
 #define ___FALSEORNULLP(x)(((x)&(___NUL-___tSPECIAL+___TMASK))==___NUL)

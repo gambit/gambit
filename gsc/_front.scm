@@ -1630,12 +1630,11 @@
              (if false?
                (make-branchpoints context dummy-bb context *bb*)
                (make-branchpoints context *bb* context dummy-bb)))
-           (branchpoints-invert
-            (gen-conditional node
-                             live
-                             (reason-pred-invert reason)
-                             **not-proc-obj
-                             (list opnd)))))
+           (gen-conditional node
+                            live
+                            reason
+                            **identity-proc-obj
+                            (list opnd))))
         (else ; (or (reason-need? reason) (reason-side? reason))
          opnd)))
 
@@ -2790,10 +2789,10 @@
                    *bbs*)))
             (bb-put-branch! *bb*
               (make-ifjump
-               **not-proc-obj
+               **identity-proc-obj
                (list target.proc-result)
-               false-lbl
                true-lbl
+               false-lbl
                #f
                (current-frame (varset-adjoin live result-var))
                (node->comment node)))
@@ -2917,12 +2916,17 @@
                           ((proc-obj-testable? proc) (node-env node)))))
 
           (if (and (reason-pred? reason)
-                   (eq? proc **not-proc-obj))
+                   (or (eq? proc **not-proc-obj)
+                       (eq? proc **identity-proc-obj)))
 
-            (branchpoints-invert
-             (gen-node (car args)
-                       live
-                       (reason-pred-invert reason)))
+            (if (eq? proc **not-proc-obj)
+              (branchpoints-invert
+               (gen-node (car args)
+                         live
+                         (reason-pred-invert reason)))
+              (gen-node (car args)
+                        live
+                        reason))
 
             (let ((eval-order (arg-eval-order #f args))
                   (vars (map (lambda (x) (cons x #f)) args)))

@@ -347,6 +347,8 @@
 
 ;; other
 
+("identity"                           (1)   #f 0     0    (#f)    gambit)
+
 ("void"                               (0)   #f 0     0    #f      gambit)
 
 ("will?"                              (1)   #f 0     0    boolean gambit)
@@ -875,6 +877,8 @@
 ("##promise-result-set!"              (2)   #t ()    0    #f      extended)
 
 ("##force"                            (1)   #t 0     0    #f      extended)
+
+("##identity"                         (1)   #f ()    0    (#f)    extended)
 
 ("##void"                             (0)   #f ()    0    #f      extended)
 
@@ -1442,6 +1446,7 @@
 
 (def-spec "touch"            (spec-s "##force"))
 (def-spec "force"            (spec-s "##force"))
+(def-spec "identity"         (spec-s "##identity"))
 (def-spec "void"             (spec-s "##void"))
 
 (def-spec "eqv?"             (spec-s-eqv?))

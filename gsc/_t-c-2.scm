@@ -3112,7 +3112,7 @@
        proc-safe?
        #f ; safe to assume that arguments are not all flonums
        (lambda (opnds fs)
-         (list "NOT" (list "FALSEP" (generator opnds fs)))))
+         (list "NOTFALSEP" (generator opnds fs))))
      prim)
     ((targ-setup-inlinable-proc proc-safe? #f #f generator)
      prim)))
@@ -3724,6 +3724,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(targ-op "##identity"         (targ-apply-first-argument))
 (targ-op "##first-argument"   (targ-apply-first-argument))
 (targ-op "##check-heap-limit" (targ-apply-check-heap-limit))
 

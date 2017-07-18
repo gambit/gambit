@@ -242,6 +242,9 @@
   (set! target.object-type       (target-object-type target))
   (set! target.file-extensions   (target-file-extensions target))
 
+  (set! **identity-proc-obj
+        (target.prim-info **identity-sym))
+
   (set! **not-proc-obj
         (target.prim-info **not-sym))
 
@@ -270,6 +273,7 @@
 
 (define (target-unselect!)
 
+  (set! **identity-proc-obj           #f)
   (set! **not-proc-obj                #f)
   (set! **eq?-proc-obj                #f)
   (set! **quasi-append-proc-obj       #f)
@@ -299,6 +303,7 @@
 
 ;; procedures defined in back-end:
 
+(define **identity-proc-obj           #f)  ;; ##identity
 (define **not-proc-obj                #f)  ;; ##not
 (define **eq?-proc-obj                #f)  ;; ##eq?
 (define **quasi-append-proc-obj       #f)  ;; ##quasi-append
