@@ -3328,7 +3328,12 @@
                                  return-lbl
                                  (if local-proc-info #f nb-args)
                                  #f
-                                 (safe? (node-env node))
+                                 (and (safe? (node-env node))
+                                      (not local-proc-info)
+                                      (not (and (obj? opnd)
+                                                (let ((val (obj-val opnd)))
+                                                  (and (proc-obj? val)
+                                                       (proc-obj-primitive? val))))))
                                  (current-frame liv)
                                  (node->comment node)))
 
