@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -679,7 +679,7 @@
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (warnings) (verbose) (report)
-                           (expansion) (gvm) (asm)
+                           (expansion) (gvm) (cfg) (asm)
                            (check) (force) (keep-c)
                            (debug) (debug-location) (debug-source) (debug-environments)
                            (track-scheme)

@@ -1838,11 +1838,20 @@
   (display "]" port)
   (newline port)
 
-  (for-each (lambda (x) (write-gvm-instr x port) (newline port))
+  (for-each (lambda (gvm-instr)
+              (if (useful-gvm-instr? gvm-instr)
+                  (begin
+                    (write-gvm-instr gvm-instr port)
+                    (newline port))))
             (bb-non-branch-instrs bb))
 
   (if (not (null? (bb-branch-instr bb)))
       (write-gvm-instr (bb-branch-instr bb) port)))
+
+(define (useful-gvm-instr? gvm-instr)
+  (or show-frame-padding?
+      (not (and (eq? (gvm-instr-type gvm-instr) 'copy)
+                (not (copy-opnd gvm-instr))))))
 
 (define (write-bbs bbs port)
   (bbs-for-each-bb
@@ -1856,8 +1865,313 @@
 (define show-slots-needed? #f)
 (set! show-slots-needed? #f)
 
-(define (virtual.dump procs port)
+(define show-frame-padding? #f)
+(set! show-frame-padding? #f)
 
+(define show-frame? #f)
+(set! show-frame? #t)
+
+(define (virtual.dump-gvm procs port)
+
+  (define (dump-proc p)
+
+    (define (dump-code code)
+      (let ((gvm-instr (code-gvm-instr code)))
+        (if (useful-gvm-instr? gvm-instr)
+            (begin
+
+              (if show-slots-needed?
+                  (begin
+                    (display "sn=" port)
+                    (display (code-slots-needed code) port)
+                    (display " | " port)))
+
+              (write-gvm-instr gvm-instr port)
+              (newline port)))))
+
+    (if (proc-obj-primitive? p)
+        (display "**** #<primitive " port)
+        (display "**** #<procedure " port))
+    (write (string->canonical-symbol (proc-obj-name p)) port)
+    (display "> =" port)
+    (newline port)
+
+    (let ((x (proc-obj-code p)))
+      (if (bbs? x)
+
+          (let loop ((l (bbs->code-list x))
+                     (prev-filename "")
+                     (prev-line 0))
+            (if (pair? l)
+                (let* ((code (car l))
+                       (instr (code-gvm-instr code))
+                       (node (comment-get (gvm-instr-comment instr) 'node))
+                       (src (node-source node))
+                       (loc (and src (source-locat src)))
+                       (filename
+                        (if (and loc (string? (vector-ref loc 0))) ;;;;;;;;;;;;;
+                            (vector-ref loc 0)
+                            prev-filename))
+                       (line
+                        (if (and loc (string? (vector-ref loc 0)))
+                            (+ (**filepos-line (vector-ref loc 1)) 1)
+                            prev-line)))
+                  (if (or (not (string=? filename prev-filename))
+                          (not (= line prev-line)))
+                      (begin
+                        (display "#line " port)
+                        (display line port)
+                        (if (not (string=? filename prev-filename))
+                            (begin
+                              (display " " port)
+                              (write filename port)))
+                        (newline port)))
+
+                  (dump-code code)
+                  (loop (cdr l) filename line))
+                (newline port)))
+
+          (begin
+            (display "C procedure of arity " port)
+            (display (c-proc-arity x) port)
+            (display " and body:" port)
+            (newline port)
+            (display (c-proc-body x) port)
+            (newline port)))))
+
+  (for-each dump-proc (reachable-procs procs)))
+
+(define (virtual.dump-cfg procs port)
+
+  ;; For generating visual representation of control flow graph with "dot".
+
+  (define nodes '())
+  (define edges '())
+
+  (define (add-node node)
+    (set! nodes
+          `(,@node
+            ,@nodes)))
+
+  (define (add-edge from to dotted?)
+    (set! edges
+          `("  " ,from " -> " ,to
+            ,(if dotted?
+                 " [style = dotted]"
+                 "")
+            ";\n"
+            ,@edges)))
+
+  (define node-bgcolor "gray80")
+  (define node-info-bgcolor "gray60")
+
+  (define (gen-digraph name)
+    `("digraph \"" ,name "\" {\n"
+      "  graph [splines = true overlap = false rankdir = \"TD\"];\n"
+      ,@nodes
+      ,@edges
+      "}\n"))
+
+  (define (gen-node id label)
+    `("  " ,id " [fontname = \"Courier New\" shape = \"none\" label = "
+      ,@label
+      " ];\n"))
+
+  (define (gen-table id bgcolor content)
+    `("<table border=\"0\" cellborder=\"0\" cellspacing=\"0\" cellpadding=\"0\""
+      ,@(if bgcolor
+            `(" bgcolor=\"" ,bgcolor "\"")
+            '())
+      ,@(if id
+            `(" port=\"" ,id "\"")
+            '())
+      ">"
+      ,@content
+      "</table>"))
+
+  (define (gen-row content)
+    `("<tr>"
+      ,@content
+      "</tr>"))
+
+  (define (gen-col id last? content)
+    `("<td align=\"left\""
+      ,@(if id
+            `(" port=\"" ,id "\"")
+            '())
+      ,(if last?
+           " colspan=\"20\""
+           "")
+      ">"
+      ,@content
+      "</td>"))
+
+  (define (gen-html-label content)
+    `("<"
+      ,@content
+      ">"))
+
+  (define (escape str)
+    (apply string-append
+           (map (lambda (c)
+                  (cond ((char=? c #\<) "&lt;")
+                        ((char=? c #\>) "&gt;")
+                        ((char=? c #\&) "&amp;")
+                        (else           (string c))))
+                (string->list str))))
+
+  (let ((proc-tbl (make-table)))
+
+    (define (proc-repr proc)
+      (format-gvm-opnd (make-obj proc)))
+
+    (define (proc-id proc proc-index)
+      (bb-id (let ((x (proc-obj-code proc)))
+               (if (bbs? x)
+                   (bbs-entry-lbl-num x)
+                   0))
+             proc-index))
+
+    (define (bb-id bb-index proc-index)
+      (string-append "proc"
+                     (number->string proc-index)
+                     "_"
+                     (number->string bb-index)))
+
+    (define (dump-proc proc proc-index)
+      (let ((x (proc-obj-code proc)))
+        (if (bbs? x)
+            (dump-proc-bbs proc proc-index x))))
+
+    (define (dump-proc-bbs proc proc-index bbs)
+
+      (define (dump-bb bb)
+        (let ((id (bb-id (bb-lbl-num bb) proc-index))
+              (port-count 0)
+              (rev-rows '()))
+
+          (define (add-row row)
+            (set! rev-rows (cons row rev-rows)))
+
+          (define (gen-port)
+            (set! port-count (+ port-count 1))
+            (number->string port-count))
+
+          (define (decorate-instr lst last-instr?)
+            (let ((line-id (gen-port)))
+
+              (define (target-id ref)
+                (or (table-ref proc-tbl ref #f)
+                    (bb-id (string->number
+                            (substring ref 1 (string-length ref)))
+                           proc-index)))
+
+              (define (reference? x)
+                (or (table-ref proc-tbl x #f)
+                    (and (>= (string-length x) 2)
+                         (char=? (string-ref x 0) #\#))))
+
+              (define (add-ref from side to dotted?)
+                (add-edge (string-append id ":" from side) to dotted?))
+
+              (gen-row
+               (gen-col
+                #f
+                #f
+                (gen-table
+                 line-id
+                 #f
+                 (gen-row
+                  (let loop ((before (list (escape (car lst))))
+                             (lst (cdr lst)))
+                    (if (pair? lst)
+                        (let ((x (car lst)))
+                          (if (reference? x)
+                              (let ((jump?
+                                     (and (pair? before)
+                                          (equal? (car before) ""))))
+                                (if last-instr?
+                                    (let ((ref-id (gen-port)))
+                                      (add-ref ref-id
+                                               ":s"
+                                               (target-id x)
+                                               (not jump?))
+                                      `(,@(gen-col #f #f (reverse before))
+                                        ,@(gen-col ref-id #f `(,(escape x)))
+                                        ,@(loop '()
+                                                (cdr lst))))
+                                    (begin
+                                      (add-ref line-id
+                                               ":w"
+                                               (target-id x)
+                                               (not jump?))
+                                      (loop (cons (escape x) before)
+                                            (cdr lst)))))
+                              (loop (cons (escape x) before)
+                                    (cdr lst))))
+                        (gen-col #f #t (reverse before))))))))))
+
+          (let ((instrs
+                 (cons (format-gvm-instr (bb-label-instr bb))
+                       (append (map format-gvm-instr
+                                    (keep useful-gvm-instr?
+                                          (bb-non-branch-instrs bb)))
+                               (list
+                                (format-gvm-instr (bb-branch-instr bb))))))
+                (gv-bb-info
+                 (comment-get (gvm-instr-comment (bb-label-instr bb))
+                              'gv-bb-info)))
+            (add-node
+             (gen-node
+              id
+              (gen-html-label
+               (gen-table
+                #f
+                node-bgcolor
+                `(,@(if gv-bb-info
+                        (apply append
+                               (map (lambda (line)
+                                      (gen-row
+                                       (gen-col
+                                        #f
+                                        #f
+                                        (gen-table
+                                         #f
+                                         node-info-bgcolor
+                                         (gen-row
+                                          (gen-col #f #f (list (escape line))))))))
+                                    gv-bb-info))
+                        '())
+                  ,@(let loop ((lst instrs))
+                      (if (pair? lst)
+                          (let ((rest (cdr lst)))
+                            `(,@(decorate-instr (car lst) (null? rest))
+                              ,@(loop rest)))
+                          '()))))))))))
+
+      (bbs-for-each-bb dump-bb bbs))
+
+    (let ((rprocs
+           (reachable-procs procs)))
+
+      (let loop1 ((i 0) (lst rprocs))
+        (if (pair? lst)
+            (let ((proc (car lst)))
+              (table-set! proc-tbl (proc-repr proc) (proc-id proc i))
+              (loop1 (+ i 1) (cdr lst)))))
+
+      (let loop2 ((i 0) (lst rprocs))
+        (if (pair? lst)
+            (let ((proc (car lst)))
+              (dump-proc proc i)
+              (loop2 (+ i 1) (cdr lst)))))
+
+      (for-each
+       (lambda (str)
+         (display str port))
+       (gen-digraph (proc-obj-name (car procs)))))))
+
+(define (reachable-procs procs)
   (let ((proc-seen (queue-empty))
         (proc-left (queue-empty)))
 
@@ -1876,25 +2190,17 @@
             ((clo? gvm-opnd)
              (scan-opnd (clo-base gvm-opnd)))))
 
-    (define (dump-proc p)
+    (define (scan-proc proc)
 
-      (define (scan-code code)
-        (let ((gvm-instr (code-gvm-instr code)))
+      (define (scan-bb bb)
 
-          (if show-slots-needed?
-            (begin
-              (display "sn=" port)
-              (display (code-slots-needed code) port)
-              (display " | " port)))
-
-          (write-gvm-instr gvm-instr port)
-          (newline port)
+        (define (scan-gvm-instr gvm-instr)
           (case (gvm-instr-type gvm-instr)
 
             ((apply)
              (for-each scan-opnd (apply-opnds gvm-instr))
              (if (apply-loc gvm-instr)
-               (scan-opnd (apply-loc gvm-instr))))
+                 (scan-opnd (apply-loc gvm-instr))))
 
             ((copy)
              (scan-opnd (copy-opnd gvm-instr))
@@ -1915,68 +2221,26 @@
                        (switch-cases gvm-instr)))
 
             ((jump)
-             (scan-opnd (jump-opnd gvm-instr)))
+             (scan-opnd (jump-opnd gvm-instr)))))
 
-            (else
-             '()))))
+        (scan-gvm-instr (bb-label-instr bb))
+        (for-each (lambda (gvm-instr) (scan-gvm-instr gvm-instr))
+                  (bb-non-branch-instrs bb))
+        (scan-gvm-instr (bb-branch-instr bb)))
 
-      (if (proc-obj-primitive? p)
-        (display "**** #<primitive " port)
-        (display "**** #<procedure " port))
-      (write (string->canonical-symbol (proc-obj-name p)) port)
-      (display "> =" port)
-      (newline port)
-
-      (let ((x (proc-obj-code p)))
+      (let ((x (proc-obj-code proc)))
         (if (bbs? x)
-
-          (let loop ((l (bbs->code-list x))
-                     (prev-filename "")
-                     (prev-line 0))
-            (if (pair? l)
-              (let* ((code (car l))
-                     (instr (code-gvm-instr code))
-                     (node (comment-get (gvm-instr-comment instr) 'node))
-                     (src (node-source node))
-                     (loc (and src (source-locat src)))
-                     (filename
-                       (if (and loc (string? (vector-ref loc 0)));;;;;;;;;;;;;
-                         (vector-ref loc 0)
-                         prev-filename))
-                     (line
-                       (if (and loc (string? (vector-ref loc 0)))
-                         (+ (**filepos-line (vector-ref loc 1)) 1)
-                         prev-line)))
-                (if (or (not (string=? filename prev-filename))
-                        (not (= line prev-line)))
-                  (begin
-                    (display "#line " port)
-                    (display line port)
-                    (if (not (string=? filename prev-filename))
-                      (begin
-                        (display " " port)
-                        (write filename port)))
-                    (newline port)))
-
-                (scan-code code)
-                (loop (cdr l) filename line))
-              (newline port)))
-
-          (begin
-            (display "C procedure of arity " port)
-            (display (c-proc-arity x) port)
-            (display " and body:" port)
-            (newline port)
-            (display (c-proc-body x) port)
-            (newline port)))))
+            (bbs-for-each-bb (lambda (bb) (scan-bb bb)) x))))
 
     (for-each (lambda (proc) (scan-opnd (make-obj proc))) procs)
 
     (let loop ()
       (if (not (queue-empty? proc-left))
         (begin
-          (dump-proc (queue-get! proc-left))
-          (loop))))))
+          (scan-proc (queue-get! proc-left))
+          (loop))))
+
+    (queue->list proc-seen)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
@@ -1985,259 +2249,18 @@
 
 (define (write-gvm-instr gvm-instr port)
 
-  (define (write-closure-parms parms)
-    (display " " port)
-    (let ((len (+ 1 (write-gvm-opnd (closure-parms-loc parms) port))))
-      (display " = (" port)
-      (let ((len (+ len (+ 4 (write-gvm-lbl (closure-parms-lbl parms) port)))))
-        (+ len (write-spaced-opnd-list (closure-parms-opnds parms) port)))))
-
-  (define (write-spaced-opnd-list l port)
-    (let loop ((l l) (len 0))
-      (if (pair? l)
-        (let ((opnd (car l)))
-          (display " " port)
-          (loop (cdr l) (+ len (+ 1 (write-gvm-opnd opnd port)))))
-        (begin
-          (display ")" port)
-          (+ len 1)))))
-
-  (define (write-opnd-list l port)
-    (if (pair? l)
-      (let ((len (write-gvm-opnd (car l) port)))
-        (+ len (write-spaced-opnd-list (cdr l) port)))
-      (begin
-        (display ")" port)
-        1)))
-
-  (define (write-key-pair-list keys port)
-    (if keys
-      (begin
-        (display " (" port)
-        (if (pair? keys)
-          (let loop ((l keys))
-            (let* ((key-pair (car l))
-                   (key (car key-pair))
-                   (opnd (cdr key-pair))
-                   (rest (cdr l)))
-              (display "(" port)
-              (let ((len (+ 1 (write-returning-len key port))))
-                (display " " port)
-                (let ((len (+ len (+ 1 (write-gvm-opnd opnd port)))))
-                  (display ")" port)
-                  (if (pair? rest)
-                    (begin
-                      (display " " port)
-                      (+ len (+ 2 (loop rest))))
-                    (begin
-                      (display ")" port)
-                      (+ len 4)))))))
-          (begin
-            (display ")" port)
-            3)))
-      0))
-
-  (define (write-param-pattern gvm-instr port)
-    (display "nparams=" port)
-    (let ((len (+ 8 (write-returning-len
-                     (label-entry-nb-parms gvm-instr)
-                     port))))
-      (display " (" port)
-      (let ((len (+ len
-                    (+ 2
-                       (write-opnd-list
-                         (label-entry-opts gvm-instr)
-                         port)))))
-        (let ((len (+ len
-                      (write-key-pair-list
-                        (label-entry-keys gvm-instr)
-                        port))))
-          (if (label-entry-rest? gvm-instr)
-            (begin (display " +" port) (+ len 2))
-            len)))))
-
-  (define (write-prim-applic prim opnds port)
-    (display "(" port)
-    (let ((len (+ 1 (display-returning-len (proc-obj-name prim) port))))
-      (+ len (write-spaced-opnd-list opnds port))))
-
-  (define (write-instr gvm-instr)
-    (case (gvm-instr-type gvm-instr)
-
-      ((label)
-       (let ((len (write-gvm-lbl (label-lbl-num gvm-instr) port)))
-         (display " fs=" port)
-         (let ((len (+ len
-                       (+ 4 (write-returning-len
-                              (frame-size (gvm-instr-frame gvm-instr))
-                              port)))))
-           (case (label-type gvm-instr)
-             ((simple)
-              len)
-             ((entry)
-              (if (label-entry-closed? gvm-instr)
-                (begin
-                  (display " closure-entry-point " port)
-                  (+ len (+ 21 (write-param-pattern gvm-instr port))))
-                (begin
-                  (display " entry-point " port)
-                  (+ len (+ 13 (write-param-pattern gvm-instr port))))))
-             ((return)
-              (display " return-point" port)
-              (+ len 13))
-             ((task-entry)
-              (display " task-entry-point" port)
-              (+ len 17))
-             ((task-return)
-              (display " task-return-point" port)
-              (+ len 18))
-             (else
-              (compiler-internal-error
-                "write-gvm-instr, unknown label type"))))))
-
-      ((apply)
-       (display "  " port)
-       (let ((len (+ 2 (write-gvm-opnd (apply-loc gvm-instr) port))))
-         (display " = " port)
-         (+ len
-            (+ 3
-               (write-prim-applic (apply-prim gvm-instr)
-                                  (apply-opnds gvm-instr)
-                                  port)))))
-
-      ((copy)
-       (display "  " port)
-       (let ((len (+ 2 (write-gvm-opnd (copy-loc gvm-instr) port))))
-         (display " = " port)
-         (+ len (+ 3 (write-gvm-opnd (copy-opnd gvm-instr) port)))))
-
-      ((close)
-       (display "  close" port)
-       (let ((len (+ 7 (write-closure-parms (car (close-parms gvm-instr))))))
-         (let loop ((l (cdr (close-parms gvm-instr))) (len len))
-           (if (pair? l)
-             (let ((x (car l)))
-               (display "," port)
-               (loop (cdr l) (+ len (+ 1 (write-closure-parms x)))))
-             len))))
-
-      ((ifjump)
-       (display "  if " port)
-       (let ((len (+ 5
-                     (write-prim-applic (ifjump-test gvm-instr)
-                                        (ifjump-opnds gvm-instr)
-                                        port))))
-         (let ((len (+ len
-                       (if (ifjump-poll? gvm-instr)
-                         (begin (display " jump/poll " port) 11)
-                         (begin (display " jump " port) 6)))))
-           (display "fs=" port)
-           (let ((len (+ len
-                         (+ 3 (write-returning-len
-                               (frame-size (gvm-instr-frame gvm-instr))
-                               port)))))
-             (display " " port)
-             (let ((len (+ len
-                           (+ 1 (write-gvm-lbl
-                                  (ifjump-true gvm-instr)
-                                  port)))))
-               (display " else " port)
-               (+ len (+ 6 (write-gvm-lbl
-                             (ifjump-false gvm-instr)
-                             port))))))))
-
-      ((switch)
-       (display "  " port)
-       (let ((len (+ 2
-                     (if (switch-poll? gvm-instr)
-                       (begin (display "switch/poll " port) 12)
-                       (begin (display "switch " port) 7)))))
-         (display "fs=" port)
-         (let ((len (+ len
-                       (+ 3 (write-returning-len
-                             (frame-size (gvm-instr-frame gvm-instr))
-                             port)))))
-           (display " " port)
-           (let ((len (+ len
-                         (+ 1 (write-gvm-opnd (switch-opnd gvm-instr) port)))))
-             (display " (" port)
-             (let ((len
-                    (let loop ((cases (switch-cases gvm-instr))
-                               (len (+ len 2)))
-                      (if (pair? cases)
-                        (let ((c (car cases)))
-                          (let ((len (+ len
-                                        (write-gvm-obj (switch-case-obj c)
-                                                       port))))
-                            (display " => " port)
-                            (let ((len (+ len
-                                          (+ 4 (write-gvm-lbl (switch-case-lbl c)
-                                                              port)))))
-                              (let ((next (cdr cases)))
-                                (if (null? next)
-                                  len
-                                  (begin
-                                    (display ", " port)
-                                    (loop next (+ len 2))))))))
-                        len))))
-               (display ") " port)
-               (+ len
-                  (+ 2 (write-gvm-lbl
-                        (switch-default gvm-instr)
-                        port))))))))
-
-      ((jump)
-       (display "  " port)
-       (let ((len (+ 2
-                     (if (jump-poll? gvm-instr)
-                       (begin (display "jump/poll" port) 9)
-                       (begin (display "jump" port) 4)))))
-         (let ((len (+ len
-                       (if (jump-safe? gvm-instr)
-                         (begin (display "/safe " port) 6)
-                         (begin (display " " port) 1)))))
-           (display "fs=" port)
-           (let ((len (+ len
-                         (+ 3 (write-returning-len
-                               (frame-size (gvm-instr-frame gvm-instr))
-                               port)))))
-             (display " " port)
-             (let ((len (+ len
-                           (+ 1 (write-gvm-opnd
-                                 (jump-opnd gvm-instr)
-                                 port)))))
-               (let ((len (+ len
-                             (if (jump-ret gvm-instr)
-                               (begin
-                                 (display " r0=" port)
-                                 (+ 4 (write-gvm-opnd
-                                       (make-lbl (jump-ret gvm-instr))
-                                       port)))
-                               0))))
-                 (+ len
-                    (if (jump-nb-args gvm-instr)
-                      (begin
-                        (display " nargs=" port)
-                        (+ 7 (write-returning-len
-                               (jump-nb-args gvm-instr)
-                               port)))
-                      0))))))))
-
-      (else
-       (compiler-internal-error
-         "write-gvm-instr, unknown 'gvm-instr':"
-         gvm-instr))))
-
   (define (spaces n)
     (if (> n 0)
       (if (> n 7)
         (begin (display "        " port) (spaces (- n 8)))
         (begin (display " " port) (spaces (- n 1))))))
 
-  (let ((len (write-instr gvm-instr)))
-    (spaces (- 43 len))
+  (let ((str (apply string-append (format-gvm-instr gvm-instr))))
+    (display str port)
+    (spaces (- 43 (string-length str)))
     (display " " port)
-    (write-frame (gvm-instr-frame gvm-instr) port))
+    (if show-frame?
+        (write-frame (gvm-instr-frame gvm-instr) port)))
 
   (let ((x (gvm-instr-comment gvm-instr)))
     (if x
@@ -2287,64 +2310,230 @@
                 (loop2 (+ i 1) (cdr l) " "))
               (loop2 (+ i 1) (cdr l) sep))))))))
 
+(define (format-gvm-instr gvm-instr)
+
+  (define (format-closure-parms parms)
+    `(" "
+      ,(format-gvm-opnd (closure-parms-loc parms))
+      " = ("
+      ,(format-gvm-lbl (closure-parms-lbl parms))
+      ,@(format-spaced-opnd-list (closure-parms-opnds parms))))
+
+  (define (format-spaced-opnd-list lst)
+    (let loop ((lst lst)
+               (rev-result '()))
+      (if (pair? lst)
+          (loop (cdr lst)
+                `(,(format-gvm-opnd (car lst))
+                  " "
+                  ,@rev-result))
+          (reverse `(")" ,@rev-result)))))
+
+  (define (format-opnd-list lst)
+    (if (pair? lst)
+        `(,(format-gvm-opnd (car lst))
+          ,@(format-spaced-opnd-list (cdr lst)))
+        (format-spaced-opnd-list lst)))
+
+  (define (format-key-pair-list keys)
+    (if keys
+        `(" ("
+          ,@(if (pair? keys)
+                (let loop ((lst keys))
+                  (let* ((key-pair (car lst))
+                         (key (car key-pair))
+                         (opnd (cdr key-pair))
+                         (rest (cdr lst)))
+                    `(,(string-append "(" (object->string key))
+                      " "
+                      ,(format-gvm-opnd opnd)
+                      ")"
+                      ,@(if (pair? rest)
+                            `(" "
+                              ,@(loop rest))
+                            `(")")))))
+                `(")")))
+        '()))
+
+  (define (format-param-pattern gvm-instr)
+    `("nparams="
+      ,(number->string (label-entry-nb-parms gvm-instr))
+      " ("
+      ,@(format-opnd-list (label-entry-opts gvm-instr))
+      ,@(format-key-pair-list (label-entry-keys gvm-instr))
+      ,@(if (label-entry-rest? gvm-instr)
+            `(" +")
+            '())))
+
+  (define (format-prim-applic prim opnds)
+    (if (eq? prim **identity-proc-obj)
+        `(,(format-gvm-opnd (car opnds)))
+        (cons (string-append "(" (proc-obj-name prim))
+              (format-spaced-opnd-list opnds))))
+
+  (case (gvm-instr-type gvm-instr)
+
+    ((label)
+     `(,(format-gvm-lbl (label-lbl-num gvm-instr))
+       " fs="
+       ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
+       ,@(case (label-type gvm-instr)
+           ((simple)
+            '())
+           ((entry)
+            `(,(if (label-entry-closed? gvm-instr)
+                   " closure-entry-point "
+                   " entry-point ")
+              ,@(format-param-pattern gvm-instr)))
+           ((return)
+            `(" return-point"))
+           ((task-entry)
+            `(" task-entry-point"))
+           ((task-return)
+            `(" task-return-point"))
+           (else
+            (compiler-internal-error
+             "format-gvm-instr, unknown label type")))))
+
+    ((apply)
+     `("  "
+       ,(format-gvm-opnd (apply-loc gvm-instr))
+       " = "
+       ,@(format-prim-applic (apply-prim gvm-instr)
+                             (apply-opnds gvm-instr))))
+
+    ((copy)
+     `("  "
+       ,(format-gvm-opnd (copy-loc gvm-instr))
+       " = "
+       ,(format-gvm-opnd (copy-opnd gvm-instr))))
+
+    ((close)
+     (let loop ((lst (close-parms gvm-instr))
+                (sep "  close"))
+       (if (pair? lst)
+           `(,sep
+             ,@(format-closure-parms (car lst))
+             ,@(loop (cdr lst)
+                     ","))
+           '())))
+
+    ((ifjump)
+     `("  if "
+       ,@(format-prim-applic (ifjump-test gvm-instr)
+                             (ifjump-opnds gvm-instr))
+       ,(if (ifjump-poll? gvm-instr)
+            " jump/poll"
+            " jump")
+       " fs="
+       ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
+       " "
+       "" ;; tag as a direct jump
+       ,(format-gvm-lbl (ifjump-true gvm-instr))
+       " else "
+       "" ;; tag as a direct jump
+       ,(format-gvm-lbl (ifjump-false gvm-instr))))
+
+    ((switch)
+     `("  "
+       ,(if (switch-poll? gvm-instr)
+            "switch/poll"
+            "switch")
+       " fs="
+       ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
+       " "
+       ,(format-gvm-opnd (switch-opnd gvm-instr))
+       " ("
+       ,@(let loop ((cases (switch-cases gvm-instr)))
+           (if (pair? cases)
+               (let ((c (car cases))
+                     (next (cdr cases)))
+                 `(,(format-gvm-obj (switch-case-obj c))
+                   " => "
+                   "" ;; tag as a direct jump
+                   ,(format-gvm-lbl (switch-case-lbl c))
+                   ,@(if (null? next)
+                         '()
+                         `(", "
+                           ,@(loop next)))))
+               '()))
+       ") "
+       "" ;; tag as a direct jump
+       ,(format-gvm-lbl (switch-default gvm-instr))))
+
+    ((jump)
+     `("  "
+       ,(if (jump-poll? gvm-instr)
+            "jump/poll"
+            "jump")
+       ,(if (jump-safe? gvm-instr)
+            "/safe"
+            "")
+       " fs="
+       ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
+       " "
+       "" ;; tag as a direct jump
+       ,(format-gvm-opnd (jump-opnd gvm-instr))
+       ,@(if (jump-ret gvm-instr)
+             `(" r0="
+               ,(format-gvm-opnd (make-lbl (jump-ret gvm-instr))))
+             '())
+       ,@(if (jump-nb-args gvm-instr)
+             `(" nargs="
+               ,(number->string (jump-nb-args gvm-instr)))
+             '())))
+
+    (else
+     (compiler-internal-error
+      "format-gvm-instr, unknown 'gvm-instr':"
+      gvm-instr))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
 ;; Operand writing:
 ;; ---------------
 
 (define (write-gvm-opnd gvm-opnd port)
+  (let ((str (format-gvm-opnd gvm-opnd)))
+    (display str port)
+    (string-length str)))
+
+(define (format-gvm-opnd gvm-opnd)
   (cond ((not gvm-opnd)
-         (display "." port)
-         1)
+         ".")
         ((reg? gvm-opnd)
-         (display "r" port)
-         (+ 1 (write-returning-len (reg-num gvm-opnd) port)))
+         (string-append "r" (number->string (reg-num gvm-opnd))))
         ((stk? gvm-opnd)
-         (display "frame[" port)
-         (let ((len (write-returning-len (stk-num gvm-opnd) port)))
-           (display "]" port)
-           (+ 7 len)))
+         (string-append "frame[" (number->string (stk-num gvm-opnd)) "]"))
         ((glo? gvm-opnd)
-         (display "global[" port)
-         (let ((len (write-returning-len (glo-name gvm-opnd) port)))
-           (display "]" port)
-           (+ 8 len)))
+         (string-append "global[" (object->string (glo-name gvm-opnd)) "]"))
         ((clo? gvm-opnd)
-         (let ((len (write-gvm-opnd (clo-base gvm-opnd) port)))
-           (display "[" port)
-           (let ((len (+ len
-                         (+ 1 (write-returning-len
-                                (clo-index gvm-opnd)
-                                port)))))
-             (display "]" port)
-             (+ len 1))))
+         (string-append (format-gvm-opnd (clo-base gvm-opnd))
+                        "["
+                        (number->string (clo-index gvm-opnd))
+                        "]"))
         ((lbl? gvm-opnd)
-         (write-gvm-lbl (lbl-num gvm-opnd) port))
+         (format-gvm-lbl (lbl-num gvm-opnd)))
         ((obj? gvm-opnd)
-         (display "'" port)
-         (+ (write-gvm-obj (obj-val gvm-opnd) port) 1))
+         (string-append "'" (format-gvm-obj (obj-val gvm-opnd))))
         (else
          (compiler-internal-error
-           "write-gvm-opnd, unknown 'gvm-opnd':"
+           "format-gvm-opnd, unknown 'gvm-opnd':"
            gvm-opnd))))
 
-(define (write-gvm-lbl lbl port)
-  (display "#" port)
-  (+ (write-returning-len lbl port) 1))
+(define (format-gvm-lbl lbl)
+  (string-append "#" (number->string lbl)))
 
-(define (write-gvm-obj val port)
+(define (format-gvm-obj val)
   (cond ((proc-obj? val)
-         (if (proc-obj-primitive? val)
-           (display "#<primitive " port)
-           (display "#<procedure " port))
-         (let ((len
-                (write-returning-len
-                  (string->canonical-symbol (proc-obj-name val))
-                  port)))
-           (display ">" port)
-           (+ len 13)))
+         (string-append
+          (if (proc-obj-primitive? val)
+              "#<primitive "
+              "#<procedure ")
+          (proc-obj-name val)
+          ">"))
         (else
-         (write-returning-len val port))))
+         (object->string val))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

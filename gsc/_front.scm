@@ -114,6 +114,9 @@
                      ((gvm)
                       (set! compiler-option-gvm                #t)
                       #t)
+                     ((cfg)
+                      (set! compiler-option-cfg                #t)
+                      #t)
                      ((debug)
                       (set! compiler-option-debug              #t)
                       #t)
@@ -161,6 +164,7 @@
   (set! compiler-option-report             #f)
   (set! compiler-option-expansion          #f)
   (set! compiler-option-gvm                #f)
+  (set! compiler-option-cfg                #f)
   (set! compiler-option-debug              #f)
   (set! compiler-option-debug-location     #f)
   (set! compiler-option-debug-source       #f)
@@ -172,6 +176,7 @@
 (define compiler-option-report             #f)
 (define compiler-option-expansion          #f)
 (define compiler-option-gvm                #f)
+(define compiler-option-cfg                #f)
 (define compiler-option-debug              #f)
 (define compiler-option-debug-location     #f)
 (define compiler-option-debug-source       #f)
@@ -365,8 +370,14 @@
                  (if compiler-option-gvm
                      (let ((gvm-port
                             (open-output-file (string-append root ".gvm"))))
-                       (virtual.dump module-procs gvm-port)
+                       (virtual.dump-gvm module-procs gvm-port)
                        (close-output-port gvm-port)))
+
+                 (if compiler-option-cfg
+                     (let ((cfg-port
+                            (open-output-file (string-append root ".cfg"))))
+                       (virtual.dump-cfg module-procs cfg-port)
+                       (close-output-port cfg-port)))
 
                  (target.dump
                   module-procs

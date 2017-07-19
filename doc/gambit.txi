@@ -731,7 +731,7 @@ Synopsis:
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
     @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
-    @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]}
+    @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
     @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
     @r{[}-o @r{@var{output}}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @r{@var{base}}@r{]}
@@ -838,6 +838,8 @@ Display a global variable usage report.
 Display the source code after expansion.
 @item -gvm
 Generate a listing of the GVM code.
+@item -cfg
+Generate a control flow graph of the GVM code.
 @item -debug
 Include all debugging information in the code generated.
 @item -debug-location
@@ -951,6 +953,18 @@ after expansion and inlining by the front end.
 The @samp{-gvm} option generates a listing of the intermediate code
 for the ``Gambit Virtual Machine'' (GVM) of each Scheme file on
 @samp{@var{file}.gvm}.
+
+@opindex -cfg
+The @samp{-cfg} option generates a visual representation of the
+control flow graph of the intermediate code for the ``Gambit Virtual
+Machine'' (GVM) of each Scheme file on @samp{@var{file}.cfg}.
+The file is suitable for processing with the ``dot'' program.
+For example, to generate the PDF file @samp{@var{file}.cfg.pdf}
+from @samp{@var{file}.cfg} the following command can be used:
+
+@smallexample
+$ @b{dot -O -Tpdf @var{file}.cfg}
+@end smallexample
 
 @opindex -debug
 @opindex debug
