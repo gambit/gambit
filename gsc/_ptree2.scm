@@ -205,17 +205,19 @@
                                    (env
                                     (node-env ptree)))
 
-                              (define (generate-spec-call vars)
-                                (new-call source (add-not-inline-primitives env)
+                              (define (generate-spec-call vars dead-end?)
+                                (gen-call-maybe-dead-end source env
                                   (new-cst source env
                                     spec)
-                                  (gen-var-refs source env vars)))
+                                  (gen-var-refs source env vars)
+                                  dead-end?))
 
-                              (define (generate-original-call vars)
-                                (new-call source (add-not-inline-primitives env)
+                              (define (generate-original-call vars dead-end?)
+                                (gen-call-maybe-dead-end source env
                                   (new-ref (node-source oper) (node-env oper)
                                     var)
-                                  (gen-var-refs source env vars)))
+                                  (gen-var-refs source env vars)
+                                  dead-end?))
 
                               (define (generate-run-time-binding-test gen-body)
                                 (let ((vars (gen-temp-vars source args)))
@@ -228,8 +230,8 @@
                                           (node-env oper)
                                           var)
                                         proc)
-                                      (gen-body vars)
-                                      (generate-original-call vars)))))
+                                      (gen-body vars #f)
+                                      (generate-original-call vars #f)))))
 
                               (if (and spec
                                        (inline-primitive? name env)
@@ -277,10 +279,11 @@
                                                    (if (and (not std?)
                                                             (not (eq? proc spec)))
                                                      (generate-run-time-binding-test
-                                                      (lambda (vars)
-                                                        (new-call source env
+                                                      (lambda (vars dead-end?)
+                                                        (gen-call-maybe-dead-end source env
                                                           x
-                                                          (gen-var-refs source env vars))))
+                                                          (gen-var-refs source env vars)
+                                                          dead-end?)))
                                                      x)
                                                    (and std?
                                                         (new-cst source env
@@ -311,13 +314,11 @@
                                       ptree
                                       oper
                                       args
-                                      (lambda (vars)
-                                        (new-call
-                                         source
-                                         (add-not-inline-primitives env)
-                                         (new-cst source env
-                                           spec)
-                                         (gen-var-refs source env vars)))
+                                      (lambda (vars dead-end?)
+                                        (gen-call-maybe-dead-end source env
+                                          (new-cst source env
+                                            spec)
+                                          (gen-var-refs source env vars)))
                                       #f))))
                           (epc (or x oper))))
 
@@ -380,10 +381,22 @@
     (gen-var-refs source env vars)))
 
 (define (gen-call-prim source env prim args)
-  (new-call source (add-not-safe env)
+  (gen-call-maybe-dead-end source (add-not-safe env)
     (new-cst source env
       (target.prim-info prim))
+    args
+    #f))
+
+(define (gen-call-maybe-dead-end source env proc args dead-end?)
+  (new-call source (add-not-inline-primitives (if dead-end? (add-dead-end-calls env) env))
+    proc
     args))
+
+(define (dead-end-calls? env)
+  (declaration-value 'dead-end-calls #f #f env))
+
+(define (add-dead-end-calls env)
+  (env-declare env (list 'dead-end-calls #t)))
 
 (define (gen-eq-proc source env arg proc)
   (gen-call-prim source env

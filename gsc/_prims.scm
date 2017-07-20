@@ -1630,7 +1630,8 @@
         (let* ((vars1
                 (gen-temp-vars source '(#f)))
                (call
-                (generate-call vars1)))
+                (generate-call vars1
+                               (not check-run-time-binding))))
           (gen-prc source env
             vars1
             (if (< pattern 4)
@@ -1682,10 +1683,11 @@
                   (gen-call-prim-vars source env
                     **mutable?-sym
                     (list (car vars))))
-                (gen-call-prim-vars source (add-not-inline-primitives env)
+                (gen-call-prim-vars source env
                   (op-prim pattern)
                   vars)
-                (generate-call vars)))))))
+                (generate-call vars
+                               (not check-run-time-binding))))))))
 
     (let ((name (gen-name pattern)))
       (def-exp name expander)))
@@ -1737,7 +1739,9 @@
                     #f
                     #f
                     (new-tst source env
-                      (gen-call-prim-vars source env **pair?-sym (list lst1-var))
+                      (gen-call-prim-vars source env
+                        **pair?-sym
+                        (list lst1-var))
                       (new-call source env2
                         (new-prc source env
                           #f
@@ -1775,7 +1779,8 @@
                                     **pair?-sym
                                     (list x-var))
                                   (gen-test)
-                                  (generate-call vars))
+                                  (generate-call vars
+                                                 (not check-run-time-binding)))
                                 (gen-test)))
                             (new-tst source env
                               (gen-call-prim source env
@@ -1799,10 +1804,13 @@
                                 (list lst1-var))))
                       (if (safe? env)
                         (new-tst source env
-                          (gen-call-prim-vars source env **null?-sym (list lst1-var))
+                          (gen-call-prim-vars source env
+                            **null?-sym
+                            (list lst1-var))
                           (new-cst source env
                             false-object)
-                          (generate-call vars))
+                          (generate-call vars
+                                         (not check-run-time-binding)))
                         (new-cst source env
                           false-object)))))))
 
@@ -1812,7 +1820,8 @@
             (new-tst source env
               (check-run-time-binding)
               (gen-main-loop)
-              (generate-call vars))
+              (generate-call vars
+                             (not check-run-time-binding)))
             (gen-main-loop))))))
 
   (define (make-map-for-each-expander prim)
@@ -1960,7 +1969,8 @@
                             **null?-sym
                             lst1-vars)
                           (gen-main-loop)
-                          (generate-call vars))))))))
+                          (generate-call vars
+                                         (not check-run-time-binding)))))))))
 
         (gen-prc source env
           vars
@@ -1988,7 +1998,8 @@
                 (if (safe? env)
                   (gen-check)
                   (gen-main-loop))
-                (generate-call vars))
+                (generate-call vars
+                               (not check-run-time-binding)))
               (gen-main-loop)))))))
 
   (setup-c...r-primitives)
@@ -2337,7 +2348,7 @@
               vars
               (let* ((generic-call
                       (lambda ()
-                        (generate-call vars)))
+                        (generate-call vars #f))) ;; handle other cases
                      (cases-expansion
                       ((car cases) source env
                        vars
@@ -2372,7 +2383,7 @@
           vars
           (let ((generic-call
                  (lambda ()
-                   (generate-call vars))))
+                   (generate-call vars #f)))) ;; handle other cases
             (gen-case source env
               vars
               check-run-time-binding
@@ -2396,7 +2407,7 @@
                  vars
                  (let ((generic-call
                         (lambda ()
-                          (generate-call vars))))
+                          (generate-call vars #f)))) ;; handle other cases
                    (gen-case source env
                      vars
                      check-run-time-binding
@@ -2964,9 +2975,7 @@
              (gen-call-prim-vars source env **fixnum?-sym vars)
              (new-disj source env
                (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source (add-not-inline-primitives env)
-                 **real?-sym
-                 vars))))
+               (gen-call-prim-vars source env **real?-sym vars))))
          fail)))
 
     (define case-rational?
@@ -2986,9 +2995,7 @@
              (new-tst source env
                (gen-call-prim-vars source env **flonum?-sym vars)
                (gen-call-prim-vars source env **flfinite?-sym vars)
-               (gen-call-prim-vars source (add-not-inline-primitives env)
-                 **rational?-sym
-                 vars))))
+               (gen-call-prim-vars source env **rational?-sym vars))))
          fail)))
 
     (define case-integer?
@@ -3005,9 +3012,7 @@
          (lambda ()
            (new-disj source env
              (gen-call-prim-vars source env **fixnum?-sym vars)
-             (gen-call-prim-vars source (add-not-inline-primitives env)
-               **integer?-sym
-               vars)))
+             (gen-call-prim-vars source env **integer?-sym vars)))
          fail)))
 
     (define (case-exact? fallback)
@@ -3028,9 +3033,7 @@
                (gen-call-prim source env
                  **not-sym
                  (list (gen-call-prim-vars source env **flonum?-sym vars)))
-               (gen-call-prim-vars source (add-not-inline-primitives env)
-                 fallback
-                 vars))))
+               (gen-call-prim-vars source env fallback vars))))
          fail)))
 
     (define (case-inexact? fallback)
@@ -3051,9 +3054,7 @@
                (list (gen-call-prim-vars source env **fixnum?-sym vars)))
              (new-disj source env
                (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source (add-not-inline-primitives env)
-                 fallback
-                 vars))))
+               (gen-call-prim-vars source env fallback vars))))
          fail)))
 
     (def-exp "##real?"     (make-simple-expander case-real?))
@@ -3479,7 +3480,8 @@
                 (new-tst source env
                   checks
                   call-prim
-                  (generate-call vars))
+                  (generate-call vars
+                                 (not check-run-time-binding)))
                 call-prim)))))
 
       (define (make-ref-set!-cas!-inc!-expander type-check? kind)
@@ -3536,7 +3538,7 @@
                             rtb-check))
                       type-mutability-index-value-check))
                  (call-prim
-                  (gen-call-prim-vars source (add-not-inline-primitives env)
+                  (gen-call-prim-vars source env
                     (case kind
                       ((ref)  **vect-ref-sym)
                       ((set!) **vect-set!-sym)
@@ -3556,7 +3558,8 @@
                   (new-tst source env
                     checks
                     value
-                    (generate-call vars))
+                    (generate-call vars
+                                   (not check-run-time-binding)))
                   call-prim)))))
 
       (def-exp
@@ -3810,7 +3813,7 @@
              (type-check
               (gen-type-check source env obj-var type-var))
              (call-prim
-              (gen-call-prim-vars source (add-not-inline-primitives env)
+              (gen-call-prim-vars source env
                 (case kind
                   ((ref)  **unchecked-structure-ref-sym)
                   ((set!) **unchecked-structure-set!-sym)
@@ -3821,7 +3824,8 @@
           (new-tst source env
             type-check
             call-prim
-            (generate-call vars))))))
+            (generate-call vars
+                           (not check-run-time-binding)))))))
 
   (def-exp
    "##direct-structure-ref"

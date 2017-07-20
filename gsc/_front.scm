@@ -3362,16 +3362,57 @@
 
                                 (if (reason-tail? reason2)
                                   target.proc-result
-                                  (begin
+                                  (let ((frame
+                                         (current-frame
+                                          (varset-adjoin live result-var))))
+
                                     (set! poll (return-poll poll where))
+
                                     (set! *bb*
                                       (make-bb
                                        (make-label-return
                                         return-lbl
-                                        (current-frame
-                                         (varset-adjoin live result-var))
+                                        frame
                                         (node->comment node))
                                        *bbs*))
+
+                                    (if (dead-end-calls? (node-env node))
+                                        (let* ((lbl1 (bbs-new-lbl! *bbs*))
+                                               (lbl2 (bbs-new-lbl! *bbs*)))
+
+                                          (bb-put-branch! *bb*
+                                            (make-jump (make-lbl lbl1)
+                                                       #f
+                                                       #f
+                                                       #f
+                                                       #f
+                                                       frame
+                                                       (node->comment node)))
+
+                                          (set! *bb*
+                                            (make-bb
+                                             (make-label-simple
+                                              lbl1
+                                              frame
+                                              (node->comment node))
+                                             *bbs*))
+
+                                          (bb-put-branch! *bb*
+                                            (make-jump (make-lbl lbl1)
+                                                       #f
+                                                       #f
+                                                       #f
+                                                       #f
+                                                       frame
+                                                       (node->comment node)))
+
+                                          (set! *bb*
+                                            (make-bb
+                                             (make-label-simple
+                                              lbl2
+                                              frame
+                                              (node->comment node))
+                                             *bbs*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;
