@@ -1608,20 +1608,23 @@
           (table-set! loc-table expr locat))))
   expr)
 
-(define use-actual-primitives-in-expression? #t)
+(define use-actual-primitives-in-expression? #f)
+(set! use-actual-primitives-in-expression? #t)
 
-(define use-begin-when-possible-in-expression? #t)
+(define use-begin-when-possible-in-expression? #f)
+(set! use-begin-when-possible-in-expression? #t)
 
 (define (se-constant val ptree loc-table)
   (se-gen
-   (if (self-evaluating? val)
-       val
-       (list quote-sym
-             (if (proc-obj? val)
-                 (if use-actual-primitives-in-expression?
-                     (eval (string->symbol (proc-obj-name val)))
-                     (list '*primitive* (proc-obj-name val)))
-                 val)))
+   (cond ((self-evaluating? val)
+          val)
+         ((proc-obj? val)
+          (let ((name (string->symbol (proc-obj-name val))))
+            (if use-actual-primitives-in-expression?
+                (list quote-sym (eval name))
+                (list 'PRIM name))))
+         (else
+          (list quote-sym val)))
    ptree
    loc-table))
 
@@ -1635,7 +1638,8 @@
 ;;                    (number->string (##object->serial-number var))))
     id))
 
-(define use-dotted-rest-parameter-when-possible? #t)
+(define use-dotted-rest-parameter-when-possible? #f)
+(set! use-dotted-rest-parameter-when-possible? #t)
 
 (define (se-parameters parms opts keys rest? env num ptree loc-table)
 
