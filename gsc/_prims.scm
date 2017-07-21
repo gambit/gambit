@@ -62,7 +62,7 @@
 ("null?"                              (1)   #f 0     0    boolean ieee)
 ("list?"                              (1)   #f 0     0    boolean ieee)
 ("list"                               0     #f ()    0    list    ieee)
-("length"                             (1)   #f 0     0    integer ieee)
+("length"                             (1)   #f 0     0    fixnonneg ieee)
 ("append"                             0     #f 0     0    list    ieee)
 ("reverse"                            (1)   #f 0     0    list    ieee)
 ("list-ref"                           (2)   #f 0     0    (#f)    ieee)
@@ -154,7 +154,7 @@
 ("string?"                            (1)   #f 0     0    boolean ieee)
 ("make-string"                        (1 2) #f 0     0    string  ieee)
 ("string"                             0     #f 0     0    string  ieee)
-("string-length"                      (1)   #f 0     0    integer ieee)
+("string-length"                      (1)   #f 0     0    fixnonneg ieee)
 ("string-ref"                         (2)   #f 0     0    char    ieee)
 ("string-set!"                        (3)   #t 0     0    string  ieee)
 ("string=?"                           0     #f 0     0    boolean ieee)
@@ -172,7 +172,7 @@
 ("vector?"                            (1)   #f 0     0    boolean ieee)
 ("make-vector"                        (1 2) #f (1)   0    vector  ieee)
 ("vector"                             0     #f ()    0    vector  ieee)
-("vector-length"                      (1)   #f 0     0    integer ieee)
+("vector-length"                      (1)   #f 0     0    fixnonneg ieee)
 ("vector-ref"                         (2)   #f 0     0    (#f)    ieee)
 ("vector-set!"                        (3)   #t (1 2) 0    vector  ieee)
 ("procedure?"                         (1)   #f 0     0    boolean ieee)
@@ -364,94 +364,94 @@
 ("vector-inc!"                        (2 3) #t 0     0    fixnum  gambit)
 
 ("s8vector?"                          (1)   #f 0     0    boolean gambit)
-("s8vector"                           0     #f 0     0    #f      gambit)
-("make-s8vector"                      (1 2) #f 0     0    #f      gambit)
-("s8vector-length"                    (1)   #f 0     0    integer gambit)
-("s8vector-ref"                       (2)   #f 0     0    integer gambit)
+("s8vector"                           0     #f 0     0    s8vector gambit)
+("make-s8vector"                      (1 2) #f 0     0    s8vector gambit)
+("s8vector-length"                    (1)   #f 0     0    fixnonneg gambit)
+("s8vector-ref"                       (2)   #f 0     0    s8      gambit)
 ("s8vector-set!"                      (3)   #t 0     0    #f      gambit)
 ("s8vector->list"                     (1)   #f 0     0    list    gambit)
-("list->s8vector"                     (1)   #f 0     0    #f      gambit)
+("list->s8vector"                     (1)   #f 0     0    s8vector gambit)
 
 ("u8vector?"                          (1)   #f 0     0    boolean gambit)
-("u8vector"                           0     #f 0     0    #f      gambit)
-("make-u8vector"                      (1 2) #f 0     0    #f      gambit)
-("u8vector-length"                    (1)   #f 0     0    integer gambit)
-("u8vector-ref"                       (2)   #f 0     0    integer gambit)
+("u8vector"                           0     #f 0     0    u8vector gambit)
+("make-u8vector"                      (1 2) #f 0     0    u8vector gambit)
+("u8vector-length"                    (1)   #f 0     0    fixnonneg gambit)
+("u8vector-ref"                       (2)   #f 0     0    u8      gambit)
 ("u8vector-set!"                      (3)   #t 0     0    #f      gambit)
 ("u8vector->list"                     (1)   #f 0     0    list    gambit)
-("list->u8vector"                     (1)   #f 0     0    #f      gambit)
+("list->u8vector"                     (1)   #f 0     0    u8vector gambit)
 
 ("s16vector?"                         (1)   #f 0     0    boolean gambit)
-("s16vector"                          0     #f 0     0    #f      gambit)
-("make-s16vector"                     (1 2) #f 0     0    #f      gambit)
-("s16vector-length"                   (1)   #f 0     0    integer gambit)
-("s16vector-ref"                      (2)   #f 0     0    integer gambit)
+("s16vector"                          0     #f 0     0    s16vector gambit)
+("make-s16vector"                     (1 2) #f 0     0    s16vector gambit)
+("s16vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("s16vector-ref"                      (2)   #f 0     0    s16     gambit)
 ("s16vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("s16vector->list"                    (1)   #f 0     0    list    gambit)
-("list->s16vector"                    (1)   #f 0     0    #f      gambit)
+("list->s16vector"                    (1)   #f 0     0    s16vector gambit)
 
 ("u16vector?"                         (1)   #f 0     0    boolean gambit)
-("u16vector"                          0     #f 0     0    #f      gambit)
-("make-u16vector"                     (1 2) #f 0     0    #f      gambit)
-("u16vector-length"                   (1)   #f 0     0    integer gambit)
-("u16vector-ref"                      (2)   #f 0     0    integer gambit)
+("u16vector"                          0     #f 0     0    u16vector gambit)
+("make-u16vector"                     (1 2) #f 0     0    u16vector gambit)
+("u16vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("u16vector-ref"                      (2)   #f 0     0    u16     gambit)
 ("u16vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("u16vector->list"                    (1)   #f 0     0    list    gambit)
-("list->u16vector"                    (1)   #f 0     0    #f      gambit)
+("list->u16vector"                    (1)   #f 0     0    u16vector gambit)
 
 ("s32vector?"                         (1)   #f 0     0    boolean gambit)
-("s32vector"                          0     #f 0     0    #f      gambit)
-("make-s32vector"                     (1 2) #f 0     0    #f      gambit)
-("s32vector-length"                   (1)   #f 0     0    integer gambit)
-("s32vector-ref"                      (2)   #f 0     0    integer gambit)
+("s32vector"                          0     #f 0     0    s32vector gambit)
+("make-s32vector"                     (1 2) #f 0     0    s32vector gambit)
+("s32vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("s32vector-ref"                      (2)   #f 0     0    s32     gambit)
 ("s32vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("s32vector->list"                    (1)   #f 0     0    list    gambit)
-("list->s32vector"                    (1)   #f 0     0    #f      gambit)
+("list->s32vector"                    (1)   #f 0     0    s32vector gambit)
 
 ("u32vector?"                         (1)   #f 0     0    boolean gambit)
-("u32vector"                          0     #f 0     0    #f      gambit)
-("make-u32vector"                     (1 2) #f 0     0    #f      gambit)
-("u32vector-length"                   (1)   #f 0     0    integer gambit)
-("u32vector-ref"                      (2)   #f 0     0    integer gambit)
+("u32vector"                          0     #f 0     0    u32vector gambit)
+("make-u32vector"                     (1 2) #f 0     0    u32vector gambit)
+("u32vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("u32vector-ref"                      (2)   #f 0     0    u32     gambit)
 ("u32vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("u32vector->list"                    (1)   #f 0     0    list    gambit)
-("list->u32vector"                    (1)   #f 0     0    #f      gambit)
+("list->u32vector"                    (1)   #f 0     0    u32vector gambit)
 
 ("s64vector?"                         (1)   #f 0     0    boolean gambit)
-("s64vector"                          0     #f 0     0    #f      gambit)
-("make-s64vector"                     (1 2) #f 0     0    #f      gambit)
-("s64vector-length"                   (1)   #f 0     0    integer gambit)
-("s64vector-ref"                      (2)   #f 0     0    integer gambit)
+("s64vector"                          0     #f 0     0    s64vector gambit)
+("make-s64vector"                     (1 2) #f 0     0    s64vector gambit)
+("s64vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("s64vector-ref"                      (2)   #f 0     0    s64     gambit)
 ("s64vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("s64vector->list"                    (1)   #f 0     0    list    gambit)
-("list->s64vector"                    (1)   #f 0     0    #f      gambit)
+("list->s64vector"                    (1)   #f 0     0    s64vector gambit)
 
 ("u64vector?"                         (1)   #f 0     0    boolean gambit)
-("u64vector"                          0     #f 0     0    #f      gambit)
-("make-u64vector"                     (1 2) #f 0     0    #f      gambit)
-("u64vector-length"                   (1)   #f 0     0    integer gambit)
-("u64vector-ref"                      (2)   #f 0     0    integer gambit)
+("u64vector"                          0     #f 0     0    u64vector gambit)
+("make-u64vector"                     (1 2) #f 0     0    u64vector gambit)
+("u64vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("u64vector-ref"                      (2)   #f 0     0    u64     gambit)
 ("u64vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("u64vector->list"                    (1)   #f 0     0    list    gambit)
-("list->u64vector"                    (1)   #f 0     0    #f      gambit)
+("list->u64vector"                    (1)   #f 0     0    u64vector gambit)
 
 ("f32vector?"                         (1)   #f 0     0    boolean gambit)
-("f32vector"                          0     #f 0     0    #f      gambit)
-("make-f32vector"                     (1 2) #f 0     0    #f      gambit)
-("f32vector-length"                   (1)   #f 0     0    integer gambit)
-("f32vector-ref"                      (2)   #f 0     0    real    gambit)
+("f32vector"                          0     #f 0     0    f32vector gambit)
+("make-f32vector"                     (1 2) #f 0     0    f32vector gambit)
+("f32vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("f32vector-ref"                      (2)   #f 0     0    flonum  gambit)
 ("f32vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("f32vector->list"                    (1)   #f 0     0    list    gambit)
-("list->f32vector"                    (1)   #f 0     0    #f      gambit)
+("list->f32vector"                    (1)   #f 0     0    f32vector gambit)
 
 ("f64vector?"                         (1)   #f 0     0    boolean gambit)
-("f64vector"                          0     #f 0     0    #f      gambit)
-("make-f64vector"                     (1 2) #f 0     0    #f      gambit)
-("f64vector-length"                   (1)   #f 0     0    integer gambit)
-("f64vector-ref"                      (2)   #f 0     0    real    gambit)
+("f64vector"                          0     #f 0     0    f64vector gambit)
+("make-f64vector"                     (1 2) #f 0     0    f64vector gambit)
+("f64vector-length"                   (1)   #f 0     0    fixnonneg gambit)
+("f64vector-ref"                      (2)   #f 0     0    flonum  gambit)
 ("f64vector-set!"                     (3)   #t 0     0    #f      gambit)
 ("f64vector->list"                    (1)   #f 0     0    list    gambit)
-("list->f64vector"                    (1)   #f 0     0    #f      gambit)
+("list->f64vector"                    (1)   #f 0     0    f64vector gambit)
 
 ("bitwise-ior"                        0     #f 0     0    integer gambit)
 ("bitwise-xor"                        0     #f 0     0    integer gambit)
@@ -541,13 +541,13 @@
 ("##fxmin"                       1     #f ()    0    fixnum  extended)
 ("##fxwrap+"                     0     #f ()    0    fixnum  extended)
 ("##fx+"                         0     #f ()    0    fixnum  extended)
-("##fx+?"                        (2)   #f ()    0    #f      extended)
+("##fx+?"                        (2)   #f ()    0    ?fixnum extended)
 ("##fxwrap*"                     0     #f ()    0    fixnum  extended)
 ("##fx*"                         0     #f ()    0    fixnum  extended)
-("##fx*?"                        (2)   #f ()    0    #f      extended)
+("##fx*?"                        (2)   #f ()    0    ?fixnum extended)
 ("##fxwrap-"                     1     #f ()    0    fixnum  extended)
 ("##fx-"                         1     #f ()    0    fixnum  extended)
-("##fx-?"                        (1 2) #f ()    0    #f      extended)
+("##fx-?"                        (1 2) #f ()    0    ?fixnum extended)
 ("##fxwrapquotient"              (2)   #f ()    0    fixnum  extended)
 ("##fxquotient"                  (2)   #f ()    0    fixnum  extended)
 ("##fxremainder"                 (2)   #f ()    0    fixnum  extended)
@@ -562,23 +562,23 @@
 ("##fxfirst-bit-set"             (1)   #f ()    0    fixnum  extended)
 ("##fxbit-set?"                  (2)   #f ()    0    fixnum  extended)
 ("##fxwraparithmetic-shift"      (2)   #f ()    0    fixnum  extended)
-("##fxwraparithmetic-shift?"     (2)   #f ()    0    #f      extended)
+("##fxwraparithmetic-shift?"     (2)   #f ()    0    ?fixnum extended)
 ("##fxarithmetic-shift"          (2)   #f ()    0    fixnum  extended)
-("##fxarithmetic-shift?"         (2)   #f ()    0    #f      extended)
+("##fxarithmetic-shift?"         (2)   #f ()    0    ?fixnum extended)
 ("##fxwraparithmetic-shift-left" (2)   #f ()    0    fixnum  extended)
-("##fxwraparithmetic-shift-left?"(2)   #f ()    0    #f      extended)
+("##fxwraparithmetic-shift-left?"(2)   #f ()    0    ?fixnum extended)
 ("##fxarithmetic-shift-left"     (2)   #f ()    0    fixnum  extended)
-("##fxarithmetic-shift-left?"    (2)   #f ()    0    #f      extended)
+("##fxarithmetic-shift-left?"    (2)   #f ()    0    ?fixnum extended)
 ("##fxarithmetic-shift-right"    (2)   #f ()    0    fixnum  extended)
-("##fxarithmetic-shift-right?"   (2)   #f ()    0    #f      extended)
+("##fxarithmetic-shift-right?"   (2)   #f ()    0    ?fixnum extended)
 ("##fxwraplogical-shift-right"   (2)   #f ()    0    fixnum  extended)
-("##fxwraplogical-shift-right?"  (2)   #f ()    0    #f      extended)
+("##fxwraplogical-shift-right?"  (2)   #f ()    0    ?fixnum extended)
 ("##fxwrapabs"                   (1)   #f ()    0    fixnum  extended)
 ("##fxabs"                       (1)   #f ()    0    fixnum  extended)
-("##fxabs?"                      (1)   #f ()    0    #f      extended)
+("##fxabs?"                      (1)   #f ()    0    ?fixnum extended)
 ("##fxwrapsquare"                (1)   #f ()    0    fixnum  extended)
 ("##fxsquare"                    (1)   #f ()    0    fixnum  extended)
-("##fxsquare?"                   (1)   #f ()    0    #f      extended)
+("##fxsquare?"                   (1)   #f ()    0    ?fixnum extended)
 ("##fxzero?"                     (1)   #f ()    0    boolean extended)
 ("##fxpositive?"                 (1)   #f ()    0    boolean extended)
 ("##fxnegative?"                 (1)   #f ()    0    boolean extended)
@@ -593,42 +593,42 @@
 ("##integer->char"               (1)   #f ()    0    char    extended)
 ("##char->integer"               (1)   #f ()    0    fixnum  extended)
 ("##flonum->fixnum"              (1)   #f ()    0    fixnum  extended)
-("##fixnum->flonum"              (1)   #f ()    0    real    extended)
+("##fixnum->flonum"              (1)   #f ()    0    flonum  extended)
 ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
 
-("##flmax"                       1     #f ()    0    real    extended)
-("##flmin"                       1     #f ()    0    real    extended)
-("##fl+"                         0     #f ()    0    real    extended)
-("##fl*"                         0     #f ()    0    real    extended)
-("##fl-"                         1     #f ()    0    real    extended)
-("##fl/"                         1     #f ()    0    real    extended)
-("##flabs"                       (1)   #f ()    0    real    extended)
-("##flfloor"                     (1)   #f ()    0    real    extended)
-("##flceiling"                   (1)   #f ()    0    real    extended)
-("##fltruncate"                  (1)   #f ()    0    real    extended)
-("##flround"                     (1)   #f ()    0    real    extended)
-("##flscalbn"                    (2)   #f 0     0    real    extended)
-("##flilogb"                     (1)   #f 0     0    real    extended)
-("##flexp"                       (1)   #f ()    0    real    extended)
-("##flexpm1"                     (1)   #f ()    0    real    extended)
-("##fllog"                       (1)   #f ()    0    real    extended)
-("##fllog1p"                     (1)   #f ()    0    real    extended)
-("##flsin"                       (1)   #f ()    0    real    extended)
-("##flcos"                       (1)   #f ()    0    real    extended)
-("##fltan"                       (1)   #f ()    0    real    extended)
-("##flasin"                      (1)   #f ()    0    real    extended)
-("##flacos"                      (1)   #f ()    0    real    extended)
-("##flatan"                      (1 2) #f ()    0    real    extended)
-("##flsinh"                      (1)   #f ()    0    real    extended)
-("##flcosh"                      (1)   #f ()    0    real    extended)
-("##fltanh"                      (1)   #f ()    0    real    extended)
-("##flasinh"                     (1)   #f ()    0    real    extended)
-("##flacosh"                     (1)   #f ()    0    real    extended)
-("##flatanh"                     (1)   #f ()    0    real    extended)
-("##flexpt"                      (2)   #f ()    0    real    extended)
-("##flsqrt"                      (1)   #f ()    0    real    extended)
-("##flsquare"                    (1)   #f ()    0    real    extended)
-("##flcopysign"                  (2)   #f ()    0    real    extended)
+("##flmax"                       1     #f ()    0    flonum  extended)
+("##flmin"                       1     #f ()    0    flonum  extended)
+("##fl+"                         0     #f ()    0    flonum  extended)
+("##fl*"                         0     #f ()    0    flonum  extended)
+("##fl-"                         1     #f ()    0    flonum  extended)
+("##fl/"                         1     #f ()    0    flonum  extended)
+("##flabs"                       (1)   #f ()    0    flonum  extended)
+("##flfloor"                     (1)   #f ()    0    flonum  extended)
+("##flceiling"                   (1)   #f ()    0    flonum  extended)
+("##fltruncate"                  (1)   #f ()    0    flonum  extended)
+("##flround"                     (1)   #f ()    0    flonum  extended)
+("##flscalbn"                    (2)   #f 0     0    flonum  extended)
+("##flilogb"                     (1)   #f 0     0    fixnum  extended)
+("##flexp"                       (1)   #f ()    0    flonum  extended)
+("##flexpm1"                     (1)   #f ()    0    flonum  extended)
+("##fllog"                       (1)   #f ()    0    flonum  extended)
+("##fllog1p"                     (1)   #f ()    0    flonum  extended)
+("##flsin"                       (1)   #f ()    0    flonum  extended)
+("##flcos"                       (1)   #f ()    0    flonum  extended)
+("##fltan"                       (1)   #f ()    0    flonum  extended)
+("##flasin"                      (1)   #f ()    0    flonum  extended)
+("##flacos"                      (1)   #f ()    0    flonum  extended)
+("##flatan"                      (1 2) #f ()    0    flonum  extended)
+("##flsinh"                      (1)   #f ()    0    flonum  extended)
+("##flcosh"                      (1)   #f ()    0    flonum  extended)
+("##fltanh"                      (1)   #f ()    0    flonum  extended)
+("##flasinh"                     (1)   #f ()    0    flonum  extended)
+("##flacosh"                     (1)   #f ()    0    flonum  extended)
+("##flatanh"                     (1)   #f ()    0    flonum  extended)
+("##flexpt"                      (2)   #f ()    0    flonum  extended)
+("##flsqrt"                      (1)   #f ()    0    flonum  extended)
+("##flsquare"                    (1)   #f ()    0    flonum  extended)
+("##flcopysign"                  (2)   #f ()    0    flonum  extended)
 ("##flinteger?"                  (1)   #f ()    0    boolean extended)
 ("##flzero?"                     (1)   #f ()    0    boolean extended)
 ("##flpositive?"                 (1)   #f ()    0    boolean extended)
@@ -715,13 +715,13 @@
 
 ("##values"                           0     #f ()    0    (#f)    extended)
 ("##make-values"                      (1 2) #f ()    0    (#f)    extended)
-("##values-length"                    (1)   #f ()    0    fixnum  extended)
+("##values-length"                    (1)   #f ()    0    fixnonneg extended)
 ("##values-ref"                       (2)   #f ()    0    (#f)    extended)
 ("##values-set!"                      (3)   #t ()    0    (#f)    extended)
 
 ("##vector"                           0     #f ()    0    vector  extended)
 ("##make-vector"                      (1 2) #f ()    0    vector  extended)
-("##vector-length"                    (1)   #f ()    0    fixnum  extended)
+("##vector-length"                    (1)   #f ()    0    fixnonneg extended)
 ("##vector-ref"                       (2)   #f ()    0    (#f)    extended)
 ("##vector-set!"                      (3)   #t ()    0    vector  extended)
 ("##vector-shrink!"                   (2)   #t ()    0    vector  extended)
@@ -730,80 +730,80 @@
 
 ("##string"                           0     #f ()    0    string  extended)
 ("##make-string"                      (1 2) #f ()    0    string  extended)
-("##string-length"                    (1)   #f ()    0    fixnum  extended)
+("##string-length"                    (1)   #f ()    0    fixnonneg extended)
 ("##string-ref"                       (2)   #f ()    0    char    extended)
 ("##string-set!"                      (3)   #t ()    0    string  extended)
 ("##string-shrink!"                   (2)   #t ()    0    string  extended)
 
-("##s8vector"                         0     #f ()    0    #f      extended)
-("##make-s8vector"                    (1 2) #f ()    0    #f      extended)
-("##s8vector-length"                  (1)   #f ()    0    fixnum  extended)
-("##s8vector-ref"                     (2)   #f ()    0    fixnum  extended)
-("##s8vector-set!"                    (3)   #t ()    0    #f      extended)
-("##s8vector-shrink!"                 (2)   #t ()    0    #f      extended)
+("##s8vector"                         0     #f ()    0    s8vector extended)
+("##make-s8vector"                    (1 2) #f ()    0    s8vector extended)
+("##s8vector-length"                  (1)   #f ()    0    fixnonneg extended)
+("##s8vector-ref"                     (2)   #f ()    0    s8       extended)
+("##s8vector-set!"                    (3)   #t ()    0    s8vector extended)
+("##s8vector-shrink!"                 (2)   #t ()    0    s8vector extended)
 
-("##u8vector"                         0     #f ()    0    #f      extended)
-("##make-u8vector"                    (1 2) #f ()    0    #f      extended)
-("##u8vector-length"                  (1)   #f ()    0    fixnum  extended)
-("##u8vector-ref"                     (2)   #f ()    0    fixnum  extended)
-("##u8vector-set!"                    (3)   #t ()    0    #f      extended)
-("##u8vector-shrink!"                 (2)   #t ()    0    #f      extended)
+("##u8vector"                         0     #f ()    0    u8vector extended)
+("##make-u8vector"                    (1 2) #f ()    0    u8vector extended)
+("##u8vector-length"                  (1)   #f ()    0    fixnonneg extended)
+("##u8vector-ref"                     (2)   #f ()    0    u8      extended)
+("##u8vector-set!"                    (3)   #t ()    0    u8vector extended)
+("##u8vector-shrink!"                 (2)   #t ()    0    u8vector extended)
 
-("##s16vector"                        0     #f ()    0    #f      extended)
-("##make-s16vector"                   (1 2) #f ()    0    #f      extended)
-("##s16vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##s16vector-ref"                    (2)   #f ()    0    fixnum  extended)
-("##s16vector-set!"                   (3)   #t ()    0    #f      extended)
-("##s16vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##s16vector"                        0     #f ()    0    s16vector extended)
+("##make-s16vector"                   (1 2) #f ()    0    s16vector extended)
+("##s16vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##s16vector-ref"                    (2)   #f ()    0    s16     extended)
+("##s16vector-set!"                   (3)   #t ()    0    s16vector extended)
+("##s16vector-shrink!"                (2)   #t ()    0    s16vector extended)
 
-("##u16vector"                        0     #f ()    0    #f      extended)
-("##make-u16vector"                   (1 2) #f ()    0    #f      extended)
-("##u16vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##u16vector-ref"                    (2)   #f ()    0    fixnum  extended)
-("##u16vector-set!"                   (3)   #t ()    0    #f      extended)
-("##u16vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##u16vector"                        0     #f ()    0    u16vector extended)
+("##make-u16vector"                   (1 2) #f ()    0    u16vector extended)
+("##u16vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##u16vector-ref"                    (2)   #f ()    0    u16     extended)
+("##u16vector-set!"                   (3)   #t ()    0    u16vector extended)
+("##u16vector-shrink!"                (2)   #t ()    0    u16vector extended)
 
-("##s32vector"                        0     #f ()    0    #f      extended)
-("##make-s32vector"                   (1 2) #f ()    0    #f      extended)
-("##s32vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##s32vector-ref"                    (2)   #f ()    0    fixnum  extended)
-("##s32vector-set!"                   (3)   #t ()    0    #f      extended)
-("##s32vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##s32vector"                        0     #f ()    0    s32vector extended)
+("##make-s32vector"                   (1 2) #f ()    0    s32vector extended)
+("##s32vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##s32vector-ref"                    (2)   #f ()    0    s32     extended)
+("##s32vector-set!"                   (3)   #t ()    0    s32vector extended)
+("##s32vector-shrink!"                (2)   #t ()    0    s32vector extended)
 
-("##u32vector"                        0     #f ()    0    #f      extended)
-("##make-u32vector"                   (1 2) #f ()    0    #f      extended)
-("##u32vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##u32vector-ref"                    (2)   #f ()    0    fixnum  extended)
-("##u32vector-set!"                   (3)   #t ()    0    #f      extended)
-("##u32vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##u32vector"                        0     #f ()    0    u32vector extended)
+("##make-u32vector"                   (1 2) #f ()    0    u32vector extended)
+("##u32vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##u32vector-ref"                    (2)   #f ()    0    u32     extended)
+("##u32vector-set!"                   (3)   #t ()    0    u32vector extended)
+("##u32vector-shrink!"                (2)   #t ()    0    u32vector extended)
 
-("##s64vector"                        0     #f ()    0    #f      extended)
-("##make-s64vector"                   (1 2) #f ()    0    #f      extended)
-("##s64vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##s64vector-ref"                    (2)   #f ()    0    fixnum  extended)
-("##s64vector-set!"                   (3)   #t ()    0    #f      extended)
-("##s64vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##s64vector"                        0     #f ()    0    s64vector extended)
+("##make-s64vector"                   (1 2) #f ()    0    s64vector extended)
+("##s64vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##s64vector-ref"                    (2)   #f ()    0    s64     extended)
+("##s64vector-set!"                   (3)   #t ()    0    s64vector extended)
+("##s64vector-shrink!"                (2)   #t ()    0    s64vector extended)
 
-("##u64vector"                        0     #f ()    0    #f      extended)
-("##make-u64vector"                   (1 2) #f ()    0    #f      extended)
-("##u64vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##u64vector-ref"                    (2)   #f ()    0    fixnum  extended)
-("##u64vector-set!"                   (3)   #t ()    0    #f      extended)
-("##u64vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##u64vector"                        0     #f ()    0    u64vector extended)
+("##make-u64vector"                   (1 2) #f ()    0    u64vector extended)
+("##u64vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##u64vector-ref"                    (2)   #f ()    0    u64     extended)
+("##u64vector-set!"                   (3)   #t ()    0    u64vector extended)
+("##u64vector-shrink!"                (2)   #t ()    0    u64vector extended)
 
-("##f32vector"                        0     #f ()    0    #f      extended)
-("##make-f32vector"                   (1 2) #f ()    0    #f      extended)
-("##f32vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##f32vector-ref"                    (2)   #f ()    0    real    extended)
-("##f32vector-set!"                   (3)   #t ()    0    #f      extended)
-("##f32vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##f32vector"                        0     #f ()    0    f32vector extended)
+("##make-f32vector"                   (1 2) #f ()    0    f32vector extended)
+("##f32vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##f32vector-ref"                    (2)   #f ()    0    flonum  extended)
+("##f32vector-set!"                   (3)   #t ()    0    f32vector extended)
+("##f32vector-shrink!"                (2)   #t ()    0    f32vector extended)
 
-("##f64vector"                        0     #f ()    0    #f      extended)
-("##make-f64vector"                   (1 2) #f ()    0    #f      extended)
-("##f64vector-length"                 (1)   #f ()    0    fixnum  extended)
-("##f64vector-ref"                    (2)   #f ()    0    real    extended)
-("##f64vector-set!"                   (3)   #t ()    0    #f      extended)
-("##f64vector-shrink!"                (2)   #t ()    0    #f      extended)
+("##f64vector"                        0     #f ()    0    f64vector extended)
+("##make-f64vector"                   (1 2) #f ()    0    f64vector extended)
+("##f64vector-length"                 (1)   #f ()    0    fixnonneg extended)
+("##f64vector-ref"                    (2)   #f ()    0    flonum  extended)
+("##f64vector-set!"                   (3)   #t ()    0    f64vector extended)
+("##f64vector-shrink!"                (2)   #t ()    0    f64vector extended)
 
 ("##ratnum-make"                      (2)   #f ()    0    number  extended)
 ("##ratnum-numerator"                 (1)   #f ()    0    integer extended)
@@ -819,7 +819,7 @@
 ("##structure-type-set!"              (2)   #t ()    0    (#f)    extended)
 ("##structure"                        1     #f ()    0    (#f)    extended)
 ("##make-structure"                   (2)   #f ()    0    (#f)    extended)
-("##structure-length"                 (1)   #f ()    0    fixnum  extended)
+("##structure-length"                 (1)   #f ()    0    fixnonneg extended)
 ("##structure-ref"                    (4)   #f ()    0    (#f)    extended)
 ("##structure-set!"                   (5)   #t ()    0    (#f)    extended)
 ("##structure-cas!"                   (6)   #t ()    0    (#f)    extended)
@@ -857,7 +857,7 @@
 ("##keyword-interned?"                (1)   #f ()    0    #f      extended)
 
 ("##make-closure"                     (2)   #f ()    0    #f      extended)
-("##closure-length"                   (1)   #f ()    0    fixnum  extended)
+("##closure-length"                   (1)   #f ()    0    fixnonneg extended)
 ("##closure-code"                     (1)   #f ()    0    #f      extended)
 ("##closure-ref"                      (2)   #f ()    0    (#f)    extended)
 ("##closure-set!"                     (3)   #t ()    0    #f      extended)
@@ -949,12 +949,12 @@
 ("##case-memv"                        (2)   #f 0     0    list    extended)
 
 ("##bignum.negative?"                 (1)   #f ()    0    boolean extended)
-("##bignum.adigit-length"             (1)   #f ()    0    integer extended)
+("##bignum.adigit-length"             (1)   #f ()    0    fixnonneg extended)
 ("##bignum.adigit-inc!"               (2)   #t ()    0    integer extended)
 ("##bignum.adigit-dec!"               (2)   #t ()    0    integer extended)
 ("##bignum.adigit-add!"               (5)   #t ()    0    integer extended)
 ("##bignum.adigit-sub!"               (5)   #t ()    0    integer extended)
-("##bignum.mdigit-length"             (1)   #f ()    0    integer extended)
+("##bignum.mdigit-length"             (1)   #f ()    0    fixnonneg extended)
 ("##bignum.mdigit-ref"                (2)   #f ()    0    integer extended)
 ("##bignum.mdigit-set!"               (3)   #t ()    0    #f      extended)
 ("##bignum.mdigit-mul!"               (6)   #t ()    0    integer extended)
@@ -978,7 +978,7 @@
 ("##bignum.adigit-bitwise-xor!"       (4)   #t ()    0    #f      extended)
 ("##bignum.adigit-bitwise-not!"       (2)   #t ()    0    #f      extended)
 
-("##bignum.fdigit-length"             (1)   #f ()    0    integer extended)
+("##bignum.fdigit-length"             (1)   #f ()    0    fixnonneg extended)
 ("##bignum.fdigit-ref"                (2)   #f ()    0    integer extended)
 ("##bignum.fdigit-set!"               (3)   #t ()    0    #f      extended)
 
@@ -1045,9 +1045,9 @@
           spec
           proc)))))
 
-(define (eq-testable-object? obj)
-  (and (not (void-object? obj)) ;; the void-object denotes a non-constant
-       (testable-with-eq? obj)))
+(define (eq-testable-object? type)
+  (and (type-singleton? type)
+       (testable-with-eq? (type-singleton-val type))))
 
 (define (testable-with-eq? obj)
   (or (symbol-object? obj)
@@ -3849,69 +3849,73 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;; Table of primitive procedure simplifiers
+;; Table of primitive procedure constant folders
 
-(define (setup-prim-simplifiers targ)
+(define (setup-prim-constant-folders targ)
 
 ;; TODO: remove dependencies to C back-end
 
 (define (get-prim-info name)
   ((target-prim-info targ) (string->canonical-symbol name)))
 
-(define (def-simp name . folders)
-  (let ((simp
-         (lambda (ptree args)
+(define (def-fold name . folders)
+  (let ((fold
+         (lambda (args)
            (let loop ((lst folders))
              (if (pair? lst)
-                 (let ((folder (car lst)))
-                   (or (folder ptree args)
-                       (loop (cdr lst))))
-                 #f)))))
+                 (let* ((folder (car lst))
+                        (result (folder args)))
+                   (if (type-universal? result)
+                       (loop (cdr lst))
+                       result))
+                 (make-type-universal))))))
 
-    (define (simp-set name)
+    (define (fold-set name)
       (let ((proc (get-prim-info name)))
-        (if proc (proc-obj-simplify-set! proc simp))))
+        (if proc (proc-obj-constant-fold-set! proc fold))))
 
-    (simp-set name)
-    (simp-set (string-append "##" name))))
+    (fold-set name)
+    (fold-set (string-append "##" name))))
+
+(define (convert-result val)
+  val) ;; TODO: handle false-object, etc
 
 (define (constant-folder op . type-patterns)
-  (constant-folder-with-ptree-maker
-   (lambda (ptree arg-vals)
-     (let ((result (apply op arg-vals)))
-       (new-cst (node-source ptree) (node-env ptree)
-         result)))
+  (constant-folder-arg-type-check
+   (lambda (arg-vals)
+     (let ((result (convert-result (apply op arg-vals))))
+       (make-type-singleton result)))
    type-patterns))
 
 (define (constant-folder-gen op . type-patterns)
   (apply constant-folder (cons op type-patterns)))
 
 (define (constant-folder-fix op . type-patterns)
-  (constant-folder-with-ptree-maker
-   (lambda (ptree arg-vals)
-     (let ((result (apply op arg-vals)))
-       (and (or (not (number? result))
-                (targ-fixnum32? result)) ;; TODO: remove dependency on C back-end
-            (new-cst (node-source ptree) (node-env ptree)
-              result))))
+  (constant-folder-arg-type-check
+   (lambda (arg-vals)
+     (let ((result (convert-result (apply op arg-vals))))
+       (or (and (or (not (number? result))
+                    (targ-fixnum32? result)) ;; TODO: remove dependency on C back-end
+                (make-type-singleton result))
+           (make-type-universal))))
    type-patterns))
 
 (define (constant-folder-flo op . type-patterns)
-  (constant-folder-with-ptree-maker
-   (lambda (ptree arg-vals)
-     (let ((result (apply op arg-vals)))
-       (and (or (not (number? result))
-                (targ-flonum? result)) ;; TODO: remove dependency on C back-end
-            (new-cst (node-source ptree) (node-env ptree)
-              result))))
+  (constant-folder-arg-type-check
+   (lambda (arg-vals)
+     (let ((result (convert-result (apply op arg-vals))))
+       (or (and (or (not (number? result))
+                    (targ-flonum? result)) ;; TODO: remove dependency on C back-end
+                (make-type-singleton result))
+           (make-type-universal))))
    type-patterns))
 
-(define (constant-folder-with-ptree-maker ptree-maker type-patterns)
+(define (constant-folder-arg-type-check folder type-patterns)
   (let ((type-patterns
          (if (null? type-patterns)
-           (list (lambda (obj) #t))
+           (list (lambda (val) #t))
            type-patterns)))
-    (lambda (ptree args)
+    (lambda (args)
 
       (define (match? args type-pattern)
         (if (pair? args)
@@ -3925,29 +3929,30 @@
                       (match? (cdr args) type-pattern))))
           (not (pair? type-pattern))))
 
-      (and (every? cst? args) ; are all arguments constants?
-           (let ((arg-vals (map cst-val args)))
-             (let loop ((type-pats type-patterns))
-               (if (pair? type-pats)
-                 (if (match? arg-vals (car type-pats))
-                   (ptree-maker ptree arg-vals)
-                   (loop (cdr type-pats)))
-                 #f)))))))
+      (or (and (every? type-singleton? args) ;; are all arguments known values?
+               (let ((arg-vals (map type-singleton-val args)))
+                 (let loop ((type-pats type-patterns))
+                   (if (pair? type-pats)
+                       (if (match? arg-vals (car type-pats))
+                           (folder arg-vals)
+                           (loop (cdr type-pats)))
+                       (make-type-universal)))))
+          (make-type-universal)))))
 
-(define (constant-folder-ref op get-length type?)
-  (lambda (ptree args)
-    (and (every? cst? args) ; are all arguments constants?
-         (let* ((arg-vals (map cst-val args))
+(define (constant-folder-ref op get-length vect-type?)
+  (lambda (args)
+    (and (every? type-singleton? args) ;; are all arguments known values?
+         (let* ((arg-vals (map type-singleton-val args))
                 (vect (car arg-vals))
                 (index (cadr arg-vals)))
-           (and (type? vect)
-                (integer? index)
-                (exact? index)
-                (not (< index 0))
-                (< index (get-length vect))
-                (let ((result (op vect index)))
-                  (new-cst (node-source ptree) (node-env ptree)
-                    result)))))))
+           (or (and (vect-type? vect)
+                    (integer? index)
+                    (exact? index)
+                    (not (< index 0))
+                    (< index (get-length vect))
+                    (let ((result (op vect index)))
+                      (make-type-singleton result)))
+               (make-type-universal))))))
 
 (define (num? obj) (targ-number? obj)) ;; TODO: remove dependency on C back-end
 (define (nz-num? obj) (targ-nonzero-number? obj)) ;; TODO: remove dependency on C back-end
@@ -3980,399 +3985,2102 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(def-simp "not"              (constant-folder false-object?  ))
-(def-simp "boolean?"         (constant-folder (lambda (obj)
+(def-fold "not"              (constant-folder false-object?  ))
+(def-fold "boolean?"         (constant-folder (lambda (obj)
                                                       (or (false-object? obj)
                                                           (eq? obj #t)))))
-(def-simp "##false-or-null?" (constant-folder (lambda (obj)
+(def-fold "##false-or-null?" (constant-folder (lambda (obj)
                                                       (or (false-object? obj)
                                                           (null? obj)))))
-(def-simp "##false-or-void?" (constant-folder (lambda (obj)
+(def-fold "##false-or-void?" (constant-folder (lambda (obj)
                                                       (or (false-object? obj)
                                                           (void-object? obj)))))
-(def-simp "eqv?"             (constant-folder eqv?           ))
-(def-simp "eq?"              (constant-folder eq?            ))
-(def-simp "equal?"           (constant-folder equal?         ))
-(def-simp "##mem-allocated?" (constant-folder (lambda (obj)
+(def-fold "eqv?"             (constant-folder eqv?           ))
+(def-fold "eq?"              (constant-folder eq?            ))
+(def-fold "equal?"           (constant-folder equal?         ))
+(def-fold "##mem-allocated?" (constant-folder (lambda (obj)
                                                       (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
                                                         ((subtyped pair) #t)
                                                         (else            #f)))
                                                     not-bigfix?))
-(def-simp "##subtyped?"      (constant-folder (lambda (obj)
+(def-fold "##subtyped?"      (constant-folder (lambda (obj)
                                                       (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
                                                         ((subtyped) #t)
                                                         (else       #f)))
                                                     not-bigfix?))
-(def-simp "##subtype"        (constant-folder targ-obj-subtype-integer ;; TODO: remove dependency on C back-end
+(def-fold "##subtype"        (constant-folder targ-obj-subtype-integer ;; TODO: remove dependency on C back-end
                                                     mem-alloc?))
-(def-simp "pair?"            (constant-folder pair?          ))
-;(def-simp "cons"             (constant-folder cons           ))  ;; this would not preserve mutability and eq?-ness
-(def-simp "car"              (constant-folder car            pair?))
-(def-simp "cdr"              (constant-folder cdr            pair?))
-;(def-simp "caar"             (constant-folder caar           ))
-;(def-simp "cadr"             (constant-folder cadr           ))
-;(def-simp "cdar"             (constant-folder cdar           ))
-;(def-simp "cddr"             (constant-folder cddr           ))
-;(def-simp "caaar"            (constant-folder caaar          ))
-;(def-simp "caadr"            (constant-folder caadr          ))
-;(def-simp "cadar"            (constant-folder cadar          ))
-;(def-simp "caddr"            (constant-folder caddr          ))
-;(def-simp "cdaar"            (constant-folder cdaar          ))
-;(def-simp "cdadr"            (constant-folder cdadr          ))
-;(def-simp "cddar"            (constant-folder cddar          ))
-;(def-simp "cdddr"            (constant-folder cdddr          ))
-;(def-simp "caaaar"           (constant-folder caaaar         ))
-;(def-simp "caaadr"           (constant-folder caaadr         ))
-;(def-simp "caadar"           (constant-folder caadar         ))
-;(def-simp "caaddr"           (constant-folder caaddr         ))
-;(def-simp "cadaar"           (constant-folder cadaar         ))
-;(def-simp "cadadr"           (constant-folder cadadr         ))
-;(def-simp "caddar"           (constant-folder caddar         ))
-;(def-simp "cadddr"           (constant-folder cadddr         ))
-;(def-simp "cdaaar"           (constant-folder cdaaar         ))
-;(def-simp "cdaadr"           (constant-folder cdaadr         ))
-;(def-simp "cdadar"           (constant-folder cdadar         ))
-;(def-simp "cdaddr"           (constant-folder cdaddr         ))
-;(def-simp "cddaar"           (constant-folder cddaar         ))
-;(def-simp "cddadr"           (constant-folder cddadr         ))
-;(def-simp "cdddar"           (constant-folder cdddar         ))
-;(def-simp "cddddr"           (constant-folder cddddr         ))
-(def-simp "null?"            (constant-folder null?          ))
-(def-simp "list?"            (constant-folder list?          ))
-;(def-simp "list"             (constant-folder list           ))  ;; this would not preserve mutability and eq?-ness
-(def-simp "length"           (constant-folder length         list?))
-;(def-simp "append"           (constant-folder append         list?))
-;(def-simp "reverse"          (constant-folder reverse        list?))
-(def-simp "list-ref"         (constant-folder-ref
+(def-fold "pair?"            (constant-folder pair?          ))
+;(def-fold "cons"             (constant-folder cons           ))  ;; this would not preserve mutability and eq?-ness
+(def-fold "car"              (constant-folder car            pair?))
+(def-fold "cdr"              (constant-folder cdr            pair?))
+;(def-fold "caar"             (constant-folder caar           ))
+;(def-fold "cadr"             (constant-folder cadr           ))
+;(def-fold "cdar"             (constant-folder cdar           ))
+;(def-fold "cddr"             (constant-folder cddr           ))
+;(def-fold "caaar"            (constant-folder caaar          ))
+;(def-fold "caadr"            (constant-folder caadr          ))
+;(def-fold "cadar"            (constant-folder cadar          ))
+;(def-fold "caddr"            (constant-folder caddr          ))
+;(def-fold "cdaar"            (constant-folder cdaar          ))
+;(def-fold "cdadr"            (constant-folder cdadr          ))
+;(def-fold "cddar"            (constant-folder cddar          ))
+;(def-fold "cdddr"            (constant-folder cdddr          ))
+;(def-fold "caaaar"           (constant-folder caaaar         ))
+;(def-fold "caaadr"           (constant-folder caaadr         ))
+;(def-fold "caadar"           (constant-folder caadar         ))
+;(def-fold "caaddr"           (constant-folder caaddr         ))
+;(def-fold "cadaar"           (constant-folder cadaar         ))
+;(def-fold "cadadr"           (constant-folder cadadr         ))
+;(def-fold "caddar"           (constant-folder caddar         ))
+;(def-fold "cadddr"           (constant-folder cadddr         ))
+;(def-fold "cdaaar"           (constant-folder cdaaar         ))
+;(def-fold "cdaadr"           (constant-folder cdaadr         ))
+;(def-fold "cdadar"           (constant-folder cdadar         ))
+;(def-fold "cdaddr"           (constant-folder cdaddr         ))
+;(def-fold "cddaar"           (constant-folder cddaar         ))
+;(def-fold "cddadr"           (constant-folder cddadr         ))
+;(def-fold "cdddar"           (constant-folder cdddar         ))
+;(def-fold "cddddr"           (constant-folder cddddr         ))
+(def-fold "null?"            (constant-folder null?          ))
+(def-fold "list?"            (constant-folder list?          ))
+;(def-fold "list"             (constant-folder list           ))  ;; this would not preserve mutability and eq?-ness
+(def-fold "length"           (constant-folder length         list?))
+;(def-fold "append"           (constant-folder append         list?))
+;(def-fold "reverse"          (constant-folder reverse        list?))
+(def-fold "list-ref"         (constant-folder-ref
                                list-ref
                                length
                                list?))
-(def-simp "memq"             (constant-folder memq
+(def-fold "memq"             (constant-folder memq
                                                     (list any list?)))
-(def-simp "memv"             (constant-folder memv
+(def-fold "memv"             (constant-folder memv
                                                     (list any list?)))
-(def-simp "member"           (constant-folder member
+(def-fold "member"           (constant-folder member
                                                     (list any list?)))
-(def-simp "assq"             (constant-folder assq
+(def-fold "assq"             (constant-folder assq
                                                     (list any alist?)))
-(def-simp "assv"             (constant-folder assv
+(def-fold "assv"             (constant-folder assv
                                                     (list any alist?)))
-(def-simp "assoc"            (constant-folder assoc
+(def-fold "assoc"            (constant-folder assoc
                                                     (list any alist?)))
-(def-simp "symbol?"          (constant-folder symbol-object? ))
-(def-simp "symbol->string"   (constant-folder symbol->string
+(def-fold "symbol?"          (constant-folder symbol-object? ))
+(def-fold "symbol->string"   (constant-folder symbol->string
                                               symbol-object?))
-(def-simp "string->symbol"   (constant-folder string->symbol ))
-(def-simp "number?"          (constant-folder number?        ))
-(def-simp "complex?"         (constant-folder complex?       ))
-(def-simp "real?"            (constant-folder real?          ))
-(def-simp "rational?"        (constant-folder rational?      ))
-(def-simp "integer?"         (constant-folder integer?       ))
-(def-simp "exact?"           (constant-folder exact?         num?))
-(def-simp "inexact?"         (constant-folder inexact?       num?))
-(def-simp "="                (constant-folder =              num?))
-(def-simp "fx="              (constant-folder =              fix32?))
-(def-simp "fl="              (constant-folder =              flo?))
-(def-simp "<"                (constant-folder <              real?))
-(def-simp "fx<"              (constant-folder <              fix32?))
-(def-simp "fl<"              (constant-folder <              flo?))
-(def-simp ">"                (constant-folder >              real?))
-(def-simp "fx>"              (constant-folder >              fix32?))
-(def-simp "fl>"              (constant-folder >              flo?))
-(def-simp "<="               (constant-folder <=             real?))
-(def-simp "fx<="             (constant-folder <=             fix32?))
-(def-simp "fl<="             (constant-folder <=             flo?))
-(def-simp ">="               (constant-folder >=             real?))
-(def-simp "fx>="             (constant-folder >=             fix32?))
-(def-simp "fl>="             (constant-folder >=             flo?))
-(def-simp "zero?"            (constant-folder zero?          num?))
-(def-simp "fxzero?"          (constant-folder zero?          fix32?))
-(def-simp "flzero?"          (constant-folder zero?          flo?))
-(def-simp "positive?"        (constant-folder positive?     real?))
-(def-simp "fxpositive?"      (constant-folder positive?     fix32?))
-(def-simp "flpositive?"      (constant-folder positive?     flo?))
-(def-simp "negative?"        (constant-folder negative?     real?))
-(def-simp "fxnegative?"      (constant-folder negative?     fix32?))
-(def-simp "flnegative?"      (constant-folder negative?     flo?))
-(def-simp "odd?"             (constant-folder odd?           int?))
-(def-simp "fxodd?"           (constant-folder odd?           fix32?))
-(def-simp "flodd?"           (constant-folder odd?           int-flo?))
-(def-simp "even?"            (constant-folder even?          int?))
-(def-simp "fxeven?"          (constant-folder even?          fix32?))
-(def-simp "fleven?"          (constant-folder even?          int-flo?))
-(def-simp "max"              (constant-folder-gen max        real?))
-(def-simp "fxmax"            (constant-folder-fix max        fix32?))
-(def-simp "flmax"            (constant-folder-flo max        flo?))
-(def-simp "min"              (constant-folder-gen min        real?))
-(def-simp "fxmin"            (constant-folder-fix min        fix32?))
-(def-simp "flmin"            (constant-folder-flo min        flo?))
-(def-simp "+"                (constant-folder-gen +          num?))
-(def-simp "fxwrap+"          (constant-folder-fix +          fix32?))
-(def-simp "fx+"              (constant-folder-fix +          fix32?))
-(def-simp "fx+?"             (constant-folder-fix +          fix32?))
-(def-simp "fl+"              (constant-folder-flo +          flo?));;;;;;;;;;must return 0.0 when 0 args
-(def-simp "*"                (constant-folder-gen *          num?))
-(def-simp "fxwrap*"          (constant-folder-fix *          fix32?))
-(def-simp "fx*"              (constant-folder-fix *          fix32?))
-(def-simp "fx*?"             (constant-folder-fix *          fix32?))
-(def-simp "fl*"              (constant-folder-flo *          flo?));;;;;;;;;;must return 1.0 when 0 args
-(def-simp "-"                (constant-folder-gen -          num?))
-(def-simp "fxwrap-"          (constant-folder-fix -          fix32?))
-(def-simp "fx-"              (constant-folder-fix -          fix32?))
-(def-simp "fx-?"             (constant-folder-fix -          fix32?))
-(def-simp "fl-"              (constant-folder-flo -          flo?))
-(def-simp "/"                (constant-folder-gen /
+(def-fold "string->symbol"   (constant-folder string->symbol ))
+(def-fold "number?"          (constant-folder number?        ))
+(def-fold "complex?"         (constant-folder complex?       ))
+(def-fold "real?"            (constant-folder real?          ))
+(def-fold "rational?"        (constant-folder rational?      ))
+(def-fold "integer?"         (constant-folder integer?       ))
+(def-fold "exact?"           (constant-folder exact?         num?))
+(def-fold "inexact?"         (constant-folder inexact?       num?))
+(def-fold "="                (constant-folder =              num?))
+(def-fold "fx="              (constant-folder =              fix32?))
+(def-fold "fl="              (constant-folder =              flo?))
+(def-fold "<"                (constant-folder <              real?))
+(def-fold "fx<"              (constant-folder <              fix32?))
+(def-fold "fl<"              (constant-folder <              flo?))
+(def-fold ">"                (constant-folder >              real?))
+(def-fold "fx>"              (constant-folder >              fix32?))
+(def-fold "fl>"              (constant-folder >              flo?))
+(def-fold "<="               (constant-folder <=             real?))
+(def-fold "fx<="             (constant-folder <=             fix32?))
+(def-fold "fl<="             (constant-folder <=             flo?))
+(def-fold ">="               (constant-folder >=             real?))
+(def-fold "fx>="             (constant-folder >=             fix32?))
+(def-fold "fl>="             (constant-folder >=             flo?))
+(def-fold "zero?"            (constant-folder zero?          num?))
+(def-fold "fxzero?"          (constant-folder zero?          fix32?))
+(def-fold "flzero?"          (constant-folder zero?          flo?))
+(def-fold "positive?"        (constant-folder positive?     real?))
+(def-fold "fxpositive?"      (constant-folder positive?     fix32?))
+(def-fold "flpositive?"      (constant-folder positive?     flo?))
+(def-fold "negative?"        (constant-folder negative?     real?))
+(def-fold "fxnegative?"      (constant-folder negative?     fix32?))
+(def-fold "flnegative?"      (constant-folder negative?     flo?))
+(def-fold "odd?"             (constant-folder odd?           int?))
+(def-fold "fxodd?"           (constant-folder odd?           fix32?))
+(def-fold "flodd?"           (constant-folder odd?           int-flo?))
+(def-fold "even?"            (constant-folder even?          int?))
+(def-fold "fxeven?"          (constant-folder even?          fix32?))
+(def-fold "fleven?"          (constant-folder even?          int-flo?))
+(def-fold "max"              (constant-folder-gen max        real?))
+(def-fold "fxmax"            (constant-folder-fix max        fix32?))
+(def-fold "flmax"            (constant-folder-flo max        flo?))
+(def-fold "min"              (constant-folder-gen min        real?))
+(def-fold "fxmin"            (constant-folder-fix min        fix32?))
+(def-fold "flmin"            (constant-folder-flo min        flo?))
+(def-fold "+"                (constant-folder-gen +          num?))
+(def-fold "fxwrap+"          (constant-folder-fix +          fix32?))
+(def-fold "fx+"              (constant-folder-fix +          fix32?))
+(def-fold "fx+?"             (constant-folder-fix +          fix32?))
+(def-fold "fl+"              (constant-folder-flo +          flo?));;TODO: must return 0.0 when 0 args
+(def-fold "*"                (constant-folder-gen *          num?))
+(def-fold "fxwrap*"          (constant-folder-fix *          fix32?))
+(def-fold "fx*"              (constant-folder-fix *          fix32?))
+(def-fold "fx*?"             (constant-folder-fix *          fix32?))
+(def-fold "fl*"              (constant-folder-flo *          flo?));;TODO: must return 1.0 when 0 args
+(def-fold "-"                (constant-folder-gen -          num?))
+(def-fold "fxwrap-"          (constant-folder-fix -          fix32?))
+(def-fold "fx-"              (constant-folder-fix -          fix32?))
+(def-fold "fx-?"             (constant-folder-fix -          fix32?))
+(def-fold "fl-"              (constant-folder-flo -          flo?))
+(def-fold "/"                (constant-folder-gen /
                                                   (list nz-num?)
                                                   (cons num?
                                                         (cons nz-num?
                                                               nz-num?))))
-(def-simp "fl/"              (constant-folder-flo /
+(def-fold "fl/"              (constant-folder-flo /
                                                   (list nz-flo?)
                                                         (cons flo?
                                                               (cons nz-flo?
                                                                     nz-flo?))))
-(def-simp "abs"              (constant-folder-gen abs          num?))
-(def-simp "fxwrapabs"        (constant-folder-fix abs          fix32?))
-(def-simp "fxabs"            (constant-folder-fix abs          fix32?))
-(def-simp "fxabs?"           (constant-folder-fix abs          fix32?))
-(def-simp "flabs"            (constant-folder-flo abs          flo?))
-(def-simp "square"           (constant-folder-gen square       num?))
-(def-simp "fxwrapsquare"     (constant-folder-fix square       fix32?))
-(def-simp "fxsquare"         (constant-folder-fix square       fix32?))
-(def-simp "fxsquare?"        (constant-folder-fix square       fix32?))
-(def-simp "flsquare"         (constant-folder-flo square       flo?))
-(def-simp "quotient"         (constant-folder-gen quotient
+(def-fold "abs"              (constant-folder-gen abs          num?))
+(def-fold "fxwrapabs"        (constant-folder-fix abs          fix32?))
+(def-fold "fxabs"            (constant-folder-fix abs          fix32?))
+(def-fold "fxabs?"           (constant-folder-fix abs          fix32?))
+(def-fold "flabs"            (constant-folder-flo abs          flo?))
+(def-fold "square"           (constant-folder-gen square       num?))
+(def-fold "fxwrapsquare"     (constant-folder-fix square       fix32?))
+(def-fold "fxsquare"         (constant-folder-fix square       fix32?))
+(def-fold "fxsquare?"        (constant-folder-fix square       fix32?))
+(def-fold "flsquare"         (constant-folder-flo square       flo?))
+(def-fold "quotient"         (constant-folder-gen quotient
                                                   (list int? nz-int?)))
-(def-simp "fxwrapquotient"   (constant-folder-fix quotient
+(def-fold "fxwrapquotient"   (constant-folder-fix quotient
                                                   (list fix32? nz-fix32?)))
-(def-simp "fxquotient"       (constant-folder-fix quotient
+(def-fold "fxquotient"       (constant-folder-fix quotient
                                                   (list fix32? nz-fix32?)))
-(def-simp "remainder"        (constant-folder-gen remainder
+(def-fold "remainder"        (constant-folder-gen remainder
                                                   (list int? nz-int?)))
-(def-simp "fxremainder"      (constant-folder-fix remainder
+(def-fold "fxremainder"      (constant-folder-fix remainder
                                                   (list fix32? nz-fix32?)))
-(def-simp "modulo"           (constant-folder-gen modulo
+(def-fold "modulo"           (constant-folder-gen modulo
                                                   (list int? nz-int?)))
-(def-simp "fxmodulo"         (constant-folder-fix modulo
+(def-fold "fxmodulo"         (constant-folder-fix modulo
                                                   (list fix32? nz-fix32?)))
-(def-simp "gcd"              (constant-folder-gen gcd        int?))
-(def-simp "lcm"              (constant-folder-gen lcm        int?))
-(def-simp "numerator"        (constant-folder-gen numerator  rational?))
-(def-simp "denominator"      (constant-folder-gen denominator rational?))
-(def-simp "floor"            (constant-folder-gen floor      fin-real?))
-(def-simp "flfloor"          (constant-folder-flo floor      fin-flo?))
-(def-simp "ceiling"          (constant-folder-gen ceiling    fin-real?))
-(def-simp "flceiling"        (constant-folder-flo ceiling    fin-flo?))
-(def-simp "truncate"         (constant-folder-gen truncate   fin-real?))
-(def-simp "fltruncate"       (constant-folder-flo truncate   fin-flo?))
-(def-simp "round"            (constant-folder-gen round      fin-real?))
-(def-simp "flround"          (constant-folder-flo round      fin-flo?))
-(def-simp "rationalize"      (constant-folder-gen rationalize real?))
-(def-simp "exp"              (constant-folder-gen exp        num?))
-(def-simp "flexp"            (constant-folder-flo exp        flo?))
-(def-simp "log"              (constant-folder-gen log        nz-num?))
-(def-simp "fllog"            (constant-folder-flo log        nz-flo?))
-(def-simp "sin"              (constant-folder-gen sin        num?))
-(def-simp "flsin"            (constant-folder-flo sin        flo?))
-(def-simp "cos"              (constant-folder-gen cos        num?))
-(def-simp "flcos"            (constant-folder-flo cos        flo?))
-(def-simp "tan"              (constant-folder-gen tan        num?))
-(def-simp "fltan"            (constant-folder-flo tan        flo?))
-(def-simp "asin"             (constant-folder-gen asin       num?))
-(def-simp "flasin"           (constant-folder-flo asin       flo?))
-(def-simp "acos"             (constant-folder-gen acos       num?))
-(def-simp "flacos"           (constant-folder-flo acos       flo?))
-(def-simp "atan"             (constant-folder-gen atan       num?))
-(def-simp "flatan"           (constant-folder-flo atan       flo?))
-(def-simp "expt"             (constant-folder-gen expt       num?))
-(def-simp "flexpt"           (constant-folder-flo expt       flo?))
-(def-simp "sqrt"             (constant-folder-gen sqrt       num?))
-(def-simp "flsqrt"           (constant-folder-flo sqrt       flo?))
-(def-simp "expt"             (constant-folder-gen expt       num?))
-(def-simp "##flonum->fixnum" (constant-folder-fix inexact->exact flo?))
+(def-fold "gcd"              (constant-folder-gen gcd        int?))
+(def-fold "lcm"              (constant-folder-gen lcm        int?))
+(def-fold "numerator"        (constant-folder-gen numerator  rational?))
+(def-fold "denominator"      (constant-folder-gen denominator rational?))
+(def-fold "floor"            (constant-folder-gen floor      fin-real?))
+(def-fold "flfloor"          (constant-folder-flo floor      fin-flo?))
+(def-fold "ceiling"          (constant-folder-gen ceiling    fin-real?))
+(def-fold "flceiling"        (constant-folder-flo ceiling    fin-flo?))
+(def-fold "truncate"         (constant-folder-gen truncate   fin-real?))
+(def-fold "fltruncate"       (constant-folder-flo truncate   fin-flo?))
+(def-fold "round"            (constant-folder-gen round      fin-real?))
+(def-fold "flround"          (constant-folder-flo round      fin-flo?))
+(def-fold "rationalize"      (constant-folder-gen rationalize real?))
+(def-fold "exp"              (constant-folder-gen exp        num?))
+(def-fold "flexp"            (constant-folder-flo exp        flo?))
+(def-fold "log"              (constant-folder-gen log        nz-num?))
+(def-fold "fllog"            (constant-folder-flo log        nz-flo?))
+(def-fold "sin"              (constant-folder-gen sin        num?))
+(def-fold "flsin"            (constant-folder-flo sin        flo?))
+(def-fold "cos"              (constant-folder-gen cos        num?))
+(def-fold "flcos"            (constant-folder-flo cos        flo?))
+(def-fold "tan"              (constant-folder-gen tan        num?))
+(def-fold "fltan"            (constant-folder-flo tan        flo?))
+(def-fold "asin"             (constant-folder-gen asin       num?))
+(def-fold "flasin"           (constant-folder-flo asin       flo?))
+(def-fold "acos"             (constant-folder-gen acos       num?))
+(def-fold "flacos"           (constant-folder-flo acos       flo?))
+(def-fold "atan"             (constant-folder-gen atan       num?))
+(def-fold "flatan"           (constant-folder-flo atan       flo?))
+(def-fold "expt"             (constant-folder-gen expt       num?))
+(def-fold "flexpt"           (constant-folder-flo expt       flo?))
+(def-fold "sqrt"             (constant-folder-gen sqrt       num?))
+(def-fold "flsqrt"           (constant-folder-flo sqrt       flo?))
+(def-fold "expt"             (constant-folder-gen expt       num?))
+(def-fold "##flonum->fixnum" (constant-folder-fix inexact->exact flo?))
 
-(def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
-(def-simp "make-polar"       (constant-folder-gen make-polar     real?))
-(def-simp "real-part"        (constant-folder-gen real-part      num?))
-(def-simp "imag-part"        (constant-folder-gen imag-part      num?))
-(def-simp "magnitude"        (constant-folder-gen magnitude      num?))
-(def-simp "angle"            (constant-folder-gen angle          num?))
-(def-simp "exact->inexact"   (constant-folder-gen exact->inexact num?))
-(def-simp "inexact->exact"   (constant-folder-gen inexact->exact num?))
-;(def-simp "number->string"   (constant-folder number->string num?))
-(def-simp "string->number"   (constant-folder string->number string?))
+(def-fold "make-rectangular" (constant-folder-gen make-rectangular real?))
+(def-fold "make-polar"       (constant-folder-gen make-polar     real?))
+(def-fold "real-part"        (constant-folder-gen real-part      num?))
+(def-fold "imag-part"        (constant-folder-gen imag-part      num?))
+(def-fold "magnitude"        (constant-folder-gen magnitude      num?))
+(def-fold "angle"            (constant-folder-gen angle          num?))
+(def-fold "exact->inexact"   (constant-folder-gen exact->inexact num?))
+(def-fold "inexact->exact"   (constant-folder-gen inexact->exact num?))
+;(def-fold "number->string"   (constant-folder number->string num?))
+(def-fold "string->number"   (constant-folder string->number string?))
 
-(def-simp "char?"            (constant-folder char?          ))
-(def-simp "char=?"           (constant-folder char=?         char?))
-(def-simp "char<?"           (constant-folder char<?         char?))
-(def-simp "char>?"           (constant-folder char>?         char?))
-(def-simp "char<=?"          (constant-folder char<=?        char?))
-(def-simp "char>=?"          (constant-folder char>=?        char?))
-(def-simp "char-ci=?"        (constant-folder char-ci=?      char?))
-(def-simp "char-ci<?"        (constant-folder char-ci<?      char?))
-(def-simp "char-ci>?"        (constant-folder char-ci>?      char?))
-(def-simp "char-ci<=?"       (constant-folder char-ci<=?     char?))
-(def-simp "char-ci>=?"       (constant-folder char-ci>=?     char?))
-(def-simp "char-alphabetic?" (constant-folder char-alphabetic? char?))
-(def-simp "char-numeric?"    (constant-folder char-numeric?  char?))
-(def-simp "char-whitespace?" (constant-folder char-whitespace? char?))
-(def-simp "char-upper-case?" (constant-folder char-upper-case? char?))
-(def-simp "char-lower-case?" (constant-folder char-lower-case? char?))
-(def-simp "char->integer"    (constant-folder char->integer  char?))
-;(def-simp "integer->char"    (constant-folder integer->char  ))
-(def-simp "char-upcase"      (constant-folder char-upcase    char?))
-(def-simp "char-downcase"    (constant-folder char-downcase  char?))
+(def-fold "char?"            (constant-folder char?          ))
+(def-fold "char=?"           (constant-folder char=?         char?))
+(def-fold "char<?"           (constant-folder char<?         char?))
+(def-fold "char>?"           (constant-folder char>?         char?))
+(def-fold "char<=?"          (constant-folder char<=?        char?))
+(def-fold "char>=?"          (constant-folder char>=?        char?))
+(def-fold "char-ci=?"        (constant-folder char-ci=?      char?))
+(def-fold "char-ci<?"        (constant-folder char-ci<?      char?))
+(def-fold "char-ci>?"        (constant-folder char-ci>?      char?))
+(def-fold "char-ci<=?"       (constant-folder char-ci<=?     char?))
+(def-fold "char-ci>=?"       (constant-folder char-ci>=?     char?))
+(def-fold "char-alphabetic?" (constant-folder char-alphabetic? char?))
+(def-fold "char-numeric?"    (constant-folder char-numeric?  char?))
+(def-fold "char-whitespace?" (constant-folder char-whitespace? char?))
+(def-fold "char-upper-case?" (constant-folder char-upper-case? char?))
+(def-fold "char-lower-case?" (constant-folder char-lower-case? char?))
+(def-fold "char->integer"    (constant-folder char->integer  char?))
+;(def-fold "integer->char"    (constant-folder integer->char  ))
+(def-fold "char-upcase"      (constant-folder char-upcase    char?))
+(def-fold "char-downcase"    (constant-folder char-downcase  char?))
 
-(def-simp "string?"          (constant-folder string?        ))
-;(def-simp "make-string"      (constant-folder make-string    ))
-;(def-simp "string"           (constant-folder string         char?))
-(def-simp "string-length"    (constant-folder string-length  string?))
-(def-simp "string-ref"       (constant-folder-ref
+(def-fold "string?"          (constant-folder string?        ))
+;(def-fold "make-string"      (constant-folder make-string    ))
+;(def-fold "string"           (constant-folder string         char?))
+(def-fold "string-length"    (constant-folder string-length  string?))
+(def-fold "string-ref"       (constant-folder-ref
                               string-ref
                               string-length
                               string?))
-(def-simp "string=?"         (constant-folder string=?       string?))
-(def-simp "string<?"         (constant-folder string<?       string?))
-(def-simp "string>?"         (constant-folder string>?       string?))
-(def-simp "string<=?"        (constant-folder string<=?      string?))
-(def-simp "string>=?"        (constant-folder string>=?      string?))
-(def-simp "string-ci=?"      (constant-folder string-ci=?    string?))
-(def-simp "string-ci<?"      (constant-folder string-ci<?    string?))
-(def-simp "string-ci>?"      (constant-folder string-ci>?    string?))
-(def-simp "string-ci<=?"     (constant-folder string-ci<=?   string?))
-(def-simp "string-ci>=?"     (constant-folder string-ci>=?   string?))
-;(def-simp "substring"        (constant-folder substring      ))
-;(def-simp "string-append"    (constant-folder string-append  string?))
+(def-fold "string=?"         (constant-folder string=?       string?))
+(def-fold "string<?"         (constant-folder string<?       string?))
+(def-fold "string>?"         (constant-folder string>?       string?))
+(def-fold "string<=?"        (constant-folder string<=?      string?))
+(def-fold "string>=?"        (constant-folder string>=?      string?))
+(def-fold "string-ci=?"      (constant-folder string-ci=?    string?))
+(def-fold "string-ci<?"      (constant-folder string-ci<?    string?))
+(def-fold "string-ci>?"      (constant-folder string-ci>?    string?))
+(def-fold "string-ci<=?"     (constant-folder string-ci<=?   string?))
+(def-fold "string-ci>=?"     (constant-folder string-ci>=?   string?))
+;(def-fold "substring"        (constant-folder substring      ))
+;(def-fold "string-append"    (constant-folder string-append  string?))
 
-(def-simp "vector?"          (constant-folder vector-object? ))
-;(def-simp "make-vector"      (constant-folder make-vector    ))
-;(def-simp "vector"           (constant-folder vector         ))
-(def-simp "vector-length"    (constant-folder vector-length
+(def-fold "vector?"          (constant-folder vector-object? ))
+;(def-fold "make-vector"      (constant-folder make-vector    ))
+;(def-fold "vector"           (constant-folder vector         ))
+(def-fold "vector-length"    (constant-folder vector-length
                                               vector-object?))
-(def-simp "vector-ref"       (constant-folder-ref
+(def-fold "vector-ref"       (constant-folder-ref
                               vector-ref
                               vector-length
                               vector-object?))
 
-(def-simp "s8vector?"        (constant-folder s8vect? ))
-;(def-simp "make-s8vector"    (constant-folder make-s8vect    ))
-;(def-simp "s8vector"         (constant-folder s8vect         ))
-(def-simp "s8vector-length"  (constant-folder s8vect-length
+(def-fold "s8vector?"        (constant-folder s8vect? ))
+;(def-fold "make-s8vector"    (constant-folder make-s8vect    ))
+;(def-fold "s8vector"         (constant-folder s8vect         ))
+(def-fold "s8vector-length"  (constant-folder s8vect-length
                                               s8vect?))
-(def-simp "s8vector-ref"     (constant-folder-ref
+(def-fold "s8vector-ref"     (constant-folder-ref
                               s8vect-ref
                               s8vect-length
                               s8vect?))
 
-(def-simp "u8vector?"        (constant-folder u8vect? ))
-;(def-simp "make-u8vector"    (constant-folder make-u8vect    ))
-;(def-simp "u8vector"         (constant-folder u8vect         ))
-(def-simp "u8vector-length"  (constant-folder u8vect-length
+(def-fold "u8vector?"        (constant-folder u8vect? ))
+;(def-fold "make-u8vector"    (constant-folder make-u8vect    ))
+;(def-fold "u8vector"         (constant-folder u8vect         ))
+(def-fold "u8vector-length"  (constant-folder u8vect-length
                                               u8vect?))
-(def-simp "u8vector-ref"     (constant-folder-ref
+(def-fold "u8vector-ref"     (constant-folder-ref
                               u8vect-ref
                               u8vect-length
                               u8vect?))
 
-(def-simp "s16vector?"       (constant-folder s16vect? ))
-;(def-simp "make-s16vector"   (constant-folder make-s16vect    ))
-;(def-simp "s16vector"        (constant-folder s16vect         ))
-(def-simp "s16vector-length" (constant-folder s16vect-length
+(def-fold "s16vector?"       (constant-folder s16vect? ))
+;(def-fold "make-s16vector"   (constant-folder make-s16vect    ))
+;(def-fold "s16vector"        (constant-folder s16vect         ))
+(def-fold "s16vector-length" (constant-folder s16vect-length
                                               s16vect?))
-(def-simp "s16vector-ref"    (constant-folder-ref
+(def-fold "s16vector-ref"    (constant-folder-ref
                               s16vect-ref
                               s16vect-length
                               s16vect?))
 
-(def-simp "u16vector?"       (constant-folder u16vect? ))
-;(def-simp "make-u16vector"   (constant-folder make-u16vect    ))
-;(def-simp "u16vector"        (constant-folder u16vect         ))
-(def-simp "u16vector-length" (constant-folder u16vect-length
+(def-fold "u16vector?"       (constant-folder u16vect? ))
+;(def-fold "make-u16vector"   (constant-folder make-u16vect    ))
+;(def-fold "u16vector"        (constant-folder u16vect         ))
+(def-fold "u16vector-length" (constant-folder u16vect-length
                                               u16vect?))
-(def-simp "u16vector-ref"    (constant-folder-ref
+(def-fold "u16vector-ref"    (constant-folder-ref
                               u16vect-ref
                               u16vect-length
                               u16vect?))
 
-(def-simp "s32vector?"         (constant-folder s32vect? ))
-;(def-simp "make-s32vector"     (constant-folder make-s32vect    ))
-;(def-simp "s32vector"          (constant-folder s32vect         ))
-(def-simp "s32vector-length"   (constant-folder s32vect-length
+(def-fold "s32vector?"         (constant-folder s32vect? ))
+;(def-fold "make-s32vector"     (constant-folder make-s32vect    ))
+;(def-fold "s32vector"          (constant-folder s32vect         ))
+(def-fold "s32vector-length"   (constant-folder s32vect-length
                                                 s32vect?))
-(def-simp "s32vector-ref"      (constant-folder-ref
+(def-fold "s32vector-ref"      (constant-folder-ref
                                 s32vect-ref
                                 s32vect-length
                                 s32vect?))
 
-(def-simp "u32vector?"         (constant-folder u32vect? ))
-;(def-simp "make-u32vector"     (constant-folder make-u32vect    ))
-;(def-simp "u32vector"          (constant-folder u32vect         ))
-(def-simp "u32vector-length"   (constant-folder u32vect-length
+(def-fold "u32vector?"         (constant-folder u32vect? ))
+;(def-fold "make-u32vector"     (constant-folder make-u32vect    ))
+;(def-fold "u32vector"          (constant-folder u32vect         ))
+(def-fold "u32vector-length"   (constant-folder u32vect-length
                                                 u32vect?))
-(def-simp "u32vector-ref"      (constant-folder-ref
+(def-fold "u32vector-ref"      (constant-folder-ref
                                 u32vect-ref
                                 u32vect-length
                                 u32vect?))
 
-(def-simp "s64vector?"         (constant-folder s64vect? ))
-;(def-simp "make-s64vector"     (constant-folder make-s64vect    ))
-;(def-simp "s64vector"          (constant-folder s64vect         ))
-(def-simp "s64vector-length"   (constant-folder s64vect-length
+(def-fold "s64vector?"         (constant-folder s64vect? ))
+;(def-fold "make-s64vector"     (constant-folder make-s64vect    ))
+;(def-fold "s64vector"          (constant-folder s64vect         ))
+(def-fold "s64vector-length"   (constant-folder s64vect-length
                                                 s64vect?))
-(def-simp "s64vector-ref"      (constant-folder-ref
+(def-fold "s64vector-ref"      (constant-folder-ref
                                 s64vect-ref
                                 s64vect-length
                                 s64vect?))
 
-(def-simp "u64vector?"         (constant-folder u64vect? ))
-;(def-simp "make-u64vector"     (constant-folder make-u64vect    ))
-;(def-simp "u64vector"          (constant-folder u64vect         ))
-(def-simp "u64vector-length"   (constant-folder u64vect-length
+(def-fold "u64vector?"         (constant-folder u64vect? ))
+;(def-fold "make-u64vector"     (constant-folder make-u64vect    ))
+;(def-fold "u64vector"          (constant-folder u64vect         ))
+(def-fold "u64vector-length"   (constant-folder u64vect-length
                                                 u64vect?))
-(def-simp "u64vector-ref"      (constant-folder-ref
+(def-fold "u64vector-ref"      (constant-folder-ref
                                 u64vect-ref
                                 u64vect-length
                                 u64vect?))
 
-(def-simp "f32vector?"         (constant-folder f32vect? ))
-;(def-simp "make-f32vector"     (constant-folder make-f32vect    ))
-;(def-simp "f32vector"          (constant-folder f32vect         ))
-(def-simp "f32vector-length"   (constant-folder f32vect-length
+(def-fold "f32vector?"         (constant-folder f32vect? ))
+;(def-fold "make-f32vector"     (constant-folder make-f32vect    ))
+;(def-fold "f32vector"          (constant-folder f32vect         ))
+(def-fold "f32vector-length"   (constant-folder f32vect-length
                                                 f32vect?))
-(def-simp "f32vector-ref"      (constant-folder-ref
+(def-fold "f32vector-ref"      (constant-folder-ref
                                 f32vect-ref
                                 f32vect-length
                                 f32vect?))
 
-(def-simp "f64vector?"         (constant-folder f64vect? ))
-;(def-simp "make-f64vector"     (constant-folder make-f64vect    ))
-;(def-simp "f64vector"          (constant-folder f64vect         ))
-(def-simp "f64vector-length"   (constant-folder f64vect-length
+(def-fold "f64vector?"         (constant-folder f64vect? ))
+;(def-fold "make-f64vector"     (constant-folder make-f64vect    ))
+;(def-fold "f64vector"          (constant-folder f64vect         ))
+(def-fold "f64vector-length"   (constant-folder f64vect-length
                                                 f64vect?))
-(def-simp "f64vector-ref"      (constant-folder-ref
+(def-fold "f64vector-ref"      (constant-folder-ref
                                 f64vect-ref
                                 f64vect-length
                                 f64vect?))
 
-(def-simp "procedure?"       (constant-folder proc-obj?      ))
-;(def-simp "apply"            (constant-folder apply          ))
-(def-simp "input-port?"      (constant-folder input-port?    ))
-(def-simp "output-port?"     (constant-folder output-port?   ))
-(def-simp "eof-object?"      (constant-folder end-of-file-object?))
-;(def-simp "list-tail"        (constant-folder list-tail      ))
-;(def-simp "string->list"     (constant-folder string->list   string?))
-;(def-simp "list->string"     (constant-folder list->string   ))
-;(def-simp "string-copy"      (constant-folder string-copy    string?))
-;(def-simp "vector->list"     (constant-folder vector->list
+(def-fold "procedure?"       (constant-folder proc-obj?      ))
+;(def-fold "apply"            (constant-folder apply          ))
+(def-fold "input-port?"      (constant-folder input-port?    ))
+(def-fold "output-port?"     (constant-folder output-port?   ))
+(def-fold "eof-object?"      (constant-folder end-of-file-object?))
+;(def-fold "list-tail"        (constant-folder list-tail      ))
+;(def-fold "string->list"     (constant-folder string->list   string?))
+;(def-fold "list->string"     (constant-folder list->string   ))
+;(def-fold "string-copy"      (constant-folder string-copy    string?))
+;(def-fold "vector->list"     (constant-folder vector->list
 ;;                                              vector-object?))
-;(def-simp "list->vector"     (constant-folder list->vector   list?))
-(def-simp "keyword?"         (constant-folder keyword-object?))
-(def-simp "keyword->string"  (constant-folder keyword-object->string))
-(def-simp "string->keyword"  (constant-folder string->keyword-object))
-(def-simp "void"             (constant-folder (lambda () void-object)))
+;(def-fold "list->vector"     (constant-folder list->vector   list?))
+(def-fold "keyword?"         (constant-folder keyword-object?))
+(def-fold "keyword->string"  (constant-folder keyword-object->string))
+(def-fold "string->keyword"  (constant-folder string->keyword-object))
+(def-fold "void"             (constant-folder (lambda () void-object)))
 
-(def-simp "fixnum?"          (constant-folder fix32?         not-bigfix?))
-(def-simp "flonum?"          (constant-folder flo?           ))
+(def-fold "fixnum?"          (constant-folder fix32?         not-bigfix?))
+(def-fold "flonum?"          (constant-folder flo?           ))
+)
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Type representation.
+
+;; TODO: remove dependency on C back-end
+
+;; There is a representation for the types boolean, fixnum, flonum,
+;; char, symbol, keyword, string, vector and pair, and also the type
+;; fixnum-or-false that contains all the fixnum and #f (useful for the
+;; overflow checking fixnum primitives).  If use-complement-types? is
+;; #t, there is also a representation for the complement of the types
+;; boolean, fixnum, flonum, char, symbol, keyword, string, vector and
+;; pair.  Finally there is a singleton type that contains a single
+;; value.
+;;
+;;            fixnum-or-false
+;;            +--------------------------------------+
+;;            |                                      |
+;;   boolean  |       fixnum                         |  flonum
+;;   +--------|----+  +---------------------------+  |  +-------------+
+;;   |   #t   | #f |  | ...  -2  -1  0  1  2  ... |  |  | ... 1.3 ... |
+;;   +--------|----+  +---------------------------+  |  +-------------+
+;;            |                                      |
+;;            +--------------------------------------+
+;;
+;;   etc.
+;;
+;; not-boolean is the complement of boolean
+;; not-fixnum is the complement of fixnum
+;; not-flonum is the complement of flonum
+;; not-char is the complement of char
+;; not-symbol is the complement of symbol
+;; not-keyword is the complement of keyword
+;; not-string is the complement of string
+;; not-vector is the complement of vector
+;; not-pair is the complement of pair
+
+(define use-complement-types? #f)
+(set! use-complement-types? #f)
+
+(define (type-specific? type)
+  (or (type-boolean? type)
+      (type-fixnum? type)
+      (type-flonum? type)
+      (type-char? type)
+      (type-symbol? type)
+      (type-keyword? type)
+      (type-string? type)
+      (type-vector? type)
+      (type-pair? type)))
+
+(define (type-specific-complement? type)
+  (and use-complement-types?
+       (or (type-not-boolean? type)
+           (type-not-fixnum? type)
+           (type-not-flonum? type)
+           (type-not-char? type)
+           (type-not-symbol? type)
+           (type-not-keyword? type)
+           (type-not-string? type)
+           (type-not-vector? type)
+           (type-not-pair? type))))
+
+(define (type-specific-complement-except? not-of-type? type)
+  (and (type-specific-complement? type)
+       (not (not-of-type? type))))
+
+(define (type-complement of-type? singleton-of-type? not-of-type? type)
+  (cond ((not-of-type? type)
+         #t)
+        ((or (type-specific-complement? type)
+             (of-type? type)
+             (and (type-singleton? type)
+                  (not (singleton-of-type? type)))) ;; handles 'maybe
+         #f)
+        (else
+         #t)))
+
+;;; singleton type
+
+(define (make-type-singleton val)
+  (cons val '()))
+
+(define (type-singleton? type)
+  (and (pair? type)
+       (let ((x (cdr type)))
+         (eq? x '()))))
+
+(define (type-singleton-val type)
+  (car type))
+
+(define (type-singleton-of-type? value-of-type? type)
+  (and (type-singleton? type)
+       (let ((val (type-singleton-val type)))
+         (value-of-type? val))))
+
+;;; boolean type
+
+(define (make-type-boolean)
+  'boolean)
+
+(define (type-boolean? type)
+  (eq? type (make-type-boolean)))
+
+(define (isa-boolean? type)
+  (or (type-boolean? type)
+      (type-singleton-boolean? type)))
+
+(define (type-singleton-boolean? type)
+  (type-singleton-of-type? type-value-boolean? type))
+
+(define (type-value-boolean? val)
+  (or (type-value-false? val)
+      (eq? val #t)))
+
+(define (type-singleton-false? type)
+  (type-singleton-of-type? type-value-false? type))
+
+(define (type-value-false? val)
+  (false-object? val))
+
+;;; not-boolean type
+
+(define type-not-boolean-tag
+  '!boolean)
+
+(define (make-type-not-boolean)
+  (if use-complement-types?
+      type-not-boolean-tag
+      (make-type-universal)))
+
+(define (type-not-boolean? type)
+  (eq? type type-not-boolean-tag))
+
+(define (isa-not-boolean? type)
+  (and (not (type-universal? type))
+       (not (type-fixnum-or-false? type))
+       (type-complement type-boolean?
+                        type-singleton-boolean?
+                        type-not-boolean?
+                        type)))
+
+;;; fixnum type
+
+(define (make-type-fixnum lo hi)
+  ;; lo can be an int or >= (min fixnum) or > (min fixnum + 1) or #f (overflow)
+  ;; hi can be an int or <= (max fixnum) or < (max fixnum - 1) or #f (overflow)
+  (cons lo hi))
+
+(define (type-fixnum? type)
+  (and (pair? type)
+       (let ((x (cdr type)))
+         (and (not (eq? x '()))
+              (not (eq? x 'delay))))))
+
+(define (type-fixnum-lo type)
+  (car type))
+
+(define (type-fixnum-hi type)
+  (cdr type))
+
+(define (type-fixnum-range-size type)
+  (declare (generic))
+  (let* ((t (type-fixnum-from-possibly-singleton type))
+         (lo (type-fixnum-lo t))
+         (lo-num (cond ((eq? lo '>=) targ-min-fixnum32)
+                       ((eq? lo '>)  (+ targ-min-fixnum32 1))
+                       (else         lo)))
+         (hi (type-fixnum-hi t))
+         (hi-num (cond ((eq? hi '<=) targ-max-fixnum32)
+                       ((eq? hi '<)  (- targ-max-fixnum32 1))
+                       (else         hi))))
+    (+ (- hi-num lo-num) 1)))
+
+(define (type-fixnum-from-possibly-singleton type)
+  (if (type-singleton? type)
+      (let ((val (type-singleton-val type)))
+        (make-type-fixnum-bounded val val))
+      type))
+
+(define (make-type-fixnum-bounded lo hi)
+  (make-type-fixnum
+   (cond ((not (number? lo))             lo)
+         ((< lo targ-min-fixnum32)       #f)
+         ((= lo targ-min-fixnum32)       '>=)
+         ((= lo (+ targ-min-fixnum32 1)) '>)
+         (else                           lo))
+   (cond ((not (number? hi))             hi)
+         ((> hi targ-max-fixnum32)       #f)
+         ((= hi targ-max-fixnum32)       '<=)
+         ((= hi (- targ-max-fixnum32 1)) '<)
+         (else                           hi))))
+
+(define (type-fixnum-normalize type)
+  (let ((lo (type-fixnum-lo type))
+        (hi (type-fixnum-hi type)))
+    (if (and (number? lo) (number? hi) (= lo hi))
+        (make-type-singleton lo)
+        type)))
+
+(define (type-fixnum-normalize-clamp type)
+  (let ((lo (type-fixnum-lo type))
+        (hi (type-fixnum-hi type)))
+    (if (or (not lo) (not hi))
+        (make-type-fixnum (or lo '>=) (or hi '<=))
+        (type-fixnum-normalize type))))
+
+(define (type-fixnum-normalize-wrap type)
+  (let ((lo (type-fixnum-lo type))
+        (hi (type-fixnum-hi type)))
+    (if (or (not lo) (not hi))
+        (make-type-fixnum '>= '<=)
+        (type-fixnum-normalize type))))
+
+(define (type-fixnum-normalize-false type)
+  (let ((lo (type-fixnum-lo type))
+        (hi (type-fixnum-hi type)))
+    (if (or (not lo) (not hi))
+        (make-type-fixnum-or-false)
+        (type-fixnum-normalize type))))
+
+(define (isa-fixnum? type)
+  (or (type-fixnum? type)
+      (eq? #t (type-singleton-fixnum? type)))) ;; exclude 'maybe
+
+(define (type-singleton-fixnum? type) ;; returns #f, #t or 'maybe
+  (type-singleton-of-type? type-value-fixnum? type))
+
+(define (type-value-fixnum? val)
+  (cond ((targ-fixnum32? val)
+         #t)
+        ((targ-fixnum64? val)
+         'maybe)
+        (else
+         #f)))
+
+;;; not-fixnum type
+
+(define type-not-fixnum-tag
+  '!fixnum)
+
+(define (make-type-not-fixnum)
+  (if use-complement-types?
+      type-not-fixnum-tag
+      (make-type-universal)))
+
+(define (type-not-fixnum? type)
+  (eq? type type-not-fixnum-tag))
+
+(define (isa-not-fixnum? type)
+  (and (not (type-universal? type))
+       (not (type-fixnum-or-false? type))
+       (type-complement type-fixnum?
+                        type-singleton-fixnum?
+                        type-not-fixnum?
+                        type)))
+
+;;; fixnum-or-false type
+
+(define (make-type-fixnum-or-false)
+  '?fixnum)
+
+(define (type-fixnum-or-false? type)
+  (eq? type (make-type-fixnum-or-false)))
+
+(define (isa-fixnum-or-false? type)
+  (or (type-fixnum-or-false? type)
+      (type-fixnum? type)
+      (type-singleton-fixnum-or-false? type)))
+
+(define (type-singleton-fixnum-or-false? type)
+  (type-singleton-of-type? type-value-fixnum-or-false? type))
+
+(define (type-value-fixnum-or-false? val)
+  (or (type-value-false? val)
+      (type-value-fixnum? val)))
+
+(define (type-not-boolean-or-not-fixnum? type)
+  (or (type-not-boolean? type)
+      (type-not-fixnum? type)))
+
+;;; flonum type
+
+(define (make-type-flonum)
+  'flonum)
+
+(define (type-flonum? type)
+  (eq? type (make-type-flonum)))
+
+(define (isa-flonum? type)
+  (or (type-flonum? type)
+      (type-singleton-flonum? type)))
+
+(define (type-singleton-flonum? type)
+  (type-singleton-of-type? type-value-flonum? type))
+
+(define (type-value-flonum? val)
+  (targ-flonum? val))
+
+;;; not-flonum type
+
+(define type-not-flonum-tag
+  '!flonum)
+
+(define (make-type-not-flonum)
+  (if use-complement-types?
+      type-not-flonum-tag
+      (make-type-universal)))
+
+(define (type-not-flonum? type)
+  (eq? type type-not-flonum-tag))
+
+(define (isa-not-flonum? type)
+  (and (not (type-universal? type))
+       (type-complement type-flonum?
+                        type-singleton-flonum?
+                        type-not-flonum?
+                        type)))
+
+;;; char type
+
+(define (make-type-char)
+  'char)
+
+(define (type-char? type)
+  (eq? type (make-type-char)))
+
+(define (isa-char? type)
+  (or (type-char? type)
+      (type-singleton-char? type)))
+
+(define (type-singleton-char? type)
+  (type-singleton-of-type? type-value-char? type))
+
+(define (type-value-char? val)
+  (char? val))
+
+;;; not-char type
+
+(define type-not-char-tag
+  '!char)
+
+(define (make-type-not-char)
+  (if use-complement-types?
+      type-not-char-tag
+      (make-type-universal)))
+
+(define (type-not-char? type)
+  (eq? type type-not-char-tag))
+
+(define (isa-not-char? type)
+  (and (not (type-universal? type))
+       (type-complement type-char?
+                        type-singleton-char?
+                        type-not-char?
+                        type)))
+
+;;; symbol type
+
+(define (make-type-symbol)
+  'symbol)
+
+(define (type-symbol? type)
+  (eq? type (make-type-symbol)))
+
+(define (isa-symbol? type)
+  (or (type-symbol? type)
+      (type-singleton-symbol? type)))
+
+(define (type-singleton-symbol? type)
+  (type-singleton-of-type? type-value-symbol? type))
+
+(define (type-value-symbol? val)
+  (symbol-object? val))
+
+;;; not-symbol type
+
+(define type-not-symbol-tag
+  '!symbol)
+
+(define (make-type-not-symbol)
+  (if use-complement-types?
+      type-not-symbol-tag
+      (make-type-universal)))
+
+(define (type-not-symbol? type)
+  (eq? type type-not-symbol-tag))
+
+(define (isa-not-symbol? type)
+  (and (not (type-universal? type))
+       (type-complement type-symbol?
+                        type-singleton-symbol?
+                        type-not-symbol?
+                        type)))
+
+;;; keyword type
+
+(define (make-type-keyword)
+  'keyword)
+
+(define (type-keyword? type)
+  (eq? type (make-type-keyword)))
+
+(define (isa-keyword? type)
+  (or (type-keyword? type)
+      (type-singleton-keyword? type)))
+
+(define (type-singleton-keyword? type)
+  (type-singleton-of-type? type-value-keyword? type))
+
+(define (type-value-keyword? val)
+  (keyword-object? val))
+
+;;; not-keyword type
+
+(define type-not-keyword-tag
+  '!keyword)
+
+(define (make-type-not-keyword)
+  (if use-complement-types?
+      type-not-keyword-tag
+      (make-type-universal)))
+
+(define (type-not-keyword? type)
+  (eq? type type-not-keyword-tag))
+
+(define (isa-not-keyword? type)
+  (and (not (type-universal? type))
+       (type-complement type-keyword?
+                        type-singleton-keyword?
+                        type-not-keyword?
+                        type)))
+
+;;; string type
+
+(define (make-type-string)
+  'string)
+
+(define (type-string? type)
+  (eq? type (make-type-string)))
+
+(define (isa-string? type)
+  (or (type-string? type)
+      (type-singleton-string? type)))
+
+(define (type-singleton-string? type)
+  (type-singleton-of-type? type-value-string? type))
+
+(define (type-value-string? val)
+  (string? val))
+
+;;; not-string type
+
+(define type-not-string-tag
+  '!string)
+
+(define (make-type-not-string)
+  (if use-complement-types?
+      type-not-string-tag
+      (make-type-universal)))
+
+(define (type-not-string? type)
+  (eq? type type-not-string-tag))
+
+(define (isa-not-string? type)
+  (and (not (type-universal? type))
+       (type-complement type-string?
+                        type-singleton-string?
+                        type-not-string?
+                        type)))
+
+;;; vector type
+
+(define (make-type-vector)
+  'vector)
+
+(define (type-vector? type)
+  (eq? type (make-type-vector)))
+
+(define (isa-vector? type)
+  (or (type-vector? type)
+      (type-singleton-vector? type)))
+
+(define (type-singleton-vector? type)
+  (type-singleton-of-type? type-value-vector? type))
+
+(define (type-value-vector? val)
+  (vector-object? val))
+
+;;; not-vector type
+
+(define type-not-vector-tag
+  '!vector)
+
+(define (make-type-not-vector)
+  (if use-complement-types?
+      type-not-vector-tag
+      (make-type-universal)))
+
+(define (type-not-vector? type)
+  (eq? type type-not-vector-tag))
+
+(define (isa-not-vector? type)
+  (and (not (type-universal? type))
+       (type-complement type-vector?
+                        type-singleton-vector?
+                        type-not-vector?
+                        type)))
+
+;;; pair type
+
+(define (make-type-pair)
+  'pair)
+
+(define (type-pair? type)
+  (eq? type (make-type-pair)))
+
+(define (isa-pair? type)
+  (or (type-pair? type)
+      (type-singleton-pair? type)))
+
+(define (type-singleton-pair? type)
+  (type-singleton-of-type? type-value-pair? type))
+
+(define (type-value-pair? val)
+  (pair? val))
+
+;;; not-pair type
+
+(define type-not-pair-tag
+  '!pair)
+
+(define (make-type-not-pair)
+  (if use-complement-types?
+      type-not-pair-tag
+      (make-type-universal)))
+
+(define (type-not-pair? type)
+  (eq? type type-not-pair-tag))
+
+(define (isa-not-pair? type)
+  (and (not (type-universal? type))
+       (type-complement type-pair?
+                        type-singleton-pair?
+                        type-not-pair?
+                        type)))
+
+;;; universal type
+
+(define (make-type-universal)
+  'any)
+
+(define (type-universal? type)
+  (eq? type (make-type-universal)))
+
+;;; empty type
+
+(define (make-type-empty)
+  '())
+
+(define (type-empty? type)
+  (eq? type (make-type-empty)))
+
+;;; operations on types
+
+(define (type-compare type1 type2)
+
+  (define (invert x)
+    (and x (- x)))
+
+  (define (compare-singleton type1 type2)
+    (if (type-singleton? type2)
+        (if (eqv? (type-singleton-val type1)
+                  (type-singleton-val type2))
+            0   ;; equal
+            #f) ;; not comparable
+        (let ((val (type-singleton-val type1)))
+          (if (eq? (type-value-fixnum? val) #t) ;; exclude 'maybe
+              (cond ((type-fixnum-or-false? type2)
+                     -1) ;; less than
+                    ((type-fixnum? type2)
+                     (type-fixnum-compare type1 type2))
+                    (else
+                     #f)) ;; not comparable
+              (if (cond ((type-value-boolean? val)
+                         (or (type-boolean? type2)
+                             (and (type-value-false? val)
+                                  (type-fixnum-or-false? type2))))
+                        ((type-value-flonum? val)
+                         (type-flonum? type2))
+                        ((type-value-char? val)
+                         (type-char? type2))
+                        ((type-value-symbol? val)
+                         (type-symbol? type2))
+                        ((type-value-keyword? val)
+                         (type-keyword? type2))
+                        ((type-value-string? val)
+                         (type-string? type2))
+                        ((type-value-vector? val)
+                         (type-vector? type2))
+                        ((type-value-pair? val)
+                         (type-pair? type2))
+                        (else
+                         #f))
+                  -1      ;; less than
+                  #f))))) ;; not comparable
+
+  (define (compare-boolean type1 type2)
+    (cond ((type-boolean? type2)
+           0)    ;; equal
+          ((type-specific-complement-except? type-not-boolean? type2)
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (define (compare-fixnum type1 type2)
+    (cond ((type-fixnum? type2)
+           (type-fixnum-compare type1 type2))
+          ((or (type-fixnum-or-false? type2)
+               (type-specific-complement-except? type-not-fixnum? type2))
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (define (compare-fixnum-or-false type1 type2)
+    (if (type-specific-complement-except?
+         type-not-boolean-or-not-fixnum?
+         type2)
+        -1   ;; less than
+        #f)) ;; not comparable
+
+  (define (compare-flonum type1 type2)
+    (cond ((type-flonum? type2)
+           0)    ;; equal
+          ((type-specific-complement-except? type-not-flonum? type2)
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (define (compare-char type1 type2)
+    (cond ((type-char? type2)
+           0)    ;; equal
+          ((type-specific-complement-except? type-not-char? type2)
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (define (compare-symbol type1 type2)
+    (cond ((type-symbol? type2)
+           0)    ;; equal
+          ((type-specific-complement-except? type-not-symbol? type2)
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (define (compare-keyword type1 type2)
+    (cond ((type-keyword? type2)
+           0)    ;; equal
+          ((type-specific-complement-except? type-not-keyword? type2)
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (define (compare-string type1 type2)
+    (cond ((type-string? type2)
+           0)    ;; equal
+          ((type-specific-complement-except? type-not-string? type2)
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (define (compare-vector type1 type2)
+    (cond ((type-vector? type2)
+           0)   ;; equal
+          ((type-specific-complement-except? type-not-vector? type2)
+           -1)   ;; less than
+          (else
+           #f))) ;; not comparable
+
+  (cond ((eq? type1 type2)
+         0) ;; equal
+
+        ((type-universal? type1)
+         1)  ;; greater than
+        ((type-universal? type2)
+         -1) ;; less than
+
+        ((type-empty? type1)
+         -1) ;; less than
+        ((type-empty? type2)
+         1)  ;; greater than
+
+        ((type-singleton? type1)
+         (compare-singleton type1 type2))
+        ((type-singleton? type2)
+         (invert (compare-singleton type2 type1)))
+
+        ((type-boolean? type1)
+         (compare-boolean type1 type2))
+        ((type-boolean? type2)
+         (invert (compare-boolean type2 type1)))
+
+        ((type-fixnum? type1)
+         (compare-fixnum type1 type2))
+        ((type-fixnum? type2)
+         (invert (compare-fixnum type2 type1)))
+
+        ((type-fixnum-or-false? type1)
+         (compare-fixnum-or-false type1 type2))
+        ((type-fixnum-or-false? type2)
+         (invert (compare-fixnum-or-false type2 type1)))
+
+        ((type-flonum? type1)
+         (compare-flonum type1 type2))
+        ((type-flonum? type2)
+         (invert (compare-flonum type2 type1)))
+
+        ((type-char? type1)
+         (compare-char type1 type2))
+        ((type-char? type2)
+         (invert (compare-char type2 type1)))
+
+        ((type-symbol? type1)
+         (compare-symbol type1 type2))
+        ((type-symbol? type2)
+         (invert (compare-symbol type2 type1)))
+
+        ((type-keyword? type1)
+         (compare-keyword type1 type2))
+        ((type-keyword? type2)
+         (invert (compare-keyword type2 type1)))
+
+        ((type-string? type1)
+         (compare-string type1 type2))
+        ((type-string? type2)
+         (invert (compare-string type2 type1)))
+
+        ((type-vector? type1)
+         (compare-vector type1 type2))
+        ((type-vector? type2)
+         (invert (compare-vector type2 type1)))
+
+        (else
+         #f))) ;; not comparable
+
+(define (type-includes? type1 type2)
+  (let ((comp (type-compare type1 type2)))
+    (and comp (>= comp 0))))
+
+(define (type-union type1 type2)
+
+  (define (union-singleton-false type)
+    ;; type can't be singleton #f
+    (if (isa-fixnum-or-false? type)
+        (make-type-fixnum-or-false)
+        (union-boolean type)))
+
+  (define (union-boolean type)
+    ;; type can't be singleton #f but may be singleton #t or other type
+    (if (isa-boolean? type)
+        (make-type-boolean)
+        (union-specific-complement-except
+         type-not-boolean?
+         type)))
+
+  (define (union-fixnum type1 type2)
+    (if (isa-fixnum? type2)
+        (let* ((f1 (type-fixnum-from-possibly-singleton type1))
+               (lo1 (type-fixnum-lo f1))
+               (hi1 (type-fixnum-hi f1))
+               (f2 (type-fixnum-from-possibly-singleton type2))
+               (lo2 (type-fixnum-lo f2))
+               (hi2 (type-fixnum-hi f2)))
+          (make-type-fixnum
+           (cond ((or (not lo1) (not lo2))         #f)
+                 ((or (eq? lo1 '>=) (eq? lo2 '>=)) '>=)
+                 ((or (eq? lo1 '>)  (eq? lo2 '>))  '>)
+                 (else                             (min lo1 lo2)))
+           (cond ((or (not hi1) (not hi2))         #f)
+                 ((or (eq? hi1 '<=) (eq? hi2 '<=)) '<=)
+                 ((or (eq? hi1 '<)  (eq? hi2 '<))  '<)
+                 (else                             (max hi1 hi2)))))
+        (if (type-fixnum-or-false? type2)
+            type2
+            (union-specific-complement-except
+             type-not-fixnum?
+             type2))))
+
+  (define (union-fixnum-or-false type)
+    ;; singleton #f, singleton fixnum and the fixnum type have been
+    ;; handled before
+    (if (type-fixnum-or-false? type)
+        type
+        (union-specific-complement-except
+         type-not-boolean-or-not-fixnum?
+         type)))
+
+  (define (union-flonum type)
+    (if (isa-flonum? type)
+        (make-type-flonum) ;; can't be the same singleton value
+        (union-specific-complement-except
+         type-not-flonum?
+         type)))
+
+  (define (union-char type)
+    (if (isa-char? type)
+        (make-type-char) ;; can't be the same singleton value
+        (union-specific-complement-except
+         type-not-char?
+         type)))
+
+  (define (union-symbol type)
+    (if (isa-symbol? type)
+        (make-type-symbol) ;; can't be the same singleton value
+        (union-specific-complement-except
+         type-not-symbol?
+         type)))
+
+  (define (union-keyword type)
+    (if (isa-keyword? type)
+        (make-type-keyword) ;; can't be the same singleton value
+        (union-specific-complement-except
+         type-not-keyword?
+         type)))
+
+  (define (union-string type)
+    (if (isa-string? type)
+        (make-type-string) ;; can't be the same singleton value
+        (union-specific-complement-except
+         type-not-string?
+         type)))
+
+  (define (union-vector type)
+    (if (isa-vector? type)
+        (make-type-vector) ;; can't be the same singleton value
+        (union-specific-complement-except
+         type-not-vector?
+         type)))
+
+  (define (union-pair type)
+    (if (isa-pair? type)
+        (make-type-pair) ;; can't be the same singleton value
+        (union-specific-complement-except
+         type-not-pair?
+         type)))
+
+  (define (union-specific-complement-except not-of-type? type)
+    (if (type-specific-complement-except? not-of-type? type)
+        type
+        (make-type-universal)))
+
+  (cond ((eq? type1 type2)
+         type1)
+
+        ((and (type-singleton? type1)
+              (type-singleton? type2)
+              (eqv? (type-singleton-val type1)
+                    (type-singleton-val type2)))
+         type1)
+
+        ;; from this point on, the case of two identical singleton types
+        ;; is impossible
+
+        ((type-singleton-false? type1)
+         (union-singleton-false type2))
+        ((type-singleton-false? type2)
+         (union-singleton-false type1))
+
+        ;; from this point on, neither type1 nor type2 can be singleton #f
+
+        ((isa-boolean? type1) ;; catches singleton #t
+         (union-boolean type2))
+        ((isa-boolean? type2) ;; catches singleton #t
+         (union-boolean type1))
+
+        ((isa-fixnum? type1) ;; catches singleton fixnum
+         (union-fixnum type1 type2))
+        ((isa-fixnum? type2) ;; catches singleton fixnum
+         (union-fixnum type2 type1))
+
+        ((type-fixnum-or-false? type1)
+         (union-fixnum-or-false type2))
+        ((type-fixnum-or-false? type2)
+         (union-fixnum-or-false type1))
+
+        ((isa-flonum? type1) ;; catches singleton flonum
+         (union-flonum type2))
+        ((isa-flonum? type2) ;; catches singleton flonum
+         (union-flonum type1))
+
+        ((isa-char? type1) ;; catches singleton char
+         (union-char type2))
+        ((isa-char? type2) ;; catches singleton char
+         (union-char type1))
+
+        ((isa-symbol? type1) ;; catches singleton symbol
+         (union-symbol type2))
+        ((isa-symbol? type2) ;; catches singleton symbol
+         (union-symbol type1))
+
+        ((isa-keyword? type1) ;; catches singleton keyword
+         (union-keyword type2))
+        ((isa-keyword? type2) ;; catches singleton keyword
+         (union-keyword type1))
+
+        ((isa-string? type1) ;; catches singleton string
+         (union-string type2))
+        ((isa-string? type2) ;; catches singleton string
+         (union-string type1))
+
+        ((isa-vector? type1) ;; catches singleton vector
+         (union-vector type2))
+        ((isa-vector? type2) ;; catches singleton vector
+         (union-vector type1))
+
+        ((isa-pair? type1) ;; catches singleton pair
+         (union-pair type2))
+        ((isa-pair? type2) ;; catches singleton pair
+         (union-pair type1))
+
+        (else
+         (make-type-universal))))
+
+(define (type-fixnum-<=-num x num)
+  (cond ((eq? x '>=) #t)
+        ((eq? x '>)  #t)
+        ((eq? x '<)  #f)
+        ((eq? x '<=) #f)
+        (else        (<= x num))))
+
+(define (type-fixnum->=-num x num)
+  (cond ((eq? x '>=) #f)
+        ((eq? x '>)  #f)
+        ((eq? x '<)  #t)
+        ((eq? x '<=) #t)
+        (else        (>= x num))))
+
+(define (type-fixnum-<= x y)
+  (cond ((eq? x '>=)
+         #t)
+        ((eq? x '>)
+         (not (eq? y '>=)))
+        ((number? x)
+         (cond ((eq? y '>=) #f)
+               ((eq? y '>)  #f)
+               ((number? y) (<= x y))
+               (else        #t)))
+        ((eq? x '<)
+         (or (eq? y '<)
+             (eq? y '<=)))
+        ((eq? x '<=)
+         (eq? y '<=))
+        (else
+         (error "(type-fixnum-<= x y)"))))
+
+(define (type-fixnum-< x y)
+  (cond ((eq? x '>=)
+         (not (eq? y '>=)))
+        ((eq? x '>)
+         (not (or (eq? y '>=)
+                  (eq? y '>))))
+        ((number? x)
+         (cond ((eq? y '>=) #f)
+               ((eq? y '>)  #f)
+               ((number? y) (< x y))
+               (else        #t)))
+        ((eq? x '<)
+         (eq? y '<=))
+        ((eq? x '<=)
+         #f)
+        (else
+         (error "(type-fixnum-< x y)"))))
+
+(define (type-fixnum-compare type1 type2)
+  (let* ((f1 (type-fixnum-from-possibly-singleton type1))
+         (lo1 (type-fixnum-lo f1))
+         (hi1 (type-fixnum-hi f1))
+         (f2 (type-fixnum-from-possibly-singleton type2))
+         (lo2 (type-fixnum-lo f2))
+         (hi2 (type-fixnum-hi f2))
+         (included-1-in-2
+          (and (type-fixnum-<= lo2 lo1) (type-fixnum-<= hi1 hi2)))
+         (included-2-in-1
+          (and (type-fixnum-<= lo1 lo2) (type-fixnum-<= hi2 hi1))))
+    (cond (included-1-in-2
+           (if included-2-in-1
+               0    ;; equal
+               -1)) ;; less than
+          (included-2-in-1
+           1) ;; greater than
+          (else
+           #f)))) ;; not comparable
+
+(define (type-fixnum-lo-inc x)
+  (cond ((eq? x '>=)
+         '>)
+        ((eq? x '>)
+         '>)
+        (else
+         (+ x 1))))
+
+(define (type-fixnum-hi-dec x)
+  (cond ((eq? x '<=)
+         '<)
+        ((eq? x '<)
+         '<)
+        (else
+         (- x 1))))
+
+(define (type-fixnum-min x y)
+  (if (type-fixnum-< x y) x y))
+
+(define (type-fixnum-max x y)
+  (if (type-fixnum-< x y) y x))
+
+(define (type-fixnum-union type1 type2)
+  (let* ((f1 (type-fixnum-from-possibly-singleton type1))
+         (lo1 (type-fixnum-lo f1))
+         (hi1 (type-fixnum-hi f1))
+         (f2 (type-fixnum-from-possibly-singleton type2))
+         (lo2 (type-fixnum-lo f2))
+         (hi2 (type-fixnum-hi f2)))
+    (make-type-fixnum
+     (type-fixnum-min lo1 lo2)
+     (type-fixnum-max hi1 hi2))))
+
+(define (type-infer-fixnum1 infer type)
+  (if (not (isa-fixnum? type))
+      (make-type-fixnum #f #f)
+      (let* ((f (type-fixnum-from-possibly-singleton type))
+             (lo (type-fixnum-lo f))
+             (hi (type-fixnum-hi f)))
+        (infer lo hi))))
+
+(define (type-infer-fixnum2 infer type1 type2)
+  (if (or (not (isa-fixnum? type1))
+          (not (isa-fixnum? type2)))
+      (make-type-fixnum #f #f)
+      (let* ((f1 (type-fixnum-from-possibly-singleton type1))
+             (lo1 (type-fixnum-lo f1))
+             (hi1 (type-fixnum-hi f1))
+             (f2 (type-fixnum-from-possibly-singleton type2))
+             (lo2 (type-fixnum-lo f2))
+             (hi2 (type-fixnum-hi f2)))
+        (infer lo1 hi1 lo2 hi2))))
+
+(define (type-infer-fold infer0 infer1 infer2)
+  (lambda (args)
+    (if (not (pair? args))
+        (infer0)
+        (let ((arg1 (car args))
+              (rest (cdr args)))
+          (if (not (pair? rest))
+              (infer1 arg1)
+              (let loop ((result arg1) (lst rest))
+                (if (pair? lst)
+                    (loop (infer2 result (car lst)) (cdr lst))
+                    result)))))))
+
+(define (type-infer-common-fx+ lo1 hi1 lo2 hi2)
+
+  (declare (generic))
+
+  (define (leq? x val) (type-fixnum-<=-num x val))
+  (define (geq? x val) (type-fixnum->=-num x val))
+
+  (define (abstract-fx+ x y)
+
+    (define (abstract-fx+-non-num x y)
+      (cond ((eq? x '>=) ;; x >= min-fixnum
+             (cond ((geq? y 1) '>)     ;; result >= min-fixnum + 1
+                   ((eqv? y 0) '>=)    ;; result >= min-fixnum
+                   (else       #f)))   ;; overflow
+            ((eq? x '>) ;; x >= min-fixnum + 1
+             (cond ((geq? y 0)  '>)    ;; result >= min-fixnum + 1
+                   ((eqv? y -1) '>=)   ;; result >= min-fixnum
+                   (else        #f)))  ;; overflow
+            ((eq? x '<) ;; x <= max-fixnum - 1
+             (cond ((leq? y 0)  '<)    ;; result <= max-fixnum - 1
+                   ((eqv? y 1)  '<=)   ;; result <= max-fixnum
+                   (else        #f)))  ;; overflow
+            (else ;; (eq? x '<=) ;; x <= max-fixnum
+             (cond ((leq? y -1) '<)    ;; result <= max-fixnum - 1
+                   ((eqv? y 0)  '<=)   ;; result <= max-fixnum
+                   (else        #f)))));; overflow
+
+    (if (number? x)
+        (if (number? y)
+            (+ x y)
+            (abstract-fx+-non-num y x))
+        (abstract-fx+-non-num x y)))
+
+  (make-type-fixnum-bounded
+   (abstract-fx+ lo1 lo2)
+   (abstract-fx+ hi1 hi2)))
+
+(define (type-infer-fx+ type1 type2)
+  (type-fixnum-normalize-clamp
+   (type-infer-fixnum2 type-infer-common-fx+ type1 type2)))
+
+(define (type-infer-fxwrap+ type1 type2)
+  (type-fixnum-normalize-wrap
+   (type-infer-fixnum2 type-infer-common-fx+ type1 type2)))
+
+(define (type-infer-fx+? type1 type2)
+  (type-fixnum-normalize-false
+   (type-infer-fixnum2 type-infer-common-fx+ type1 type2)))
+
+(define (type-infer-common-fx- lo1 hi1 lo2 hi2)
+
+  (declare (generic))
+
+  (define (leq? x val) (type-fixnum-<=-num x val))
+  (define (geq? x val) (type-fixnum->=-num x val))
+
+  (define (abstract-fx- x y)
+    (cond ((eq? x '>=) ;; x >= min-fixnum
+           (cond ((leq? y -1) '>)     ;; result >= min-fixnum + 1
+                 ((eqv? y 0)  '>=)    ;; result >= min-fixnum
+                 (else        #f)))   ;; overflow
+          ((eq? x '>) ;; x >= min-fixnum + 1
+           (cond ((leq? y 0)  '>)    ;; result >= min-fixnum + 1
+                 ((eqv? y 1)  '>=)   ;; result >= min-fixnum
+                 (else        #f)))  ;; overflow
+          ((eq? x '<) ;; x <= max-fixnum - 1
+           (cond ((geq? y 0)  '<)    ;; result <= max-fixnum - 1
+                 ((eqv? y -1) '<=)   ;; result <= max-fixnum
+                 (else        #f)))  ;; overflow
+          ((eq? x '<=) ;; x <= max-fixnum
+           (cond ((geq? y 1)  '<)    ;; result <= max-fixnum - 1
+                 ((eqv? y 0)  '<=)   ;; result <= max-fixnum
+                 (else        #f)))  ;; overflow
+          (else ;; x is a specific number
+           (cond ((eq? y '>=)
+                  (cond ((<= x -2) '<)   ;; result <= max-fixnum - 1
+                        ((= x -1)  '<=)  ;; result <= max-fixnum
+                        (else      #f))) ;; overflow
+                 ((eq? y '>)
+                  (cond ((<= x -1) '<)   ;; result <= max-fixnum - 1
+                        ((= x 0)   '<=)  ;; result <= max-fixnum
+                        (else      #f))) ;; overflow
+                 ((eq? y '<)
+                  (cond ((>= x -1) '>)   ;; result >= min-fixnum + 1
+                        ((= x -2)  '>=)  ;; result >= min-fixnum
+                        (else      #f))) ;; overflow
+                 ((eq? y '<=)
+                  (cond ((>= x 0)  '>)   ;; result >= min-fixnum + 1
+                        ((= x -1)  '>=)  ;; result >= min-fixnum
+                        (else      #f))) ;; overflow
+                 (else
+                  (- x y))))))
+
+  (make-type-fixnum-bounded
+   (abstract-fx- lo1 hi2)
+   (abstract-fx- hi1 lo2)))
+
+(define (type-infer-fx- type1 type2)
+  (type-fixnum-normalize-clamp
+   (type-infer-fixnum2 type-infer-common-fx- type1 type2)))
+
+(define (type-infer-fxwrap- type1 type2)
+  (type-fixnum-normalize-wrap
+   (type-infer-fixnum2 type-infer-common-fx- type1 type2)))
+
+(define (type-infer-fx-? type1 type2)
+  (type-fixnum-normalize-false
+   (type-infer-fixnum2 type-infer-common-fx- type1 type2)))
+
+(define (type-infer-common-fx* lo1 hi1 lo2 hi2)
+
+  (declare (generic))
+
+  (define (minus-to-plus-1? lo hi)
+    (and (number? lo)
+         (number? hi)
+         (>= lo -1)
+         (<= hi 1)))
+
+  (define (minus-to-plus-1-case lo1 hi1 lo2 hi2)
+
+    (define (zero)
+      (make-type-fixnum 0 0))
+
+    (define (one)
+      (make-type-fixnum lo2 hi2))
+
+    (define (minus-one)
+      (type-infer-fixnum2 type-infer-common-fx- (zero) (one)))
+
+    (cond ((= hi1 -1)
+           (minus-one)) ;; multiplying by -1
+          ((= hi1 0)
+           (if (= lo1 0)
+               (zero) ;; multiplying by 0
+               (type-union (minus-one) (zero)))) ;; multiplying by -1 or 0
+          ((= lo1 1)
+           (one)) ;; multiplying by 1
+          ((= lo1 0)
+           (type-union (zero) (one))) ;; multiplying by 0 or 1
+          (else
+           (type-union (minus-one) (type-union (zero) (one)))))) ;; multiplying by -1, 0 or 1
+
+  (cond ((minus-to-plus-1? lo1 hi1)
+         (minus-to-plus-1-case lo1 hi1 lo2 hi2))
+        ((minus-to-plus-1? lo2 hi2)
+         (minus-to-plus-1-case lo2 hi2 lo1 hi1))
+        ((and (number? lo1)
+              (number? hi1)
+              (number? lo2)
+              (number? hi2))
+         (let ((lo-lo (* lo1 lo2))
+               (lo-hi (* lo1 hi2))
+               (hi-lo (* hi1 lo2))
+               (hi-hi (* hi1 hi2)))
+           (make-type-fixnum-bounded
+            (min lo-lo lo-hi hi-lo hi-hi)
+            (max lo-lo lo-hi hi-lo hi-hi))))
+        (else
+         (make-type-fixnum #f #f))))
+
+(define (type-infer-fx* type1 type2)
+  (type-fixnum-normalize-clamp
+   (type-infer-fixnum2 type-infer-common-fx* type1 type2)))
+
+(define (type-infer-fxwrap* type1 type2)
+  (type-fixnum-normalize-wrap
+   (type-infer-fixnum2 type-infer-common-fx* type1 type2)))
+
+(define (type-infer-fx*? type1 type2)
+  (type-fixnum-normalize-false
+   (type-infer-fixnum2 type-infer-common-fx* type1 type2)))
+
+(define (type-narrow-fold narrow2)
+  (lambda (args)
+    (if (not (pair? args))
+        (cons args #f) ;; always true
+        (let ((arg1 (car args))
+              (rest (cdr args)))
+          (if (not (pair? rest))
+              (cons args #f) ;; always true
+              (let* ((arg2 (car rest))
+                     (x (narrow2 arg1 arg2)))
+                (if (not (pair? (cdr rest)))
+                    x
+                    (let ((true (car x))
+                          (false (cdr x)))
+                      (cond ((not true) ;; always false?
+                             (cons #f args))
+                            ((not false) ;; always true?
+                             (cons args #f))
+                            (else
+                             (let ((arg1-false (car false)))
+                               (let loop ((rev-result-true (list (car true)))
+                                          (prev-true (cadr true))
+                                          (arg2-false (cadr false))
+                                          (i 2)
+                                          (lst (cdr rest)))
+                                 (if (not (pair? lst))
+                                     (cons (reverse (cons prev-true
+                                                          rev-result-true))
+                                           (cons arg1-false
+                                                 (cons arg2-false
+                                                       (cdr rest))))
+                                     (let* ((x (narrow2 prev-true (car lst)))
+                                            (true (car x))
+                                            (false (cdr x)))
+                                       (if (not true) ;; always false?
+                                           (cons #f args)
+                                           (loop (cons (car true)
+                                                       rev-result-true)
+                                                 (cadr true)
+                                                 (if (and (= i 2) false)
+                                                     (type-fixnum-union
+                                                      arg2-false
+                                                      (car false))
+                                                     arg2-false)
+                                                 (+ i 1)
+                                                 (cdr lst)))))))))))))))))
+
+(define (type-narrow-fx< type1 type2)
+
+  ;; if x<y
+  ;;
+  ;;  x is in  x.lo .. min(x.hi,y.hi-1)
+  ;;  y is in  max(y.lo,x.lo+1) .. y.hi
+  ;;
+  ;; if x>=y
+  ;;
+  ;;  x is in  max(x.lo,y.lo) .. x.hi
+  ;;  y is in  y.lo .. min(y.hi,x.hi)
+
+  (if (not (and (isa-fixnum? type1)
+                (isa-fixnum? type2)))
+      (cons (list type1 type2)
+            (list type1 type2))
+      (let* ((f1 (type-fixnum-from-possibly-singleton type1))
+             (lo1 (type-fixnum-lo f1))
+             (hi1 (type-fixnum-hi f1))
+             (f2 (type-fixnum-from-possibly-singleton type2))
+             (lo2 (type-fixnum-lo f2))
+             (hi2 (type-fixnum-hi f2))
+             (true-lo1 lo1)
+             (true-hi1 (type-fixnum-min hi1 (type-fixnum-hi-dec hi2)))
+             (true-lo2 (type-fixnum-max lo2 (type-fixnum-lo-inc lo1)))
+             (true-hi2 hi2)
+             (false-lo1 (type-fixnum-max lo1 lo2))
+             (false-hi1 hi1)
+             (false-lo2 lo2)
+             (false-hi2 (type-fixnum-min hi2 hi1)))
+        (cond ((or (type-fixnum-< true-hi1 true-lo1) ;; true case impossible?
+                   (type-fixnum-< true-hi2 true-lo2))
+               (cons #f
+                     (list type1 type2)))
+              ((or (type-fixnum-< false-hi1 false-lo1) ;; false case impossible?
+                   (type-fixnum-< false-hi2 false-lo2))
+               (cons (list type1 type2)
+                     #f))
+              (else
+               (cons (list (type-fixnum-normalize
+                            (make-type-fixnum-bounded true-lo1 true-hi1))
+                           (type-fixnum-normalize
+                            (make-type-fixnum-bounded true-lo2 true-hi2)))
+                     (list (type-fixnum-normalize
+                            (make-type-fixnum-bounded false-lo1 false-hi1))
+                           (type-fixnum-normalize
+                            (make-type-fixnum-bounded false-lo2 false-hi2)))))))))
+
+(define (type-narrow-fx> type1 type2)
+  (type-narrow-swap
+   (type-narrow-fx< type2 type1)))
+
+(define (type-narrow-fx>= type1 type2)
+  (type-narrow-invert
+   (type-narrow-fx< type1 type2)))
+
+(define (type-narrow-fx<= type1 type2)
+  (type-narrow-invert
+   (type-narrow-swap
+    (type-narrow-fx< type2 type1))))
+
+(define (type-narrow-fl< type1 type2)
+  (cons (list type1 type2)
+        (list type1 type2)))
+
+(define (type-narrow-fl> type1 type2)
+  (type-narrow-swap
+   (type-narrow-fl< type2 type1)))
+
+(define (type-narrow-fl>= type1 type2)
+  (type-narrow-invert
+   (type-narrow-fl< type1 type2)))
+
+(define (type-narrow-fl<= type1 type2)
+  (type-narrow-invert
+   (type-narrow-swap
+    (type-narrow-fl< type2 type1))))
+
+(define (type-narrow-invert x)
+  (let ((true (car x))
+        (false (cdr x)))
+    (cons false true)))
+
+(define (type-narrow-swap x)
+
+  (define (swap lst)
+    (and lst (list (cadr lst) (car lst))))
+
+  (let ((true (car x))
+        (false (cdr x)))
+    (cons (swap true) (swap false))))
+
+(define (proc-type->type type)
+  (case (type-name type)
+    ((boolean)
+     (make-type-boolean))
+    ((fixnum)
+     (make-type-fixnum '>= '<=))
+    ((?fixnum)
+     (make-type-fixnum-or-false))
+    ((fixnonneg)
+     (make-type-fixnum 0 '<=))
+    ((flonum)
+     (make-type-flonum))
+    ((char)
+     (make-type-char))
+    ((symbol)
+     (make-type-symbol))
+    ((keyword)
+     (make-type-keyword))
+    ((string)
+     (make-type-string))
+    ((vector)
+     (make-type-vector))
+    ((pair)
+     (make-type-pair))
+    ((s8)
+     (make-type-fixnum -128 127))
+    ((u8)
+     (make-type-fixnum 0 255))
+    ((s16)
+     (make-type-fixnum -32768 32767))
+    ((u16)
+     (make-type-fixnum 0 65535))
+    ((list number integer real port
+      s8vector u8vector s16vector u16vector
+      s32 s32vector u32 u32vector s64 s64vector u64 u64vector
+      f32vector f64vector
+      #f)
+     (make-type-universal)) ;;TODO: refine
+    (else
+     (compiler-internal-error
+      "proc-type->type, unknown 'type':" type))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Table of primitive procedure typers
+
+(define (setup-prim-typers targ)
+
+;; TODO: remove dependencies to C back-end
+
+(define (get-prim-info name)
+  ((target-prim-info targ) (string->canonical-symbol name)))
+
+(define (type-infer-set! name infer)
+  (let ((proc (get-prim-info name)))
+    (if proc
+        (let ((default-type
+                (proc-type->type (proc-obj-type proc)))
+              (constant-fold
+               (proc-obj-constant-fold proc)))
+          (proc-obj-type-infer-set!
+           proc
+           (lambda (args)
+
+             ;; try constant folding first in case it is possible,
+             ;; then the type inference procedure, then default
+             ;; procedure result type
+
+             (let ((folding-result
+                    (if constant-fold
+                        (constant-fold args)
+                        (make-type-universal))))
+               (if (type-singleton? folding-result)
+                   folding-result
+                   (let ((infer-result
+                          (if infer
+                              (infer args)
+                              (make-type-universal))))
+                     (if (not (type-universal? infer-result))
+                         infer-result
+                         default-type))))))))))
+
+(define (def-type-infer name infer)
+  (type-infer-set! name infer)
+  (type-infer-set! (string-append "##" name) infer))
+
+(define (type-narrow-set! name narrow)
+  (let ((proc (get-prim-info name)))
+    (if proc
+        (let ((constant-fold
+               (proc-obj-constant-fold proc)))
+          (proc-obj-type-narrow-set!
+           proc
+           (lambda (args)
+
+             ;; try constant folding first in case it is possible,
+             ;; then the narrow procedure
+
+             (let ((folding-result
+                    (if constant-fold
+                        (constant-fold args)
+                        (make-type-universal))))
+               (if (type-singleton? folding-result)
+                   (if (false-object? (type-singleton-val folding-result))
+                       (cons #f args)
+                       (cons args #f))
+                   (if narrow
+                       (narrow args)
+                       (cons args args))))))))))
+
+(define (def-type-narrow name narrow)
+  (type-narrow-set! name narrow)
+  (type-narrow-set! (string-append "##" name) narrow))
+
+(define (infer-fx+ normalize)
+  (type-infer-fold
+   (lambda ()
+     (make-type-singleton 0))
+   (lambda (type)
+     type)
+   (lambda (type1 type2)
+     (normalize
+      (type-infer-fixnum2 type-infer-common-fx+ type1 type2)))))
+
+(define (infer-fx- normalize)
+  (type-infer-fold
+   #f
+   (lambda (type)
+     (normalize
+      (let ((zero (make-type-singleton 0)))
+        (type-infer-fixnum2 type-infer-common-fx- zero type))))
+   (lambda (type1 type2)
+     (normalize
+      (type-infer-fixnum2 type-infer-common-fx- type1 type2)))))
+
+(define (infer-fx* normalize)
+  (type-infer-fold
+   (lambda ()
+     (make-type-singleton 1))
+   (lambda (type)
+     type)
+   (lambda (type1 type2)
+     (normalize
+      (type-infer-fixnum2 type-infer-common-fx* type1 type2)))))
+
+(type-infer-set! "##fx+?" (infer-fx+ type-fixnum-normalize-false))
+(def-type-infer "fx+"     (infer-fx+ type-fixnum-normalize-clamp))
+(def-type-infer "fxwrap+" (infer-fx+ type-fixnum-normalize-wrap))
+
+(type-infer-set! "##fx-?" (infer-fx- type-fixnum-normalize-false))
+(def-type-infer "fx-"     (infer-fx- type-fixnum-normalize-clamp))
+(def-type-infer "fxwrap-" (infer-fx- type-fixnum-normalize-wrap))
+
+(type-infer-set! "##fx*?" (infer-fx* type-fixnum-normalize-false))
+(def-type-infer "fx*"     (infer-fx* type-fixnum-normalize-clamp))
+(def-type-infer "fxwrap*" (infer-fx* type-fixnum-normalize-wrap))
+
+(def-type-narrow "fx="  #f)
+(def-type-narrow "fx<"  (type-narrow-fold type-narrow-fx<))
+(def-type-narrow "fx<=" (type-narrow-fold type-narrow-fx<=))
+(def-type-narrow "fx>"  (type-narrow-fold type-narrow-fx>))
+(def-type-narrow "fx>=" (type-narrow-fold type-narrow-fx>=))
+
+(def-type-infer
+  "fl+"
+  (lambda (args)
+    (make-type-flonum)))
+
+(def-type-infer
+  "fl-"
+  (lambda (args)
+    (make-type-flonum)))
+
+(def-type-infer
+  "fl*"
+  (lambda (args)
+    (make-type-flonum)))
+
+(def-type-narrow "fl="  #f)
+(def-type-narrow "fl<"  (type-narrow-fold type-narrow-fl<))
+(def-type-narrow "fl<=" (type-narrow-fold type-narrow-fl<=))
+(def-type-narrow "fl>"  (type-narrow-fold type-narrow-fl>))
+(def-type-narrow "fl>=" (type-narrow-fold type-narrow-fl>=))
+
+(def-type-narrow "identity"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((type-singleton? arg)
+             (if (false-object? (type-singleton-val arg))
+                 (cons #f args)
+                 (cons args #f)))
+            ((type-fixnum-or-false? arg)
+             (cons (list (make-type-fixnum '>= '<=))
+                   (list (make-type-singleton false-object))))
+            ((or (type-not-boolean? arg)
+                 (and (not (type-boolean? arg))
+                      (type-specific? arg)))
+             (cons args #f))
+            (else
+             (cons args args))))))
+
+(def-type-narrow "not"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((type-singleton? arg)
+             (if (false-object? (type-singleton-val arg))
+                 (cons args #f)
+                 (cons #f args)))
+            ((type-fixnum-or-false? arg)
+             (cons (list (make-type-singleton false-object))
+                   (list (make-type-fixnum '>= '<=))))
+            ((or (type-not-boolean? arg)
+                 (and (not (type-boolean? arg))
+                      (type-specific? arg)))
+             (cons #f args))
+            (else
+             (cons args args))))))
+
+(def-type-narrow "boolean?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-boolean? arg)
+             (cons args #f))
+            ((isa-not-boolean? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-boolean))
+                   (list (make-type-not-boolean))))))))
+
+(def-type-narrow "fixnum?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((type-fixnum-or-false? arg)
+             (cons (list (make-type-fixnum '>= '<=))
+                   (list (make-type-singleton false-object))))
+            ((isa-fixnum? arg)
+             (cons args #f))
+            ((isa-not-fixnum? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-fixnum '>= '<=))
+                   (list (make-type-not-fixnum))))))))
+
+(def-type-narrow "flonum?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-flonum? arg)
+             (cons args #f))
+            ((isa-not-flonum? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-flonum))
+                   (list (make-type-not-flonum))))))))
+
+(def-type-narrow "char?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-char? arg)
+             (cons args #f))
+            ((isa-not-char? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-char))
+                   (list (make-type-not-char))))))))
+
+(def-type-narrow "symbol?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-symbol? arg)
+             (cons args #f))
+            ((isa-not-symbol? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-symbol))
+                   (list (make-type-not-symbol))))))))
+
+(def-type-narrow "keyword?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-keyword? arg)
+             (cons args #f))
+            ((isa-not-keyword? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-keyword))
+                   (list (make-type-not-keyword))))))))
+
+(def-type-narrow "string?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-string? arg)
+             (cons args #f))
+            ((isa-not-string? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-string))
+                   (list (make-type-not-string))))))))
+
+(def-type-narrow "vector?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-vector? arg)
+             (cons args #f))
+            ((isa-not-vector? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-vector))
+                   (list (make-type-not-vector))))))))
+
+(def-type-narrow "pair?"
+  (lambda (args)
+    (let ((arg (car args)))
+      (cond ((isa-pair? arg)
+             (cons args #f))
+            ((isa-not-pair? arg)
+             (cons #f args))
+            (else
+             (cons (list (make-type-pair))
+                   (list (make-type-not-pair))))))))
+
+(for-each
+ (lambda (x)
+   (let* ((name (car x))
+          (proc (get-prim-info name)))
+     (if proc
+         (begin
+           (if (not (proc-obj-type-infer proc))
+               (type-infer-set! name #f))))))
+ prim-procs)
+
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -4380,6 +6088,7 @@
 (define (setup-prims target)
   (setup-prim-specializers target)
   (setup-prim-expanders target)
-  (setup-prim-simplifiers target))
+  (setup-prim-constant-folders target)
+  (setup-prim-typers target))
 
 ;;;============================================================================
