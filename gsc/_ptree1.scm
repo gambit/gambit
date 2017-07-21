@@ -342,7 +342,10 @@
          (let ((spec
                 ((proc-obj-specialize proc)
                  env
-                 (map (lambda (arg) (if (cst? arg) (cst-val arg) void-object))
+                 (map (lambda (arg)
+                        (if (cst? arg)
+                            (make-type-singleton (cst-val arg))
+                            (make-type-universal)))
                       args))))
            (if (eq? spec proc)
              proc

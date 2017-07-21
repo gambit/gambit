@@ -814,7 +814,7 @@
              (let ((br-oper (br oper substs 'need expansion-limit)))
                ; at this point (or (cst? br-oper) (ref? br-oper))
                (or (br-app-inline ptree br-oper args substs reason expansion-limit)
-                   (br-app-simplify ptree br-oper args substs reason expansion-limit)))
+                   (br-app-constant-fold ptree br-oper args substs reason expansion-limit)))
              (br-app ptree oper args substs reason expansion-limit))))
 
         ((fut? ptree)
@@ -1040,30 +1040,38 @@
                            (inline-procedure expansion-limit))
                          (inline-procedure (list new-limit))))))))))
 
-(define (br-app-simplify ptree br-oper args substs reason expansion-limit)
+(define (br-app-constant-fold ptree br-oper args substs reason expansion-limit)
 
-  ; invariant: (or (cst? br-oper) (ref? br-oper))
+  ;; invariant: (or (cst? br-oper) (ref? br-oper))
 
   (let* ((br-args
           (map (lambda (arg) (br arg substs 'need expansion-limit)) args))
          (proc
           (and (constant-fold? (node-env ptree))
                (specialize-app br-oper br-args (node-env ptree))))
-         (simp
+         (constant-fold
           (and proc
                (nb-args-conforms? (length args) (proc-obj-call-pat proc))
-               (proc-obj-simplify proc)))
-         (simplified-ptree
-          (and simp
-               (simp ptree br-args))))
-    (if simplified-ptree
-      (begin
-        (delete-ptree br-oper)
-        (for-each delete-ptree br-args)
-        simplified-ptree)
-      (new-call (node-source ptree) (node-env ptree)
-        br-oper
-        br-args))))
+               (proc-obj-constant-fold proc)))
+         (folding-result
+          (if constant-fold
+              (constant-fold
+               (map (lambda (arg)
+                      (if (cst? arg)
+                          (make-type-singleton (cst-val arg))
+                          (make-type-universal)))
+                    br-args))
+              (make-type-universal))))
+    (if (type-singleton? folding-result)
+        (let ((result
+               (new-cst (node-source ptree) (node-env ptree)
+                 (type-singleton-val folding-result))))
+          (delete-ptree br-oper)
+          (for-each delete-ptree br-args)
+          result)
+        (new-call (node-source ptree) (node-env ptree)
+          br-oper
+          br-args))))
 
 (define (ptree-size ptree)
   (let loop ((lst (node-children ptree)) (n 1))
