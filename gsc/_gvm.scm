@@ -1963,7 +1963,8 @@
             ,@edges)))
 
   (define node-bgcolor "gray80")
-  (define node-info-bgcolor "gray60")
+  (define node-type-bgcolor "gray60")
+  (define node-entry-bgcolor "black")
 
   (define (gen-digraph name)
     `("digraph \"" ,name "\" {\n"
@@ -1994,8 +1995,11 @@
       ,@content
       "</tr>"))
 
-  (define (gen-col id last? content)
-    `("<td align=\"left\""
+  (define (gen-col id last? align content)
+    `("<td"
+      ,@(if align
+            `(" align=\"" ,align "\"")
+            '())
       ,@(if id
             `(" port=\"" ,id "\"")
             '())
@@ -2005,6 +2009,15 @@
       ">"
       ,@content
       "</td>"))
+
+  (define (gen-font face color content)
+    `("<font face=\"" ,face "\""
+      ,@(if color
+            `(" color=\"" ,color "\"")
+            '())
+      ">"
+      ,@content
+      "</font>"))
 
   (define (gen-html-label content)
     `("<"
@@ -2078,6 +2091,7 @@
                (gen-col
                 #f
                 #f
+                "left"
                 (gen-table
                  line-id
                  #f
@@ -2096,8 +2110,8 @@
                                                ":s"
                                                (target-id x)
                                                (not jump?))
-                                      `(,@(gen-col #f #f (reverse before))
-                                        ,@(gen-col ref-id #f `(,(escape x)))
+                                      `(,@(gen-col #f #f "left" (reverse before))
+                                        ,@(gen-col ref-id #f "left" `(,(escape x)))
                                         ,@(loop '()
                                                 (cdr lst))))
                                     (begin
@@ -2109,7 +2123,7 @@
                                             (cdr lst)))))
                               (loop (cons (escape x) before)
                                     (cdr lst))))
-                        (gen-col #f #t (reverse before))))))))))
+                        (gen-col #f #t "left" (reverse before))))))))))
 
           (let ((instrs
                  (cons (format-gvm-instr (bb-label-instr bb))
@@ -2119,8 +2133,14 @@
                                (list
                                 (format-gvm-instr (bb-branch-instr bb))))))
                 (gv-bb-info
-                 (comment-get (gvm-instr-comment (bb-label-instr bb))
-                              'gv-bb-info)))
+                 (append
+                  (if (= (bbs-entry-lbl-num bbs)
+                         (bb-lbl-num bb))
+                      (list (cons 'entry (format-gvm-obj proc)))
+                      '())
+                  (or (comment-get (gvm-instr-comment (bb-label-instr bb))
+                                   'gv-bb-info)
+                      '()))))
             (add-node
              (gen-node
               id
@@ -2128,20 +2148,46 @@
                (gen-table
                 #f
                 node-bgcolor
-                `(,@(if gv-bb-info
-                        (apply append
-                               (map (lambda (line)
-                                      (gen-row
-                                       (gen-col
-                                        #f
-                                        #f
-                                        (gen-table
-                                         #f
-                                         node-info-bgcolor
-                                         (gen-row
-                                          (gen-col #f #f (list (escape line))))))))
-                                    gv-bb-info))
-                        '())
+                `(,@(apply append
+                           (map (lambda (x)
+                                  (let* ((style (if (pair? x) (car x) 'plain))
+                                         (line (if (pair? x) (cdr x) x))
+                                         (bgcolor
+                                          (case style
+                                            ((entry)
+                                             node-entry-bgcolor)
+                                            ((type)
+                                             node-type-bgcolor)
+                                            (else
+                                             #f)))
+                                         (esc-line
+                                          (list (escape line)))
+                                         (decorated-line
+                                          (case style
+                                            ((entry)
+                                             (gen-font
+                                              "Courier Bold"
+                                              "white"
+                                              esc-line))
+                                            (else
+                                             esc-line)))
+                                         (align
+                                          (case style
+                                            ((entry)
+                                             #f)
+                                            (else
+                                             "left"))))
+                                  (gen-row
+                                   (gen-col
+                                    #f
+                                    #f
+                                    "left"
+                                    (gen-table
+                                     #f
+                                     bgcolor
+                                     (gen-row
+                                      (gen-col #f #f align decorated-line)))))))
+                                gv-bb-info))
                   ,@(let loop ((lst instrs))
                       (if (pair? lst)
                           (let ((rest (cdr lst)))
