@@ -175,7 +175,9 @@
             (lambda (env) #f) ; jump-inlinable?
             #f ; jump-inline
             #f ; specialize
-            #f ; simplify
+            #f ; constant-fold
+            #f ; type-infer
+            #f ; type-narrow
             side-effects?
             strict-pat
             lift-pat
@@ -205,12 +207,14 @@
 (define (proc-obj-jump-inlinable? obj)        (vector-ref obj 12))
 (define (proc-obj-jump-inline obj)            (vector-ref obj 13))
 (define (proc-obj-specialize obj)             (vector-ref obj 14))
-(define (proc-obj-simplify obj)               (vector-ref obj 15))
-(define (proc-obj-side-effects? obj)          (vector-ref obj 16))
-(define (proc-obj-strict-pat obj)             (vector-ref obj 17))
-(define (proc-obj-lift-pat obj)               (vector-ref obj 18))
-(define (proc-obj-type obj)                   (vector-ref obj 19))
-(define (proc-obj-standard obj)               (vector-ref obj 20))
+(define (proc-obj-constant-fold obj)          (vector-ref obj 15))
+(define (proc-obj-type-infer obj)             (vector-ref obj 16))
+(define (proc-obj-type-narrow obj)            (vector-ref obj 17))
+(define (proc-obj-side-effects? obj)          (vector-ref obj 18))
+(define (proc-obj-strict-pat obj)             (vector-ref obj 19))
+(define (proc-obj-lift-pat obj)               (vector-ref obj 20))
+(define (proc-obj-type obj)                   (vector-ref obj 21))
+(define (proc-obj-standard obj)               (vector-ref obj 22))
 
 (define (proc-obj-code-set! obj x)            (vector-set! obj 4 x))
 (define (proc-obj-testable?-set! obj x)       (vector-set! obj 6 x))
@@ -222,7 +226,9 @@
 (define (proc-obj-jump-inlinable?-set! obj x) (vector-set! obj 12 x))
 (define (proc-obj-jump-inline-set! obj x)     (vector-set! obj 13 x))
 (define (proc-obj-specialize-set! obj x)      (vector-set! obj 14 x))
-(define (proc-obj-simplify-set! obj x)        (vector-set! obj 15 x))
+(define (proc-obj-constant-fold-set! obj x)   (vector-set! obj 15 x))
+(define (proc-obj-type-infer-set! obj x)      (vector-set! obj 16 x))
+(define (proc-obj-type-narrow-set! obj x)     (vector-set! obj 17 x))
 
 (define (make-pattern nb-parms nb-opts nb-keys rest?)
   (let* ((max-pos-args (- nb-parms nb-keys (if rest? 1 0)))
