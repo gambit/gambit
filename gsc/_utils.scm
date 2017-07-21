@@ -625,6 +625,11 @@
         (loop (+ n 1) (cdr lst))
         n)))
 
+(define (list-set lst i x)
+  (if (> i 0)
+      (cons (car lst) (list-set (cdr lst) (- i 1) x))
+      (cons x (cdr lst))))
+
 (define (make-counter next)
   (lambda ()
     (let ((result next))

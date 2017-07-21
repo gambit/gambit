@@ -3855,6 +3855,12 @@ procedure is bound to a global variable, the definition site must have a
 less code expansion than specified by the inlining limit (an expansion
 around 10% is common for @var{n}=350).
 
+@item (versioning-limit @var{n})
+@opindex versioning-limit
+Select the degree to which basic blocks are duplicated to create
+specialized versions.  @var{n} is the maximum number of versions
+created.
+
 @item (@r{[}not@r{]} lambda-lift)
 @opindex lambda-lift
 Lambda-lift (or don't lambda-lift) locally defined procedures.
@@ -4039,6 +4045,7 @@ The default declarations used by the compiler are equivalent to:
   (inline)
   (inline-primitives)
   (inlining-limit 350)
+  (versioning-limit 5)
   (constant-fold)
   (lambda-lift)
   (not standard-bindings)

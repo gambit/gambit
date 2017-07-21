@@ -98,6 +98,8 @@
 (define inline-primitives-sym  (string->canonical-symbol "inline-primitives"))
 (define inlining-limit-sym     (string->canonical-symbol "inlining-limit"))
 
+(define versioning-limit-sym   (string->canonical-symbol "versioning-limit"))
+
 (define block-sym              (string->canonical-symbol "block"))
 (define separate-sym           (string->canonical-symbol "separate"))
 
