@@ -144,6 +144,57 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
+;; Operand tables:
+;; --------------
+
+;; The operand table structure maps keys to values where the keys
+;; are either a stack slot, a register, or a closed variable.
+
+(define (make-otbl slots regs closed)
+  (vector slots regs closed))
+
+(define (otbl-slots otbl)  (vector-ref otbl 0))
+(define (otbl-regs otbl)   (vector-ref otbl 1))
+(define (otbl-closed otbl) (vector-ref otbl 2))
+
+(define (otbl-stk-ref otbl stk)
+  (let ((slots (otbl-slots otbl)))
+    (list-ref slots (- (length slots) (stk-num stk)))))
+
+(define (otbl-stk-set otbl stk type)
+  (make-otbl
+   (let ((slots (otbl-slots otbl)))
+     (let ((i (- (length slots) (stk-num stk))))
+       (if (< i 0)
+           (cons type slots)
+           (list-set slots i type))))
+   (otbl-regs otbl)
+   (otbl-closed otbl)))
+
+(define (otbl-reg-ref otbl reg)
+  (let ((regs (otbl-regs otbl)))
+    (list-ref regs (reg-num reg))))
+
+(define (otbl-reg-set otbl reg type)
+  (make-otbl
+   (otbl-slots otbl)
+   (let ((regs (otbl-regs otbl)))
+     (list-set regs (reg-num reg) type))
+   (otbl-closed otbl)))
+
+(define (otbl-clo-ref otbl clo)
+  (let ((closed (otbl-closed otbl)))
+    (list-ref closed (- (clo-index clo) 1))))
+
+(define (otbl-clo-set otbl clo type)
+  (make-otbl
+   (otbl-slots otbl)
+   (otbl-regs otbl)
+   (let ((closed (otbl-closed otbl)))
+     (list-set closed (- (clo-index clo) 1) type))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;
 ;; Procedure objects:
 ;; -----------------
 
@@ -439,14 +490,18 @@
 (define (ifjump-test gvm-instr)  (vector-ref gvm-instr 3))
 (define (ifjump-opnds gvm-instr) (vector-ref gvm-instr 4))
 (define (ifjump-true gvm-instr)  (vector-ref gvm-instr 5))
+(define (ifjump-true-set! gvm-instr lbl) (vector-set! gvm-instr 5 lbl))
 (define (ifjump-false gvm-instr) (vector-ref gvm-instr 6))
+(define (ifjump-false-set! gvm-instr lbl) (vector-set! gvm-instr 6 lbl))
 (define (ifjump-poll? gvm-instr) (vector-ref gvm-instr 7))
 
 (define (make-switch opnd cases default poll? frame comment)
   (vector 'switch frame comment opnd cases default poll?))
 (define (switch-opnd gvm-instr)    (vector-ref gvm-instr 3))
 (define (switch-cases gvm-instr)   (vector-ref gvm-instr 4))
+(define (switch-cases-set! gvm-instr cases) (vector-set! gvm-instr 4 cases))
 (define (switch-default gvm-instr) (vector-ref gvm-instr 5))
+(define (switch-default-set! gvm-instr lbl) (vector-set! gvm-instr 5 lbl))
 (define (switch-poll? gvm-instr)   (vector-ref gvm-instr 6))
 
 (define (make-switch-case obj lbl) (cons obj lbl))
@@ -456,7 +511,9 @@
 (define (make-jump opnd ret nb-args poll? safe? frame comment)
   (vector 'jump frame comment opnd ret nb-args poll? safe?))
 (define (jump-opnd gvm-instr)    (vector-ref gvm-instr 3))
+(define (jump-opnd-set! gvm-instr opnd) (vector-set! gvm-instr 3 opnd))
 (define (jump-ret gvm-instr)     (vector-ref gvm-instr 4))
+(define (jump-ret-set! gvm-instr ret) (vector-set! gvm-instr 4 ret))
 (define (jump-nb-args gvm-instr) (vector-ref gvm-instr 5))
 (define (jump-poll? gvm-instr)   (vector-ref gvm-instr 6))
 (define (jump-safe? gvm-instr)   (vector-ref gvm-instr 7))
@@ -720,7 +777,7 @@
 ;; through the process.  The first basic block of a 'purified' basic block set
 ;; is always the entry point.
 
-(define (bbs-purify bbs)
+(define (bbs-purify-aux bbs)
   (let loop ((bbs1 bbs))
     (let* ((bbs2 (bbs-remove-jump-cascades bbs1))
            (bbs3 (bbs-remove-dead-code bbs2))
@@ -729,6 +786,25 @@
       (if (not (eq? bbs3 bbs5)) ;; iterate until code does not change
           (loop bbs5)
           (bbs-order bbs5)))))
+
+(set! use-actual-primitives-in-expression? #f);;TODO: remove
+(define gvm-trace #f)
+(define use-versioning #t)
+
+(define (bbs-purify bbs)
+  (if (not use-versioning)
+
+      (bbs-purify-aux bbs)
+
+      (let ((x (bbs-version bbs)))
+
+        (if gvm-trace
+            (begin
+              (pp 'vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv)
+              (write-bbs x (current-output-port))(newline)
+              (pp '^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^)))
+
+        (bbs-purify-aux x))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1060,10 +1136,9 @@
     (let loop ()
       (if (not (queue-empty? work-list))
           (let ((bb (queue-get! work-list)))
-            (begin
-              (bb-determine-refs! bb get-bb)
-              (for-each reachable (bb-references bb))
-              (loop)))))
+            (bb-determine-refs! bb get-bb)
+            (for-each reachable (bb-references bb))
+            (loop))))
 
     new-bbs))
 
@@ -1486,7 +1561,10 @@
                 ;; non-branch instruction?
 
                 (if (and (eq? (bb-label-type dest-bb) 'simple)
-                         (frame-eq? frame1 frame2)
+                         (if #f;;TODO: is this correct?
+                             (frame-eq? frame1 frame2)
+                             (= (frame-size (gvm-instr-frame branch))
+                                (frame-size frame2)))
                          (= (length (bb-precedents dest-bb)) 1))
 
                     (let* ((new-bb (make-bb (bb-label-instr bb) new-bbs)))
@@ -1507,6 +1585,1002 @@
     (bbs-for-each-bb remove-useless-jump bbs)
 
     (if changed? new-bbs bbs)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Basic block set versioning:
+
+(define (bbs-version bbs)
+  (let ((versions (make-stretchable-vector #f))
+        (all-versions (make-stretchable-vector '()))
+        (first-pass? #t))
+
+    (define (pass)
+      (let ((new-bbs (make-bbs))
+            (work-list (queue-empty)))
+
+        (define (make-ctx n ttbl) (vector n ttbl))
+        (define (ctx-n ctx) (vector-ref ctx 0))
+        (define (ctx-ttbl ctx) (vector-ref ctx 1))
+
+        (define (make-ttbl nb-slots nb-regs)
+          (make-otbl (vector->list (make-vector nb-slots (make-type-universal)))
+                     (vector->list (make-vector nb-regs (make-type-universal)))
+                     '()))
+
+        (define (make-ttbl-clear-regs ttbl)
+          (make-otbl (otbl-slots ttbl)
+                     (map (lambda (x) (make-type-universal)) (otbl-regs ttbl))
+                     '()))
+
+        (define (make-ttbl-keep-bottom nb-slots ttbl)
+          (make-otbl (drop (otbl-slots ttbl)
+                           (- (length (otbl-slots ttbl)) nb-slots))
+                     (otbl-regs ttbl)
+                     '()))
+
+        (define (make-ttbl-keep-top nb-slots ttbl)
+          (make-otbl (take (otbl-slots ttbl) nb-slots)
+                     (otbl-regs ttbl)
+                     '()))
+
+        (define (type-get ttbl opnd)
+          (cond ((not opnd)  (make-type-universal))
+                ((obj? opnd) (make-type-singleton (obj-val opnd)))
+                ((reg? opnd) (otbl-reg-ref ttbl opnd))
+                ((stk? opnd) (otbl-stk-ref ttbl opnd))
+                ((clo? opnd) (otbl-clo-ref ttbl opnd))
+                (else        (make-type-universal))))
+
+        (define (type-set ttbl opnd type)
+          (cond ((reg? opnd) (otbl-reg-set ttbl opnd type))
+                ((stk? opnd) (otbl-stk-set ttbl opnd type))
+                ((clo? opnd) (otbl-clo-set ttbl opnd type))
+                (else        ttbl)))
+
+        (define (type-set-multi ttbl opnds types)
+          (if (pair? opnds)
+              (type-set-multi (type-set ttbl (car opnds) (car types))
+                              (cdr opnds)
+                              (cdr types))
+              ttbl))
+
+        (define (dummy-ctx)
+          (make-ctx 0
+                    (make-ttbl 0 0)))
+
+        (define (frame-ctx frame)
+          (make-ctx 0
+                    (make-ttbl (length (frame-slots frame))
+                               (length (frame-regs frame)))))
+
+        (define (entry-point-ctx label-instr closed-types)
+          (let* ((pc
+                  (c#target.label-info
+                   (label-entry-nb-parms label-instr)
+                   closed-types))
+                 (fs
+                  (frame-size
+                   (gvm-instr-frame label-instr))))
+            (if (not (= fs (pcontext-fs pc)))
+                (error "incoherent frame size"))
+            (make-ctx 0
+                      (make-ttbl fs target.nb-regs))))
+
+        (define (return-point-ctx lbl ctx)
+          (let ((fs
+                 (frame-size
+                  (gvm-instr-frame (bb-label-instr (lbl-num->bb lbl bbs))))))
+            (make-ctx 0
+                      (make-ttbl-clear-regs
+                       (make-ttbl-keep-bottom fs (ctx-ttbl ctx))))))
+
+        (define (branch-ctx lbl fs ctx)
+          (let ((label-instr (bb-label-instr (lbl-num->bb lbl bbs))))
+            (if (eq? (label-type label-instr) 'entry)
+                (frame-ctx (gvm-instr-frame label-instr))
+                (let ((dest-fs (frame-size (gvm-instr-frame label-instr))))
+                  (make-ctx 0
+                            (make-ttbl-keep-top
+                             dest-fs
+                             (make-ttbl-keep-bottom fs (ctx-ttbl ctx))))))))
+
+        (define (remove-dead ctx frame)
+
+          (define (ctx-type-set ctx opnd type)
+            (make-ctx (ctx-n ctx)
+                      (type-set (ctx-ttbl ctx) opnd type)))
+
+          (define (live? var)
+            (let ((live (frame-live frame)))
+              (or (varset-member? var live)
+                  (and (eq? var closure-env-var)
+                       (varset-intersects?
+                        live
+                        (list->varset (frame-closed frame)))))))
+
+          (let loop1 ((i 1)
+                      (lst (reverse (frame-slots frame)))
+                      (ctx ctx))
+            (if (pair? lst)
+                (let ((var (car lst)))
+                  (if (live? var)
+                      (loop1 (+ i 1)
+                             (cdr lst)
+                             ctx)
+                      (loop1 (+ i 1)
+                             (cdr lst)
+                             (ctx-type-set ctx
+                                           (make-stk i)
+                                           (make-type-universal)))))
+                (let loop2 ((i 0)
+                            (lst (frame-regs frame))
+                            (ctx ctx))
+                  (if (pair? lst)
+                      (let ((var (car lst)))
+                        (if (live? var)
+                            (loop2 (+ i 1)
+                                   (cdr lst)
+                                   ctx)
+                            (loop2 (+ i 1)
+                                   (cdr lst)
+                                   (ctx-type-set ctx
+                                                 (make-reg i)
+                                                 (make-type-universal)))))
+                      ctx)))))
+
+        (define (lbl-version lbl ctx)
+
+          ;; first check if a version for that specific context already exists
+
+          (let* ((ctx
+                  (remove-dead
+                   ctx
+                   (gvm-instr-frame (bb-label-instr (lbl-num->bb lbl bbs)))))
+                 (ctxs
+                  (or (stretchable-vector-ref versions lbl)
+                      (let ((ctxs (vector '() '())))
+                        (stretchable-vector-set! versions lbl ctxs)
+                        ctxs))))
+
+            (if first-pass?
+                (stretchable-vector-set!
+                 all-versions
+                 lbl
+                 (cons ctx
+                       (stretchable-vector-ref all-versions lbl))))
+
+            (let ((x (assoc ctx (vector-ref ctxs 0))))
+              (if x
+
+                  (cdr x) ;; yes that specific version exists!
+
+                  (lbl-version-not-existing lbl ctx ctxs)))))
+
+        (define (lbl-version-not-existing lbl ctx ctxs)
+
+          (cond ((not first-pass?)
+                 (lbl-version-pick-most-specific lbl ctx ctxs))
+
+                ((< (length (vector-ref ctxs 0))
+                    (let* ((bb (lbl-num->bb lbl bbs))
+                           (node (comment-get (gvm-instr-comment (bb-label-instr bb)) 'node)))
+                      (versioning-limit (node-env node))))
+                 (lbl-version-add-specific lbl ctx ctxs))
+
+                (else
+                 (lbl-version-abstract lbl ctx ctxs))))
+
+        (define (lbl-version-pick-most-specific lbl ctx ctxs)
+          (let ((contexts (vector-ref ctxs 1)))
+            (let loop ((lst contexts)
+                       (i 0)
+                       (max-count #f)
+                       (max-i #f))
+              (if (pair? lst)
+                  (let ((c1 (car lst)))
+                    (if (ctx-includes? c1 ctx)
+                        (let ((count 0))
+                          (for-each
+                           (lambda (c2)
+                             (set! count
+                                   (+ count
+                                      (if (ctx-includes? c2 c1)
+                                          1
+                                          0))))
+                           contexts)
+                          (if (or (not max-count)
+                                  (> count max-count))
+                              (loop (cdr lst)
+                                    (+ i 1)
+                                    count
+                                    i)
+                              (loop (cdr lst)
+                                    (+ i 1)
+                                    max-count
+                                    max-i)))
+                        (loop (cdr lst)
+                              (+ i 1)
+                              max-count
+                              max-i)))
+                  (if (not max-i)
+                      (error "bug")
+                      (let* ((new-ctx (list-ref contexts max-i))
+                             (new-lbl (bbs-new-lbl! new-bbs))
+                             (y (cons new-ctx new-lbl)))
+                        (vector-set! ctxs 0 (cons y (vector-ref ctxs 0)))
+                        (queue-put! work-list (vector lbl new-ctx new-lbl))
+                        new-lbl))))))
+
+        (define (lbl-version-add-specific lbl ctx ctxs)
+
+          ;; create a specific version
+
+          (let* ((new-lbl (bbs-new-lbl! new-bbs))
+                 (y (cons ctx new-lbl)))
+            (vector-set! ctxs 0 (cons y (vector-ref ctxs 0)))
+            (vector-set! ctxs 1 (cons ctx (vector-ref ctxs 1)))
+            (queue-put! work-list (vector lbl ctx new-lbl))
+            new-lbl))
+
+        (define (ctx-distance ctx1 ctx2)
+          (declare (generic))
+          (let ((ttbl1 (ctx-ttbl ctx1))
+                (ttbl2 (ctx-ttbl ctx2)))
+            (let loop ((lst1 (append (otbl-slots ttbl1) (otbl-regs ttbl1)))
+                       (lst2 (append (otbl-slots ttbl2) (otbl-regs ttbl2)))
+                       (dist 0))
+              (if (pair? lst1)
+                  (loop (cdr lst1)
+                        (cdr lst2)
+                        (+ dist
+                           (let ((t1 (car lst1))
+                                 (t2 (car lst2)))
+                             (cond ((and (isa-fixnum? t1)
+                                         (isa-fixnum? t2))
+                                    (let* ((u (type-union t1 t2))
+                                           (range-increase
+                                            (max
+                                             (- (type-fixnum-range-size u)
+                                                (type-fixnum-range-size t1))
+                                             (- (type-fixnum-range-size u)
+                                                (type-fixnum-range-size t2)))))
+                                      (* range-increase #e1e3)))
+                                   ((or (and (isa-fixnum? t1)
+                                             (type-fixnum-or-false? t2))
+                                        (and (isa-fixnum? t2)
+                                             (type-fixnum-or-false? t1)))
+                                    #e1e12)
+                                   (else
+                                    (case (type-compare t1 t2)
+                                      ((0)    0)
+                                      ((-1 1) (if (or (type-universal? t1)
+                                                      (type-universal? t2))
+                                                  #e1e18
+                                                  #e1e15))
+                                      (else   #e1e18)))))))
+                  dist))))
+
+        (define (abstract contexts)
+          (declare (generic))
+          (let loop1 ((lst1 contexts)
+                      (i 0)
+                      (min-d #f)
+                      (min-ij '(0 . 0)))
+            (if (pair? lst1)
+                (let ((c1 (car lst1)))
+                  (let loop2 ((lst2 (cdr lst1))
+                              (j (+ i 1))
+                              (min-d min-d)
+                              (min-ij min-ij))
+                    (if (pair? lst2)
+                        (let* ((c2 (car lst2))
+                               (d (+ (+ i j) (ctx-distance c1 c2))))
+                          ;;(pp (list 'xxx d c1 c2))
+                          (if (or (not min-d)
+                                  (< d min-d))
+                              (loop2 (cdr lst2)
+                                     (+ j 1)
+                                     d
+                                     (cons i j))
+                              (loop2 (cdr lst2)
+                                     (+ j 1)
+                                     min-d
+                                     min-ij)))
+                        (loop1 (cdr lst1)
+                               (+ i 1)
+                               min-d
+                               min-ij))))
+                (let* ((i (car min-ij))
+                       (j (cdr min-ij))
+                       (ci (list-ref contexts i))
+                       (cj (list-ref contexts j))
+                       (cu (ctx-union-and-widen ci cj)))
+
+                  (define (compact contexts)
+                    (keep (lambda (c)
+                            (or (not (ctx-includes? cu c))
+                                (> (ctx-distance cu c) 10000)))
+                          contexts))
+
+                  (if (= i 0)
+                      (list (append (compact (take (cdr contexts) (- j 1)))
+                                    (list cu)
+                                    (compact (drop (cdr contexts) j)))
+                            cu)
+                      (list (append (take contexts i)
+                                    (compact (take (drop contexts (+ i 1)) (- j (+ i 1))))
+                                    (list cu)
+                                    (compact (drop contexts (+ j 1))))
+                            (car contexts)
+                            cu))))))
+
+        (define (lbl-version-abstract lbl ctx ctxs)
+          (let* ((abstracted-contexts
+                  (abstract (cons ctx (vector-ref ctxs 1))))
+                 (new-contexts
+                  (car abstracted-contexts))
+                 (ctxs-added
+                  (cdr abstracted-contexts)))
+
+            (define (add ctx)
+              (let* ((new-lbl (bbs-new-lbl! new-bbs))
+                     (y (cons ctx new-lbl)))
+                (vector-set! ctxs 0 (cons y (vector-ref ctxs 0)))
+                (queue-put! work-list (vector lbl ctx new-lbl))
+                new-lbl))
+
+            ;;(if (> (length new-contexts) 5) (pp (list '************************************** (length new-contexts))))
+            (vector-set! ctxs 1 new-contexts)
+
+            (if (pair? (cdr ctxs-added))
+                (add (car (cdr ctxs-added))))
+
+            (add (car ctxs-added))))
+
+
+
+        (define (lbl-version-abstract-old lbl ctx ctxs)
+
+          ;; search for an existing version for a more general context
+
+          (or (let loop1 ((lst (vector-ref ctxs 0)))
+                (if (pair? lst)
+                    (let ((c (car lst)))
+                      (if (let ((r (ctx-includes? (car c) ctx))) '(pp (list 'ctx-includes? (car c) ctx '=> r)) r)
+                          (cdr c)
+                          (loop1 (cdr lst))))
+                    #f))
+              (let* ((new-ctx
+                      (let* ((gen-ctxs
+                              (map (lambda (c)
+                                     (let ((r (ctx-union c ctx))) '(pp (list 'ctx-union c ctx '=> r)) r))
+                                   (vector-ref ctxs 1)))
+                             (counts
+                              (map (lambda (c)
+                                     (apply +
+                                            (map (lambda (c2)
+                                                   (if (ctx-includes?
+                                                        c
+                                                        c2)
+                                                       1
+                                                       0))
+                                                 (vector-ref ctxs 1))))
+                                   gen-ctxs))
+                             (min-count
+                              (apply min counts))
+                             (i
+                              (object-pos-in-list min-count counts)))
+                        (list-ref gen-ctxs i)))
+                     (new-lbl
+                      (bbs-new-lbl! new-bbs))
+                     (y
+                      (cons new-ctx new-lbl))
+                     (new-ctx-list
+                      (cons new-ctx
+                            (keep (lambda (c)
+                                    (not (ctx-includes?
+                                          new-ctx
+                                          c)))
+                                  (vector-ref ctxs 1)))))
+                (vector-set! ctxs 0 (cons y (vector-ref ctxs 0)))
+                (vector-set! ctxs 1 new-ctx-list)
+                ;;(if '(= 1 (modulo (length (vector-ref ctxs 0)) 5)) (pp (vector-ref ctxs 1)))
+                (queue-put! work-list (vector lbl new-ctx new-lbl))
+                new-lbl)))
+
+        (define (ctx-union-multi ctxs)
+          (let loop ((ctx (car ctxs)) (lst (cdr ctxs)))
+            (if (pair? lst)
+                (loop (ctx-union ctx (car lst)) (cdr lst))
+                ctx)))
+
+        (define (ctx-includes? ctx1 ctx2)
+          (let ((ttbl1 (ctx-ttbl ctx1))
+                (ttbl2 (ctx-ttbl ctx2)))
+            (let loop ((lst1 (append (otbl-slots ttbl1) (otbl-regs ttbl1)))
+                       (lst2 (append (otbl-slots ttbl2) (otbl-regs ttbl2))))
+              (if (pair? lst1)
+                  (if (type-includes? (car lst1) (car lst2))
+                      (loop (cdr lst1) (cdr lst2))
+                      #f)
+                  #t))))
+
+        (define (ctx-union ctx1 ctx2)
+          (define (union t1 t2)
+            (let ((u (type-union t1 t2)))
+              ;;(pp (list '*******union t1 t2 '-> u))
+              (if #f ;; (type-fixnum? u)
+                  (type-union u (make-type-fixnum '> '<))
+                  u)))
+          (make-ctx 0
+                    (let ((ttbl1 (ctx-ttbl ctx1))
+                          (ttbl2 (ctx-ttbl ctx2)))
+                      (make-otbl (map union (otbl-slots ttbl1) (otbl-slots ttbl2))
+                                 (map union (otbl-regs ttbl1) (otbl-regs ttbl2))
+                                 '()))))
+
+        (define (ctx-union-and-widen ctx1 ctx2)
+
+          (define (union type1 type2)
+            (if (and (isa-fixnum? type1)
+                     (isa-fixnum? type2))
+                (let* ((t1 (type-fixnum-from-possibly-singleton type1))
+                       (t2 (type-fixnum-from-possibly-singleton type2))
+                       (lo1 (type-fixnum-lo t1))
+                       (hi1 (type-fixnum-hi t1))
+                       (lo2 (type-fixnum-lo t2))
+                       (hi2 (type-fixnum-hi t2)))
+                  (type-fixnum-normalize
+                   (make-type-fixnum
+                    (cond ((or (eq? lo1 '>=) (eq? lo2 '>=)) '>=)
+                          ((or (eq? lo1 '>)  (eq? lo2 '>))  '>)
+                          ((= lo1 lo2)       lo1)
+                          (else
+                           (let ((lo (min lo1 lo2)))
+                             (cond ((>= lo 1) 1)
+                                   ((= lo 0)  0)
+                                   (else      '>)))))
+                    (cond ((or (eq? hi1 '<=) (eq? hi2 '<=)) '<=)
+                          ((or (eq? hi1 '<)  (eq? hi2 '<))  '<)
+                          ((= hi1 hi2)       hi1)
+                          (else
+                           (let ((hi (min hi1 hi2)))
+                             (cond ((<= hi -1) -1)
+                                   ((= hi 0)   0)
+                                   (else       '<))))))))
+                (type-union type1 type2)))
+
+          (make-ctx 0
+                    (let ((ttbl1 (ctx-ttbl ctx1))
+                          (ttbl2 (ctx-ttbl ctx2)))
+                      (make-otbl (map union (otbl-slots ttbl1) (otbl-slots ttbl2))
+                                 (map union (otbl-regs ttbl1) (otbl-regs ttbl2))
+                                 '()))))
+
+        (define (lbl-version-old lbl ctx)
+          (let ((ctxs
+                 (or (stretchable-vector-ref versions lbl)
+                     (let ((ctxs (vector '() '())))
+                       (stretchable-vector-set! versions lbl ctxs)
+                       ctxs))))
+            (let ((x (assoc ctx (vector-ref ctxs 0))))
+              (if x
+                  (cdr x)
+                  (let* ((new-lbl (bbs-new-lbl! new-bbs))
+                         (y (cons ctx new-lbl)))
+                    (vector-set! ctxs 0 (cons y (vector-ref ctxs 0)))
+                    (queue-put! work-list (vector lbl ctx new-lbl))
+                    new-lbl)))))
+
+        (define (bb-version lbl ctx new-lbl)
+
+          (define (make-state ctx bb) (vector ctx bb))
+
+          (define (state-ctx state) (vector-ref state 0))
+          (define (state-ctx-set! state ctx) (vector-set! state 0 ctx))
+          (define (state-bb state) (vector-ref state 1))
+          (define (state-bb-set! state bb) (vector-set! state 1 bb))
+
+          (define (gvm-instr-version instr state)
+
+            (define (direct-branch-lbl-version lbl fs ctx)
+              (lbl-version lbl (branch-ctx lbl fs ctx)))
+
+            (define (first-class-lbl-version lbl ctx)
+              (lbl-version lbl
+                           (frame-ctx
+                            (gvm-instr-frame
+                             (bb-label-instr (lbl-num->bb lbl bbs))))))
+
+            (define (gvm-opnd-version opnd ctx)
+              (if opnd
+                  (let ((type (and (reg? opnd) (type-get (ctx-ttbl ctx) opnd)))) ;;TODO: generalize
+                    (cond ((type-singleton? type)
+                           (make-obj (type-singleton-val type)))
+                          ((lbl? opnd)
+                           (make-lbl
+                            (first-class-lbl-version (lbl-num opnd) ctx)))
+                          ((clo? opnd)
+                           (make-clo (gvm-opnd-version (clo-base opnd) ctx)
+                                     (clo-index opnd)))
+                          (else
+                           (gvm-loc-version opnd ctx))))
+                  opnd))
+
+            (define (gvm-loc-version opnd ctx)
+              opnd)
+
+            (define (closure-parms-version p ctx)
+              (make-closure-parms
+               (gvm-loc-version (closure-parms-loc p) ctx)
+               (first-class-lbl-version (closure-parms-lbl p) ctx)
+               (map (lambda (opnd) (gvm-opnd-version opnd ctx))
+                    (closure-parms-opnds p))))
+
+            (define (comment)
+              ;;(gvm-instr-comment instr)
+              (let ((c (make-comment)))
+                (set-cdr!
+                 c
+                 (cons (cons 'frame-types
+                             (ctx-ttbl (state-ctx state)))
+                       (cdr (gvm-instr-comment instr)))
+                 ;;(cons (cons 'text (object->string (state-ctx state))) (cdr (gvm-instr-comment instr)))
+                 )
+                c))
+
+            (define (add-one-instr!)
+              (state-ctx-set!
+               state
+               (make-ctx (min 0 (+ 1 (ctx-n (state-ctx state))))
+                         (ctx-ttbl (state-ctx state)))))
+
+            (define (extract-live-ctx ctx frame)
+
+              (define (live? var)
+                (let ((live (frame-live frame)))
+                  (or (varset-member? var live)
+                      (and (eq? var closure-env-var)
+                           (varset-intersects?
+                            live
+                            (list->varset (frame-closed frame)))))))
+
+              (let loop1 ((i 1)
+                          (lst (reverse (frame-slots frame)))
+                          (result '()))
+
+                (define (add-var opnd var result)
+                  (if (or (eq? var ret-var)
+                          #;(type-universal? type))
+                      result
+                      (let ((name (var-name var))
+                            (type (type-get (ctx-ttbl ctx) opnd)))
+                        (cons (string-append
+                               (if (symbol? name)
+                                   (symbol->string name)
+                                   (string-append "TEMP" (object->string name)))
+                               "="
+                               (if (reg? opnd)
+                                   (string-append
+                                    "r"
+                                    (number->string (reg-num opnd)))
+                                   (string-append
+                                    "frame["
+                                    (number->string (stk-num opnd))
+                                    "]"))
+                               "="
+                               (object->string type)
+                               " ")
+                              result))))
+
+                (if (pair? lst)
+                    (let ((var (car lst)))
+                      (if (live? var)
+                          (loop1 (+ i 1)
+                                 (cdr lst)
+                                 (add-var (make-stk i) var result))
+                          (loop1 (+ i 1)
+                                 (cdr lst)
+                                 result)))
+                    (let loop2 ((i 0)
+                                (lst (frame-regs frame))
+                                (result result))
+                      (if (pair? lst)
+                          (let ((var (car lst)))
+                            (if (live? var)
+                                (loop2 (+ i 1)
+                                       (cdr lst)
+                                       (add-var (make-reg i) var result))
+                                (loop2 (+ i 1)
+                                       (cdr lst)
+                                       result)))
+                          (apply string-append (reverse result)))))))
+
+            (define (add-label-instr! instr)
+              (let ((live-ctx
+                     (extract-live-ctx (state-ctx state)
+                                       (gvm-instr-frame instr))))
+                (if #t ;;(not (string=? live-ctx ""))
+                    (comment-put! (gvm-instr-comment instr)
+                                  'gv-bb-info
+                                  (list (cons 'type
+                                              (string-append
+                                               live-ctx
+                                               " CLONED #"
+                                               (number->string lbl)))))))
+              (state-bb-set! state (make-bb instr new-bbs))
+              (add-one-instr!))
+
+            (define (add-non-branch-instr! instr)
+              (bb-put-non-branch! (state-bb state) instr)
+              (add-one-instr!))
+
+            (define (add-branch-instr! instr)
+              (bb-put-branch! (state-bb state) instr)
+              (add-one-instr!))
+
+            (case (gvm-instr-type instr)
+
+              ((label)
+               (case (label-type instr)
+
+                 ((simple)
+                  (add-label-instr!
+                   (make-label-simple
+                    new-lbl
+                    (gvm-instr-frame instr)
+                    (comment))))
+
+                 ((entry)
+                  (state-ctx-set!
+                   state
+                   (entry-point-ctx instr '()))
+                  (add-label-instr!
+                   (make-label-entry
+                    new-lbl
+                    (label-entry-nb-parms instr)
+                    (label-entry-opts instr)
+                    (label-entry-keys instr)
+                    (label-entry-rest? instr)
+                    (label-entry-closed? instr)
+                    (gvm-instr-frame instr)
+                    (comment))))
+
+                 ((return)
+                  (add-label-instr!
+                   (make-label-return
+                    new-lbl
+                    (gvm-instr-frame instr)
+                    (comment))))
+
+                 ((task-entry)
+                  (add-label-instr!
+                   (make-label-task-entry
+                    new-lbl
+                    (gvm-instr-frame instr)
+                    (comment))))
+
+                 ((task-return)
+                  (add-label-instr!
+                   (make-label-task-return
+                    new-lbl
+                    (gvm-instr-frame instr)
+                    (comment))))
+
+                 (else
+                  (compiler-internal-error
+                   "gvm-instr-version, unknown 'instr':" instr))))
+
+              ((apply)
+               (let ((ctx (state-ctx state)))
+
+                 (let* ((prim
+                         (apply-prim instr))
+                        (loc
+                         (apply-loc instr))
+                        (arg-types
+                         (map (lambda (arg)
+                                (type-get
+                                 (ctx-ttbl (state-ctx state))
+                                 arg))
+                              (apply-opnds instr)))
+                        (prim ;; specialize primitive
+                         ((proc-obj-specialize prim)
+                          (let ((node (comment-get (gvm-instr-comment instr) 'node)))
+                            (node-env node))
+                          arg-types))
+                        (type-infer
+                         (proc-obj-type-infer prim))
+                        (result-type
+                         (if type-infer
+                             (type-infer arg-types)
+                             (make-type-universal))))
+
+                   ;; attach type to result loc
+
+                   (if (and loc
+                            (or (reg? loc)
+                                (stk? loc)
+                                (clo? loc)))
+                       (state-ctx-set!
+                        state
+                        (make-ctx (ctx-n (state-ctx state))
+                                  (type-set
+                                   (ctx-ttbl (state-ctx state))
+                                   loc
+                                   result-type))))
+
+                   ;; check if can replace apply instruction by a copy instruction
+
+                   (if (and (type-singleton? result-type)
+                            (not (proc-obj-side-effects? prim)))
+                       (if loc
+                           (add-non-branch-instr!
+                            (make-copy
+                             (gvm-opnd-version
+                              (make-obj (type-singleton-val result-type))
+                              ctx)
+                             (gvm-loc-version loc ctx)
+                             (gvm-instr-frame instr)
+                             (comment))))
+                       (add-non-branch-instr!
+                        (make-apply
+                         prim
+                         (map (lambda (opnd) (gvm-opnd-version opnd ctx))
+                              (apply-opnds instr))
+                         (gvm-loc-version loc ctx)
+                         (gvm-instr-frame instr)
+                         (comment)))))))
+
+              ((copy)
+               (let ((ctx (state-ctx state)))
+
+                 (let ((loc (copy-loc instr))
+                       (opnd (copy-opnd instr)))
+                   (if (or (reg? loc)
+                           (stk? loc)
+                           (clo? loc))
+                       (state-ctx-set!
+                        state
+                        (make-ctx (ctx-n (state-ctx state))
+                                  (type-set
+                                   (ctx-ttbl (state-ctx state))
+                                   loc
+                                   (type-get
+                                    (ctx-ttbl (state-ctx state))
+                                    opnd))))))
+
+                 (add-non-branch-instr!
+                  (make-copy
+                   (gvm-opnd-version (copy-opnd instr) ctx)
+                   (gvm-loc-version (copy-loc instr) ctx)
+                   (gvm-instr-frame instr)
+                   (comment)))))
+
+              ((close)
+               (let ((ctx (state-ctx state)))
+                 (add-non-branch-instr!
+                  (make-close
+                   (map (lambda (p) (closure-parms-version p ctx))
+                        (close-parms instr))
+                   (gvm-instr-frame instr)
+                   (comment)))))
+
+              ((ifjump)
+               (let* ((test (ifjump-test instr))
+                      (opnds (ifjump-opnds instr))
+                      (type-narrow (proc-obj-type-narrow test))
+                      (opnds-types
+                       (map (lambda (arg)
+                              (type-get
+                               (ctx-ttbl (state-ctx state))
+                               arg))
+                            opnds))
+                      (x
+                       (if type-narrow
+                           (type-narrow opnds-types)
+                           (cons opnds-types opnds-types)))
+                      (x-true
+                       (car x))
+                      (ttbl-true
+                       (and x-true
+                            (type-set-multi
+                             (ctx-ttbl (state-ctx state))
+                             opnds
+                             x-true)))
+                      (x-false
+                       (cdr x))
+                      (ttbl-false
+                       (and x-false
+                            (type-set-multi
+                             (ctx-ttbl (state-ctx state))
+                             opnds
+                             x-false))))
+
+                 (if (or (eq? ttbl-true #f)
+                         (eq? ttbl-false #f))
+
+                     (let* ((ctx (state-ctx state))
+                            (new-instr
+                             (make-jump
+                              #f ;; filled in later
+                              #f ;; ret
+                              #f ;; nb-args
+                              (ifjump-poll? instr)
+                              #f ;; safe?
+                              (gvm-instr-frame instr)
+                              (comment))))
+
+                       (add-branch-instr! new-instr)
+
+                       (jump-opnd-set!
+                        new-instr
+                        (make-lbl
+                         (direct-branch-lbl-version
+                          (if (eq? ttbl-true #f)
+                              (ifjump-false instr)
+                              (ifjump-true instr))
+                          (frame-size (gvm-instr-frame instr))
+                          (make-ctx (ctx-n (state-ctx state))
+                                    (if (eq? ttbl-true #f)
+                                        ttbl-false
+                                        ttbl-true))))))
+
+                     (let* ((ctx (state-ctx state))
+                            (new-instr
+                             (make-ifjump
+                              (ifjump-test instr)
+                              (map (lambda (opnd)
+                                     (gvm-opnd-version opnd ctx))
+                                   (ifjump-opnds instr))
+                              #f ;; filled in later
+                              #f ;; filled in later
+                              (ifjump-poll? instr)
+                              (gvm-instr-frame instr)
+                              (comment))))
+
+                       (add-branch-instr! new-instr)
+
+                       (ifjump-true-set!
+                        new-instr
+                        (direct-branch-lbl-version
+                         (ifjump-true instr)
+                         (frame-size (gvm-instr-frame instr))
+                         (make-ctx (ctx-n (state-ctx state))
+                                   ttbl-true)))
+
+                       (ifjump-false-set!
+                        new-instr
+                        (direct-branch-lbl-version
+                         (ifjump-false instr)
+                         (frame-size (gvm-instr-frame instr))
+                         (make-ctx (ctx-n (state-ctx state))
+                                   ttbl-false)))))))
+
+              ((switch)
+               (let* ((ctx (state-ctx state))
+                      (new-instr
+                       (make-switch
+                        (gvm-opnd-version (switch-opnd instr) ctx)
+                        #f ;; filled in later
+                        #f ;; filled in later
+                        (switch-poll? instr)
+                        (gvm-instr-frame instr)
+                        (comment))))
+                 (add-branch-instr! new-instr)
+                 (let ((new-ctx (state-ctx state)))
+                   (switch-cases-set!
+                    new-instr
+                    (map (lambda (c)
+                           (make-switch-case
+                            (switch-case-obj c)
+                            (direct-branch-lbl-version
+                             (switch-case-lbl c)
+                             (frame-size (gvm-instr-frame instr))
+                             new-ctx)))
+                         (switch-cases instr)))
+                   (switch-default-set!
+                    new-instr
+                    (direct-branch-lbl-version
+                     (switch-default instr)
+                     (frame-size (gvm-instr-frame instr))
+                     new-ctx)))))
+
+              ((jump)
+               (let* ((ctx (state-ctx state))
+                      (new-instr
+                       (make-jump
+                        #f ;; filled in later
+                        #f ;; filled in later
+                        (jump-nb-args instr)
+                        (jump-poll? instr)
+                        (jump-safe? instr)
+                        (gvm-instr-frame instr)
+                        (comment))))
+                 (add-branch-instr! new-instr)
+                 (if (jump-ret instr)
+                     (jump-ret-set!
+                      new-instr
+                      (lbl-version
+                       (jump-ret instr)
+                       (return-point-ctx
+                        (jump-ret instr)
+                        (state-ctx state)))))
+                 (let ((opnd (jump-opnd instr)))
+                   (jump-opnd-set!
+                    new-instr
+                    (if (not (lbl? opnd))
+
+                        (gvm-opnd-version opnd ctx)
+
+                        (let ((new-ctx (state-ctx state)))
+                          (make-lbl
+                           (direct-branch-lbl-version
+                            (lbl-num opnd)
+                            (frame-size (gvm-instr-frame instr))
+                            new-ctx))))))))
+
+              (else
+               (compiler-internal-error
+                "gvm-instr-version, unknown 'instr':" instr))))
+
+          (let* ((state
+                  (make-state ctx #f))
+                 (bb
+                  (lbl-num->bb lbl bbs)))
+            (gvm-instr-version (bb-label-instr bb) state)
+            (for-each (lambda (instr)
+                        (gvm-instr-version instr state))
+                      (bb-non-branch-instrs bb))
+            (gvm-instr-version (bb-branch-instr bb) state)))
+
+        (bbs-entry-lbl-num-set!
+         new-bbs
+         (let ((lbl (bbs-entry-lbl-num bbs)))
+           (lbl-version lbl
+                        (frame-ctx
+                         (gvm-instr-frame
+                          (bb-label-instr (lbl-num->bb lbl bbs)))))))
+
+        (let loop ()
+          (if (not (queue-empty? work-list))
+              (let* ((x (queue-get! work-list))
+                     (lbl (vector-ref x 0))
+                     (ctx (vector-ref x 1))
+                     (new-lbl (vector-ref x 2)))
+                (bb-version lbl ctx new-lbl)
+                (loop))))
+
+        (bbs-determine-refs! new-bbs)
+
+        new-bbs))
+
+    (pass)
+
+    (set! first-pass? #f)
+
+    (stretchable-vector-for-each
+     (lambda (v i)
+       (if v
+           (vector-set! v 0 '())))
+     versions)
+
+    (if gvm-trace
+        (stretchable-vector-for-each
+         (lambda (ctxs lbl)
+           (if (and ctxs (>= lbl 1))
+               (begin
+                 (newline)
+                 (pp (list 'FIN: (map (lambda (x) (vector-ref x 1))
+                                      (reverse (vector-ref ctxs 1)))))
+                 (pp (list 'ALL: (map (lambda (x) (vector-ref x 1))
+                                      (reverse (stretchable-vector-ref all-versions lbl)))))
+                 (write-bb (lbl-num->bb lbl bbs) (current-output-port))
+                 (newline))))
+         versions))
+
+    (pass)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
