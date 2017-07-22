@@ -4482,10 +4482,6 @@ ___SCMOBJ client_ca_path;)
 ___HIDDEN void clear_tls_error_queue
    ___PVOID
 {
-  while (ERR_peek_error() != 0)
-    {
-      /* ERR_print_errors_fp (stderr); */
-    }
   ERR_clear_error();
 }
 
