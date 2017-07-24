@@ -1,15 +1,16 @@
 /******************************************************************************
  *
  * This script generates an nmake compatible makefile for Microsoft Visual
- * Studio. The generated makefile can be used to build gsc.exe and gsi.exe
- * from a release of Gambit.  It is not suitable for building from a clone
- * of the github repository.
+ * Studio. The generated makefile can be used to build the system from a
+ * release of Gambit.  To build from a clone of the github repository
+ * some additional tools and steps are needed (see below).
  *
- * Steps to build gsc.exe and gsi.exe:
+ *
+ * Steps to build the system from a release of Gambit:
  *
  * STEP 1 -- Ensure that the Visual Studio tools are in the path
  *
- *   C:\gambit>"C:\Program Files (x86)\Microsoft Visual Studio 14.0\vc\bin\vcvars32.bat"
+ *   C:\gambit>"C:\Program Files\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat"
  *
  * STEP 2 -- Run the script using --prefix=... to specify install destination
  *
@@ -31,6 +32,7 @@
  *   Hello World!
  *   C:\gambit>type hello.scm
  *   (display "Hello World!\n")
+ *
  *
  * The script accepts a subset of the configure script options.
  * The supported options are:
@@ -62,6 +64,24 @@
  *
  *   --enable-multiple-threaded-vms  support > 1 OS thread per Gambit VM
  *   --enable-max-processors=N  max number of processors per Gambit VM
+ *
+ *
+ * Steps to build the system from a clone of the github repository:
+ *
+ * STEP 1 -- Install mingw and git if they are not yet installed
+ *
+ *   - mingw: http://mingw.org/wiki/Getting_Started
+ *   - git:   https://git-for-windows.github.io/
+ *
+ * STEP 2 -- Start a mingw shell and bootstrap the sources with the commands
+ *
+ *   $ git clone https://github.com/gambit/gambit.git
+ *   $ cd gambit
+ *   $ ./configure --enable-single-host
+ *   $ make -j4 current-gsc-boot
+ *   $ make -j4 from-scratch
+ *
+ * STEP 3 -- Use the steps above to build with Visual Studio
  *
  *****************************************************************************/
 
@@ -224,7 +244,7 @@ var GAMBITDIRS;
 
 function Escape(str)
 {
-    return "\\\"" + str.replace(/\\/g, "\\\\") + "\\\"";
+    return "\\\"" + str.replace(/\\/g, "\\\\").replace(/ /g, "\\040") + "\\\"";
 }
 
 function AddGambitDir(key, dir, name)
@@ -367,10 +387,46 @@ FixupFile(
     gambitRoot + "\\bin\\gambcomp-C.bat",
     {
         "C_COMPILER_BAT": GetCCompiler(true),
-        "BUILD_OBJ_ECHO_BAT": "%C_COMPILER% -I%GAMBITDIR_INCLUDE% -c -Fo%BUILD_OBJ_OUTPUT_FILENAME% %BUILD_OBJ_CC_OPTIONS% %BUILD_OBJ_INPUT_FILENAMES%",
-        "BUILD_DYN_ECHO_BAT": "%C_COMPILER% -I%GAMBITDIR_INCLUDE% -D___DYNAMIC -LD -Fe%BUILD_DYN_OUTPUT_FILENAME% %BUILD_DYN_CC_OPTIONS% %BUILD_DYN_LD_OPTIONS_PRELUDE% %BUILD_DYN_INPUT_FILENAMES% %BUILD_DYN_LD_OPTIONS%",
-        "BUILD_EXE_ECHO_BAT": "%C_COMPILER% -I%GAMBITDIR_INCLUDE% %GAMBITLIB_LOC% -Fe%BUILD_EXE_OUTPUT_FILENAME% %BUILD_EXE_CC_OPTIONS% %BUILD_EXE_LD_OPTIONS_PRELUDE% %BUILD_EXE_INPUT_FILENAMES% %GAMBITDIR_LIB%\\libgambit.lib Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib %GAMBITLIB_LINK% %BUILD_EXE_LD_OPTIONS%"
+        "BUILD_OBJ_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" -c -Fo%BUILD_OBJ_OUTPUT_FILENAME% %BUILD_OBJ_CC_OPTIONS% %BUILD_OBJ_INPUT_FILENAMES%",
+        "BUILD_DYN_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" -D___DYNAMIC -LD -Fe%BUILD_DYN_OUTPUT_FILENAME% %BUILD_DYN_CC_OPTIONS% %BUILD_DYN_LD_OPTIONS_PRELUDE% %BUILD_DYN_INPUT_FILENAMES% %BUILD_DYN_LD_OPTIONS%",
+        "BUILD_EXE_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" %GAMBITLIB_LOC% -Fe%BUILD_EXE_OUTPUT_FILENAME% %BUILD_EXE_CC_OPTIONS% %BUILD_EXE_LD_OPTIONS_PRELUDE% %BUILD_EXE_INPUT_FILENAMES% \"%GAMBITDIR_LIB%\\libgambit.lib\" Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib %GAMBITLIB_LINK% %BUILD_EXE_LD_OPTIONS%"
     });
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-js.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-js.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-python.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-python.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-ruby.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-ruby.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-php.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-php.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-java.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-java.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambdoc.bat.windows.in",
+    gambitRoot + "\\bin\\gambdoc.bat",
+    {});
 
 
 // We read in all the targets into makefile dictionary
@@ -461,19 +517,21 @@ makefileObject.WriteLine("\t" + "if exist \"" + config["includedir"] + "\" rd /s
 makefileObject.WriteLine("\t" + "if exist \"" + config["docdir"] + "\" rd /s \"" + config["docdir"] + "\"");
 makefileObject.WriteLine("\t" + "if exist \"" + config["infodir"] + "\" rd /s \"" + config["infodir"] + "\"");
 makefileObject.WriteLine("\t" + "if exist \"" + config["datadir"] + "\" rd /s \"" + config["datadir"] + "\"");
-makefileObject.WriteLine("\t" + "mkdir " + config["bindir"]);
-makefileObject.WriteLine("\t" + "mkdir " + config["libdir"]);
-makefileObject.WriteLine("\t" + "mkdir " + config["includedir"]);
-makefileObject.WriteLine("\t" + "mkdir " + config["docdir"]);
-makefileObject.WriteLine("\t" + "mkdir " + config["infodir"]);
-makefileObject.WriteLine("\t" + "mkdir " + config["datadir"]);
-makefileObject.WriteLine("\t" + "copy gsi\\*.exe " + config["bindir"]);
-makefileObject.WriteLine("\t" + "copy gsc\\*.exe " + config["bindir"]);
-makefileObject.WriteLine("\t" + "copy bin\\*.bat " + config["bindir"]);
-makefileObject.WriteLine("\t" + "copy lib\\_gambit.c " + config["libdir"]);
-makefileObject.WriteLine("\t" + "copy lib\\*.lib " + config["libdir"]);
-makefileObject.WriteLine("\t" + "copy lib\\*#.scm " + config["libdir"]);
-makefileObject.WriteLine("\t" + "copy include\\gambit.h " + config["includedir"]);
+makefileObject.WriteLine("\t" + "mkdir \"" + config["bindir"] + "\"");
+makefileObject.WriteLine("\t" + "mkdir \"" + config["libdir"] + "\"");
+makefileObject.WriteLine("\t" + "mkdir \"" + config["includedir"] + "\"");
+makefileObject.WriteLine("\t" + "mkdir \"" + config["docdir"] + "\"");
+makefileObject.WriteLine("\t" + "mkdir \"" + config["infodir"] + "\"");
+makefileObject.WriteLine("\t" + "mkdir \"" + config["datadir"] + "\"");
+makefileObject.WriteLine("\t" + "copy gsi\\*.exe \"" + config["bindir"] + "\"");
+makefileObject.WriteLine("\t" + "copy gsc\\*.exe \"" + config["bindir"] + "\"");
+makefileObject.WriteLine("\t" + "copy bin\\*.bat \"" + config["bindir"] + "\"");
+makefileObject.WriteLine("\t" + "copy lib\\_gambit.c \"" + config["libdir"] + "\"");
+makefileObject.WriteLine("\t" + "copy lib\\*.lib \"" + config["libdir"] + "\"");
+makefileObject.WriteLine("\t" + "copy lib\\*#.scm \"" + config["libdir"] + "\"");
+makefileObject.WriteLine("\t" + "copy include\\gambit.h \"" + config["includedir"] + "\"");
+makefileObject.WriteLine("\t" + "if exist doc\\gambit.pdf copy doc\\gambit.pdf \"" + config["docdir"] + "\"");
+makefileObject.WriteLine("\t" + "if exist doc\\gambit.html copy doc\\gambit.html \"" + config["docdir"] + "\"");
 
 makefileObject.WriteLine("clean:");
 makefileObject.WriteLine("\t" + "del lib\\*.obj");
@@ -498,7 +556,7 @@ function AddTargets(cList, subdir, gambitRoot, makefileDict)
 function AddTarget(fileName, subdir, gambitRoot, makefileDict)
 {
     var fullPath = "$(GAMBIT_ROOT)\\" + subdir + "\\" + fileName;
-    var objName = ReplaceExtension(fullPath, "c", "obj"); 
+    var objName = ReplaceExtension(fullPath, "c", "obj");
     makefileDict[fullPath] = {
         "object": objName,
         "commandLine": GetCommandLineForCompilation(fileName, gambitRoot) + " /Fo" + objName + " " + fullPath
@@ -546,7 +604,7 @@ function GetValuesFromMakefile(fso, makefileName, macro)
         if (m != null)
         {
             line = m[1];
-            
+
             var m;
             while ((m = line.match(/(.*)\\$/)) != null)
             {
