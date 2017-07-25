@@ -16,13 +16,11 @@
 
 find_in_path() # exe-name, sets `$exe'
 {
-  save_IFS="${IFS}"; IFS=":"
-  for dir in $PATH; do
-    if test -x "$dir/$1" -a ! -d "$dir/$1"; then
-      exe="$dir/$1"; IFS="$save_IFS"; return 0
-    fi
-  done
-  exe=""; IFS="$save_IFS"; return 1
+	exe=$(which "${1}");
+	# Alternatively, use $(command) somehow
+	if [ -f "$exe" ]; then
+		return $?
+	fi
 }
 
 find_browser() # sets `$exe'
