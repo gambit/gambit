@@ -19,7 +19,9 @@ find_in_path() # exe-name, sets `$exe'
 	exe=$(which "${1}");
 	# Alternatively, use $(command) somehow
 	if [ -f "$exe" ]; then
-		return $?
+		return 0
+	else
+		return 1
 	fi
 }
 
@@ -32,14 +34,13 @@ find_browser() # sets `$exe'
     browser_list="lynx firefox mozilla netscape osascript chrome chromium chromium-browser"
   fi
 
-  browser_list="${GAMBDOC_BROWSER} $browser_list"
-
-  for b in $browser_list; do
-    if find_in_path $b; then
-      browser=$b
+  for b in "${browser_list[@]}"; do
+		if exe=$(find_in_path "${b}"); then
+			echo "${exe}"
       return 0
     fi
   done
+	echo "${browser_list[@]}"
   return 1
 }
 
@@ -57,7 +58,7 @@ EOF
     esac
   else
     echo "*** WARNING -- none of these browsers can be found to view the documentation:"
-    echo "***            $browser_list"
+    echo "***            ${browser}"
     exit 1
   fi
 }
