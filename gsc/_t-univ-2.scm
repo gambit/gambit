@@ -990,7 +990,7 @@
       (lambda (ctx)
         (let ((rest (^local-var 'rest))
               (nrp (^local-var 'nrp)))
-          (^ (^var-declaration 'scmobj rest (^null))
+          (^ (^var-declaration 'scmobj rest (^null-obj))
              (^if (^< (^getnargs)
                       nrp)
                   (^return (^bool #f)))
@@ -1056,7 +1056,7 @@
            (^var-declaration 'int i (^int 0))
            (^var-declaration 'scmobj key (^null))
            (^var-declaration 'scmobj val (^null))
-           (^var-declaration '(array scmobj) key_vals (^null))
+           (^var-declaration '(array scmobj) key_vals (^null-obj))
 
            (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
                      (^!= (^parens (^bitand nb_key_args (^int 1))) (^int 0))) ;; keyword arguments must come in pairs
