@@ -1595,9 +1595,6 @@
 
  (else
 
- ;; The default representation for tables in the univ backend is an alist
- ;; However, if the target host implements hash tables, they can be used
-
 (define-prim (##make-table
               #!optional
               (size (macro-absent-obj))
@@ -1666,14 +1663,15 @@
               #!optional
               (found (lambda (key) key))
               (not-found (lambda () #!void)))
-  (let loop ((keys (##table-univ-keys (macro-table-hashtable table))))
-    (cond
-     ((##null? keys)
-      (not-found))
-     (((macro-table-test table) (##car keys) key)
-      (found (##car keys)))
-     (else
-      (loop (##cdr keys))))))
+  (let ((test (macro-table-test table)))
+    (let loop ((keys (##table-univ-keys (macro-table-hashtable table))))
+      (cond
+       ((##null? keys)
+        (not-found))
+       ((test (##car keys) key)
+        (found (##car keys)))
+       (else
+        (loop (##cdr keys)))))))
 
 (define-prim (##table-ref
               table
@@ -1682,14 +1680,10 @@
               (default-value (macro-absent-obj)))
 
   (let ((test (macro-table-test table)))
-    (let* ((key (if test
-                    (##table-find-key table key)
-                    key))
-           (exists (##table-univ-key-exists? (macro-table-hashtable table) key)))
+    (define (found key)
+      (##table-univ-ref (macro-table-hashtable table) key))
+    (define (not-found)
       (cond
-       (exists
-        (##table-univ-ref (macro-table-hashtable table)
-                          key))
        ((##not (##eq? default-value (macro-absent-obj)))
         default-value)
        ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
@@ -1698,7 +1692,14 @@
         (##raise-unbound-table-key-exception
          table-ref
          table
-         key))))))
+         key))))
+    (cond
+     (test ;; not and eq?-table
+      (##table-find-key table key found not-found))
+     ((##table-univ-key-exists? (macro-table-hashtable table) key)
+      (found key))
+     (else
+      (not-found)))))
 
 (define-prim (table-ref
               table
@@ -1777,16 +1778,50 @@
           hash
           min-load
           max-load)))
-    (let loop ((lst lst))
-      (if (null? lst)
-          table
-          (begin
-            (##table-univ-set! (macro-table-hashtable table)
-                               (caar lst)
-                               (cdar lst))
-            (loop (cdr lst)))))))
+    (let loop ((x lst))
+      (if (##pair? x)
+          (let ((couple (##car x)))
+            (macro-check-pair-list
+             couple
+             1
+             (list->table lst
+                          size: size
+                          init: init
+                          weak-keys: weak-keys
+                          weak-values: weak-values
+                          test: test
+                          hash: hash
+                          min-load: min-load
+                          max-load: max-load)
+             (##table-univ-set! (macro-table-hashtable table)
+                                (##car couple)
+                                (##cdr couple)))
+            (loop (##cdr x)))
+          (macro-check-list
+           x
+           1
+           (list->table lst
+                        size: size
+                        init: init
+                        weak-keys: weak-keys
+                        weak-values: weak-values
+                        test: test
+                        hash: hash
+                        min-load: min-load
+                        max-load: max-load)
+           table)))))
 
-(define-prim (list->table lst)
+(define-prim (list->table
+              lst
+              #!key
+              (size (macro-absent-obj))
+              (init (macro-absent-obj))
+              (weak-keys (macro-absent-obj))
+              (weak-values (macro-absent-obj))
+              (test (macro-absent-obj))
+              (hash (macro-absent-obj))
+              (min-load (macro-absent-obj))
+              (max-load (macro-absent-obj)))
   (##list->table lst))
 
 (define-prim (##table-copy table)
