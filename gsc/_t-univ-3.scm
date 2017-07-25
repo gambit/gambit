@@ -3700,6 +3700,59 @@ tanh
      (compiler-internal-error
       "univ-emit-string-set!, host representation not implemented"))))
 
+(define (univ-emit-substring ctx expr1 expr2 expr3)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^subarray expr1 expr2 expr3))
+
+    ((php)
+     (^call-prim 'substr expr1 expr2 expr3))
+
+    ;; TODO : Java
+
+    (else
+     (compiler-internal-error
+      "univ-emit-substring, unknown target"))))
+
+(define (univ-emit-str-toint ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ "+" expr))
+
+    ((python)
+     (^call-prim 'int expr))
+
+    ((ruby)
+     (^call-member expr 'to_i))
+
+    ((java)
+     (^call-member 'Integer 'parseInt expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-str-toint, unknown target"))))
+
+(define (univ-emit-str-tofloat ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ "+" expr))
+
+    ((python)
+     (^call-prim 'float expr))
+
+    ((ruby)
+     (^call-member expr 'to_f))
+
+    ((java)
+     (^call-member 'Float 'parseFloat expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-str-tofloat, unknown target"))))
+
 (define (univ-emit-symbol-obj ctx obj force-var?)
   (case (univ-symbol-representation ctx)
 
@@ -4136,6 +4189,10 @@ tanh
 
     ((python)
      (^ "(type(" expr ") == int or type(" expr ") == float or type(" expr ") == bool or " expr " is None)"))
+
+    ((php)
+     (^not
+      (^call-prim 'is_object expr)))
 
     (else
      (compiler-internal-error

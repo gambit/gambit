@@ -1075,6 +1075,15 @@
 (define-macro (^string-set! val1 val2 val3)
   `(univ-emit-string-set! ctx ,val1 ,val2 ,val3))
 
+(define-macro (^substring val1 val2 val3)
+  `(univ-emit-substring ctx ,val1 ,val2 ,val3))
+
+(define-macro (^str-toint val)
+  `(univ-emit-str-toint ctx ,val))
+
+(define-macro (^str-tofloat val)
+  `(univ-emit-str-toint ctx ,val))
+
 (define-macro (^symbol-obj obj force-var?)
   `(univ-emit-symbol-obj ctx ,obj ,force-var?))
 

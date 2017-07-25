@@ -1247,6 +1247,37 @@
               (^cast*-jumpable
                (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))))))
 
+    ;; Hashtables
+    ((next_sn)
+     (rts-field
+      'next_sn
+      'int
+      (^int 0)
+      '(public)))
+
+    ((sn_table)
+     (rts-field
+      'sn_table
+      '(dict int scmobj)
+      (^empty-dict '(dict int scmobj))
+      '(public)))
+
+    ((get_serial_number)
+     (rts-method
+      'get_serial_number
+      '(public)
+      'int
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((obj (^local-var 'obj)))
+          (^ (^if (^not (^attribute-exists? obj (^str "__sn__")))
+                  (^ (^assign (^member obj '__sn__) (^rts-field-use 'next_sn))
+                     (^dict-set (^rts-field-use 'sn_table) (^rts-field-use 'next_sn) obj)
+                     (^inc-by (^rts-field-use 'next_sn) (^int 1))))
+             (^return (^member obj '__sn__)))))))
+
     ;; TODO ScmObjHashMap wrapper for Java
     ((hashtable)
      (rts-class
@@ -1260,7 +1291,15 @@
         (else
          'scmobj))
       '() ;; class-fields
-      '() ;; instance-fields
+      (case (target-name (ctx-target ctx)) ;; instance-fields
+        ((php)
+         (list
+          (univ-field 'dict
+                      '(dict scmobj scmobj)
+                      (^empty-dict '(dict int scmobj))
+                      '(public))))
+        (else
+         '()))
       '() ;; class-methods
       (append ;; instance-methods
        (case (target-name (ctx-target ctx))
@@ -1279,21 +1318,21 @@
             '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "return dict.__setitem__(self,(type(key), key),val) if " (^host-primitive? 'key) " else dict.__setitem__(self,key,val)"))))
+               (^ "return dict.__setitem__(self,(type(key), key),val) if " (^host-primitive? 'key) " else dict.__setitem__(self, key, val)"))))
 
            (univ-method '__contains__ '(public) 'scmobj
             (list (univ-field 'key 'scmobj))
             '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "return dict.__contains__(self,(type(key), key)) if " (^host-primitive? 'key) " else dict.__contains__(self,key)"))))
+               (^ "return dict.__contains__(self,(type(key), key)) if " (^host-primitive? 'key) " else dict.__contains__(self, key)"))))
 
            (univ-method '__delitem__ '(public) 'noresult
             (list (univ-field 'key 'scmobj))
             '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "k = (type(key), key) if " (^host-primitive? 'key) " else key;"
+               (^ "k = (type(key), key) if " (^host-primitive? 'key) " else key\n"
                   "return dict.__delitem__(self,k) if k in self else None"))))
 
            (univ-method 'keys '(public) 'scmobj '() '()
@@ -1302,6 +1341,129 @@
              "\n"
              (lambda (ctx)
                (^ "return map(lambda x: x[1] if type(x) == tuple else x,dict.keys(self))"))))))
+         ((php)
+          (list
+           (univ-method 'const_to_string '(public) 'str
+            (list (univ-field 'obj 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((obj (^local-var 'obj)))
+                 (^ (^if (^bool? obj)
+                         (^return (^concat "c" (^if-expr obj "0" "1"))))
+
+                    (^if (^null? obj)
+                         (^return "c2"))
+
+                    (^if (^void? obj)
+                         (^return "c3"))
+
+                    (^if (^int? obj)
+                         (^return (^concat "i" (^tostr obj))))
+
+                    (^if (^float? obj)
+                         (^return (^concat "f" (^tostr obj))))
+
+                    (^if (^str? obj)
+                         (^return (^concat "s" obj)))
+
+                    (univ-throw ctx "\"const_to_string error (cannot convert object)\""))))))
+           (univ-method 'string_to_const '(public) 'scmobj
+            (list (univ-field 'code 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((code (^local-var 'code))
+                     (prefix (^local-var 'prefix)))
+                 (^ (^var-declaration 'str prefix (^string-ref code 0))
+
+                    (^if (^= prefix "c")
+                         (^return (^if-expr (^eq? (^string-ref code 1) (^str "0"))
+                                            (^bool #t)
+                                            (^if-expr (^eq? (^string-ref code 1) (^str "1"))
+                                                      (^bool #f)
+                                                      (^if-expr (^eq? (^string-ref code 1) (^str "2"))
+                                                                (^null)
+                                                                (^void))))))
+
+                    (^if (^= prefix (^str "i"))
+                         (^return (^str-toint (^substring code 1 (^- (^str-length code) 1)))))
+
+                    (^if (^= prefix (^str "f"))
+                         (^return (^str-tofloat (^substring code 1 (^- (^str-length code) 1)))))
+
+                    (^if (^= prefix (^str "s"))
+                         (^return (^substring code 1 (^- (^str-length code) 1))))
+
+                    (univ-throw ctx "\"string_to_const error (unknown string)\""))))))
+           (univ-method 'has '(public) 'boolean
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key)))
+                 (^return
+                  (^if-expr (^or (^host-primitive? key) (^attribute-exists? key (^str "__sn__")))
+                            (^dict-key-exists? (^member (^this) 'dict)
+                                               (^if-expr (^host-primitive? key)
+                                                        (^call-member (^this) 'const_to_string key)
+                                                        (^member key '__sn__)))
+                            (^bool #f)))))))
+           (univ-method 'get '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key)))
+                 (^return
+                  (^dict-get (^member (^this) 'dict)
+                             (^if-expr (^host-primitive? key)
+                                      (^call-member (^this) 'const_to_string key)
+                                      (^member key '__sn__))))))))
+           (univ-method 'set '(public) 'noresult
+            (list (univ-field 'key 'scmobj)
+                  (univ-field 'val 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key))
+                     (val (^local-var 'val)))
+                 (^dict-set (^member (^this) 'dict)
+                            (^if-expr (^host-primitive? key)
+                                      (^call-member (^this) 'const_to_string key)
+                                      (^call-prim (^rts-method-use 'get_serial_number) key))
+                            val)))))
+           (univ-method 'delete '(public) 'noresult
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key)))
+                 (^dict-delete (^member (^this) 'dict)
+                               (^if-expr (^host-primitive? key)
+                                         (^call-member (^this) 'const_to_string key)
+                                         (^call-prim (^rts-method-use 'get_serial_number) key)))))))
+           (univ-method 'size '(public) 'int '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return (^dict-length (^member (^this) 'dict))))))
+           (univ-method 'keys '(public) '(array scmobj) '() '()
+            (univ-emit-fn-body
+             ctx
+             "\n"
+             (lambda (ctx)
+               (let ((keys (^local-var 'keys))
+                     (i (^local-var 'i)))
+                 (^ (^var-declaration '(array scmobj) keys (^dict-keys (^member (^this) 'dict) 'scmobj))
+                    (^var-declaration 'int i 0)
+
+                    (^while (^< i (^array-length keys))
+                            (^ (^assign (^array-index keys i)
+                                        (^if-expr (^str? (^array-index keys i))
+                                                  (^call-member (^this) 'string_to_const (^array-index keys i))
+                                                  (^dict-get (^rts-field-use 'sn_table) (^array-index keys i))))
+                               (^inc-by i 1)))
+                    (^return keys))))))))
          (else
           '()))
        (list
@@ -1310,24 +1472,27 @@
           ctx
           "\n"
           (lambda (ctx)
-            (let ((lst (^local-var 'lst))
-                  (keys (^local-var 'keys))
-                  (i (^local-var 'i)))
-              (^ (^var-declaration 'scmobj lst (^null-obj))
-                 (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
+            (let ((keys (^local-var 'keys)))
+              (^ (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
 
                  (if (eq? (target-name (ctx-target ctx)) 'python)
                      (^assign keys (^call-prim 'list keys))
                      (^))
 
-                 (^var-declaration 'int i (^int 0))
+                 (^return (^call-prim (^rts-method-use 'hostarray2list) keys)))))))
+        (univ-method 'table2list '(public) 'scmobj '() '() ;; TODO
+         (univ-emit-fn-body
+          ctx
+          "\n"
+          (lambda (ctx)
+            (let ((keys (^local-var 'keys)))
+              (^ (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
 
-                 (^while (^< i (^array-length keys))
-                         (^ (^assign lst (^cons (^array-index keys i)
-                                                lst))
-                            (^inc-by i 1)))
+                 (if (eq? (target-name (ctx-target ctx)) 'python)
+                     (^assign keys (^call-prim 'list keys))
+                     (^))
 
-                 (^return lst))))))))))
+                 (^return (^call-prim (^rts-method-use 'hostarray2list) keys)))))))))))
 
     ((hashtable_base)
      (rts-class
@@ -1354,32 +1519,32 @@
            (univ-method '__len__ '(public) 'scmobj '() '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "return len(self.objdict) + len(self.primdict)"))))
+               (^ "return len(self.keys())"))))
            (univ-method '__contains__ '(public) 'boolean
             (list (univ-field 'key 'scmobj))
             '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict;"
+               (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
                   "return key in d"))))
            (univ-method '__delitem__ '(public) 'noresult
             (list (univ-field 'key 'scmobj))
             '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict;"
-                  "return d.__delitem__(key) if key in d else None"))))))
+               (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
+                  "return d.__delitem__(key) if key in d else None\n"))))))
          ((ruby)
           (list
            (univ-method 'cleanup '(public) 'scmobj '() '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "select! do |e| self.key_alive? e end;"))))
+               (^ "select! do |e| self.key_alive? e end\n"))))
 
            (univ-method 'keys '(public) 'scmobj '() '()
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
-               (^ "cleanup; parent_keys;"))))))
+               (^ "cleanup; parent_keys\n"))))))
          (else
           (compiler-internal-error
            "hashtable_base, unknown target")))
@@ -1389,24 +1554,14 @@
           ctx
           "\n"
           (lambda (ctx)
-            (let ((lst (^local-var 'lst))
-                  (keys (^local-var 'keys))
-                  (i (^local-var 'i)))
-              (^ (^var-declaration 'scmobj lst (^null-obj))
-                 (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
+            (let ((keys (^local-var 'keys)))
+              (^ (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
 
                  (if (eq? (target-name (ctx-target ctx)) 'python)
                      (^assign keys (^call-prim 'list keys))
                      (^))
 
-                 (^var-declaration 'int i (^int 0))
-
-                 (^while (^< i (^array-length keys))
-                         (^ (^assign lst (^cons (^array-index keys i)
-                                                lst))
-                            (^inc-by i 1)))
-
-                 (^return lst))))))))
+                 (^return (^call-prim (^rts-method-use 'hostarray2list) keys)))))))))
        '()
       (case (target-name (ctx-target ctx)) ;; constructor
         ((python)
@@ -1431,16 +1586,16 @@
            '()
            (univ-emit-fn-body ctx "\n"
             (lambda (ctx)
-              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict;"
-                 "return d[key] if key in d else " (^void-obj)))))
+              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
+                 "return d[key]\n"))))
           (univ-method '__setitem__ '(public) 'scmobj
            (list (univ-field 'key 'scmobj)
                  (univ-field 'val 'scmobj))
            '()
            (univ-emit-fn-body ctx "\n"
             (lambda (ctx)
-              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict;"
-                 "d[key] = val"))))))
+              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
+                 "d[key] = val\n"))))))
         ((ruby)
          (list
           (univ-method 'key_alive? '(public) 'boolean
@@ -1448,200 +1603,280 @@
            '()
            (univ-emit-fn-body ctx "\n"
             (lambda (ctx)
-              (^ "begin;"
-                 "key.__getobj__ if key.class == WeakRef;"
-                 "true;"
-                 "rescue WeakRef::RefError => err;"
-                 "false;"
-                 "end;"))))
+              (^ "begin\n"
+                 "key.__getobj__ if key.class == WeakRef\n"
+                 "true\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "false\n"
+                 "end\n"))))
+          (univ-method 'keys_list '(public) 'scmobj '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "g_hostarray2list(self.keys.map do |e| e.class == WeakRef ? e.__getobj__ : e end)"))))
           (univ-method 'has_key? '(public) 'scmobj
            (list (univ-field 'key 'scmobj))
            '()
            (univ-emit-fn-body ctx "\n"
             (lambda (ctx)
-              (^ "keys.each do |e| "
-                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key);"
-                 "end;"
-                 "false;"))))
+              (^ "keys.each do |e|"
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key)\n"
+                 "end\n"
+                 "false\n"))))
           (univ-method '|[]| '(public) 'scmobj
            (list (univ-field 'key 'scmobj))
            '()
            (univ-emit-fn-body ctx "\n"
             (lambda (ctx)
-              (^ "keys.each do |e| "
-                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key);"
-                 "end;"
-                 "nil;"))))
+              (^ "keys.each do |e|"
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key)\n"
+                 "end\n"
+                 "nil\n"))))
           (univ-method '|[]=| '(public) 'scmobj
            (list (univ-field 'key 'scmobj)
                  (univ-field 'obj 'scmobj))
            '()
            (univ-emit-fn-body ctx "\n"
             (lambda (ctx)
-              (^ "begin;"
-                 "super WeakRef.new(key), obj;"
-                 "rescue ArgumentError;"
-                 "super key, obj;"
-                 "end;"))))))
+              (^ "begin\n"
+                 "super WeakRef.new(key), obj\n"
+                 "rescue ArgumentError\n"
+                 "super key, obj\n"
+                 "end\n"))))
+          (univ-method 'delete '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "keys.each do |e|"
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key)\n"
+                 "end\n"
+                 "nil\n"))))))
         (else
          (compiler-internal-error "hashtable_weak_keys, unknown target")))
       '() ;; class-classes
       (case (target-name (ctx-target ctx)) ;; constructor
         ((python)
          (lambda (ctx)
-           (^ (^rts-class-use 'hashtable_base) ".__init__(self);"
-              "self.objdict = weakref.WeakKeyDictionary();")))
+           (^ (^rts-class-use 'hashtable_base) ".__init__(self)\n"
+              "self.objdict = weakref.WeakKeyDictionary()\n")))
         (else
          #f))))
 
     ((hashtable_weak_values)
      (rts-class
-      'weak_values_hashtable
-      '(abstract)))
+      'hashtable_weak_values
+      '() ;; properties
+      'hashtable_base
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx))  ;; instance-methods
+        ((python)
+         (list
+          (univ-method '__getitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "d = self.primdict if key in self.primdict else self.objdict\n"
+                 "return d[key]\n"))))
+          (univ-method '__setitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'val 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ (^if (^host-primitive? 'val)
+                      (^ (^if "key in self.objdict"
+                              "del self.objdict[key]\n")
+                         "self.primdict[key] = val\n")
+                      (^ (^if "key in self.primdict"
+                              "del self.primdict[key]\n")
+                         "self.objdict[key] = val\n"))))))
+          (univ-method '__delitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^if "key in self.primdict"
+                   "del self.primdict[key]\n"
+                   (^if "key in self.objdict"
+                        "del self.objdict[key]\n")))))
+           (univ-method '__contains__ '(public) 'boolean
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return key in self.primdict or key in self.objdict"))))))
+        ((ruby)
+         (list
+          (univ-method 'key_alive? '(public) 'boolean
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "e = self.parent_get key\n"
+                 "e.respond_to?(:foo) if e.class == WeakRef\n"
+                 "true\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "false\n"
+                 "end\n"))))
+          (univ-method 'has_key? '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "super key and key_alive?(key)\n"))))
+          (univ-method '|[]| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "e = super key\n"
+                 "begin\n"
+                 "return e.class == WeakRef ? e.__getobj__ : e\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "nil\n"
+                 "end\n"))))
+          (univ-method '|[]=| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'obj 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "super key, WeakRef.new(obj)\n"
+                 "rescue ArgumentError\n"
+                 "super key, obj\n"
+                 "end\n"))))))
+        (else
+         (compiler-internal-error "hashtable_weak_values, unknown target")))
+      '() ;; class-classes
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ (^rts-class-use 'hashtable_base) ".__init__(self)\n"
+              "self.objdict = weakref.WeakValueDictionary()\n")))
+        (else
+         #f))))
 
     ((hashtable_weak_keys_values)
      (rts-class
       'hashtable_weak_keys_values
-      '(abstract)))
+      '() ;; properties
+      'hashtable_weak_keys
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx))  ;; instance-methods
+        ((python)
+         (list
+          (univ-method '__getitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "val = " (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key)\n"
+                 "return val() if isinstance(val, weakref.ref) else val\n"))))
+          (univ-method '__setitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'val 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "v = val if " (^host-primitive? "val") " else weakref.ref(val)\n"
+                 "return " (^rts-class-use 'hashtable_weak_keys) ".__setitem__(self, key, v)\n"))))
+          (univ-method 'keys '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return filter(lambda key: self.valid_key(key), " (^rts-class-use 'hashtable_weak_keys) ".keys(self))\n"))))
+          (univ-method 'valid_key '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)) '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return not isinstance(" (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key), weakref.ref) or " (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key)() is not None\n"))))
+          (univ-method '__contains__ '(public) 'boolean
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return " (^rts-class-use 'hashtable_weak_keys) ".__contains__(self, key) and self.valid_key(key)"))))))
+        ((ruby)
+         (list
+          (univ-method 'key_alive? '(public) 'boolean
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return false if not super key\n"
+                 "begin\n"
+                 "e = self.parent_get key\n"
+                 "e.respond_to?(:foo) if e.class == WeakRef\n"
+                 "true\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "false\n"
+                 "end\n"))))
+          (univ-method 'has_key? '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "super key and key_alive?(key)\n"))))
+          (univ-method '|[]| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if not has_key? key\n"
+                 "return nil\n"
+                 "end\n"
+                 "e = super key\n"
+                 "return e.class == WeakRef ? e.__getobj__ : e\n"))))
+          (univ-method '|[]=| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'obj 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "v = WeakRef.new(obj)\n"
+                 "rescue ArgumentError\n"
+                 "v = obj\n"
+                 "end\n"
+                 "super key, v\n"))))))
+        (else
+         (compiler-internal-error "hashtable_weak_keys_values, unknown target")))
+      '() ;; class-classes
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ (^rts-class-use 'hashtable_weak_keys) ".__init__(self)\n")))
+        (else
+         #f))))
 
-    ((prim_to_dict_key)
+    ((hostarray2list)
      (rts-method
-      'prim_to_dict_key
-      '(public)
-      'string
-      (list (univ-field 'key 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((key (^local-var 'key)))
-          (^
-           (^if (^or (^int? key) (^float? key))
-                (^return key))
-
-           (^if (^eq? key (^bool #t))
-                (^return (^str "c0")))
-
-           (^if (^eq? key (^bool #f))
-                (^return (^str "c1")))
-
-           (^if (^eq? key (^null))
-                (^return (^str "c2")))
-
-           (^if (^eq? key (^void))
-                (^return (^str "c3")))
-
-           (^if (^str? key)
-                (^return (^+ (^str "s") key)))
-
-           (^return (^str "cerror")))))))
-
-    ((dict_key_to_prim)
-     (rts-method
-      'dict_key_to_prim
-      '(public)
-      'scmobj
-      (list (univ-field 'key 'string))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((key (^local-var 'key)))
-          (^
-           ;; TODO
-           (^if (^eq? (^string-ref key 0) (^chr "s"))
-                (^return (^str "string_key_not_implemented")))
-
-           (^if (^eq? key (^str "c0"))
-                (^return (^bool #t)))
-
-           (^if (^eq? key (^str "c1"))
-                (^return (^bool #f)))
-
-           (^if (^eq? key (^str "c2"))
-                (^return (^null)))
-
-           (^if (^eq? key (^str "c3"))
-                (^return (^void)))
-
-           ;; TODO : cast as int/float
-           (^return (^ "+" key)))))))
-
-    ((next_sn)
-     (rts-field
-      'next_sn
-      'int
-      (^int 0)
-      '(public)))
-
-    ((sn_table)
-     (rts-field
-      'sn_table
-      '(dict int scmobj)
-      (^empty-dict '(dict int scmobj))
-      '(public)))
-
-    ((get_serial_number)
-     (rts-method
-      'get_serial_number
-      '(public)
-      'scmobj
-      (list (univ-field 'obj 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((obj (^local-var 'obj)))
-          (^
-           (^if (^not (^attribute-exists? obj (^str "__sn__")))
-                (^ (^assign (^member obj '__sn__) (^rts-field-use 'next_sn))
-                   (^assign (^array-index (^rts-field-use 'sn_table) (^rts-field-use 'next_sn)) obj)
-                   (^inc-by (^rts-field-use 'next_sn) (^int 1))))
-           (^return (^member obj '__sn__)))))))
-
-    ((native_table_to_list)
-     (rts-method
-      'native_table_to_list
+      'hostarray2list
       '(public)
       'scmobj
-      (list (univ-field 'objdict '(dict int scmobj))
-            (univ-field 'primdict '(dict str scmobj)))
+      (list (univ-field 'arr 'scmobj))
       "\n"
       '()
       (lambda (ctx)
-        (let ((objdict (^local-var 'objdict))
-              (primdict (^local-var 'primdict))
-              (alist (^local-var 'alist))
-              (primkeys (^local-var 'primkeys))
-              (primkey (^local-var 'primkey))
-              (objkeys (^local-var 'objkeys))
-              (objkey (^local-var 'objkey))
+        (let ((lst (^local-var 'lst))
+              (arr (^local-var 'arr))
               (i (^local-var 'i)))
-          (^
-           (^var-declaration 'scmobj alist (^null))
+          (^ (^var-declaration 'scmobj lst (^null-obj))
 
-           (^var-declaration '(array str) primkeys (^dict-keys primdict 'str))
-           (^var-declaration 'str primkey (^null))
+             (^var-declaration 'int i (^int 0))
 
-           (^var-declaration '(array int) objkeys (^dict-keys objdict 'int))
-           (^var-declaration 'int objkey (^int 0))
+             (^while (^< i (^array-length arr))
+                     (^ (^assign lst (^cons (^array-index arr i)
+                                            lst))
+                        (^inc-by i 1)))
 
-           (^var-declaration 'int i (^int 0))
-
-           (^while (^< i (^array-length primkeys))
-                   (^ (^assign primkey (^array-index primkeys i))
-                      (^assign alist (^cons (^cons (^call-prim (^rts-field-use 'dict_key_to_prim) primkey)
-                                                   (^dict-get primdict primkey))
-                                            alist))
-                      (^inc-by i (^int 1))))
-
-           (^assign i (^int 0))
-
-           (^while (^< i (^array-length objkeys))
-                   (^ (^assign objkey (^array-index objkeys i))
-                      (^assign alist (^cons (^cons (^dict-get (^rts-field-use 'sn_table) objkey)
-                                                   (^dict-get objdict objkey))
-                                            alist))
-                      (^inc-by i (^int 1))))
-
-           (^return alist))))))
+             (^return lst))))))
 
     ((get)
 #<<EOF
