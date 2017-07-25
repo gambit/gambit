@@ -29,9 +29,9 @@ find_browser() # sets `$exe'
 {
 	browser_list=("${GAMBDOC_BROWSER}")
   if [ "@HELP_BROWSER@" != "" ]; then
-    browser_list="@HELP_BROWSER@"
+		browser_list+=("@HELP_BROWSER@")
   else
-    browser_list="lynx firefox mozilla netscape osascript chrome chromium chromium-browser"
+    browser_list+=("lynx" "firefox" "mozilla" "netscape" "osascript" "chrome" "chromium" "chromium-browser")
   fi
 
   for b in "${browser_list[@]}"; do
