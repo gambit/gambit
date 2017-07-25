@@ -19,6 +19,7 @@ find_in_path() # exe-name, sets `$exe'
 	exe=$(which "${1}");
 	# Alternatively, use $(command) somehow
 	if [ -f "$exe" ]; then
+		echo $exe
 		return 0
 	else
 		return 1
@@ -54,7 +55,7 @@ tell application "Safari"
     open location "$url"
 end tell
 EOF
-              * ) $exe $url ;;
+              * ) "${browser}" "${url}" ;;
     esac
   else
     echo "*** WARNING -- none of these browsers can be found to view the documentation:"
