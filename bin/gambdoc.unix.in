@@ -18,7 +18,7 @@ find_in_path() # exe-name, sets `$exe'
 {
 	exe=$(which "${1}");
 	# Alternatively, use $(command) somehow
-	if [ -f "$exe" ]; then
+	if [ -x "$exe" ]; then
 		echo $exe
 		return 0
 	else
