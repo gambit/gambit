@@ -19,42 +19,42 @@ find_in_path()
 ## $1 == string of command found in $PATH
 ## returns => boolean depending if found
 ## returns fqdn (fully qualified domain name) on stdout
-	exe=$(which "${1}");
-	# Alternatively, use $(command) somehow
-	if [ -x "$exe" ]; then
-		echo $exe
-		return 0
-	else
-		return 1
-	fi
+  exe=$(which "${1}");
+  # Alternatively, use $(command) somehow
+  if [ -x "$exe" ]; then
+    echo $exe
+    return 0
+  else
+    return 1
+  fi
 }
 
 find_browser()
 ## returns => (bool) is browser found
 ## returns preferred browser fqdn over stdout
 {
-	browser_list=("${GAMBDOC_BROWSER}")
+  browser_list=("${GAMBDOC_BROWSER}")
   if [ "@HELP_BROWSER@" != "" ]; then
-		browser_list+=("@HELP_BROWSER@")
+    browser_list+=("@HELP_BROWSER@")
   else
     browser_list+=("lynx" "firefox" "mozilla" "netscape" "osascript" "chrome" "chromium" "chromium-browser")
   fi
 
   for b in "${browser_list[@]}"; do
-		if exe=$(find_in_path "${b}"); then
-			echo "${exe}"
+    if exe=$(find_in_path "${b}"); then
+      echo "${exe}"
       return 0
     fi
   done
-	echo "${browser_list[@]}"
+  echo "${browser_list[@]}"
   return 1
 }
 
 operation_help() # sets `$exe'
 {
-	if browser=$(find_browser); then
+  if browser=$(find_browser); then
     url="file://${GAMBDOC_GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG2}"
-		case "$(basename ${browser})" in
+    case "$(basename ${browser})" in
       osascript ) "${browser}" <<EOF ;;
 tell application "Safari"
     open location "$url"
