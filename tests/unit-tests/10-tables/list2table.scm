@@ -1,7 +1,7 @@
 (include "#.scm")
 
 (for-each
- (lambda (t)
+ (lambda (args)
 
    ;; Primitive keys
    (define prim-keys-a (list 1 2 #t #f #!void '() 'symbol '|special symbol| '|123|))
@@ -22,31 +22,28 @@
 
    (define obj-keys '(list str1 str2 bignum flonum ratnum cpxnum table-key fct-key prim-keys-a uninterned-symbol uninterned-keyword))
 
+   (define alist (map (lambda (key)
+                        (cons key key))
+                      (append obj-keys prim-keys-a)))
+   
+   (define t (apply list->table (cons alist args)))
+
+   (check-= (table-length t) (length alist))
+
    (for-each
     (lambda (key)
-      (table-set! t key key))
-    (append prim-keys-a obj-keys))
+      (check-eq? (table-ref t key "default") key))
+    (append prim-keys-b obj-keys))
+   
+   (check-equal? (table-ref t -123 "not found") "not found")
+   (check-equal? (table-ref t 'not-found "not found") "not found"))
 
-   (let ((lst (table->list t)))
-
-     (check-= (length lst) (table-length t))
-
-     (for-each
-      (lambda (key)
-        (cond
-         ((assoc key lst) => (lambda (pair)
-                               (check-eq? key (car pair))
-                               (check-eq? key (cdr pair))))
-         (else
-          (check-true #f))))
-      (append prim-keys-b obj-keys))))
-
- (list (make-table)
-       (make-table weak-keys: #t)
-       (make-table weak-values: #t)
-       (make-table weak-keys: #t weak-values: #t)
+ (list '()
+       (list weak-keys: #t)
+       (list weak-values: #t)
+       (list weak-keys: #t weak-values: #t)
        
-       (make-table test: eq?)
-       (make-table test: eq? weak-keys: #t)
-       (make-table test: eq? weak-values: #t)
-       (make-table test: eq? weak-keys: #t weak-values: #t)))
+       (list test: eq?)
+       (list test: eq? weak-keys: #t)
+       (list test: eq? weak-values: #t)
+       (list test: eq? weak-keys: #t weak-values: #t)))

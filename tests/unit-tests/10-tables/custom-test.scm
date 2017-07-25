@@ -1,3 +1,5 @@
+(include "#.scm")
+
 (define (=mod10? a b) (= (modulo a 10)
                          (modulo b 10)))
 (for-each
@@ -9,13 +11,13 @@
 
    (table-set! t 12 "C")
 
-   (println (table-ref t 102))
+   (check-equal? (table-ref t 102) "C")
 
-   (println (table-ref t 55))
+   (check-equal? (table-ref t 55) "B")
 
-   (println (table-length t))
+   (check-= (table-length t) 2)
 
-   (println (table-ref t 77777 77777)))
+   (check-equal? (table-ref t 77777 "not-found") "not-found"))
 
  (list (make-table test: =mod10?)
        (make-table test: =mod10? weak-keys: #t)

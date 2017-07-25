@@ -1,3 +1,5 @@
+(include "#.scm")
+
 (for-each
  (lambda (t)
    ;; Primitive keys
@@ -19,32 +21,27 @@
 
    (define obj-keys '(list str1 str2 bignum flonum ratnum cpxnum table-key fct-key prim-keys-a uninterned-symbol uninterned-keyword))
 
-   (let loop ((i 0) (lst prim-keys-a))
-     (if (not (null? lst))
-         (let ((key (car lst)))
-           (table-set! t
-                       key
-                       (cons 'prim- i))
-           (loop (+ i 1) (cdr lst)))))
+   (for-each
+    (lambda (key)
+      (table-set! t key key))
+    prim-keys-a)
 
-   (println (= (length prim-keys-a) (table-length t)))
+   (check-= (length prim-keys-a) (table-length t))
 
-   (let loop ((i 0) (lst obj-keys))
-     (if (not (null? lst))
-         (let ((key (car lst)))
-           (table-set! t
-                       key
-                       (cons 'obj- i))
-           (loop (+ i 1) (cdr lst)))))
+   (for-each
+    (lambda (key)
+      (table-set! t key key))
+    obj-keys)
 
-   (println (= (+ (length prim-keys-a) (length obj-keys)) (table-length t)))
+   (check-= (+ (length prim-keys-a) (length obj-keys)) (table-length t))
 
-   (for-each (lambda (key)
-               (println (table-ref t key "default")))
-             (append prim-keys-b obj-keys))
+   (for-each
+    (lambda (key)
+      (check-eq? (table-ref t key "default") key))
+    (append prim-keys-b obj-keys))
 
-   (println (table-ref t -123 "not-found"))
-   (println (table-ref t 'not-found "not-found")))
+   (check-equal? (table-ref t -123 "not-found") "not-found")
+   (check-equal? (table-ref t 'not-found "not-found") "not-found"))
 
  (list (make-table)
        (make-table weak-keys: #t)
