@@ -14,8 +14,11 @@
 # echo GAMBDOC_ARG1 = "${GAMBDOC_ARG1}"
 # echo GAMBDOC_ARG2 = "${GAMBDOC_ARG2}"
 
-find_in_path() # exe-name, sets `$exe'
+find_in_path()
 {
+## $1 == string of command found in $PATH
+## returns => boolean depending if found
+## returns fqdn (fully qualified domain name) on stdout
 	exe=$(which "${1}");
 	# Alternatively, use $(command) somehow
 	if [ -x "$exe" ]; then
@@ -26,7 +29,9 @@ find_in_path() # exe-name, sets `$exe'
 	fi
 }
 
-find_browser() # sets `$exe'
+find_browser()
+## returns => (bool) is browser found
+## returns preferred browser fqdn over stdout
 {
 	browser_list=("${GAMBDOC_BROWSER}")
   if [ "@HELP_BROWSER@" != "" ]; then
