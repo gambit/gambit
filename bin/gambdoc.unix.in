@@ -1,20 +1,18 @@
 #! /bin/sh
 
 # Script parameters are passed in the following environment variables:
-#   GAMBDOC_GAMBITDIR_BIN
+    GAMBDOC_GAMBITDIR_BIN=$(dirname ${0})
 #   GAMBDOC_GAMBITDIR_DOC
-#   GAMBDOC_ARG1
-#   GAMBDOC_ARG2
-#   GAMBDOC_ARG3
-#   GAMBDOC_ARG4
+#   GAMBDOC_BROWSER
+    GAMBDOC_ARG1=${1:-help}
+    GAMBDOC_ARG2=$2
 #   ...
 
 # echo GAMBDOC_GAMBITDIR_BIN = "${GAMBDOC_GAMBITDIR_BIN}"
 # echo GAMBDOC_GAMBITDIR_DOC = "${GAMBDOC_GAMBITDIR_DOC}"
+# echo GAMBDOC_BROWSER = "${GAMBDOC_BROWSER}"
 # echo GAMBDOC_ARG1 = "${GAMBDOC_ARG1}"
 # echo GAMBDOC_ARG2 = "${GAMBDOC_ARG2}"
-# echo GAMBDOC_ARG3 = "${GAMBDOC_ARG3}"
-# echo GAMBDOC_ARG4 = "${GAMBDOC_ARG4}"
 
 find_in_path() # exe-name, sets `$exe'
 {
@@ -29,13 +27,14 @@ find_in_path() # exe-name, sets `$exe'
 
 find_browser() # sets `$exe'
 {
+	browser_list=("${GAMBDOC_BROWSER}")
   if [ "@HELP_BROWSER@" != "" ]; then
     browser_list="@HELP_BROWSER@"
   else
     browser_list="lynx firefox mozilla netscape osascript chrome chromium chromium-browser"
   fi
 
-  browser_list="${GAMBDOC_ARG3} $browser_list"
+  browser_list="${GAMBDOC_BROWSER} $browser_list"
 
   for b in $browser_list; do
     if find_in_path $b; then
@@ -48,10 +47,10 @@ find_browser() # sets `$exe'
 
 operation_help() # sets `$exe'
 {
-  if find_browser; then
-    url="file://${GAMBDOC_GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG4}"
-    case "$browser" in
-      osascript ) $exe <<EOF ;;
+	if browser=$(find_browser); then
+    url="file://${GAMBDOC_GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG2}"
+		case "$(basename ${browser})" in
+      osascript ) "${browser}" <<EOF ;;
 tell application "Safari"
     open location "$url"
 end tell
