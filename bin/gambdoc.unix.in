@@ -3,9 +3,9 @@
 # Script parameters are passed in the following environment variables:
     GAMBDOC_GAMBITDIR_BIN=$(dirname ${0})
 #   GAMBDOC_GAMBITDIR_DOC
-#   GAMBDOC_BROWSER
+    GAMBDOC_BROWSER=${GAMBDOC_ARG3:-${BROWSER}}
     GAMBDOC_ARG1=${1:-help}
-    GAMBDOC_ARG2=$2
+    GAMBDOC_ARG2=${GAMBDOC_ARG4:-${2}}
 #   ...
 
 # echo GAMBDOC_GAMBITDIR_BIN = "${GAMBDOC_GAMBITDIR_BIN}"
