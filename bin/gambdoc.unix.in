@@ -1,66 +1,70 @@
 #! /bin/sh
 
 # Script parameters are passed in the following environment variables:
-#   GAMBDOC_GAMBITDIR_BIN
+    GAMBDOC_GAMBITDIR_BIN=$(dirname ${0})
 #   GAMBDOC_GAMBITDIR_DOC
-#   GAMBDOC_ARG1
-#   GAMBDOC_ARG2
-#   GAMBDOC_ARG3
-#   GAMBDOC_ARG4
+    GAMBDOC_BROWSER=${GAMBDOC_ARG3:-${BROWSER}}
+    GAMBDOC_ARG1=${1:-help}
+    GAMBDOC_ARG2=${GAMBDOC_ARG4:-${2}}
 #   ...
 
 # echo GAMBDOC_GAMBITDIR_BIN = "${GAMBDOC_GAMBITDIR_BIN}"
 # echo GAMBDOC_GAMBITDIR_DOC = "${GAMBDOC_GAMBITDIR_DOC}"
+# echo GAMBDOC_BROWSER = "${GAMBDOC_BROWSER}"
 # echo GAMBDOC_ARG1 = "${GAMBDOC_ARG1}"
 # echo GAMBDOC_ARG2 = "${GAMBDOC_ARG2}"
-# echo GAMBDOC_ARG3 = "${GAMBDOC_ARG3}"
-# echo GAMBDOC_ARG4 = "${GAMBDOC_ARG4}"
 
-find_in_path() # exe-name, sets `$exe'
+find_in_path()
 {
-  save_IFS="${IFS}"; IFS=":"
-  for dir in $PATH; do
-    if test -x "$dir/$1" -a ! -d "$dir/$1"; then
-      exe="$dir/$1"; IFS="$save_IFS"; return 0
-    fi
-  done
-  exe=""; IFS="$save_IFS"; return 1
+## $1 == string of command found in $PATH
+## returns => boolean depending if found
+## returns fqdn (fully qualified domain name) on stdout
+  exe=$(which "${1}");
+  # Alternatively, use $(command) somehow
+  if [ -x "$exe" ]; then
+    echo $exe
+    return 0
+  else
+    return 1
+  fi
 }
 
-find_browser() # sets `$exe'
+find_browser()
+## returns => (bool) is browser found
+## returns preferred browser fqdn over stdout
 {
+  browser_list=("${GAMBDOC_BROWSER}")
   if [ "@HELP_BROWSER@" != "" ]; then
-    browser_list="@HELP_BROWSER@"
+    browser_list+=("@HELP_BROWSER@")
   else
-    browser_list="lynx firefox mozilla netscape osascript chrome chromium chromium-browser"
+    browser_list+=("lynx" "firefox" "mozilla" "netscape" "osascript" "chrome" "chromium" "chromium-browser")
   fi
 
-  browser_list="${GAMBDOC_ARG3} $browser_list"
-
-  for b in $browser_list; do
-    if find_in_path $b; then
-      browser=$b
+  for b in "${browser_list[@]}"; do
+    if exe=$(find_in_path "${b}"); then
+      echo "${exe}"
       return 0
     fi
   done
+  echo "${browser_list[@]}"
   return 1
 }
 
 operation_help() # sets `$exe'
 {
-  if find_browser; then
-    url="file://${GAMBDOC_GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG4}"
-    case "$browser" in
-      osascript ) $exe <<EOF ;;
+  if browser=$(find_browser); then
+    url="file://${GAMBDOC_GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG2}"
+    case "$(basename ${browser})" in
+      osascript ) "${browser}" <<EOF ;;
 tell application "Safari"
     open location "$url"
 end tell
 EOF
-              * ) $exe $url ;;
+              * ) "${browser}" "${url}" ;;
     esac
   else
     echo "*** WARNING -- none of these browsers can be found to view the documentation:"
-    echo "***            $browser_list"
+    echo "***            ${browser}"
     exit 1
   fi
 }
