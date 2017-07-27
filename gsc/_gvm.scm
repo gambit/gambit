@@ -789,10 +789,14 @@
 
 (set! use-actual-primitives-in-expression? #f);;TODO: remove
 (define gvm-trace #f)
-(define use-versioning #t)
+(define use-versioning #f)
 
 (define (bbs-purify bbs)
-  (if (not use-versioning)
+  (if (or (not use-versioning)
+          (= 0
+             (let* ((bb (lbl-num->bb (bbs-entry-lbl-num bbs) bbs))
+                    (node (comment-get (gvm-instr-comment (bb-label-instr bb)) 'node)))
+               (versioning-limit (node-env node)))))
 
       (bbs-purify-aux bbs)
 
@@ -1629,7 +1633,7 @@
                 ((obj? opnd) (make-type-singleton (obj-val opnd)))
                 ((reg? opnd) (otbl-reg-ref ttbl opnd))
                 ((stk? opnd) (otbl-stk-ref ttbl opnd))
-                ((clo? opnd) (otbl-clo-ref ttbl opnd))
+;;                ((clo? opnd) (otbl-clo-ref ttbl opnd))
                 (else        (make-type-universal))))
 
         (define (type-set ttbl opnd type)
@@ -2362,7 +2366,19 @@
                (let ((ctx (state-ctx state)))
                  (add-non-branch-instr!
                   (make-close
-                   (map (lambda (p) (closure-parms-version p ctx))
+                   (map (lambda (p)
+                          (let ((loc (closure-parms-loc p)))
+                            (if (or (reg? loc)
+                                    (stk? loc)
+                                    (clo? loc))
+                                (state-ctx-set!
+                                 state
+                                 (make-ctx (ctx-n (state-ctx state))
+                                           (type-set
+                                            (ctx-ttbl (state-ctx state))
+                                            loc
+                                            (make-type-universal))))))
+                          (closure-parms-version p ctx))
                         (close-parms instr))
                    (gvm-instr-frame instr)
                    (comment)))))
