@@ -1945,93 +1945,11 @@
 
   ;; For generating visual representation of control flow graph with "dot".
 
-  (define nodes '())
-  (define edges '())
+  (define dd (make-dot-digraph (proc-obj-name (car procs))))
 
-  (define (add-node node)
-    (set! nodes
-          `(,@node
-            ,@nodes)))
-
-  (define (add-edge from to dotted?)
-    (set! edges
-          `("  " ,from " -> " ,to
-            ,(if dotted?
-                 " [style = dotted]"
-                 "")
-            ";\n"
-            ,@edges)))
-
-  (define node-bgcolor "gray80")
-  (define node-type-bgcolor "gray60")
-  (define node-entry-bgcolor "black")
-
-  (define (gen-digraph name)
-    `("digraph \"" ,name "\" {\n"
-      "  graph [splines = true overlap = false rankdir = \"TD\"];\n"
-      ,@nodes
-      ,@edges
-      "}\n"))
-
-  (define (gen-node id label)
-    `("  " ,id " [fontname = \"Courier New\" shape = \"none\" label = "
-      ,@label
-      " ];\n"))
-
-  (define (gen-table id bgcolor content)
-    `("<table border=\"0\" cellborder=\"0\" cellspacing=\"0\" cellpadding=\"0\""
-      ,@(if bgcolor
-            `(" bgcolor=\"" ,bgcolor "\"")
-            '())
-      ,@(if id
-            `(" port=\"" ,id "\"")
-            '())
-      ">"
-      ,@content
-      "</table>"))
-
-  (define (gen-row content)
-    `("<tr>"
-      ,@content
-      "</tr>"))
-
-  (define (gen-col id last? align content)
-    `("<td"
-      ,@(if align
-            `(" align=\"" ,align "\"")
-            '())
-      ,@(if id
-            `(" port=\"" ,id "\"")
-            '())
-      ,(if last?
-           " colspan=\"20\""
-           "")
-      ">"
-      ,@content
-      "</td>"))
-
-  (define (gen-font face color content)
-    `("<font face=\"" ,face "\""
-      ,@(if color
-            `(" color=\"" ,color "\"")
-            '())
-      ">"
-      ,@content
-      "</font>"))
-
-  (define (gen-html-label content)
-    `("<"
-      ,@content
-      ">"))
-
-  (define (escape str)
-    (apply string-append
-           (map (lambda (c)
-                  (cond ((char=? c #\<) "&lt;")
-                        ((char=? c #\>) "&gt;")
-                        ((char=? c #\&) "&amp;")
-                        (else           (string c))))
-                (string->list str))))
+  (define node-bgcolor       dot-digraph-gray80)
+  (define node-type-bgcolor  dot-digraph-gray60)
+  (define node-entry-bgcolor dot-digraph-black)
 
   (let ((proc-tbl (make-table)))
 
@@ -2085,19 +2003,27 @@
                          (char=? (string-ref x 0) #\#))))
 
               (define (add-ref from side to dotted?)
-                (add-edge (string-append id ":" from side) to dotted?))
+                (dot-digraph-add-edge!
+                 dd
+                 (dot-digraph-gen-edge
+                  (string-append id ":" from side)
+                  to
+                  dotted?)))
 
-              (gen-row
-               (gen-col
+              (dot-digraph-gen-row
+               (dot-digraph-gen-col
                 #f
                 #f
                 "left"
-                (gen-table
+                (dot-digraph-gen-table
                  line-id
                  #f
-                 (gen-row
-                  (let loop ((before (list (escape (car lst))))
-                             (lst (cdr lst)))
+                 (dot-digraph-gen-row
+                  (let loop ((before
+                              (list (dot-digraph-gen-html-escape
+                                     (car lst))))
+                             (lst
+                              (cdr lst)))
                     (if (pair? lst)
                         (let ((x (car lst)))
                           (if (reference? x)
@@ -2110,8 +2036,16 @@
                                                ":s"
                                                (target-id x)
                                                (not jump?))
-                                      `(,@(gen-col #f #f "left" (reverse before))
-                                        ,@(gen-col ref-id #f "left" `(,(escape x)))
+                                      `(,@(dot-digraph-gen-col
+                                           #f
+                                           #f
+                                           "left"
+                                           (reverse before))
+                                        ,@(dot-digraph-gen-col
+                                           ref-id
+                                           #f
+                                           "left"
+                                           `(,(dot-digraph-gen-html-escape x)))
                                         ,@(loop '()
                                                 (cdr lst))))
                                     (begin
@@ -2119,11 +2053,19 @@
                                                ":w"
                                                (target-id x)
                                                (not jump?))
-                                      (loop (cons (escape x) before)
+                                      (loop (cons
+                                             (dot-digraph-gen-html-escape x)
+                                             before)
                                             (cdr lst)))))
-                              (loop (cons (escape x) before)
+                              (loop (cons
+                                     (dot-digraph-gen-html-escape x)
+                                     before)
                                     (cdr lst))))
-                        (gen-col #f #t "left" (reverse before))))))))))
+                        (dot-digraph-gen-col
+                         #f
+                         #t
+                         "left"
+                         (reverse before))))))))))
 
           (let ((instrs
                  (cons (format-gvm-instr (bb-label-instr bb))
@@ -2141,11 +2083,12 @@
                   (or (comment-get (gvm-instr-comment (bb-label-instr bb))
                                    'gv-bb-info)
                       '()))))
-            (add-node
-             (gen-node
+            (dot-digraph-add-node!
+             dd
+             (dot-digraph-gen-node
               id
-              (gen-html-label
-               (gen-table
+              (dot-digraph-gen-html-label
+               (dot-digraph-gen-table
                 #f
                 node-bgcolor
                 `(,@(apply append
@@ -2161,11 +2104,12 @@
                                             (else
                                              #f)))
                                          (esc-line
-                                          (list (escape line)))
+                                          (list (dot-digraph-gen-html-escape
+                                                 line)))
                                          (decorated-line
                                           (case style
                                             ((entry)
-                                             (gen-font
+                                             (dot-digraph-gen-font
                                               "Courier Bold"
                                               "white"
                                               esc-line))
@@ -2177,16 +2121,20 @@
                                              #f)
                                             (else
                                              "left"))))
-                                  (gen-row
-                                   (gen-col
+                                  (dot-digraph-gen-row
+                                   (dot-digraph-gen-col
                                     #f
                                     #f
                                     "left"
-                                    (gen-table
+                                    (dot-digraph-gen-table
                                      #f
                                      bgcolor
-                                     (gen-row
-                                      (gen-col #f #f align decorated-line)))))))
+                                     (dot-digraph-gen-row
+                                      (dot-digraph-gen-col
+                                       #f
+                                       #f
+                                       align
+                                       decorated-line)))))))
                                 gv-bb-info))
                   ,@(let loop ((lst instrs))
                       (if (pair? lst)
@@ -2212,10 +2160,7 @@
               (dump-proc proc i)
               (loop2 (+ i 1) (cdr lst)))))
 
-      (for-each
-       (lambda (str)
-         (display str port))
-       (gen-digraph (proc-obj-name (car procs)))))))
+      (dot-digraph-write dd port))))
 
 (define (reachable-procs procs)
   (let ((proc-seen (queue-empty))
@@ -2287,6 +2232,119 @@
           (loop))))
 
     (queue->list proc-seen)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;
+;; 'dot' graph generation:
+;; ----------------------
+
+(define (make-dot-digraph name)
+  (vector '() '() name))
+
+(define (dot-digraph-nodes dd)            (vector-ref dd 0))
+(define (dot-digraph-nodes-set! dd nodes) (vector-set! dd 0 nodes))
+
+(define (dot-digraph-edges dd)            (vector-ref dd 1))
+(define (dot-digraph-edges-set! dd edges) (vector-set! dd 1 edges))
+
+(define (dot-digraph-name dd)           (vector-ref dd 2))
+(define (dot-digraph-name-set! dd name) (vector-set! dd 2 name))
+
+(define (dot-digraph-add-node! dd node)
+  (dot-digraph-nodes-set!
+   dd
+   `(,@node
+     ,@(dot-digraph-nodes dd))))
+
+(define (dot-digraph-add-edge! dd edge)
+  (dot-digraph-edges-set!
+   dd
+   `(,@edge
+     ,@(dot-digraph-edges dd))))
+
+(define (dot-digraph-gen-digraph dd)
+  `("digraph \"" ,(dot-digraph-name dd) "\" {\n"
+    "  graph [splines = true overlap = false rankdir = \"TD\"];\n"
+    ,@(dot-digraph-nodes dd)
+    ,@(dot-digraph-edges dd)
+    "}\n"))
+
+(define (dot-digraph-gen-edge from to dotted?)
+  `("  " ,from " -> " ,to
+    ,(if dotted?
+         " [style = dotted]"
+         "")
+    ";\n"))
+
+(define (dot-digraph-gen-node id label)
+  `("  " ,id " [fontname = \"Courier New\" shape = \"none\" label = "
+    ,@label
+    " ];\n"))
+
+(define (dot-digraph-gen-table id bgcolor content)
+  `("<table border=\"0\" cellborder=\"0\" cellspacing=\"0\" cellpadding=\"0\""
+    ,@(if bgcolor
+          `(" bgcolor=\"" ,bgcolor "\"")
+          '())
+    ,@(if id
+          `(" port=\"" ,id "\"")
+          '())
+    ">"
+    ,@content
+    "</table>"))
+
+(define (dot-digraph-gen-row content)
+  `("<tr>"
+    ,@content
+    "</tr>"))
+
+(define (dot-digraph-gen-col id last? align content)
+  `("<td"
+    ,@(if align
+          `(" align=\"" ,align "\"")
+          '())
+    ,@(if id
+          `(" port=\"" ,id "\"")
+          '())
+    ,(if last?
+         " colspan=\"20\""
+         "")
+    ">"
+    ,@content
+    "</td>"))
+
+(define (dot-digraph-gen-font face color content)
+  `("<font face=\"" ,face "\""
+    ,@(if color
+          `(" color=\"" ,color "\"")
+          '())
+    ">"
+    ,@content
+    "</font>"))
+
+(define (dot-digraph-gen-html-label content)
+  `("<"
+    ,@content
+    ">"))
+
+(define (dot-digraph-gen-html-escape str)
+  (apply string-append
+         (map (lambda (c)
+                (cond ((char=? c #\<) "&lt;")
+                      ((char=? c #\>) "&gt;")
+                      ((char=? c #\&) "&amp;")
+                      (else           (string c))))
+              (string->list str))))
+
+(define (dot-digraph-write dd port)
+  (for-each
+   (lambda (str)
+     (display str port))
+   (dot-digraph-gen-digraph dd)))
+
+(define dot-digraph-gray80 "gray80")
+(define dot-digraph-gray60 "gray60")
+(define dot-digraph-black  "black")
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
