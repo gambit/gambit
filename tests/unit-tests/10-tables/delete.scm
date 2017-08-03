@@ -1,15 +1,4 @@
 (include "#.scm")
-;; (define (check-= a b)
-;;   (println "--------")
-;;   (println a)
-;;   (println "=?=")
-;;   (println b))
-
-;; (define (check-equal? a b)
-;;   (println "--------")
-;;   (println a)
-;;   (println "eq?")
-;;   (println b))
 
 (define obj-key '(1 2 3))
 
@@ -40,12 +29,12 @@
    (table-set! t (cons "not" "found")))
 
  (list (make-table)
-       ;(make-table weak-keys: #t)
-       ;(make-table weak-values: #t)
-       ;(make-table weak-keys: #t weak-values: #t)
+       (make-table weak-keys: #t)
+       (make-table weak-values: #t)
+       (make-table weak-keys: #t weak-values: #t)
 
-       ;(make-table test: eq?)
-       ;(make-table test: eq? weak-keys: #t)
-       ;(make-table test: eq? weak-values: #t)
-       #;(make-table test: eq? weak-keys: #t weak-values: #t)))
+       (make-table test: eq?)
+       (make-table test: eq? weak-keys: #t)
+       (make-table test: eq? weak-values: #t)
+       (make-table test: eq? weak-keys: #t weak-values: #t)))
 

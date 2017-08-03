@@ -7,8 +7,7 @@
    (define prim-keys-b (list 1 2 #t #f #!void '() 'symbol '|special symbol| '|123|))
 
    ;; Object keys
-   (define str1 "key")
-   (define str2 "key")
+   (define str "key")
    (define bignum 12893187263876213876213876128736498328443298679821739812739832879)
    (define flonum 77.77)
    (define ratnum 1/3)
@@ -19,7 +18,7 @@
    (define uninterned-symbol (string->uninterned-symbol "unintered-symbol"))
    (define uninterned-keyword (string->uninterned-keyword "unintered-keyword"))
 
-   (define obj-keys '(list str1 str2 bignum flonum ratnum cpxnum table-key fct-key prim-keys-a uninterned-symbol uninterned-keyword))
+   (define obj-keys (list str bignum flonum ratnum cpxnum table-key fct-key prim-keys-a uninterned-symbol uninterned-keyword))
 
    (for-each
     (lambda (key)

@@ -2,10 +2,9 @@
 
 (for-each
  (lambda (t)
-
    ;; Primitive keys
-   (define prim-keys-a (list 1 2 #t #f #!void '() 'symbol '|special symbol| '|123|))
-   (define prim-keys-b (list 1 2 #t #f #!void '() 'symbol '|special symbol| '|123|))
+   (define prim-keys-a (list 1 #t #f #!void '() 'symbol '|special symbol| '|123|))
+   (define prim-keys-b (list 1 #t #f #!void '() 'symbol '|special symbol| '|123|))
 
    ;; Object keys
    (define str "key")
@@ -26,25 +25,28 @@
       (table-set! t key key))
     (append prim-keys-a obj-keys))
 
-   (let ((lst (table->list t)))
+   (for-each
+    (lambda (key)
+      (check-eq? (table-search
+                  (lambda (k v)
+                    (if (eq? k key)
+                        v
+                        #f))
+                  t)
+                 key))
+    (append prim-keys-b obj-keys))
 
-     (check-= (length lst) (table-length t))
-
-     (for-each
-      (lambda (key)
-        (cond
-         ((assoc key lst) => (lambda (pair)
-                               (check-eq? key (car pair))
-                               (check-eq? key (cdr pair))))
-         (else
-          (check-true #f))))
-      (append prim-keys-b obj-keys))))
-
+   (check-= 1 (table-search
+               (lambda (k v)
+                 (if (fixnum? k)
+                     v
+                     #f))
+               t)))
  (list (make-table)
        (make-table weak-keys: #t)
        (make-table weak-values: #t)
        (make-table weak-keys: #t weak-values: #t)
-       
+
        (make-table test: eq?)
        (make-table test: eq? weak-keys: #t)
        (make-table test: eq? weak-values: #t)
