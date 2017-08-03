@@ -15,7 +15,528 @@
 
 ;;----------------------------------------------------------------------------
 
+(define univ-rtlib-feature-table (make-table))
+
 (define (univ-rtlib-feature ctx feature)
+  (let ((f (table-ref univ-rtlib-feature-table feature #f)))
+    (if f
+        (f ctx feature)
+        (old-univ-rtlib-feature ctx feature))))
+
+(define (univ-define-rtlib-feature name feature)
+  (table-set! univ-rtlib-feature-table name feature))
+
+(let () ;; univ-rtlib-features definitions
+
+  (define (rts-class
+           ctx
+           root-name
+           properties
+           extends
+           class-fields
+           instance-fields
+           class-methods
+           instance-methods
+           class-classes
+           constructor
+           inits)
+    (univ-add-class
+     (univ-make-empty-defs)
+     (univ-class
+      (^rts-class root-name)
+      properties
+      (cond ;; extends
+       ((and (pair? extends)
+             (eq? (car extends) 'prim))
+        (cadr extends))
+       ((and extends
+             (or (eq? (target-name (ctx-target ctx)) 'java)
+                 (not (eq? extends 'scmobj))))
+        (^rts-class-use extends))
+       (else
+        #f))
+      class-fields
+      instance-fields
+      class-methods
+      instance-methods
+      class-classes
+      constructor
+      inits)))
+
+  (define (rts-method
+           ctx
+           name
+           properties
+           result-type
+           params
+           header
+           attribs
+           gen-body)
+    (univ-add-method
+     (univ-make-empty-defs)
+     (univ-method
+      (^rts-method name)
+      properties
+      result-type
+      params
+      attribs
+      (univ-emit-fn-body ctx header gen-body))))
+
+  (define (rts-field name type #!optional (init #f) (properties '()))
+    (univ-add-field
+     (univ-make-empty-defs)
+     (univ-field name type init properties)))
+
+  (define (rts-init init)
+    (univ-add-init
+     (univ-make-empty-defs)
+     init))
+
+  (define (continuation-capture-procedure ctx nb-args thread-save?)
+    (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+      (univ-jumpable-declaration-defs
+       ctx
+       #t
+       (string->symbol
+        (string-append
+         (if thread-save?
+             "thread_save"
+             "continuation_capture")
+         (number->string nb-args)))
+       'entrypt
+       '()
+       '()
+       (univ-emit-fn-body
+        ctx
+        "\n"
+        (lambda (ctx)
+          (^ (if (= nb-stacked 0)
+                 (^var-declaration
+                  'scmobj
+                  (^local-var (^ 'arg 1))
+                  (^getreg 1))
+                 (univ-foldr-range
+                  1
+                  nb-stacked
+                  (^)
+                  (lambda (i rest)
+                    (^ rest
+                       (^pop (lambda (expr)
+                               (^var-declaration
+                                'scmobj
+                                (^local-var (^ 'arg i))
+                                expr)))))))
+
+             (^setreg 0
+                      (^call-prim
+                       (^rts-method-use 'heapify_cont)
+                       (^cast* 'returnpt
+                               (^getreg 0))))
+
+             (let* ((cont
+                     (^new-continuation
+                      (^cast* 'frame
+                              (^array-index
+                               (gvm-state-stack-use ctx 'rd)
+                               (^int 0)))
+                      (^structure-ref (^rts-field-use 'current_thread)
+                                      univ-thread-denv-slot)))
+                    (result
+                     (if thread-save?
+                         (^rts-field-use 'current_thread)
+                         cont)))
+
+               (^ (if thread-save?
+                      (^structure-set! (^rts-field-use 'current_thread)
+                                       univ-thread-cont-slot
+                                       cont)
+                      (^))
+
+                  (if (= nb-stacked 0)
+                      (^setreg 1 result)
+                      (univ-foldr-range
+                       1
+                       nb-stacked
+                       (^)
+                       (lambda (i rest)
+                         (^ (^push (if (= i 1) result (^local-var (^ 'arg i))))
+                            rest))))))
+
+             (^setnargs nb-args)
+
+             (^return-jump
+              (^cast*-jumpable (^local-var (^ 'arg 1))))))))))
+
+  (define (continuation-graft-no-winding-procedure ctx nb-args thread-restore?)
+    (univ-jumpable-declaration-defs
+     ctx
+     #t
+     (string->symbol
+      (string-append
+       (if thread-restore?
+           "thread_restore"
+           "continuation_graft_no_winding")
+       (number->string nb-args)))
+     'entrypt
+     '()
+     '()
+     (univ-emit-fn-body
+      ctx
+      "\n"
+      (lambda (ctx)
+        (let* ((nb-stacked
+                (max 0 (- nb-args univ-nb-arg-regs)))
+               (new-nb-args
+                (- nb-args 2))
+               (new-nb-stacked
+                (max 0 (- new-nb-args univ-nb-arg-regs)))
+               (underflow
+                (^rts-jumpable-use 'underflow)))
+          (^ (univ-foldr-range
+              1
+              (max 2 (- nb-args univ-nb-arg-regs))
+              (^)
+              (lambda (i rest)
+                (^ rest
+                   (^var-declaration
+                    'scmobj
+                    (^local-var (^ 'arg i))
+                    (let ((x (- i nb-stacked)))
+                      (if (>= x 1)
+                          (^getreg x)
+                          (^getstk x)))))))
+
+             (if thread-restore?
+                 (^ (^assign (^rts-field-use 'current_thread)
+                             (^local-var (^ 'arg 1)))
+                    (^assign (^local-var (^ 'arg 1))
+                             (^structure-ref (^local-var (^ 'arg 1))
+                                             univ-thread-cont-slot)))
+                 (^))
+
+             (^assign
+              (^array-index
+               (gvm-state-stack-use ctx 'rd)
+               (^int 0))
+              (^member (^cast* 'continuation
+                               (^local-var (^ 'arg 1)))
+                       'frame))
+
+             (^structure-set! (^rts-field-use 'current_thread)
+                              univ-thread-denv-slot
+                              (^member (^cast* 'continuation
+                                               (^local-var (^ 'arg 1)))
+                                       'denv))
+
+             (^assign
+              (gvm-state-sp-use ctx 'wr)
+              0)
+
+             (^setreg 0 underflow)
+
+             (univ-foldr-range
+              1
+              new-nb-stacked
+              (^)
+              (lambda (i rest)
+                (^ (^push (^local-var (^ 'arg (+ i 2))))
+                   rest)))
+
+             (if (= new-nb-stacked (- nb-stacked 2))
+                 (^)
+                 (univ-foldr-range
+                  (+ new-nb-stacked 1)
+                  new-nb-args
+                  (^)
+                  (lambda (i rest)
+                    (^ (^setreg (- i new-nb-stacked)
+                                (^getreg (- i (- nb-stacked 2))))
+                       rest))))
+
+             (^setnargs new-nb-args)
+
+             (^return
+              (^cast*-jumpable (^local-var (^ 'arg 2))))))))))
+
+  (define (continuation-return-no-winding-procedure ctx nb-args)
+    (univ-jumpable-declaration-defs
+     ctx
+     #t
+     (string->symbol
+      (string-append
+       "continuation_return_no_winding"
+       (number->string nb-args)))
+     'entrypt
+     '()
+     '()
+     (univ-emit-fn-body
+      ctx
+      "\n"
+      (lambda (ctx)
+        (let* ((nb-stacked
+                (max 0 (- nb-args univ-nb-arg-regs)))
+               (underflow
+                (^rts-jumpable-use 'underflow))
+               (arg1
+                (^local-var 'arg1)))
+          (^ (^var-declaration
+              'continuation
+              arg1
+              (^cast* 'continuation
+                      (let ((x (- 1 nb-stacked)))
+                        (if (>= x 1)
+                            (^getreg x)
+                            (^getstk x)))))
+
+             (^assign
+              (^array-index
+               (gvm-state-stack-use ctx 'rd)
+               (^int 0))
+              (^member arg1 'frame))
+
+             (^structure-set! (^rts-field-use 'current_thread)
+                              univ-thread-denv-slot
+                              (^member arg1 'denv))
+
+             (^assign
+              (gvm-state-sp-use ctx 'wr)
+              0)
+
+             (^setreg 0 underflow)
+
+             (let ((x (- 2 nb-stacked)))
+               (if (= x 1)
+                   (^)
+                   (^setreg 1 (^getreg x))))
+
+             (^return underflow)))))))
+
+  (define (apply-procedure ctx nb-args)
+    (univ-jumpable-declaration-defs
+     ctx
+     #t
+     (string->symbol
+      (string-append
+       "apply"
+       (number->string nb-args)))
+     'entrypt
+     '()
+     '()
+     (univ-emit-fn-body
+      ctx
+      "\n"
+      (lambda (ctx)
+        (^ (univ-pop-args-to-vars ctx nb-args)
+
+           (univ-foldr-range
+            2
+            (- nb-args 1)
+            (^)
+            (lambda (i rest)
+              (^ (^push (^local-var (^ 'arg i)))
+                 rest)))
+
+           (^setnargs (- nb-args 2))
+
+           (let ((args (^local-var (^ 'arg nb-args))))
+             (^while (^pair? args)
+                     (^ (^push (^getcar args))
+                        (^assign args (^getcdr args))
+                        (^inc-by (gvm-state-nargs-use ctx 'rdwr)
+                                 1))))
+
+           (univ-pop-args-to-regs ctx 0)
+
+           (^return
+            (^cast*-jumpable (^local-var (^ 'arg 1)))))))))
+  ;; --
+
+  (define (univ-rtlib-feature-method
+           properties
+           result-type
+           params
+           header
+           attribs
+           gen-body)
+    (lambda (ctx feature)
+      (rts-method
+       ctx
+       feature
+       properties
+       result-type
+       params
+       header
+       attribs
+       gen-body)))
+
+  (define (univ-rtlib-feature-class
+           #!optional
+           (properties '())
+           (extends #f)
+           (class-fields '())
+           (instance-fields '())
+           (class-methods '())
+           (instance-methods '())
+           (class-classes '())
+           (constructor #f)
+           (inits '()))
+    (lambda (ctx feature)
+      (rts-class ctx feature properties extends class-fields instance-fields class-methods instance-methods class-classes constructor inits)))
+
+  ;; -- helpers
+  (define (univ-rtlib-feature-reg ctx feature)
+    (rts-field feature 'scmobj (^null) '(public)))
+
+  (for-each
+   (lambda (reg)
+     (univ-define-rtlib-feature reg univ-rtlib-feature-reg))
+   '(r0 r1 r2 r3 r4))
+
+  (univ-define-rtlib-feature 'trampoline
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'pc 'jumpable))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((pc (^local-var 'pc)))
+        (^while (^!= pc (^null)) ;; exit trampoline?
+                (^assign pc
+                         (^jump pc)))))))
+
+  (univ-define-rtlib-feature 'module_registry_init
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'link_info '(array modlinkinfo)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((link_info (^local-var 'link_info))
+            (n (^local-var 'n))
+            (i (^local-var 'i))
+            (info (^local-var 'info)))
+
+        (^ (^var-declaration
+            'int
+            n
+            (^array-length link_info))
+
+           (^var-declaration
+            'int
+            i
+            (^int 0))
+
+           (^assign (^rts-field-use 'module_table)
+                    (^new-array 'scmobj n))
+
+           (^while (^< i n)
+
+                   (^ (^var-declaration
+                       'modlinkinfo
+                       info
+                       (^array-index link_info i))
+
+                      (^dict-set (^rts-field-use 'module_map)
+                                 (^member info 'name)
+                                 info)
+
+                      (^assign (^array-index (^rts-field-use 'module_table) i)
+                               (^null))
+
+                      (^inc-by i 1))))))))
+
+  (univ-define-rtlib-feature 'modlinkinfo
+   (univ-rtlib-feature-class
+    '() ;; properties
+    #f ;; extends
+    '() ;; class-fields
+    (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+          (univ-field 'index 'int #f '(public)))))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "continuation_capture" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (continuation-capture-procedure ctx num #f)))))
+   '(1 2 3 4))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "continuation_graft_no_winding" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (continuation-graft-no-winding-procedure ctx num #f)))))
+   '(2 3 4 5))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "thread_restore" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (continuation-graft-no-winding-procedure ctx num #t)))))
+   '(2 3 4 5))
+
+  (univ-define-rtlib-feature 'continuation_return_no_winding2
+   (lambda (ctx feature)
+     (continuation-return-no-winding-procedure ctx 2)))
+
+  (univ-define-rtlib-feature 'glo-real-time-milliseconds
+   (lambda (ctx feature)
+     (univ-defs-combine
+      (univ-jumpable-declaration-defs
+       ctx
+       #t
+       (gvm-proc-use ctx "real-time-milliseconds")
+       'entrypt
+       '()
+       '()
+       (univ-emit-fn-body
+        ctx
+        "\n"
+        (lambda (ctx)
+          (^ (case (target-name (ctx-target ctx))
+
+               ((js java)
+                (^setreg 1
+                         (^fixnum-box
+                          (^cast* 'int
+                                  (^parens
+                                   (^- (univ-get-time ctx)
+                                       (^rts-field-use 'start_time)))))))
+
+               ((python php ruby)
+                (^setreg 1
+                         (^fixnum-box
+                          (^float-toint
+                           (^* 1000
+                               (^parens
+                                (^- (univ-get-time ctx)
+                                    (^rts-field-use 'start_time))))))))
+
+               (else
+                (compiler-internal-error
+                 "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
+             (^return
+              (^cast*-jumpable (^getreg 0)))))))
+      (rts-init
+       (lambda (ctx)
+         (^setglo 'real-time-milliseconds
+                  (^this-mod-jumpable
+                   (gvm-proc-use ctx "real-time-milliseconds"))))))))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "apply" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (apply-procedure ctx num)))))
+   '(2 3 4 5))
+   )
+
+(define (old-univ-rtlib-feature ctx feature)
 
   (define (rts-method
            name
@@ -340,8 +861,8 @@
 
   (case feature
 
-    ((r0 r1 r2 r3 r4)
-     (rts-field feature 'scmobj (^null) '(public)))
+    ;; ((r0 r1 r2 r3 r4)
+    ;;  (rts-field feature 'scmobj (^null) '(public)))
 
     ((peps)
      (rts-field
@@ -421,62 +942,62 @@
                         )))
                 '(public)))
 
-    ((trampoline)
-     (rts-method
-      'trampoline
-      '(public)
-      'noresult
-      (list (univ-field 'pc 'jumpable))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((pc (^local-var 'pc)))
-          (^while (^!= pc (^null)) ;; exit trampoline?
-                  (^assign pc
-                           (^jump pc)))))))
+    ;; ((trampoline)
+    ;;  (rts-method
+    ;;   'trampoline
+    ;;   '(public)
+    ;;   'noresult
+    ;;   (list (univ-field 'pc 'jumpable))
+    ;;   "\n"
+    ;;   '()
+    ;;   (lambda (ctx)
+    ;;     (let ((pc (^local-var 'pc)))
+    ;;       (^while (^!= pc (^null)) ;; exit trampoline?
+    ;;               (^assign pc
+    ;;                        (^jump pc)))))))
 
-    ((module_registry_init)
-     (rts-method
-      'module_registry_init
-      '(public)
-      'noresult
-      (list (univ-field 'link_info '(array modlinkinfo)))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((link_info (^local-var 'link_info))
-              (n (^local-var 'n))
-              (i (^local-var 'i))
-              (info (^local-var 'info)))
+    ;; ((module_registry_init)
+    ;;  (rts-method
+    ;;   'module_registry_init
+    ;;   '(public)
+    ;;   'noresult
+    ;;   (list (univ-field 'link_info '(array modlinkinfo)))
+    ;;   "\n"
+    ;;   '()
+    ;;   (lambda (ctx)
+    ;;     (let ((link_info (^local-var 'link_info))
+    ;;           (n (^local-var 'n))
+    ;;           (i (^local-var 'i))
+    ;;           (info (^local-var 'info)))
 
-          (^ (^var-declaration
-              'int
-              n
-              (^array-length link_info))
+    ;;       (^ (^var-declaration
+    ;;           'int
+    ;;           n
+    ;;           (^array-length link_info))
 
-             (^var-declaration
-              'int
-              i
-              (^int 0))
+    ;;          (^var-declaration
+    ;;           'int
+    ;;           i
+    ;;           (^int 0))
 
-             (^assign (^rts-field-use 'module_table)
-                      (^new-array 'scmobj n))
+    ;;          (^assign (^rts-field-use 'module_table)
+    ;;                   (^new-array 'scmobj n))
 
-             (^while (^< i n)
+    ;;          (^while (^< i n)
 
-                     (^ (^var-declaration
-                         'modlinkinfo
-                         info
-                         (^array-index link_info i))
+    ;;                  (^ (^var-declaration
+    ;;                      'modlinkinfo
+    ;;                      info
+    ;;                      (^array-index link_info i))
 
-                        (^dict-set (^rts-field-use 'module_map)
-                                   (^member info 'name)
-                                   info)
+    ;;                     (^dict-set (^rts-field-use 'module_map)
+    ;;                                (^member info 'name)
+    ;;                                info)
 
-                        (^assign (^array-index (^rts-field-use 'module_table) i)
-                                 (^null))
+    ;;                     (^assign (^array-index (^rts-field-use 'module_table) i)
+    ;;                              (^null))
 
-                        (^inc-by i 1))))))))
+    ;;                     (^inc-by i 1))))))))
 
     ((module_register)
      (rts-method
@@ -569,14 +1090,14 @@
                                            (^rts-field-use 'module_table)
                                            (^int 0))))))))))))))
 
-    ((modlinkinfo)
-     (rts-class
-      'modlinkinfo
-      '() ;; properties
-      #f ;; extends
-      '() ;; class-fields
-      (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-            (univ-field 'index 'int #f '(public)))))
+    ;; ((modlinkinfo)
+    ;;  (rts-class
+    ;;   'modlinkinfo
+    ;;   '() ;; properties
+    ;;   #f ;; extends
+    ;;   '() ;; class-fields
+    ;;   (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+    ;;         (univ-field 'index 'int #f '(public)))))
 
     ((module_map)
      (rts-field
@@ -910,17 +1431,17 @@
 
               (^return ra)))))))
 
-    ((continuation_capture1)
-     (continuation-capture-procedure 1 #f))
+    ;; ((continuation_capture1)
+    ;;  (continuation-capture-procedure 1 #f))
 
-    ((continuation_capture2)
-     (continuation-capture-procedure 2 #f))
+    ;; ((continuation_capture2)
+    ;;  (continuation-capture-procedure 2 #f))
 
-    ((continuation_capture3)
-     (continuation-capture-procedure 3 #f))
+    ;; ((continuation_capture3)
+    ;;  (continuation-capture-procedure 3 #f))
 
-    ((continuation_capture4)
-     (continuation-capture-procedure 4 #f))
+    ;; ((continuation_capture4)
+    ;;  (continuation-capture-procedure 4 #f))
 
     ((thread_save1)
      (continuation-capture-procedure 1 #t))
@@ -934,32 +1455,32 @@
     ((thread_save4)
      (continuation-capture-procedure 4 #t))
 
-    ((continuation_graft_no_winding2)
-     (continuation-graft-no-winding-procedure 2 #f))
+    ;; ((continuation_graft_no_winding2)
+    ;;  (continuation-graft-no-winding-procedure 2 #f))
 
-    ((continuation_graft_no_winding3)
-     (continuation-graft-no-winding-procedure 3 #f))
+    ;; ((continuation_graft_no_winding3)
+    ;;  (continuation-graft-no-winding-procedure 3 #f))
 
-    ((continuation_graft_no_winding4)
-     (continuation-graft-no-winding-procedure 4 #f))
+    ;; ((continuation_graft_no_winding4)
+    ;;  (continuation-graft-no-winding-procedure 4 #f))
 
-    ((continuation_graft_no_winding5)
-     (continuation-graft-no-winding-procedure 5 #f))
+    ;; ((continuation_graft_no_winding5)
+    ;;  (continuation-graft-no-winding-procedure 5 #f))
 
-    ((thread_restore2)
-     (continuation-graft-no-winding-procedure 2 #t))
+    ;; ((thread_restore2)
+    ;;  (continuation-graft-no-winding-procedure 2 #t))
 
-    ((thread_restore3)
-     (continuation-graft-no-winding-procedure 3 #t))
+    ;; ((thread_restore3)
+    ;;  (continuation-graft-no-winding-procedure 3 #t))
 
-    ((thread_restore4)
-     (continuation-graft-no-winding-procedure 4 #t))
+    ;; ((thread_restore4)
+    ;;  (continuation-graft-no-winding-procedure 4 #t))
 
-    ((thread_restore5)
-     (continuation-graft-no-winding-procedure 5 #t))
+    ;; ((thread_restore5)
+    ;;  (continuation-graft-no-winding-procedure 5 #t))
 
-    ((continuation_return_no_winding2)
-     (continuation-return-no-winding-procedure 2))
+    ;; ((continuation_return_no_winding2)
+    ;;  (continuation-return-no-winding-procedure 2))
 
     ((poll)
      (rts-method
@@ -3705,48 +4226,48 @@ EOF
                   (^this-mod-jumpable
                    (gvm-proc-use ctx "##exit-process")))))))
 
-    ((glo-real-time-milliseconds)
-     (univ-defs-combine
-      (univ-jumpable-declaration-defs
-       ctx
-       #t
-       (gvm-proc-use ctx "real-time-milliseconds")
-       'entrypt
-       '()
-       '()
-       (univ-emit-fn-body
-        ctx
-        "\n"
-        (lambda (ctx)
-          (^ (case (target-name (ctx-target ctx))
+    ;; ((glo-real-time-milliseconds)
+    ;;  (univ-defs-combine
+    ;;   (univ-jumpable-declaration-defs
+    ;;    ctx
+    ;;    #t
+    ;;    (gvm-proc-use ctx "real-time-milliseconds")
+    ;;    'entrypt
+    ;;    '()
+    ;;    '()
+    ;;    (univ-emit-fn-body
+    ;;     ctx
+    ;;     "\n"
+    ;;     (lambda (ctx)
+    ;;       (^ (case (target-name (ctx-target ctx))
 
-               ((js java)
-                (^setreg 1
-                         (^fixnum-box
-                          (^cast* 'int
-                                  (^parens
-                                   (^- (univ-get-time ctx)
-                                       (^rts-field-use 'start_time)))))))
+    ;;            ((js java)
+    ;;             (^setreg 1
+    ;;                      (^fixnum-box
+    ;;                       (^cast* 'int
+    ;;                               (^parens
+    ;;                                (^- (univ-get-time ctx)
+    ;;                                    (^rts-field-use 'start_time)))))))
 
-               ((python php ruby)
-                (^setreg 1
-                         (^fixnum-box
-                          (^float-toint
-                           (^* 1000
-                               (^parens
-                                (^- (univ-get-time ctx)
-                                    (^rts-field-use 'start_time))))))))
+    ;;            ((python php ruby)
+    ;;             (^setreg 1
+    ;;                      (^fixnum-box
+    ;;                       (^float-toint
+    ;;                        (^* 1000
+    ;;                            (^parens
+    ;;                             (^- (univ-get-time ctx)
+    ;;                                 (^rts-field-use 'start_time))))))))
 
-               (else
-                (compiler-internal-error
-                 "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
-             (^return
-              (^cast*-jumpable (^getreg 0)))))))
-      (rts-init
-       (lambda (ctx)
-         (^setglo 'real-time-milliseconds
-                  (^this-mod-jumpable
-                   (gvm-proc-use ctx "real-time-milliseconds")))))))
+    ;;            (else
+    ;;             (compiler-internal-error
+    ;;              "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
+    ;;          (^return
+    ;;           (^cast*-jumpable (^getreg 0)))))))
+    ;;   (rts-init
+    ;;    (lambda (ctx)
+    ;;      (^setglo 'real-time-milliseconds
+    ;;               (^this-mod-jumpable
+    ;;                (gvm-proc-use ctx "real-time-milliseconds")))))))
 
     ((start_time)
      (rts-field
@@ -4041,17 +4562,17 @@ EOF
                      (^glo-var-primitive-set! sym (^null))))
              (^return sym))))))
 
-    ((apply2)
-     (apply-procedure 2))
+    ;; ((apply2)
+    ;;  (apply-procedure 2))
 
-    ((apply3)
-     (apply-procedure 3))
+    ;; ((apply3)
+    ;;  (apply-procedure 3))
 
-    ((apply4)
-     (apply-procedure 4))
+    ;; ((apply4)
+    ;;  (apply-procedure 4))
 
-    ((apply5)
-     (apply-procedure 5))
+    ;; ((apply5)
+    ;;  (apply-procedure 5))
 
     ((host_function2scm)
      (rts-method
