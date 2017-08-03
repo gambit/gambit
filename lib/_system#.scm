@@ -75,6 +75,7 @@
   (test      unprintable:)
   (init      unprintable:)
   (hashtable unprintable:)
+  (flags     unprintable:)
 )
 
 ))

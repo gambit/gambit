@@ -1599,8 +1599,8 @@
               #!optional
               (size (macro-absent-obj))
               (init (macro-absent-obj))
-              (weak-keys (macro-absent-obj))
-              (weak-values (macro-absent-obj))
+              (weak-keys #f)
+              (weak-values #f)
               (test (macro-absent-obj))
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
@@ -1634,6 +1634,8 @@
                       ;; weak-keys/values are extended booleans
                       (##univ-table-make-hashtable (##not (##not weak-keys))
                                                    (##not (##not weak-values)))
+                      (##fx+ (if weak-keys 1 0)
+                             (if weak-values 2 0))
 ))
 
   (check-test 0))
@@ -1825,11 +1827,21 @@
   (##list->table lst))
 
 (define-prim (##table-copy table)
-  (macro-make-table
-   (macro-table-init table)
-   (macro-table-test table)
-   ;; TODO
-   (##table-univ-make-hashtable #f #f)))
+  (let ((copy (##make-table
+               (macro-absent-obj) ;; size
+               (macro-table-init table) ;; init
+               (##fxand 1 (macro-table-flags table)) ;; weak-keys
+               (##fxand 2 (macro-table-flags table)) ;; weak-values
+               ;; (macro-table-test table) ;; test
+               ;; (macro-absent-obj) ;; hash
+               ;; (macro-absent-obj) ;; min-load
+               ;; (macro-absent-obj) ;; max-load
+               )))
+    (for-each
+     (lambda (pair)
+       (##table-set! copy (##car pair) (##cdr pair)))
+     (##table->list table))
+    copy))
 
 (define-prim (table-copy table)
   (macro-force-vars (table)
@@ -1837,12 +1849,26 @@
       (##table-copy table))))
 
 (define-prim (##table-search proc table)
-  (let loop ((lst (macro-table-hashtable table)))
+  (let loop ((lst (##table->list table)))
     (if (##pair? lst)
         (let ((pair (##car lst)))
           (or (proc (##car pair) (##cdr pair))
               (loop (##cdr lst))))
         #f)))
+
+(define-prim (table-search proc table)
+  (##table-search proc table))
+
+(define-prim (##table-for-each proc table)
+  (let loop ((lst (##table->list table)))
+    (if (##pair? lst)
+        (let ((pair (##car lst)))
+          (proc (##car pair) (##cdr pair))
+          (loop (##cdr lst)))
+        #!void)))
+
+(define-prim (table-for-each proc table)
+  (##table-for-each proc table))
 
 (define-prim (##table-equal? table1 table2)
 
@@ -1860,9 +1886,6 @@
                                  (##table-ref table2 key1 unique)))
                             (##not (##equal? val1 val2))))
                         table1)))))))
-
-(define-prim (##table-dump table)
-  (##inline-host-statement "print(@1@);" (macro-table-hashtable table)))
 ))
 
 ;;;----------------------------------------------------------------------------
