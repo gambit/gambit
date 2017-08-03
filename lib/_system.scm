@@ -1632,8 +1632,9 @@
                           test-fn)
                       init
                       ;; weak-keys/values are extended booleans
-                      (##table-univ-make-hashtable (##not (##eq? weak-keys (macro-absent-obj)))
-                                                   (##not (##eq? weak-values (macro-absent-obj))))))
+                      (##univ-table-make-hashtable (##not (##not weak-keys))
+                                                   (##not (##not weak-values)))
+))
 
   (check-test 0))
 
@@ -1664,7 +1665,7 @@
               (found (lambda (key) key))
               (not-found (lambda () #!void)))
   (let ((test (macro-table-test table)))
-    (let loop ((keys (##table-univ-keys (macro-table-hashtable table))))
+    (let loop ((keys (##univ-table-keys (macro-table-hashtable table))))
       (cond
        ((##null? keys)
         (not-found))
@@ -1681,7 +1682,7 @@
 
   (let ((test (macro-table-test table)))
     (define (found key)
-      (##table-univ-ref (macro-table-hashtable table) key))
+      (##univ-table-ref (macro-table-hashtable table) key))
     (define (not-found)
       (cond
        ((##not (##eq? default-value (macro-absent-obj)))
@@ -1696,7 +1697,7 @@
     (cond
      (test ;; not and eq?-table
       (##table-find-key table key found not-found))
-     ((##table-univ-key-exists? (macro-table-hashtable table) key)
+     ((##univ-table-key-exists? (macro-table-hashtable table) key)
       (found key))
      (else
       (not-found)))))
@@ -1720,11 +1721,11 @@
     (if (macro-table-test table) ;; if it's not an eq?-table
         (##table-find-key table key
                           (lambda (k)
-                            (##table-univ-delete (macro-table-hashtable table) k))))
+                            (##univ-table-delete (macro-table-hashtable table) k))))
 
     (if (##eq? val (macro-absent-obj))
-        (##table-univ-delete (macro-table-hashtable table) key) ;; TODO : la fonction ne doit pas crasher si la clé n'existe pas
-        (##table-univ-set! (macro-table-hashtable table)
+        (##univ-table-delete (macro-table-hashtable table) key)
+        (##univ-table-set! (macro-table-hashtable table)
                            key
                            val))))
 
@@ -1738,7 +1739,7 @@
       (##table-set! table key val))))
 
 (define-prim (##table-length table)
-  (##table-univ-length (macro-table-hashtable table)))
+  (##univ-table-length (macro-table-hashtable table)))
 
 (define-prim (table-length table)
   (macro-force-vars (table)
@@ -1746,11 +1747,10 @@
       (##table-length table))))
 
 (define-prim (##table->list table)
-  ;; TODO this is horribly inefficient for non-eq?-table
-  ;; add a ##table-univ->list primitive
-  (map (lambda (key)
-         (cons key (##table-ref table key)))
-       (##table-univ-keys (macro-table-hashtable table))))
+  (let ((hashtable (macro-table-hashtable table)))
+    (map (lambda (key)
+           (cons key (##univ-table-ref hashtable key)))
+         (##univ-table-keys (macro-table-hashtable table)))))
 
 (define-prim (table->list table)
   (macro-force-vars (table)
@@ -1793,7 +1793,7 @@
                           hash: hash
                           min-load: min-load
                           max-load: max-load)
-             (##table-univ-set! (macro-table-hashtable table)
+             (##univ-table-set! (macro-table-hashtable table)
                                 (##car couple)
                                 (##cdr couple)))
             (loop (##cdr x)))

@@ -607,16 +607,13 @@
 (univ-prim-proc-add! '("##inline-host-expression" 1 #t 0 0 (#f) extended))
 (univ-prim-proc-add! '("##inline-host-declaration" (1) #t 0 0 (#f) extended))
 
-(univ-prim-proc-add! '("##table-univ-make-hashtable" (2) #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-univ-key-exists?" (2) #f 0 0 boolean extended))
-(univ-prim-proc-add! '("##table-univ-keys" (1) #f 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-univ-ref" (2) #f 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-univ-set!" (3) #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-univ-delete" (2) #f 0 0 (#f) extended))
-(univ-prim-proc-add! '("##table-univ-length" (1) #f 0 0 number extended))
-
-;; (univ-prim-proc-add! '("##table-univ->list" (1) #f 0 0 pair extended))
-;; (univ-prim-proc-add! '("##list->table-univ" (1) #f 0 0 pair extended))
+(univ-prim-proc-add! '("##univ-table-make-hashtable" (2) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##univ-table-key-exists?" (2) #f 0 0 boolean extended))
+(univ-prim-proc-add! '("##univ-table-keys" (1) #f 0 0 (#f) extended))
+(univ-prim-proc-add! '("##univ-table-ref" (2) #f 0 0 (#f) extended))
+(univ-prim-proc-add! '("##univ-table-set!" (3) #t 0 0 (#f) extended))
+(univ-prim-proc-add! '("##univ-table-delete" (2) #f 0 0 (#f) extended))
+(univ-prim-proc-add! '("##univ-table-length" (1) #f 0 0 number extended))
 
 (define (univ-switch-testable? targ obj)
   ;;(pretty-print (list 'univ-switch-testable? 'targ obj))
