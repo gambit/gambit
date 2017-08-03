@@ -1832,11 +1832,10 @@
                (macro-table-init table) ;; init
                (##fxand 1 (macro-table-flags table)) ;; weak-keys
                (##fxand 2 (macro-table-flags table)) ;; weak-values
-               ;; (macro-table-test table) ;; test
-               ;; (macro-absent-obj) ;; hash
-               ;; (macro-absent-obj) ;; min-load
-               ;; (macro-absent-obj) ;; max-load
-               )))
+               (or (macro-table-test table) ##eq?) ;; test
+               (macro-absent-obj) ;; hash
+               (macro-absent-obj) ;; min-load
+               (macro-absent-obj)))) ;; max-load
     (for-each
      (lambda (pair)
        (##table-set! copy (##car pair) (##cdr pair)))
