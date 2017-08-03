@@ -559,9 +559,6 @@
 (define-macro (^dict-length expr)
   `(univ-emit-dict-length ctx ,expr))
 
-(define-macro (^dict-keys expr type)
-  `(univ-emit-dict-keys ctx ,expr ,type))
-
 (define-macro (^member expr name)
   `(univ-emit-member ctx ,expr ,name))
 

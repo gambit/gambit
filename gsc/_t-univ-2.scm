@@ -1278,7 +1278,6 @@
                      (^inc-by (^rts-field-use 'next_sn) (^int 1))))
              (^return (^member obj '__sn__)))))))
 
-    ;; TODO ScmObjHashMap wrapper for Java
     ((hashtable)
      (rts-class
       'hashtable
@@ -1296,7 +1295,13 @@
          (list
           (univ-field 'dict
                       '(dict scmobj scmobj)
-                      (^empty-dict '(dict int scmobj))
+                      (^empty-dict '(dict scmobj scmobj))
+                      '(public))))
+        ((java)
+         (list
+          (univ-field 'dict
+                      '(generic Map scmobj scmobj)
+                      (^null)
                       '(public))))
         (else
          '()))
@@ -1454,7 +1459,7 @@
              (lambda (ctx)
                (let ((keys (^local-var 'keys))
                      (i (^local-var 'i)))
-                 (^ (^var-declaration '(array scmobj) keys (^dict-keys (^member (^this) 'dict) 'scmobj))
+                 (^ (^var-declaration '(array scmobj) keys (^call-prim 'array_keys (^member (^this) 'dict)))
                     (^var-declaration 'int i 0)
 
                     (^while (^< i (^array-length keys))
@@ -1464,23 +1469,71 @@
                                                   (^dict-get (^rts-field-use 'sn_table) (^array-index keys i))))
                                (^inc-by i 1)))
                     (^return keys))))))))
+         ((java)
+          (list
+           (univ-method 'has '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return
+                (^boolean-box (^call-member (^member (^this) 'dict) 'containsKey 'key))))))
+           (univ-method 'get '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return (^call-member (^member (^this) 'dict) 'get 'key)))))
+           (univ-method 'set '(public) 'noresult
+            (list (univ-field 'key 'scmobj)
+                  (univ-field 'val 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^expr-statement
+                (^call-member (^member (^this) 'dict) 'set 'key 'val)))))
+           (univ-method 'delete '(public) 'noresult
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^expr-statement
+                (^call-member (^member (^this) 'dict) 'remove 'key)))))
+           (univ-method 'size '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return
+                (^fixnum-box (^call-member (^member (^this) 'dict) 'size))))))
+           (univ-method 'keys '(public) '(array scmobj) '() '()
+            (univ-emit-fn-body
+             ctx
+             "\n"
+             (lambda (ctx)
+               (^return
+                (^call-member (^call-member (^member (^this) 'dict) 'keySet)
+                              'toArray
+                              (^new-array 'scmobj (^call-member (^member (^this) 'dict) 'size)))))))
+           (univ-method 'init '(public) 'scmobj
+            (list (univ-field 'weak_keys 'boolean)
+                  (univ-field 'weak_values 'boolean))
+            '()
+            (univ-emit-fn-body
+             ctx
+             "\n"
+             (lambda (ctx)
+               (^ (^assign (^member (^this) 'dict)
+                           (^if-expr (^and 'weak_keys 'weak_values)
+                                     (^new (^rts-class-use 'hashtable_weak_keys_values))
+                                     (^if-expr 'weak_keys
+                                               (^new (^type '(generic WeakHashMap scmobj scmobj)))
+                                               (^if-expr 'weak_values
+                                                         (^new (^rts-class-use 'hashtable_weak_values))
+                                                         (^empty-dict '(dict scmobj scmobj))))))
+                  (^return (^this))))))))
          (else
           '()))
        (list
         (univ-method 'keys_list '(public) 'scmobj '() '()
-         (univ-emit-fn-body
-          ctx
-          "\n"
-          (lambda (ctx)
-            (let ((keys (^local-var 'keys)))
-              (^ (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
-
-                 (if (eq? (target-name (ctx-target ctx)) 'python)
-                     (^assign keys (^call-prim 'list keys))
-                     (^))
-
-                 (^return (^call-prim (^rts-method-use 'hostarray2list) keys)))))))
-        (univ-method 'table2list '(public) 'scmobj '() '() ;; TODO
          (univ-emit-fn-body
           ctx
           "\n"
@@ -1497,9 +1550,8 @@
     ((hashtable_base)
      (rts-class
       'hashtable_base
-      (list
-       '(alias_method :parent_keys :keys)
-       '(alias_method :parent_get |:[]|)) ;; properties
+      '((alias_method :parent_keys :keys) ;; properties
+        (alias_method :parent_get |:[]|))
       (case (target-name (ctx-target ctx)) ;; extends
         ((ruby)
          '(prim Hash))
@@ -1520,7 +1572,7 @@
             (univ-emit-fn-body ctx "\n"
              (lambda (ctx)
                (^ "return len(self.keys())"))))
-           (univ-method '__contains__ '(public) 'boolean
+           (univ-method '__contains__ '(public) 'bool
             (list (univ-field 'key 'scmobj))
             '()
             (univ-emit-fn-body ctx "\n"
@@ -1598,7 +1650,7 @@
                  "d[key] = val\n"))))))
         ((ruby)
          (list
-          (univ-method 'key_alive? '(public) 'boolean
+          (univ-method 'key_alive? '(public) 'bool
            (list (univ-field 'key 'scmobj))
            '()
            (univ-emit-fn-body ctx "\n"
@@ -1665,8 +1717,12 @@
     ((hashtable_weak_values)
      (rts-class
       'hashtable_weak_values
-      '() ;; properties
-      'hashtable_base
+      '((generic K V)) ;; properties
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((java)
+         '(prim |HashMap<K, V>|))
+        (else
+         'hashtable_base))
       '() ;; class-fields
       '() ;; instance-fields
       '() ;; class-methods
@@ -1702,7 +1758,7 @@
                    "del self.primdict[key]\n"
                    (^if "key in self.objdict"
                         "del self.objdict[key]\n")))))
-           (univ-method '__contains__ '(public) 'boolean
+           (univ-method '__contains__ '(public) 'bool
             (list (univ-field 'key 'scmobj))
             '()
             (univ-emit-fn-body ctx "\n"
@@ -1710,7 +1766,7 @@
                (^ "return key in self.primdict or key in self.objdict"))))))
         ((ruby)
          (list
-          (univ-method 'key_alive? '(public) 'boolean
+          (univ-method 'key_alive? '(public) 'bool
            (list (univ-field 'key 'scmobj))
            '()
            (univ-emit-fn-body ctx "\n"
@@ -1750,6 +1806,55 @@
                  "rescue ArgumentError\n"
                  "super key, obj\n"
                  "end\n"))))))
+        ((java)
+         (list
+          (univ-method 'get '(public) 'V
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "WeakReference<V> ref = (WeakReference<V>) super.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return null;\n"
+                 "return ref.get();\n"))))
+          (univ-method 'put '(public) 'V
+           (list (univ-field 'key 'K)
+                 (univ-field 'value 'V))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "V previous = this.get(key);\n"
+                 "super.put(key, (V) new WeakReference<V>(value));\n"
+                 "return previous;\n"))))
+          (univ-method 'size '(public) 'int '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "cleanup();\n"
+                 "return super.size();"))))
+          (univ-method 'cleanup '(public) 'noresult '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "Set<K> keySet = super.keySet();\n"
+                 "Object[] keys = keySet.toArray(new Object[super.size()]);\n"
+                 "for(Object key : keys)\n"
+                 "  if(this.get((K) key) == null)\n"
+                 "    this.remove((K) key);\n"))))
+          (univ-method 'containsKey '(public) 'bool
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if(!super.containsKey((K) key))\n"
+                 "  return false;\n"
+                 "V ref = (V) this.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return false;\n"
+                 "return true;\n"))))
+          (univ-method 'keySet '(public) '(generic Set K) '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "cleanup();\n"
+                 "return super.keySet();\n"))))))
         (else
          (compiler-internal-error "hashtable_weak_values, unknown target")))
       '() ;; class-classes
@@ -1764,10 +1869,21 @@
     ((hashtable_weak_keys_values)
      (rts-class
       'hashtable_weak_keys_values
-      '() ;; properties
-      'hashtable_weak_keys
+      '((generic K V)) ;; properties
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((java)
+         '(prim |WeakHashMap<K, V>|))
+        (else
+         'hashtable_weak_keys))
       '() ;; class-fields
-      '() ;; instance-fields
+      (case (target-name (ctx-target ctx)) ;; instance-fields
+        ((java)
+         (list (univ-field 'doCleanupWhenComputingSize
+                           'bool
+                           (^bool #f)
+                           '(protected))))
+        (else
+         '()))
       '() ;; class-methods
       (case (target-name (ctx-target ctx))  ;; instance-methods
         ((python)
@@ -1796,7 +1912,7 @@
            (univ-emit-fn-body ctx "\n"
             (lambda (ctx)
               (^ "return not isinstance(" (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key), weakref.ref) or " (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key)() is not None\n"))))
-          (univ-method '__contains__ '(public) 'boolean
+          (univ-method '__contains__ '(public) 'bool
             (list (univ-field 'key 'scmobj))
             '()
             (univ-emit-fn-body ctx "\n"
@@ -1804,7 +1920,7 @@
                (^ "return " (^rts-class-use 'hashtable_weak_keys) ".__contains__(self, key) and self.valid_key(key)"))))))
         ((ruby)
          (list
-          (univ-method 'key_alive? '(public) 'boolean
+          (univ-method 'key_alive? '(public) 'bool
            (list (univ-field 'key 'scmobj))
            '()
            (univ-emit-fn-body ctx "\n"
@@ -1845,6 +1961,58 @@
                  "v = obj\n"
                  "end\n"
                  "super key, v\n"))))))
+        ((java)
+         (list
+          (univ-method 'get '(public) 'V
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "WeakReference<V> ref = (WeakReference<V>) super.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return null;\n"
+                 "return ref.get();\n"))))
+          (univ-method 'put '(public) 'V
+           (list (univ-field 'key 'K)
+                 (univ-field 'value 'V))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "V previous = this.get(key);\n"
+                 "super.put(key, (V) new WeakReference<V>(value));\n"
+                 "return previous;\n"))))
+          (univ-method 'size '(public) 'int '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if(!doCleanupWhenComputingSize)\n"
+                 "  cleanup();\n"
+                 "return super.size();"))))
+          (univ-method 'cleanup '(public) 'noresult '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "doCleanupWhenComputingSize = true;\n"
+                 "Set<K> keySet = super.keySet();\n"
+                 "Object[] keys = keySet.toArray(new Object[super.size()]);\n"
+                 "for(Object key : keys)\n"
+                 "  if(this.get((K) key) == null)\n"
+                 "    this.remove((K) key);\n"
+                 "doCleanupWhenComputingSize = false;\n"))))
+          (univ-method 'containsKey '(public) 'bool
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if(!super.containsKey((K) key))\n"
+                 "  return false;\n"
+                 "V ref = (V) this.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return false;\n"
+                 "return true;\n"))))
+          (univ-method 'keySet '(public) '(generic Set K) '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "cleanup();\n"
+                 "return super.keySet();\n"))))))
         (else
          (compiler-internal-error "hashtable_weak_keys_values, unknown target")))
       '() ;; class-classes
@@ -4920,6 +5088,10 @@ EOF
      (^ "import java.util.Arrays;\n"
         "import java.util.HashMap;\n"
         "import java.lang.System;\n"
+        "import java.util.Map;\n"
+        "import java.util.WeakHashMap;\n"
+        "import java.util.Set;\n"
+        "import java.lang.ref.WeakReference;\n"
         "\n"))
 
     (else

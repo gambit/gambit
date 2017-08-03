@@ -255,6 +255,8 @@
                            (^type (cadr type)))
                        ","
                        (^type (caddr type)) ">")))
+             ((and (pair? type) (eq? (car type) 'generic))
+              (base (^ (cadr type) "<" (univ-separated-list "," (map (lambda (x) (^type x)) (cddr type))) ">")))
              (else
               (case type
                 ((frm)      (decl '(array scmobj)))
@@ -1210,8 +1212,11 @@
               (all-methods
                (append constr c-methods i-methods))
               (c-inits
-               (gen-inits ctx inits)))
-         (^ (if abstract? "abstract " "") "class " name
+               (gen-inits ctx inits))
+              (generic
+               (assq 'generic properties)))
+         (^ (if abstract? "abstract " "") "class "
+            name (if generic (^ "<" (univ-separated-list ", " (map (lambda (x) (^type x)) (cdr generic))) "> ") "")
             (if extends (^ " extends " (^type extends)) "")
             " {"
             (univ-indent
@@ -1906,12 +1911,13 @@
       (^ "del " (^prop-index expr1 expr2)))
 
      ((ruby)
-      (^call-prim (^member expr1 'delete) expr2))
+      (^call-member expr1 'delete expr2))
 
      ((php)
       (^call-prim 'unset (^prop-index expr1 expr2)))
 
-     ;; TODO : Java
+     ((java)
+      (^call-member expr1 'remove expr2))
 
      (else
       (compiler-internal-error
@@ -1926,30 +1932,12 @@
     ((python ruby php)
      (^array-length expr))
 
+    ((java)
+     (^call-member expr 'size))
+
     (else
      (compiler-internal-error
       "univ-emit-dict-length, unknown target"))))
-
-(define (univ-emit-dict-keys ctx expr type)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     (^call-prim (^member 'Object 'keys) expr))
-
-    ((python ruby)
-     (^call-prim (^member expr 'keys)))
-
-    ((php)
-     (^call-prim 'array_keys expr))
-
-    ;; ((java)
-    ;; TODO :
-    ;;  expr.keySet().toArray(new Type[]);
-    ;;  )
-
-    (else
-     (compiler-internal-error
-      "univ-emit-dict-keys, unknown target"))))
 
 (define (univ-emit-member ctx expr name)
   (case (target-name (ctx-target ctx))

@@ -2157,29 +2157,27 @@
    (lambda (ctx return weak-keys weak-values)
      (let ((weak-keys (^boolean-unbox weak-keys))
            (weak-values (^boolean-unbox weak-values)))
-       (return
-        (case (target-name (ctx-target ctx))
-          ((python ruby)
-           (^if-expr (^and weak-keys weak-values)
-                     (^new (^rts-class-use 'hashtable_weak_keys_values))
-                     (^if-expr weak-keys
-                               (^new (^rts-class-use 'hashtable_weak_keys))
-                               (^if-expr weak-values
-                                         (^new (^rts-class-use 'hashtable_weak_values))
-                                         (^new (^rts-class-use 'hashtable))))))
-          ((js)
-           ;; Note : WeakMap in javascript is a Map object with weak-keys.
-           ;; However, a WeakMap's keys are not enumerable, which makes functions
-           ;; such as table-for-each and table->list impossible to implement
-           (^new 'Map))
-          ((php)
-           (^new (^rts-class-use 'hashtable)))
-          ;; TODO : Java
-          ;; Java will need a ScmObj wrapper in order to fit in a Structure field
-          ;; This will imply a few cast* things here and there
-          (else
-           (compiler-internal-error
-            "##table-univ-make-hashtable, unknown target"))))))))
+       (case (target-name (ctx-target ctx))
+         ((python ruby)
+          (return (^if-expr (^and weak-keys weak-values)
+                            (^new (^rts-class-use 'hashtable_weak_keys_values))
+                            (^if-expr weak-keys
+                                      (^new (^rts-class-use 'hashtable_weak_keys))
+                                      (^if-expr weak-values
+                                                (^new (^rts-class-use 'hashtable_weak_values))
+                                                (^new (^rts-class-use 'hashtable)))))))
+         ((js)
+          ;; Note : WeakMap in javascript is a Map object with weak-keys.
+          ;; However, a WeakMap's keys are not enumerable, which makes functions
+          ;; such as table-for-each and table->list impossible to implement
+          (return (^new 'Map)))
+         ((php)
+          (return (^new (^rts-class-use 'hashtable))))
+         ((java)
+          (return (^call-member (^new (^rts-class-use 'hashtable)) 'init weak-keys weak-values)))
+         (else
+          (compiler-internal-error
+           "##univ-table-make-hashtable, unknown target")))))))
 
 (univ-define-prim "##univ-table-key-exists?" #f
   (make-translated-operand-generator
@@ -2189,7 +2187,7 @@
        (case (target-name (ctx-target ctx))
          ((python ruby)
           (^dict-key-exists? dict key))
-         ((js php)
+         ((js php java)
           (^call-member dict 'has key))
          (else
           (compiler-internal-error
@@ -2200,7 +2198,7 @@
    (lambda (ctx return dict)
      (return
        (case (target-name (ctx-target ctx))
-         ((python ruby php)
+         ((python ruby php java)
           (^call-member dict 'keys_list))
          ((js)
           ;; TODO : IE and old browsers compatibility
@@ -2265,7 +2263,7 @@
           (^dict-length dict))
          ((js)
           (^member dict 'size))
-         ((php)
+         ((php java)
           (^call-member dict 'size))
          (else
           (compiler-internal-error
