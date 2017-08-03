@@ -2897,12 +2897,12 @@
         (return arg1)))))
 
 (univ-define-prim "##identity" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return arg1)))
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^not (^eq? (^cast*-scmobj arg1) (^obj #f)))))))
+ (make-translated-operand-generator
+  (lambda (ctx return arg1)
+    (return arg1)))
+ (make-translated-operand-generator
+  (lambda (ctx return arg1)
+    (return (^not (^eq? (^cast*-scmobj arg1) (^obj #f)))))))
 
 (univ-define-prim "##first-argument" #t
   (make-translated-operand-generator
