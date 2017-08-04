@@ -679,7 +679,7 @@
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (warnings) (verbose) (report)
-                           (expansion) (gvm) (cfg) (asm)
+                           (expansion) (gvm) (cfg) (dg) (asm)
                            (check) (force) (keep-c)
                            (debug) (debug-location) (debug-source) (debug-environments)
                            (track-scheme)

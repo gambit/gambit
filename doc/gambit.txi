@@ -731,7 +731,7 @@ Synopsis:
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
     @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
-    @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]}
+    @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]} @r{[}-dg@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
     @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
     @r{[}-o @r{@var{output}}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @r{@var{base}}@r{]}
@@ -840,6 +840,8 @@ Display the source code after expansion.
 Generate a listing of the GVM code.
 @item -cfg
 Generate a control flow graph of the GVM code.
+@item -dg
+Generate a dependency graph.
 @item -debug
 Include all debugging information in the code generated.
 @item -debug-location
@@ -964,6 +966,17 @@ from @samp{@var{file}.cfg} the following command can be used:
 
 @smallexample
 $ @b{dot -O -Tpdf @var{file}.cfg}
+@end smallexample
+
+@opindex -dg
+The @samp{-dg} option generates a visual representation of the
+dependency graph of each Scheme file on @samp{@var{file}.dg}.
+The file is suitable for processing with the ``dot'' program.
+For example, to generate the PDF file @samp{@var{file}.dg.pdf}
+from @samp{@var{file}.dg} the following command can be used:
+
+@smallexample
+$ @b{dot -O -Tpdf @var{file}.dg}
 @end smallexample
 
 @opindex -debug
@@ -3998,9 +4011,9 @@ this declaration.
 @opindex optimize-dead-definitions
 Remove (or preserve) the dead toplevel definitions of the given global
 variables (all global variables if none specified).  A toplevel
-definition is dead if the evaluation of its expression can't possibly
-cause a side-effect and it is not referenced by toplevel expressions
-of the programs or toplevel definitions that aren't dead.  When a
+definition is dead if it is not referenced by toplevel expressions
+of the program or toplevel definitions that aren't dead (regardless
+of the evaluation of its expression causing a side-effect).  When a
 module is separately compiled and some of its definitions are only
 used by other modules, this declaration must be used with care to keep
 definitions that are used by other modules, for example if @code{foo}

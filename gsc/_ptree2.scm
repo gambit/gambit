@@ -29,8 +29,7 @@
   (let* ((lst (expand-primitive-calls ptrees))
          (lst (assignment-convert lst))
          (lst (beta-reduce lst))
-         (lst (lambda-lift lst))
-         (lst (remove-dead-defs lst)))
+         (lst (lambda-lift lst)))
 
     (if (null? lst) ;; must return at least one ptree
         (list (new-cst (expression->source void-object #f) (node-env (car ptrees))
@@ -1393,90 +1392,6 @@
 
   (for-each (lambda (child) (ll-rename! child))
             (node-children ptree)))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-;;
-;; Dead definition removal:
-;; -----------------------
-
-;; (remove-dead-defs lst) takes a list of parse-trees and returns a
-;; list where dead toplevel definitions have been removed.  A toplevel
-;; definition is dead if it is in the scope of a
-;; "optimize-dead-definitions" declaration, the variable it defines is
-;; not referenced in a toplevel expression or in the expression of a
-;; non-dead toplevel definition, and the initializing expression has
-;; no possible side-effects.  The algorithm for determining deadness
-;; is thus similar to a GC which determines reachability from roots
-;; which are the toplevel expressions and definitions with possible
-;; side-effects or in the scope of a "not optimize-dead-definitions"
-;; declaration.
-
-(define (remove-dead-defs lst)
-
-  (define ignore-side-effects-in-defs? #f)
-
-  (define (optimizable-def? ptree)
-    (optimize-dead-definitions? (var-name (def-var ptree)) (node-env ptree)))
-
-  (let ((useful-ptrees
-         (list->ptset
-          (keep (lambda (ptree)
-                  (or (and (def? ptree)
-                           (not (optimizable-def? ptree)))
-                      (if ignore-side-effects-in-defs?
-                          (not (def? ptree))
-                          (not (side-effects-impossible? ptree)))))
-                lst)))
-        (useful-vars
-         (varset-empty)))
-
-    (define (add-vars vars)
-      (for-each
-       (lambda (var)
-         (if (not (varset-member? var useful-vars))
-             (begin
-               (set! useful-vars (varset-adjoin useful-vars var))
-               (for-each (lambda (ptree)
-                           (if (not (ptset-member? ptree useful-ptrees))
-                               (begin
-                                 (ptset-adjoin useful-ptrees ptree)
-                                 (add-vars (free-variables ptree)))))
-                         (ptset->list (var-sets var))))))
-       (varset->list vars)))
-
-    (add-vars
-     (varset-union-multi
-      (map (lambda (ptree)
-             (free-variables
-              (if (def? ptree)
-                  (def-val ptree)
-                  ptree)))
-           (ptset->list useful-ptrees))))
-
-    (append-lists
-     (map (lambda (ptree)
-            (if (and (def? ptree)
-                     (optimizable-def? ptree)
-                     (ptset-empty? (var-refs (def-var ptree))))
-                (let ((val (def-val ptree)))
-                  (if (or ignore-side-effects-in-defs?
-                          (side-effects-impossible? val))
-                      (begin
-                        (delete-ptree val)
-                        '())
-                      (begin
-                        (ptset-remove (var-sets (def-var ptree)) ptree)
-                        (node-parent-set! val #f) ;; no parent
-                        (list val))))
-                (list ptree)))
-          (append-lists
-           (map (lambda (ptree)
-                  (if (ptset-member? ptree useful-ptrees)
-                      (list ptree)
-                      (begin
-                        (delete-ptree ptree)
-                        '())))
-                lst))))))
 
 ;;;----------------------------------------------------------------------------
 ;;

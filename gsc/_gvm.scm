@@ -2162,6 +2162,54 @@
 
       (dot-digraph-write dd port))))
 
+(define (virtual.dump-dg name dependency-graph port)
+
+  ;; For generating visual representation of dependency graph with "dot".
+
+  (define dd (make-dot-digraph name))
+
+  (define (gen-label referrer)
+    (object->string (object->string referrer)))
+
+  (define (interesting? sym)
+    ;; modify to filter out some symbols
+    #t)
+
+  (for-each
+   (lambda (referrer-dependencies)
+     (let ((referrer (car referrer-dependencies))
+           (dependencies (cdr referrer-dependencies)))
+       (if (interesting? referrer)
+           (begin
+
+             '
+             (dot-digraph-add-node!
+              dd
+              (dot-digraph-gen-node
+               (gen-label referrer)
+               (list (gen-label referrer))))
+
+             (for-each
+              (lambda (var)
+                (if (and (not (eq? var referrer)) ;; avoid self cycle
+                         (interesting? var))
+                    (dot-digraph-add-edge!
+                     dd
+                     (dot-digraph-gen-edge
+                      (gen-label referrer)
+                      (gen-label var)
+                      #f))))
+              (sort-list (map var-name (varset->list dependencies))
+                         (lambda (x y)
+                           (string<? (symbol->string x)
+                                     (symbol->string y)))))))))
+   (sort-list (table->list dependency-graph)
+              (lambda (x y)
+                (string<? (symbol->string (car x))
+                          (symbol->string (car y))))))
+
+  (dot-digraph-write dd port))
+
 (define (reachable-procs procs)
   (let ((proc-seen (queue-empty))
         (proc-left (queue-empty)))
@@ -2265,6 +2313,7 @@
 (define (dot-digraph-gen-digraph dd)
   `("digraph \"" ,(dot-digraph-name dd) "\" {\n"
     "  graph [splines = true overlap = false rankdir = \"TD\"];\n"
+    "  node [fontname = \"Courier New\" shape = \"none\"];\n"
     ,@(dot-digraph-nodes dd)
     ,@(dot-digraph-edges dd)
     "}\n"))
@@ -2277,9 +2326,9 @@
     ";\n"))
 
 (define (dot-digraph-gen-node id label)
-  `("  " ,id " [fontname = \"Courier New\" shape = \"none\" label = "
+  `("  " ,id " [label = "
     ,@label
-    " ];\n"))
+    "];\n"))
 
 (define (dot-digraph-gen-table id bgcolor content)
   `("<table border=\"0\" cellborder=\"0\" cellspacing=\"0\" cellpadding=\"0\""
