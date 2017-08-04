@@ -2169,11 +2169,22 @@
   (define dd (make-dot-digraph name))
 
   (define (gen-label referrer)
-    (object->string (object->string referrer)))
+    (object->string (gen-label-string referrer)))
+
+  (define (gen-label-string referrer)
+    (object->string referrer))
 
   (define (interesting? sym)
     ;; modify to filter out some symbols
     #t)
+
+  (define (sort-syms t)
+   (sort-list (table->list t)
+              (lambda (x y)
+                (string<? (symbol->string (car x))
+                          (symbol->string (car y))))))
+
+  (define not-defined (make-table test: eq?))
 
   (for-each
    (lambda (referrer-dependencies)
@@ -2193,20 +2204,45 @@
               (lambda (var)
                 (if (and (not (eq? var referrer)) ;; avoid self cycle
                          (interesting? var))
-                    (dot-digraph-add-edge!
-                     dd
-                     (dot-digraph-gen-edge
-                      (gen-label referrer)
-                      (gen-label var)
-                      #f))))
+                    (begin
+                      (if (not (table-ref dependency-graph var #f))
+                          (table-set! not-defined var #t))
+                      (dot-digraph-add-edge!
+                       dd
+                       (dot-digraph-gen-edge
+                        (gen-label referrer)
+                        (gen-label var)
+                        #f)))))
               (sort-list (map var-name (varset->list dependencies))
                          (lambda (x y)
                            (string<? (symbol->string x)
                                      (symbol->string y)))))))))
-   (sort-list (table->list dependency-graph)
-              (lambda (x y)
-                (string<? (symbol->string (car x))
-                          (symbol->string (car y))))))
+   (sort-syms dependency-graph))
+
+  (for-each
+   (lambda (x)
+     (let ((var (car x)))
+       (dot-digraph-add-node!
+        dd
+        (dot-digraph-gen-node
+         (gen-label var)
+         (dot-digraph-gen-html-label
+          (dot-digraph-gen-table
+           #f
+           dot-digraph-black
+           (dot-digraph-gen-row
+            (dot-digraph-gen-col
+             #f
+             #f
+             #f
+             (dot-digraph-gen-font
+              "Courier Bold"
+              "white"
+              (list
+               " "
+               (dot-digraph-gen-html-escape (gen-label-string var))
+               " "))))))))))
+   (sort-syms not-defined))
 
   (dot-digraph-write dd port))
 

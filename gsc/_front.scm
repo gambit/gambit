@@ -708,22 +708,27 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (compile-parsed-program module-name program env c-intf info-port)
-  (let ((main-proc
-         (make-proc-obj
-          (string-append module-prefix module-name) ;; name
-          #f     ;; c-name
-          #t     ;; primitive?
-          #f     ;; code
-          '(0)   ;; call-pat
-          #t     ;; side-effects?
-          '()    ;; strict-pat
-          0      ;; lift-pat
-          '(#f)  ;; type
-          #f))   ;; standard
-        (main-bbs
-         (make-bbs))
-        (const-procs
-         '()))
+  (let* ((name
+          (string-append module-prefix module-name))
+         (main-proc
+          (make-proc-obj
+           name   ;; name
+           #f     ;; c-name
+           #t     ;; primitive?
+           #f     ;; code
+           '(0)   ;; call-pat
+           #t     ;; side-effects?
+           '()    ;; strict-pat
+           0      ;; lift-pat
+           '(#f)  ;; type
+           #f))   ;; standard
+         (main-bbs
+          (make-bbs))
+         (const-procs
+          '()))
+
+    (if dependency-graph
+        (table-set! dependency-graph (string->symbol name) (varset-empty)))
 
     (if info-port
         (display "Compiling:" info-port))
@@ -996,8 +1001,9 @@
 
 (define (reach-definition! ptree)
   (if (def? ptree)
-      (let ((def (table-ref definition-table ptree)))
-        (if (not (definition-reached? def))
+      (let ((def (table-ref definition-table ptree #f)))
+        (if (and def ;; def = #f when definition is "not core"
+                 (not (definition-reached? def)))
             (begin
               (definition-reached?-set! def #t)
               (set! live-definition-queue
@@ -1010,18 +1016,20 @@
 
 (define (register-dependency var)
   (if dependency-graph
-      (let* ((referrer (string->symbol (proc-obj-name *proc*)))
-             (deps (table-ref dependency-graph referrer #f)))
+      (let ((referrer (string->symbol (proc-obj-name *proc*))))
         (table-set!
          dependency-graph
          referrer
-         (varset-adjoin (or deps (varset-empty)) var)))))
+         (varset-adjoin (table-ref dependency-graph referrer) var)))))
 
 (define (gen-definition ptree info-port)
 
   (define (gen update)
     (let ((var (def-var ptree))
           (val (def-val ptree)))
+
+      (if dependency-graph
+          (table-set! dependency-graph (var-name var) (varset-empty)))
 
       (if (not (prc? val))
 
