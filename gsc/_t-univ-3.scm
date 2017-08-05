@@ -178,6 +178,11 @@
     ((flonum)        'Flonum)
     ((foreign)       'Foreign)
     ((frame)         'Frame)
+    ((hashtable)     'HashTable)
+    ((hashtable_base) 'HashTableBase)
+    ((hashtable_weak_keys)        'HashTableWeakKeys)
+    ((hashtable_weak_values)      'HashTableWeakValues)
+    ((hashtable_weak_keys_values) 'HashTableWeakKeysValues)
     ((jumpable)      'Jumpable)
     ((key)           'Key)
     ((keyword)       'Keyword)
@@ -250,6 +255,8 @@
                            (^type (cadr type)))
                        ","
                        (^type (caddr type)) ">")))
+             ((and (pair? type) (eq? (car type) 'generic))
+              (base (^ (cadr type) "<" (univ-separated-list "," (map (lambda (x) (^type x)) (cddr type))) ">")))
              (else
               (case type
                 ((frm)      (decl '(array scmobj)))
@@ -768,8 +775,8 @@
          (class-classes '())
          (constructor #f)
          (inits '()))
-  (let* ((name (tt"CCC"root-name)) ;; (^prefix-class root-name);;TODO: fix ^prefix
-         (abstract? (memq 'abstract properties)))
+  (let ((name (tt"CCC"root-name)) ;; (^prefix-class root-name);;TODO: fix ^prefix
+        (abstract? (memq 'abstract properties)))
 
     (define (qualifiers additional-properties decl)
       (let ((all (append additional-properties (univ-decl-properties decl))))
@@ -1119,6 +1126,17 @@
                    (not (null? class-methods))
                    (not (null? instance-methods)))
                (^ "\n"
+                  (let ((meta-attributes (keep (lambda (x)
+                                                 (and (pair? x)
+                                                      (eq? (car x) 'alias_method)))
+                                               properties)))
+                    (if (not (null? meta-attributes))
+                        (^ "\n"
+                           (map (lambda (attr)
+                                  (^ (car attr) " " (univ-separated-list "," (cdr attr)) "\n"))
+                                meta-attributes)
+                           "\n")
+                        (^)))
                   (if (or (not (null? class-fields))
                           (not (null? class-methods)))
                       (^ "\n"
@@ -1194,8 +1212,11 @@
               (all-methods
                (append constr c-methods i-methods))
               (c-inits
-               (gen-inits ctx inits)))
-         (^ (if abstract? "abstract " "") "class " name
+               (gen-inits ctx inits))
+              (generic
+               (assq 'generic properties)))
+         (^ (if abstract? "abstract " "") "class "
+            name (if generic (^ "<" (univ-separated-list ", " (map (lambda (x) (^type x)) (cdr generic))) "> ") "")
             (if extends (^ " extends " (^type extends)) "")
             " {"
             (univ-indent
@@ -1879,6 +1900,44 @@
     (else
      (compiler-internal-error
       "univ-emit-dict-set, unknown target"))))
+
+(define (univ-emit-dict-delete ctx expr1 expr2)
+  (^expr-statement
+   (case (target-name (ctx-target ctx))
+     ((js)
+      (^ "delete " (^prop-index expr1 expr2)))
+
+     ((python)
+      (^ "del " (^prop-index expr1 expr2)))
+
+     ((ruby)
+      (^call-member expr1 'delete expr2))
+
+     ((php)
+      (^call-prim 'unset (^prop-index expr1 expr2)))
+
+     ((java)
+      (^call-member expr1 'remove expr2))
+
+     (else
+      (compiler-internal-error
+       "univ-emit-dict-delete, unknown target")))))
+
+(define (univ-emit-dict-length ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^array-length (^call-prim (^member 'Object 'keys) expr)))
+
+    ((python ruby php)
+     (^array-length expr))
+
+    ((java)
+     (^call-member expr 'size))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-dict-length, unknown target"))))
 
 (define (univ-emit-member ctx expr name)
   (case (target-name (ctx-target ctx))
@@ -3629,6 +3688,59 @@ tanh
      (compiler-internal-error
       "univ-emit-string-set!, host representation not implemented"))))
 
+(define (univ-emit-substring ctx expr1 expr2 expr3)
+  (case (target-name (ctx-target ctx))
+
+    ((js python ruby)
+     (^subarray expr1 expr2 expr3))
+
+    ((php)
+     (^call-prim 'substr expr1 expr2 expr3))
+
+    ;; TODO : Java
+
+    (else
+     (compiler-internal-error
+      "univ-emit-substring, unknown target"))))
+
+(define (univ-emit-str-toint ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ "+" expr))
+
+    ((python)
+     (^call-prim 'int expr))
+
+    ((ruby)
+     (^call-member expr 'to_i))
+
+    ((java)
+     (^call-member 'Integer 'parseInt expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-str-toint, unknown target"))))
+
+(define (univ-emit-str-tofloat ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((js php)
+     (^ "+" expr))
+
+    ((python)
+     (^call-prim 'float expr))
+
+    ((ruby)
+     (^call-member expr 'to_f))
+
+    ((java)
+     (^call-member 'Float 'parseFloat expr))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-str-tofloat, unknown target"))))
+
 (define (univ-emit-symbol-obj ctx obj force-var?)
   (case (univ-symbol-representation ctx)
 
@@ -3955,6 +4067,15 @@ tanh
 (define (univ-emit-call-prim ctx expr . params)
   (univ-emit-call-prim-aux ctx expr params))
 
+(define (univ-emit-call-member ctx expr fct . params)
+  (let ((name
+         (case (target-name (ctx-target ctx))
+           ((ruby)
+            ;; Avoid (^member (^this) fct) => @fct
+            (^ expr "." fct))
+           (else (^member expr fct)))))
+    (univ-emit-call-prim-aux ctx name params)))
+
 (define (univ-emit-call-prim-aux ctx expr params)
   (if (and (null? params)
            (eq? (target-name (ctx-target ctx)) 'ruby))
@@ -4049,7 +4170,21 @@ tanh
 
     (else
      (compiler-internal-error
-      "unit-emit-instanceof, unknown target"))))
+      "univ-emit-instanceof, unknown target"))))
+
+(define (univ-emit-host-primitive? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((python)
+     (^ "(type(" expr ") == int or type(" expr ") == float or type(" expr ") == bool or " expr " is None)"))
+
+    ((php)
+     (^not
+      (^call-prim 'is_object expr)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-host-primitive?, unknown target"))))
 
 (define (univ-throw ctx expr)
   (case (target-name (ctx-target ctx))

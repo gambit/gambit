@@ -15,7 +15,528 @@
 
 ;;----------------------------------------------------------------------------
 
+(define univ-rtlib-feature-table (make-table))
+
 (define (univ-rtlib-feature ctx feature)
+  (let ((f (table-ref univ-rtlib-feature-table feature #f)))
+    (if f
+        (f ctx feature)
+        (old-univ-rtlib-feature ctx feature))))
+
+(define (univ-define-rtlib-feature name feature)
+  (table-set! univ-rtlib-feature-table name feature))
+
+(let () ;; univ-rtlib-features definitions
+
+  (define (rts-class
+           ctx
+           root-name
+           properties
+           extends
+           class-fields
+           instance-fields
+           class-methods
+           instance-methods
+           class-classes
+           constructor
+           inits)
+    (univ-add-class
+     (univ-make-empty-defs)
+     (univ-class
+      (^rts-class root-name)
+      properties
+      (cond ;; extends
+       ((and (pair? extends)
+             (eq? (car extends) 'prim))
+        (cadr extends))
+       ((and extends
+             (or (eq? (target-name (ctx-target ctx)) 'java)
+                 (not (eq? extends 'scmobj))))
+        (^rts-class-use extends))
+       (else
+        #f))
+      class-fields
+      instance-fields
+      class-methods
+      instance-methods
+      class-classes
+      constructor
+      inits)))
+
+  (define (rts-method
+           ctx
+           name
+           properties
+           result-type
+           params
+           header
+           attribs
+           gen-body)
+    (univ-add-method
+     (univ-make-empty-defs)
+     (univ-method
+      (^rts-method name)
+      properties
+      result-type
+      params
+      attribs
+      (univ-emit-fn-body ctx header gen-body))))
+
+  (define (rts-field name type #!optional (init #f) (properties '()))
+    (univ-add-field
+     (univ-make-empty-defs)
+     (univ-field name type init properties)))
+
+  (define (rts-init init)
+    (univ-add-init
+     (univ-make-empty-defs)
+     init))
+
+  (define (continuation-capture-procedure ctx nb-args thread-save?)
+    (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+      (univ-jumpable-declaration-defs
+       ctx
+       #t
+       (string->symbol
+        (string-append
+         (if thread-save?
+             "thread_save"
+             "continuation_capture")
+         (number->string nb-args)))
+       'entrypt
+       '()
+       '()
+       (univ-emit-fn-body
+        ctx
+        "\n"
+        (lambda (ctx)
+          (^ (if (= nb-stacked 0)
+                 (^var-declaration
+                  'scmobj
+                  (^local-var (^ 'arg 1))
+                  (^getreg 1))
+                 (univ-foldr-range
+                  1
+                  nb-stacked
+                  (^)
+                  (lambda (i rest)
+                    (^ rest
+                       (^pop (lambda (expr)
+                               (^var-declaration
+                                'scmobj
+                                (^local-var (^ 'arg i))
+                                expr)))))))
+
+             (^setreg 0
+                      (^call-prim
+                       (^rts-method-use 'heapify_cont)
+                       (^cast* 'returnpt
+                               (^getreg 0))))
+
+             (let* ((cont
+                     (^new-continuation
+                      (^cast* 'frame
+                              (^array-index
+                               (gvm-state-stack-use ctx 'rd)
+                               (^int 0)))
+                      (^structure-ref (^rts-field-use 'current_thread)
+                                      univ-thread-denv-slot)))
+                    (result
+                     (if thread-save?
+                         (^rts-field-use 'current_thread)
+                         cont)))
+
+               (^ (if thread-save?
+                      (^structure-set! (^rts-field-use 'current_thread)
+                                       univ-thread-cont-slot
+                                       cont)
+                      (^))
+
+                  (if (= nb-stacked 0)
+                      (^setreg 1 result)
+                      (univ-foldr-range
+                       1
+                       nb-stacked
+                       (^)
+                       (lambda (i rest)
+                         (^ (^push (if (= i 1) result (^local-var (^ 'arg i))))
+                            rest))))))
+
+             (^setnargs nb-args)
+
+             (^return-jump
+              (^cast*-jumpable (^local-var (^ 'arg 1))))))))))
+
+  (define (continuation-graft-no-winding-procedure ctx nb-args thread-restore?)
+    (univ-jumpable-declaration-defs
+     ctx
+     #t
+     (string->symbol
+      (string-append
+       (if thread-restore?
+           "thread_restore"
+           "continuation_graft_no_winding")
+       (number->string nb-args)))
+     'entrypt
+     '()
+     '()
+     (univ-emit-fn-body
+      ctx
+      "\n"
+      (lambda (ctx)
+        (let* ((nb-stacked
+                (max 0 (- nb-args univ-nb-arg-regs)))
+               (new-nb-args
+                (- nb-args 2))
+               (new-nb-stacked
+                (max 0 (- new-nb-args univ-nb-arg-regs)))
+               (underflow
+                (^rts-jumpable-use 'underflow)))
+          (^ (univ-foldr-range
+              1
+              (max 2 (- nb-args univ-nb-arg-regs))
+              (^)
+              (lambda (i rest)
+                (^ rest
+                   (^var-declaration
+                    'scmobj
+                    (^local-var (^ 'arg i))
+                    (let ((x (- i nb-stacked)))
+                      (if (>= x 1)
+                          (^getreg x)
+                          (^getstk x)))))))
+
+             (if thread-restore?
+                 (^ (^assign (^rts-field-use 'current_thread)
+                             (^local-var (^ 'arg 1)))
+                    (^assign (^local-var (^ 'arg 1))
+                             (^structure-ref (^local-var (^ 'arg 1))
+                                             univ-thread-cont-slot)))
+                 (^))
+
+             (^assign
+              (^array-index
+               (gvm-state-stack-use ctx 'rd)
+               (^int 0))
+              (^member (^cast* 'continuation
+                               (^local-var (^ 'arg 1)))
+                       'frame))
+
+             (^structure-set! (^rts-field-use 'current_thread)
+                              univ-thread-denv-slot
+                              (^member (^cast* 'continuation
+                                               (^local-var (^ 'arg 1)))
+                                       'denv))
+
+             (^assign
+              (gvm-state-sp-use ctx 'wr)
+              0)
+
+             (^setreg 0 underflow)
+
+             (univ-foldr-range
+              1
+              new-nb-stacked
+              (^)
+              (lambda (i rest)
+                (^ (^push (^local-var (^ 'arg (+ i 2))))
+                   rest)))
+
+             (if (= new-nb-stacked (- nb-stacked 2))
+                 (^)
+                 (univ-foldr-range
+                  (+ new-nb-stacked 1)
+                  new-nb-args
+                  (^)
+                  (lambda (i rest)
+                    (^ (^setreg (- i new-nb-stacked)
+                                (^getreg (- i (- nb-stacked 2))))
+                       rest))))
+
+             (^setnargs new-nb-args)
+
+             (^return
+              (^cast*-jumpable (^local-var (^ 'arg 2))))))))))
+
+  (define (continuation-return-no-winding-procedure ctx nb-args)
+    (univ-jumpable-declaration-defs
+     ctx
+     #t
+     (string->symbol
+      (string-append
+       "continuation_return_no_winding"
+       (number->string nb-args)))
+     'entrypt
+     '()
+     '()
+     (univ-emit-fn-body
+      ctx
+      "\n"
+      (lambda (ctx)
+        (let* ((nb-stacked
+                (max 0 (- nb-args univ-nb-arg-regs)))
+               (underflow
+                (^rts-jumpable-use 'underflow))
+               (arg1
+                (^local-var 'arg1)))
+          (^ (^var-declaration
+              'continuation
+              arg1
+              (^cast* 'continuation
+                      (let ((x (- 1 nb-stacked)))
+                        (if (>= x 1)
+                            (^getreg x)
+                            (^getstk x)))))
+
+             (^assign
+              (^array-index
+               (gvm-state-stack-use ctx 'rd)
+               (^int 0))
+              (^member arg1 'frame))
+
+             (^structure-set! (^rts-field-use 'current_thread)
+                              univ-thread-denv-slot
+                              (^member arg1 'denv))
+
+             (^assign
+              (gvm-state-sp-use ctx 'wr)
+              0)
+
+             (^setreg 0 underflow)
+
+             (let ((x (- 2 nb-stacked)))
+               (if (= x 1)
+                   (^)
+                   (^setreg 1 (^getreg x))))
+
+             (^return underflow)))))))
+
+  (define (apply-procedure ctx nb-args)
+    (univ-jumpable-declaration-defs
+     ctx
+     #t
+     (string->symbol
+      (string-append
+       "apply"
+       (number->string nb-args)))
+     'entrypt
+     '()
+     '()
+     (univ-emit-fn-body
+      ctx
+      "\n"
+      (lambda (ctx)
+        (^ (univ-pop-args-to-vars ctx nb-args)
+
+           (univ-foldr-range
+            2
+            (- nb-args 1)
+            (^)
+            (lambda (i rest)
+              (^ (^push (^local-var (^ 'arg i)))
+                 rest)))
+
+           (^setnargs (- nb-args 2))
+
+           (let ((args (^local-var (^ 'arg nb-args))))
+             (^while (^pair? args)
+                     (^ (^push (^getcar args))
+                        (^assign args (^getcdr args))
+                        (^inc-by (gvm-state-nargs-use ctx 'rdwr)
+                                 1))))
+
+           (univ-pop-args-to-regs ctx 0)
+
+           (^return
+            (^cast*-jumpable (^local-var (^ 'arg 1)))))))))
+  ;; --
+
+  (define (univ-rtlib-feature-method
+           properties
+           result-type
+           params
+           header
+           attribs
+           gen-body)
+    (lambda (ctx feature)
+      (rts-method
+       ctx
+       feature
+       properties
+       result-type
+       params
+       header
+       attribs
+       gen-body)))
+
+  (define (univ-rtlib-feature-class
+           #!optional
+           (properties '())
+           (extends #f)
+           (class-fields '())
+           (instance-fields '())
+           (class-methods '())
+           (instance-methods '())
+           (class-classes '())
+           (constructor #f)
+           (inits '()))
+    (lambda (ctx feature)
+      (rts-class ctx feature properties extends class-fields instance-fields class-methods instance-methods class-classes constructor inits)))
+
+  ;; -- helpers
+  (define (univ-rtlib-feature-reg ctx feature)
+    (rts-field feature 'scmobj (^null) '(public)))
+
+  (for-each
+   (lambda (reg)
+     (univ-define-rtlib-feature reg univ-rtlib-feature-reg))
+   '(r0 r1 r2 r3 r4))
+
+  (univ-define-rtlib-feature 'trampoline
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'pc 'jumpable))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((pc (^local-var 'pc)))
+        (^while (^!= pc (^null)) ;; exit trampoline?
+                (^assign pc
+                         (^jump pc)))))))
+
+  (univ-define-rtlib-feature 'module_registry_init
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'link_info '(array modlinkinfo)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((link_info (^local-var 'link_info))
+            (n (^local-var 'n))
+            (i (^local-var 'i))
+            (info (^local-var 'info)))
+
+        (^ (^var-declaration
+            'int
+            n
+            (^array-length link_info))
+
+           (^var-declaration
+            'int
+            i
+            (^int 0))
+
+           (^assign (^rts-field-use 'module_table)
+                    (^new-array 'scmobj n))
+
+           (^while (^< i n)
+
+                   (^ (^var-declaration
+                       'modlinkinfo
+                       info
+                       (^array-index link_info i))
+
+                      (^dict-set (^rts-field-use 'module_map)
+                                 (^member info 'name)
+                                 info)
+
+                      (^assign (^array-index (^rts-field-use 'module_table) i)
+                               (^null))
+
+                      (^inc-by i 1))))))))
+
+  (univ-define-rtlib-feature 'modlinkinfo
+   (univ-rtlib-feature-class
+    '() ;; properties
+    #f ;; extends
+    '() ;; class-fields
+    (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+          (univ-field 'index 'int #f '(public)))))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "continuation_capture" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (continuation-capture-procedure ctx num #f)))))
+   '(1 2 3 4))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "continuation_graft_no_winding" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (continuation-graft-no-winding-procedure ctx num #f)))))
+   '(2 3 4 5))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "thread_restore" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (continuation-graft-no-winding-procedure ctx num #t)))))
+   '(2 3 4 5))
+
+  (univ-define-rtlib-feature 'continuation_return_no_winding2
+   (lambda (ctx feature)
+     (continuation-return-no-winding-procedure ctx 2)))
+
+  (univ-define-rtlib-feature 'glo-real-time-milliseconds
+   (lambda (ctx feature)
+     (univ-defs-combine
+      (univ-jumpable-declaration-defs
+       ctx
+       #t
+       (gvm-proc-use ctx "real-time-milliseconds")
+       'entrypt
+       '()
+       '()
+       (univ-emit-fn-body
+        ctx
+        "\n"
+        (lambda (ctx)
+          (^ (case (target-name (ctx-target ctx))
+
+               ((js java)
+                (^setreg 1
+                         (^fixnum-box
+                          (^cast* 'int
+                                  (^parens
+                                   (^- (univ-get-time ctx)
+                                       (^rts-field-use 'start_time)))))))
+
+               ((python php ruby)
+                (^setreg 1
+                         (^fixnum-box
+                          (^float-toint
+                           (^* 1000
+                               (^parens
+                                (^- (univ-get-time ctx)
+                                    (^rts-field-use 'start_time))))))))
+
+               (else
+                (compiler-internal-error
+                 "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
+             (^return
+              (^cast*-jumpable (^getreg 0)))))))
+      (rts-init
+       (lambda (ctx)
+         (^setglo 'real-time-milliseconds
+                  (^this-mod-jumpable
+                   (gvm-proc-use ctx "real-time-milliseconds"))))))))
+
+  (for-each
+   (lambda (num)
+     (let ((name (string->symbol (string-append "apply" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (apply-procedure ctx num)))))
+   '(2 3 4 5))
+   )
+
+(define (old-univ-rtlib-feature ctx feature)
 
   (define (rts-method
            name
@@ -52,10 +573,16 @@
      (univ-class
       (^rts-class root-name)
       properties
-      (and extends
-           (or (eq? (target-name (ctx-target ctx)) 'java)
-               (not (eq? extends 'scmobj)))
-           (^rts-class-use extends))
+      (cond ;; extends
+       ((and (pair? extends)
+             (eq? (car extends) 'prim))
+        (cadr extends))
+       ((and extends
+             (or (eq? (target-name (ctx-target ctx)) 'java)
+                 (not (eq? extends 'scmobj))))
+        (^rts-class-use extends))
+       (else
+        #f))
       class-fields
       instance-fields
       class-methods
@@ -334,8 +861,8 @@
 
   (case feature
 
-    ((r0 r1 r2 r3 r4)
-     (rts-field feature 'scmobj (^null) '(public)))
+    ;; ((r0 r1 r2 r3 r4)
+    ;;  (rts-field feature 'scmobj (^null) '(public)))
 
     ((peps)
      (rts-field
@@ -415,62 +942,62 @@
                         )))
                 '(public)))
 
-    ((trampoline)
-     (rts-method
-      'trampoline
-      '(public)
-      'noresult
-      (list (univ-field 'pc 'jumpable))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((pc (^local-var 'pc)))
-          (^while (^!= pc (^null)) ;; exit trampoline?
-                  (^assign pc
-                           (^jump pc)))))))
+    ;; ((trampoline)
+    ;;  (rts-method
+    ;;   'trampoline
+    ;;   '(public)
+    ;;   'noresult
+    ;;   (list (univ-field 'pc 'jumpable))
+    ;;   "\n"
+    ;;   '()
+    ;;   (lambda (ctx)
+    ;;     (let ((pc (^local-var 'pc)))
+    ;;       (^while (^!= pc (^null)) ;; exit trampoline?
+    ;;               (^assign pc
+    ;;                        (^jump pc)))))))
 
-    ((module_registry_init)
-     (rts-method
-      'module_registry_init
-      '(public)
-      'noresult
-      (list (univ-field 'link_info '(array modlinkinfo)))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((link_info (^local-var 'link_info))
-              (n (^local-var 'n))
-              (i (^local-var 'i))
-              (info (^local-var 'info)))
+    ;; ((module_registry_init)
+    ;;  (rts-method
+    ;;   'module_registry_init
+    ;;   '(public)
+    ;;   'noresult
+    ;;   (list (univ-field 'link_info '(array modlinkinfo)))
+    ;;   "\n"
+    ;;   '()
+    ;;   (lambda (ctx)
+    ;;     (let ((link_info (^local-var 'link_info))
+    ;;           (n (^local-var 'n))
+    ;;           (i (^local-var 'i))
+    ;;           (info (^local-var 'info)))
 
-          (^ (^var-declaration
-              'int
-              n
-              (^array-length link_info))
+    ;;       (^ (^var-declaration
+    ;;           'int
+    ;;           n
+    ;;           (^array-length link_info))
 
-             (^var-declaration
-              'int
-              i
-              (^int 0))
+    ;;          (^var-declaration
+    ;;           'int
+    ;;           i
+    ;;           (^int 0))
 
-             (^assign (^rts-field-use 'module_table)
-                      (^new-array 'scmobj n))
+    ;;          (^assign (^rts-field-use 'module_table)
+    ;;                   (^new-array 'scmobj n))
 
-             (^while (^< i n)
+    ;;          (^while (^< i n)
 
-                     (^ (^var-declaration
-                         'modlinkinfo
-                         info
-                         (^array-index link_info i))
+    ;;                  (^ (^var-declaration
+    ;;                      'modlinkinfo
+    ;;                      info
+    ;;                      (^array-index link_info i))
 
-                        (^dict-set (^rts-field-use 'module_map)
-                                   (^member info 'name)
-                                   info)
+    ;;                     (^dict-set (^rts-field-use 'module_map)
+    ;;                                (^member info 'name)
+    ;;                                info)
 
-                        (^assign (^array-index (^rts-field-use 'module_table) i)
-                                 (^null))
+    ;;                     (^assign (^array-index (^rts-field-use 'module_table) i)
+    ;;                              (^null))
 
-                        (^inc-by i 1))))))))
+    ;;                     (^inc-by i 1))))))))
 
     ((module_register)
      (rts-method
@@ -563,14 +1090,14 @@
                                            (^rts-field-use 'module_table)
                                            (^int 0))))))))))))))
 
-    ((modlinkinfo)
-     (rts-class
-      'modlinkinfo
-      '() ;; properties
-      #f ;; extends
-      '() ;; class-fields
-      (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-            (univ-field 'index 'int #f '(public)))))
+    ;; ((modlinkinfo)
+    ;;  (rts-class
+    ;;   'modlinkinfo
+    ;;   '() ;; properties
+    ;;   #f ;; extends
+    ;;   '() ;; class-fields
+    ;;   (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+    ;;         (univ-field 'index 'int #f '(public)))))
 
     ((module_map)
      (rts-field
@@ -904,17 +1431,17 @@
 
               (^return ra)))))))
 
-    ((continuation_capture1)
-     (continuation-capture-procedure 1 #f))
+    ;; ((continuation_capture1)
+    ;;  (continuation-capture-procedure 1 #f))
 
-    ((continuation_capture2)
-     (continuation-capture-procedure 2 #f))
+    ;; ((continuation_capture2)
+    ;;  (continuation-capture-procedure 2 #f))
 
-    ((continuation_capture3)
-     (continuation-capture-procedure 3 #f))
+    ;; ((continuation_capture3)
+    ;;  (continuation-capture-procedure 3 #f))
 
-    ((continuation_capture4)
-     (continuation-capture-procedure 4 #f))
+    ;; ((continuation_capture4)
+    ;;  (continuation-capture-procedure 4 #f))
 
     ((thread_save1)
      (continuation-capture-procedure 1 #t))
@@ -928,32 +1455,32 @@
     ((thread_save4)
      (continuation-capture-procedure 4 #t))
 
-    ((continuation_graft_no_winding2)
-     (continuation-graft-no-winding-procedure 2 #f))
+    ;; ((continuation_graft_no_winding2)
+    ;;  (continuation-graft-no-winding-procedure 2 #f))
 
-    ((continuation_graft_no_winding3)
-     (continuation-graft-no-winding-procedure 3 #f))
+    ;; ((continuation_graft_no_winding3)
+    ;;  (continuation-graft-no-winding-procedure 3 #f))
 
-    ((continuation_graft_no_winding4)
-     (continuation-graft-no-winding-procedure 4 #f))
+    ;; ((continuation_graft_no_winding4)
+    ;;  (continuation-graft-no-winding-procedure 4 #f))
 
-    ((continuation_graft_no_winding5)
-     (continuation-graft-no-winding-procedure 5 #f))
+    ;; ((continuation_graft_no_winding5)
+    ;;  (continuation-graft-no-winding-procedure 5 #f))
 
-    ((thread_restore2)
-     (continuation-graft-no-winding-procedure 2 #t))
+    ;; ((thread_restore2)
+    ;;  (continuation-graft-no-winding-procedure 2 #t))
 
-    ((thread_restore3)
-     (continuation-graft-no-winding-procedure 3 #t))
+    ;; ((thread_restore3)
+    ;;  (continuation-graft-no-winding-procedure 3 #t))
 
-    ((thread_restore4)
-     (continuation-graft-no-winding-procedure 4 #t))
+    ;; ((thread_restore4)
+    ;;  (continuation-graft-no-winding-procedure 4 #t))
 
-    ((thread_restore5)
-     (continuation-graft-no-winding-procedure 5 #t))
+    ;; ((thread_restore5)
+    ;;  (continuation-graft-no-winding-procedure 5 #t))
 
-    ((continuation_return_no_winding2)
-     (continuation-return-no-winding-procedure 2))
+    ;; ((continuation_return_no_winding2)
+    ;;  (continuation-return-no-winding-procedure 2))
 
     ((poll)
      (rts-method
@@ -984,7 +1511,7 @@
       (lambda (ctx)
         (let ((rest (^local-var 'rest))
               (nrp (^local-var 'nrp)))
-          (^ (^var-declaration 'scmobj rest (^null))
+          (^ (^var-declaration 'scmobj rest (^null-obj))
              (^if (^< (^getnargs)
                       nrp)
                   (^return (^bool #f)))
@@ -1050,7 +1577,7 @@
            (^var-declaration 'int i (^int 0))
            (^var-declaration 'scmobj key (^null))
            (^var-declaration 'scmobj val (^null))
-           (^var-declaration '(array scmobj) key_vals (^null))
+           (^var-declaration '(array scmobj) key_vals (^null-obj))
 
            (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
                      (^!= (^parens (^bitand nb_key_args (^int 1))) (^int 0))) ;; keyword arguments must come in pairs
@@ -1240,6 +1767,805 @@
              (^return
               (^cast*-jumpable
                (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))))))
+
+    ;; Hashtables
+    ((next_sn)
+     (rts-field
+      'next_sn
+      'int
+      (^int 0)
+      '(public)))
+
+    ((sn_table)
+     (rts-field
+      'sn_table
+      '(dict int scmobj)
+      (^empty-dict '(dict int scmobj))
+      '(public)))
+
+    ((get_serial_number)
+     (rts-method
+      'get_serial_number
+      '(public)
+      'int
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((obj (^local-var 'obj)))
+          (^ (^if (^not (^attribute-exists? obj (^str "__sn__")))
+                  (^ (^assign (^member obj '__sn__) (^rts-field-use 'next_sn))
+                     (^dict-set (^rts-field-use 'sn_table) (^rts-field-use 'next_sn) obj)
+                     (^inc-by (^rts-field-use 'next_sn) (^int 1))))
+             (^return (^member obj '__sn__)))))))
+
+    ((hashtable)
+     (rts-class
+      'hashtable
+      '() ;; properties
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((python)
+         '(prim dict))
+        ((ruby)
+         '(prim Hash))
+        (else
+         'scmobj))
+      '() ;; class-fields
+      (case (target-name (ctx-target ctx)) ;; instance-fields
+        ((php)
+         (list
+          (univ-field 'dict
+                      '(dict scmobj scmobj)
+                      (^empty-dict '(dict scmobj scmobj))
+                      '(public))))
+        ((java)
+         (list
+          (univ-field 'dict
+                      '(generic Map scmobj scmobj)
+                      (^null)
+                      '(public))))
+        (else
+         '()))
+      '() ;; class-methods
+      (append ;; instance-methods
+       (case (target-name (ctx-target ctx))
+         ((python)
+          (list
+           (univ-method '__getitem__ '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return dict.__getitem__(self, (type(key), key)) if " (^host-primitive? 'key) " else dict.__getitem__(self, key)"))))
+
+           (univ-method '__setitem__ '(public) 'scmobj
+            (list (univ-field 'key 'scmobj)
+                  (univ-field 'val 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return dict.__setitem__(self,(type(key), key),val) if " (^host-primitive? 'key) " else dict.__setitem__(self, key, val)"))))
+
+           (univ-method '__contains__ '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return dict.__contains__(self,(type(key), key)) if " (^host-primitive? 'key) " else dict.__contains__(self, key)"))))
+
+           (univ-method '__delitem__ '(public) 'noresult
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "k = (type(key), key) if " (^host-primitive? 'key) " else key\n"
+                  "return dict.__delitem__(self,k) if k in self else None"))))
+
+           (univ-method 'keys '(public) 'scmobj '() '()
+            (univ-emit-fn-body
+             ctx
+             "\n"
+             (lambda (ctx)
+               (^ "return map(lambda x: x[1] if type(x) == tuple else x,dict.keys(self))"))))))
+         ((php)
+          (list
+           (univ-method 'const_to_string '(public) 'str
+            (list (univ-field 'obj 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((obj (^local-var 'obj)))
+                 (^ (^if (^bool? obj)
+                         (^return (^concat "c" (^if-expr obj "0" "1"))))
+
+                    (^if (^null? obj)
+                         (^return "c2"))
+
+                    (^if (^void? obj)
+                         (^return "c3"))
+
+                    (^if (^int? obj)
+                         (^return (^concat "i" (^tostr obj))))
+
+                    (^if (^float? obj)
+                         (^return (^concat "f" (^tostr obj))))
+
+                    (^if (^str? obj)
+                         (^return (^concat "s" obj)))
+
+                    (univ-throw ctx "\"const_to_string error (cannot convert object)\""))))))
+           (univ-method 'string_to_const '(public) 'scmobj
+            (list (univ-field 'code 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((code (^local-var 'code))
+                     (prefix (^local-var 'prefix)))
+                 (^ (^var-declaration 'str prefix (^string-ref code 0))
+
+                    (^if (^= prefix "c")
+                         (^return (^if-expr (^eq? (^string-ref code 1) (^str "0"))
+                                            (^bool #t)
+                                            (^if-expr (^eq? (^string-ref code 1) (^str "1"))
+                                                      (^bool #f)
+                                                      (^if-expr (^eq? (^string-ref code 1) (^str "2"))
+                                                                (^null)
+                                                                (^void))))))
+
+                    (^if (^= prefix (^str "i"))
+                         (^return (^str-toint (^substring code 1 (^- (^str-length code) 1)))))
+
+                    (^if (^= prefix (^str "f"))
+                         (^return (^str-tofloat (^substring code 1 (^- (^str-length code) 1)))))
+
+                    (^if (^= prefix (^str "s"))
+                         (^return (^substring code 1 (^- (^str-length code) 1))))
+
+                    (univ-throw ctx "\"string_to_const error (unknown string)\""))))))
+           (univ-method 'has '(public) 'boolean
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key)))
+                 (^return
+                  (^if-expr (^or (^host-primitive? key) (^attribute-exists? key (^str "__sn__")))
+                            (^dict-key-exists? (^member (^this) 'dict)
+                                               (^if-expr (^host-primitive? key)
+                                                        (^call-member (^this) 'const_to_string key)
+                                                        (^member key '__sn__)))
+                            (^bool #f)))))))
+           (univ-method 'get '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key)))
+                 (^return
+                  (^dict-get (^member (^this) 'dict)
+                             (^if-expr (^host-primitive? key)
+                                      (^call-member (^this) 'const_to_string key)
+                                      (^member key '__sn__))))))))
+           (univ-method 'set '(public) 'noresult
+            (list (univ-field 'key 'scmobj)
+                  (univ-field 'val 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key))
+                     (val (^local-var 'val)))
+                 (^dict-set (^member (^this) 'dict)
+                            (^if-expr (^host-primitive? key)
+                                      (^call-member (^this) 'const_to_string key)
+                                      (^call-prim (^rts-method-use 'get_serial_number) key))
+                            val)))))
+           (univ-method 'delete '(public) 'noresult
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (let ((key (^local-var 'key)))
+                 (^dict-delete (^member (^this) 'dict)
+                               (^if-expr (^host-primitive? key)
+                                         (^call-member (^this) 'const_to_string key)
+                                         (^call-prim (^rts-method-use 'get_serial_number) key)))))))
+           (univ-method 'size '(public) 'int '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return (^dict-length (^member (^this) 'dict))))))
+           (univ-method 'keys '(public) '(array scmobj) '() '()
+            (univ-emit-fn-body
+             ctx
+             "\n"
+             (lambda (ctx)
+               (let ((keys (^local-var 'keys))
+                     (i (^local-var 'i)))
+                 (^ (^var-declaration '(array scmobj) keys (^call-prim 'array_keys (^member (^this) 'dict)))
+                    (^var-declaration 'int i 0)
+
+                    (^while (^< i (^array-length keys))
+                            (^ (^assign (^array-index keys i)
+                                        (^if-expr (^str? (^array-index keys i))
+                                                  (^call-member (^this) 'string_to_const (^array-index keys i))
+                                                  (^dict-get (^rts-field-use 'sn_table) (^array-index keys i))))
+                               (^inc-by i 1)))
+                    (^return keys))))))))
+         ((java)
+          (list
+           (univ-method 'has '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return
+                (^boolean-box (^call-member (^member (^this) 'dict) 'containsKey 'key))))))
+           (univ-method 'get '(public) 'scmobj
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return (^call-member (^member (^this) 'dict) 'get 'key)))))
+           (univ-method 'set '(public) 'noresult
+            (list (univ-field 'key 'scmobj)
+                  (univ-field 'val 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^expr-statement
+                (^call-member (^member (^this) 'dict) 'set 'key 'val)))))
+           (univ-method 'delete '(public) 'noresult
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^expr-statement
+                (^call-member (^member (^this) 'dict) 'remove 'key)))))
+           (univ-method 'size '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^return
+                (^fixnum-box (^call-member (^member (^this) 'dict) 'size))))))
+           (univ-method 'keys '(public) '(array scmobj) '() '()
+            (univ-emit-fn-body
+             ctx
+             "\n"
+             (lambda (ctx)
+               (^return
+                (^call-member (^call-member (^member (^this) 'dict) 'keySet)
+                              'toArray
+                              (^new-array 'scmobj (^call-member (^member (^this) 'dict) 'size)))))))
+           (univ-method 'init '(public) 'scmobj
+            (list (univ-field 'weak_keys 'boolean)
+                  (univ-field 'weak_values 'boolean))
+            '()
+            (univ-emit-fn-body
+             ctx
+             "\n"
+             (lambda (ctx)
+               (^ (^assign (^member (^this) 'dict)
+                           (^if-expr (^and 'weak_keys 'weak_values)
+                                     (^new (^rts-class-use 'hashtable_weak_keys_values))
+                                     (^if-expr 'weak_keys
+                                               (^new (^type '(generic WeakHashMap scmobj scmobj)))
+                                               (^if-expr 'weak_values
+                                                         (^new (^rts-class-use 'hashtable_weak_values))
+                                                         (^empty-dict '(dict scmobj scmobj))))))
+                  (^return (^this))))))))
+         (else
+          '()))
+       (list
+        (univ-method 'keys_list '(public) 'scmobj '() '()
+         (univ-emit-fn-body
+          ctx
+          "\n"
+          (lambda (ctx)
+            (let ((keys (^local-var 'keys)))
+              (^ (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
+
+                 (if (eq? (target-name (ctx-target ctx)) 'python)
+                     (^assign keys (^call-prim 'list keys))
+                     (^))
+
+                 (^return (^call-prim (^rts-method-use 'hostarray2list) keys)))))))))))
+
+    ((hashtable_base)
+     (rts-class
+      'hashtable_base
+      '((alias_method :parent_keys :keys) ;; properties
+        (alias_method :parent_get |:[]|))
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((ruby)
+         '(prim Hash))
+        (else
+         'scmobj))
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (append
+       (case (target-name (ctx-target ctx)) ;; instance-methods
+         ((python)
+          (list
+           (univ-method 'keys '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return self.objdict.keys() + self.primdict.keys()"))))
+           (univ-method '__len__ '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return len(self.keys())"))))
+           (univ-method '__contains__ '(public) 'bool
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
+                  "return key in d"))))
+           (univ-method '__delitem__ '(public) 'noresult
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
+                  "return d.__delitem__(key) if key in d else None\n"))))))
+         ((ruby)
+          (list
+           (univ-method 'cleanup '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "select! do |e| self.key_alive? e end\n"))))
+
+           (univ-method 'keys '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "cleanup; parent_keys\n"))))))
+         (else
+          (compiler-internal-error
+           "hashtable_base, unknown target")))
+       (list
+        (univ-method 'keys_list '(public) 'scmobj '() '()
+         (univ-emit-fn-body
+          ctx
+          "\n"
+          (lambda (ctx)
+            (let ((keys (^local-var 'keys)))
+              (^ (^var-declaration 'scmobj keys (^call-member (^this) 'keys))
+
+                 (if (eq? (target-name (ctx-target ctx)) 'python)
+                     (^assign keys (^call-prim 'list keys))
+                     (^))
+
+                 (^return (^call-prim (^rts-method-use 'hostarray2list) keys)))))))))
+       '()
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ "self.primdict = " (^new (^rts-class-use 'hashtable)))))
+        (else
+         #f))))
+
+    ((hashtable_weak_keys)
+     (rts-class
+      'hashtable_weak_keys
+      '() ;; properties
+      'hashtable_base
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx))  ;; instance-methods
+        ((python)
+         (list
+          (univ-method '__getitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
+                 "return d[key]\n"))))
+          (univ-method '__setitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'val 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "d = self.primdict if " (^host-primitive? 'key) " else self.objdict\n"
+                 "d[key] = val\n"))))))
+        ((ruby)
+         (list
+          (univ-method 'key_alive? '(public) 'bool
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "key.__getobj__ if key.class == WeakRef\n"
+                 "true\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "false\n"
+                 "end\n"))))
+          (univ-method 'keys_list '(public) 'scmobj '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "g_hostarray2list(self.keys.map do |e| e.class == WeakRef ? e.__getobj__ : e end)"))))
+          (univ-method 'has_key? '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "keys.each do |e|"
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key)\n"
+                 "end\n"
+                 "false\n"))))
+          (univ-method '|[]| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "keys.each do |e|"
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key)\n"
+                 "end\n"
+                 "nil\n"))))
+          (univ-method '|[]=| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'obj 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "super WeakRef.new(key), obj\n"
+                 "rescue ArgumentError\n"
+                 "super key, obj\n"
+                 "end\n"))))
+          (univ-method 'delete '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "keys.each do |e|"
+                 "return super(e) if (e.class == WeakRef ? e.__getobj__ : e).equal?(key)\n"
+                 "end\n"
+                 "nil\n"))))))
+        (else
+         (compiler-internal-error "hashtable_weak_keys, unknown target")))
+      '() ;; class-classes
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ (^rts-class-use 'hashtable_base) ".__init__(self)\n"
+              "self.objdict = weakref.WeakKeyDictionary()\n")))
+        (else
+         #f))))
+
+    ((hashtable_weak_values)
+     (rts-class
+      'hashtable_weak_values
+      '((generic K V)) ;; properties
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((java)
+         '(prim |HashMap<K, V>|))
+        (else
+         'hashtable_base))
+      '() ;; class-fields
+      '() ;; instance-fields
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx))  ;; instance-methods
+        ((python)
+         (list
+          (univ-method '__getitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "d = self.primdict if key in self.primdict else self.objdict\n"
+                 "return d[key]\n"))))
+          (univ-method '__setitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'val 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ (^if (^host-primitive? 'val)
+                      (^ (^if "key in self.objdict"
+                              "del self.objdict[key]\n")
+                         "self.primdict[key] = val\n")
+                      (^ (^if "key in self.primdict"
+                              "del self.primdict[key]\n")
+                         "self.objdict[key] = val\n"))))))
+          (univ-method '__delitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^if "key in self.primdict"
+                   "del self.primdict[key]\n"
+                   (^if "key in self.objdict"
+                        "del self.objdict[key]\n")))))
+           (univ-method '__contains__ '(public) 'bool
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return key in self.primdict or key in self.objdict"))))))
+        ((ruby)
+         (list
+          (univ-method 'key_alive? '(public) 'bool
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "e = self.parent_get key\n"
+                 "e.respond_to?(:foo) if e.class == WeakRef\n"
+                 "true\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "false\n"
+                 "end\n"))))
+          (univ-method 'has_key? '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "super key and key_alive?(key)\n"))))
+          (univ-method '|[]| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "e = super key\n"
+                 "begin\n"
+                 "return e.class == WeakRef ? e.__getobj__ : e\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "nil\n"
+                 "end\n"))))
+          (univ-method '|[]=| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'obj 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "super key, WeakRef.new(obj)\n"
+                 "rescue ArgumentError\n"
+                 "super key, obj\n"
+                 "end\n"))))))
+        ((java)
+         (list
+          (univ-method 'get '(public) 'V
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "WeakReference<V> ref = (WeakReference<V>) super.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return null;\n"
+                 "return ref.get();\n"))))
+          (univ-method 'put '(public) 'V
+           (list (univ-field 'key 'K)
+                 (univ-field 'value 'V))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "V previous = this.get(key);\n"
+                 "super.put(key, (V) new WeakReference<V>(value));\n"
+                 "return previous;\n"))))
+          (univ-method 'size '(public) 'int '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "cleanup();\n"
+                 "return super.size();"))))
+          (univ-method 'cleanup '(public) 'noresult '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "Set<K> keySet = super.keySet();\n"
+                 "Object[] keys = keySet.toArray(new Object[super.size()]);\n"
+                 "for(Object key : keys)\n"
+                 "  if(this.get((K) key) == null)\n"
+                 "    this.remove((K) key);\n"))))
+          (univ-method 'containsKey '(public) 'bool
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if(!super.containsKey((K) key))\n"
+                 "  return false;\n"
+                 "V ref = (V) this.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return false;\n"
+                 "return true;\n"))))
+          (univ-method 'keySet '(public) '(generic Set K) '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "cleanup();\n"
+                 "return super.keySet();\n"))))))
+        (else
+         (compiler-internal-error "hashtable_weak_values, unknown target")))
+      '() ;; class-classes
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ (^rts-class-use 'hashtable_base) ".__init__(self)\n"
+              "self.objdict = weakref.WeakValueDictionary()\n")))
+        (else
+         #f))))
+
+    ((hashtable_weak_keys_values)
+     (rts-class
+      'hashtable_weak_keys_values
+      '((generic K V)) ;; properties
+      (case (target-name (ctx-target ctx)) ;; extends
+        ((java)
+         '(prim |WeakHashMap<K, V>|))
+        (else
+         'hashtable_weak_keys))
+      '() ;; class-fields
+      (case (target-name (ctx-target ctx)) ;; instance-fields
+        ((java)
+         (list (univ-field 'doCleanupWhenComputingSize
+                           'bool
+                           (^bool #f)
+                           '(protected))))
+        (else
+         '()))
+      '() ;; class-methods
+      (case (target-name (ctx-target ctx))  ;; instance-methods
+        ((python)
+         (list
+          (univ-method '__getitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "val = " (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key)\n"
+                 "return val() if isinstance(val, weakref.ref) else val\n"))))
+          (univ-method '__setitem__ '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'val 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "v = val if " (^host-primitive? "val") " else weakref.ref(val)\n"
+                 "return " (^rts-class-use 'hashtable_weak_keys) ".__setitem__(self, key, v)\n"))))
+          (univ-method 'keys '(public) 'scmobj '() '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return filter(lambda key: self.valid_key(key), " (^rts-class-use 'hashtable_weak_keys) ".keys(self))\n"))))
+          (univ-method 'valid_key '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)) '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return not isinstance(" (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key), weakref.ref) or " (^rts-class-use 'hashtable_weak_keys) ".__getitem__(self, key)() is not None\n"))))
+          (univ-method '__contains__ '(public) 'bool
+            (list (univ-field 'key 'scmobj))
+            '()
+            (univ-emit-fn-body ctx "\n"
+             (lambda (ctx)
+               (^ "return " (^rts-class-use 'hashtable_weak_keys) ".__contains__(self, key) and self.valid_key(key)"))))))
+        ((ruby)
+         (list
+          (univ-method 'key_alive? '(public) 'bool
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "return false if not super key\n"
+                 "begin\n"
+                 "e = self.parent_get key\n"
+                 "e.respond_to?(:foo) if e.class == WeakRef\n"
+                 "true\n"
+                 "rescue WeakRef::RefError => err\n"
+                 "false\n"
+                 "end\n"))))
+          (univ-method 'has_key? '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "super key and key_alive?(key)\n"))))
+          (univ-method '|[]| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if not has_key? key\n"
+                 "return nil\n"
+                 "end\n"
+                 "e = super key\n"
+                 "return e.class == WeakRef ? e.__getobj__ : e\n"))))
+          (univ-method '|[]=| '(public) 'scmobj
+           (list (univ-field 'key 'scmobj)
+                 (univ-field 'obj 'scmobj))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "begin\n"
+                 "v = WeakRef.new(obj)\n"
+                 "rescue ArgumentError\n"
+                 "v = obj\n"
+                 "end\n"
+                 "super key, v\n"))))))
+        ((java)
+         (list
+          (univ-method 'get '(public) 'V
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "WeakReference<V> ref = (WeakReference<V>) super.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return null;\n"
+                 "return ref.get();\n"))))
+          (univ-method 'put '(public) 'V
+           (list (univ-field 'key 'K)
+                 (univ-field 'value 'V))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "V previous = this.get(key);\n"
+                 "super.put(key, (V) new WeakReference<V>(value));\n"
+                 "return previous;\n"))))
+          (univ-method 'size '(public) 'int '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if(!doCleanupWhenComputingSize)\n"
+                 "  cleanup();\n"
+                 "return super.size();"))))
+          (univ-method 'cleanup '(public) 'noresult '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "doCleanupWhenComputingSize = true;\n"
+                 "Set<K> keySet = super.keySet();\n"
+                 "Object[] keys = keySet.toArray(new Object[super.size()]);\n"
+                 "for(Object key : keys)\n"
+                 "  if(this.get((K) key) == null)\n"
+                 "    this.remove((K) key);\n"
+                 "doCleanupWhenComputingSize = false;\n"))))
+          (univ-method 'containsKey '(public) 'bool
+           (list (univ-field 'key 'Object))
+           '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "if(!super.containsKey((K) key))\n"
+                 "  return false;\n"
+                 "V ref = (V) this.get(key);\n"
+                 "if(ref == null)\n"
+                 "  return false;\n"
+                 "return true;\n"))))
+          (univ-method 'keySet '(public) '(generic Set K) '() '()
+           (univ-emit-fn-body ctx "\n"
+            (lambda (ctx)
+              (^ "cleanup();\n"
+                 "return super.keySet();\n"))))))
+        (else
+         (compiler-internal-error "hashtable_weak_keys_values, unknown target")))
+      '() ;; class-classes
+      (case (target-name (ctx-target ctx)) ;; constructor
+        ((python)
+         (lambda (ctx)
+           (^ (^rts-class-use 'hashtable_weak_keys) ".__init__(self)\n")))
+        (else
+         #f))))
+
+    ((hostarray2list)
+     (rts-method
+      'hostarray2list
+      '(public)
+      'scmobj
+      (list (univ-field 'arr 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((lst (^local-var 'lst))
+              (arr (^local-var 'arr))
+              (i (^local-var 'i)))
+          (^ (^var-declaration 'scmobj lst (^null-obj))
+
+             (^var-declaration 'int i (^int 0))
+
+             (^while (^< i (^array-length arr))
+                     (^ (^assign lst (^cons (^array-index arr i)
+                                            lst))
+                        (^inc-by i 1)))
+
+             (^return lst))))))
 
     ((get)
 #<<EOF
@@ -2900,48 +4226,48 @@ EOF
                   (^this-mod-jumpable
                    (gvm-proc-use ctx "##exit-process")))))))
 
-    ((glo-real-time-milliseconds)
-     (univ-defs-combine
-      (univ-jumpable-declaration-defs
-       ctx
-       #t
-       (gvm-proc-use ctx "real-time-milliseconds")
-       'entrypt
-       '()
-       '()
-       (univ-emit-fn-body
-        ctx
-        "\n"
-        (lambda (ctx)
-          (^ (case (target-name (ctx-target ctx))
+    ;; ((glo-real-time-milliseconds)
+    ;;  (univ-defs-combine
+    ;;   (univ-jumpable-declaration-defs
+    ;;    ctx
+    ;;    #t
+    ;;    (gvm-proc-use ctx "real-time-milliseconds")
+    ;;    'entrypt
+    ;;    '()
+    ;;    '()
+    ;;    (univ-emit-fn-body
+    ;;     ctx
+    ;;     "\n"
+    ;;     (lambda (ctx)
+    ;;       (^ (case (target-name (ctx-target ctx))
 
-               ((js java)
-                (^setreg 1
-                         (^fixnum-box
-                          (^cast* 'int
-                                  (^parens
-                                   (^- (univ-get-time ctx)
-                                       (^rts-field-use 'start_time)))))))
+    ;;            ((js java)
+    ;;             (^setreg 1
+    ;;                      (^fixnum-box
+    ;;                       (^cast* 'int
+    ;;                               (^parens
+    ;;                                (^- (univ-get-time ctx)
+    ;;                                    (^rts-field-use 'start_time)))))))
 
-               ((python php ruby)
-                (^setreg 1
-                         (^fixnum-box
-                          (^float-toint
-                           (^* 1000
-                               (^parens
-                                (^- (univ-get-time ctx)
-                                    (^rts-field-use 'start_time))))))))
+    ;;            ((python php ruby)
+    ;;             (^setreg 1
+    ;;                      (^fixnum-box
+    ;;                       (^float-toint
+    ;;                        (^* 1000
+    ;;                            (^parens
+    ;;                             (^- (univ-get-time ctx)
+    ;;                                 (^rts-field-use 'start_time))))))))
 
-               (else
-                (compiler-internal-error
-                 "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
-             (^return
-              (^cast*-jumpable (^getreg 0)))))))
-      (rts-init
-       (lambda (ctx)
-         (^setglo 'real-time-milliseconds
-                  (^this-mod-jumpable
-                   (gvm-proc-use ctx "real-time-milliseconds")))))))
+    ;;            (else
+    ;;             (compiler-internal-error
+    ;;              "univ-rtlib-feature glo-real-time-milliseconds, unknown target")))
+    ;;          (^return
+    ;;           (^cast*-jumpable (^getreg 0)))))))
+    ;;   (rts-init
+    ;;    (lambda (ctx)
+    ;;      (^setglo 'real-time-milliseconds
+    ;;               (^this-mod-jumpable
+    ;;                (gvm-proc-use ctx "real-time-milliseconds")))))))
 
     ((start_time)
      (rts-field
@@ -3236,17 +4562,17 @@ EOF
                      (^glo-var-primitive-set! sym (^null))))
              (^return sym))))))
 
-    ((apply2)
-     (apply-procedure 2))
+    ;; ((apply2)
+    ;;  (apply-procedure 2))
 
-    ((apply3)
-     (apply-procedure 3))
+    ;; ((apply3)
+    ;;  (apply-procedure 3))
 
-    ((apply4)
-     (apply-procedure 4))
+    ;; ((apply4)
+    ;;  (apply-procedure 4))
 
-    ((apply5)
-     (apply-procedure 5))
+    ;; ((apply5)
+    ;;  (apply-procedure 5))
 
     ((host_function2scm)
      (rts-method
@@ -4264,8 +5590,11 @@ EOF
 (define (univ-external-libs ctx)
   (case (target-name (ctx-target ctx))
 
-    ((js php ruby)
+    ((js php)
      (^))
+
+    ((ruby)
+     (^ "require 'weakref'\n"))
 
     ((python)
      (^ "from array import array\n"
@@ -4273,12 +5602,17 @@ EOF
         "import time\n"
         "import math\n"
         "import sys\n"
+        "import weakref\n"
         "\n"))
 
     ((java)
      (^ "import java.util.Arrays;\n"
         "import java.util.HashMap;\n"
         "import java.lang.System;\n"
+        "import java.util.Map;\n"
+        "import java.util.WeakHashMap;\n"
+        "import java.util.Set;\n"
+        "import java.lang.ref.WeakReference;\n"
         "\n"))
 
     (else

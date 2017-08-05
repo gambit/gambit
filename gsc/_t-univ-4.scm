@@ -2150,6 +2150,125 @@
 ;;TODO: ("##type-super"                   (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-fields"                  (1)   #f ()    0    #f      extended)
 
+;; Tables
+
+(univ-define-prim "##univ-table-make-hashtable" #f
+  (make-translated-operand-generator
+   (lambda (ctx return weak-keys weak-values)
+     (let ((weak-keys (^boolean-unbox weak-keys))
+           (weak-values (^boolean-unbox weak-values)))
+       (case (target-name (ctx-target ctx))
+         ((python ruby)
+          (return (^if-expr (^and weak-keys weak-values)
+                            (^new (^rts-class-use 'hashtable_weak_keys_values))
+                            (^if-expr weak-keys
+                                      (^new (^rts-class-use 'hashtable_weak_keys))
+                                      (^if-expr weak-values
+                                                (^new (^rts-class-use 'hashtable_weak_values))
+                                                (^new (^rts-class-use 'hashtable)))))))
+         ((js)
+          ;; Note : WeakMap in javascript is a Map object with weak-keys.
+          ;; However, a WeakMap's keys are not enumerable, which makes functions
+          ;; such as table-for-each and table->list impossible to implement
+          (return (^new 'Map)))
+         ((php)
+          (return (^new (^rts-class-use 'hashtable))))
+         ((java)
+          (return (^call-member (^new (^rts-class-use 'hashtable)) 'init weak-keys weak-values)))
+         (else
+          (compiler-internal-error
+           "##univ-table-make-hashtable, unknown target")))))))
+
+(univ-define-prim "##univ-table-key-exists?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict key)
+     (return
+      (^boolean-box
+       (case (target-name (ctx-target ctx))
+         ((python ruby)
+          (^dict-key-exists? dict key))
+         ((js php java)
+          (^call-member dict 'has key))
+         (else
+          (compiler-internal-error
+           "##univ-table-key-exists?, unknown target"))))))))
+
+(univ-define-prim "##univ-table-keys" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict)
+     (return
+       (case (target-name (ctx-target ctx))
+         ((python ruby php java)
+          (^call-member dict 'keys_list))
+         ((js)
+          ;; TODO : IE and old browsers compatibility
+          (^call-prim
+           (^rts-method-use 'hostarray2list)
+           (^call-member 'Array 'from
+                         (^call-member dict 'keys))))
+         (else
+          (compiler-internal-error
+           "##univ-table-keys, unknown target")))))))
+
+(univ-define-prim "##univ-table-ref" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict key)
+     (return
+      (case (target-name (ctx-target ctx))
+        ((python ruby)
+         (^dict-get dict key))
+        ((js php java)
+         (^call-member dict 'get key))
+        (else
+         (compiler-internal-error
+          "##univ-table-ref, unknown target")))))))
+
+(univ-define-prim "##univ-table-set!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict key val)
+     (^
+      (case (target-name (ctx-target ctx))
+        ((python ruby)
+         (^dict-set dict key val))
+        ((js php java)
+         (^expr-statement
+          (^call-member dict 'set key val)))
+        (else
+         (compiler-internal-error
+          "##univ-table-set!, unknown target")))
+      (return (^void))))))
+
+(univ-define-prim "##univ-table-delete" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict key)
+     (^
+      (case (target-name (ctx-target ctx))
+        ((python ruby)
+         (^dict-delete dict key))
+        ((js php java)
+         (^expr-statement
+          (^call-member dict 'delete key)))
+        (else
+         (compiler-internal-error
+          "##univ-table-delete, unknown target")))
+      (return (^void))))))
+
+(univ-define-prim "##univ-table-length" #f
+  (make-translated-operand-generator
+   (lambda (ctx return dict)
+     (return
+      (^fixnum-box
+       (case (target-name (ctx-target ctx))
+         ((python ruby)
+          (^dict-length dict))
+         ((js)
+          (^member dict 'size))
+         ((php java)
+          (^call-member dict 'size))
+         (else
+          (compiler-internal-error
+           "##univ-table-length, unknown target"))))))))
+
 (univ-define-prim-bool "##symbol?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -2778,12 +2897,12 @@
         (return arg1)))))
 
 (univ-define-prim "##identity" #t
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return arg1)))
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^not (^eq? (^cast*-scmobj arg1) (^obj #f)))))))
+ (make-translated-operand-generator
+  (lambda (ctx return arg1)
+    (return arg1)))
+ (make-translated-operand-generator
+  (lambda (ctx return arg1)
+    (return (^not (^parens (^eq? (^cast*-scmobj arg1) (^obj #f))))))))
 
 (univ-define-prim "##first-argument" #t
   (make-translated-operand-generator

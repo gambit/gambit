@@ -220,6 +220,9 @@
 (define-macro (^set obj name val)
   `(univ-emit-set ctx ,obj ,name ,val))
 
+(define-macro (^attribute-exists? obj name)
+  `(univ-emit-attribute-exists? ctx ,obj ,name))
+
 (define-macro (^obj obj)
   `(univ-emit-obj ctx ,obj))
 
@@ -237,6 +240,9 @@
 
 (define-macro (^call-prim expr . params)
   `(univ-emit-call-prim ctx ,expr ,@params))
+
+(define-macro (^call-member expr fct . params)
+  `(univ-emit-call-member ctx ,expr ,fct ,@params))
 
 (define-macro (^jump expr . params)
   `(univ-emit-jump ctx ,expr ,@params))
@@ -546,6 +552,12 @@
 
 (define-macro (^dict-set expr1 expr2 expr3)
   `(univ-emit-dict-set ctx ,expr1 ,expr2 ,expr3))
+
+(define-macro (^dict-delete expr1 expr2)
+  `(univ-emit-dict-delete ctx ,expr1 ,expr2))
+
+(define-macro (^dict-length expr)
+  `(univ-emit-dict-length ctx ,expr))
 
 (define-macro (^member expr name)
   `(univ-emit-member ctx ,expr ,name))
@@ -1060,6 +1072,15 @@
 (define-macro (^string-set! val1 val2 val3)
   `(univ-emit-string-set! ctx ,val1 ,val2 ,val3))
 
+(define-macro (^substring val1 val2 val3)
+  `(univ-emit-substring ctx ,val1 ,val2 ,val3))
+
+(define-macro (^str-toint val)
+  `(univ-emit-str-toint ctx ,val))
+
+(define-macro (^str-tofloat val)
+  `(univ-emit-str-toint ctx ,val))
+
 (define-macro (^symbol-obj obj force-var?)
   `(univ-emit-symbol-obj ctx ,obj ,force-var?))
 
@@ -1152,3 +1173,6 @@
 
 (define-macro (^popcount! arg)
   `(univ-emit-popcount! ctx ,arg))
+
+(define-macro (^host-primitive? arg)
+  `(univ-emit-host-primitive? ctx ,arg))
