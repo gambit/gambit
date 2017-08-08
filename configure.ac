@@ -1221,6 +1221,7 @@ else
   AC_CHECK_HEADERS(sys/sysctl.h)
   AC_CHECK_HEADERS(ws2tcpip.h)
   AC_CHECK_HEADERS(TargetConditionals.h)
+  AC_CHECK_HEADERS(AvailabilityMacros.h)
   AC_CHECK_HEADERS(poll.h)
 
   AC_CHECK_COMMON

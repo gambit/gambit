@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -126,6 +126,7 @@
 #undef HAVE_CRT_EXTERNS_H
 #undef HAVE_WS2TCPIP_H
 #undef HAVE_TARGETCONDITIONALS_H
+#undef HAVE_AVAILABILITYMACROS_H
 #undef HAVE_POLL_H
 
 /*---------------------------------------------------------------------------*/

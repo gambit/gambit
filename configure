@@ -7001,6 +7001,18 @@ fi
 
 done
 
+  for ac_header in AvailabilityMacros.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "AvailabilityMacros.h" "ac_cv_header_AvailabilityMacros_h" "$ac_includes_default"
+if test "x$ac_cv_header_AvailabilityMacros_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_AVAILABILITYMACROS_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in poll.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "poll.h" "ac_cv_header_poll_h" "$ac_includes_default"

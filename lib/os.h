@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -371,6 +371,15 @@
 #undef USE_NONBLOCKING_FILE_IO
 #undef HAVE_CLOCK_GETTIME
 #endif
+#endif
+#endif
+
+/* clock_gettime only available since MacOS 10.12 */
+
+#ifdef HAVE_AVAILABILITYMACROS_H
+#include <AvailabilityMacros.h>
+#if defined(__APPLE__) && MAC_OS_X_VERSION_MIN_REQUIRED < 101200
+#undef HAVE_CLOCK_GETTIME
 #endif
 #endif
 
