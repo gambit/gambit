@@ -1790,10 +1790,36 @@
              y)
             ((##eqv? y 0)
              x)
-            ((and (##fixnum? x) (##fixnum? y))
-             (fixnum-base x y))
+            ((##fixnum? x)
+             (if (##fixnum? y)
+                 (fixnum-base x y)
+                 (fixnum-base x (##remainder y x))))
+            ((##fixnum? y)
+             (fixnum-base y (##remainder x y)))
             (else
-             (##fast-gcd x y)))))
+             (let* ((first-x-bit
+                     (##first-bit-set x))
+                    (first-y-bit
+                     (##first-bit-set y))
+                    (shift-x?
+                     (fx> (fx* 2 first-x-bit) (##integer-length x)))
+                    (shift-y?
+                     (fx> (fx* 2 first-y-bit) (##integer-length y)))
+                    (x
+                     (if shift-x?
+                         (##arithmetic-shift x (##fx- first-x-bit))
+                         x))
+                    (y
+                     (if shift-y?
+                         (##arithmetic-shift y (##fx- first-y-bit))
+                         y)))
+               (if (or shift-x? shift-y?)
+                   ;; we've shifted out all the powers of two in at
+                   ;; least one argument, so we need to put them back
+                   ;; in the gcd.
+                   (##arithmetic-shift (##gcd x y)
+                                       (##fxmin first-x-bit first-y-bit))
+                   (##fast-gcd x y)))))))
 
   (cond ((##not (##integer? x))
          (type-error-on-x))
