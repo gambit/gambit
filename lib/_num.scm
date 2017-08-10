@@ -2321,9 +2321,9 @@ for a discussion of branch cuts.
              (##abs xi))
         (macro-cpxnum-make (##flcopysign 1. (##exact->inexact xi))     ;; xi cannot be exact 0
                            (##flcopysign 0. (##exact->inexact eta)))   ;; eta cannot be exact 0
-        (let* ((t (##tan eta))                                  ;; sin(eta)/cos(eta), can't be exact 0, so can't be exact
+        (let* ((t (##tan eta))                                    ;; sin(eta)/cos(eta) can't be exact 0, so can't be exact
                (beta (##fl+ 1. (##flsquare t)))                   ;; 1/cos^2(eta), can't be exact
-               (s (##sinh xi))                                  ;; sinh(xi), can't be exact zero, so can't be exact
+               (s (##sinh xi))                                    ;; sinh(xi), can't be exact zero, so can't be exact
                (rho (##flsqrt (##fl+ 1. (##flsquare s)))))        ;; cosh(xi), can't be exact
           (if (##infinite? t)                                     ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
               (macro-cpxnum-make (##fl/ rho s)
@@ -2333,9 +2333,6 @@ for a discussion of branch cuts.
                                           one+beta*s^2)
                                    (##fl/ t
                                           one+beta*s^2))))))))
-
-(define-prim (##ctan zeta)
-  (##* -i (##ctanh (##* +i zeta))))
 
 ;;; End of Kahan's functions
 
@@ -2567,7 +2564,10 @@ for a discussion of branch cuts.
     (##fltan (##exact-int->flonum x))
     (##fltan (##ratnum->flonum x))
     (##fltan x)
-    ;; complex ##tanh is the basic one here.
+    ;; ##tanh is the basic function here.
+    ;; Note that multiplying a purely imaginary argument
+    ;; x by +i gives a purely real result, so we apply
+    ;; ##tanh to (##* +i x), not ##ctanh.
     (##* -i (##tanh (##* +i x)))))
 
 (define-prim (tan x)
@@ -8909,14 +8909,12 @@ ___RESULT = result;
                  (copy-lut med-lut stride)
                  (extend-lut low-lut-rac (##fxarithmetic-shift-right n (##fx- log-lut-table-size 1)))))
 
-              ((##fx<= n lut-table-size^3)
+              (else ;; (##fx<= n lut-table-size^3)
                (let* ((stride (##fxquotient (##fx* lut-table-size^3 2) n))
                       (start  (##fxquotient (##fx* lut-table-size 4) stride)))
                  (copy-lut high-lut stride)
                  (extend-lut med-lut start)
-                 (extend-lut low-lut-rac (##fx* start lut-table-size))))
-              (else
-               (error "asking for too large a table")))))
+                 (extend-lut low-lut-rac (##fx* start lut-table-size)))))))
 
     (define (bignum->f64vector-rac x a)
 
@@ -10057,7 +10055,6 @@ ___RESULT = result;
 
 (define-prim (##ratnum.= x y)
   (##declare (mostly-fixnum)
-             (not safe)
              (standard-bindings))
   (and (= (macro-ratnum-numerator x)
           (macro-ratnum-numerator y))
@@ -10066,7 +10063,6 @@ ___RESULT = result;
 
 (define-prim (##ratnum.< x y)
   (##declare (mostly-fixnum)
-             (not safe)
              (standard-bindings))
   (< (* (macro-ratnum-numerator x)
         (macro-ratnum-denominator y))
@@ -10075,7 +10071,6 @@ ___RESULT = result;
 
 (define-prim (##ratnum.+ x y)
   (##declare (mostly-fixnum)
-             (not safe)
              (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
@@ -10099,7 +10094,6 @@ ___RESULT = result;
 
 (define-prim (##ratnum.- x y)
   (##declare (mostly-fixnum)
-             (not safe)
              (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
@@ -10123,7 +10117,6 @@ ___RESULT = result;
 
 (define-prim (##ratnum.* x y)
   (##declare (mostly-fixnum)
-             (not safe)
              (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
@@ -10141,7 +10134,6 @@ ___RESULT = result;
 
 (define-prim (##ratnum./ x y)
   (##declare (mostly-fixnum)
-             (not safe)
              (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
@@ -10163,7 +10155,6 @@ ___RESULT = result;
 
 (define-prim (##ratnum.normalize num den)
   (##declare (mostly-fixnum)
-             (not safe)
              (standard-bindings))
   (let* ((x (##gcd num den))
          (y (if (negative? den) (- x) x))
@@ -10827,8 +10818,8 @@ ___RESULT = result;
              (##flonum? c) (##flonum? d))
         (##make-rectangular (##fl+ a c) (##fl+ b d))
         (let ()
-          (declare (standard-bindings)
-                   (mostly-fixnum))
+          (##declare (standard-bindings)
+                     (mostly-fixnum))
           (##make-rectangular (+ a c) (+ b d))))))
 
 (define-prim (##cpxnum.* x y)
@@ -10839,8 +10830,8 @@ ___RESULT = result;
         (##make-rectangular (##fl- (##fl* a c) (##fl* b d))
                             (##fl+ (##fl* a d) (##fl* b c)))
         (let ()
-          (declare (standard-bindings)
-                   (mostly-fixnum))
+          (##declare (standard-bindings)
+                     (mostly-fixnum))
           (##make-rectangular (- (* a c) (* b d))
                               (+ (* a d) (* b c)))))))
 (define-prim (##cpxnum.- x y)
@@ -10850,8 +10841,8 @@ ___RESULT = result;
              (##flonum? c) (##flonum? d))
         (##make-rectangular (##fl- a c) (##fl- b d))
         (let ()
-          (declare (standard-bindings)
-                   (mostly-fixnum))
+          (##declare (standard-bindings)
+                     (mostly-fixnum))
           (##make-rectangular (- a c) (- b d))))))
 
 

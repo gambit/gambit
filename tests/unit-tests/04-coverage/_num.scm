@@ -289,6 +289,13 @@
 (check-eqv? (gcd (expt 3 30) (expt 5. 30)) 1.)
 (check-eqv? (gcd (expt 3. 30) (expt 5 30)) 1.)
 
+;; fixnum-fixnum
+(check-eqv? (gcd (expt 3 10) (expt 5 10)) 1)
+;; fixnum-bignum
+(check-eqv? (gcd (expt 3 10) (expt 5 50)) 1)
+;; bignum-fixnum
+(check-eqv? (gcd (expt 3 60) (expt 5 10)) 1)
+
 (check-eqv? (expt 15 1000000) (* (expt 3 1000000) (expt 5 1000000)))
 
 (check-eqv? (+ 1 1) 2)
