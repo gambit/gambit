@@ -298,55 +298,63 @@
                       (loop (cdr clauses)))))
                #'(begin))))))))
 
-(macro-define-syntax macro-if-forces
+(macro-define-syntax macro-if2-compilation-option
   (lambda (stx)
     (syntax-case stx ()
-      ((_ forces noforces)
+      ((_ option have-option dont-have-option)
        (if (let* ((co
                    (##global-var-ref
                     (##make-global-var '##compilation-options)))
                   (comp-opts
                    (if (##unbound? co) '() co)))
-             (assq 'force comp-opts))
+             (assq (syntax->datum #'option) comp-opts))
 
-           #'forces
+           #'have-option
 
-           #'noforces)))))
+           #'dont-have-option)))))
+
+(macro-define-syntax macro-if-compilation-option
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ option have-option)
+       #'(macro-if2-compilation-option option have-option (begin)))
+      ((_ option have-option dont-have-option)
+       #'(macro-if2-compilation-option option have-option dont-have-option)))))
+
+(macro-define-syntax macro-if-not-compilation-option
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ option dont-have-option)
+       #'(macro-if2-compilation-option option (begin) dont-have-option))
+      ((_ option dont-have-option have-option)
+       #'(macro-if2-compilation-option option have-option dont-have-option)))))
+
+(macro-define-syntax macro-if-forces
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ forces noforces)
+       #'(macro-if2-compilation-option force forces noforces)))))
 
 (macro-define-syntax macro-force-vars
   (lambda (stx)
     (syntax-case stx ()
       ((_ vars expr)
-       (if (let* ((co
-                   (##global-var-ref
-                    (##make-global-var '##compilation-options)))
-                  (comp-opts
-                   (if (##unbound? co) '() co)))
-             (assq 'force comp-opts))
-
-           (syntax-case (datum->syntax
-                         #'vars
-                         (map (lambda (x) `(,x (##force ,x)))
-                              (syntax->list #'vars)))
-               ()
-             (bindings #'(let bindings expr)))
-
-           #'expr)))))
+       (syntax-case (datum->syntax
+                     #'vars
+                     (map (lambda (x) `(,x (##force ,x)))
+                          (syntax->list #'vars)))
+           ()
+         (bindings
+          #'(macro-if2-compilation-option
+             force
+             (let bindings expr)
+             expr)))))))
 
 (macro-define-syntax macro-if-checks
   (lambda (stx)
     (syntax-case stx ()
       ((_ checks nochecks)
-       (if (let* ((co
-                   (##global-var-ref
-                    (##make-global-var '##compilation-options)))
-                  (comp-opts
-                   (if (##unbound? co) '() co)))
-             (assq 'check comp-opts))
-
-           #'checks
-
-           #'nochecks)))))
+       #'(macro-if2-compilation-option check checks nochecks)))))
 
 (macro-define-syntax macro-no-force
   (lambda (stx)
