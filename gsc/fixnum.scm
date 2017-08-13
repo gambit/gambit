@@ -1,12 +1,8 @@
 ;;;============================================================================
 
-;;; File: "fixnum.scm", Time-stamp: <2008-12-15 11:36:06 feeley>
+;;; File: "fixnum.scm"
 
-;;; Copyright (c) 1994-2008 by Marc Feeley, All Rights Reserved.
-
-(##namespace ("c#"))
-
-(##include "../lib/header.scm")
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)

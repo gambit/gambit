@@ -685,9 +685,9 @@ AC_ARG_ENABLE(type-checking,
               ENABLE_TYPE_CHECKING=yes)
 
 if test "$ENABLE_TYPE_CHECKING" = yes; then
-
-  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -check"
-
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-type-checking|"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|disable-type-checking|"
 fi
 
 ###############################################################################
@@ -701,9 +701,9 @@ AC_ARG_ENABLE(auto-forcing,
               ENABLE_AUTO_FORCING=no)
 
 if test "$ENABLE_AUTO_FORCING" = yes; then
-
-  COMPILATION_OPTIONS="$COMPILATION_OPTIONS -force"
-
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-auto-forcing|"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|disable-auto-forcing|"
 fi
 
 ###############################################################################

@@ -329,11 +329,15 @@
       ((_ option dont-have-option have-option)
        #'(macro-if2-compilation-option option have-option dont-have-option)))))
 
-(macro-define-syntax macro-if-forces
+(macro-define-syntax macro-if-auto-forcing
   (lambda (stx)
     (syntax-case stx ()
-      ((_ forces noforces)
-       #'(macro-if2-compilation-option force forces noforces)))))
+      ((_ forcing noforcing)
+       #'(cond-expand
+          (enable-auto-forcing
+           forcing)
+          (else
+           noforcing))))))
 
 (macro-define-syntax macro-force-vars
   (lambda (stx)
@@ -345,16 +349,21 @@
                           (syntax->list #'vars)))
            ()
          (bindings
-          #'(macro-if2-compilation-option
-             force
-             (let bindings expr)
-             expr)))))))
+          #'(cond-expand
+             (enable-auto-forcing
+              (let bindings expr))
+             (else
+              expr))))))))
 
 (macro-define-syntax macro-if-checks
   (lambda (stx)
     (syntax-case stx ()
       ((_ checks nochecks)
-       #'(macro-if2-compilation-option check checks nochecks)))))
+       #'(cond-expand
+          (enable-type-checking
+           checks)
+          (else
+           nochecks))))))
 
 (macro-define-syntax macro-no-force
   (lambda (stx)

@@ -3984,7 +3984,7 @@
               port
               #!optional
               (max-length ##max-fixnum)
-              (force? (macro-if-forces #t #f)))
+              (force? (macro-if-auto-forcing #t #f)))
   (if (macro-character-output-port? port)
       (begin
         (##write-generic-to-character-port
@@ -4014,7 +4014,7 @@
               port
               #!optional
               (max-length ##max-fixnum)
-              (force? (macro-if-forces #t #f)))
+              (force? (macro-if-auto-forcing #t #f)))
   (if (macro-character-output-port? port)
       (begin
         (##write-generic-to-character-port
@@ -4044,7 +4044,7 @@
               port
               #!optional
               (max-length ##max-fixnum)
-              (force? (macro-if-forces #t #f)))
+              (force? (macro-if-auto-forcing #t #f)))
   (if (macro-character-output-port? port)
       (begin
         (##write-generic-to-character-port
@@ -4074,7 +4074,7 @@
               port
               #!optional
               (max-length ##max-fixnum)
-              (force? (macro-if-forces #t #f)))
+              (force? (macro-if-auto-forcing #t #f)))
   (if (macro-character-output-port? port)
       (begin
         (##write-generic-to-character-port
@@ -4493,7 +4493,7 @@
            port
            (macro-character-port-output-readtable port)
            #f
-           (macro-if-forces #t #f)
+           (macro-if-auto-forcing #t #f)
            0
            0
            0

@@ -679,8 +679,10 @@
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (warnings) (verbose) (report)
-                           (expansion) (gvm) (cfg) (dg) (asm)
-                           (check) (force) (keep-c)
+                           (expansion) (gvm) (cfg) (dg) (asm) (keep-c)
+;;TODO: enable and document when compiler supports these options
+;;                           (type-checking) (no-type-checking)
+;;                           (auto-forcing) (no-auto-forcing)
                            (debug) (debug-location) (debug-source) (debug-environments)
                            (track-scheme)
                            (o string) (l string)

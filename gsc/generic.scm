@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "generic.scm", Time-stamp: <2007-06-28 17:55:20 feeley>
+;;; File: "generic.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (##include "../gsc/fixnum.scm")
 

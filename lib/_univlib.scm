@@ -456,7 +456,7 @@
             tail
             (##cons arg tail))
           (##cons arg tail)))
-      (macro-if-forces
+      (macro-if-auto-forcing
         (copy-proper-list arg)
         (check-proper-list arg))))
 

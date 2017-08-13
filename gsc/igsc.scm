@@ -5,7 +5,7 @@
 
 ;;; File: "igsc.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -24,26 +24,10 @@
 
 ;;;----------------------------------------------------------------------------
 
+
 (define-macro (at-expansion-time expr) (eval expr) '(begin))
 
 (at-expansion-time (define ##compilation-options '()))
-
-#;
-(define-macro (set-root-dir)
-  (let* ((script-path (path-normalize (car ##processed-command-line)))
-         (dir (path-directory script-path)))
-    (if (equal? (path-strip-directory script-path) "igsc.scm")
-        `(begin
-           (include "fixnum.scm")
-           (define root ,(path-directory
-                          (path-strip-trailing-directory-separator dir))))
-        `(begin
-           (include "gsc/fixnum.scm")
-           (define root ,dir)))))
-#;
-(set-root-dir)
-
-(include "~~/gsc/fixnum.scm")
 
 ;; use custom absent object otherwise the interpreter gets confused
 
@@ -107,13 +91,19 @@
 
 ;;;----------------------------------------------------------------------------
 
+(eval '(begin
+        (##namespace ("c#"))
+        (##include "~~/lib/header.scm")))
+
 ((load-from-root "gsc/") "_host")
 
-(set! **main-readtable
-  (and **main-readtable
-       (##list->vector (##vector->list **main-readtable))))
+(set! c#**main-readtable
+  (and c#**main-readtable
+       (##list->vector (##vector->list c#**main-readtable))))
 
 (for-each (load-from-root "gsc/") gsc-modules)
+
+(eval '(##namespace ("")))
 
 (##main-gsi/gsc)
 
