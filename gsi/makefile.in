@@ -1,6 +1,6 @@
 # makefile for Gambit interpreter.
 
-# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsi
 rootfromhere = ..
@@ -157,7 +157,7 @@ BUILD_EXE_LD_OPTIONS_PRELUDE =
 BUILD_EXE_INPUT_FILENAMES = $(EXECUTABLE_OBJECTS)
 BUILD_EXE_LD_OPTIONS = $(LIBRARY)
 
-PRELUDE_OPT = -prelude "(define-cond-expand-feature@RTLIB_COND_EXPAND_FEATURES@)(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
+PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
 
 all:
 

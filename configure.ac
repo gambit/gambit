@@ -685,9 +685,9 @@ AC_ARG_ENABLE(type-checking,
               ENABLE_TYPE_CHECKING=yes)
 
 if test "$ENABLE_TYPE_CHECKING" = yes; then
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-type-checking|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-type-checking|)"
 else
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|disable-type-checking|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-type-checking|)"
 fi
 
 ###############################################################################
@@ -701,9 +701,9 @@ AC_ARG_ENABLE(auto-forcing,
               ENABLE_AUTO_FORCING=no)
 
 if test "$ENABLE_AUTO_FORCING" = yes; then
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-auto-forcing|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-auto-forcing|)"
 else
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|disable-auto-forcing|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-auto-forcing|)"
 fi
 
 ###############################################################################
@@ -717,9 +717,9 @@ AC_ARG_ENABLE(sharp-dot,
               ENABLE_SHARP_DOT=yes)
 
 if test "$ENABLE_SHARP_DOT" = yes; then
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-sharp-dot|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-sharp-dot|)"
 else
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|disable-sharp-dot|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-sharp-dot|)"
 fi
 
 ###############################################################################
@@ -733,7 +733,9 @@ AC_ARG_ENABLE(bignum,
               ENABLE_BIGNUM=yes)
 
 if test "$ENABLE_BIGNUM" = yes; then
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-bignum|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-bignum|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-bignum|)"
 fi
 
 AC_ARG_ENABLE(ratnum,
@@ -743,7 +745,9 @@ AC_ARG_ENABLE(ratnum,
               ENABLE_RATNUM=yes)
 
 if test "$ENABLE_RATNUM" = yes; then
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-ratnum|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-ratnum|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-ratnum|)"
 fi
 
 AC_ARG_ENABLE(cpxnum,
@@ -753,7 +757,9 @@ AC_ARG_ENABLE(cpxnum,
               ENABLE_CPXNUM=yes)
 
 if test "$ENABLE_CPXNUM" = yes; then
-  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-cpxnum|"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-cpxnum|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-cpxnum|)"
 fi
 
 ###############################################################################

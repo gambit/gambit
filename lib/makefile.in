@@ -1,6 +1,6 @@
 # makefile for Gambit library.
 
-# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
@@ -154,7 +154,7 @@ BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
 BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS) $(GAMBITLIB_DEFS) -D___PRIMAL
 BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
 
-PRELUDE_OPT = -prelude "(define-cond-expand-feature@RTLIB_COND_EXPAND_FEATURES@)(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
+PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
 
 all:
 
