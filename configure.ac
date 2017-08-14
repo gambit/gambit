@@ -724,6 +724,40 @@ fi
 
 ###############################################################################
 #
+# Check which numerical types need to be supported.
+
+AC_ARG_ENABLE(bignum,
+              AC_HELP_STRING([--enable-bignum],
+                             [support infinite precision integers (default is YES)]),
+              ENABLE_BIGNUM=$enableval,
+              ENABLE_BIGNUM=yes)
+
+if test "$ENABLE_BIGNUM" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-bignum|"
+fi
+
+AC_ARG_ENABLE(ratnum,
+              AC_HELP_STRING([--enable-ratnum],
+                             [support exact rational numbers (default is YES)]),
+              ENABLE_RATNUM=$enableval,
+              ENABLE_RATNUM=yes)
+
+if test "$ENABLE_RATNUM" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-ratnum|"
+fi
+
+AC_ARG_ENABLE(cpxnum,
+              AC_HELP_STRING([--enable-cpxnum],
+                             [support complex numbers (default is YES)]),
+              ENABLE_CPXNUM=$enableval,
+              ENABLE_CPXNUM=yes)
+
+if test "$ENABLE_CPXNUM" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES|enable-cpxnum|"
+fi
+
+###############################################################################
+#
 # Check if debugging information for the Scheme runtime library is to
 # be generated when the system is bootstrapped (with
 # "make bootstrap; make bootclean; make").

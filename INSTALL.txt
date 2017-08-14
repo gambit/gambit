@@ -281,6 +281,9 @@ The configure options which are specific to the Gambit system are:
   --enable-sharp-dot
                           enables the support for the #.<expression> syntax
                           (requires: make bootstrap; make bootclean; make)
+  --enable-bignum         support infinite precision integers
+  --enable-ratnum         support exact rational numbers
+  --enable-cpxnum         support complex numbers
   --enable-rtlib-debug
                           cause the inclusion of all debugging information
                           in the code generated for the Scheme runtime library
