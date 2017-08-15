@@ -3193,8 +3193,8 @@ for a discussion of branch cuts.
                                    (##fx- n 1)))))
 
     (or (and (power-of-two? (macro-ratnum-denominator y))
-             (or (and (##= (macro-ratnum-denominator y) 2)
-                      (##= (macro-ratnum-numerator y) 1)
+             (or (and (##eqv? (macro-ratnum-denominator y) 2)
+                      (##eqv? (macro-ratnum-numerator y) 1)
                       (##sqrt x))
                  (let ((root? (exact-dyadic-root? x (##first-bit-set (macro-ratnum-denominator y)))))
                    (and root?
@@ -9136,7 +9136,7 @@ ___RESULT = result;
       ;; otherwise the length of a would be cut in half.
 
       (let ((normalizer (##fl/ (##fixnum->flonum (##fxarithmetic-shift-right (##f64vector-length a) 1)))))
-        (if (and (##fixnum? (##expt 2 32))
+        (if (and (##fx> ##fixnum-width 32)
                  (##fx= ##bignum.fdigit-base 256))
             ;; Here we have faster code for the case of
             ;; (1) 64-bit fixnums and
