@@ -1513,7 +1513,7 @@
       (##vector-ref v 1))
 
     (define gcd-matrix-identity '#(1 0
-                                     0 1))
+                                   0 1))
 
     (define (gcd-matrix-multiply A B)
       (cond ((##eq? A gcd-matrix-identity)
@@ -1850,9 +1850,9 @@
                     (first-y-bit
                      (##first-bit-set y))
                     (shift-x?
-                     (fx> (fx* 2 first-x-bit) (##integer-length x)))
+                     (##fx> (##fx* 2 first-x-bit) (##integer-length x)))
                     (shift-y?
-                     (fx> (fx* 2 first-y-bit) (##integer-length y)))
+                     (##fx> (##fx* 2 first-y-bit) (##integer-length y)))
                     (x
                      (if shift-x?
                          (##arithmetic-shift x (##fx- first-x-bit))
@@ -3193,8 +3193,8 @@ for a discussion of branch cuts.
                                    (##fx- n 1)))))
 
     (or (and (power-of-two? (macro-ratnum-denominator y))
-             (or (and (##= (macro-ratnum-denominator y) 2)
-                      (##= (macro-ratnum-numerator y) 1)
+             (or (and (##eqv? (macro-ratnum-denominator y) 2)
+                      (##eqv? (macro-ratnum-numerator y) 1)
                       (##sqrt x))
                  (let ((root? (exact-dyadic-root? x (##first-bit-set (macro-ratnum-denominator y)))))
                    (and root?
@@ -4655,7 +4655,7 @@ for a discussion of branch cuts.
 
   (define (bignum-bitwise-ior-loop x result n)
     (##declare (not interrupts-enabled))
-    (let loop ((i (fx- n 1)))
+    (let loop ((i (##fx- n 1)))
       (if (##fx< i 0)
           (##bignum.normalize! result)
           (begin
@@ -5935,7 +5935,7 @@ for a discussion of branch cuts.
   ;; Returns the number of fdigits in x
 
   (define-prim (##bignum.fdigit-length x)
-    (fx* (##bignum.adigit-length x) 2))
+    (##fx* (##bignum.adigit-length x) 2))
 
   ;; Returns x[i] (accessing x as fdigits)
   (define-prim (##bignum.fdigit-ref x i)
@@ -9136,8 +9136,8 @@ ___RESULT = result;
       ;; otherwise the length of a would be cut in half.
 
       (let ((normalizer (##fl/ (##fixnum->flonum (##fxarithmetic-shift-right (##f64vector-length a) 1)))))
-        (if (and (##fixnum? (##expt 2 32))
-                 (fx= ##bignum.fdigit-base 256))
+        (if (and (##fx> ##fixnum-width 32)
+                 (##fx= ##bignum.fdigit-base 256))
             ;; Here we have faster code for the case of
             ;; (1) 64-bit fixnums and
             ;; (2) 8-bit fdigits
@@ -11156,7 +11156,7 @@ ___RESULT = result;
     4294944442) ;; (- (macro-m2) 1)
 
   (define (pack-state a b c d e f)
-    (f64vector
+    (##f64vector
      (##exact-int->flonum a)
      (##exact-int->flonum b)
      (##exact-int->flonum c)
@@ -11169,13 +11169,13 @@ ___RESULT = result;
      ))
 
   (define (unpack-state state)
-    (vector
-     (##flonum->exact-int (f64vector-ref state 0))
-     (##flonum->exact-int (f64vector-ref state 1))
-     (##flonum->exact-int (f64vector-ref state 2))
-     (##flonum->exact-int (f64vector-ref state 3))
-     (##flonum->exact-int (f64vector-ref state 4))
-     (##flonum->exact-int (f64vector-ref state 5))))
+    (##vector
+     (##flonum->exact-int (##f64vector-ref state 0))
+     (##flonum->exact-int (##f64vector-ref state 1))
+     (##flonum->exact-int (##f64vector-ref state 2))
+     (##flonum->exact-int (##f64vector-ref state 3))
+     (##flonum->exact-int (##f64vector-ref state 4))
+     (##flonum->exact-int (##f64vector-ref state 5))))
 
   (let ((state ;; initial state is 0 3 6 9 12 15 of A^(2^4), see below
          (pack-state
@@ -11193,17 +11193,17 @@ ___RESULT = result;
 
       (define (integer-in-range? x m)
         (and (macro-exact-int? x)
-             (not (negative? x))
-             (< x m)))
+             (##not (##negative? x))
+             (##< x m)))
 
-      (or (and (vector? new-state)
-               (fx= (vector-length new-state) 6)
-               (let ((a (vector-ref new-state 0))
-                     (b (vector-ref new-state 1))
-                     (c (vector-ref new-state 2))
-                     (d (vector-ref new-state 3))
-                     (e (vector-ref new-state 4))
-                     (f (vector-ref new-state 5)))
+      (or (and (##vector? new-state)
+               (##fx= (##vector-length new-state) 6)
+               (let ((a (##vector-ref new-state 0))
+                     (b (##vector-ref new-state 1))
+                     (c (##vector-ref new-state 2))
+                     (d (##vector-ref new-state 3))
+                     (e (##vector-ref new-state 4))
+                     (f (##vector-ref new-state 5)))
                  (and (integer-in-range? a (macro-m1))
                       (integer-in-range? b (macro-m1))
                       (integer-in-range? c (macro-m1))
@@ -11225,52 +11225,52 @@ ___RESULT = result;
     (define (randomize!)
 
       (define (random-fixnum-from-time)
-        (let ((v (f64vector (macro-inexact-+0))))
+        (let ((v (##f64vector (macro-inexact-+0))))
           (##get-current-time! v 0)
-          (let ((x (f64vector-ref v 0)))
+          (let ((x (##f64vector-ref v 0)))
             (##flonum->fixnum
-             (fl* 536870912.0 ;; (expt 2.0 29)
-                  (fl- x (flfloor x)))))))
+             (##fl* 536870912.0 ;; (expt 2.0 29)
+                    (##fl- x (##flfloor x)))))))
 
       (define seed16
         (random-fixnum-from-time))
 
       (define (simple-random16)
-        (let ((r (bitwise-and seed16 65535)))
+        (let ((r (##bitwise-and seed16 65535)))
           (set! seed16
-                (+ (* 30903 r)
-                   (arithmetic-shift seed16 -16)))
+                (##+ (##* 30903 r)
+                     (##arithmetic-shift seed16 -16)))
           r))
 
       (define (simple-random32)
-        (+ (arithmetic-shift (simple-random16) 16)
-           (simple-random16)))
+        (##+ (##arithmetic-shift (simple-random16) 16)
+             (simple-random16)))
 
       ;; perturb the state randomly
 
       (let ((s (unpack-state state)))
         (set! state
               (pack-state
-               (+ 1
-                  (modulo (+ (vector-ref s 0)
-                             (simple-random32))
-                          (macro-m1-minus-1)))
-               (modulo (+ (vector-ref s 1)
-                          (simple-random32))
-                       (macro-m1))
-               (modulo (+ (vector-ref s 2)
-                          (simple-random32))
-                       (macro-m1))
-               (+ 1
-                  (modulo (+ (vector-ref s 3)
-                             (simple-random32))
-                          (macro-m2-minus-1)))
-               (modulo (+ (vector-ref s 4)
-                          (simple-random32))
-                       (macro-m2))
-               (modulo (+ (vector-ref s 5)
-                          (simple-random32))
-                       (macro-m2))))
+               (##+ 1
+                    (##modulo (##+ (##vector-ref s 0)
+                                   (simple-random32))
+                              (macro-m1-minus-1)))
+               (##modulo (##+ (##vector-ref s 1)
+                              (simple-random32))
+                         (macro-m1))
+               (##modulo (##+ (##vector-ref s 2)
+                              (simple-random32))
+                         (macro-m1))
+               (##+ 1
+                    (##modulo (##+ (##vector-ref s 3)
+                                   (simple-random32))
+                              (macro-m2-minus-1)))
+               (##modulo (##+ (##vector-ref s 4)
+                              (simple-random32))
+                         (macro-m2))
+               (##modulo (##+ (##vector-ref s 5)
+                              (simple-random32))
+                         (macro-m2))))
         (void)))
 
     (define (pseudo-randomize! i j)
@@ -11278,15 +11278,15 @@ ___RESULT = result;
       (define (mult A B) ;; A*B
 
         (define (lc i0 i1 i2 j0 j1 j2 m)
-          (modulo (+ (* (vector-ref A i0)
-                        (vector-ref B j0))
-                     (+ (* (vector-ref A i1)
-                           (vector-ref B j1))
-                        (* (vector-ref A i2)
-                           (vector-ref B j2))))
-                  m))
+          (##modulo (##+ (##* (##vector-ref A i0)
+                              (##vector-ref B j0))
+                         (##+ (##* (##vector-ref A i1)
+                                   (##vector-ref B j1))
+                              (##* (##vector-ref A i2)
+                                   (##vector-ref B j2))))
+                    m))
 
-        (vector
+        (##vector
          (lc  0  1  2   0  3  6  (macro-m1))
          (lc  0  1  2   1  4  7  (macro-m1))
          (lc  0  1  2   2  5  8  (macro-m1))
@@ -11307,54 +11307,54 @@ ___RESULT = result;
          (lc 15 16 17  11 14 17  (macro-m2))))
 
       (define (power A e) ;; A^e
-        (cond ((eq? e 0)
+        (cond ((##eq? e 0)
                identity)
-              ((eq? e 1)
+              ((##eq? e 1)
                A)
-              ((even? e)
-               (power (mult A A) (arithmetic-shift e -1)))
+              ((##even? e)
+               (power (mult A A) (##arithmetic-shift e -1)))
               (else
-               (mult (power A (- e 1)) A))))
+               (mult (power A (##- e 1)) A))))
 
       (define identity
         '#(         1           0           0
-                                0           1           0
-                                0           0           1
-                                1           0           0
-                                0           1           0
-                                0           0           1))
+                    0           1           0
+                    0           0           1
+                    1           0           0
+                    0           1           0
+                    0           0           1))
 
       (define A ;; primary MRG32k3a equations
         '#(         0     1403580  4294156359
-                          1           0           0
-                          0           1           0
-                          527612           0  4293573854
-                          1           0           0
-                          0           1           0))
+                    1           0           0
+                    0           1           0
+               527612           0  4293573854
+                    1           0           0
+                    0           1           0))
 
       (define A^2^127 ;; A^(2^127)
         '#(1230515664   986791581  1988835001
-                        3580155704  1230515664   226153695
-                        949770784  3580155704  2427906178
-                        2093834863    32183930  2824425944
-                        1022607788  1464411153    32183930
-                        1610723613   277697599  1464411153))
+           3580155704  1230515664   226153695
+            949770784  3580155704  2427906178
+           2093834863    32183930  2824425944
+           1022607788  1464411153    32183930
+           1610723613   277697599  1464411153))
 
       (define A^2^76 ;; A^(2^76)
         '#(  69195019  3528743235  3672091415
-                       1871391091    69195019  3672831523
-                       4127413238  1871391091    82758667
-                       3708466080  4292754251  3859662829
-                       3889917532  1511326704  4292754251
-                       1610795712  3759209742  1511326704))
+           1871391091    69195019  3672831523
+           4127413238  1871391091    82758667
+           3708466080  4292754251  3859662829
+           3889917532  1511326704  4292754251
+           1610795712  3759209742  1511326704))
 
       (define A^2^4 ;; A^(2^4)
         '#(1062452522   340793741  2955879160
-                        2961816100  1062452522   387300998
-                        342112271  2961816100   736416029
-                        2854655037  1817134745  3493477402
-                        3321940838   818368950  1817134745
-                        3542344109  3790774567   818368950))
+           2961816100  1062452522   387300998
+            342112271  2961816100   736416029
+           2854655037  1817134745  3493477402
+           3321940838   818368950  1817134745
+           3542344109  3790774567   818368950))
 
       (let ((M ;; M = A^(2^4 + i*2^127 + j*2^76)
              (mult A^2^4
@@ -11362,43 +11362,43 @@ ___RESULT = result;
                          (power A^2^76 j)))))
         (set! state
               (pack-state
-               (vector-ref M 0)
-               (vector-ref M 3)
-               (vector-ref M 6)
-               (vector-ref M 9)
-               (vector-ref M 12)
-               (vector-ref M 15)))
+               (##vector-ref M 0)
+               (##vector-ref M 3)
+               (##vector-ref M 6)
+               (##vector-ref M 9)
+               (##vector-ref M 12)
+               (##vector-ref M 15)))
         (void)))
 
     (define (advance-state!)
       (##declare (not interrupts-enabled))
       (let* ((state state)
              (x10
-              (fl- (fl* 1403580.0 (f64vector-ref state 1))
-                   (fl* 810728.0 (f64vector-ref state 2))))
+              (##fl- (##fl* 1403580.0 (##f64vector-ref state 1))
+                     (##fl*  810728.0 (##f64vector-ref state 2))))
              (y10
-              (fl- x10
-                   (fl* (flfloor (fl/ x10 (macro-m1-inexact)))
-                        (macro-m1-inexact))))
+              (##fl- x10
+                     (##fl* (##flfloor (##fl/ x10 (macro-m1-inexact)))
+                            (macro-m1-inexact))))
              (x20
-              (fl- (fl* 527612.0 (f64vector-ref state 3))
-                   (fl* 1370589.0 (f64vector-ref state 5))))
+              (##fl- (##fl*  527612.0 (##f64vector-ref state 3))
+                     (##fl* 1370589.0 (##f64vector-ref state 5))))
              (y20
-              (fl- x20
-                   (fl* (flfloor (fl/ x20 (macro-m2-inexact)))
-                        (macro-m2-inexact)))))
-        (f64vector-set! state 5 (f64vector-ref state 4))
-        (f64vector-set! state 4 (f64vector-ref state 3))
-        (f64vector-set! state 3 y20)
-        (f64vector-set! state 2 (f64vector-ref state 1))
-        (f64vector-set! state 1 (f64vector-ref state 0))
-        (f64vector-set! state 0 y10)
-        (if (fl< y10 y20)
-            (f64vector-set! state 6 (fl+ (macro-m1-inexact)
-                                         (fl- (f64vector-ref state 0)
-                                              (f64vector-ref state 3))))
-            (f64vector-set! state 6 (fl- (f64vector-ref state 0)
-                                         (f64vector-ref state 3))))))
+              (##fl- x20
+                     (##fl* (##flfloor (##fl/ x20 (macro-m2-inexact)))
+                            (macro-m2-inexact)))))
+        (##f64vector-set! state 5 (##f64vector-ref state 4))
+        (##f64vector-set! state 4 (##f64vector-ref state 3))
+        (##f64vector-set! state 3 y20)
+        (##f64vector-set! state 2 (##f64vector-ref state 1))
+        (##f64vector-set! state 1 (##f64vector-ref state 0))
+        (##f64vector-set! state 0 y10)
+        (if (##fl< y10 y20)
+            (##f64vector-set! state 6 (##fl+ (macro-m1-inexact)
+                                             (##fl- (##f64vector-ref state 0)
+                                                    (##f64vector-ref state 3))))
+            (##f64vector-set! state 6 (##fl- (##f64vector-ref state 0)
+                                             (##f64vector-ref state 3))))))
 
     (define (make-integers)
 
@@ -11412,8 +11412,8 @@ ___RESULT = result;
 
         (macro-force-vars (range)
           (macro-exact-int-dispatch range (type-error)
-            (if (fxpositive? range)
-                (if (fx< (macro-max-fixnum32) range) ;;TODO: check if this should be fx<=
+            (if (##fxpositive? range)
+                (if (##fx< (macro-max-fixnum32) range) ;;TODO: check if this should be fx<=
                     (rand-integer range)
                     (rand-fixnum32 range))
                 (range-error))
@@ -11431,40 +11431,40 @@ ___RESULT = result;
       (define 2^2*size 268435456)
 
       (let ((len (integer-length range)))
-        (if (fx= (fx- len 1) ;; check if range is a power of 2
-                 (first-bit-set range))
-            (rand-integer-2^ (fx- len 1))
+        (if (##fx= (##fx- len 1) ;; check if range is a power of 2
+                   (##first-bit-set range))
+            (rand-integer-2^ (##fx- len 1))
             (let* ((inv
-                    (fxquotient
+                    (##fxquotient
                      2^2*size
-                     (fx+ 1
-                          (extract-bit-field size (fx- len size) range))))
+                     (##fx+ 1
+                            (##extract-bit-field size (##fx- len size) range))))
                    (range2
-                    (* range inv)))
+                    (##* range inv)))
               (let loop ()
-                (let ((r (rand-integer-2^ (fx+ len size))))
-                  (if (< r range2)
-                      (quotient r inv)
+                (let ((r (rand-integer-2^ (##fx+ len size))))
+                  (if (##< r range2)
+                      (##quotient r inv)
                       (loop))))))))
 
     (define (rand-integer-2^ w)
 
       (define (rand w s)
-        (cond ((fx< w (macro-k))
-               (fxand (rand-fixnum32-2^k)
-                      (fx- (fxarithmetic-shift-left 1 w) 1)))
-              ((fx= w (macro-k))
+        (cond ((##fx< w (macro-k))
+               (##fxand (rand-fixnum32-2^k)
+                        (##fx- (##fxarithmetic-shift-left 1 w) 1)))
+              ((##fx= w (macro-k))
                (rand-fixnum32-2^k))
               (else
-               (let ((s/2 (fxarithmetic-shift-right s 1)))
-                 (if (fx< s w)
-                     (+ (rand s s/2)
-                        (arithmetic-shift (rand (fx- w s) s/2) s))
+               (let ((s/2 (##fxarithmetic-shift-right s 1)))
+                 (if (##fx< s w)
+                     (##+ (rand s s/2)
+                          (##arithmetic-shift (rand (##fx- w s) s/2) s))
                      (rand w s/2))))))
 
       (define (split w s)
-        (let ((s*2 (fx* 2 s)))
-          (if (fx< s*2 w)
+        (let ((s*2 (##fx* 2 s)))
+          (if (##fx< s*2 w)
               (split w s*2)
               s)))
 
@@ -11474,86 +11474,83 @@ ___RESULT = result;
       (##declare (not interrupts-enabled))
       (let loop ()
         (advance-state!)
-        (if (fl< (f64vector-ref state 6)
-                 (macro-m1-div-2^k-times-2^k-inexact))
+        (if (##fl< (##f64vector-ref state 6)
+                   (macro-m1-div-2^k-times-2^k-inexact))
             (##flonum->fixnum
-             (fl/ (f64vector-ref state 6)
-                  (macro-m1-div-2^k-inexact)))
+             (##fl/ (##f64vector-ref state 6)
+                    (macro-m1-div-2^k-inexact)))
             (loop))))
 
     (define (rand-fixnum32 range) ;; range is a fixnum32
       (##declare (not interrupts-enabled))
-      (let* ((a (fixnum->flonum range))
-             (b (flfloor (fl/ (macro-m1-inexact) a))))
-        (f64vector-set! state 7 b)
-        (f64vector-set! state 8 (fl* a b)))
+      (let* ((a (##fixnum->flonum range))
+             (b (##flfloor (##fl/ (macro-m1-inexact) a))))
+        (##f64vector-set! state 7 b)
+        (##f64vector-set! state 8 (##fl* a b)))
       (let loop ()
         (advance-state!)
-        (if (fl< (f64vector-ref state 6)
-                 (f64vector-ref state 8))
+        (if (##fl< (##f64vector-ref state 6)
+                   (##f64vector-ref state 8))
             (##flonum->fixnum
-             (fl/ (f64vector-ref state 6)
-                  (f64vector-ref state 7)))
+             (##fl/ (##f64vector-ref state 6)
+                    (##f64vector-ref state 7)))
             (loop))))
 
     (define (make-reals precision)
-      (if (fl< precision (macro-inv-m1-plus-1-inexact))
+      (if (##fl< precision (macro-inv-m1-plus-1-inexact))
           (lambda ()
-            (let loop ((r (fixnum->flonum (rand-fixnum32-2^k)))
+            (let loop ((r (##fixnum->flonum (rand-fixnum32-2^k)))
                        (d (macro-inv-2^k-inexact)))
-              (if (fl< r (macro-flonum-+m-max-plus-1-inexact))
-                  (loop (fl+ (fl* r (macro-2^k-inexact))
-                             (fixnum->flonum (rand-fixnum32-2^k)))
-                        (fl* d (macro-inv-2^k-inexact)))
-                  (fl* r d))))
+              (if (##fl< r (macro-flonum-+m-max-plus-1-inexact))
+                  (loop (##fl+ (##fl* r (macro-2^k-inexact))
+                               (##fixnum->flonum (rand-fixnum32-2^k)))
+                        (##fl* d (macro-inv-2^k-inexact)))
+                  (##fl* r d))))
           (lambda ()
             (##declare (not interrupts-enabled))
             (advance-state!)
-            (fl* (fl+ (macro-inexact-+1) (f64vector-ref state 6))
-                 (macro-inv-m1-plus-1-inexact)))))
+            (##fl* (##fl+ (macro-inexact-+1) (##f64vector-ref state 6))
+                   (macro-inv-m1-plus-1-inexact)))))
 
     (define (make-u8vectors)
-
-      (define (random-u8vector len)
+      (lambda (len)
         (macro-force-vars (len)
           (macro-check-index len 1 (random-u8vector len)
             (let ((u8vect (##make-u8vector len 0)))
-              (let loop ((i (fx- len 1)))
-                (if (fx< i 0)
+              (let loop ((i (##fx- len 1)))
+                (if (##fx< i 0)
                     u8vect
                     (begin
                       (##u8vector-set! u8vect i (rand-fixnum32 256))
-                      (loop (fx- i 1)))))))))
-
-      random-u8vector)
-
+                      (loop (##fx- i 1))))))))))
+    
     (define (make-f64vectors precision)
-      (if (fl< precision (macro-inv-m1-plus-1-inexact))
+      (if (##fl< precision (macro-inv-m1-plus-1-inexact))
           (let ((make-real (make-reals precision)))
             (lambda (len)
               (macro-force-vars (len)
                 (macro-check-index len 1 (random-f64vector len)
                   (let ((f64vect (##make-f64vector len (macro-inexact-+0))))
-                    (let loop ((i (fx- len 1)))
-                      (if (fx< i 0)
+                    (let loop ((i (##fx- len 1)))
+                      (if (##fx< i 0)
                           f64vect
                           (begin
                             (##f64vector-set! f64vect i (make-real))
-                            (loop (fx- i 1))))))))))
+                            (loop (##fx- i 1))))))))))
           (lambda (len)
             (macro-force-vars (len)
               (macro-check-index len 1 (random-f64vector len)
                 (let ((f64vect (##make-f64vector len (macro-inexact-+0))))
-                  (let loop ((i (fx- len 1)))
-                    (if (fx< i 0)
+                  (let loop ((i (##fx- len 1)))
+                    (if (##fx< i 0)
                         f64vect
                         (let ()
                           (##declare (not interrupts-enabled))
                           (advance-state!)
-                          (##f64vector-set! f64vect i (fl* (fl+ (macro-inexact-+1)
-                                                                (f64vector-ref state 6))
+                          (##f64vector-set! f64vect i (##fl* (##fl+ (macro-inexact-+1)
+                                                                (##f64vector-ref state 6))
                                                            (macro-inv-m1-plus-1-inexact)))
-                          (loop (fx- i 1)))))))))))
+                          (loop (##fx- i 1)))))))))))
 
     (macro-make-random-source
      state-ref
@@ -11606,9 +11603,9 @@ ___RESULT = result;
           (##fail-check-exact-integer 2 random-source-pseudo-randomize! rs i j)
           (if (not (macro-exact-int? j))
               (##fail-check-exact-integer 3 random-source-pseudo-randomize! rs i j)
-              (if (negative? i)
+              (if (##negative? i)
                   (##raise-range-exception 2 random-source-pseudo-randomize! rs i j)
-                  (if (negative? j)
+                  (if (##negative? j)
                       (##raise-range-exception 3 random-source-pseudo-randomize! rs i j)
                       (##random-source-pseudo-randomize! rs i j))))))))
 
@@ -11633,8 +11630,8 @@ ___RESULT = result;
           (##random-source-make-reals rs)
           (if (rational? p)
               (let ((precision (macro-real->inexact p)))
-                (if (and (fl< (macro-inexact-+0) precision)
-                         (fl< precision (macro-inexact-+1)))
+                (if (and (##fl< (macro-inexact-+0) precision)
+                         (##fl< precision (macro-inexact-+1)))
                     (##random-source-make-reals rs precision)
                     (##raise-range-exception 2 random-source-make-reals rs p)))
               (##fail-check-finite-real 2 random-source-make-reals rs p))))))
@@ -11652,8 +11649,8 @@ ___RESULT = result;
           (##random-source-make-f64vectors rs)
           (if (rational? p)
               (let ((precision (macro-real->inexact p)))
-                (if (and (fl< (macro-inexact-+0) precision)
-                         (fl< precision (macro-inexact-+1)))
+                (if (and (##fl< (macro-inexact-+0) precision)
+                         (##fl< precision (macro-inexact-+1)))
                     (##random-source-make-f64vectors rs precision)
                     (##raise-range-exception 2 random-source-make-f64vectors rs p)))
               (##fail-check-finite-real 2 random-source-make-f64vectors rs p))))))
