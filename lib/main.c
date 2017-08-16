@@ -20,6 +20,9 @@
 ___HIDDEN ___UCS_2 gambopt_env_name[] =
 { 'G', 'A', 'M', 'B', 'O', 'P', 'T', '\0' };
 
+#ifdef ___DEFAULT_RUNTIME_OPTIONS
+___HIDDEN ___UCS_2 default_runtime_options[] = ___DEFAULT_RUNTIME_OPTIONS;
+#endif
 
 ___HIDDEN ___SCMOBJ usage_err
    ___P((int debug_settings),
@@ -172,7 +175,7 @@ ___mod_or_lnk (*linker)();)
 
   ___UCS_2STRING *argv;
   ___UCS_2STRING *current_argv;
-  ___UCS_2STRING runtime_options;
+  ___UCS_2STRING cmd_line_runtime_options;
   ___UCS_2STRING script_line;
   int extra_arg_pos;
   int contract_argv;
@@ -200,10 +203,12 @@ ___mod_or_lnk (*linker)();)
   /* handle arguments to runtime */
 
   argv = ___program_startup_info.argv;
+  contract_argv = 0;
   gambitdir = 0;
   gambitdir_map = 0;
   gambitdir_map_len = 0;
   gambopt = 0;
+  cmd_line_runtime_options = 0;
   remote_dbg_addr = 0;
   rpc_server_addr = 0;
   min_heap_len = 0;
@@ -224,63 +229,93 @@ ___mod_or_lnk (*linker)();)
   terminal_settings = ___TERMINAL_SETTINGS_INITIAL;
   stdio_settings = ___STDIO_SETTINGS_INITIAL;
 
-  if (argv != 0
-      && (runtime_options = argv[1]) != 0
-      && runtime_options[0] == '-'
-      && runtime_options[1] == ':')
-    {
-      runtime_options += 2;
-      if (runtime_options[0] == ':')
-        runtime_options++;
-    }
-  else
-    runtime_options = 0;
+  /*
+   * Runtime options can come from several sources:
+   *
+   * - the default runtime options (as specified to the configure script)
+   * - the environment variable GAMBOPT
+   * - the script line
+   * - the first command line argument if it is of the form -:XXX
+   *
+   * When a source of runtime options starts with a colon it is the
+   * sole source of runtime options and the first command line
+   * argument will not be processed specially, even if it is of the
+   * form -:XXX).  Otherwise the runtime options are accumulated from
+   * all the sources of runtime options.
+   */
 
-  if ((script_line = ___program_startup_info.script_line) != 0)
-    {
-      for (;;)
-        {
-          if (*script_line == '\0')
-            {
-              script_line = 0;
-              break;
-            }
-          if (script_line[0] == ' '
-              && script_line[1] == '-'
-              && script_line[2] == ':')
-            {
-              script_line += 3;
-              break;
-            }
-          script_line++;
-        }
-    }
-
-  if (script_line != 0 &&
-      script_line[0] == ':')
-    {
-      /*
-       * When the script line runtime options is of the form -::XXX
-       * (i.e. the colon is followed by a colon) it is the sole source
-       * of runtime options (i.e. the command line and environment
-       * variable GAMBOPT are not used as a source of other runtime
-       * options).
-       */
-      
-      script_line++;
-      runtime_options = 0;
-      options_source_min = 1;
-      options_source_max = 1;
-    }
-  else
+#ifdef ___DEFAULT_RUNTIME_OPTIONS
+  if (default_runtime_options[0] == ':')
     {
       options_source_min = 0;
-      options_source_max = 2;
+      options_source_max = 0;
+    }
+  else
+#endif
+    {
+      if ((e = ___getenv_UCS_2 (gambopt_env_name, &gambopt))
+          != ___FIX(___NO_ERR))
+        goto after_setup;
+
+      if (gambopt != 0 &&
+          gambopt[0] == ':')
+        {
+          options_source_min = 1;
+          options_source_max = 1;
+        }
+      else
+        {
+          if ((script_line = ___program_startup_info.script_line) != 0)
+            {
+              for (;;)
+                {
+                  if (*script_line == '\0')
+                    {
+                      script_line = 0;
+                      break;
+                    }
+                  if (script_line[0] == ' '
+                      && script_line[1] == '-'
+                      && script_line[2] == ':')
+                    {
+                      script_line += 3;
+                      break;
+                    }
+                  script_line++;
+                }
+            }
+
+          if (script_line != 0 &&
+              script_line[0] == ':')
+            {
+              options_source_min = 2;
+              options_source_max = 2;
+            }
+          else
+            {
+              options_source_min = 0;
+
+              if (argv != 0
+                  && (cmd_line_runtime_options = argv[1]) != 0
+                  && cmd_line_runtime_options[0] == '-'
+                  && cmd_line_runtime_options[1] == ':')
+                {
+                  cmd_line_runtime_options += 2;
+                  contract_argv = 1;
+
+                  if (cmd_line_runtime_options[0] == ':')
+                    options_source_min = 3;
+
+                  options_source_max = 3;
+                }
+              else
+                options_source_max = 2;
+            }
+        }
     }
 
   current_argv = argv;
   extra_arg_pos = 1;
-  contract_argv = (runtime_options != 0);
 
   for (options_source = options_source_min;
        options_source <= options_source_max;
@@ -289,19 +324,28 @@ ___mod_or_lnk (*linker)();)
       ___UCS_2STRING arg;
 
       if (options_source == 0)
+#ifdef ___DEFAULT_RUNTIME_OPTIONS
+        arg = default_runtime_options;
+#else
+        continue;
+#endif
+      else if (options_source == 1)
         {
           if ((e = ___getenv_UCS_2 (gambopt_env_name, &gambopt))
               != ___FIX(___NO_ERR))
             goto after_setup;
           arg = gambopt;
         }
-      else if (options_source == 1)
+      else if (options_source == 2)
         arg = script_line;
       else
-        arg = runtime_options;
+        arg = cmd_line_runtime_options;
 
       if (arg == 0)
         continue;
+
+      if (arg[0] == ':')
+        arg++;
 
       do
         {

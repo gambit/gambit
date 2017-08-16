@@ -272,6 +272,12 @@
 #undef ___PATH_ENCODING_WCHAR
 #undef ___PATH_ENCODING_NATIVE
 
+/*
+ * Define as a UCS_2 array initialization containing the default
+ * runtime options, e.g. #define ___DEFAULT_RUNTIME_OPTIONS {'d','2','\0'}
+ */
+#undef ___DEFAULT_RUNTIME_OPTIONS
+
 /*---------------------------------------------------------------------------*/
 
 #endif

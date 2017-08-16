@@ -530,6 +530,21 @@ fi
 
 ###############################################################################
 #
+# Determine default runtime options.
+
+AC_ARG_ENABLE(default-runtime-options,
+              AC_HELP_STRING([--enable-default-runtime-options=...],
+                             [Default runtime options (default is none)]),
+              ENABLE_DEFAULT_RUNTIME_OPTIONS=$enableval,
+              ENABLE_DEFAULT_RUNTIME_OPTIONS=)
+
+if test "$ENABLE_DEFAULT_RUNTIME_OPTIONS" != ""; then
+  DEFAULT_RUNTIME_OPTIONS=`echo "$ENABLE_DEFAULT_RUNTIME_OPTIONS" | sed -e "s/\(.\)/'\1',/g" -e "s/''',/'\\\\\\\\'',/g" -e "s/'\\\\\\\\',/'\\\\\\\\\\\\\\\\',/g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
+  AC_DEFINE_UNQUOTED([___DEFAULT_RUNTIME_OPTIONS],[$DEFAULT_RUNTIME_OPTIONS],[Select default runtime options])
+fi
+
+###############################################################################
+#
 # Check the size of the type "void*".  On many systems it is the same
 # size as "long".  If this isn't the case then define
 # ___VOIDSTAR_WIDTH appropriately.

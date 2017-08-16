@@ -944,6 +944,7 @@ enable_gnu_gcc_specific_options
 enable_gnu_gcc_no_strict_aliasing
 enable_char_size
 enable_path_encoding
+enable_default_runtime_options
 enable_shared
 enable_ansi_c
 enable_symlinks
@@ -1652,6 +1653,8 @@ Optional Features:
   --enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native
                           Filesystem path encoding (default is ucs2 on Windows
                           and utf8 on other OSes)
+  --enable-default-runtime-options=...
+                          Default runtime options (default is none)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
@@ -4987,6 +4990,27 @@ $as_echo "#define ___PATH_ENCODING_NATIVE /**/" >>confdefs.h
       fi
     fi
   fi
+fi
+
+###############################################################################
+#
+# Determine default runtime options.
+
+# Check whether --enable-default-runtime-options was given.
+if test "${enable_default_runtime_options+set}" = set; then :
+  enableval=$enable_default_runtime_options; ENABLE_DEFAULT_RUNTIME_OPTIONS=$enableval
+else
+  ENABLE_DEFAULT_RUNTIME_OPTIONS=
+fi
+
+
+if test "$ENABLE_DEFAULT_RUNTIME_OPTIONS" != ""; then
+  DEFAULT_RUNTIME_OPTIONS=`echo "$ENABLE_DEFAULT_RUNTIME_OPTIONS" | sed -e "s/\(.\)/'\1',/g" -e "s/''',/'\\\\\\\\'',/g" -e "s/'\\\\\\\\',/'\\\\\\\\\\\\\\\\',/g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
+
+cat >>confdefs.h <<_ACEOF
+#define ___DEFAULT_RUNTIME_OPTIONS $DEFAULT_RUNTIME_OPTIONS
+_ACEOF
+
 fi
 
 ###############################################################################

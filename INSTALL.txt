@@ -251,6 +251,8 @@ The configure options which are specific to the Gambit system are:
   --enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native
                           Filesystem path encoding (default is ucs2 on Windows
                           and utf8 on other OSes)
+  --enable-default-runtime-options=...
+                          Default runtime options (default is none)
   --enable-ansi-c         link only with ANSI C libraries
   --enable-symlinks       use symbolic links for installed files not in the
                           central installation directory
