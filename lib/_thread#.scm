@@ -1146,6 +1146,11 @@
   (threads-deq-prev init: #f)
 
   (floats           init: #f)
+
+  (btq-container    init: #f) ;; unused
+
+  (toq-container    init: #f) ;; unused
+
   (name             init: #f)
   (end-condvar      init: #f)
   (exception?       init: 'not-started)
