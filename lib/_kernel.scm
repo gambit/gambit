@@ -934,19 +934,36 @@ end-of-code
 
      ___SCMOBJ unwind_destination = ___STK(2-___FRAME_SPACE(2));
 
-     if (!___FALSEP(___FIELD(unwind_destination,0))) /* first return? */
+#ifndef ___SINGLE_THREADED_VMS
+
+     if (!___FIXEQ(___FIELD(unwind_destination,1),
+                   ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)))))
+       {
+         /* not the same processor that created frame */
+         ___COVER_RETURN_TO_C_HANDLER_WRONG_PROCESSOR;
+         ___SET_R0(___GSTATE->handler_return_to_c)
+         ___SET_R1(___FIELD(unwind_destination,1))
+         ___JUMPPRM(___SET_NARGS(1),
+                    ___PRMCELL(___G__23__23_c_2d_return_2d_on_2d_other_2d_processor.prm))
+       }
+     else
+
+#endif
+
+     if (___FALSEP(___FIELD(unwind_destination,0)))
+       {
+         /* not first return */
+         ___COVER_RETURN_TO_C_HANDLER_MULTIPLE_RETURN;
+         ___SET_R0(___GSTATE->handler_return_to_c)
+         ___JUMPPRM(___SET_NARGS(0),
+                    ___PRMCELL(___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception.prm))
+       }
+     else
        {
          ___COVER_RETURN_TO_C_HANDLER_FIRST_RETURN;
          ___FRAME_STORE_RA(___GSTATE->handler_return_to_c)
          ___W_ALL
          ___throw_error (___PSP ___FIX(___UNWIND_C_STACK));  /* jump back inside ___call */
-       }
-     else
-       {
-         ___COVER_RETURN_TO_C_HANDLER_MULTIPLE_RETURN;
-         ___SET_R0(___GSTATE->handler_return_to_c)
-         ___JUMPPRM(___SET_NARGS(0),
-                    ___PRMCELL(___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception.prm))
        }
 
 end-of-code
@@ -1634,6 +1651,25 @@ end-of-code
   (##declare (not interrupts-enabled))
   (macro-raise
    (macro-make-constant-multiple-c-return-exception)))
+
+(implement-library-type-wrong-processor-c-return-exception)
+
+(define-prim (##raise-wrong-processor-c-return-exception)
+  (##declare (not interrupts-enabled))
+  (macro-raise
+   (macro-make-constant-wrong-processor-c-return-exception)))
+
+(define ##c-return-on-other-processor-hook #f)
+
+(define-prim (##c-return-on-other-processor-hook-set! x)
+  (set! ##c-return-on-other-processor-hook x))
+
+(define-prim (##c-return-on-other-processor id)
+  (##declare (not interrupts-enabled))
+  (let ((proc ##c-return-on-other-processor-hook))
+    (if (##procedure? proc)
+        (proc id)
+        (##raise-wrong-processor-c-return-exception))))
 
 (implement-library-type-number-of-arguments-limit-exception)
 

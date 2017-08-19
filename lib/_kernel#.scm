@@ -93,6 +93,12 @@
   opaque:
 )
 
+(define-library-type-of-exception wrong-processor-c-return-exception
+  id: 828142df-e9a5-4ed8-a467-2f4833525b3e
+  constructor: #f
+  opaque:
+)
+
 (define-library-type-of-exception number-of-arguments-limit-exception
   id: f9519b37-d6d4-4748-8eb1-a0c8dc18c5e7
   constructor: #f

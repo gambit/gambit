@@ -944,6 +944,7 @@ write-u8
 wrong-number-of-arguments-exception-arguments
 wrong-number-of-arguments-exception-procedure
 wrong-number-of-arguments-exception?
+wrong-processor-c-return-exception?
 
 ))
 

@@ -6473,17 +6473,25 @@ ___SCMOBJ proc_or_false;)
 {
   ___SCMOBJ stack_marker;
 
+#ifdef ___SINGLE_THREADED_VMS
   stack_marker = ___make_vector (___ps, 1, ___FAL);
+#else
+  stack_marker = ___make_vector (___ps, 2, ___FAL);
+#endif
 
-  /************************ beware!  proc_or_false may have been GC'd at this point! */
+  /*TODO: proc_or_false may have been GC'd at this point! protect it some way*/
+
+  if (___FIXNUMP(stack_marker))
+    return ___FIX(___SFUN_HEAP_OVERFLOW_ERR);
 
   if (proc_or_false == ___FAL)
     ___FIELD(stack_marker,0) = ___data_rc (___c_closure_self ());
   else
     ___FIELD(stack_marker,0) = proc_or_false;
 
-  if (___FIXNUMP(stack_marker))
-    return ___FIX(___SFUN_HEAP_OVERFLOW_ERR);
+#ifndef ___SINGLE_THREADED_VMS
+  ___FIELD(stack_marker,1) = ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)));
+#endif
 
   *marker = stack_marker;
 
