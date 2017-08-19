@@ -1165,6 +1165,7 @@
   (specific         init: '#!void)
   (resume-thunk     init: #f)
   (interrupts       init: '())
+  (last-processor   init: #f) ;; last processor that executed thread or #f
 )
 
 ;;; Access to floating point fields.

@@ -3687,6 +3687,7 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
   ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
   ___FIELD(cont,___CONTINUATION_FRAME) = ___END_OF_CONT_MARKER; \
   ___INTERRUPT_MASK_SET(___FIELD(___FIELD(thread,___THREAD_DENV),___DENV_INTERRUPT_MASK)); \
+  ___FIELD(thread,___THREAD_LAST_PROCESSOR) = ___CURRENTPROCESSOR; \
   ___CURRENTTHREADSET(thread) \
   ___SET_R0(___GSTATE->handler_break) \
 }
@@ -3764,11 +3765,12 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 
 #define ___CONDVAR_NAME 10
 
-#define ___THREAD_CONT        23
-#define ___THREAD_DENV        24
-#define ___THREAD_DENV_CACHE1 25
-#define ___THREAD_DENV_CACHE2 26
-#define ___THREAD_DENV_CACHE3 27
+#define ___THREAD_CONT           23
+#define ___THREAD_DENV           24
+#define ___THREAD_DENV_CACHE1    25
+#define ___THREAD_DENV_CACHE2    26
+#define ___THREAD_DENV_CACHE3    27
+#define ___THREAD_LAST_PROCESSOR 33
 
 #define ___PROCESSOR_CURRENT_THREAD 14
 
