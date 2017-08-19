@@ -4450,6 +4450,12 @@ end-of-code
    devices
    timeout))
 
+(define-prim (##device-select-abort! processor)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___device_select_abort (___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),___VMSTATE_FROM_PSTATE(___ps)));"
+   processor))
+
 (define-prim ##os-port-decode-chars!
   (c-lambda (scheme-object
              scheme-object
