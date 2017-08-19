@@ -1803,6 +1803,11 @@
 (##define-macro (macro-temp f)                     `(##f64vector-ref ,f 2))
 (##define-macro (macro-temp-set! f x)              `(##f64vector-set! ,f 2 ,x))
 
+(##define-macro (macro-get-heartbeat-interval f)
+  `(begin
+     (##get-heartbeat-interval! ,f 1)
+     (macro-heartbeat-interval ,f)))
+
 (##define-macro (macro-update-current-time!)
   `(##get-current-time! (macro-thread-floats (macro-current-processor)) 0))
 

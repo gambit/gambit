@@ -929,17 +929,15 @@
 
       (##thread-report-scheduler-error! code))
 
-    (let* ((current-processor
-            (macro-current-processor))
-           (current-thread
-            (macro-current-thread))
-           (current-processor-floats
-            (macro-thread-floats current-processor))
-           (current-thread-floats
-            (macro-thread-floats current-thread))
+    (let* ((current-processor-floats ;; to get heartbeat interval
+            (macro-thread-floats (macro-current-processor)))
+           (current-thread-floats ;; to get current thread's quantum used
+            (macro-thread-floats (macro-current-thread)))
+           (heartbeat-interval
+            (macro-get-heartbeat-interval current-processor-floats))
            (quantum-used
             (##fl+ (macro-quantum-used current-thread-floats)
-                   (macro-heartbeat-interval current-processor-floats))))
+                   heartbeat-interval)))
 
       (macro-quantum-used-set! current-thread-floats quantum-used)
 
@@ -1615,22 +1613,11 @@
     ;; assign serial number 1 to primordial thread
     (##object->serial-number primordial-thread)
 
-    (##thread-heartbeat-interval-set! (macro-default-heartbeat-interval))
+    (##set-heartbeat-interval! (macro-default-heartbeat-interval))
 
     (##startup-parallelism!)
 
     (##void)))
-
-(define-prim (##thread-heartbeat-interval-set! seconds)
-  (##declare (not interrupts-enabled))
-  (let* ((actual-interval
-          (##heartbeat-interval-set! seconds))
-         (current-processor
-          (macro-current-processor))
-         (current-processor-floats
-          (macro-thread-floats current-processor)))
-    (macro-heartbeat-interval-set! current-processor-floats actual-interval)
-    actual-interval))
 
 ;;;----------------------------------------------------------------------------
 

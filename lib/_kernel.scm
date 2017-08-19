@@ -1367,25 +1367,41 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
-;; (##heartbeat-interval-set! seconds) sets the heartbeat interrupt
-;; interval to the time closest to "seconds" seconds (a flonum value).
-;; If "seconds" is negative, the heartbeat interrupt is turned off.  If
-;; "seconds" is zero, the smallest possible interval is used.  The
-;; actual interval in seconds is returned.
+;; The heartbeat is used to implement preemptive multithreading by
+;; generating interrupts at regular intervals. The procedure
+;; (##set-heartbeat-interval! seconds) sets the heartbeat
+;; interrupt interval to the time closest to "seconds" seconds (a
+;; flonum value). If "seconds" is negative, the heartbeat interrupt is
+;; turned off.  If "seconds" is zero, the smallest possible interval
+;; is used.  The procedure (##get-heartbeat-interval! u64vect i) is
+;; used to retrieve the current heartbeat interval.
 
-(define-prim (##heartbeat-interval-set! seconds)
+(define-prim (##get-heartbeat-interval! u64vect i)
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___FLONUM_VAL(___ARG2) = ___set_heartbeat_interval (___FLONUM_VAL(___ARG1));
-   ___RESULT = ___ARG2;
+   ___F64VECTORSET(___ARG1,
+                   ___ARG2,
+                   ___get_heartbeat_interval ());
+
+   ___RESULT = ___VOID;
 
 end-of-code
 
-   seconds
-   (let ()
-     (##declare (not constant-fold)) ;; force allocation of a flonum
-     (##fixnum->flonum 0))))
+   u64vect
+   i))
+
+(define-prim (##set-heartbeat-interval! seconds)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___set_heartbeat_interval (___FLONUM_VAL(___ARG1));
+
+   ___RESULT = ___VOID;
+
+end-of-code
+
+   seconds))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1922,11 +1938,12 @@ end-of-code
     (macro-fifo-insert-at-head! registry will)
     will))
 
-(##interrupt-vector-set! 4 ;; ___INTR_GC
-  (lambda ()
-    (##declare (not interrupts-enabled))
-    (##gc-finalize!)
-    (##execute-jobs! ##gc-interrupt-jobs)))
+(define-prim (##handle-gc-interrupt!)
+  (##declare (not interrupts-enabled))
+  (##gc-finalize!)
+  (##execute-jobs! ##gc-interrupt-jobs))
+
+(##interrupt-vector-set! 4 ##handle-gc-interrupt!) ;; ___INTR_GC
 
 ;;;----------------------------------------------------------------------------
 
