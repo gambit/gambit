@@ -892,10 +892,11 @@
 
   (##declare (not interrupts-enabled))
 
-  (let* ((current-processor (macro-current-processor))
-         (code (##os-condvar-select! current-processor timeout)))
-    (let loop ((condvar (macro-btq-deq-next current-processor)))
-      (if (##eq? condvar current-processor)
+  (##primitive-lock! (macro-current-processor) 1 9)
+  (let ((code (##os-condvar-select! (macro-current-processor) timeout)))
+    (##primitive-unlock! (macro-current-processor) 1 9)
+    (let loop ((condvar (macro-btq-deq-next (macro-current-processor))))
+      (if (##eq? condvar (macro-current-processor))
         code
         (let ((next (macro-btq-deq-next condvar)))
           (if (##fxodd? (macro-btq-owner condvar))
