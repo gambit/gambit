@@ -913,6 +913,22 @@ AC_SUBST(CONF_SINGLE_MULTIPLE_THREADED_VMS)
 
 ###############################################################################
 #
+# Check if the SMP Scheme thread scheduler should be enabled.
+
+AC_ARG_ENABLE(smp,
+              AC_HELP_STRING([--enable-smp],
+                             [support SMP Scheme thread scheduler (default is NO)]),
+              ENABLE_SMP=$enableval,
+              ENABLE_SMP=no)
+
+if test "$ENABLE_SMP" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-smp|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-smp|)"
+fi
+
+###############################################################################
+#
 # Determine the maximum number of OS threads (processors) per
 # Gambit VM instance.
 

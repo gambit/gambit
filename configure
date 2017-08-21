@@ -970,6 +970,7 @@ enable_poll
 enable_high_res_timing
 enable_multiple_vms
 enable_multiple_threaded_vms
+enable_smp
 enable_max_processors
 enable_thread_system
 enable_dynamic_tls
@@ -1707,6 +1708,7 @@ Optional Features:
   --enable-multiple-threaded-vms
                           support multiple OS threads per Gambit VM instance
                           (default is NO)
+  --enable-smp            support SMP Scheme thread scheduler (default is NO)
   --enable-max-processors=N
                           Max number of processors per Gambit VM instance
                           (default is 64)
@@ -5765,6 +5767,24 @@ else
 fi
 
 
+
+###############################################################################
+#
+# Check if the SMP Scheme thread scheduler should be enabled.
+
+# Check whether --enable-smp was given.
+if test "${enable_smp+set}" = set; then :
+  enableval=$enable_smp; ENABLE_SMP=$enableval
+else
+  ENABLE_SMP=no
+fi
+
+
+if test "$ENABLE_SMP" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-smp|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-smp|)"
+fi
 
 ###############################################################################
 #
