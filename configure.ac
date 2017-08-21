@@ -1760,6 +1760,21 @@ fi
 AC_SUBST(CONF_THREAD_SYSTEM)
 AC_SUBST(CONF_THREAD_LOCAL_STORAGE_CLASS)
 
+# Check availability of WIN32 CONDITION_VARIABLE type.
+
+CONF_HAVE_CONDITION_VARIABLE="___DONT_HAVE_CONDITION_VARIABLE"
+
+if test "$OS_WIN32" = yes; then
+
+  AC_CHECK_TYPE([CONDITION_VARIABLE],
+                [CONF_HAVE_CONDITION_VARIABLE="___HAVE_CONDITION_VARIABLE"],
+                [],
+                [#include <windows.h>])
+
+fi
+
+AC_SUBST(CONF_HAVE_CONDITION_VARIABLE)
+
 ###############################################################################
 #
 # Check for pthread_setaffinity_np if using posix threads.

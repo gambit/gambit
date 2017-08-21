@@ -828,6 +828,7 @@ DASH_fno_move_loop_invariants
 DASH_fno_trapping_math
 DASH_fschedule_insns2
 DASH_no_cpp_precomp
+CONF_HAVE_CONDITION_VARIABLE
 CONF_THREAD_LOCAL_STORAGE_CLASS
 CONF_THREAD_SYSTEM
 OS_WIN32
@@ -9165,6 +9166,23 @@ $as_echo "$as_me:
 
 fi
 
+
+
+
+# Check availability of WIN32 CONDITION_VARIABLE type.
+
+CONF_HAVE_CONDITION_VARIABLE="___DONT_HAVE_CONDITION_VARIABLE"
+
+if test "$OS_WIN32" = yes; then
+
+  ac_fn_cxx_check_type "$LINENO" "CONDITION_VARIABLE" "ac_cv_type_CONDITION_VARIABLE" "#include <windows.h>
+"
+if test "x$ac_cv_type_CONDITION_VARIABLE" = xyes; then :
+  CONF_HAVE_CONDITION_VARIABLE="___HAVE_CONDITION_VARIABLE"
+fi
+
+
+fi
 
 
 
