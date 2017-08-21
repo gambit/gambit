@@ -1150,37 +1150,44 @@
         (define (scale x m)
           (##flonum->exact-int (##flround (##fl* x m))))
 
+        (define (show x*1000 unit)
+
+          (define (decimals d)
+            (let* ((n (##round (##/ x*1000 (##expt 10 (##fx- 3 d)))))
+                   (n-str (##number->string n 10))
+                   (n-str-len (##string-length n-str))
+                   (str (if (##fx< n-str-len d)
+                            (##string-append
+                             (##make-string (##fx- d n-str-len) #\0)
+                             n-str)
+                            n-str))
+                   (len (##string-length str))
+                   (split (##fx- len d)))
+              (##write-string
+               (if (##fx= d 0)
+                   str
+                   (##string-append (##substring str 0 split)
+                                    "."
+                                    (##substring str split len)))
+               output-port)
+              (##write-string unit output-port)))
+
+          (cond ((##< x*1000 10000)
+                 (decimals 1))
+                (else
+                 (decimals 0))))
+
+        (define (tim secs)
+          (let ((us (scale secs 1.0e9)))
+            (if (##< us 1000000)
+                (show us "us")
+                (let ((ms (scale secs 1.0e6)))
+                  (if (##< ms 1000000)
+                      (show ms "ms")
+                      (let ((s (scale secs 1.0e3)))
+                        (show s "s")))))))
+
         (define (mem bytes suffix)
-
-          (define (show x*1000 unit)
-
-            (define (decimals d)
-              (let* ((n (##round (##/ x*1000 (##expt 10 (##fx- 3 d)))))
-                     (n-str (##number->string n 10))
-                     (n-str-len (##string-length n-str))
-                     (str (if (##fx< n-str-len d)
-                              (##string-append
-                               (##make-string (##fx- d n-str-len) #\0)
-                               n-str)
-                              n-str))
-                     (len (##string-length str))
-                     (split (##fx- len d)))
-                (##write-string
-                 (if (##fx= d 0)
-                     str
-                     (##string-append (##substring str 0 split)
-                                      "."
-                                      (##substring str split len)))
-                 output-port)
-                (##write-string unit output-port)))
-
-            (cond ((##< x*1000 10000)
-                   (decimals 2))
-                  ((##< x*1000 100000)
-                   (decimals 1))
-                  (else
-                   (decimals 0))))
-
           (let ((k (scale bytes 9.765625e-1)))
             (if (##< k 1024000)
                 (show k "K")
@@ -1192,8 +1199,8 @@
           (##write-string suffix output-port))
 
         (##write-string "*** GC: " output-port)
-        (##write (scale last-gc-real-time 1000.0) output-port)
-        (##write-string " ms, " output-port)
+        (tim last-gc-real-time)
+        (##write-string ", " output-port)
         (mem last-gc-alloc " alloc, ")
         (mem last-gc-heap-size " heap, ")
         (mem last-gc-live " live (")
