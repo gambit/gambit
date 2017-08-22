@@ -10,10 +10,10 @@
 (macro-case-target
  ((C)
   (c-declare "#include \"mem.h\"")
-  (##define-macro (use-fast-bignum-algorithms) #f))
+  (##define-macro (use-fast-bignum-algorithms) #t))
 
  ((js)
-  (##define-macro (use-fast-bignum-algorithms) #f))
+  (##define-macro (use-fast-bignum-algorithms) #t))
 
  (else
   (##define-macro (use-fast-bignum-algorithms) #f)))
