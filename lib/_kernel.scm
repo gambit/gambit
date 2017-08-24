@@ -3780,6 +3780,13 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##continuation-next! (##continuation-copy cont)))
 
+(define-prim (##continuation-last cont)
+  (let loop ((cont cont))
+    (let ((next (##continuation-next cont)))
+      (if next
+          (loop next)
+          cont))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Symbols and keywords.
