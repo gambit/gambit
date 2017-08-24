@@ -3914,7 +3914,7 @@ for a discussion of branch cuts.
                             (if (##fx= n 1) "" ".")
                             (##substring d 1 n)
                             "e"
-                            (##number->string (##fx- e 1) 10))))))
+                            (##exact-int->string (##fx- e 1) 10 #f))))))
 
 (define-prim (##flonum->string x rad force-sign?)
 
