@@ -18,6 +18,9 @@
  (else
   (##define-macro (use-fast-bignum-algorithms) #f)))
 
+(define-prim (##use-fast-bignum-algorithms?)
+  (use-fast-bignum-algorithms))
+
 ;;;============================================================================
 
 ;;; Implementation of exceptions.
