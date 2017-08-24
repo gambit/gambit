@@ -73,7 +73,6 @@ configure script to make sure that any stale .c files obtained from
 the repository are updated:
 
   % make current-gsc-boot
-  % make bootstrap
   % make bootclean
 
 The "make current-gsc-boot" builds the Gambit compiler that was
