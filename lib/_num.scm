@@ -3818,6 +3818,11 @@ for a discussion of branch cuts.
                 str)))))
 
   (define (flonum->exponent-and-digits v)
+    (macro-if-bignum
+     (flonum->exponent-and-digits-accurately v)
+     (flonum->exponent-and-digits-host v)))
+
+  (define (flonum->exponent-and-digits-accurately v)
     (let* ((x (##flonum->exact-exponential-format v))
            (f (##vector-ref x 0))
            (e (##vector-ref x 1))
@@ -3851,6 +3856,96 @@ for a discussion of branch cuts.
                        2^e
                        round?
                        v))))))
+
+  (define (flonum->exponent-and-digits-host v)
+    (string->exponent-and-digits (##flonum->string-host v)))
+
+  (define (string->exponent-and-digits str)
+    (let loop1 ((i 0)
+                (j 0)
+                (last-nz #f)
+                (decimals #f))
+
+      (define (err)
+        (##cons 1 "0error"))
+
+      (define (done e)
+        (if last-nz
+
+            (let ((len (##fx+ last-nz 1)))
+              (##string-shrink! str len)
+              (let ((decimals (##fx- (or decimals 0) (##fx- j len))))
+                (##cons (##fx+ e (##fx- len decimals)) str)))
+
+            (##cons 1 "0")))
+
+      (if (##fx< i (##string-length str))
+          (let* ((c (##string-ref str i))
+                 (ic (##char->integer c))
+                 (d
+                  (if (##fx< ic 128)
+                      (##u8vector-ref
+                       ##char-to-digit-table
+                       ic)
+                      99)))
+            (cond ((##fx= d 0)
+                   (loop1 (##fx+ i 1)
+                          (if last-nz
+                              (begin
+                                (##string-set! str j c)
+                                (##fx+ j 1))
+                              j)
+                          last-nz
+                          (and decimals (##fx+ decimals 1))))
+                  ((##fx< d 10)
+                   (##string-set! str j c)
+                   (loop1 (##fx+ i 1)
+                          (##fx+ j 1)
+                          j
+                          (and decimals (##fx+ decimals 1))))
+                  ((##char=? c #\.)
+                   (if decimals
+                       (err)
+                       (loop1 (##fx+ i 1)
+                              j
+                              last-nz
+                              0)))
+                  ((or (##char=? c #\e)
+                       (##char=? c #\E))
+                   (let ((i (##fx+ i 1)))
+                     (if (##fx< i (##string-length str))
+                         (let ((sign (##string-ref str i)))
+                           (let ((i (if (or (##char=? sign #\-)
+                                            (##char=? sign #\+))
+                                        (##fx+ i 1)
+                                        i)))
+                             (if (##not (##fx< i (##string-length str)))
+                                 (err)
+                                 (let loop2 ((i i)
+                                             (e 0))
+                                   (if (##fx< i (##string-length str))
+                                       (let* ((c (##string-ref str i))
+                                              (ic (##char->integer c))
+                                              (d
+                                               (if (##fx< ic 128)
+                                                   (##u8vector-ref
+                                                    ##char-to-digit-table
+                                                    ic)
+                                                   99)))
+                                         (if (and (##fx< d 10)
+                                                  (##fx< e 100))
+                                             (loop2 (##fx+ i 1)
+                                                    (##fx+ (##fx* e 10) d))
+                                             (err)))
+                                       (done (if (##char=? sign #\-)
+                                                 (##fx- e)
+                                                 e)))))))
+                         (err))))
+                  ((##fx< i (##string-length str))
+                   (err))
+                  (else
+                   (done 0))))
+          (done 0))))
 
   (let* ((x (flonum->exponent-and-digits v))
          (e (##car x))
@@ -11529,7 +11624,7 @@ ___RESULT = result;
                     (begin
                       (##u8vector-set! u8vect i (rand-fixnum32 256))
                       (loop (##fx- i 1))))))))))
-    
+
     (define (make-f64vectors precision)
       (if (##fl< precision (macro-inv-m1-plus-1-inexact))
           (let ((make-real (make-reals precision)))
