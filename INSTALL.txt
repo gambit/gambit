@@ -78,10 +78,9 @@ the repository are updated:
 The "make current-gsc-boot" builds the Gambit compiler that was
 current at the latest release and then uses it to compile the very
 latest sources of the compiler cloned from github.  The "make
-boostrap" uses that compiler to build itself again from sources (it
-creates up to date .c files from the .scm files).
-
-Then the system can be built by invoking "make":
+bootclean" then removes all the generated .c files so that they will
+be created using the current gsc-boot compiler.  Then the system can
+be built by invoking "make":
 
   % make
 
