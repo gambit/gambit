@@ -2673,6 +2673,67 @@ double y;)
 #endif
 
 
+___EXP_FUNC(___SCMOBJ,___F64_to_STRING)
+   ___P((___PSD
+         double x),
+        (___PSV
+         x)
+___PSDKR
+double x;)
+{
+  ___PSGET
+
+#ifdef USE_snprintf
+
+#ifdef DBL_DECIMAL_DIG
+#define NDIG DBL_DECIMAL_DIG
+#else
+#ifdef __DBL_DECIMAL_DIG__
+#define NDIG __DBL_DECIMAL_DIG__
+#else
+#define NDIG (DBL_DIG + 2)
+#endif
+#endif
+
+  char buf[NDIG+8]; /* +8 to account for sign, period, e, +/-, 3 digit exponent and nul char */
+  ___WORD len = 0;
+  ___WORD i;
+  ___D_HEAP
+
+  snprintf (buf, NDIG+8, "%.*g", NDIG, x);
+
+  while (buf[len] != '\0') len++;
+
+  ___R_HEAP
+
+  ___BEGIN_ALLOC_STRING(len)
+
+  for (i=0; i<len; i++)
+    ___ADD_STRING_ELEM(i,___CHR(buf[i]))
+
+  ___END_ALLOC_STRING(len)
+
+  ___W_HEAP
+
+  return ___GET_STRING(len);
+
+#else
+
+  ___D_HEAP
+
+  ___R_HEAP
+
+  ___BEGIN_ALLOC_STRING(0)
+  ___END_ALLOC_STRING(0)
+
+  ___W_HEAP
+
+  return ___GET_STRING(0);
+
+#endif
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -3785,6 +3846,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___pow
     = ___pow;
 #endif
+
+  ___GSTATE->___F64_to_STRING
+    = ___F64_to_STRING;
 
   ___GSTATE->___S64_from_SM32_fn
     = ___S64_from_SM32_fn;

@@ -3352,6 +3352,14 @@
 (targ-op "##fixnum->flonum" (targ-apply-simpflo-u #f "F64FROMFIX"))
 (targ-op "##fixnum->flonum-exact?" (targ-ifjump-simp-u #f "F64FROMFIXEXACTP"))
 
+(targ-op "##flonum->string-host"
+  (targ-apply-alloc
+    (lambda (n) (targ-string-space 50)) ;; account for result of max length 50
+    #t
+    #f
+    #f
+    (targ-apply-simp-generator #t #f "F64TOSTRING")))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##flmax"       (targ-apply-fold-u #t #f      "F64POS" "F64MAX"))

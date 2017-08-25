@@ -595,6 +595,7 @@
 ("##flonum->fixnum"              (1)   #f ()    0    fixnum  extended)
 ("##fixnum->flonum"              (1)   #f ()    0    real    extended)
 ("##fixnum->flonum-exact?"       (1)   #f ()    0    boolean extended)
+("##flonum->string-host"         (1)   #f ()    0    string  extended)
 
 ("##flmax"                       1     #f ()    0    real    extended)
 ("##flmin"                       1     #f ()    0    real    extended)

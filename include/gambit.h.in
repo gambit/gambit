@@ -3140,6 +3140,12 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___F64SQRT(x)___CLIBEXT(sqrt)(x)
 #define ___F64COPYSIGN(x,y)___EXT(___copysign)(x,y)
 
+#define ___F64TOSTRING(x) \
+(___W_HEAP_EXPR, \
+ ___temp=___EXT(___F64_to_STRING) (___PSP x), \
+ ___R_HEAP_EXPR, \
+ ___temp)
+
 /* IFJUMP-able operations */
 
 #define ___F64INTEGERP(x)(!___F64INFINITEP(x) && (x)==___F64FLOOR(x))
@@ -4135,8 +4141,10 @@ switch((___pc-=___start)/(___LS*___WS)) \
 
 #define ___PSHEAP ___ps->hp
 #define ___D_HEAP register ___WORD *___hp;
-#define ___R_HEAP ___hp=___PSHEAP;
-#define ___W_HEAP ___PSHEAP=___hp;
+#define ___R_HEAP ___R_HEAP_EXPR;
+#define ___W_HEAP ___W_HEAP_EXPR;
+#define ___R_HEAP_EXPR ___hp=___PSHEAP
+#define ___W_HEAP_EXPR ___PSHEAP=___hp
 
 #define ___PSFP ___ps->fp
 #define ___D_FP register ___WORD *___fp;
@@ -8944,6 +8952,10 @@ typedef struct ___global_state_struct
              double y),
             ());
 #endif
+    ___SCMOBJ (*___F64_to_STRING)
+       ___P((___PSD
+             double x),
+            ());
     ___S64 (*___S64_from_SM32_fn)
        ___P((___SM32 val),
             ());
@@ -11199,6 +11211,10 @@ ___IMP_FUNC(double,___pow)
          double y),
         ());
 #endif
+___IMP_FUNC(___SCMOBJ,___F64_to_STRING)
+   ___P((___PSD
+         double x),
+        ());
 ___IMP_FUNC(void,___setup_params_reset)
    ___P((___setup_params_struct *setup_params),
         ());

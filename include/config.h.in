@@ -232,6 +232,8 @@
 
 #undef HAVE_HSTRERROR
 
+#undef HAVE_SNPRINTF
+
 #undef HAVE_GET_FPC_CSR
 
 #undef HAVE_ENVIRON

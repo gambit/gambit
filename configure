@@ -8931,6 +8931,18 @@ fi
 done
 
 
+  for ac_func in snprintf
+do :
+  ac_fn_cxx_check_func "$LINENO" "snprintf" "ac_cv_func_snprintf"
+if test "x$ac_cv_func_snprintf" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SNPRINTF 1
+_ACEOF
+
+fi
+done
+
+
   case "$target_os" in
     # the OpenBSD test is always lowercase
     openbsd*)

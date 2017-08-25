@@ -3951,6 +3951,9 @@ for a discussion of branch cuts.
                (else
                 (non-neg-num->str x rad ""))))))
 
+(define-prim (##flonum->string-host x)
+  (##flonum->string x 10 #f)) ;; TODO: remove after bootstrap
+
 (define-prim (##cpxnum->string x rad force-sign?)
   (let* ((real
           (macro-cpxnum-real x))

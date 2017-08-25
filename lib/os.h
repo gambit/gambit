@@ -140,6 +140,10 @@
 
 #endif
 
+#ifdef HAVE_SNPRINTF
+#define USE_snprintf
+#endif
+
 
 /* Operating-system specific features we require */
 
@@ -795,6 +799,13 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_types_h
 #undef INCLUDE_dirent_h
 #define INCLUDE_dirent_h
+#endif
+
+#ifdef USE_snprintf
+#undef INCLUDE_stdio_h
+#define INCLUDE_stdio_h
+#undef INCLUDE_float_h
+#define INCLUDE_float_h
 #endif
 
 #ifdef USE_stat
@@ -1627,6 +1638,12 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #ifdef INCLUDE_sys_socket_h
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#endif
+
+#ifdef INCLUDE_stdio_h
+#ifdef HAVE_STDIO_H
+#include <stdio.h>
 #endif
 #endif
 

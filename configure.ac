@@ -1593,6 +1593,8 @@ else
 
   AC_CHECK_FUNCS(hstrerror)
 
+  AC_CHECK_FUNCS(snprintf)
+
   case "$target_os" in
     # the OpenBSD test is always lowercase
     openbsd*)
