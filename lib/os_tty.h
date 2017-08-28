@@ -1,6 +1,6 @@
 /* File: "os_tty.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -545,27 +545,6 @@ extern ___tty_module ___tty_mod;
 extern ___SCMOBJ ___setup_user_interrupt_handling ___PVOID;
 
 extern void ___cleanup_user_interrupt_handling ___PVOID;
-
-typedef struct ___mask_user_interrupts_state_struct
-  {
-#ifdef USE_POSIX
-
-    ___sigset_type oldmask;
-
-#else
-
-    int dummy; /* avoid empty struct error raised by MSVC */
-
-#endif
-  } ___mask_user_interrupts_state;
-
-extern void ___mask_user_interrupts_begin
-   ___P((___mask_user_interrupts_state *state),
-        ());
-
-extern void ___mask_user_interrupts_end
-   ___P((___mask_user_interrupts_state *state),
-        ());
 
 
 /*---------------------------------------------------------------------------*/

@@ -4476,6 +4476,24 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___enable_interrupts_pstate
     = ___enable_interrupts_pstate;
 
+  ___GSTATE->___mask_os_interrupts_begin
+    = ___mask_os_interrupts_begin;
+
+  ___GSTATE->___mask_os_interrupts_end
+    = ___mask_os_interrupts_end;
+
+  ___GSTATE->___mask_user_interrupts_begin
+    = ___mask_user_interrupts_begin;
+
+  ___GSTATE->___mask_user_interrupts_end
+    = ___mask_user_interrupts_end;
+
+  ___GSTATE->___mask_heartbeat_interrupts_begin
+    = ___mask_heartbeat_interrupts_begin;
+
+  ___GSTATE->___mask_heartbeat_interrupts_end
+    = ___mask_heartbeat_interrupts_end;
+
   ___GSTATE->___alloc_mem
     = ___alloc_mem;
 

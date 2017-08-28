@@ -7996,6 +7996,17 @@ typedef struct ___ticketlock_location
   } ___ticketlock_location;
 
 
+typedef struct ___mask_interrupts_state_struct
+  {
+    ___S32 content[8]; /* larger than needed to be safe */
+  } ___mask_interrupts_state;
+
+
+typedef ___mask_interrupts_state ___mask_os_interrupts_state;
+typedef ___mask_interrupts_state ___mask_user_interrupts_state;
+typedef ___mask_interrupts_state ___mask_heartbeat_interrupts_state;
+
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -10023,6 +10034,24 @@ typedef struct ___global_state_struct
     void (*___enable_interrupts_pstate)
        ___P((___processor_state ___ps),
             ());
+    void (*___mask_os_interrupts_begin)
+       ___P((___mask_os_interrupts_state *state),
+            ());
+    void (*___mask_os_interrupts_end)
+       ___P((___mask_os_interrupts_state *state),
+            ());
+    void (*___mask_user_interrupts_begin)
+       ___P((___mask_user_interrupts_state *state),
+            ());
+    void (*___mask_user_interrupts_end)
+       ___P((___mask_user_interrupts_state *state),
+            ());
+    void (*___mask_heartbeat_interrupts_begin)
+       ___P((___mask_heartbeat_interrupts_state *state),
+            ());
+    void (*___mask_heartbeat_interrupts_end)
+       ___P((___mask_heartbeat_interrupts_state *state),
+            ());
 #ifndef ___DEBUG_ALLOC_MEM
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes),
@@ -11356,6 +11385,33 @@ ___IMP_FUNC(void,___disable_interrupts_pstate)
         ());
 ___IMP_FUNC(void,___enable_interrupts_pstate)
    ___P((___processor_state ___ps),
+        ());
+#endif
+
+#ifndef ___INCLUDED_FROM_OS_SETUP
+___IMP_FUNC(void,___mask_os_interrupts_begin)
+   ___P((___mask_os_interrupts_state *state),
+        ());
+___IMP_FUNC(void,___mask_os_interrupts_end)
+   ___P((___mask_os_interrupts_state *state),
+        ());
+#endif
+
+#ifndef ___INCLUDED_FROM_OS_TTY
+___IMP_FUNC(void,___mask_user_interrupts_begin)
+   ___P((___mask_user_interrupts_state *state),
+        ());
+___IMP_FUNC(void,___mask_user_interrupts_end)
+   ___P((___mask_user_interrupts_state *state),
+        ());
+#endif
+
+#ifndef ___INCLUDED_FROM_OS_TIME
+___IMP_FUNC(void,___mask_heartbeat_interrupts_begin)
+   ___P((___mask_heartbeat_interrupts_state *state),
+        ());
+___IMP_FUNC(void,___mask_heartbeat_interrupts_end)
+   ___P((___mask_heartbeat_interrupts_state *state),
         ());
 #endif
 

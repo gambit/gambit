@@ -29,7 +29,7 @@
  *  - operations on I/O devices
  */
 
-#define ___INCLUDED_FROM_OS
+#define ___INCLUDED_FROM_OS_SETUP
 #define ___VERSION 408008
 #include "gambit.h"
 
@@ -332,8 +332,8 @@ void ___mask_os_interrupts_begin
         (state)
 ___mask_os_interrupts_state *state;)
 {
-  ___mask_user_interrupts_begin (&state->user_interrupt);
-  ___mask_heartbeat_interrupts_begin (&state->heartbeat_interrupt);
+  ___mask_user_interrupts_begin (state);
+  ___mask_heartbeat_interrupts_begin (state);
 }
 
 
@@ -342,8 +342,8 @@ void ___mask_os_interrupts_end
         (state)
 ___mask_os_interrupts_state *state;)
 {
-  ___mask_heartbeat_interrupts_end (&state->heartbeat_interrupt);
-  ___mask_user_interrupts_end (&state->user_interrupt);
+  ___mask_heartbeat_interrupts_end (state);
+  ___mask_user_interrupts_end (state);
 }
 
 

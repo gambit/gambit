@@ -933,7 +933,7 @@ ___F64 seconds;)
 }
 
 
-void ___mask_heartbeat_interrupts_begin
+___EXP_FUNC(void,___mask_heartbeat_interrupts_begin)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
@@ -941,7 +941,7 @@ ___mask_heartbeat_interrupts_state *state;)
 }
 
 
-void ___mask_heartbeat_interrupts_end
+___EXP_FUNC(void,___mask_heartbeat_interrupts_end)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
@@ -1038,7 +1038,7 @@ ___F64 seconds;)
 }
 
 
-void ___mask_heartbeat_interrupts_begin
+___EXP_FUNC(void,___mask_heartbeat_interrupts_begin)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
@@ -1050,20 +1050,20 @@ ___mask_heartbeat_interrupts_state *state;)
   sigemptyset (&toblock);
   sigaddset (&toblock, HEARTBEAT_SIG);
 
-  ___thread_sigmask (SIG_BLOCK, &toblock, &state->oldmask);
+  ___thread_sigmask (SIG_BLOCK, &toblock, ___CAST(___sigset_type*,state)+0);
 
 #endif
 }
 
 
-void ___mask_heartbeat_interrupts_end
+___EXP_FUNC(void,___mask_heartbeat_interrupts_end)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask (SIG_SETMASK, &state->oldmask, 0);
+  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+0, NULL);
 
 #endif
 }
@@ -1153,21 +1153,22 @@ ___F64 seconds;)
 }
 
 
-void ___mask_heartbeat_interrupts_begin
+___EXP_FUNC(void,___mask_heartbeat_interrupts_begin)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
+  *___CAST(int*,state) = ___time_mod.heartbeat_enabled;
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___mask_heartbeat_interrupts_end
+___EXP_FUNC(void,___mask_heartbeat_interrupts_end)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
-  ___time_mod.heartbeat_enabled = 1;
+  ___time_mod.heartbeat_enabled = *___CAST(int*,state);
 }
 
 
@@ -1264,21 +1265,22 @@ ___F64 seconds;)
 }
 
 
-void ___mask_heartbeat_interrupts_begin
+___EXP_FUNC(void,___mask_heartbeat_interrupts_begin)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
+  *___CAST(int*,state) = ___time_mod.heartbeat_enabled;
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___mask_heartbeat_interrupts_end
+___EXP_FUNC(void,___mask_heartbeat_interrupts_end)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
-  ___time_mod.heartbeat_enabled = 1;
+  ___time_mod.heartbeat_enabled = *___CAST(int*,state);
 }
 
 
@@ -1331,12 +1333,6 @@ void ___cleanup_heartbeat_interrupt_handling ___PVOID
 
 
 #ifdef USE_VInstall
-
-
-___HIDDEN ___BOOL heartbeat_task_installed;
-___HIDDEN short heartbeat_task_ticks;
-___HIDDEN VBLTask heartbeat_task;
-___HIDDEN ___BOOL heartbeat_enabled;
 
 
 ___HIDDEN void heartbeat_task_code ___PVOID
@@ -1418,21 +1414,22 @@ ___F64 seconds;)
 }
 
 
-void ___mask_heartbeat_interrupts_begin
+___EXP_FUNC(void,___mask_heartbeat_interrupts_begin)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
+  *___CAST(int*,state) = ___time_mod.heartbeat_enabled;
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___mask_heartbeat_interrupts_end
+___EXP_FUNC(void,___mask_heartbeat_interrupts_end)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
-  ___time_mod.heartbeat_enabled = 1;
+  ___time_mod.heartbeat_enabled = *___CAST(int*,state);
 }
 
 
@@ -1547,21 +1544,22 @@ ___F64 seconds;)
 }
 
 
-void ___mask_heartbeat_interrupts_begin
+___EXP_FUNC(void,___mask_heartbeat_interrupts_begin)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
+  *___CAST(int*,state) = ___time_mod.heartbeat_enabled;
   ___time_mod.heartbeat_enabled = 0;
 }
 
 
-void ___mask_heartbeat_interrupts_end
+___EXP_FUNC(void,___mask_heartbeat_interrupts_end)
    ___P((___mask_heartbeat_interrupts_state *state),
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
-  ___time_mod.heartbeat_enabled = 1;
+  ___time_mod.heartbeat_enabled = *___CAST(int*,state);
 }
 
 

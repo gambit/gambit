@@ -8620,15 +8620,15 @@ ___mask_user_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___sigset_type sigs;
+  ___sigset_type toblock;
 
-  sigemptyset (&sigs);
-  sigaddset (&sigs, SIGINT);
-  sigaddset (&sigs, SIGTERM);
-  sigaddset (&sigs, SIGWINCH);
-  sigaddset (&sigs, SIGCONT);
+  sigemptyset (&toblock);
+  sigaddset (&toblock, SIGINT);
+  sigaddset (&toblock, SIGTERM);
+  sigaddset (&toblock, SIGWINCH);
+  sigaddset (&toblock, SIGCONT);
 
-  ___thread_sigmask (SIG_BLOCK, &sigs, &state->oldmask);
+  ___thread_sigmask (SIG_BLOCK, &toblock, ___CAST(___sigset_type*,state)+1);
 
 #endif
 }
@@ -8641,7 +8641,7 @@ ___mask_user_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask (SIG_BLOCK, &state->oldmask, NULL);
+  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+1, NULL);
 
 #endif
 }

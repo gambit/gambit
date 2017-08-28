@@ -267,27 +267,6 @@ extern ___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID;
 
 extern void ___cleanup_heartbeat_interrupt_handling ___PVOID;
 
-typedef struct ___mask_heartbeat_interrupts_state_struct
-  {
-#ifdef USE_POSIX
-
-    ___sigset_type oldmask;
-
-#else
-
-    int dummy; /* avoid empty struct error raised by MSVC */
-
-#endif
-  } ___mask_heartbeat_interrupts_state;
-
-extern void ___mask_heartbeat_interrupts_begin
-   ___P((___mask_heartbeat_interrupts_state *state),
-        ());
-
-extern void ___mask_heartbeat_interrupts_end
-   ___P((___mask_heartbeat_interrupts_state *state),
-        ());
-
 
 /*---------------------------------------------------------------------------*/
 

@@ -72,20 +72,6 @@ extern ___SCMOBJ ___setup_os_interrupt_handling ___PVOID;
 
 extern void ___cleanup_os_interrupt_handling ___PVOID;
 
-typedef struct ___mask_os_interrupts_state_struct
-  {
-    ___mask_user_interrupts_state user_interrupt;
-    ___mask_heartbeat_interrupts_state heartbeat_interrupt;
-  } ___mask_os_interrupts_state;
-
-extern void ___mask_os_interrupts_begin
-   ___P((___mask_os_interrupts_state *state),
-        ());
-
-extern void ___mask_os_interrupts_end
-   ___P((___mask_os_interrupts_state *state),
-        ());
-
 
 /* CPU information. */
 
