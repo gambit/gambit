@@ -7888,6 +7888,129 @@ int *direction;)
 
 /*---------------------------------------------------------------------------*/
 
+/* Child process interrupts. */
+
+#ifdef USE_POSIX
+
+___HIDDEN void sigchld_signal_handler
+   ___P((int sig),
+        (sig)
+int sig;)
+{
+  int save_errno = errno;
+#ifdef USE_signal
+  ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
+#endif
+
+  /*
+   * A SIGCHLD signal indicates that at least one child has changed
+   * status.  There may be more than one because signals are not
+   * queued.  For example during a period when the SIGCHLD signal is
+   * blocked several child processes can terminate and only one call
+   * to the SIGCHLD handler will occur when the SIGCHLD signal is
+   * unblocked.  For this reason we must call waitpid in a loop, until
+   * the last call indicates that no other child process is available.
+   */
+
+  for (;;)
+    {
+      int status;
+      ___device *head;
+      pid_t pid = ___waitpid_no_EINTR (-1, &status, WNOHANG);
+
+      if (pid <= 0)
+        break;
+
+      /*
+       * Find the process device structure for the process which
+       * terminated, and save the exit status with the process device.
+       */
+
+      head = ___global_device_group ()->list;
+
+      if (head != NULL)
+        {
+          ___device *d = head->prev;
+
+          do
+            {
+              if (___device_kind (d) == ___PROCESS_DEVICE_KIND)
+                {
+                  ___device_process *dev = ___CAST(___device_process*,d);
+
+                  if (dev->pid == pid)
+                    {
+                      if (WIFEXITED(status) || WIFSIGNALED(status))
+                        ___device_process_status_set (dev, status); /* ignore error */
+                      break;
+                    }
+                }
+              d = d->prev;
+            } while  (d != head);
+        }
+    }
+  errno = save_errno;
+}
+
+#endif
+
+
+___SCMOBJ ___setup_child_interrupt_handling ___PVOID
+{
+#ifdef USE_POSIX
+
+  ___set_signal_handler (SIGPIPE, SIG_IGN);
+  ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
+
+  ___thread_sigmask1 (SIG_UNBLOCK, SIGCHLD, NULL);
+
+#endif
+
+  return ___FIX(___NO_ERR);
+}
+
+
+void ___cleanup_child_interrupt_handling ___PVOID
+{
+#ifdef USE_POSIX
+
+  ___set_signal_handler (SIGPIPE, SIG_DFL);
+  ___set_signal_handler (SIGCHLD, SIG_DFL);
+
+  ___thread_sigmask1 (SIG_UNBLOCK, SIGCHLD, NULL);
+
+#endif
+}
+
+
+___EXP_FUNC(void,___mask_child_interrupts_begin)
+   ___P((___mask_child_interrupts_state *state),
+        (state)
+___mask_child_interrupts_state *state;)
+{
+#ifdef USE_POSIX
+
+  ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, ___CAST(___sigset_type*,state)+2);
+
+#endif
+}
+
+
+___EXP_FUNC(void,___mask_child_interrupts_end)
+   ___P((___mask_child_interrupts_state *state),
+        (state)
+___mask_child_interrupts_state *state;)
+{
+#ifdef USE_POSIX
+
+  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+2, NULL);
+
+#endif
+}
+
+
+/*---------------------------------------------------------------------------*/
+
 #ifndef ___STREAM_OPEN_PROCESS_CE_SELECT
 
 #ifdef USE_execvp
@@ -8125,125 +8248,6 @@ ___BOOL use_pty;)
 }
 
 #endif
-
-
-#ifdef USE_POSIX
-
-___HIDDEN void sigchld_signal_handler
-   ___P((int sig),
-        (sig)
-int sig;)
-{
-  int save_errno = errno;
-#ifdef USE_signal
-  ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
-#endif
-
-  /*
-   * A SIGCHLD signal indicates that at least one child has changed
-   * status.  There may be more than one because signals are not
-   * queued.  For example during a period when the SIGCHLD signal is
-   * blocked several child processes can terminate and only one call
-   * to the SIGCHLD handler will occur when the SIGCHLD signal is
-   * unblocked.  For this reason we must call waitpid in a loop, until
-   * the last call indicates that no other child process is available.
-   */
-
-  for (;;)
-    {
-      int status;
-      ___device *head;
-      pid_t pid = ___waitpid_no_EINTR (-1, &status, WNOHANG);
-
-      if (pid <= 0)
-        break;
-
-      /*
-       * Find the process device structure for the process which
-       * terminated, and save the exit status with the process device.
-       */
-
-      head = ___global_device_group ()->list;
-
-      if (head != NULL)
-        {
-          ___device *d = head->prev;
-
-          do
-            {
-              if (___device_kind (d) == ___PROCESS_DEVICE_KIND)
-                {
-                  ___device_process *dev = ___CAST(___device_process*,d);
-
-                  if (dev->pid == pid)
-                    {
-                      if (WIFEXITED(status) || WIFSIGNALED(status))
-                        ___device_process_status_set (dev, status); /* ignore error */
-                      break;
-                    }
-                }
-              d = d->prev;
-            } while  (d != head);
-        }
-    }
-  errno = save_errno;
-}
-
-#endif
-
-
-___SCMOBJ ___setup_child_interrupt_handling ___PVOID
-{
-#ifdef USE_POSIX
-
-  ___set_signal_handler (SIGPIPE, SIG_IGN);
-  ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
-
-  ___thread_sigmask1 (SIG_UNBLOCK, SIGCHLD, NULL);
-
-#endif
-
-  return ___FIX(___NO_ERR);
-}
-
-
-void ___cleanup_child_interrupt_handling ___PVOID
-{
-#ifdef USE_POSIX
-
-  ___set_signal_handler (SIGPIPE, SIG_DFL);
-  ___set_signal_handler (SIGCHLD, SIG_DFL);
-
-  ___thread_sigmask1 (SIG_UNBLOCK, SIGCHLD, NULL);
-
-#endif
-}
-
-
-___EXP_FUNC(void,___mask_child_interrupts_begin)
-   ___P((___mask_child_interrupts_state *state),
-        (state)
-___mask_child_interrupts_state *state;)
-{
-#ifdef USE_POSIX
-
-  ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, ___CAST(___sigset_type*,state)+2);
-
-#endif
-}
-
-
-___EXP_FUNC(void,___mask_child_interrupts_end)
-   ___P((___mask_child_interrupts_state *state),
-        (state)
-___mask_child_interrupts_state *state;)
-{
-#ifdef USE_POSIX
-
-  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+2, NULL);
-
-#endif
-}
 
 
 #ifdef USE_CreateProcess
