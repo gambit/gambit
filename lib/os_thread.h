@@ -1,6 +1,6 @@
 /* File: "os_thread.h" */
 
-/* Copyright (c) 2013-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_THREAD_H
 #define ___OS_THREAD_H
@@ -86,7 +86,12 @@ extern int ___thread_sigmask
          ___sigset_type *set,
          ___sigset_type *oldset),
         ());
-#else
+
+extern int ___thread_sigmask1
+   ___P((int how,
+         int sig,
+         ___sigset_type *oldset),
+        ());
 
 #endif
 

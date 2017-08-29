@@ -58,53 +58,6 @@
 #ifdef USE_POSIX
 
 
-___sigset_type ___block_signal
-   ___P((int signum),
-        (signum)
-int signum;)
-{
-  ___sigset_type oldmask;
-
-#ifdef USE_sigaction
-
-  ___sigset_type toblock;
-
-  sigemptyset (&toblock);
-  sigaddset (&toblock, signum);
-
-  ___thread_sigmask (SIG_BLOCK, &toblock, &oldmask);
-
-#endif
-
-#ifdef USE_signal
-
-  oldmask = sigblock (sigmask (signum));
-
-#endif
-
-  return oldmask;
-}
-
-
-void ___restore_sigmask
-   ___P((___sigset_type oldmask),
-        (oldmask)
-___sigset_type oldmask;)
-{
-#ifdef USE_sigaction
-
-  ___thread_sigmask (SIG_SETMASK, &oldmask, 0);
-
-#endif
-
-#ifdef USE_signal
-
-  sigsetmask (oldmask);
-
-#endif
-}
-
-
 /*
  * Some system calls can be interrupted by a signal and fail with
  * errno == EINTR.  The following functions are wrappers for system
@@ -308,40 +261,31 @@ int end;)
 /*---------------------------------------------------------------------------*/
 
 
-___SCMOBJ ___setup_os_interrupt_handling ___PVOID
-{
-  ___SCMOBJ e;
-
-  if ((e = ___setup_heartbeat_interrupt_handling ()) == ___FIX(___NO_ERR))
-    {
-      if ((e = ___setup_user_interrupt_handling ()) != ___FIX(___NO_ERR))
-        ___cleanup_heartbeat_interrupt_handling ();
-    }
-
-  return e;
-}
-
-void ___cleanup_os_interrupt_handling ___PVOID
+void ___cleanup_all_interrupt_handling ___PVOID
 {
   ___cleanup_user_interrupt_handling ();
   ___cleanup_heartbeat_interrupt_handling ();
+  ___cleanup_child_interrupt_handling ();
 }
 
-void ___mask_os_interrupts_begin
-   ___P((___mask_os_interrupts_state *state),
+
+___EXP_FUNC(void,___mask_all_interrupts_begin)
+   ___P((___mask_all_interrupts_state *state),
         (state)
-___mask_os_interrupts_state *state;)
+___mask_all_interrupts_state *state;)
 {
   ___mask_user_interrupts_begin (state);
   ___mask_heartbeat_interrupts_begin (state);
+  ___mask_child_interrupts_begin (state);
 }
 
 
-void ___mask_os_interrupts_end
-   ___P((___mask_os_interrupts_state *state),
+___EXP_FUNC(void,___mask_all_interrupts_end)
+   ___P((___mask_all_interrupts_state *state),
         (state)
-___mask_os_interrupts_state *state;)
+___mask_all_interrupts_state *state;)
 {
+  ___mask_child_interrupts_end (state);
   ___mask_heartbeat_interrupts_end (state);
   ___mask_user_interrupts_end (state);
 }
@@ -2982,7 +2926,6 @@ ___SCMOBJ ___setup_os ___PVOID
               if ((e = ___setup_tty_module (user_intr, terminate_intr)) == ___FIX(___NO_ERR)) {
                 if ((e = ___setup_io_module ()) == ___FIX(___NO_ERR)) {
 #ifdef USE_POSIX
-                  ___set_signal_handler (SIGPIPE, SIG_IGN); /***** belongs elsewhere */
 #ifdef USE_CRASH_SIGNAL_HANDLER
                   ___set_signal_handler (SIGTERM, crash_signal_handler);
                   ___set_signal_handler (SIGBUS,  crash_signal_handler);

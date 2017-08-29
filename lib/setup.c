@@ -3421,7 +3421,7 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
 
   ___GSTATE->setup_state = 2;
 
-  ___cleanup_os_interrupt_handling ();
+  ___cleanup_all_interrupt_handling ();
 
 #ifndef ___SINGLE_THREADED_VMS
 
@@ -4476,11 +4476,11 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___enable_interrupts_pstate
     = ___enable_interrupts_pstate;
 
-  ___GSTATE->___mask_os_interrupts_begin
-    = ___mask_os_interrupts_begin;
+  ___GSTATE->___mask_all_interrupts_begin
+    = ___mask_all_interrupts_begin;
 
-  ___GSTATE->___mask_os_interrupts_end
-    = ___mask_os_interrupts_end;
+  ___GSTATE->___mask_all_interrupts_end
+    = ___mask_all_interrupts_end;
 
   ___GSTATE->___mask_user_interrupts_begin
     = ___mask_user_interrupts_begin;
@@ -4493,6 +4493,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___mask_heartbeat_interrupts_end
     = ___mask_heartbeat_interrupts_end;
+
+  ___GSTATE->___mask_child_interrupts_begin
+    = ___mask_child_interrupts_begin;
+
+  ___GSTATE->___mask_child_interrupts_end
+    = ___mask_child_interrupts_end;
 
   ___GSTATE->___alloc_mem
     = ___alloc_mem;

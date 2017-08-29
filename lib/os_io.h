@@ -743,6 +743,8 @@ extern ___SCMOBJ ___os_device_process_status
    ___P((___SCMOBJ dev),
         ());
 
+extern void ___cleanup_child_interrupt_handling ___PVOID;
+
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Opening a TCP client. */

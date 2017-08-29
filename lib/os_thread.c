@@ -1,6 +1,6 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.
@@ -455,6 +455,25 @@ ___sigset_type *oldset;)
 #endif
 
 #endif
+}
+
+int ___thread_sigmask1
+   ___P((int how,
+         int sig,
+         ___sigset_type *oldset),
+        (how,
+         sig,
+         oldset)
+int how;
+int sig;
+___sigset_type *oldset;)
+{
+  ___sigset_type sigs;
+
+  sigemptyset (&sigs);
+  sigaddset (&sigs, sig);
+
+  ___thread_sigmask (how, &sigs, oldset);
 }
 
 #endif

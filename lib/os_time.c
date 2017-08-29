@@ -1045,12 +1045,7 @@ ___mask_heartbeat_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___sigset_type toblock;
-
-  sigemptyset (&toblock);
-  sigaddset (&toblock, HEARTBEAT_SIG);
-
-  ___thread_sigmask (SIG_BLOCK, &toblock, ___CAST(___sigset_type*,state)+0);
+  ___thread_sigmask1 (SIG_BLOCK, HEARTBEAT_SIG, ___CAST(___sigset_type*,state)+0);
 
 #endif
 }
@@ -1072,7 +1067,11 @@ ___mask_heartbeat_interrupts_state *state;)
 ___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
 #ifdef USE_POSIX
+
   ___set_signal_handler (HEARTBEAT_SIG, heartbeat_interrupt_handler);
+
+  ___thread_sigmask1 (SIG_UNBLOCK, HEARTBEAT_SIG, NULL);
+
 #endif
 
   return ___FIX(___NO_ERR);
@@ -1084,7 +1083,11 @@ void ___cleanup_heartbeat_interrupt_handling ___PVOID
   ___set_heartbeat_interval (-1.0);
 
 #ifdef USE_POSIX
+
   ___set_signal_handler (HEARTBEAT_SIG, SIG_IGN);
+
+  ___thread_sigmask1 (SIG_UNBLOCK, HEARTBEAT_SIG, NULL);
+
 #endif
 
 }

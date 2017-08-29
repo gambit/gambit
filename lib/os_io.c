@@ -8127,6 +8127,125 @@ ___BOOL use_pty;)
 #endif
 
 
+#ifdef USE_POSIX
+
+___HIDDEN void sigchld_signal_handler
+   ___P((int sig),
+        (sig)
+int sig;)
+{
+  int save_errno = errno;
+#ifdef USE_signal
+  ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
+#endif
+
+  /*
+   * A SIGCHLD signal indicates that at least one child has changed
+   * status.  There may be more than one because signals are not
+   * queued.  For example during a period when the SIGCHLD signal is
+   * blocked several child processes can terminate and only one call
+   * to the SIGCHLD handler will occur when the SIGCHLD signal is
+   * unblocked.  For this reason we must call waitpid in a loop, until
+   * the last call indicates that no other child process is available.
+   */
+
+  for (;;)
+    {
+      int status;
+      ___device *head;
+      pid_t pid = ___waitpid_no_EINTR (-1, &status, WNOHANG);
+
+      if (pid <= 0)
+        break;
+
+      /*
+       * Find the process device structure for the process which
+       * terminated, and save the exit status with the process device.
+       */
+
+      head = ___global_device_group ()->list;
+
+      if (head != NULL)
+        {
+          ___device *d = head->prev;
+
+          do
+            {
+              if (___device_kind (d) == ___PROCESS_DEVICE_KIND)
+                {
+                  ___device_process *dev = ___CAST(___device_process*,d);
+
+                  if (dev->pid == pid)
+                    {
+                      if (WIFEXITED(status) || WIFSIGNALED(status))
+                        ___device_process_status_set (dev, status); /* ignore error */
+                      break;
+                    }
+                }
+              d = d->prev;
+            } while  (d != head);
+        }
+    }
+  errno = save_errno;
+}
+
+#endif
+
+
+___SCMOBJ ___setup_child_interrupt_handling ___PVOID
+{
+#ifdef USE_POSIX
+
+  ___set_signal_handler (SIGPIPE, SIG_IGN);
+  ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
+
+  ___thread_sigmask1 (SIG_UNBLOCK, SIGCHLD, NULL);
+
+#endif
+
+  return ___FIX(___NO_ERR);
+}
+
+
+void ___cleanup_child_interrupt_handling ___PVOID
+{
+#ifdef USE_POSIX
+
+  ___set_signal_handler (SIGPIPE, SIG_DFL);
+  ___set_signal_handler (SIGCHLD, SIG_DFL);
+
+  ___thread_sigmask1 (SIG_UNBLOCK, SIGCHLD, NULL);
+
+#endif
+}
+
+
+___EXP_FUNC(void,___mask_child_interrupts_begin)
+   ___P((___mask_child_interrupts_state *state),
+        (state)
+___mask_child_interrupts_state *state;)
+{
+#ifdef USE_POSIX
+
+  ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, ___CAST(___sigset_type*,state)+2);
+
+#endif
+}
+
+
+___EXP_FUNC(void,___mask_child_interrupts_end)
+   ___P((___mask_child_interrupts_state *state),
+        (state)
+___mask_child_interrupts_state *state;)
+{
+#ifdef USE_POSIX
+
+  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+2, NULL);
+
+#endif
+}
+
+
 #ifdef USE_CreateProcess
 
 #define ___ESCAPE_PROCESS_ARGS
@@ -8356,7 +8475,9 @@ int options;)
    * sigchld_signal_handler will find it in the device group.
    */
 
-  ___sigset_type oldmask = ___block_signal (SIGCHLD);
+  ___mask_all_interrupts_state all_interrupts;
+
+  ___mask_all_interrupts_begin (&all_interrupts);
 
   fdp.input.writing_fd = -1;
   fdp.output.reading_fd = -1;
@@ -8370,10 +8491,6 @@ int options;)
         e = err_code_from_errno ();
       else
         {
-          ___mask_os_interrupts_state os_interrupts;
-
-          ___mask_os_interrupts_begin (&os_interrupts);
-
           if ((pid = fork ()) < 0)
             {
               e = err_code_from_errno ();
@@ -8383,9 +8500,6 @@ int options;)
                   ___close_half_duplex_pipe (&fdp.output, 2);
                 }
             }
-
-          if (pid > 0)
-            ___mask_os_interrupts_end (&os_interrupts);
         }
 
       if (e != ___FIX(___NO_ERR))
@@ -8398,9 +8512,7 @@ int options;)
         {
           /* child process */
 
-          ___restore_sigmask (oldmask);
-
-          ___cleanup_os_interrupt_handling ();
+          ___cleanup_all_interrupt_handling ();
 
           if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
             {
@@ -8528,7 +8640,7 @@ int options;)
       ___close_half_duplex_pipe (&hdp_errno, 0);
     }
 
-  ___restore_sigmask (oldmask);
+  ___mask_all_interrupts_end (&all_interrupts);
 
   return e;
 
@@ -9748,71 +9860,6 @@ ___SCMOBJ options;)
 }
 
 
-#ifdef USE_POSIX
-
-___HIDDEN void sigchld_signal_handler
-   ___P((int sig),
-        (sig)
-int sig;)
-{
-  int save_errno = errno;
-#ifdef USE_signal
-  ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
-#endif
-
-  /*
-   * A SIGCHLD signal indicates that at least one child has changed
-   * status.  There may be more than one because signals are not
-   * queued.  For example during a period when the SIGCHLD signal is
-   * blocked several child processes can terminate and only one call
-   * to the SIGCHLD handler will occur when the SIGCHLD signal is
-   * unblocked.  For this reason we must call waitpid in a loop, until
-   * the last call indicates that no other child process is available.
-   */
-
-  for (;;)
-    {
-      int status;
-      ___device *head;
-      pid_t pid = ___waitpid_no_EINTR (-1, &status, WNOHANG);
-
-      if (pid <= 0)
-        break;
-
-      /*
-       * Find the process device structure for the process which
-       * terminated, and save the exit status with the process device.
-       */
-
-      head = ___global_device_group ()->list;
-
-      if (head != NULL)
-        {
-          ___device *d = head->prev;
-
-          do
-            {
-              if (___device_kind (d) == ___PROCESS_DEVICE_KIND)
-                {
-                  ___device_process *dev = ___CAST(___device_process*,d);
-
-                  if (dev->pid == pid)
-                    {
-                      if (WIFEXITED(status) || WIFSIGNALED(status))
-                        ___device_process_status_set (dev, status); /* ignore error */
-                      break;
-                    }
-                }
-              d = d->prev;
-            } while  (d != head);
-        }
-    }
-  errno = save_errno;
-}
-
-#endif
-
-
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Opening a TCP client. */
@@ -10752,11 +10799,7 @@ ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 
   if ((e = ___device_group_setup (&___io_mod.dgroup)) == ___FIX(___NO_ERR))
     {
-#ifdef USE_POSIX
-
-      ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
-
-#endif
+      ___setup_child_interrupt_handling (); /* ignore error */
 
 #ifdef USE_WIN32
 
@@ -10786,11 +10829,7 @@ ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 
 ___HIDDEN void io_module_cleanup ___PVOID
 {
-#ifdef USE_POSIX
-
-  ___set_signal_handler (SIGCHLD, SIG_DFL);
-
-#endif
+  ___cleanup_child_interrupt_handling ();
 
 #ifdef USE_WIN32
 

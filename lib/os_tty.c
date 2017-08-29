@@ -8582,6 +8582,18 @@ ___SCMOBJ ___setup_user_interrupt_handling ___PVOID
   ___set_signal_handler (SIGWINCH, tty_signal_handler);
   ___set_signal_handler (SIGCONT, tty_signal_handler);
 
+  {
+    ___sigset_type sigs;
+
+    sigemptyset (&sigs);
+    sigaddset (&sigs, SIGINT);
+    sigaddset (&sigs, SIGTERM);
+    sigaddset (&sigs, SIGWINCH);
+    sigaddset (&sigs, SIGCONT);
+
+    ___thread_sigmask (SIG_UNBLOCK, &sigs, NULL);
+  }
+
 #endif
 
 #ifdef USE_WIN32
@@ -8603,6 +8615,18 @@ void ___cleanup_user_interrupt_handling ___PVOID
   ___set_signal_handler (SIGWINCH, SIG_DFL);
   ___set_signal_handler (SIGCONT, SIG_DFL);
 
+  {
+    ___sigset_type sigs;
+
+    sigemptyset (&sigs);
+    sigaddset (&sigs, SIGINT);
+    sigaddset (&sigs, SIGTERM);
+    sigaddset (&sigs, SIGWINCH);
+    sigaddset (&sigs, SIGCONT);
+
+    ___thread_sigmask (SIG_UNBLOCK, &sigs, NULL);
+  }
+
 #endif
 
 #ifdef USE_WIN32
@@ -8613,28 +8637,28 @@ void ___cleanup_user_interrupt_handling ___PVOID
 }
 
 
-void ___mask_user_interrupts_begin
+___EXP_FUNC(void,___mask_user_interrupts_begin)
    ___P((___mask_user_interrupts_state *state),
         (state)
 ___mask_user_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___sigset_type toblock;
+  ___sigset_type sigs;
 
-  sigemptyset (&toblock);
-  sigaddset (&toblock, SIGINT);
-  sigaddset (&toblock, SIGTERM);
-  sigaddset (&toblock, SIGWINCH);
-  sigaddset (&toblock, SIGCONT);
+  sigemptyset (&sigs);
+  sigaddset (&sigs, SIGINT);
+  sigaddset (&sigs, SIGTERM);
+  sigaddset (&sigs, SIGWINCH);
+  sigaddset (&sigs, SIGCONT);
 
-  ___thread_sigmask (SIG_BLOCK, &toblock, ___CAST(___sigset_type*,state)+1);
+  ___thread_sigmask (SIG_BLOCK, &sigs, ___CAST(___sigset_type*,state)+1);
 
 #endif
 }
 
 
-void ___mask_user_interrupts_end
+___EXP_FUNC(void,___mask_user_interrupts_end)
    ___P((___mask_user_interrupts_state *state),
         (state)
 ___mask_user_interrupts_state *state;)

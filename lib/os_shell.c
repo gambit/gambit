@@ -826,9 +826,9 @@ ___SCMOBJ cmd;)
       == ___FIX(___NO_ERR))
     {
       int code;
-      ___mask_os_interrupts_state os_interrupts;
+      ___mask_all_interrupts_state all_interrupts;
 
-      ___mask_os_interrupts_begin (&os_interrupts);
+      ___mask_all_interrupts_begin (&all_interrupts);
 
       code = system (ccmd);
 
@@ -837,7 +837,7 @@ ___SCMOBJ cmd;)
       else
         e = ___FIX(code & ___MAX_FIX);
 
-      ___mask_os_interrupts_end (&os_interrupts);
+      ___mask_all_interrupts_end (&all_interrupts);
 
       ___release_string (ccmd);
     }
@@ -901,9 +901,9 @@ ___SCMOBJ dir;)
                 e = err_code_from_errno ();
               else
                 {
-                  ___mask_os_interrupts_state os_interrupts;
+                  ___mask_all_interrupts_state all_interrupts;
 
-                  ___mask_os_interrupts_begin (&os_interrupts);
+                  ___mask_all_interrupts_begin (&all_interrupts);
 
                   code = system (ccmd);
 
@@ -912,7 +912,7 @@ ___SCMOBJ dir;)
                   else
                     e = ___FIX(code & ___MAX_FIX);
 
-                  ___mask_os_interrupts_end (&os_interrupts);
+                  ___mask_all_interrupts_end (&all_interrupts);
 
                   chdir (old_dir); /* ignore error */
                 }
