@@ -4787,7 +4787,7 @@ end-of-code
 ;;     (super   unprintable: equality-skip:)
 ;;     (fields  unprintable: equality-skip:)
 ;;   )
-
+;; TODO: Does not change.
 (##define-macro (macro-type-type-constant)
   (let ((type-type
          (##structure

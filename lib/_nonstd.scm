@@ -356,6 +356,9 @@
                super-type-dynamic-expr
                args)
 
+  (define-macro (macro-atomicity-depth-default) 32)
+  (define-macro (macro-atomicity-width-default) 8192)
+
   (define (generate
            name
            flags
@@ -389,10 +392,29 @@
                            =>
                            (lambda (x) (##constant-expression-value (##cdr x))))
                           (else
-                           #f))))
+                           #f)))
+                   (atomicity-width
+                     (cond ((##assq 'serialization-atomicity-width: attributes)
+                            => (lambda (x)
+                                 (let ((val (##cdr x)))
+                                     (if (and (fixnum? val)
+                                              (fx>= val 0) (fx<= val 255))
+                                       (fxarithmetic-shift-left val 13)
+                                       (error "Invalid serialization-atomicity-width must be in 0-255")))))
+
+                           (else (macro-atomicity-width-default))))
+                   (atomicity-depth
+                     (cond ((##assq 'serialization-atomicity-depth: attributes)
+                            => (lambda (x)
+                                 (let ((val (##cdr x)))
+                                   (if (and (fixnum? val)
+                                            (fx>= val 0) (fx<= val 255))
+                                     (fxarithmetic-shift-left val 5)
+                                     (error "Invalid serialization-atomicity-depth must be between 0-255")))))
+                           (else (macro-atomicity-depth-default)))))
               (loop (##cdr lst1)
                     (##cons field-name
-                            (##cons options
+                            (##cons (##fxior options atomicity-width atomicity-depth)
                                     (##cons init
                                             lst2)))))
             (##list->vector lst2))))
@@ -770,7 +792,9 @@
           (cond ((##pair? lst2)
                  (let ((attribute (##car lst2)))
                    (cond ((##assq attribute
-                                  '((init: . (-9 . 8))))
+                                  '((init: . (-9 . 8))
+                                    (serialization-atomicity-depth: . (-8161 . 0))
+                                    (serialization-atomicity-width: . (-2088961 . 0))))
                           =>
                           (lambda (opt)
                             (let ((rest (##cdr lst2)))
