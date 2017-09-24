@@ -2374,7 +2374,8 @@
             (make-table test: ##eq?)
             (if (eq? transform (macro-absent-obj))
                 (lambda (x) x)
-                transform)))
+                transform)
+            #t))
 
   (define (write-u8 x)
     (let ((ptr (vector-ref state 0)))
@@ -2469,6 +2470,33 @@
           (serialize-exact-int-of-length! n len)
           (alloc! n))))
 
+  ;; Check if transformable-when-serialize bit set???
+  (define (serialize-structure! struct struct-length struct-ref)
+    (let* ((len (struct-length struct))
+           (struct-type (##structure-type struct))
+           (struct-type-fields (##type-fields struct-type)))
+      (if (fx< len #x0f)
+        (write-u8 (fxior (structure-tag) len))
+        (begin
+          (write-u8 (fxior (structure-tag) #x0f))
+          (serialize-nonneg-fixnum! len)))
+
+      (vector-set! state 5
+        (fx< ;; better way
+          (fxand
+            (##type-flags struct-type) #x20) #x20))
+      (serialize! (struct-ref struct 0))
+      (let loop ((i 1) (j 1)) ;; more memory less operations
+        (if (fx< i len)
+          (begin
+            (vector-set! state 5
+              (fx< ;; better way
+                (fxand
+                  (##vector-ref struct-type-fields j) #x20) #x20))
+            (serialize! (struct-ref struct i))
+            (loop (fx+ i 1) (fx+ j 3))))
+        (vector-set! state 5 #t))))
+
   (define (serialize-vector-like! vect vect-tag vect-length vect-ref)
     (let ((len (vect-length vect)))
       (if (fx< len #x0f)
@@ -2562,7 +2590,7 @@
 
   (define (serialize! obj)
     (let* ((transform (vector-ref state 4))
-           (obj (transform obj)))
+           (obj (if (vector-ref state 5) (transform obj) obj)))
       (cond ((fixnum? obj)
              (cond ((and (fx>= obj #x00)
                          (fx< obj #x0b))
@@ -2649,11 +2677,10 @@
                  (or (share obj)
                      (begin
                        (alloc! obj)
-                       (serialize-vector-like!
-                        obj
-                        (structure-tag)
-                        (lambda (obj) (##structure-length obj))
-                        (lambda (obj i) (##unchecked-structure-ref obj i #f #f)))))))
+                       (serialize-structure!
+                         obj
+                         (lambda (obj) (##structure-length obj))
+                         (lambda (obj i) (##unchecked-structure-ref obj i #f #f)))))))
 
             ((procedure? obj)
              (if (closure? obj)
@@ -2948,7 +2975,8 @@
             (make-vector 64)
             (if (eq? transform (macro-absent-obj))
                 (lambda (x) x)
-                transform)))
+                transform)
+            #t)) ;; transformable
 
   (define (read-u8)
     (let ((ptr (vector-ref state 0))
@@ -3057,6 +3085,37 @@
                   (err)))
             obj))))
 
+  (define (deserialize-structure! x make-struct struct-set!)
+    (let ((len (fxand x #x0f)))
+      (if (fx>= len #x0f)
+        (set! len (deserialize-nonneg-fixnum! 0 0)))
+      (let ((obj (make-struct len)))
+        (alloc! obj)
+        (let* ((type (begin
+                       ; ##structure-type is untransformable
+                       (vector-set! state 5 #f)
+                       (deserialize!)))
+               (type-fields (##type-fields type)))
+          (struct-set! obj 0 type)
+          (if (##vector? type-fields)
+            (let loop ((i 1) (j 1))
+              (if (fx< i len)
+                (begin
+                  (vector-set! state 5
+                      (fx<
+                        (fxand (##vector-ref type-fields j) #x20) #x20))
+                  (struct-set! obj i (deserialize!))
+                  (loop (fx+ i 1) (fx+ j 3)))))
+            (begin
+              (let loop ((i 1))
+                (if (fx< i len)
+                  (begin
+                    (vector-set! state 5 #f)
+                    (struct-set! obj i (deserialize!))
+                    (loop (fx+ i 1)))))))
+          (vector-set! state 5 #t)
+          obj))))
+
   (define (deserialize-vector-like! x make-vect vect-set!)
     (let* ((len (fxand x #x0f)))
       (if (fx< len #x0f)
@@ -3073,6 +3132,7 @@
       (let loop ((i 0))
         (if (fx< i len)
             (begin
+              ;; Where deserialize is called.
               (vect-set! obj i (deserialize!))
               (loop (fx+ i 1)))
             obj))))
@@ -3155,14 +3215,18 @@
       (if (fx= x 1)
           (##make-global-var sym))))
 
+  (define (id x) x) ;; Identity
+
   (define (deserialize!)
     (let ((x (read-u8)))
       (if (fx>= x (shared-tag))
 
           (shared-ref
            (deserialize-nonneg-fixnum! (fxand x #x7f) 7))
-
-          ((vector-ref state 4) ;; transform
+          (let ((transform (if (vector-ref state 5)
+                             (vector-ref state 4) ;; transform
+                             id)))
+          (transform
            (cond ((fx>= x (false-tag))
                   (cond ((fx= x (false-tag))
                          #f)
@@ -3490,7 +3554,7 @@
                (deserialize-subprocedure-with-id! subproc-id)))
 
             ((fx>= x (structure-tag))
-             (deserialize-vector-like!
+             (deserialize-structure!
               x
               (lambda (len)
                 (##make-structure
@@ -3517,7 +3581,7 @@
                     (obj (string->symbol name)))
                (create-global-var-if-needed obj)
                (alloc! obj)
-               obj)))))))
+               obj))))))))
 
   (let ((obj (deserialize!)))
     (if (eof?)

@@ -750,7 +750,9 @@
           (read-write:    . (-3 . 0))
           (read-only:     . (-3 . 2))
           (equality-test: . (-5 . 0))
-          (equality-skip: . (-5 . 4))))
+          (equality-skip: . (-5 . 4))
+          (transformable-when-serializing: . (-33 . 0))
+          (untransformable-when-serializing: . (-33 . 32))))
 
       (define (update-options options opt)
         (let* ((x (##cdr opt))
@@ -1030,7 +1032,8 @@
                            (if extender 2 0)
                            (if (##assq 'macros: flags) 4 0)
                            (if constructor 8 0)
-                           (if id 16 0))
+                           (if id 16 0)
+                           32) ;; type is untransformable-when-serializing
                     id
                     extender
                     constructor
