@@ -4781,22 +4781,22 @@ end-of-code
 ;;
 ;;   (define-type type
 ;;     id: ...special-type...
-;;     (id      unprintable: untransformable-when-serializing: equality-test:)
-;;     (name    unprintable: untransformable-when-serializing: equality-skip:)
-;;     (flags   unprintable: untransformable-when-serializing: equality-skip:)
-;;     (super   unprintable: untransformable-when-serializing: equality-skip:)
-;;     (fields  unprintable: untransformable-when-serializing: equality-skip:)
+;;     (id      unprintable: equality-test:)
+;;     (name    unprintable: equality-skip:)
+;;     (flags   unprintable: equality-skip:)
+;;     (super   unprintable: equality-skip:)
+;;     (fields  unprintable: equality-skip:)
 ;;   )
-
+;; TODO: Does not change.
 (##define-macro (macro-type-type-constant)
   (let ((type-type
          (##structure
           #f ;; this structure's type descriptor is itself! (set later)
           '##type-5
           'type
-          '40
+          '8
           '#f
-          '#(id 33 #f name 37 #f flags 37 #f super 37 #f fields 37 #f))))
+          '#(id 1 #f name 5 #f flags 5 #f super 5 #f fields 5 #f))))
     (##structure-type-set! type-type type-type) ;; self reference
     `',type-type))
 

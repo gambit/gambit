@@ -2374,8 +2374,7 @@
             (make-table test: ##eq?)
             (if (eq? transform (macro-absent-obj))
                 (lambda (x) x)
-                transform)
-            #t))
+            transform)))
 
   (define (write-u8 x)
     (let ((ptr (vector-ref state 0)))
@@ -2470,7 +2469,12 @@
           (serialize-exact-int-of-length! n len)
           (alloc! n))))
 
-  ;; Check if transformable-when-serialize bit set???
+  (define (serialize! obj w-d)
+    ;; Serialize Wrapper
+    (define (ser! obj)
+      (serialize! obj w-d))
+
+    ;; Check if transformable-when-serialize bit set???
   (define (serialize-structure! struct struct-length struct-ref)
     (let* ((len (struct-length struct))
            (struct-type (##structure-type struct))
@@ -2481,21 +2485,13 @@
           (write-u8 (fxior (structure-tag) #x0f))
           (serialize-nonneg-fixnum! len)))
 
-      (vector-set! state 5
-        (fx< ;; better way
-          (fxand
-            (##type-flags struct-type) #x20) #x20))
-      (serialize! (struct-ref struct 0))
-      (let loop ((i 1) (j 1)) ;; more memory less operations
-        (if (fx< i len)
-          (begin
-            (vector-set! state 5
-              (fx< ;; better way
-                (fxand
-                  (##vector-ref struct-type-fields j) #x20) #x20))
-            (serialize! (struct-ref struct i))
-            (loop (fx+ i 1) (fx+ j 3))))
-        (vector-set! state 5 #t))))
+        (serialize! (struct-ref struct 0) 0)
+        (let loop ((i 1) (j 1)) ;; more memory less operations
+          (if (fx< i len)
+              (let* ((field-flag (##vector-ref struct-type-fields j))
+                     (w-d (fxand (fxwraplogical-shift-right field-flag 5) 65535)))
+                (serialize! (struct-ref struct i) w-d)
+                (loop (fx+ i 1) (fx+ j 3)))))))
 
   (define (serialize-vector-like! vect vect-tag vect-length vect-ref)
     (let ((len (vect-length vect)))
@@ -2510,7 +2506,8 @@
     (let loop ((i start))
       (if (fx< i end)
           (begin
-            (serialize! (vect-ref vect i))
+            (serialize! (vect-ref vect i)
+                        (if (fx> (fxand w-d 255) 1) (fxwrap- w-d 1) w-d))
             (loop (fx+ i 1))))))
 
   (define (serialize-string-like! str tag mask)
@@ -2581,16 +2578,17 @@
                     (begin
                       (write-u8 (fxior tag mask))
                       (serialize-nonneg-fixnum! subproc-id)))
-                (serialize! (##system-version))
+                (ser! (##system-version))
                 (or (share parent-name)
                     (let ((str (symbol->string parent-name)))
                       (serialize-string-like! str 0 #x7f)
                       (alloc! parent-name)))
                 (alloc! subproc))))))
 
-  (define (serialize! obj)
     (let* ((transform (vector-ref state 4))
-           (obj (if (vector-ref state 5) (transform obj) obj)))
+           (obj (if (or (fx= (fxand w-d 255) 1)
+                        (fx= (fxwraplogical-shift-right w-d 8) 1))
+                  (transform obj) obj)))
       (cond ((fixnum? obj)
              (cond ((and (fx>= obj #x00)
                          (fx< obj #x0b))
@@ -2607,8 +2605,8 @@
                  (begin
                    (alloc! obj)
                    (write-u8 (pair-tag))
-                   (serialize! (car obj))
-                   (serialize! (cdr obj)))))
+                   (serialize! (car obj) (if (fx> (fxand w-d #xff) 1) (fxwrap- w-d 1) w-d))
+                   (serialize! (cdr obj) (if (fx> w-d 511) (fxwrap- w-d 256) w-d))))) ;; width > 1
 
             ((symbol? obj)
              (or (share obj)
@@ -2697,7 +2695,9 @@
                          (let loop ((i 1))
                            (if (fx<= i nb-closed)
                                (begin
-                                 (serialize! (closure-ref obj i))
+                                 (serialize! (closure-ref obj i)
+                                             (if (fx> (fxand w-d #xff) 1)
+                                               (fxwrap- w-d 1) w-d))
                                  (loop (fx+ i 1))))))))
 
                  (serialize-subprocedure! obj (subprocedure-tag) #x0f)))
@@ -2716,16 +2716,16 @@
              (or (share obj)
                  (begin
                    (write-u8 (ratnum-tag))
-                   (serialize! (macro-ratnum-numerator obj))
-                   (serialize! (macro-ratnum-denominator obj))
+                   (ser! (macro-ratnum-numerator obj))
+                   (ser! (macro-ratnum-denominator obj))
                    (alloc! obj))))
 
             ((cpxnum? obj)
              (or (share obj)
                  (begin
                    (write-u8 (cpxnum-tag))
-                   (serialize! (macro-cpxnum-real obj))
-                   (serialize! (macro-cpxnum-imag obj))
+                   (ser! (macro-cpxnum-real obj))
+                   (ser! (macro-cpxnum-imag obj))
                    (alloc! obj))))
 
             ((continuation? obj)
@@ -2745,8 +2745,9 @@
                                    (let ((next (continuation-next cont)))
                                      (if next
                                          (serialize-cont-frame! next)
-                                         (serialize! (macro-end-of-cont-marker))))
-                                   (serialize! (continuation-ref cont i))))
+                                         ;; Should use serialize! instead of ser!?
+                                         (ser! (macro-end-of-cont-marker))))
+                                         (ser! (continuation-ref cont i))))
                            (loop (fx+ i 1)))))))
 
                (or (share obj)
@@ -2754,7 +2755,7 @@
                      (alloc! obj)
                      (write-u8 (continuation-tag))
                      (serialize-cont-frame! obj)
-                     (serialize! (continuation-denv obj))))))
+                     (ser! (continuation-denv obj))))))
 
             ((frame? obj)
              (or (share obj)
@@ -2768,7 +2769,7 @@
                        (if (fx<= i fs)
                            (begin
                              (if (frame-slot-live? obj i)
-                                 (serialize! (frame-ref obj i)))
+                             (ser! (frame-ref obj i)))
                              (loop (fx+ i 1)))))))))
 
             ((box? obj)
@@ -2777,7 +2778,7 @@
                    (alloc! obj)
                    (write-u8 (boxvalues-tag))
                    (serialize-nonneg-fixnum! 1)
-                   (serialize! (unbox obj)))))
+                   (ser! (unbox obj)))))
 
             ((values? obj)
              (or (share obj)
@@ -2789,7 +2790,7 @@
                      (let loop ((i 0))
                        (if (fx< i len)
                            (begin
-                             (serialize! (values-ref obj i))
+                             (ser! (values-ref obj i))
                              (loop (fx+ i 1)))))))))
 
             ((s8vector? obj)
@@ -2876,9 +2877,9 @@
              (or (share obj)
                  (begin
                    (alloc! obj)
-                   (write-u8 (promise-tag))
-                   (serialize! (promise-thunk obj))
-                   (serialize! (promise-result obj)))))
+                   (write-u8 (promise-tag)) ; Promise is atomic
+                   (serialize! (promise-thunk obj) 0)
+                   (serialize! (promise-result obj) 0))))
 
             ((char? obj)
              (let ((n (char->integer obj)))
@@ -2933,12 +2934,12 @@
                                     (if (and (not (eq? key (macro-unused-obj)))
                                              (not (eq? key (macro-deleted-obj))))
                                         (let ((val (vector-ref obj (fx+ i 1))))
-                                          (serialize! key)
-                                          (serialize! val)))
+                                          (ser! key)
+                                          (ser! val)))
                                     (let ()
                                       (##declare (interrupts-enabled))
                                       (loop (fx+ i 2))))
-                                  (serialize! (macro-unused-obj))))))))
+                                  (ser! (macro-unused-obj))))))))
 
                    (else
                     (cannot-serialize obj))))
@@ -2946,7 +2947,7 @@
             (else
              (cannot-serialize obj)))))
 
-  (serialize! obj)
+  (serialize! obj 257)
 
   (get-output-u8vector))
 
@@ -2975,8 +2976,7 @@
             (make-vector 64)
             (if (eq? transform (macro-absent-obj))
                 (lambda (x) x)
-                transform)
-            #t)) ;; transformable
+                transform)))
 
   (define (read-u8)
     (let ((ptr (vector-ref state 0))
@@ -3085,35 +3085,39 @@
                   (err)))
             obj))))
 
+  ;; Maybe remove the fxand
+  (define-macro (macro-type-width-depth field)
+    `(fxand (fxarithmetic-shift-right field 5) 65535))
+
+  ; TODO merge width and depth into w-d
+  (define (deserialize! w-d)
+    ;; Deserialize wrapper
+    (define (des!)
+      (deserialize! w-d))
+
   (define (deserialize-structure! x make-struct struct-set!)
     (let ((len (fxand x #x0f)))
       (if (fx>= len #x0f)
         (set! len (deserialize-nonneg-fixnum! 0 0)))
       (let ((obj (make-struct len)))
         (alloc! obj)
-        (let* ((type (begin
-                       ; ##structure-type is untransformable
-                       (vector-set! state 5 #f)
-                       (deserialize!)))
+        (let* ((type (deserialize! 0))
                (type-fields (##type-fields type)))
           (struct-set! obj 0 type)
           (if (##vector? type-fields)
             (let loop ((i 1) (j 1))
               (if (fx< i len)
                 (begin
-                  (vector-set! state 5
-                      (fx<
-                        (fxand (##vector-ref type-fields j) #x20) #x20))
-                  (struct-set! obj i (deserialize!))
-                  (loop (fx+ i 1) (fx+ j 3)))))
+                  (let* ((field (##vector-ref type-fields j))
+                         (new-w-d (macro-type-width-depth field)))
+                    (struct-set! obj i (deserialize! new-w-d))
+                    (loop (fx+ i 1) (fx+ j 3))))))
             (begin
               (let loop ((i 1))
                 (if (fx< i len)
                   (begin
-                    (vector-set! state 5 #f)
-                    (struct-set! obj i (deserialize!))
+                    (struct-set! obj i (deserialize! 0))
                     (loop (fx+ i 1)))))))
-          (vector-set! state 5 #t)
           obj))))
 
   (define (deserialize-vector-like! x make-vect vect-set!)
@@ -3132,8 +3136,7 @@
       (let loop ((i 0))
         (if (fx< i len)
             (begin
-              ;; Where deserialize is called.
-              (vect-set! obj i (deserialize!))
+              (vect-set! obj i (deserialize! (if (fx> (fxand w-d 255) 1) (fxwrap- w-d 1) w-d)))
               (loop (fx+ i 1)))
             obj))))
 
@@ -3182,7 +3185,7 @@
             (deserialize-subprocedure-with-id! subproc-id)))))
 
   (define (deserialize-subprocedure-with-id! subproc-id)
-    (let ((v (deserialize!)))
+    (let ((v (deserialize! 0)))
       (if (not (eqv? v (##system-version)))
           (err)
           (let* ((x
@@ -3217,13 +3220,13 @@
 
   (define (id x) x) ;; Identity
 
-  (define (deserialize!)
     (let ((x (read-u8)))
       (if (fx>= x (shared-tag))
 
           (shared-ref
            (deserialize-nonneg-fixnum! (fxand x #x7f) 7))
-          (let ((transform (if (vector-ref state 5)
+          (let ((transform (if (or (fx= (fxand w-d 255) 1)
+                                   (fx= (fxarithmetic-shift-right w-d 8) 1))
                              (vector-ref state 4) ;; transform
                              id)))
           (transform
@@ -3264,8 +3267,8 @@
                         ((fx= x (promise-tag))
                          (let ((obj (make-promise #f)))
                            (alloc! obj)
-                           (let* ((thunk (deserialize!))
-                                  (result (deserialize!)))
+                           (let* ((thunk (des!))
+                                  (result (des!)))
                              (promise-thunk-set! obj thunk)
                              (promise-result-set! obj result)
                              obj)))
@@ -3294,8 +3297,8 @@
                            obj))
 
                         ((fx= x (ratnum-tag))
-                         (let* ((num (deserialize!))
-                                (den (deserialize!)))
+                         (let* ((num (des!))
+                                (den (des!)))
                            (if #f #;(or (and (fixnum? den)
                                              (fx<= den 1))
                                         (and (bignum? den)
@@ -3307,8 +3310,8 @@
                              obj))))
 
                   ((fx= x (cpxnum-tag))
-                   (let* ((real (deserialize!))
-                          (imag (deserialize!)))
+                   (let* ((real (des!))
+                          (imag (des!)))
                      (if #f #;(or (not (real? real))
                                   (not (real? imag)))
                          (err)
@@ -3319,8 +3322,8 @@
                   ((fx= x (pair-tag))
                    (let ((obj (cons #f #f)))
                      (alloc! obj)
-                     (let* ((a (deserialize!))
-                            (d (deserialize!)))
+                     (let* ((a (deserialize! (if (fx> (fxand w-d #xff) 1) (fxwrap- w-d 1) w-d)))
+                            (d (deserialize! (if (fx> w-d 511) (fxwrap- w-d 256) w-d))))
                        (set-car! obj a)
                        (set-cdr! obj d)
                        obj)))
@@ -3329,8 +3332,8 @@
                    (let ((obj
                           (make-continuation (macro-end-of-cont-marker) #f)))
                      (alloc! obj)
-                     (let* ((frame (deserialize!))
-                            (denv (deserialize!)))
+                     (let* ((frame (des!))
+                            (denv (des!)))
                        (if #f #;(not (frame? frame)) ;; should also check denv
                            (err)
                            (begin
@@ -3343,14 +3346,14 @@
                      (if (fx= len 1)
                          (let ((obj (box #f)))
                            (alloc! obj)
-                           (set-box! obj (deserialize!))
+                           (set-box! obj (des!))
                            obj)
                          (let ((obj (make-values len)))
                            (alloc! obj)
                            (let loop ((i 0))
                              (if (fx< i len)
                                  (begin
-                                   (values-set! obj i (deserialize!))
+                                   (values-set! obj i (des!))
                                    (loop (fx+ i 1)))
                                  obj))))))
 
@@ -3389,7 +3392,7 @@
                                  (alloc! obj)
                                  (let loop ((i 1))
                                    (if (fx<= i nb-closed)
-                                       (let ((x (deserialize!)))
+                                       (let ((x (deserialize! (if (fx> (fxand w-d #xff) 1) (fxwrap- w-d 1) w-d))))
                                          (closure-set! obj i x)
                                          (loop (fx+ i 1)))
                                        obj))))))))
@@ -3408,7 +3411,7 @@
                                     obj
                                     i
                                     (if (frame-slot-live? obj i)
-                                        (deserialize!)
+                                        (des!)
                                         0))
                                    (loop (fx+ i 1)))
                                  obj))))))
@@ -3435,9 +3438,9 @@
                            (macro-gc-hash-table-free-set! obj free)
                            (let loop ((i (macro-gc-hash-table-key0)))
                              (if (fx< i (vector-length obj))
-                                 (let ((key (deserialize!)))
+                                 (let ((key (des!)))
                                    (if (not (eq? key (macro-unused-obj)))
-                                       (let ((val (deserialize!)))
+                                       (let ((val (des!)))
                                          (vector-set! obj i key)
                                          (vector-set! obj (fx+ i 1) val)
                                          (loop (fx+ i 2)))
@@ -3583,7 +3586,7 @@
                (alloc! obj)
                obj))))))))
 
-  (let ((obj (deserialize!)))
+  (let ((obj (deserialize! 257)))
     (if (eof?)
         obj
         (err))))

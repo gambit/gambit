@@ -2,7 +2,9 @@
 
 (declare (block)) ;; needed for serialization/deserialization when compiled
 
+(define i 0)
 (define (serdes1 obj)
+  ;(println (object->string obj))
   (let ((ser (object->u8vector obj)))
     (let ((des (u8vector->object ser)))
       des)))
@@ -25,11 +27,11 @@
     (object->u8vector obj (make-transform expect-ser)))
 
   (define (des u8vect)
-    (u8vector->object u8vect (make-transform expect-des)))
+    (u8vector->object u8vect)) ;(make-transform expect-des)))
 
-  (let ((ser-obj (ser obj)))
-    (let ((des-obj (des ser-obj)))
-      des-obj)))
+  (let* ((ser-obj (ser obj))
+         (des-obj (des ser-obj)))
+      des-obj))
 
 (define-type point
   id: the-point-object
@@ -40,17 +42,19 @@
 (define-type point-0
   id: the-point-0object
   x
-  (y untransformable-when-serializing:))
+  (y serialization-atomicity-depth: 2
+     serialization-atomicity-width: 2))
 
 (define-type point-1
   id: the-point-1-object
-  (x untransformable-when-serializing:)
+  (x serialization-atomicity-depth: 2
+     serialization-atomicity-width: 2)
   y)
 
 (define-type point-2
   id: the-point-2-object
-  (x untransformable-when-serializing:)
-  (y untransformable-when-serializing:))
+  (x serialization-atomicity-depth: 2)
+  (y serialization-atomicity-depth: 2))
 
 (define objects
   (list (cons 11 22)
@@ -193,3 +197,62 @@
 (define add10 (make-adder 10))
 
 (check-equal? ((serdes1 add10) 5) 15)
+
+(define-type container-5-5
+  id: container-5-5-unique-id
+  ;; Depth: 3 + cell
+  ;; Width: 4
+  (data serialization-atomicity-depth: 5
+        serialization-atomicity-width: 5))
+
+(define-type container-0-5
+  id: container-0-5-unique-id
+  ;; Depth: 3 + cell
+  (data serialization-atomicity-depth: 5
+        serialization-atomicity-width: 0))
+
+(define-type container-5-0
+  id: container-5-0-unique-id
+  ;; Width: 4
+  (data serialization-atomicity-depth: 0
+        serialization-atomicity-width: 5))
+
+
+(define (create-list-table w d)
+  (let loop ((d d) (acc '()))
+    (if (> d 0)
+      (loop (- d 1)
+            (cons acc
+              (vector->list (make-vector w)))) acc)))
+
+(define lst (create-list-table 30 30))
+
+(define (test-w-d-attribute
+          make-obj
+          obj-data
+          w d lst)
+  (check-equal?
+    (obj-data
+      (u8vector->object
+        (object->u8vector
+          (make-obj lst)
+          (lambda (o)
+            (if (pair? o)
+              '()
+              o)))))
+    (create-list-table w d)))
+
+(test-w-d-attribute
+  make-container-5-5
+  container-5-5-data
+  3 4 lst)
+
+(test-w-d-attribute
+  make-container-5-0
+  container-5-0-data
+  3 30 lst)
+
+(test-w-d-attribute
+  make-container-0-5
+  container-0-5-data
+  30 4 lst)
