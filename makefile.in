@@ -134,7 +134,7 @@ boot-wip-compiler: fake_target
 	    test "`find gsc/makefile.in gsc/*.scm -exec diff -q \{\} boot/\{\} \; 2>&1`" = ""; then \
 	  echo "**** boot/gsc/gsc@exe@ doesn't need to be rebuilt"; \
 	else \
-	  $(MAKE) boot-wip-compiler-gsc-gsc; \
+	  $(MAKE) boot-wip-compiler-gsc-gsc && $(MAKE) bootclean; \
 	fi
 
 boot-wip-compiler-gsc-gsc: boot-most-recent-release
