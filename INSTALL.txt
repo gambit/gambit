@@ -54,52 +54,21 @@ permissions.
 2) Quick-install instructions
 =============================
 
-On most Unix platforms the system is easily built using
-configure/make.  First the configure script is called as in:
+On most Unix platforms the system is easily built using configure/make:
 
-  % ./configure        # add configure script options as required
-
-If a specific release of the system was obtained as a compressed tar
-ball (.tgz extension) it can be built by invoking "make":
-
+  % ./configure        # add options as required, for example CC=gcc-7
   % make
 
-If the source code was obtained by cloning the Gambit repository from
-github, more steps are required because some of the files have to be
-recreated as they may be stale.
-
-The following commands should then be entered after executing the
-configure script to make sure that any stale .c files obtained from
-the repository are updated:
-
-  % make current-gsc-boot
-  % make bootclean
-
-The "make current-gsc-boot" builds the Gambit compiler that was
-current at the latest release and then uses it to compile the very
-latest sources of the compiler cloned from github.  The "make
-bootclean" then removes all the generated .c files so that they will
-be created using the current gsc-boot compiler.  Then the system can
-be built by invoking "make":
-
-  % make
-
-These steps can be shortened to the following commands:
-
-  % ./configure        # add configure script options as required
-  % make current-gsc-boot
-  % make from-scratch
-
-The system can be tested and installed using the following commands:
+The system can then be tested and installed using the following commands:
 
   % make check
   % sudo make install
 
 On a computer with multiple cores it is normally beneficial to build
-the system in parallel by adding a "-j" option to all the invocations
-of "make" before "make check".  For example:
+the system in parallel by adding a "-j" option to the invocation
+of make:
 
-  % make -j8 from-scratch
+  % make -j8
 
 
 3) Recommended "configure" script options

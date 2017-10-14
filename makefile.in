@@ -111,24 +111,16 @@ from-scratch: fake_target
 	$(MAKE) bootclean
 	$(MAKE) all       # make everything with repo HEAD gsc compiler
 
-latest-release: fake_target
-	echo "*************** the make target latest-release is deprecated!"
-	$(GIT) checkout -f tags/$(PACKAGE_VERSION)
-	$(CONFIGURE_COMMAND)
-	$(MAKE) bootstrap
-	$(GIT) checkout -f master
-	$(GIT) reset --hard
-
 boot-most-recent-release: fake_target
-	@if test -x "boot/gsc-boot" && \
-	    test "`boot/gsc-boot -v | sed -e 's/ .*//'`" = "$(PACKAGE_VERSION)"; then \
-	  echo "**** boot/gsc-boot doesn't need to be rebuilt"; \
+	@if test -x "boot/gsc-boot@exe@" && \
+	    test "`boot/gsc-boot@exe@ -v | sed -e 's/ .*//'`" = "$(PACKAGE_VERSION)"; then \
+	  echo "**** boot/gsc-boot@exe@ doesn't need to be rebuilt"; \
 	else \
 	  $(MAKE) boot-most-recent-release-gsc-boot; \
 	fi
 
 boot-most-recent-release-gsc-boot: fake_target
-	@echo "**** building boot/gsc-boot"
+	@echo "**** building boot/gsc-boot@exe@"
 	rm -rf boot
 	mkdir -p boot
 	$(GIT) archive tags/$(PACKAGE_VERSION) | (cd boot && tar xf -)
@@ -137,33 +129,43 @@ boot-most-recent-release-gsc-boot: fake_target
 	$(MAKE) bootstrap
 
 boot-wip-compiler: fake_target
-	@if test -x "boot/gsc/gsc" && \
+	@if test -x "boot/gsc/gsc@exe@" && \
 	    test "`boot/gsc/gsc -v | sed -e 's/ .*//'`" = "$(PACKAGE_VERSION)" && \
 	    test "`find gsc/makefile.in gsc/*.scm -exec diff -q \{\} boot/\{\} \; 2>&1`" = ""; then \
-	  echo "**** boot/gsc/gsc doesn't need to be rebuilt"; \
+	  echo "**** boot/gsc/gsc@exe@ doesn't need to be rebuilt"; \
 	else \
 	  $(MAKE) boot-wip-compiler-gsc-gsc; \
 	fi
 
 boot-wip-compiler-gsc-gsc: boot-most-recent-release
-	@echo "**** building boot/gsc/gsc using boot/gsc-boot"
+	@echo "**** building boot/gsc/gsc@exe@ using boot/gsc-boot@exe@"
 	cd boot && \
 	rm -rf gsc && \
 	mkdir gsc && \
 	cp ../gsc/makefile.in ../gsc/*.scm gsc && \
 	./configure CC='$(C_COMPILER)' && \
-	for i in lib gsi gsc ; do (cd $$i ; $(MAKE) ) ; done
+	for i in lib gsi gsc ; do (cd $$i ; $(MAKE) all) ; done
 
 wip-gsc-boot: boot-wip-compiler
-	cp boot/gsc/gsc gsc-boot
+	cp boot/gsc/gsc@exe@ gsc-boot@exe@
 
 current-gsc-boot: wip-gsc-boot
 
-gsc-boot@exe@:
-	rm -f gsc-boot@bat@ gsc-boot
+dummy-gsc-boot:
+	rm -f gsc-boot@bat@ gsc-boot@exe@
 	cp gsc-boot.bat.windows gsc-boot@bat@
-	cp gsc-boot.unix gsc-boot
-	chmod +x gsc-boot
+	cp gsc-boot.unix gsc-boot@exe@
+	chmod +x gsc-boot@exe@
+
+gsc-boot@exe@:
+	@if $(GIT) --version > /dev/null 2> /dev/null && \
+          test "`$(GIT) describe --tags`" != "$(PACKAGE_VERSION)"; then \
+	  echo "**** checking if current gsc-boot must be built"; \
+	  $(MAKE) current-gsc-boot; \
+	else \
+	  echo "**** using a dummy gsc-boot"; \
+	  $(MAKE) dummy-gsc-boot; \
+	fi
 
 fake_target:
 
