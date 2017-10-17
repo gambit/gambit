@@ -13,13 +13,13 @@
 #
 # you should add this line to your ~/.profile and ~/.bashrc files:
 #
-#    export PATH=/usr/local/gcc-6.1.0/bin:$PATH
+#    export PATH=/usr/local/gcc-7.2.0/bin:$PATH
 
-GCCVERSION=6.1.0
-GMPVERSION=6.1.0
-MPFRVERSION=3.1.4
+GCCVERSION=7.2.0
+GMPVERSION=6.1.2
+MPFRVERSION=3.1.6
 MPCVERSION=1.0.3
-ISLVERSION=0.16.1
+ISLVERSION=0.18
 CLOOGVERSION=0.18.1
 
 PREFIX=/usr/local/gcc-$GCCVERSION
@@ -32,15 +32,15 @@ cd temp-gcc
 
 command -v wget >/dev/null 2>&1 || { echo >&2 "This script requires wget but it's not installed.  Aborting."; exit 1; }
 
-wget ftp://ftp.gnu.org/gnu/gcc/gcc-$GCCVERSION/gcc-$GCCVERSION.tar.gz
-wget ftp://ftp.gnu.org/gnu/gmp/gmp-$GMPVERSION.tar.bz2
-wget ftp://ftp.gnu.org/gnu/mpfr/mpfr-$MPFRVERSION.tar.gz
+wget ftp://ftp.gnu.org/gnu/gcc/gcc-$GCCVERSION/gcc-$GCCVERSION.tar.xz
+wget ftp://ftp.gnu.org/gnu/gmp/gmp-$GMPVERSION.tar.xz
+wget ftp://ftp.gnu.org/gnu/mpfr/mpfr-$MPFRVERSION.tar.xz
 wget ftp://ftp.gnu.org/gnu/mpc/mpc-$MPCVERSION.tar.gz
 
-tar zxf gcc-$GCCVERSION.tar.gz
-tar jxf gmp-$GMPVERSION.tar.bz2
-tar zxf mpfr-$MPFRVERSION.tar.gz
-tar zxf mpc-$MPCVERSION.tar.gz
+tar xf gcc-$GCCVERSION.tar.xz
+tar xf gmp-$GMPVERSION.tar.xz
+tar xf mpfr-$MPFRVERSION.tar.xz
+tar xf mpc-$MPCVERSION.tar.gz
 
 ln -s ../gmp-$GMPVERSION   gcc-$GCCVERSION/gmp
 ln -s ../mpfr-$MPFRVERSION gcc-$GCCVERSION/mpfr
@@ -52,8 +52,8 @@ ln -s ../mpc-$MPCVERSION   gcc-$GCCVERSION/mpc
 wget ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-$ISLVERSION.tar.bz2
 wget ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-$CLOOGVERSION.tar.gz
 
-tar jxf isl-$ISLVERSION.tar.bz2
-tar zxf cloog-$CLOOGVERSION.tar.gz
+tar xf isl-$ISLVERSION.tar.bz2
+tar xf cloog-$CLOOGVERSION.tar.gz
 
 ln -s ../isl-$ISLVERSION   gcc-$GCCVERSION/isl
 ln -s ../cloog-$CLOOGVERSION gcc-$GCCVERSION/cloog
