@@ -275,6 +275,7 @@
 #define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
 
 #define tospace_offset          ___PSTATE_MEM(tospace_offset_)
+#define msection_free_list      ___PSTATE_MEM(msection_free_list_)
 #define stack_msection          ___PSTATE_MEM(stack_msection_)
 #define alloc_stack_start       ___PSTATE_MEM(alloc_stack_start_)
 #define alloc_stack_ptr         ___PSTATE_MEM(alloc_stack_ptr_)
@@ -2864,6 +2865,18 @@ ___msection *ms;)
   alloc_stack_limit = start_of_tospace(ms);
   alloc_stack_start = alloc_stack_limit + (___MSECTION_SIZE>>1);
   alloc_stack_ptr = alloc_stack_start;
+}
+
+
+___HIDDEN void set_stack_msection_possibly_sharing_with_heap
+   ___P((___processor_state ___ps,
+         ___msection *ms),
+        (___ps,
+         ms)
+___processor_state ___ps;
+___msection *ms;)
+{
+  set_stack_msection (___ps, ms);
 
   if (ms == heap_msection)
     {
@@ -2891,15 +2904,44 @@ ___msection *ms;)
 }
 
 
+___HIDDEN void stack_msection_stop_using
+   ___P((___processor_state ___ps,
+         ___WORD *stack_start,
+         ___WORD *stack_ptr),
+        (___ps,
+         stack_start,
+         stack_ptr)
+___processor_state ___ps;
+___WORD *stack_start;
+___WORD *stack_ptr;)
+{
+  words_prev_msections += stack_start - stack_ptr;
+}
+
+
+___HIDDEN void stack_msection_resume_using
+   ___P((___processor_state ___ps,
+         ___WORD *stack_start,
+         ___WORD *stack_ptr),
+        (___ps,
+         stack_start,
+         stack_ptr)
+___processor_state ___ps;
+___WORD *stack_start;
+___WORD *stack_ptr;)
+{
+  words_prev_msections -= stack_start - stack_ptr;
+}
+
+
 ___HIDDEN void next_stack_msection_without_locking
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
   ___msection *ms;
-  words_prev_msections += alloc_stack_start - alloc_stack_ptr;
   ms = next_msection_without_locking (___ps, heap_msection);
-  set_stack_msection (___ps, ms);
+  set_stack_msection_possibly_sharing_with_heap (___ps, ms);
 }
 
 
@@ -2909,11 +2951,10 @@ ___HIDDEN void next_stack_msection
 ___processor_state ___ps;)
 {
   ___msection *ms;
-  words_prev_msections += alloc_stack_start - alloc_stack_ptr;
   ALLOC_MEM_LOCK();
   ms = next_msection_without_locking (___ps, heap_msection);
   ALLOC_MEM_UNLOCK();
-  set_stack_msection (___ps, ms);
+  set_stack_msection_possibly_sharing_with_heap (___ps, ms);
 }
 
 
@@ -3003,6 +3044,18 @@ ___msection *ms;)
   alloc_heap_start = start_of_tospace(ms);
   alloc_heap_limit = alloc_heap_start + (___MSECTION_SIZE>>1);
   alloc_heap_ptr = alloc_heap_start;
+}
+
+
+___HIDDEN void set_heap_msection_possibly_sharing_with_stack
+   ___P((___processor_state ___ps,
+         ___msection *ms),
+        (___ps,
+         ms)
+___processor_state ___ps;
+___msection *ms;)
+{
+  set_heap_msection (___ps, ms);
 
   if (ms == stack_msection)
     {
@@ -3038,7 +3091,7 @@ ___processor_state ___ps;)
   ___msection *ms;
   words_prev_msections += alloc_heap_ptr - alloc_heap_start;
   ms = next_msection_without_locking (___ps, stack_msection);
-  set_heap_msection (___ps, ms);
+  set_heap_msection_possibly_sharing_with_stack (___ps, ms);
 }
 
 
@@ -3052,7 +3105,7 @@ ___processor_state ___ps;)
   ALLOC_MEM_LOCK();
   ms = next_msection_without_locking (___ps, stack_msection);
   ALLOC_MEM_UNLOCK();
-  set_heap_msection (___ps, ms);
+  set_heap_msection_possibly_sharing_with_stack (___ps, ms);
 }
 
 
@@ -3347,11 +3400,6 @@ ___WORD *orig_ptr;)
 
   cf = *ptr;
 
-#if 0
-  printf ("-------------\n");;;;;;;;;;;;;;;;;;;;;;;;;;
-  fflush (stdout);
-#endif
-
   if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
     {
       /* continuation frame is in the stack */
@@ -3379,12 +3427,7 @@ ___WORD *orig_ptr;)
           ___COVER_MARK_CAPTURED_CONTINUATION_RETN;
         }
 
-#if 0
-      printf ("fp=0x%08lx ra1=0x%08lx fs=%d link=%d\n", fp, ra1, fs, link);;;;;;;;;;;;;;;;;;;;;;;;;;
-      fflush (stdout);
-#endif
-
-      ___FP_ADJFP(fp,-___FRAME_SPACE(fs)); /* get base of frame */
+      ___FP_ADJFP(fp,-___FRAME_SPACE(fs)) /* get base of frame */
 
       ra2 = ___FP_STK(fp,link+1);
 
@@ -3615,7 +3658,7 @@ ___PSDKR)
         print_value (ra1);
 #endif
 
-        ___FP_ADJFP(fp,-___FRAME_SPACE(fs)); /* get base of frame */
+        ___FP_ADJFP(fp,-___FRAME_SPACE(fs)) /* get base of frame */
 
         ra2 = ___FP_STK(fp,link+1);
 
@@ -4208,6 +4251,8 @@ ___processor_state ___ps;)
    * Allocate processor's stack and heap.
    */
 
+  msection_free_list = 0;
+
   words_prev_msections = 0;
 
   stack_msection = 0;
@@ -4244,7 +4289,7 @@ ___processor_state ___ps;)
   ___ps->stack_start = alloc_stack_start;
   alloc_stack_ptr = alloc_stack_start;
 
-  ___FP_ADJFP(alloc_stack_ptr,___BREAK_FRAME_SPACE)
+  ___FP_ADJFP(alloc_stack_ptr,___FIRST_BREAK_FRAME_SPACE)
   ___FP_SET_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT,___END_OF_CONT_MARKER)
 
   ___ps->stack_break = alloc_stack_ptr;
@@ -5383,13 +5428,13 @@ ___PSDKR)
   ___WORD *p2;
 
   start = ___ps->fp;
-  length = (___ps->stack_break + ___BREAK_FRAME_SPACE) - start;
+  length = (___ps->stack_break + ___FIRST_BREAK_FRAME_SPACE) - start;
 
   p1 = start + length;
   p2 = alloc_stack_ptr;
 
   ___ps->stack_start = alloc_stack_start;
-  ___ps->stack_break = p2 - ___BREAK_FRAME_SPACE;
+  ___ps->stack_break = p2 - ___FIRST_BREAK_FRAME_SPACE;
 
   while (p1 != start)
     *--p2 = *--p1;
@@ -6141,54 +6186,276 @@ ___PSDKR)
     check_fudge_used (___PSPNC);
 #endif
 
-  ALLOC_MEM_LOCK();
-
-  if (
-#ifdef CALL_GC_FREQUENTLY
-      --___gc_calls_to_punt >= 0 &&
-#endif
-      compute_free_heap_space() >= ___MSECTION_SIZE)
+  if (alloc_stack_ptr < alloc_stack_limit + ___MSECTION_FUDGE)
     {
-      if (alloc_stack_ptr < alloc_stack_limit + ___MSECTION_FUDGE)
-        {
-          ___WORD frame;
+      /*
+       * There isn't enough free space in the current stack msection.
+       */
 
-          if (alloc_stack_ptr != ___ps->stack_break)
-            frame = ___CAST(___WORD,alloc_stack_ptr);
-          else
-            frame = ___FP_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT);
+      ___msection *prev_stack_msection = stack_msection;
+      ___WORD *prev_alloc_stack_start = alloc_stack_start;
+      ___WORD *prev_alloc_stack_ptr = alloc_stack_ptr;
+      ___WORD *prev_stack_break = ___ps->stack_break;
+      ___WORD *fp;
+      int frame_count;
+      int words;
+
+      /*
+       * Get a new stack msection.
+       */
+
+      ___msection *ms = msection_free_list;
+
+      if (stack_msection != heap_msection &&
+          ms != NULL)
+        {
+          /* we can reuse an existing one */
+
+          msection_free_list = ___CAST(___msection*,ms->base[0]);
+
+          set_stack_msection (___ps, ms);
+        }
+      else
+        {
+          /* we need to allocate a new msection */
+
+          ALLOC_MEM_LOCK();
+
+          if (
+#ifdef CALL_GC_FREQUENTLY
+              --___gc_calls_to_punt < 0 ||
+#endif
+              compute_free_heap_space() < ___MSECTION_SIZE)
+            {
+              ALLOC_MEM_UNLOCK();
+
+              /*
+               * Because the GC preserves the topmost contiguous
+               * frames in the stack msection (the frames between the
+               * stack pointer and the latest break frame), the
+               * occupation of the stack msection would increase
+               * gradually with subsequent calls to ___stack_limit and
+               * this would eventually cause an uncontrolled overflow
+               * of the stack msection.
+               *
+               * To avoid this, a break frame is added at the top of
+               * the stack when the topmost contiguous frames in the
+               * stack msection take too much space.  This will cause
+               * the GC to move all the frames to the heap.
+               */
+
+              if ((___ps->stack_break - alloc_stack_ptr) >
+                  (___ps->stack_start - ___ps->stack_limit)*2/3)
+                {
+                  /*
+                   * At the top of the current stack msection there are
+                   * contiguous frames that occupy more than 2/3 of the
+                   * available space.
+                   */
+
+                  /*
+                   * Add a break frame.
+                   */
+
+                  ___FP_ADJFP(alloc_stack_ptr,___BREAK_FRAME_SPACE)
+                  ___FP_SET_STK(alloc_stack_ptr,
+                                -___BREAK_FRAME_NEXT,
+                                ___CAST(___WORD,prev_alloc_stack_ptr))
+                  ___ps->stack_break = alloc_stack_ptr;
+                }
+
+              prepare_mem_pstate (___ps);
+
+              return 1; /* trigger GC */
+            }
 
           next_stack_msection_without_locking (___ps);
 
           ALLOC_MEM_UNLOCK();
-
-          /*
-           * Create a "break frame" in the new stack msection.
-           */
-
-          ___ps->stack_start = alloc_stack_start;
-          alloc_stack_ptr = alloc_stack_start;
-
-          ___FP_ADJFP(alloc_stack_ptr,___BREAK_FRAME_SPACE)
-          ___FP_SET_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT,frame)
-
-          ___ps->stack_break = alloc_stack_ptr;
         }
-      else
+
+      /*
+       * Move to the new stack msection.
+       */
+
+      ___ps->stack_start = alloc_stack_start;
+      alloc_stack_ptr = alloc_stack_start;
+
+      /*
+       * Create a "break frame" in the new stack msection.  The break
+       * frame is used by the break handler (see _kernel.scm).
+       */
+
+      ___FP_ADJFP(alloc_stack_ptr,___FIRST_BREAK_FRAME_SPACE)
+
+      /*
+       * Because ___stack_limit is only called by the stack-limit
+       * handler in _kernel.scm and it has pushed an internal
+       * return frame to the top of the stack, the frame pointer
+       * can't be pointing to a break frame,
+       * i.e. prev_alloc_stack_ptr != prev_stack_break.
+       *
+       * If the topmost frame were to be left on the
+       * stack, when ___stack_overflow_undo would return to it, an
+       * uncontrolled overflow of the stack would be possible
+       * (because the generated code assumes that after returning
+       * from a call to ___stack_limit it is OK to perform a
+       * function call without checking the stack limit).
+       *
+       * For this reason, is is necessary for correctness to
+       * transfer the topmost frame to the new stack msection.
+       * However, only transferring the topmost frame may cause
+       * the stack limit handler to be called frequently if there
+       * are many shallow function calls in a row (calls to
+       * ___stack_limit followed by ___stack_overflow_undo in a
+       * tight loop).  To avoid this performance issue, it is best
+       * to transfer a certain number of frames, but no more than
+       * up to the break frame.
+       */
+
+      fp = prev_alloc_stack_ptr;
+      frame_count = 0; /* count of frames to transfer */
+
+      for (;;)
         {
-          ALLOC_MEM_UNLOCK();
+          int fs, link;
+          ___WORD ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
+          ___WORD ra2;
+
+          frame_count++;
+
+          if (ra1 == ___GSTATE->internal_return)
+            {
+              ___WORD actual_ra = ___FP_STK(fp,___RETI_RA);
+              ___RETI_GET_FS_LINK(actual_ra,fs,link)
+            }
+          else
+            {
+              ___RETN_GET_FS_LINK(ra1,fs,link)
+            }
+
+          ___FP_ADJFP(fp,-___FRAME_SPACE(fs)) /* get base of frame */
+
+          ra2 = ___FP_STK(fp,link+1);
+
+          words = fp - prev_alloc_stack_ptr;
+
+          if (fp == prev_stack_break)
+            {
+              /* reached the break frame */
+
+              /* best to not transfer any frames to new stack msection */
+
+              /*
+               * Add a break frame.
+               */
+
+              ___FP_ADJFP(alloc_stack_ptr,___BREAK_FRAME_SPACE)
+              ___FP_SET_STK(alloc_stack_ptr,
+                            -___BREAK_FRAME_NEXT,
+                            ___CAST(___WORD,prev_alloc_stack_ptr))
+              ___ps->stack_break = alloc_stack_ptr;
+
+              fp = alloc_stack_ptr;
+
+              break;
+            }
+
+          ___FP_SET_STK(fp,-___FRAME_STACK_RA,ra2)
+
+          words = fp - prev_alloc_stack_ptr;
+
+          if (frame_count >= 5 || words >= 100)
+            {
+              /* reached max frame count or max volume */
+
+              /*
+               * Save state of previous stack msection in the
+               * first break frame of new stack msection to allow
+               * returning to the previous stack msection when
+               * ___stack_overflow_undo is called.
+               */
+
+              ___FP_SET_STK(alloc_stack_ptr,
+                            -___FIRST_BREAK_FRAME_STACK_MSECTION,
+                            ___CAST(___WORD,prev_stack_msection))
+
+              ___FP_SET_STK(alloc_stack_ptr,
+                            -___FIRST_BREAK_FRAME_STACK_BREAK,
+                            ___CAST(___WORD,prev_stack_break))
+
+              ___FP_SET_STK(alloc_stack_ptr,
+                            -___BREAK_FRAME_NEXT,
+                            ___CAST(___WORD,fp))
+
+              ___ps->stack_break = alloc_stack_ptr;
+
+              memmove (alloc_stack_ptr - words,
+                       prev_alloc_stack_ptr,
+                       words << ___LWS);
+
+              ___FP_SET_STK(alloc_stack_ptr,
+                            link+1,
+                            ___GSTATE->handler_break)
+
+              ___FP_ADJFP(alloc_stack_ptr, words)
+
+              break;
+            }
         }
+
+      stack_msection_stop_using (___ps, prev_alloc_stack_start, fp);
+    }
+
+  prepare_mem_pstate (___ps);
+
+  return 0;
+}
+
+
+___WORD ___stack_overflow_undo_if_possible
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  ___D_FP
+  ___R_FP
+
+  if (stack_msection != heap_msection &&
+      ___ps->stack_start == &___STK(-___FIRST_BREAK_FRAME_SPACE))
+    {
+      /*
+       * The current stack msection is not shared with the heap and
+       * the break frame is at the start of the stack msection, so
+       * the stack can be moved to the previous stack msection.
+       */
+
+      stack_msection->base[0] = ___CAST(___WORD,msection_free_list);
+      msection_free_list = stack_msection;
+
+      set_stack_msection (___ps,
+                          ___CAST(___msection*,
+                                  ___STK(-___FIRST_BREAK_FRAME_STACK_MSECTION)));
+
+      ___ps->stack_break =
+        ___CAST(___WORD*,___STK(-___FIRST_BREAK_FRAME_STACK_BREAK));
+
+      alloc_stack_ptr =
+        ___CAST(___WORD*,___STK(-___BREAK_FRAME_NEXT));
+
+      ___ps->stack_start = alloc_stack_start;
+
+      stack_msection_resume_using (___ps, alloc_stack_start, alloc_stack_ptr);
 
       prepare_mem_pstate (___ps);
 
-      return 0;
-    }
-  else
-    {
-      ALLOC_MEM_UNLOCK();
+      ___SET_FP(alloc_stack_ptr)
+
+      return ___FRAME_FETCH_RA;
     }
 
-  return 1;
+  return ___FAL;
 }
 
 

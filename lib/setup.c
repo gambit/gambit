@@ -2899,8 +2899,10 @@ ___SCMOBJ proc;
 ___SCMOBJ stack_marker;)
 {
   ___PSGET
-  ___SCMOBJ *___fp = ___ps->fp;
   ___SCMOBJ ___err;
+
+  ___D_FP
+  ___SET_FP(___PSFP)
 
   /*
    * The C function which has called ___call() has put the arguments

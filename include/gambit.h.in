@@ -3689,7 +3689,7 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 
 #define ___THREAD_RESTORE \
 { ___SCMOBJ cont = ___FIELD(thread,___THREAD_CONT); \
-  ___fp = ___ps->stack_break; \
+  ___SET_FP(___ps->stack_break) \
   ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
   ___FIELD(cont,___CONTINUATION_FRAME) = ___END_OF_CONT_MARKER; \
   ___INTERRUPT_MASK_SET(___FIELD(___FIELD(thread,___THREAD_DENV),___DENV_INTERRUPT_MASK)); \
@@ -3870,7 +3870,7 @@ ___ps->stack_break = ___fp;
 }
 
 #define ___CONTINUATION_GRAFT_NO_WINDING \
-___fp = ___ps->stack_break; \
+___SET_FP(___ps->stack_break) \
 ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
 temp = ___FIELD(cont,___CONTINUATION_DENV); \
 thread = ___CURRENTTHREAD; \
@@ -3937,7 +3937,7 @@ ___SET_R0(___GSTATE->handler_break)
   ___SCMOBJ thread; \
   ___POP_ARGS2(cont,result) \
   ___SET_R1(result) \
-  ___fp = ___ps->stack_break; \
+  ___SET_FP(___ps->stack_break) \
   ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
   temp = ___FIELD(cont,___CONTINUATION_DENV); \
   thread = ___CURRENTTHREAD; \
@@ -3952,6 +3952,8 @@ ___SET_R0(___GSTATE->handler_break)
 /*---------------------------------------------------------------------------*/
 
 /* Stack manipulation */
+
+#define ___SET_FP(fp)___fp=(fp);
 
 #define ___FP_AFTER(fp1,fp2)((fp1) < (fp2))
 #define ___FP_PUSH(fp,val)*--fp=(val);
@@ -4148,7 +4150,7 @@ switch((___pc-=___start)/(___LS*___WS)) \
 
 #define ___PSFP ___ps->fp
 #define ___D_FP register ___WORD *___fp;
-#define ___R_FP ___fp=___PSFP;
+#define ___R_FP ___SET_FP(___PSFP)
 #define ___W_FP ___PSFP=___fp;
 
 /*---------------------------------------------------------------------------*/
@@ -6132,8 +6134,11 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 
 #define ___CEILING_DIV(n,m)(((n)+(m)-1)/(m))
 #define ___ROUND_TO_MULT(n,m)(___CEILING_DIV(n,m)*(m))
-#define ___BREAK_FRAME_NEXT 1/********************should be 0*/
+#define ___BREAK_FRAME_NEXT 1
 #define ___BREAK_FRAME_SPACE ___ROUND_TO_MULT(1,___FRAME_ALIGN)
+#define ___FIRST_BREAK_FRAME_STACK_MSECTION 2
+#define ___FIRST_BREAK_FRAME_STACK_BREAK    3
+#define ___FIRST_BREAK_FRAME_SPACE ___ROUND_TO_MULT(3,___FRAME_ALIGN)
 
 #define ___FRAME_SPACE(n)___ROUND_TO_MULT((n)+___FRAME_RESERVE,___FRAME_ALIGN)
 #define ___FRAME_RESERVE 3
@@ -8203,6 +8208,9 @@ typedef struct ___pstate_mem_struct {
 
 /* location of tospace in each msection */
 ___SIZE_TS tospace_offset_;
+
+/* msection free list */
+___msection *msection_free_list_;
 
 /* msection where continuation frames are currently being allocated */
 ___msection *stack_msection_;

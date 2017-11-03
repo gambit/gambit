@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -980,7 +980,8 @@ end-of-code
     *
     * This is the break handler.  It is invoked when a procedure
     * attempts to return to its caller and the caller's stack frame
-    * is not on top of the stack because it has been captured.
+    * is not on top of the stack because it has been captured or
+    * the frame was created following a stack section overflow.
     *
     * At this point the callee will have cleaned up the stack so that the
     * frame pointer (___fp) points to the break frame.  The break frame
@@ -1016,12 +1017,17 @@ end-of-code
     * These cases are distinguished by the tag on the pointer to the
     * caller's frame (i.e. 'call frame').
     *
-    * The break handler puts a copy of the caller's frame on the top of
-    * the stack except that the slot 'link' is set to the address of the
-    * break handler.  The frame pointer in the break frame is modified
-    * so that it points to the frame of the caller's caller.  Finally a
-    * jump to the return address in the caller's frame (ret_adr1) is
-    * performed.  At that point the stack will be in the following state
+    * If the break frame was created following a stack section overflow
+    * it will be the first of a new stack section.  In this case the break
+    * handler simply sets the stack pointer to the caller's frame and
+    * resumes execution at the return address in the caller's frame.
+    *
+    * Otherwise, the break handler puts a copy of the caller's frame on
+    * the top of the stack except that the slot 'link' is set to the
+    * address of the break handler.  The frame pointer in the break frame
+    * is modified so that it points to the frame of the caller's caller.
+    * Finally a jump to the return address in the caller's frame (ret_adr1)
+    * is performed.  At that point the stack will be in the following state
     * respectively:
     *
     *              STACK                      STACK              HEAP
@@ -1082,44 +1088,57 @@ end-of-code
 
        fp = ___CAST(___SCMOBJ*,cf);
 
-       ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
+       ___W_FP
+       ra1 = ___stack_overflow_undo_if_possible (___PSPNC);
+       ___R_FP
 
-       if (ra1 == ___GSTATE->internal_return)
+       if (ra1 == ___FAL)
          {
-           ___SCMOBJ actual_ra = ___FP_STK(fp,___RETI_RA);
-           ___RETI_GET_FS_LINK(actual_ra,fs,link)
-           ___COVER_BREAK_HANDLER_STACK_RETI;
-         }
-       else
-         {
-           ___RETN_GET_FS_LINK(ra1,fs,link)
-           ___COVER_BREAK_HANDLER_STACK_RETN;
-         }
+           /*
+            * The caller's frame must be copied to the top of stack.
+            */
 
-       ___FP_ADJFP(fp,-___FRAME_SPACE(fs)); /* get base of frame */
+           ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
-       for (i=fs; i>0; i--)
-         ___SET_STK(i,___FP_STK(fp,i))
+           if (ra1 == ___GSTATE->internal_return)
+             {
+               ___SCMOBJ actual_ra = ___FP_STK(fp,___RETI_RA);
+               ___RETI_GET_FS_LINK(actual_ra,fs,link)
+               ___COVER_BREAK_HANDLER_STACK_RETI;
+             }
+           else
+             {
+               ___RETN_GET_FS_LINK(ra1,fs,link)
+               ___COVER_BREAK_HANDLER_STACK_RETN;
+             }
 
-       ra2 = ___STK(link+1);
+           ___FP_ADJFP(fp,-___FRAME_SPACE(fs)); /* get base of frame */
 
-       if (ra2 == ___GSTATE->handler_break)
-         {
-           /* first frame of that section */
+           for (i=fs; i>0; i--)
+             ___SET_STK(i,___FP_STK(fp,i))
 
-           ___COVER_BREAK_HANDLER_STACK_FIRST_FRAME;
-           ___SET_STK(-___BREAK_FRAME_NEXT,
-                      ___FP_STK(fp,-___BREAK_FRAME_NEXT))
-         }
-       else
-         {
-           /* not the first frame of that section */
+           ra2 = ___STK(link+1);
 
-           ___COVER_BREAK_HANDLER_STACK_NOT_FIRST_FRAME;
+           if (ra2 == ___GSTATE->handler_break)
+             {
+               /* first frame of that section */
 
-           ___FP_SET_STK(fp,-___FRAME_STACK_RA,ra2)
-           ___SET_STK(-___BREAK_FRAME_NEXT,___CAST(___SCMOBJ,fp))
-           ___SET_STK(link+1,___GSTATE->handler_break)
+               ___COVER_BREAK_HANDLER_STACK_FIRST_FRAME;
+               ___SET_STK(-___BREAK_FRAME_NEXT,
+                          ___FP_STK(fp,-___BREAK_FRAME_NEXT))
+             }
+           else
+             {
+               /* not the first frame of that section */
+
+               ___COVER_BREAK_HANDLER_STACK_NOT_FIRST_FRAME;
+
+               ___FP_SET_STK(fp,-___FRAME_STACK_RA,ra2)
+               ___SET_STK(-___BREAK_FRAME_NEXT,___CAST(___SCMOBJ,fp))
+               ___SET_STK(link+1,___GSTATE->handler_break)
+             }
+
+           ___ADJFP(___FRAME_SPACE(fs))
          }
      }
    else
@@ -1149,9 +1168,9 @@ end-of-code
 
        ___SET_STK(-___BREAK_FRAME_NEXT,___STK(link+1))
        ___SET_STK(link+1,___GSTATE->handler_break)
-     }
 
-   ___ADJFP(___FRAME_SPACE(fs))
+       ___ADJFP(___FRAME_SPACE(fs))
+     }
 
    ___JUMPEXTPRM(___NOTHING,ra1)
 

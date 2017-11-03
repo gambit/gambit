@@ -1,6 +1,6 @@
 /* File: "mem.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___MEM_H
 #define ___MEM_H
@@ -128,6 +128,11 @@ extern ___BOOL ___stack_limit
         ());
 
 #endif
+
+
+extern ___WORD ___stack_overflow_undo_if_possible
+   ___P((___PSDNC),
+        ());
 
 
 #ifdef ___DEBUG_HEAP_LIMIT
