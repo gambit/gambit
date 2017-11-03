@@ -24,6 +24,11 @@
 (check-eqv? (expt -1 (expt 2 10000)) 1)
 (check-eqv? (expt -1 (+ 1 (expt 2 10000))) -1)
 
+;; The following check was added as a result of issue #303 (faulty
+;; C library ldexp and pow functions on OpenBSD/mips64el up to 6.2).
+;; See: http://openbsd-archive.7691.n7.nabble.com/pow-returns-a-negative-result-on-loongson-td327877.html
+(check-false (negative? (expt 0.5 1074.0)))
+
 ;;; Test exceptions
 
 (check-tail-exn type-exception? (lambda () (expt 'a 2)))
