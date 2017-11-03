@@ -473,7 +473,7 @@ ___sigset_type *oldset;)
   sigemptyset (&sigs);
   sigaddset (&sigs, sig);
 
-  ___thread_sigmask (how, &sigs, oldset);
+  return ___thread_sigmask (how, &sigs, oldset);
 }
 
 #endif
