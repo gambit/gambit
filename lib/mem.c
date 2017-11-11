@@ -3148,6 +3148,8 @@ ___virtual_machine_state ___vms;)
 
       tospace_offset = fromspace_offset;  /* Flip fromspace and tospace */
 
+      msection_free_list = 0;
+
       words_prev_msections = 0;
 
       stack_msection = 0;
@@ -3400,6 +3402,10 @@ ___WORD *orig_ptr;)
 
   cf = *ptr;
 
+#ifdef SHOW_FRAMES
+  ___printf ("mark_captured_continuation cf=%p\n", ___CAST(void*,cf));
+#endif
+
   if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
     {
       /* continuation frame is in the stack */
@@ -3415,6 +3421,10 @@ ___WORD *orig_ptr;)
 
       ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
+#ifdef SHOW_FRAMES
+        ___printf ("  frame [ra=%p] ", ___CAST(void*,ra1));
+#endif
+
       if (ra1 == ___GSTATE->internal_return)
         {
           ___WORD actual_ra = ___FP_STK(fp,___RETI_RA);
@@ -3426,6 +3436,12 @@ ___WORD *orig_ptr;)
           ___RETN_GET_FS_LINK(ra1,fs,link)
           ___COVER_MARK_CAPTURED_CONTINUATION_RETN;
         }
+
+#ifdef SHOW_FRAMES
+        ___printf ("fs=%d link=%d fp=%p ra=", fs, link, fp);
+        print_value (ra1);
+        ___printf ("\n");
+#endif
 
       ___FP_ADJFP(fp,-___FRAME_SPACE(fs)) /* get base of frame */
 
@@ -3632,13 +3648,17 @@ ___PSDKR)
 
   fp = ___ps->fp;
 
+#ifdef SHOW_FRAMES
+  ___printf ("mark_continuation fp=%p\n", fp);
+#endif
+
   if (fp != ___ps->stack_break)
     for (;;)
       {
         ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
 #ifdef SHOW_FRAMES
-        ___printf ("continuation frame [fp=%p ra1=0x%016x], ", fp, ra1);
+        ___printf ("  frame [ra=%p] ", ___CAST(void*,ra1));
 #endif
 
         if (ra1 == ___GSTATE->internal_return)
@@ -3664,9 +3684,7 @@ ___PSDKR)
 
 #ifdef SHOW_FRAMES
         if (fp == ___ps->stack_break)
-          ___printf (" (first frame)\n");
-        else
-          ___printf (" (not first frame)\n");
+          ___printf ("  (first frame above break frame)\n");
 #endif
 
         mark_frame (___PSP fp, fs, gcmap, nextgcmap);
@@ -3821,7 +3839,8 @@ ___WORD *body;)
         ___WORD frame;
 
 #ifdef SHOW_FRAMES
-        ___printf ("___sFRAME object, ");
+        ___printf ("___sFRAME object\n");
+        ___printf ("  frame [ra=%p] ", ___CAST(void*,ra));
 #endif
 
         if (ra == ___GSTATE->internal_return)
@@ -6431,12 +6450,13 @@ ___PSDKR)
        * the stack can be moved to the previous stack msection.
        */
 
+      ___msection *ms = ___CAST(___msection*,
+                                ___STK(-___FIRST_BREAK_FRAME_STACK_MSECTION));
+
       stack_msection->base[0] = ___CAST(___WORD,msection_free_list);
       msection_free_list = stack_msection;
 
-      set_stack_msection (___ps,
-                          ___CAST(___msection*,
-                                  ___STK(-___FIRST_BREAK_FRAME_STACK_MSECTION)));
+      set_stack_msection (___ps, ms);
 
       ___ps->stack_break =
         ___CAST(___WORD*,___STK(-___FIRST_BREAK_FRAME_STACK_BREAK));
