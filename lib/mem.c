@@ -6524,30 +6524,51 @@ ___PSDKR)
     check_fudge_used (___PSPNC);
 #endif
 
-  ALLOC_MEM_LOCK();
+  {
+    /*
+     * Get a new heap msection.
+     */
 
-  if (
+    ___msection *ms = msection_free_list;
+
+    if (stack_msection != heap_msection &&
+        ms != NULL)
+      {
+        /* we can reuse an existing one */
+
+        msection_free_list = ___CAST(___msection*,ms->base[0]);
+
+        set_heap_msection (___ps, ms);
+      }
+    else
+      {
+        /* we need to allocate a new msection */
+
+        ALLOC_MEM_LOCK();
+
+        if (
 #ifdef CALL_GC_FREQUENTLY
-      --___gc_calls_to_punt >= 0 &&
+            --___gc_calls_to_punt >= 0 &&
 #endif
-      compute_free_heap_space() >= ___MSECTION_SIZE)
-    {
-      if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
-        next_heap_msection_without_locking (___ps);
+            compute_free_heap_space() >= ___MSECTION_SIZE)
+          {
+            if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
+              next_heap_msection_without_locking (___ps);
 
-      ALLOC_MEM_UNLOCK();
+            ALLOC_MEM_UNLOCK();
+          }
+        else
+          {
+            ALLOC_MEM_UNLOCK();
 
-      prepare_mem_pstate (___ps);
+            return 1; /* trigger GC */
+          }
+      }
+  }
 
-      return 0;
-    }
-  else
-    {
+  prepare_mem_pstate (___ps);
 
-      ALLOC_MEM_UNLOCK();
-    }
-
-  return 1;
+  return 0;
 }
 
 
