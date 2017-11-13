@@ -386,17 +386,20 @@
   (define (append-2-non-null x y arg-num)
     ;; x!=(), returns fixnum on error
     (if (##pair? x)
-        (let ((head (##car x))
-              (tail (##cdr x)))
-          (macro-force-vars (tail)
-            (if (##null? tail)
-                (##cons head y)
-                (let ((result (append-2-non-null tail y arg-num)))
-                  (macro-if-checks
-                   (if (##fixnum? result)
-                       result
-                       (##cons head result))
-                   (##cons head result))))))
+        (let ((result (##cons (##car x) '())))
+          (let loop ((last result) (tail (##cdr x)))
+            (macro-force-vars (tail)
+              (if (##pair? tail)
+                  (let ((next (##cons (##car tail) '())))
+                    (##set-cdr! last next)
+                    (loop next (##cdr tail)))
+                  (begin
+                    (##set-cdr! last y)
+                    (macro-if-checks
+                     (if (##null? tail)
+                         result
+                         arg-num) ;; error: list expected
+                     result))))))
         (macro-if-checks
          arg-num ;; error: list expected
          y)))
