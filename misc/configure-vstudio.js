@@ -33,7 +33,6 @@
  *   C:\gambit>type hello.scm
  *   (display "Hello World!\n")
  *
- *
  * The script accepts a subset of the configure script options.
  * The supported options are:
  *
