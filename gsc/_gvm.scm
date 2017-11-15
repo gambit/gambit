@@ -1871,6 +1871,9 @@
 (define show-frame? #f)
 (set! show-frame? #t)
 
+(define show-source-location? #f)
+(set! show-source-location? #f)
+
 (define (virtual.dump-gvm procs port)
 
   (define (dump-proc p)
@@ -1916,8 +1919,9 @@
                         (if (and loc (string? (vector-ref loc 0)))
                             (+ (**filepos-line (vector-ref loc 1)) 1)
                             prev-line)))
-                  (if (or (not (string=? filename prev-filename))
-                          (not (= line prev-line)))
+                  (if (and show-source-location?
+                           (or (not (string=? filename prev-filename))
+                               (not (= line prev-line))))
                       (begin
                         (display "#line " port)
                         (display line port)
@@ -2461,21 +2465,26 @@
 
 (define (write-frame frame port)
 
-  (define (write-var var opnd sep)
+  (define (write-opnd var opnd sep)
     (display sep port)
     (write-gvm-opnd opnd port)
     (if var
-      (begin
-        (display "=" port)
-        (cond ((eq? var closure-env-var)
-               (write (map var-name (frame-closed frame))
-                      port))
-              ((eq? var ret-var)
-               (display "#" port))
-              ((temp-var? var)
-               (display "." port))
-              (else
-               (write (var-name var) port))))))
+        (begin
+          (display "=" port)
+          (write-var var port))))
+
+  (define (write-var var sep)
+    (cond ((not var)
+           (display "." port))
+          ((eq? var closure-env-var)
+           (write (map var-name (frame-closed frame))
+                  port))
+          ((eq? var ret-var)
+           (display "#ret" port))
+          ((temp-var? var)
+           (display "#" port))
+          (else
+           (write (var-name var) port))))
 
   (define (live? var)
     (let ((live (frame-live frame)))
@@ -2485,19 +2494,26 @@
                  live
                  (list->varset (frame-closed frame)))))))
 
-  (let loop1 ((i 1) (l (reverse (frame-slots frame))) (sep "; "))
-    (if (pair? l)
-      (let ((var (car l)))
-        (write-var (if (live? var) var #f) (make-stk i) sep)
-        (loop1 (+ i 1) (cdr l) " "))
-      (let loop2 ((i 0) (l (frame-regs frame)) (sep sep))
-        (if (pair? l)
+  (let ((slots (reverse (frame-slots frame)))
+        (regs (frame-regs frame)))
+    (display "[" port)
+    (let loop1 ((i 1) (l slots) (sep ""))
+      (if (pair? l)
           (let ((var (car l)))
-            (if (live? var)
-              (begin
-                (write-var var (make-reg i) sep)
-                (loop2 (+ i 1) (cdr l) " "))
-              (loop2 (+ i 1) (cdr l) sep))))))))
+            (display sep port)
+            (write-var (if (live? var) var #f) sep)
+            (loop1 (+ i 1) (cdr l) " "))
+          (display "]" port)))
+    (if (pair? regs)
+        (begin
+          (let loop2 ((i 0) (l regs) (sep " "))
+            (if (pair? l)
+                (let ((var (car l)))
+                  (if (live? var)
+                      (begin
+                        (write-opnd var (make-reg i) sep)
+                        (loop2 (+ i 1) (cdr l) " "))
+                      (loop2 (+ i 1) (cdr l) sep)))))))))
 
 (define (format-gvm-instr gvm-instr)
 

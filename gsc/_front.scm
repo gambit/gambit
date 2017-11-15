@@ -3585,7 +3585,12 @@
                                                (let ((val (obj-val opnd)))
                                                  (and (proc-obj? val)
                                                       (proc-obj-primitive? val))))))
-                                (current-frame liv)
+                                (current-frame
+                                 (if return-lbl
+                                     (let ((ret-v (make-temp-var 0)))
+                                       (put-var (make-reg 0) ret-v)
+                                       (varset-adjoin liv ret-v))
+                                     liv))
                                 (node->comment node)))
 
                               ; ==== FIFTH: put return label if there is one
