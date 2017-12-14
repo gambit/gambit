@@ -93,7 +93,7 @@
      init))
 
   (define (continuation-capture-procedure ctx nb-args thread-save?)
-    (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+    (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx)))))
       (univ-jumpable-declaration-defs
        ctx
        #t
@@ -185,16 +185,16 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (new-nb-args
                 (- nb-args 2))
                (new-nb-stacked
-                (max 0 (- new-nb-args univ-nb-arg-regs)))
+                (max 0 (- new-nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow)))
           (^ (univ-foldr-range
               1
-              (max 2 (- nb-args univ-nb-arg-regs))
+              (max 2 (- nb-args (univ-nb-arg-regs ctx)))
               (^)
               (lambda (i rest)
                 (^ rest
@@ -274,7 +274,7 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow))
                (arg1
@@ -602,7 +602,7 @@
      init))
 
   (define (continuation-capture-procedure nb-args thread-save?)
-    (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+    (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx)))))
       (univ-jumpable-declaration-defs
        ctx
        #t
@@ -694,16 +694,16 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (new-nb-args
                 (- nb-args 2))
                (new-nb-stacked
-                (max 0 (- new-nb-args univ-nb-arg-regs)))
+                (max 0 (- new-nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow)))
           (^ (univ-foldr-range
               1
-              (max 2 (- nb-args univ-nb-arg-regs))
+              (max 2 (- nb-args (univ-nb-arg-regs ctx)))
               (^)
               (lambda (i rest)
                 (^ rest
@@ -783,7 +783,7 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow))
                (arg1
@@ -2759,7 +2759,7 @@ EOF
          ctx
          "\n"
          (lambda (ctx)
-           (^ (^setreg (+ univ-nb-arg-regs 1) (^this))
+           (^ (^setreg (+ (univ-nb-arg-regs ctx) 1) (^this))
               (^return
                (^cast*-jumpable
                 (^array-index (^member (^this) 'slots) (^int 0)))))))))))
@@ -2812,7 +2812,7 @@ EOF
                       '()
                       (^ (^if (^= msg (^bool #t))
                               (^return slots))
-                         (^setreg (+ univ-nb-arg-regs 1) (^prefix closure))
+                         (^setreg (+ (univ-nb-arg-regs ctx) 1) (^prefix closure))
                          (^return (^array-index slots (^int 0)))))
                      (^return (^prefix closure))))))))))))
 

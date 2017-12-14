@@ -731,7 +731,7 @@
                    (define (add! x)
                      (set! globals (cons x globals)))
 
-                   (let loop ((num (- univ-nb-gvm-regs 1)))
+                   (let loop ((num (- (univ-nb-gvm-regs ctx) 1)))
                      (if (>= num 0)
                          (begin
                            (if (used? num) (add! (gvm-state-reg ctx num)))

@@ -211,7 +211,7 @@
   (virtual.begin!)
 
   (let ((target-name (cadr (assq 'target opts))))
-    (target-select! target-name info-port))
+    (target-select! target-name opts info-port))
 
   (let* ((output-filename
           (and output-filename-gen
@@ -278,7 +278,6 @@
                  (result
                   (inner parsed-program
                          env
-                         opts
                          root
                          output
                          module-name
@@ -316,7 +315,6 @@
              info-port
              (lambda (parsed-program
                       env
-                      opts
                       root
                       output
                       module-name
@@ -388,8 +386,7 @@
                   output
                   c-intf
                   module-descr
-                  unique-name
-                  opts)
+                  unique-name)
 
                  (dump-c-intf module-procs root c-intf)
 
@@ -432,7 +429,6 @@
         #f
         (lambda (parsed-program
                  env
-                 opts
                  root
                  output
                  module-name
