@@ -779,6 +779,8 @@ thread-group->thread-list
 thread-group->thread-vector
 thread-group-name
 thread-group-parent
+thread-group-specific
+thread-group-specific-set!
 thread-group-resume!
 thread-group-suspend!
 thread-group-terminate!

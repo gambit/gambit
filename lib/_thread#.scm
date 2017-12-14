@@ -3909,6 +3909,9 @@
   (suspend-condvar
    macro-tgroup-suspend-condvar
    macro-tgroup-suspend-condvar-set!)
+  (specific
+   macro-tgroup-specific
+   macro-tgroup-specific-set!)
   (unused1
    macro-tgroup-unused1
    macro-tgroup-unused1-set!)
@@ -3927,9 +3930,6 @@
   (unused6
    macro-tgroup-unused6
    macro-tgroup-unused6-set!)
-  (unused7
-   macro-tgroup-unused7
-   macro-tgroup-unused7-set!)
   (threads-deq-next ;; must be at same pos as the same name field in a thread
    macro-tgroup-threads-deq-next
    macro-tgroup-threads-deq-next-set!)

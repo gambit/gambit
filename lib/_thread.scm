@@ -4468,6 +4468,18 @@
     (macro-check-tgroup tgroup 1 (thread-group-parent tgroup)
       (macro-tgroup-parent tgroup))))
 
+(define-prim (thread-group-specific tgroup)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group-specific tgroup)
+      (macro-tgroup-specific tgroup))))
+
+(define-prim (thread-group-specific-set! tgroup obj)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group-specific-set! tgroup obj)
+      (begin
+        (macro-tgroup-specific-set! tgroup obj)
+        (##void)))))
+
 (define-prim (thread-group-suspend! tgroup)
   (macro-force-vars (tgroup)
     (macro-check-tgroup tgroup 1 (thread-group-suspend! tgroup)
@@ -7845,6 +7857,18 @@
     (macro-check-tgroup tgroup 1 (thread-group-parent tgroup)
       (macro-tgroup-parent tgroup))))
 
+(define-prim (thread-group-specific tgroup)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group-specific tgroup)
+      (macro-tgroup-specific tgroup))))
+
+(define-prim (thread-group-specific-set! tgroup obj)
+  (macro-force-vars (tgroup)
+    (macro-check-tgroup tgroup 1 (thread-group-specific-set! tgroup obj)
+      (begin
+        (macro-tgroup-specific-set! tgroup obj)
+        (##void)))))
+
 (define-prim (thread-group-suspend! tgroup)
   (macro-force-vars (tgroup)
     (macro-check-tgroup tgroup 1 (thread-group-suspend! tgroup)
@@ -8594,9 +8618,9 @@
    (##declare (not interrupts-enabled))
    (set! ##deferred-user-interrupt? #t)
    (##void))
-     
+
 (define defer-user-interrupts ##defer-user-interrupts)
-     
+
 (define ##current-user-interrupt-handler
   (##make-parameter
    ##defer-user-interrupts
