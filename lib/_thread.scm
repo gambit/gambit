@@ -3421,9 +3421,11 @@
 
 (define-prim (##thread-send thread obj)
   (##declare (not interrupts-enabled))
-  (if ##thread-send-hook
-    (##thread-send-hook thread obj))
-  (let* ((mb
+  (let* ((obj
+          (if ##thread-send-hook
+            (##thread-send-hook thread obj)
+            obj))
+         (mb
           (##thread-mailbox-get! thread))
          (mutex
           (macro-mailbox-mutex mb)))
@@ -7044,9 +7046,11 @@
 
 (define-prim (##thread-send thread obj)
   (##declare (not interrupts-enabled))
-  (if ##thread-send-hook
-    (##thread-send-hook thread obj))
-  (let* ((mb
+  (let* ((obj
+          (if ##thread-send-hook
+            (##thread-send-hook thread obj)
+            obj))
+         (mb
           (##thread-mailbox-get! thread))
          (mutex
           (macro-mailbox-mutex mb)))
