@@ -13,6 +13,7 @@
 
 @ifinfo
 @format
+INFO-DIR-SECTION Programming
 START-INFO-DIR-ENTRY
 * Gambit: (gambit).		A portable implementation of Scheme.
 * gsi: (gambit) interpreter.	Gambit interpreter.
