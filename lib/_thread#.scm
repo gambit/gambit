@@ -1897,7 +1897,10 @@
    macro-tgroup-tgroups)
   (name
    macro-tgroup-name)
-  unused-field6
+  (specific
+   macro-tgroup-specific
+   macro-tgroup-specific-set!)
+
   unused-field7
 
   (parent ;; thread-group this thread-group belongs to
