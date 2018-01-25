@@ -10,6 +10,9 @@
 (include-adt "_gvmadt.scm")
 (include-adt "_ptreeadt.scm")
 (include-adt "_sourceadt.scm")
+(include-adt "_x86#.scm")
+(include-adt "_asm#.scm")
+(include-adt "_codegen#.scm")
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -222,30 +225,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; ***** DUMPING OF A COMPILATION MODULE
-
-(define (cpu-dump targ
-                  procs
-                  output
-                  c-intf
-                  module-descr
-                  unique-name
-                  sem-changing-options
-                  sem-preserving-options)
-
-  (pretty-print (list 'cpu-dump
-                      (target-name targ)
-                      (map proc-obj-name procs)
-                      output
-                      unique-name))
-
-  ;; for now just display the GVM code
-  (virtual.dump-gvm procs (current-output-port))
-
-  #f)
-
-;;;----------------------------------------------------------------------------
-
 ;; ***** INLINING OF PRIMITIVES
 
 (define (cpu-inlinable name)
@@ -265,4 +244,600 @@
 
 (cpu-testable "##fx<")
 
+;;;----------------------------------------------------------------------------
+
+;; ***** DUMPING OF A COMPILATION MODULE
+
+(define (cpu-dump targ
+                  procs
+                  output
+                  c-intf
+                  module-descr
+                  unique-name
+                  sem-changing-options
+                  sem-preserving-options)
+
+  (pretty-print (list 'cpu-dump
+                      (target-name targ)
+                      (map proc-obj-name procs)
+                      output
+                      unique-name))
+  
+  (let ((port (current-output-port)))
+      (virtual.dump-gvm procs port)
+      (dispatch-target targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
+  #f))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** Dispatching
+
+(define (dispatch-target targ
+                         procs
+                         output
+                         c-intf
+                         module-descr
+                         unique-name
+                         sem-changing-options
+                         sem-preserving-options)
+        (let* ((arch (target-name targ))
+               (handler (case arch
+                        ('x86     x86-backend)
+                        ('x86-64  x86-64-backend)
+                        ('arm     armv8-backend)
+                        (else (compiler-internal-error "dispatch-target, unsupported target: " arch))))
+               (cgc (make-codegen-context)))
+
+          (codegen-context-listing-format-set! cgc 'gnu)
+
+          (handler
+            targ procs output c-intf
+            module-descr unique-name
+            sem-changing-options sem-preserving-options
+            cgc)))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** Label table
+
+(define nat-labels (make-table test: eq?))
+
+(define (get-label cgc proc-name gvm-lbl)
+  (define (nat-label-ref label-id)
+    (let ((x (table-ref nat-labels label-id #f)))
+      (if x
+          x
+          (let ((l  (asm-make-label cgc label-id)))
+            (table-set! nat-labels label-id l)
+            l))))
+
+  (let ((id (lbl->id gvm-lbl (replace_whitespace proc-name))))
+    (nat-label-ref id)))
+
+(define (lbl->id num proc_name)
+  (string->symbol (string-append "_"
+                                 (number->string num)
+                                 "_"
+                                 proc_name)))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** x64 code generation
+
+(define (x86-64-backend targ
+                        procs
+                        output
+                        c-intf
+                        module-descr
+                        unique-name
+                        sem-changing-options
+                        sem-preserving-options
+                        cgc)
+                        
+  (define (encode-proc proc)
+    (map-proc-instrs
+      (lambda (code)
+        (x64-encode-gvm-instr cgc proc code))
+      proc))
+
+  (debug "x86-64-backend\n")
+  (asm-init-code-block cgc 0 'le)
+  (x86-arch-set! cgc 'x86-64)
+
+  (add-start-routine cgc)
+  ; (encode-proc (car procs))
+  (map-on-procs encode-proc procs)
+  (add-end-routine cgc)
+  (asm-assemble-to-u8vector cgc)
+  (codegen-context-fixup-list cgc)
+  (asm-display-listing cgc (current-error-port) #f))
+
+;; ***** Constants and helper functions
+
+  (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
+
+  (define r0 (x86-r15)) ;; GVM r0 = x86 r15
+  (define r1 (x86-r14)) ;; GVM r1 = x86 r14
+  (define r2 (x86-r13)) ;; GVM r2 = x86 r13
+  (define r3 (x86-r12)) ;; GVM r3 = x86 r12
+  (define r4 (x86-r11)) ;; GVM r4 = x86 r11
+  (define r5 (x86-r10)) ;; GVM r4 = x86 r10
+  (define na (x86-cl))  ;; number of arguments register
+  (define sp (x86-rsp))
+  (define fp (x86-rdx))
+  (define stack-size 10000) ;; Scheme stack size
+  (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
+
+  (define (get-register n) 
+    (vector-ref (vector r0 r1 r2 r3 r4 r5) n))
+
+  (define x64regs-work (list 15 14 13 12 11))
+  (define x64regs-unused (list 10 9 8))
+
+  (define (alloc-frame cgc n)
+    (if (< 0 n)
+      (x86-add cgc fp (x86-imm-int (* n -8)))))
+
+  (define (frame cgc fs n)
+    (x86-mem (* (+ fs (- n) offs) 8) fp))
+
+  (define (x64-gvm-opnd->x86-opnd cgc proc code opnd)
+    (display opnd)
+    (newline)
+    (cond 
+      ((reg? opnd)
+        (display "reg\n")
+        (get-register (reg-num opnd)))
+      ((stk? opnd)
+        (display "stk\n")
+        (frame cgc (proc-lbl-frame-size proc) (stk-num opnd)))
+      ((lbl? opnd)
+        (display "lbl\n")
+        (x86-imm-lbl (get-label cgc (proc-obj-name proc) (lbl-num opnd))))
+      ((obj? opnd)
+        (display "obj\n")
+        ; (display (obj-val opnd))
+        ; (display (string? (obj-val opnd)))
+        ; (newline)
+        (x86-imm-int (obj-val opnd) 64))
+      ((glo? opnd)
+        (compiler-internal-error "Opnd not implementeted global"))
+      ((clo? opnd)
+        (compiler-internal-error "Opnd not implementeted closure"))
+      (else
+        (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown opnd: " opnd))))
+
+;; ***** Environment code and primitive functions
+
+  (define (add-start-routine cgc)
+    (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
+  )
+
+  (define (add-end-routine cgc)
+    (x86-label cgc WRONG_NARGS_LBL)
+    (x86-jmp  cgc WRONG_NARGS_LBL) ;; infinite loop if wrong number of arguments)
+  )
+
+;; ***** x64 : GVM Instruction encoding
+
+  (define (x64-encode-gvm-instr cgc proc code)
+    ; (display "x64-encode-gvm-instr\n")
+    (case (gvm-instr-type (code-gvm-instr code))
+      ((label)  (x64-encode-label-instr   cgc proc code))
+      ((apply)  (x64-encode-apply-instr   cgc proc code))
+      ((copy)   (x64-encode-copy-instr    cgc proc code))
+      ((close)  (x64-encode-close-instr   cgc proc code))
+      ((ifjump) (x64-encode-ifjump-instr  cgc proc code))
+      ((switch) (x64-encode-switch-instr  cgc proc code))
+      ((jump)   (x64-encode-jump-instr    cgc proc code))
+      (else
+        (compiler-error
+          "format-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type gvm-instr)))))
+
+;; ***** Label instruction encoding
+
+  (define (x64-encode-label-instr cgc proc code)
+    (debug "x64-encode-label-instr\n")
+    (let* ((gvm-instr (code-gvm-instr code))
+          (proc-name (proc-obj-name proc))
+          (label-num (label-lbl-num gvm-instr))
+          (label (get-label cgc proc-name label-num))
+          (narg (label-entry-nb-parms gvm-instr)))
+
+      (if (not (eqv? 'simple (label-type gvm-instr)))
+          (asm-align cgc 4 1))
+
+      (x86-label cgc label)
+
+      (if (eqv? 'entry (label-type gvm-instr))
+        (add-narg-check cgc narg)))
+    (display "testabc"))
+
+  (define (add-narg-check cgc narg)
+    (debug "add-narg-check\n")
+    (display narg)
+    (cond
+      ((= narg 0)
+        (x86-jne cgc WRONG_NARGS_LBL))
+      ((= narg 1)
+        (x86-jp cgc WRONG_NARGS_LBL))
+      ((= narg 2)
+        (x86-jno cgc WRONG_NARGS_LBL))
+      ((= narg 3)
+        (x86-jns cgc WRONG_NARGS_LBL))
+      ((<= narg 34)
+          (x86-sub cgc na (x86-imm-int (make-parity-adjusted-valued narg)))
+          (x86-jne cgc WRONG_NARGS_LBL))
+      (else
+        (compiler-internal-error "Number of argument not supported: " narg))))
+
+  (define (make-parity-adjusted-valued n)
+    (define (bit-count n)
+      (if (= n 0)
+        0
+        (+ (modulo n 2) (bit-count (quotient n 2)))))
+    (let* ((narg2 (* 2 (- n 3)))
+          (bits (bit-count narg2))
+          (parity (modulo bits 2)))
+      (+ 64 parity narg2)))
+
+;; ***** (if)Jump instruction encoding
+
+  (define (x64-encode-jump-instr cgc proc code)
+    (debug "x64-encode-jump-instr\n")
+    (let* ((gvm-instr (code-gvm-instr code))
+          (proc-name (proc-obj-name proc))
+          (fs-lbl (proc-lbl-frame-size proc))
+          (fs-jmp (proc-jmp-frame-size proc))
+          (jmp-opnd (jump-opnd gvm-instr)))
+
+      ;; Pop stack if necessary
+      (alloc-frame cgc (- fs-jmp fs-lbl))
+
+      ;; TODO
+      ;; Poll/safe is specified (jump-poll?/jump-safe? gvm-instr)
+
+      ;; Save return address if necessary 
+      (if (jump-ret gvm-instr)
+        (let* ((label-ret-num (jump-ret gvm-instr))
+                (label-ret (get-label cgc proc-name label-ret-num))
+                (label-ret-opnd (x86-imm-lbl label-ret)))
+          (x86-mov cgc r0 label-ret-opnd)))
+
+      ;; Set arg count 
+      (if (jump-nb-args gvm-instr)
+        (add-narg-set cgc (jump-nb-args gvm-instr)))
+
+      ; Jump to location 
+      (x86-jmp cgc (x64-jmp-opnd->x86-opnd cgc proc jmp-opnd))))
+
+
+  (define (x64-encode-ifjump-instr cgc proc code)
+    (debug "x64-encode-ifjump-instr\n")
+    (let* ((gvm-instr (code-gvm-instr code))
+          (proc-name (proc-obj-name proc))
+          (fs-lbl (proc-lbl-frame-size proc))
+          (fs-jmp (proc-jmp-frame-size proc))
+          (true-label (get-label cgc proc-name (ifjump-true gvm-instr)))
+          (false-label (get-label cgc proc-name (ifjump-false gvm-instr))))
+
+      ;; Pop stack if necessary 
+      (alloc-frame cgc (- fs-jmp fs-lbl))
+
+      ;; TODO
+      ;; Poll/safe is specified (jump-poll?/jump-safe? gvm-instr)
+
+      (x64-encode-prim-ifjump 
+        cgc
+        proc
+        code
+        (get-prim-obj (proc-obj-name (apply-prim gvm-instr)))
+        (ifjump-opnds gvm-instr)
+        true-label
+        false-label)
+
+      ; (x64-encode-prim
+      ;   cgc 
+      ;   proc 
+      ;   code
+      ;   (proc-obj-name (ifjump-test gvm-instr))
+      ;   (ifjump-opnds gvm-instr)
+      ;   #f
+      ;   (cdr x64regs-unused))
+    ))
+        
+  (define (add-narg-set cgc narg)
+    (cond
+      ((= narg 0)
+        (x86-cmp cgc na na))
+      ((= narg 1)
+        (x86-cmp cgc na (x86-imm-int -65)))
+      ((= narg 2)
+        (x86-cmp cgc na (x86-imm-int 66)))
+      ((= narg 3)
+        (x86-cmp cgc na (x86-imm-int 0)))
+      ((<= narg 34)
+          (x86-add cgc na (x86-imm-int (make-parity-adjusted-valued narg))))
+      (else
+        (compiler-internal-error "Number of argument not supported: " narg))))
+
+  (define (x64-jmp-opnd->x86-opnd cgc proc jmp-opnd)
+    (cond
+      ((reg? jmp-opnd)
+          (display "register")
+        (get-register (reg-num jmp-opnd)))
+      ((stk? jmp-opnd)
+          (display "stack")
+        (frame cgc (proc-lbl-frame-size proc) (stk-num jmp-opnd)))
+      ((lbl? jmp-opnd)
+          (display "label")
+        (get-label cgc (proc-obj-name proc) (lbl-num jmp-opnd)))
+      ((obj? jmp-opnd)
+        (get-label cgc (proc-obj-name (obj-val jmp-opnd)) 1))
+      ((glo? jmp-opnd)
+        (compiler-internal-error "x64-encode-jump-instr: global object as jump location"))
+      ((clo? jmp-opnd)
+        (compiler-internal-error "x64-encode-jump-instr: closure object as jump location"))))
+
+;; ***** Apply instruction encoding
+
+  (define (x64-encode-apply-instr cgc proc code)
+    (debug "x64-encode-apply-instr\n")
+    (let ((gvm-instr (code-gvm-instr code)))
+      (x64-encode-prim-affectation
+        cgc 
+        proc 
+        code
+        (get-prim-obj (proc-obj-name (apply-prim gvm-instr)))
+        (apply-opnds gvm-instr)
+        (apply-loc gvm-instr))))
+
+;; ***** Copy instruction encoding
+
+  (define (x64-encode-copy-instr cgc proc code)
+    (debug "x64-encode-copy-instr\n")
+    (let* ((gvm-instr (code-gvm-instr code))
+          (src (x64-gvm-opnd->x86-opnd cgc proc gvm-instr (copy-opnd gvm-instr)))
+          (dst (x64-gvm-opnd->x86-opnd cgc proc gvm-instr (copy-loc gvm-instr))))
+      (x86-mov cgc dst src 64)))
+
+;; ***** Close instruction encoding
+
+  (define (x64-encode-close-instr cgc proc gvm-instr)
+    (debug "x64-encode-close-instr\n")
+    (compiler-internal-error
+      "x64-encode-close-instr: close instruction not implemented"))
+    
+;; ***** Switch instruction encoding
+
+  (define (x64-encode-switch-instr cgc proc gvm-instr)
+    (debug "x64-encode-switch-instr\n")
+    (compiler-internal-error
+      "x64-encode-switch-instr: switch instruction not implemented"))
+
+;; ***** x64 primitives
+
+;; x64-apply-binary-op equivalent for operations that use the flag register as result-loc
+;; Adds conditionnal jump after instruction 
+; (define (x64-apply-flag-op cgc proc code encoder-func arg1 arg2 arg1-need-reg arg2-need-reg true-action false-action true-first? available-regs)
+;   (debug "  x64-apply-binary-op\n")
+;   (let* ((opnd1-moved (and (not (reg? arg1)) arg1-need-reg))
+;         (opnd2-moved (and (not (reg? arg2)) arg2-need-reg))
+;         (x86-arg1 (x64-gvm-opnd->x86-opnd cgc proc code arg1))
+;         (x86-arg2 (x64-gvm-opnd->x86-opnd cgc proc code arg2))
+;         (opnd1 (if opnd1-moved
+;                 (begin 
+;                   (x86-mov cgc (car available-regs) x86-arg1)
+;                   (car available-regs))
+;                 x86-arg1))
+;         (opnd2 (if opnd2-moved
+;                 (begin 
+;                   (x86-mov cgc (cadr available-regs) x86-arg2)
+;                   (cadr available-regs))
+;                 x86-arg2)))
+
+;     (encoder-func cgc opnd1 opnd2)
+;     (display "result-loc")
+;     (display result-loc)
+;     (newline)
+;     (if (and result-loc (not (equal? arg1 result-loc)))
+;       (let ((x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code result-loc)))
+;       (display "x86-result-loc")
+;       (display x86-result-loc)
+;       (newline)
+;         (x86-mov cgc x86-result-loc opnd1)))))
+
+; (define (prim-fx- cgc proc code args loc available-regs)
+;   (if (not (= 2 (length args)))
+;     (compiler-internal-error "##fx- primitive doesn't have 2 operands"))
+;   (x64-apply-binary-op cgc proc code x86-sub (car args) (cadr args) #t #f loc available-regs))
+
+; (define (prim-fx+ cgc proc code args loc available-regs)
+;   (if (not (= 2 (length args)))
+;     (compiler-internal-error "##fx+ primitive doesn't have 2 operands"))
+;   (x64-apply-binary-op cgc proc code x86-add (car args) (cadr args) #t #f loc available-regs))
+
+; (define (prim-fx< cgc proc code args result-actions available-regs)
+;   (if (not (= 2 (length args)))
+;   (let ((true-action (lambda ()
+;           (x86-jg)
+;           ))
+;         (false-action (lambda ()
+;           )))
+;   (x64-apply-flag-op cgc proc code x86-cmp (car args) (cadr args) #t #f true-action false-action #f available-regs)))
+
+
+;; (vector (boolean|number) encoder-fun narg narg_need_reg)
+;; (vector (boolean|number) encoder-fun narg narg_need_reg true-jmp)
+
+(define (make-number-prim-info symbol encoder narg args-need-reg)
+  (if (not (= (length args-need-reg) narg))
+    (compiler-internal-error "make-number-prim-info" symbol " narg /= (length args-need-reg)"))
+  (vector 'number symbol encoder narg args-need-reg))
+
+(define (make-boolean-prim-info symbol encoder narg args-need-reg true-jmp)
+  (if (not (= (length args-need-reg) narg))
+    (compiler-internal-error "make-boolean-prim-info" symbol " narg /= (length args-need-reg)"))
+  (vector 'boolean symbol encoder narg args-need-reg true-jmp))
+
+(define (prim-info-type vect) (vector-ref vect 0))
+(define (prim-info-symbol vect) (vector-ref vect 1))
+(define (prim-info-encoder vect) (vector-ref vect 2))
+(define (prim-info-narg vect) (vector-ref vect 3))
+(define (prim-info-args-need-reg vect) (vector-ref vect 4))
+(define (prim-info-true-jump vect) (vector-ref vect 5))
+
+(define (get-prim-obj prim-name)
+  (case (string->symbol prim-name)
+      ('##fx+ prim-info-fx+)
+      ('##fx- prim-info-fx-)
+      ('##fx< prim-info-fx<)
+      (else 
+        (compiler-internal-error "Primitive not implemented: " prim-name))))
+
+(define prim-info-fx+
+  (make-number-prim-info '##fx+ x86-add 2 '(#t #f)))
+(define prim-info-fx-
+  (make-number-prim-info '##fx- x86-sub 2 '(#t #f)))
+
+(define prim-info-fx<
+  (make-boolean-prim-info '##fx< x86-cmp 2 '(#t #f) x86-jle))
+
+(define (prim-guard prim-obj args)
+  (define (reg-check opnd need-reg)
+    (if (and (need-reg) (not (reg? opnd)))
+      (compiler-internal-error "prim-guard " (prim-info-symbol prim-obj) " one of it's argument isn't reg but is specified as one")))
+
+  (if (= (length args) (prim-info-narg prim-obj))
+    (compiler-internal-error "##fx+ primitive doesn't have 2 operands"))
+
+  (for-each reg-check args (prim-info-args-need-reg prim-obj)))
+
+(define id 0)
+(define (inc-id)
+  (set! id (+ id 1))
+  id)
+
+;; Add mov necessary if operation only operates on register but args are not registers
+;; arg1 is destination
+;; arg2 is source
+;; result-loc can be used to mov return after (False to disable)
+(define (x64-encode-prim-affectation cgc proc code prim args result-loc)
+  (debug "  x64-apply-binary-op\n")
+  (let* ((opnds
+          (map
+            (lambda (opnd) (x64-gvm-opnd->x86-opnd cgc proc code opnd))
+            args))
+         (opnd1 (car opnds)))
+
+    (apply (prim-info-encoder prim) cgc (append opnds '(64)))
+
+    (if (and result-loc (not (equal? (car args) result-loc))) 
+      (let ((x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code result-loc)))
+      (if (eqv? (prim-info-symbol prim) 'boolean)
+        (let* ((proc-name (proc-obj-name proc))
+               (id-str (number->string (inc-id)))
+               (label-name (string-append proc-name "_jump"))
+               (label (get-label cgc label-name id-str)))
+            (x86-mov cgc x86-result-loc (x86-imm-int 1))
+            ((prim-info-true-jump prim) cgc label)
+            (x86-mov cgc x86-result-loc (x86-imm-int 0))
+            (x86-label label))
+        (x86-mov cgc x86-result-loc opnd1))))))
+
+;; Add mov necessary if operation only operates on register but args are not registers
+;; arg1 is destination
+;; arg2 is source
+;; result-loc can be used to mov return after (False to disable)
+(define (x64-encode-prim-ifjump cgc proc code prim args true-loc-label false-loc-label)
+  (debug "  x64-apply-binary-op\n")
+  (let* ((opnds
+          (map
+            (lambda (opnd) (x64-gvm-opnd->x86-opnd cgc proc code opnd))
+            args))
+         (opnd1 (car opnds)))
+
+    (apply (prim-info-encoder prim) cgc (append opnds '(64)))
+
+    ((prim-info-true-jump prim) cgc true-loc-label)
+    (x86-jmp cgc false-loc-label)))
+
+;; Add mov necessary if operation only operates on register but args are not registers
+;; arg1 is destination
+;; arg2 is source
+;; result-loc can be used to mov return after (False to disable)
+(define (x64-encode-prim-jump cgc proc code prim args result-loc)
+  (debug "  x64-apply-binary-op\n"))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** GVM helper methods
+
+(define (map-on-procs fn procs)
+  (map fn (reachable-procs procs)))
+
+(define (map-proc-instrs fn proc)
+  (let ((p (proc-obj-code proc)))
+        (if (bbs? p)
+          (map fn (bbs->code-list p)))))
+
+(define (proc-lbl proc)
+  (let ((codes (bbs->code-list (proc-obj-code proc))))
+    ; (display (length codes))
+    ; (display (vector? codes))
+    (car codes)))
+
+(define (proc-jmp proc)
+  (let ((codes (bbs->code-list (proc-obj-code proc))))
+    (list-ref codes (- (length codes) 1))))
+
+(define (proc-lbl-frame-size proc)
+  (frame-size (gvm-instr-frame (code-gvm-instr (proc-lbl proc)))))
+
+(define (proc-jmp-frame-size proc)
+  (frame-size (gvm-instr-frame (code-gvm-instr (proc-jmp proc)))))
+
 ;;;============================================================================
+
+;; ***** Utils
+
+(define _debug #t)
+(define (debug . str)
+  (if _debug (apply display str)))
+
+(define (foldl fn list acc)
+  (if (null? list) acc
+      (foldl fn
+        (cdr list)
+        (fn (car list) acc))))
+
+(define (foldr fn list acc)
+  (if (null? list) acc
+      (fn
+        (car list)
+        (foldr fn (cdr list) acc))))
+
+; (define (reduce fn acc list)
+;   (if (null? lis)
+;       acc
+;       (fn (car lis)
+;           (reduce fn (cdr lis) acc))))
+
+(define (string-join strings delim)
+  (define (combine accum str)
+    (string-append str delim accum))
+  (if (null? strings)
+    ""
+    (foldl combine (cdr strings) (car strings))))
+
+(define (unlines strings)
+  (string-append (string-join strings "\n") "\n"))
+
+(define (show-listing cgc)
+  (asm-assemble-to-u8vector cgc)
+  (asm-display-listing cgc (current-error-port) #t))
+
+(define (replace_whitespace str)
+  (let ((f (lambda (c) (if (equal? #\space c) #\_ c)))
+        (str-list (string->list str)))
+    (list->string (map f str-list))))
