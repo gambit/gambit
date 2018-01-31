@@ -296,36 +296,31 @@
     '((always-return-jump)
       (never-return-jump)))
 
-  (let* ((sem-changing-options
-          (append common-semantics-changing-options
-                  semantics-changing-options))
-         (targ
-          (make-target 11
-                       target-language
-                       file-extensions
-                       (append sem-changing-options
-                               common-semantics-preserving-options
-                               semantics-preserving-options)
-                       0)))
+  (let ((targ
+         (make-target 12
+                      target-language
+                      file-extensions
+                      (append semantics-changing-options
+                              common-semantics-changing-options)
+                      (append semantics-preserving-options
+                              common-semantics-preserving-options)
+                      0)))
 
-    (define (begin! info-port)
+    (define (begin! sem-changing-opts
+                    sem-preserving-opts
+                    info-port)
 
       (target-dump-set!
        targ
-       (lambda (procs output c-intf module-descr unique-name options)
-         (let* ((sem-changing-opts
-                 (append-lists
-                  (map (lambda (o)
-                         (let ((x (assq (car o) options)))
-                           (if x (list x) '())))
-                       sem-changing-options)))
-                (sem-preserving-opts
-                 (append-lists
-                  (map (lambda (o)
-                         (let ((x (assq (car o) sem-changing-options)))
-                           (if x '() (list o))))
-                       options))))
-           (univ-dump targ procs output c-intf module-descr unique-name sem-changing-opts sem-preserving-opts))))
+       (lambda (procs output c-intf module-descr unique-name)
+         (univ-dump targ
+                    procs
+                    output
+                    c-intf
+                    module-descr
+                    unique-name
+                    sem-changing-opts
+                    sem-preserving-opts)))
 
       (target-link-info-set!
        targ
@@ -337,22 +332,10 @@
        (lambda (extension? inputs output warnings?)
          (univ-link targ extension? inputs output warnings?)))
 
-      (target-nb-regs-set! targ univ-nb-gvm-regs)
-
       (target-prim-info-set!
        targ
        (lambda (name)
          (univ-prim-info targ name)))
-
-      (target-label-info-set!
-       targ
-       (lambda (nb-parms closed?)
-         (univ-label-info targ nb-parms closed?)))
-
-      (target-jump-info-set!
-       targ
-       (lambda (nb-args)
-         (univ-jump-info targ nb-args)))
 
       (target-frame-constraints-set!
        targ
@@ -381,6 +364,8 @@
        (lambda (obj)
          (univ-object-type targ obj)))
 
+      (univ-set-nb-regs targ sem-changing-opts)
+
       #f)
 
     (define (end!)
@@ -399,6 +384,46 @@
 ;;(univ-setup 'c      '((".c"    . C))           '()       '())
 ;;(univ-setup 'c++    '((".cc"   . C++))         '()       '())
 ;;(univ-setup 'objc   '((".m"    . Objective-C)) '()       '())
+
+;;;----------------------------------------------------------------------------
+
+;; ***** REGISTERS AVAILABLE
+
+;; The registers available in the virtual machine default to
+;; univ-default-nb-gvm-regs and univ-default-nb-arg-regs but can be
+;; changed with the gsc options -nb-gvm-regs and -nb-arg-regs.
+;;
+;; nb-gvm-regs = total number of registers available
+;; nb-arg-regs = maximum number of arguments passed in registers
+
+(define univ-default-nb-gvm-regs 5)
+(define univ-default-nb-arg-regs 3)
+
+(define (univ-nb-gvm-regs ctx) (target-nb-regs (ctx-target ctx)))
+(define (univ-nb-arg-regs ctx) (target-nb-arg-regs (ctx-target ctx)))
+
+(define (univ-set-nb-regs targ sem-changing-opts)
+  (let ((nb-gvm-regs
+         (get-option sem-changing-opts
+                     'nb-gvm-regs
+                     univ-default-nb-gvm-regs))
+        (nb-arg-regs
+         (get-option sem-changing-opts
+                     'nb-arg-regs
+                     univ-default-nb-arg-regs)))
+
+    (if (not (and (<= 3 nb-gvm-regs)
+                  (<= nb-gvm-regs 25)))
+        (compiler-error "-nb-gvm-regs option must be between 3 and 25"))
+
+    (if (not (and (<= 1 nb-arg-regs)
+                  (<= nb-arg-regs (- nb-gvm-regs 2))))
+        (compiler-error
+         (string-append "-nb-arg-regs option must be between 1 and "
+                        (number->string (- nb-gvm-regs 2)))))
+
+    (target-nb-regs-set! targ nb-gvm-regs)
+    (target-nb-arg-regs-set! targ nb-arg-regs)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -498,122 +523,41 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; ***** PROCEDURE CALLING CONVENTION
-
-(define univ-nb-gvm-regs 5)
-(define univ-nb-arg-regs 3)
-
-(define (univ-label-info targ nb-parms closed?)
-
-;; After a GVM "entry-point" or "closure-entry-point" label, the following
-;; is true:
-;;
-;;  * return address is in GVM register 0
-;;
-;;  * if nb-parms <= nb-arg-regs
-;;
-;;      then parameter N is in GVM register N
-;;
-;;      else parameter N is in
-;;               GVM register N-F, if N > F
-;;               GVM stack slot N, if N <= F
-;;           where F = nb-parms - nb-arg-regs
-;;
-;;  * for a "closure-entry-point" GVM register nb-arg-regs+1 contains
-;;    a pointer to the closure object
-;;
-;;  * other GVM registers contain an unspecified value
-
-  (let ((nb-stacked (max 0 (- nb-parms univ-nb-arg-regs))))
-
-    (define (location-of-parms i)
-      (if (> i nb-parms)
-          '()
-          (cons (cons i
-                      (if (> i nb-stacked)
-                          (make-reg (- i nb-stacked))
-                          (make-stk i)))
-                (location-of-parms (+ i 1)))))
-
-    (let ((x (cons (cons 'return 0) (location-of-parms 1))))
-      (make-pcontext nb-stacked
-                     (if closed?
-                         (cons (cons 'closure-env
-                                     (make-reg (+ univ-nb-arg-regs 1)))
-                               x)
-                         x)))))
-
-(define (univ-jump-info targ nb-args)
-
-;; After a GVM "jump" instruction with argument count, the following
-;; is true:
-;;
-;;  * the return address is in GVM register 0
-;;
-;;  * if nb-args <= nb-arg-regs
-;;
-;;      then argument N is in GVM register N
-;;
-;;      else argument N is in
-;;               GVM register N-F, if N > F
-;;               GVM stack slot N, if N <= F
-;;           where F = nb-args - nb-arg-regs
-;;
-;;  * GVM register nb-arg-regs+1 contains a pointer to the closure object
-;;    if a closure is being jumped to
-;;
-;;  * other GVM registers contain an unspecified value
-
-  (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
-
-    (define (location-of-args i)
-      (if (> i nb-args)
-          '()
-          (cons (cons i
-                      (if (> i nb-stacked)
-                          (make-reg (- i nb-stacked))
-                          (make-stk i)))
-                (location-of-args (+ i 1)))))
-
-    (make-pcontext nb-stacked
-                   (cons (cons 'return (make-reg 0))
-                         (location-of-args 1)))))
-
 ;; The frame constraints are defined by the parameters
 ;; univ-frame-reserve and univ-frame-alignment.
 
 (define univ-frame-reserve 0) ;; no extra slots reserved
 (define univ-frame-alignment 1) ;; no alignment constraint
 
+;;;----------------------------------------------------------------------------
+
 ;; ***** PRIMITIVE PROCEDURE DATABASE
+
+(define univ-prim-proc-table
+  (let ((t (make-prim-proc-table)))
+    (for-each
+     (lambda (x) (prim-proc-add! t x))
+     '(("##inline-host-statement" 1 #t 0 0 (#f) extended)
+       ("##inline-host-expression" 1 #t 0 0 (#f) extended)
+       ("##inline-host-declaration" (1) #t 0 0 (#f) extended)
+       ("##univ-table-make-hashtable" (2) #t 0 0 (#f) extended)
+       ("##univ-table-key-exists?" (2) #f 0 0 boolean extended)
+       ("##univ-table-keys" (1) #f 0 0 (#f) extended)
+       ("##univ-table-ref" (2) #f 0 0 (#f) extended)
+       ("##univ-table-set!" (3) #t 0 0 (#f) extended)
+       ("##univ-table-delete" (2) #f 0 0 (#f) extended)
+       ("##univ-table-length" (1) #f 0 0 number extended)))
+    t))
 
 (define (univ-prim-info targ name)
   (univ-prim-info* name))
 
 (define (univ-prim-info* name)
-  (table-ref univ-prim-proc-table name #f))
+  (prim-proc-info univ-prim-proc-table name))
 
-(define univ-prim-proc-table (make-table))
+;;;----------------------------------------------------------------------------
 
-(define (univ-prim-proc-add! x)
-  (let ((name (string->canonical-symbol (car x))))
-    (table-set! univ-prim-proc-table
-                name
-                (apply make-proc-obj (car x) #f #t #f (cdr x)))))
-
-(for-each univ-prim-proc-add! prim-procs)
-
-(univ-prim-proc-add! '("##inline-host-statement" 1 #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##inline-host-expression" 1 #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##inline-host-declaration" (1) #t 0 0 (#f) extended))
-
-(univ-prim-proc-add! '("##univ-table-make-hashtable" (2) #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##univ-table-key-exists?" (2) #f 0 0 boolean extended))
-(univ-prim-proc-add! '("##univ-table-keys" (1) #f 0 0 (#f) extended))
-(univ-prim-proc-add! '("##univ-table-ref" (2) #f 0 0 (#f) extended))
-(univ-prim-proc-add! '("##univ-table-set!" (3) #t 0 0 (#f) extended))
-(univ-prim-proc-add! '("##univ-table-delete" (2) #f 0 0 (#f) extended))
-(univ-prim-proc-add! '("##univ-table-length" (1) #f 0 0 number extended))
+;; ***** OBJECT PROPERTIES
 
 (define (univ-switch-testable? targ obj)
   ;;(pretty-print (list 'univ-switch-testable? 'targ obj))
@@ -626,6 +570,8 @@
 (define (univ-object-type targ obj)
   ;;(pretty-print (list 'univ-object-type 'targ obj))
   'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;----------------------------------------------------------------------------
 
 (define (univ-emit-popcount! ctx arg)
 
@@ -2765,7 +2711,7 @@
                     (^return-call-prim
                      (^rts-method-use 'wrong_key_args)
                      (if closed?
-                         (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                         (^cast*-jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
                          id)
                      error)))))
            (keys
@@ -2784,7 +2730,7 @@
                     (^return-call-prim
                      (^rts-method-use 'wrong_key_args)
                      (if closed?
-                         (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                         (^cast*-jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
                          id)
                      error)))))
            (else
@@ -2797,11 +2743,11 @@
                  (^return-call-prim
                   (^rts-method-use 'wrong_nargs)
                   (if closed?
-                      (^cast*-jumpable (^getreg (+ univ-nb-arg-regs 1)))
+                      (^cast*-jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
                       id)))))
 
-          (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs)))
-                (nb-stacked* (max 0 (- nb-parms univ-nb-arg-regs))))
+          (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx))))
+                (nb-stacked* (max 0 (- nb-parms (univ-nb-arg-regs ctx)))))
 
             (define (setup-parameter i)
               (if (<= i nb-parms)
@@ -3877,7 +3823,7 @@
       rest))
 
 (define (univ-pop-args-to-vars ctx nb-args)
-  (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+  (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx)))))
     (univ-foldr-range
      1
      nb-args
@@ -3899,7 +3845,7 @@
 (define (univ-push-args ctx)
   (univ-foldr-range
    0
-   (- univ-nb-arg-regs 1)
+   (- (univ-nb-arg-regs ctx) 1)
    (^)
    (lambda (i rest)
      (^if (^> (^getnargs) i)
@@ -3909,7 +3855,7 @@
 (define (univ-pop-args-to-regs ctx lo)
   (univ-foldr-range
    0
-   (- univ-nb-arg-regs 1)
+   (- (univ-nb-arg-regs ctx) 1)
    (^)
    (lambda (i rest)
      (let ((x

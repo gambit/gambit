@@ -149,7 +149,7 @@
 
 (##define-macro (macro-none-kind)      0) ;; allows nothing
 (##define-macro (macro-waitable-kind)  1) ;; can wait until readable/writable
-(##define-macro (macro-object-kind)    3) ;; can read and write objects
+(##define-macro (macro-object-kind)    3) ;; can also read and write objects
 (##define-macro (macro-character-kind) 7) ;; can also read and write chars
 (##define-macro (macro-byte-kind)     15) ;; can also read and write bytes
 (##define-macro (macro-device-kind)   31) ;; can also do device operations
@@ -572,7 +572,7 @@
 ;;; Representation of raw device ports.
 
 (define-type-of-port raw-device-port
-  id: f55e3678-0414-63d0-3fda-68b9bc518bca
+  id: E641E009-FCAA-412D-B283-587F5C6D4EC1
   type-exhibitor: macro-type-raw-device-port
   constructor: macro-make-raw-device-port
   implementer: implement-type-raw-device-port
@@ -585,8 +585,9 @@
 
   rdevice-condvar
   wdevice-condvar
-  device
+  type
   id
+  specific
 )
 
 (##define-macro (macro-raw-device-port? obj)

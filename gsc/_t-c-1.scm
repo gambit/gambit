@@ -28,21 +28,46 @@
 
 ;; ***** REGISTERS AVAILABLE
 
-;; The registers available in the virtual machine are defined by the
-;; parameters targ-nb-gvm-regs and targ-nb-arg-regs.  The definitions must
-;; agree with the corresponding macros in the file "include/gambit.h.in"
-;; (i.e. ___NB_GVM_REGS and ___NB_ARG_REGS).
+;; The registers available in the virtual machine default to
+;; targ-default-nb-gvm-regs and targ-default-nb-arg-regs but can be
+;; changed with the gsc options -nb-gvm-regs and -nb-arg-regs.  They
+;; must be compatible with the corresponding macros in the file
+;; "include/gambit.h.in" (i.e. nb-gvm-regs <= ___NB_GVM_REGS and
+;; nb-arg-regs = ___NB_ARG_REGS).
 ;;
-;; targ-nb-gvm-regs = total number of registers available
-;;                    3 <= targ-nb-gvm-regs <= 25
-;; targ-nb-arg-regs = maximum number of arguments passed in registers
-;;                    1 <= targ-nb-arg-regs <= min( 12, targ-nb-gvm-regs-2 )
+;; nb-gvm-regs = total number of registers available
+;;               3 <= nb-gvm-regs <= 25
+;; nb-arg-regs = maximum number of arguments passed in registers
+;;               1 <= nb-arg-regs <= min( 12, nb-gvm-regs-2 )
 
-(define targ-nb-gvm-regs #f)
-(set! targ-nb-gvm-regs 5)
+(define targ-default-nb-gvm-regs 5)
+(define targ-default-nb-arg-regs 3)
 
-(define targ-nb-arg-regs #f)
-(set! targ-nb-arg-regs 3)
+(define (targ-nb-gvm-regs) (target-nb-regs targ-target))
+(define (targ-nb-arg-regs) (target-nb-arg-regs targ-target))
+
+(define (targ-set-nb-regs targ sem-changing-opts)
+  (let ((nb-gvm-regs
+         (get-option sem-changing-opts
+                     'nb-gvm-regs
+                     targ-default-nb-gvm-regs))
+        (nb-arg-regs
+         (get-option sem-changing-opts
+                     'nb-arg-regs
+                     targ-default-nb-arg-regs)))
+
+    (if (not (and (<= 3 nb-gvm-regs)
+                  (<= nb-gvm-regs 25)))
+        (compiler-error "-nb-gvm-regs option must be between 3 and 25"))
+
+    (if (not (and (<= 1 nb-arg-regs)
+                  (<= nb-arg-regs (min 12 (- nb-gvm-regs 2)))))
+        (compiler-error
+         (string-append "-nb-arg-regs option must be between 1 and "
+                        (number->string (min 12 (- nb-gvm-regs 2))))))
+
+    (target-nb-regs-set! targ nb-gvm-regs)
+    (target-nb-arg-regs-set! targ nb-arg-regs)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -119,82 +144,6 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;; ***** PROCEDURE CALLING CONVENTION
-
-(define (targ-label-info nb-parms closed?)
-
-;; After a GVM "entry-point" or "closure-entry-point" label, the following
-;; is true:
-;;
-;;  * return address is in GVM register 0
-;;
-;;  * if nb-parms <= nb-arg-regs
-;;
-;;      then parameter N is in GVM register N
-;;
-;;      else parameter N is in
-;;               GVM register N-F, if N > F
-;;               GVM stack slot N, if N <= F
-;;           where F = nb-parms - nb-arg-regs
-;;
-;;  * for a "closure-entry-point" GVM register nb-arg-regs+1 contains
-;;    a pointer to the closure object
-;;
-;;  * other GVM registers contain an unspecified value
-
-  (let ((nb-stacked (max 0 (- nb-parms targ-nb-arg-regs))))
-
-    (define (location-of-parms i)
-      (if (> i nb-parms)
-        '()
-        (cons (cons i
-                    (if (> i nb-stacked)
-                      (make-reg (- i nb-stacked))
-                      (make-stk i)))
-              (location-of-parms (+ i 1)))))
-
-    (let ((x (cons (cons 'return 0) (location-of-parms 1))))
-      (make-pcontext nb-stacked
-        (if closed?
-          (cons (cons 'closure-env (make-reg (+ targ-nb-arg-regs 1))) x)
-          x)))))
-
-(define (targ-jump-info nb-args)
-
-;; After a GVM "jump" instruction with argument count, the following
-;; is true:
-;;
-;;  * the return address is in GVM register 0
-;;
-;;  * if nb-args <= nb-arg-regs
-;;
-;;      then argument N is in GVM register N
-;;
-;;      else argument N is in
-;;               GVM register N-F, if N > F
-;;               GVM stack slot N, if N <= F
-;;           where F = nb-args - nb-arg-regs
-;;
-;;  * GVM register nb-arg-regs+1 contains a pointer to the closure object
-;;    if a closure is being jumped to
-;;
-;;  * other GVM registers contain an unspecified value
-
-  (let ((nb-stacked (max 0 (- nb-args targ-nb-arg-regs))))
-
-    (define (location-of-args i)
-      (if (> i nb-args)
-        '()
-        (cons (cons i
-                    (if (> i nb-stacked)
-                      (make-reg (- i nb-stacked))
-                      (make-stk i)))
-              (location-of-args (+ i 1)))))
-
-    (make-pcontext nb-stacked
-                   (cons (cons 'return (make-reg 0))
-                         (location-of-args 1)))))
-
 ;; The frame constraints are defined by the parameters
 ;; targ-frame-reserve and targ-frame-alignment.  The definitions must
 ;; agree with the corresponding macros in the file "include/gambit.h.in"
@@ -215,7 +164,7 @@
 
 (define (targ-make-target)
   (let ((targ
-         (make-target 11
+         (make-target 12
                       'C
                       '((".c"    . C)
                         (".C"    . C++)
@@ -229,19 +178,19 @@
                         (".M"    . Objective-C++)
                         (".mm"   . Objective-C++))
                       '()
-                      1)))
+                      '()
+                      0)))
 
-    (define (begin! info-port)
+    (define (begin! sem-changing-opts
+                    sem-preserving-opts
+                    info-port)
 
       (set! targ-info-port info-port)
 
       (target-dump-set!              targ targ-dump)
       (target-link-info-set!         targ targ-link-info)
       (target-link-set!              targ targ-link)
-      (target-nb-regs-set!           targ targ-nb-gvm-regs)
       (target-prim-info-set!         targ targ-prim-info)
-      (target-label-info-set!        targ targ-label-info)
-      (target-jump-info-set!         targ targ-jump-info)
       (target-frame-constraints-set! targ (make-frame-constraints
                                            targ-frame-reserve
                                            targ-frame-alignment))
@@ -251,6 +200,8 @@
       (target-eq-testable?-set!      targ targ-eq-testable?)
       (target-object-type-set!       targ targ-object-type)
 
+      (targ-set-nb-regs targ sem-changing-opts)
+
       #f)
 
     (define (end!)
@@ -259,12 +210,7 @@
     (target-begin!-set! targ begin!)
     (target-end!-set! targ end!)
 
-    (targ-prim-proc-table-set! targ (make-vector 403 '()))
-
     targ))
-
-(define (targ-prim-proc-table x)        (vector-ref x 19))
-(define (targ-prim-proc-table-set! x y) (vector-set! x 19 y))
 
 (define targ-target (targ-make-target))
 
@@ -273,34 +219,39 @@
 (define targ-info-port #f)
 
 ;;;----------------------------------------------------------------------------
-;;
-;; Primitive procedure database
 
-(define (targ-prim-proc-add! x)
-  (let* ((sym (string->canonical-symbol (car x)))
-         (index (modulo (symbol-hash sym) 403)))
-    (vector-set!
-     (targ-prim-proc-table targ-target)
-     index
-     (cons
-      (cons
-       sym
-       (apply make-proc-obj (car x) #f #t #f (cdr x)))
-      (vector-ref (targ-prim-proc-table targ-target) index)))))
+;; ***** PROCEDURE CALLING CONVENTION
 
-(for-each targ-prim-proc-add! prim-procs)
+(define (targ-label-info nb-params closed?)
+  ((target-label-info targ-target) nb-params closed?))
+
+(define (targ-jump-info nb-args)
+  ((target-jump-info targ-target) nb-args))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** PRIMITIVE PROCEDURE DATABASE
+
+(define targ-prim-proc-table
+  (let ((t (make-prim-proc-table)))
+    (for-each
+     (lambda (x) (prim-proc-add! t x))
+     '(("##c-code"  0            #t 0        0 (#f)   extended)))
+    t))
 
 (define (targ-prim-info name)
-  (let ((index (modulo (symbol-hash name) 403)))
-    (let ((x (assq name (vector-ref (targ-prim-proc-table targ-target) index))))
-      (if x (cdr x) #f))))
+  (prim-proc-info targ-prim-proc-table name))
 
 (define (targ-get-prim-info name)
   (let ((proc (targ-prim-info (string->canonical-symbol name))))
     (if proc
-      proc
-      (compiler-internal-error
-        "targ-get-prim-info, unknown primitive:" name))))
+        proc
+        (compiler-internal-error
+         "targ-get-prim-info, unknown primitive:" name))))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** OBJECT PROPERTIES
 
 (define (targ-switch-testable? obj)
   (targ-eq-testable? obj))
@@ -323,7 +274,7 @@
 ;;
 ;; Dumping of a compilation module
 
-(define (targ-dump procs output c-intf module-descr unique-name options)
+(define (targ-dump procs output c-intf module-descr unique-name)
   (let ((c-decls (c-intf-decls c-intf))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
@@ -2265,7 +2216,7 @@
 (define (targ-display-no-line-info-c-string str)
   (targ-display-no-line-info #\")
   (targ-display-no-line-info-c-string-tail str))
-  
+
 (define (targ-display-no-line-info-c-string-tail str)
   (let loop ((i 0))
     (if (< i (string-length str))

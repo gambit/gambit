@@ -517,27 +517,37 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Missing argument for option "
+        "*** WARNING -- Missing argument for -"
         output-port)
-       (##write (##symbol->string opt-sym) output-port)
-       (##write-string "\n" output-port)
+       (##write-string (##symbol->string opt-sym) output-port)
+       (##write-string " option\n" output-port)
+       #t)))
+
+  (define (warn-fixnum-argument-expected-for-option opt-sym)
+    (##repl
+     (lambda (first output-port)
+       (##write-string
+        "*** WARNING -- Fixnum argument expected for -"
+        output-port)
+       (##write-string (##symbol->string opt-sym) output-port)
+       (##write-string " option\n" output-port)
        #t)))
 
   (define (warn-unknown-option opt-sym)
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Unknown or improperly placed option: "
+        "*** WARNING -- Unknown or improperly placed -"
         output-port)
-       (##write (##symbol->string opt-sym) output-port)
-       (##newline output-port)
+       (##write-string (##symbol->string opt-sym) output-port)
+       (##write-string " option\n" output-port)
        #t)))
 
   (define (warn-multiple-output-files-and-o-option)
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Multiple output files: non-directory \"o\" option ignored\n"
+        "*** WARNING -- Multiple output files: non-directory -o option ignored\n"
         output-port)
        #t)))
 
@@ -545,7 +555,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- No incremental link: \"l\" option ignored\n"
+        "*** WARNING -- No incremental link: -l option ignored\n"
         output-port)
        #t)))
 
@@ -553,7 +563,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- \"link\" or \"exe\" options were not specified: \"flat\" option ignored\n"
+        "*** WARNING -- -link or -exe options were not specified: -flat option ignored\n"
         output-port)
        #t)))
 
@@ -561,7 +571,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- The options \"c\", \"link\", \"dynamic\", \"exe\" and \"obj\" are mutually exclusive\n"
+        "*** WARNING -- The -c, -link, -dynamic, -exe and -obj options are mutually exclusive\n"
         output-port)
        #t)))
 
@@ -569,7 +579,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- The options \"preload\" and \"nopreload\" must be used with the options \"link\" and \"exe\"\n"
+        "*** WARNING -- The -preload and -nopreload options must be used with the -link and -exe options\n"
         output-port)
        #t)))
 
@@ -607,10 +617,21 @@
                      (let ((opt-val (##car rest)))
                        (case (##cadr x)
                          ((symbol)
-                          (loop1 (##cdr rest)
-                                 (##cons (##list opt-sym
-                                                 (##string->symbol opt-val))
-                                         rev-options)))
+                          (let ((val (##string->symbol opt-val)))
+                            (loop1 (##cdr rest)
+                                   (##cons (##list opt-sym val)
+                                           rev-options))))
+                         ((fixnum)
+                          (let ((val (##string->number opt-val)))
+                            (if (##fixnum? val)
+                                (loop1 (##cdr rest)
+                                       (##cons (##list opt-sym val)
+                                               rev-options))
+                                (begin
+                                  (if warn?
+                                      (warn-fixnum-argument-expected-for-option opt-sym))
+                                  (loop1 (##cdr rest)
+                                         rev-options)))))
                          (else
                           (loop1 (##cdr rest)
                                  (##cons (##list opt-sym

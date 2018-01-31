@@ -15,6 +15,82 @@
 
 ;;----------------------------------------------------------------------------
 
+(define (univ-class
+         root-name
+         properties
+         extends
+         class-fields
+         instance-fields
+         class-methods
+         instance-methods
+         class-classes
+         constructor
+         inits)
+  (vector 'class
+          root-name
+          properties
+          extends
+          class-fields
+          instance-fields
+          class-methods
+          instance-methods
+          class-classes
+          constructor
+          inits))
+
+(define (univ-class-root-name class-descr)        (vector-ref class-descr 1))
+(define (univ-class-properties class-descr)       (vector-ref class-descr 2))
+(define (univ-class-extends class-descr)          (vector-ref class-descr 3))
+(define (univ-class-class-fields class-descr)     (vector-ref class-descr 4))
+(define (univ-class-instance-fields class-descr)  (vector-ref class-descr 5))
+(define (univ-class-class-methods class-descr)    (vector-ref class-descr 6))
+(define (univ-class-instance-methods class-descr) (vector-ref class-descr 7))
+(define (univ-class-class-classes class-descr)    (vector-ref class-descr 8))
+(define (univ-class-constructor class-descr)      (vector-ref class-descr 9))
+(define (univ-class-inits class-descr)            (vector-ref class-descr 10))
+
+(define (univ-method
+         name
+         properties
+         result-type
+         params
+         #!optional
+         (attribs '())
+         (body #f))
+  (vector 'method
+          name
+          properties
+          result-type
+          params
+          attribs
+          body))
+
+(define (univ-method-name method-descr)        (vector-ref method-descr 1))
+(define (univ-method-properties method-descr)  (vector-ref method-descr 2))
+(define (univ-method-result-type method-descr) (vector-ref method-descr 3))
+(define (univ-method-params method-descr)      (vector-ref method-descr 4))
+(define (univ-method-attribs method-descr)     (vector-ref method-descr 5))
+(define (univ-method-body method-descr)        (vector-ref method-descr 6))
+
+(define (univ-method? x) (eq? (vector-ref x 0) 'method))
+
+(define (univ-field name type #!optional (init #f) (properties '()))
+  (vector 'field name properties type init))
+
+(define (univ-field-name field-descr)       (vector-ref field-descr 1))
+(define (univ-field-properties field-descr) (vector-ref field-descr 2))
+(define (univ-field-type field-descr)       (vector-ref field-descr 3))
+(define (univ-field-init field-descr)       (vector-ref field-descr 4))
+
+(define (univ-field-inherited? field-descr)
+  (memq 'inherited (univ-field-properties field-descr)))
+
+(define (univ-decl-properties decl) (vector-ref decl 2))
+
+(define (univ-def-kind x) (if (vector? x) (vector-ref x 0) 'init))
+
+;;----------------------------------------------------------------------------
+
 (define univ-rtlib-feature-table (make-table))
 
 (define (univ-rtlib-feature ctx feature)
@@ -93,7 +169,7 @@
      init))
 
   (define (continuation-capture-procedure ctx nb-args thread-save?)
-    (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+    (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx)))))
       (univ-jumpable-declaration-defs
        ctx
        #t
@@ -185,16 +261,16 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (new-nb-args
                 (- nb-args 2))
                (new-nb-stacked
-                (max 0 (- new-nb-args univ-nb-arg-regs)))
+                (max 0 (- new-nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow)))
           (^ (univ-foldr-range
               1
-              (max 2 (- nb-args univ-nb-arg-regs))
+              (max 2 (- nb-args (univ-nb-arg-regs ctx)))
               (^)
               (lambda (i rest)
                 (^ rest
@@ -274,7 +350,7 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow))
                (arg1
@@ -602,7 +678,7 @@
      init))
 
   (define (continuation-capture-procedure nb-args thread-save?)
-    (let ((nb-stacked (max 0 (- nb-args univ-nb-arg-regs))))
+    (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx)))))
       (univ-jumpable-declaration-defs
        ctx
        #t
@@ -694,16 +770,16 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (new-nb-args
                 (- nb-args 2))
                (new-nb-stacked
-                (max 0 (- new-nb-args univ-nb-arg-regs)))
+                (max 0 (- new-nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow)))
           (^ (univ-foldr-range
               1
-              (max 2 (- nb-args univ-nb-arg-regs))
+              (max 2 (- nb-args (univ-nb-arg-regs ctx)))
               (^)
               (lambda (i rest)
                 (^ rest
@@ -783,7 +859,7 @@
       "\n"
       (lambda (ctx)
         (let* ((nb-stacked
-                (max 0 (- nb-args univ-nb-arg-regs)))
+                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow))
                (arg1
@@ -2759,7 +2835,7 @@ EOF
          ctx
          "\n"
          (lambda (ctx)
-           (^ (^setreg (+ univ-nb-arg-regs 1) (^this))
+           (^ (^setreg (+ (univ-nb-arg-regs ctx) 1) (^this))
               (^return
                (^cast*-jumpable
                 (^array-index (^member (^this) 'slots) (^int 0)))))))))))
@@ -2812,7 +2888,7 @@ EOF
                       '()
                       (^ (^if (^= msg (^bool #t))
                               (^return slots))
-                         (^setreg (+ univ-nb-arg-regs 1) (^prefix closure))
+                         (^setreg (+ (univ-nb-arg-regs ctx) 1) (^prefix closure))
                          (^return (^array-index slots (^int 0)))))
                      (^return (^prefix closure))))))))))))
 

@@ -170,7 +170,7 @@
     ; move arguments from registers to stack frame
 
     (let loop1 ((i 1))
-      (if (and (<= i arity) (<= i targ-nb-arg-regs))
+      (if (and (<= i arity) (<= i (targ-nb-arg-regs)))
         (begin
           (targ-emit
             (targ-loc (make-stk (+ pc-fs i)) (targ-opnd (make-reg i))))
@@ -429,10 +429,10 @@
   (let ((x (if (< i targ-nb-non-reg-res)
              (cons op (vector-ref '#("HEAP" "FP") i))
              (let ((j (- i targ-nb-non-reg-res)))
-               (if (< j targ-nb-gvm-regs)
+               (if (< j (targ-nb-gvm-regs))
                  (cons op (string-append "R" (number->string j)))
                  (if (eq? op 'd-)
-                   (let ((k (- j targ-nb-gvm-regs)))
+                   (let ((k (- j (targ-nb-gvm-regs))))
                      (list "D_F64"
                            (targ-unboxed-index->code k)))
                    #f))))))
@@ -442,7 +442,7 @@
   (cond ((reg? loc)
          (reg-num loc))
         ((stk? loc)
-         (+ (- (stk-num loc) 1) targ-nb-gvm-regs))
+         (+ (- (stk-num loc) 1) (targ-nb-gvm-regs)))
         (else
          (compiler-internal-error
            "targ-unboxed-loc->index, invalid 'loc'" loc))))
@@ -456,14 +456,14 @@
          (list (string-append
                 "F64V"
                 (number->string i))))
-        ((< i targ-nb-gvm-regs)
+        ((< i (targ-nb-gvm-regs))
          (list (string-append
                 "F64R"
                 (number->string i))))
         (else
          (list (string-append
                 "F64STK"
-                (number->string (+ (- i targ-nb-gvm-regs) 1)))))))
+                (number->string (+ (- i (targ-nb-gvm-regs)) 1)))))))
 
 (define (targ-unboxed-loc->code loc stamp)
   (targ-unboxed-index->code
@@ -500,10 +500,10 @@
 
 (define (targ-need-unboxed n)
   (targ-wr-res
-    (+ n (+ targ-nb-non-reg-res targ-nb-gvm-regs))))
+    (+ n (+ targ-nb-non-reg-res (targ-nb-gvm-regs)))))
 
 (define (targ-use-all-res)
-  (let loop ((i (- (+ targ-nb-non-reg-res targ-nb-gvm-regs) 1)))
+  (let loop ((i (- (+ targ-nb-non-reg-res (targ-nb-gvm-regs)) 1)))
     (if (>= i 0)
       (begin
         (targ-wr-res i)
@@ -862,8 +862,8 @@
            (list (if rest? "GET_REST" "WRONG_NARGS")
                  lbl* nb-req nb-opts nb-keys)))
 
-        (let ((nb-stacked (max 0 (- nb-args targ-nb-arg-regs)))
-              (nb-stacked* (max 0 (- nb-parms targ-nb-arg-regs))))
+        (let ((nb-stacked (max 0 (- nb-args (targ-nb-arg-regs))))
+              (nb-stacked* (max 0 (- nb-parms (targ-nb-arg-regs)))))
 
           (define (setup-parameter i)
             (if (<= i nb-parms)
@@ -966,11 +966,11 @@
                                             (- cfs-after-alignment
                                                (frame-size frame))))
                       (reverse (extend-vars (reverse regs)
-                                            (- targ-nb-gvm-regs
+                                            (- (targ-nb-gvm-regs)
                                                (length regs))))
                       (list return-var)
                       (extend-vars '()
-                                   (let ((n (+ targ-nb-gvm-regs 1)))
+                                   (let ((n (+ (targ-nb-gvm-regs) 1)))
                                      (- (targ-align-frame-without-reserve n)
                                         n)))))
              (gc-map
@@ -980,7 +980,7 @@
                  (or (frame-live? var frame)
                      (let ((j (- i cfs-after-alignment)))
                        (and (>= j 0) ; all saved GVM regs are live
-                            (<= j targ-nb-gvm-regs))))))))
+                            (<= j (targ-nb-gvm-regs)))))))))
         (generate cfs vars gc-map))
       (let* ((fs ; remove frame reserve from actual frame size
               (- targ-proc-fp targ-frame-reserve))
@@ -1431,7 +1431,7 @@
               ((glo? opnd)
 ;;               (targ-repr-exit-block! #f)
                (let ((name (glo-name opnd)))
-                 (targ-wr-reg (+ targ-nb-arg-regs 1))
+                 (targ-wr-reg (+ (targ-nb-arg-regs) 1))
                  (targ-emit
                   (list (if safe? "JUMPGLOSAFE" "JUMPGLONOTSAFE")
                         (if nb-args set-nargs '("NOTHING"))
@@ -1442,7 +1442,7 @@
                (targ-emit
                  (list (if nb-args
                          (begin
-                           (targ-wr-reg (+ targ-nb-arg-regs 1))
+                           (targ-wr-reg (+ (targ-nb-arg-regs) 1))
                            (if safe? "JUMPGENSAFE" "JUMPGENNOTSAFE"))
                          "JUMPPRM")
                        (if nb-args set-nargs '("NOTHING"))
@@ -1603,7 +1603,7 @@
                 (if (targ-repr-empty? src-have)
                   (targ-repr-need-reprs src-descr)
                   src-have)))
-          (if (< i targ-nb-gvm-regs)
+          (if (< i (targ-nb-gvm-regs))
             (let ((dst-descr
                     (stretchable-vector-ref dst-loc-descrs i)))
               (stretchable-vector-set!
@@ -1618,10 +1618,10 @@
             (let* ((j
                     (- i offs))
                    (dst-descr
-                     (if (>= j targ-nb-gvm-regs)
+                     (if (>= j (targ-nb-gvm-regs))
                        (stretchable-vector-ref dst-loc-descrs j)
                        0)))
-              (if (>= j targ-nb-gvm-regs)
+              (if (>= j (targ-nb-gvm-regs))
                 (stretchable-vector-set!
                   dst-loc-descrs
                   j
@@ -1647,7 +1647,7 @@
                 (if (targ-repr-empty? src-have)
                   (targ-repr-need-reprs src-descr)
                   src-have)))
-          (if (< i targ-nb-gvm-regs)
+          (if (< i (targ-nb-gvm-regs))
             (let ((dst1-descr
                     (stretchable-vector-ref dst1-loc-descrs i))
                   (dst2-descr
@@ -1676,14 +1676,14 @@
                    (j2
                     (- i offs2))
                    (dst1-descr
-                     (if (>= j1 targ-nb-gvm-regs)
+                     (if (>= j1 (targ-nb-gvm-regs))
                        (stretchable-vector-ref dst1-loc-descrs j1)
                        0))
                    (dst2-descr
-                     (if (>= j2 targ-nb-gvm-regs)
+                     (if (>= j2 (targ-nb-gvm-regs))
                        (stretchable-vector-ref dst2-loc-descrs j2)
                        0)))
-              (if (>= j1 targ-nb-gvm-regs)
+              (if (>= j1 (targ-nb-gvm-regs))
                 (stretchable-vector-set!
                   dst1-loc-descrs
                   j1
@@ -1692,7 +1692,7 @@
                     (targ-repr-intersection
                       (targ-repr-entry-reprs dst1-descr)
                       src-reprs))))
-              (if (>= j2 targ-nb-gvm-regs)
+              (if (>= j2 (targ-nb-gvm-regs))
                 (stretchable-vector-set!
                   dst2-loc-descrs
                   j2
@@ -1763,7 +1763,7 @@
                   (cons (targ-repr-to-boxed! (targ-repr-index->loc i) r)
                         lst)))))))
 
-      (let loop ((i (- (+ targ-nb-gvm-regs src-fs) 1)))
+      (let loop ((i (- (+ (targ-nb-gvm-regs) src-fs) 1)))
         (if (>= i 0)
           (let ((descr-i (stretchable-vector-ref src-loc-descrs i)))
             (if (targ-repr-live2? descr-i)
@@ -1838,11 +1838,11 @@
                   (cons (targ-repr-to-boxed! (targ-repr-index->loc i) r)
                         lst)))))))
 
-      (let loop ((i (- (+ targ-nb-gvm-regs src-fs) 1)))
+      (let loop ((i (- (+ (targ-nb-gvm-regs) src-fs) 1)))
         (if (>= i 0)
-          (let ((j (if (< i targ-nb-gvm-regs) i (- i offs))))
-            (if (and (>= i targ-nb-gvm-regs)
-                     (< j targ-nb-gvm-regs))
+          (let ((j (if (< i (targ-nb-gvm-regs)) i (- i offs))))
+            (if (and (>= i (targ-nb-gvm-regs))
+                     (< j (targ-nb-gvm-regs)))
               (conversion i i (targ-repr-empty))
               (let ((descr-j (stretchable-vector-ref dst-loc-descrs j)))
                 (if (targ-repr-live1? descr-j)
@@ -2147,7 +2147,7 @@
       (let ((loc-descrs (targ-block-loc-descrs targ-repr-current-block)))
         (if (memq kind
                   '(entry return task-entry task-return))
-          (let loop ((i (- (+ targ-nb-gvm-regs fs) 1)))
+          (let loop ((i (- (+ (targ-nb-gvm-regs) fs) 1)))
             (if (>= i 0)
               (let ((descr (stretchable-vector-ref loc-descrs i)))
                 (stretchable-vector-set!
@@ -2196,20 +2196,20 @@
   (cond ((reg? loc)
          (reg-num loc))
         ((stk? loc)
-         (+ (- (stk-num loc) 1) targ-nb-gvm-regs))
+         (+ (- (stk-num loc) 1) (targ-nb-gvm-regs)))
         (else
          (compiler-internal-error
            "targ-repr-loc->index, invalid 'loc'" loc))))
 
 (define (targ-repr-index->loc i)
-  (if (< i targ-nb-gvm-regs)
+  (if (< i (targ-nb-gvm-regs))
     (make-reg i)
-    (make-stk (+ (- i targ-nb-gvm-regs) 1))))
+    (make-stk (+ (- i (targ-nb-gvm-regs)) 1))))
 
 (define (targ-repr-unboxed-index->code i repr)
   (let ((type (vector-ref targ-repr-types (- repr 1))))
     (targ-need-unboxed i repr)
-    (if (< i targ-nb-gvm-regs)
+    (if (< i (targ-nb-gvm-regs))
       (list (string-append
               type
               "R"
@@ -2217,13 +2217,13 @@
       (list (string-append
               type
               "STK"
-              (number->string (+ (- i targ-nb-gvm-regs) 1)))))))
+              (number->string (+ (- i (targ-nb-gvm-regs)) 1)))))))
 
 (define (targ-repr-index->code i repr)
   (if (= repr targ-repr-boxed)
-    (if (< i targ-nb-gvm-regs)
+    (if (< i (targ-nb-gvm-regs))
       (cons 'r i)
-      (list "STK" (- (+ (- i targ-nb-gvm-regs) 1) targ-proc-fp)))
+      (list "STK" (- (+ (- i (targ-nb-gvm-regs)) 1) targ-proc-fp)))
     (targ-repr-unboxed-index->code i repr)))
 
 (define (targ-repr-unboxed-loc->code loc repr)
@@ -2617,13 +2617,6 @@
 ;;;============================================================================
 
 ;; DATABASE OF PRIMITIVES
-
-(for-each targ-prim-proc-add!
-          '(
-            ("##c-code"  0            #t 0        0 (#f)   extended)
-           ))
-
-;;;----------------------------------------------------------------------------
 
 (define (targ-op name descr)
   (descr (targ-get-prim-info name)))
@@ -3820,7 +3813,7 @@
            (targ-wr-fp)
            (targ-rd-reg 0)
            (targ-wr-reg 0)
-           (targ-wr-reg (+ targ-nb-arg-regs 1))
+           (targ-wr-reg (+ (targ-nb-arg-regs) 1))
            #t))))
 
 (targ-jump-inline "##thread-restore!"
@@ -3834,7 +3827,7 @@
            (targ-rd-fp)
            (targ-wr-fp)
            (targ-wr-reg 0)
-           (targ-wr-reg (+ targ-nb-arg-regs 1))
+           (targ-wr-reg (+ (targ-nb-arg-regs) 1))
            #t))))
 
 (targ-op "##make-continuation"

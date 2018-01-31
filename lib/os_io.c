@@ -4403,6 +4403,10 @@ ___SCMOBJ client_ca_path;)
       SSL_CTX_set_mode (c->tls_ctx,
                         SSL_MODE_ENABLE_PARTIAL_WRITE |
                         SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
+      /* always verify server certificate */
+      SSL_CTX_set_default_verify_paths (c->tls_ctx);
+      SSL_CTX_set_verify (c->tls_ctx, SSL_VERIFY_PEER, NULL);
   }
 
   if ((scm_e =___NONNULLPOINTER_to_SCMOBJ

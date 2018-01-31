@@ -9054,17 +9054,17 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##make-raw-device-port raw-device device id direction)
+(define-prim (##make-raw-device-port direction device type id specific)
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
          (if (##fx= direction (macro-direction-out))
-           (macro-none-kind)
-           (macro-raw-device-kind)))
+             (macro-none-kind)
+             (macro-raw-device-kind)))
         (wkind
          (if (##fx= direction (macro-direction-in))
-           (macro-none-kind)
-           (macro-raw-device-kind)))
+             (macro-none-kind)
+             (macro-raw-device-kind)))
         (roptions
          0)
         (rtimeout
@@ -9079,10 +9079,10 @@
          #f)
         (rdevice-condvar
          (and (##not (##fx= direction (macro-direction-out)))
-              (##make-rdevice-condvar raw-device)))
+              (##make-rdevice-condvar device)))
         (wdevice-condvar
          (and (##not (##fx= direction (macro-direction-in)))
-              (##make-wdevice-condvar raw-device))))
+              (##make-wdevice-condvar device))))
 
     (define (name port)
 
@@ -9090,7 +9090,7 @@
       ;; access to the port.
 
       (##declare (not interrupts-enabled))
-      (##list (macro-raw-device-port-id port) (macro-raw-device-port-device port)))
+      id)
 
     (define (wait port direction)
 
@@ -9181,8 +9181,9 @@
             #f ;; io-exception-handler
             rdevice-condvar
             wdevice-condvar
-            device
-            id)))
+            type
+            id
+            specific)))
       (if rdevice-condvar
         (##io-condvar-port-set! rdevice-condvar port))
       (if wdevice-condvar

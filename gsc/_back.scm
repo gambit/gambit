@@ -2,7 +2,7 @@
 
 ;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -37,11 +37,12 @@
 ;;
 ;; options      The options allowed for this target.
 ;;
-;; begin!       Procedure (lambda (info-port) ...)
+;; begin!       Procedure (lambda (sem-changing-opts sem-preserving-opts info-port) ...)
 ;;              This procedure must be called to initialize the module
 ;;              before any of the other fields are referenced.
-;;              If 'info-port' is not #f, it is used to display
-;;              user-related information.
+;;              The 'sem-changing-opts' and 'sem-preserving-opts' parameters
+;;              contain target options.  If 'info-port' is not #f, it is used
+;;              to display user-related information.
 ;;
 ;; end!         Procedure (lambda () ...)
 ;;              This procedure must be called to do final 'cleanup'.
@@ -91,7 +92,7 @@
 ;;              a 'procedure object' describing the named procedure if it
 ;;              exists and #f if it doesn't.
 ;;
-;; label-info   Procedure (lambda (nb-parms nb-opts nb-keys rest? closed?) ...)
+;; label-info   Procedure (lambda (nb-parms closed?) ...)
 ;;              This procedure returns information describing where
 ;;              parameters are located immediately following a procedure
 ;;              'label' instruction with the given parameters.  The locations
@@ -133,56 +134,86 @@
 
 ;;;; Target description object manipulation
 
-(define (make-target version name file-extensions options extra)
+(define (make-target version
+                     name
+                     file-extensions
+                     semantics-changing-options
+                     semantics-preserving-options
+                     extra)
 
-  (define current-target-version 11) ;; number for this version of the module
+  (define current-target-version 12) ;; number for this version of the module
+
+  (define common-semantics-changing-options
+    '((nb-gvm-regs fixnum)
+      (nb-arg-regs fixnum)))
+
+  (define common-semantics-preserving-options
+    '())
 
   (if (not (= version current-target-version))
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((x (make-vector (+ 19 extra))))
-    (vector-set! x 0 'target)
-    (vector-set! x 1 name)
-    (vector-set! x 2 file-extensions)
-    (vector-set! x 3 options)
-    x))
+  (let ((targ (make-vector (+ 21 extra))))
+
+    (vector-set! targ 0 'target)
+    (vector-set! targ 1 name)
+    (vector-set! targ 2 file-extensions)
+    (vector-set! targ 3 (append semantics-changing-options
+                                common-semantics-changing-options))
+    (vector-set! targ 4 (append semantics-preserving-options
+                                common-semantics-preserving-options))
+
+    (target-label-info-set!
+     targ
+     (lambda (nb-parms closed?)
+       (default-label-info targ nb-parms closed?)))
+
+    (target-jump-info-set!
+     targ
+     (lambda (nb-args)
+       (default-jump-info targ nb-args)))
+
+    targ))
 
 (define (target-name x)                     (vector-ref x 1))
 (define (target-file-extensions x)          (vector-ref x 2))
-(define (target-options x)                  (vector-ref x 3))
+(define (target-semantics-changing-options x) (vector-ref x 3))
+(define (target-semantics-preserving-options x) (vector-ref x 4))
 
-(define (target-begin! x)                   (vector-ref x 4))
-(define (target-begin!-set! x y)            (vector-set! x 4 y))
-(define (target-end! x)                     (vector-ref x 5))
-(define (target-end!-set! x y)              (vector-set! x 5 y))
+(define (target-begin! x)                   (vector-ref x 5))
+(define (target-begin!-set! x y)            (vector-set! x 5 y))
+(define (target-end! x)                     (vector-ref x 6))
+(define (target-end!-set! x y)              (vector-set! x 6 y))
 
-(define (target-dump x)                     (vector-ref x 6))
-(define (target-dump-set! x y)              (vector-set! x 6 y))
-(define (target-link-info x)                (vector-ref x 7))
-(define (target-link-info-set! x y)         (vector-set! x 7 y))
-(define (target-link x)                     (vector-ref x 8))
-(define (target-link-set! x y)              (vector-set! x 8 y))
-(define (target-nb-regs x)                  (vector-ref x 9))
-(define (target-nb-regs-set! x y)           (vector-set! x 9 y))
-(define (target-prim-info x)                (vector-ref x 10))
-(define (target-prim-info-set! x y)         (vector-set! x 10 y))
-(define (target-label-info x)               (vector-ref x 11))
-(define (target-label-info-set! x y)        (vector-set! x 11 y))
-(define (target-jump-info x)                (vector-ref x 12))
-(define (target-jump-info-set! x y)         (vector-set! x 12 y))
-(define (target-frame-constraints x)        (vector-ref x 13))
-(define (target-frame-constraints-set! x y) (vector-set! x 13 y))
-(define (target-proc-result x)              (vector-ref x 14))
-(define (target-proc-result-set! x y)       (vector-set! x 14 y))
-(define (target-task-return x)              (vector-ref x 15))
-(define (target-task-return-set! x y)       (vector-set! x 15 y))
-(define (target-switch-testable? x)         (vector-ref x 16))
-(define (target-switch-testable?-set! x y)  (vector-set! x 16 y))
-(define (target-eq-testable? x)             (vector-ref x 17))
-(define (target-eq-testable?-set! x y)      (vector-set! x 17 y))
-(define (target-object-type x)              (vector-ref x 18))
-(define (target-object-type-set! x y)       (vector-set! x 18 y))
+(define (target-dump x)                     (vector-ref x 7))
+(define (target-dump-set! x y)              (vector-set! x 7 y))
+(define (target-link-info x)                (vector-ref x 8))
+(define (target-link-info-set! x y)         (vector-set! x 8 y))
+(define (target-link x)                     (vector-ref x 9))
+(define (target-link-set! x y)              (vector-set! x 9 y))
+(define (target-nb-regs x)                  (vector-ref x 10))
+(define (target-nb-regs-set! x y)           (vector-set! x 10 y))
+(define (target-nb-arg-regs x)              (vector-ref x 11))
+(define (target-nb-arg-regs-set! x y)       (vector-set! x 11 y))
+(define (target-prim-info x)                (vector-ref x 12))
+(define (target-prim-info-set! x y)         (vector-set! x 12 y))
+(define (target-label-info x)               (vector-ref x 13))
+(define (target-label-info-set! x y)        (vector-set! x 13 y))
+(define (target-jump-info x)                (vector-ref x 14))
+(define (target-jump-info-set! x y)         (vector-set! x 14 y))
+(define (target-frame-constraints x)        (vector-ref x 15))
+(define (target-frame-constraints-set! x y) (vector-set! x 15 y))
+(define (target-proc-result x)              (vector-ref x 16))
+(define (target-proc-result-set! x y)       (vector-set! x 16 y))
+(define (target-task-return x)              (vector-ref x 17))
+(define (target-task-return-set! x y)       (vector-set! x 17 y))
+(define (target-switch-testable? x)         (vector-ref x 18))
+(define (target-switch-testable?-set! x y)  (vector-set! x 18 y))
+(define (target-eq-testable? x)             (vector-ref x 19))
+(define (target-eq-testable?-set! x y)      (vector-set! x 19 y))
+(define (target-object-type x)              (vector-ref x 20))
+(define (target-object-type-set! x y)       (vector-set! x 20 y))
 
 ;;;; Frame constraints structure
 
@@ -217,15 +248,141 @@
       (compiler-error "No target module is available")
       (car (car targets-alist))))
 
+(define (target-options targ)
+  (append (target-semantics-changing-options targ)
+          (target-semantics-preserving-options targ)))
+
+(define (get-option alist name default)
+  (let ((x (assq name alist)))
+    (if x
+        (cadr x)
+        default)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;;; Primitive procedure database
+
+(define (make-prim-proc-table)
+  (let ((prim-proc-table (make-table)))
+    (for-each (lambda (x) (prim-proc-add! prim-proc-table x))
+              prim-procs)
+    prim-proc-table))
+
+(define (prim-proc-add! prim-proc-table x)
+  (let ((name (string->canonical-symbol (car x))))
+    (table-set! prim-proc-table
+                name
+                (apply make-proc-obj (car x) #f #t #f (cdr x)))))
+
+(define (prim-proc-info prim-proc-table name)
+  (table-ref prim-proc-table name #f))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define (default-label-info targ nb-parms closed?)
+
+;; After a GVM "entry-point" or "closure-entry-point" label, the following
+;; is true:
+;;
+;;  * return address is in GVM register 0
+;;
+;;  * if nb-parms <= nb-arg-regs
+;;
+;;      then parameter N is in GVM register N
+;;
+;;      else parameter N is in
+;;               GVM register N-F, if N > F
+;;               GVM stack slot N, if N <= F
+;;           where F = nb-parms - nb-arg-regs
+;;
+;;  * for a "closure-entry-point" GVM register nb-arg-regs+1 contains
+;;    a pointer to the closure object
+;;
+;;  * other GVM registers contain an unspecified value
+
+  (let* ((nb-arg-regs (target-nb-arg-regs targ))
+         (nb-stacked (max 0 (- nb-parms nb-arg-regs))))
+
+    (define (location-of-parms i)
+      (if (> i nb-parms)
+          '()
+          (cons (cons i
+                      (if (> i nb-stacked)
+                          (make-reg (- i nb-stacked))
+                          (make-stk i)))
+                (location-of-parms (+ i 1)))))
+
+    (let ((x (cons (cons 'return 0) (location-of-parms 1))))
+      (make-pcontext nb-stacked
+                     (if closed?
+                         (cons (cons 'closure-env
+                                     (make-reg (+ nb-arg-regs 1)))
+                               x)
+                         x)))))
+
+(define (default-jump-info targ nb-args)
+
+;; After a GVM "jump" instruction with argument count, the following
+;; is true:
+;;
+;;  * the return address is in GVM register 0
+;;
+;;  * if nb-args <= nb-arg-regs
+;;
+;;      then argument N is in GVM register N
+;;
+;;      else argument N is in
+;;               GVM register N-F, if N > F
+;;               GVM stack slot N, if N <= F
+;;           where F = nb-args - nb-arg-regs
+;;
+;;  * GVM register nb-arg-regs+1 contains a pointer to the closure object
+;;    if a closure is being jumped to
+;;
+;;  * other GVM registers contain an unspecified value
+
+  (let* ((nb-arg-regs (target-nb-arg-regs targ))
+         (nb-stacked (max 0 (- nb-args nb-arg-regs))))
+
+    (define (location-of-args i)
+      (if (> i nb-args)
+          '()
+          (cons (cons i
+                      (if (> i nb-stacked)
+                          (make-reg (- i nb-stacked))
+                          (make-stk i)))
+                (location-of-args (+ i 1)))))
+
+    (make-pcontext nb-stacked
+                   (cons (cons 'return (make-reg 0))
+                         (location-of-args 1)))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;;; Target machine selection
 
-(define (target-select! name info-port)
+(define (target-select! name options info-port)
 
   (set! target (target-get name))
 
-  ((target-begin! target) info-port)
+  (let* ((semantics-changing-options
+          (target-semantics-changing-options target))
+         (sem-changing-opts
+          (append-lists
+           (map (lambda (o)
+                  (let ((x (assq (car o) options)))
+                    (if x (list x) '())))
+                semantics-changing-options)))
+         (sem-preserving-opts
+          (append-lists
+           (map (lambda (o)
+                  (let ((x (assq (car o) semantics-changing-options)))
+                    (if x '() (list o))))
+                options))))
+    ((target-begin! target)
+     sem-changing-opts
+     sem-preserving-opts
+     info-port))
 
   (setup-prims target)
 
@@ -412,7 +569,7 @@
                                         (cons (list file flags info)
                                               result)))))))
                     result))))
-        ((target-begin! selected-target) #f)
+        ((target-begin! selected-target) '() '() #f)
         (let* ((output-file
                 (if output-is-directory?
                     (string-append
@@ -445,7 +602,7 @@
             (define (got-link-info file info)
               (list file info targ))
 
-            ((target-begin! targ) #f)
+            ((target-begin! targ) '() '() #f)
             (if (not (string=? ext ""))
                 (if (not (assoc ext allowed-extensions))
                     (begin
