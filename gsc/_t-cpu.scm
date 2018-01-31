@@ -408,6 +408,7 @@
 ;; ***** Environment code and primitive functions
 
   (define (add-start-routine cgc)
+    (x86-mov cgc na (x86-imm-int -64 64))
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
   )
 
