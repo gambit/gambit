@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 408008
@@ -1557,14 +1557,15 @@ ___SIZE_TS bytes;)
 }
 
 
-___EXP_FUNC(void,___release_scmobj)
-   ___P((___WORD obj),
+___EXP_FUNC(___SCMOBJ,___release_scmobj)
+   ___P((___SCMOBJ obj),
         (obj)
-___WORD obj;)
+___SCMOBJ obj;)
 {
   if (___MEM_ALLOCATED(obj) &&
       ___HD_TYP(___BODY(obj)[-1]) == ___STILL)
     ___still_obj_refcount_dec (obj);
+  return obj;
 }
 
 

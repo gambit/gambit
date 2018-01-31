@@ -1,6 +1,6 @@
 /* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -618,6 +618,8 @@ void **linker;)
                      (___CAST(___STRING_TYPE(___DL_PATH_CE_SELECT),cpath),
                       ___CAST(___STRING_TYPE(___DL_MODNAME_CE_SELECT),cmodname),
                       linker);
+
+          /* TODO: check if should do ___release_scmobj (result); to avoid memory leak */
 
           ___FREE_MEM(cmodname);
         }

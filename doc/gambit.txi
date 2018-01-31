@@ -4381,8 +4381,8 @@ For example:
 @deffnx procedure invalid-hash-number-exception-arguments @var{exc}
 @end deffn
 
-@deffn procedure tcp-client-peer-socket-info @var{tcp-client-port}
-@deffnx procedure tcp-client-self-socket-info @var{tcp-client-port}
+@deffn procedure tcp-client-local-socket-info @var{tcp-client-port}
+@deffnx procedure tcp-client-peer-socket-info @var{tcp-client-port}
 @end deffn
 
 @deffn procedure tcp-server-socket-info @var{tcp-server-port}
@@ -12653,7 +12653,7 @@ exact integer), a string of the form @code{"@var{HOST}:@var{PORT}"} or
 a list of port settings.  When the parameter is the number @var{PORT}
 it is handled as if it was the setting @code{port-number:} @var{PORT}.
 When the parameter is the string @code{"@var{HOST}:@var{PORT}"} it is
-handled as if it was the setting @code{server-address:}
+handled as if it was the setting @code{address:}
 @code{"@var{HOST}:@var{PORT}"}.
 
 Here are the settings allowed in addition to the generic settings of
@@ -12662,7 +12662,7 @@ byte-ports:
 @itemize
 
 @item
-@code{server-address:} @var{string-or-ip-address}
+@code{address:} @var{string-or-ip-address}
 
 This setting indicates the internet address of the server, and
 possibly the IP port number.  When this parameter is not specified or
@@ -12673,7 +12673,7 @@ denoting a host name, which will be translated to an IP address by the
 32-bit IPv4 address or an 8 element u16vector which contains the
 128-bit IPv6 address.  A string of the form
 @code{"@var{HOST}:@var{PORT}"} is handled as if it was the combination
-of settings @code{server-address:} @code{"@var{HOST}"}
+of settings @code{address:} @code{"@var{HOST}"}
 @code{port-number:} @var{PORT}.
 
 @item
@@ -12682,6 +12682,32 @@ of settings @code{server-address:} @code{"@var{HOST}"}
 This setting indicates the IP port number of the server to connect
 to (e.g. 80 for the standard HTTP server, 23 for the standard telnet
 server).  There is no default value for this setting.
+
+@item
+@code{local-address:} @var{string-or-ip-address}
+
+This setting indicates the internet address of the local network interface
+on which connections requests are initiated, and possibly the IP port
+number.  When this parameter is not specified or is @code{"*"}, the
+connection requests are initiated on any network interface
+(i.e. address INADDR_ANY).  When this parameter is @code{""}, the
+connection requests are initiated only on the loopback interface (with
+IP address 127.0.0.1).  The parameter can be a string denoting a
+host name, which will be translated to an IP address by the
+@code{host-info} procedure, or a 4 element u8vector which contains the
+32-bit IPv4 address or an 8 element u16vector which contains the
+128-bit IPv6 address.  A string of the form
+@code{"@var{INTF}:@var{PORT}"} is handled as if it was the combination
+of settings @code{local-address:} @code{"@var{INTF}"}
+@code{local-port-number:} @var{PORT}.
+
+@item
+@code{local-port-number:} @var{16-bit-exact-integer}
+
+This setting indicates the IP port number assigned to the socket which
+initiates connection requests.  The special value 0 requests that a
+currently unused port number be assigned to the socket.
+This is the default value for this setting.
 
 @item
 @code{keep-alive:} ( @code{#f} | @code{#t} )
@@ -12750,11 +12776,11 @@ accepting connections on that socket.
 
 The parameter of this procedure is an IP port number (16-bit nonnegative
 exact integer), a string of the form @code{"@var{INTF}:@var{PORT}"} or
-a list of port settings which must contain a @code{port-number:}
+a list of port settings which must contain a @code{local-port-number:}
 setting.  When the parameter is the number @var{PORT} it is handled as
-if it was the setting @code{port-number:} @var{PORT}.  When the
+if it was the setting @code{local-port-number:} @var{PORT}.  When the
 parameter is the string @code{"@var{INTF}:@var{PORT}"} it is handled
-as if it was the setting @code{server-address:}
+as if it was the setting @code{local-address:}
 @code{"@var{INTF}:@var{PORT}"}.
 
 Below is a list of the settings allowed in addition to the settings
@@ -12768,9 +12794,9 @@ the @code{open-tcp-client} procedure.
 @itemize
 
 @item
-@code{server-address:} @var{string-or-ip-address}
+@code{local-address:} @var{string-or-ip-address}
 
-This setting indicates the internet address of the network interface
+This setting indicates the internet address of the local network interface
 on which connections requests are accepted, and possibly the IP port
 number.  When this parameter is not specified or is @code{""}, the
 connection requests are accepted only on the loopback interface (with
@@ -12782,11 +12808,11 @@ host name, which will be translated to an IP address by the
 32-bit IPv4 address or an 8 element u16vector which contains the
 128-bit IPv6 address.  A string of the form
 @code{"@var{INTF}:@var{PORT}"} is handled as if it was the combination
-of settings @code{server-address:} @code{"@var{INTF}"}
-@code{port-number:} @var{PORT}.
+of settings @code{local-address:} @code{"@var{INTF}"}
+@code{local-port-number:} @var{PORT}.
 
 @item
-@code{port-number:} @var{16-bit-exact-integer}
+@code{local-port-number:} @var{16-bit-exact-integer}
 
 This setting indicates the IP port number assigned to the socket which
 accepts connection requests from clients.  So called ``well-known
@@ -12837,8 +12863,8 @@ on port 8080 of any network interface.  For the client-side code see
 the example for the procedure @code{open-tcp-client}.
 
 @smallexample
-> @b{(define s (open-tcp-server (list server-address: "*"
-                                   port-number: 8080
+> @b{(define s (open-tcp-server (list local-address: "*"
+                                   local-port-number: 8080
                                    eol-encoding: 'cr-lf)))}
 > @b{(define p (read s))  @r{@i{; blocks until client connects}}}
 > @b{p}
@@ -12981,8 +13007,9 @@ TCP Client example with TLS encryption.
 
 @smallexample
 (define ctx (make-tls-context))
-(define c (open-tcp-client (list server-address: "twitter.com"
-                                 port-number: 443 tls-context: ctx)))
+(define c (open-tcp-client (list address: "twitter.com"
+                                 port-number: 443
+                                 tls-context: ctx)))
 (display "GET / HTTP/1.1\nHost: twitter.com\n\n" c)
 (force-output c)
 (read-line c)
@@ -12999,8 +13026,9 @@ for @code{server-mode}.
                               diffie-hellman-parameters: "dh_param_1024.pem"
                               elliptic-curve: "prime256v1"))
 
-(define s (open-tcp-server (list server-address: "localhost"
-                                 port-number: 1443 tls-context: ctx)))
+(define s (open-tcp-server (list local-address: "localhost"
+                                 local-port-number: 1443
+                                 tls-context: ctx)))
 (define p (read s))
 (display "<HTML></HTML>\n" p)
 (force-output p)
@@ -13008,6 +13036,253 @@ for @code{server-mode}.
 
 A practical way of testing TLS options are the @code{s_server} and
 @code{s_client} commands of the @code{openssl} tool.
+
+@end deffn
+
+@deffn procedure open-udp @var{port-number-or-address-or-settings}
+
+This procedure opens a socket for doing network communication with the
+UDP protocol.  The default value of the @code{direction:} setting is
+@code{input-output}, i.e. the Scheme program can send information and
+receive information on the socket.  The sending direction can be
+closed using the @code{close-output-port} procedure and the receiving
+direction can be closed using the @code{close-input-port} procedure.
+The @code{close-port} procedure closes both directions.
+
+The resulting port designates a UDP socket.  Each call to @code{read}
+and @code{udp-read-subu8vector} causes the reception of a single
+datagram on the designated UDP socket, and each call to @code{write}
+and @code{udp-write-subu8vector} sends a single datagram.  UDP ports
+are a direct subtype of object-ports (i.e. they are not
+character-ports) and @code{read} and @code{write} transfer u8vectors.
+If @code{read} is called and a timeout occurs before a datagram is
+transferred and the timeout thunk returns @code{#f} (see the procedure
+@code{input-port-timeout-set!}) then the end-of-file object is
+returned.
+
+The parameter of this procedure is an IP port number (16-bit nonnegative
+exact integer), a string of the form @code{"@var{HOST}:@var{PORT}"} or
+a list of port settings.  When the parameter is the number @var{PORT}
+it is handled as if it was the setting @code{local-port-number:} @var{PORT}.
+When the parameter is the string @code{"@var{HOST}:@var{PORT}"} it is
+handled as if it was the setting @code{local-address:}
+@code{"@var{HOST}:@var{PORT}"}.
+
+Here are the settings allowed:
+
+@itemize
+
+@item
+@code{direction:} ( @code{input} | @code{output} | @code{input-output} )
+
+This setting controls the direction of the port.  The symbol
+@code{input} indicates a unidirectional input-port, the symbol
+@code{output} indicates a unidirectional output-port, and the symbol
+@code{input-output} indicates a bidirectional port.  The default
+value of this setting is @code{input-output}.
+
+@item
+@code{local-address:} @var{string-or-ip-address}
+
+This setting indicates the internet address of the local network
+interface on which the socket is open and possibly the IP port number.
+When this parameter is not specified or is @code{""}, the socket is
+open on the loopback interface (with IP address 127.0.0.1).
+When this parameter is @code{"*"} the socket is open on all network
+interfaces (i.e. address INADDR_ANY).  The parameter can be a string
+denoting a host name, which will be translated to an IP address by the
+@code{host-info} procedure, or a 4 element u8vector which contains the
+32-bit IPv4 address or an 8 element u16vector which contains the
+128-bit IPv6 address.  A string of the form
+@code{"@var{INTF}:@var{PORT}"} is handled as if it was the combination
+of settings @code{local-address:} @code{"@var{INTF}"}
+@code{local-port-number:} @var{PORT}.
+
+@item
+@code{local-port-number:} @var{16-bit-exact-integer}
+
+This setting indicates the IP port number assigned to the socket.  The
+special value 0 requests that a currently unused port number be
+assigned to the socket.  This is the default value for this setting.
+
+@item
+@code{address:} @var{string-or-ip-address}
+
+This setting indicates the initial destination internet address of the
+datagrams, and possibly the IP port number.  When this parameter is not
+specified the destination is set to the local address if it is not all
+network interfaces (i.e. @code{"*"} = address INADDR_ANY).  When this
+parameter is @code{""} or this parameter is not specified and the
+local address is all network interfaces, the destination is set to the
+loopback interface (with IP address 127.0.0.1).  The parameter can be
+a string denoting a host name, which will be translated to an IP
+address by the @code{host-info} procedure, or a 4 element u8vector
+which contains the 32-bit IPv4 address or an 8 element u16vector which
+contains the 128-bit IPv6 address.  A string of the form
+@code{"@var{HOST}:@var{PORT}"} is handled as if it was the combination
+of settings @code{address:} @code{"@var{HOST}"} @code{port-number:}
+@var{PORT}.
+
+@item
+@code{port-number:} @var{16-bit-exact-integer}
+
+This setting indicates the initial destination IP port number of the
+datagrams.  It defaults to the local port number.
+
+@end itemize
+
+@end deffn
+
+@deffn procedure udp-destination-set! @var{address} @var{port-number} @r{[}@var{udp-port}@r{]}
+
+This procedure sets the destination address and port-number for the
+next datagram sent on the UDP socket designated by @var{udp-port},
+obtained with a call to @code{open-udp}.  If it is not specified,
+@var{udp-port} defaults to the current output-port.
+
+@end deffn
+
+@deffn procedure udp-read-u8vector @r{[}@var{udp-port}@r{]}
+@deffnx procedure udp-write-u8vector @var{u8vector} @r{[}@var{udp-port}@r{]}
+@deffnx procedure udp-read-subu8vector @var{u8vector} @var{start} @var{end} @r{[}@var{udp-port}@r{]}
+@deffnx procedure udp-write-subu8vector @var{u8vector} @var{start} @var{end} @r{[}@var{udp-port}@r{]}
+
+These procedures receive and send datagrams on the UDP socket
+designated by @var{udp-port}, obtained with a call to @code{open-udp}.
+If it is not specified, @var{udp-port} defaults to the current
+input-port for @code{udp-read-u8vector} and
+@code{udp-read-subu8vector} and to the current output-port for
+@code{udp-write-u8vector} and @code{udp-write-subu8vector}.
+
+These procedures are similar in function to @code{read-subu8vector}
+and @code{write-subu8vector}, but because they read or write a group
+of bytes at a time rather than a stream of bytes, they are distinct
+procedures with slightly different APIs.
+
+The procedure @code{udp-read-u8vector} receives the next datagram and
+returns it in a fresh u8vector.  If a timeout occurs before a datagram
+is transferred and the timeout thunk returns @code{#f} (see the
+procedure @code{input-port-timeout-set!}) then @code{#f} is returned.
+
+The procedure @code{udp-write-u8vector} sends as a datagram the
+u8vector @var{u8vector}.
+
+For the procedures @code{udp-read-subu8vector} and
+@code{udp-write-subu8vector}, the part of the u8vector @var{u8vector}
+starting at index @var{start} and ending just before index @var{end}
+is used as a byte buffer that will be the target of
+@code{udp-read-subu8vector} or the source of the
+@code{udp-write-subu8vector}.  Up to @var{end}-@var{start} bytes will
+be transferred.  The number of bytes transferred, possibly zero, is
+returned by these procedures, unless a timeout occurs (see below).
+Fewer bytes will be read by @code{udp-read-subu8vector} if the
+received datagram's length is less than @var{end}-@var{start}.
+@code{udp-write-subu8vector} always transfers @var{end}-@var{start}
+bytes, but note that this must be less than 65536 bytes, and some
+operating systems have a lower limit (for example MacOS limits the
+number of bytes to 9216 by default).  If a timeout occurs before a
+datagram is transferred and the timeout thunk returns @code{#f} (see
+the procedure @code{input-port-timeout-set!}) then @code{#f} is
+returned by these procedures (this is different from the procedures
+@code{read-subu8vector} and @code{write-subu8vector} which return 0).
+
+For @code{udp-write-u8vector} and @code{udp-write-subu8vector} the
+datagram's destination is the address initially supplied when
+@code{open-udp} was called, or the latest address set when
+@code{udp-destination-set!}  was called.
+
+Here is an example of sending a 3 byte datagram to port 5678 of the
+loopback interface (with IP address 127.0.0.1):
+
+@smallexample
+> @b{(define p (open-udp (list address: '#u8(127 0 0 1) port-number: 5678)))}
+> @b{(write '#u8(11 22 33) p)}
+@end smallexample
+
+An alternative approach is to use @code{udp-destination-set!}:
+
+@smallexample
+> @b{(define p (open-udp))}
+> @b{(udp-destination-set! '#u8(127 0 0 1) 5678 p)}
+> @b{(write '#u8(11 22 33) p)}
+@end smallexample
+
+Another approach is to use @code{udp-write-subu8vector}:
+
+@smallexample
+> @b{(define p (open-udp))}
+> @b{(udp-destination-set! '#u8(127 0 0 1) 5678 p)}
+> @b{(define v '#u8(11 22 33))}
+> @b{(udp-write-subu8vector v 0 3 p)}
+3
+@end smallexample
+
+Note that by default the internet address of the local network
+interface is the loopback interface, which is not connected to the
+internet.  To contact an external socket the address of the local
+network interface must be specified, for example @code{"*"} will
+select all interfaces.  The following example shows how to connect to
+a Time Protocol server to get the current time:
+
+@smallexample
+> @b{(define p (open-udp (list local-address: "*" address: "time.nist.gov:37")))}
+> @b{(write '#u8() p)}
+> @b{(read p)}
+#u8(222 27 158 226)
+@end smallexample
+
+Here is an example of receiving a 3 byte datagram on port 5678 of the
+loopback interface:
+
+@smallexample
+> @b{(define p (open-udp 5678))}
+> @b{(read p)}
+#u8(11 22 33)
+@end smallexample
+
+An alternative approach is to use @code{udp-read-subu8vector}:
+
+@smallexample
+> @b{(define p (open-udp 5678))}
+> @b{(define v (make-u8vector 10000))}
+> @b{(udp-read-subu8vector v 0 10000 p)}
+3
+> @b{(subu8vector v 0 3)}
+#u8(11 22 33)
+@end smallexample
+
+Note that using @code{udp-read-subu8vector} and
+@code{udp-write-subu8vector} is typically more efficient than
+@code{read} and @code{write} because it avoids having to construct a
+new u8vector for each datagram transferred.
+
+@end deffn
+
+@deffn procedure udp-local-socket-info @var{udp-port}
+@deffnx procedure udp-source-socket-info @var{udp-port}
+
+The procedure @code{udp-local-socket-info} returns the local
+socket-info of the UDP socket designated by @var{udp-port}.
+
+The procedure @code{udp-source-socket-info} returns the socket-info of
+the source of the latest datagram received on the UDP socket
+designated by @var{udp-port}.  When a datagram hasn't been received
+yet, @code{#f} is returned.
+
+For example:
+
+@smallexample
+> @b{(define p (open-udp (list local-address: "*" address: "time.nist.gov:37")))}
+> @b{(udp-local-socket-info p)}
+#<socket-info #2 family: INET port-number: 64716 address: #f>
+> @b{(udp-source-socket-info p)}
+#f
+> @b{(write '#u8() p)}
+> @b{(read p)}
+#u8(222 27 162 109)
+> @b{(udp-source-socket-info p)}
+#<socket-info #3 family: INET port-number: 37 address: #u8(132 163 97 4)>
+@end smallexample
 
 @end deffn
 

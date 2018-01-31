@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3908,6 +3908,9 @@
     (directory-port               . "Directory PORT")
     (event-queue-port             . "Event-queue PORT")
     (timer-port                   . "Timer PORT")
+    (udp-port                     . "Udp PORT")
+    (udp-input-port               . "Udp INPUT PORT")
+    (udp-output-port              . "Udp OUTPUT PORT")
     (readtable                    . "READTABLE")
     (hostent                      . "HOSTENT")
     (datum-parsing-exception      . "DATUM PARSING EXCEPTION object")

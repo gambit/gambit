@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -559,7 +559,7 @@ int ___core_count ___PVOID
 #ifdef USE_sysctlbyname
 
   ___S32 n;
-  ___SIZE_T s = sizeof (n);
+  size_t s = sizeof (n);
 
   if (sysctlbyname ("machdep.cpu.core_count", &n, &s, NULL, 0) == 0)
     nb_cores = n;
@@ -808,10 +808,15 @@ int arg_num;)
   if (addr == ___FAL)
     ia->s_addr = htonl (INADDR_ANY); /* wildcard address */
   else
-    ia->s_addr = htonl ((___INT(___U8VECTORREF(addr,___FIX(0)))<<24) +
-                        (___INT(___U8VECTORREF(addr,___FIX(1)))<<16) +
-                        (___INT(___U8VECTORREF(addr,___FIX(2)))<<8) +
-                        ___INT(___U8VECTORREF(addr,___FIX(3))));
+    {
+      ___SCMOBJ ___temp; /* needed by the ___U8VECTORP macro */
+      if ((!___U8VECTORP(addr)) || ___U8VECTORLENGTH(addr) != ___FIX(4))
+        return ___FIX(___STOC_STRUCT_ERR+arg_num);
+      ia->s_addr = htonl ((___INT(___U8VECTORREF(addr,___FIX(0)))<<24) +
+                          (___INT(___U8VECTORREF(addr,___FIX(1)))<<16) +
+                          (___INT(___U8VECTORREF(addr,___FIX(2)))<<8) +
+                          ___INT(___U8VECTORREF(addr,___FIX(3))));
+    }
 
   return ___FIX(___NO_ERR);
 }
@@ -849,6 +854,18 @@ int arg_num;)
 }
 
 
+___BOOL ___in_addr_equal
+   ___P((struct in_addr *ia1,
+         struct in_addr *ia2),
+        (ia1,
+         ia2)
+struct in_addr *ia1;
+struct in_addr *ia2;)
+{
+  return ntohl (ia1->s_addr) == ntohl (ia2->s_addr);
+}
+
+
 #ifdef USE_IPV6
 
 ___SCMOBJ ___SCMOBJ_to_in6_addr
@@ -876,6 +893,9 @@ int arg_num;)
     }
   else
     {
+      ___SCMOBJ ___temp; /* needed by the ___U16VECTORP macro */
+      if ((!___U16VECTORP(addr)) || ___U16VECTORLENGTH(addr) != ___FIX(8))
+        return ___FIX(___STOC_STRUCT_ERR+arg_num);
       for (i=0; i<8; i++)
         {
           ___U16 x = ___INT(___U16VECTORREF(addr,___FIX(i)));
@@ -923,6 +943,25 @@ int arg_num;)
   return result;
 }
 
+
+___BOOL ___in6_addr_equal
+   ___P((struct in6_addr *ia1,
+         struct in6_addr *ia2),
+        (ia1,
+         ia2)
+struct in6_addr *ia1;
+struct in6_addr *ia2;)
+{
+  int i;
+
+  for (i=0; i<16; i++)
+    if (ia1->s6_addr[i] != ia2->s6_addr[i])
+      return 0;
+
+  return 1;
+}
+
+
 #endif
 
 
@@ -930,7 +969,7 @@ ___SCMOBJ ___SCMOBJ_to_sockaddr
    ___P((___SCMOBJ addr,
          ___SCMOBJ port_num,
          struct sockaddr *sa,
-         int *salen,
+         SOCKET_LEN_TYPE *salen,
          int arg_num),
         (addr,
          port_num,
@@ -940,11 +979,15 @@ ___SCMOBJ ___SCMOBJ_to_sockaddr
 ___SCMOBJ addr;
 ___SCMOBJ port_num;
 struct sockaddr *sa;
-int *salen;
+SOCKET_LEN_TYPE *salen;
 int arg_num;)
 {
   ___SCMOBJ result;
   ___SCMOBJ ___temp; /* needed by the ___U8VECTORP and ___U16VECTORP macros */
+  int port = 0;
+
+  if (port_num != ___FAL)
+    port = ___INT(port_num);
 
   if (addr == ___FAL || ___U8VECTORP(addr))
     {
@@ -952,7 +995,7 @@ int arg_num;)
       *salen = sizeof (*sa_in);
       memset (sa_in, 0, sizeof (*sa_in));
       sa_in->sin_family = AF_INET;
-      sa_in->sin_port = htons (___INT(port_num));
+      sa_in->sin_port = htons (port);
       result = ___SCMOBJ_to_in_addr (addr, &sa_in->sin_addr, arg_num);
     }
 #ifdef USE_IPV6
@@ -962,12 +1005,12 @@ int arg_num;)
       *salen = sizeof (*sa_in6);
       memset (sa_in6, 0, sizeof (*sa_in6));
       sa_in6->sin6_family = AF_INET6;
-      sa_in6->sin6_port = htons (___INT(port_num));
+      sa_in6->sin6_port = htons (port);
       result = ___SCMOBJ_to_in6_addr (addr, &sa_in6->sin6_addr, arg_num);
     }
 #endif
   else
-    result = ___FIX(___UNKNOWN_ERR);
+    result = ___FIX(___STOC_STRUCT_ERR+arg_num);
 
   return result;
 }
@@ -975,13 +1018,13 @@ int arg_num;)
 
 ___SCMOBJ ___sockaddr_to_SCMOBJ
    ___P((struct sockaddr *sa,
-         int salen,
+         SOCKET_LEN_TYPE salen,
          int arg_num),
         (sa,
          salen,
          arg_num)
 struct sockaddr *sa;
-int salen;
+SOCKET_LEN_TYPE salen;
 int arg_num;)
 {
   ___SCMOBJ result;
@@ -1026,65 +1069,56 @@ int arg_num;)
     }
 #endif
   else
-    result = ___FAL;
+    {
+      ___release_scmobj (result);
+      result = ___FIX(___CTOS_STRUCT_ERR+arg_num);
+    }
 
   return result;
 }
 
 
-___SCMOBJ ___addr_to_SCMOBJ
-   ___P((void *sa,
-         int salen,
-         int arg_num),
-        (sa,
-         salen,
-         arg_num)
-void *sa;
-int salen;
-int arg_num;)
+___BOOL sockaddr_equal
+   ___P((struct sockaddr *sa1,
+         SOCKET_LEN_TYPE salen1,
+         struct sockaddr *sa2,
+         SOCKET_LEN_TYPE salen2),
+        (sa1,
+         salen1,
+         sa2,
+         salen2)
+struct sockaddr *sa1;
+SOCKET_LEN_TYPE salen1;
+struct sockaddr *sa2;
+SOCKET_LEN_TYPE salen2;)
 {
-  ___SCMOBJ result;
-
-  if (salen == 4)
+  if (salen1 == salen2)
     {
-      struct in_addr *ia = ___CAST(struct in_addr*,sa);
-      ___U32 a;
+      if (salen1 == sizeof (struct sockaddr_in))
+        {
+          struct sockaddr_in *sa1_in = ___CAST(struct sockaddr_in*,sa1);
+          struct sockaddr_in *sa2_in = ___CAST(struct sockaddr_in*,sa2);
 
-      result = ___alloc_scmobj (___PSTATE, ___sU8VECTOR, 4);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
-
-      a = ntohl (ia->s_addr);
-
-      ___U8VECTORSET(result,___FIX(0),___FIX((a>>24)&0xff))
-      ___U8VECTORSET(result,___FIX(1),___FIX((a>>16)&0xff))
-      ___U8VECTORSET(result,___FIX(2),___FIX((a>>8)&0xff))
-      ___U8VECTORSET(result,___FIX(3),___FIX(a&0xff))
-    }
+          return (sa1_in->sin_family == sa2_in->sin_family) &&
+                 (ntohs (sa1_in->sin_port) == ntohs (sa2_in->sin_port)) &&
+                 ___in_addr_equal (&sa1_in->sin_addr, &sa2_in->sin_addr);
+        }
 #ifdef USE_IPV6
-  else if (salen == 16)
-    {
-      struct in6_addr *ia = ___CAST(struct in6_addr*,sa);
-      int i;
+      else if (salen1 == sizeof (struct sockaddr_in6))
+        {
+          struct sockaddr_in6 *sa1_in6 = ___CAST(struct sockaddr_in6*,sa1);
+          struct sockaddr_in6 *sa2_in6 = ___CAST(struct sockaddr_in6*,sa2);
 
-      result = ___alloc_scmobj (___PSTATE, ___sU16VECTOR, 8<<1);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
-
-      for (i=0; i<8; i++)
-        ___U16VECTORSET(result,
-                        ___FIX(i),
-                        ___FIX((___CAST(___U16,ia->s6_addr[i<<1])<<8)
-                               +ia->s6_addr[(i<<1)+1]))
-    }
+          return (sa1_in6->sin6_family == sa2_in6->sin6_family) &&
+                 (ntohs (sa1_in6->sin6_port) == ntohs (sa2_in6->sin6_port)) &&
+                 ___in6_addr_equal (&sa1_in6->sin6_addr, &sa2_in6->sin6_addr);
+        }
 #endif
-  else
-    result = ___FAL;
+    }
 
-  return result;
+  return 0;
 }
+
 
 #endif
 
@@ -1267,14 +1301,12 @@ ___SCMOBJ protocol;)
         }
     }
 
-  ___release_scmobj (lst);
-
   freeaddrinfo (res0);
 
   ___release_string (chost);
   ___release_string (cserv);
 
-  return lst;
+  return ___release_scmobj (lst);
 
 #endif
 }
@@ -1547,9 +1579,7 @@ ___SCMOBJ ___os_host_name ___PVOID
       != ___FIX(___NO_ERR))
     return e;
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 
 #endif
 }
@@ -1708,9 +1738,7 @@ ___SCMOBJ protocol;)
   ___FIELD(vect,4) = x;
   ___release_scmobj (x);
 
-  ___release_scmobj (vect);
-
-  return vect;
+  return ___release_scmobj (vect);
 
 #endif
 }
@@ -1842,9 +1870,7 @@ ___SCMOBJ protocol;)
 
   ___FIELD(vect,3) = ___FIX(pe->p_proto);
 
-  ___release_scmobj (vect);
-
-  return vect;
+  return ___release_scmobj (vect);
 
 #endif
 }
@@ -2056,9 +2082,7 @@ ___SCMOBJ chase;)
 
       ___release_scmobj (x);
 
-      ___release_scmobj (result);
-
-      return result;
+      return ___release_scmobj (result);
     }
 
 #endif
@@ -2230,9 +2254,7 @@ ___SCMOBJ chase;)
       ___FIELD(result,13) = x;
       ___release_scmobj (x);
 
-      ___release_scmobj (result);
-
-      return result;
+      return ___release_scmobj (result);
     }
 
 #endif
@@ -2352,9 +2374,7 @@ ___SCMOBJ chase;)
       ___FIELD(result,13) = x;
       ___release_scmobj (x);
 
-      ___release_scmobj (result);
-
-      return result;
+      return ___release_scmobj (result);
     }
 
 #endif
@@ -2472,9 +2492,7 @@ ___SCMOBJ user;)
       ___FIELD(result,5) = x;
       ___release_scmobj (x);
 
-      ___release_scmobj (result);
-
-      return result;
+      return ___release_scmobj (result);
     }
 
 #endif
@@ -2616,9 +2634,7 @@ ___SCMOBJ group;)
       ___FIELD(result,3) = x;
       ___release_scmobj (x);
 
-      ___release_scmobj (result);
-
-      return result;
+      return ___release_scmobj (result);
     }
 
 #endif

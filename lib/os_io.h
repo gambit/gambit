@@ -1,6 +1,6 @@
 /* File: "os_io.h" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -17,13 +17,13 @@ typedef struct ___device_group_struct
     struct ___device_struct *list; /* list of devices in this group */
   } ___device_group;
 
-
+/*TODO: remove "DEVICE" from names*/
 #define ___NONE_KIND              0
 #define ___WAITABLE_KIND          1
-#define ___OBJECT_KIND            3
-#define ___CHARACTER_KIND         7
-#define ___BYTE_KIND              15
-#define ___DEVICE_KIND            31
+#define ___OBJECT_KIND            (___WAITABLE_KIND+2)
+#define ___CHARACTER_KIND         (___OBJECT_KIND+4)
+#define ___BYTE_KIND              (___CHARACTER_KIND+8)
+#define ___DEVICE_KIND            (___BYTE_KIND+16)
 #define ___FILE_DEVICE_KIND       (___DEVICE_KIND+32)
 #define ___PIPE_DEVICE_KIND       (___DEVICE_KIND+64)
 #define ___PROCESS_DEVICE_KIND    (___PIPE_DEVICE_KIND+131072)
@@ -38,6 +38,7 @@ typedef struct ___device_group_struct
 #define ___STRING_KIND            (___CHARACTER_KIND+32768)
 #define ___U8VECTOR_KIND          (___BYTE_KIND+65536)
 #define ___RAW_DEVICE_KIND        (___WAITABLE_KIND+262144)
+#define ___UDP_DEVICE_KIND        (___OBJECT_KIND+524288)
 
 #define ___OPEN_STATE(x)      ((x)&(1<<12))
 #define ___OPEN_STATE_MASK(x) ((x)&~(1<<12))
@@ -750,14 +751,16 @@ extern void ___cleanup_child_interrupt_handling ___PVOID;
 /* Opening a TCP client. */
 
 extern ___SCMOBJ ___os_device_tcp_client_open
-   ___P((___SCMOBJ server_addr,
+   ___P((___SCMOBJ local_addr,
+         ___SCMOBJ local_port_num,
+         ___SCMOBJ addr,
          ___SCMOBJ port_num,
          ___SCMOBJ options,
          ___SCMOBJ tls_context),
         ());
 
 extern ___SCMOBJ ___os_device_tcp_client_socket_info
-   ___P((___SCMOBJ dev_condvar,
+   ___P((___SCMOBJ dev,
          ___SCMOBJ peer),
         ());
 
@@ -766,8 +769,8 @@ extern ___SCMOBJ ___os_device_tcp_client_socket_info
 /* Opening and reading a TCP server. */
 
 extern ___SCMOBJ ___os_device_tcp_server_open
-   ___P((___SCMOBJ server_addr,
-         ___SCMOBJ port_num,
+   ___P((___SCMOBJ local_addr,
+         ___SCMOBJ local_port_num,
          ___SCMOBJ backlog,
          ___SCMOBJ options,
          ___SCMOBJ tls_context),
@@ -778,7 +781,7 @@ extern ___SCMOBJ ___os_device_tcp_server_read
         ());
 
 extern ___SCMOBJ ___os_device_tcp_server_socket_info
-   ___P((___SCMOBJ dev_condvar),
+   ___P((___SCMOBJ dev),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
@@ -793,6 +796,41 @@ extern ___SCMOBJ ___os_make_tls_context
          ___SCMOBJ dh_params_path,
          ___SCMOBJ elliptic_curve_name,
          ___SCMOBJ client_ca_path),
+        ());
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
+
+/* Opening a UDP socket. */
+
+extern ___SCMOBJ ___os_device_udp_open
+   ___P((___SCMOBJ local_addr,
+         ___SCMOBJ local_port_num,
+         ___SCMOBJ options),
+        ());
+
+extern ___SCMOBJ ___os_device_udp_read_subu8vector
+   ___P((___SCMOBJ dev_condvar,
+         ___SCMOBJ buffer,
+         ___SCMOBJ lo,
+         ___SCMOBJ hi),
+        ());
+
+extern ___SCMOBJ ___os_device_udp_write_subu8vector
+   ___P((___SCMOBJ dev_condvar,
+         ___SCMOBJ buffer,
+         ___SCMOBJ lo,
+         ___SCMOBJ hi),
+        ());
+
+extern ___SCMOBJ ___os_device_udp_destination_set
+   ___P((___SCMOBJ dev_condvar,
+         ___SCMOBJ addr,
+         ___SCMOBJ port_num),
+        ());
+
+extern ___SCMOBJ ___os_device_udp_socket_info
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ source),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */

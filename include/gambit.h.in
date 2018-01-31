@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -9875,7 +9875,7 @@ typedef struct ___global_state_struct
              int subtype,
              ___SIZE_TS bytes),
             ());
-    void (*___release_scmobj)
+    ___SCMOBJ (*___release_scmobj)
        ___P((___SCMOBJ obj),
             ());
     ___SCMOBJ (*___make_pair)
@@ -11111,7 +11111,7 @@ ___IMP_FUNC(___SCMOBJ,___alloc_scmobj)
          int subtype,
          ___SIZE_TS bytes),
         ());
-___IMP_FUNC(void,___release_scmobj)
+___IMP_FUNC(___SCMOBJ,___release_scmobj)
    ___P((___SCMOBJ obj),
         ());
 ___IMP_FUNC(___SCMOBJ,___make_pair)

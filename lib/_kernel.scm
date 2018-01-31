@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4386,7 +4386,9 @@ end-of-code
             "___os_make_tls_context"))
 
 (define-prim ##os-device-tcp-client-open
-  (c-lambda (scheme-object  ;; server_addr
+  (c-lambda (scheme-object  ;; local_addr
+             scheme-object  ;; local_port_num
+             scheme-object  ;; addr
              scheme-object  ;; port_num
              scheme-object  ;; options
              scheme-object) ;; tls_context
@@ -4394,14 +4396,14 @@ end-of-code
    "___os_device_tcp_client_open"))
 
 (define-prim ##os-device-tcp-client-socket-info
-  (c-lambda (scheme-object  ;; dev_condvar
+  (c-lambda (scheme-object  ;; dev
              scheme-object) ;; peer
             scheme-object   ;; addr
    "___os_device_tcp_client_socket_info"))
 
 (define-prim ##os-device-tcp-server-open
-  (c-lambda (scheme-object  ;; server_addr
-             scheme-object  ;; port_num
+  (c-lambda (scheme-object  ;; local_addr
+             scheme-object  ;; local_port_num
              scheme-object  ;; backlog
              scheme-object  ;; options
              scheme-object) ;; tls_context
@@ -4414,9 +4416,45 @@ end-of-code
    "___os_device_tcp_server_read"))
 
 (define-prim ##os-device-tcp-server-socket-info
-  (c-lambda (scheme-object) ;; dev_condvar
+  (c-lambda (scheme-object) ;; dev
             scheme-object   ;; addr
    "___os_device_tcp_server_socket_info"))
+
+(define-prim ##os-device-udp-open
+  (c-lambda (scheme-object  ;; local_addr
+             scheme-object  ;; local_port_num
+             scheme-object) ;; options
+            scheme-object   ;; device
+   "___os_device_udp_open"))
+
+(define-prim ##os-device-udp-read-subu8vector
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; buffer
+             scheme-object  ;; lo
+             scheme-object) ;; hi
+            scheme-object   ;; u8vector or fixnum = bytes read or error code
+   "___os_device_udp_read_subu8vector"))
+
+(define-prim ##os-device-udp-write-subu8vector
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; buffer
+             scheme-object  ;; lo
+             scheme-object) ;; hi
+            scheme-object   ;; fixnum = bytes written or error code
+   "___os_device_udp_write_subu8vector"))
+
+(define-prim ##os-device-udp-destination-set!
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; addr
+             scheme-object) ;; port_num
+            scheme-object   ;; fixnum error code
+   "___os_device_udp_destination_set"))
+
+(define-prim ##os-device-udp-socket-info
+  (c-lambda (scheme-object  ;; dev
+             scheme-object) ;; source
+            scheme-object   ;; addr
+   "___os_device_udp_socket_info"))
 
 (define-prim ##os-device-directory-open-path
   (c-lambda (scheme-object  ;; path

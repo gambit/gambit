@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -460,6 +460,7 @@ open-tcp-client
 open-tcp-server
 open-u8vector
 open-u8vector-pipe
+open-udp
 open-vector
 open-vector-pipe
 os-exception-arguments
@@ -762,6 +763,7 @@ table-search
 table-set!
 table?
 tanh
+tcp-client-local-socket-info
 tcp-client-peer-socket-info
 tcp-client-self-socket-info
 tcp-server-socket-info
@@ -878,6 +880,13 @@ u8vector-ref
 u8vector-set!
 u8vector-shrink!
 u8vector?
+udp-destination-set!
+udp-local-socket-info
+udp-read-subu8vector
+udp-read-u8vector
+udp-source-socket-info
+udp-write-subu8vector
+udp-write-u8vector
 unbound-global-exception-code
 unbound-global-exception-rte
 unbound-global-exception-variable

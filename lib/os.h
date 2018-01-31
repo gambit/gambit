@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -548,6 +548,8 @@
 
 /* Determine which function to use for miscellaneous networking features.  */
 
+#ifdef USE_NETWORKING
+
 #ifdef HAVE_GETHOSTNAME
 #define USE_gethostname
 #endif
@@ -594,6 +596,8 @@
 
 #ifdef HAVE_GETNETBYNAME
 #define USE_getnetbyname
+#endif
+
 #endif
 
 
@@ -1746,6 +1750,63 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 typedef sigset_t ___sigset_type;
 #else
 typedef int ___sigset_type;
+#endif
+
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef USE_NETWORKING
+
+/* Socket utilities */
+
+#ifdef USE_POSIX
+#define SOCKET_TYPE int
+#define SOCKET_CALL_ERROR(s) ((s) < 0)
+#define SOCKET_CALL_ERROR2(s) ((s) < 0)
+#define CONNECT_IN_PROGRESS (errno == EINPROGRESS)
+#define CONNECT_WOULD_BLOCK (errno == EAGAIN)
+#define NOT_CONNECTED(e) ((e) == ___FIX(___ERRNO_ERR(ENOTCONN)))
+#define CLOSE_SOCKET(s) ___close_no_EINTR (s)
+#define ERR_CODE_FROM_SOCKET_CALL err_code_from_errno ()
+#define IOCTL_SOCKET(s,cmd,argp) ioctl (s,cmd,argp)
+#define SOCKET_LEN_TYPE socklen_t
+#endif
+
+#ifdef USE_WIN32
+#define SOCKET_TYPE SOCKET
+#define SOCKET_CALL_ERROR(s) ((s) == SOCKET_ERROR)
+#define SOCKET_CALL_ERROR2(s) ((s) == INVALID_SOCKET)
+#define CONNECT_IN_PROGRESS ((WSAGetLastError () == WSAEALREADY) || \
+(WSAGetLastError () == WSAEISCONN))
+#define CONNECT_WOULD_BLOCK ((WSAGetLastError () == WSAEWOULDBLOCK) || \
+(WSAGetLastError () == WSAEINVAL))
+#define NOT_CONNECTED(e) ((e) == ___FIX(___WIN32_ERR(WSAENOTCONN)))
+#define CLOSE_SOCKET(s) closesocket (s)
+#define ERR_CODE_FROM_SOCKET_CALL err_code_from_WSAGetLastError ()
+#define IOCTL_SOCKET(s,cmd,argp) ioctlsocket (s,cmd,argp)
+#define SOCKET_LEN_TYPE int
+#endif
+
+#ifdef SHUT_RD
+#define SHUTDOWN_RD SHUT_RD
+#else
+#ifdef SD_RECEIVE
+#define SHUTDOWN_RD SD_RECEIVE
+#else
+#define SHUTDOWN_RD 0
+#endif
+#endif
+
+#ifdef SHUT_WR
+#define SHUTDOWN_WR SHUT_WR
+#else
+#ifdef SD_SEND
+#define SHUTDOWN_WR SD_SEND
+#else
+#define SHUTDOWN_WR 1
+#endif
 #endif
 
 #endif
