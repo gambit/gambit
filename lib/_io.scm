@@ -7030,8 +7030,7 @@
               (if (##null? (macro-psettings-local-port-number psettings))
                   #f
                   (macro-psettings-local-port-number psettings))))
-         (if (or (##null? address)
-                 (##not port-number))
+         (if (##not port-number)
              (fail)
              (let ((device
                     (##os-device-tcp-client-open
@@ -7039,7 +7038,9 @@
                          #f ;; default local-address to any interface
                          local-address)
                      local-port-number
-                     address
+                     (if (##null? address)
+                         (macro-localhost) ;; default address to localhost
+                         address)
                      port-number
                      (psettings->options psettings)
                      (macro-psettings-tls-context psettings))))
@@ -7050,7 +7051,9 @@
                    (let ((port
                           (##make-tcp-client-port
                            (##list 'tcp-client
-                                   address-or-host
+                                   (if (##null? address)
+                                       (macro-localhost)
+                                       (or address-or-host "*"))
                                    port-number)
                            device
                            psettings)))
@@ -7608,7 +7611,7 @@
          (rdevice
           (##os-device-tcp-server-open
            (if (##null? local-address)
-               '#u8(127 0 0 1) ;; default local-address to localhost
+               (macro-localhost) ;; default local-address to localhost
                local-address)
            local-port-number
            (macro-psettings-backlog psettings)
@@ -7989,7 +7992,7 @@
                (macro-psettings-port-number psettings))
               (local-a
                (if (##null? local-address)
-                   '#u8(127 0 0 1) ;; default local-address to localhost
+                   (macro-localhost) ;; default local-address to localhost
                    local-address))
               (local-pn
                (if (##null? local-port-number)
@@ -8030,7 +8033,7 @@
                            (##os-device-udp-destination-set!
                             wdevice-condvar
                             (if (##null? address)
-                                (or a '#u8(127 0 0 1))
+                                (or a (macro-localhost))
                                 address)
                             (if (##null? port-number)
                                 pn

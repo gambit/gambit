@@ -999,6 +999,8 @@
 
 (##define-macro (macro-default-tls-context) #f)
 
+(##define-macro (macro-localhost) ''#u8(127 0 0 1))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Representation of write environments.
