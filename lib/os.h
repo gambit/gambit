@@ -229,7 +229,13 @@
 #endif
 
 #ifdef HAVE_SYSLOG
+/*
+ * Also check for the presence of a working syslog.h, which
+ * causes problems with Xcode 9.2 + gcc-7.
+ */
+#ifdef HAVE_SYSLOG_H
 #define USE_syslog
+#endif
 #endif
 
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
