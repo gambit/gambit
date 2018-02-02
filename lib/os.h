@@ -1392,6 +1392,14 @@ extern int h_errno;
 #endif
 #endif
 
+#ifndef NETDB_INTERNAL
+#define NETDB_INTERNAL -1
+#endif
+
+#ifndef NETDB_SUCCESS
+#define NETDB_SUCCESS 0
+#endif
+
 #ifdef INCLUDE_grp_h
 #ifdef HAVE_GRP_H
 #include <grp.h>
