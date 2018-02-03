@@ -352,6 +352,7 @@
 ;; ***** Constants and helper functions
 
   (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
+  (define C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
 
   (define r0 (x86-r15)) ;; GVM r0 = x86 r15
   (define r1 (x86-r14)) ;; GVM r1 = x86 r14
@@ -408,11 +409,16 @@
 ;; ***** Environment code and primitive functions
 
   (define (add-start-routine cgc)
+    (x86-mov cgc r0 (x86-imm-lbl C_RETURN_LBL))
     (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
   )
 
   (define (add-end-routine cgc)
+    (x86-label cgc C_RETURN_LBL)
+    (x86-mov cgc (x86-rax) (x86-imm-int 0 64)) ;; Set exit code
+    (x86-ret cgc 0) ;; Exit program
+
     (x86-label cgc WRONG_NARGS_LBL)
     (x86-jmp  cgc WRONG_NARGS_LBL) ;; infinite loop if wrong number of arguments)
   )
