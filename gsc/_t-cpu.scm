@@ -369,7 +369,7 @@
     (vector-ref (vector r0 r1 r2 r3 r4 r5) n))
 
   (define (alloc-frame cgc n)
-    (if (< 0 n)
+    (if (not (= 0 n))
       (x86-add cgc fp (x86-imm-int (* n -8)))))
 
   (define (frame cgc fs n)
@@ -384,7 +384,7 @@
         (get-register (reg-num opnd)))
       ((stk? opnd)
         (debug "stk\n")
-        (frame cgc (proc-lbl-frame-size proc) (stk-num opnd)))
+        (frame cgc (proc-lbl-frame-size code) (stk-num opnd)))
       ((lbl? opnd)
         (debug "lbl\n")
         (x86-imm-lbl (get-label cgc (proc-obj-name proc) (lbl-num opnd))))
@@ -408,7 +408,7 @@
 ;; ***** Environment code and primitive functions
 
   (define (add-start-routine cgc)
-    (x86-mov cgc na (x86-imm-int -64 64))
+    (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
   )
 
@@ -423,12 +423,12 @@
     ; (debug "x64-encode-gvm-instr\n")
     (case (gvm-instr-type (code-gvm-instr code))
       ((label)  (x64-encode-label-instr   cgc proc code))
+      ((jump)   (x64-encode-jump-instr    cgc proc code))
+      ((ifjump) (x64-encode-ifjump-instr  cgc proc code))
       ((apply)  (x64-encode-apply-instr   cgc proc code))
       ((copy)   (x64-encode-copy-instr    cgc proc code))
       ((close)  (x64-encode-close-instr   cgc proc code))
-      ((ifjump) (x64-encode-ifjump-instr  cgc proc code))
       ((switch) (x64-encode-switch-instr  cgc proc code))
-      ((jump)   (x64-encode-jump-instr    cgc proc code))
       (else
         (compiler-error
           "format-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type gvm-instr)))))
@@ -488,8 +488,8 @@
     (debug "x64-encode-jump-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
           (proc-name (proc-obj-name proc))
-          (fs-lbl (proc-lbl-frame-size proc))
-          (fs-jmp (proc-jmp-frame-size proc))
+           (fs-lbl (proc-lbl-frame-size code))
+           (fs-jmp (proc-jmp-frame-size code))
           (jmp-opnd (jump-opnd gvm-instr)))
 
       ;; Pop stack if necessary
@@ -510,15 +510,14 @@
         (add-narg-set cgc (jump-nb-args gvm-instr)))
 
       ; Jump to location 
-      (x86-jmp cgc (x64-jmp-opnd->x86-opnd cgc proc jmp-opnd))))
-
+      (x86-jmp cgc (x64-jmp-opnd->x86-opnd cgc proc code jmp-opnd))))
 
   (define (x64-encode-ifjump-instr cgc proc code)
     (debug "x64-encode-ifjump-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
           (proc-name (proc-obj-name proc))
-          (fs-lbl (proc-lbl-frame-size proc))
-          (fs-jmp (proc-jmp-frame-size proc))
+           (fs-lbl (proc-lbl-frame-size code))
+           (fs-jmp (proc-jmp-frame-size code))
           (true-label (get-label cgc proc-name (ifjump-true gvm-instr)))
           (false-label (get-label cgc proc-name (ifjump-false gvm-instr))))
 
@@ -552,14 +551,14 @@
       (else
         (compiler-internal-error "Number of argument not supported: " narg))))
 
-  (define (x64-jmp-opnd->x86-opnd cgc proc jmp-opnd)
+  (define (x64-jmp-opnd->x86-opnd cgc proc code jmp-opnd)
     (cond
       ((reg? jmp-opnd)
           (debug "register")
         (get-register (reg-num jmp-opnd)))
       ((stk? jmp-opnd)
           (debug "stack")
-        (frame cgc (proc-lbl-frame-size proc) (stk-num jmp-opnd)))
+        (frame cgc (proc-jmp-frame-size code) (stk-num jmp-opnd)))
       ((lbl? jmp-opnd)
           (debug "label")
         (get-label cgc (proc-obj-name proc) (lbl-num jmp-opnd)))
@@ -588,8 +587,8 @@
   (define (x64-encode-copy-instr cgc proc code)
     (debug "x64-encode-copy-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
-          (src (x64-gvm-opnd->x86-opnd cgc proc gvm-instr (copy-opnd gvm-instr)))
-          (dst (x64-gvm-opnd->x86-opnd cgc proc gvm-instr (copy-loc gvm-instr))))
+          (src (x64-gvm-opnd->x86-opnd cgc proc code (copy-opnd gvm-instr)))
+          (dst (x64-gvm-opnd->x86-opnd cgc proc code (copy-loc gvm-instr))))
       (x86-mov cgc dst src 64)))
 
 ;; ***** Close instruction encoding
@@ -717,19 +716,11 @@
           (if (bbs? p)
             (map fn (bbs->code-list p)))))
 
-  (define (proc-lbl proc)
-    (let ((codes (bbs->code-list (proc-obj-code proc))))
-      (car codes)))
+  (define (proc-lbl-frame-size code)
+    (bb-entry-frame-size (code-bb code)))
 
-  (define (proc-jmp proc)
-    (let ((codes (bbs->code-list (proc-obj-code proc))))
-      (list-ref codes (- (length codes) 1))))
-
-  (define (proc-lbl-frame-size proc)
-    (frame-size (gvm-instr-frame (code-gvm-instr (proc-lbl proc)))))
-
-  (define (proc-jmp-frame-size proc)
-    (frame-size (gvm-instr-frame (code-gvm-instr (proc-jmp proc)))))
+  (define (proc-jmp-frame-size code)
+    (bb-exit-frame-size (code-bb code)))
 
 ;;;============================================================================
 
