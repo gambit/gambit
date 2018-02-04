@@ -472,6 +472,7 @@
     (x86-mov cgc r0 (x86-imm-lbl C_RETURN_LBL))
     (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
+    (add-narg-set cgc 0)
   )
 
   (define (add-end-routine cgc)
