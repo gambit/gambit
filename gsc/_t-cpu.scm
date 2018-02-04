@@ -591,7 +591,7 @@
     (let* ((gvm-instr (code-gvm-instr code))
            (fs-lbl (proc-lbl-frame-size code))
            (fs-jmp (proc-jmp-frame-size code))
-          (jmp-opnd (jump-opnd gvm-instr)))
+           (jmp-opnd (jump-opnd gvm-instr)))
 
       ;; Pop stack if necessary
       (alloc-frame cgc (- fs-jmp fs-lbl))
@@ -603,7 +603,7 @@
       (if (jump-ret gvm-instr)
         (let* ((label-ret-num (jump-ret gvm-instr))
                (label-ret (get-proc-label cgc proc label-ret-num))
-                (label-ret-opnd (x86-imm-lbl label-ret)))
+               (label-ret-opnd (x86-imm-lbl label-ret)))
           (x86-mov cgc r0 label-ret-opnd)))
 
       ;; Set arg count 
@@ -807,13 +807,13 @@
 
 ;; ***** Utils
 
-(define _debug #f)
+(define _debug #t)
 (define (debug . str)
   (if _debug (for-each display str)))
 
 (define (show-listing cgc)
   (asm-assemble-to-u8vector cgc)
-  (asm-display-listing cgc (current-error-port) #t))
+  (asm-display-listing cgc (current-error-port) #f))
 
 (define (replace_whitespace str)
   (let ((f (lambda (c) (if (equal? #\space c) #\_ c)))
