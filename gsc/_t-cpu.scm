@@ -300,25 +300,53 @@
 
 ;; ***** Label table
 
-(define nat-labels (make-table test: eq?))
+;; Key: Label id
+;; Value: Pair (Label, optional Proc-obj)
+(define proc-labels (make-table test: eq?))
 
-(define (get-label cgc proc-name gvm-lbl)
+(define (get-proc-label cgc proc gvm-lbl)
   (define (nat-label-ref label-id)
-    (let ((x (table-ref nat-labels label-id #f)))
+    (let ((x (table-ref proc-labels label-id #f)))
       (if x
-          x
+          (car x)
           (let ((l (asm-make-label cgc label-id)))
-            (table-set! nat-labels label-id l)
+            (table-set! proc-labels label-id (list l proc))
             l))))
 
-  (let ((id (lbl->id gvm-lbl (replace_whitespace proc-name))))
-    (nat-label-ref id)))
+  (let* ((id (if gvm-lbl gvm-lbl 0))
+         (label-id (lbl->id id (replace_whitespace (proc-obj-name proc)))))
+    (nat-label-ref label-id)))
+
+;; Useful for branching
+(define (make-unique-label cgc suffix?)
+  (let* ((id (get-unique-id))
+         (suffix (if suffix? suffix? "other"))
+         (label-id (lbl->id id suffix))
+         (l (asm-make-label cgc label-id)))
+    (table-set! proc-labels label-id (list l #f))
+    l))
 
 (define (lbl->id num proc_name)
   (string->symbol (string-append "_"
                                  (number->string num)
                                  "_"
                                  proc_name)))
+
+; ***** Object table and object creation
+
+(define obj-labels (make-table test: equal?))
+
+;; Store object reference or as int ???
+(define (make-object-label cgc obj)
+  (define (obj->id)
+    (string->symbol (string-append "_obj_" (number->string (get-unique-id)))))
+
+  (let* ((x (table-ref obj-labels obj #f)))
+    (if x
+        x
+        (let* ((label (asm-make-label cgc (obj->id))))
+          (table-set! obj-labels obj label)
+          label))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -366,6 +394,12 @@
   (define stack-size 10000) ;; Scheme stack size
   (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
 
+  (define fixnum-tag 0)
+  (define other-tag 1)
+  (define cons-tag 2)
+  (define empty-tag 3)
+  (define tag-mult 4)
+
   (define (get-register n) 
     (vector-ref (vector r0 r1 r2 r3 r4 r5) n))
 
@@ -376,7 +410,7 @@
   (define (frame cgc fs n)
     (x86-mem (* (+ fs (- n) offs) 8) fp))
 
-  (define (x64-gvm-opnd->x86-opnd cgc proc code opnd)
+  (define (x64-gvm-opnd->x86-opnd cgc proc code opnd context)
     (debug opnd)
     (debug "\n")
     (cond 
@@ -385,14 +419,34 @@
         (get-register (reg-num opnd)))
       ((stk? opnd)
         (debug "stk\n")
-        (frame cgc (proc-lbl-frame-size code) (stk-num opnd)))
+        (if (eqv? context 'jump)
+          (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
+          (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
       ((lbl? opnd)
         (debug "lbl\n")
-        (x86-imm-lbl (get-label cgc (proc-obj-name proc) (lbl-num opnd))))
+        (if (eqv? context 'jump)
+          (get-proc-label cgc proc (lbl-num opnd))
+          (x86-imm-lbl (get-proc-label cgc proc (lbl-num opnd)))))
       ((obj? opnd)
         (debug "obj\n")
-        (x86-imm-int (obj-val opnd) 64))
+        (let ((val (obj-val opnd)))
+          (cond
+            ((fixnum? val)
+              (x86-imm-int (+ (* val tag-mult) fixnum-tag) 64))
+            ((null? val)
+              (x86-imm-int empty-tag 64))
+            ((proc-obj? val)
+              (if (eqv? context 'jump)
+                (get-proc-label cgc (obj-val opnd) 1)
+                (x86-imm-lbl (get-proc-label cgc (obj-val opnd) 1))))
+            ((string? val)
+              (if (eqv? context 'jump)
+                (make-object-label cgc (obj-val opnd))
+                (x86-imm-lbl (make-object-label cgc (obj-val opnd)))))
+            (else 
+              (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown object type")))))
       ((glo? opnd)
+        (debug "glo\n") ; (debug (glo-name opnd))
         (compiler-internal-error "Opnd not implementeted global"))
       ((clo? opnd)
         (compiler-internal-error "Opnd not implementeted closure"))
@@ -401,6 +455,7 @@
 
   ;; Provides unique ids
   ;; No need for randomness or UUID
+  ;; *** Obviously, NOT thread safe ***
   (define id 0)
   (define (get-unique-id)
     (set! id (+ id 1))
@@ -409,19 +464,61 @@
 ;; ***** Environment code and primitive functions
 
   (define (add-start-routine cgc)
+    (debug "add-start-routine\n")
     (x86-mov cgc r0 (x86-imm-lbl C_RETURN_LBL))
     (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
   )
 
   (define (add-end-routine cgc)
+    (debug "add-end-routine\n")
     (x86-label cgc C_RETURN_LBL)
     (x86-mov cgc (x86-rax) (x86-imm-int 0 64)) ;; Set exit code
     (x86-ret cgc 0) ;; Exit program
 
     (x86-label cgc WRONG_NARGS_LBL)
     (x86-jmp  cgc WRONG_NARGS_LBL) ;; infinite loop if wrong number of arguments)
+
+    ;; Add primitives
+    (table-for-each 
+      (lambda (key val) (put-primitive-if-needed cgc key val)) 
+      proc-labels)
+    ;; Add objects
+    (table-for-each 
+      (lambda (key val) (put-objects cgc key val)) 
+      obj-labels)
   )
+
+  ;; Value is Pair (Label, optional Proc-obj)
+  (define (put-primitive-if-needed cgc key pair)
+    (debug "put-primitive-if-needed\n")
+    (let* ((label (car pair))
+           (proc (cdr pair))
+           (defined? (and (vector-ref label 1) proc))) ;; See asm-label-pos (Same but without error if undefined)
+      (if (not defined?)
+        (begin
+          (debug "DEFINING: ")
+          (debug key)
+          (debug "\n")
+          (x86-label cgc label)
+          (x86-jmp cgc label)))))
+
+  ;; Value is Pair (Label, optional Proc-obj)
+  (define (put-objects cgc obj label)
+    (debug "put-objects\n")
+    (debug "label: " label)
+
+    (x86-label cgc label)
+
+    (cond
+      ((string? obj)
+        (debug "Obj: " obj "\n")
+        ;; Header: 158 (0x9E) + 256 * char_size(default:4) * length
+        (x86-dd cgc (+ 158 (* (* 256 4) (string-length obj))))
+        ;; String content=
+        (apply x86-dd (cons cgc (map char->integer (string->list obj)))))
+      (else 
+        (compiler-internal-error "put-objects: Unknown object type"))))
 
 ;; ***** x64 : GVM Instruction encoding
 
@@ -444,9 +541,8 @@
   (define (x64-encode-label-instr cgc proc code)
     (debug "x64-encode-label-instr: ")
     (let* ((gvm-instr (code-gvm-instr code))
-          (proc-name (proc-obj-name proc))
           (label-num (label-lbl-num gvm-instr))
-          (label (get-label cgc proc-name label-num))
+          (label (get-proc-label cgc proc label-num))
           (narg (label-entry-nb-parms gvm-instr)))
 
       (if (not (eqv? 'simple (label-type gvm-instr)))
@@ -493,7 +589,6 @@
   (define (x64-encode-jump-instr cgc proc code)
     (debug "x64-encode-jump-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
-          (proc-name (proc-obj-name proc))
            (fs-lbl (proc-lbl-frame-size code))
            (fs-jmp (proc-jmp-frame-size code))
           (jmp-opnd (jump-opnd gvm-instr)))
@@ -507,7 +602,7 @@
       ;; Save return address if necessary 
       (if (jump-ret gvm-instr)
         (let* ((label-ret-num (jump-ret gvm-instr))
-                (label-ret (get-label cgc proc-name label-ret-num))
+               (label-ret (get-proc-label cgc proc label-ret-num))
                 (label-ret-opnd (x86-imm-lbl label-ret)))
           (x86-mov cgc r0 label-ret-opnd)))
 
@@ -516,16 +611,15 @@
         (add-narg-set cgc (jump-nb-args gvm-instr)))
 
       ; Jump to location 
-      (x86-jmp cgc (x64-jmp-opnd->x86-opnd cgc proc code jmp-opnd))))
+      (x86-jmp cgc (x64-gvm-opnd->x86-opnd cgc proc code jmp-opnd 'jump))))
 
   (define (x64-encode-ifjump-instr cgc proc code)
     (debug "x64-encode-ifjump-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
-          (proc-name (proc-obj-name proc))
            (fs-lbl (proc-lbl-frame-size code))
            (fs-jmp (proc-jmp-frame-size code))
-          (true-label (get-label cgc proc-name (ifjump-true gvm-instr)))
-          (false-label (get-label cgc proc-name (ifjump-false gvm-instr))))
+           (true-label (get-proc-label cgc proc (ifjump-true gvm-instr)))
+           (false-label (get-proc-label cgc proc (ifjump-false gvm-instr))))
 
       ;; Pop stack if necessary 
       (alloc-frame cgc (- fs-jmp fs-lbl))
@@ -557,24 +651,6 @@
       (else
         (compiler-internal-error "Number of argument not supported: " narg))))
 
-  (define (x64-jmp-opnd->x86-opnd cgc proc code jmp-opnd)
-    (cond
-      ((reg? jmp-opnd)
-          (debug "register")
-        (get-register (reg-num jmp-opnd)))
-      ((stk? jmp-opnd)
-          (debug "stack")
-        (frame cgc (proc-jmp-frame-size code) (stk-num jmp-opnd)))
-      ((lbl? jmp-opnd)
-          (debug "label")
-        (get-label cgc (proc-obj-name proc) (lbl-num jmp-opnd)))
-      ((obj? jmp-opnd)
-        (get-label cgc (proc-obj-name (obj-val jmp-opnd)) 1))
-      ((glo? jmp-opnd)
-        (compiler-internal-error "x64-encode-jump-instr: global object as jump location"))
-      ((clo? jmp-opnd)
-        (compiler-internal-error "x64-encode-jump-instr: closure object as jump location"))))
-
 ;; ***** Apply instruction encoding
 
   (define (x64-encode-apply-instr cgc proc code)
@@ -593,8 +669,8 @@
   (define (x64-encode-copy-instr cgc proc code)
     (debug "x64-encode-copy-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
-          (src (x64-gvm-opnd->x86-opnd cgc proc code (copy-opnd gvm-instr)))
-          (dst (x64-gvm-opnd->x86-opnd cgc proc code (copy-loc gvm-instr))))
+          (src (x64-gvm-opnd->x86-opnd cgc proc code (copy-opnd gvm-instr) #f))
+          (dst (x64-gvm-opnd->x86-opnd cgc proc code (copy-loc gvm-instr) #f)))
       (x86-mov cgc dst src 64)))
 
 ;; ***** Close instruction encoding
@@ -667,19 +743,18 @@
     (debug "  x64-apply-binary-op\n")
     (let* ((opnds
             (map
-              (lambda (opnd) (x64-gvm-opnd->x86-opnd cgc proc code opnd))
+              (lambda (opnd) (x64-gvm-opnd->x86-opnd cgc proc code opnd #f))
               args))
           (opnd1 (car opnds)))
 
       (apply (prim-info-encoder prim) cgc (append opnds '(64)))
 
       (if (and result-loc (not (equal? (car args) result-loc))) 
-        (let ((x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code result-loc)))
+        (let ((x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code result-loc #f)))
         (if (eqv? (prim-info-symbol prim) 'boolean)
           (let* ((proc-name (proc-obj-name proc))
-                (id-str (number->string (get-unique-id)))
-                (label-name (string-append proc-name "_jump"))
-                (label (get-label cgc label-name id-str)))
+                 (suffix (string-append proc-name "_jump"))
+                 (label (make-unique-label cgc suffix)))
               (x86-mov cgc x86-result-loc (x86-imm-int 1))
               ((prim-info-true-jump prim) cgc label)
               (x86-mov cgc x86-result-loc (x86-imm-int 0))
@@ -694,7 +769,7 @@
     (debug "  x64-apply-binary-op\n")
     (let* ((opnds
             (map
-              (lambda (opnd) (x64-gvm-opnd->x86-opnd cgc proc code opnd))
+              (lambda (opnd) (x64-gvm-opnd->x86-opnd cgc proc code opnd #f))
               args))
           (opnd1 (car opnds)))
 
