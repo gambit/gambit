@@ -399,10 +399,10 @@
     (vector r0 r1 r2 r3 r4 r5))
 
   (define fixnum-tag 0)
-  (define other-tag 1)
-  (define cons-tag 2)
-  (define empty-tag 3)
-  (define tag-mult 4)
+  (define other-tag 0)
+  (define cons-tag 0)
+  (define empty-tag 0)
+  (define tag-mult 1)
 
   (define (get-register n) 
     (vector-ref main-registers  n))
