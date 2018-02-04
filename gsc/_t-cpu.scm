@@ -476,10 +476,12 @@
 
   (define (add-end-routine cgc)
     (debug "add-end-routine\n")
+    (asm-align cgc 4 1)
     (x86-label cgc C_RETURN_LBL)
     (x86-mov cgc (x86-rax) (x86-imm-int 0 64)) ;; Set exit code
     (x86-ret cgc 0) ;; Exit program
 
+    (asm-align cgc 4 1)
     (x86-label cgc WRONG_NARGS_LBL)
     (x86-jmp  cgc WRONG_NARGS_LBL) ;; infinite loop if wrong number of arguments)
 
@@ -502,6 +504,7 @@
       (if (not defined?)
         (let* ((prim (get-prim-obj (proc-obj-name proc)))
                (fun (prim-info-lifted-encode-fun prim)))
+          (asm-align cgc 4 1)
           (x86-label cgc label)
           (fun cgc label 64)))))
 
