@@ -734,7 +734,7 @@
 
 (define _debug #f)
 (define (debug . str)
-  (if _debug (apply display str)))
+  (if _debug (for-each display str)))
 
 (define (show-listing cgc)
   (asm-assemble-to-u8vector cgc)
