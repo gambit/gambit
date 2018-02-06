@@ -2,7 +2,7 @@
 
 ;;; File: "_x86#.scm"
 
-;;; Copyright (c) 2010-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2010-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -219,6 +219,8 @@ x86-jg
 
 x86-push
 x86-pop
+x86-pushf
+x86-popf
 
 x86-cwde
 x86-cdq
