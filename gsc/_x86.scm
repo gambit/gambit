@@ -2,7 +2,7 @@
 
 ;;; File: "_x86.scm"
 
-;;; Copyright (c) 2010-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2010-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -933,9 +933,12 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; X86 instructions: NOP, LEAVE, HLT, CMC, CLC, STC, CLI, STI, CLD, and STD.
+;;; X86 instructions: NOP, PUSHF, POPF, LEAVE, HLT, CMC, CLC, STC,
+;;; CLI, STI, CLD, and STD.
 
 (define (x86-nop cgc) (x86-no-opnd-instr cgc #x90))
+(define (x86-pushf cgc) (x86-no-opnd-instr cgc #x9c))
+(define (x86-popf cgc) (x86-no-opnd-instr cgc #x9d))
 (define (x86-leave cgc) (x86-no-opnd-instr cgc #xc9))
 (define (x86-hlt cgc) (x86-no-opnd-instr cgc #xf4))
 (define (x86-cmc cgc) (x86-no-opnd-instr cgc #xf5))
@@ -954,6 +957,10 @@
       (x86-listing cgc
                    (cond ((fx= opcode #x90)
                           "nop")
+                         ((fx= opcode #x9c)
+                          "pushf")
+                         ((fx= opcode #x9d)
+                          "popf")
                          ((fx= opcode #xc9)
                           "leave")
                          (else
