@@ -74,7 +74,7 @@
          (fixups (codegen-context-fixup-list cgc))
          (procedure (u8vector->procedure code fixups)))
     (display "time-cgc: \n\n\n\n")
-    (asm-display-listing cgc (current-error-port) #f)
+    (asm-display-listing cgc (current-error-port) #t)
     (pp (time (procedure)))))
 
 ;;;----------------------------------------------------------------------------
@@ -535,6 +535,7 @@
     (x86-mov cgc r0 (x86-imm-lbl C_RETURN_LBL))
     (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
+    (x86-sub  cgc sp (x86-imm-int 10000))
     (add-narg-set cgc 0)
   )
 
@@ -542,7 +543,10 @@
     (debug "add-end-routine\n")
     (asm-align cgc 4 1)
     (x86-label cgc C_RETURN_LBL)
-    (x86-mov cgc (x86-rax) (x86-imm-int 0 64)) ;; Set exit code
+    (x86-add cgc sp (x86-imm-int 10000))
+    (x86-mov cgc (x86-rax) r1)
+    (x86-add cgc (x86-rax) (x86-rax))
+    (x86-add cgc (x86-rax) (x86-rax))
     (x86-ret cgc 0) ;; Exit program
 
     (asm-align cgc 4 1)
@@ -614,8 +618,8 @@
           (label (get-proc-label cgc proc label-num))
           (narg (label-entry-nb-parms gvm-instr)))
 
-      (if (not (eqv? 'simple (label-type gvm-instr)))
-          (asm-align cgc 4 1))
+;;      (if (not (eqv? 'simple (label-type gvm-instr)))
+;;          (asm-align cgc 4 1))
 
       (x86-label cgc label)
 
