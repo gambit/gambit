@@ -343,21 +343,24 @@
                          unique-name
                          sem-changing-options
                          sem-preserving-options)
-        (let* ((arch (target-name targ))
-               (handler (case arch
-                        ('x86     x86-backend)
-                        ('x86-64  x86-64-backend)
-                        ('arm     armv8-backend)
-                        (else (compiler-internal-error "dispatch-target, unsupported target: " arch))))
-               (cgc (make-codegen-context)))
+  (let* ((arch (target-name targ))
+          (handler (case arch
+                  ('x86     x86-backend)
+                  ('x86-64  x86-64-backend)
+                  ('arm     armv8-backend)
+                  (else (compiler-internal-error "dispatch-target, unsupported target: " arch))))
+          (cgc (make-codegen-context)))
 
-          (codegen-context-listing-format-set! cgc 'gnu)
+    (codegen-context-listing-format-set! cgc 'gnu)
 
-          (handler
-            targ procs output c-intf
-            module-descr unique-name
-            sem-changing-options sem-preserving-options
-            cgc)))
+    (handler
+      targ procs output c-intf
+      module-descr unique-name
+      sem-changing-options sem-preserving-options
+      cgc)
+
+    ; (show-listing cgc)
+    (time-cgc cgc)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -437,9 +440,7 @@
 
   (add-start-routine cgc)
   (map-on-procs encode-proc procs)
-  (add-end-routine cgc)
-  ; (show-listing cgc)  
-  (time-cgc cgc))
+  (add-end-routine cgc))
 
 ;; ***** Constants and helper functions
 
