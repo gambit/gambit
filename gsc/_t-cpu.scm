@@ -672,19 +672,22 @@
       ;; TODO
       ;; Poll/safe is specified (jump-poll?/jump-safe? gvm-instr)
 
-      ;; Save return address if necessary 
+      ;; Save return address if necessary
       (if (jump-ret gvm-instr)
         (let* ((label-ret-num (jump-ret gvm-instr))
                (label-ret (get-proc-label cgc proc label-ret-num))
                (label-ret-opnd (x86-imm-lbl label-ret)))
           (x86-mov cgc r0 label-ret-opnd)))
 
-      ;; Set arg count 
+      ;; Set arg count
       (if (jump-nb-args gvm-instr)
         (add-narg-set cgc (jump-nb-args gvm-instr)))
 
-      ; Jump to location 
-      (x86-jmp cgc (x64-gvm-opnd->x86-opnd cgc proc code jmp-opnd 'jump))))
+      ;; Jump to location. Checks if jump is useless.
+      ;; As far as I know, it breaks nothing and gives 50% more performance in (fib 40)
+      (let* ((label-num (label-lbl-num (bb-label-instr (code-bb code)))))
+        (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
+          (x86-jmp cgc (x64-gvm-opnd->x86-opnd cgc proc code jmp-opnd 'jump))))))
 
   (define (x64-encode-ifjump-instr cgc proc code)
     (debug "x64-encode-ifjump-instr\n")
