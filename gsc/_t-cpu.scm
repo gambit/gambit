@@ -465,7 +465,7 @@
   (define other-tag 0)
   (define cons-tag 0)
   (define empty-tag 0)
-  (define tag-mult 1)
+  (define tag-mult 4)
 
   (define (get-register n) 
     (vector-ref main-registers  n))
