@@ -533,10 +533,10 @@
 
   (define (add-start-routine cgc)
     (debug "add-start-routine\n")
-    (x86-mov cgc r0 (x86-imm-lbl C_RETURN_LBL))
+    (x86-mov cgc (get-register 0) (x86-imm-lbl C_RETURN_LBL))
     (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
-    (x86-sub  cgc sp (x86-imm-int 10000))
+    (x86-sub  cgc sp (x86-imm-int stack-size))
     (add-narg-set cgc 0)
   )
 
@@ -675,7 +675,7 @@
         (let* ((label-ret-num (jump-ret gvm-instr))
                (label-ret (get-proc-label cgc proc label-ret-num))
                (label-ret-opnd (x86-imm-lbl label-ret)))
-          (x86-mov cgc r0 label-ret-opnd)))
+          (x86-mov cgc (get-register 0) label-ret-opnd)))
 
       ;; Set arg count
       (if (jump-nb-args gvm-instr)
@@ -894,13 +894,13 @@
                (label (make-unique-label cgc suffix))
                (result-loc r1))
 
-            (x86-mov cgc r1 (x86-imm-int 1))
+            (x86-mov cgc (get-register 1) (x86-imm-int 1))
             ((prim-info-true-jump prim) cgc label)
-            (x86-mov cgc r1 (x86-imm-int 0))
+            (x86-mov cgc (get-register 1) (x86-imm-int 0))
             (x86-label cgc label)))
         ;; Else, we suppose that arg1 is destination of operation. arg1 = r1
 
-    (x86-jmp cgc r0)))
+    (x86-jmp cgc (get-register 0))))
 
 ;;;----------------------------------------------------------------------------
 
