@@ -359,7 +359,6 @@
       sem-changing-options sem-preserving-options
       cgc)
 
-    ; (show-listing cgc)
     (time-cgc cgc)))
 
 ;;;----------------------------------------------------------------------------
@@ -414,6 +413,14 @@
           (table-set! obj-labels obj label)
           label))))
 
+;; Provides unique ids
+;; No need for randomness or UUID
+;; *** Obviously, NOT thread safe ***
+(define id 0)
+(define (get-unique-id)
+  (set! id (+ id 1))
+  id)
+
 ;;;----------------------------------------------------------------------------
 
 ;; ***** x64 code generation
@@ -447,6 +454,15 @@
   (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
   (define C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
 
+  (define stack-size 10000) ;; Scheme stack size
+  (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
+
+  (define fixnum-tag 0)
+  (define other-tag 0)
+  (define cons-tag 0)
+  (define empty-tag 0)
+  (define tag-mult 4)
+
   (define r0 (x86-r15)) ;; GVM r0 = x86 r15
   (define r1 (x86-r14)) ;; GVM r1 = x86 r14
   (define r2 (x86-r13)) ;; GVM r2 = x86 r13
@@ -456,20 +472,12 @@
   (define na (x86-cl))  ;; number of arguments register
   (define sp (x86-rsp))
   (define fp (x86-rdx))
-  (define stack-size 10000) ;; Scheme stack size
-  (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
 
   (define main-registers 
-    (vector r0 r1 r2 r3 r4 r5))
-
-  (define fixnum-tag 0)
-  (define other-tag 0)
-  (define cons-tag 0)
-  (define empty-tag 0)
-  (define tag-mult 4)
+    (list r0 r1 r2 r3 r4 r5))
 
   (define (get-register n) 
-    (vector-ref main-registers  n))
+    (list-ref main-registers n))
 
   (define (alloc-frame cgc n)
     (if (not (= 0 n))
@@ -520,14 +528,6 @@
         (compiler-internal-error "Opnd not implementeted closure"))
       (else
         (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown opnd: " opnd))))
-
-  ;; Provides unique ids
-  ;; No need for randomness or UUID
-  ;; *** Obviously, NOT thread safe ***
-  (define id 0)
-  (define (get-unique-id)
-    (set! id (+ id 1))
-    id)
 
 ;; ***** Environment code and primitive functions
 
@@ -623,9 +623,6 @@
 ;;          (asm-align cgc 4 1))
 
       (x86-label cgc label)
-
-      (debug label)
-      (debug "\n")
 
       (if (eqv? 'entry (label-type gvm-instr))
         (add-narg-check cgc narg))))
