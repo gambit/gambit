@@ -619,8 +619,9 @@
           (label (get-proc-label cgc proc label-num))
           (narg (label-entry-nb-parms gvm-instr)))
 
-;;      (if (not (eqv? 'simple (label-type gvm-instr)))
-;;          (asm-align cgc 4 1))
+    ;; Todo: Check if alignment is necessary for task-entry/return
+    (if (not (eqv? 'simple (label-type gvm-instr)))
+      (asm-align cgc 4 1 144))
 
       (x86-label cgc label)
 
