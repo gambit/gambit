@@ -379,7 +379,7 @@
             l))))
 
   (let* ((id (if gvm-lbl gvm-lbl 0))
-         (label-id (lbl->id id (replace_whitespace (proc-obj-name proc)))))
+         (label-id (lbl->id id (proc-obj-name proc))))
     (nat-label-ref label-id)))
 
 ;; Useful for branching
@@ -392,7 +392,7 @@
     l))
 
 (define (lbl->id num proc_name)
-  (string->symbol (string-append "_"
+  (string->symbol (string-append "_proc_"
                                  (number->string num)
                                  "_"
                                  proc_name)))
@@ -930,9 +930,4 @@
 
 (define (show-listing cgc)
   (asm-assemble-to-u8vector cgc)
-  (asm-display-listing cgc (current-error-port) #f))
-
-(define (replace_whitespace str)
-  (let ((f (lambda (c) (if (equal? #\space c) #\_ c)))
-        (str-list (string->list str)))
-    (list->string (map f str-list))))
+  (asm-display-listing cgc (current-error-port) #t))
