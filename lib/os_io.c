@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -7990,7 +7990,7 @@ ___mask_child_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, ___CAST(___sigset_type*,state)+2);
+  ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, state->sigset+2);
 
 #endif
 }
@@ -8003,7 +8003,7 @@ ___mask_child_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+2, NULL);
+  ___thread_sigmask (SIG_SETMASK, state->sigset+2, NULL);
 
 #endif
 }

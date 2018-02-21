@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -1520,6 +1520,28 @@
 #define ___HAVE_GOOD_COSH
 #define ___HAVE_GOOD_TANH
 
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
+/* signal.h library properties. */
+
+#ifndef ___DONT_HAVE_SIGNAL_H
+
+#define @CONF_USE_SIGSET_T@
+
+#ifdef ___USE_SIGSET_T
+#include <signal.h>
+#endif
+
+#endif
+
+
+#ifdef ___USE_SIGSET_T
+#define ___sigset_type sigset_t
+#else
+#define ___sigset_type int
 #endif
 
 
@@ -8003,7 +8025,7 @@ typedef struct ___ticketlock_location
 
 typedef struct ___mask_interrupts_state_struct
   {
-    ___S32 content[8]; /* larger than needed to be safe */
+    ___sigset_type sigset[3]; /* increase if other interrupts are added */
   } ___mask_interrupts_state;
 
 
