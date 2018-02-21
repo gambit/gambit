@@ -189,6 +189,7 @@ x86-cld
 x86-std
 
 x86-int
+x86-int3
 
 x86-syscall
 x86-sysret

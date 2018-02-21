@@ -975,16 +975,21 @@
 ;;; X86 instruction: INT.
 
 (define (x86-int cgc n)
-  (if (fx= n 3)
-      (asm-8 cgc #xcc) ;; opcode
-      (begin
-        (asm-8 cgc #xcd) ;; opcode
-        (asm-8 cgc n)))
+  (asm-8 cgc #xcd) ;; opcode
+  (asm-8 cgc n)
   (if (codegen-context-listing-format cgc)
       (x86-listing cgc
                    "int"
                    0
                    (x86-imm-int n 0))))
+
+(define (x86-int3 cgc) ;; one byte encoding for "int 3"
+  (asm-8 cgc #xcc) ;; opcode
+  (if (codegen-context-listing-format cgc)
+      (x86-listing cgc
+                   "int"
+                   0
+                   (x86-imm-int 3 0))))
 
 ;;;----------------------------------------------------------------------------
 
