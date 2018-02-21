@@ -1365,7 +1365,10 @@ ___END_C_LINKAGE
 
 #ifdef INCLUDE_signal_h
 #ifdef HAVE_SIGNAL_H
+/* Only include signal.h if gambit.h hasn't already done so */
+#ifndef ___USE_SIGSET_T
 #include <signal.h>
+#endif
 #endif
 #endif
 
@@ -1755,17 +1758,6 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #define HEARTBEAT_ITIMER ITIMER_VIRTUAL
 #define HEARTBEAT_SIG SIGVTALRM
 #endif
-#endif
-
-
-#ifdef USE_POSIX
-
-#ifdef USE_sigaction
-typedef sigset_t ___sigset_type;
-#else
-typedef int ___sigset_type;
-#endif
-
 #endif
 
 

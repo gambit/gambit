@@ -1198,6 +1198,26 @@ AC_DEFUN([AC_CHECK_STAT],
                 [#include <sys/stat.h>])
 ])
 
+AC_DEFUN([AC_CHECK_SIGSET_T],
+[
+  CONF_USE_SIGSET_T="___USE_NO_SIGSET_T"
+  AC_CACHE_CHECK([for sigset_t], ac_cv_type_sigset_t,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+      ],[sigset_t ss;],
+    ac_cv_type_sigset_t=yes,
+    ac_cv_type_sigset_t=no)
+  ])
+  if test $ac_cv_type_sigset_t = yes; then
+    CONF_USE_SIGSET_T="___USE_SIGSET_T"
+  fi
+  AC_SUBST(CONF_USE_SIGSET_T)
+])
+
+
 AC_DEFUN([AC_CHECK_COMMON],
 [
   AC_CHECK_ENVIRON
@@ -1207,6 +1227,7 @@ AC_DEFUN([AC_CHECK_COMMON],
   AC_CHECK_MKDIR
   AC_CHECK_OPENDIR
   AC_CHECK_STAT
+  AC_CHECK_SIGSET_T
 ])
 
 # Check for OS functions and header files

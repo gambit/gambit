@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8652,7 +8652,7 @@ ___mask_user_interrupts_state *state;)
   sigaddset (&sigs, SIGWINCH);
   sigaddset (&sigs, SIGCONT);
 
-  ___thread_sigmask (SIG_BLOCK, &sigs, ___CAST(___sigset_type*,state)+1);
+  ___thread_sigmask (SIG_BLOCK, &sigs, state->sigset+1);
 
 #endif
 }
@@ -8665,7 +8665,7 @@ ___mask_user_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+1, NULL);
+  ___thread_sigmask (SIG_SETMASK, state->sigset+1, NULL);
 
 #endif
 }

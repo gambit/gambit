@@ -831,6 +831,7 @@ DASH_no_cpp_precomp
 CONF_HAVE_CONDITION_VARIABLE
 CONF_THREAD_LOCAL_STORAGE_CLASS
 CONF_THREAD_SYSTEM
+CONF_USE_SIGSET_T
 OS_WIN32
 C_COMP_VISUALC
 C_COMP_LLVM
@@ -6223,6 +6224,9 @@ PATH_SEP="/"
 
 
 
+
+
+
 # Check for OS functions and header files
 
 if test "$ANSI_C" = yes; then
@@ -6549,6 +6553,44 @@ if test "x$ac_cv_type_struct_stat64" = xyes; then :
 $as_echo "#define HAVE_STRUCT_STAT64 /**/" >>confdefs.h
 
 fi
+
+
+
+  CONF_USE_SIGSET_T="___USE_NO_SIGSET_T"
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sigset_t" >&5
+$as_echo_n "checking for sigset_t... " >&6; }
+if ${ac_cv_type_sigset_t+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+
+int
+main ()
+{
+sigset_t ss;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ac_cv_type_sigset_t=yes
+else
+  ac_cv_type_sigset_t=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_type_sigset_t" >&5
+$as_echo "$ac_cv_type_sigset_t" >&6; }
+  if test $ac_cv_type_sigset_t = yes; then
+    CONF_USE_SIGSET_T="___USE_SIGSET_T"
+  fi
 
 
 
@@ -7344,6 +7386,44 @@ if test "x$ac_cv_type_struct_stat64" = xyes; then :
 $as_echo "#define HAVE_STRUCT_STAT64 /**/" >>confdefs.h
 
 fi
+
+
+
+  CONF_USE_SIGSET_T="___USE_NO_SIGSET_T"
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sigset_t" >&5
+$as_echo_n "checking for sigset_t... " >&6; }
+if ${ac_cv_type_sigset_t+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+
+int
+main ()
+{
+sigset_t ss;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  ac_cv_type_sigset_t=yes
+else
+  ac_cv_type_sigset_t=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_type_sigset_t" >&5
+$as_echo "$ac_cv_type_sigset_t" >&6; }
+  if test $ac_cv_type_sigset_t = yes; then
+    CONF_USE_SIGSET_T="___USE_SIGSET_T"
+  fi
 
 
 
