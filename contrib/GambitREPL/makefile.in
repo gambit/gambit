@@ -1,6 +1,6 @@
 # makefile for Gambit REPL app.
 
-# Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 herefromroot = contrib/GambitREPL
 rootfromhere = ../..
@@ -107,6 +107,8 @@ GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
+PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)../../lib/header.scm\")"
+
 all:
 
 all-pre:
@@ -148,10 +150,10 @@ prepare-for-xcode: $(MODULES_M) GambitREPL.xcodeproj gambit-iOS
 	@echo "*************************************************************"
 
 .scm.m:
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c -check -o $*.m $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c $(PRELUDE_OPT) -o $*.m $(srcdirpfx)$*.scm
 
 program_.m: digest.m genport.m zlib.m tar.m json.m url.m html.m wiki.m repl-server.m intf.m script.m repo.m help.m emacs.m program.m
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link -o $@ $^
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link $(PRELUDE_OPT) -o $@ $^
 
 GambitREPL.xcodeproj: GambitREPL.xcodeproj.tgz
 	rm -rf GambitREPL.xcodeproj
@@ -170,7 +172,7 @@ tgz-for-emacs: emacs/GambitREPL.html emacs/GambitREPL.js emacs/GambitREPL.css em
 tgz-files: tgz-for-GambitREPL.xcodeproj tgz-for-emacs
 
 grd@exe@: grd.scm
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o grd@exe@ -exe grd.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings $(PRELUDE_OPT) -o grd@exe@ -exe grd.scm
 
 bootstrap-pre:
 
