@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -58,7 +58,7 @@ for VARIANT in intel32 intel64; do
   rm -f `pwd`/gcc
   cat <<EOF > gcc
 #!/bin/sh
-exec /usr/local/Cellar/gcc5/5.2.0/bin/gcc-5 -fschedule-insns2 -fno-trapping-math -fwrapv -mieee-fp -fmodulo-sched -freschedule-modulo-scheduled-loops "\$@"
+exec /usr/local/Cellar/gcc/7.3.0/bin/gcc-7 -fschedule-insns2 -fno-trapping-math -fwrapv -mieee-fp -fmodulo-sched -freschedule-modulo-scheduled-loops "\$@"
 EOF
   chmod +x gcc
   export PATH="`pwd`:$PATH"
