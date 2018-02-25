@@ -1356,9 +1356,6 @@
 
 #ifdef __cplusplus
 
-#define ___P(ansi,kr)ansi
-#define ___PVOID ()
-
 #define ___BEGIN_C_LINKAGE extern "C" {
 #define ___END_C_LINKAGE }
 
@@ -1377,18 +1374,6 @@
 
 #else
 
-#ifdef __STDC__
-
-#define ___P(ansi,kr)ansi
-#define ___PVOID (void)
-
-#else
-
-#define ___P(ansi,kr)kr
-#define ___PVOID ()
-
-#endif
-
 #define ___BEGIN_C_LINKAGE
 #define ___END_C_LINKAGE
 
@@ -1398,6 +1383,23 @@
 
 #undef ___USE_SETJMP
 #define ___USE_SETJMP
+
+#endif
+
+
+#ifdef ___FORCE_KR
+
+#define ___P(ansi,kr)kr
+#define ___PVOID ()
+
+#else
+
+#define ___P(ansi,kr)ansi
+#ifdef __cplusplus
+#define ___PVOID ()
+#else
+#define ___PVOID (void)
+#endif
 
 #endif
 
