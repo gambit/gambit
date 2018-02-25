@@ -453,8 +453,11 @@
 
   (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
   (define C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
+  (define THREAD_DESCRIPTOR (asm-make-label cgc 'THREAD_DESCRIPTOR))
 
-  (define stack-size 10000) ;; Scheme stack size
+  (define stack-size 10000) ;; Scheme stack size (bytes)
+  (define thread-descritor-size 256) ;; Thread descriptor size (bytes) (Probably too much)
+  (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
   (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
 
   (define fixnum-tag 0)
@@ -479,6 +482,8 @@
   (define na (x86-cl))  ;; number of arguments register
   (define sp (x86-rsp))
   (define fp (x86-rdx))
+
+  (define descriptor-register (x86-rcx))  ;; Thread descriptor register
 
   (define main-registers 
     (list r0 r1 r2 r3 r4 r5))
@@ -549,23 +554,46 @@
 
   (define (add-start-routine cgc)
     (debug "add-start-routine\n")
-    (x86-mov cgc (get-register 0) (x86-imm-lbl C_RETURN_LBL))
-    (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
-    (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
-    (x86-sub  cgc sp (x86-imm-int stack-size))
+
+    ;; Aligns address to 2^8 so the 8 least significant bits are 0
+    ;; This is used to store the address in the lower bits of the cl register
+    ;; The lower byte is used to pass narg
+    ;; Also, align to descriptor to cache lines. TODO: Confirm it's true
+    (asm-align cgc 256)
+    (x86-label cgc THREAD_DESCRIPTOR)
+    (reserve-space cgc thread-descritor-size 0) ;; Reserve space for thread-descritor-size bytes
+
+    ; ;; Allocate space for thread descriptor + some padding to protect in case of underflow
+    (x86-sub cgc sp (x86-imm-int thread-descritor-size))
+    ; ;; Set thread descriptor address
+    (x86-mov cgc descriptor-register (x86-imm-lbl THREAD_DESCRIPTOR))
+
+    ; ;; Allocate padding to protect thread descriptor from underflow
+    (x86-sub cgc sp (x86-imm-int stack-underflow-padding))
+    ; ;; Set underflow position to current stack pointer position
+    (x86-mov cgc (x86-mem 8 descriptor-register) sp)
+
+    (x86-mov cgc (get-register 0) (x86-imm-lbl C_RETURN_LBL)) ;; Set return address for main
+    (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register
+    (x86-lea cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
+    (x86-sub cgc sp (x86-imm-int stack-size)) ;; Allocate space for stack
     (add-narg-set cgc 0)
   )
 
   (define (add-end-routine cgc)
     (debug "add-end-routine\n")
+    
+    ;; Terminal procedure
     (asm-align cgc 4 1)
     (x86-label cgc C_RETURN_LBL)
-    (x86-add cgc sp (x86-imm-int 10000))
+    (x86-add cgc sp (x86-imm-int 
+      (+ stack-underflow-padding thread-descritor-size stack-size)))
     (x86-mov cgc (x86-rax) r1)
     (x86-add cgc (x86-rax) (x86-rax))
     (x86-add cgc (x86-rax) (x86-rax))
     (x86-ret cgc 0) ;; Exit program
 
+    ;; Incorrect narg handling
     (asm-align cgc 4 1)
     (x86-label cgc WRONG_NARGS_LBL)
     (x86-jmp  cgc WRONG_NARGS_LBL) ;; infinite loop if wrong number of arguments)
@@ -598,6 +626,7 @@
     (debug "put-objects\n")
     (debug "label: " label)
 
+    ;; Todo : Alignment
     (x86-label cgc label)
 
     (cond
@@ -950,3 +979,9 @@
 (define (show-listing cgc)
   (asm-assemble-to-u8vector cgc)
   (asm-display-listing cgc (current-error-port) #t))
+
+(define (reserve-space cgc bytes #!optional (value 0))
+  (if (> bytes 0)
+    (begin
+      (x86-db cgc value)
+      (reserve-space cgc (- bytes 1) value))))
