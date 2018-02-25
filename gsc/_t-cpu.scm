@@ -325,7 +325,7 @@
                       (map proc-obj-name procs)
                       output
                       unique-name))
-  
+
   (let ((port (current-output-port)))
       (virtual.dump-gvm procs port)
       (dispatch-target targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
@@ -434,7 +434,7 @@
                         sem-changing-options
                         sem-preserving-options
                         cgc)
-                        
+
   (define (encode-proc proc)
     (map-proc-instrs
       (lambda (code)
@@ -485,10 +485,10 @@
 
   (define descriptor-register (x86-rcx))  ;; Thread descriptor register
 
-  (define main-registers 
+  (define main-registers
     (list r0 r1 r2 r3 r4 r5))
 
-  (define (get-register n) 
+  (define (get-register n)
     (list-ref main-registers n))
 
   (define (alloc-frame cgc n)
@@ -509,7 +509,7 @@
         ((null? val)
           (x86-imm-int (tag-number nil-object-val tag-mult special-int-tag) 64))
         ((boolean? val)
-          (x86-imm-int 
+          (x86-imm-int
             (if val
               (tag-number true-object-val  tag-mult special-int-tag)
               (tag-number false-object-val tag-mult special-int-tag)) 64))
@@ -521,11 +521,11 @@
           (if (eqv? context 'jump)
             (make-object-label cgc (obj-val opnd))
             (x86-imm-lbl (make-object-label cgc (obj-val opnd)))))
-        (else 
+        (else
           (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown object type"))))
 
     (debug opnd "\n")
-    (cond 
+    (cond
       ((reg? opnd)
         (debug "reg\n")
         (get-register (reg-num opnd)))
@@ -582,11 +582,11 @@
 
   (define (add-end-routine cgc)
     (debug "add-end-routine\n")
-    
+
     ;; Terminal procedure
     (asm-align cgc 4 1)
     (x86-label cgc C_RETURN_LBL)
-    (x86-add cgc sp (x86-imm-int 
+    (x86-add cgc sp (x86-imm-int
       (+ stack-underflow-padding thread-descritor-size stack-size)))
     (x86-mov cgc (x86-rax) r1)
     (x86-add cgc (x86-rax) (x86-rax))
@@ -599,12 +599,12 @@
     (x86-jmp  cgc WRONG_NARGS_LBL) ;; infinite loop if wrong number of arguments)
 
     ;; Add primitives
-    (table-for-each 
-      (lambda (key val) (put-primitive-if-needed cgc key val)) 
+    (table-for-each
+      (lambda (key val) (put-primitive-if-needed cgc key val))
       proc-labels)
     ;; Add objects
-    (table-for-each 
-      (lambda (key val) (put-objects cgc key val)) 
+    (table-for-each
+      (lambda (key val) (put-objects cgc key val))
       obj-labels)
   )
 
@@ -636,7 +636,7 @@
         (x86-dd cgc (+ 158 (* (* 256 4) (string-length obj))))
         ;; String content=
         (apply x86-dd (cons cgc (map char->integer (string->list obj)))))
-      (else 
+      (else
         (compiler-internal-error "put-objects: Unknown object type"))))
 
 ;; ***** x64 : GVM Instruction encoding
@@ -779,8 +779,8 @@
     (debug "x64-encode-apply-instr\n")
     (let ((gvm-instr (code-gvm-instr code)))
       (x64-encode-prim-affectation
-        cgc 
-        proc 
+        cgc
+        proc
         code
         (get-prim-obj (proc-obj-name (apply-prim gvm-instr)))
         (apply-opnds gvm-instr)
@@ -801,7 +801,7 @@
     (debug "x64-encode-close-instr\n")
     (compiler-internal-error
       "x64-encode-close-instr: close instruction not implemented"))
-    
+
 ;; ***** Switch instruction encoding
 
   (define (x64-encode-switch-instr cgc proc gvm-instr)
@@ -848,7 +848,7 @@
         ('##fx- (prim-info-fx-))
         ('##fx< (prim-info-fx<))
         ('display (prim-info-display))
-        (else 
+        (else
           (compiler-internal-error "Primitive not implemented: " prim-name))))
 
   (define (prim-info-fx+)
@@ -903,7 +903,7 @@
     (debug "x64-encode-prim-affectation\n")
     (x64-encode-inline-prim cgc proc code prim args)
 
-      (if (and result-loc (not (equal? (car args) result-loc))) 
+      (if (and result-loc (not (equal? (car args) result-loc)))
         (let ((x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code result-loc #f)))
       (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose narg > 0
         ;; If operation returns boolean (Result is in flag register)
@@ -925,12 +925,12 @@
 
     ((prim-info-true-jump prim) cgc true-loc-label)
     (x86-jmp cgc false-loc-label))
-    
+
   ;; Defines lifted function using inline-encode-fun
   (define (x64-encode-lifted-prim-inline cgc prim)
     (debug "x64-encode-lifted-prim\n")
     (let* ((opnds
-            (cdr (take 
+            (cdr (take
               (vector->list main-registers)
               (prim-info-narg prim)))))
 
