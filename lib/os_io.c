@@ -3253,7 +3253,11 @@ ___device_stream *self;)
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
   int char_encoding = ___CHAR_ENCODING_ASCII;
   int eol_encoding = ___EOL_ENCODING_LF;
+#ifdef USE_WIN32
+  int buffering = ___NO_BUFFERING;
+#else
   int buffering = ___FULL_BUFFERING;
+#endif
 
   return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
                                   char_encoding,
