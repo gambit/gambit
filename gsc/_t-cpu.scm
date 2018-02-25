@@ -458,10 +458,17 @@
   (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
 
   (define fixnum-tag 0)
-  (define other-tag 0)
-  (define cons-tag 0)
-  (define empty-tag 0)
+  (define object-tag 1)
+  (define special-int-tag 2)
+  (define pair-tag 3)
+
   (define tag-mult 4)
+
+  ;; Special int values
+  (define false-object-val 0) ;; Default value for false
+  (define true-object-val -1) ;; Default value for true
+  (define eof-object-val -100)
+  (define nil-object-val -1000)
 
   (define r0 (x86-r15)) ;; GVM r0 = x86 r15
   (define r1 (x86-r14)) ;; GVM r1 = x86 r14
@@ -486,9 +493,33 @@
   (define (frame cgc fs n)
     (x86-mem (* (+ fs (- n) offs) 8) fp))
 
+  (define (tag-number val mult tag)
+    (+ (* mult val) tag))
+
   (define (x64-gvm-opnd->x86-opnd cgc proc code opnd context)
-    (debug opnd)
-    (debug "\n")
+    (define (make-obj val)
+      (cond
+        ((fixnum? val)
+          (x86-imm-int (tag-number val tag-mult fixnum-tag) 64))
+        ((null? val)
+          (x86-imm-int (tag-number nil-object-val tag-mult special-int-tag) 64))
+        ((boolean? val)
+          (x86-imm-int 
+            (if val
+              (tag-number true-object-val  tag-mult special-int-tag)
+              (tag-number false-object-val tag-mult special-int-tag)) 64))
+        ((proc-obj? val)
+          (if (eqv? context 'jump)
+            (get-proc-label cgc (obj-val opnd) 1)
+            (x86-imm-lbl (get-proc-label cgc (obj-val opnd) 1))))
+        ((string? val)
+          (if (eqv? context 'jump)
+            (make-object-label cgc (obj-val opnd))
+            (x86-imm-lbl (make-object-label cgc (obj-val opnd)))))
+        (else 
+          (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown object type"))))
+
+    (debug opnd "\n")
     (cond 
       ((reg? opnd)
         (debug "reg\n")
@@ -505,22 +536,7 @@
           (x86-imm-lbl (get-proc-label cgc proc (lbl-num opnd)))))
       ((obj? opnd)
         (debug "obj\n")
-        (let ((val (obj-val opnd)))
-          (cond
-            ((fixnum? val)
-              (x86-imm-int (+ (* val tag-mult) fixnum-tag) 64))
-            ((null? val)
-              (x86-imm-int empty-tag 64))
-            ((proc-obj? val)
-              (if (eqv? context 'jump)
-                (get-proc-label cgc (obj-val opnd) 1)
-                (x86-imm-lbl (get-proc-label cgc (obj-val opnd) 1))))
-            ((string? val)
-              (if (eqv? context 'jump)
-                (make-object-label cgc (obj-val opnd))
-                (x86-imm-lbl (make-object-label cgc (obj-val opnd)))))
-            (else 
-              (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown object type")))))
+        (make-obj (obj-val opnd)))
       ((glo? opnd)
         (debug "glo\n") ; (debug (glo-name opnd))
         (compiler-internal-error "Opnd not implementeted global"))
@@ -618,6 +634,8 @@
           (label-num (label-lbl-num gvm-instr))
           (label (get-proc-label cgc proc label-num))
           (narg (label-entry-nb-parms gvm-instr)))
+
+    (debug label "\n")
 
     ;; Todo: Check if alignment is necessary for task-entry/return
     (if (not (eqv? 'simple (label-type gvm-instr)))
