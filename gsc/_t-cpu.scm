@@ -343,21 +343,23 @@
                          unique-name
                          sem-changing-options
                          sem-preserving-options)
-        (let* ((arch (target-name targ))
-               (handler (case arch
-                        ('x86     x86-backend)
-                        ('x86-64  x86-64-backend)
-                        ('arm     armv8-backend)
-                        (else (compiler-internal-error "dispatch-target, unsupported target: " arch))))
-               (cgc (make-codegen-context)))
+  (let* ((arch (target-name targ))
+          (handler (case arch
+                  ('x86     x86-backend)
+                  ('x86-64  x86-64-backend)
+                  ('arm     armv8-backend)
+                  (else (compiler-internal-error "dispatch-target, unsupported target: " arch))))
+          (cgc (make-codegen-context)))
 
-          (codegen-context-listing-format-set! cgc 'gnu)
+    (codegen-context-listing-format-set! cgc 'gnu)
 
-          (handler
-            targ procs output c-intf
-            module-descr unique-name
-            sem-changing-options sem-preserving-options
-            cgc)))
+    (handler
+      targ procs output c-intf
+      module-descr unique-name
+      sem-changing-options sem-preserving-options
+      cgc)
+
+    (time-cgc cgc)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -377,7 +379,7 @@
             l))))
 
   (let* ((id (if gvm-lbl gvm-lbl 0))
-         (label-id (lbl->id id (replace_whitespace (proc-obj-name proc)))))
+         (label-id (lbl->id id (proc-obj-name proc))))
     (nat-label-ref label-id)))
 
 ;; Useful for branching
@@ -390,7 +392,7 @@
     l))
 
 (define (lbl->id num proc_name)
-  (string->symbol (string-append "_"
+  (string->symbol (string-append "_proc_"
                                  (number->string num)
                                  "_"
                                  proc_name)))
@@ -410,6 +412,14 @@
         (let* ((label (asm-make-label cgc (obj->id))))
           (table-set! obj-labels obj label)
           label))))
+
+;; Provides unique ids
+;; No need for randomness or UUID
+;; *** Obviously, NOT thread safe ***
+(define id 0)
+(define (get-unique-id)
+  (set! id (+ id 1))
+  id)
 
 ;;;----------------------------------------------------------------------------
 
@@ -437,14 +447,21 @@
 
   (add-start-routine cgc)
   (map-on-procs encode-proc procs)
-  (add-end-routine cgc)
-  ; (show-listing cgc)  
-  (time-cgc cgc))
+  (add-end-routine cgc))
 
 ;; ***** Constants and helper functions
 
   (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
   (define C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
+
+  (define stack-size 10000) ;; Scheme stack size
+  (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
+
+  (define fixnum-tag 0)
+  (define other-tag 0)
+  (define cons-tag 0)
+  (define empty-tag 0)
+  (define tag-mult 4)
 
   (define r0 (x86-r15)) ;; GVM r0 = x86 r15
   (define r1 (x86-r14)) ;; GVM r1 = x86 r14
@@ -455,20 +472,12 @@
   (define na (x86-cl))  ;; number of arguments register
   (define sp (x86-rsp))
   (define fp (x86-rdx))
-  (define stack-size 10000) ;; Scheme stack size
-  (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
 
   (define main-registers 
-    (vector r0 r1 r2 r3 r4 r5))
-
-  (define fixnum-tag 0)
-  (define other-tag 0)
-  (define cons-tag 0)
-  (define empty-tag 0)
-  (define tag-mult 4)
+    (list r0 r1 r2 r3 r4 r5))
 
   (define (get-register n) 
-    (vector-ref main-registers  n))
+    (list-ref main-registers n))
 
   (define (alloc-frame cgc n)
     (if (not (= 0 n))
@@ -520,22 +529,14 @@
       (else
         (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown opnd: " opnd))))
 
-  ;; Provides unique ids
-  ;; No need for randomness or UUID
-  ;; *** Obviously, NOT thread safe ***
-  (define id 0)
-  (define (get-unique-id)
-    (set! id (+ id 1))
-    id)
-
 ;; ***** Environment code and primitive functions
 
   (define (add-start-routine cgc)
     (debug "add-start-routine\n")
-    (x86-mov cgc r0 (x86-imm-lbl C_RETURN_LBL))
+    (x86-mov cgc (get-register 0) (x86-imm-lbl C_RETURN_LBL))
     (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register 
     (x86-lea  cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
-    (x86-sub  cgc sp (x86-imm-int 10000))
+    (x86-sub  cgc sp (x86-imm-int stack-size))
     (add-narg-set cgc 0)
   )
 
@@ -618,13 +619,11 @@
           (label (get-proc-label cgc proc label-num))
           (narg (label-entry-nb-parms gvm-instr)))
 
-;;      (if (not (eqv? 'simple (label-type gvm-instr)))
-;;          (asm-align cgc 4 1))
+    ;; Todo: Check if alignment is necessary for task-entry/return
+    (if (not (eqv? 'simple (label-type gvm-instr)))
+      (asm-align cgc 4 1 144))
 
       (x86-label cgc label)
-
-      (debug label)
-      (debug "\n")
 
       (if (eqv? 'entry (label-type gvm-instr))
         (add-narg-check cgc narg))))
@@ -677,7 +676,7 @@
         (let* ((label-ret-num (jump-ret gvm-instr))
                (label-ret (get-proc-label cgc proc label-ret-num))
                (label-ret-opnd (x86-imm-lbl label-ret)))
-          (x86-mov cgc r0 label-ret-opnd)))
+          (x86-mov cgc (get-register 0) label-ret-opnd)))
 
       ;; Set arg count
       (if (jump-nb-args gvm-instr)
@@ -896,13 +895,13 @@
                (label (make-unique-label cgc suffix))
                (result-loc r1))
 
-            (x86-mov cgc r1 (x86-imm-int 1))
+            (x86-mov cgc (get-register 1) (x86-imm-int 1))
             ((prim-info-true-jump prim) cgc label)
-            (x86-mov cgc r1 (x86-imm-int 0))
+            (x86-mov cgc (get-register 1) (x86-imm-int 0))
             (x86-label cgc label)))
         ;; Else, we suppose that arg1 is destination of operation. arg1 = r1
 
-    (x86-jmp cgc r0)))
+    (x86-jmp cgc (get-register 0))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -932,9 +931,4 @@
 
 (define (show-listing cgc)
   (asm-assemble-to-u8vector cgc)
-  (asm-display-listing cgc (current-error-port) #f))
-
-(define (replace_whitespace str)
-  (let ((f (lambda (c) (if (equal? #\space c) #\_ c)))
-        (str-list (string->list str)))
-    (list->string (map f str-list))))
+  (asm-display-listing cgc (current-error-port) #t))
