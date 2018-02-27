@@ -863,7 +863,7 @@
 
   ;; symbol: prim symbol
   ;; extra-info: (return-type . more-info depending on type)
-  ;; narg: Number of arguments accepted. #f is vararg (Is it possible?)
+  ;; arity: Number of arguments accepted. #f is vararg (Is it possible?)
   ;; lifted-encode-fun: CGC -> Label -> Width (8|16|32|64) -> ().
   ;;    Generates function assembly code when called
 
@@ -871,19 +871,19 @@
   ;;    Generates inline assembly when called
   ;; args-need-reg: [Boolean]. #t if arg at the same index needs to be a register
   ;;    Otherwise, everything can be used (Do something for functions accepting memory loc by not constants)
-  (define (make-prim-info symbol extra-info narg lifted-encode-fun)
-    (vector symbol extra-info narg lifted-encode-fun))
+  (define (make-prim-info symbol extra-info arity lifted-encode-fun)
+    (vector symbol extra-info arity lifted-encode-fun))
 
-  (define (make-inlinable-prim-info symbol extra-info narg lifted-encode-fun inline-encode-fun args-need-reg)
-    (if (not (= (length args-need-reg) narg))
-      (compiler-internal-error "make-inlinable-prim-info" symbol " narg /= (length args-need-reg)"))
-    (vector symbol extra-info narg lifted-encode-fun inline-encode-fun args-need-reg))
+  (define (make-inlinable-prim-info symbol extra-info arity lifted-encode-fun inline-encode-fun args-need-reg)
+    (if (not (= (length args-need-reg) arity))
+      (compiler-internal-error "make-inlinable-prim-info" symbol " arity /= (length args-need-reg)"))
+    (vector symbol extra-info arity lifted-encode-fun inline-encode-fun args-need-reg))
 
   (define (prim-info-inline? vect) (= 6 (vector-length vect)))
 
   (define (prim-info-symbol vect) (vector-ref vect 0))
   (define (prim-info-extra-info vect) (vector-ref vect 1))
-  (define (prim-info-narg vect) (vector-ref vect 2))
+  (define (prim-info-arity vect) (vector-ref vect 2))
   (define (prim-info-lifted-encode-fun vect) (vector-ref vect 3))
   (define (prim-info-inline-encode-fun vect) (vector-ref vect 4))
   (define (prim-info-args-need-reg vect) (vector-ref vect 5))
@@ -927,8 +927,8 @@
       (if (and need-reg (not (reg? opnd)))
         (compiler-internal-error "prim-guard " (prim-info-symbol prim) " one of it's argument isn't reg but is specified as one")))
 
-    (if (not (= (length args) (prim-info-narg prim)))
-      (compiler-internal-error (prim-info-symbol prim) "primitive doesn't have " (prim-info-narg prim) " operands"))
+    (if (not (= (length args) (prim-info-arity prim)))
+      (compiler-internal-error (prim-info-symbol prim) "primitive doesn't have " (prim-info-arity prim) " operands"))
 
     (map reg-check args (prim-info-args-need-reg prim)))
 
@@ -954,7 +954,7 @@
 
       (if (and result-loc (not (equal? (car args) result-loc)))
         (let ((x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code result-loc #f)))
-      (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose narg > 0
+      (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose arity > 0
         ;; If operation returns boolean (Result is in flag register)
           (let* ((proc-name (proc-obj-name proc))
                  (suffix (string-append proc-name "_jump"))
@@ -981,11 +981,11 @@
     (let* ((opnds
             (cdr (take
               (vector->list main-registers)
-              (prim-info-narg prim)))))
+              (prim-info-arity prim)))))
 
       (apply (prim-info-inline-encode-fun prim) cgc (append opnds '(64)))
 
-      (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose narg > 0
+      (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose arity > 0
         ;; If operation returns boolean (Result is in flag register)
         (let* ((suffix "_jump")
                (label (make-unique-label cgc suffix))
