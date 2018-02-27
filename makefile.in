@@ -158,8 +158,10 @@ dummy-gsc-boot:
 	chmod +x gsc-boot@exe@
 
 gsc-boot@exe@:
-	@if $(GIT) --version > /dev/null 2> /dev/null && \
-          test "`$(GIT) describe --tags`" != "$(PACKAGE_VERSION)"; then \
+	@if ls .git > /dev/null 2> /dev/null && \
+	    $(GIT) --version > /dev/null 2> /dev/null && \
+	    $(GIT) describe --tags > /dev/null 2> /dev/null && \
+	    test "`$(GIT) describe --tags`" != "$(PACKAGE_VERSION)"; then \
 	  echo "**** checking if current gsc-boot must be built"; \
 	  $(MAKE) current-gsc-boot; \
 	else \
