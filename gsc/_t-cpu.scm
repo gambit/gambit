@@ -616,8 +616,7 @@
     (x86-mov cgc fp (thread-descriptor underflow-position-offset))
     (x86-mov cgc r0 (x86-imm-int -1)) ;; Error value
     ;; Pop remaining stack (Everything allocated but stack size
-    (x86-add cgc sp (x86-imm-int
-      (+ stack-underflow-padding thread-descriptor-size)))
+    (x86-add cgc sp (x86-imm-int stack-size))
     (x86-mov cgc (x86-rax) (x86-imm-int -4))
     (x86-ret cgc)
     ; (x86-jmp cgc WRONG_NARGS_LBL) ;; infinite loop
