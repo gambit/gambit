@@ -743,14 +743,9 @@
            (jmp-opnd (jump-opnd gvm-instr)))
 
       ;; Pop stack if necessary
-      (display "a\n")
-      (display (proc-frame-slots-gained code))
-      (display "b\n")
       (alloc-frame cgc (proc-frame-slots-gained code))
 
       (poll-check cgc code)
-
-      (display "c\n")
 
       ;; Save return address if necessary
       (if (jump-ret gvm-instr)
@@ -924,7 +919,6 @@
   (define (prim-info-display)
     (define (lifted-encode-fun cgc label width)
       (x86-jmp cgc label)
-      ;;(display "display : lifted-encode-fun")
       #f)
     (make-prim-info 'display (list 'fixnum) 1 lifted-encode-fun))
 
