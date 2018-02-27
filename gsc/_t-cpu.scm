@@ -779,7 +779,7 @@
         cgc
         proc
         code
-        (get-prim-obj (proc-obj-name (apply-prim gvm-instr)))
+        (get-prim-obj (proc-obj-name (ifjump-test gvm-instr)))
         (ifjump-opnds gvm-instr)
         true-label
         false-label)))
