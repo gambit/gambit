@@ -74,7 +74,7 @@
          (fixups (codegen-context-fixup-list cgc))
          (procedure (u8vector->procedure code fixups)))
     (display "time-cgc: \n\n\n\n")
-    (asm-display-listing cgc (current-error-port) #t)
+    (asm-display-listing cgc (current-error-port) #f)
     (pp (time (procedure)))))
 
 ;;;----------------------------------------------------------------------------
@@ -451,15 +451,30 @@
 
 ;; ***** Constants and helper functions
 
-  (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
-  (define C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
   (define THREAD_DESCRIPTOR (asm-make-label cgc 'THREAD_DESCRIPTOR))
+  (define C_START_LBL (asm-make-label cgc 'C_START_LBL))
+  (define C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
+  ;; Exception handling procedures
+  (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
+  (define OVERFLOW_LBL (asm-make-label cgc 'OVERFLOW_LBL))
+  (define UNDERFLOW_LBL (asm-make-label cgc 'UNDERFLOW_LBL))
+  (define INTERRUPT_LBL (asm-make-label cgc 'INTERRUPT_LBL))
 
   (define stack-size 10000) ;; Scheme stack size (bytes)
-  (define thread-descritor-size 256) ;; Thread descriptor size (bytes) (Probably too much)
+  (define thread-descriptor-size 256) ;; Thread descriptor size (bytes) (Probably too much)
   (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
   (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
 
+  ;; Thread descriptor offsets:
+  (define underflow-position-offset 8)
+  (define interrupt-offset 16)
+
+  ;; 64 = 01000000_2 = 0x40. -64 = 11000000_2 = 0xC0
+  ;; 0xC0 unsigned = 192
+  (define na-reg-default-value -64)
+  (define na-reg-default-value-abs 192)
+
+  ;; Pointer tagging constants
   (define fixnum-tag 0)
   (define object-tag 1)
   (define special-int-tag 2)
@@ -480,8 +495,8 @@
   (define r4 (x86-r11)) ;; GVM r4 = x86 r11
   (define r5 (x86-r10)) ;; GVM r4 = x86 r10
   (define na (x86-cl))  ;; number of arguments register
-  (define sp (x86-rsp))
-  (define fp (x86-rdx))
+  (define sp (x86-rsp)) ;; Real stack limit
+  (define fp (x86-rdx)) ;; Simulated stack current pos
 
   (define descriptor-register (x86-rcx))  ;; Thread descriptor register
 
@@ -497,6 +512,9 @@
 
   (define (frame cgc fs n)
     (x86-mem (* (+ fs (- n) offs) 8) fp))
+
+  (define (thread-descriptor offset)
+    (x86-mem (- offset na-reg-default-value-abs) descriptor-register))
 
   (define (tag-number val mult tag)
     (+ (* mult val) tag))
@@ -553,28 +571,23 @@
 ;; ***** Environment code and primitive functions
 
   (define (add-start-routine cgc)
+
     (debug "add-start-routine\n")
 
-    ;; Aligns address to 2^8 so the 8 least significant bits are 0
-    ;; This is used to store the address in the lower bits of the cl register
-    ;; The lower byte is used to pass narg
-    ;; Also, align to descriptor to cache lines. TODO: Confirm it's true
-    (asm-align cgc 256)
-    (x86-label cgc THREAD_DESCRIPTOR)
-    (reserve-space cgc thread-descritor-size 0) ;; Reserve space for thread-descritor-size bytes
+    ;; (x86-jmp cgc C_START_LBL) ;; Used to skip descriptor data
+    (x86-label cgc C_START_LBL) ;; Initial procedure label
 
-    ; ;; Allocate space for thread descriptor + some padding to protect in case of underflow
-    (x86-sub cgc sp (x86-imm-int thread-descritor-size))
-    ; ;; Set thread descriptor address
-    (x86-mov cgc descriptor-register (x86-imm-lbl THREAD_DESCRIPTOR))
-
-    ; ;; Allocate padding to protect thread descriptor from underflow
-    (x86-sub cgc sp (x86-imm-int stack-underflow-padding))
-    ; ;; Set underflow position to current stack pointer position
-    (x86-mov cgc (x86-mem 8 descriptor-register) sp)
+    ;; Thread descriptor initialization
+      ;; Set thread descriptor address
+      (x86-mov cgc descriptor-register (x86-imm-lbl THREAD_DESCRIPTOR))
+      ;; Set lower bytes of descriptor-register used for passing narg
+      (x86-mov cgc na (x86-imm-int na-reg-default-value 64))
+      ;; Set underflow position to current stack pointer position
+      (x86-mov cgc (thread-descriptor underflow-position-offset) sp)
+      ;; Set interrupt flag to current stack pointer position
+      (x86-mov cgc (thread-descriptor interrupt-offset) (x86-imm-int 0) 64)
 
     (x86-mov cgc (get-register 0) (x86-imm-lbl C_RETURN_LBL)) ;; Set return address for main
-    (x86-mov cgc na (x86-imm-int -64 64)) ;; na = -64. Used for passing narg with flag register
     (x86-lea cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
     (x86-sub cgc sp (x86-imm-int stack-size)) ;; Allocate space for stack
     (add-narg-set cgc 0)
@@ -584,19 +597,39 @@
     (debug "add-end-routine\n")
 
     ;; Terminal procedure
-    (asm-align cgc 4 1)
     (x86-label cgc C_RETURN_LBL)
-    (x86-add cgc sp (x86-imm-int
-      (+ stack-underflow-padding thread-descritor-size stack-size)))
+    (x86-add cgc sp (x86-imm-int stack-size))
     (x86-mov cgc (x86-rax) r1)
     (x86-add cgc (x86-rax) (x86-rax))
     (x86-add cgc (x86-rax) (x86-rax))
     (x86-ret cgc 0) ;; Exit program
 
     ;; Incorrect narg handling
-    (asm-align cgc 4 1)
     (x86-label cgc WRONG_NARGS_LBL)
-    (x86-jmp  cgc WRONG_NARGS_LBL) ;; infinite loop if wrong number of arguments)
+    ;; Overflow handling
+    (x86-label cgc OVERFLOW_LBL)
+    ;; Underflow handling
+    (x86-label cgc UNDERFLOW_LBL)
+    ;; Interrupts handling
+    (x86-label cgc INTERRUPT_LBL)
+    ;; Pop stack
+    (x86-mov cgc fp (thread-descriptor underflow-position-offset))
+    (x86-mov cgc r0 (x86-imm-int -1)) ;; Error value
+    ;; Pop remaining stack (Everything allocated but stack size
+    (x86-add cgc sp (x86-imm-int
+      (+ stack-underflow-padding thread-descriptor-size)))
+    (x86-mov cgc (x86-rax) (x86-imm-int -4))
+    (x86-ret cgc)
+    ; (x86-jmp cgc WRONG_NARGS_LBL) ;; infinite loop
+
+    ;; Thread descriptor reserved space
+      ;; Aligns address to 2^8 so the 8 least significant bits are 0
+      ;; This is used to store the address in the lower bits of the cl register
+      ;; The lower byte is used to pass narg
+      ;; Also, align to descriptor to cache lines. TODO: Confirm it's true
+      (asm-align cgc 256)
+      (x86-label cgc THREAD_DESCRIPTOR)
+      (reserve-space cgc thread-descriptor-size 0) ;; Reserve space for thread-descriptor-size bytes
 
     ;; Add primitives
     (table-for-each
@@ -708,15 +741,17 @@
   (define (x64-encode-jump-instr cgc proc code)
     (debug "x64-encode-jump-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
-           (fs-lbl (proc-lbl-frame-size code))
-           (fs-jmp (proc-jmp-frame-size code))
            (jmp-opnd (jump-opnd gvm-instr)))
 
       ;; Pop stack if necessary
-      (alloc-frame cgc (- fs-jmp fs-lbl))
+      (display "a\n")
+      (display (proc-frame-slots-gained code))
+      (display "b\n")
+      (alloc-frame cgc (proc-frame-slots-gained code))
 
-      ;; TODO
-      ;; Poll/safe is specified (jump-poll?/jump-safe? gvm-instr)
+      (poll-check cgc code)
+
+      (display "c\n")
 
       ;; Save return address if necessary
       (if (jump-ret gvm-instr)
@@ -738,18 +773,15 @@
   (define (x64-encode-ifjump-instr cgc proc code)
     (debug "x64-encode-ifjump-instr\n")
     (let* ((gvm-instr (code-gvm-instr code))
-           (fs-lbl (proc-lbl-frame-size code))
-           (fs-jmp (proc-jmp-frame-size code))
            (true-label (get-proc-label cgc proc (ifjump-true gvm-instr)))
            (false-label (get-proc-label cgc proc (ifjump-false gvm-instr))))
 
-      ;; Pop stack if necessary 
-      (alloc-frame cgc (- fs-jmp fs-lbl))
+      ;; Pop stack if necessary
+      (alloc-frame cgc (proc-frame-slots-gained code))
 
-      ;; TODO
-      ;; Poll/safe is specified (jump-poll?/jump-safe? gvm-instr)
+      (poll-check cgc code)
 
-      (x64-encode-prim-ifjump 
+      (x64-encode-prim-ifjump
         cgc
         proc
         code
@@ -757,7 +789,31 @@
         (ifjump-opnds gvm-instr)
         true-label
         false-label)))
-        
+
+  (define (poll-check cgc code)
+    (define (check-overflow)
+      (debug "check-overflow\n")
+      (x86-cmp cgc fp sp)
+      (x86-jbe cgc OVERFLOW_LBL))
+    (define (check-underflow)
+      (debug "check-underflow\n")
+      (x86-cmp cgc fp (thread-descriptor underflow-position-offset))
+      (x86-jae cgc UNDERFLOW_LBL))
+    (define (check-interrupt)
+      (debug "check-interrupt\n")
+      (x86-cmp cgc (thread-descriptor interrupt-offset) (x86-imm-int 0) 64)
+      (x86-jne cgc INTERRUPT_LBL))
+
+    (debug "poll-check\n")
+    (let ((gvm-instr (code-gvm-instr code))
+          (fs-gain (proc-frame-slots-gained code)))
+      (if (jump-poll? gvm-instr)
+        (begin
+          (cond
+            ((< 0 fs-gain) (check-overflow))
+            ((> 0 fs-gain) (check-underflow)))
+          (check-interrupt)))))
+
   (define (add-narg-set cgc narg)
     (cond
       ((= narg 0)
@@ -967,6 +1023,9 @@
 
   (define (proc-jmp-frame-size code)
     (bb-exit-frame-size (code-bb code)))
+
+  (define (proc-frame-slots-gained code)
+    (bb-slots-gained (code-bb code)))
 
 ;;;============================================================================
 
