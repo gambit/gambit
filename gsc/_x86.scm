@@ -507,7 +507,7 @@
                                 (asm-32-le cgc offset))
                                ((asm-signed8? offset)
                                 (if (or (not (fx= offset 0)) ;; non-null offset?
-                                        (fx= field1 5))      ;; or RBP
+                                        (fx= field1-lo 5))   ;; or RBP/R13
                                     (begin ;; use 8 bit displacement
                                       (asm-8 cgc (fx+ #x40 modrm*)) ;; ModR/M
                                       (asm-8 cgc sib) ;; SIB
