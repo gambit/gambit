@@ -374,7 +374,7 @@
 ;;  the native assembly:
 ;;    apply-primitive cgc primName ...
 ;;    set-narg/check-narg cgc narg
-;;    check-poll cgc ...
+;;    poll cgc ...
 ;;    make-opnd cgc ...
 ;;
 ;;  Default methods are given if possible
@@ -435,6 +435,7 @@
 (define word-width 64)
 (define word-width-bytes 8)
 (define load-store-only #f)
+(define enable-poll #t)
 
 ;; ***** AM: Operands
 
@@ -452,7 +453,7 @@
 
 (define am-check-narg default-check-narg)
 (define am-set-narg   default-set-narg)
-(define am-check-poll default-check-poll) ;; todo: Find better name than check-poll
+(define am-poll       default-poll)
 (define make-opnd     default-make-opnd)
 
 ;; ***** AM: Instructions: Arithmetic
@@ -529,7 +530,7 @@
   (debug "default-set-narg: " narg "\n")
   (am-mov cgc (thread-descriptor narg-offset) (int-opnd narg)))
 
-(define (default-check-poll cgc code)
+(define (default-poll cgc code)
   ;; Reminder: sp is the real stack pointer and fp is the simulated stack pointer
   ;; In memory
   ;; +++: underflow location
@@ -554,7 +555,7 @@
         (am-cmp cgc opnd (int-opnd 0) word-width)
         (am-jnge cgc INTERRUPT_LBL))))
 
-  (debug "default-check-poll\n")
+  (debug "default-poll\n")
   (let ((gvm-instr (code-gvm-instr code))
         (fs-gain (proc-frame-slots-gained code)))
     (if (jump-poll? gvm-instr)
@@ -828,7 +829,7 @@
   (define (helper-setup)
     (set! am-set-narg   x64-set-narg)
     (set! am-check-narg x64-check-narg)
-    ; (set! am-check-poll default-check-poll)
+    ; (set! am-poll default-poll)
     ; (set! make-opnd default-make-opnd)
   )
 
@@ -1022,7 +1023,7 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (am-check-poll cgc code)
+    (am-poll cgc code)
 
     ;; Save return address if necessary
     (if (jump-ret gvm-instr)
@@ -1055,7 +1056,7 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (am-check-poll cgc code)
+    (am-poll cgc code)
 
     (x64-encode-prim-ifjump
       cgc
