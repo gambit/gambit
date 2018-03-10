@@ -558,7 +558,7 @@
   (debug "default-poll\n")
   (let ((gvm-instr (code-gvm-instr code))
         (fs-gain (proc-frame-slots-gained code)))
-    (if (jump-poll? gvm-instr)
+    (if (and (jump-poll? gvm-instr) enable-poll)
       (begin
         (cond
           ((< 0 fs-gain) (check-overflow))
@@ -876,6 +876,8 @@
       (else
         (default-set-narg cgc narg))))
 
+  (set! load-store-only #t)
+  (set! enable-poll #t)
   (register-setup)
   (opnds-setup)
   (instructions-setup)
