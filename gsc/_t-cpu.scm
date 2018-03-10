@@ -433,6 +433,7 @@
 ;; ***** AM: Caracteristics
 
 (define word-width 64)
+(define word-width-bytes 8)
 (define load-store-only #f)
 
 ;; ***** AM: Operands
@@ -732,7 +733,7 @@
 
 (define (alloc-frame cgc n)
   (if (not (= 0 n))
-    (am-add cgc fp (int-opnd (* n -8)))))
+    (am-sub cgc fp (int-opnd (* n word-width-bytes)))))
 
 (define (frame cgc fs n)
   (mem-opnd (* (+ fs (- n) offs) 8) fp))
@@ -896,7 +897,7 @@
   ;; Set interrupt flag to current stack pointer position
   (am-mov cgc (thread-descriptor interrupt-offset) (int-opnd 0) word-width)
   (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
-  (am-lea cgc fp (mem-opnd (* offs -8) sp)) ;; Align frame with offset
+  (am-lea cgc fp (mem-opnd (* offs (- word-width-bytes)) sp)) ;; Align frame with offset
   (am-sub cgc sp (int-opnd stack-size)) ;; Allocate space for stack
   (am-set-narg cgc 0))
 
@@ -1085,7 +1086,7 @@
   (let* ((gvm-instr (code-gvm-instr code))
         (src (make-opnd cgc proc code (copy-opnd gvm-instr) #f))
         (dst (make-opnd cgc proc code (copy-loc gvm-instr) #f)))
-    (am-mov cgc dst src 64)))
+    (am-mov cgc dst src word-width)))
 
 ;; ***** Close instruction encoding
 
