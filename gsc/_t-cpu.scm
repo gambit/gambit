@@ -345,7 +345,7 @@
                          sem-preserving-options)
   (let* ((arch (target-name targ))
           (handler (case arch
-                  ('x86     x86-backend)
+                  ('x86-32  x86-backend)
                   ('x86-64  x86-64-backend)
                   ('arm     armv8-backend)
                   (else (compiler-internal-error "dispatch-target, unsupported target: " arch))))
@@ -363,7 +363,254 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; ***** Label table
+;; ***** Abstract machine (AM)
+;;  We define an abstract instruction set which we program against for most of
+;;  the backend. Most of the code is moving data between registers and the stack
+;;  and jumping to locations, so it reduces the repetion between native backends
+;;  (x86, x64, ARM, Risc V, etc.).
+;;
+;;
+;;  To reduce the overhead the following high-level instructions are defined in
+;;  the native assembly:
+;;    apply-primitive cgc primName ...
+;;    set-narg/check-narg cgc narg
+;;    check-poll cgc ...
+;;    make-opnd cgc ...
+;;
+;;  Default methods are given if possible
+;;
+;;
+;;  In case the native architecture is load-store, set load-store-only to true.
+;;  The am-mov instruction acts like both load and store.
+;;
+;;
+;;  The following non-branching instructions are required:
+;;    am-label: Place label
+;;    am-ret  : Exit program
+;;    am-mov  : Move value between 2 registers/memory/immediate
+;;    am-cmp  : Compare 2 operands. Sets flag
+;;    am-add  : (Add imm/reg to register). If load-store-only, mem can be used as opn
+;;    am-sub  : (Add imm/reg to register). If load-store-only, mem can be used as opn
+;;    ...
+;;
+;;
+;;  The following branching instructions are required:
+;;    am-jmp      : Jump to location
+;;    am-jmplink  : Jump and store location. (Branch and link)
+;;    am-je       : Jump if equal
+;;    am-jne      : Jump if not equal
+;;    am-jg       : Jump if greater (signed)
+;;    am-jng      : Jump if not greater (signed)
+;;    am-jge      : Jump if greater or equal (signed)
+;;    am-jnge     : Jump if not greater or equal (signed)
+;;    am-jgu      : Jump if greater (unsigned)
+;;    am-jngu     : Jump if not greater (unsigned)
+;;    am-jgeu     : Jump if greater or equal (unsigned)
+;;    am-jngeu    : Jump if not greater or equal (unsigned)
+;;    execute-cond: NOT IMPLEMENTED. Execute code given only if condition is true.
+;;                  This may be useful with conditionnal instructions in ARM
+;;                  On other arch, it still provides a nice abstraction for entering small branches
+;;
+;;  Note: Branching instructions on overflow/carry/sign/parity/etc. are not needed.
+;;
+;;
+;;  The following instructions have a default implementation:
+;;    am-lea  : Load address of memory location
+;;    ...
+;;
+;;
+;;  The following non-instructions function have to be defined
+;;    int-opnd: Create int immediate object   (See int-opnd)
+;;    lbl-opnd: Create label immediate object (See x86-imm-lbl)
+;;    mem-opnd: Create memory location object (See x86-mem)
+;;
+;;
+;;  The operand objects have to follow the x86 operands objects formats.
+;;  This is because the default implementations may assume they follow the format. (Ex: lea)
+;;
+;;  To add new native backend, see x64-setup function
+
+;; ***** AM: Caracteristics
+
+(define word-width 64)
+(define load-store-only #f)
+
+;; ***** AM: Operands
+
+(define int-opnd #f)
+(define lbl-opnd #f)
+(define mem-opnd #f)
+
+;; ***** AM: Instructions
+;; ***** AM: Instructions: Misc
+
+(define am-lbl #f)
+(define am-ret #f)
+(define am-mov #f)
+(define am-lea default-lea)
+
+(define am-check-narg default-check-narg)
+(define am-set-narg   default-set-narg)
+(define am-check-poll default-check-poll) ;; todo: Find better name than check-poll
+(define make-opnd     default-make-opnd)
+
+;; ***** AM: Instructions: Arithmetic
+
+(define am-cmp #f)
+(define am-add #f)
+(define am-sub #f)
+
+;; ***** AM: Instructions: Branch
+
+;; Jump
+(define am-jmp   #f)
+;; Call (Branch and link). Has default implementation
+(define am-jmplink default-jmplink)
+
+;; Equal
+(define am-je    #f)
+(define am-jne   #f)
+;; Signed
+(define am-jg    #f) ;; Greater. Equivalent to: less or equal
+(define am-jng   #f) ;; Not greater
+(define am-jge   #f) ;; Greater or equal. Equivalent to: not less
+(define am-jnge  #f) ;; Not greater or equal. Equivalent to: less
+;; Unsigned
+(define am-jgu   #f) ;; Greater
+(define am-jngu  #f) ;; Not greater
+(define am-jgeu  #f) ;; Greater or equal
+(define am-jngeu #f) ;; Not greater or equal
+
+;; ***** AM: Data
+
+(define am-db #f)
+(define am-dw #f)
+(define am-dd #f)
+(define am-dq #f)
+
+;; ***** AM: Default implementations
+
+(define (default-lea cgc reg opnd)
+  (define (mem-opnd? x) (and (vector? x) (fx= (vector-length x) 4)))
+  (define (mem-opnd-offset x) (vector-ref x 0))
+  (define (mem-opnd-reg1 x) (vector-ref x 1))
+  (define (mem-opnd-reg2 x) (vector-ref x 2))
+  (define (mem-opnd-scale x) (vector-ref x 3))
+
+  ;; No need for reg2 and scale
+  (if (not (mem-opnd? opnd))
+    (compiler-internal-error "am-lea: opnd isn't mem location"))
+  (if (mem-opnd-reg2 opnd)
+    (compiler-internal-error "am-lea: default implementation doesn't support reg2 and scale"))
+  (am-mov cgc reg (int-opnd (mem-opnd-offset opnd)))
+  (if (mem-opnd-reg1 opnd)
+    (am-add cgc reg (mem-opnd-reg1 opnd))))
+
+(define (default-jmplink cgc opnd)
+  (am-mov cgc (get-register 0) opnd)
+  (am-jmp opnd))
+
+(define (default-check-narg cgc narg)
+  (debug "default-check-narg: " narg "\n")
+  (load-mem-if-necessary cgc (thread-descriptor narg-offset)
+    (lambda (opnd)
+      (am-cmp cgc opnd (int-opnd narg))
+      (am-jne cgc WRONG_NARGS_LBL))))
+  ; (if load-store-only
+  ;   (begin
+  ;     (am-mov cgc (get-extra-register 0) (thread-descriptor narg-offset))
+  ;     )
+  ;   (begin
+  ;     (am-cmp cgc (thread-descriptor narg-offset) (int-opnd narg))
+  ;     (am-jne cgc WRONG_NARGS_LBL))))
+
+(define (default-set-narg cgc narg)
+  (debug "default-set-narg: " narg "\n")
+  (am-mov cgc (thread-descriptor narg-offset) (int-opnd narg)))
+
+(define (default-check-poll cgc code)
+  ;; Reminder: sp is the real stack pointer and fp is the simulated stack pointer
+  ;; In memory
+  ;; +++: underflow location
+  ;; ++ : fp
+  ;; +  : sp
+  ;; 0  :
+  ;; sp < fp < underflow
+  (define (check-overflow)
+    (debug "check-overflow\n")
+    (am-cmp cgc fp sp)
+    (am-jngu cgc OVERFLOW_LBL))
+  (define (check-underflow)
+    (debug "check-underflow\n")
+    (load-mem-if-necessary cgc (thread-descriptor underflow-position-offset)
+      (lambda (opnd)
+        (am-cmp cgc opnd fp)
+        (am-jnge cgc UNDERFLOW_LBL))))
+  (define (check-interrupt)
+    (debug "check-interrupt\n")
+    (load-mem-if-necessary cgc (thread-descriptor interrupt-offset)
+      (lambda (opnd)
+        (am-cmp cgc opnd (int-opnd 0) word-width)
+        (am-jnge cgc INTERRUPT_LBL))))
+
+  (debug "default-check-poll\n")
+  (let ((gvm-instr (code-gvm-instr code))
+        (fs-gain (proc-frame-slots-gained code)))
+    (if (jump-poll? gvm-instr)
+      (begin
+        (cond
+          ((< 0 fs-gain) (check-overflow))
+          ((> 0 fs-gain) (check-underflow)))
+        (check-interrupt)))))
+
+(define (default-make-opnd cgc proc code opnd context)
+  (define (make-obj val)
+    (cond
+      ((fixnum? val)
+        (int-opnd (tag-number val tag-mult fixnum-tag) word-width))
+      ((null? val)
+        (int-opnd (tag-number nil-object-val tag-mult special-int-tag) word-width))
+      ((boolean? val)
+        (int-opnd
+          (if val
+            (tag-number true-object-val  tag-mult special-int-tag)
+            (tag-number false-object-val tag-mult special-int-tag)) word-width))
+      ((proc-obj? val)
+        (if (eqv? context 'jump)
+          (get-proc-label cgc (obj-val opnd) 1)
+          (lbl-opnd (get-proc-label cgc (obj-val opnd) 1))))
+      ((string? val)
+        (if (eqv? context 'jump)
+          (make-object-label cgc (obj-val opnd))
+          (lbl-opnd (make-object-label cgc (obj-val opnd)))))
+      (else
+        (compiler-internal-error "default-make-opnd: Unknown object type"))))
+  (cond
+    ((reg? opnd)
+      (debug "reg\n")
+      (get-register (reg-num opnd)))
+    ((stk? opnd)
+      (debug "stk\n")
+      (if (eqv? context 'jump)
+        (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
+        (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
+    ((lbl? opnd)
+      (debug "lbl\n")
+      (if (eqv? context 'jump)
+        (get-proc-label cgc proc (lbl-num opnd))
+        (lbl-opnd (get-proc-label cgc proc (lbl-num opnd)))))
+    ((obj? opnd)
+      (debug "obj\n")
+      (make-obj (obj-val opnd)))
+    ((glo? opnd)
+      (debug "glo: " (glo-name opnd) "\n")
+      (compiler-internal-error "default-make-opnd: Opnd not implementeted global"))
+    ((clo? opnd)
+      (compiler-internal-error "default-make-opnd: Opnd not implementeted closure"))
+    (else
+      (compiler-internal-error "default-make-opnd: Unknown opnd: " opnd))))
+
+;; ***** AM: Label table
 
 ;; Key: Label id
 ;; Value: Pair (Label, optional Proc-obj)
@@ -397,7 +644,7 @@
                                  "_"
                                  proc_name)))
 
-; ***** Object table and object creation
+; ***** AM: Object table and object creation
 
 (define obj-labels (make-table test: equal?))
 
@@ -421,35 +668,7 @@
   (set! id (+ id 1))
   id)
 
-;;;----------------------------------------------------------------------------
-
-;; ***** x64 code generation
-
-(define (x86-64-backend targ
-                        procs
-                        output
-                        c-intf
-                        module-descr
-                        unique-name
-                        sem-changing-options
-                        sem-preserving-options
-                        cgc)
-
-  (define (encode-proc proc)
-    (map-proc-instrs
-      (lambda (code)
-        (x64-encode-gvm-instr cgc proc code))
-      proc))
-
-  (debug "x86-64-backend\n")
-  (asm-init-code-block cgc 0 'le)
-  (x86-arch-set! cgc 'x86-64)
-
-  (add-start-routine cgc)
-  (map-on-procs encode-proc procs)
-  (add-end-routine cgc))
-
-;; ***** Constants and helper functions
+;; ***** AM: Important labels
 
 (define THREAD_DESCRIPTOR (asm-make-label cgc 'THREAD_DESCRIPTOR))
 (define C_START_LBL (asm-make-label cgc 'C_START_LBL))
@@ -460,14 +679,18 @@
 (define UNDERFLOW_LBL (asm-make-label cgc 'UNDERFLOW_LBL))
 (define INTERRUPT_LBL (asm-make-label cgc 'INTERRUPT_LBL))
 
+;; ***** AM: Implementation constants
+
 (define stack-size 10000) ;; Scheme stack size (bytes)
 (define thread-descriptor-size 256) ;; Thread descriptor size (bytes) (Probably too much)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
 (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
+(define runtime-result-register #f)
 
 ;; Thread descriptor offsets:
 (define underflow-position-offset 8)
 (define interrupt-offset 16)
+(define narg-offset 24)
 
 ;; 64 = 01000000_2 = 0x40. -64 = 11000000_2 = 0xC0
 ;; 0xC0 unsigned = 192
@@ -488,147 +711,228 @@
 (define eof-object-val -100)
 (define nil-object-val -1000)
 
-(define r0 (x86-r15)) ;; GVM r0 = x86 r15
-(define r1 (x86-r14)) ;; GVM r1 = x86 r14
-(define r2 (x86-r13)) ;; GVM r2 = x86 r13
-(define r3 (x86-r12)) ;; GVM r3 = x86 r12
-(define r4 (x86-r11)) ;; GVM r4 = x86 r11
-(define r5 (x86-r10)) ;; GVM r4 = x86 r10
-(define na (x86-cl))  ;; number of arguments register
-(define sp (x86-rsp)) ;; Real stack limit
-(define fp (x86-rdx)) ;; Simulated stack current pos
+(define na #f) ;; number of arguments register
+(define sp #f) ;; Real stack limit
+(define fp #f) ;; Simulated stack current pos
+(define dp #f) ;; Thread descriptor register
 
-(define descriptor-register (x86-rcx))  ;; Thread descriptor register
+;; Registers that map directly to GVM registers
+(define main-registers #f)
+;; Registers that can be overwritten at any moment!
+;; Used when need extra register. Has to have at least 1 register.
+(define work-registers #f)
 
-(define main-registers
-  (list r0 r1 r2 r3 r4 r5))
+;; ***** AM: Helper functions
 
 (define (get-register n)
   (list-ref main-registers n))
 
+(define (get-extra-register n)
+  (list-ref work-registers n))
+
 (define (alloc-frame cgc n)
   (if (not (= 0 n))
-    (x86-add cgc fp (x86-imm-int (* n -8)))))
+    (am-add cgc fp (int-opnd (* n -8)))))
 
 (define (frame cgc fs n)
-  (x86-mem (* (+ fs (- n) offs) 8) fp))
+  (mem-opnd (* (+ fs (- n) offs) 8) fp))
 
 (define (thread-descriptor offset)
-  (x86-mem (- offset na-reg-default-value-abs) descriptor-register))
+  (mem-opnd (- offset na-reg-default-value-abs) dp))
 
 (define (tag-number val mult tag)
   (+ (* mult val) tag))
 
-(define (x64-gvm-opnd->x86-opnd cgc proc code opnd context)
-    (define (make-obj val)
-      (cond
-        ((fixnum? val)
-          (x86-imm-int (tag-number val tag-mult fixnum-tag) 64))
-        ((null? val)
-          (x86-imm-int (tag-number nil-object-val tag-mult special-int-tag) 64))
-        ((boolean? val)
-          (x86-imm-int
-            (if val
-              (tag-number true-object-val  tag-mult special-int-tag)
-              (tag-number false-object-val tag-mult special-int-tag)) 64))
-        ((proc-obj? val)
-          (if (eqv? context 'jump)
-            (get-proc-label cgc (obj-val opnd) 1)
-            (x86-imm-lbl (get-proc-label cgc (obj-val opnd) 1))))
-        ((string? val)
-          (if (eqv? context 'jump)
-            (make-object-label cgc (obj-val opnd))
-            (x86-imm-lbl (make-object-label cgc (obj-val opnd)))))
-        (else
-          (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown object type"))))
+(define (load-mem-if-necessary cgc mem-to-load f)
+  (if load-store-only
+    (begin
+      (am-mov cgc (get-extra-register 0) mem-to-load)
+      (f (get-extra-register 0)))
+    (f mem-to-load)))
 
-    (debug opnd "\n")
+;;;----------------------------------------------------------------------------
+
+;; ***** x64 code generation
+
+(define (x86-64-backend targ
+                        procs
+                        output
+                        c-intf
+                        module-descr
+                        unique-name
+                        sem-changing-options
+                        sem-preserving-options
+                        cgc)
+
+  (define (encode-proc proc)
+    (map-proc-instrs
+      (lambda (code)
+        (encode-gvm-instr cgc proc code))
+      proc))
+
+  (debug "x86-64-backend\n")
+  (asm-init-code-block cgc 0 'le)
+  (x86-arch-set! cgc 'x86-64)
+  (x64-setup)
+
+  (add-start-routine cgc)
+  (map-on-procs encode-proc procs)
+  (add-end-routine cgc))
+
+(define (x64-setup)
+  (define (register-setup)
+    (set! main-registers
+      (list (x86-r15) (x86-r14) (x86-r13) (x86-r12) (x86-r11) (x86-r10)))
+    (set! work-registers
+      (list (x86-r9) (x86-r8)))
+    (set! na (x86-cl))
+    (set! sp (x86-rsp))
+    (set! fp (x86-rdx))
+    (set! dp (x86-rcx))
+    (set! runtime-result-register (x86-rax)))
+
+  (define (opnds-setup)
+    (set! int-opnd x86-imm-int)
+    (set! lbl-opnd x86-imm-lbl)
+    (set! mem-opnd x86-mem))
+
+  (define (instructions-setup)
+    (set! am-lbl x86-label)
+    (set! am-mov x86-mov)
+    (set! am-lea x86-lea)
+    (set! am-ret x86-ret)
+    (set! am-cmp x86-cmp)
+    (set! am-add x86-add)
+    (set! am-sub x86-sub)
+
+    (set! am-jmp    x86-jmp)
+    ; (set! am-jmplink  doesnt-exist)
+    (set! am-je     x86-je)
+    (set! am-jne    x86-jne)
+    (set! am-jg     x86-jg)
+    (set! am-jng    x86-jle)
+    (set! am-jge    x86-jge)
+    (set! am-jnge   x86-jl)
+    (set! am-jgu    x86-ja)
+    (set! am-jngu   x86-jbe)
+    (set! am-jgeu   x86-jae)
+    (set! am-jngeu  x86-jb))
+
+  (define (data-setup)
+    (set! am-db x86-db)
+    (set! am-dw x86-dw)
+    (set! am-dd x86-dd)
+    (set! am-dq x86-dq))
+
+  (define (helper-setup)
+    (set! am-set-narg   x64-set-narg)
+    (set! am-check-narg x64-check-narg)
+    ; (set! am-check-poll default-check-poll)
+    ; (set! make-opnd default-make-opnd)
+  )
+
+  (define (make-parity-adjusted-valued n)
+    (define (bit-count n)
+      (if (= n 0)
+        0
+        (+ (modulo n 2) (bit-count (quotient n 2)))))
+    (let* ((narg2 (* 2 (- n 3)))
+          (bits (bit-count narg2))
+          (parity (modulo bits 2)))
+      (+ 64 parity narg2)))
+
+  (define (x64-check-narg cgc narg)
+    (debug "x64-check-narg: " narg "\n")
     (cond
-      ((reg? opnd)
-        (debug "reg\n")
-        (get-register (reg-num opnd)))
-      ((stk? opnd)
-        (debug "stk\n")
-        (if (eqv? context 'jump)
-          (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
-          (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
-      ((lbl? opnd)
-        (debug "lbl\n")
-        (if (eqv? context 'jump)
-          (get-proc-label cgc proc (lbl-num opnd))
-          (x86-imm-lbl (get-proc-label cgc proc (lbl-num opnd)))))
-      ((obj? opnd)
-        (debug "obj\n")
-        (make-obj (obj-val opnd)))
-      ((glo? opnd)
-        (debug "glo\n") ; (debug (glo-name opnd))
-        (compiler-internal-error "Opnd not implementeted global"))
-      ((clo? opnd)
-        (compiler-internal-error "Opnd not implementeted closure"))
+      ((= narg 0)
+        (am-jne cgc WRONG_NARGS_LBL))
+      ((= narg 1)
+        (x86-jp cgc WRONG_NARGS_LBL))
+      ((= narg 2)
+        (x86-jno cgc WRONG_NARGS_LBL))
+      ((= narg 3)
+        (x86-jns cgc WRONG_NARGS_LBL))
+      ((<= narg 34)
+          (am-sub cgc na (int-opnd (make-parity-adjusted-valued narg)))
+          (am-jne cgc WRONG_NARGS_LBL))
       (else
-        (compiler-internal-error "x64-gvm-opnd->x86-opnd: Unknown opnd: " opnd))))
+        (default-check-narg cgc narg))))
+
+  (define (x64-set-narg cgc narg)
+    (debug "x64-set-narg: " narg "\n")
+    (cond
+      ((= narg 0)
+        (am-cmp cgc na na))
+      ((= narg 1)
+        (am-cmp cgc na (int-opnd -65)))
+      ((= narg 2)
+        (am-cmp cgc na (int-opnd 66)))
+      ((= narg 3)
+        (am-cmp cgc na (int-opnd 0)))
+      ((<= narg 34)
+          (am-add cgc na (int-opnd (make-parity-adjusted-valued narg))))
+      (else
+        (default-set-narg cgc narg))))
+
+  (register-setup)
+  (opnds-setup)
+  (instructions-setup)
+  (data-setup)
+  (helper-setup))
 
 ;; ***** Environment code and primitive functions
 
 (define (add-start-routine cgc)
-
   (debug "add-start-routine\n")
 
-  ;; (x86-jmp cgc C_START_LBL) ;; Used to skip descriptor data
-  (x86-label cgc C_START_LBL) ;; Initial procedure label
-
+  (am-lbl cgc C_START_LBL) ;; Initial procedure label
   ;; Thread descriptor initialization
-    ;; Set thread descriptor address
-    (x86-mov cgc descriptor-register (x86-imm-lbl THREAD_DESCRIPTOR))
-    ;; Set lower bytes of descriptor-register used for passing narg
-    (x86-mov cgc na (x86-imm-int na-reg-default-value 64))
-    ;; Set underflow position to current stack pointer position
-    (x86-mov cgc (thread-descriptor underflow-position-offset) sp)
-    ;; Set interrupt flag to current stack pointer position
-    (x86-mov cgc (thread-descriptor interrupt-offset) (x86-imm-int 0) 64)
-
-  (x86-mov cgc (get-register 0) (x86-imm-lbl C_RETURN_LBL)) ;; Set return address for main
-  (x86-lea cgc fp (x86-mem (* offs -8) sp)) ;; Align frame with offset
-  (x86-sub cgc sp (x86-imm-int stack-size)) ;; Allocate space for stack
-  (add-narg-set cgc 0)
-)
+  ;; Set thread descriptor address
+  (am-mov cgc dp (lbl-opnd THREAD_DESCRIPTOR))
+  ;; Set lower bytes of descriptor register used for passing narg
+  (am-mov cgc na (int-opnd na-reg-default-value word-width))
+  ;; Set underflow position to current stack pointer position
+  (am-mov cgc (thread-descriptor underflow-position-offset) sp)
+  ;; Set interrupt flag to current stack pointer position
+  (am-mov cgc (thread-descriptor interrupt-offset) (int-opnd 0) word-width)
+  (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
+  (am-lea cgc fp (mem-opnd (* offs -8) sp)) ;; Align frame with offset
+  (am-sub cgc sp (int-opnd stack-size)) ;; Allocate space for stack
+  (am-set-narg cgc 0))
 
 (define (add-end-routine cgc)
   (debug "add-end-routine\n")
 
   ;; Terminal procedure
-  (x86-label cgc C_RETURN_LBL)
-  (x86-add cgc sp (x86-imm-int stack-size))
-  (x86-mov cgc (x86-rax) r1)
-  (x86-add cgc (x86-rax) (x86-rax))
-  (x86-add cgc (x86-rax) (x86-rax))
-  (x86-ret cgc 0) ;; Exit program
+  (am-lbl cgc C_RETURN_LBL)
+  (am-add cgc sp (int-opnd stack-size))
+  (am-mov cgc runtime-result-register (get-register 1))
+  (am-ret cgc) ;; Exit program
 
   ;; Incorrect narg handling
-  (x86-label cgc WRONG_NARGS_LBL)
+  (am-lbl cgc WRONG_NARGS_LBL)
   ;; Overflow handling
-  (x86-label cgc OVERFLOW_LBL)
+  (am-lbl cgc OVERFLOW_LBL)
   ;; Underflow handling
-  (x86-label cgc UNDERFLOW_LBL)
+  (am-lbl cgc UNDERFLOW_LBL)
   ;; Interrupts handling
-  (x86-label cgc INTERRUPT_LBL)
+  (am-lbl cgc INTERRUPT_LBL)
   ;; Pop stack
-  (x86-mov cgc fp (thread-descriptor underflow-position-offset))
-  (x86-mov cgc r0 (x86-imm-int -1)) ;; Error value
+  (am-mov cgc fp (thread-descriptor underflow-position-offset))
+  (am-mov cgc (get-register 0) (int-opnd -1)) ;; Error value
   ;; Pop remaining stack (Everything allocated but stack size
-  (x86-add cgc sp (x86-imm-int stack-size))
-  (x86-mov cgc (x86-rax) (x86-imm-int -4))
-  (x86-ret cgc)
-  ; (x86-jmp cgc WRONG_NARGS_LBL) ;; infinite loop
+  (am-add cgc sp (int-opnd stack-size))
+  (am-mov cgc runtime-result-register (int-opnd -4))
+  (am-ret cgc 0)
 
   ;; Thread descriptor reserved space
-    ;; Aligns address to 2^8 so the 8 least significant bits are 0
-    ;; This is used to store the address in the lower bits of the cl register
-    ;; The lower byte is used to pass narg
-    ;; Also, align to descriptor to cache lines. TODO: Confirm it's true
-    (asm-align cgc 256)
-    (x86-label cgc THREAD_DESCRIPTOR)
-    (reserve-space cgc thread-descriptor-size 0) ;; Reserve space for thread-descriptor-size bytes
+  ;; Aligns address to 2^8 so the 8 least significant bits are 0
+  ;; This is used to store the address in the lower bits of the cl register
+  ;; The lower byte is used to pass narg
+  ;; Also, align to descriptor to cache lines. TODO: Confirm it's true
+  (asm-align cgc 256)
+  (am-lbl cgc THREAD_DESCRIPTOR)
+  (reserve-space cgc thread-descriptor-size 0) ;; Reserve space for thread-descriptor-size bytes
 
   ;; Add primitives
   (table-for-each
@@ -650,8 +954,8 @@
       (let* ((prim (get-prim-obj (proc-obj-name proc)))
               (fun (prim-info-lifted-encode-fun prim)))
         (asm-align cgc 4 1)
-        (x86-label cgc label)
-        (fun cgc label 64)))))
+        (am-lbl cgc label)
+        (fun cgc label word-width)))))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-objects cgc obj label)
@@ -659,42 +963,42 @@
   (debug "label: " label)
 
   ;; Todo : Alignment
-  (x86-label cgc label)
+  (am-lbl cgc label)
 
   (cond
     ((string? obj)
       (debug "Obj: " obj "\n")
       ;; Header: 158 (0x9E) + 256 * char_size(default:4) * length
-      (x86-dd cgc (+ 158 (* (* 256 4) (string-length obj))))
+      (am-dd cgc (+ 158 (* (* 256 4) (string-length obj))))
       ;; String content=
-      (apply x86-dd (cons cgc (map char->integer (string->list obj)))))
+      (apply am-dd (cons cgc (map char->integer (string->list obj)))))
     (else
       (compiler-internal-error "put-objects: Unknown object type"))))
 
 ;; ***** x64 : GVM Instruction encoding
 
-(define (x64-encode-gvm-instr cgc proc code)
-  ; (debug "x64-encode-gvm-instr\n")
+(define (encode-gvm-instr cgc proc code)
+  ; (debug "encode-gvm-instr\n")
   (case (gvm-instr-type (code-gvm-instr code))
-    ((label)  (x64-encode-label-instr   cgc proc code))
-    ((jump)   (x64-encode-jump-instr    cgc proc code))
-    ((ifjump) (x64-encode-ifjump-instr  cgc proc code))
-    ((apply)  (x64-encode-apply-instr   cgc proc code))
-    ((copy)   (x64-encode-copy-instr    cgc proc code))
-    ((close)  (x64-encode-close-instr   cgc proc code))
-    ((switch) (x64-encode-switch-instr  cgc proc code))
+    ((label)  (encode-label-instr   cgc proc code))
+    ((jump)   (encode-jump-instr    cgc proc code))
+    ((ifjump) (encode-ifjump-instr  cgc proc code))
+    ((apply)  (encode-apply-instr   cgc proc code))
+    ((copy)   (encode-copy-instr    cgc proc code))
+    ((close)  (encode-close-instr   cgc proc code))
+    ((switch) (encode-switch-instr  cgc proc code))
     (else
       (compiler-error
-        "format-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type gvm-instr)))))
+        "encode-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type gvm-instr)))))
 
 ;; ***** Label instruction encoding
 
-(define (x64-encode-label-instr cgc proc code)
-  (debug "x64-encode-label-instr: ")
+(define (encode-label-instr cgc proc code)
+  (debug "encode-label-instr: ")
   (let* ((gvm-instr (code-gvm-instr code))
-        (label-num (label-lbl-num gvm-instr))
-        (label (get-proc-label cgc proc label-num))
-        (narg (label-entry-nb-parms gvm-instr)))
+         (label-num (label-lbl-num gvm-instr))
+         (label (get-proc-label cgc proc label-num))
+         (narg (label-entry-nb-parms gvm-instr)))
 
   (debug label "\n")
 
@@ -702,70 +1006,47 @@
   (if (not (eqv? 'simple (label-type gvm-instr)))
     (asm-align cgc 4 1 144))
 
-    (x86-label cgc label)
+    (am-lbl cgc label)
 
     (if (eqv? 'entry (label-type gvm-instr))
-      (add-narg-check cgc narg))))
-
-(define (add-narg-check cgc narg)
-  (debug "add-narg-check\n")
-  (debug narg)
-  (cond
-    ((= narg 0)
-      (x86-jne cgc WRONG_NARGS_LBL))
-    ((= narg 1)
-      (x86-jp cgc WRONG_NARGS_LBL))
-    ((= narg 2)
-      (x86-jno cgc WRONG_NARGS_LBL))
-    ((= narg 3)
-      (x86-jns cgc WRONG_NARGS_LBL))
-    ((<= narg 34)
-        (x86-sub cgc na (x86-imm-int (make-parity-adjusted-valued narg)))
-        (x86-jne cgc WRONG_NARGS_LBL))
-    (else
-      (compiler-internal-error "Number of argument not supported: " narg))))
-
-(define (make-parity-adjusted-valued n)
-  (define (bit-count n)
-    (if (= n 0)
-      0
-      (+ (modulo n 2) (bit-count (quotient n 2)))))
-  (let* ((narg2 (* 2 (- n 3)))
-        (bits (bit-count narg2))
-        (parity (modulo bits 2)))
-    (+ 64 parity narg2)))
+      (am-check-narg cgc narg))))
 
 ;; ***** (if)Jump instruction encoding
 
-(define (x64-encode-jump-instr cgc proc code)
-  (debug "x64-encode-jump-instr\n")
+(define (encode-jump-instr cgc proc code)
+  (debug "encode-jump-instr\n")
   (let* ((gvm-instr (code-gvm-instr code))
-          (jmp-opnd (jump-opnd gvm-instr)))
+         (jmp-opnd (jump-opnd gvm-instr)))
 
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (poll-check cgc code)
+    (am-check-poll cgc code)
 
     ;; Save return address if necessary
     (if (jump-ret gvm-instr)
       (let* ((label-ret-num (jump-ret gvm-instr))
               (label-ret (get-proc-label cgc proc label-ret-num))
-              (label-ret-opnd (x86-imm-lbl label-ret)))
-        (x86-mov cgc (get-register 0) label-ret-opnd)))
+              (label-ret-opnd (lbl-opnd label-ret)))
+        (am-mov cgc (get-register 0) label-ret-opnd)))
+
+    ;; How to use am-jumplink (Branch with link like in ARM)
+    ;; Problem: add-narg-set may change flag register
+    ;; If isa support deactivating effects to register (Use global variable to toggle ex: (enable-flag-effects) (disable-flag-effects))
+    ;;    Invert save-return-address and set-arg-count
+    ;; Else, keep order
 
     ;; Set arg count
     (if (jump-nb-args gvm-instr)
-      (add-narg-set cgc (jump-nb-args gvm-instr)))
+      (am-set-narg cgc (jump-nb-args gvm-instr)))
 
-    ;; Jump to location. Checks if jump is useless.
-    ;; As far as I know, it breaks nothing and gives 50% more performance in (fib 40)
+    ;; Jump to location. Checks if jump is NOP.
     (let* ((label-num (label-lbl-num (bb-label-instr (code-bb code)))))
       (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
-        (x86-jmp cgc (x64-gvm-opnd->x86-opnd cgc proc code jmp-opnd 'jump))))))
+        (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump))))))
 
-(define (x64-encode-ifjump-instr cgc proc code)
-  (debug "x64-encode-ifjump-instr\n")
+(define (encode-ifjump-instr cgc proc code)
+  (debug "encode-ifjump-instr\n")
   (let* ((gvm-instr (code-gvm-instr code))
           (true-label (get-proc-label cgc proc (ifjump-true gvm-instr)))
           (false-label (get-proc-label cgc proc (ifjump-false gvm-instr))))
@@ -773,7 +1054,7 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (poll-check cgc code)
+    (am-check-poll cgc code)
 
     (x64-encode-prim-ifjump
       cgc
@@ -784,49 +1065,10 @@
       true-label
       false-label)))
 
-(define (poll-check cgc code)
-  (define (check-overflow)
-    (debug "check-overflow\n")
-    (x86-cmp cgc fp sp)
-    (x86-jbe cgc OVERFLOW_LBL))
-  (define (check-underflow)
-    (debug "check-underflow\n")
-    (x86-cmp cgc fp (thread-descriptor underflow-position-offset))
-    (x86-jae cgc UNDERFLOW_LBL))
-  (define (check-interrupt)
-    (debug "check-interrupt\n")
-    (x86-cmp cgc (thread-descriptor interrupt-offset) (x86-imm-int 0) 64)
-    (x86-jne cgc INTERRUPT_LBL))
-
-  (debug "poll-check\n")
-  (let ((gvm-instr (code-gvm-instr code))
-        (fs-gain (proc-frame-slots-gained code)))
-    (if (jump-poll? gvm-instr)
-      (begin
-        (cond
-          ((< 0 fs-gain) (check-overflow))
-          ((> 0 fs-gain) (check-underflow)))
-        (check-interrupt)))))
-
-(define (add-narg-set cgc narg)
-  (cond
-    ((= narg 0)
-      (x86-cmp cgc na na))
-    ((= narg 1)
-      (x86-cmp cgc na (x86-imm-int -65)))
-    ((= narg 2)
-      (x86-cmp cgc na (x86-imm-int 66)))
-    ((= narg 3)
-      (x86-cmp cgc na (x86-imm-int 0)))
-    ((<= narg 34)
-        (x86-add cgc na (x86-imm-int (make-parity-adjusted-valued narg))))
-    (else
-      (compiler-internal-error "Number of argument not supported: " narg))))
-
 ;; ***** Apply instruction encoding
 
-(define (x64-encode-apply-instr cgc proc code)
-  (debug "x64-encode-apply-instr\n")
+(define (encode-apply-instr cgc proc code)
+  (debug "encode-apply-instr\n")
   (let ((gvm-instr (code-gvm-instr code)))
     (x64-encode-prim-affectation
       cgc
@@ -838,24 +1080,24 @@
 
 ;; ***** Copy instruction encoding
 
-(define (x64-encode-copy-instr cgc proc code)
-  (debug "x64-encode-copy-instr\n")
+(define (encode-copy-instr cgc proc code)
+  (debug "encode-copy-instr\n")
   (let* ((gvm-instr (code-gvm-instr code))
-        (src (x64-gvm-opnd->x86-opnd cgc proc code (copy-opnd gvm-instr) #f))
-        (dst (x64-gvm-opnd->x86-opnd cgc proc code (copy-loc gvm-instr) #f)))
-    (x86-mov cgc dst src 64)))
+        (src (make-opnd cgc proc code (copy-opnd gvm-instr) #f))
+        (dst (make-opnd cgc proc code (copy-loc gvm-instr) #f)))
+    (am-mov cgc dst src 64)))
 
 ;; ***** Close instruction encoding
 
-(define (x64-encode-close-instr cgc proc gvm-instr)
-  (debug "x64-encode-close-instr\n")
+(define (encode-close-instr cgc proc gvm-instr)
+  (debug "encode-close-instr\n")
   (compiler-internal-error
     "x64-encode-close-instr: close instruction not implemented"))
 
 ;; ***** Switch instruction encoding
 
-(define (x64-encode-switch-instr cgc proc gvm-instr)
-  (debug "x64-encode-switch-instr\n")
+(define (encode-switch-instr cgc proc gvm-instr)
+  (debug "encode-switch-instr\n")
   (compiler-internal-error
     "x64-encode-switch-instr: switch instruction not implemented"))
 
@@ -940,7 +1182,7 @@
 
   (let* ((opnds
           (map
-            (lambda (opnd) (x64-gvm-opnd->x86-opnd cgc proc code opnd #f))
+            (lambda (opnd) (make-opnd cgc proc code opnd #f))
             args))
         (opnd1 (car opnds)))
 
@@ -953,19 +1195,19 @@
   (x64-encode-inline-prim cgc proc code prim args)
 
     (if (and result-loc (not (equal? (car args) result-loc)))
-      (let ((x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code result-loc #f)))
+      (let ((result-loc-opnd (make-opnd cgc proc code result-loc #f)))
     (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose arity > 0
       ;; If operation returns boolean (Result is in flag register)
         (let* ((proc-name (proc-obj-name proc))
                 (suffix (string-append proc-name "_jump"))
                 (label (make-unique-label cgc suffix)))
 
-            (x86-mov cgc x86-result-loc (x86-imm-int 1))
+            (am-mov cgc result-loc-opnd (int-opnd 1))
             ((prim-info-true-jump prim) cgc label)
-            (x86-mov cgc x86-result-loc (x86-imm-int 0))
-            (x86-label label))
+            (am-mov cgc result-loc-opnd (int-opnd 0))
+            (am-label label))
       ;; Else
-      (x86-mov cgc x86-result-loc (x64-gvm-opnd->x86-opnd cgc proc code (car args) #f))))))
+      (am-mov cgc result-loc-opnd (make-opnd cgc proc code (car args) #f))))))
 
 ;; Add mov necessary if operation only operates on register but args are not registers (todo? necessary?
 (define (x64-encode-prim-ifjump cgc proc code prim args true-loc-label false-loc-label)
@@ -973,7 +1215,7 @@
   (x64-encode-inline-prim cgc proc code prim args)
 
   ((prim-info-true-jump prim) cgc true-loc-label)
-  (x86-jmp cgc false-loc-label))
+  (am-jmp cgc false-loc-label))
 
 ;; Defines lifted function using inline-encode-fun
 (define (x64-encode-lifted-prim-inline cgc prim)
@@ -989,15 +1231,15 @@
       ;; If operation returns boolean (Result is in flag register)
       (let* ((suffix "_jump")
               (label (make-unique-label cgc suffix))
-              (result-loc r1))
+              (result-loc (get-register 1)))
 
-          (x86-mov cgc (get-register 1) (x86-imm-int 1))
+          (am-mov cgc (get-register 1) (int-opnd 1))
           ((prim-info-true-jump prim) cgc label)
-          (x86-mov cgc (get-register 1) (x86-imm-int 0))
-          (x86-label cgc label)))
+          (am-mov cgc (get-register 1) (int-opnd 0))
+          (am-label cgc label)))
       ;; Else, we suppose that arg1 is destination of operation. arg1 = r1
 
-  (x86-jmp cgc (get-register 0))))
+  (am-jmp cgc (get-register 0))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1035,5 +1277,5 @@
 (define (reserve-space cgc bytes #!optional (value 0))
   (if (> bytes 0)
     (begin
-      (x86-db cgc value)
+      (am-db cgc value)
       (reserve-space cgc (- bytes 1) value))))
