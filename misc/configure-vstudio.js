@@ -372,7 +372,8 @@ FixupFile(
         "CONF_HAVE_CONDITION_VARIABLE":      CONF_HAVE_CONDITION_VARIABLE,
         "CONF_MAX_PROCESSORS":               CONF_MAX_PROCESSORS,
         "CONF_ACTIVITY_LOG":                 CONF_ACTIVITY_LOG,
-        "CONF_BOOL":                         CONF_BOOL
+        "CONF_BOOL":                         CONF_BOOL,
+        "CONF_USE_SIGSET_T":                 "CONF_USE_SIGSET_T"
     });
 
 FixupFile(
