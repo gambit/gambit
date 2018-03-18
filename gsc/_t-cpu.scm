@@ -443,6 +443,10 @@
 (define lbl-opnd #f)
 (define mem-opnd #f)
 
+(define int-opnd? #f)
+(define lbl-opnd? #f)
+(define mem-opnd? #f)
+
 ;; ***** AM: Instructions
 ;; ***** AM: Instructions: Misc
 
@@ -616,7 +620,7 @@
 
 ;; Key: Label id
 ;; Value: Pair (Label, optional Proc-obj)
-(define proc-labels (make-table test: eq?))
+(define proc-labels (make-table test: equal?))
 
 (define (get-proc-label cgc proc gvm-lbl)
   (define (nat-label-ref label-id)
@@ -796,7 +800,11 @@
   (define (opnds-setup)
     (set! int-opnd x86-imm-int)
     (set! lbl-opnd x86-imm-lbl)
-    (set! mem-opnd x86-mem))
+    (set! mem-opnd x86-mem)
+
+    (set! int-opnd? x86-imm-int?)
+    (set! lbl-opnd? x86-imm-lbl?)
+    (set! mem-opnd? x86-mem?))
 
   (define (instructions-setup)
     (set! am-lbl x86-label)
@@ -876,7 +884,7 @@
       (else
         (default-set-narg cgc narg))))
 
-  (set! load-store-only #t)
+  (set! load-store-only #f)
   (set! enable-poll #t)
   (register-setup)
   (opnds-setup)
@@ -1283,3 +1291,94 @@
     (begin
       (am-db cgc value)
       (reserve-space cgc (- bytes 1) value))))
+
+
+;;;============================================================================
+
+;; ***** Instruction substitution
+;; ***** Instruction substitution - Base
+
+;; Create an interception.
+;; Pred :: [Arg] -> Bool
+;; Replacment :: Function
+;; map-args :: [Arg] -> [Arg]
+(define (make-intercept pred replacement #!optional (map-args id))
+  (vector 'intercept pred replacement map-args))
+
+(define (intercept? vect)
+  (and (= 4 (length vect)) (eqv? 'intercept (vect-ref vect 0))))
+(define (intercept-pred vect) (vector-ref vect 1))
+(define (intercept-replacement vect) (vector-ref vect 2))
+(define (intercept-map-args vect) (vector-ref vect 3))
+
+;; Wrap func in lambda that does
+;; 1. Check if any intercept-pred is true with it's argument.
+;;    The first one that's true is used to override func
+;; 2. If no interception, execute func with it's argument
+(define (wrap-function func intercepts)
+  (define (iter . args)
+    (let loop ((intercepts intercepts))
+      (if (null? intercepts)
+        (apply func args)
+        (let* ((intercept (car intercepts))
+               (pred (intercept-pred intercept))
+               (repl (intercept-replacement intercept))
+               (map-args (intercept-map-args intercept)))
+          (if (pred args)
+            (apply repl (map-args args))
+            (loop (cdr intercepts)))))))
+  iter)
+
+;; ***** Instruction substitution - Predicate helper functions
+
+(define (NOP . args) #f)
+(define (id . args) args)
+
+(define (pred-on-arg arg-index pred sub #!optional (args-map id))
+  (make-intercept
+    (lambda (args) (and (< arg-index (length args)) (pred (list-ref args arg-index))))
+    sub
+    args-map))
+
+(define (pred-const arg-index val sub #!optional (args-map id))
+  (pred-on-arg
+    arg-index
+    (lambda (arg) (equal? arg val))
+    sub args-map))
+
+;; Set reg to #f to match any
+(define (pred-int arg-index int sub #!optional (args-map id))
+  (pred-on-arg arg-index
+    (lambda (arg)
+      (display "lambda!\n")
+      (display int)
+      (display
+        (if int
+          (equal? arg (int-opnd int))
+          (int-opnd? arg)))
+      (if int
+        (equal? arg (int-opnd int))
+        (int-opnd? arg)))
+    sub args-map))
+
+;; ***** Instruction substitution - Arguments helper functions
+
+(define (map-argument arg-index fun)
+  (lambda (args)
+    (map-nth args arg-index fun)))
+
+(define (map-nth list nth fun)
+  (if (= 0 nth)
+    (cons (fun (car list)) (cdr list))
+    (cons (car list) (map-nth (cdr list) (- nth 1) fun))))
+
+(define (reorder-list args list)
+  (if (null? list)
+    '()
+    (cons
+      (list-ref args (car list))
+      (reorder-list args (cdr list)))))
+
+(define (reorganize-args list)
+  (lambda (args)
+    (reorder-list args list)))
