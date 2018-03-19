@@ -1366,51 +1366,56 @@
 ;; type OpndType = Int | Reg | Mem
 ;; Currently no use for OpndType Obj and Label.
 
-(define (make-rule id expr sub #!optional (args-map id))
+(define (make-rule rule-id expr sub #!optional (args-map id))
   (define (match? args expr)
-    (if (not (rule-enabled? id))
-      (begin
-        (debug "Not applying rule with id: " id "\n")
-        #f)
-      (begin
-        (debug "Applying rule with id: " id "\n")
+    (case (car expr)
+      ('or
+        (any (map (lambda (subconds) (match? args subconds)) (cdr expr))))
 
-        (case (car expr)
-          ('or
-            (any (map (lambda (subconds) (match? args subconds)) (cdr expr))))
+      ('and
+        (all (map (lambda (subconds) (match? args subconds)) (cdr expr))))
 
-          ('and
-            (all (map (lambda (subconds) (match? args subconds)) (cdr expr))))
+      ('abs
+        (let* ((arg-index (cadr expr))
+               (opnd-type (caddr expr))
+               (pred      (cadddr expr))
+               (arg       (list-ref args arg-index)))
+          (if (procedure? pred)
+            (case opnd-type
+              ('int (and (int-opnd? arg) (or (not pred) (pred arg))))
+              ('reg (and (fixnum?   arg) (or (not pred) (pred arg))))
+              ('mem (and (mem-opnd? arg) (or (not pred) (pred arg))))
+              (else (compiler-internal-error "Unknown opnd-type: " opnd-type)))
+            (case opnd-type
+              ('int (and (int-opnd? arg) (or (not pred) (equal? arg (int-opnd pred)))))
+              ('reg (and (fixnum?   arg) (or (not pred) (equal? arg (get-register pred)))))
+              ('mem (and (mem-opnd? arg) (or (not pred) (equal? arg (apply mem-opnd pred)))))
+              (else (compiler-internal-error "Unknown arg-type: " opnd-type))))))
 
-          ('abs
-            (let* ((arg-index (cadr expr))
-                   (opnd-type (caddr expr))
-                   (pred      (cadddr expr))
-                   (arg       (list-ref args arg-index)))
-              (if (procedure? pred)
-                (case opnd-type
-                  ('int (and (int-opnd? arg) (or (not arg-val) (pred arg))))
-                  ('reg (and (fixnum?   arg) (or (not arg-val) (pred arg))))
-                  ('mem (and (mem-opnd? arg) (or (not arg-val) (pred arg))))
-                  (else (compiler-internal-error "Unknown opnd-type: " opnd-type)))
-                (case arg-type
-                  ('int (and (int-opnd? arg) (or (not arg-val) (equal? arg (int-opnd arg-val)))))
-                  ('reg (and (fixnum?   arg) (or (not arg-val) (equal? arg (get-register arg-val)))))
-                  ('mem (and (mem-opnd? arg) (or (not arg-val) (equal? arg (apply mem-opnd arg-val)))))
-                  (else (compiler-internal-error "Unknown arg-type: " arg-type))))))
+      ('rel
+        (let* ((indexes (cadr expr))
+                (opnds (reorder-list args indexes))
+                (pred (caddr expr)))
+          (pred opnds)))
 
-          ('rel
-            (let* ((indexes (cadr expr))
-                   (opnds (reorder-list args indexes))
-                   (pred (caddr expr)))
-              (pred opnds)))
-
-          (else
-            (compiler-internal-error "make-rule: Unknown tag: " (car expr)))))))
+      (else
+        (compiler-internal-error "make-rule: Unknown tag: " (car expr)))))
 
   (rule
     (lambda (args)
-      (match? args expr))
+      (let ((does-match? (match? args expr))
+            (enabled (rule-enabled? rule-id)))
+        (cond
+          ((and does-match? (not enabled))
+            (begin
+              (debug "Not applying rule with id: " rule-id "\n")
+              #f))
+          ((and does-match? enabled)
+            (begin
+              (debug "Applying rule with id: " rule-id "\n")
+              #t))
+          (else
+            #f))))
     sub
     args-map))
 
@@ -1467,7 +1472,7 @@
   (let loop ((ids enabled-rules))
     (if (null? ids)
       #f
-      (if (eqv? id (car ids))
+      (if (equal? id (car ids))
         #t
         (loop (cdr ids))))))
 
@@ -1475,7 +1480,6 @@
 ;; Naming convention: original_operation opnd1_type opnd2_type -> substituted_operation new_opnd1_type new_opnd2_type
 ;; Operand types are: (R)egister, (M)emory, (L)abel, _ for Any, Int or other constants
 (define enabled-rules (list
-  ; "mov R 0 -> xor R R"
-  ; "add _ 0 -> nop"
-  ; "add _ 1 -> inc _"
-  ))
+  "mov R 0 -> xor R R"
+  "add _ 0 -> nop"
+  "add _ 1 -> inc _"))
