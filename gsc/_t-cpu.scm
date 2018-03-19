@@ -415,7 +415,7 @@
 ;;
 ;;
 ;;  The following instructions have a default implementation:
-;;    am-lea  : Load address of memory location
+;;    am-lda  : Load address of memory location. Does not support labels.
 ;;    ...
 ;;
 ;;
@@ -426,7 +426,7 @@
 ;;
 ;;
 ;;  The operand objects have to follow the x86 operands objects formats.
-;;  This is because the default implementations may assume they follow the format. (Ex: lea)
+;;  The default implementations assume they follow the format.
 ;;
 ;;  To add new native backend, see x64-setup function
 
@@ -447,13 +447,19 @@
 (define lbl-opnd? #f)
 (define mem-opnd? #f)
 
+(define int-opnd-value #f)
+(define lbl-opnd-offset #f)
+(define lbl-opnd-label #f)
+(define mem-opnd-offset #f)
+(define mem-opnd-reg #f)
+
 ;; ***** AM: Instructions
 ;; ***** AM: Instructions: Misc
 
 (define am-lbl #f)
 (define am-ret #f)
 (define am-mov #f)
-(define am-lea default-lea)
+(define am-lda default-lda)
 
 (define am-check-narg default-check-narg)
 (define am-set-narg   default-set-narg)
@@ -496,21 +502,15 @@
 
 ;; ***** AM: Default implementations
 
-(define (default-lea cgc reg opnd)
-  (define (mem-opnd? x) (and (vector? x) (fx= (vector-length x) 4)))
-  (define (mem-opnd-offset x) (vector-ref x 0))
-  (define (mem-opnd-reg1 x) (vector-ref x 1))
-  (define (mem-opnd-reg2 x) (vector-ref x 2))
-  (define (mem-opnd-scale x) (vector-ref x 3))
-
-  ;; No need for reg2 and scale
-  (if (not (mem-opnd? opnd))
-    (compiler-internal-error "am-lea: opnd isn't mem location"))
-  (if (mem-opnd-reg2 opnd)
-    (compiler-internal-error "am-lea: default implementation doesn't support reg2 and scale"))
-  (am-mov cgc reg (int-opnd (mem-opnd-offset opnd)))
-  (if (mem-opnd-reg1 opnd)
-    (am-add cgc reg (mem-opnd-reg1 opnd))))
+(define (default-lda cgc reg opnd)
+  (debug "default-lda\n")
+  (cond
+    ((mem-opnd? opnd)
+      (am-mov cgc reg (int-opnd (mem-opnd-offset opnd)))
+      (am-add cgc reg (mem-opnd-reg opnd)))
+    (else
+      (compiler-internal-error
+        "default-lda: Unknown opnd" opnd))))
 
 (define (default-jmplink cgc opnd)
   (am-mov cgc (get-register 0) opnd)
@@ -802,9 +802,15 @@
     (set! lbl-opnd x86-imm-lbl)
     (set! mem-opnd x86-mem)
 
-    (set! int-opnd? x86-imm-int?)
-    (set! lbl-opnd? x86-imm-lbl?)
-    (set! mem-opnd? x86-mem?))
+    ;; Copied from _x86.scm
+    (set! int-opnd? (lambda (x) (and (pair? x) (number? (cdr x)))))
+    (set! lbl-opnd? (lambda (x) (and (pair? x) (vector? (cdr x)))))
+    (set! mem-opnd? (lambda (x) (and (vector? x) (fx= (vector-length x) 4))))
+    (set! int-opnd-value  (lambda (x) (cdr x)))
+    (set! lbl-opnd-offset (lambda (x) (car x)))
+    (set! lbl-opnd-label  (lambda (x) (cdr x)))
+    (set! mem-opnd-offset (lambda (x) (vector-ref x 0)))
+    (set! mem-opnd-reg    (lambda (x) (vector-ref x 1))))
 
   (define (instructions-setup)
     (set! am-lbl x86-label)
@@ -816,7 +822,7 @@
             (all-rules (match-reg 1 #f) (match-int 2 0))
             x86-xor
             (reorganize-args '(0 1 1))))))
-    (set! am-lea x86-lea)
+    (set! am-lda x86-lea)
     (set! am-ret x86-ret)
     (set! am-cmp x86-cmp)
     (set! am-add
@@ -922,7 +928,7 @@
   (am-mov cgc (thread-descriptor interrupt-offset) (int-opnd 0) word-width)
 
   (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
-  (am-lea cgc fp (mem-opnd (* offs (- word-width-bytes)) sp)) ;; Align frame with offset
+  (am-lda cgc fp (mem-opnd (* offs (- word-width-bytes)) sp)) ;; Align frame with offset
   (am-sub cgc sp (int-opnd stack-size)) ;; Allocate space for stack
   (am-set-narg cgc 0))
 
