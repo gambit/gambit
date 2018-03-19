@@ -1438,7 +1438,7 @@
 
 (define (any bools)
   (if (null? bools)
-    #t
+    #f
     (or (car bools) (all (cdr bools)))))
 
 ;; ***** Instruction substitution - Enabling/Disabling rules
