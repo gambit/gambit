@@ -1348,23 +1348,24 @@
 (define (NOP . args) #f)
 (define (id . args) args)
 
-;; sub :: Function to substitute
-;; conds :: Expr
+;; Builds a substitution rule from an Expression
+;; The goal of the function is to make it easier to express complex substitution
+;; conditions while keeping expressions short and easy to understand.
+;; Using an Haskell-like syntax, an expression is defined as:
 ;; data Expr = And [Expr]
 ;;           | Or [Expr]
-;;           | Absolute ArgIndex OpndType OpndValue ;;
-;;           | Relative Arg1Index Arg2Index Pred
+;;             ;; If pred is function, apply pred on argument at ArgIndex
+;;             ;; If constant, check if opnd built with that value is equal to argument at ArgIndex
+;;             ;; In both cases, if argument at ArgIndex is not of opndType, it returns false
+;;             ;; If pred is #f, matches everything as long as opndType is correct
+;;           | Absolute { argIndex :: Int, opndType :: OpndType, pred :: #f | Constant | Opnd -> Bool }
+;;             ;; Apply list of arguments at indexes to pred.
+;;             ;; This is much more general than Absolute, but much less easy to use.
+;;           | Relative { indexes :: [Int], pred :: [Opnd] -> Bool }
 ;;
-;; type ArgIndex = Int
-;; type OpndType = Int | Reg | Mem | Lbl
-;; data OpndValue = List [Any] | Any | Val -> Bool
-;;
-;; Evaluate the truth value of the Expr
-;;
-;; Example expressions:
-;; Simple: (1 'int )
-;; Composed and: ('and (1 'int 2) (2 'reg 0))
-;; Composed or : ('or (1 'int 2) (2 'reg 0))
+;; type OpndType = Int | Reg | Mem
+;; Currently no use for OpndType Obj and Label.
+
 (define (make-rule id expr sub #!optional (args-map id))
   (define (match? args expr)
     (if (not (rule-enabled? id))
@@ -1383,21 +1384,26 @@
 
           ('abs
             (let* ((arg-index (cadr expr))
-                  (arg-type  (caddr expr))
-                  (arg-val   (cadddr expr))
-                  (arg       (list-ref args arg-index)))
-              (case arg-type
-                ('int (and (int-opnd? arg) (or (not arg-val) (equal? arg (int-opnd arg-val)))))
-                ('reg (and (fixnum?   arg) (or (not arg-val) (equal? arg (get-register arg-val)))))
-                ('mem (and (mem-opnd? arg) (or (not arg-val) (equal? arg (apply mem-opnd arg-val)))))
-                ('lbl (and (lbl-opnd? arg) (or (not arg-val) (equal? arg (lbl-opnd arg-val)))))
-                (else (compiler-internal-error "Unknown arg-type: " arg-type)))))
+                   (opnd-type (caddr expr))
+                   (pred      (cadddr expr))
+                   (arg       (list-ref args arg-index)))
+              (if (procedure? pred)
+                (case opnd-type
+                  ('int (and (int-opnd? arg) (or (not arg-val) (pred arg))))
+                  ('reg (and (fixnum?   arg) (or (not arg-val) (pred arg))))
+                  ('mem (and (mem-opnd? arg) (or (not arg-val) (pred arg))))
+                  (else (compiler-internal-error "Unknown opnd-type: " opnd-type)))
+                (case arg-type
+                  ('int (and (int-opnd? arg) (or (not arg-val) (equal? arg (int-opnd arg-val)))))
+                  ('reg (and (fixnum?   arg) (or (not arg-val) (equal? arg (get-register arg-val)))))
+                  ('mem (and (mem-opnd? arg) (or (not arg-val) (equal? arg (apply mem-opnd arg-val)))))
+                  (else (compiler-internal-error "Unknown arg-type: " arg-type))))))
 
           ('rel
-            (let* ((arg1 (list-ref args (cadr expr)))
-                  (arg2 (list-ref args (caddr expr)))
-                  (pred (cadddr expr)))
-              (pred arg1 arg2)))
+            (let* ((indexes (cadr expr))
+                   (opnds (reorder-list args indexes))
+                   (pred (caddr expr)))
+              (pred opnds)))
 
           (else
             (compiler-internal-error "make-rule: Unknown tag: " (car expr)))))))
@@ -1412,16 +1418,16 @@
   (cons 'and rules))
 (define (any-rules . rules)
   (cons 'or rules))
+
 (define (match-int arg-index val)
   (list 'abs arg-index 'int val))
 (define (match-reg arg-index val)
   (list 'abs arg-index 'reg val))
 (define (match-mem arg-index val)
   (list 'abs arg-index 'mem val))
-(define (match-lbl arg-index val)
-  (list 'abs arg-index 'lbl val))
-(define (match-rel arg1-index arg2-index pred)
-  (list 'rel arg1-index arg2-index pred))
+
+(define (match-rel indexes pred)
+  (list 'rel indexes pred))
 
 ;; ***** Instruction substitution - Arguments helper functions
 
