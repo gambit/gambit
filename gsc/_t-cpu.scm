@@ -812,6 +812,7 @@
       (wrap-function x86-mov
         (list
           (make-rule
+            "mov R 0 -> xor R R"
             (all-rules (match-reg 1 #f) (match-int 2 0))
             x86-xor
             (reorganize-args '(0 1 1))))))
@@ -821,8 +822,8 @@
     (set! am-add
       (wrap-function x86-add
         (list
-          (make-rule (match-int 2 0) NOP)
-          (make-rule (match-int 2 1) x86-inc (reorganize-args '(0 1))))))
+          (make-rule "add _ 0 -> nop" (match-int 2 0) NOP)
+          (make-rule "add _ 1 -> inc _" (match-int 2 1) x86-inc (reorganize-args '(0 1))))))
     (set! am-sub x86-sub)
 
     (set! am-jmp    x86-jmp)
@@ -1364,35 +1365,42 @@
 ;; Simple: (1 'int )
 ;; Composed and: ('and (1 'int 2) (2 'reg 0))
 ;; Composed or : ('or (1 'int 2) (2 'reg 0))
-(define (make-rule expr sub #!optional (args-map id))
+(define (make-rule id expr sub #!optional (args-map id))
   (define (match? args expr)
-    (case (car expr)
-      ('or
-        (any (map (lambda (subconds) (match? args subconds)) (cdr expr))))
+    (if (not (rule-enabled? id))
+      (begin
+        (debug "Not applying rule with id: " id "\n")
+        #f)
+      (begin
+        (debug "Applying rule with id: " id "\n")
 
-      ('and
-        (all (map (lambda (subconds) (match? args subconds)) (cdr expr))))
+        (case (car expr)
+          ('or
+            (any (map (lambda (subconds) (match? args subconds)) (cdr expr))))
 
-      ('abs
-        (let* ((arg-index (cadr expr))
-               (arg-type  (caddr expr))
-               (arg-val   (cadddr expr))
-               (arg       (list-ref args arg-index)))
-          (case arg-type
-            ('int (and (int-opnd? arg) (or (not arg-val) (equal? arg (int-opnd arg-val)))))
-            ('reg (and (fixnum?   arg) (or (not arg-val) (equal? arg (get-register arg-val)))))
-            ('mem (and (mem-opnd? arg) (or (not arg-val) (equal? arg (apply mem-opnd arg-val)))))
-            ('lbl (and (lbl-opnd? arg) (or (not arg-val) (equal? arg (lbl-opnd arg-val)))))
-            (else (compiler-internal-error "Unknown arg-type: " arg-type)))))
+          ('and
+            (all (map (lambda (subconds) (match? args subconds)) (cdr expr))))
 
-      ('rel
-        (let* ((arg1 (list-ref args (cadr expr)))
-               (arg2 (list-ref args (caddr expr)))
-               (pred (cadddr expr)))
-          (pred arg1 arg2)))
+          ('abs
+            (let* ((arg-index (cadr expr))
+                  (arg-type  (caddr expr))
+                  (arg-val   (cadddr expr))
+                  (arg       (list-ref args arg-index)))
+              (case arg-type
+                ('int (and (int-opnd? arg) (or (not arg-val) (equal? arg (int-opnd arg-val)))))
+                ('reg (and (fixnum?   arg) (or (not arg-val) (equal? arg (get-register arg-val)))))
+                ('mem (and (mem-opnd? arg) (or (not arg-val) (equal? arg (apply mem-opnd arg-val)))))
+                ('lbl (and (lbl-opnd? arg) (or (not arg-val) (equal? arg (lbl-opnd arg-val)))))
+                (else (compiler-internal-error "Unknown arg-type: " arg-type)))))
 
-      (else
-        (compiler-internal-error "make-rule: Unknown tag: " (car expr)))))
+          ('rel
+            (let* ((arg1 (list-ref args (cadr expr)))
+                  (arg2 (list-ref args (caddr expr)))
+                  (pred (cadddr expr)))
+              (pred arg1 arg2)))
+
+          (else
+            (compiler-internal-error "make-rule: Unknown tag: " (car expr)))))))
 
   (rule
     (lambda (args)
@@ -1446,3 +1454,22 @@
   (if (null? bools)
     #t
     (or (car bools) (all (cdr bools)))))
+
+;; ***** Instruction substitution - Enabling/Disabling rules
+
+(define (rule-enabled? id)
+  (let loop ((ids enabled-rules))
+    (if (null? ids)
+      #f
+      (if (eqv? id (car ids))
+        #t
+        (loop (cdr ids))))))
+
+;; Todo: Replace with hash table
+;; Naming convention: original_operation opnd1_type opnd2_type -> substituted_operation new_opnd1_type new_opnd2_type
+;; Operand types are: (R)egister, (M)emory, (L)abel, _ for Any, Int or other constants
+(define enabled-rules (list
+  ; "mov R 0 -> xor R R"
+  ; "add _ 0 -> nop"
+  ; "add _ 1 -> inc _"
+  ))
