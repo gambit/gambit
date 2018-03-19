@@ -808,11 +808,21 @@
 
   (define (instructions-setup)
     (set! am-lbl x86-label)
-    (set! am-mov x86-mov)
+    (set! am-mov
+      (wrap-function x86-mov
+        (list
+          (make-rule
+            (all-rules (match-reg 1 #f) (match-int 2 0))
+            x86-xor
+            (reorganize-args '(0 1 1))))))
     (set! am-lea x86-lea)
     (set! am-ret x86-ret)
     (set! am-cmp x86-cmp)
-    (set! am-add x86-add)
+    (set! am-add
+      (wrap-function x86-add
+        (list
+          (make-rule (match-int 2 0) NOP)
+          (make-rule (match-int 2 1) x86-inc (reorganize-args '(0 1))))))
     (set! am-sub x86-sub)
 
     (set! am-jmp    x86-jmp)
@@ -884,6 +894,8 @@
       (else
         (default-set-narg cgc narg))))
 
+  (debug "x64-setup\n")
+
   (set! load-store-only #f)
   (set! enable-poll #t)
   (register-setup)
@@ -907,6 +919,7 @@
   (am-mov cgc (thread-descriptor underflow-position-offset) sp)
   ;; Set interrupt flag to current stack pointer position
   (am-mov cgc (thread-descriptor interrupt-offset) (int-opnd 0) word-width)
+
   (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
   (am-lea cgc fp (mem-opnd (* offs (- word-width-bytes)) sp)) ;; Align frame with offset
   (am-sub cgc sp (int-opnd stack-size)) ;; Allocate space for stack
