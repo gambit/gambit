@@ -961,7 +961,7 @@
   ;; Aligns address to 2^8 so the 8 least significant bits are 0
   ;; This is used to store the address in the lower bits of the cl register
   ;; The lower byte is used to pass narg
-  ;; Also, align to descriptor to cache lines. TODO: Confirm it's true
+  ;; Also, align to descriptor to cache lines. TODO: Confirm its true
   (asm-align cgc 256)
   (am-lbl cgc THREAD_DESCRIPTOR)
   (reserve-space cgc thread-descriptor-size 0) ;; Reserve space for thread-descriptor-size bytes
@@ -1313,9 +1313,9 @@
 (define (rule-map-args vect) (vector-ref vect 3))
 
 ;; Wrap func in lambda that does
-;; 1. Check if any rule-pred is true with it's argument.
+;; 1. Check if any rule-pred is true with its argument.
 ;;    The first one that's true is used to override func
-;; 2. If no rule match, execute func with it's argument
+;; 2. If no rule match, execute func with its argument
 (define (wrap-function func rules)
   (define (iter . args)
     (let loop ((rules rules))
