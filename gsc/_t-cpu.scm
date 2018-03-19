@@ -1298,35 +1298,35 @@
 ;; ***** Instruction substitution
 ;; ***** Instruction substitution - Base
 
-;; Create an interception.
+;; Create an rule.
 ;; Pred :: [Arg] -> Bool
 ;; Replacment :: Function
 ;; map-args :: [Arg] -> [Arg]
-(define (make-intercept pred replacement #!optional (map-args id))
-  (vector 'intercept pred replacement map-args))
+(define (rule pred replacement #!optional (map-args id))
+  (vector 'rule pred replacement map-args))
 
-(define (intercept? vect)
-  (and (= 4 (length vect)) (eqv? 'intercept (vect-ref vect 0))))
-(define (intercept-pred vect) (vector-ref vect 1))
-(define (intercept-replacement vect) (vector-ref vect 2))
-(define (intercept-map-args vect) (vector-ref vect 3))
+(define (rule? vect)
+  (and (= 4 (length vect)) (eqv? 'rule (vect-ref vect 0))))
+(define (rule-pred vect) (vector-ref vect 1))
+(define (rule-replacement vect) (vector-ref vect 2))
+(define (rule-map-args vect) (vector-ref vect 3))
 
 ;; Wrap func in lambda that does
-;; 1. Check if any intercept-pred is true with it's argument.
+;; 1. Check if any rule-pred is true with it's argument.
 ;;    The first one that's true is used to override func
-;; 2. If no interception, execute func with it's argument
-(define (wrap-function func intercepts)
+;; 2. If no rule match, execute func with it's argument
+(define (wrap-function func rules)
   (define (iter . args)
-    (let loop ((intercepts intercepts))
-      (if (null? intercepts)
+    (let loop ((rules rules))
+      (if (null? rules)
         (apply func args)
-        (let* ((intercept (car intercepts))
-               (pred (intercept-pred intercept))
-               (repl (intercept-replacement intercept))
-               (map-args (intercept-map-args intercept)))
+        (let* ((rule (car rules))
+               (pred (rule-pred rule))
+               (repl (rule-replacement rule))
+               (map-args (rule-map-args rule)))
           (if (pred args)
             (apply repl (map-args args))
-            (loop (cdr intercepts)))))))
+            (loop (cdr rules)))))))
   iter)
 
 ;; ***** Instruction substitution - Predicate helper functions
@@ -1334,32 +1334,73 @@
 (define (NOP . args) #f)
 (define (id . args) args)
 
-(define (pred-on-arg arg-index pred sub #!optional (args-map id))
-  (make-intercept
-    (lambda (args) (and (< arg-index (length args)) (pred (list-ref args arg-index))))
+;; sub :: Function to substitute
+;; conds :: Expr
+;; data Expr = And [Expr]
+;;           | Or [Expr]
+;;           | Absolute ArgIndex OpndType OpndValue ;;
+;;           | Relative Arg1Index Arg2Index Pred
+;;
+;; type ArgIndex = Int
+;; type OpndType = Int | Reg | Mem | Lbl
+;; data OpndValue = List [Any] | Any | Val -> Bool
+;;
+;; Evaluate the truth value of the Expr
+;;
+;; Example expressions:
+;; Simple: (1 'int )
+;; Composed and: ('and (1 'int 2) (2 'reg 0))
+;; Composed or : ('or (1 'int 2) (2 'reg 0))
+(define (make-rule expr sub #!optional (args-map id))
+  (define (match? args expr)
+    (case (car expr)
+      ('or
+        (any (map (lambda (subconds) (match? args subconds)) (cdr expr))))
+
+      ('and
+        (all (map (lambda (subconds) (match? args subconds)) (cdr expr))))
+
+      ('abs
+        (let* ((arg-index (cadr expr))
+               (arg-type  (caddr expr))
+               (arg-val   (cadddr expr))
+               (arg       (list-ref args arg-index)))
+          (case arg-type
+            ('int (and (int-opnd? arg) (or (not arg-val) (equal? arg (int-opnd arg-val)))))
+            ('reg (and (fixnum?   arg) (or (not arg-val) (equal? arg (get-register arg-val)))))
+            ('mem (and (mem-opnd? arg) (or (not arg-val) (equal? arg (apply mem-opnd arg-val)))))
+            ('lbl (and (lbl-opnd? arg) (or (not arg-val) (equal? arg (lbl-opnd arg-val)))))
+            (else (compiler-internal-error "Unknown arg-type: " arg-type)))))
+
+      ('rel
+        (let* ((arg1 (list-ref args (cadr expr)))
+               (arg2 (list-ref args (caddr expr)))
+               (pred (cadddr expr)))
+          (pred arg1 arg2)))
+
+      (else
+        (compiler-internal-error "make-rule: Unknown tag: " (car expr)))))
+
+  (rule
+    (lambda (args)
+      (match? args expr))
     sub
     args-map))
 
-(define (pred-const arg-index val sub #!optional (args-map id))
-  (pred-on-arg
-    arg-index
-    (lambda (arg) (equal? arg val))
-    sub args-map))
-
-;; Set reg to #f to match any
-(define (pred-int arg-index int sub #!optional (args-map id))
-  (pred-on-arg arg-index
-    (lambda (arg)
-      (display "lambda!\n")
-      (display int)
-      (display
-        (if int
-          (equal? arg (int-opnd int))
-          (int-opnd? arg)))
-      (if int
-        (equal? arg (int-opnd int))
-        (int-opnd? arg)))
-    sub args-map))
+(define (all-rules . rules)
+  (cons 'and rules))
+(define (any-rules . rules)
+  (cons 'or rules))
+(define (match-int arg-index val)
+  (list 'abs arg-index 'int val))
+(define (match-reg arg-index val)
+  (list 'abs arg-index 'reg val))
+(define (match-mem arg-index val)
+  (list 'abs arg-index 'mem val))
+(define (match-lbl arg-index val)
+  (list 'abs arg-index 'lbl val))
+(define (match-rel arg1-index arg2-index pred)
+  (list 'rel arg1-index arg2-index pred))
 
 ;; ***** Instruction substitution - Arguments helper functions
 
@@ -1382,3 +1423,13 @@
 (define (reorganize-args list)
   (lambda (args)
     (reorder-list args list)))
+
+(define (all bools)
+  (if (null? bools)
+    #t
+    (and (car bools) (all (cdr bools)))))
+
+(define (any bools)
+  (if (null? bools)
+    #t
+    (or (car bools) (all (cdr bools)))))
