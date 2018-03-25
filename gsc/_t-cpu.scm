@@ -959,9 +959,8 @@
 
   ;; Thread descriptor reserved space
   ;; Aligns address to 2^8 so the 8 least significant bits are 0
-  ;; This is used to store the address in the lower bits of the cl register
-  ;; The lower byte is used to pass narg
-  ;; Also, align to descriptor to cache lines. TODO: Confirm its true
+  ;; The 8 lower bytes can be used to store something else. ie: narg
+  ;; Also, it aligns descriptor to cache lines. todo: Check if it changes something
   (asm-align cgc 256)
   (am-lbl cgc THREAD_DESCRIPTOR)
   (reserve-space cgc thread-descriptor-size 0) ;; Reserve space for thread-descriptor-size bytes
