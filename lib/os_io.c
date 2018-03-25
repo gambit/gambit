@@ -4425,9 +4425,7 @@ ___SCMOBJ client_ca_path;)
       return scm_e;
     }
 
-  /* TODO: check if ___release_scmobj (scm_ctx); needed to avoid memory leak */
-
-  return scm_ctx;
+  return ___release_scmobj (scm_ctx);
 }
 
 /* TLS support functions */
