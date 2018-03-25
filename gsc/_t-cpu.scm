@@ -1489,7 +1489,7 @@
   (define (iota start end)
     (if (> start end)
       '()
-      (cons start (enum-to (+ start 1) end))))
+      (cons start (iota (+ start 1) end))))
 
   (define (filter pred elems)
     (if (null? elems)
