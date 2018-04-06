@@ -5625,7 +5625,6 @@ char *server_name)
       if (server_name != NULL)
         {
           SSL_set_tlsext_host_name (d->tls, server_name);
-          ___release_string (server_name);
         }
 #endif
     }
@@ -10398,18 +10397,22 @@ ___SCMOBJ server_name;)
 
 #endif
 
-  if ((e = ___device_tcp_client_setup_from_sockaddr
-             (&dev,
-              ___global_device_group (),
-              &sa,
-              salen,
-              &local_sa,
-              local_salen,
-              ___INT(options),
-              ___DIRECTION_RD|___DIRECTION_WR,
-              tls_context_p,
-              server_name_p))
-      != ___FIX(___NO_ERR))
+  e = ___device_tcp_client_setup_from_sockaddr
+        (&dev,
+         ___global_device_group (),
+         &sa,
+         salen,
+         &local_sa,
+         local_salen,
+         ___INT(options),
+         ___DIRECTION_RD|___DIRECTION_WR,
+         tls_context_p,
+         server_name_p);
+
+  if (server_name_p != NULL)
+    ___release_string (server_name_p);
+
+  if (e != ___FIX(___NO_ERR))
     return e;
 
   if ((e = ___NONNULLPOINTER_to_SCMOBJ
