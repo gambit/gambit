@@ -5558,7 +5558,8 @@ ___SCMOBJ ___device_tcp_client_setup_from_sockaddr
          SOCKET_LEN_TYPE local_addrlen,
          int options,
          int direction,
-         ___tls_context *tls_context),
+         ___tls_context *tls_context,
+         char *server_name),
         (dev,
          dgroup,
          addr,
@@ -5567,7 +5568,8 @@ ___SCMOBJ ___device_tcp_client_setup_from_sockaddr
          local_addrlen,
          options,
          direction,
-         tls_context)
+         tls_context,
+         server_name)
 ___device_tcp_client **dev;
 ___device_group *dgroup;
 struct sockaddr *addr;
@@ -5576,7 +5578,8 @@ struct sockaddr *local_addr;
 SOCKET_LEN_TYPE local_addrlen;
 int options;
 int direction;
-___tls_context *tls_context;)
+___tls_context *tls_context;
+char *server_name)
 {
   ___SCMOBJ e;
   SOCKET_TYPE s;
@@ -5617,6 +5620,13 @@ ___tls_context *tls_context;)
     {
       d->tls = SSL_new (tls_context->tls_ctx);
       SSL_set_fd (d->tls, d->s);
+
+#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+      if (server_name != NULL)
+        {
+          SSL_set_tlsext_host_name (d->tls, server_name);
+        }
+#endif
     }
 
 #endif
@@ -10298,19 +10308,22 @@ ___SCMOBJ ___os_device_tcp_client_open
          ___SCMOBJ addr,
          ___SCMOBJ port_num,
          ___SCMOBJ options,
-         ___SCMOBJ tls_context),
+         ___SCMOBJ tls_context,
+         ___SCMOBJ server_name),
         (local_addr,
          local_port_num,
          addr,
          port_num,
          options,
-         tls_context)
+         tls_context,
+         server_name)
 ___SCMOBJ local_addr;
 ___SCMOBJ local_port_num;
 ___SCMOBJ addr;
 ___SCMOBJ port_num;
 ___SCMOBJ options;
-___SCMOBJ tls_context;)
+___SCMOBJ tls_context;
+___SCMOBJ server_name;)
 {
 #ifndef USE_NETWORKING
 
@@ -10326,6 +10339,7 @@ ___SCMOBJ tls_context;)
   struct sockaddr sa;
   SOCKET_LEN_TYPE salen;
   ___tls_context *tls_context_p;
+  char *server_name_p;
 
   if ((e = ___SCMOBJ_to_sockaddr (local_addr,
                                   local_port_num,
@@ -10344,7 +10358,10 @@ ___SCMOBJ tls_context;)
 #ifdef USE_OPENSSL
 
   if (tls_context == ___FAL)
-    tls_context_p = NULL;
+    {
+      tls_context_p = NULL;
+      server_name_p = NULL;
+    }
   else
     {
       if ((e = ___SCMOBJ_to_NONNULLPOINTER
@@ -10354,6 +10371,20 @@ ___SCMOBJ tls_context;)
             7))
           != ___FIX(___NO_ERR))
         return e;
+
+#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+      if (___FALSEP (server_name))
+        server_name_p = NULL;
+      else if ((e = ___SCMOBJ_to_CHARSTRING
+                (___PSA(___PSTATE) server_name,
+                 &server_name_p,
+                 8))
+               != ___FIX(___NO_ERR))
+        return e;
+#else
+      server_name_p = NULL;
+#endif
+
     }
 
 #else
@@ -10362,20 +10393,26 @@ ___SCMOBJ tls_context;)
     return ___FIX(___UNIMPL_ERR);
 
   tls_context_p = NULL;
+  server_name_p = NULL;
 
 #endif
 
-  if ((e = ___device_tcp_client_setup_from_sockaddr
-             (&dev,
-              ___global_device_group (),
-              &sa,
-              salen,
-              &local_sa,
-              local_salen,
-              ___INT(options),
-              ___DIRECTION_RD|___DIRECTION_WR,
-              tls_context_p))
-      != ___FIX(___NO_ERR))
+  e = ___device_tcp_client_setup_from_sockaddr
+        (&dev,
+         ___global_device_group (),
+         &sa,
+         salen,
+         &local_sa,
+         local_salen,
+         ___INT(options),
+         ___DIRECTION_RD|___DIRECTION_WR,
+         tls_context_p,
+         server_name_p);
+
+  if (server_name_p != NULL)
+    ___release_string (server_name_p);
+
+  if (e != ___FIX(___NO_ERR))
     return e;
 
   if ((e = ___NONNULLPOINTER_to_SCMOBJ

@@ -4391,7 +4391,8 @@ end-of-code
              scheme-object  ;; addr
              scheme-object  ;; port_num
              scheme-object  ;; options
-             scheme-object) ;; tls_context
+             scheme-object  ;; tls_context
+             scheme-object) ;; server_name
             scheme-object   ;; device
    "___os_device_tcp_client_open"))
 
