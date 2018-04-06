@@ -5619,11 +5619,15 @@ char *server_name)
   if (tls_context != NULL)
     {
       d->tls = SSL_new (tls_context->tls_ctx);
+      if (server_name != NULL)
+        {
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
-      SSL_set_tlsext_host_name (d->tls, server_name);
+          SSL_set_tlsext_host_name (d->tls, server_name);
 #endif
+          ___release_string (server_name);
+        }
       SSL_set_fd (d->tls, d->s);
-      ___release_string (server_name);
+
     }
 
 #endif
@@ -10369,11 +10373,13 @@ ___SCMOBJ server_name;)
           != ___FIX(___NO_ERR))
         return e;
 
-      if ((e = ___SCMOBJ_to_CHARSTRING
-           (___PSA(___PSTATE) server_name,
-            &server_name_p,
-            8))
-          != ___FIX(___NO_ERR))
+      if (___FALSEP (server_name))
+        server_name_p = NULL;
+      else if ((e = ___SCMOBJ_to_CHARSTRING
+                (___PSA(___PSTATE) server_name,
+                 &server_name_p,
+                 8))
+               != ___FIX(___NO_ERR))
         return e;
     }
 
