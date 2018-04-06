@@ -7043,7 +7043,8 @@
                          address)
                      port-number
                      (psettings->options psettings)
-                     (macro-psettings-tls-context psettings))))
+                     (macro-psettings-tls-context psettings)
+                     (and (##string? address-or-host) address-or-host))))
                (if (##fixnum? device)
                    (if raise-os-exception?
                        (##raise-os-exception #f device prim port-number-or-address-or-settings)

@@ -756,7 +756,8 @@ extern ___SCMOBJ ___os_device_tcp_client_open
          ___SCMOBJ addr,
          ___SCMOBJ port_num,
          ___SCMOBJ options,
-         ___SCMOBJ tls_context),
+         ___SCMOBJ tls_context,
+         ___SCMOBJ server_name),
         ());
 
 extern ___SCMOBJ ___os_device_tcp_client_socket_info
