@@ -82,7 +82,10 @@
  */
 
 #ifdef HAVE_ENVIRON
+#ifndef USE_WIN32
+/* Windows doesn't propagate environ to subprocesses, so avoid it there */
 #define USE_environ
+#endif
 #else
 #ifdef HAVE__NSGETENVIRON
 #define USE_environ
