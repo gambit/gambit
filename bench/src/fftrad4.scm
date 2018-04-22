@@ -2043,7 +2043,7 @@
        (two^p 1 (* two^p 2)))
       ((<= m two^p) p)))
 
-(define n 20) ;; Works on 2^n complex doubles.
+(define n 18) ;; Works on 2^n complex doubles.
 (define two^n+1 (expt 2 (+ n 1)))
 (define inexact-two^-n (FLOAT/ (exact->inexact (expt 2 n))))
 
@@ -2066,7 +2066,7 @@
 (define (main . args)
   (run-benchmark
    "fftrad4"
-   1
+   fftrad4-iters
    (lambda (result) (FLOAT<= (FLOATabs (FLOAT- result 3.0)) 1e-4))
    (lambda (data) (lambda () (run data)))
    data))
