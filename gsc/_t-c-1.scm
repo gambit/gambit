@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -941,7 +941,7 @@
           (map targ-glo-rsrc glo-list))
          (ofd-count
           (targ-get-ofd-count prc-list))
-         (name
+         (module-name
           (symbol->string (vector-ref module-descr 0)))
          (module-meta-info
           (vector-ref module-descr 3))
@@ -951,15 +951,15 @@
 
     (targ-start-dump
      filename
-     name
-     (list (list name))
+     module-name
+     (list (list module-name))
      sym-rsrc
      key-rsrc
      glo-rsrc
      module-meta-info)
 
     (targ-dump-module-info
-     name
+     module-name
      unique-name
      #f
      #f
@@ -1161,8 +1161,7 @@
                              #f)
 
       (targ-macro-definition '("MH_PROC")
-                             (targ-c-id-host
-                              (string-append module-prefix name))))
+                             (targ-c-id-host name)))
 
   (targ-macro-definition '("SCRIPT_LINE")
                          (if script-line
@@ -2151,7 +2150,7 @@
   (cons 'c-string str))
 
 (define (targ-linker-id name)
-  (targ-c-id-linker (string-append module-prefix name)))
+  (targ-c-id-linker name))
 
 (define (targ-c-id-linker name)
   (cons 'c-id-linker name))

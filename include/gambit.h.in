@@ -2249,11 +2249,10 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #endif
 
 /*
- * Module prefix and C id prefix must match the definitions
- * in the file "gsc/_parms.scm".
+ * The C id prefix must match the definition in the file
+ * "gsc/_parms.scm".
  */
 
-#define ___MODULE_PREFIX " "
 #define ___C_ID_PREFIX "___"
 
 /*---------------------------------------------------------------------------*/

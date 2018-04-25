@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -89,11 +89,13 @@
                 expanded-output)))
          (module-name
           (or mod-name
-              (##path-strip-directory
-               (##path-strip-extension
-                (if output-directory?
-                    filename
-                    expanded-output))))))
+              (##string-append
+               (##path-strip-directory
+                (##path-strip-extension
+                 (if output-directory?
+                     filename
+                     expanded-output)))
+               "#"))))
     (c#cf filename
           options
           output-filename-gen
@@ -224,7 +226,9 @@
            (output-filename-no-dir
             (##path-strip-directory output-filename))
            (module-name
-            (##path-strip-extension output-filename-no-dir))
+            (##string-append
+             (##path-strip-extension output-filename-no-dir)
+             "#"))
            (unique-name
             (if (##eq? type 'dyn)
                 output-filename-no-dir

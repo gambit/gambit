@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2816,7 +2816,7 @@
                          (let* ((index
                                  (number->string c-interface-proc-count))
                                 (scheme-name
-                                 (string-append module-prefix c-interface-module-name "#" index))
+                                 (string-append c-interface-module-name "#" index))
                                 (c-name
                                  (string-append c-id-prefix (scheme-id->c-id scheme-name)))
                                 (arity

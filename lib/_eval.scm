@@ -4191,15 +4191,9 @@
             (##vector-ref x 2)))))
 
   (define (load-binary abs-path)
-
-    (##define-macro (module-prefix)
-      c#module-prefix)
-
     (let* ((module-name
             (or module-name
-                (##string-append
-                 (module-prefix)
-                 (##path-strip-directory abs-path))))
+                (##path-strip-directory abs-path)))
            (result
             (##load-object-file abs-path module-name quiet?)))
 

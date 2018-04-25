@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -5565,8 +5565,7 @@ EOF
       (lambda (x i)
         (let ((name (car x)))
           (univ-glo-use ctx
-                        (string->symbol
-                         (string-append module-prefix name))
+                        (string->symbol name)
                         'rd)
           (^new (^type 'modlinkinfo) (^str name) (^int i))))
       mods-and-flags)))))
