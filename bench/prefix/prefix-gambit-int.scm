@@ -40,33 +40,33 @@
 
 ; Specialize fixnum and flonum arithmetic.
 
-;; This code should be used when f64vectors are available.
-;(def-macro (FLOATvector-const . lst)   `',(list->f64vector lst))
-;(def-macro (FLOATvector? x)            `(f64vector? ,x))
-;(def-macro (FLOATvector . lst)         `(f64vector ,@lst))
-;(def-macro (FLOATmake-vector n . init) `(make-f64vector ,n ,@init))
-;(def-macro (FLOATvector-ref v i)       `(f64vector-ref ,v ,i))
-;(def-macro (FLOATvector-set! v i x)    `(f64vector-set! ,v ,i ,x))
-;(def-macro (FLOATvector-length v)      `(f64vector-length ,v))
-;
-;(def-macro (nuc-const . lst)
-;  `',(list->vector
-;       (map (lambda (x)
-;              (if (vector? x)
-;                (list->f64vector (vector->list x))
-;                x))
-;            lst)))
-
-(def-macro (FLOATvector-const . lst)   `',(list->vector lst))
-(def-macro (FLOATvector? x)            `(vector? ,x))
-(def-macro (FLOATvector . lst)         `(vector ,@lst))
-(def-macro (FLOATmake-vector n . init) `(make-vector ,n ,@init))
-(def-macro (FLOATvector-ref v i)       `(vector-ref ,v ,i))
-(def-macro (FLOATvector-set! v i x)    `(vector-set! ,v ,i ,x))
-(def-macro (FLOATvector-length v)      `(vector-length ,v))
+; This code should be used when f64vectors are available.
+(def-macro (FLOATvector-const . lst)   `',(list->f64vector lst))
+(def-macro (FLOATvector? x)            `(f64vector? ,x))
+(def-macro (FLOATvector . lst)         `(f64vector ,@lst))
+(def-macro (FLOATmake-vector n . init) `(make-f64vector ,n ,@init))
+(def-macro (FLOATvector-ref v i)       `(f64vector-ref ,v ,i))
+(def-macro (FLOATvector-set! v i x)    `(f64vector-set! ,v ,i ,x))
+(def-macro (FLOATvector-length v)      `(f64vector-length ,v))
 
 (def-macro (nuc-const . lst)
-  `',(list->vector lst))
+  `',(list->vector
+       (map (lambda (x)
+              (if (vector? x)
+                (list->f64vector (vector->list x))
+                x))
+            lst)))
+
+;(def-macro (FLOATvector-const . lst)   `',(list->vector lst))
+;(def-macro (FLOATvector? x)            `(vector? ,x))
+;(def-macro (FLOATvector . lst)         `(vector ,@lst))
+;(def-macro (FLOATmake-vector n . init) `(make-vector ,n ,@init))
+;(def-macro (FLOATvector-ref v i)       `(vector-ref ,v ,i))
+;(def-macro (FLOATvector-set! v i x)    `(vector-set! ,v ,i ,x))
+;(def-macro (FLOATvector-length v)      `(vector-length ,v))
+;
+;(def-macro (nuc-const . lst)
+;  `',(list->vector lst))
 
 (def-macro (FLOAT+ . lst) `(fl+ ,@lst))
 (def-macro (FLOAT- . lst) `(fl- ,@lst))

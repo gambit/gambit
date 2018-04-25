@@ -41,6 +41,7 @@
 (define dynamic-iters 1)
 (define earley-iters 1)
 (define fibc-iters 1)
+(define fftrad4-iters 1)
 (define graphs-iters 1)
 (define lattice-iters 1)
 (define matrix-iters 1)
