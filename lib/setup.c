@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -1155,7 +1155,7 @@ ___HIDDEN ___mod_or_lnk linker_to_mod_or_lnk
 ___mod_or_lnk (*linker) ();)
 {
   ___mod_or_lnk mol = linker (___GSTATE);
-  if (mol->module.kind == ___LINKFILE_KIND)
+  if (mol->module.version != -1 && mol->module.kind == ___LINKFILE_KIND)
     {
       ___linkinfo *p = mol->linkfile.linkertbl;
       while (p->mol != 0)
@@ -1365,10 +1365,10 @@ ___module_struct *module;)
    * system.
    */
 
-  if (module->version / 10000 < ___VERSION / 10000)
+  if (module->version < ___VERSION)
     return ___FIX(___MODULE_VERSION_TOO_OLD_ERR);
 
-  if (module->version / 10000 > ___VERSION / 10000)
+  if (module->version > ___VERSION)
     return ___FIX(___MODULE_VERSION_TOO_NEW_ERR);
 
   /* Align label table and pair table */
@@ -1824,7 +1824,7 @@ ___SCMOBJ modname;)
               (___CAST(___mod_or_lnk (*) ___P((___global_state),()),
                        linker));
 
-      if (mol->linkfile.version < 0) /* was it already setup? */
+      if (mol->linkfile.version == -1) /* was it already setup? */
         result = ___FIX(___MODULE_ALREADY_LOADED_ERR);
       else
         {
