@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -21,6 +21,7 @@
       (##string?
        (##load filename
                (lambda (script-line script-path) #f)
+               #f
                #f
                #f
                #f)))
@@ -100,6 +101,7 @@
                       script-callback
                       #t
                       #t
+                      #f
                       #f)
 
               (if starter
