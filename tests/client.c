@@ -1,6 +1,6 @@
 /* File: "client.c" */
 
-/* Copyright (c) 1996-2014 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1996-2018 by Marc Feeley, All Rights Reserved. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,11 +19,11 @@
 
 /*
  * Define SCHEME_LIBRARY_LINKER as the name of the Scheme library
- * prefixed with "____20_" and suffixed with "__".  This is the
+ * prefixed with "___" and suffixed with "__".  This is the
  * function that initializes the Scheme library.
  */
 
-#define SCHEME_LIBRARY_LINKER ____20_server__
+#define SCHEME_LIBRARY_LINKER ___server__
 
 ___BEGIN_C_LINKAGE
 extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state);
