@@ -3,8 +3,8 @@
 (
 408009
 (C)
-"mix#"
-(("mix#"))
+"mix"
+(("mix"))
 (
 "*"
 "+"
@@ -51,7 +51,7 @@
 "list"
 "lookup"
 "m"
-"mix#"
+"mix"
 "n"
 "not"
 "null?"
@@ -408,9 +408,9 @@
 )
 #else
 #define ___VERSION 408009
-#define ___MODULE_NAME "mix#"
-#define ___LINKER_ID ___mix_23_
-#define ___MH_PROC ___H_mix_23_
+#define ___MODULE_NAME "mix"
+#define ___LINKER_ID ___mix
+#define ___MH_PROC ___H_mix
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 67
 #define ___KEYCOUNT 5
@@ -468,7 +468,7 @@ ___NEED_SYM(___S_letrec)
 ___NEED_SYM(___S_list)
 ___NEED_SYM(___S_lookup)
 ___NEED_SYM(___S_m)
-___NEED_SYM(___S_mix_23_)
+___NEED_SYM(___S_mix)
 ___NEED_SYM(___S_n)
 ___NEED_SYM(___S_not)
 ___NEED_SYM(___S_null_3f_)
@@ -861,7 +861,7 @@ ___DEF_SYM(41,___S_letrec,"letrec")
 ___DEF_SYM(42,___S_list,"list")
 ___DEF_SYM(43,___S_lookup,"lookup")
 ___DEF_SYM(44,___S_m,"m")
-___DEF_SYM(45,___S_mix_23_,"mix#")
+___DEF_SYM(45,___S_mix,"mix")
 ___DEF_SYM(46,___S_n,"n")
 ___DEF_SYM(47,___S_not,"not")
 ___DEF_SYM(48,___S_null_3f_,"null?")
@@ -930,7 +930,7 @@ ___END_SYM
 #define ___SYM_list ___SYM(42,___S_list)
 #define ___SYM_lookup ___SYM(43,___S_lookup)
 #define ___SYM_m ___SYM(44,___S_m)
-#define ___SYM_mix_23_ ___SYM(45,___S_mix_23_)
+#define ___SYM_mix ___SYM(45,___S_mix)
 #define ___SYM_n ___SYM(46,___S_n)
 #define ___SYM_not ___SYM(47,___S_not)
 #define ___SYM_null_3f_ ___SYM(48,___S_null_3f_)
@@ -3310,7 +3310,7 @@ ___DEF_SUB_STR(___X269,32UL)
                ___STR8(41,32,33,61,32,45,48,46)
                ___STR0
 ___DEF_SUB_VEC(___X270,5UL)
-               ___VEC1(___REF_SYM(45,___S_mix_23_))
+               ___VEC1(___REF_SYM(45,___S_mix))
                ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FIX(1))
                ___VEC1(___REF_NUL)
@@ -42057,7 +42057,7 @@ ___DEF_MOD_SYM(41,___S_letrec,"letrec")
 ___DEF_MOD_SYM(42,___S_list,"list")
 ___DEF_MOD_SYM(43,___S_lookup,"lookup")
 ___DEF_MOD_SYM(44,___S_m,"m")
-___DEF_MOD_SYM(45,___S_mix_23_,"mix#")
+___DEF_MOD_SYM(45,___S_mix,"mix")
 ___DEF_MOD_SYM(46,___S_n,"n")
 ___DEF_MOD_SYM(47,___S_not,"not")
 ___DEF_MOD_SYM(48,___S_null_3f_,"null?")
