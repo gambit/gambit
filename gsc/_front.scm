@@ -689,7 +689,7 @@
 
 (define (compile-parsed-program module-name program env c-intf info-port)
   (let* ((name
-          module-name)
+          (string-append module-name "#"))
          (main-proc
           (make-proc-obj
            name   ;; name

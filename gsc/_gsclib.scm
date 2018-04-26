@@ -89,13 +89,11 @@
                 expanded-output)))
          (module-name
           (or mod-name
-              (##string-append
-               (##path-strip-directory
-                (##path-strip-extension
-                 (if output-directory?
-                     filename
-                     expanded-output)))
-               "#"))))
+              (##path-strip-directory
+               (##path-strip-extension
+                (if output-directory?
+                    filename
+                    expanded-output))))))
     (c#cf filename
           options
           output-filename-gen
@@ -108,6 +106,7 @@
          #!key
          (options (macro-absent-obj))
          (output (macro-absent-obj))
+         (module-name (macro-absent-obj))
          (cc-options (macro-absent-obj))
          (ld-options-prelude (macro-absent-obj))
          (ld-options (macro-absent-obj)))
@@ -124,6 +123,11 @@
                    (##path-normalize filename))
                   (macro-force-vars (output)
                     output)))
+             (mod-name
+              (if (##eq? module-name (macro-absent-obj))
+                  #f
+                  (macro-force-vars (module-name)
+                    module-name)))
              (cc-opts
               (if (##eq? cc-options (macro-absent-obj))
                   ""
@@ -144,6 +148,8 @@
                (error "list expected for options: parameter"));;;;;;;
               ((##not (##string? out))
                (error "string expected for output: parameter"));;;;;;;;;;
+              ((##not (or (##not mod-name) (##string? mod-name)))
+               (error "string or #f expected for module-name: parameter"));;;;;;;;;;
               ((##not (##string? cc-opts))
                (error "string expected for cc-options: parameter"));;;;;;;;;;
               ((##not (##string? ld-opts-prelude))
@@ -154,6 +160,7 @@
                (##compile-file filename
                                opts
                                out
+                               mod-name
                                cc-opts
                                ld-opts-prelude
                                ld-opts)))))))
@@ -162,6 +169,7 @@
          filename
          options
          output
+         module-name
          cc-options
          ld-options-prelude
          ld-options)
@@ -226,9 +234,8 @@
            (output-filename-no-dir
             (##path-strip-directory output-filename))
            (module-name
-            (##string-append
-             (##path-strip-extension output-filename-no-dir)
-             "#"))
+            (or module-name
+                (##path-strip-extension output-filename-no-dir)))
            (unique-name
             (if (##eq? type 'dyn)
                 output-filename-no-dir
