@@ -1890,7 +1890,6 @@ if test "$C_COMP_GNUC" = yes; then
     #DASH_fpermissive=""
     DASH_mieee=""
     DASH_mieee_with_inexact=""
-    DASH_mieee_fp=""
     DASH_mpc64=""
     DASH_fno_ipa_ra=""
 
@@ -1909,7 +1908,6 @@ if test "$C_COMP_GNUC" = yes; then
     # machine specific options:
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
-    AC_CHECK_C_COMPILER_OPT(-mieee-fp,DASH_mieee_fp)
     AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
   fi
 
@@ -2125,7 +2123,6 @@ if test "$C_COMP_GNUC" = yes; then
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_with_inexact"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_fp"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mpc64"
 
   case "$target_os" in
