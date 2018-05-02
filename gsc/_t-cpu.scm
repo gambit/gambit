@@ -446,6 +446,7 @@
 (define int-opnd? #f)
 (define lbl-opnd? #f)
 (define mem-opnd? #f)
+(define reg-opnd? #f)
 
 (define int-opnd-value #f)
 (define lbl-opnd-offset #f)
@@ -806,6 +807,8 @@
     (set! int-opnd? (lambda (x) (and (pair? x) (number? (cdr x)))))
     (set! lbl-opnd? (lambda (x) (and (pair? x) (vector? (cdr x)))))
     (set! mem-opnd? (lambda (x) (and (vector? x) (fx= (vector-length x) 4))))
+    (set! reg-opnd? fixnum?)
+
     (set! int-opnd-value  (lambda (x) (cdr x)))
     (set! lbl-opnd-offset (lambda (x) (car x)))
     (set! lbl-opnd-label  (lambda (x) (cdr x)))
@@ -1403,7 +1406,7 @@
   (match-opnd arg-index val int-opnd? int-opnd))
 
 (define (match-reg arg-index val)
-  (match-opnd arg-index val fixnum? get-register))
+  (match-opnd arg-index val reg-opnd? get-register))
 
 (define (match-mem arg-index val)
   (match-opnd arg-index val mem-opnd?
