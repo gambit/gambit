@@ -1506,15 +1506,12 @@
 
 (define (swap-index index1 index2 elems)
   (define (build-list elems index elem1 elem2)
-    (display "build-list \n")
     (cond ((null? elems)
            '())
-          ((= idx index1)
+          ((= index index1)
            (cons elem2 (build-list (cdr elems) (+ 1 index) elem1 elem2)))
-          ((= idx index2)
-           (cons elem2 (build-list (cdr elems) (+ 1 index) elem1 elem2)))
+          ((= index index2)
+           (cons elem1 (build-list (cdr elems) (+ 1 index) elem1 elem2)))
           (else
            (cons (car elems) (build-list (cdr elems) (+ 1 index) elem1 elem2)))))
-  (if (= index1 index2)
-    elems
-    (build-list elems 0 (list-ref elems index1) (list-ref elems index2))))
+  (build-list elems 0 (list-ref elems index1) (list-ref elems index2)))
