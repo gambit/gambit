@@ -1450,53 +1450,71 @@
   "add _ 0 -> nop"
   "add _ 1 -> inc _"))
 
-  ;;;============================================================================
+;;;============================================================================
 
-  ;; ***** Utils
+;; ***** Utils
 
-  (define _debug #t)
-  (define (debug . str)
-    (if _debug (for-each display str)))
+(define _debug #t)
+(define (debug . str)
+  (if _debug (for-each display str)))
 
-  (define (show-listing cgc)
-    (asm-assemble-to-u8vector cgc)
-    (asm-display-listing cgc (current-error-port) #t))
+(define (show-listing cgc)
+  (asm-assemble-to-u8vector cgc)
+  (asm-display-listing cgc (current-error-port) #t))
 
-  (define (reserve-space cgc bytes #!optional (value 0))
-    (if (> bytes 0)
-      (begin
-        (am-db cgc value)
-        (reserve-space cgc (- bytes 1) value))))
+(define (reserve-space cgc bytes #!optional (value 0))
+  (if (> bytes 0)
+    (begin
+      (am-db cgc value)
+      (reserve-space cgc (- bytes 1) value))))
 
-  ;; ***** Utils - Lists
+;; ***** Utils - Lists
 
-  (define (find pred elems #!optional (index 0))
-    (if (null? elems)
-      -1
-      (if (pred (car elems))
-        index
-        (find pred (cdr elems) (+ 1 index)))))
+(define (find pred elems #!optional (index 0))
+  (if (null? elems)
+    -1
+    (if (pred (car elems))
+      index
+      (find pred (cdr elems) (+ 1 index)))))
 
-  (define (iota start end)
-    (if (> start end)
-      '()
-      (cons start (iota (+ start 1) end))))
+(define (index-of elem elems)
+  (find (lambda (var) (equal? var elem)) elems))
 
-  (define (filter pred elems)
-    (if (null? elems)
-      '()
-      (if (pred (car elems))
-        (cons (car elems) (filter pred (cdr elems)))
-        (filter pred (cdr elems)))))
+(define (iota start end)
+  (if (> start end)
+    '()
+    (cons start (iota (+ start 1) end))))
 
-  (define (map-nth list nth fun)
-    (if (= 0 nth)
-      (cons (fun (car list)) (cdr list))
-      (cons (car list) (map-nth (cdr list) (- nth 1) fun))))
+(define (filter pred elems)
+  (if (null? elems)
+    '()
+    (if (pred (car elems))
+      (cons (car elems) (filter pred (cdr elems)))
+      (filter pred (cdr elems)))))
 
-  (define (reorder-list elems indexes)
-    (if (null? indexes)
-      '()
-      (cons
-        (list-ref elems (car indexes))
-        (reorder-list elems (cdr indexes)))))
+(define (map-nth list nth fun)
+  (if (= 0 nth)
+    (cons (fun (car list)) (cdr list))
+    (cons (car list) (map-nth (cdr list) (- nth 1) fun))))
+
+(define (reorder-list elems indexes)
+  (if (null? indexes)
+    '()
+    (cons
+      (list-ref elems (car indexes))
+      (reorder-list elems (cdr indexes)))))
+
+(define (swap-index index1 index2 elems)
+  (define (build-list elems index elem1 elem2)
+    (display "build-list \n")
+    (cond ((null? elems)
+           '())
+          ((= idx index1)
+           (cons elem2 (build-list (cdr elems) (+ 1 index) elem1 elem2)))
+          ((= idx index2)
+           (cons elem2 (build-list (cdr elems) (+ 1 index) elem1 elem2)))
+          (else
+           (cons (car elems) (build-list (cdr elems) (+ 1 index) elem1 elem2)))))
+  (if (= index1 index2)
+    elems
+    (build-list elems 0 (list-ref elems index1) (list-ref elems index2))))
