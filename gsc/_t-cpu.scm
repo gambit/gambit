@@ -726,7 +726,7 @@
 ;; Registers that map directly to GVM registers
 (define main-registers #f)
 ;; Registers that can be overwritten at any moment!
-;; Used when need extra register. Has to have at least 1 register.
+;; Used when need extra register. Has to have at least 3 register.
 (define work-registers #f)
 
 ;; ***** AM: Helper functions
@@ -756,6 +756,13 @@
       (am-mov cgc (get-extra-register 0) mem-to-load)
       (f (get-extra-register 0)))
     (f mem-to-load)))
+
+(define (opnd-type opnd)
+  (cond
+    ((reg-opnd? opnd) 'reg)
+    ((mem-opnd? opnd) 'mem)
+    ((lbl-opnd? opnd) 'lbl)
+    ((int-opnd? opnd) 'int)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -985,18 +992,16 @@
           (proc (cadr pair))
           (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
     (if (not defined?)
-      (let* ((prim (get-prim-obj (proc-obj-name proc)))
-              (fun (prim-info-lifted-encode-fun prim)))
-        (asm-align cgc 4 1)
-        (am-lbl cgc label)
-        (fun cgc label word-width)))))
+      (let ((prim (get-prim-obj (proc-obj-name proc))))
+          ;; todo: Complete here
+          (am-lbl cgc label)
+          (prim cgc (then-return) (get-register 1) (get-register 2) (get-register 3) (get-register 4)) ;; todo : Find way to get arity
+        ))))
 
-;; Value is Pair (Label, optional Proc-obj)
 (define (put-objects cgc obj label)
   (debug "put-objects\n")
   (debug "label: " label)
 
-  ;; Todo : Alignment
   (am-lbl cgc label)
 
   (cond
@@ -1090,27 +1095,23 @@
 
     (am-poll cgc code)
 
-    (x64-encode-prim-ifjump
-      cgc
-      proc
-      code
-      (get-prim-obj (proc-obj-name (ifjump-test gvm-instr)))
-      (ifjump-opnds gvm-instr)
-      true-label
-      false-label)))
+    (let* ((prim (get-prim-obj (proc-obj-name (ifjump-test gvm-instr))))
+           (then (then-jump true-label false-label))
+           (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (ifjump-opnds gvm-instr)))
+           (opnds (append (list cgc then) args)))
+      (apply prim opnds))))
 
 ;; ***** Apply instruction encoding
 
 (define (encode-apply-instr cgc proc code)
   (debug "encode-apply-instr\n")
   (let ((gvm-instr (code-gvm-instr code)))
-    (x64-encode-prim-affectation
-      cgc
-      proc
-      code
-      (get-prim-obj (proc-obj-name (apply-prim gvm-instr)))
-      (apply-opnds gvm-instr)
-      (apply-loc gvm-instr))))
+
+    (let* ((prim (get-prim-obj (proc-obj-name (apply-prim gvm-instr))))
+           (then (then-move (make-opnd cgc proc code (apply-loc gvm-instr) #f)))
+           (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (apply-opnds gvm-instr)))
+           (opnds (append (list cgc then) args)))
+      (apply prim opnds))))
 
 ;; ***** Copy instruction encoding
 
@@ -1137,143 +1138,189 @@
 
 ;; ***** x64 primitives
 
-;; symbol: prim symbol
-;; extra-info: (return-type . more-info depending on type)
-;; arity: Number of arguments accepted. #f is vararg (Is it possible?)
-;; lifted-encode-fun: CGC -> Label -> Width (8|16|32|64) -> ().
-;;    Generates function assembly code when called
-
-;; inline-encode-fun: CGC -> Opnds* (Not in list) -> Width -> ().
-;;    Generates inline assembly when called
-;; args-need-reg: [Boolean]. #t if arg at the same index needs to be a register
-;;    Otherwise, everything can be used (Do something for functions accepting memory loc by not constants)
-(define (make-prim-info symbol extra-info arity lifted-encode-fun)
-  (vector symbol extra-info arity lifted-encode-fun))
-
-(define (make-inlinable-prim-info symbol extra-info arity lifted-encode-fun inline-encode-fun args-need-reg)
-  (if (not (= (length args-need-reg) arity))
-    (compiler-internal-error "make-inlinable-prim-info" symbol " arity /= (length args-need-reg)"))
-  (vector symbol extra-info arity lifted-encode-fun inline-encode-fun args-need-reg))
-
-(define (prim-info-inline? vect) (= 6 (vector-length vect)))
-
-(define (prim-info-symbol vect) (vector-ref vect 0))
-(define (prim-info-extra-info vect) (vector-ref vect 1))
-(define (prim-info-arity vect) (vector-ref vect 2))
-(define (prim-info-lifted-encode-fun vect) (vector-ref vect 3))
-(define (prim-info-inline-encode-fun vect) (vector-ref vect 4))
-(define (prim-info-args-need-reg vect) (vector-ref vect 5))
-
-(define (prim-info-return-type vect) (car (prim-info-extra-info vect)))
-(define (prim-info-true-jump vect) (cadr (prim-info-extra-info vect)))
-(define (prim-info-false-jump vect) (caddr (prim-info-extra-info vect)))
-
 (define (get-prim-obj prim-name)
+  (debug "get-prim-obj: " prim-name "\n")
   (case (string->symbol prim-name)
-      ('##fx+ (prim-info-fx+))
-      ('##fx- (prim-info-fx-))
-      ('##fx< (prim-info-fx<))
-      ('display (prim-info-display))
+      ('##fx+ (x86-prim-fx+))
+      ('##fx- (x86-prim-fx-))
+      ('##fx< (x86-prim-fx<))
+      ; ('##fx* (x86-prim-fx-))
+      ; ('##fx/ (x86-prim-fx-))
+      ; ('display (prim-info-display))
       (else
         (compiler-internal-error "Primitive not implemented: " prim-name))))
 
-(define (prim-info-fx+)
-  (define (lifted-encode-fun cgc label width)
-    (x64-encode-lifted-prim-inline cgc (prim-info-fx+)))
-  (make-inlinable-prim-info '##fx+ (list 'fixnum) 2 lifted-encode-fun x86-add '(#f #f)))
+;;  A primitive is a function taking:
+;;  CGC
+;;  ResultAction
+;;  Arguments
+;;    ResultAction = Copy location-opnd | Branch true-jump-location false-jump-location | Return
 
-(define (prim-info-fx-)
-  (define (lifted-encode-fun cgc label width)
-    (x64-encode-lifted-prim-inline cgc (prim-info-fx-)))
-  (make-inlinable-prim-info '##fx- (list 'fixnum) 2 lifted-encode-fun x86-sub '(#f #f)))
+(define (then-jump true-location false-location) (list 'jump true-location false-location))
+(define (then-jump? then) (eqv? 'jump (car then)))
+(define (then-jump-true-location then) (cadr then))
+(define (then-jump-false-location then) (caddr then))
 
-(define (prim-info-fx<)
-  (define (lifted-encode-fun cgc label width)
-    (x64-encode-lifted-prim-inline cgc (prim-info-fx<)))
-  (make-inlinable-prim-info '##fx< (list 'boolean x86-jle x86-jg) 2 lifted-encode-fun x86-cmp '(#f #f)))
+(define (then-move  store-location) (cons 'mov store-location))
+(define (then-move? then) (eqv? 'mov (car then)))
+(define (then-move-store-location then) (cdr then))
 
-(define (prim-info-display)
-  (define (lifted-encode-fun cgc label width)
-    (x86-jmp cgc label)
-    #f)
-  (make-prim-info 'display (list 'fixnum) 1 lifted-encode-fun))
+(define (then-return) '(return))
+(define (then-return? then) (eqv? 'return (car then)))
 
-(define (prim-guard prim args)
-  (define (reg-check opnd need-reg)
-    (if (and need-reg (not (reg? opnd)))
-      (compiler-internal-error "prim-guard " (prim-info-symbol prim) " one of it's argument isn't reg but is specified as one")))
+(define (x86-prim-fx+)
+  (arithmetic-prim am-add 'number (default-arithmetic-allowed-opnds) #t))
 
-  (if (not (= (length args) (prim-info-arity prim)))
-    (compiler-internal-error (prim-info-symbol prim) "primitive doesn't have " (prim-info-arity prim) " operands"))
+(define (x86-prim-fx-)
+  (arithmetic-prim am-sub 'number (default-arithmetic-allowed-opnds) #f))
 
-  (map reg-check args (prim-info-args-need-reg prim)))
+(define (x86-prim-fx<)
+  (arithmetic-prim am-cmp (list 'boolean x86-jle x86-jg) (default-arithmetic-allowed-opnds) #f))
 
-(define (x64-encode-inline-prim cgc proc code prim args)
-  (debug "x64-encode-inline-prim\n")
-  (prim-guard prim args)
-  (if (not (prim-info-inline? prim))
-    (compiler-internal-error "x64-encode-inline-prim: " (prim-info-symbol prim) " isn't inlinable"))
+(define (default-arithmetic-allowed-opnds)
+  (if load-store-only
+    '((reg) (reg int))
+    '((reg) (reg int mem))))
 
-  (let* ((opnds
-          (map
-            (lambda (opnd) (make-opnd cgc proc code opnd #f))
+(define (arithmetic-prim asm-fun return-type allowed-opnds  commutative)
+  (let ((commutative-prologue (if commutative prologue-commute idlogue)))
+    (make-primitive
+      (compose-prologues
+        commutative-prologue
+        (prologue-mov-args allowed-opnds))
+
+      (lambda (cgc result-action args) (apply asm-fun (cons cgc args)))
+
+      (if (equal? 'boolean (car return-type))
+          (apply epilogue-use-result-boolean (cdr return-type))
+          epilogue-use-result-default))))
+
+(define (make-primitive prologue asm-fun epilogue)
+  (lambda (cgc result-action . args)
+    (debug "Before prologue\n")
+    (let* ((prologue-result (prologue cgc result-action args)))
+      (debug "After prologue\n")
+      (asm-fun cgc result-action prologue-result)
+      (debug "After asm-fun\n")
+      (epilogue cgc result-action prologue-result)
+      (debug "After epilogue\n"))))
+
+;; Apply prologues linearly.
+;; Applies the modifies arguments returned by the prologue into the next
+(define (compose-prologues . progs)
+  (define (loop prologues)
+    (if (null? prologues)
+      idlogue
+      (lambda (cgc result-action args)
+        (let* ((prologue (car prologues))
+               (new-args (prologue cgc result-action args)))
+          ((loop (cdr prologues)) cgc result-action new-args)))))
+
+  (loop progs))
+
+(define compose-epilogues compose-prologues)
+
+;; Identity prologue
+(define (idlogue cgc result-action args) args)
+
+;; Prologue for primitives that are commutative.
+;; Reduces the number of mov by commuting the operands.
+;; Suppose that the result is put in the first argument (like epilogue-use-result-default)
+;; (Isn't specific to x86)
+(define prologue-commute
+  (lambda (cgc result-action args)
+    (debug "prologue-commute\n")
+    (if (then-move? result-action)
+      (let ((result-loc-index (index-of (then-move-store-location result-action) args)))
+        (if (not (= -1 result-loc-index))
+            (swap-index 0 result-loc-index args)
             args))
-        (opnd1 (car opnds)))
+      args)))
 
-  (apply (prim-info-inline-encode-fun prim) cgc (append opnds '(64)))))
+;; Prologue for primitives that may not support some types of operands.
+;; This prologue mov every operands not supported in the extra registers.
+;; todo :: Do something if need more registers. (Save some less important registers on stack)
+;; (Isn't specific to x86)
+(define (prologue-mov-args allowed-opnds)
+  (define (mov-arg cgc result-reg index arg)
+    (debug "mov-arg\n")
+    (let* ((allowed-opnd (list-ref allowed-opnds index))
+           (in? (not (= -1 (index-of (opnd-type arg) allowed-opnd)))))
+      (if in?
+        arg
+          (let ((new-register
+                  ;; Check if result-reg can be used as extra register.
+                  (if (and (= 0 index) (not (= result-reg #f)))
+                    result-reg
+                    (get-extra-register index))))
+            (am-mov cgc new-register arg)
+            new-register))))
 
-;; Add mov necessary if operation only operates on register but args are not registers (todo? necessary?)
-;; result-loc can be used to mov return after (False to disable)
-(define (x64-encode-prim-affectation cgc proc code prim args result-loc)
-  (debug "x64-encode-prim-affectation\n")
-  (x64-encode-inline-prim cgc proc code prim args)
+  (lambda (cgc result-action args)
+    (debug "prologue-mov-args\n")
+    (let* ((store-location (then-move-store-location result-action))
+           (result-reg (if (and
+                            (then-move? result-action)
+                            (reg-opnd? store-location)
+                            (= -1 (index-of store-location args)))
+                          store-location
+                          #f)))
+      (map
+        (lambda (index arg) (mov-arg cgc result-reg index arg))
+        (iota 0 (- (length args) 1))
+        args))))
 
-    (if (and result-loc (not (equal? (car args) result-loc)))
-      (let ((result-loc-opnd (make-opnd cgc proc code result-loc #f)))
-    (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose arity > 0
-      ;; If operation returns boolean (Result is in flag register)
-        (let* ((proc-name (proc-obj-name proc))
-                (suffix (string-append proc-name "_jump"))
-                (label (make-unique-label cgc suffix)))
+;; Default epilogue for primitives that put their results in their first arguments
+;; Ex x86-add r1 r2 == r1 <- r1 + r2
+;; (Isn't specific to x86)
+(define (epilogue-use-result-default cgc result-action args)
+  (debug "epilogue-use-result-default\n")
+    (cond
+      ((then-jump? result-action)
+        ;; The function doesn't return a boolean => result is always true
+        (am-jmp cgc (then-jump-true-location result-action)))
+      ((then-move? result-action)
+        (let ((result-action-location (then-move-store-location result-action)))
+          (if (and (not (null? args))
+                (not (equal? result-action-location (car args))))
+            (am-mov cgc result-action-location (car args)))))
+      ((then-return? result-action)
+        (am-jmp cgc  (get-register 0)))
+      (else
+        (compiler-internal-error "epilogue-use-result-default - Unknown result-action" result-action))))
 
-            (am-mov cgc result-loc-opnd (int-opnd 1))
-            ((prim-info-true-jump prim) cgc label)
-            (am-mov cgc result-loc-opnd (int-opnd 0))
-            (am-label label))
-      ;; Else
-      (am-mov cgc result-loc-opnd (make-opnd cgc proc code (car args) #f))))))
+;; Default epilogue for primitives that put their results in flag register
+;; (Isn't specific to x86)
+(define (epilogue-use-result-boolean true-test-jump false-test-jump)
+  (lambda (cgc result-action args)
+    (cond
+      ((then-jump? result-action)
+        ;; The function doesn't return a boolean => result is always true
+        (true-test-jump cgc (then-jump-true-location result-action))
+        (am-jmp cgc (then-jump-false-location result-action)))
+      ((then-move? result-action)
+        ;; Extract boolean
+        (let* ((suffix "_jump")
+               (label (make-unique-label cgc suffix))
+               (result-loc (then-move-store-location result-action)))
 
-;; Add mov necessary if operation only operates on register but args are not registers (todo? necessary?
-(define (x64-encode-prim-ifjump cgc proc code prim args true-loc-label false-loc-label)
-  (debug "x64-encode-prim-ifjump\n")
-  (x64-encode-inline-prim cgc proc code prim args)
+            (am-mov cgc result-loc (int-opnd 1)) ;; todo true value
+            (true-test cgc label)
+            (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
+            (am-label cgc label)))
+      ((then-return? result-action)
+        ;; Extract boolean then jump
+        (let* ((suffix "_jump")
+               (label (make-unique-label cgc suffix))
+               (result-loc (get-register 1))
+               (return-loc (get-register 0)))
 
-  ((prim-info-true-jump prim) cgc true-loc-label)
-  (am-jmp cgc false-loc-label))
-
-;; Defines lifted function using inline-encode-fun
-(define (x64-encode-lifted-prim-inline cgc prim)
-  (debug "x64-encode-lifted-prim\n")
-  (let* ((opnds
-          (cdr (take
-            (vector->list main-registers)
-            (prim-info-arity prim)))))
-
-    (apply (prim-info-inline-encode-fun prim) cgc (append opnds '(64)))
-
-    (if (eqv? (prim-info-return-type prim) 'boolean) ;; We suppose arity > 0
-      ;; If operation returns boolean (Result is in flag register)
-      (let* ((suffix "_jump")
-              (label (make-unique-label cgc suffix))
-              (result-loc (get-register 1)))
-
-          (am-mov cgc (get-register 1) (int-opnd 1))
-          ((prim-info-true-jump prim) cgc label)
-          (am-mov cgc (get-register 1) (int-opnd 0))
-          (am-label cgc label)))
-      ;; Else, we suppose that arg1 is destination of operation. arg1 = r1
-
-  (am-jmp cgc (get-register 0))))
+            (am-mov cgc result-loc (int-opnd 1)) ;; todo true value
+            (true-test cgc return-loc)
+            (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
+            (am-jmp cgc return-loc)))
+      (else
+        (compiler-internal-error "epilogue-use-result-boolean - Unknown result-action" result-action)))))
 
 ;;;----------------------------------------------------------------------------
 
