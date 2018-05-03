@@ -181,7 +181,7 @@ echo exit 1 >> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_gcc.exe>> gsc-cc-o.bat
 echo cd "%%GSC_CC_O_C_FILENAME_DIR%%">> gsc-cc-o.bat
-echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -shared -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_wcl386.exe>> gsc-cc-o.bat
@@ -196,7 +196,7 @@ echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :use_build_time_c_compiler>> gsc-cc-o.bat
 echo cd "%%GSC_CC_O_C_FILENAME_DIR%%">> gsc-cc-o.bat
-echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -mieee-fp -shared -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
+echo gcc.exe -mno-cygwin -Wall -W -Wno-unused -O1 -fno-math-errno -fschedule-insns2 -fno-trapping-math -fno-strict-aliasing -fwrapv -fno-common -shared -I"%%GSC_CC_O_GAMBCDIR_INCLUDE%%" -D___DYNAMIC -D___SINGLE_HOST -o "%%GSC_CC_O_OBJ_FILENAME%%" %%GSC_CC_O_CC_OPTIONS%% %%GSC_CC_O_LD_OPTIONS_PRELUDE%% "%%GSC_CC_O_C_FILENAME_BASE%%" %%GSC_CC_O_LD_OPTIONS%%>> gsc-cc-o.bat
 echo goto end>> gsc-cc-o.bat
 echo.>> gsc-cc-o.bat
 echo :end>> gsc-cc-o.bat

@@ -1167,19 +1167,19 @@ h.scm:
 /Users/feeley/gambit/doc/h.c:
 gcc -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
  -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
- -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit/include" -c -o "h.o" h.c
+ -fPIC -fno-common -I"/usr/local/Gambit/include" -c -o "h.o" h.c
 w.six:
 /Users/feeley/gambit/doc/w.c:
 gcc -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
  -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
- -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit/include" -c -o "w.o" w.c
+ -fPIC -fno-common -I"/usr/local/Gambit/include" -c -o "w.o" w.c
 /Users/feeley/gambit/doc/w_.c:
 gcc -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
  -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
- -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit/include" -c -o "w_.o" w_.c
+ -fPIC -fno-common -I"/usr/local/Gambit/include" -c -o "w_.o" w_.c
 gcc  -no-cpp-precomp -Wno-unused -O1 -fno-math-errno -fschedule-insns2
  -fno-trapping-math -fno-strict-aliasing -fwrapv -fomit-frame-pointer
- -fPIC -fno-common -mieee-fp -I"/usr/local/Gambit/include"
+ -fPIC -fno-common -I"/usr/local/Gambit/include"
  -o "hello.exe" h.o w.o w_.o "/usr/local/Gambit/lib/libgambit.a"
 @end smallexample
 
