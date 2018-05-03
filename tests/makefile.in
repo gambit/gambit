@@ -142,7 +142,7 @@ test6: test5
 	@echo "------------ TEST 6 (link and execute the code generated)"
 	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mix@exe@ -exe mix.c
-	@SETDLPATH@ ./mix@exe@ -:m4000 > test6.out
+	@SETDLPATH@ ./mix@exe@ -:m5000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \
 	  rm -f test6.out mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@
 
