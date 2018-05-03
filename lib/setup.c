@@ -249,7 +249,7 @@ ___processor_state ___ps;)
   int i;
   ___SCMOBJ p = ___PROCESSOR_SCMOBJ(___ps);
 
-  ___HEADER(p) = ___MAKE_HD((___PROCESSOR_SIZE<<___LWS),___sSTRUCTURE,___PERM);
+  ___SUBTYPED_HEADER_SET(p, ___MAKE_HD((___PROCESSOR_SIZE<<___LWS),___sSTRUCTURE,___PERM));
 
   for (i=0; i<___PROCESSOR_SIZE; i++)
     ___VECTORSET(p,___FIX(i),___FAL)
@@ -274,7 +274,7 @@ ___virtual_machine_state ___vms;)
   int i;
   ___SCMOBJ vm = ___VM_SCMOBJ(___vms);
 
-  ___HEADER(vm) = ___MAKE_HD((___VM_SIZE<<___LWS),___sSTRUCTURE,___PERM);
+  ___SUBTYPED_HEADER_SET(vm, ___MAKE_HD((___VM_SIZE<<___LWS),___sSTRUCTURE,___PERM));
 
   for (i=0; i<___VM_SIZE; i++)
     ___VECTORSET(vm,___FIX(i),___FAL)
@@ -1113,8 +1113,8 @@ int need_64bit_alignment;)
   ___SCMOBJ *to;
 
 #if ___WS == 4
-  if (need_64bit_alignment)
-    to = ___ALIGNUP((from+1), 8) - 1;
+  if (need_64bit_alignment) /* body must be aligned at 8 byte multiple */
+    to = ___ALIGNUP((from+___SUBTYPED_BODY), 8) - ___SUBTYPED_BODY;
   else
 #endif
     to = ___ALIGNUP(from, ___WS);
@@ -1139,7 +1139,9 @@ ___SCMOBJ *ptr;)
   ___SCMOBJ head = ptr[0];
   int subtype = ___HD_SUBTYPE(head);
   int words = ___HD_WORDS(head);
-  return ___TAG(align (ptr, words+1, subtype>=___sS64VECTOR), ___tSUBTYPED);
+  return ___SUBTYPED_FROM_START(align (ptr,
+                                       words+___SUBTYPED_BODY,
+                                       subtype>=___sS64VECTOR));
 }
 
 
@@ -1229,26 +1231,24 @@ ___module_struct *module;
 ___SCMOBJ *p;)
 {
   ___SCMOBJ v = *p;
+  int n = ___INT(v);
   switch (___TYP(v))
     {
     case ___tMEM1:
-      if (___INT(v)<0)
-        *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-___INT(v)];
+      if (n < 0)
+        *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-n];
+      else if (n < module->subcount)
+        *p = ___CAST(___SCMOBJ*,module->subtbl)[n];
       else
-        {
-          int n = ___INT(v);
-          if (n < module->subcount)
-            *p = ___CAST(___SCMOBJ*,module->subtbl)[n];
-          else
-            *p = ___TAG(___CAST(___SCMOBJ*,&module->lbltbl[n-module->subcount]),___tSUBTYPED);
-        }
+        *p = ___SUBTYPED_FROM_START(___CAST(___SCMOBJ*,&module->lbltbl[n-module->subcount]));
       break;
 
     case ___tMEM2:
-      if (___INT(v)<0)
-        *p = ___CAST(___SCMOBJ*,module->symtbl)[-1-___INT(v)];
+      if (n < 0)
+        *p = ___CAST(___SCMOBJ*,module->symtbl)[-1-n];
       else
-        *p = ___TAG(&___CAST(___SCMOBJ*,module->cnstbl)[(___PAIR_SIZE+1)*___INT(v)], ___tPAIR);
+        *p = ___PAIR_FROM_START(&___CAST(___SCMOBJ*,module->cnstbl)[
+                                   n*(___PAIR_BODY+___PAIR_SIZE)]);
       break;
     }
 }
@@ -1377,7 +1377,7 @@ ___module_struct *module;)
                    align (___CAST(___SCMOBJ*,lbltbl), lblcount*___LS, 0));
   module->lbltbl = lbltbl;
 
-  cnstbl = align (cnstbl, (___PAIR_SIZE+1)*cnscount, 0);
+  cnstbl = align (cnstbl, (___PAIR_BODY+___PAIR_SIZE)*cnscount, 0);
   module->cnstbl = cnstbl;
 
   /* Setup module's global variable table */
@@ -1421,7 +1421,7 @@ ___module_struct *module;)
   else
     {
       for (i=symcount-1; i>=0; i--)
-        symtbl[i] = ___TAG(___ALIGNUP(symtbl[i], ___WS), ___tSUBTYPED);
+        symtbl[i] = ___SUBTYPED_FROM_START(___ALIGNUP(symtbl[i], ___WS));
     }
 
   /* Setup module's keyword table */
@@ -1441,7 +1441,7 @@ ___module_struct *module;)
   else
     {
       for (i=keycount-1; i>=0; i--)
-        keytbl[i] = ___TAG(___ALIGNUP(keytbl[i], ___WS), ___tSUBTYPED);
+        keytbl[i] = ___SUBTYPED_FROM_START(___ALIGNUP(keytbl[i], ___WS));
     }
 
   /* Setup module's subtyped object table */
@@ -1457,15 +1457,21 @@ ___module_struct *module;)
 
   for (i=cnscount-1; i>=0; i--)
     {
-      fixref (module, cnstbl+i*(___PAIR_SIZE+1)+1);
-      fixref (module, cnstbl+i*(___PAIR_SIZE+1)+2);
+      fixref (module,
+              cnstbl
+              + i*(___PAIR_BODY+___PAIR_SIZE)
+              + (___PAIR_BODY+___PAIR_CAR));
+      fixref (module,
+              cnstbl
+              + i*(___PAIR_BODY+___PAIR_SIZE)
+              + (___PAIR_BODY+___PAIR_CDR));
     }
 
   /* Fix references in module's subtyped object table */
 
   for (j=subcount-1; j>=0; j--)
     {
-      ___SCMOBJ *p = ___UNTAG_AS(subtbl[j],___tSUBTYPED);
+      ___SCMOBJ *p = ___SUBTYPED_TO_START(subtbl[j]);
       ___SCMOBJ head = p[0];
       int subtype = ___HD_SUBTYPE(head);
       int words = ___HD_WORDS(head);
@@ -1477,7 +1483,8 @@ ___module_struct *module;)
         case ___sSTRUCTURE:
         case ___sRATNUM:
         case ___sCPXNUM:
-          for (i=1; i<=words; i++)
+          p += ___SUBTYPED_BODY;
+          for (i=0; i<words; i++)
             fixref (module, p+i);
         }
     }
@@ -1583,10 +1590,10 @@ ___module_struct *module;)
                     }
                 }
               else
-                lbl->entry_or_descr = ___TAG(&lbl->header,___tSUBTYPED);
+                lbl->entry_or_descr = ___SUBTYPED_FROM_START(&lbl->header);
             }
         }
-      *lp = ___TAG(lbltbl,___tSUBTYPED);
+      *lp = ___SUBTYPED_FROM_START(lbltbl);
     }
 
   return ___FIX(___NO_ERR);
@@ -2764,9 +2771,9 @@ ___mod_or_lnk mol;)
           sym_ptr = ___CAST(___SCMOBJ*,p2);
 
           p2 = ___CAST(___FAKEWORD*,sym_ptr[0]);
-          glo = ___CAST(___glo_struct*,sym_ptr[1+___SYMBOL_GLOBAL]);
+          glo = ___CAST(___glo_struct*,sym_ptr[___SUBTYPED_BODY+___SYMBOL_GLOBAL]);
 
-          sym_ptr[1+___SYMKEY_HASH] = glo->prm; /* move symbol's hash value */
+          sym_ptr[___SUBTYPED_BODY+___SYMKEY_HASH] = glo->prm; /* move symbol's hash value */
         }
     }
 }
@@ -2799,8 +2806,8 @@ ___mod_or_lnk mol;)
           sym_ptr = ___CAST(___SCMOBJ*,p2);
 
           p2 = ___CAST(___FAKEWORD*,sym_ptr[0]);
-          str = align_subtyped (___CAST(___SCMOBJ*,sym_ptr[1+___SYMKEY_NAME]));
-          glo = ___CAST(___glo_struct*,sym_ptr[1+___SYMBOL_GLOBAL]);
+          str = align_subtyped (___CAST(___SCMOBJ*,sym_ptr[___SUBTYPED_BODY+___SYMKEY_NAME]));
+          glo = ___CAST(___glo_struct*,sym_ptr[___SUBTYPED_BODY+___SYMBOL_GLOBAL]);
 
 #ifndef ___SINGLE_VM
 
@@ -2810,7 +2817,7 @@ ___mod_or_lnk mol;)
 
           ___glo_list_add (glo);
 
-          *sym_ptr = ___MAKE_HD((___SYMBOL_SIZE<<___LWS),___sSYMBOL,___PERM);
+          sym_ptr[0] = ___MAKE_HD((___SYMBOL_SIZE<<___LWS),___sSYMBOL,___PERM);
 
           sym = align_subtyped (sym_ptr);
 
@@ -2828,9 +2835,9 @@ ___mod_or_lnk mol;)
           key_ptr = ___CAST(___SCMOBJ*,p3);
 
           p3 = ___CAST(___FAKEWORD*,key_ptr[0]);
-          str = align_subtyped (___CAST(___SCMOBJ*,key_ptr[1+___SYMKEY_NAME]));
+          str = align_subtyped (___CAST(___SCMOBJ*,key_ptr[___SUBTYPED_BODY+___SYMKEY_NAME]));
 
-          *key_ptr = ___MAKE_HD((___KEYWORD_SIZE<<___LWS),___sKEYWORD,___PERM);
+          key_ptr[0] = ___MAKE_HD((___KEYWORD_SIZE<<___LWS),___sKEYWORD,___PERM);
 
           key = align_subtyped (key_ptr);
 
@@ -2959,7 +2966,7 @@ ___SCMOBJ stack_marker;)
 
   ___ps->fp = ___fp;
   ___ps->na = nargs;
-  ___ps->pc = ___CAST(___label_struct*,proc-___tSUBTYPED)->entry_or_descr;
+  ___ps->pc = ___CAST(___label_struct*,___SUBTYPED_TO_START(proc))->entry_or_descr;
   ___PSSELF = proc;
 
   ___BEGIN_TRY

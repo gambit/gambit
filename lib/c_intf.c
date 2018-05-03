@@ -2905,7 +2905,7 @@ int arg_num;)
   else
     {
       ___label_struct *lbl =
-        ___CAST(___label_struct*,___UNTAG_AS(obj,___tSUBTYPED));
+        ___CAST(___label_struct*,&___SUBTYPED_HEADER(obj));
 
       /*
        * Check if the Scheme procedure was defined with a c-define

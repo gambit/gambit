@@ -2,7 +2,7 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2017 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
@@ -6074,15 +6074,12 @@ if (n > ___CAST(___WORD, ___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
-#if ___BIG_ABASE_WIDTH == 32
-    ___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
-#else
-#if ___WS == 4
-    ___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 2;
-#else
-    ___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + 1;
+    ___SIZE_TS words = ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + ___SUBTYPED_BODY;
+
+#if ___BIG_ABASE_WIDTH == 64 && ___WS == 4
+    words++;
 #endif
-#endif
+
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
@@ -6115,20 +6112,15 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-#if ___BIG_ABASE_WIDTH == 32
-            result = ___TAG(___hp, ___tSUBTYPED);
+#if ___BIG_ABASE_WIDTH == 64 && ___WS == 4
+            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
 #else
-#if ___WS == 4
-            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                            ___tSUBTYPED);
-#else
-            result = ___TAG(___hp, ___tSUBTYPED);
-#endif
+            result = ___SUBTYPED_FROM_START(___hp);
 #endif
 #if ___BIG_ABASE_WIDTH == 32
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sBIGNUM);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sBIGNUM));
 #else
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sBIGNUM);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sBIGNUM));
 #endif
             ___hp += words;
           }
