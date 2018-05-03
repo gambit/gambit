@@ -409,7 +409,7 @@
 #else
 #define ___VERSION 408009
 #define ___MODULE_NAME "mix"
-#define ___LINKER_ID ___mix
+#define ___LINKER_ID ___LNK_mix
 #define ___MH_PROC ___H_mix
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 67
