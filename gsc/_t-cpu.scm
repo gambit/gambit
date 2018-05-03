@@ -1021,19 +1021,14 @@
 
 (define (put-objects cgc obj label)
   (debug "put-objects\n")
-  (debug "label: " label)
+  (debug "label: " label "\n")
+  (debug "Obj: " obj "\n")
 
   (am-lbl cgc label)
 
-  (cond
-    ((string? obj)
-      (debug "Obj: " obj "\n")
-      ;; Header: 158 (0x9E) + 256 * char_size(default:4) * length
-      (am-dd cgc (+ 158 (* (* 256 4) (string-length obj))))
-      ;; String content=
-      (apply am-dd (cons cgc (map char->integer (string->list obj)))))
-    (else
-      (compiler-internal-error "put-objects: Unknown object type"))))
+  (let* ((obj-desc (get-object-description obj))
+         (bytes (format-object obj-desc obj)))
+    (apply am-dd (cons cgc bytes))))
 
 ;; ***** x64 : GVM Instruction encoding
 
@@ -1157,26 +1152,68 @@
   (compiler-internal-error
     "x64-encode-switch-instr: switch instruction not implemented"))
 
-
 ;; ***** Memory model
 
 ; data ObjectDescription = Immediate {
 ;   type :: ImmediateType,
-;   literal-object-val :: Object
+;   encode-fun :: Object -> Fixnum (30 or 62 bits - Without tags)
 ; } | Reference {
 ;   type :: ReferenceType,
-;   literal-object-val :: Object,
 ;   header-tag :: Fixnum (5 bits),
-;   header-length-fun :: Object -> Fixnum (24 or 56 bits)
-;   fields :: [Field]
+;   header-length-fun :: Object -> Fixnum (24 or 56 bits),
+;   encode-fun :: Object -> [Field] -- Encodes the body of the object
 ; }
 
 ; data ImmediateType = Fixnum  | SpecialVal
 ; data ReferenceType = Subtype | Pair
-; data Field = SubObject
-;            | ComputedValue (literal-object-val -> Fixnum (64 bits))
-;            | Indirection (See if necessary)
 
+(define (immediate-desc type encode-fun) (list 'imm type encode-fun))
+(define (immediate-desc? desc) (eqv? 'imm (car desc)))
+(define (immediate-type desc) (list-ref desc 1))
+(define (immediate-encode-fun desc) (list-ref desc 2))
+
+(define (reference-desc type header-tag header-fun encode-fun) (list 'ref type header-tag header-fun encode-fun))
+(define (reference-desc? desc) (eqv? 'ref (car desc)))
+(define (reference-type desc) (list-ref desc 1))
+(define (reference-header-tag desc) (list-ref desc 2))
+(define (reference-header-fun desc) (list-ref desc 3))
+(define (reference-encode-fun desc) (list-ref desc 4))
+
+(define (format-object desc object)
+  (cond
+    ((immediate-desc? desc)
+      (list ((immediate-encode-fun desc) object)))
+    ((reference-desc? desc)
+      (let* ((object-length ((reference-header-fun desc) object))
+             (tag (reference-header-tag desc))
+             (header (+ tag (* 256 object-length))))
+      (cons header ((reference-encode-fun desc) object))))
+    (else
+      (compiler-internal-error "format-object - Unknown object type: " desc))))
+
+(define (get-object-description object)
+  (cond
+    ((string? object) string-obj-desc)
+    ((fixnum? object) fixnum-obj-desc)
+    ((pair? object)   pair-obj-desc)
+    (else (compiler-internal-error "Unknown object type: " object))))
+
+(define fixnum-obj-desc
+  (let ((encode-fun
+          (lambda (val) (tag-number val tag-mult fixnum-tag))))
+    (immediate-desc 'fixnum encode-fun)))
+
+(define string-obj-desc
+  (let ((subtype 158)
+        (header-fun (lambda (val) (* 4 (string-length val))))
+        (encode-fun (lambda (val) (map char->integer (string->list val)))))
+    (reference-desc 'subtype subtype header-fun encode-fun)))
+
+(define pair-obj-desc
+  (let ((subtype 0)
+        (header-fun (lambda (val) 16))
+        (encode-fun (lambda (val) (compiler-internal-error "Implement encode-obj function"))))
+    (reference-desc 'pair subtype header-fun encode-fun)))
 
 ;; ***** x64 primitives
 
@@ -1209,33 +1246,6 @@
 
 (define (then-return) '(return))
 (define (then-return? then) (eqv? 'return (car then)))
-
-(define (x86-prim-fx+)
-  (arithmetic-prim am-add 'number (default-arithmetic-allowed-opnds) #t))
-
-(define (x86-prim-fx-)
-  (arithmetic-prim am-sub 'number (default-arithmetic-allowed-opnds) #f))
-
-(define (x86-prim-fx<)
-  (arithmetic-prim am-cmp (list 'boolean x86-jle x86-jg) (default-arithmetic-allowed-opnds) #f))
-
-(define (default-arithmetic-allowed-opnds)
-  (if load-store-only
-    '((reg) (reg int))
-    '((reg) (reg int mem))))
-
-(define (arithmetic-prim asm-fun return-type allowed-opnds  commutative)
-  (let ((commutative-prologue (if commutative prologue-commute idlogue)))
-    (make-primitive
-      (compose-prologues
-        commutative-prologue
-        (prologue-mov-args allowed-opnds))
-
-      (lambda (cgc result-action args) (apply asm-fun (cons cgc args)))
-
-      (if (equal? 'boolean (car return-type))
-          (apply epilogue-use-result-boolean (cdr return-type))
-          epilogue-use-result-default))))
 
 (define (make-primitive prologue asm-fun epilogue)
   (lambda (cgc result-action . args)
@@ -1337,7 +1347,6 @@
   (lambda (cgc result-action args)
     (cond
       ((then-jump? result-action)
-        ;; The function doesn't return a boolean => result is always true
         (true-test-jump cgc (then-jump-true-location result-action))
         (am-jmp cgc (then-jump-false-location result-action)))
       ((then-move? result-action)
@@ -1349,7 +1358,7 @@
             (am-mov cgc result-loc (int-opnd 1)) ;; todo true value
             (true-test-jump cgc label)
             (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
-            (am-lbl cgc label)
+            (am-lbl cgc label)))
       ((then-return? result-action)
         ;; Extract boolean then jump
         (let* ((suffix "_jump")
@@ -1363,6 +1372,56 @@
             (am-jmp cgc return-loc)))
       (else
         (compiler-internal-error "epilogue-use-result-boolean - Unknown result-action" result-action)))))
+
+;; ***** Arithmetic primitives
+
+(define (x86-prim-fx+)
+  (arithmetic-prim am-add 'number (default-arithmetic-allowed-opnds) #t))
+
+(define (x86-prim-fx-)
+  (arithmetic-prim am-sub 'number (default-arithmetic-allowed-opnds) #f))
+
+(define (x86-prim-fx<)
+  (arithmetic-prim am-cmp (list 'boolean x86-jle x86-jg) (default-arithmetic-allowed-opnds) #f))
+
+(define (default-arithmetic-allowed-opnds)
+  (if load-store-only
+    '((reg) (reg int))
+    '((reg) (reg int mem))))
+
+(define (arithmetic-prim asm-fun return-type allowed-opnds  commutative)
+  (let ((commutative-prologue (if commutative prologue-commute idlogue)))
+    (make-primitive
+      (compose-prologues
+        commutative-prologue
+        (prologue-mov-args allowed-opnds))
+
+      (lambda (cgc result-action args) (apply asm-fun (cons cgc args)))
+
+      (if (equal? 'boolean (car return-type))
+          (apply epilogue-use-result-boolean (cdr return-type))
+          epilogue-use-result-default))))
+
+
+;; ***** Memory read primitives
+
+(define (type-check-primitive obj-desc)
+  (cond
+    ((immediate-desc? obj-desc)
+      (make-primitive
+        (prologue-mov-args '((reg)))
+        (lambda (cgc result-action args) (display "test!") (am-test cgc (car args) (int-opnd 3)))
+        (epilogue-use-result-boolean am-jne am-je)))
+    ; ((reference-desc? obj-desc)
+    ;   #f))
+    (else
+      (compiler-internal-error "Unknown object description"))))
+
+; (define (read-header-prim obj-desc)
+;   (lambda ()))
+
+; (define (read-body-prim obj-desc)
+;   (lambda ()))
 
 ;;;----------------------------------------------------------------------------
 
