@@ -11354,9 +11354,11 @@ ___SCMOBJ eof;)
             e = err_code_from_char_encoding (___CHAR_ENCODING(options), 1, 0, 0);
           else
             {
+#if ___UNICODE_REPLACEMENT <= ___MAX_CHR
               if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
                 cbuf_ptr[chi] = ___UNICODE_REPLACEMENT;
               else
+#endif
                 cbuf_ptr[chi] = ___UNICODE_QUESTION;
 
               cbuf_avail--;
@@ -11420,9 +11422,11 @@ ___SCMOBJ port;)
             ___C replacement_cbuf[1];
             int replacement_cbuf_avail = 1;
 
+#if ___UNICODE_REPLACEMENT <= ___MAX_CHR
             if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
               replacement_cbuf[0] = ___UNICODE_REPLACEMENT;
             else
+#endif
               replacement_cbuf[0] = ___UNICODE_QUESTION;
 
             code = chars_to_bytes (replacement_cbuf,
