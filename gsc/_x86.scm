@@ -1186,6 +1186,49 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
 
 ;;;----------------------------------------------------------------------------
 
+;;; X86 instructions: SETO, SETNO, SETB, SETAE, SETE, SETNE, SETBE, SETA,
+;;; SETS, SETNS, SETP, SETNP, SETL, SETGE, SETLE, and SETG.
+
+;; Conditional set opcodes
+
+(define (x86-seto cgc opnd)  (x86-set-cc cgc opnd   0))
+(define (x86-setno cgc opnd) (x86-set-cc cgc opnd   1))
+(define (x86-setb cgc opnd)  (x86-set-cc cgc opnd   2))
+(define (x86-setae cgc opnd) (x86-set-cc cgc opnd   3))
+(define (x86-sete cgc opnd)  (x86-set-cc cgc opnd   4))
+(define (x86-setne cgc opnd) (x86-set-cc cgc opnd   5))
+(define (x86-setbe cgc opnd) (x86-set-cc cgc opnd   6))
+(define (x86-seta cgc opnd)  (x86-set-cc cgc opnd   7))
+(define (x86-sets cgc opnd)  (x86-set-cc cgc opnd   8))
+(define (x86-setns cgc opnd) (x86-set-cc cgc opnd   9))
+(define (x86-setp cgc opnd)  (x86-set-cc cgc opnd  10))
+(define (x86-setnp cgc opnd) (x86-set-cc cgc opnd  11))
+(define (x86-setl cgc opnd)  (x86-set-cc cgc opnd  12))
+(define (x86-setge cgc opnd) (x86-set-cc cgc opnd  13))
+(define (x86-setle cgc opnd) (x86-set-cc cgc opnd  14))
+(define (x86-setg cgc opnd)  (x86-set-cc cgc opnd  15))
+
+(define (x86-set-cc cgc opnd cc)
+
+  (define (listing opnd)
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     (vector-ref
+                      '#("seto" "setno" "setb" "setae"
+                         "sete" "setne" "setbe" "seta"
+                         "sets" "setns" "setp" "setnp"
+                         "setl" "setge" "setle" "setg")
+                      cc)
+                     opnd)))
+
+  (x86-esc-opcode cgc)
+  (asm-8 cb (+ #x90 cc))  ;; opcode
+  (x86-opnd-prefix cgc 0 0 opnd #f) ;; prefix (width is implicit)
+  (x86-opnd-modrm/sib cgc 0 opnd) ;; ModR/M
+  (listing opnd))
+
+;;;----------------------------------------------------------------------------
+
 ;;; X86 instructions: PUSH and POP.
 
 (define (x86-push cgc opnd)
