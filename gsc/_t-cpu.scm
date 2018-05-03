@@ -1136,6 +1136,27 @@
   (compiler-internal-error
     "x64-encode-switch-instr: switch instruction not implemented"))
 
+
+;; ***** Memory model
+
+; data ObjectDescription = Immediate {
+;   type :: ImmediateType,
+;   literal-object-val :: Object
+; } | Reference {
+;   type :: ReferenceType,
+;   literal-object-val :: Object,
+;   header-tag :: Fixnum (5 bits),
+;   header-length-fun :: Object -> Fixnum (24 or 56 bits)
+;   fields :: [Field]
+; }
+
+; data ImmediateType = Fixnum  | SpecialVal
+; data ReferenceType = Subtype | Pair
+; data Field = SubObject
+;            | ComputedValue (literal-object-val -> Fixnum (64 bits))
+;            | Indirection (See if necessary)
+
+
 ;; ***** x64 primitives
 
 (define (get-prim-obj prim-name)
