@@ -19,11 +19,11 @@
 
 /*
  * Define SCHEME_LIBRARY_LINKER as the name of the Scheme library
- * prefixed with "___" and suffixed with "__".  This is the
+ * prefixed with "___LNK_" and suffixed with "__".  This is the
  * function that initializes the Scheme library.
  */
 
-#define SCHEME_LIBRARY_LINKER ___server__
+#define SCHEME_LIBRARY_LINKER ___LNK_server__
 
 ___BEGIN_C_LINKAGE
 extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state);
