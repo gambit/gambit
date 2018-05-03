@@ -385,13 +385,19 @@
 ;;
 ;;
 ;;  The following non-branching instructions are required:
-;;    am-label: Place label
+;;    am-lbl: Place label
 ;;    am-ret  : Exit program
 ;;    am-mov  : Move value between 2 registers/memory/immediate
+;;
 ;;    am-cmp  : Compare 2 operands. Sets flag
 ;;    am-add  : (Add imm/reg to register). If load-store-only, mem can be used as opn
 ;;    am-sub  : (Add imm/reg to register). If load-store-only, mem can be used as opn
-;;    ...
+;;
+;;    am-not  : Logical not
+;;    am-and  : Logical and
+;;    am-or   : Logical or
+;;    am-xor  : Logical xor
+;;    am-test : Logical and, but only sets flag
 ;;
 ;;
 ;;  The following branching instructions are required:
@@ -472,6 +478,14 @@
 (define am-cmp #f)
 (define am-add #f)
 (define am-sub #f)
+
+;; ***** AM: Instructions: Boolean arithmetic
+
+(define am-not #f)
+(define am-and #f)
+(define am-or  #f)
+(define am-xor #f)
+(define am-test #f)
 
 ;; ***** AM: Instructions: Branch
 
@@ -835,6 +849,13 @@
     (set! am-lda x86-lea)
     (set! am-ret x86-ret)
     (set! am-cmp x86-cmp)
+
+    (set! am-not x86-not)
+    (set! am-and x86-and)
+    (set! am-or  x86-or)
+    (set! am-xor x86-xor)
+    (set! am-test x86-test)
+
     (set! am-add
       (wrap-function x86-add
         (list
@@ -1326,9 +1347,9 @@
                (result-loc (then-move-store-location result-action)))
 
             (am-mov cgc result-loc (int-opnd 1)) ;; todo true value
-            (true-test cgc label)
+            (true-test-jump cgc label)
             (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
-            (am-label cgc label)))
+            (am-lbl cgc label)
       ((then-return? result-action)
         ;; Extract boolean then jump
         (let* ((suffix "_jump")
