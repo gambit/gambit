@@ -1922,7 +1922,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define targ-linker-tag "")
+(define targ-linker-tag "LNK_")
 (define targ-host-tag   "H_")
 (define targ-glo-tag    "G_")
 (define targ-glo2-tag   "GLO_")

@@ -465,7 +465,7 @@ ___HIDDEN char c_id_prefix[] =
 #ifdef ___IMPORTED_ID_PREFIX
 ___IMPORTED_ID_PREFIX
 #endif
-___C_ID_PREFIX;
+___C_ID_PREFIX "LNK_";
 
 #define c_id_prefix_length (sizeof (c_id_prefix) - 1)
 
