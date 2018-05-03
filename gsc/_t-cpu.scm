@@ -684,10 +684,10 @@
 ;; Provides unique ids
 ;; No need for randomness or UUID
 ;; *** Obviously, NOT thread safe ***
-(define id 0)
+(define unique-id 0)
 (define (get-unique-id)
-  (set! id (+ id 1))
-  id)
+  (set! unique-id (+ unique-id 1))
+  unique-id)
 
 ;; ***** AM: Important labels
 
@@ -1394,7 +1394,7 @@
 ;; Pred :: [Arg] -> Bool
 ;; Replacment :: Function
 ;; map-args :: [Arg] -> [Arg]
-(define (rule pred replacement #!optional (map-args id))
+(define (rule pred replacement #!optional (map-args id-args))
   (vector 'rule pred replacement map-args))
 
 (define (rule? vect)
@@ -1424,7 +1424,7 @@
 ;; ***** Instruction substitution - Predicate helper functions
 
 (define (NOP . args) #f)
-(define (id . args) args)
+(define (id-args . args) args)
 
 ;; Builds a substitution rule from an Expression
 ;; The goal of the function is to make it easier to express complex substitution
@@ -1438,7 +1438,7 @@
 ;; type OpndType = Int | Reg | Mem
 ;; Currently no use for OpndType Obj and Label.
 
-(define (make-rule rule-id expr sub #!optional (args-map id))
+(define (make-rule rule-id expr sub #!optional (args-map id-args))
   (define (match? args expr)
     (case (car expr)
       ('or
