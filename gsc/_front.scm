@@ -40,7 +40,7 @@
 (define cf #f)
 
 (set! cf
-  (lambda (input opts output-filename-gen module-name unique-name)
+  (lambda (input opts output-filename-gen module-name linker-name)
     (with-exception-handling
      (lambda ()
        (let* ((t
@@ -71,7 +71,7 @@
                           (cons (list 'target (default-target)) opts))
                       output-filename-gen
                       module-name
-                      unique-name
+                      linker-name
                       info-port))))
 
            result))))))
@@ -125,7 +125,7 @@
                       #t)
                      ((c dynamic exe obj link flat
                          check force keep-c
-                         o l prelude postlude
+                         o l module-name linker-name prelude postlude
                          cc-options ld-options-prelude ld-options
                          asm)
                       #t) ;; these options are innocuous
@@ -197,7 +197,7 @@
          opts
          output-filename-gen
          module-name
-         unique-name
+         linker-name
          info-port
          inner)
 
@@ -257,7 +257,7 @@
                (lambda ()
                  (let ((comp-scope (##compilation-scope)))
                    (table-set! comp-scope 'module-name module-name)
-                   (table-set! comp-scope 'unique-name unique-name))
+                   (table-set! comp-scope 'linker-name linker-name))
                  (parse-program
                   program
                   (make-global-environment)
@@ -274,10 +274,10 @@
             (let ((mod-name (table-ref comp-scope 'module-name)))
               (table-set! comp-scope 'module-name)
               mod-name))
-           (unique-name
-            (let ((uniq-name (table-ref comp-scope 'unique-name)))
-              (table-set! comp-scope 'unique-name)
-              (or uniq-name
+           (linker-name
+            (let ((link-name (table-ref comp-scope 'linker-name)))
+              (table-set! comp-scope 'linker-name)
+              (or link-name
                   module-name)))
            (result
             (inner parsed-program
@@ -285,7 +285,7 @@
                    root
                    output
                    module-name
-                   unique-name
+                   linker-name
                    c-intf
                    comp-scope
                    script-line)))
@@ -302,7 +302,7 @@
          opts
          output-filename-gen
          module-name
-         unique-name
+         linker-name
          info-port)
 
   (set! warnings-requested? compiler-option-warnings)
@@ -315,14 +315,14 @@
              opts
              output-filename-gen
              module-name
-             unique-name
+             linker-name
              info-port
              (lambda (parsed-program
                       env
                       root
                       output
                       module-name
-                      unique-name
+                      linker-name
                       c-intf
                       comp-scope
                       script-line)
@@ -390,7 +390,7 @@
                   output
                   c-intf
                   module-descr
-                  unique-name)
+                  linker-name)
 
                  (dump-c-intf module-procs root c-intf)
 
@@ -436,7 +436,7 @@
                  root
                  output
                  module-name
-                 unique-name
+                 linker-name
                  c-intf
                  comp-scope
                  script-line)

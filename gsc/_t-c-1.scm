@@ -274,7 +274,7 @@
 ;;
 ;; Dumping of a compilation module
 
-(define (targ-dump procs output c-intf module-descr unique-name)
+(define (targ-dump procs output c-intf module-descr linker-name)
   (let ((c-decls (c-intf-decls c-intf))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
@@ -320,7 +320,7 @@
      c-inits
      (map targ-use-obj c-objs)
      module-descr
-     unique-name)
+     linker-name)
 
     (targ-heap-end!)
 
@@ -780,13 +780,14 @@
                 (equal? (car (cadr info)) (target-name targ-target))
                 info)))))
 
-(define (targ-link extension? inputs output warnings?)
+(define (targ-link extension? inputs output linker-name warnings?)
   (with-exception-handling
     (lambda ()
       (let* ((root
                (path-strip-extension output))
              (name
-               (path-strip-directory root))
+               (or linker-name
+                   (path-strip-directory root)))
              (input-mods
                (map targ-get-mod inputs))
              (input-mods-and-flags
@@ -918,7 +919,7 @@
 ;; These routines write out the C code that represents the Scheme objects
 ;; contained in the compilation module.
 
-(define (targ-heap-dump filename c-decls c-inits c-objs module-descr unique-name)
+(define (targ-heap-dump filename c-decls c-inits c-objs module-descr linker-name)
   (let* ((sym-list
           (targ-sort (table->list targ-sym-objs) symbol->string))
          (key-list
@@ -960,7 +961,7 @@
 
     (targ-dump-module-info
      module-name
-     unique-name
+     linker-name
      #f
      #f
      script-line)
@@ -1140,7 +1141,7 @@
   (targ-display ")")
   (targ-line))
 
-(define (targ-dump-module-info name linker-id linkfile? extension? script-line)
+(define (targ-dump-module-info name linker-name linkfile? extension? script-line)
 
   (targ-macro-definition '("VERSION")
                          (compiler-version))
@@ -1151,7 +1152,7 @@
                          (targ-c-string name))
 
   (targ-macro-definition '("LINKER_ID")
-                         (targ-linker-id linker-id))
+                         (targ-linker-id linker-name))
 
   (if linkfile?
 
