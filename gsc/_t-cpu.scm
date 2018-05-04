@@ -74,7 +74,7 @@
          (fixups (codegen-context-fixup-list cgc))
          (procedure (u8vector->procedure code fixups)))
     (display "time-cgc: \n\n\n\n")
-    (asm-display-listing cgc (current-error-port) #f)
+    (asm-display-listing cgc (current-error-port) #t)
     (pp (time (procedure)))))
 
 ;;;----------------------------------------------------------------------------
