@@ -577,21 +577,17 @@
 
 (define (default-make-opnd cgc proc code opnd context)
   (define (make-obj val)
+    (display "make-obj")
     (cond
-      ((fixnum? val)
-        (int-opnd (tag-number val tag-mult fixnum-tag) word-width))
-      ((null? val)
-        (int-opnd (tag-number nil-object-val tag-mult special-int-tag) word-width))
-      ((boolean? val)
-        (int-opnd
-          (if val
-            (tag-number true-object-val  tag-mult special-int-tag)
-            (tag-number false-object-val tag-mult special-int-tag)) word-width))
       ((proc-obj? val)
         (if (eqv? context 'jump)
           (get-proc-label cgc (obj-val opnd) 1)
           (lbl-opnd (get-proc-label cgc (obj-val opnd) 1))))
-      ((string? val)
+      ((immediate-desc? (get-object-description val))
+          (int-opnd
+            (car (format-object (get-object-description val) val))
+            word-width))
+      ((reference-desc? (get-object-description val))
         (if (eqv? context 'jump)
           (make-object-label cgc (obj-val opnd))
           (lbl-opnd (make-object-label cgc (obj-val opnd)))))
