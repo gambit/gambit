@@ -709,20 +709,6 @@
 (define na-reg-default-value -64)
 (define na-reg-default-value-abs 192)
 
-;; Pointer tagging constants
-(define fixnum-tag 0)
-(define object-tag 1)
-(define special-int-tag 2)
-(define pair-tag 3)
-
-(define tag-mult 4)
-
-;; Special int values
-(define false-object-val 0) ;; Default value for false
-(define true-object-val -1) ;; Default value for true
-(define eof-object-val -100)
-(define nil-object-val -1000)
-
 (define na #f) ;; number of arguments register
 (define sp #f) ;; Real stack limit
 (define fp #f) ;; Simulated stack current pos
@@ -751,9 +737,6 @@
 
 (define (thread-descriptor offset)
   (mem-opnd (- offset na-reg-default-value-abs) dp))
-
-(define (tag-number val mult tag)
-  (+ (* mult val) tag))
 
 (define (load-opnd-if-necessary cgc opnd-to-load #!optional (register-index 0))
   (if load-store-only
@@ -1190,10 +1173,53 @@
     ((pair? object)   pair-obj-desc)
     (else (compiler-internal-error "Unknown object type: " object))))
 
+(define (get-desc-pointer-tag desc)
+  (cond
+    ((and (immediate-desc? desc) (eqv? 'fixnum (immediate-type desc)))
+      fixnum-tag)
+    ((and (immediate-desc? desc) (eqv? 'specialval (immediate-type desc)))
+      special-int-tag)
+    ((and (reference-desc? desc) (eqv? 'subtype (immediate-type desc)))
+      object-tag)
+    ((and (reference-desc? desc) (eqv? 'pair (immediate-type desc)))
+      pair-tag)
+    (else
+      (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
+
+;; Pointer tagging constants
+(define fixnum-tag 0)
+(define object-tag 1)
+(define special-int-tag 2)
+(define pair-tag 3)
+(define tag-mult 4)
+
+(define (tag-number val tag)
+  (+ (* tag-mult val) tag))
+
+;; Immediate types
+
+;; Special int values
+(define false-object-val -1) ;; Default value for false
+(define true-object-val  -2) ;; Default value for true
+(define eof-object-val   -100)
+(define nil-object-val   -1000)
+
 (define fixnum-obj-desc
-  (let ((encode-fun
-          (lambda (val) (tag-number val tag-mult fixnum-tag))))
-    (immediate-desc 'fixnum encode-fun)))
+  (immediate-desc 'fixnum
+    (lambda (val) (tag-number val fixnum-tag))))
+
+(define (make-unit-type-desc val)
+  (immediate-desc 'specialval
+    (lambda (val) (tag-number val special-int-tag))))
+
+(define boolean-obj-desc
+  (immediate-desc 'specialval
+    (lambda (val) (tag-number (if val true-object-val false-object-val) special-int-tag))))
+
+(define nil-obj-desc (make-unit-type-desc nil-object-val))
+(define eof-obj-desc (make-unit-type-desc nil-object-val))
+
+;; Reference types
 
 (define string-obj-desc
   (let ((subtype 158)
