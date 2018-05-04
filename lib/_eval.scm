@@ -4162,7 +4162,7 @@
          script-callback
          clone-cte?
          raise-os-exception?
-         module-name
+         linker-name
          quiet?)
 
   (define (raise-os-exception-if-needed x)
@@ -4191,11 +4191,11 @@
             (##vector-ref x 2)))))
 
   (define (load-binary abs-path)
-    (let* ((module-name
-            (or module-name
+    (let* ((linker-name
+            (or linker-name
                 (##path-strip-directory abs-path)))
            (result
-            (##load-object-file abs-path module-name quiet?)))
+            (##load-object-file abs-path linker-name quiet?)))
 
       (define (raise-error code)
         (if (##fixnum? code)
@@ -4307,9 +4307,9 @@
 (define-prim (##load-source-if-more-recent-set! x)
   (set! ##load-source-if-more-recent x))
 
-(define-prim (##load-object-file abs-path module-name quiet?)
+(define-prim (##load-object-file abs-path linker-name quiet?)
   (let ((result
-         (##os-load-object-file abs-path module-name)))
+         (##os-load-object-file abs-path linker-name)))
     (cond ((##not (##vector? result))
            result)
           ((##fx= 2 (##vector-length result))

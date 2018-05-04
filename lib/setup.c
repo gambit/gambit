@@ -1815,17 +1815,17 @@ ___mod_or_lnk mol;)
 
 ___SCMOBJ ___os_load_object_file
    ___P((___SCMOBJ path,
-         ___SCMOBJ modname),
+         ___SCMOBJ linkername),
         (path,
-         modname)
+         linkername)
 ___SCMOBJ path;
-___SCMOBJ modname;)
+___SCMOBJ linkername;)
 {
   ___SCMOBJ result;
   void *linker;
   ___mod_or_lnk mol;
 
-  if ((result = ___dynamic_load (path, modname, &linker)) == ___FIX(___NO_ERR))
+  if ((result = ___dynamic_load (path, linkername, &linker)) == ___FIX(___NO_ERR))
     {
       mol = linker_to_mod_or_lnk
               (___CAST(___mod_or_lnk (*) ___P((___global_state),()),
