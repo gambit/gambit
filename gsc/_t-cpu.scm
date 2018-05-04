@@ -1027,8 +1027,9 @@
   (am-lbl cgc label)
 
   (let* ((obj-desc (get-object-description obj))
-         (bytes (format-object obj-desc obj)))
-    (apply am-dd (cons cgc bytes))))
+         (words (format-object obj-desc obj)))
+    ;; todo: Replace with am-dw if 32 bits. Create am-dataword ?
+    (apply am-dd (cons cgc words))))
 
 ;; ***** x64 : GVM Instruction encoding
 
@@ -1044,7 +1045,7 @@
     ((switch) (encode-switch-instr  cgc proc code))
     (else
       (compiler-error
-        "encode-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type gvm-instr)))))
+        "encode-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type (code-gvm-instr code))))))
 
 ;; ***** Label instruction encoding
 
@@ -1367,7 +1368,7 @@
                (return-loc (get-register 0)))
 
             (am-mov cgc result-loc (int-opnd 1)) ;; todo true value
-            (true-test cgc return-loc)
+            (true-test-jump cgc return-loc)
             (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
             (am-jmp cgc return-loc)))
       (else
@@ -1457,7 +1458,7 @@
   (vector 'rule pred replacement map-args))
 
 (define (rule? vect)
-  (and (= 4 (length vect)) (eqv? 'rule (vect-ref vect 0))))
+  (and (= 4 (length vect)) (eqv? 'rule (vector-ref vect 0))))
 (define (rule-pred vect) (vector-ref vect 1))
 (define (rule-replacement vect) (vector-ref vect 2))
 (define (rule-map-args vect) (vector-ref vect 3))
