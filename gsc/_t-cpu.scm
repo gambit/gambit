@@ -533,17 +533,9 @@
 
 (define (default-check-narg cgc narg)
   (debug "default-check-narg: " narg "\n")
-  (load-mem-if-necessary cgc (thread-descriptor narg-offset)
-    (lambda (opnd)
-      (am-cmp cgc opnd (int-opnd narg))
-      (am-jne cgc WRONG_NARGS_LBL))))
-  ; (if load-store-only
-  ;   (begin
-  ;     (am-mov cgc (get-extra-register 0) (thread-descriptor narg-offset))
-  ;     )
-  ;   (begin
-  ;     (am-cmp cgc (thread-descriptor narg-offset) (int-opnd narg))
-  ;     (am-jne cgc WRONG_NARGS_LBL))))
+  (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor narg-offset))))
+    (am-cmp cgc opnd (int-opnd narg))
+    (am-jne cgc WRONG_NARGS_LBL)))
 
 (define (default-set-narg cgc narg)
   (debug "default-set-narg: " narg "\n")
@@ -563,16 +555,15 @@
     (am-jngu cgc OVERFLOW_LBL))
   (define (check-underflow)
     (debug "check-underflow\n")
-    (load-mem-if-necessary cgc (thread-descriptor underflow-position-offset)
-      (lambda (opnd)
-        (am-cmp cgc opnd fp)
-        (am-jnge cgc UNDERFLOW_LBL))))
+    (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor underflow-position-offset))))
+      (am-cmp cgc opnd fp)
+      (am-jnge cgc UNDERFLOW_LBL)))
+
   (define (check-interrupt)
     (debug "check-interrupt\n")
-    (load-mem-if-necessary cgc (thread-descriptor interrupt-offset)
-      (lambda (opnd)
-        (am-cmp cgc opnd (int-opnd 0) word-width)
-        (am-jnge cgc INTERRUPT_LBL))))
+    (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor interrupt-offset))))
+      (am-cmp cgc opnd (int-opnd 0) word-width)
+      (am-jnge cgc INTERRUPT_LBL)))
 
   (debug "default-poll\n")
   (let ((gvm-instr (code-gvm-instr code))
@@ -764,12 +755,12 @@
 (define (tag-number val mult tag)
   (+ (* mult val) tag))
 
-(define (load-mem-if-necessary cgc mem-to-load f)
+(define (load-opnd-if-necessary cgc opnd-to-load #!optional (register-index 0))
   (if load-store-only
     (begin
-      (am-mov cgc (get-extra-register 0) mem-to-load)
-      (f (get-extra-register 0)))
-    (f mem-to-load)))
+      (am-mov cgc (get-extra-register register-index) opnd-to-load)
+      (get-extra-register register-index))
+    opnd-to-load))
 
 (define (opnd-type opnd)
   (cond
