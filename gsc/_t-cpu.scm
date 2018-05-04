@@ -377,15 +377,14 @@
 ;;    poll cgc ...
 ;;    make-opnd cgc ...
 ;;
-;;  Default methods are given if possible
-;;
-;;
-;;  In case the native architecture is load-store, set load-store-only to true.
-;;  The am-mov instruction acts like both load and store.
+;;  Notes:
+;;    1 - Default methods are given if possible
+;;    2 - In case the native architecture is load-store, set load-store-only to true.
+;;        The am-mov instruction acts like both load and store.
 ;;
 ;;
 ;;  The following non-branching instructions are required:
-;;    am-lbl: Place label
+;;    am-lbl  : Place label
 ;;    am-ret  : Exit program
 ;;    am-mov  : Move value between 2 registers/memory/immediate
 ;;
@@ -690,6 +689,7 @@
 ;; ***** AM: Implementation constants
 
 (define stack-size 10000) ;; Scheme stack size (bytes)
+;; 500 is the safe minimum for (fib 40)
 (define thread-descriptor-size 32) ;; Thread descriptor size (bytes) (Probably too much)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
 (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
@@ -961,7 +961,8 @@
   ;; Thread descriptor reserved space
   ;; Aligns address to 2^8 so the 8 least significant bits are 0
   ;; The 8 lower bytes can be used to store something else. ie: narg
-  ;; Also, it aligns descriptor to cache lines. todo: Check if it changes something
+  ;; Also, it aligns descriptor to cache lines.
+  ;; ##Check if it changes something## Does nothing!!!
   (asm-align cgc 256)
   (am-lbl cgc THREAD_DESCRIPTOR)
   (reserve-space cgc thread-descriptor-size 0) ;; Reserve space for thread-descriptor-size bytes
