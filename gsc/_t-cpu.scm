@@ -690,7 +690,7 @@
 ;; ***** AM: Implementation constants
 
 (define stack-size 10000) ;; Scheme stack size (bytes)
-(define thread-descriptor-size 256) ;; Thread descriptor size (bytes) (Probably too much)
+(define thread-descriptor-size 32) ;; Thread descriptor size (bytes) (Probably too much)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
 (define offs 1) ;; stack offset so that frame[1] is at null offset from fp
 (define runtime-result-register #f)
