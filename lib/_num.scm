@@ -4067,7 +4067,8 @@ for a discussion of branch cuts.
 (define-prim (##number->string x #!optional (rad 10) (force-sign? #f))
   (macro-number-dispatch x '()
     (##exact-int->string x rad force-sign?)
-    (##exact-int->string x rad force-sign?)
+    (let ((normalized-x (or (##bignum->fixnum? x) x))) ;; allow conversion of unnormalized bignums
+      (##exact-int->string normalized-x rad force-sign?))
     (##ratnum->string x rad force-sign?)
     (##flonum->string x rad force-sign?)
     (##cpxnum->string x rad force-sign?)))
