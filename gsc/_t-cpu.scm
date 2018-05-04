@@ -1363,10 +1363,20 @@
 ;; (Isn't specific to x86)
 (define (epilogue-use-result-boolean true-test-jump false-test-jump)
   (lambda (cgc result-action args)
+  (debug "epilogue-use-result-boolean\n")
     (cond
       ((then-jump? result-action)
-        (true-test-jump cgc (then-jump-true-location result-action))
-        (am-jmp cgc (then-jump-false-location result-action)))
+        (let ((true-location  (then-jump-true-location  result-action))
+              (false-location (then-jump-false-location result-action)))
+          (cond
+            ((and true-location false-location)
+              (true-test-jump cgc true-location)
+              (am-jmp cgc false-location))
+            (true-location
+              (true-test-jump cgc true-location))
+            (false-location
+              (false-test-jump cgc false-location)))))
+
       ((then-move? result-action)
         ;; Extract boolean
         (let* ((suffix "_jump")
