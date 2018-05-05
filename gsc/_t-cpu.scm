@@ -73,9 +73,9 @@
   (let* ((code (asm-assemble-to-u8vector cgc))
          (fixups (codegen-context-fixup-list cgc))
          (procedure (u8vector->procedure code fixups)))
-    (display "time-cgc: \n\n\n\n")
-    (asm-display-listing cgc (current-error-port) #t)
-    (pp (time (procedure)))))
+    (asm-display-listing cgc (current-error-port) #f)
+    (pp (##exec-stats procedure))))
+    ; (pp (time (procedure)))))
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -362,10 +362,66 @@
     (time-cgc cgc)))
 
 
+    ; (test-values (iota 0 255) procs)
+; Used somewhere in the code to change a value for the test
+(define test-value #f)
+(define test-results '())
+
+(define (test-values values procs)
+  (if (not (null? values))
+    (let* ((handler x86-64-backend)
+           (cgc (make-codegen-context))
+           (value (car values)))
+
+      ; (display "Number of test remaining: ")
+      ; (display (length values))
+      ; (display "\n")
+      ; (display "Current value: ")
+      ; (display value)
+      ; (display "\n")
+
+      (set! test-value value)
+
+      (reset-state)
+
+      (codegen-context-listing-format-set! cgc 'gnu)
+
+      (handler
+        #f procs
+        #f #f
+        #f #f
+        #f #f
+        cgc)
+
+      (time-test-with-value cgc)
+      (test-values (cdr values) procs))))
+
+(define (time-test-with-value cgc)
+  (let* ((code (asm-assemble-to-u8vector cgc))
+         (fixups (codegen-context-fixup-list cgc))
+         (procedure (u8vector->procedure code fixups))
+         (current-result (##exec-stats procedure)))
+
+    ; (asm-display-listing cgc (current-error-port) #t)
+    (set! test-results (cons (cons test-value current-result) test-results))))
+
+(define (print-results-csv)
+  ; (display "Results: \n")
+  (for-each
+    (lambda (result)
+      (let ((current-value (car result))
+            (current-result (cdr result)))
+        (display current-value)
+        (display ",")
+        (display (cdr (list-ref current-result 3)))
+        (newline)))
+    (reverse test-results)))
+
 (define (reset-state)
   (reset-proc-labels)
   (reset-obj-labels)
   (reset-labels))
+
 ;;;----------------------------------------------------------------------------
 
 ;; ***** Abstract machine (AM)
