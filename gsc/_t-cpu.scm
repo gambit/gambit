@@ -367,7 +367,7 @@
 (define test-value #f)
 (define test-results '())
 
-(define (test-values values procs)
+(define (test-values values sample-count procs)
   (if (not (null? values))
     (let* ((handler x86-64-backend)
            (cgc (make-codegen-context))
@@ -393,27 +393,34 @@
         #f #f
         cgc)
 
-      (time-test-with-value cgc)
-      (test-values (cdr values) procs))))
+      (time-test-with-value cgc sample-count)
+      (test-values (cdr values) sample-count procs))))
 
-(define (time-test-with-value cgc)
+(define (time-test-with-value cgc sample-count)
   (let* ((code (asm-assemble-to-u8vector cgc))
          (fixups (codegen-context-fixup-list cgc))
          (procedure (u8vector->procedure code fixups))
-         (current-result (##exec-stats procedure)))
+         (samples (map
+                  (lambda (x) (##exec-stats procedure))
+                  (iota 1 sample-count))))
 
-    ; (asm-display-listing cgc (current-error-port) #t)
-    (set! test-results (cons (cons test-value current-result) test-results))))
+      ; (asm-display-listing cgc (current-error-port) #t)
+      (set! test-results (cons (cons test-value samples) test-results))))
 
 (define (print-results-csv)
-  ; (display "Results: \n")
+  (display "Results: \n")
+  (display "Value,Time \n")
   (for-each
     (lambda (result)
-      (let ((current-value (car result))
-            (current-result (cdr result)))
+      (let* ((current-value (car result))
+             (samples (cdr result)))
+
         (display current-value)
-        (display ",")
-        (display (cdr (list-ref current-result 3)))
+        (for-each
+          (lambda (sample)
+            (display ",")
+            (display (cdr (list-ref sample 3))))
+          samples)
         (newline)))
     (reverse test-results)))
 
