@@ -327,7 +327,7 @@
   ;                     unique-name))
 
   (let ((port (current-output-port)))
-      ; (virtual.dump-gvm procs port)
+      (virtual.dump-gvm procs port)
       (dispatch-target targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
   #f))
 
