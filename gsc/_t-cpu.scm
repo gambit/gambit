@@ -1241,10 +1241,18 @@
       (compiler-internal-error "format-object - Unknown object type: " desc))))
 
 (define (get-object-description object)
+  ;; todo: Use macro to shorten code and reduce repetition
   (cond
-    ((string? object) string-obj-desc)
-    ((fixnum? object) fixnum-obj-desc)
-    ((pair? object)   pair-obj-desc)
+    ;; Fixnum
+    ((fixnum? object)     fixnum-obj-desc)
+    ;; Special int values
+    ((boolean? object)    boolean-obj-desc)
+    ((null? object)       nil-obj-desc)
+    ((eof-object? object) eof-obj-desc)
+    ;; Pair
+    ((pair? object)       pair-obj-desc)
+    ;; Subtypes
+    ((string? object)     string-obj-desc)
     (else (compiler-internal-error "Unknown object type: " object))))
 
 (define (get-desc-pointer-tag desc)
@@ -1261,11 +1269,13 @@
       (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
 
 ;; Pointer tagging constants
-(define fixnum-tag 0)
-(define object-tag 1)
+(define tag-mult        4)
+(define tag-width       2) ;(ceiling (/ (log tag-mult) (log 2))))
+
+(define fixnum-tag      0)
+(define object-tag      1)
 (define special-int-tag 2)
-(define pair-tag 3)
-(define tag-mult 4)
+(define pair-tag        3)
 
 (define (tag-number val tag)
   (+ (* tag-mult val) tag))
