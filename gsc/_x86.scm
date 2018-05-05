@@ -1784,3 +1784,9 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
          (general width))))
 
 ;;;============================================================================
+
+;; Comment in listing
+
+(define (x86-comment cgc text)
+  (if (codegen-context-listing-format cgc)
+    (asm-listing cgc (string-append "## " text " ##"))))
