@@ -1771,9 +1771,3 @@
          (general width))))
 
 ;;;============================================================================
-
-;; Comment in listing
-
-(define (x86-comment cgc text)
-  (if (codegen-context-listing-format cgc)
-    (asm-listing cgc (string-append "## " text " ##"))))
