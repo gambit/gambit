@@ -320,14 +320,14 @@
                   sem-changing-options
                   sem-preserving-options)
 
-  (pretty-print (list 'cpu-dump
-                      (target-name targ)
-                      (map proc-obj-name procs)
-                      output
-                      unique-name))
+  ; (pretty-print (list 'cpu-dump
+  ;                     (target-name targ)
+  ;                     (map proc-obj-name procs)
+  ;                     output
+  ;                     unique-name))
 
   (let ((port (current-output-port)))
-      (virtual.dump-gvm procs port)
+      ; (virtual.dump-gvm procs port)
       (dispatch-target targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
   #f))
 
@@ -576,7 +576,7 @@
 
 (define (default-make-opnd cgc proc code opnd context)
   (define (make-obj val)
-    (display "make-obj")
+    (debug "make-obj")
     (cond
       ((proc-obj? val)
         (if (eqv? context 'jump)
@@ -1435,7 +1435,7 @@
     ((immediate-desc? obj-desc)
       (make-primitive
         (prologue-mov-args '((reg)))
-        (lambda (cgc result-action args) (display "test!") (am-test cgc (car args) (int-opnd 3)))
+        (lambda (cgc result-action args) (am-test cgc (car args) (int-opnd 3)))
         (epilogue-use-result-boolean am-jne am-je)))
     ; ((reference-desc? obj-desc)
     ;   #f))
