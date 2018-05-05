@@ -1164,9 +1164,8 @@
 
     (let* ((prim (get-prim-obj (proc-obj-name (ifjump-test gvm-instr))))
            (then (then-jump true-label false-label))
-           (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (ifjump-opnds gvm-instr)))
-           (opnds (append (list cgc then) args)))
-      (apply prim opnds))))
+           (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (ifjump-opnds gvm-instr))))
+      (prim cgc then args))))
 
 ;; ***** Apply instruction encoding
 
@@ -1176,9 +1175,8 @@
 
     (let* ((prim (get-prim-obj (proc-obj-name (apply-prim gvm-instr))))
            (then (then-move (make-opnd cgc proc code (apply-loc gvm-instr) #f)))
-           (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (apply-opnds gvm-instr)))
-           (opnds (append (list cgc then) args)))
-      (apply prim opnds))))
+           (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (apply-opnds gvm-instr))))
+      (prim cgc then args))))
 
 ;; ***** Copy instruction encoding
 
@@ -1342,7 +1340,7 @@
 (define (then-return? then) (eqv? 'return (car then)))
 
 (define (make-primitive prologue asm-fun epilogue)
-  (lambda (cgc result-action . args)
+  (lambda (cgc result-action args)
     (debug "Before prologue\n")
     (let* ((prologue-result (prologue cgc result-action args)))
       (debug "After prologue\n")
@@ -1350,6 +1348,10 @@
       (debug "After asm-fun\n")
       (epilogue cgc result-action prologue-result)
       (debug "After epilogue\n"))))
+
+(define (wrap-asm-fun asm-fun)
+  (lambda (cgc result-action args)
+    (apply asm-fun (cons cgc args))))
 
 ;; Apply prologues linearly.
 ;; Applies the modifies arguments returned by the prologue into the next
@@ -1493,14 +1495,14 @@
     '((reg) (reg int))
     '((reg) (reg int mem))))
 
-(define (arithmetic-prim asm-fun return-type allowed-opnds  commutative)
+(define (arithmetic-prim asm-fun return-type allowed-opnds commutative)
   (let ((commutative-prologue (if commutative prologue-commute idlogue)))
     (make-primitive
       (compose-prologues
         commutative-prologue
         (prologue-mov-args allowed-opnds))
 
-      (lambda (cgc result-action args) (apply asm-fun (cons cgc args)))
+      (wrap-asm-fun asm-fun)
 
       (if (equal? 'boolean (car return-type))
           (apply epilogue-use-result-boolean (cdr return-type))
