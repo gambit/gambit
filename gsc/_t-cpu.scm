@@ -360,9 +360,9 @@
       cgc)
 
     (time-cgc cgc)))
+    ; (test-values (iota 0 64) 10 procs)
+    ; (print-results-csv)))
 
-
-    ; (test-values (iota 0 255) procs)
 ; Used somewhere in the code to change a value for the test
 (define test-value #f)
 (define test-results '())
