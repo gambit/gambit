@@ -73,9 +73,9 @@
   (let* ((code (asm-assemble-to-u8vector cgc))
          (fixups (codegen-context-fixup-list cgc))
          (procedure (u8vector->procedure code fixups)))
-    (asm-display-listing cgc (current-error-port) #f)
-    (pp (##exec-stats procedure))))
-    ; (pp (time (procedure)))))
+    (asm-display-listing cgc (current-error-port) #t)
+    ; (pp (##exec-stats procedure))))
+    (pp (time (procedure)))))
 
 ;;;----------------------------------------------------------------------------
 ;;
