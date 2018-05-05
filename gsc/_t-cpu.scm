@@ -657,7 +657,9 @@
       ((reference-desc? (get-object-description val))
         (if (eqv? context 'jump)
           (make-object-label cgc (obj-val opnd))
-          (lbl-opnd (make-object-label cgc (obj-val opnd)))))
+          (lbl-opnd
+            (make-object-label cgc (obj-val opnd))
+            (get-desc-pointer-tag (get-object-description val)))))
       (else
         (compiler-internal-error "default-make-opnd: Unknown object type"))))
   (cond
@@ -671,6 +673,7 @@
         (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
     ((lbl? opnd)
       (debug "lbl\n")
+      ;;todo : Check if correct.
       (if (eqv? context 'jump)
         (get-proc-label cgc proc (lbl-num opnd))
         (lbl-opnd (get-proc-label cgc proc (lbl-num opnd)))))
