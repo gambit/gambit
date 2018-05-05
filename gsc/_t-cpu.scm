@@ -507,6 +507,7 @@
 
 (define word-width 64)
 (define word-width-bytes 8)
+(define endianness 'be)
 (define load-store-only #f)
 (define enable-poll #t)
 
@@ -986,8 +987,12 @@
 
   (debug "x64-setup\n")
 
+  (set! word-width 64)
+  (set! word-width-bytes 8)
+  (set! endianness 'le)
   (set! load-store-only #f)
   (set! enable-poll #t)
+
   (register-setup)
   (opnds-setup)
   (instructions-setup)
