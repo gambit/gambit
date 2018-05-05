@@ -361,6 +361,11 @@
 
     (time-cgc cgc)))
 
+
+(define (reset-state)
+  (reset-proc-labels)
+  (reset-obj-labels)
+  (reset-labels))
 ;;;----------------------------------------------------------------------------
 
 ;; ***** Abstract machine (AM)
@@ -621,6 +626,7 @@
 
 ;; Key: Label id
 ;; Value: Pair (Label, optional Proc-obj)
+(define (reset-proc-labels) (set! proc-labels (make-table test: equal?)))
 (define proc-labels (make-table test: equal?))
 
 (define (get-proc-label cgc proc gvm-lbl)
@@ -653,6 +659,7 @@
 
 ; ***** AM: Object table and object creation
 
+(define (reset-obj-labels) (set! obj-labels (make-table test: equal?)))
 (define obj-labels (make-table test: equal?))
 
 ;; Store object reference or as int ???
@@ -676,6 +683,15 @@
   unique-id)
 
 ;; ***** AM: Important labels
+
+(define (reset-labels)
+  (set! THREAD_DESCRIPTOR (asm-make-label cgc 'THREAD_DESCRIPTOR))
+  (set! C_START_LBL (asm-make-label cgc 'C_START_LBL))
+  (set! C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
+  (set! WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
+  (set! OVERFLOW_LBL (asm-make-label cgc 'OVERFLOW_LBL))
+  (set! UNDERFLOW_LBL (asm-make-label cgc 'UNDERFLOW_LBL))
+  (set! INTERRUPT_LBL (asm-make-label cgc 'INTERRUPT_LBL)))
 
 (define THREAD_DESCRIPTOR (asm-make-label cgc 'THREAD_DESCRIPTOR))
 (define C_START_LBL (asm-make-label cgc 'C_START_LBL))
