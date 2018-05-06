@@ -186,13 +186,13 @@
 
 (define (default-check-narg cgc narg)
   (debug "default-check-narg: " narg "\n")
-  (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor narg-offset))))
+  (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor 'narg))))
     (am-cmp cgc opnd (int-opnd narg))
     (am-jne cgc WRONG_NARGS_LBL)))
 
 (define (default-set-narg cgc narg)
   (debug "default-set-narg: " narg "\n")
-  (am-mov cgc (thread-descriptor narg-offset) (int-opnd narg)))
+  (am-mov cgc (thread-descriptor 'narg) (int-opnd narg)))
 
 (define (default-poll cgc code)
   ;; Reminder: sp is the real stack pointer and fp is the simulated stack pointer
@@ -208,13 +208,13 @@
     (am-jngu cgc OVERFLOW_LBL))
   (define (check-underflow)
     (debug "check-underflow\n")
-    (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor underflow-position-offset))))
+    (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor 'underflow-position))))
       (am-cmp cgc opnd fp)
       (am-jnge cgc UNDERFLOW_LBL)))
 
   (define (check-interrupt)
     (debug "check-interrupt\n")
-    (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor interrupt-offset))))
+    (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor 'interrupt-flag))))
       ;; Todo: Compare exec time for 1 byte vs 8 bytes opnd
       (am-cmp cgc opnd (int-opnd 0) word-width)
       (am-jnge cgc INTERRUPT_LBL)))
@@ -373,11 +373,6 @@
 (define frame-offset 1) ;; stack offset so that frame[1] is at null offset from fp
 (define runtime-result-register #f)
 
-;; Thread descriptor offsets:
-(define underflow-position-offset 8)
-(define interrupt-offset 16)
-(define narg-offset 24)
-
 ;; 64 = 01000000_2 = 0x40. -64 = 11000000_2 = 0xC0
 ;; 0xC0 unsigned = 192
 (define na-reg-default-value -64)
@@ -409,8 +404,19 @@
 (define (frame cgc fs n)
   (mem-opnd (* (+ fs (- n) frame-offset) word-width-bytes) fp))
 
-(define (thread-descriptor offset)
-  (mem-opnd (- offset na-reg-default-value-abs) dp))
+;; Can return either a memory location or a register
+(define (thread-descriptor sym)
+  (let ((opnd
+          (case sym
+            ('underflow-position (* 0 word-width-bytes))
+            ('interrupt-flag (* 1 word-width-bytes))
+            ('narg      (* 2 word-width-bytes))
+            (else (compiler-internal-error "Unknown thread-descriptor symbol")))))
+
+    ;; (not (fixnum? opnd)) <=> not mem-opnd
+    (if (fixnum? opnd)
+      (mem-opnd (- opnd na-reg-default-value-abs) dp)
+      opnd)))
 
 (define (load-opnd-if-necessary cgc opnd-to-load #!optional (register-index 0))
   (if load-store-only
