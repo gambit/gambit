@@ -1472,7 +1472,10 @@
                 (not (equal? result-action-location (car args))))
             (am-mov cgc result-action-location (car args)))))
       ((then-return? result-action)
-        (am-jmp cgc  (get-register 0)))
+        (am-jmp cgc (get-register 0)))
+      ((not result-action)
+        ;; Do nothing
+        #f)
       (else
         (compiler-internal-error "epilogue-use-result-default - Unknown result-action" result-action))))
 
@@ -1515,6 +1518,9 @@
             (true-test-jump cgc return-loc)
             (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
             (am-jmp cgc return-loc)))
+      ((not result-action)
+        ;; Do nothing
+        #f)
       (else
         (compiler-internal-error "epilogue-use-result-boolean - Unknown result-action" result-action)))))
 
