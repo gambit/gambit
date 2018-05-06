@@ -1503,9 +1503,9 @@
                (label (make-unique-label cgc suffix))
                (result-loc (then-move-store-location result-action)))
 
-            (am-mov cgc result-loc (int-opnd 1)) ;; todo true value
+            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #t))))
             (true-test-jump cgc label)
-            (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
+            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #f))))
             (am-lbl cgc label)))
       ((then-return? result-action)
         ;; Extract boolean then jump
@@ -1514,9 +1514,10 @@
                (result-loc (get-register 1))
                (return-loc (get-register 0)))
 
-            (am-mov cgc result-loc (int-opnd 1)) ;; todo true value
-            (true-test-jump cgc return-loc)
-            (am-mov cgc result-loc (int-opnd 0)) ;; todo false value
+            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #t))))
+            (true-test-jump cgc label)
+            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #f))))
+            (am-lbl cgc label)
             (am-jmp cgc return-loc)))
       ((not result-action)
         ;; Do nothing
