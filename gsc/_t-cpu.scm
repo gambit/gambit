@@ -1058,9 +1058,12 @@
   (reserve-space cgc thread-descriptor-size 0) ;; Reserve space for thread-descriptor-size bytes
 
   ;; Add primitives
+  (debug "Adding primitives\n")
   (table-for-each
     (lambda (key val) (put-primitive-if-needed cgc key val))
     proc-labels)
+
+  (debug "Adding objects\n")
   ;; Add objects
   (table-for-each
     (lambda (key val) (put-objects cgc key val))
@@ -1074,10 +1077,11 @@
           (proc (cadr pair))
           (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
     (if (not defined?)
-      (let ((prim (get-prim-obj (proc-obj-name proc))))
-          ;; todo: Complete here
+      (let ((prim (get-prim-obj (proc-obj-name proc)))
+            (then (then-return))
+            (args (list (get-register 1) (get-register 2) (get-register 3)))) ;; todo : Find way to get arity
           (am-lbl cgc label)
-          (prim cgc (then-return) (get-register 1) (get-register 2) (get-register 3) (get-register 4)) ;; todo : Find way to get arity
+          (prim cgc then args)
         ))))
 
 (define (put-objects cgc obj label)
