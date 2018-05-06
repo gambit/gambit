@@ -1230,7 +1230,7 @@
   (compiler-internal-error
     "x64-encode-switch-instr: switch instruction not implemented"))
 
-;; ***** Memory model
+;; ***** Object encoding
 
 ; data ObjectDescription = Immediate {
 ;   type :: ImmediateType,
@@ -1386,22 +1386,31 @@
 (define (then-return) '(return))
 (define (then-return? then) (eqv? 'return (car then)))
 
+;;  Most primitives can be split in 3 parts:
+;;    Prologue:
+;;      Function setup
+;;      Can be useful to optimize arguments order or load operands that can't
+;;      be used as is by the function,
+;;
+;;    Useful function:
+;;      Usually a simple call to am-instr
+;;
+;;    Epilogue:
+;;      Extract result from function and place it where it should be.
+;;      Put back stuff changed by primitive (e.g. pop registers that may have spilled)
 (define (make-primitive prologue asm-fun epilogue)
   (lambda (cgc result-action args)
-    (debug "Before prologue\n")
     (let* ((prologue-result (prologue cgc result-action args)))
-      (debug "After prologue\n")
       (asm-fun cgc result-action prologue-result)
-      (debug "After asm-fun\n")
-      (epilogue cgc result-action prologue-result)
-      (debug "After epilogue\n"))))
+      (epilogue cgc result-action prologue-result))))
 
+;; Saves 1 line! Yay
 (define (wrap-asm-fun asm-fun)
   (lambda (cgc result-action args)
     (apply asm-fun (cons cgc args))))
 
 ;; Apply prologues linearly.
-;; Applies the modifies arguments returned by the prologue into the next
+;; Applies the modified arguments returned by the previous prologue into the next
 (define (compose-prologues . progs)
   (define (loop prologues)
     (if (null? prologues)
@@ -1415,7 +1424,7 @@
 
 (define compose-epilogues compose-prologues)
 
-;; Identity prologue
+;; Identity prologue/epilogue
 (define (idlogue cgc result-action args) args)
 
 ;; Prologue for primitives that are commutative.
