@@ -763,12 +763,16 @@
 (define THREAD_DESCRIPTOR (asm-make-label cgc 'THREAD_DESCRIPTOR))
 (define C_START_LBL (asm-make-label cgc 'C_START_LBL))
 (define C_RETURN_LBL (asm-make-label cgc 'C_RETURN_LBL))
+(define TEST_CODE_LBL (asm-make-label cgc 'TEST_CODE_LBL))
+
 ;; Exception handling procedures
 (define WRONG_NARGS_LBL (asm-make-label cgc 'WRONG_NARGS_LBL))
 (define OVERFLOW_LBL (asm-make-label cgc 'OVERFLOW_LBL))
 (define UNDERFLOW_LBL (asm-make-label cgc 'UNDERFLOW_LBL))
 (define INTERRUPT_LBL (asm-make-label cgc 'INTERRUPT_LBL))
 (define TYPE_ERROR_LBL (asm-make-label cgc 'TYPE_ERROR_LBL))
+
+(define TEST_DATA_LBL (asm-make-label cgc 'TEST_DATA))
 
 ;; ***** AM: Implementation constants
 
@@ -1019,6 +1023,13 @@
   (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
   (am-lda cgc fp (mem-opnd (* offs (- word-width-bytes)) sp)) ;; Align frame with offset
   (am-sub cgc sp (int-opnd stack-size)) ;; Allocate space for stack
+
+  (am-lbl cgc TEST_CODE_LBL)
+
+  ;; Test code here
+
+
+  ;; Narg set
   (am-set-narg cgc 0))
 
 (define (add-end-routine cgc)
@@ -1068,6 +1079,9 @@
   (table-for-each
     (lambda (key val) (put-objects cgc key val))
     obj-labels)
+
+  (am-lbl cgc TEST_DATA_LBL)
+  ; (apply am-dd (cons cgc (format-object string-obj-desc "Laurent")))
 )
 
 ;; Value is Pair (Label, optional Proc-obj)
