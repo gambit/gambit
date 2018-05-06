@@ -1298,13 +1298,16 @@
       (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
 
 ;; Pointer tagging constants
-(define tag-mult        4)
-(define tag-width       2) ;(ceiling (/ (log tag-mult) (log 2))))
+(define header-tag-width  5)
+(define header-tag-offset 3)
 
-(define fixnum-tag      0)
-(define object-tag      1)
-(define special-int-tag 2)
-(define pair-tag        3)
+(define tag-mult          4)
+(define tag-width         2) ;(ceiling (/ (log tag-mult) (log 2))))
+
+(define fixnum-tag        0)
+(define object-tag        1)
+(define special-int-tag   2)
+(define pair-tag          3)
 
 (define (tag-number val tag)
   (+ (* tag-mult val) tag))
@@ -1351,11 +1354,16 @@
 (define (get-prim-obj prim-name)
   (debug "get-prim-obj: " prim-name "\n")
   (case (string->symbol prim-name)
-      ('##fx+ (x86-prim-fx+))
-      ('##fx- (x86-prim-fx-))
-      ('##fx< (x86-prim-fx<))
-      ; ('##fx* (x86-prim-fx-))
-      ; ('##fx/ (x86-prim-fx-))
+      ('##fx+         (x86-prim-fx+))
+      ('##fx-         (x86-prim-fx-))
+      ('##fx<         (x86-prim-fx<))
+      ; ('##fx*         (x86-prim-fx<))
+      ; ('##fx/         (x86-prim-fx<))
+      ('##fixnum?     (x86-prim-fixnum?))
+      ('##pair?       (x86-prim-pair?))
+      ('##boolean?    (x86-prim-boolean?))
+      ('##null?       (x86-prim-null?))
+      ('##string?     (x86-prim-string?))
       ; ('display (prim-info-display))
       (else
         (compiler-internal-error "Primitive not implemented: " prim-name))))
@@ -1554,26 +1562,82 @@
           (apply epilogue-use-result-boolean (cdr return-type))
           epilogue-use-result-default))))
 
-
 ;; ***** Memory read primitives
 
+(define (x86-prim-fixnum?)
+  (type-check-primitive fixnum-obj-desc))
+
+(define (x86-prim-string?)
+  (type-check-primitive string-obj-desc))
+
+(define (x86-prim-pair?)
+  (type-check-primitive pair-obj-desc))
+
+(define (x86-prim-boolean?)
+  (type-check-primitive boolean-obj-desc))
+
+(define (x86-prim-null?)
+  (type-check-primitive null-obj-desc))
+
+(define (prim-test)
+  (let ((allowed-opnds (if load-store-only
+                        '((reg) (reg int))
+                        '((reg mem) (reg int)))))
+    (make-primitive
+      (prologue-mov-args allowed-opnds)
+      (wrap-asm-fun am-test)
+      (epilogue-use-result-boolean am-je am-jne))))
+
 (define (type-check-primitive obj-desc)
+  (define (test-pointer-tag cgc result-action opnd obj-desc)
+    ;; todo : Test if bit shifting is faster. Probably not, but may be interesting
+    (let ((cmp-opnd (int-opnd (flip-bits (get-desc-pointer-tag obj-desc) tag-width))))
+      ((prim-test) cgc result-action (list opnd cmp-opnd))))
+
   (cond
     ((immediate-desc? obj-desc)
-      (make-primitive
-        (prologue-mov-args '((reg)))
-        (lambda (cgc result-action args) (am-test cgc (car args) (int-opnd 3)))
-        (epilogue-use-result-boolean am-jne am-je)))
-    ; ((reference-desc? obj-desc)
-    ;   #f))
+      (lambda (cgc result-action args)
+        (debug "Immediate value type check\n")
+        (test-pointer-tag cgc result-action (car args) obj-desc)))
+
+    ((reference-desc? obj-desc)
+      (lambda (cgc result-action args)
+        (debug "Reference value type check\n")
+        (let* ((arg (car args))
+               (offset (get-desc-pointer-tag obj-desc))
+               (header-mem-location (get-opnd-with-offset arg (- offset))))
+
+          (test-pointer-tag
+            cgc
+            (then-jump #f (then-jump-false-location result-action))
+            arg
+            obj-desc)
+
+          ;; Continues execution only if tag match subtype or pair
+          ;; Now check if header tag is valid
+
+          (am-mov cgc (get-extra-register 0) header-mem-location)
+
+          (let* ((flipped (flip-bits (reference-header-tag obj-desc) header-tag-width))
+                 (shifted (* (expt 2 header-tag-offset) flipped))
+                 (cmp-opnd (int-opnd flipped)))
+            ((prim-test) cgc result-action (list (get-extra-register 0) cmp-opnd))))))
     (else
       (compiler-internal-error "Unknown object description"))))
 
-; (define (read-header-prim obj-desc)
-;   (lambda ()))
+(define (get-opnd-with-offset opnd offset)
+  (case (opnd-type opnd)
+    ('reg
+      (mem-opnd offset opnd))
+    ('mem
+      (mem-opnd (+ (mem-opnd-offset opnd) offset) (mem-opnd-reg opnd)))
+    ('lbl
+      (lbl-opnd (lbl-opnd-label opnd) (+ (lbl-opnd-offset opnd) offset)))
+    ('int
+      (mem-opnd (+ (int-opnd-value opnd) offset)))))
 
-; (define (read-body-prim obj-desc)
-;   (lambda ()))
+(define (flip-bits num width)
+  (- (- (expt 2 width) 1) num))
 
 ;;;----------------------------------------------------------------------------
 
