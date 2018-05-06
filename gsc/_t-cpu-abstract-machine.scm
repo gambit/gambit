@@ -107,11 +107,11 @@
 (define mem-opnd? #f)
 (define reg-opnd? #f)
 
-(define int-opnd-value #f)
+(define int-opnd-value  #f)
 (define lbl-opnd-offset #f)
-(define lbl-opnd-label #f)
+(define lbl-opnd-label  #f)
 (define mem-opnd-offset #f)
-(define mem-opnd-reg #f)
+(define mem-opnd-reg    #f)
 
 ;; ***** AM: Instructions
 ;; ***** AM: Instructions: Misc
@@ -134,10 +134,10 @@
 
 ;; ***** AM: Instructions: Boolean arithmetic
 
-(define am-not #f)
-(define am-and #f)
-(define am-or  #f)
-(define am-xor #f)
+(define am-not  #f)
+(define am-and  #f)
+(define am-or   #f)
+(define am-xor  #f)
 (define am-test #f)
 
 ;; ***** AM: Instructions: Branch
@@ -215,6 +215,7 @@
   (define (check-interrupt)
     (debug "check-interrupt\n")
     (let ((opnd (load-opnd-if-necessary cgc (thread-descriptor interrupt-offset))))
+      ;; Todo: Compare exec time for 1 byte vs 8 bytes opnd
       (am-cmp cgc opnd (int-opnd 0) word-width)
       (am-jnge cgc INTERRUPT_LBL)))
 
@@ -234,8 +235,8 @@
     (cond
       ((proc-obj? val)
         (if (eqv? context 'jump)
-          (get-proc-label cgc (obj-val opnd) 1)
-          (lbl-opnd (get-proc-label cgc (obj-val opnd) 1))))
+          (get-proc-label cgc (obj-val opnd) #f)
+          (lbl-opnd (get-proc-label cgc (obj-val opnd) #f))))
       ((immediate-desc? (get-object-description val))
           (int-opnd
             (car (format-object (get-object-description val) val))
@@ -267,9 +268,10 @@
       (debug "obj\n")
       (make-obj (obj-val opnd)))
     ((glo? opnd)
-      (debug "glo: " (glo-name opnd) "\n")
+      (debug "glo\n")
       (compiler-internal-error "default-make-opnd: Opnd not implementeted global"))
     ((clo? opnd)
+      (debug "clo\n")
       (compiler-internal-error "default-make-opnd: Opnd not implementeted closure"))
     (else
       (compiler-internal-error "default-make-opnd: Unknown opnd: " opnd))))
@@ -366,9 +368,9 @@
 
 (define stack-size 10000) ;; Scheme stack size (bytes)
 ;; 500 is the safe minimum for (fib 40)
-(define thread-descriptor-size 32) ;; Thread descriptor size (bytes) (Probably too much)
+(define thread-descriptor-size 32) ;; Thread descriptor size (bytes)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
-(define offs 1) ;; stack offset so that frame[1] is at null offset from fp
+(define frame-offset 1) ;; stack offset so that frame[1] is at null offset from fp
 (define runtime-result-register #f)
 
 ;; Thread descriptor offsets:
@@ -405,7 +407,7 @@
     (am-sub cgc fp (int-opnd (* n word-width-bytes)))))
 
 (define (frame cgc fs n)
-  (mem-opnd (* (+ fs (- n) offs) 8) fp))
+  (mem-opnd (* (+ fs (- n) frame-offset) word-width-bytes) fp))
 
 (define (thread-descriptor offset)
   (mem-opnd (- offset na-reg-default-value-abs) dp))
