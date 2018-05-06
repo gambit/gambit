@@ -217,12 +217,12 @@
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc na (int-opnd na-reg-default-value word-width))
   ;; Set underflow position to current stack pointer position
-  (am-mov cgc (thread-descriptor underflow-position-offset) sp)
+  (am-mov cgc (thread-descriptor 'underflow-position) sp)
   ;; Set interrupt flag to current stack pointer position
-  (am-mov cgc (thread-descriptor interrupt-offset) (int-opnd 0) word-width)
+  (am-mov cgc (thread-descriptor 'interrupt-flag) (int-opnd 0) word-width)
 
   (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
-  (am-lda cgc fp (mem-opnd (* offs (- word-width-bytes)) sp)) ;; Align frame with offset
+  (am-lda cgc fp (mem-opnd (* frame-offset (- word-width-bytes)) sp)) ;; Align frame with offset
   (am-sub cgc sp (int-opnd stack-size)))
 
 ;; End routine
@@ -247,7 +247,7 @@
   (am-lbl cgc INTERRUPT_LBL)   ;; Interrupts handling
   (am-lbl cgc TYPE_ERROR_LBL)  ;; Type error handling
 
-  (am-mov cgc fp (thread-descriptor underflow-position-offset)) ;; Pop stack
+  (am-mov cgc fp (thread-descriptor 'underflow-position)) ;; Pop stack
 
   ;; Pop remaining stack (Everything allocated but stack size)
   (am-add cgc sp (int-opnd stack-size))
