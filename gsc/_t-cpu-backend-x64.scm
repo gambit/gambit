@@ -210,34 +210,20 @@
 (define (x64-init-routine cgc)
   (debug "put-init-routine\n")
 
-  (display "CGC:")
-;   (display cgc)
-  (newline)
-
-  (display 0)
-;   (display cgc)
-;   (display C_START_LBL)
   (am-lbl cgc C_START_LBL) ;; Initial procedure label
-  (display 1)
   ;; Thread descriptor initialization
   ;; Set thread descriptor address
   (am-mov cgc dp (lbl-opnd THREAD_DESCRIPTOR))
-  (display 2)
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc na (int-opnd na-reg-default-value word-width))
-  (display 3)
   ;; Set underflow position to current stack pointer position
   (am-mov cgc (thread-descriptor underflow-position-offset) sp)
-  (display 4)
   ;; Set interrupt flag to current stack pointer position
   (am-mov cgc (thread-descriptor interrupt-offset) (int-opnd 0) word-width)
-  (display 5)
 
   (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
   (am-lda cgc fp (mem-opnd (* offs (- word-width-bytes)) sp)) ;; Align frame with offset
-  (am-sub cgc sp (int-opnd stack-size))
-
-  (display "TEST\n")) ;; Allocate space for stack
+  (am-sub cgc sp (int-opnd stack-size)))
 
 ;; End routine
 ;; Gets executed after main if no error happened during execution
