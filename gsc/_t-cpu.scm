@@ -460,6 +460,9 @@
 ;;    am-add  : (Add imm/reg to register). If load-store-only, mem can be used as opn
 ;;    am-sub  : (Add imm/reg to register). If load-store-only, mem can be used as opn
 ;;
+;;    am-bit-shift-right : Shifts register to the right by some constant
+;;    am-bit-shift-left  : Shifts register to the left by some constant
+;;
 ;;    am-not  : Logical not
 ;;    am-and  : Logical and
 ;;    am-or   : Logical or
@@ -907,6 +910,9 @@
     (set! am-lda x86-lea)
     (set! am-ret x86-ret)
     (set! am-cmp x86-cmp)
+
+    (set! am-bit-shift-right x86-shr)
+    (set! am-bit-shift-left  x86-shl)
 
     (set! am-not x86-not)
     (set! am-and x86-and)
