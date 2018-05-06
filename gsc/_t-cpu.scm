@@ -1597,6 +1597,10 @@
       (wrap-asm-fun am-test)
       (epilogue-use-result-boolean am-je am-jne))))
 
+(define (read-reference cgc dest ref tag offset)
+  (let* ((mem-location (get-opnd-with-offset ref (- tag))))
+    (am-mov cgc dest mem-location)))
+
 (define (type-check-primitive obj-desc)
   (define (test-pointer-tag cgc result-action opnd obj-desc)
     ;; todo : Test if bit shifting is faster. Probably not, but may be interesting
@@ -1613,24 +1617,29 @@
       (lambda (cgc result-action args)
         (debug "Reference value type check\n")
         (let* ((arg (car args))
-               (offset (get-desc-pointer-tag obj-desc))
-               (header-mem-location (get-opnd-with-offset arg (- offset))))
+               (suffix "_jump")
+               (label (make-unique-label cgc suffix)))
 
           (test-pointer-tag
             cgc
-            (then-jump #f (then-jump-false-location result-action))
+            (then-jump #f label)
             arg
             obj-desc)
 
           ;; Continues execution only if tag match subtype or pair
           ;; Now check if header tag is valid
 
-          (am-mov cgc (get-extra-register 0) header-mem-location)
-
           (let* ((flipped (flip-bits (reference-header-tag obj-desc) header-tag-width))
                  (shifted (* (expt 2 header-tag-offset) flipped))
                  (cmp-opnd (int-opnd flipped)))
-            ((prim-test) cgc result-action (list (get-extra-register 0) cmp-opnd))))))
+            ; Read then compare
+            (read-reference cgc (get-extra-register 0) arg (get-desc-pointer-tag obj-desc) 0)
+            ((prim-test) cgc result-action (list (get-extra-register 0) cmp-opnd)))
+
+          ;; If first test fails, jump here
+          (am-lbl cgc label)
+          (am-mov cgc (get-register 1) (int-opnd (car (format-object boolean-obj-desc #t))))
+          (am-jmp cgc (get-register 0)))))
     (else
       (compiler-internal-error "Unknown object description"))))
 
