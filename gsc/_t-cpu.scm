@@ -768,6 +768,7 @@
 (define OVERFLOW_LBL (asm-make-label cgc 'OVERFLOW_LBL))
 (define UNDERFLOW_LBL (asm-make-label cgc 'UNDERFLOW_LBL))
 (define INTERRUPT_LBL (asm-make-label cgc 'INTERRUPT_LBL))
+(define TYPE_ERROR_LBL (asm-make-label cgc 'TYPE_ERROR_LBL))
 
 ;; ***** AM: Implementation constants
 
@@ -1037,6 +1038,8 @@
   (am-lbl cgc UNDERFLOW_LBL)
   ;; Interrupts handling
   (am-lbl cgc INTERRUPT_LBL)
+  ;; Type error handling
+  (am-lbl cgc TYPE_ERROR_LBL)
   ;; Pop stack
   (am-mov cgc fp (thread-descriptor underflow-position-offset))
   (am-mov cgc (get-register 0) (int-opnd -1)) ;; Error value
@@ -1243,7 +1246,7 @@
     ((reference-desc? desc)
       (let* ((object-length ((reference-header-fun desc) object))
              (tag (reference-header-tag desc))
-             (header (+ tag (* 256 object-length))))
+             (header (+ (* 8 tag) (* 256 object-length))))
       (cons header ((reference-encode-fun desc) object))))
     (else
       (compiler-internal-error "format-object - Unknown object type: " desc))))
@@ -1314,7 +1317,7 @@
 ;; Reference types
 
 (define string-obj-desc
-  (let ((subtype 158)
+  (let ((subtype 31) ;; 11111_b
         (header-fun (lambda (val) (* 4 (string-length val))))
         (encode-fun (lambda (val) (map char->integer (string->list val)))))
     (reference-desc 'subtype subtype header-fun encode-fun)))
