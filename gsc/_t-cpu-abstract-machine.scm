@@ -452,10 +452,10 @@
 ;; Get appropriate am-db, am-dw, am-dd, am-dq
 (define (am-data-width width)
   (case width
-    (8  am-db)
-    (16 am-dw)
-    (32 am-dd)
-    (64 am-dq)
+    ((8)  am-db)
+    ((16) am-dw)
+    ((32) am-dd)
+    ((64) am-dq)
     (else (compiler-internal-error "am-data-width - Unknown width: " width))))
 
 ;; ***** Routines
