@@ -429,13 +429,6 @@
       (get-extra-register register-index))
     opnd-to-load))
 
-(define (opnd-type opnd)
-  (cond
-    ((reg-opnd? opnd) 'reg)
-    ((mem-opnd? opnd) 'mem)
-    ((lbl-opnd? opnd) 'lbl)
-    ((int-opnd? opnd) 'int)))
-
 (define (reserve-space cgc bytes #!optional (value 0))
   (if (> bytes 0)
     (begin
@@ -448,6 +441,22 @@
   (reset-proc-labels)
   (reset-obj-labels)
   (reset-labels))
+
+(define (opnd-type opnd)
+  (cond
+    ((reg-opnd? opnd) 'reg)
+    ((mem-opnd? opnd) 'mem)
+    ((lbl-opnd? opnd) 'lbl)
+    ((int-opnd? opnd) 'int)))
+
+;; Get appropriate am-db, am-dw, am-dd, am-dq
+(define (am-data-width width)
+  (case width
+    (8  am-db)
+    (16 am-dw)
+    (32 am-dd)
+    (64 am-dq)
+    (else (compiler-internal-error "am-data-width - Unknown width: " width))))
 
 ;; ***** Routines
 

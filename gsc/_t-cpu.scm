@@ -410,8 +410,7 @@
 
   (let* ((obj-desc (get-object-description obj))
          (words (format-object obj-desc obj)))
-    ;; todo: Replace with am-dw if 32 bits. Create am-dataword ?
-    (apply am-dd (cons cgc words))))
+    (apply (am-data-width word-width) (cons cgc words))))
 
 ;;;----------------------------------------------------------------------------
 
