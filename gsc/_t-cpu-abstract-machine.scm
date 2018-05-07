@@ -415,7 +415,7 @@
             ('underflow-position (* 0 word-width-bytes))
             ('interrupt-flag (* 1 word-width-bytes))
             ('narg      (* 2 word-width-bytes))
-            (else (compiler-internal-error "Unknown thread-descriptor symbol")))))
+            (else (compiler-internal-error "Unknown thread-descriptor symbol:" sym)))))
 
     ;; (not (fixnum? opnd)) <=> not mem-opnd
     (if (fixnum? opnd)

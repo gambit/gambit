@@ -367,7 +367,7 @@
 
   ;; Placing data after the code (end and error routines)
   ;; reduces execution code to 300 from 330 ms in (fib 40)
-  (debug "put-data-routine")
+  (debug "put-data-routine\n")
   (put-data-routine cgc)
   (am-place-data-routine cgc)
 
@@ -389,7 +389,6 @@
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
-  (debug "put-primitive-if-needed\n")
   (let* ((label (car pair))
           (proc (cadr pair))
           (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
@@ -397,6 +396,8 @@
       (let ((prim (get-prim-obj (proc-obj-name proc)))
             (then (then-return))
             (args (list (get-register 1) (get-register 2) (get-register 3)))) ;; todo : Find way to get arity
+
+          (debug "Putting primitive: " (proc-obj-name proc) "\n")
           (am-lbl cgc label)
           (prim cgc then args)))))
 
