@@ -235,8 +235,12 @@
     (cond
       ((proc-obj? val)
         (if (eqv? context 'jump)
-          (get-proc-label cgc (obj-val opnd) #f)
-          (lbl-opnd (get-proc-label cgc (obj-val opnd) #f))))
+          ;; 1 is used to get the first label of a procedure, if it exists.
+          ;; If not 1, the procedure will look like a primitive that was used
+          ;; but not defined and it will look for a primitive called the name
+          ;; of the procedure. It crashes the program, DO NOT CHANGE!
+          (get-proc-label cgc (obj-val opnd) 1)
+          (lbl-opnd (get-proc-label cgc (obj-val opnd) 1))))
       ((immediate-desc? (get-object-description val))
           (int-opnd
             (car (format-object (get-object-description val) val))
