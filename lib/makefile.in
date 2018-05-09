@@ -260,6 +260,9 @@ _thread@obj@: _thread.c
 _repl@obj@: _repl.c
 	@BUILD_OBJ@ -D___LIBRARY
 
+_$(GAMBITLIB)@obj@: $(GAMBIT_LIB_C)
+	@BUILD_OBJ@ -D___LIBRARY
+
 main@obj@: main.c os.h os_setup.h os_base.h os_shell.h setup.h
 	@BUILD_OBJ_RTS@ -D___LIBRARY
 
