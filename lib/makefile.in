@@ -1,6 +1,6 @@
 # makefile for Gambit library.
 
-# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
@@ -25,6 +25,8 @@ FLAGS_OBJ = @FLAGS_OBJ_MF@
 FLAGS_DYN = @FLAGS_DYN_MF@
 FLAGS_LIB = @FLAGS_LIB_MF@
 FLAGS_EXE = @FLAGS_EXE_MF@
+FLAGS_OPT = @FLAGS_OPT_MF@
+FLAGS_OPT_RTS = @FLAGS_OPT_RTS_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
@@ -162,9 +164,6 @@ all-pre:
 
 all-post: $(LIBRARY) $(GAMBIT_LIBS)
 
-.c@obj@:
-	@BUILD_OBJ@ -D___LIBRARY
-
 .scm.c:
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c @COMPILATION_OPTIONS@ $(PRELUDE_OPT) $(srcdirpfx)$*.scm
 
@@ -234,39 +233,74 @@ $(srcdirpfx)$(rootfromhere)/lib/_with-syntax-boot.scm
 
 $(MODULES_O) $(NORMAL_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
-_kernel@obj@: $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_setup.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+_kernel@obj@: _kernel.c $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_setup.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+	@BUILD_OBJ@ -D___LIBRARY
 
-_std@obj@: os.h
+_system@obj@: _system.c
+	@BUILD_OBJ@ -D___LIBRARY
 
-_num@obj@: mem.h
+_num@obj@: _num.c mem.h
+	@BUILD_OBJ@ -D___LIBRARY
+
+_std@obj@: _std.c os.h
+	@BUILD_OBJ@ -D___LIBRARY
+
+_eval@obj@: _eval.c
+	@BUILD_OBJ@ -D___LIBRARY
+
+_io@obj@: _io.c
+	@BUILD_OBJ@ -D___LIBRARY
+
+_nonstd@obj@: _nonstd.c
+	@BUILD_OBJ@ -D___LIBRARY
+
+_thread@obj@: _thread.c
+	@BUILD_OBJ@ -D___LIBRARY
+
+_repl@obj@: _repl.c
+	@BUILD_OBJ@ -D___LIBRARY
 
 main@obj@: main.c os.h os_setup.h os_base.h os_shell.h setup.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 setup@obj@: setup.c os.h os_setup.h os_base.h os_files.h os_dyn.h os_thread.h setup.h mem.h c_intf.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 mem@obj@: mem.c os.h os_setup.h os_base.h os_time.h setup.h mem.h c_intf.h actlog.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 c_intf@obj@: c_intf.c os.h os_base.h os_dyn.h setup.h mem.h c_intf.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 actlog@obj@: actlog.c os.h os_base.h os_time.h actlog.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_setup@obj@: os_setup.c os.h os_setup.h os_thread.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_base@obj@: os_base.c os.h os_base.h setup.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_thread@obj@: os_thread.c os.h os_base.h os_thread.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_time@obj@: os_time.c os.h os_thread.h os_base.h os_time.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_shell@obj@: os_shell.c os.h os_setup.h os_base.h os_shell.h os_files.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_files@obj@: os_files.c os.h os_base.h os_shell.h os_files.h setup.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_dyn@obj@: os_dyn.c os.h os_base.h os_shell.h os_files.h os_dyn.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_tty@obj@: os_tty.c os.h os_setup.h os_thread.h os_base.h os_tty.h os_shell.h os_io.h mem.h c_intf.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 os_io@obj@: os_io.c os.h os_setup.h os_base.h os_io.h os_tty.h os_shell.h os_files.h setup.h c_intf.h
+	@BUILD_OBJ_RTS@ -D___LIBRARY
 
 bootstrap-pre:
 
