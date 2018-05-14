@@ -215,6 +215,9 @@
 (define (target-object-type x)              (vector-ref x 20))
 (define (target-object-type-set! x y)       (vector-set! x 20 y))
 
+(define (target-extra x i)                  (vector-ref x (+ 21 i)))
+(define (target-extra-set! x i y)           (vector-set! x (+ 21 i) y))
+
 ;;;; Frame constraints structure
 
 (define (make-frame-constraints reserve align) (vector reserve align))
