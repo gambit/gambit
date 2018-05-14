@@ -6,6 +6,13 @@
 
 ;;------------------------------------------------------------------------------
 
+(define (make-prim-obj fun arity inlinable testable)
+  (vector 'prim fun arity inlinable testable))
+(define (get-primitive-function prim-object)  (vector-ref prim-object 1))
+(define (get-primitive-arity prim-object)     (vector-ref prim-object 2))
+(define (get-primitive-inlinable prim-object) (vector-ref prim-object 3))
+(define (get-primitive-testable prim-object)  (vector-ref prim-object 4))
+
 ;;  A primitive is a function taking:
 ;;  CGC
 ;;  ResultAction
@@ -85,14 +92,14 @@
   (define (mov-arg cgc result-reg index arg)
     (debug "mov-arg\n")
     (let* ((allowed-opnd (list-ref allowed-opnds index))
-           (in? (not (= -1 (index-of (opnd-type arg) allowed-opnd)))))
+           (in? (not (= -1 (index-of (opnd-type cgc arg) allowed-opnd)))))
       (if in?
         arg
           (let ((new-register
                   ;; Check if result-reg can be used as extra register.
                   (if (and (= 0 index) (not (eqv? result-reg #f)))
                     result-reg
-                    (get-extra-register index))))
+                    (get-extra-register cgc index))))
             (am-mov cgc new-register arg)
             new-register))))
 
@@ -101,7 +108,7 @@
     (let* ((store-location (then-move-store-location result-action))
            (result-reg (if (and
                             (then-move? result-action)
-                            (reg-opnd? store-location)
+                            (reg-opnd? cgc store-location)
                             (= -1 (index-of store-location args)))
                           store-location
                           #f)))
@@ -124,7 +131,7 @@
                 (not (equal? result-action-location (car args))))
             (am-mov cgc result-action-location (car args)))))
       ((then-return? result-action)
-        (am-jmp cgc (get-register 0)))
+        (am-jmp cgc (get-register cgc 0)))
       ((not result-action)
         ;; Do nothing
         #f)
@@ -178,8 +185,8 @@
 
 ;; ***** Arithmetic primitives
 
-(define (default-arithmetic-allowed-opnds)
-  (if load-store-only
+(define (default-arithmetic-allowed-opnds is-load-store)
+  (if is-load-store
     '((reg) (reg int))
     '((reg) (reg int mem))))
 
@@ -198,8 +205,8 @@
 
 ;; ***** Memory read primitives
 
-(define (prim-test)
-  (let ((allowed-opnds (if load-store-only
+(define (prim-test cgc)
+  (let ((allowed-opnds (if (is-load-store? cgc)
                         '((reg) (reg int))
                         '((reg mem) (reg int)))))
     (make-primitive
@@ -215,7 +222,7 @@
   (define (test-pointer-tag cgc result-action opnd obj-desc)
     ;; todo : Test if bit shifting is faster. Probably not, but may be interesting
     (let ((cmp-opnd (int-opnd (flip-bits (get-desc-pointer-tag obj-desc) tag-width))))
-      ((prim-test) cgc result-action (list opnd cmp-opnd))))
+      ((prim-test cgc) cgc result-action (list opnd cmp-opnd))))
 
   (cond
     ((immediate-desc? obj-desc)
@@ -244,7 +251,7 @@
                  (cmp-opnd (int-opnd flipped)))
             ; Read then compare
             (read-reference cgc (get-extra-register 0) arg (get-desc-pointer-tag obj-desc) 0)
-            ((prim-test) cgc result-action (list (get-extra-register 0) cmp-opnd)))
+            ((prim-test cgc) cgc result-action (list (get-extra-register 0) cmp-opnd)))
 
           ;; If first test fails, jump here
           (am-lbl cgc label)

@@ -4,226 +4,263 @@
 
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
 
+(include "generic.scm")
+
+(include-adt "_envadt.scm")
+(include-adt "_gvmadt.scm")
+(include-adt "_ptreeadt.scm")
+(include-adt "_sourceadt.scm")
+(include-adt "_x86#.scm")
+(include-adt "_asm#.scm")
+(include-adt "_codegen#.scm")
+
 ;;------------------------------------------------------------------------------
 
-;;              x86 64 bits backend
+;; Constants
 
-;;  Backend definition:
-;;  Bindings for the abstract machine instructions
-;;  Primitive table
-;;  Init/End/Error handling routine
+(define is-load-store-arch #f)
 
-;; Finishes creation of CGC and initialize instruction encoder
-;; Leave #f as NOP
-(define (x64-setup cgc)
-  (asm-init-code-block cgc 0 'le)
-  (x86-arch-set! cgc 'x86-64))
+(define na (x86-cl))  ;; number of arguments register
+(define sp (x86-rsp)) ;; Real stack limit
+(define fp (x86-rdx)) ;; Simulated stack current pos
+(define dp (x86-rcx)) ;; Thread descriptor register
+(define runtime-result-register (x86-rax))
 
-;; Resets state of instruction encoder if necessary.
-;; Leave #f as NOP
-(define (x64-cleanup) #f)
+(define stack-size 10000) ;; Scheme stack size (bytes)
+;; 500 is the safe minimum for (fib 40)
+(define thread-descriptor-size 32) ;; Thread descriptor size (bytes)
+(define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
+(define frame-offset 1) ;; stack offset so that frame[1] is at null offset from fp
 
-;; Hash table
-;; Key:   Primitive's name (symbol)
-;; Value: Primitive's function (as defined in _t-cpu-primitives.scm)
-(define (x64-primitive-table)
-  (debug "Creating table\n")
-  (let ((table (make-table test: eqv?)))
-    (table-set! table '##fx+      (x86-prim-fx+))
-    (table-set! table '##fx-      (x86-prim-fx-))
-    (table-set! table '##fx<      (x86-prim-fx<))
-    (table-set! table '##fixnum?  (x86-prim-fixnum?))
-    (table-set! table '##pair?    (x86-prim-pair?))
-    (table-set! table '##boolean? (x86-prim-boolean?))
-    (table-set! table '##string?  (x86-prim-string?))
-    ; ('length (x86-prim-string-length))
-    ; ('##fx*         (x86-prim-fx<))
-    ; ('##fx/         (x86-prim-fx<))
-    ; ('display (prim-info-display))
+;; 64 = 01000000_2 = 0x40. -64 = 11000000_2 = 0xC0
+;; 0xC0 unsigned = 192
+(define na-reg-default-value -64)
+(define na-reg-default-value-abs 192)
+
+;;------------------------------------------------------------------------------
+
+;; Primitives
+
+(define x86-prim-fx+
+  (arithmetic-prim x86-add '(number) (default-arithmetic-allowed-opnds is-load-store-arch) #t))
+
+(define x86-prim-fx-
+  (arithmetic-prim x86-sub '(number) (default-arithmetic-allowed-opnds is-load-store-arch) #f))
+
+(define x86-prim-fx<
+  (arithmetic-prim x86-cmp (list 'boolean x86-jle x86-jg) (default-arithmetic-allowed-opnds is-load-store-arch) #f))
+
+(define primitive-object-table
+  (let ((table (make-table test: equal?)))
+    (table-set! table '##fx+ (make-prim-obj x86-prim-fx+ 2 #t #f))
+    (table-set! table '##fx- (make-prim-obj x86-prim-fx- 2 #t #f))
+    (table-set! table '##fx< (make-prim-obj x86-prim-fx< 2 #t #t))
+    ; (table-set! '##fx>  (list x86-prim-fx+ 2 #t #t))
     table))
 
-(define (x86-prim-fx+)
-  (arithmetic-prim am-add 'number (default-arithmetic-allowed-opnds) #t))
+;;------------------------------------------------------------------------------
 
-(define (x86-prim-fx-)
-  (arithmetic-prim am-sub 'number (default-arithmetic-allowed-opnds) #f))
+;; Thread descriptor table
 
-(define (x86-prim-fx<)
-  (arithmetic-prim am-cmp (list 'boolean x86-jle x86-jg) (default-arithmetic-allowed-opnds) #f))
+(define thread-descriptor-table
+  (let ((table (make-table test: equal?)))
+    (table-set! table 'underflow-position (x86-rax))
+    (table-set! table 'interrupt-flag     (x86-rax))
+    (table-set! table 'narg               (x86-rax))
 
-(define (x86-prim-fixnum?)
-  (type-check-primitive fixnum-obj-desc))
+    table))
 
-(define (x86-prim-string?)
-  (type-check-primitive string-obj-desc))
+;;                             x86 64 bits backend
 
-(define (x86-prim-pair?)
-  (type-check-primitive pair-obj-desc))
+(define (x86-64-abstract-machine-info) (make-backend (info) (operands) (instructions) (routines)))
 
-(define (x86-prim-boolean?)
-  (type-check-primitive boolean-obj-desc))
+;;------------------------------------------------------------------------------
 
-;; Sets functions defined for abstract machine
-;; See _t-cpu-abstract-machine.scm for variables to set!
-(define (x64-setup-abstract-machine)
-  (define (register-setup)
-    (set! main-registers
-      (list (x86-r15) (x86-r14) (x86-r13) (x86-r12) (x86-r11) (x86-r10)))
-    (set! work-registers
-      (list (x86-r9) (x86-r8)))
-    (set! na (x86-cl))
-    (set! sp (x86-rsp))
-    (set! fp (x86-rdx))
-    (set! dp (x86-rcx))
-    (set! runtime-result-register (x86-rax)))
+;; Backend info
 
-  (define (opnds-setup)
-    (set! int-opnd x86-imm-int)
-    (set! lbl-opnd x86-imm-lbl)
-    (set! mem-opnd x86-mem)
+(define (info)
+  (make-backend-info
+    8                         ;; Word width
+    'le                       ;; Endianness
+    is-load-store             ;; Load store architecture?
+    fp                        ;; Stack pointer register
+    frame-offset              ;; Frame offset
+    thread-descriptor-table   ;; Thread descriptor table
+    primitive-object-table    ;; Primitive table
+    (vector                   ;; Main registers
+      (x86-r15) (x86-r14) (x86-r13) (x86-r12) (x86-r11))
+    (vector)                  ;; Spill registers
+    (vector                   ;; Extra registers
+      (x86-r10) (x86-r9) (x86-r8))
+    make-cgc                  ;; CGC constructor
+    ))
 
-    ;; Copied from _x86.scm
-    (set! int-opnd? (lambda (x) (and (pair? x) (number? (cdr x)))))
-    (set! lbl-opnd? (lambda (x) (and (pair? x) (vector? (cdr x)))))
-    (set! mem-opnd? (lambda (x) (and (vector? x) (fx= (vector-length x) 4))))
-    (set! reg-opnd? fixnum?)
+(define (make-cgc)
+  (let ((cgc (make-codegen-context)))
+    (codegen-context-listing-format-set! cgc 'gnu)
+    (asm-init-code-block cgc 0 'le)
+    (x86-arch-set! cgc 'x86-64)
+    cgc))
 
-    (set! int-opnd-value  (lambda (x) (cdr x)))
-    (set! lbl-opnd-offset (lambda (x) (car x)))
-    (set! lbl-opnd-label  (lambda (x) (cdr x)))
-    (set! mem-opnd-offset (lambda (x) (vector-ref x 0)))
-    (set! mem-opnd-reg    (lambda (x) (vector-ref x 1))))
+;;------------------------------------------------------------------------------
 
-  (define (instructions-setup)
-    (set! am-lbl x86-label)
-    (set! am-mov
-      (wrap-function x86-mov
-        (list
-          (make-rule
-            "mov R 0 -> xor R R"
-            (all-rules (match-reg 1 #f) (match-int 2 0))
-            x86-xor
-            (reorganize-args '(0 1 1))))))
-    (set! am-lda x86-lea)
-    (set! am-ret x86-ret)
-    (set! am-cmp x86-cmp)
+;; Backend operands
 
-    (set! am-bit-shift-right x86-shr)
-    (set! am-bit-shift-left  x86-shl)
+(define (operands)
+  (make-operand-dictionnary
+    x86-imm-int
+    (lambda (x) (and (pair? x) (number? (cdr x))))
+    x86-imm-lbl
+    (lambda (x) (and (pair? x) (vector? (cdr x))))
+    x86-mem
+    (lambda (x) (and (vector? x) (fx= (vector-length x) 4)))
+    fixnum?                       ;; reg?
+    (lambda (x) (cdr x))          ;; int-opnd-value
+    (lambda (x) (car x))          ;; lbl-opnd-offset
+    (lambda (x) (cdr x))          ;; lbl-opnd-label
+    (lambda (x) (vector-ref x 0)) ;; mem-opnd-offset
+    (lambda (x) (vector-ref x 1)) ;; mem-opnd-reg
+    ))
 
-    (set! am-not x86-not)
-    (set! am-and x86-and)
-    (set! am-or  x86-or)
-    (set! am-xor x86-xor)
-    (set! am-test x86-test)
+;;------------------------------------------------------------------------------
 
-    (set! am-add
-      (wrap-function x86-add
-        (list
-          (make-rule "add _ 0 -> nop" (match-int 2 0) NOP)
-          (make-rule "add _ 1 -> inc _" (match-int 2 1) x86-inc (reorganize-args '(0 1))))))
-    (set! am-sub x86-sub)
+(define (instructions)
+  (make-instruction-dictionnary
+    x86-label-align ;; am-lbl
+    data-instr      ;; am-data
+    mov-instr       ;; am-mov.
+    x86-lea         ;; am-load-mem-address
+    x86-add         ;; am-add
+    x86-sub         ;; am-sub
+    x86-shr         ;; am-bit-shift-right
+    x86-shl         ;; am-bit-shift-left
+    x86-not         ;; am-not
+    x86-and         ;; am-and
+    x86-or          ;; am-or
+    x86-xor         ;; am-xor
+    x86-jmp         ;; am-jmp
+    cmp-jump-instr  ;; am-compare-jump
+    ))
 
-    (set! am-jmp    x86-jmp)
-    ; (set! am-jmplink  doesnt-exist)
-    (set! am-je     x86-je)
-    (set! am-jne    x86-jne)
-    (set! am-jg     x86-jg)
-    (set! am-jng    x86-jle)
-    (set! am-jge    x86-jge)
-    (set! am-jnge   x86-jl)
-    (set! am-jgu    x86-ja)
-    (set! am-jngu   x86-jbe)
-    (set! am-jgeu   x86-jae)
-    (set! am-jngeu  x86-jb))
+(define (x86-label-align cgc label #!optional (align #f))
+  (if align
+    (asm-align cgc (car align) (cdr align) #x90))
+    (x86-label cgc label))
 
-  (define (data-setup)
-    (set! am-db x86-db)
-    (set! am-dw x86-dw)
-    (set! am-dd x86-dd)
-    (set! am-dq x86-dq))
+(define data-instr
+  (make-am-data x86-db x86-dw x86-dd x86-dq))
 
-  (define (helper-setup)
-    (set! am-set-narg   x64-set-narg)
-    (set! am-check-narg x64-check-narg)
-    (set! am-poll default-poll)
-    (set! make-opnd default-make-opnd)
-  )
+(define (mov-instr cgc dst src #!optional (width #f))
+  (if (lbl-opnd? cgc dst)
+    (let ((extra-reg (get-extra-register cgc 0)))
+      (x86-mov cgc extra-reg dst)
+      (x86-mov cgc (x86-mem 0 extra-reg) src))
+    (x86-mov cgc dst src width)))
 
-  (define (make-parity-adjusted-valued n)
-    (define (bit-count n)
-      (if (= n 0)
-        0
-        (+ (modulo n 2) (bit-count (quotient n 2)))))
-    (let* ((narg2 (* 2 (- n 3)))
-          (bits (bit-count narg2))
-          (parity (modulo bits 2)))
-      (+ 64 parity narg2)))
+(define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false)
+  (define (flip pair)
+      (cons (cdr pair) (car pair)))
 
-  (define (x64-check-narg cgc narg)
-    (debug "x64-check-narg: " narg "\n")
+  (define (get-jumps condition)
+    (case (get-condition condition)
+            ((equal)
+              (cons x86-je  x86-jne))
+            ((greater)
+              (cond
+                ((and (cond-is-equal condition) (cond-is-signed condition))
+                  (cons x86-jge x86-jl))
+                ((and (not (cond-is-equal condition)) (cond-is-signed condition))
+                  (cons x86-jg x86-jle))
+                ((and (cond-is-equal condition) (not (cond-is-signed condition)))
+                  (cons x86-jae x86-jb))
+                ((and (not (cond-is-equal condition)) (not (cond-is-signed condition)))
+                  (cons x86-ja x86-jbe))))
+            ((not-equal) (flip (get-jumps (inverse-condition condition))))
+            ((not-greater) (flip (get-jumps (inverse-condition condition))))
+            (else
+              (compiler-internal-error "cmp-jump-instr - Unknown condition: " condition))))
+
+  (display "cmp-jump-instr")
+  (let* ((jumps (get-jumps condition)))
+
+    ;; In case both jump locations are false, the cmp is unnecessary.
+    (if (or loc-true loc-false)
+      (x86-cmp cgc opnd1 opnd2))
+
     (cond
-      ((= narg 0)
-        (am-jne cgc WRONG_NARGS_LBL))
-      ((= narg 1)
-        (x86-jp cgc WRONG_NARGS_LBL))
-      ((= narg 2)
-        (x86-jno cgc WRONG_NARGS_LBL))
-      ((= narg 3)
-        (x86-jns cgc WRONG_NARGS_LBL))
-      ((<= narg 34)
-          (am-sub cgc na (int-opnd (make-parity-adjusted-valued narg)))
-          (am-jne cgc WRONG_NARGS_LBL))
+      ((and loc-false loc-true)
+        ((car jumps) cgc loc-true)
+        (x86-jmp cgc loc-false))
+      ((and (not loc-true) loc-false)
+        ((cdr jumps) cgc loc-false))
+      ((and loc-true (not loc-false))
+        ((car jumps) cgc loc-true))
       (else
-        (default-check-narg cgc narg))))
+        (debug "am-compare-jump: No jump encoded")))))
 
-  (define (x64-set-narg cgc narg)
-    (debug "x64-set-narg: " narg "\n")
-    (cond
-      ((= narg 0)
-        (am-cmp cgc na na))
-      ((= narg 1)
-        (am-cmp cgc na (int-opnd -65)))
-      ((= narg 2)
-        (am-cmp cgc na (int-opnd 66)))
-      ((= narg 3)
-        (am-cmp cgc na (int-opnd 0)))
-      ((<= narg 34)
-          (am-add cgc na (int-opnd (make-parity-adjusted-valued narg))))
-      (else
-        (default-set-narg cgc narg))))
+;;------------------------------------------------------------------------------
 
-  (set! word-width 64)
-  (set! word-width-bytes 8)
-  (set! endianness 'le)
-  (set! load-store-only #f)
-  (set! enable-poll #t)
+;; Backend routines
 
-  (register-setup)
-  (opnds-setup)
-  (instructions-setup)
-  (data-setup)
-  (helper-setup))
+(define (routines)
+  (make-routine-dictionnary
+    x64-poll
+    default-set-narg
+    default-check-narg
+    x64-init-routine
+    x64-end-routine
+    x64-error-routine
+    x64-place-extra-data
+    ))
+
+(define (x64-poll cgc code)
+  ;; Reminder: sp is the real stack pointer and fp is the simulated stack pointer
+  ;; In memory
+  ;; +++: underflow location
+  ;; ++ : fp
+  ;; +  : sp
+  ;; 0  : Overflow
+  ;; sp < fp < underflow
+  (define (check-overflow)
+    (debug "check-overflow\n")
+    (let ((condition (condition-greater #f #f))
+          (error-lbl (get-other-label cgc 'OVERFLOW_LBL)))
+      (am-compare-jump cgc fp sp condition error-lbl #f)))
+  (define (check-underflow)
+    (debug "check-underflow\n")
+    (let ((opnd (get-thread-descriptor-opnd cgc 'underflow-position))
+          (condition (condition-not-greater #f #f))
+          (error-lbl (get-other-label cgc 'UNDERFLOW_LBL)))
+      (am-compare-jump cgc opnd fp condition error-lbl #f)))
+
+  (define (check-interrupt)
+    (debug "check-interrupt\n")
+    (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
+          (condition condition-not-equal)
+          (error-lbl (get-other-label cgc 'INTERRUPT_LBL)))
+      (am-compare-jump cgc opnd (int-opnd cgc 0) condition error-lbl #f)))
+
+  (make-poll check-interrupt check-underflow check-overflow))
 
 ;; Start routine
 ;; Gets executed before main
 (define (x64-init-routine cgc)
   (debug "put-init-routine\n")
 
-  (am-lbl cgc C_START_LBL) ;; Initial procedure label
+  (am-lbl cgc (get-other-label cgc 'C_START_LBL)) ;; Initial procedure label
   ;; Thread descriptor initialization
   ;; Set thread descriptor address
-  (am-mov cgc dp (lbl-opnd THREAD_DESCRIPTOR))
+  (am-mov cgc dp (lbl-opnd cgc (get-other-label cgc 'THREAD_DESCRIPTOR)))
   ;; Set lower bytes of descriptor register used for passing narg
-  (am-mov cgc na (int-opnd na-reg-default-value word-width))
+  (am-mov cgc na (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
   ;; Set underflow position to current stack pointer position
-  (am-mov cgc (thread-descriptor 'underflow-position) sp)
+  (am-mov cgc (get-thread-descriptor-opnd cgc 'underflow-position) sp)
   ;; Set interrupt flag to current stack pointer position
-  (am-mov cgc (thread-descriptor 'interrupt-flag) (int-opnd 0) word-width)
+  (am-mov cgc (get-thread-descriptor-opnd cgc 'interrupt-flag) (int-opnd cgc 0) (get-word-width-bits cgc))
 
-  (am-mov cgc (get-register 0) (lbl-opnd C_RETURN_LBL)) ;; Set return address for main
-  (am-lda cgc fp (mem-opnd (* frame-offset (- word-width-bytes)) sp)) ;; Align frame with offset
-  (am-sub cgc sp (int-opnd stack-size)))
+  (am-mov cgc (get-register cgc 0) (lbl-opnd cgc (get-other-label cgc 'C_RETURN_LBL))) ;; Set return address for main
+  (am-load-mem-address cgc fp (mem-opnd cgc (* frame-offset (- (get-word-width cgc))) sp)) ;; Align frame with offset
+  (am-sub cgc sp (int-opnd cgc stack-size)))
 
 ;; End routine
 ;; Gets executed after main if no error happened during execution
@@ -231,28 +268,30 @@
   (debug "put-end-routine\n")
 
   ;; Terminal procedure
-  (am-lbl cgc C_RETURN_LBL)
-  (am-add cgc sp (int-opnd stack-size))
-  (am-mov cgc runtime-result-register (get-register 1))
-  (am-ret cgc)) ;; Exit program
+  (am-lbl cgc (get-other-label cgc 'C_RETURN_LBL))
+  (am-add cgc sp (int-opnd cgc stack-size))
+  (am-mov cgc runtime-result-register (get-register cgc 1))
+  (x86-ret cgc)) ;; Exit program
 
 ;; Error routine
 ;; Gets executed if an error occurs
 (define (x64-error-routine cgc)
-  (debug "put-end-routine\n")
+  (debug "put-error-routine\n")
 
-  (am-lbl cgc WRONG_NARGS_LBL) ;; Incorrect narg handling
-  (am-lbl cgc OVERFLOW_LBL)    ;; Overflow handling
-  (am-lbl cgc UNDERFLOW_LBL)   ;; Underflow handling
-  (am-lbl cgc INTERRUPT_LBL)   ;; Interrupts handling
-  (am-lbl cgc TYPE_ERROR_LBL)  ;; Type error handling
+  (am-lbl cgc (get-other-label cgc 'WRONG_NARGS_LBL)) ;; Incorrect narg handling
+  (am-lbl cgc (get-other-label cgc 'OVERFLOW_LBL))    ;; Overflow handling
+  (am-lbl cgc (get-other-label cgc 'UNDERFLOW_LBL))   ;; Underflow handling
+  (am-lbl cgc (get-other-label cgc 'INTERRUPT_LBL))   ;; Interrupts handling
+  (am-lbl cgc (get-other-label cgc 'TYPE_ERROR_LBL))  ;; Type error handling
 
-  (am-mov cgc fp (thread-descriptor 'underflow-position)) ;; Pop stack
+  (am-mov cgc fp (get-thread-descriptor-opnd cgc 'underflow-position)) ;; Pop stack
 
   ;; Pop remaining stack (Everything allocated but stack size)
-  (am-add cgc sp (int-opnd stack-size))
-  (am-mov cgc runtime-result-register (int-opnd -4))
-  (am-ret cgc 0))
+  (am-add cgc sp (int-opnd cgc stack-size))
+  (am-mov cgc runtime-result-register (int-opnd cgc -4))
+  (x86-ret cgc 0))
 
-;; Place data used by start, end and error routines
-(define (x64-place-data cgc) #f)
+(define (x64-place-extra-data cgc)
+  (debug "place-extra-data\n")
+  (am-lbl cgc (get-other-label cgc 'THREAD_DESCRIPTOR) (cons 256 1))
+  (reserve-space cgc thread-descriptor-size 0))
