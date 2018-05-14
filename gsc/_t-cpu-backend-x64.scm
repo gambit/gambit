@@ -222,19 +222,19 @@
   ;; 0  : Overflow
   ;; sp < fp < underflow
   (define (check-overflow)
-    (debug "check-overflow\n")
+    (debug "check-overflow")
     (let ((condition (condition-greater #f #f))
           (error-lbl (get-other-label cgc 'OVERFLOW_LBL)))
       (am-compare-jump cgc fp sp condition error-lbl #f)))
   (define (check-underflow)
-    (debug "check-underflow\n")
+    (debug "check-underflow")
     (let ((opnd (get-thread-descriptor-opnd cgc 'underflow-position))
           (condition (condition-not-greater #f #f))
           (error-lbl (get-other-label cgc 'UNDERFLOW_LBL)))
       (am-compare-jump cgc opnd fp condition error-lbl #f)))
 
   (define (check-interrupt)
-    (debug "check-interrupt\n")
+    (debug "check-interrupt")
     (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
           (condition condition-not-equal)
           (error-lbl (get-other-label cgc 'INTERRUPT_LBL)))
@@ -245,7 +245,7 @@
 ;; Start routine
 ;; Gets executed before main
 (define (x64-init-routine cgc)
-  (debug "put-init-routine\n")
+  (debug "put-init-routine")
 
   (am-lbl cgc (get-other-label cgc 'C_START_LBL)) ;; Initial procedure label
   ;; Thread descriptor initialization
@@ -265,7 +265,7 @@
 ;; End routine
 ;; Gets executed after main if no error happened during execution
 (define (x64-end-routine cgc)
-  (debug "put-end-routine\n")
+  (debug "put-end-routine")
 
   ;; Terminal procedure
   (am-lbl cgc (get-other-label cgc 'C_RETURN_LBL))
@@ -276,7 +276,7 @@
 ;; Error routine
 ;; Gets executed if an error occurs
 (define (x64-error-routine cgc)
-  (debug "put-error-routine\n")
+  (debug "put-error-routine")
 
   (am-lbl cgc (get-other-label cgc 'WRONG_NARGS_LBL)) ;; Incorrect narg handling
   (am-lbl cgc (get-other-label cgc 'OVERFLOW_LBL))    ;; Overflow handling
@@ -292,6 +292,6 @@
   (x86-ret cgc 0))
 
 (define (x64-place-extra-data cgc)
-  (debug "place-extra-data\n")
+  (debug "place-extra-data")
   (am-lbl cgc (get-other-label cgc 'THREAD_DESCRIPTOR) (cons 256 1))
   (reserve-space cgc thread-descriptor-size 0))
