@@ -276,27 +276,22 @@
     (virtual.dump-gvm procs (current-output-port))
     (encode-procs cgc procs)
     (time-cgc cgc #t)
-    ; (test-values (iota 0 64) 1 procs)
-    ; (print-results-csv)))
-
   #f))
 
 ;;;----------------------------------------------------------------------------
 
-;; ***** Dispatching
-
-(define LABEL (asm-make-label cgc 'TEST))
+;; ***** Procedures encoding
 
 (define (encode-procs cgc procs)
 
   (define (encode-proc proc)
-    (debug "Encoding proc \n")
+    (debug "Encoding proc")
     (map-proc-instrs
       (lambda (code)
         (encode-gvm-instr cgc proc code))
       proc))
 
-  (debug "Encode procs \n")
+  (debug "Encode procs")
 
   (am-init cgc)
 
@@ -308,17 +303,17 @@
 
   (am-place-extra-data cgc)
 
-  (debug "Adding primitives\n")
+  (debug "Adding primitives")
   (table-for-each
     (lambda (key val) (put-primitive-if-needed cgc key val))
     (get-proc-label-table cgc))
 
-  (debug "Adding objects\n")
+  (debug "Adding objects")
   (table-for-each
     (lambda (key val) (put-object cgc key val))
     (get-object-label-table cgc))
 
-  (debug "Finished!\n"))
+  (debug "Finished!"))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
@@ -330,14 +325,14 @@
             (then (then-return))
             (args (list (get-register 1) (get-register 2) (get-register 3)))) ;; todo : Find way to get arity
 
-          (debug "Putting primitive: " (proc-obj-name proc) "\n")
+          (debug "Putting primitive: " (proc-obj-name proc))
           (am-lbl cgc label)
           (prim cgc then args)))))
 
 (define (put-object cgc obj label)
-  (debug "put-object\n")
-  (debug "label: " label "\n")
-  (debug "Obj: " obj "\n")
+  (debug "put-object")
+  (debug "label: " label)
+  (debug "Obj: " obj)
 
   (am-lbl cgc label)
 
@@ -350,7 +345,6 @@
 ;; ***** GVM Instruction encoding
 
 (define (encode-gvm-instr cgc proc code)
-  ; (debug "encode-gvm-instr\n")
   (case (gvm-instr-type (code-gvm-instr code))
     ((label)  (encode-label-instr   cgc proc code))
     ((jump)   (encode-jump-instr    cgc proc code))
@@ -366,13 +360,12 @@
 ;; ***** Label instruction encoding
 
 (define (encode-label-instr cgc proc code)
-  (debug "encode-label-instr: ")
   (let* ((gvm-instr (code-gvm-instr code))
          (label-num (label-lbl-num gvm-instr))
          (label (get-proc-label cgc proc label-num))
          (narg (label-entry-nb-parms gvm-instr)))
 
-  (debug label "\n")
+  (debug "encode-label-instr: " label)
 
   (let* ((align? (not (eqv? 'simple (label-type gvm-instr))))
         (alignment (if align? (cons 4 1) #f)))
@@ -384,7 +377,7 @@
 ;; ***** (if)Jump instruction encoding
 
 (define (encode-jump-instr cgc proc code)
-  (debug "encode-jump-instr\n")
+  (debug "encode-jump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (jmp-opnd (jump-opnd gvm-instr))
          (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
@@ -410,7 +403,7 @@
       (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump)))))
 
 (define (encode-ifjump-instr cgc proc code)
-  (debug "encode-ifjump-instr\n")
+  (debug "encode-ifjump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (true-label (get-proc-label cgc proc (ifjump-true gvm-instr)))
          (false-label (get-proc-label cgc proc (ifjump-false gvm-instr))))
@@ -429,7 +422,7 @@
 ;; ***** Apply instruction encoding
 
 (define (encode-apply-instr cgc proc code)
-  (debug "encode-apply-instr\n")
+  (debug "encode-apply-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (prim-sym (proc-obj-name (apply-prim gvm-instr)))
          (prim-obj (get-primitive-object cgc prim-sym))
@@ -441,7 +434,7 @@
 ;; ***** Copy instruction encoding
 
 (define (encode-copy-instr cgc proc code)
-  (debug "encode-copy-instr\n")
+  (debug "encode-copy-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (src (make-opnd cgc proc code (copy-opnd gvm-instr) #f))
          (dst (make-opnd cgc proc code (copy-loc gvm-instr) #f)))
@@ -451,14 +444,14 @@
 ;; ***** Close instruction encoding
 
 (define (encode-close-instr cgc proc gvm-instr)
-  (debug "encode-close-instr\n")
+  (debug "encode-close-instr")
   (compiler-internal-error
     "encode-close-instr: close instruction not implemented"))
 
 ;; ***** Switch instruction encoding
 
 (define (encode-switch-instr cgc proc gvm-instr)
-  (debug "encode-switch-instr\n")
+  (debug "encode-switch-instr")
   (compiler-internal-error
     "encode-switch-instr: switch instruction not implemented"))
 
@@ -489,7 +482,10 @@
 
 (define _debug #t)
 (define (debug . str)
-  (if _debug (for-each display str)))
+  (if _debug
+    (begin
+      (for-each display str)
+      (newline))))
 
 ;; ***** Utils - Lists
 

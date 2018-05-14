@@ -328,7 +328,6 @@
   (define (lbl->id num proc_name)
     (string->symbol (string-append "_proc_" (number->string num) "_" proc_name)))
 
-  (debug "get-proc-label\n")
   (let* ((table (get-proc-label-table cgc))
          (id (if gvm-lbl gvm-lbl 0))
          (lbl-id (lbl->id id (proc-obj-name proc)))
@@ -336,7 +335,6 @@
     (car (table-get-or-set table lbl-id def-lbl))))
 
 (define (get-other-label cgc sym)
-  (debug "get-other-label\n")
   (let* ((table (get-other-label-table cgc))
          (def-lbl (asm-make-label cgc sym)))
     (table-get-or-set table sym def-lbl)))
@@ -345,7 +343,6 @@
   (define (obj->id)
     (string->symbol (string-append "_obj_" (number->string (get-unique-id)))))
 
-  (debug "get-obj-label\n")
   (let* ((table (get-object-label-table cgc))
          (val (asm-make-label cgc (obj->id))))
     (table-get-or-set table obj val)))
@@ -404,10 +401,8 @@
 
 (define (make-opnd cgc proc code opnd context)
   (define (make-obj val)
-    (debug "make-obj\n")
     (cond
       ((proc-obj? val)
-        (debug "Procedure object\n")
         (if (eqv? context 'jump)
           ;; 1 is used to get the first label of a procedure, if it exists.
           ;; If not 1, the procedure will look like a primitive that was used
@@ -416,12 +411,10 @@
           (get-proc-label cgc (obj-val opnd) 1)
           (lbl-opnd cgc (get-proc-label cgc (obj-val opnd) 1))))
       ((immediate-desc? (get-object-description val))
-          (debug "Immediate object\n")
           (int-opnd cgc
             (car (format-object (get-object-description val) val))
             (get-word-width-bits cgc)))
       ((reference-desc? (get-object-description val))
-        (debug "Reference object\n")
         (if (eqv? context 'jump)
           (get-obj-label cgc (obj-val opnd))
           (lbl-opnd cgc
@@ -431,27 +424,21 @@
         (compiler-internal-error "make-opnd: Unknown object type"))))
   (cond
     ((reg? opnd)
-      (debug "reg\n")
       (get-register cgc (reg-num opnd)))
     ((stk? opnd)
-      (debug "stk\n")
       (if (eqv? context 'jump)
         (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
         (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
     ((lbl? opnd)
-      (debug "lbl\n")
       ;;todo : Check if correct.
       (if (eqv? context 'jump)
         (get-proc-label cgc proc (lbl-num opnd))
         (lbl-opnd cgc (get-proc-label cgc proc (lbl-num opnd)))))
     ((obj? opnd)
-      (debug "obj\n")
       (make-obj (obj-val opnd)))
     ((glo? opnd)
-      (debug "glo\n")
       (compiler-internal-error "make-opnd: Opnd not implementeted global"))
     ((clo? opnd)
-      (debug "clo\n")
       (compiler-internal-error "make-opnd: Opnd not implementeted closure"))
     (else
       (compiler-internal-error "make-opnd: Unknown opnd: " opnd))))
@@ -498,7 +485,7 @@
 
 (define (make-poll check-interrupt check-underflow check-overflow)
   (lambda (cgc code)
-    (debug "default-poll\n")
+    (debug "default-poll")
     (let ((gvm-instr (code-gvm-instr code))
           (fs-gain (proc-frame-slots-gained code)))
       (if (jump-poll? gvm-instr)
@@ -511,11 +498,11 @@
 ;; ***** Default Routines
 
 (define (default-check-narg cgc narg)
-  (debug "default-check-narg: " narg "\n")
+  (debug "default-check-narg: " narg)
   (let ((opnd1 (get-thread-descriptor-opnd cgc 'narg))
         (opnd2 (int-opnd cgc narg)))
     (am-compare-jump cgc opnd1 opnd2 condition-not-equal (get-other-label cgc 'WRONG_NARGS_LBL) #f)))
 
 (define (default-set-narg cgc narg)
-  (debug "default-set-narg: " narg "\n")
+  (debug "default-set-narg: " narg)
   (am-mov cgc (get-thread-descriptor-opnd cgc 'narg) (int-opnd cgc narg)))

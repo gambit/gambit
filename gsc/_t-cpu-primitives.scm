@@ -77,7 +77,7 @@
 ;; Suppose that the result is put in the first argument (like epilogue-use-result-default)
 (define prologue-commute
   (lambda (cgc result-action args)
-    (debug "prologue-commute\n")
+    (debug "prologue-commute")
     (if (then-move? result-action)
       (let ((result-loc-index (index-of (then-move-store-location result-action) args)))
         (if (not (= -1 result-loc-index))
@@ -90,7 +90,7 @@
 ;; todo :: Do something if need more registers. (Save some less important registers on stack)
 (define (prologue-mov-args allowed-opnds)
   (define (mov-arg cgc result-reg index arg)
-    (debug "mov-arg\n")
+    (debug "mov-arg")
     (let* ((allowed-opnd (list-ref allowed-opnds index))
            (in? (not (= -1 (index-of (opnd-type cgc arg) allowed-opnd)))))
       (if in?
@@ -104,7 +104,7 @@
             new-register))))
 
   (lambda (cgc result-action args)
-    (debug "prologue-mov-args\n")
+    (debug "prologue-mov-args")
     (let* ((store-location (then-move-store-location result-action))
            (result-reg (if (and
                             (then-move? result-action)
@@ -120,7 +120,7 @@
 ;; Default epilogue for primitives that put their results in their first arguments
 ;; Ex am-add r1 r2 == r1 <- r1 + r2
 (define (epilogue-use-result-default cgc result-action args)
-  (debug "epilogue-use-result-default\n")
+  (debug "epilogue-use-result-default")
     (cond
       ((then-jump? result-action)
         ;; The function doesn't return a boolean => result is always true
@@ -141,7 +141,7 @@
 ;; Default epilogue for primitives that put their results in flag register
 (define (epilogue-use-result-boolean true-test-jump false-test-jump)
   (lambda (cgc result-action args)
-  (debug "epilogue-use-result-boolean\n")
+  (debug "epilogue-use-result-boolean")
     (cond
       ((then-jump? result-action)
         (let ((true-location  (then-jump-true-location  result-action))
@@ -227,12 +227,12 @@
   (cond
     ((immediate-desc? obj-desc)
       (lambda (cgc result-action args)
-        (debug "Immediate value type check\n")
+        (debug "Immediate value type check")
         (test-pointer-tag cgc result-action (car args) obj-desc)))
 
     ((reference-desc? obj-desc)
       (lambda (cgc result-action args)
-        (debug "Reference value type check\n")
+        (debug "Reference value type check")
         (let* ((arg (car args))
                (suffix "_jump")
                (label (make-unique-label cgc suffix)))

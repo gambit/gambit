@@ -79,11 +79,11 @@
         (cond
           ((and does-match? (not enabled))
             (begin
-              (debug "Not applying rule with id: " rule-id "\n")
+              (debug "Not applying rule with id: " rule-id)
               #f))
           ((and does-match? enabled)
             (begin
-              (debug "Applying rule with id: " rule-id "\n")
+              (debug "Applying rule with id: " rule-id)
               #t))
           (else
             #f))))
