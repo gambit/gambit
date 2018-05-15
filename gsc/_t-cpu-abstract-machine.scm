@@ -104,11 +104,7 @@
 ;;    word-width : Machine word length in bytes
 ;;    endianness : 'le or 'be
 ;;    load-store : See note 3
-
-;;    thread-descriptor-table : Table between symbol and operands
-;;      For symbols: see #######
-;;      Operands must be either: register, memory location or label
-
+;;
 ;;    primitive-table : Table between symbol and primitive object
 ;;      For symbols: see _prims.scm
 ;;      data Primitive = (function: cgc -> operands -> ())
@@ -126,7 +122,6 @@
           load-store
           frame-pointer-reg
           frame-offset
-          thread-descriptor-table
           primitive-table
           main-registers
           spill-registers
@@ -139,7 +134,6 @@
     load-store
     frame-pointer-reg
     frame-offset
-    thread-descriptor-table
     primitive-table
     main-registers
     spill-registers
@@ -202,24 +196,16 @@
 
 ;; ***** AM: Info fields
 
-(define (get-word-width cgc)              (get-in-cgc cgc info-index 0))
-(define (get-word-width-bits cgc)         (* 8 (get-word-width cgc)))
-(define (get-endianness cgc)              (get-in-cgc cgc info-index 1))
-(define (is-load-store? cgc)              (get-in-cgc cgc info-index 2))
-(define (get-frame-pointer-reg cgc)       (get-in-cgc cgc info-index 3))
-(define (get-frame-offset cgc)            (get-in-cgc cgc info-index 4))
-(define (get-thread-descriptor-table cgc) (get-in-cgc cgc info-index 5))
-(define (get-primitive-table cgc)         (get-in-cgc cgc info-index 6))
-(define (get-register  cgc n)      (vector-ref (get-in-cgc cgc info-index 7) n))
-(define (get-spill-register cgc n) (vector-ref (get-in-cgc cgc info-index 8) n))
-(define (get-extra-register cgc n) (vector-ref (get-in-cgc cgc info-index 9) n))
-
-(define (get-thread-descriptor-opnd cgc name)
-  (let* ((table (get-thread-descriptor-table cgc))
-         (opnd (table-ref table name #f)))
-    (if opnd
-      opnd
-      (compiler-internal-error "Unknown thread descriptor field: " name))))
+(define (get-word-width cgc)        (get-in-cgc cgc info-index 0))
+(define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
+(define (get-endianness cgc)        (get-in-cgc cgc info-index 1))
+(define (is-load-store? cgc)        (get-in-cgc cgc info-index 2))
+(define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 3))
+(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
+(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
+(define (get-register  cgc n)       (vector-ref (get-in-cgc cgc info-index 6) n))
+(define (get-spill-register cgc n)  (vector-ref (get-in-cgc cgc info-index 7) n))
+(define (get-extra-register cgc n)  (vector-ref (get-in-cgc cgc info-index 8) n))
 
 (define (get-primitive-object cgc name)
   (let* ((table (get-primitive-table cgc))
@@ -497,12 +483,11 @@
 
 ;; ***** Default Routines
 
-(define (default-check-narg cgc narg)
+(define (default-check-narg cgc narg narg-loc error-lbl)
   (debug "default-check-narg: " narg)
-  (let ((opnd1 (get-thread-descriptor-opnd cgc 'narg))
-        (opnd2 (int-opnd cgc narg)))
-    (am-compare-jump cgc opnd1 opnd2 condition-not-equal (get-other-label cgc 'WRONG_NARGS_LBL) #f)))
+  (let ((opnd2 (int-opnd cgc narg)))
+    (am-compare-jump cgc narg-loc opnd2 condition-not-equal error-lbl #f)))
 
-(define (default-set-narg cgc narg)
+(define (default-set-narg cgc narg narg-loc)
   (debug "default-set-narg: " narg)
-  (am-mov cgc (get-thread-descriptor-opnd cgc 'narg) (int-opnd cgc narg)))
+  (am-mov cgc narg-loc (int-opnd cgc narg)))
