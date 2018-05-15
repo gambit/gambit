@@ -295,6 +295,8 @@
 
   (am-init cgc)
 
+  (am-set-narg cgc 0)
+
   (map-on-procs encode-proc procs)
 
   (am-end cgc)
