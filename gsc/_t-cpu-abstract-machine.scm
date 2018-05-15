@@ -187,8 +187,8 @@
 
 (define (get-in-cgc cgc i1 i2)
   (let* ((target (codegen-context-target cgc))
-        (info (target-extra target 0))
-        (field (vector-ref (vector-ref info i1) i2)))
+         (info (target-extra target 0))
+         (field (vector-ref (vector-ref info i1) i2)))
     field))
 
 (define (exec-in-cgc cgc i1 i2 args)
@@ -277,30 +277,14 @@
 
 (define (get-proc-label-table cgc) (get-state-field cgc 0))
 (define (get-object-label-table cgc) (get-state-field cgc 1))
-(define (get-other-label-table cgc) (get-state-field cgc 2))
+(define (get-label-table cgc) (get-state-field cgc 2))
 
 (define (make-state)
   (vector
     (make-table test: equal?) ;; Labels of proc. (Key, Value) == (Label id, (Label, Maybe Proc-obj))
     (make-table test: equal?) ;; Labels for objects
-    (make-other-labels-table) ;; Other labels
+    (make-table test: equal?) ;; Other labels
     ))
-
-(define (make-other-labels-table)
-  (let ((table (make-table test: eqv?)))
-    ;; todo: Reduce repetition
-    (for-each
-      (lambda (sym) (table-set! table sym (asm-make-label cgc sym)))
-      '(THREAD_DESCRIPTOR
-        C_START_LBL
-        C_RETURN_LBL
-        WRONG_NARGS_LBL
-        OVERFLOW_LBL
-        UNDERFLOW_LBL
-        INTERRUPT_LBL
-        TYPE_ERROR_LBL))
-
-    table))
 
 (define (table-get-or-set table key def-val)
   (let ((x (table-ref table key #f)))
@@ -320,8 +304,8 @@
          (def-lbl (list (asm-make-label cgc lbl-id) proc)))
     (car (table-get-or-set table lbl-id def-lbl))))
 
-(define (get-other-label cgc sym)
-  (let* ((table (get-other-label-table cgc))
+(define (get-label cgc sym)
+  (let* ((table (get-label-table cgc))
          (def-lbl (asm-make-label cgc sym)))
     (table-get-or-set table sym def-lbl)))
 

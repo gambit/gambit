@@ -20,22 +20,29 @@
 
 (define is-load-store-arch #f)
 
-(define na (x86-cl))  ;; number of arguments register
-(define sp (x86-rsp)) ;; Real stack limit
-(define fp (x86-rdx)) ;; Simulated stack current pos
-(define dp (x86-rcx)) ;; Thread descriptor register
-(define runtime-result-register (x86-rax))
+(define narg-pointer (x86-cl))  ;; number of arguments register
+(define stack-pointer (x86-rsp)) ;; Real stack limit
+(define frame-pointer (x86-rdx)) ;; Simulated stack current pos
 
 (define stack-size 10000) ;; Scheme stack size (bytes)
 ;; 500 is the safe minimum for (fib 40)
 (define thread-descriptor-size 32) ;; Thread descriptor size (bytes)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
-(define frame-offset 1) ;; stack offset so that frame[1] is at null offset from fp
+(define frame-offset 1) ;; stack offset so that frame[1] is at null offset from frame-pointer
 
 ;; 64 = 01000000_2 = 0x40. -64 = 11000000_2 = 0xC0
 ;; 0xC0 unsigned = 192
 (define na-reg-default-value -64)
 (define na-reg-default-value-abs 192)
+
+(define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
+(define (C_START_LBL cgc)           (get-label cgc 'C_START_LBL))
+(define (C_RETURN_LBL cgc)          (get-label cgc 'C_RETURN_LBL))
+(define (WRONG_NARGS_LBL cgc)       (get-label cgc 'WRONG_NARGS_LBL))
+(define (OVERFLOW_LBL cgc)          (get-label cgc 'OVERFLOW_LBL))
+(define (UNDERFLOW_LBL cgc)         (get-label cgc 'UNDERFLOW_LBL))
+(define (INTERRUPT_LBL cgc)         (get-label cgc 'INTERRUPT_LBL))
+(define (TYPE_ERROR_LBL cgc)        (get-label cgc 'TYPE_ERROR_LBL))
 
 ;;------------------------------------------------------------------------------
 
@@ -62,11 +69,12 @@
 
 ;; Thread descriptor table
 
-(define thread-descriptor-table
-  (let ((table (make-table test: equal?)))
-    (table-set! table 'underflow-position (x86-rax))
-    (table-set! table 'interrupt-flag     (x86-rax))
-    (table-set! table 'narg               (x86-rax))
+(define (thread-descriptor-table targ)
+  (let ((table (make-table test: equal?))
+        (label (apply-on-targ THREAD_DESCRIPTOR_LBL targ)))
+    (table-set! table 'underflow-position (x86-imm-lbl label 0))
+    (table-set! table 'interrupt-flag     (x86-imm-lbl label 8))
+    (table-set! table 'narg               (x86-imm-lbl label 16))
 
     table))
 
@@ -83,7 +91,7 @@
     8                         ;; Word width
     'le                       ;; Endianness
     is-load-store             ;; Load store architecture?
-    fp                        ;; Stack pointer register
+    frame-pointer                        ;; Stack pointer register
     frame-offset              ;; Frame offset
     thread-descriptor-table   ;; Thread descriptor table
     primitive-object-table    ;; Primitive table
@@ -128,7 +136,7 @@
   (make-instruction-dictionnary
     x86-label-align ;; am-lbl
     data-instr      ;; am-data
-    mov-instr       ;; am-mov.
+    mov-instr       ;; am-mov
     x86-lea         ;; am-load-mem-address
     x86-add         ;; am-add
     x86-sub         ;; am-sub
@@ -180,7 +188,6 @@
             (else
               (compiler-internal-error "cmp-jump-instr - Unknown condition: " condition))))
 
-  (display "cmp-jump-instr")
   (let* ((jumps (get-jumps condition)))
 
     ;; In case both jump locations are false, the cmp is unnecessary.
@@ -205,8 +212,8 @@
 (define (routines)
   (make-routine-dictionnary
     x64-poll
-    default-set-narg
-    default-check-narg
+    x64-set-narg
+    x64-check-narg
     x64-init-routine
     x64-end-routine
     x64-error-routine
@@ -214,53 +221,104 @@
     ))
 
 (define (x64-poll cgc code)
-  ;; Reminder: sp is the real stack pointer and fp is the simulated stack pointer
-  ;; In memory
-  ;; +++: underflow location
-  ;; ++ : fp
-  ;; +  : sp
-  ;; 0  : Overflow
-  ;; sp < fp < underflow
+  ;; Reminder: stack-pointer is the real stack pointer and frame-pointer is the simulated stack pointer
+  ;; stack-pointer {overflow pos} < frame-pointer < {underflow pos}
   (define (check-overflow)
     (debug "check-overflow")
     (let ((condition (condition-greater #f #f))
-          (error-lbl (get-other-label cgc 'OVERFLOW_LBL)))
-      (am-compare-jump cgc fp sp condition error-lbl #f)))
+          (error-lbl (OVERFLOW_LBL cgc)))
+      (am-compare-jump cgc frame-pointer stack-pointer condition error-lbl #f)))
   (define (check-underflow)
     (debug "check-underflow")
     (let ((opnd (get-thread-descriptor-opnd cgc 'underflow-position))
           (condition (condition-not-greater #f #f))
-          (error-lbl (get-other-label cgc 'UNDERFLOW_LBL)))
-      (am-compare-jump cgc opnd fp condition error-lbl #f)))
+          (error-lbl (UNDERFLOW_LBL cgc)))
+      (am-compare-jump cgc opnd frame-pointer condition error-lbl #f)))
 
   (define (check-interrupt)
     (debug "check-interrupt")
     (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
           (condition condition-not-equal)
-          (error-lbl (get-other-label cgc 'INTERRUPT_LBL)))
+          (error-lbl (INTERRUPT_LBL cgc)))
       (am-compare-jump cgc opnd (int-opnd cgc 0) condition error-lbl #f)))
 
   (make-poll check-interrupt check-underflow check-overflow))
+
+(define (make-parity-adjusted-valued n)
+  (define (bit-count n)
+    (if (= n 0)
+      0
+      (+ (modulo n 2) (bit-count (quotient n 2)))))
+  (let* ((narg2 (* 2 (- n 3)))
+        (bits (bit-count narg2))
+        (parity (modulo bits 2)))
+    (+ 64 parity narg2)))
+
+(define (x64-set-narg cgc narg)
+    (debug "x64-set-narg: " narg "\n")
+    (cond
+      ((= narg 0)
+        (x86-cmp cgc narg-pointer narg-pointer))
+      ((= narg 1)
+        (x86-cmp cgc narg-pointer (int-opnd cgc -65)))
+      ((= narg 2)
+        (x86-cmp cgc narg-pointer (int-opnd cgc 66)))
+      ((= narg 3)
+        (x86-cmp cgc narg-pointer (int-opnd cgc 0)))
+      ((<= narg 34)
+        (x86-add cgc narg-pointer (int-opnd cgc (make-parity-adjusted-valued narg))))
+      (else
+        (default-set-narg cgc narg))))
+
+(define (x64-check-narg cgc narg)
+  (debug "x64-check-narg: " narg "\n")
+  (let ((error-lbl (WRONG_NARGS_LBL cgc)))
+    (cond
+      ((= narg 0)
+        (x86-jne cgc error-lbl))
+      ((= narg 1)
+        (x86-jp cgc error-lbl))
+      ((= narg 2)
+        (x86-jno cgc error-lbl))
+      ((= narg 3)
+        (x86-jns cgc error-lbl))
+      ((<= narg 34)
+        (x86-sub cgc narg-pointer (int-opnd cgc (make-parity-adjusted-valued narg)))
+        (x86-jne cgc error-lbl))
+      (else
+        (default-check-narg cgc narg error-lbl)))))
 
 ;; Start routine
 ;; Gets executed before main
 (define (x64-init-routine cgc)
   (debug "put-init-routine")
 
-  (am-lbl cgc (get-other-label cgc 'C_START_LBL)) ;; Initial procedure label
+  (am-lbl cgc (C_START_LBL cgc)) ;; Initial procedure label
   ;; Thread descriptor initialization
   ;; Set thread descriptor address
-  (am-mov cgc dp (lbl-opnd cgc (get-other-label cgc 'THREAD_DESCRIPTOR)))
+  ; (am-mov cgc dp (lbl-opnd cgc (THREAD_DESCRIPTOR_LBL cgc)))
   ;; Set lower bytes of descriptor register used for passing narg
-  (am-mov cgc na (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
+  (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
   ;; Set underflow position to current stack pointer position
-  (am-mov cgc (get-thread-descriptor-opnd cgc 'underflow-position) sp)
+  (am-mov cgc (get-thread-descriptor-opnd cgc 'underflow-position) stack-pointer)
   ;; Set interrupt flag to current stack pointer position
-  (am-mov cgc (get-thread-descriptor-opnd cgc 'interrupt-flag) (int-opnd cgc 0) (get-word-width-bits cgc))
+  (am-mov cgc
+    (get-thread-descriptor-opnd cgc 'interrupt-flag)
+    (int-opnd cgc 0)
+    (get-word-width-bits cgc))
 
-  (am-mov cgc (get-register cgc 0) (lbl-opnd cgc (get-other-label cgc 'C_RETURN_LBL))) ;; Set return address for main
-  (am-load-mem-address cgc fp (mem-opnd cgc (* frame-offset (- (get-word-width cgc))) sp)) ;; Align frame with offset
-  (am-sub cgc sp (int-opnd cgc stack-size)))
+  ;; Set return address for main
+  (am-mov cgc
+    (get-register cgc 0)
+    (lbl-opnd cgc (C_RETURN_LBL cgc)))
+
+  ;; Align frame with offset
+  (am-load-mem-address cgc
+    frame-pointer
+    (mem-opnd cgc (* frame-offset (- (get-word-width cgc))) stack-pointer))
+
+  ;; Allocate stack
+  (am-sub cgc stack-pointer (int-opnd cgc stack-size)))
 
 ;; End routine
 ;; Gets executed after main if no error happened during execution
@@ -268,9 +326,9 @@
   (debug "put-end-routine")
 
   ;; Terminal procedure
-  (am-lbl cgc (get-other-label cgc 'C_RETURN_LBL))
-  (am-add cgc sp (int-opnd cgc stack-size))
-  (am-mov cgc runtime-result-register (get-register cgc 1))
+  (am-lbl cgc (C_RETURN_LBL cgc))
+  (am-add cgc stack-pointer (int-opnd cgc stack-size))
+  (am-mov cgc (x86-rax) (get-register cgc 1))
   (x86-ret cgc)) ;; Exit program
 
 ;; Error routine
@@ -278,20 +336,20 @@
 (define (x64-error-routine cgc)
   (debug "put-error-routine")
 
-  (am-lbl cgc (get-other-label cgc 'WRONG_NARGS_LBL)) ;; Incorrect narg handling
-  (am-lbl cgc (get-other-label cgc 'OVERFLOW_LBL))    ;; Overflow handling
-  (am-lbl cgc (get-other-label cgc 'UNDERFLOW_LBL))   ;; Underflow handling
-  (am-lbl cgc (get-other-label cgc 'INTERRUPT_LBL))   ;; Interrupts handling
-  (am-lbl cgc (get-other-label cgc 'TYPE_ERROR_LBL))  ;; Type error handling
+  (am-lbl cgc (WRONG_NARGS_LBL cgc)) ;; Incorrect narg handling
+  (am-lbl cgc (OVERFLOW_LBL cgc))    ;; Overflow handling
+  (am-lbl cgc (UNDERFLOW_LBL cgc))   ;; Underflow handling
+  (am-lbl cgc (INTERRUPT_LBL cgc))   ;; Interrupts handling
+  (am-lbl cgc (TYPE_ERROR_LBL cgc))  ;; Type error handling
 
-  (am-mov cgc fp (get-thread-descriptor-opnd cgc 'underflow-position)) ;; Pop stack
+  (am-mov cgc frame-pointer (get-thread-descriptor-opnd cgc 'underflow-position)) ;; Pop stack
 
   ;; Pop remaining stack (Everything allocated but stack size)
-  (am-add cgc sp (int-opnd cgc stack-size))
-  (am-mov cgc runtime-result-register (int-opnd cgc -4))
+  (am-add cgc stack-pointer (int-opnd cgc stack-size))
+  (am-mov cgc (x86-rax) (int-opnd cgc -4))
   (x86-ret cgc 0))
 
 (define (x64-place-extra-data cgc)
   (debug "place-extra-data")
-  (am-lbl cgc (get-other-label cgc 'THREAD_DESCRIPTOR) (cons 256 1))
+  (am-lbl cgc (THREAD_DESCRIPTOR_LBL cgc) (cons 256 0))
   (reserve-space cgc thread-descriptor-size 0))
