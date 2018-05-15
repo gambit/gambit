@@ -207,6 +207,12 @@
 (define (get-spill-register cgc n)  (vector-ref (get-in-cgc cgc info-index 7) n))
 (define (get-extra-register cgc n)  (vector-ref (get-in-cgc cgc info-index 8) n))
 
+;; NOTICE THAT IT TAKES A TARGET INSTEAD OF CGC
+(define (get-make-cgc-fun target)
+  (let* ((info (target-extra target 0))
+         (field (vector-ref (vector-ref info info-index) 9)))
+    field))
+
 (define (get-primitive-object cgc name)
   (let* ((table (get-primitive-table cgc))
          (prim (table-ref table (string->symbol name) #f)))
@@ -214,10 +220,6 @@
       prim
       (compiler-internal-error "Primitive not implemented: " name))))
 
-(define (get-make-cgc-fun target)
-  (let* ((info (target-extra target 0))
-         (field (vector-ref (vector-ref info info-index) 10)))
-    field))
 
 ;; ***** AM: Operands fields
 
