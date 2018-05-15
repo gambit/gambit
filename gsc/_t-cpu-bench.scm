@@ -82,37 +82,30 @@
 (define test-value #f)
 (define test-results '())
 
-(define (test-values values sample-count procs)
-  ; (set! debug #f)
+(define (test-values targ values sample-count procs)
+  ; (set! _debug #f)
 
   (if (not (null? values))
-    (let* ((handler x86-64-backend)
-           (cgc (make-codegen-context))
+    (let* ((cgc ((get-make-cgc-fun targ)))
            (value (car values)))
 
-      ; (display "Number of test remaining: ")
-      ; (display (length values))
-      ; (display "\n")
-      ; (display "Current value: ")
-      ; (display value)
-      ; (display "\n")
+      (codegen-context-target-set! cgc targ)
 
+      (debug "Number of test remaining: ")
+      (debug (length values))
+      (debug "\n")
+      (debug "Current value: ")
+      (debug value)
+      (debug "\n")
+
+      ;; Test value
       (set! test-value value)
-
-      (reset-state)
-
-      ;; Finishes initialization of CGC and instruction encoder
-      (setup-function cgc)
-      (codegen-context-listing-format-set! cgc 'gnu)
-
       ;; Encodes procs in CGC
       (encode-procs cgc procs)
-
       ;; Take sample
       (time-test-with-value cgc sample-count)
-
       ;; Loop
-      (test-values (cdr values) sample-count procs))))
+      (test-values targ (cdr values) sample-count procs))))
 
 (define (time-test-with-value cgc sample-count)
   (let* ((procedure (create-procedure cgc #t))
