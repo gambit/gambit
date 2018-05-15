@@ -69,14 +69,14 @@
 
 ;; Thread descriptor table
 
-(define (thread-descriptor-table targ)
-  (let ((table (make-table test: equal?))
-        (label (apply-on-targ THREAD_DESCRIPTOR_LBL targ)))
-    (table-set! table 'underflow-position (x86-imm-lbl label 0))
-    (table-set! table 'interrupt-flag     (x86-imm-lbl label 8))
-    (table-set! table 'narg               (x86-imm-lbl label 16))
+(define (get-thread-descriptor-opnd cgc sym)
+  (let ((label (THREAD_DESCRIPTOR_LBL cgc)))
+    (case sym
+      ((underflow-position) (x86-imm-lbl label 0))
+      ((interrupt-flag)     (x86-imm-lbl label 8))
+      ((narg)               (x86-imm-lbl label 16))
+      (else (compiler-internal-error "Unknown thread descriptor field: " sym)))))
 
-    table))
 
 ;;                             x86 64 bits backend
 
@@ -90,10 +90,9 @@
   (make-backend-info
     8                         ;; Word width
     'le                       ;; Endianness
-    is-load-store             ;; Load store architecture?
-    frame-pointer                        ;; Stack pointer register
+    is-load-store-arch        ;; Load store architecture?
+    frame-pointer             ;; Stack pointer register
     frame-offset              ;; Frame offset
-    thread-descriptor-table   ;; Thread descriptor table
     primitive-object-table    ;; Primitive table
     (vector                   ;; Main registers
       (x86-r15) (x86-r14) (x86-r13) (x86-r12) (x86-r11))
@@ -162,7 +161,7 @@
   (if (lbl-opnd? cgc dst)
     (let ((extra-reg (get-extra-register cgc 0)))
       (x86-mov cgc extra-reg dst)
-      (x86-mov cgc (x86-mem 0 extra-reg) src))
+      (x86-mov cgc (x86-mem 0 extra-reg) src width))
     (x86-mov cgc dst src width)))
 
 (define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false)
@@ -294,9 +293,6 @@
   (debug "put-init-routine")
 
   (am-lbl cgc (C_START_LBL cgc)) ;; Initial procedure label
-  ;; Thread descriptor initialization
-  ;; Set thread descriptor address
-  ; (am-mov cgc dp (lbl-opnd cgc (THREAD_DESCRIPTOR_LBL cgc)))
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
   ;; Set underflow position to current stack pointer position
