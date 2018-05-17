@@ -61,7 +61,7 @@
 ;;  The following branching instructions are required:
 ;;    am-jmp          : Jump to location
 ;;    am-compare-jump : Jump to location only if condition is set after comparison
-;;                      Args : cgc location-true location-false operand1 operand2 condition
+;;                      Args : cgc location-true location-false operand1 operand2 condition opnds-width (optional)
 ;;
 ;;    data Condition = Equal
 ;;                   | NotEqual
@@ -465,9 +465,9 @@
       (if (jump-poll? gvm-instr)
         (begin
           (cond
-            ((< 0 fs-gain) (check-overflow))
-            ((> 0 fs-gain) (check-underflow)))
-          (check-interrupt))))))
+            ((< 0 fs-gain) (check-overflow cgc))
+            ((> 0 fs-gain) (check-underflow cgc)))
+          (check-interrupt cgc))))))
 
 ;; ***** Default Routines
 
