@@ -268,7 +268,8 @@
     (+ 64 parity narg2)))
 
 (define (x64-set-narg cgc narg)
-    (debug "x64-set-narg: " narg "\n")
+  (debug "x64-set-narg: " narg)
+  (let ((narg-loc (get-thread-descriptor-opnd cgc 'narg)))
     (cond
       ((= narg 0)
         (x86-cmp cgc narg-pointer narg-pointer))
@@ -281,11 +282,12 @@
       ((<= narg 34)
         (x86-add cgc narg-pointer (int-opnd cgc (make-parity-adjusted-valued narg))))
       (else
-        (default-set-narg cgc narg))))
+        (default-set-narg cgc narg narg-loc)))))
 
 (define (x64-check-narg cgc narg)
-  (debug "x64-check-narg: " narg "\n")
-  (let ((error-lbl (WRONG_NARGS_LBL cgc)))
+  (debug "x64-check-narg: " narg)
+  (let ((error-lbl (WRONG_NARGS_LBL cgc))
+        (narg-loc (get-thread-descriptor-opnd cgc 'narg)))
     (cond
       ((= narg 0)
         (x86-jne cgc error-lbl))
@@ -299,7 +301,7 @@
         (x86-sub cgc narg-pointer (int-opnd cgc (make-parity-adjusted-valued narg)))
         (x86-jne cgc error-lbl))
       (else
-        (default-check-narg cgc narg error-lbl)))))
+        (default-check-narg cgc narg narg-loc error-lbl)))))
 
 ;; Start routine
 ;; Gets executed before main
