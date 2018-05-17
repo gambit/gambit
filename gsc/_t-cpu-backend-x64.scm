@@ -23,9 +23,11 @@
 (define narg-pointer (x86-cl))  ;; number of arguments register
 (define stack-pointer (x86-rsp)) ;; Real stack limit
 (define frame-pointer (x86-rdx)) ;; Simulated stack current pos
+(define heap-pointer  (x86-rsi)) ;; Simulated stack current pos
 
 (define stack-size 10000) ;; Scheme stack size (bytes)
 ;; 500 is the safe minimum for (fib 40)
+(define heap-size  10000)  ;; Heap size (Bytes)
 (define thread-descriptor-size 32) ;; Thread descriptor size (bytes)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
 (define frame-offset 1) ;; stack offset so that frame[1] is at null offset from frame-pointer
@@ -38,11 +40,13 @@
 (define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
 (define (C_START_LBL cgc)           (get-label cgc 'C_START_LBL))
 (define (C_RETURN_LBL cgc)          (get-label cgc 'C_RETURN_LBL))
+(define (C_ERROR_LBL cgc)           (get-label cgc 'C_ERROR_LBL))
 (define (WRONG_NARGS_LBL cgc)       (get-label cgc 'WRONG_NARGS_LBL))
 (define (OVERFLOW_LBL cgc)          (get-label cgc 'OVERFLOW_LBL))
 (define (UNDERFLOW_LBL cgc)         (get-label cgc 'UNDERFLOW_LBL))
 (define (INTERRUPT_LBL cgc)         (get-label cgc 'INTERRUPT_LBL))
 (define (TYPE_ERROR_LBL cgc)        (get-label cgc 'TYPE_ERROR_LBL))
+(define (ALLOCATION_ERROR_LBL cgc)  (get-label cgc 'ALLOCATION_ERROR_LBL))
 
 ;;------------------------------------------------------------------------------
 
@@ -221,10 +225,13 @@
 
 ;;  Memory layout:
 ;;    HIGH
-;;    STACK END      <- stack-pointer
-;;    ...            <- frame-pointer
-;;    STACK START    <- underflow position
+;;    HEAP START
+;;    ...            <- heap-pointer
+;;    HEAP END       <- max allocation position
 ;;    EMPTY SPACE (Size stack-underflow-padding)
+;;    STACK START    <- underflow position
+;;    ...            <- frame-pointer
+;;    STACK END      <- stack-pointer
 ;;    LOW
 (define (check-overflow cgc)
     (debug "check-overflow")
@@ -235,7 +242,7 @@
 (define (check-underflow cgc)
     (debug "check-underflow")
   (let ((underflow-pos-reg (get-extra-register cgc 0))
-          (condition (condition-not-greater #f #f))
+        (condition (condition-greater #f #f))
           (error-lbl (UNDERFLOW_LBL cgc)))
     (am-mov cgc underflow-pos-reg stack-pointer)
     (am-add cgc underflow-pos-reg (int-opnd cgc stack-size))
@@ -309,26 +316,34 @@
   (debug "put-init-routine")
 
   (am-lbl cgc (C_START_LBL cgc)) ;; Initial procedure label
+
+  ;; Thread descriptor initialization
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
-  ;; Set interrupt flag to current stack pointer position
+  ;; Set interrupt flag to 0
   (am-mov cgc
     (get-thread-descriptor-opnd cgc 'interrupt-flag)
     (int-opnd cgc 0)
     (get-word-width-bits cgc))
 
+  ;; Allocate heap
+  (am-mov cgc heap-pointer stack-pointer)
+  (am-sub cgc stack-pointer (int-opnd cgc heap-size))
+
+  ;; Add space between stack and heap in case of underflow
+  (am-sub cgc stack-pointer (int-opnd cgc stack-underflow-padding))
+
+  ;; Set frame pointer to bottom of stack
+  (am-mov cgc frame-pointer stack-pointer)
+  ;; Align frame with offset
+  (am-sub cgc frame-pointer (int-opnd cgc (* frame-offset (get-word-width cgc))))
+  ;; Allocate stack
+  (am-sub cgc stack-pointer (int-opnd cgc stack-size))
+
   ;; Set return address for main
   (am-mov cgc
     (get-register cgc 0)
-    (lbl-opnd cgc (C_RETURN_LBL cgc)))
-
-  ;; Align frame with offset
-  (am-load-mem-address cgc
-    frame-pointer
-    (mem-opnd cgc (* frame-offset (- (get-word-width cgc))) stack-pointer))
-
-  ;; Allocate stack
-  (am-sub cgc stack-pointer (int-opnd cgc stack-size)))
+    (lbl-opnd cgc (C_RETURN_LBL cgc))))
 
 ;; End routine
 ;; Gets executed after main if no error happened during execution
@@ -337,7 +352,11 @@
 
   ;; Terminal procedure
   (am-lbl cgc (C_RETURN_LBL cgc))
-  (am-add cgc stack-pointer (int-opnd cgc stack-size))
+
+  ;; Pop stack and heap
+  (am-add cgc stack-pointer
+    (int-opnd cgc (+ stack-size heap-size stack-underflow-padding)))
+
   (am-mov cgc (x86-rax) (get-register cgc 1))
   (x86-ret cgc)) ;; Exit program
 
@@ -346,15 +365,30 @@
 (define (x64-error-routine cgc)
   (debug "put-error-routine")
 
-  (am-lbl cgc (WRONG_NARGS_LBL cgc)) ;; Incorrect narg handling
   (am-lbl cgc (OVERFLOW_LBL cgc))    ;; Overflow handling
-  (am-lbl cgc (UNDERFLOW_LBL cgc))   ;; Underflow handling
-  (am-lbl cgc (INTERRUPT_LBL cgc))   ;; Interrupts handling
-  (am-lbl cgc (TYPE_ERROR_LBL cgc))  ;; Type error handling
+  (am-mov cgc (x86-rax) (int-opnd cgc -20))
+  (am-jmp cgc (C_ERROR_LBL cgc))
 
-  ;; Pop remaining stack (Everything allocated but stack size)
-  (am-add cgc stack-pointer (int-opnd cgc stack-size))
+  (am-lbl cgc (UNDERFLOW_LBL cgc))   ;; Underflow handling
+  (am-mov cgc (x86-rax) (int-opnd cgc -16))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (WRONG_NARGS_LBL cgc)) ;; Incorrect narg handling
+  (am-mov cgc (x86-rax) (int-opnd cgc -12))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (INTERRUPT_LBL cgc))   ;; Interrupts handling
+  (am-mov cgc (x86-rax) (int-opnd cgc -8))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (TYPE_ERROR_LBL cgc))  ;; Type error handling
   (am-mov cgc (x86-rax) (int-opnd cgc -4))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (C_ERROR_LBL cgc))
+  ;; Pop stack and heap
+  (am-add cgc stack-pointer
+    (int-opnd cgc (+ stack-size heap-size stack-underflow-padding)))
   (x86-ret cgc 0))
 
 (define (x64-place-extra-data cgc)
