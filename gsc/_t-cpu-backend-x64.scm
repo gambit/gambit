@@ -234,16 +234,16 @@
 ;;    STACK END      <- stack-pointer
 ;;    LOW
 (define (check-overflow cgc)
-    (debug "check-overflow")
+  (debug "check-overflow")
   (let ((condition (condition-not-greater #f #f))
-          (error-lbl (OVERFLOW_LBL cgc)))
-      (am-compare-jump cgc frame-pointer stack-pointer condition error-lbl #f)))
+        (error-lbl (OVERFLOW_LBL cgc)))
+    (am-compare-jump cgc frame-pointer stack-pointer condition error-lbl #f)))
 
 (define (check-underflow cgc)
-    (debug "check-underflow")
+  (debug "check-underflow")
   (let ((underflow-pos-reg (get-extra-register cgc 0))
         (condition (condition-greater #f #f))
-          (error-lbl (UNDERFLOW_LBL cgc)))
+        (error-lbl (UNDERFLOW_LBL cgc)))
     (am-mov cgc underflow-pos-reg stack-pointer)
     (am-add cgc underflow-pos-reg (int-opnd cgc stack-size))
     (am-compare-jump cgc
