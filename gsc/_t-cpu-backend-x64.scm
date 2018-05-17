@@ -72,9 +72,8 @@
 (define (get-thread-descriptor-opnd cgc sym)
   (let ((label (THREAD_DESCRIPTOR_LBL cgc)))
     (case sym
-      ((underflow-position) (x86-imm-lbl label 0))
-      ((interrupt-flag)     (x86-imm-lbl label 8))
-      ((narg)               (x86-imm-lbl label 16))
+      ((interrupt-flag)     (x86-imm-lbl label 0))
+      ((narg)               (x86-imm-lbl label 8))
       (else (compiler-internal-error "Unknown thread descriptor field: " sym)))))
 
 
@@ -164,7 +163,7 @@
       (x86-mov cgc (x86-mem 0 extra-reg) src width))
     (x86-mov cgc dst src width)))
 
-(define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false)
+(define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
   (define (flip pair)
       (cons (cdr pair) (car pair)))
 
@@ -191,7 +190,7 @@
 
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
-      (x86-cmp cgc opnd1 opnd2))
+      (x86-cmp cgc opnd1 opnd2 opnds-width))
 
     (cond
       ((and loc-false loc-true)
@@ -220,29 +219,43 @@
     x64-place-extra-data
     ))
 
-(define (x64-poll cgc code)
-  ;; Reminder: stack-pointer is the real stack pointer and frame-pointer is the simulated stack pointer
-  ;; stack-pointer {overflow pos} < frame-pointer < {underflow pos}
-  (define (check-overflow)
+;;  Memory layout:
+;;    HIGH
+;;    STACK END      <- stack-pointer
+;;    ...            <- frame-pointer
+;;    STACK START    <- underflow position
+;;    EMPTY SPACE (Size stack-underflow-padding)
+;;    LOW
+(define (check-overflow cgc)
     (debug "check-overflow")
-    (let ((condition (condition-greater #f #f))
+  (let ((condition (condition-not-greater #f #f))
           (error-lbl (OVERFLOW_LBL cgc)))
       (am-compare-jump cgc frame-pointer stack-pointer condition error-lbl #f)))
-  (define (check-underflow)
+
+(define (check-underflow cgc)
     (debug "check-underflow")
-    (let ((opnd (get-thread-descriptor-opnd cgc 'underflow-position))
+  (let ((underflow-pos-reg (get-extra-register cgc 0))
           (condition (condition-not-greater #f #f))
           (error-lbl (UNDERFLOW_LBL cgc)))
-      (am-compare-jump cgc opnd frame-pointer condition error-lbl #f)))
+    (am-mov cgc underflow-pos-reg stack-pointer)
+    (am-add cgc underflow-pos-reg (int-opnd cgc stack-size))
+    (am-compare-jump cgc
+      frame-pointer underflow-pos-reg
+      condition
+      error-lbl #f)))
 
-  (define (check-interrupt)
-    (debug "check-interrupt")
-    (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
-          (condition condition-not-equal)
-          (error-lbl (INTERRUPT_LBL cgc)))
-      (am-compare-jump cgc opnd (int-opnd cgc 0) condition error-lbl #f)))
+(define (check-interrupt cgc) #f)
+  ; (debug "check-interrupt")
+  ; (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
+  ;       (condition condition-not-equal)
+  ;       (error-lbl (INTERRUPT_LBL cgc)))
+  ;   (am-compare-jump cgc
+  ;      opnd (int-opnd cgc 0)
+  ;      condition
+  ;      error-lbl #f
+  ;     (get-word-width-bits cgc))))
 
-  (make-poll check-interrupt check-underflow check-overflow))
+(define x64-poll (make-poll check-interrupt check-underflow check-overflow))
 
 (define (make-parity-adjusted-valued n)
   (define (bit-count n)
@@ -296,8 +309,6 @@
   (am-lbl cgc (C_START_LBL cgc)) ;; Initial procedure label
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
-  ;; Set underflow position to current stack pointer position
-  (am-mov cgc (get-thread-descriptor-opnd cgc 'underflow-position) stack-pointer)
   ;; Set interrupt flag to current stack pointer position
   (am-mov cgc
     (get-thread-descriptor-opnd cgc 'interrupt-flag)
@@ -338,8 +349,6 @@
   (am-lbl cgc (UNDERFLOW_LBL cgc))   ;; Underflow handling
   (am-lbl cgc (INTERRUPT_LBL cgc))   ;; Interrupts handling
   (am-lbl cgc (TYPE_ERROR_LBL cgc))  ;; Type error handling
-
-  (am-mov cgc frame-pointer (get-thread-descriptor-opnd cgc 'underflow-position)) ;; Pop stack
 
   ;; Pop remaining stack (Everything allocated but stack size)
   (am-add cgc stack-pointer (int-opnd cgc stack-size))
