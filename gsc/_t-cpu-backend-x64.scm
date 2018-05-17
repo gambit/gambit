@@ -251,18 +251,24 @@
       condition
       error-lbl #f)))
 
-(define (check-interrupt cgc) #f)
-  ; (debug "check-interrupt")
-  ; (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
-  ;       (condition condition-not-equal)
-  ;       (error-lbl (INTERRUPT_LBL cgc)))
-  ;   (am-compare-jump cgc
-  ;      opnd (int-opnd cgc 0)
-  ;      condition
-  ;      error-lbl #f
-  ;     (get-word-width-bits cgc))))
+(define (check-interrupt cgc)
+  (debug "check-interrupt")
+  (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
+        (mov-reg (get-extra-register cgc 0))
+        (condition condition-not-equal)
+        (error-lbl (INTERRUPT_LBL cgc)))
+    ;; Todo: If we could use labels as mem operands, we could remove mov
+    (am-mov cgc mov-reg opnd)
+    (am-compare-jump cgc
+      (mem-opnd cgc 0 mov-reg) (int-opnd cgc 0)
+      condition
+      error-lbl #f
+      (get-word-width-bits cgc))))
 
+;; Adds approximately 50ms.
+;; Can easily be more optimized
 (define x64-poll (make-poll check-interrupt check-underflow check-overflow))
+; (define x64-poll (lambda (cgc code) #f))
 
 (define (make-parity-adjusted-valued n)
   (define (bit-count n)
