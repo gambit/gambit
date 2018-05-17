@@ -334,18 +334,6 @@
     (am-mov cgc result-reg heap-pointer)
     (am-sub cgc heap-pointer (int-opnd cgc nb-bytes))))
 
-
-;   (let ((condition (condition-not-greater #f #f)))
-;     (am-compare-jump cgc heap-size)
-;     ))
-  ;; cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
-  ;; Check if space is available
-  ;; If yes,
-  ;;  (am-mov cgc reg-register heap-pointer)
-  ;;  (am-sub cgc heap-pointer (int-opnd cgc nb-bytes))
-  ;; If no,
-  ;;  (am-jmp cgc (ALL))
-
 ;; Start routine
 ;; Gets executed before main
 (define (x64-init-routine cgc)
