@@ -216,7 +216,7 @@
     x64-poll
     x64-set-narg
     x64-check-narg
-    #f
+    x64-allocate-heap
     x64-init-routine
     x64-end-routine
     x64-error-routine
@@ -316,6 +316,36 @@
       (else
         (default-check-narg cgc narg narg-loc error-lbl)))))
 
+(define (x64-allocate-heap cgc nb-bytes result-reg)
+  (let ((heap-limit-reg (get-extra-register cgc 0))
+        (condition (condition-not-greater #f #f))
+        (error-lbl (ALLOCATION_ERROR_LBL cgc)))
+
+    ;; Check if space is available
+    (am-mov cgc heap-limit-reg stack-pointer)
+    (am-add cgc heap-limit-reg
+      (int-opnd cgc (+ stack-size stack-underflow-padding nb-bytes)))
+    (am-compare-jump cgc
+      heap-pointer heap-limit-reg
+      condition
+      error-lbl #f)
+
+    ;; Can allocate
+    (am-mov cgc result-reg heap-pointer)
+    (am-sub cgc heap-pointer (int-opnd cgc nb-bytes))))
+
+
+;   (let ((condition (condition-not-greater #f #f)))
+;     (am-compare-jump cgc heap-size)
+;     ))
+  ;; cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
+  ;; Check if space is available
+  ;; If yes,
+  ;;  (am-mov cgc reg-register heap-pointer)
+  ;;  (am-sub cgc heap-pointer (int-opnd cgc nb-bytes))
+  ;; If no,
+  ;;  (am-jmp cgc (ALL))
+
 ;; Start routine
 ;; Gets executed before main
 (define (x64-init-routine cgc)
@@ -370,6 +400,10 @@
 ;; Gets executed if an error occurs
 (define (x64-error-routine cgc)
   (debug "put-error-routine")
+
+  (am-lbl cgc (ALLOCATION_ERROR_LBL cgc))    ;; Overflow handling
+  (am-mov cgc (x86-rax) (int-opnd cgc -24))
+  (am-jmp cgc (C_ERROR_LBL cgc))
 
   (am-lbl cgc (OVERFLOW_LBL cgc))    ;; Overflow handling
   (am-mov cgc (x86-rax) (int-opnd cgc -20))
