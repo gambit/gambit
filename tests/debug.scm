@@ -1,6 +1,6 @@
 ; File: "debug.scm"
 
-; Copyright (c) 1998-2016 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2018 by Marc Feeley, All Rights Reserved.
 
 ; Test program for Gambit's interpreter support for debugging.
 
@@ -46,10 +46,8 @@
 
 ;------------------------------------------------------------------------------
 
-(define word-size (##u8vector-length '#(#f))) ; may not work in the future
-
-(define (subprocedure p i) ; may not work in the future
-  (##encoding->object (+ (* i (* 4 word-size)) (##object->encoding p))))
+(define (subprocedure p i)
+  (##make-subprocedure p i))
 
 (define (check cprc)
 
