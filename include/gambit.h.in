@@ -2259,7 +2259,14 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 
 /* Object representation */
 
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+#define ___REFERENCE_TO_BODY (-1)
+#define ___PSTATE_ALIGN_MULTIPLIER 256
+#define ___PSTATE_ALIGN_MODULUS    192
+#undef ___USE_LABEL_VALUES
+#else
 #define ___REFERENCE_TO_BODY 1
+#endif
 
 #define ___BODY0(obj)(___UNTAG(obj)+___REFERENCE_TO_BODY)
 #define ___BODY0_AS(obj,tag)(___UNTAG_AS(obj,tag)+___REFERENCE_TO_BODY)
@@ -2913,8 +2920,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___PROCEDUREP(x)___TESTSUBTYPE(x,___sPROCEDURE)
 #define ___SUBPROCEDUREP(x) \
 (___PROCEDUREP(x) && \
- ___CAST(___label_struct*,(x)-___tSUBTYPED)->entry_or_descr == x && \
- !___TESTHEADERTAG(___CAST(___SCMOBJ*,(x)-___tSUBTYPED)[-___LS],___sVECTOR))
+ ___LABEL_ENTRY_GET(x) == x && \
+ !___TESTHEADERTAG(___SUBTYPED_TO_BODY(x)[-___LABEL_SIZE-1],___sVECTOR))
 #define ___CLOSUREP(x) \
 (___PROCEDUREP(x) && \
  ___HD_TYP(___SUBTYPED_HEADER(x)) != ___PERM)
@@ -3404,11 +3411,6 @@ ___STORE_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U64UNBOX(z));
 #define ___UNCHECKEDSTRUCTUREREF(x,i,type,proc)___VECTORREF(x,i)
 #define ___UNCHECKEDSTRUCTURESET(x,val,i,type,proc)___VECTORSET(x,i,val)
 #define ___UNCHECKEDSTRUCTURECAS(x,val,oldval,i,type,proc)___VECTORCAS(x,i,val,oldval)
-
-#define ___CLOSURELENGTH(x)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(x)))
-#define ___CLOSURECODE(x)___CLO(x,0)
-#define ___CLOSUREREF(x,y)___CLO(x,___INT(y))
-#define ___CLOSURESET(x,y,z)___SET_CLO(x,___INT(y),z)
 
 #define ___GLOBALVARSTRUCT(gv)___CAST(___glo_struct*,___FIELD(gv,___SYMBOL_GLOBAL))
 #define ___GLOBALVARREF(gv)___GLOCELL(___GLOBALVARSTRUCT(gv)->val)
@@ -4170,7 +4172,7 @@ ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LIN
 #define ___BEGIN_SW \
 ___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
 ___REGISTER_HOST_ENTRY \
-goto *___LABEL_HOST_LABEL(___pc);
+goto *___LABEL_HOST_LABEL_GET(___pc);
 
 #define ___DEF_SW(n)
 
@@ -4181,16 +4183,16 @@ ___jumpext:
 
 #define ___JUMP(dest) \
 {___pc=dest; \
- if (___EXPECT_TRUE(___LABEL_HOST(___pc) == ___HOST_PROC)) \
-   goto *___LABEL_HOST_LABEL(___pc); \
+ if (___EXPECT_TRUE(___LABEL_HOST_GET(___pc) == ___HOST_PROC)) \
+   goto *___LABEL_HOST_LABEL_GET(___pc); \
  goto ___jumpext;}
 
 #else
 
 #define ___END_SW \
 ___jump: \
-if (___EXPECT_TRUE(___LABEL_HOST(___pc) == ___HOST_PROC)) \
-  goto *___LABEL_HOST_LABEL(___pc); \
+if (___EXPECT_TRUE(___LABEL_HOST_GET(___pc) == ___HOST_PROC)) \
+  goto *___LABEL_HOST_LABEL_GET(___pc); \
 ___jumpext:
 
 #define ___JUMP(dest){___pc=dest;goto ___jump;}
@@ -4212,7 +4214,7 @@ ___jumpext:
 ___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
 ___REGISTER_HOST_ENTRY \
 ___jump: \
-switch((___pc-=___start)/(___LS*___WS)) \
+switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
 {
 
 #define ___DEF_SW(n)case ___PH_LBL0-___HOST_LBL0+n:
@@ -4228,8 +4230,6 @@ switch((___pc-=___start)/(___LS*___WS)) \
 #define ___BEGIN_P_SLBL ___SM(___NOTHING,___BEGIN_SLBL)
 #define ___DEF_P_SLBL(id)
 #define ___END_P_SLBL ___SM(___NOTHING,___END_SLBL)
-
-#define ___LS 4
 
 #define ___PSHEAP ___ps->hp
 #define ___D_HEAP register ___WORD *___hp;
@@ -5314,8 +5314,8 @@ switch (na) \
 #define ___NOT(x)!x
 #define ___AND(x,y)(x&&y)
 
-#define ___MLBL(n)___lp+((n)*___LS*___WS)
-#define ___LBL(n)___start+((___PH_LBL0-___HOST_LBL0+n)*___LS*___WS)
+#define ___MLBL(n)___lp+((n)*___LABEL_SIZE*___WS)
+#define ___LBL(n)___start+((___PH_LBL0-___HOST_LBL0+n)*___LABEL_SIZE*___WS)
 #define ___DEF_SLBL(n,lbl)___DEF_SW(n)___DEF_GLBL(lbl)
 #define ___DEF_GLBL(lbl)lbl:___AM_HERE_PS
 #define ___GOTO(lbl)goto lbl;
@@ -5324,12 +5324,12 @@ switch (na) \
 #define ___JUMPEXTPRM(nargs,val){nargs ___JUMPEXT(val)}
 #define ___JUMPEXTNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \
-___JUMPEXT(___LABEL_ENTRY_OR_DESCR(___SELF))}
+___JUMPEXT(___LABEL_ENTRY_GET(___SELF))}
 #define ___JUMPPRM(nargs,val){nargs ___JUMP(val)}
 
 #define ___JUMPNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \
-___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF))}
+___JUMP(___LABEL_ENTRY_GET(___SELF))}
 
 #define ___JUMPSAFE(nargs,val) ___JUMPNOTSAFE(nargs,val) /***************/
 
@@ -5338,12 +5338,12 @@ ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF))}
 #define ___JUMPGENSAFE(nargs,val) \
 {nargs ___SELF=val; \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
-  ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF)) \
+  ___JUMP(___LABEL_ENTRY_GET(___SELF)) \
 ___ps->temp1=___SELF;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc)}
 #define ___JUMPGLOSAFE(nargs,i,glo) \
 {nargs ___SELF=___GLO(i,glo); \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
-  ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF)) \
+  ___JUMP(___LABEL_ENTRY_GET(___SELF)) \
 ___ps->temp4=(___WORD)&___GLOSTRUCT(i,glo);___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc_glo)}
 
 #ifdef ___NOT_SAFE_CALLS
@@ -5382,7 +5382,7 @@ if (___EXPECT_TRUE(guard(___sw))) switch(___INT(___FIELD(___sw,___SYMKEY_HASH)) 
 
 /*---------------------------------------------------------------------------*/
 
-#define ___PRC(i)___start+((i-___HOST_LBL0)*___LS*___WS)
+#define ___PRC(i)___start+((i-___HOST_LBL0)*___LABEL_SIZE*___WS)
 
 #define ___SET_NARGS(n)___ps->na=n;
 
@@ -5413,14 +5413,75 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_key_rest)}
 #define ___BOOLEAN(x)(x)?___TRU:___FAL
 #define ___EXPR(x)x;
 
-#define ___ALLOC_CLO(n)(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n+1,___sPROCEDURE)),___END_ALLOC_SUBTYPED(n+1),___GET_SUBTYPED(n+1))
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+#ifdef ___CPU_x86_32
+
+#define ___LABEL_SIZE 4
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate x86-32 instruction: call lbl */ \
+     ___WORD dist = ___CAST(___WORD, \
+                            ___CAST(___UWORD,lbl) - \
+                            (___CAST(___UWORD,ptr) + ___WS + ___tSUBTYPED + 5)); \
+     (ptr)[___LABEL_HOST_LABEL] = (0xe8L << (8*___tSUBTYPED)) \
+                                  + (dist << (8*(___tSUBTYPED+1))); \
+     (ptr)[___LABEL_HOST_LABEL+1] = (dist >> (8*(___WS-(___tSUBTYPED+1)))); \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate x86-32 instruction: call *-4(%ecx) */ \
+     (ptr)[___LABEL_HOST_LABEL] = 0xfc51ff << (8*___tSUBTYPED); \
+   } while (0)
+
+#else
+#ifdef ___CPU_x86_64
+
+#define ___LABEL_SIZE 4
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate x86-64 instruction: call *-15(%rip) */ \
+     (ptr)[___LABEL_HOST_LABEL] = 0xfffffff115ffL << (8*___tSUBTYPED); \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate x86-64 instruction: call *-8(%rcx) */ \
+     (ptr)[___LABEL_HOST_LABEL] = 0xf851ff << (8*___tSUBTYPED); \
+   } while (0)
+
+#endif
+#endif
+
+#endif
+
+#ifndef ___LABEL_SIZE
+#define ___LABEL_SIZE 4
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 0
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl)
+#endif
+
+#define ___ALLOC_CLO(n)(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE),___sPROCEDURE)),___END_ALLOC_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)),___GET_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)))
 #define ___BEGIN_SETUP_CLO(n,clo,lbl) \
 {___WORD *___ptr=___BODY0_AS(clo,___tSUBTYPED); \
-___ptr[0]=___LBL(lbl);
-#define ___ADD_CLO_ELEM(i,val)___ptr[i+1]=(val);
+___ptr[___LABEL_ENTRY_OR_DESCR]=___LBL(lbl); \
+___CLO_LOWLEVEL_TRAMPOLINE_SETUP(___ptr,___LBL(lbl));
+#define ___ADD_CLO_ELEM(i,val)___ptr[i+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)]=(val);
 #define ___END_SETUP_CLO(n) }
-#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y]
-#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y]=z;
+#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]
+#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]=z;
+
+#define ___CLOSURELENGTH(x)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(x))-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
+#define ___CLOSURECODE(x)___CLO(x,-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
+#define ___CLOSUREREF(x,y)___CLO(x,___INT(y))
+#define ___CLOSURESET(x,y,z)___SET_CLO(x,___INT(y),z)
 
 #define ___BEGIN_ALLOC_LIST(n,last)___ALLOC_PAIR(last,___NUL)
 #define ___ADD_LIST_ELEM(i,val)___ALLOC_PAIR(val,___GET_PAIR())
@@ -5660,12 +5721,18 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMI
 #ifdef ___LOCAL_GSTATE
 
 #define ___GSTATE ___local_gstate
+
 #define ___GSTATEDECL ___LOCAL ___global_state ___local_gstate;
 #define ___SET_LOCAL_GSTATE(gs) ___local_gstate = gs;
 
 #else
 
+#ifdef ___PSTATE_ALIGN_MULTIPLIER
+#define ___GSTATE ___CAST(___global_state,___ALIGNUP(&___gstate0,___PSTATE_ALIGN_MULTIPLIER))
+#else
 #define ___GSTATE (&___gstate0)
+#endif
+
 #define ___GSTATEDECL ___IMP_DATA(___global_state_struct,___gstate0);
 #define ___SET_LOCAL_GSTATE(gs)
 
@@ -5675,7 +5742,7 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMI
 
 /* Use direct access to the only pstate */
 
-#define ___GET_PSTATE() ___GSTATE->vmstate0.pstate
+#define ___GET_PSTATE() (&___GSTATE->vmstate0.aligned_pstate[0].pstate)
 #define ___SET_PSTATE(ps)
 
 #else
@@ -5799,7 +5866,13 @@ extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 #define ___PSP ___PSA(___PSVNC)
 
 #ifdef ___SINGLE_THREADED_VMS
-#define ___VMSTATE_FROM_PSTATE(ps) ___CAST(___virtual_machine_state,ps)
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+#define ___VMSTATE_FROM_PSTATE(ps) \
+  ___CAST(___virtual_machine_state,___CAST(___aligned_lowlevel_processor_state_struct*,ps)-1)
+#else
+#define ___VMSTATE_FROM_PSTATE(ps) \
+___CAST(___virtual_machine_state,ps)
+#endif
 #else
 #define ___VMSTATE_FROM_PSTATE(ps) ps->vmstate
 #endif
@@ -6237,11 +6310,31 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #define ___FRAME_RESERVE 3
 #define ___FRAME_ALIGN 4
 
+#if ___LABEL_SIZE == 4
+#define ___LBL_TAIL
+#else
+#if ___LABEL_SIZE == 5
+#define ___LBL_TAIL ,0
+#else
+#if ___LABEL_SIZE == 6
+#define ___LBL_TAIL ,0,0
+#else
+#if ___LABEL_SIZE == 7
+#define ___LBL_TAIL ,0,0,0
+#else
+#if ___LABEL_SIZE == 8
+#define ___LBL_TAIL ,0,0,0,0
+#endif
+#endif
+#endif
+#endif
+#endif
+
 #define ___BEGIN_LBL \
 ___LOCAL ___label_struct ___lbltbl[]={
-#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc){___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM),info,___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name),___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc))}
-#define ___DEF_LBL_PROC(id,nbp,nbc){___PRD(nbp,nbc),0,0,___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id))}
-#define ___DEF_LBL_RET(id,frm){___MAKE_HD((3<<___LWS),___sRETURN,___PERM),frm,0,___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id))}
+#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc){___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc)),___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM),info,___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name) ___LBL_TAIL}
+#define ___DEF_LBL_PROC(id,nbp,nbc){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___PRD(nbp,nbc),0,0 ___LBL_TAIL}
+#define ___DEF_LBL_RET(id,frm){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___MAKE_HD(0,___sRETURN,___PERM),frm,0 ___LBL_TAIL}
 
 #define ___END_LBL ___PADDING_LBL};
 
@@ -6290,28 +6383,28 @@ ___MAKE_HD(((nbclosed+1)<<12)+nbparms,___sPROCEDURE,___PERM)
 ___ROUND_TO_MULT(fs,___FRAME_ALIGN)+___FRAME_SPACE(___NB_GVM_REGS+1)-___FRAME_RESERVE
 
 #define ___RETI_GET_CFS(ra,fs) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
 fs = ___OFD_FS(*(___WORD*)descr); }
 
 #define ___RETI_GET_FS(ra,fs) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); \
 else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(*(___WORD*)descr)); }
 
 #define ___RETN_GET_FS(ra,fs) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
 fs = ___OFD_FS(*(___WORD*)descr); }
 
 #define ___RETI_GET_FS_LINK(ra,fs,link) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); } \
 else \
@@ -6319,7 +6412,7 @@ else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK(ra,fs,link) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
 else \
@@ -6327,7 +6420,7 @@ else \
 fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 
 #define ___RETI_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); \
 firstgcmap = ___IFD_GCMAP(descr); } \
@@ -6336,7 +6429,7 @@ else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { firstgcmap = ___IFD_GCMAP(descr); \
 fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
@@ -8411,7 +8504,7 @@ typedef struct ___vmstate_fdset_struct {
   ___VOLATILE int overflow;
 } ___vmstate_fdset;
 #endif
- 
+
 typedef struct ___vmstate_os_struct {
 #ifdef ___OS_WIN32
   int dummy; /* avoid empty struct error raised by MSVC */
@@ -8546,7 +8639,10 @@ typedef struct ___processor_state_struct
     ___WORD *hp;
 
     ___WORD r[___NB_GVM_REGS];
+
     ___WORD pc;
+    int na;
+
     ___WORD temp1;
     ___WORD temp2;
     ___WORD temp3;
@@ -8554,8 +8650,6 @@ typedef struct ___processor_state_struct
 
     ___F64 f64_temp1;
     ___F64 f64_temp2;
-
-    int na;
 
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
@@ -8616,22 +8710,78 @@ typedef struct ___processor_state_struct
 #endif
   } ___processor_state_struct;
 
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+typedef struct ___lowlevel_processor_state_struct
+  {
+    ___WORD *lowlevel_leave_sp;
+    ___WORD *lowlevel_leave_handler;
+  } ___lowlevel_processor_state_struct;
+
+typedef struct ___aligned_lowlevel_processor_state_struct
+  {
+#ifdef ___PSTATE_ALIGN_MODULUS
+    /*
+     * pad so that the structure will be of a size that is a multiple
+     * of ___PSTATE_ALIGN_MODULUS
+     */
+    ___WORD padding[(___PSTATE_ALIGN_MODULUS
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+                     - sizeof(___lowlevel_processor_state_struct)
+#endif
+                    ) >> ___LWS];
+#endif
+    ___lowlevel_processor_state_struct llpstate;
+  } ___aligned_lowlevel_processor_state_struct;
+
+#endif
+
+typedef struct ___aligned_processor_state_struct
+  {
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+    ___aligned_lowlevel_processor_state_struct aligned_llpstate;
+#endif
+
+    ___processor_state_struct pstate;
+
+#if ___MAX_PROCESSORS > 1
+#ifdef ___PSTATE_ALIGN_MULTIPLIER
+    /*
+     * pad so that ___aligned_processor_state_struct is a size that is
+     * a multiple of ___PSTATE_ALIGN_MULTIPLIER
+     */
+    char padding[___PSTATE_ALIGN_MULTIPLIER -
+                 (___PSTATE_ALIGN_MODULUS + sizeof(___processor_state_struct))
+                 % ___PSTATE_ALIGN_MULTIPLIER];
+#endif
+#endif
+  } ___aligned_processor_state_struct;
+
 typedef ___WORD (*___host) ___P((___processor_state ___ps),());
 
 typedef struct ___label_struct
   {
+    ___FAKEHOST host;
     ___WORD header;
     ___WORD entry_or_descr;
     ___FAKEVOIDSTAR host_label;
-    ___FAKEHOST host;
+#if ___LABEL_SIZE > 4
+    ___WORD dummy[___LABEL_SIZE-4];
+#endif
   } ___label_struct;
 
-#define ___LABEL_ENTRY_OR_DESCR(lbl) \
-(*___CAST(___WORD*,___SUBTYPED_TO(lbl,0)))
-#define ___LABEL_HOST_LABEL(lbl) \
-(*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,1)))
-#define ___LABEL_HOST(lbl) \
-(*___CAST(___FAKEHOST*,___SUBTYPED_TO(lbl,2)))
+#define ___LABEL_ENTRY_OR_DESCR 0
+#define ___LABEL_HOST_LABEL     1
+#define ___LABEL_HOST           -2
+
+#define ___LABEL_ENTRY_GET(lbl) \
+(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
+#define ___LABEL_DESCR_GET(lbl) \
+(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
+#define ___LABEL_HOST_LABEL_GET(lbl) \
+(*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL)))
+#define ___LABEL_HOST_GET(lbl) \
+(*___CAST(___FAKEHOST*,___SUBTYPED_TO(lbl,___LABEL_HOST)))
 
 /* Module structure */
 
@@ -8706,7 +8856,7 @@ typedef struct ___program_startup_info_struct
 
 typedef struct ___virtual_machine_state_struct
   {
-    ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
+    ___aligned_processor_state_struct aligned_pstate[___MAX_PROCESSORS]; /* VM's processors */
 
     ___VOLATILE int processor_count; /* number of processors in this VM */
 
@@ -8738,8 +8888,13 @@ typedef struct ___virtual_machine_state_struct
 
   } ___virtual_machine_state_struct;
 
-#define ___PROCESSOR_ID(ps,vms) ((ps) - (vms)->pstate)
-#define ___PSTATE_FROM_PROCESSOR_ID(id,vms) ((vms)->pstate+(id))
+#define ___PROCESSOR_ID(ps,vms) \
+(___CAST(___aligned_processor_state_struct*,ps) - \
+ ___CAST(___aligned_processor_state_struct*,&(vms)->aligned_pstate[0].pstate))
+
+
+#define ___PSTATE_FROM_PROCESSOR_ID(id,vms) \
+(&(vms)->aligned_pstate[id].pstate)
 
 /* Setup parameters structure */
 
@@ -10057,6 +10212,11 @@ typedef struct ___global_state_struct
        ___P((___PSD
              ___SCMOBJ thunk),
             ());
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+    ___WORD (*___lowlevel_exec)
+       ___P((___processor_state ___ps),
+            ());
+#endif
     void (*___throw_error)
        ___P((___PSD
              ___SCMOBJ err),
@@ -10162,6 +10322,14 @@ typedef struct ___global_state_struct
        ___P((void *ptr),
             ());
 #define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr)
+    void *(*___alloc_mem_heap)
+       ___P((___SIZE_T bytes),
+            ());
+#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes)
+    void (*___free_mem_heap)
+       ___P((void *ptr),
+            ());
+#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr)
 #else
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes,
@@ -10175,6 +10343,18 @@ typedef struct ___global_state_struct
              char *file),
             ());
 #define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr,__LINE__,__FILE__)
+    void *(*___alloc_mem_heap)
+       ___P((___SIZE_T bytes,
+             int lineno,
+             char *file),
+            ());
+#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes,__LINE__,__FILE__)
+    void (*___free_mem_heap)
+       ___P((void *ptr,
+             int lineno,
+             char *file),
+            ());
+#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr,__LINE__,__FILE__)
 #endif
     void *(*___alloc_mem_code)
        ___P((___SIZE_T bytes),
@@ -10211,6 +10391,14 @@ typedef struct ___global_state_struct
        ___P((jmp_buf env),
             ());
 #endif
+#endif
+
+#ifdef ___PSTATE_ALIGN_MULTIPLIER
+    /*
+     * pad the global state so that it can be aligned to a multiple
+     * of ___PSTATE_ALIGN_MULTIPLIER
+     */
+    char padding[___PSTATE_ALIGN_MULTIPLIER];
 #endif
   } ___global_state_struct;
 
@@ -11415,6 +11603,11 @@ ___IMP_FUNC(___SCMOBJ,___call)
 ___IMP_FUNC(___SCMOBJ,___run)
    ___P((___SCMOBJ thunk),
         ());
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+___IMP_FUNC(___WORD,___lowlevel_exec)
+   ___P((___processor_state ___ps),
+        ());
+#endif
 ___IMP_FUNC(void,___throw_error)
    ___P((___PSD
          ___SCMOBJ err),
@@ -11533,6 +11726,12 @@ ___IMP_FUNC(void *,___alloc_mem)
 ___IMP_FUNC(void,___free_mem)
    ___P((void *ptr),
         ());
+___IMP_FUNC(void *,___alloc_mem_heap)
+   ___P((___SIZE_T bytes),
+        ());
+___IMP_FUNC(void,___free_mem_heap)
+   ___P((void *ptr),
+        ());
 #else
 ___IMP_FUNC(void *,___alloc_mem)
    ___P((___SIZE_T bytes,
@@ -11540,6 +11739,16 @@ ___IMP_FUNC(void *,___alloc_mem)
          char *file),
         ());
 ___IMP_FUNC(void,___free_mem)
+   ___P((void *ptr,
+         int lineno,
+         char *file),
+        ());
+___IMP_FUNC(void *,___alloc_mem_heap)
+   ___P((___SIZE_T bytes,
+         int lineno,
+         char *file),
+        ());
+___IMP_FUNC(void,___free_mem_heap)
    ___P((void *ptr,
          int lineno,
          char *file),

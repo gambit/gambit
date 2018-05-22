@@ -103,7 +103,7 @@ int code;)
   int i;
 
   for (i=___vms->processor_count-1; i>=0; i--)
-    ___raise_interrupt_pstate (&___vms->pstate[i], code);
+    ___raise_interrupt_pstate (___PSTATE_FROM_PROCESSOR_ID(i,___vms), code);
 }
 
 
@@ -764,13 +764,13 @@ ___WORD target_processor_count;)
 
       for (i=initial; i<target_processor_count; i++)
         {
-          ___processor_state ps = &___vms->pstate[i];
+          ___processor_state ps = ___PSTATE_FROM_PROCESSOR_ID(i,___vms);
 
-          if ((err = ___setup_pstate (&___vms->pstate[i], ___vms))
+          if ((err = ___setup_pstate (ps, ___vms))
               != ___FIX(___NO_ERR))
             {
               while (--i >= initial)
-                ___cleanup_pstate (&___vms->pstate[i]);
+                ___cleanup_pstate (ps);
 
               BARRIER();
 
@@ -795,7 +795,7 @@ ___WORD target_processor_count;)
 
           for (i=initial-1; i>=target_processor_count; i--)
             {
-              ___processor_state ps = &___vms->pstate[i];
+              ___processor_state ps = ___PSTATE_FROM_PROCESSOR_ID(i,___vms);
               ___thread *t = &ps->os_thread;
 
               ___thread_join (t); /* ignore error */
@@ -809,7 +809,7 @@ ___WORD target_processor_count;)
 
           for (i=initial; i<target_processor_count; i++)
             {
-              ___processor_state ps = &___vms->pstate[i];
+              ___processor_state ps = ___PSTATE_FROM_PROCESSOR_ID(i,___vms);
               ___thread *t = &ps->os_thread;
 
               t->start_fn = start_processor_execution;
@@ -1240,7 +1240,7 @@ ___SCMOBJ *p;)
       else if (n < module->subcount)
         *p = ___CAST(___SCMOBJ*,module->subtbl)[n];
       else
-        *p = ___SUBTYPED_FROM_START(___CAST(___SCMOBJ*,&module->lbltbl[n-module->subcount]));
+        *p = ___SUBTYPED_FROM_BODY(&module->lbltbl[n-module->subcount].entry_or_descr);
       break;
 
     case ___tMEM2:
@@ -1319,6 +1319,7 @@ ___module_struct *module;)
   ___UTF_8STRING *key_names;
   ___SCMOBJ *lp;
   ___label_struct *lbltbl;
+  ___label_struct *new_lbltbl;
   int lblcount;
   ___SCMOBJ *ofdtbl;
   int ofd_length;
@@ -1371,11 +1372,28 @@ ___module_struct *module;)
   if (module->version > ___VERSION)
     return ___FIX(___MODULE_VERSION_TOO_NEW_ERR);
 
-  /* Align label table and pair table */
+  /* Align label table */
 
-  lbltbl = ___CAST(___label_struct*,
-                   align (___CAST(___SCMOBJ*,lbltbl), lblcount*___LS, 0));
-  module->lbltbl = lbltbl;
+  if (lblcount > 0)
+    {
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+      new_lbltbl = ___alloc_mem_code (lblcount*___LABEL_SIZE*___WS);
+      memmove (new_lbltbl, lbltbl, lblcount*___LABEL_SIZE*___WS);
+
+#else
+
+      new_lbltbl = ___CAST(___label_struct*,
+                           align (___CAST(___SCMOBJ*,lbltbl),
+                                  lblcount*___LABEL_SIZE,
+                                  0));
+
+#endif
+
+      module->lbltbl = new_lbltbl;
+    }
+
+  /* Align pair table */
 
   cnstbl = align (cnstbl, (___PAIR_BODY+___PAIR_SIZE)*cnscount, 0);
   module->cnstbl = cnstbl;
@@ -1505,7 +1523,7 @@ ___module_struct *module;)
 
       for (i=0; i<lblcount; i++)
         {
-          ___label_struct *lbl = &lbltbl[i];
+          ___label_struct *lbl = &new_lbltbl[i];
           ___SCMOBJ head = lbl->header;
 
           if (___TESTHEADERTAG(head,___sVECTOR))
@@ -1575,7 +1593,7 @@ ___module_struct *module;)
                * the stack frame is large.
                */
 
-              if (head == ___MAKE_HD((3<<___LWS),___sRETURN,___PERM))
+              if (head == ___MAKE_HD(0,___sRETURN,___PERM))
                 {
                   ___SCMOBJ descr;
                   descr = lbl->entry_or_descr;
@@ -1591,9 +1609,15 @@ ___module_struct *module;)
                 }
               else
                 lbl->entry_or_descr = ___SUBTYPED_FROM_START(&lbl->header);
+
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+              ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(&lbl->entry_or_descr);
+
+#endif
             }
         }
-      *lp = ___SUBTYPED_FROM_START(lbltbl);
+      *lp = ___SUBTYPED_FROM_BODY(&new_lbltbl[0].entry_or_descr);
     }
 
   return ___FIX(___NO_ERR);
@@ -2878,7 +2902,7 @@ ___processor_state ___ps;)
 
   for (;;)
     {
-#define CALL_STEP ___pc = ___LABEL_HOST(___pc)(___ps)
+#define CALL_STEP ___pc = ___LABEL_HOST_GET(___pc)(___ps)
       CALL_STEP;
       CALL_STEP;
       CALL_STEP;
@@ -2966,7 +2990,7 @@ ___SCMOBJ stack_marker;)
 
   ___ps->fp = ___fp;
   ___ps->na = nargs;
-  ___ps->pc = ___CAST(___label_struct*,___SUBTYPED_TO_START(proc))->entry_or_descr;
+  ___ps->pc = ___LABEL_ENTRY_GET(proc);
   ___PSSELF = proc;
 
   ___BEGIN_TRY
@@ -3013,6 +3037,268 @@ ___SCMOBJ thunk;)
 
   return ___err;
 }
+
+
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+
+___EXP_FUNC(___WORD,___lowlevel_exec)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+#ifdef __GNUC__
+
+#ifdef ___CPU_x86
+
+#ifdef ___CPU_x86_32
+
+#define reg_R0 "edi"
+#define reg_R1 "eax"
+#define reg_R2 "ebx"
+#define reg_R3 "edx"
+#define reg_R4 "esi"
+#define reg_PS "ecx"
+#define reg_FP "ebp"
+#define reg_HP "esp"
+#define reg_TMP reg_R1
+#define reg_SP "esp"
+#define PS_FIELD(field) field "*4(%%" reg_PS ")"
+
+  /*
+    GVM       ___________________C_ABI___________________
+    r1   eax      return value
+    r2   ebx  CS
+    ps   ecx
+    r3   edx
+    hp   esp  CS  stack pointer
+    sp   ebp  CS  optionally used as frame pointer
+    r4   esi  CS
+    r0   edi  CS
+  */
+
+#endif
+
+#ifdef ___CPU_x86_64
+
+#define reg_R0 "rdi"
+#define reg_R1 "rax"
+#define reg_R2 "rbx"
+#define reg_R3 "rdx"
+#define reg_R4 "rsi"
+#define reg_PS "rcx"
+#define reg_FP "rbp"
+#define reg_HP "rsp"
+#define reg_TMP reg_R1
+#define reg_SP "rsp"
+#define PS_FIELD(field) field "*8(%%" reg_PS ")"
+
+  /*
+    GVM       ___________________C_ABI___________________
+    r1   rax      return value 1
+    r2   rbx  CS
+    ps   rcx      argument 4 to functions
+    r3   rdx      argument 3 to functions; return value 2
+    hp   rsp  CS  stack pointer
+    sp   rbp  CS  optionally used as frame pointer
+    r4   rsi      argument 2 to functions
+    r0   rdi      argument 1 to functions
+         r8       argument 5 to functions
+         r9       argument 6 to functions
+         r10      static chain pointer of function
+         r11      temporary register
+         r12  CS
+         r13  CS
+         r14  CS
+         r15  CS  optionally used as GOT base pointer
+  */
+
+#endif
+
+#define PS_FP   PS_FIELD("2")
+#define PS_HP   PS_FIELD("6")
+#define PS_R(n) PS_FIELD("(" n "+7)")
+#define PS_PC   PS_FIELD("(0+5+7)")
+#define PS_NA   PS_FIELD("(1+5+7)")
+
+  __asm__ __volatile__ (
+
+    "mov  %0, %%" reg_PS "\n\t"
+
+#ifdef ___CPU_x86_64
+
+    /* account for red zone */
+
+    "add  $-128, %%" reg_SP "\n\t"
+
+#endif
+
+    /* save callee-save registers */
+
+    "push %%" reg_R0 "\n\t"
+    "push %%" reg_R1 "\n\t"
+    "push %%" reg_R2 "\n\t"
+    "push %%" reg_R3 "\n\t"
+    "push %%" reg_R4 "\n\t"
+    "push %%" reg_PS "\n\t"
+    "push %%" reg_FP "\n\t"
+    "push %%" reg_HP "\n\t"
+
+    /* setup handler for returning from lowlevel code */
+
+#ifdef ___CPU_x86_32
+    "mov  $return_from_lowlevel, %%" reg_TMP "\n\t"
+#endif
+#ifdef ___CPU_x86_64
+    "lea  return_from_lowlevel(%%rip), %%" reg_TMP "\n\t"
+#endif
+    "mov  %%" reg_TMP ", " PS_FIELD("-1") "\n\t"
+    "mov  %%" reg_SP ", " PS_FIELD("-2") "\n\t"
+
+    /* setup lowlevel registers from ___ps->r[...] */
+
+    "mov  " PS_R("0") ", %%" reg_R0 "\n\t"
+    "mov  " PS_R("1") ", %%" reg_R1 "\n\t"
+    "mov  " PS_R("2") ", %%" reg_R2 "\n\t"
+    "mov  " PS_R("3") ", %%" reg_R3 "\n\t"
+    "mov  " PS_R("4") ", %%" reg_R4 "\n\t"
+
+    /* setup frame pointer and heap pointer registers */
+
+    "mov  " PS_FP ", %%" reg_FP "\n\t"
+    /* "mov  " PS_HP ", %%" reg_HP "\n\t" */
+
+    /*
+     * set flags according to ___ps->na and jump to lowlevel code at
+     * ___ps->pc
+     */
+
+    "cmpl $0, " PS_NA "\n\t"
+    "je   na_0\n\t"
+    "cmpl $1, " PS_NA "\n\t"
+    "je   na_1\n\t"
+    "cmpl $2, " PS_NA "\n\t"
+    "je   na_2\n\t"
+    "cmpl $3, " PS_NA "\n\t"
+    "je   na_3\n\t"
+
+    "\n"
+    "na_above_3:\n\t"
+    /* set flags so that these jumps succeed: jno jne jns jp  */
+    "cmp  $-67, %%cl\n\t"
+    "jmp  *" PS_PC "\n\t"
+
+    "\n"
+    "na_0:\n\t"
+    /* set flags so that these jumps succeed: jno je  jns jp  */
+    "cmp  %%cl, %%cl\n\t"
+    "jmp  *" PS_PC "\n\t"
+
+    "\n"
+    "na_1:\n\t"
+    /* set flags so that these jumps succeed: jo  jne jns jp  */
+    "cmp  $66, %%cl\n\t"
+    "jmp  *" PS_PC "\n\t"
+
+    "\n"
+    "na_2:\n\t"
+    /* set flags so that these jumps succeed: jno jne js  jp  */
+    "cmp  $0, %%cl\n\t"
+    "jmp  *" PS_PC "\n\t"
+
+    "\n"
+    "na_3:\n\t"
+    /* set flags so that these jumps succeed: jno jne jns jnp */
+    "cmp  $-65, %%cl\n\t"
+    "jmp  *" PS_PC "\n\t"
+
+    /* handler for returning from lowlevel code */
+
+    "\n"
+    "return_from_lowlevel:"
+    "\n\t"
+
+    /* recover ___ps->na from flags */
+
+    "jne  na_not_0\n\t"
+    "movl $0, " PS_NA "\n\t"
+    "jmp  na_done\n"
+    "na_not_0:\n\t"
+
+    "jno  na_not_0_or_1\n\t"
+    "movl $1, " PS_NA "\n\t"
+    "jmp  na_done\n"
+    "na_not_0_or_1:\n\t"
+
+    "jns  na_not_0_or_1_or_2\n\t"
+    "movl $2, " PS_NA "\n\t"
+    "jmp  na_done\n"
+    "na_not_0_or_1_or_2:\n\t"
+
+    "jp   na_done\n\t"
+    "movl $3, " PS_NA "\n\t"
+
+    "\n"
+    "na_done:\n\t"
+
+    /* save lowlevel registers to ___ps->r[...] */
+
+    "mov  %%" reg_R0 ", " PS_R("0") "\n\t"
+    "mov  %%" reg_R1 ", " PS_R("1") "\n\t"
+    "mov  %%" reg_R2 ", " PS_R("2") "\n\t"
+    "mov  %%" reg_R3 ", " PS_R("3") "\n\t"
+    "mov  %%" reg_R4 ", " PS_R("4") "\n\t"
+
+    /* save frame pointer and heap pointer registers */
+
+    "mov  %%" reg_FP ", " PS_FP "\n\t"
+    /* "mov  %%" reg_HP ", " PS_HP "\n\t" */
+
+    /* recover the destination control point in ___ps->pc */
+
+    "pop  %%" reg_TMP "\n\t"
+    "add  $-3, %%" reg_TMP "\n\t"
+    "mov  %%" reg_TMP ", " PS_PC "\n\t"
+
+    /* TODO: pop self register when control point is for a closure */
+
+    /* restore callee-save registers */
+
+    "mov  " PS_FIELD("-2") ", %%" reg_SP "\n\t"
+    "pop  %%" reg_HP "\n\t"
+    "pop  %%" reg_FP "\n\t"
+    "pop  %%" reg_PS "\n\t"
+    "pop  %%" reg_R4 "\n\t"
+    "pop  %%" reg_R3 "\n\t"
+    "pop  %%" reg_R2 "\n\t"
+    "pop  %%" reg_R1 "\n\t"
+    "pop  %%" reg_R0 "\n\t"
+
+#ifdef ___CPU_x86_64
+
+    /* account for red zone */
+
+    "add  $128, %%" reg_SP "\n\t"
+
+#endif
+
+    : /* no outputs */
+    : /* inputs */
+      "m" (___ps)
+    : /* clobbers */
+      "%" reg_PS,
+      "%" reg_TMP
+  );
+
+#endif
+
+#endif
+
+  return ___ps->pc;
+}
+
+
+#endif
 
 
 #ifdef ___USE_print_source_location
@@ -3066,7 +3352,7 @@ ___virtual_machine_state ___vms;)
   for (i=0; i<___vms->processor_count; i++)
     {
       ___printf ("\nP%d:\n", i);
-      ___print_ctrl_flow_history_pstate (&___vms->pstate[i]);
+      ___print_ctrl_flow_history_pstate (___PSTATE_FROM_PROCESSOR_ID(i,___vms));
     }
 }
 
@@ -3107,7 +3393,7 @@ ___virtual_machine_state ___vms;)
   for (i=0; i<___vms->processor_count; i++)
     {
       ___printf ("P%d: ", i);
-      ___print_ctrl_flow_last_seen_pstate (&___vms->pstate[i]);
+      ___print_ctrl_flow_last_seen_pstate (___PSTATE_FROM_PROCESSOR_ID(i,___vms));
     }
 }
 
@@ -3413,7 +3699,7 @@ ___virtual_machine_state ___vms;)
    * Setup the main processor of the virtual machine.
    */
 
-  return ___setup_pstate (&___vms->pstate[0], ___vms);
+  return ___setup_pstate (___PSTATE_FROM_PROCESSOR_ID(0,___vms), ___vms);
 }
 
 
@@ -4426,6 +4712,16 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___call
     = ___call;
 
+  ___GSTATE->___run
+    = ___run;
+
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  ___GSTATE->___lowlevel_exec
+    = ___lowlevel_exec;
+
+#endif
+
   ___GSTATE->___throw_error
     = ___throw_error;
 
@@ -4555,7 +4851,7 @@ ___setup_params_struct *setup_params;)
 {
   ___SCMOBJ err;
   ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
-  ___processor_state ___ps = &___vms->pstate[0];
+  ___processor_state ___ps = ___PSTATE_FROM_PROCESSOR_ID(0,___vms);
   ___SCMOBJ module_descrs;
   ___mod_or_lnk mol;
 

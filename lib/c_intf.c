@@ -2904,8 +2904,7 @@ int arg_num;)
     return ___FIX(___STOC_FUNCTION_ERR+arg_num);
   else
     {
-      ___label_struct *lbl =
-        ___CAST(___label_struct*,&___SUBTYPED_HEADER(obj));
+      ___WORD *body = ___SUBTYPED_TO_BODY(obj);
 
       /*
        * Check if the Scheme procedure was defined with a c-define
@@ -2913,9 +2912,9 @@ int arg_num;)
        * used).
        */
 
-      if (lbl[0].entry_or_descr != obj /* closure? */
-          || !___TESTHEADERTAG(lbl[-1].header,___sVECTOR)/* not INTRO label? */
-          || (*x = ___CAST(void*,___CAST_FAKEHOST_TO_HOST(lbl[-1].host)))
+      if (body[___LABEL_ENTRY_OR_DESCR] != obj /* closure? */
+          || !___TESTHEADERTAG(body[-___LABEL_SIZE-1],___sVECTOR)/* not INTRO label? */
+          || (*x = ___CAST(void*,body[-___LABEL_SIZE+___LABEL_HOST]))
              == 0) /* not "c-define"d? */
         {
           /*

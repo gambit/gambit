@@ -2796,7 +2796,7 @@ ___HIDDEN void user_intr ___PVOID
   /**** belongs elsewhere */
   /* send interrupt only to processor 0 of vm 0 */
   ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
-  ___raise_interrupt_pstate (&___vms->pstate[0], ___INTR_USER);
+  ___raise_interrupt_pstate (___PSTATE_FROM_PROCESSOR_ID(0,___vms), ___INTR_USER);
 }
 
 

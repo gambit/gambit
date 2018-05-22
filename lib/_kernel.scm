@@ -3112,9 +3112,9 @@ end-of-code
        ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ptr += ___LS;
-       ___RESULT = ___FIX( (start-ptr)/___LS );
+         ptr -= ___LABEL_SIZE;
+       ptr += ___LABEL_SIZE;
+       ___RESULT = ___FIX( (start-ptr)/___LABEL_SIZE );
      }
    else
      ___RESULT = ___FIX(0);
@@ -3132,8 +3132,8 @@ end-of-code
        ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ptr += ___LS;
+         ptr -= ___LABEL_SIZE;
+       ptr += ___LABEL_SIZE;
       ___RESULT = ___SUBTYPED_FROM_START(ptr);
      }
    else
@@ -3169,12 +3169,12 @@ end-of-code
 
    {
      ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-     ___SCMOBJ head = start[-___LS];
+     ___SCMOBJ head = start[-___LABEL_SIZE];
      int i = ___INT(___ARG2);
      if (___TESTHEADERTAG(head,___sVECTOR) &&
          i >= 0 &&
          i < ___CAST(int,___HD_FIELDS(head)))
-       ___RESULT = ___SUBTYPED_FROM_START(start+___LS*i);
+       ___RESULT = ___SUBTYPED_FROM_START(start+___LABEL_SIZE*i);
      else
        ___RESULT = ___FAL;
    }
@@ -3193,8 +3193,8 @@ end-of-code
        ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ___RESULT = ptr[1];
+         ptr -= ___LABEL_SIZE;
+       ___RESULT = (ptr+1)[___LABEL_ENTRY_OR_DESCR];
      }
    else
      ___RESULT = ___FAL;
@@ -3212,8 +3212,8 @@ end-of-code
        ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ___RESULT = ptr[2];
+         ptr -= ___LABEL_SIZE;
+       ___RESULT = (ptr+1)[___LABEL_HOST_LABEL];
      }
    else
      ___RESULT = ___FAL;

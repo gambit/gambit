@@ -232,7 +232,7 @@
  *     Note: the entry procedure must be a nonclosure procedure
  *
  * Return points:
- *     subtype = ___sPROCEDURE
+ *     subtype = ___sRETURN
  *     field_0 = return frame descriptor
  *     field_1 = C pointer to label (only when using gcc)
  *     field_2 = C pointer to host C procedure
@@ -519,27 +519,31 @@
 
 
 /*
- * 'alloc_mem_aligned (words, multiplier, modulus)' allocates an
- * aligned block of memory through the '___alloc_mem' function.
- * 'words' is the size of the block in words and 'multiplier' and
- * 'modulus' specify its alignment in words.  'multiplier' must be a
- * power of two and 0<=modulus<multiplier.  The pointer returned
- * corresponds to an address that is equal to
- * (i*multiplier+modulus)*sizeof (___WORD) for some 'i'.
+ * 'alloc_mem_aligned_aux (words, multiplier, modulus, heap)'
+ * allocates an aligned block of memory (using '___alloc_mem' when
+ * heap is false, and '___alloc_mem_heap' when heap is true).  'words'
+ * is the size of the block in words and 'multiplier' and 'modulus'
+ * specify its alignment in words.  'multiplier' must be a power of
+ * two and 0<=modulus<multiplier.  The pointer returned corresponds to
+ * an address that is equal to (i*multiplier+modulus)*sizeof (___WORD)
+ * for some 'i'.
  */
 
-___HIDDEN void *alloc_mem_aligned
+___HIDDEN void *alloc_mem_aligned_aux
    ___P((___SIZE_TS words,
          unsigned int multiplier,
-         unsigned int modulus),
+         unsigned int modulus,
+         ___BOOL heap),
         (words,
          multiplier,
-         modulus)
+         modulus,
+         heap)
 ___SIZE_TS words;
 unsigned int multiplier;
-unsigned int modulus;)
+unsigned int modulus;
+___BOOL heap;)
 {
-  void *container; /* pointer to block returned by ___alloc_mem */
+  void *container; /* pointer to block returned by ___alloc_mem{_heap} */
   unsigned int extra; /* space for alignment to multiplier */
 
   /* Make sure alignment is sufficient for pointers */
@@ -553,7 +557,10 @@ unsigned int modulus;)
   if (modulus < sizeof (void*) / ___WS)
     extra += sizeof (void*);
 
-  container = ___ALLOC_MEM(extra + (words+modulus) * ___WS);
+  if (heap)
+    container = ___ALLOC_MEM_HEAP(extra + (words+modulus) * ___WS);
+  else
+    container = ___ALLOC_MEM(extra + (words+modulus) * ___WS);
 
   if (container == 0)
     return 0;
@@ -573,6 +580,36 @@ unsigned int modulus;)
 }
 
 
+___HIDDEN void *alloc_mem_aligned
+   ___P((___SIZE_TS words,
+         unsigned int multiplier,
+         unsigned int modulus),
+        (words,
+         multiplier,
+         modulus)
+___SIZE_TS words;
+unsigned int multiplier;
+unsigned int modulus;)
+{
+  return alloc_mem_aligned_aux (words, multiplier, modulus, 0);
+}
+
+
+___HIDDEN void *alloc_mem_aligned_heap
+   ___P((___SIZE_TS words,
+         unsigned int multiplier,
+         unsigned int modulus),
+        (words,
+         multiplier,
+         modulus)
+___SIZE_TS words;
+unsigned int multiplier;
+unsigned int modulus;)
+{
+  return alloc_mem_aligned_aux (words, multiplier, modulus, 1);
+}
+
+
 /*
  * 'free_mem_aligned (ptr)' reclaims the aligned block of memory 'ptr'
  * that was allocated using 'alloc_mem_aligned'.
@@ -587,6 +624,23 @@ void *ptr;)
                         (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
                         -___CAST(___WORD,sizeof (void*)));
   ___FREE_MEM(*cptr);
+}
+
+
+/*
+ * 'free_mem_aligned_heap (ptr)' reclaims the aligned block of memory
+ * 'ptr' that was allocated using 'alloc_mem_aligned_heap'.
+ */
+
+___HIDDEN void free_mem_aligned_heap
+   ___P((void *ptr),
+        (ptr)
+void *ptr;)
+{
+  void **cptr = ___CAST(void**,
+                        (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
+                        -___CAST(___WORD,sizeof (void*)));
+  ___FREE_MEM_HEAP(*cptr);
 }
 
 
@@ -875,7 +929,7 @@ int n;)
               ms->sections[j]->pos = j;
             }
 
-          free_mem_aligned (s);
+          free_mem_aligned_heap (s);
 
           ns--;
         }
@@ -899,7 +953,7 @@ int n;)
       while (ns < n)
         {
           ___msection *s = ___CAST(___msection*,
-                                   alloc_mem_aligned
+                                   alloc_mem_aligned_heap
                                      (___WORDS(___sizeof_msection(___MSECTION_SIZE)),
                                       1,
                                       0));
@@ -963,7 +1017,7 @@ ___msections **msp;)
       int i;
 
       for (i=ms->nb_sections-1; i>=0; i--)
-        free_mem_aligned (ms->sections[i]);
+        free_mem_aligned_heap (ms->sections[i]);
 
       free_mem_aligned (ms);
 
@@ -1012,7 +1066,7 @@ unsigned int modulus;)
 
   /* Allocate container */
 
-  container = alloc_mem_aligned (words+modulus, multiplier, 0);
+  container = alloc_mem_aligned_heap (words+modulus, multiplier, 0);
 
   if (container == 0)
     return 0;
@@ -1108,7 +1162,7 @@ ___HIDDEN void free_psections ___PVOID
   while (base != 0)
     {
       void *link = *___CAST(void**,base);
-      free_mem_aligned (base);
+      free_mem_aligned_heap (base);
       base = link;
     }
 }
@@ -1444,9 +1498,9 @@ ___SIZE_TS bytes;)
        * efficient due to a better utilization of the cache.
        */
 
-      if ((ptr = alloc_mem_aligned (words,
-                                    8>>___LWS,
-                                    (-___STILL_BODY)&((8>>___LWS)-1)))
+      if ((ptr = alloc_mem_aligned_heap (words,
+                                         8>>___LWS,
+                                         (-___STILL_BODY)&((8>>___LWS)-1)))
           == 0)
         {
           /*
@@ -1504,12 +1558,12 @@ ___SIZE_TS bytes;)
 
       /*
        * Allocate the still object.  See comments above for other call
-       * to alloc_mem_aligned.
+       * to alloc_mem_aligned_heap.
        */
 
-      if ((ptr = alloc_mem_aligned (words,
-                                    8>>___LWS,
-                                    (-___STILL_BODY)&((8>>___LWS)-1)))
+      if ((ptr = alloc_mem_aligned_heap (words,
+                                         8>>___LWS,
+                                         (-___STILL_BODY)&((8>>___LWS)-1)))
           == 0)
         {
           /*
@@ -2144,13 +2198,13 @@ ___SCMOBJ val;)
                       ___SCMOBJ *start = &body[-1];
                       ___SCMOBJ *ptr = start;
                       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-                        ptr -= ___LS;
-                      ptr += ___LS;
+                        ptr -= ___LABEL_SIZE;
+                      ptr += ___LABEL_SIZE;
                       if (ptr == start)
                         ___printf ("???");
                       else
                         {
-                          ___printf ("%d in ", (start-ptr)/___LS);
+                          ___printf ("%d in ", (start-ptr)/___LABEL_SIZE);
                           print_value (___TAG(ptr,___tSUBTYPED));
                         }
                     }
@@ -3157,7 +3211,7 @@ ___virtual_machine_state ___vms;)
 
   for (i=0; i<np; i++)
     {
-      ___processor_state ___ps = &___vms->pstate[i];
+      ___processor_state ___ps = ___PSTATE_FROM_PROCESSOR_ID(i,___vms);
 
       tospace_offset = fromspace_offset;  /* Flip fromspace and tospace */
 
@@ -3883,7 +3937,20 @@ ___WORD *body;)
        * The object can only be a closure (nonclosures are permanent objects).
        */
 
-      mark_array (___PSP body+1, words-1); /* only scan free variables */
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+      /* update the closure's lowlevel code trampoline */
+
+      ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(body,
+                                       body[___LABEL_ENTRY_OR_DESCR]);
+
+#endif
+
+      /* only need to scan the free variables */
+
+      mark_array (___PSP
+                  body+(___LABEL_HOST_LABEL+___CLO_LOWLEVEL_TRAMPOLINE_SIZE),
+                  words-(___LABEL_HOST_LABEL+___CLO_LOWLEVEL_TRAMPOLINE_SIZE));
 
       break;
 
@@ -4088,7 +4155,7 @@ ___PSDKR)
           if (___HD_SUBTYPE(head) == ___sFOREIGN)
             ___release_foreign
               (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
-          free_mem_aligned (base);
+          free_mem_aligned_heap (base);
         }
       else
         {
@@ -4130,7 +4197,7 @@ ___processor_state ___ps;)
       if (___HD_SUBTYPE(head) == ___sFOREIGN)
         ___release_foreign
           (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
-      free_mem_aligned (base);
+      free_mem_aligned_heap (base);
       base = ___CAST(___WORD*,link);
     }
 }
@@ -4262,7 +4329,7 @@ ___processor_state ___ps;)
    * Setup location of tospace.
    */
 
-  tospace_offset = ___vms->pstate[0].mem.tospace_offset_;
+  tospace_offset = ___PSTATE_FROM_PROCESSOR_ID(0,___vms)->mem.tospace_offset_;
 
   ___SPINLOCK_INIT(heap_chunks_to_scan_lock);
 
@@ -4421,7 +4488,7 @@ ___virtual_machine_state ___vms;)
    * Setup location of tospace.
    */
 
-  ___vms->pstate[0].mem.tospace_offset_ = 0;
+  ___PSTATE_FROM_PROCESSOR_ID(0,___vms)->mem.tospace_offset_ = 0;
 
   /*
    * Set the overflow reserve so that the rest parameter handler can
@@ -4569,7 +4636,7 @@ ___virtual_machine_state ___vms;)
 
 #endif
 
-  ___cleanup_mem_pstate (&___vms->pstate[0]);/*TODO: other processors?*/
+  ___cleanup_mem_pstate (___PSTATE_FROM_PROCESSOR_ID(0,___vms));/*TODO: other processors?*/
 
   free_msections (&the_msections);
 
@@ -5482,7 +5549,7 @@ ___virtual_machine_state ___vms;)
 
   for (p=0; p<np; p++)
     {
-      ___processor_state ps = &___vms->pstate[p];
+      ___processor_state ps = ___PSTATE_FROM_PROCESSOR_ID(p,___vms);
 
       movable += words_movable_objs(ps);
 
@@ -5774,7 +5841,7 @@ ___PSDKR)
 
       for (i = (np-1) * ___GC_SCAN_STEAL_WORK_CYCLES - 1; i>=0; i--)
         {
-          ___processor_state ps = &___vms->pstate[(i + i%(np-1) + 1) % np];
+          ___processor_state ps = ___PSTATE_FROM_PROCESSOR_ID((i + i%(np-1) + 1) % np,___vms);
           ___VOLATILE ___WORD *hcsh;
 
           if (ps->mem.heap_chunks_to_scan_head_ !=
