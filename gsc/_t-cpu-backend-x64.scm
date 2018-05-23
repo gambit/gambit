@@ -136,20 +136,20 @@
 
 (define (instructions)
   (make-instruction-dictionnary
-    x86-label-align ;; am-lbl
-    data-instr      ;; am-data
-    mov-instr       ;; am-mov
-    x86-lea         ;; am-load-mem-address
-    x86-add         ;; am-add
-    x86-sub         ;; am-sub
-    x86-shr         ;; am-bit-shift-right
-    x86-shl         ;; am-bit-shift-left
-    x86-not         ;; am-not
-    x86-and         ;; am-and
-    x86-or          ;; am-or
-    x86-xor         ;; am-xor
-    x86-jmp         ;; am-jmp
-    cmp-jump-instr  ;; am-compare-jump
+    x86-label-align         ;; am-lbl
+    data-instr              ;; am-data
+    mov-instr               ;; am-mov
+    x86-lea                 ;; am-load-mem-address
+    (apply-and-mov x86-add) ;; am-add
+    (apply-and-mov x86-sub) ;; am-sub
+    (apply-and-mov x86-shr) ;; am-bit-shift-right
+    (apply-and-mov x86-shl) ;; am-bit-shift-left
+    (apply-and-mov x86-not) ;; am-not
+    (apply-and-mov x86-and) ;; am-and
+    (apply-and-mov x86-or)  ;; am-or
+    (apply-and-mov x86-xor) ;; am-xor
+    x86-jmp                 ;; am-jmp
+    cmp-jump-instr          ;; am-compare-jump
     ))
 
 (define (x86-label-align cgc label #!optional (align #f))
@@ -166,6 +166,14 @@
       (x86-mov cgc extra-reg dst)
       (x86-mov cgc (x86-mem 0 extra-reg) src width))
     (x86-mov cgc dst src width)))
+
+(define (apply-and-mov fun)
+  (lambda (cgc result-reg opnd1 opnd2)
+    (if (equal? result-reg opnd1)
+        (fun cgc result-reg opnd2)
+        (begin
+          (x86-mov cgc result-reg opnd1)
+          (fun cgc result-reg opnd2)))))
 
 (define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
   (define (flip pair)
@@ -244,8 +252,7 @@
   (let ((underflow-pos-reg (get-extra-register cgc 0))
         (condition (condition-greater #f #f))
         (error-lbl (UNDERFLOW_LBL cgc)))
-    (am-mov cgc underflow-pos-reg stack-pointer)
-    (am-add cgc underflow-pos-reg (int-opnd cgc stack-size))
+    (am-add cgc underflow-pos-reg stack-pointer (int-opnd cgc stack-size))
     (am-compare-jump cgc
       frame-pointer underflow-pos-reg
       condition
@@ -322,8 +329,8 @@
         (error-lbl (ALLOCATION_ERROR_LBL cgc)))
 
     ;; Check if space is available
-    (am-mov cgc heap-limit-reg stack-pointer)
     (am-add cgc heap-limit-reg
+      stack-pointer
       (int-opnd cgc (+ stack-size stack-underflow-padding nb-bytes)))
     (am-compare-jump cgc
       heap-pointer heap-limit-reg
@@ -332,7 +339,7 @@
 
     ;; Can allocate
     (am-mov cgc result-reg heap-pointer)
-    (am-sub cgc heap-pointer (int-opnd cgc nb-bytes))))
+    (am-sub cgc heap-pointer heap-pointer (int-opnd cgc nb-bytes))))
 
 ;; Start routine
 ;; Gets executed before main
@@ -345,6 +352,7 @@
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
   ;; Set interrupt flag to 0
+
   (am-mov cgc
     (get-thread-descriptor-opnd cgc 'interrupt-flag)
     (int-opnd cgc 0)
@@ -352,17 +360,17 @@
 
   ;; Allocate heap
   (am-mov cgc heap-pointer stack-pointer)
-  (am-sub cgc stack-pointer (int-opnd cgc heap-size))
+  (am-sub cgc stack-pointer stack-pointer (int-opnd cgc heap-size))
 
   ;; Add space between stack and heap in case of underflow
-  (am-sub cgc stack-pointer (int-opnd cgc stack-underflow-padding))
+  (am-sub cgc stack-pointer stack-pointer (int-opnd cgc stack-underflow-padding))
 
   ;; Set frame pointer to bottom of stack
   (am-mov cgc frame-pointer stack-pointer)
   ;; Align frame with offset
-  (am-sub cgc frame-pointer (int-opnd cgc (* frame-offset (get-word-width cgc))))
+  (am-sub cgc frame-pointer stack-pointer (int-opnd cgc (* frame-offset (get-word-width cgc))))
   ;; Allocate stack
-  (am-sub cgc stack-pointer (int-opnd cgc stack-size))
+  (am-sub cgc stack-pointer stack-pointer (int-opnd cgc stack-size))
 
   ;; Set return address for main
   (am-mov cgc
@@ -379,6 +387,7 @@
 
   ;; Pop stack and heap
   (am-add cgc stack-pointer
+    stack-pointer
     (int-opnd cgc (+ stack-size heap-size stack-underflow-padding)))
 
   (am-mov cgc (x86-rax) (get-register cgc 1))
@@ -416,6 +425,7 @@
   (am-lbl cgc (C_ERROR_LBL cgc))
   ;; Pop stack and heap
   (am-add cgc stack-pointer
+    stack-pointer
     (int-opnd cgc (+ stack-size heap-size stack-underflow-padding)))
   (x86-ret cgc 0))
 

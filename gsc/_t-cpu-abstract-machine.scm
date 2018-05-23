@@ -26,32 +26,31 @@
 ;;  Notes:
 ;;    1 - Some instructions have a default implementation when possible.
 ;;
-;;    2 - In case the target architecture is load-store, set load-store-only to true.
-;;        The am-mov instruction acts like both load and store.
-;;
-;;    3 - Arithmetic instructions must support the following operands:
-;;        If load-store-only
-;;          Operand 1: register
-;;          Operand 2: register, immediate
+;;    2 - Unless specified, the args of the instructions is:
+;;        CGC, Destination register, Operand 1, Operand 2
+;;        If the architecture is load store,
+;;          Destination register: Register
+;;          Operands: Register, Immediate
 ;;        Else
-;;          Operand 1: register, memory
-;;          Operand 2: register, immediate, memory
+;;          Destination register: Register, Memory, Label
+;;          Operands: Register, Immediate, Memory (todo: And Label)
 ;;
-;;        They must also support an extra argument that specifies the result location (register).
-;;
+;;        The am-mov instruction acts like both load and store.
 ;;
 ;;  The following non-branching instructions are required:
 ;;    am-lbl  : Place label.
-;;       Type : CGC -> Label -> Alignment (Multiple . Offset) -> IO ()
-;;    am-mov  : Move value between 2 reg/mem/imm/label
-;;              Works in both ways: mov reg/mem/imm/label reg/mem/imm/label
+;;       Args : CGC, Label, Alignment (Multiple . Offset)
+;;    am-mov  : Move value between operands.
+;;       Args : CGC, reg/mem/label, reg/mem/imm/label
 ;;    am-load-mem-address : Load address of memory location.
+;;       Args : CGC, reg, mem
 ;;
-;;    am-add  : Add operand 1 and operand 2
-;;    am-sub  : Sub operand 2 from operand 1
+;;    am-add  : Operand 1 = Operand 2 + Operand 3
+;;    am-sub  : Operand 1 = Operand 2 - Operand 3
 ;;
 ;;    am-bit-shift-right : Shifts register to the right by some constant
 ;;    am-bit-shift-left  : Shifts register to the left by some constant
+;;                  Args : CGC, Destination register, Shifted register, constant
 ;;
 ;;    am-not  : Logical not
 ;;    am-and  : Logical and
@@ -60,16 +59,14 @@
 ;;
 ;;  The following branching instructions are required:
 ;;    am-jmp          : Jump to location
+;;               Args : CGC, jmp-opnd
 ;;    am-compare-jump : Jump to location only if condition is set after comparison
-;;                      Args : cgc location-true location-false operand1 operand2 condition opnds-width (optional)
-;;
-;;    data Condition = Equal
-;;                   | NotEqual
-;;                   | Greater eq(bool) signed(bool)
-;;                   | NotGreater eq(bool) signed(bool)
-;;
-;;  Note: Branching instructions on overflow/carry/sign/parity/etc. are not needed.
-;;
+;;               Args : CGC, location-true(jmp-opnd), location-false(jmp-opnd), operand1, operand2 condition (optional) opnds-width
+;;      Where jmp-opnd = reg/mem/label
+;;            data Condition = Equal
+;;                           | NotEqual
+;;                           | Greater eq(bool) signed(bool)
+;;                           | NotGreater eq(bool) signed(bool)
 ;;
 ;;  The following non-instructions function have to be defined
 ;;    am-data  : Place at current location the value with given width.
@@ -435,6 +432,7 @@
   (if (not (= 0 n))
     (am-sub cgc
       (get-frame-pointer-reg cgc)
+      (get-frame-pointer-reg cgc)
       (int-opnd cgc (* n (get-word-width cgc))))))
 
 ;; Get appropriate am-db, am-dw, am-dd, am-dq
@@ -479,3 +477,8 @@
 (define (default-set-narg cgc narg narg-loc)
   (debug "default-set-narg: " narg)
   (am-mov cgc narg-loc (int-opnd cgc narg)))
+
+;; ***** Default Primitives
+;;
+;; Based on the instructions, we can define some basic primitives.
+
