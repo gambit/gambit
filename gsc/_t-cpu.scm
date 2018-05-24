@@ -373,6 +373,11 @@
         (alignment (if align? (cons 4 1) #f)))
     (am-lbl cgc label))
 
+  ; (if (and
+  ;       (equal? label-num 1)
+  ;       (equal? (proc-obj-name proc) "indirect"))
+  ;   (am-jmp cgc (get-label cgc 'ALLOCATION_ERROR_LBL)))
+
   (if (eqv? 'entry (label-type gvm-instr))
     (am-check-narg cgc narg))))
 
@@ -401,6 +406,7 @@
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
     ;; Jump to location. Checks if jump is NOP.
+    (debug jmp-opnd)
     (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
       (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump)))))
 
@@ -418,7 +424,7 @@
            (prim-obj (get-primitive-object cgc prim-sym))
            (prim-fun (get-primitive-function prim-obj))
            (then (then-jump true-label false-label))
-           (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (ifjump-opnds gvm-instr))))
+           (args (map (lambda (opnd) (make-opnd cgc proc code opnd)) (ifjump-opnds gvm-instr))))
       (prim-fun cgc then args))))
 
 ;; ***** Apply instruction encoding
@@ -429,8 +435,8 @@
          (prim-sym (proc-obj-name (apply-prim gvm-instr)))
          (prim-obj (get-primitive-object cgc prim-sym))
          (prim-fun (get-primitive-function prim-obj))
-         (then (then-move (make-opnd cgc proc code (apply-loc gvm-instr) #f)))
-         (args (map (lambda (opnd) (make-opnd cgc proc code opnd #f)) (apply-opnds gvm-instr))))
+         (then (then-move (make-opnd cgc proc code (apply-loc gvm-instr))))
+         (args (map (lambda (opnd) (make-opnd cgc proc code opnd)) (apply-opnds gvm-instr))))
     (prim-fun cgc then args)))
 
 ;; ***** Copy instruction encoding
@@ -438,17 +444,39 @@
 (define (encode-copy-instr cgc proc code)
   (debug "encode-copy-instr")
   (let* ((gvm-instr (code-gvm-instr code))
-         (src (make-opnd cgc proc code (copy-opnd gvm-instr) #f))
-         (dst (make-opnd cgc proc code (copy-loc gvm-instr) #f)))
+         (src (make-opnd cgc proc code (copy-opnd gvm-instr)))
+         (dst (make-opnd cgc proc code (copy-loc gvm-instr))))
     (display dst)
     (am-mov cgc dst src (get-word-width-bits cgc))))
 
 ;; ***** Close instruction encoding
 
-(define (encode-close-instr cgc proc gvm-instr)
+(define (encode-close-instr cgc proc code)
   (debug "encode-close-instr")
-  (compiler-internal-error
-    "encode-close-instr: close instruction not implemented"))
+  (debug (car (close-parms (code-gvm-instr code))))
+  (let* ((gvm-instr (code-gvm-instr code))
+         (mk-opnd (lambda (opnd) (make-opnd cgc proc code opnd)))
+         (parms (car (close-parms gvm-instr))) ;; Todo: Find why close-parms returns list
+         (loc (mk-opnd (closure-parms-loc parms)))
+        ;  (lbl (mk-opnd (closure-parms-lbl parms))) ;; WTF: Why not in opnd-table?
+         (lbl (lbl-opnd cgc (get-proc-label cgc proc (closure-parms-lbl parms))))
+         (opnds (map mk-opnd (closure-parms-opnds parms)))
+        ;  (opnds (closure-parms-opnds parms))
+         (size (* (get-word-width cgc) (+ 1 (length opnds)))))
+
+    (get-extra-register cgc
+      (lambda (reg)
+        (am-allocate-mem cgc size reg)
+        (let ((n 0))
+          (for-each
+            (lambda (opnd)
+              (am-mov cgc (mem-opnd cgc (* (get-word-width cgc) n) reg) opnd (get-word-width-bits cgc))
+              (set! n (+ n 1)))
+            (cons lbl opnds)))
+
+        ;; Todo: Remove mov if unecessary (Next GVM Instruction is often reg = loc)
+        (am-mov cgc loc reg)))))
+
 
 ;; ***** Switch instruction encoding
 
