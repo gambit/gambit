@@ -44,6 +44,10 @@
 ;;       Args : CGC, reg/mem/label, reg/mem/imm/label
 ;;    am-load-mem-address : Load address of memory location.
 ;;       Args : CGC, reg, mem
+;;    am-push : Place operand on top of stack
+;;       Args : CGC, reg/mem/imm/label
+;;    am-pop  : Take operand on top of stack
+;;       Args : CGC, reg/mem/imm/label
 ;;
 ;;    am-add  : Operand 1 = Operand 2 + Operand 3
 ;;    am-sub  : Operand 1 = Operand 2 - Operand 3
@@ -124,7 +128,6 @@
           spill-registers
           extra-registers
           make-cgc-fun)
-
   (vector
     word-width
     endianness
@@ -158,6 +161,7 @@
 (define (make-instruction-dictionnary
           am-lbl am-data
           am-mov am-load-mem-address
+          am-push am-pop
           am-add am-sub
           am-bit-shift-right am-bit-shift-left
           am-not am-and
@@ -166,6 +170,7 @@
   (vector
     am-lbl am-data
     am-mov am-load-mem-address
+    am-push am-pop
     am-add am-sub
     am-bit-shift-right am-bit-shift-left
     am-not am-and
@@ -246,16 +251,18 @@
 (define (am-data cgc . args)             (apply-instruction cgc 1  args))
 (define (am-mov cgc . args)              (apply-instruction cgc 2  args))
 (define (am-load-mem-address cgc . args) (apply-instruction cgc 3  args))
-(define (am-add cgc . args)              (apply-instruction cgc 4  args))
-(define (am-sub cgc . args)              (apply-instruction cgc 5  args))
-(define (am-bit-shift-right cgc . args)  (apply-instruction cgc 6  args))
-(define (am-bit-shift-left cgc . args)   (apply-instruction cgc 7  args))
-(define (am-not cgc . args)              (apply-instruction cgc 8  args))
-(define (am-and cgc . args)              (apply-instruction cgc 9  args))
-(define (am-or cgc . args)               (apply-instruction cgc 10 args))
-(define (am-xor cgc . args)              (apply-instruction cgc 11 args))
-(define (am-jmp cgc . args)              (apply-instruction cgc 12 args))
-(define (am-compare-jump cgc . args)     (apply-instruction cgc 13 args))
+(define (am-push cgc . args)             (apply-instruction cgc 4  args))
+(define (am-pop  cgc . args)             (apply-instruction cgc 5  args))
+(define (am-add cgc . args)              (apply-instruction cgc 6  args))
+(define (am-sub cgc . args)              (apply-instruction cgc 7  args))
+(define (am-bit-shift-right cgc . args)  (apply-instruction cgc 8  args))
+(define (am-bit-shift-left cgc . args)   (apply-instruction cgc 9  args))
+(define (am-not cgc . args)              (apply-instruction cgc 10  args))
+(define (am-and cgc . args)              (apply-instruction cgc 11  args))
+(define (am-or cgc . args)               (apply-instruction cgc 12 args))
+(define (am-xor cgc . args)              (apply-instruction cgc 13 args))
+(define (am-jmp cgc . args)              (apply-instruction cgc 14 args))
+(define (am-compare-jump cgc . args)     (apply-instruction cgc 15 args))
 
 ;; ***** AM: Routines fields
 
