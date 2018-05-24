@@ -37,9 +37,10 @@
          (options (macro-absent-obj))
          (output (macro-absent-obj))
          (module-name (macro-absent-obj))
-         (linker-name (macro-absent-obj)))
+         (linker-name (macro-absent-obj))
+         (expression (macro-absent-obj)))
   (macro-force-vars (filename)
-    (macro-check-string filename 1 (compile-file-to-target filename . other);;;;;;
+    (macro-check-string filename 1 (compile-file-to-target filename . other) ;;;;;;
       (let* ((opts
               (if (##eq? options (macro-absent-obj))
                   '()
@@ -60,25 +61,37 @@
               (if (##eq? linker-name (macro-absent-obj))
                   #f
                   (macro-force-vars (linker-name)
-                    linker-name))))
+                    linker-name)))
+             (filename-or-source
+              (if (##eq? expression (macro-absent-obj))
+                  filename
+                  (if (##source? expression)
+                      expression
+                      (##make-source
+                       expression
+                       (##make-locat (##path->container filename) 0))))))
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
-               (error "list expected for options: parameter"));;;;;;;
+               (error "list expected for options: parameter")) ;;;;;;;
               ((##not (##string? out))
-               (error "string expected for output: parameter"));;;;;;;;;;
+               (error "string expected for output: parameter")) ;;;;;;;;;;
               ((##not (or (##not mod-name) (##string? mod-name)))
-               (error "string or #f expected for module-name: parameter"));;;;;;;;;;
+               (error "string or #f expected for module-name: parameter")) ;;;;;;;;;;
               ((##not (or (##not link-name) (##string? link-name)))
-               (error "string or #f expected for linker-name: parameter"));;;;;;;;;;
+               (error "string or #f expected for linker-name: parameter")) ;;;;;;;;;;
               (else
-               (##compile-file-to-target filename
+               (##compile-file-to-target filename-or-source
                                          opts
                                          out
                                          mod-name
                                          link-name)))))))
 
-(define (##compile-file-to-target filename options output mod-name link-name)
-  (let* ((options
+(define (##compile-file-to-target filename-or-source options output mod-name link-name)
+  (let* ((filename
+          (if (##source? filename-or-source)
+              (##source-path filename-or-source)
+              filename-or-source))
+         (options
           (##compile-options-normalize options))
          (expanded-output
           (##path-normalize output))
@@ -106,7 +119,7 @@
          (linker-name
           (or link-name
               module-name)))
-    (c#cf filename
+    (c#cf filename-or-source
           options
           output-filename-gen
           module-name
@@ -122,9 +135,10 @@
          (linker-name (macro-absent-obj))
          (cc-options (macro-absent-obj))
          (ld-options-prelude (macro-absent-obj))
-         (ld-options (macro-absent-obj)))
+         (ld-options (macro-absent-obj))
+         (expression (macro-absent-obj)))
   (macro-force-vars (filename)
-    (macro-check-string filename 1 (compile-file filename . other);;;;;;
+    (macro-check-string filename 1 (compile-file filename . other) ;;;;;;
       (let* ((opts
               (if (##eq? options (macro-absent-obj))
                   '()
@@ -160,24 +174,32 @@
               (if (##eq? ld-options (macro-absent-obj))
                   ""
                   (macro-force-vars (ld-options)
-                    ld-options))))
+                    ld-options)))
+             (filename-or-source
+              (if (##eq? expression (macro-absent-obj))
+                  filename
+                  (if (##source? expression)
+                      expression
+                      (##make-source
+                       expression
+                       (##make-locat (##path->container filename) 0))))))
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
-               (error "list expected for options: parameter"));;;;;;;
+               (error "list expected for options: parameter")) ;;;;;;;
               ((##not (##string? out))
-               (error "string expected for output: parameter"));;;;;;;;;;
+               (error "string expected for output: parameter")) ;;;;;;;;;;
               ((##not (or (##not mod-name) (##string? mod-name)))
-               (error "string or #f expected for module-name: parameter"));;;;;;;;;;
+               (error "string or #f expected for module-name: parameter")) ;;;;;;;;;;
               ((##not (or (##not link-name) (##string? link-name)))
-               (error "string or #f expected for linker-name: parameter"));;;;;;;;;;
+               (error "string or #f expected for linker-name: parameter")) ;;;;;;;;;;
               ((##not (##string? cc-opts))
-               (error "string expected for cc-options: parameter"));;;;;;;;;;
+               (error "string expected for cc-options: parameter")) ;;;;;;;;;;
               ((##not (##string? ld-opts-prelude))
-               (error "string expected for ld-options-prelude: parameter"));;;;;;;;;;
+               (error "string expected for ld-options-prelude: parameter")) ;;;;;;;;;;
               ((##not (##string? ld-opts))
-               (error "string expected for ld-options: parameter"));;;;;;;;;;
+               (error "string expected for ld-options: parameter")) ;;;;;;;;;;
               (else
-               (##compile-file filename
+               (##compile-file filename-or-source
                                opts
                                out
                                mod-name
@@ -187,7 +209,7 @@
                                ld-opts)))))))
 
 (define (##compile-file
-         filename
+         filename-or-source
          options
          output
          module-name
@@ -227,7 +249,11 @@
              root
              (generate-next-version-of-object-file root)))))
 
-    (let* ((input-is-target-file?
+    (let* ((filename
+            (if (##source? filename-or-source)
+                (##source-path filename-or-source)
+                filename-or-source))
+           (input-is-target-file?
             (##assoc (##path-extension filename)
                      (c#target-file-extensions target)))
            (target-filename
@@ -264,7 +290,7 @@
                     output-filename-no-dir
                     module-name))))
       (and (or input-is-target-file?
-               (c#cf filename
+               (c#cf filename-or-source
                      options
                      (lambda () target-filename)
                      module-name

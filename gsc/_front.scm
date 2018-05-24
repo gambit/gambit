@@ -219,7 +219,11 @@
          (root
           (if output-filename
               (path-strip-extension output-filename)
-              (path-strip-directory (path-strip-extension input))))
+              (let ((filename
+                     (if (##source? input)
+                         (##source-path input)
+                         input)))
+                (path-strip-directory (path-strip-extension filename)))))
          (output
           (if output-filename
               output-filename
@@ -249,7 +253,10 @@
                ptrees))
             ptrees)))
 
-    (let* ((v1 (read-source input #f #t))
+    (let* ((v1
+            (if (##source? input)
+                (vector #f (##sourcify-deep input input))
+                (read-source input #f #t)))
            (script-line (vector-ref v1 0))
            (expr (vector-ref v1 1))
            (program (expand-source (wrap-program expr)))
@@ -279,7 +286,7 @@
               (table-set! comp-scope 'linker-name)
               (or link-name
                   module-name)))
-           (result
+           (result-thunk
             (inner parsed-program
                    env
                    root
@@ -295,7 +302,8 @@
       (ptree.end!)
       (env.end!)
 
-      result)))
+      (and result-thunk
+           (result-thunk)))))
 
 (define (compile-program
          input
@@ -307,7 +315,7 @@
 
   (set! warnings-requested? compiler-option-warnings)
 
-  (let ((result
+  (let ((result-thunk
          (with-exception-handling
           (lambda ()
             (compile-program-frontend
@@ -385,19 +393,21 @@
                        (close-output-port dg-port)
                        (set! dependency-graph #f)))
 
-                 (target.dump
-                  module-procs
-                  output
-                  c-intf
-                  module-descr
-                  linker-name)
+                 (let ((result-thunk
+                        (target.dump
+                         module-procs
+                         output
+                         c-intf
+                         module-descr
+                         linker-name)))
 
-                 (dump-c-intf module-procs root c-intf)
+                   (if result-thunk
+                       (dump-c-intf module-procs root c-intf))
 
-                 output)))))))
+                   result-thunk))))))))
 
     (if info-port
-        (if result
+        (if result-thunk
             (begin
               (display "Compilation finished." info-port)
               (newline info-port))
@@ -405,7 +415,7 @@
               (display "Compilation terminated abnormally." info-port)
               (newline info-port))))
 
-    result))
+    result-thunk))
 
 (define (expand-program input . rest)
   (let ((opts #f)
@@ -422,27 +432,32 @@
 
     (set! warnings-requested? compiler-option-warnings)
 
-    (with-exception-handling
-     (lambda ()
-       (compile-program-frontend
-        input
-        opts
-        #f
-        #f
-        #f
-        #f
-        (lambda (parsed-program
-                 env
-                 root
-                 output
-                 module-name
-                 linker-name
-                 c-intf
-                 comp-scope
-                 script-line)
-          (map (lambda (x)
-                 (parse-tree->expression x loc-table))
-               parsed-program)))))))
+    (let ((result-thunk
+           (with-exception-handling
+            (lambda ()
+              (compile-program-frontend
+               input
+               opts
+               #f
+               #f
+               #f
+               #f
+               (lambda (parsed-program
+                        env
+                        root
+                        output
+                        module-name
+                        linker-name
+                        c-intf
+                        comp-scope
+                        script-line)
+                 (let ((result
+                        (map (lambda (x)
+                               (parse-tree->expression x loc-table))
+                             parsed-program)))
+                   (lambda () result))))))))
+      (and result-thunk
+           (result-thunk)))))
 
 (define (dump-c-intf module-procs root c-intf)
   (let ((decls (c-intf-decls c-intf))

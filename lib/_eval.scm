@@ -154,6 +154,12 @@
                       (##vector-ref src 3))
         #f)))
 
+(define (##source-path src)
+  (let ((locat
+         (##source-locat src)))
+    (and locat
+         (##container->path (##locat-container locat)))))
+
 (define (##desourcify src)
 
   (define (desourcify-list lst)
