@@ -166,19 +166,18 @@
 (define (mov-instr cgc dst src #!optional (width #f))
   (cond
     ((lbl-opnd? cgc dst)
-    (let ((extra-reg (get-extra-register cgc 0)))
-      (x86-mov cgc extra-reg dst)
-        (x86-mov cgc (x86-mem 0 extra-reg) src width)))
+      (get-extra-register cgc
+        (lambda (reg)
+          (x86-mov cgc reg dst)
+          (x86-mov cgc (x86-mem 0 reg) src width))))
     ((or
         (and (mem-opnd? cgc dst) (mem-opnd? cgc src))
         (and (mem-opnd? cgc dst) (lbl-opnd? cgc src))
         (and (lbl-opnd? cgc dst) (mem-opnd? cgc src)))
-      (let ((reg (get-extra-register cgc 0)))
-        ;; Todo: Can be almost always removed. Find way to track register usage
-        (x86-push cgc reg)
-        (x86-mov cgc reg src)
-        (x86-mov cgc dst reg)
-        (x86-pop cgc reg)))
+      (get-extra-register cgc
+        (lambda (reg)
+          (x86-mov cgc reg src)
+          (x86-mov cgc dst reg))))
     (else
       (x86-mov cgc dst src width))))
 
@@ -264,28 +263,30 @@
 
 (define (check-underflow cgc)
   (debug "check-underflow")
-  (let ((underflow-pos-reg (get-extra-register cgc 0))
-        (condition (condition-greater #f #f))
+  (let ((condition (condition-greater #f #f))
         (error-lbl (UNDERFLOW_LBL cgc)))
-    (am-add cgc underflow-pos-reg stack-pointer (int-opnd cgc stack-size))
-    (am-compare-jump cgc
-      frame-pointer underflow-pos-reg
-      condition
-      error-lbl #f)))
+    (get-extra-register cgc
+      (lambda (underflow-pos-reg)
+        (am-add cgc underflow-pos-reg stack-pointer (int-opnd cgc stack-size))
+        (am-compare-jump cgc
+          frame-pointer underflow-pos-reg
+          condition
+          error-lbl #f)))))
 
 (define (check-interrupt cgc)
   (debug "check-interrupt")
   (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
-        (mov-reg (get-extra-register cgc 0))
         (condition condition-not-equal)
         (error-lbl (INTERRUPT_LBL cgc)))
-    ;; Todo: If we could use labels as mem operands, we could remove mov
-    (am-mov cgc mov-reg opnd)
-    (am-compare-jump cgc
-      (mem-opnd cgc 0 mov-reg) (int-opnd cgc 0)
-      condition
-      error-lbl #f
-      (get-word-width-bits cgc))))
+    (get-extra-register cgc
+      (lambda (mov-reg)
+        ;; Todo: If we could use labels as mem operands, we could remove mov
+        (am-mov cgc mov-reg opnd)
+        (am-compare-jump cgc
+          (mem-opnd cgc 0 mov-reg) (int-opnd cgc 0)
+          condition
+          error-lbl #f
+          (get-word-width-bits cgc))))))
 
 ;; Adds approximately 50ms.
 ;; Can easily be more optimized
@@ -339,22 +340,23 @@
         (default-check-narg cgc narg narg-loc error-lbl)))))
 
 (define (x64-allocate-heap cgc nb-bytes result-reg)
-  (let ((heap-limit-reg (get-extra-register cgc 0))
-        (condition (condition-not-greater #f #f))
+  (let ((condition (condition-not-greater #f #f))
         (error-lbl (ALLOCATION_ERROR_LBL cgc)))
 
-    ;; Check if space is available
-    (am-add cgc heap-limit-reg
-      stack-pointer
-      (int-opnd cgc (+ stack-size stack-underflow-padding nb-bytes)))
-    (am-compare-jump cgc
-      heap-pointer heap-limit-reg
-      condition
-      error-lbl #f)
+    (get-extra-register cgc
+      (lambda (heap-limit-reg)
+        ;; Check if space is available
+        (am-add cgc heap-limit-reg
+          stack-pointer
+          (int-opnd cgc (+ stack-size stack-underflow-padding nb-bytes)))
+        (am-compare-jump cgc
+          heap-pointer heap-limit-reg
+          condition
+          error-lbl #f))))
 
-    ;; Can allocate
-    (am-mov cgc result-reg heap-pointer)
-    (am-sub cgc heap-pointer heap-pointer (int-opnd cgc nb-bytes))))
+  ;; Can allocate
+  (am-mov cgc result-reg heap-pointer)
+  (am-sub cgc heap-pointer heap-pointer (int-opnd cgc nb-bytes)))
 
 ;; Start routine
 ;; Gets executed before main
@@ -367,6 +369,7 @@
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
   ;; Set interrupt flag to 0
+
   (am-mov cgc
     (get-thread-descriptor-opnd cgc 'interrupt-flag)
     (int-opnd cgc 0)
@@ -374,6 +377,7 @@
 
   ;; Allocate heap
   (am-mov cgc heap-pointer stack-pointer)
+  (am-sub cgc heap-pointer heap-pointer (int-opnd cgc (get-word-width cgc)))
   (am-sub cgc stack-pointer stack-pointer (int-opnd cgc heap-size))
 
   ;; Add space between stack and heap in case of underflow
@@ -387,7 +391,8 @@
   ;; Set return address for main
   (am-mov cgc
     (get-register cgc 0)
-    (lbl-opnd cgc (C_RETURN_LBL cgc))))
+    (lbl-opnd cgc (C_RETURN_LBL cgc)))
+)
 
 ;; End routine
 ;; Gets executed after main if no error happened during execution
