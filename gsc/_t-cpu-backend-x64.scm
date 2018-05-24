@@ -377,7 +377,6 @@
 
   ;; Allocate heap
   (am-mov cgc heap-pointer stack-pointer)
-  (am-sub cgc heap-pointer heap-pointer (int-opnd cgc (get-word-width cgc)))
   (am-sub cgc stack-pointer stack-pointer (int-opnd cgc heap-size))
 
   ;; Add space between stack and heap in case of underflow
