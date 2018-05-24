@@ -286,11 +286,12 @@
 (define (get-state-field cgc index)
   (get-in-cgc cgc state-index index))
 
-(define (get-proc-label-table cgc) (get-state-field cgc 0))
-(define (get-object-label-table cgc) (get-state-field cgc 1))
-(define (get-label-table cgc) (get-state-field cgc 2))
-(define (get-spill-register-allocation cgc) (get-state-field cgc 3))
-(define (get-extra-register-allocation cgc) (get-state-field cgc 4))
+(define (get-proc-label-table cgc)          (get-state-field cgc 0))
+(define (get-object-label-table cgc)        (get-state-field cgc 1))
+(define (get-global-var-table cgc)          (get-state-field cgc 2))
+(define (get-label-table cgc)               (get-state-field cgc 3))
+(define (get-spill-register-allocation cgc) (get-state-field cgc 4))
+(define (get-extra-register-allocation cgc) (get-state-field cgc 5))
 
 (define (make-state info)
   (define (const a)
@@ -301,6 +302,7 @@
   (vector
     (make-table test: equal?) ;; Labels of proc. (Key, Value) == (Label id, (Label, Maybe Proc-obj))
     (make-table test: equal?) ;; Labels for objects
+    (make-table test: equal?) ;; Labels for global variables
     (make-table test: equal?) ;; Other labels
     (make-allocation-vector (vector-length (vector-ref info spill-register-index)))
     (make-allocation-vector (vector-length (vector-ref info extra-register-index)))
@@ -324,11 +326,6 @@
          (def-lbl (list (asm-make-label cgc lbl-id) proc)))
     (car (table-get-or-set table lbl-id def-lbl))))
 
-(define (get-label cgc sym)
-  (let* ((table (get-label-table cgc))
-         (def-lbl (asm-make-label cgc sym)))
-    (table-get-or-set table sym def-lbl)))
-
 (define (get-obj-label cgc obj)
   (define (obj->id)
     (string->symbol (string-append "_obj_" (number->string (get-unique-id)))))
@@ -336,6 +333,19 @@
   (let* ((table (get-object-label-table cgc))
          (val (asm-make-label cgc (obj->id))))
     (table-get-or-set table obj val)))
+
+(define (get-global-var-label cgc name)
+  (define (obj->id)
+    (string->symbol (string-append "_glo_" (number->string (get-unique-id)))))
+
+  (let* ((table (get-global-var-table cgc))
+         (val (asm-make-label cgc (obj->id))))
+    (table-get-or-set table name val)))
+
+(define (get-label cgc sym)
+  (let* ((table (get-label-table cgc))
+         (def-lbl (asm-make-label cgc sym)))
+    (table-get-or-set table sym def-lbl)))
 
 ;; Useful for branching
 (define (make-unique-label cgc prefix)
@@ -417,13 +427,13 @@
 
 (define (get-register cgc n)
   (vector-ref (get-main-registers cgc) n))
-
 (define (get-spill-register cgc use)
   (choose-register cgc use (get-spill-registers cgc) (get-spill-register-allocation cgc)))
 (define (get-extra-register cgc use)
   (choose-register cgc use (get-extra-registers cgc) (get-extra-register-allocation cgc)))
 
-
+;; Todo: Find better solution than using context.
+;; Also, make sure that everything is consistent.
 (define (make-opnd cgc proc code opnd #!optional (context #f))
   (define (make-obj val)
     (cond
@@ -440,11 +450,9 @@
             (car (format-object (get-object-description val) val))
             (get-word-width-bits cgc)))
       ((reference-desc? (get-object-description val))
-        (if (eqv? context 'jump)
-          (get-obj-label cgc (obj-val opnd))
           (lbl-opnd cgc
             (get-obj-label cgc (obj-val opnd))
-            (get-desc-pointer-tag (get-object-description val)))))
+          (get-desc-pointer-tag (get-object-description val))))
       (else
         (compiler-internal-error "make-opnd: Unknown object type"))))
   (cond
@@ -455,7 +463,6 @@
         (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
         (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
     ((lbl? opnd)
-      ;;todo : Check if correct.
       (if (eqv? context 'jump)
         (get-proc-label cgc proc (lbl-num opnd))
         (lbl-opnd cgc (get-proc-label cgc proc (lbl-num opnd)))))
@@ -469,7 +476,7 @@
         (debug "Index:" index)
         (mem-opnd cgc index base)))
     ((glo? opnd)
-      (compiler-internal-error "make-opnd: Opnd not implementeted" opnd))
+      (lbl-opnd cgc (get-global-var-label cgc (glo-name opnd))))
     (else
       (compiler-internal-error "make-opnd: Unknown opnd: " opnd))))
 

@@ -294,15 +294,12 @@
   (debug "Encode procs")
 
   (am-init cgc)
-
   (am-set-narg cgc 0)
 
   (map-on-procs encode-proc procs)
 
   (am-end cgc)
-
   (am-error cgc)
-
   (am-place-extra-data cgc)
 
   (debug "Adding primitives")
@@ -310,18 +307,23 @@
     (lambda (key val) (put-primitive-if-needed cgc key val))
     (get-proc-label-table cgc))
 
-  (debug "Adding objects")
+  (debug "Adding constants objects")
   (table-for-each
     (lambda (key val) (put-object cgc key val))
     (get-object-label-table cgc))
+
+  (debug "Adding global variables")
+  (table-for-each
+    (lambda (name label) (put-global-variable cgc name label))
+    (get-global-var-table cgc))
 
   (debug "Finished!"))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
   (let* ((label (car pair))
-          (proc (cadr pair))
-          (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
+         (proc (cadr pair))
+         (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
     (if (not defined?)
       (let ((prim (get-primitive-object cgc (proc-obj-name proc)))
             (then (then-return))
@@ -341,6 +343,14 @@
   (let* ((obj-desc (get-object-description obj))
          (words (format-object obj-desc obj)))
     (am-data cgc (get-word-width-bits cgc) words)))
+
+(define (put-global-variable cgc name label)
+  (debug "put-global-variable")
+  (debug "name: " name)
+  (debug "label: " label)
+
+  (am-lbl cgc label)
+  (am-data cgc (get-word-width-bits cgc) 0))
 
 ;;;----------------------------------------------------------------------------
 
@@ -406,6 +416,7 @@
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
     ;; Jump to location. Checks if jump is NOP.
+    ;; Todo: Make sure that jmp-opnd is a label or check type of object
     (debug jmp-opnd)
     (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
       (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump)))))
