@@ -378,8 +378,6 @@
   ;; Add space between stack and heap in case of underflow
   (am-sub cgc stack-pointer stack-pointer (int-opnd cgc stack-underflow-padding))
 
-  ;; Set frame pointer to bottom of stack
-  (am-mov cgc frame-pointer stack-pointer)
   ;; Align frame with offset
   (am-sub cgc frame-pointer stack-pointer (int-opnd cgc (* frame-offset (get-word-width cgc))))
   ;; Allocate stack
