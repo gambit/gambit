@@ -370,7 +370,7 @@
 
 ;; ***** Utils
 
-(define (make-opnd cgc proc code opnd context)
+(define (make-opnd cgc proc code opnd #!optional (context #f))
   (define (make-obj val)
     (cond
       ((proc-obj? val)
@@ -407,10 +407,15 @@
         (lbl-opnd cgc (get-proc-label cgc proc (lbl-num opnd)))))
     ((obj? opnd)
       (make-obj (obj-val opnd)))
-    ((glo? opnd)
-      (compiler-internal-error "make-opnd: Opnd not implementeted global"))
     ((clo? opnd)
-      (compiler-internal-error "make-opnd: Opnd not implementeted closure"))
+      ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
+      (let ((base (get-register cgc (reg-num (clo-base opnd))))
+            (index (* 8 (- (clo-index opnd) 1))))
+        (debug "Base:" base)
+        (debug "Index:" index)
+        (mem-opnd cgc index base)))
+    ((glo? opnd)
+      (compiler-internal-error "make-opnd: Opnd not implementeted" opnd))
     (else
       (compiler-internal-error "make-opnd: Unknown opnd: " opnd))))
 
