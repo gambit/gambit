@@ -140,6 +140,8 @@
     data-instr              ;; am-data
     mov-instr               ;; am-mov
     x86-lea                 ;; am-load-mem-address
+    x86-push                ;; am-push
+    x86-pop                 ;; am-pop
     (apply-and-mov x86-add) ;; am-add
     (apply-and-mov x86-sub) ;; am-sub
     (apply-and-mov x86-shr) ;; am-bit-shift-right
@@ -365,7 +367,6 @@
   ;; Set lower bytes of descriptor register used for passing narg
   (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
   ;; Set interrupt flag to 0
-
   (am-mov cgc
     (get-thread-descriptor-opnd cgc 'interrupt-flag)
     (int-opnd cgc 0)
