@@ -160,12 +160,25 @@
 (define data-instr
   (make-am-data x86-db x86-dw x86-dd x86-dq))
 
+;; Args : CGC, reg/mem/label, reg/mem/imm/label
 (define (mov-instr cgc dst src #!optional (width #f))
-  (if (lbl-opnd? cgc dst)
+  (cond
+    ((lbl-opnd? cgc dst)
     (let ((extra-reg (get-extra-register cgc 0)))
       (x86-mov cgc extra-reg dst)
-      (x86-mov cgc (x86-mem 0 extra-reg) src width))
-    (x86-mov cgc dst src width)))
+        (x86-mov cgc (x86-mem 0 extra-reg) src width)))
+    ((or
+        (and (mem-opnd? cgc dst) (mem-opnd? cgc src))
+        (and (mem-opnd? cgc dst) (lbl-opnd? cgc src))
+        (and (lbl-opnd? cgc dst) (mem-opnd? cgc src)))
+      (let ((reg (get-extra-register cgc 0)))
+        ;; Todo: Can be almost always removed. Find way to track register usage
+        (x86-push cgc reg)
+        (x86-mov cgc reg src)
+        (x86-mov cgc dst reg)
+        (x86-pop cgc reg)))
+    (else
+      (x86-mov cgc dst src width))))
 
 (define (apply-and-mov fun)
   (lambda (cgc result-reg opnd1 opnd2)
