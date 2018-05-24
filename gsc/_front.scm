@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -40,7 +40,7 @@
 (define cf #f)
 
 (set! cf
-  (lambda (input opts output-filename-gen module-name unique-name)
+  (lambda (input opts output-filename-gen module-name linker-name)
     (with-exception-handling
      (lambda ()
        (let* ((t
@@ -71,7 +71,7 @@
                           (cons (list 'target (default-target)) opts))
                       output-filename-gen
                       module-name
-                      unique-name
+                      linker-name
                       info-port))))
 
            result))))))
@@ -125,7 +125,7 @@
                       #t)
                      ((c dynamic exe obj link flat
                          check force keep-c
-                         o l prelude postlude
+                         o l module-name linker-name prelude postlude
                          cc-options ld-options-prelude ld-options
                          asm)
                       #t) ;; these options are innocuous
@@ -197,7 +197,7 @@
          opts
          output-filename-gen
          module-name
-         unique-name
+         linker-name
          info-port
          inner)
 
@@ -226,79 +226,83 @@
               (string-append root (caar target.file-extensions))))
          (module-name
           (or module-name
-              (path-strip-directory root)))
-         (unique-name
-          (or unique-name
-              module-name)))
+              (string-append (path-strip-directory root) "#"))))
 
-    (if (not (valid-module-name? module-name))
-        (compiler-error
-         "Invalid characters in file name (must be a symbol with no \"#\")")
-        (let ()
+    (define (add-loading-of-required-modules ptrees source env comp-scope)
+      (let ((required-modules
+             (table-ref comp-scope 'required-modules '())))
+        (if (pair? required-modules)
+            (let ((env
+                   (add-extended-bindings
+                    (add-proper-tail-calls
+                     (add-safe env)))))
+              (append
+               (map (lambda (module-ref)
+                      (new-call source env
+                                (new-ref source env
+                                         (env-lookup-global-var
+                                          env
+                                          '##load-required-module))
+                                (list (new-cst source env
+                                               module-ref))))
+                    required-modules)
+               ptrees))
+            ptrees)))
 
-          (define (add-loading-of-required-modules ptrees source env comp-scope)
-            (let ((required-modules
-                   (table-ref comp-scope 'required-modules '())))
-              (if (pair? required-modules)
-                  (let ((env
-                         (add-extended-bindings
-                          (add-proper-tail-calls
-                           (add-safe env)))))
-                    (append
-                     (map (lambda (module-ref)
-                            (new-call source env
-                                      (new-ref source env
-                                               (env-lookup-global-var
-                                                env
-                                                '##load-required-module))
-                                      (list (new-cst source env
-                                                     module-ref))))
-                          required-modules)
-                     ptrees))
-                  ptrees)))
+    (let* ((v1 (read-source input #f #t))
+           (script-line (vector-ref v1 0))
+           (expr (vector-ref v1 1))
+           (program (expand-source (wrap-program expr)))
+           (x (##in-new-compilation-scope
+               (lambda ()
+                 (let ((comp-scope (##compilation-scope)))
+                   (table-set! comp-scope 'module-name module-name)
+                   (table-set! comp-scope 'linker-name linker-name))
+                 (parse-program
+                  program
+                  (make-global-environment)
+                  module-name
+                  vector))))
+           (v2 (car x))
+           (comp-scope (cdr x))
+           (lst (vector-ref v2 0))
+           (env (vector-ref v2 1))
+           (c-intf (vector-ref v2 2))
+           (ptrees (add-loading-of-required-modules lst program env comp-scope))
+           (parsed-program (normalize-program ptrees))
+           (module-name
+            (let ((mod-name (table-ref comp-scope 'module-name)))
+              (table-set! comp-scope 'module-name)
+              mod-name))
+           (linker-name
+            (let ((link-name (table-ref comp-scope 'linker-name)))
+              (table-set! comp-scope 'linker-name)
+              (or link-name
+                  module-name)))
+           (result
+            (inner parsed-program
+                   env
+                   root
+                   output
+                   module-name
+                   linker-name
+                   c-intf
+                   comp-scope
+                   script-line)))
 
-          (let* ((v1 (read-source input #f #t))
-                 (script-line (vector-ref v1 0))
-                 (expr (vector-ref v1 1))
-                 (program (expand-source (wrap-program expr)))
-                 (x (##in-new-compilation-scope
-                     (lambda ()
-                       (parse-program
-                        program
-                        (make-global-environment)
-                        module-name
-                        vector))))
-                 (v2 (car x))
-                 (comp-scope (cdr x))
-                 (lst (vector-ref v2 0))
-                 (env (vector-ref v2 1))
-                 (c-intf (vector-ref v2 2))
-                 (ptrees (add-loading-of-required-modules lst program env comp-scope))
-                 (parsed-program (normalize-program ptrees))
-                 (result
-                  (inner parsed-program
-                         env
-                         root
-                         output
-                         module-name
-                         unique-name
-                         c-intf
-                         comp-scope
-                         script-line)))
+      (target-unselect!)
+      (virtual.end!)
+      (ptree.end!)
+      (env.end!)
 
-            (target-unselect!)
-            (virtual.end!)
-            (ptree.end!)
-            (env.end!)
-
-            result)))))
+      result)))
 
 (define (compile-program
          input
          opts
          output-filename-gen
          module-name
-         unique-name
+         linker-name
          info-port)
 
   (set! warnings-requested? compiler-option-warnings)
@@ -311,14 +315,14 @@
              opts
              output-filename-gen
              module-name
-             unique-name
+             linker-name
              info-port
              (lambda (parsed-program
                       env
                       root
                       output
                       module-name
-                      unique-name
+                      linker-name
                       c-intf
                       comp-scope
                       script-line)
@@ -386,7 +390,7 @@
                   output
                   c-intf
                   module-descr
-                  unique-name)
+                  linker-name)
 
                  (dump-c-intf module-procs root c-intf)
 
@@ -432,33 +436,13 @@
                  root
                  output
                  module-name
-                 unique-name
+                 linker-name
                  c-intf
                  comp-scope
                  script-line)
           (map (lambda (x)
                  (parse-tree->expression x loc-table))
                parsed-program)))))))
-
-(define (valid-module-name? module-name)
-
-  ; Valid module names are exactly the valid symbols except those
-  ; containing "#".  A module name can also be a number.
-
-  (define (valid-char? c)
-    (and (not (memv c '(#\# #\; #\( #\) #\  #\[ #\] #\{ #\} #\" #\' #\` #\,)))
-         (not (char-whitespace? c))))
-
-  (let ((n (string-length module-name)))
-    (and (> n 0)                               ; should not be empty
-         (not (string=? module-name "."))      ; should not be "."
-         ;;(not (string->number module-name 10)) ; should not be a number
-         (let loop ((i 0))
-           (if (< i n)
-             (if (valid-char? (string-ref module-name i))
-               (loop (+ i 1))
-               #f)
-             #t)))))
 
 (define (dump-c-intf module-procs root c-intf)
   (let ((decls (c-intf-decls c-intf))
@@ -705,7 +689,7 @@
 
 (define (compile-parsed-program module-name program env c-intf info-port)
   (let* ((name
-          (string-append module-prefix module-name))
+          (string-append module-name "#"))
          (main-proc
           (make-proc-obj
            name   ;; name
@@ -755,7 +739,7 @@
                (if (and val (prc? val))
                    (let ((proc
                           (make-proc-obj
-                           (symbol->string (var-name var)) ; name
+                           (symbol->string (var-name var)) ;; name
                            (prc-c-name val)   ;; c-name
                            #t                 ;; primitive?
                            #f                 ;; code

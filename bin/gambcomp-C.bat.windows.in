@@ -10,6 +10,9 @@ set FLAGS_DYN=@FLAGS_DYN_BAT@
 set FLAGS_LIB=@FLAGS_LIB_BAT@
 set FLAGS_EXE=@FLAGS_EXE_BAT@
 
+set FLAGS_OPT=@FLAGS_OPT_BAT@
+set FLAGS_OPT_RTS=@FLAGS_OPT_RTS_BAT@
+
 set DEFS_OBJ=@DEFS_OBJ_BAT@
 set DEFS_DYN=@DEFS_DYN_BAT@
 set DEFS_LIB=@DEFS_LIB_BAT@
@@ -124,6 +127,20 @@ if not "%1" == ""FLAGS_EXE"" goto not_FLAGS_EXE
 echo.%FLAGS_EXE%
 goto end
 :not_FLAGS_EXE
+
+if "%1" == "FLAGS_OPT" goto FLAGS_OPT
+if not "%1" == ""FLAGS_OPT"" goto not_FLAGS_OPT
+:FLAGS_OPT
+echo.%FLAGS_OPT%
+goto end
+:not_FLAGS_OPT
+
+if "%1" == "FLAGS_OPT_RTS" goto FLAGS_OPT_RTS
+if not "%1" == ""FLAGS_OPT_RTS"" goto not_FLAGS_OPT_RTS
+:FLAGS_OPT_RTS
+echo.%FLAGS_OPT_RTS%
+goto end
+:not_FLAGS_OPT_RTS
 
 if "%1" == "DEFS_OBJ" goto DEFS_OBJ
 if not "%1" == ""DEFS_OBJ"" goto not_DEFS_OBJ

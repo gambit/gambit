@@ -1,9 +1,9 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
-#define ___VERSION 408008
+#define ___VERSION 408009
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -118,7 +118,7 @@
  * least a head and a body.  The head is a single ___WORD that
  * contains 3 "head" tag bits (the 3 lower bits), a subtype tag (the
  * next 5 bits), and the length of the object in bytes (the remaining
- * bits).  The head immediately precedes the body of the object, which
+ * bits).  The head is followed by the body of the object, which
  * contains the rest of the information associated with the object.
  * Depending on the subtype, the body can contain raw binary data
  * (such as when the object is a string) and Scheme objects (such as
@@ -218,13 +218,13 @@
  *
  *   nonclosures (toplevel procedures)
  *     subtype = ___sPROCEDURE (length contains parameter descriptor)
- *     field_0 = C pointer to field_0 - ___BODY_OFS
+ *     field_0 = C pointer to this object
  *     field_1 = C pointer to label (only when using gcc)
  *     field_2 = C pointer to host C procedure
  *
  *   closures:
  *     subtype = ___sPROCEDURE
- *     field_0 = C pointer to field_0 of entry procedure - ___BODY_OFS
+ *     field_0 = C pointer to entry procedure
  *     field_1 = free variable 1
  *     field_2 = free variable 2
  *     ...
@@ -232,14 +232,14 @@
  *     Note: the entry procedure must be a nonclosure procedure
  *
  * Return points:
- *     subtype = ___sPROCEDURE
+ *     subtype = ___sRETURN
  *     field_0 = return frame descriptor
  *     field_1 = C pointer to label (only when using gcc)
  *     field_2 = C pointer to host C procedure
  *
  * Wills:
  *     subtype = ___sWEAK
- *     field_0 = next will in list with special tag in lower bits
+ *     field_0 = C pointer to field_0 of next will in list
  *     field_1 = testator object
  *     field_2 = action procedure
  *
@@ -247,7 +247,7 @@
  *
  * GC hash tables:
  *     subtype = ___sWEAK
- *     field_0 = next GC hash table in list with special tag in lower bits
+ *     field_0 = C pointer to field_0 of next GC hash table in list
  *     field_1 = flags
  *     field_2 = count*2 (twice number of active key-value entries)
  *     field_3 = used*2 (twice number of total entries including deleted)
@@ -491,24 +491,26 @@
 /* Constants related to representation of permanent and still objects: */
 
 #ifdef ___USE_HANDLES
-#define ___PERM_HAND_OFS 0
-#define ___PERM_BODY_OFS 2
+#define ___PERM_HANDLE 0
+#define ___PERM_BODY 2
 #else
-#define ___PERM_HAND_OFS ___PERM_BODY_OFS
-#define ___PERM_BODY_OFS 1
+#define ___PERM_HANDLE ___PERM_BODY
+#define ___PERM_BODY 1
 #endif
+#define ___PERM_HEADER (___PERM_BODY-1)
 
-#define ___STILL_LINK_OFS 0
-#define ___STILL_REFCOUNT_OFS 1
-#define ___STILL_LENGTH_OFS 2
-#define ___STILL_MARK_OFS 3
+#define ___STILL_LINK 0
+#define ___STILL_REFCOUNT 1
+#define ___STILL_LENGTH 2
+#define ___STILL_MARK 3
 #ifdef ___USE_HANDLES
-#define ___STILL_HAND_OFS 4
-#define ___STILL_BODY_OFS 6
+#define ___STILL_HANDLE 4
+#define ___STILL_BODY 6
 #else
-#define ___STILL_HAND_OFS ___STILL_BODY_OFS
-#define ___STILL_BODY_OFS (5+1)/************/
+#define ___STILL_HANDLE ___STILL_BODY
+#define ___STILL_BODY (5+1)/************/
 #endif
+#define ___STILL_HEADER (___STILL_BODY-1)
 
 
 /*---------------------------------------------------------------------------*/
@@ -517,27 +519,31 @@
 
 
 /*
- * 'alloc_mem_aligned (words, multiplier, modulus)' allocates an
- * aligned block of memory through the '___alloc_mem' function.
- * 'words' is the size of the block in words and 'multiplier' and
- * 'modulus' specify its alignment in words.  'multiplier' must be a
- * power of two and 0<=modulus<multiplier.  The pointer returned
- * corresponds to an address that is equal to
- * (i*multiplier+modulus)*sizeof (___WORD) for some 'i'.
+ * 'alloc_mem_aligned_aux (words, multiplier, modulus, heap)'
+ * allocates an aligned block of memory (using '___alloc_mem' when
+ * heap is false, and '___alloc_mem_heap' when heap is true).  'words'
+ * is the size of the block in words and 'multiplier' and 'modulus'
+ * specify its alignment in words.  'multiplier' must be a power of
+ * two and 0<=modulus<multiplier.  The pointer returned corresponds to
+ * an address that is equal to (i*multiplier+modulus)*sizeof (___WORD)
+ * for some 'i'.
  */
 
-___HIDDEN void *alloc_mem_aligned
+___HIDDEN void *alloc_mem_aligned_aux
    ___P((___SIZE_TS words,
          unsigned int multiplier,
-         unsigned int modulus),
+         unsigned int modulus,
+         ___BOOL heap),
         (words,
          multiplier,
-         modulus)
+         modulus,
+         heap)
 ___SIZE_TS words;
 unsigned int multiplier;
-unsigned int modulus;)
+unsigned int modulus;
+___BOOL heap;)
 {
-  void *container; /* pointer to block returned by ___alloc_mem */
+  void *container; /* pointer to block returned by ___alloc_mem{_heap} */
   unsigned int extra; /* space for alignment to multiplier */
 
   /* Make sure alignment is sufficient for pointers */
@@ -551,7 +557,10 @@ unsigned int modulus;)
   if (modulus < sizeof (void*) / ___WS)
     extra += sizeof (void*);
 
-  container = ___ALLOC_MEM(extra + (words+modulus) * ___WS);
+  if (heap)
+    container = ___ALLOC_MEM_HEAP(extra + (words+modulus) * ___WS);
+  else
+    container = ___ALLOC_MEM(extra + (words+modulus) * ___WS);
 
   if (container == 0)
     return 0;
@@ -571,6 +580,36 @@ unsigned int modulus;)
 }
 
 
+___HIDDEN void *alloc_mem_aligned
+   ___P((___SIZE_TS words,
+         unsigned int multiplier,
+         unsigned int modulus),
+        (words,
+         multiplier,
+         modulus)
+___SIZE_TS words;
+unsigned int multiplier;
+unsigned int modulus;)
+{
+  return alloc_mem_aligned_aux (words, multiplier, modulus, 0);
+}
+
+
+___HIDDEN void *alloc_mem_aligned_heap
+   ___P((___SIZE_TS words,
+         unsigned int multiplier,
+         unsigned int modulus),
+        (words,
+         multiplier,
+         modulus)
+___SIZE_TS words;
+unsigned int multiplier;
+unsigned int modulus;)
+{
+  return alloc_mem_aligned_aux (words, multiplier, modulus, 1);
+}
+
+
 /*
  * 'free_mem_aligned (ptr)' reclaims the aligned block of memory 'ptr'
  * that was allocated using 'alloc_mem_aligned'.
@@ -585,6 +624,23 @@ void *ptr;)
                         (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
                         -___CAST(___WORD,sizeof (void*)));
   ___FREE_MEM(*cptr);
+}
+
+
+/*
+ * 'free_mem_aligned_heap (ptr)' reclaims the aligned block of memory
+ * 'ptr' that was allocated using 'alloc_mem_aligned_heap'.
+ */
+
+___HIDDEN void free_mem_aligned_heap
+   ___P((void *ptr),
+        (ptr)
+void *ptr;)
+{
+  void **cptr = ___CAST(void**,
+                        (___CAST(___WORD,ptr) - ___CAST(___WORD,sizeof (void*))) &
+                        -___CAST(___WORD,sizeof (void*)));
+  ___FREE_MEM_HEAP(*cptr);
 }
 
 
@@ -873,7 +929,7 @@ int n;)
               ms->sections[j]->pos = j;
             }
 
-          free_mem_aligned (s);
+          free_mem_aligned_heap (s);
 
           ns--;
         }
@@ -897,7 +953,7 @@ int n;)
       while (ns < n)
         {
           ___msection *s = ___CAST(___msection*,
-                                   alloc_mem_aligned
+                                   alloc_mem_aligned_heap
                                      (___WORDS(___sizeof_msection(___MSECTION_SIZE)),
                                       1,
                                       0));
@@ -961,7 +1017,7 @@ ___msections **msp;)
       int i;
 
       for (i=ms->nb_sections-1; i>=0; i--)
-        free_mem_aligned (ms->sections[i]);
+        free_mem_aligned_heap (ms->sections[i]);
 
       free_mem_aligned (ms);
 
@@ -1010,7 +1066,7 @@ unsigned int modulus;)
 
   /* Allocate container */
 
-  container = alloc_mem_aligned (words+modulus, multiplier, 0);
+  container = alloc_mem_aligned_heap (words+modulus, multiplier, 0);
 
   if (container == 0)
     return 0;
@@ -1106,7 +1162,7 @@ ___HIDDEN void free_psections ___PVOID
   while (base != 0)
     {
       void *link = *___CAST(void**,base);
-      free_mem_aligned (base);
+      free_mem_aligned_heap (base);
       base = link;
     }
 }
@@ -1326,7 +1382,7 @@ ___EXP_FUNC(void,___still_obj_refcount_inc)
         (obj)
 ___WORD obj;)
 {
-  ___UNTAG(obj)[___BODY_OFS - ___STILL_BODY_OFS + ___STILL_REFCOUNT_OFS]++;
+  ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY]++;
 }
 
 
@@ -1340,7 +1396,7 @@ ___EXP_FUNC(void,___still_obj_refcount_dec)
         (obj)
 ___WORD obj;)
 {
-  ___UNTAG(obj)[___BODY_OFS - ___STILL_BODY_OFS + ___STILL_REFCOUNT_OFS]--;
+  ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY]--;
 }
 
 
@@ -1370,7 +1426,8 @@ ___SIZE_TS bytes;)
 {
   void *ptr;
   ___WORD *base;
-  ___SIZE_TS words = ___PERM_BODY_OFS + ___WORDS(bytes);
+  ___WORD *body;
+  ___SIZE_TS words = ___PERM_BODY + ___WORDS(bytes);
 
   /*
    * Some objects, such as ___sFOREIGN, ___sS64VECTOR, ___sU64VECTOR,
@@ -1383,20 +1440,24 @@ ___SIZE_TS bytes;)
 
   ptr = alloc_mem_aligned_perm (words,
                                 8>>___LWS,
-                                (-___PERM_BODY_OFS)&((8>>___LWS)-1));
+                                (-___PERM_BODY)&((8>>___LWS)-1));
 
   if (ptr == 0)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   base = ___CAST(___WORD*,ptr);
+  body = base + ___PERM_BODY;
 
 #ifdef ___USE_HANDLES
-  base[___PERM_HAND_OFS] = ___CAST(___WORD,base+___PERM_BODY_OFS-___BODY_OFS);
+  base[___PERM_HANDLE] = ___CAST(___WORD,body);
 #endif
-  base[___PERM_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___PERM);
 
-  return ___TAG((base + ___PERM_HAND_OFS - ___BODY_OFS),
-                (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
+  base[___PERM_HEADER] = ___MAKE_HD(bytes, subtype, ___PERM);
+
+  if (subtype == ___sPAIR)
+    return ___PAIR_FROM_BODY(body);
+  else
+    return ___SUBTYPED_FROM_BODY(body);
 }
 
 
@@ -1413,7 +1474,8 @@ ___SIZE_TS bytes;)
 {
   void *ptr;
   ___WORD *base;
-  ___SIZE_TS words = ___STILL_BODY_OFS + ___WORDS(bytes);
+  ___WORD *body;
+  ___SIZE_TS words = ___STILL_BODY + ___WORDS(bytes);
   ___SIZE_TS words_including_deferred = words + words_still_objs_deferred;
 
 #ifdef CALL_GC_FREQUENTLY
@@ -1436,9 +1498,9 @@ ___SIZE_TS bytes;)
        * efficient due to a better utilization of the cache.
        */
 
-      if ((ptr = alloc_mem_aligned (words,
-                                    8>>___LWS,
-                                    (-___STILL_BODY_OFS)&((8>>___LWS)-1)))
+      if ((ptr = alloc_mem_aligned_heap (words,
+                                         8>>___LWS,
+                                         (-___STILL_BODY)&((8>>___LWS)-1)))
           == 0)
         {
           /*
@@ -1496,12 +1558,12 @@ ___SIZE_TS bytes;)
 
       /*
        * Allocate the still object.  See comments above for other call
-       * to alloc_mem_aligned.
+       * to alloc_mem_aligned_heap.
        */
 
-      if ((ptr = alloc_mem_aligned (words,
-                                    8>>___LWS,
-                                    (-___STILL_BODY_OFS)&((8>>___LWS)-1)))
+      if ((ptr = alloc_mem_aligned_heap (words,
+                                         8>>___LWS,
+                                         (-___STILL_BODY)&((8>>___LWS)-1)))
           == 0)
         {
           /*
@@ -1522,20 +1584,25 @@ ___SIZE_TS bytes;)
   /* Initialize still object and add it to the still_objs list. */
 
   base = ___CAST(___WORD*,ptr);
+  body = base + ___STILL_BODY;
 
-  base[___STILL_LINK_OFS] = still_objs;
+  base[___STILL_LINK] = still_objs;
   still_objs = ___CAST(___WORD,base);
-  base[___STILL_REFCOUNT_OFS] = 1;
-  base[___STILL_LENGTH_OFS] = words;
+  base[___STILL_REFCOUNT] = 1;
+  base[___STILL_LENGTH] = words;
+
 #ifdef ___USE_HANDLES
-  base[___STILL_HAND_OFS] = ___CAST(___WORD,base+___STILL_BODY_OFS-___BODY_OFS);
+  base[___STILL_HANDLE] = ___CAST(___WORD,body);
 #endif
-  base[___STILL_BODY_OFS-1] = ___MAKE_HD(bytes, subtype, ___STILL);
+
+  base[___STILL_HEADER] = ___MAKE_HD(bytes, subtype, ___STILL);
 
   /* Return tagged reference to still object. */
 
-  return ___TAG((base + ___STILL_HAND_OFS - ___BODY_OFS),
-                (subtype == ___sPAIR ? ___tPAIR : ___tSUBTYPED));
+  if (subtype == ___sPAIR)
+    return ___PAIR_FROM_BODY(body);
+  else
+    return ___SUBTYPED_FROM_BODY(body);
 }
 
 
@@ -1557,14 +1624,15 @@ ___SIZE_TS bytes;)
 }
 
 
-___EXP_FUNC(void,___release_scmobj)
-   ___P((___WORD obj),
+___EXP_FUNC(___SCMOBJ,___release_scmobj)
+   ___P((___SCMOBJ obj),
         (obj)
-___WORD obj;)
+___SCMOBJ obj;)
 {
   if (___MEM_ALLOCATED(obj) &&
-      ___HD_TYP(___BODY(obj)[-1]) == ___STILL)
+      ___HD_TYP(___HEADER(obj)) == ___STILL)
     ___still_obj_refcount_dec (obj);
+  return obj;
 }
 
 
@@ -1595,8 +1663,8 @@ ___WORD cdr;)
 
   if (!___FIXNUMP(obj))
     {
-      ___PAIR_CAR(obj) = car;
-      ___PAIR_CDR(obj) = cdr;
+      ___CAR_FIELD(obj) = car;
+      ___CDR_FIELD(obj) = cdr;
     }
 
   return obj;
@@ -2085,7 +2153,7 @@ ___SCMOBJ val;)
   ___SCMOBJ ___temp;
   if (___MEM_ALLOCATED(val))
     {
-      ___WORD* body = ___BODY(val);
+      ___WORD* body = ___BODY0(val);
       ___WORD head = body[-1];
       int subtype;
       int shift = 0;
@@ -2093,7 +2161,7 @@ ___SCMOBJ val;)
       if (___TYP(head) == ___FORW)
         {
           /* indirect forwarding pointer */
-          body = ___UNTAG_AS(head, ___FORW) + ___BODY_OFS;
+          body = ___BODY0(head);
           head = body[-1];
         }
 
@@ -2130,13 +2198,13 @@ ___SCMOBJ val;)
                       ___SCMOBJ *start = &body[-1];
                       ___SCMOBJ *ptr = start;
                       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-                        ptr -= ___LS;
-                      ptr += ___LS;
+                        ptr -= ___LABEL_SIZE;
+                      ptr += ___LABEL_SIZE;
                       if (ptr == start)
                         ___printf ("???");
                       else
                         {
-                          ___printf ("%d in ", (start-ptr)/___LS);
+                          ___printf ("%d in ", (start-ptr)/___LABEL_SIZE);
                           print_value (___TAG(ptr,___tSUBTYPED));
                         }
                     }
@@ -2148,7 +2216,7 @@ ___SCMOBJ val;)
           else if (subtype == ___sSTRING)
             {
               int i;
-              ___SCMOBJ str = ___TAG((body-1),___tSUBTYPED);
+              ___SCMOBJ str = ___SUBTYPED_FROM_BODY(body);
               ___printf ("\"");
               for (i=0; i<___INT(___STRINGLENGTH(str)); i++)
                 ___printf ("%c", ___INT(___STRINGREF(str,___FIX(i))));
@@ -2288,7 +2356,7 @@ int indent;)
     }
   else
     {
-      ___WORD* body = ___BODY(obj);
+      ___WORD* body = ___BODY0(obj);
       ___WORD head = body[-1];
       int subtype;
       int shift = 0;
@@ -2296,7 +2364,7 @@ int indent;)
       if (___TYP(head) == ___FORW)
         {
           /* indirect forwarding pointer */
-          body = ___UNTAG_AS(head, ___FORW) + ___BODY_OFS;
+          body = ___BODY0(head);
           head = body[-1];
         }
 
@@ -2520,14 +2588,14 @@ char *msg;)
 
   {
     int j;
-    ___WORD head = ___BODY(obj)[-1]>>shift;
+    ___WORD head = ___BODY0(obj)[-1]>>shift;
     ___SIZE_TS words = ___HD_WORDS(head);
     if (words > 10)
       words = 10;
     for (j=-1; j<words; j++)
       {
-        ___printf (">>>  body[%2d] = 0x%016lx\n", j, ___BODY(obj)[j]>>shift);
-        print_object (___BODY(obj)[j]>>shift, 1, ">>>             ", 0);
+        ___printf (">>>  body[%2d] = 0x%016lx\n", j, ___BODY0(obj)[j]>>shift);
+        print_object (___BODY0(obj)[j]>>shift, 1, ">>>             ", 0);
       }
   }
 
@@ -2541,12 +2609,10 @@ char *msg;)
         int subtype = ___HD_SUBTYPE(head);
         int i;
 
-#if ___tPAIR != ___tSUBTYPED
         if (subtype == ___sPAIR)
-          container = ___TAG(container_body-___BODY_OFS,___tPAIR);
+          container = ___PAIR_FROM_BODY(container_body);
         else
-#endif
-          container = ___TAG(container_body-___BODY_OFS,___tSUBTYPED);
+          container = ___SUBTYPED_FROM_BODY(container_body);
 
         ___printf (">>> The reference was found in ");
         if (___HD_TYP(head) == ___PERM)
@@ -2653,7 +2719,7 @@ ___PSDKR
 ___WORD obj;)
 {
   ___PSGET
-  ___WORD *hd_ptr = ___BODY(obj)-1;
+  ___WORD *hd_ptr = ___BODY0(obj)-1;
   ___WORD head;
   int i = find_msection (the_msections, hd_ptr);
   if (i >= 0 && i < the_msections->nb_sections)
@@ -2664,7 +2730,7 @@ ___WORD obj;)
           head = *hd_ptr;
           if (___TYP(head) == ___FORW)
             {
-              ___WORD *hd_ptr2 = ___UNTAG_AS(head,___FORW)+___BODY_OFS-1;
+              ___WORD *hd_ptr2 = ___BODY0(head)-1;
               int i2 = find_msection (the_msections, hd_ptr2);
               if (i2 >= 0 && i2 < the_msections->nb_sections)
                 {
@@ -2757,6 +2823,7 @@ ___PSDKR)
   ___printf ("********* used fudge: stack = %d  heap = %d\n", s, h);
 #endif
 }
+
 
 #endif
 
@@ -3144,7 +3211,7 @@ ___virtual_machine_state ___vms;)
 
   for (i=0; i<np; i++)
     {
-      ___processor_state ___ps = &___vms->pstate[i];
+      ___processor_state ___ps = ___PSTATE_FROM_PROCESSOR_ID(i,___vms);
 
       tospace_offset = fromspace_offset;  /* Flip fromspace and tospace */
 
@@ -3250,7 +3317,7 @@ ___WORD n;)
               validate_old_obj (___PSP obj);
 #endif
 
-            body = ___UNTAG(obj) + ___BODY_OFS;
+            body = ___BODY0(obj);
             head = body[-1];
             subtype = ___HD_SUBTYPE(head);
             head_typ = ___HD_TYP(head);
@@ -3258,6 +3325,7 @@ ___WORD n;)
             if (head_typ == ___MOVABLE0)
               {
                 ___SIZE_TS words = ___HD_WORDS(head);
+                /*TODO: add allocation of handle if using handles*/
 #if ___WS == 4
                 ___BOOL pad = 0;
                 while (alloc + words + (subtype >= ___sS64VECTOR ? 2 : 1) >
@@ -3291,7 +3359,7 @@ ___WORD n;)
 
 #ifdef ___SINGLE_THREADED_VMS
 
-                body[-1] = ___TAG((alloc - ___BODY_OFS), ___FORW);
+                body[-1] = ___TAG(alloc - ___REFERENCE_TO_BODY, ___FORW);
 
 #else
 
@@ -3299,7 +3367,7 @@ ___WORD n;)
                   ___WORD head_now =
                     ___COMPARE_AND_SWAP_WORD(&body[-1],
                                              head,
-                                             ___TAG((alloc - ___BODY_OFS), ___FORW));
+                                             ___TAG(alloc - ___REFERENCE_TO_BODY, ___FORW));
 
                   if (head_now != head)
                     {
@@ -3317,7 +3385,7 @@ ___WORD n;)
 
 #endif
 
-                *cell = ___TAG((alloc - ___BODY_OFS), ___TYP(obj));
+                *cell = ___TAG(alloc - ___REFERENCE_TO_BODY, ___TYP(obj));
 
                 if (words > 0 && subtype <= ___sBOXVALUES)
                   cell = alloc;
@@ -3347,23 +3415,23 @@ ___WORD n;)
               {
 #ifdef ___SINGLE_THREADED_VMS
 
-                if (body[___STILL_MARK_OFS - ___STILL_BODY_OFS] == -1)
+                if (body[___STILL_MARK - ___STILL_BODY] == -1)
                   {
-                    body[___STILL_MARK_OFS - ___STILL_BODY_OFS]
+                    body[___STILL_MARK - ___STILL_BODY]
                       = ___CAST(___WORD,still_objs_to_scan);
                     still_objs_to_scan
-                      = ___CAST(___WORD,body - ___STILL_BODY_OFS);
+                      = ___CAST(___WORD,body - ___STILL_BODY);
                   }
 
 #else
 
-                if (___COMPARE_AND_SWAP_WORD(&body[___STILL_MARK_OFS - ___STILL_BODY_OFS],
+                if (___COMPARE_AND_SWAP_WORD(&body[___STILL_MARK - ___STILL_BODY],
                                              -1,
                                              ___CAST(___WORD,still_objs_to_scan))
                     == -1)
                   {
                     still_objs_to_scan
-                      = ___CAST(___WORD,body - ___STILL_BODY_OFS);
+                      = ___CAST(___WORD,body - ___STILL_BODY);
                   }
 #endif
               }
@@ -3461,7 +3529,7 @@ ___WORD *orig_ptr;)
 
           words = fs + ___FRAME_EXTRA_SLOTS;
 
-          while (alloc + words + ___SUBTYPED_OVERHEAD > limit)
+          while (alloc + words + ___SUBTYPED_BODY > limit)
             {
               alloc_heap_ptr = alloc;
               end_heap_chunk (___ps);
@@ -3471,11 +3539,13 @@ ___WORD *orig_ptr;)
               limit = alloc_heap_limit;
             }
 
+          /*TODO: add allocation of handle if using handles*/
+
           *alloc++ = ___MAKE_HD_WORDS(words, ___sFRAME);
-#if ___SUBTYPED_OVERHEAD != 1
-          #error "___SUBTYPED_OVERHEAD != 1"
+#if ___SUBTYPED_BODY != 1
+          #error "___SUBTYPED_BODY != 1"
 #endif
-          forw = ___TAG((alloc - ___BODY_OFS), ___tFIXNUM);
+          forw = ___TAG(alloc - ___REFERENCE_TO_BODY, ___tFIXNUM);
           *alloc++ = ra1;
 #if ___FRAME_EXTRA_SLOTS != 1
           #error "___FRAME_EXTRA_SLOTS != 1"
@@ -3550,22 +3620,6 @@ ___WORD gcmap;
 ___WORD *nextgcmap;)
 {
   int i = 1;
-
-#ifdef SHOW_FRAMESzzz
-
-  {
-    int k = 1;
-    while (k <= fs)
-      {
-        ___WORD obj = ___FP_STK(fp,k);
-        ___printf ("  %2d: ", k);
-        print_value (obj);
-        ___printf ("\n");
-        k++;
-      }
-  }
-
-#endif
 
   for (;;)
     {
@@ -3721,11 +3775,11 @@ ___PSDKR)
 
 
 #define UNMARKED_MOVABLE(obj) \
-((unmarked_typ = ___HD_TYP((unmarked_body=___BODY(obj))[-1])) == ___MOVABLE0)
+((unmarked_typ = ___HD_TYP((unmarked_body=___BODY0(obj))[-1])) == ___MOVABLE0)
 
 #define UNMARKED_STILL(obj) \
 (unmarked_typ == ___STILL && \
- unmarked_body[___STILL_MARK_OFS - ___STILL_BODY_OFS] == -1)
+ unmarked_body[___STILL_MARK - ___STILL_BODY] == -1)
 
 #define UNMARKED(obj) \
 (UNMARKED_MOVABLE(obj) || UNMARKED_STILL(obj))
@@ -3815,7 +3869,7 @@ ___WORD *body;)
             }
 
           body[0] = reached_gc_hash_tables;
-          reached_gc_hash_tables = ___TAG((body-1),0);
+          reached_gc_hash_tables = ___CAST(___WORD,body);
         }
       break;
 
@@ -3883,7 +3937,20 @@ ___WORD *body;)
        * The object can only be a closure (nonclosures are permanent objects).
        */
 
-      mark_array (___PSP body+1, words-1); /* only scan free variables */
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+      /* update the closure's lowlevel code trampoline */
+
+      ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(body,
+                                       body[___LABEL_ENTRY_OR_DESCR]);
+
+#endif
+
+      /* only need to scan the free variables */
+
+      mark_array (___PSP
+                  body+(___LABEL_HOST_LABEL+___CLO_LOWLEVEL_TRAMPOLINE_SIZE),
+                  words-(___LABEL_HOST_LABEL+___CLO_LOWLEVEL_TRAMPOLINE_SIZE));
 
       break;
 
@@ -3912,14 +3979,14 @@ ___PSDKR)
 
   while (base != 0)
     {
-      if (base[___STILL_REFCOUNT_OFS] == 0)
-        base[___STILL_MARK_OFS] = -1;
+      if (base[___STILL_REFCOUNT] == 0)
+        base[___STILL_MARK] = -1;
       else
         {
-          base[___STILL_MARK_OFS] = ___CAST(___WORD,to_scan);
+          base[___STILL_MARK] = ___CAST(___WORD,to_scan);
           to_scan = base;
         }
-      base = ___CAST(___WORD*,base[___STILL_LINK_OFS]);
+      base = ___CAST(___WORD*,base[___STILL_LINK]);
     }
 
   still_objs_to_scan = ___CAST(___WORD,to_scan);
@@ -3936,8 +4003,8 @@ ___PSDKR)
 
   while ((base = ___CAST(___WORD*,still_objs_to_scan)) != 0)
     {
-      still_objs_to_scan = base[___STILL_MARK_OFS];
-      scan (___PSP base + ___STILL_BODY_OFS);
+      still_objs_to_scan = base[___STILL_MARK];
+      scan (___PSP base + ___STILL_BODY);
     }
 }
 
@@ -4081,20 +4148,20 @@ ___PSDKR)
 
   while (base != 0)
     {
-      ___WORD link = base[___STILL_LINK_OFS];
-      if (base[___STILL_MARK_OFS] == -1)
+      ___WORD link = base[___STILL_LINK];
+      if (base[___STILL_MARK] == -1)
         {
-          ___WORD head = base[___STILL_BODY_OFS-1];
+          ___WORD head = base[___STILL_BODY-1];
           if (___HD_SUBTYPE(head) == ___sFOREIGN)
             ___release_foreign
-              (___TAG((base + ___STILL_BODY_OFS - ___BODY_OFS), ___tSUBTYPED));
-          free_mem_aligned (base);
+              (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+          free_mem_aligned_heap (base);
         }
       else
         {
-          live_words_still += base[___STILL_LENGTH_OFS];
+          live_words_still += base[___STILL_LENGTH];
           *last = ___CAST(___WORD,base);
-          last = base + ___STILL_LINK_OFS;
+          last = base + ___STILL_LINK;
         }
       base = ___CAST(___WORD*,link);
     }
@@ -4125,12 +4192,12 @@ ___processor_state ___ps;)
 
   while (base != 0)
     {
-      ___WORD link = base[___STILL_LINK_OFS];
-      ___WORD head = base[___STILL_BODY_OFS-1];
+      ___WORD link = base[___STILL_LINK];
+      ___WORD head = base[___STILL_BODY-1];
       if (___HD_SUBTYPE(head) == ___sFOREIGN)
         ___release_foreign
-          (___TAG((base + ___STILL_BODY_OFS - ___BODY_OFS), ___tSUBTYPED));
-      free_mem_aligned (base);
+          (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+      free_mem_aligned_heap (base);
       base = ___CAST(___WORD*,link);
     }
 }
@@ -4262,7 +4329,7 @@ ___processor_state ___ps;)
    * Setup location of tospace.
    */
 
-  tospace_offset = ___vms->pstate[0].mem.tospace_offset_;
+  tospace_offset = ___PSTATE_FROM_PROCESSOR_ID(0,___vms)->mem.tospace_offset_;
 
   ___SPINLOCK_INIT(heap_chunks_to_scan_lock);
 
@@ -4421,7 +4488,7 @@ ___virtual_machine_state ___vms;)
    * Setup location of tospace.
    */
 
-  ___vms->pstate[0].mem.tospace_offset_ = 0;
+  ___PSTATE_FROM_PROCESSOR_ID(0,___vms)->mem.tospace_offset_ = 0;
 
   /*
    * Set the overflow reserve so that the rest parameter handler can
@@ -4429,8 +4496,8 @@ ___virtual_machine_state ___vms;)
    * garbage collector.
    */
 
-  normal_overflow_reserve = 2*((___MAX_NB_PARMS+___SUBTYPED_OVERHEAD) +
-                               ___MAX_NB_ARGS*(___PAIR_SIZE+___PAIR_OVERHEAD));
+  normal_overflow_reserve = 2*((___MAX_NB_PARMS+___SUBTYPED_BODY) +
+                               ___MAX_NB_ARGS*(___PAIR_SIZE+___PAIR_BODY));
   overflow_reserve = normal_overflow_reserve;
 
   /* Setup GC statistics */
@@ -4569,7 +4636,7 @@ ___virtual_machine_state ___vms;)
 
 #endif
 
-  ___cleanup_mem_pstate (&___vms->pstate[0]);/*TODO: other processors?*/
+  ___cleanup_mem_pstate (___PSTATE_FROM_PROCESSOR_ID(0,___vms));/*TODO: other processors?*/
 
   free_msections (&the_msections);
 
@@ -4609,7 +4676,7 @@ ___WORD list;)
 {
   while (___UNTAG(list) != 0)
     {
-      ___WORD* will_body = ___BODY(list);
+      ___WORD* will_body = ___UNTAG(list) + ___SUBTYPED_BODY;
       ___WORD will_head = will_body[-1];
       ___WORD testator;
 
@@ -4617,11 +4684,11 @@ ___WORD list;)
       int unmarked_typ;
 
       if (___TYP(will_head) == ___FORW) /* was will forwarded? */
-        will_body = ___BODY_AS(will_head,___FORW);
+        will_body = ___BODY0_AS(will_head,___FORW);
 
-      list = will_body[0];
+      list = will_body[___WILL_NEXT];
 
-      testator = will_body[1];
+      testator = will_body[___WILL_TESTATOR];
 
       if (___MEM_ALLOCATED(testator) &&
           UNMARKED(testator)) /* testator was not marked? */
@@ -4631,7 +4698,7 @@ ___WORD list;)
            * weak references, so mark will as executable.
            */
 
-          will_body[0] = list | ___EXECUTABLE_WILL;
+          will_body[___WILL_NEXT] = list | ___EXECUTABLE_WILL;
         }
     }
 }
@@ -4666,15 +4733,15 @@ ___PSDKR)
 
   while (___UNTAG(curr) != 0)
     {
-      ___WORD will = ___TAG(___UNTAG(curr),___tSUBTYPED);
+      ___WORD will = ___SUBTYPED_FROM_START(___UNTAG(curr));
 
       mark_array (___PSP &will, 1);
 
-      *tail_exec = ___TAG(___UNTAG(will),___EXECUTABLE_WILL);
-      tail_exec = &___BODY_AS(will,___tSUBTYPED)[0];
+      *tail_exec = ___TAG(___SUBTYPED_TO_START(will),___EXECUTABLE_WILL);
+      tail_exec = &___BODY0_AS(will,___tSUBTYPED)[___WILL_NEXT];
       curr = *tail_exec;
       if (curr & ___UNMARKED_TESTATOR_WILL)
-        mark_array (___PSP tail_exec+1, 1); /* mark testator object */
+        mark_array (___PSP tail_exec+___WILL_TESTATOR, 1); /* mark testator object */
     }
 
   tail_nonexec = &nonexecutable_wills;
@@ -4682,29 +4749,29 @@ ___PSDKR)
 
   while (___UNTAG(curr) != 0)
     {
-      ___WORD will = ___TAG(___UNTAG(curr),___tSUBTYPED);
+      ___WORD will = ___SUBTYPED_FROM_START(___UNTAG(curr));
 
       mark_array (___PSP &will, 1);
 
-      if (___BODY_AS(will,___tSUBTYPED)[0] & ___EXECUTABLE_WILL)
+      if (___BODY0_AS(will,___tSUBTYPED)[___WILL_NEXT] & ___EXECUTABLE_WILL)
         {
           /* move will to executable will list */
 
-          *tail_exec = ___TAG(___UNTAG(will),___EXECUTABLE_WILL);
-          tail_exec = &___BODY_AS(will,___tSUBTYPED)[0];
+          *tail_exec = ___TAG(___SUBTYPED_TO_START(will),___EXECUTABLE_WILL);
+          tail_exec = &___BODY0_AS(will,___tSUBTYPED)[___WILL_NEXT];
           curr = *tail_exec;
           if (curr & ___UNMARKED_TESTATOR_WILL)
-            mark_array (___PSP tail_exec+1, 1); /* mark testator object */
+            mark_array (___PSP tail_exec+___WILL_TESTATOR, 1); /* mark testator object */
         }
       else
         {
           /* leave will in nonexecutable will list */
 
-          *tail_nonexec = ___TAG(___UNTAG(will),0);
-          tail_nonexec = &___BODY_AS(will,___tSUBTYPED)[0];
+          *tail_nonexec = ___TAG(___SUBTYPED_TO_START(will),0);
+          tail_nonexec = &___BODY0_AS(will,___tSUBTYPED)[___WILL_NEXT];
           curr = *tail_nonexec;
           if (curr & ___UNMARKED_TESTATOR_WILL)
-            mark_array (___PSP tail_nonexec+1, 1); /* mark testator object */
+            mark_array (___PSP tail_nonexec+___WILL_TESTATOR, 1); /* mark testator object */
         }
     }
 
@@ -4723,14 +4790,14 @@ ___PSDKR)
 
   while (curr != ___TAG(0,0))
     {
-      ___WORD* body = ___BODY(curr);
+      ___WORD* body = ___CAST(___WORD*,curr);
       ___SIZE_TS words = ___HD_WORDS(body[-1]);
       int flags = ___INT(body[___GCHASHTABLE_FLAGS]);
       int i;
 
-      curr = body[0];
+      curr = body[___GCHASHTABLE_NEXT];
 
-      body[0] = ___FIX(0);
+      body[___GCHASHTABLE_NEXT] = ___FIX(0);
 
       if (((___GCHASHTABLE_FLAG_WEAK_KEYS | ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)
            & flags) ==
@@ -4757,7 +4824,7 @@ ___PSDKR)
 
                   if (___MEM_ALLOCATED(key))
                     {
-                      ___WORD key_head = ___BODY(key)[-1];
+                      ___WORD key_head = ___BODY0(key)[-1];
 
                       if (___TYP(key_head) == ___FORW)
                         {
@@ -4768,7 +4835,7 @@ ___PSDKR)
 
                           if (___MEM_ALLOCATED(val))
                             {
-                              ___WORD val_head = ___BODY(val)[-1];
+                              ___WORD val_head = ___BODY0(val)[-1];
 
                               if (___TYP(val_head) == ___FORW)
                                 {
@@ -4858,7 +4925,7 @@ ___PSDKR)
 
                           if (___MEM_ALLOCATED(val))
                             {
-                              ___WORD val_head = ___BODY(val)[-1];
+                              ___WORD val_head = ___BODY0(val)[-1];
 
                               if (___TYP(val_head) == ___FORW)
                                 {
@@ -4915,7 +4982,7 @@ ___PSDKR)
 
                       if (___MEM_ALLOCATED(val))
                         {
-                          ___WORD val_head = ___BODY(val)[-1];
+                          ___WORD val_head = ___BODY0(val)[-1];
 
                           if (___TYP(val_head) == ___FORW)
                             {
@@ -4982,7 +5049,7 @@ ___PSDKR)
 
                   if (___MEM_ALLOCATED(key))
                     {
-                      ___WORD head = ___BODY(key)[-1];
+                      ___WORD head = ___BODY0(key)[-1];
 
                       if (___TYP(head) == ___FORW)
                         {
@@ -5035,7 +5102,7 @@ ___PSDKR)
 
                   if (___MEM_ALLOCATED(val))
                     {
-                      ___WORD head = ___BODY(val)[-1];
+                      ___WORD head = ___BODY0(val)[-1];
 
                       if (___TYP(head) == ___FORW)
                         {
@@ -5080,7 +5147,7 @@ ___SCMOBJ ht;)
 {
   ___WORD* body = ___BODY_AS(ht,___tSUBTYPED);
   ___SIZE_TS words = ___HD_WORDS(body[-1]);
-  int size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
+  int size2 = words - ___GCHASHTABLE_KEY0;
   int i;
 
   ___FIELD(ht, ___GCHASHTABLE_FLAGS) =
@@ -5482,7 +5549,7 @@ ___virtual_machine_state ___vms;)
 
   for (p=0; p<np; p++)
     {
-      ___processor_state ps = &___vms->pstate[p];
+      ___processor_state ps = ___PSTATE_FROM_PROCESSOR_ID(p,___vms);
 
       movable += words_movable_objs(ps);
 
@@ -5640,7 +5707,7 @@ ___PSDKR)
 #endif
 
   mark_array (___PSP
-              ___BODY_AS(___PROCESSOR_SCMOBJ(___ps),___tSUBTYPED),
+              ___BODY0_AS(___PROCESSOR_SCMOBJ(___ps),___tSUBTYPED),
               ___PROCESSOR_SIZE);
 }
 
@@ -5658,7 +5725,7 @@ ___PSDKR)
 #endif
 
   mark_array (___PSP
-              ___BODY_AS(___VM_SCMOBJ(___vms),___tSUBTYPED),
+              ___BODY0_AS(___VM_SCMOBJ(___vms),___tSUBTYPED),
               ___VM_SIZE);
 }
 
@@ -5774,7 +5841,7 @@ ___PSDKR)
 
       for (i = (np-1) * ___GC_SCAN_STEAL_WORK_CYCLES - 1; i>=0; i--)
         {
-          ___processor_state ps = &___vms->pstate[(i + i%(np-1) + 1) % np];
+          ___processor_state ps = ___PSTATE_FROM_PROCESSOR_ID((i + i%(np-1) + 1) % np,___vms);
           ___VOLATILE ___WORD *hcsh;
 
           if (ps->mem.heap_chunks_to_scan_head_ !=
@@ -5913,7 +5980,7 @@ ___PSDKR)
 
   /* maintain list of GC hash tables reached by GC */
 
-  reached_gc_hash_tables = ___TAG(0,0);
+  reached_gc_hash_tables = 0;
 
   traverse_weak_refs = 0; /* don't traverse weak references in this phase */
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -49,15 +49,14 @@
 ;;              References to the other fields in the module should thus
 ;;              happen inside calls to 'begin!' and 'end!'.
 ;;
-;; dump         Procedure (lambda (procs output c-intf script-line
-;;                                 options) ...)
+;; dump         Procedure (lambda (procs output c-intf module-descr
+;;                                 linker-name) ...)
 ;;              This procedure takes a list of 'procedure objects' and dumps
 ;;              the corresponding loader-compatible object file to the
 ;;              specified file.  The first procedure in 'procs', which must
 ;;              be a 0 argument procedure, will be called once when
-;;              the program it is linked into is started up.  'options'
-;;              is a list of back-end specific symbols passed by the
-;;              front end of the compiler.  'c-intf' is a c-intf structure
+;;              the program it is linked into is started up.
+;;              'c-intf' is a c-intf structure
 ;;              containing the C declarations, procedures, and initialization
 ;;              code contained in the source file.  It is the responsibility
 ;;              of the back-end (and loader) to create one Scheme primitive
@@ -68,9 +67,7 @@
 ;;              normally the case (this is useful in the case of a back-end
 ;;              generating C that will itself be creating this file).
 ;;              The 'output' argument specifies the file name of the file
-;;              to produce.  The 'script-line' argument indicates the text
-;;              on the first line of the source file (after the #! or @;)
-;;              if the source file is a script or #f if it is not a script.
+;;              to produce.
 ;;
 ;; link-info    Procedure (lambda (file) ...)
 ;;              This procedure opens the file and extracts the linking meta
@@ -521,7 +518,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define (link-modules extension? inputs output warnings?)
+(define (link-modules extension? inputs output linker-name warnings?)
   (with-exception-handling
     (lambda ()
       (let* ((expanded-output
@@ -584,6 +581,7 @@
                  extension?
                  files-and-flags-and-link-infos
                  output-file
+                 linker-name
                  warnings?)))
           ((target-end! selected-target))
           result)))))

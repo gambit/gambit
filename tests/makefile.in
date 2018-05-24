@@ -1,6 +1,6 @@
 # makefile for regression tests.
 
-# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 herefromroot = tests
 rootfromhere = ..
@@ -25,6 +25,8 @@ FLAGS_OBJ = @FLAGS_OBJ_MF@
 FLAGS_DYN = @FLAGS_DYN_MF@
 FLAGS_LIB = @FLAGS_LIB_MF@
 FLAGS_EXE = @FLAGS_EXE_MF@
+FLAGS_OPT = @FLAGS_OPT_MF@
+FLAGS_OPT_RTS = @FLAGS_OPT_RTS_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
@@ -102,6 +104,8 @@ all-post:
 	  touch server.rm; \
 	fi
 
+.NOTPARALLEL:
+
 check: all test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
@@ -140,7 +144,7 @@ test6: test5
 	@echo "------------ TEST 6 (link and execute the code generated)"
 	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mix@exe@ -exe mix.c
-	@SETDLPATH@ ./mix@exe@ -:m4000 > test6.out
+	@SETDLPATH@ ./mix@exe@ -:m5000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \
 	  rm -f test6.out mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@
 
@@ -148,7 +152,7 @@ test7:
 	@echo "------------ TEST 7 (memory management and C-interface)"
 	rm -f mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mem@exe@ -exe mem.scm
-	@SETDLPATH@ ./mem@exe@ -:m1,h4000 > test7.out
+	@SETDLPATH@ ./mem@exe@ -:m1,h5000 > test7.out
 	diff $(srcdirpfx)test7.ok test7.out && \
 	  rm -f test7.out mem.c mem_.c mem@obj@ mem_@obj@ mem@exe@
 
@@ -165,7 +169,7 @@ test9: test7
 	@echo "------------ TEST 9 (dynamic compilation and loading of a module)"
 	rm -rf mem@obj@ mem.o*
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings mem.scm
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:m1,h4000 -f mem.o1 > test9.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi -:m1,h5000 -f mem.o1 > test9.out
 	diff $(srcdirpfx)test9.ok test9.out && rm -f test9.out mem@obj@ mem.o1
 
 test10:

@@ -19,10 +19,10 @@ void signal_handler (int sig)
   switch (sig)
     {
       case SIGUSR1:
-        ___EXT(___raise_interrupt) (___INTR_USER); /* interrupt 0 */
+        ___EXT(___raise_interrupt) (___INTR_USER); /* interrupt 3 */
         break;
       case SIGUSR2:
-        ___EXT(___raise_interrupt) (___INTR_TERMINATE); /* interrupt 3 */
+        ___EXT(___raise_interrupt) (___INTR_TERMINATE); /* interrupt 1 */
         break;
     }
 }
@@ -40,8 +40,8 @@ c-declare-end
   (c-lambda () void "install_SIGUSR_handlers"))
 
 (define (install-handlers)
-  (##interrupt-vector-set! 0 (lambda () (pretty-print 'got-SIGUSR1)))
-  (##interrupt-vector-set! 3 (lambda () (pretty-print 'got-SIGUSR2)))
+  (##interrupt-vector-set! 3 (lambda () (pretty-print 'got-SIGUSR1)))
+  (##interrupt-vector-set! 1 (lambda () (pretty-print 'got-SIGUSR2)))
   (install-SIGUSR-handlers))
 
 (install-handlers)

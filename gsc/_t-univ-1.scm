@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -312,13 +312,13 @@
 
       (target-dump-set!
        targ
-       (lambda (procs output c-intf module-descr unique-name)
+       (lambda (procs output c-intf module-descr linker-name)
          (univ-dump targ
                     procs
                     output
                     c-intf
                     module-descr
-                    unique-name
+                    linker-name
                     sem-changing-opts
                     sem-preserving-opts)))
 
@@ -329,8 +329,8 @@
 
       (target-link-set!
        targ
-       (lambda (extension? inputs output warnings?)
-         (univ-link targ extension? inputs output warnings?)))
+       (lambda (extension? inputs output linker-name warnings?)
+         (univ-link targ extension? inputs output linker-name warnings?)))
 
       (target-prim-info-set!
        targ
@@ -1671,13 +1671,13 @@
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 
-(define (univ-dump targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
+(define (univ-dump targ procs output c-intf module-descr linker-name sem-changing-options sem-preserving-options)
   (let ((code
-         (univ-dump-code targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)))
+         (univ-dump-code targ procs output c-intf module-descr linker-name sem-changing-options sem-preserving-options)))
     (univ-display-to-file code output)
     #f))
 
-(define (univ-dump-code targ procs output c-intf module-descr unique-name sem-changing-options sem-preserving-options)
+(define (univ-dump-code targ procs output c-intf module-descr linker-name sem-changing-options sem-preserving-options)
   (let* ((module-name-str
           (symbol->string (vector-ref module-descr 0)))
 
@@ -1925,7 +1925,7 @@
 (define univ-all-warnings #t)
 (set! univ-all-warnings #f)
 
-(define (univ-link targ extension? inputs output warnings?)
+(define (univ-link targ extension? inputs output linker-name warnings?)
   (let* ((root
           (path-strip-extension output))
 

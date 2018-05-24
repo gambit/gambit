@@ -7,7 +7,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_BASE
-#define ___VERSION 408008
+#define ___VERSION 408009
 #include "gambit.h"
 
 #include "os_base.h"
@@ -357,6 +357,74 @@ void *ptr;)
 #ifdef USE_VirtualAlloc
 
   VirtualFree (ptr, 0, MEM_RELEASE);
+
+#endif
+}
+
+
+#ifdef ___DEBUG_ALLOC_MEM
+void *___alloc_mem_heap
+   ___P((___SIZE_T bytes,
+         int lineno,
+         char *file),
+        (bytes,
+         lineno,
+         file)
+___SIZE_T bytes;
+int lineno;
+char *file;)
+#else
+void *___alloc_mem_heap
+   ___P((___SIZE_T bytes),
+        (bytes)
+___SIZE_T bytes;)
+#endif
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  return ___alloc_mem_code (bytes);
+
+#else
+
+#ifdef ___DEBUG_ALLOC_MEM
+  return ___alloc_mem (bytes, lineno, file);
+#else
+  return ___alloc_mem (bytes);
+#endif
+
+#endif
+}
+
+
+#ifdef ___DEBUG_ALLOC_MEM
+void ___free_mem_heap
+   ___P((void *ptr,
+         int lineno,
+         char *file),
+        (ptr,
+         lineno,
+         file)
+void *ptr;
+int lineno;
+char *file;)
+#else
+void ___free_mem_heap
+   ___P((void *ptr),
+        (ptr)
+void *ptr;)
+#endif
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  ___free_mem_code (ptr);
+
+#else
+
+#ifdef ___DEBUG_ALLOC_MEM
+  ___free_mem (ptr, lineno, file);
+#else
+  ___free_mem (ptr);
+#endif
 
 #endif
 }

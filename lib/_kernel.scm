@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -361,7 +361,7 @@ end-of-code
 
    /* ___ps->temp1 points to the entry point of the procedure */
 
-   if (___HD_TYP(___HEADER(___ps->temp1)) == ___PERM)
+   if (___HD_TYP(___SUBTYPED_HEADER(___ps->temp1)) == ___PERM)
      {
        ___COVER_WRONG_NARGS_HANDLER_NONCLOSURE;
        ___SET_STK(-na,___ps->temp1) /*set operator argument when nonclosure*/
@@ -395,7 +395,7 @@ end-of-code
    int i;
    ___SCMOBJ rest_param_list;
 
-   np = ___PRD_NBPARMS(___HEADER(___ps->temp1));
+   np = ___PRD_NBPARMS(___SUBTYPED_HEADER(___ps->temp1));
    na = ___ps->na;
 
    ___PUSH_ARGS_IN_REGS(na) /* save all arguments that are in registers */
@@ -503,7 +503,7 @@ end-of-code
    ___SCMOBJ key_descr;
    ___SCMOBJ key_vals[___MAX_NB_PARMS];
 
-   np = ___PRD_NBPARMS(___HEADER(___ps->temp1));
+   np = ___PRD_NBPARMS(___SUBTYPED_HEADER(___ps->temp1));
    na = ___ps->na;
    key_descr = ___ps->temp3;
    nb_req_opt = ___ps->temp2;
@@ -664,7 +664,7 @@ end-of-code
    ___SCMOBJ key_vals[___MAX_NB_PARMS];
    ___SCMOBJ rest_param_list;
 
-   np = ___PRD_NBPARMS(___HEADER(___ps->temp1));
+   np = ___PRD_NBPARMS(___SUBTYPED_HEADER(___ps->temp1));
    na = ___ps->na;
    key_descr = ___ps->temp3;
    nb_req_opt = ___ps->temp2;
@@ -1905,12 +1905,14 @@ end-of-code
   (let ((will
          (##c-code #<<end-of-code
 
-          ___SCMOBJ will = ___ps->mem.executable_wills_;
-          if (___UNTAG(will) == 0) /* end of list? */
+          ___WORD exec_wills = ___ps->mem.executable_wills_;
+
+          if (___UNTAG(exec_wills) == 0) /* end of list? */
             ___RESULT = ___FAL;
           else
             {
-              ___ps->mem.executable_wills_ = ___BODY(will)[0];
+              ___WORD will = ___SUBTYPED_FROM_START(___UNTAG(exec_wills));
+              ___ps->mem.executable_wills_ = ___FIELD(will,___WILL_NEXT);
               ___RESULT = will;
             }
 
@@ -2090,7 +2092,7 @@ end-of-code
   (let ((o (##c-code #<<end-of-code
 
 ___SCMOBJ result;
-___WORD head = *___UNTAG(___ARG1);
+___WORD head = ___HEADER(___ARG1);
 ___FRAME_STORE_RA(___R0)
 ___W_ALL
 result = ___EXT(___alloc_scmobj) (___ps, ___HD_SUBTYPE(head), ___HD_BYTES(head));
@@ -2099,9 +2101,11 @@ ___SET_R0(___FRAME_FETCH_RA)
 if (!___FIXNUMP(result))
   {
     ___SIZE_TS words = ___HD_WORDS(head);
+    ___WORD *body1 = ___BODY(___ARG1);
+    ___WORD *body2 = ___BODY(result);
     while (words > 0)
       {
-        ___UNTAG(result)[words] = ___UNTAG(___ARG1)[words];
+        *body2++ = *body1++;
         words--;
       }
     ___still_obj_refcount_dec (result);
@@ -2165,8 +2169,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_WORDS(n, ___sVECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_WORDS(n, ___sVECTOR));
             ___hp += words;
           }
       }
@@ -2231,8 +2235,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<___LCS), ___sSTRING);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<___LCS), ___sSTRING));
             ___hp += words;
           }
       }
@@ -2294,8 +2298,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES(n, ___sS8VECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sS8VECTOR));
             ___hp += words;
           }
       }
@@ -2357,8 +2361,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES(n, ___sU8VECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sU8VECTOR));
             ___hp += words;
           }
       }
@@ -2420,8 +2424,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR));
             ___hp += words;
           }
       }
@@ -2483,8 +2487,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<1), ___sU16VECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sU16VECTOR));
             ___hp += words;
           }
       }
@@ -2546,8 +2550,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR));
             ___hp += words;
           }
       }
@@ -2609,8 +2613,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sU32VECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sU32VECTOR));
             ___hp += words;
           }
       }
@@ -2643,11 +2647,12 @@ if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
+    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
+
 #if ___WS == 4
-    ___SIZE_TS words = ___WORDS((n<<3)) + 2;
-#else
-    ___SIZE_TS words = ___WORDS((n<<3)) + 1;
+    words++;
 #endif
+
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
@@ -2677,12 +2682,11 @@ else
         else
           {
 #if ___WS == 4
-            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                            ___tSUBTYPED);
+            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
 #else
-            result = ___TAG(___hp, ___tSUBTYPED);
+            result = ___SUBTYPED_FROM_START(___hp);
 #endif
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR));
             ___hp += words;
           }
       }
@@ -2715,11 +2719,12 @@ if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
+    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
+
 #if ___WS == 4
-    ___SIZE_TS words = ___WORDS((n<<3)) + 2;
-#else
-    ___SIZE_TS words = ___WORDS((n<<3)) + 1;
+    words++;
 #endif
+
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
@@ -2749,12 +2754,11 @@ else
         else
           {
 #if ___WS == 4
-            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                            ___tSUBTYPED);
+            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
 #else
-            result = ___TAG(___hp, ___tSUBTYPED);
+            result = ___SUBTYPED_FROM_START(___hp);
 #endif
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sU64VECTOR);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sU64VECTOR));
             ___hp += words;
           }
       }
@@ -2816,8 +2820,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___TAG(___hp, ___tSUBTYPED);
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<2), ___sF32VECTOR);
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sF32VECTOR));
             ___hp += words;
           }
       }
@@ -2851,11 +2855,12 @@ if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
+    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
+
 #if ___WS == 4
-    ___SIZE_TS words = ___WORDS((n<<3)) + 2;
-#else
-    ___SIZE_TS words = ___WORDS((n<<3)) + 1;
+    words++;
 #endif
+
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
@@ -2885,12 +2890,11 @@ else
         else
           {
 #if ___WS == 4
-            result = ___TAG(___CAST(___SCMOBJ*,___CAST(___SCMOBJ,___hp+2)&~7)-1,
-                            ___tSUBTYPED);
+            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
 #else
-            result = ___TAG(___hp, ___tSUBTYPED);
+            result = ___SUBTYPED_FROM_START(___hp);
 #endif
-            ___HEADER(result) = ___MAKE_HD_BYTES((n<<3), ___sF64VECTOR);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sF64VECTOR));
             ___hp += words;
           }
       }
@@ -3105,12 +3109,12 @@ end-of-code
 
    if (___TYP(___ARG1) == ___tSUBTYPED)
      {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,___ARG1-___tSUBTYPED);
+       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ptr += ___LS;
-       ___RESULT = ___FIX( (start-ptr)/___LS );
+         ptr -= ___LABEL_SIZE;
+       ptr += ___LABEL_SIZE;
+       ___RESULT = ___FIX( (start-ptr)/___LABEL_SIZE );
      }
    else
      ___RESULT = ___FIX(0);
@@ -3125,12 +3129,12 @@ end-of-code
 
    if (___TYP(___ARG1) == ___tSUBTYPED)
      {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,___ARG1-___tSUBTYPED);
+       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ptr += ___LS;
-      ___RESULT = ___TAG(ptr,___tSUBTYPED);
+         ptr -= ___LABEL_SIZE;
+       ptr += ___LABEL_SIZE;
+      ___RESULT = ___SUBTYPED_FROM_START(ptr);
      }
    else
      ___RESULT = ___FAL;
@@ -3143,7 +3147,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___RESULT = ___FIX(___PRD_NBPARMS(___CAST(___label_struct*,___ARG1-___tSUBTYPED)->header));
+   ___RESULT = ___FIX(___PRD_NBPARMS(___SUBTYPED_HEADER(___ARG1)));
 
 end-of-code
 
@@ -3153,7 +3157,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___RESULT = ___FIX(___PRD_NBCLOSED(___CAST(___label_struct*,___ARG1-___tSUBTYPED)->header));
+   ___RESULT = ___FIX(___PRD_NBCLOSED(___SUBTYPED_HEADER(___ARG1)));
 
 end-of-code
 
@@ -3164,13 +3168,13 @@ end-of-code
   (##c-code #<<end-of-code
 
    {
-     ___SCMOBJ *start = ___CAST(___SCMOBJ*,___ARG1-___tSUBTYPED);
-     ___SCMOBJ head = start[-___LS];
+     ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
+     ___SCMOBJ head = start[-___LABEL_SIZE];
      int i = ___INT(___ARG2);
      if (___TESTHEADERTAG(head,___sVECTOR) &&
          i >= 0 &&
          i < ___CAST(int,___HD_FIELDS(head)))
-       ___RESULT = ___TAG(start+___LS*i,___tSUBTYPED);
+       ___RESULT = ___SUBTYPED_FROM_START(start+___LABEL_SIZE*i);
      else
        ___RESULT = ___FAL;
    }
@@ -3186,11 +3190,11 @@ end-of-code
 
    if (___TYP(___ARG1) == ___tSUBTYPED)
      {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,___ARG1-___tSUBTYPED);
+       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ___RESULT = ptr[1];
+         ptr -= ___LABEL_SIZE;
+       ___RESULT = (ptr+1)[___LABEL_ENTRY_OR_DESCR];
      }
    else
      ___RESULT = ___FAL;
@@ -3205,11 +3209,11 @@ end-of-code
 
    if (___TYP(___ARG1) == ___tSUBTYPED)
      {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,___ARG1-___tSUBTYPED);
+       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
        ___SCMOBJ *ptr = start;
        while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LS;
-       ___RESULT = ptr[2];
+         ptr -= ___LABEL_SIZE;
+       ___RESULT = (ptr+1)[___LABEL_HOST_LABEL];
      }
    else
      ___RESULT = ___FAL;
@@ -4386,22 +4390,25 @@ end-of-code
             "___os_make_tls_context"))
 
 (define-prim ##os-device-tcp-client-open
-  (c-lambda (scheme-object  ;; server_addr
+  (c-lambda (scheme-object  ;; local_addr
+             scheme-object  ;; local_port_num
+             scheme-object  ;; addr
              scheme-object  ;; port_num
              scheme-object  ;; options
-             scheme-object) ;; tls_context
+             scheme-object  ;; tls_context
+             scheme-object) ;; server_name
             scheme-object   ;; device
    "___os_device_tcp_client_open"))
 
 (define-prim ##os-device-tcp-client-socket-info
-  (c-lambda (scheme-object  ;; dev_condvar
+  (c-lambda (scheme-object  ;; dev
              scheme-object) ;; peer
             scheme-object   ;; addr
    "___os_device_tcp_client_socket_info"))
 
 (define-prim ##os-device-tcp-server-open
-  (c-lambda (scheme-object  ;; server_addr
-             scheme-object  ;; port_num
+  (c-lambda (scheme-object  ;; local_addr
+             scheme-object  ;; local_port_num
              scheme-object  ;; backlog
              scheme-object  ;; options
              scheme-object) ;; tls_context
@@ -4414,9 +4421,45 @@ end-of-code
    "___os_device_tcp_server_read"))
 
 (define-prim ##os-device-tcp-server-socket-info
-  (c-lambda (scheme-object) ;; dev_condvar
+  (c-lambda (scheme-object) ;; dev
             scheme-object   ;; addr
    "___os_device_tcp_server_socket_info"))
+
+(define-prim ##os-device-udp-open
+  (c-lambda (scheme-object  ;; local_addr
+             scheme-object  ;; local_port_num
+             scheme-object) ;; options
+            scheme-object   ;; device
+   "___os_device_udp_open"))
+
+(define-prim ##os-device-udp-read-subu8vector
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; buffer
+             scheme-object  ;; lo
+             scheme-object) ;; hi
+            scheme-object   ;; u8vector or fixnum = bytes read or error code
+   "___os_device_udp_read_subu8vector"))
+
+(define-prim ##os-device-udp-write-subu8vector
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; buffer
+             scheme-object  ;; lo
+             scheme-object) ;; hi
+            scheme-object   ;; fixnum = bytes written or error code
+   "___os_device_udp_write_subu8vector"))
+
+(define-prim ##os-device-udp-destination-set!
+  (c-lambda (scheme-object  ;; dev_condvar
+             scheme-object  ;; addr
+             scheme-object) ;; port_num
+            scheme-object   ;; fixnum error code
+   "___os_device_udp_destination_set"))
+
+(define-prim ##os-device-udp-socket-info
+  (c-lambda (scheme-object  ;; dev
+             scheme-object) ;; source
+            scheme-object   ;; addr
+   "___os_device_udp_socket_info"))
 
 (define-prim ##os-device-directory-open-path
   (c-lambda (scheme-object  ;; path

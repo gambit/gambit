@@ -2,7 +2,7 @@
 
 ;;; File: "_std.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1230,14 +1230,15 @@
   (if (##promise? obj)
       (let ((result (##promise-result obj)))
         (if (##eq? result obj)
-            (let* ((r ((##promise-thunk obj)))
+            (let* ((r (##force ((##promise-thunk obj))))
                    (result2 (##promise-result obj)))
               (if (##eq? result2 obj)
                   (begin
                     (##promise-result-set! obj r)
                     (##promise-thunk-set! obj #f)
                     r)
-                  result2))))
+                  result2))
+            result))
       obj))
 
 (define-prim (force obj)

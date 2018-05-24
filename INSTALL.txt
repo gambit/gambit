@@ -199,14 +199,14 @@ The configure options which are specific to the Gambit system are:
   --enable-debug-c-backtrace
                           build system so that it generates a C backtrace when
                           a program crashes
-   --enable-debug-ctrl-flow-history
+  --enable-debug-ctrl-flow-history
                           build system so that it tracks the control flow
                           history
   --enable-debug-host-changes
                           build system so that it tracks the host changes
   --enable-debug-alloc-mem
                           build system so that it tracks the memory allocations
-  --enable-debug-garbage-collector
+  --enable-debug-garbage-collect
                           build system so that it detects issues in the
                           garbage collector
   --enable-profile        build system so that it can be profiled

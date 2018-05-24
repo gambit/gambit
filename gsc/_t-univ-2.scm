@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -12,6 +12,82 @@
 (include-adt "_ptreeadt.scm")
 (include-adt "_sourceadt.scm")
 (include-adt "_univadt.scm")
+
+;;----------------------------------------------------------------------------
+
+(define (univ-class
+         root-name
+         properties
+         extends
+         class-fields
+         instance-fields
+         class-methods
+         instance-methods
+         class-classes
+         constructor
+         inits)
+  (vector 'class
+          root-name
+          properties
+          extends
+          class-fields
+          instance-fields
+          class-methods
+          instance-methods
+          class-classes
+          constructor
+          inits))
+
+(define (univ-class-root-name class-descr)        (vector-ref class-descr 1))
+(define (univ-class-properties class-descr)       (vector-ref class-descr 2))
+(define (univ-class-extends class-descr)          (vector-ref class-descr 3))
+(define (univ-class-class-fields class-descr)     (vector-ref class-descr 4))
+(define (univ-class-instance-fields class-descr)  (vector-ref class-descr 5))
+(define (univ-class-class-methods class-descr)    (vector-ref class-descr 6))
+(define (univ-class-instance-methods class-descr) (vector-ref class-descr 7))
+(define (univ-class-class-classes class-descr)    (vector-ref class-descr 8))
+(define (univ-class-constructor class-descr)      (vector-ref class-descr 9))
+(define (univ-class-inits class-descr)            (vector-ref class-descr 10))
+
+(define (univ-method
+         name
+         properties
+         result-type
+         params
+         #!optional
+         (attribs '())
+         (body #f))
+  (vector 'method
+          name
+          properties
+          result-type
+          params
+          attribs
+          body))
+
+(define (univ-method-name method-descr)        (vector-ref method-descr 1))
+(define (univ-method-properties method-descr)  (vector-ref method-descr 2))
+(define (univ-method-result-type method-descr) (vector-ref method-descr 3))
+(define (univ-method-params method-descr)      (vector-ref method-descr 4))
+(define (univ-method-attribs method-descr)     (vector-ref method-descr 5))
+(define (univ-method-body method-descr)        (vector-ref method-descr 6))
+
+(define (univ-method? x) (eq? (vector-ref x 0) 'method))
+
+(define (univ-field name type #!optional (init #f) (properties '()))
+  (vector 'field name properties type init))
+
+(define (univ-field-name field-descr)       (vector-ref field-descr 1))
+(define (univ-field-properties field-descr) (vector-ref field-descr 2))
+(define (univ-field-type field-descr)       (vector-ref field-descr 3))
+(define (univ-field-init field-descr)       (vector-ref field-descr 4))
+
+(define (univ-field-inherited? field-descr)
+  (memq 'inherited (univ-field-properties field-descr)))
+
+(define (univ-decl-properties decl) (vector-ref decl 2))
+
+(define (univ-def-kind x) (if (vector? x) (vector-ref x 0) 'init))
 
 ;;----------------------------------------------------------------------------
 
@@ -5489,8 +5565,7 @@ EOF
       (lambda (x i)
         (let ((name (car x)))
           (univ-glo-use ctx
-                        (string->symbol
-                         (string-append module-prefix name))
+                        (string->symbol name)
                         'rd)
           (^new (^type 'modlinkinfo) (^str name) (^int i))))
       mods-and-flags)))))

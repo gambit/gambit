@@ -8,11 +8,11 @@
 #define ___GAMBIT_H
 
 #ifndef ___VERSION
-#define ___VERSION 408008
+#define ___VERSION 408009
 #endif
 
-#if ___VERSION != 408008
-#include "gambit-not408008.h"
+#if ___VERSION != 408009
+#include "gambit-not408009.h"
 #else
 
 #ifdef HAVE_CONFIG_H
@@ -1356,9 +1356,6 @@
 
 #ifdef __cplusplus
 
-#define ___P(ansi,kr)ansi
-#define ___PVOID ()
-
 #define ___BEGIN_C_LINKAGE extern "C" {
 #define ___END_C_LINKAGE }
 
@@ -1377,18 +1374,6 @@
 
 #else
 
-#ifdef __STDC__
-
-#define ___P(ansi,kr)ansi
-#define ___PVOID (void)
-
-#else
-
-#define ___P(ansi,kr)kr
-#define ___PVOID ()
-
-#endif
-
 #define ___BEGIN_C_LINKAGE
 #define ___END_C_LINKAGE
 
@@ -1398,6 +1383,23 @@
 
 #undef ___USE_SETJMP
 #define ___USE_SETJMP
+
+#endif
+
+
+#ifdef ___FORCE_KR
+
+#define ___P(ansi,kr)kr
+#define ___PVOID ()
+
+#else
+
+#define ___P(ansi,kr)ansi
+#ifdef __cplusplus
+#define ___PVOID ()
+#else
+#define ___PVOID (void)
+#endif
 
 #endif
 
@@ -2179,7 +2181,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 
 #define ___SYM(i,id)___CAST_FAKEWORD_TO_WORD(___symtbl[i])
 #define ___KEY(i,id)___CAST_FAKEWORD_TO_WORD(___keytbl[i])
-#define ___CNS(i)___TAG((___ALIGNUP(___cnstbl,___WS)+i*(___PAIR_SIZE+1)),___tPAIR)
+#define ___CNS(i)___PAIR_FROM_START(___ALIGNUP(___cnstbl,___WS)+i*(___PAIR_BODY+___PAIR_SIZE))
 #define ___SUB(i)___CAST_FAKEWORD_TO_WORD(___subtbl[i])
 
 /*
@@ -2247,14 +2249,40 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #endif
 
 /*
- * Module prefix and C id prefix must match the definitions
- * in the file "gsc/_parms.scm".
+ * The C id prefix must match the definition in the file
+ * "gsc/_parms.scm".
  */
 
-#define ___MODULE_PREFIX " "
 #define ___C_ID_PREFIX "___"
 
 /*---------------------------------------------------------------------------*/
+
+/* Object representation */
+
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+#define ___REFERENCE_TO_BODY (-1)
+#define ___PSTATE_ALIGN_MULTIPLIER 256
+#define ___PSTATE_ALIGN_MODULUS    192
+#undef ___USE_LABEL_VALUES
+#else
+#define ___REFERENCE_TO_BODY 1
+#endif
+
+#define ___BODY0(obj)(___UNTAG(obj)+___REFERENCE_TO_BODY)
+#define ___BODY0_AS(obj,tag)(___UNTAG_AS(obj,tag)+___REFERENCE_TO_BODY)
+#define ___BODY0_FROM_HP()(___hp+___SUBTYPED_BODY)
+
+#ifdef ___USE_HANDLES
+#define ___PAIR_BODY     2
+#define ___SUBTYPED_BODY 2
+#define ___BODY(obj)___CAST(___WORD*,___BODY0(obj)[-2])
+#define ___BODY_AS(obj,tag)___CAST(___WORD*,___BODY0_AS(obj,tag)[-2])
+#else
+#define ___PAIR_BODY     1
+#define ___SUBTYPED_BODY 1
+#define ___BODY(obj)___BODY0(obj)
+#define ___BODY_AS(obj,tag)___BODY0_AS(obj,tag)
+#endif
 
 #define ___ALIGNUP(x,mult) \
 ___CAST(___WORD*,(___CAST(___WORD,x)+((mult)-1))&~((mult)-1))
@@ -2272,7 +2300,37 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 
 #endif
 
-/* Type tests */
+#define ___BEGIN_ALLOC_PAIR()___hp[0] = ___MAKE_HD_WORDS(___PAIR_SIZE,___sPAIR)
+#define ___ADD_PAIR_ELEM(i,val)___hp[(i)+___PAIR_BODY] = val
+#define ___END_ALLOC_PAIR()___ALLOC(___PAIR_SIZE+___PAIR_BODY)
+#define ___GET_PAIR()___PAIR_FROM_END(___hp)
+
+#define ___BEGIN_ALLOC_SUBTYPED(hd)___hp[0] = hd
+#define ___ADD_SUBTYPED_ELEM(i,val)___hp[(i)+___SUBTYPED_BODY] = val
+#define ___END_ALLOC_SUBTYPED(n)___ALLOC((n)+___SUBTYPED_BODY)
+#define ___GET_SUBTYPED(n)___SUBTYPED_FROM_END(___hp,n)
+
+#define ___PAIR_FROM(ptr,n) \
+___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tPAIR)
+#define ___PAIR_FROM_START(ptr)___PAIR_FROM(ptr,-___PAIR_BODY)
+#define ___PAIR_FROM_END(ptr)___PAIR_FROM(ptr,___PAIR_SIZE)
+#define ___PAIR_FROM_BODY(ptr)___PAIR_FROM(ptr,0)
+#define ___PAIR_TO(obj,n) \
+(___UNTAG_AS(obj,___tPAIR) + (___REFERENCE_TO_BODY+(n)))
+#define ___PAIR_TO_START(obj)___PAIR_TO(obj,-___PAIR_BODY)
+#define ___PAIR_TO_END(obj)___PAIR_TO(obj,___PAIR_SIZE)
+#define ___PAIR_TO_BODY(obj)___PAIR_TO(obj,0)
+
+#define ___SUBTYPED_FROM(ptr,n) \
+___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tSUBTYPED)
+#define ___SUBTYPED_FROM_START(ptr)___SUBTYPED_FROM(ptr,-___SUBTYPED_BODY)
+#define ___SUBTYPED_FROM_END(ptr,n)___SUBTYPED_FROM(ptr,n)
+#define ___SUBTYPED_FROM_BODY(ptr)___SUBTYPED_FROM(ptr,0)
+#define ___SUBTYPED_TO(obj,n) \
+(___UNTAG_AS(obj,___tSUBTYPED) + (___REFERENCE_TO_BODY+(n)))
+#define ___SUBTYPED_TO_START(obj)___SUBTYPED_TO(obj,-___SUBTYPED_BODY)
+#define ___SUBTYPED_TO_END(obj,n)___SUBTYPED_TO(obj,n)
+#define ___SUBTYPED_TO_BODY(obj)___SUBTYPED_TO(obj,0)
 
 #define ___TAG(ptr,tag)(___CAST(___WORD,ptr)+(tag))
 #define ___UNTAG(obj)___CAST(___WORD*,(obj)&~___TMASK)
@@ -2282,25 +2340,16 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___TESTTYPE(x,typ)(___TYP(x)==(typ))
 
 #define ___TESTHEADERTAG(x,s)(((x)&___SMASK)==((s)<<___HTB))
-#define ___TESTSUBTYPETAG(x,s)___TESTHEADERTAG(___HEADER(x),s)
+#define ___TESTSUBTYPETAG(x,s)___TESTHEADERTAG(___SUBTYPED_HEADER(x),s)
 #define ___TESTSUBTYPE(x,s)(___TYP((___temp=(x)))==___tSUBTYPED&&___TESTSUBTYPETAG(___temp,(s)))
-#define ___TESTLENGTHSUBTYPETAG(x,bytes,s)((___HEADER(x)&___LSMASK)==___MAKE_HD(bytes,s,0))
+#define ___TESTLENGTHSUBTYPETAG(x,bytes,s)((___SUBTYPED_HEADER(x)&___LSMASK)==___MAKE_HD(bytes,s,0))
 #define ___TESTLENGTHSUBTYPE(x,bytes,s)(___TYP((___temp=(x)))==___tSUBTYPED&&___TESTLENGTHSUBTYPETAG(___temp,bytes,s))
-#define ___HEADER(x)(*___UNTAG_AS(x,___tSUBTYPED))
 
-#define ___BODY_OFS 1
+#define ___HEADER(obj)___BODY0(obj)[-1]
+#define ___HEADER_SET(obj,head)___HEADER(obj) = head
 
-#ifdef ___USE_HANDLES
-#define ___PAIR_OVERHEAD 2
-#define ___SUBTYPED_OVERHEAD 2
-#define ___BODY(obj)___CAST(___WORD*,*(___UNTAG(obj)+___BODY_OFS)+___BODY_OFS)
-#define ___BODY_AS(obj,tag)___CAST(___WORD*,*(___UNTAG_AS(obj,tag)+___BODY_OFS)+___BODY_OFS)
-#else
-#define ___PAIR_OVERHEAD 1
-#define ___SUBTYPED_OVERHEAD 1
-#define ___BODY(obj)(___UNTAG(obj)+___BODY_OFS)
-#define ___BODY_AS(obj,tag)(___UNTAG_AS(obj,tag)+___BODY_OFS)
-#endif
+#define ___SUBTYPED_HEADER(obj)___SUBTYPED_TO_BODY(obj)[-1]
+#define ___SUBTYPED_HEADER_SET(obj,head)___SUBTYPED_TO_BODY(obj)[-1] = head
 
 #define ___MAKE_HD(bytes,subtype,tag)(((bytes)<<___LF)+((subtype)<<___HTB)+(tag))
 #define ___HD_TYP(head)((head)&___HTMASK)
@@ -2316,23 +2365,6 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___MAKE_HD_BYTES(bytes,subtype)___MAKE_HD(bytes,subtype,___MOVABLE0)
 #define ___MAKE_HD_WORDS(words,subtype)___MAKE_HD(((words)<<___LWS),subtype,___MOVABLE0)
 
-#define ___SYMBOL_SIZE 4
-#define ___KEYWORD_SIZE 3
-#define ___WILL_SIZE 3
-#define ___TABLE_SIZE 5
-#define ___PROMISE_SIZE 2
-#define ___RATNUM_SIZE 2
-#define ___CPXNUM_SIZE 2
-#define ___CONTINUATION_SIZE 2
-#define ___BOX_SIZE 1
-#define ___FOREIGN_SIZE 3
-#define ___FOREIGN_TAGS 0
-#define ___FOREIGN_RELEASE_FN 1
-#define ___FOREIGN_PTR 2
-
-#define ___PROCESSOR_SIZE 21
-#define ___VM_SIZE 20
-
 /* Flonum boxing and unboxing */
 
 #define ___FLONUM_VAL(obj) *___CAST(___F64*,___BODY_AS(obj,___tSUBTYPED))
@@ -2343,7 +2375,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 (___ALLOC_ALIGN64(1+___FLONUM_SIZE), \
  ___hp[-(1+___FLONUM_SIZE)] = ___MAKE_HD_WORDS(___FLONUM_SIZE,___sFLONUM), \
  *___CAST(___F64*,___hp-___FLONUM_SIZE) = (x), \
- ___TAG((___hp-(1+___FLONUM_SIZE)),___tSUBTYPED))
+ ___GET_SUBTYPED(___FLONUM_SIZE))
 
 #define ___D_F64(x)___F64 x;
 #define ___SET_F64(x,y)x=y;
@@ -2407,14 +2439,14 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___S64UNBOX(x) \
 (___TYP((___temp=x)) == ___tFIXNUM \
  ? ___S64_from_SM32(___INT(___temp)) \
- : (___HD_BYTES(___HEADER(___temp)) == (1<<2) \
+ : (___HD_BYTES(___SUBTYPED_HEADER(___temp)) == (1<<2) \
     ? ___S64_from_SM32(___BIGAFETCHSIGNED(___BODY_AS(___temp,___tSUBTYPED),0)) \
     : ___S64_from_SM32_UM32(___BIGAFETCHSIGNED(___BODY_AS(___temp,___tSUBTYPED),1),___BIGAFETCH(___BODY_AS(___temp,___tSUBTYPED),0))))
 
 #define ___U64UNBOX(x) \
 (___TYP((___temp=x)) == ___tFIXNUM \
  ? ___U64_from_UM32(___CAST_U32(___INT(___temp))) \
- : (___HD_BYTES(___HEADER(___temp)) == (1<<2) \
+ : (___HD_BYTES(___SUBTYPED_HEADER(___temp)) == (1<<2) \
     ? ___U64_from_UM32(___BIGAFETCH(___BODY_AS(___temp,___tSUBTYPED),0)) \
     : ___U64_from_UM32_UM32(___BIGAFETCH(___BODY_AS(___temp,___tSUBTYPED),1),___BIGAFETCH(___BODY_AS(___temp,___tSUBTYPED),0))))
 
@@ -2427,7 +2459,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
   : (___ALLOC(1+___WORDS(1<<2)), \
      ___hp[-(1+___WORDS(1<<2))] = ___MAKE_HD_BYTES(1<<2,___sBIGNUM), \
      ___BIGASTORESIGNED(___hp,-1,___s32_temp), \
-     ___TAG((___hp-(1+___WORDS(1<<2))),___tSUBTYPED))))
+     ___GET_SUBTYPED(___WORDS(1<<2)))))
 
 #define ___U32BOX(x) \
 (___u32_temp=(x), \
@@ -2438,11 +2470,11 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
         ___hp[-(1+___WORDS(2<<2))] = ___MAKE_HD_BYTES(2<<2,___sBIGNUM), \
         ___BIGASTORE(___hp,-2,___u32_temp), \
         ___BIGASTORE(___hp,-1,0), \
-        ___TAG((___hp-(1+___WORDS(2<<2))),___tSUBTYPED)) \
+        ___GET_SUBTYPED(___WORDS(2<<2))) \
      : (___ALLOC(1+___WORDS(1<<2)), \
         ___hp[-(1+___WORDS(1<<2))] = ___MAKE_HD_BYTES(1<<2,___sBIGNUM), \
         ___BIGASTORE(___hp,-1,___u32_temp), \
-        ___TAG((___hp-(1+___WORDS(1<<2))),___tSUBTYPED)))))
+        ___GET_SUBTYPED(___WORDS(1<<2))))))
 
 #define ___S64BOX(x) \
 (___s64_temp=(x), \
@@ -2453,12 +2485,12 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
      : (___ALLOC(1+___WORDS(1<<2)), \
         ___hp[-(1+___WORDS(1<<2))] = ___MAKE_HD_BYTES(1<<2,___sBIGNUM), \
         ___BIGASTORE(___hp,-1,___s32_temp), \
-        ___TAG((___hp-(1+___WORDS(1<<2))),___tSUBTYPED))) \
+        ___GET_SUBTYPED(___WORDS(1<<2)))) \
   : (___ALLOC(1+___WORDS(2<<2)), \
      ___hp[-(1+___WORDS(2<<2))] = ___MAKE_HD_BYTES(2<<2,___sBIGNUM), \
      ___BIGASTORE(___hp,-2,___s32_temp), \
      ___BIGASTORESIGNED(___hp,-1,___S64_hi32(___s64_temp)), \
-     ___TAG((___hp-(1+___WORDS(2<<2))),___tSUBTYPED))))
+     ___GET_SUBTYPED(___WORDS(2<<2)))))
 
 #define ___U64BOX(x) \
 (___u64_temp=(x), \
@@ -2468,7 +2500,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
      ___BIGASTORE(___hp,-3,___U64_lo32(___u64_temp)), \
      ___BIGASTORE(___hp,-2,___U64_hi32(___u64_temp)), \
      ___BIGASTORE(___hp,-1,0), \
-     ___TAG((___hp-(1+___WORDS(3<<2))),___tSUBTYPED)) \
+     ___GET_SUBTYPED(___WORDS(3<<2))) \
   : (((___u32_temp = ___U64_lo32(___u64_temp)) & (___CAST_U32(1)<<31)) \
      == ___U64_hi32(___u64_temp) \
      ? (___u32_temp <= ___MAX_FIX \
@@ -2476,12 +2508,12 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
         : (___ALLOC(1+___WORDS(1<<2)), \
            ___hp[-(1+___WORDS(1<<2))] = ___MAKE_HD_BYTES(1<<2,___sBIGNUM), \
            ___BIGASTORE(___hp,-1,___u32_temp), \
-           ___TAG((___hp-(1+___WORDS(1<<2))),___tSUBTYPED))) \
+           ___GET_SUBTYPED(___WORDS(1<<2)))) \
      : (___ALLOC(1+___WORDS(2<<2)), \
         ___hp[-(1+___WORDS(2<<2))] = ___MAKE_HD_BYTES(2<<2,___sBIGNUM), \
         ___BIGASTORE(___hp,-2,___u32_temp), \
         ___BIGASTORESIGNED(___hp,-1,___S64_hi32(___u64_temp)), \
-        ___TAG((___hp-(1+___WORDS(2<<2))),___tSUBTYPED)))))
+        ___GET_SUBTYPED(___WORDS(2<<2))))))
 
 #else
 
@@ -2496,12 +2528,12 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
      ? (___ALLOC(1+___WORDS(1<<2)), \
         ___hp[-(1+___WORDS(1<<2))] = ___MAKE_HD_BYTES(1<<2,___sBIGNUM), \
         ___BIGASTORE(___hp,-1,___S64_lo32(___s64_temp)), \
-        ___TAG((___hp-(1+___WORDS(1<<2))),___tSUBTYPED)) \
+        ___GET_SUBTYPED(___WORDS(1<<2))) \
      : (___ALLOC(1+___WORDS(2<<2)), \
         ___hp[-(1+___WORDS(2<<2))] = ___MAKE_HD_BYTES(2<<2,___sBIGNUM), \
         ___BIGASTORE(___hp,-2,___S64_lo32(___s64_temp)), \
         ___BIGASTORESIGNED(___hp,-1,___S64_hi32(___s64_temp)), \
-        ___TAG((___hp-(1+___WORDS(2<<2))),___tSUBTYPED)))))
+        ___GET_SUBTYPED(___WORDS(2<<2))))))
 
 #define ___U64BOX(x) \
 (___u64_temp=(x), \
@@ -2513,17 +2545,17 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
         ___BIGASTORE(___hp,-3,___U64_lo32(___u64_temp)), \
         ___BIGASTORE(___hp,-2,___U64_hi32(___u64_temp)), \
         ___BIGASTORE(___hp,-1,0), \
-        ___TAG((___hp-(1+___WORDS(3<<2))),___tSUBTYPED)) \
+        ___GET_SUBTYPED(___WORDS(3<<2))) \
      : ((___U64_lo32(___u64_temp) & (___CAST_U32(1)<<31)) == ___U64_hi32(___u64_temp) \
         ? (___ALLOC(1+___WORDS(1<<2)), \
            ___hp[-(1+___WORDS(1<<2))] = ___MAKE_HD_BYTES(1<<2,___sBIGNUM), \
            ___BIGASTORE(___hp,-1,___S64_lo32(___u64_temp)), \
-           ___TAG((___hp-(1+___WORDS(1<<2))),___tSUBTYPED)) \
+           ___GET_SUBTYPED(___WORDS(1<<2))) \
         : (___ALLOC(1+___WORDS(2<<2)), \
            ___hp[-(1+___WORDS(2<<2))] = ___MAKE_HD_BYTES(2<<2,___sBIGNUM), \
            ___BIGASTORE(___hp,-2,___S64_lo32(___u64_temp)), \
            ___BIGASTORESIGNED(___hp,-1,___S64_hi32(___u64_temp)), \
-           ___TAG((___hp-(1+___WORDS(2<<2))),___tSUBTYPED))))))
+           ___GET_SUBTYPED(___WORDS(2<<2)))))))
 
 #endif
 
@@ -2558,7 +2590,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
   : (___ALLOC_ALIGN64(1+___WORDS(1<<3)), \
      ___hp[-(1+___WORDS(1<<3))] = ___MAKE_HD_BYTES(1<<3,___sBIGNUM), \
      ___BIGASTORESIGNED(___hp,-1,___S64_from_SM32(___s32_temp)), \
-     ___TAG((___hp-(1+___WORDS(1<<3))),___tSUBTYPED))))
+     ___GET_SUBTYPED(___WORDS(1<<3)))))
 
 #define ___U32BOX(x) \
 (___u32_temp=(x), \
@@ -2567,7 +2599,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
   : (___ALLOC_ALIGN64(1+___WORDS(1<<3)), \
      ___hp[-(1+___WORDS(1<<3))] = ___MAKE_HD_BYTES(1<<3,___sBIGNUM), \
      ___BIGASTORE(___hp,-1,___U64_from_UM32(___u32_temp)), \
-     ___TAG((___hp-(1+___WORDS(1<<3))),___tSUBTYPED))))
+     ___GET_SUBTYPED(___WORDS(1<<3)))))
 
 #else
 
@@ -2583,7 +2615,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
   : (___ALLOC_ALIGN64(1+___WORDS(1<<3)), \
      ___hp[-(1+___WORDS(1<<3))] = ___MAKE_HD_BYTES(1<<3,___sBIGNUM), \
      ___BIGASTORESIGNED(___hp,-1,___s64_temp), \
-     ___TAG((___hp-(1+___WORDS(1<<3))),___tSUBTYPED))))
+     ___GET_SUBTYPED(___WORDS(1<<3)))))
 
 #define ___U64BOX(x) \
 (___u64_temp=(x), \
@@ -2594,11 +2626,11 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
         ___hp[-(1+___WORDS(2<<3))] = ___MAKE_HD_BYTES(2<<3,___sBIGNUM), \
         ___BIGASTORE(___hp,-2,___u64_temp), \
         ___BIGASTORE(___hp,-1,0), \
-        ___TAG((___hp-(1+___WORDS(2<<3))),___tSUBTYPED)) \
+        ___GET_SUBTYPED(___WORDS(2<<3))) \
      : (___ALLOC_ALIGN64(1+___WORDS(1<<3)), \
         ___hp[-(1+___WORDS(1<<3))] = ___MAKE_HD_BYTES(1<<3,___sBIGNUM), \
         ___BIGASTORE(___hp,-1,___u64_temp), \
-        ___TAG((___hp-(1+___WORDS(1<<3))),___tSUBTYPED)))))
+        ___GET_SUBTYPED(___WORDS(1<<3))))))
 
 #endif
 
@@ -2610,7 +2642,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 (___ALLOC(1+___WORDS(1<<2)), \
  ___hp[-(1+___WORDS(1<<2))] = ___MAKE_HD_BYTES(1<<2,___sBIGNUM), \
  ___BIGASTORESIGNED(___hp,-1,___INT(x)), \
- ___TAG((___hp-(1+___WORDS(1<<2))),___tSUBTYPED))
+ ___GET_SUBTYPED(___WORDS(1<<2)))
 
 #else
 
@@ -2619,7 +2651,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
  ___hp[-(1+___WORDS(2<<2))] = ___MAKE_HD_BYTES(2<<2,___sBIGNUM), \
  ___BIGASTORE(___hp,-2,___S64_lo32(___INT(x))), \
  ___BIGASTORESIGNED(___hp,-1,___S64_hi32(___INT(x))), \
- ___TAG((___hp-(1+___WORDS(2<<2))),___tSUBTYPED))
+ ___GET_SUBTYPED(___WORDS(2<<2)))
 
 #endif
 
@@ -2629,7 +2661,7 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 (___ALLOC_ALIGN64(1+___WORDS(1<<3)), \
  ___hp[-(1+___WORDS(1<<3))] = ___MAKE_HD_BYTES(1<<3,___sBIGNUM), \
  ___BIGASTORESIGNED(___hp,-1,___CAST(___BIGADIGIT,___INT(x))), \
- ___TAG((___hp-(1+___WORDS(1<<3))),___tSUBTYPED))
+ ___GET_SUBTYPED(___WORDS(1<<3)))
 
 #endif
 
@@ -2836,8 +2868,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___TYPE(x)___FIX(___TYP(x))
 #define ___TYPECAST(x,y)(((x)&~___TMASK)+___INT(y))
-#define ___SUBTYPE(x)((*___UNTAG(x)&___SMASK)>>(___HTB-___TB))
-#define ___SUBTYPESET(x,y)___temp=(x);___HEADER(___temp)=(___HEADER(___temp)&~___SMASK)+((y)<<(___HTB-___TB));
+#define ___SUBTYPE(x)((___HEADER(x)&___SMASK)>>(___HTB-___TB))
+#define ___SUBTYPESET(x,y)___temp=(x);___HEADER_SET(___temp,(___HEADER(___temp)&~___SMASK)+((y)<<(___HTB-___TB)));
 
 /* IFJUMP-able operations */
 
@@ -2861,9 +2893,9 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #else
 #define ___PAIRP(x)___TESTTYPE(x,___tPAIR)
 #endif
-#define ___MUTABLEP(obj)(___HD_TYP(*___UNTAG(obj))!=___PERM)
+#define ___MUTABLEP(obj)(___HD_TYP(___HEADER(obj))!=___PERM)
 #define ___SUBTYPEDP(x)___TESTTYPE(x,___tSUBTYPED)
-#define ___SUBTYPEDMUTABLEP(obj)(___HD_TYP(*___UNTAG_AS(obj,___tSUBTYPED))!=___PERM)
+#define ___SUBTYPEDMUTABLEP(obj)(___HD_TYP(___SUBTYPED_HEADER(obj))!=___PERM)
 #define ___SUBTYPEDVECTORP(x)___TESTSUBTYPETAG(x,___sVECTOR)
 #define ___SUBTYPEDSYMBOLP(x)___TESTSUBTYPETAG(x,___sSYMBOL)
 #define ___SUBTYPEDFLONUMP(x)___TESTSUBTYPETAG(x,___sFLONUM)
@@ -2872,8 +2904,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___RATNUMP(x)___TESTSUBTYPE(x,___sRATNUM)
 #define ___CPXNUMP(x)___TESTSUBTYPE(x,___sCPXNUM)
 #define ___STRUCTUREP(x)___TESTSUBTYPE(x,___sSTRUCTURE)
-#define ___BOXP(x)(___TYP((___temp=x))==___tSUBTYPED&&(___HEADER(___temp)&___LSMASK)==___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
-#define ___VALUESP(x)(___TYP((___temp=x))==___tSUBTYPED&&___TESTSUBTYPETAG(___temp,___sBOXVALUES)&&(___HEADER(___temp)&___LSMASK)!=___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
+#define ___BOXP(x)(___TYP((___temp=x))==___tSUBTYPED&&(___SUBTYPED_HEADER(___temp)&___LSMASK)==___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
+#define ___VALUESP(x)(___TYP((___temp=x))==___tSUBTYPED&&___TESTSUBTYPETAG(___temp,___sBOXVALUES)&&(___SUBTYPED_HEADER(___temp)&___LSMASK)!=___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
 #define ___MEROONP(x)___TESTSUBTYPE(x,___sMEROON)
 #define ___JAZZP(x)___TESTSUBTYPE(x,___sJAZZ)
 #define ___SYMBOLP(x)___TESTSUBTYPE(x,___sSYMBOL)
@@ -2883,16 +2915,16 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___CONTINUATIONP(x)___TESTSUBTYPE(x,___sCONTINUATION)
 #define ___PROMISEP(x)___TESTSUBTYPE(x,___sPROMISE)
 #define ___WILLP(x)___TESTLENGTHSUBTYPE(x,(___WILL_SIZE<<___LWS),___sWEAK)
-#define ___GCHASHTABLEP(x)(___TYP((___temp=(x)))==___tSUBTYPED&&___TESTHEADERTAG((___temp=___HEADER(___temp)),___sWEAK)&&(___temp&___LSMASK)!=___MAKE_HD((___WILL_SIZE<<___LWS),___sWEAK,0))
+#define ___GCHASHTABLEP(x)(___TYP((___temp=(x)))==___tSUBTYPED&&___TESTHEADERTAG((___temp=___SUBTYPED_HEADER(___temp)),___sWEAK)&&(___temp&___LSMASK)!=___MAKE_HD((___WILL_SIZE<<___LWS),___sWEAK,0))
 #define ___MEMALLOCATEDP(x)___MEM_ALLOCATED(x)
 #define ___PROCEDUREP(x)___TESTSUBTYPE(x,___sPROCEDURE)
 #define ___SUBPROCEDUREP(x) \
 (___PROCEDUREP(x) && \
- ___CAST(___label_struct*,(x)-___tSUBTYPED)->entry_or_descr == x && \
- !___TESTHEADERTAG(___CAST(___SCMOBJ*,(x)-___tSUBTYPED)[-___LS],___sVECTOR))
+ ___LABEL_ENTRY_GET(x) == x && \
+ !___TESTHEADERTAG(___SUBTYPED_TO_BODY(x)[-___LABEL_SIZE-1],___sVECTOR))
 #define ___CLOSUREP(x) \
 (___PROCEDUREP(x) && \
- ___HD_TYP(___HEADER(x)) != ___PERM)
+ ___HD_TYP(___SUBTYPED_HEADER(x)) != ___PERM)
 #define ___RETURNP(x)___TESTSUBTYPE(x,___sRETURN)
 #define ___FOREIGNP(x)___TESTSUBTYPE(x,___sFOREIGN)
 #define ___STRINGP(x)___TESTSUBTYPE(x,___sSTRING)
@@ -2909,7 +2941,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___BIGNUMP(x)___TESTSUBTYPE(x,___sBIGNUM)
 #define ___CHARP(x)(___TYP((___temp=x))==___tSPECIAL&&___temp>=0)
 #define ___NUMBERP(x)___COMPLEXP(x)
-#define ___COMPLEXP(x)((___TYP((___temp=(x)))==___tFIXNUM)||(___TYP(___temp)==___tSUBTYPED&&((___temp=(___HEADER(___temp)&___SMASK))==(___sFLONUM<<___HTB)||___temp==(___sBIGNUM<<___HTB)||___temp==(___sRATNUM<<___HTB)||___temp==(___sCPXNUM<<___HTB))))
+#define ___COMPLEXP(x)((___TYP((___temp=(x)))==___tFIXNUM)||(___TYP(___temp)==___tSUBTYPED&&((___temp=(___SUBTYPED_HEADER(___temp)&___SMASK))==(___sFLONUM<<___HTB)||___temp==(___sBIGNUM<<___HTB)||___temp==(___sRATNUM<<___HTB)||___temp==(___sCPXNUM<<___HTB))))
 
 #define ___OBJECTBEFOREP(x,y)((x)<(y))
 
@@ -3218,22 +3250,27 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 /* APPLY-able operations */
 
 #define ___PAIR_SIZE 2
-#define ___PAIR_CDR_OFS 0
-#define ___PAIR_CAR_OFS 1
+#define ___PAIR_CDR 0
+#define ___PAIR_CAR 1
 
-#define ___PAIR_CAR(obj)(*(___BODY_AS(obj,___tPAIR)+___PAIR_CAR_OFS))
-#define ___PAIR_CDR(obj)(*(___BODY_AS(obj,___tPAIR)+___PAIR_CDR_OFS))
+#define ___CAR_FIELD(obj)___PAIR_TO_BODY(obj)[___PAIR_CAR]
+#define ___CDR_FIELD(obj)___PAIR_TO_BODY(obj)[___PAIR_CDR]
 
-#define ___ALLOC_PAIR_EXPR(x,y)(___hp[0]=___MAKE_HD_WORDS(___PAIR_SIZE,___sPAIR), \
-___hp[___PAIR_CAR_OFS+1]=x,___hp[___PAIR_CDR_OFS+1]=y,___ALLOC(___PAIR_SIZE+1))
-#define ___ALLOC_PAIR(x,y){___hp[0]=___MAKE_HD_WORDS(___PAIR_SIZE,___sPAIR); \
-___hp[___PAIR_CAR_OFS+1]=x;___hp[___PAIR_CDR_OFS+1]=y;___ALLOC(___PAIR_SIZE+1);}
-#define ___CONS(x,y)(___ALLOC_PAIR_EXPR(x,y),___TAG((___hp-___PAIR_SIZE-1),___tPAIR))
+#define ___ALLOC_PAIR_EXPR(x,y)(___BEGIN_ALLOC_PAIR(), \
+___ADD_PAIR_ELEM(___PAIR_CAR,x), \
+___ADD_PAIR_ELEM(___PAIR_CDR,y), \
+___END_ALLOC_PAIR())
+#define ___ALLOC_PAIR(x,y){___BEGIN_ALLOC_PAIR(); \
+___ADD_PAIR_ELEM(___PAIR_CAR,x); \
+___ADD_PAIR_ELEM(___PAIR_CDR,y); \
+___END_ALLOC_PAIR();}
 
-#define ___SETCAR(obj,car)___PAIR_CAR(obj)=car;
-#define ___SETCDR(obj,cdr)___PAIR_CDR(obj)=cdr;
-#define ___CAR(obj)___PAIR_CAR(obj)
-#define ___CDR(obj)___PAIR_CDR(obj)
+#define ___CONS(x,y)(___ALLOC_PAIR_EXPR(x,y),___GET_PAIR())
+
+#define ___SETCAR(obj,car)___CAR_FIELD(obj)=car;
+#define ___SETCDR(obj,cdr)___CDR_FIELD(obj)=cdr;
+#define ___CAR(obj)___CAR_FIELD(obj)
+#define ___CDR(obj)___CDR_FIELD(obj)
 #define ___CAAR(obj)___CAR(___CAR(obj))
 #define ___CADR(obj)___CAR(___CDR(obj))
 #define ___CDAR(obj)___CDR(___CAR(obj))
@@ -3265,19 +3302,22 @@ ___hp[___PAIR_CAR_OFS+1]=x;___hp[___PAIR_CDR_OFS+1]=y;___ALLOC(___PAIR_SIZE+1);}
 
 /* APPLY-able operations */
 
-#define ___BOX(x)(___ALLOC(2),___hp[-2]=___MAKE_HD_WORDS(1,___sBOXVALUES), \
-___hp[-1]=x,___TAG((___hp-2),___tSUBTYPED))
+#define ___BOX(x) \
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___BOX_SIZE,___sBOXVALUES)), \
+___ADD_SUBTYPED_ELEM(0,x), \
+___END_ALLOC_SUBTYPED(___BOX_SIZE), \
+___GET_SUBTYPED(___BOX_SIZE))
 #define ___UNBOX(x)___BODY_AS(x,___tSUBTYPED)[0]
 #define ___SETBOX(x,y)___BODY_AS(x,___tSUBTYPED)[0]=y;
 
-#define ___VECTORLENGTH(v)___FIX(___HD_FIELDS(___HEADER(v)))
+#define ___VECTORLENGTH(v)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(v)))
 #define ___VECTORREF(v,i)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))
 #define ___VECTORSET(v,i,val)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))=val;
-#define ___VECTORSHRINK(v,i)___temp=v;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+___LWS));
+#define ___VECTORSHRINK(v,i)___temp=v;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+___LWS)));
 #define ___VECTORCAS(v,i,val,oldval)___COMPARE_AND_SWAP_WORD((___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB))),oldval,val)
 #define ___VECTORINC(v,i,val)___FETCH_AND_ADD_WORD((___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB))),val)
 
-#define ___STRINGLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>___LCS))
+#define ___STRINGLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>___LCS))
 #define ___STRINGREF(x,y)___CHR(___CS_SELECT( \
 ___FETCH_U8(___BODY_AS(x,___tSUBTYPED),(y)>>___TB), \
 ___FETCH_U16(___BODY_AS(x,___tSUBTYPED),(y)>>___TB), \
@@ -3286,65 +3326,65 @@ ___FETCH_U32(___BODY_AS(x,___tSUBTYPED),(y)>>___TB)))
 ___STORE_U8(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___INT(z)), \
 ___STORE_U16(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___INT(z)), \
 ___STORE_U32(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___INT(z)));
-#define ___STRINGSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+___LCS));
+#define ___STRINGSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+___LCS)));
 
-#define ___S8VECTORLENGTH(x)___FIX(___HD_BYTES(___HEADER(x)))
+#define ___S8VECTORLENGTH(x)___FIX(___HD_BYTES(___SUBTYPED_HEADER(x)))
 #define ___S8VECTORREF(x,y) \
 ___FIX(___FETCH_S8(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___S8VECTORSET(x,y,z) \
 ___STORE_S8(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___INT(z));
-#define ___S8VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB));
+#define ___S8VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB)));
 
-#define ___U8VECTORLENGTH(x)___FIX(___HD_BYTES(___HEADER(x)))
+#define ___U8VECTORLENGTH(x)___FIX(___HD_BYTES(___SUBTYPED_HEADER(x)))
 #define ___U8VECTORREF(x,y) \
 ___FIX(___FETCH_U8(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___U8VECTORSET(x,y,z) \
 ___STORE_U8(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___INT(z));
-#define ___U8VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB));
+#define ___U8VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB)));
 
-#define ___S16VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>1))
+#define ___S16VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>1))
 #define ___S16VECTORREF(x,y) \
 ___FIX(___FETCH_S16(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___S16VECTORSET(x,y,z) \
 ___STORE_S16(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___INT(z));
-#define ___S16VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+1));
+#define ___S16VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+1)));
 
-#define ___U16VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>1))
+#define ___U16VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>1))
 #define ___U16VECTORREF(x,y) \
 ___FIX(___FETCH_U16(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___U16VECTORSET(x,y,z) \
 ___STORE_U16(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___INT(z));
-#define ___U16VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+1));
+#define ___U16VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+1)));
 
-#define ___S32VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>2))
+#define ___S32VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>2))
 #define ___S32VECTORREF(x,y) \
 ___S32BOX(___FETCH_S32(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___S32VECTORSET(x,y,z) \
 ___STORE_S32(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___S32UNBOX(z));
-#define ___S32VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+2));
+#define ___S32VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+2)));
 
-#define ___U32VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>2))
+#define ___U32VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>2))
 #define ___U32VECTORREF(x,y) \
 ___U32BOX(___FETCH_U32(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___U32VECTORSET(x,y,z) \
 ___STORE_U32(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U32UNBOX(z));
-#define ___U32VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+2));
+#define ___U32VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+2)));
 
-#define ___S64VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>3))
+#define ___S64VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>3))
 #define ___S64VECTORREF(x,y) \
 ___S64BOX(___FETCH_S64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___S64VECTORSET(x,y,z) \
 ___STORE_S64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___S64UNBOX(z));
-#define ___S64VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+3));
+#define ___S64VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+3)));
 
-#define ___U64VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>3))
+#define ___U64VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>3))
 #define ___U64VECTORREF(x,y) \
 ___U64BOX(___FETCH_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB))
 #define ___U64VECTORSET(x,y,z) \
 ___STORE_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U64UNBOX(z));
-#define ___U64VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+3));
+#define ___U64VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+3)));
 
-#define ___F32VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>2))
+#define ___F32VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>2))
 #ifdef ___F32
 #define ___F32VECTORREF(x,y)*(___F32*)(((___WORD)___BODY_AS(x,___tSUBTYPED))+((y)<<(2-___TB)))
 #define ___F32VECTORSET(x,y,z)*(___F32*)(((___WORD)___BODY_AS(x,___tSUBTYPED))+((y)<<(2-___TB)))=z;
@@ -3352,12 +3392,12 @@ ___STORE_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U64UNBOX(z));
 #define ___F32VECTORREF(x,y)0.0
 #define ___F32VECTORSET(x,y,z);
 #endif
-#define ___F32VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+2));
+#define ___F32VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+2)));
 
-#define ___F64VECTORLENGTH(x)___FIX((___HD_BYTES(___HEADER(x))>>3))
+#define ___F64VECTORLENGTH(x)___FIX((___HD_BYTES(___SUBTYPED_HEADER(x))>>3))
 #define ___F64VECTORREF(x,y)*(___F64*)(((___WORD)___BODY_AS(x,___tSUBTYPED))+((y)<<(3-___TB)))
 #define ___F64VECTORSET(x,y,z)*(___F64*)(((___WORD)___BODY_AS(x,___tSUBTYPED))+((y)<<(3-___TB)))=z;
-#define ___F64VECTORSHRINK(x,y)___temp=x;___HEADER(___temp)=(___HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+3));
+#define ___F64VECTORSHRINK(x,y)___temp=x;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((y)<<(___LF-___TB+3)));
 
 #define ___TYPEID(x)___VECTORREF(x,___FIX(1))
 #define ___TYPENAME(x)___VECTORREF(x,___FIX(2))
@@ -3372,11 +3412,6 @@ ___STORE_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U64UNBOX(z));
 #define ___UNCHECKEDSTRUCTURESET(x,val,i,type,proc)___VECTORSET(x,i,val)
 #define ___UNCHECKEDSTRUCTURECAS(x,val,oldval,i,type,proc)___VECTORCAS(x,i,val,oldval)
 
-#define ___CLOSURELENGTH(x)___FIX(___HD_FIELDS(___HEADER(x)))
-#define ___CLOSURECODE(x)___CLO(x,0)
-#define ___CLOSUREREF(x,y)___CLO(x,___INT(y))
-#define ___CLOSURESET(x,y,z)___SET_CLO(x,___INT(y),z)
-
 #define ___GLOBALVARSTRUCT(gv)___CAST(___glo_struct*,___FIELD(gv,___SYMBOL_GLOBAL))
 #define ___GLOBALVARREF(gv)___GLOCELL(___GLOBALVARSTRUCT(gv)->val)
 #define ___GLOBALVARPRIMREF(gv)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm)
@@ -3384,25 +3419,30 @@ ___STORE_U64(___BODY_AS(x,___tSUBTYPED),(y)>>___TB,___U64UNBOX(z));
 #define ___GLOBALVARPRIMSET(gv,x)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm) = x;
 
 #define ___RATNUMMAKE(num,den) \
-(___ALLOC(___RATNUM_SIZE+1), \
-___hp[-3]=___MAKE_HD_WORDS(___RATNUM_SIZE,___sRATNUM), \
-___hp[-2]=num,___hp[-1]=den,___TAG((___hp-___RATNUM_SIZE-1),___tSUBTYPED))
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___RATNUM_SIZE,___sRATNUM)), \
+___ADD_SUBTYPED_ELEM(0,num), \
+___ADD_SUBTYPED_ELEM(1,den), \
+___END_ALLOC_SUBTYPED(___RATNUM_SIZE), \
+___GET_SUBTYPED(___RATNUM_SIZE))
 
 #define ___RATNUMNUMERATOR(obj)___FIELD(obj,0)
 #define ___RATNUMDENOMINATOR(obj)___FIELD(obj,1)
 
 #define ___CPXNUMMAKE(real,imag) \
-(___ALLOC(___CPXNUM_SIZE+1), \
-___hp[-3]=___MAKE_HD_WORDS(___CPXNUM_SIZE,___sCPXNUM), \
-___hp[-2]=real,___hp[-1]=imag,___TAG((___hp-___CPXNUM_SIZE-1),___tSUBTYPED))
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___CPXNUM_SIZE,___sCPXNUM)), \
+___ADD_SUBTYPED_ELEM(0,real), \
+___ADD_SUBTYPED_ELEM(1,imag), \
+___END_ALLOC_SUBTYPED(___CPXNUM_SIZE), \
+___GET_SUBTYPED(___CPXNUM_SIZE))
 
 #define ___CPXNUMREAL(obj)___FIELD(obj,0)
 #define ___CPXNUMIMAG(obj)___FIELD(obj,1)
 
 #define ___MAKEPROMISE(x) \
-(___ALLOC(___PROMISE_SIZE+1), \
-___hp[-3]=___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE), \
-___hp[-2]=x, ___hp[-1]=___TAG((___hp-___PROMISE_SIZE-1),___tSUBTYPED))
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE)), \
+___ADD_SUBTYPED_ELEM(0,x), \
+___END_ALLOC_SUBTYPED(___PROMISE_SIZE), \
+___hp[-1]=___GET_SUBTYPED(___CPXNUM_SIZE))
 
 #define ___PROMISETHUNK(obj)___FIELD(obj,___PROMISE_THUNK)
 #define ___PROMISETHUNKSET(obj,val)___FIELD(obj,___PROMISE_THUNK) = val;
@@ -3410,9 +3450,11 @@ ___hp[-2]=x, ___hp[-1]=___TAG((___hp-___PROMISE_SIZE-1),___tSUBTYPED))
 #define ___PROMISERESULTSET(obj,val)___FIELD(obj,___PROMISE_RESULT) = val;
 
 #define ___MAKECONTINUATION(frame,denv) \
-(___ALLOC(___CONTINUATION_SIZE+1), \
-___hp[-3]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION), \
-___hp[-2]=frame,___hp[-1]=denv,___TAG((___hp-___CONTINUATION_SIZE-1),___tSUBTYPED))
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION)), \
+___ADD_SUBTYPED_ELEM(___CONTINUATION_FRAME,frame), \
+___ADD_SUBTYPED_ELEM(___CONTINUATION_DENV,denv), \
+___END_ALLOC_SUBTYPED(___CONTINUATION_SIZE), \
+___GET_SUBTYPED(___CONTINUATION_SIZE))
 
 #define ___CONTINUATIONFRAME(obj)___FIELD(obj,___CONTINUATION_FRAME)
 #define ___CONTINUATIONFRAMESET(obj,val)___FIELD(obj,___CONTINUATION_FRAME) = val;
@@ -3422,9 +3464,13 @@ ___hp[-2]=frame,___hp[-1]=denv,___TAG((___hp-___CONTINUATION_SIZE-1),___tSUBTYPE
 #define ___END_OF_CONT_MARKER ___VOID
 
 #define ___MAKESYMBOL(name,hash) \
-(___ALLOC(___SYMBOL_SIZE+1), \
-___hp[-5]=___MAKE_HD_WORDS(___SYMBOL_SIZE,___sSYMBOL), \
-___hp[-4]=name,___hp[-3]=hash,___hp[-2]=___FAL,___hp[-1]=0,___TAG((___hp-___SYMBOL_SIZE-1),___tSUBTYPED))
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___SYMBOL_SIZE,___sSYMBOL)), \
+___ADD_SUBTYPED_ELEM(___SYMKEY_NAME,name), \
+___ADD_SUBTYPED_ELEM(___SYMKEY_HASH,hash), \
+___ADD_SUBTYPED_ELEM(___SYMKEY_NEXT,___FAL), \
+___ADD_SUBTYPED_ELEM(___SYMBOL_GLOBAL,0), \
+___END_ALLOC_SUBTYPED(___SYMBOL_SIZE), \
+___GET_SUBTYPED(___SYMBOL_SIZE))
 
 #define ___SYMBOLNAME(obj)___FIELD(obj,___SYMKEY_NAME)
 #define ___SYMBOLNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
@@ -3433,9 +3479,12 @@ ___hp[-4]=name,___hp[-3]=hash,___hp[-2]=___FAL,___hp[-1]=0,___TAG((___hp-___SYMB
 #define ___SYMBOLINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
 
 #define ___MAKEKEYWORD(name,hash) \
-(___ALLOC(___KEYWORD_SIZE+1), \
-___hp[-4]=___MAKE_HD_WORDS(___KEYWORD_SIZE,___sKEYWORD), \
-___hp[-3]=name,___hp[-2]=hash,___hp[-1]=___FAL,___TAG((___hp-___KEYWORD_SIZE-1),___tSUBTYPED))
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___KEYWORD_SIZE,___sKEYWORD)), \
+___ADD_SUBTYPED_ELEM(___SYMKEY_NAME,name), \
+___ADD_SUBTYPED_ELEM(___SYMKEY_HASH,hash), \
+___ADD_SUBTYPED_ELEM(___SYMKEY_NEXT,___FAL), \
+___END_ALLOC_SUBTYPED(___KEYWORD_SIZE), \
+___GET_SUBTYPED(___KEYWORD_SIZE))
 
 #define ___KEYWORDNAME(obj)___FIELD(obj,___SYMKEY_NAME)
 #define ___KEYWORDNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
@@ -3444,13 +3493,13 @@ ___hp[-3]=name,___hp[-2]=hash,___hp[-1]=___FAL,___TAG((___hp-___KEYWORD_SIZE-1),
 #define ___KEYWORDINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
 
 #define ___MAKEWILL(testator,action) \
-(___hp[0]=___MAKE_HD_WORDS(___WILL_SIZE,___sWEAK), \
-___hp[1]=___ps->mem.nonexecutable_wills_, \
-___hp[2]=testator, \
-___hp[3]=action, \
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___WILL_SIZE,___sWEAK)), \
+___ADD_SUBTYPED_ELEM(0,___ps->mem.nonexecutable_wills_), \
+___ADD_SUBTYPED_ELEM(___WILL_TESTATOR,testator), \
+___ADD_SUBTYPED_ELEM(___WILL_ACTION,action), \
 ___ps->mem.nonexecutable_wills_=___TAG(___hp,0), \
-___ALLOC(___WILL_SIZE+1), \
-___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
+___END_ALLOC_SUBTYPED(___WILL_SIZE), \
+___GET_SUBTYPED(___WILL_SIZE))
 
 #define ___WILLTESTATOR(obj)___FIELD(obj,___WILL_TESTATOR)
 #define ___WILLTESTATORSET(obj,val)___FIELD(obj,___WILL_TESTATOR) = val;
@@ -3487,13 +3536,15 @@ ___TAG((___hp-___WILL_SIZE-1),___tSUBTYPED))
 #define ___CURRENTTHREAD ___FIELD(___CURRENTPROCESSOR,___PROCESSOR_CURRENT_THREAD)
 #define ___CURRENTTHREADSET(thread)___FIELD(___CURRENTPROCESSOR,___PROCESSOR_CURRENT_THREAD) = thread;
 
-#define ___PROCESSOR_SCMOBJ(ps)___TAG(___ALIGNUP((ps)->processor_scmobj+(___SUBTYPED_OVERHEAD-___BODY_OFS),___WS),___tSUBTYPED)
+#define ___PROCESSOR_SCMOBJ(ps) \
+___SUBTYPED_FROM_START(___ALIGNUP((ps)->processor_scmobj,___WS))
 
 #define ___CURRENTPROCESSOR ___PROCESSOR_SCMOBJ(___ps)
 #define ___CURRENTPROCESSORID ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)))
 #define ___PROCESSOR(id) ___PROCESSOR_SCMOBJ(___PSTATE_FROM_PROCESSOR_ID(___INT(id),___VMSTATE_FROM_PSTATE(___ps)))
 
-#define ___VM_SCMOBJ(vms)___TAG(___ALIGNUP((vms)->vm_scmobj+(___SUBTYPED_OVERHEAD-___BODY_OFS),___WS),___tSUBTYPED)
+#define ___VM_SCMOBJ(vms) \
+___SUBTYPED_FROM_START(___ALIGNUP((vms)->vm_scmobj,___WS))
 
 #define ___CURRENTVM ___VM_SCMOBJ(___VMSTATE_FROM_PSTATE(___ps))
 
@@ -3761,23 +3812,35 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
   jump(___SET_NARGS(3),proc) \
 }
 
-#define ___FRAME_OVERHEAD(n) (___FRAME_SPACE(n)-(n))
-#define ___RETI_RA (-___FRAME_OVERHEAD(___NB_GVM_REGS+1))
-#define ___FRAME_RETI_RA (1-___FRAME_RESERVE-___RETI_RA)
+#define ___BOX_SIZE 1
+#define ___RATNUM_SIZE 2
+#define ___CPXNUM_SIZE 2
+#define ___TABLE_SIZE 5
 
-#define ___SYMKEY_NAME  0
-#define ___SYMKEY_HASH  1
-#define ___SYMKEY_NEXT  2
+#define ___SYMBOL_SIZE   4
+#define ___KEYWORD_SIZE  3
+#define ___SYMKEY_NAME   0
+#define ___SYMKEY_HASH   1
+#define ___SYMKEY_NEXT   2
 #define ___SYMBOL_GLOBAL 3
 
+#define ___PROMISE_SIZE   2
 #define ___PROMISE_THUNK  0
 #define ___PROMISE_RESULT 1
 
+#define ___CONTINUATION_SIZE  2
 #define ___CONTINUATION_FRAME 0
 #define ___CONTINUATION_DENV  1
 
+#define ___WILL_SIZE     3
+#define ___WILL_NEXT     0
 #define ___WILL_TESTATOR 1
 #define ___WILL_ACTION   2
+
+#define ___FOREIGN_SIZE       3
+#define ___FOREIGN_TAGS       0
+#define ___FOREIGN_RELEASE_FN 1
+#define ___FOREIGN_PTR        2
 
 #define ___OBJ_LOCK1    1
 #define ___OBJ_LOCK2    9
@@ -3800,7 +3863,10 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___THREAD_DENV_CACHE3    27
 #define ___THREAD_LAST_PROCESSOR 33
 
+#define ___PROCESSOR_SIZE           21
 #define ___PROCESSOR_CURRENT_THREAD 14
+
+#define ___VM_SIZE 20
 
 #define ___ENV_NAME_VAL 0
 #define ___ENV_LEFT     1
@@ -3813,6 +3879,10 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___DENV_EXCEPTION_HANDLER  4
 #define ___DENV_INPUT_PORT         5
 #define ___DENV_OUTPUT_PORT        6
+
+#define ___FRAME_OVERHEAD(n) (___FRAME_SPACE(n)-(n))
+#define ___RETI_RA (-___FRAME_OVERHEAD(___NB_GVM_REGS+1))
+#define ___FRAME_RETI_RA (1-___FRAME_RESERVE-___RETI_RA)
 
 #define ___FRAME_EXTRA_SLOTS 1
 #define ___FRAME_STACK_RA 0
@@ -3836,11 +3906,11 @@ else \
     ___R0 = ___GSTATE->handler_break; \
     frame = ___CAST(___SCMOBJ,___fp); \
   } \
-___ADJFP(___ROUND_TO_MULT(___SUBTYPED_OVERHEAD+___CONTINUATION_SIZE,___FRAME_ALIGN)) \
+___ADJFP(___ROUND_TO_MULT(___SUBTYPED_BODY+___CONTINUATION_SIZE,___FRAME_ALIGN)) \
 ___SET_STK(0,___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION)) \
 ___SET_STK(-1,frame) \
 ___SET_STK(-2,___FIELD(___CURRENTTHREAD,___THREAD_DENV)) \
-cont = ___TAG(&___STK(0),___tSUBTYPED); \
+cont = ___SUBTYPED_FROM_START(&___STK(0)); \
 ___ADJFP(___BREAK_FRAME_SPACE) \
 ___SET_STK(-___BREAK_FRAME_NEXT,frame) \
 ___ps->stack_break = ___fp;
@@ -4102,7 +4172,7 @@ ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LIN
 #define ___BEGIN_SW \
 ___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
 ___REGISTER_HOST_ENTRY \
-goto *___LABEL_HOST_LABEL(___pc);
+goto *___LABEL_HOST_LABEL_GET(___pc);
 
 #define ___DEF_SW(n)
 
@@ -4113,16 +4183,16 @@ ___jumpext:
 
 #define ___JUMP(dest) \
 {___pc=dest; \
- if (___EXPECT_TRUE(___LABEL_HOST(___pc) == ___HOST_PROC)) \
-   goto *___LABEL_HOST_LABEL(___pc); \
+ if (___EXPECT_TRUE(___LABEL_HOST_GET(___pc) == ___HOST_PROC)) \
+   goto *___LABEL_HOST_LABEL_GET(___pc); \
  goto ___jumpext;}
 
 #else
 
 #define ___END_SW \
 ___jump: \
-if (___EXPECT_TRUE(___LABEL_HOST(___pc) == ___HOST_PROC)) \
-  goto *___LABEL_HOST_LABEL(___pc); \
+if (___EXPECT_TRUE(___LABEL_HOST_GET(___pc) == ___HOST_PROC)) \
+  goto *___LABEL_HOST_LABEL_GET(___pc); \
 ___jumpext:
 
 #define ___JUMP(dest){___pc=dest;goto ___jump;}
@@ -4144,7 +4214,7 @@ ___jumpext:
 ___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
 ___REGISTER_HOST_ENTRY \
 ___jump: \
-switch((___pc-=___start)/(___LS*___WS)) \
+switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
 {
 
 #define ___DEF_SW(n)case ___PH_LBL0-___HOST_LBL0+n:
@@ -4160,8 +4230,6 @@ switch((___pc-=___start)/(___LS*___WS)) \
 #define ___BEGIN_P_SLBL ___SM(___NOTHING,___BEGIN_SLBL)
 #define ___DEF_P_SLBL(id)
 #define ___END_P_SLBL ___SM(___NOTHING,___END_SLBL)
-
-#define ___LS 4
 
 #define ___PSHEAP ___ps->hp
 #define ___D_HEAP register ___WORD *___hp;
@@ -5246,8 +5314,8 @@ switch (na) \
 #define ___NOT(x)!x
 #define ___AND(x,y)(x&&y)
 
-#define ___MLBL(n)___lp+((n)*___LS*___WS)
-#define ___LBL(n)___start+((___PH_LBL0-___HOST_LBL0+n)*___LS*___WS)
+#define ___MLBL(n)___lp+((n)*___LABEL_SIZE*___WS)
+#define ___LBL(n)___start+((___PH_LBL0-___HOST_LBL0+n)*___LABEL_SIZE*___WS)
 #define ___DEF_SLBL(n,lbl)___DEF_SW(n)___DEF_GLBL(lbl)
 #define ___DEF_GLBL(lbl)lbl:___AM_HERE_PS
 #define ___GOTO(lbl)goto lbl;
@@ -5256,12 +5324,12 @@ switch (na) \
 #define ___JUMPEXTPRM(nargs,val){nargs ___JUMPEXT(val)}
 #define ___JUMPEXTNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \
-___JUMPEXT(___LABEL_ENTRY_OR_DESCR(___SELF))}
+___JUMPEXT(___LABEL_ENTRY_GET(___SELF))}
 #define ___JUMPPRM(nargs,val){nargs ___JUMP(val)}
 
 #define ___JUMPNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \
-___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF))}
+___JUMP(___LABEL_ENTRY_GET(___SELF))}
 
 #define ___JUMPSAFE(nargs,val) ___JUMPNOTSAFE(nargs,val) /***************/
 
@@ -5270,12 +5338,12 @@ ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF))}
 #define ___JUMPGENSAFE(nargs,val) \
 {nargs ___SELF=val; \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
-  ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF)) \
+  ___JUMP(___LABEL_ENTRY_GET(___SELF)) \
 ___ps->temp1=___SELF;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc)}
 #define ___JUMPGLOSAFE(nargs,i,glo) \
 {nargs ___SELF=___GLO(i,glo); \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
-  ___JUMP(___LABEL_ENTRY_OR_DESCR(___SELF)) \
+  ___JUMP(___LABEL_ENTRY_GET(___SELF)) \
 ___ps->temp4=(___WORD)&___GLOSTRUCT(i,glo);___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc_glo)}
 
 #ifdef ___NOT_SAFE_CALLS
@@ -5314,7 +5382,7 @@ if (___EXPECT_TRUE(guard(___sw))) switch(___INT(___FIELD(___sw,___SYMKEY_HASH)) 
 
 /*---------------------------------------------------------------------------*/
 
-#define ___PRC(i)___start+((i-___HOST_LBL0)*___LS*___WS)
+#define ___PRC(i)___start+((i-___HOST_LBL0)*___LABEL_SIZE*___WS)
 
 #define ___SET_NARGS(n)___ps->na=n;
 
@@ -5345,64 +5413,125 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_key_rest)}
 #define ___BOOLEAN(x)(x)?___TRU:___FAL
 #define ___EXPR(x)x;
 
-#define ___ALLOC_CLO(n)(___ALLOC(n+2),___TAG((___hp-n-2),___tSUBTYPED))
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+#ifdef ___CPU_x86_32
+
+#define ___LABEL_SIZE 4
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate x86-32 instruction: call lbl */ \
+     ___WORD dist = ___CAST(___WORD, \
+                            ___CAST(___UWORD,lbl) - \
+                            (___CAST(___UWORD,ptr) + ___WS + ___tSUBTYPED + 5)); \
+     (ptr)[___LABEL_HOST_LABEL] = (0xe8L << (8*___tSUBTYPED)) \
+                                  + (dist << (8*(___tSUBTYPED+1))); \
+     (ptr)[___LABEL_HOST_LABEL+1] = (dist >> (8*(___WS-(___tSUBTYPED+1)))); \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate x86-32 instruction: call *-4(%ecx) */ \
+     (ptr)[___LABEL_HOST_LABEL] = 0xfc51ff << (8*___tSUBTYPED); \
+   } while (0)
+
+#else
+#ifdef ___CPU_x86_64
+
+#define ___LABEL_SIZE 4
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate x86-64 instruction: call *-15(%rip) */ \
+     (ptr)[___LABEL_HOST_LABEL] = 0xfffffff115ffL << (8*___tSUBTYPED); \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate x86-64 instruction: call *-8(%rcx) */ \
+     (ptr)[___LABEL_HOST_LABEL] = 0xf851ff << (8*___tSUBTYPED); \
+   } while (0)
+
+#endif
+#endif
+
+#endif
+
+#ifndef ___LABEL_SIZE
+#define ___LABEL_SIZE 4
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 0
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl)
+#endif
+
+#define ___ALLOC_CLO(n)(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE),___sPROCEDURE)),___END_ALLOC_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)),___GET_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)))
 #define ___BEGIN_SETUP_CLO(n,clo,lbl) \
-{___WORD *___ptr=___UNTAG_AS(clo,___tSUBTYPED); \
-___ptr[0]=___MAKE_HD_WORDS((n+1),___sPROCEDURE); ___ptr[1]=___LBL(lbl);
-#define ___ADD_CLO_ELEM(i,val)___ptr[i+2]=(val);
+{___WORD *___ptr=___BODY0_AS(clo,___tSUBTYPED); \
+___ptr[___LABEL_ENTRY_OR_DESCR]=___LBL(lbl); \
+___CLO_LOWLEVEL_TRAMPOLINE_SETUP(___ptr,___LBL(lbl));
+#define ___ADD_CLO_ELEM(i,val)___ptr[i+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)]=(val);
 #define ___END_SETUP_CLO(n) }
-#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y]
-#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y]=z;
+#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]
+#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]=z;
+
+#define ___CLOSURELENGTH(x)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(x))-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
+#define ___CLOSURECODE(x)___CLO(x,-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
+#define ___CLOSUREREF(x,y)___CLO(x,___INT(y))
+#define ___CLOSURESET(x,y,z)___SET_CLO(x,___INT(y),z)
 
 #define ___BEGIN_ALLOC_LIST(n,last)___ALLOC_PAIR(last,___NUL)
-#define ___ADD_LIST_ELEM(i,val)___ALLOC_PAIR(val,___TAG((___hp-___PAIR_SIZE-1),___tPAIR))
+#define ___ADD_LIST_ELEM(i,val)___ALLOC_PAIR(val,___GET_PAIR())
 #define ___END_ALLOC_LIST(n)
-#define ___GET_LIST(n) ___TAG((___hp-___PAIR_SIZE-1),___tPAIR)
+#define ___GET_LIST(n)___GET_PAIR()
 
 #define ___BEGIN_ALLOC_STRING(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<___LCS,___sSTRING);
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<___LCS,___sSTRING));
 #define ___ADD_STRING_ELEM(i,val)___CS_SELECT( \
-___STORE_U8(___hp+1,i,___INT(val)), \
-___STORE_U16(___hp+1,i,___INT(val)), \
-___STORE_U32(___hp+1,i,___INT(val)));
+___STORE_U8(___BODY0_FROM_HP(),i,___INT(val)), \
+___STORE_U16(___BODY0_FROM_HP(),i,___INT(val)), \
+___STORE_U32(___BODY0_FROM_HP(),i,___INT(val)));
 #define ___END_ALLOC_STRING(n)___ALLOC(___WORDS(n<<___LCS)+1);
-#define ___GET_STRING(n)___TAG((___hp-___WORDS(n<<___LCS)-1),___tSUBTYPED)
+#define ___GET_STRING(n)___GET_SUBTYPED(___WORDS(n<<___LCS))
 
 #define ___BEGIN_ALLOC_S8VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n,___sS8VECTOR);
-#define ___ADD_S8VECTOR_ELEM(i,val)___STORE_S8(___hp+1,i,___INT(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n,___sS8VECTOR));
+#define ___ADD_S8VECTOR_ELEM(i,val)___STORE_S8(___BODY0_FROM_HP(),i,___INT(val));
 #define ___END_ALLOC_S8VECTOR(n)___ALLOC(___WORDS(n)+1);
-#define ___GET_S8VECTOR(n)___TAG((___hp-___WORDS(n)-1),___tSUBTYPED)
+#define ___GET_S8VECTOR(n)___GET_SUBTYPED(___WORDS(n))
 
 #define ___BEGIN_ALLOC_U8VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n,___sU8VECTOR);
-#define ___ADD_U8VECTOR_ELEM(i,val)___STORE_U8(___hp+1,i,___INT(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n,___sU8VECTOR));
+#define ___ADD_U8VECTOR_ELEM(i,val)___STORE_U8(___BODY0_FROM_HP(),i,___INT(val));
 #define ___END_ALLOC_U8VECTOR(n)___ALLOC(___WORDS(n)+1);
-#define ___GET_U8VECTOR(n)___TAG((___hp-___WORDS(n)-1),___tSUBTYPED)
+#define ___GET_U8VECTOR(n)___GET_SUBTYPED(___WORDS(n))
 
 #define ___BEGIN_ALLOC_S16VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<1,___sS16VECTOR);
-#define ___ADD_S16VECTOR_ELEM(i,val)___STORE_S16(___hp+1,i,___INT(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<1,___sS16VECTOR));
+#define ___ADD_S16VECTOR_ELEM(i,val)___STORE_S16(___BODY0_FROM_HP(),i,___INT(val));
 #define ___END_ALLOC_S16VECTOR(n)___ALLOC(___WORDS(n<<1)+1);
-#define ___GET_S16VECTOR(n)___TAG((___hp-___WORDS(n<<1)-1),___tSUBTYPED)
+#define ___GET_S16VECTOR(n)___GET_SUBTYPED(___WORDS(n<<1))
 
 #define ___BEGIN_ALLOC_U16VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<1,___sU16VECTOR);
-#define ___ADD_U16VECTOR_ELEM(i,val)___STORE_U16(___hp+1,i,___INT(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<1,___sU16VECTOR));
+#define ___ADD_U16VECTOR_ELEM(i,val)___STORE_U16(___BODY0_FROM_HP(),i,___INT(val));
 #define ___END_ALLOC_U16VECTOR(n)___ALLOC(___WORDS(n<<1)+1);
-#define ___GET_U16VECTOR(n)___TAG((___hp-___WORDS(n<<1)-1),___tSUBTYPED)
+#define ___GET_U16VECTOR(n)___GET_SUBTYPED(___WORDS(n<<1))
 
 #define ___BEGIN_ALLOC_S32VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<2,___sS32VECTOR);
-#define ___ADD_S32VECTOR_ELEM(i,val)___STORE_S32(___hp+1,i,___S32UNBOX(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<2,___sS32VECTOR));
+#define ___ADD_S32VECTOR_ELEM(i,val)___STORE_S32(___BODY0_FROM_HP(),i,___S32UNBOX(val));
 #define ___END_ALLOC_S32VECTOR(n)___ALLOC(___WORDS(n<<2)+1);
-#define ___GET_S32VECTOR(n)___TAG((___hp-___WORDS(n<<2)-1),___tSUBTYPED)
+#define ___GET_S32VECTOR(n)___GET_SUBTYPED(___WORDS(n<<2))
 
 #define ___BEGIN_ALLOC_U32VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<2,___sU32VECTOR);
-#define ___ADD_U32VECTOR_ELEM(i,val)___STORE_U32(___hp+1,i,___U32UNBOX(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<2,___sU32VECTOR));
+#define ___ADD_U32VECTOR_ELEM(i,val)___STORE_U32(___BODY0_FROM_HP(),i,___U32UNBOX(val));
 #define ___END_ALLOC_U32VECTOR(n)___ALLOC(___WORDS(n<<2)+1);
-#define ___GET_U32VECTOR(n)___TAG((___hp-___WORDS(n<<2)-1),___tSUBTYPED)
+#define ___GET_U32VECTOR(n)___GET_SUBTYPED(___WORDS(n<<2))
 
 #if ___SCMOBJ_WIDTH == 32
 
@@ -5411,40 +5540,40 @@ ___hp[0]=___MAKE_HD_BYTES(n<<2,___sU32VECTOR);
 ___ptr[-1]=___MAKE_HD_BYTES(n<<3,___sS64VECTOR);
 #define ___ADD_S64VECTOR_ELEM(i,val)___STORE_S64(___ptr,i,___S64UNBOX(val));
 #define ___END_ALLOC_S64VECTOR(n)___ALLOC(___WORDS(n<<3)+2);}
-#define ___GET_S64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-1),___tSUBTYPED)
+#define ___GET_S64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
 
 #define ___BEGIN_ALLOC_U64VECTOR(n) \
 {___WORD *___ptr = (___WORD*)((___WORD)(___hp+2)&~7); \
 ___ptr[-1]=___MAKE_HD_BYTES(n<<3,___sU64VECTOR);
 #define ___ADD_U64VECTOR_ELEM(i,val)___STORE_U64(___ptr,i,___U64UNBOX(val));
 #define ___END_ALLOC_U64VECTOR(n)___ALLOC(___WORDS(n<<3)+2);}
-#define ___GET_U64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-1),___tSUBTYPED)
+#define ___GET_U64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
 
 #else
 
 #define ___BEGIN_ALLOC_S64VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<3,___sS64VECTOR);
-#define ___ADD_S64VECTOR_ELEM(i,val)___STORE_S64(___hp+1,i,___S64UNBOX(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<3,___sS64VECTOR));
+#define ___ADD_S64VECTOR_ELEM(i,val)___STORE_S64(___BODY0_FROM_HP(),i,___S64UNBOX(val));
 #define ___END_ALLOC_S64VECTOR(n)___ALLOC(___WORDS(n<<3)+1);
-#define ___GET_S64VECTOR(n)___TAG((___hp-___WORDS(n<<3)-1),___tSUBTYPED)
+#define ___GET_S64VECTOR(n)___GET_SUBTYPED(___WORDS(n<<3))
 
 #define ___BEGIN_ALLOC_U64VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<3,___sU64VECTOR);
-#define ___ADD_U64VECTOR_ELEM(i,val)___STORE_U64(___hp+1,i,___U64UNBOX(val));
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<3,___sU64VECTOR));
+#define ___ADD_U64VECTOR_ELEM(i,val)___STORE_U64(___BODY0_FROM_HP(),i,___U64UNBOX(val));
 #define ___END_ALLOC_U64VECTOR(n)___ALLOC(___WORDS(n<<3)+1);
-#define ___GET_U64VECTOR(n)___TAG((___hp-___WORDS(n<<3)-1),___tSUBTYPED)
+#define ___GET_U64VECTOR(n)___GET_SUBTYPED(___WORDS(n<<3))
 
 #endif
 
 #define ___BEGIN_ALLOC_F32VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<2,___sF32VECTOR);
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<2,___sF32VECTOR));
 #ifdef ___F32
-#define ___ADD_F32VECTOR_ELEM(i,val)((___F32*)(___hp+1))[i]=(val);
+#define ___ADD_F32VECTOR_ELEM(i,val)((___F32*)___BODY0_FROM_HP())[i]=(val);
 #else
 #define ___ADD_F32VECTOR_ELEM(i,val);
 #endif
 #define ___END_ALLOC_F32VECTOR(n)___ALLOC(___WORDS(n<<2)+1);
-#define ___GET_F32VECTOR(n)___TAG((___hp-___WORDS(n<<2)-1),___tSUBTYPED)
+#define ___GET_F32VECTOR(n)___GET_SUBTYPED(___WORDS(n<<2))
 
 #if ___SCMOBJ_WIDTH == 32
 
@@ -5453,32 +5582,35 @@ ___hp[0]=___MAKE_HD_BYTES(n<<2,___sF32VECTOR);
 ___ptr[-1]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
 #define ___ADD_F64VECTOR_ELEM(i,val)((___F64*)___ptr)[i]=(val);
 #define ___END_ALLOC_F64VECTOR(n)___ALLOC(___WORDS(n<<3)+2);}
-#define ___GET_F64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-1),___tSUBTYPED)
+#define ___GET_F64VECTOR(n)___TAG((((___WORD*)((___WORD)(___hp-___WORDS(n<<3))&~7))-___REFERENCE_TO_BODY),___tSUBTYPED)
 
 #else
 
 #define ___BEGIN_ALLOC_F64VECTOR(n) \
-___hp[0]=___MAKE_HD_BYTES(n<<3,___sF64VECTOR);
-#define ___ADD_F64VECTOR_ELEM(i,val)((___F64*)(___hp+1))[i]=(val);
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_BYTES(n<<3,___sF64VECTOR));
+#define ___ADD_F64VECTOR_ELEM(i,val)((___F64*)___BODY0_FROM_HP())[i]=(val);
 #define ___END_ALLOC_F64VECTOR(n)___ALLOC(___WORDS(n<<3)+1);
-#define ___GET_F64VECTOR(n)___TAG((___hp-___WORDS(n<<3)-1),___tSUBTYPED)
+#define ___GET_F64VECTOR(n)___GET_SUBTYPED(___WORDS(n<<3))
 
 #endif
 
-#define ___BEGIN_ALLOC_VECTOR(n)___hp[0]=___MAKE_HD_WORDS(n,___sVECTOR);
-#define ___ADD_VECTOR_ELEM(i,val)___hp[i+1]=(val);
-#define ___END_ALLOC_VECTOR(n)___ALLOC(n+1);
-#define ___GET_VECTOR(n)___TAG((___hp-n-1),___tSUBTYPED)
+#define ___BEGIN_ALLOC_VECTOR(n) \
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n,___sVECTOR));
+#define ___ADD_VECTOR_ELEM(i,val)___ADD_SUBTYPED_ELEM(i,val);
+#define ___END_ALLOC_VECTOR(n)___END_ALLOC_SUBTYPED(n);
+#define ___GET_VECTOR(n)___GET_SUBTYPED(n)
 
-#define ___BEGIN_ALLOC_STRUCTURE(n)___hp[0]=___MAKE_HD_WORDS(n,___sSTRUCTURE);
-#define ___ADD_STRUCTURE_ELEM(i,val)___hp[i+1]=(val);
-#define ___END_ALLOC_STRUCTURE(n)___ALLOC(n+1);
-#define ___GET_STRUCTURE(n)___TAG((___hp-n-1),___tSUBTYPED)
+#define ___BEGIN_ALLOC_STRUCTURE(n) \
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n,___sSTRUCTURE));
+#define ___ADD_STRUCTURE_ELEM(i,val)___ADD_SUBTYPED_ELEM(i,val);
+#define ___END_ALLOC_STRUCTURE(n)___END_ALLOC_SUBTYPED(n);
+#define ___GET_STRUCTURE(n)___GET_SUBTYPED(n)
 
-#define ___BEGIN_ALLOC_VALUES(n)___hp[0]=___MAKE_HD_WORDS(n,___sBOXVALUES);
-#define ___ADD_VALUES_ELEM(i,val)___hp[i+1]=(val);
-#define ___END_ALLOC_VALUES(n)___ALLOC(n+1);
-#define ___GET_VALUES(n)___TAG((___hp-n-1),___tSUBTYPED)
+#define ___BEGIN_ALLOC_VALUES(n) \
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n,___sBOXVALUES));
+#define ___ADD_VALUES_ELEM(i,val)___ADD_SUBTYPED_ELEM(i,val);
+#define ___END_ALLOC_VALUES(n)___END_ALLOC_SUBTYPED(n);
+#define ___GET_VALUES(n)___GET_SUBTYPED(n)
 
 #define ___NB_INTRS 6
 #define ___INTR_SYNC_OP    0
@@ -5589,12 +5721,18 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMI
 #ifdef ___LOCAL_GSTATE
 
 #define ___GSTATE ___local_gstate
+
 #define ___GSTATEDECL ___LOCAL ___global_state ___local_gstate;
 #define ___SET_LOCAL_GSTATE(gs) ___local_gstate = gs;
 
 #else
 
+#ifdef ___PSTATE_ALIGN_MULTIPLIER
+#define ___GSTATE ___CAST(___global_state,___ALIGNUP(&___gstate0,___PSTATE_ALIGN_MULTIPLIER))
+#else
 #define ___GSTATE (&___gstate0)
+#endif
+
 #define ___GSTATEDECL ___IMP_DATA(___global_state_struct,___gstate0);
 #define ___SET_LOCAL_GSTATE(gs)
 
@@ -5604,7 +5742,7 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMI
 
 /* Use direct access to the only pstate */
 
-#define ___GET_PSTATE() ___GSTATE->vmstate0.pstate
+#define ___GET_PSTATE() (&___GSTATE->vmstate0.aligned_pstate[0].pstate)
 #define ___SET_PSTATE(ps)
 
 #else
@@ -5728,7 +5866,13 @@ extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 #define ___PSP ___PSA(___PSVNC)
 
 #ifdef ___SINGLE_THREADED_VMS
-#define ___VMSTATE_FROM_PSTATE(ps) ___CAST(___virtual_machine_state,ps)
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+#define ___VMSTATE_FROM_PSTATE(ps) \
+  ___CAST(___virtual_machine_state,___CAST(___aligned_lowlevel_processor_state_struct*,ps)-1)
+#else
+#define ___VMSTATE_FROM_PSTATE(ps) \
+___CAST(___virtual_machine_state,ps)
+#endif
 #else
 #define ___VMSTATE_FROM_PSTATE(ps) ps->vmstate
 #endif
@@ -6166,11 +6310,31 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #define ___FRAME_RESERVE 3
 #define ___FRAME_ALIGN 4
 
+#if ___LABEL_SIZE == 4
+#define ___LBL_TAIL
+#else
+#if ___LABEL_SIZE == 5
+#define ___LBL_TAIL ,0
+#else
+#if ___LABEL_SIZE == 6
+#define ___LBL_TAIL ,0,0
+#else
+#if ___LABEL_SIZE == 7
+#define ___LBL_TAIL ,0,0,0
+#else
+#if ___LABEL_SIZE == 8
+#define ___LBL_TAIL ,0,0,0,0
+#endif
+#endif
+#endif
+#endif
+#endif
+
 #define ___BEGIN_LBL \
 ___LOCAL ___label_struct ___lbltbl[]={
-#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc){___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM),info,___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name),___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc))}
-#define ___DEF_LBL_PROC(id,nbp,nbc){___PRD(nbp,nbc),0,0,___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id))}
-#define ___DEF_LBL_RET(id,frm){___MAKE_HD((3<<___LWS),___sRETURN,___PERM),frm,0,___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id))}
+#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc){___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc)),___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM),info,___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name) ___LBL_TAIL}
+#define ___DEF_LBL_PROC(id,nbp,nbc){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___PRD(nbp,nbc),0,0 ___LBL_TAIL}
+#define ___DEF_LBL_RET(id,frm){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___MAKE_HD(0,___sRETURN,___PERM),frm,0 ___LBL_TAIL}
 
 #define ___END_LBL ___PADDING_LBL};
 
@@ -6219,28 +6383,28 @@ ___MAKE_HD(((nbclosed+1)<<12)+nbparms,___sPROCEDURE,___PERM)
 ___ROUND_TO_MULT(fs,___FRAME_ALIGN)+___FRAME_SPACE(___NB_GVM_REGS+1)-___FRAME_RESERVE
 
 #define ___RETI_GET_CFS(ra,fs) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
 fs = ___OFD_FS(*(___WORD*)descr); }
 
 #define ___RETI_GET_FS(ra,fs) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); \
 else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(*(___WORD*)descr)); }
 
 #define ___RETN_GET_FS(ra,fs) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 fs = ___IFD_FS(descr); \
 else \
 fs = ___OFD_FS(*(___WORD*)descr); }
 
 #define ___RETI_GET_FS_LINK(ra,fs,link) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); } \
 else \
@@ -6248,7 +6412,7 @@ else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK(ra,fs,link) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
 else \
@@ -6256,7 +6420,7 @@ else \
 fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 
 #define ___RETI_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { fs = ___RETI_CFS_TO_FS(___IFD_FS(descr)); link = ___IFD_LINK(descr); \
 firstgcmap = ___IFD_GCMAP(descr); } \
@@ -6265,7 +6429,7 @@ else \
 fs = ___RETI_CFS_TO_FS(___OFD_FS(descr)); link = ___OFD_LINK(descr); } }
 
 #define ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,firstgcmap,nextgcmap) \
-{ ___WORD descr = ___LABEL_ENTRY_OR_DESCR(ra); \
+{ ___WORD descr = ___LABEL_DESCR_GET(ra); \
 if (___IS_IFD(descr)) \
 { firstgcmap = ___IFD_GCMAP(descr); \
 fs = ___IFD_FS(descr); link = ___IFD_LINK(descr); } \
@@ -8340,7 +8504,7 @@ typedef struct ___vmstate_fdset_struct {
   ___VOLATILE int overflow;
 } ___vmstate_fdset;
 #endif
- 
+
 typedef struct ___vmstate_os_struct {
 #ifdef ___OS_WIN32
   int dummy; /* avoid empty struct error raised by MSVC */
@@ -8475,7 +8639,10 @@ typedef struct ___processor_state_struct
     ___WORD *hp;
 
     ___WORD r[___NB_GVM_REGS];
+
     ___WORD pc;
+    int na;
+
     ___WORD temp1;
     ___WORD temp2;
     ___WORD temp3;
@@ -8484,13 +8651,11 @@ typedef struct ___processor_state_struct
     ___F64 f64_temp1;
     ___F64 f64_temp2;
 
-    int na;
-
     ___WORD intr_enabled; /* global interrupt enable */
     ___WORD intr_mask; /* 1 bit means interrupt disabled */
     ___VOLATILE ___WORD intr_flag[___NB_INTRS];
 
-    ___WORD processor_scmobj[___SUBTYPED_OVERHEAD+___PROCESSOR_SIZE+___PADDING_SIZE]; /* Scheme processor object */
+    ___WORD processor_scmobj[___SUBTYPED_BODY+___PROCESSOR_SIZE+___PADDING_SIZE]; /* Scheme processor object */
 
 #ifdef ___ACTIVITY_LOG
     ___pstate_actlog actlog; /* activity log state */
@@ -8545,29 +8710,78 @@ typedef struct ___processor_state_struct
 #endif
   } ___processor_state_struct;
 
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+typedef struct ___lowlevel_processor_state_struct
+  {
+    ___WORD *lowlevel_leave_sp;
+    ___WORD *lowlevel_leave_handler;
+  } ___lowlevel_processor_state_struct;
+
+typedef struct ___aligned_lowlevel_processor_state_struct
+  {
+#ifdef ___PSTATE_ALIGN_MODULUS
+    /*
+     * pad so that the structure will be of a size that is a multiple
+     * of ___PSTATE_ALIGN_MODULUS
+     */
+    ___WORD padding[(___PSTATE_ALIGN_MODULUS
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+                     - sizeof(___lowlevel_processor_state_struct)
+#endif
+                    ) >> ___LWS];
+#endif
+    ___lowlevel_processor_state_struct llpstate;
+  } ___aligned_lowlevel_processor_state_struct;
+
+#endif
+
+typedef struct ___aligned_processor_state_struct
+  {
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+    ___aligned_lowlevel_processor_state_struct aligned_llpstate;
+#endif
+
+    ___processor_state_struct pstate;
+
+#if ___MAX_PROCESSORS > 1
+#ifdef ___PSTATE_ALIGN_MULTIPLIER
+    /*
+     * pad so that ___aligned_processor_state_struct is a size that is
+     * a multiple of ___PSTATE_ALIGN_MULTIPLIER
+     */
+    char padding[___PSTATE_ALIGN_MULTIPLIER -
+                 (___PSTATE_ALIGN_MODULUS + sizeof(___processor_state_struct))
+                 % ___PSTATE_ALIGN_MULTIPLIER];
+#endif
+#endif
+  } ___aligned_processor_state_struct;
+
 typedef ___WORD (*___host) ___P((___processor_state ___ps),());
 
 typedef struct ___label_struct
   {
+    ___FAKEHOST host;
     ___WORD header;
     ___WORD entry_or_descr;
     ___FAKEVOIDSTAR host_label;
-    ___FAKEHOST host;
+#if ___LABEL_SIZE > 4
+    ___WORD dummy[___LABEL_SIZE-4];
+#endif
   } ___label_struct;
 
-#ifdef ___LABEL_ACCESS_OLD
+#define ___LABEL_ENTRY_OR_DESCR 0
+#define ___LABEL_HOST_LABEL     1
+#define ___LABEL_HOST           -2
 
-#define ___LABEL_ENTRY_OR_DESCR(lbl)(___CAST(___label_struct*,(lbl)-___tSUBTYPED)->entry_or_descr)
-#define ___LABEL_HOST_LABEL(lbl)___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(___CAST(___label_struct*,(lbl)-___tSUBTYPED)->host_label)
-#define ___LABEL_HOST(lbl)___CAST_FAKEHOST_TO_HOST(___CAST(___label_struct*,(lbl)-___tSUBTYPED)->host)
-
-#else
-
-#define ___LABEL_ENTRY_OR_DESCR(lbl)(*___CAST(___WORD*,(lbl)+((1<<___LWS)-___tSUBTYPED)))
-#define ___LABEL_HOST_LABEL(lbl)(*___CAST(___FAKEVOIDSTAR*,(lbl)+((2<<___LWS)-___tSUBTYPED)))
-#define ___LABEL_HOST(lbl)(*___CAST(___FAKEHOST*,(lbl)+((3<<___LWS)-___tSUBTYPED)))
-
-#endif
+#define ___LABEL_ENTRY_GET(lbl) \
+(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
+#define ___LABEL_DESCR_GET(lbl) \
+(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
+#define ___LABEL_HOST_LABEL_GET(lbl) \
+(*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL)))
+#define ___LABEL_HOST_GET(lbl) \
+(*___CAST(___FAKEHOST*,___SUBTYPED_TO(lbl,___LABEL_HOST)))
 
 /* Module structure */
 
@@ -8642,11 +8856,11 @@ typedef struct ___program_startup_info_struct
 
 typedef struct ___virtual_machine_state_struct
   {
-    ___processor_state_struct pstate[___MAX_PROCESSORS]; /* VM's processors */
+    ___aligned_processor_state_struct aligned_pstate[___MAX_PROCESSORS]; /* VM's processors */
 
     ___VOLATILE int processor_count; /* number of processors in this VM */
 
-    ___WORD vm_scmobj[___SUBTYPED_OVERHEAD+___VM_SIZE+___PADDING_SIZE]; /* Scheme vm object */
+    ___WORD vm_scmobj[___SUBTYPED_BODY+___VM_SIZE+___PADDING_SIZE]; /* Scheme vm object */
 
 #ifdef ___ACTIVITY_LOG
     ___vmstate_actlog actlog; /* activity log state */
@@ -8674,8 +8888,13 @@ typedef struct ___virtual_machine_state_struct
 
   } ___virtual_machine_state_struct;
 
-#define ___PROCESSOR_ID(ps,vms) ((ps) - (vms)->pstate)
-#define ___PSTATE_FROM_PROCESSOR_ID(id,vms) ((vms)->pstate+(id))
+#define ___PROCESSOR_ID(ps,vms) \
+(___CAST(___aligned_processor_state_struct*,ps) - \
+ ___CAST(___aligned_processor_state_struct*,&(vms)->aligned_pstate[0].pstate))
+
+
+#define ___PSTATE_FROM_PROCESSOR_ID(id,vms) \
+(&(vms)->aligned_pstate[id].pstate)
 
 /* Setup parameters structure */
 
@@ -9897,7 +10116,7 @@ typedef struct ___global_state_struct
              int subtype,
              ___SIZE_TS bytes),
             ());
-    void (*___release_scmobj)
+    ___SCMOBJ (*___release_scmobj)
        ___P((___SCMOBJ obj),
             ());
     ___SCMOBJ (*___make_pair)
@@ -9993,6 +10212,11 @@ typedef struct ___global_state_struct
        ___P((___PSD
              ___SCMOBJ thunk),
             ());
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+    ___WORD (*___lowlevel_exec)
+       ___P((___processor_state ___ps),
+            ());
+#endif
     void (*___throw_error)
        ___P((___PSD
              ___SCMOBJ err),
@@ -10098,6 +10322,14 @@ typedef struct ___global_state_struct
        ___P((void *ptr),
             ());
 #define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr)
+    void *(*___alloc_mem_heap)
+       ___P((___SIZE_T bytes),
+            ());
+#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes)
+    void (*___free_mem_heap)
+       ___P((void *ptr),
+            ());
+#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr)
 #else
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes,
@@ -10111,6 +10343,18 @@ typedef struct ___global_state_struct
              char *file),
             ());
 #define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr,__LINE__,__FILE__)
+    void *(*___alloc_mem_heap)
+       ___P((___SIZE_T bytes,
+             int lineno,
+             char *file),
+            ());
+#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes,__LINE__,__FILE__)
+    void (*___free_mem_heap)
+       ___P((void *ptr,
+             int lineno,
+             char *file),
+            ());
+#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr,__LINE__,__FILE__)
 #endif
     void *(*___alloc_mem_code)
        ___P((___SIZE_T bytes),
@@ -10147,6 +10391,14 @@ typedef struct ___global_state_struct
        ___P((jmp_buf env),
             ());
 #endif
+#endif
+
+#ifdef ___PSTATE_ALIGN_MULTIPLIER
+    /*
+     * pad the global state so that it can be aligned to a multiple
+     * of ___PSTATE_ALIGN_MULTIPLIER
+     */
+    char padding[___PSTATE_ALIGN_MULTIPLIER];
 #endif
   } ___global_state_struct;
 
@@ -11133,7 +11385,7 @@ ___IMP_FUNC(___SCMOBJ,___alloc_scmobj)
          int subtype,
          ___SIZE_TS bytes),
         ());
-___IMP_FUNC(void,___release_scmobj)
+___IMP_FUNC(___SCMOBJ,___release_scmobj)
    ___P((___SCMOBJ obj),
         ());
 ___IMP_FUNC(___SCMOBJ,___make_pair)
@@ -11351,6 +11603,11 @@ ___IMP_FUNC(___SCMOBJ,___call)
 ___IMP_FUNC(___SCMOBJ,___run)
    ___P((___SCMOBJ thunk),
         ());
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+___IMP_FUNC(___WORD,___lowlevel_exec)
+   ___P((___processor_state ___ps),
+        ());
+#endif
 ___IMP_FUNC(void,___throw_error)
    ___P((___PSD
          ___SCMOBJ err),
@@ -11469,6 +11726,12 @@ ___IMP_FUNC(void *,___alloc_mem)
 ___IMP_FUNC(void,___free_mem)
    ___P((void *ptr),
         ());
+___IMP_FUNC(void *,___alloc_mem_heap)
+   ___P((___SIZE_T bytes),
+        ());
+___IMP_FUNC(void,___free_mem_heap)
+   ___P((void *ptr),
+        ());
 #else
 ___IMP_FUNC(void *,___alloc_mem)
    ___P((___SIZE_T bytes,
@@ -11476,6 +11739,16 @@ ___IMP_FUNC(void *,___alloc_mem)
          char *file),
         ());
 ___IMP_FUNC(void,___free_mem)
+   ___P((void *ptr,
+         int lineno,
+         char *file),
+        ());
+___IMP_FUNC(void *,___alloc_mem_heap)
+   ___P((___SIZE_T bytes,
+         int lineno,
+         char *file),
+        ());
+___IMP_FUNC(void,___free_mem_heap)
    ___P((void *ptr,
          int lineno,
          char *file),

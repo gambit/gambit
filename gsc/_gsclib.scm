@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -36,7 +36,8 @@
          #!key
          (options (macro-absent-obj))
          (output (macro-absent-obj))
-         (module-name (macro-absent-obj)))
+         (module-name (macro-absent-obj))
+         (linker-name (macro-absent-obj)))
   (macro-force-vars (filename)
     (macro-check-string filename 1 (compile-file-to-target filename . other);;;;;;
       (let* ((opts
@@ -54,7 +55,12 @@
               (if (##eq? module-name (macro-absent-obj))
                   #f
                   (macro-force-vars (module-name)
-                    module-name))))
+                    module-name)))
+             (link-name
+              (if (##eq? linker-name (macro-absent-obj))
+                  #f
+                  (macro-force-vars (linker-name)
+                    linker-name))))
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
                (error "list expected for options: parameter"));;;;;;;
@@ -62,13 +68,16 @@
                (error "string expected for output: parameter"));;;;;;;;;;
               ((##not (or (##not mod-name) (##string? mod-name)))
                (error "string or #f expected for module-name: parameter"));;;;;;;;;;
+              ((##not (or (##not link-name) (##string? link-name)))
+               (error "string or #f expected for linker-name: parameter"));;;;;;;;;;
               (else
                (##compile-file-to-target filename
                                          opts
                                          out
-                                         mod-name)))))))
+                                         mod-name
+                                         link-name)))))))
 
-(define (##compile-file-to-target filename options output mod-name)
+(define (##compile-file-to-target filename options output mod-name link-name)
   (let* ((options
           (##compile-options-normalize options))
          (expanded-output
@@ -93,12 +102,15 @@
                (##path-strip-extension
                 (if output-directory?
                     filename
-                    expanded-output))))))
+                    expanded-output)))))
+         (linker-name
+          (or link-name
+              module-name)))
     (c#cf filename
           options
           output-filename-gen
           module-name
-          module-name)))
+          linker-name)))
 
 (define (compile-file
          filename
@@ -106,6 +118,8 @@
          #!key
          (options (macro-absent-obj))
          (output (macro-absent-obj))
+         (module-name (macro-absent-obj))
+         (linker-name (macro-absent-obj))
          (cc-options (macro-absent-obj))
          (ld-options-prelude (macro-absent-obj))
          (ld-options (macro-absent-obj)))
@@ -122,6 +136,16 @@
                    (##path-normalize filename))
                   (macro-force-vars (output)
                     output)))
+             (mod-name
+              (if (##eq? module-name (macro-absent-obj))
+                  #f
+                  (macro-force-vars (module-name)
+                    module-name)))
+             (link-name
+              (if (##eq? linker-name (macro-absent-obj))
+                  #f
+                  (macro-force-vars (linker-name)
+                    linker-name)))
              (cc-opts
               (if (##eq? cc-options (macro-absent-obj))
                   ""
@@ -142,6 +166,10 @@
                (error "list expected for options: parameter"));;;;;;;
               ((##not (##string? out))
                (error "string expected for output: parameter"));;;;;;;;;;
+              ((##not (or (##not mod-name) (##string? mod-name)))
+               (error "string or #f expected for module-name: parameter"));;;;;;;;;;
+              ((##not (or (##not link-name) (##string? link-name)))
+               (error "string or #f expected for linker-name: parameter"));;;;;;;;;;
               ((##not (##string? cc-opts))
                (error "string expected for cc-options: parameter"));;;;;;;;;;
               ((##not (##string? ld-opts-prelude))
@@ -152,6 +180,8 @@
                (##compile-file filename
                                opts
                                out
+                               mod-name
+                               link-name
                                cc-opts
                                ld-opts-prelude
                                ld-opts)))))))
@@ -160,6 +190,8 @@
          filename
          options
          output
+         module-name
+         linker-name
          cc-options
          ld-options-prelude
          ld-options)
@@ -224,17 +256,19 @@
            (output-filename-no-dir
             (##path-strip-directory output-filename))
            (module-name
-            (##path-strip-extension output-filename-no-dir))
-           (unique-name
-            (if (##eq? type 'dyn)
-                output-filename-no-dir
-                module-name)))
+            (or module-name
+                (##path-strip-extension output-filename-no-dir)))
+           (linker-name
+            (or linker-name
+                (if (##eq? type 'dyn)
+                    output-filename-no-dir
+                    module-name))))
       (and (or input-is-target-file?
                (c#cf filename
                      options
                      (lambda () target-filename)
                      module-name
-                     unique-name))
+                     linker-name))
            (let ((exit-status
                   (##gambcomp
                    (c#target-name target)
@@ -399,6 +433,7 @@
          #!rest other;;;;;;;;;;
          #!key
          (output (macro-absent-obj))
+         (linker-name (macro-absent-obj))
          (base (macro-absent-obj))
          (warnings? (macro-absent-obj)))
   (macro-force-vars (modules)
@@ -421,6 +456,11 @@
                          (##path-normalize (##car (##car rev-mods))))
                         (macro-force-vars (output)
                           output)))
+                   (link-name
+                    (if (##eq? linker-name (macro-absent-obj))
+                        #f
+                        (macro-force-vars (linker-name)
+                          linker-name)))
                    (baselib
                     (if (##eq? base (macro-absent-obj))
                         (let ((gambitdir-lib
@@ -438,18 +478,22 @@
                           warnings?))))
               (cond ((##not (##string? out))
                      (error "string expected for output: parameter")) ;;;;;;;;;;
+                    ((##not (or (##not link-name) (##string? link-name)))
+                     (error "string or #f expected for linker-name: parameter"));;;;;;;;;;
                     ((##not (##string? baselib))
                      (error "string expected for base: parameter")) ;;;;;;;;;;
                     (else
                      (##link-incremental rev-mods
                                          out
+                                         link-name
                                          baselib
                                          warn?)))))))))
 
-(define (##link-incremental rev-mods output base warnings?)
+(define (##link-incremental rev-mods output linker-name base warnings?)
   (c#link-modules #t
                   (##cons (##list base) (##reverse rev-mods))
                   output
+                  linker-name
                   warnings?))
 
 (define (link-flat
@@ -457,6 +501,7 @@
          #!rest other;;;;;;;;;;
          #!key
          (output (macro-absent-obj))
+         (linker-name (macro-absent-obj))
          (warnings? (macro-absent-obj)))
   (macro-force-vars (modules)
     (let loop ((lst modules) (rev-mods '()))
@@ -478,6 +523,11 @@
                          (##path-normalize (##car (##car rev-mods))))
                         (macro-force-vars (output)
                           output)))
+                   (link-name
+                    (if (##eq? linker-name (macro-absent-obj))
+                        #f
+                        (macro-force-vars (linker-name)
+                          linker-name)))
                    (warn?
                     (if (##eq? warnings? (macro-absent-obj))
                         #t
@@ -485,15 +535,19 @@
                           warnings?))))
               (cond ((##not (##string? out))
                      (error "string expected for output: parameter")) ;;;;;;;;;;
+                    ((##not (or (##not link-name) (##string? link-name)))
+                     (error "string or #f expected for linker-name: parameter"));;;;;;;;;;
                     (else
                      (##link-flat rev-mods
                                   out
+                                  link-name
                                   warn?)))))))))
 
-(define (##link-flat rev-mods output warnings?)
+(define (##link-flat rev-mods output linker-name warnings?)
   (c#link-modules #f
                   (##reverse rev-mods)
                   output
+                  linker-name
                   warnings?))
 
 (define (##c-code . args) ;; avoid errors when using -expansion

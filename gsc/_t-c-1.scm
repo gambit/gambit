@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -274,7 +274,7 @@
 ;;
 ;; Dumping of a compilation module
 
-(define (targ-dump procs output c-intf module-descr unique-name)
+(define (targ-dump procs output c-intf module-descr linker-name)
   (let ((c-decls (c-intf-decls c-intf))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
@@ -320,7 +320,7 @@
      c-inits
      (map targ-use-obj c-objs)
      module-descr
-     unique-name)
+     linker-name)
 
     (targ-heap-end!)
 
@@ -780,13 +780,14 @@
                 (equal? (car (cadr info)) (target-name targ-target))
                 info)))))
 
-(define (targ-link extension? inputs output warnings?)
+(define (targ-link extension? inputs output linker-name warnings?)
   (with-exception-handling
     (lambda ()
       (let* ((root
                (path-strip-extension output))
              (name
-               (path-strip-directory root))
+               (or linker-name
+                   (path-strip-directory root)))
              (input-mods
                (map targ-get-mod inputs))
              (input-mods-and-flags
@@ -918,7 +919,7 @@
 ;; These routines write out the C code that represents the Scheme objects
 ;; contained in the compilation module.
 
-(define (targ-heap-dump filename c-decls c-inits c-objs module-descr unique-name)
+(define (targ-heap-dump filename c-decls c-inits c-objs module-descr linker-name)
   (let* ((sym-list
           (targ-sort (table->list targ-sym-objs) symbol->string))
          (key-list
@@ -941,7 +942,7 @@
           (map targ-glo-rsrc glo-list))
          (ofd-count
           (targ-get-ofd-count prc-list))
-         (name
+         (module-name
           (symbol->string (vector-ref module-descr 0)))
          (module-meta-info
           (vector-ref module-descr 3))
@@ -951,16 +952,16 @@
 
     (targ-start-dump
      filename
-     name
-     (list (list name))
+     module-name
+     (list (list module-name))
      sym-rsrc
      key-rsrc
      glo-rsrc
      module-meta-info)
 
     (targ-dump-module-info
-     name
-     unique-name
+     module-name
+     linker-name
      #f
      #f
      script-line)
@@ -1140,7 +1141,7 @@
   (targ-display ")")
   (targ-line))
 
-(define (targ-dump-module-info name linker-id linkfile? extension? script-line)
+(define (targ-dump-module-info name linker-name linkfile? extension? script-line)
 
   (targ-macro-definition '("VERSION")
                          (compiler-version))
@@ -1151,7 +1152,7 @@
                          (targ-c-string name))
 
   (targ-macro-definition '("LINKER_ID")
-                         (targ-linker-id linker-id))
+                         (targ-linker-id linker-name))
 
   (if linkfile?
 
@@ -1161,8 +1162,7 @@
                              #f)
 
       (targ-macro-definition '("MH_PROC")
-                             (targ-c-id-host
-                              (string-append module-prefix name))))
+                             (targ-c-id-host name)))
 
   (targ-macro-definition '("SCRIPT_LINE")
                          (if script-line
@@ -1923,7 +1923,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define targ-linker-tag "")
+(define targ-linker-tag "LNK_")
 (define targ-host-tag   "H_")
 (define targ-glo-tag    "G_")
 (define targ-glo2-tag   "GLO_")
@@ -2151,7 +2151,7 @@
   (cons 'c-string str))
 
 (define (targ-linker-id name)
-  (targ-c-id-linker (string-append module-prefix name)))
+  (targ-c-id-linker name))
 
 (define (targ-c-id-linker name)
   (cons 'c-id-linker name))

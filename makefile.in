@@ -1,6 +1,6 @@
 # makefile for Gambit system.
 
-# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -23,6 +23,8 @@ FLAGS_OBJ = @FLAGS_OBJ_MF@
 FLAGS_DYN = @FLAGS_DYN_MF@
 FLAGS_LIB = @FLAGS_LIB_MF@
 FLAGS_EXE = @FLAGS_EXE_MF@
+FLAGS_OPT = @FLAGS_OPT_MF@
+FLAGS_OPT_RTS = @FLAGS_OPT_RTS_MF@
 DEFS = @DEFS@
 LIBS = @LIBS@
 
@@ -158,8 +160,10 @@ dummy-gsc-boot:
 	chmod +x gsc-boot@exe@
 
 gsc-boot@exe@:
-	@if $(GIT) --version > /dev/null 2> /dev/null && \
-          test "`$(GIT) describe --tags`" != "$(PACKAGE_VERSION)"; then \
+	@if ls .git > /dev/null 2> /dev/null && \
+	    $(GIT) --version > /dev/null 2> /dev/null && \
+	    $(GIT) describe --tags > /dev/null 2> /dev/null && \
+	    test "`$(GIT) describe --tags`" != "$(PACKAGE_VERSION)"; then \
 	  echo "**** checking if current gsc-boot must be built"; \
 	  $(MAKE) current-gsc-boot; \
 	else \
@@ -181,7 +185,7 @@ bench: fake_target all
 examples: fake_target all
 	@cd examples && $(MAKE) $(MDEFINES) $@
 
-prebuilt:  dist dist-devel
+prebuilt: dist dist-devel
 	PATH="gsi:$$PATH" prebuilt/remote-connect $(BUILD_FARM) "" "(define tmpdir \"gambtmp0\")(define gambit-dist \"$(PACKAGE_TARNAME)\")(define timeout 3000)(ssh timeout (string-append \"rm -rf \" tmpdir \";mkdir \" tmpdir \";echo \\\"logged in on:\\\";hostname\"))(scp-to timeout (string-append gambit-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"ssh $(BUILD_HOST) \\\"cd \" tmpdir \";tar zxf \" gambit-dist \".tgz;cd \" gambit-dist \";./configure;make -j 4;mv ../\" gambit-dist \".tgz .;cd prebuilt;make prebuilt\\\"\"))(scp-from timeout (string-append tmpdir \"/\" gambit-dist \"/$(PACKAGE_TARNAME)-*\") \".\")"
 	@# cd prebuilt && $(MAKE) $(MDEFINES) $@
 

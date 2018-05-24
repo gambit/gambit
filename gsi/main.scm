@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -21,6 +21,7 @@
       (##string?
        (##load filename
                (lambda (script-line script-path) #f)
+               #f
                #f
                #f
                #f)))
@@ -100,6 +101,7 @@
                       script-callback
                       #t
                       #t
+                      #f
                       #f)
 
               (if starter
@@ -196,6 +198,16 @@
                           (##assq 'prelude options))
                          (post
                           (##assq 'postlude options))
+                         (module-name
+                          (let ((x (##assq 'module-name options)))
+                            (if x
+                                (##cadr x)
+                                #f)))
+                         (linker-name
+                          (let ((x (##assq 'linker-name options)))
+                            (if x
+                                (##cadr x)
+                                #f)))
                          (cc-options
                           (let ((x (##assq 'cc-options options)))
                             (if x
@@ -293,12 +305,16 @@
                                  file
                                  options: opts
                                  output: output
+                                 module-name: module-name
+                                 linker-name: linker-name
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options)
                                 (compile-file
                                  file
                                  options: opts
+                                 module-name: module-name
+                                 linker-name: linker-name
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options))
@@ -310,10 +326,14 @@
                                 (compile-file-to-target
                                  file
                                  options: opts
-                                 output: output)
+                                 output: output
+                                 module-name: module-name
+                                 linker-name: linker-name)
                                 (compile-file-to-target
                                  file
-                                 options: opts))
+                                 options: opts
+                                 module-name: module-name
+                                 linker-name: linker-name))
                             (exit-abnormally)))
 
                       (define (do-build-executable obj-files output-filename)
@@ -439,8 +459,10 @@
                                                              link?)
                                                         (link-flat gen-files
                                                                    output: output
+                                                                   linker-name: linker-name
                                                                    warnings?: warnings-opt?)
                                                         (link-flat gen-files
+                                                                   linker-name: linker-name
                                                                    warnings?: warnings-opt?))
                                                     (if (and output
                                                              link?)
@@ -448,19 +470,23 @@
                                                             (link-incremental
                                                              gen-files
                                                              output: output
+                                                             linker-name: linker-name
                                                              base: base
                                                              warnings?: warnings-opt?)
                                                             (link-incremental
                                                              gen-files
                                                              output: output
+                                                             linker-name: linker-name
                                                              warnings?: warnings-opt?))
                                                         (if base
                                                             (link-incremental
                                                              gen-files
+                                                             linker-name: linker-name
                                                              base: base
                                                              warnings?: warnings-opt?)
                                                             (link-incremental
                                                              gen-files
+                                                             linker-name: linker-name
                                                              warnings?: warnings-opt?))))))
                                           (and link-file
                                                (begin
@@ -707,6 +733,7 @@
                            (debug) (debug-location) (debug-source) (debug-environments)
                            (track-scheme)
                            (o string) (l string)
+                           (module-name string) (linker-name string)
                            (prelude string) (postlude string)
                            (cc-options string)
                            (ld-options-prelude string) (ld-options string))))
