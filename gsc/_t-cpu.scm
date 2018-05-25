@@ -325,13 +325,14 @@
          (proc (cadr pair))
          (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
     (if (not defined?)
-      (let ((prim (get-primitive-object cgc (proc-obj-name proc)))
-            (then (then-return))
-            (args (list (get-register 1) (get-register 2) (get-register 3)))) ;; todo : Find way to get arity
+      (let* ((prim-obj (get-primitive-object cgc (proc-obj-name proc)))
+             (prim-fun (get-primitive-function prim-obj))
+             (then (then-return))
+             (args (list (get-register cgc 1) (get-register cgc 2) (get-register cgc 3)))) ;; todo : Find way to get arity
 
           (debug "Putting primitive: " (proc-obj-name proc))
           (am-lbl cgc label)
-          (prim cgc then args)))))
+          (prim-fun cgc then args)))))
 
 (define (put-object cgc object label #!optional (label-offset 0))
   (define (put-data word)
