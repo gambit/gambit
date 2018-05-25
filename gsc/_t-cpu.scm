@@ -353,7 +353,10 @@
           (put-data (format-imm-object sub-object))
           ;; Todo: Replace with generic procedure (Non x86)
           (_x86#x86-imm-lbl-encode cgc
-            (lbl-opnd-set-offset cgc (lbl-opnd cgc label) (* (get-word-width cgc) field-offset))
+            (lbl-opnd-set-offset cgc
+              (lbl-opnd cgc label)
+              (+ (get-desc-pointer-tag (get-object-description sub-object))
+                (* (get-word-width cgc) field-offset)))
             (get-word-width-bits cgc)))
 
         (place-obj-fields
