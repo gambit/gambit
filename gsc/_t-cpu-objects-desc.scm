@@ -15,7 +15,7 @@
 ;   type :: ReferenceType,
 ;   header-tag :: Fixnum (5 bits),
 ;   header-length-fun :: Object -> Fixnum (24 or 56 bits),
-;   encode-fun :: Object -> [Field] -- Encodes the body of the object
+;   encode-fun :: Object -> [Object] -- Encodes the body of the object
 ; }
 
 ; data ImmediateType = Fixnum  | SpecialVal
@@ -33,22 +33,25 @@
 (define (reference-header-fun desc) (list-ref desc 3))
 (define (reference-encode-fun desc) (list-ref desc 4))
 
-(define (format-object desc object)
-  (cond
-    ((immediate-desc? desc)
-      (list ((immediate-encode-fun desc) object)))
-    ((reference-desc? desc)
-      (let* ((object-length ((reference-header-fun desc) object))
-             (tag (reference-header-tag desc))
-             (header (+ (* 8 tag) (* 256 object-length))))
-      (cons header ((reference-encode-fun desc) object))))
-    (else
-      (compiler-internal-error "format-object - Unknown object type: " desc))))
+(define (immediate-object? object)
+  (immediate-desc? (get-object-description object)))
+
+(define (reference-object? object)
+  (reference-desc? (get-object-description object)))
+
+(define (format-imm-object object)
+  (let ((desc (get-object-description object)))
+    (cond
+      ((immediate-desc? desc)
+        ((immediate-encode-fun desc) object))
+      (else
+          (compiler-internal-error "format-imm-object - Object must be an immediate: " object)))))
 
 (define (get-object-description object)
   ;; todo: Use macro to shorten code and reduce repetition
   (cond
     ;; Fixnum
+    ;; Todo: Check if fixnum on TARGET, not compilation machine
     ((fixnum? object)     fixnum-obj-desc)
     ;; Special int values
     ((boolean? object)    boolean-obj-desc)
@@ -100,9 +103,9 @@
   (immediate-desc 'fixnum
     (lambda (val) (tag-number val fixnum-tag))))
 
-(define (make-unit-type-desc val)
+(define (make-unit-type-desc fixnum-value)
   (immediate-desc 'specialval
-    (lambda (val) (tag-number val special-int-tag))))
+    (lambda (void) (tag-number fixnum-value special-int-tag))))
 
 (define boolean-obj-desc
   (immediate-desc 'specialval
@@ -115,14 +118,14 @@
 
 (define vector-obj-desc
   (let ((subtype 0)
-        (header-fun (lambda (val) (compiler-internal-error "Implement header-fun function")))
-        (encode-fun (lambda (val) (compiler-internal-error "Implement encode-obj function"))))
+        (header-fun (lambda (val) (vector-length val)))
+        (encode-fun (lambda (val) (vector->list val))))
     (reference-desc 'subtype subtype header-fun encode-fun)))
 
 (define pair-obj-desc
   (let ((subtype 1)
-        (header-fun (lambda (val) 16))
-        (encode-fun (lambda (val) (compiler-internal-error "Implement encode-obj function"))))
+        (header-fun (lambda (val) 2))
+        (encode-fun (lambda (val) (list (car val) (cdr val)))))
     (reference-desc 'pair subtype header-fun encode-fun)))
 
 (define ratnum-obj-desc
