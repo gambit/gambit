@@ -455,7 +455,7 @@
       ((reference-object? val)
         (lbl-opnd cgc
           (get-obj-label cgc (obj-val opnd))
-          (- (get-desc-pointer-tag (get-object-description val)))))
+          (get-desc-pointer-tag (get-object-description val))))
       (else
         (compiler-internal-error "make-opnd: Unknown object type"))))
   (cond
@@ -479,7 +479,9 @@
         (debug "Index:" index)
         (mem-opnd cgc index base)))
     ((glo? opnd)
-      (lbl-opnd cgc (get-global-var-label cgc (glo-name opnd))))
+      (if (eqv? context 'jump)
+        (get-global-var-label cgc (glo-name opnd))
+        (lbl-opnd cgc (get-global-var-label cgc (glo-name opnd)))))
     (else
       (compiler-internal-error "make-opnd: Unknown opnd: " opnd))))
 
