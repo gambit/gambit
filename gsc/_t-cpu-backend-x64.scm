@@ -163,8 +163,18 @@
   (make-am-data x86-db x86-dw x86-dd x86-dq))
 
 ;; Args : CGC, reg/mem/label, reg/mem/imm/label
+;; Todo: Check if some cases can be eliminated
 (define (mov-instr cgc dst src #!optional (width #f))
   (cond
+    ((and (lbl-opnd? cgc dst) (lbl-opnd? cgc src))
+      (get-extra-register cgc
+        (lambda (reg-dst)
+          (get-extra-register cgc
+            (lambda (reg-src)
+              (x86-mov cgc reg-dst dst)
+              (x86-mov cgc reg-src src)
+              (x86-mov cgc reg-src (x86-mem 0 reg-src))
+              (x86-mov cgc (x86-mem 0 reg-dst) reg-src width))))))
     ((lbl-opnd? cgc dst)
       (get-extra-register cgc
         (lambda (reg)
