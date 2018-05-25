@@ -245,6 +245,9 @@
 (define (mem-opnd-offset cgc . args) (apply-opnd cgc 10 args))
 (define (mem-opnd-reg    cgc . args) (apply-opnd cgc 11 args))
 
+(define (lbl-opnd-set-offset cgc lbl offset)
+  (lbl-opnd cgc (lbl-opnd-label cgc lbl) offset))
+
 ;; ***** AM: Instructions fields
 
 (define (apply-instruction cgc index args)
@@ -436,6 +439,7 @@
 ;; Also, make sure that everything is consistent.
 (define (make-opnd cgc proc code opnd #!optional (context #f))
   (define (make-obj val)
+    (debug "make-opnd: make-obj")
     (cond
       ((proc-obj? val)
         (if (eqv? context 'jump)
@@ -445,14 +449,14 @@
           ;; of the procedure. It crashes the program, DO NOT CHANGE!
           (get-proc-label cgc (obj-val opnd) 1)
           (lbl-opnd cgc (get-proc-label cgc (obj-val opnd) 1))))
-      ((immediate-desc? (get-object-description val))
-          (int-opnd cgc
-            (car (format-object (get-object-description val) val))
-            (get-word-width-bits cgc)))
-      ((reference-desc? (get-object-description val))
-          (lbl-opnd cgc
-            (get-obj-label cgc (obj-val opnd))
-          (get-desc-pointer-tag (get-object-description val))))
+      ((immediate-object? val)
+        (int-opnd cgc
+          (format-imm-object val)
+          (get-word-width-bits cgc)))
+      ((reference-object? val)
+        (lbl-opnd cgc
+          (get-obj-label cgc (obj-val opnd))
+          (- (get-desc-pointer-tag (get-object-description val)))))
       (else
         (compiler-internal-error "make-opnd: Unknown object type"))))
   (cond
