@@ -439,7 +439,6 @@
 ;; Also, make sure that everything is consistent.
 (define (make-opnd cgc proc code opnd #!optional (context #f))
   (define (make-obj val)
-    (debug "make-opnd: make-obj")
     (cond
       ((proc-obj? val)
         (if (eqv? context 'jump)
