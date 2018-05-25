@@ -333,16 +333,70 @@
           (am-lbl cgc label)
           (prim cgc then args)))))
 
-(define (put-object cgc obj label)
+(define (put-object cgc object label #!optional (label-offset 0))
+  (define (put-data word)
+    (am-data cgc (get-word-width-bits cgc) word))
+
+  (define (get-object-extra-width object)
+    (if (immediate-object? object)
+      0 ;; Immediate objects occupy 0 extra width
+      (let* ((desc (get-object-description object))
+             (sub-objects ((reference-encode-fun desc) object))
+             (sub-objects-length (map get-object-extra-width sub-objects)))
+        ;; + 1 because we count the header
+        (+ 1 (length sub-objects-length) (apply + sub-objects-length)))))
+
+  (define (place-obj-fields sub-objects index field-offset)
+    (if (not (null? sub-objects))
+      (let ((sub-object (car sub-objects)))
+        (if (immediate-object? sub-object)
+          (put-data (format-imm-object sub-object))
+          ;; Todo: Replace with generic procedure (Non x86)
+          (_x86#x86-imm-lbl-encode cgc
+            (lbl-opnd-set-offset cgc (lbl-opnd cgc label) (* (get-word-width cgc) field-offset))
+            (get-word-width-bits cgc)))
+
+        (place-obj-fields
+          (cdr sub-objects)
+          (+ 1 index)
+          (+ field-offset (get-object-extra-width sub-object))))))
+
   (debug "put-object")
   (debug "label: " label)
-  (debug "Obj: " obj)
+  (debug "Obj: " object)
 
-  (am-lbl cgc label)
+  (if (eqv? 0 label-offset)
+    (am-lbl cgc label))
 
-  (let* ((obj-desc (get-object-description obj))
-         (words (format-object obj-desc obj)))
-    (am-data cgc (get-word-width-bits cgc) words)))
+  (if (immediate-object? object)
+    ;; Object is immediate
+    (begin
+      (debug "Immediate object: " object)
+      (put-data (format-imm-object object))
+      0)
+    ;; Object is ref object
+    (begin
+      (debug "Reference object: " object)
+      (let* ((desc (get-object-description object))
+             (object-length ((reference-header-fun desc) object))
+             (tag (reference-header-tag desc))
+             (header (+ (* 8 tag) (* 256 (get-word-width cgc) object-length)))
+             (sub-objects ((reference-encode-fun desc) object)))
+
+      ;; Place object header
+      (put-data header)
+      ;; Place object's fields
+      (place-obj-fields sub-objects 0 (+ label-offset 1 (length sub-objects)))
+      ;; Place object's fields definition (Recursively)
+      (let ((fields-offset 0))
+        (for-each
+          (lambda (sub-obj)
+            (debug "Recursive: " sub-obj)
+            (if (reference-object? sub-obj)
+              (begin
+                (put-object cgc sub-obj label (+ fields-offset 1 (length sub-objects)))
+                (set! fields-offset (+ fields-offset (get-object-extra-width sub-obj))))))
+          sub-objects))))))
 
 (define (put-global-variable cgc name label)
   (debug "put-global-variable")
@@ -457,7 +511,6 @@
   (let* ((gvm-instr (code-gvm-instr code))
          (src (make-opnd cgc proc code (copy-opnd gvm-instr)))
          (dst (make-opnd cgc proc code (copy-loc gvm-instr))))
-    (display dst)
     (am-mov cgc dst src (get-word-width-bits cgc))))
 
 ;; ***** Close instruction encoding
