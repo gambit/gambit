@@ -87,21 +87,17 @@
 
 ;; Prologue for primitives that may not support some types of operands.
 ;; This prologue mov every operands not supported in the extra registers.
-;; todo :: Do something if need more registers. (Save some less important registers on stack)
 (define (prologue-mov-args allowed-opnds)
-  (define (mov-arg cgc result-reg index arg)
+  (define (mov-arg cgc result-reg arg index)
     (debug "mov-arg")
     (let* ((allowed-opnd (list-ref allowed-opnds index))
-           (in? (not (= -1 (index-of (opnd-type cgc arg) allowed-opnd)))))
+           (in? (not (= -1 (index-of (opnd-type cgc arg) allowed-opnd))))
+           (lambd (lambda (reg) (am-mov cgc reg arg) reg)))
       (if in?
         arg
-          (let ((new-register
-                  ;; Check if result-reg can be used as extra register.
-                  (if (and (= 0 index) (not (eqv? result-reg #f)))
-                    result-reg
-                    (get-extra-register cgc index))))
-            (am-mov cgc new-register arg)
-            new-register))))
+        (if (and (= 0 index) (not (eqv? result-reg #f)))
+          (lambd result-reg)
+          (get-extra-register cgc lambd)))))
 
   (lambda (cgc result-action args)
     (debug "prologue-mov-args")
@@ -113,9 +109,10 @@
                           store-location
                           #f)))
       (map
-        (lambda (index arg) (mov-arg cgc result-reg index arg))
-        (iota 0 (- (length args) 1))
-        args))))
+        (lambda (arg index) (mov-arg cgc result-reg arg index))
+        args
+        (iota 0 (length args))))))
+
 
 ;; Default epilogue for primitives that put their results in their first arguments
 ;; Ex am-add r1 r2 == r1 <- r1 + r2
@@ -202,74 +199,3 @@
       (if (equal? 'boolean (car return-type))
           (apply epilogue-use-result-boolean (cdr return-type))
           epilogue-use-result-default))))
-
-;; ***** Memory read primitives
-
-(define (prim-test cgc)
-  (let ((allowed-opnds (if (is-load-store? cgc)
-                        '((reg) (reg int))
-                        '((reg mem) (reg int)))))
-    (make-primitive
-      (prologue-mov-args allowed-opnds)
-      (wrap-asm-fun am-test)
-      (epilogue-use-result-boolean am-je am-jne))))
-
-(define (read-reference cgc dest ref tag offset)
-  (let* ((mem-location (get-opnd-with-offset ref (- tag))))
-    (am-mov cgc dest mem-location)))
-
-(define (type-check-primitive obj-desc)
-  (define (test-pointer-tag cgc result-action opnd obj-desc)
-    ;; todo : Test if bit shifting is faster. Probably not, but may be interesting
-    (let ((cmp-opnd (int-opnd (flip-bits (get-desc-pointer-tag obj-desc) tag-width))))
-      ((prim-test cgc) cgc result-action (list opnd cmp-opnd))))
-
-  (cond
-    ((immediate-desc? obj-desc)
-      (lambda (cgc result-action args)
-        (debug "Immediate value type check")
-        (test-pointer-tag cgc result-action (car args) obj-desc)))
-
-    ((reference-desc? obj-desc)
-      (lambda (cgc result-action args)
-        (debug "Reference value type check")
-        (let* ((arg (car args))
-               (suffix "_jump")
-               (label (make-unique-label cgc suffix)))
-
-          (test-pointer-tag
-            cgc
-            (then-jump #f label)
-            arg
-            obj-desc)
-
-          ;; Continues execution only if tag match subtype or pair
-          ;; Now check if header tag is valid
-
-          (let* ((flipped (flip-bits (reference-header-tag obj-desc) header-tag-width))
-                 (shifted (* (expt 2 header-tag-offset) flipped))
-                 (cmp-opnd (int-opnd flipped)))
-            ; Read then compare
-            (read-reference cgc (get-extra-register 0) arg (get-desc-pointer-tag obj-desc) 0)
-            ((prim-test cgc) cgc result-action (list (get-extra-register 0) cmp-opnd)))
-
-          ;; If first test fails, jump here
-          (am-lbl cgc label)
-          (am-mov cgc (get-register 1) (int-opnd (format-imm-object #t)))
-          (am-jmp cgc (get-register 0)))))
-    (else
-      (compiler-internal-error "Unknown object description"))))
-
-(define (get-opnd-with-offset opnd offset)
-  (case (opnd-type opnd)
-    ('reg
-      (mem-opnd offset opnd))
-    ('mem
-      (mem-opnd (+ (mem-opnd-offset opnd) offset) (mem-opnd-reg opnd)))
-    ('lbl
-      (lbl-opnd (lbl-opnd-label opnd) (+ (lbl-opnd-offset opnd) offset)))
-    ('int
-      (mem-opnd (+ (int-opnd-value opnd) offset)))))
-
-(define (flip-bits num width)
-  (- (- (expt 2 width) 1) num))

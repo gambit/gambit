@@ -549,7 +549,56 @@
   (debug "default-set-narg: " narg)
   (am-mov cgc narg-loc (int-opnd cgc narg)))
 
-;; ***** Default Primitives
-;;
-;; Based on the instructions, we can define some basic primitives.
 
+;; ***** Default Primitives
+;; ***** Default Primitives - Memory read/write/test
+
+(define (read-reference cgc dest ref tag offset)
+  (let* ((total-offset (- (* (get-word-width cgc) offset) tag))
+         (mem-location (get-opnd-with-offset cgc ref total-offset)))
+    (am-mov cgc dest mem-location)))
+
+(define (get-opnd-with-offset cgc opnd offset)
+  (case (opnd-type cgc opnd)
+    ('reg
+      (mem-opnd cgc offset opnd))
+    ('mem
+      (mem-opnd cgc (+ (mem-opnd-offset cgc opnd) offset) (mem-opnd-reg cgc opnd)))
+    ('lbl
+      (lbl-opnd cgc (lbl-opnd-label cgc opnd) (+ (lbl-opnd-offset cgc opnd) offset)))
+    ('int
+      (mem-opnd cgc (+ (int-opnd-value cgc opnd) offset)))))
+
+(define (get-object-field desc field-index)
+  (if (immediate-desc? desc)
+    (compiler-internal-error "Object isn't a reference"))
+  (lambda (cgc result-action args)
+    (let* ((ref (car args))
+           (tag (get-desc-pointer-tag desc))
+           (lambd (lambda (reg)
+            (read-reference cgc reg ref tag (+ 1 field-index)))))
+      (cond
+        ((then-jump? result-action)
+          (get-extra-register cgc
+            (lambda (reg)
+              (let ((condition condition-not-equal)
+                    (false-opnd (int-opnd cgc (format-imm-object #f)))
+                    (true-jmp (then-jump-true-location result-action))
+                    (false-jmp (then-jump-false-location result-action)))
+                (lambd reg)
+                (am-compare-jump cgc reg false-opnd condition-not-equal true-jmp false-jmp)))))
+
+        ((then-move? result-action)
+          (lambd (then-move-store-location result-action)))
+
+        ((then-return? result-action)
+          (lambd (get-register cgc 1))
+          (am-jmp cgc (get-register cgc 0)))
+
+        ((not result-action)
+          ;; Do nothing
+          ;; Todo: Decide if this is useful
+          #f)
+
+        (else
+          (compiler-internal-error "get-object-field - Unknown result-action" result-action))))))
