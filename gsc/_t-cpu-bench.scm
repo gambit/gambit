@@ -76,7 +76,7 @@
 ;; Some functions to execute and time the generated machine code
 
 (define (time-cgc cgc #!optional (show-listing #f))
-  (pp (time ((create-procedure cgc show-listing #f)))))
+  (pp (time ((create-procedure cgc show-listing #t)))))
 
 ; Used somewhere in the code to change a value for the test
 (define test-value #f)
