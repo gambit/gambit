@@ -161,9 +161,9 @@
                (label (make-unique-label cgc suffix))
                (result-loc (then-move-store-location result-action)))
 
-            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #t))))
+            (am-mov cgc result-loc (int-opnd (format-imm-object #t)))
             (true-test-jump cgc label)
-            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #f))))
+            (am-mov cgc result-loc (int-opnd (format-imm-object #f)))
             (am-lbl cgc label)))
       ((then-return? result-action)
         ;; Extract boolean then jump
@@ -172,9 +172,9 @@
                (result-loc (get-register 1))
                (return-loc (get-register 0)))
 
-            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #t))))
+            (am-mov cgc result-loc (int-opnd (format-imm-object #t)))
             (true-test-jump cgc label)
-            (am-mov cgc result-loc (int-opnd (car (format-object boolean-obj-desc #f))))
+            (am-mov cgc result-loc (int-opnd (format-imm-object #f)))
             (am-lbl cgc label)
             (am-jmp cgc return-loc)))
       ((not result-action)
@@ -255,7 +255,7 @@
 
           ;; If first test fails, jump here
           (am-lbl cgc label)
-          (am-mov cgc (get-register 1) (int-opnd (car (format-object boolean-obj-desc #t))))
+          (am-mov cgc (get-register 1) (int-opnd (format-imm-object #t)))
           (am-jmp cgc (get-register 0)))))
     (else
       (compiler-internal-error "Unknown object description"))))
