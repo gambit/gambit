@@ -121,17 +121,17 @@
 (define (operands)
   (make-operand-dictionnary
     x86-imm-int
-    (lambda (x) (and (pair? x) (number? (cdr x))))
+    x86-imm-int?
     x86-imm-lbl
-    (lambda (x) (and (pair? x) (vector? (cdr x))))
+    x86-imm-lbl?
     x86-mem
-    (lambda (x) (and (vector? x) (fx= (vector-length x) 4)))
-    fixnum?                       ;; reg?
-    (lambda (x) (cdr x))          ;; int-opnd-value
-    (lambda (x) (car x))          ;; lbl-opnd-offset
-    (lambda (x) (cdr x))          ;; lbl-opnd-label
-    (lambda (x) (vector-ref x 0)) ;; mem-opnd-offset
-    (lambda (x) (vector-ref x 1)) ;; mem-opnd-reg
+    x86-mem?
+    fixnum?                     ;; reg?
+    x86-imm-int-value           ;; int-opnd-value
+    x86-imm-lbl-offset          ;; lbl-opnd-offset
+    x86-imm-lbl-label           ;; lbl-opnd-label
+    x86-mem-offset              ;; mem-opnd-offset
+    x86-mem-reg1                ;; mem-opnd-reg
     ))
 
 ;;------------------------------------------------------------------------------
