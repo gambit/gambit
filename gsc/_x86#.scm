@@ -146,12 +146,6 @@ x86-arch-set!
 x86-64bit-mode?
 x86-word-width
 
-x86-imm-int
-x86-imm-int?
-x86-imm-int-value
-x86-imm-lbl
-x86-mem
-
 x86-imm?
 
 x86-imm-int
@@ -172,6 +166,13 @@ x86-imm-late-handler
 x86-imm-obj
 x86-imm-obj?
 x86-imm-obj-value
+
+x86-mem
+x86-mem?
+x86-mem-offset
+x86-mem-reg1
+x86-mem-reg2
+x86-mem-scale
 
 x86-label
 x86-db
