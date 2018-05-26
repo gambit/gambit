@@ -3301,6 +3301,100 @@ ___processor_state ___ps;)
 #endif
 
 
+___SCMOBJ ___machine_code_block_fixup
+   ___P((___processor_state ___ps,
+         void *mcb,
+         ___SCMOBJ fixup_locs,
+         ___SCMOBJ fixup_objs),
+        (___ps,
+         mcb,
+         fixup_locs,
+         fixup_objs)
+___processor_state ___ps;
+void *mcb;
+___SCMOBJ fixup_locs;
+___SCMOBJ fixup_objs;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  ___WORD code = ___CAST(___WORD,mcb);
+  ___U8 *ptr = ___CAST(___U8*,___BODY_AS(fixup_locs,___tSUBTYPED));
+  ___WORD pos = 0;
+  ___U8 loc;
+  ___S64 val = ___FAL;
+
+  while ((loc = *ptr++) != 0)
+    {
+      if (loc == 1)
+        pos += 127;
+      else
+        {
+          ___WORD fixup_pos = pos + (loc>>1) - 1;
+          ___S64 x = (loc&1)
+                     ? *___CAST(___S64*,code+fixup_pos)
+                     : *___CAST(___S32*,code+fixup_pos);
+          int op = x & 0xff;
+          ___S64 arg = x >> 8;
+
+          switch (op)
+            {
+            case 0:
+              val = arg;
+              break;
+
+            case 1:
+              val = code + fixup_pos + arg;
+              break;
+
+            case 2:
+              val = ___VECTORREF(fixup_objs, ___FIX(arg));
+              break;
+
+            case 3:
+              val = ___VECTORREF(fixup_objs, ___FIX(arg));
+              val = ___make_global_var (val);
+              val = ___CAST(___S64, &___GLOBALVARREF(val));
+              break;
+
+            case 4:
+              val = ___VECTORREF(fixup_objs, ___FIX(arg));
+              val = ___make_global_var (val);
+              val = ___CAST(___S64, &___GLOBALVARPRIMREF(val));
+              break;
+
+            case 5:
+              switch (arg)
+                {
+                case 0:
+                  val = ___CAST(___S64,___lowlevel_exec);
+                  break;
+                }
+              break;
+            }
+
+          if (loc&1)
+            {
+              *___CAST(___S64*,code+fixup_pos) = val;
+              pos = fixup_pos + 8;
+            }
+          else
+            {
+              *___CAST(___S32*,code+fixup_pos) = val;
+              pos = fixup_pos + 4;
+            }
+        }
+    }
+
+  return val;
+
+#else
+
+  return ___FAL;
+
+#endif
+}
+
+
 #ifdef ___USE_print_source_location
 
 
@@ -4721,6 +4815,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
     = ___lowlevel_exec;
 
 #endif
+
+  ___GSTATE->___machine_code_block_fixup
+    = ___machine_code_block_fixup;
 
   ___GSTATE->___throw_error
     = ___throw_error;

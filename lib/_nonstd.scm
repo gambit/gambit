@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -212,13 +212,9 @@
 
 (define-runtime-syntax this-source-file
   (lambda (src)
-    (let* ((locat
-            (##source-locat src))
-           (path
-            (and locat
-                 (##container->path (##locat-container locat)))))
+    (let ((path (##source-path src)))
       (if path
-          (##make-source path locat)
+          (##make-source path (##source-locat src))
           (##raise-expression-parsing-exception
            'unknown-location
            src)))))

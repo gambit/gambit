@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -194,8 +194,8 @@
 ("read"                               (0 1) #t 0     0    #f      ieee)
 ("read-char"                          (0 1) #t 0     0    #f      ieee)
 ("peek-char"                          (0 1) #t 0     0    #f      ieee)
-("write"                              (0 1) #t 0     0    #f      ieee)
-("display"                            (0 1) #t 0     0    #f      ieee)
+("write"                              (1 2) #t 0     0    #f      ieee)
+("display"                            (1 2) #t 0     0    #f      ieee)
 ("newline"                            (0 1) #t 0     0    #f      ieee)
 ("write-char"                         (1 2) #t 0     0    #f      ieee)
 

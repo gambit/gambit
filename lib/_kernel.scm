@@ -2962,16 +2962,27 @@ end-of-code
 
  ((C)
 
-(define-prim (##make-machine-code-block len)
-  ((c-lambda (size_t)
+(define-prim (##make-machine-code-block x)
+  ((c-lambda (scheme-object)
              (pointer void)
      #<<end-of-code
 
-     ___return(___alloc_mem_code (___arg1));
+     if (___FIXNUMP(___arg1))
+       {
+         ___return(___alloc_mem_code (___INT(___arg1)));
+       }
+     else
+       {
+         int len = ___INT(___U8VECTORLENGTH(___arg1));
+         void *mcb = ___alloc_mem_code (len);
+         if (mcb != 0)
+           memmove (mcb, ___BODY_AS(___arg1,___tSUBTYPED), len);
+         ___return(mcb);
+       }
 
 end-of-code
 )
-   len))
+   x))
 
 (define-prim (##machine-code-block-ref mcb i)
   ((c-lambda ((nonnull-pointer void) int)
@@ -3011,6 +3022,25 @@ end-of-code
    arg1
    arg2
    arg3))
+
+(define-prim (##machine-code-block-fixup mcb fixup-locs fixup-objs)
+  ((c-lambda ((nonnull-pointer void) scheme-object scheme-object)
+             scheme-object
+     #<<end-of-code
+
+     ___return(___machine_code_block_fixup (___ps, ___arg1, ___arg2, ___arg3));
+
+end-of-code
+)
+   mcb
+   fixup-locs
+   fixup-objs))
+
+(define-prim (##machine-code-fixup code fixup-locs fixup-objs)
+  (##machine-code-block-fixup
+   (##make-machine-code-block code)
+   fixup-locs
+   fixup-objs))
 
 ;;;----------------------------------------------------------------------------
 

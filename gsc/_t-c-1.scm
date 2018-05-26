@@ -324,7 +324,9 @@
 
     (targ-heap-end!)
 
-    (set! targ-track-scheme-option? #f)))
+    (set! targ-track-scheme-option? #f)
+
+    (lambda () output)))
 
 (define targ-track-scheme-option? #f)
 
@@ -815,7 +817,6 @@
                           (or script-line
                               last-script-line)))
                   last-script-line))))
-
         (targ-link-aux
           extension?
           output
