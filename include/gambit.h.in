@@ -10217,6 +10217,12 @@ typedef struct ___global_state_struct
        ___P((___processor_state ___ps),
             ());
 #endif
+    ___SCMOBJ (*___machine_code_block_fixup)
+       ___P((___processor_state ___ps,
+             void *mcb,
+             ___SCMOBJ fixup_locs,
+             ___SCMOBJ fixup_objs),
+            ());
     void (*___throw_error)
        ___P((___PSD
              ___SCMOBJ err),
@@ -11608,6 +11614,12 @@ ___IMP_FUNC(___WORD,___lowlevel_exec)
    ___P((___processor_state ___ps),
         ());
 #endif
+___IMP_FUNC(___SCMOBJ,___machine_code_block_fixup)
+   ___P((___processor_state ___ps,
+         void *mcb,
+         ___SCMOBJ fixup_locs,
+         ___SCMOBJ fixup_objs),
+        ());
 ___IMP_FUNC(void,___throw_error)
    ___P((___PSD
          ___SCMOBJ err),
