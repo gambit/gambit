@@ -3315,6 +3315,8 @@ void *mcb;
 ___SCMOBJ fixup_locs;
 ___SCMOBJ fixup_objs;)
 {
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
   ___WORD code = ___CAST(___WORD,mcb);
   ___U8 *ptr = ___CAST(___U8*,___BODY_AS(fixup_locs,___tSUBTYPED));
   ___WORD pos = 0;
@@ -3384,6 +3386,12 @@ ___SCMOBJ fixup_objs;)
     }
 
   return val;
+
+#else
+
+  return ___FAL;
+
+#endif
 }
 
 
