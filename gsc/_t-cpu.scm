@@ -275,7 +275,7 @@
 
     (virtual.dump-gvm procs (current-output-port))
     (encode-procs cgc procs)
-    (time-cgc cgc #t)
+    (create-object-file "objfile.o1" cgc)
   #f))
 
 ;;;----------------------------------------------------------------------------
