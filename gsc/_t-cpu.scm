@@ -352,13 +352,13 @@
       (let ((sub-object (car sub-objects)))
         (if (immediate-object? sub-object)
           (put-data (format-imm-object sub-object))
-          ;; Todo: Replace with generic procedure (Non x86)
-          (_x86#x86-imm-lbl-encode cgc
-            (lbl-opnd-set-offset cgc
-              (lbl-opnd cgc label)
+          (codegen-fixup-lbl!
+            cgc
+            label
               (+ (get-desc-pointer-tag (get-object-description sub-object))
-                (* (get-word-width cgc) field-offset)))
-            (get-word-width-bits cgc)))
+                (* (get-word-width cgc) field-offset))
+            #f ;; absolute
+            (get-word-width cgc)))
 
         (place-obj-fields
           (cdr sub-objects)
