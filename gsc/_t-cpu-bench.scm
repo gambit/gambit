@@ -18,58 +18,32 @@
 ;; The code in the u8vector must obey the C calling conventions of
 ;; the host architecture.
 
-(define (u8vector->procedure code fixups)
- (machine-code-block->procedure
-  (u8vector->machine-code-block code fixups)))
+(define (create-object-file filename cgc #!optional (show-listing? #t))
 
-(define (u8vector->machine-code-block code fixups)
- (let* ((len (u8vector-length code))
-        (mcb (##make-machine-code-block len)))
-   (let loop ((i (fx- len 1)))
-     (if (fx>= i 0)
-         (begin
-           (##machine-code-block-set! mcb i (u8vector-ref code i))
-           (loop (fx- i 1)))
-         (apply-fixups mcb fixups)))))
-
-;; Add mcb's base address to every label that needs to be fixed up.
-;; Currently assumes 32 bit width.
-(define (apply-fixups mcb fixups)
-  (let ((base-addr (##foreign-address mcb)))
-    (let loop ((fixups fixups))
-      (if (null? fixups)
-          mcb
-          (let* ((pos (asm-label-pos (caar fixups)))
-                 (size (quotient (cdar fixups) 8))
-                 (n (+ base-addr (machine-code-block-int-ref mcb pos size))))
-            (machine-code-block-int-set! mcb pos size n)
-            (loop (cdr fixups)))))))
-
-(define (machine-code-block-int-ref mcb start size)
-  (let loop ((n 0) (i (- size 1)))
-    (if (>= i 0)
-        (loop (+ (* n 256) (##machine-code-block-ref mcb (+ start i)))
-              (- i 1))
-        n)))
-
-(define (machine-code-block-int-set! mcb start size n)
-  (let loop ((n n) (i 0))
-    (if (< i size)
-        (begin
-          (##machine-code-block-set! mcb (+ start i) (modulo n 256))
-          (loop (quotient n 256) (+ i 1))))))
-
-(define (machine-code-block->procedure mcb)
-  (lambda (#!optional (arg1 0) (arg2 0) (arg3 0))
-    (##machine-code-block-exec mcb arg1 arg2 arg3)))
-
-(define (create-procedure cgc show-listing #!optional (show-bytes #t))
   (let* ((code (asm-assemble-to-u8vector cgc))
-         (fixups (codegen-context-fixup-list cgc))
-         (procedure (u8vector->procedure code fixups)))
-    (if show-listing
-      (asm-display-listing cgc (current-error-port) show-bytes))
-    procedure))
+         (fixup-locs (codegen-context-fixup-locs->vector cgc))
+         (fixup-objs (codegen-context-fixup-objs->vector cgc)))
+
+    (if show-listing?
+        (asm-display-listing cgc (current-output-port) #t))
+
+    ; (display ";; code = ") (write code) (newline)
+    ; (display ";; fixup-locs = ") (write fixup-locs) (newline)
+    ; (display ";; fixup-objs = ") (write fixup-objs) (newline)
+
+    ;; Call compiler to create objfile.o1 using the C backend.
+    ;; When the file is loaded, it will execute the x86 code.
+
+    (debug "Compiling")
+    (compile-file "dummy.scm"
+                  output: filename
+                  options: '((target C))
+                  expression: `((##machine-code-fixup
+                                  ',code
+                                  ',fixup-locs
+                                  ',fixup-objs)))
+
+    (debug "After compiling")))
 
 ;;------------------------------------------------------------------------------
 
