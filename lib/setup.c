@@ -3247,7 +3247,6 @@ ___processor_state ___ps;)
     "mov  %%" reg_R1 ", " PS_R("1") "\n\t"
     "mov  %%" reg_R2 ", " PS_R("2") "\n\t"
     "mov  %%" reg_R3 ", " PS_R("3") "\n\t"
-    "mov  %%" reg_R4 ", " PS_R("4") "\n\t"
 
     /* save frame pointer and heap pointer registers */
 
@@ -3260,7 +3259,22 @@ ___processor_state ___ps;)
     "add  $-3, %%" reg_TMP "\n\t"
     "mov  %%" reg_TMP ", " PS_PC "\n\t"
 
-    /* TODO: pop self register when control point is for a closure */
+#ifdef ___CPU_x86_32
+    "cmpl $1048576,-1-2*4(%%" reg_TMP ")\n\t"
+    "jl   save_self_register\n\t"
+    "pop  %%" reg_R4 "\n\t"
+    "add  $-3, %%" reg_R4 "\n\t"
+#endif
+#ifdef ___CPU_x86_64
+    "cmpl $1048576,-1-2*8(%%" reg_TMP ")\n\t"
+    "jl   save_self_register\n\t"
+    "pop  %%" reg_R4 "\n\t"
+    "add  $-6, %%" reg_R4 "\n\t"
+#endif
+
+    "\n"
+    "save_self_register:\n\t"
+    "mov  %%" reg_R4 ", " PS_R("4") "\n\t"
 
     /* restore callee-save registers */
 
