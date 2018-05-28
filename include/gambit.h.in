@@ -2262,7 +2262,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 #define ___REFERENCE_TO_BODY (-1)
 #define ___PSTATE_ALIGN_MULTIPLIER 256
-#define ___PSTATE_ALIGN_MODULUS    192
+#define ___PSTATE_ALIGN_MODULUS    136
 #undef ___USE_LABEL_VALUES
 #else
 #define ___REFERENCE_TO_BODY 1
