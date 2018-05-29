@@ -284,18 +284,28 @@
 
 (define (encode-procs cgc procs)
 
+  (define first-label #f)
+
   (define (encode-proc proc)
     (debug "Encoding proc")
     (map-proc-instrs
       (lambda (code)
+        ;; Place jump to main (We suppose the first instruction is the main)
+        (if (not first-label)
+          (let* ((instr (code-gvm-instr code))
+                 (label (label-instr-label cgc proc instr)))
+            (debug "Placing jump into main. Label: " label)
+            (set! first-label label)
+            (am-jmp cgc label)))
+
         (encode-gvm-instr cgc proc code))
       proc))
 
-  (debug "Encode procs")
-
+  (debug "Prologue")
   (am-init cgc)
   (am-set-narg cgc 0)
 
+  (debug "Encode procs")
   (map-on-procs encode-proc procs)
 
   (am-end cgc)
@@ -573,6 +583,11 @@
 
 (define (proc-frame-slots-gained code)
   (bb-slots-gained (code-bb code)))
+
+(define (label-instr-label cgc proc lbl-instr)
+  (let* ((label-num (label-lbl-num lbl-instr)))
+    (debug "label-num: " label-num)
+    (get-proc-label cgc proc label-num)))
 
 ;;;============================================================================
 
