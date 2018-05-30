@@ -22,8 +22,8 @@
 
 (define narg-pointer (x86-cl))  ;; number of arguments register
 (define stack-pointer (x86-rsp)) ;; Real stack limit
-(define frame-pointer (x86-rdx)) ;; Simulated stack current pos
-(define heap-pointer  (x86-rsi)) ;; Simulated stack current pos
+(define frame-pointer (x86-rsp)) ;; Simulated stack current pos
+(define heap-pointer  (x86-rbp)) ;; Simulated stack current pos
 
 (define stack-size 10000) ;; Scheme stack size (bytes)
 ;; 500 is the safe minimum for (fib 40)
@@ -99,10 +99,10 @@
     frame-offset              ;; Frame offset
     primitive-object-table    ;; Primitive table
     (vector                   ;; Main registers
-      (x86-r15) (x86-r14) (x86-r13) (x86-r12) (x86-r11))
+      (x86-rdi) (x86-rax) (x86-rbx) (x86-rdx) (x86-rsi))
     (vector)                  ;; Spill registers
     (vector                   ;; Extra registers
-      (x86-r10) (x86-r9) (x86-r8))
+      (x86-r8) (x86-r9) (x86-r10) (x86-r11) (x86-r12) (x86-r13) (x86-r14) (x86-r15))
     make-cgc                  ;; CGC constructor
     ))
 
