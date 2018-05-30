@@ -1675,7 +1675,7 @@
   (let ((code
          (univ-dump-code targ procs output c-intf module-descr linker-name sem-changing-options sem-preserving-options)))
     (univ-display-to-file code output)
-    #f))
+    (lambda () output)))
 
 (define (univ-dump-code targ procs output c-intf module-descr linker-name sem-changing-options sem-preserving-options)
   (let* ((module-name-str

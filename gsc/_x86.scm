@@ -76,6 +76,10 @@
 (define (x86-imm-late-width x) (car x))
 (define (x86-imm-late-handler x) (cdr x))
 
+(define (x86-imm-obj obj) (cons obj '()))
+(define (x86-imm-obj? x) (and (pair? x) (null? (cdr x))))
+(define (x86-imm-obj-value x) (car x))
+
 ;;(define (x86-glo name #!optional (offset 0))
 ;;  (vector name offset))
 ;;
@@ -123,6 +127,8 @@
                                 (x86-offset->string (x86-imm-lbl-offset opnd))))
                          ((x86-imm-late? opnd)
                           ((x86-imm-late-handler opnd) cgc 'listing))
+                         ((x86-imm-obj? opnd)
+                          (list "'" (object->string (x86-imm-obj-value opnd))))
                          (else
                           (error "unknown immediate" opnd)))))
             #;
@@ -205,6 +211,8 @@
                           (x86-offset->string (x86-imm-lbl-offset opnd))))
                    ((x86-imm-late? opnd)
                     ((x86-imm-late-handler opnd) cgc 'listing))
+                   ((x86-imm-obj? opnd)
+                    (list "'" (object->string (x86-imm-obj-value opnd))))
                    (else
                     (error "unknown immediate" opnd))))
             #;
@@ -423,6 +431,9 @@
                        (not (x86-reg64? reg1))))))
       (asm-8 cgc #x67))) ;; address size override prefix
 
+#|
+TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
+
 (define (x86-abs-addr cgc label offset width)
 
   (assert (fx= width 32)
@@ -444,6 +455,7 @@
        4)
      (lambda (cgc self)
        (asm-32-le cgc (fx+ (asm-label-pos label) offset))))))
+|#
 
 (define (x86-opnd-modrm/sib cgc field opnd)
   (let ((modrm-rf
@@ -555,28 +567,25 @@
          imm)
         ((x86-imm-late? imm)
          ((x86-imm-late-handler imm) cgc 'encode))
+        ((x86-imm-obj? imm)
+         (x86-imm-obj-encode cgc imm imm-width)
+         imm)
         (else
          (error "unknown immediate"))))
 
 (define (x86-imm-lbl-encode cgc imm-lbl imm-width)
-  (let ((lbl (asm-make-label cgc 'fixup)))
-    (codegen-context-fixup-list-set!
-     cgc
-     (cons (cons lbl imm-width)
-           (codegen-context-fixup-list cgc)))
-    (asm-label cgc lbl)
-    (asm-at-assembly
+  (codegen-fixup-lbl!
+   cgc
+   (x86-imm-lbl-label imm-lbl)
+   (x86-imm-lbl-offset imm-lbl)
+   #f ;; absolute
+   imm-width))
 
-     cgc
-
-     (lambda (cb self)
-       (fxarithmetic-shift-right imm-width 3))
-
-     (lambda (cb self)
-       (let ((dist
-              (fx+ (asm-label-pos (x86-imm-lbl-label imm-lbl))
-                   (x86-imm-lbl-offset imm-lbl))))
-         (asm-int-le cb dist imm-width))))))
+(define (x86-imm-obj-encode cgc imm-obj imm-width)
+  (codegen-fixup-obj!
+   cgc
+   (x86-imm-obj-value imm-obj)
+   imm-width))
 
 ;;;----------------------------------------------------------------------------
 

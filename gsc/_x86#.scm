@@ -152,6 +152,27 @@ x86-imm-int-value
 x86-imm-lbl
 x86-mem
 
+x86-imm?
+
+x86-imm-int
+x86-imm-int?
+x86-imm-int-width
+x86-imm-int-value
+
+x86-imm-lbl
+x86-imm-lbl?
+x86-imm-lbl-offset
+x86-imm-lbl-label
+
+x86-imm-late
+x86-imm-late?
+x86-imm-late-width
+x86-imm-late-handler
+
+x86-imm-obj
+x86-imm-obj?
+x86-imm-obj-value
+
 x86-label
 x86-db
 x86-dw
