@@ -317,28 +317,28 @@
   (debug "Prologue")
   (am-lbl cgc C_START_LBL)
 
-  (get-extra-register cgc
-    (lambda (reg)
-      (am-mov cgc reg (x86-imm-obj 'display))
-      (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-      (am-mov cgc reg (mem-opnd cgc 0 reg))
-      (am-mov cgc (get-register cgc 0) (x86-imm-lbl C_START_LBL2)) ;; set r0 to #2
-      (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
-      (am-set-narg cgc 1) ;; nargs = 1
-      (am-jmp cgc reg)))
+  ; (get-extra-register cgc
+  ;   (lambda (reg)
+  ;     (am-mov cgc reg (x86-imm-obj 'display))
+  ;     (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+  ;     (am-mov cgc reg (mem-opnd cgc 0 reg))
+  ;     (am-mov cgc (get-register cgc 0) (x86-imm-lbl C_START_LBL2)) ;; set r0 to #2
+  ;     (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
+  ;     (am-set-narg cgc 1) ;; nargs = 1
+  ;     (am-jmp cgc reg)))
 
-  (asm-align cgc 8)
-  (put-function-vector-metadata cgc)
+  ; (asm-align cgc 8)
+  ; (put-function-vector-metadata cgc)
 
-  ;; Label description structure
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-  (codegen-fixup-lbl! cgc C_START_LBL2   0 #f 64)
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc C_START_LBL2)
+  ; ;; Label description structure
+  ; (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  ; (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
+  ; (codegen-fixup-lbl! cgc C_START_LBL2   0 #f 64)
+  ; (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+  ; (am-lbl cgc C_START_LBL2)
 
-  (am-init cgc)
-  (am-set-narg cgc 0)
+  ; (am-init cgc)
+  ; (am-set-narg cgc 0)
 
   (debug "Encode procs")
   (map-on-procs encode-proc procs)

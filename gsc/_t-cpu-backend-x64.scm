@@ -444,8 +444,7 @@
     (get-word-width-bits cgc))
 
   ; ;; Set return address for main
-  (am-mov cgc (frame cgc 0 1) (get-register cgc 0))
-  (alloc-frame cgc 1)
+  (am-mov cgc (get-register cgc 4) (get-register cgc 0))
   (am-mov cgc
     (get-register cgc 0)
     (lbl-opnd cgc (C_RETURN_LBL cgc)))
@@ -457,33 +456,34 @@
   (debug "put-end-routine")
 
   ;; Terminal procedure
-  (am-lbl cgc (C_RETURN_LBL cgc))
-
-  (am-jmp cgc first-label)
-
-  (get-extra-register cgc
-    (lambda (reg)
-      (debug reg)
-      (am-mov cgc reg (x86-imm-obj 'display))
-      (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-      (am-mov cgc reg (mem-opnd cgc 0 reg))
-      (am-mov cgc (get-register cgc 0) (frame cgc 0 1)) ;; set r0 to #2
-      (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
-      (am-set-narg cgc 1) ;; nargs = 1
-      (am-jmp cgc reg)))
 
   (asm-align cgc 8)
   (put-function-vector-metadata cgc)
 
   ;; Label description structure
   (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-  (codegen-fixup-lbl! cgc (C_RETURN_LBL2 cgc) 0 #f 64)
+  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
+  (am-data-word cgc (+ 1 ;; RETN (normal return).
+                      (* 4 0) ;; frame size
+                      (* 128 1) ; location of return addr
+                      (* 4096 1))) ; gcmap
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc (C_RETURN_LBL2 cgc))
+  (am-lbl cgc (C_RETURN_LBL cgc))
 
-  (am-mov cgc (get-register cgc 0) (frame cgc 0 1))
-  (am-jmp cgc (get-register cgc 0)))
+  ; (am-jmp cgc (get-register cgc 4))
+  (am-jmp cgc (get-register cgc 0))
+
+  ; (get-extra-register cgc
+  ;   (lambda (reg)
+  ;     (am-mov cgc reg (x86-imm-obj 'display))
+  ;     (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+  ;     (am-mov cgc reg (mem-opnd cgc 0 reg))
+  ;      ;; set r0 to saved return address in init routine
+  ;     (am-mov cgc (get-register cgc 0) (get-register cgc 4))
+  ;     ;; dealloc frame
+  ;     (am-set-narg cgc 1)
+  ;     (am-jmp cgc reg)))
+  )
 
 ;; Error routine
 ;; Gets executed if an error occurs
@@ -518,27 +518,15 @@
 
   (get-extra-register cgc
     (lambda (reg)
-      (debug reg)
       (am-mov cgc reg (x86-imm-obj 'display))
       (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
       (am-mov cgc reg (mem-opnd cgc 0 reg))
-      (am-mov cgc (get-register cgc 0) (x86-imm-lbl (C_RETURN_LBL3 cgc))) ;; set r0 to #2
-      (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
-      (am-set-narg cgc 1) ;; nargs = 1
+       ;; set r0 to saved return address in init routine
+      (am-mov cgc (get-register cgc 0) (get-register cgc 4))
+      (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 45)))
+      (am-set-narg cgc 1)
       (am-jmp cgc reg)))
-
-  (asm-align cgc 8)
-  (put-function-vector-metadata cgc)
-
-  ;; Label description structure
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-  (codegen-fixup-lbl! cgc (C_RETURN_LBL3 cgc) 0 #f 64)
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc (C_RETURN_LBL3 cgc))
-
-  (am-mov cgc (get-register cgc 0) (frame cgc 0 1))
-  (am-jmp cgc (get-register cgc 0)))
+  )
 
 (define (x64-place-extra-data cgc)
   (debug "place-extra-data")
