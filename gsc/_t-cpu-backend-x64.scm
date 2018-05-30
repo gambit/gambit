@@ -34,8 +34,7 @@
 
 ;; 64 = 01000000_2 = 0x40. -64 = 11000000_2 = 0xC0
 ;; 0xC0 unsigned = 192
-(define na-reg-default-value -64)
-(define na-reg-default-value-abs 192)
+(define na-reg-default-value -120)
 
 (define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
 (define (C_RETURN_LBL cgc)          (get-label cgc 'C_RETURN_LBL))
@@ -306,16 +305,6 @@
 (define x64-poll (make-poll check-interrupt check-underflow check-overflow))
 ; (define x64-poll (lambda (cgc code) #f))
 
-(define (make-parity-adjusted-valued n)
-  (define (bit-count n)
-    (if (= n 0)
-      0
-      (+ (modulo n 2) (bit-count (quotient n 2)))))
-  (let* ((narg2 (* 2 (- n 3)))
-        (bits (bit-count narg2))
-        (parity (modulo bits 2)))
-    (+ 64 parity narg2)))
-
 (define min-nargs-passed-in-ps-na 5) ;; must be in range 0 .. 5
 
 (define (x64-set-narg cgc nargs)
@@ -435,9 +424,8 @@
 
   ;; Thread descriptor initialization
   ;; Set lower bytes of descriptor register used for passing narg
-  (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value (get-word-width-bits cgc)))
+  (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value))
   ;; Set interrupt flag to 0
-
   (am-mov cgc
     (get-thread-descriptor-opnd cgc 'interrupt-flag)
     (int-opnd cgc 0)
@@ -469,9 +457,6 @@
                       (* 4096 1))) ; gcmap
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc (C_RETURN_LBL cgc))
-
-  ; (am-jmp cgc (get-register cgc 4))
-  ; (am-jmp cgc (get-register cgc 0))
 
   (get-extra-register cgc
     (lambda (reg)
