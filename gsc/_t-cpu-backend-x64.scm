@@ -40,6 +40,7 @@
 (define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
 (define (C_RETURN_LBL cgc)          (get-label cgc 'C_RETURN_LBL))
 (define (C_RETURN_LBL2 cgc)         (get-label cgc 'C_RETURN_LBL2))
+(define (C_RETURN_LBL3 cgc)         (get-label cgc 'C_RETURN_LBL3))
 (define (C_ERROR_LBL cgc)           (get-label cgc 'C_ERROR_LBL))
 (define (WRONG_NARGS_LBL cgc)       (get-label cgc 'WRONG_NARGS_LBL))
 (define (OVERFLOW_LBL cgc)          (get-label cgc 'OVERFLOW_LBL))
@@ -315,41 +316,98 @@
         (parity (modulo bits 2)))
     (+ 64 parity narg2)))
 
-(define (x64-set-narg cgc narg)
-  (debug "x64-set-narg: " narg)
-  (let ((narg-loc (get-thread-descriptor-opnd cgc 'narg)))
-    (cond
-      ((= narg 0)
-        (x86-cmp cgc narg-pointer narg-pointer))
-      ((= narg 1)
-        (x86-cmp cgc narg-pointer (int-opnd cgc -65)))
-      ((= narg 2)
-        (x86-cmp cgc narg-pointer (int-opnd cgc 66)))
-      ((= narg 3)
-        (x86-cmp cgc narg-pointer (int-opnd cgc 0)))
-      ((<= narg 34)
-        (x86-add cgc narg-pointer (int-opnd cgc (make-parity-adjusted-valued narg))))
-      (else
-        (default-set-narg cgc narg narg-loc)))))
+(define min-nargs-passed-in-ps-na 5) ;; must be in range 0 .. 5
 
-(define (x64-check-narg cgc narg)
-  (debug "x64-check-narg: " narg)
-  (let ((error-lbl (WRONG_NARGS_LBL cgc))
-        (narg-loc (get-thread-descriptor-opnd cgc 'narg)))
-    (cond
-      ((= narg 0)
-        (x86-jne cgc error-lbl))
-      ((= narg 1)
-        (x86-jp cgc error-lbl))
-      ((= narg 2)
-        (x86-jno cgc error-lbl))
-      ((= narg 3)
-        (x86-jns cgc error-lbl))
-      ((<= narg 34)
-        (x86-sub cgc narg-pointer (int-opnd cgc (make-parity-adjusted-valued narg)))
-        (x86-jne cgc error-lbl))
-      (else
-        (default-check-narg cgc narg narg-loc error-lbl)))))
+(define (x64-set-narg cgc nargs)
+  ;; set flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
+  (define (flags-a) (x86-cmp cgc narg-pointer (x86-imm-int -3)))
+  ;; set flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
+  (define (flags-b) (x86-cmp cgc narg-pointer narg-pointer))
+  ;; set flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
+  (define (flags-c) (x86-cmp cgc narg-pointer (x86-imm-int -123)))
+  ;; set flags = jae jne jle jo  jp  ja  jl  jns  wrong_na = jno
+  (define (flags-d) (x86-cmp cgc narg-pointer (x86-imm-int 10)))
+  ;; set flags = jae jne jle jno jnp ja  jl  js   wrong_na = jp
+  (define (flags-e) (x86-cmp cgc narg-pointer (x86-imm-int 2)))
+  ;; set flags = jae jne jle jno jp  ja  jl  js
+  (define (flags-f) (x86-cmp cgc narg-pointer (x86-imm-int 0)))
+
+  (define (set-ps-na)
+    (x86-mov cgc
+             (if (eq? 'x86-64 (codegen-context-arch cgc))
+                 (x86-mem (* 8 (+ 1 5 7)) (x86-rcx))
+                 (x86-mem (* 4 (+ 1 5 7)) (x86-ecx)))
+             (x86-imm-int nargs)
+             32))
+
+  (debug "x64-set-narg: " nargs)
+
+  (if (<= min-nargs-passed-in-ps-na 4)
+      (if (<= min-nargs-passed-in-ps-na nargs)
+          (begin
+            (set-ps-na)
+            (if (> min-nargs-passed-in-ps-na 0)
+                (flags-a)))
+          (case nargs
+            ((0) (flags-b))
+            ((1) (flags-c))
+            ((2) (flags-d))
+            ((3) (flags-e))))
+      (if (<= min-nargs-passed-in-ps-na nargs)
+          (begin
+            (set-ps-na)
+            (flags-f))
+          (case nargs
+            ((0) (flags-a))
+            ((1) (flags-b))
+            ((2) (flags-c))
+            ((3) (flags-d))
+            ((4) (flags-e))))))
+
+(define (x64-check-narg cgc nargs)
+  (define (check-not-a) (x86-jae cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-not-b) (x86-jne cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-not-c) (x86-jle cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-not-d) (x86-jno cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-not-e) (x86-jp  cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-not-a-or-b) (x86-ja  cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-not-b-or-c) (x86-jl  cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-not-b-or-c-or-d) (x86-js  cgc (WRONG_NARGS_LBL cgc)))
+
+  (define (check-ps-na)
+    (x86-cmp cgc
+             (if (eq? 'x86-64 (codegen-context-arch cgc))
+                 (x86-mem (* 8 (+ 1 5 7)) (x86-rcx))
+                 (x86-mem (* 4 (+ 1 5 7)) (x86-ecx)))
+             (x86-imm-int nargs)
+             32)
+    (x86-jne cgc (WRONG_NARGS_LBL cgc)))
+
+  (debug "x64-check-narg: " nargs)
+
+  (if (<= min-nargs-passed-in-ps-na 4)
+      (if (<= min-nargs-passed-in-ps-na nargs)
+          (begin
+            (if (> min-nargs-passed-in-ps-na 0)
+                (check-not-a))
+            (check-ps-na))
+          (case nargs
+            ((0) (check-not-b))
+            ((1) (check-not-c))
+            ((2) (check-not-d))
+            ((3) (check-not-e))))
+      (if (<= min-nargs-passed-in-ps-na nargs)
+          (begin
+            (check-not-a)
+            (check-not-b-or-c-or-d)
+            (check-not-e)
+            (check-ps-na))
+          (case nargs
+            ((0) (check-not-a))
+            ((1) (check-not-b))
+            ((2) (check-not-c))
+            ((3) (check-not-d))
+            ((4) (check-not-e))))))
 
 (define (x64-allocate-heap cgc nb-bytes result-reg)
   (let ((condition (condition-not-greater #f #f))
@@ -385,20 +443,8 @@
     (int-opnd cgc 0)
     (get-word-width-bits cgc))
 
-  ;; Allocate heap
-  ; (am-mov cgc heap-pointer stack-pointer)
-  ; (am-sub cgc stack-pointer stack-pointer (int-opnd cgc heap-size))
-
-  ; ;; Add space between stack and heap in case of underflow
-  ; (am-sub cgc stack-pointer stack-pointer (int-opnd cgc stack-underflow-padding))
-
-  ; ;; Align frame with offset
-  ; (am-sub cgc frame-pointer stack-pointer (int-opnd cgc (* frame-offset (get-word-width cgc))))
-  ; ;; Allocate stack
-  ; (am-sub cgc stack-pointer stack-pointer (int-opnd cgc stack-size))
-
   ; ;; Set return address for main
-  (am-mov (frame cgc 0 1) (get-register 0))
+  (am-mov cgc (frame cgc 0 1) (get-register cgc 0))
   (alloc-frame cgc 1)
   (am-mov cgc
     (get-register cgc 0)
@@ -413,15 +459,17 @@
   ;; Terminal procedure
   (am-lbl cgc (C_RETURN_LBL cgc))
 
+  (am-jmp cgc first-label)
+
   (get-extra-register cgc
     (lambda (reg)
       (debug reg)
       (am-mov cgc reg (x86-imm-obj 'display))
       (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
       (am-mov cgc reg (mem-opnd cgc 0 reg))
-      (am-mov cgc (get-register cgc 0) (x86-imm-lbl (C_RETURN_LBL2 cgc))) ;; set r0 to #2
+      (am-mov cgc (get-register cgc 0) (frame cgc 0 1)) ;; set r0 to #2
       (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
-      (x86-set-nargs cgc 1) ;; nargs = 1
+      (am-set-narg cgc 1) ;; nargs = 1
       (am-jmp cgc reg)))
 
   (asm-align cgc 8)
@@ -434,16 +482,8 @@
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc (C_RETURN_LBL2 cgc))
 
-  (am-mov (get-register 0) (frame cgc 0 1))
-  (am-jmp (get-register 0)))
-
-  ;; Pop stack and heap
-  ; (am-add cgc stack-pointer
-  ;   stack-pointer
-  ;   (int-opnd cgc (+ stack-size heap-size stack-underflow-padding)))
-
-  ; (am-mov cgc (x86-rax) (get-register cgc 1))
-  ; (x86-ret cgc)) ;; Exit program
+  (am-mov cgc (get-register cgc 0) (frame cgc 0 1))
+  (am-jmp cgc (get-register cgc 0)))
 
 ;; Error routine
 ;; Gets executed if an error occurs
@@ -475,71 +515,32 @@
   (am-jmp cgc (C_ERROR_LBL cgc))
 
   (am-lbl cgc (C_ERROR_LBL cgc))
-  ;; Pop stack and heap
-  (am-add cgc stack-pointer
-    stack-pointer
-    (int-opnd cgc (+ stack-size heap-size stack-underflow-padding)))
-  (x86-ret cgc 0))
+
+  (get-extra-register cgc
+    (lambda (reg)
+      (debug reg)
+      (am-mov cgc reg (x86-imm-obj 'display))
+      (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+      (am-mov cgc reg (mem-opnd cgc 0 reg))
+      (am-mov cgc (get-register cgc 0) (x86-imm-lbl (C_RETURN_LBL3 cgc))) ;; set r0 to #2
+      (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
+      (am-set-narg cgc 1) ;; nargs = 1
+      (am-jmp cgc reg)))
+
+  (asm-align cgc 8)
+  (put-function-vector-metadata cgc)
+
+  ;; Label description structure
+  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
+  (codegen-fixup-lbl! cgc (C_RETURN_LBL3 cgc) 0 #f 64)
+  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+  (am-lbl cgc (C_RETURN_LBL3 cgc))
+
+  (am-mov cgc (get-register cgc 0) (frame cgc 0 1))
+  (am-jmp cgc (get-register cgc 0)))
 
 (define (x64-place-extra-data cgc)
   (debug "place-extra-data")
   (am-lbl cgc (THREAD_DESCRIPTOR_LBL cgc) (cons 256 0))
   (reserve-space cgc thread-descriptor-size 0))
-
-(define min-nargs-passed-in-ps-na 5) ;; must be in range 0 .. 5
-
-(define (x86-set-nargs cgc nargs)
-
-  (define (flags-a)
-    ;; set flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
-    (x86-cmp cgc (x86-cl) (x86-imm-int -3)))
-
-  (define (flags-b)
-    ;; set flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
-    (x86-cmp cgc (x86-cl) (x86-cl)))
-
-  (define (flags-c)
-    ;; set flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
-    (x86-cmp cgc (x86-cl) (x86-imm-int -123)))
-
-  (define (flags-d)
-    ;; set flags = jae jne jle jo  jp  ja  jl  jns  wrong_na = jno
-    (x86-cmp cgc (x86-cl) (x86-imm-int 10)))
-
-  (define (flags-e)
-    ;; set flags = jae jne jle jno jnp ja  jl  js   wrong_na = jp
-    (x86-cmp cgc (x86-cl) (x86-imm-int 2)))
-
-  (define (flags-f)
-    ;; set flags = jae jne jle jno jp  ja  jl  js
-    (x86-cmp cgc (x86-cl) (x86-imm-int 0)))
-
-  (define (set-ps-na)
-    (x86-mov cgc
-             (if (eq? 'x86-64 (codegen-context-arch cgc))
-                 (x86-mem (* 8 (+ 1 5 7)) (x86-rcx))
-                 (x86-mem (* 4 (+ 1 5 7)) (x86-ecx)))
-             (x86-imm-int nargs)
-             32))
-
-  (if (<= min-nargs-passed-in-ps-na 4)
-      (if (<= min-nargs-passed-in-ps-na nargs)
-          (begin
-            (set-ps-na)
-            (if (> min-nargs-passed-in-ps-na 0)
-                (flags-a)))
-          (case nargs
-            ((0) (flags-b))
-            ((1) (flags-c))
-            ((2) (flags-d))
-            ((3) (flags-e))))
-      (if (<= min-nargs-passed-in-ps-na nargs)
-          (begin
-            (set-ps-na)
-            (flags-f))
-          (case nargs
-            ((0) (flags-a))
-            ((1) (flags-b))
-            ((2) (flags-c))
-            ((3) (flags-d))
-            ((4) (flags-e))))))
