@@ -283,12 +283,12 @@
 
 ;; ***** Procedures encoding
 
+(define first-label #f)
+
 (define (encode-procs cgc procs)
 
   (define C_START_LBL (get-label cgc 'C_START_LBL))
   (define C_START_LBL2 (get-label cgc 'C_START_LBL2))
-
-  (define first-label #f)
 
   (define (encode-proc proc)
     (debug "Encoding proc")
@@ -324,7 +324,7 @@
       (am-mov cgc reg (mem-opnd cgc 0 reg))
       (am-mov cgc (get-register cgc 0) (x86-imm-lbl C_START_LBL2)) ;; set r0 to #2
       (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
-      (x86-set-nargs cgc 1) ;; nargs = 1
+      (am-set-narg cgc 1) ;; nargs = 1
       (am-jmp cgc reg)))
 
   (asm-align cgc 8)
