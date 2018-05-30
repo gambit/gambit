@@ -337,8 +337,8 @@
   ; (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   ; (am-lbl cgc C_START_LBL2)
 
-  ; (am-init cgc)
-  ; (am-set-narg cgc 0)
+  (am-init cgc)
+  (am-set-narg cgc 0)
 
   (debug "Encode procs")
   (map-on-procs encode-proc procs)
