@@ -27,19 +27,12 @@
 
 (define stack-size 10000) ;; Scheme stack size (bytes)
 ;; 500 is the safe minimum for (fib 40)
-(define heap-size  10000)  ;; Heap size (Bytes)
+(define heap-size 10000)  ;; Heap size (Bytes)
 (define thread-descriptor-size 32) ;; Thread descriptor size (bytes)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
 (define frame-offset 1) ;; stack offset so that frame[1] is at null offset from frame-pointer
 
-;; 64 = 01000000_2 = 0x40. -64 = 11000000_2 = 0xC0
-;; 0xC0 unsigned = 192
-(define na-reg-default-value -120)
-
 (define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
-(define (C_RETURN_LBL cgc)          (get-label cgc 'C_RETURN_LBL))
-(define (C_RETURN_LBL2 cgc)         (get-label cgc 'C_RETURN_LBL2))
-(define (C_RETURN_LBL3 cgc)         (get-label cgc 'C_RETURN_LBL3))
 (define (C_ERROR_LBL cgc)           (get-label cgc 'C_ERROR_LBL))
 (define (WRONG_NARGS_LBL cgc)       (get-label cgc 'WRONG_NARGS_LBL))
 (define (OVERFLOW_LBL cgc)          (get-label cgc 'OVERFLOW_LBL))
@@ -68,7 +61,7 @@
     (table-set! table '##fx< (make-prim-obj x86-prim-fx< 2 #t #t))
     (table-set! table '##car (make-prim-obj (get-object-field pair-obj-desc 0) 1 #t #f))
     (table-set! table '##cdr (make-prim-obj (get-object-field pair-obj-desc 1) 1 #t #f))
-    ; (table-set! '##fx>  (list x86-prim-fx+ 2 #t #t))
+
     table))
 
 ;;------------------------------------------------------------------------------
@@ -81,7 +74,6 @@
       ((interrupt-flag)     (x86-imm-lbl label 0))
       ((narg)               (x86-imm-lbl label 8))
       (else (compiler-internal-error "Unknown thread descriptor field: " sym)))))
-
 
 ;;                             x86 64 bits backend
 
@@ -420,76 +412,12 @@
 ;; Start routine
 ;; Gets executed before main
 (define (x64-init-routine cgc)
-  (debug "put-init-routine")
-
-  ;; Thread descriptor initialization
-  ;; Set lower bytes of descriptor register used for passing narg
-  (am-mov cgc narg-pointer (int-opnd cgc na-reg-default-value))
-  ;; Set interrupt flag to 0
-  (am-mov cgc
-    (get-thread-descriptor-opnd cgc 'interrupt-flag)
-    (int-opnd cgc 0)
-    (get-word-width-bits cgc))
-
-  ; ;; Set return address for main
-  (am-mov cgc (get-register cgc 4) (get-register cgc 0))
-  (am-mov cgc
-    (get-register cgc 0)
-    (lbl-opnd cgc (C_RETURN_LBL cgc)))
-)
+  (debug "put-init-routine"))
 
 ;; End routine
 ;; Gets executed after main if no error happened during execution
 (define (x64-end-routine cgc)
-  (debug "put-end-routine")
-
-  ;; Terminal procedure
-
-  (asm-align cgc 8)
-  (put-function-vector-metadata cgc)
-
-  ;; Label description structure
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
-  (am-data-word cgc (+ 1 ;; RETN (normal return).
-                      (* 4 0) ;; frame size
-                      (* 128 1) ; location of return addr
-                      (* 4096 1))) ; gcmap
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc (C_RETURN_LBL cgc))
-
-  ;; Exec C function
-  (get-extra-register cgc
-    (lambda (reg)
-      (am-mov cgc reg (x86-imm-obj '##exec-stats))
-      (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-      (am-mov cgc reg (mem-opnd cgc 0 reg))
-      (am-mov cgc (get-register cgc 0) (lbl-opnd cgc (C_RETURN_LBL2 cgc))) ;; r0
-      (am-set-narg cgc 1)
-      (am-jmp cgc reg)))
-
-  (asm-align cgc 8)
-  (put-function-vector-metadata cgc)
-
-  ;; Label description structure
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
-  (am-data-word cgc (+ 1 ;; RETN (normal return).
-                      (* 4 0) ;; frame size
-                      (* 128 1) ; location of return addr
-                      (* 4096 1))) ; gcmap
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc (C_RETURN_LBL2 cgc))
-
-  (get-extra-register cgc
-    (lambda (reg)
-      (am-mov cgc reg (x86-imm-obj 'pp))
-      (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-      (am-mov cgc reg (mem-opnd cgc 0 reg))
-      (am-mov cgc (get-register cgc 0) (get-register cgc 4))
-      (am-set-narg cgc 1)
-      (am-jmp cgc reg)))
-  )
+  (debug "put-end-routine"))
 
 ;; Error routine
 ;; Gets executed if an error occurs

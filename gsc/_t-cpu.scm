@@ -288,7 +288,6 @@
 (define (encode-procs cgc procs)
 
   (define C_START_LBL (get-label cgc 'C_START_LBL))
-  (define C_START_LBL2 (get-label cgc 'C_START_LBL2))
 
   (define (encode-proc proc)
     (debug "Encoding proc")
@@ -316,26 +315,6 @@
 
   (debug "Prologue")
   (am-lbl cgc C_START_LBL)
-
-  ; (get-extra-register cgc
-  ;   (lambda (reg)
-  ;     (am-mov cgc reg (x86-imm-obj 'display))
-  ;     (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-  ;     (am-mov cgc reg (mem-opnd cgc 0 reg))
-  ;     (am-mov cgc (get-register cgc 0) (x86-imm-lbl C_START_LBL2)) ;; set r0 to #2
-  ;     (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 42)))
-  ;     (am-set-narg cgc 1) ;; nargs = 1
-  ;     (am-jmp cgc reg)))
-
-  ; (asm-align cgc 8)
-  ; (put-function-vector-metadata cgc)
-
-  ; ;; Label description structure
-  ; (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  ; (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-  ; (codegen-fixup-lbl! cgc C_START_LBL2   0 #f 64)
-  ; (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  ; (am-lbl cgc C_START_LBL2)
 
   (am-init cgc)
   (am-set-narg cgc 0)
@@ -481,6 +460,30 @@
   (am-data-word cgc -2) ;; info = #f
   (am-data-word cgc 0)) ;; null name
 
+(define (put-entry-point-label cgc label)
+  (asm-align cgc 8)
+  (put-function-vector-metadata cgc)
+  ;; Label description structure
+  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
+  (codegen-fixup-lbl! cgc label 0 #f 64)
+  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+  (am-lbl cgc label))
+
+(define (put-return-point-label cgc label frame-size ret-pos gcmap)
+  (asm-align cgc 8)
+  (put-function-vector-metadata cgc)
+
+  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
+  ;; Check if gcmap can be too large
+  (am-data-word cgc (+ 1 ;; RETN (normal return). Todo: Check if correct
+    (* 4 frame-size) ;; frame size
+    (* 128 ret-pos) ; location of return addr
+    (* 4096 gcmap))) ; gcmap
+  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+  (am-lbl cgc label))
+
 (define (encode-label-instr cgc proc code)
 
   (let* ((gvm-instr (code-gvm-instr code))
@@ -500,32 +503,17 @@
                 ; (keys (label-entry-keys gvm-instr))
                 ; (closed? (label-entry-closed? gvm-instr))
 
-                (asm-align cgc 8)
-                (put-function-vector-metadata cgc)
+                (put-entry-point-label cgc label)
 
-                ;; Label description structure
-                (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-                (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-                (codegen-fixup-lbl! cgc label 0 #f 64)
-                (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-                (am-lbl cgc label)
-
-                ;; Todo: Complete narg
+                ;; Todo: Complete narg. Support optional and varargs
                 (am-check-narg cgc narg)))
 
         ((return)
-          (asm-align cgc 8)
-          (put-function-vector-metadata cgc)
-
-          (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-          (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
-          ;; Check if gcmap can be too large
-          (am-data-word cgc (+ 1 ;; RETN (normal return). Todo: Check if correct
-                              (* 4 frame-size) ;; frame size
-                              (* 128 (get-frame-ret-pos frame)) ; location of return addr
-                              (* 4096 (get-frame-gcmap frame)))) ; gcmap
-          (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-          (am-lbl cgc label))
+          (put-return-point-label cgc
+            label
+            frame-size
+            (get-frame-ret-pos frame)
+            (get-frame-gcmap frame)))
         (else
           (am-lbl cgc label)))))
 
@@ -554,6 +542,9 @@
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
     ;; Todo: Make sure that jmp-opnd is a label or check type of object
+    ;; Todo: Check if next label is simple and jump location. If true, NOP
+    ; (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
+    ;   (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump)))))
     (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump))))
 
 (define (encode-ifjump-instr cgc proc code)
