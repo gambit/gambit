@@ -38,7 +38,6 @@
 (define na-reg-default-value-abs 192)
 
 (define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
-(define (C_START_LBL cgc)           (get-label cgc 'C_START_LBL))
 (define (C_RETURN_LBL cgc)          (get-label cgc 'C_RETURN_LBL))
 (define (C_ERROR_LBL cgc)           (get-label cgc 'C_ERROR_LBL))
 (define (WRONG_NARGS_LBL cgc)       (get-label cgc 'WRONG_NARGS_LBL))
@@ -374,8 +373,6 @@
 ;; Gets executed before main
 (define (x64-init-routine cgc)
   (debug "put-init-routine")
-
-  (am-lbl cgc (C_START_LBL cgc)) ;; Initial procedure label
 
   ;; Thread descriptor initialization
   ;; Set lower bytes of descriptor register used for passing narg

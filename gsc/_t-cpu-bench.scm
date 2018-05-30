@@ -27,9 +27,9 @@
     (if show-listing?
         (asm-display-listing cgc (current-output-port) #t))
 
-    ; (display ";; code = ") (write code) (newline)
-    ; (display ";; fixup-locs = ") (write fixup-locs) (newline)
-    ; (display ";; fixup-objs = ") (write fixup-objs) (newline)
+    (display ";; code = ") (write code) (newline)
+    (display ";; fixup-locs = ") (write fixup-locs) (newline)
+    (display ";; fixup-objs = ") (write fixup-objs) (newline)
 
     ;; Call compiler to create objfile.o1 using the C backend.
     ;; When the file is loaded, it will execute the x86 code.
@@ -43,7 +43,7 @@
                                   ',fixup-locs
                                   ',fixup-objs)))
 
-    (debug "After compiling")))
+    (debug "Output file: " filename)))
 
 ;;------------------------------------------------------------------------------
 

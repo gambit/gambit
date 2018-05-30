@@ -284,6 +284,8 @@
 
 (define (encode-procs cgc procs)
 
+  (define C_START_LBL (get-label cgc 'C_START_LBL))
+
   (define first-label #f)
 
   (define (encode-proc proc)
@@ -301,7 +303,17 @@
         (encode-gvm-instr cgc proc code))
       proc))
 
+  (asm-align cgc 8)
+  (put-function-vector-metadata cgc)
+
+  ;; Label description structure
+  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
+  (codegen-fixup-lbl! cgc C_START_LBL 0 #f 64)
+  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+
   (debug "Prologue")
+  (am-lbl cgc C_START_LBL)
   (am-init cgc)
   (am-set-narg cgc 0)
 
@@ -327,7 +339,10 @@
     (lambda (name label) (put-global-variable cgc name label))
     (get-global-var-table cgc))
 
-  (debug "Finished!"))
+  (debug "Finished!")
+
+  ;; specify value returned by create-procedure (i.e. procedure reference)
+  (codegen-fixup-lbl! cgc C_START_LBL 0 #f 64))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
@@ -436,13 +451,14 @@
 
 ;; ***** Label instruction encoding
 
+; Todo: Check if constant
+(define (put-function-vector-metadata cgc)
+  (am-data-word cgc 0) ;; null cproc
+  (am-data-word cgc (+ 6 (* 8 0) (* 1 8 256))) ;; PERM VECTOR of length 1
+  (am-data-word cgc -2) ;; info = #f
+  (am-data-word cgc 0)) ;; null name
+
 (define (encode-label-instr cgc proc code)
-  ; Todo: Check if constant
-  (define (put-metadata)
-    (am-data-word cgc 0) ;; null cproc
-    (am-data-word cgc (+ 6 (* 8 0) (* 1 8 256))) ;; PERM VECTOR of length 1
-    (am-data-word cgc -2) ;; info = #f
-    (am-data-word cgc 0)) ;; null name
 
   (let* ((gvm-instr (code-gvm-instr code))
          (label (label-instr-label cgc proc gvm-instr))
@@ -462,7 +478,7 @@
                 ; (closed? (label-entry-closed? gvm-instr))
 
                 (asm-align cgc 8)
-                (put-metadata)
+                (put-function-vector-metadata cgc)
 
                 ;; Label description structure
                 (codegen-fixup-handler! cgc '___lowlevel_exec 64)
@@ -476,7 +492,7 @@
 
         ((return)
           (asm-align cgc 8)
-          (put-metadata)
+          (put-function-vector-metadata cgc)
 
           (codegen-fixup-handler! cgc '___lowlevel_exec 64)
           (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
@@ -614,19 +630,16 @@
 
 (define (label-instr-label cgc proc lbl-instr)
   (let* ((label-num (label-lbl-num lbl-instr)))
-    (debug "label-num: " label-num)
     (get-proc-label cgc proc label-num)))
 
 (define (get-frame-gcmap frame)
   (define (live? var)
-    (debug "live?. var: " var)
     (let ((live (frame-live frame)))
       (or (varset-member? var live)
           (and (eq? var closure-env-var)
                 (varset-intersects?
                   live
                   (list->varset (frame-closed frame)))))))
-  (debug (car (frame-slots frame)))
   (make-bitmap
     (map
       (lambda (slot) (live? slot))
