@@ -270,6 +270,9 @@
 (define (am-jmp cgc . args)              (apply-instruction cgc 14 args))
 (define (am-compare-jump cgc . args)     (apply-instruction cgc 15 args))
 
+(define (am-data-word cgc word)
+  (am-data cgc (get-word-width-bits cgc) word))
+
 ;; ***** AM: Routines fields
 
 (define (apply-routine cgc index args)

@@ -345,9 +345,6 @@
           (prim-fun cgc then args)))))
 
 (define (put-object cgc object label #!optional (label-offset 0))
-  (define (put-data word)
-    (am-data cgc (get-word-width-bits cgc) word))
-
   (define (get-object-extra-width object)
     (if (immediate-object? object)
       0 ;; Immediate objects occupy 0 extra width
@@ -361,7 +358,7 @@
     (if (not (null? sub-objects))
       (let ((sub-object (car sub-objects)))
         (if (immediate-object? sub-object)
-          (put-data (format-imm-object sub-object))
+          (am-data-word cgc (format-imm-object sub-object))
           (codegen-fixup-lbl!
             cgc
             label
@@ -386,7 +383,7 @@
     ;; Object is immediate
     (begin
       (debug "Immediate object: " object)
-      (put-data (format-imm-object object))
+      (am-data-word cgc (format-imm-object object))
       0)
     ;; Object is ref object
     (begin
@@ -398,7 +395,7 @@
              (sub-objects ((reference-encode-fun desc) object)))
 
       ;; Place object header
-      (put-data header)
+      (am-data-word cgc header)
       ;; Place object's fields
       (place-obj-fields sub-objects 0 (+ label-offset 1 (length sub-objects)))
       ;; Place object's fields definition (Recursively)
@@ -418,7 +415,7 @@
   (debug "label: " label)
 
   (am-lbl cgc label)
-  (am-data cgc (get-word-width-bits cgc) 0))
+  (am-data-word cgc 0))
 
 ;;;----------------------------------------------------------------------------
 
@@ -440,24 +437,58 @@
 ;; ***** Label instruction encoding
 
 (define (encode-label-instr cgc proc code)
+  ; Todo: Check if constant
+  (define (put-metadata)
+    (am-data-word cgc 0) ;; null cproc
+    (am-data-word cgc (+ 6 (* 8 0) (* 1 8 256))) ;; PERM VECTOR of length 1
+    (am-data-word cgc -2) ;; info = #f
+    (am-data-word cgc 0)) ;; null name
+
   (let* ((gvm-instr (code-gvm-instr code))
-         (label-num (label-lbl-num gvm-instr))
-         (label (get-proc-label cgc proc label-num))
-         (narg (label-entry-nb-parms gvm-instr)))
+         (label (label-instr-label cgc proc gvm-instr))
+         (type (label-type gvm-instr))
+         (frame (gvm-instr-frame gvm-instr))
+         (frame-size (frame-size frame)))
 
-  (debug "encode-label-instr: " label)
+    (debug "encode-label-instr: " label)
 
-  (let* ((align? (not (eqv? 'simple (label-type gvm-instr))))
-        (alignment (if align? (cons 4 1) #f)))
-    (am-lbl cgc label))
+      (case (label-type gvm-instr)
+        ((entry)
+          (let ((narg (label-entry-nb-parms gvm-instr))
+                (opts (label-entry-opts gvm-instr))
+                (rest? (label-entry-rest? gvm-instr)))
+                ;; Todo: Ask Marc what this is
+                ; (keys (label-entry-keys gvm-instr))
+                ; (closed? (label-entry-closed? gvm-instr))
 
-  ; (if (and
-  ;       (equal? label-num 1)
-  ;       (equal? (proc-obj-name proc) "indirect"))
-  ;   (am-jmp cgc (get-label cgc 'ALLOCATION_ERROR_LBL)))
+                (asm-align cgc 8)
+                (put-metadata)
 
-  (if (eqv? 'entry (label-type gvm-instr))
-    (am-check-narg cgc narg))))
+                ;; Label description structure
+                (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+                (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
+                (codegen-fixup-lbl! cgc label 0 #f 64)
+                (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+                (am-lbl cgc label)
+
+                ;; Todo: Complete narg
+                (am-check-narg cgc narg)))
+
+        ((return)
+          (asm-align cgc 8)
+          (put-metadata)
+
+          (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+          (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
+          ;; Check if gcmap can be too large
+          (am-data-word cgc (+ 1 ;; RETN (normal return). Todo: Check if correct
+                              (* 4 frame-size) ;; frame size
+                              (* 128 (get-frame-ret-pos frame)) ; location of return addr
+                              (* 4096 (get-frame-gcmap frame)))) ; gcmap
+          (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+          (am-lbl cgc label))
+        (else
+          (am-lbl cgc label)))))
 
 ;; ***** (if)Jump instruction encoding
 
@@ -483,11 +514,8 @@
     (if (jump-nb-args gvm-instr)
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
-    ;; Jump to location. Checks if jump is NOP.
     ;; Todo: Make sure that jmp-opnd is a label or check type of object
-    (debug jmp-opnd)
-    (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
-      (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump)))))
+    (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump))))
 
 (define (encode-ifjump-instr cgc proc code)
   (debug "encode-ifjump-instr")
@@ -589,6 +617,24 @@
     (debug "label-num: " label-num)
     (get-proc-label cgc proc label-num)))
 
+(define (get-frame-gcmap frame)
+  (define (live? var)
+    (debug "live?. var: " var)
+    (let ((live (frame-live frame)))
+      (or (varset-member? var live)
+          (and (eq? var closure-env-var)
+                (varset-intersects?
+                  live
+                  (list->varset (frame-closed frame)))))))
+  (debug (car (frame-slots frame)))
+  (make-bitmap
+    (map
+      (lambda (slot) (live? slot))
+      (frame-slots frame))))
+
+(define (get-frame-ret-pos frame)
+  (index-of 'ret (map var-name (frame-slots frame))))
+
 ;;;============================================================================
 
 ;; ***** Utils
@@ -601,6 +647,17 @@
       (newline))))
 
 ;; ***** Utils - Lists
+
+(define (make-bitmap lst)
+  (define bitmap 0)
+  (define bit-value 1)
+  (for-each
+    (lambda (x)
+      (if x
+        (set! bitmap (+ bitmap bit-value)))
+      (set! bit-value (* 2 bit-value)))
+    lst)
+  bitmap)
 
 (define (find pred elems #!optional (index 0))
   (if (null? elems)
