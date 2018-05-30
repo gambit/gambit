@@ -471,18 +471,18 @@
   (am-lbl cgc (C_RETURN_LBL cgc))
 
   ; (am-jmp cgc (get-register cgc 4))
-  (am-jmp cgc (get-register cgc 0))
+  ; (am-jmp cgc (get-register cgc 0))
 
-  ; (get-extra-register cgc
-  ;   (lambda (reg)
-  ;     (am-mov cgc reg (x86-imm-obj 'display))
-  ;     (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-  ;     (am-mov cgc reg (mem-opnd cgc 0 reg))
-  ;      ;; set r0 to saved return address in init routine
-  ;     (am-mov cgc (get-register cgc 0) (get-register cgc 4))
-  ;     ;; dealloc frame
-  ;     (am-set-narg cgc 1)
-  ;     (am-jmp cgc reg)))
+  (get-extra-register cgc
+    (lambda (reg)
+      (am-mov cgc reg (x86-imm-obj 'display))
+      (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+      (am-mov cgc reg (mem-opnd cgc 0 reg))
+       ;; set r0 to saved return address in init routine
+      (am-mov cgc (get-register cgc 0) (get-register cgc 4))
+      ;; dealloc frame
+      (am-set-narg cgc 1)
+      (am-jmp cgc reg)))
   )
 
 ;; Error routine
