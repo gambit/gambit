@@ -345,16 +345,31 @@
 (define (put-primitive-if-needed cgc key pair)
   (let* ((label (car pair))
          (proc (cadr pair))
+         (prim-obj (get-primitive-object cgc (proc-obj-name proc)))
          (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
+
     (if (not defined?)
-      (let* ((prim-obj (get-primitive-object cgc (proc-obj-name proc)))
-             (prim-fun (get-primitive-function prim-obj))
-             (then (then-return))
-             (args (list (get-register cgc 1) (get-register cgc 2) (get-register cgc 3)))) ;; todo : Find way to get arity
+      (if prim-obj
+        ;; Prim is defined in native backend
+        (let* ((prim-fun (get-primitive-function prim-obj))
+               (then (then-return))
+               (args (list (get-register cgc 1) (get-register cgc 2) (get-register cgc 3)))) ;; todo : Find way to get arity
 
           (debug "Putting primitive: " (proc-obj-name proc))
           (am-lbl cgc label)
-          (prim-fun cgc then args)))))
+          (prim-fun cgc then args))
+
+        ;; Prim is defined in C
+        ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
+        (let* ((proc-name (proc-obj-name proc))
+               (proc-sym (string->symbol proc-name)))
+          (get-extra-register cgc
+            (lambda (reg)
+              (am-lbl cgc label)
+              (am-mov cgc reg (x86-imm-obj proc-sym))
+              (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+              (am-mov cgc reg (mem-opnd cgc 0 reg))
+              (am-jmp cgc reg))))))))
 
 (define (put-global-variable cgc name label)
   (debug "put-global-variable")
@@ -450,9 +465,41 @@
 ;; ***** (if)Jump instruction encoding
 
 (define (encode-jump-instr cgc proc code)
+  (define (make-jump-opnd opnd)
+    (define (make-obj val)
+      (cond
+        ((proc-obj? val)
+          (get-proc-label cgc (obj-val opnd) 1))
+        ((immediate-object? val)
+          (int-opnd cgc
+            (format-imm-object val)
+            (get-word-width-bits cgc)))
+        ((reference-object? val)
+          (x86-imm-obj val))
+        (else
+          (compiler-internal-error "make-jump-opnd: Unknown object type"))))
+    (cond
+      ((reg? opnd)
+        (get-register cgc (reg-num opnd)))
+      ((stk? opnd)
+        (frame cgc (proc-jmp-frame-size code) (stk-num opnd)))
+      ((lbl? opnd)
+        (get-proc-label cgc proc (lbl-num opnd)))
+      ((obj? opnd)
+        (make-obj (obj-val opnd)))
+      ((clo? opnd)
+        ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
+        (let ((base (get-register cgc (reg-num (clo-base opnd))))
+              (index (* 8 (- (clo-index opnd) 1))))
+          (mem-opnd cgc index base)))
+      ((glo? opnd)
+        (x86-imm-glo (glo-name opnd)))
+      (else
+        (compiler-internal-error "make-jump-opnd: Unknown opnd: " opnd))))
+
   (debug "encode-jump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
-         (jmp-opnd (jump-opnd gvm-instr))
+         (jmp-opnd (make-jump-opnd (jump-opnd gvm-instr)))
          (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
 
     ;; Pop stack if necessary
@@ -475,7 +522,16 @@
     ;; Todo: Check if next label is simple and jump location. If true, NOP
     ; (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
     ;   (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump)))))
-    (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump))))
+
+    (cond
+      ((x86-imm-glo? jmp-opnd)
+        (get-extra-register cgc
+          (lambda (reg)
+            (am-mov cgc reg jmp-opnd)
+            (am-jmp cgc reg))))
+      (else
+        (am-jmp cgc jmp-opnd)))))
+
 
 (define (encode-ifjump-instr cgc proc code)
   (debug "encode-ifjump-instr")

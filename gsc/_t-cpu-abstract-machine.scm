@@ -221,11 +221,8 @@
     field))
 
 (define (get-primitive-object cgc name)
-  (let* ((table (get-primitive-table cgc))
-         (prim (table-ref table (string->symbol name) #f)))
-    (if prim
-      prim
-      (compiler-internal-error "Primitive not implemented: " name))))
+  (let* ((table (get-primitive-table cgc)))
+    (table-ref table (string->symbol name) #f)))
 
 ;; ***** AM: Operands fields
 
@@ -438,41 +435,39 @@
 (define (get-extra-register cgc use)
   (choose-register cgc use (get-extra-registers cgc) (get-extra-register-allocation cgc)))
 
-;; Todo: Find better solution than using context.
-;; Also, make sure that everything is consistent.
-(define (make-opnd cgc proc code opnd #!optional (context #f))
+(define (make-opnd cgc proc code opnd)
   (define (make-obj val)
     (cond
       ((proc-obj? val)
-        (if (eqv? context 'jump)
-          ;; 1 is used to get the first label of a procedure, if it exists.
-          ;; If not 1, the procedure will look like a primitive that was used
-          ;; but not defined and it will look for a primitive called the name
-          ;; of the procedure. It crashes the program, DO NOT CHANGE!
-          (get-proc-label cgc (obj-val opnd) 1)
-          (lbl-opnd cgc (get-proc-label cgc (obj-val opnd) 1))))
+        ;; 1 is used to get the first label of a procedure, if it exists.
+        ;; If not 1, the procedure will look like a primitive that was used
+        ;; but not defined and it will look for a primitive called the name
+        ;; of the procedure. It crashes the program, DO NOT CHANGE!
+        (lbl-opnd cgc (get-proc-label cgc (obj-val opnd) 1)))
       ((immediate-object? val)
+        (debug "make-opnd: obj imm: " val)
         (int-opnd cgc
           (format-imm-object val)
           (get-word-width-bits cgc)))
       ((reference-object? val)
+        (debug "make-opnd: obj ref: " val)
         (x86-imm-obj val))
       (else
         (compiler-internal-error "make-opnd: Unknown object type"))))
   (cond
     ((reg? opnd)
+      (debug "make-opnd: reg")
       (get-register cgc (reg-num opnd)))
     ((stk? opnd)
-      (if (eqv? context 'jump)
-        (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
-        (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
+      (debug "make-opnd: stk")
+      (frame cgc (proc-lbl-frame-size code) (stk-num opnd)))
     ((lbl? opnd)
-      (if (eqv? context 'jump)
-        (get-proc-label cgc proc (lbl-num opnd))
-        (lbl-opnd cgc (get-proc-label cgc proc (lbl-num opnd)))))
+      (debug "make-opnd: lbl")
+      (lbl-opnd cgc (get-proc-label cgc proc (lbl-num opnd))))
     ((obj? opnd)
       (make-obj (obj-val opnd)))
     ((clo? opnd)
+      (debug "make-opnd: clo")
       ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
       (let ((base (get-register cgc (reg-num (clo-base opnd))))
             (index (* 8 (- (clo-index opnd) 1))))
@@ -480,20 +475,19 @@
         (debug "Index:" index)
         (mem-opnd cgc index base)))
     ((glo? opnd)
-      (if (eqv? context 'jump)
-        (get-global-var-label cgc (glo-name opnd))
-        (lbl-opnd cgc (get-global-var-label cgc (glo-name opnd)))))
+      (debug "make-opnd: glo")
+      (x86-imm-glo (glo-name opnd)))
     (else
       (compiler-internal-error "make-opnd: Unknown opnd: " opnd))))
 
 (define (opnd-type cgc opnd)
   (cond
+    ((int-opnd? cgc opnd) 'int)
     ((reg-opnd? cgc opnd) 'reg)
     ((mem-opnd? cgc opnd) 'mem)
     ((lbl-opnd? cgc opnd) 'lbl)
-    ((int-opnd? cgc opnd) 'int)
-    ;; Todo: Do something generic
-    ((x86-imm-obj? opnd) 'lbl)
+    ((x86-imm-obj? opnd)  'lbl) ;; Todo: Do something generic
+    ((x86-imm-glo? opnd)  'ind) ;; Todo: Do something generic
     (else
       (compiler-internal-error "opnd-type - Unknown opnd: " : opnd))))
 

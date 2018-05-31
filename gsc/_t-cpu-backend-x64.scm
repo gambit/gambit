@@ -159,31 +159,35 @@
 ;; Args : CGC, reg/mem/label, reg/mem/imm/label
 ;; Todo: Check if some cases can be eliminated
 (define (mov-instr cgc dst src #!optional (width #f))
-  (cond
-    ((and (lbl-opnd? cgc dst) (lbl-opnd? cgc src))
+  (define dst-type (opnd-type cgc dst))
+  (define src-type (opnd-type cgc src))
+
+  ;; new-src can be directly used as an operand to mov
+  (define (mov-in-dst new-src)
+    (if (equal? dst-type 'ind)
       (get-extra-register cgc
         (lambda (reg-dst)
+          (x86-mov cgc reg-dst dst)
+          (x86-mov cgc (x86-mem 0 reg-dst) src width)))
+      (x86-mov cgc dst new-src)))
+
+  (cond
+    ;; Mov
+    ((and
+      (equal? dst-type 'mem)
+      (or (equal? src-type 'mem) (equal? src-type 'lbl)))
           (get-extra-register cgc
             (lambda (reg-src)
-              (x86-mov cgc reg-dst dst)
               (x86-mov cgc reg-src src)
-              (x86-mov cgc reg-src (x86-mem 0 reg-src))
-              (x86-mov cgc (x86-mem 0 reg-dst) reg-src width))))))
-    ((lbl-opnd? cgc dst)
+          (mov-in-dst reg-src))))
+    ((equal? src-type 'ind)
       (get-extra-register cgc
-        (lambda (reg)
-          (x86-mov cgc reg dst)
-          (x86-mov cgc (x86-mem 0 reg) src width))))
-    ((or
-        (and (mem-opnd? cgc dst) (mem-opnd? cgc src))
-        (and (mem-opnd? cgc dst) (lbl-opnd? cgc src))
-        (and (lbl-opnd? cgc dst) (mem-opnd? cgc src)))
-      (get-extra-register cgc
-        (lambda (reg)
-          (x86-mov cgc reg src)
-          (x86-mov cgc dst reg))))
+        (lambda (reg-src)
+          (x86-mov cgc reg-src src)
+          (x86-mov cgc reg-src (x86-mem 0 reg-src))
+          (mov-in-dst reg-src))))
     (else
-      (x86-mov cgc dst src width))))
+      (mov-in-dst src))))
 
 (define (apply-and-mov fun)
   (lambda (cgc result-reg opnd1 opnd2)
