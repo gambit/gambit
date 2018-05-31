@@ -486,7 +486,6 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (am-poll cgc code)
     (let* ((prim-sym (proc-obj-name (ifjump-test gvm-instr)))
            (prim-obj (get-primitive-object cgc prim-sym))
            (prim-fun (get-primitive-function prim-obj))
