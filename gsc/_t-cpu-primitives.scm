@@ -89,8 +89,8 @@
 ;; This prologue mov every operands not supported in the extra registers.
 (define (prologue-mov-args allowed-opnds)
   (define (mov-arg cgc result-reg arg index)
-    (debug "mov-arg")
-    (let* ((allowed-opnd (list-ref allowed-opnds index))
+  (debug "mov-arg")
+      (let* ((allowed-opnd (list-ref allowed-opnds index))
            (in? (not (= -1 (index-of (opnd-type cgc arg) allowed-opnd))))
            (lambd (lambda (reg) (am-mov cgc reg arg) reg)))
       (if in?
@@ -158,9 +158,9 @@
                (label (make-unique-label cgc suffix))
                (result-loc (then-move-store-location result-action)))
 
-            (am-mov cgc result-loc (int-opnd (format-imm-object #t)))
+            (am-mov cgc result-loc (x86-imm-obj #t))
             (true-test-jump cgc label)
-            (am-mov cgc result-loc (int-opnd (format-imm-object #f)))
+            (am-mov cgc result-loc (x86-imm-obj #f))
             (am-lbl cgc label)))
       ((then-return? result-action)
         ;; Extract boolean then jump
@@ -169,9 +169,9 @@
                (result-loc (get-register 1))
                (return-loc (get-register 0)))
 
-            (am-mov cgc result-loc (int-opnd (format-imm-object #t)))
+            (am-mov cgc result-loc (x86-imm-obj #t))
             (true-test-jump cgc label)
-            (am-mov cgc result-loc (int-opnd (format-imm-object #f)))
+            (am-mov cgc result-loc (x86-imm-obj #f))
             (am-lbl cgc label)
             (am-jmp cgc return-loc)))
       ((not result-action)

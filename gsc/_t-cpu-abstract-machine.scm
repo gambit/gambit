@@ -444,6 +444,7 @@
   (define (make-obj val)
     (cond
       ((proc-obj? val)
+        (debug "make-opnd proc-obj")
         (if (eqv? context 'jump)
           ;; 1 is used to get the first label of a procedure, if it exists.
           ;; If not 1, the procedure will look like a primitive that was used
@@ -451,30 +452,27 @@
           ;; of the procedure. It crashes the program, DO NOT CHANGE!
           (get-proc-label cgc (obj-val opnd) 1)
           (lbl-opnd cgc (get-proc-label cgc (obj-val opnd) 1))))
-      ((immediate-object? val)
-        (int-opnd cgc
-          (format-imm-object val)
-          (get-word-width-bits cgc)))
-      ((reference-object? val)
-        (lbl-opnd cgc
-          (get-obj-label cgc (obj-val opnd))
-          (get-desc-pointer-tag (get-object-description val))))
       (else
-        (compiler-internal-error "make-opnd: Unknown object type"))))
+        (debug "make-obj: " val)
+        (x86-imm-obj val))))
   (cond
     ((reg? opnd)
+      (debug "make-opnd: reg")
       (get-register cgc (reg-num opnd)))
     ((stk? opnd)
+      (debug "make-opnd: stk")
       (if (eqv? context 'jump)
         (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
         (frame cgc (proc-lbl-frame-size code) (stk-num opnd))))
     ((lbl? opnd)
+      (debug "make-opnd: lbl")
       (if (eqv? context 'jump)
         (get-proc-label cgc proc (lbl-num opnd))
         (lbl-opnd cgc (get-proc-label cgc proc (lbl-num opnd)))))
     ((obj? opnd)
       (make-obj (obj-val opnd)))
     ((clo? opnd)
+      (debug "make-opnd: clo")
       ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
       (let ((base (get-register cgc (reg-num (clo-base opnd))))
             (index (* 8 (- (clo-index opnd) 1))))
@@ -482,6 +480,7 @@
         (debug "Index:" index)
         (mem-opnd cgc index base)))
     ((glo? opnd)
+      (debug "make-opnd: glo")
       (if (eqv? context 'jump)
         (get-global-var-label cgc (glo-name opnd))
         (lbl-opnd cgc (get-global-var-label cgc (glo-name opnd)))))
@@ -493,7 +492,15 @@
     ((reg-opnd? cgc opnd) 'reg)
     ((mem-opnd? cgc opnd) 'mem)
     ((lbl-opnd? cgc opnd) 'lbl)
-    ((int-opnd? cgc opnd) 'int)))
+    ((int-opnd? cgc opnd) 'int)
+    ;; Todo: Do something generic
+    ((x86-imm-obj? opnd)
+      (let ((val (x86-imm-obj-value opnd)))
+        (if (immediate-object? val)
+          'int
+          'lbl)))
+    (else
+      (compiler-internal-error "opnd-type - Unknown opnd: " : opnd))))
 
 (define (frame cgc fs n)
   (mem-opnd cgc
@@ -585,7 +592,7 @@
           (get-extra-register cgc
             (lambda (reg)
               (let ((condition condition-not-equal)
-                    (false-opnd (int-opnd cgc (format-imm-object #f)))
+                    (false-opnd (x86-imm-obj #f))
                     (true-jmp (then-jump-true-location result-action))
                     (false-jmp (then-jump-false-location result-action)))
                 (lambd reg)
