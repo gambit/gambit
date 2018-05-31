@@ -71,6 +71,10 @@
 (define (x86-imm-lbl-offset x) (car x))
 (define (x86-imm-lbl-label x) (cdr x))
 
+(define (x86-imm-glo name) (cons #f name))
+(define (x86-imm-glo? x) (and (pair? x) (symbol? (cdr x))))
+(define (x86-imm-glo-name x) (cdr x))
+
 (define (x86-imm-late handler width) (cons width handler))
 (define (x86-imm-late? x) (and (pair? x) (procedure? (cdr x))))
 (define (x86-imm-late-width x) (car x))
@@ -125,6 +129,8 @@
                          ((x86-imm-lbl? opnd)
                           (list (asm-label-name (x86-imm-lbl-label opnd))
                                 (x86-offset->string (x86-imm-lbl-offset opnd))))
+                         ((x86-imm-glo? opnd)
+                          (list "&global[" (x86-imm-glo-name opnd) "]"))
                          ((x86-imm-late? opnd)
                           ((x86-imm-late-handler opnd) cgc 'listing))
                          ((x86-imm-obj? opnd)
@@ -209,6 +215,8 @@
                    ((x86-imm-lbl? opnd)
                     (list (asm-label-name (x86-imm-lbl-label opnd))
                           (x86-offset->string (x86-imm-lbl-offset opnd))))
+                   ((x86-imm-glo? opnd)
+                    (list "&global[" (x86-imm-glo-name opnd) "]"))
                    ((x86-imm-late? opnd)
                     ((x86-imm-late-handler opnd) cgc 'listing))
                    ((x86-imm-obj? opnd)
@@ -565,6 +573,9 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
         ((x86-imm-lbl? imm)
          (x86-imm-lbl-encode cgc imm imm-width)
          imm)
+        ((x86-imm-glo? imm)
+         (x86-imm-glo-encode cgc imm imm-width)
+         imm)
         ((x86-imm-late? imm)
          ((x86-imm-late-handler imm) cgc 'encode))
         ((x86-imm-obj? imm)
@@ -579,6 +590,12 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
    (x86-imm-lbl-label imm-lbl)
    (x86-imm-lbl-offset imm-lbl)
    #f ;; absolute
+   imm-width))
+
+(define (x86-imm-glo-encode cgc imm-glo imm-width)
+  (codegen-fixup-glo!
+   cgc
+   (x86-imm-glo-name imm-glo)
    imm-width))
 
 (define (x86-imm-obj-encode cgc imm-obj imm-width)
