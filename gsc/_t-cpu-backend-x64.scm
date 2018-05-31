@@ -30,7 +30,7 @@
 (define heap-size 10000)  ;; Heap size (Bytes)
 (define thread-descriptor-size 32) ;; Thread descriptor size (bytes)
 (define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
-(define frame-offset 1) ;; stack offset so that frame[1] is at null offset from frame-pointer
+(define frame-offset 0) ;; stack offset so that frame[1] is at null offset from frame-pointer
 
 (define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
 (define (C_ERROR_LBL cgc)           (get-label cgc 'C_ERROR_LBL))
