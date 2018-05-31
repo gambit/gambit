@@ -169,7 +169,7 @@
         (lambda (reg-dst)
           (x86-mov cgc reg-dst dst)
           (x86-mov cgc (x86-mem 0 reg-dst) src width)))
-      (x86-mov cgc dst new-src)))
+      (x86-mov cgc dst new-src width)))
 
   (cond
     ;; Mov
