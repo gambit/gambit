@@ -61,6 +61,8 @@
     ((pair? object)       pair-obj-desc)
     ;; Subtypes
     ((string? object)     string-obj-desc)
+    ((vector? object)     vector-obj-desc)
+    ((symbol? object)     symbol-obj-desc)
     (else (compiler-internal-error "Unknown object type: " object))))
 
 (define (get-desc-pointer-tag desc)
