@@ -331,11 +331,6 @@
     (lambda (key val) (put-primitive-if-needed cgc key val))
     (get-proc-label-table cgc))
 
-  (debug "Adding constants objects")
-  (table-for-each
-    (lambda (key val) (put-object cgc key val))
-    (get-object-label-table cgc))
-
   (debug "Adding global variables")
   (table-for-each
     (lambda (name label) (put-global-variable cgc name label))
@@ -360,71 +355,6 @@
           (debug "Putting primitive: " (proc-obj-name proc))
           (am-lbl cgc label)
           (prim-fun cgc then args)))))
-
-(define (put-object cgc object label #!optional (label-offset 0))
-  (define (get-object-extra-width object)
-    (if (immediate-object? object)
-      0 ;; Immediate objects occupy 0 extra width
-      (let* ((desc (get-object-description object))
-             (sub-objects ((reference-encode-fun desc) object))
-             (sub-objects-length (map get-object-extra-width sub-objects)))
-        ;; + 1 because we count the header
-        (+ 1 (length sub-objects-length) (apply + sub-objects-length)))))
-
-  (define (place-obj-fields sub-objects index field-offset)
-    (if (not (null? sub-objects))
-      (let ((sub-object (car sub-objects)))
-        (if (immediate-object? sub-object)
-          (am-data-word cgc (format-imm-object sub-object))
-          (codegen-fixup-lbl!
-            cgc
-            label
-              (+ (get-desc-pointer-tag (get-object-description sub-object))
-                (* (get-word-width cgc) field-offset))
-            #f ;; absolute
-            (get-word-width cgc)))
-
-        (place-obj-fields
-          (cdr sub-objects)
-          (+ 1 index)
-          (+ field-offset (get-object-extra-width sub-object))))))
-
-  (debug "put-object")
-  (debug "label: " label)
-  (debug "Obj: " object)
-
-  (if (eqv? 0 label-offset)
-    (am-lbl cgc label))
-
-  (if (immediate-object? object)
-    ;; Object is immediate
-    (begin
-      (debug "Immediate object: " object)
-      (am-data-word cgc (format-imm-object object))
-      0)
-    ;; Object is ref object
-    (begin
-      (debug "Reference object: " object)
-      (let* ((desc (get-object-description object))
-             (object-length ((reference-header-fun desc) object))
-             (tag (reference-header-tag desc))
-             (header (+ (* 8 tag) (* 256 (get-word-width cgc) object-length)))
-             (sub-objects ((reference-encode-fun desc) object)))
-
-      ;; Place object header
-      (am-data-word cgc header)
-      ;; Place object's fields
-      (place-obj-fields sub-objects 0 (+ label-offset 1 (length sub-objects)))
-      ;; Place object's fields definition (Recursively)
-      (let ((fields-offset 0))
-        (for-each
-          (lambda (sub-obj)
-            (debug "Recursive: " sub-obj)
-            (if (reference-object? sub-obj)
-              (begin
-                (put-object cgc sub-obj label (+ fields-offset 1 (length sub-objects)))
-                (set! fields-offset (+ fields-offset (get-object-extra-width sub-obj))))))
-          sub-objects))))))
 
 (define (put-global-variable cgc name label)
   (debug "put-global-variable")
@@ -561,7 +491,8 @@
            (prim-obj (get-primitive-object cgc prim-sym))
            (prim-fun (get-primitive-function prim-obj))
            (then (then-jump true-label false-label))
-           (args (map (lambda (opnd) (make-opnd cgc proc code opnd)) (ifjump-opnds gvm-instr))))
+           (opnds (ifjump-opnds gvm-instr))
+           (args (map (lambda (opnd) (make-opnd cgc proc code opnd)) opnds)))
       (prim-fun cgc then args))))
 
 ;; ***** Apply instruction encoding
