@@ -39,13 +39,13 @@
 (define (reference-object? object)
   (reference-desc? (get-object-description object)))
 
-; (define (format-imm-object object)
-;   (let ((desc (get-object-description object)))
-;     (cond
-;       ((immediate-desc? desc)
-;         ((immediate-encode-fun desc) object))
-;       (else
-;           (compiler-internal-error "format-imm-object - Object must be an immediate: " object)))))
+(define (format-imm-object object)
+  (let ((desc (get-object-description object)))
+    (cond
+      ((immediate-desc? desc)
+        ((immediate-encode-fun desc) object))
+      (else
+          (compiler-internal-error "format-imm-object - Object must be an immediate: " object)))))
 
 (define (get-object-description object)
   ;; todo: Use macro to shorten code and reduce repetition
