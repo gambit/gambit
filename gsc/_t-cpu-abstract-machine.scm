@@ -267,9 +267,6 @@
 (define (am-jmp cgc . args)              (apply-instruction cgc 14 args))
 (define (am-compare-jump cgc . args)     (apply-instruction cgc 15 args))
 
-(define (am-data-word cgc word)
-  (am-data cgc (get-word-width-bits cgc) word))
-
 ;; ***** AM: Routines fields
 
 (define (apply-routine cgc index args)
@@ -402,6 +399,8 @@
 
 ;; ***** Utils
 
+;; ***** Utils - Register allocation
+
 (define (choose-register cgc use registers allocation)
   (define (use-register index save?)
     (let ((register (vector-ref registers index))
@@ -430,10 +429,28 @@
 
 (define (get-register cgc n)
   (vector-ref (get-main-registers cgc) n))
+
 (define (get-spill-register cgc use)
   (choose-register cgc use (get-spill-registers cgc) (get-spill-register-allocation cgc)))
+
 (define (get-extra-register cgc use)
   (choose-register cgc use (get-extra-registers cgc) (get-extra-register-allocation cgc)))
+
+;; ***** Utils - Operands
+
+;; Version of make-opnd not using proc and code.
+(define (make-obj-opnd cgc val)
+  (cond
+    ((immediate-object? val)
+      (debug "make-obj-opnd: obj imm: " val)
+      (int-opnd cgc
+        (format-imm-object val)
+        (get-word-width-bits cgc)))
+    ((reference-object? val)
+      (debug "make-obj-opnd: obj ref: " val)
+      (x86-imm-obj val))
+    (else
+      (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
 
 (define (make-opnd cgc proc code opnd)
   (define (make-obj val)
@@ -453,7 +470,7 @@
         (debug "make-opnd: obj ref: " val)
         (x86-imm-obj val))
       (else
-        (compiler-internal-error "make-opnd: Unknown object type"))))
+        (compiler-internal-error "make-opnd: Unknown object: " val))))
   (cond
     ((reg? opnd)
       (debug "make-opnd: reg")
@@ -505,6 +522,47 @@
       (get-frame-pointer-reg cgc)
       (int-opnd cgc (* n (get-word-width cgc))))))
 
+;; ***** Utils - Abstract machine shorthand
+
+(define (am-call-c-function cgc sym args)
+  (get-extra-register cgc
+    (lambda (reg)
+      (let ((label (make-unique-label cgc #f)))
+        ;; Check if global var can be **safely** used
+        (am-mov cgc reg (x86-imm-obj sym))
+        (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+        (am-mov cgc reg (mem-opnd cgc 0 reg))
+
+        (am-mov cgc (get-register cgc 0) (lbl-opnd cgc label)) ;; Set return
+        (am-put-args cgc 0 args) ;; Put arguments
+        (am-set-narg cgc (length args))
+        (am-jmp cgc reg)
+        (put-return-point-label cgc label 0 0 0))))) ;; Return point)))
+
+(define (am-put-args cgc jump-fs args)
+  (define (get-frames count)
+    (map (lambda (i) (frame cgc jump-fs i)) (iota 1 count)))
+
+  (define (get-registers count)
+    (map (lambda (i) (get-register cgc i)) (iota 1 count)))
+
+  (let* ((target (codegen-context-target cgc))
+         (narg-in-regs (target-nb-arg-regs target))
+         (narg-in-frames (- (length args) narg-in-regs))
+         (frames (reverse (get-frames narg-in-frames)))
+         (regs (get-registers narg-in-regs)))
+    (for-each
+      (lambda (arg loc) (am-mov cgc loc arg (get-word-width-bits cgc)))
+      args
+      (append frames regs))))
+
+; (define (am-get-args cgc nargs))
+
+(define (am-data-word cgc word)
+  (am-data cgc (get-word-width-bits cgc) word))
+
+;; ***** Utils - Abstract machine definition helper
+
 ;; Get appropriate am-db, am-dw, am-dd, am-dq
 (define (make-am-data am-db am-dw am-dd am-dq)
   (lambda (cgc width data)
@@ -526,7 +584,7 @@
       (reserve-space cgc (- bytes 1) value))))
 
 (define (make-poll check-interrupt check-underflow check-overflow)
-  (lambda (cgc code)
+  (lambda (cgc proc code)
     (debug "default-poll")
     (let ((gvm-instr (code-gvm-instr code))
           (fs-gain (proc-frame-slots-gained code)))

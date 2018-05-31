@@ -506,7 +506,7 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (am-poll cgc code)
+    (am-poll cgc proc code)
 
     ;; Save return address if necessary
     (if (jump-ret gvm-instr)
