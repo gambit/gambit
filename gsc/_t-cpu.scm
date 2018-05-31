@@ -538,14 +538,17 @@
   (debug "encode-ifjump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (true-label (get-proc-label cgc proc (ifjump-true gvm-instr)))
-         (false-label (get-proc-label cgc proc (ifjump-false gvm-instr))))
+         (false-label (get-proc-label cgc proc (ifjump-false gvm-instr)))
+         (prim-sym (proc-obj-name (ifjump-test gvm-instr)))
+         (prim-obj (get-primitive-object cgc prim-sym)))
 
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (let* ((prim-sym (proc-obj-name (ifjump-test gvm-instr)))
-           (prim-obj (get-primitive-object cgc prim-sym))
-           (prim-fun (get-primitive-function prim-obj))
+    (if (not prim-obj)
+      (compiler-internal-error "encode-ifjump-instr - Primitive not implemented: " prim-sym))
+
+    (let* ((prim-fun (get-primitive-function prim-obj))
            (then (then-jump true-label false-label))
            (opnds (ifjump-opnds gvm-instr))
            (args (map (lambda (opnd) (make-opnd cgc proc code opnd)) opnds)))
