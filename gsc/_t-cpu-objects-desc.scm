@@ -125,7 +125,7 @@
 (define pair-obj-desc
   (let ((subtype 1)
         (header-fun (lambda (val) 2))
-        (encode-fun (lambda (val) (list (car val) (cdr val)))))
+        (encode-fun (lambda (val) (list (cdr val) (car val)))))
     (reference-desc 'pair subtype header-fun encode-fun)))
 
 (define ratnum-obj-desc
