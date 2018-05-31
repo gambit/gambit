@@ -167,6 +167,10 @@ x86-imm-obj
 x86-imm-obj?
 x86-imm-obj-value
 
+x86-imm-glo
+x86-imm-glo?
+x86-imm-glo-name
+
 x86-mem
 x86-mem?
 x86-mem-offset
