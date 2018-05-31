@@ -173,8 +173,8 @@
 ;; The frame constraints are defined by the parameters
 ;; cpu-frame-reserve and cpu-frame-alignment.
 
-(define cpu-frame-reserve 0) ;; no extra slots reserved
-(define cpu-frame-alignment 1) ;; no alignment constraint
+(define cpu-frame-reserve 3) ;; no extra slots reserved
+(define cpu-frame-alignment 4) ;; no alignment constraint
 
 ;;;----------------------------------------------------------------------------
 
