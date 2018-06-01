@@ -246,7 +246,6 @@
     x64-poll
     x64-set-narg
     x64-check-narg
-    x64-allocate-heap
     x64-init-routine
     x64-end-routine
     x64-error-routine
@@ -255,10 +254,6 @@
 
 ;;  Memory layout:
 ;;    HIGH
-;;    HEAP START
-;;    ...            <- heap-pointer
-;;    HEAP END       <- max allocation position
-;;    EMPTY SPACE (Size stack-underflow-padding)
 ;;    STACK START    <- underflow position
 ;;    ...            <- frame-pointer
 ;;    STACK END      <- stack-pointer
@@ -393,25 +388,6 @@
             ((2) (check-not-c))
             ((3) (check-not-d))
             ((4) (check-not-e))))))
-
-(define (x64-allocate-heap cgc nb-bytes result-reg)
-  (let ((condition (condition-not-greater #f #f))
-        (error-lbl (ALLOCATION_ERROR_LBL cgc)))
-
-    (get-extra-register cgc
-      (lambda (heap-limit-reg)
-        ;; Check if space is available
-        (am-add cgc heap-limit-reg
-          stack-pointer
-          (int-opnd cgc (+ stack-size stack-underflow-padding nb-bytes)))
-        (am-compare-jump cgc
-          heap-pointer heap-limit-reg
-          condition
-          error-lbl #f))))
-
-  ;; Can allocate
-  (am-mov cgc result-reg heap-pointer)
-  (am-sub cgc heap-pointer heap-pointer (int-opnd cgc nb-bytes)))
 
 ;; Start routine
 ;; Gets executed before main
