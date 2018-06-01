@@ -3948,9 +3948,7 @@ ___WORD *body;)
 
       /* only need to scan the free variables */
 
-      mark_array (___PSP
-                  body+(___LABEL_HOST_LABEL+___CLO_LOWLEVEL_TRAMPOLINE_SIZE),
-                  words-(___LABEL_HOST_LABEL+___CLO_LOWLEVEL_TRAMPOLINE_SIZE));
+      mark_array (___PSP body+___CLO_FREEVARS, words-___CLO_FREEVARS);
 
       break;
 

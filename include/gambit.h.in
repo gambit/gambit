@@ -1222,8 +1222,30 @@
 #define ___NB_ARG_REGS 3
 
 /*
- * Determine if label values (a gcc extension to C) should be used.
+ * Determine if label values (a gcc extension to C) should be supported.
  */
+
+#ifdef ___NOT_SUPPORT_LABEL_VALUES
+#ifdef ___SUPPORT_LABEL_VALUES
+#error "Define either ___SUPPORT_LABEL_VALUES or ___NOT_SUPPORT_LABEL_VALUES"
+#endif
+#else
+#ifndef ___SUPPORT_LABEL_VALUES
+#define ___SUPPORT_LABEL_VALUES
+#endif
+#endif
+
+/*
+ * Determine if label values should be used.
+ */
+
+#ifndef ___SUPPORT_LABEL_VALUES
+
+#undef ___USE_LABEL_VALUES
+#undef ___NOT_USE_LABEL_VALUES
+#define ___NOT_USE_LABEL_VALUES
+
+#else
 
 #ifdef ___USE_LABEL_VALUES
 #ifdef ___NOT_USE_LABEL_VALUES
@@ -1242,6 +1264,8 @@
 #define ___NOT_USE_LABEL_VALUES
 #endif
 #endif
+#endif
+
 #endif
 
 /*
@@ -2261,9 +2285,9 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 #define ___REFERENCE_TO_BODY (-1)
+#define ___LABEL_LOWLEVEL_CODE 1
 #define ___PSTATE_ALIGN_MULTIPLIER 256
 #define ___PSTATE_ALIGN_MODULUS    136
-#undef ___USE_LABEL_VALUES
 #else
 #define ___REFERENCE_TO_BODY 1
 #endif
@@ -5417,8 +5441,6 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_key_rest)}
 
 #ifdef ___CPU_x86_32
 
-#define ___LABEL_SIZE 4
-
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
 do { \
@@ -5426,35 +5448,33 @@ do { \
      ___WORD dist = ___CAST(___WORD, \
                             ___CAST(___UWORD,lbl) - \
                             (___CAST(___UWORD,ptr) + ___WS + ___tSUBTYPED + 5)); \
-     (ptr)[___LABEL_HOST_LABEL] = (0xe8L << (8*___tSUBTYPED)) \
-                                  + (dist << (8*(___tSUBTYPED+1))); \
-     (ptr)[___LABEL_HOST_LABEL+1] = (dist >> (8*(___WS-(___tSUBTYPED+1)))); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = (0xe8L << (8*___tSUBTYPED)) \
+                                     + (dist << (8*(___tSUBTYPED+1))); \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = (dist >> (8*(___WS-(___tSUBTYPED+1)))); \
    } while (0)
 
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
 do { \
      /* generate x86-32 instruction: call *-4(%ecx) */ \
-     (ptr)[___LABEL_HOST_LABEL] = 0xfc51ff << (8*___tSUBTYPED); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xfc51ff << (8*___tSUBTYPED); \
    } while (0)
 
 #else
 #ifdef ___CPU_x86_64
 
-#define ___LABEL_SIZE 4
-
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 1
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
 do { \
      /* generate x86-64 instruction: call *-15(%rip) */ \
-     (ptr)[___LABEL_HOST_LABEL] = 0xfffffff115ffL << (8*___tSUBTYPED); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xfffffff115ffL << (8*___tSUBTYPED); \
    } while (0)
 
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
 do { \
      /* generate x86-64 instruction: call *-8(%rcx) */ \
-     (ptr)[___LABEL_HOST_LABEL] = 0xf851ff << (8*___tSUBTYPED); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xf851ff << (8*___tSUBTYPED); \
    } while (0)
 
 #endif
@@ -5462,21 +5482,39 @@ do { \
 
 #endif
 
-#ifndef ___LABEL_SIZE
-#define ___LABEL_SIZE 4
+#ifdef ___CLO_LOWLEVEL_TRAMPOLINE_SIZE
+#ifdef ___SUPPORT_LABEL_VALUES
+#define ___UNALIGNED_LABEL_SIZE (4+___LABEL_LOWLEVEL_TRAMPOLINE_SIZE)
+#else
+#define ___UNALIGNED_LABEL_SIZE (3+___LABEL_LOWLEVEL_TRAMPOLINE_SIZE)
+#endif
+#else
+#define ___UNALIGNED_LABEL_SIZE 4
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 0
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl)
 #endif
 
-#define ___ALLOC_CLO(n)(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE),___sPROCEDURE)),___END_ALLOC_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)),___GET_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)))
+#ifdef ___USE_UNALIGNED_LABEL_SIZE
+#define ___LABEL_SIZE ___UNALIGNED_LABEL_SIZE
+#else
+#if ___UNALIGNED_LABEL_SIZE <= 4
+#define ___LABEL_SIZE 4
+#else
+#define ___LABEL_SIZE 8
+#endif
+#endif
+
+#define ___CLO_FREEVARS (1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
+
+#define ___ALLOC_CLO(n)(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n+___CLO_FREEVARS,___sPROCEDURE)),___END_ALLOC_SUBTYPED(n+___CLO_FREEVARS),___GET_SUBTYPED(n+___CLO_FREEVARS))
 #define ___BEGIN_SETUP_CLO(n,clo,lbl) \
 {___WORD *___ptr=___BODY0_AS(clo,___tSUBTYPED); \
 ___ptr[___LABEL_ENTRY_OR_DESCR]=___LBL(lbl); \
 ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(___ptr,___LBL(lbl));
-#define ___ADD_CLO_ELEM(i,val)___ptr[i+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)]=(val);
+#define ___ADD_CLO_ELEM(i,val)___ptr[i+___CLO_FREEVARS]=(val);
 #define ___END_SETUP_CLO(n) }
-#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]
-#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]=z;
+#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y+(___CLO_FREEVARS-1)]
+#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y+(___CLO_FREEVARS-1)]=z;
 
 #define ___CLOSURELENGTH(x)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(x))-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
 #define ___CLOSURECODE(x)___CLO(x,-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
@@ -6309,34 +6347,6 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #define ___FRAME_SPACE(n)___ROUND_TO_MULT((n)+___FRAME_RESERVE,___FRAME_ALIGN)
 #define ___FRAME_RESERVE 3
 #define ___FRAME_ALIGN 4
-
-#if ___LABEL_SIZE == 4
-#define ___LBL_TAIL
-#else
-#if ___LABEL_SIZE == 5
-#define ___LBL_TAIL ,0
-#else
-#if ___LABEL_SIZE == 6
-#define ___LBL_TAIL ,0,0
-#else
-#if ___LABEL_SIZE == 7
-#define ___LBL_TAIL ,0,0,0
-#else
-#if ___LABEL_SIZE == 8
-#define ___LBL_TAIL ,0,0,0,0
-#endif
-#endif
-#endif
-#endif
-#endif
-
-#define ___BEGIN_LBL \
-___LOCAL ___label_struct ___lbltbl[]={
-#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc){___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc)),___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM),info,___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name) ___LBL_TAIL}
-#define ___DEF_LBL_PROC(id,nbp,nbc){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___PRD(nbp,nbc),0,0 ___LBL_TAIL}
-#define ___DEF_LBL_RET(id,frm){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___MAKE_HD(0,___sRETURN,___PERM),frm,0 ___LBL_TAIL}
-
-#define ___END_LBL ___PADDING_LBL};
 
 #ifdef ___OFDCOUNT
 #define ___OFDTBL ___ofdtbl,sizeof(___ofdtbl)/sizeof(___WORD)
@@ -8714,8 +8724,8 @@ typedef struct ___processor_state_struct
 
 typedef struct ___lowlevel_processor_state_struct
   {
-    ___WORD *lowlevel_leave_sp;
-    ___WORD *lowlevel_leave_handler;
+    ___WORD *return_sp;
+    ___WORD *return_handler;
   } ___lowlevel_processor_state_struct;
 
 typedef struct ___aligned_lowlevel_processor_state_struct
@@ -8761,27 +8771,94 @@ typedef ___WORD (*___host) ___P((___processor_state ___ps),());
 
 typedef struct ___label_struct
   {
-    ___FAKEHOST host;
-    ___WORD header;
-    ___WORD entry_or_descr;
+#ifdef ___SUPPORT_LABEL_VALUES
     ___FAKEVOIDSTAR host_label;
-#if ___LABEL_SIZE > 4
-    ___WORD dummy[___LABEL_SIZE-4];
+#define ___LABEL_HOST_LABEL (-3)
+#define ___LABEL_HOST_LABEL_GET(lbl) \
+*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL))
+#define ___LABEL_HOST_LABEL_SET(lbl,hlbl) \
+___LABEL_HOST_LABEL_GET(lbl) = hlbl
+#define ___LABEL_PLACEHOLDER1(x) x,
+#define ___LABEL_PLACEHOLDER2(x)
+#define ___LABEL_NAME ___LABEL_HOST_LABEL
+#define ___LABEL_START_TO_BODY 3
+#else
+#define ___LABEL_PLACEHOLDER1(x)
+#define ___LABEL_PLACEHOLDER2(x) ,x
+#define ___LABEL_NAME (___LABEL_ENTRY_OR_DESCR+1)
+#define ___LABEL_START_TO_BODY 2
+#endif
+
+    ___FAKEHOST host;
+#define ___LABEL_HOST (-2)
+#define ___LABEL_HOST_GET(lbl) \
+(*___CAST(___FAKEHOST*,___SUBTYPED_TO(lbl,___LABEL_HOST)))
+
+    ___WORD header;
+
+    ___WORD entry_or_descr;
+#define ___LABEL_ENTRY_OR_DESCR 0
+#define ___LABEL_ENTRY_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)
+#define ___LABEL_ENTRY_SET(lbl, val) ___LABEL_ENTRY_GET(lbl) = val
+#define ___LABEL_DESCR_GET(lbl) ___LABEL_ENTRY_GET(lbl)
+#define ___LABEL_DESCR_SET(lbl, val) ___LABEL_ENTRY_SET(lbl, val)
+#define ___LABEL_INFO ___LABEL_ENTRY_OR_DESCR
+
+#if ___LABEL_SIZE - ___LABEL_START_TO_BODY - 1 > 0
+    ___FAKEVOIDSTAR padding[___LABEL_SIZE - ___LABEL_START_TO_BODY - 1];
 #endif
   } ___label_struct;
 
-#define ___LABEL_ENTRY_OR_DESCR 0
-#define ___LABEL_HOST_LABEL     1
-#define ___LABEL_HOST           -2
+#if ___LABEL_SIZE == 4
+#define ___LABEL_ZERO_FILL
+#else
+#if ___LABEL_SIZE == 5
+#define ___LABEL_ZERO_FILL ,0
+#else
+#if ___LABEL_SIZE == 6
+#define ___LABEL_ZERO_FILL ,0,0
+#else
+#if ___LABEL_SIZE == 7
+#define ___LABEL_ZERO_FILL ,0,0,0
+#else
+#define ___LABEL_ZERO_FILL ,0,0,0,0
+#endif
+#endif
+#endif
+#endif
 
-#define ___LABEL_ENTRY_GET(lbl) \
-(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
-#define ___LABEL_DESCR_GET(lbl) \
-(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
-#define ___LABEL_HOST_LABEL_GET(lbl) \
-(*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL)))
-#define ___LABEL_HOST_GET(lbl) \
-(*___CAST(___FAKEHOST*,___SUBTYPED_TO(lbl,___LABEL_HOST)))
+#define ___BEGIN_LBL \
+___LOCAL ___label_struct ___lbltbl[]={
+
+#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc) \
+{ ___LABEL_PLACEHOLDER1(___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name)) \
+  ___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc)), \
+  ___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM), \
+  info \
+  ___LABEL_PLACEHOLDER2(___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name)) \
+  ___LABEL_ZERO_FILL \
+}
+
+#define ___DEF_LBL_PROC(id,nbp,nbc) \
+{ ___LABEL_PLACEHOLDER1(0) \
+  ___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)), \
+  ___PRD(nbp,nbc), \
+  0 \
+  ___LABEL_PLACEHOLDER2(0) \
+  ___LABEL_ZERO_FILL \
+}
+
+#define ___DEF_LBL_RET(id,frm) \
+{ ___LABEL_PLACEHOLDER1(0) \
+  ___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)), \
+  ___MAKE_HD(0,___sRETURN,___PERM), \
+  frm \
+  ___LABEL_PLACEHOLDER2(0) \
+  ___LABEL_ZERO_FILL \
+}
+
+#define ___END_LBL \
+___PADDING_LBL};
 
 /* Module structure */
 

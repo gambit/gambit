@@ -1,6 +1,6 @@
 /* File: "setup.h" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___SETUP_H
 #define ___SETUP_H
@@ -11,6 +11,42 @@
 extern ___SCMOBJ ___os_load_object_file
    ___P((___SCMOBJ path,
          ___SCMOBJ modname),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_id
+   ___P((___SCMOBJ proc),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_parent
+   ___P((___SCMOBJ proc),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_nb_parameters
+   ___P((___SCMOBJ proc),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_nb_closed
+   ___P((___SCMOBJ proc),
+        ());
+
+
+extern ___SCMOBJ ___make_subprocedure
+   ___P((___SCMOBJ parent,
+         ___SCMOBJ id),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_parent_info
+   ___P((___SCMOBJ proc),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_parent_name
+   ___P((___SCMOBJ proc),
         ());
 
 

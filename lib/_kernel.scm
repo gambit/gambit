@@ -3135,121 +3135,45 @@ end-of-code
 
 (define-prim (##subprocedure-id proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ptr += ___LABEL_SIZE;
-       ___RESULT = ___FIX( (start-ptr)/___LABEL_SIZE );
-     }
-   else
-     ___RESULT = ___FIX(0);
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_id (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-parent proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ptr += ___LABEL_SIZE;
-      ___RESULT = ___SUBTYPED_FROM_START(ptr);
-     }
-   else
-     ___RESULT = ___FAL;
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_parent (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-nb-parameters proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   ___RESULT = ___FIX(___PRD_NBPARMS(___SUBTYPED_HEADER(___ARG1)));
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_nb_parameters (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-nb-closed proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   ___RESULT = ___FIX(___PRD_NBCLOSED(___SUBTYPED_HEADER(___ARG1)));
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_nb_closed (___ARG1);"
    proc))
 
 (define-prim (##make-subprocedure parent id)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   {
-     ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-     ___SCMOBJ head = start[-___LABEL_SIZE];
-     int i = ___INT(___ARG2);
-     if (___TESTHEADERTAG(head,___sVECTOR) &&
-         i >= 0 &&
-         i < ___CAST(int,___HD_FIELDS(head)))
-       ___RESULT = ___SUBTYPED_FROM_START(start+___LABEL_SIZE*i);
-     else
-       ___RESULT = ___FAL;
-   }
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___make_subprocedure (___ARG1, ___ARG2);"
    parent
    id))
 
 (define-prim (##subprocedure-parent-info proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ___RESULT = (ptr+1)[___LABEL_ENTRY_OR_DESCR];
-     }
-   else
-     ___RESULT = ___FAL;
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_parent_info (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-parent-name proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ___RESULT = (ptr+1)[___LABEL_HOST_LABEL];
-     }
-   else
-     ___RESULT = ___FAL;
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_parent_name (___ARG1);"
    proc))
 
 ;;;----------------------------------------------------------------------------
