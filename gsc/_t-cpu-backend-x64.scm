@@ -172,7 +172,6 @@
       (x86-mov cgc dst new-src width)))
 
   (cond
-    ;; Mov
     ((and
       (equal? dst-type 'mem)
       (or (equal? src-type 'mem) (equal? src-type 'lbl)))
@@ -216,7 +215,7 @@
                 ((and (not (cond-is-equal condition)) (not (cond-is-signed condition)))
                   (cons x86-ja x86-jbe))))
             ((not-equal) (flip (get-jumps (inverse-condition condition))))
-            ((not-greater) (flip (get-jumps (inverse-condition condition))))
+            ((lesser) (flip (get-jumps (inverse-condition condition))))
             (else
               (compiler-internal-error "cmp-jump-instr - Unknown condition: " condition))))
 
