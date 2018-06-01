@@ -2286,8 +2286,6 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 #define ___REFERENCE_TO_BODY (-1)
 #define ___LABEL_LOWLEVEL_CODE 1
-#define ___PSTATE_ALIGN_MULTIPLIER (1<<16)
-#define ___PSTATE_ALIGN_MODULUS    0x8888
 #else
 #define ___REFERENCE_TO_BODY 1
 #endif
@@ -5439,6 +5437,12 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_key_rest)}
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
+#ifdef ___CPU_x86
+
+/* Useful to have constant bit pattern in low 16 bits of pstate */
+#define ___PSTATE_ALIGN_MULTIPLIER (1<<16)
+#define ___PSTATE_ALIGN_MODULUS    0x8888
+
 #ifdef ___CPU_x86_32
 
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
@@ -5460,7 +5464,8 @@ do { \
      (ptr)[___LABEL_LOWLEVEL_CODE] = 0xfc51ff << (8*___tSUBTYPED); \
    } while (0)
 
-#else
+#endif
+
 #ifdef ___CPU_x86_64
 
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 1
@@ -5478,6 +5483,7 @@ do { \
    } while (0)
 
 #endif
+
 #endif
 
 #endif
