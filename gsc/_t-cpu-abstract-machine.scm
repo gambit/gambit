@@ -366,7 +366,7 @@
 (define condition-not-equal (list 'not-equal))
 
 (define (condition-greater and-equal? signed) (list 'greater and-equal? signed))
-(define (condition-not-greater and-equal? signed) (list 'not-greater and-equal? signed))
+(define (condition-lesser and-equal? signed) (list 'lesser and-equal? signed))
 
 (define (get-condition cond) (car cond))
 
@@ -375,14 +375,14 @@
     ((equal) #t)
     ((not-equal) #f)
     ((greater) (cadr cond))
-    ((not-greater) (cadr cond))))
+    ((lesser) (cadr cond))))
 
 (define (cond-is-signed cond)
   (case (car cond)
     ((equal) #t)
     ((not-equal) #t)
     ((greater) (caddr cond))
-    ((not-greater) (caddr cond))))
+    ((lesser) (caddr cond))))
 
 (define (inverse-condition cond)
   (case (car cond)
@@ -391,8 +391,8 @@
     ((not-equal)
       condition-equal)
     ((greater)
-      (condition-not-greater (not (cond-is-equal cond)) (cond-is-signed cond)))
-    ((not-greater)
+      (condition-lesser (not (cond-is-equal cond)) (cond-is-signed cond)))
+    ((lesser)
       (condition-greater (not (cond-is-equal cond)) (cond-is-signed cond)))))
 
 ;; ***** Utils
