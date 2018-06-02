@@ -1526,7 +1526,7 @@ ___module_struct *module;)
       for (i=0; i<lblcount; i++)
         {
           ___SCMOBJ lbl = ___SUBTYPED_FROM_BODY(&new_lbltbl[i].entry_or_descr);
-          ___SCMOBJ head = ___HEADER(lbl);
+          ___SCMOBJ head = ___SUBTYPED_HEADER(lbl);
 
           if (___TESTHEADERTAG(head,___sVECTOR))
             {
@@ -1536,10 +1536,10 @@ ___module_struct *module;)
                */
 
               ___UTF_8STRING name =
-                ___CAST(___UTF_8STRING, *___SUBTYPED_TO(lbl, ___LABEL_NAME));
+                ___CAST(___UTF_8STRING, ___LABEL_NAME_GET(lbl));
 
               if (name == 0)
-                *___SUBTYPED_TO(lbl, ___LABEL_NAME) = ___FAL;
+                ___LABEL_NAME_SET(lbl, ___FAL);
               else
                 {
                   /* TODO: the time needed to create these symbols dynamically dominates the module setup time... optimize by using the local symbol table... this may require changes to the linker */
@@ -1553,7 +1553,7 @@ ___module_struct *module;)
                   if (sym == ___FAL)
                     return ___FIX(___UNKNOWN_ERR);
 
-                  *___SUBTYPED_TO(lbl, ___LABEL_NAME) = sym;
+                  ___LABEL_NAME_SET(lbl, sym);
                 }
 
               /*
@@ -1627,118 +1627,6 @@ ___module_struct *module;)
     }
 
   return ___FIX(___NO_ERR);
-}
-
-
-___SCMOBJ ___subprocedure_id
-   ___P((___SCMOBJ proc),
-        (proc)
-___SCMOBJ proc;)
-{
-  if (___TYP(proc) == ___tSUBTYPED)
-    {
-      ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(proc));
-      ___SCMOBJ *ptr = start;
-      while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-        ptr -= ___LABEL_SIZE;
-      ptr += ___LABEL_SIZE;
-      return ___FIX( (start-ptr)/___LABEL_SIZE );
-    }
-  else
-    return ___FIX(0);
-}
-
-
-___SCMOBJ ___subprocedure_parent
-   ___P((___SCMOBJ proc),
-        (proc)
-___SCMOBJ proc;)
-{
-  if (___TYP(proc) == ___tSUBTYPED)
-    {
-      ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(proc));
-      ___SCMOBJ *ptr = start;
-      while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-        ptr -= ___LABEL_SIZE;
-      ptr += ___LABEL_SIZE;
-      return ___SUBTYPED_FROM_START(ptr);
-    }
-  else
-    return ___FAL;
-}
-
-
-___SCMOBJ ___subprocedure_nb_parameters
-   ___P((___SCMOBJ proc),
-        (proc)
-___SCMOBJ proc;)
-{
-   return ___FIX(___PRD_NBPARMS(___SUBTYPED_HEADER(proc)));
-}
-
-
-___SCMOBJ ___subprocedure_nb_closed
-   ___P((___SCMOBJ proc),
-        (proc)
-___SCMOBJ proc;)
-{
-  return ___FIX(___PRD_NBCLOSED(___SUBTYPED_HEADER(proc)));
-}
-
-
-___SCMOBJ ___make_subprocedure
-   ___P((___SCMOBJ parent,
-         ___SCMOBJ id),
-        (parent,
-         id)
-___SCMOBJ parent;
-___SCMOBJ id;)
-{
-  ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(parent));
-  ___SCMOBJ head = start[-___LABEL_SIZE];
-  int i = ___INT(id);
-  if (___TESTHEADERTAG(head,___sVECTOR) &&
-      i >= 0 &&
-      i < ___CAST(int,___HD_FIELDS(head)))
-    return ___SUBTYPED_FROM_START(start+___LABEL_SIZE*i);
-  else
-    return ___FAL;
-}
-
-
-___SCMOBJ ___subprocedure_parent_info
-   ___P((___SCMOBJ proc),
-        (proc)
-___SCMOBJ proc;)
-{
-  if (___TYP(proc) == ___tSUBTYPED)
-    {
-      ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(proc));
-      ___SCMOBJ *ptr = start;
-      while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-        ptr -= ___LABEL_SIZE;
-      return (ptr+1)[___LABEL_ENTRY_OR_DESCR];
-    }
-  else
-    return ___FAL;
-}
-
-
-___SCMOBJ ___subprocedure_parent_name
-   ___P((___SCMOBJ proc),
-        (proc)
-___SCMOBJ proc;)
-{
-  if (___TYP(proc) == ___tSUBTYPED)
-    {
-      ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(proc));
-      ___SCMOBJ *ptr = start;
-      while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-        ptr -= ___LABEL_SIZE;
-      return (ptr+1)[___LABEL_NAME];
-    }
-  else
-    return ___FAL;
 }
 
 
@@ -3557,6 +3445,168 @@ ___SCMOBJ fixup_objs;)
   return ___FAL;
 
 #endif
+}
+
+
+/*
+ * In the following functions, proc points to a label structure
+ * (___label_struct) that was either created by the C backend or the
+ * CPU backend.  If the host field of the label structure is equal to
+ * ___lowlevel_exec then it was created by the CPU backend and the
+ * word just before the host field is a pointer to the parent intro
+ * structure.
+ */
+
+#define ___LOWLEVEL_LABEL(lbl) \
+(___LABEL_HOST_GET(lbl) == ___lowlevel_exec)
+
+#define ___LOWLEVEL_LABEL_PARENT_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-1)
+#define ___LOWLEVEL_LABEL_NEXT_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-2)
+#define ___LOWLEVEL_LABEL_NBLBLS_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-3)
+#define ___LOWLEVEL_LABEL_INFO_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-4)
+#define ___LOWLEVEL_LABEL_NAME_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-5)
+
+
+___HIDDEN ___SCMOBJ ___subprocedure_parent_intro
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+  ___SCMOBJ probe = proc;
+
+  do
+    {
+      probe -= ___LABEL_SIZE * ___WS;
+    } while (!___TESTSUBTYPETAG(probe, ___sVECTOR));
+
+  return probe;
+}
+
+
+___SCMOBJ ___make_subprocedure
+   ___P((___SCMOBJ proc,
+         ___SCMOBJ id),
+        (proc,
+         id)
+___SCMOBJ proc;
+___SCMOBJ id;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    {
+      ___SCMOBJ probe = ___LOWLEVEL_LABEL_PARENT_GET(proc);
+
+      if (___FIXLT(id, ___FIX(0)) ||
+          ___FIXGE(id, ___LOWLEVEL_LABEL_NBLBLS_GET(probe)))
+        return ___FAL;
+
+      while (___FIXGT(id, ___FIX(0)))
+        {
+          probe = ___LOWLEVEL_LABEL_NEXT_GET(probe);
+          id = ___FIXSUB(id, ___FIX(1));
+        }
+
+      return probe;
+    }
+
+#endif
+
+  {
+    ___SCMOBJ intro = ___subprocedure_parent_intro (proc);
+
+    if (___FIXLT(id, ___FIX(0)) ||
+        ___FIXGE(id, ___FIX(___HD_FIELDS(___SUBTYPED_HEADER(intro)))))
+      return ___FAL;
+
+    return intro + (___INT(id)+1) * ___LABEL_SIZE * ___WS;
+  }
+}
+
+
+___SCMOBJ ___subprocedure_id
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    {
+      ___SCMOBJ probe = ___LOWLEVEL_LABEL_PARENT_GET(proc);
+      ___SCMOBJ id = ___FIX(0);
+
+      while (!___EQP(proc, probe))
+        {
+          probe = ___LOWLEVEL_LABEL_NEXT_GET(probe);
+          id = ___FIXADD(id, ___FIX(1));
+        }
+
+      return id;
+    }
+
+#endif
+
+  return ___FIX((proc - ___subprocedure_parent_intro (proc)) / (___LABEL_SIZE * ___WS) - 1);
+}
+
+
+___SCMOBJ ___subprocedure_parent
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+  return ___make_subprocedure (proc, ___FIX(0));
+}
+
+
+___SCMOBJ ___subprocedure_parent_info
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    return ___LOWLEVEL_LABEL_INFO_GET(___LOWLEVEL_LABEL_PARENT_GET(proc));
+
+#endif
+
+  return ___LABEL_INFO_GET(___subprocedure_parent_intro (proc));
+}
+
+
+___SCMOBJ ___subprocedure_parent_name
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    return ___LOWLEVEL_LABEL_NAME_GET(___LOWLEVEL_LABEL_PARENT_GET(proc));
+
+#endif
+
+  return ___LABEL_NAME_GET(___subprocedure_parent_intro (proc));
+}
+
+
+___SCMOBJ ___subprocedure_nb_parameters
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+   return ___FIX(___PRD_NBPARMS(___SUBTYPED_HEADER(proc)));
+}
+
+
+___SCMOBJ ___subprocedure_nb_closed
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+  return ___FIX(___PRD_NBCLOSED(___SUBTYPED_HEADER(proc)));
 }
 
 

@@ -5500,14 +5500,14 @@ do { \
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl)
 #endif
 
-#ifdef ___USE_UNALIGNED_LABEL_SIZE
-#define ___LABEL_SIZE ___UNALIGNED_LABEL_SIZE
-#else
+#ifdef ___USE_ALIGNED_LABEL_SIZE
 #if ___UNALIGNED_LABEL_SIZE <= 4
 #define ___LABEL_SIZE 4
 #else
 #define ___LABEL_SIZE 8
 #endif
+#else
+#define ___LABEL_SIZE ___UNALIGNED_LABEL_SIZE
 #endif
 
 #define ___CLO_FREEVARS (1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
@@ -8794,6 +8794,8 @@ ___LABEL_HOST_LABEL_GET(lbl) = hlbl
 #define ___LABEL_NAME (___LABEL_ENTRY_OR_DESCR+1)
 #define ___LABEL_START_TO_BODY 2
 #endif
+#define ___LABEL_NAME_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_NAME)
+#define ___LABEL_NAME_SET(lbl, val) ___LABEL_NAME_GET(lbl) = val
 
     ___FAKEHOST host;
 #define ___LABEL_HOST (-2)
@@ -8804,11 +8806,13 @@ ___LABEL_HOST_LABEL_GET(lbl) = hlbl
 
     ___WORD entry_or_descr;
 #define ___LABEL_ENTRY_OR_DESCR 0
+#define ___LABEL_INFO ___LABEL_ENTRY_OR_DESCR
 #define ___LABEL_ENTRY_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)
 #define ___LABEL_ENTRY_SET(lbl, val) ___LABEL_ENTRY_GET(lbl) = val
 #define ___LABEL_DESCR_GET(lbl) ___LABEL_ENTRY_GET(lbl)
 #define ___LABEL_DESCR_SET(lbl, val) ___LABEL_ENTRY_SET(lbl, val)
-#define ___LABEL_INFO ___LABEL_ENTRY_OR_DESCR
+#define ___LABEL_INFO_GET(lbl) ___LABEL_ENTRY_GET(lbl)
+#define ___LABEL_INFO_SET(lbl, val) ___LABEL_ENTRY_SET(lbl, val)
 
 #if ___LABEL_SIZE - ___LABEL_START_TO_BODY - 1 > 0
     ___FAKEVOIDSTAR padding[___LABEL_SIZE - ___LABEL_START_TO_BODY - 1];

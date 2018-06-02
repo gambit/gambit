@@ -14,6 +14,12 @@ extern ___SCMOBJ ___os_load_object_file
         ());
 
 
+extern ___SCMOBJ ___make_subprocedure
+   ___P((___SCMOBJ proc,
+         ___SCMOBJ id),
+        ());
+
+
 extern ___SCMOBJ ___subprocedure_id
    ___P((___SCMOBJ proc),
         ());
@@ -24,28 +30,22 @@ extern ___SCMOBJ ___subprocedure_parent
         ());
 
 
-extern ___SCMOBJ ___subprocedure_nb_parameters
-   ___P((___SCMOBJ proc),
-        ());
-
-
-extern ___SCMOBJ ___subprocedure_nb_closed
-   ___P((___SCMOBJ proc),
-        ());
-
-
-extern ___SCMOBJ ___make_subprocedure
-   ___P((___SCMOBJ parent,
-         ___SCMOBJ id),
-        ());
-
-
 extern ___SCMOBJ ___subprocedure_parent_info
    ___P((___SCMOBJ proc),
         ());
 
 
 extern ___SCMOBJ ___subprocedure_parent_name
+   ___P((___SCMOBJ proc),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_nb_parameters
+   ___P((___SCMOBJ proc),
+        ());
+
+
+extern ___SCMOBJ ___subprocedure_nb_closed
    ___P((___SCMOBJ proc),
         ());
 
