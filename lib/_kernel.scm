@@ -74,8 +74,8 @@ end-of-code
     * C-interface when Scheme is calling a C function.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
 
    na = ___ps->na;
 
@@ -235,8 +235,8 @@ end-of-code
     * by the arguments of the faulty call.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
 
    na = ___ps->na;
 
@@ -279,8 +279,8 @@ end-of-code
     * faulty call.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
    ___SCMOBJ result;
    ___SCMOBJ handler;
 
@@ -348,8 +348,8 @@ end-of-code
     * the faulty call.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
 
    na = ___ps->na;
 
@@ -390,9 +390,9 @@ end-of-code
     * rest parameter must be constructed.
     */
 
-   int np;
-   int na;
-   int i;
+   ___WORD np;
+   ___WORD na;
+   ___WORD i;
    ___SCMOBJ rest_param_list;
 
    np = ___PRD_NBPARMS(___SUBTYPED_HEADER(___ps->temp1));
@@ -492,14 +492,14 @@ end-of-code
     * parameters must be processed.
     */
 
-   int np;
-   int na;
-   int nb_req_opt;
-   int nb_key;
-   int i;
-   int j;
-   int k;
-   int fnk;
+   ___WORD np;
+   ___WORD na;
+   ___WORD nb_req_opt;
+   ___WORD nb_key;
+   ___WORD i;
+   ___WORD j;
+   ___WORD k;
+   ___WORD fnk;
    ___SCMOBJ key_descr;
    ___SCMOBJ key_vals[___MAX_NB_PARMS];
 
@@ -652,14 +652,14 @@ end-of-code
     * processed arguments.
     */
 
-   int np;          /* number of formal parameters */
-   int na;          /* number of arguments of the call */
-   int nb_req_opt;  /* number of required or optional parameters */
-   int nb_key;      /* number of keyword parameters */
-   int i;
-   int j;
-   int k;
-   int fnk;
+   ___WORD np;          /* number of formal parameters */
+   ___WORD na;          /* number of arguments of the call */
+   ___WORD nb_req_opt;  /* number of required or optional parameters */
+   ___WORD nb_key;      /* number of keyword parameters */
+   ___WORD i;
+   ___WORD j;
+   ___WORD k;
+   ___WORD fnk;
    ___SCMOBJ key_descr;
    ___SCMOBJ key_vals[___MAX_NB_PARMS];
    ___SCMOBJ rest_param_list;
@@ -3057,7 +3057,7 @@ end-of-code
      ___SCMOBJ proc;
      ___SCMOBJ args;
      ___SCMOBJ lst;
-     int na;
+     ___WORD na;
 
      ___POP_ARGS2(proc,args)
 

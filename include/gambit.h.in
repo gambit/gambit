@@ -8657,7 +8657,7 @@ typedef struct ___processor_state_struct
     ___WORD r[___NB_GVM_REGS];
 
     ___WORD pc;
-    int na;
+    ___WORD na;
 
     /* these handlers are duplicated from the global state for quick access */
 
@@ -10311,7 +10311,7 @@ typedef struct ___global_state_struct
     ___program_startup_info_struct *(*___get_program_startup_info) ___PVOID;
     ___SCMOBJ (*___call)
        ___P((___PSD
-             int nargs,
+             ___WORD nargs,
              ___SCMOBJ proc,
              ___SCMOBJ marker),
             ());
@@ -11709,7 +11709,7 @@ ___IMP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
    ___PVOID;
 ___IMP_FUNC(___SCMOBJ,___call)
    ___P((___PSD
-         int nargs,
+         ___WORD nargs,
          ___SCMOBJ proc,
          ___SCMOBJ marker),
         ());

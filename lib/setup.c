@@ -2923,7 +2923,7 @@ ___processor_state ___ps;)
 
 ___EXP_FUNC(___SCMOBJ,___call)
    ___P((___PSD
-         int nargs,
+         ___WORD nargs,
          ___SCMOBJ proc,
          ___SCMOBJ stack_marker),
         (___PSV
@@ -2931,7 +2931,7 @@ ___EXP_FUNC(___SCMOBJ,___call)
          proc,
          stack_marker)
 ___PSDKR
-int nargs;
+___WORD nargs;
 ___SCMOBJ proc;
 ___SCMOBJ stack_marker;)
 {
