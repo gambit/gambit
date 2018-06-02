@@ -74,8 +74,8 @@ end-of-code
     * C-interface when Scheme is calling a C function.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
 
    na = ___ps->na;
 
@@ -144,7 +144,7 @@ end-of-code
 
    ___ADJFP(-___RETI_RA)
 
-   ___SET_R0(___GSTATE->internal_return)
+   ___SET_R0(___ps->internal_return)
 
    /* check why the handler was called */
 
@@ -208,7 +208,7 @@ end-of-code
 
    ___ADJFP(-___RETI_RA)
 
-   ___SET_R0(___GSTATE->internal_return)
+   ___SET_R0(___ps->internal_return)
 
    /* tail call to ##check-heap */
 
@@ -235,8 +235,8 @@ end-of-code
     * by the arguments of the faulty call.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
 
    na = ___ps->na;
 
@@ -279,8 +279,8 @@ end-of-code
     * faulty call.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
    ___SCMOBJ result;
    ___SCMOBJ handler;
 
@@ -348,8 +348,8 @@ end-of-code
     * the faulty call.
     */
 
-   int na;
-   int i;
+   ___WORD na;
+   ___WORD i;
 
    na = ___ps->na;
 
@@ -390,9 +390,9 @@ end-of-code
     * rest parameter must be constructed.
     */
 
-   int np;
-   int na;
-   int i;
+   ___WORD np;
+   ___WORD na;
+   ___WORD i;
    ___SCMOBJ rest_param_list;
 
    np = ___PRD_NBPARMS(___SUBTYPED_HEADER(___ps->temp1));
@@ -492,14 +492,14 @@ end-of-code
     * parameters must be processed.
     */
 
-   int np;
-   int na;
-   int nb_req_opt;
-   int nb_key;
-   int i;
-   int j;
-   int k;
-   int fnk;
+   ___WORD np;
+   ___WORD na;
+   ___WORD nb_req_opt;
+   ___WORD nb_key;
+   ___WORD i;
+   ___WORD j;
+   ___WORD k;
+   ___WORD fnk;
    ___SCMOBJ key_descr;
    ___SCMOBJ key_vals[___MAX_NB_PARMS];
 
@@ -652,14 +652,14 @@ end-of-code
     * processed arguments.
     */
 
-   int np;          /* number of formal parameters */
-   int na;          /* number of arguments of the call */
-   int nb_req_opt;  /* number of required or optional parameters */
-   int nb_key;      /* number of keyword parameters */
-   int i;
-   int j;
-   int k;
-   int fnk;
+   ___WORD np;          /* number of formal parameters */
+   ___WORD na;          /* number of arguments of the call */
+   ___WORD nb_req_opt;  /* number of required or optional parameters */
+   ___WORD nb_key;      /* number of keyword parameters */
+   ___WORD i;
+   ___WORD j;
+   ___WORD k;
+   ___WORD fnk;
    ___SCMOBJ key_descr;
    ___SCMOBJ key_vals[___MAX_NB_PARMS];
    ___SCMOBJ rest_param_list;
@@ -903,7 +903,7 @@ end-of-code
 
        ___ADJFP(-___RETI_RA)
 
-       ___SET_R0(___GSTATE->internal_return)
+       ___SET_R0(___ps->internal_return)
 
        /* tail call to ##force-undetermined */
 
@@ -941,7 +941,7 @@ end-of-code
        {
          /* not the same processor that created frame */
          ___COVER_RETURN_TO_C_HANDLER_WRONG_PROCESSOR;
-         ___SET_R0(___GSTATE->handler_return_to_c)
+         ___SET_R0(___ps->handler_return_to_c)
          ___SET_R1(___FIELD(unwind_destination,1))
          ___JUMPPRM(___SET_NARGS(1),
                     ___PRMCELL(___G__23__23_c_2d_return_2d_on_2d_other_2d_processor.prm))
@@ -954,14 +954,14 @@ end-of-code
        {
          /* not first return */
          ___COVER_RETURN_TO_C_HANDLER_MULTIPLE_RETURN;
-         ___SET_R0(___GSTATE->handler_return_to_c)
+         ___SET_R0(___ps->handler_return_to_c)
          ___JUMPPRM(___SET_NARGS(0),
                     ___PRMCELL(___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception.prm))
        }
      else
        {
          ___COVER_RETURN_TO_C_HANDLER_FIRST_RETURN;
-         ___FRAME_STORE_RA(___GSTATE->handler_return_to_c)
+         ___FRAME_STORE_RA(___ps->handler_return_to_c)
          ___W_ALL
          ___throw_error (___PSP ___FIX(___UNWIND_C_STACK));  /* jump back inside ___call */
        }
@@ -1100,7 +1100,7 @@ end-of-code
 
            ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
-           if (ra1 == ___GSTATE->internal_return)
+           if (ra1 == ___ps->internal_return)
              {
                ___SCMOBJ actual_ra = ___FP_STK(fp,___RETI_RA);
                ___RETI_GET_FS_LINK(actual_ra,fs,link)
@@ -1119,7 +1119,7 @@ end-of-code
 
            ra2 = ___STK(link+1);
 
-           if (ra2 == ___GSTATE->handler_break)
+           if (ra2 == ___ps->handler_break)
              {
                /* first frame of that section */
 
@@ -1135,7 +1135,7 @@ end-of-code
 
                ___FP_SET_STK(fp,-___FRAME_STACK_RA,ra2)
                ___SET_STK(-___BREAK_FRAME_NEXT,___CAST(___SCMOBJ,fp))
-               ___SET_STK(link+1,___GSTATE->handler_break)
+               ___SET_STK(link+1,___ps->handler_break)
              }
 
            ___ADJFP(___FRAME_SPACE(fs))
@@ -1149,7 +1149,7 @@ end-of-code
 
        ra1 = fp[___FRAME_RA];
 
-       if (ra1 == ___GSTATE->internal_return)
+       if (ra1 == ___ps->internal_return)
          {
            ___SCMOBJ actual_ra = fp[___FRAME_RETI_RA];
            ___RETI_GET_FS_LINK(actual_ra,fs,link)
@@ -1167,7 +1167,7 @@ end-of-code
          ___SET_STK(i,___FP_STK(fp,i))
 
        ___SET_STK(-___BREAK_FRAME_NEXT,___STK(link+1))
-       ___SET_STK(link+1,___GSTATE->handler_break)
+       ___SET_STK(link+1,___ps->handler_break)
 
        ___ADJFP(___FRAME_SPACE(fs))
      }
@@ -3057,7 +3057,7 @@ end-of-code
      ___SCMOBJ proc;
      ___SCMOBJ args;
      ___SCMOBJ lst;
-     int na;
+     ___WORD na;
 
      ___POP_ARGS2(proc,args)
 
@@ -3135,121 +3135,45 @@ end-of-code
 
 (define-prim (##subprocedure-id proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ptr += ___LABEL_SIZE;
-       ___RESULT = ___FIX( (start-ptr)/___LABEL_SIZE );
-     }
-   else
-     ___RESULT = ___FIX(0);
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_id (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-parent proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ptr += ___LABEL_SIZE;
-      ___RESULT = ___SUBTYPED_FROM_START(ptr);
-     }
-   else
-     ___RESULT = ___FAL;
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_parent (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-nb-parameters proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   ___RESULT = ___FIX(___PRD_NBPARMS(___SUBTYPED_HEADER(___ARG1)));
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_nb_parameters (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-nb-closed proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   ___RESULT = ___FIX(___PRD_NBCLOSED(___SUBTYPED_HEADER(___ARG1)));
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_nb_closed (___ARG1);"
    proc))
 
 (define-prim (##make-subprocedure parent id)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   {
-     ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-     ___SCMOBJ head = start[-___LABEL_SIZE];
-     int i = ___INT(___ARG2);
-     if (___TESTHEADERTAG(head,___sVECTOR) &&
-         i >= 0 &&
-         i < ___CAST(int,___HD_FIELDS(head)))
-       ___RESULT = ___SUBTYPED_FROM_START(start+___LABEL_SIZE*i);
-     else
-       ___RESULT = ___FAL;
-   }
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___make_subprocedure (___ARG1, ___ARG2);"
    parent
    id))
 
 (define-prim (##subprocedure-parent-info proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ___RESULT = (ptr+1)[___LABEL_ENTRY_OR_DESCR];
-     }
-   else
-     ___RESULT = ___FAL;
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_parent_info (___ARG1);"
    proc))
 
 (define-prim (##subprocedure-parent-name proc)
   (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-
-   if (___TYP(___ARG1) == ___tSUBTYPED)
-     {
-       ___SCMOBJ *start = ___CAST(___SCMOBJ*,&___SUBTYPED_HEADER(___ARG1));
-       ___SCMOBJ *ptr = start;
-       while (!___TESTHEADERTAG(*ptr,___sVECTOR))
-         ptr -= ___LABEL_SIZE;
-       ___RESULT = (ptr+1)[___LABEL_HOST_LABEL];
-     }
-   else
-     ___RESULT = ___FAL;
-
-end-of-code
-
+  (##c-code
+   "___RESULT = ___subprocedure_parent_name (___ARG1);"
    proc))
 
 ;;;----------------------------------------------------------------------------
@@ -3300,7 +3224,7 @@ end-of-code
 
    ___SCMOBJ ra = ___FIELD(___ARG1,0);
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ra = ___FIELD(___ARG1,___FRAME_RETI_RA);
 
    ___RESULT = ra;
@@ -3322,7 +3246,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ra = ___FIELD(frame,___FRAME_RETI_RA);
      }
    else
@@ -3333,7 +3257,7 @@ end-of-code
 
        ra = fp[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ra = fp[-___RETI_RA];
      }
 
@@ -3365,7 +3289,7 @@ end-of-code
    ___SCMOBJ ra = ___FIELD(___ARG1,0);
    int fs;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS(___FIELD(___ARG1,___FRAME_RETI_RA),fs)
    else
      ___RETN_GET_FS(ra,fs)
@@ -3390,7 +3314,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS(___FIELD(frame,___FRAME_RETI_RA),fs)
        else
          ___RETN_GET_FS(ra,fs)
@@ -3403,7 +3327,7 @@ end-of-code
 
        ra = fp[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS(fp[-___RETI_RA],fs)
        else
          ___RETN_GET_FS(ra,fs)
@@ -3423,7 +3347,7 @@ end-of-code
    int fs;
    int link;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3449,7 +3373,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3460,7 +3384,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3483,7 +3407,7 @@ end-of-code
    ___WORD gcmap;
    ___WORD *nextgcmap = 0;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK_GCMAP(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link,gcmap,nextgcmap)
    else
      ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
@@ -3516,7 +3440,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK_GCMAP(___FIELD(frame,___FRAME_RETI_RA),fs,link,gcmap,nextgcmap)
        else
          ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
@@ -3529,7 +3453,7 @@ end-of-code
 
        ra = fp[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK_GCMAP(fp[-___RETI_RA],fs,link,gcmap,nextgcmap)
        else
          ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
@@ -3554,7 +3478,7 @@ end-of-code
    int fs;
    int link;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3578,7 +3502,7 @@ end-of-code
    int fs;
    int link;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3610,7 +3534,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3626,7 +3550,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3660,7 +3584,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3673,7 +3597,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3763,14 +3687,14 @@ end-of-code
 
        fp = ___BODY_AS(frame,___tSUBTYPED);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(fp[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
 
        fp += fs+1;
 
-       if (ra == ___GSTATE->dynamic_env_bind_return)
+       if (ra == ___ps->dynamic_env_bind_return)
          denv = fp[-DYNAMIC_ENV_BIND_DENV];
 
        next_frame = fp[-link-1];
@@ -3790,7 +3714,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3798,10 +3722,10 @@ end-of-code
        fp = ___CAST(___SCMOBJ*,frame)+___FRAME_SPACE(fs);
        frame_ra = fp[-link-1];
 
-       if (ra == ___GSTATE->dynamic_env_bind_return)
+       if (ra == ___ps->dynamic_env_bind_return)
          denv = fp[-DYNAMIC_ENV_BIND_DENV];
 
-       if (frame_ra == ___GSTATE->handler_break)
+       if (frame_ra == ___ps->handler_break)
          {
            /* first frame of that section */
 

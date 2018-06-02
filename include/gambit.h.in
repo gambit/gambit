@@ -1222,8 +1222,30 @@
 #define ___NB_ARG_REGS 3
 
 /*
- * Determine if label values (a gcc extension to C) should be used.
+ * Determine if label values (a gcc extension to C) should be supported.
  */
+
+#ifdef ___NOT_SUPPORT_LABEL_VALUES
+#ifdef ___SUPPORT_LABEL_VALUES
+#error "Define either ___SUPPORT_LABEL_VALUES or ___NOT_SUPPORT_LABEL_VALUES"
+#endif
+#else
+#ifndef ___SUPPORT_LABEL_VALUES
+#define ___SUPPORT_LABEL_VALUES
+#endif
+#endif
+
+/*
+ * Determine if label values should be used.
+ */
+
+#ifndef ___SUPPORT_LABEL_VALUES
+
+#undef ___USE_LABEL_VALUES
+#undef ___NOT_USE_LABEL_VALUES
+#define ___NOT_USE_LABEL_VALUES
+
+#else
 
 #ifdef ___USE_LABEL_VALUES
 #ifdef ___NOT_USE_LABEL_VALUES
@@ -1242,6 +1264,8 @@
 #define ___NOT_USE_LABEL_VALUES
 #endif
 #endif
+#endif
+
 #endif
 
 /*
@@ -2261,9 +2285,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 #define ___REFERENCE_TO_BODY (-1)
-#define ___PSTATE_ALIGN_MULTIPLIER 256
-#define ___PSTATE_ALIGN_MODULUS    136
-#undef ___USE_LABEL_VALUES
+#define ___LABEL_LOWLEVEL_CODE 1
 #else
 #define ___REFERENCE_TO_BODY 1
 #endif
@@ -3699,12 +3721,12 @@ ___TICKETLOCK_UNLOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)));
 
 
 #define ___THREAD_SAVE \
-if (___R0 == ___GSTATE->handler_break) \
+if (___R0 == ___ps->handler_break) \
   frame = ___STK(-___BREAK_FRAME_NEXT); \
 else \
   { \
     ___SET_STK(-___FRAME_STACK_RA,___R0) \
-    ___R0 = ___GSTATE->handler_break; \
+    ___R0 = ___ps->handler_break; \
     frame = ___CAST(___SCMOBJ,___fp); \
     ___ADJFP(___BREAK_FRAME_SPACE) \
     ___SET_STK(-___BREAK_FRAME_NEXT,frame) \
@@ -3768,7 +3790,7 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
   ___INTERRUPT_MASK_SET(___FIELD(___FIELD(thread,___THREAD_DENV),___DENV_INTERRUPT_MASK)); \
   ___FIELD(thread,___THREAD_LAST_PROCESSOR) = ___CURRENTPROCESSOR; \
   ___CURRENTTHREADSET(thread) \
-  ___SET_R0(___GSTATE->handler_break) \
+  ___SET_R0(___ps->handler_break) \
 }
 
 #define ___JUMP_THREAD_RESTORE2(jump) \
@@ -3895,15 +3917,15 @@ if (___fp != ___ps->stack_break) \
 #define ___FRAME_FETCH_RA \
 ((___fp != ___ps->stack_break) \
 ? ___STK(-___FRAME_STACK_RA) \
-: ___GSTATE->handler_break)
+: ___ps->handler_break)
 
 #define ___CONTINUATION_CAPTURE \
-if (___R0 == ___GSTATE->handler_break) \
+if (___R0 == ___ps->handler_break) \
   frame = ___STK(-___BREAK_FRAME_NEXT); \
 else \
   { \
     ___SET_STK(-___FRAME_STACK_RA,___R0) \
-    ___R0 = ___GSTATE->handler_break; \
+    ___R0 = ___ps->handler_break; \
     frame = ___CAST(___SCMOBJ,___fp); \
   } \
 ___ADJFP(___ROUND_TO_MULT(___SUBTYPED_BODY+___CONTINUATION_SIZE,___FRAME_ALIGN)) \
@@ -3971,7 +3993,7 @@ temp = ___FIELD(___FIELD(temp,___DENV_LOCAL),___ENV_NAME_VAL); \
 ___FIELD(thread,___THREAD_DENV_CACHE1) = temp; \
 ___FIELD(thread,___THREAD_DENV_CACHE2) = temp; \
 ___FIELD(thread,___THREAD_DENV_CACHE3) = temp; \
-___SET_R0(___GSTATE->handler_break)
+___SET_R0(___ps->handler_break)
 
 #define ___JUMP_CONTINUATION_GRAFT_NO_WINDING2(jump) \
 { ___SCMOBJ cont; \
@@ -4038,7 +4060,7 @@ ___SET_R0(___GSTATE->handler_break)
   ___FIELD(thread,___THREAD_DENV_CACHE1) = temp; \
   ___FIELD(thread,___THREAD_DENV_CACHE2) = temp; \
   ___FIELD(thread,___THREAD_DENV_CACHE3) = temp; \
-  ___JUMPPRM(___NOTHING,___GSTATE->handler_break) \
+  ___JUMPPRM(___NOTHING,___ps->handler_break) \
 }
 
 /*---------------------------------------------------------------------------*/
@@ -5339,12 +5361,12 @@ ___JUMP(___LABEL_ENTRY_GET(___SELF))}
 {nargs ___SELF=val; \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
   ___JUMP(___LABEL_ENTRY_GET(___SELF)) \
-___ps->temp1=___SELF;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc)}
+___ps->temp1=___SELF;___JUMPEXTPRM(___NOTHING,___ps->handler_not_proc)}
 #define ___JUMPGLOSAFE(nargs,i,glo) \
 {nargs ___SELF=___GLO(i,glo); \
 if (___EXPECT_TRUE(___PROCEDUREP(___SELF))) \
   ___JUMP(___LABEL_ENTRY_GET(___SELF)) \
-___ps->temp4=(___WORD)&___GLOSTRUCT(i,glo);___JUMPEXTPRM(___NOTHING,___GSTATE->handler_not_proc_glo)}
+___ps->temp4=(___WORD)&___GLOSTRUCT(i,glo);___JUMPEXTPRM(___NOTHING,___ps->handler_not_proc_glo)}
 
 #ifdef ___NOT_SAFE_CALLS
 #undef ___JUMPGENSAFE
@@ -5390,34 +5412,38 @@ if (___EXPECT_TRUE(guard(___sw))) switch(___INT(___FIELD(___sw,___SYMKEY_HASH)) 
 
 #define ___WRONG_NARGS(lbl,nb_req,nb_opt,nb_key) \
 {___ps->temp1=___LBL(lbl); \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_wrong_nargs)}
+___JUMPEXTPRM(___NOTHING,___ps->handler_wrong_nargs)}
 
 #define ___GET_REST(lbl,nb_req,nb_opt,nb_key) \
 if (___ps->na>=0){___ps->temp1=___LBL(lbl); \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_rest)}
+___JUMPEXTPRM(___NOTHING,___ps->handler_get_rest)}
 
 #define ___GET_KEY(lbl,nb_req,nb_opt,nb_key,key_descr) \
 if (___ps->na>=0){___ps->temp1=___LBL(lbl);___ps->temp2=nb_req+nb_opt; \
-___ps->temp3=key_descr;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_key)}
+___ps->temp3=key_descr;___JUMPEXTPRM(___NOTHING,___ps->handler_get_key)}
 
 #define ___GET_REST_KEY(lbl,nb_req,nb_opt,nb_key,key_descr) \
 if (___ps->na>=0){___ps->temp1=___LBL(lbl);___ps->temp2=nb_req+nb_opt; \
 ___ps->temp3=key_descr;___ps->temp4=1; \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_key_rest)}
+___JUMPEXTPRM(___NOTHING,___ps->handler_get_key_rest)}
 
 #define ___GET_KEY_REST(lbl,nb_req,nb_opt,nb_key,key_descr) \
 if (___ps->na>=0){___ps->temp1=___LBL(lbl);___ps->temp2=nb_req+nb_opt; \
 ___ps->temp3=key_descr;___ps->temp4=0; \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_get_key_rest)}
+___JUMPEXTPRM(___NOTHING,___ps->handler_get_key_rest)}
 
 #define ___BOOLEAN(x)(x)?___TRU:___FAL
 #define ___EXPR(x)x;
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
-#ifdef ___CPU_x86_32
+#ifdef ___CPU_x86
 
-#define ___LABEL_SIZE 4
+/* Useful to have constant bit pattern in low 16 bits of pstate */
+#define ___PSTATE_ALIGN_MULTIPLIER (1<<16)
+#define ___PSTATE_ALIGN_MODULUS    0x8888
+
+#ifdef ___CPU_x86_32
 
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
@@ -5426,57 +5452,75 @@ do { \
      ___WORD dist = ___CAST(___WORD, \
                             ___CAST(___UWORD,lbl) - \
                             (___CAST(___UWORD,ptr) + ___WS + ___tSUBTYPED + 5)); \
-     (ptr)[___LABEL_HOST_LABEL] = (0xe8L << (8*___tSUBTYPED)) \
-                                  + (dist << (8*(___tSUBTYPED+1))); \
-     (ptr)[___LABEL_HOST_LABEL+1] = (dist >> (8*(___WS-(___tSUBTYPED+1)))); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = (0xe8L << (8*___tSUBTYPED)) \
+                                     + (dist << (8*(___tSUBTYPED+1))); \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = (dist >> (8*(___WS-(___tSUBTYPED+1)))); \
    } while (0)
 
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
 do { \
      /* generate x86-32 instruction: call *-4(%ecx) */ \
-     (ptr)[___LABEL_HOST_LABEL] = 0xfc51ff << (8*___tSUBTYPED); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xfc51ff << (8*___tSUBTYPED); \
    } while (0)
 
-#else
-#ifdef ___CPU_x86_64
+#endif
 
-#define ___LABEL_SIZE 4
+#ifdef ___CPU_x86_64
 
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 1
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
 do { \
      /* generate x86-64 instruction: call *-15(%rip) */ \
-     (ptr)[___LABEL_HOST_LABEL] = 0xfffffff115ffL << (8*___tSUBTYPED); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xfffffff115ffL << (8*___tSUBTYPED); \
    } while (0)
 
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
 do { \
      /* generate x86-64 instruction: call *-8(%rcx) */ \
-     (ptr)[___LABEL_HOST_LABEL] = 0xf851ff << (8*___tSUBTYPED); \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xf851ff << (8*___tSUBTYPED); \
    } while (0)
 
 #endif
-#endif
 
 #endif
 
-#ifndef ___LABEL_SIZE
-#define ___LABEL_SIZE 4
+#endif
+
+#ifdef ___CLO_LOWLEVEL_TRAMPOLINE_SIZE
+#ifdef ___SUPPORT_LABEL_VALUES
+#define ___UNALIGNED_LABEL_SIZE (4+___LABEL_LOWLEVEL_TRAMPOLINE_SIZE)
+#else
+#define ___UNALIGNED_LABEL_SIZE (3+___LABEL_LOWLEVEL_TRAMPOLINE_SIZE)
+#endif
+#else
+#define ___UNALIGNED_LABEL_SIZE 4
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 0
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl)
 #endif
 
-#define ___ALLOC_CLO(n)(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE),___sPROCEDURE)),___END_ALLOC_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)),___GET_SUBTYPED(n+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)))
+#ifdef ___USE_ALIGNED_LABEL_SIZE
+#if ___UNALIGNED_LABEL_SIZE <= 4
+#define ___LABEL_SIZE 4
+#else
+#define ___LABEL_SIZE 8
+#endif
+#else
+#define ___LABEL_SIZE ___UNALIGNED_LABEL_SIZE
+#endif
+
+#define ___CLO_FREEVARS (1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
+
+#define ___ALLOC_CLO(n)(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(n+___CLO_FREEVARS,___sPROCEDURE)),___END_ALLOC_SUBTYPED(n+___CLO_FREEVARS),___GET_SUBTYPED(n+___CLO_FREEVARS))
 #define ___BEGIN_SETUP_CLO(n,clo,lbl) \
 {___WORD *___ptr=___BODY0_AS(clo,___tSUBTYPED); \
 ___ptr[___LABEL_ENTRY_OR_DESCR]=___LBL(lbl); \
 ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(___ptr,___LBL(lbl));
-#define ___ADD_CLO_ELEM(i,val)___ptr[i+(1+___CLO_LOWLEVEL_TRAMPOLINE_SIZE)]=(val);
+#define ___ADD_CLO_ELEM(i,val)___ptr[i+___CLO_FREEVARS]=(val);
 #define ___END_SETUP_CLO(n) }
-#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]
-#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y+___CLO_LOWLEVEL_TRAMPOLINE_SIZE]=z;
+#define ___CLO(x,y)___BODY_AS(x,___tSUBTYPED)[y+(___CLO_FREEVARS-1)]
+#define ___SET_CLO(x,y,z)___BODY_AS(x,___tSUBTYPED)[y+(___CLO_FREEVARS-1)]=z;
 
 #define ___CLOSURELENGTH(x)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(x))-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
 #define ___CLOSURECODE(x)___CLO(x,-___CLO_LOWLEVEL_TRAMPOLINE_SIZE)
@@ -5646,7 +5690,7 @@ if (___EXPECT_FALSE(___POLL_TRIGGER)) \
 {___ps->temp1=___LBL(n); \
 ___ps->poll_location.file=__FILE__; \
 ___ps->poll_location.line=__LINE__; \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
+___JUMPEXTPRM(___NOTHING,___ps->handler_stack_limit) \
 }
 
 #else
@@ -5654,7 +5698,7 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
 #define ___POLL(n)                    \
 if (___EXPECT_FALSE(___POLL_TRIGGER)) \
 {___ps->temp1=___LBL(n); \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_stack_limit) \
+___JUMPEXTPRM(___NOTHING,___ps->handler_stack_limit) \
 }
 
 #endif
@@ -5669,7 +5713,7 @@ if (___EXPECT_FALSE(___hp>___ps->heap_limit)) \
 {___ps->temp1=___LBL(n); \
 ___ps->check_heap_location.file=__FILE__; \
 ___ps->check_heap_location.line=__LINE__; \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
+___JUMPEXTPRM(___NOTHING,___ps->handler_heap_limit) \
 }
 
 #else
@@ -5677,13 +5721,13 @@ ___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
 #define ___CHECK_HEAP(n,m)                    \
 if (___EXPECT_FALSE(___hp>___ps->heap_limit)) \
 {___ps->temp1=___LBL(n); \
-___JUMPEXTPRM(___NOTHING,___GSTATE->handler_heap_limit) \
+___JUMPEXTPRM(___NOTHING,___ps->handler_heap_limit) \
 }
 
 #endif
 
 #define ___FORCE1(n,src) \
-if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___GSTATE->handler_force);
+if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___ps->handler_force);
 #define ___FORCE2 ___temp=___ps->temp2;}
 #define ___FORCE3 ___temp
 
@@ -6309,34 +6353,6 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #define ___FRAME_SPACE(n)___ROUND_TO_MULT((n)+___FRAME_RESERVE,___FRAME_ALIGN)
 #define ___FRAME_RESERVE 3
 #define ___FRAME_ALIGN 4
-
-#if ___LABEL_SIZE == 4
-#define ___LBL_TAIL
-#else
-#if ___LABEL_SIZE == 5
-#define ___LBL_TAIL ,0
-#else
-#if ___LABEL_SIZE == 6
-#define ___LBL_TAIL ,0,0
-#else
-#if ___LABEL_SIZE == 7
-#define ___LBL_TAIL ,0,0,0
-#else
-#if ___LABEL_SIZE == 8
-#define ___LBL_TAIL ,0,0,0,0
-#endif
-#endif
-#endif
-#endif
-#endif
-
-#define ___BEGIN_LBL \
-___LOCAL ___label_struct ___lbltbl[]={
-#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc){___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc)),___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM),info,___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name) ___LBL_TAIL}
-#define ___DEF_LBL_PROC(id,nbp,nbc){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___PRD(nbp,nbc),0,0 ___LBL_TAIL}
-#define ___DEF_LBL_RET(id,frm){___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)),___MAKE_HD(0,___sRETURN,___PERM),frm,0 ___LBL_TAIL}
-
-#define ___END_LBL ___PADDING_LBL};
 
 #ifdef ___OFDCOUNT
 #define ___OFDTBL ___ofdtbl,sizeof(___ofdtbl)/sizeof(___WORD)
@@ -7123,7 +7139,7 @@ ___HIDDEN ___SCMOBJ id \
 void *___x;) \
 { ___DELETE_TYPE(name,___x); return ___FIX(___NO_ERR); }
 
-#define ___CFUN_CONV_ERROR if ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___LBL(0);___JUMPEXTPRM(___SET_NARGS(___NARGS),___GSTATE->handler_cfun_conv_error;)}
+#define ___CFUN_CONV_ERROR if ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___LBL(0);___JUMPEXTPRM(___SET_NARGS(___NARGS),___ps->handler_cfun_conv_error;)}
 
 #define ___STOC3(f,s,c,i)___err=___EXT(f)(___PSP s,c,i)
 #define ___STOC4(f,s,c,t,i)___err=___EXT(f)(___PSP s,c,t,i)
@@ -7140,19 +7156,19 @@ void *___x;) \
 #define ___BEGIN_SFUN_VOID(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
 #define ___SFUN_CALL_VOID ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_VOID /* no result to set */
-#define ___SFUN_ERROR_VOID while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___GSTATE->handler_sfun_conv_error,___marker);
+#define ___SFUN_ERROR_VOID while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
 #define ___END_SFUN_VOID } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
 #define ___BEGIN_SFUN_SCMOBJ(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___result;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
 #define ___SFUN_CALL_SCMOBJ ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_SCMOBJ ___result = ___SFUN_RESULT;
-#define ___SFUN_ERROR_SCMOBJ while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___GSTATE->handler_sfun_conv_error,___marker);
+#define ___SFUN_ERROR_SCMOBJ while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
 #define ___END_SFUN_SCMOBJ } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
 #define ___BEGIN_SFUN(proc,decl)___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;decl;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
 #define ___SFUN_CALL if ((___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker))==___FIX(___NO_ERR))
 #define ___SFUN_SET_RESULT /* done in conversion function */
-#define ___SFUN_ERROR while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;if ((___err=___EXT(___call) (___PSP 0,___GSTATE->handler_sfun_conv_error,___marker))==___FIX(___NO_ERR))
+#define ___SFUN_ERROR while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;if ((___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker))==___FIX(___NO_ERR))
 #define ___END_SFUN } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
 #define ___BEGIN_SFUN_ARG(i,arg)___SCMOBJ arg;
@@ -8641,7 +8657,25 @@ typedef struct ___processor_state_struct
     ___WORD r[___NB_GVM_REGS];
 
     ___WORD pc;
-    int na;
+    ___WORD na;
+
+    /* these handlers are duplicated from the global state for quick access */
+
+    ___WORD handler_sfun_conv_error;
+    ___WORD handler_cfun_conv_error;
+    ___WORD handler_stack_limit;
+    ___WORD handler_heap_limit;
+    ___WORD handler_not_proc;
+    ___WORD handler_not_proc_glo;
+    ___WORD handler_wrong_nargs;
+    ___WORD handler_get_rest;
+    ___WORD handler_get_key;
+    ___WORD handler_get_key_rest;
+    ___WORD handler_force;
+    ___WORD handler_return_to_c;
+    ___WORD handler_break;
+    ___WORD internal_return;
+    ___WORD dynamic_env_bind_return;
 
     ___WORD temp1;
     ___WORD temp2;
@@ -8714,8 +8748,8 @@ typedef struct ___processor_state_struct
 
 typedef struct ___lowlevel_processor_state_struct
   {
-    ___WORD *lowlevel_leave_sp;
-    ___WORD *lowlevel_leave_handler;
+    ___WORD *return_sp;
+    ___WORD *return_handler;
   } ___lowlevel_processor_state_struct;
 
 typedef struct ___aligned_lowlevel_processor_state_struct
@@ -8761,27 +8795,98 @@ typedef ___WORD (*___host) ___P((___processor_state ___ps),());
 
 typedef struct ___label_struct
   {
-    ___FAKEHOST host;
-    ___WORD header;
-    ___WORD entry_or_descr;
+#ifdef ___SUPPORT_LABEL_VALUES
     ___FAKEVOIDSTAR host_label;
-#if ___LABEL_SIZE > 4
-    ___WORD dummy[___LABEL_SIZE-4];
+#define ___LABEL_HOST_LABEL (-3)
+#define ___LABEL_HOST_LABEL_GET(lbl) \
+*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL))
+#define ___LABEL_HOST_LABEL_SET(lbl,hlbl) \
+___LABEL_HOST_LABEL_GET(lbl) = hlbl
+#define ___LABEL_PLACEHOLDER1(x) x,
+#define ___LABEL_PLACEHOLDER2(x)
+#define ___LABEL_NAME ___LABEL_HOST_LABEL
+#define ___LABEL_START_TO_BODY 3
+#else
+#define ___LABEL_PLACEHOLDER1(x)
+#define ___LABEL_PLACEHOLDER2(x) ,x
+#define ___LABEL_NAME (___LABEL_ENTRY_OR_DESCR+1)
+#define ___LABEL_START_TO_BODY 2
+#endif
+#define ___LABEL_NAME_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_NAME)
+#define ___LABEL_NAME_SET(lbl, val) ___LABEL_NAME_GET(lbl) = val
+
+    ___FAKEHOST host;
+#define ___LABEL_HOST (-2)
+#define ___LABEL_HOST_GET(lbl) \
+(*___CAST(___FAKEHOST*,___SUBTYPED_TO(lbl,___LABEL_HOST)))
+
+    ___WORD header;
+
+    ___WORD entry_or_descr;
+#define ___LABEL_ENTRY_OR_DESCR 0
+#define ___LABEL_INFO ___LABEL_ENTRY_OR_DESCR
+#define ___LABEL_ENTRY_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)
+#define ___LABEL_ENTRY_SET(lbl, val) ___LABEL_ENTRY_GET(lbl) = val
+#define ___LABEL_DESCR_GET(lbl) ___LABEL_ENTRY_GET(lbl)
+#define ___LABEL_DESCR_SET(lbl, val) ___LABEL_ENTRY_SET(lbl, val)
+#define ___LABEL_INFO_GET(lbl) ___LABEL_ENTRY_GET(lbl)
+#define ___LABEL_INFO_SET(lbl, val) ___LABEL_ENTRY_SET(lbl, val)
+
+#if ___LABEL_SIZE - ___LABEL_START_TO_BODY - 1 > 0
+    ___FAKEVOIDSTAR padding[___LABEL_SIZE - ___LABEL_START_TO_BODY - 1];
 #endif
   } ___label_struct;
 
-#define ___LABEL_ENTRY_OR_DESCR 0
-#define ___LABEL_HOST_LABEL     1
-#define ___LABEL_HOST           -2
+#if ___LABEL_SIZE == 4
+#define ___LABEL_ZERO_FILL
+#else
+#if ___LABEL_SIZE == 5
+#define ___LABEL_ZERO_FILL ,0
+#else
+#if ___LABEL_SIZE == 6
+#define ___LABEL_ZERO_FILL ,0,0
+#else
+#if ___LABEL_SIZE == 7
+#define ___LABEL_ZERO_FILL ,0,0,0
+#else
+#define ___LABEL_ZERO_FILL ,0,0,0,0
+#endif
+#endif
+#endif
+#endif
 
-#define ___LABEL_ENTRY_GET(lbl) \
-(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
-#define ___LABEL_DESCR_GET(lbl) \
-(*___CAST(___WORD*,___SUBTYPED_TO(lbl,___LABEL_ENTRY_OR_DESCR)))
-#define ___LABEL_HOST_LABEL_GET(lbl) \
-(*___CAST(___FAKEVOIDSTAR*,___SUBTYPED_TO(lbl,___LABEL_HOST_LABEL)))
-#define ___LABEL_HOST_GET(lbl) \
-(*___CAST(___FAKEHOST*,___SUBTYPED_TO(lbl,___LABEL_HOST)))
+#define ___BEGIN_LBL \
+___LOCAL ___label_struct ___lbltbl[]={
+
+#define ___DEF_LBL_INTRO(id,name,info,nlbls,cproc) \
+{ ___LABEL_PLACEHOLDER1(___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name)) \
+  ___CAST_HOST_TO_FAKEHOST(___CAST(___host,cproc)), \
+  ___MAKE_HD((nlbls<<___LWS),___sVECTOR,___PERM), \
+  info \
+  ___LABEL_PLACEHOLDER2(___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(name)) \
+  ___LABEL_ZERO_FILL \
+}
+
+#define ___DEF_LBL_PROC(id,nbp,nbc) \
+{ ___LABEL_PLACEHOLDER1(0) \
+  ___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)), \
+  ___PRD(nbp,nbc), \
+  0 \
+  ___LABEL_PLACEHOLDER2(0) \
+  ___LABEL_ZERO_FILL \
+}
+
+#define ___DEF_LBL_RET(id,frm) \
+{ ___LABEL_PLACEHOLDER1(0) \
+  ___CAST_HOST_TO_FAKEHOST(___SM(___MH_PROC,id)), \
+  ___MAKE_HD(0,___sRETURN,___PERM), \
+  frm \
+  ___LABEL_PLACEHOLDER2(0) \
+  ___LABEL_ZERO_FILL \
+}
+
+#define ___END_LBL \
+___PADDING_LBL};
 
 /* Module structure */
 
@@ -9002,6 +9107,8 @@ typedef struct ___global_state_struct
     int setup_state; /* 0=pre-setup, 1=post-setup, 2=post-cleanup */
 
     ___setup_params_struct setup_params; /* params received by ___setup */
+
+    /* these handlers are duplicated in the processor state for quick access */
 
     ___WORD handler_sfun_conv_error;
     ___WORD handler_cfun_conv_error;
@@ -10204,7 +10311,7 @@ typedef struct ___global_state_struct
     ___program_startup_info_struct *(*___get_program_startup_info) ___PVOID;
     ___SCMOBJ (*___call)
        ___P((___PSD
-             int nargs,
+             ___WORD nargs,
              ___SCMOBJ proc,
              ___SCMOBJ marker),
             ());
@@ -11602,7 +11709,7 @@ ___IMP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
    ___PVOID;
 ___IMP_FUNC(___SCMOBJ,___call)
    ___P((___PSD
-         int nargs,
+         ___WORD nargs,
          ___SCMOBJ proc,
          ___SCMOBJ marker),
         ());

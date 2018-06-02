@@ -13,14 +13,17 @@
 #
 # you should add this line to your ~/.profile and ~/.bashrc files:
 #
-#    export PATH=/usr/local/gcc-7.2.0/bin:$PATH
+#    export PATH=/usr/local/gcc-8.1.0/bin:$PATH
 
-GCCVERSION=7.2.0
+# NOTE: If you're using tar from a package manager (Fink, Homebrew, etc.),
+# make sure that the xz package is installed so that tar can uncompress and
+# extract the downloaded sources in .tar.xz format.
+
+GCCVERSION=8.1.0
 GMPVERSION=6.1.2
-MPFRVERSION=3.1.6
-MPCVERSION=1.0.3
+MPFRVERSION=4.0.1
+MPCVERSION=1.1.0
 ISLVERSION=0.18
-CLOOGVERSION=0.18.1
 
 PREFIX=/usr/local/gcc-$GCCVERSION
 MAKE="make -j 8"
@@ -46,17 +49,14 @@ ln -s ../gmp-$GMPVERSION   gcc-$GCCVERSION/gmp
 ln -s ../mpfr-$MPFRVERSION gcc-$GCCVERSION/mpfr
 ln -s ../mpc-$MPCVERSION   gcc-$GCCVERSION/mpc
 
-# The following packages are not absolutely necessary, but they enable
-# the Graphite loop optimizations in gcc.
+# The following package is not absolutely necessary, but it enables
+# the certain loop optimizations in gcc.
 
 wget ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-$ISLVERSION.tar.bz2
-wget ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-$CLOOGVERSION.tar.gz
 
 tar xf isl-$ISLVERSION.tar.bz2
-tar xf cloog-$CLOOGVERSION.tar.gz
 
 ln -s ../isl-$ISLVERSION   gcc-$GCCVERSION/isl
-ln -s ../cloog-$CLOOGVERSION gcc-$GCCVERSION/cloog
 
 # Do the actual build
 

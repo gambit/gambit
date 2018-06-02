@@ -1515,16 +1515,18 @@ ___module_struct *module;)
 
   if (lblcount > 0)
     {
-      ___host current_host = 0;
+#ifdef ___SUPPORT_LABEL_VALUES
       void **hlbl_ptr = 0;
+#endif
+      ___host current_host = 0;
       ___SCMOBJ *ofd_alloc;
 
       ofd_alloc = ofdtbl;
 
       for (i=0; i<lblcount; i++)
         {
-          ___label_struct *lbl = &new_lbltbl[i];
-          ___SCMOBJ head = lbl->header;
+          ___SCMOBJ lbl = ___SUBTYPED_FROM_BODY(&new_lbltbl[i].entry_or_descr);
+          ___SCMOBJ head = ___SUBTYPED_HEADER(lbl);
 
           if (___TESTHEADERTAG(head,___sVECTOR))
             {
@@ -1534,11 +1536,10 @@ ___module_struct *module;)
                */
 
               ___UTF_8STRING name =
-                ___CAST(___UTF_8STRING,
-                        ___CAST_FAKEVOIDSTAR_TO_VOIDSTAR(lbl->host_label));
+                ___CAST(___UTF_8STRING, ___LABEL_NAME_GET(lbl));
 
               if (name == 0)
-                lbl->host_label = ___CAST(___FAKEVOIDSTAR,___FAL);
+                ___LABEL_NAME_SET(lbl, ___FAL);
               else
                 {
                   /* TODO: the time needed to create these symbols dynamically dominates the module setup time... optimize by using the local symbol table... this may require changes to the linker */
@@ -1552,7 +1553,7 @@ ___module_struct *module;)
                   if (sym == ___FAL)
                     return ___FIX(___UNKNOWN_ERR);
 
-                  lbl->host_label = ___CAST(___FAKEVOIDSTAR,sym);
+                  ___LABEL_NAME_SET(lbl, sym);
                 }
 
               /*
@@ -1560,13 +1561,16 @@ ___module_struct *module;)
                * (##subprocedure-parent-info proc)
                */
 
-              fixref (module, &lbl->entry_or_descr);
+              fixref (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO));
 
+#ifdef ___SUPPORT_LABEL_VALUES
               if (hlbl_ptr != 0)
                 hlbl_ptr++; /* skip INTRO label */
+#endif
             }
           else
             {
+#ifdef ___SUPPORT_LABEL_VALUES
               if (flags & ___USES_INDIRECT_GOTO)
                 {
                   /*
@@ -1577,15 +1581,17 @@ ___module_struct *module;)
                    * host function.
                    */
 
-                  if (___CAST_FAKEHOST_TO_HOST(lbl->host) != current_host)
+                  if (___LABEL_HOST_GET(lbl) != current_host)
                     {
-                      current_host = ___CAST_FAKEHOST_TO_HOST(lbl->host);
+                      current_host = ___LABEL_HOST_GET(lbl);
                       hlbl_ptr = ___CAST(void**,current_host (0));
                       hlbl_ptr++; /* skip INTRO label */
                     }
 
-                  lbl->host_label = ___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(*hlbl_ptr++);
+                  ___LABEL_HOST_LABEL_SET(lbl,
+                                          ___CAST_VOIDSTAR_TO_FAKEVOIDSTAR(*hlbl_ptr++));
                 }
+#endif
 
               /*
                * Return labels contain a GC map descriptor which has
@@ -1595,12 +1601,11 @@ ___module_struct *module;)
 
               if (head == ___MAKE_HD(0,___sRETURN,___PERM))
                 {
-                  ___SCMOBJ descr;
-                  descr = lbl->entry_or_descr;
+                  ___SCMOBJ descr = ___LABEL_DESCR_GET(lbl);
                   if (___IFD_GCMAP(descr) == 0) /* out-of-line descriptor? */
                     {
                       int fs;
-                      lbl->entry_or_descr = ___CAST(___SCMOBJ,ofd_alloc);
+                      ___LABEL_DESCR_SET(lbl, ___CAST(___SCMOBJ,ofd_alloc));
                       fs = ___OFD_FS(*ofd_alloc);
                       if (___IFD_KIND(descr) == ___RETI)
                         fs = ___RETI_CFS_TO_FS(fs);
@@ -1608,15 +1613,16 @@ ___module_struct *module;)
                     }
                 }
               else
-                lbl->entry_or_descr = ___SUBTYPED_FROM_START(&lbl->header);
+                ___LABEL_ENTRY_SET(lbl, lbl);
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
-              ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(&lbl->entry_or_descr);
+              ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(___SUBTYPED_TO_BODY(lbl));
 
 #endif
             }
         }
+
       *lp = ___SUBTYPED_FROM_BODY(&new_lbltbl[0].entry_or_descr);
     }
 
@@ -2917,7 +2923,7 @@ ___processor_state ___ps;)
 
 ___EXP_FUNC(___SCMOBJ,___call)
    ___P((___PSD
-         int nargs,
+         ___WORD nargs,
          ___SCMOBJ proc,
          ___SCMOBJ stack_marker),
         (___PSV
@@ -2925,7 +2931,7 @@ ___EXP_FUNC(___SCMOBJ,___call)
          proc,
          stack_marker)
 ___PSDKR
-int nargs;
+___WORD nargs;
 ___SCMOBJ proc;
 ___SCMOBJ stack_marker;)
 {
@@ -3442,6 +3448,168 @@ ___SCMOBJ fixup_objs;)
 }
 
 
+/*
+ * In the following functions, proc points to a label structure
+ * (___label_struct) that was either created by the C backend or the
+ * CPU backend.  If the host field of the label structure is equal to
+ * ___lowlevel_exec then it was created by the CPU backend and the
+ * word just before the host field is a pointer to the parent intro
+ * structure.
+ */
+
+#define ___LOWLEVEL_LABEL(lbl) \
+(___LABEL_HOST_GET(lbl) == ___lowlevel_exec)
+
+#define ___LOWLEVEL_LABEL_PARENT_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-1)
+#define ___LOWLEVEL_LABEL_NEXT_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-2)
+#define ___LOWLEVEL_LABEL_NBLBLS_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-3)
+#define ___LOWLEVEL_LABEL_INFO_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-4)
+#define ___LOWLEVEL_LABEL_NAME_GET(lbl) *___SUBTYPED_TO(lbl,___LABEL_HOST-5)
+
+
+___HIDDEN ___SCMOBJ ___subprocedure_parent_intro
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+  ___SCMOBJ probe = proc;
+
+  do
+    {
+      probe -= ___LABEL_SIZE * ___WS;
+    } while (!___TESTSUBTYPETAG(probe, ___sVECTOR));
+
+  return probe;
+}
+
+
+___SCMOBJ ___make_subprocedure
+   ___P((___SCMOBJ proc,
+         ___SCMOBJ id),
+        (proc,
+         id)
+___SCMOBJ proc;
+___SCMOBJ id;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    {
+      ___SCMOBJ probe = ___LOWLEVEL_LABEL_PARENT_GET(proc);
+
+      if (___FIXLT(id, ___FIX(0)) ||
+          ___FIXGE(id, ___LOWLEVEL_LABEL_NBLBLS_GET(probe)))
+        return ___FAL;
+
+      while (___FIXGT(id, ___FIX(0)))
+        {
+          probe = ___LOWLEVEL_LABEL_NEXT_GET(probe);
+          id = ___FIXSUB(id, ___FIX(1));
+        }
+
+      return probe;
+    }
+
+#endif
+
+  {
+    ___SCMOBJ intro = ___subprocedure_parent_intro (proc);
+
+    if (___FIXLT(id, ___FIX(0)) ||
+        ___FIXGE(id, ___FIX(___HD_FIELDS(___SUBTYPED_HEADER(intro)))))
+      return ___FAL;
+
+    return intro + (___INT(id)+1) * ___LABEL_SIZE * ___WS;
+  }
+}
+
+
+___SCMOBJ ___subprocedure_id
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    {
+      ___SCMOBJ probe = ___LOWLEVEL_LABEL_PARENT_GET(proc);
+      ___SCMOBJ id = ___FIX(0);
+
+      while (!___EQP(proc, probe))
+        {
+          probe = ___LOWLEVEL_LABEL_NEXT_GET(probe);
+          id = ___FIXADD(id, ___FIX(1));
+        }
+
+      return id;
+    }
+
+#endif
+
+  return ___FIX((proc - ___subprocedure_parent_intro (proc)) / (___LABEL_SIZE * ___WS) - 1);
+}
+
+
+___SCMOBJ ___subprocedure_parent
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+  return ___make_subprocedure (proc, ___FIX(0));
+}
+
+
+___SCMOBJ ___subprocedure_parent_info
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    return ___LOWLEVEL_LABEL_INFO_GET(___LOWLEVEL_LABEL_PARENT_GET(proc));
+
+#endif
+
+  return ___LABEL_INFO_GET(___subprocedure_parent_intro (proc));
+}
+
+
+___SCMOBJ ___subprocedure_parent_name
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+#ifdef ___SUPPORT_LOWLEVEL_EXEC
+
+  if (___LOWLEVEL_LABEL(proc))
+    return ___LOWLEVEL_LABEL_NAME_GET(___LOWLEVEL_LABEL_PARENT_GET(proc));
+
+#endif
+
+  return ___LABEL_NAME_GET(___subprocedure_parent_intro (proc));
+}
+
+
+___SCMOBJ ___subprocedure_nb_parameters
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+   return ___FIX(___PRD_NBPARMS(___SUBTYPED_HEADER(proc)));
+}
+
+
+___SCMOBJ ___subprocedure_nb_closed
+   ___P((___SCMOBJ proc),
+        (proc)
+___SCMOBJ proc;)
+{
+  return ___FIX(___PRD_NBCLOSED(___SUBTYPED_HEADER(proc)));
+}
+
+
 #ifdef ___USE_print_source_location
 
 
@@ -3752,6 +3920,26 @@ ___virtual_machine_state ___vms;)
 
   for (i=0; i<___NB_GVM_REGS; i++)
     ___ps->r[i] = ___VOID;
+
+  /*
+   * Copy handlers from global state to processor state.
+   */
+
+  ___ps->handler_sfun_conv_error = ___GSTATE->handler_sfun_conv_error;
+  ___ps->handler_cfun_conv_error = ___GSTATE->handler_cfun_conv_error;
+  ___ps->handler_stack_limit     = ___GSTATE->handler_stack_limit;
+  ___ps->handler_heap_limit      = ___GSTATE->handler_heap_limit;
+  ___ps->handler_not_proc        = ___GSTATE->handler_not_proc;
+  ___ps->handler_not_proc_glo    = ___GSTATE->handler_not_proc_glo;
+  ___ps->handler_wrong_nargs     = ___GSTATE->handler_wrong_nargs;
+  ___ps->handler_get_rest        = ___GSTATE->handler_get_rest;
+  ___ps->handler_get_key         = ___GSTATE->handler_get_key;
+  ___ps->handler_get_key_rest    = ___GSTATE->handler_get_key_rest;
+  ___ps->handler_force           = ___GSTATE->handler_force;
+  ___ps->handler_return_to_c     = ___GSTATE->handler_return_to_c;
+  ___ps->handler_break           = ___GSTATE->handler_break;
+  ___ps->internal_return         = ___GSTATE->internal_return;
+  ___ps->dynamic_env_bind_return = ___GSTATE->dynamic_env_bind_return;
 
   /*
    * Setup exception handling.
