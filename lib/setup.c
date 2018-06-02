@@ -3922,6 +3922,26 @@ ___virtual_machine_state ___vms;)
     ___ps->r[i] = ___VOID;
 
   /*
+   * Copy handlers from global state to processor state.
+   */
+
+  ___ps->handler_sfun_conv_error = ___GSTATE->handler_sfun_conv_error;
+  ___ps->handler_cfun_conv_error = ___GSTATE->handler_cfun_conv_error;
+  ___ps->handler_stack_limit     = ___GSTATE->handler_stack_limit;
+  ___ps->handler_heap_limit      = ___GSTATE->handler_heap_limit;
+  ___ps->handler_not_proc        = ___GSTATE->handler_not_proc;
+  ___ps->handler_not_proc_glo    = ___GSTATE->handler_not_proc_glo;
+  ___ps->handler_wrong_nargs     = ___GSTATE->handler_wrong_nargs;
+  ___ps->handler_get_rest        = ___GSTATE->handler_get_rest;
+  ___ps->handler_get_key         = ___GSTATE->handler_get_key;
+  ___ps->handler_get_key_rest    = ___GSTATE->handler_get_key_rest;
+  ___ps->handler_force           = ___GSTATE->handler_force;
+  ___ps->handler_return_to_c     = ___GSTATE->handler_return_to_c;
+  ___ps->handler_break           = ___GSTATE->handler_break;
+  ___ps->internal_return         = ___GSTATE->internal_return;
+  ___ps->dynamic_env_bind_return = ___GSTATE->dynamic_env_bind_return;
+
+  /*
    * Setup exception handling.
    */
 

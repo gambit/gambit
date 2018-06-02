@@ -144,7 +144,7 @@ end-of-code
 
    ___ADJFP(-___RETI_RA)
 
-   ___SET_R0(___GSTATE->internal_return)
+   ___SET_R0(___ps->internal_return)
 
    /* check why the handler was called */
 
@@ -208,7 +208,7 @@ end-of-code
 
    ___ADJFP(-___RETI_RA)
 
-   ___SET_R0(___GSTATE->internal_return)
+   ___SET_R0(___ps->internal_return)
 
    /* tail call to ##check-heap */
 
@@ -903,7 +903,7 @@ end-of-code
 
        ___ADJFP(-___RETI_RA)
 
-       ___SET_R0(___GSTATE->internal_return)
+       ___SET_R0(___ps->internal_return)
 
        /* tail call to ##force-undetermined */
 
@@ -941,7 +941,7 @@ end-of-code
        {
          /* not the same processor that created frame */
          ___COVER_RETURN_TO_C_HANDLER_WRONG_PROCESSOR;
-         ___SET_R0(___GSTATE->handler_return_to_c)
+         ___SET_R0(___ps->handler_return_to_c)
          ___SET_R1(___FIELD(unwind_destination,1))
          ___JUMPPRM(___SET_NARGS(1),
                     ___PRMCELL(___G__23__23_c_2d_return_2d_on_2d_other_2d_processor.prm))
@@ -954,14 +954,14 @@ end-of-code
        {
          /* not first return */
          ___COVER_RETURN_TO_C_HANDLER_MULTIPLE_RETURN;
-         ___SET_R0(___GSTATE->handler_return_to_c)
+         ___SET_R0(___ps->handler_return_to_c)
          ___JUMPPRM(___SET_NARGS(0),
                     ___PRMCELL(___G__23__23_raise_2d_multiple_2d_c_2d_return_2d_exception.prm))
        }
      else
        {
          ___COVER_RETURN_TO_C_HANDLER_FIRST_RETURN;
-         ___FRAME_STORE_RA(___GSTATE->handler_return_to_c)
+         ___FRAME_STORE_RA(___ps->handler_return_to_c)
          ___W_ALL
          ___throw_error (___PSP ___FIX(___UNWIND_C_STACK));  /* jump back inside ___call */
        }
@@ -1100,7 +1100,7 @@ end-of-code
 
            ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
-           if (ra1 == ___GSTATE->internal_return)
+           if (ra1 == ___ps->internal_return)
              {
                ___SCMOBJ actual_ra = ___FP_STK(fp,___RETI_RA);
                ___RETI_GET_FS_LINK(actual_ra,fs,link)
@@ -1119,7 +1119,7 @@ end-of-code
 
            ra2 = ___STK(link+1);
 
-           if (ra2 == ___GSTATE->handler_break)
+           if (ra2 == ___ps->handler_break)
              {
                /* first frame of that section */
 
@@ -1135,7 +1135,7 @@ end-of-code
 
                ___FP_SET_STK(fp,-___FRAME_STACK_RA,ra2)
                ___SET_STK(-___BREAK_FRAME_NEXT,___CAST(___SCMOBJ,fp))
-               ___SET_STK(link+1,___GSTATE->handler_break)
+               ___SET_STK(link+1,___ps->handler_break)
              }
 
            ___ADJFP(___FRAME_SPACE(fs))
@@ -1149,7 +1149,7 @@ end-of-code
 
        ra1 = fp[___FRAME_RA];
 
-       if (ra1 == ___GSTATE->internal_return)
+       if (ra1 == ___ps->internal_return)
          {
            ___SCMOBJ actual_ra = fp[___FRAME_RETI_RA];
            ___RETI_GET_FS_LINK(actual_ra,fs,link)
@@ -1167,7 +1167,7 @@ end-of-code
          ___SET_STK(i,___FP_STK(fp,i))
 
        ___SET_STK(-___BREAK_FRAME_NEXT,___STK(link+1))
-       ___SET_STK(link+1,___GSTATE->handler_break)
+       ___SET_STK(link+1,___ps->handler_break)
 
        ___ADJFP(___FRAME_SPACE(fs))
      }
@@ -3224,7 +3224,7 @@ end-of-code
 
    ___SCMOBJ ra = ___FIELD(___ARG1,0);
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ra = ___FIELD(___ARG1,___FRAME_RETI_RA);
 
    ___RESULT = ra;
@@ -3246,7 +3246,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ra = ___FIELD(frame,___FRAME_RETI_RA);
      }
    else
@@ -3257,7 +3257,7 @@ end-of-code
 
        ra = fp[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ra = fp[-___RETI_RA];
      }
 
@@ -3289,7 +3289,7 @@ end-of-code
    ___SCMOBJ ra = ___FIELD(___ARG1,0);
    int fs;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS(___FIELD(___ARG1,___FRAME_RETI_RA),fs)
    else
      ___RETN_GET_FS(ra,fs)
@@ -3314,7 +3314,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS(___FIELD(frame,___FRAME_RETI_RA),fs)
        else
          ___RETN_GET_FS(ra,fs)
@@ -3327,7 +3327,7 @@ end-of-code
 
        ra = fp[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS(fp[-___RETI_RA],fs)
        else
          ___RETN_GET_FS(ra,fs)
@@ -3347,7 +3347,7 @@ end-of-code
    int fs;
    int link;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3373,7 +3373,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3384,7 +3384,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3407,7 +3407,7 @@ end-of-code
    ___WORD gcmap;
    ___WORD *nextgcmap = 0;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK_GCMAP(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link,gcmap,nextgcmap)
    else
      ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
@@ -3440,7 +3440,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK_GCMAP(___FIELD(frame,___FRAME_RETI_RA),fs,link,gcmap,nextgcmap)
        else
          ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
@@ -3453,7 +3453,7 @@ end-of-code
 
        ra = fp[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK_GCMAP(fp[-___RETI_RA],fs,link,gcmap,nextgcmap)
        else
          ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
@@ -3478,7 +3478,7 @@ end-of-code
    int fs;
    int link;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3502,7 +3502,7 @@ end-of-code
    int fs;
    int link;
 
-   if (ra == ___GSTATE->internal_return)
+   if (ra == ___ps->internal_return)
      ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3534,7 +3534,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3550,7 +3550,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3584,7 +3584,7 @@ end-of-code
 
        ra = ___FIELD(frame,0);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3597,7 +3597,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3687,14 +3687,14 @@ end-of-code
 
        fp = ___BODY_AS(frame,___tSUBTYPED);
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(fp[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
 
        fp += fs+1;
 
-       if (ra == ___GSTATE->dynamic_env_bind_return)
+       if (ra == ___ps->dynamic_env_bind_return)
          denv = fp[-DYNAMIC_ENV_BIND_DENV];
 
        next_frame = fp[-link-1];
@@ -3714,7 +3714,7 @@ end-of-code
 
        ra = ___CAST(___SCMOBJ*,frame)[___FRAME_STACK_RA];
 
-       if (ra == ___GSTATE->internal_return)
+       if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(___CAST(___SCMOBJ*,frame)[-___RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
@@ -3722,10 +3722,10 @@ end-of-code
        fp = ___CAST(___SCMOBJ*,frame)+___FRAME_SPACE(fs);
        frame_ra = fp[-link-1];
 
-       if (ra == ___GSTATE->dynamic_env_bind_return)
+       if (ra == ___ps->dynamic_env_bind_return)
          denv = fp[-DYNAMIC_ENV_BIND_DENV];
 
-       if (frame_ra == ___GSTATE->handler_break)
+       if (frame_ra == ___ps->handler_break)
          {
            /* first frame of that section */
 
