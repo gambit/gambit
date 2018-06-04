@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -688,6 +688,9 @@ ___HIDDEN ___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT) config_gambitdir_map
 #endif
 #ifdef ___GAMBITDIR_LIB
   "lib=" ___GAMBITDIR_LIB,
+#endif
+#ifdef ___GAMBITDIR_USERLIB
+  "userlib=" ___GAMBITDIR_USERLIB,
 #endif
 #ifdef ___GAMBITDIR_SHARE
   "share=" ___GAMBITDIR_SHARE,
