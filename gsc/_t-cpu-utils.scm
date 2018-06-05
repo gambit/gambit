@@ -73,3 +73,13 @@
           (else
            (cons (car elems) (build-list (cdr elems) (+ 1 index) elem1 elem2)))))
   (build-list elems 0 (list-ref elems index1) (list-ref elems index2)))
+
+(define (take-n lst n)
+  (if (or (null? lst) (<= n 0))
+    '()
+    (cons (car lst) (take-n (cdr lst) (- n 1)))))
+
+(define (drop-n lst n)
+  (if (or (null? lst) (<= n 0))
+    lst
+    (drop-n (cdr lst) (- n 1))))
