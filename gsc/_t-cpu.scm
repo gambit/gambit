@@ -284,26 +284,23 @@
 
 ;; ***** Procedures encoding
 
-(define first-label #f)
-
 (define (encode-procs cgc procs)
 
   (define C_START_LBL (get-label cgc 'C_START_LBL))
 
+  (define procs2 (reachable-procs procs))
+
+  (define (get-main-label)
+    (let* ((main-proc (car procs))
+           (bb1 (car (get-code-list main-proc)))
+           (instr (code-gvm-instr bb1)))
+      (label-instr-label cgc main-proc instr)))
+
   (define (encode-proc proc)
     (debug "Encoding proc")
-    (map-proc-instrs
-      (lambda (code)
-        ;; Place jump to main (We suppose the first instruction is the main)
-        (if (not first-label)
-          (let* ((instr (code-gvm-instr code))
-                 (label (label-instr-label cgc proc instr)))
-            (debug "Placing jump into main. Label: " label)
-            (set! first-label label)
-            (am-jmp cgc label)))
-
-        (encode-gvm-instr cgc proc code))
-      proc))
+    (for-each
+      (lambda (code) (encode-gvm-instr cgc proc code))
+      (get-code-list proc)))
 
   (asm-align cgc 8)
   (put-function-vector-metadata cgc)
@@ -319,9 +316,12 @@
 
   (am-init cgc)
   (am-set-narg cgc 0)
+  (let ((main-lbl (get-main-label)))
+    (debug "Placing jump into main. Label: " main-lbl)
+    (am-jmp cgc main-lbl))
 
   (debug "Encode procs")
-  (map-on-procs encode-proc procs)
+  (for-each encode-proc procs2)
 
   (am-end cgc)
   (am-error cgc)
@@ -615,13 +615,12 @@
 
 ;; ***** GVM helper methods
 
-(define (map-on-procs fn procs)
-  (map fn (reachable-procs procs)))
-
-(define (map-proc-instrs fn proc)
+(define (get-code-list proc)
   (let ((p (proc-obj-code proc)))
         (if (bbs? p)
-          (map fn (bbs->code-list p)))))
+      (bbs->code-list p)
+      #f)))
+
 
 (define (proc-lbl-frame-size code)
   (bb-entry-frame-size (code-bb code)))
