@@ -503,7 +503,9 @@
          (frames (reverse (get-frames narg-in-frames)))
          (regs (get-registers narg-in-regs)))
     (for-each
-      (lambda (arg loc) (am-mov cgc loc arg (get-word-width-bits cgc)))
+      (lambda (arg loc)
+        (if (not (equal? loc arg))
+          (am-mov cgc loc arg (get-word-width-bits cgc))))
       args
       (append frames regs))))
 
