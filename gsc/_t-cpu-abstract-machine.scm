@@ -488,7 +488,7 @@
         (am-put-args cgc 0 args) ;; Put arguments
         (am-set-narg cgc (length args))
         (am-jmp cgc reg)
-        (put-return-point-label cgc label 0 0 0))))) ;; Return point)))
+        (put-return-point-label cgc label #f #f 0 0 0))))) ;; Return point)))
 
 (define (am-put-args cgc jump-fs args)
   (define (get-frames count)

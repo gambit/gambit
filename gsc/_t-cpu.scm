@@ -273,7 +273,7 @@
     (let* ((main-proc (car procs2))
            (bb1 (car (get-code-list main-proc)))
            (instr (code-gvm-instr bb1)))
-      (label-instr-label cgc main-proc instr)))
+      (get-proc-label cgc main-proc (label-lbl-num instr))))
 
   (define (encode-proc proc)
     (debug "Encoding proc")
@@ -284,17 +284,22 @@
         (encode-gvm-instr cgc code))
       (get-code-list proc)))
 
-  (asm-align cgc 8)
-  (put-function-vector-metadata cgc)
-
-  ;; Label description structure
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-  (codegen-fixup-lbl! cgc C_START_LBL 0 #f 64)
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-
   (debug "Prologue")
-  (am-lbl cgc C_START_LBL)
+  (put-entry-point-label
+    cgc C_START_LBL
+    #f #f
+    'C_START_LBL #f)
+
+  ; (am-call-c-function cgc 'display
+  ;   (list stack-pointer))
+  ; (am-call-c-function cgc 'newline '())
+  ; (am-call-c-function cgc 'display
+  ;   (list (car (get-processor-state-field cgc 'stack-start))))
+  ; (am-call-c-function cgc 'newline '())
+  ; (am-call-c-function cgc 'display
+  ;   (list (car (get-processor-state-field cgc 'stack-trip))))
+  ; (am-call-c-function cgc 'newline '())
+  ; (am-call-c-function cgc 'newline '())
 
   (am-init cgc)
   (am-set-narg cgc 0)
@@ -377,44 +382,56 @@
 
 ;; ***** Label instruction encoding
 
-; Todo: Check if constant
-(define (put-function-vector-metadata cgc)
-  (am-data-word cgc 0) ;; null cproc
-  (am-data-word cgc (+ 6 (* 8 0) (* 1 8 256))) ;; PERM VECTOR of length 1
-  (am-data-word cgc -2) ;; info = #f
-  (am-data-word cgc 0)) ;; null name
-
-(define (put-entry-point-label cgc label)
+(define (put-entry-point-label cgc label parent-label next-label fun-name fun-info)
   (asm-align cgc 8)
-  (put-function-vector-metadata cgc)
-  ;; Label description structure
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  (codegen-fixup-obj! cgc fun-name 64)    ;; ##subprocedure-parent-name
+  (codegen-fixup-obj! cgc fun-info 64)    ;; ##subprocedure-parent-info
+  (codegen-fixup-obj! cgc 2 64)           ;; nb labels
+
+  ;; next label struct
+  (if next-label
+    (codegen-fixup-lbl! cgc next-label 0 #f 64)
+    (am-data-word cgc 0))
+  ;; parent label struct
+  (if parent-label
+    (codegen-fixup-lbl! cgc parent-label 0 #f 64)
+    (am-data-word cgc 0))
+
+  (codegen-fixup-handler! cgc '___lowlevel_exec (get-word-width-bits cgc))
   (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-  (codegen-fixup-lbl! cgc label 0 #f 64)
+  (codegen-fixup-lbl! cgc label 0 #f 64) ;; self ptr
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc label))
 
-(define (put-return-point-label cgc label frame-size ret-pos gcmap)
+(define (put-return-point-label cgc label parent-label next-label frame-size ret-pos gcmap)
   (asm-align cgc 8)
-  (put-function-vector-metadata cgc)
+  ;; next label struct
+  (if next-label
+    (codegen-fixup-lbl! cgc next-label 0 #f 64)
+    (am-data-word cgc 0))
+  ;; parent label struct
+  (if parent-label
+    (codegen-fixup-lbl! cgc parent-label 0 #f 64)
+    (am-data-word cgc 0))
 
   (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM RETURN
-  ;; Check if gcmap can be too large
-  (am-data-word cgc (+ 1 ;; RETN (normal return). Todo: Check if correct
+  (asm-64 cgc (+ 6 (* 8 15))) ;; PERM RETURN
+  (asm-64 cgc (+ 1 ;; RETN (normal return)
     (* 4 frame-size) ;; frame size
-    (* 128 ret-pos) ; location of return addr
-    (* 4096 gcmap))) ; gcmap
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc label))
+                    (* 128 ret-pos) ;; link
+                    (* 4096 gcmap))) ;; gcmap
+  (asm-8 cgc 0) ;; so that label reference has tag ___tSUBTYPED
+
+  (x86-label cgc label))
 
 (define (encode-label-instr cgc code)
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
-         (label (label-instr-label cgc proc gvm-instr))
-         (type (label-type gvm-instr))
-         (frame (gvm-instr-frame gvm-instr))
-         (frame-size (frame-size frame)))
+         (label-num (label-lbl-num gvm-instr))
+         (label (get-proc-label cgc proc label-num))
+         (parent (get-parent-label cgc proc label-num))
+         (next (get-next-label cgc proc label-num))
+         (type (label-type gvm-instr)))
 
     (debug "encode-label-instr: " label)
 
@@ -422,22 +439,28 @@
       ((entry)
         (let ((narg (label-entry-nb-parms gvm-instr))
               (opts (label-entry-opts gvm-instr))
-              (rest? (label-entry-rest? gvm-instr)))
+              (rest? (label-entry-rest? gvm-instr))
+              (proc-name (string->symbol (proc-obj-name proc))))
               ;; Todo: Ask Marc what this is
               ; (keys (label-entry-keys gvm-instr))
               ; (closed? (label-entry-closed? gvm-instr))
 
-              (put-entry-point-label cgc label)
+              (put-entry-point-label
+                cgc label
+                parent next
+                proc-name #f)
 
               ;; Todo: Complete narg. Support optional and varargs
               (am-check-narg cgc narg)))
 
       ((return)
-        (put-return-point-label cgc
-          label
-          frame-size
+        (let ((frame (gvm-instr-frame gvm-instr)))
+          (put-return-point-label
+            cgc label
+            parent next
+            (frame-size frame)
           (get-frame-ret-pos frame)
-          (get-frame-gcmap frame)))
+            (get-frame-gcmap frame))))
       (else
         (am-lbl cgc label)))))
 
@@ -605,6 +628,48 @@
       (bbs->code-list p)
       #f)))
 
+(define (get-proc-label-instrs proc)
+  (define (is-label? instr)
+    (let ((type (gvm-instr-type instr)))
+      (equal? type 'label)))
+  (let* ((code-list (get-code-list proc))
+         (instrs (map code-gvm-instr code-list)))
+    (filter is-label? instrs)))
+
+(define (get-parent-label cgc proc current-lbl-num)
+  (let ((label-nums (get-proc-label-instrs proc)))
+    (cond
+      ((>= 1 current-lbl-num)
+        #f)
+      ((< (length label-nums) current-lbl-num)
+        #f)
+      (else
+        (get-proc-label cgc proc (- current-lbl-num 1))))))
+
+(define (get-next-label cgc proc current-lbl-num)
+  (let ((label-nums (get-proc-label-instrs proc)))
+    (cond
+      ((<= (length label-nums) current-lbl-num)
+        #f)
+      (else
+        (get-proc-label cgc proc (+ current-lbl-num 1))))))
+
+; (define (get-parent-label gvm-instr)
+;   (define (pred code)
+;     (let* ((gvm-instr-type (code-gvm-instr code)))
+;       (and
+;         (equal? 'label gvm-instr-type)
+;         (case (label-type gvm-instr)
+;           ((entry) #t)
+;           ((return) #t)
+;           (else #f)))))
+
+;   (let* ((init (reverse (take-n code-list index)))
+;          (parent-index (find pred init)))
+;     (if (= -1 parent-index)
+;       #f
+;       (list-ref init parent-index))))
+
 (define (proc-lbl-frame-size code)
   (bb-entry-frame-size (code-bb code)))
 
@@ -614,9 +679,8 @@
 (define (proc-frame-slots-gained code)
   (bb-slots-gained (code-bb code)))
 
-(define (label-instr-label cgc proc lbl-instr)
-  (let* ((label-num (label-lbl-num lbl-instr)))
-    (get-proc-label cgc proc label-num)))
+(define (label-instr-label cgc proc label-num)
+  (get-proc-label cgc proc label-num))
 
 (define (get-frame-gcmap frame)
   (define (live? var)
