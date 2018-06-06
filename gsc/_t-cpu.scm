@@ -31,7 +31,8 @@
 
 ;; Initialization/finalization of back-end.
 
-(define (cpu-setup
+(define (make-backend-target
+         abstract-machine-info
          target-arch
          file-extensions
          max-nb-gvm-regs
@@ -60,58 +61,38 @@
                     sem-preserving-opts
                     info-port)
 
-      (target-dump-set!
-       targ
-       (lambda (procs output c-intf module-descr unique-name)
-         (cpu-dump targ
-                   procs
-                   output
-                   c-intf
-                   module-descr
-                   unique-name
-                   sem-changing-opts
-                   sem-preserving-opts)))
+      (target-dump-set! targ
+        (lambda (procs output c-intf module-descr unique-name)
+          (cpu-dump targ procs
+                    output c-intf
+                    module-descr unique-name
+                    sem-changing-opts sem-preserving-opts)))
 
-      (target-link-info-set!
-       targ
-       (lambda (file)
-         (cpu-link-info targ file)))
+      (target-link-info-set! targ
+        (lambda (file) (cpu-link-info targ file)))
 
-      (target-link-set!
-       targ
-       (lambda (extension? inputs output warnings?)
-         (cpu-link targ extension? inputs output warnings?)))
+      (target-link-set! targ
+        (lambda (extension? inputs output warnings?)
+          (cpu-link targ extension? inputs output warnings?)))
 
       (target-prim-info-set! targ cpu-prim-info)
 
-      (target-frame-constraints-set!
-       targ
-       (make-frame-constraints
-        cpu-frame-reserve
-        cpu-frame-alignment))
+      (target-frame-constraints-set! targ
+        (make-frame-constraints
+          cpu-frame-reserve
+          cpu-frame-alignment))
 
-      (target-proc-result-set!
-       targ
-       (make-reg 1))
+      (target-proc-result-set! targ (make-reg 1))
+      (target-task-return-set! targ (make-reg 0))
 
-      (target-task-return-set!
-       targ
-       (make-reg 0))
+      (target-switch-testable?-set! targ
+       (lambda (obj) (cpu-switch-testable? targ obj)))
 
-      (target-switch-testable?-set!
-       targ
-       (lambda (obj)
-         (cpu-switch-testable? targ obj)))
+      (target-eq-testable?-set! targ
+       (lambda (obj) (cpu-eq-testable? targ obj)))
 
-      (target-eq-testable?-set!
-       targ
-       (lambda (obj)
-         (cpu-eq-testable? targ obj)))
-
-      (target-object-type-set!
-       targ
-       (lambda (obj)
-         (cpu-object-type targ obj)))
+      (target-object-type-set! targ
+       (lambda (obj) (cpu-object-type targ obj)))
 
       (cpu-set-nb-regs targ sem-changing-opts max-nb-gvm-regs)
 
@@ -122,13 +103,11 @@
 
     (target-begin!-set! targ begin!)
     (target-end!-set! targ end!)
-    (target-extra-set! targ 0 (x86-64-abstract-machine-info))
+    (target-extra-set! targ 0 abstract-machine-info)
 
-    (target-add targ)))
+    targ))
 
-; (cpu-setup 'x86-32 '((".s" . X86-32))  5 5 3 '() '())
-(cpu-setup 'x86-64 '((".s" . X86-64)) 13 5 3 '() '())
-; (cpu-setup 'arm    '((".s" . ARM))    13 5 3 '() '())
+(target-add (x64-target))
 
 ;;;----------------------------------------------------------------------------
 
