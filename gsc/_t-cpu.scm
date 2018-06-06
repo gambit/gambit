@@ -291,15 +291,18 @@
   (define procs2 (reachable-procs procs))
 
   (define (get-main-label)
-    (let* ((main-proc (car procs))
+    (let* ((main-proc (car procs2))
            (bb1 (car (get-code-list main-proc)))
            (instr (code-gvm-instr bb1)))
       (label-instr-label cgc main-proc instr)))
 
   (define (encode-proc proc)
     (debug "Encoding proc")
-    (for-each
-      (lambda (code) (encode-gvm-instr cgc proc code))
+    (codegen-context-current-proc-set! cgc proc)
+    (map
+      (lambda (code)
+        (codegen-context-current-code-set! cgc code)
+        (encode-gvm-instr cgc code))
       (get-code-list proc)))
 
   (asm-align cgc 8)
@@ -321,7 +324,7 @@
     (am-jmp cgc main-lbl))
 
   (debug "Encode procs")
-  (for-each encode-proc procs2)
+  (map encode-proc procs2)
 
   (am-end cgc)
   (am-error cgc)
@@ -330,12 +333,7 @@
   (debug "Adding primitives")
   (table-for-each
     (lambda (key val) (put-primitive-if-needed cgc key val))
-    (get-proc-label-table cgc))
-
-  (debug "Adding global variables")
-  (table-for-each
-    (lambda (name label) (put-global-variable cgc name label))
-    (get-global-var-table cgc))
+    (codegen-context-proc-labels-table cgc))
 
   (debug "Finished!")
 
@@ -384,15 +382,16 @@
 
 ;; ***** GVM Instruction encoding
 
-(define (encode-gvm-instr cgc proc code)
+(define (encode-gvm-instr cgc code)
+  (debug (gvm-instr-type (code-gvm-instr code)))
   (case (gvm-instr-type (code-gvm-instr code))
-    ((label)  (encode-label-instr   cgc proc code))
-    ((jump)   (encode-jump-instr    cgc proc code))
-    ((ifjump) (encode-ifjump-instr  cgc proc code))
-    ((apply)  (encode-apply-instr   cgc proc code))
-    ((copy)   (encode-copy-instr    cgc proc code))
-    ((close)  (encode-close-instr   cgc proc code))
-    ((switch) (encode-switch-instr  cgc proc code))
+    ((label)  (encode-label-instr   cgc code))
+    ((jump)   (encode-jump-instr    cgc code))
+    ((ifjump) (encode-ifjump-instr  cgc code))
+    ((apply)  (encode-apply-instr   cgc code))
+    ((copy)   (encode-copy-instr    cgc code))
+    ((close)  (encode-close-instr   cgc code))
+    ((switch) (encode-switch-instr  cgc code))
     (else
       (compiler-error
         "encode-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type (code-gvm-instr code))))))
@@ -430,9 +429,9 @@
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc label))
 
-(define (encode-label-instr cgc proc code)
-
+(define (encode-label-instr cgc code)
   (let* ((gvm-instr (code-gvm-instr code))
+         (proc (codegen-context-current-proc cgc))
          (label (label-instr-label cgc proc gvm-instr))
          (type (label-type gvm-instr))
          (frame (gvm-instr-frame gvm-instr))
@@ -440,32 +439,32 @@
 
     (debug "encode-label-instr: " label)
 
-      (case (label-type gvm-instr)
-        ((entry)
-          (let ((narg (label-entry-nb-parms gvm-instr))
-                (opts (label-entry-opts gvm-instr))
-                (rest? (label-entry-rest? gvm-instr)))
-                ;; Todo: Ask Marc what this is
-                ; (keys (label-entry-keys gvm-instr))
-                ; (closed? (label-entry-closed? gvm-instr))
+    (case (label-type gvm-instr)
+      ((entry)
+        (let ((narg (label-entry-nb-parms gvm-instr))
+              (opts (label-entry-opts gvm-instr))
+              (rest? (label-entry-rest? gvm-instr)))
+              ;; Todo: Ask Marc what this is
+              ; (keys (label-entry-keys gvm-instr))
+              ; (closed? (label-entry-closed? gvm-instr))
 
-                (put-entry-point-label cgc label)
+              (put-entry-point-label cgc label)
 
-                ;; Todo: Complete narg. Support optional and varargs
-                (am-check-narg cgc narg)))
+              ;; Todo: Complete narg. Support optional and varargs
+              (am-check-narg cgc narg)))
 
-        ((return)
-          (put-return-point-label cgc
-            label
-            frame-size
-            (get-frame-ret-pos frame)
-            (get-frame-gcmap frame)))
-        (else
-          (am-lbl cgc label)))))
+      ((return)
+        (put-return-point-label cgc
+          label
+          frame-size
+          (get-frame-ret-pos frame)
+          (get-frame-gcmap frame)))
+      (else
+        (am-lbl cgc label)))))
 
 ;; ***** (if)Jump instruction encoding
 
-(define (encode-jump-instr cgc proc code)
+(define (encode-jump-instr cgc code)
   (define (make-jump-opnd opnd)
     (define (make-obj val)
       (cond
@@ -485,7 +484,7 @@
       ((stk? opnd)
         (frame cgc (proc-jmp-frame-size code) (stk-num opnd)))
       ((lbl? opnd)
-        (get-proc-label cgc proc (lbl-num opnd)))
+        (get-proc-label cgc (codegen-context-current-proc cgc) (lbl-num opnd)))
       ((obj? opnd)
         (make-obj (obj-val opnd)))
       ((clo? opnd)
@@ -500,13 +499,15 @@
 
   (debug "encode-jump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
+         (proc (codegen-context-current-proc cgc))
          (jmp-opnd (make-jump-opnd (jump-opnd gvm-instr)))
          (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
 
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (am-poll cgc proc code)
+    (if (jump-poll? gvm-instr)
+      (am-poll cgc (proc-frame-slots-gained code)))
 
     ;; Save return address if necessary
     (if (jump-ret gvm-instr)
@@ -522,7 +523,7 @@
     ;; Todo: Make sure that jmp-opnd is a label or check type of object
     ;; Todo: Check if next label is simple and jump location. If true, NOP
     ; (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
-    ;   (am-jmp cgc (make-opnd cgc proc code jmp-opnd 'jump)))))
+    ;   (am-jmp cgc (make-opnd cgc jmp-opnd 'jump)))))
 
     (cond
       ((x86-imm-glo? jmp-opnd)
@@ -533,9 +534,10 @@
       (else
         (am-jmp cgc jmp-opnd)))))
 
-(define (encode-ifjump-instr cgc proc code)
+(define (encode-ifjump-instr cgc code)
   (debug "encode-ifjump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
+         (proc (codegen-context-current-proc cgc))
          (true-label (get-proc-label cgc proc (ifjump-true gvm-instr)))
          (false-label (get-proc-label cgc proc (ifjump-false gvm-instr)))
          (prim-sym (proc-obj-name (ifjump-test gvm-instr)))
@@ -550,42 +552,42 @@
     (let* ((prim-fun (get-primitive-function prim-obj))
            (then (then-jump true-label false-label))
            (opnds (ifjump-opnds gvm-instr))
-           (args (map (lambda (opnd) (make-opnd cgc proc code opnd)) opnds)))
+           (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds)))
       (prim-fun cgc then args))))
 
 ;; ***** Apply instruction encoding
 
-(define (encode-apply-instr cgc proc code)
+(define (encode-apply-instr cgc code)
   (debug "encode-apply-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (prim-sym (proc-obj-name (apply-prim gvm-instr)))
          (prim-obj (get-primitive-object cgc prim-sym))
          (prim-fun (get-primitive-function prim-obj))
-         (then (then-move (make-opnd cgc proc code (apply-loc gvm-instr))))
-         (args (map (lambda (opnd) (make-opnd cgc proc code opnd)) (apply-opnds gvm-instr))))
+         (then (then-move (make-opnd cgc (apply-loc gvm-instr))))
+         (args (map (lambda (opnd) (make-opnd cgc opnd)) (apply-opnds gvm-instr))))
     (prim-fun cgc then args)))
 
 ;; ***** Copy instruction encoding
 
-(define (encode-copy-instr cgc proc code)
+(define (encode-copy-instr cgc code)
   (define empty-frame-val #f); (int-opnd cgc 0))
   (debug "encode-copy-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (src (copy-opnd gvm-instr))
          (dst (copy-loc gvm-instr))
-         (src-opnd (if src (make-opnd cgc proc code src) empty-frame-val))
-         (dst-opnd (make-opnd cgc proc code (copy-loc gvm-instr))))
+         (src-opnd (if src (make-opnd cgc src) empty-frame-val))
+         (dst-opnd (make-opnd cgc dst)))
     (if src-opnd
       (am-mov cgc dst-opnd src-opnd (get-word-width-bits cgc)))))
 
 ;; ***** Close instruction encoding
 
-(define (encode-close-instr cgc proc code)
+(define (encode-close-instr cgc code)
   (debug "encode-close-instr")
   (compiler-internal-error "encode-close-instr: Not implemented"))
   ; (debug (car (close-parms (code-gvm-instr code))))
   ; (let* ((gvm-instr (code-gvm-instr code))
-  ;        (mk-opnd (lambda (opnd) (make-opnd cgc proc code opnd)))
+  ;        (mk-opnd (lambda (opnd) (make-opnd cgc opnd)))
   ;        (parms (car (close-parms gvm-instr))) ;; Todo: Find why close-parms returns list
   ;        (loc (mk-opnd (closure-parms-loc parms)))
   ;       ;  (lbl (mk-opnd (closure-parms-lbl parms))) ;; WTF: Why not in opnd-table?
@@ -609,7 +611,7 @@
 
 ;; ***** Switch instruction encoding
 
-(define (encode-switch-instr cgc proc gvm-instr)
+(define (encode-switch-instr cgc gvm-instr)
   (debug "encode-switch-instr")
   (compiler-internal-error
     "encode-switch-instr: switch instruction not implemented"))
@@ -623,7 +625,6 @@
         (if (bbs? p)
       (bbs->code-list p)
       #f)))
-
 
 (define (proc-lbl-frame-size code)
   (bb-entry-frame-size (code-bb code)))
