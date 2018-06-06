@@ -533,7 +533,6 @@
       (else
         (am-jmp cgc jmp-opnd)))))
 
-
 (define (encode-ifjump-instr cgc proc code)
   (debug "encode-ifjump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
@@ -569,11 +568,15 @@
 ;; ***** Copy instruction encoding
 
 (define (encode-copy-instr cgc proc code)
+  (define empty-frame-val #f); (int-opnd cgc 0))
   (debug "encode-copy-instr")
   (let* ((gvm-instr (code-gvm-instr code))
-         (src (make-opnd cgc proc code (copy-opnd gvm-instr)))
-         (dst (make-opnd cgc proc code (copy-loc gvm-instr))))
-    (am-mov cgc dst src (get-word-width-bits cgc))))
+         (src (copy-opnd gvm-instr))
+         (dst (copy-loc gvm-instr))
+         (src-opnd (if src (make-opnd cgc proc code src) empty-frame-val))
+         (dst-opnd (make-opnd cgc proc code (copy-loc gvm-instr))))
+    (if src-opnd
+      (am-mov cgc dst-opnd src-opnd (get-word-width-bits cgc)))))
 
 ;; ***** Close instruction encoding
 
@@ -676,4 +679,3 @@
     (if (eq? val 1243431)
       (compiler-internal-error "(get-opt-val " sym ") Unknown option name")
       val)))
-      
