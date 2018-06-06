@@ -92,14 +92,12 @@
     info
     operands
     instructions
-    routines
-    (make-state info)))
+    routines))
 
 (define info-index 0)
 (define operands-index 1)
 (define instructions-index 2)
 (define routines-index 3)
-(define state-index 4)
 
 ;;  Fields:
 ;;    word-width : Machine word length in bytes
@@ -114,9 +112,8 @@
 ;;                       (testable: bool)
 ;;
 ;;    main-registers  : (Vector) Registers that map directly to GVM registers
-;;    spill-registers : (Vector) Registers that can be pushed.  Must be a subset of main-registers.
 ;;    extra-registers : (Vector) Extra registers that can be overwritten at any time.
-;;      Note: #spill-registers + #extra-registers must >= 3.
+;;      Note: #extra-registers must >= 3.
 (define (make-backend-info
           word-width
           endianness
@@ -125,7 +122,6 @@
           frame-offset
           primitive-table
           main-registers
-          spill-registers
           extra-registers
           make-cgc-fun)
   (vector
@@ -136,7 +132,6 @@
     frame-offset
     primitive-table
     main-registers
-    spill-registers
     extra-registers
     make-cgc-fun))
 
@@ -199,8 +194,7 @@
 ;; ***** AM: Info fields
 
 (define main-register-index 6)
-(define spill-register-index 7)
-(define extra-register-index 8)
+(define extra-register-index 7)
 
 (define (get-word-width cgc)        (get-in-cgc cgc info-index 0))
 (define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
@@ -210,13 +204,12 @@
 (define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
 (define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
 (define (get-main-registers  cgc)   (get-in-cgc cgc info-index main-register-index))
-(define (get-spill-registers cgc)   (get-in-cgc cgc info-index spill-register-index))
 (define (get-extra-registers cgc)   (get-in-cgc cgc info-index extra-register-index))
 
 ;; NOTICE THAT IT TAKES A TARGET INSTEAD OF CGC
 (define (get-make-cgc-fun target)
   (let* ((info (target-extra target 0))
-         (field (vector-ref (vector-ref info info-index) 9)))
+         (field (vector-ref (vector-ref info info-index) 8)))
     field))
 
 (define (get-primitive-object cgc name)
@@ -281,31 +274,6 @@
 
 ;; ***** AM: State fields
 
-(define (get-state-field cgc index)
-  (get-in-cgc cgc state-index index))
-
-(define (get-proc-label-table cgc)          (get-state-field cgc 0))
-(define (get-object-label-table cgc)        (get-state-field cgc 1))
-(define (get-global-var-table cgc)          (get-state-field cgc 2))
-(define (get-label-table cgc)               (get-state-field cgc 3))
-(define (get-spill-register-allocation cgc) (get-state-field cgc 4))
-(define (get-extra-register-allocation cgc) (get-state-field cgc 5))
-
-(define (make-state info)
-  (define (const a)
-    (lambda (b) a))
-  (define (make-allocation-vector length)
-    (apply vector (map (const 0) (iota 1 length))))
-
-  (vector
-    (make-table test: equal?) ;; Labels of proc. (Key, Value) == (Label id, (Label, Maybe Proc-obj))
-    (make-table test: equal?) ;; Labels for objects
-    (make-table test: equal?) ;; Labels for global variables
-    (make-table test: equal?) ;; Other labels
-    (make-allocation-vector (vector-length (vector-ref info spill-register-index)))
-    (make-allocation-vector (vector-length (vector-ref info extra-register-index)))
-    ))
-
 (define (table-get-or-set table key def-val)
   (let ((x (table-ref table key #f)))
     (if x
@@ -318,30 +286,14 @@
   (define (lbl->id num proc_name)
     (string->symbol (string-append "_proc_" (number->string num) "_" proc_name)))
 
-  (let* ((table (get-proc-label-table cgc))
+  (let* ((table (codegen-context-proc-labels-table cgc))
          (id (if gvm-lbl gvm-lbl 0))
          (lbl-id (lbl->id id (proc-obj-name proc)))
          (def-lbl (list (asm-make-label cgc lbl-id) proc)))
     (car (table-get-or-set table lbl-id def-lbl))))
 
-(define (get-obj-label cgc obj)
-  (define (obj->id)
-    (string->symbol (string-append "_obj_" (number->string (get-unique-id)))))
-
-  (let* ((table (get-object-label-table cgc))
-         (val (asm-make-label cgc (obj->id))))
-    (table-get-or-set table obj val)))
-
-(define (get-global-var-label cgc name)
-  (define (obj->id)
-    (string->symbol (string-append "_glo_" (number->string (get-unique-id)))))
-
-  (let* ((table (get-global-var-table cgc))
-         (val (asm-make-label cgc (obj->id))))
-    (table-get-or-set table name val)))
-
 (define (get-label cgc sym)
-  (let* ((table (get-label-table cgc))
+  (let* ((table (codegen-context-other-labels-table cgc))
          (def-lbl (asm-make-label cgc sym)))
     (table-get-or-set table sym def-lbl)))
 
@@ -428,15 +380,13 @@
 (define (get-register cgc n)
   (vector-ref (get-main-registers cgc) n))
 
-(define (get-spill-register cgc use)
-  (choose-register cgc use (get-spill-registers cgc) (get-spill-register-allocation cgc)))
-
 (define (get-extra-register cgc use)
-  (choose-register cgc use (get-extra-registers cgc) (get-extra-register-allocation cgc)))
+  (choose-register cgc use
+    (get-extra-registers cgc)
+    (codegen-context-extra-registers-allocation cgc)))
 
 ;; ***** Utils - Operands
 
-;; Version of make-opnd not using proc and code.
 (define (make-obj-opnd cgc val)
   (cond
     ((immediate-object? val)
@@ -450,7 +400,10 @@
     (else
       (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
 
-(define (make-opnd cgc proc code opnd)
+(define (make-opnd cgc opnd)
+  (define proc (codegen-context-current-proc cgc))
+  (define code (codegen-context-current-code cgc))
+
   (define (make-obj val)
     (cond
       ((proc-obj? val)
@@ -504,7 +457,7 @@
     ((x86-imm-obj? opnd)  'lbl) ;; Todo: Do something generic
     ((x86-imm-glo? opnd)  'ind) ;; Todo: Do something generic
     (else
-      (compiler-internal-error "opnd-type - Unknown opnd: " : opnd))))
+      (compiler-internal-error "opnd-type - Unknown opnd: " opnd))))
 
 (define (frame cgc fs n)
   (mem-opnd cgc
@@ -582,16 +535,12 @@
       (reserve-space cgc (- bytes 1) value))))
 
 (define (make-poll check-interrupt check-underflow check-overflow)
-  (lambda (cgc proc code)
+  (lambda (cgc fs-gain)
     (debug "default-poll")
-    (let ((gvm-instr (code-gvm-instr code))
-          (fs-gain (proc-frame-slots-gained code)))
-      (if (jump-poll? gvm-instr)
-        (begin
-          (cond
-            ((< 0 fs-gain) (check-overflow cgc))
-            ((> 0 fs-gain) (check-underflow cgc)))
-          (check-interrupt cgc))))))
+    (cond
+      ((< 0 fs-gain) (check-overflow cgc))
+      ((> 0 fs-gain) (check-underflow cgc)))
+    (check-interrupt cgc)))
 
 ;; ***** Default Routines
 

@@ -77,7 +77,8 @@
 
 ;;                             x86 64 bits backend
 
-(define (x86-64-abstract-machine-info) (make-backend (info) (operands) (instructions) (routines)))
+(define (x86-64-abstract-machine-info)
+  (make-backend (info) (operands) (instructions) (routines)))
 
 ;;------------------------------------------------------------------------------
 
@@ -93,7 +94,6 @@
     primitive-object-table    ;; Primitive table
     (vector                   ;; Main registers
       (x86-rdi) (x86-rax) (x86-rbx) (x86-rdx) (x86-rsi))
-    (vector)                  ;; Spill registers
     (vector                   ;; Extra registers
       (x86-r8) (x86-r9) (x86-r10) (x86-r11) (x86-r12) (x86-r13) (x86-r14) (x86-r15))
     make-cgc                  ;; CGC constructor
@@ -104,6 +104,10 @@
     (codegen-context-listing-format-set! cgc 'gnu)
     (asm-init-code-block cgc 0 'le)
     (x86-arch-set! cgc 'x86-64)
+
+    (codegen-context-extra-registers-allocation-set! cgc
+      (make-vector 16 0)) ;; Can be longer than register count
+
     cgc))
 
 ;;------------------------------------------------------------------------------
@@ -293,7 +297,6 @@
 ;; Adds approximately 50ms.
 ;; Can easily be more optimized
 (define x64-poll (make-poll check-interrupt check-underflow check-overflow))
-; (define x64-poll (lambda (cgc code) #f))
 
 (define min-nargs-passed-in-ps-na 5) ;; must be in range 0 .. 5
 

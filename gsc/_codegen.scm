@@ -19,15 +19,30 @@
 ;;;============================================================================
 
 (define (make-codegen-context)
-  (let ((cgc (make-vector (+ (asm-code-block-size) 7) 'codegen-context)))
-    (codegen-context-listing-format-set! cgc #f)
-    (codegen-context-arch-set!           cgc #f)
-    (codegen-context-target-set!         cgc #f)
-    (codegen-context-frame-size-set!     cgc #f)
-    (codegen-context-fixup-locs-set!     cgc '())
-    (codegen-context-fixup-objs-set!     cgc (make-table 'test: eq?))
-    (codegen-context-nargs-set!          cgc 0)
+  (let ((cgc (make-vector (+ (asm-code-block-size) 14) 'codegen-context)))
+    (codegen-context-listing-format-set!             cgc #f)
+    (codegen-context-arch-set!                       cgc #f)
+
+    (codegen-context-target-set!                     cgc #f)
+
+    (codegen-context-fixup-locs-set!                 cgc '())
+    (codegen-context-fixup-objs-set!                 cgc (make-table 'test: eq?))
+
+    (codegen-context-current-proc-set!               cgc #f)
+    (codegen-context-current-code-set!               cgc #f)
+    (codegen-context-frame-size-set!                 cgc #f)
+    (codegen-context-nargs-set!                      cgc #f)
+    (codegen-context-previous-label-set!             cgc #f)
+
+    (codegen-context-extra-registers-allocation-set! cgc #f)
+
+    (codegen-context-primitive-labels-table-set!     cgc (make-table 'test: equal?))
+    (codegen-context-proc-labels-table-set!          cgc (make-table 'test: equal?))
+    (codegen-context-other-labels-table-set!         cgc (make-table 'test: equal?))
+
     cgc))
+
+;; Instruction encoding
 
 (define (codegen-context-listing-format cgc)
   (vector-ref cgc (+ (asm-code-block-size) 0)))
@@ -41,35 +56,91 @@
 (define (codegen-context-arch-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 1) x))
 
-(define (codegen-context-fixup-locs cgc)
-  (vector-ref cgc (+ (asm-code-block-size) 2)))
-
-(define (codegen-context-fixup-locs-set! cgc x)
-  (vector-set! cgc (+ (asm-code-block-size) 2) x))
-
-(define (codegen-context-fixup-objs cgc)
-  (vector-ref cgc (+ (asm-code-block-size) 3)))
-
-(define (codegen-context-fixup-objs-set! cgc x)
-  (vector-set! cgc (+ (asm-code-block-size) 3) x))
+;; Target
 
 (define (codegen-context-target cgc)
-  (vector-ref cgc (+ (asm-code-block-size) 4)))
+  (vector-ref cgc (+ (asm-code-block-size) 2)))
 
 (define (codegen-context-target-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 2) x))
+
+;; Loader values
+
+(define (codegen-context-fixup-locs cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 3)))
+
+(define (codegen-context-fixup-locs-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 3) x))
+
+(define (codegen-context-fixup-objs cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 4)))
+
+(define (codegen-context-fixup-objs-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 4) x))
 
-(define (codegen-context-frame-size cgc)
+;; Execution context
+
+(define (codegen-context-current-proc cgc)
   (vector-ref cgc (+ (asm-code-block-size) 5)))
 
-(define (codegen-context-frame-size-set! cgc x)
+(define (codegen-context-current-proc-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 5) x))
 
-(define (codegen-context-nargs cgc)
+(define (codegen-context-current-code cgc)
   (vector-ref cgc (+ (asm-code-block-size) 6)))
 
-(define (codegen-context-nargs-set! cgc x)
+(define (codegen-context-current-code-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 6) x))
+
+(define (codegen-context-frame-size cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 7)))
+
+(define (codegen-context-frame-size-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 7) x))
+
+(define (codegen-context-nargs cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 8)))
+
+(define (codegen-context-nargs-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 8) x))
+
+(define (codegen-context-previous-label cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 9)))
+
+(define (codegen-context-previous-label-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 9) x))
+
+;; Resource tracking
+
+(define (codegen-context-extra-registers-allocation cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 10)))
+
+(define (codegen-context-extra-registers-allocation-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 10) x))
+
+;; Label tables
+
+(define (codegen-context-primitive-labels-table cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 11)))
+
+(define (codegen-context-primitive-labels-table-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 11) x))
+
+(define (codegen-context-proc-labels-table cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 12)))
+
+(define (codegen-context-proc-labels-table-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 12) x))
+
+(define (codegen-context-other-labels-table cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 13)))
+
+(define (codegen-context-other-labels-table-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 13) x))
+
+;; Utils
+
+;; Utils - Fixups
 
 (define (codegen-context-fixup-locs-add! cgc lbl width)
   (codegen-context-fixup-locs-set!
