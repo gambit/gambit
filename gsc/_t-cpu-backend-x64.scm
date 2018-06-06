@@ -18,19 +18,14 @@
 
 ;; Constants
 
+;; Todo: Respect config-object value
 (define is-load-store-arch #f)
 
-(define narg-pointer (x86-cl))  ;; number of arguments register
-(define stack-pointer (x86-rsp)) ;; Real stack limit
-(define frame-pointer (x86-rsp)) ;; Simulated stack current pos
-(define heap-pointer  (x86-rbp)) ;; Simulated stack current pos
+(define narg-pointer            (x86-cl))  ;; number of arguments register
+(define stack-pointer           (x86-rsp)) ;; Real stack limit
+(define processor-state-pointer (x86-rcx)) ;; Processor state pointer
 
-(define stack-size 10000) ;; Scheme stack size (bytes)
-;; 500 is the safe minimum for (fib 40)
-(define heap-size 10000)  ;; Heap size (Bytes)
-(define thread-descriptor-size 32) ;; Thread descriptor size (bytes)
-(define stack-underflow-padding 128) ;; Prevent underflow from writing thread descriptor (bytes)
-(define frame-offset 0) ;; stack offset so that frame[1] is at null offset from frame-pointer
+(define frame-offset 0) ;; stack offset so that frame[1] is at null offset from stack-pointer
 
 (define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
 (define (C_ERROR_LBL cgc)           (get-label cgc 'C_ERROR_LBL))
@@ -66,14 +61,127 @@
 
 ;;------------------------------------------------------------------------------
 
-;; Thread descriptor table
+;; Processor state table
 
-(define (get-thread-descriptor-opnd cgc sym)
-  (let ((label (THREAD_DESCRIPTOR_LBL cgc)))
-    (case sym
-      ((interrupt-flag)     (x86-imm-lbl label 0))
-      ((narg)               (x86-imm-lbl label 8))
-      (else (compiler-internal-error "Unknown thread descriptor field: " sym)))))
+;; The ps register points at the start of processor state structure.
+;;
+;;  Start: Low level exec processor state structure
+;;  End: Low level exec processor state structure
+;;  Start: Regular processor state structure <-- ps register
+;;  End: Regular processor state structure
+
+;; Low level exec processor state structure:
+;; typedef struct ___lowlevel_processor_state_struct
+;;   {
+;;     ___WORD *return_sp;
+;;     ___WORD *return_handler;
+;;   } ___lowlevel_processor_state_struct;
+
+;; Processor state structure:
+;; typedef struct ___processor_state_struct
+;;   {
+;;     ___WORD * ___VOLATILE stack_trip;
+;;     ___WORD *stack_limit;
+;;     ___WORD *fp;
+;;     ___WORD *stack_start;
+;;     ___WORD *stack_break;
+;;     ___WORD *heap_limit;
+;;     ___WORD *hp;
+;;     ___WORD r[___NB_GVM_REGS];
+;;     ___WORD pc;
+;;     ___WORD na;
+;;
+;;     /* these handlers are duplicated from the global state for quick access */
+;;     ___WORD handler_sfun_conv_error;
+;;     ___WORD handler_cfun_conv_error;
+;;     ___WORD handler_stack_limit;
+;;     ___WORD handler_heap_limit;
+;;     ___WORD handler_not_proc;
+;;     ___WORD handler_not_proc_glo;
+;;     ___WORD handler_wrong_nargs;
+;;     ___WORD handler_get_rest;
+;;     ___WORD handler_get_key;
+;;     ___WORD handler_get_key_rest;
+;;     ___WORD handler_force;
+;;     ___WORD handler_return_to_c;
+;;     ___WORD handler_break;
+;;     ___WORD internal_return;
+;;     ___WORD dynamic_env_bind_return;
+;;
+;;     ___WORD temp1;
+;;     ___WORD temp2;
+;;     ___WORD temp3;
+;;     ___WORD temp4;
+
+(define (get-processor-state-field cgc sym)
+  (define lowlevelexec (get-opt-val 'use-c-backend))
+
+  (define word-width (get-word-width cgc))
+
+  (define (fields-lowlevelexec) `(
+    (return-stack-pointer    ,word-width)
+    (return-handler          ,word-width)
+    ))
+
+  (define (fields-regular) `(
+    (stack-trip              ,word-width)
+    (stack-limit             ,word-width)
+    (frame-pointer           ,word-width)
+    (stack-start             ,word-width)
+    (stack-break             ,word-width)
+    (heap-limit              ,word-width)
+    (heap-pointer            ,word-width)
+    (NBGVMREGS               ,word-width) ;; Todo: Ask Marc what this is
+    (program-counter         ,word-width)
+    (nargs                   ,word-width)
+    (handler_sfun_conv_error ,word-width)
+    (handler_cfun_conv_error ,word-width)
+    (handler_stack_limit     ,word-width)
+    (handler_heap_limit      ,word-width)
+    (handler_not_proc        ,word-width)
+    (handler_not_proc_glo    ,word-width)
+    (handler_wrong_nargs     ,word-width)
+    (handler_get_rest        ,word-width)
+    (handler_get_key         ,word-width)
+    (handler_get_key_rest    ,word-width)
+    (handler_force           ,word-width)
+    (handler_return_to_c     ,word-width)
+    (handler_break           ,word-width)
+    (internal_return         ,word-width)
+    (dynamic_env_bind_return ,word-width)
+    (temp1                   ,word-width)
+    (temp2                   ,word-width)
+    (temp3                   ,word-width)
+    (temp4                   ,word-width)
+    ))
+
+  ;; Returns a pair of the offset from start of lst and the width of the field
+  (define (find-field lst accum)
+    (if (null? lst)
+      -1 ;; Error value
+      (let* ((field (car lst))
+             (field-sym (car field))
+             (width (cadr field)))
+        (if (equal? sym field-sym)
+          (cons accum width)
+          (find-field (cdr lst) (+ width accum))))))
+
+  (let* ((fields (if lowlevelexec
+          (append (fields-lowlevelexec) (fields-regular))
+          (fields-regular)))
+         (offset (if lowlevelexec
+          (- (apply + (map cadr (fields-lowlevelexec))))
+          0))
+         (field (find-field fields 0)))
+
+
+    (debug "Sym: " sym "  Field: " field "  Offset: " offset)
+
+    (if (eq? -1 field)
+      (compiler-internal-error "Unknown processor state field: " sym)
+      (cons
+        (mem-opnd cgc (+ offset (car field)) processor-state-pointer) ;; Opnd
+        (cdr field))))) ;; Width
 
 ;;                             x86 64 bits backend
 
@@ -94,7 +202,7 @@
     8                         ;; Word width
     'le                       ;; Endianness
     is-load-store-arch        ;; Load store architecture?
-    frame-pointer             ;; Stack pointer register
+    stack-pointer             ;; Stack pointer register
     frame-offset              ;; Frame offset
     primitive-object-table    ;; Primitive table
     (vector                   ;; Main registers
@@ -450,6 +558,4 @@
   )
 
 (define (x64-place-extra-data cgc)
-  (debug "place-extra-data")
-  (am-lbl cgc (THREAD_DESCRIPTOR_LBL cgc) (cons 256 0))
-  (reserve-space cgc thread-descriptor-size 0))
+  (debug "place-extra-data"))
