@@ -32,10 +32,12 @@ codegen-context-frame-size
 codegen-context-frame-size-set!
 codegen-context-nargs
 codegen-context-nargs-set!
-codegen-context-previous-label
-codegen-context-previous-label-set!
+codegen-context-label-struct-position
+codegen-context-label-struct-position-set!
+
 codegen-context-extra-registers-allocation
 codegen-context-extra-registers-allocation-set!
+
 codegen-context-primitive-labels-table
 codegen-context-primitive-labels-table-set!
 codegen-context-proc-labels-table
@@ -46,6 +48,7 @@ codegen-context-other-labels-table-set!
 codegen-context-fixup-locs->vector
 codegen-context-fixup-objs->vector
 codegen-fixup-lbl!
+codegen-fixup-lbl-late!
 codegen-fixup-obj!
 codegen-fixup-glo!
 codegen-fixup-prm!

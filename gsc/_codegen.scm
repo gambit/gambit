@@ -32,7 +32,7 @@
     (codegen-context-current-code-set!               cgc #f)
     (codegen-context-frame-size-set!                 cgc #f)
     (codegen-context-nargs-set!                      cgc #f)
-    (codegen-context-previous-label-set!             cgc #f)
+    (codegen-context-label-struct-position-set!      cgc #f)
 
     (codegen-context-extra-registers-allocation-set! cgc #f)
 
@@ -104,10 +104,10 @@
 (define (codegen-context-nargs-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 8) x))
 
-(define (codegen-context-previous-label cgc)
+(define (codegen-context-label-struct-position cgc)
   (vector-ref cgc (+ (asm-code-block-size) 9)))
 
-(define (codegen-context-previous-label-set! cgc x)
+(define (codegen-context-label-struct-position-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 9) x))
 
 ;; Resource tracking
@@ -199,17 +199,16 @@
               (table->list (codegen-context-fixup-objs cgc)))
     vect))
 
-(define (codegen-fixup-generic! cgc width gen-value)
+(define (codegen-fixup-generic! cgc width gen-value #!optional (listing #f))
   (let ((lbl (asm-make-label cgc 'fixup)))
     (codegen-context-fixup-locs-add! cgc lbl width)
     (asm-label cgc lbl)
+    (if listing
+      (asm-listing cgc (list "'" listing)))
     (asm-at-assembly
-
      cgc
-
      (lambda (cgc self)
        (fxarithmetic-shift-right width 3))
-
      (lambda (cgc self)
        (asm-int-le cgc (gen-value cgc self) width)))))
 
@@ -221,7 +220,22 @@
      (fx+ (if relative? 0 1)
           (fx* 256
                (fx- (fx+ (asm-label-pos lbl) offset)
-                    self))))))
+                    self))))
+    (asm-label-name lbl)))
+
+(define (codegen-fixup-lbl-late! cgc make-lbl relative? width #!optional (label-name #f))
+  (codegen-fixup-generic!
+   cgc
+   width
+   (lambda (cgc self)
+     (let ((lbl (make-lbl)))
+      (if lbl
+        (fx+ (if relative? 0 1)
+              (fx* 256
+                  (fx- (asm-label-pos lbl)
+                        self)))
+        0)))
+    label-name))
 
 (define (codegen-fixup-obj-generic! cgc op obj width)
   (codegen-context-fixup-obj-register! cgc obj)
