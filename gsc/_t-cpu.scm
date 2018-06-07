@@ -543,7 +543,7 @@
     (alloc-frame cgc (proc-frame-slots-gained code))
 
     (if (jump-poll? gvm-instr)
-      (am-poll cgc (proc-frame-slots-gained code) (lbl-opnd cgc jmp-loc)))
+      (am-poll cgc (gvm-instr-frame gvm-instr)))
 
     ;; Save return address if necessary
     (if (jump-ret gvm-instr)
@@ -565,7 +565,6 @@
 
       ;; Jump to next label?
       ((and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num)))
-        ; #f)
         (let* ((code (codegen-context-current-code cgc))
                (bb-index (bb-lbl-num (code-bb code)))
                (next-bb (get-bb proc (+ 1 bb-index)))
