@@ -202,9 +202,9 @@
 (define (codegen-fixup-generic! cgc width gen-value #!optional (listing #f))
   (let ((lbl (asm-make-label cgc 'fixup)))
     (codegen-context-fixup-locs-add! cgc lbl width)
-    (asm-label cgc lbl)
     (if listing
       (asm-listing cgc (list "'" listing)))
+    (asm-label cgc lbl)
     (asm-at-assembly
      cgc
      (lambda (cgc self)
@@ -221,7 +221,7 @@
           (fx* 256
                (fx- (fx+ (asm-label-pos lbl) offset)
                     self))))
-    (asm-label-name lbl)))
+   (asm-label-name lbl)))
 
 (define (codegen-fixup-lbl-late! cgc make-lbl relative? width #!optional (label-name #f))
   (codegen-fixup-generic!
@@ -235,7 +235,7 @@
                   (fx- (asm-label-pos lbl)
                         self)))
         0)))
-    label-name))
+   label-name))
 
 (define (codegen-fixup-obj-generic! cgc op obj width)
   (codegen-context-fixup-obj-register! cgc obj)
@@ -263,7 +263,8 @@
    (lambda (cgc self)
      (fx+ 5
           (fx* 256
-               (c#object-pos-in-list handler-name codegen-fixup-handlers))))))
+               (c#object-pos-in-list handler-name codegen-fixup-handlers))))
+   (symbol->string handler-name)))
 
 (define codegen-fixup-handlers
   '(___lowlevel_exec))
