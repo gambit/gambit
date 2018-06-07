@@ -464,7 +464,6 @@
          (label-struct-position (codegen-context-label-struct-position cgc))
          (proc (codegen-context-current-proc cgc))
          (label-num (label-lbl-num gvm-instr))
-         (type (label-type gvm-instr))
          (label (get-proc-label cgc proc label-num)))
 
     (debug "encode-label-instr: " label)
@@ -484,6 +483,7 @@
 
               ;; Todo: Complete narg. Support optional and varargs
               (am-check-narg cgc narg)))
+
       ((return)
         (let ((frame (gvm-instr-frame gvm-instr)))
           (set-proc-label-index cgc proc label label-struct-position)
@@ -492,6 +492,7 @@
             (frame-size frame)
           (get-frame-ret-pos frame)
             (get-frame-gcmap frame))))
+
       (else
         (am-lbl cgc label)))))
 
@@ -533,14 +534,16 @@
   (debug "encode-jump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
-         (jmp-opnd (make-jump-opnd (jump-opnd gvm-instr)))
-         (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
+         (jmp-opnd (jump-opnd gvm-instr))
+         (jmp-loc (make-jump-opnd (jump-opnd gvm-instr)))
+         (label-num (label-lbl-num (bb-label-instr (code-bb code))))
+         (next-label (get-proc-label cgc proc label-num)))
 
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
     (if (jump-poll? gvm-instr)
-      (am-poll cgc (proc-frame-slots-gained code)))
+      (am-poll cgc (proc-frame-slots-gained code) (lbl-opnd cgc jmp-loc)))
 
     ;; Save return address if necessary
     (if (jump-ret gvm-instr)
@@ -553,19 +556,27 @@
     (if (jump-nb-args gvm-instr)
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
-    ;; Todo: Make sure that jmp-opnd is a label or check type of object
-    ;; Todo: Check if next label is simple and jump location. If true, NOP
-    ; (if (not (and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num))))
-    ;   (am-jmp cgc (make-opnd cgc jmp-opnd 'jump)))))
-
     (cond
-      ((x86-imm-glo? jmp-opnd)
+      ((x86-imm-glo? jmp-loc)
         (get-extra-register cgc
           (lambda (reg)
-            (am-mov cgc reg jmp-opnd)
+            (am-mov cgc reg jmp-loc)
             (am-jmp cgc reg))))
+
+      ;; Jump to next label?
+      ((and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num)))
+        ; #f)
+        (let* ((code (codegen-context-current-code cgc))
+               (bb-index (bb-lbl-num (code-bb code)))
+               (next-bb (get-bb proc (+ 1 bb-index)))
+               (type (bb-label-type next-bb)))
+            ;; Label is simple => No structure before code
+            (if (equal? 'simple type)
+              #f
+              (am-jmp cgc jmp-loc))))
+
       (else
-        (am-jmp cgc jmp-opnd)))))
+        (am-jmp cgc jmp-loc)))))
 
 (define (encode-ifjump-instr cgc code)
   (debug "encode-ifjump-instr")
@@ -654,40 +665,20 @@
 ;; ***** GVM helper methods
 
 (define (get-code-list proc)
-  (let ((p (proc-obj-code proc)))
-        (if (bbs? p)
-      (bbs->code-list p)
+  (let ((bbs (proc-obj-code proc)))
+    (if (bbs? bbs)
+      (bbs->code-list bbs)
       #f)))
 
-(define (get-proc-label-instrs proc)
-  (define (is-label? instr)
-    (let ((type (gvm-instr-type instr)))
-      (equal? type 'label)))
-  (let* ((code-list (get-code-list proc))
-         (instrs (map code-gvm-instr code-list)))
-    (filter is-label? instrs)))
+(define (get-bb proc index)
+  (let ((bbs (proc-obj-code proc)))
+    (if (bbs? bbs)
+      (lbl-num->bb index bbs)
+      #f)))
 
 ;; First label always start with 1
 (define (get-parent-proc-label cgc proc)
   (get-proc-label cgc proc 1))
-
-(define (get-prev-label cgc proc current-lbl-num)
-  (let ((label-nums (get-proc-label-instrs proc)))
-    (cond
-      ((>= 1 current-lbl-num)
-        #f)
-      ((< (length label-nums) current-lbl-num)
-        #f)
-      (else
-        (get-proc-label cgc proc (- current-lbl-num 1))))))
-
-(define (get-next-proc-label cgc proc current-lbl-num)
-  (let ((label-nums (get-proc-label-instrs proc)))
-    (cond
-      ((<= (length label-nums) current-lbl-num)
-        #f)
-      (else
-        (get-proc-label cgc proc (+ current-lbl-num 1))))))
 
 (define (proc-lbl-frame-size code)
   (bb-entry-frame-size (code-bb code)))
