@@ -569,13 +569,6 @@
       (am-data cgc 8 value)
       (reserve-space cgc (- bytes 1) value))))
 
-(define (make-poll check-interrupt check-underflow check-overflow)
-  (lambda (cgc fs-gain)
-    (debug "default-poll")
-    (cond
-      ((< 0 fs-gain) (check-overflow cgc))
-      ((> 0 fs-gain) (check-underflow cgc)))
-    (check-interrupt cgc)))
 
 ;; ***** Default Routines
 

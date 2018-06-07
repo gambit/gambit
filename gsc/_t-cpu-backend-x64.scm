@@ -131,7 +131,11 @@
     (stack-break             ,word-width)
     (heap-limit              ,word-width)
     (heap-pointer            ,word-width)
-    (NBGVMREGS               ,word-width) ;; Todo: Ask Marc what this is
+    (gvm-reg0                ,word-width)
+    (gvm-reg1                ,word-width)
+    (gvm-reg2                ,word-width)
+    (gvm-reg3                ,word-width)
+    (gvm-reg4                ,word-width)
     (program-counter         ,word-width)
     (nargs                   ,word-width)
     (handler_sfun_conv_error ,word-width)
@@ -173,9 +177,6 @@
           (- (apply + (map cadr (fields-lowlevelexec))))
           0))
          (field (find-field fields 0)))
-
-
-    (debug "Sym: " sym "  Field: " field "  Offset: " offset)
 
     (if (eq? -1 field)
       (compiler-internal-error "Unknown processor state field: " sym)
@@ -368,48 +369,37 @@
     x64-place-extra-data
     ))
 
-;;  Memory layout:
-;;    HIGH
-;;    STACK START    <- underflow position
-;;    ...            <- frame-pointer
-;;    STACK END      <- stack-pointer
-;;    LOW
-(define (check-overflow cgc)
-  (debug "check-overflow")
-  (let ((condition (condition-not-greater #f #f))
-        (error-lbl (OVERFLOW_LBL cgc)))
-    (am-compare-jump cgc frame-pointer stack-pointer condition error-lbl #f)))
+(define (check-overflow-and-interrupt cgc frame)
+  (debug "check-overflow-and-interrupt")
+  (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
+         (temp1 (get-processor-state-field cgc 'temp1))
+         (true-loc (make-unique-label cgc "on-overflow"))
+         (return-loc (make-unique-label cgc "return-from-overflow"))
+         (handler-loc (car (get-processor-state-field cgc 'handler_stack_limit)))
+         (proc (codegen-context-current-proc cgc))
+         (struct-position (codegen-context-label-struct-position cgc)))
 
-(define (check-underflow cgc)
-  (debug "check-underflow")
-  (let ((condition (condition-greater #f #f))
-        (error-lbl (UNDERFLOW_LBL cgc)))
-    (get-extra-register cgc
-      (lambda (underflow-pos-reg)
-        (am-add cgc underflow-pos-reg stack-pointer (int-opnd cgc stack-size))
         (am-compare-jump cgc
-          frame-pointer underflow-pos-reg
-          condition
-          error-lbl #f)))))
+      stack-pointer stack-trip
+      (condition-lesser #f #f)
+      true-loc return-loc)
 
-(define (check-interrupt cgc)
-  (debug "check-interrupt")
-  (let ((opnd (get-thread-descriptor-opnd cgc 'interrupt-flag))
-        (condition condition-not-equal)
-        (error-lbl (INTERRUPT_LBL cgc)))
-    (get-extra-register cgc
-      (lambda (mov-reg)
-        ;; Todo: If we could use labels as mem operands, we could remove mov
-        (am-mov cgc mov-reg opnd)
-        (am-compare-jump cgc
-          (mem-opnd cgc 0 mov-reg) (int-opnd cgc 0)
-          condition
-          error-lbl #f
-          (get-word-width-bits cgc))))))
+    ;; Jump to handler
+    (am-lbl cgc true-loc)
+    (am-mov cgc (car temp1) (lbl-opnd cgc return-loc))
+    (am-jmp cgc handler-loc)
 
-;; Adds approximately 50ms.
-;; Can easily be more optimized
-(define x64-poll (make-poll check-interrupt check-underflow check-overflow))
+    ;; Return point from handler
+    (set-proc-label-index cgc proc return-loc struct-position)
+    (put-return-point-label
+      cgc return-loc
+      (frame-size frame)
+      (get-frame-ret-pos frame)
+      (get-frame-gcmap frame)
+      #t)))
+
+(define (x64-poll cgc frame)
+  (check-overflow-and-interrupt cgc frame))
 
 (define min-nargs-passed-in-ps-na 5) ;; must be in range 0 .. 5
 
