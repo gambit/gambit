@@ -278,17 +278,12 @@
   (define (encode-proc proc)
     (debug "Encoding proc")
     (codegen-context-current-proc-set! cgc proc)
+    (codegen-context-label-struct-position-set! cgc 1)
     (map
       (lambda (code)
         (codegen-context-current-code-set! cgc code)
         (encode-gvm-instr cgc code))
       (get-code-list proc)))
-
-  (debug "Prologue")
-  (put-entry-point-label
-    cgc C_START_LBL
-    #f #f
-    'C_START_LBL #f)
 
   ; (am-call-c-function cgc 'display
   ;   (list stack-pointer))
@@ -300,12 +295,6 @@
   ;   (list (car (get-processor-state-field cgc 'stack-trip))))
   ; (am-call-c-function cgc 'newline '())
   ; (am-call-c-function cgc 'newline '())
-
-  (am-init cgc)
-  (am-set-narg cgc 0)
-  (let ((main-lbl (get-main-label)))
-    (debug "Placing jump into main. Label: " main-lbl)
-    (am-jmp cgc main-lbl))
 
   (debug "Encode procs")
   (map encode-proc procs2)
@@ -322,7 +311,8 @@
   (debug "Finished!")
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
-  (codegen-fixup-lbl! cgc C_START_LBL 0 #f 64))
+  (let ((main-lbl (get-main-label)))
+    (codegen-fixup-lbl! cgc main-lbl 0 #f 64)))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
