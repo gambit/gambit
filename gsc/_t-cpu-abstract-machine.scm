@@ -282,15 +282,47 @@
         (table-set! table key def-val)
         def-val))))
 
-(define (get-proc-label cgc proc gvm-lbl)
-  (define (lbl->id num proc_name)
-    (string->symbol (string-append "_proc_" (number->string num) "_" proc_name)))
+;; If identifier is a number, will return the bb at index of the proc passed as argument
+(define (get-proc-label cgc proc identifier)
+  (define (make-label-id proc-name)
+    (cond
+      ((number? identifier)
+        (string->symbol (string-append
+          "_proc_"
+          proc-name
+          "_"
+          (number->string identifier))))
+      (else
+        identifier)))
 
-  (let* ((table (codegen-context-proc-labels-table cgc))
-         (id (if gvm-lbl gvm-lbl 0))
-         (lbl-id (lbl->id id (proc-obj-name proc)))
-         (def-lbl (list (asm-make-label cgc lbl-id) proc)))
-    (car (table-get-or-set table lbl-id def-lbl))))
+  (let* ((proc-name (proc-obj-name proc))
+         (label-id (make-label-id proc-name))
+         (label (asm-make-label cgc label-id))
+         (primitive-table (codegen-context-primitive-labels-table cgc))
+         (procs-labels-table (codegen-context-proc-labels-table cgc))
+         (proc-labels-table ;; Table of (label, label-id, index)
+            (table-get-or-set
+              procs-labels-table
+              proc-name
+              (make-table 'test: equal?))))
+
+    ;; Add label to primitive table only if entry point
+    (if (eq? 1 identifier)
+      (car (table-get-or-set primitive-table label-id (cons label proc))))
+
+    (car (table-get-or-set proc-labels-table label-id (cons label -1)))))
+
+(define (set-proc-label-index cgc proc label index)
+  (let* ((proc-name (proc-obj-name proc))
+         (lbl-id (asm-label-name label))
+         (procs-labels-table (codegen-context-proc-labels-table cgc))
+         (proc-labels-table ;; Table of (label, label-id, index)
+           (table-get-or-set
+             procs-labels-table
+             proc-name
+             (make-table 'test: equal?))))
+    (let ((ref (table-get-or-set proc-labels-table lbl-id (cons label index))))
+      (set-cdr! ref index))))
 
 (define (get-label cgc sym)
   (let* ((table (codegen-context-other-labels-table cgc))
@@ -407,11 +439,7 @@
   (define (make-obj val)
     (cond
       ((proc-obj? val)
-        ;; 1 is used to get the first label of a procedure, if it exists.
-        ;; If not 1, the procedure will look like a primitive that was used
-        ;; but not defined and it will look for a primitive called the name
-        ;; of the procedure. It crashes the program, DO NOT CHANGE!
-        (lbl-opnd cgc (get-proc-label cgc (obj-val opnd) 1)))
+        (lbl-opnd cgc (get-parent-proc-label cgc (obj-val opnd))))
       ((immediate-object? val)
         (debug "make-opnd: obj imm: " val)
         (int-opnd cgc
@@ -478,7 +506,10 @@
 (define (am-call-c-function cgc sym args)
   (get-extra-register cgc
     (lambda (reg)
-      (let ((label (make-unique-label cgc #f)))
+      (let* ((proc (codegen-context-current-proc cgc))
+             (struct-position (codegen-context-label-struct-position cgc))
+             (label (get-proc-label cgc proc (- struct-position))))
+
         ;; Check if global var can be **safely** used
         (am-mov cgc reg (x86-imm-obj sym))
         (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
@@ -488,7 +519,9 @@
         (am-put-args cgc 0 args) ;; Put arguments
         (am-set-narg cgc (length args))
         (am-jmp cgc reg)
-        (put-return-point-label cgc label #f #f 0 0 0))))) ;; Return point)))
+
+        (set-proc-label-index cgc proc label struct-position)
+        (put-return-point-label cgc label 0 0 0))))) ;; Return point)))
 
 (define (am-put-args cgc jump-fs args)
   (define (get-frames count)
