@@ -212,7 +212,7 @@
      (lambda (cgc self)
        (asm-int-le cgc (gen-value cgc self) width)))))
 
-(define (codegen-fixup-lbl! cgc lbl offset relative? width)
+(define (codegen-fixup-lbl! cgc lbl offset relative? width #!optional (show-listing #t))
   (codegen-fixup-generic!
    cgc
    width
@@ -221,7 +221,9 @@
           (fx* 256
                (fx- (fx+ (asm-label-pos lbl) offset)
                     self))))
-   (asm-label-name lbl)))
+   (if show-listing
+    (asm-label-name lbl)
+    #f)))
 
 (define (codegen-fixup-lbl-late! cgc make-lbl relative? width #!optional (label-name #f))
   (codegen-fixup-generic!
@@ -237,7 +239,7 @@
         0)))
    label-name))
 
-(define (codegen-fixup-obj-generic! cgc op obj width)
+(define (codegen-fixup-obj-generic! cgc op obj width show-listing)
   (codegen-context-fixup-obj-register! cgc obj)
   (codegen-fixup-generic!
    cgc
@@ -245,16 +247,17 @@
    (lambda (cgc self)
      (fx+ op
           (fx* 256
-               (codegen-context-fixup-obj-register! cgc obj))))))
+               (codegen-context-fixup-obj-register! cgc obj))))
+   (if show-listing "obj" #f)))
 
-(define (codegen-fixup-obj! cgc obj width)
-  (codegen-fixup-obj-generic! cgc 2 obj width))
+(define (codegen-fixup-obj! cgc obj width #!optional (show-listing #t))
+  (codegen-fixup-obj-generic! cgc 2 obj width show-listing))
 
-(define (codegen-fixup-glo! cgc glo-name width)
-  (codegen-fixup-obj-generic! cgc 3 glo-name width))
+(define (codegen-fixup-glo! cgc glo-name width #!optional (show-listing #t))
+  (codegen-fixup-obj-generic! cgc 3 glo-name width show-listing))
 
-(define (codegen-fixup-prm! cgc prm-name width)
-  (codegen-fixup-obj-generic! cgc 4 prm-name width))
+(define (codegen-fixup-prm! cgc prm-name width #!optional (show-listing #t))
+  (codegen-fixup-obj-generic! cgc 4 prm-name width show-listing))
 
 (define (codegen-fixup-handler! cgc handler-name width)
   (codegen-fixup-generic!
