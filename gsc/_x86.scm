@@ -590,19 +590,22 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
    (x86-imm-lbl-label imm-lbl)
    (x86-imm-lbl-offset imm-lbl)
    #f ;; absolute
-   imm-width))
+   imm-width
+   #f))
 
 (define (x86-imm-glo-encode cgc imm-glo imm-width)
   (codegen-fixup-glo!
    cgc
    (x86-imm-glo-name imm-glo)
-   imm-width))
+   imm-width
+   #f))
 
 (define (x86-imm-obj-encode cgc imm-obj imm-width)
   (codegen-fixup-obj!
    cgc
    (x86-imm-obj-value imm-obj)
-   imm-width))
+   imm-width
+   #f))
 
 ;;;----------------------------------------------------------------------------
 
