@@ -286,23 +286,25 @@
       (get-extra-register cgc
         (lambda (reg-dst)
           (x86-mov cgc reg-dst dst)
-          (x86-mov cgc (x86-mem 0 reg-dst) src width)))
+          (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
       (x86-mov cgc dst new-src width)))
 
   (cond
     ((and
-      (equal? dst-type 'mem)
+      (or (equal? dst-type 'mem) (equal? dst-type 'ind))
       (or (equal? src-type 'mem) (equal? src-type 'lbl)))
           (get-extra-register cgc
             (lambda (reg-src)
               (x86-mov cgc reg-src src)
           (mov-in-dst reg-src))))
+
     ((equal? src-type 'ind)
       (get-extra-register cgc
         (lambda (reg-src)
           (x86-mov cgc reg-src src)
           (x86-mov cgc reg-src (x86-mem 0 reg-src))
           (mov-in-dst reg-src))))
+
     (else
       (mov-in-dst src))))
 
