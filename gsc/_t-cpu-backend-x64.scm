@@ -373,30 +373,16 @@
   (debug "check-overflow-and-interrupt")
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
          (temp1 (get-processor-state-field cgc 'temp1))
-         (true-loc (make-unique-label cgc "on-overflow"))
-         (return-loc (make-unique-label cgc "return-from-overflow"))
-         (handler-loc (car (get-processor-state-field cgc 'handler_stack_limit)))
-         (proc (codegen-context-current-proc cgc))
-         (struct-position (codegen-context-label-struct-position cgc)))
+         (return-loc (make-unique-label cgc "return-from-overflow")))
 
         (am-compare-jump cgc
       stack-pointer stack-trip
       (condition-lesser #f #f)
-      true-loc return-loc)
+      #f return-loc)
 
     ;; Jump to handler
-    (am-lbl cgc true-loc)
     (am-mov cgc (car temp1) (lbl-opnd cgc return-loc))
-    (am-jmp cgc handler-loc)
-
-    ;; Return point from handler
-    (set-proc-label-index cgc proc return-loc struct-position)
-    (put-return-point-label
-      cgc return-loc
-      (frame-size frame)
-      (get-frame-ret-pos frame)
-      (get-frame-gcmap frame)
-      #t)))
+    (call-handler cgc 'handler_stack_limit frame return-loc)))
 
 (define (x64-poll cgc frame)
   (check-overflow-and-interrupt cgc frame))
