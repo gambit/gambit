@@ -406,81 +406,74 @@
   (define (flags-f) (x86-cmp cgc narg-pointer (x86-imm-int 0)))
 
   (define (set-ps-na)
-    (x86-mov cgc
-             (if (eq? 'x86-64 (codegen-context-arch cgc))
-                 (x86-mem (* 8 (+ 1 5 7)) (x86-rcx))
-                 (x86-mem (* 4 (+ 1 5 7)) (x86-ecx)))
-             (x86-imm-int nargs)
-             32))
+    (let ((na-opnd (get-processor-state-field cgc 'nargs)))
+      (x86-mov cgc (car na-opnd) (x86-imm-int nargs) (cdr na-opnd))))
+
+  (define all-tests (list flags-a flags-b flags-c flags-d flags-e))
+  (define tests
+    (if (<= min-nargs-passed-in-ps-na 4)
+      (cdr all-tests)
+      all-tests))
 
   (debug "x64-set-narg: " nargs)
 
-  (if (<= min-nargs-passed-in-ps-na 4)
       (if (<= min-nargs-passed-in-ps-na nargs)
+    ;; Use processor state to pass narg
           (begin
             (set-ps-na)
-            (if (> min-nargs-passed-in-ps-na 0)
-                (flags-a)))
-          (case nargs
-            ((0) (flags-b))
-            ((1) (flags-c))
-            ((2) (flags-d))
-            ((3) (flags-e))))
-      (if (<= min-nargs-passed-in-ps-na nargs)
-          (begin
-            (set-ps-na)
+      (cond
+        ((> min-nargs-passed-in-ps-na 4)
             (flags-f))
-          (case nargs
-            ((0) (flags-a))
-            ((1) (flags-b))
-            ((2) (flags-c))
-            ((3) (flags-d))
-            ((4) (flags-e))))))
+        ((> min-nargs-passed-in-ps-na 0)
+          (flags-a))))
+    ;; Use flag register
+    ((list-ref tests nargs))))
 
-(define (x64-check-narg cgc nargs)
-  (define (check-not-a) (x86-jae cgc (WRONG_NARGS_LBL cgc)))
-  (define (check-not-b) (x86-jne cgc (WRONG_NARGS_LBL cgc)))
-  (define (check-not-c) (x86-jle cgc (WRONG_NARGS_LBL cgc)))
-  (define (check-not-d) (x86-jno cgc (WRONG_NARGS_LBL cgc)))
-  (define (check-not-e) (x86-jp  cgc (WRONG_NARGS_LBL cgc)))
-  (define (check-not-a-or-b) (x86-ja  cgc (WRONG_NARGS_LBL cgc)))
-  (define (check-not-b-or-c) (x86-jl  cgc (WRONG_NARGS_LBL cgc)))
-  (define (check-not-b-or-c-or-d) (x86-js  cgc (WRONG_NARGS_LBL cgc)))
+(define (x64-check-narg cgc fs-start nargs optional-parameters rest?)
+  (define (check-not-a label)           (x86-jae cgc label))
+  (define (check-not-b label)           (x86-jne cgc label))
+  (define (check-not-c label)           (x86-jle cgc label))
+  (define (check-not-d label)           (x86-jno cgc label))
+  (define (check-not-e label)           (x86-jp  cgc label))
+  (define (check-not-a-or-b label)      (x86-ja  cgc label))
+  (define (check-not-b-or-c label)      (x86-jl  cgc label))
+  (define (check-not-b-or-c-or-d label) (x86-js  cgc label))
 
-  (define (check-ps-na)
-    (x86-cmp cgc
-             (if (eq? 'x86-64 (codegen-context-arch cgc))
-                 (x86-mem (* 8 (+ 1 5 7)) (x86-rcx))
-                 (x86-mem (* 4 (+ 1 5 7)) (x86-ecx)))
-             (x86-imm-int nargs)
-             32)
-    (x86-jne cgc (WRONG_NARGS_LBL cgc)))
+  (define (check-ps-na n label)
+    (let ((na-opnd (get-processor-state-field cgc 'nargs)))
+      (x86-cmp cgc (car na-opnd) (x86-imm-int n) (cdr na-opnd))
+      (x86-jne cgc label)))
+
+  (define all-tests (list check-not-a check-not-b check-not-c check-not-d check-not-e))
+  (define tests
+    (if (<= min-nargs-passed-in-ps-na 4)
+      (cdr all-tests)
+      all-tests))
+
+  (define (check-n n label)
+      (if (<= min-nargs-passed-in-ps-na nargs)
+      ;; Use processor state to pass narg
+          (begin
+        (check-ps-na n label)
+        ;; Check if narg was passed in flag instead of ps
+        (cond
+          ((> min-nargs-passed-in-ps-na 4)
+            (check-not-a label)
+            (check-not-b-or-c-or-d label)
+            (check-not-e label))
+          ((> min-nargs-passed-in-ps-na 0)
+            (flags-not-a))))
+      ;; Use flag register
+      ((list-ref tests nargs) label)))
 
   (debug "x64-check-narg: " nargs)
-
-  (if (<= min-nargs-passed-in-ps-na 4)
-      (if (<= min-nargs-passed-in-ps-na nargs)
-          (begin
-            (if (> min-nargs-passed-in-ps-na 0)
-                (check-not-a))
-            (check-ps-na))
-          (case nargs
-            ((0) (check-not-b))
-            ((1) (check-not-c))
-            ((2) (check-not-d))
-            ((3) (check-not-e))))
-      (if (<= min-nargs-passed-in-ps-na nargs)
-          (begin
-            (check-not-a)
-            (check-not-b-or-c-or-d)
-            (check-not-e)
-            (check-ps-na))
-          (case nargs
-            ((0) (check-not-a))
-            ((1) (check-not-b))
-            ((2) (check-not-c))
-            ((3) (check-not-d))
-            ((4) (check-not-e))))))
+  ; (x86-int3 cgc)
+  (if (and (null? optional-parameters) (not rest?))
+    ;; Basic case
+    (check-n nargs (WRONG_NARGS_LBL cgc))
+    ;; Optional and rest arguments case
+    ;; Todo
+    #f))
 
 ;; Start routine
 ;; Gets executed before main
