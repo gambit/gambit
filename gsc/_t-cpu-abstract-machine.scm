@@ -504,9 +504,11 @@
 ;; ***** Utils - Abstract machine shorthand
 
 (define (jump-with-return-point cgc location return-lbl frame internal?)
+  (debug "jump-with-return-point")
   (let* ((proc (codegen-context-current-proc cgc))
          (struct-position (codegen-context-label-struct-position cgc)))
 
+    (debug "jump: " location)
     (am-jmp cgc location)
 
     ;; Return point
@@ -517,10 +519,6 @@
       (get-frame-ret-pos frame)
       (get-frame-gcmap frame)
       internal?)))
-
-(define (call-handler cgc sym frame return-loc)
-  (let* ((handler-loc (car (get-processor-state-field cgc sym))))
-    (jump-with-return-point cgc handler-loc return-loc frame #t)))
 
 (define (am-call-c-function cgc sym args)
   (get-extra-register cgc

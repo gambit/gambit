@@ -531,3 +531,117 @@
 
 (define (x64-place-extra-data cgc)
   (debug "place-extra-data"))
+    (for-each
+      (lambda (arg-count mov-label opnd)
+        (am-lbl cgc mov-label)
+        (if opnd
+          (am-mov cgc
+            (get-nth-arg cgc (frame-size frame) nargs (+ 1 arg-count)) ;; Indexing starts at 1
+            opnd
+            (get-word-width-bits cgc))))
+      nargs-to-test
+      mov-labels
+      (append mov-opnds '(#f))))
+
+  (debug "x64-check-narg: " nargs)
+  ; (x86-int3 cgc)
+
+  (if (and (null? optional-args-values) (not rest?))
+    ;; Basic case
+    (check-nargs nargs (WRONG_NARGS_LBL cgc))
+
+    ;; Optional and rest arguments case
+    (let* ((opts-count (length optional-args-values))
+           (rest-count (if rest? 1 0))
+           (lower-bound (- nargs opts-count rest-count))
+           (nargs-to-test (iota lower-bound (- nargs rest-count)))
+           (make-lbl (lambda (prefix)
+             (lambda (i)
+               (make-unique-label cgc
+                 (string-append prefix (number->string i)) #f))))
+           (case-labels (map (make-lbl "case_") nargs-to-test))
+           (mov-labels (map (make-lbl "mov_") nargs-to-test))
+           (continue-lbl (make-unique-label cgc "continue" #f))
+           (error-label (make-unique-label cgc "narg-error" #f))
+           (rest-label (if rest? (make-unique-label cgc "get-rest" #f) #f)))
+
+      (if (not rest?)
+        ;; No rest
+        (begin
+          (place-switch nargs-to-test mov-labels case-labels error-label #f)
+          (place-movs nargs-to-test mov-labels
+            (map (lambda (val) (make-opnd cgc val)) optional-args-values))
+
+          (am-jmp cgc continue-lbl)
+        )
+        ;; Wth rest
+        #f
+      )
+
+      ;; Error handler
+      (am-lbl cgc error-label)
+      ;; call-handler cgc sym frame return-loc
+      ;; call error handler
+      ;; Note: Places continue-lbl as return-point
+      (call-handler cgc 'handler_wrong_nargs frame continue-lbl))))
+
+;; Start routine
+;; Gets executed before main
+(define (x64-init-routine cgc)
+  (debug "put-init-routine"))
+
+;; End routine
+;; Gets executed after main if no error happened during execution
+(define (x64-end-routine cgc)
+  (am-lbl cgc (GET_REST_LBL cgc))
+  (x86-int3 cgc)
+  (x86-ret cgc)
+
+  (debug "put-end-routine"))
+
+;; Error routine
+;; Gets executed if an error occurs
+(define (x64-error-routine cgc)
+  (debug "put-error-routine")
+
+  (am-lbl cgc (ALLOCATION_ERROR_LBL cgc))    ;; Overflow handling
+  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Allocation"))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (OVERFLOW_LBL cgc))    ;; Overflow handling
+  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Overflow"))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (UNDERFLOW_LBL cgc))   ;; Underflow handling
+  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Underflow"))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (WRONG_NARGS_LBL cgc)) ;; Incorrect nargs handling
+  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Narg"))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (TYPE_ERROR_LBL cgc))  ;; Type error handling
+  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Type"))
+  (am-jmp cgc (C_ERROR_LBL cgc))
+
+  (am-lbl cgc (C_ERROR_LBL cgc))
+
+  (am-call-c-function cgc
+    'display
+    (map
+      (lambda (arg) (make-obj-opnd cgc arg))
+      (list " error\n")))
+
+  (x86-int3 cgc)
+  (x86-ret cgc)
+  )
+
+(define (x64-place-extra-data cgc)
+  (debug "place-extra-data"))
+
+;; Utils
+
+(define (call-handler cgc sym frame return-loc)
+  (let* ((handler-loc (car (get-processor-state-field cgc sym))))
+    (debug "handler-loc: " handler-loc)
+    (jump-with-return-point cgc handler-loc return-loc frame #t)))
