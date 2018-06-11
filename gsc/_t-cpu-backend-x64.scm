@@ -36,6 +36,8 @@
 (define (TYPE_ERROR_LBL cgc)        (get-label cgc 'TYPE_ERROR_LBL))
 (define (ALLOCATION_ERROR_LBL cgc)  (get-label cgc 'ALLOCATION_ERROR_LBL))
 
+(define (GET_REST_LBL cgc)          (get-label cgc 'GET_REST))
+
 ;;------------------------------------------------------------------------------
 
 ;; Primitives
@@ -167,7 +169,7 @@
              (field-sym (car field))
              (width (cadr field)))
         (if (equal? sym field-sym)
-          (cons accum width)
+          (cons accum (* 8 width))
           (find-field (cdr lst) (+ width accum))))))
 
   (let* ((fields (if lowlevelexec
@@ -364,8 +366,8 @@
 (define (routines)
   (make-routine-dictionnary
     x64-poll
-    x64-set-narg
-    x64-check-narg
+    x64-set-nargs
+    x64-check-nargs
     x64-init-routine
     x64-end-routine
     x64-error-routine
@@ -384,15 +386,20 @@
       #f return-loc)
 
     ;; Jump to handler
-    (am-mov cgc (car temp1) (lbl-opnd cgc return-loc))
+    (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
     (call-handler cgc 'handler_stack_limit frame return-loc)))
 
 (define (x64-poll cgc frame)
   (check-overflow-and-interrupt cgc frame))
 
-(define min-nargs-passed-in-ps-na 5) ;; must be in range 0 .. 5
+(define use-f-flag #t)
+(define nargs-passed-in-flags '(0 1 2 3 4)) ;; Can't be longer than 5
 
-(define (x64-set-narg cgc nargs)
+(define (narg-index nargs) (index-of nargs nargs-passed-in-flags))
+(define (passed-in-ps nargs) (= -1 (narg-index nargs)))
+(define (passed-in-flags nargs) (not (passed-in-ps nargs)))
+
+(define (x64-set-nargs cgc nargs)
   ;; set flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
   (define (flags-a) (x86-cmp cgc narg-pointer (x86-imm-int -3)))
   ;; set flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
@@ -406,31 +413,33 @@
   ;; set flags = jae jne jle jno jp  ja  jl  js
   (define (flags-f) (x86-cmp cgc narg-pointer (x86-imm-int 0)))
 
-  (define (set-ps-na)
+  (define (set-ps-na arg-count)
     (let ((na-opnd (get-processor-state-field cgc 'nargs)))
-      (x86-mov cgc (car na-opnd) (x86-imm-int nargs) (cdr na-opnd))))
+      (x86-mov cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))))
 
   (define all-tests (list flags-a flags-b flags-c flags-d flags-e))
-  (define tests
-    (if (<= min-nargs-passed-in-ps-na 4)
-      (cdr all-tests)
-      all-tests))
+  (define tests (if use-f-flag all-tests (cdr all-tests)))
 
   (debug "x64-set-narg: " nargs)
 
-      (if (<= min-nargs-passed-in-ps-na nargs)
+  (if (passed-in-ps nargs)
     ;; Use processor state to pass narg
           (begin
-            (set-ps-na)
-      (cond
-        ((> min-nargs-passed-in-ps-na 4)
-            (flags-f))
-        ((> min-nargs-passed-in-ps-na 0)
-          (flags-a))))
+      (set-ps-na nargs)
+      (if use-f-flag
+        (flags-f)
+        (flags-a)))
     ;; Use flag register
-    ((list-ref tests nargs))))
+    ((list-ref tests (narg-index nargs)))))
 
-(define (x64-check-narg cgc fs-start nargs optional-parameters rest?)
+(define (x64-check-nargs cgc frame nargs optional-args-values rest?)
+  ;; a flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
+  ;; b flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
+  ;; c flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
+  ;; d flags = jae jne jle jo  jp  ja  jl  jns  wrong_na = jno
+  ;; e flags = jae jne jle jno jnp ja  jl  js   wrong_na = jp
+  ;; f flags = jae jne jle jno jp  ja  jl  js   no jump
+
   (define (check-not-a label)           (x86-jae cgc label))
   (define (check-not-b label)           (x86-jne cgc label))
   (define (check-not-c label)           (x86-jle cgc label))
@@ -440,97 +449,88 @@
   (define (check-not-b-or-c label)      (x86-jl  cgc label))
   (define (check-not-b-or-c-or-d label) (x86-js  cgc label))
 
-  (define (check-ps-na n label)
+  (define (check-a label)               (x86-jb  cgc label))
+  (define (check-b label)               (x86-je  cgc label))
+  (define (check-c label)               (x86-jg  cgc label))
+  (define (check-d label)               (x86-jo  cgc label))
+  (define (check-e label)               (x86-jnp cgc label))
+  (define (check-ab label)              (x86-jbe cgc label))
+  (define (check-bc label)              (x86-jge cgc label))
+  (define (check-bcd label)             (x86-jns cgc label))
+
+  (define (check-ps-na arg-count label)
     (let ((na-opnd (get-processor-state-field cgc 'nargs)))
-      (x86-cmp cgc (car na-opnd) (x86-imm-int n) (cdr na-opnd))
+      (x86-cmp cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))
       (x86-jne cgc label)))
 
   (define all-tests (list check-not-a check-not-b check-not-c check-not-d check-not-e))
-  (define tests
-    (if (<= min-nargs-passed-in-ps-na 4)
-      (cdr all-tests)
-      all-tests))
+  (define tests (if use-f-flag all-tests (cdr all-tests)))
 
-  (define (check-n n label)
-      (if (<= min-nargs-passed-in-ps-na nargs)
+  (define (check-nargs arg-count label)
+    (if (passed-in-ps arg-count)
       ;; Use processor state to pass narg
           (begin
-        (check-ps-na n label)
-        ;; Check if narg was passed in flag instead of ps
-        (cond
-          ((> min-nargs-passed-in-ps-na 4)
-            (check-not-a label)
-            (check-not-b-or-c-or-d label)
-            (check-not-e label))
-          ((> min-nargs-passed-in-ps-na 0)
-            (flags-not-a))))
+        (if use-f-flag
+          ;; Test what is faster.
+          ;; 1:
+          ;;  (check-[abcde] label)
+          ;; 2:
+          ;;  (check-a error)
+          ;;  (check-bcd error)
+          ;;  (check-e error)
+          ;; 3:
+          ;;  (check-not-a lbl1)
+          ;;  lbl1: (check-bcd lbl2)
+          ;;  lbl2: (check-e lbl3)
+          ;;  lbl3:
+          (let ((not-a-lbl (make-unique-label cgc "not-a"))
+                (not-bcd-lbl (make-unique-label cgc "not-bcd"))
+                (not-e-lbl (make-unique-label cgc "not-e")))
+            ;; Checks if nargs was passed in flag instead of ps
+            (check-not-a not-a-lbl)
+            (am-lbl cgc not-a-lbl)
+            (check-not-b-or-c-or-d not-bcd-lbl)
+            (am-lbl cgc not-bcd-lbl)
+            (check-not-e not-e-lbl)
+            (am-lbl cgc not-e-lbl))
+
+          (flags-not-a))
+        (check-ps-na arg-count label))
       ;; Use flag register
-      ((list-ref tests nargs) label)))
+      ((list-ref tests (narg-index arg-count)) label)))
 
-  (debug "x64-check-narg: " nargs)
-  ; (x86-int3 cgc)
-  (if (and (null? optional-parameters) (not rest?))
-    ;; Basic case
-    (check-n nargs (WRONG_NARGS_LBL cgc))
-    ;; Optional and rest arguments case
-    ;; Todo
-    #f))
+  ;; Places the arguments in their correct place
+  (define (mov-arguments-in-correct-position call-nargs)
+    (for-each
+      (lambda (n)
+        (am-mov cgc
+          (get-nth-arg cgc (frame-size frame) nargs n)
+          (get-nth-arg cgc (frame-size frame) call-nargs n)))
+      (iota 1 call-nargs)))
 
-;; Start routine
-;; Gets executed before main
-(define (x64-init-routine cgc)
-  (debug "put-init-routine"))
+  ;; Places switch
+  ;; Captures the number of argument (If narg-reg)
+  ;; Moves the parameters to the right position if necessary
+  ;; Then jump to corresponding mov-labels
+  ;; Placed in its own function to make code simpler and reduce redundancy
+  (define (place-switch nargs-to-test mov-labels case-labels end-label narg-reg)
+    (debug "place-switch")
+    (for-each
+      (lambda (arg-count mov-label case-label next-case-label)
+        (am-lbl cgc case-label)
+        (check-nargs arg-count next-case-label)
+        ;; Here, we know that function was called with nargs == arg-count
+        (if narg-reg
+          (am-mov cgc narg-reg (int-opnd cgc arg-count)))
+        (mov-arguments-in-correct-position arg-count)
+        (am-jmp cgc mov-label))
+      nargs-to-test
+      mov-labels
+      case-labels
+      (append (cdr case-labels) (list end-label))))
 
-;; End routine
-;; Gets executed after main if no error happened during execution
-(define (x64-end-routine cgc)
-  (debug "put-end-routine"))
-
-;; Error routine
-;; Gets executed if an error occurs
-(define (x64-error-routine cgc)
-  (debug "put-error-routine")
-
-  (am-lbl cgc (ALLOCATION_ERROR_LBL cgc))    ;; Overflow handling
-  (am-mov cgc (x86-rax) (int-opnd cgc -24))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (OVERFLOW_LBL cgc))    ;; Overflow handling
-  (am-mov cgc (x86-rax) (int-opnd cgc -20))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (UNDERFLOW_LBL cgc))   ;; Underflow handling
-  (am-mov cgc (x86-rax) (int-opnd cgc -16))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (WRONG_NARGS_LBL cgc)) ;; Incorrect narg handling
-  (am-mov cgc (x86-rax) (int-opnd cgc -12))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (INTERRUPT_LBL cgc))   ;; Interrupts handling
-  (am-mov cgc (x86-rax) (int-opnd cgc -8))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (TYPE_ERROR_LBL cgc))  ;; Type error handling
-  (am-mov cgc (x86-rax) (int-opnd cgc -4))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (C_ERROR_LBL cgc))
-
-  (get-extra-register cgc
-    (lambda (reg)
-      (am-mov cgc reg (x86-imm-obj 'display))
-      (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-      (am-mov cgc reg (mem-opnd cgc 0 reg))
-       ;; set r0 to saved return address in init routine
-      (am-mov cgc (get-register cgc 0) (get-register cgc 4))
-      (am-mov cgc (get-register cgc 1) (int-opnd cgc (* 4 45)))
-      (am-set-narg cgc 1)
-      (am-jmp cgc reg)))
-  )
-
-(define (x64-place-extra-data cgc)
-  (debug "place-extra-data"))
+  (define (place-movs nargs-to-test mov-labels mov-opnds)
+    (debug "place-movs")
     (for-each
       (lambda (arg-count mov-label opnd)
         (am-lbl cgc mov-label)
