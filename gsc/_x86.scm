@@ -1103,7 +1103,7 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
 
 (define (x86-call cgc opnd)
   (if (asm-label? opnd)
-      (x86-jump-label cgc opnd x86-call-rel32-opcode)
+      (x86-jump-label cgc opnd x86-call-rel32-opcode #f)
       (x86-jump-general cgc opnd 2)))
 
 (define (x86-jo cgc label)  (x86-jump-label cgc label x86-jo-rel8-opcode #t))
