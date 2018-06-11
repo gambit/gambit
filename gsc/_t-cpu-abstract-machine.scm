@@ -407,15 +407,34 @@
         (use-register n #f)
         (loop (+ n 1)))
 
+      ;; Todo: Remove randomness
       (use-register (random-integer (vector-length registers)) #t))))
 
 (define (get-register cgc n)
   (vector-ref (get-main-registers cgc) n))
 
 (define (get-extra-register cgc use)
-  (choose-register cgc use
+  (get-multiple-extra-register cgc 1 use))
+
+(define (get-multiple-extra-register cgc number use)
+  (define registers '())
+  (define (accumulate-extra-register count)
+    (choose-register cgc
+      (lambda (reg)
+        (if (>= count 1)
+          (begin
+            (set! registers (cons reg registers))
+            (accumulate-extra-register (- count 1)))))
     (get-extra-registers cgc)
-    (codegen-context-extra-registers-allocation cgc)))
+      (codegen-context-extra-registers-allocation cgc))
+
+    registers)
+
+  (if (< (vector-length (get-extra-registers cgc)) number)
+    (compiler-internal-error "get-extra-register: Not enough extra registers"))
+
+  (let ((regs (accumulate-extra-register number)))
+    (apply use regs)))
 
 ;; ***** Utils - Operands
 
@@ -540,9 +559,9 @@
         (set-proc-label-index cgc proc label struct-position)
         (put-return-point-label cgc label 0 0 0))))) ;; Return point)))
 
-(define (am-put-args cgc jump-fs args)
+(define (am-put-args cgc start-fs args)
   (define (get-frames count)
-    (map (lambda (i) (frame cgc jump-fs i)) (iota 1 count)))
+    (map (lambda (i) (frame cgc start-fs i)) (iota 1 count)))
 
   (define (get-registers count)
     (map (lambda (i) (get-register cgc i)) (iota 1 count)))
