@@ -330,11 +330,14 @@
     (table-get-or-set table sym def-lbl)))
 
 ;; Useful for branching
-(define (make-unique-label cgc prefix)
-  (define (lbl->id num proc_name)
-    (string->symbol (string-append (if prefix prefix "other") (number->string num))))
+(define (make-unique-label cgc prefix #!optional (add-suffix #t))
+  (define (lbl->id num)
+    (string->symbol (string-append
+      (if prefix prefix "other")
+      (if add-suffix (number->string num) ""))))
+
   (let* ((id (get-unique-id))
-         (label-id (lbl->id id suffix))
+         (label-id (lbl->id id))
          (lbl (asm-make-label cgc label-id)))
     lbl))
 
@@ -387,7 +390,6 @@
   (define (use-register index save?)
     (let ((register (vector-ref registers index))
           (ref-count (vector-ref allocation index)))
-      (debug "Use-register: " register " (" ref-count ") ")
       (if save?
         (am-push cgc register))
 
