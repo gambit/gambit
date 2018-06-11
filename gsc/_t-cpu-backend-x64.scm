@@ -289,6 +289,7 @@
           (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
       (x86-mov cgc dst new-src width)))
 
+  (if (not (equal? dst src))
   (cond
     ((and
       (or (equal? dst-type 'mem) (equal? dst-type 'ind))
@@ -306,7 +307,7 @@
           (mov-in-dst reg-src))))
 
     (else
-      (mov-in-dst src))))
+        (mov-in-dst src)))))
 
 (define (apply-and-mov fun)
   (lambda (cgc result-reg opnd1 opnd2)
