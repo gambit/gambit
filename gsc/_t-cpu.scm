@@ -412,21 +412,23 @@
   (codegen-fixup-lbl-late! cgc
     (get-next-label cgc proc-name (+ 1 label-struct-position) label)
     #f 64
-    'next-label)
+    'next-label-with-structure
+    )
   ;; parent label struct
   (if parent-label
-    (codegen-fixup-lbl! cgc parent-label 0 #f 64)
+    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
     (am-data-word cgc 0))
 
   (codegen-fixup-handler! cgc '___lowlevel_exec (get-word-width-bits cgc))
   (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
-  (codegen-fixup-lbl! cgc label 0 #f 64) ;; self ptr
+  (codegen-fixup-lbl! cgc label 0 #f 64 'self-label) ;; self ptr
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc label)
 
   (codegen-context-label-struct-position-set! cgc
     (+ 1 label-struct-position)))
 
+;; Todo: Make sure ret-pos is valid when using this function
 (define (put-return-point-label cgc label frame-size ret-pos gcmap #!optional (internal? #f))
   (define label-struct-position (codegen-context-label-struct-position cgc))
   (define proc (codegen-context-current-proc cgc))
@@ -440,10 +442,10 @@
   (codegen-fixup-lbl-late! cgc
     (get-next-label cgc proc-name (+ 1 label-struct-position) label)
     #f 64
-    'next-label)
+    'next-label-with-structure)
   ;; parent label struct
   (if parent-label
-    (codegen-fixup-lbl! cgc parent-label 0 #f 64)
+    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
     (am-data-word cgc 0))
 
   (codegen-fixup-handler! cgc '___lowlevel_exec 64)
@@ -461,6 +463,8 @@
 
 (define (encode-label-instr cgc code)
   (let* ((gvm-instr (code-gvm-instr code))
+         (frame (gvm-instr-frame gvm-instr))
+         (fs (frame-size frame))
          (label-struct-position (codegen-context-label-struct-position cgc))
          (proc (codegen-context-current-proc cgc))
          (label-num (label-lbl-num gvm-instr))
@@ -472,8 +476,7 @@
       ((entry)
         (let ((narg (label-entry-nb-parms gvm-instr))
               (opts (label-entry-opts gvm-instr))
-              (rest? (label-entry-rest? gvm-instr))
-              (proc-name (string->symbol (proc-obj-name proc))))
+              (rest? (label-entry-rest? gvm-instr)))
               ;; Todo: Ask Marc what this is
               ; (keys (label-entry-keys gvm-instr))
               ; (closed? (label-entry-closed? gvm-instr))
@@ -482,16 +485,15 @@
               (put-entry-point-label cgc label)
 
               ;; Todo: Complete narg. Support optional and varargs
-              (am-check-narg cgc narg)))
+              (am-check-narg cgc frame narg opts rest?)))
 
       ((return)
-        (let ((frame (gvm-instr-frame gvm-instr)))
           (set-proc-label-index cgc proc label label-struct-position)
           (put-return-point-label cgc
             label
-            (frame-size frame)
+          fs
           (get-frame-ret-pos frame)
-            (get-frame-gcmap frame))))
+          (get-frame-gcmap frame)))
 
       (else
         (am-lbl cgc label)))))
