@@ -517,37 +517,48 @@
   ;; Places switch
   ;; Captures the number of argument (If narg-reg)
   ;; Moves the parameters to the right position if necessary
-  ;; Then jump to corresponding mov-labels
-  ;; Placed in its own function to make code simpler and reduce redundancy
-  (define (place-switch nargs-to-test mov-labels case-labels end-label narg-reg)
+  ;; Moves the default values if necessary
+  (define (place-switch
+    nargs-to-test
+    case-labels
+    continue-label
+    end-label
+    narg-reg
+    optional-values)
     (debug "place-switch")
     (for-each
-      (lambda (arg-count mov-label case-label next-case-label)
+      (lambda (arg-count case-label next-case-label i)
         (am-lbl cgc case-label)
         (check-nargs arg-count next-case-label)
-        ;; Here, we know that function was called with nargs == arg-count
-        (if narg-reg
-          (am-mov cgc narg-reg (int-opnd cgc arg-count)))
-        (mov-arguments-in-correct-position arg-count)
-        (am-jmp cgc mov-label))
-      nargs-to-test
-      mov-labels
-      case-labels
-      (append (cdr case-labels) (list end-label))))
 
-  (define (place-movs nargs-to-test mov-labels mov-opnds)
-    (debug "place-movs")
+        (if rest?
+          (begin
+            (am-mov cgc narg-reg (int-opnd cgc arg-count))))
+
+        (mov-arguments-in-correct-position arg-count)
+
+        ;; Here, nargs == arg-count
+
+        ;; Places the default values
+        (let ((default-values-to-move (drop-n optional-values i)))
+          (debug "default-values-to-move: " default-values-to-move)
     (for-each
-      (lambda (arg-count mov-label opnd)
-        (am-lbl cgc mov-label)
-        (if opnd
+            (lambda (default-value j)
+              (debug default-value)
           (am-mov cgc
-            (get-nth-arg cgc (frame-size frame) nargs (+ 1 arg-count)) ;; Indexing starts at 1
-            opnd
-            (get-word-width-bits cgc))))
+                (get-nth-arg cgc (frame-size frame) nargs (+ i j))
+                default-value
+                (get-word-width-bits cgc)))
+
+            default-values-to-move
+            (iota 0 (length default-values-to-move))))
+
+        (am-jmp cgc continue-label))
+
       nargs-to-test
-      mov-labels
-      (append mov-opnds '(#f))))
+      case-labels
+      (append (cdr case-labels) (list end-label))
+      (iota 0 (length nargs-to-test))))
 
   (debug "x64-check-narg: " nargs)
   ; (x86-int3 cgc)
@@ -560,28 +571,29 @@
     (let* ((opts-count (length optional-args-values))
            (rest-count (if rest? 1 0))
            (lower-bound (- nargs opts-count rest-count))
-           (nargs-to-test (iota lower-bound (- nargs rest-count)))
+           (upper-bound (- nargs rest-count))
+           (nargs-to-test (iota lower-bound upper-bound))
            (make-lbl (lambda (prefix)
              (lambda (i)
                (make-unique-label cgc
                  (string-append prefix (number->string i)) #f))))
            (case-labels (map (make-lbl "case_") nargs-to-test))
-           (mov-labels (map (make-lbl "mov_") nargs-to-test))
            (continue-lbl (make-unique-label cgc "continue" #f))
            (error-label (make-unique-label cgc "narg-error" #f))
            (rest-label (if rest? (make-unique-label cgc "get-rest" #f) #f)))
 
-      (if (not rest?)
-        ;; No rest
-        (begin
-          (place-switch nargs-to-test mov-labels case-labels error-label #f)
-          (place-movs nargs-to-test mov-labels
+      (get-extra-register cgc
+        (lambda (real-nargs-reg)
+          (place-switch
+            nargs-to-test
+            case-labels
+            continue-lbl
+            (if rest? rest-label error-label)
+            real-nargs-reg
             (map (lambda (val) (make-opnd cgc val)) optional-args-values))
 
           (am-jmp cgc continue-lbl)
         )
-        ;; Wth rest
-        #f
       )
 
       ;; Error handler

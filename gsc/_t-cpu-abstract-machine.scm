@@ -618,12 +618,13 @@
         (for-each (lambda (datum) (fun cgc datum)) data)
         (fun cgc data)))))
 
+;; ***** Utils - Other
+
 (define (reserve-space cgc bytes #!optional (value 0))
   (if (> bytes 0)
     (begin
       (am-data cgc 8 value)
       (reserve-space cgc (- bytes 1) value))))
-
 
 ;; ***** Default Routines
 
