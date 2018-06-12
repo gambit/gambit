@@ -4057,6 +4057,11 @@
   interrupts
 )
 
+(##define-macro (macro-make-floats)
+  `(##f64vector (macro-inexact-+0)
+                (macro-inexact-+0)
+                (macro-inexact-+0)))
+
 (##define-macro (macro-current-time f)             `(##f64vector-ref ,f 0))
 (##define-macro (macro-current-time-set! f x)      `(##f64vector-set! ,f 0 ,x))
 (##define-macro (macro-heartbeat-interval f)       `(##f64vector-ref ,f 1))
@@ -4072,7 +4077,7 @@
 (##define-macro (macro-update-current-time!)
   `(##get-current-time! (macro-thread-floats (macro-current-processor)) 0))
 
-(##define-macro (macro-make-processor)
+(##define-macro (macro-make-processor id)
   `(let ((processor
           (macro-construct-processor
            0
@@ -4090,9 +4095,8 @@
            #f
            #f
            #f
-           (##f64vector (macro-inexact-+0)
-                        (macro-inexact-+0)
-                        (macro-inexact-+0))
+           (macro-make-floats)
+           #f
            #f
            ,id
            '())))
@@ -4103,7 +4107,7 @@
      processor))
 
 (##define-macro (macro-processor-init! processor id)
-  `(let ((processor ,processor))
+  `(let ((processor ,processor) (id ,id))
      (##structure-type-set! processor (macro-type-processor))
      (macro-processor-floats-set!
       processor
@@ -4114,7 +4118,7 @@
      (macro-btq-init! processor)
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
-     (macro-processor-id-set! processor ,id)
+     (macro-processor-id-set! processor id)
      (macro-processor-interrupts-set! processor '())
      processor))
 
