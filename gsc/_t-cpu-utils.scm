@@ -38,6 +38,9 @@
 (define (index-of elem elems)
   (find (lambda (var) (equal? var elem)) elems))
 
+(define (elem? elem elems)
+  (not (= -1 (index-of elem elems))))
+
 (define (iota start end)
   (if (> start end)
     '()
