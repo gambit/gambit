@@ -580,7 +580,24 @@
       args
       (append frames regs))))
 
-; (define (am-get-args cgc nargs))
+;; Count starts at 0
+;; Todo: Optimize. This is not very efficient...
+; 5 arguments   sp[1]  sp[0]  R1     R2     R3
+(define (get-nth-arg cgc start-fs total nth)
+  (define (get-frames count)
+    (map (lambda (i) (frame cgc start-fs i)) (iota 1 count)))
+
+  (define (get-registers count)
+    (map (lambda (i) (get-register cgc i)) (iota 1 count)))
+
+  (let* ((target (codegen-context-target cgc))
+         (narg-in-regs (target-nb-arg-regs target))
+         (narg-in-frames (- total narg-in-regs))
+         (frames (reverse (get-frames narg-in-frames)))
+         (regs (get-registers narg-in-regs))
+         (arg-opnds (append frames regs)))
+    (list-ref arg-opnds nth)))
+
 
 (define (am-data-word cgc word)
   (am-data cgc (get-word-width-bits cgc) word))
