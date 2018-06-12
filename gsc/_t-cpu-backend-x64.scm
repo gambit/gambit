@@ -393,7 +393,8 @@
   (check-overflow-and-interrupt cgc frame))
 
 (define use-f-flag #t)
-(define nargs-passed-in-flags '(0 1 2 3 4)) ;; Can't be longer than 5
+;; Must be ordered and can't be longer than 5
+(define nargs-passed-in-flags '(0 1 2 3 4))
 
 (define (narg-index nargs) (index-of nargs nargs-passed-in-flags))
 (define (passed-in-ps nargs) (= -1 (narg-index nargs)))
@@ -417,8 +418,10 @@
     (let ((na-opnd (get-processor-state-field cgc 'nargs)))
       (x86-mov cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))))
 
-  (define all-tests (list flags-a flags-b flags-c flags-d flags-e))
-  (define tests (if use-f-flag all-tests (cdr all-tests)))
+  (define all-tests
+    (list flags-a flags-b flags-c flags-d flags-e))
+  (define tests
+    (if use-f-flag all-tests (cdr all-tests)))
 
   (debug "x64-set-narg: " nargs)
 
@@ -463,10 +466,12 @@
       (x86-cmp cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))
       (x86-jne cgc label)))
 
-  (define all-tests (list check-not-a check-not-b check-not-c check-not-d check-not-e))
-  (define tests (if use-f-flag all-tests (cdr all-tests)))
+  (define all-tests
+    (list check-not-a check-not-b check-not-c check-not-d check-not-e))
+  (define tests
+    (if use-f-flag all-tests (cdr all-tests)))
 
-  (define (check-nargs arg-count label)
+  (define (check-nargs arg-count error-label)
     (if (passed-in-ps arg-count)
       ;; Use processor state to pass narg
           (begin
@@ -483,30 +488,31 @@
           ;;  lbl1: (check-bcd lbl2)
           ;;  lbl2: (check-e lbl3)
           ;;  lbl3:
-          (let ((not-a-lbl (make-unique-label cgc "not-a"))
-                (not-bcd-lbl (make-unique-label cgc "not-bcd"))
-                (not-e-lbl (make-unique-label cgc "not-e")))
+          (let ((not-a-lbl (make-unique-label cgc "not-a" #f))
+                (not-bcd-lbl (make-unique-label cgc "not-bcd" #f))
+                (not-e-lbl (make-unique-label cgc "not-e" #f)))
             ;; Checks if nargs was passed in flag instead of ps
             (check-not-a not-a-lbl)
             (am-lbl cgc not-a-lbl)
             (check-not-b-or-c-or-d not-bcd-lbl)
             (am-lbl cgc not-bcd-lbl)
-            (check-not-e not-e-lbl)
-            (am-lbl cgc not-e-lbl))
+            (check-e error-label)
+            ) ;; Continue execution
 
-          (flags-not-a))
-        (check-ps-na arg-count label))
+          (check-not-a error-label))
+        (check-ps-na arg-count error-label))
       ;; Use flag register
-      ((list-ref tests (narg-index arg-count)) label)))
+      ((list-ref tests (narg-index arg-count)) error-label)))
 
   ;; Places the arguments in their correct place
+  ;; Todo: Make sure arguments can't overwrite
   (define (mov-arguments-in-correct-position call-nargs)
     (for-each
       (lambda (n)
         (am-mov cgc
           (get-nth-arg cgc (frame-size frame) nargs n)
           (get-nth-arg cgc (frame-size frame) call-nargs n)))
-      (iota 1 call-nargs)))
+      (iota 0 (- call-nargs 1))))
 
   ;; Places switch
   ;; Captures the number of argument (If narg-reg)
