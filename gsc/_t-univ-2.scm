@@ -4831,9 +4831,9 @@ EOF
 
            (univ-throw ctx "\"host2scm error\""))))))
 
-    ((host2scm_call)
+    ((scm_call)
      (rts-method
-      'host2scm_call
+      'scm_call
       '(public)
       'object
       (list (univ-field 'proc 'scmobj)
@@ -4851,16 +4851,33 @@ EOF
             (^assign i 0)
             (^while (^< i (^getnargs))
               (^ (^push
-                   (^call-prim (^rts-method-ref 'host2scm)
-                               (^array-index args i)))
+                  (^array-index args i))
                  (^inc-by i 1)))
             (univ-pop-args-to-regs ctx 0)
             (^assign (^getreg 0) (^rts-method-use 'underflow))
             (^expr-statement
               (^call-prim (^rts-method-use 'trampoline)
                           proc))
-            (^return-call-prim (^rts-method-ref 'scm2host)
-                               (^getreg 1)))))))
+            (^return (^getreg 1)))))))
+
+    ((host2scm_call)
+     (rts-method
+      'host2scm_call
+      '(public)
+      'object
+      (list (univ-field 'proc 'scmobj)
+            (univ-field 'args 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((args (^local-var 'args))
+             (proc (^local-var 'proc)))
+         (^return
+          (^call-prim (^rts-method-use 'scm2host)
+                      (^call-prim (^rts-method-use 'scm_call)
+                                  proc
+                                  (^map (^rts-method-ref 'host2scm)
+                                        args))))))))
 
     ((scm_procedure2host)
      (rts-method
