@@ -435,14 +435,22 @@
 
 (define (x64-check-nargs cgc frame nargs optional-args-values rest?)
   ;; Constants
+
+  (define target (codegen-context-target cgc))
+  (define nargs-in-regs (target-nb-arg-regs target))
+
   (define opts-count (length optional-args-values))
   (define nargs-no-opts (- nargs opts-count (if rest? 1 0)))
   (define nargs-no-rest (- nargs (if rest? 1 0)))
   (define nargs-to-test (iota nargs-no-opts nargs-no-rest))
 
   (define continue-label (make-unique-label cgc "continue" #f))
-  (define error-label  (make-unique-label cgc "narg-error" #f))
-  (define rest-label   (make-unique-label cgc "get-rest" #f))
+  (define error-label    (make-unique-label cgc "narg-error" #f))
+  (define rest-label     (make-unique-label cgc "get-rest" #f))
+
+  (define (make-label-curried prefix)
+    (lambda (i) (make-unique-label cgc
+      (string-append prefix (number->string i)) #f)))
 
   ;; a flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
   ;; b flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
@@ -474,12 +482,17 @@
       (x86-cmp cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))
       (x86-jne cgc label)))
 
-  (define all-tests
+  (define all-negative-tests
     (list check-not-a check-not-b check-not-c check-not-d check-not-e))
-  (define tests
-    (if use-f-flag all-tests (cdr all-tests)))
+  (define negative-tests
+    (if use-f-flag all-negative-tests (cdr all-negative-tests)))
 
-  (define (check-nargs arg-count error-label)
+  (define all-positive-tests
+    (list check-not-a check-not-b check-not-c check-not-d check-not-e))
+  (define positive-tests
+    (if use-f-flag all-positive-tests (cdr all-positive-tests)))
+
+  (define (check-nargs arg-count jmp-loc use-positive)
     (if (passed-in-ps arg-count)
       ;; Use processor state to pass narg
           (begin
@@ -496,21 +509,24 @@
           ;;  lbl1: (check-bcd lbl2)
           ;;  lbl2: (check-e lbl3)
           ;;  lbl3:
-          (let ((not-a-lbl (make-unique-label cgc "not-a" #f))
+          (let ((not-a-lbl   (make-unique-label cgc "not-a" #f))
                 (not-bcd-lbl (make-unique-label cgc "not-bcd" #f))
-                (not-e-lbl (make-unique-label cgc "not-e" #f)))
+                (not-e-lbl   (make-unique-label cgc "not-e" #f)))
             ;; Checks if nargs was passed in flag instead of ps
             (check-not-a not-a-lbl)
             (am-lbl cgc not-a-lbl)
             (check-not-b-or-c-or-d not-bcd-lbl)
             (am-lbl cgc not-bcd-lbl)
-            (check-e error-label)
+            (check-e jmp-loc)
             ) ;; Continue execution
 
-          (check-not-a error-label))
-        (check-ps-na arg-count error-label))
+          (check-not-a jmp-loc))
+        (check-ps-na arg-count jmp-loc))
       ;; Use flag register
-      ((list-ref tests (narg-index arg-count)) error-label)))
+      ((list-ref
+        (if use-positive positive-tests negative-tests)
+        (narg-index arg-count))
+        jmp-loc)))
 
   ;; Places the arguments in their correct place
   ;; Todo: Make sure arguments can't overwrite
@@ -527,16 +543,13 @@
   ;; Captures the number of argument (If narg-reg)
   ;; Moves the parameters to the right position if necessary
   ;; Moves the default values if necessary
-  (define (place-switch narg-reg)
-    (debug "place-switch")
+  (define (place-optional-arguments-switch narg-reg)
+    (debug "place-optional-arguments-switch")
     (let* ((case-labels
-              (map
-                (lambda (i) (make-unique-label cgc
-                  (string-append "case_" (number->string i)) #f))
-                nargs-to-test))
+              (map (make-label-curried "opt-case_") nargs-to-test))
            (last-label (if rest? rest-label error-label))
            (next-case-labels (append (cdr case-labels) (list last-label)))
-           (rest-opnds (if rest? (list (make-obj-opnd cgc '())) '()))
+           (rest-opnds (if rest? (list (x86-imm-obj '())) '()))
            (optional-opnds
               (append
                 (map (lambda (val) (make-opnd cgc val)) optional-args-values)
@@ -545,7 +558,7 @@
     (for-each
       (lambda (arg-count case-label next-case-label i)
         (am-lbl cgc case-label)
-        (check-nargs arg-count next-case-label)
+          (check-nargs arg-count next-case-label #f)
 
           (if narg-reg
             (am-mov cgc narg-reg (int-opnd cgc arg-count)))
@@ -572,37 +585,113 @@
         next-case-labels
         (iota 0 (length nargs-to-test)))))
 
+  (define (place-rest-switch narg-reg)
+    (let* ((rest-nargs-to-test
+              (filter
+                (lambda (n) (>= n nargs-no-opts))
+                nargs-passed-in-flags))
+           (get-rest-lbl
+             (get-label cgc
+               (string->symbol
+                 (string-append "FUN-GET-REST-"
+                   (number->string (min nargs nargs-in-regs))))))
+           (case-labels
+              (map (make-label-curried "rest-case_") rest-nargs-to-test))
+           (check-ps-label (make-unique-label cgc "check-nargs-in-ps" #f))
+           (next-case-labels (append (cdr case-labels) (list check-ps-label))))
+
+    ;; Maybe optimise by checking ps-na case before checking flags?
+    (for-each
+      (lambda (arg-count case-label next-case-label)
+        (debug "case-lbl: " case-label)
+        (am-lbl cgc case-label)
+        (check-nargs arg-count next-case-label #f)
+        (if (eq? arg-count nargs-no-opts)
+          (begin
+            (am-mov cgc
+              (get-nth-arg cgc (frame-size frame) arg-count arg-count)
+              (x86-imm-obj '()))
+            (am-jmp cgc continue-label))
+          (begin
+            (am-push cgc (int-opnd cgc arg-count))
+            (am-push cgc (lbl-opnd cgc continue-label))
+            (am-jmp cgc get-rest-lbl))))
+      rest-nargs-to-test
+      case-labels
+      next-case-labels)
+
+      (am-lbl cgc check-ps-label)
+      ;; Because nargs-passed-in-flags is a set, we need to compare to nargs-no-opts.
+      ;; Example: if 0 is not passed in flags, we would not catch the error
+      ;; in the for-each above.
+      (am-mov cgc narg-reg (car (get-processor-state-field cgc 'nargs)))
+      (x86-cmp cgc narg-reg (int-opnd cgc nargs-no-opts))
+      (x86-jl cgc error-label)
+
+      ;; Here, we know it's in ps.
+      (am-push cgc (lbl-opnd cgc continue-label))
+      (am-jmp cgc get-rest-lbl)
+  ))
+
   (debug "x64-check-narg: " nargs)
   ; (x86-int3 cgc)
 
   (if (and (null? optional-args-values) (not rest?))
     ;; Basic case
-    (check-nargs nargs (WRONG_NARGS_LBL cgc))
+    (check-nargs nargs (WRONG_NARGS_LBL cgc) #f)
 
     ;; Optional and rest arguments case
     (begin
       (if rest?
+        ;; If rest
       (get-extra-register cgc
         (lambda (real-nargs-reg)
-            (place-switch real-nargs-reg)
-
+            (if (not (= 0 opts-count))
+              (place-optional-arguments-switch real-nargs-reg))
             (am-lbl cgc rest-label)
-            ;; Check if real nargs if HIGHER OR EQUAL than nargs
-            ;; Or NOT LESS than lower-bound
+            (place-rest-switch real-nargs-reg)))
 
-            ;; jump to correct get-rest handler
-          ))
       ;; If not rest
-      (place-switch #f))
+        (place-optional-arguments-switch #f))
 
       ;; Error handler
+      ;; Note: call-handler places continue-label as return-point
       (am-lbl cgc error-label)
-      ;; call-handler cgc sym frame return-loc
-      ;; call error handler
-      ;; Note: Places continue-label as return-point
-      (call-handler cgc 'handler_wrong_nargs frame continue-label))
+      (call-handler cgc 'handler_wrong_nargs frame continue-label))))
 
-    ))
+(define (make-get-rest-procedure cgc nargs)
+  (let ((registers-to-push
+          (map (lambda (i) (get-register cgc i)) (iota 0 (- nargs 1))))
+        (repeat-label (make-unique-label cgc "REPEAT: " #f)))
+
+    (get-multiple-extra-register cgc 3
+      (lambda (nargs-register ret-reg accum-reg)
+        (am-pop cgc nargs-register)
+        (am-pop cgc ret-reg)
+        (am-mov cgc accum-reg (x86-imm-obj '()))
+
+        (for-each
+          (lambda (opnd)
+            (am-push cgc opnd))
+          registers-to-push)
+
+        ;; Loop
+        ;; It will always loop at least once, because we optimise the empty case
+        (am-lbl cgc repeat-label)
+
+        ;; Todo: Construct list here
+
+        ; (x86-sub cgc nargs-register (int-opnd cgc 1))
+        (x86-inc cgc nargs-register)
+        (x86-cmp cgc nargs-register (int-opnd cgc nargs))
+        (x86-jg cgc repeat-label)
+
+        (for-each
+          (lambda (opnd)
+            (am-pop cgc opnd))
+          (reverse registers-to-push))
+
+        (am-jmp cgc ret-reg)))))
 
 ;; Start routine
 ;; Gets executed before main
@@ -612,16 +701,30 @@
 ;; End routine
 ;; Gets executed after main if no error happened during execution
 (define (x64-end-routine cgc)
-  (asm-listing cgc "END ROUTINE")
+  (let* ((target (codegen-context-target cgc))
+         (nargs-in-regs (target-nb-arg-regs target)))
+    (for-each
+      (lambda (nargs)
+        (am-lbl cgc
+          (get-label cgc
+            (string->symbol
+              (string-append "FUN-GET-REST-"
+                (number->string nargs)))))
+        (make-get-rest-procedure cgc nargs)
+      )
+      (iota 0 nargs-in-regs)))
+
   (x86-int3 cgc)
   (x86-ret cgc)
 
+  (asm-listing cgc "END ROUTINE")
   (debug "put-end-routine"))
 
 ;; Error routine
 ;; Gets executed if an error occurs
 (define (x64-error-routine cgc)
   (debug "put-error-routine")
+  (asm-listing cgc "ERROR ROUTINE")
 
   (am-lbl cgc (ALLOCATION_ERROR_LBL cgc))    ;; Overflow handling
   (am-mov cgc (get-register cgc 1) (x86-imm-obj "Allocation"))
