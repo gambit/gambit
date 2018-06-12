@@ -1318,7 +1318,7 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
     (listing opnd))
 
   (cond ((and (fx= op #x50) ;; push?
-              (x86-imm-int? opnd))
+              (x86-imm? opnd))
          (immediate))
         ((x86-reg? opnd)
          (register))
