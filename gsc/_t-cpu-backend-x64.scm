@@ -594,7 +594,7 @@
              (get-label cgc
                (string->symbol
                  (string-append "FUN-GET-REST-"
-                   (number->string (min nargs nargs-in-regs))))))
+                   (number->string (min nargs-no-opts nargs-in-regs))))))
            (case-labels
               (map (make-label-curried "rest-case_") rest-nargs-to-test))
            (check-ps-label (make-unique-label cgc "check-nargs-in-ps" #f))
@@ -613,8 +613,8 @@
               (x86-imm-obj '()))
             (am-jmp cgc continue-label))
           (begin
-            (am-push cgc (int-opnd cgc arg-count))
             (am-push cgc (lbl-opnd cgc continue-label))
+            (am-push cgc (int-opnd cgc arg-count))
             (am-jmp cgc get-rest-lbl))))
       rest-nargs-to-test
       case-labels
@@ -624,17 +624,18 @@
       ;; Because nargs-passed-in-flags is a set, we need to compare to nargs-no-opts.
       ;; Example: if 0 is not passed in flags, we would not catch the error
       ;; in the for-each above.
-      (am-mov cgc narg-reg (car (get-processor-state-field cgc 'nargs)))
+      (let ((narg-field (get-processor-state-field cgc 'nargs)))
+        (am-mov cgc narg-reg (car narg-field))
       (x86-cmp cgc narg-reg (int-opnd cgc nargs-no-opts))
       (x86-jl cgc error-label)
 
       ;; Here, we know it's in ps.
       (am-push cgc (lbl-opnd cgc continue-label))
-      (am-jmp cgc get-rest-lbl)
-  ))
+        (am-push cgc (car narg-field))
+        (am-jmp cgc get-rest-lbl))))
 
   (debug "x64-check-narg: " nargs)
-  ; (x86-int3 cgc)
+  (x86-int3 cgc)
 
   (if (and (null? optional-args-values) (not rest?))
     ;; Basic case
@@ -682,7 +683,7 @@
         ;; Todo: Construct list here
 
         ; (x86-sub cgc nargs-register (int-opnd cgc 1))
-        (x86-inc cgc nargs-register)
+        (x86-dec cgc nargs-register)
         (x86-cmp cgc nargs-register (int-opnd cgc nargs))
         (x86-jg cgc repeat-label)
 
