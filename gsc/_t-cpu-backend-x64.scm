@@ -36,8 +36,6 @@
 (define (TYPE_ERROR_LBL cgc)        (get-label cgc 'TYPE_ERROR_LBL))
 (define (ALLOCATION_ERROR_LBL cgc)  (get-label cgc 'ALLOCATION_ERROR_LBL))
 
-(define (GET_REST_LBL cgc)          (get-label cgc 'GET_REST))
-
 ;;------------------------------------------------------------------------------
 
 ;; Primitives
@@ -436,6 +434,16 @@
     ((list-ref tests (narg-index nargs)))))
 
 (define (x64-check-nargs cgc frame nargs optional-args-values rest?)
+  ;; Constants
+  (define opts-count (length optional-args-values))
+  (define nargs-no-opts (- nargs opts-count (if rest? 1 0)))
+  (define nargs-no-rest (- nargs (if rest? 1 0)))
+  (define nargs-to-test (iota nargs-no-opts nargs-no-rest))
+
+  (define continue-label (make-unique-label cgc "continue" #f))
+  (define error-label  (make-unique-label cgc "narg-error" #f))
+  (define rest-label   (make-unique-label cgc "get-rest" #f))
+
   ;; a flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
   ;; b flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
   ;; c flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
@@ -511,40 +519,44 @@
       (lambda (n)
         (am-mov cgc
           (get-nth-arg cgc (frame-size frame) nargs n)
-          (get-nth-arg cgc (frame-size frame) call-nargs n)))
+          (get-nth-arg cgc (frame-size frame) call-nargs n)
+          (get-word-width-bits cgc)))
       (iota 0 (- call-nargs 1))))
 
   ;; Places switch
   ;; Captures the number of argument (If narg-reg)
   ;; Moves the parameters to the right position if necessary
   ;; Moves the default values if necessary
-  (define (place-switch
-    nargs-to-test
-    case-labels
-    continue-label
-    end-label
-    narg-reg
-    optional-values)
+  (define (place-switch narg-reg)
     (debug "place-switch")
+    (let* ((case-labels
+              (map
+                (lambda (i) (make-unique-label cgc
+                  (string-append "case_" (number->string i)) #f))
+                nargs-to-test))
+           (last-label (if rest? rest-label error-label))
+           (next-case-labels (append (cdr case-labels) (list last-label)))
+           (rest-opnds (if rest? (list (make-obj-opnd cgc '())) '()))
+           (optional-opnds
+              (append
+                (map (lambda (val) (make-opnd cgc val)) optional-args-values)
+                rest-opnds)))
+
     (for-each
       (lambda (arg-count case-label next-case-label i)
         (am-lbl cgc case-label)
         (check-nargs arg-count next-case-label)
 
-        (if rest?
-          (begin
-            (am-mov cgc narg-reg (int-opnd cgc arg-count))))
+          (if narg-reg
+            (am-mov cgc narg-reg (int-opnd cgc arg-count)))
 
         (mov-arguments-in-correct-position arg-count)
 
         ;; Here, nargs == arg-count
-
-        ;; Places the default values
-        (let ((default-values-to-move (drop-n optional-values i)))
-          (debug "default-values-to-move: " default-values-to-move)
+          ;; Places the default values (Including empty list if rest?)
+          (let ((default-values-to-move (append (drop-n optional-opnds i))))
     (for-each
             (lambda (default-value j)
-              (debug default-value)
           (am-mov cgc
                 (get-nth-arg cgc (frame-size frame) nargs (+ i j))
                 default-value
@@ -553,12 +565,12 @@
             default-values-to-move
             (iota 0 (length default-values-to-move))))
 
-        (am-jmp cgc continue-label))
+          (am-jmp cgc error-label))
 
       nargs-to-test
       case-labels
-      (append (cdr case-labels) (list end-label))
-      (iota 0 (length nargs-to-test))))
+        next-case-labels
+        (iota 0 (length nargs-to-test)))))
 
   (debug "x64-check-narg: " nargs)
   ; (x86-int3 cgc)
@@ -568,40 +580,29 @@
     (check-nargs nargs (WRONG_NARGS_LBL cgc))
 
     ;; Optional and rest arguments case
-    (let* ((opts-count (length optional-args-values))
-           (rest-count (if rest? 1 0))
-           (lower-bound (- nargs opts-count rest-count))
-           (upper-bound (- nargs rest-count))
-           (nargs-to-test (iota lower-bound upper-bound))
-           (make-lbl (lambda (prefix)
-             (lambda (i)
-               (make-unique-label cgc
-                 (string-append prefix (number->string i)) #f))))
-           (case-labels (map (make-lbl "case_") nargs-to-test))
-           (continue-lbl (make-unique-label cgc "continue" #f))
-           (error-label (make-unique-label cgc "narg-error" #f))
-           (rest-label (if rest? (make-unique-label cgc "get-rest" #f) #f)))
-
+    (begin
+      (if rest?
       (get-extra-register cgc
         (lambda (real-nargs-reg)
-          (place-switch
-            nargs-to-test
-            case-labels
-            continue-lbl
-            (if rest? rest-label error-label)
-            real-nargs-reg
-            (map (lambda (val) (make-opnd cgc val)) optional-args-values))
+            (place-switch real-nargs-reg)
 
-          (am-jmp cgc continue-lbl)
-        )
-      )
+            (am-lbl cgc rest-label)
+            ;; Check if real nargs if HIGHER OR EQUAL than nargs
+            ;; Or NOT LESS than lower-bound
+
+            ;; jump to correct get-rest handler
+          ))
+      ;; If not rest
+      (place-switch #f))
 
       ;; Error handler
       (am-lbl cgc error-label)
       ;; call-handler cgc sym frame return-loc
       ;; call error handler
-      ;; Note: Places continue-lbl as return-point
-      (call-handler cgc 'handler_wrong_nargs frame continue-lbl))))
+      ;; Note: Places continue-label as return-point
+      (call-handler cgc 'handler_wrong_nargs frame continue-label))
+
+    ))
 
 ;; Start routine
 ;; Gets executed before main
@@ -611,7 +612,7 @@
 ;; End routine
 ;; Gets executed after main if no error happened during execution
 (define (x64-end-routine cgc)
-  (am-lbl cgc (GET_REST_LBL cgc))
+  (asm-listing cgc "END ROUTINE")
   (x86-int3 cgc)
   (x86-ret cgc)
 
