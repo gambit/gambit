@@ -212,7 +212,7 @@
      (lambda (cgc self)
        (asm-int-le cgc (gen-value cgc self) width)))))
 
-(define (codegen-fixup-lbl! cgc lbl offset relative? width #!optional (show-listing #t))
+(define (codegen-fixup-lbl! cgc lbl offset relative? width #!optional (label-name #f))
   (codegen-fixup-generic!
    cgc
    width
@@ -221,9 +221,10 @@
           (fx* 256
                (fx- (fx+ (asm-label-pos lbl) offset)
                     self))))
-   (if show-listing
-    (asm-label-name lbl)
+   (if label-name
+    label-name
     #f)))
+    ; (asm-label-name lbl))))
 
 (define (codegen-fixup-lbl-late! cgc make-lbl relative? width #!optional (label-name #f))
   (codegen-fixup-generic!
