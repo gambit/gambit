@@ -427,7 +427,7 @@
           (begin
             (set! registers (cons reg registers))
             (accumulate-extra-register (- count 1)))))
-    (get-extra-registers cgc)
+      (get-extra-registers cgc)
       (codegen-context-extra-registers-allocation cgc))
 
     registers)
