@@ -71,9 +71,9 @@
       fixnum-tag)
     ((and (immediate-desc? desc) (eqv? 'specialval (immediate-type desc)))
       special-int-tag)
-    ((and (reference-desc? desc) (eqv? 'subtype (immediate-type desc)))
+    ((and (reference-desc? desc) (eqv? 'subtype (reference-type desc)))
       object-tag)
-    ((and (reference-desc? desc) (eqv? 'pair (immediate-type desc)))
+    ((and (reference-desc? desc) (eqv? 'pair (reference-type desc)))
       pair-tag)
     (else
       (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
