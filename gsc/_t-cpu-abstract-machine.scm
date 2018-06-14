@@ -176,11 +176,12 @@
           poll
           set-narg
           check-narg
+          allocate-memory
           init
           end
           error
           place-extra-data)
-  (vector poll set-narg check-narg init end error place-extra-data))
+  (vector poll set-narg check-narg allocate-memory init end error place-extra-data))
 
 (define (get-in-cgc cgc i1 i2)
   (let* ((target (codegen-context-target cgc))
@@ -252,8 +253,8 @@
 (define (am-sub cgc . args)              (apply-instruction cgc 7  args))
 (define (am-bit-shift-right cgc . args)  (apply-instruction cgc 8  args))
 (define (am-bit-shift-left cgc . args)   (apply-instruction cgc 9  args))
-(define (am-not cgc . args)              (apply-instruction cgc 10  args))
-(define (am-and cgc . args)              (apply-instruction cgc 11  args))
+(define (am-not cgc . args)              (apply-instruction cgc 10 args))
+(define (am-and cgc . args)              (apply-instruction cgc 11 args))
 (define (am-or cgc . args)               (apply-instruction cgc 12 args))
 (define (am-xor cgc . args)              (apply-instruction cgc 13 args))
 (define (am-jmp cgc . args)              (apply-instruction cgc 14 args))
@@ -267,10 +268,11 @@
 (define (am-poll cgc . args)             (apply-routine cgc 0 args))
 (define (am-set-narg cgc . args)         (apply-routine cgc 1 args))
 (define (am-check-narg cgc . args)       (apply-routine cgc 2 args))
-(define (am-init cgc . args)             (apply-routine cgc 3 args))
-(define (am-end cgc . args)              (apply-routine cgc 4 args))
-(define (am-error cgc . args)            (apply-routine cgc 5 args))
-(define (am-place-extra-data cgc . args) (apply-routine cgc 6 args))
+(define (am-allocate-memory cgc . args)  (apply-routine cgc 3 args))
+(define (am-init cgc . args)             (apply-routine cgc 4 args))
+(define (am-end cgc . args)              (apply-routine cgc 5 args))
+(define (am-error cgc . args)            (apply-routine cgc 6 args))
+(define (am-place-extra-data cgc . args) (apply-routine cgc 7 args))
 
 ;; ***** AM: State fields
 
@@ -523,6 +525,7 @@
 
 ;; ***** Utils - Abstract machine shorthand
 
+;; Must set arguments before calling this function
 (define (jump-with-return-point cgc location return-lbl frame internal?)
   (debug "jump-with-return-point")
   (let* ((proc (codegen-context-current-proc cgc))
