@@ -274,6 +274,21 @@
 
 ;;;----------------------------------------------------------------------------
 
+(macro-define-syntax macro-target
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_)
+       (let ((target
+              (let* ((co
+                      (##global-var-ref
+                       (##make-global-var '##compilation-options)))
+                     (comp-opts
+                      (if (##unbound? co) '() co))
+                     (t
+                      (assq 'target comp-opts)))
+                (if t (cadr t) 'C))))
+         (datum->syntax stx `',target))))))
+
 (macro-define-syntax macro-case-target
   (lambda (stx)
     (syntax-case stx (else)
@@ -286,7 +301,7 @@
                       (if (##unbound? co) '() co))
                      (t
                       (assq 'target comp-opts)))
-                (if t (cadr t) 'c))))
+                (if t (cadr t) 'C))))
          (let loop ((clauses (syntax->list #'clauses)))
            (if (pair? clauses)
                (syntax-case (car clauses) (else)

@@ -64,6 +64,8 @@ COMPILATION_OPTIONS=""
 
 RTLIB_COND_EXPAND_FEATURES=""
 
+userlibdir="~/.gambit_userlib"
+
 ###############################################################################
 #
 # Check if the system must be compiled using the C compiler or C++ compiler.
@@ -2769,6 +2771,8 @@ if test "$datadir" = "\${datarootdir}"; then
 fi
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_USERLIB=\"\\\"`echo \"$userlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 if test "$ENABLE_SYMLINKS" != yes; then
 

@@ -346,7 +346,7 @@
 (define targ-lbl-alloc #f) ; label table allocation pointer
 (define targ-cns-objs #f)  ; ordered table of pair objects
 (define targ-sym-objs #f)  ; table of interned symbol objects
-(define targ-key-objs #f)  ; table of keyword objects
+(define targ-key-objs #f)  ; table of interned keyword objects
 (define targ-num-objs #f)  ; table of numbers that may be subtyped objects
 (define targ-sub-objs #f)  ; ordered table of subtyped objects (vector, ...)
 (define targ-prc-objs #f)  ; queue of procedure objects
@@ -396,20 +396,23 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (targ-use-glo glo supply?)
-  (let ((x (table-ref targ-glo-vars glo #f)))
-    (if x
-      (begin
-        (if supply?
-          (targ-rsrc-suppliers-set! (cdr x) '(""))
-          (targ-rsrc-demanders-set! (cdr x) '("")))
-        (car x))
-      (let* ((y (targ-make-cell #f))
-             (name (symbol->string glo))
-             (r (if supply?
-                  (targ-make-rsrc name '() '(""))
-                  (targ-make-rsrc name '("") '()))))
-        (table-set! targ-glo-vars glo (cons y r))
-        y))))
+  (if (symbol-object-interned? glo)
+      (let ((x (table-ref targ-glo-vars glo #f)))
+        (if x
+            (begin
+              (if supply?
+                  (targ-rsrc-suppliers-set! (cdr x) '(""))
+                  (targ-rsrc-demanders-set! (cdr x) '("")))
+              (car x))
+            (let* ((y (targ-make-cell #f))
+                   (name (symbol->string glo))
+                   (r (if supply?
+                          (targ-make-rsrc name '() '(""))
+                          (targ-make-rsrc name '("") '()))))
+              (table-set! targ-glo-vars glo (cons y r))
+              y)))
+      (compiler-error
+       "invalid uninterned global variable" glo)))
 
 (define (targ-glo-rsrc g)
   (cddr g))
@@ -591,6 +594,12 @@
                              (lambda (obj i)
                                (list "SUB" i))))))
                    (case subtype
+                     ((symbol)
+                      (targ-use-obj (symbol->string obj))
+                      (targ-use-obj (symbol-object-hash obj)))
+                     ((keyword)
+                      (targ-use-obj (keyword-object->string obj))
+                      (targ-use-obj (keyword-object-hash obj)))
                      ((vector)
                       (for-each targ-use-obj (vect->list obj)))
                      ((ratnum)
@@ -609,11 +618,17 @@
            ((procedure)
             (targ-use-prc obj #f))
            ((symbol)
-            (targ-use-sym obj)
-            (targ-c-id-sym2 (symbol->string obj)))
+            (if (symbol-object-interned? obj)
+                (begin
+                  (targ-use-sym obj)
+                  (targ-c-id-sym2 (symbol->string obj)))
+                (use-subtyped-obj obj)))
            ((keyword)
-            (targ-use-key obj)
-            (targ-c-id-key2 (keyword-object->string obj)))
+            (if (keyword-object-interned? obj)
+                (begin
+                  (targ-use-key obj)
+                  (targ-c-id-key2 (keyword-object->string obj)))
+                (use-subtyped-obj obj)))
            ((flonum bigfixnum bignum ratnum cpxnum)
             (let ((x (table-ref targ-num-objs obj #f)))
               (use-subtyped-obj
@@ -705,19 +720,23 @@
 
          (case subtype
            ((symbol)
-            (let ((x (table-ref targ-sym-objs obj #f)))
-              (if x
-                (list "REF_SYM"
-                      x
-                      (targ-c-id-sym (symbol->string obj)))
-                (err))))
+            (if (symbol-object-interned? obj)
+                (let ((x (table-ref targ-sym-objs obj #f)))
+                  (if x
+                      (list "REF_SYM"
+                            x
+                            (targ-c-id-sym (symbol->string obj))) ;; TODO: remove this useless argument to ___REF_SYM
+                      (err)))
+                (ref-subtyped-obj obj)))
            ((keyword)
-            (let ((x (table-ref targ-key-objs obj #f)))
-              (if x
-                (list "REF_KEY"
-                      x
-                      (targ-c-id-key (keyword-object->string obj)))
-                (err))))
+            (if (keyword-object-interned? obj)
+                (let ((x (table-ref targ-key-objs obj #f)))
+                  (if x
+                      (list "REF_KEY"
+                            x
+                            (targ-c-id-key (keyword-object->string obj))) ;; TODO: remove this useless argument to ___REF_KEY
+                      (err)))
+                (ref-subtyped-obj obj)))
            ((flonum bigfixnum bignum ratnum cpxnum)
             (let ((x (table-ref targ-num-objs obj #f)))
               (if x
@@ -1177,8 +1196,10 @@
       (targ-line)
       (for-each
         (lambda (s)
-          (let ((name (symbol->string (car s))))
-            (targ-code* (list "NEED_SYM" (targ-c-id-sym name)))))
+          (let ((sym (car s)))
+            (if (symbol-object-interned? sym)
+                (let ((name (symbol->string sym)))
+                  (targ-code* (list "NEED_SYM" (targ-c-id-sym name)))))))
         sym-list)))
 
   (if (not (null? key-list))
@@ -1186,8 +1207,10 @@
       (targ-line)
       (for-each
         (lambda (k)
-          (let ((name (keyword-object->string (car k))))
-            (targ-code* (list "NEED_KEY" (targ-c-id-key name)))))
+          (let ((key (car k)))
+            (if (keyword-object-interned? key)
+                (let ((name (keyword-object->string key)))
+                  (targ-code* (list "NEED_KEY" (targ-c-id-key name)))))))
         key-list)))
 
   (if (not (null? glo-list))
@@ -1354,6 +1377,10 @@
                   (let ((obj (car x)) (id (targ-sub-name (caddr x))))
                     (let ((subtype (targ-obj-subtype obj)))
                       (case subtype
+                        ((symbol)
+                         (targ-dump-symbol obj id))
+                        ((keyword)
+                         (targ-dump-keyword obj id))
                         ((string)
                          (targ-dump-string obj id))
                         ((bignum)
@@ -1407,6 +1434,16 @@
                 (targ-display "               ")
                 (targ-code* (cons chunk-name (cons n (reverse lst))))
                 (if (= n cycle) (loop1 (+ i n) elems))))))))))
+
+(define (targ-dump-symbol obj id)
+  (targ-code* (list "DEF_SUB_SYM" id
+                    (targ-heap-ref-obj (symbol->string obj))
+                    (targ-heap-ref-obj (symbol-object-hash obj)))))
+
+(define (targ-dump-keyword obj id)
+  (targ-code* (list "DEF_SUB_KEY" id
+                    (targ-heap-ref-obj (keyword-object->string obj))
+                    (targ-heap-ref-obj (keyword-object-hash obj)))))
 
 (define (targ-dump-string obj id)
   (targ-vector-like-object "DEF_SUB_STR" id 'str
