@@ -23,6 +23,7 @@
 
 (define narg-pointer            (x86-cl))  ;; number of arguments register
 (define stack-pointer           (x86-rsp)) ;; Real stack limit
+(define heap-pointer            (x86-rbp)) ;; Small heap pointer (Bump allocator)
 (define processor-state-pointer (x86-rcx)) ;; Processor state pointer
 
 (define frame-offset 0) ;; stack offset so that frame[1] is at null offset from stack-pointer
@@ -369,14 +370,14 @@
     x64-poll
     x64-set-nargs
     x64-check-nargs
+    x64-allocate-memory
     x64-init-routine
     x64-end-routine
     x64-error-routine
-    x64-place-extra-data
-    ))
+    x64-place-extra-data))
 
-(define (check-overflow-and-interrupt cgc frame)
-  (debug "check-overflow-and-interrupt")
+(define (x64-poll cgc frame)
+  (debug "x64-poll")
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
          (temp1 (get-processor-state-field cgc 'temp1))
          (return-loc (make-unique-label cgc "return-from-overflow")))
@@ -390,8 +391,8 @@
     (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
     (call-handler cgc 'handler_stack_limit frame return-loc)))
 
-(define (x64-poll cgc frame)
-  (check-overflow-and-interrupt cgc frame))
+
+;; Nargs passing
 
 (define use-f-flag #t)
 ;; Must be ordered and can't be longer than 5
@@ -438,7 +439,6 @@
 
 (define (x64-check-nargs cgc frame nargs optional-args-values rest?)
   ;; Constants
-
   (define target (codegen-context-target cgc))
   (define nargs-in-regs (target-nb-arg-regs target))
 
