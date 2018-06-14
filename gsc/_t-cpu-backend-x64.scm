@@ -190,7 +190,7 @@
 (define (x64-target)
   (make-backend-target
     (x86-64-abstract-machine-info)
-    'x86-64 '((".s" . X86-64)) 13 5 3 '() '()))
+    'x86-64 '((".c" . X86-64)) 13 5 3 '() '()))
 
 (define (x86-64-abstract-machine-info)
   (make-backend (info) (operands) (instructions) (routines)))

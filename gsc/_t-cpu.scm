@@ -255,9 +255,7 @@
 
     (virtual.dump-gvm procs (current-output-port))
     (encode-procs cgc procs)
-    (create-object-file "fib.o1" cgc)
-    ; (create-object-file unique-name cgc)
-  #f))
+    (lambda () (create-target-file output unique-name cgc))))
 
 ;;;----------------------------------------------------------------------------
 
