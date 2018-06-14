@@ -426,17 +426,16 @@
         (if (>= count 1)
           (begin
             (set! registers (cons reg registers))
-            (accumulate-extra-register (- count 1)))))
+            (accumulate-extra-register (- count 1)))
+          (begin
+            (apply use registers))))
       (get-extra-registers cgc)
-      (codegen-context-extra-registers-allocation cgc))
-
-    registers)
+      (codegen-context-extra-registers-allocation cgc)))
 
   (if (< (vector-length (get-extra-registers cgc)) number)
     (compiler-internal-error "get-extra-register: Not enough extra registers"))
 
-  (let ((regs (accumulate-extra-register number)))
-    (apply use regs)))
+  (accumulate-extra-register number))
 
 ;; ***** Utils - Operands
 
