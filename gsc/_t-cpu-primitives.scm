@@ -19,7 +19,8 @@
 ;;  Arguments
 ;;    ResultAction = Copy location-opnd | Branch true-jump-location false-jump-location | Return
 
-(define (then-jump true-location false-location) (list 'jump true-location false-location))
+(define (then-jump true-location false-location)
+  (list 'jump true-location false-location))
 (define (then-jump? then) (eqv? 'jump (car then)))
 (define (then-jump-true-location then) (cadr then))
 (define (then-jump-false-location then) (caddr then))
