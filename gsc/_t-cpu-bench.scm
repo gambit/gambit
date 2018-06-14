@@ -18,7 +18,7 @@
 ;; The code in the u8vector must obey the C calling conventions of
 ;; the host architecture.
 
-(define (create-object-file filename cgc #!optional (show-listing? #t))
+(define (create-target-file filename module-name cgc #!optional (show-listing? #t))
 
   (let* ((code (asm-assemble-to-u8vector cgc))
          (fixup-locs (codegen-context-fixup-locs->vector cgc))
