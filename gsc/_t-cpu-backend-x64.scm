@@ -693,7 +693,43 @@
         ;; It will always loop at least once, because we optimise the empty case
         (am-lbl cgc repeat-label)
 
-        ;; Todo: Construct list here
+        (let ((pair-tag (get-desc-pointer-tag pair-obj-desc)))
+
+          ; (am-allocate-memory cgc
+          ;   temp-reg
+          ;   (* 3 (get-word-width cgc)) ;; Header + 2 fields
+          ;   (- pair-tag (get-word-width cgc))) ;; Pointer is pointing to header, with tag
+
+          ; ;; Example: Cons l2 l3
+          ; ;; (x86-lea   cgc (x86-rax) (x86-mem (+ 3 (* 8 2)) hp))
+          ; ;; (x86-mov   cgc (x86-mem (* 8 0) hp) (x86-imm-int (+ (* 256 8 2) (* 8 1) 0)) 64)
+          ; ;; (x86-mov   cgc (x86-r11) (x86-imm-lbl L3)) ;; set r11 to #3
+          ; ;; (x86-mov   cgc (x86-mem (* 8 1) hp) (x86-r11))
+          ; ;; (x86-mov   cgc (x86-r11) (x86-imm-lbl L2)) ;; set r11 to #2
+          ; ;; (x86-mov   cgc (x86-mem (* 8 2) hp) (x86-r11))
+          ; ;; (x86-add   cgc hp (x86-imm-int (* 8 3)) 64)
+
+          ; ;; Move header
+          ; (am-mov cgc
+          ;   (mem-opnd cgc (- 0 (* 8 2) pair-tag) temp-reg)
+          ;   (x86-imm-int (+ (* 256 8 2) (* 8 1) 0))
+          ;   (get-word-width-bits cgc))
+
+          ; ;; Move cdr
+          ; (am-mov cgc
+          ;   (mem-opnd cgc (- 0 (* 8 0) pair-tag) temp-reg)
+          ;   accum-reg
+          ;   (get-word-width-bits cgc))
+
+          ; ;; Move car
+          ; (am-mov cgc accum-reg temp-reg)
+          ; (am-pop cgc temp-reg)
+          ; (am-mov cgc
+          ;   (mem-opnd cgc (- 0 (* 8 1) pair-tag) accum-reg)
+          ;   temp-reg
+          ;   (get-word-width-bits cgc))
+          #f
+        )
 
         ; (x86-sub cgc nargs-register (int-opnd cgc 1))
         (x86-dec cgc nargs-register)
