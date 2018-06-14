@@ -587,8 +587,11 @@
   (debug "encode-ifjump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
-         (true-label (get-proc-label cgc proc (ifjump-true gvm-instr)))
-         (false-label (get-proc-label cgc proc (ifjump-false gvm-instr)))
+         (next-label-num (+ 1 (label-lbl-num (bb-label-instr (code-bb code)))))
+         (true-label-num (ifjump-true gvm-instr))
+         (false-label-num (ifjump-false gvm-instr))
+         (true-label (get-proc-label cgc proc true-label-num))
+         (false-label (get-proc-label cgc proc false-label-num))
          (prim-sym (proc-obj-name (ifjump-test gvm-instr)))
          (prim-obj (get-primitive-object cgc prim-sym)))
 
@@ -599,10 +602,15 @@
       (compiler-internal-error "encode-ifjump-instr - Primitive not implemented: " prim-sym))
 
     (let* ((prim-fun (get-primitive-function prim-obj))
-           (then (then-jump true-label false-label))
            (opnds (ifjump-opnds gvm-instr))
-           (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds)))
-      (prim-fun cgc then args))))
+           (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds))
+           (next-label-type (get-next-label-type proc code))
+           (simple? (equal? next-label-type 'simple)))
+      (prim-fun cgc
+        (then-jump
+          (if (and simple? (= next-label-num true-label-num)) #f true-label)
+          (if (and simple? (= next-label-num false-label-num)) #f false-label))
+        args))))
 
 ;; ***** Apply instruction encoding
 
@@ -678,7 +686,9 @@
 (define (get-bb proc index)
   (let ((bbs (proc-obj-code proc)))
     (if (bbs? bbs)
+      (if (< index (stretchable-vector-length (bbs-basic-blocks bbs)))
       (lbl-num->bb index bbs)
+        #f)
       #f)))
 
 ;; First label always start with 1
