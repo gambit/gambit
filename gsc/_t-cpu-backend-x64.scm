@@ -589,9 +589,13 @@
         (iota 0 (length nargs-to-test)))))
 
   (define (place-rest-switch narg-reg)
-    (let* ((rest-nargs-to-test
+    (let* ((valid-flags-to-test
               (filter
                 (lambda (n) (>= n nargs-no-opts))
+                nargs-passed-in-flags))
+           (invalid-flags-to-test
+             (filter
+                (lambda (n) (< n nargs-no-opts))
                 nargs-passed-in-flags))
            (get-rest-lbl
              (get-label cgc
@@ -599,7 +603,7 @@
                  (string-append "FUN-GET-REST-"
                    (number->string (min nargs-no-opts nargs-in-regs))))))
            (case-labels
-              (map (make-label-curried "rest-case_") rest-nargs-to-test))
+              (map (make-label-curried "rest-case_") valid-flags-to-test))
            (check-ps-label (make-unique-label cgc "check-nargs-in-ps" #f))
            (next-case-labels (append (cdr case-labels) (list check-ps-label))))
 
@@ -616,29 +620,34 @@
               (x86-imm-obj '()))
             (am-jmp cgc continue-label))
           (begin
-            (am-push cgc (lbl-opnd cgc continue-label))
             (am-push cgc (int-opnd cgc arg-count))
+            (am-push cgc (lbl-opnd cgc continue-label))
             (am-jmp cgc get-rest-lbl))))
-      rest-nargs-to-test
+      valid-flags-to-test
       case-labels
       next-case-labels)
 
       (am-lbl cgc check-ps-label)
       ;; Because nargs-passed-in-flags is a set, we need to compare to nargs-no-opts.
-      ;; Example: if 0 is not passed in flags, we would not catch the error
-      ;; in the for-each above.
+      ;; Todo: This check can probably be removed with some conditions.
+
+      ;; We also need to check the other flags.
+      (for-each
+        (lambda (arg-count)
+          (check-nargs arg-count error-label #f))
+        invalid-flags-to-test)
+
       (let ((narg-field (get-processor-state-field cgc 'nargs)))
         (am-mov cgc narg-reg (car narg-field))
       (x86-cmp cgc narg-reg (int-opnd cgc nargs-no-opts))
       (x86-jl cgc error-label)
 
       ;; Here, we know it's in ps.
-      (am-push cgc (lbl-opnd cgc continue-label))
-        (am-push cgc (car narg-field))
+        (am-push cgc (car narg-field)) ;; Push nargs
+        (am-push cgc (lbl-opnd cgc continue-label)) ;; Push continuation
         (am-jmp cgc get-rest-lbl))))
 
   (debug "x64-check-narg: " nargs)
-  (x86-int3 cgc)
 
   (if (and (null? optional-args-values) (not rest?))
     ;; Basic case
@@ -660,6 +669,7 @@
 
       ;; Error handler
       ;; Note: call-handler places continue-label as return-point
+      ;; Is setting up a return point necessary if we never return?
       (am-lbl cgc error-label)
       (call-handler cgc 'handler_wrong_nargs frame continue-label))))
 
@@ -668,10 +678,10 @@
           (map (lambda (i) (get-register cgc i)) (iota 0 (- nargs 1))))
         (repeat-label (make-unique-label cgc "REPEAT: " #f)))
 
-    (get-multiple-extra-register cgc 3
-      (lambda (nargs-register ret-reg accum-reg)
-        (am-pop cgc nargs-register)
+    (get-multiple-extra-register cgc 4
+      (lambda (nargs-register ret-reg accum-reg temp-reg)
         (am-pop cgc ret-reg)
+        (am-pop cgc nargs-register)
         (am-mov cgc accum-reg (x86-imm-obj '()))
 
         (for-each
