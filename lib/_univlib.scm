@@ -581,29 +581,26 @@
   (##declare (not interrupts-enabled))
   (macro-make-condvar name))
 
-(define-prim (##mutex-lock-out-of-line! mutex absrel-timeout owner)
+(define-prim (##mutex-lock-out-of-line! mutex absrel-timeout new-owner)
   #f)
 
-(define-prim (##mutex-unlock-out-of-line! mutex)
+(define-prim (##condvar-signal-no-reschedule! condvar broadcast?)
   #f)
 
 (##define-macro (macro-mutex-unlocked-not-abandoned-and-not-multiprocessor? mutex)
   #t)
 
 (##define-macro (macro-mutex-lock! mutex absrel-timeout owner)
-  `(##mutex-lock-out-of-line! ,mutex ,absrel-timeout ,owner))
+  #t)
 
 (##define-macro (macro-mutex-lock-anonymously! mutex absrel-timeout)
   #t)
 
 (##define-macro (macro-mutex-unlock! mutex)
-  `(##mutex-unlock-out-of-line! ,mutex))
+  `(##void))
 
 (##define-macro (macro-mutex-unlock-no-reschedule! mutex)
   `(##void))
-
-(define-prim (mutex-lock! mutex)
-  (macro-mutex-lock! mutex #f (macro-current-thread)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -707,9 +704,9 @@
 (define-prim (##mutex-signal-and-condvar-wait! mutex condvar timeout)
   (error "##mutex-signal-and-condvar-wait! not implemented yet"))
 
-(define ##err-code-EAGAIN -35)
-(define ##err-code-EINTR   -4)
-(define ##err-code-ENOENT  -1)
+(define ##err-code-EAGAIN 35)
+(define ##err-code-EINTR   4)
+(define ##err-code-ENOENT  1)
 
 (macro-case-target
  ((js)
@@ -724,71 +721,69 @@ var g_PORT_MUTEX                = 1;
 var g_PORT_RKIND                = 2;
 var g_PORT_WKIND                = 3;
 var g_PORT_NAME                 = 4;
-var g_PORT_WAIT                 = 5;
-var g_PORT_CLOSE                = 6;
-var g_PORT_ROPTIONS             = 7;
-var g_PORT_RTIMEOUT             = 8;
-var g_PORT_RTIMEOUT_THUNK       = 9;
-var g_PORT_SET_RTIMEOUT         = 10;
-var g_PORT_WOPTIONS             = 11;
-var g_PORT_WTIMEOUT             = 12;
-var g_PORT_WTIMEOUT_THUNK       = 13;
-var g_PORT_SET_WTIMEOUT         = 14;
-var g_PORT_IO_EXCEPTION_HANDLER = 15;
+var g_PORT_READ_DATUM           = 5;
+var g_PORT_WRITE_DATUM          = 6;
+var g_PORT_NEWLINE              = 7;
+var g_PORT_FORCE_OUTPUT         = 8;
+var g_PORT_CLOSE                = 9;
+var g_PORT_ROPTIONS             = 10;
+var g_PORT_RTIMEOUT             = 11;
+var g_PORT_RTIMEOUT_THUNK       = 12;
+var g_PORT_SET_RTIMEOUT         = 13;
+var g_PORT_WOPTIONS             = 14;
+var g_PORT_WTIMEOUT             = 15;
+var g_PORT_WTIMEOUT_THUNK       = 16;
+var g_PORT_SET_WTIMEOUT         = 17;
+var g_PORT_IO_EXCEPTION_HANDLER = 18;
 
-var g_PORT_OBJECT_READ_DATUM    = 16;
-var g_PORT_OBJECT_WRITE_DATUM   = 17;
-var g_PORT_OBJECT_NEWLINE       = 18;
-var g_PORT_OBJECT_FORCE_OUTPUT  = 19;
+var g_PORT_OBJECT_OTHER1        = 19;
+var g_PORT_OBJECT_OTHER2        = 20;
+var g_PORT_OBJECT_OTHER3        = 21;
 
-var g_PORT_OBJECT_OTHER1        = 20;
-var g_PORT_OBJECT_OTHER2        = 21;
-var g_PORT_OBJECT_OTHER3        = 22;
+var g_PORT_CHAR_RBUF            = 19;
+var g_PORT_CHAR_RLO             = 20;
+var g_PORT_CHAR_RHI             = 21;
+var g_PORT_CHAR_RCHARS          = 22;
+var g_PORT_CHAR_RLINES          = 23;
+var g_PORT_CHAR_RCURLINE        = 24;
+var g_PORT_CHAR_RBUF_FILL       = 25;
+var g_PORT_CHAR_PEEK_EOFP       = 26;
 
-var g_PORT_CHAR_RBUF            = 20;
-var g_PORT_CHAR_RLO             = 21;
-var g_PORT_CHAR_RHI             = 22;
-var g_PORT_CHAR_RCHARS          = 23;
-var g_PORT_CHAR_RLINES          = 24;
-var g_PORT_CHAR_RCURLINE        = 25;
-var g_PORT_CHAR_RBUF_FILL       = 26;
-var g_PORT_CHAR_PEEK_EOFP       = 27;
+var g_PORT_CHAR_WBUF            = 27;
+var g_PORT_CHAR_WLO             = 28;
+var g_PORT_CHAR_WHI             = 29;
+var g_PORT_CHAR_WCHARS          = 30;
+var g_PORT_CHAR_WLINES          = 31;
+var g_PORT_CHAR_WCURLINE        = 32;
+var g_PORT_CHAR_WBUF_DRAIN      = 33;
+var g_PORT_INPUT_READTABLE      = 34;
+var g_PORT_OUTPUT_READTABLE     = 35;
+var g_PORT_OUTPUT_WIDTH         = 36;
 
-var g_PORT_CHAR_WBUF            = 28;
-var g_PORT_CHAR_WLO             = 29;
-var g_PORT_CHAR_WHI             = 30;
-var g_PORT_CHAR_WCHARS          = 31;
-var g_PORT_CHAR_WLINES          = 32;
-var g_PORT_CHAR_WCURLINE        = 33;
-var g_PORT_CHAR_WBUF_DRAIN      = 34;
-var g_PORT_INPUT_READTABLE      = 35;
-var g_PORT_OUTPUT_READTABLE     = 36;
-var g_PORT_OUTPUT_WIDTH         = 37;
+var g_PORT_CHAR_OTHER1          = 37;
+var g_PORT_CHAR_OTHER2          = 38;
+var g_PORT_CHAR_OTHER3          = 39;
+var g_PORT_CHAR_OTHER4          = 40;
+var g_PORT_CHAR_OTHER5          = 41;
 
-var g_PORT_CHAR_OTHER1          = 38;
-var g_PORT_CHAR_OTHER2          = 39;
-var g_PORT_CHAR_OTHER3          = 40;
-var g_PORT_CHAR_OTHER4          = 41;
-var g_PORT_CHAR_OTHER5          = 42;
+var g_PORT_BYTE_RBUF            = 37;
+var g_PORT_BYTE_RLO             = 38;
+var g_PORT_BYTE_RHI             = 39;
+var g_PORT_BYTE_RBUF_FILL       = 40;
 
-var g_PORT_BYTE_RBUF            = 38;
-var g_PORT_BYTE_RLO             = 39;
-var g_PORT_BYTE_RHI             = 40;
-var g_PORT_BYTE_RBUF_FILL       = 41;
+var g_PORT_BYTE_WBUF            = 41;
+var g_PORT_BYTE_WLO             = 42;
+var g_PORT_BYTE_WHI             = 43;
+var g_PORT_BYTE_WBUF_DRAIN      = 44;
 
-var g_PORT_BYTE_WBUF            = 42;
-var g_PORT_BYTE_WLO             = 43;
-var g_PORT_BYTE_WHI             = 44;
-var g_PORT_BYTE_WBUF_DRAIN      = 45;
+var g_PORT_BYTE_OTHER1          = 45;
+var g_PORT_BYTE_OTHER2          = 46;
 
-var g_PORT_BYTE_OTHER1          = 46;
-var g_PORT_BYTE_OTHER2          = 47;
+var g_PORT_RDEVICE_CONDVAR      = 45;
+var g_PORT_WDEVICE_CONDVAR      = 46;
 
-var g_PORT_RDEVICE_CONDVAR      = 46;
-var g_PORT_WDEVICE_CONDVAR      = 47;
-
-var g_PORT_DEVICE_OTHER1        = 48;
-var g_PORT_DEVICE_OTHER2        = 49;
+var g_PORT_DEVICE_OTHER1        = 47;
+var g_PORT_DEVICE_OTHER2        = 48;
 
 function g_os_encode_errno(code) {
   switch (code) {
@@ -855,10 +850,6 @@ function g_os_translate_flags(flags) {
 
 function G_Device(fd) {
   this.fd = fd;
-  this.rbuf = new Uint8Array(1024);
-  this.rlo = 1;
-  this.rhi = 1; // 0 would mean EOF
-  this.rdone = true;
 }
 
 var g_debug = false;
@@ -948,45 +939,19 @@ function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
   if (g_debug)
     console.log('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
 
-  if (!dev.rdone) {
-    // read request is in progress so must wait before issuing another request
-    return g_host2scm(-35); // EAGAIN
+  var n;
+
+  try {
+    n = fs.readSync(dev.fd, buffer, lo, hi-lo, null);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
   }
 
-  if (dev.rhi === 0) {
-    return g_host2scm(0); // 0 means EOF
-  }
-
-  var n = hi-lo;
-  var have = dev.rhi-dev.rlo;
-
-  if (have > 0) {
-
-    if (n > have) n = have;
-
-    buffer.set(dev.rbuf.subarray(dev.rlo, dev.rlo+n), lo);
-
-    dev.rlo += n;
-
-    return g_host2scm(n); // number of bytes transferred
-  }
-
-  // start an asynchronous read request
-
-  dev.rdone = false;
-
-  function callback(err, bytesRead, buffer) {
-    dev.rlo = 0;
-    dev.rhi = bytesRead; // if 0 this means EOF
-    dev.rdone = true;
-    g_scm_call(g_glo['##end-wait-for-io!'],[dev_condvar_scm]);
-  }
-
-  // read as many bytes as will fit in device's buffer
-
-  fs.read(dev.fd, dev.rbuf, 0, dev.rbuf.length, null, callback);
-
-  return g_host2scm(-35); // EAGAIN
+  return g_host2scm(n);
 }
 
 function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
@@ -1421,235 +1386,8 @@ function g_os_device_process_status(dev_scm) {
 (define-prim (##timeout->time absrel-timeout)
   (error "##timeout->time not implemented yet"))
 
-(define ##the-processor (macro-make-processor 0))
-
-(define (##current-processor)
-  ##the-processor)
-
-(define ##primordial-thread #f)
-
-(define-prim (##make-root-thread
-              thunk
-              name
-              tgroup
-              input-port
-              output-port)
-
-  (##declare (not interrupts-enabled))
-
-  (let* ((interrupt-mask
-          0)
-         (debugging-settings
-          0)
-         (local-binding
-          (##cons ##current-directory
-                  (macro-parameter-descr-value
-                   (macro-parameter-descr ##current-directory)))))
-
-    ;; these macros are defined to prevent the normal thread
-    ;; inheritance mechanism when a root thread is created
-
-    (##define-macro (macro-current-thread)
-      `#f)
-
-    (##define-macro (macro-thread-denv thread)
-      `#f)
-
-    (##define-macro (macro-denv-local denv)
-      `(macro-make-env local-binding '() '()))
-
-    (##define-macro (macro-denv-dynwind denv)
-      `##initial-dynwind)
-
-    (##define-macro (macro-denv-interrupt-mask denv)
-      `interrupt-mask)
-
-    (##define-macro (macro-denv-debugging-settings denv)
-      `debugging-settings)
-
-    (##define-macro (macro-denv-input-port denv)
-      `(##cons ##current-input-port input-port))
-
-    (##define-macro (macro-denv-output-port denv)
-      `(##cons ##current-output-port output-port))
-
-    (##define-macro (macro-thread-denv-cache1 thread)
-      `local-binding)
-
-    (##define-macro (macro-thread-denv-cache2 thread)
-      `local-binding)
-
-    (##define-macro (macro-thread-denv-cache3 thread)
-      `local-binding)
-
-    (##define-macro (macro-thread-floats thread)
-      `#f)
-
-    (##define-macro (macro-base-priority floats)
-      `(macro-thread-root-base-priority))
-
-    (##define-macro (macro-quantum floats)
-      `(macro-thread-root-quantum))
-
-    (##define-macro (macro-priority-boost floats)
-      `(macro-thread-root-priority-boost))
-
-    ;; create root thread
-
-    (macro-make-thread thunk name tgroup)))
-
-(##define-macro (macro-thread-init2! thread thunk name tgroup)
-  `(let ((thread ,thread) (thunk ,thunk) (name ,name) (tgroup ,tgroup))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((p (macro-current-thread)))
-       (macro-thread-tgroup-set! thread tgroup)
-       (macro-thread-floats-set! thread (macro-make-floats))
-       (macro-thread-name-set! thread name)
-       ;;(macro-thread-end-condvar-set! thread (macro-make-thread-end-condvar p))
-       ;;(macro-thread-resume-thunk-set! thread
-       ;; (lambda ()
-       ;;   (##thread-execute-and-end! thunk)))
-       ;;(macro-thread-cont-set! thread (macro-make-thread-cont p))
-       ;;(macro-thread-denv-set! thread (macro-make-thread-denv p))
-       ;;(macro-thread-denv-cache1-set! thread (macro-make-thread-denv-cache1 p))
-       ;;(macro-thread-denv-cache2-set! thread (macro-make-thread-denv-cache2 p))
-       ;;(macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
-       (macro-btq-deq-init! thread)
-       ;;(macro-tgroup-threads-deq-insert-at-tail! tgroup thread)
-       thread)))
-
-(define (##startup-threading!)
-
-  (##declare (not interrupts-enabled))
-
-  (let* ((primordial-tgroup
-          (let ((tg
-                 (macro-construct-tgroup
-                  #f
-                  #f
-                  #f
-                  #f
-                  'primordial
-                  #f
-                  #f
-                  #f
-                  #f
-                  #f
-                  #f
-                  #f
-                  #f
-                  #f
-                  #f)))
-            (macro-tgroup-threads-deq-init! tg)
-            tg))
-         (primordial-thread
-          (macro-current-thread)))
-
-    (macro-thread-init2! primordial-thread #f 'primordial primordial-tgroup)
-
-    (macro-thread-exception?-set! primordial-thread #f)
-
-    (macro-processor-current-thread-set!
-     (macro-current-processor)
-     primordial-thread)
-
-    (##btq-insert! (macro-current-processor) primordial-thread)
-
-    (set! ##primordial-thread primordial-thread)
-
-    ;; assign serial number 1 to primordial thread
-    (##object->serial-number primordial-thread)
-
-    (##void)))
-
-(##startup-threading!)
-
 (define-prim (##wait-for-io! condvar timeout)
-  (##declare (not interrupts-enabled))
-  (let ((result
-         (macro-thread-save!
-          (lambda (current-thread condvar timeout)
-            (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-            (##btq-remove! current-thread)
-            (##btq-insert! condvar current-thread)
-            (macro-btq-deq-remove! condvar)
-            (macro-btq-deq-insert-at-tail! (macro-current-processor) condvar)
-            (##thread-schedule!))
-          condvar
-          timeout)))
-    (if (##eq? result (##void))
-        #t
-        result)))
-
-(define (##end-wait-for-io! dev-condvar)
-  (##device-condvar-broadcast-no-reschedule! dev-condvar)
-  (##thread-schedule!))
-
-(define-prim (##thread-resume-execution!)
-  (##declare (not interrupts-enabled))
-  (let ((resume-thunk (macro-thread-resume-thunk (macro-current-thread))))
-    (resume-thunk)))
-
-(define-prim (##thread-schedule!)
-
-  (##declare (not interrupts-enabled))
-
-  (let ((current-processor
-         (macro-current-processor)))
-
-    ;; check if there are runnable threads
-
-    (let ((next-thread
-           (macro-btq-leftmost current-processor)))
-      (if (##not (##eq? next-thread current-processor))
-
-          ;; there are runnable threads, so continue executing the next
-          ;; runnable thread
-
-          (macro-thread-restore!
-           next-thread
-           ##thread-resume-execution!)
-
-          ;; there are no runnable threads, so wait for event to
-          ;; make some thread runnable
-
-          (##exit-trampoline)))))
-
-(define (##exit-trampoline)
-  (##inline-host-statement "return null;")
-  #f)
-
-(define-prim (##condvar-signal-no-reschedule! condvar broadcast?)
-  (##declare (not interrupts-enabled))
-  (let loop ()
-    (let ((leftmost (macro-btq-leftmost condvar)))
-      (if (##not (##eq? leftmost condvar))
-          (begin
-            (macro-thread-resume-thunk-set!
-             leftmost
-             ##thread-signaled-condvar-action!)
-            (##btq-remove! leftmost)
-            (##btq-insert! (macro-current-processor) leftmost)
-            (if broadcast?
-                (loop)
-                (##void)))
-          (##void)))))
-
-(define-prim (##thread-void-action!)
-  (##declare (not interrupts-enabled))
-  (##void))
-
-(define-prim (##thread-signaled-condvar-action!)
-  (##declare (not interrupts-enabled))
-  #t)
-
-(define-prim (##device-condvar-broadcast-no-reschedule! condvar)
-  (##declare (not interrupts-enabled))
-  (macro-btq-deq-remove! condvar)
-  (macro-btq-deq-init! condvar)
-  (##condvar-signal-no-reschedule! condvar #t))
+  (error "##wait-for-io! not implemented yet"))
 
 (define-prim (error message . parameters)
   (println message)

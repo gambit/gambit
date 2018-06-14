@@ -386,7 +386,7 @@ end-of-code
    /*
     * ___LBL(7)
     *
-    * This is the rest parameter handler.  It is invoked when a
+    * This is the rest parameter handler.  It is invoked when a nonnull
     * rest parameter must be constructed.
     */
 
@@ -400,7 +400,7 @@ end-of-code
 
    ___PUSH_ARGS_IN_REGS(na) /* save all arguments that are in registers */
 
-   if (na < np-1)
+   if (na < np)
      {
        ___COVER_REST_PARAM_HANDLER_WRONG_NARGS;
 

@@ -2501,52 +2501,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (##string->c-id str #!optional (allow-upper? #t))
-  (let ((len (##string-length str)))
-    (if (##fx= len 0)
-        "_"
-        (let loop1 ((i (##fx- len 1))
-                    (lst '()))
-          (if (##fx>= i 0)
-              (let ((c (##string-ref str i)))
-                (cond ((##char=? c #\_)
-                       (loop1 (##fx- i 1)
-                              (##cons c (##cons c lst))))
-                      ((if (##fx= i 0)
-                           (##c-id-initial? c allow-upper?)
-                           (##c-id-subsequent? c allow-upper?))
-                       (loop1 (##fx- i 1)
-                              (##cons c lst)))
-                      (else
-                       (let ((n (##char->integer c)))
-                         (if (##fx= n 0)
-                             (loop1 (##fx- i 1)
-                                    (##cons #\_ (##cons #\0 (##cons #\_ lst))))
-                             (let loop2 ((n n)
-                                         (lst (##cons #\_ lst)))
-                               (if (##fx> n 0)
-                                   (loop2 (##fxarithmetic-shift-right n 4)
-                                          (##cons
-                                           (##string-ref "0123456789abcdef"
-                                                         (##fxand n 15))
-                                           lst))
-                                   (loop1 (##fx- i 1)
-                                          (##cons #\_ lst)))))))))
-              (##list->string lst))))))
-
-(define (##c-id-initial? c allow-upper?) ;; c is an ASCII letter or _
-  (let ((n (##char->integer c)))
-    (or (and (##fx>= n 97) (##fx<= n 122))
-        (##fx= n 95)
-        (and allow-upper? (##fx>= n 65) (##fx<= n 90)))))
-
-(define (##c-id-subsequent? c allow-upper?) ;; c is an ASCII letter, _ or 0..9
-  (or (##c-id-initial? c allow-upper?)
-      (let ((n (##char->integer c)))
-        (and (##fx>= n 48) (##fx<= n 57)))))
-
-;;;----------------------------------------------------------------------------
-
 (define-runtime-macro (six.!x x)
   `(not ,x))
 

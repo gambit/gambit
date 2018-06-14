@@ -6076,12 +6076,6 @@ ___LOCAL ___WORD id[]={___MAKE_HD((n<<___LWS),___sSTRUCTURE,___PERM)
 #define ___DEF_SUB_BOX(id,n) \
 ___LOCAL ___WORD id[]={___MAKE_HD((n<<___LWS),___sBOXVALUES,___PERM)
 
-#define ___DEF_SUB_SYM(id,name,hash) \
-___LOCAL ___WORD id[]={___MAKE_HD((___SYMBOL_SIZE<<___LWS),___sSYMBOL,___PERM),name,hash,___FAL,0 ___PADDING};
-
-#define ___DEF_SUB_KEY(id,name,hash) \
-___LOCAL ___WORD id[]={___MAKE_HD((___KEYWORD_SIZE<<___LWS),___sKEYWORD,___PERM),name,hash,___FAL ___PADDING};
-
 #define ___DEF_SUB_STR(id,n) \
 ___LOCAL ___WORD id[]={___MAKE_HD((n<<___LCS),___sSTRING,___PERM)
 

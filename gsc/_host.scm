@@ -2,7 +2,7 @@
 
 ;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -42,9 +42,6 @@
               (len (string-length str)))
          (and (< 1 len)
               (char=? (string-ref str (- len 1)) #\:)))))
-
-(define (keyword-object-interned? key)
-  #t)
 
 ;; These definitions are needed to support objects which are not
 ;; standard in all implementations of Scheme.  On implementations which
@@ -140,9 +137,6 @@
        (not (rest-object? obj))
 ;;       (not (body-object? obj))
        ))
-
-(define (symbol-object-interned? sym)
-  #t)
 
 (define box-tag (list 'box))
 
@@ -584,8 +578,7 @@
 (define (max-fixnum32-div-max-lines)  8191)
 (define (subtype-structure) #f)
 
-(define (symbol-object-hash sym) 0)
-(define (keyword-object-hash key) 0)
+(define (symbol-hash sym) 0)
 
 ;; Tables.
 
@@ -647,9 +640,6 @@
 (define (keyword-object? obj)
   (##keyword? obj))
 
-(define (keyword-object-interned? key)
-  (##keyword-interned? key))
-
 (define false-object #f)
 
 (define (false-object? obj)
@@ -708,9 +698,6 @@
 
 (define (symbol-object? obj)
   (symbol? obj))
-
-(define (symbol-object-interned? sym)
-  (##symbol-interned? sym))
 
 (define (box-object? obj)
   (##box? obj))
@@ -909,10 +896,7 @@
 (define (subtype-structure)
   (macro-subtype-structure))
 
-(define (symbol-object-hash sym)
+(define (symbol-hash sym)
   (##symbol-hash sym))
-
-(define (keyword-object-hash key)
-  (##keyword-hash key))
 
 ;"
