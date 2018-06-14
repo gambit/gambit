@@ -500,6 +500,13 @@
 
 ;; ***** (if)Jump instruction encoding
 
+(define (get-next-label-type proc code)
+  (let* ((bb-index (bb-lbl-num (code-bb code)))
+         (next-bb (get-bb proc (+ 1 bb-index))))
+    (if next-bb
+      (bb-label-type next-bb)
+      next-bb)))
+
 (define (encode-jump-instr cgc code)
   (define (make-jump-opnd opnd)
     (define (make-obj val)
@@ -538,8 +545,7 @@
          (proc (codegen-context-current-proc cgc))
          (jmp-opnd (jump-opnd gvm-instr))
          (jmp-loc (make-jump-opnd (jump-opnd gvm-instr)))
-         (label-num (label-lbl-num (bb-label-instr (code-bb code))))
-         (next-label (get-proc-label cgc proc label-num)))
+         (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
 
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
@@ -559,6 +565,7 @@
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
     (cond
+      ;; We need to dereference before jumping
       ((x86-imm-glo? jmp-loc)
         (get-extra-register cgc
           (lambda (reg)
@@ -566,15 +573,12 @@
             (am-jmp cgc reg))))
 
       ;; Jump to next label?
-      ((and (lbl? jmp-opnd) (= (lbl-num jmp-opnd) (+ 1 label-num)))
-        (let* ((code (codegen-context-current-code cgc))
-               (bb-index (bb-lbl-num (code-bb code)))
-               (next-bb (get-bb proc (+ 1 bb-index)))
-               (type (bb-label-type next-bb)))
-            ;; Label is simple => No structure before code
-            (if (equal? 'simple type)
-              #f
-              (am-jmp cgc jmp-loc))))
+      ((and
+        (lbl? jmp-opnd)
+        (= (lbl-num jmp-opnd) (+ 1 label-num))
+        (equal? 'simple (get-next-label-type proc code)))
+        ;; Jump to next label AND Next label is simple => No need to jump
+        #f)
 
       (else
         (am-jmp cgc jmp-loc)))))
