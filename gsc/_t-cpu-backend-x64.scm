@@ -282,14 +282,14 @@
 
   ;; new-src can be directly used as an operand to mov
   (define (mov-in-dst new-src)
+    (if (not (equal? dst new-src))
     (if (equal? dst-type 'ind)
       (get-extra-register cgc
         (lambda (reg-dst)
           (x86-mov cgc reg-dst dst)
           (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
-      (x86-mov cgc dst new-src width)))
+        (x86-mov cgc dst new-src width))))
 
-  (if (not (equal? dst src))
   (cond
     ((and
       (or (equal? dst-type 'mem) (equal? dst-type 'ind))
@@ -300,14 +300,17 @@
           (mov-in-dst reg-src))))
 
     ((equal? src-type 'ind)
-      (get-extra-register cgc
+      (let ((action
         (lambda (reg-src)
           (x86-mov cgc reg-src src)
           (x86-mov cgc reg-src (x86-mem 0 reg-src))
           (mov-in-dst reg-src))))
+        (if (equal? dst-type 'reg)
+          (action dst)
+          (get-extra-register cgc action))))
 
     (else
-        (mov-in-dst src)))))
+      (mov-in-dst src))))
 
 (define (apply-and-mov fun)
   (lambda (cgc result-reg opnd1 opnd2)
