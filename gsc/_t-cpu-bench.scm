@@ -35,8 +35,9 @@
     ;; When the file is loaded, it will execute the x86 code.
 
     (debug "Compiling")
-    (compile-file "dummy.scm"
+    (compile-file-to-target "dummy.scm"
                   output: filename
+                            module-name: module-name
                   options: '((target C))
                   expression: `((##machine-code-fixup
                                   ',code
