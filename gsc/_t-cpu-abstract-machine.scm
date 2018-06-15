@@ -442,7 +442,17 @@
 ;; ***** Utils - Operands
 
 (define (make-obj-opnd cgc val)
-  (x86-imm-obj val))
+  (cond
+    ((immediate-object? val)
+      (debug "make-obj-opnd: obj imm: " val)
+      (int-opnd cgc
+        (format-imm-object val)
+        (get-word-width-bits cgc)))
+    ((reference-object? val)
+      (debug "make-obj-opnd: obj ref: " val)
+      (x86-imm-obj val))
+    (else
+      (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
 
 (define (make-opnd cgc opnd)
   (define proc (codegen-context-current-proc cgc))
@@ -452,8 +462,16 @@
     (cond
       ((proc-obj? val)
         (lbl-opnd cgc (get-parent-proc-label cgc (obj-val opnd))))
+      ((immediate-object? val)
+        (debug "make-opnd: obj imm: " val)
+        (int-opnd cgc
+          (format-imm-object val)
+          (get-word-width-bits cgc)))
+      ((reference-object? val)
+        (debug "make-opnd: obj ref: " val)
+        (x86-imm-obj val))
       (else
-        (x86-imm-obj val))))
+        (compiler-internal-error "make-opnd: Unknown object: " val))))
   (cond
     ((reg? opnd)
       (debug "make-opnd: reg")
