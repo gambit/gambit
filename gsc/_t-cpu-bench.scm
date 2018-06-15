@@ -27,7 +27,7 @@
     (if show-listing?
         (asm-display-listing cgc (current-output-port) #t))
 
-    (display ";; code = ") (write code) (newline)
+    (display ";; code = ")       (write code)       (newline)
     (display ";; fixup-locs = ") (write fixup-locs) (newline)
     (display ";; fixup-objs = ") (write fixup-objs) (newline)
 
@@ -36,10 +36,10 @@
 
     (debug "Compiling")
     (compile-file-to-target "dummy.scm"
-                  output: filename
+                            output: filename
                             module-name: module-name
-                  options: '((target C))
-                  expression: `((##machine-code-fixup
+                            options: '((target C))
+                            expression: `((##machine-code-fixup
                                   ',code
                                   ',fixup-locs
                                   ',fixup-objs)))
