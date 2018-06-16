@@ -443,11 +443,14 @@
   (define target (codegen-context-target cgc))
   (define nargs-in-regs (target-nb-arg-regs target))
 
+  (define nargs-in-flags? (elem? nargs nargs-passed-in-flags))
+
   (define opts-count (length optional-args-values))
   (define nargs-no-rest (- nargs (if rest? 1 0)))
   (define nargs-no-opts (- nargs-no-rest opts-count))
 
   (define continue-label (make-unique-label cgc "continue" #f))
+  (define pop-label      (make-unique-label cgc "restore-flags" #f))
   (define error-label    (make-unique-label cgc "narg-error" #f))
   (define rest-label     (make-unique-label cgc "get-rest" #f))
 
@@ -480,10 +483,12 @@
   (define (check-bc label)              (x86-jge cgc label))
   (define (check-bcd label)             (x86-jns cgc label))
 
-  (define (check-ps-na arg-count label)
+  (define (check-ps-na arg-count label use-positive)
     (let ((na-opnd (get-processor-state-field cgc 'nargs)))
       (x86-cmp cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))
-      (x86-jne cgc label)))
+      (if use-positive
+        (x86-je cgc label)
+        (x86-jne cgc label))))
 
   (define all-negative-tests
     (list check-not-a check-not-b check-not-c check-not-d check-not-e))
@@ -507,7 +512,7 @@
               (check-bcd error-label)
               (check-e   error-label))
             (check-not-a jmp-loc)))
-        (check-ps-na arg-count jmp-loc)
+        (check-ps-na arg-count jmp-loc use-positive)
         #f)
       ;; Use flag register
       (begin
@@ -517,6 +522,7 @@
           jmp-loc)
         #t)))
 
+  (define check-flags #t)
   ;; Places switch for optional parameters
   ;; Moves the parameters to the right position if necessary
   ;; Moves the default values if necessary
@@ -531,12 +537,14 @@
               (am-mov cgc dst src (get-word-width-bits cgc))))
           (iota min-frame-to-move arg-count))))
 
-    (define check-flags #t)
     (define (place-case arg-count case-label next-case-label)
       (debug "place-case: " arg-count)
         (am-lbl cgc case-label)
       (if (not (check-nargs arg-count next-case-label #f check-flags))
         (set! check-flags #f))
+
+      ;; Merge with frame-pointer adjustement
+      (if (and rest? (not nargs-in-flags?)) (x86-popf cgc))
 
       ;; When called with not all arguments, the frame size needs to be adjusted.
       (let* ((nargs-in-frames (max 0 (- arg-count nargs-in-regs)))
@@ -558,7 +566,7 @@
     (for-each
           (lambda (default-value i)
           (am-mov cgc
-              (get-nth-arg cgc (frame-size frame) nargs-no-rest (+ arg-count i 1))
+              (get-nth-arg cgc (frame-size frame) nargs (+ arg-count i 1))
                 default-value
                 (get-word-width-bits cgc)))
 
@@ -579,8 +587,7 @@
            (last-label (if rest? rest-label error-label)))
 
       ;; Because testing ps->nargs changes the flags register,
-      ;; we need to test the flags first.
-      ;; We then test ps->na
+      ;; we need to test the flags first. We then test ps->na.
       (let* ((nargs-to-test-flags (filter
                   (lambda (n) (elem? n nargs-passed-in-flags))
                   nargs-to-test))
@@ -595,154 +602,87 @@
           case-labels
             (append (cdr case-labels) (list last-label)))))))
 
+  (define (place-get-rest-code)
+    (let* ((invalid-flags-to-test
              (filter
-                (lambda (n) (< n nargs-no-opts))
+                (lambda (n) (< n nargs-no-rest))
                 nargs-passed-in-flags))
-           (get-rest-lbl
-             (get-label cgc
-               (string->symbol
-                 (string-append "FUN-GET-REST-"
-                   (number->string (min nargs-no-opts nargs-in-regs))))))
-           (case-labels
-              (map (make-label-curried "rest-case_") valid-flags-to-test))
-           (check-ps-label (make-unique-label cgc "check-nargs-in-ps" #f))
-           (next-case-labels (append (cdr case-labels) (list check-ps-label))))
+           (call-rest-handler (make-unique-label cgc "call-rest-handler" #f))
+           (return-from-get-rest (make-unique-label cgc "return-from-get-rest" #f))
+           (narg-field (get-processor-state-field cgc 'nargs))
+           (temp1-field (get-processor-state-field cgc 'temp1))
+           (rest-handler (get-processor-state-field cgc 'handler_get_rest)))
 
-    ;; Maybe optimise by checking ps-na case before checking flags?
-    (for-each
-      (lambda (arg-count case-label next-case-label)
-        (debug "case-lbl: " case-label)
-        (am-lbl cgc case-label)
-        (check-nargs arg-count next-case-label #f)
-        (if (eq? arg-count nargs-no-opts)
-          (begin
+      ;; Optimize case with 0 elem
+      (check-nargs nargs-no-rest call-rest-handler #f check-flags)
+      (if (not nargs-in-flags?) (x86-popf cgc))   ;; Replace with pop? Maybe faster
             (am-mov cgc
-              (get-nth-arg cgc (frame-size frame) arg-count arg-count)
-              (x86-imm-obj '()))
-            (am-jmp cgc continue-label))
-          (begin
-            (am-push cgc (int-opnd cgc arg-count))
-            (am-push cgc (lbl-opnd cgc continue-label))
-            (am-jmp cgc get-rest-lbl))))
-      valid-flags-to-test
-      case-labels
-      next-case-labels)
+        (get-nth-arg cgc (frame-size frame) nargs nargs)
+        (x86-imm-obj '())
+        (get-word-width-bits cgc))
+      (am-sub cgc                           ;; Adjusts the frame pointer
+        (get-frame-pointer-reg cgc)
+        (get-frame-pointer-reg cgc)
+        (int-opnd cgc (* (get-word-width cgc) 1)))
+      (am-jmp cgc continue-label)
 
-      (am-lbl cgc check-ps-label)
-      ;; Because nargs-passed-in-flags is a set, we need to compare to nargs-no-opts.
-      ;; Todo: This check can probably be removed with some conditions.
+      (am-lbl cgc call-rest-handler)
+      (if nargs-in-flags? (x86-pushf cgc)) ;; Save flags if not saved before
+      (x86-cmp cgc (car narg-field) (int-opnd cgc 0) (cdr narg-field))
+      (x86-js cgc return-from-get-rest)
+      (x86-popf cgc)
 
-      ;; We also need to check the other flags.
-      (for-each
-        (lambda (arg-count)
-          (check-nargs arg-count error-label #f))
-        invalid-flags-to-test)
+      ;; Jump to rest handler here
+      (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
+      (am-jmp cgc (car rest-handler))
 
-      (let ((narg-field (get-processor-state-field cgc 'nargs)))
-        (am-mov cgc narg-reg (car narg-field))
-      (x86-cmp cgc narg-reg (int-opnd cgc nargs-no-opts))
-      (x86-jl cgc error-label)
-
-      ;; Here, we know it's in ps.
-        (am-push cgc (car narg-field)) ;; Push nargs
-        (am-push cgc (lbl-opnd cgc continue-label)) ;; Push continuation
-        (am-jmp cgc get-rest-lbl))))
+      ;; Jump to continue after restoring flags
+      (am-lbl cgc return-from-get-rest)
+      (x86-popf cgc)
+      (am-mov cgc
+        (car narg-field)
+        (int-opnd cgc 0)
+        (cdr narg-field))
+      (am-jmp cgc continue-label)))
 
   (debug "x64-check-narg: " nargs)
 
   (if (and (null? optional-args-values) (not rest?))
     ;; Basic case
-    (check-nargs nargs (WRONG_NARGS_LBL cgc) #f)
+    (if nargs-in-flags?
+    (check-nargs nargs continue-label #t)
+        (begin
+          (x86-pushf cgc)
+          (check-nargs nargs pop-label #t)
+          ;; Continues to error handler
+          (x86-popf cgc)))
 
     ;; Optional and rest arguments case
-    (begin
       (if rest?
         ;; If rest
-      (get-extra-register cgc
-        (lambda (real-nargs-reg)
+      (begin
+        ;; Save flags register if necessary
+        (if (not nargs-in-flags?) (x86-pushf cgc))
             (if (not (= 0 opts-count))
-              (place-optional-arguments-switch real-nargs-reg))
+          (place-optional-arguments-switch))
             (am-lbl cgc rest-label)
-            (place-rest-switch real-nargs-reg)))
+        (place-get-rest-code))
 
       ;; If not rest
-        (place-optional-arguments-switch #f))
+      (place-optional-arguments-switch)))
 
       ;; Error handler
-      ;; Note: call-handler places continue-label as return-point
       ;; Is setting up a return point necessary if we never return?
+  (let ((temp1-field (get-processor-state-field cgc 'temp1))
+        (narg-field (get-processor-state-field cgc 'nargs))
+        (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
       (am-lbl cgc error-label)
-      (call-handler cgc 'handler_wrong_nargs frame continue-label))))
+    (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
+    (am-jmp cgc (car error-handler)))
 
-(define (make-get-rest-procedure cgc nargs)
-  (let ((registers-to-push
-          (map (lambda (i) (get-register cgc i)) (iota 0 (- nargs 1))))
-        (repeat-label (make-unique-label cgc "REPEAT: " #f)))
-
-    (get-multiple-extra-register cgc 4
-      (lambda (nargs-register ret-reg accum-reg temp-reg)
-        (am-pop cgc ret-reg)
-        (am-pop cgc nargs-register)
-        (am-mov cgc accum-reg (x86-imm-obj '()))
-
-        (for-each
-          (lambda (opnd)
-            (am-push cgc opnd))
-          registers-to-push)
-
-        ;; Loop
-        ;; It will always loop at least once, because we optimise the empty case
-        (am-lbl cgc repeat-label)
-
-        (let ((pair-tag (get-desc-pointer-tag pair-obj-desc)))
-
-          ; (am-allocate-memory cgc
-          ;   temp-reg
-          ;   (* 3 (get-word-width cgc)) ;; Header + 2 fields
-          ;   (- pair-tag (get-word-width cgc))) ;; Pointer is pointing to header, with tag
-
-          ; ;; Example: Cons l2 l3
-          ; ;; (x86-lea   cgc (x86-rax) (x86-mem (+ 3 (* 8 2)) hp))
-          ; ;; (x86-mov   cgc (x86-mem (* 8 0) hp) (x86-imm-int (+ (* 256 8 2) (* 8 1) 0)) 64)
-          ; ;; (x86-mov   cgc (x86-r11) (x86-imm-lbl L3)) ;; set r11 to #3
-          ; ;; (x86-mov   cgc (x86-mem (* 8 1) hp) (x86-r11))
-          ; ;; (x86-mov   cgc (x86-r11) (x86-imm-lbl L2)) ;; set r11 to #2
-          ; ;; (x86-mov   cgc (x86-mem (* 8 2) hp) (x86-r11))
-          ; ;; (x86-add   cgc hp (x86-imm-int (* 8 3)) 64)
-
-          ; ;; Move header
-          ; (am-mov cgc
-          ;   (mem-opnd cgc (- 0 (* 8 2) pair-tag) temp-reg)
-          ;   (x86-imm-int (+ (* 256 8 2) (* 8 1) 0))
-          ;   (get-word-width-bits cgc))
-
-          ; ;; Move cdr
-          ; (am-mov cgc
-          ;   (mem-opnd cgc (- 0 (* 8 0) pair-tag) temp-reg)
-          ;   accum-reg
-          ;   (get-word-width-bits cgc))
-
-          ; ;; Move car
-          ; (am-mov cgc accum-reg temp-reg)
-          ; (am-pop cgc temp-reg)
-          ; (am-mov cgc
-          ;   (mem-opnd cgc (- 0 (* 8 1) pair-tag) accum-reg)
-          ;   temp-reg
-          ;   (get-word-width-bits cgc))
-          #f
-        )
-
-        ; (x86-sub cgc nargs-register (int-opnd cgc 1))
-        (x86-dec cgc nargs-register)
-        (x86-cmp cgc nargs-register (int-opnd cgc nargs))
-        (x86-jg cgc repeat-label)
-
-        (for-each
-          (lambda (opnd)
-            (am-pop cgc opnd))
-          (reverse registers-to-push))
-
-        (am-jmp cgc ret-reg)))))
+  (am-lbl cgc pop-label)
+  (x86-popf cgc)
+  (am-lbl cgc continue-label))
 
 ;; Start routine
 ;; Gets executed before main
