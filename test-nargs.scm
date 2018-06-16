@@ -195,13 +195,13 @@
 (define (rest5-b a b . r) b)
 (define (rest5-c a b c . r) c)
 (define (rest5-d a b c d . r) d)
-(define (rest5-e a b c d e . r) d)
+(define (rest5-e a b c d e . r) e)
 (define (rest5-r a b c d e . r) r)
 (define (rest6-a a . r) a)
 (define (rest6-b a b . r) b)
 (define (rest6-c a b c . r) c)
 (define (rest6-d a b c d . r) d)
-(define (rest6-e a b c d e  . r) d)
+(define (rest6-e a b c d e  . r) e)
 (define (rest6-f a b c d e f . r) f)
 (define (rest6-r a b c d e f . r) r)
 
@@ -379,6 +379,6 @@
 (display-newline (optrest8-0c 1 2 3 4 5 6 7)) ;; 3
 (display-newline (optrest8-0d 1 2 3 4 5 6 7)) ;; 4
 (display-newline (optrest8-0r 1 2 3 4 5 6 7)) ;; ()
-(display-newline (optrest8-0r 1 2 3 4 5 6 7 8 9 10 11)) ;; (8 9 10 11)
+(display-newline (optrest8-0r 1 2 3 4 5 6 7 8 9 10 11)) ;; (9 10 11)
 
 (display-newline "END")
