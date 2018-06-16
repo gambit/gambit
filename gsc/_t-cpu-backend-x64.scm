@@ -28,15 +28,6 @@
 
 (define frame-offset 0) ;; stack offset so that frame[1] is at null offset from stack-pointer
 
-(define (THREAD_DESCRIPTOR_LBL cgc) (get-label cgc 'THREAD_DESCRIPTOR_LBL))
-(define (C_ERROR_LBL cgc)           (get-label cgc 'C_ERROR_LBL))
-(define (WRONG_NARGS_LBL cgc)       (get-label cgc 'WRONG_NARGS_LBL))
-(define (OVERFLOW_LBL cgc)          (get-label cgc 'OVERFLOW_LBL))
-(define (UNDERFLOW_LBL cgc)         (get-label cgc 'UNDERFLOW_LBL))
-(define (INTERRUPT_LBL cgc)         (get-label cgc 'INTERRUPT_LBL))
-(define (TYPE_ERROR_LBL cgc)        (get-label cgc 'TYPE_ERROR_LBL))
-(define (ALLOCATION_ERROR_LBL cgc)  (get-label cgc 'ALLOCATION_ERROR_LBL))
-
 ;;------------------------------------------------------------------------------
 
 ;; Primitives
@@ -284,34 +275,34 @@
   ;; new-src can be directly used as an operand to mov
   (define (mov-in-dst new-src)
     (if (not (equal? dst new-src))
-    (if (equal? dst-type 'ind)
-      (get-extra-register cgc
-        (lambda (reg-dst)
-          (x86-mov cgc reg-dst dst)
-          (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
+      (if (equal? dst-type 'ind)
+        (get-extra-register cgc
+          (lambda (reg-dst)
+            (x86-mov cgc reg-dst dst)
+            (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
         (x86-mov cgc dst new-src width))))
 
   (if (not (equal? dst src))
-  (cond
-    ((and
-      (or (equal? dst-type 'mem) (equal? dst-type 'ind))
-      (or (equal? src-type 'mem) (equal? src-type 'lbl)))
-          (get-extra-register cgc
-            (lambda (reg-src)
-              (x86-mov cgc reg-src src)
-          (mov-in-dst reg-src))))
+    (cond
+      ((and
+        (or (equal? dst-type 'mem) (equal? dst-type 'ind))
+        (or (equal? src-type 'mem) (equal? src-type 'lbl)))
+            (get-extra-register cgc
+              (lambda (reg-src)
+                (x86-mov cgc reg-src src)
+                (mov-in-dst reg-src))))
 
-    ((equal? src-type 'ind)
-      (let ((action
-        (lambda (reg-src)
-          (x86-mov cgc reg-src src)
-          (x86-mov cgc reg-src (x86-mem 0 reg-src))
-          (mov-in-dst reg-src))))
-        (if (equal? dst-type 'reg)
-          (action dst)
-          (get-extra-register cgc action))))
+      ((equal? src-type 'ind)
+        (let ((action
+                (lambda (reg-src)
+                  (x86-mov cgc reg-src src)
+                  (x86-mov cgc reg-src (x86-mem 0 reg-src))
+                  (mov-in-dst reg-src))))
+          (if (equal? dst-type 'reg)
+            (action dst)
+            (get-extra-register cgc action))))
 
-    (else
+      (else
         (mov-in-dst src)))))
 
 (define (apply-and-mov fun)
@@ -383,7 +374,7 @@
          (temp1 (get-processor-state-field cgc 'temp1))
          (return-loc (make-unique-label cgc "return-from-overflow")))
 
-        (am-compare-jump cgc
+    (am-compare-jump cgc
       stack-pointer stack-trip
       (condition-lesser #f #f)
       #f return-loc)
@@ -430,7 +421,7 @@
 
   (if (passed-in-ps nargs)
     ;; Use processor state to pass narg
-          (begin
+    (begin
       (set-ps-na nargs)
       (if use-f-flag
         (flags-f)
@@ -504,9 +495,9 @@
   (define (check-nargs arg-count jmp-loc use-positive #!optional (check-f #t))
     (if (passed-in-ps arg-count)
       ;; Use processor state to pass narg
-          (begin
+      (begin
         (if check-f
-        (if use-f-flag
+          (if use-f-flag
             (begin
               (check-a   error-label)
               (check-bcd error-label)
@@ -516,9 +507,9 @@
         #f)
       ;; Use flag register
       (begin
-      ((list-ref
-        (if use-positive positive-tests negative-tests)
-        (narg-index arg-count))
+        ((list-ref
+          (if use-positive positive-tests negative-tests)
+          (narg-index arg-count))
           jmp-loc)
         #t)))
 
@@ -527,11 +518,11 @@
   ;; Moves the parameters to the right position if necessary
   ;; Moves the default values if necessary
   (define (place-optional-arguments-switch)
-  ;; Places the arguments in their correct place
+    ;; Places the arguments in their correct place
     (define (mov-arguments-in-correct-position arg-count)
       (let ((min-frame-to-move (max 1 (+ 1 (- arg-count nargs-in-regs)))))
-    (for-each
-      (lambda (n)
+        (for-each
+          (lambda (n)
             (let ((dst (get-nth-arg cgc (frame-size frame) nargs n))
                   (src (get-nth-arg cgc (frame-size frame) arg-count n)))
               (am-mov cgc dst src (get-word-width-bits cgc))))
@@ -539,7 +530,7 @@
 
     (define (place-case arg-count case-label next-case-label)
       (debug "place-case: " arg-count)
-        (am-lbl cgc case-label)
+      (am-lbl cgc case-label)
       (if (not (check-nargs arg-count next-case-label #f check-flags))
         (set! check-flags #f))
 
@@ -555,7 +546,7 @@
             (get-frame-pointer-reg cgc)
             (int-opnd cgc (* (get-word-width cgc) offset)))))
 
-        (mov-arguments-in-correct-position arg-count)
+      (mov-arguments-in-correct-position arg-count)
 
       ;; Places the default values
       (let* ((optional-opnds
@@ -563,14 +554,14 @@
             (default-values-to-move
               (drop-n optional-opnds (- arg-count nargs-no-opts))))
 
-    (for-each
+        (for-each
           (lambda (default-value i)
-          (am-mov cgc
+            (am-mov cgc
               (get-nth-arg cgc (frame-size frame) nargs (+ arg-count i 1))
-                default-value
-                (get-word-width-bits cgc)))
+              default-value
+              (get-word-width-bits cgc)))
 
-            default-values-to-move
+          default-values-to-move
           (iota 0 (length default-values-to-move)))
 
         ;; Place empty list
@@ -589,17 +580,17 @@
       ;; Because testing ps->nargs changes the flags register,
       ;; we need to test the flags first. We then test ps->na.
       (let* ((nargs-to-test-flags (filter
-                  (lambda (n) (elem? n nargs-passed-in-flags))
-                  nargs-to-test))
+                (lambda (n) (elem? n nargs-passed-in-flags))
+                nargs-to-test))
              (nargs-to-test-ps (filter
                 (lambda (n) (not (elem? n nargs-passed-in-flags)))
                 nargs-to-test))
              (cases (append nargs-to-test-flags nargs-to-test-ps))
              (case-labels (map (make-label-curried "opt-case_") cases)))
         (if (not (null? case-labels))
-        (for-each place-case
+          (for-each place-case
             cases
-          case-labels
+            case-labels
             (append (cdr case-labels) (list last-label)))))))
 
   (define (place-get-rest-code)
@@ -616,7 +607,7 @@
       ;; Optimize case with 0 elem
       (check-nargs nargs-no-rest call-rest-handler #f check-flags)
       (if (not nargs-in-flags?) (x86-popf cgc))   ;; Replace with pop? Maybe faster
-            (am-mov cgc
+      (am-mov cgc
         (get-nth-arg cgc (frame-size frame) nargs nargs)
         (x86-imm-obj '())
         (get-word-width-bits cgc))
@@ -650,7 +641,7 @@
   (if (and (null? optional-args-values) (not rest?))
     ;; Basic case
     (if nargs-in-flags?
-    (check-nargs nargs continue-label #t)
+        (check-nargs nargs continue-label #t)
         (begin
           (x86-pushf cgc)
           (check-nargs nargs pop-label #t)
@@ -658,25 +649,25 @@
           (x86-popf cgc)))
 
     ;; Optional and rest arguments case
-      (if rest?
-        ;; If rest
+    (if rest?
+      ;; If rest
       (begin
         ;; Save flags register if necessary
         (if (not nargs-in-flags?) (x86-pushf cgc))
-            (if (not (= 0 opts-count))
+        (if (not (= 0 opts-count))
           (place-optional-arguments-switch))
-            (am-lbl cgc rest-label)
+        (am-lbl cgc rest-label)
         (place-get-rest-code))
 
       ;; If not rest
       (place-optional-arguments-switch)))
 
-      ;; Error handler
-      ;; Is setting up a return point necessary if we never return?
+  ;; Error handler
+  ;; Is setting up a return point necessary if we never return?
   (let ((temp1-field (get-processor-state-field cgc 'temp1))
         (narg-field (get-processor-state-field cgc 'nargs))
         (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
-      (am-lbl cgc error-label)
+    (am-lbl cgc error-label)
     (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
     (am-jmp cgc (car error-handler)))
 
@@ -692,24 +683,11 @@
 ;; End routine
 ;; Gets executed after main if no error happened during execution
 (define (x64-end-routine cgc)
-  (let* ((target (codegen-context-target cgc))
-         (nargs-in-regs (target-nb-arg-regs target)))
-    (for-each
-      (lambda (nargs)
-        (am-lbl cgc
-          (get-label cgc
-            (string->symbol
-              (string-append "FUN-GET-REST-"
-                (number->string nargs)))))
-        (make-get-rest-procedure cgc nargs)
-      )
-      (iota 0 nargs-in-regs)))
+  (debug "put-end-routine")
+  (asm-listing cgc "END ROUTINE")
 
   (x86-int3 cgc)
-  (x86-ret cgc)
-
-  (asm-listing cgc "END ROUTINE")
-  (debug "put-end-routine"))
+  (x86-ret cgc))
 
 ;; Error routine
 ;; Gets executed if an error occurs
@@ -717,37 +695,8 @@
   (debug "put-error-routine")
   (asm-listing cgc "ERROR ROUTINE")
 
-  (am-lbl cgc (ALLOCATION_ERROR_LBL cgc))    ;; Overflow handling
-  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Allocation"))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (OVERFLOW_LBL cgc))    ;; Overflow handling
-  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Overflow"))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (UNDERFLOW_LBL cgc))   ;; Underflow handling
-  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Underflow"))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (WRONG_NARGS_LBL cgc)) ;; Incorrect nargs handling
-  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Narg"))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (TYPE_ERROR_LBL cgc))  ;; Type error handling
-  (am-mov cgc (get-register cgc 1) (x86-imm-obj "Type"))
-  (am-jmp cgc (C_ERROR_LBL cgc))
-
-  (am-lbl cgc (C_ERROR_LBL cgc))
-
-  (am-call-c-function cgc
-    'display
-    (map
-      (lambda (arg) (make-obj-opnd cgc arg))
-      (list " error\n")))
-
   (x86-int3 cgc)
-  (x86-ret cgc)
-  )
+  (x86-ret cgc))
 
 (define (x64-place-extra-data cgc)
   (debug "place-extra-data"))
