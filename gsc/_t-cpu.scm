@@ -442,9 +442,9 @@
   (codegen-fixup-handler! cgc '___lowlevel_exec 64)
   (asm-64 cgc (+ 6 (* 8 15)))        ;; PERM RETURN
   (asm-64 cgc (+ (if internal? 2 1)  ;; RETI or RETN (2 or 1)
-    (* 4 frame-size) ;; frame size
+                 (* 4 frame-size) ;; frame size
                  (* 128 ret-pos)  ;; link
-                    (* 4096 gcmap))) ;; gcmap
+                 (* 4096 gcmap))) ;; gcmap
   (asm-8 cgc 0) ;; so that label reference has tag ___tSUBTYPED
 
   (x86-label cgc label)
@@ -480,9 +480,9 @@
           (set-proc-label-index cgc proc label label-struct-position)
           (put-return-point-label cgc
             label
-          fs
-          (get-frame-ret-pos frame)
-          (get-frame-gcmap frame)))
+            fs
+            (get-frame-ret-pos frame)
+            (get-frame-gcmap frame)))
 
       (else
         (am-lbl cgc label)))))
@@ -729,6 +729,7 @@
     (table-set! table 'use-c-interface       #t)
     (table-set! table 'fast-pair-type-check  #t)
     (table-set! table 'glovar-table-register #t)
+    (table-set! table 'force-load-store-arch #f)
 
     table))
 
