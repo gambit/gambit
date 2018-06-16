@@ -283,17 +283,6 @@
         (encode-gvm-instr cgc code))
       (get-code-list proc)))
 
-  ; (am-call-c-function cgc 'display
-  ;   (list stack-pointer))
-  ; (am-call-c-function cgc 'newline '())
-  ; (am-call-c-function cgc 'display
-  ;   (list (car (get-processor-state-field cgc 'stack-start))))
-  ; (am-call-c-function cgc 'newline '())
-  ; (am-call-c-function cgc 'display
-  ;   (list (car (get-processor-state-field cgc 'stack-trip))))
-  ; (am-call-c-function cgc 'newline '())
-  ; (am-call-c-function cgc 'newline '())
-
   (debug "Encode procs")
   (map encode-proc procs2)
 
@@ -393,7 +382,7 @@
         (table-find-label proc-labels-table lbl-pos)
         (compiler-internal-error "Procedure " proc-name " doesn't have associated label table")))))
 
-(define (put-entry-point-label cgc label)
+(define (put-entry-point-label cgc label nargs closure?)
   (define label-struct-position (codegen-context-label-struct-position cgc))
   (define proc (codegen-context-current-proc cgc))
   (define proc-name (proc-obj-name proc))
@@ -418,7 +407,11 @@
     (am-data-word cgc 0))
 
   (codegen-fixup-handler! cgc '___lowlevel_exec (get-word-width-bits cgc))
-  (am-data-word cgc (+ 6 (* 8 14))) ;; PERM PROCEDURE
+  (am-data-word cgc (+ 6                               ;; PERM
+                      (* 8 14)                         ;; PROCEDURE
+                      (* 256 (+ nargs                  ;; Number of arguments
+                        (* 4096 (if closure? 1 0)))))) ;; Is closure?
+
   (codegen-fixup-lbl! cgc label 0 #f 64 'self-label) ;; self ptr
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc label)
@@ -447,10 +440,10 @@
     (am-data-word cgc 0))
 
   (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (asm-64 cgc (+ 6 (* 8 15))) ;; PERM RETURN
-  (asm-64 cgc (+ (if internal? 2 1) ;; RETI or RETN (2 or 1)
+  (asm-64 cgc (+ 6 (* 8 15)))        ;; PERM RETURN
+  (asm-64 cgc (+ (if internal? 2 1)  ;; RETI or RETN (2 or 1)
     (* 4 frame-size) ;; frame size
-                    (* 128 ret-pos) ;; link
+                 (* 128 ret-pos)  ;; link
                     (* 4096 gcmap))) ;; gcmap
   (asm-8 cgc 0) ;; so that label reference has tag ___tSUBTYPED
 
@@ -474,16 +467,14 @@
       ((entry)
         (let ((narg (label-entry-nb-parms gvm-instr))
               (opts (label-entry-opts gvm-instr))
-              (rest? (label-entry-rest? gvm-instr)))
-              ;; Todo: Ask Marc what this is
-              ; (keys (label-entry-keys gvm-instr))
-              ; (closed? (label-entry-closed? gvm-instr))
+              (rest? (label-entry-rest? gvm-instr))
+              (keys (label-entry-keys gvm-instr))
+              (closure? (label-entry-closed? gvm-instr)))
 
               (set-proc-label-index cgc proc label label-struct-position)
-              (put-entry-point-label cgc label)
+              (put-entry-point-label cgc label narg closure?)
 
-              ;; Todo: Complete narg. Support optional and varargs
-              (am-check-narg cgc frame narg opts rest?)))
+              (am-check-narg cgc label frame narg opts rest?)))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
