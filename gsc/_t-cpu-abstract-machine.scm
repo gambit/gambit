@@ -564,9 +564,8 @@
       args
       (append frames regs))))
 
-;; Count starts at 0
+;; Count starts at 1
 ;; Todo: Optimize. This is not very efficient...
-; 5 arguments   sp[1]  sp[0]  R1     R2     R3
 (define (get-nth-arg cgc start-fs total nth)
   (define (get-frames count)
     (map (lambda (i) (frame cgc start-fs i)) (iota 1 count)))
@@ -577,11 +576,11 @@
   (let* ((target (codegen-context-target cgc))
          (narg-in-regs (target-nb-arg-regs target))
          (narg-in-frames (- total narg-in-regs))
-         (frames (reverse (get-frames narg-in-frames)))
+         (frames (get-frames narg-in-frames))
          (regs (get-registers narg-in-regs))
          (arg-opnds (append frames regs)))
-    (list-ref arg-opnds nth)))
-
+    (debug "get-nth-arg: " arg-opnds)
+    (list-ref arg-opnds (- nth 1))))
 
 (define (am-data-word cgc word)
   (am-data cgc (get-word-width-bits cgc) word))

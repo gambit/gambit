@@ -291,6 +291,7 @@
           (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
         (x86-mov cgc dst new-src width))))
 
+  (if (not (equal? dst src))
   (cond
     ((and
       (or (equal? dst-type 'mem) (equal? dst-type 'ind))
@@ -311,7 +312,7 @@
           (get-extra-register cgc action))))
 
     (else
-      (mov-in-dst src))))
+        (mov-in-dst src)))))
 
 (define (apply-and-mov fun)
   (lambda (cgc result-reg opnd1 opnd2)
@@ -437,15 +438,14 @@
     ;; Use flag register
     ((list-ref tests (narg-index nargs)))))
 
-(define (x64-check-nargs cgc frame nargs optional-args-values rest?)
+(define (x64-check-nargs cgc fun-label frame nargs optional-args-values rest?)
   ;; Constants
   (define target (codegen-context-target cgc))
   (define nargs-in-regs (target-nb-arg-regs target))
 
   (define opts-count (length optional-args-values))
-  (define nargs-no-opts (- nargs opts-count (if rest? 1 0)))
   (define nargs-no-rest (- nargs (if rest? 1 0)))
-  (define nargs-to-test (iota nargs-no-opts nargs-no-rest))
+  (define nargs-no-opts (- nargs-no-rest opts-count))
 
   (define continue-label (make-unique-label cgc "continue" #f))
   (define error-label    (make-unique-label cgc "narg-error" #f))
@@ -491,109 +491,128 @@
     (if use-f-flag all-negative-tests (cdr all-negative-tests)))
 
   (define all-positive-tests
-    (list check-not-a check-not-b check-not-c check-not-d check-not-e))
+    (list check-a check-b check-c check-d check-e))
   (define positive-tests
     (if use-f-flag all-positive-tests (cdr all-positive-tests)))
 
-  (define (check-nargs arg-count jmp-loc use-positive)
+  ;; Returns true if in flag
+  (define (check-nargs arg-count jmp-loc use-positive #!optional (check-f #t))
     (if (passed-in-ps arg-count)
       ;; Use processor state to pass narg
           (begin
+        (if check-f
         (if use-f-flag
-          ;; Test what is faster.
-          ;; 1:
-          ;;  (check-[abcde] label)
-          ;; 2:
-          ;;  (check-a error)
-          ;;  (check-bcd error)
-          ;;  (check-e error)
-          ;; 3:
-          ;;  (check-not-a lbl1)
-          ;;  lbl1: (check-bcd lbl2)
-          ;;  lbl2: (check-e lbl3)
-          ;;  lbl3:
-          (let ((not-a-lbl   (make-unique-label cgc "not-a" #f))
-                (not-bcd-lbl (make-unique-label cgc "not-bcd" #f))
-                (not-e-lbl   (make-unique-label cgc "not-e" #f)))
-            ;; Checks if nargs was passed in flag instead of ps
-            (check-not-a not-a-lbl)
-            (am-lbl cgc not-a-lbl)
-            (check-not-b-or-c-or-d not-bcd-lbl)
-            (am-lbl cgc not-bcd-lbl)
-            (check-e jmp-loc)
-            ) ;; Continue execution
-
-          (check-not-a jmp-loc))
-        (check-ps-na arg-count jmp-loc))
+            (begin
+              (check-a   error-label)
+              (check-bcd error-label)
+              (check-e   error-label))
+            (check-not-a jmp-loc)))
+        (check-ps-na arg-count jmp-loc)
+        #f)
       ;; Use flag register
+      (begin
       ((list-ref
         (if use-positive positive-tests negative-tests)
         (narg-index arg-count))
-        jmp-loc)))
+          jmp-loc)
+        #t)))
 
-  ;; Places the arguments in their correct place
-  ;; Todo: Make sure arguments can't overwrite
-  (define (mov-arguments-in-correct-position call-nargs)
-    (for-each
-      (lambda (n)
-        (am-mov cgc
-          (get-nth-arg cgc (frame-size frame) nargs n)
-          (get-nth-arg cgc (frame-size frame) call-nargs n)
-          (get-word-width-bits cgc)))
-      (iota 0 (- call-nargs 1))))
-
-  ;; Places switch
-  ;; Captures the number of argument (If narg-reg)
+  ;; Places switch for optional parameters
   ;; Moves the parameters to the right position if necessary
   ;; Moves the default values if necessary
-  (define (place-optional-arguments-switch narg-reg)
-    (debug "place-optional-arguments-switch")
-    (let* ((case-labels
-              (map (make-label-curried "opt-case_") nargs-to-test))
-           (last-label (if rest? rest-label error-label))
-           (next-case-labels (append (cdr case-labels) (list last-label)))
-           (rest-opnds (if rest? (list (x86-imm-obj '())) '()))
-           (optional-opnds
-              (append
-                (map (lambda (val) (make-opnd cgc val)) optional-args-values)
-                rest-opnds)))
-
+; 7 arguments   s1  s2  s3  s4  R1  R2  R3
+; 8 arguments   s1  s2  s3  s4  s5  R1  R2  R3
+  (define (place-optional-arguments-switch)
+  ;; Places the arguments in their correct place
+    (define (mov-arguments-in-correct-position arg-count)
+      (let ((min-frame-to-move (max 1 (+ 1 (- arg-count nargs-in-regs)))))
     (for-each
-      (lambda (arg-count case-label next-case-label i)
-        (am-lbl cgc case-label)
-          (check-nargs arg-count next-case-label #f)
+      (lambda (n)
+            (let ((dst (get-nth-arg cgc (frame-size frame) nargs n))
+                  (src (get-nth-arg cgc (frame-size frame) arg-count n)))
+              (am-mov cgc dst src (get-word-width-bits cgc))))
+          (iota min-frame-to-move arg-count))))
 
-          (if narg-reg
-            (am-mov cgc narg-reg (int-opnd cgc arg-count)))
+    (define check-flags #t)
+    (define (place-case arg-count case-label next-case-label)
+      (debug "place-case: " arg-count)
+        (am-lbl cgc case-label)
+      (if (not (check-nargs arg-count next-case-label #f check-flags))
+        (set! check-flags #f))
+
+      ;; When called with not all arguments, the frame size needs to be adjusted.
+      (let* ((nargs-in-frames (max 0 (- arg-count nargs-in-regs)))
+             (offset (- (frame-size frame) nargs-in-frames)))
+        (if (not (= 0 offset))
+          (am-sub cgc
+            (get-frame-pointer-reg cgc)
+            (get-frame-pointer-reg cgc)
+            (int-opnd cgc (* (get-word-width cgc) offset)))))
 
         (mov-arguments-in-correct-position arg-count)
 
-        ;; Here, nargs == arg-count
-          ;; Places the default values (Including empty list if rest?)
-          (let ((default-values-to-move (append (drop-n optional-opnds i))))
+      ;; Places the default values
+      (let* ((optional-opnds
+              (map (lambda (val) (make-opnd cgc val)) optional-args-values))
+            (default-values-to-move
+              (drop-n optional-opnds (- arg-count nargs-no-opts))))
+
     (for-each
-            (lambda (default-value j)
+          (lambda (default-value i)
           (am-mov cgc
-                (get-nth-arg cgc (frame-size frame) nargs (+ i j))
+              (get-nth-arg cgc (frame-size frame) nargs-no-rest (+ arg-count i 1))
                 default-value
                 (get-word-width-bits cgc)))
 
             default-values-to-move
-            (iota 0 (length default-values-to-move))))
+          (iota 0 (length default-values-to-move)))
 
-          (am-jmp cgc error-label))
+        ;; Place empty list
+        (if rest?
+          (am-mov cgc
+            (get-nth-arg cgc (frame-size frame) nargs nargs)
+            (x86-imm-obj '())
+            (get-word-width-bits cgc))))
 
-      nargs-to-test
+      (am-jmp cgc continue-label))
+
+    (debug "place-optional-arguments-switch")
+    (let* ((nargs-to-test (iota nargs-no-opts nargs-no-rest))
+           (test-ps-label (make-unique-label cgc "test-ps" #f))
+           (last-label (if rest? rest-label error-label)))
+
+      ;; Because testing ps->nargs changes flag register, we need to test the flags first.
+      (let* ((nargs-to-test-flags
+                (filter
+                  (lambda (n) (elem? n nargs-passed-in-flags))
+                  nargs-to-test))
+             (case-labels
+                (map (make-label-curried "opt-case-flag_") nargs-to-test-flags))
+             (next-case-labels
+                (if (null? case-labels) #f
+                  (append (cdr case-labels) (list test-ps-label)))))
+        (for-each place-case
+          nargs-to-test-flags
       case-labels
-        next-case-labels
-        (iota 0 (length nargs-to-test)))))
+          next-case-labels))
 
-  (define (place-rest-switch narg-reg)
-    (let* ((valid-flags-to-test
+      (am-lbl cgc test-ps-label)
+
+      ;; Testing ps
+      (let* ((nargs-to-test-ps
               (filter
-                (lambda (n) (>= n nargs-no-opts))
-                nargs-passed-in-flags))
-           (invalid-flags-to-test
+                (lambda (n) (not (elem? n nargs-passed-in-flags)))
+                nargs-to-test))
+             (case-labels
+              (map (make-label-curried "opt-case-ps_") nargs-to-test-ps))
+             (next-case-labels
+              (if (null? case-labels) #f
+                (append (cdr case-labels) (list last-label)))))
+        (for-each place-case
+          nargs-to-test-ps
+          case-labels
+          next-case-labels))))
+
              (filter
                 (lambda (n) (< n nargs-no-opts))
                 nargs-passed-in-flags))
