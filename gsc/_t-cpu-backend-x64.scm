@@ -495,7 +495,7 @@
   (define positive-tests
     (if use-f-flag all-positive-tests (cdr all-positive-tests)))
 
-  ;; Returns true if in flag
+  ;; Returns true if arg-count is passed in flags
   (define (check-nargs arg-count jmp-loc use-positive #!optional (check-f #t))
     (if (passed-in-ps arg-count)
       ;; Use processor state to pass narg
@@ -520,8 +520,6 @@
   ;; Places switch for optional parameters
   ;; Moves the parameters to the right position if necessary
   ;; Moves the default values if necessary
-; 7 arguments   s1  s2  s3  s4  R1  R2  R3
-; 8 arguments   s1  s2  s3  s4  s5  R1  R2  R3
   (define (place-optional-arguments-switch)
   ;; Places the arguments in their correct place
     (define (mov-arguments-in-correct-position arg-count)
@@ -578,40 +576,24 @@
 
     (debug "place-optional-arguments-switch")
     (let* ((nargs-to-test (iota nargs-no-opts nargs-no-rest))
-           (test-ps-label (make-unique-label cgc "test-ps" #f))
            (last-label (if rest? rest-label error-label)))
 
-      ;; Because testing ps->nargs changes flag register, we need to test the flags first.
-      (let* ((nargs-to-test-flags
-                (filter
+      ;; Because testing ps->nargs changes the flags register,
+      ;; we need to test the flags first.
+      ;; We then test ps->na
+      (let* ((nargs-to-test-flags (filter
                   (lambda (n) (elem? n nargs-passed-in-flags))
                   nargs-to-test))
-             (case-labels
-                (map (make-label-curried "opt-case-flag_") nargs-to-test-flags))
-             (next-case-labels
-                (if (null? case-labels) #f
-                  (append (cdr case-labels) (list test-ps-label)))))
-        (for-each place-case
-          nargs-to-test-flags
-      case-labels
-          next-case-labels))
-
-      (am-lbl cgc test-ps-label)
-
-      ;; Testing ps
-      (let* ((nargs-to-test-ps
-              (filter
+             (nargs-to-test-ps (filter
                 (lambda (n) (not (elem? n nargs-passed-in-flags)))
                 nargs-to-test))
-             (case-labels
-              (map (make-label-curried "opt-case-ps_") nargs-to-test-ps))
-             (next-case-labels
-              (if (null? case-labels) #f
-                (append (cdr case-labels) (list last-label)))))
+             (cases (append nargs-to-test-flags nargs-to-test-ps))
+             (case-labels (map (make-label-curried "opt-case_") cases)))
+        (if (not (null? case-labels))
         (for-each place-case
-          nargs-to-test-ps
+            cases
           case-labels
-          next-case-labels))))
+            (append (cdr case-labels) (list last-label)))))))
 
              (filter
                 (lambda (n) (< n nargs-no-opts))
