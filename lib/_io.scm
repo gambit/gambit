@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10296,7 +10296,12 @@
                                                   0))
                                              (loop tail
                                                    (##fx+ i 1)
-                                                   (wr-elem head)))))))))
+                                                   (if (and (##eq? head '|.|)
+                                                            (##fx= i 0)
+                                                            (macro-readtable-dot-at-head-of-list-allowed?
+                                                             (macro-writeenv-readtable we)))
+                                                       (wr-str ".")
+                                                       (wr-elem head))))))))))
                           ((##not (##null? lst))
                            (wr-str ".")
                            (macro-writeenv-close-parens-set! we new-close-parens)
@@ -11774,14 +11779,22 @@
 ;;; Procedure to read a list of datums (possibly an improper list).
 
 (define (##build-list re allow-improper? start-pos close)
-  (let ((obj (##read-datum-or-label-or-none re)))
+  (let ((obj
+         (if (macro-readtable-dot-at-head-of-list-allowed?
+              (macro-readenv-readtable re))
+             (##read-datum-or-label-or-none-or-dot re)
+             (##read-datum-or-label-or-none re))))
     (if (eq? obj (##none-marker))
         (begin
           (##read-next-char-expecting re close)
           '())
         (begin
           (macro-readenv-filepos-set! re start-pos) ;; restore pos
-          (let ((lst (cons obj '())))
+          (let ((lst
+                 (cons (if (eq? obj (##dot-marker))
+                           (macro-readenv-wrap re '|.|)
+                           obj)
+                       '())))
             (if (##label-marker? obj)
                 (##label-marker-fixup-handler-add!
                  re
@@ -14417,6 +14430,7 @@
           #t                 ;; r6rs-compatible-read?
           #t                 ;; r6rs-compatible-write?
           'multiline         ;; here-strings-allowed?
+          #t                 ;; dot-at-head-of-list-allowed?
           #f                 ;; comment-handler
           )))
 
