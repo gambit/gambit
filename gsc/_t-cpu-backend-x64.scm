@@ -668,6 +668,7 @@
         (narg-field (get-processor-state-field cgc 'nargs))
         (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
     (am-lbl cgc error-label)
+    (if (not nargs-in-flags?) (x86-popf cgc))
     (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
     (am-jmp cgc (car error-handler)))
 
