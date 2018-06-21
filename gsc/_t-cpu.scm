@@ -10,7 +10,6 @@
 (include "_t-cpu-abstract-machine.scm")
 (include "_t-cpu-function-sub.scm")
 (include "_t-cpu-objects-desc.scm")
-(include "_t-cpu-primitives.scm")
 (include "_t-cpu-bench.scm")
 (include "_t-cpu-backend-x64.scm")
 (include "_t-cpu-utils.scm")

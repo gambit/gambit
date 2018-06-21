@@ -1,6 +1,6 @@
 ;;==============================================================================
 
-;;; File: "_t-cpu-primitives.scm"
+;;; File: "_t-cpu-backend-x64.scm"
 
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
 
@@ -35,7 +35,10 @@
   (foldl-prim 'none x86-sub '(reg mem int) #f))
 
 (define x86-prim-fx<
-  (arithmetic-prim x86-cmp (list 'boolean x86-jle x86-jg) (default-arithmetic-allowed-opnds is-load-store-arch) #f))
+  (foldl-prim #t
+    (lambda (cgc accum opnd)
+      5)
+    '(reg mem int) #f))
 
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
