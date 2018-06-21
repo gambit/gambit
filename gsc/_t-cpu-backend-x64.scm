@@ -429,7 +429,7 @@
     ;; Use flag register
     ((list-ref tests (narg-index nargs)))))
 
-(define (x64-check-nargs cgc fun-label frame nargs optional-args-values rest?)
+(define (x64-check-nargs cgc fun-label fs nargs optional-args-values rest?)
   ;; Constants
   (define target (codegen-context-target cgc))
   (define nargs-in-regs (target-nb-arg-regs target))
@@ -523,8 +523,8 @@
       (let ((min-frame-to-move (max 1 (+ 1 (- arg-count nargs-in-regs)))))
         (for-each
           (lambda (n)
-            (let ((dst (get-nth-arg cgc (frame-size frame) nargs n))
-                  (src (get-nth-arg cgc (frame-size frame) arg-count n)))
+            (let ((dst (get-nth-arg cgc fs nargs n))
+                  (src (get-nth-arg cgc fs arg-count n)))
               (am-mov cgc dst src (get-word-width-bits cgc))))
           (iota min-frame-to-move arg-count))))
 
@@ -539,7 +539,7 @@
 
       ;; When called with not all arguments, the frame size needs to be adjusted.
       (let* ((nargs-in-frames (max 0 (- arg-count nargs-in-regs)))
-             (offset (- (frame-size frame) nargs-in-frames)))
+             (offset (- fs nargs-in-frames)))
         (if (not (= 0 offset))
           (am-sub cgc
             (get-frame-pointer-reg cgc)
@@ -557,7 +557,7 @@
         (for-each
           (lambda (default-value i)
             (am-mov cgc
-              (get-nth-arg cgc (frame-size frame) nargs (+ arg-count i 1))
+              (get-nth-arg cgc fs nargs (+ arg-count i 1))
               default-value
               (get-word-width-bits cgc)))
 
@@ -567,7 +567,7 @@
         ;; Place empty list
         (if rest?
           (am-mov cgc
-            (get-nth-arg cgc (frame-size frame) nargs nargs)
+            (get-nth-arg cgc fs nargs nargs)
             (x86-imm-obj '())
             (get-word-width-bits cgc))))
 
@@ -608,7 +608,7 @@
       (check-nargs nargs-no-rest call-rest-handler #f check-flags)
       (if (not nargs-in-flags?) (x86-popf cgc))   ;; Replace with pop? Maybe faster
       (am-mov cgc
-        (get-nth-arg cgc (frame-size frame) nargs nargs)
+        (get-nth-arg cgc fs nargs nargs)
         (x86-imm-obj '())
         (get-word-width-bits cgc))
       (am-sub cgc                           ;; Adjusts the frame pointer
