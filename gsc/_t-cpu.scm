@@ -239,6 +239,7 @@
 ;;;----------------------------------------------------------------------------
 
 ;; ***** DUMPING OF A COMPILATION MODULE
+;; Todo: Move most of the code to abstract machine where it belongs more.
 
 (define (cpu-dump targ
                   procs
@@ -465,10 +466,10 @@
               (keys (label-entry-keys gvm-instr))
               (closure? (label-entry-closed? gvm-instr)))
 
+              (am-check-nargs cgc label frame narg opts rest?
+                (lambda (fun-label)
               (set-proc-label-index cgc proc label label-struct-position)
-              (put-entry-point-label cgc label narg closure?)
-
-              (am-check-nargs cgc label frame narg opts rest?)))
+                  (put-entry-point-label cgc label narg closure?)))))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)

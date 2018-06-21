@@ -429,7 +429,7 @@
     ;; Use flag register
     ((list-ref tests (narg-index nargs)))))
 
-(define (x64-check-nargs cgc fun-label fs nargs optional-args-values rest?)
+(define (x64-check-nargs cgc fun-label fs nargs optional-args-values rest? place-label-fun)
   ;; Constants
   (define target (codegen-context-target cgc))
   (define nargs-in-regs (target-nb-arg-regs target))
@@ -638,15 +638,25 @@
 
   (debug "x64-check-narg: " nargs)
 
+  ;; Error handler
+  (let ((temp1-field (get-processor-state-field cgc 'temp1))
+        (narg-field (get-processor-state-field cgc 'nargs))
+        (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
+    (am-lbl cgc error-label)
+    (if (not nargs-in-flags?) (x86-popf cgc))
+    (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
+    (am-jmp cgc (car error-handler)))
+
+  (place-label-fun fun-label)
+
   (if (and (null? optional-args-values) (not rest?))
     ;; Basic case
     (if nargs-in-flags?
-        (check-nargs nargs continue-label #t)
+        (check-nargs nargs error-label #f)
         (begin
           (x86-pushf cgc)
-          (check-nargs nargs pop-label #t)
-          ;; Continues to error handler
-          (x86-popf cgc)))
+          (check-nargs nargs error-label #f)))
+          ;; Then continues to pop-label
 
     ;; Optional and rest arguments case
     (if rest?
@@ -662,18 +672,10 @@
       ;; If not rest
       (place-optional-arguments-switch)))
 
-  ;; Error handler
-  ;; Is setting up a return point necessary if we never return?
-  (let ((temp1-field (get-processor-state-field cgc 'temp1))
-        (narg-field (get-processor-state-field cgc 'nargs))
-        (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
-    (am-lbl cgc error-label)
-    (if (not nargs-in-flags?) (x86-popf cgc))
-    (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
-    (am-jmp cgc (car error-handler)))
-
+  (if (not nargs-in-flags?)
+    (begin
   (am-lbl cgc pop-label)
-  (x86-popf cgc)
+      (x86-popf cgc)))
   (am-lbl cgc continue-label))
 
 ;; Start routine
