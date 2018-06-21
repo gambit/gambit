@@ -825,7 +825,8 @@
       (am-if-eq cgc arg1 (make-obj-opnd cgc #t)
         (lambda (cgc) (am-return-const cgc result-action #t))
         (lambda (cgc) (am-return-const cgc result-action #t))
-        #t))))
+        #t
+        (get-word-width-bits cgc)))))
 
 (define (##identity-not cgc result-action args)
   (check-nargs-if-necessary cgc result-action 1)
@@ -835,7 +836,8 @@
       (am-if-eq cgc arg1 (make-obj-opnd cgc #t)
         (lambda (cgc) (am-return-const cgc result-action #f))
         (lambda (cgc) (am-return-const cgc result-action #t))
-        #t))))
+        #t
+        (get-word-width-bits cgc)))))
 
 ;; ***** Default Primitives - Memory read/write/test
 
