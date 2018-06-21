@@ -472,7 +472,7 @@
               (keys (label-entry-keys gvm-instr))
               (closure? (label-entry-closed? gvm-instr)))
 
-              (am-check-nargs cgc label frame narg opts rest?
+              (am-check-nargs cgc label (frame-size frame) narg opts rest?
                 (lambda (fun-label)
                   (set-proc-label-index cgc proc label label-struct-position)
                   (put-entry-point-label cgc label narg closure?)))))
