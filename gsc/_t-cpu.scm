@@ -476,7 +476,7 @@
               (set-proc-label-index cgc proc label label-struct-position)
               (put-entry-point-label cgc label narg closure?)
 
-              (am-check-narg cgc label frame narg opts rest?)))
+              (am-check-nargs cgc label frame narg opts rest?)))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
