@@ -29,8 +29,9 @@
 (define (then-move? then) (eqv? 'mov (car then)))
 (define (then-move-store-location then) (cdr then))
 
-(define (then-return) '(return))
+(define (then-return fun-label) (cons 'return fun-label))
 (define (then-return? then) (eqv? 'return (car then)))
+(define (then-return-label then) (cdr then))
 
 ;;  Most primitives can be split in 3 parts:
 ;;    Prologue:

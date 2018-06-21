@@ -43,6 +43,9 @@
 
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
+    (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
+    (table-set! table '##not (make-prim-obj ##identity-not 1 #t #t))
+
     (table-set! table '##fx+ (make-prim-obj x86-prim-fx+ 2 #t #f))
     (table-set! table '##fx- (make-prim-obj x86-prim-fx- 2 #t #f))
     (table-set! table '##fx< (make-prim-obj x86-prim-fx< 2 #t #t))

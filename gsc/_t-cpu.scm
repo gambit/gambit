@@ -314,25 +314,25 @@
     (if (not defined?)
       (begin
         (debug "Putting primitive: " (proc-obj-name proc))
-      (if prim-obj
-        ;; Prim is defined in native backend
-        (let* ((prim-fun (get-primitive-function prim-obj))
-               (then (then-return))
-               (args (list (get-register cgc 1) (get-register cgc 2) (get-register cgc 3)))) ;; todo : Find way to get arity
-          (am-lbl cgc label)
-          (prim-fun cgc then args))
+        (if prim-obj
+          ;; Prim is defined in native backend
+          (let* ((prim-fun (get-primitive-function prim-obj))
+                 (arity (get-primitive-arity prim-obj))
+                 (args (get-args-opnds cgc (get-fun-fs cgc arity) arity)))
+            (prim-fun cgc (then-return label) args))
 
-        ;; Prim is defined in C
-        ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
-        (let* ((proc-name (proc-obj-name proc))
-               (proc-sym (string->symbol proc-name)))
-          (get-extra-register cgc
-            (lambda (reg)
-              (am-lbl cgc label)
-              (am-mov cgc reg (x86-imm-obj proc-sym))
-              (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-              (am-mov cgc reg (mem-opnd cgc 0 reg))
-                (am-jmp cgc reg)))))))))
+          ;; Prim is defined in C
+          ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
+          ;; Todo: Check if label can be references as entry-point. Maybe set label struct?
+          (let* ((proc-name (proc-obj-name proc))
+                 (proc-sym (string->symbol proc-name)))
+            (get-extra-register cgc
+              (lambda (reg)
+                (am-lbl cgc label)
+                (am-mov cgc reg (x86-imm-obj proc-sym))
+                (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+                (am-mov cgc reg (mem-opnd cgc 0 reg))
+                  (am-jmp cgc reg)))))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -376,6 +376,11 @@
       (if proc-labels-table
         (table-find-label proc-labels-table lbl-pos)
         (compiler-internal-error "Procedure " proc-name " doesn't have associated label table")))))
+
+(define (get-fun-fs cgc arg-count)
+  (let* ((target (codegen-context-target cgc))
+         (nargs-in-regs (target-nb-arg-regs target)))
+    (max 0 (- arg-count nargs-in-regs))))
 
 (define (put-entry-point-label cgc label nargs closure?)
   (define label-struct-position (codegen-context-label-struct-position cgc))
@@ -468,7 +473,7 @@
 
               (am-check-nargs cgc label frame narg opts rest?
                 (lambda (fun-label)
-              (set-proc-label-index cgc proc label label-struct-position)
+                  (set-proc-label-index cgc proc label label-struct-position)
                   (put-entry-point-label cgc label narg closure?)))))
 
       ((return)

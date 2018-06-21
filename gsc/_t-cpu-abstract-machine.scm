@@ -600,6 +600,11 @@
     (debug "get-nth-arg: " arg-opnds)
     (list-ref arg-opnds (- nth 1))))
 
+(define (get-args-opnds cgc start-fs total)
+  (map
+    (lambda (n) (get-nth-arg cgc start-fs total n))
+    (iota 1 total)))
+
 (define (am-data-word cgc word)
   (am-data cgc (get-word-width-bits cgc) word))
 
@@ -638,8 +643,200 @@
   (debug "default-set-narg: " narg)
   (am-mov cgc narg-loc (int-opnd cgc narg)))
 
+;; ***** High level instructions
+
+;; ***** High level instructions - Utils
+
+(define (with-result-opnd cgc result-action args commutative fun)
+  (cond
+    ((then-jump? result-action)
+      (get-extra-register cgc fun))
+    ((then-move? result-action)
+      (let ((mov-loc (then-move-store-location result-action)))
+        (cond
+          ;; We can rearrange the expression to remove redundant move
+          ((and (= 1 (elem-count mov-loc args)) commutative)
+            (fun mov-loc))
+          ;; We can overwrite mov-loc.
+          ;; It is probably more efficient to do this when #args > 2
+          ((equal? 'reg (opnd-type cgc mov-loc))
+            (fun mov-loc))
+          (else
+            (get-extra-register cgc fun)))))
+        ; (if (or (and (= 1 (elem-count mov-loc args))) (not commutative)) ;;
+        ;         (not (equal? 'reg (opnd-type cgc mov-loc))))
+        ;   (get-extra-register cgc fun)
+        ;   (fun mov-loc))))
+    ((then-return? result-action)
+      (get-extra-register cgc fun))
+    (else
+      (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
+
+(define (check-nargs-if-necessary cgc result-action nargs #!optional (optional-args-values '()) (rest? #f))
+  (if (then-return? result-action)
+    (am-check-nargs
+      cgc
+      (then-return-label result-action)
+      (get-fun-fs cgc nargs)
+      nargs
+      optional-args-values
+      rest?
+      (lambda (fun-label)
+        (put-entry-point-label cgc fun-label nargs #f)))))
+
+(define (call-with-nargs args nargs fun)
+  (apply fun args))
+
+;; ***** High level instructions - Instructions
+
+;; Fold with no default-value.
+;; nargs > 0
+; (define (fold-prim default-value reduce-fun allowed-opnd)
+;   (lambda (cgc result-action args)
+
+;     ;; Optimize empty case
+;     (if (null? args)
+;       (return-const cgc result-action default-value))
+
+;     (with-result-opnd cgc result-action
+;       (lambda (accum)
+;         (let loop ((lst args))
+;           (if (not (null? lst))
+;             (begin
+;               (reduce-fun (car lst) accum)
+;               (loop (cdr lst)))))))))
+
+(define (foldl-prim default-value reduce-fun allowed-opnds commutative)
+  (lambda (cgc result-action args)
+    (debug "foldr-prim")
+    ;; Optimize empty case
+    (if (null? args)
+      (am-return-const cgc result-action default-value))
+
+    (debug "foldr-prim - After empty case")
+    ;; Fold over arguments
+    (with-result-opnd cgc result-action args commutative
+      (lambda (accum)
+        (debug "foldr-prim - accum: " accum)
+        ;; Accum may be in args if commutative.
+        ;; Remove accum from args in that case.
+        ;; Conditions for accum to be in args are:
+        ;;  Only appears once
+        (let loop ((args
+                    (if commutative
+                      (filter (lambda (opnd) (not (equal? accum opnd))) args)
+                      args)))
+          (if (not (null? args))
+            ;; Mov car args if necessary
+            (let ((arg (car args)))
+              (if (not (elem? (opnd-type cgc arg) allowed-opnds))
+                (get-extra-register cgc
+                  (lambda (tmp-reg)
+
+                    (am-mov cgc tmp-reg arg)
+                    (reduce-fun cgc accum tmp-reg)))
+                (reduce-fun cgc accum arg))
+
+              (loop (cdr args)))))
+
+        (am-return-opnd cgc result-action accum #t)))))
+
+(define (am-if cgc opnd1 opnd2 condition on-true on-false #!optional (actions-return #f) (opnds-width #f))
+  (let ((true-label (make-unique-label cgc "if-true" #f))
+        (false-label (make-unique-label cgc "if-false" #f))
+        (continue-label (make-unique-label cgc "continue-label" #f)))
+    (cond
+      ((and on-true on-false)
+        (am-compare-jump cgc opnd1 opnd2 condition #f false-label opnds-width)
+        (on-true cgc)
+        (if (not actions-return)
+          (am-jmp cgc continue-label))
+        (am-lbl cgc false-label)
+        (on-false cgc)
+        (am-lbl cgc continue-label))
+      (on-true
+        (am-compare-jump cgc opnd1 opnd2 condition #f continue-label opnds-width)
+        (on-true cgc)
+        (if (not actions-return)
+          (am-jmp cgc continue-label)))
+      (on-false
+        (am-compare-jump cgc opnd1 opnd2 condition continue-label #f opnds-width)
+        (on-false cgc)
+        (if (not actions-return)
+          (am-jmp cgc continue-label))))))
+
+(define (am-if-eq cgc opnd1 opnd2 on-true on-false #!optional (actions-return #f) (opnds-width #f))
+  (am-if cgc opnd1 opnd2 condition-equal on-true on-false actions-return opnds-width))
+
+(define (am-return-const cgc result-action value)
+  (debug "am-return-const")
+  (debug "result-action: " result-action)
+  (cond
+    ((then-jump? result-action)
+      (if value
+        (if (then-jump-true-location result-action)
+          (am-jmp cgc (then-jump-true-location result-action)))
+        (if (then-jump-false-location result-action)
+          (am-jmp cgc (then-jump-false-location result-action)))))
+    ((then-move? result-action)
+      (am-mov
+        cgc
+        (then-move-store-location result-action)
+        (make-obj-opnd cgc value)))
+    ((then-return? result-action)
+      (am-mov
+        cgc
+        (get-register cgc 1)
+        (make-obj-opnd cgc value))
+      (am-jmp cgc (get-register cgc 0)))
+    (else
+      (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
+
+(define (am-return-opnd cgc result-action opnd check-truth-value)
+  (debug "am-return-opnd")
+  (debug "result-action: " result-action)
+  (cond
+    ((then-jump? result-action)
+      (if check-truth-value
+        (let ((false-opnd (make-obj-opnd cgc #t))
+              (true-jmp (then-jump-true-location result-action))
+              (false-jmp (then-jump-false-location result-action)))
+          (am-compare-jump cgc opnd false-opnd condition-equal true-jmp false-jmp))
+        (am-jmp cgc (then-jump-true-location result-action))))
+    ((then-move? result-action)
+      (let ((mov-loc (then-move-store-location result-action)))
+        (if (not (equal? mov-loc opnd))
+          (am-mov cgc mov-loc opnd))))
+    ((then-return? result-action)
+      (if (not (equal? (get-register cgc 1) opnd))
+        (am-mov cgc (get-register cgc 1) opnd))
+      (am-jmp cgc (get-register cgc 0)))
+    (else
+      (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
 
 ;; ***** Default Primitives
+;; ***** Basic primitives (##Identity and ##not)
+
+(define (##identity-primitive cgc result-action args)
+  (check-nargs-if-necessary cgc result-action 1)
+  (call-with-nargs args 1
+    (lambda (arg1)
+      (debug "identity prim")
+      (am-if-eq cgc arg1 (make-obj-opnd cgc #t)
+        (lambda (cgc) (am-return-const cgc result-action #t))
+        (lambda (cgc) (am-return-const cgc result-action #t))
+        #t))))
+
+(define (##identity-not cgc result-action args)
+  (check-nargs-if-necessary cgc result-action 1)
+  (call-with-nargs args 1
+    (lambda (arg1)
+      (debug "identity not")
+      (am-if-eq cgc arg1 (make-obj-opnd cgc #t)
+        (lambda (cgc) (am-return-const cgc result-action #f))
+        (lambda (cgc) (am-return-const cgc result-action #t))
+        #t))))
+
 ;; ***** Default Primitives - Memory read/write/test
 
 (define (read-reference cgc dest ref tag offset)
