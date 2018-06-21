@@ -6,10 +6,6 @@
 
 (include "generic.scm")
 
-(include-adt "_envadt.scm")
-(include-adt "_gvmadt.scm")
-(include-adt "_ptreeadt.scm")
-(include-adt "_sourceadt.scm")
 (include-adt "_x86#.scm")
 (include-adt "_asm#.scm")
 (include-adt "_codegen#.scm")
