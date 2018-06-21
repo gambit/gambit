@@ -522,6 +522,17 @@
       (get-frame-pointer-reg cgc)
       (int-opnd cgc (* n (get-word-width cgc))))))
 
+(define (get-opnd-with-offset cgc opnd offset)
+  (case (opnd-type cgc opnd)
+    ('reg
+      (mem-opnd cgc offset opnd))
+    ('mem
+      (mem-opnd cgc (+ (mem-opnd-offset cgc opnd) offset) (mem-opnd-reg cgc opnd)))
+    ('lbl
+      (lbl-opnd cgc (lbl-opnd-label cgc opnd) (+ (lbl-opnd-offset cgc opnd) offset)))
+    ('int
+      (mem-opnd cgc (+ (int-opnd-value cgc opnd) offset)))))
+
 ;; ***** Utils - Abstract machine shorthand
 
 ;; Must set arguments before calling this function
@@ -638,7 +649,8 @@
 
 ;; ***** High level instructions - Utils
 
-(define (with-result-opnd cgc result-action args commutative fun)
+(define (with-result-opnd cgc result-action args
+          #!key fun (commutative #f) (single-instruction #f))
   (cond
     ((then-jump? result-action)
       (get-extra-register cgc fun))
@@ -649,21 +661,24 @@
           ((and (= 1 (elem-count mov-loc args)) commutative)
             (fun mov-loc))
           ;; We can overwrite mov-loc.
-          ;; It is probably more efficient to do this when #args > 2
-          ((equal? 'reg (opnd-type cgc mov-loc))
+          ;; It is probably more efficient to do this when #args > 2 as
+          ;; instructions with registers are faster than with memory operands.
+          ((and (equal? 'reg (opnd-type cgc mov-loc))
+                (not (elem? mov-loc args)))
             (fun mov-loc))
           (else
             (get-extra-register cgc fun)))))
-        ; (if (or (and (= 1 (elem-count mov-loc args))) (not commutative)) ;;
-        ;         (not (equal? 'reg (opnd-type cgc mov-loc))))
-        ;   (get-extra-register cgc fun)
-        ;   (fun mov-loc))))
     ((then-return? result-action)
-      (get-extra-register cgc fun))
+      ;; We can rearrange the expression to remove redundant move
+      (if (or single-instruction
+              (and (= 1 (elem-count (get-register cgc 1) args)) commutative))
+        (fun (get-register cgc 1))
+        (get-extra-register cgc fun)))
     (else
       (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
 
-(define (check-nargs-if-necessary cgc result-action nargs #!optional (optional-args-values '()) (rest? #f))
+(define (check-nargs-if-necessary cgc result-action nargs
+          #!key (optional-args-values '()) (rest? #f))
   (if (then-return? result-action)
     (am-check-nargs
       cgc
@@ -678,7 +693,7 @@
           (then-return-prim-name result-action) #f
           nargs #f)))))
 
-(define (call-with-nargs args nargs fun)
+(define (call-with-nargs args fun)
   (apply fun args))
 
 ;; ***** High level instructions - Instructions
@@ -707,11 +722,10 @@
     (if (null? args)
       (am-return-const cgc result-action default-value))
 
-    (debug "foldr-prim - After empty case")
     ;; Fold over arguments
-    (with-result-opnd cgc result-action args commutative
-      (lambda (accum)
-        (debug "foldr-prim - accum: " accum)
+    (with-result-opnd cgc result-action args
+      commutative: commutative
+      fun: (lambda (accum)
         ;; Accum may be in args if commutative.
         ;; Remove accum from args in that case.
         ;; Conditions for accum to be in args are:
@@ -733,7 +747,7 @@
 
               (loop (cdr args)))))
 
-        (am-return-opnd cgc result-action accum #t)))))
+        (am-return-opnd cgc result-action accum)))))
 
 (define (am-if cgc opnd1 opnd2 condition on-true on-false #!optional (actions-return #f) (opnds-width #f))
   (let ((true-label (make-unique-label cgc "if-true" #f))
@@ -786,22 +800,21 @@
     (else
       (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
 
-(define (am-return-opnd cgc result-action opnd check-truth-value)
+(define (am-return-opnd cgc result-action opnd #!key (opnd-not-false #f))
   (debug "am-return-opnd")
   (debug "result-action: " result-action)
   (cond
     ((then-jump? result-action)
-      (if check-truth-value
-        (let ((false-opnd (make-obj-opnd cgc #f))
-              (true-jmp (then-jump-true-location result-action))
-              (false-jmp (then-jump-false-location result-action)))
+      (let ((false-opnd (make-obj-opnd cgc #f))
+            (true-jmp (then-jump-true-location result-action))
+            (false-jmp (then-jump-false-location result-action)))
+        (if opnd-not-false
+          (if true-jmp (am-jmp cgc true-jmp))
           (am-compare-jump cgc
             opnd false-opnd
             condition-not-equal
             true-jmp false-jmp
-            (get-word-width-bits cgc)))
-        (if (then-jump-true-location result-action)
-          (am-jmp cgc (then-jump-true-location result-action)))))
+            (get-word-width-bits cgc)))))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
         (if (not (equal? mov-loc opnd))
@@ -819,14 +832,14 @@
 
 (define (##identity-primitive cgc result-action args)
   (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args 1
+  (call-with-nargs args
     (lambda (arg1)
       (debug "identity prim")
-      (am-return-opnd cgc result-action arg1 #t))))
+      (am-return-opnd cgc result-action arg1))))
 
 (define (##not cgc result-action args)
   (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args 1
+  (call-with-nargs args
     (lambda (arg1)
       (debug "identity not")
       (am-if-eq cgc arg1 (make-obj-opnd cgc #f)
@@ -835,54 +848,70 @@
         #t
         (get-word-width-bits cgc)))))
 
+;; ***** Default Primitives - Type checks
+
+;; Todo
+
 ;; ***** Default Primitives - Memory read/write/test
 
-(define (read-reference cgc dest ref tag offset)
-  (let* ((total-offset (- (* (get-word-width cgc) offset) tag))
+(define (read-reference cgc dest ref tag index width)
+  (let* ((total-offset (- (* width index) tag))
          (mem-location (get-opnd-with-offset cgc ref total-offset)))
     (am-mov cgc dest mem-location)))
 
-(define (get-opnd-with-offset cgc opnd offset)
-  (case (opnd-type cgc opnd)
-    ('reg
-      (mem-opnd cgc offset opnd))
-    ('mem
-      (mem-opnd cgc (+ (mem-opnd-offset cgc opnd) offset) (mem-opnd-reg cgc opnd)))
-    ('lbl
-      (lbl-opnd cgc (lbl-opnd-label cgc opnd) (+ (lbl-opnd-offset cgc opnd) offset)))
-    ('int
-      (mem-opnd cgc (+ (int-opnd-value cgc opnd) offset)))))
+(define (set-reference cgc src ref tag index width)
+  (let* ((total-offset (- (* width index) tag))
+         (mem-location (get-opnd-with-offset cgc ref total-offset)))
+    (am-mov cgc mem-location src)))
 
-(define (get-object-field desc field-index)
+; (define (read-reference-dynamic cgc dest ref tag index-opnd width)
+;   (let* ((total-offset (- (* width index) tag))
+;          (mem-location (get-opnd-with-offset cgc ref total-offset)))
+;     (am-mov cgc dest mem-location)))
+
+; (define (set-reference-dynamic cgc src ref tag index width)
+;   (let* ((total-offset (- (* width index) tag))
+;          (mem-location (get-opnd-with-offset cgc ref total-offset)))
+;     (am-mov cgc mem-location dest)))
+
+(define (object-read-prim desc field-index #!optional (width #f))
   (if (immediate-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
-  (lambda (cgc result-action args)
-    (let* ((ref (car args))
-           (tag (get-desc-pointer-tag desc))
-           (lambd (lambda (reg)
-            (read-reference cgc reg ref tag (+ 1 field-index)))))
-      (cond
-        ((then-jump? result-action)
-          (get-extra-register cgc
-            (lambda (reg)
-              (let ((condition condition-not-equal)
-                    (false-opnd (int-opnd cgc (format-imm-object #f)))
-                    (true-jmp (then-jump-true-location result-action))
-                    (false-jmp (then-jump-false-location result-action)))
-                (lambd reg)
-                (am-compare-jump cgc reg false-opnd condition-not-equal true-jmp false-jmp)))))
 
-        ((then-move? result-action)
-          (lambd (then-move-store-location result-action)))
+  (if field-index
+    ;; Index is static
+    (lambda (cgc result-action args)
+      (with-result-opnd cgc result-action args
+        single-instruction: #t
+        fun: (lambda (result-opnd)
+          (check-nargs-if-necessary cgc result-action 1)
+          (call-with-nargs args
+            (lambda (ref)
+              (read-reference cgc
+                result-opnd ref
+                (get-desc-pointer-tag desc)
+                (- field-index 1)
+                (if width width (get-word-width cgc)))
+              (am-return-opnd cgc result-action result-opnd))))))
+    (compiler-internal-error "object-set-prim - Dynamic index not implemented")))
 
-        ((then-return? result-action)
-          (lambd (get-register cgc 1))
-          (am-jmp cgc (get-register cgc 0)))
+(define (object-set-prim desc field-index #!optional (width #f))
+  (if (immediate-desc? desc)
+    (compiler-internal-error "Object isn't a reference"))
 
-        ((not result-action)
-          ;; Do nothing
-          ;; Todo: Decide if this is useful
-          #f)
-
-        (else
-          (compiler-internal-error "get-object-field - Unknown result-action" result-action))))))
+  (if field-index
+    ;; Index is static
+    (lambda (cgc result-action args)
+      (with-result-opnd cgc result-action args
+        single-instruction: #t
+        fun: (lambda (result-opnd)
+          (check-nargs-if-necessary cgc result-action 2)
+          (call-with-nargs args
+            (lambda (ref new-val)
+              (set-reference cgc
+                new-val ref
+                (get-desc-pointer-tag desc) (- field-index 1)
+                (if width width (get-word-width cgc)))
+              ;; Todo: Change return value to (void)
+              (am-return-const cgc result-action 0))))))
+  (compiler-internal-error "object-set-prim - Dynamic index not implemented")))

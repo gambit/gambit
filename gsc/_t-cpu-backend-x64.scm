@@ -45,8 +45,10 @@
     (table-set! table '##fx+ (make-prim-obj x86-prim-fx+ 2 #t #f))
     (table-set! table '##fx- (make-prim-obj x86-prim-fx- 2 #t #f))
     (table-set! table '##fx< (make-prim-obj x86-prim-fx< 2 #t #t))
-    ; (table-set! table '##car (make-prim-obj (get-object-field pair-obj-desc 1) 1 #t #f))
-    ; (table-set! table '##cdr (make-prim-obj (get-object-field pair-obj-desc 0) 1 #t #f))
+    (table-set! table '##car (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
+    (table-set! table '##cdr (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
+    (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
+    (table-set! table '##set-cdr! (make-prim-obj (object-set-prim pair-obj-desc 0) 2 #t #f))
 
     table))
 
