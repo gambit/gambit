@@ -333,14 +333,6 @@
               (am-mov cgc reg (mem-opnd cgc 0 reg))
                 (am-jmp cgc reg)))))))))
 
-(define (put-global-variable cgc name label)
-  (debug "put-global-variable")
-  (debug "name: " name)
-  (debug "label: " label)
-
-  (am-lbl cgc label)
-  (am-data-word cgc 0))
-
 ;;;----------------------------------------------------------------------------
 
 ;; ***** GVM Instruction encoding
