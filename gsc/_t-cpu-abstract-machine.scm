@@ -267,7 +267,7 @@
 
 (define (am-poll cgc . args)             (apply-routine cgc 0 args))
 (define (am-set-narg cgc . args)         (apply-routine cgc 1 args))
-(define (am-check-narg cgc . args)       (apply-routine cgc 2 args))
+(define (am-check-nargs cgc . args)       (apply-routine cgc 2 args))
 (define (am-allocate-memory cgc . args)  (apply-routine cgc 3 args))
 (define (am-init cgc . args)             (apply-routine cgc 4 args))
 (define (am-end cgc . args)              (apply-routine cgc 5 args))
