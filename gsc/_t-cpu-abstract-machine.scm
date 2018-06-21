@@ -632,15 +632,7 @@
       (reserve-space cgc (- bytes 1) value))))
 
 ;; ***** Default Routines
-
-(define (default-check-narg cgc narg narg-loc error-lbl)
-  (debug "default-check-narg: " narg)
-  (let ((opnd2 (int-opnd cgc narg)))
-    (am-compare-jump cgc narg-loc opnd2 condition-not-equal error-lbl #f)))
-
-(define (default-set-narg cgc narg narg-loc)
-  (debug "default-set-narg: " narg)
-  (am-mov cgc narg-loc (int-opnd cgc narg)))
+;; ...
 
 ;; ***** High level instructions
 

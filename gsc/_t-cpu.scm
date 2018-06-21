@@ -324,12 +324,12 @@
 
           ;; Prim is defined in C
           ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
-            (get-extra-register cgc
-              (lambda (reg)
+          (get-extra-register cgc
+            (lambda (reg)
               (put-entry-point-label cgc label proc-name #f 0 #f)
               (am-mov cgc reg (x86-imm-obj (string->symbol proc-name)))
-                (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-                (am-mov cgc reg (mem-opnd cgc 0 reg))
+              (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+              (am-mov cgc reg (mem-opnd cgc 0 reg))
                 (am-jmp cgc reg))))))))
 
 ;;;----------------------------------------------------------------------------
