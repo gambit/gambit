@@ -650,30 +650,37 @@
 ;; ***** High level instructions - Utils
 
 (define (with-result-opnd cgc result-action args
-          #!key fun (commutative #f) (single-instruction #f))
+          #!key fun (commutative #f) (single-instruction #f) (default-opnd #f))
+  (define (use-default-opnd)
+    (if default-opnd
+      (fun default-opnd #t)
+      (get-extra-register cgc (lambda (reg) (fun reg #f)))))
   (cond
     ((then-jump? result-action)
-      (get-extra-register cgc fun))
+      (use-default-opnd))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
         (cond
           ;; We can rearrange the expression to remove redundant move
           ((and (= 1 (elem-count mov-loc args)) commutative)
-            (fun mov-loc))
+            (fun mov-loc #t))
           ;; We can overwrite mov-loc.
           ;; It is probably more efficient to do this when #args > 2 as
           ;; instructions with registers are faster than with memory operands.
           ((and (equal? 'reg (opnd-type cgc mov-loc))
                 (not (elem? mov-loc args)))
-            (fun mov-loc))
+            (fun mov-loc #f))
           (else
-            (get-extra-register cgc fun)))))
+            (use-default-opnd)))))
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
-      (if (or single-instruction
-              (and (= 1 (elem-count (get-register cgc 1) args)) commutative))
-        (fun (get-register cgc 1))
-        (get-extra-register cgc fun)))
+      (cond
+        (single-instruction
+          (fun (get-register cgc 1) #f))
+        ((and (= 1 (elem-count (get-register cgc 1) args)) commutative)
+          (fun (get-register cgc 1) #t))
+        (else
+          (use-default-opnd))))
     (else
       (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
 
@@ -697,57 +704,6 @@
   (apply fun args))
 
 ;; ***** High level instructions - Instructions
-
-;; Fold with no default-value.
-;; nargs > 0
-; (define (fold-prim default-value reduce-fun allowed-opnd)
-;   (lambda (cgc result-action args)
-
-;     ;; Optimize empty case
-;     (if (null? args)
-;       (return-const cgc result-action default-value))
-
-;     (with-result-opnd cgc result-action
-;       (lambda (accum)
-;         (let loop ((lst args))
-;           (if (not (null? lst))
-;             (begin
-;               (reduce-fun (car lst) accum)
-;               (loop (cdr lst)))))))))
-
-(define (foldl-prim default-value reduce-fun allowed-opnds commutative)
-  (lambda (cgc result-action args)
-    (debug "foldr-prim")
-    ;; Optimize empty case
-    (if (null? args)
-      (am-return-const cgc result-action default-value))
-
-    ;; Fold over arguments
-    (with-result-opnd cgc result-action args
-      commutative: commutative
-      fun: (lambda (accum)
-        ;; Accum may be in args if commutative.
-        ;; Remove accum from args in that case.
-        ;; Conditions for accum to be in args are:
-        ;;  Only appears once
-        (let loop ((args
-                    (if commutative
-                      (filter (lambda (opnd) (not (equal? accum opnd))) args)
-                      args)))
-          (if (not (null? args))
-            ;; Mov car args if necessary
-            (let ((arg (car args)))
-              (if (not (elem? (opnd-type cgc arg) allowed-opnds))
-                (get-extra-register cgc
-                  (lambda (tmp-reg)
-
-                    (am-mov cgc tmp-reg arg)
-                    (reduce-fun cgc accum tmp-reg)))
-                (reduce-fun cgc accum arg))
-
-              (loop (cdr args)))))
-
-        (am-return-opnd cgc result-action accum)))))
 
 (define (am-if cgc opnd1 opnd2 condition on-true on-false #!optional (actions-return #f) (opnds-width #f))
   (let ((true-label (make-unique-label cgc "if-true" #f))
@@ -826,6 +782,58 @@
     (else
       (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
 
+(define (foldl-prim default-value reduce-fun allowed-opnds commutative)
+  (lambda (cgc result-action args)
+    (debug "foldl-prim")
+
+    (if (and (null? args) (equal? default-value 'none))
+      (compiler-internal-error
+        "foldl-prim - Prim doesn't have a default-value and has no args"))
+
+    ;; Optimize empty case
+    (if (null? args)
+      (am-return-const cgc result-action default-value))
+
+    ;; Fold over arguments
+    (with-result-opnd cgc result-action args
+      commutative: commutative
+      default-opnd:
+        ;; If we fold over lots of elements, it's worth using an extra register.
+        ;; The value 3 is totally arbitraty.
+        ;; Todo: Check 3 is the best value. Maybe add option in config.
+        (if (and (reg-opnd? cgc (car args)) (> 3 (length args)))
+          (car args)
+          #f)
+      fun:
+      (lambda (accum save?)
+        (define args-without-accum
+          (if save? ;; Accum is in args
+            (filter (lambda (opnd) (not (equal? accum opnd))) args)
+            (if (equal? default-value 'none)
+              (cdr args) ;; Because we use the first value to initialize accum
+              args)))
+
+        (if (not save?) ;; accum isn't initialized
+          (if (equal? default-value 'none)
+            (am-mov cgc accum (car args))
+            (am-mov cgc accum (make-obj-opnd cgc default-value))))
+
+        (let loop ((args args-without-accum))
+          (if (not (null? args))
+            ;; Mov car args if necessary
+            (let ((arg (car args)))
+              (if (not (elem? (opnd-type cgc arg) allowed-opnds))
+                (get-extra-register cgc
+                  (lambda (tmp-reg)
+
+                    (am-mov cgc tmp-reg arg)
+                    (reduce-fun cgc accum tmp-reg)))
+                (reduce-fun cgc accum arg))
+
+              (loop (cdr args)))))
+
+        (am-return-opnd cgc result-action accum)))))
+
 ;; ***** Default Primitives
 
 ;; ***** Basic primitives (##Identity and ##not)
@@ -883,7 +891,7 @@
     (lambda (cgc result-action args)
       (with-result-opnd cgc result-action args
         single-instruction: #t
-        fun: (lambda (result-opnd)
+        fun: (lambda (result-opnd save?)
           (check-nargs-if-necessary cgc result-action 1)
           (call-with-nargs args
             (lambda (ref)
@@ -904,7 +912,7 @@
     (lambda (cgc result-action args)
       (with-result-opnd cgc result-action args
         single-instruction: #t
-        fun: (lambda (result-opnd)
+        fun: (lambda (result-opnd save?)
           (check-nargs-if-necessary cgc result-action 2)
           (call-with-nargs args
             (lambda (ref new-val)
