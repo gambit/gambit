@@ -1246,6 +1246,7 @@
   (r6rs-compatible-read?          unprintable: read-write:)
   (r6rs-compatible-write?         unprintable: read-write:)
   (here-strings-allowed?          unprintable: read-write:)
+  (dot-at-head-of-list-allowed?   unprintable: read-write:)
   (comment-handler                unprintable: read-write:)
 )
 
