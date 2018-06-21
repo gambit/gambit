@@ -255,7 +255,9 @@
 
     (virtual.dump-gvm procs (current-output-port))
     (encode-procs cgc procs)
-    (lambda () (create-target-file output unique-name cgc))))
+    (lambda ()
+      (create-target-file output unique-name cgc)
+      output)))
 
 ;;;----------------------------------------------------------------------------
 
