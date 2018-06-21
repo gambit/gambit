@@ -328,7 +328,7 @@
                  (proc-sym (string->symbol proc-name)))
             (get-extra-register cgc
               (lambda (reg)
-                (am-lbl cgc label)
+                (put-entry-point-label cgc label 0 #f)
                 (am-mov cgc reg (x86-imm-obj proc-sym))
                 (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
                 (am-mov cgc reg (mem-opnd cgc 0 reg))
@@ -382,6 +382,7 @@
          (nargs-in-regs (target-nb-arg-regs target)))
     (max 0 (- arg-count nargs-in-regs))))
 
+;; Todo: Fix proc-name-sym invalid when placing primitives
 (define (put-entry-point-label cgc label nargs closure?)
   (define label-struct-position (codegen-context-label-struct-position cgc))
   (define proc (codegen-context-current-proc cgc))
