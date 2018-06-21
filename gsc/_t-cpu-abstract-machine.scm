@@ -453,6 +453,7 @@
       (x86-imm-obj val))
     (else
       (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
+  ; (x86-imm-obj val))
 
 (define (make-opnd cgc opnd)
   (define proc (codegen-context-current-proc cgc))
@@ -472,6 +473,8 @@
         (x86-imm-obj val))
       (else
         (compiler-internal-error "make-opnd: Unknown object: " val))))
+      ; (else
+      ;   (x86-imm-obj val))))
   (cond
     ((reg? opnd)
       (debug "make-opnd: reg")
@@ -802,7 +805,8 @@
               (true-jmp (then-jump-true-location result-action))
               (false-jmp (then-jump-false-location result-action)))
           (am-compare-jump cgc opnd false-opnd condition-equal true-jmp false-jmp))
-        (am-jmp cgc (then-jump-true-location result-action))))
+        (if (then-jump-true-location result-action)
+          (am-jmp cgc (then-jump-true-location result-action)))))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
         (if (not (equal? mov-loc opnd))
