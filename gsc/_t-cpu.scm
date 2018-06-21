@@ -308,6 +308,7 @@
 (define (put-primitive-if-needed cgc key pair)
   (let* ((label (car pair))
          (proc (cdr pair))
+         (proc-name (proc-obj-name proc))
          (prim-obj (get-primitive-object cgc (proc-obj-name proc)))
          (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
 
@@ -319,20 +320,17 @@
           (let* ((prim-fun (get-primitive-function prim-obj))
                  (arity (get-primitive-arity prim-obj))
                  (args (get-args-opnds cgc (get-fun-fs cgc arity) arity)))
-            (prim-fun cgc (then-return label) args))
+            (prim-fun cgc (then-return label proc-name) args))
 
           ;; Prim is defined in C
           ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
-          ;; Todo: Check if label can be references as entry-point. Maybe set label struct?
-          (let* ((proc-name (proc-obj-name proc))
-                 (proc-sym (string->symbol proc-name)))
             (get-extra-register cgc
               (lambda (reg)
-                (put-entry-point-label cgc label 0 #f)
-                (am-mov cgc reg (x86-imm-obj proc-sym))
+              (put-entry-point-label cgc label proc-name #f 0 #f)
+              (am-mov cgc reg (x86-imm-obj (string->symbol proc-name)))
                 (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
                 (am-mov cgc reg (mem-opnd cgc 0 reg))
-                  (am-jmp cgc reg)))))))))
+                (am-jmp cgc reg))))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -383,18 +381,15 @@
     (max 0 (- arg-count nargs-in-regs))))
 
 ;; Todo: Fix proc-name-sym invalid when placing primitives
-(define (put-entry-point-label cgc label nargs closure?)
+(define (put-entry-point-label cgc label proc-name proc-info nargs closure?)
   (define label-struct-position (codegen-context-label-struct-position cgc))
   (define proc (codegen-context-current-proc cgc))
-  (define proc-name (proc-obj-name proc))
-  (define proc-name-sym (string->symbol proc-name))
-  (define proc-info #f)
   (define parent-label (get-parent-proc-label cgc proc))
 
   (asm-align cgc 8)
-  (codegen-fixup-obj! cgc proc-name-sym 64)    ;; ##subprocedure-parent-name
-  (codegen-fixup-obj! cgc proc-info 64)        ;; ##subprocedure-parent-info
-  (codegen-fixup-obj! cgc 2 64)                ;; nb labels
+  (codegen-fixup-obj! cgc (string->symbol proc-name) 64) ;; ##subprocedure-parent-name
+  (codegen-fixup-obj! cgc proc-info 64)                  ;; ##subprocedure-parent-info
+  (codegen-fixup-obj! cgc 2 64)                          ;; nb labels
 
   ;; next label struct
   (codegen-fixup-lbl-late! cgc
@@ -459,6 +454,7 @@
          (fs (frame-size frame))
          (label-struct-position (codegen-context-label-struct-position cgc))
          (proc (codegen-context-current-proc cgc))
+         (proc-name (proc-obj-name proc))
          (label-num (label-lbl-num gvm-instr))
          (label (get-proc-label cgc proc label-num)))
 
@@ -475,7 +471,7 @@
               (am-check-nargs cgc label (frame-size frame) narg opts rest?
                 (lambda (fun-label)
                   (set-proc-label-index cgc proc label label-struct-position)
-                  (put-entry-point-label cgc label narg closure?)))))
+                  (put-entry-point-label cgc label proc-name #f narg closure?)))))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
