@@ -801,10 +801,14 @@
   (cond
     ((then-jump? result-action)
       (if check-truth-value
-        (let ((false-opnd (make-obj-opnd cgc #t))
+        (let ((false-opnd (make-obj-opnd cgc #f))
               (true-jmp (then-jump-true-location result-action))
               (false-jmp (then-jump-false-location result-action)))
-          (am-compare-jump cgc opnd false-opnd condition-equal true-jmp false-jmp))
+          (am-compare-jump cgc
+            opnd false-opnd
+            condition-not-equal
+            true-jmp false-jmp
+            (get-word-width-bits cgc)))
         (if (then-jump-true-location result-action)
           (am-jmp cgc (then-jump-true-location result-action)))))
     ((then-move? result-action)
@@ -819,6 +823,7 @@
       (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
 
 ;; ***** Default Primitives
+
 ;; ***** Basic primitives (##Identity and ##not)
 
 (define (##identity-primitive cgc result-action args)
@@ -826,20 +831,16 @@
   (call-with-nargs args 1
     (lambda (arg1)
       (debug "identity prim")
-      (am-if-eq cgc arg1 (make-obj-opnd cgc #t)
-        (lambda (cgc) (am-return-const cgc result-action #t))
-        (lambda (cgc) (am-return-const cgc result-action #t))
-        #t
-        (get-word-width-bits cgc)))))
+      (am-return-opnd cgc result-action arg1 #t))))
 
-(define (##identity-not cgc result-action args)
+(define (##not cgc result-action args)
   (check-nargs-if-necessary cgc result-action 1)
   (call-with-nargs args 1
     (lambda (arg1)
       (debug "identity not")
-      (am-if-eq cgc arg1 (make-obj-opnd cgc #t)
-        (lambda (cgc) (am-return-const cgc result-action #f))
+      (am-if-eq cgc arg1 (make-obj-opnd cgc #f)
         (lambda (cgc) (am-return-const cgc result-action #t))
+        (lambda (cgc) (am-return-const cgc result-action #f))
         #t
         (get-word-width-bits cgc)))))
 
