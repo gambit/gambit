@@ -41,6 +41,16 @@
 (define (elem? elem elems)
   (not (= -1 (index-of elem elems))))
 
+(define (elem-count elem elems)
+  (define (worker lst count)
+    (if (null? lst)
+      count
+      (let ((fst (car lst)))
+        (if (equal? fst elem)
+          (worker (cdr lst) (+ 1 count))
+          (worker (cdr lst) count)))))
+  (worker elems 0))
+
 (define (iota start end)
   (if (> start end)
     '()
@@ -86,3 +96,11 @@
   (if (or (null? lst) (<= n 0))
     lst
     (drop-n (cdr lst) (- n 1))))
+
+(define (drop-first elem lst)
+  (if (null? lst)
+    lst
+    (let ((fst (car lst)))
+      (if (equal? elem fst)
+        (cdr lst)
+        (cons fst (drop-first elem (cdr lst)))))))
