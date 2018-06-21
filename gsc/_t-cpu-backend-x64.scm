@@ -29,10 +29,10 @@
 ;; Primitives
 
 (define x86-prim-fx+
-  (arithmetic-prim x86-add '(number) (default-arithmetic-allowed-opnds is-load-store-arch) #t))
+  (foldl-prim 0 x86-add '(reg mem int) #t))
 
 (define x86-prim-fx-
-  (arithmetic-prim x86-sub '(number) (default-arithmetic-allowed-opnds is-load-store-arch) #f))
+  (foldl-prim 'none x86-sub '(reg mem int) #f))
 
 (define x86-prim-fx<
   (arithmetic-prim x86-cmp (list 'boolean x86-jle x86-jg) (default-arithmetic-allowed-opnds is-load-store-arch) #f))
@@ -40,13 +40,13 @@
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
-    (table-set! table '##not (make-prim-obj ##not 1 #t #t))
+    (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
 
-    (table-set! table '##fx+ (make-prim-obj x86-prim-fx+ 2 #t #f))
-    (table-set! table '##fx- (make-prim-obj x86-prim-fx- 2 #t #f))
-    (table-set! table '##fx< (make-prim-obj x86-prim-fx< 2 #t #t))
-    (table-set! table '##car (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
-    (table-set! table '##cdr (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
+    (table-set! table '##fx+      (make-prim-obj x86-prim-fx+ 2 #t #f))
+    (table-set! table '##fx-      (make-prim-obj x86-prim-fx- 2 #t #f))
+    (table-set! table '##fx<      (make-prim-obj x86-prim-fx< 2 #t #t))
+    (table-set! table '##car      (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
+    (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
     (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
     (table-set! table '##set-cdr! (make-prim-obj (object-set-prim pair-obj-desc 0) 2 #t #f))
 
@@ -675,7 +675,7 @@
 
   (if (not nargs-in-flags?)
     (begin
-  (am-lbl cgc pop-label)
+      (am-lbl cgc pop-label)
       (x86-popf cgc)))
   (am-lbl cgc continue-label))
 
