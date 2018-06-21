@@ -681,7 +681,10 @@
       optional-args-values
       rest?
       (lambda (fun-label)
-        (put-entry-point-label cgc fun-label nargs #f)))))
+        (put-entry-point-label cgc
+          fun-label
+          (then-return-prim-name result-action) #f
+          nargs #f)))))
 
 (define (call-with-nargs args nargs fun)
   (apply fun args))
