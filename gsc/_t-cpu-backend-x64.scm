@@ -366,6 +366,7 @@
     x64-poll
     x64-set-nargs
     x64-check-nargs
+    x64-check-nargs-simple
     x64-allocate-memory
     x64-init-routine
     x64-end-routine
@@ -433,6 +434,68 @@
     ;; Use flag register
     ((list-ref tests (narg-index nargs)))))
 
+(define (x64-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?
+          #!optional (check-flags #t))
+  ;; a flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
+  ;; b flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
+  ;; c flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
+  ;; d flags = jae jne jle jo  jp  ja  jl  jns  wrong_na = jno
+  ;; e flags = jae jne jle jno jnp ja  jl  js   wrong_na = jp
+  ;; f flags = jae jne jle jno jp  ja  jl  js   no jump
+  (define (check-a label)               (x86-jb  cgc label))
+  (define (check-not-a label)           (x86-jae cgc label))
+  (define (check-b label)               (x86-je  cgc label))
+  (define (check-not-b label)           (x86-jne cgc label))
+  (define (check-c label)               (x86-jg  cgc label))
+  (define (check-not-c label)           (x86-jle cgc label))
+  (define (check-d label)               (x86-jo  cgc label))
+  (define (check-not-d label)           (x86-jno cgc label))
+  (define (check-e label)               (x86-jnp cgc label))
+  (define (check-not-e label)           (x86-jp  cgc label))
+  (define (check-ab label)              (x86-jbe cgc label))
+  (define (check-not-a-or-b label)      (x86-ja  cgc label))
+  (define (check-bc label)              (x86-jge cgc label))
+  (define (check-not-b-or-c label)      (x86-jl  cgc label))
+  (define (check-bcd label)             (x86-jns cgc label))
+  (define (check-not-b-or-c-or-d label) (x86-js  cgc label))
+
+  (define (check-ps-na arg-count label)
+    (let ((na-opnd (get-processor-state-field cgc 'nargs)))
+      (x86-cmp cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))
+      (if if-equal?
+        (x86-je cgc label)
+        (x86-jne cgc label))))
+
+  (define all-negative-tests
+    (list check-not-a check-not-b check-not-c check-not-d check-not-e))
+  (define negative-tests
+    (if use-f-flag all-negative-tests (cdr all-negative-tests)))
+
+  (define all-positive-tests
+    (list check-a check-b check-c check-d check-e))
+  (define positive-tests
+    (if use-f-flag all-positive-tests (cdr all-positive-tests)))
+
+    (if (passed-in-ps arg-count)
+      ;; Use processor state to pass narg
+      (begin
+      (if check-flags
+          (if use-f-flag
+            (begin
+              (check-a   error-label)
+              (check-bcd error-label)
+              (check-e   error-label))
+            (check-not-a jmp-loc)))
+      (check-ps-na arg-count jmp-loc if-equal?)
+        #f)
+      ;; Use flag register
+      (begin
+        ((list-ref
+        (if if-equal? positive-tests negative-tests)
+          (narg-index arg-count))
+          jmp-loc)
+        #t)))
+
 (define (x64-check-nargs cgc fun-label fs nargs optional-args-values rest? place-label-fun)
   ;; Constants
   (define target (codegen-context-target cgc))
@@ -453,70 +516,6 @@
     (lambda (i) (make-unique-label cgc
       (string-append prefix (number->string i)) #f)))
 
-  ;; a flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
-  ;; b flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
-  ;; c flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
-  ;; d flags = jae jne jle jo  jp  ja  jl  jns  wrong_na = jno
-  ;; e flags = jae jne jle jno jnp ja  jl  js   wrong_na = jp
-  ;; f flags = jae jne jle jno jp  ja  jl  js   no jump
-
-  (define (check-not-a label)           (x86-jae cgc label))
-  (define (check-not-b label)           (x86-jne cgc label))
-  (define (check-not-c label)           (x86-jle cgc label))
-  (define (check-not-d label)           (x86-jno cgc label))
-  (define (check-not-e label)           (x86-jp  cgc label))
-  (define (check-not-a-or-b label)      (x86-ja  cgc label))
-  (define (check-not-b-or-c label)      (x86-jl  cgc label))
-  (define (check-not-b-or-c-or-d label) (x86-js  cgc label))
-
-  (define (check-a label)               (x86-jb  cgc label))
-  (define (check-b label)               (x86-je  cgc label))
-  (define (check-c label)               (x86-jg  cgc label))
-  (define (check-d label)               (x86-jo  cgc label))
-  (define (check-e label)               (x86-jnp cgc label))
-  (define (check-ab label)              (x86-jbe cgc label))
-  (define (check-bc label)              (x86-jge cgc label))
-  (define (check-bcd label)             (x86-jns cgc label))
-
-  (define (check-ps-na arg-count label use-positive)
-    (let ((na-opnd (get-processor-state-field cgc 'nargs)))
-      (x86-cmp cgc (car na-opnd) (x86-imm-int arg-count) (cdr na-opnd))
-      (if use-positive
-        (x86-je cgc label)
-        (x86-jne cgc label))))
-
-  (define all-negative-tests
-    (list check-not-a check-not-b check-not-c check-not-d check-not-e))
-  (define negative-tests
-    (if use-f-flag all-negative-tests (cdr all-negative-tests)))
-
-  (define all-positive-tests
-    (list check-a check-b check-c check-d check-e))
-  (define positive-tests
-    (if use-f-flag all-positive-tests (cdr all-positive-tests)))
-
-  ;; Returns true if arg-count is passed in flags
-  (define (check-nargs arg-count jmp-loc use-positive #!optional (check-f #t))
-    (if (passed-in-ps arg-count)
-      ;; Use processor state to pass narg
-      (begin
-        (if check-f
-          (if use-f-flag
-            (begin
-              (check-a   error-label)
-              (check-bcd error-label)
-              (check-e   error-label))
-            (check-not-a jmp-loc)))
-        (check-ps-na arg-count jmp-loc use-positive)
-        #f)
-      ;; Use flag register
-      (begin
-        ((list-ref
-          (if use-positive positive-tests negative-tests)
-          (narg-index arg-count))
-          jmp-loc)
-        #t)))
-
   (define check-flags #t)
   ;; Places switch for optional parameters
   ;; Moves the parameters to the right position if necessary
@@ -535,7 +534,7 @@
     (define (place-case arg-count case-label next-case-label)
       (debug "place-case: " arg-count)
       (am-lbl cgc case-label)
-      (if (not (check-nargs arg-count next-case-label #f check-flags))
+      (if (not (x64-check-nargs-simple cgc arg-count next-case-label error-label #f check-flags))
         (set! check-flags #f))
 
       ;; Merge with frame-pointer adjustement
@@ -609,7 +608,9 @@
            (rest-handler (get-processor-state-field cgc 'handler_get_rest)))
 
       ;; Optimize case with 0 elem
-      (check-nargs nargs-no-rest call-rest-handler #f check-flags)
+      ;; Todo: Fix case where nargs-passed-in-flags doesn't contain 0.
+      ;; Maybe replace check-flags by #f. Check if doesn't break everything...
+      (x64-check-nargs-simple cgc nargs-no-rest call-rest-handler error-label #f check-flags)
       (if (not nargs-in-flags?) (x86-popf cgc))   ;; Replace with pop? Maybe faster
       (am-mov cgc
         (get-nth-arg cgc fs nargs nargs)
@@ -656,10 +657,10 @@
   (if (and (null? optional-args-values) (not rest?))
     ;; Basic case
     (if nargs-in-flags?
-        (check-nargs nargs error-label #f)
+        (x64-check-nargs-simple cgc nargs error-label error-label #f)
         (begin
           (x86-pushf cgc)
-          (check-nargs nargs error-label #f)))
+          (x64-check-nargs-simple cgc nargs error-label error-label #f)))
           ;; Then continues to pop-label
 
     ;; Optional and rest arguments case

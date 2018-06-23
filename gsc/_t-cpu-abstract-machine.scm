@@ -172,12 +172,13 @@
           poll
           set-narg
           check-narg
+          check-narg-simple
           allocate-memory
           init
           end
           error
           place-extra-data)
-  (vector poll set-narg check-narg allocate-memory init end error place-extra-data))
+  (vector poll set-narg check-narg check-narg-simple allocate-memory init end error place-extra-data))
 
 (define (get-in-cgc cgc i1 i2)
   (let* ((target (codegen-context-target cgc))
@@ -261,14 +262,15 @@
 (define (apply-routine cgc index args)
   (exec-in-cgc cgc routines-index index (cons cgc args)))
 
-(define (am-poll cgc . args)             (apply-routine cgc 0 args))
-(define (am-set-narg cgc . args)         (apply-routine cgc 1 args))
-(define (am-check-nargs cgc . args)       (apply-routine cgc 2 args))
-(define (am-allocate-memory cgc . args)  (apply-routine cgc 3 args))
-(define (am-init cgc . args)             (apply-routine cgc 4 args))
-(define (am-end cgc . args)              (apply-routine cgc 5 args))
-(define (am-error cgc . args)            (apply-routine cgc 6 args))
-(define (am-place-extra-data cgc . args) (apply-routine cgc 7 args))
+(define (am-poll cgc . args)               (apply-routine cgc 0 args))
+(define (am-set-narg cgc . args)           (apply-routine cgc 1 args))
+(define (am-check-nargs cgc . args)        (apply-routine cgc 2 args))
+(define (am-check-nargs-simple cgc . args) (apply-routine cgc 3 args))
+(define (am-allocate-memory cgc . args)    (apply-routine cgc 4 args))
+(define (am-init cgc . args)               (apply-routine cgc 5 args))
+(define (am-end cgc . args)                (apply-routine cgc 6 args))
+(define (am-error cgc . args)              (apply-routine cgc 7 args))
+(define (am-place-extra-data cgc . args)   (apply-routine cgc 8 args))
 
 ;; ***** AM: State fields
 
