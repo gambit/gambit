@@ -28,17 +28,40 @@
 
 ;; Primitives
 
+; (default-value 'none)
+; (default-value-null? #f)
+; (unroll-count 0)
+; (commutative #f)
+
 (define x86-prim-fx+
-  (foldl-prim 0 x86-add '(reg mem int) #t))
+  (foldl-prim x86-add
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 0
+    start-value-null?: #t
+    unroll-count: 2
+    commutative: #t))
 
 (define x86-prim-fx-
-  (foldl-prim 'none x86-sub '(reg mem int) #f))
+  (foldl-prim x86-sub
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    ; start-value: 0 ;; Start the fold on the first operand
+    unroll-count: 0
+    commutative: #f))
 
-(define x86-prim-fx<
-  (foldl-prim #t
-    (lambda (cgc accum opnd)
-      5)
-    '(reg mem int) #f))
+(define x86-prim-fx< (lambda (a . args) #f))
+  ; (foldl-boolean-prim
+  ;   (lambda (cgc accum opnd true-location false-location)
+  ;     (x86-cmp cgc accum opnd)
+  ;     (x86-jg cgc false-location)
+  ;     true-location) ;; Returns where it should continue
+  ;   allowed-opnds: '(reg mem int)
+  ;   allowed-opnds-accum: '(reg mem)
+  ;   start-value: (- (expt 2 63) 1) ;; Min int
+  ;   start-value-null?: #t
+  ;   unroll-count: 0
+  ;   commutative: #f))
 
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
@@ -321,22 +344,22 @@
 (define (get-jumps condition)
   (define (flip pair) (cons (cdr pair) (car pair)))
 
-    (case (get-condition condition)
-            ((equal)
-              (cons x86-je  x86-jne))
-            ((greater)
-              (cond
-                ((and (cond-is-equal condition) (cond-is-signed condition))
-                  (cons x86-jge x86-jl))
-                ((and (not (cond-is-equal condition)) (cond-is-signed condition))
-                  (cons x86-jg x86-jle))
-                ((and (cond-is-equal condition) (not (cond-is-signed condition)))
-                  (cons x86-jae x86-jb))
-                ((and (not (cond-is-equal condition)) (not (cond-is-signed condition)))
-                  (cons x86-ja x86-jbe))))
-            ((not-equal) (flip (get-jumps (inverse-condition condition))))
-            ((lesser) (flip (get-jumps (inverse-condition condition))))
-            (else
+  (case (get-condition condition)
+    ((equal)
+      (cons x86-je  x86-jne))
+    ((greater)
+      (cond
+        ((and (cond-is-equal condition) (cond-is-signed condition))
+          (cons x86-jge x86-jl))
+        ((and (not (cond-is-equal condition)) (cond-is-signed condition))
+          (cons x86-jg x86-jle))
+        ((and (cond-is-equal condition) (not (cond-is-signed condition)))
+          (cons x86-jae x86-jb))
+        ((and (not (cond-is-equal condition)) (not (cond-is-signed condition)))
+          (cons x86-ja x86-jbe))))
+    ((not-equal) (flip (get-jumps (inverse-condition condition))))
+    ((lesser) (flip (get-jumps (inverse-condition condition))))
+    (else
       (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
 (define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
@@ -502,25 +525,25 @@
   (define positive-tests
     (if use-f-flag all-positive-tests (cdr all-positive-tests)))
 
-    (if (passed-in-ps arg-count)
-      ;; Use processor state to pass narg
-      (begin
+  (if (passed-in-ps arg-count)
+    ;; Use processor state to pass narg
+    (begin
       (if check-flags
-          (if use-f-flag
-            (begin
-              (check-a   error-label)
-              (check-bcd error-label)
-              (check-e   error-label))
-            (check-not-a jmp-loc)))
+        (if use-f-flag
+          (begin
+            (check-a   error-label)
+            (check-bcd error-label)
+            (check-e   error-label))
+          (check-not-a jmp-loc)))
       (check-ps-na arg-count jmp-loc)
-        #f)
-      ;; Use flag register
-      (begin
-        ((list-ref
+      #f)
+    ;; Use flag register
+    (begin
+      ((list-ref
         (if if-equal? positive-tests negative-tests)
-          (narg-index arg-count))
-          jmp-loc)
-        #t)))
+        (narg-index arg-count))
+        jmp-loc)
+      #t)))
 
 (define (x64-check-nargs cgc fun-label fs nargs optional-args-values rest? place-label-fun)
   ;; Constants
