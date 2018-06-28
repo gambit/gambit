@@ -10,7 +10,6 @@
 (include "_t-cpu-abstract-machine.scm")
 (include "_t-cpu-function-sub.scm")
 (include "_t-cpu-objects-desc.scm")
-(include "_t-cpu-bench.scm")
 (include "_t-cpu-backend-x64.scm")
 (include "_t-cpu-utils.scm")
 
@@ -234,6 +233,37 @@
 (cpu-inlinable "##fx-")
 
 (cpu-testable "##fx<")
+
+;;;----------------------------------------------------------------------------
+
+;; ***** BACKEND OUTPUT
+
+(define (create-target-file filename module-name cgc #!optional (show-listing? #t))
+  (let* ((code (asm-assemble-to-u8vector cgc))
+         (fixup-locs (codegen-context-fixup-locs->vector cgc))
+         (fixup-objs (codegen-context-fixup-objs->vector cgc)))
+
+    (if show-listing?
+        (asm-display-listing cgc (current-output-port) #t))
+
+    (display ";; code = ")       (write code)       (newline)
+    (display ";; fixup-locs = ") (write fixup-locs) (newline)
+    (display ";; fixup-objs = ") (write fixup-objs) (newline)
+
+    ;; Call compiler to create objfile.o1 using the C backend.
+    ;; When the file is loaded, it will execute the x86 code.
+
+    (debug "Compiling")
+    (compile-file-to-target "dummy.scm"
+                            output: filename
+                            module-name: module-name
+                            options: '((target C))
+                            expression: `((##machine-code-fixup
+                                  ',code
+                                  ',fixup-locs
+                                  ',fixup-objs)))
+
+    (debug "Output file: " filename)))
 
 ;;;----------------------------------------------------------------------------
 
