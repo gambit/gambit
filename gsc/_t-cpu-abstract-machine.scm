@@ -157,7 +157,8 @@
           am-bit-shift-right am-bit-shift-left
           am-not am-and
           am-or  am-xor
-          am-jmp am-compare-jump)
+          am-jmp am-compare-jump
+          am-compare-move)
   (vector
     am-lbl am-data
     am-mov am-load-mem-address
@@ -166,7 +167,8 @@
     am-bit-shift-right am-bit-shift-left
     am-not am-and
     am-or am-xor
-    am-jmp am-compare-jump))
+    am-jmp am-compare-jump
+    am-compare-move))
 
 (define (make-routine-dictionnary
           poll
@@ -256,6 +258,7 @@
 (define (am-xor cgc . args)              (apply-instruction cgc 13 args))
 (define (am-jmp cgc . args)              (apply-instruction cgc 14 args))
 (define (am-compare-jump cgc . args)     (apply-instruction cgc 15 args))
+(define (am-compare-move cgc . args)     (apply-instruction cgc 16 args))
 
 ;; ***** AM: Routines fields
 
