@@ -260,6 +260,7 @@
     (apply-and-mov x86-xor) ;; am-xor
     x86-jmp                 ;; am-jmp
     cmp-jump-instr          ;; am-compare-jump
+    cmp-move-instr          ;; am-compare-move
     ))
 
 (define (x86-label-align cgc label #!optional (align #f))
@@ -317,11 +318,9 @@
           (x86-mov cgc result-reg opnd1)
           (fun cgc result-reg opnd2)))))
 
-(define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
-  (define (flip pair)
-      (cons (cdr pair) (car pair)))
+(define (get-jumps condition)
+  (define (flip pair) (cons (cdr pair) (car pair)))
 
-  (define (get-jumps condition)
     (case (get-condition condition)
             ((equal)
               (cons x86-je  x86-jne))
@@ -338,10 +337,10 @@
             ((not-equal) (flip (get-jumps (inverse-condition condition))))
             ((lesser) (flip (get-jumps (inverse-condition condition))))
             (else
-              (compiler-internal-error "cmp-jump-instr - Unknown condition: " condition))))
+      (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
+(define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
   (let* ((jumps (get-jumps condition)))
-
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
       (x86-cmp cgc opnd1 opnd2 opnds-width))
@@ -356,6 +355,32 @@
         ((car jumps) cgc loc-true))
       (else
         (debug "am-compare-jump: No jump encoded")))))
+
+(define (cmp-move-instr cgc condition dest opnd1 opnd2 true-opnd false-opnd #!optional (opnds-width #f))
+  (let* ((jumps (get-jumps condition))
+         (label-true (make-unique-label cgc "mov-true" #f))
+         (label-false (make-unique-label cgc "mov-false" #f)))
+    ;; In case both jump locations are false, the cmp is unnecessary.
+    (x86-cmp cgc opnd1 opnd2)
+    (cond
+      ((and true-opnd false-opnd)
+        ((car jumps) cgc label-true)
+        (am-mov cgc dest false-opnd)
+        (am-jmp cgc label-false)
+        (am-lbl cgc label-true)
+        (am-mov cgc dest true-opnd)
+        (am-lbl cgc label-false))
+      ((and (not true-opnd) false-opnd)
+        ((car jumps) cgc label-true) ;; Jump if true
+        (am-mov cgc dest false-opnd)
+        (am-lbl cgc label-true))
+      ((and true-opnd (not false-opnd))
+        ((cdr jumps) cgc label-false) ;; Jump if false
+        (am-mov cgc dest true-opnd)
+        (am-lbl cgc label-false))
+      (else
+        (debug "am-compare-move: No move encoded")))))
+
 
 ;;------------------------------------------------------------------------------
 
@@ -434,6 +459,7 @@
     ;; Use flag register
     ((list-ref tests (narg-index nargs)))))
 
+;; The function returns if it checked the flags
 (define (x64-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?
           #!optional (check-flags #t))
   ;; a flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
@@ -486,7 +512,7 @@
               (check-bcd error-label)
               (check-e   error-label))
             (check-not-a jmp-loc)))
-      (check-ps-na arg-count jmp-loc if-equal?)
+      (check-ps-na arg-count jmp-loc)
         #f)
       ;; Use flag register
       (begin
