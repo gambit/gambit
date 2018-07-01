@@ -262,7 +262,7 @@
 "init"
 )
 (
-" _t-univ-3"
+"_t-univ-3#"
 "c#univ-add-class"
 "c#univ-add-field"
 "c#univ-add-method"
@@ -768,8 +768,8 @@
 #else
 #define ___VERSION 408009
 #define ___MODULE_NAME "_t-univ-3"
-#define ___LINKER_ID ____20___t_2d_univ_2d_3
-#define ___MH_PROC ___H__20___t_2d_univ_2d_3
+#define ___LINKER_ID ___LNK___t_2d_univ_2d_3
+#define ___MH_PROC ___H___t_2d_univ_2d_3
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 250
 #define ___KEYCOUNT 2
@@ -1036,12 +1036,12 @@ ___NEED_SYM(___S_will)
 ___NEED_KEY(___K_char_2d_encoding)
 ___NEED_KEY(___K_init)
 
-___NEED_GLO(___G__20___t_2d_univ_2d_3)
 ___NEED_GLO(___G__2b_)
 ___NEED_GLO(___G__2d_)
 ___NEED_GLO(___G__3c_)
 ___NEED_GLO(___G__3d_)
 ___NEED_GLO(___G__3e__3d_)
+___NEED_GLO(___G___t_2d_univ_2d_3_23_)
 ___NEED_GLO(___G_abs)
 ___NEED_GLO(___G_append)
 ___NEED_GLO(___G_apply)
@@ -2046,7 +2046,7 @@ ___END_KEY
 #define ___KEY_init ___KEY(1,___K_init)
 
 ___BEGIN_GLO
-___DEF_GLO(0," _t-univ-3")
+___DEF_GLO(0,"_t-univ-3#")
 ___DEF_GLO(1,"c#make-translated-operand-generator")
 
 ___DEF_GLO(2,"c#univ-add-class")
@@ -2551,8 +2551,8 @@ ___DEF_GLO(494,"symbol->string")
 ___DEF_GLO(495,"u8vector->list")
 ___END_GLO
 
-#define ___GLO__20___t_2d_univ_2d_3 ___GLO(0,___G__20___t_2d_univ_2d_3)
-#define ___PRM__20___t_2d_univ_2d_3 ___PRM(0,___G__20___t_2d_univ_2d_3)
+#define ___GLO___t_2d_univ_2d_3_23_ ___GLO(0,___G___t_2d_univ_2d_3_23_)
+#define ___PRM___t_2d_univ_2d_3_23_ ___PRM(0,___G___t_2d_univ_2d_3_23_)
 #define ___GLO_c_23_make_2d_translated_2d_operand_2d_generator ___GLO(1,___G_c_23_make_2d_translated_2d_operand_2d_generator)
 #define ___PRM_c_23_make_2d_translated_2d_operand_2d_generator ___PRM(1,___G_c_23_make_2d_translated_2d_operand_2d_generator)
 #define ___GLO_c_23_univ_2d_add_2d_class ___GLO(2,___G_c_23_univ_2d_add_2d_class)
@@ -5561,7 +5561,7 @@ ___F64V2)
 ___BEGIN_M_COD
 ___BEGIN_M_HLBL
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0__20___t_2d_univ_2d_3)
+___DEF_M_HLBL(___L0___t_2d_univ_2d_3_23_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_univ_2d_defs)
 ___DEF_M_HLBL(___L1_c_23_univ_2d_defs)
@@ -8998,7 +8998,7 @@ ___END_M_HLBL
 ___BEGIN_M_SW
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__20___t_2d_univ_2d_3
+#define ___PH_PROC ___H___t_2d_univ_2d_3_23_
 #undef ___PH_LBL0
 #define ___PH_LBL0 1
 #undef ___PD_ALL
@@ -9010,13 +9010,13 @@ ___BEGIN_M_SW
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0__20___t_2d_univ_2d_3)
+___DEF_P_HLBL(___L0___t_2d_univ_2d_3_23_)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0__20___t_2d_univ_2d_3)
+___DEF_SLBL(0,___L0___t_2d_univ_2d_3_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
-___DEF_GLBL(___L__20___t_2d_univ_2d_3)
+___DEF_GLBL(___L___t_2d_univ_2d_3_23_)
    ___SET_R1(___VOID)
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
@@ -39329,8 +39329,8 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H__20___t_2d_univ_2d_3," _t-univ-3",___REF_FAL,1,0)
-,___DEF_LBL_PROC(___H__20___t_2d_univ_2d_3,0,-1)
+ ___DEF_LBL_INTRO(___H___t_2d_univ_2d_3_23_,"_t-univ-3#",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H___t_2d_univ_2d_3_23_,0,-1)
 ,___DEF_LBL_INTRO(___H_c_23_univ_2d_defs,"c#univ-defs",___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H_c_23_univ_2d_defs,5,-1)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_defs,___IFD(___RETI,0,0,0x3fL))
@@ -43186,7 +43186,7 @@ ___BEGIN_OFD
 ___END_OFD
 
 ___BEGIN_MOD_PRM
-___DEF_MOD_PRM(0,___G__20___t_2d_univ_2d_3,1)
+___DEF_MOD_PRM(0,___G___t_2d_univ_2d_3_23_,1)
 ___DEF_MOD_PRM(12,___G_c_23_univ_2d_defs,3)
 ___DEF_MOD_PRM(17,___G_c_23_univ_2d_defs_2d_fields,6)
 ___DEF_MOD_PRM(19,___G_c_23_univ_2d_defs_2d_methods,8)
@@ -43512,7 +43512,7 @@ ___BEGIN_MOD_C_INIT
 ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
-___DEF_MOD_GLO(0,___G__20___t_2d_univ_2d_3,1)
+___DEF_MOD_GLO(0,___G___t_2d_univ_2d_3_23_,1)
 ___DEF_MOD_GLO(12,___G_c_23_univ_2d_defs,3)
 ___DEF_MOD_GLO(17,___G_c_23_univ_2d_defs_2d_fields,6)
 ___DEF_MOD_GLO(19,___G_c_23_univ_2d_defs_2d_methods,8)

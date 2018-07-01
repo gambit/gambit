@@ -106,9 +106,9 @@
 (
 )
 (
-" _gsi"
 "##main-gsi/gsc"
 "##processed-command-line"
+"_gsi#"
 )
 (
 )
@@ -152,8 +152,8 @@
 #else
 #define ___VERSION 408009
 #define ___MODULE_NAME "_gsi"
-#define ___LINKER_ID ____20___gsi
-#define ___MH_PROC ___H__20___gsi
+#define ___LINKER_ID ___LNK___gsi
+#define ___MH_PROC ___H___gsi
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 96
 #define ___GLOCOUNT 36
@@ -262,7 +262,6 @@ ___NEED_SYM(___S_write_2d_extended_2d_read_2d_macros_3f_)
 ___NEED_SYM(___S_wtimeout)
 ___NEED_SYM(___S_wtimeout_2d_thunk)
 
-___NEED_GLO(___G__20___gsi)
 ___NEED_GLO(___G__23__23_assq)
 ___NEED_GLO(___G__23__23_current_2d_readtable)
 ___NEED_GLO(___G__23__23_eval_2d_top)
@@ -298,6 +297,7 @@ ___NEED_GLO(___G__23__23_unwrap_2d_datum)
 ___NEED_GLO(___G__23__23_wrap_2d_datum)
 ___NEED_GLO(___G__23__23_write)
 ___NEED_GLO(___G__23__23_write_2d_string)
+___NEED_GLO(___G___gsi_23_)
 
 ___BEGIN_SYM
 ___DEF_SYM(0,___S_,"")
@@ -501,9 +501,9 @@ ___END_SYM
 #define ___SYM_wtimeout_2d_thunk ___SYM(95,___S_wtimeout_2d_thunk)
 
 ___BEGIN_GLO
-___DEF_GLO(0," _gsi")
-___DEF_GLO(1,"##main-gsi/gsc")
-___DEF_GLO(2,"##processed-command-line")
+___DEF_GLO(0,"##main-gsi/gsc")
+___DEF_GLO(1,"##processed-command-line")
+___DEF_GLO(2,"_gsi#")
 ___DEF_GLO(3,"##assq")
 ___DEF_GLO(4,"##current-readtable")
 ___DEF_GLO(5,"##eval-top")
@@ -541,12 +541,12 @@ ___DEF_GLO(34,"##write")
 ___DEF_GLO(35,"##write-string")
 ___END_GLO
 
-#define ___GLO__20___gsi ___GLO(0,___G__20___gsi)
-#define ___PRM__20___gsi ___PRM(0,___G__20___gsi)
-#define ___GLO__23__23_main_2d_gsi_2f_gsc ___GLO(1,___G__23__23_main_2d_gsi_2f_gsc)
-#define ___PRM__23__23_main_2d_gsi_2f_gsc ___PRM(1,___G__23__23_main_2d_gsi_2f_gsc)
-#define ___GLO__23__23_processed_2d_command_2d_line ___GLO(2,___G__23__23_processed_2d_command_2d_line)
-#define ___PRM__23__23_processed_2d_command_2d_line ___PRM(2,___G__23__23_processed_2d_command_2d_line)
+#define ___GLO__23__23_main_2d_gsi_2f_gsc ___GLO(0,___G__23__23_main_2d_gsi_2f_gsc)
+#define ___PRM__23__23_main_2d_gsi_2f_gsc ___PRM(0,___G__23__23_main_2d_gsi_2f_gsc)
+#define ___GLO__23__23_processed_2d_command_2d_line ___GLO(1,___G__23__23_processed_2d_command_2d_line)
+#define ___PRM__23__23_processed_2d_command_2d_line ___PRM(1,___G__23__23_processed_2d_command_2d_line)
+#define ___GLO___gsi_23_ ___GLO(2,___G___gsi_23_)
+#define ___PRM___gsi_23_ ___PRM(2,___G___gsi_23_)
 #define ___GLO__23__23_assq ___GLO(3,___G__23__23_assq)
 #define ___PRM__23__23_assq ___PRM(3,___G__23__23_assq)
 #define ___GLO__23__23_current_2d_readtable ___GLO(4,___G__23__23_current_2d_readtable)
@@ -994,8 +994,8 @@ ___END_SUB
 ___BEGIN_M_COD
 ___BEGIN_M_HLBL
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0__20___gsi)
-___DEF_M_HLBL(___L1__20___gsi)
+___DEF_M_HLBL(___L0___gsi_23_)
+___DEF_M_HLBL(___L1___gsi_23_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_main_2d_gsi_2f_gsc)
 ___DEF_M_HLBL(___L1__23__23_main_2d_gsi_2f_gsc)
@@ -1149,7 +1149,7 @@ ___END_M_HLBL
 ___BEGIN_M_SW
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__20___gsi
+#define ___PH_PROC ___H___gsi_23_
 #undef ___PH_LBL0
 #define ___PH_LBL0 1
 #undef ___PD_ALL
@@ -1161,17 +1161,17 @@ ___BEGIN_M_SW
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0__20___gsi)
-___DEF_P_HLBL(___L1__20___gsi)
+___DEF_P_HLBL(___L0___gsi_23_)
+___DEF_P_HLBL(___L1___gsi_23_)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0__20___gsi)
+___DEF_SLBL(0,___L0___gsi_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
-___DEF_GLBL(___L__20___gsi)
+___DEF_GLBL(___L___gsi_23_)
    ___SET_R1(___PRC(4))
    ___POLL(1)
-___DEF_SLBL(1,___L1__20___gsi)
+___DEF_SLBL(1,___L1___gsi_23_)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),11,___G__23__23_main_2d_set_21_)
 ___END_P_SW
 ___END_P_COD
@@ -1649,14 +1649,15 @@ ___DEF_SLBL(43,___L43__23__23_main_2d_gsi_2f_gsc)
    ___SET_STK(-5,___R1)
    ___SET_STK(1,___STK(-4))
    ___SET_STK(2,___STK(-3))
+   ___SET_STK(3,___TRU)
    ___SET_R3(___FAL)
-   ___SET_R2(___TRU)
+   ___SET_R2(___FAL)
    ___SET_R1(___TRU)
    ___SET_R0(___LBL(45))
-   ___ADJFP(2)
+   ___ADJFP(3)
    ___CHECK_HEAP(44,4096)
 ___DEF_SLBL(44,___L44__23__23_main_2d_gsi_2f_gsc)
-   ___JUMPGLONOTSAFE(___SET_NARGS(5),9,___G__23__23_load)
+   ___JUMPGLONOTSAFE(___SET_NARGS(6),9,___G__23__23_load)
 ___DEF_SLBL(45,___L45__23__23_main_2d_gsi_2f_gsc)
    ___IF(___NOT(___NOTFALSEP(___UNBOX(___STK(-5)))))
    ___GOTO(___L158__23__23_main_2d_gsi_2f_gsc)
@@ -1701,7 +1702,7 @@ ___DEF_GLBL(___L159__23__23_main_2d_gsi_2f_gsc)
    ___SETBOX(___R0,___R1)
    ___SET_R0(___CLO(___STK(-5),1))
    ___SET_R1(___CONS(___STK(-6),___R0))
-   ___SET_GLO(2,___G__23__23_processed_2d_command_2d_line,___R1)
+   ___SET_GLO(1,___G__23__23_processed_2d_command_2d_line,___R1)
    ___SET_R1(___VOID)
    ___CHECK_HEAP(52,4096)
 ___DEF_SLBL(52,___L52__23__23_main_2d_gsi_2f_gsc)
@@ -2170,14 +2171,15 @@ ___DEF_GLBL(___L182__23__23_main_2d_gsi_2f_gsc)
    ___SET_STK(3,___R3)
    ___SET_STK(9,___SUB(16))
    ___SET_STK(10,___LBL(132))
+   ___SET_STK(11,___FAL)
    ___SET_R3(___FAL)
    ___SET_R2(___FAL)
    ___SET_R1(___FAL)
-   ___ADJFP(10)
+   ___ADJFP(11)
    ___POLL(126)
 ___DEF_SLBL(126,___L126__23__23_main_2d_gsi_2f_gsc)
    ___SET_R0(___LBL(127))
-   ___JUMPGLONOTSAFE(___SET_NARGS(5),9,___G__23__23_load)
+   ___JUMPGLONOTSAFE(___SET_NARGS(6),9,___G__23__23_load)
 ___DEF_SLBL(127,___L127__23__23_main_2d_gsi_2f_gsc)
    ___IF(___STRINGP(___R1))
    ___GOTO(___L183__23__23_main_2d_gsi_2f_gsc)
@@ -2204,12 +2206,13 @@ ___DEF_SLBL(129,___L129__23__23_main_2d_gsi_2f_gsc)
 ___DEF_SLBL(130,___L130__23__23_main_2d_gsi_2f_gsc)
    ___SET_STK(1,___R1)
    ___SET_STK(2,___LBL(131))
+   ___SET_STK(3,___FAL)
    ___SET_R3(___FAL)
    ___SET_R2(___FAL)
    ___SET_R1(___FAL)
    ___SET_R0(___LBL(128))
-   ___ADJFP(2)
-   ___JUMPGLONOTSAFE(___SET_NARGS(5),9,___G__23__23_load)
+   ___ADJFP(3)
+   ___JUMPGLONOTSAFE(___SET_NARGS(6),9,___G__23__23_load)
 ___DEF_SLBL(131,___L131__23__23_main_2d_gsi_2f_gsc)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(131,2,0,0)
@@ -2321,9 +2324,9 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H__20___gsi," _gsi",___REF_FAL,2,0)
-,___DEF_LBL_PROC(___H__20___gsi,0,-1)
-,___DEF_LBL_RET(___H__20___gsi,___IFD(___RETI,0,0,0x3fL))
+ ___DEF_LBL_INTRO(___H___gsi_23_,"_gsi#",___REF_FAL,2,0)
+,___DEF_LBL_PROC(___H___gsi_23_,0,-1)
+,___DEF_LBL_RET(___H___gsi_23_,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_INTRO(___H__23__23_main_2d_gsi_2f_gsc,"##main-gsi/gsc",___REF_FAL,147,0)
 ,___DEF_LBL_PROC(___H__23__23_main_2d_gsi_2f_gsc,0,-1)
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,4,0,0x3f1L))
@@ -2369,7 +2372,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,8,0,0x3f0fL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___OFD(___RETI,10,0,0x3f307L))
+,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___OFD(___RETI,11,0,0x3f707L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
@@ -2451,7 +2454,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___OFD(___RETI,10,0,0x3f307L))
+,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___OFD(___RETI,11,0,0x3f707L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H__23__23_main_2d_gsi_2f_gsc,___IFD(___RETN,5,0,0x7L))
@@ -2477,25 +2480,25 @@ ___END_LBL
 ___BEGIN_OFD
  ___DEF_OFD(___RETI,12,0)
                ___GCMAP1(0x3f02bL)
-,___DEF_OFD(___RETI,10,0)
-               ___GCMAP1(0x3f307L)
+,___DEF_OFD(___RETI,11,0)
+               ___GCMAP1(0x3f707L)
 ,___DEF_OFD(___RETI,12,0)
                ___GCMAP1(0x3f02bL)
-,___DEF_OFD(___RETI,10,0)
-               ___GCMAP1(0x3f307L)
+,___DEF_OFD(___RETI,11,0)
+               ___GCMAP1(0x3f707L)
 ___END_OFD
 
 ___BEGIN_MOD_PRM
-___DEF_MOD_PRM(0,___G__20___gsi,1)
-___DEF_MOD_PRM(1,___G__23__23_main_2d_gsi_2f_gsc,4)
+___DEF_MOD_PRM(2,___G___gsi_23_,1)
+___DEF_MOD_PRM(0,___G__23__23_main_2d_gsi_2f_gsc,4)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
 ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
-___DEF_MOD_GLO(0,___G__20___gsi,1)
-___DEF_MOD_GLO(1,___G__23__23_main_2d_gsi_2f_gsc,4)
+___DEF_MOD_GLO(2,___G___gsi_23_,1)
+___DEF_MOD_GLO(0,___G__23__23_main_2d_gsi_2f_gsc,4)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
