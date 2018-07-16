@@ -362,7 +362,7 @@
     (else
       (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
-(define (cmp-jump-instr cgc opnd1 opnd2 condition loc-true loc-false #!optional (opnds-width #f))
+(define (cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
   (let* ((jumps (get-jumps condition)))
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
