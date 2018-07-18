@@ -58,12 +58,13 @@
     ((null? object)       nil-obj-desc)
     ((eof-object? object) eof-obj-desc)
     ;; Pair
-    ((pair? object)       pair-obj-desc)
-    ;; Subtypes
-    ((string? object)     string-obj-desc)
-    ((vector? object)     vector-obj-desc)
-    ((symbol? object)     symbol-obj-desc)
-    (else (compiler-internal-error "Unknown object type: " object))))
+    ; ((pair? object)       pair-obj-desc)
+    ; ;; Subtypes
+    ; ((string? object)     string-obj-desc)
+    ; ((vector? object)     vector-obj-desc)
+    ; ((symbol? object)     symbol-obj-desc)
+    (else c-obj-desc)))
+    ; (else (compiler-internal-error "Unknown object type: " object))))
 
 (define (get-desc-pointer-tag desc)
   (cond
@@ -117,6 +118,12 @@
 (define eof-obj-desc (make-unit-type-desc nil-object-val))
 
 ;; Reference types
+
+(define c-obj-desc
+    (let ((subtype 0)
+          (header-fun (lambda (val) (compiler-internal-error "c-obj-desc: todo")))
+          (encode-fun (lambda (val) (compiler-internal-error "c-obj-desc: todo"))))
+      (reference-desc 'subtype subtype header-fun encode-fun)))
 
 (define vector-obj-desc
   (let ((subtype 0)
