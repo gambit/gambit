@@ -500,7 +500,12 @@
               (am-check-nargs cgc label (frame-size frame) narg opts rest?
                 (lambda (fun-label)
                   (set-proc-label-index cgc proc label label-struct-position)
-                  (put-entry-point-label cgc label proc-name #f narg closure?)))))
+                  (put-entry-point-label cgc label proc-name #f narg closure?)))
+
+              (if closure?
+                (let ((r4 (get-self-register cgc)))
+                  (am-pop cgc r4)
+                  (am-sub cgc r4 r4 (int-opnd cgc 6))))))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
@@ -548,8 +553,8 @@
       ((clo? opnd)
         ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
         (let ((base (get-register cgc (reg-num (clo-base opnd))))
-              (index (* 8 (- (clo-index opnd) 1))))
-          (mem-opnd cgc index base)))
+              (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
+          (mem-opnd cgc offset base)))
       ((glo? opnd)
         (x86-imm-glo (glo-name opnd)))
       (else
@@ -655,31 +660,43 @@
 ;; ***** Close instruction encoding
 
 (define (encode-close-instr cgc code)
+  (define (mov-at-clo-index index reg opnd)
+    (am-mov cgc
+      (mem-opnd cgc (- (* (get-word-width cgc) index) 1) reg)
+      opnd
+      (get-word-width-bits cgc)))
   (debug "encode-close-instr")
-  (compiler-internal-error "encode-close-instr: Not implemented"))
-  ; (debug (car (close-parms (code-gvm-instr code))))
-  ; (let* ((gvm-instr (code-gvm-instr code))
-  ;        (mk-opnd (lambda (opnd) (make-opnd cgc opnd)))
-  ;        (parms (car (close-parms gvm-instr))) ;; Todo: Find why close-parms returns list
-  ;        (loc (mk-opnd (closure-parms-loc parms)))
-  ;       ;  (lbl (mk-opnd (closure-parms-lbl parms))) ;; WTF: Why not in opnd-table?
-  ;        (lbl (lbl-opnd cgc (get-proc-label cgc proc (closure-parms-lbl parms))))
-  ;        (opnds (map mk-opnd (closure-parms-opnds parms)))
-  ;       ;  (opnds (closure-parms-opnds parms))
-  ;        (size (* (get-word-width cgc) (+ 1 (length opnds)))))
+  (let* ((proc (codegen-context-current-proc cgc))
+         (gvm-instr (code-gvm-instr code))
+         (mk-opnd (lambda (opnd) (make-opnd cgc opnd)))
+         (clo-parms (car (close-parms gvm-instr)))
+         (loc (mk-opnd (closure-parms-loc clo-parms)))
+         (clo-lbl (get-proc-label cgc proc (closure-parms-lbl clo-parms)))
+         (clo-opnds (map mk-opnd (closure-parms-opnds clo-parms)))
+         (size (* (get-word-width cgc) (+ 3 (length clo-opnds)))))
 
-  ;   (get-extra-register cgc
-  ;     (lambda (reg)
-  ;       (am-allocate-mem cgc size reg)
-  ;       (let ((n 0))
-  ;         (for-each
-  ;           (lambda (opnd)
-  ;             (am-mov cgc (mem-opnd cgc (* (get-word-width cgc) n) reg) opnd (get-word-width-bits cgc))
-  ;             (set! n (+ n 1)))
-  ;           (cons lbl opnds)))
+    (get-extra-register cgc
+      (lambda (reg)
+        (am-allocate-memory cgc size reg (+ 1 (* 2 (get-word-width cgc))))
 
-  ;       ;; Todo: Remove mov if unecessary (Next GVM Instruction is often reg = loc)
-  ;       (am-mov cgc loc reg)))))
+        (mov-at-clo-index -2 reg                   ;; Place header
+          (int-opnd cgc (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
+        (mov-at-clo-index -1 reg (lbl-opnd cgc clo-lbl)) ;; Place entry
+        (get-extra-register cgc
+          (lambda (reg2)
+            ;; Because can't move 64 bit value in mem
+            ; (am-mov cgc reg2 (int-opnd cgc (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]
+            (am-mov cgc reg2 (int-opnd cgc (* 256 #xffffffF115ff))) ;; Encoded: jmp [rip-15]
+            (mov-at-clo-index 0 reg reg2))) ;; Place code
+
+        ;; Place value of free variables
+        (let loop ((opnds clo-opnds) (n 1))
+          (if (not (null? opnds))
+            (begin
+              (mov-at-clo-index n reg (car opnds))
+              (loop (cdr opnds) (+ n 1)))))
+        ;; Todo: Remove mov if unnecessary (Next GVM Instruction is often reg = loc)
+        (am-mov cgc loc reg)))))
 
 ;; ***** Switch instruction encoding
 
