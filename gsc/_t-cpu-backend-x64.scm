@@ -17,10 +17,17 @@
 ;; Todo: Respect config-object value
 (define is-load-store-arch #f)
 
-(define narg-pointer            (x86-cl))  ;; number of arguments register
-(define stack-pointer           (x86-rsp)) ;; Real stack limit
+(define narg-register           (x86-cl))  ;; number of arguments register
+(define self-register           (x86-rsi)) ;; Used for calling closures
+(define frame-pointer           (x86-rsp)) ;; Real stack limit
 (define heap-pointer            (x86-rbp)) ;; Small heap pointer (Bump allocator)
 (define processor-state-pointer (x86-rcx)) ;; Processor state pointer
+
+;; Main registers
+(define main-registers (vector (x86-rdi) (x86-rax) (x86-rbx) (x86-rdx)))
+;; Extra registers
+(define extra-registers
+  (vector (x86-r8) (x86-r9) (x86-r10) (x86-r11) (x86-r12) (x86-r13) (x86-r14) (x86-r15)))
 
 (define frame-offset 0) ;; stack offset so that frame[1] is at null offset from stack-pointer
 
@@ -222,7 +229,8 @@
     8                         ;; Word width
     'le                       ;; Endianness
     is-load-store-arch        ;; Load store architecture?
-    stack-pointer             ;; Stack pointer register
+    self-register
+    frame-pointer             ;; Stack pointer register
     frame-offset              ;; Frame offset
     primitive-object-table    ;; Primitive table
     (vector                   ;; Main registers
@@ -428,7 +436,7 @@
          (return-loc (make-unique-label cgc "return-from-overflow")))
 
     (am-compare-jump cgc
-      stack-pointer stack-trip
+      frame-pointer stack-trip
       (condition-lesser #f #f)
       #f return-loc)
 
@@ -449,17 +457,17 @@
 
 (define (x64-set-nargs cgc nargs)
   ;; set flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
-  (define (flags-a) (x86-cmp cgc narg-pointer (x86-imm-int -3)))
+  (define (flags-a) (x86-cmp cgc narg-register (x86-imm-int -3)))
   ;; set flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
-  (define (flags-b) (x86-cmp cgc narg-pointer narg-pointer))
+  (define (flags-b) (x86-cmp cgc narg-register narg-register))
   ;; set flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
-  (define (flags-c) (x86-cmp cgc narg-pointer (x86-imm-int -123)))
+  (define (flags-c) (x86-cmp cgc narg-register (x86-imm-int -123)))
   ;; set flags = jae jne jle jo  jp  ja  jl  jns  wrong_na = jno
-  (define (flags-d) (x86-cmp cgc narg-pointer (x86-imm-int 10)))
+  (define (flags-d) (x86-cmp cgc narg-register (x86-imm-int 10)))
   ;; set flags = jae jne jle jno jnp ja  jl  js   wrong_na = jp
-  (define (flags-e) (x86-cmp cgc narg-pointer (x86-imm-int 2)))
+  (define (flags-e) (x86-cmp cgc narg-register (x86-imm-int 2)))
   ;; set flags = jae jne jle jno jp  ja  jl  js
-  (define (flags-f) (x86-cmp cgc narg-pointer (x86-imm-int 0)))
+  (define (flags-f) (x86-cmp cgc narg-register (x86-imm-int 0)))
 
   (define (set-ps-na arg-count)
     (let ((na-opnd (get-processor-state-field cgc 'nargs)))
@@ -731,6 +739,11 @@
       (am-lbl cgc pop-label)
       (x86-popf cgc)))
   (am-lbl cgc continue-label))
+
+;; Todo: Call gc maybe
+(define (x64-allocate-memory cgc bytes dest-reg offset)
+  (x86-lea cgc dest-reg (mem-opnd cgc offset heap-pointer))
+  (x86-add cgc heap-pointer (int-opnd cgc bytes)))
 
 ;; Start routine
 ;; Gets executed before main

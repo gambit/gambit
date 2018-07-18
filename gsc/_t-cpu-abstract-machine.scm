@@ -114,6 +114,7 @@
           word-width
           endianness
           load-store
+          self-register
           frame-pointer-reg
           frame-offset
           primitive-table
@@ -124,6 +125,7 @@
     word-width
     endianness
     load-store
+    self-register
     frame-pointer-reg
     frame-offset
     primitive-table
@@ -193,23 +195,21 @@
 
 ;; ***** AM: Info fields
 
-(define main-register-index 6)
-(define extra-register-index 7)
-
 (define (get-word-width cgc)        (get-in-cgc cgc info-index 0))
 (define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
 (define (get-endianness cgc)        (get-in-cgc cgc info-index 1))
 (define (is-load-store? cgc)        (get-in-cgc cgc info-index 2))
-(define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 3))
-(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
-(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
-(define (get-main-registers  cgc)   (get-in-cgc cgc info-index main-register-index))
-(define (get-extra-registers cgc)   (get-in-cgc cgc info-index extra-register-index))
+(define (get-self-register cgc)     (get-in-cgc cgc info-index 3))
+(define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 4))
+(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 5))
+(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 6))
+(define (get-main-registers  cgc)   (get-in-cgc cgc info-index 7))
+(define (get-extra-registers cgc)   (get-in-cgc cgc info-index 8))
 
 ;; NOTICE THAT IT TAKES A TARGET INSTEAD OF CGC
 (define (get-make-cgc-fun target)
   (let* ((info (target-extra target 0))
-         (field (vector-ref (vector-ref info info-index) 8)))
+         (field (vector-ref (vector-ref info info-index) 9)))
     field))
 
 (define (get-primitive-object cgc name)
@@ -492,10 +492,8 @@
       (debug "make-opnd: clo")
       ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
       (let ((base (get-register cgc (reg-num (clo-base opnd))))
-            (index (* 8 (- (clo-index opnd) 1))))
-        (debug "Base:" base)
-        (debug "Index:" index)
-        (mem-opnd cgc index base)))
+            (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
+        (mem-opnd cgc offset base)))
     ((glo? opnd)
       (debug "make-opnd: glo")
       (x86-imm-glo (glo-name opnd)))
