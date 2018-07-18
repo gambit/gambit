@@ -436,14 +436,13 @@
          (return-loc (make-unique-label cgc "return-from-overflow")))
 
     (am-compare-jump cgc
-      frame-pointer stack-trip
       (condition-lesser #f #f)
+      frame-pointer stack-trip
       #f return-loc)
 
     ;; Jump to handler
     (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
     (call-handler cgc 'handler_stack_limit frame return-loc)))
-
 
 ;; Nargs passing
 
