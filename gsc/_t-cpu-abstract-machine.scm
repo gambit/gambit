@@ -29,7 +29,7 @@
 ;;          Operands: Register, Immediate
 ;;        Else
 ;;          Destination register: Register, Memory, Label
-;;          Operands: Register, Immediate, Memory (todo: And Label)
+;;          Operands: Register, Immediate, Memory
 ;;
 ;;        The am-mov instruction acts like both load and store.
 ;;
@@ -746,11 +746,13 @@
             (false-jmp (then-jump-false-location result-action)))
         (if opnd-not-false
           (if true-jmp (am-jmp cgc true-jmp))
-          (am-compare-jump cgc
-            condition-not-equal
-            opnd false-opnd
-            true-jmp false-jmp
-            (get-word-width-bits cgc)))))
+          (mov-if-necessary cgc '(reg mem) opnd
+            (lambda (opnd)
+            (am-compare-jump cgc
+              condition-not-equal
+              opnd false-opnd
+              true-jmp false-jmp
+              (get-word-width-bits cgc)))))))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
         (if (not (equal? mov-loc opnd))
@@ -762,14 +764,50 @@
     (else
       (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
 
-(define (foldl-prim reduce-fun
+; (lambda (cgc true-label false-label))
+(define (am-return-boolean cgc result-action action)
+  (debug "am-return-boolean")
+  (let ((true-label (make-unique-label cgc "if-true" #f))
+        (false-label (make-unique-label cgc "if-false" #f))
+        (continue-label (make-unique-label cgc "continue-label" #f)))
+    (cond
+      ((then-jump? result-action)
+        (let ((true-jmp (then-jump-true-location result-action))
+              (false-jmp (then-jump-false-location result-action)))
+          (action true-jmp false-jmp)))
+      ((then-move? result-action)
+        (let ((mov-loc (then-move-store-location result-action)))
+          (action true-label false-label)
+
+          (am-lbl cgc true-label)
+          (am-mov cgc mov-loc (make-obj-opnd cgc #t))
+          (am-jmp cgc continue-label)
+
+          (am-lbl cgc false-label)
+          (am-mov cgc mov-loc (make-obj-opnd cgc #f))
+          (am-lbl cgc continue-label)))
+      ((then-return? result-action)
+        (action true-label false-label)
+
+        (am-lbl cgc true-label)
+        (am-mov cgc (get-register cgc 1) (make-obj-opnd cgc #t))
+        (am-jmp cgc continue-label)
+
+        (am-lbl cgc false-label)
+        (am-mov cgc (get-register cgc 1) (make-obj-opnd cgc #f))
+
+        (am-lbl cgc continue-label)
+        (am-jmp cgc (get-register cgc 0)))
+      (else
+        (compiler-internal-error "prim-const-return - Unknown result-action" result-action)))))
+
+(define (foldl-prim reduce-2+
           #!key (allowed-opnds '(reg))
                 (allowed-opnds-accum '(reg))
                 (start-value 'none)
                 (start-value-null? #f)
-                (unroll-count 0)
-                (commutative #f)
-                (box-fun #f))
+                (reduce-1 #f)
+                (commutative #f))
 
   (define (none? a) (equal? 'none a))
 
@@ -787,9 +825,18 @@
         ((and (null? args) (none? start-value))
           (compiler-internal-error
             "foldl-prim - Prim doesn't have a start-value"))
-        ;; Optimize empty case
+        ;; Empty case
         ((null? args)
           (am-return-const cgc result-action start-value))
+        ;; 1 argument case
+        ((null? (cdr args))
+          (with-result-opnd cgc result-action args
+            commutative: commutative
+            allowed-opnds: allowed-opnds-accum
+            fun:
+              (lambda (accum accum-in-args)
+                (reduce-1 cgc accum (car args))
+                (am-return-opnd cgc result-action accum))))
         ;; General case
         (else
           (with-result-opnd cgc result-action args
@@ -821,86 +868,87 @@
                 (let loop ((loop-args new-args))
                   (if (not (null? loop-args))
                     ;; Mov car args if necessary
-                    (mov-if-necessary cgc allowed-opnds (car loop-args)
-                      (lambda (arg)
-                        (reduce-fun cgc accum arg)))
-                    (loop (cdr loop-args))))
-
-                (if box-fun
-                  (box-fun cgc result-action accum args))
+                    (begin
+                      (mov-if-necessary cgc allowed-opnds (car loop-args)
+                        (lambda (arg)
+                          (reduce-2+ cgc accum arg)))
+                      (loop (cdr loop-args)))))
 
                 (am-return-opnd cgc result-action accum)))))))))
 
-; (define (foldl-boolean-prim reduce-fun
-;           #!key (allowed-opnds '(reg))
-;                 (allowed-opnds-accum '(reg))
-;                 (start-value 'none)
-;                 (start-value-null? #f)
-;                 (jump-true #f)
-;                 (jump-false #f)
-;                 (jump-extract-boolean #f)
-;                 (unroll-count 0)
-;                 (commutative #f))
+(define (foldl-compare-prim reduce-2+
+          #!key (allowed-opnds1 '(reg))
+                (allowed-opnds2 '(reg))
+                (reduce-1 #t) ;; Or can be function (Todo and necessary?)
+                (empty-val #t)
+                (commutative #f))
+  (lambda (cgc result-action args)
+    (debug "foldl-compare-prim")
 
-;   (define (none? a) (equal? 'none a))
+    ;; The difference between a function and an inlined function is that the
+    ;; arguments for the inlined function are unrolled while they are placed in
+    ;; a list as the last argument of the function.
+    (if (then-return? result-action)
+      ;; Is a function.
+      #f ;; Todo
+      ;; Is inlined.
+      (cond
+        ;; Empty case
+        ((null? args)
+          (debug "empty case")
+          (am-return-const cgc result-action empty-val))
+        ;; 1 argument case
+        ((null? (cdr args))
+          (debug "1 argument case")
+          (am-return-const cgc result-action reduce-1))
+        ;; General case
+        (else
+          (debug "general case")
+          (am-return-boolean cgc result-action
+            (lambda (true-label false-label)
+              (for-each
+                (lambda (opnd1 opnd2)
+                  ;; Mov car args if necessary
+                  (mov-if-necessary cgc allowed-opnds1 opnd1
+                    (lambda (arg1)
+                      (mov-if-necessary cgc allowed-opnds2 opnd2
+                        (lambda (arg2)
+                          (reduce-2+ cgc arg1 arg2 true-label false-label))))))
+                (cdr args)
+                args))))))))
 
-;   (lambda (cgc result-action args)
-;     (debug "foldl-boolean-prim")
+(define (foldl-boolean-prim reduce-1 end-value
+          #!key (allowed-opnds '(reg))
+                (empty-val #t))
+  (lambda (cgc result-action args)
+    (debug "foldl-boolean-prim")
 
-;     ;; The difference between a function and an inlined function is that the
-;     ;; arguments for the inlined function are unrolled while they are placed in
-;     ;; a list as the last argument of the function.
-;     (if (then-return? result-action)
-;       ;; Is a function.
-;       #f ;; Todo
-;       ;; Is inlined.
-;       (cond
-;         ((and (null? args) (none? start-value))
-;           (compiler-internal-error
-;             "foldl-boolean-prim - Prim doesn't have a start-value"))
-;         ;; Optimize empty case
-;         ((null? args)
-;           (am-return-const cgc result-action start-value))
-;         ;; General case
-;         (else
-;           (with-result-opnd cgc result-action args
-;             commutative: commutative
-;             allowed-opnds: allowed-opnds-accum
-;             ;; Start-value is the identity value => Can skip it
-;             default-opnd: (if (or (none? start-value) start-value-null?) (car args) #f)
-;             fun: (lambda (accum accum-in-args)
-;               (let ((new-args
-;                 ;; Remove accum from args if accum is in opnd. Happens if commutative
-;                 (if accum-in-args
-;                   (filter (lambda (opnd) (not (equal? accum opnd))) args)
-;                   ;; Remove first element as it's used to initialize accum
-;                   (if (or (none? start-value) start-value-null?)
-;                     (cdr args)
-;                     args))))
+    ;; The difference between a function and an inlined function is that the
+    ;; arguments for the inlined function are unrolled while they are placed in
+    ;; a list as the last argument of the function.
+    (if (then-return? result-action)
+      ;; Is a function.
+      #f ;; Todo
+      ;; Is inlined.
+      (cond
+        ;; Empty case
+        ((null? args)
+          (am-return-const cgc result-action empty-val))
+        ;; General case
+        (else
+          (am-return-boolean cgc result-action
+            (lambda (true-label false-label)
+              (for-each
+                (lambda (opnd)
+                  ;; Mov car args if necessary
+                  (mov-if-necessary cgc allowed-opnds opnd
+                    (lambda (arg)
+                      (reduce-1 cgc arg true-label false-label))))
+                args)
 
-;                 ;; Initialize accum if necessary
-;                 (if (not accum-in-args)
-;                   (cond
-;                     ((or (none? start-value) start-value-null?)
-;                       (am-mov cgc accum (car args)))
-;                     ((not start-value-null?)
-;                       (am-mov cgc accum (make-obj-opnd cgc start-value)))
-;                     (else
-;                       (compiler-internal-error "foldl-prim : No start-value"))))
-
-;                 ;; Fold over arguments
-;                 (let loop ((loop-args new-args))
-;                   (if (not (null? loop-args))
-;                     ;; Mov car args if necessary
-;                     (mov-if-necessary cgc allowed-opnds (car loop-args)
-;                       (lambda (arg)
-;                         (reduce-fun cgc accum arg)))
-;                     (loop (cdr loop-args))))
-
-;                 (if end-function
-;                   (end-function cgc result-action accum args))
-
-;                 (am-return-opnd cgc result-action accum)))))))))
+              (if end-value
+                (am-jmp true-label)
+                (am-jmp false-label)))))))))
 
 ;; ***** Primitives - High level instructions - Utils
 
@@ -908,26 +956,19 @@
           #!key fun
           (commutative #f)
           (single-instruction #f)
-          (allowed-opnds '())
+          (allowed-opnds '(reg int mem))
           (default-opnd #f))
 
-  (define (use-default-opnd)
-    (if default-opnd
-      (fun default-opnd #t)
-      (get-extra-register cgc (lambda (reg) (fun reg #f)))))
-
   (define (use-loc loc in-args?)
-    (if (null? allowed-opnds)
+    (if (and loc (elem? (opnd-type cgc loc) allowed-opnds))
       (fun loc in-args?)
-      (if (elem? (opnd-type cgc loc) allowed-opnds)
-        (fun loc in-args?)
-        (get-extra-register cgc (lambda (reg) (fun reg #f))))))
+      (get-extra-register cgc (lambda (reg) (fun reg #f)))))
 
   (define once-in-args (= 1 (elem-count (get-register cgc 1) args)))
 
   (cond
     ((then-jump? result-action)
-      (use-default-opnd))
+      (use-loc default-opnd #t))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
         (cond
@@ -938,7 +979,7 @@
           ((not (elem? mov-loc args))
             (use-loc mov-loc #f))
           (else
-            (use-default-opnd)))))
+            (use-loc default-opnd #t)))))
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
       (cond
@@ -947,7 +988,7 @@
         ((and once-in-args commutative)
           (use-loc (get-register cgc 1) #t))
         (else
-          (use-default-opnd))))
+          (use-loc default-opnd #t))))
     (else
       (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
 
@@ -995,7 +1036,7 @@
       (am-if-eq cgc arg1 (make-obj-opnd cgc #f)
         (lambda (cgc) (am-return-const cgc result-action #t))
         (lambda (cgc) (am-return-const cgc result-action #f))
-        #t
+        #f
         (get-word-width-bits cgc)))))
 
 ;; ***** Primitives - Default Primitives - Type checks
