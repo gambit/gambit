@@ -652,7 +652,8 @@
          (prim-sym (proc-obj-name (apply-prim gvm-instr)))
          (prim-obj (get-primitive-object cgc prim-sym))
          (prim-fun (get-primitive-function prim-obj))
-         (then (then-move (make-opnd cgc (apply-loc gvm-instr))))
+         (loc (apply-loc gvm-instr))
+         (then (if loc (then-move (make-opnd cgc loc)) then-nothing))
          (args (map (lambda (opnd) (make-opnd cgc opnd)) (apply-opnds gvm-instr))))
     (prim-fun cgc then args)))
 
