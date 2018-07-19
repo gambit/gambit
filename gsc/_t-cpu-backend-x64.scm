@@ -65,7 +65,7 @@
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
-        (condition-lesser #f #f)
+        (condition-lesser #t #f)
         opnd1 opnd2
         false-label true-label
         (get-word-width-bits cgc)))
@@ -76,7 +76,7 @@
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
-        (condition-lesser #t #f)
+        (condition-lesser #f #f)
         opnd1 opnd2
         false-label true-label
         (get-word-width-bits cgc)))
@@ -87,7 +87,7 @@
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
-        (condition-greater #f #f)
+        (condition-greater #t #f)
         opnd1 opnd2
         false-label true-label
         (get-word-width-bits cgc)))
@@ -98,7 +98,7 @@
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
-        (condition-greater #t #f)
+        (condition-greater #f #f)
         opnd1 opnd2
         false-label true-label
         (get-word-width-bits cgc)))
