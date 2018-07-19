@@ -7,12 +7,6 @@
 ;; Todo: Check if all includes are necessary
 ;; Todo: Check if my utils can be refactored in _utils.scm or somewhere else
 
-(include "_t-cpu-abstract-machine.scm")
-(include "_t-cpu-function-sub.scm")
-(include "_t-cpu-objects-desc.scm")
-(include "_t-cpu-backend-x64.scm")
-(include "_t-cpu-utils.scm")
-
 (include "generic.scm")
 
 (include-adt "_envadt.scm")

@@ -1246,7 +1246,7 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
                      opnd)))
 
   (x86-esc-opcode cgc)
-  (asm-8 cb (+ #x90 cc))  ;; opcode
+  (asm-8 cgc (+ #x90 cc))  ;; opcode
   (x86-opnd-prefix cgc 0 0 opnd #f) ;; prefix (width is implicit)
   (x86-opnd-modrm/sib cgc 0 opnd) ;; ModR/M
   (listing opnd))
