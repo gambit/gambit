@@ -534,7 +534,11 @@
     ('lbl
       (lbl-opnd cgc (lbl-opnd-label cgc opnd) (+ (lbl-opnd-offset cgc opnd) offset)))
     ('int
-      (mem-opnd cgc (+ (int-opnd-value cgc opnd) offset)))))
+      (mem-opnd cgc (+ (int-opnd-value cgc opnd) offset)))
+    ('glo
+      (compiler-internal-error "get-opnd-with-offset - global doesn't support offset (todo)"))
+    (else
+      (compiler-internal-error "get-opnd-with-offset - unknown opnd: " opnd))))
 
 ;; ***** Utils - Abstract machine shorthand
 
@@ -683,6 +687,9 @@
 (define (then-return-label then) (cadr then))
 (define (then-return-prim-name then) (caddr then))
 
+(define then-nothing 'nop)
+(define (then-nothing? then) (equal? 'nop then))
+
 ;; ***** Primitives - High level instructions
 
 (define (am-if cgc opnd1 opnd2 condition on-true on-false #!optional (actions-return #f) (opnds-width #f))
@@ -733,6 +740,8 @@
         (get-register cgc 1)
         (make-obj-opnd cgc value))
       (am-jmp cgc (get-register cgc 0)))
+    (then-nothing?
+      (debug "result-action is nop"))
     (else
       (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
 
@@ -761,6 +770,8 @@
       (if (not (equal? (get-register cgc 1) opnd))
         (am-mov cgc (get-register cgc 1) opnd))
       (am-jmp cgc (get-register cgc 0)))
+    (then-nothing?
+      (debug "result-action is nop"))
     (else
       (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
 
@@ -798,6 +809,11 @@
 
         (am-lbl cgc continue-label)
         (am-jmp cgc (get-register cgc 0)))
+      (then-nothing?
+        (debug "result-action is nop")
+        (action true-label false-label)
+        (am-lbl cgc true-label)
+        (am-lbl cgc false-label))
       (else
         (compiler-internal-error "prim-const-return - Unknown result-action" result-action)))))
 
@@ -962,7 +978,10 @@
   (define (use-loc loc in-args?)
     (if (and loc (elem? (opnd-type cgc loc) allowed-opnds))
       (fun loc in-args?)
-      (get-extra-register cgc (lambda (reg) (fun reg #f)))))
+      (get-extra-register cgc
+        (lambda (reg)
+          (fun reg #f)
+          (am-mov cgc loc reg)))))
 
   (define once-in-args (= 1 (elem-count (get-register cgc 1) args)))
 
@@ -989,6 +1008,9 @@
           (use-loc (get-register cgc 1) #t))
         (else
           (use-loc default-opnd #t))))
+    (then-nothing?
+      (debug "result-action is nop")
+      (get-extra-register cgc (lambda (reg) (fun reg #f))))
     (else
       (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
 
@@ -1048,7 +1070,7 @@
 (define (read-reference cgc dest ref tag index width)
   (let* ((total-offset (- (* width index) tag))
          (mem-location (get-opnd-with-offset cgc ref total-offset)))
-    (am-mov cgc dest mem-location)))
+    (am-mov cgc dest dest)))
 
 (define (set-reference cgc src ref tag index width)
   (let* ((total-offset (- (* width index) tag))
@@ -1072,11 +1094,12 @@
   (if field-index
     ;; Index is static
     (lambda (cgc result-action args)
+      (debug "object-read-prim")
       (with-result-opnd cgc result-action args
         single-instruction: #t
         fun: (lambda (result-opnd result-opnd-in-args)
           (check-nargs-if-necessary cgc result-action 1)
-          (call-with-nargs args
+          (mov-if-necessary cgc '(reg mem) (car args)
             (lambda (ref)
               (read-reference cgc
                 result-opnd ref
@@ -1093,16 +1116,12 @@
   (if field-index
     ;; Index is static
     (lambda (cgc result-action args)
-      (with-result-opnd cgc result-action args
-        single-instruction: #t
-        fun: (lambda (result-opnd result-opnd-in-args)
-          (check-nargs-if-necessary cgc result-action 2)
-          (call-with-nargs args
-            (lambda (ref new-val)
-              (set-reference cgc
-                new-val ref
-                (get-desc-pointer-tag desc) (- field-index 1)
-                (if width width (get-word-width cgc)))
-              ;; Todo: Change return value to (void)
-              (am-return-const cgc result-action 0))))))
+      (check-nargs-if-necessary cgc result-action 2)
+      (call-with-nargs args
+        (lambda (ref new-val)
+          (set-reference cgc
+            new-val ref
+            (get-desc-pointer-tag desc) (- field-index 1)
+            (if width width (get-word-width cgc)))
+          (am-return-const cgc result-action (void)))))
   (compiler-internal-error "object-set-prim - Dynamic index not implemented")))
