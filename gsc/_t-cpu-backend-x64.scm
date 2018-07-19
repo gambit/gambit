@@ -46,7 +46,9 @@
     allowed-opnds-accum: '(reg mem)
     start-value: 0
     start-value-null?: #t
-    unroll-count: 2
+    reduce-1:
+      (lambda (cgc dst opnd)
+        (am-mov cgc dst opnd))
     commutative: #t))
 
 (define x86-prim-fx-
@@ -54,30 +56,79 @@
     allowed-opnds: '(reg mem int)
     allowed-opnds-accum: '(reg mem)
     ; start-value: 0 ;; Start the fold on the first operand
-    unroll-count: 0
+    reduce-1:
+      (lambda (cgc dst opnd)
+        (am-sub cgc dst (int-opnd cgc 0) opnd))
     commutative: #f))
 
-(define x86-prim-fx< (lambda (a . args) #f))
-  ; (foldl-boolean-prim
-  ;   (lambda (cgc accum opnd true-location false-location)
-  ;     (x86-cmp cgc accum opnd)
-  ;     (x86-jg cgc false-location)
-  ;     true-location) ;; Returns where it should continue
-  ;   allowed-opnds: '(reg mem int)
-  ;   allowed-opnds-accum: '(reg mem)
-  ;   start-value: (- (expt 2 63) 1) ;; Min int
-  ;   start-value-null?: #t
-  ;   unroll-count: 0
-  ;   commutative: #f))
+(define x86-prim-fx<
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-lesser #f #f)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx<=
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-lesser #t #f)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx>
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-greater #f #f)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx>=
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-greater #t #f)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx=
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        condition-not-equal
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
 
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
     (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
 
-    (table-set! table '##fx+      (make-prim-obj x86-prim-fx+ 2 #t #f))
-    (table-set! table '##fx-      (make-prim-obj x86-prim-fx- 2 #t #f))
-    (table-set! table '##fx<      (make-prim-obj x86-prim-fx< 2 #t #t))
+    (table-set! table '##fx+      (make-prim-obj x86-prim-fx+  2 #t #f))
+    (table-set! table '##fx-      (make-prim-obj x86-prim-fx-  2 #t #f))
+    (table-set! table '##fx<      (make-prim-obj x86-prim-fx<  2 #t #t))
+    (table-set! table '##fx<=     (make-prim-obj x86-prim-fx<= 2 #t #t))
+    (table-set! table '##fx>      (make-prim-obj x86-prim-fx>  2 #t #t))
+    (table-set! table '##fx>=     (make-prim-obj x86-prim-fx>= 2 #t #t))
+    (table-set! table '##fx=      (make-prim-obj x86-prim-fx=  2 #t #t))
+
     (table-set! table '##car      (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
     (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
     (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
@@ -374,7 +425,8 @@
   (let* ((jumps (get-jumps condition)))
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
-      (x86-cmp cgc opnd1 opnd2 opnds-width))
+      (mov-if-necessary cgc '(reg mem) opnd1
+        (lambda (opnd1) (x86-cmp cgc opnd1 opnd2 opnds-width))))
 
     (cond
       ((and loc-false loc-true)
@@ -392,7 +444,9 @@
          (label-true (make-unique-label cgc "mov-true" #f))
          (label-false (make-unique-label cgc "mov-false" #f)))
     ;; In case both jump locations are false, the cmp is unnecessary.
-    (x86-cmp cgc opnd1 opnd2)
+    (mov-if-necessary cgc '(reg mem) opnd1
+      (lambda (opnd1) (x86-cmp cgc opnd1 opnd2 opnds-width)))
+
     (cond
       ((and true-opnd false-opnd)
         ((car jumps) cgc label-true)

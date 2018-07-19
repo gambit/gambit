@@ -232,7 +232,18 @@
 (cpu-inlinable "##fx+")
 (cpu-inlinable "##fx-")
 
+(cpu-inlinable "##identity")
+(cpu-inlinable "##not")
+(cpu-inlinable "##car")
+(cpu-inlinable "##cdr")
+(cpu-inlinable "##set-car!")
+(cpu-inlinable "##set-cdr!")
+
 (cpu-testable "##fx<")
+(cpu-testable "##fx<=")
+(cpu-testable "##fx>")
+(cpu-testable "##fx>=")
+(cpu-testable "##fx=")
 
 ;;;----------------------------------------------------------------------------
 
@@ -349,6 +360,7 @@
           (let* ((prim-fun (get-primitive-function prim-obj))
                  (arity (get-primitive-arity prim-obj))
                  (args (get-args-opnds cgc (get-fun-fs cgc arity) arity)))
+            (put-entry-point-label cgc label proc-name #f 0 #f) ;; Place label in prim-fun
             (prim-fun cgc (then-return label proc-name) args))
 
           ;; Prim is defined in C
