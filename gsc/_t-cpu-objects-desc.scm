@@ -97,10 +97,11 @@
 ;; Immediate types
 
 ;; Special int values
+;; Use gsi with ##fx+ to find values
 (define false-object-val -1) ;; Default value for false
 (define true-object-val  -2) ;; Default value for true
-(define eof-object-val   -100)
-(define nil-object-val   -1000)
+(define nil-object-val   -3)
+(define eof-object-val   -4)
 
 (define fixnum-obj-desc
   (immediate-desc 'fixnum
