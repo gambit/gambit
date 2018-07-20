@@ -3225,20 +3225,20 @@ ___processor_state ___ps;)
 
     /* account for red zone */
 
-    "add  $-128, %%" reg_SP "\n\t"
+    // "add  $-128, %%" reg_SP "\n\t"
 
 #endif
 
     /* save callee-save registers */
 
-    "push %%" reg_R0 "\n\t"
-    "push %%" reg_R1 "\n\t"
-    "push %%" reg_R2 "\n\t"
-    "push %%" reg_R3 "\n\t"
-    "push %%" reg_R4 "\n\t"
+    // "push %%" reg_R0 "\n\t"
+    // "push %%" reg_R1 "\n\t"
+    // "push %%" reg_R2 "\n\t"
+    // "push %%" reg_R3 "\n\t"
+    // "push %%" reg_R4 "\n\t"
+    // "push %%" reg_HP "\n\t"
     /* "push %%" reg_PS "\n\t" */
     /* "push %%" reg_FP "\n\t" */
-    "push %%" reg_HP "\n\t"
 
     /* setup handler for returning from lowlevel code */
 
@@ -3410,20 +3410,20 @@ ___processor_state ___ps;)
     /* restore callee-save registers */
 
     "mov  " PS_FIELD("-2") ", %%" reg_SP "\n\t"
-    "pop  %%" reg_HP "\n\t"
     /* "pop  %%" reg_FP "\n\t" */
     /* "pop  %%" reg_PS "\n\t" */
-    "pop  %%" reg_R4 "\n\t"
-    "pop  %%" reg_R3 "\n\t"
-    "pop  %%" reg_R2 "\n\t"
-    "pop  %%" reg_R1 "\n\t"
-    "pop  %%" reg_R0 "\n\t"
+    // "pop  %%" reg_HP "\n\t"
+    // "pop  %%" reg_R4 "\n\t"
+    // "pop  %%" reg_R3 "\n\t"
+    // "pop  %%" reg_R2 "\n\t"
+    // "pop  %%" reg_R1 "\n\t"
+    // "pop  %%" reg_R0 "\n\t"
 
 #ifdef ___CPU_x86_64
 
     /* account for red zone */
 
-    "add  $128, %%" reg_SP "\n\t"
+    // "add  $128, %%" reg_SP "\n\t"
 
 #endif
 
@@ -3432,7 +3432,13 @@ ___processor_state ___ps;)
       "m" (___ps)
     : /* clobbers */
       "%" reg_PS,
-      "%" reg_TMP
+      "%" reg_TMP,
+      "%" reg_R0,
+      "%" reg_R1,
+      "%" reg_R2,
+      "%" reg_R3,
+      "%" reg_R4,
+      "%" reg_HP
   );
 
 #endif
