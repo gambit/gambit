@@ -116,7 +116,7 @@
     allowed-opnds1: '(reg mem)
     allowed-opnds2: '(reg int)))
 
-(define x86-prim-cons
+(define x86-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
       allowed-opnds: '(reg)
@@ -145,6 +145,17 @@
               (car args)
               (get-word-width-bits cgc)))))))
 
+(define x86-prim-##null?
+  (lambda (cgc result-action args)
+    (check-nargs-if-necessary cgc result-action 1)
+    (call-with-nargs args
+      (lambda (arg1)
+        (am-if-eq cgc arg1 (make-obj-opnd cgc '())
+          (lambda (cgc) (am-return-const cgc result-action #t))
+          (lambda (cgc) (am-return-const cgc result-action #f))
+          #f
+          (get-word-width-bits cgc))))))
+
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
@@ -162,7 +173,8 @@
     (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
     (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
     (table-set! table '##set-cdr! (make-prim-obj (object-set-prim pair-obj-desc 0) 2 #t #f))
-    (table-set! table '##cons     (make-prim-obj x86-prim-cons 2 #t #f))
+    (table-set! table '##cons     (make-prim-obj x86-prim-##cons 2 #t #f))
+    (table-set! table '##null?    (make-prim-obj x86-prim-##null? 2 #t #f))
 
     table))
 

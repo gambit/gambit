@@ -233,6 +233,7 @@
 (cpu-inlinable "##set-car!")
 (cpu-inlinable "##set-cdr!")
 (cpu-inlinable "##cons")
+(cpu-inlinable "##null?")
 
 (cpu-testable "##fx<")
 (cpu-testable "##fx<=")
