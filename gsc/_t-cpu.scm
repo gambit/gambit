@@ -232,6 +232,7 @@
 (cpu-inlinable "##cdr")
 (cpu-inlinable "##set-car!")
 (cpu-inlinable "##set-cdr!")
+(cpu-inlinable "##cons")
 
 (cpu-testable "##fx<")
 (cpu-testable "##fx<=")
@@ -317,6 +318,7 @@
     (map
       (lambda (code)
         (codegen-context-current-code-set! cgc code)
+        (codegen-context-frame-set! cgc (gvm-instr-frame (code-gvm-instr code)))
         (encode-gvm-instr cgc code))
       (get-code-list proc)))
 
@@ -675,6 +677,7 @@
   (debug "encode-close-instr")
   (let* ((proc (codegen-context-current-proc cgc))
          (gvm-instr (code-gvm-instr code))
+         (frame (gvm-instr-frame gvm-instr))
          (mk-opnd (lambda (opnd) (make-opnd cgc opnd)))
          (clo-parms (car (close-parms gvm-instr)))
          (loc (mk-opnd (closure-parms-loc clo-parms)))
@@ -684,7 +687,7 @@
 
     (get-extra-register cgc
       (lambda (reg)
-        (am-allocate-memory cgc size reg (+ 1 (* 2 (get-word-width cgc))))
+        (am-allocate-memory cgc reg size (+ 1 (* 2 (get-word-width cgc))) frame)
 
         (mov-at-clo-index -2 reg                   ;; Place header
           (int-opnd cgc (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
