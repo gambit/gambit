@@ -983,7 +983,15 @@
           (fun reg #f)
           (am-mov cgc loc reg)))))
 
-  (define once-in-args (= 1 (elem-count (get-register cgc 1) args)))
+  (define (use-extra-reg loc)
+    (get-extra-register cgc
+      (lambda (reg)
+        (fun reg #f)
+        (am-mov cgc loc reg))))
+
+  (define loc-in-args-count (elem-count (get-register cgc 1) args))
+  (define not-in-args (= 0 loc-in-args-count))
+  (define once-in-args (= 1 loc-in-args-count))
 
   (cond
     ((then-jump? result-action)
@@ -995,10 +1003,12 @@
           ((and once-in-args commutative)
             (use-loc mov-loc #t))
           ;; We can overwrite mov-loc.
-          ((not (elem? mov-loc args))
+          (not-in-args
             (use-loc mov-loc #f))
+          (default-opnd
+            (use-loc default-opnd #f))
           (else
-            (use-loc default-opnd #t)))))
+            (use-extra-reg mov-loc)))))
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
       (cond
@@ -1006,8 +1016,12 @@
           (use-loc (get-register cgc 1) once-in-args))
         ((and once-in-args commutative)
           (use-loc (get-register cgc 1) #t))
+        (not-in-args
+          (use-loc (get-register cgc 1) #f))
+        (default-opnd
+          (use-loc default-opnd #t))
         (else
-          (use-loc default-opnd #t))))
+          (use-extra-reg (get-register cgc 1)))))
     (then-nothing?
       (debug "result-action is nop")
       (get-extra-register cgc (lambda (reg) (fun reg #f))))
