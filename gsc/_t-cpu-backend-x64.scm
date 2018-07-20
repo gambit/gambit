@@ -116,6 +116,35 @@
     allowed-opnds1: '(reg mem)
     allowed-opnds2: '(reg int)))
 
+(define x86-prim-cons
+  (lambda (cgc result-action args)
+    (with-result-opnd cgc result-action args
+      allowed-opnds: '(reg)
+      fun:
+        (lambda (result-opnd result-opnd-in-args)
+          (let* ((word (get-word-width cgc))
+                 (size (* word 3))
+                 (tag 3)
+                 (offset (+ tag (* 2 word))))
+
+            (am-allocate-memory cgc result-opnd size offset
+              (codegen-context-frame cgc))
+
+            (am-mov cgc
+              (mem-opnd cgc (- offset) result-opnd)
+              (int-opnd cgc (* 8 3))
+              (get-word-width-bits cgc))
+
+            (am-mov cgc
+              (mem-opnd cgc (- word offset) result-opnd)
+              (cadr args)
+              (get-word-width-bits cgc))
+
+            (am-mov cgc
+              (mem-opnd cgc (- (* 2 word) offset) result-opnd)
+              (car args)
+              (get-word-width-bits cgc)))))))
+
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
@@ -133,6 +162,7 @@
     (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
     (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
     (table-set! table '##set-cdr! (make-prim-obj (object-set-prim pair-obj-desc 0) 2 #t #f))
+    (table-set! table '##cons     (make-prim-obj x86-prim-cons 2 #t #f))
 
     table))
 
@@ -794,9 +824,22 @@
   (am-lbl cgc continue-label))
 
 ;; Todo: Call gc maybe
-(define (x64-allocate-memory cgc bytes dest-reg offset)
+(define (x64-allocate-memory cgc dest-reg bytes offset frame)
+  (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
+          (temp1 (get-processor-state-field cgc 'temp1))
+          (return-loc (make-unique-label cgc "return-from-gc")))
+
   (x86-lea cgc dest-reg (mem-opnd cgc offset heap-pointer))
-  (x86-add cgc heap-pointer (int-opnd cgc bytes)))
+      (x86-add cgc heap-pointer (int-opnd cgc bytes))
+
+      (am-compare-jump cgc
+        (condition-lesser #f #f)
+        frame-pointer stack-trip
+        #f return-loc)
+
+      ;; Jump to handler
+      (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
+      (call-handler cgc 'handler_heap_limit frame return-loc)))
 
 ;; Start routine
 ;; Gets executed before main

@@ -1067,10 +1067,16 @@
 
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
+;; Todo: Dereference memory before reading with offset (Doesn't work)
 (define (read-reference cgc dest ref tag index width)
-  (let* ((total-offset (- (* width index) tag))
-         (mem-location (get-opnd-with-offset cgc ref total-offset)))
-    (am-mov cgc dest dest)))
+  (let* ((total-offset (- (* width index) tag)))
+    (if (equal? 'reg (opnd-type cgc ref))
+      (am-mov cgc dest (get-opnd-with-offset cgc ref total-offset))
+      (begin
+        (get-extra-register cgc
+          (lambda (reg)
+            (am-mov cgc reg ref)
+            (am-mov cgc dest (get-opnd-with-offset cgc reg total-offset))))))))
 
 (define (set-reference cgc src ref tag index width)
   (let* ((total-offset (- (* width index) tag))

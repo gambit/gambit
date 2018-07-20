@@ -104,3 +104,5 @@
       (if (equal? elem fst)
         (cdr lst)
         (cons fst (drop-first elem (cdr lst)))))))
+
+(define (flip pair) (cons (cdr pair) (car pair)))
