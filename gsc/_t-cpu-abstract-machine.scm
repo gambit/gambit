@@ -1082,7 +1082,7 @@
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
 ;; Todo: Dereference memory before reading with offset (Doesn't work)
-(define (read-reference cgc dest ref tag index width)
+(define (read-reference cgc result-action dest ref tag index width)
   (let* ((total-offset (- (* width index) tag)))
     (if (equal? 'reg (opnd-type cgc ref))
       (am-mov cgc dest (get-opnd-with-offset cgc ref total-offset))
@@ -1121,12 +1121,11 @@
           (check-nargs-if-necessary cgc result-action 1)
           (mov-if-necessary cgc '(reg mem) (car args)
             (lambda (ref)
-              (read-reference cgc
+              (read-reference cgc result-action
                 result-opnd ref
                 (get-desc-pointer-tag desc)
                 (- field-index 1)
-                (if width width (get-word-width cgc)))
-              (am-return-opnd cgc result-action result-opnd))))))
+                (if width width (get-word-width cgc))))))))
     (compiler-internal-error "object-set-prim - Dynamic index not implemented")))
 
 (define (object-set-prim desc field-index #!optional (width #f))
