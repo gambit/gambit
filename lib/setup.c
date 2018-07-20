@@ -3291,52 +3291,54 @@ ___processor_state ___ps;)
      * ___ps->pc
      */
 
-    "cmpl $0, " PS_NA "\n\t"
-    "je   nargs_0\n\t"
-    "cmpl $1, " PS_NA "\n\t"
-    "je   nargs_1\n\t"
-    "cmpl $2, " PS_NA "\n\t"
-    "je   nargs_2\n\t"
-    "cmpl $3, " PS_NA "\n\t"
-    "je   nargs_3\n\t"
-    "cmpl $4, " PS_NA "\n\t"
-    "je   nargs_4\n\t"
-
-    "\n"
-    "nargs_in_ps_na:\n\t"
-    /* set flags so these jumps succeed: jae jne jle jno jp  ja  jl  js */
-    "cmp  $0, %%cl\n\t"
     "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_0:\n\t"
-    /* set flags so these jumps succeed: jb  jne jle jno jp  jbe jl  js */
-    "cmp  $-3, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "cmpl $0, " PS_NA "\n\t"
+    // "je   nargs_0\n\t"
+    // "cmpl $1, " PS_NA "\n\t"
+    // "je   nargs_1\n\t"
+    // "cmpl $2, " PS_NA "\n\t"
+    // "je   nargs_2\n\t"
+    // "cmpl $3, " PS_NA "\n\t"
+    // "je   nargs_3\n\t"
+    // "cmpl $4, " PS_NA "\n\t"
+    // "je   nargs_4\n\t"
 
-    "\n"
-    "nargs_1:\n\t"
-    /* set flags so these jumps succeed: jae je  jle jno jp  jbe jge jns */
-    "cmp  %%cl, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_in_ps_na:\n\t"
+    // /* set flags so these jumps succeed: jae jne jle jno jp  ja  jl  js */
+    // "cmp  $0, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_2:\n\t"
-    /* set flags so these jumps succeed: jae jne jg  jno jp  ja  jge jns */
-    "cmp  $-123, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_0:\n\t"
+    // /* set flags so these jumps succeed: jb  jne jle jno jp  jbe jl  js */
+    // "cmp  $-3, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_3:\n\t"
-    /* set flags so these jumps succeed: jae jne jle jo  jp  ja  jl  jns */
-    "cmp  $10, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_1:\n\t"
+    // /* set flags so these jumps succeed: jae je  jle jno jp  jbe jge jns */
+    // "cmp  %%cl, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_4:\n\t"
-    /* set flags so these jumps succeed: jae jne jle jno jnp ja  jl  js */
-    "cmp  $2, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_2:\n\t"
+    // /* set flags so these jumps succeed: jae jne jg  jno jp  ja  jge jns */
+    // "cmp  $-123, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
+
+    // "\n"
+    // "nargs_3:\n\t"
+    // /* set flags so these jumps succeed: jae jne jle jo  jp  ja  jl  jns */
+    // "cmp  $10, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
+
+    // "\n"
+    // "nargs_4:\n\t"
+    // /* set flags so these jumps succeed: jae jne jle jno jnp ja  jl  js */
+    // "cmp  $2, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
     "\n"
     "return_from_lowlevel:"
@@ -3344,31 +3346,31 @@ ___processor_state ___ps;)
 
     /* recover ___ps->na from flags */
 
-    "jae  nargs_not_0\n\t"
-    "movl $0, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0:\n\t"
+    // "jae  nargs_not_0\n\t"
+    // "movl $0, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0:\n\t"
 
-    "jne  nargs_not_0_or_1\n\t"
-    "movl $1, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0_or_1:\n\t"
+    // "jne  nargs_not_0_or_1\n\t"
+    // "movl $1, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0_or_1:\n\t"
 
-    "jle  nargs_not_0_or_1_or_2\n\t"
-    "movl $2, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0_or_1_or_2:\n\t"
+    // "jle  nargs_not_0_or_1_or_2\n\t"
+    // "movl $2, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0_or_1_or_2:\n\t"
 
-    "jno  nargs_not_0_or_1_or_2_or_3\n\t"
-    "movl $3, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0_or_1_or_2_or_3:\n\t"
+    // "jno  nargs_not_0_or_1_or_2_or_3\n\t"
+    // "movl $3, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0_or_1_or_2_or_3:\n\t"
 
-    "jp   nargs_done\n\t"
-    "movl $4, " PS_NA "\n\t"
+    // "jp   nargs_done\n\t"
+    // "movl $4, " PS_NA "\n\t"
 
-    "\n"
-    "nargs_done:\n\t"
+    // "\n"
+    // "nargs_done:\n\t"
 
     /* save lowlevel registers to ___ps->r[...] */
 
