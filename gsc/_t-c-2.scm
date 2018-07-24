@@ -2968,6 +2968,24 @@
         #f
         generator))))
 
+(define (targ-apply-ifjump proc-safe? name0 name1 name2)
+  (let ((apply-generator
+         (lambda (opnds sn)
+           (if (not (pair? opnds))
+               (list name0)
+               (let ((o1 (car opnds)))
+                 (if (not (pair? (cdr opnds)))
+                     (list name1 (targ-opnd o1))
+                     (let ((o2 (cadr opnds)))
+                       (list name2 (targ-opnd o1) (targ-opnd o2)))))))))
+    (lambda (prim)
+      ((targ-setup-inlinable-proc
+        proc-safe?
+        #f
+        #f
+        apply-generator)
+       prim))))
+
 (define (targ-apply-simpflo-s flo? name)
   (targ-apply-simpflo #t flo? name))
 
@@ -3289,18 +3307,18 @@
 
 (targ-op "##fxwrap+"        (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXWRAPADD"))
 (targ-op "##fx+"            (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXADD"))
-(targ-op "##fx+?"           (targ-apply-fold-u #f "FIX_0"  #f       "FIXADDP"))
+(targ-op "##fx+?"           (targ-apply-ifjump #f #f #f "FIXADDP"))
 (targ-op "##fxwrap*"        (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXWRAPMUL"))
 (targ-op "##fx*"            (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXMUL"))
-(targ-op "##fx*?"           (targ-apply-fold-u #f "FIX_1"  #f       "FIXMULP"))
+(targ-op "##fx*?"           (targ-apply-ifjump #f #f #f "FIXMULP"))
 (targ-op "##fxwrap-"        (targ-apply-fold-u #f #f       "FIXWRAPNEG" "FIXWRAPSUB"))
 (targ-op "##fx-"            (targ-apply-fold-u #f #f       "FIXNEG" "FIXSUB"))
-(targ-op "##fx-?"           (targ-apply-fold-u #f #f       "FIXNEGP""FIXSUBP"))
+(targ-op "##fx-?"           (targ-apply-ifjump #f #f "FIXNEGP""FIXSUBP"))
 (targ-op "##fxwrapquotient" (targ-apply-fold-u #f #f       #f       "FIXWRAPQUO"))
 (targ-op "##fxquotient"     (targ-apply-fold-u #f #f       #f       "FIXQUO"))
 (targ-op "##fxremainder"    (targ-apply-fold-u #f #f       #f       "FIXREM"))
 (targ-op "##fxmodulo"       (targ-apply-fold-u #f #f       #f       "FIXMOD"))
-(targ-op "##fxnot"          (targ-apply-simp-u #f #f #f "FIXNOT"))
+(targ-op "##fxnot"          (targ-apply-simp-u #f #f       #f       "FIXNOT"))
 (targ-op "##fxand"          (targ-apply-fold-u #f "FIX_M1" "FIXPOS" "FIXAND"))
 (targ-op "##fxior"          (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXIOR"))
 (targ-op "##fxxor"          (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXXOR"))
@@ -3323,10 +3341,10 @@
 (targ-op "##fxwraplogical-shift-right?" (targ-apply-simp-u #f #f #f "FIXWRAPLSHRP"))
 (targ-op "##fxwrapabs"      (targ-apply-simp-u #f #f #f "FIXWRAPABS"))
 (targ-op "##fxabs"          (targ-apply-simp-u #f #f #f "FIXABS"))
-(targ-op "##fxabs?"         (targ-apply-simp-u #f #f #f "FIXABSP"))
+(targ-op "##fxabs?"         (targ-apply-ifjump #f #f "FIXABSP" #f))
 (targ-op "##fxwrapsquare"   (targ-apply-simp-u #f #f #f "FIXWRAPSQUARE"))
 (targ-op "##fxsquare"       (targ-apply-simp-u #f #f #f "FIXSQUARE"))
-(targ-op "##fxsquare?"      (targ-apply-simp-u #f #f #f "FIXSQUAREP"))
+(targ-op "##fxsquare?"      (targ-apply-ifjump #f #f "FIXSQUAREP" #f))
 
 (targ-op "##fxzero?"     (targ-ifjump-simp-u #f "FIXZEROP"))
 (targ-op "##fxpositive?" (targ-ifjump-simp-u #f "FIXPOSITIVEP"))
