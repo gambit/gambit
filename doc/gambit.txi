@@ -4089,7 +4089,7 @@ The default declarations used by the compiler are equivalent to:
   (run-time-bindings)
   (safe)
   (interrupts-enabled)
-  (poll-on-return)
+  (not poll-on-return)
   (not debug)           ;; depends on debugging command line options
   (debug-location)      ;; depends on debugging command line options
   (debug-source)        ;; depends on debugging command line options

@@ -555,7 +555,7 @@
   (env-declare env (list interrupts-enabled-sym #f)))
 
 (define (poll-on-return? env) ; true when interrupt checks should be generated on procedure returns
-  (declaration-value poll-on-return-sym #f #t env))
+  (declaration-value poll-on-return-sym #f #f env))
 
 (define (debug? env) ; true iff debugging information should be generated
   (declaration-value debug-sym #f compiler-option-debug env))
