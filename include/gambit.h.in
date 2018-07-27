@@ -2978,37 +2978,42 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXADD(x,y)((___WORD)((x)+(y)))
 
 #ifdef ___USE_builtin_op_overflow
-#define ___FIXADDP(x,y)(___EXPECT_FALSE(__builtin_add_overflow((___WORD)(x),(___WORD)(y),&___temp))?___FAL:___temp)
+#define ___FIXADDP_NOTFALSEP(var,x,y)!___EXPECT_FALSE(__builtin_add_overflow((___WORD)(x),(___WORD)(y),&var))
 #else
-#define ___FIXADDP(x,y)(___temp=___FIXWRAPADD(x,y),___EXPECT_FALSE(((___temp^(x))&(___temp^(y)))<0)?___FAL:___temp)
+#define ___FIXADDP_NOTFALSEP(var,x,y)(___temp=___FIXWRAPADD(x,y),___EXPECT_FALSE(((___temp^(x))&(___temp^(y)))<0)?0:(var=___temp,1))
 #endif
+#define ___FIXADDP(x,y)(___FIXADDP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
 #define ___FIX_1 ___FIX(1)
 #define ___FIXWRAPMUL(x,y)___CAST(___WORD,___CAST(___UWORD,x)*___CAST(___UWORD,___INT(y)))
 #define ___FIXMUL(x,y)((___WORD)((x)*___INT(y)))
 
 #ifdef ___USE_builtin_op_overflow
-#define ___FIXMULP(x,y)(___EXPECT_FALSE(__builtin_mul_overflow((___WORD)(x),___INT(y),&___temp))?___FAL:___temp)
+#define ___FIXMULP_NOTFALSEP(var,x,y)!___EXPECT_FALSE(__builtin_mul_overflow((___WORD)(x),___INT(y),&var))
 #else
-#define ___FIXMULP(x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXWRAPMUL(x,y)),y)!=(x))?___FAL:___temp)
+#define ___FIXMULP_NOTFALSEP(var,x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXWRAPMUL(x,y)),y)!=(x))?0:(var=___temp,1))
 #endif
+#define ___FIXMULP(x,y)(___FIXMULP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
 #define ___FIXWRAPSQUARE(x)___FIXWRAPMUL(x,x)
 #define ___FIXSQUARE(x)___FIXMUL(x,x)
-#define ___FIXSQUAREP(x)(___EXPECT_FALSE(___CAST(___UWORD,x)+___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))>(___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))<<1))?___FAL:___FIXSQUARE(x))
+#define ___FIXSQUAREP_NOTFALSEP(var,x)(___EXPECT_FALSE(___CAST(___UWORD,x)+___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))>(___CAST(___UWORD,___FIX(___SQRT_MAX_FIX))<<1))?0:(var=___FIXSQUARE(x),1))
+#define ___FIXSQUAREP(x)(___FIXSQUAREP_NOTFALSEP(___temp,x)?___temp:___FAL)
 
 #define ___FIXWRAPNEG(x)___CAST(___WORD,-___CAST(___UWORD,x))
 #define ___FIXNEG(x)((___WORD)(-(x)))
+#define ___FIXNEGP_NOTFALSEP(var,x)(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?0:(var=___FIXNEG(x),1))
 #define ___FIXNEGP(x)(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x))
 
 #define ___FIXWRAPSUB(x,y)___CAST(___WORD,___CAST(___UWORD,x)-___CAST(___UWORD,y))
 #define ___FIXSUB(x,y)((___WORD)((x)-(y)))
 
 #ifdef ___USE_builtin_op_overflow
-#define ___FIXSUBP(x,y)(___EXPECT_FALSE(__builtin_sub_overflow((___WORD)(x),(___WORD)(y),&___temp))?___FAL:___temp)
+#define ___FIXSUBP_NOTFALSEP(var,x,y)!___EXPECT_FALSE(__builtin_sub_overflow((___WORD)(x),(___WORD)(y),&var))
 #else
-#define ___FIXSUBP(x,y)(___temp=___FIXWRAPSUB(x,y),___EXPECT_FALSE(((___temp^(x))&((y)^(x)))<0)?___FAL:___temp)
+#define ___FIXSUBP_NOTFALSEP(var,x,y)(___temp=___FIXWRAPSUB(x,y),___EXPECT_FALSE(((___temp^(x))&((y)^(x)))<0)?0:(var=___temp,1))
 #endif
+#define ___FIXSUBP(x,y)(___FIXSUBP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
 #define ___FIXWRAPQUO(x,y)((y)==___FIX(-1)?___FIXWRAPNEG(x):___FIXQUO(x,y))
 #define ___FIXQUO(x,y)___FIX(((x)/(y)))
@@ -3024,7 +3029,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___FIXWRAPABS(x)((x)<0?___FIXWRAPNEG(x):(x))
 #define ___FIXABS(x)((x)<0?___FIXNEG(x):(x))
-#define ___FIXABSP(x)((x)<0?((___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x))):(x))
+#define ___FIXABSP_NOTFALSEP(var,x)((x)<0?(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?0:(var=___FIXNEG(x),1)):(var=(x),1))
+#define ___FIXABSP(x)((x)<0?(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x)):(x))
 
 #if ___SCMOBJ_WIDTH == 32
 #define ___SCMOBJ_MASK(x,y)y
@@ -4253,15 +4259,17 @@ switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
 #define ___DEF_P_SLBL(id)
 #define ___END_P_SLBL ___SM(___NOTHING,___END_SLBL)
 
+#define ___REGISTER
+
 #define ___PSHEAP ___ps->hp
-#define ___D_HEAP register ___WORD *___hp;
+#define ___D_HEAP ___REGISTER ___WORD *___hp;
 #define ___R_HEAP ___R_HEAP_EXPR;
 #define ___W_HEAP ___W_HEAP_EXPR;
 #define ___R_HEAP_EXPR ___hp=___PSHEAP
 #define ___W_HEAP_EXPR ___PSHEAP=___hp
 
 #define ___PSFP ___ps->fp
-#define ___D_FP register ___WORD *___fp;
+#define ___D_FP ___REGISTER ___WORD *___fp;
 #define ___R_FP ___SET_FP(___PSFP)
 #define ___W_FP ___PSFP=___fp;
 
@@ -4331,7 +4339,7 @@ switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
 
 #define ___PSR0 ___ps->r[0]
 #if ___MAX_LOCAL_GVM_REGS > 0
-#define ___D_R0 register ___WORD ___r0;
+#define ___D_R0 ___REGISTER ___WORD ___r0;
 #define ___R_R0 ___r0=___PSR0;
 #define ___W_R0 ___PSR0=___r0;
 #define ___R0 ___r0
@@ -4356,7 +4364,7 @@ switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
 
 #define ___PSR1 ___ps->r[1]
 #if ___MAX_LOCAL_GVM_REGS > 1
-#define ___D_R1 register ___WORD ___r1;
+#define ___D_R1 ___REGISTER ___WORD ___r1;
 #define ___R_R1 ___r1=___PSR1;
 #define ___W_R1 ___PSR1=___r1;
 #define ___R1 ___r1
@@ -4392,7 +4400,7 @@ if ((na)>0) ___POP_R1_TO_R1
 
 #define ___PSR2 ___ps->r[2]
 #if ___MAX_LOCAL_GVM_REGS > 2
-#define ___D_R2 register ___WORD ___r2;
+#define ___D_R2 ___REGISTER ___WORD ___r2;
 #define ___R_R2 ___r2=___PSR2;
 #define ___W_R2 ___PSR2=___r2;
 #define ___R2 ___r2
@@ -4438,7 +4446,7 @@ switch (na) \
 
 #define ___PSR3 ___ps->r[3]
 #if ___MAX_LOCAL_GVM_REGS > 3
-#define ___D_R3 register ___WORD ___r3;
+#define ___D_R3 ___REGISTER ___WORD ___r3;
 #define ___R_R3 ___r3=___PSR3;
 #define ___W_R3 ___PSR3=___r3;
 #define ___R3 ___r3
@@ -4486,7 +4494,7 @@ switch (na) \
 
 #define ___PSR4 ___ps->r[4]
 #if ___MAX_LOCAL_GVM_REGS > 4
-#define ___D_R4 register ___WORD ___r4;
+#define ___D_R4 ___REGISTER ___WORD ___r4;
 #define ___R_R4 ___r4=___PSR4;
 #define ___W_R4 ___PSR4=___r4;
 #define ___R4 ___r4
@@ -4536,7 +4544,7 @@ switch (na) \
 
 #define ___PSR5 ___ps->r[5]
 #if ___MAX_LOCAL_GVM_REGS > 5
-#define ___D_R5 register ___WORD ___r5;
+#define ___D_R5 ___REGISTER ___WORD ___r5;
 #define ___R_R5 ___r5=___PSR5;
 #define ___W_R5 ___PSR5=___r5;
 #define ___R5 ___r5
@@ -4588,7 +4596,7 @@ switch (na) \
 
 #define ___PSR6 ___ps->r[6]
 #if ___MAX_LOCAL_GVM_REGS > 6
-#define ___D_R6 register ___WORD ___r6;
+#define ___D_R6 ___REGISTER ___WORD ___r6;
 #define ___R_R6 ___r6=___PSR6;
 #define ___W_R6 ___PSR6=___r6;
 #define ___R6 ___r6
@@ -4642,7 +4650,7 @@ switch (na) \
 
 #define ___PSR7 ___ps->r[7]
 #if ___MAX_LOCAL_GVM_REGS > 7
-#define ___D_R7 register ___WORD ___r7;
+#define ___D_R7 ___REGISTER ___WORD ___r7;
 #define ___R_R7 ___r7=___PSR7;
 #define ___W_R7 ___PSR7=___r7;
 #define ___R7 ___r7
@@ -4698,7 +4706,7 @@ switch (na) \
 
 #define ___PSR8 ___ps->r[8]
 #if ___MAX_LOCAL_GVM_REGS > 8
-#define ___D_R8 register ___WORD ___r8;
+#define ___D_R8 ___REGISTER ___WORD ___r8;
 #define ___R_R8 ___r8=___PSR8;
 #define ___W_R8 ___PSR8=___r8;
 #define ___R8 ___r8
@@ -4756,7 +4764,7 @@ switch (na) \
 
 #define ___PSR9 ___ps->r[9]
 #if ___MAX_LOCAL_GVM_REGS > 9
-#define ___D_R9 register ___WORD ___r9;
+#define ___D_R9 ___REGISTER ___WORD ___r9;
 #define ___R_R9 ___r9=___PSR9;
 #define ___W_R9 ___PSR9=___r9;
 #define ___R9 ___r9
@@ -4816,7 +4824,7 @@ switch (na) \
 
 #define ___PSR10 ___ps->r[10]
 #if ___MAX_LOCAL_GVM_REGS > 10
-#define ___D_R10 register ___WORD ___r10;
+#define ___D_R10 ___REGISTER ___WORD ___r10;
 #define ___R_R10 ___r10=___PSR10;
 #define ___W_R10 ___PSR10=___r10;
 #define ___R10 ___r10
@@ -4878,7 +4886,7 @@ switch (na) \
 
 #define ___PSR11 ___ps->r[11]
 #if ___MAX_LOCAL_GVM_REGS > 11
-#define ___D_R11 register ___WORD ___r11;
+#define ___D_R11 ___REGISTER ___WORD ___r11;
 #define ___R_R11 ___r11=___PSR11;
 #define ___W_R11 ___PSR11=___r11;
 #define ___R11 ___r11
@@ -4942,7 +4950,7 @@ switch (na) \
 
 #define ___PSR12 ___ps->r[12]
 #if ___MAX_LOCAL_GVM_REGS > 12
-#define ___D_R12 register ___WORD ___r12;
+#define ___D_R12 ___REGISTER ___WORD ___r12;
 #define ___R_R12 ___r12=___PSR12;
 #define ___W_R12 ___PSR12=___r12;
 #define ___R12 ___r12
@@ -5008,7 +5016,7 @@ switch (na) \
 
 #define ___PSR13 ___ps->r[13]
 #if ___MAX_LOCAL_GVM_REGS > 13
-#define ___D_R13 register ___WORD ___r13;
+#define ___D_R13 ___REGISTER ___WORD ___r13;
 #define ___R_R13 ___r13=___PSR13;
 #define ___W_R13 ___PSR13=___r13;
 #define ___R13 ___r13
@@ -5033,7 +5041,7 @@ switch (na) \
 
 #define ___PSR14 ___ps->r[14]
 #if ___MAX_LOCAL_GVM_REGS > 14
-#define ___D_R14 register ___WORD ___r14;
+#define ___D_R14 ___REGISTER ___WORD ___r14;
 #define ___R_R14 ___r14=___PSR14;
 #define ___W_R14 ___PSR14=___r14;
 #define ___R14 ___r14
@@ -5058,7 +5066,7 @@ switch (na) \
 
 #define ___PSR15 ___ps->r[15]
 #if ___MAX_LOCAL_GVM_REGS > 15
-#define ___D_R15 register ___WORD ___r15;
+#define ___D_R15 ___REGISTER ___WORD ___r15;
 #define ___R_R15 ___r15=___PSR15;
 #define ___W_R15 ___PSR15=___r15;
 #define ___R15 ___r15
@@ -5083,7 +5091,7 @@ switch (na) \
 
 #define ___PSR16 ___ps->r[16]
 #if ___MAX_LOCAL_GVM_REGS > 16
-#define ___D_R16 register ___WORD ___r16;
+#define ___D_R16 ___REGISTER ___WORD ___r16;
 #define ___R_R16 ___r16=___PSR16;
 #define ___W_R16 ___PSR16=___r16;
 #define ___R16 ___r16
@@ -5108,7 +5116,7 @@ switch (na) \
 
 #define ___PSR17 ___ps->r[17]
 #if ___MAX_LOCAL_GVM_REGS > 17
-#define ___D_R17 register ___WORD ___r17;
+#define ___D_R17 ___REGISTER ___WORD ___r17;
 #define ___R_R17 ___r17=___PSR17;
 #define ___W_R17 ___PSR17=___r17;
 #define ___R17 ___r17
@@ -5133,7 +5141,7 @@ switch (na) \
 
 #define ___PSR18 ___ps->r[18]
 #if ___MAX_LOCAL_GVM_REGS > 18
-#define ___D_R18 register ___WORD ___r18;
+#define ___D_R18 ___REGISTER ___WORD ___r18;
 #define ___R_R18 ___r18=___PSR18;
 #define ___W_R18 ___PSR18=___r18;
 #define ___R18 ___r18
@@ -5158,7 +5166,7 @@ switch (na) \
 
 #define ___PSR19 ___ps->r[19]
 #if ___MAX_LOCAL_GVM_REGS > 19
-#define ___D_R19 register ___WORD ___r19;
+#define ___D_R19 ___REGISTER ___WORD ___r19;
 #define ___R_R19 ___r19=___PSR19;
 #define ___W_R19 ___PSR19=___r19;
 #define ___R19 ___r19
@@ -5183,7 +5191,7 @@ switch (na) \
 
 #define ___PSR20 ___ps->r[20]
 #if ___MAX_LOCAL_GVM_REGS > 20
-#define ___D_R20 register ___WORD ___r20;
+#define ___D_R20 ___REGISTER ___WORD ___r20;
 #define ___R_R20 ___r20=___PSR20;
 #define ___W_R20 ___PSR20=___r20;
 #define ___R20 ___r20
@@ -5208,7 +5216,7 @@ switch (na) \
 
 #define ___PSR21 ___ps->r[21]
 #if ___MAX_LOCAL_GVM_REGS > 21
-#define ___D_R21 register ___WORD ___r21;
+#define ___D_R21 ___REGISTER ___WORD ___r21;
 #define ___R_R21 ___r21=___PSR21;
 #define ___W_R21 ___PSR21=___r21;
 #define ___R21 ___r21
@@ -5233,7 +5241,7 @@ switch (na) \
 
 #define ___PSR22 ___ps->r[22]
 #if ___MAX_LOCAL_GVM_REGS > 22
-#define ___D_R22 register ___WORD ___r22;
+#define ___D_R22 ___REGISTER ___WORD ___r22;
 #define ___R_R22 ___r22=___PSR22;
 #define ___W_R22 ___PSR22=___r22;
 #define ___R22 ___r22
@@ -5258,7 +5266,7 @@ switch (na) \
 
 #define ___PSR23 ___ps->r[23]
 #if ___MAX_LOCAL_GVM_REGS > 23
-#define ___D_R23 register ___WORD ___r23;
+#define ___D_R23 ___REGISTER ___WORD ___r23;
 #define ___R_R23 ___r23=___PSR23;
 #define ___W_R23 ___PSR23=___r23;
 #define ___R23 ___r23
@@ -5283,7 +5291,7 @@ switch (na) \
 
 #define ___PSR24 ___ps->r[24]
 #if ___MAX_LOCAL_GVM_REGS > 24
-#define ___D_R24 register ___WORD ___r24;
+#define ___D_R24 ___REGISTER ___WORD ___r24;
 #define ___R_R24 ___r24=___PSR24;
 #define ___W_R24 ___PSR24=___r24;
 #define ___R24 ___r24

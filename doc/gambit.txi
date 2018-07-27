@@ -3931,6 +3931,13 @@ Generate (or don't generate) interrupt checks.  Interrupt checks are
 used to detect user interrupts and also to check for stack overflows.
 Interrupt checking should not be turned off casually.
 
+@item (@r{[}not@r{]} poll-on-return)
+@opindex poll-on-return
+Generate (or don't generate) interrupt checks on procedure returns
+(when interrupt checking is enabled).  This declaration has no effect
+on the behavior of interrupt checking on procedure calls, which is
+needed to guarantee that stack overflows are handled properly.
+
 @item (@r{[}not@r{]} debug)
 @opindex debug
 @opindex -debug
@@ -4082,6 +4089,7 @@ The default declarations used by the compiler are equivalent to:
   (run-time-bindings)
   (safe)
   (interrupts-enabled)
+  (poll-on-return)
   (not debug)           ;; depends on debugging command line options
   (debug-location)      ;; depends on debugging command line options
   (debug-source)        ;; depends on debugging command line options

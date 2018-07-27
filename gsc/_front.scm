@@ -1129,7 +1129,7 @@
           (merge-contexts-and-seal-bb
            p-context
            ret-var-set
-           (intrs-enabled? (node-env val))
+           val
            'internal
            (node->comment val))
 
@@ -1829,7 +1829,7 @@
                      ret-var-set
                      (node->comment node))
            (let ((ret-opnd (var->opnd ret-var)))
-             (seal-bb (intrs-enabled? (node-env node)) 'return)
+             (seal-bb node 'return)
              (shrink-slots 0)
              (emit-instr!
               (make-jump ret-opnd
@@ -2318,7 +2318,7 @@
 (define (join-execution-paths-aux node live context1 bb1 context2 bb2)
   (restore-context context2)
   (set! *bb* bb2)
-  (seal-bb (intrs-enabled? (node-env node)) 'internal)
+  (seal-bb node 'internal)
   (let ((join-lbl (bbs-new-lbl! *bbs*)))
     (emit-instr!
      (make-jump (make-lbl join-lbl)
@@ -2334,7 +2334,7 @@
       (merge-contexts-and-seal-bb
        context2*
        live
-       (intrs-enabled? (node-env node))
+       node
        'internal
        (node->comment node))
       (emit-instr!
@@ -2676,7 +2676,7 @@
                                     live
                                     (node->comment node))
 
-                      (seal-bb (intrs-enabled? (node-env node)) 'internal)
+                      (seal-bb node 'internal)
 
                       (emit-instr!
                        (make-jump (make-lbl join-lbl)
@@ -2729,7 +2729,7 @@
 ;; context (i.e. reg and stack values and frame size) to 'other-context' only
 ;; considering the variables in 'live'.
 
-(define (merge-contexts-and-seal-bb other-context live poll? where comment)
+(define (merge-contexts-and-seal-bb other-context live node where comment)
 ;(display "*************")(newline);*************
 ;(display "1 regs  : ")(pp (map (lambda (x) (if (var? x) (var-name x) x)) regs))
 ;(display "1 slots : ")(pp (map (lambda (x) (if (var? x) (var-name x) x)) slots))
@@ -2816,7 +2816,7 @@
             (put-var (make-stk i) empty-var))
           (loop4 (+ i 1)))))
 
-    (seal-bb poll? where)
+    (seal-bb node where)
 
     (set! poll (poll-merge poll other-poll))
 
@@ -2827,7 +2827,7 @@
       (compiler-internal-error
         "merge-contexts-and-seal-bb, entry-bb's do not agree"))))
 
-(define (seal-bb poll? where)
+(define (seal-bb node where)
 
   (define (poll-at split-point)
     (let loop ((i 0)
@@ -2896,19 +2896,22 @@
           (poll-at (max (- poll-period delta) 0))
           (impose-polling-constraints)))))
 
-  (if poll? (impose-polling-constraints))
+  (if (intrs-enabled? (node-env node))
+      (impose-polling-constraints))
 
   (let* ((n (+ (length (bb-non-branch-instrs *bb*)) 1))
          (delta (+ (poll-delta poll) n))
          (since-entry? (poll-since-entry? poll)))
-    (if (and poll?
+    (if (and (intrs-enabled? (node-env node))
              (case where
                ((call)
                 (> delta (- poll-period poll-head)))
                ((tail-call)
                 (> delta poll-tail))
                ((return)
-                (and since-entry? (> delta (+ poll-head poll-tail))))
+                (and since-entry?
+                     (poll-on-return? (node-env node))
+                     (> delta (+ poll-head poll-tail))))
                ((internal)
                 #f)
                (else
@@ -3007,7 +3010,7 @@
                             result-var
                             live
                             (node->comment node))
-          (seal-bb (intrs-enabled? (node-env node)) 'internal)
+          (seal-bb node 'internal)
           (let* ((true-lbl
                   (bbs-new-lbl! *bbs*))
                  (false-lbl
@@ -3559,7 +3562,7 @@
                                                  empty-var)
                                         (loop4 (- i 1)))))))
 
-                              (seal-bb (intrs-enabled? (node-env node)) where)
+                              (seal-bb node where)
 
                               (if (and (not (intrs-enabled? (node-env node)))
                                        (not (reason-tail? reason2))
@@ -4196,7 +4199,7 @@
                        empty-var)
               (loop3 (- i 1))))))
 
-      (seal-bb (intrs-enabled? (node-env node)) 'call)
+      (seal-bb node 'call)
 
       (emit-instr!
        (make-jump (make-lbl task-lbl)
