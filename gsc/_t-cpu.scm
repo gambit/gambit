@@ -250,12 +250,13 @@
          (fixup-locs (codegen-context-fixup-locs->vector cgc))
          (fixup-objs (codegen-context-fixup-objs->vector cgc)))
 
+    ; (if (show-listing? _debug)
     (if show-listing?
         (asm-display-listing cgc (current-output-port) #t))
 
-    (display ";; code = ")       (write code)       (newline)
-    (display ";; fixup-locs = ") (write fixup-locs) (newline)
-    (display ";; fixup-objs = ") (write fixup-objs) (newline)
+    (debug ";; code = " code)
+    (debug ";; fixup-locs = " fixup-locs)
+    (debug ";; fixup-objs = " fixup-objs)
 
     ;; Call compiler to create objfile.o1 using the C backend.
     ;; When the file is loaded, it will execute the x86 code.
@@ -573,7 +574,7 @@
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
          (jmp-opnd (jump-opnd gvm-instr))
-         (jmp-loc (make-jump-opnd (jump-opnd gvm-instr)))
+         (jmp-loc (make-jump-opnd jmp-opnd))
          (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
 
     ;; Pop stack if necessary
