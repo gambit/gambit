@@ -32,155 +32,8 @@
 (define frame-offset 0) ;; stack offset so that frame[1] is at null offset from stack-pointer
 
 ;;------------------------------------------------------------------------------
-
-;; Primitives
-
-; (default-value 'none)
-; (default-value-null? #f)
-; (unroll-count 0)
-; (commutative #f)
-
-(define x86-prim-fx+
-  (foldl-prim x86-add
-    allowed-opnds: '(reg mem int)
-    allowed-opnds-accum: '(reg mem)
-    start-value: 0
-    start-value-null?: #t
-    reduce-1:
-      (lambda (cgc dst opnd)
-        (am-mov cgc dst opnd))
-    commutative: #t))
-
-(define x86-prim-fx-
-  (foldl-prim x86-sub
-    allowed-opnds: '(reg mem int)
-    allowed-opnds-accum: '(reg mem)
-    ; start-value: 0 ;; Start the fold on the first operand
-    reduce-1:
-      (lambda (cgc dst opnd)
-        (am-sub cgc dst (int-opnd cgc 0) opnd))
-    commutative: #f))
-
-(define x86-prim-fx<
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        (condition-lesser #t #t)
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-fx<=
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        (condition-lesser #f #t)
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-fx>
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        (condition-greater #t #t)
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-fx>=
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        (condition-greater #f #t)
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-fx=
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        condition-not-equal
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-##cons
-  (lambda (cgc result-action args)
-    (with-result-opnd cgc result-action args
-      allowed-opnds: '(reg)
-      fun:
-        (lambda (result-opnd result-opnd-in-args)
-          (let* ((word (get-word-width cgc))
-                 (size (* word 3))
-                 (tag 3)
-                 (offset (+ tag (* 2 word))))
-
-            (am-allocate-memory cgc result-opnd size offset
-              (codegen-context-frame cgc))
-
-            (am-mov cgc
-              (mem-opnd cgc (- offset) result-opnd)
-              (int-opnd cgc (* 8 3))
-              (get-word-width-bits cgc))
-
-            (am-mov cgc
-              (mem-opnd cgc (- word offset) result-opnd)
-              (cadr args)
-              (get-word-width-bits cgc))
-
-            (am-mov cgc
-              (mem-opnd cgc (- (* 2 word) offset) result-opnd)
-              (car args)
-              (get-word-width-bits cgc)))))))
-
-(define x86-prim-##null?
-  (lambda (cgc result-action args)
-    (check-nargs-if-necessary cgc result-action 1)
-    (call-with-nargs args
-      (lambda (arg1)
-        (am-if-eq cgc arg1 (make-obj-opnd cgc '())
-          (lambda (cgc) (am-return-const cgc result-action #t))
-          (lambda (cgc) (am-return-const cgc result-action #f))
-          #f
-          (get-word-width-bits cgc))))))
-
-(define primitive-object-table
-  (let ((table (make-table test: equal?)))
-    (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
-    (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
-
-    (table-set! table '##fx+      (make-prim-obj x86-prim-fx+  2 #t #f))
-    (table-set! table '##fx-      (make-prim-obj x86-prim-fx-  2 #t #f))
-    (table-set! table '##fx<      (make-prim-obj x86-prim-fx<  2 #t #t))
-    (table-set! table '##fx<=     (make-prim-obj x86-prim-fx<= 2 #t #t))
-    (table-set! table '##fx>      (make-prim-obj x86-prim-fx>  2 #t #t))
-    (table-set! table '##fx>=     (make-prim-obj x86-prim-fx>= 2 #t #t))
-    (table-set! table '##fx=      (make-prim-obj x86-prim-fx=  2 #t #t))
-
-    (table-set! table '##car      (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
-    (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
-    (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
-    (table-set! table '##set-cdr! (make-prim-obj (object-set-prim pair-obj-desc 0) 2 #t #f))
-    (table-set! table '##cons     (make-prim-obj x86-prim-##cons 2 #t #f))
-    (table-set! table '##null?    (make-prim-obj x86-prim-##null? 2 #t #f))
-
-    table))
-
+;;---------------------------  x86 64 bits backend  ----------------------------
 ;;------------------------------------------------------------------------------
-
-;;                             x86 64 bits backend
 
 (define (x64-target)
   (make-backend-target
@@ -200,7 +53,7 @@
 
 ;;------------------------------------------------------------------------------
 
-;; Backend info
+;; x86 backend info
 
 (define (info)
   (make-backend-info
@@ -216,7 +69,7 @@
 
 ;;------------------------------------------------------------------------------
 
-;; Backend operands
+;; x86 Abstract machine operands
 
 (define (operands)
   (make-operand-dictionnary
@@ -234,6 +87,8 @@
     x86-mem-reg1))              ;; mem-opnd-reg
 
 ;;------------------------------------------------------------------------------
+
+;; x86 Abstract machine instructions
 
 (define (instructions)
   (make-instruction-dictionnary
@@ -732,7 +587,6 @@
 ;       (x86-popf cgc)))
 ;   (am-lbl cgc continue-label))
 
-;; Todo: Call gc maybe
 (define (x64-allocate-memory cgc dest-reg bytes offset frame)
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
           (temp1 (get-processor-state-field cgc 'temp1))
@@ -759,3 +613,150 @@
   (let* ((handler-loc (car (get-processor-state-field cgc sym))))
     (debug "handler-loc: " handler-loc)
     (jump-with-return-point cgc handler-loc return-loc frame #t)))
+
+;;------------------------------------------------------------------------------
+
+;; Primitives
+
+; (default-value 'none)
+; (default-value-null? #f)
+; (unroll-count 0)
+; (commutative #f)
+
+(define x86-prim-fx+
+  (foldl-prim x86-add
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 0
+    start-value-null?: #t
+    reduce-1:
+      (lambda (cgc dst opnd)
+        (am-mov cgc dst opnd))
+    commutative: #t))
+
+(define x86-prim-fx-
+  (foldl-prim x86-sub
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    ; start-value: 0 ;; Start the fold on the first operand
+    reduce-1:
+      (lambda (cgc dst opnd)
+        (am-sub cgc dst (int-opnd cgc 0) opnd))
+    commutative: #f))
+
+(define x86-prim-fx<
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-lesser #t #t)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx<=
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-lesser #f #t)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx>
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-greater #t #t)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx>=
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        (condition-greater #f #t)
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-fx=
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        condition-not-equal
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg mem)
+    allowed-opnds2: '(reg int)))
+
+(define x86-prim-##cons
+  (lambda (cgc result-action args)
+    (with-result-opnd cgc result-action args
+      allowed-opnds: '(reg)
+      fun:
+        (lambda (result-opnd result-opnd-in-args)
+          (let* ((word (get-word-width cgc))
+                 (size (* word 3))
+                 (tag 3)
+                 (offset (+ tag (* 2 word))))
+
+            (am-allocate-memory cgc result-opnd size offset
+              (codegen-context-frame cgc))
+
+            (am-mov cgc
+              (mem-opnd cgc (- offset) result-opnd)
+              (int-opnd cgc (* 8 3))
+              (get-word-width-bits cgc))
+
+            (am-mov cgc
+              (mem-opnd cgc (- word offset) result-opnd)
+              (cadr args)
+              (get-word-width-bits cgc))
+
+            (am-mov cgc
+              (mem-opnd cgc (- (* 2 word) offset) result-opnd)
+              (car args)
+              (get-word-width-bits cgc)))))))
+
+(define x86-prim-##null?
+  (lambda (cgc result-action args)
+    (check-nargs-if-necessary cgc result-action 1)
+    (call-with-nargs args
+      (lambda (arg1)
+        (am-if-eq cgc arg1 (make-obj-opnd cgc '())
+          (lambda (cgc) (am-return-const cgc result-action #t))
+          (lambda (cgc) (am-return-const cgc result-action #f))
+          #f
+          (get-word-width-bits cgc))))))
+
+(define primitive-object-table
+  (let ((table (make-table test: equal?)))
+    (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
+    (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
+
+    (table-set! table '##fx+      (make-prim-obj x86-prim-fx+  2 #t #f))
+    (table-set! table '##fx-      (make-prim-obj x86-prim-fx-  2 #t #f))
+    (table-set! table '##fx<      (make-prim-obj x86-prim-fx<  2 #t #t))
+    (table-set! table '##fx<=     (make-prim-obj x86-prim-fx<= 2 #t #t))
+    (table-set! table '##fx>      (make-prim-obj x86-prim-fx>  2 #t #t))
+    (table-set! table '##fx>=     (make-prim-obj x86-prim-fx>= 2 #t #t))
+    (table-set! table '##fx=      (make-prim-obj x86-prim-fx=  2 #t #t))
+
+    (table-set! table '##car      (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
+    (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
+    (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
+    (table-set! table '##set-cdr! (make-prim-obj (object-set-prim pair-obj-desc 0) 2 #t #f))
+    (table-set! table '##cons     (make-prim-obj x86-prim-##cons 2 #t #f))
+    (table-set! table '##null?    (make-prim-obj x86-prim-##null? 2 #t #f))
+
+    table))
