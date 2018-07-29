@@ -81,24 +81,27 @@
 ;;
 ;;  To add new backend, see x64 backend as example.
 
-
 ;; Backend object: Has all the information to encode the GVM instructions.
-(define (make-backend info operands instructions routines)
+(define (make-backend make-cgc-fun info operands instructions routines)
   (vector
+    make-cgc-fun
     info
     operands
     instructions
     routines))
 
-(define info-index 0)
-(define operands-index 1)
-(define instructions-index 2)
-(define routines-index 3)
+(define info-index 1)
+(define operands-index 2)
+(define instructions-index 3)
+(define routines-index 4)
 
 ;;  Fields:
 ;;    word-width : Machine word length in bytes
 ;;    endianness : 'le or 'be
 ;;    load-store : See note 3
+;;    self-register: r4 gvm register
+;;    frame-pointer-reg: Register pointing to current frame
+;;    frame-offset: Offset to frame
 ;;
 ;;    primitive-table : Table between symbol and primitive object
 ;;      For symbols: see _prims.scm
@@ -111,45 +114,27 @@
 ;;    extra-registers : (Vector) Extra registers that can be overwritten at any time.
 ;;      Note: #extra-registers must >= 3.
 (define (make-backend-info
-          word-width
-          endianness
-          load-store
-          self-register
-          frame-pointer-reg
-          frame-offset
+          word-width endianness load-store
+          self-register frame-pointer-reg frame-offset
           primitive-table
-          main-registers
-          extra-registers
-          make-cgc-fun)
+          main-registers extra-registers)
   (vector
-    word-width
-    endianness
-    load-store
-    self-register
-    frame-pointer-reg
-    frame-offset
+    word-width endianness load-store
+    self-register frame-pointer-reg frame-offset
     primitive-table
-    main-registers
-    extra-registers
-    make-cgc-fun))
+    main-registers extra-registers))
 
 ;; Vector of functions on operands
 (define (make-operand-dictionnary
-          int-opnd int-opnd?
-          lbl-opnd lbl-opnd?
-          mem-opnd mem-opnd?
           reg-opnd?
-          int-opnd-value
-          lbl-opnd-offset lbl-opnd-label
-          mem-opnd-offset mem-opnd-reg)
+          int-opnd int-opnd? int-opnd-value
+          lbl-opnd lbl-opnd? lbl-opnd-offset lbl-opnd-label
+          mem-opnd mem-opnd? mem-opnd-offset mem-opnd-reg)
   (vector
-    int-opnd int-opnd?
-    lbl-opnd lbl-opnd?
-    mem-opnd mem-opnd?
     reg-opnd?
-    int-opnd-value
-    lbl-opnd-offset lbl-opnd-label
-    mem-opnd-offset mem-opnd-reg))
+    int-opnd int-opnd? int-opnd-value
+    lbl-opnd lbl-opnd? lbl-opnd-offset lbl-opnd-label
+    mem-opnd mem-opnd? mem-opnd-offset mem-opnd-reg))
 
 (define (make-instruction-dictionnary
           am-lbl am-data
@@ -195,6 +180,12 @@
 
 ;; ***** AM: Info fields
 
+;; NOTICE THAT IT TAKES A TARGET INSTEAD OF CGC
+(define (get-make-cgc-fun target)
+  (let* ((info (target-extra target 0))
+         (field (vector-ref info 0)))
+    field))
+
 (define (get-word-width cgc)        (get-in-cgc cgc info-index 0))
 (define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
 (define (get-endianness cgc)        (get-in-cgc cgc info-index 1))
@@ -206,12 +197,6 @@
 (define (get-main-registers  cgc)   (get-in-cgc cgc info-index 7))
 (define (get-extra-registers cgc)   (get-in-cgc cgc info-index 8))
 
-;; NOTICE THAT IT TAKES A TARGET INSTEAD OF CGC
-(define (get-make-cgc-fun target)
-  (let* ((info (target-extra target 0))
-         (field (vector-ref (vector-ref info info-index) 9)))
-    field))
-
 (define (get-primitive-object cgc name)
   (let* ((table (get-primitive-table cgc)))
     (table-ref table (string->symbol name) #f)))
@@ -221,21 +206,18 @@
 (define (apply-opnd cgc index args)
   (exec-in-cgc cgc operands-index index args))
 
-(define (int-opnd  cgc . args)       (apply-opnd cgc 0  args))
-(define (int-opnd? cgc . args)       (apply-opnd cgc 1  args))
-(define (lbl-opnd  cgc . args)       (apply-opnd cgc 2  args))
-(define (lbl-opnd? cgc . args)       (apply-opnd cgc 3  args))
-(define (mem-opnd  cgc . args)       (apply-opnd cgc 4  args))
-(define (mem-opnd? cgc . args)       (apply-opnd cgc 5  args))
-(define (reg-opnd? cgc . args)       (apply-opnd cgc 6  args))
-(define (int-opnd-value  cgc . args) (apply-opnd cgc 7  args))
-(define (lbl-opnd-offset cgc . args) (apply-opnd cgc 8  args))
-(define (lbl-opnd-label  cgc . args) (apply-opnd cgc 9  args))
+(define (reg-opnd? cgc . args)       (apply-opnd cgc 0  args))
+(define (int-opnd  cgc . args)       (apply-opnd cgc 1  args))
+(define (int-opnd? cgc . args)       (apply-opnd cgc 2  args))
+(define (int-opnd-value  cgc . args) (apply-opnd cgc 3  args))
+(define (lbl-opnd  cgc . args)       (apply-opnd cgc 4  args))
+(define (lbl-opnd? cgc . args)       (apply-opnd cgc 5  args))
+(define (lbl-opnd-offset cgc . args) (apply-opnd cgc 6  args))
+(define (lbl-opnd-label  cgc . args) (apply-opnd cgc 7  args))
+(define (mem-opnd  cgc . args)       (apply-opnd cgc 8  args))
+(define (mem-opnd? cgc . args)       (apply-opnd cgc 9  args))
 (define (mem-opnd-offset cgc . args) (apply-opnd cgc 10 args))
 (define (mem-opnd-reg    cgc . args) (apply-opnd cgc 11 args))
-
-(define (lbl-opnd-set-offset cgc lbl offset)
-  (lbl-opnd cgc (lbl-opnd-label cgc lbl) offset))
 
 ;; ***** AM: Instructions fields
 
