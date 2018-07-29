@@ -327,8 +327,6 @@
   (debug "Encode procs")
   (map encode-proc procs2)
 
-  (am-end cgc)
-  (am-error cgc)
   (am-place-extra-data cgc)
 
   (debug "Adding primitives")
