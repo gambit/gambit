@@ -367,6 +367,93 @@
     ((lesser)
       (condition-greater (not (cond-is-equal cond)) (cond-is-signed cond)))))
 
+;; ***** C to lowlevel bridge
+
+;; Processor state table
+
+;; The ps register points at the start of processor state structure.
+;;
+;;  Start: Low level exec processor state structure
+;;  End: Low level exec processor state structure
+;;  Start: Regular processor state structure <-- ps register
+;;  End: Regular processor state structure
+
+;; Todo: Support gvm-reg other than 0|1|2|3|4
+(define (get-processor-state-field cgc sym)
+  (define lowlevelexec (get-opt-val 'use-c-backend))
+
+  (define word-width (get-word-width cgc))
+
+  (define (fields-lowlevelexec) `(
+    (return-stack-pointer    ,word-width)
+    (return-handler          ,word-width)
+    ))
+
+  (define (fields-regular) `(
+    (stack-trip              ,word-width)
+    (stack-limit             ,word-width)
+    (frame-pointer           ,word-width)
+    (stack-start             ,word-width)
+    (stack-break             ,word-width)
+    (heap-limit              ,word-width)
+    (heap-pointer            ,word-width)
+    (gvm-reg0                ,word-width)
+    (gvm-reg1                ,word-width)
+    (gvm-reg2                ,word-width)
+    (gvm-reg3                ,word-width)
+    (gvm-reg4                ,word-width)
+    (program-counter         ,word-width)
+    (nargs                   ,word-width)
+    (handler_sfun_conv_error ,word-width)
+    (handler_cfun_conv_error ,word-width)
+    (handler_stack_limit     ,word-width)
+    (handler_heap_limit      ,word-width)
+    (handler_not_proc        ,word-width)
+    (handler_not_proc_glo    ,word-width)
+    (handler_wrong_nargs     ,word-width)
+    (handler_get_rest        ,word-width)
+    (handler_get_key         ,word-width)
+    (handler_get_key_rest    ,word-width)
+    (handler_force           ,word-width)
+    (handler_return_to_c     ,word-width)
+    (handler_break           ,word-width)
+    (internal_return         ,word-width)
+    (dynamic_env_bind_return ,word-width)
+    (temp1                   ,word-width)
+    (temp2                   ,word-width)
+    (temp3                   ,word-width)
+    (temp4                   ,word-width)
+    ))
+
+  ;; Returns a pair of the offset from start of lst and the width of the field
+  (define (find-field lst accum)
+    (if (null? lst)
+      -1 ;; Error value
+      (let* ((field (car lst))
+             (field-sym (car field))
+             (width (cadr field)))
+        (if (equal? sym field-sym)
+          (cons accum (* 8 width))
+          (find-field (cdr lst) (+ width accum))))))
+
+  (let* ((fields
+          (if lowlevelexec
+            (append (fields-lowlevelexec) (fields-regular))
+            (fields-regular)))
+         (offset
+          (if lowlevelexec
+            (- (apply + (map cadr (fields-lowlevelexec))))
+            0))
+         (field (find-field fields 0)))
+
+  (if (eq? -1 field)
+    (compiler-internal-error "Unknown processor state field: " sym))
+
+    ;; Cons of mem-opnd and width
+    (cons
+      (mem-opnd cgc (+ offset (car field)) processor-state-pointer)
+      (cdr field))))
+
 ;; ***** Utils
 
 ;; ***** Utils - Register allocation
