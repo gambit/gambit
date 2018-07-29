@@ -388,9 +388,6 @@
     x64-check-nargs
     x64-check-nargs-simple
     x64-allocate-memory
-    x64-init-routine
-    x64-end-routine
-    x64-error-routine
     x64-place-extra-data))
 
 (define (x64-poll cgc frame)
@@ -752,29 +749,6 @@
       ;; Jump to handler
       (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
       (call-handler cgc 'handler_heap_limit frame return-loc)))
-
-;; Start routine
-;; Gets executed before main
-(define (x64-init-routine cgc)
-  (debug "put-init-routine"))
-
-;; End routine
-;; Gets executed after main if no error happened during execution
-(define (x64-end-routine cgc)
-  (debug "put-end-routine")
-  (asm-listing cgc "END ROUTINE")
-
-  (x86-int3 cgc)
-  (x86-ret cgc))
-
-;; Error routine
-;; Gets executed if an error occurs
-(define (x64-error-routine cgc)
-  (debug "put-error-routine")
-  (asm-listing cgc "ERROR ROUTINE")
-
-  (x86-int3 cgc)
-  (x86-ret cgc))
 
 (define (x64-place-extra-data cgc)
   (debug "place-extra-data"))
