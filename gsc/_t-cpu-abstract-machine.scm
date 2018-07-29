@@ -166,6 +166,11 @@
           place-extra-data)
   (vector poll set-narg check-narg check-narg-simple allocate-memory place-extra-data))
 
+(define (get-in-target target i1 i2)
+  (let* ((info (target-extra target 0))
+         (field (vector-ref (vector-ref info i1) i2)))
+    field))
+
 (define (get-in-cgc cgc i1 i2)
   (let* ((target (codegen-context-target cgc))
          (info (target-extra target 0))
@@ -191,6 +196,7 @@
 (define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 4))
 (define (get-frame-offset cgc)      (get-in-cgc cgc info-index 5))
 (define (get-primitive-table cgc)   (get-in-cgc cgc info-index 6))
+(define (get-primitive-table-target targ) (get-in-target targ info-index 6))
 (define (get-main-registers  cgc)   (get-in-cgc cgc info-index 7))
 (define (get-extra-registers cgc)   (get-in-cgc cgc info-index 8))
 
