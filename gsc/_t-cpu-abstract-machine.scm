@@ -11,13 +11,13 @@
 (include-adt "_codegen#.scm")
 
 ;;------------------------------------------------------------------------------
+;;-----------------------  Abstract Machine definition  ------------------------
+;;------------------------------------------------------------------------------
 
-;; ***** Abstract machine (AM)
 ;;  We define an abstract instruction set which we program against for most of
 ;;  the backend. Most of the code is moving data between registers and the stack
 ;;  and jumping to locations, so it reduces the repetion between native backends
 ;;  (x86, x64, ARM, Risc V, etc.).
-;;
 ;;
 ;;  Notes:
 ;;    1 - Some instructions have a default implementation when possible.
@@ -245,6 +245,9 @@
 (define (am-compare-jump cgc . args)     (apply-instruction cgc 15 args))
 (define (am-compare-move cgc . args)     (apply-instruction cgc 16 args))
 
+(define (am-data-word cgc word)
+  (am-data cgc (get-word-width-bits cgc) word))
+
 ;; ***** AM: Routines fields
 
 (define (apply-routine cgc index args)
@@ -257,7 +260,9 @@
 (define (am-allocate-memory cgc . args)    (apply-routine cgc 4 args))
 (define (am-place-extra-data cgc . args)   (apply-routine cgc 5 args))
 
-;; ***** AM: State fields
+;;------------------------------------------------------------------------------
+;;-----------------------------  Label functions  ------------------------------
+;;------------------------------------------------------------------------------
 
 (define (table-get-or-set table key def-val)
   (let ((x (table-ref table key #f)))
@@ -332,182 +337,9 @@
   (set! unique-id (+ unique-id 1))
   unique-id)
 
-;; ***** AM: Conditions
-
-(define condition-equal (list 'equal))
-(define condition-not-equal (list 'not-equal))
-
-(define (condition-greater and-equal? signed) (list 'greater and-equal? signed))
-(define (condition-lesser and-equal? signed) (list 'lesser and-equal? signed))
-
-(define (get-condition cond) (car cond))
-
-(define (cond-is-equal cond)
-  (case (car cond)
-    ((equal) #t)
-    ((not-equal) #f)
-    ((greater) (cadr cond))
-    ((lesser) (cadr cond))))
-
-(define (cond-is-signed cond)
-  (case (car cond)
-    ((equal) #t)
-    ((not-equal) #t)
-    ((greater) (caddr cond))
-    ((lesser) (caddr cond))))
-
-(define (inverse-condition cond)
-  (case (car cond)
-    ((equal)
-      condition-not-equal)
-    ((not-equal)
-      condition-equal)
-    ((greater)
-      (condition-lesser (not (cond-is-equal cond)) (cond-is-signed cond)))
-    ((lesser)
-      (condition-greater (not (cond-is-equal cond)) (cond-is-signed cond)))))
-
-;; ***** C to lowlevel bridge
-
-;; Processor state table
-
-;; The ps register points at the start of processor state structure.
-;;
-;;  Start: Low level exec processor state structure
-;;  End: Low level exec processor state structure
-;;  Start: Regular processor state structure <-- ps register
-;;  End: Regular processor state structure
-
-;; Todo: Support gvm-reg other than 0|1|2|3|4
-(define (get-processor-state-field cgc sym)
-  (define word-width (get-word-width cgc))
-
-  (define (fields-lowlevelexec) `(
-    (return-stack-pointer    ,word-width)
-    (return-handler          ,word-width)
-    ))
-
-  (define (fields-regular) `(
-    (stack-trip              ,word-width)
-    (stack-limit             ,word-width)
-    (frame-pointer           ,word-width)
-    (stack-start             ,word-width)
-    (stack-break             ,word-width)
-    (heap-limit              ,word-width)
-    (heap-pointer            ,word-width)
-    (gvm-reg0                ,word-width)
-    (gvm-reg1                ,word-width)
-    (gvm-reg2                ,word-width)
-    (gvm-reg3                ,word-width)
-    (gvm-reg4                ,word-width)
-    (program-counter         ,word-width)
-    (nargs                   ,word-width)
-    (handler_sfun_conv_error ,word-width)
-    (handler_cfun_conv_error ,word-width)
-    (handler_stack_limit     ,word-width)
-    (handler_heap_limit      ,word-width)
-    (handler_not_proc        ,word-width)
-    (handler_not_proc_glo    ,word-width)
-    (handler_wrong_nargs     ,word-width)
-    (handler_get_rest        ,word-width)
-    (handler_get_key         ,word-width)
-    (handler_get_key_rest    ,word-width)
-    (handler_force           ,word-width)
-    (handler_return_to_c     ,word-width)
-    (handler_break           ,word-width)
-    (internal_return         ,word-width)
-    (dynamic_env_bind_return ,word-width)
-    (temp1                   ,word-width)
-    (temp2                   ,word-width)
-    (temp3                   ,word-width)
-    (temp4                   ,word-width)
-    ))
-
-  ;; Returns a pair of the offset from start of lst and the width of the field
-  (define (find-field lst accum)
-    (if (null? lst)
-      -1 ;; Error value
-      (let* ((field (car lst))
-             (field-sym (car field))
-             (width (cadr field)))
-        (if (equal? sym field-sym)
-          (cons accum (* 8 width))
-          (find-field (cdr lst) (+ width accum))))))
-
-  (let* ((fields
-          (if USE_BRIDGE
-            (append (fields-lowlevelexec) (fields-regular))
-            (fields-regular)))
-         (offset
-          (if USE_BRIDGE
-            (- (apply + (map cadr (fields-lowlevelexec))))
-            0))
-         (field (find-field fields 0)))
-
-  (if (eq? -1 field)
-    (compiler-internal-error "Unknown processor state field: " sym))
-
-    ;; Cons of mem-opnd and width
-    (cons
-      (mem-opnd cgc (+ offset (car field)) processor-state-pointer)
-      (cdr field))))
-
-;; ***** Utils
-
-;; ***** Utils - Register allocation
-
-(define (choose-register cgc use registers allocation)
-  (define (use-register index save?)
-    (let ((register (vector-ref registers index))
-          (ref-count (vector-ref allocation index)))
-      (if save?
-        (am-push cgc register))
-
-      (vector-set! allocation index (+ ref-count 1))
-      (use register)
-      ;; Important: Don't use ref-count because (use-register) may have used the register
-      (vector-set! allocation index (- (vector-ref allocation index) 1))
-
-      (if save?
-        (am-pop cgc register))))
-
-  (debug "Choose-register")
-
-  (let loop ((n 0))
-    (if (< n (vector-length registers))
-      (if (= 0 (vector-ref allocation n))
-        (use-register n #f)
-        (loop (+ n 1)))
-
-      ;; Todo: Remove randomness
-      (use-register (random-integer (vector-length registers)) #t))))
-
-(define (get-register cgc n)
-  (vector-ref (get-main-registers cgc) n))
-
-(define (get-extra-register cgc use)
-  (get-multiple-extra-register cgc 1 use))
-
-(define (get-multiple-extra-register cgc number use)
-  (define registers '())
-  (define (accumulate-extra-register count)
-    (choose-register cgc
-      (lambda (reg)
-        (if (>= count 1)
-          (begin
-            (set! registers (cons reg registers))
-            (accumulate-extra-register (- count 1)))
-          (begin
-            (apply use registers))))
-      (get-extra-registers cgc)
-      (codegen-context-extra-registers-allocation cgc)))
-
-  (if (< (vector-length (get-extra-registers cgc)) number)
-    (compiler-internal-error "get-extra-register: Not enough extra registers"))
-
-  (accumulate-extra-register number))
-
-;; ***** Utils - Operands
+;;------------------------------------------------------------------------------
+;;------------------------- Abstract machine operands --------------------------
+;;------------------------------------------------------------------------------
 
 (define (make-obj-opnd cgc val)
   (cond
@@ -607,7 +439,103 @@
     (else
       (compiler-internal-error "get-opnd-with-offset - unknown opnd: " opnd))))
 
-;; ***** Utils - Abstract machine shorthand
+;;------------------------------------------------------------------------------
+;;--------------------------------- Conditions ---------------------------------
+;;------------------------------------------------------------------------------
+
+(define condition-equal (list 'equal))
+(define condition-not-equal (list 'not-equal))
+
+(define (condition-greater and-equal? signed) (list 'greater and-equal? signed))
+(define (condition-lesser and-equal? signed) (list 'lesser and-equal? signed))
+
+(define (get-condition cond) (car cond))
+
+(define (cond-is-equal cond)
+  (case (car cond)
+    ((equal) #t)
+    ((not-equal) #f)
+    ((greater) (cadr cond))
+    ((lesser) (cadr cond))))
+
+(define (cond-is-signed cond)
+  (case (car cond)
+    ((equal) #t)
+    ((not-equal) #t)
+    ((greater) (caddr cond))
+    ((lesser) (caddr cond))))
+
+(define (inverse-condition cond)
+  (case (car cond)
+    ((equal)
+      condition-not-equal)
+    ((not-equal)
+      condition-equal)
+    ((greater)
+      (condition-lesser (not (cond-is-equal cond)) (cond-is-signed cond)))
+    ((lesser)
+      (condition-greater (not (cond-is-equal cond)) (cond-is-signed cond)))))
+
+;;------------------------------------------------------------------------------
+;;---------------------------- Register Allocation -----------------------------
+;;------------------------------------------------------------------------------
+
+(define (get-register cgc n)
+  (vector-ref (get-main-registers cgc) n))
+
+(define (get-extra-register cgc use)
+  (get-multiple-extra-register cgc 1 use))
+
+(define (get-multiple-extra-register cgc number use)
+  (define registers '())
+  (define (accumulate-extra-register count)
+    (choose-register cgc
+      (lambda (reg)
+        (if (>= count 1)
+          (begin
+            (set! registers (cons reg registers))
+            (accumulate-extra-register (- count 1)))
+          (begin
+            (apply use registers))))
+      (get-extra-registers cgc)
+      (codegen-context-extra-registers-allocation cgc)))
+
+  (if (< (vector-length (get-extra-registers cgc)) number)
+    (compiler-internal-error "get-extra-register: Not enough extra registers"))
+
+  (accumulate-extra-register number))
+
+(define (choose-register cgc use registers allocation)
+  (define (use-register index save?)
+    (let ((register (vector-ref registers index))
+          (ref-count (vector-ref allocation index)))
+      (if save?
+        (am-push cgc register))
+
+      (vector-set! allocation index (+ ref-count 1))
+      (use register)
+      ;; Important: Don't use ref-count because (use-register) may have used the register
+      (vector-set! allocation index (- (vector-ref allocation index) 1))
+
+      (if save?
+        (am-pop cgc register))))
+
+  (debug "Choose-register")
+
+  (let loop ((n 0))
+    (if (< n (vector-length registers))
+      (if (= 0 (vector-ref allocation n))
+        (use-register n #f)
+        (loop (+ n 1)))
+
+      ;; Todo: Remove randomness
+      (use-register (random-integer (vector-length registers)) #t))))
+
+;;------------------------------------------------------------------------------
+;;----------------------------------- Utils ------------------------------------
+;;------------------------------------------------------------------------------
+
+;;  Utils: Jumps and calls with return
 
 ;; Must set arguments before calling this function
 (define (jump-with-return-point cgc location return-lbl frame internal?)
@@ -646,6 +574,8 @@
 
         (set-proc-label-index cgc proc label struct-position)
         (put-return-point-label cgc label 0 0 0))))) ;; Return point)))
+
+;;  Utils: Function call arguments
 
 (define (am-put-args cgc start-fs args)
   (define (get-frames count)
@@ -689,9 +619,6 @@
     (lambda (n) (get-nth-arg cgc start-fs total n))
     (iota 1 total)))
 
-(define (am-data-word cgc word)
-  (am-data cgc (get-word-width-bits cgc) word))
-
 ;; ***** Utils - Abstract machine definition helper
 
 ;; Get appropriate am-db, am-dw, am-dd, am-dq
@@ -708,506 +635,547 @@
         (for-each (lambda (datum) (fun cgc datum)) data)
         (fun cgc data)))))
 
-;; ***** Utils - Other
+;;------------------------------------------------------------------------------
+;;----------------------------- GVM proc encoding ------------------------------
+;;------------------------------------------------------------------------------
 
-(define (reserve-space cgc bytes #!optional (value 0))
-  (if (> bytes 0)
-    (begin
-      (am-data cgc 8 value)
-      (reserve-space cgc (- bytes 1) value))))
+(define (encode-procs cgc procs)
+  (define procs2 (reachable-procs procs))
 
-;; ***** Default Routines
+  (define (get-main-label)
+    (let* ((main-proc (car procs2))
+           (bb1 (car (get-code-list main-proc)))
+           (instr (code-gvm-instr bb1)))
+      (get-proc-label cgc main-proc (label-lbl-num instr))))
 
-;; ...
+  (define (encode-proc proc)
+    (debug "Encoding proc")
+    (codegen-context-current-proc-set! cgc proc)
+    (codegen-context-label-struct-position-set! cgc 1)
+    (map
+      (lambda (code)
+        (codegen-context-current-code-set! cgc code)
+        (codegen-context-frame-set! cgc (gvm-instr-frame (code-gvm-instr code)))
+        (encode-gvm-instr cgc code))
+      (get-code-list proc)))
 
-;; ***** Primitives
+  (debug "Encode procs")
+  (map encode-proc procs2)
 
-;;  A primitive is a function taking:
-;;  CGC
-;;  ResultAction
-;;  Arguments
-;;    ResultAction = Copy location-opnd
-;;                 | Branch true-jump-location false-jump-location
-;;                 | Return fun-label fun-name
-;;
-;;  It also has some other values: arity, inlinable and testable.
+  (am-place-extra-data cgc)
 
-(define (make-prim-obj fun arity inlinable testable)
-  (vector 'prim fun arity inlinable testable))
-(define (get-primitive-function prim-object)  (vector-ref prim-object 1))
-(define (get-primitive-arity prim-object)     (vector-ref prim-object 2))
-(define (get-primitive-inlinable prim-object) (vector-ref prim-object 3))
-(define (get-primitive-testable prim-object)  (vector-ref prim-object 4))
+  (debug "Adding primitives")
+  (table-for-each
+    (lambda (key val) (put-primitive-if-needed cgc key val))
+    (codegen-context-primitive-labels-table cgc))
 
-(define (then-jump true-location false-location)
-  (list 'jump true-location false-location))
-(define (then-jump? then) (eqv? 'jump (car then)))
-(define (then-jump-true-location then) (cadr then))
-(define (then-jump-false-location then) (caddr then))
+  (debug "Finished!")
 
-(define (then-move  store-location) (cons 'mov store-location))
-(define (then-move? then) (eqv? 'mov (car then)))
-(define (then-move-store-location then) (cdr then))
+  ;; specify value returned by create-procedure (i.e. procedure reference)
+  (let ((main-lbl (get-main-label)))
+    (codegen-fixup-lbl! cgc main-lbl 0 #f 64)))
 
-(define (then-return fun-label fun-name) (list 'return fun-label fun-name))
-(define (then-return? then) (eqv? 'return (car then)))
-(define (then-return-label then) (cadr then))
-(define (then-return-prim-name then) (caddr then))
+;; Value is Pair (Label, optional Proc-obj)
+(define (put-primitive-if-needed cgc key pair)
+  (let* ((label (car pair))
+         (proc (cdr pair))
+         (proc-name (proc-obj-name proc))
+         (prim-obj (get-primitive-object cgc (proc-obj-name proc)))
+         (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
 
-(define then-nothing 'nop)
-(define (then-nothing? then) (equal? 'nop then))
-
-;; ***** Primitives - High level instructions
-
-(define (am-if cgc opnd1 opnd2 condition on-true on-false #!optional (actions-return #f) (opnds-width #f))
-  (let ((true-label (make-unique-label cgc "if-true" #f))
-        (false-label (make-unique-label cgc "if-false" #f))
-        (continue-label (make-unique-label cgc "continue-label" #f)))
-    (cond
-      ((and on-true on-false)
-        (am-compare-jump cgc condition opnd1 opnd2 #f false-label opnds-width)
-        (on-true cgc)
-        (if (not actions-return)
-          (am-jmp cgc continue-label))
-        (am-lbl cgc false-label)
-        (on-false cgc)
-        (am-lbl cgc continue-label))
-      (on-true
-        (am-compare-jump cgc condition opnd1 opnd2 #f continue-label opnds-width)
-        (on-true cgc)
-        (if (not actions-return)
-          (am-jmp cgc continue-label)))
-      (on-false
-        (am-compare-jump cgc condition opnd1 opnd2 continue-label #f opnds-width)
-        (on-false cgc)
-        (if (not actions-return)
-          (am-jmp cgc continue-label))))))
-
-(define (am-if-eq cgc opnd1 opnd2 on-true on-false #!optional (actions-return #f) (opnds-width #f))
-  (am-if cgc opnd1 opnd2 condition-equal on-true on-false actions-return opnds-width))
-
-(define (am-return-const cgc result-action value)
-  (debug "am-return-const")
-  (debug "result-action: " result-action)
-  (cond
-    ((then-jump? result-action)
-      (if value
-        (if (then-jump-true-location result-action)
-          (am-jmp cgc (then-jump-true-location result-action)))
-        (if (then-jump-false-location result-action)
-          (am-jmp cgc (then-jump-false-location result-action)))))
-    ((then-move? result-action)
-      (am-mov
-        cgc
-        (then-move-store-location result-action)
-        (make-obj-opnd cgc value)))
-    ((then-return? result-action)
-      (am-mov
-        cgc
-        (get-register cgc 1)
-        (make-obj-opnd cgc value))
-      (am-jmp cgc (get-register cgc 0)))
-    (then-nothing?
-      (debug "result-action is nop"))
-    (else
-      (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
-
-(define (am-return-opnd cgc result-action opnd #!key (opnd-not-false #f))
-  (debug "am-return-opnd")
-  (debug "result-action: " result-action)
-  (cond
-    ((then-jump? result-action)
-      (let ((false-opnd (make-obj-opnd cgc #f))
-            (true-jmp (then-jump-true-location result-action))
-            (false-jmp (then-jump-false-location result-action)))
-        (if opnd-not-false
-          (if true-jmp (am-jmp cgc true-jmp))
-          (mov-if-necessary cgc '(reg mem) opnd
-            (lambda (opnd)
-            (am-compare-jump cgc
-              condition-not-equal
-              opnd false-opnd
-              true-jmp false-jmp
-              (get-word-width-bits cgc)))))))
-    ((then-move? result-action)
-      (let ((mov-loc (then-move-store-location result-action)))
-        (if (not (equal? mov-loc opnd))
-          (am-mov cgc mov-loc opnd))))
-    ((then-return? result-action)
-      (if (not (equal? (get-register cgc 1) opnd))
-        (am-mov cgc (get-register cgc 1) opnd))
-      (am-jmp cgc (get-register cgc 0)))
-    (then-nothing?
-      (debug "result-action is nop"))
-    (else
-      (compiler-internal-error "prim-const-return - Unknown result-action" result-action))))
-
-; (lambda (cgc true-label false-label))
-(define (am-return-boolean cgc result-action action)
-  (debug "am-return-boolean")
-  (let ((true-label (make-unique-label cgc "if-true" #f))
-        (false-label (make-unique-label cgc "if-false" #f))
-        (continue-label (make-unique-label cgc "continue-label" #f)))
-    (cond
-      ((then-jump? result-action)
-        (let ((true-jmp (then-jump-true-location result-action))
-              (false-jmp (then-jump-false-location result-action)))
-          (action true-jmp false-jmp)))
-      ((then-move? result-action)
-        (let ((mov-loc (then-move-store-location result-action)))
-          (action true-label false-label)
-
-          (am-lbl cgc true-label)
-          (am-mov cgc mov-loc (make-obj-opnd cgc #t))
-          (am-jmp cgc continue-label)
-
-          (am-lbl cgc false-label)
-          (am-mov cgc mov-loc (make-obj-opnd cgc #f))
-          (am-lbl cgc continue-label)))
-      ((then-return? result-action)
-        (action true-label false-label)
-
-        (am-lbl cgc true-label)
-        (am-mov cgc (get-register cgc 1) (make-obj-opnd cgc #t))
-        (am-jmp cgc continue-label)
-
-        (am-lbl cgc false-label)
-        (am-mov cgc (get-register cgc 1) (make-obj-opnd cgc #f))
-
-        (am-lbl cgc continue-label)
-        (am-jmp cgc (get-register cgc 0)))
-      (then-nothing?
-        (debug "result-action is nop")
-        (action true-label false-label)
-        (am-lbl cgc true-label)
-        (am-lbl cgc false-label))
-      (else
-        (compiler-internal-error "prim-const-return - Unknown result-action" result-action)))))
-
-(define (foldl-prim reduce-2+
-          #!key (allowed-opnds '(reg))
-                (allowed-opnds-accum '(reg))
-                (start-value 'none)
-                (start-value-null? #f)
-                (reduce-1 #f)
-                (commutative #f))
-
-  (define (none? a) (equal? 'none a))
-
-  (lambda (cgc result-action args)
-    (debug "foldl-prim")
-
-    ;; The difference between a function and an inlined function is that the
-    ;; arguments for the inlined function are unrolled while they are placed in
-    ;; a list as the last argument of the function.
-    (if (then-return? result-action)
-      ;; Is a function.
-      #f ;; Todo
-      ;; Is inlined.
-      (cond
-        ((and (null? args) (none? start-value))
-          (compiler-internal-error
-            "foldl-prim - Prim doesn't have a start-value"))
-        ;; Empty case
-        ((null? args)
-          (am-return-const cgc result-action start-value))
-        ;; 1 argument case
-        ((null? (cdr args))
-          (with-result-opnd cgc result-action args
-            commutative: commutative
-            allowed-opnds: allowed-opnds-accum
-            fun:
-              (lambda (accum accum-in-args)
-                (reduce-1 cgc accum (car args))
-                (am-return-opnd cgc result-action accum))))
-        ;; General case
-        (else
-          (with-result-opnd cgc result-action args
-            commutative: commutative
-            allowed-opnds: allowed-opnds-accum
-            ;; Start-value is the identity value => Can skip it
-            default-opnd: (if (or (none? start-value) start-value-null?) (car args) #f)
-            fun: (lambda (accum accum-in-args)
-              (let ((new-args
-                ;; Remove accum from args if accum is in opnd. Happens if commutative
-                (if accum-in-args
-                  (filter (lambda (opnd) (not (equal? accum opnd))) args)
-                  ;; Remove first element as it's used to initialize accum
-                  (if (or (none? start-value) start-value-null?)
-                    (cdr args)
-                    args))))
-
-                ;; Initialize accum if necessary
-                (if (not accum-in-args)
-                  (cond
-                    ((or (none? start-value) start-value-null?)
-                      (am-mov cgc accum (car args)))
-                    ((not start-value-null?)
-                      (am-mov cgc accum (make-obj-opnd cgc start-value)))
-                    (else
-                      (compiler-internal-error "foldl-prim : No start-value"))))
-
-                ;; Fold over arguments
-                (let loop ((loop-args new-args))
-                  (if (not (null? loop-args))
-                    ;; Mov car args if necessary
-                    (begin
-                      (mov-if-necessary cgc allowed-opnds (car loop-args)
-                        (lambda (arg)
-                          (reduce-2+ cgc accum arg)))
-                      (loop (cdr loop-args)))))
-
-                (am-return-opnd cgc result-action accum)))))))))
-
-(define (foldl-compare-prim reduce-2+
-          #!key (allowed-opnds1 '(reg))
-                (allowed-opnds2 '(reg))
-                (reduce-1 #t) ;; Or can be function (Todo and necessary?)
-                (empty-val #t)
-                (commutative #f))
-  (lambda (cgc result-action args)
-    (debug "foldl-compare-prim")
-
-    ;; The difference between a function and an inlined function is that the
-    ;; arguments for the inlined function are unrolled while they are placed in
-    ;; a list as the last argument of the function.
-    (if (then-return? result-action)
-      ;; Is a function.
-      #f ;; Todo
-      ;; Is inlined.
-      (cond
-        ;; Empty case
-        ((null? args)
-          (debug "empty case")
-          (am-return-const cgc result-action empty-val))
-        ;; 1 argument case
-        ((null? (cdr args))
-          (debug "1 argument case")
-          (am-return-const cgc result-action reduce-1))
-        ;; General case
-        (else
-          (debug "general case")
-          (am-return-boolean cgc result-action
-            (lambda (true-label false-label)
-              (for-each
-                (lambda (opnd1 opnd2)
-                  ;; Mov car args if necessary
-                  (mov-if-necessary cgc allowed-opnds1 opnd1
-                    (lambda (arg1)
-                      (mov-if-necessary cgc allowed-opnds2 opnd2
-                        (lambda (arg2)
-                          (reduce-2+ cgc arg1 arg2 true-label false-label))))))
-                (cdr args)
-                args))))))))
-
-(define (foldl-boolean-prim reduce-1 end-value
-          #!key (allowed-opnds '(reg))
-                (empty-val #t))
-  (lambda (cgc result-action args)
-    (debug "foldl-boolean-prim")
-
-    ;; The difference between a function and an inlined function is that the
-    ;; arguments for the inlined function are unrolled while they are placed in
-    ;; a list as the last argument of the function.
-    (if (then-return? result-action)
-      ;; Is a function.
-      #f ;; Todo
-      ;; Is inlined.
-      (cond
-        ;; Empty case
-        ((null? args)
-          (am-return-const cgc result-action empty-val))
-        ;; General case
-        (else
-          (am-return-boolean cgc result-action
-            (lambda (true-label false-label)
-              (for-each
-                (lambda (opnd)
-                  ;; Mov car args if necessary
-                  (mov-if-necessary cgc allowed-opnds opnd
-                    (lambda (arg)
-                      (reduce-1 cgc arg true-label false-label))))
-                args)
-
-              (if end-value
-                (am-jmp true-label)
-                (am-jmp false-label)))))))))
-
-;; ***** Primitives - High level instructions - Utils
-
-(define (with-result-opnd cgc result-action args
-          #!key fun
-          (commutative #f)
-          (single-instruction #f)
-          (allowed-opnds '(reg int mem))
-          (default-opnd #f))
-
-  (define (use-loc loc in-args?)
-    (if (and loc (elem? (opnd-type cgc loc) allowed-opnds))
-      (fun loc in-args?)
-      (get-extra-register cgc
-        (lambda (reg)
-          (fun reg #f)
-          (am-mov cgc loc reg)))))
-
-  (define (use-extra-reg loc)
-    (get-extra-register cgc
-      (lambda (reg)
-        (fun reg #f)
-        (am-mov cgc loc reg))))
-
-  (define loc-in-args-count (elem-count (get-register cgc 1) args))
-  (define not-in-args (= 0 loc-in-args-count))
-  (define once-in-args (= 1 loc-in-args-count))
-
-  (cond
-    ((then-jump? result-action)
-      (use-loc default-opnd #t))
-    ((then-move? result-action)
-      (let ((mov-loc (then-move-store-location result-action)))
-        (cond
-          ;; We can rearrange the expression to remove redundant move
-          ((and once-in-args commutative)
-            (use-loc mov-loc #t))
-          ;; We can overwrite mov-loc.
-          (not-in-args
-            (use-loc mov-loc #f))
-          (default-opnd
-            (use-loc default-opnd #f))
-          (else
-            (use-extra-reg mov-loc)))))
-    ((then-return? result-action)
-      ;; We can rearrange the expression to remove redundant move
-      (cond
-        (single-instruction
-          (use-loc (get-register cgc 1) once-in-args))
-        ((and once-in-args commutative)
-          (use-loc (get-register cgc 1) #t))
-        (not-in-args
-          (use-loc (get-register cgc 1) #f))
-        (default-opnd
-          (use-loc default-opnd #t))
-        (else
-          (use-extra-reg (get-register cgc 1)))))
-    (then-nothing?
-      (debug "result-action is nop")
-      (get-extra-register cgc (lambda (reg) (fun reg #f))))
-    (else
-      (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
-
-(define (check-nargs-if-necessary cgc result-action nargs
-          #!key (optional-args-values '()) (rest? #f))
-  (if (then-return? result-action)
-    (am-check-nargs
-      cgc
-      (then-return-label result-action)
-      (get-fun-fs cgc nargs)
-      nargs
-      optional-args-values
-      rest?
-      (lambda (fun-label)
-        (put-entry-point-label cgc
-          fun-label
-          (then-return-prim-name result-action) #f
-          nargs #f)))))
-
-(define (call-with-nargs args fun)
-  (apply fun args))
-
-(define (mov-if-necessary cgc allowed-opnds opnd fun)
-  (if (elem? (opnd-type cgc opnd) allowed-opnds)
-    (fun opnd)
-    (get-extra-register cgc
-      (lambda (reg)
-        (am-mov cgc reg opnd)
-        (fun reg)))))
-
-;; ***** Primitives - Basic primitives (##Identity and ##not)
-
-(define (##identity-primitive cgc result-action args)
-  (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args
-    (lambda (arg1)
-      (debug "identity prim")
-      (am-return-opnd cgc result-action arg1))))
-
-(define (##not cgc result-action args)
-  (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args
-    (lambda (arg1)
-      (debug "identity not")
-      (am-if-eq cgc arg1 (make-obj-opnd cgc #f)
-        (lambda (cgc) (am-return-const cgc result-action #t))
-        (lambda (cgc) (am-return-const cgc result-action #f))
-        #f
-        (get-word-width-bits cgc)))))
-
-;; ***** Primitives - Default Primitives - Type checks
-
-;; Todo
-
-;; ***** Primitives - Default Primitives - Memory read/write/test
-
-;; Todo: Dereference memory before reading with offset (Doesn't work)
-(define (read-reference cgc result-action dest ref tag index width)
-  (let* ((total-offset (- (* width index) tag)))
-    (if (equal? 'reg (opnd-type cgc ref))
-      (am-mov cgc dest (get-opnd-with-offset cgc ref total-offset))
+    (if (not defined?)
       (begin
+        (debug "Putting primitive: " (proc-obj-name proc))
+        (if prim-obj
+          ;; Prim is defined in native backend
+          (let* ((prim-fun (get-primitive-function prim-obj))
+                 (arity (get-primitive-arity prim-obj))
+                 (args (get-args-opnds cgc (get-fun-fs cgc arity) arity)))
+            (put-entry-point-label cgc label proc-name #f 0 #f) ;; Place label in prim-fun
+            (prim-fun cgc (then-return label proc-name) args))
+
+          ;; Prim is defined in C
+          ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
+          (get-extra-register cgc
+            (lambda (reg)
+              (put-entry-point-label cgc label proc-name #f 0 #f)
+              (am-mov cgc reg (x86-imm-obj (string->symbol proc-name)))
+              (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
+              (am-mov cgc reg (mem-opnd cgc 0 reg))
+                (am-jmp cgc reg))))))))
+
+;;  GVM Instruction Encoding
+
+(define (encode-gvm-instr cgc code)
+  (debug (gvm-instr-type (code-gvm-instr code)))
+  (case (gvm-instr-type (code-gvm-instr code))
+    ((label)  (encode-label-instr   cgc code))
+    ((jump)   (encode-jump-instr    cgc code))
+    ((ifjump) (encode-ifjump-instr  cgc code))
+    ((apply)  (encode-apply-instr   cgc code))
+    ((copy)   (encode-copy-instr    cgc code))
+    ((close)  (encode-close-instr   cgc code))
+    ((switch) (encode-switch-instr  cgc code))
+    (else
+      (compiler-error
+        "encode-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type (code-gvm-instr code))))))
+
+;;  Label Instruction Encoding
+
+(define (table-find-label table index)
+  (let loop ((lst (table->list table)))
+    (if (null? lst)
+      #f
+      (let* ((val (cdr (car lst)))
+             (label (car val))
+             (val-index (cdr val)))
+        (if (eq? val-index index)
+          label
+          (loop (cdr lst)))))))
+
+(define (get-next-label cgc proc-name lbl-pos label)
+  (lambda ()
+    (let* ((procs-labels-table (codegen-context-proc-labels-table cgc))
+           (proc-labels-table (table-ref procs-labels-table proc-name #f)))
+
+      (if proc-labels-table
+        (table-find-label proc-labels-table lbl-pos)
+        (compiler-internal-error "Procedure " proc-name " doesn't have associated label table")))))
+
+(define (get-fun-fs cgc arg-count)
+  (let* ((target (codegen-context-target cgc))
+         (nargs-in-regs (target-nb-arg-regs target)))
+    (max 0 (- arg-count nargs-in-regs))))
+
+;; Todo: Fix proc-name-sym invalid when placing primitives
+(define (put-entry-point-label cgc label proc-name proc-info nargs closure?)
+  (define label-struct-position (codegen-context-label-struct-position cgc))
+  (define proc (codegen-context-current-proc cgc))
+  (define parent-label (get-parent-proc-label cgc proc))
+
+  (asm-align cgc 8)
+  (codegen-fixup-obj! cgc (string->symbol proc-name) 64) ;; ##subprocedure-parent-name
+  (codegen-fixup-obj! cgc proc-info 64)                  ;; ##subprocedure-parent-info
+  (codegen-fixup-obj! cgc 2 64)                          ;; nb labels
+
+  ;; next label struct
+  (codegen-fixup-lbl-late! cgc
+    (get-next-label cgc proc-name (+ 1 label-struct-position) label)
+    #f 64
+    'next-label-with-structure
+    )
+  ;; parent label struct
+  (if parent-label
+    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
+    (am-data-word cgc 0))
+
+  (codegen-fixup-handler! cgc '___lowlevel_exec (get-word-width-bits cgc))
+  (am-data-word cgc (+ 6                               ;; PERM
+                      (* 8 14)                         ;; PROCEDURE
+                      (* 256 (+ nargs                  ;; Number of arguments
+                        (* 4096 (if closure? 1 0)))))) ;; Is closure?
+
+  (codegen-fixup-lbl! cgc label 0 #f 64 'self-label) ;; self ptr
+  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+  (am-lbl cgc label)
+
+  (codegen-context-label-struct-position-set! cgc
+    (+ 1 label-struct-position)))
+
+;; Todo: Make sure ret-pos is valid when using this function
+(define (put-return-point-label cgc label frame-size ret-pos gcmap #!optional (internal? #f))
+  (define label-struct-position (codegen-context-label-struct-position cgc))
+  (define proc (codegen-context-current-proc cgc))
+  (define proc-name (proc-obj-name proc))
+  (define proc-name-sym (string->symbol proc-name))
+  (define proc-info #f)
+  (define parent-label (get-parent-proc-label cgc proc))
+
+  (asm-align cgc 8)
+  ;; next label struct
+  (codegen-fixup-lbl-late! cgc
+    (get-next-label cgc proc-name (+ 1 label-struct-position) label)
+    #f 64
+    'next-label-with-structure)
+  ;; parent label struct
+  (if parent-label
+    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
+    (am-data-word cgc 0))
+
+  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  (asm-64 cgc (+ 6 (* 8 15)))        ;; PERM RETURN
+  (asm-64 cgc (+ (if internal? 2 1)  ;; RETI or RETN (2 or 1)
+                 (* 4 frame-size) ;; frame size
+                 (* 128 ret-pos)  ;; link
+                 (* 4096 gcmap))) ;; gcmap
+  (asm-8 cgc 0) ;; so that label reference has tag ___tSUBTYPED
+
+  (x86-label cgc label)
+
+  (codegen-context-label-struct-position-set! cgc
+    (+ 1 label-struct-position)))
+
+(define (encode-label-instr cgc code)
+  (let* ((gvm-instr (code-gvm-instr code))
+         (frame (gvm-instr-frame gvm-instr))
+         (fs (frame-size frame))
+         (label-struct-position (codegen-context-label-struct-position cgc))
+         (proc (codegen-context-current-proc cgc))
+         (proc-name (proc-obj-name proc))
+         (label-num (label-lbl-num gvm-instr))
+         (label (get-proc-label cgc proc label-num)))
+
+    (debug "encode-label-instr: " label)
+
+    (case (label-type gvm-instr)
+      ((entry)
+        (let ((narg (label-entry-nb-parms gvm-instr))
+              (opts (label-entry-opts gvm-instr))
+              (rest? (label-entry-rest? gvm-instr))
+              (keys (label-entry-keys gvm-instr))
+              (closure? (label-entry-closed? gvm-instr)))
+
+              (am-check-nargs cgc label (frame-size frame) narg opts rest?
+                (lambda (fun-label)
+                  (set-proc-label-index cgc proc label label-struct-position)
+                  (put-entry-point-label cgc label proc-name #f narg closure?)))
+
+              (if closure?
+                (let ((r4 (get-self-register cgc)))
+                  (am-pop cgc r4)
+                  (am-sub cgc r4 r4 (int-opnd cgc 6))))))
+
+      ((return)
+          (set-proc-label-index cgc proc label label-struct-position)
+          (put-return-point-label cgc
+            label
+            fs
+            (get-frame-ret-pos frame)
+            (get-frame-gcmap frame)))
+
+      (else
+        (am-lbl cgc label)))))
+
+;; ***** (if)Jump instruction encoding
+
+(define (get-next-label-type proc code)
+  (let* ((bb-index (bb-lbl-num (code-bb code)))
+         (next-bb (get-bb proc (+ 1 bb-index))))
+    (if next-bb
+      (bb-label-type next-bb)
+      next-bb)))
+
+(define (encode-jump-instr cgc code)
+  (define (make-jump-opnd opnd)
+    (define (make-obj val)
+      (cond
+        ((proc-obj? val)
+          (get-proc-label cgc (obj-val opnd) 1))
+        ((immediate-object? val)
+          (int-opnd cgc
+            (format-imm-object val)
+            (get-word-width-bits cgc)))
+        ((reference-object? val)
+          (x86-imm-obj val))
+        (else
+          (compiler-internal-error "make-jump-opnd: Unknown object type"))))
+    (cond
+      ((reg? opnd)
+        (get-register cgc (reg-num opnd)))
+      ((stk? opnd)
+        (frame cgc (proc-jmp-frame-size code) (stk-num opnd)))
+      ((lbl? opnd)
+        (get-proc-label cgc (codegen-context-current-proc cgc) (lbl-num opnd)))
+      ((obj? opnd)
+        (make-obj (obj-val opnd)))
+      ((clo? opnd)
+        ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
+        (let ((base (get-register cgc (reg-num (clo-base opnd))))
+              (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
+          (mem-opnd cgc offset base)))
+      ((glo? opnd)
+        (x86-imm-glo (glo-name opnd)))
+      (else
+        (compiler-internal-error "make-jump-opnd: Unknown opnd: " opnd))))
+
+  (debug "encode-jump-instr")
+  (let* ((gvm-instr (code-gvm-instr code))
+         (proc (codegen-context-current-proc cgc))
+         (jmp-opnd (jump-opnd gvm-instr))
+         (jmp-loc (make-jump-opnd jmp-opnd))
+         (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
+
+    ;; Pop stack if necessary
+    (alloc-frame cgc (proc-frame-slots-gained code))
+
+    (if (jump-poll? gvm-instr)
+      (am-poll cgc (gvm-instr-frame gvm-instr)))
+
+    ;; Save return address if necessary
+    (if (jump-ret gvm-instr)
+      (let* ((label-ret-num (jump-ret gvm-instr))
+             (label-ret (get-proc-label cgc proc label-ret-num))
+             (label-ret-opnd (lbl-opnd cgc label-ret)))
+        (am-mov cgc (get-register cgc 0) label-ret-opnd)))
+
+    ;; Set arg count
+    (if (jump-nb-args gvm-instr)
+      (am-set-narg cgc (jump-nb-args gvm-instr)))
+
+    (cond
+      ;; We need to dereference before jumping
+      ((x86-imm-glo? jmp-loc)
         (get-extra-register cgc
           (lambda (reg)
-            (am-mov cgc reg ref)
-            (am-mov cgc dest (get-opnd-with-offset cgc reg total-offset))))))))
+            (am-mov cgc reg jmp-loc)
+            (am-jmp cgc reg))))
 
-(define (set-reference cgc src ref tag index width)
-  (let* ((total-offset (- (* width index) tag))
-         (mem-location (get-opnd-with-offset cgc ref total-offset)))
-    (am-mov cgc mem-location src)))
+      ;; Jump to next label?
+      ((and
+        (lbl? jmp-opnd)
+        (= (lbl-num jmp-opnd) (+ 1 label-num))
+        (equal? 'simple (get-next-label-type proc code)))
+        ;; Jump to next label AND Next label is simple => No need to jump
+        #f)
 
-; (define (read-reference-dynamic cgc dest ref tag index-opnd width)
-;   (let* ((total-offset (- (* width index) tag))
-;          (mem-location (get-opnd-with-offset cgc ref total-offset)))
-;     (am-mov cgc dest mem-location)))
+      (else
+        (am-jmp cgc jmp-loc)))))
 
-; (define (set-reference-dynamic cgc src ref tag index width)
-;   (let* ((total-offset (- (* width index) tag))
-;          (mem-location (get-opnd-with-offset cgc ref total-offset)))
-;     (am-mov cgc mem-location dest)))
+(define (encode-ifjump-instr cgc code)
+  (debug "encode-ifjump-instr")
+  (let* ((gvm-instr (code-gvm-instr code))
+         (proc (codegen-context-current-proc cgc))
+         (next-label-num (+ 1 (label-lbl-num (bb-label-instr (code-bb code)))))
+         (true-label-num (ifjump-true gvm-instr))
+         (false-label-num (ifjump-false gvm-instr))
+         (true-label (get-proc-label cgc proc true-label-num))
+         (false-label (get-proc-label cgc proc false-label-num))
+         (prim-sym (proc-obj-name (ifjump-test gvm-instr)))
+         (prim-obj (get-primitive-object cgc prim-sym)))
 
-(define (object-read-prim desc field-index #!optional (width #f))
-  (if (immediate-desc? desc)
-    (compiler-internal-error "Object isn't a reference"))
+    ;; Pop stack if necessary
+    (alloc-frame cgc (proc-frame-slots-gained code))
 
-  (if field-index
-    ;; Index is static
-    (lambda (cgc result-action args)
-      (debug "object-read-prim")
-      (with-result-opnd cgc result-action args
-        single-instruction: #t
-        fun: (lambda (result-opnd result-opnd-in-args)
-          (check-nargs-if-necessary cgc result-action 1)
-          (mov-if-necessary cgc '(reg mem) (car args)
-            (lambda (ref)
-              (read-reference cgc result-action
-                result-opnd ref
-                (get-desc-pointer-tag desc)
-                (- field-index 1)
-                (if width width (get-word-width cgc))))))))
-    (compiler-internal-error "object-set-prim - Dynamic index not implemented")))
+    (if (not prim-obj)
+      (compiler-internal-error "encode-ifjump-instr - Primitive not implemented: " prim-sym))
 
-(define (object-set-prim desc field-index #!optional (width #f))
-  (if (immediate-desc? desc)
-    (compiler-internal-error "Object isn't a reference"))
+    (let* ((prim-fun (get-primitive-function prim-obj))
+           (opnds (ifjump-opnds gvm-instr))
+           (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds))
+           (next-label-type (get-next-label-type proc code))
+           (simple? (equal? next-label-type 'simple)))
+      (prim-fun cgc
+        (then-jump
+          (if (and simple? (= next-label-num true-label-num)) #f true-label)
+          (if (and simple? (= next-label-num false-label-num)) #f false-label))
+        args))))
 
-  (if field-index
-    ;; Index is static
-    (lambda (cgc result-action args)
-      (check-nargs-if-necessary cgc result-action 2)
-      (call-with-nargs args
-        (lambda (ref new-val)
-          (set-reference cgc
-            new-val ref
-            (get-desc-pointer-tag desc) (- field-index 1)
-            (if width width (get-word-width cgc)))
-          (am-return-const cgc result-action (void)))))
-  (compiler-internal-error "object-set-prim - Dynamic index not implemented")))
+;; ***** Apply instruction encoding
+
+(define (encode-apply-instr cgc code)
+  (debug "encode-apply-instr")
+  (let* ((gvm-instr (code-gvm-instr code))
+         (prim-sym (proc-obj-name (apply-prim gvm-instr)))
+         (prim-obj (get-primitive-object cgc prim-sym))
+         (prim-fun (get-primitive-function prim-obj))
+         (loc (apply-loc gvm-instr))
+         (then (if loc (then-move (make-opnd cgc loc)) then-nothing))
+         (args (map (lambda (opnd) (make-opnd cgc opnd)) (apply-opnds gvm-instr))))
+    (prim-fun cgc then args)))
+
+;; ***** Copy instruction encoding
+
+(define (encode-copy-instr cgc code)
+  (define empty-frame-val #f); (int-opnd cgc 0))
+  (debug "encode-copy-instr")
+  (let* ((gvm-instr (code-gvm-instr code))
+         (src (copy-opnd gvm-instr))
+         (dst (copy-loc gvm-instr))
+         (src-opnd (if src (make-opnd cgc src) empty-frame-val))
+         (dst-opnd (make-opnd cgc dst)))
+    (if src-opnd
+      (am-mov cgc dst-opnd src-opnd (get-word-width-bits cgc)))))
+
+;; ***** Close instruction encoding
+
+(define (encode-close-instr cgc code)
+  (define (mov-at-clo-index index reg opnd)
+    (am-mov cgc
+      (mem-opnd cgc (- (* (get-word-width cgc) index) 1) reg)
+      opnd
+      (get-word-width-bits cgc)))
+  (debug "encode-close-instr")
+  (let* ((proc (codegen-context-current-proc cgc))
+         (gvm-instr (code-gvm-instr code))
+         (frame (gvm-instr-frame gvm-instr))
+         (mk-opnd (lambda (opnd) (make-opnd cgc opnd)))
+         (clo-parms (car (close-parms gvm-instr)))
+         (loc (mk-opnd (closure-parms-loc clo-parms)))
+         (clo-lbl (get-proc-label cgc proc (closure-parms-lbl clo-parms)))
+         (clo-opnds (map mk-opnd (closure-parms-opnds clo-parms)))
+         (size (* (get-word-width cgc) (+ 3 (length clo-opnds)))))
+
+    (get-extra-register cgc
+      (lambda (reg)
+        (am-allocate-memory cgc reg size (+ 1 (* 2 (get-word-width cgc))) frame)
+
+        (mov-at-clo-index -2 reg                   ;; Place header
+          (int-opnd cgc (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
+        (mov-at-clo-index -1 reg (lbl-opnd cgc clo-lbl)) ;; Place entry
+        (get-extra-register cgc
+          (lambda (reg2)
+            ;; Because can't move 64 bit value in mem
+            ; (am-mov cgc reg2 (int-opnd cgc (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]
+            (am-mov cgc reg2 (int-opnd cgc (* 256 #xffffffF115ff))) ;; Encoded: jmp [rip-15]
+            (mov-at-clo-index 0 reg reg2))) ;; Place code
+
+        ;; Place value of free variables
+        (let loop ((opnds clo-opnds) (n 1))
+          (if (not (null? opnds))
+            (begin
+              (mov-at-clo-index n reg (car opnds))
+              (loop (cdr opnds) (+ n 1)))))
+        ;; Todo: Remove mov if unnecessary (Next GVM Instruction is often reg = loc)
+        (am-mov cgc loc reg)))))
+
+;; ***** Switch instruction encoding
+
+(define (encode-switch-instr cgc gvm-instr)
+  (debug "encode-switch-instr")
+  (compiler-internal-error
+    "encode-switch-instr: switch instruction not implemented"))
+
+;; ***** GVM helper methods
+
+(define (get-code-list proc)
+  (let ((bbs (proc-obj-code proc)))
+    (if (bbs? bbs)
+      (bbs->code-list bbs)
+      #f)))
+
+(define (get-bb proc index)
+  (let ((bbs (proc-obj-code proc)))
+    (if (bbs? bbs)
+      (if (< index (stretchable-vector-length (bbs-basic-blocks bbs)))
+      (lbl-num->bb index bbs)
+        #f)
+      #f)))
+
+;; First label always start with 1
+(define (get-parent-proc-label cgc proc)
+  (get-proc-label cgc proc 1))
+
+(define (proc-lbl-frame-size code)
+  (bb-entry-frame-size (code-bb code)))
+
+(define (proc-jmp-frame-size code)
+  (bb-exit-frame-size (code-bb code)))
+
+(define (proc-frame-slots-gained code)
+  (bb-slots-gained (code-bb code)))
+
+(define (label-instr-label cgc proc label-num)
+  (get-proc-label cgc proc label-num))
+
+(define (get-frame-gcmap frame)
+  (define (live? var)
+    (let ((live (frame-live frame)))
+      (or (varset-member? var live)
+          (and (eq? var closure-env-var)
+                (varset-intersects?
+                  live
+                  (list->varset (frame-closed frame)))))))
+  (make-bitmap
+    (map
+      (lambda (slot) (live? slot))
+      (frame-slots frame))))
+
+(define (get-frame-ret-pos frame)
+  (index-of 'ret (map var-name (frame-slots frame))))
+
+;;------------------------------------------------------------------------------
+;;------------------------------ Lowlevel Bridge -------------------------------
+;;------------------------------------------------------------------------------
+
+;; Processor state table
+
+;; The ps register points at the start of processor state structure.
+;;
+;;  Start: Low level exec processor state structure
+;;  End: Low level exec processor state structure
+;;  Start: Regular processor state structure <-- ps register
+;;  End: Regular processor state structure
+
+;; Todo: Support gvm-reg other than 0|1|2|3|4
+(define (get-processor-state-field cgc sym)
+  (define word-width (get-word-width cgc))
+
+  (define (fields-lowlevelexec) `(
+    (return-stack-pointer    ,word-width)
+    (return-handler          ,word-width)
+    ))
+
+  (define (fields-regular) `(
+    (stack-trip              ,word-width)
+    (stack-limit             ,word-width)
+    (frame-pointer           ,word-width)
+    (stack-start             ,word-width)
+    (stack-break             ,word-width)
+    (heap-limit              ,word-width)
+    (heap-pointer            ,word-width)
+    (gvm-reg0                ,word-width)
+    (gvm-reg1                ,word-width)
+    (gvm-reg2                ,word-width)
+    (gvm-reg3                ,word-width)
+    (gvm-reg4                ,word-width)
+    (program-counter         ,word-width)
+    (nargs                   ,word-width)
+    (handler_sfun_conv_error ,word-width)
+    (handler_cfun_conv_error ,word-width)
+    (handler_stack_limit     ,word-width)
+    (handler_heap_limit      ,word-width)
+    (handler_not_proc        ,word-width)
+    (handler_not_proc_glo    ,word-width)
+    (handler_wrong_nargs     ,word-width)
+    (handler_get_rest        ,word-width)
+    (handler_get_key         ,word-width)
+    (handler_get_key_rest    ,word-width)
+    (handler_force           ,word-width)
+    (handler_return_to_c     ,word-width)
+    (handler_break           ,word-width)
+    (internal_return         ,word-width)
+    (dynamic_env_bind_return ,word-width)
+    (temp1                   ,word-width)
+    (temp2                   ,word-width)
+    (temp3                   ,word-width)
+    (temp4                   ,word-width)
+    ))
+
+  ;; Returns a pair of the offset from start of lst and the width of the field
+  (define (find-field lst accum)
+    (if (null? lst)
+      -1 ;; Error value
+      (let* ((field (car lst))
+             (field-sym (car field))
+             (width (cadr field)))
+        (if (equal? sym field-sym)
+          (cons accum (* 8 width))
+          (find-field (cdr lst) (+ width accum))))))
+
+  (let* ((fields
+          (if USE_BRIDGE
+            (append (fields-lowlevelexec) (fields-regular))
+            (fields-regular)))
+         (offset
+          (if USE_BRIDGE
+            (- (apply + (map cadr (fields-lowlevelexec))))
+            0))
+         (field (find-field fields 0)))
+
+  (if (eq? -1 field)
+    (compiler-internal-error "Unknown processor state field: " sym))
+
+    ;; Cons of mem-opnd and width
+    (cons
+      (mem-opnd cgc (+ offset (car field)) processor-state-pointer)
+      (cdr field))))

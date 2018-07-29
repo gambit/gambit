@@ -4,9 +4,6 @@
 
 ;;; Copyright (c) 2011-2017 by Laurent Huberdeau, All Rights Reserved.
 
-;; Todo: Check if all includes are necessary
-;; Todo: Check if my utils can be refactored in _utils.scm or somewhere else
-
 (include "generic.scm")
 
 (include-adt "_envadt.scm")
@@ -18,7 +15,6 @@
 (include-adt "_codegen#.scm")
 
 ;;;----------------------------------------------------------------------------
-;;
 ;; "CPU" back-end that targets hardware processors.
 
 ;; Initialization/finalization of back-end.
@@ -60,54 +56,55 @@
     (let ((prim (cpu-get-prim-info name)))
       (proc-obj-jump-inlinable?-set! prim (lambda (env) #t))))
 
-  (define (begin! sem-changing-opts
-                  sem-preserving-opts
-                  info-port)
-
-    (target-dump-set! targ
-      (lambda (procs output c-intf module-descr unique-name)
-        (cpu-dump targ procs
-                  output c-intf
-                  module-descr unique-name
-                  sem-changing-opts sem-preserving-opts)))
-
-    ;; Linking
-    (target-link-info-set! targ (lambda (file) #f))
-    (target-link-set! targ (lambda (extension? inputs output warnings?) #f))
-
-    ;; Frame
-    (target-frame-constraints-set! targ
-      (make-frame-constraints
-        3   ;; CPU frame reverse
-        4)) ;; CPU frame alignment
-
-    ;; GVM registers
-    (target-nb-regs-set! targ nb-gvm-regs)
-    (target-nb-arg-regs-set! targ nb-arg-regs)
-    (target-proc-result-set! targ (make-reg 1))
-    (target-task-return-set! targ (make-reg 0))
-
-    ;; Object properties
-    (target-switch-testable?-set! targ (lambda (obj) #f))
-    (target-eq-testable?-set! targ (lambda (obj) #f))
-    (target-object-type-set! targ (lambda (obj) 'bignum))
-
-    ;; Primitives
-    (target-prim-info-set! targ cpu-prim-info)
-    (table-for-each
-      (lambda (name proc-obj)
-        (if (get-primitive-inlinable proc-obj)
-          (cpu-inlinable (symbol->string name)))
-        (if (get-primitive-testable proc-obj)
-          (cpu-testable (symbol->string name)))
-        )
-      (get-primitive-table-target targ))
-
-    #f)
-
-  (define (end!) #f)
-
   (let ((targ (make-target 12 target-arch file-extensions '() '((asm symbol)) 1)))
+
+    (define (begin! sem-changing-opts
+                    sem-preserving-opts
+                    info-port)
+
+      (target-dump-set! targ
+        (lambda (procs output c-intf module-descr unique-name)
+          (cpu-dump targ procs
+                    output c-intf
+                    module-descr unique-name
+                    sem-changing-opts sem-preserving-opts)))
+
+      ;; Linking
+      (target-link-info-set! targ (lambda (file) #f))
+      (target-link-set! targ (lambda (extension? inputs output warnings?) #f))
+
+      ;; Frame
+      (target-frame-constraints-set! targ
+        (make-frame-constraints
+          3   ;; CPU frame reverse
+          4)) ;; CPU frame alignment
+
+      ;; GVM registers
+      (target-nb-regs-set! targ nb-gvm-regs)
+      (target-nb-arg-regs-set! targ nb-arg-regs)
+      (target-proc-result-set! targ (make-reg 1))
+      (target-task-return-set! targ (make-reg 0))
+
+      ;; Object properties
+      (target-switch-testable?-set! targ (lambda (obj) #f))
+      (target-eq-testable?-set! targ (lambda (obj) #f))
+      (target-object-type-set! targ (lambda (obj) 'bignum))
+
+      ;; Primitives
+      (target-prim-info-set! targ cpu-prim-info)
+      (table-for-each
+        (lambda (name proc-obj)
+          (if (get-primitive-inlinable proc-obj)
+            (cpu-inlinable (symbol->string name)))
+          (if (get-primitive-testable proc-obj)
+            (cpu-testable (symbol->string name)))
+          )
+        (get-primitive-table-target targ))
+
+      #f)
+
+    (define (end!) #f)
+
     (target-begin!-set! targ begin!)
     (target-end!-set! targ end!)
     (target-extra-set! targ 0 abstract-machine-info)
@@ -116,8 +113,29 @@
 
 (target-add (x64-target))
 
-;;;----------------------------------------------------------------------------
+;;;-----------------------------------------------------------------------------
+;; ***** GVM Encoding
 
+(define (cpu-dump targ
+                  procs
+                  output
+                  c-intf
+                  module-descr
+                  unique-name
+                  sem-changing-options
+                  sem-preserving-options)
+
+  (let ((cgc ((get-make-cgc-fun targ))))
+
+    (codegen-context-target-set! cgc targ)
+
+    (virtual.dump-gvm procs (current-output-port))
+    (encode-procs cgc procs)
+    (lambda ()
+      (create-target-file output unique-name cgc)
+      output)))
+
+;;;----------------------------------------------------------------------------
 ;; ***** BACKEND OUTPUT
 
 (define (create-target-file filename module-name cgc #!optional (show-listing? #t))
@@ -148,500 +166,7 @@
 
     (debug "Output file: " filename)))
 
-;;;----------------------------------------------------------------------------
-
-;; ***** DUMPING OF A COMPILATION MODULE
-;; Todo: Move most of the code to abstract machine where it belongs more.
-
-(define (cpu-dump targ
-                  procs
-                  output
-                  c-intf
-                  module-descr
-                  unique-name
-                  sem-changing-options
-                  sem-preserving-options)
-
-  (let ((cgc ((get-make-cgc-fun targ))))
-
-    (codegen-context-target-set! cgc targ)
-
-    (virtual.dump-gvm procs (current-output-port))
-    (encode-procs cgc procs)
-    (lambda ()
-      (create-target-file output unique-name cgc)
-      output)))
-
-;;;----------------------------------------------------------------------------
-
-;; ***** Procedures encoding
-
-(define (encode-procs cgc procs)
-
-  (define C_START_LBL (get-label cgc 'C_START_LBL))
-
-  (define procs2 (reachable-procs procs))
-
-  (define (get-main-label)
-    (let* ((main-proc (car procs2))
-           (bb1 (car (get-code-list main-proc)))
-           (instr (code-gvm-instr bb1)))
-      (get-proc-label cgc main-proc (label-lbl-num instr))))
-
-  (define (encode-proc proc)
-    (debug "Encoding proc")
-    (codegen-context-current-proc-set! cgc proc)
-    (codegen-context-label-struct-position-set! cgc 1)
-    (map
-      (lambda (code)
-        (codegen-context-current-code-set! cgc code)
-        (codegen-context-frame-set! cgc (gvm-instr-frame (code-gvm-instr code)))
-        (encode-gvm-instr cgc code))
-      (get-code-list proc)))
-
-  (debug "Encode procs")
-  (map encode-proc procs2)
-
-  (am-place-extra-data cgc)
-
-  (debug "Adding primitives")
-  (table-for-each
-    (lambda (key val) (put-primitive-if-needed cgc key val))
-    (codegen-context-primitive-labels-table cgc))
-
-  (debug "Finished!")
-
-  ;; specify value returned by create-procedure (i.e. procedure reference)
-  (let ((main-lbl (get-main-label)))
-    (codegen-fixup-lbl! cgc main-lbl 0 #f 64)))
-
-;; Value is Pair (Label, optional Proc-obj)
-(define (put-primitive-if-needed cgc key pair)
-  (let* ((label (car pair))
-         (proc (cdr pair))
-         (proc-name (proc-obj-name proc))
-         (prim-obj (get-primitive-object cgc (proc-obj-name proc)))
-         (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
-
-    (if (not defined?)
-      (begin
-        (debug "Putting primitive: " (proc-obj-name proc))
-        (if prim-obj
-          ;; Prim is defined in native backend
-          (let* ((prim-fun (get-primitive-function prim-obj))
-                 (arity (get-primitive-arity prim-obj))
-                 (args (get-args-opnds cgc (get-fun-fs cgc arity) arity)))
-            (put-entry-point-label cgc label proc-name #f 0 #f) ;; Place label in prim-fun
-            (prim-fun cgc (then-return label proc-name) args))
-
-          ;; Prim is defined in C
-          ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
-          (get-extra-register cgc
-            (lambda (reg)
-              (put-entry-point-label cgc label proc-name #f 0 #f)
-              (am-mov cgc reg (x86-imm-obj (string->symbol proc-name)))
-              (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-              (am-mov cgc reg (mem-opnd cgc 0 reg))
-                (am-jmp cgc reg))))))))
-
-;;;----------------------------------------------------------------------------
-
-;; ***** GVM Instruction encoding
-
-(define (encode-gvm-instr cgc code)
-  (debug (gvm-instr-type (code-gvm-instr code)))
-  (case (gvm-instr-type (code-gvm-instr code))
-    ((label)  (encode-label-instr   cgc code))
-    ((jump)   (encode-jump-instr    cgc code))
-    ((ifjump) (encode-ifjump-instr  cgc code))
-    ((apply)  (encode-apply-instr   cgc code))
-    ((copy)   (encode-copy-instr    cgc code))
-    ((close)  (encode-close-instr   cgc code))
-    ((switch) (encode-switch-instr  cgc code))
-    (else
-      (compiler-error
-        "encode-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type (code-gvm-instr code))))))
-
-;; ***** Label instruction encoding
-
-(define (table-find-label table index)
-  (let loop ((lst (table->list table)))
-    (if (null? lst)
-      #f
-      (let* ((val (cdr (car lst)))
-             (label (car val))
-             (val-index (cdr val)))
-        (if (eq? val-index index)
-          label
-          (loop (cdr lst)))))))
-
-(define (get-next-label cgc proc-name lbl-pos label)
-  (lambda ()
-    (let* ((procs-labels-table (codegen-context-proc-labels-table cgc))
-           (proc-labels-table (table-ref procs-labels-table proc-name #f)))
-
-      ; (debug "For proc: " label)
-      ; (debug "Found: " (table-find-label proc-labels-table lbl-pos))
-
-      (if proc-labels-table
-        (table-find-label proc-labels-table lbl-pos)
-        (compiler-internal-error "Procedure " proc-name " doesn't have associated label table")))))
-
-(define (get-fun-fs cgc arg-count)
-  (let* ((target (codegen-context-target cgc))
-         (nargs-in-regs (target-nb-arg-regs target)))
-    (max 0 (- arg-count nargs-in-regs))))
-
-;; Todo: Fix proc-name-sym invalid when placing primitives
-(define (put-entry-point-label cgc label proc-name proc-info nargs closure?)
-  (define label-struct-position (codegen-context-label-struct-position cgc))
-  (define proc (codegen-context-current-proc cgc))
-  (define parent-label (get-parent-proc-label cgc proc))
-
-  (asm-align cgc 8)
-  (codegen-fixup-obj! cgc (string->symbol proc-name) 64) ;; ##subprocedure-parent-name
-  (codegen-fixup-obj! cgc proc-info 64)                  ;; ##subprocedure-parent-info
-  (codegen-fixup-obj! cgc 2 64)                          ;; nb labels
-
-  ;; next label struct
-  (codegen-fixup-lbl-late! cgc
-    (get-next-label cgc proc-name (+ 1 label-struct-position) label)
-    #f 64
-    'next-label-with-structure
-    )
-  ;; parent label struct
-  (if parent-label
-    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
-    (am-data-word cgc 0))
-
-  (codegen-fixup-handler! cgc '___lowlevel_exec (get-word-width-bits cgc))
-  (am-data-word cgc (+ 6                               ;; PERM
-                      (* 8 14)                         ;; PROCEDURE
-                      (* 256 (+ nargs                  ;; Number of arguments
-                        (* 4096 (if closure? 1 0)))))) ;; Is closure?
-
-  (codegen-fixup-lbl! cgc label 0 #f 64 'self-label) ;; self ptr
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc label)
-
-  (codegen-context-label-struct-position-set! cgc
-    (+ 1 label-struct-position)))
-
-;; Todo: Make sure ret-pos is valid when using this function
-(define (put-return-point-label cgc label frame-size ret-pos gcmap #!optional (internal? #f))
-  (define label-struct-position (codegen-context-label-struct-position cgc))
-  (define proc (codegen-context-current-proc cgc))
-  (define proc-name (proc-obj-name proc))
-  (define proc-name-sym (string->symbol proc-name))
-  (define proc-info #f)
-  (define parent-label (get-parent-proc-label cgc proc))
-
-  (asm-align cgc 8)
-  ;; next label struct
-  (codegen-fixup-lbl-late! cgc
-    (get-next-label cgc proc-name (+ 1 label-struct-position) label)
-    #f 64
-    'next-label-with-structure)
-  ;; parent label struct
-  (if parent-label
-    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
-    (am-data-word cgc 0))
-
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (asm-64 cgc (+ 6 (* 8 15)))        ;; PERM RETURN
-  (asm-64 cgc (+ (if internal? 2 1)  ;; RETI or RETN (2 or 1)
-                 (* 4 frame-size) ;; frame size
-                 (* 128 ret-pos)  ;; link
-                 (* 4096 gcmap))) ;; gcmap
-  (asm-8 cgc 0) ;; so that label reference has tag ___tSUBTYPED
-
-  (x86-label cgc label)
-
-  (codegen-context-label-struct-position-set! cgc
-    (+ 1 label-struct-position)))
-
-(define (encode-label-instr cgc code)
-  (let* ((gvm-instr (code-gvm-instr code))
-         (frame (gvm-instr-frame gvm-instr))
-         (fs (frame-size frame))
-         (label-struct-position (codegen-context-label-struct-position cgc))
-         (proc (codegen-context-current-proc cgc))
-         (proc-name (proc-obj-name proc))
-         (label-num (label-lbl-num gvm-instr))
-         (label (get-proc-label cgc proc label-num)))
-
-    (debug "encode-label-instr: " label)
-
-    (case (label-type gvm-instr)
-      ((entry)
-        (let ((narg (label-entry-nb-parms gvm-instr))
-              (opts (label-entry-opts gvm-instr))
-              (rest? (label-entry-rest? gvm-instr))
-              (keys (label-entry-keys gvm-instr))
-              (closure? (label-entry-closed? gvm-instr)))
-
-              (am-check-nargs cgc label (frame-size frame) narg opts rest?
-                (lambda (fun-label)
-                  (set-proc-label-index cgc proc label label-struct-position)
-                  (put-entry-point-label cgc label proc-name #f narg closure?)))
-
-              (if closure?
-                (let ((r4 (get-self-register cgc)))
-                  (am-pop cgc r4)
-                  (am-sub cgc r4 r4 (int-opnd cgc 6))))))
-
-      ((return)
-          (set-proc-label-index cgc proc label label-struct-position)
-          (put-return-point-label cgc
-            label
-            fs
-            (get-frame-ret-pos frame)
-            (get-frame-gcmap frame)))
-
-      (else
-        (am-lbl cgc label)))))
-
-;; ***** (if)Jump instruction encoding
-
-(define (get-next-label-type proc code)
-  (let* ((bb-index (bb-lbl-num (code-bb code)))
-         (next-bb (get-bb proc (+ 1 bb-index))))
-    (if next-bb
-      (bb-label-type next-bb)
-      next-bb)))
-
-(define (encode-jump-instr cgc code)
-  (define (make-jump-opnd opnd)
-    (define (make-obj val)
-      (cond
-        ((proc-obj? val)
-          (get-proc-label cgc (obj-val opnd) 1))
-        ((immediate-object? val)
-          (int-opnd cgc
-            (format-imm-object val)
-            (get-word-width-bits cgc)))
-        ((reference-object? val)
-          (x86-imm-obj val))
-        (else
-          (compiler-internal-error "make-jump-opnd: Unknown object type"))))
-    (cond
-      ((reg? opnd)
-        (get-register cgc (reg-num opnd)))
-      ((stk? opnd)
-        (frame cgc (proc-jmp-frame-size code) (stk-num opnd)))
-      ((lbl? opnd)
-        (get-proc-label cgc (codegen-context-current-proc cgc) (lbl-num opnd)))
-      ((obj? opnd)
-        (make-obj (obj-val opnd)))
-      ((clo? opnd)
-        ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
-        (let ((base (get-register cgc (reg-num (clo-base opnd))))
-              (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
-          (mem-opnd cgc offset base)))
-      ((glo? opnd)
-        (x86-imm-glo (glo-name opnd)))
-      (else
-        (compiler-internal-error "make-jump-opnd: Unknown opnd: " opnd))))
-
-  (debug "encode-jump-instr")
-  (let* ((gvm-instr (code-gvm-instr code))
-         (proc (codegen-context-current-proc cgc))
-         (jmp-opnd (jump-opnd gvm-instr))
-         (jmp-loc (make-jump-opnd jmp-opnd))
-         (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
-
-    ;; Pop stack if necessary
-    (alloc-frame cgc (proc-frame-slots-gained code))
-
-    (if (jump-poll? gvm-instr)
-      (am-poll cgc (gvm-instr-frame gvm-instr)))
-
-    ;; Save return address if necessary
-    (if (jump-ret gvm-instr)
-      (let* ((label-ret-num (jump-ret gvm-instr))
-             (label-ret (get-proc-label cgc proc label-ret-num))
-             (label-ret-opnd (lbl-opnd cgc label-ret)))
-        (am-mov cgc (get-register cgc 0) label-ret-opnd)))
-
-    ;; Set arg count
-    (if (jump-nb-args gvm-instr)
-      (am-set-narg cgc (jump-nb-args gvm-instr)))
-
-    (cond
-      ;; We need to dereference before jumping
-      ((x86-imm-glo? jmp-loc)
-        (get-extra-register cgc
-          (lambda (reg)
-            (am-mov cgc reg jmp-loc)
-            (am-jmp cgc reg))))
-
-      ;; Jump to next label?
-      ((and
-        (lbl? jmp-opnd)
-        (= (lbl-num jmp-opnd) (+ 1 label-num))
-        (equal? 'simple (get-next-label-type proc code)))
-        ;; Jump to next label AND Next label is simple => No need to jump
-        #f)
-
-      (else
-        (am-jmp cgc jmp-loc)))))
-
-(define (encode-ifjump-instr cgc code)
-  (debug "encode-ifjump-instr")
-  (let* ((gvm-instr (code-gvm-instr code))
-         (proc (codegen-context-current-proc cgc))
-         (next-label-num (+ 1 (label-lbl-num (bb-label-instr (code-bb code)))))
-         (true-label-num (ifjump-true gvm-instr))
-         (false-label-num (ifjump-false gvm-instr))
-         (true-label (get-proc-label cgc proc true-label-num))
-         (false-label (get-proc-label cgc proc false-label-num))
-         (prim-sym (proc-obj-name (ifjump-test gvm-instr)))
-         (prim-obj (get-primitive-object cgc prim-sym)))
-
-    ;; Pop stack if necessary
-    (alloc-frame cgc (proc-frame-slots-gained code))
-
-    (if (not prim-obj)
-      (compiler-internal-error "encode-ifjump-instr - Primitive not implemented: " prim-sym))
-
-    (let* ((prim-fun (get-primitive-function prim-obj))
-           (opnds (ifjump-opnds gvm-instr))
-           (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds))
-           (next-label-type (get-next-label-type proc code))
-           (simple? (equal? next-label-type 'simple)))
-      (prim-fun cgc
-        (then-jump
-          (if (and simple? (= next-label-num true-label-num)) #f true-label)
-          (if (and simple? (= next-label-num false-label-num)) #f false-label))
-        args))))
-
-;; ***** Apply instruction encoding
-
-(define (encode-apply-instr cgc code)
-  (debug "encode-apply-instr")
-  (let* ((gvm-instr (code-gvm-instr code))
-         (prim-sym (proc-obj-name (apply-prim gvm-instr)))
-         (prim-obj (get-primitive-object cgc prim-sym))
-         (prim-fun (get-primitive-function prim-obj))
-         (loc (apply-loc gvm-instr))
-         (then (if loc (then-move (make-opnd cgc loc)) then-nothing))
-         (args (map (lambda (opnd) (make-opnd cgc opnd)) (apply-opnds gvm-instr))))
-    (prim-fun cgc then args)))
-
-;; ***** Copy instruction encoding
-
-(define (encode-copy-instr cgc code)
-  (define empty-frame-val #f); (int-opnd cgc 0))
-  (debug "encode-copy-instr")
-  (let* ((gvm-instr (code-gvm-instr code))
-         (src (copy-opnd gvm-instr))
-         (dst (copy-loc gvm-instr))
-         (src-opnd (if src (make-opnd cgc src) empty-frame-val))
-         (dst-opnd (make-opnd cgc dst)))
-    (if src-opnd
-      (am-mov cgc dst-opnd src-opnd (get-word-width-bits cgc)))))
-
-;; ***** Close instruction encoding
-
-(define (encode-close-instr cgc code)
-  (define (mov-at-clo-index index reg opnd)
-    (am-mov cgc
-      (mem-opnd cgc (- (* (get-word-width cgc) index) 1) reg)
-      opnd
-      (get-word-width-bits cgc)))
-  (debug "encode-close-instr")
-  (let* ((proc (codegen-context-current-proc cgc))
-         (gvm-instr (code-gvm-instr code))
-         (frame (gvm-instr-frame gvm-instr))
-         (mk-opnd (lambda (opnd) (make-opnd cgc opnd)))
-         (clo-parms (car (close-parms gvm-instr)))
-         (loc (mk-opnd (closure-parms-loc clo-parms)))
-         (clo-lbl (get-proc-label cgc proc (closure-parms-lbl clo-parms)))
-         (clo-opnds (map mk-opnd (closure-parms-opnds clo-parms)))
-         (size (* (get-word-width cgc) (+ 3 (length clo-opnds)))))
-
-    (get-extra-register cgc
-      (lambda (reg)
-        (am-allocate-memory cgc reg size (+ 1 (* 2 (get-word-width cgc))) frame)
-
-        (mov-at-clo-index -2 reg                   ;; Place header
-          (int-opnd cgc (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
-        (mov-at-clo-index -1 reg (lbl-opnd cgc clo-lbl)) ;; Place entry
-        (get-extra-register cgc
-          (lambda (reg2)
-            ;; Because can't move 64 bit value in mem
-            ; (am-mov cgc reg2 (int-opnd cgc (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]
-            (am-mov cgc reg2 (int-opnd cgc (* 256 #xffffffF115ff))) ;; Encoded: jmp [rip-15]
-            (mov-at-clo-index 0 reg reg2))) ;; Place code
-
-        ;; Place value of free variables
-        (let loop ((opnds clo-opnds) (n 1))
-          (if (not (null? opnds))
-            (begin
-              (mov-at-clo-index n reg (car opnds))
-              (loop (cdr opnds) (+ n 1)))))
-        ;; Todo: Remove mov if unnecessary (Next GVM Instruction is often reg = loc)
-        (am-mov cgc loc reg)))))
-
-;; ***** Switch instruction encoding
-
-(define (encode-switch-instr cgc gvm-instr)
-  (debug "encode-switch-instr")
-  (compiler-internal-error
-    "encode-switch-instr: switch instruction not implemented"))
-
-;;;----------------------------------------------------------------------------
-
-;; ***** GVM helper methods
-
-(define (get-code-list proc)
-  (let ((bbs (proc-obj-code proc)))
-    (if (bbs? bbs)
-      (bbs->code-list bbs)
-      #f)))
-
-(define (get-bb proc index)
-  (let ((bbs (proc-obj-code proc)))
-    (if (bbs? bbs)
-      (if (< index (stretchable-vector-length (bbs-basic-blocks bbs)))
-      (lbl-num->bb index bbs)
-        #f)
-      #f)))
-
-;; First label always start with 1
-(define (get-parent-proc-label cgc proc)
-  (get-proc-label cgc proc 1))
-
-(define (proc-lbl-frame-size code)
-  (bb-entry-frame-size (code-bb code)))
-
-(define (proc-jmp-frame-size code)
-  (bb-exit-frame-size (code-bb code)))
-
-(define (proc-frame-slots-gained code)
-  (bb-slots-gained (code-bb code)))
-
-(define (label-instr-label cgc proc label-num)
-  (get-proc-label cgc proc label-num))
-
-(define (get-frame-gcmap frame)
-  (define (live? var)
-    (let ((live (frame-live frame)))
-      (or (varset-member? var live)
-          (and (eq? var closure-env-var)
-                (varset-intersects?
-                  live
-                  (list->varset (frame-closed frame)))))))
-  (make-bitmap
-    (map
-      (lambda (slot) (live? slot))
-      (frame-slots frame))))
-
-(define (get-frame-ret-pos frame)
-  (index-of 'ret (map var-name (frame-slots frame))))
-
-;;;=============================================================================
-
+;;;-----------------------------------------------------------------------------
 ;; Configuration constants
 
 (define USE_BRIDGE #t)
