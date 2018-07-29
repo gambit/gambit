@@ -374,8 +374,6 @@
 
 ;; Todo: Support gvm-reg other than 0|1|2|3|4
 (define (get-processor-state-field cgc sym)
-  (define lowlevelexec (get-opt-val 'use-c-backend))
-
   (define word-width (get-word-width cgc))
 
   (define (fields-lowlevelexec) `(
@@ -431,11 +429,11 @@
           (find-field (cdr lst) (+ width accum))))))
 
   (let* ((fields
-          (if lowlevelexec
+          (if USE_BRIDGE
             (append (fields-lowlevelexec) (fields-regular))
             (fields-regular)))
          (offset
-          (if lowlevelexec
+          (if USE_BRIDGE
             (- (apply + (map cadr (fields-lowlevelexec))))
             0))
          (field (find-field fields 0)))

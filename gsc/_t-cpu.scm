@@ -767,27 +767,7 @@
 
 ;;;=============================================================================
 
-;; Config object
+;; Configuration constants
 
-;; --enable-multiple-threaded-vms
-;; use C backend
-;; Use C interface
-;; Fast pair test
-;; Global variable table register
-;; ...
-
-(define config-object
-  (let ((table (make-table test: equal?)))
-    (table-set! table 'use-c-backend         #t)
-    (table-set! table 'use-c-interface       #t)
-    (table-set! table 'fast-pair-type-check  #t)
-    (table-set! table 'glovar-table-register #t)
-    (table-set! table 'force-load-store-arch #f)
-
-    table))
-
-(define (get-opt-val sym)
-  (let* ((val (table-ref config-object sym 1243431)))
-    (if (eq? val 1243431)
-      (compiler-internal-error "(get-opt-val " sym ") Unknown option name")
-      val)))
+(define USE_BRIDGE #t)
+(define FORCE_LOAD_STORE_ARCH #f)
