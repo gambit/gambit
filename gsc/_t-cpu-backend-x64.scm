@@ -311,7 +311,15 @@
     'x86-64 '((".c" . X86-64)) 13 5 3 '() '()))
 
 (define (x86-64-abstract-machine-info)
-  (make-backend (info) (operands) (instructions) (routines)))
+  (make-backend make-cgc (info) (operands) (instructions) (routines)))
+
+(define (make-cgc)
+  (let ((cgc (make-codegen-context)))
+    (codegen-context-listing-format-set! cgc 'gnu)
+    (asm-init-code-block cgc 0 'le)
+    (x86-arch-set! cgc 'x86-64)
+    (codegen-context-extra-registers-allocation-set! cgc (make-vector 16 0))
+    cgc))
 
 ;;------------------------------------------------------------------------------
 
@@ -326,23 +334,8 @@
     frame-pointer             ;; Stack pointer register
     frame-offset              ;; Frame offset
     primitive-object-table    ;; Primitive table
-    (vector                   ;; Main registers
-      (x86-rdi) (x86-rax) (x86-rbx) (x86-rdx) (x86-rsi))
-    (vector                   ;; Extra registers
-      (x86-r8) (x86-r9) (x86-r10) (x86-r11) (x86-r12) (x86-r13) (x86-r14) (x86-r15))
-    make-cgc                  ;; CGC constructor
-    ))
-
-(define (make-cgc)
-  (let ((cgc (make-codegen-context)))
-    (codegen-context-listing-format-set! cgc 'gnu)
-    (asm-init-code-block cgc 0 'le)
-    (x86-arch-set! cgc 'x86-64)
-
-    (codegen-context-extra-registers-allocation-set! cgc
-      (make-vector 16 0)) ;; Can be longer than register count
-
-    cgc))
+    main-registers            ;; Main registers
+    extra-registers))         ;; Extra registers
 
 ;;------------------------------------------------------------------------------
 
@@ -350,19 +343,18 @@
 
 (define (operands)
   (make-operand-dictionnary
+    fixnum?                     ;; reg?
     x86-imm-int
     x86-imm-int?
+    x86-imm-int-value           ;; int-opnd-value
     x86-imm-lbl
     x86-imm-lbl?
-    x86-mem
-    x86-mem?
-    fixnum?                     ;; reg?
-    x86-imm-int-value           ;; int-opnd-value
     x86-imm-lbl-offset          ;; lbl-opnd-offset
     x86-imm-lbl-label           ;; lbl-opnd-label
+    x86-mem
+    x86-mem?
     x86-mem-offset              ;; mem-opnd-offset
-    x86-mem-reg1                ;; mem-opnd-reg
-    ))
+    x86-mem-reg1))              ;; mem-opnd-reg
 
 ;;------------------------------------------------------------------------------
 
@@ -384,8 +376,7 @@
     (apply-and-mov x86-xor) ;; am-xor
     x86-jmp                 ;; am-jmp
     cmp-jump-instr          ;; am-compare-jump
-    cmp-move-instr          ;; am-compare-move
-    ))
+    cmp-move-instr))        ;; am-compare-move
 
 (define (x86-label-align cgc label #!optional (align #f))
   (if align
