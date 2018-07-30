@@ -143,8 +143,7 @@
          (fixup-locs (codegen-context-fixup-locs->vector cgc))
          (fixup-objs (codegen-context-fixup-objs->vector cgc)))
 
-    ; (if (show-listing? _debug)
-    (if show-listing?
+    (if (and show-listing? _debug)
         (asm-display-listing cgc (current-output-port) #t))
 
     (debug ";; code = " code)
