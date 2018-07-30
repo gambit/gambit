@@ -390,9 +390,9 @@
     ((clo? opnd)
       (debug "make-opnd: clo")
       ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
-      (let ((base (get-register cgc (reg-num (clo-base opnd))))
+      (let ((r4 (get-self-register cgc))
             (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
-        (mem-opnd cgc offset base)))
+        (mem-opnd cgc offset r4)))
     ((glo? opnd)
       (debug "make-opnd: glo")
       (x86-imm-glo (glo-name opnd)))
@@ -890,9 +890,9 @@
         (make-obj (obj-val opnd)))
       ((clo? opnd)
         ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
-        (let ((base (get-register cgc (reg-num (clo-base opnd))))
+        (let ((r4 (get-self-register cgc))
               (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
-          (mem-opnd cgc offset base)))
+          (mem-opnd cgc offset r4)))
       ((glo? opnd)
         (x86-imm-glo (glo-name opnd)))
       (else
