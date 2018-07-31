@@ -195,8 +195,8 @@
 (define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 3))
 (define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
 (define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
-(define (gvm-reg-count cgc)         (get-in-cgc cgc info-index 6))
-(define (gvm-arg-reg-count cgc)     (get-in-cgc cgc info-index 7))
+(define (get-gvm-reg-count cgc)         (get-in-cgc cgc info-index 6))
+(define (get-gvm-arg-reg-count cgc)     (get-in-cgc cgc info-index 7))
 (define (get-registers  cgc)        (get-in-cgc cgc info-index 8))
 
 (define (get-primitive-table-target targ) (get-in-target targ info-index 5))
@@ -478,13 +478,41 @@
       (condition-greater (not (cond-is-equal cond)) (cond-is-signed cond)))))
 
 ;;------------------------------------------------------------------------------
-;;---------------------------- Register Allocation -----------------------------
+;;----------------------------- Register Selection -----------------------------
 ;;------------------------------------------------------------------------------
 
 (define (get-register cgc n)
+  (vector-ref (get-registers cgc) n))
 
-(define (update-allocation-from-frame cgc frame old-frame)
-  (define allocation (codegen-context-registers-allocation cgc))
+(define (get-self-register cgc)
+  (get-register cgc (- (get-gvm-reg-count cgc) 1)))
+
+;; data Value = Dead | Filled Opnd Time | Live | LiveSaved Opnd
+;; data Opnd  = Register Int | Stack Int | Closure Int | Global Symbol
+
+(define dead-register 'dead)
+(define (dead-register? sym) (equal? 'dead sym))
+
+(define live-register 'live)
+(define (live-register? sym) (equal? 'live sym))
+
+(define (filled-register opnd #!optional (time -1)) (list 'filled opnd time))
+(define (filled-register? pair) (and (pair? pair) (equal? 'filled (car pair))))
+(define (filled-register-opnd pair) (cadr pair))
+(define (filled-register-time pair) (caddr pair))
+
+(define (live-saved-register opnd) (cons 'live-saved opnd))
+(define (live-saved-register? pair) (and (pair? pair) (equal? 'live-saved (car pair))))
+(define (live-saved-register-opnd pair) (cdr pair))
+
+;; Return time id
+(define selection-id 0)
+(define (get-time-id)
+  (set! selection-id (+ selection-id 1))
+  selection-id)
+
+(define (update-registers-status-from-frame cgc frame old-frame)
+  (define registers-status (codegen-context-registers-status cgc))
 
   (define live-vars (frame-live frame))
   (define (live? var)
@@ -503,26 +531,24 @@
       (begin
         (cond
           ;; The status doesn't change
-          ((eq? (live? (safe-car regs)) (live? (safe-car regs-old)))
-            #f)
+          ((eq? (live? (safe-car regs)) (live? (safe-car regs-old))) #f)
           ;; old reg is not in old-frame.
           ;; The register is now live.
           ((and (live? (safe-car regs)) (not (live? (safe-car regs-old))))
-            (vector-set! allocation reg-index #f))
+            (vector-set! registers-status reg-index live-register))
           ;; reg is not in frame.
           ;; We update the status of the register so it's empty/free
           ((and (not (live? (safe-car regs))) (live? (safe-car regs-old)))
-            (vector-set! allocation reg-index #t)))
+            (vector-set! registers-status reg-index dead-register)))
 
-        (loop (+ 1 reg-index) (safe-cdr regs) (safe-cdr regs-old)))
-      #f)))
+        (loop (+ 1 reg-index) (safe-cdr regs) (safe-cdr regs-old))))))
 
-(define (reset-allocation cgc)
+(define (reset-registers-status cgc)
   (let* ((registers (get-registers cgc))
          (size (vector-length registers))
-         (alloc-vector (make-vector size #t)))
+         (alloc-vector (make-vector size dead-register)))
     ;; All registers are now available
-    (codegen-context-registers-allocation-set! cgc alloc-vector)))
+    (codegen-context-registers-status-set! cgc alloc-vector)))
 
 (define (get-register-index cgc reg)
   (let ((registers (get-registers cgc)))
@@ -552,38 +578,76 @@
 
   (accumulate-extra-register number))
 
-(define (choose-register cgc use registers reserved-regs)
-  (define allocation (codegen-context-registers-allocation cgc))
+(define (choose-register cgc use registers reserved-opnds)
+  (define registers-status (codegen-context-registers-status cgc))
+  (define registers-status-list (vector->list registers-status))
+  (define registers-list (vector->list registers))
 
-  (define (use-register register index)
-    (debug "use-register")
-    ; (if save?
-    ;   (compiler-internal-error "Todo push"))
+  (define (use-register info)
+    (let* ((reg (car info))
+           (status (cadr info))
+           (index (caddr info))
+           (save? (live-register? reg))
+           (save-loc (find-save-loc)))
+      (if save?
+        (am-mov cgc save-loc reg))
 
-    (vector-set! allocation index #f)
-      (use register)
-    (vector-set! allocation index #t)
+      (vector-set! registers-status index
+        (if save? (live-saved-register save-loc) live-register))
+      (use reg)
+      (vector-set! registers-status index dead-register)
 
-    ; (if save?
-    ;   (compiler-internal-error "Todo pop")))
-  )
+      (if save?
+        (am-mov cgc reg save-loc))))
 
-  (define (find-empty-register registers n)
-    (if (> n 0)
-      (let* ((register (vector-ref registers n))
-             (available? (vector-ref allocation n))
-             (reserved? (elem? register reserved-regs)))
-        (if (and available? (not reserved?))
-          (begin
-            (use-register register n)
-            n)
-          (find-empty-register registers (- n 1))))
-      #f))
+  (define (find-save-loc)
+    (let* ((current-frame (codegen-context-frame cgc))
+           (frame-size (frame-size current-frame)))
+      (let loop ((i 2))
+        (if (not (elem? (frame cgc frame-size (+ frame-size 1)) reserved-opnds))
+          (frame cgc frame-size (+ frame-size 2))
+          (loop (+ i 1))))))
+
+  (define (sort-fun info1 info2)
+    (define (status-priority status)
+      (cond
+        ((dead-register? status) -1000)
+        ((filled-register? status) (filled-register-time status))
+        (else (compiler-internal-error "Invalid priority"))))
+
+    (let* ((reg1 (car info1))
+           (reg2 (car info2))
+           (status1 (cadr info1))
+           (status2 (cadr info2))
+           (index1 (caddr info1))
+           (index2 (caddr info2)))
+      (if (= (status-priority status1) (status-priority status2))
+        (> index1 index2) ;; Extra registers before GVM registers
+        (< (status-priority status1) (status-priority status2)))))
+
+  (define (filter-available-reg info)
+    (and
+      (not (elem? (car info) reserved-opnds))
+      (not (live-register? (cadr info)))
+      (not (live-saved-register? (cadr info)))))
+
+  (define (filter-live-reg info)
+    (and (not (elem? (car info) reserved-opnds)) (live-register? (cadr info))))
 
   (debug "Choose-register")
-  (debug allocation)
-  (if (not (find-empty-register registers (- (vector-length registers) 1)))
-    (compiler-internal-error "No register to allocate")))
+  (let* ((lst
+          (map list
+            registers-list
+            registers-status-list
+            (iota 0 (length registers-list))))
+         (live-registers (filter filter-live-reg lst))
+         (filtered (filter filter-available-reg lst))
+         (sorted (sort-list filtered sort-fun)))
+    (if (not (null? sorted))
+      (use-register (car sorted))
+      (if (not (null? live-registers))
+        (use-register (car live-registers))
+        (compiler-internal-error "No free or saveable live registers to use")))))
 
 ;;------------------------------------------------------------------------------
 ;;----------------------------------- Utils ------------------------------------
@@ -692,15 +756,15 @@
                (current-frame (gvm-instr-frame gvm-instr))
                (old-frame (codegen-context-frame cgc)))
 
-        (codegen-context-current-code-set! cgc code)
+          (codegen-context-current-code-set! cgc code)
           (codegen-context-frame-set! cgc current-frame)
 
           (if (equal? 'label (gvm-instr-type gvm-instr))
             (begin
-              (reset-allocation cgc)
-              (update-allocation-from-frame cgc current-frame #f))
+              (reset-registers-status cgc)
+              (update-registers-status-from-frame cgc current-frame #f))
             (begin
-              (update-allocation-from-frame cgc current-frame old-frame)))
+              (update-registers-status-from-frame cgc current-frame old-frame)))
 
           (encode-gvm-instr cgc code)))
       (get-code-list proc)))

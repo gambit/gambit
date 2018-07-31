@@ -23,7 +23,6 @@
           abstract-machine-info
           target-arch
           file-extensions
-          max-nb-gvm-regs
           nb-gvm-regs
           nb-arg-regs)
 
@@ -82,8 +81,8 @@
       ;; GVM registers
       (target-nb-regs-set! targ nb-gvm-regs)
       (target-nb-arg-regs-set! targ nb-arg-regs)
-      (target-proc-result-set! targ (make-reg 1))
       (target-task-return-set! targ (make-reg 0))
+      (target-proc-result-set! targ (make-reg 1))
 
       ;; Object properties
       (target-switch-testable?-set! targ (lambda (obj) #f))
