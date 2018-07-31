@@ -30,11 +30,11 @@
 
     (codegen-context-current-proc-set!               cgc #f)
     (codegen-context-current-code-set!               cgc #f)
-    (codegen-context-frame-size-set!                 cgc #f)
+    (codegen-context-frame-set!                      cgc #f)
     (codegen-context-nargs-set!                      cgc #f)
     (codegen-context-label-struct-position-set!      cgc #f)
 
-    (codegen-context-extra-registers-allocation-set! cgc #f)
+    (codegen-context-registers-status-set!           cgc #f)
 
     (codegen-context-primitive-labels-table-set!     cgc (make-table 'test: equal?))
     (codegen-context-proc-labels-table-set!          cgc (make-table 'test: equal?))
@@ -92,10 +92,10 @@
 (define (codegen-context-current-code-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 6) x))
 
-(define (codegen-context-frame-size cgc)
+(define (codegen-context-frame cgc)
   (vector-ref cgc (+ (asm-code-block-size) 7)))
 
-(define (codegen-context-frame-size-set! cgc x)
+(define (codegen-context-frame-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 7) x))
 
 (define (codegen-context-nargs cgc)
@@ -112,10 +112,10 @@
 
 ;; Resource tracking
 
-(define (codegen-context-extra-registers-allocation cgc)
+(define (codegen-context-registers-status cgc)
   (vector-ref cgc (+ (asm-code-block-size) 10)))
 
-(define (codegen-context-extra-registers-allocation-set! cgc x)
+(define (codegen-context-registers-status-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 10) x))
 
 ;; Label tables

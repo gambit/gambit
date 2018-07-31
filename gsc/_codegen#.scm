@@ -28,15 +28,15 @@ codegen-context-current-proc
 codegen-context-current-proc-set!
 codegen-context-current-code
 codegen-context-current-code-set!
-codegen-context-frame-size
-codegen-context-frame-size-set!
+codegen-context-frame
+codegen-context-frame-set!
 codegen-context-nargs
 codegen-context-nargs-set!
 codegen-context-label-struct-position
 codegen-context-label-struct-position-set!
 
-codegen-context-extra-registers-allocation
-codegen-context-extra-registers-allocation-set!
+codegen-context-registers-status
+codegen-context-registers-status-set!
 
 codegen-context-primitive-labels-table
 codegen-context-primitive-labels-table-set!
