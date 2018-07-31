@@ -609,26 +609,6 @@
       (get-frame-gcmap frame)
       internal?)))
 
-(define (am-call-c-function cgc sym args)
-  (get-free-register cgc
-    (lambda (reg)
-      (let* ((proc (codegen-context-current-proc cgc))
-             (struct-position (codegen-context-label-struct-position cgc))
-             (label (get-proc-label cgc proc (- struct-position))))
-
-        ;; Check if global var can be **safely** used
-        (am-mov cgc reg (x86-imm-obj sym))
-        (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-        (am-mov cgc reg (mem-opnd cgc 0 reg))
-
-        (am-mov cgc (get-register cgc 0) (lbl-opnd cgc label)) ;; Set return
-        (am-put-args cgc 0 args) ;; Put arguments
-        (am-set-narg cgc (length args))
-        (am-jmp cgc reg)
-
-        (set-proc-label-index cgc proc label struct-position)
-        (put-return-point-label cgc label 0 0 0))))) ;; Return point)))
-
 ;;  Utils: Function call arguments
 
 (define (am-put-args cgc start-fs args)
