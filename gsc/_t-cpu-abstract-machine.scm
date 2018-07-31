@@ -13,7 +13,7 @@
 ;;------------------------------------------------------------------------------
 ;;-----------------------  Abstract Machine definition  ------------------------
 ;;------------------------------------------------------------------------------
-
+;;
 ;;  We define an abstract instruction set which we program against for most of
 ;;  the backend. Most of the code is moving data between registers and the stack
 ;;  and jumping to locations, so it reduces the repetion between native backends
@@ -115,14 +115,14 @@
 ;;      Note: #extra-registers must >= 3.
 (define (make-backend-info
           word-width endianness load-store
-          self-register frame-pointer-reg frame-offset
+          frame-pointer-reg frame-offset
           primitive-table
-          main-registers extra-registers)
+          gvm-reg-count gvm-arg-reg-count registers)
   (vector
     word-width endianness load-store
-    self-register frame-pointer-reg frame-offset
+    frame-pointer-reg frame-offset
     primitive-table
-    main-registers extra-registers))
+    gvm-reg-count gvm-arg-reg-count registers))
 
 ;; Vector of functions on operands
 (define (make-operand-dictionnary
@@ -192,13 +192,14 @@
 (define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
 (define (get-endianness cgc)        (get-in-cgc cgc info-index 1))
 (define (is-load-store? cgc)        (get-in-cgc cgc info-index 2))
-(define (get-self-register cgc)     (get-in-cgc cgc info-index 3))
-(define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 4))
-(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 5))
-(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 6))
-(define (get-primitive-table-target targ) (get-in-target targ info-index 6))
-(define (get-main-registers  cgc)   (get-in-cgc cgc info-index 7))
-(define (get-extra-registers cgc)   (get-in-cgc cgc info-index 8))
+(define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 3))
+(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
+(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
+(define (gvm-reg-count cgc)         (get-in-cgc cgc info-index 6))
+(define (gvm-arg-reg-count cgc)     (get-in-cgc cgc info-index 7))
+(define (get-registers  cgc)        (get-in-cgc cgc info-index 8))
+
+(define (get-primitive-table-target targ) (get-in-target targ info-index 5))
 
 (define (get-primitive-object cgc name)
   (let* ((table (get-primitive-table cgc)))
@@ -481,12 +482,61 @@
 ;;------------------------------------------------------------------------------
 
 (define (get-register cgc n)
-  (vector-ref (get-main-registers cgc) n))
 
-(define (get-extra-register cgc use)
-  (get-multiple-extra-register cgc 1 use))
+(define (update-allocation-from-frame cgc frame old-frame)
+  (define allocation (codegen-context-registers-allocation cgc))
 
-(define (get-multiple-extra-register cgc number use)
+  (define live-vars (frame-live frame))
+  (define (live? var)
+    (and var
+      (or (varset-member? var live-vars)
+          (and (eq? var closure-env-var)
+               (varset-intersects?
+                  live-vars
+                  (list->varset (frame-closed frame)))))))
+
+  (let loop ((reg-index 0)
+             (regs (frame-regs frame))
+             (regs-old (if old-frame (frame-regs old-frame) '())))
+
+    (if (or (pair? regs) (pair? regs-old))
+      (begin
+        (cond
+          ;; The status doesn't change
+          ((eq? (live? (safe-car regs)) (live? (safe-car regs-old)))
+            #f)
+          ;; old reg is not in old-frame.
+          ;; The register is now live.
+          ((and (live? (safe-car regs)) (not (live? (safe-car regs-old))))
+            (vector-set! allocation reg-index #f))
+          ;; reg is not in frame.
+          ;; We update the status of the register so it's empty/free
+          ((and (not (live? (safe-car regs))) (live? (safe-car regs-old)))
+            (vector-set! allocation reg-index #t)))
+
+        (loop (+ 1 reg-index) (safe-cdr regs) (safe-cdr regs-old)))
+      #f)))
+
+(define (reset-allocation cgc)
+  (let* ((registers (get-registers cgc))
+         (size (vector-length registers))
+         (alloc-vector (make-vector size #t)))
+    ;; All registers are now available
+    (codegen-context-registers-allocation-set! cgc alloc-vector)))
+
+(define (get-register-index cgc reg)
+  (let ((registers (get-registers cgc)))
+    (let loop ((i 0))
+      (if (< i (vector-length registers))
+        (if (equal? reg (vector-ref registers i))
+          i
+          (loop (+ i 1)))
+      -1))))
+
+(define (get-free-register cgc use)
+  (get-multiple-free-registers cgc 1 use))
+
+(define (get-multiple-free-registers cgc number use)
   (define registers '())
   (define (accumulate-extra-register count)
     (choose-register cgc
@@ -497,39 +547,43 @@
             (accumulate-extra-register (- count 1)))
           (begin
             (apply use registers))))
-      (get-extra-registers cgc)
-      (codegen-context-extra-registers-allocation cgc)))
-
-  (if (< (vector-length (get-extra-registers cgc)) number)
-    (compiler-internal-error "get-extra-register: Not enough extra registers"))
+      (get-registers cgc)
+      '()))
 
   (accumulate-extra-register number))
 
-(define (choose-register cgc use registers allocation)
-  (define (use-register index save?)
-    (let ((register (vector-ref registers index))
-          (ref-count (vector-ref allocation index)))
-      (if save?
-        (am-push cgc register))
+(define (choose-register cgc use registers reserved-regs)
+  (define allocation (codegen-context-registers-allocation cgc))
 
-      (vector-set! allocation index (+ ref-count 1))
+  (define (use-register register index)
+    (debug "use-register")
+    ; (if save?
+    ;   (compiler-internal-error "Todo push"))
+
+    (vector-set! allocation index #f)
       (use register)
-      ;; Important: Don't use ref-count because (use-register) may have used the register
-      (vector-set! allocation index (- (vector-ref allocation index) 1))
+    (vector-set! allocation index #t)
 
-      (if save?
-        (am-pop cgc register))))
+    ; (if save?
+    ;   (compiler-internal-error "Todo pop")))
+  )
+
+  (define (find-empty-register registers n)
+    (if (> n 0)
+      (let* ((register (vector-ref registers n))
+             (available? (vector-ref allocation n))
+             (reserved? (elem? register reserved-regs)))
+        (if (and available? (not reserved?))
+          (begin
+            (use-register register n)
+            n)
+          (find-empty-register registers (- n 1))))
+      #f))
 
   (debug "Choose-register")
-
-  (let loop ((n 0))
-    (if (< n (vector-length registers))
-      (if (= 0 (vector-ref allocation n))
-        (use-register n #f)
-        (loop (+ n 1)))
-
-      ;; Todo: Remove randomness
-      (use-register (random-integer (vector-length registers)) #t))))
+  (debug allocation)
+  (if (not (find-empty-register registers (- (vector-length registers) 1)))
+    (compiler-internal-error "No register to allocate")))
 
 ;;------------------------------------------------------------------------------
 ;;----------------------------------- Utils ------------------------------------
@@ -556,7 +610,7 @@
       internal?)))
 
 (define (am-call-c-function cgc sym args)
-  (get-extra-register cgc
+  (get-free-register cgc
     (lambda (reg)
       (let* ((proc (codegen-context-current-proc cgc))
              (struct-position (codegen-context-label-struct-position cgc))
@@ -654,9 +708,21 @@
     (codegen-context-label-struct-position-set! cgc 1)
     (map
       (lambda (code)
+        (let* ((gvm-instr (code-gvm-instr code))
+               (current-frame (gvm-instr-frame gvm-instr))
+               (old-frame (codegen-context-frame cgc)))
+
         (codegen-context-current-code-set! cgc code)
-        (codegen-context-frame-set! cgc (gvm-instr-frame (code-gvm-instr code)))
-        (encode-gvm-instr cgc code))
+          (codegen-context-frame-set! cgc current-frame)
+
+          (if (equal? 'label (gvm-instr-type gvm-instr))
+            (begin
+              (reset-allocation cgc)
+              (update-allocation-from-frame cgc current-frame #f))
+            (begin
+              (update-allocation-from-frame cgc current-frame old-frame)))
+
+          (encode-gvm-instr cgc code)))
       (get-code-list proc)))
 
   (debug "Encode procs")
@@ -696,7 +762,7 @@
 
           ;; Prim is defined in C
           ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
-          (get-extra-register cgc
+          (get-free-register cgc
             (lambda (reg)
               (put-entry-point-label cgc label proc-name #f 0 #f)
               (am-mov cgc reg (x86-imm-obj (string->symbol proc-name)))
@@ -925,7 +991,7 @@
     (cond
       ;; We need to dereference before jumping
       ((x86-imm-glo? jmp-loc)
-        (get-extra-register cgc
+        (get-free-register cgc
           (lambda (reg)
             (am-mov cgc reg jmp-loc)
             (am-jmp cgc reg))))
@@ -1015,14 +1081,14 @@
          (clo-opnds (map mk-opnd (closure-parms-opnds clo-parms)))
          (size (* (get-word-width cgc) (+ 3 (length clo-opnds)))))
 
-    (get-extra-register cgc
+    (get-free-register cgc
       (lambda (reg)
         (am-allocate-memory cgc reg size (+ 1 (* 2 (get-word-width cgc))) frame)
 
         (mov-at-clo-index -2 reg                   ;; Place header
           (int-opnd cgc (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
         (mov-at-clo-index -1 reg (lbl-opnd cgc clo-lbl)) ;; Place entry
-        (get-extra-register cgc
+        (get-free-register cgc
           (lambda (reg2)
             ;; Because can't move 64 bit value in mem
             ; (am-mov cgc reg2 (int-opnd cgc (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]
