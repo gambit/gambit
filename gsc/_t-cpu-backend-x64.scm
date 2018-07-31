@@ -14,31 +14,41 @@
 
 ;; Constants
 
-;; Todo: Respect config-object value
-(define is-load-store-arch #f)
-
 (define narg-register           (x86-cl))  ;; number of arguments register
-(define self-register           (x86-rsi)) ;; Used for calling closures
 (define frame-pointer           (x86-rsp)) ;; Real stack limit
 (define heap-pointer            (x86-rbp)) ;; Small heap pointer (Bump allocator)
 (define processor-state-pointer (x86-rcx)) ;; Processor state pointer
 
-;; Main registers
-(define main-registers (vector (x86-rdi) (x86-rax) (x86-rbx) (x86-rdx)))
-;; Extra registers
-(define extra-registers
-  (vector (x86-r8) (x86-r9) (x86-r10) (x86-r11) (x86-r12) (x86-r13) (x86-r14) (x86-r15)))
+(define nb-gvm-regs 5)
+(define nb-arg-regs 3)
+
+;; Registers
+(define registers
+  (vector
+    (x86-rdi) ;; R0
+    (x86-rax) ;; R1
+    (x86-rbx) ;; R2
+    (x86-rdx) ;; R3
+    (x86-rsi) ;; R4
+    (x86-r8)
+    (x86-r9)
+    (x86-r10)
+    (x86-r11)
+    (x86-r12)
+    (x86-r13)
+    (x86-r14)
+    (x86-r15)))
 
 (define frame-offset 0) ;; stack offset so that frame[1] is at null offset from stack-pointer
 
 ;;------------------------------------------------------------------------------
-;;---------------------------  x86 64 bits backend  ----------------------------
+;;----------------------------  x86 64-bit backend  ----------------------------
 ;;------------------------------------------------------------------------------
 
 (define (x64-target)
   (make-backend-target
     (x86-64-abstract-machine-info)
-    'x86-64 '((".c" . X86-64)) 13 5 3))
+    'x86-64 '((".c" . X86-64)) nb-gvm-regs nb-arg-regs))
 
 (define (x86-64-abstract-machine-info)
   (make-backend make-cgc (info) (operands) (instructions) (routines)))
@@ -48,7 +58,6 @@
     (codegen-context-listing-format-set! cgc 'gnu)
     (asm-init-code-block cgc 0 'le)
     (x86-arch-set! cgc 'x86-64)
-    (codegen-context-extra-registers-allocation-set! cgc (make-vector 16 0))
     cgc))
 
 ;;------------------------------------------------------------------------------
@@ -59,13 +68,13 @@
   (make-backend-info
     8                         ;; Word width
     'le                       ;; Endianness
-    is-load-store-arch        ;; Load store architecture?
-    self-register
+    FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
     frame-pointer             ;; Stack pointer register
     frame-offset              ;; Frame offset
     primitive-object-table    ;; Primitive table
-    main-registers            ;; Main registers
-    extra-registers))         ;; Extra registers
+    nb-gvm-regs               ;; GVM register count
+    nb-arg-regs               ;; GVM register count for passing arguments
+    registers))               ;; Main registers
 
 ;;------------------------------------------------------------------------------
 
@@ -128,7 +137,7 @@
   (define (mov-in-dst new-src)
     (if (not (equal? dst new-src))
       (if (equal? dst-type 'ind)
-        (get-extra-register cgc
+        (get-free-register cgc
           (lambda (reg-dst)
             (x86-mov cgc reg-dst dst)
             (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
@@ -139,7 +148,7 @@
       ((and
         (or (equal? dst-type 'mem) (equal? dst-type 'ind))
         (or (equal? src-type 'mem) (equal? src-type 'lbl)))
-            (get-extra-register cgc
+            (get-free-register cgc
               (lambda (reg-src)
                 (x86-mov cgc reg-src src)
                 (mov-in-dst reg-src))))
@@ -152,7 +161,7 @@
                   (mov-in-dst reg-src))))
           (if (equal? dst-type 'reg)
             (action dst)
-            (get-extra-register cgc action))))
+            (get-free-register cgc action))))
 
       (else
         (mov-in-dst src)))))
