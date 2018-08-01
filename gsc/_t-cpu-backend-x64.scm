@@ -137,7 +137,7 @@
   (define (mov-in-dst new-src)
     (if (not (equal? dst new-src))
       (if (equal? dst-type 'ind)
-        (get-free-register cgc
+        (get-free-register cgc (list dst new-src)
           (lambda (reg-dst)
             (x86-mov cgc reg-dst dst)
             (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
@@ -148,10 +148,10 @@
       ((and
         (or (equal? dst-type 'mem) (equal? dst-type 'ind))
         (or (equal? src-type 'mem) (equal? src-type 'lbl)))
-            (get-free-register cgc
-              (lambda (reg-src)
-                (x86-mov cgc reg-src src)
-                (mov-in-dst reg-src))))
+          (get-free-register cgc (list src)
+            (lambda (reg-src)
+              (x86-mov cgc reg-src src)
+              (mov-in-dst reg-src))))
 
       ((equal? src-type 'ind)
         (let ((action
@@ -161,7 +161,7 @@
                   (mov-in-dst reg-src))))
           (if (equal? dst-type 'reg)
             (action dst)
-            (get-free-register cgc action))))
+            (get-free-register cgc (list src) action))))
 
       (else
         (mov-in-dst src)))))

@@ -487,6 +487,25 @@
 (define (get-self-register cgc)
   (get-register cgc (- (get-gvm-reg-count cgc) 1)))
 
+(define (get-register-index cgc reg)
+  (let ((registers (get-registers cgc)))
+    (let loop ((i 0))
+      (if (< i (vector-length registers))
+        (if (equal? reg (vector-ref registers i))
+          i
+          (loop (+ i 1)))
+      -1))))
+
+(define (get-free-register cgc needed-opnds action)
+  (get-multiple-free-registers cgc 1 needed-opnds action))
+
+; (define (mov-in-reg cgc opnd fun)
+;   (get-free-register cgc
+;     (lambda (reg)
+;       (am-mov cgc reg opnd)
+;       (fun reg)
+;       (filled-register opnd))))
+
 ;; data Value = Dead | Filled Opnd Time | Live | LiveSaved Opnd
 ;; data Opnd  = Register Int | Stack Int | Closure Int | Global Symbol
 
@@ -504,6 +523,13 @@
 (define (live-saved-register opnd) (cons 'live-saved opnd))
 (define (live-saved-register? pair) (and (pair? pair) (equal? 'live-saved (car pair))))
 (define (live-saved-register-opnd pair) (cdr pair))
+
+(define (reset-registers-status cgc)
+  (let* ((registers (get-registers cgc))
+         (size (vector-length registers))
+         (alloc-vector (make-vector size dead-register)))
+    ;; All registers are now available
+    (codegen-context-registers-status-set! cgc alloc-vector)))
 
 ;; Return time id
 (define selection-id 0)
@@ -543,26 +569,7 @@
 
         (loop (+ 1 reg-index) (safe-cdr regs) (safe-cdr regs-old))))))
 
-(define (reset-registers-status cgc)
-  (let* ((registers (get-registers cgc))
-         (size (vector-length registers))
-         (alloc-vector (make-vector size dead-register)))
-    ;; All registers are now available
-    (codegen-context-registers-status-set! cgc alloc-vector)))
-
-(define (get-register-index cgc reg)
-  (let ((registers (get-registers cgc)))
-    (let loop ((i 0))
-      (if (< i (vector-length registers))
-        (if (equal? reg (vector-ref registers i))
-          i
-          (loop (+ i 1)))
-      -1))))
-
-(define (get-free-register cgc use)
-  (get-multiple-free-registers cgc 1 use))
-
-(define (get-multiple-free-registers cgc number use)
+(define (get-multiple-free-registers cgc count needed-opnds use)
   (define registers '())
   (define (accumulate-extra-register count)
     (choose-register cgc
@@ -574,9 +581,9 @@
           (begin
             (apply use registers))))
       (get-registers cgc)
-      '()))
+      needed-opnds))
 
-  (accumulate-extra-register number))
+  (accumulate-extra-register count))
 
 (define (choose-register cgc use registers reserved-opnds)
   (define registers-status (codegen-context-registers-status cgc))
@@ -594,8 +601,15 @@
 
       (vector-set! registers-status index
         (if save? (live-saved-register save-loc) live-register))
-      (use reg)
-      (vector-set! registers-status index dead-register)
+      (let ((new-status (use reg)))
+        (if (and
+              (not save?)
+              (or
+                (dead-register? new-status)
+                (live-register? new-status)
+                (live-saved-register? new-status)
+                (filled-register? new-status)))
+          (vector-set! registers-status index new-status)))
 
       (if save?
         (am-mov cgc reg save-loc))))
@@ -674,25 +688,6 @@
       internal?)))
 
 ;;  Utils: Function call arguments
-
-(define (am-put-args cgc start-fs args)
-  (define (get-frames count)
-    (map (lambda (i) (frame cgc start-fs i)) (iota 1 count)))
-
-  (define (get-registers count)
-    (map (lambda (i) (get-register cgc i)) (iota 1 count)))
-
-  (let* ((target (codegen-context-target cgc))
-         (narg-in-regs (target-nb-arg-regs target))
-         (narg-in-frames (- (length args) narg-in-regs))
-         (frames (reverse (get-frames narg-in-frames)))
-         (regs (get-registers narg-in-regs)))
-    (for-each
-      (lambda (arg loc)
-        (if (not (equal? loc arg))
-          (am-mov cgc loc arg (get-word-width-bits cgc))))
-      args
-      (append frames regs))))
 
 ;; Count starts at 1
 ;; Todo: Optimize. This is not very efficient...
@@ -806,13 +801,13 @@
 
           ;; Prim is defined in C
           ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
-          (get-free-register cgc
+          (get-free-register cgc '()
             (lambda (reg)
               (put-entry-point-label cgc label proc-name #f 0 #f)
               (am-mov cgc reg (x86-imm-obj (string->symbol proc-name)))
               (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
               (am-mov cgc reg (mem-opnd cgc 0 reg))
-                (am-jmp cgc reg))))))))
+              (am-jmp cgc reg))))))))
 
 ;;  GVM Instruction Encoding
 
@@ -1035,7 +1030,7 @@
     (cond
       ;; We need to dereference before jumping
       ((x86-imm-glo? jmp-loc)
-        (get-free-register cgc
+        (get-free-register cgc (list jmp-loc)
           (lambda (reg)
             (am-mov cgc reg jmp-loc)
             (am-jmp cgc reg))))
@@ -1125,14 +1120,14 @@
          (clo-opnds (map mk-opnd (closure-parms-opnds clo-parms)))
          (size (* (get-word-width cgc) (+ 3 (length clo-opnds)))))
 
-    (get-free-register cgc
+    (get-free-register cgc clo-opnds
       (lambda (reg)
         (am-allocate-memory cgc reg size (+ 1 (* 2 (get-word-width cgc))) frame)
 
         (mov-at-clo-index -2 reg                   ;; Place header
           (int-opnd cgc (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
         (mov-at-clo-index -1 reg (lbl-opnd cgc clo-lbl)) ;; Place entry
-        (get-free-register cgc
+        (get-free-register cgc '()
           (lambda (reg2)
             ;; Because can't move 64 bit value in mem
             ; (am-mov cgc reg2 (int-opnd cgc (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]

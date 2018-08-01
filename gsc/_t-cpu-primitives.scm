@@ -335,13 +335,13 @@
   (define (use-loc loc in-args?)
     (if (and loc (elem? (opnd-type cgc loc) allowed-opnds))
       (fun loc in-args?)
-      (get-free-register cgc
+      (get-free-register cgc args
         (lambda (reg)
           (fun reg #f)
           (am-mov cgc loc reg)))))
 
   (define (use-extra-reg loc)
-    (get-free-register cgc
+    (get-free-register cgc args
       (lambda (reg)
         (fun reg #f)
         (am-mov cgc loc reg))))
@@ -381,7 +381,7 @@
           (use-extra-reg (get-register cgc 1)))))
     (then-nothing?
       (debug "result-action is nop")
-      (get-free-register cgc (lambda (reg) (fun reg #f))))
+      (get-free-register cgc args (lambda (reg) (fun reg #f))))
     (else
       (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
 
@@ -407,7 +407,7 @@
 (define (mov-if-necessary cgc allowed-opnds opnd fun)
   (if (elem? (opnd-type cgc opnd) allowed-opnds)
     (fun opnd)
-    (get-free-register cgc
+    (get-free-register cgc (list opnd)
       (lambda (reg)
         (am-mov cgc reg opnd)
         (fun reg)))))
@@ -444,7 +444,7 @@
     (if (equal? 'reg (opnd-type cgc ref))
       (am-mov cgc dest (get-opnd-with-offset cgc ref total-offset))
       (begin
-        (get-free-register cgc
+        (get-free-register cgc (list ref dest)
           (lambda (reg)
             (am-mov cgc reg ref)
             (am-mov cgc dest (get-opnd-with-offset cgc reg total-offset))))))))
