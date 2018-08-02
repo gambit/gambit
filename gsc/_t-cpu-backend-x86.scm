@@ -1,6 +1,6 @@
 ;;==============================================================================
 
-;;; File: "_t-cpu-backend-x64.scm"
+;;; File: "_t-cpu-backend-x86.scm"
 
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
 
@@ -14,16 +14,97 @@
 
 ;; Constants
 
-(define narg-register           (x86-cl))  ;; number of arguments register
-(define frame-pointer           (x86-rsp)) ;; Real stack limit
-(define heap-pointer            (x86-rbp)) ;; Small heap pointer (Bump allocator)
-(define processor-state-pointer (x86-rcx)) ;; Processor state pointer
+; (define x86-narg-register  (x86-cl))  ;; number of arguments register
 
 (define nb-gvm-regs 5)
 (define nb-arg-regs 3)
 
+;;------------------------------------------------------------------------------
+;;----------------------------  x86 32-bit backend  ----------------------------
+;;------------------------------------------------------------------------------
+
+(define (x86-target)
+  (make-backend-target
+    (x86-abstract-machine-info)
+    'x86 '((".c" . X86)) nb-gvm-regs nb-arg-regs))
+
+(define (x86-abstract-machine-info)
+  (make-backend make-cgc-x86 (x86-info) (x86-operands) (x86-instructions) (x86-routines)))
+
+(define (make-cgc-x86)
+  (let ((cgc (make-codegen-context)))
+    (codegen-context-listing-format-set! cgc 'gnu)
+    (asm-init-code-block cgc 0 'le)
+    (x86-arch-set! cgc 'x86-32)
+    cgc))
+
+;;------------------------------------------------------------------------------
+;;----------------------------  x86 64-bit backend  ----------------------------
+;;------------------------------------------------------------------------------
+
+(define (x64-target)
+  (make-backend-target
+    (x64-abstract-machine-info)
+    'x86-64 '((".c" . X86-64)) nb-gvm-regs nb-arg-regs))
+
+(define (x64-abstract-machine-info)
+  (make-backend make-cgc-x64 (x64-info) (x86-operands) (x86-instructions) (x86-routines)))
+
+(define (make-cgc-x64)
+  (let ((cgc (make-codegen-context)))
+    (codegen-context-listing-format-set! cgc 'gnu)
+    (asm-init-code-block cgc 0 'le)
+    (x86-arch-set! cgc 'x86-64)
+    cgc))
+
+;;------------------------------------------------------------------------------
+
+;; x86 backend info
+
+(define (x86-info)
+  (make-backend-info
+    4                         ;; Word width
+    'le                       ;; Endianness
+    FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
+    0                         ;; Frame offset
+    primitive-object-table    ;; Primitive table
+    nb-gvm-regs               ;; GVM register count
+    nb-arg-regs               ;; GVM register count for passing arguments
+    x86-registers             ;; Main registers
+    (x86-ecx)                 ;; Processor state pointer
+    (x86-esp)                 ;; Stack pointer
+    (x86-ebp)                 ;; Heap pointer
+  ))
+
+(define x86-registers
+  (vector
+    (x86-edi)   ;; R0
+    (x86-eax)   ;; R1
+    (x86-ebx)   ;; R2
+    (x86-edx)   ;; R3
+    (x86-esi))) ;; R4
+
+;;------------------------------------------------------------------------------
+
+;; x86 64-bit backend info
+
+(define (x64-info)
+  (make-backend-info
+    8                         ;; Word width
+    'le                       ;; Endianness
+    FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
+    0                         ;; Frame offset
+    primitive-object-table    ;; Primitive table
+    nb-gvm-regs               ;; GVM register count
+    nb-arg-regs               ;; GVM register count for passing arguments
+    x64-registers             ;; Main registers
+    (x86-rcx)                 ;; Processor state pointer
+    (x86-rsp)                 ;; Stack pointer
+    (x86-rbp)                 ;; Heap pointer
+  ))
+
 ;; Registers
-(define registers
+(define x64-registers
   (vector
     (x86-rdi) ;; R0
     (x86-rax) ;; R1
@@ -39,48 +120,11 @@
     (x86-r14)
     (x86-r15)))
 
-(define frame-offset 0) ;; stack offset so that frame[1] is at null offset from stack-pointer
-
-;;------------------------------------------------------------------------------
-;;----------------------------  x86 64-bit backend  ----------------------------
-;;------------------------------------------------------------------------------
-
-(define (x64-target)
-  (make-backend-target
-    (x86-64-abstract-machine-info)
-    'x86-64 '((".c" . X86-64)) nb-gvm-regs nb-arg-regs))
-
-(define (x86-64-abstract-machine-info)
-  (make-backend make-cgc (info) (operands) (instructions) (routines)))
-
-(define (make-cgc)
-  (let ((cgc (make-codegen-context)))
-    (codegen-context-listing-format-set! cgc 'gnu)
-    (asm-init-code-block cgc 0 'le)
-    (x86-arch-set! cgc 'x86-64)
-    cgc))
-
-;;------------------------------------------------------------------------------
-
-;; x86 backend info
-
-(define (info)
-  (make-backend-info
-    8                         ;; Word width
-    'le                       ;; Endianness
-    FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
-    frame-pointer             ;; Stack pointer register
-    frame-offset              ;; Frame offset
-    primitive-object-table    ;; Primitive table
-    nb-gvm-regs               ;; GVM register count
-    nb-arg-regs               ;; GVM register count for passing arguments
-    registers))               ;; Main registers
-
 ;;------------------------------------------------------------------------------
 
 ;; x86 Abstract machine operands
 
-(define (operands)
+(define (x86-operands)
   (make-operand-dictionnary
     fixnum?                     ;; reg?
     x86-imm-int
@@ -99,7 +143,7 @@
 
 ;; x86 Abstract machine instructions
 
-(define (instructions)
+(define (x86-instructions)
   (make-instruction-dictionnary
     x86-label-align         ;; am-lbl
     data-instr              ;; am-data
@@ -240,29 +284,28 @@
       (else
         (debug "am-compare-move: No move encoded")))))
 
-
 ;;------------------------------------------------------------------------------
 
 ;; Backend routines
 
-(define (routines)
+(define (x86-routines)
   (make-routine-dictionnary
-    x64-poll
-    x64-set-nargs
-    x64-check-nargs
-    x64-check-nargs-simple
-    x64-allocate-memory
-    x64-place-extra-data))
+    x86-poll
+    x86-set-nargs
+    x86-check-nargs
+    x86-check-nargs-simple
+    x86-allocate-memory
+    x86-place-extra-data))
 
-(define (x64-poll cgc frame)
-  (debug "x64-poll")
+(define (x86-poll cgc frame)
+  (debug "x86-poll")
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
          (temp1 (get-processor-state-field cgc 'temp1))
          (return-loc (make-unique-label cgc "return-from-overflow")))
 
     (am-compare-jump cgc
       (condition-lesser #f #f)
-      frame-pointer stack-trip
+      (get-frame-pointer cgc) stack-trip
       #f return-loc)
 
     ;; Jump to handler
@@ -271,25 +314,25 @@
 
 ;; Nargs passing
 
-(define (x64-set-nargs cgc arg-count)
-  (debug "x64-set-narg: " arg-count)
+(define (x86-set-nargs cgc arg-count)
+  (debug "x86-set-narg: " arg-count)
   (let ((narg-field (get-processor-state-field cgc 'nargs)))
     (x86-mov cgc (car narg-field) (int-opnd cgc arg-count) (cdr narg-field))))
-    ; (x86-mov cgc narg-register (int-opnd cgc arg-count))))
+    ; (x86-mov cgc x86-narg-register (int-opnd cgc arg-count))))
 
-(define (x64-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?)
-  (debug "x64-check-narg-simple: " arg-count)
+(define (x86-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?)
+  (debug "x86-check-narg-simple: " arg-count)
   (let ((narg-field (get-processor-state-field cgc 'nargs)))
     (x86-cmp cgc (car narg-field) (int-opnd cgc arg-count) (cdr narg-field))
-    ; (x86-cmp cgc narg-register (int-opnd cgc arg-count))
+    ; (x86-cmp cgc x86-narg-register (int-opnd cgc arg-count))
     (if if-equal?
       (x86-je cgc jmp-loc)
       (x86-jne cgc jmp-loc))
     (x86-jmp cgc error-label)))
 
-(define (x64-check-nargs cgc fun-label fs arg-count optional-args-values rest? place-label-fun)
+(define (x86-check-nargs cgc fun-label fs arg-count optional-args-values rest? place-label-fun)
   (define error-label (make-unique-label cgc "narg-error" #f))
-  (debug "x64-check-narg: " arg-count)
+  (debug "x86-check-narg: " arg-count)
   ;; Error handler
   (let ((temp1-field (get-processor-state-field cgc 'temp1))
         (narg-field (get-processor-state-field cgc 'nargs))
@@ -300,7 +343,7 @@
 
     (place-label-fun fun-label)
     (x86-cmp cgc (car narg-field) (int-opnd cgc arg-count) (cdr narg-field))
-    ; (x86-cmp cgc narg-register (int-opnd cgc arg-count))
+    ; (x86-cmp cgc x86-narg-register (int-opnd cgc arg-count))
     (x86-jne cgc error-label)))
 
 ; (define use-f-flag #t)
@@ -311,19 +354,19 @@
 ; (define (passed-in-ps nargs) (= -1 (narg-index nargs)))
 ; (define (passed-in-flags nargs) (not (passed-in-ps nargs)))
 
-; (define (x64-set-nargs cgc nargs)
+; (define (x86-set-nargs cgc nargs)
 ;   ;; set flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
-;   (define (flags-a) (x86-cmp cgc narg-register (x86-imm-int -3)))
+;   (define (flags-a) (x86-cmp cgc x86-narg-register (x86-imm-int -3)))
 ;   ;; set flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
-;   (define (flags-b) (x86-cmp cgc narg-register narg-register))
+;   (define (flags-b) (x86-cmp cgc x86-narg-register x86-narg-register))
 ;   ;; set flags = jae jne jg  jno jp  ja  jge jns  wrong_na = jle
-;   (define (flags-c) (x86-cmp cgc narg-register (x86-imm-int -123)))
+;   (define (flags-c) (x86-cmp cgc x86-narg-register (x86-imm-int -123)))
 ;   ;; set flags = jae jne jle jo  jp  ja  jl  jns  wrong_na = jno
-;   (define (flags-d) (x86-cmp cgc narg-register (x86-imm-int 10)))
+;   (define (flags-d) (x86-cmp cgc x86-narg-register (x86-imm-int 10)))
 ;   ;; set flags = jae jne jle jno jnp ja  jl  js   wrong_na = jp
-;   (define (flags-e) (x86-cmp cgc narg-register (x86-imm-int 2)))
+;   (define (flags-e) (x86-cmp cgc x86-narg-register (x86-imm-int 2)))
 ;   ;; set flags = jae jne jle jno jp  ja  jl  js
-;   (define (flags-f) (x86-cmp cgc narg-register (x86-imm-int 0)))
+;   (define (flags-f) (x86-cmp cgc x86-narg-register (x86-imm-int 0)))
 
 ;   (define (set-ps-na arg-count)
 ;     (let ((na-opnd (get-processor-state-field cgc 'nargs)))
@@ -334,7 +377,7 @@
 ;   (define tests
 ;     (if use-f-flag all-tests (cdr all-tests)))
 
-;   (debug "x64-set-narg: " nargs)
+;   (debug "x86-set-narg: " nargs)
 
 ;   (if (passed-in-ps nargs)
 ;     ;; Use processor state to pass narg
@@ -347,7 +390,7 @@
 ;     ((list-ref tests (narg-index nargs)))))
 
 ; ;; The function returns if it checked the flags
-; (define (x64-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?
+; (define (x86-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?
 ;           #!optional (check-flags #t))
 ;   ;; a flags = jb  jne jle jno jp  jbe jl  js   wrong_na = jae
 ;   ;; b flags = jae je  jle jno jp  jbe jge jns  wrong_na = jne
@@ -409,7 +452,7 @@
 ;         jmp-loc)
 ;       #t)))
 
-; (define (x64-check-nargs cgc fun-label fs nargs optional-args-values rest? place-label-fun)
+; (define (x86-check-nargs cgc fun-label fs nargs optional-args-values rest? place-label-fun)
 ;   ;; Constants
 ;   (define target (codegen-context-target cgc))
 ;   (define nargs-in-regs (target-nb-arg-regs target))
@@ -447,10 +490,10 @@
 ;     (define (place-case arg-count case-label next-case-label)
 ;       (debug "place-case: " arg-count)
 ;       (am-lbl cgc case-label)
-;       (if (not (x64-check-nargs-simple cgc arg-count next-case-label error-label #f check-flags))
+;       (if (not (x86-check-nargs-simple cgc arg-count next-case-label error-label #f check-flags))
 ;         (set! check-flags #f))
 
-;       ;; Merge with frame-pointer adjustement
+;       ;; Merge with x86-frame-pointer adjustement
 ;       (if (and rest? (not nargs-in-flags?)) (x86-popf cgc))
 
 ;       ;; When called with not all arguments, the frame size needs to be adjusted.
@@ -458,8 +501,8 @@
 ;              (offset (- fs nargs-in-frames)))
 ;         (if (not (= 0 offset))
 ;           (am-sub cgc
-;             (get-frame-pointer-reg cgc)
-;             (get-frame-pointer-reg cgc)
+;             (get-frame-pointer cgc)
+;             (get-frame-pointer cgc)
 ;             (int-opnd cgc (* (get-word-width cgc) offset)))))
 
 ;       (mov-arguments-in-correct-position arg-count)
@@ -523,15 +566,15 @@
 ;       ;; Optimize case with 0 elem
 ;       ;; Todo: Fix case where nargs-passed-in-flags doesn't contain 0.
 ;       ;; Maybe replace check-flags by #f. Check if doesn't break everything...
-;       (x64-check-nargs-simple cgc nargs-no-rest call-rest-handler error-label #f check-flags)
+;       (x86-check-nargs-simple cgc nargs-no-rest call-rest-handler error-label #f check-flags)
 ;       (if (not nargs-in-flags?) (x86-popf cgc))   ;; Replace with pop? Maybe faster
 ;       (am-mov cgc
 ;         (get-nth-arg cgc fs nargs nargs)
 ;         (x86-imm-obj '())
 ;         (get-word-width-bits cgc))
 ;       (am-sub cgc                           ;; Adjusts the frame pointer
-;         (get-frame-pointer-reg cgc)
-;         (get-frame-pointer-reg cgc)
+;         (get-frame-pointer cgc)
+;         (get-frame-pointer cgc)
 ;         (int-opnd cgc (* (get-word-width cgc) 1)))
 ;       (am-jmp cgc continue-label)
 
@@ -554,7 +597,7 @@
 ;         (cdr narg-field))
 ;       (am-jmp cgc continue-label)))
 
-;   (debug "x64-check-narg: " nargs)
+;   (debug "x86-check-narg: " nargs)
 
 ;   ;; Error handler
 ;   (let ((temp1-field (get-processor-state-field cgc 'temp1))
@@ -570,10 +613,10 @@
 ;   (if (and (null? optional-args-values) (not rest?))
 ;     ;; Basic case
 ;     (if nargs-in-flags?
-;         (x64-check-nargs-simple cgc nargs error-label error-label #f)
+;         (x86-check-nargs-simple cgc nargs error-label error-label #f)
 ;         (begin
 ;           (x86-pushf cgc)
-;           (x64-check-nargs-simple cgc nargs error-label error-label #f)))
+;           (x86-check-nargs-simple cgc nargs error-label error-label #f)))
 ;           ;; Then continues to pop-label
 
 ;     ;; Optional and rest arguments case
@@ -596,24 +639,24 @@
 ;       (x86-popf cgc)))
 ;   (am-lbl cgc continue-label))
 
-(define (x64-allocate-memory cgc dest-reg bytes offset frame)
+(define (x86-allocate-memory cgc dest-reg bytes offset frame)
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
           (temp1 (get-processor-state-field cgc 'temp1))
           (return-loc (make-unique-label cgc "return-from-gc")))
 
-      (x86-lea cgc dest-reg (mem-opnd cgc offset heap-pointer))
-      (x86-add cgc heap-pointer (int-opnd cgc bytes))
+      (x86-lea cgc dest-reg (mem-opnd cgc offset (get-heap-pointer cgc)))
+      (x86-add cgc (get-heap-pointer cgc) (int-opnd cgc bytes))
 
       (am-compare-jump cgc
         (condition-lesser #f #f)
-        frame-pointer stack-trip
+        (get-frame-pointer cgc) stack-trip
         #f return-loc)
 
       ;; Jump to handler
       (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
       (call-handler cgc 'handler_heap_limit frame return-loc)))
 
-(define (x64-place-extra-data cgc)
+(define (x86-place-extra-data cgc)
   (debug "place-extra-data"))
 
 ;; Utils
@@ -626,11 +669,6 @@
 ;;------------------------------------------------------------------------------
 
 ;; Primitives
-
-; (default-value 'none)
-; (default-value-null? #f)
-; (unroll-count 0)
-; (commutative #f)
 
 (define x86-prim-fx+
   (foldl-prim x86-add
