@@ -114,15 +114,15 @@
 ;;    extra-registers : (Vector) Extra registers that can be overwritten at any time.
 ;;      Note: #extra-registers must >= 3.
 (define (make-backend-info
-          word-width endianness load-store
-          frame-pointer-reg frame-offset
+          word-width endianness load-store frame-offset
           primitive-table
-          gvm-reg-count gvm-arg-reg-count registers)
+          gvm-reg-count gvm-arg-reg-count registers
+          pstate-pointer frame-pointer heap-pointer)
   (vector
-    word-width endianness load-store
-    frame-pointer-reg frame-offset
+    word-width endianness load-store frame-offset
     primitive-table
-    gvm-reg-count gvm-arg-reg-count registers))
+    gvm-reg-count gvm-arg-reg-count registers
+    pstate-pointer frame-pointer heap-pointer))
 
 ;; Vector of functions on operands
 (define (make-operand-dictionnary
@@ -192,14 +192,16 @@
 (define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
 (define (get-endianness cgc)        (get-in-cgc cgc info-index 1))
 (define (is-load-store? cgc)        (get-in-cgc cgc info-index 2))
-(define (get-frame-pointer-reg cgc) (get-in-cgc cgc info-index 3))
-(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
-(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
-(define (get-gvm-reg-count cgc)         (get-in-cgc cgc info-index 6))
-(define (get-gvm-arg-reg-count cgc)     (get-in-cgc cgc info-index 7))
-(define (get-registers  cgc)        (get-in-cgc cgc info-index 8))
+(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 3))
+(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 4))
+(define (get-gvm-reg-count cgc)     (get-in-cgc cgc info-index 5))
+(define (get-gvm-arg-reg-count cgc) (get-in-cgc cgc info-index 6))
+(define (get-registers  cgc)        (get-in-cgc cgc info-index 7))
+(define (get-pstate-pointer cgc)    (get-in-cgc cgc info-index 8))
+(define (get-frame-pointer cgc)     (get-in-cgc cgc info-index 9))
+(define (get-heap-pointer cgc)      (get-in-cgc cgc info-index 10))
 
-(define (get-primitive-table-target targ) (get-in-target targ info-index 5))
+(define (get-primitive-table-target targ) (get-in-target targ info-index 4))
 
 (define (get-primitive-object cgc name)
   (let* ((table (get-primitive-table cgc)))
@@ -416,13 +418,13 @@
     (*
       (+ fs (- n) (get-frame-offset cgc))
       (get-word-width cgc))
-    (get-frame-pointer-reg cgc)))
+    (get-frame-pointer cgc)))
 
 (define (alloc-frame cgc n)
   (if (not (= 0 n))
     (am-sub cgc
-      (get-frame-pointer-reg cgc)
-      (get-frame-pointer-reg cgc)
+      (get-frame-pointer cgc)
+      (get-frame-pointer cgc)
       (int-opnd cgc (* n (get-word-width cgc))))))
 
 (define (get-opnd-with-offset cgc opnd offset)
@@ -1282,5 +1284,5 @@
 
     ;; Cons of mem-opnd and width
     (cons
-      (mem-opnd cgc (+ offset (car field)) processor-state-pointer)
+      (mem-opnd cgc (+ offset (car field)) (get-pstate-pointer cgc))
       (cdr field))))
