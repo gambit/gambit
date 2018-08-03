@@ -62,7 +62,7 @@
 ;; x86 backend info
 
 (define (x86-32-info)
-  (make-backend-info
+  (make-cpu-info
     4                         ;; Word width
     'le                       ;; Endianness
     FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
@@ -89,7 +89,7 @@
 ;; x86 64-bit backend info
 
 (define (x86-64-info)
-  (make-backend-info
+  (make-cpu-info
     8                         ;; Word width
     'le                       ;; Endianness
     FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
