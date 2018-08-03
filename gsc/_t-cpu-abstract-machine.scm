@@ -113,7 +113,7 @@
 ;;    main-registers  : (Vector) Registers that map directly to GVM registers
 ;;    extra-registers : (Vector) Extra registers that can be overwritten at any time.
 ;;      Note: #extra-registers must >= 3.
-(define (make-backend-info
+(define (make-cpu-info
           word-width endianness load-store frame-offset
           primitive-table
           gvm-reg-count gvm-arg-reg-count registers
