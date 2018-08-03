@@ -110,8 +110,8 @@
 
     targ))
 
-(target-add (x86-target))
-(target-add (x64-target))
+(target-add (x86-32-target))
+(target-add (x86-64-target))
 
 ;;;-----------------------------------------------------------------------------
 ;; ***** GVM Encoding

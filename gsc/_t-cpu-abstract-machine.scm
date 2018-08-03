@@ -917,7 +917,7 @@
                  (* 4096 gcmap))) ;; gcmap
   (asm-8 cgc 0) ;; so that label reference has tag ___tSUBTYPED
 
-  (x86-label cgc label)
+  (am-lbl cgc label)
 
   (codegen-context-label-struct-position-set! cgc
     (+ 1 label-struct-position)))

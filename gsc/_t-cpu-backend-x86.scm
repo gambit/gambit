@@ -23,15 +23,15 @@
 ;;----------------------------  x86 32-bit backend  ----------------------------
 ;;------------------------------------------------------------------------------
 
-(define (x86-target)
+(define (x86-32-target)
   (make-backend-target
-    (x86-abstract-machine-info)
+    (x86-32-abstract-machine-info)
     'x86 '((".c" . X86)) nb-gvm-regs nb-arg-regs))
 
-(define (x86-abstract-machine-info)
-  (make-backend make-cgc-x86 (x86-info) (x86-operands) (x86-instructions) (x86-routines)))
+(define (x86-32-abstract-machine-info)
+  (make-backend make-cgc-x86-32 (x86-32-info) (x86-operands) (x86-instructions) (x86-routines)))
 
-(define (make-cgc-x86)
+(define (make-cgc-x86-32)
   (let ((cgc (make-codegen-context)))
     (codegen-context-listing-format-set! cgc 'gnu)
     (asm-init-code-block cgc 0 'le)
@@ -42,15 +42,15 @@
 ;;----------------------------  x86 64-bit backend  ----------------------------
 ;;------------------------------------------------------------------------------
 
-(define (x64-target)
+(define (x86-64-target)
   (make-backend-target
-    (x64-abstract-machine-info)
+    (x86-64-abstract-machine-info)
     'x86-64 '((".c" . X86-64)) nb-gvm-regs nb-arg-regs))
 
-(define (x64-abstract-machine-info)
-  (make-backend make-cgc-x64 (x64-info) (x86-operands) (x86-instructions) (x86-routines)))
+(define (x86-64-abstract-machine-info)
+  (make-backend make-cgc-x86-64 (x86-64-info) (x86-operands) (x86-instructions) (x86-routines)))
 
-(define (make-cgc-x64)
+(define (make-cgc-x86-64)
   (let ((cgc (make-codegen-context)))
     (codegen-context-listing-format-set! cgc 'gnu)
     (asm-init-code-block cgc 0 'le)
@@ -61,7 +61,7 @@
 
 ;; x86 backend info
 
-(define (x86-info)
+(define (x86-32-info)
   (make-backend-info
     4                         ;; Word width
     'le                       ;; Endianness
@@ -70,13 +70,13 @@
     primitive-object-table    ;; Primitive table
     nb-gvm-regs               ;; GVM register count
     nb-arg-regs               ;; GVM register count for passing arguments
-    x86-registers             ;; Main registers
+    x86-32-registers          ;; Main registers
     (x86-ecx)                 ;; Processor state pointer
     (x86-esp)                 ;; Stack pointer
     (x86-ebp)                 ;; Heap pointer
   ))
 
-(define x86-registers
+(define x86-32-registers
   (vector
     (x86-edi)   ;; R0
     (x86-eax)   ;; R1
@@ -88,7 +88,7 @@
 
 ;; x86 64-bit backend info
 
-(define (x64-info)
+(define (x86-64-info)
   (make-backend-info
     8                         ;; Word width
     'le                       ;; Endianness
@@ -97,14 +97,14 @@
     primitive-object-table    ;; Primitive table
     nb-gvm-regs               ;; GVM register count
     nb-arg-regs               ;; GVM register count for passing arguments
-    x64-registers             ;; Main registers
+    x86-64-registers          ;; Main registers
     (x86-rcx)                 ;; Processor state pointer
     (x86-rsp)                 ;; Stack pointer
     (x86-rbp)                 ;; Heap pointer
   ))
 
 ;; Registers
-(define x64-registers
+(define x86-64-registers
   (vector
     (x86-rdi) ;; R0
     (x86-rax) ;; R1
