@@ -938,11 +938,15 @@
       next-bb)))
 
 (define (encode-jump-instr cgc code)
+  (define (make-jump-opnd opnd)
+    (if (stk? opnd)
+      (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
+      (make-opnd cgc opnd)))
   (debug "encode-jump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
          (jmp-opnd (jump-opnd gvm-instr))
-         (jmp-loc (make-opnd cgc jmp-opnd))
+         (jmp-loc (make-jump-opnd jmp-opnd))
          (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
 
     ;; Pop stack if necessary
