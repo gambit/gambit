@@ -19,7 +19,7 @@
 
 ;; Initialization/finalization of back-end.
 
-(define (make-backend-target
+(define (make-cpu-target
           abstract-machine-info
           target-arch
           file-extensions

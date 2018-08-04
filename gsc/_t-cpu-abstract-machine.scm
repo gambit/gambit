@@ -38,12 +38,6 @@
 ;;       Args : CGC, Label, Alignment (Multiple . Offset)
 ;;    am-mov  : Move value between operands.
 ;;       Args : CGC, reg/mem/label, reg/mem/imm/label
-;;    am-load-mem-address : Load address of memory location.
-;;       Args : CGC, reg, mem
-;;    am-push : Place operand on top of stack
-;;       Args : CGC, reg/mem/imm/label
-;;    am-pop  : Take operand on top of stack
-;;       Args : CGC, reg/mem/imm/label
 ;;
 ;;    am-add  : Operand 1 = Operand 2 + Operand 3
 ;;    am-sub  : Operand 1 = Operand 2 - Operand 3
@@ -73,27 +67,19 @@
 ;;               Width is 8, 16, 32 or 64 bits
 ;;               Args : cgc width value
 ;;
-;;    int-opnd : Create int immediate object   (See int-opnd)
-;;    lbl-opnd : Create label immediate object (See x86-imm-lbl)
-;;    mem-opnd : Create memory location object (See x86-mem)
-;;
-;;  The operand objects have to follow the x86 operands objects formats.
-;;
 ;;  To add new backend, see x64 backend as example.
 
 ;; Backend object: Has all the information to encode the GVM instructions.
-(define (make-backend make-cgc-fun info operands instructions routines)
+(define (make-backend make-cgc-fun info instructions routines)
   (vector
     make-cgc-fun
     info
-    operands
     instructions
     routines))
 
 (define info-index 1)
-(define operands-index 2)
-(define instructions-index 3)
-(define routines-index 4)
+(define instructions-index 2)
+(define routines-index 3)
 
 ;;  Fields:
 ;;    word-width : Machine word length in bytes
@@ -124,22 +110,9 @@
     gvm-reg-count gvm-arg-reg-count registers
     pstate-pointer frame-pointer heap-pointer))
 
-;; Vector of functions on operands
-(define (make-operand-dictionnary
-          reg-opnd?
-          int-opnd int-opnd? int-opnd-value
-          lbl-opnd lbl-opnd? lbl-opnd-offset lbl-opnd-label
-          mem-opnd mem-opnd? mem-opnd-offset mem-opnd-reg)
-  (vector
-    reg-opnd?
-    int-opnd int-opnd? int-opnd-value
-    lbl-opnd lbl-opnd? lbl-opnd-offset lbl-opnd-label
-    mem-opnd mem-opnd? mem-opnd-offset mem-opnd-reg))
-
 (define (make-instruction-dictionnary
           am-lbl am-data
-          am-mov am-load-mem-address
-          am-push am-pop
+          am-mov
           am-add am-sub
           am-bit-shift-right am-bit-shift-left
           am-not am-and
@@ -148,8 +121,7 @@
           am-compare-move)
   (vector
     am-lbl am-data
-    am-mov am-load-mem-address
-    am-push am-pop
+    am-mov
     am-add am-sub
     am-bit-shift-right am-bit-shift-left
     am-not am-and
@@ -207,24 +179,6 @@
   (let* ((table (get-primitive-table cgc)))
     (table-ref table (string->symbol name) #f)))
 
-;; ***** AM: Operands fields
-
-(define (apply-opnd cgc index args)
-  (exec-in-cgc cgc operands-index index args))
-
-(define (reg-opnd? cgc . args)       (apply-opnd cgc 0  args))
-(define (int-opnd  cgc . args)       (apply-opnd cgc 1  args))
-(define (int-opnd? cgc . args)       (apply-opnd cgc 2  args))
-(define (int-opnd-value  cgc . args) (apply-opnd cgc 3  args))
-(define (lbl-opnd  cgc . args)       (apply-opnd cgc 4  args))
-(define (lbl-opnd? cgc . args)       (apply-opnd cgc 5  args))
-(define (lbl-opnd-offset cgc . args) (apply-opnd cgc 6  args))
-(define (lbl-opnd-label  cgc . args) (apply-opnd cgc 7  args))
-(define (mem-opnd  cgc . args)       (apply-opnd cgc 8  args))
-(define (mem-opnd? cgc . args)       (apply-opnd cgc 9  args))
-(define (mem-opnd-offset cgc . args) (apply-opnd cgc 10 args))
-(define (mem-opnd-reg    cgc . args) (apply-opnd cgc 11 args))
-
 ;; ***** AM: Instructions fields
 
 (define (apply-instruction cgc index args)
@@ -233,20 +187,17 @@
 (define (am-lbl cgc . args)              (apply-instruction cgc 0  args))
 (define (am-data cgc . args)             (apply-instruction cgc 1  args))
 (define (am-mov cgc . args)              (apply-instruction cgc 2  args))
-(define (am-load-mem-address cgc . args) (apply-instruction cgc 3  args))
-(define (am-push cgc . args)             (apply-instruction cgc 4  args))
-(define (am-pop  cgc . args)             (apply-instruction cgc 5  args))
-(define (am-add cgc . args)              (apply-instruction cgc 6  args))
-(define (am-sub cgc . args)              (apply-instruction cgc 7  args))
-(define (am-bit-shift-right cgc . args)  (apply-instruction cgc 8  args))
-(define (am-bit-shift-left cgc . args)   (apply-instruction cgc 9  args))
-(define (am-not cgc . args)              (apply-instruction cgc 10 args))
-(define (am-and cgc . args)              (apply-instruction cgc 11 args))
-(define (am-or cgc . args)               (apply-instruction cgc 12 args))
-(define (am-xor cgc . args)              (apply-instruction cgc 13 args))
-(define (am-jmp cgc . args)              (apply-instruction cgc 14 args))
-(define (am-compare-jump cgc . args)     (apply-instruction cgc 15 args))
-(define (am-compare-move cgc . args)     (apply-instruction cgc 16 args))
+(define (am-add cgc . args)              (apply-instruction cgc 3  args))
+(define (am-sub cgc . args)              (apply-instruction cgc 4  args))
+(define (am-bit-shift-right cgc . args)  (apply-instruction cgc 5  args))
+(define (am-bit-shift-left cgc . args)   (apply-instruction cgc 6  args))
+(define (am-not cgc . args)              (apply-instruction cgc 7  args))
+(define (am-and cgc . args)              (apply-instruction cgc 8  args))
+(define (am-or cgc . args)               (apply-instruction cgc 9  args))
+(define (am-xor cgc . args)              (apply-instruction cgc 10 args))
+(define (am-jmp cgc . args)              (apply-instruction cgc 11 args))
+(define (am-compare-jump cgc . args)     (apply-instruction cgc 12 args))
+(define (am-compare-move cgc . args)     (apply-instruction cgc 13 args))
 
 (define (am-data-word cgc word)
   (am-data cgc (get-word-width-bits cgc) word))
@@ -290,7 +241,7 @@
 
   (let* ((proc-name (proc-obj-name proc))
          (label-id (make-label-id proc-name))
-         (label (asm-make-label cgc label-id))
+         (label (lbl-opnd (asm-make-label cgc label-id)))
          (primitive-table (codegen-context-primitive-labels-table cgc))
          (procs-labels-table (codegen-context-proc-labels-table cgc))
          (proc-labels-table ;; Table of (label, label-id, index)
@@ -307,7 +258,7 @@
 
 (define (set-proc-label-index cgc proc label index)
   (let* ((proc-name (proc-obj-name proc))
-         (lbl-id (asm-label-name label))
+         (lbl-id (asm-label-name (lbl-opnd-label label)))
          (procs-labels-table (codegen-context-proc-labels-table cgc))
          (proc-labels-table ;; Table of (label, label-id, index)
            (table-get-or-set
@@ -319,7 +270,7 @@
 
 (define (get-label cgc sym)
   (let* ((table (codegen-context-other-labels-table cgc))
-         (def-lbl (asm-make-label cgc sym)))
+         (def-lbl (lbl-opnd (asm-make-label cgc sym))))
     (table-get-or-set table sym def-lbl)))
 
 ;; Useful for branching
@@ -330,9 +281,8 @@
       (if add-suffix (number->string num) ""))))
 
   (let* ((id (get-unique-id))
-         (label-id (lbl->id id))
-         (lbl (asm-make-label cgc label-id)))
-    lbl))
+         (label-id (lbl->id id)))
+    (lbl-opnd (asm-make-label cgc label-id))))
 
 ;; Return unique id
 (define unique-id 0)
@@ -344,103 +294,106 @@
 ;;------------------------- Abstract machine operands --------------------------
 ;;------------------------------------------------------------------------------
 
-(define (make-obj-opnd cgc val)
+(define (tagged-object? tag pair) (and (pair? pair) (equal? tag (car pair))))
+
+;; Registers are fixnums
+
+(define reg-opnd? fixnum?)
+
+(define (int-opnd n)               (list 'int-opnd n))
+(define (int-opnd? pair)           (tagged-object? 'int-opnd pair))
+(define (int-opnd-value pair)      (cadr pair))
+
+(define (obj-opnd obj)             (list 'obj-opnd obj))
+(define (obj-opnd? pair)           (tagged-object? 'obj-opnd pair))
+(define (obj-opnd-value pair)        (cadr pair))
+
+(define (mem-opnd register offset) (list 'mem-opnd register offset))
+(define (mem-opnd? pair)           (tagged-object? 'mem-opnd pair))
+(define (mem-opnd-base pair)       (cadr pair))
+(define (mem-opnd-offset pair)     (caddr pair))
+
+(define (lbl-opnd label #!optional (offset 0)) (list 'lbl-opnd label offset))
+(define (lbl-opnd? pair)           (tagged-object? 'lbl-opnd pair))
+(define (lbl-opnd-label pair)      (cadr pair))
+(define (lbl-opnd-offset pair)     (caddr pair))
+
+(define (glo-opnd name)            (list 'glo-opnd name))
+(define (glo-opnd? pair)           (tagged-object? 'glo-opnd pair))
+(define (glo-opnd-name pair)       (cadr pair))
+
+(define (opnd-with-offset opnd offset)
   (cond
-    ((immediate-object? val)
-      (debug "make-obj-opnd: obj imm: " val)
-      (int-opnd cgc
-        (format-imm-object val)
-        (get-word-width-bits cgc)))
-    ((reference-object? val)
-      (debug "make-obj-opnd: obj ref: " val)
-      (x86-imm-obj val))
-    (else
-      (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
-  ; (x86-imm-obj val))
+    ((reg-opnd? opnd) (mem-opnd opnd offset))
+    ((mem-opnd? opnd) (mem-opnd (mem-opnd-base opnd) (+ offset (mem-opnd-offset opnd))))
+    ((lbl-opnd? opnd) (lbl-opnd (lbl-opnd-label opnd) (+ offset (lbl-opnd-offset opnd))))
+    (else (compiler-internal-error "opnd-with-offset - Incompatible operand: " opnd))))
 
 (define (make-opnd cgc opnd)
   (define proc (codegen-context-current-proc cgc))
   (define code (codegen-context-current-code cgc))
-
   (define (make-obj val)
     (cond
       ((proc-obj? val)
-        (lbl-opnd cgc (get-parent-proc-label cgc (obj-val opnd))))
+        (get-parent-proc-label cgc val))
       ((immediate-object? val)
-        (debug "make-opnd: obj imm: " val)
-        (int-opnd cgc
-          (format-imm-object val)
-          (get-word-width-bits cgc)))
+        (int-opnd (format-imm-object val)))
       ((reference-object? val)
-        (debug "make-opnd: obj ref: " val)
-        (x86-imm-obj val))
+        (obj-opnd val))
       (else
         (compiler-internal-error "make-opnd: Unknown object: " val))))
-      ; (else
-      ;   (x86-imm-obj val))))
+
+  (debug "make-opnd")
   (cond
     ((reg? opnd)
-      (debug "make-opnd: reg")
       (get-register cgc (reg-num opnd)))
     ((stk? opnd)
-      (debug "make-opnd: stk")
       (frame cgc (proc-lbl-frame-size code) (stk-num opnd)))
     ((lbl? opnd)
-      (debug "make-opnd: lbl")
-      (lbl-opnd cgc (get-proc-label cgc proc (lbl-num opnd))))
-    ((obj? opnd)
-      (make-obj (obj-val opnd)))
+      (get-proc-label cgc proc (lbl-num opnd)))
     ((clo? opnd)
-      (debug "make-opnd: clo")
-      ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
       (let ((r4 (get-self-register cgc))
             (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
-        (mem-opnd cgc offset r4)))
+        (mem-opnd r4 offset)))
     ((glo? opnd)
-      (debug "make-opnd: glo")
-      (x86-imm-glo (glo-name opnd)))
+      (glo-opnd (glo-name opnd)))
+    ((obj? opnd)
+      (make-obj (obj-val opnd)))
     (else
-      (compiler-internal-error "make-opnd: Unknown opnd: " opnd))))
+      (compiler-internal-error "make-opnd: Unknown GVM opnd: " opnd))))
 
-(define (opnd-type cgc opnd)
+(define (make-obj-opnd cgc val)
   (cond
-    ((int-opnd? cgc opnd) 'int)
-    ((reg-opnd? cgc opnd) 'reg)
-    ((mem-opnd? cgc opnd) 'mem)
-    ((lbl-opnd? cgc opnd) 'lbl)
-    ((x86-imm-obj? opnd)  'lbl) ;; Todo: Do something generic
-    ((x86-imm-glo? opnd)  'ind) ;; Todo: Do something generic
+    ((immediate-object? val)
+      (int-opnd (format-imm-object val)))
+    ((reference-object? val)
+      (obj-opnd val))
+    (else
+      (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
+
+(define (opnd-type opnd)
+  (cond
+    ((reg-opnd? opnd) 'reg)
+    ((int-opnd? opnd) 'int)
+    ((mem-opnd? opnd) 'mem)
+    ((lbl-opnd? opnd) 'lbl)
+    ((obj-opnd? opnd) 'lbl)
+    ((glo-opnd? opnd) 'ind)
     (else
       (compiler-internal-error "opnd-type - Unknown opnd: " opnd))))
 
 (define (frame cgc fs n)
-  (mem-opnd cgc
-    (*
-      (+ fs (- n) (get-frame-offset cgc))
-      (get-word-width cgc))
-    (get-frame-pointer cgc)))
+  (mem-opnd
+    (get-frame-pointer cgc)
+    (* (+ fs (- n) (get-frame-offset cgc))
+       (get-word-width cgc))))
 
 (define (alloc-frame cgc n)
   (if (not (= 0 n))
     (am-sub cgc
       (get-frame-pointer cgc)
       (get-frame-pointer cgc)
-      (int-opnd cgc (* n (get-word-width cgc))))))
-
-(define (get-opnd-with-offset cgc opnd offset)
-  (case (opnd-type cgc opnd)
-    ('reg
-      (mem-opnd cgc offset opnd))
-    ('mem
-      (mem-opnd cgc (+ (mem-opnd-offset cgc opnd) offset) (mem-opnd-reg cgc opnd)))
-    ('lbl
-      (lbl-opnd cgc (lbl-opnd-label cgc opnd) (+ (lbl-opnd-offset cgc opnd) offset)))
-    ('int
-      (mem-opnd cgc (+ (int-opnd-value cgc opnd) offset)))
-    ('glo
-      (compiler-internal-error "get-opnd-with-offset - global doesn't support offset (todo)"))
-    (else
-      (compiler-internal-error "get-opnd-with-offset - unknown opnd: " opnd))))
+      (int-opnd (* n (get-word-width cgc))))))
 
 ;;------------------------------------------------------------------------------
 ;;--------------------------------- Conditions ---------------------------------
@@ -500,6 +453,14 @@
 
 (define (get-free-register cgc needed-opnds action)
   (get-multiple-free-registers cgc 1 needed-opnds action))
+
+(define (mov-if-necessary cgc allowed-opnds opnd fun)
+  (if (elem? (opnd-type opnd) allowed-opnds)
+    (fun opnd)
+    (get-free-register cgc (list opnd)
+      (lambda (reg)
+        (am-mov cgc reg opnd)
+        (fun reg)))))
 
 ; (define (mov-in-reg cgc opnd fun)
 ;   (get-free-register cgc
@@ -677,7 +638,6 @@
   (let* ((proc (codegen-context-current-proc cgc))
          (struct-position (codegen-context-label-struct-position cgc)))
 
-    (debug "jump: " location)
     (am-jmp cgc location)
 
     ;; Return point
@@ -779,16 +739,16 @@
   (debug "Finished!")
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
-  (let ((main-lbl (get-main-label)))
+  (let ((main-lbl (lbl-opnd-label (get-main-label))))
     (codegen-fixup-lbl! cgc main-lbl 0 #f 64)))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
-  (let* ((label (car pair))
+  (let* ((label-opnd (car pair))
          (proc (cdr pair))
          (proc-name (proc-obj-name proc))
          (prim-obj (get-primitive-object cgc (proc-obj-name proc)))
-         (defined? (or (vector-ref label 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
+         (defined? (or (vector-ref (lbl-opnd-label label-opnd) 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
 
     (if (not defined?)
       (begin
@@ -798,17 +758,18 @@
           (let* ((prim-fun (get-primitive-function prim-obj))
                  (arity (get-primitive-arity prim-obj))
                  (args (get-args-opnds cgc (get-fun-fs cgc arity) arity)))
-            (put-entry-point-label cgc label proc-name #f 0 #f) ;; Place label in prim-fun
-            (prim-fun cgc (then-return label proc-name) args))
+            (put-entry-point-label cgc label-opnd proc-name #f 0 #f) ;; Place label in prim-fun
+            (prim-fun cgc (then-return label-opnd proc-name) args))
 
           ;; Prim is defined in C
           ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
           (get-free-register cgc '()
             (lambda (reg)
-              (put-entry-point-label cgc label proc-name #f 0 #f)
-              (am-mov cgc reg (x86-imm-obj (string->symbol proc-name)))
-              (am-mov cgc reg (mem-opnd cgc (+ (* 8 3) -9) reg))
-              (am-mov cgc reg (mem-opnd cgc 0 reg))
+              (debug proc-name)
+              (put-entry-point-label cgc label-opnd proc-name #f 0 #f)
+              (am-mov cgc reg (obj-opnd (string->symbol proc-name)))
+              (am-mov cgc reg (mem-opnd reg (+ (* 8 3) -9)))
+              (am-mov cgc reg (mem-opnd reg 0))
               (am-jmp cgc reg))))))))
 
 ;;  GVM Instruction Encoding
@@ -841,13 +802,15 @@
           (loop (cdr lst)))))))
 
 (define (get-next-label cgc proc-name lbl-pos label)
-  (lambda ()
-    (let* ((procs-labels-table (codegen-context-proc-labels-table cgc))
-           (proc-labels-table (table-ref procs-labels-table proc-name #f)))
+  (let* ((procs-labels-table (codegen-context-proc-labels-table cgc))
+          (proc-labels-table (table-ref procs-labels-table proc-name #f)))
 
-      (if proc-labels-table
-        (table-find-label proc-labels-table lbl-pos)
-        (compiler-internal-error "Procedure " proc-name " doesn't have associated label table")))))
+    (if proc-labels-table
+      (let ((lbl (table-find-label proc-labels-table lbl-pos)))
+        (if lbl
+          (lbl-opnd-label lbl)
+          #f))
+      (compiler-internal-error "Procedure " proc-name " doesn't have associated label table"))))
 
 (define (get-fun-fs cgc arg-count)
   (let* ((target (codegen-context-target cgc))
@@ -867,13 +830,13 @@
 
   ;; next label struct
   (codegen-fixup-lbl-late! cgc
-    (get-next-label cgc proc-name (+ 1 label-struct-position) label)
+    (lambda ()
+      (get-next-label cgc proc-name (+ 1 label-struct-position) label))
     #f 64
-    'next-label-with-structure
-    )
+    'next-label-with-structure)
   ;; parent label struct
   (if parent-label
-    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
+    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f 64 'parent-label)
     (am-data-word cgc 0))
 
   (codegen-fixup-handler! cgc '___lowlevel_exec (get-word-width-bits cgc))
@@ -882,7 +845,7 @@
                       (* 256 (+ nargs                  ;; Number of arguments
                         (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
-  (codegen-fixup-lbl! cgc label 0 #f 64 'self-label) ;; self ptr
+  (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f 64 'self-label) ;; self ptr
   (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc label)
 
@@ -901,12 +864,13 @@
   (asm-align cgc 8)
   ;; next label struct
   (codegen-fixup-lbl-late! cgc
-    (get-next-label cgc proc-name (+ 1 label-struct-position) label)
+    (lambda ()
+      (get-next-label cgc proc-name (+ 1 label-struct-position) label))
     #f 64
     'next-label-with-structure)
   ;; parent label struct
   (if parent-label
-    (codegen-fixup-lbl! cgc parent-label 0 #f 64 'parent-label)
+    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f 64 'parent-label)
     (am-data-word cgc 0))
 
   (codegen-fixup-handler! cgc '___lowlevel_exec 64)
@@ -947,10 +911,11 @@
                   (set-proc-label-index cgc proc label label-struct-position)
                   (put-entry-point-label cgc label proc-name #f narg closure?)))
 
+              ;; Todo: Change for x86-32 and ARM
               (if closure?
                 (let ((r4 (get-self-register cgc)))
-                  (am-pop cgc r4)
-                  (am-sub cgc r4 r4 (int-opnd cgc 6))))))
+                  (x86-pop cgc r4)
+                  (am-sub cgc r4 r4 (int-opnd 6))))))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
@@ -973,43 +938,11 @@
       next-bb)))
 
 (define (encode-jump-instr cgc code)
-  (define (make-jump-opnd opnd)
-    (define (make-obj val)
-      (cond
-        ((proc-obj? val)
-          (get-proc-label cgc (obj-val opnd) 1))
-        ((immediate-object? val)
-          (int-opnd cgc
-            (format-imm-object val)
-            (get-word-width-bits cgc)))
-        ((reference-object? val)
-          (x86-imm-obj val))
-        (else
-          (compiler-internal-error "make-jump-opnd: Unknown object type"))))
-    (cond
-      ((reg? opnd)
-        (get-register cgc (reg-num opnd)))
-      ((stk? opnd)
-        (frame cgc (proc-jmp-frame-size code) (stk-num opnd)))
-      ((lbl? opnd)
-        (get-proc-label cgc (codegen-context-current-proc cgc) (lbl-num opnd)))
-      ((obj? opnd)
-        (make-obj (obj-val opnd)))
-      ((clo? opnd)
-        ;; Todo: Refactor with _t-cpu.scm::encode-close-instr
-        (let ((r4 (get-self-register cgc))
-              (offset (- (* (get-word-width cgc) (clo-index opnd)) 1)))
-          (mem-opnd cgc offset r4)))
-      ((glo? opnd)
-        (x86-imm-glo (glo-name opnd)))
-      (else
-        (compiler-internal-error "make-jump-opnd: Unknown opnd: " opnd))))
-
   (debug "encode-jump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
          (jmp-opnd (jump-opnd gvm-instr))
-         (jmp-loc (make-jump-opnd jmp-opnd))
+         (jmp-loc (make-opnd cgc jmp-opnd))
          (label-num (label-lbl-num (bb-label-instr (code-bb code)))))
 
     ;; Pop stack if necessary
@@ -1021,8 +954,7 @@
     ;; Save return address if necessary
     (if (jump-ret gvm-instr)
       (let* ((label-ret-num (jump-ret gvm-instr))
-             (label-ret (get-proc-label cgc proc label-ret-num))
-             (label-ret-opnd (lbl-opnd cgc label-ret)))
+             (label-ret-opnd (get-proc-label cgc proc label-ret-num)))
         (am-mov cgc (get-register cgc 0) label-ret-opnd)))
 
     ;; Set arg count
@@ -1030,13 +962,6 @@
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
     (cond
-      ;; We need to dereference before jumping
-      ((x86-imm-glo? jmp-loc)
-        (get-free-register cgc (list jmp-loc)
-          (lambda (reg)
-            (am-mov cgc reg jmp-loc)
-            (am-jmp cgc reg))))
-
       ;; Jump to next label?
       ((and
         (lbl? jmp-opnd)
@@ -1093,7 +1018,7 @@
 ;; ***** Copy instruction encoding
 
 (define (encode-copy-instr cgc code)
-  (define empty-frame-val #f); (int-opnd cgc 0))
+  (define empty-frame-val #f); (int-opnd 0))
   (debug "encode-copy-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (src (copy-opnd gvm-instr))
@@ -1108,7 +1033,7 @@
 (define (encode-close-instr cgc code)
   (define (mov-at-clo-index index reg opnd)
     (am-mov cgc
-      (mem-opnd cgc (- (* (get-word-width cgc) index) 1) reg)
+      (mem-opnd reg (- (* (get-word-width cgc) index) 1))
       opnd
       (get-word-width-bits cgc)))
   (debug "encode-close-instr")
@@ -1127,13 +1052,13 @@
         (am-allocate-memory cgc reg size (+ 1 (* 2 (get-word-width cgc))) frame)
 
         (mov-at-clo-index -2 reg                   ;; Place header
-          (int-opnd cgc (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
-        (mov-at-clo-index -1 reg (lbl-opnd cgc clo-lbl)) ;; Place entry
+          (int-opnd (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
+        (mov-at-clo-index -1 reg clo-lbl) ;; Place entry
         (get-free-register cgc '()
           (lambda (reg2)
             ;; Because can't move 64 bit value in mem
-            ; (am-mov cgc reg2 (int-opnd cgc (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]
-            (am-mov cgc reg2 (int-opnd cgc (* 256 #xffffffF115ff))) ;; Encoded: jmp [rip-15]
+            ; (am-mov cgc reg2 (int-opnd (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]
+            (am-mov cgc reg2 (int-opnd (* 256 #xffffffF115ff))) ;; Encoded: jmp [rip-15]
             (mov-at-clo-index 0 reg reg2))) ;; Place code
 
         ;; Place value of free variables
@@ -1284,5 +1209,5 @@
 
     ;; Cons of mem-opnd and width
     (cons
-      (mem-opnd cgc (+ offset (car field)) (get-pstate-pointer cgc))
+      (mem-opnd (get-pstate-pointer cgc) (+ offset (car field)))
       (cdr field))))
