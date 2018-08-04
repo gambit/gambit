@@ -24,12 +24,12 @@
 ;;------------------------------------------------------------------------------
 
 (define (x86-32-target)
-  (make-backend-target
+  (make-cpu-target
     (x86-32-abstract-machine-info)
     'x86 '((".c" . X86)) nb-gvm-regs nb-arg-regs))
 
 (define (x86-32-abstract-machine-info)
-  (make-backend make-cgc-x86-32 (x86-32-info) (x86-operands) (x86-instructions) (x86-routines)))
+  (make-backend make-cgc-x86-32 (x86-32-info) (x86-instructions) (x86-routines)))
 
 (define (make-cgc-x86-32)
   (let ((cgc (make-codegen-context)))
@@ -43,12 +43,12 @@
 ;;------------------------------------------------------------------------------
 
 (define (x86-64-target)
-  (make-backend-target
+  (make-cpu-target
     (x86-64-abstract-machine-info)
     'x86-64 '((".c" . X86-64)) nb-gvm-regs nb-arg-regs))
 
 (define (x86-64-abstract-machine-info)
-  (make-backend make-cgc-x86-64 (x86-64-info) (x86-operands) (x86-instructions) (x86-routines)))
+  (make-backend make-cgc-x86-64 (x86-64-info) (x86-instructions) (x86-routines)))
 
 (define (make-cgc-x86-64)
   (let ((cgc (make-codegen-context)))
@@ -122,25 +122,6 @@
 
 ;;------------------------------------------------------------------------------
 
-;; x86 Abstract machine operands
-
-(define (x86-operands)
-  (make-operand-dictionnary
-    fixnum?                     ;; reg?
-    x86-imm-int
-    x86-imm-int?
-    x86-imm-int-value           ;; int-opnd-value
-    x86-imm-lbl
-    x86-imm-lbl?
-    x86-imm-lbl-offset          ;; lbl-opnd-offset
-    x86-imm-lbl-label           ;; lbl-opnd-label
-    x86-mem
-    x86-mem?
-    x86-mem-offset              ;; mem-opnd-offset
-    x86-mem-reg1))              ;; mem-opnd-reg
-
-;;------------------------------------------------------------------------------
-
 ;; x86 Abstract machine instructions
 
 (define (x86-instructions)
@@ -148,25 +129,50 @@
     x86-label-align         ;; am-lbl
     data-instr              ;; am-data
     mov-instr               ;; am-mov
-    x86-lea                 ;; am-load-mem-address
-    x86-push                ;; am-push
-    x86-pop                 ;; am-pop
-    (apply-and-mov x86-add) ;; am-add
-    (apply-and-mov x86-sub) ;; am-sub
-    (apply-and-mov x86-shr) ;; am-bit-shift-right
-    (apply-and-mov x86-shl) ;; am-bit-shift-left
-    (apply-and-mov x86-not) ;; am-not
-    (apply-and-mov x86-and) ;; am-and
-    (apply-and-mov x86-or)  ;; am-or
-    (apply-and-mov x86-xor) ;; am-xor
-    x86-jmp                 ;; am-jmp
+    (arith-instr x86-add)   ;; am-add
+    (arith-instr x86-sub)   ;; am-sub
+    (arith-instr x86-shr)   ;; am-bit-shift-right
+    (arith-instr x86-shl)   ;; am-bit-shift-left
+    (arith-instr x86-not)   ;; am-not
+    (arith-instr x86-and)   ;; am-and
+    (arith-instr x86-or)    ;; am-or
+    (arith-instr x86-xor)   ;; am-xor
+    x86-jmp-instr           ;; am-jmp
     cmp-jump-instr          ;; am-compare-jump
     cmp-move-instr))        ;; am-compare-move
 
-(define (x86-label-align cgc label #!optional (align #f))
-  (if align
-    (asm-align cgc (car align) (cdr align) #x90))
-    (x86-label cgc label))
+(define (make-x86-opnd opnd)
+  (cond
+    ((reg-opnd? opnd) opnd)
+    ((int-opnd? opnd) (x86-imm-int (int-opnd-value opnd)))
+    ((mem-opnd? opnd) (x86-mem (mem-opnd-offset opnd) (mem-opnd-base opnd)))
+    ((lbl-opnd? opnd) (x86-imm-lbl (lbl-opnd-label opnd) (lbl-opnd-offset opnd)))
+    ((obj-opnd? opnd) (x86-imm-obj (obj-opnd-value opnd)))
+    ((glo-opnd? opnd) (x86-imm-glo (glo-opnd-name opnd)))
+    (else (compiler-internal-error "make-x86-opnd - Unknown opnd: " opnd))))
+
+; (define (apply-and-mov fun)
+;   (lambda (cgc result-reg opnd1 opnd2)
+;     (if (equal? result-reg opnd1)
+;         (fun cgc result-reg opnd2)
+;         (begin
+;           (x86-mov cgc result-reg opnd1)
+;           (fun cgc result-reg opnd2)))))
+
+(define (arith-instr instr)
+  (lambda (cgc result-loc opnd1 opnd2)
+    (let ((x86-result-loc (make-x86-opnd result-loc))
+          (x86-opnd1 (make-x86-opnd opnd1))
+          (x86-opnd2 (make-x86-opnd opnd2)))
+      (if (equal? result-loc opnd1)
+          (instr cgc x86-result-loc x86-opnd2)
+          (begin
+            (x86-mov cgc x86-result-loc x86-opnd1)
+            (instr cgc x86-result-loc x86-opnd2))))))
+
+(define (x86-label-align cgc label-opnd #!optional (align #f))
+  (if align (asm-align cgc (car align) (cdr align) #x90))
+  (x86-label cgc (lbl-opnd-label label-opnd)))
 
 (define data-instr
   (make-am-data x86-db x86-dw x86-dd x86-dq))
@@ -174,18 +180,22 @@
 ;; Args : CGC, reg/mem/label, reg/mem/imm/label
 ;; Todo: Check if some cases can be eliminated
 (define (mov-instr cgc dst src #!optional (width #f))
-  (define dst-type (opnd-type cgc dst))
-  (define src-type (opnd-type cgc src))
+  (define dst-type (opnd-type dst))
+  (define src-type (opnd-type src))
+
+  (define x86-src (make-x86-opnd src))
+  (define x86-dst (make-x86-opnd dst))
 
   ;; new-src can be directly used as an operand to mov
   (define (mov-in-dst new-src)
+    (define x86-new-src (make-x86-opnd new-src))
     (if (not (equal? dst new-src))
       (if (equal? dst-type 'ind)
         (get-free-register cgc (list dst new-src)
           (lambda (reg-dst)
-            (x86-mov cgc reg-dst dst)
-            (x86-mov cgc (x86-mem 0 reg-dst) new-src width)))
-        (x86-mov cgc dst new-src width))))
+            (x86-mov cgc reg-dst x86-dst)
+            (x86-mov cgc (x86-mem 0 reg-dst) x86-new-src width)))
+        (x86-mov cgc x86-dst x86-new-src width))))
 
   (if (not (equal? dst src))
     (cond
@@ -194,13 +204,13 @@
         (or (equal? src-type 'mem) (equal? src-type 'lbl)))
           (get-free-register cgc (list src)
             (lambda (reg-src)
-              (x86-mov cgc reg-src src)
+              (x86-mov cgc reg-src x86-src)
               (mov-in-dst reg-src))))
 
       ((equal? src-type 'ind)
         (let ((action
                 (lambda (reg-src)
-                  (x86-mov cgc reg-src src)
+                  (x86-mov cgc reg-src x86-src)
                   (x86-mov cgc reg-src (x86-mem 0 reg-src))
                   (mov-in-dst reg-src))))
           (if (equal? dst-type 'reg)
@@ -210,13 +220,12 @@
       (else
         (mov-in-dst src)))))
 
-(define (apply-and-mov fun)
-  (lambda (cgc result-reg opnd1 opnd2)
-    (if (equal? result-reg opnd1)
-        (fun cgc result-reg opnd2)
-        (begin
-          (x86-mov cgc result-reg opnd1)
-          (fun cgc result-reg opnd2)))))
+(define (x86-jmp-instr cgc opnd)
+  (if (lbl-opnd? opnd)
+    (x86-jmp cgc (lbl-opnd-label opnd))
+    (mov-if-necessary cgc '(reg int mem lbl) opnd
+      (lambda (opnd)
+        (x86-jmp cgc (make-x86-opnd opnd))))))
 
 (define (get-jumps condition)
   (define (flip pair) (cons (cdr pair) (car pair)))
@@ -240,20 +249,23 @@
       (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
 (define (cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
+  (define x86-opnd1 (make-x86-opnd opnd1))
+  (define x86-opnd2 (make-x86-opnd opnd2))
+
   (let* ((jumps (get-jumps condition)))
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
       (mov-if-necessary cgc '(reg mem) opnd1
-        (lambda (opnd1) (x86-cmp cgc opnd1 opnd2 opnds-width))))
+        (lambda (opnd1) (x86-cmp cgc x86-opnd1 x86-opnd2 opnds-width))))
 
     (cond
       ((and loc-false loc-true)
-        ((car jumps) cgc loc-true)
-        (x86-jmp cgc loc-false))
+        ((car jumps) cgc (lbl-opnd-label loc-true))
+        (x86-jmp cgc (lbl-opnd-label loc-false)))
       ((and (not loc-true) loc-false)
-        ((cdr jumps) cgc loc-false))
+        ((cdr jumps) cgc (lbl-opnd-label loc-false)))
       ((and loc-true (not loc-false))
-        ((car jumps) cgc loc-true))
+        ((car jumps) cgc (lbl-opnd-label loc-true)))
       (else
         (debug "am-compare-jump: No jump encoded")))))
 
@@ -309,7 +321,7 @@
       #f return-loc)
 
     ;; Jump to handler
-    (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
+    (am-mov cgc (car temp1) return-loc (cdr temp1))
     (call-handler cgc 'handler_stack_limit frame return-loc)))
 
 ;; Nargs passing
@@ -317,18 +329,17 @@
 (define (x86-set-nargs cgc arg-count)
   (debug "x86-set-narg: " arg-count)
   (let ((narg-field (get-processor-state-field cgc 'nargs)))
-    (x86-mov cgc (car narg-field) (int-opnd cgc arg-count) (cdr narg-field))))
-    ; (x86-mov cgc x86-narg-register (int-opnd cgc arg-count))))
+    (am-mov cgc (car narg-field) (int-opnd arg-count) (cdr narg-field))))
 
-(define (x86-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?)
-  (debug "x86-check-narg-simple: " arg-count)
-  (let ((narg-field (get-processor-state-field cgc 'nargs)))
-    (x86-cmp cgc (car narg-field) (int-opnd cgc arg-count) (cdr narg-field))
-    ; (x86-cmp cgc x86-narg-register (int-opnd cgc arg-count))
-    (if if-equal?
-      (x86-je cgc jmp-loc)
-      (x86-jne cgc jmp-loc))
-    (x86-jmp cgc error-label)))
+; (define (x86-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?)
+;   (debug "x86-check-narg-simple: " arg-count)
+;   (let ((narg-field (get-processor-state-field cgc 'nargs)))
+
+;     (x86-cmp cgc (car narg-field) (int-opnd arg-count) (cdr narg-field))
+;     (if if-equal?
+;       (x86-je cgc jmp-loc)
+;       (x86-jne cgc jmp-loc))
+;     (x86-jmp cgc error-label)))
 
 (define (x86-check-nargs cgc fun-label fs arg-count optional-args-values rest? place-label-fun)
   (define error-label (make-unique-label cgc "narg-error" #f))
@@ -338,13 +349,16 @@
         (narg-field (get-processor-state-field cgc 'nargs))
         (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
     (am-lbl cgc error-label)
-    (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
+    (am-mov cgc (car temp1-field) fun-label (cdr temp1-field))
     (am-jmp cgc (car error-handler))
 
     (place-label-fun fun-label)
-    (x86-cmp cgc (car narg-field) (int-opnd cgc arg-count) (cdr narg-field))
-    ; (x86-cmp cgc x86-narg-register (int-opnd cgc arg-count))
-    (x86-jne cgc error-label)))
+
+    (am-compare-jump cgc
+      condition-not-equal
+      (car narg-field) (int-opnd arg-count)
+      error-label #f
+      (cdr narg-field))))
 
 ; (define use-f-flag #t)
 ; ;; Must be ordered and can't be longer than 5
@@ -503,7 +517,7 @@
 ;           (am-sub cgc
 ;             (get-frame-pointer cgc)
 ;             (get-frame-pointer cgc)
-;             (int-opnd cgc (* (get-word-width cgc) offset)))))
+;             (int-opnd (* (get-word-width cgc) offset)))))
 
 ;       (mov-arguments-in-correct-position arg-count)
 
@@ -527,7 +541,7 @@
 ;         (if rest?
 ;           (am-mov cgc
 ;             (get-nth-arg cgc fs nargs nargs)
-;             (x86-imm-obj '())
+;             (obj-opnd '())
 ;             (get-word-width-bits cgc))))
 
 ;       (am-jmp cgc continue-label))
@@ -570,22 +584,22 @@
 ;       (if (not nargs-in-flags?) (x86-popf cgc))   ;; Replace with pop? Maybe faster
 ;       (am-mov cgc
 ;         (get-nth-arg cgc fs nargs nargs)
-;         (x86-imm-obj '())
+;         (obj-opnd '())
 ;         (get-word-width-bits cgc))
 ;       (am-sub cgc                           ;; Adjusts the frame pointer
 ;         (get-frame-pointer cgc)
 ;         (get-frame-pointer cgc)
-;         (int-opnd cgc (* (get-word-width cgc) 1)))
+;         (int-opnd (* (get-word-width cgc) 1)))
 ;       (am-jmp cgc continue-label)
 
 ;       (am-lbl cgc call-rest-handler)
 ;       (if nargs-in-flags? (x86-pushf cgc)) ;; Save flags if not saved before
-;       (x86-cmp cgc (car narg-field) (int-opnd cgc 0) (cdr narg-field))
+;       (x86-cmp cgc (car narg-field) (int-opnd 0) (cdr narg-field))
 ;       (x86-js cgc return-from-get-rest)
 ;       (x86-popf cgc)
 
 ;       ;; Jump to rest handler here
-;       (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
+;       (am-mov cgc (car temp1-field) fun-label (cdr temp1-field))
 ;       (am-jmp cgc (car rest-handler))
 
 ;       ;; Jump to continue after restoring flags
@@ -593,7 +607,7 @@
 ;       (x86-popf cgc)
 ;       (am-mov cgc
 ;         (car narg-field)
-;         (int-opnd cgc 0)
+;         (int-opnd 0)
 ;         (cdr narg-field))
 ;       (am-jmp cgc continue-label)))
 
@@ -605,7 +619,7 @@
 ;         (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
 ;     (am-lbl cgc error-label)
 ;     (if (not nargs-in-flags?) (x86-popf cgc))
-;     (am-mov cgc (car temp1-field) (lbl-opnd cgc fun-label) (cdr temp1-field))
+;     (am-mov cgc (car temp1-field) fun-label (cdr temp1-field))
 ;     (am-jmp cgc (car error-handler)))
 
 ;   (place-label-fun fun-label)
@@ -644,8 +658,8 @@
           (temp1 (get-processor-state-field cgc 'temp1))
           (return-loc (make-unique-label cgc "return-from-gc")))
 
-      (x86-lea cgc dest-reg (mem-opnd cgc offset (get-heap-pointer cgc)))
-      (x86-add cgc (get-heap-pointer cgc) (int-opnd cgc bytes))
+      (x86-lea cgc dest-reg (mem-opnd (get-heap-pointer cgc) offset))
+      (x86-add cgc (get-heap-pointer cgc) (int-opnd bytes))
 
       (am-compare-jump cgc
         (condition-lesser #f #f)
@@ -653,7 +667,7 @@
         #f return-loc)
 
       ;; Jump to handler
-      (am-mov cgc (car temp1) (lbl-opnd cgc return-loc) (cdr temp1))
+      (am-mov cgc (car temp1) return-loc (cdr temp1))
       (call-handler cgc 'handler_heap_limit frame return-loc)))
 
 (define (x86-place-extra-data cgc)
@@ -671,24 +685,24 @@
 ;; Primitives
 
 (define x86-prim-fx+
-  (foldl-prim x86-add
+  (foldl-prim
+    (lambda (cgc opnd1 opnd2) (x86-add cgc (make-x86-opnd opnd1) (make-x86-opnd opnd2)))
     allowed-opnds: '(reg mem int)
     allowed-opnds-accum: '(reg mem)
     start-value: 0
     start-value-null?: #t
-    reduce-1:
-      (lambda (cgc dst opnd)
-        (am-mov cgc dst opnd))
+    reduce-1: am-mov
     commutative: #t))
 
 (define x86-prim-fx-
-  (foldl-prim x86-sub
+  (foldl-prim
+    (lambda (cgc opnd1 opnd2) (x86-sub cgc (make-x86-opnd opnd1) (make-x86-opnd opnd2)))
     allowed-opnds: '(reg mem int)
     allowed-opnds-accum: '(reg mem)
     ; start-value: 0 ;; Start the fold on the first operand
     reduce-1:
       (lambda (cgc dst opnd)
-        (am-sub cgc dst (int-opnd cgc 0) opnd))
+        (am-sub cgc dst (int-opnd 0) opnd))
     commutative: #f))
 
 (define x86-prim-fx<
@@ -751,27 +765,27 @@
     (with-result-opnd cgc result-action args
       allowed-opnds: '(reg)
       fun:
-        (lambda (result-opnd result-opnd-in-args)
+        (lambda (result-reg result-opnd-in-args)
           (let* ((word (get-word-width cgc))
                  (size (* word 3))
                  (tag 3)
                  (offset (+ tag (* 2 word))))
 
-            (am-allocate-memory cgc result-opnd size offset
+            (am-allocate-memory cgc result-reg size offset
               (codegen-context-frame cgc))
 
             (am-mov cgc
-              (mem-opnd cgc (- offset) result-opnd)
-              (int-opnd cgc (* 8 3))
+              (mem-opnd result-reg (- offset))
+              (int-opnd (* 8 3))
               (get-word-width-bits cgc))
 
             (am-mov cgc
-              (mem-opnd cgc (- word offset) result-opnd)
+              (mem-opnd result-reg (- word offset))
               (cadr args)
               (get-word-width-bits cgc))
 
             (am-mov cgc
-              (mem-opnd cgc (- (* 2 word) offset) result-opnd)
+              (mem-opnd result-reg (- (* 2 word) offset))
               (car args)
               (get-word-width-bits cgc)))))))
 
