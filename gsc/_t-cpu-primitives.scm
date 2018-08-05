@@ -90,12 +90,12 @@
       (am-mov
         cgc
         (then-move-store-location result-action)
-        (make-obj-opnd cgc value)))
+        (make-obj-opnd value)))
     ((then-return? result-action)
       (am-mov
         cgc
         (get-register cgc 1)
-        (make-obj-opnd cgc value))
+        (make-obj-opnd value))
       (am-jmp cgc (get-register cgc 0)))
     (then-nothing?
       (debug "result-action is nop"))
@@ -107,7 +107,7 @@
   (debug "result-action: " result-action)
   (cond
     ((then-jump? result-action)
-      (let ((false-opnd (make-obj-opnd cgc #f))
+      (let ((false-opnd (make-obj-opnd #f))
             (true-jmp (then-jump-true-location result-action))
             (false-jmp (then-jump-false-location result-action)))
         (if opnd-not-false
@@ -148,21 +148,21 @@
           (action true-label false-label)
 
           (am-lbl cgc true-label)
-          (am-mov cgc mov-loc (make-obj-opnd cgc #t))
+          (am-mov cgc mov-loc (make-obj-opnd #t))
           (am-jmp cgc continue-label)
 
           (am-lbl cgc false-label)
-          (am-mov cgc mov-loc (make-obj-opnd cgc #f))
+          (am-mov cgc mov-loc (make-obj-opnd #f))
           (am-lbl cgc continue-label)))
       ((then-return? result-action)
         (action true-label false-label)
 
         (am-lbl cgc true-label)
-        (am-mov cgc (get-register cgc 1) (make-obj-opnd cgc #t))
+        (am-mov cgc (get-register cgc 1) (make-obj-opnd #t))
         (am-jmp cgc continue-label)
 
         (am-lbl cgc false-label)
-        (am-mov cgc (get-register cgc 1) (make-obj-opnd cgc #f))
+        (am-mov cgc (get-register cgc 1) (make-obj-opnd #f))
 
         (am-lbl cgc continue-label)
         (am-jmp cgc (get-register cgc 0)))
@@ -233,7 +233,7 @@
                     ((or (none? start-value) start-value-null?)
                       (am-mov cgc accum (car args)))
                     ((not start-value-null?)
-                      (am-mov cgc accum (make-obj-opnd cgc start-value)))
+                      (am-mov cgc accum (make-obj-opnd start-value)))
                     (else
                       (compiler-internal-error "foldl-prim : No start-value"))))
 
@@ -418,7 +418,7 @@
   (call-with-nargs args
     (lambda (arg1)
       (debug "identity not")
-      (am-if-eq cgc arg1 (make-obj-opnd cgc #f)
+      (am-if-eq cgc arg1 (make-obj-opnd #f)
         (lambda (cgc) (am-return-const cgc result-action #t))
         (lambda (cgc) (am-return-const cgc result-action #f))
         #f
