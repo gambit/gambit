@@ -362,7 +362,7 @@
     (else
       (compiler-internal-error "make-opnd: Unknown GVM opnd: " opnd))))
 
-(define (make-obj-opnd cgc val)
+(define (make-obj-opnd val)
   (cond
     ((immediate-object? val)
       (int-opnd (format-imm-object val)))
