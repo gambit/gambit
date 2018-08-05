@@ -687,7 +687,7 @@
 (define (make-function-opnds func)
   (lambda (cgc . args) (apply func (cons cgc (map make-x86-opnd args)))))
 
-(define x86-prim-fx+
+(define x86-prim-##fx+
   (foldl-prim
     (make-function-opnds x86-add)
     allowed-opnds: '(reg mem int)
@@ -697,7 +697,7 @@
     reduce-1: am-mov
     commutative: #t))
 
-(define x86-prim-fx-
+(define x86-prim-##fx-
   (foldl-prim
     (make-function-opnds x86-sub)
     allowed-opnds: '(reg mem int)
@@ -706,7 +706,8 @@
     reduce-1: (lambda (cgc dst opnd) (am-sub cgc dst (int-opnd 0) opnd))
     commutative: #f))
 
-(define x86-prim-fx<
+
+(define x86-prim-##fx<
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
@@ -717,7 +718,7 @@
     allowed-opnds1: '(reg mem)
     allowed-opnds2: '(reg int)))
 
-(define x86-prim-fx<=
+(define x86-prim-##fx<=
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
@@ -728,7 +729,7 @@
     allowed-opnds1: '(reg mem)
     allowed-opnds2: '(reg int)))
 
-(define x86-prim-fx>
+(define x86-prim-##fx>
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
@@ -739,7 +740,7 @@
     allowed-opnds1: '(reg mem)
     allowed-opnds2: '(reg int)))
 
-(define x86-prim-fx>=
+(define x86-prim-##fx>=
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
@@ -750,7 +751,7 @@
     allowed-opnds1: '(reg mem)
     allowed-opnds2: '(reg int)))
 
-(define x86-prim-fx=
+(define x86-prim-##fx=
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
@@ -795,7 +796,7 @@
     (check-nargs-if-necessary cgc result-action 1)
     (call-with-nargs args
       (lambda (arg1)
-        (am-if-eq cgc arg1 (make-obj-opnd cgc '())
+        (am-if-eq cgc arg1 (make-obj-opnd '())
           (lambda (cgc) (am-return-const cgc result-action #t))
           (lambda (cgc) (am-return-const cgc result-action #f))
           #f
@@ -806,13 +807,13 @@
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
     (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
 
-    (table-set! table '##fx+      (make-prim-obj x86-prim-fx+  2 #t #f))
-    (table-set! table '##fx-      (make-prim-obj x86-prim-fx-  2 #t #f))
-    (table-set! table '##fx<      (make-prim-obj x86-prim-fx<  2 #t #t))
-    (table-set! table '##fx<=     (make-prim-obj x86-prim-fx<= 2 #t #t))
-    (table-set! table '##fx>      (make-prim-obj x86-prim-fx>  2 #t #t))
-    (table-set! table '##fx>=     (make-prim-obj x86-prim-fx>= 2 #t #t))
-    (table-set! table '##fx=      (make-prim-obj x86-prim-fx=  2 #t #t))
+    (table-set! table '##fx+      (make-prim-obj x86-prim-##fx+  2 #t #f))
+    (table-set! table '##fx-      (make-prim-obj x86-prim-##fx-  2 #t #f))
+    (table-set! table '##fx<      (make-prim-obj x86-prim-##fx<  2 #t #t))
+    (table-set! table '##fx<=     (make-prim-obj x86-prim-##fx<= 2 #t #t))
+    (table-set! table '##fx>      (make-prim-obj x86-prim-##fx>  2 #t #t))
+    (table-set! table '##fx>=     (make-prim-obj x86-prim-##fx>= 2 #t #t))
+    (table-set! table '##fx=      (make-prim-obj x86-prim-##fx=  2 #t #t))
 
     (table-set! table '##car      (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
     (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 0) 1 #t #f))
