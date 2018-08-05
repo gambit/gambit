@@ -706,6 +706,18 @@
     reduce-1: (lambda (cgc dst opnd) (am-sub cgc dst (int-opnd 0) opnd))
     commutative: #f))
 
+(define x86-prim-##fx+?
+  (lambda (cgc result-action args)
+    (with-result-opnd cgc result-action args
+      allowed-opnds: '(reg)
+      fun:
+      (lambda (result-reg result-opnd-in-args)
+        (let ((opnds (map make-x86-opnd args))
+              (lbl-continue (make-unique-label cgc "NO-##fx+-overflow" #f)))
+          (am-add cgc result-reg (car args) (cadr args))
+          (x86-jno cgc (lbl-opnd-label lbl-continue))
+          (am-mov cgc result-reg (make-obj-opnd #f))
+          (am-lbl cgc lbl-continue))))))
 
 (define x86-prim-##fx<
   (foldl-compare-prim
@@ -809,6 +821,7 @@
 
     (table-set! table '##fx+      (make-prim-obj x86-prim-##fx+  2 #t #f))
     (table-set! table '##fx-      (make-prim-obj x86-prim-##fx-  2 #t #f))
+    (table-set! table '##fx+?     (make-prim-obj x86-prim-##fx+? 2 #t #f))
     (table-set! table '##fx<      (make-prim-obj x86-prim-##fx<  2 #t #t))
     (table-set! table '##fx<=     (make-prim-obj x86-prim-##fx<= 2 #t #t))
     (table-set! table '##fx>      (make-prim-obj x86-prim-##fx>  2 #t #t))
