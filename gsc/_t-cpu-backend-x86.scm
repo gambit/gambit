@@ -658,8 +658,8 @@
           (temp1 (get-processor-state-field cgc 'temp1))
           (return-loc (make-unique-label cgc "return-from-gc")))
 
-      (x86-lea cgc dest-reg (mem-opnd (get-heap-pointer cgc) offset))
-      (x86-add cgc (get-heap-pointer cgc) (int-opnd bytes))
+      (x86-lea cgc dest-reg (make-x86-opnd (mem-opnd (get-heap-pointer cgc) offset)))
+      (x86-add cgc (get-heap-pointer cgc) (make-x86-opnd (int-opnd bytes)))
 
       (am-compare-jump cgc
         (condition-lesser #f #f)
@@ -684,9 +684,12 @@
 
 ;; Primitives
 
+(define (make-function-opnds func)
+  (lambda (cgc . args) (apply func (cons cgc (map make-x86-opnd args)))))
+
 (define x86-prim-fx+
   (foldl-prim
-    (lambda (cgc opnd1 opnd2) (x86-add cgc (make-x86-opnd opnd1) (make-x86-opnd opnd2)))
+    (make-function-opnds x86-add)
     allowed-opnds: '(reg mem int)
     allowed-opnds-accum: '(reg mem)
     start-value: 0
@@ -696,13 +699,11 @@
 
 (define x86-prim-fx-
   (foldl-prim
-    (lambda (cgc opnd1 opnd2) (x86-sub cgc (make-x86-opnd opnd1) (make-x86-opnd opnd2)))
+    (make-function-opnds x86-sub)
     allowed-opnds: '(reg mem int)
     allowed-opnds-accum: '(reg mem)
     ; start-value: 0 ;; Start the fold on the first operand
-    reduce-1:
-      (lambda (cgc dst opnd)
-        (am-sub cgc dst (int-opnd 0) opnd))
+    reduce-1: (lambda (cgc dst opnd) (am-sub cgc dst (int-opnd 0) opnd))
     commutative: #f))
 
 (define x86-prim-fx<
