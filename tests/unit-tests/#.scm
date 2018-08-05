@@ -2,7 +2,7 @@
 
 ;;; File: "#.scm"
 
-;;; Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -199,5 +199,15 @@
 
 (##define-syntax check-exn        (lambda (src) (##expand-check src)))
 (##define-syntax check-tail-exn   (lambda (src) (##expand-check src)))
+
+(define (exit0-when-unimplemented-operation-os-exception thunk)
+  (with-exception-catcher
+   (lambda (e)
+     (if (and (os-exception? e)
+              (equal? (##os-err-code->string (os-exception-code e))
+                      "Unimplemented operation"))
+         (exit 0)
+         (raise e)))
+   thunk))
 
 ;;;============================================================================

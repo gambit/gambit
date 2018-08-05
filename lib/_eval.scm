@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -153,6 +153,12 @@
         (##make-locat container
                       (##vector-ref src 3))
         #f)))
+
+(define (##source-path src)
+  (let ((locat
+         (##source-locat src)))
+    (and locat
+         (##container->path (##locat-container locat)))))
 
 (define (##desourcify src)
 
@@ -4162,6 +4168,7 @@
          script-callback
          clone-cte?
          raise-os-exception?
+         linker-name
          quiet?)
 
   (define (raise-os-exception-if-needed x)
@@ -4190,7 +4197,11 @@
             (##vector-ref x 2)))))
 
   (define (load-binary abs-path)
-    (let ((result (##load-object-file abs-path quiet?)))
+    (let* ((linker-name
+            (or linker-name
+                (##path-strip-directory abs-path)))
+           (result
+            (##load-object-file abs-path linker-name quiet?)))
 
       (define (raise-error code)
         (if (##fixnum? code)
@@ -4302,17 +4313,9 @@
 (define-prim (##load-source-if-more-recent-set! x)
   (set! ##load-source-if-more-recent x))
 
-(define-prim (##load-object-file abs-path quiet?)
-
-  (##define-macro (module-prefix)
-    c#module-prefix)
-
-  (let* ((module-name
-          (##string-append
-           (module-prefix)
-           (##path-strip-directory abs-path)))
-         (result
-          (##os-load-object-file abs-path module-name)))
+(define-prim (##load-object-file abs-path linker-name quiet?)
+  (let ((result
+         (##os-load-object-file abs-path linker-name)))
     (cond ((##not (##vector? result))
            result)
           ((##fx= 2 (##vector-length result))
@@ -4350,6 +4353,7 @@
             (lambda (script-line script-path) #f)
             #t
             #t
+            #f
             #f)))
 
 ;;;----------------------------------------------------------------------------
@@ -4368,6 +4372,7 @@
           (lambda (script-line script-path) #f)
           #f ;; must be #f for the macros to be added to the interaction environment
           #f
+          #f
           #f)
 
   (let ((standard-level (##get-standard-level)))
@@ -4376,6 +4381,7 @@
                 (lambda (script-line script-path) #f)
                 #t
                 #t
+                #f
                 #f))))
 
 ;;;----------------------------------------------------------------------------

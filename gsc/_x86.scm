@@ -2,7 +2,7 @@
 
 ;;; File: "_x86.scm"
 
-;;; Copyright (c) 2010-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2010-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -76,6 +76,10 @@
 (define (x86-imm-late-width x) (car x))
 (define (x86-imm-late-handler x) (cdr x))
 
+(define (x86-imm-obj obj) (cons obj '()))
+(define (x86-imm-obj? x) (and (pair? x) (null? (cdr x))))
+(define (x86-imm-obj-value x) (car x))
+
 ;;(define (x86-glo name #!optional (offset 0))
 ;;  (vector name offset))
 ;;
@@ -123,6 +127,8 @@
                                 (x86-offset->string (x86-imm-lbl-offset opnd))))
                          ((x86-imm-late? opnd)
                           ((x86-imm-late-handler opnd) cgc 'listing))
+                         ((x86-imm-obj? opnd)
+                          (list "'" (object->string (x86-imm-obj-value opnd))))
                          (else
                           (error "unknown immediate" opnd)))))
             #;
@@ -205,6 +211,8 @@
                           (x86-offset->string (x86-imm-lbl-offset opnd))))
                    ((x86-imm-late? opnd)
                     ((x86-imm-late-handler opnd) cgc 'listing))
+                   ((x86-imm-obj? opnd)
+                    (list "'" (object->string (x86-imm-obj-value opnd))))
                    (else
                     (error "unknown immediate" opnd))))
             #;
@@ -423,6 +431,9 @@
                        (not (x86-reg64? reg1))))))
       (asm-8 cgc #x67))) ;; address size override prefix
 
+#|
+TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
+
 (define (x86-abs-addr cgc label offset width)
 
   (assert (fx= width 32)
@@ -444,6 +455,7 @@
        4)
      (lambda (cgc self)
        (asm-32-le cgc (fx+ (asm-label-pos label) offset))))))
+|#
 
 (define (x86-opnd-modrm/sib cgc field opnd)
   (let ((modrm-rf
@@ -507,7 +519,7 @@
                                 (asm-32-le cgc offset))
                                ((asm-signed8? offset)
                                 (if (or (not (fx= offset 0)) ;; non-null offset?
-                                        (fx= field1 5))      ;; or RBP
+                                        (fx= field1-lo 5))   ;; or RBP/R13
                                     (begin ;; use 8 bit displacement
                                       (asm-8 cgc (fx+ #x40 modrm*)) ;; ModR/M
                                       (asm-8 cgc sib) ;; SIB
@@ -555,28 +567,25 @@
          imm)
         ((x86-imm-late? imm)
          ((x86-imm-late-handler imm) cgc 'encode))
+        ((x86-imm-obj? imm)
+         (x86-imm-obj-encode cgc imm imm-width)
+         imm)
         (else
          (error "unknown immediate"))))
 
 (define (x86-imm-lbl-encode cgc imm-lbl imm-width)
-  (let ((lbl (asm-make-label cgc 'fixup)))
-    (codegen-context-fixup-list-set!
-     cgc
-     (cons (cons lbl imm-width)
-           (codegen-context-fixup-list cgc)))
-    (asm-label cgc lbl)
-    (asm-at-assembly
+  (codegen-fixup-lbl!
+   cgc
+   (x86-imm-lbl-label imm-lbl)
+   (x86-imm-lbl-offset imm-lbl)
+   #f ;; absolute
+   imm-width))
 
-     cgc
-
-     (lambda (cb self)
-       (fxarithmetic-shift-right imm-width 3))
-
-     (lambda (cb self)
-       (let ((dist
-              (fx+ (asm-label-pos (x86-imm-lbl-label imm-lbl))
-                   (x86-imm-lbl-offset imm-lbl))))
-         (asm-int-le cb dist imm-width))))))
+(define (x86-imm-obj-encode cgc imm-obj imm-width)
+  (codegen-fixup-obj!
+   cgc
+   (x86-imm-obj-value imm-obj)
+   imm-width))
 
 ;;;----------------------------------------------------------------------------
 
@@ -933,9 +942,12 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; X86 instructions: NOP, LEAVE, HLT, CMC, CLC, STC, CLI, STI, CLD, and STD.
+;;; X86 instructions: NOP, PUSHF, POPF, LEAVE, HLT, CMC, CLC, STC,
+;;; CLI, STI, CLD, and STD.
 
 (define (x86-nop cgc) (x86-no-opnd-instr cgc #x90))
+(define (x86-pushf cgc) (x86-no-opnd-instr cgc #x9c))
+(define (x86-popf cgc) (x86-no-opnd-instr cgc #x9d))
 (define (x86-leave cgc) (x86-no-opnd-instr cgc #xc9))
 (define (x86-hlt cgc) (x86-no-opnd-instr cgc #xf4))
 (define (x86-cmc cgc) (x86-no-opnd-instr cgc #xf5))
@@ -954,6 +966,10 @@
       (x86-listing cgc
                    (cond ((fx= opcode #x90)
                           "nop")
+                         ((fx= opcode #x9c)
+                          "pushf")
+                         ((fx= opcode #x9d)
+                          "popf")
                          ((fx= opcode #xc9)
                           "leave")
                          (else
@@ -975,6 +991,14 @@
                    "int"
                    0
                    (x86-imm-int n 0))))
+
+(define (x86-int3 cgc) ;; one byte encoding for "int 3"
+  (asm-8 cgc #xcc) ;; opcode
+  (if (codegen-context-listing-format cgc)
+      (x86-listing cgc
+                   "int"
+                   0
+                   (x86-imm-int 3 0))))
 
 ;;;----------------------------------------------------------------------------
 

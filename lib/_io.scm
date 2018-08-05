@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -201,9 +201,10 @@
           (macro-default-stderr-redir)
           (macro-default-pseudo-term)
           (macro-default-show-console)
-          (macro-default-server-address)
-          (macro-default-port-number)
-          (macro-default-socket-type)
+          '() ;; address
+          '() ;; port-number
+          '() ;; local-address
+          '() ;; local-port-number
           (macro-default-coalesce)
           (macro-default-keep-alive)
           (macro-default-backlog)
@@ -444,16 +445,6 @@
                 (##fx<= 0 value)
                 (##fx<= value 65535))
            value)
-          (else
-           #f)))
-
-  (define (socket-type value)
-    (cond ((or (##eq? value 'TCP) (##eq? value 'tcp))
-           (macro-socket-type-TCP))
-          ((or (##eq? value 'UDP) (##eq? value 'udp))
-           (macro-socket-type-UDP))
-          ((or (##eq? value 'RAW) (##eq? value 'raw))
-           (macro-socket-type-RAW))
           (else
            #f)))
 
@@ -904,13 +895,13 @@
                                         (loop rest2))
                                       (error name))))
 
-                               ((##eq? name 'server-address:)
+                               ((or (##eq? name 'server-address:) ;; keep for backward compatibility
+                                    (##eq? name 'address:)
+                                    (##eq? name 'local-address:))
                                 (cond ((##string? value)
                                        (let ((address-and-port-number
                                               (##string->address-and-port-number
-                                               value
-                                               (macro-default-server-address)
-                                               #f)))
+                                               value)))
                                          (if address-and-port-number
                                              (let ((address
                                                     (##car
@@ -918,40 +909,47 @@
                                                    (port-number
                                                     (##cdr
                                                      address-and-port-number)))
-                                               (macro-psettings-server-address-set!
-                                                psettings
-                                                address)
-                                               (if port-number
-                                                   (macro-psettings-port-number-set!
+                                               (if (##eq? name 'local-address:)
+                                                   (macro-psettings-local-address-set!
                                                     psettings
-                                                    port-number))
+                                                    address)
+                                                   (macro-psettings-address-set!
+                                                    psettings
+                                                    address))
+                                               (if port-number
+                                                   (if (##eq? name 'local-address:)
+                                                       (macro-psettings-local-port-number-set!
+                                                        psettings
+                                                        port-number)
+                                                       (macro-psettings-port-number-set!
+                                                        psettings
+                                                        port-number)))
                                                (loop rest2))
                                              (error name))))
                                       ((##ip-address? value)
-                                       (macro-psettings-server-address-set!
-                                        psettings
-                                        value)
+                                       (if (##eq? name 'local-address:)
+                                           (macro-psettings-local-address-set!
+                                            psettings
+                                            value)
+                                           (macro-psettings-address-set!
+                                            psettings
+                                            value))
                                        (loop rest2))
                                       (else
                                        (error name))))
 
-                               ((##eq? name 'port-number:)
+                               ((or (##eq? name 'port-number:)
+                                    (##eq? name 'local-port-number:))
                                 (let ((x (port-number value)))
                                   (if x
                                       (begin
-                                        (macro-psettings-port-number-set!
-                                         psettings
-                                         x)
-                                        (loop rest2))
-                                      (error name))))
-
-                               ((##eq? name 'socket-type:)
-                                (let ((x (socket-type value)))
-                                  (if x
-                                      (begin
-                                        (macro-psettings-socket-type-set!
-                                         psettings
-                                         x)
+                                        (if (##eq? name 'local-port-number:)
+                                            (macro-psettings-local-port-number-set!
+                                             psettings
+                                             x)
+                                            (macro-psettings-port-number-set!
+                                             psettings
+                                             x))
                                         (loop rest2))
                                       (error name))))
 
@@ -4015,17 +4013,14 @@
               #!optional
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
-  (if (macro-character-output-port? port)
-      (begin
-        (##write-generic-to-character-port
-         'display
-         port
-         (macro-character-port-output-readtable port)
-         force?
-         max-length
-         obj)
-        (##void))
-      ((macro-object-port-write-datum port) port obj #f)))
+  (##write-generic-to-character-port
+   'display
+   port
+   (macro-character-port-output-readtable port)
+   force?
+   max-length
+   obj)
+  (##void))
 
 (define-prim (display
               obj
@@ -4036,7 +4031,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-object-output-port p 2 (display obj p)
+      (macro-check-character-output-port p 2 (display obj p)
         (##display obj p)))))
 
 (define-prim (##pretty-print
@@ -4045,17 +4040,14 @@
               #!optional
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
-  (if (macro-character-output-port? port)
-      (begin
-        (##write-generic-to-character-port
-         'pretty-print
-         port
-         (macro-character-port-output-readtable port)
-         force?
-         max-length
-         obj)
-        (##newline port))
-      ((macro-object-port-write-datum port) port obj #f)))
+  (##write-generic-to-character-port
+   'pretty-print
+   port
+   (macro-character-port-output-readtable port)
+   force?
+   max-length
+   obj)
+  (##newline port))
 
 (define-prim (pretty-print
               obj
@@ -4066,7 +4058,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-object-output-port p 2 (pretty-print obj p)
+      (macro-check-character-output-port p 2 (pretty-print obj p)
         (##pretty-print obj p)))))
 
 (define-prim (##print
@@ -4075,17 +4067,14 @@
               #!optional
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
-  (if (macro-character-output-port? port)
-      (begin
-        (##write-generic-to-character-port
-         'print
-         port
-         (macro-character-port-output-readtable port)
-         force?
-         max-length
-         obj)
-        (##void))
-      ((macro-object-port-write-datum port) port obj #f)))
+  (##write-generic-to-character-port
+   'print
+   port
+   (macro-character-port-output-readtable port)
+   force?
+   max-length
+   obj)
+  (##void))
 
 (macro-case-target
 
@@ -4099,7 +4088,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-object-output-port p 2 (print port: p . body)
+      (macro-check-character-output-port p 2 (print port: p . body)
         (##print body p)))))
 
 (define-prim (println
@@ -4110,7 +4099,7 @@
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port)))
-      (macro-check-object-output-port p 2 (println port: p . body)
+      (macro-check-character-output-port p 2 (println port: p . body)
         (begin
           (##print body p)
           (##newline p))))))
@@ -6906,9 +6895,11 @@
 
   (define allowed-client-settings
     '(; broadcast:
-      server-address:
+      server-address: ;; keep for backward compatibility
+      address:
       port-number:
-      ;; socket-type:
+      local-address:
+      local-port-number:
       keep-alive:
       coalesce:
       output-width:
@@ -6932,9 +6923,10 @@
   (define allowed-server-settings
     '(reuse-address:
       backlog:
-      server-address:
-      port-number:
-      ;; socket-type:
+      server-address: ;; keep for backward compatibility
+      port-number:    ;; keep for backward compatibility
+      local-address:
+      local-port-number:
       keep-alive:
       coalesce:
       output-width:
@@ -6993,51 +6985,86 @@
    (cond ((##fixnum? port-number-or-address-or-settings)
           (##list 'port-number: port-number-or-address-or-settings))
          ((##string? port-number-or-address-or-settings)
-          (##list 'server-address: port-number-or-address-or-settings))
+          (##list 'address: port-number-or-address-or-settings))
          (else
           port-number-or-address-or-settings))
    fail
    (lambda (psettings)
-     (let ((server-address-or-host
-            (macro-psettings-server-address psettings)))
 
-       (define (open server-address)
-         (let ((port-number
-                (macro-psettings-port-number psettings)))
-           (if (or (##eq? server-address #f)
-                   (##not port-number))
-               (fail)
-               (let ((device
-                      (##os-device-tcp-client-open
-                       server-address
-                       port-number
-                       (psettings->options psettings)
-                       (macro-psettings-tls-context psettings))))
-                 (if (##fixnum? device)
-                     (if raise-os-exception?
-                         (##raise-os-exception #f device prim port-number-or-address-or-settings)
-                         (cont device))
-                     (let ((port
-                            (##make-tcp-client-port
-                             (##list 'tcp-client
-                                     server-address-or-host
-                                     port-number)
-                             device
-                             psettings)))
+     (define (stage1)
+       (let ((address-or-host
+              (macro-psettings-address psettings)))
+         (if (##string? address-or-host)
+             (let ((info (##os-host-info address-or-host)))
+               (if (##fixnum? info)
+                   (if raise-os-exception?
+                       (##raise-os-exception #f info prim port-number-or-address-or-settings)
+                       (cont info))
+                 (stage2 address-or-host
+                         (##car (macro-host-info-addresses info)))))
+             (stage2 address-or-host
+                     address-or-host))))
+
+     (define (stage2 address-or-host address)
+       (let ((local-address-or-host
+              (macro-psettings-local-address psettings)))
+         (if (##string? local-address-or-host)
+             (let ((info (##os-host-info local-address-or-host)))
+               (if (##fixnum? info)
+                   (if raise-os-exception?
+                       (##raise-os-exception #f info prim port-number-or-address-or-settings)
+                       (cont info))
+                 (stage3 address-or-host
+                         address
+                         (##car (macro-host-info-addresses info)))))
+             (stage3 address-or-host
+                     address
+                     local-address-or-host))))
+
+     (define (stage3 address-or-host address local-address)
+       (let ((port-number
+              (if (##null? (macro-psettings-port-number psettings))
+                  #f
+                  (macro-psettings-port-number psettings)))
+             (local-port-number
+              (if (##null? (macro-psettings-local-port-number psettings))
+                  #f
+                  (macro-psettings-local-port-number psettings))))
+         (if (##not port-number)
+             (fail)
+             (let ((device
+                    (##os-device-tcp-client-open
+                     (if (##null? local-address)
+                         #f ;; default local-address to any interface
+                         local-address)
+                     local-port-number
+                     (if (##null? address)
+                         (macro-localhost) ;; default address to localhost
+                         address)
+                     port-number
+                     (psettings->options psettings)
+                     (macro-psettings-tls-context psettings)
+                     (and (##string? address-or-host) address-or-host))))
+               (if (##fixnum? device)
+                   (if raise-os-exception?
+                       (##raise-os-exception #f device prim port-number-or-address-or-settings)
+                       (cont device))
+                   (let ((port
+                          (##make-tcp-client-port
+                           (##list 'tcp-client
+                                   (if (##null? address)
+                                       (macro-localhost)
+                                       (or address-or-host "*"))
+                                   port-number)
+                           device
+                           psettings)))
 ;;; wait for connection to be established
-;;;                       (##wait-for-io!
-;;;                        (macro-device-port-wdevice-condvar port)
-;;;                        (macro-port-wtimeout port))
-                       (cont port)))))))
+;;;                     (##wait-for-io!
+;;;                      (macro-device-port-wdevice-condvar port)
+;;;                      (macro-port-wtimeout port))
+                     (cont port)))))))
 
-       (if (##string? server-address-or-host)
-           (let ((info (##os-host-info server-address-or-host)))
-             (if (##fixnum? info)
-                 (if raise-os-exception?
-                     (##raise-os-exception #f info prim port-number-or-address-or-settings)
-                     (cont info))
-                 (open (##car (macro-host-info-addresses info)))))
-           (open server-address-or-host))))))
+     (stage1))))
 
 (define-prim (open-tcp-client port-number-or-address-or-settings)
   (macro-force-vars (port-number-or-address-or-settings)
@@ -7059,7 +7086,9 @@
   (let loop ()
     (let ((result
            (##os-device-tcp-client-socket-info
-            (macro-device-port-rdevice-condvar port)
+            (macro-condvar-name
+             (or (macro-device-port-rdevice-condvar port)
+                 (macro-device-port-wdevice-condvar port)))
             (##eq? prim tcp-client-peer-socket-info))))
       (if (##fixnum? result)
 
@@ -7073,13 +7102,18 @@
 
           (##socket-info-setup! result)))))
 
-(define-prim (##tcp-client-self-socket-info port)
-  (##tcp-client-socket-info port tcp-client-self-socket-info))
+(define-prim (##tcp-client-local-socket-info port)
+  (##tcp-client-socket-info port tcp-client-local-socket-info))
 
-(define-prim (tcp-client-self-socket-info port)
+(define-prim (tcp-client-local-socket-info port)
+  (macro-force-vars (port)
+    (macro-check-tcp-client-port port 1 (tcp-client-local-socket-info port)
+      (##tcp-client-local-socket-info port))))
+
+(define-prim (tcp-client-self-socket-info port) ;;TODO: deprecated
   (macro-force-vars (port)
     (macro-check-tcp-client-port port 1 (tcp-client-self-socket-info port)
-      (##tcp-client-self-socket-info port))))
+      (##tcp-client-local-socket-info port))))
 
 (define-prim (##tcp-client-peer-socket-info port)
   (##tcp-client-socket-info port tcp-client-peer-socket-info))
@@ -7331,7 +7365,7 @@
       (##declare (not interrupts-enabled))
 
       (##list 'tcp-server
-              (macro-psettings-port-number
+              (macro-psettings-local-port-number
                (macro-tcp-server-port-client-psettings port))))
 
     ;; This code gives a more informative name to the tcp-client port but
@@ -7347,11 +7381,12 @@
     ;;
     ;;          (let ((info
     ;;                 (##os-device-tcp-client-socket-info
-    ;;                  (macro-device-port-wdevice-condvar port)
+    ;;                  (macro-condvar-name
+    ;;                   (macro-device-port-wdevice-condvar port))
     ;;                  #t)))
     ;;            (if (##fixnum? info)
     ;;              (##list 'tcp-client
-    ;;                      (macro-psettings-port-number
+    ;;                      (macro-psettings-local-port-number
     ;;                       (macro-tcp-server-port-client-psettings port)))
     ;;              (let ((address
     ;;                     (macro-socket-info-address info))
@@ -7510,37 +7545,42 @@
   (##make-tcp-psettings
    #f
    (cond ((##fixnum? port-number-or-address-or-settings)
-          (##list 'port-number: port-number-or-address-or-settings))
+          (##list 'local-port-number: port-number-or-address-or-settings))
          ((##string? port-number-or-address-or-settings)
-          (##list 'server-address: port-number-or-address-or-settings))
+          (##list 'local-address: port-number-or-address-or-settings))
          (else
           port-number-or-address-or-settings))
    fail
    (lambda (psettings)
 
-     (define (continue-with-address server-address)
-       (if (##eq? server-address #t)
-           (fail)
-           (cont (##cons psettings server-address))))
+     (define (stage1)
+       (let ((local-address-or-host
+              (if (##null? (macro-psettings-local-address psettings))
+                  (macro-psettings-address psettings) ;; for backward compatibility
+                  (macro-psettings-local-address psettings))))
+         (if (##string? local-address-or-host)
+             (let ((info (##os-host-info local-address-or-host)))
+               (if (##fixnum? info)
+                   (if raise-os-exception?
+                       (##raise-os-exception #f info prim port-number-or-address-or-settings arg2 arg3 arg4)
+                       (cont info))
+                 (stage2 (##car (macro-host-info-addresses info)))))
+             (stage2 local-address-or-host))))
 
-     (if (##not (macro-psettings-port-number psettings))
-         (fail)
-         (let ((server-address-or-host
-                (macro-psettings-server-address psettings)))
-           (if (##string? server-address-or-host)
-               (let ((info (##os-host-info server-address-or-host)))
-                 (if (##fixnum? info)
-                     (if raise-os-exception?
-                         (##raise-os-exception #f info prim port-number-or-address-or-settings arg2 arg3 arg4)
-                         (cont info))
-                     (continue-with-address
-                      (##car (macro-host-info-addresses info)))))
-               (continue-with-address
-                server-address-or-host)))))))
+     (define (stage2 local-address)
+       (let ((local-port-number
+              (if (##null? (macro-psettings-local-port-number psettings))
+                  (macro-psettings-port-number psettings) ;; for backward compatibility
+                  (macro-psettings-local-port-number psettings))))
+         (if (##null? local-port-number)
+             (fail)
+             (cont (##vector psettings local-address local-port-number)))))
+
+     (stage1))))
 
 (define-prim (##open-tcp-server-aux
               raise-os-exception?
-              psettings-and-server-address
+              psettings-and-address-and-port-number
               cont
               prim
               port-number-or-address-or-settings
@@ -7562,17 +7602,19 @@
         keep-alive))))
 
   (let* ((psettings
-          (##car psettings-and-server-address))
-         (server-address
-          (##cdr psettings-and-server-address))
-         (port-number
-          (macro-psettings-port-number psettings))
+          (##vector-ref psettings-and-address-and-port-number 0))
+         (local-address
+          (##vector-ref psettings-and-address-and-port-number 1))
+         (local-port-number
+          (##vector-ref psettings-and-address-and-port-number 2))
          (tls-context
           (macro-psettings-tls-context psettings))
          (rdevice
           (##os-device-tcp-server-open
-           server-address
-           port-number
+           (if (##null? local-address)
+               (macro-localhost) ;; default local-address to localhost
+               local-address)
+           local-port-number
            (macro-psettings-backlog psettings)
            (psettings->options psettings)
            tls-context)))
@@ -7592,10 +7634,10 @@
               arg4)
   (##process-tcp-server-psettings
    raise-os-exception?
-   (lambda (psettings-and-server-address)
+   (lambda (psettings-and-address-and-port-number)
      (##open-tcp-server-aux
       raise-os-exception?
-      psettings-and-server-address
+      psettings-and-address-and-port-number
       cont
       prim
       port-number-or-address-or-settings
@@ -7622,22 +7664,23 @@
 (define-prim (##tcp-server-socket-info port)
   (let ((result
          (##os-device-tcp-server-socket-info
-          (macro-tcp-server-port-rdevice-condvar port))))
+          (macro-condvar-name
+           (macro-tcp-server-port-rdevice-condvar port)))))
     (if (##fixnum? result)
 
-        (##raise-os-io-exception port #f result tcp-server-socket-info port))
+        (##raise-os-io-exception port #f result tcp-server-socket-info port)
 
-    (##socket-info-setup! result)))
+        (##socket-info-setup! result))))
 
 (define-prim (tcp-server-socket-info port)
   (macro-force-vars (port)
     (macro-check-tcp-server-port port 1 (tcp-server-socket-info port)
       (##tcp-server-socket-info port))))
 
-(define-prim (##string->address-and-port-number
-              str
-              default-address
-              default-port-num)
+(define-prim (##string->address-and-port-number str)
+
+  (define default-address '())
+  (define default-port-num '())
 
   (define (err)
     #f)
@@ -7677,6 +7720,677 @@
                                 (addr (##substring str 0 colon)))
                             port-num)
                     (err))))))))
+
+))
+
+;;;----------------------------------------------------------------------------
+
+;; Implementation of UDP ports.
+
+(macro-case-target
+
+ ((C)
+
+(implement-check-type-udp-port)
+(define-fail-check-type udp-input-port 'udp-input-port)
+(define-fail-check-type udp-output-port 'udp-output-port)
+
+(define-prim (##make-udp-psettings
+              settings
+              fail
+              succeed)
+
+  (define allowed-settings
+    '(address:
+      port-number:
+      local-address:
+      local-port-number:
+      direction:))
+
+  (##make-psettings
+   (macro-direction-inout)
+   allowed-settings
+   settings
+   fail
+   succeed))
+
+(define-prim (##make-udp-port device id psettings)
+  (let* ((direction
+          (macro-psettings-direction psettings))
+         (mutex
+          (macro-make-port-mutex))
+         (rkind
+          (if (##fx= direction (macro-direction-out))
+              (macro-none-kind)
+              (macro-udp-kind)))
+         (wkind
+          (if (##fx= direction (macro-direction-in))
+              (macro-none-kind)
+              (macro-udp-kind)))
+         (roptions
+          0)
+         (rtimeout
+          #t)
+         (rtimeout-thunk
+          #f)
+         (woptions
+          0)
+         (wtimeout
+          #t)
+         (wtimeout-thunk
+          #f)
+         (rdevice-condvar
+          (and (##not (##fx= rkind (macro-none-kind)))
+               (##make-rdevice-condvar device)))
+         (wdevice-condvar
+          (and (##not (##fx= wkind (macro-none-kind)))
+               (##make-wdevice-condvar device))))
+
+    (define (name port)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      id)
+
+    (define (wait port direction)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+      (if (##fx= direction (macro-direction-in))
+
+        (##wait-for-io!
+         (macro-udp-port-rdevice-condvar port)
+         (macro-port-rtimeout port))
+
+        (##wait-for-io!
+         (macro-udp-port-wdevice-condvar port)
+         (macro-port-wtimeout port))))
+
+    (define (close port prim arg1)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (let ((result
+             (##close-device
+              port
+              (macro-udp-port-rdevice-condvar port)
+              (macro-udp-port-wdevice-condvar port)
+              prim)))
+        (macro-port-mutex-unlock! port)
+        (if (##fixnum? result)
+            (##raise-os-io-exception port #f result prim arg1)
+            result)))
+
+    (define (set-rtimeout port timeout thunk)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (macro-port-rtimeout-set! port timeout)
+      (macro-port-rtimeout-thunk-set! port thunk)
+      (##condvar-signal-no-reschedule!
+       (macro-udp-port-rdevice-condvar port)
+       #t)
+      (macro-port-mutex-unlock! port)
+      (##void))
+
+    (define (set-wtimeout port timeout thunk)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+      (macro-port-wtimeout-set! port timeout)
+      (macro-port-wtimeout-thunk-set! port thunk)
+      (##condvar-signal-no-reschedule!
+       (macro-udp-port-wdevice-condvar port)
+       #t)
+      (macro-port-mutex-unlock! port)
+      (##void))
+
+    (define (read-datum port re)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (##udp-read-subu8vector #f #f #f port read #!eof))
+
+    (define (write-datum port obj we)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (macro-check-u8vector
+        obj
+        1
+        (write obj port)
+        (##udp-write-subu8vector obj #f #f port write)))
+
+    (define (newline port)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (##void))
+
+    (define (force-output port level prim arg1 arg2 arg3 arg4)
+
+      ;; It is assumed that the thread **does not** have exclusive
+      ;; access to the port.
+
+      (##declare (not interrupts-enabled))
+
+      (##void))
+
+    (let ((port
+           (macro-make-udp-port
+            mutex
+            rkind
+            wkind
+            name
+            wait
+            close
+            roptions
+            rtimeout
+            rtimeout-thunk
+            set-rtimeout
+            woptions
+            wtimeout
+            wtimeout-thunk
+            set-wtimeout
+            #f ;; io-exception-handler
+            read-datum
+            write-datum
+            newline
+            force-output
+            rdevice-condvar
+            wdevice-condvar
+            #f ;; latest-source
+            )))
+      (if rdevice-condvar
+        (##io-condvar-port-set! rdevice-condvar port))
+      (if wdevice-condvar
+        (##io-condvar-port-set! wdevice-condvar port))
+      port)))
+
+(define-prim (##open-udp
+              raise-os-exception?
+              cont
+              prim
+              port-number-or-address-or-settings)
+
+  (define (psettings->options psettings)
+    0)
+
+  (define (fail)
+    (##fail-check-exact-integer-or-string-or-settings 1 prim port-number-or-address-or-settings))
+
+  (##make-udp-psettings
+   (cond ((##eq? port-number-or-address-or-settings (macro-absent-obj))
+          '())
+         ((##fixnum? port-number-or-address-or-settings)
+          (##list 'local-port-number: port-number-or-address-or-settings))
+         ((##string? port-number-or-address-or-settings)
+          (##list 'local-address: port-number-or-address-or-settings))
+         (else
+          port-number-or-address-or-settings))
+   fail
+   (lambda (psettings)
+
+     (define (stage1)
+       (let ((local-address-or-host
+              (macro-psettings-local-address psettings)))
+         (if (##string? local-address-or-host)
+             (let ((info (##os-host-info local-address-or-host)))
+               (if (##fixnum? info)
+                   (if raise-os-exception?
+                       (##raise-os-exception #f info prim port-number-or-address-or-settings)
+                       (cont info))
+                 (stage2 (##car (macro-host-info-addresses info)))))
+             (stage2 local-address-or-host))))
+
+     (define (stage2 local-address)
+       (let ((address-or-host
+              (macro-psettings-address psettings)))
+         (if (##string? address-or-host)
+             (let ((info (##os-host-info address-or-host)))
+               (if (##fixnum? info)
+                   (if raise-os-exception?
+                       (##raise-os-exception #f info prim port-number-or-address-or-settings)
+                       (cont info))
+                 (stage3 local-address
+                         (##car (macro-host-info-addresses info)))))
+             (stage3 local-address
+                     address-or-host))))
+
+     (define (stage3 local-address address)
+       (let* ((local-port-number
+               (macro-psettings-local-port-number psettings))
+              (port-number
+               (macro-psettings-port-number psettings))
+              (local-a
+               (if (##null? local-address)
+                   (macro-localhost) ;; default local-address to localhost
+                   local-address))
+              (local-pn
+               (if (##null? local-port-number)
+                   #f ;; default to automatically assigned port number
+                   local-port-number))
+              (device
+               (##os-device-udp-open
+                local-a
+                local-pn
+                (psettings->options psettings))))
+         (if (##fixnum? device)
+             (if raise-os-exception?
+                 (##raise-os-exception #f device prim port-number-or-address-or-settings)
+                 (cont device))
+
+             (let ((result (##os-device-udp-socket-info device #f)))
+               (if (##fixnum? result)
+
+                   (##raise-os-exception #f result prim port-number-or-address-or-settings)
+
+                   (let* ((info
+                           (##socket-info-setup! result))
+                          (a
+                           (macro-socket-info-address info))
+                          (pn
+                           (macro-socket-info-port-number info))
+                          (port
+                           (##make-udp-port
+                            device
+                            (##list 'udp
+                                    (or a "*")
+                                    pn)
+                            psettings)))
+
+                     (let ((wdevice-condvar
+                            (macro-udp-port-wdevice-condvar port)))
+                       (if wdevice-condvar
+                           (##os-device-udp-destination-set!
+                            wdevice-condvar
+                            (if (##null? address)
+                                (or a (macro-localhost))
+                                address)
+                            (if (##null? port-number)
+                                pn
+                                port-number))))
+
+                     (cont port)))))))
+
+     (stage1))))
+
+(define-prim (open-udp
+              #!optional
+              (port-number-or-address-or-settings (macro-absent-obj)))
+  (##open-udp
+   #t
+   (lambda (port) port)
+   open-udp
+   port-number-or-address-or-settings))
+
+(define-prim (##udp-read-subu8vector u8vect start end port prim eof)
+
+  (##declare (not interrupts-enabled))
+
+  (define (err code)
+
+    ;; signal an error
+
+    (macro-port-mutex-unlock! port)
+    (if u8vect
+        (##raise-os-io-exception port #f code prim u8vect start end port)
+        (##raise-os-io-exception port #f code prim port)))
+
+  (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+  (let loop ()
+    (let ((result
+           (##os-device-udp-read-subu8vector
+            (macro-udp-port-rdevice-condvar port)
+            u8vect
+            start
+            end)))
+
+      (if (and (##fixnum? result) (##fx< result 0))
+
+          ;; the read caused an error
+
+          (cond ((##fx= result ##err-code-EINTR)
+
+                 ;; the read was interrupted, so try again
+
+                 (loop))
+
+                ((##fx= result ##err-code-EAGAIN)
+
+                 ;; the read would block, so wait and then try again
+
+                 (macro-port-mutex-unlock! port)
+                 (let ((continue?
+                        (or (##wait-for-io!
+                             (macro-udp-port-rdevice-condvar port)
+                             (macro-port-rtimeout port))
+                            ((macro-port-rtimeout-thunk port)))))
+                   (if continue?
+                       (begin
+                         (macro-port-mutex-lock! port) ;; regain access to port
+                         (loop))
+                       eof)))
+
+                (else
+
+                 (err result)))
+
+          (begin
+            (macro-port-mutex-unlock! port)
+            result)))))
+
+(define-prim (udp-read-subu8vector
+              u8vect
+              start
+              end
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (u8vect start end port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-input-port)
+               port)))
+    (macro-check-u8vector
+      u8vect
+      1
+      (udp-read-subu8vector u8vect start end port)
+      (macro-check-index-range-incl
+        start
+        2
+        0
+        (##u8vector-length u8vect)
+        (udp-read-subu8vector u8vect start end port)
+        (macro-check-index-range-incl
+          end
+          3
+          start
+          (##u8vector-length u8vect)
+          (udp-read-subu8vector u8vect start end port)
+          (macro-check-udp-input-port
+            p
+            4
+            (udp-read-subu8vector u8vect start end port)
+            (##udp-read-subu8vector u8vect start end p udp-read-subu8vector #f))))))))
+
+(define-prim (##udp-read-u8vector port)
+  (##udp-read-subu8vector #f #f #f port udp-read-u8vector #f))
+
+(define-prim (udp-read-u8vector
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-input-port)
+               port)))
+      (macro-check-udp-input-port
+        p
+        1
+        (udp-read-u8vector port)
+        (##udp-read-u8vector p)))))
+
+(define-prim (##udp-socket-info source port prim)
+
+  (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+  (let ((result
+         (##os-device-udp-socket-info
+          (macro-condvar-name
+           (or (macro-udp-port-rdevice-condvar port)
+               (macro-udp-port-wdevice-condvar port)))
+          source)))
+
+    (if (##fixnum? result)
+
+        (begin
+          (macro-port-mutex-unlock! port)
+          (##raise-os-io-exception port #f result prim port))
+
+        (let ((info
+               (cond ((##eq? result #f) ;; no message received yet
+                      result)
+                     ((##eq? result #t) ;; same address as last time
+                      ;; return last socket info
+                      (macro-udp-port-latest-source port))
+                     (else
+                      (let ((info (##socket-info-setup! result)))
+                        (if source
+                            (begin
+                              ;; new address... remember for next time
+                              (macro-udp-port-latest-source-set! port info)))
+                        info)))))
+          (macro-port-mutex-unlock! port)
+          info))))
+
+(define-prim (##udp-local-socket-info port)
+  (##udp-socket-info #f port udp-local-socket-info))
+
+(define-prim (udp-local-socket-info
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-input-port)
+               port)))
+      (macro-check-udp-port
+        p
+        1
+        (udp-local-socket-info port)
+        (##udp-local-socket-info p)))))
+
+(define-prim (##udp-source-socket-info port)
+  (##udp-socket-info #t port udp-source-socket-info))
+
+(define-prim (udp-source-socket-info
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-input-port)
+               port)))
+      (macro-check-udp-input-port
+        p
+        1
+        (udp-source-socket-info port)
+        (##udp-source-socket-info p)))))
+
+(define-prim (##udp-write-subu8vector u8vect start end port prim)
+
+  (##declare (not interrupts-enabled))
+
+  (define (err code)
+
+    ;; signal an error
+
+    (macro-port-mutex-unlock! port)
+    (if start
+        (##raise-os-io-exception port #f code prim u8vect start end port)
+        (##raise-os-io-exception port #f code prim u8vect port)))
+
+  (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+  (let loop ()
+    (let ((result
+           (##os-device-udp-write-subu8vector
+            (macro-udp-port-wdevice-condvar port)
+            u8vect
+            start
+            end)))
+
+      (if (and (##fixnum? result) (##fx< result 0))
+
+          ;; the write caused an error
+
+          (cond ((##fx= result ##err-code-EINTR)
+
+                 ;; the write was interrupted, so try again
+
+                 (loop))
+
+                ((##fx= result ##err-code-EAGAIN)
+
+                 ;; the write would block, so wait and then try again
+
+                 (macro-port-mutex-unlock! port)
+                 (let ((continue?
+                        (or (##wait-for-io!
+                             (macro-udp-port-wdevice-condvar port)
+                             (macro-port-wtimeout port))
+                            ((macro-port-wtimeout-thunk port)))))
+                   (if continue?
+                       (begin
+                         (macro-port-mutex-lock! port) ;; regain access to port
+                         (loop))
+                       #f)))
+
+                (else
+
+                 (err result)))
+
+          (begin
+            (macro-port-mutex-unlock! port)
+            result)))))
+
+(define-prim (##udp-write-u8vector u8vect port)
+  (##udp-write-subu8vector
+   u8vect
+   0
+   (##u8vector-length u8vect)
+   port
+   udp-write-u8vector))
+
+(define-prim (udp-write-u8vector
+              u8vect
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (u8vect port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-output-port)
+               port)))
+    (macro-check-u8vector
+      u8vect
+      1
+      (udp-write-u8vector u8vect port)
+      (macro-check-udp-output-port
+        p
+        2
+        (udp-write-u8vector u8vect port)
+        (##udp-write-u8vector u8vect p))))))
+
+(define-prim (udp-write-subu8vector
+              u8vect
+              start
+              end
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (u8vect start end port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-output-port)
+               port)))
+    (macro-check-u8vector
+      u8vect
+      1
+      (udp-write-subu8vector u8vect start end port)
+      (macro-check-index-range-incl
+        start
+        2
+        0
+        (##u8vector-length u8vect)
+        (udp-write-subu8vector u8vect start end port)
+        (macro-check-index-range-incl
+          end
+          3
+          start
+          (##u8vector-length u8vect)
+          (udp-write-subu8vector u8vect start end port)
+          (macro-check-udp-output-port
+            p
+            4
+            (udp-write-subu8vector u8vect start end port)
+            (##udp-write-subu8vector
+             u8vect
+             start
+             end
+             port
+             udp-write-subu8vector))))))))
+
+(define-prim (udp-destination-set!
+              address
+              port-number
+              #!optional
+              (port (macro-absent-obj)))
+
+  (macro-force-vars (address port-number port)
+    (let ()
+
+      (define (stage1)
+        (if (##string? address)
+            (let ((info (##os-host-info address)))
+              (if (##fixnum? info)
+                  (##raise-os-exception #f info udp-destination-set! address port-number port)
+                  (stage2 (##car (macro-host-info-addresses info)))))
+            (stage2 address)))
+
+      (define (stage2 address)
+        (macro-check-index-range-incl
+          port-number
+          2
+          0
+          65535
+          (udp-destination-set! address port-number port)
+          (let ((p
+                 (if (##eq? port (macro-absent-obj))
+                     (macro-current-output-port)
+                     port)))
+            (macro-check-udp-output-port
+              p
+              3
+              (udp-destination-set! address port-number port)
+              (let ((code
+                     (##os-device-udp-destination-set!
+                      (macro-udp-port-wdevice-condvar p)
+                      address
+                      port-number)))
+                (if (##fx< code 0)
+                    (##raise-os-exception #f code udp-destination-set! address port-number port)
+                    (##void)))))))
+
+      (stage1))))
 
 ))
 
@@ -8344,17 +9058,17 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##make-raw-device-port raw-device device id direction)
+(define-prim (##make-raw-device-port direction device type id specific)
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
          (if (##fx= direction (macro-direction-out))
-           (macro-none-kind)
-           (macro-raw-device-kind)))
+             (macro-none-kind)
+             (macro-raw-device-kind)))
         (wkind
          (if (##fx= direction (macro-direction-in))
-           (macro-none-kind)
-           (macro-raw-device-kind)))
+             (macro-none-kind)
+             (macro-raw-device-kind)))
         (roptions
          0)
         (rtimeout
@@ -8369,10 +9083,10 @@
          #f)
         (rdevice-condvar
          (and (##not (##fx= direction (macro-direction-out)))
-              (##make-rdevice-condvar raw-device)))
+              (##make-rdevice-condvar device)))
         (wdevice-condvar
          (and (##not (##fx= direction (macro-direction-in)))
-              (##make-wdevice-condvar raw-device))))
+              (##make-wdevice-condvar device))))
 
     (define (name port)
 
@@ -8380,7 +9094,7 @@
       ;; access to the port.
 
       (##declare (not interrupts-enabled))
-      (##list (macro-raw-device-port-id port) (macro-raw-device-port-device port)))
+      id)
 
     (define (wait port direction)
 
@@ -8471,8 +9185,9 @@
             #f ;; io-exception-handler
             rdevice-condvar
             wdevice-condvar
-            device
-            id)))
+            type
+            id
+            specific)))
       (if rdevice-condvar
         (##io-condvar-port-set! rdevice-condvar port))
       (if wdevice-condvar
@@ -9581,7 +10296,12 @@
                                                   0))
                                              (loop tail
                                                    (##fx+ i 1)
-                                                   (wr-elem head)))))))))
+                                                   (if (and (##eq? head '|.|)
+                                                            (##fx= i 0)
+                                                            (macro-readtable-dot-at-head-of-list-allowed?
+                                                             (macro-writeenv-readtable we)))
+                                                       (wr-str ".")
+                                                       (wr-elem head))))))))))
                           ((##not (##null? lst))
                            (wr-str ".")
                            (macro-writeenv-close-parens-set! we new-close-parens)
@@ -11059,14 +11779,22 @@
 ;;; Procedure to read a list of datums (possibly an improper list).
 
 (define (##build-list re allow-improper? start-pos close)
-  (let ((obj (##read-datum-or-label-or-none re)))
+  (let ((obj
+         (if (macro-readtable-dot-at-head-of-list-allowed?
+              (macro-readenv-readtable re))
+             (##read-datum-or-label-or-none-or-dot re)
+             (##read-datum-or-label-or-none re))))
     (if (eq? obj (##none-marker))
         (begin
           (##read-next-char-expecting re close)
           '())
         (begin
           (macro-readenv-filepos-set! re start-pos) ;; restore pos
-          (let ((lst (cons obj '())))
+          (let ((lst
+                 (cons (if (eq? obj (##dot-marker))
+                           (macro-readenv-wrap re '|.|)
+                           obj)
+                       '())))
             (if (##label-marker? obj)
                 (##label-marker-fixup-handler-add!
                  re
@@ -13702,6 +14430,7 @@
           #t                 ;; r6rs-compatible-read?
           #t                 ;; r6rs-compatible-write?
           'multiline         ;; here-strings-allowed?
+          #t                 ;; dot-at-head-of-list-allowed?
           #f                 ;; comment-handler
           )))
 

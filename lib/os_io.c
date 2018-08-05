@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_IO
-#define ___VERSION 408008
+#define ___VERSION 408009
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -3253,7 +3253,11 @@ ___device_stream *self;)
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
   int char_encoding = ___CHAR_ENCODING_ASCII;
   int eol_encoding = ___EOL_ENCODING_LF;
+#ifdef USE_WIN32
+  int buffering = ___NO_BUFFERING;
+#else
   int buffering = ___FULL_BUFFERING;
+#endif
 
   return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
                                   char_encoding,
@@ -3793,63 +3797,6 @@ int direction;)
             direction,
             0);
 }
-
-#endif
-
-
-/*---------------------------------------------------------------------------*/
-
-#ifdef USE_NETWORKING
-
-/* Socket utilities */
-
-#ifdef USE_POSIX
-#define SOCKET_TYPE int
-#define SOCKET_CALL_ERROR(s) ((s) < 0)
-#define SOCKET_CALL_ERROR2(s) ((s) < 0)
-#define CONNECT_IN_PROGRESS (errno == EINPROGRESS)
-#define CONNECT_WOULD_BLOCK (errno == EAGAIN)
-#define NOT_CONNECTED(e) ((e) == ___FIX(___ERRNO_ERR(ENOTCONN)))
-#define CLOSE_SOCKET(s) ___close_no_EINTR (s)
-#define ERR_CODE_FROM_SOCKET_CALL err_code_from_errno ()
-#define IOCTL_SOCKET(s,cmd,argp) ioctl (s,cmd,argp)
-#define SOCKET_LEN_TYPE socklen_t
-#endif
-
-#ifdef USE_WIN32
-#define SOCKET_TYPE SOCKET
-#define SOCKET_CALL_ERROR(s) ((s) == SOCKET_ERROR)
-#define SOCKET_CALL_ERROR2(s) ((s) == INVALID_SOCKET)
-#define CONNECT_IN_PROGRESS ((WSAGetLastError () == WSAEALREADY) || \
-(WSAGetLastError () == WSAEISCONN))
-#define CONNECT_WOULD_BLOCK ((WSAGetLastError () == WSAEWOULDBLOCK) || \
-(WSAGetLastError () == WSAEINVAL))
-#define NOT_CONNECTED(e) ((e) == ___FIX(___WIN32_ERR(WSAENOTCONN)))
-#define CLOSE_SOCKET(s) closesocket (s)
-#define ERR_CODE_FROM_SOCKET_CALL err_code_from_WSAGetLastError ()
-#define IOCTL_SOCKET(s,cmd,argp) ioctlsocket (s,cmd,argp)
-#define SOCKET_LEN_TYPE int
-#endif
-
-#ifdef SHUT_RD
-#define SHUTDOWN_RD SHUT_RD
-#else
-#ifdef SD_RECEIVE
-#define SHUTDOWN_RD SD_RECEIVE
-#else
-#define SHUTDOWN_RD 0
-#endif
-#endif
-
-#ifdef SHUT_WR
-#define SHUTDOWN_WR SHUT_WR
-#else
-#ifdef SD_SEND
-#define SHUTDOWN_WR SD_SEND
-#else
-#define SHUTDOWN_WR 1
-#endif
-#endif
 
 #endif
 
@@ -4460,6 +4407,10 @@ ___SCMOBJ client_ca_path;)
       SSL_CTX_set_mode (c->tls_ctx,
                         SSL_MODE_ENABLE_PARTIAL_WRITE |
                         SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+
+      /* always verify server certificate */
+      SSL_CTX_set_default_verify_paths (c->tls_ctx);
+      SSL_CTX_set_verify (c->tls_ctx, SSL_VERIFY_PEER, NULL);
   }
 
   if ((scm_e =___NONNULLPOINTER_to_SCMOBJ
@@ -4474,7 +4425,7 @@ ___SCMOBJ client_ca_path;)
       return scm_e;
     }
 
-  return scm_ctx;
+  return ___release_scmobj (scm_ctx);
 }
 
 /* TLS support functions */
@@ -4665,8 +4616,8 @@ typedef struct ___device_tcp_client_struct
   {
     ___device_stream base;
     SOCKET_TYPE s;
-    struct sockaddr server_addr;
-    SOCKET_LEN_TYPE server_addrlen;
+    struct sockaddr addr;
+    SOCKET_LEN_TYPE addrlen;
     int try_connect_again;
     int connect_done;
 
@@ -4711,8 +4662,8 @@ ___HIDDEN int try_connect
 ___device_tcp_client *dev;)
 {
   if (!SOCKET_CALL_ERROR(connect (dev->s,
-                                  &dev->server_addr,
-                                  dev->server_addrlen)) ||
+                                  &dev->addr,
+                                  dev->addrlen)) ||
       CONNECT_IN_PROGRESS || /* establishing connection in background */
       dev->try_connect_again == 2) /* last connect attempt? */
     {
@@ -4970,23 +4921,17 @@ ___device_select_state *state;)
             d->io_events |= (FD_WRITE | FD_CLOSE);
           else
             d->io_events |= (FD_READ | FD_CLOSE);
-       /* Once the the select is done, return the for_writing to
+       /* Once the select is done, return for_writing to
           its regular meaning (read for read, write for write) */
           d->want_write[for_writing] = for_writing;
         }
-      else if (for_writing)
-        d->io_events |= (FD_WRITE | FD_CLOSE);
-      else
-        d->io_events |= (FD_READ | FD_CLOSE);
-
-#else
-
-      else if (for_writing)
-        d->io_events |= (FD_WRITE | FD_CLOSE);
-      else
-        d->io_events |= (FD_READ | FD_CLOSE);
 
 #endif
+
+      else if (for_writing)
+        d->io_events |= (FD_WRITE | FD_CLOSE);
+      else
+        d->io_events |= (FD_READ | FD_CLOSE);
 
       return ___FIX(___NO_ERR);
     }
@@ -5413,22 +5358,33 @@ ___HIDDEN ___device_tcp_client_vtbl ___device_tcp_client_table =
 #define ___SOCK_KEEPALIVE_FLAG(options) (((options) & 1) != 0)
 #define ___SOCK_NO_COALESCE_FLAG(options) (((options) & 2) != 0)
 #define ___SOCK_REUSE_ADDRESS_FLAG(options) (((options) & 2048) != 0)
+#define ___SOCK_UDP_FLAG(options) (((options) & ___SOCK_UDP) != 0)
+#define ___SOCK_UDP 4096
 
 
-___HIDDEN ___SCMOBJ create_tcp_socket
+___HIDDEN ___SCMOBJ create_socket
    ___P((SOCKET_TYPE *sock,
+         struct sockaddr *local_addr,
+         SOCKET_LEN_TYPE local_addrlen,
          int options),
         (sock,
+         local_addr,
+         local_addrlen,
          options)
 SOCKET_TYPE *sock;
+struct sockaddr *local_addr;
+SOCKET_LEN_TYPE local_addrlen;
 int options;)
 {
   int keepalive_flag = ___SOCK_KEEPALIVE_FLAG(options);
   int no_coalesce_flag = ___SOCK_NO_COALESCE_FLAG(options);
   int reuse_address_flag = ___SOCK_REUSE_ADDRESS_FLAG(options);
+  int udp_flag = ___SOCK_UDP_FLAG(options);
   SOCKET_TYPE s;
 
-  if (SOCKET_CALL_ERROR2(s = socket (AF_INET, SOCK_STREAM, 0)))
+  if (SOCKET_CALL_ERROR2(s = socket (AF_INET,
+                                     udp_flag ? SOCK_DGRAM : SOCK_STREAM,
+                                     0)))
     return ERR_CODE_FROM_SOCKET_CALL;
 
 #ifndef TCP_NODELAY
@@ -5452,7 +5408,8 @@ int options;)
                    IPPROTO_TCP,
                    TCP_NODELAY,
                    ___CAST(char*,&no_coalesce_flag),
-                   sizeof (no_coalesce_flag)) != 0))
+                   sizeof (no_coalesce_flag)) != 0) ||
+      (bind (s, local_addr, local_addrlen) != 0))
     {
       ___SCMOBJ e = ERR_CODE_FROM_SOCKET_CALL;
       CLOSE_SOCKET(s); /* ignore error */
@@ -5465,10 +5422,13 @@ int options;)
 }
 
 
-___HIDDEN int set_socket_non_blocking
-   ___P((SOCKET_TYPE s),
-        (s)
-SOCKET_TYPE s;)
+___HIDDEN int set_socket_blocking_mode
+   ___P((SOCKET_TYPE s,
+         ___BOOL blocking),
+        (s,
+         blocking)
+SOCKET_TYPE s;
+___BOOL blocking;)
 {
 #ifndef USE_ioctl
 #undef FIONBIO
@@ -5476,13 +5436,13 @@ SOCKET_TYPE s;)
 
 #ifdef FIONBIO
 
-  unsigned long param = 1;
+  unsigned long param = !blocking;
 
   return SOCKET_CALL_ERROR(IOCTL_SOCKET(s, FIONBIO, &param));
 
 #else
 
-  return ___set_fd_blocking_mode (s, 0);
+  return ___set_fd_blocking_mode (s, blocking);
 
 #endif
 }
@@ -5492,22 +5452,22 @@ ___SCMOBJ ___device_tcp_client_setup_from_socket
    ___P((___device_tcp_client **dev,
          ___device_group *dgroup,
          SOCKET_TYPE s,
-         struct sockaddr *server_addr,
-         SOCKET_LEN_TYPE server_addrlen,
+         struct sockaddr *addr,
+         SOCKET_LEN_TYPE addrlen,
          int try_connect_again,
          int direction),
         (dev,
          dgroup,
          s,
-         server_addr,
-         server_addrlen,
+         addr,
+         addrlen,
          try_connect_again,
          direction)
 ___device_tcp_client **dev;
 ___device_group *dgroup;
 SOCKET_TYPE s;
-struct sockaddr *server_addr;
-SOCKET_LEN_TYPE server_addrlen;
+struct sockaddr *addr;
+SOCKET_LEN_TYPE addrlen;
 int try_connect_again;
 int direction;)
 {
@@ -5531,7 +5491,7 @@ int direction;)
    * Setup socket to perform nonblocking I/O.
    */
 
-  if (set_socket_non_blocking (s) != 0) /* set nonblocking mode */
+  if (set_socket_blocking_mode (s, 0) != 0) /* set nonblocking mode */
     {
       e = ERR_CODE_FROM_SOCKET_CALL;
       ___FREE_MEM(d);
@@ -5540,8 +5500,8 @@ int direction;)
 
   d->base.base.vtbl = &___device_tcp_client_table;
   d->s = s;
-  d->server_addr = *server_addr;
-  d->server_addrlen = server_addrlen;
+  d->addr = *addr;
+  d->addrlen = addrlen;
   d->try_connect_again = try_connect_again;
   d->connect_done = 0;
 
@@ -5592,25 +5552,34 @@ int direction;)
 ___SCMOBJ ___device_tcp_client_setup_from_sockaddr
    ___P((___device_tcp_client **dev,
          ___device_group *dgroup,
-         struct sockaddr *server_addr,
-         SOCKET_LEN_TYPE server_addrlen,
+         struct sockaddr *addr,
+         SOCKET_LEN_TYPE addrlen,
+         struct sockaddr *local_addr,
+         SOCKET_LEN_TYPE local_addrlen,
          int options,
          int direction,
-         ___tls_context *tls_context),
+         ___tls_context *tls_context,
+         char *server_name),
         (dev,
          dgroup,
-         server_addr,
-         server_addrlen,
+         addr,
+         addrlen,
+         local_addr,
+         local_addrlen,
          options,
          direction,
-         tls_context)
+         tls_context,
+         server_name)
 ___device_tcp_client **dev;
 ___device_group *dgroup;
-struct sockaddr *server_addr;
-SOCKET_LEN_TYPE server_addrlen;
+struct sockaddr *addr;
+SOCKET_LEN_TYPE addrlen;
+struct sockaddr *local_addr;
+SOCKET_LEN_TYPE local_addrlen;
 int options;
 int direction;
-___tls_context *tls_context;)
+___tls_context *tls_context;
+char *server_name)
 {
   ___SCMOBJ e;
   SOCKET_TYPE s;
@@ -5623,15 +5592,16 @@ ___tls_context *tls_context;)
 
 #endif
 
-  if ((e = create_tcp_socket (&s, options)) != ___FIX(___NO_ERR))
+  if ((e = create_socket (&s, local_addr, local_addrlen, options))
+      != ___FIX(___NO_ERR))
     return e;
 
   if ((e = ___device_tcp_client_setup_from_socket
              (&d,
               dgroup,
               s,
-              server_addr,
-              server_addrlen,
+              addr,
+              addrlen,
               1,
               direction))
       != ___FIX(___NO_ERR))
@@ -5650,6 +5620,13 @@ ___tls_context *tls_context;)
     {
       d->tls = SSL_new (tls_context->tls_ctx);
       SSL_set_fd (d->tls, d->s);
+
+#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+      if (server_name != NULL)
+        {
+          SSL_set_tlsext_host_name (d->tls, server_name);
+        }
+#endif
     }
 
 #endif
@@ -5844,22 +5821,22 @@ ___HIDDEN ___device_tcp_server_vtbl ___device_tcp_server_table =
 ___SCMOBJ ___device_tcp_server_setup
    ___P((___device_tcp_server **dev,
          ___device_group *dgroup,
-         struct sockaddr *server_addr,
-         SOCKET_LEN_TYPE server_addrlen,
+         struct sockaddr *local_addr,
+         SOCKET_LEN_TYPE local_addrlen,
          int backlog,
          int options,
          ___tls_context *tls_context),
         (dev,
          dgroup,
-         server_addr,
-         server_addrlen,
+         local_addr,
+         local_addrlen,
          backlog,
          options,
          tls_context)
 ___device_tcp_server **dev;
 ___device_group *dgroup;
-struct sockaddr *server_addr;
-SOCKET_LEN_TYPE server_addrlen;
+struct sockaddr *local_addr;
+SOCKET_LEN_TYPE local_addrlen;
 int backlog;
 int options;
 ___tls_context *tls_context;)
@@ -5868,11 +5845,11 @@ ___tls_context *tls_context;)
   SOCKET_TYPE s;
   ___device_tcp_server *d;
 
-  if ((e = create_tcp_socket (&s, options)) != ___FIX(___NO_ERR))
+  if ((e = create_socket (&s, local_addr, local_addrlen, options))
+      != ___FIX(___NO_ERR))
     return e;
 
-  if (set_socket_non_blocking (s) != 0 || /* set nonblocking mode */
-      bind (s, server_addr, server_addrlen) != 0 ||
+  if (set_socket_blocking_mode (s, 0) != 0 || /* set nonblocking mode */
       listen (s, backlog) != 0)
     {
       e = ERR_CODE_FROM_SOCKET_CALL;
@@ -6000,6 +5977,464 @@ ___device_tcp_client **client;)
 
   return ___FIX(___NO_ERR);
 }
+
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+
+#ifdef USE_NETWORKING
+
+/* UDP device. */
+
+typedef struct ___device_udp_struct
+  {
+    ___device base;
+    SOCKET_TYPE s;
+
+    struct sockaddr dest_sa;
+    SOCKET_LEN_TYPE dest_salen; /* 0 when no destination yet set */
+
+    struct sockaddr source_sa;
+    SOCKET_LEN_TYPE source_salen; /* 0 when no message yet received */
+    ___BOOL source_same_as_previous; /* true when source_sa contains latest address read by ___os_device_udp_socket_info */
+
+#ifdef USE_WIN32
+
+    long io_events;   /* used by ___device_udp_select_raw_virt */
+    HANDLE io_event;  /* used by ___device_udp_select_raw_virt */
+
+#endif
+  } ___device_udp;
+
+typedef struct ___device_udp_vtbl_struct
+  {
+    ___device_vtbl base;
+  } ___device_udp_vtbl;
+
+
+___HIDDEN int ___device_udp_kind
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  return ___UDP_DEVICE_KIND;
+}
+
+___HIDDEN ___SCMOBJ ___device_udp_close_virt
+   ___P((___device *self,
+         int direction),
+        (self,
+         direction)
+        ___device *self;
+        int direction;)
+{
+  ___device_udp *d = ___CAST(___device_udp*,self);
+  int is_not_closed = 0;
+
+  if (d->base.read_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_RD;
+
+  if (d->base.write_stage != ___STAGE_CLOSED)
+    is_not_closed |= ___DIRECTION_WR;
+
+  if (is_not_closed == 0)
+    return ___FIX(___NO_ERR);
+
+  if ((is_not_closed & ~direction) == 0)
+    {
+      /* Close socket when both sides are closed. */
+
+      d->base.read_stage = ___STAGE_CLOSED; /* avoid multiple closes */
+      d->base.write_stage = ___STAGE_CLOSED;
+
+#ifdef USE_WIN32
+
+      if (d->io_event != NULL)
+        CloseHandle (d->io_event); /* ignore error */
+
+#endif
+
+      if ((d->base.close_direction & (___DIRECTION_RD|___DIRECTION_WR))
+          == (___DIRECTION_RD|___DIRECTION_WR))
+        {
+          if (CLOSE_SOCKET(d->s) != 0)
+            return ERR_CODE_FROM_SOCKET_CALL;
+        }
+    }
+  else if (is_not_closed & direction & ___DIRECTION_RD)
+    d->base.read_stage = ___STAGE_CLOSED;
+  else if (is_not_closed & direction & ___DIRECTION_WR)
+    d->base.write_stage = ___STAGE_CLOSED;
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_udp_select_raw_virt
+   ___P((___device *self,
+         ___BOOL for_writing,
+         int i,
+         int pass,
+         ___device_select_state *state),
+        (self,
+         for_writing,
+         i,
+         pass,
+         state)
+___device *self;
+___BOOL for_writing;
+int i;
+int pass;
+___device_select_state *state;)
+{
+  ___device_udp *d = ___CAST(___device_udp*,self);
+  int stage = (for_writing
+               ? d->base.write_stage
+               : d->base.read_stage);
+
+  if (pass == ___SELECT_PASS_1)
+    {
+      if (stage != ___STAGE_OPEN)
+        {
+          state->timeout = ___time_mod.time_neg_infinity;
+          return ___FIX(___SELECT_SETUP_DONE);
+        }
+      else
+        {
+#ifdef USE_POSIX
+
+          ___device_select_add_fd (state, d->s, for_writing);
+
+          return ___FIX(___SELECT_SETUP_DONE);
+
+#endif
+
+#ifdef USE_WIN32
+
+          d->io_events = 0;
+
+          return ___FIX(___NO_ERR);
+
+#endif
+        }
+    }
+
+#ifdef USE_WIN32
+
+  else if (pass == ___SELECT_PASS_2)
+    {
+      if (for_writing)
+        d->io_events |= (FD_WRITE | FD_CLOSE);
+      else
+        d->io_events |= (FD_READ | FD_CLOSE);
+
+      return ___FIX(___NO_ERR);
+    }
+  else if (pass == ___SELECT_PASS_3)
+    {
+      HANDLE wait_obj = d->io_event;
+
+      ResetEvent (wait_obj); /* ignore error */
+
+      WSAEventSelect (d->s, wait_obj, d->io_events);
+
+      ___device_select_add_wait_obj (state, i, wait_obj);
+
+      return ___FIX(___SELECT_SETUP_DONE);
+    }
+
+#endif
+
+  /* pass == ___SELECT_PASS_CHECK */
+
+  if (stage != ___STAGE_OPEN)
+    state->devs[i] = NULL;
+  else
+    {
+#ifdef USE_POSIX
+
+      if (for_writing
+          ? ___FD_ISSET(d->s, state->writefds)
+          : ___FD_ISSET(d->s, state->readfds))
+        state->devs[i] = NULL;
+
+#endif
+
+#ifdef USE_WIN32
+
+      if (state->devs_next[i] != -1)
+        state->devs[i] = NULL;
+
+#endif
+    }
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_udp_release_virt
+   ___P((___device *self),
+        (self)
+___device *self;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_udp_force_output_virt
+   ___P((___device *self,
+         int level),
+        (self,
+         level)
+___device *self;
+int level;)
+{
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___device_udp_vtbl ___device_udp_table =
+{
+  {
+    ___device_udp_kind,
+    ___device_udp_select_raw_virt,
+    ___device_udp_release_virt,
+    ___device_udp_force_output_virt,
+    ___device_udp_close_virt
+  }
+};
+
+___SCMOBJ ___device_udp_setup_from_socket
+   ___P((___device_udp **dev,
+         ___device_group *dgroup,
+         SOCKET_TYPE s,
+         struct sockaddr *local_addr,
+         SOCKET_LEN_TYPE local_addrlen,
+         int direction),
+        (dev,
+         dgroup,
+         s,
+         local_addr,
+         local_addrlen,
+         direction)
+___device_udp **dev;
+___device_group *dgroup;
+SOCKET_TYPE s;
+struct sockaddr *local_addr;
+SOCKET_LEN_TYPE local_addrlen;
+int direction;)
+{
+  ___SCMOBJ e;
+  ___device_udp *d;
+
+#ifdef USE_FDSET_RESIZING
+
+  if (!___fdset_resize (s, s))
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+#endif
+
+  d = ___CAST(___device_udp*,
+              ___ALLOC_MEM(sizeof (___device_udp)));
+
+  if (d == NULL)
+    return ___FIX(___HEAP_OVERFLOW_ERR);
+
+  /*
+   * Setup socket to perform nonblocking I/O.
+   */
+
+  if (set_socket_blocking_mode (s, 0) != 0) /* set nonblocking mode */
+    {
+      e = ERR_CODE_FROM_SOCKET_CALL;
+      ___FREE_MEM(d);
+      return e;
+    }
+
+  d->base.vtbl = &___device_udp_table;
+  d->base.refcount = 1;
+  d->base.direction = direction;
+  d->base.close_direction = 0; /* prevent closing on errors */
+
+  if (direction & ___DIRECTION_RD)
+    d->base.read_stage = ___STAGE_OPEN;
+  else
+    d->base.read_stage = ___STAGE_CLOSED;
+
+  if (direction & ___DIRECTION_WR)
+    d->base.write_stage = ___STAGE_OPEN;
+  else
+    d->base.write_stage = ___STAGE_CLOSED;
+
+  d->s = s;
+  d->dest_salen = 0; /* no destination yet set */
+  d->source_salen = 0; /* no message yet received */
+  d->source_same_as_previous = 0;
+
+#ifdef USE_WIN32
+
+  d->io_event =
+    CreateEvent (NULL,  /* can't inherit */
+                 TRUE,  /* manual reset */
+                 FALSE, /* not signaled */
+                 NULL); /* no name */
+
+  if (d->io_event == NULL)
+    {
+      e = err_code_from_GetLastError ();
+      ___FREE_MEM(d);
+      return e;
+    }
+
+#endif
+
+  device_transfer_close_responsibility (___CAST(___device*,d));
+
+  *dev = d;
+
+  ___device_add_to_group (dgroup, &d->base);
+
+  return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ ___device_udp_setup_from_sockaddr
+   ___P((___device_udp **dev,
+         ___device_group *dgroup,
+         struct sockaddr *local_addr,
+         SOCKET_LEN_TYPE local_addrlen,
+         int options,
+         int direction),
+        (dev,
+         dgroup,
+         local_addr,
+         local_addrlen,
+         options,
+         direction)
+___device_tcp_client **dev;
+___device_group *dgroup;
+struct sockaddr *local_addr;
+SOCKET_LEN_TYPE local_addrlen;
+int options;
+int direction;)
+{
+  ___SCMOBJ e;
+  SOCKET_TYPE s;
+  ___device_udp *d;
+
+  if ((e = create_socket (&s, local_addr, local_addrlen, ___SOCK_UDP))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  if ((e = ___device_udp_setup_from_socket
+             (&d,
+              dgroup,
+              s,
+              local_addr,
+              local_addrlen,
+              direction))
+      != ___FIX(___NO_ERR))
+    {
+      CLOSE_SOCKET(s); /* ignore error */
+      return e;
+    }
+
+  device_transfer_close_responsibility (___CAST(___device*,d));
+
+  *dev = d;
+
+  return ___FIX(___NO_ERR);
+}
+
+___HIDDEN ___SCMOBJ ___device_udp_read_raw
+   ___P((___device_udp *self,
+         ___U8 *buf,
+         ___SSIZE_T len,
+         ___SSIZE_T *len_done),
+        (self,
+         buf,
+         len,
+         len_done)
+___device_udp *self;
+___U8 *buf;
+___SSIZE_T len;
+___SSIZE_T *len_done;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___SSIZE_T n;
+  struct sockaddr sa;
+  SOCKET_LEN_TYPE salen = sizeof (sa);
+
+  if (self->base.read_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
+
+  n = recvfrom (self->s, buf, len, 0, &sa, &salen);
+
+  if (n < 0)
+    return ERR_CODE_FROM_SOCKET_CALL;
+
+  if (!self->source_same_as_previous ||
+      !sockaddr_equal (&sa, salen, &self->source_sa, self->source_salen))
+    {
+      self->source_sa = sa;
+      self->source_salen = salen;
+      self->source_same_as_previous = 0;
+    }
+
+  *len_done = n;
+
+  return ___FIX(___NO_ERR);
+
+#endif
+}
+
+
+___HIDDEN ___SCMOBJ ___device_udp_write_raw
+   ___P((___device_udp *self,
+         ___U8 *buf,
+         ___SSIZE_T len,
+         ___SSIZE_T *len_done),
+        (self,
+         buf,
+         len,
+         len_done)
+___device_udp *self;
+___U8 *buf;
+___SSIZE_T len;
+___SSIZE_T *len_done;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___SSIZE_T n;
+
+  if (self->base.write_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
+
+  n = sendto (self->s, buf, len, 0, &self->dest_sa, self->dest_salen);
+
+  /*
+   * Note that some operating systems limit the size of datagrams sent.
+   * For example, by default MacOS doesn't allow sending datagrams longer
+   * than 9216 bytes and this can be changed with:
+   *
+   * sudo sysctl -w net.inet.udp.maxdgram=65535
+   */
+
+  if (n < 0)
+    return ERR_CODE_FROM_SOCKET_CALL;
+
+  *len_done = n;
+
+  return ___FIX(___NO_ERR);
+
+#endif
+}
+
 
 #endif
 
@@ -6546,6 +6981,7 @@ ___SCMOBJ *event;)
                      0,           /* no constraint on the message type */
                      0,
                      PM_REMOVE))  /* remove message */
+      /* TODO: check if ___release_scmobj (...); needed to avoid memory leak */
       return ___NONNULLPOINTER_to_SCMOBJ
                (___PSTATE,
                 ___CAST(void*,msg),
@@ -7526,13 +7962,13 @@ int direction;)
         case ___TCP_CLIENT_DEVICE_KIND:
           {
             ___device_tcp_client *d;
-            struct sockaddr server_addr;
+            struct sockaddr addr;
 
             if ((e = ___device_tcp_client_setup_from_socket
                        (&d,
                         dgroup,
                         fd,
-                        &server_addr,
+                        &addr,
                         0,
                         0,
                         direction))
@@ -7990,7 +8426,7 @@ ___mask_child_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, ___CAST(___sigset_type*,state)+2);
+  ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, state->sigset+2);
 
 #endif
 }
@@ -8003,7 +8439,7 @@ ___mask_child_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+2, NULL);
+  ___thread_sigmask (SIG_SETMASK, state->sigset+2, NULL);
 
 #endif
 }
@@ -9066,6 +9502,7 @@ ___SCMOBJ whence;)
   if (e != ___FIX(___NO_ERR) ||
       (e = ___S32_to_SCMOBJ (___PSTATE, p, &result, ___RETURN_POS)) != ___FIX(___NO_ERR))
     result = e;
+  /* TODO: check if ___release_scmobj (...); needed to avoid memory leak */
 
   return result;
 }
@@ -9178,6 +9615,7 @@ ___SCMOBJ options;)
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Raw device file descriptors */
+
 typedef struct ___device_raw_struct
   {
     ___device base;
@@ -9461,13 +9899,13 @@ ___SCMOBJ flags;)
       return e;
     }
 
-  ___release_scmobj (result);
+  return ___release_scmobj (result);
 
-  return result;
-
-#endif
+#else
 
   return ___FIX(___UNIMPL_ERR);
+
+#endif
 }
 
 /* Opening a predefined device (stdin, stdout, stderr, console, etc). */
@@ -9691,9 +10129,7 @@ ___SCMOBJ flags;)
       return e;
     }
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 }
 
 
@@ -9764,9 +10200,7 @@ ___SCMOBJ mode;)
       ___release_string (cpath);
     }
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 
 #endif
 }
@@ -9869,18 +10303,27 @@ ___SCMOBJ options;)
 /* Opening a TCP client. */
 
 ___SCMOBJ ___os_device_tcp_client_open
-   ___P((___SCMOBJ server_addr,
+   ___P((___SCMOBJ local_addr,
+         ___SCMOBJ local_port_num,
+         ___SCMOBJ addr,
          ___SCMOBJ port_num,
          ___SCMOBJ options,
-         ___SCMOBJ tls_context),
-        (server_addr,
+         ___SCMOBJ tls_context,
+         ___SCMOBJ server_name),
+        (local_addr,
+         local_port_num,
+         addr,
          port_num,
          options,
-         tls_context)
-___SCMOBJ server_addr;
+         tls_context,
+         server_name)
+___SCMOBJ local_addr;
+___SCMOBJ local_port_num;
+___SCMOBJ addr;
 ___SCMOBJ port_num;
 ___SCMOBJ options;
-___SCMOBJ tls_context;)
+___SCMOBJ tls_context;
+___SCMOBJ server_name;)
 {
 #ifndef USE_NETWORKING
 
@@ -9891,18 +10334,34 @@ ___SCMOBJ tls_context;)
   ___SCMOBJ e;
   ___device_tcp_client *dev;
   ___SCMOBJ result;
+  struct sockaddr local_sa;
+  SOCKET_LEN_TYPE local_salen;
   struct sockaddr sa;
-  int salen;
+  SOCKET_LEN_TYPE salen;
   ___tls_context *tls_context_p;
+  char *server_name_p;
 
-  if ((e = ___SCMOBJ_to_sockaddr (server_addr, port_num, &sa, &salen, 1))
+  if ((e = ___SCMOBJ_to_sockaddr (local_addr,
+                                  local_port_num,
+                                  &local_sa,
+                                  &local_salen,
+                                  1))
+      != ___FIX(___NO_ERR) ||
+      (e = ___SCMOBJ_to_sockaddr (addr,
+                                  port_num,
+                                  &sa,
+                                  &salen,
+                                  2))
       != ___FIX(___NO_ERR))
     return e;
 
 #ifdef USE_OPENSSL
 
   if (tls_context == ___FAL)
-    tls_context_p = NULL;
+    {
+      tls_context_p = NULL;
+      server_name_p = NULL;
+    }
   else
     {
       if ((e = ___SCMOBJ_to_NONNULLPOINTER
@@ -9912,6 +10371,20 @@ ___SCMOBJ tls_context;)
             7))
           != ___FIX(___NO_ERR))
         return e;
+
+#ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
+      if (___FALSEP (server_name))
+        server_name_p = NULL;
+      else if ((e = ___SCMOBJ_to_CHARSTRING
+                (___PSA(___PSTATE) server_name,
+                 &server_name_p,
+                 8))
+               != ___FIX(___NO_ERR))
+        return e;
+#else
+      server_name_p = NULL;
+#endif
+
     }
 
 #else
@@ -9920,18 +10393,26 @@ ___SCMOBJ tls_context;)
     return ___FIX(___UNIMPL_ERR);
 
   tls_context_p = NULL;
+  server_name_p = NULL;
 
 #endif
 
-  if ((e = ___device_tcp_client_setup_from_sockaddr
-             (&dev,
-              ___global_device_group (),
-              &sa,
-              salen,
-              ___INT(options),
-              ___DIRECTION_RD|___DIRECTION_WR,
-              tls_context_p))
-      != ___FIX(___NO_ERR))
+  e = ___device_tcp_client_setup_from_sockaddr
+        (&dev,
+         ___global_device_group (),
+         &sa,
+         salen,
+         &local_sa,
+         local_salen,
+         ___INT(options),
+         ___DIRECTION_RD|___DIRECTION_WR,
+         tls_context_p,
+         server_name_p);
+
+  if (server_name_p != NULL)
+    ___release_string (server_name_p);
+
+  if (e != ___FIX(___NO_ERR))
     return e;
 
   if ((e = ___NONNULLPOINTER_to_SCMOBJ
@@ -9947,20 +10428,18 @@ ___SCMOBJ tls_context;)
       return e;
     }
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 
 #endif
 }
 
 
 ___SCMOBJ ___os_device_tcp_client_socket_info
-   ___P((___SCMOBJ dev_condvar,
+   ___P((___SCMOBJ dev,
          ___SCMOBJ peer),
-        (dev_condvar,
+        (dev,
          peer)
-___SCMOBJ dev_condvar;
+___SCMOBJ dev;
 ___SCMOBJ peer;)
 {
 #ifndef USE_NETWORKING
@@ -9969,11 +10448,14 @@ ___SCMOBJ peer;)
 
 #else
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_tcp_client *d =
     ___CAST(___device_tcp_client*,___FIELD(dev,___FOREIGN_PTR));
   struct sockaddr sa;
   SOCKET_LEN_TYPE salen;
+
+  if (d->base.base.read_stage != ___STAGE_OPEN &&
+      d->base.base.write_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
 
   if (d->try_connect_again != 0)
     {
@@ -9998,7 +10480,7 @@ ___SCMOBJ peer;)
       return e;
     }
 
-  return ___sockaddr_to_SCMOBJ (&sa, salen, ___RETURN_POS);
+  return ___release_scmobj (___sockaddr_to_SCMOBJ (&sa, salen, ___RETURN_POS));
 
 #endif
 }
@@ -10009,18 +10491,18 @@ ___SCMOBJ peer;)
 /* Opening and reading a TCP server. */
 
 ___SCMOBJ ___os_device_tcp_server_open
-   ___P((___SCMOBJ server_addr,
-         ___SCMOBJ port_num,
+   ___P((___SCMOBJ local_addr,
+         ___SCMOBJ local_port_num,
          ___SCMOBJ backlog,
          ___SCMOBJ options,
          ___SCMOBJ tls_context),
-        (server_addr,
-         port_num,
+        (local_addr,
+         local_port_num,
          backlog,
          options,
          tls_context)
-___SCMOBJ server_addr;
-___SCMOBJ port_num;
+___SCMOBJ local_addr;
+___SCMOBJ local_port_num;
 ___SCMOBJ backlog;
 ___SCMOBJ options;
 ___SCMOBJ tls_context;)
@@ -10034,11 +10516,15 @@ ___SCMOBJ tls_context;)
   ___SCMOBJ e;
   ___device_tcp_server *dev;
   ___SCMOBJ result;
-  struct sockaddr sa;
-  int salen;
+  struct sockaddr local_sa;
+  SOCKET_LEN_TYPE local_salen;
   ___tls_context *tls_context_p;
 
-  if ((e = ___SCMOBJ_to_sockaddr (server_addr, port_num, &sa, &salen, 1))
+  if ((e = ___SCMOBJ_to_sockaddr (local_addr,
+                                  local_port_num,
+                                  &local_sa,
+                                  &local_salen,
+                                  1))
       != ___FIX(___NO_ERR))
     return e;
 
@@ -10072,8 +10558,8 @@ ___SCMOBJ tls_context;)
   e = ___device_tcp_server_setup
         (&dev,
          ___global_device_group (),
-         &sa,
-         salen,
+         &local_sa,
+         local_salen,
          ___INT(backlog),
          ___INT(options),
          tls_context_p);
@@ -10095,9 +10581,7 @@ ___SCMOBJ tls_context;)
       return e;
     }
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 
 #endif
 }
@@ -10139,7 +10623,169 @@ ___SCMOBJ dev_condvar;)
       return e;
     }
 
-  ___release_scmobj (result);
+  return ___release_scmobj (result);
+
+#endif
+}
+
+
+___SCMOBJ ___os_device_tcp_server_socket_info
+   ___P((___SCMOBJ dev),
+        (dev)
+___SCMOBJ dev;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___device_tcp_server *d =
+    ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
+  struct sockaddr sa;
+  SOCKET_LEN_TYPE salen = sizeof (sa);
+
+  if (d->base.read_stage != ___STAGE_OPEN &&
+      d->base.write_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
+
+  if (getsockname (d->s, &sa, &salen) < 0)
+    return ERR_CODE_FROM_SOCKET_CALL;
+
+  return ___release_scmobj (___sockaddr_to_SCMOBJ (&sa, salen, ___RETURN_POS));
+
+#endif
+}
+
+
+/*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
+
+/* Opening a UDP socket. */
+
+___SCMOBJ ___os_device_udp_open
+   ___P((___SCMOBJ local_addr,
+         ___SCMOBJ local_port_num,
+         ___SCMOBJ options),
+        (local_addr,
+         local_port_num,
+         options)
+___SCMOBJ local_addr;
+___SCMOBJ local_port_num;
+___SCMOBJ options;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___SCMOBJ e;
+  ___device_udp *dev;
+  ___SCMOBJ result;
+  struct sockaddr local_sa;
+  SOCKET_LEN_TYPE local_salen;
+
+  if ((e = ___SCMOBJ_to_sockaddr (local_addr,
+                                  local_port_num,
+                                  &local_sa,
+                                  &local_salen,
+                                  1))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  if ((e = ___device_udp_setup_from_sockaddr
+             (&dev,
+              ___global_device_group (),
+              &local_sa,
+              local_salen,
+              ___INT(options),
+              ___DIRECTION_RD|___DIRECTION_WR))
+      != ___FIX(___NO_ERR))
+    return e;
+
+  if ((e = ___NONNULLPOINTER_to_SCMOBJ
+             (___PSTATE,
+              dev,
+              ___FAL,
+              ___device_cleanup_from_ptr,
+              &result,
+              ___RETURN_POS))
+      != ___FIX(___NO_ERR))
+    {
+      ___device_cleanup (___CAST(___device*,dev)); /* ignore error */
+      return e;
+    }
+
+  return ___release_scmobj (result);
+
+#endif
+}
+
+
+___SCMOBJ ___os_device_udp_read_subu8vector
+   ___P((___SCMOBJ dev_condvar,
+         ___SCMOBJ buffer,
+         ___SCMOBJ lo,
+         ___SCMOBJ hi),
+        (dev_condvar,
+         buffer,
+         lo,
+         hi)
+___SCMOBJ dev_condvar;
+___SCMOBJ buffer;
+___SCMOBJ lo;
+___SCMOBJ hi;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+#define MAX_DATAGRAM_LENGTH 65536
+
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___device_udp *d =
+    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ e;
+  ___SSIZE_T n;
+  ___SCMOBJ result;
+
+  if (buffer == ___FAL)
+    {
+      ___U8 buf[MAX_DATAGRAM_LENGTH];
+
+      if ((e = ___device_udp_read_raw
+                  (d,
+                   buf,
+                   MAX_DATAGRAM_LENGTH,
+                   &n))
+          != ___FIX(___NO_ERR))
+        return e;
+
+      result = ___alloc_scmobj (___PSTATE, ___sU8VECTOR, n);
+
+      if (___FIXNUMP(result))
+        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+
+      memmove (___BODY_AS(result,___tSUBTYPED),
+               buf,
+               n);
+
+      ___release_scmobj (result);
+    }
+  else
+    {
+      if ((e = ___device_udp_read_raw
+                  (d,
+                   ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED)) + ___INT(lo),
+                   ___INT(hi)-___INT(lo),
+                   &n))
+          != ___FIX(___NO_ERR))
+        return e;
+
+      result = ___FIX(n);
+    }
 
   return result;
 
@@ -10147,10 +10793,19 @@ ___SCMOBJ dev_condvar;)
 }
 
 
-___SCMOBJ ___os_device_tcp_server_socket_info
-   ___P((___SCMOBJ dev_condvar),
-        (dev_condvar)
-___SCMOBJ dev_condvar;)
+___SCMOBJ ___os_device_udp_write_subu8vector
+   ___P((___SCMOBJ dev_condvar,
+         ___SCMOBJ buffer,
+         ___SCMOBJ lo,
+         ___SCMOBJ hi),
+        (dev_condvar,
+         buffer,
+         lo,
+         hi)
+___SCMOBJ dev_condvar;
+___SCMOBJ buffer;
+___SCMOBJ lo;
+___SCMOBJ hi;)
 {
 #ifndef USE_NETWORKING
 
@@ -10159,17 +10814,121 @@ ___SCMOBJ dev_condvar;)
 #else
 
   ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
-  ___device_tcp_server *d =
-    ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
-  struct sockaddr sa;
-  SOCKET_LEN_TYPE salen;
+  ___device_udp *d =
+    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ e;
+  ___SSIZE_T n;
+  ___U8 *buf = ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED));
+  ___SSIZE_T len;
 
-  salen = sizeof (sa);
+  if (lo == ___FAL)
+    len = ___INT(___U8VECTORLENGTH(buffer));
+  else
+    {
+      buf += ___INT(lo);
+      len = ___INT(hi)-___INT(lo);
+    }
 
-  if (getsockname (d->s, &sa, &salen) < 0)
-    return ERR_CODE_FROM_SOCKET_CALL;
+  if ((e = ___device_udp_write_raw (d, buf, len, &n))
+      != ___FIX(___NO_ERR))
+    return e;
 
-  return ___sockaddr_to_SCMOBJ (&sa, salen, ___RETURN_POS);
+  if (n != len)
+    return ___FIX(___UNKNOWN_ERR);
+
+  return ___VOID;
+
+#endif
+}
+
+
+___SCMOBJ ___os_device_udp_socket_info
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ source),
+        (dev,
+         source)
+___SCMOBJ dev;
+___SCMOBJ source;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___device_udp *d =
+    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+
+  if (d->base.read_stage != ___STAGE_OPEN &&
+      d->base.write_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
+
+  if (source == ___FAL)
+    {
+      struct sockaddr sa;
+      SOCKET_LEN_TYPE salen = sizeof (sa);
+
+      if (getsockname (d->s, &sa, &salen) < 0)
+        return ERR_CODE_FROM_SOCKET_CALL;
+
+      return ___release_scmobj (___sockaddr_to_SCMOBJ (&sa,
+                                                       salen,
+                                                       ___RETURN_POS));
+    }
+  else
+    {
+      if (d->source_salen == 0) /* no message received yet? */
+        return ___FAL;
+
+      if (d->source_same_as_previous) /* last source address same as previously read? */
+        return ___TRU;
+
+      d->source_same_as_previous = 1;
+
+      return ___release_scmobj (___sockaddr_to_SCMOBJ (&d->source_sa,
+                                                       d->source_salen,
+                                                       ___RETURN_POS));
+    }
+
+#endif
+}
+
+
+___SCMOBJ ___os_device_udp_destination_set
+   ___P((___SCMOBJ dev_condvar,
+         ___SCMOBJ addr,
+         ___SCMOBJ port_num),
+        (dev_condvar,
+         addr,
+         port_num)
+___SCMOBJ dev_condvar;
+___SCMOBJ addr;
+___SCMOBJ port_num;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___SCMOBJ e;
+  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___device_udp *d =
+    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+
+  if (d->base.read_stage != ___STAGE_OPEN &&
+      d->base.write_stage != ___STAGE_OPEN)
+    return ___FIX(___CLOSED_DEVICE_ERR);
+
+  if ((e = ___SCMOBJ_to_sockaddr (addr,
+                                  port_num,
+                                  &d->dest_sa,
+                                  &d->dest_salen,
+                                  1)) /* argument 1 of udp-destination-set! */
+      != ___FIX(___NO_ERR))
+    return e;
+
+  return ___FIX(___NO_ERR);
 
 #endif
 }
@@ -10238,9 +10997,7 @@ ___SCMOBJ ignore_hidden;)
       ___release_string (cpath);
     }
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 
 #endif
 }
@@ -10274,9 +11031,7 @@ ___SCMOBJ dev_condvar;)
       != ___FIX(___NO_ERR))
     return e;
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 
 #endif
 }
@@ -10317,9 +11072,7 @@ ___SCMOBJ selector;)
         }
     }
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 }
 
 
@@ -10337,9 +11090,7 @@ ___SCMOBJ dev_condvar;)
   if ((e = ___device_event_queue_read (d, &result)) != ___FIX(___NO_ERR))
     return e;
 
-  ___release_scmobj (result);
-
-  return result;
+  return ___release_scmobj (result);
 }
 
 
@@ -10603,9 +11354,11 @@ ___SCMOBJ eof;)
             e = err_code_from_char_encoding (___CHAR_ENCODING(options), 1, 0, 0);
           else
             {
+#if ___UNICODE_REPLACEMENT <= ___MAX_CHR
               if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
                 cbuf_ptr[chi] = ___UNICODE_REPLACEMENT;
               else
+#endif
                 cbuf_ptr[chi] = ___UNICODE_QUESTION;
 
               cbuf_avail--;
@@ -10669,9 +11422,11 @@ ___SCMOBJ port;)
             ___C replacement_cbuf[1];
             int replacement_cbuf_avail = 1;
 
+#if ___UNICODE_REPLACEMENT <= ___MAX_CHR
             if (___CHAR_ENCODING_SUPPORTS_BMP(___CHAR_ENCODING(options)))
               replacement_cbuf[0] = ___UNICODE_REPLACEMENT;
             else
+#endif
               replacement_cbuf[0] = ___UNICODE_QUESTION;
 
             code = chars_to_bytes (replacement_cbuf,

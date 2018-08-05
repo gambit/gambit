@@ -1,6 +1,6 @@
 /* File: "mem.h" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___MEM_H
 #define ___MEM_H
@@ -32,7 +32,7 @@
  * is adjusted.  If there is less than or equal to ___MSECTION_WASTE
  * words of space left, a garbage collection is triggered.
  * ___MSECTION_FUDGE must be >=
- * ___MAX_NB_FRAME_SLOTS+1+___SUBTYPED_OVERHEAD (which is the size of
+ * ___MAX_NB_FRAME_SLOTS+1+___SUBTYPED_BODY (which is the size of
  * the largest continuation frame).
  *
  * ___MSECTION_BIGGEST is the size in words beyond which an object will
@@ -64,7 +64,7 @@
 #define ___MAX_NB_ARGS          8192
 #define ___MAX_NB_FRAME_SLOTS   8192
 #define ___MSECTION_SIZE        131072
-#define ___MSECTION_FUDGE       (___MAX_NB_FRAME_SLOTS+1+___SUBTYPED_OVERHEAD)
+#define ___MSECTION_FUDGE       (___MAX_NB_FRAME_SLOTS+1+___SUBTYPED_BODY)
 #define ___MSECTION_WASTE       (___MSECTION_FUDGE/16)
 #define ___MSECTION_BIGGEST     255
 #define ___MSECTION_CHUNK       ___MSECTION_BIGGEST

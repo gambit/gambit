@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -40,7 +40,7 @@
 (define cf #f)
 
 (set! cf
-  (lambda (input opts output-filename-gen module-name unique-name)
+  (lambda (input opts output-filename-gen module-name linker-name)
     (with-exception-handling
      (lambda ()
        (let* ((t
@@ -71,7 +71,7 @@
                           (cons (list 'target (default-target)) opts))
                       output-filename-gen
                       module-name
-                      unique-name
+                      linker-name
                       info-port))))
 
            result))))))
@@ -125,7 +125,7 @@
                       #t)
                      ((c dynamic exe obj link flat
                          check force keep-c
-                         o l prelude postlude
+                         o l module-name linker-name prelude postlude
                          cc-options ld-options-prelude ld-options
                          asm)
                       #t) ;; these options are innocuous
@@ -197,7 +197,7 @@
          opts
          output-filename-gen
          module-name
-         unique-name
+         linker-name
          info-port
          inner)
 
@@ -211,7 +211,7 @@
   (virtual.begin!)
 
   (let ((target-name (cadr (assq 'target opts))))
-    (target-select! target-name info-port))
+    (target-select! target-name opts info-port))
 
   (let* ((output-filename
           (and output-filename-gen
@@ -219,92 +219,103 @@
          (root
           (if output-filename
               (path-strip-extension output-filename)
-              (path-strip-directory (path-strip-extension input))))
+              (let ((filename
+                     (if (##source? input)
+                         (##source-path input)
+                         input)))
+                (path-strip-directory (path-strip-extension filename)))))
          (output
           (if output-filename
               output-filename
               (string-append root (caar target.file-extensions))))
          (module-name
           (or module-name
-              (path-strip-directory root)))
-         (unique-name
-          (or unique-name
-              module-name)))
+              (string-append (path-strip-directory root) "#"))))
 
-    (if (not (valid-module-name? module-name))
-        (compiler-error
-         "Invalid characters in file name (must be a symbol with no \"#\")")
-        (let ()
+    (define (add-loading-of-required-modules ptrees source env comp-scope)
+      (let ((required-modules
+             (table-ref comp-scope 'required-modules '())))
+        (if (pair? required-modules)
+            (let ((env
+                   (add-extended-bindings
+                    (add-proper-tail-calls
+                     (add-safe env)))))
+              (append
+               (map (lambda (module-ref)
+                      (new-call source env
+                                (new-ref source env
+                                         (env-lookup-global-var
+                                          env
+                                          '##load-required-module))
+                                (list (new-cst source env
+                                               module-ref))))
+                    required-modules)
+               ptrees))
+            ptrees)))
 
-          (define (add-loading-of-required-modules ptrees source env comp-scope)
-            (let ((required-modules
-                   (table-ref comp-scope 'required-modules '())))
-              (if (pair? required-modules)
-                  (let ((env
-                         (add-extended-bindings
-                          (add-proper-tail-calls
-                           (add-safe env)))))
-                    (append
-                     (map (lambda (module-ref)
-                            (new-call source env
-                                      (new-ref source env
-                                               (env-lookup-global-var
-                                                env
-                                                '##load-required-module))
-                                      (list (new-cst source env
-                                                     module-ref))))
-                          required-modules)
-                     ptrees))
-                  ptrees)))
+    (let* ((v1
+            (if (##source? input)
+                (vector #f (##sourcify-deep input input))
+                (read-source input #f #t)))
+           (script-line (vector-ref v1 0))
+           (expr (vector-ref v1 1))
+           (program (expand-source (wrap-program expr)))
+           (x (##in-new-compilation-scope
+               (lambda ()
+                 (let ((comp-scope (##compilation-scope)))
+                   (table-set! comp-scope 'module-name module-name)
+                   (table-set! comp-scope 'linker-name linker-name))
+                 (parse-program
+                  program
+                  (make-global-environment)
+                  module-name
+                  vector))))
+           (v2 (car x))
+           (comp-scope (cdr x))
+           (lst (vector-ref v2 0))
+           (env (vector-ref v2 1))
+           (c-intf (vector-ref v2 2))
+           (ptrees (add-loading-of-required-modules lst program env comp-scope))
+           (parsed-program (normalize-program ptrees))
+           (module-name
+            (let ((mod-name (table-ref comp-scope 'module-name)))
+              (table-set! comp-scope 'module-name)
+              mod-name))
+           (linker-name
+            (let ((link-name (table-ref comp-scope 'linker-name)))
+              (table-set! comp-scope 'linker-name)
+              (or link-name
+                  module-name)))
+           (result-thunk
+            (inner parsed-program
+                   env
+                   root
+                   output
+                   module-name
+                   linker-name
+                   c-intf
+                   comp-scope
+                   script-line)))
 
-          (let* ((v1 (read-source input #f #t))
-                 (script-line (vector-ref v1 0))
-                 (expr (vector-ref v1 1))
-                 (program (expand-source (wrap-program expr)))
-                 (x (##in-new-compilation-scope
-                     (lambda ()
-                       (parse-program
-                        program
-                        (make-global-environment)
-                        module-name
-                        vector))))
-                 (v2 (car x))
-                 (comp-scope (cdr x))
-                 (lst (vector-ref v2 0))
-                 (env (vector-ref v2 1))
-                 (c-intf (vector-ref v2 2))
-                 (ptrees (add-loading-of-required-modules lst program env comp-scope))
-                 (parsed-program (normalize-program ptrees))
-                 (result
-                  (inner parsed-program
-                         env
-                         opts
-                         root
-                         output
-                         module-name
-                         unique-name
-                         c-intf
-                         comp-scope
-                         script-line)))
+      (target-unselect!)
+      (virtual.end!)
+      (ptree.end!)
+      (env.end!)
 
-            (target-unselect!)
-            (virtual.end!)
-            (ptree.end!)
-            (env.end!)
-
-            result)))))
+      (and result-thunk
+           (result-thunk)))))
 
 (define (compile-program
          input
          opts
          output-filename-gen
          module-name
-         unique-name
+         linker-name
          info-port)
 
   (set! warnings-requested? compiler-option-warnings)
 
-  (let ((result
+  (let ((result-thunk
          (with-exception-handling
           (lambda ()
             (compile-program-frontend
@@ -312,15 +323,14 @@
              opts
              output-filename-gen
              module-name
-             unique-name
+             linker-name
              info-port
              (lambda (parsed-program
                       env
-                      opts
                       root
                       output
                       module-name
-                      unique-name
+                      linker-name
                       c-intf
                       comp-scope
                       script-line)
@@ -383,20 +393,21 @@
                        (close-output-port dg-port)
                        (set! dependency-graph #f)))
 
-                 (target.dump
-                  module-procs
-                  output
-                  c-intf
-                  module-descr
-                  unique-name
-                  opts)
+                 (let ((result-thunk
+                        (target.dump
+                         module-procs
+                         output
+                         c-intf
+                         module-descr
+                         linker-name)))
 
-                 (dump-c-intf module-procs root c-intf)
+                   (if result-thunk
+                       (dump-c-intf module-procs root c-intf))
 
-                 output)))))))
+                   result-thunk))))))))
 
     (if info-port
-        (if result
+        (if result-thunk
             (begin
               (display "Compilation finished." info-port)
               (newline info-port))
@@ -404,7 +415,7 @@
               (display "Compilation terminated abnormally." info-port)
               (newline info-port))))
 
-    result))
+    result-thunk))
 
 (define (expand-program input . rest)
   (let ((opts #f)
@@ -421,48 +432,32 @@
 
     (set! warnings-requested? compiler-option-warnings)
 
-    (with-exception-handling
-     (lambda ()
-       (compile-program-frontend
-        input
-        opts
-        #f
-        #f
-        #f
-        #f
-        (lambda (parsed-program
-                 env
-                 opts
-                 root
-                 output
-                 module-name
-                 unique-name
-                 c-intf
-                 comp-scope
-                 script-line)
-          (map (lambda (x)
-                 (parse-tree->expression x loc-table))
-               parsed-program)))))))
-
-(define (valid-module-name? module-name)
-
-  ; Valid module names are exactly the valid symbols except those
-  ; containing "#".  A module name can also be a number.
-
-  (define (valid-char? c)
-    (and (not (memv c '(#\# #\; #\( #\) #\  #\[ #\] #\{ #\} #\" #\' #\` #\,)))
-         (not (char-whitespace? c))))
-
-  (let ((n (string-length module-name)))
-    (and (> n 0)                               ; should not be empty
-         (not (string=? module-name "."))      ; should not be "."
-         ;;(not (string->number module-name 10)) ; should not be a number
-         (let loop ((i 0))
-           (if (< i n)
-             (if (valid-char? (string-ref module-name i))
-               (loop (+ i 1))
-               #f)
-             #t)))))
+    (let ((result-thunk
+           (with-exception-handling
+            (lambda ()
+              (compile-program-frontend
+               input
+               opts
+               #f
+               #f
+               #f
+               #f
+               (lambda (parsed-program
+                        env
+                        root
+                        output
+                        module-name
+                        linker-name
+                        c-intf
+                        comp-scope
+                        script-line)
+                 (let ((result
+                        (map (lambda (x)
+                               (parse-tree->expression x loc-table))
+                             parsed-program)))
+                   (lambda () result))))))))
+      (and result-thunk
+           (result-thunk)))))
 
 (define (dump-c-intf module-procs root c-intf)
   (let ((decls (c-intf-decls c-intf))
@@ -709,7 +704,7 @@
 
 (define (compile-parsed-program module-name program env c-intf info-port)
   (let* ((name
-          (string-append module-prefix module-name))
+          (string-append module-name "#"))
          (main-proc
           (make-proc-obj
            name   ;; name
@@ -759,7 +754,7 @@
                (if (and val (prc? val))
                    (let ((proc
                           (make-proc-obj
-                           (symbol->string (var-name var)) ; name
+                           (symbol->string (var-name var)) ;; name
                            (prc-c-name val)   ;; c-name
                            #t                 ;; primitive?
                            #f                 ;; code
@@ -1134,7 +1129,7 @@
           (merge-contexts-and-seal-bb
            p-context
            ret-var-set
-           (intrs-enabled? (node-env val))
+           val
            'internal
            (node->comment val))
 
@@ -1834,7 +1829,7 @@
                      ret-var-set
                      (node->comment node))
            (let ((ret-opnd (var->opnd ret-var)))
-             (seal-bb (intrs-enabled? (node-env node)) 'return)
+             (seal-bb node 'return)
              (shrink-slots 0)
              (emit-instr!
               (make-jump ret-opnd
@@ -2323,7 +2318,7 @@
 (define (join-execution-paths-aux node live context1 bb1 context2 bb2)
   (restore-context context2)
   (set! *bb* bb2)
-  (seal-bb (intrs-enabled? (node-env node)) 'internal)
+  (seal-bb node 'internal)
   (let ((join-lbl (bbs-new-lbl! *bbs*)))
     (emit-instr!
      (make-jump (make-lbl join-lbl)
@@ -2339,7 +2334,7 @@
       (merge-contexts-and-seal-bb
        context2*
        live
-       (intrs-enabled? (node-env node))
+       node
        'internal
        (node->comment node))
       (emit-instr!
@@ -2681,7 +2676,7 @@
                                     live
                                     (node->comment node))
 
-                      (seal-bb (intrs-enabled? (node-env node)) 'internal)
+                      (seal-bb node 'internal)
 
                       (emit-instr!
                        (make-jump (make-lbl join-lbl)
@@ -2734,7 +2729,7 @@
 ;; context (i.e. reg and stack values and frame size) to 'other-context' only
 ;; considering the variables in 'live'.
 
-(define (merge-contexts-and-seal-bb other-context live poll? where comment)
+(define (merge-contexts-and-seal-bb other-context live node where comment)
 ;(display "*************")(newline);*************
 ;(display "1 regs  : ")(pp (map (lambda (x) (if (var? x) (var-name x) x)) regs))
 ;(display "1 slots : ")(pp (map (lambda (x) (if (var? x) (var-name x) x)) slots))
@@ -2821,7 +2816,7 @@
             (put-var (make-stk i) empty-var))
           (loop4 (+ i 1)))))
 
-    (seal-bb poll? where)
+    (seal-bb node where)
 
     (set! poll (poll-merge poll other-poll))
 
@@ -2832,7 +2827,7 @@
       (compiler-internal-error
         "merge-contexts-and-seal-bb, entry-bb's do not agree"))))
 
-(define (seal-bb poll? where)
+(define (seal-bb node where)
 
   (define (poll-at split-point)
     (let loop ((i 0)
@@ -2901,19 +2896,22 @@
           (poll-at (max (- poll-period delta) 0))
           (impose-polling-constraints)))))
 
-  (if poll? (impose-polling-constraints))
+  (if (intrs-enabled? (node-env node))
+      (impose-polling-constraints))
 
   (let* ((n (+ (length (bb-non-branch-instrs *bb*)) 1))
          (delta (+ (poll-delta poll) n))
          (since-entry? (poll-since-entry? poll)))
-    (if (and poll?
+    (if (and (intrs-enabled? (node-env node))
              (case where
                ((call)
                 (> delta (- poll-period poll-head)))
                ((tail-call)
                 (> delta poll-tail))
                ((return)
-                (and since-entry? (> delta (+ poll-head poll-tail))))
+                (and since-entry?
+                     (poll-on-return? (node-env node))
+                     (> delta (+ poll-head poll-tail))))
                ((internal)
                 #f)
                (else
@@ -3012,7 +3010,7 @@
                             result-var
                             live
                             (node->comment node))
-          (seal-bb (intrs-enabled? (node-env node)) 'internal)
+          (seal-bb node 'internal)
           (let* ((true-lbl
                   (bbs-new-lbl! *bbs*))
                  (false-lbl
@@ -3564,7 +3562,7 @@
                                                  empty-var)
                                         (loop4 (- i 1)))))))
 
-                              (seal-bb (intrs-enabled? (node-env node)) where)
+                              (seal-bb node where)
 
                               (if (and (not (intrs-enabled? (node-env node)))
                                        (not (reason-tail? reason2))
@@ -4201,7 +4199,7 @@
                        empty-var)
               (loop3 (- i 1))))))
 
-      (seal-bb (intrs-enabled? (node-env node)) 'call)
+      (seal-bb node 'call)
 
       (emit-instr!
        (make-jump (make-lbl task-lbl)

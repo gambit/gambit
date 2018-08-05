@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -149,7 +149,7 @@
 
 (##define-macro (macro-none-kind)      0) ;; allows nothing
 (##define-macro (macro-waitable-kind)  1) ;; can wait until readable/writable
-(##define-macro (macro-object-kind)    3) ;; can read and write objects
+(##define-macro (macro-object-kind)    3) ;; can also read and write objects
 (##define-macro (macro-character-kind) 7) ;; can also read and write chars
 (##define-macro (macro-byte-kind)     15) ;; can also read and write bytes
 (##define-macro (macro-device-kind)   31) ;; can also do device operations
@@ -167,6 +167,7 @@
 (##define-macro (macro-string-kind)      (+ 7 32768))
 (##define-macro (macro-u8vector-kind)    (+ 15 65536))
 (##define-macro (macro-raw-device-kind)  (+ 1 262144))
+(##define-macro (macro-udp-kind)         (+ 3 524288))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -483,7 +484,6 @@
 (define-library-type host-info
   id: e3dc833e-a176-42c1-bdc0-76a6c4b302f8
   constructor: #f
-  opaque:
 
   (name      printable: read-only:)
   (aliases   printable: read-only:)
@@ -497,7 +497,6 @@
 (define-library-type service-info
   id: 177749b2-beb0-4670-9ab2-4b9c01b54c1d
   constructor: #f
-  opaque:
 
   (name        printable: read-only:)
   (aliases     printable: read-only:)
@@ -512,7 +511,6 @@
 (define-library-type protocol-info
   id: ffc668b5-2146-42b7-ab11-7d91641f2124
   constructor: #f
-  opaque:
 
   (name      printable: read-only:)
   (aliases   printable: read-only:)
@@ -526,7 +524,6 @@
 (define-library-type network-info
   id: ce2e418b-96c7-4562-9cb6-419ec113704e
   constructor: #f
-  opaque:
 
   (name      printable: read-only:)
   (aliases   printable: read-only:)
@@ -540,7 +537,6 @@
 (define-library-type socket-info
   id: 837d9768-9d27-455e-ac65-5ae59f43f79e
   constructor: #f
-  opaque:
 
   (family      printable: read-only:)
   (port-number printable: read-only:)
@@ -554,7 +550,6 @@
 (define-library-type address-info
   id: f165f359-8685-48da-bc99-f38827ad8af9
   constructor: #f
-  opaque:
 
   (family       printable: read-only:)
   (socket-type  printable: read-only:)
@@ -577,7 +572,7 @@
 ;;; Representation of raw device ports.
 
 (define-type-of-port raw-device-port
-  id: f55e3678-0414-63d0-3fda-68b9bc518bca
+  id: E641E009-FCAA-412D-B283-587F5C6D4EC1
   type-exhibitor: macro-type-raw-device-port
   constructor: macro-make-raw-device-port
   implementer: implement-type-raw-device-port
@@ -590,8 +585,9 @@
 
   rdevice-condvar
   wdevice-condvar
-  device
+  type
   id
+  specific
 )
 
 (##define-macro (macro-raw-device-port? obj)
@@ -623,6 +619,44 @@
 
 (##define-macro (macro-tcp-server-port? obj)
   `(##port-of-kind? ,obj (macro-tcp-server-kind)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;; Representation of UDP device ports.
+
+(define-type-of-object-port udp-port
+  id: AB62859B-18EF-47D3-8AC5-69D3103EDE6F
+  type-exhibitor: macro-type-udp-port
+  constructor: macro-make-udp-port
+  implementer: implement-type-udp-port
+  macros:
+  prefix: macro-
+  opaque:
+  unprintable:
+
+  extender: define-type-of-udp-port
+
+  rdevice-condvar
+  wdevice-condvar
+  latest-source
+)
+
+(define-check-type udp-port 'udp-port
+  macro-udp-port?)
+
+(##define-macro (macro-udp-port? obj)
+  `(##port-of-kind? ,obj (macro-udp-kind)))
+
+(define-check-type udp-input-port 'udp-input-port
+  macro-udp-input-port?)
+(define-check-type udp-output-port 'udp-output-port
+  macro-udp-output-port?)
+
+(##define-macro (macro-udp-input-port? obj)
+  `(macro-port-of-rkind? ,obj (macro-udp-kind)))
+
+(##define-macro (macro-udp-output-port? obj)
+  `(macro-port-of-wkind? ,obj (macro-udp-kind)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -727,7 +761,7 @@
 ;;; Representation of port settings.
 
 (define-type psettings
-  id: a7c86cfa-b41f-48ee-a212-9861f71b0dc1
+  id: C4293CA5-B269-494A-B24F-63730C347018
   type-exhibitor: macro-type-psettings
   constructor: macro-make-psettings
   implementer: implement-type-psettings
@@ -754,9 +788,10 @@
   stderr-redir
   pseudo-term
   show-console
-  server-address
+  address
   port-number
-  socket-type
+  local-address
+  local-port-number
   coalesce
   keep-alive
   backlog
@@ -939,15 +974,6 @@
 (##define-macro (macro-no-show-console) 0)
 (##define-macro (macro-default-show-console) `(macro-show-console))
 
-(##define-macro (macro-default-server-address) `'#u8(127 0 0 1))
-
-(##define-macro (macro-default-port-number) #f)
-
-(##define-macro (macro-socket-type-TCP) 0)
-(##define-macro (macro-socket-type-UDP) 1)
-(##define-macro (macro-socket-type-RAW) 2)
-(##define-macro (macro-default-socket-type) `(macro-socket-type-TCP))
-
 (##define-macro (macro-coalesce) 1)
 (##define-macro (macro-no-coalesce) 0)
 (##define-macro (macro-default-coalesce) `(macro-coalesce))
@@ -972,6 +998,8 @@
 (##define-macro (macro-default-ignore-hidden) `(macro-ignore-hidden))
 
 (##define-macro (macro-default-tls-context) #f)
+
+(##define-macro (macro-localhost) ''#u8(127 0 0 1))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1218,6 +1246,7 @@
   (r6rs-compatible-read?          unprintable: read-write:)
   (r6rs-compatible-write?         unprintable: read-write:)
   (here-strings-allowed?          unprintable: read-write:)
+  (dot-at-head-of-list-allowed?   unprintable: read-write:)
   (comment-handler                unprintable: read-write:)
 )
 

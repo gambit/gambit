@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -21,6 +21,7 @@
       (##string?
        (##load filename
                (lambda (script-line script-path) #f)
+               #f
                #f
                #f
                #f)))
@@ -100,6 +101,7 @@
                       script-callback
                       #t
                       #t
+                      #f
                       #f)
 
               (if starter
@@ -196,6 +198,16 @@
                           (##assq 'prelude options))
                          (post
                           (##assq 'postlude options))
+                         (module-name
+                          (let ((x (##assq 'module-name options)))
+                            (if x
+                                (##cadr x)
+                                #f)))
+                         (linker-name
+                          (let ((x (##assq 'linker-name options)))
+                            (if x
+                                (##cadr x)
+                                #f)))
                          (cc-options
                           (let ((x (##assq 'cc-options options)))
                             (if x
@@ -293,12 +305,16 @@
                                  file
                                  options: opts
                                  output: output
+                                 module-name: module-name
+                                 linker-name: linker-name
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options)
                                 (compile-file
                                  file
                                  options: opts
+                                 module-name: module-name
+                                 linker-name: linker-name
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options))
@@ -310,10 +326,14 @@
                                 (compile-file-to-target
                                  file
                                  options: opts
-                                 output: output)
+                                 output: output
+                                 module-name: module-name
+                                 linker-name: linker-name)
                                 (compile-file-to-target
                                  file
-                                 options: opts))
+                                 options: opts
+                                 module-name: module-name
+                                 linker-name: linker-name))
                             (exit-abnormally)))
 
                       (define (do-build-executable obj-files output-filename)
@@ -439,8 +459,10 @@
                                                              link?)
                                                         (link-flat gen-files
                                                                    output: output
+                                                                   linker-name: linker-name
                                                                    warnings?: warnings-opt?)
                                                         (link-flat gen-files
+                                                                   linker-name: linker-name
                                                                    warnings?: warnings-opt?))
                                                     (if (and output
                                                              link?)
@@ -448,19 +470,23 @@
                                                             (link-incremental
                                                              gen-files
                                                              output: output
+                                                             linker-name: linker-name
                                                              base: base
                                                              warnings?: warnings-opt?)
                                                             (link-incremental
                                                              gen-files
                                                              output: output
+                                                             linker-name: linker-name
                                                              warnings?: warnings-opt?))
                                                         (if base
                                                             (link-incremental
                                                              gen-files
+                                                             linker-name: linker-name
                                                              base: base
                                                              warnings?: warnings-opt?)
                                                             (link-incremental
                                                              gen-files
+                                                             linker-name: linker-name
                                                              warnings?: warnings-opt?))))))
                                           (and link-file
                                                (begin
@@ -517,27 +543,37 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Missing argument for option "
+        "*** WARNING -- Missing argument for -"
         output-port)
-       (##write (##symbol->string opt-sym) output-port)
-       (##write-string "\n" output-port)
+       (##write-string (##symbol->string opt-sym) output-port)
+       (##write-string " option\n" output-port)
+       #t)))
+
+  (define (warn-fixnum-argument-expected-for-option opt-sym)
+    (##repl
+     (lambda (first output-port)
+       (##write-string
+        "*** WARNING -- Fixnum argument expected for -"
+        output-port)
+       (##write-string (##symbol->string opt-sym) output-port)
+       (##write-string " option\n" output-port)
        #t)))
 
   (define (warn-unknown-option opt-sym)
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Unknown or improperly placed option: "
+        "*** WARNING -- Unknown or improperly placed -"
         output-port)
-       (##write (##symbol->string opt-sym) output-port)
-       (##newline output-port)
+       (##write-string (##symbol->string opt-sym) output-port)
+       (##write-string " option\n" output-port)
        #t)))
 
   (define (warn-multiple-output-files-and-o-option)
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- Multiple output files: non-directory \"o\" option ignored\n"
+        "*** WARNING -- Multiple output files: non-directory -o option ignored\n"
         output-port)
        #t)))
 
@@ -545,7 +581,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- No incremental link: \"l\" option ignored\n"
+        "*** WARNING -- No incremental link: -l option ignored\n"
         output-port)
        #t)))
 
@@ -553,7 +589,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- \"link\" or \"exe\" options were not specified: \"flat\" option ignored\n"
+        "*** WARNING -- -link or -exe options were not specified: -flat option ignored\n"
         output-port)
        #t)))
 
@@ -561,7 +597,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- The options \"c\", \"link\", \"dynamic\", \"exe\" and \"obj\" are mutually exclusive\n"
+        "*** WARNING -- The -c, -link, -dynamic, -exe and -obj options are mutually exclusive\n"
         output-port)
        #t)))
 
@@ -569,7 +605,7 @@
     (##repl
      (lambda (first output-port)
        (##write-string
-        "*** WARNING -- The options \"preload\" and \"nopreload\" must be used with the options \"link\" and \"exe\"\n"
+        "*** WARNING -- The -preload and -nopreload options must be used with the -link and -exe options\n"
         output-port)
        #t)))
 
@@ -607,10 +643,21 @@
                      (let ((opt-val (##car rest)))
                        (case (##cadr x)
                          ((symbol)
-                          (loop1 (##cdr rest)
-                                 (##cons (##list opt-sym
-                                                 (##string->symbol opt-val))
-                                         rev-options)))
+                          (let ((val (##string->symbol opt-val)))
+                            (loop1 (##cdr rest)
+                                   (##cons (##list opt-sym val)
+                                           rev-options))))
+                         ((fixnum)
+                          (let ((val (##string->number opt-val)))
+                            (if (##fixnum? val)
+                                (loop1 (##cdr rest)
+                                       (##cons (##list opt-sym val)
+                                               rev-options))
+                                (begin
+                                  (if warn?
+                                      (warn-fixnum-argument-expected-for-option opt-sym))
+                                  (loop1 (##cdr rest)
+                                         rev-options)))))
                          (else
                           (loop1 (##cdr rest)
                                  (##cons (##list opt-sym
@@ -686,6 +733,7 @@
                            (debug) (debug-location) (debug-source) (debug-environments)
                            (track-scheme)
                            (o string) (l string)
+                           (module-name string) (linker-name string)
                            (prelude string) (postlude string)
                            (cc-options string)
                            (ld-options-prelude string) (ld-options string))))

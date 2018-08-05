@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H

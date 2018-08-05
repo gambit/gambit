@@ -1,6 +1,6 @@
 /* File: "pthread.c" */
 
-/* Copyright (c) 2006-2013 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2006-2018 by Marc Feeley, All Rights Reserved. */
 
 #include <stdio.h>
 #include <pthread.h>
@@ -9,7 +9,7 @@
  * ___VERSION must match the version number of the Gambit header file.
  */
 
-#define ___VERSION 408008
+#define ___VERSION 408009
 #include "gambit.h"
 
 /*
@@ -20,11 +20,11 @@
 
 /*
  * Define SCHEME_LIBRARY_LINKER as the name of the Scheme library
- * prefixed with "____20_" and suffixed with "__".  This is the
+ * prefixed with "___LNK_" and suffixed with "__".  This is the
  * function that initializes the Scheme library.
  */
 
-#define SCHEME_LIBRARY_LINKER ____20_mylib__
+#define SCHEME_LIBRARY_LINKER ___LNK_mylib__
 
 ___BEGIN_C_LINKAGE
 extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state);

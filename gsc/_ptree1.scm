@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -489,6 +489,7 @@
 (define-boolean-decl warnings-sym)
 
 (define-boolean-decl interrupts-enabled-sym)
+(define-boolean-decl poll-on-return-sym)
 
 (define-boolean-decl debug-sym)
 (define-boolean-decl debug-location-sym)
@@ -565,6 +566,9 @@
 
 (define (add-not-interrupts-enabled env)
   (env-declare env (list interrupts-enabled-sym #f)))
+
+(define (poll-on-return? env) ; true when interrupt checks should be generated on procedure returns
+  (declaration-value poll-on-return-sym #f #f env))
 
 (define (debug? env) ; true iff debugging information should be generated
   (declaration-value debug-sym #f compiler-option-debug env))

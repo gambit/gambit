@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -82,7 +82,10 @@
  */
 
 #ifdef HAVE_ENVIRON
+#ifndef USE_WIN32
+/* Windows doesn't propagate environ to subprocesses, so avoid it there */
 #define USE_environ
+#endif
 #else
 #ifdef HAVE__NSGETENVIRON
 #define USE_environ
@@ -229,7 +232,13 @@
 #endif
 
 #ifdef HAVE_SYSLOG
+/*
+ * Also check for the presence of a working syslog.h, which
+ * causes problems with Xcode 9.2 + gcc-7.
+ */
+#ifdef HAVE_SYSLOG_H
 #define USE_syslog
+#endif
 #endif
 
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
@@ -548,6 +557,8 @@
 
 /* Determine which function to use for miscellaneous networking features.  */
 
+#ifdef USE_NETWORKING
+
 #ifdef HAVE_GETHOSTNAME
 #define USE_gethostname
 #endif
@@ -594,6 +605,8 @@
 
 #ifdef HAVE_GETNETBYNAME
 #define USE_getnetbyname
+#endif
+
 #endif
 
 
@@ -1355,7 +1368,10 @@ ___END_C_LINKAGE
 
 #ifdef INCLUDE_signal_h
 #ifdef HAVE_SIGNAL_H
+/* Only include signal.h if gambit.h hasn't already done so */
+#ifndef ___USE_SIGSET_T
 #include <signal.h>
+#endif
 #endif
 #endif
 
@@ -1380,6 +1396,14 @@ extern int h_errno;
 #endif
 #endif
 #endif
+#endif
+
+#ifndef NETDB_INTERNAL
+#define NETDB_INTERNAL -1
+#endif
+
+#ifndef NETDB_SUCCESS
+#define NETDB_SUCCESS 0
 #endif
 
 #ifdef INCLUDE_grp_h
@@ -1740,12 +1764,58 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #endif
 
 
-#ifdef USE_POSIX
+/*---------------------------------------------------------------------------*/
 
-#ifdef USE_sigaction
-typedef sigset_t ___sigset_type;
+#ifdef USE_NETWORKING
+
+/* Socket utilities */
+
+#ifdef USE_POSIX
+#define SOCKET_TYPE int
+#define SOCKET_CALL_ERROR(s) ((s) < 0)
+#define SOCKET_CALL_ERROR2(s) ((s) < 0)
+#define CONNECT_IN_PROGRESS (errno == EINPROGRESS)
+#define CONNECT_WOULD_BLOCK (errno == EAGAIN)
+#define NOT_CONNECTED(e) ((e) == ___FIX(___ERRNO_ERR(ENOTCONN)))
+#define CLOSE_SOCKET(s) ___close_no_EINTR (s)
+#define ERR_CODE_FROM_SOCKET_CALL err_code_from_errno ()
+#define IOCTL_SOCKET(s,cmd,argp) ioctl (s,cmd,argp)
+#define SOCKET_LEN_TYPE socklen_t
+#endif
+
+#ifdef USE_WIN32
+#define SOCKET_TYPE SOCKET
+#define SOCKET_CALL_ERROR(s) ((s) == SOCKET_ERROR)
+#define SOCKET_CALL_ERROR2(s) ((s) == INVALID_SOCKET)
+#define CONNECT_IN_PROGRESS ((WSAGetLastError () == WSAEALREADY) || \
+(WSAGetLastError () == WSAEISCONN))
+#define CONNECT_WOULD_BLOCK ((WSAGetLastError () == WSAEWOULDBLOCK) || \
+(WSAGetLastError () == WSAEINVAL))
+#define NOT_CONNECTED(e) ((e) == ___FIX(___WIN32_ERR(WSAENOTCONN)))
+#define CLOSE_SOCKET(s) closesocket (s)
+#define ERR_CODE_FROM_SOCKET_CALL err_code_from_WSAGetLastError ()
+#define IOCTL_SOCKET(s,cmd,argp) ioctlsocket (s,cmd,argp)
+#define SOCKET_LEN_TYPE int
+#endif
+
+#ifdef SHUT_RD
+#define SHUTDOWN_RD SHUT_RD
 #else
-typedef int ___sigset_type;
+#ifdef SD_RECEIVE
+#define SHUTDOWN_RD SD_RECEIVE
+#else
+#define SHUTDOWN_RD 0
+#endif
+#endif
+
+#ifdef SHUT_WR
+#define SHUTDOWN_WR SHUT_WR
+#else
+#ifdef SD_SEND
+#define SHUTDOWN_WR SD_SEND
+#else
+#define SHUTDOWN_WR 1
+#endif
 #endif
 
 #endif

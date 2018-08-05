@@ -1,6 +1,6 @@
 /* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_DYN
-#define ___VERSION 408008
+#define ___VERSION 408009
 #include "gambit.h"
 
 #include "os_base.h"
@@ -47,13 +47,13 @@ ___HIDDEN void setup_dynamic_load ___PVOID
 
 ___HIDDEN ___SCMOBJ dynamic_load_module
    ___P((___STRING_TYPE(___DL_PATH_CE_SELECT) cpath,
-         ___STRING_TYPE(___DL_MODNAME_CE_SELECT) cmodname,
+         ___STRING_TYPE(___DL_LINKERNAME_CE_SELECT) clinkername,
          void **linker),
         (cpath,
-         cmodname,
+         clinkername,
          linker)
 ___STRING_TYPE(___DL_PATH_CE_SELECT) cpath;
-___STRING_TYPE(___DL_MODNAME_CE_SELECT) cmodname;
+___STRING_TYPE(___DL_LINKERNAME_CE_SELECT) clinkername;
 void **linker;)
 {
   ___SCMOBJ e;
@@ -79,7 +79,7 @@ void **linker;)
 
   if (p->descr == 0)
     result = err_code_from_errno ();
-  else if (!shl_findsym (&p->descr, cmodname, TYPE_PROCEDURE, linker) &&
+  else if (!shl_findsym (&p->descr, clinkername, TYPE_PROCEDURE, linker) &&
            *linker != 0)
     result = ___FIX(___NO_ERR);
   else
@@ -95,7 +95,7 @@ void **linker;)
   p->descr = LoadLibrary (cpath);
 
   if (p->descr != 0 &&
-      (*linker = ___CAST(void*,GetProcAddress (p->descr, cmodname))) != 0)
+      (*linker = ___CAST(void*,GetProcAddress (p->descr, clinkername))) != 0)
     result = ___FIX(___NO_ERR);
   else
     {
@@ -153,7 +153,7 @@ void **linker;)
           {
             p->descr = hmodule;
 
-            rc = DosQueryProcAddr (hmodule, 0L, cmodname, linker);
+            rc = DosQueryProcAddr (hmodule, 0L, clinkername, linker);
 
             if (rc != NO_ERROR || *linker == 0)
               {
@@ -212,15 +212,15 @@ void **linker;)
     OSErr err;
     Ptr mainadr, procadr;
     Str63 ppath;
-    Str255 pmodname;
+    Str255 plinkername;
     Str255 pmsg;
     char msg[256];
     FSSpec spec;
 
     if (!c2pascal (cpath, ppath, sizeof(ppath)-1))
       *errmsg = "Path is too long";
-    else if (!c2pascal (cmodname, pmodname, sizeof(pmodname)-1))
-      *errmsg = "Module name is too long";
+    else if (!c2pascal (clinkername, plinkername, sizeof(plinkername)-1))
+      *errmsg = "Linker name is too long";
     else if (make_ResolvedFSSpec (0, 0, ppath, &spec) != noErr)
       *errmsg = "Invalid path";
     else
@@ -238,7 +238,7 @@ void **linker;)
           }
         else
           {
-            if (FindSymbol (p->descr, pmodname, &procadr, kCodeCFragSymbol)
+            if (FindSymbol (p->descr, plinkername, &procadr, kCodeCFragSymbol)
                 != noErr)
               {
                 *errmsg = "FindSymbol failed";
@@ -261,7 +261,7 @@ void **linker;)
 #endif
 
   if (p->descr != 0 &&
-      (*linker = dlsym (p->descr, cmodname)) != 0)
+      (*linker = dlsym (p->descr, clinkername)) != 0)
     result = ___FIX(___NO_ERR);
   else
     {
@@ -284,9 +284,9 @@ void **linker;)
   {
     NSSymbol sym;
 
-    if (NSIsSymbolNameDefined (cmodname))
+    if (NSIsSymbolNameDefined (clinkername))
       {
-        sym = NSLookupAndBindSymbol (cmodname);
+        sym = NSLookupAndBindSymbol (clinkername);
 
         if ((*linker = NSAddressOfSymbol (sym)) != 0)
           result = ___FIX(___NO_ERR);
@@ -304,7 +304,7 @@ void **linker;)
             p->descr = NSLinkModule (img, cpath, NSLINKMODULE_OPTION_BINDNOW);
 
             if (p->descr != 0 &&
-                (sym = NSLookupSymbolInModule (p->descr, cmodname)) != 0 &&
+                (sym = NSLookupSymbolInModule (p->descr, clinkername)) != 0 &&
                 (*linker = NSAddressOfSymbol (sym)) != 0)
               result = ___FIX(___NO_ERR);
             else
@@ -380,22 +380,22 @@ void **linker;)
 
       if (!___FIXNUMP(r))
         {
-          ___SCMOBJ modname;
+          ___SCMOBJ linkername;
 
           if ((e = ___NONNULLSTRING_to_SCMOBJ
                      (___PSTATE,
-                      cmodname,
-                      &modname,
+                      clinkername,
+                      &linkername,
                       ___RETURN_POS,
-                      ___CE(___DL_MODNAME_CE_SELECT)))
+                      ___CE(___DL_LINKERNAME_CE_SELECT)))
               != ___FIX(___NO_ERR))
             ___release_scmobj (r);
           else
             {
               ___VECTORSET(r,___FIX(0),result)
-              ___VECTORSET(r,___FIX(1),modname)
+              ___VECTORSET(r,___FIX(1),linkername)
               ___release_scmobj (result);
-              ___release_scmobj (modname);
+              ___release_scmobj (linkername);
               result = r;
             }
         }
@@ -465,7 +465,7 @@ ___HIDDEN char c_id_prefix[] =
 #ifdef ___IMPORTED_ID_PREFIX
 ___IMPORTED_ID_PREFIX
 #endif
-___C_ID_PREFIX;
+___C_ID_PREFIX "LNK_";
 
 #define c_id_prefix_length (sizeof (c_id_prefix) - 1)
 
@@ -486,7 +486,7 @@ ___HIDDEN char hex_digits[] = "0123456789abcdef";
  ((c)=='_'))
 
 
-___HIDDEN ___SCMOBJ ___SCMOBJ_to_MODNAMESTRING
+___HIDDEN ___SCMOBJ ___SCMOBJ_to_LINKERNAMESTRING
    ___P((___SCMOBJ obj,
          void **x,
          int arg_num),
@@ -497,19 +497,19 @@ ___SCMOBJ obj;
 void **x;
 int arg_num;)
 {
-  ___STRING_TYPE(___DL_MODNAME_CE_SELECT) r;
+  ___STRING_TYPE(___DL_LINKERNAME_CE_SELECT) r;
   int len;
   int i;
   int j;
   ___SCMOBJ ___temp; /* used by ___STRINGP */
 
   if (!___STRINGP(obj))
-    return ___FIX(___DL_MODNAME_CE_SELECT(___STOC_NONNULLISO_8859_1STRING_ERR,
-                                          ___STOC_NONNULLUTF_8STRING_ERR,
-                                          ___STOC_NONNULLUCS_2STRING_ERR,
-                                          ___STOC_NONNULLUCS_4STRING_ERR,
-                                          ___STOC_NONNULLWCHARSTRING_ERR,
-                                          ___STOC_NONNULLCHARSTRING_ERR)
+    return ___FIX(___DL_LINKERNAME_CE_SELECT(___STOC_NONNULLISO_8859_1STRING_ERR,
+                                             ___STOC_NONNULLUTF_8STRING_ERR,
+                                             ___STOC_NONNULLUCS_2STRING_ERR,
+                                             ___STOC_NONNULLUCS_4STRING_ERR,
+                                             ___STOC_NONNULLWCHARSTRING_ERR,
+                                             ___STOC_NONNULLCHARSTRING_ERR)
                   + arg_num);
 
   len = ___INT(___STRINGLENGTH(obj));
@@ -534,9 +534,9 @@ int arg_num;)
         }
     }
 
-  r = ___CAST(___STRING_TYPE(___DL_MODNAME_CE_SELECT),
+  r = ___CAST(___STRING_TYPE(___DL_LINKERNAME_CE_SELECT),
               ___ALLOC_MEM((j+1) *
-                           sizeof (___CHAR_TYPE(___DL_MODNAME_CE_SELECT))));
+                           sizeof (___CHAR_TYPE(___DL_LINKERNAME_CE_SELECT))));
 
   if (r == 0)
     return ___FIX(___STOC_HEAP_OVERFLOW_ERR+arg_num);
@@ -581,19 +581,19 @@ int arg_num;)
 
 ___SCMOBJ ___dynamic_load
    ___P((___SCMOBJ path,
-         ___SCMOBJ modname,
+         ___SCMOBJ linkername,
          void **linker),
         (path,
-         modname,
+         linkername,
          linker)
 ___SCMOBJ path;
-___SCMOBJ modname;
+___SCMOBJ linkername;
 void **linker;)
 {
   ___SCMOBJ e;
   ___SCMOBJ result;
   void *cpath;
-  void *cmodname;
+  void *clinkername;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
@@ -606,9 +606,9 @@ void **linker;)
     result = e;
   else
     {
-      if ((e = ___SCMOBJ_to_MODNAMESTRING
-                 (modname,
-                  &cmodname,
+      if ((e = ___SCMOBJ_to_LINKERNAMESTRING
+                 (linkername,
+                  &clinkername,
                   2))
           != ___FIX(___NO_ERR))
         result = e;
@@ -616,10 +616,12 @@ void **linker;)
         {
           result = dynamic_load_module
                      (___CAST(___STRING_TYPE(___DL_PATH_CE_SELECT),cpath),
-                      ___CAST(___STRING_TYPE(___DL_MODNAME_CE_SELECT),cmodname),
+                      ___CAST(___STRING_TYPE(___DL_LINKERNAME_CE_SELECT),clinkername),
                       linker);
 
-          ___FREE_MEM(cmodname);
+          /* TODO: check if should do ___release_scmobj (result); to avoid memory leak */
+
+          ___FREE_MEM(clinkername);
         }
 
       ___release_string (cpath);

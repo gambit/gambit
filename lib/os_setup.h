@@ -1,6 +1,6 @@
 /* File: "os_setup.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SETUP_H
 #define ___OS_SETUP_H
@@ -175,20 +175,21 @@ extern ___SCMOBJ ___SCMOBJ_to_sockaddr
    ___P((___SCMOBJ addr,
          ___SCMOBJ port_num,
          struct sockaddr *sa,
-         int *salen,
+         SOCKET_LEN_TYPE *salen,
          int arg_num),
         ());
 
 extern ___SCMOBJ ___sockaddr_to_SCMOBJ
    ___P((struct sockaddr *sa,
-         int salen,
+         SOCKET_LEN_TYPE salen,
          int arg_num),
         ());
 
-extern ___SCMOBJ ___addr_to_SCMOBJ
-   ___P((void *sa,
-         int salen,
-         int arg_num),
+extern ___BOOL sockaddr_equal
+   ___P((struct sockaddr *sa1,
+         SOCKET_LEN_TYPE salen1,
+         struct sockaddr *sa2,
+         SOCKET_LEN_TYPE salen2),
         ());
 
 #endif

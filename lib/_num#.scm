@@ -594,6 +594,9 @@
   (##define-macro (macro-ratnum-numerator r) `(##ratnum-numerator ,r))
   (##define-macro (macro-ratnum-denominator r) `(##ratnum-denominator ,r))))
 
+(define-macro (macro-exact-int->ratnum x)
+  `(macro-ratnum-make ,x 1))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Cpxnum objects.
@@ -621,6 +624,9 @@
   (##define-macro (macro-cpxnum-make r i) `(##cpxnum-make ,r ,i))
   (##define-macro (macro-cpxnum-real c) `(##cpxnum-real ,c))
   (##define-macro (macro-cpxnum-imag c) `(##cpxnum-imag ,c))))
+
+(define-macro (macro-noncpxnum->cpxnum x)
+  `(macro-cpxnum-make ,x 0))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -1,6 +1,6 @@
 /* File: "os_time.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_TIME
-#define ___VERSION 408008
+#define ___VERSION 408009
 #include "gambit.h"
 
 #include "os_thread.h"
@@ -1045,7 +1045,7 @@ ___mask_heartbeat_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask1 (SIG_BLOCK, HEARTBEAT_SIG, ___CAST(___sigset_type*,state)+0);
+  ___thread_sigmask1 (SIG_BLOCK, HEARTBEAT_SIG, state->sigset+0);
 
 #endif
 }
@@ -1058,7 +1058,7 @@ ___mask_heartbeat_interrupts_state *state;)
 {
 #ifdef USE_POSIX
 
-  ___thread_sigmask (SIG_SETMASK, ___CAST(___sigset_type*,state)+0, NULL);
+  ___thread_sigmask (SIG_SETMASK, state->sigset+0, NULL);
 
 #endif
 }

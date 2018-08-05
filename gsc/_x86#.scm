@@ -2,7 +2,7 @@
 
 ;;; File: "_x86#.scm"
 
-;;; Copyright (c) 2010-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2010-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -152,6 +152,27 @@ x86-imm-int-value
 x86-imm-lbl
 x86-mem
 
+x86-imm?
+
+x86-imm-int
+x86-imm-int?
+x86-imm-int-width
+x86-imm-int-value
+
+x86-imm-lbl
+x86-imm-lbl?
+x86-imm-lbl-offset
+x86-imm-lbl-label
+
+x86-imm-late
+x86-imm-late?
+x86-imm-late-width
+x86-imm-late-handler
+
+x86-imm-obj
+x86-imm-obj?
+x86-imm-obj-value
+
 x86-label
 x86-db
 x86-dw
@@ -189,6 +210,7 @@ x86-cld
 x86-std
 
 x86-int
+x86-int3
 
 x86-syscall
 x86-sysret
@@ -219,6 +241,8 @@ x86-jg
 
 x86-push
 x86-pop
+x86-pushf
+x86-popf
 
 x86-cwde
 x86-cdq

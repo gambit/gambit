@@ -1162,8 +1162,8 @@
 ;;; (Argument 2) Object OUTPUT PORT expected: (write "abc" #f)
 abc(display "abc") => #!void
 abc(display "abc" '#<output-port #7 (stdout)>) => #!void
-;;; (Argument 2) Object OUTPUT PORT expected: (display "abc" '#<input-port #6 (stdin)>)
-;;; (Argument 2) Object OUTPUT PORT expected: (display "abc" #f)
+;;; (Argument 2) Character OUTPUT PORT expected: (display "abc" '#<input-port #6 (stdin)>)
+;;; (Argument 2) Character OUTPUT PORT expected: (display "abc" #f)
 
 (newline) => #!void
 

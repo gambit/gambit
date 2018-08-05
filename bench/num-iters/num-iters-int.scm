@@ -40,6 +40,7 @@
 (define conform-iters       4)
 (define dynamic-iters       2)
 (define earley-iters       20)
+(define fftrad4-iters       4)
 (define fibc-iters         50)
 (define graphs-iters       30)
 (define lattice-iters       1)

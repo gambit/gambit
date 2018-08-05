@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -28,21 +28,46 @@
 
 ;; ***** REGISTERS AVAILABLE
 
-;; The registers available in the virtual machine are defined by the
-;; parameters targ-nb-gvm-regs and targ-nb-arg-regs.  The definitions must
-;; agree with the corresponding macros in the file "include/gambit.h.in"
-;; (i.e. ___NB_GVM_REGS and ___NB_ARG_REGS).
+;; The registers available in the virtual machine default to
+;; targ-default-nb-gvm-regs and targ-default-nb-arg-regs but can be
+;; changed with the gsc options -nb-gvm-regs and -nb-arg-regs.  They
+;; must be compatible with the corresponding macros in the file
+;; "include/gambit.h.in" (i.e. nb-gvm-regs <= ___NB_GVM_REGS and
+;; nb-arg-regs = ___NB_ARG_REGS).
 ;;
-;; targ-nb-gvm-regs = total number of registers available
-;;                    3 <= targ-nb-gvm-regs <= 25
-;; targ-nb-arg-regs = maximum number of arguments passed in registers
-;;                    1 <= targ-nb-arg-regs <= min( 12, targ-nb-gvm-regs-2 )
+;; nb-gvm-regs = total number of registers available
+;;               3 <= nb-gvm-regs <= 25
+;; nb-arg-regs = maximum number of arguments passed in registers
+;;               1 <= nb-arg-regs <= min( 12, nb-gvm-regs-2 )
 
-(define targ-nb-gvm-regs #f)
-(set! targ-nb-gvm-regs 5)
+(define targ-default-nb-gvm-regs 5)
+(define targ-default-nb-arg-regs 3)
 
-(define targ-nb-arg-regs #f)
-(set! targ-nb-arg-regs 3)
+(define (targ-nb-gvm-regs) (target-nb-regs targ-target))
+(define (targ-nb-arg-regs) (target-nb-arg-regs targ-target))
+
+(define (targ-set-nb-regs targ sem-changing-opts)
+  (let ((nb-gvm-regs
+         (get-option sem-changing-opts
+                     'nb-gvm-regs
+                     targ-default-nb-gvm-regs))
+        (nb-arg-regs
+         (get-option sem-changing-opts
+                     'nb-arg-regs
+                     targ-default-nb-arg-regs)))
+
+    (if (not (and (<= 3 nb-gvm-regs)
+                  (<= nb-gvm-regs 25)))
+        (compiler-error "-nb-gvm-regs option must be between 3 and 25"))
+
+    (if (not (and (<= 1 nb-arg-regs)
+                  (<= nb-arg-regs (min 12 (- nb-gvm-regs 2)))))
+        (compiler-error
+         (string-append "-nb-arg-regs option must be between 1 and "
+                        (number->string (min 12 (- nb-gvm-regs 2))))))
+
+    (target-nb-regs-set! targ nb-gvm-regs)
+    (target-nb-arg-regs-set! targ nb-arg-regs)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -119,82 +144,6 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;; ***** PROCEDURE CALLING CONVENTION
-
-(define (targ-label-info nb-parms closed?)
-
-;; After a GVM "entry-point" or "closure-entry-point" label, the following
-;; is true:
-;;
-;;  * return address is in GVM register 0
-;;
-;;  * if nb-parms <= nb-arg-regs
-;;
-;;      then parameter N is in GVM register N
-;;
-;;      else parameter N is in
-;;               GVM register N-F, if N > F
-;;               GVM stack slot N, if N <= F
-;;           where F = nb-parms - nb-arg-regs
-;;
-;;  * for a "closure-entry-point" GVM register nb-arg-regs+1 contains
-;;    a pointer to the closure object
-;;
-;;  * other GVM registers contain an unspecified value
-
-  (let ((nb-stacked (max 0 (- nb-parms targ-nb-arg-regs))))
-
-    (define (location-of-parms i)
-      (if (> i nb-parms)
-        '()
-        (cons (cons i
-                    (if (> i nb-stacked)
-                      (make-reg (- i nb-stacked))
-                      (make-stk i)))
-              (location-of-parms (+ i 1)))))
-
-    (let ((x (cons (cons 'return 0) (location-of-parms 1))))
-      (make-pcontext nb-stacked
-        (if closed?
-          (cons (cons 'closure-env (make-reg (+ targ-nb-arg-regs 1))) x)
-          x)))))
-
-(define (targ-jump-info nb-args)
-
-;; After a GVM "jump" instruction with argument count, the following
-;; is true:
-;;
-;;  * the return address is in GVM register 0
-;;
-;;  * if nb-args <= nb-arg-regs
-;;
-;;      then argument N is in GVM register N
-;;
-;;      else argument N is in
-;;               GVM register N-F, if N > F
-;;               GVM stack slot N, if N <= F
-;;           where F = nb-args - nb-arg-regs
-;;
-;;  * GVM register nb-arg-regs+1 contains a pointer to the closure object
-;;    if a closure is being jumped to
-;;
-;;  * other GVM registers contain an unspecified value
-
-  (let ((nb-stacked (max 0 (- nb-args targ-nb-arg-regs))))
-
-    (define (location-of-args i)
-      (if (> i nb-args)
-        '()
-        (cons (cons i
-                    (if (> i nb-stacked)
-                      (make-reg (- i nb-stacked))
-                      (make-stk i)))
-              (location-of-args (+ i 1)))))
-
-    (make-pcontext nb-stacked
-                   (cons (cons 'return (make-reg 0))
-                         (location-of-args 1)))))
-
 ;; The frame constraints are defined by the parameters
 ;; targ-frame-reserve and targ-frame-alignment.  The definitions must
 ;; agree with the corresponding macros in the file "include/gambit.h.in"
@@ -215,7 +164,7 @@
 
 (define (targ-make-target)
   (let ((targ
-         (make-target 11
+         (make-target 12
                       'C
                       '((".c"    . C)
                         (".C"    . C++)
@@ -229,19 +178,19 @@
                         (".M"    . Objective-C++)
                         (".mm"   . Objective-C++))
                       '()
-                      1)))
+                      '()
+                      0)))
 
-    (define (begin! info-port)
+    (define (begin! sem-changing-opts
+                    sem-preserving-opts
+                    info-port)
 
       (set! targ-info-port info-port)
 
       (target-dump-set!              targ targ-dump)
       (target-link-info-set!         targ targ-link-info)
       (target-link-set!              targ targ-link)
-      (target-nb-regs-set!           targ targ-nb-gvm-regs)
       (target-prim-info-set!         targ targ-prim-info)
-      (target-label-info-set!        targ targ-label-info)
-      (target-jump-info-set!         targ targ-jump-info)
       (target-frame-constraints-set! targ (make-frame-constraints
                                            targ-frame-reserve
                                            targ-frame-alignment))
@@ -251,6 +200,8 @@
       (target-eq-testable?-set!      targ targ-eq-testable?)
       (target-object-type-set!       targ targ-object-type)
 
+      (targ-set-nb-regs targ sem-changing-opts)
+
       #f)
 
     (define (end!)
@@ -259,12 +210,7 @@
     (target-begin!-set! targ begin!)
     (target-end!-set! targ end!)
 
-    (targ-prim-proc-table-set! targ (make-vector 403 '()))
-
     targ))
-
-(define (targ-prim-proc-table x)        (vector-ref x 19))
-(define (targ-prim-proc-table-set! x y) (vector-set! x 19 y))
 
 (define targ-target (targ-make-target))
 
@@ -273,34 +219,39 @@
 (define targ-info-port #f)
 
 ;;;----------------------------------------------------------------------------
-;;
-;; Primitive procedure database
 
-(define (targ-prim-proc-add! x)
-  (let* ((sym (string->canonical-symbol (car x)))
-         (index (modulo (symbol-hash sym) 403)))
-    (vector-set!
-     (targ-prim-proc-table targ-target)
-     index
-     (cons
-      (cons
-       sym
-       (apply make-proc-obj (car x) #f #t #f (cdr x)))
-      (vector-ref (targ-prim-proc-table targ-target) index)))))
+;; ***** PROCEDURE CALLING CONVENTION
 
-(for-each targ-prim-proc-add! prim-procs)
+(define (targ-label-info nb-params closed?)
+  ((target-label-info targ-target) nb-params closed?))
+
+(define (targ-jump-info nb-args)
+  ((target-jump-info targ-target) nb-args))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** PRIMITIVE PROCEDURE DATABASE
+
+(define targ-prim-proc-table
+  (let ((t (make-prim-proc-table)))
+    (for-each
+     (lambda (x) (prim-proc-add! t x))
+     '(("##c-code"  0            #t 0        0 (#f)   extended)))
+    t))
 
 (define (targ-prim-info name)
-  (let ((index (modulo (symbol-hash name) 403)))
-    (let ((x (assq name (vector-ref (targ-prim-proc-table targ-target) index))))
-      (if x (cdr x) #f))))
+  (prim-proc-info targ-prim-proc-table name))
 
 (define (targ-get-prim-info name)
   (let ((proc (targ-prim-info (string->canonical-symbol name))))
     (if proc
-      proc
-      (compiler-internal-error
-        "targ-get-prim-info, unknown primitive:" name))))
+        proc
+        (compiler-internal-error
+         "targ-get-prim-info, unknown primitive:" name))))
+
+;;;----------------------------------------------------------------------------
+
+;; ***** OBJECT PROPERTIES
 
 (define (targ-switch-testable? obj)
   (targ-eq-testable? obj))
@@ -323,7 +274,7 @@
 ;;
 ;; Dumping of a compilation module
 
-(define (targ-dump procs output c-intf module-descr unique-name options)
+(define (targ-dump procs output c-intf module-descr linker-name)
   (let ((c-decls (c-intf-decls c-intf))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
@@ -369,11 +320,13 @@
      c-inits
      (map targ-use-obj c-objs)
      module-descr
-     unique-name)
+     linker-name)
 
     (targ-heap-end!)
 
-    (set! targ-track-scheme-option? #f)))
+    (set! targ-track-scheme-option? #f)
+
+    (lambda () output)))
 
 (define targ-track-scheme-option? #f)
 
@@ -393,7 +346,7 @@
 (define targ-lbl-alloc #f) ; label table allocation pointer
 (define targ-cns-objs #f)  ; ordered table of pair objects
 (define targ-sym-objs #f)  ; table of interned symbol objects
-(define targ-key-objs #f)  ; table of keyword objects
+(define targ-key-objs #f)  ; table of interned keyword objects
 (define targ-num-objs #f)  ; table of numbers that may be subtyped objects
 (define targ-sub-objs #f)  ; ordered table of subtyped objects (vector, ...)
 (define targ-prc-objs #f)  ; queue of procedure objects
@@ -443,20 +396,23 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (targ-use-glo glo supply?)
-  (let ((x (table-ref targ-glo-vars glo #f)))
-    (if x
-      (begin
-        (if supply?
-          (targ-rsrc-suppliers-set! (cdr x) '(""))
-          (targ-rsrc-demanders-set! (cdr x) '("")))
-        (car x))
-      (let* ((y (targ-make-cell #f))
-             (name (symbol->string glo))
-             (r (if supply?
-                  (targ-make-rsrc name '() '(""))
-                  (targ-make-rsrc name '("") '()))))
-        (table-set! targ-glo-vars glo (cons y r))
-        y))))
+  (if (symbol-object-interned? glo)
+      (let ((x (table-ref targ-glo-vars glo #f)))
+        (if x
+            (begin
+              (if supply?
+                  (targ-rsrc-suppliers-set! (cdr x) '(""))
+                  (targ-rsrc-demanders-set! (cdr x) '("")))
+              (car x))
+            (let* ((y (targ-make-cell #f))
+                   (name (symbol->string glo))
+                   (r (if supply?
+                          (targ-make-rsrc name '() '(""))
+                          (targ-make-rsrc name '("") '()))))
+              (table-set! targ-glo-vars glo (cons y r))
+              y)))
+      (compiler-error
+       "invalid uninterned global variable" glo)))
 
 (define (targ-glo-rsrc g)
   (cddr g))
@@ -638,6 +594,12 @@
                              (lambda (obj i)
                                (list "SUB" i))))))
                    (case subtype
+                     ((symbol)
+                      (targ-use-obj (symbol->string obj))
+                      (targ-use-obj (symbol-object-hash obj)))
+                     ((keyword)
+                      (targ-use-obj (keyword-object->string obj))
+                      (targ-use-obj (keyword-object-hash obj)))
                      ((vector)
                       (for-each targ-use-obj (vect->list obj)))
                      ((ratnum)
@@ -656,11 +618,17 @@
            ((procedure)
             (targ-use-prc obj #f))
            ((symbol)
-            (targ-use-sym obj)
-            (targ-c-id-sym2 (symbol->string obj)))
+            (if (symbol-object-interned? obj)
+                (begin
+                  (targ-use-sym obj)
+                  (targ-c-id-sym2 (symbol->string obj)))
+                (use-subtyped-obj obj)))
            ((keyword)
-            (targ-use-key obj)
-            (targ-c-id-key2 (keyword-object->string obj)))
+            (if (keyword-object-interned? obj)
+                (begin
+                  (targ-use-key obj)
+                  (targ-c-id-key2 (keyword-object->string obj)))
+                (use-subtyped-obj obj)))
            ((flonum bigfixnum bignum ratnum cpxnum)
             (let ((x (table-ref targ-num-objs obj #f)))
               (use-subtyped-obj
@@ -752,19 +720,23 @@
 
          (case subtype
            ((symbol)
-            (let ((x (table-ref targ-sym-objs obj #f)))
-              (if x
-                (list "REF_SYM"
-                      x
-                      (targ-c-id-sym (symbol->string obj)))
-                (err))))
+            (if (symbol-object-interned? obj)
+                (let ((x (table-ref targ-sym-objs obj #f)))
+                  (if x
+                      (list "REF_SYM"
+                            x
+                            (targ-c-id-sym (symbol->string obj))) ;; TODO: remove this useless argument to ___REF_SYM
+                      (err)))
+                (ref-subtyped-obj obj)))
            ((keyword)
-            (let ((x (table-ref targ-key-objs obj #f)))
-              (if x
-                (list "REF_KEY"
-                      x
-                      (targ-c-id-key (keyword-object->string obj)))
-                (err))))
+            (if (keyword-object-interned? obj)
+                (let ((x (table-ref targ-key-objs obj #f)))
+                  (if x
+                      (list "REF_KEY"
+                            x
+                            (targ-c-id-key (keyword-object->string obj))) ;; TODO: remove this useless argument to ___REF_KEY
+                      (err)))
+                (ref-subtyped-obj obj)))
            ((flonum bigfixnum bignum ratnum cpxnum)
             (let ((x (table-ref targ-num-objs obj #f)))
               (if x
@@ -829,13 +801,14 @@
                 (equal? (car (cadr info)) (target-name targ-target))
                 info)))))
 
-(define (targ-link extension? inputs output warnings?)
+(define (targ-link extension? inputs output linker-name warnings?)
   (with-exception-handling
     (lambda ()
       (let* ((root
                (path-strip-extension output))
              (name
-               (path-strip-directory root))
+               (or linker-name
+                   (path-strip-directory root)))
              (input-mods
                (map targ-get-mod inputs))
              (input-mods-and-flags
@@ -863,7 +836,6 @@
                           (or script-line
                               last-script-line)))
                   last-script-line))))
-
         (targ-link-aux
           extension?
           output
@@ -967,7 +939,7 @@
 ;; These routines write out the C code that represents the Scheme objects
 ;; contained in the compilation module.
 
-(define (targ-heap-dump filename c-decls c-inits c-objs module-descr unique-name)
+(define (targ-heap-dump filename c-decls c-inits c-objs module-descr linker-name)
   (let* ((sym-list
           (targ-sort (table->list targ-sym-objs) symbol->string))
          (key-list
@@ -990,7 +962,7 @@
           (map targ-glo-rsrc glo-list))
          (ofd-count
           (targ-get-ofd-count prc-list))
-         (name
+         (module-name
           (symbol->string (vector-ref module-descr 0)))
          (module-meta-info
           (vector-ref module-descr 3))
@@ -1000,16 +972,16 @@
 
     (targ-start-dump
      filename
-     name
-     (list (list name))
+     module-name
+     (list (list module-name))
      sym-rsrc
      key-rsrc
      glo-rsrc
      module-meta-info)
 
     (targ-dump-module-info
-     name
-     unique-name
+     module-name
+     linker-name
      #f
      #f
      script-line)
@@ -1189,7 +1161,7 @@
   (targ-display ")")
   (targ-line))
 
-(define (targ-dump-module-info name linker-id linkfile? extension? script-line)
+(define (targ-dump-module-info name linker-name linkfile? extension? script-line)
 
   (targ-macro-definition '("VERSION")
                          (compiler-version))
@@ -1200,7 +1172,7 @@
                          (targ-c-string name))
 
   (targ-macro-definition '("LINKER_ID")
-                         (targ-linker-id linker-id))
+                         (targ-linker-id linker-name))
 
   (if linkfile?
 
@@ -1210,8 +1182,7 @@
                              #f)
 
       (targ-macro-definition '("MH_PROC")
-                             (targ-c-id-host
-                              (string-append module-prefix name))))
+                             (targ-c-id-host name)))
 
   (targ-macro-definition '("SCRIPT_LINE")
                          (if script-line
@@ -1225,8 +1196,10 @@
       (targ-line)
       (for-each
         (lambda (s)
-          (let ((name (symbol->string (car s))))
-            (targ-code* (list "NEED_SYM" (targ-c-id-sym name)))))
+          (let ((sym (car s)))
+            (if (symbol-object-interned? sym)
+                (let ((name (symbol->string sym)))
+                  (targ-code* (list "NEED_SYM" (targ-c-id-sym name)))))))
         sym-list)))
 
   (if (not (null? key-list))
@@ -1234,8 +1207,10 @@
       (targ-line)
       (for-each
         (lambda (k)
-          (let ((name (keyword-object->string (car k))))
-            (targ-code* (list "NEED_KEY" (targ-c-id-key name)))))
+          (let ((key (car k)))
+            (if (keyword-object-interned? key)
+                (let ((name (keyword-object->string key)))
+                  (targ-code* (list "NEED_KEY" (targ-c-id-key name)))))))
         key-list)))
 
   (if (not (null? glo-list))
@@ -1402,6 +1377,10 @@
                   (let ((obj (car x)) (id (targ-sub-name (caddr x))))
                     (let ((subtype (targ-obj-subtype obj)))
                       (case subtype
+                        ((symbol)
+                         (targ-dump-symbol obj id))
+                        ((keyword)
+                         (targ-dump-keyword obj id))
                         ((string)
                          (targ-dump-string obj id))
                         ((bignum)
@@ -1455,6 +1434,16 @@
                 (targ-display "               ")
                 (targ-code* (cons chunk-name (cons n (reverse lst))))
                 (if (= n cycle) (loop1 (+ i n) elems))))))))))
+
+(define (targ-dump-symbol obj id)
+  (targ-code* (list "DEF_SUB_SYM" id
+                    (targ-heap-ref-obj (symbol->string obj))
+                    (targ-heap-ref-obj (symbol-object-hash obj)))))
+
+(define (targ-dump-keyword obj id)
+  (targ-code* (list "DEF_SUB_KEY" id
+                    (targ-heap-ref-obj (keyword-object->string obj))
+                    (targ-heap-ref-obj (keyword-object-hash obj)))))
 
 (define (targ-dump-string obj id)
   (targ-vector-like-object "DEF_SUB_STR" id 'str
@@ -1972,7 +1961,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define targ-linker-tag "")
+(define targ-linker-tag "LNK_")
 (define targ-host-tag   "H_")
 (define targ-glo-tag    "G_")
 (define targ-glo2-tag   "GLO_")
@@ -2200,7 +2189,7 @@
   (cons 'c-string str))
 
 (define (targ-linker-id name)
-  (targ-c-id-linker (string-append module-prefix name)))
+  (targ-c-id-linker name))
 
 (define (targ-c-id-linker name)
   (cons 'c-id-linker name))
@@ -2265,7 +2254,7 @@
 (define (targ-display-no-line-info-c-string str)
   (targ-display-no-line-info #\")
   (targ-display-no-line-info-c-string-tail str))
-  
+
 (define (targ-display-no-line-info-c-string-tail str)
   (let loop ((i 0))
     (if (< i (string-length str))

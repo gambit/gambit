@@ -1,6 +1,6 @@
 /* File: "os_dyn.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_DYN_H
 #define ___OS_DYN_H
@@ -45,8 +45,8 @@
 ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
 #endif
 
-#ifndef ___DL_MODNAME_CE_SELECT
-#define ___DL_MODNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#ifndef ___DL_LINKERNAME_CE_SELECT
+#define ___DL_LINKERNAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 
 
@@ -84,7 +84,7 @@ extern ___dyn_module ___dyn_mod;
 
 extern ___SCMOBJ ___dynamic_load
    ___P((___SCMOBJ path,
-         ___SCMOBJ modname,
+         ___SCMOBJ linkername,
          void **linker),
         ());
 

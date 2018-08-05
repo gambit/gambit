@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -194,8 +194,8 @@
 ("read"                               (0 1) #t 0     0    #f      ieee)
 ("read-char"                          (0 1) #t 0     0    #f      ieee)
 ("peek-char"                          (0 1) #t 0     0    #f      ieee)
-("write"                              (0 1) #t 0     0    #f      ieee)
-("display"                            (0 1) #t 0     0    #f      ieee)
+("write"                              (1 2) #t 0     0    #f      ieee)
+("display"                            (1 2) #t 0     0    #f      ieee)
 ("newline"                            (0 1) #t 0     0    #f      ieee)
 ("write-char"                         (1 2) #t 0     0    #f      ieee)
 
@@ -1175,12 +1175,16 @@
 (def-spec "modulo"   (spec-arith "fxmodulo" #f))
 
 (def-spec "fxnot" (spec-u "##fxnot"))
+(def-spec "bitwise-not" (spec-arith "fxnot" #f))
 
 (def-spec "fxand" (spec-u "##fxand"))
+(def-spec "bitwise-and" (spec-arith "fxand" #f))
 
 (def-spec "fxior" (spec-u "##fxior"))
+(def-spec "bitwise-ior" (spec-arith "fxior" #f))
 
 (def-spec "fxxor" (spec-u "##fxxor"))
+(def-spec "bitwise-xor" (spec-arith "fxxor" #f))
 
 (def-spec "fxif" (spec-u "##fxif"))
 
@@ -2068,6 +2072,11 @@
   (define **fxior-sym (string->canonical-symbol "##fxior"))
   (define **fxxor-sym (string->canonical-symbol "##fxxor"))
 
+  (define bitwise-not-sym (string->canonical-symbol "bitwise-not"))
+  (define bitwise-and-sym (string->canonical-symbol "bitwise-and"))
+  (define bitwise-ior-sym (string->canonical-symbol "bitwise-ior"))
+  (define bitwise-xor-sym (string->canonical-symbol "bitwise-xor"))
+
   (define **fxwraparithmetic-shift-sym
     (string->canonical-symbol "##fxwraparithmetic-shift"))
   (define **fxwraparithmetic-shift?-sym
@@ -2709,6 +2718,18 @@
     (define case-fxxor
       (gen-simple-case **fixnum?-sym **fxxor-sym))
 
+    (define case-bitwise-not
+      (gen-simple-case **fixnum?-sym **fxnot-sym))
+
+    (define case-bitwise-and
+      (gen-simple-case **fixnum?-sym **fxand-sym))
+
+    (define case-bitwise-ior
+      (gen-simple-case **fixnum?-sym **fxior-sym))
+
+    (define case-bitwise-xor
+      (gen-simple-case **fixnum?-sym **fxxor-sym))
+
     (define case-fxwraparithmetic-shift
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator
@@ -3173,6 +3194,14 @@
     (def-exp "fxior" (make-simple-expander case-fxior))
 
     (def-exp "fxxor" (make-simple-expander case-fxxor))
+
+    (def-exp "bitwise-not" (make-simple-expander case-bitwise-not))
+
+    (def-exp "bitwise-and" (make-simple-expander case-bitwise-and))
+
+    (def-exp "bitwise-ior" (make-simple-expander case-bitwise-ior))
+
+    (def-exp "bitwise-xor" (make-simple-expander case-bitwise-xor))
 
     (def-exp "fxwraparithmetic-shift"
       (make-simple-expander case-fxwraparithmetic-shift))

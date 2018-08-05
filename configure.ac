@@ -1,10 +1,10 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(Gambit,v4.8.8,gambit@iro.umontreal.ca,gambit-v4_8_8)
+AC_INIT(Gambit,v4.8.9,gambit@iro.umontreal.ca,gambit-v4_8_9)
 
 AC_CONFIG_HEADERS(include/config.h)
 
@@ -17,7 +17,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -50,6 +50,8 @@ FLAGS_EXE=""
 FLAGS_OBJ_DYN=""
 FLAGS_OBJ_DYN_LIB_EXE=""
 FLAGS_DYN_LIB=""
+FLAGS_OPT=""
+FLAGS_OPT_RTS=""
 
 DEFS_OBJ=""
 DEFS_DYN="-D___DYNAMIC"
@@ -61,6 +63,8 @@ DEFS_OBJ_DYN_LIB_EXE=""
 COMPILATION_OPTIONS=""
 
 RTLIB_COND_EXPAND_FEATURES=""
+
+userlibdir="~/.gambit_userlib"
 
 ###############################################################################
 #
@@ -1198,6 +1202,26 @@ AC_DEFUN([AC_CHECK_STAT],
                 [#include <sys/stat.h>])
 ])
 
+AC_DEFUN([AC_CHECK_SIGSET_T],
+[
+  CONF_USE_SIGSET_T="___USE_NO_SIGSET_T"
+  AC_CACHE_CHECK([for sigset_t], ac_cv_type_sigset_t,
+  [
+    AC_TRY_COMPILE([
+      #ifdef HAVE_SIGNAL_H
+      #include <signal.h>
+      #endif
+      ],[sigset_t ss;],
+    ac_cv_type_sigset_t=yes,
+    ac_cv_type_sigset_t=no)
+  ])
+  if test $ac_cv_type_sigset_t = yes; then
+    CONF_USE_SIGSET_T="___USE_SIGSET_T"
+  fi
+  AC_SUBST(CONF_USE_SIGSET_T)
+])
+
+
 AC_DEFUN([AC_CHECK_COMMON],
 [
   AC_CHECK_ENVIRON
@@ -1207,6 +1231,7 @@ AC_DEFUN([AC_CHECK_COMMON],
   AC_CHECK_MKDIR
   AC_CHECK_OPENDIR
   AC_CHECK_STAT
+  AC_CHECK_SIGSET_T
 ])
 
 # Check for OS functions and header files
@@ -1869,7 +1894,6 @@ if test "$C_COMP_GNUC" = yes; then
     #DASH_fpermissive=""
     DASH_mieee=""
     DASH_mieee_with_inexact=""
-    DASH_mieee_fp=""
     DASH_mpc64=""
     DASH_fno_ipa_ra=""
 
@@ -1888,7 +1912,6 @@ if test "$C_COMP_GNUC" = yes; then
     # machine specific options:
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
-    AC_CHECK_C_COMPILER_OPT(-mieee-fp,DASH_mieee_fp)
     AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
   fi
 
@@ -1919,18 +1942,29 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
   AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
 
-  OPT_LEVEL_FLAG="$DASH_O1"
+  FLAGS_OPT_LO="$DASH_O1"
+
+  if test "$DASH_O3" != ""; then
+    FLAGS_OPT_HI="$DASH_O3"
+  else
+    if test "$DASH_O2" != ""; then
+      FLAGS_OPT_HI="$DASH_O2"
+    else
+      FLAGS_OPT_HI="$DASH_O1"
+    fi
+  fi
+
+  FLAGS_OPT="$FLAGS_OPT_LO"
+  FLAGS_OPT_RTS="$FLAGS_OPT_HI"
 
   case "$ENABLE_C_OPT" in
 
-     yes) if test "$DASH_O2" != ""; then
-            OPT_LEVEL_FLAG="$DASH_O2"
-          fi
+     yes) FLAGS_OPT="$FLAGS_OPT_HI"
           ;;
 
       no) ;;
 
-       *) OPT_LEVEL_FLAG=" $ENABLE_C_OPT"
+       *) FLAGS_OPT=" $ENABLE_C_OPT"
           ;;
 
   esac
@@ -2020,10 +2054,6 @@ if test "$C_COMP_GNUC" = yes; then
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wno_write_strings"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_Wdisabled_optimization"
 
-  if test "$ENABLE_DEBUG" = yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g"
-  fi
-
   if test "$ENABLE_PROFILE" = yes; then
     if test "x$DASH_pg" != x; then
       FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_pg"
@@ -2033,9 +2063,10 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_DEBUG" = yes; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_ftrapv"
+    FLAGS_OPT=""
+    FLAGS_OPT_RTS=""
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g$DASH_ftrapv"
   else
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$OPT_LEVEL_FLAG"
     # TODO: remove the use of -fwrapv once runtime system is cleaned up
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
   fi
@@ -2104,7 +2135,6 @@ if test "$C_COMP_GNUC" = yes; then
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_with_inexact"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mieee_fp"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_mpc64"
 
   case "$target_os" in
@@ -2126,21 +2156,25 @@ else if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  OPT_LEVEL_FLAG="-Oityb1"
+  FLAGS_OPT_LO="-Oityb1"
+  FLAGS_OPT_HI="-Oityb2"
+
+  FLAGS_OPT="$FLAGS_OPT_LO"
+  FLAGS_OPT_RTS="$FLAGS_OPT_HI"
 
   case "$ENABLE_C_OPT" in
 
-     yes) OPT_LEVEL_FLAG="-Oityb2"
+     yes) FLAGS_OPT="$FLAGS_OPT_HI"
           ;;
 
       no) ;;
 
-       *) OPT_LEVEL_FLAG="$ENABLE_C_OPT"
+       *) FLAGS_OPT=" $ENABLE_C_OPT"
           ;;
 
   esac
 
-  FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -nologo $OPT_LEVEL_FLAG -MT -D_CRT_SECURE_NO_DEPRECATE"
+  FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -nologo -MT -D_CRT_SECURE_NO_DEPRECATE"
   FLAGS_DYN="$FLAGS_DYN -LD"
 
 #else if test "$C_COMP_WATCOMC" = yes; then
@@ -2397,6 +2431,8 @@ AC_SUBST(FLAGS_OBJ)
 AC_SUBST(FLAGS_DYN)
 AC_SUBST(FLAGS_LIB)
 AC_SUBST(FLAGS_EXE)
+AC_SUBST(FLAGS_OPT)
+AC_SUBST(FLAGS_OPT_RTS)
 AC_SUBST(DEFS_OBJ)
 AC_SUBST(DEFS_DYN)
 AC_SUBST(DEFS_LIB)
@@ -2406,6 +2442,8 @@ AC_SUBST(FLAGS_OBJ_MF)
 AC_SUBST(FLAGS_DYN_MF)
 AC_SUBST(FLAGS_LIB_MF)
 AC_SUBST(FLAGS_EXE_MF)
+AC_SUBST(FLAGS_OPT_MF)
+AC_SUBST(FLAGS_OPT_RTS_MF)
 AC_SUBST(DEFS_OBJ_MF)
 AC_SUBST(DEFS_DYN_MF)
 AC_SUBST(DEFS_LIB_MF)
@@ -2415,6 +2453,8 @@ AC_SUBST(FLAGS_OBJ_SH)
 AC_SUBST(FLAGS_DYN_SH)
 AC_SUBST(FLAGS_LIB_SH)
 AC_SUBST(FLAGS_EXE_SH)
+AC_SUBST(FLAGS_OPT_SH)
+AC_SUBST(FLAGS_OPT_RTS_SH)
 AC_SUBST(DEFS_OBJ_SH)
 AC_SUBST(DEFS_DYN_SH)
 AC_SUBST(DEFS_LIB_SH)
@@ -2424,6 +2464,8 @@ AC_SUBST(FLAGS_OBJ_BAT)
 AC_SUBST(FLAGS_DYN_BAT)
 AC_SUBST(FLAGS_LIB_BAT)
 AC_SUBST(FLAGS_EXE_BAT)
+AC_SUBST(FLAGS_OPT_BAT)
+AC_SUBST(FLAGS_OPT_RTS_BAT)
 AC_SUBST(DEFS_OBJ_BAT)
 AC_SUBST(DEFS_DYN_BAT)
 AC_SUBST(DEFS_LIB_BAT)
@@ -2586,9 +2628,11 @@ if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
@@ -2604,9 +2648,11 @@ if test "$C_COMP_VISUALC" = yes; then
 
 else
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -o \"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -o \"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
@@ -2726,6 +2772,8 @@ fi
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_USERLIB=\"\\\"`echo \"$userlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
 if test "$ENABLE_SYMLINKS" != yes; then
 
   if test "$bindir" != "\${prefix}/bin"; then
@@ -2789,11 +2837,15 @@ FLAGS_DYN_MF=`echo "$FLAGS_DYN" | $ESC_MF`
 FLAGS_LIB_MF=`echo "$FLAGS_LIB" | $ESC_MF`
 FLAGS_EXE_MF=`echo "$FLAGS_EXE" | $ESC_MF`
 
+FLAGS_OPT_MF=`echo "$FLAGS_OPT" | $ESC_MF`
+FLAGS_OPT_RTS_MF=`echo "$FLAGS_OPT_RTS" | $ESC_MF`
+
 DEFS_OBJ_MF=`echo "$DEFS_OBJ" | $ESC_MF`
 DEFS_DYN_MF=`echo "$DEFS_DYN" | $ESC_MF`
 DEFS_LIB_MF=`echo "$DEFS_LIB" | $ESC_MF`
 DEFS_EXE_MF=`echo "$DEFS_EXE" | $ESC_MF`
 
+BUILD_OBJ_RTS_MF=`echo "$BUILD_OBJ_RTS" | $ESC_MF`
 BUILD_OBJ_MF=`echo "$BUILD_OBJ" | $ESC_MF`
 BUILD_DYN_MF=`echo "$BUILD_DYN" | $ESC_MF`
 BUILD_LIB_MF=`echo "$BUILD_LIB" | $ESC_MF`
@@ -2819,11 +2871,15 @@ FLAGS_DYN_SH=`echo "$FLAGS_DYN" | $ESC_SH`
 FLAGS_LIB_SH=`echo "$FLAGS_LIB" | $ESC_SH`
 FLAGS_EXE_SH=`echo "$FLAGS_EXE" | $ESC_SH`
 
+FLAGS_OPT_SH=`echo "$FLAGS_OPT" | $ESC_SH`
+FLAGS_OPT_RTS_SH=`echo "$FLAGS_OPT_RTS" | $ESC_SH`
+
 DEFS_OBJ_SH=`echo "$DEFS_OBJ" | $ESC_SH`
 DEFS_DYN_SH=`echo "$DEFS_DYN" | $ESC_SH`
 DEFS_LIB_SH=`echo "$DEFS_LIB" | $ESC_SH`
 DEFS_EXE_SH=`echo "$DEFS_EXE" | $ESC_SH`
 
+BUILD_OBJ_RTS_SH=`echo "$BUILD_OBJ_RTS" | $ESC_SH`
 BUILD_OBJ_SH=`echo "$BUILD_OBJ" | $ESC_SH`
 BUILD_DYN_SH=`echo "$BUILD_DYN" | $ESC_SH`
 BUILD_LIB_SH=`echo "$BUILD_LIB" | $ESC_SH`
@@ -2849,11 +2905,15 @@ FLAGS_DYN_BAT=`echo "$FLAGS_DYN" | $ESC_BAT`
 FLAGS_LIB_BAT=`echo "$FLAGS_LIB" | $ESC_BAT`
 FLAGS_EXE_BAT=`echo "$FLAGS_EXE" | $ESC_BAT`
 
+FLAGS_OPT_BAT=`echo "$FLAGS_OPT" | $ESC_BAT`
+FLAGS_OPT_RTS_BAT=`echo "$FLAGS_OPT_RTS" | $ESC_BAT`
+
 DEFS_OBJ_BAT=`echo "$DEFS_OBJ" | $ESC_BAT`
 DEFS_DYN_BAT=`echo "$DEFS_DYN" | $ESC_BAT`
 DEFS_LIB_BAT=`echo "$DEFS_LIB" | $ESC_BAT`
 DEFS_EXE_BAT=`echo "$DEFS_EXE" | $ESC_BAT`
 
+BUILD_OBJ_RTS_BAT=`echo "$BUILD_OBJ_RTS" | $ESC_BAT`
 BUILD_OBJ_BAT=`echo "$BUILD_OBJ" | $ESC_BAT`
 BUILD_DYN_BAT=`echo "$BUILD_DYN" | $ESC_BAT`
 BUILD_LIB_BAT=`echo "$BUILD_LIB" | $ESC_BAT`
@@ -2871,11 +2931,13 @@ OBJ_EXTENSION_BAT=`echo "$OBJ_EXTENSION" | $ESC_BAT`
 EXE_EXTENSION_BAT=`echo "$EXE_EXTENSION" | $ESC_BAT`
 BAT_EXTENSION_BAT=`echo "$BAT_EXTENSION" | $ESC_BAT`
 
+BUILD_OBJ_RTS_ECHO=`echo "$BUILD_OBJ_RTS" | $ESC_ECHO`
 BUILD_OBJ_ECHO=`echo "$BUILD_OBJ" | $ESC_ECHO`
 BUILD_DYN_ECHO=`echo "$BUILD_DYN" | $ESC_ECHO`
 BUILD_LIB_ECHO=`echo "$BUILD_LIB" | $ESC_ECHO`
 BUILD_EXE_ECHO=`echo "$BUILD_EXE" | $ESC_ECHO`
 
+BUILD_OBJ_RTS_ECHO_BAT=`echo "$BUILD_OBJ_RTS" | $ESC_ECHO_BAT`
 BUILD_OBJ_ECHO_BAT=`echo "$BUILD_OBJ" | $ESC_ECHO_BAT`
 BUILD_DYN_ECHO_BAT=`echo "$BUILD_DYN" | $ESC_ECHO_BAT`
 BUILD_LIB_ECHO_BAT=`echo "$BUILD_LIB" | $ESC_ECHO_BAT`
@@ -2901,6 +2963,7 @@ AC_SUBST(bat)
 AC_SUBST(SETDLPATH)
 AC_SUBST(SETDLPATHBOOT)
 
+AC_SUBST(BUILD_OBJ_RTS)
 AC_SUBST(BUILD_OBJ)
 AC_SUBST(BUILD_DYN)
 AC_SUBST(BUILD_LIB)
@@ -2917,6 +2980,7 @@ AC_SUBST(OBJ_EXTENSION)
 AC_SUBST(EXE_EXTENSION)
 AC_SUBST(BAT_EXTENSION)
 
+AC_SUBST(BUILD_OBJ_RTS_MF)
 AC_SUBST(BUILD_OBJ_MF)
 AC_SUBST(BUILD_DYN_MF)
 AC_SUBST(BUILD_LIB_MF)
@@ -2933,6 +2997,7 @@ AC_SUBST(OBJ_EXTENSION_MF)
 AC_SUBST(EXE_EXTENSION_MF)
 AC_SUBST(BAT_EXTENSION_MF)
 
+AC_SUBST(BUILD_OBJ_RTS_SH)
 AC_SUBST(BUILD_OBJ_SH)
 AC_SUBST(BUILD_DYN_SH)
 AC_SUBST(BUILD_LIB_SH)
@@ -2949,6 +3014,7 @@ AC_SUBST(OBJ_EXTENSION_SH)
 AC_SUBST(EXE_EXTENSION_SH)
 AC_SUBST(BAT_EXTENSION_SH)
 
+AC_SUBST(BUILD_OBJ_RTS_BAT)
 AC_SUBST(BUILD_OBJ_BAT)
 AC_SUBST(BUILD_DYN_BAT)
 AC_SUBST(BUILD_LIB_BAT)
@@ -2965,11 +3031,13 @@ AC_SUBST(OBJ_EXTENSION_BAT)
 AC_SUBST(EXE_EXTENSION_BAT)
 AC_SUBST(BAT_EXTENSION_BAT)
 
+AC_SUBST(BUILD_OBJ_RTS_ECHO)
 AC_SUBST(BUILD_OBJ_ECHO)
 AC_SUBST(BUILD_DYN_ECHO)
 AC_SUBST(BUILD_LIB_ECHO)
 AC_SUBST(BUILD_EXE_ECHO)
 
+AC_SUBST(BUILD_OBJ_RTS_ECHO_BAT)
 AC_SUBST(BUILD_OBJ_ECHO_BAT)
 AC_SUBST(BUILD_DYN_ECHO_BAT)
 AC_SUBST(BUILD_LIB_ECHO_BAT)

@@ -503,7 +503,7 @@
 
 (define (targ-internal-fs fs)
   (+ (targ-align-frame fs)
-     (targ-align-frame-without-reserve (+ targ-nb-gvm-regs 1))))
+     (targ-align-frame-without-reserve (+ (targ-nb-gvm-regs) 1))))
 
 (define (targ-align-frame fs)
   (* (quotient (+ fs (- targ-frame-alignment 1))
