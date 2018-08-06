@@ -12,7 +12,7 @@
 "test"
 )
 (
-" _utils"
+"_utils#"
 "c#append-lists"
 "c#compiler-abort"
 "c#compiler-internal-error"
@@ -134,8 +134,8 @@
 #else
 #define ___VERSION 408009
 #define ___MODULE_NAME "_utils"
-#define ___LINKER_ID ____20___utils
-#define ___MH_PROC ___H__20___utils
+#define ___LINKER_ID ___LNK___utils
+#define ___MH_PROC ___H___utils
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 1
 #define ___KEYCOUNT 1
@@ -151,9 +151,9 @@ ___NEED_SYM(___S___utils)
 
 ___NEED_KEY(___K_test)
 
-___NEED_GLO(___G__20___utils)
 ___NEED_GLO(___G__23__23_call_2d_with_2d_current_2d_continuation)
 ___NEED_GLO(___G__2b_)
+___NEED_GLO(___G___utils_23_)
 ___NEED_GLO(___G_apply)
 ___NEED_GLO(___G_c_23_append_2d_lists)
 ___NEED_GLO(___G_c_23_bits_2d_and)
@@ -277,7 +277,7 @@ ___END_KEY
 #define ___KEY_test ___KEY(0,___K_test)
 
 ___BEGIN_GLO
-___DEF_GLO(0," _utils")
+___DEF_GLO(0,"_utils#")
 ___DEF_GLO(1,"c#append-lists")
 ___DEF_GLO(2,"c#bits-and")
 ___DEF_GLO(3,"c#bits-or")
@@ -391,8 +391,8 @@ ___DEF_GLO(110,"table-set!")
 ___DEF_GLO(111,"write")
 ___END_GLO
 
-#define ___GLO__20___utils ___GLO(0,___G__20___utils)
-#define ___PRM__20___utils ___PRM(0,___G__20___utils)
+#define ___GLO___utils_23_ ___GLO(0,___G___utils_23_)
+#define ___PRM___utils_23_ ___PRM(0,___G___utils_23_)
 #define ___GLO_c_23_append_2d_lists ___GLO(1,___G_c_23_append_2d_lists)
 #define ___PRM_c_23_append_2d_lists ___PRM(1,___G_c_23_append_2d_lists)
 #define ___GLO_c_23_bits_2d_and ___GLO(2,___G_c_23_bits_2d_and)
@@ -719,10 +719,10 @@ ___END_SUB
 ___BEGIN_M_COD
 ___BEGIN_M_HLBL
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0__20___utils)
-___DEF_M_HLBL(___L1__20___utils)
-___DEF_M_HLBL(___L2__20___utils)
-___DEF_M_HLBL(___L3__20___utils)
+___DEF_M_HLBL(___L0___utils_23_)
+___DEF_M_HLBL(___L1___utils_23_)
+___DEF_M_HLBL(___L2___utils_23_)
+___DEF_M_HLBL(___L3___utils_23_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_append_2d_lists)
 ___DEF_M_HLBL(___L1_c_23_append_2d_lists)
@@ -1339,7 +1339,7 @@ ___END_M_HLBL
 ___BEGIN_M_SW
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__20___utils
+#define ___PH_PROC ___H___utils_23_
 #undef ___PH_LBL0
 #define ___PH_LBL0 1
 #undef ___PD_ALL
@@ -1351,30 +1351,30 @@ ___BEGIN_M_SW
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0__20___utils)
-___DEF_P_HLBL(___L1__20___utils)
-___DEF_P_HLBL(___L2__20___utils)
-___DEF_P_HLBL(___L3__20___utils)
+___DEF_P_HLBL(___L0___utils_23_)
+___DEF_P_HLBL(___L1___utils_23_)
+___DEF_P_HLBL(___L2___utils_23_)
+___DEF_P_HLBL(___L3___utils_23_)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0__20___utils)
+___DEF_SLBL(0,___L0___utils_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
-___DEF_GLBL(___L__20___utils)
+___DEF_GLBL(___L___utils_23_)
    ___SET_GLO(71,___G_c_23_throw_2d_to_2d_exception_2d_handler,___PRC(614))
    ___SET_GLO(93,___G_c_23_warnings_2d_requested_3f_,___FAL)
    ___SET_GLO(93,___G_c_23_warnings_2d_requested_3f_,___TRU)
    ___SET_STK(1,___R0)
    ___ADJFP(4)
    ___POLL(1)
-___DEF_SLBL(1,___L1__20___utils)
+___DEF_SLBL(1,___L1___utils_23_)
    ___SET_R0(___LBL(2))
    ___JUMPINT(___SET_NARGS(0),___PRC(413),___L_c_23_ptset_2d_empty)
-___DEF_SLBL(2,___L2__20___utils)
+___DEF_SLBL(2,___L2___utils_23_)
    ___SET_GLO(44,___G_c_23_ptset_2d_empty_2d_set,___R1)
    ___SET_R1(___VOID)
    ___POLL(3)
-___DEF_SLBL(3,___L3__20___utils)
+___DEF_SLBL(3,___L3___utils_23_)
    ___ADJFP(-4)
    ___JUMPPRM(___NOTHING,___STK(1))
 ___END_P_SW
@@ -7165,11 +7165,11 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H__20___utils," _utils",___REF_FAL,4,0)
-,___DEF_LBL_PROC(___H__20___utils,0,-1)
-,___DEF_LBL_RET(___H__20___utils,___IFD(___RETI,4,0,0x3f1L))
-,___DEF_LBL_RET(___H__20___utils,___IFD(___RETN,1,0,0x1L))
-,___DEF_LBL_RET(___H__20___utils,___IFD(___RETI,4,0,0x3f1L))
+ ___DEF_LBL_INTRO(___H___utils_23_,"_utils#",___REF_FAL,4,0)
+,___DEF_LBL_PROC(___H___utils_23_,0,-1)
+,___DEF_LBL_RET(___H___utils_23_,___IFD(___RETI,4,0,0x3f1L))
+,___DEF_LBL_RET(___H___utils_23_,___IFD(___RETN,1,0,0x1L))
+,___DEF_LBL_RET(___H___utils_23_,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_INTRO(___H_c_23_append_2d_lists,"c#append-lists",___REF_FAL,10,0)
 ,___DEF_LBL_PROC(___H_c_23_append_2d_lists,1,-1)
 ,___DEF_LBL_RET(___H_c_23_append_2d_lists,___IFD(___RETI,0,0,0x3fL))
@@ -7823,7 +7823,7 @@ ___BEGIN_OFD
 ___END_OFD
 
 ___BEGIN_MOD_PRM
-___DEF_MOD_PRM(0,___G__20___utils,1)
+___DEF_MOD_PRM(0,___G___utils_23_,1)
 ___DEF_MOD_PRM(1,___G_c_23_append_2d_lists,6)
 ___DEF_MOD_PRM(59,___G_c_23_reverse_2d_append_21_,17)
 ___DEF_MOD_PRM(26,___G_c_23_list_2d_length,20)
@@ -7921,7 +7921,7 @@ ___BEGIN_MOD_C_INIT
 ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
-___DEF_MOD_GLO(0,___G__20___utils,1)
+___DEF_MOD_GLO(0,___G___utils_23_,1)
 ___DEF_MOD_GLO(1,___G_c_23_append_2d_lists,6)
 ___DEF_MOD_GLO(59,___G_c_23_reverse_2d_append_21_,17)
 ___DEF_MOD_GLO(26,___G_c_23_list_2d_length,20)

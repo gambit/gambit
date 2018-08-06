@@ -14,7 +14,7 @@
 (
 )
 (
-" _env"
+"_env#"
 "c#boolean-declarations"
 "c#env-frame"
 "c#env-global-env"
@@ -107,8 +107,8 @@
 #else
 #define ___VERSION 408009
 #define ___MODULE_NAME "_env"
-#define ___LINKER_ID ____20___env
-#define ___MH_PROC ___H__20___env
+#define ___LINKER_ID ___LNK___env
+#define ___MH_PROC ___H___env
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 4
 #define ___GLOCOUNT 83
@@ -124,7 +124,7 @@ ___NEED_SYM(___S_closure_2d_env)
 ___NEED_SYM(___S_ret)
 ___NEED_SYM(___S_var_2d_tag)
 
-___NEED_GLO(___G__20___env)
+___NEED_GLO(___G___env_23_)
 ___NEED_GLO(___G_c_23_boolean_2d_decl)
 ___NEED_GLO(___G_c_23_boolean_2d_declarations)
 ___NEED_GLO(___G_c_23_closure_2d_env_2d_var)
@@ -221,7 +221,7 @@ ___END_SYM
 #define ___SYM_var_2d_tag ___SYM(3,___S_var_2d_tag)
 
 ___BEGIN_GLO
-___DEF_GLO(0," _env")
+___DEF_GLO(0,"_env#")
 ___DEF_GLO(1,"c#boolean-decl")
 ___DEF_GLO(2,"c#boolean-declarations")
 ___DEF_GLO(3,"c#closure-env-var")
@@ -306,8 +306,8 @@ ___DEF_GLO(81,"string-append")
 ___DEF_GLO(82,"symbol->string")
 ___END_GLO
 
-#define ___GLO__20___env ___GLO(0,___G__20___env)
-#define ___PRM__20___env ___PRM(0,___G__20___env)
+#define ___GLO___env_23_ ___GLO(0,___G___env_23_)
+#define ___PRM___env_23_ ___PRM(0,___G___env_23_)
 #define ___GLO_c_23_boolean_2d_decl ___GLO(1,___G_c_23_boolean_2d_decl)
 #define ___PRM_c_23_boolean_2d_decl ___PRM(1,___G_c_23_boolean_2d_decl)
 #define ___GLO_c_23_boolean_2d_declarations ___GLO(2,___G_c_23_boolean_2d_declarations)
@@ -517,10 +517,10 @@ ___END_SUB
 ___BEGIN_M_COD
 ___BEGIN_M_HLBL
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0__20___env)
-___DEF_M_HLBL(___L1__20___env)
-___DEF_M_HLBL(___L2__20___env)
-___DEF_M_HLBL(___L3__20___env)
+___DEF_M_HLBL(___L0___env_23_)
+___DEF_M_HLBL(___L1___env_23_)
+___DEF_M_HLBL(___L2___env_23_)
+___DEF_M_HLBL(___L3___env_23_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_make_2d_var)
 ___DEF_M_HLBL(___L1_c_23_make_2d_var)
@@ -765,7 +765,7 @@ ___END_M_HLBL
 ___BEGIN_M_SW
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__20___env
+#define ___PH_PROC ___H___env_23_
 #undef ___PH_LBL0
 #define ___PH_LBL0 1
 #undef ___PD_ALL
@@ -777,16 +777,16 @@ ___BEGIN_M_SW
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0__20___env)
-___DEF_P_HLBL(___L1__20___env)
-___DEF_P_HLBL(___L2__20___env)
-___DEF_P_HLBL(___L3__20___env)
+___DEF_P_HLBL(___L0___env_23_)
+___DEF_P_HLBL(___L1___env_23_)
+___DEF_P_HLBL(___L2___env_23_)
+___DEF_P_HLBL(___L3___env_23_)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0__20___env)
+___DEF_SLBL(0,___L0___env_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
-___DEF_GLBL(___L__20___env)
+___DEF_GLBL(___L___env_23_)
    ___SET_R1(___CONS(___SYM_var_2d_tag,___NUL))
    ___SET_GLO(71,___G_c_23_var_2d_tag,___R1)
    ___SET_GLO(43,___G_c_23_next_2d_var_2d_stamp,___FAL)
@@ -803,15 +803,15 @@ ___DEF_GLBL(___L__20___env)
    ___SET_GLO(40,___G_c_23_namable_2d_boolean_2d_declarations,___NUL)
    ___SET_R1(___VOID)
    ___CHECK_HEAP(1,4096)
-___DEF_SLBL(1,___L1__20___env)
+___DEF_SLBL(1,___L1___env_23_)
    ___JUMPPRM(___NOTHING,___R0)
-___DEF_SLBL(2,___L2__20___env)
+___DEF_SLBL(2,___L2___env_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(2,0,0,0)
    ___SET_R2(___NUL)
    ___SET_R1(___FAL)
    ___POLL(3)
-___DEF_SLBL(3,___L3__20___env)
+___DEF_SLBL(3,___L3___env_23_)
    ___JUMPINT(___SET_NARGS(2),___PRC(72),___L_c_23_env_2d_frame)
 ___END_P_SW
 ___END_P_COD
@@ -3376,11 +3376,11 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H__20___env," _env",___REF_FAL,4,0)
-,___DEF_LBL_PROC(___H__20___env,0,-1)
-,___DEF_LBL_RET(___H__20___env,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_PROC(___H__20___env,0,-1)
-,___DEF_LBL_RET(___H__20___env,___IFD(___RETI,0,0,0x3fL))
+ ___DEF_LBL_INTRO(___H___env_23_,"_env#",___REF_FAL,4,0)
+,___DEF_LBL_PROC(___H___env_23_,0,-1)
+,___DEF_LBL_RET(___H___env_23_,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_PROC(___H___env_23_,0,-1)
+,___DEF_LBL_RET(___H___env_23_,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_INTRO(___H_c_23_make_2d_var,"c#make-var",___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H_c_23_make_2d_var,5,-1)
 ,___DEF_LBL_RET(___H_c_23_make_2d_var,___OFD(___RETI,12,2,0x3f03fL))
@@ -3639,7 +3639,7 @@ ___BEGIN_OFD
 ___END_OFD
 
 ___BEGIN_MOD_PRM
-___DEF_MOD_PRM(0,___G__20___env,1)
+___DEF_MOD_PRM(0,___G___env_23_,1)
 ___DEF_MOD_PRM(38,___G_c_23_make_2d_var,6)
 ___DEF_MOD_PRM(72,___G_c_23_var_3f_,12)
 ___DEF_MOD_PRM(61,___G_c_23_var_2d_name,14)
@@ -3706,7 +3706,7 @@ ___BEGIN_MOD_C_INIT
 ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
-___DEF_MOD_GLO(0,___G__20___env,1)
+___DEF_MOD_GLO(0,___G___env_23_,1)
 ___DEF_MOD_GLO(38,___G_c_23_make_2d_var,6)
 ___DEF_MOD_GLO(72,___G_c_23_var_3f_,12)
 ___DEF_MOD_GLO(61,___G_c_23_var_2d_name,14)

@@ -59,7 +59,7 @@
 (
 )
 (
-" _prims"
+"_prims#"
 "c#setup-prim-expanders"
 "c#setup-prim-simplifiers"
 "c#setup-prim-specializers"
@@ -287,8 +287,8 @@
 #else
 #define ___VERSION 408009
 #define ___MODULE_NAME "_prims"
-#define ___LINKER_ID ____20___prims
-#define ___MH_PROC ___H__20___prims
+#define ___LINKER_ID ___LNK___prims
+#define ___MH_PROC ___H___prims
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 49
 #define ___GLOCOUNT 218
@@ -350,7 +350,6 @@ ___NEED_SYM(___S_vector)
 ___NEED_SYM(___S_void)
 ___NEED_SYM(___S_x)
 
-___NEED_GLO(___G__20___prims)
 ___NEED_GLO(___G__23__23_integer_3f_)
 ___NEED_GLO(___G__23__23_real_3f_)
 ___NEED_GLO(___G__2a_)
@@ -362,6 +361,7 @@ ___NEED_GLO(___G__3c__3d_)
 ___NEED_GLO(___G__3d_)
 ___NEED_GLO(___G__3e_)
 ___NEED_GLO(___G__3e__3d_)
+___NEED_GLO(___G___prims_23_)
 ___NEED_GLO(___G_abs)
 ___NEED_GLO(___G_acos)
 ___NEED_GLO(___G_angle)
@@ -672,7 +672,7 @@ ___END_SYM
 #define ___SYM_x ___SYM(48,___S_x)
 
 ___BEGIN_GLO
-___DEF_GLO(0," _prims")
+___DEF_GLO(0,"_prims#")
 ___DEF_GLO(1,"c#prim-procs")
 ___DEF_GLO(2,"c#setup-prim-expanders")
 ___DEF_GLO(3,"c#setup-prim-simplifiers")
@@ -892,8 +892,8 @@ ___DEF_GLO(216,"vector-ref")
 ___DEF_GLO(217,"zero?")
 ___END_GLO
 
-#define ___GLO__20___prims ___GLO(0,___G__20___prims)
-#define ___PRM__20___prims ___PRM(0,___G__20___prims)
+#define ___GLO___prims_23_ ___GLO(0,___G___prims_23_)
+#define ___PRM___prims_23_ ___PRM(0,___G___prims_23_)
 #define ___GLO_c_23_prim_2d_procs ___GLO(1,___G_c_23_prim_2d_procs)
 #define ___PRM_c_23_prim_2d_procs ___PRM(1,___G_c_23_prim_2d_procs)
 #define ___GLO_c_23_setup_2d_prim_2d_expanders ___GLO(2,___G_c_23_setup_2d_prim_2d_expanders)
@@ -2888,8 +2888,8 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_CNS(1556),___REF_CNS(1565))
 ,___DEF_CNS(___REF_SUB(172),___REF_CNS(1557))
 ,___DEF_CNS(___REF_CNS(1558),___REF_CNS(1560))
-,___DEF_CNS(___REF_FIX(0),___REF_CNS(1559))
-,___DEF_CNS(___REF_FIX(1),___REF_NUL)
+,___DEF_CNS(___REF_FIX(1),___REF_CNS(1559))
+,___DEF_CNS(___REF_FIX(2),___REF_NUL)
 ,___DEF_CNS(___REF_TRU,___REF_CNS(1561))
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(1562))
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(1563))
@@ -2898,8 +2898,8 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_CNS(1566),___REF_CNS(1575))
 ,___DEF_CNS(___REF_SUB(173),___REF_CNS(1567))
 ,___DEF_CNS(___REF_CNS(1568),___REF_CNS(1570))
-,___DEF_CNS(___REF_FIX(0),___REF_CNS(1569))
-,___DEF_CNS(___REF_FIX(1),___REF_NUL)
+,___DEF_CNS(___REF_FIX(1),___REF_CNS(1569))
+,___DEF_CNS(___REF_FIX(2),___REF_NUL)
 ,___DEF_CNS(___REF_TRU,___REF_CNS(1571))
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(1572))
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(1573))
@@ -17147,7 +17147,7 @@ ___END_SUB
 ___BEGIN_M_COD
 ___BEGIN_M_HLBL
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0__20___prims)
+___DEF_M_HLBL(___L0___prims_23_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_setup_2d_prim_2d_specializers)
 ___DEF_M_HLBL(___L1_c_23_setup_2d_prim_2d_specializers)
@@ -19968,7 +19968,7 @@ ___END_M_HLBL
 ___BEGIN_M_SW
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__20___prims
+#define ___PH_PROC ___H___prims_23_
 #undef ___PH_LBL0
 #define ___PH_LBL0 1
 #undef ___PD_ALL
@@ -19980,13 +19980,13 @@ ___BEGIN_M_SW
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0__20___prims)
+___DEF_P_HLBL(___L0___prims_23_)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0__20___prims)
+___DEF_SLBL(0,___L0___prims_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
-___DEF_GLBL(___L__20___prims)
+___DEF_GLBL(___L___prims_23_)
    ___SET_GLO(1,___G_c_23_prim_2d_procs,___CNS(0))
    ___SET_R1(___VOID)
    ___JUMPPRM(___NOTHING,___R0)
@@ -40209,8 +40209,8 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H__20___prims," _prims",___REF_FAL,1,0)
-,___DEF_LBL_PROC(___H__20___prims,0,-1)
+ ___DEF_LBL_INTRO(___H___prims_23_,"_prims#",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H___prims_23_,0,-1)
 ,___DEF_LBL_INTRO(___H_c_23_setup_2d_prim_2d_specializers,"c#setup-prim-specializers",___REF_FAL,662,
 0)
 ,___DEF_LBL_PROC(___H_c_23_setup_2d_prim_2d_specializers,1,-1)
@@ -45754,7 +45754,7 @@ ___BEGIN_OFD
 ___END_OFD
 
 ___BEGIN_MOD_PRM
-___DEF_MOD_PRM(0,___G__20___prims,1)
+___DEF_MOD_PRM(0,___G___prims_23_,1)
 ___DEF_MOD_PRM(4,___G_c_23_setup_2d_prim_2d_specializers,3)
 ___DEF_MOD_PRM(2,___G_c_23_setup_2d_prim_2d_expanders,666)
 ___DEF_MOD_PRM(3,___G_c_23_setup_2d_prim_2d_simplifiers,2161)
@@ -45765,7 +45765,7 @@ ___BEGIN_MOD_C_INIT
 ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
-___DEF_MOD_GLO(0,___G__20___prims,1)
+___DEF_MOD_GLO(0,___G___prims_23_,1)
 ___DEF_MOD_GLO(4,___G_c_23_setup_2d_prim_2d_specializers,3)
 ___DEF_MOD_GLO(2,___G_c_23_setup_2d_prim_2d_expanders,666)
 ___DEF_MOD_GLO(3,___G_c_23_setup_2d_prim_2d_simplifiers,2161)

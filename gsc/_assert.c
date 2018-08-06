@@ -11,7 +11,7 @@
 (
 )
 (
-" _assert"
+"_assert#"
 )
 (
 )
@@ -22,8 +22,8 @@
 #else
 #define ___VERSION 408009
 #define ___MODULE_NAME "_assert"
-#define ___LINKER_ID ____20___assert
-#define ___MH_PROC ___H__20___assert
+#define ___LINKER_ID ___LNK___assert
+#define ___MH_PROC ___H___assert
 #define ___SCRIPT_LINE 0
 #define ___SYMCOUNT 1
 #define ___GLOCOUNT 1
@@ -35,7 +35,7 @@
 
 ___NEED_SYM(___S___assert)
 
-___NEED_GLO(___G__20___assert)
+___NEED_GLO(___G___assert_23_)
 
 ___BEGIN_SYM
 ___DEF_SYM(0,___S___assert,"_assert")
@@ -44,11 +44,11 @@ ___END_SYM
 #define ___SYM___assert ___SYM(0,___S___assert)
 
 ___BEGIN_GLO
-___DEF_GLO(0," _assert")
+___DEF_GLO(0,"_assert#")
 ___END_GLO
 
-#define ___GLO__20___assert ___GLO(0,___G__20___assert)
-#define ___PRM__20___assert ___PRM(0,___G__20___assert)
+#define ___GLO___assert_23_ ___GLO(0,___G___assert_23_)
+#define ___PRM___assert_23_ ___PRM(0,___G___assert_23_)
 
 ___DEF_SUB_VEC(___X0,5UL)
                ___VEC1(___REF_SYM(0,___S___assert))
@@ -73,13 +73,13 @@ ___END_SUB
 ___BEGIN_M_COD
 ___BEGIN_M_HLBL
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0__20___assert)
+___DEF_M_HLBL(___L0___assert_23_)
 ___END_M_HLBL
 
 ___BEGIN_M_SW
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H__20___assert
+#define ___PH_PROC ___H___assert_23_
 #undef ___PH_LBL0
 #define ___PH_LBL0 1
 #undef ___PD_ALL
@@ -91,13 +91,13 @@ ___BEGIN_M_SW
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0__20___assert)
+___DEF_P_HLBL(___L0___assert_23_)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0__20___assert)
+___DEF_SLBL(0,___L0___assert_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
-___DEF_GLBL(___L__20___assert)
+___DEF_GLBL(___L___assert_23_)
    ___SET_R1(___FAL)
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
@@ -107,19 +107,19 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H__20___assert," _assert",___REF_FAL,1,0)
-,___DEF_LBL_PROC(___H__20___assert,0,-1)
+ ___DEF_LBL_INTRO(___H___assert_23_,"_assert#",___REF_FAL,1,0)
+,___DEF_LBL_PROC(___H___assert_23_,0,-1)
 ___END_LBL
 
 ___BEGIN_MOD_PRM
-___DEF_MOD_PRM(0,___G__20___assert,1)
+___DEF_MOD_PRM(0,___G___assert_23_,1)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
 ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
-___DEF_MOD_GLO(0,___G__20___assert,1)
+___DEF_MOD_GLO(0,___G___assert_23_,1)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
