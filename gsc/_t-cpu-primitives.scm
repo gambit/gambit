@@ -216,7 +216,7 @@
             commutative: commutative
             allowed-opnds: allowed-opnds-accum
             ;; Start-value is the identity value => Can skip it
-            default-opnd: (if (or (none? start-value) start-value-null?) (car args) #f)
+            default-opnd: (if (or (not (none? start-value)) start-value-null?) (car args) #f)
             fun: (lambda (accum accum-in-args)
               (let ((new-args
                 ;; Remove accum from args if accum is in opnd. Happens if commutative
