@@ -9599,7 +9599,8 @@ ___RESULT = result;
     ;; .v1 v2 v3 ...
     ;; where v1 is the highest set bit of v; result is of the form
     ;; xx . xxxxxxxxxxxxxxxxxxx where there are bits + 1 bits to the
-    ;; right of the binary point. The result is always <= 2; see Knuth, volume 2.
+    ;; right of the binary point. The result is always <= 2.
+    ;; See Knuth, volume 2, Algorithm R in Section 4.3.3
 
     (let ((cached-value (##table-ref ##reciprocal-cache v #f)))
       (if (and cached-value
@@ -9660,9 +9661,9 @@ ___RESULT = result;
 
     ;; u is a normalized bignum, v is a possibly unnormalized bignum
     ;; u >= v >= ##bignum.mdigit-base
+    ;; Based on Algorithm D of Knuth, Volume 2, Section 4.3.1
 
     (define (estimate-q-hat top-bits-of-u v_n-1 v_n-2)
-      ;; from Knuth
       (let ((q-hat
              (##bignum.mdigit-quotient top-bits-of-u 2 v_n-1))
             (u_n+j-2
