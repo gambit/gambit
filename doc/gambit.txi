@@ -4081,7 +4081,7 @@ The default declarations used by the compiler are equivalent to:
   (separate)
   (inline)
   (inline-primitives)
-  (inlining-limit 350)
+  (inlining-limit 370)
   (constant-fold)
   (lambda-lift)
   (not standard-bindings)

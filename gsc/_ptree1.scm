@@ -515,7 +515,7 @@
   (env-declare env (list inline-primitives-sym #f)))
 
 (define (inlining-limit env) ; returns the inlining limit
-  (max 0 (min 1000000 (declaration-value inlining-limit-sym #f 350 env))))
+  (max 0 (min 1000000 (declaration-value inlining-limit-sym #f 370 env))))
 
 (define (block-compilation? env) ; true iff block compilation strategy
   (eq? (declaration-value 'compilation-strategy #f separate-sym env)
