@@ -687,6 +687,25 @@
 (define (make-function-opnds func)
   (lambda (cgc . args) (apply func (cons cgc (map make-x86-opnd args)))))
 
+(define (x86-prim-##fixnum? cgc result-action args)
+  (define true-lbl  (make-unique-label cgc "##fixnum?-true" #f))
+  (define continue-lbl (make-unique-label cgc "##fixnum?-continue" #f))
+  (check-nargs-if-necessary cgc result-action 1)
+  (call-with-nargs args
+    (lambda (arg1)
+      (mov-if-necessary cgc '(reg mem) arg1
+        (lambda (opnd)
+          (x86-test cgc
+            (make-x86-opnd opnd)
+            (x86-imm-int (- (expt 2 tag-width) 1))
+            (get-word-width-bits cgc))
+          (x86-je cgc (lbl-opnd-label true-lbl))
+          (am-return-const cgc result-action #f)
+          (am-jmp cgc continue-lbl)
+          (am-lbl cgc true-lbl)
+          (am-return-const cgc result-action #t)
+          (am-lbl cgc continue-lbl))))))
+
 (define x86-prim-##fx+
   (foldl-prim
     (make-function-opnds x86-add)
@@ -814,14 +833,25 @@
           #f
           (get-word-width-bits cgc))))))
 
+(define (stub-prim cgc . args) #f)
+
 (define primitive-object-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
     (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
 
+    (table-set! table '##fixnum?  (make-prim-obj x86-prim-##fixnum? 1 #t #f))
+
+    (table-set! table '##flonum?  (make-prim-obj stub-prim 1 #t #f))
+    (table-set! table '##fl+      (make-prim-obj stub-prim 2 #t #f))
+    (table-set! table '+          (make-prim-obj stub-prim 2 #t #f))
+    (table-set! table '-          (make-prim-obj stub-prim 2 #t #f))
+    (table-set! table '<          (make-prim-obj stub-prim 2 #t #f))
+
     (table-set! table '##fx+      (make-prim-obj x86-prim-##fx+  2 #t #f))
-    (table-set! table '##fx-      (make-prim-obj x86-prim-##fx-  2 #t #f))
     (table-set! table '##fx+?     (make-prim-obj x86-prim-##fx+? 2 #t #f))
+    (table-set! table '##fx-      (make-prim-obj x86-prim-##fx-  2 #t #f))
+    (table-set! table '##fx-?     (make-prim-obj x86-prim-##fx-  2 #t #f))
     (table-set! table '##fx<      (make-prim-obj x86-prim-##fx<  2 #t #t))
     (table-set! table '##fx<=     (make-prim-obj x86-prim-##fx<= 2 #t #t))
     (table-set! table '##fx>      (make-prim-obj x86-prim-##fx>  2 #t #t))
