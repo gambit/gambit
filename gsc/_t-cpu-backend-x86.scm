@@ -177,8 +177,7 @@
 (define data-instr
   (make-am-data x86-db x86-dw x86-dd x86-dq))
 
-;; Args : CGC, reg/mem/label, reg/mem/imm/label
-;; Todo: Check if some cases can be eliminated
+;; Args : CGC, reg/mem/label, reg/mem/imm/label/glo
 (define (mov-instr cgc dst src #!optional (width #f))
   (define dst-type (opnd-type dst))
   (define src-type (opnd-type src))
@@ -199,9 +198,12 @@
 
   (if (not (equal? dst src))
     (cond
-      ((and
-        (or (equal? dst-type 'mem) (equal? dst-type 'ind))
-        (or (equal? src-type 'mem) (equal? src-type 'lbl)))
+      ((or
+        (and
+          (equal? src-type 'int) (not (asm-signed32? (int-opnd-value src))))
+        (and
+          (or (equal? dst-type 'mem) (equal? dst-type 'ind))
+          (or (equal? src-type 'mem) (equal? src-type 'lbl))))
           (get-free-register cgc (list src)
             (lambda (reg-src)
               (x86-mov cgc reg-src x86-src)

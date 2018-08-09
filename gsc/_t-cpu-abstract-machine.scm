@@ -1058,12 +1058,10 @@
         (mov-at-clo-index -2 reg                   ;; Place header
           (int-opnd (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
         (mov-at-clo-index -1 reg clo-lbl) ;; Place entry
-        (get-free-register cgc '()
-          (lambda (reg2)
-            ;; Because can't move 64 bit value in mem
-            ; (am-mov cgc reg2 (int-opnd (* 8 #xff15f1ffffff))) ;; Encoded: jmp [rip-15]
-            (am-mov cgc reg2 (int-opnd (* 256 #xffffffF115ff))) ;; Encoded: jmp [rip-15]
-            (mov-at-clo-index 0 reg reg2))) ;; Place code
+        ;; Encoded: jmp [rip-15]
+        ;; Todo : Change value for x86-32, ARM
+        ;; #xffffffF115ff == Encoded jmp [rip-15]
+        (mov-at-clo-index 0 reg (int-opnd (* 256 #xffffffF115ff))) ;; Place code
 
         ;; Place value of free variables
         (let loop ((opnds clo-opnds) (n 1))
