@@ -48,7 +48,6 @@
           (compiler-internal-error "format-imm-object - Object must be an immediate: " object)))))
 
 (define (get-object-description object)
-  ;; todo: Use macro to shorten code and reduce repetition
   (cond
     ;; Fixnum
     ;; Todo: Check if fixnum on TARGET, not compilation machine

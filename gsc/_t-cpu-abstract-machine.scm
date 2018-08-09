@@ -462,6 +462,14 @@
         (am-mov cgc reg opnd)
         (fun reg)))))
 
+(define (mov-multiple-if-necessary cgc allowed-opnds-lst opnds fun)
+  (let loop ((opnds opnds) (allowed-opnds-lst allowed-opnds-lst) (safe-opnds '()))
+    (if (null? opnds)
+      (fun (reverse safe-opnds))
+      (mov-if-necessary cgc (car allowed-opnds-lst) (car opnds)
+        (lambda (safe-opnd)
+          (loop (cdr opnds) (cdr allowed-opnds-lst) (cons safe-opnd safe-opnds)))))))
+
 ; (define (mov-in-reg cgc opnd fun)
 ;   (get-free-register cgc
 ;     (lambda (reg)
@@ -826,7 +834,7 @@
   (asm-align cgc 8)
   (codegen-fixup-obj! cgc (string->symbol proc-name) 64) ;; ##subprocedure-parent-name
   (codegen-fixup-obj! cgc proc-info 64)                  ;; ##subprocedure-parent-info
-  (codegen-fixup-obj! cgc 2 64)                          ;; nb labels
+  (codegen-fixup-obj! cgc #f 64)                         ;; nb labels, Todo
 
   ;; next label struct
   (codegen-fixup-lbl-late! cgc
