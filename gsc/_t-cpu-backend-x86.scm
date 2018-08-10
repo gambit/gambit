@@ -190,7 +190,7 @@
     (define x86-new-src (make-x86-opnd new-src))
     (if (not (equal? dst new-src))
       (if (equal? dst-type 'ind)
-        (get-free-register cgc (list dst new-src)
+        (get-free-register cgc (list dst src new-src)
           (lambda (reg-dst)
             (x86-mov cgc reg-dst x86-dst)
             (x86-mov cgc (x86-mem 0 reg-dst) x86-new-src width)))
