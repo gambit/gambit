@@ -66,7 +66,8 @@
           (cpu-dump targ procs
                     output c-intf
                     module-descr unique-name
-                    sem-changing-opts sem-preserving-opts)))
+                    sem-changing-opts sem-preserving-opts
+                    info-port)))
 
       ;; Linking
       (target-link-info-set! targ (lambda (file) #f))
@@ -75,7 +76,7 @@
       ;; Frame
       (target-frame-constraints-set! targ
         (make-frame-constraints
-          3   ;; CPU frame reverse
+          3   ;; CPU frame reserve
           4)) ;; CPU frame alignment
 
       ;; GVM registers
@@ -116,6 +117,8 @@
 ;;;-----------------------------------------------------------------------------
 ;; ***** GVM Encoding
 
+(define cpu-debug-port #f)
+
 (define (cpu-dump targ
                   procs
                   output
@@ -123,13 +126,15 @@
                   module-descr
                   unique-name
                   sem-changing-options
-                  sem-preserving-options)
+                  sem-preserving-options
+                  info-port)
+
+  (set! cpu-debug-port info-port)
+  (if (output-port? cpu-debug-port)
+    (virtual.dump-gvm procs (current-output-port)))
 
   (let ((cgc ((get-make-cgc-fun targ))))
-
     (codegen-context-target-set! cgc targ)
-
-    (virtual.dump-gvm procs (current-output-port))
     (encode-procs cgc procs)
     (lambda ()
       (create-target-file output unique-name cgc)
@@ -138,21 +143,20 @@
 ;;;----------------------------------------------------------------------------
 ;; ***** BACKEND OUTPUT
 
-(define (create-target-file filename module-name cgc #!optional (show-listing? #t))
+(define (create-target-file filename module-name cgc)
   (let* ((code (asm-assemble-to-u8vector cgc))
          (fixup-locs (codegen-context-fixup-locs->vector cgc))
          (fixup-objs (codegen-context-fixup-objs->vector cgc)))
 
-    (if (and show-listing? _debug)
-        (asm-display-listing cgc (current-output-port) #t))
+    (if (output-port? cpu-debug-port)
+      (asm-display-listing cgc cpu-debug-port #t))
 
     (debug ";; code = " code)
     (debug ";; fixup-locs = " fixup-locs)
     (debug ";; fixup-objs = " fixup-objs)
 
-    ;; Call compiler to create objfile.o1 using the C backend.
+    ;; Calls compiler to create objfile.o1 using the C backend.
     ;; When the file is loaded, it will execute the x86 code.
-
     (debug "Compiling")
     (compile-file-to-target "dummy.scm"
                             output: filename

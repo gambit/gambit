@@ -8,12 +8,11 @@
 
 ;; ***** Utils
 
-(define _debug #t)
-(define (debug . str)
-  (if _debug
+(define (debug . items)
+  (if (output-port? cpu-debug-port)
     (begin
-      (for-each display str)
-      (newline))))
+      (for-each (lambda (str) (display str cpu-debug-port)) items)
+      (newline cpu-debug-port))))
 
 ;; ***** Utils - Lists
 
