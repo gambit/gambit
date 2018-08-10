@@ -470,6 +470,14 @@
         (lambda (safe-opnd)
           (loop (cdr opnds) (cdr allowed-opnds-lst) (cons safe-opnd safe-opnds)))))))
 
+(define (mov-into cgc opnd allowed-opnds needed-opnds fun)
+  (if (elem? (opnd-type opnd) allowed-opnds)
+    (fun opnd)
+    (get-free-register cgc needed-opnds
+      (lambda (reg)
+        (fun reg)
+        (am-mov cgc opnd reg)))))
+
 ; (define (mov-in-reg cgc opnd fun)
 ;   (get-free-register cgc
 ;     (lambda (reg)
@@ -572,15 +580,17 @@
 
       (vector-set! registers-status index
         (if save? (live-saved-register save-loc) live-register))
-      (let ((new-status (use reg)))
+      (let* ((new-status (use reg))
+             (new-status*
+              (if (equal? (void) new-status) dead-register new-status)))
         (if (and
               (not save?)
               (or
-                (dead-register? new-status)
-                (live-register? new-status)
-                (live-saved-register? new-status)
-                (filled-register? new-status)))
-          (vector-set! registers-status index new-status)))
+                (dead-register? new-status*)
+                (live-register? new-status*)
+                (live-saved-register? new-status*)
+                (filled-register? new-status*)))
+          (vector-set! registers-status index new-status*)))
 
       (if save?
         (am-mov cgc reg save-loc))))
@@ -589,8 +599,8 @@
     (let* ((current-frame (codegen-context-frame cgc))
            (frame-size (frame-size current-frame)))
       (let loop ((i 2))
-        (if (not (elem? (frame cgc frame-size (+ frame-size 1)) reserved-opnds))
-          (frame cgc frame-size (+ frame-size 2))
+        (if (not (elem? (frame cgc frame-size (+ frame-size 1 i)) reserved-opnds))
+          (frame cgc frame-size (+ frame-size 1 i))
           (loop (+ i 1))))))
 
   (define (sort-fun info1 info2)
@@ -1043,42 +1053,86 @@
 ;; ***** Close instruction encoding
 
 (define (encode-close-instr cgc code)
+  (define proc (codegen-context-current-proc cgc))
+  (define gvm-instr (code-gvm-instr code))
+  (define frame (gvm-instr-frame gvm-instr))
+  (define offset (+ object-tag (* pointer-header-offset (get-word-width cgc))))
+  (define width (get-word-width cgc))
+  (define width-bits (get-word-width-bits cgc))
+
+  ;; Todo: Update for x86-32 and ARM
+  ;; x86-64: #xffffffF115ff == Encoded jmp [rip-15]
+  (define executable-code (list (* 256 #xffffffF115ff)))
+  (define code-length (length executable-code))
+
+  (define clo-ref-fields '())
+
+  (define (mk-opnd opnd) (make-opnd cgc opnd))
+
+  ;; Index 0 is header
   (define (mov-at-clo-index index reg opnd)
     (am-mov cgc
-      (mem-opnd reg (- (* (get-word-width cgc) index) 1))
-      opnd
-      (get-word-width-bits cgc)))
+      (mem-opnd reg (- (* width index) offset))
+      opnd width-bits))
+
+  (define (allocate-closure clo unitialized-locs)
+    (let* ((loc (mk-opnd (closure-parms-loc clo)))
+           (clo-lbl (get-proc-label cgc proc (closure-parms-lbl clo)))
+           (clo-opnds (map mk-opnd (closure-parms-opnds clo)))
+           (size (* (get-word-width cgc) (+ 2 code-length (length clo-opnds)))))
+
+      (mov-into cgc loc '(reg) clo-opnds
+        (lambda (reg)
+          (am-allocate-memory cgc reg size offset frame)
+
+          ;; Place header
+          (mov-at-clo-index 0 reg
+            (int-opnd (+
+                        (* 8 14)
+                        (* 256 (- size width)))))
+          ;; Place entry
+          (mov-at-clo-index 1 reg clo-lbl)
+          ;; Place code
+          (for-each
+            (lambda (code i) (mov-at-clo-index (+ 1 i) reg (int-opnd code)))
+            executable-code
+            (iota 1 code-length))
+          ;; Place value of free variables if not a clo-loc of another closure
+          (let loop ((opnds clo-opnds) (n (+ 1 code-length 1)))
+            (if (not (null? opnds))
+              (let ((opnd (car opnds)))
+                (cond
+                  ((elem? opnd unitialized-locs)
+                    (set! clo-ref-fields
+                      (cons (list loc n opnd) clo-ref-fields)))
+                  ((equal? opnd loc)
+                    (mov-at-clo-index n reg reg))
+                  (else
+                    (mov-at-clo-index n reg opnd)))
+                (loop (cdr opnds) (+ n 1)))))))))
+
   (debug "encode-close-instr")
-  (let* ((proc (codegen-context-current-proc cgc))
-         (gvm-instr (code-gvm-instr code))
-         (frame (gvm-instr-frame gvm-instr))
-         (mk-opnd (lambda (opnd) (make-opnd cgc opnd)))
-         (clo-parms (car (close-parms gvm-instr)))
-         (loc (mk-opnd (closure-parms-loc clo-parms)))
-         (clo-lbl (get-proc-label cgc proc (closure-parms-lbl clo-parms)))
-         (clo-opnds (map mk-opnd (closure-parms-opnds clo-parms)))
-         (size (* (get-word-width cgc) (+ 3 (length clo-opnds)))))
 
-    (get-free-register cgc clo-opnds
-      (lambda (reg)
-        (am-allocate-memory cgc reg size (+ 1 (* 2 (get-word-width cgc))) frame)
+  (let loop ((closures (close-parms gvm-instr))
+             (closure-locs
+                (map
+                  (lambda (clo) (mk-opnd (closure-parms-loc clo)))
+                  (close-parms gvm-instr))))
+    (if (not (null? closures))
+      (begin
+        (allocate-closure (car closures) (cdr closure-locs))
+        (loop (cdr closures) (cdr closure-locs)))))
 
-        (mov-at-clo-index -2 reg                   ;; Place header
-          (int-opnd (+ (* 8 14) (* 256 (- size (get-word-width cgc))))))
-        (mov-at-clo-index -1 reg clo-lbl) ;; Place entry
-        ;; Encoded: jmp [rip-15]
-        ;; Todo : Change value for x86-32, ARM
-        ;; #xffffffF115ff == Encoded jmp [rip-15]
-        (mov-at-clo-index 0 reg (int-opnd (* 256 #xffffffF115ff))) ;; Place code
-
-        ;; Place value of free variables
-        (let loop ((opnds clo-opnds) (n 1))
-          (if (not (null? opnds))
-            (begin
-              (mov-at-clo-index n reg (car opnds))
-              (loop (cdr opnds) (+ n 1)))))
-        ;; Todo: Remove mov if unnecessary (Next GVM Instruction is often reg = loc)
-        (am-mov cgc loc reg)))))
+  ;; Set unitialized fields
+  ;; Todo: Optimize case where clo-ref-fields contains multiple elements with the same loc
+  (for-each
+    (lambda (info)
+      (let ((loc (car info))
+            (index (cadr info))
+            (opnd (caddr info)))
+        (mov-if-necessary cgc '(reg) loc
+          (lambda (reg) (mov-at-clo-index index reg opnd)))))
+    clo-ref-fields))
 
 ;; ***** Switch instruction encoding
 

@@ -79,6 +79,8 @@
       (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
 
 ;; Pointer tagging constants
+(define pointer-header-offset 2)
+
 (define header-tag-width  5)
 (define header-tag-offset 3)
 
