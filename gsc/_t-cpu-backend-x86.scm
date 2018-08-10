@@ -848,9 +848,9 @@
 
     (table-set! table '##flonum?  (make-prim-obj stub-prim 1 #t #f))
     (table-set! table '##fl+      (make-prim-obj stub-prim 2 #t #f))
-    (table-set! table '+          (make-prim-obj stub-prim 2 #t #f))
-    (table-set! table '-          (make-prim-obj stub-prim 2 #t #f))
-    (table-set! table '<          (make-prim-obj stub-prim 2 #t #f))
+    (table-set! table '+          (make-prim-obj stub-prim 2 #f  #f))
+    (table-set! table '-          (make-prim-obj stub-prim 2 #f  #f))
+    (table-set! table '<          (make-prim-obj stub-prim 2 #f  #f))
 
     (table-set! table '##fx+      (make-prim-obj x86-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?     (make-prim-obj x86-prim-##fx+? 2 #t #f))
