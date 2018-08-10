@@ -100,12 +100,12 @@
 ;;    extra-registers : (Vector) Extra registers that can be overwritten at any time.
 ;;      Note: #extra-registers must >= 3.
 (define (make-cpu-info
-          word-width endianness load-store frame-offset
+          arch-name word-width endianness load-store frame-offset
           primitive-table
           gvm-reg-count gvm-arg-reg-count registers
           pstate-pointer frame-pointer heap-pointer)
   (vector
-    word-width endianness load-store frame-offset
+    arch-name word-width endianness load-store frame-offset
     primitive-table
     gvm-reg-count gvm-arg-reg-count registers
     pstate-pointer frame-pointer heap-pointer))
@@ -160,20 +160,21 @@
          (field (vector-ref info 0)))
     field))
 
-(define (get-word-width cgc)        (get-in-cgc cgc info-index 0))
+(define (get-arch-name cgc)         (get-in-cgc cgc info-index 0))
+(define (get-word-width cgc)        (get-in-cgc cgc info-index 1))
 (define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
-(define (get-endianness cgc)        (get-in-cgc cgc info-index 1))
-(define (is-load-store? cgc)        (get-in-cgc cgc info-index 2))
-(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 3))
-(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 4))
-(define (get-gvm-reg-count cgc)     (get-in-cgc cgc info-index 5))
-(define (get-gvm-arg-reg-count cgc) (get-in-cgc cgc info-index 6))
-(define (get-registers  cgc)        (get-in-cgc cgc info-index 7))
-(define (get-pstate-pointer cgc)    (get-in-cgc cgc info-index 8))
-(define (get-frame-pointer cgc)     (get-in-cgc cgc info-index 9))
-(define (get-heap-pointer cgc)      (get-in-cgc cgc info-index 10))
+(define (get-endianness cgc)        (get-in-cgc cgc info-index 2))
+(define (is-load-store? cgc)        (get-in-cgc cgc info-index 3))
+(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
+(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
+(define (get-gvm-reg-count cgc)     (get-in-cgc cgc info-index 6))
+(define (get-gvm-arg-reg-count cgc) (get-in-cgc cgc info-index 7))
+(define (get-registers  cgc)        (get-in-cgc cgc info-index 8))
+(define (get-pstate-pointer cgc)    (get-in-cgc cgc info-index 9))
+(define (get-frame-pointer cgc)     (get-in-cgc cgc info-index 10))
+(define (get-heap-pointer cgc)      (get-in-cgc cgc info-index 11))
 
-(define (get-primitive-table-target targ) (get-in-target targ info-index 4))
+(define (get-primitive-table-target targ) (get-in-target targ info-index 5))
 
 (define (get-primitive-object cgc name)
   (let* ((table (get-primitive-table cgc)))
@@ -983,6 +984,12 @@
     (if (jump-nb-args gvm-instr)
       (am-set-narg cgc (jump-nb-args gvm-instr)))
 
+    ;; Set r4 if applicable
+    (if (and (jump-nb-args gvm-instr)
+             (equal? 'x86-32 (get-arch-name cgc))
+             (not (lbl? jmp-opnd)))
+      (am-mov cgc (get-self-register cgc) jmp-loc))
+
     (cond
       ;; Jump to next label?
       ((and
@@ -1062,7 +1069,14 @@
 
   ;; Todo: Update for x86-32 and ARM
   ;; x86-64: #xffffffF115ff == Encoded jmp [rip-15]
-  (define executable-code (list (* 256 #xffffffF115ff)))
+  (define executable-code
+    (case (get-arch-name cgc)
+      ((x86-32)
+        (list -127467776)) ;; (* 256 #xf866ff)))
+      ((x86-64)
+        (list (* 256 #xfffffff115ff)))
+      (else
+        (compiler-error "Unknown arch"))))
   (define code-length (length executable-code))
 
   (define clo-ref-fields '())
