@@ -63,6 +63,7 @@
 
 (define (x86-32-info)
   (make-cpu-info
+    'x86-32                   ;; Arch name
     4                         ;; Word width
     'le                       ;; Endianness
     FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
@@ -90,6 +91,7 @@
 
 (define (x86-64-info)
   (make-cpu-info
+    'x86-64                   ;; Arch name
     8                         ;; Word width
     'le                       ;; Endianness
     FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
