@@ -661,12 +661,7 @@
 
     ;; Return point
     (set-proc-label-index cgc proc return-lbl struct-position)
-    (put-return-point-label
-      cgc return-lbl
-      (frame-size frame)
-      (get-frame-ret-pos frame)
-      (get-frame-gcmap frame)
-      internal?)))
+    (put-return-point-label cgc return-lbl frame internal?)))
 
 ;;  Utils: Function call arguments
 
@@ -872,7 +867,7 @@
     (+ 1 label-struct-position)))
 
 ;; Todo: Make sure ret-pos is valid when using this function
-(define (put-return-point-label cgc label frame-size ret-pos gcmap #!optional (internal? #f))
+(define (put-return-point-label cgc label frame internal?)
   (define label-struct-position (codegen-context-label-struct-position cgc))
   (define proc (codegen-context-current-proc cgc))
   (define proc-name (proc-obj-name proc))
@@ -880,25 +875,93 @@
   (define proc-info #f)
   (define parent-label (get-parent-proc-label cgc proc))
 
+  (define (get-ret-pos vars)
+    (index-of 'ret (map var-name vars)))
+
+  (define (build-gc-map slots live?)
+    (let loop ((i 0) (2^i 1) (lst slots) (gc-map 0))
+      (if (pair? lst)
+        (let ((var (car lst)))
+          (loop (+ i 1)
+                (* 2^i 2)
+                (cdr lst)
+                (if (live? i var)
+                  (+ gc-map 2^i)
+                  gc-map)))
+        gc-map)))
+
+  (define (get-gc-map frame)
+    (let* ((vars (reverse (frame-slots frame)))
+           (gc-map (build-gc-map
+              vars
+              (lambda (i var) (frame-live? var frame)))))
+      (+ 1                                             ;; RETN: 1
+        (* 4 (- (frame-size frame) cpu-frame-reserve)) ;; frame size
+        (* 128 (get-ret-pos vars)                      ;; link
+        (* 4096 gc-map)))))                            ;; gc-map
+
+  (define (align-fs fs)
+    (* (quotient (+ fs (- cpu-frame-alignment 1))
+                 cpu-frame-alignment)
+      cpu-frame-alignment))
+
+  (define (align-fs-without-reserve fs)
+    (- (align-fs (+ fs cpu-frame-reserve))
+      cpu-frame-reserve))
+
+  (define (extend-vars l n)
+    (cond ((= n 0) l)
+          ((< n 0) (extend-vars (cdr l) (+ n 1)))
+          (else    (extend-vars (cons empty-var l) (- n 1)))))
+
+  (define (get-gc-map-internal frame)
+    (let* ((nb-gvm-regs (get-gvm-reg-count cgc))
+           (cfs (frame-size frame))
+           (cfs-after-alignment (align-fs cfs))
+           (regs (frame-regs frame))
+           (return-var (make-temp-var 'return))
+           (vars
+              (append (reverse (extend-vars (frame-slots frame)
+                                            (- cfs-after-alignment
+                                               (frame-size frame))))
+                      (reverse (extend-vars (reverse regs)
+                                            (- nb-gvm-regs (length regs))))
+                      (list return-var)
+                      (extend-vars '()
+                                    (let ((n (+ nb-gvm-regs 1)))
+                                      (- (align-fs-without-reserve n) n)))))
+          (gc-map (build-gc-map
+            vars
+            (lambda (i var)
+              (or (frame-live? var frame)
+                  (let ((j (- i cfs-after-alignment)))
+                    (and (>= j 0) ; all saved GVM regs are live
+                        (<= j nb-gvm-regs))))))))
+      (+ 2                          ;; RETI : 2
+        (* 4 cfs)                   ;; frame size
+        (* 128 (get-ret-pos vars))  ;; link
+        (* 4096 gc-map))))          ;; gc-map
+
   (asm-align cgc 8)
-  ;; next label struct
+  ;; Next label reference
   (codegen-fixup-lbl-late! cgc
     (lambda ()
       (get-next-label cgc proc-name (+ 1 label-struct-position) label))
-    #f 64
-    'next-label-with-structure)
-  ;; parent label struct
+    #f 64 'next-label-with-structure)
+  ;; Parent label reference
   (if parent-label
     (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f 64 'parent-label)
     (am-data-word cgc 0))
-
+  ;; Host Address
   (codegen-fixup-handler! cgc '___lowlevel_exec 64)
-  (asm-64 cgc (+ 6 (* 8 15)))        ;; PERM RETURN
-  (asm-64 cgc (+ (if internal? 2 1)  ;; RETI or RETN (2 or 1)
-                 (* 4 frame-size) ;; frame size
-                 (* 128 ret-pos)  ;; link
-                 (* 4096 gcmap))) ;; gcmap
-  (asm-8 cgc 0) ;; so that label reference has tag ___tSUBTYPED
+  ;; Header
+  (asm-64 cgc (+ 6 (* 8 15)))
+  ;; Field 1: gc-map
+  (if internal?
+    (asm-64 cgc (get-gc-map-internal frame))
+    (asm-64 cgc (get-gc-map frame)))
+  ;; so that label reference has tag ___tSUBTYPED
+  (asm-8 cgc 0)
 
   (am-lbl cgc label)
 
@@ -938,11 +1001,7 @@
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
-          (put-return-point-label cgc
-            label
-            fs
-            (get-frame-ret-pos frame)
-            (get-frame-gcmap frame)))
+          (put-return-point-label cgc label frame #f))
 
       (else
         (am-lbl cgc label)))))
@@ -1186,22 +1245,6 @@
 
 (define (label-instr-label cgc proc label-num)
   (get-proc-label cgc proc label-num))
-
-(define (get-frame-gcmap frame)
-  (define (live? var)
-    (let ((live (frame-live frame)))
-      (or (varset-member? var live)
-          (and (eq? var closure-env-var)
-                (varset-intersects?
-                  live
-                  (list->varset (frame-closed frame)))))))
-  (make-bitmap
-    (map
-      (lambda (slot) (live? slot))
-      (frame-slots frame))))
-
-(define (get-frame-ret-pos frame)
-  (index-of 'ret (map var-name (frame-slots frame))))
 
 ;;------------------------------------------------------------------------------
 ;;------------------------------ Lowlevel Bridge -------------------------------

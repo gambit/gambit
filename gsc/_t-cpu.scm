@@ -19,6 +19,9 @@
 
 ;; Initialization/finalization of back-end.
 
+(define cpu-frame-reserve   3) ;; CPU frame reserve
+(define cpu-frame-alignment 4) ;; CPU frame alignment
+
 (define (make-cpu-target
           abstract-machine-info
           target-arch
@@ -76,11 +79,11 @@
       ;; Frame
       (target-frame-constraints-set! targ
         (make-frame-constraints
-          3   ;; CPU frame reserve
-          4)) ;; CPU frame alignment
+          cpu-frame-reserve   ;; CPU frame reserve
+          cpu-frame-alignment)) ;; CPU frame alignment
 
       ;; GVM registers
-      (target-nb-regs-set! targ nb-gvm-regs)
+      (target-nb-regs-set!     targ nb-gvm-regs)
       (target-nb-arg-regs-set! targ nb-arg-regs)
       (target-task-return-set! targ (make-reg 0))
       (target-proc-result-set! targ (make-reg 1))
@@ -131,7 +134,7 @@
 
   (set! cpu-debug-port info-port)
   (if (output-port? cpu-debug-port)
-    (virtual.dump-gvm procs (current-output-port)))
+    (virtual.dump-gvm procs cpu-debug-port))
 
   (let ((cgc ((get-make-cgc-fun targ))))
     (codegen-context-target-set! cgc targ)
