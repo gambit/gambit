@@ -703,11 +703,11 @@
             (make-x86-opnd opnd)
             (x86-imm-int (- (expt 2 tag-width) 1))
             (get-word-width-bits cgc))
-          (x86-je cgc (lbl-opnd-label true-lbl))
-          (am-return-const cgc result-action #f)
-          (am-lbl cgc true-lbl)
-          (am-return-const cgc result-action #t)
-          (am-lbl cgc continue-lbl))))))
+          (am-cond-return cgc result-action
+            (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
+            (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
+            true-opnd: (int-opnd (format-imm-object #t))
+            false-opnd: (int-opnd (format-imm-object #f))))))))
 
 (define x86-prim-##fx+
   (foldl-prim
