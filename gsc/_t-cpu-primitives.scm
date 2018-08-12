@@ -525,7 +525,11 @@
 
   (cond
     ((then-jump? result-action)
-      (use-loc default-opnd #t))
+      (if (and
+            (then-jump-move? result-action)
+            (not (elem? (then-jump-store-location result-action) args)))
+        (use-loc (then-jump-store-location result-action) #f)
+        (use-loc default-opnd #t)))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
         (cond
