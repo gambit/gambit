@@ -721,24 +721,13 @@
     (debug "Encoding proc")
     (codegen-context-current-proc-set! cgc proc)
     (codegen-context-label-struct-position-set! cgc 1)
-    (map
-      (lambda (code)
-        (let* ((gvm-instr (code-gvm-instr code))
-               (current-frame (gvm-instr-frame gvm-instr))
-               (old-frame (codegen-context-frame cgc)))
-
-          (codegen-context-current-code-set! cgc code)
-          (codegen-context-frame-set! cgc current-frame)
-
-          (if (equal? 'label (gvm-instr-type gvm-instr))
-            (begin
-              (reset-registers-status cgc)
-              (update-registers-status-from-frame cgc current-frame #f))
-            (begin
-              (update-registers-status-from-frame cgc current-frame old-frame)))
-
-          (encode-gvm-instr cgc code)))
-      (get-code-list proc)))
+    (let loop ((codes (get-code-list proc))
+               (prev-code #f))
+      (if (not (null? codes))
+        (let ((code (car codes))
+              (next-code (safe-car (safe-cdr codes))))
+          (encode-gvm-instr cgc prev-code code next-code)
+          (loop (cdr codes) code)))))
 
   (debug "Encode procs")
   (map encode-proc procs2)
@@ -788,19 +777,35 @@
 
 ;;  GVM Instruction Encoding
 
-(define (encode-gvm-instr cgc code)
-  (debug (gvm-instr-type (code-gvm-instr code)))
-  (case (gvm-instr-type (code-gvm-instr code))
-    ((label)  (encode-label-instr   cgc code))
-    ((jump)   (encode-jump-instr    cgc code))
-    ((ifjump) (encode-ifjump-instr  cgc code))
-    ((apply)  (encode-apply-instr   cgc code))
-    ((copy)   (encode-copy-instr    cgc code))
-    ((close)  (encode-close-instr   cgc code))
-    ((switch) (encode-switch-instr  cgc code))
-    (else
-      (compiler-error
-        "encode-gvm-instr, unknown 'gvm-instr-type':" (gvm-instr-type (code-gvm-instr code))))))
+(define (encode-gvm-instr cgc prev-code code next-code)
+  (debug "encode-gvm-instr")
+  (let* ((gvm-instr (code-gvm-instr code))
+         (instr-type (gvm-instr-type gvm-instr))
+         (current-frame (gvm-instr-frame gvm-instr))
+         (old-frame (codegen-context-frame cgc)))
+
+    (debug "encode-gvm-instr: " instr-type)
+
+    (codegen-context-current-code-set! cgc code)
+    (codegen-context-frame-set! cgc current-frame)
+
+    (if (equal? 'label instr-type)
+      (begin
+        (reset-registers-status cgc)
+        (update-registers-status-from-frame cgc current-frame #f))
+      (update-registers-status-from-frame cgc current-frame old-frame))
+
+    (case instr-type
+      ((label)  (encode-label-instr  cgc prev-code code next-code))
+      ((jump)   (encode-jump-instr   cgc prev-code code next-code))
+      ((ifjump) (encode-ifjump-instr cgc prev-code code next-code))
+      ((apply)  (encode-apply-instr  cgc prev-code code next-code))
+      ((copy)   (encode-copy-instr   cgc prev-code code next-code))
+      ((close)  (encode-close-instr  cgc prev-code code next-code))
+      ((switch) (encode-switch-instr cgc prev-code code next-code))
+      (else
+        (compiler-error
+          "encode-gvm-instr, unknown 'gvm-instr-type':" instr-type)))))
 
 ;;  Label Instruction Encoding
 
@@ -968,7 +973,7 @@
   (codegen-context-label-struct-position-set! cgc
     (+ 1 label-struct-position)))
 
-(define (encode-label-instr cgc code)
+(define (encode-label-instr cgc prev-code code next-code)
   (let* ((gvm-instr (code-gvm-instr code))
          (frame (gvm-instr-frame gvm-instr))
          (fs (frame-size frame))
@@ -1015,7 +1020,7 @@
       (bb-label-type next-bb)
       next-bb)))
 
-(define (encode-jump-instr cgc code)
+(define (encode-jump-instr cgc prev-code code next-code)
   (define (make-jump-opnd opnd)
     (if (stk? opnd)
       (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
@@ -1061,7 +1066,7 @@
       (else
         (am-jmp cgc jmp-loc)))))
 
-(define (encode-ifjump-instr cgc code)
+(define (encode-ifjump-instr cgc prev-code code next-code)
   (debug "encode-ifjump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
@@ -1070,29 +1075,46 @@
          (false-label-num (ifjump-false gvm-instr))
          (true-label (get-proc-label cgc proc true-label-num))
          (false-label (get-proc-label cgc proc false-label-num))
-         (prim-sym (proc-obj-name (ifjump-test gvm-instr)))
-         (prim-obj (get-primitive-object cgc prim-sym)))
+         (next-label-type (get-next-label-type proc code))
+         (simple? (equal? next-label-type 'simple))
+         (true-loc  (if (and simple? (= next-label-num true-label-num))
+            #f true-label))
+         (false-loc (if (and simple? (= next-label-num false-label-num))
+            #f false-label))
+         (prim-sym (proc-obj-name (ifjump-test gvm-instr))))
 
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (if (not prim-obj)
-      (compiler-internal-error "encode-ifjump-instr - Primitive not implemented: " prim-sym))
+    (if (apply-ifjump-optimization? cgc prev-code code)
+      (let* ((inverse-jumps? (equal? "##not" prim-sym))
+             (apply-instr (code-gvm-instr prev-code))
+             (apply-loc (make-opnd cgc (apply-loc apply-instr)))
+             (apply-prim-name (proc-obj-name (apply-prim apply-instr)))
+             (apply-prim-obj (get-primitive-object cgc apply-prim-name))
+             (opnds (apply-opnds apply-instr))
+             (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds)))
+        (debug apply-loc)
+        (debug apply-prim-obj)
+        (debug args)
+        ((get-primitive-function apply-prim-obj) cgc
+          (then-jump
+            (if inverse-jumps? false-loc true-loc)
+            (if inverse-jumps? true-loc false-loc)
+            apply-loc)
+          args))
 
-    (let* ((prim-fun (get-primitive-function prim-obj))
-           (opnds (ifjump-opnds gvm-instr))
-           (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds))
-           (next-label-type (get-next-label-type proc code))
-           (simple? (equal? next-label-type 'simple)))
-      (prim-fun cgc
-        (then-jump
-          (if (and simple? (= next-label-num true-label-num)) #f true-label)
-          (if (and simple? (= next-label-num false-label-num)) #f false-label))
-        args))))
+      (let* ((prim-obj (get-primitive-object cgc prim-sym))
+             (prim-fun (get-primitive-function prim-obj))
+             (opnds (ifjump-opnds gvm-instr))
+             (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds)))
+        (if (not prim-obj)
+          (compiler-internal-error "encode-ifjump-instr - Primitive not implemented: " prim-sym))
+        (prim-fun cgc (then-jump true-loc false-loc) args)))))
 
 ;; ***** Apply instruction encoding
 
-(define (encode-apply-instr cgc code)
+(define (encode-apply-instr cgc prev-code code next-code)
   (debug "encode-apply-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (prim-sym (proc-obj-name (apply-prim gvm-instr)))
@@ -1101,11 +1123,36 @@
          (loc (apply-loc gvm-instr))
          (then (if loc (then-move (make-opnd cgc loc)) then-nothing))
          (args (map (lambda (opnd) (make-opnd cgc opnd)) (apply-opnds gvm-instr))))
-    (prim-fun cgc then args)))
+    (if (not (apply-ifjump-optimization? cgc code next-code))
+      (prim-fun cgc then args)
+      (debug "Apply: Optimizing apply and ifjump"))))
+
+;; Checks for the pattern:
+;;    loc = (prim ...)         <- gvm-instr1
+;;    if loc ...               <- gvm-instr2
+(define (apply-ifjump-optimization? cgc code1 code2)
+  (if (and OPTIMIZE_APPLY_IFJUMP code1 code2)
+    (let ((gvm-instr1 (code-gvm-instr code1))
+          (gvm-instr2 (code-gvm-instr code2)))
+      (and (eq? (gvm-instr-type gvm-instr1) 'apply)
+           (eq? (gvm-instr-type gvm-instr2) 'ifjump)
+           (let* ((prim-sym (proc-obj-name (apply-prim gvm-instr1)))
+                  (prim-obj (get-primitive-object cgc prim-sym)))
+            (and prim-obj
+                  (get-primitive-apply-ifjump-fusable prim-obj)))
+          (let ((test (proc-obj-name (ifjump-test gvm-instr2))))
+            (or (equal? test "##identity")
+                (equal? test "##not")))
+          (let ((opnds (ifjump-opnds gvm-instr2)))
+            (and (pair? opnds)
+                 (null? (cdr opnds))
+                 (eqv? (apply-loc gvm-instr1)
+                       (car opnds))))))
+    #f))
 
 ;; ***** Copy instruction encoding
 
-(define (encode-copy-instr cgc code)
+(define (encode-copy-instr cgc prev-code code next-code)
   (define empty-frame-val #f); (int-opnd 0))
   (debug "encode-copy-instr")
   (let* ((gvm-instr (code-gvm-instr code))
@@ -1118,7 +1165,7 @@
 
 ;; ***** Close instruction encoding
 
-(define (encode-close-instr cgc code)
+(define (encode-close-instr cgc prev-code code next-code)
   (define proc (codegen-context-current-proc cgc))
   (define gvm-instr (code-gvm-instr code))
   (define frame (gvm-instr-frame gvm-instr))
@@ -1209,7 +1256,7 @@
 
 ;; ***** Switch instruction encoding
 
-(define (encode-switch-instr cgc gvm-instr)
+(define (encode-switch-instr cgc prev-code code next-code)
   (debug "encode-switch-instr")
   (compiler-internal-error
     "encode-switch-instr: switch instruction not implemented"))

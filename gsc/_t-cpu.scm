@@ -177,3 +177,4 @@
 
 (define USE_BRIDGE #t)
 (define FORCE_LOAD_STORE_ARCH #f)
+(define OPTIMIZE_APPLY_IFJUMP #t)
