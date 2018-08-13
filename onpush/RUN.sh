@@ -12,4 +12,4 @@ cd bench
 
 rm -rf results.Gambit*
 
-time ./bench -r 10 gambit all
+time ./bench -r 100 gambit all

@@ -65,7 +65,7 @@
   (map (lambda (sys)
          (let ((r (assq bench (cdr sys))))
            (cond ((>= (length r) 3)
-                  (if cpu? (cadr r) (caddr r)))
+                  (if cpu? (caddr r) (cadr r)))
                  ((= (length r) 2)
                   (cadr r))
                  (else

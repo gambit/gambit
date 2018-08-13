@@ -25,7 +25,7 @@ function output () {
     }
     
     if (failure == "") {
-      printf "(%-10s   %11s   %11s   %9s)\n", test, cpu, real, codesize;
+      printf "(%-10s   %11s   %11s   %9s)\n", test, real, cpu, codesize;
     }
     else {
       printf "(%-10s   %10s)\n", test, failure;
@@ -79,11 +79,11 @@ runtime == 1 && /ERROR/ && $0 !~ /^FATAL-ERROR$/ && $0 !~ /^SCHEME-ERROR$/ && $0
   crashed = 1;
 }
 
-runtime == 1 && /^[ ]*[0-9]+ ms cpu time \([0-9]+ user, [0-9]+ system\)$/ {
+runtime == 1 && /^[ ]*[0-9.]+ .* cpu time \([0-9.]+ user, [0-9.]+ system\)$/ {
   cpu = $1;
 }
 
-runtime == 1 && /^[ ]*[0-9]+ ms real time$/ {
+runtime == 1 && /^[ ]*[0-9.]+ .* real time$/ {
   real = $1;
 }
 

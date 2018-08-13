@@ -4228,8 +4228,18 @@
                (stats (##cdr stats))
                (bytes-allocated (##cdar stats)))
 
-          (define (secs->msecs x)
-            (##inexact->exact (##round (##* x 1000))))
+          (define (secs x)
+            (let* ((precision 1000000)
+                   (scaled
+                    (##inexact->exact (##round (##* x precision))))
+                   (int-part
+                    (##number->string
+                     (##quotient scaled precision)))
+                   (decimal-part
+                    (##number->string
+                     (##+ precision (##modulo scaled precision)))))
+              (##string-set! decimal-part 0 #\.)
+              (##string-append int-part decimal-part)))
 
           (define (print-stats port)
 
@@ -4246,16 +4256,16 @@
             (##newline port)
 
             (##write-string "    " port)
-            (##write (secs->msecs real-time) port)
-            (##write-string " ms real time" port)
+            (##write-string (secs real-time) port)
+            (##write-string " secs real time" port)
             (##newline port)
 
             (##write-string "    " port)
-            (##write (secs->msecs (##+ user-time sys-time)) port)
-            (##write-string " ms cpu time (" port)
-            (##write (secs->msecs user-time) port)
+            (##write-string (secs (##+ user-time sys-time)) port)
+            (##write-string " secs cpu time (" port)
+            (##write-string (secs user-time) port)
             (##write-string " user, " port)
-            (##write (secs->msecs sys-time) port)
+            (##write-string (secs sys-time) port)
             (##write-string " system)" port)
             (##newline port)
 
@@ -4263,11 +4273,11 @@
             (if (##not (##= nb-gcs 0))
                 (begin
                   (##write-string " accounting for " port)
-                  (##write (secs->msecs gc-real-time) port)
-                  (##write-string " ms real time (" port)
-                  (##write (secs->msecs gc-user-time) port)
+                  (##write-string (secs gc-real-time) port)
+                  (##write-string " secs real time (" port)
+                  (##write-string (secs gc-user-time) port)
                   (##write-string " user, " port)
-                  (##write (secs->msecs gc-sys-time) port)
+                  (##write-string (secs gc-sys-time) port)
                   (##write-string " system)" port)))
             (##newline port)
 
