@@ -7,13 +7,18 @@ function clearvars () {
   failed     = 0;
   crashed    = 0;
   runtime    = 0;
+  cycles     = "";
+  instrs     = "";
+  branches   = "";
+  branchmisses = "";
 }
+
 
 function output () {
   if (runtime == 1) {
 
     failure = "";
-     
+
     if ((crashed != 0) && (failed == 0)) {
        failure = "crashed";
     }
@@ -23,9 +28,9 @@ function output () {
     else if  ((crashed != 0) && (failed != 0)) {
       failure = "crashed-and-failed";
     }
-    
+
     if (failure == "") {
-      printf "(%-10s   %11s   %11s   %9s)\n", test, real, cpu, codesize;
+      printf "(%-10s %10s %10s %10s %10s %10s %10s)\n", test, real, cpu, cycles, instrs, branches, branchmisses;
     }
     else {
       printf "(%-10s   %10s)\n", test, failure;
@@ -99,6 +104,26 @@ runtime == 1 && /^[ ]*([0-9.]+) real [ ]*([0-9.]+) user [ ]*([0-9.]+) sys$/ {
 
 runtime == 1 && /^code size = [0-9]+$/ {
   codesize = $4;
+}
+
+runtime == 1 && /^[ ]*[0-9,]+[ ]+cycles .*$/ {
+  cycles = $1;
+  gsub(",","",cycles);
+}
+
+runtime == 1 && /^[ ]*[0-9,]+[ ]+instructions .*$/ {
+  instrs = $1;
+  gsub(",","",instrs);
+}
+
+runtime == 1 && /^[ ]*[0-9,]+[ ]+branches .*$/ {
+  branches = $1;
+  gsub(",","",branches);
+}
+
+runtime == 1 && /^[ ]*[0-9,]+[ ]+branch-misses .*$/ {
+  branchmisses = $1;
+  gsub(",","",branchmisses);
 }
 
 END { output() }
