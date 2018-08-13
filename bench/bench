@@ -171,14 +171,21 @@ nonexistent_exec ()
 gambit_comp ()
 {
   {
-    echo ../../../gsc/gsc -:=../../.. $COMPOPTS $1.scm
+    echo ../../../gsc/gsc -:=../../.. $COMPOPTS -exe -o $1.exe $1.scm
   } | /usr/bin/time sh
+  strip $1.exe
 }
 
 gambit_exec ()
 {
-  if test -f ./$1.o1
-  then ../../../gsi/gsi -:m10000,d-,=../../.. ./$1.o1
+  if test -f ./$1.exe
+  then
+    if command -v perf
+    then
+      perf stat ./$1.exe -:m10000,d-,=../../..
+    else
+      /usr/bin/time ./$1.exe -:m10000,d-,=../../..
+    fi
   fi
 }
 

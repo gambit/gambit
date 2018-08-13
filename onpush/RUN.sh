@@ -4,7 +4,7 @@ cd ..
 
 pwd
 
-./configure --enable-single-host
+./configure --enable-single-host CC="gcc -no-pie"
 make
 make check
 
