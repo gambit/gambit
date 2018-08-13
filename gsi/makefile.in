@@ -177,12 +177,14 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 
 _$(GAMBITGSILIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
+	$(RC) update-index --assume-unchanged $@
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
 _gsi_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSILIB).c
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSILIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
+	$(RC) update-index --assume-unchanged $@
 
 _gsi@obj@: _gsi.c
 	@BUILD_OBJ@
@@ -195,6 +197,7 @@ _gsi_@obj@: _gsi_.c
 
 .scm.c:
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -c $(srcdirpfx)$*.scm
+	$(RC) update-index --assume-unchanged $*.c
 
 _gsi.c: $(srcdirpfx)$(rootfromhere)/gsi/main.scm
 

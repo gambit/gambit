@@ -166,6 +166,7 @@ all-post: $(LIBRARY) $(GAMBIT_LIBS)
 
 .scm.c:
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c @COMPILATION_OPTIONS@ $(PRELUDE_OPT) $(srcdirpfx)$*.scm
+	$(RC) update-index --assume-unchanged $*.c
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"
@@ -177,6 +178,7 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 
 $(GAMBIT_LIB_C): $(MODULES_C)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link -flat -o $@ -preload $(MODULES_C)
+	$(RC) update-index --assume-unchanged $@
 
 $(GAMBIT_LIB_java): $(UNIVLIB) $(MODULES_SCM)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target java @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
