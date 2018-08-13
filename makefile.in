@@ -142,8 +142,7 @@ boot-wip-compiler: fake_target
 boot-wip-compiler-gsc-gsc: boot-most-recent-release
 	@echo "**** building boot/gsc/gsc@exe@ using boot/gsc-boot@exe@"
 	cd boot && \
-	rm -rf gsc && \
-	mkdir gsc && \
+	rm -f gsc/makefile && \
 	cp ../gsc/makefile.in ../gsc/*.scm gsc && \
 	./configure CC='$(C_COMPILER)' && \
 	for i in lib gsi gsc ; do (cd $$i ; $(MAKE) all) ; done
