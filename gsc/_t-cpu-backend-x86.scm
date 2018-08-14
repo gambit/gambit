@@ -754,60 +754,22 @@
           true-opnd: result-reg
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
-(define x86-prim-##fx<
+(define (x86-compare-prim condition)
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
-        (condition-lesser #t #t)
+        condition
         opnd1 opnd2
         false-label true-label
         (get-word-width-bits cgc)))
     allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
+    allowed-opnds2: '(reg mem int)))
 
-(define x86-prim-##fx<=
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        (condition-lesser #f #t)
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-##fx>
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        (condition-greater #t #t)
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-##fx>=
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        (condition-greater #f #t)
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
-
-(define x86-prim-##fx=
-  (foldl-compare-prim
-    (lambda (cgc opnd1 opnd2 true-label false-label)
-      (am-compare-jump cgc
-        condition-not-equal
-        opnd1 opnd2
-        false-label true-label
-        (get-word-width-bits cgc)))
-    allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg int)))
+(define x86-prim-##fx<  (x86-compare-prim (condition-greater #t #t)))
+(define x86-prim-##fx<= (x86-compare-prim (condition-greater #f #t)))
+(define x86-prim-##fx>  (x86-compare-prim (condition-lesser #t #t)))
+(define x86-prim-##fx>= (x86-compare-prim (condition-lesser #f #t)))
+(define x86-prim-##fx=  (x86-compare-prim condition-not-equal))
 
 (define x86-prim-##cons
   (lambda (cgc result-action args)
