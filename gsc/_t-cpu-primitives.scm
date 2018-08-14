@@ -124,7 +124,7 @@
             (get-word-width-bits cgc)))
         (if opnd-not-false
           (if true-jmp (am-jmp cgc true-jmp))
-          (mov-if-necessary cgc '(reg mem) opnd
+          (load-if-necessary cgc '(reg mem) opnd
             (lambda (opnd)
               (am-compare-jump cgc
                 condition-not-equal
@@ -417,7 +417,7 @@
                   (if (not (null? loop-args))
                     ;; Mov car args if necessary
                     (begin
-                      (mov-if-necessary cgc allowed-opnds (car loop-args)
+                      (load-if-necessary cgc allowed-opnds (car loop-args)
                         (lambda (arg)
                           (reduce-2+ cgc accum arg)))
                       (loop (cdr loop-args)))))
@@ -452,9 +452,9 @@
           (am-return-const cgc result-action reduce-1))
         ((= 2 args-length)
           (debug "2 arguments case")
-          (mov-if-necessary cgc allowed-opnds1 (car args)
+          (load-if-necessary cgc allowed-opnds1 (car args)
             (lambda (arg1)
-              (mov-if-necessary cgc allowed-opnds2 (cadr args)
+              (load-if-necessary cgc allowed-opnds2 (cadr args)
                 (lambda (arg2)
                   (reduce-2+ cgc arg1 arg2
                     (then-jump-true-location  result-action)
@@ -466,9 +466,9 @@
             (lambda (true-label false-label)
               (for-each
                 (lambda (opnd2 opnd1)
-                  (mov-if-necessary cgc allowed-opnds1 opnd1
+                  (load-if-necessary cgc allowed-opnds1 opnd1
                     (lambda (arg1)
-                      (mov-if-necessary cgc allowed-opnds2 opnd2
+                      (load-if-necessary cgc allowed-opnds2 opnd2
                         (lambda (arg2)
                           (reduce-2+ cgc arg1 arg2 true-label false-label))))))
                 (cdr args)
@@ -498,7 +498,7 @@
               (for-each
                 (lambda (opnd)
                   ;; Mov car args if necessary
-                  (mov-if-necessary cgc allowed-opnds opnd
+                  (load-if-necessary cgc allowed-opnds opnd
                     (lambda (arg)
                       (reduce-1 cgc arg true-label false-label))))
                 args)
@@ -654,7 +654,7 @@
         single-instruction: #t
         fun: (lambda (result-opnd result-opnd-in-args)
           (check-nargs-if-necessary cgc result-action 1)
-          (mov-if-necessary cgc '(reg mem) (car args)
+          (load-if-necessary cgc '(reg mem) (car args)
             (lambda (ref)
               (read-reference cgc result-action
                 result-opnd ref
