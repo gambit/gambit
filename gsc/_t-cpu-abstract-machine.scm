@@ -455,7 +455,7 @@
 (define (get-free-register cgc needed-opnds action)
   (get-multiple-free-registers cgc 1 needed-opnds action))
 
-(define (mov-if-necessary cgc allowed-opnds opnd fun)
+(define (load-if-necessary cgc allowed-opnds opnd fun)
   (if (elem? (opnd-type opnd) allowed-opnds)
     (fun opnd)
     (get-free-register cgc (list opnd)
@@ -463,13 +463,16 @@
         (am-mov cgc reg opnd)
         (fun reg)))))
 
-(define (mov-multiple-if-necessary cgc allowed-opnds-lst opnds fun)
+(define (load-multiple-if-necessary cgc allowed-opnds-lst opnds fun)
   (let loop ((opnds opnds) (allowed-opnds-lst allowed-opnds-lst) (safe-opnds '()))
     (if (null? opnds)
       (fun (reverse safe-opnds))
-      (mov-if-necessary cgc (car allowed-opnds-lst) (car opnds)
+      (load-if-necessary cgc (car allowed-opnds-lst) (car opnds)
         (lambda (safe-opnd)
-          (loop (cdr opnds) (cdr allowed-opnds-lst) (cons safe-opnd safe-opnds)))))))
+          (loop
+            (cdr opnds)
+            (if (null? (cdr allowed-opnds-lst)) allowed-opnds-lst (cdr allowed-opnds-lst))
+            (cons safe-opnd safe-opnds)))))))
 
 (define (mov-into cgc opnd allowed-opnds needed-opnds fun)
   (if (elem? (opnd-type opnd) allowed-opnds)
@@ -1250,7 +1253,7 @@
       (let ((loc (car info))
             (index (cadr info))
             (opnd (caddr info)))
-        (mov-if-necessary cgc '(reg) loc
+        (load-if-necessary cgc '(reg) loc
           (lambda (reg) (mov-at-clo-index index reg opnd)))))
     clo-ref-fields))
 

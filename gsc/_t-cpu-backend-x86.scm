@@ -257,7 +257,7 @@
 (define (x86-jmp-instr cgc opnd)
   (if (lbl-opnd? opnd)
     (x86-jmp cgc (lbl-opnd-label opnd))
-    (mov-if-necessary cgc '(reg int mem lbl) opnd
+    (load-if-necessary cgc '(reg int mem lbl) opnd
       (lambda (opnd)
         (x86-jmp cgc (make-x86-opnd opnd))))))
 
@@ -289,7 +289,7 @@
   (let* ((jumps (get-jumps condition)))
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
-      (mov-if-necessary cgc '(reg mem) opnd1
+      (load-if-necessary cgc '(reg mem) opnd1
         (lambda (opnd1) (x86-cmp cgc x86-opnd1 x86-opnd2 opnds-width))))
 
     (cond
@@ -308,7 +308,7 @@
          (label-true (make-unique-label cgc "mov-true" #f))
          (label-false (make-unique-label cgc "mov-false" #f)))
     ;; In case both jump locations are false, the cmp is unnecessary.
-    (mov-if-necessary cgc '(reg mem) opnd1
+    (load-if-necessary cgc '(reg mem) opnd1
       (lambda (opnd1) (x86-cmp cgc opnd1 opnd2 opnds-width)))
 
     (cond
@@ -727,7 +727,7 @@
   (check-nargs-if-necessary cgc result-action 1)
   (call-with-nargs args
     (lambda (arg1)
-      (mov-if-necessary cgc '(reg mem) arg1
+      (load-if-necessary cgc '(reg mem) arg1
         (lambda (opnd)
           (let* ((width (get-word-width-bits cgc))
                  (x86-opnd (make-x86-opnd opnd))
