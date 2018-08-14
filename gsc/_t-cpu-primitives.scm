@@ -431,6 +431,7 @@
                 (empty-val #t)
                 (commutative #f))
   (lambda (cgc result-action args)
+    (define args-length (length args))
     (debug "foldl-compare-prim")
 
     ;; The difference between a function and an inlined function is that the
@@ -442,21 +443,29 @@
       ;; Is inlined.
       (cond
         ;; Empty case
-        ((null? args)
+        ((= 0 args-length)
           (debug "empty case")
           (am-return-const cgc result-action empty-val))
         ;; 1 argument case
-        ((null? (cdr args))
+        ((= 1 args-length)
           (debug "1 argument case")
           (am-return-const cgc result-action reduce-1))
+        ((= 2 args-length)
+          (debug "2 arguments case")
+          (mov-if-necessary cgc allowed-opnds1 (car args)
+            (lambda (arg1)
+              (mov-if-necessary cgc allowed-opnds2 (cadr args)
+                (lambda (arg2)
+                  (reduce-2+ cgc arg1 arg2
+                    (then-jump-true-location  result-action)
+                    (then-jump-false-location result-action)))))))
         ;; General case
         (else
           (debug "general case")
           (am-return-boolean cgc result-action
             (lambda (true-label false-label)
               (for-each
-                (lambda (opnd1 opnd2)
-                  ;; Mov car args if necessary
+                (lambda (opnd2 opnd1)
                   (mov-if-necessary cgc allowed-opnds1 opnd1
                     (lambda (arg1)
                       (mov-if-necessary cgc allowed-opnds2 opnd2
