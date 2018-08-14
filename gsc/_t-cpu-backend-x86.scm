@@ -153,6 +153,36 @@
     ((glo-opnd? opnd) (x86-imm-glo (glo-opnd-name opnd)))
     (else (compiler-internal-error "make-x86-opnd - Unknown opnd: " opnd))))
 
+(define (shrink-x86-opnd opnd opnd-width width)
+  ;; Todo: use vector
+  (define regs (list
+    (x86-al)   (x86-ax)   (x86-eax)  (x86-rax)
+    (x86-cl)   (x86-cx)   (x86-ecx)  (x86-rcx)
+    (x86-dl)   (x86-dx)   (x86-edx)  (x86-rdx)
+    (x86-bl)   (x86-bx)   (x86-ebx)  (x86-rbx)
+    (x86-spl)  (x86-sp)   (x86-esp)  (x86-rsp)
+    (x86-bpl)  (x86-bp)   (x86-ebp)  (x86-rbp)
+    (x86-sil)  (x86-si)   (x86-esi)  (x86-rsi)
+    (x86-dil)  (x86-di)   (x86-edi)  (x86-rdi)
+    (x86-r8b)  (x86-r8w)  (x86-r8d)  (x86-r8)
+    (x86-r9b)  (x86-r9w)  (x86-r9d)  (x86-r9)
+    (x86-r10b) (x86-r10w) (x86-r10d) (x86-r10)
+    (x86-r11b) (x86-r11w) (x86-r11d) (x86-r11)
+    (x86-r12b) (x86-r12w) (x86-r12d) (x86-r12)
+    (x86-r13b) (x86-r13w) (x86-r13d) (x86-r13)
+    (x86-r14b) (x86-r14w) (x86-r14d) (x86-r14)
+    (x86-r15b) (x86-r15w) (x86-r15d) (x86-r15)))
+
+  (cond
+    ((x86-reg? opnd)
+      (let* ((index (index-of opnd regs))
+             (row (quotient index 4))
+             (new-col (- (integer-length (/ width 8)) 1))
+             (new-index (+ new-col (* 4 row))))
+        (cons (list-ref regs new-index) width)))
+    ((x86-mem? opnd) (cons opnd width))
+    (else (cons opnd opnd-width))))
+
 ; (define (apply-and-mov fun)
 ;   (lambda (cgc result-reg opnd1 opnd2)
 ;     (if (equal? result-reg opnd1)
@@ -699,15 +729,18 @@
     (lambda (arg1)
       (mov-if-necessary cgc '(reg mem) arg1
         (lambda (opnd)
-          (x86-test cgc
-            (make-x86-opnd opnd)
-            (x86-imm-int (- (expt 2 tag-width) 1))
-            (get-word-width-bits cgc))
-          (am-cond-return cgc result-action
-            (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
-            (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
-            true-opnd: (int-opnd (format-imm-object #t))
-            false-opnd: (int-opnd (format-imm-object #f))))))))
+          (let* ((width (get-word-width-bits cgc))
+                 (x86-opnd (make-x86-opnd opnd))
+                 (shrinked-opnd (shrink-x86-opnd x86-opnd width 8)))
+            (x86-test cgc
+              (car shrinked-opnd)
+              (x86-imm-int (- (expt 2 tag-width) 1))
+              (cdr shrinked-opnd))
+            (am-cond-return cgc result-action
+              (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
+              (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
+              true-opnd: (int-opnd (format-imm-object #t))
+              false-opnd: (int-opnd (format-imm-object #f)))))))))
 
 (define x86-prim-##fx+
   (foldl-prim
