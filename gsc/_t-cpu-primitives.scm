@@ -512,7 +512,6 @@
 (define (with-result-opnd cgc result-action args
           #!key fun
           (commutative #f)
-          (single-instruction #f)
           (allowed-opnds '(reg int mem))
           (default-opnd #f))
 
@@ -555,8 +554,6 @@
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
       (cond
-        (single-instruction
-          (use-loc (get-register cgc 1) once-in-args))
         ((and once-in-args commutative)
           (use-loc (get-register cgc 1) #t))
         (not-in-args
@@ -610,10 +607,6 @@
         #f
         (get-word-width-bits cgc)))))
 
-;; ***** Primitives - Default Primitives - Type checks
-
-;; Todo
-
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
 ;; Todo: Dereference memory before reading with offset (Doesn't work)
@@ -651,7 +644,6 @@
     (lambda (cgc result-action args)
       (debug "object-read-prim")
       (with-result-opnd cgc result-action args
-        single-instruction: #t
         fun: (lambda (result-opnd result-opnd-in-args)
           (check-nargs-if-necessary cgc result-action 1)
           (load-if-necessary cgc '(reg mem) (car args)
