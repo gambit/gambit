@@ -56,6 +56,7 @@
     ((boolean? object)    boolean-obj-desc)
     ((null? object)       nil-obj-desc)
     ((eof-object? object) eof-obj-desc)
+    ((char? object)       char-obj-desc)
     ;; Pair
     ; ((pair? object)       pair-obj-desc)
     ; ;; Subtypes
@@ -115,6 +116,10 @@
 (define boolean-obj-desc
   (immediate-desc 'specialval
     (lambda (val) (tag-number (if val true-object-val false-object-val) special-int-tag))))
+
+(define char-obj-desc
+  (immediate-desc 'specialval
+    (lambda (val) (tag-number (char->integer val) special-int-tag))))
 
 (define nil-obj-desc (make-unit-type-desc nil-object-val))
 (define eof-obj-desc (make-unit-type-desc nil-object-val))
