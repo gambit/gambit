@@ -752,8 +752,47 @@
           (x86-imm-int (- (expt 2 tag-width) 1))
           (cdr shrinked-temp1))
         (am-cond-return cgc result-action
-          (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
-          (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-je  cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jne cgc (lbl-opnd-label lbl)))
+          true-opnd: (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
+(define x86-prim-##special?
+  (const-nargs-prim 1 1 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1)
+      (let* ((width (get-word-width-bits cgc))
+             (x86-arg1 (make-x86-opnd arg1))
+             (x86-temp1 (make-x86-opnd temp1))
+             (shrinked-temp1 (shrink-x86-opnd x86-temp1 width 8)))
+        (am-mov cgc temp1 arg1) ;; Save arg1
+        (x86-and cgc
+          (car shrinked-temp1)
+          (x86-imm-int (- (expt 2 tag-width) 1))
+          (cdr shrinked-temp1))
+        (x86-cmp cgc
+          (car shrinked-temp1)
+          (x86-imm-int special-int-tag)
+          (cdr shrinked-temp1))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (x86-je  cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jne cgc (lbl-opnd-label lbl)))
+          true-opnd: (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))
+        (debug 5)))))
+
+(define x86-prim-##mem-allocated?
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let* ((width (get-word-width-bits cgc))
+             (x86-arg1 (make-x86-opnd arg1))
+             (shrinked-temp1 (shrink-x86-opnd x86-arg1 width 8)))
+        (x86-test cgc
+          (car shrinked-temp1)
+          (x86-imm-int (bitwise-and object-tag pair-tag))
+          (cdr shrinked-temp1))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (x86-jne cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-je  cgc (lbl-opnd-label lbl)))
           true-opnd: (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
@@ -770,10 +809,21 @@
         (x86-and cgc x86-temp1 x86-temp2 width)
         (x86-cmp cgc x86-temp1 (x86-imm-int special-int-tag) width)
         (am-cond-return cgc result-action
-          (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
-          (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-je cgc  (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jne cgc (lbl-opnd-label lbl)))
           true-opnd: (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
+
+; ("##not"                              (1)   #f ()    0    boolean extended)
+; ("##boolean?"                         (1)   #f ()    0    boolean extended)
+; ("##null?"                            (1)   #f ()    0    boolean extended)
+; ("##false-or-null?"                   (1)   #f ()    0    boolean extended)
+; ("##false-or-void?"                   (1)   #f ()    0    boolean extended)
+; ("##unbound?"                         (1)   #f ()    0    boolean extended)
+; ("##eq?"                              (2)   #f ()    0    boolean extended)
+; ("##eqv?"                             (2)   #f ()    0    boolean extended)
+; ("##equal?"                           (2)   #f ()    0    boolean extended)
+; ("##eof-object?"                      (1)   #f ()    0    boolean extended)
 
 (define x86-prim-##fx+
   (foldl-prim
@@ -884,9 +934,11 @@
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
     (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
 
-    (table-set! table '##fixnum?  (make-prim-obj x86-prim-##fixnum? 1 #t #t))
-    (table-set! table '##pair?    (make-prim-obj x86-prim-##pair?   1 #t #t))
-    (table-set! table '##char?    (make-prim-obj x86-prim-##char?   1 #t #t))
+    (table-set! table '##fixnum?        (make-prim-obj x86-prim-##fixnum?        1 #t #t))
+    (table-set! table '##special?       (make-prim-obj x86-prim-##special?       1 #t #t))
+    (table-set! table '##pair?          (make-prim-obj x86-prim-##pair?          1 #t #t))
+    (table-set! table '##char?          (make-prim-obj x86-prim-##char?          1 #t #t))
+    (table-set! table '##mem-allocated? (make-prim-obj x86-prim-##mem-allocated? 1 #t #t))
 
     (table-set! table '##flonum?  (make-prim-obj stub-prim 1 #t #f))
     (table-set! table '##fl+      (make-prim-obj stub-prim 2 #t #f))
