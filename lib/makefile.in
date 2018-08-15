@@ -160,13 +160,12 @@ PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)..
 
 all:
 
-all-pre:
+all-pre: $(LIBRARY) $(GAMBIT_LIBS)
 
-all-post: $(LIBRARY) $(GAMBIT_LIBS)
+all-post: deselect-gen-for-commit
 
 .scm.c:
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c @COMPILATION_OPTIONS@ $(PRELUDE_OPT) $(srcdirpfx)$*.scm
-	$(RC) update-index --assume-unchanged $*.c
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"
@@ -178,7 +177,6 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 
 $(GAMBIT_LIB_C): $(MODULES_C)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link -flat -o $@ -preload $(MODULES_C)
-	$(RC) update-index --assume-unchanged $@
 
 $(GAMBIT_LIB_java): $(UNIVLIB) $(MODULES_SCM)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target java @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
@@ -377,12 +375,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
-	$(RC) update-index --no-assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C)
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C); fi
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
-	$(RC) update-index --assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C)
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C); fi
 
 mostlyclean-pre:
 

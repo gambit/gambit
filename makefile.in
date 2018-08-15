@@ -159,7 +159,7 @@ dummy-gsc-boot:
 	chmod +x gsc-boot@exe@
 
 gsc-boot@exe@:
-	@if ls .git > /dev/null 2> /dev/null && \
+	@if [ -e .git ] && \
 	    $(GIT) --version > /dev/null 2> /dev/null && \
 	    $(GIT) describe --tags > /dev/null 2> /dev/null && \
 	    test "`$(GIT) describe --tags`" != "$(PACKAGE_VERSION)"; then \

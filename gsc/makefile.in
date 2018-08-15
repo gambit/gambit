@@ -202,9 +202,9 @@ PRELUDE_OPT = -prelude "(\#\#namespace(\"c\#\"))(\#\#include\"$(srcdirpfx)../lib
 
 all:
 
-all-pre:
+all-pre: $(LIBRARY) $(EXECUTABLE)
 
-all-post: $(LIBRARY) $(EXECUTABLE)
+all-post: deselect-gen-for-commit
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY)
@@ -216,14 +216,12 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 
 _$(GAMBITGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
-	$(RC) update-index --assume-unchanged $@
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
 _gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSCLIB).c
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
-	$(RC) update-index --assume-unchanged $@
 
 _gsc@obj@: _gsc.c
 	@BUILD_OBJ@
@@ -236,7 +234,6 @@ _gsc_@obj@: _gsc_.c
 
 .scm.c:
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -c $(srcdirpfx)$*.scm
-	$(RC) update-index --assume-unchanged $*.c
 
 _gsc.c: $(srcdirpfx)$(rootfromhere)/gsi/main.scm
 
@@ -368,12 +365,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
-	$(RC) update-index --no-assume-unchanged $(GENDISTFILES)
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-assume-unchanged $(GENDISTFILES); fi
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
-	$(RC) update-index --assume-unchanged $(GENDISTFILES)
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --assume-unchanged $(GENDISTFILES); fi
 
 mostlyclean-pre:
 
