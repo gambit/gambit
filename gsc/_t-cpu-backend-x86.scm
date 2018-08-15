@@ -721,16 +721,12 @@
 (define (make-function-opnds func)
   (lambda (cgc . args) (apply func (cons cgc (map make-x86-opnd args)))))
 
-(define (x86-prim-##fixnum? cgc result-action args)
-  (define true-lbl  (make-unique-label cgc "##fixnum?-true" #f))
-  (define continue-lbl (make-unique-label cgc "##fixnum?-continue" #f))
-  (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args
-    (lambda (arg1)
-      (load-if-necessary cgc '(reg mem) arg1
-        (lambda (opnd)
+
+(define x86-prim-##fixnum?
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
           (let* ((width (get-word-width-bits cgc))
-                 (x86-opnd (make-x86-opnd opnd))
+             (x86-opnd (make-x86-opnd arg1))
                  (shrinked-opnd (shrink-x86-opnd x86-opnd width 8)))
             (x86-test cgc
               (car shrinked-opnd)
@@ -740,7 +736,26 @@
               (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
               (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
               true-opnd: (int-opnd (format-imm-object #t))
-              false-opnd: (int-opnd (format-imm-object #f)))))))))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
+(define x86-prim-##pair?
+  (const-nargs-prim 1 1 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1)
+      (let* ((width (get-word-width-bits cgc))
+             (x86-arg1 (make-x86-opnd arg1))
+             (x86-temp1 (make-x86-opnd temp1))
+             (shrinked-temp1 (shrink-x86-opnd x86-temp1 width 8)))
+        (am-mov cgc temp1 arg1) ;; Save arg1
+        (x86-not cgc temp1)
+        (x86-test cgc
+          (car shrinked-temp1)
+          (x86-imm-int (- (expt 2 tag-width) 1))
+          (cdr shrinked-temp1))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
+          true-opnd: (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
 
 (define x86-prim-##char?
   (const-nargs-prim 1 2 '((reg mem))
@@ -870,6 +885,7 @@
     (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
 
     (table-set! table '##fixnum?  (make-prim-obj x86-prim-##fixnum? 1 #t #t))
+    (table-set! table '##pair?    (make-prim-obj x86-prim-##pair?   1 #t #t))
     (table-set! table '##char?    (make-prim-obj x86-prim-##char?   1 #t #t))
 
     (table-set! table '##flonum?  (make-prim-obj stub-prim 1 #t #f))
