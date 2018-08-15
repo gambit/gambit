@@ -2040,17 +2040,24 @@ ___CAST_U64((val)<<(((i)&7)<<3))
  * ___TB = number of tag bits
  * ___tFIXNUM   = tag for fixnums (small integers), must be 0
  * ___tSPECIAL  = tag for other immediates (#f, #t, (), #!eof, chars, ...)
- * ___tMEM1     = tag #1 for memory allocated objects (lower bit must be 1)
- * ___tMEM2     = tag #2 for memory allocated objects (lower bit must be 1)
+ * ___tMEM1     = tag #1 for memory allocated objects
+ * ___tMEM2     = tag #2 for memory allocated objects
  * ___tSUBTYPED = ___tMEM1
  * ___tPAIR     = ___tMEM1 or ___tMEM2
  */
 
 #define ___TB 2
 #define ___tFIXNUM   0
+#define ___tMEM2     3
+
+#ifdef ___USE_EVEN_TAG_FOR_SUBTYPED
+#define ___tSPECIAL  1
+#define ___tMEM1     2
+#else
 #define ___tSPECIAL  2
 #define ___tMEM1     1
-#define ___tMEM2     3
+#endif
+
 #define ___tSUBTYPED ___tMEM1
 
 #ifdef ___USE_SAME_TAG_FOR_PAIRS_AND_SUBTYPED
@@ -2059,9 +2066,9 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___tPAIR ___tMEM2
 #endif
 
-#define ___MEM_ALLOCATED(obj)((obj)&1)
-#define ___MEM_ALLOCATED_CLEAR(obj)((obj)&~___CAST(___WORD,1))
-#define ___MEM_ALLOCATED_SET(obj)((obj)|1)
+#define ___MEM_ALLOCATED(obj)((obj)&___tMEM1)
+#define ___MEM_ALLOCATED_CLEAR(obj)((obj)&~___CAST(___WORD,___tMEM1))
+#define ___MEM_ALLOCATED_SET(obj)((obj)|___tMEM1)
 
 /*
  * Subtype tag assignment.

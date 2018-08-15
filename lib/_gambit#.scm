@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -75,11 +75,11 @@
 
 ;; Special objects.
 
-(##define-macro (macro-absent-obj)   `',c#absent-object) ;;(##type-cast -6 2))
-(##define-macro (macro-unbound1-obj) `',(##type-cast -7 2))
-(##define-macro (macro-unbound2-obj) `',(##type-cast -8 2))
-(##define-macro (macro-unused-obj)   `',(##type-cast -14 2))
-(##define-macro (macro-deleted-obj)  `',(##type-cast -15 2))
+(##define-macro (macro-absent-obj)   `',c#absent-object) ;;(##type-cast -6 (##type #f)))
+(##define-macro (macro-unbound1-obj) `',(##type-cast -7 (##type #f)))
+(##define-macro (macro-unbound2-obj) `',(##type-cast -8 (##type #f)))
+(##define-macro (macro-unused-obj)   `',(##type-cast -14 (##type #f)))
+(##define-macro (macro-deleted-obj)  `',(##type-cast -15 (##type #f)))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

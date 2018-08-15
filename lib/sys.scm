@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_system.scm", Time-stamp: <2015-05-20 12:42:11 feeley>
+;;; File: "_system.scm", Time-stamp: <2018-08-15 22:33:20 feeley>
 
 ;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
 
@@ -1566,9 +1566,9 @@
 (##define-macro (macro-subtype-flonum)       30)
 (##define-macro (macro-subtype-bignum)       31)
 
-(##define-macro (macro-absent-obj)  `(##type-cast -6 2))
-(##define-macro (macro-unused-obj)  `(##type-cast -14 2))
-(##define-macro (macro-deleted-obj) `(##type-cast -15 2))
+(##define-macro (macro-absent-obj)  `(##type-cast -6 (##type #f)))
+(##define-macro (macro-unused-obj)  `(##type-cast -14 (##type #f)))
+(##define-macro (macro-deleted-obj) `(##type-cast -15 (##type #f)))
 
 (##define-macro (macro-slot index struct . val)
   (if (null? val)

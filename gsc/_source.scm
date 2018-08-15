@@ -2,7 +2,7 @@
 
 ;;; File: "_source.scm"
 
-;;; Copyright (c) 1994-2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -472,9 +472,9 @@
     (cons "eof"      end-of-file-object)))
 
 (set! **standard-sharp-bang-table;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      (append (list (cons "void"     (##type-cast -5 2))
-                    (cons "unbound1" (##type-cast -7 2))
-                    (cons "unbound2" (##type-cast -8 2)))
+      (append (list (cons "void"     (##type-cast -5 (##type #f)))
+                    (cons "unbound1" (##type-cast -7 (##type #f)))
+                    (cons "unbound2" (##type-cast -8 (##type #f))))
                 **standard-sharp-bang-table))
 
 ;;;============================================================================
