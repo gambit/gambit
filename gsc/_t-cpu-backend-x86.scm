@@ -742,6 +742,24 @@
               true-opnd: (int-opnd (format-imm-object #t))
               false-opnd: (int-opnd (format-imm-object #f)))))))))
 
+(define x86-prim-##char?
+  (const-nargs-prim 1 2 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1 temp2)
+      (let* ((x86-temp1 (make-x86-opnd temp1))
+             (x86-temp2 (make-x86-opnd temp2))
+             (width (get-word-width-bits cgc))
+             (test-int
+              (- special-int-tag (expt 2 (- (get-word-width-bits cgc) 1)))))
+        (am-mov cgc temp1 arg1) ;; Save arg1
+        (am-mov cgc temp2 (int-opnd test-int) width)
+        (x86-and cgc x86-temp1 x86-temp2 width)
+        (x86-cmp cgc x86-temp1 (x86-imm-int special-int-tag) width)
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
+          true-opnd: (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
 (define x86-prim-##fx+
   (foldl-prim
     (make-function-opnds x86-add)
@@ -852,6 +870,7 @@
     (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
 
     (table-set! table '##fixnum?  (make-prim-obj x86-prim-##fixnum? 1 #t #t))
+    (table-set! table '##char?    (make-prim-obj x86-prim-##char?   1 #t #t))
 
     (table-set! table '##flonum?  (make-prim-obj stub-prim 1 #t #f))
     (table-set! table '##fl+      (make-prim-obj stub-prim 2 #t #f))
