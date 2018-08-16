@@ -587,6 +587,15 @@
 (define (call-with-nargs args fun)
   (apply fun args))
 
+(define (const-nargs-prim nargs extra-regs-count allowed-opnds-lst fun)
+  (lambda (cgc result-action args)
+    (check-nargs-if-necessary cgc result-action nargs)
+    (load-multiple-if-necessary cgc allowed-opnds-lst args
+      (lambda (opnds)
+        (get-multiple-free-registers cgc extra-regs-count opnds
+          (lambda regs
+            (apply fun (append (list cgc result-action args) opnds regs))))))))
+
 ;; ***** Primitives - Basic primitives (##Identity and ##not)
 
 (define (##identity-primitive cgc result-action args)
