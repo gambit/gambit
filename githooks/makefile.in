@@ -1,8 +1,8 @@
-# makefile for Gambit onpush notifications.
+# makefile for Gambit githooks notifications.
 
 # Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
-herefromroot = onpush
+herefromroot = githooks
 rootfromhere = ..
 SUBDIRS =
 
