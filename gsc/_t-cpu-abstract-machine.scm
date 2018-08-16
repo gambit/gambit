@@ -666,6 +666,11 @@
     (set-proc-label-index cgc proc return-lbl struct-position)
     (put-return-point-label cgc return-lbl frame internal?)))
 
+(define (call-handler cgc sym frame return-loc)
+  (let* ((handler-loc (car (get-processor-state-field cgc sym))))
+    (debug "handler-loc: " handler-loc)
+    (jump-with-return-point cgc handler-loc return-loc frame #t)))
+
 ;;  Utils: Function call arguments
 
 ;; Count starts at 1
