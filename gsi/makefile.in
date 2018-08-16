@@ -316,12 +316,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
-	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-assume-unchanged $(GENDISTFILES); fi
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-skip-worktree $(GENDISTFILES); fi
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
-	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --assume-unchanged $(GENDISTFILES); fi
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --skip-worktree $(GENDISTFILES); fi
 
 mostlyclean-pre:
 

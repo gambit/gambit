@@ -375,12 +375,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post:
-	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C); fi
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-skip-worktree $(MODULES_C) $(GAMBIT_LIB_C); fi
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post:
-	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --assume-unchanged $(MODULES_C) $(GAMBIT_LIB_C); fi
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --skip-worktree $(MODULES_C) $(GAMBIT_LIB_C); fi
 
 mostlyclean-pre:
 
