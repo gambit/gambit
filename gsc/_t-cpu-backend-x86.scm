@@ -16,8 +16,8 @@
 
 ; (define x86-narg-register  (x86-cl))  ;; number of arguments register
 
-(define nb-gvm-regs 5)
-(define nb-arg-regs 3)
+(define x86-nb-gvm-regs 5)
+(define x86-nb-arg-regs 3)
 
 ;;------------------------------------------------------------------------------
 ;;----------------------------  x86 32-bit backend  ----------------------------
@@ -26,7 +26,7 @@
 (define (x86-32-target)
   (make-cpu-target
     (x86-32-abstract-machine-info)
-    'x86 '((".c" . X86)) nb-gvm-regs nb-arg-regs))
+    'x86 '((".c" . X86)) x86-nb-gvm-regs x86-nb-arg-regs))
 
 (define (x86-32-abstract-machine-info)
   (make-backend make-cgc-x86-32 (x86-32-info) (x86-instructions) (x86-routines)))
@@ -45,7 +45,7 @@
 (define (x86-64-target)
   (make-cpu-target
     (x86-64-abstract-machine-info)
-    'x86-64 '((".c" . X86-64)) nb-gvm-regs nb-arg-regs))
+    'x86-64 '((".c" . X86-64)) x86-nb-gvm-regs x86-nb-arg-regs))
 
 (define (x86-64-abstract-machine-info)
   (make-backend make-cgc-x86-64 (x86-64-info) (x86-instructions) (x86-routines)))
@@ -63,18 +63,18 @@
 
 (define (x86-32-info)
   (make-cpu-info
-    'x86-32                   ;; Arch name
-    4                         ;; Word width
-    'le                       ;; Endianness
-    FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
-    0                         ;; Frame offset
-    primitive-object-table    ;; Primitive table
-    nb-gvm-regs               ;; GVM register count
-    nb-arg-regs               ;; GVM register count for passing arguments
-    x86-32-registers          ;; Main registers
-    (x86-ecx)                 ;; Processor state pointer
-    (x86-esp)                 ;; Stack pointer
-    (x86-ebp)                 ;; Heap pointer
+    'x86-32               ;; Arch name
+    4                     ;; Word width
+    'le                   ;; Endianness
+    FORCE_LOAD_STORE_ARCH ;; Load store architecture?
+    0                     ;; Frame offset
+    x86-primitive-table   ;; Primitive table
+    x86-nb-gvm-regs       ;; GVM register count
+    x86-nb-arg-regs       ;; GVM register count for passing arguments
+    x86-32-registers      ;; Main registers
+    (x86-ecx)             ;; Processor state pointer
+    (x86-esp)             ;; Stack pointer
+    (x86-ebp)             ;; Heap pointer
   ))
 
 (define x86-32-registers
@@ -91,18 +91,18 @@
 
 (define (x86-64-info)
   (make-cpu-info
-    'x86-64                   ;; Arch name
-    8                         ;; Word width
-    'le                       ;; Endianness
-    FORCE_LOAD_STORE_ARCH     ;; Load store architecture?
-    0                         ;; Frame offset
-    primitive-object-table    ;; Primitive table
-    nb-gvm-regs               ;; GVM register count
-    nb-arg-regs               ;; GVM register count for passing arguments
-    x86-64-registers          ;; Main registers
-    (x86-rcx)                 ;; Processor state pointer
-    (x86-rsp)                 ;; Stack pointer
-    (x86-rbp)                 ;; Heap pointer
+    'x86-64               ;; Arch name
+    8                     ;; Word width
+    'le                   ;; Endianness
+    FORCE_LOAD_STORE_ARCH ;; Load store architecture?
+    0                     ;; Frame offset
+    x86-primitive-table   ;; Primitive table
+    x86-nb-gvm-regs       ;; GVM register count
+    x86-nb-arg-regs       ;; GVM register count for passing arguments
+    x86-64-registers      ;; Main registers
+    (x86-rcx)             ;; Processor state pointer
+    (x86-rsp)             ;; Stack pointer
+    (x86-rbp)             ;; Heap pointer
   ))
 
 ;; Registers
@@ -128,20 +128,20 @@
 
 (define (x86-instructions)
   (make-instruction-dictionnary
-    x86-label-align         ;; am-lbl
-    data-instr              ;; am-data
-    mov-instr               ;; am-mov
-    (arith-instr x86-add)   ;; am-add
-    (arith-instr x86-sub)   ;; am-sub
-    (arith-instr x86-shr)   ;; am-bit-shift-right
-    (arith-instr x86-shl)   ;; am-bit-shift-left
-    (arith-instr x86-not)   ;; am-not
-    (arith-instr x86-and)   ;; am-and
-    (arith-instr x86-or)    ;; am-or
-    (arith-instr x86-xor)   ;; am-xor
-    x86-jmp-instr           ;; am-jmp
-    cmp-jump-instr          ;; am-compare-jump
-    cmp-move-instr))        ;; am-compare-move
+    x86-label-align           ;; am-lbl
+    x86-data-instr            ;; am-data
+    x86-mov-instr             ;; am-mov
+    (x86-arith-instr x86-add) ;; am-add
+    (x86-arith-instr x86-sub) ;; am-sub
+    (x86-arith-instr x86-shr) ;; am-bit-shift-right
+    (x86-arith-instr x86-shl) ;; am-bit-shift-left
+    (x86-arith-instr x86-not) ;; am-not
+    (x86-arith-instr x86-and) ;; am-and
+    (x86-arith-instr x86-or)  ;; am-or
+    (x86-arith-instr x86-xor) ;; am-xor
+    x86-jmp-instr             ;; am-jmp
+    x86-cmp-jump-instr        ;; am-compare-jump
+    x86-cmp-move-instr))      ;; am-compare-move
 
 (define (make-x86-opnd opnd)
   (cond
@@ -191,7 +191,7 @@
 ;           (x86-mov cgc result-reg opnd1)
 ;           (fun cgc result-reg opnd2)))))
 
-(define (arith-instr instr)
+(define (x86-arith-instr instr)
   (lambda (cgc result-loc opnd1 opnd2)
     (let ((x86-result-loc (make-x86-opnd result-loc))
           (x86-opnd1 (make-x86-opnd opnd1))
@@ -206,11 +206,11 @@
   (if align (asm-align cgc (car align) (cdr align) #x90))
   (x86-label cgc (lbl-opnd-label label-opnd)))
 
-(define data-instr
+(define x86-data-instr
   (make-am-data x86-db x86-dw x86-dd x86-dq))
 
 ;; Args : CGC, reg/mem/label, reg/mem/imm/label/glo
-(define (mov-instr cgc dst src #!optional (width #f))
+(define (x86-mov-instr cgc dst src #!optional (width #f))
   (define dst-type (opnd-type dst))
   (define src-type (opnd-type src))
 
@@ -282,7 +282,7 @@
     (else
       (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
-(define (cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
+(define (x86-cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
   (define x86-opnd1 (make-x86-opnd opnd1))
   (define x86-opnd2 (make-x86-opnd opnd2))
 
@@ -303,7 +303,7 @@
       (else
         (debug "am-compare-jump: No jump encoded")))))
 
-(define (cmp-move-instr cgc condition dest opnd1 opnd2 true-opnd false-opnd #!optional (opnds-width #f))
+(define (x86-cmp-move-instr cgc condition dest opnd1 opnd2 true-opnd false-opnd #!optional (opnds-width #f))
   (let* ((jumps (get-jumps condition))
          (label-true (make-unique-label cgc "mov-true" #f))
          (label-false (make-unique-label cgc "mov-false" #f)))
@@ -707,20 +707,12 @@
 (define (x86-place-extra-data cgc)
   (debug "place-extra-data"))
 
-;; Utils
-
-(define (call-handler cgc sym frame return-loc)
-  (let* ((handler-loc (car (get-processor-state-field cgc sym))))
-    (debug "handler-loc: " handler-loc)
-    (jump-with-return-point cgc handler-loc return-loc frame #t)))
-
 ;;------------------------------------------------------------------------------
 
 ;; Primitives
 
-(define (make-function-opnds func)
+(define (make-function-x86-opnds func)
   (lambda (cgc . args) (apply func (cons cgc (map make-x86-opnd args)))))
-
 
 (define x86-prim-##fixnum?
   (const-nargs-prim 1 0 '((reg mem))
@@ -814,20 +806,9 @@
           true-opnd: (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
-; ("##not"                              (1)   #f ()    0    boolean extended)
-; ("##boolean?"                         (1)   #f ()    0    boolean extended)
-; ("##null?"                            (1)   #f ()    0    boolean extended)
-; ("##false-or-null?"                   (1)   #f ()    0    boolean extended)
-; ("##false-or-void?"                   (1)   #f ()    0    boolean extended)
-; ("##unbound?"                         (1)   #f ()    0    boolean extended)
-; ("##eq?"                              (2)   #f ()    0    boolean extended)
-; ("##eqv?"                             (2)   #f ()    0    boolean extended)
-; ("##equal?"                           (2)   #f ()    0    boolean extended)
-; ("##eof-object?"                      (1)   #f ()    0    boolean extended)
-
 (define x86-prim-##fx+
   (foldl-prim
-    (make-function-opnds x86-add)
+    (make-function-x86-opnds x86-add)
     allowed-opnds: '(reg mem int)
     allowed-opnds-accum: '(reg mem)
     start-value: 0
@@ -850,7 +831,7 @@
 
 (define x86-prim-##fx-
   (foldl-prim
-    (make-function-opnds x86-sub)
+    (make-function-x86-opnds x86-sub)
     allowed-opnds: '(reg mem int)
     allowed-opnds-accum: '(reg mem)
     ; start-value: 0 ;; Start the fold on the first operand
@@ -927,9 +908,9 @@
           #f
           (get-word-width-bits cgc))))))
 
-(define (stub-prim cgc . args) #f)
+(define (x86-stub-prim cgc . args) #f)
 
-(define primitive-object-table
+(define x86-primitive-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
     (table-set! table '##not      (make-prim-obj ##not 1 #t #t))
@@ -940,11 +921,11 @@
     (table-set! table '##char?          (make-prim-obj x86-prim-##char?          1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj x86-prim-##mem-allocated? 1 #t #t))
 
-    (table-set! table '##flonum?  (make-prim-obj stub-prim 1 #t #f))
-    (table-set! table '##fl+      (make-prim-obj stub-prim 2 #t #f))
-    (table-set! table '+          (make-prim-obj stub-prim 2 #f #f))
-    (table-set! table '-          (make-prim-obj stub-prim 2 #f #f))
-    (table-set! table '<          (make-prim-obj stub-prim 2 #f #f))
+    (table-set! table '##flonum?  (make-prim-obj x86-stub-prim 1 #t #f))
+    (table-set! table '##fl+      (make-prim-obj x86-stub-prim 2 #t #f))
+    (table-set! table '+          (make-prim-obj x86-stub-prim 2 #f #f))
+    (table-set! table '-          (make-prim-obj x86-stub-prim 2 #f #f))
+    (table-set! table '<          (make-prim-obj x86-stub-prim 2 #f #f))
 
     (table-set! table '##fx+      (make-prim-obj x86-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?     (make-prim-obj x86-prim-##fx+? 2 #t #t #t))
