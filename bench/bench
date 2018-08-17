@@ -437,7 +437,7 @@ KVW_BENCHMARKS="ack array1 cat string sum1 sumloop tail wc"
 
 C_BENCHMARKS="fft fib fibfp mbrot nucleic pnpoly sum sumfp tak tfib $KVW_BENCHMARKS"
 
-OTHER_BENCHMARKS="conform dynamic earley fibc fftrad4 graphs lattice matrix maze mazefun nqueens paraffins peval pi primes ray scheme simplex slatex perm9 nboyer sboyer gcbench"
+OTHER_BENCHMARKS="conform dynamic earley fibc fftrad4 graphs lattice matrix maze mazefun nqueens paraffins peval pi primes ray scheme simplex slatex perm9 nboyer sboyer gcbench pi10K chud100K chud1K"
 
 AWK_BENCHMARKS="$KVW_BENCHMARKS"
 

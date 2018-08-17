@@ -61,3 +61,6 @@
 (define sboyer-iters       10)
 (define gcbench-iters       1)
 (define compiler-iters     30)
+(define chud100K-iters      1)
+(define chud1K-iters     1000)
+(define pi10K-iters         1)
