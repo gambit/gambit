@@ -769,8 +769,7 @@
           (lambda (cgc lbl) (x86-je  cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl) (x86-jne cgc (lbl-opnd-label lbl)))
           true-opnd: (int-opnd (format-imm-object #t))
-          false-opnd: (int-opnd (format-imm-object #f)))
-        (debug 5)))))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
 
 (define x86-prim-##mem-allocated?
   (const-nargs-prim 1 0 '((reg mem))

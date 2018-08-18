@@ -873,7 +873,7 @@
                         (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
   (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f 64 'self-label) ;; self ptr
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+  (am-data cgc (* 8 object-tag) 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc label)
 
   (codegen-context-label-struct-position-set! cgc

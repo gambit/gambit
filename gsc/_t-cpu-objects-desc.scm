@@ -80,6 +80,9 @@
       (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
 
 ;; Pointer tagging constants
+
+(define USE_EVEN_TAG_FOR_SUBTYPED #f)
+
 (define pointer-header-offset 2)
 
 (define header-tag-width  5)
@@ -89,8 +92,8 @@
 (define tag-width         2) ;(ceiling (/ (log tag-mult) (log 2))))
 
 (define fixnum-tag        0)
-(define object-tag        1)
-(define special-int-tag   2)
+(define object-tag        (if USE_EVEN_TAG_FOR_SUBTYPED 2 1))
+(define special-int-tag   (if USE_EVEN_TAG_FOR_SUBTYPED 1 2))
 (define pair-tag          3)
 
 (define (tag-number val tag)
