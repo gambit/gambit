@@ -5774,6 +5774,24 @@ ___JUMPEXTPRM(___NOTHING,___ps->handler_get_key_rest)}
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
+#ifdef ___CPU_arm
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate ARM instruction: ???? */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0L << (8*___tSUBTYPED); \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate ARM instruction: ???? */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0L << (8*___tSUBTYPED); \
+   } while (0)
+
+#endif
+
 #ifdef ___CPU_x86
 
 /* Useful to have constant bit pattern in low 16 bits of pstate */
