@@ -131,6 +131,10 @@ arm-muls
 arm-mla
 arm-mlas
 
+arm-ldr
+arm-ldrb
+arm-str
+arm-strb
 
 
 
