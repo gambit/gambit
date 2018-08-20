@@ -455,7 +455,7 @@
 (define (get-free-register cgc needed-opnds action)
   (get-multiple-free-registers cgc 1 needed-opnds action))
 
-(define (mov-if-necessary cgc allowed-opnds opnd fun)
+(define (load-if-necessary cgc allowed-opnds opnd fun)
   (if (elem? (opnd-type opnd) allowed-opnds)
     (fun opnd)
     (get-free-register cgc (list opnd)
@@ -463,13 +463,16 @@
         (am-mov cgc reg opnd)
         (fun reg)))))
 
-(define (mov-multiple-if-necessary cgc allowed-opnds-lst opnds fun)
+(define (load-multiple-if-necessary cgc allowed-opnds-lst opnds fun)
   (let loop ((opnds opnds) (allowed-opnds-lst allowed-opnds-lst) (safe-opnds '()))
     (if (null? opnds)
       (fun (reverse safe-opnds))
-      (mov-if-necessary cgc (car allowed-opnds-lst) (car opnds)
+      (load-if-necessary cgc (car allowed-opnds-lst) (car opnds)
         (lambda (safe-opnd)
-          (loop (cdr opnds) (cdr allowed-opnds-lst) (cons safe-opnd safe-opnds)))))))
+          (loop
+            (cdr opnds)
+            (if (null? (cdr allowed-opnds-lst)) allowed-opnds-lst (cdr allowed-opnds-lst))
+            (cons safe-opnd safe-opnds)))))))
 
 (define (mov-into cgc opnd allowed-opnds needed-opnds fun)
   (if (elem? (opnd-type opnd) allowed-opnds)
@@ -662,6 +665,11 @@
     ;; Return point
     (set-proc-label-index cgc proc return-lbl struct-position)
     (put-return-point-label cgc return-lbl frame internal?)))
+
+(define (call-handler cgc sym frame return-loc)
+  (let* ((handler-loc (car (get-processor-state-field cgc sym))))
+    (debug "handler-loc: " handler-loc)
+    (jump-with-return-point cgc handler-loc return-loc frame #t)))
 
 ;;  Utils: Function call arguments
 
@@ -865,7 +873,7 @@
                         (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
   (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f 64 'self-label) ;; self ptr
-  (am-data cgc 8 0) ;; so that label reference has tag ___tSUBTYPED
+  (am-data cgc (* 8 object-tag) 0) ;; so that label reference has tag ___tSUBTYPED
   (am-lbl cgc label)
 
   (codegen-context-label-struct-position-set! cgc
@@ -1250,7 +1258,7 @@
       (let ((loc (car info))
             (index (cadr info))
             (opnd (caddr info)))
-        (mov-if-necessary cgc '(reg) loc
+        (load-if-necessary cgc '(reg) loc
           (lambda (reg) (mov-at-clo-index index reg opnd)))))
     clo-ref-fields))
 

@@ -56,6 +56,7 @@
     ((boolean? object)    boolean-obj-desc)
     ((null? object)       nil-obj-desc)
     ((eof-object? object) eof-obj-desc)
+    ((char? object)       char-obj-desc)
     ;; Pair
     ; ((pair? object)       pair-obj-desc)
     ; ;; Subtypes
@@ -79,6 +80,9 @@
       (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
 
 ;; Pointer tagging constants
+
+(define USE_EVEN_TAG_FOR_SUBTYPED #f)
+
 (define pointer-header-offset 2)
 
 (define header-tag-width  5)
@@ -88,8 +92,8 @@
 (define tag-width         2) ;(ceiling (/ (log tag-mult) (log 2))))
 
 (define fixnum-tag        0)
-(define object-tag        1)
-(define special-int-tag   2)
+(define object-tag        (if USE_EVEN_TAG_FOR_SUBTYPED 2 1))
+(define special-int-tag   (if USE_EVEN_TAG_FOR_SUBTYPED 1 2))
 (define pair-tag          3)
 
 (define (tag-number val tag)
@@ -115,6 +119,10 @@
 (define boolean-obj-desc
   (immediate-desc 'specialval
     (lambda (val) (tag-number (if val true-object-val false-object-val) special-int-tag))))
+
+(define char-obj-desc
+  (immediate-desc 'specialval
+    (lambda (val) (tag-number (char->integer val) special-int-tag))))
 
 (define nil-obj-desc (make-unit-type-desc nil-object-val))
 (define eof-obj-desc (make-unit-type-desc nil-object-val))

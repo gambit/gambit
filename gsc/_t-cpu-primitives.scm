@@ -124,7 +124,7 @@
             (get-word-width-bits cgc)))
         (if opnd-not-false
           (if true-jmp (am-jmp cgc true-jmp))
-          (mov-if-necessary cgc '(reg mem) opnd
+          (load-if-necessary cgc '(reg mem) opnd
             (lambda (opnd)
               (am-compare-jump cgc
                 condition-not-equal
@@ -417,7 +417,7 @@
                   (if (not (null? loop-args))
                     ;; Mov car args if necessary
                     (begin
-                      (mov-if-necessary cgc allowed-opnds (car loop-args)
+                      (load-if-necessary cgc allowed-opnds (car loop-args)
                         (lambda (arg)
                           (reduce-2+ cgc accum arg)))
                       (loop (cdr loop-args)))))
@@ -431,6 +431,7 @@
                 (empty-val #t)
                 (commutative #f))
   (lambda (cgc result-action args)
+    (define args-length (length args))
     (debug "foldl-compare-prim")
 
     ;; The difference between a function and an inlined function is that the
@@ -442,24 +443,32 @@
       ;; Is inlined.
       (cond
         ;; Empty case
-        ((null? args)
+        ((= 0 args-length)
           (debug "empty case")
           (am-return-const cgc result-action empty-val))
         ;; 1 argument case
-        ((null? (cdr args))
+        ((= 1 args-length)
           (debug "1 argument case")
           (am-return-const cgc result-action reduce-1))
+        ((= 2 args-length)
+          (debug "2 arguments case")
+          (load-if-necessary cgc allowed-opnds1 (car args)
+            (lambda (arg1)
+              (load-if-necessary cgc allowed-opnds2 (cadr args)
+                (lambda (arg2)
+                  (reduce-2+ cgc arg1 arg2
+                    (then-jump-true-location  result-action)
+                    (then-jump-false-location result-action)))))))
         ;; General case
         (else
           (debug "general case")
           (am-return-boolean cgc result-action
             (lambda (true-label false-label)
               (for-each
-                (lambda (opnd1 opnd2)
-                  ;; Mov car args if necessary
-                  (mov-if-necessary cgc allowed-opnds1 opnd1
+                (lambda (opnd2 opnd1)
+                  (load-if-necessary cgc allowed-opnds1 opnd1
                     (lambda (arg1)
-                      (mov-if-necessary cgc allowed-opnds2 opnd2
+                      (load-if-necessary cgc allowed-opnds2 opnd2
                         (lambda (arg2)
                           (reduce-2+ cgc arg1 arg2 true-label false-label))))))
                 (cdr args)
@@ -489,7 +498,7 @@
               (for-each
                 (lambda (opnd)
                   ;; Mov car args if necessary
-                  (mov-if-necessary cgc allowed-opnds opnd
+                  (load-if-necessary cgc allowed-opnds opnd
                     (lambda (arg)
                       (reduce-1 cgc arg true-label false-label))))
                 args)
@@ -503,7 +512,6 @@
 (define (with-result-opnd cgc result-action args
           #!key fun
           (commutative #f)
-          (single-instruction #f)
           (allowed-opnds '(reg int mem))
           (default-opnd #f))
 
@@ -525,7 +533,11 @@
 
   (cond
     ((then-jump? result-action)
-      (use-loc default-opnd #t))
+      (if (and
+            (then-jump-move? result-action)
+            (not (elem? (then-jump-store-location result-action) args)))
+        (use-loc (then-jump-store-location result-action) #f)
+        (use-loc default-opnd #t)))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
         (cond
@@ -542,8 +554,6 @@
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
       (cond
-        (single-instruction
-          (use-loc (get-register cgc 1) once-in-args))
         ((and once-in-args commutative)
           (use-loc (get-register cgc 1) #t))
         (not-in-args
@@ -577,6 +587,15 @@
 (define (call-with-nargs args fun)
   (apply fun args))
 
+(define (const-nargs-prim nargs extra-regs-count allowed-opnds-lst fun)
+  (lambda (cgc result-action args)
+    (check-nargs-if-necessary cgc result-action nargs)
+    (load-multiple-if-necessary cgc allowed-opnds-lst args
+      (lambda (opnds)
+        (get-multiple-free-registers cgc extra-regs-count opnds
+          (lambda regs
+            (apply fun (append (list cgc result-action args) opnds regs))))))))
+
 ;; ***** Primitives - Basic primitives (##Identity and ##not)
 
 (define (##identity-primitive cgc result-action args)
@@ -596,10 +615,6 @@
         (lambda (cgc) (am-return-const cgc result-action #f))
         #f
         (get-word-width-bits cgc)))))
-
-;; ***** Primitives - Default Primitives - Type checks
-
-;; Todo
 
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
@@ -638,10 +653,9 @@
     (lambda (cgc result-action args)
       (debug "object-read-prim")
       (with-result-opnd cgc result-action args
-        single-instruction: #t
         fun: (lambda (result-opnd result-opnd-in-args)
           (check-nargs-if-necessary cgc result-action 1)
-          (mov-if-necessary cgc '(reg mem) (car args)
+          (load-if-necessary cgc '(reg mem) (car args)
             (lambda (ref)
               (read-reference cgc result-action
                 result-opnd ref
