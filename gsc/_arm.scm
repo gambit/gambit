@@ -300,7 +300,7 @@
                       ;; an unconditional branch instruction.
 
                       (thumb-branch-and-link cgc label offs))))))
-          
+
           (asm-at-assembly
 
            cgc
@@ -1275,36 +1275,130 @@
 
 ;;; ARM instructions: LDR, LDRB, STR, and STRB.
 
-(define (arm-ldr cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 1 0))
+(define (arm-ldr cgc
+                 rd
+                 rb
+                 offset
+                 #!optional
+                 (pre? #t)
+                 (write-back? #f)
+                 (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #t #f))
 
-(define (arm-ldrb cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 1 1))
+(define (arm-ldrb cgc
+                  rd
+                  rb
+                  offset
+                  #!optional
+                  (pre? #t)
+                  (write-back? #f)
+                  (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #t #t))
 
-(define (arm-str cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 0 0))
+(define (arm-str cgc
+                 rd
+                 rb
+                 offset
+                 #!optional
+                 (pre? #t)
+                 (write-back? #f)
+                 (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #f #f))
 
-(define (arm-strb cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 0 1))
+(define (arm-strb cgc
+                  rd
+                  rb
+                  offset
+                  #!optional
+                  (pre? #t)
+                  (write-back? #f)
+                  (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #f #t))
 
-(define (arm-load-store cgc rd rb offset condition op byte)
+(define (arm-load-store cgc rd rb offset pre? write-back? condition load? byte?)
 
   (assert (and (arm-reg? rd)
-               (arm-reg? rb)
-               (arm-imm-int? offset))
+               (arm-reg? rb))
           "invalid operands")
+
+  (let* ((d (arm-reg-field rd))
+         (b (arm-reg-field rb)))
+
+    (if (arm-thumb-mode? cgc)
+
+        (begin
+
+          (assert (eqv? condition (arm-cond-al))
+                  "thumb instructions are unconditionnal")
+
+          (assert (and (fx<= d 7) (fx<= b 7))
+                  "thumb instruction must use low registers")
+
+          (assert (if byte?
+                      (and (fx>= offset 0)
+                           (fx<= offset 31))
+                      (and (fx>= offset 0)
+                           (fx<= offset 127)))
+                  (if byte?
+                      "offset must fit in 5 bits"
+                      "offset must fit in 7 bits"))
+
+          (assert pre?
+                  "postincrement addressing mode does not exist on thumb")
+
+          (assert (not write-back?)
+                  "write-back addressing mode does not exist on thumb")
+
+          (let ((o (if byte? offset (quotient offset 4))))
+            (asm-16-le cgc
+                       (fx+ d
+                            (fxarithmetic-shift-left b 3)
+                            (fxarithmetic-shift-left o 6)
+                            (if load? #x800  0)
+                            (if byte? #x1000 0)
+                            #x6000))))
+
+        (begin
+
+          (assert (and (fx>= offset -4095)
+                       (fx<= offset 4095))
+                  "absolute offset must fit in 12 bits")
+
+          (let ((o (abs offset)))
+            (asm-16-le cgc
+                       (fx+ o
+                            (fxarithmetic-shift-left d 12))))
+
+          (asm-16-le cgc
+                     (fx+ b
+                          (if load?         #x10  0)
+                          (if write-back?   #x20  0)
+                          (if byte?         #x40  0)
+                          (if (>= offset 0) #x80  0)
+                          (if pre?          #x100 0)
+                          #x400
+                          (fxarithmetic-shift-left condition 12))))))
 
   (if (codegen-context-listing-format cgc)
       (arm-listing
        cgc
        (list (vector-ref
               '#("str" "strb" "ldr" "ldrb")
-              (fx+ (fx* 2 op) byte))
-             (arm-condition-name* condition)
-             (if (and (fx= set-flags 1) (not (arm-thumb-mode? cgc))) "s" ""))
+              (fx+ (if load? 2 0) (if byte? 1 0)))
+             (arm-condition-name* condition))
        rd
-       opnd1
-       offset)))
+       (if pre?
+           (string-append "["
+                          (arm-register-name rb)
+                          (if (fx= offset 0)
+                              ""
+                              (string-append ",#"
+                                             (number->string offset)))
+                          (if write-back? "]!" "]"))
+           (string-append "["
+                          (arm-register-name rb)
+                          "], #"
+                          (number->string offset))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1469,7 +1563,6 @@ BX Hs                      BX Hs
 
 
 
-|#
 
 ;;;----------------------------------------------------------------------------
 
@@ -1846,7 +1939,6 @@ BX Hs                      BX Hs
 
 ;;;----------------------------------------------------------------------------
 
-#|
 
 (define (thumb-movs cgc rd n)
   (asm-8 cgc n)
