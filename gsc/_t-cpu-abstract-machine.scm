@@ -200,9 +200,6 @@
 (define (am-compare-jump cgc . args)     (apply-instruction cgc 12 args))
 (define (am-compare-move cgc . args)     (apply-instruction cgc 13 args))
 
-(define (am-data-word cgc word)
-  (am-data cgc (get-word-width-bits cgc) word))
-
 ;; ***** AM: Routines fields
 
 (define (apply-routine cgc index args)
@@ -751,7 +748,7 @@
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
   (let ((main-lbl (lbl-opnd-label (get-main-label))))
-    (codegen-fixup-lbl! cgc main-lbl 0 #f 64)))
+    (codegen-fixup-lbl! cgc main-lbl 0 #f (get-word-width-bits cgc) 'main-lbl)))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
@@ -849,35 +846,39 @@
   (define label-struct-position (codegen-context-label-struct-position cgc))
   (define proc (codegen-context-current-proc cgc))
   (define parent-label (get-parent-proc-label cgc proc))
+  (define width-bits (get-word-width-bits cgc))
 
-  (asm-align cgc 8)
-  (codegen-fixup-obj! cgc (string->symbol proc-name) 64) ;; ##subprocedure-parent-name
-  (codegen-fixup-obj! cgc proc-info 64)                  ;; ##subprocedure-parent-info
-  (codegen-fixup-obj! cgc #f 64)                         ;; nb labels, Todo
+  ;; Increment label struct position
+  (codegen-context-label-struct-position-set! cgc (+ 1 label-struct-position))
+
+  (asm-align cgc (get-word-width cgc))
+  (codegen-fixup-obj! cgc (string->symbol proc-name) width-bits 'proc-name) ;; ##subprocedure-parent-name
+  (codegen-fixup-obj! cgc proc-info width-bits 'proc-info)                  ;; ##subprocedure-parent-info
+  (codegen-fixup-obj! cgc #f width-bits 'proc-nb-labels)                    ;; nb labels, Todo
 
   ;; next label struct
   (codegen-fixup-lbl-late! cgc
     (lambda ()
       (get-next-label cgc proc-name (+ 1 label-struct-position) label))
-    #f 64
+    #f width-bits
     'next-label-with-structure)
   ;; parent label struct
   (if parent-label
-    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f 64 'parent-label)
-    (am-data-word cgc 0))
+    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f width-bits 'parent-label)
+    (am-data cgc width-bits 0))
 
-  (codegen-fixup-handler! cgc '___lowlevel_exec (get-word-width-bits cgc))
-  (am-data-word cgc (+ 6                               ;; PERM
-                      (* 8 14)                         ;; PROCEDURE
-                      (* 256 (+ nargs                  ;; Number of arguments
-                        (* 4096 (if closure? 1 0)))))) ;; Is closure?
+  (codegen-fixup-handler! cgc '___lowlevel_exec width-bits)
+  (am-data cgc width-bits (+ 6                               ;; PERM
+                            (* 8 14)                         ;; PROCEDURE
+                            (* 256 (+ nargs                  ;; Number of arguments
+                              (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
-  (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f 64 'self-label) ;; self ptr
-  (am-data cgc (* 8 object-tag) 0) ;; so that label reference has tag ___tSUBTYPED
-  (am-lbl cgc label)
-
-  (codegen-context-label-struct-position-set! cgc
-    (+ 1 label-struct-position)))
+  (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f width-bits 'self-label) ;; self ptr
+  ;; so that label reference has tag ___tSUBTYPED
+  (for-each
+    (lambda (_) (am-data cgc (* 8 object-tag) 0))
+    (iota 1 object-tag))
+  (am-lbl cgc label))
 
 ;; Todo: Make sure ret-pos is valid when using this function
 (define (put-return-point-label cgc label frame internal?)
@@ -887,6 +888,7 @@
   (define proc-name-sym (string->symbol proc-name))
   (define proc-info #f)
   (define parent-label (get-parent-proc-label cgc proc))
+  (define width-bits (get-word-width-bits cgc))
 
   (define (get-ret-pos vars)
     (index-of 'ret (map var-name vars)))
@@ -955,31 +957,30 @@
         (* 128 (get-ret-pos vars))  ;; link
         (* 4096 gc-map))))          ;; gc-map
 
-  (asm-align cgc 8)
+  ;; Increment label struct position
+  (codegen-context-label-struct-position-set! cgc (+ 1 label-struct-position))
+
+  (asm-align cgc (get-word-width cgc))
   ;; Next label reference
   (codegen-fixup-lbl-late! cgc
-    (lambda ()
-      (get-next-label cgc proc-name (+ 1 label-struct-position) label))
-    #f 64 'next-label-with-structure)
+    (lambda () (get-next-label cgc proc-name (+ 1 label-struct-position) label))
+    #f width-bits 'next-label-with-structure)
   ;; Parent label reference
   (if parent-label
-    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f 64 'parent-label)
-    (am-data-word cgc 0))
+    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f width-bits 'parent-label)
+    (am-data cgc width-bits 0))
   ;; Host Address
-  (codegen-fixup-handler! cgc '___lowlevel_exec 64)
+  (codegen-fixup-handler! cgc '___lowlevel_exec width-bits)
   ;; Header
-  (asm-64 cgc (+ 6 (* 8 15)))
+  (am-data cgc width-bits (+ 6 (* 8 15)))
   ;; Field 1: gc-map
-  (if internal?
-    (asm-64 cgc (get-gc-map-internal frame))
-    (asm-64 cgc (get-gc-map frame)))
+  (am-data cgc width-bits (if internal? (get-gc-map-internal frame) (get-gc-map frame)))
   ;; so that label reference has tag ___tSUBTYPED
-  (asm-8 cgc 0)
+  (for-each
+    (lambda (_) (am-data cgc (* 8 object-tag) 0))
+    (iota 1 object-tag))
 
-  (am-lbl cgc label)
-
-  (codegen-context-label-struct-position-set! cgc
-    (+ 1 label-struct-position)))
+  (am-lbl cgc label))
 
 (define (encode-label-instr cgc prev-code code next-code)
   (let* ((gvm-instr (code-gvm-instr code))
