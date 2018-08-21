@@ -249,7 +249,7 @@
      (fx+ op
           (fx* 256
                (codegen-context-fixup-obj-register! cgc obj))))
-   (if show-listing "obj" #f)))
+   (if show-listing  (if (boolean? show-listing) "obj" show-listing) #f)))
 
 (define (codegen-fixup-obj! cgc obj width #!optional (show-listing #t))
   (codegen-fixup-obj-generic! cgc 2 obj width show-listing))
