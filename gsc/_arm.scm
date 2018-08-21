@@ -1317,6 +1317,29 @@
 
 (define (arm-load-store cgc rd rb offset pre? write-back? condition load? byte?)
 
+  (define (listing wide?)
+    (if (codegen-context-listing-format cgc)
+        (arm-listing
+         cgc
+         (list (vector-ref
+                '#("str" "strb" "ldr" "ldrb")
+                (fx+ (if load? 2 0) (if byte? 1 0)))
+               (arm-condition-name* condition)
+               (if wide? ".w" ""))
+         rd
+         (if pre?
+             (string-append "["
+                            (arm-register-name rb)
+                            (if (fx= offset 0)
+                                ""
+                                (string-append ",#"
+                                               (number->string offset)))
+                            (if write-back? "]!" "]"))
+             (string-append "["
+                            (arm-register-name rb)
+                            "], #"
+                            (number->string offset))))))
+
   (assert (and (arm-reg? rd)
                (arm-reg? rb))
           "invalid operands")
@@ -1331,74 +1354,136 @@
           (assert (eqv? condition (arm-cond-al))
                   "thumb instructions are unconditionnal")
 
-          (assert (and (fx<= d 7) (fx<= b 7))
-                  "thumb instruction must use low registers")
+          (cond ((and (or (eqv? rb (arm-sp))
+                          (and (eqv? rb (arm-pc))
+                               load?))
+                      (fx<= d 7)
+                      (fx>= offset 0)
+                      (fx<= offset 1023)
+                      (not byte?)
+                      pre?
+                      (not write-back?))
 
-          (assert (if byte?
-                      (and (fx>= offset 0)
-                           (fx<= offset 31))
-                      (and (fx>= offset 0)
-                           (fx<= offset 127)))
-                  (if byte?
-                      "offset must fit in 5 bits"
-                      "offset must fit in 7 bits"))
+                 (assert (fx= 0 (fxmodulo offset 4))
+                         "offset must be a multiple of 4")
 
-          (assert pre?
-                  "postincrement addressing mode does not exist on thumb")
+                 (asm-16-le cgc
+                            (fx+ (fxquotient offset 4)
+                                 (fxarithmetic-shift-left d 8)
+                                 (if load? #x0800 0)
+                                 (if (eqv? rb (arm-sp))
+                                     #x9000
+                                     #x4000)))
 
-          (assert (not write-back?)
-                  "write-back addressing mode does not exist on thumb")
+                 (listing #f))
 
-          (let ((o (if byte? offset (quotient offset 4))))
-            (asm-16-le cgc
-                       (fx+ d
-                            (fxarithmetic-shift-left b 3)
-                            (fxarithmetic-shift-left o 6)
-                            (if load? #x800  0)
-                            (if byte? #x1000 0)
-                            #x6000))))
+                ((and (fx<= d 7)
+                      (fx<= b 7)
+                      (fx>= offset 0)
+                      (fx<= offset (if byte? 31 127))
+                      pre?
+                      (not write-back?))
+
+                 (assert (or byte? (fx= 0 (fxmodulo offset 4)))
+                         "offset must be a multiple of 4")
+
+                 (asm-16-le cgc
+                            (fx+ d
+                                 (fxarithmetic-shift-left b 3)
+                                 (fxarithmetic-shift-left
+                                  (if byte? offset (fxquotient offset 4))
+                                  6)
+                                 (if load? #x0800 0)
+                                 (if byte? #x1000 0)
+                                 #x6000))
+
+                 (listing #f))
+
+                ((and (eqv? rb (arm-pc))
+                      load?
+                      pre?
+                      (not write-back?))
+
+                 (let ((o (fxabs offset)))
+
+                   (assert (fx<= o 4095)
+                           "absolute offset must fit in 12 bits")
+
+                   (asm-16-le cgc
+                              (fx+ (if byte?           0 #x0040)
+                                   (if (fx>= offset 0) #x0080 0)
+                                   #xf81f))
+
+                   (asm-16-le cgc
+                              (fx+ o
+                                   (fxarithmetic-shift-left d 12)))
+
+                   (listing #t)))
+
+                ((and (fx>= offset 0)
+                      pre?
+                      (not write-back?))
+
+                 (assert (fx<= offset 4095)
+                         "offset must fit in 12 bits")
+
+                 (asm-16-le cgc
+                            (fx+ b
+                                 (if load? #x0010 0)
+                                 (if byte? 0 #x0040)
+                                 #xf880))
+
+                 (asm-16-le cgc
+                            (fx+ offset
+                                 (fxarithmetic-shift-left d 12)))
+
+                 (listing #t))
+
+                (else
+
+                 (let ((o (fxabs offset)))
+
+                   (assert (fx<= o 255)
+                           "absolute offset must fit in 8 bits")
+
+                   (asm-16-le cgc
+                              (fx+ b
+                                   (if load? #x0010 0)
+                                   (if byte? 0 #x0040)
+                                   #xf800))
+
+                   (asm-16-le cgc
+                              (fx+ o
+                                   (if write-back?     #x0100 0)
+                                   (if (fx>= offset 0) #x0200 0)
+                                   (if pre?            #x0400 0)
+                                   #x0800
+                                   (fxarithmetic-shift-left d 12)))
+
+                   (listing #f)))))
 
         (begin
 
-          (assert (and (fx>= offset -4095)
-                       (fx<= offset 4095))
+          (let ((o (fxabs offset)))
+
+            (assert (fx<= o 4095)
                   "absolute offset must fit in 12 bits")
 
-          (let ((o (abs offset)))
             (asm-16-le cgc
                        (fx+ o
-                            (fxarithmetic-shift-left d 12))))
+                            (fxarithmetic-shift-left d 12)))
 
-          (asm-16-le cgc
-                     (fx+ b
-                          (if load?         #x10  0)
-                          (if write-back?   #x20  0)
-                          (if byte?         #x40  0)
-                          (if (>= offset 0) #x80  0)
-                          (if pre?          #x100 0)
-                          #x400
-                          (fxarithmetic-shift-left condition 12))))))
+            (asm-16-le cgc
+                       (fx+ b
+                            (if load?         #x10  0)
+                            (if write-back?   #x20  0)
+                            (if byte?         #x40  0)
+                            (if (>= offset 0) #x80  0)
+                            (if pre?          #x100 0)
+                            #x400
+                            (fxarithmetic-shift-left condition 12)))
 
-  (if (codegen-context-listing-format cgc)
-      (arm-listing
-       cgc
-       (list (vector-ref
-              '#("str" "strb" "ldr" "ldrb")
-              (fx+ (if load? 2 0) (if byte? 1 0)))
-             (arm-condition-name* condition))
-       rd
-       (if pre?
-           (string-append "["
-                          (arm-register-name rb)
-                          (if (fx= offset 0)
-                              ""
-                              (string-append ",#"
-                                             (number->string offset)))
-                          (if write-back? "]!" "]"))
-           (string-append "["
-                          (arm-register-name rb)
-                          "], #"
-                          (number->string offset))))))
+            (listing #f))))))
 
 ;;;----------------------------------------------------------------------------
 
