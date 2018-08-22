@@ -51,12 +51,13 @@
   (cond
     ;; Fixnum
     ;; Todo: Check if fixnum on TARGET, not compilation machine
-    ((fixnum? object)     fixnum-obj-desc)
+    ((fixnum? object)       fixnum-obj-desc)
     ;; Special int values
-    ((boolean? object)    boolean-obj-desc)
-    ((null? object)       nil-obj-desc)
-    ((eof-object? object) eof-obj-desc)
-    ((char? object)       char-obj-desc)
+    ((boolean? object)      boolean-obj-desc)
+    ((null? object)         nil-obj-desc)
+    ((eof-object? object)   eof-obj-desc)
+    ((equal? (void) object) void-obj-desc)
+    ((char? object)         char-obj-desc)
     ;; Pair
     ; ((pair? object)       pair-obj-desc)
     ; ;; Subtypes
@@ -103,10 +104,11 @@
 
 ;; Special int values
 ;; Use gsi with ##fx+ to find values
-(define false-object-val -1) ;; Default value for false
-(define true-object-val  -2) ;; Default value for true
-(define nil-object-val   -3)
-(define eof-object-val   -4)
+(define false-object-val  -1) ;; Default value for false
+(define true-object-val   -2) ;; Default value for true
+(define nil-object-val    -3)
+(define eof-object-val    -4)
+(define void-object-val   -5)
 
 (define fixnum-obj-desc
   (immediate-desc 'fixnum
@@ -125,7 +127,8 @@
     (lambda (val) (tag-number (char->integer val) special-int-tag))))
 
 (define nil-obj-desc (make-unit-type-desc nil-object-val))
-(define eof-obj-desc (make-unit-type-desc nil-object-val))
+(define eof-obj-desc (make-unit-type-desc eof-object-val))
+(define void-obj-desc (make-unit-type-desc void-object-val))
 
 ;; Reference types
 
