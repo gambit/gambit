@@ -133,8 +133,7 @@
                 (get-word-width-bits cgc)))))))
     ((then-move? result-action)
       (let ((mov-loc (then-move-store-location result-action)))
-        (if (not (equal? mov-loc opnd))
-          (am-mov cgc mov-loc opnd (get-word-width-bits cgc)))))
+        (am-mov cgc mov-loc opnd (get-word-width-bits cgc))))
     ((then-return? result-action)
       (am-mov cgc (get-register cgc 1) opnd (get-word-width-bits cgc))
       (am-jmp cgc (get-register cgc 0)))
@@ -456,9 +455,13 @@
             (lambda (arg1)
               (load-if-necessary cgc allowed-opnds2 (cadr args)
                 (lambda (arg2)
-                  (reduce-2+ cgc arg1 arg2
-                    (then-jump-true-location  result-action)
-                    (then-jump-false-location result-action)))))))
+                  (if (then-jump? result-action)
+                    (reduce-2+ cgc arg1 arg2
+                      (then-jump-true-location  result-action)
+                      (then-jump-false-location result-action))
+                    (am-return-boolean cgc result-action
+                      (lambda (true-label false-label)
+                        (reduce-2+ cgc arg1 arg2 true-label false-label)))))))))
         ;; General case
         (else
           (debug "general case")

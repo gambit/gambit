@@ -692,8 +692,8 @@
 
 (define (x86-allocate-memory cgc dest-reg bytes offset frame)
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
-          (temp1 (get-processor-state-field cgc 'temp1))
-          (return-loc (make-unique-label cgc "return-from-gc")))
+         (temp1 (get-processor-state-field cgc 'temp1))
+         (return-loc (make-unique-label cgc "return-from-gc")))
 
       (x86-lea cgc dest-reg (make-x86-opnd (mem-opnd (get-heap-pointer cgc) offset)))
       (x86-add cgc (get-heap-pointer cgc) (make-x86-opnd (int-opnd bytes)))
@@ -846,12 +846,15 @@
       allowed-opnds: '(reg)
       fun:
       (lambda (result-reg result-opnd-in-args)
-        (am-sub cgc result-reg (car args) (cadr args))
-        (am-cond-return cgc result-action
-          (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
-          (lambda (cgc lbl) (x86-jo  cgc (lbl-opnd-label lbl)))
-          true-opnd: result-reg
-          false-opnd: (int-opnd (format-imm-object #f)))))))
+        (let* ((1-opnd? (null? (cdr args)))
+               (opnd1 (if 1-opnd? (int-opnd 0) (car args)))
+               (opnd2 (if 1-opnd? (car args) (cadr args))))
+          (am-sub cgc result-reg opnd1 opnd2)
+          (am-cond-return cgc result-action
+            (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
+            (lambda (cgc lbl) (x86-jo  cgc (lbl-opnd-label lbl)))
+            true-opnd: result-reg
+            false-opnd: (int-opnd (format-imm-object #f))))))))
 
 (define (x86-compare-prim condition)
   (foldl-compare-prim
@@ -862,7 +865,7 @@
         false-label true-label
         (get-word-width-bits cgc)))
     allowed-opnds1: '(reg mem)
-    allowed-opnds2: '(reg mem int)))
+    allowed-opnds2: '(reg int)))
 
 (define x86-prim-##fx<  (x86-compare-prim (condition-greater #t #t)))
 (define x86-prim-##fx<= (x86-compare-prim (condition-greater #f #t)))
@@ -897,7 +900,9 @@
             (am-mov cgc
               (mem-opnd result-reg (- (* 2 word) offset))
               (car args)
-              (get-word-width-bits cgc)))))))
+              (get-word-width-bits cgc))
+
+            (am-return-opnd cgc result-action result-reg))))))
 
 (define x86-prim-##null?
   (lambda (cgc result-action args)
