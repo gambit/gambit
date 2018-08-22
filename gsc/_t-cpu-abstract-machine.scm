@@ -306,10 +306,13 @@
 (define (obj-opnd? pair)           (tagged-object? 'obj-opnd pair))
 (define (obj-opnd-value pair)        (cadr pair))
 
-(define (mem-opnd register offset) (list 'mem-opnd register offset))
+(define (mem-opnd register offset #!optional (reg-offset #f) (scale 0))
+  (list 'mem-opnd register offset reg-offset scale))
 (define (mem-opnd? pair)           (tagged-object? 'mem-opnd pair))
-(define (mem-opnd-base pair)       (cadr pair))
-(define (mem-opnd-offset pair)     (caddr pair))
+(define (mem-opnd-base pair)       (list-ref pair 1))
+(define (mem-opnd-offset pair)     (list-ref pair 2))
+(define (mem-opnd-reg-offset pair) (list-ref pair 3))
+(define (mem-opnd-scale pair)      (list-ref pair 4))
 
 (define (lbl-opnd label #!optional (offset 0)) (list 'lbl-opnd label offset))
 (define (lbl-opnd? pair)           (tagged-object? 'lbl-opnd pair))

@@ -618,65 +618,30 @@
 
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
-;; Todo: Dereference memory before reading with offset (Doesn't work)
-(define (read-reference cgc result-action dest ref tag index width)
-  (let* ((total-offset (- (* width index) tag)))
-    (if (equal? 'reg (opnd-type ref))
-      (am-mov cgc dest (opnd-with-offset ref total-offset) width)
-      (begin
-        (get-free-register cgc (list ref dest)
-          (lambda (reg)
-            (am-mov cgc reg ref)
-            (am-mov cgc dest (opnd-with-offset reg total-offset) width)))))))
-
-(define (set-reference cgc src ref tag index width)
-  (let* ((total-offset (- (* width index) tag))
-         (mem-location (opnd-with-offset ref total-offset)))
-    (am-mov cgc mem-location src width)))
-
-; (define (read-reference-dynamic cgc dest ref tag index-opnd width)
-;   (let* ((total-offset (- (* width index) tag))
-;          (mem-location (opnd-with-offset ref total-offset)))
-;     (am-mov cgc dest mem-location width)))
-
-; (define (set-reference-dynamic cgc src ref tag index width)
-;   (let* ((total-offset (- (* width index) tag))
-;          (mem-location (opnd-with-offset ref total-offset)))
-;     (am-mov cgc mem-location dest width)))
-
-(define (object-read-prim desc field-index #!optional (width #f))
+;; Header is index 0
+(define (object-read-prim desc index #!optional (width #f))
   (if (immediate-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
 
-  (if field-index
-    ;; Index is static
-    (lambda (cgc result-action args)
-      (debug "object-read-prim")
-      (with-result-opnd cgc result-action args
-        fun: (lambda (result-opnd result-opnd-in-args)
-          (check-nargs-if-necessary cgc result-action 1)
-          (load-if-necessary cgc '(reg mem) (car args)
-            (lambda (ref)
-              (read-reference cgc result-action
-                result-opnd ref
-                (get-desc-pointer-tag desc)
-                (- field-index 1)
-                (if width width (get-word-width cgc))))))))
-    (compiler-internal-error "object-set-prim - Dynamic index not implemented")))
+  (const-nargs-prim 1 0 '((reg))
+    (lambda (cgc result-action args obj-opnd)
+      (let* ((width (if width width (get-word-width cgc)))
+              (obj-tag (get-desc-pointer-tag desc))
+              (header-offset (+ (* width pointer-header-offset) obj-tag))
+              (total-offset (- (* width index) header-offset))
+              (mem-location (opnd-with-offset obj-opnd total-offset)))
+        (am-return-opnd cgc result-action mem-location)))))
 
-(define (object-set-prim desc field-index #!optional (width #f))
+;; Header is index 0
+(define (object-set-prim desc index #!optional (width #f))
   (if (immediate-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
 
-  (if field-index
-    ;; Index is static
-    (lambda (cgc result-action args)
-      (check-nargs-if-necessary cgc result-action 2)
-      (call-with-nargs args
-        (lambda (ref new-val)
-          (set-reference cgc
-            new-val ref
-            (get-desc-pointer-tag desc) (- field-index 1)
-            (if width width (get-word-width cgc)))
-          (am-return-const cgc result-action (void)))))
-  (compiler-internal-error "object-set-prim - Dynamic index not implemented")))
+  (const-nargs-prim 2 0 '((reg))
+    (lambda (cgc result-action args obj-opnd new-val)
+      (let* ((width (if width width (get-word-width cgc)))
+             (obj-tag (get-desc-pointer-tag desc))
+             (header-offset (+ (* width pointer-header-offset) obj-tag))
+             (total-offset (- (* width index) header-offset))
+             (mem-location (opnd-with-offset obj-opnd total-offset)))
+        (am-mov cgc mem-location new-val width)))))
