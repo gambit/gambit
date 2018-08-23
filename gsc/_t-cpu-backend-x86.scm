@@ -353,19 +353,19 @@
          (return-lbl1 (make-unique-label cgc "return-from-poll-handler"))
          (return-lbl2 (make-unique-label cgc "resume-execution")))
 
-    (add-delayed-block cgc delayed-execute-never
-      (lambda ()
-        ;; Jump to handler
-        (am-mov cgc (car temp1) return-lbl1 (cdr temp1))
-        (call-handler cgc 'handler_stack_limit frame return-lbl1)
-        (am-jmp cgc return-lbl2)))
-
     (am-compare-jump cgc
       (condition-lesser #f #f)
       (get-frame-pointer cgc) stack-trip
       return-lbl1 #f)
 
-    (am-lbl cgc return-lbl2)))
+    (am-lbl cgc return-lbl2)
+
+    (add-delayed-block cgc delayed-execute-never
+      (lambda ()
+        ;; Jump to handler
+        (am-mov cgc (car temp1) return-lbl1 (cdr temp1))
+        (call-handler cgc 'handler_stack_limit frame return-lbl1)
+        (am-jmp cgc return-lbl2)))))
 
 ;; Nargs passing
 
@@ -696,29 +696,34 @@
 ;       (x86-popf cgc)))
 ;   (am-lbl cgc continue-label))
 
+(define bump-allocator-fudge-size 128)
 (define (x86-allocate-memory cgc dest-reg bytes offset frame)
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
          (temp1 (get-processor-state-field cgc 'temp1))
-         (return-loc (make-unique-label cgc "return-from-gc"))
          (return-lbl1 (make-unique-label cgc "return-from-gc"))
-         (return-lbl2 (make-unique-label cgc "resume-execution")))
+         (return-lbl2 (make-unique-label cgc "resume-execution"))
+         (bytes-allocated (codegen-context-memory-allocated cgc)))
 
-    (add-delayed-block cgc delayed-execute-never
-      (lambda ()
-        ;; Jump to handler
-        (am-mov cgc (car temp1) return-lbl1 (cdr temp1))
-        (call-handler cgc 'handler_heap_limit frame return-lbl1)
-        (am-jmp cgc return-lbl2)))
+    (codegen-context-memory-allocated-set! cgc (+ bytes-allocated bytes))
 
     (x86-lea cgc dest-reg (make-x86-opnd (mem-opnd (get-heap-pointer cgc) offset)))
     (x86-add cgc (get-heap-pointer cgc) (make-x86-opnd (int-opnd bytes)))
 
-    (am-compare-jump cgc
-      (condition-lesser #f #f)
-      (get-frame-pointer cgc) stack-trip
-      return-lbl1 #f)
+    (if (> bytes-allocated bump-allocator-fudge-size)
+      (begin
+        (am-compare-jump cgc
+          (condition-lesser #f #f)
+          (get-frame-pointer cgc) stack-trip
+          return-lbl1 #f)
 
-    (am-lbl cgc return-lbl2)))
+        (am-lbl cgc return-lbl2)
+
+        (add-delayed-block cgc delayed-execute-never
+          (lambda ()
+            ;; Jump to handler
+            (am-mov cgc (car temp1) return-lbl1 (cdr temp1))
+            (call-handler cgc 'handler_heap_limit frame return-lbl1)
+            (am-jmp cgc return-lbl2)))))))
 
 (define (x86-place-extra-data cgc)
   (debug "place-extra-data"))
