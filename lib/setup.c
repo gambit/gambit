@@ -3382,7 +3382,7 @@ ___SCMOBJ fixup_objs;)
   ___U8 *ptr = ___CAST(___U8*,___BODY_AS(fixup_locs,___tSUBTYPED));
   ___WORD pos = 0;
   ___U8 loc;
-  ___S64 val = ___FAL;
+  ___WORD val = ___FAL;
 
   while ((loc = *ptr++) != 0)
     {
@@ -3391,11 +3391,11 @@ ___SCMOBJ fixup_objs;)
       else
         {
           ___WORD fixup_pos = pos + (loc>>1) - 1;
-          ___S64 x = (loc&1)
-                     ? *___CAST(___S64*,code+fixup_pos)
-                     : *___CAST(___S32*,code+fixup_pos);
+          ___WORD x = (loc&1)
+                      ? *___CAST(___WORD*,code+fixup_pos)
+                      : *___CAST(___S32*,code+fixup_pos);
           int op = x & 0xff;
-          ___S64 arg = x >> 8;
+          ___WORD arg = x >> 8;
 
           switch (op)
             {
@@ -3414,20 +3414,20 @@ ___SCMOBJ fixup_objs;)
             case 3:
               val = ___VECTORREF(fixup_objs, ___FIX(arg));
               val = ___make_global_var (val);
-              val = ___CAST(___S64, &___GLOBALVARREF(val));
+              val = ___CAST(___WORD, &___GLOBALVARREF(val));
               break;
 
             case 4:
               val = ___VECTORREF(fixup_objs, ___FIX(arg));
               val = ___make_global_var (val);
-              val = ___CAST(___S64, &___GLOBALVARPRIMREF(val));
+              val = ___CAST(___WORD, &___GLOBALVARPRIMREF(val));
               break;
 
             case 5:
               switch (arg)
                 {
                 case 0:
-                  val = ___CAST(___S64,___lowlevel_exec);
+                  val = ___CAST(___WORD, ___lowlevel_exec);
                   break;
                 }
               break;
@@ -3435,13 +3435,13 @@ ___SCMOBJ fixup_objs;)
 
           if (loc&1)
             {
-              *___CAST(___S64*,code+fixup_pos) = val;
-              pos = fixup_pos + 8;
+              *___CAST(___WORD*,code+fixup_pos) = val;
+              pos = fixup_pos + sizeof(___WORD);
             }
           else
             {
               *___CAST(___S32*,code+fixup_pos) = val;
-              pos = fixup_pos + 4;
+              pos = fixup_pos + sizeof(___S32);
             }
         }
     }
