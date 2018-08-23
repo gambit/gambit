@@ -19,7 +19,7 @@
 ;;;============================================================================
 
 (define (make-codegen-context)
-  (let ((cgc (make-vector (+ (asm-code-block-size) 14) 'codegen-context)))
+  (let ((cgc (make-vector (+ (asm-code-block-size) 16) 'codegen-context)))
     (codegen-context-listing-format-set!             cgc #f)
     (codegen-context-arch-set!                       cgc #f)
 
@@ -32,9 +32,11 @@
     (codegen-context-current-code-set!               cgc #f)
     (codegen-context-frame-set!                      cgc #f)
     (codegen-context-nargs-set!                      cgc #f)
+    (codegen-context-delayed-blocks-set!             cgc '())
     (codegen-context-label-struct-position-set!      cgc #f)
 
     (codegen-context-registers-status-set!           cgc #f)
+    (codegen-context-memory-allocated-set!           cgc 0)
 
     (codegen-context-primitive-labels-table-set!     cgc (make-table 'test: equal?))
     (codegen-context-proc-labels-table-set!          cgc (make-table 'test: equal?))
@@ -104,39 +106,51 @@
 (define (codegen-context-nargs-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 8) x))
 
-(define (codegen-context-label-struct-position cgc)
+(define (codegen-context-delayed-blocks cgc)
   (vector-ref cgc (+ (asm-code-block-size) 9)))
 
-(define (codegen-context-label-struct-position-set! cgc x)
+(define (codegen-context-delayed-blocks-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 9) x))
+
+(define (codegen-context-label-struct-position cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 10)))
+
+(define (codegen-context-label-struct-position-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 10) x))
 
 ;; Resource tracking
 
 (define (codegen-context-registers-status cgc)
-  (vector-ref cgc (+ (asm-code-block-size) 10)))
+  (vector-ref cgc (+ (asm-code-block-size) 11)))
 
 (define (codegen-context-registers-status-set! cgc x)
-  (vector-set! cgc (+ (asm-code-block-size) 10) x))
+  (vector-set! cgc (+ (asm-code-block-size) 11) x))
+
+(define (codegen-context-memory-allocated cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 12)))
+
+(define (codegen-context-memory-allocated-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 12) x))
 
 ;; Label tables
 
 (define (codegen-context-primitive-labels-table cgc)
-  (vector-ref cgc (+ (asm-code-block-size) 11)))
-
-(define (codegen-context-primitive-labels-table-set! cgc x)
-  (vector-set! cgc (+ (asm-code-block-size) 11) x))
-
-(define (codegen-context-proc-labels-table cgc)
-  (vector-ref cgc (+ (asm-code-block-size) 12)))
-
-(define (codegen-context-proc-labels-table-set! cgc x)
-  (vector-set! cgc (+ (asm-code-block-size) 12) x))
-
-(define (codegen-context-other-labels-table cgc)
   (vector-ref cgc (+ (asm-code-block-size) 13)))
 
-(define (codegen-context-other-labels-table-set! cgc x)
+(define (codegen-context-primitive-labels-table-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 13) x))
+
+(define (codegen-context-proc-labels-table cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 14)))
+
+(define (codegen-context-proc-labels-table-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 14) x))
+
+(define (codegen-context-other-labels-table cgc)
+  (vector-ref cgc (+ (asm-code-block-size) 15)))
+
+(define (codegen-context-other-labels-table-set! cgc x)
+  (vector-set! cgc (+ (asm-code-block-size) 15) x))
 
 ;; Utils
 
