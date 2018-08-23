@@ -1111,7 +1111,13 @@
 
       (else
         (execute-delayed-blocks-always cgc)
-        (am-jmp cgc jmp-loc)
+        ;; jmp-loc is already loaded in self-register
+        (if (and (jump-nb-args gvm-instr)
+                (equal? 'x86-32 (get-arch-name cgc))
+                (not (lbl? jmp-opnd)))
+          (am-jmp cgc (get-self-register cgc))
+          (am-jmp cgc jmp-loc))
+
         (execute-delayed-blocks-never cgc)))))
 
 (define (encode-ifjump-instr cgc prev-code code next-code)
