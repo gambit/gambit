@@ -350,25 +350,26 @@
   (debug "x86-poll")
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
          (temp1 (get-processor-state-field cgc 'temp1))
-         (return-lbl1 (make-unique-label cgc "return-from-poll-handler"))
-         (return-lbl2 (make-unique-label cgc "resume-execution")))
+         (return-lbl1 (make-unique-label cgc "call-poll-handler"))
+         (return-lbl2 (make-unique-label cgc "return-from-poll-handler"))
+         (return-lbl3 (make-unique-label cgc "resume-execution")))
 
     (am-compare-jump cgc
-      (condition-lesser #f #f)
+      (condition-lesser #t #f)
       (get-frame-pointer cgc) stack-trip
       return-lbl1 #f)
 
-    (am-lbl cgc return-lbl2)
+    (am-lbl cgc return-lbl3)
 
-    (add-delayed-block cgc delayed-execute-never
+    (add-delayed-action cgc 'poll delayed-execute-never
       (lambda ()
         ;; Jump to handler
-        (am-mov cgc (car temp1) return-lbl1 (cdr temp1))
-        (call-handler cgc 'handler_stack_limit frame return-lbl1)
-        (am-jmp cgc return-lbl2)))))
+        (am-lbl cgc return-lbl1)
+        (am-mov cgc (car temp1) return-lbl2 (cdr temp1))
+        (call-handler cgc 'handler_stack_limit frame return-lbl2)
+        (am-jmp cgc return-lbl3)))))
 
 ;; Nargs passing
-
 (define (x86-set-nargs cgc arg-count)
   (debug "x86-set-narg: " arg-count)
   (let ((narg-field (get-processor-state-field cgc 'nargs)))
@@ -698,32 +699,46 @@
 
 (define bump-allocator-fudge-size 128)
 (define (x86-allocate-memory cgc dest-reg bytes offset frame)
-  (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
-         (temp1 (get-processor-state-field cgc 'temp1))
-         (return-lbl1 (make-unique-label cgc "return-from-gc"))
-         (return-lbl2 (make-unique-label cgc "resume-execution"))
-         (bytes-allocated (codegen-context-memory-allocated cgc)))
+  (define (check-heap-limit)
+    (let* ((heap-limit (car (get-processor-state-field cgc 'heap-limit)))
+           (temp1 (get-processor-state-field cgc 'temp1))
+           (return-lbl1 (make-unique-label cgc "call-gc"))
+           (return-lbl2 (make-unique-label cgc "return-from-gc"))
+           (return-lbl3 (make-unique-label cgc "resume-execution")))
+      ;; Reset bytes allocated count
+      (codegen-context-memory-allocated-set! cgc 0)
 
-    (codegen-context-memory-allocated-set! cgc (+ bytes-allocated bytes))
+      (am-compare-jump cgc
+        (condition-greater #f #f) ;; Not equal, because we can't exceed the fudge
+        (get-heap-pointer cgc) heap-limit
+        return-lbl1 #f)
+
+      (am-lbl cgc return-lbl3)
+
+      ;; Add internal return point after unconditional jump
+      (add-delayed-action cgc 'heap-limit-check delayed-execute-never
+        (lambda ()
+          ;; Jump to handler
+          (am-lbl cgc return-lbl1)
+          (am-mov cgc (car temp1) return-lbl2 (cdr temp1))
+          (call-handler cgc 'handler_heap_limit frame return-lbl2)
+          (am-jmp cgc return-lbl3)))))
+
+  (let* ((bytes-allocated (+ (codegen-context-memory-allocated cgc) bytes)))
+
+    (codegen-context-memory-allocated-set! cgc bytes-allocated)
 
     (x86-lea cgc dest-reg (make-x86-opnd (mem-opnd (get-heap-pointer cgc) offset)))
     (x86-add cgc (get-heap-pointer cgc) (make-x86-opnd (int-opnd bytes)))
 
-    (if (> bytes-allocated bump-allocator-fudge-size)
-      (begin
-        (am-compare-jump cgc
-          (condition-lesser #f #f)
-          (get-frame-pointer cgc) stack-trip
-          return-lbl1 #f)
-
-        (am-lbl cgc return-lbl2)
-
-        (add-delayed-block cgc delayed-execute-never
-          (lambda ()
-            ;; Jump to handler
-            (am-mov cgc (car temp1) return-lbl1 (cdr temp1))
-            (call-handler cgc 'handler_heap_limit frame return-lbl1)
-            (am-jmp cgc return-lbl2)))))))
+    (if (>= bytes-allocated bump-allocator-fudge-size)
+      (check-heap-limit)
+      ;; Add delayed action to make sure the heap limit is tested before an
+      ;; unconditional jump.
+      (add-delayed-action-unique cgc 'heap-limit-check delayed-execute-always
+        (lambda ()
+          (if (> (codegen-context-memory-allocated cgc) 0)
+            (check-heap-limit)))))))
 
 (define (x86-place-extra-data cgc)
   (debug "place-extra-data"))

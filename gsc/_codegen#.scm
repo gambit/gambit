@@ -32,8 +32,8 @@ codegen-context-frame
 codegen-context-frame-set!
 codegen-context-nargs
 codegen-context-nargs-set!
-codegen-context-delayed-blocks
-codegen-context-delayed-blocks-set!
+codegen-context-delayed-actions
+codegen-context-delayed-actions-set!
 codegen-context-label-struct-position
 codegen-context-label-struct-position-set!
 

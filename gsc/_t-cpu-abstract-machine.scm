@@ -715,36 +715,58 @@
 (define delayed-execute-always 'always)
 (define delayed-execute-never 'never)
 
-(define (add-delayed-block cgc condition thunk)
-  (let ((blocks (codegen-context-delayed-blocks cgc))
-        (pair (cons condition thunk)))
-    (codegen-context-delayed-blocks-set! cgc
-      (if (list? blocks)
-        (cons pair blocks)
-        (list pair)))))
+(define (delayed-action identifier condition thunk)
+  (list identifier condition thunk))
 
-(define (get-delayed-blocks-always cgc)
+(define delayed-action-identifier car)
+(define delayed-action-condition  cadr)
+(define delayed-action-thunk      caddr)
+
+(define (add-delayed-action cgc identifier condition thunk)
+  (let ((actions (codegen-context-delayed-actions cgc))
+        (action (delayed-action identifier condition thunk)))
+    (codegen-context-delayed-actions-set! cgc (cons action actions))))
+
+(define (add-delayed-action-unique cgc identifier condition thunk)
+  (let ((actions (codegen-context-delayed-actions cgc))
+        (action (delayed-action #f condition thunk)))
+    (if (not (delayed-action-exist? cgc identifier))
+      (codegen-context-delayed-actions-set! cgc (cons action actions)))))
+
+(define (remove-delayed-action cgc identifier)
+  (let ((actions (codegen-context-delayed-actions cgc))
+        (exist? (delayed-action-exist? cgc identifier)))
+    (codegen-context-delayed-actions-set! cgc
+      (filter
+        (lambda (action) (equal? identifier (delayed-action-identifier action)))
+        actions))
+    exist?))
+
+(define (delayed-action-exist? cgc identifier)
+  (let ((actions (codegen-context-delayed-actions cgc)))
+    (elem? identifier (map delayed-action-identifier actions))))
+
+(define (get-delayed-actions-always cgc)
   (filter
-    (lambda (pair) (equal? delayed-execute-always (car pair)))
-    (codegen-context-delayed-blocks cgc)))
+    (lambda (action) (equal? delayed-execute-always (delayed-action-condition action)))
+    (codegen-context-delayed-actions cgc)))
 
-(define (get-delayed-blocks-never cgc)
+(define (get-delayed-actions-never cgc)
   (filter
-    (lambda (pair) (equal? delayed-execute-never (car pair)))
-    (codegen-context-delayed-blocks cgc)))
+    (lambda (action) (equal? delayed-execute-never (delayed-action-condition action)))
+    (codegen-context-delayed-actions cgc)))
 
-(define (execute-delayed-blocks-always cgc)
+(define (execute-delayed-actions-always cgc)
   (for-each
-    (lambda (block) ((cdr block)))
-    (get-delayed-blocks-always cgc))
-  (codegen-context-delayed-blocks-set! cgc (get-delayed-blocks-never cgc)))
+    (lambda (action) ((delayed-action-thunk action)))
+    (get-delayed-actions-always cgc))
+  (codegen-context-delayed-actions-set! cgc (get-delayed-actions-never cgc)))
 
-
-(define (execute-delayed-blocks-never cgc)
+(define (execute-delayed-actions-never cgc)
   (for-each
-    (lambda (block) ((cdr block)))
-    (get-delayed-blocks-never cgc))
-  (codegen-context-delayed-blocks-set! cgc (get-delayed-blocks-always cgc)))
+    (lambda (action) ((delayed-action-thunk action)))
+    (get-delayed-actions-never cgc))
+  (codegen-context-delayed-actions-set! cgc (get-delayed-actions-always cgc)))
 
 ;;------------------------------------------------------------------------------
 ;;----------------------------- GVM proc encoding ------------------------------
@@ -1114,7 +1136,7 @@
         #f)
 
       (else
-        (execute-delayed-blocks-always cgc)
+        (execute-delayed-actions-always cgc)
         ;; jmp-loc is already loaded in self-register
         (if (and (jump-nb-args gvm-instr)
                 (equal? 'x86-32 (get-arch-name cgc))
@@ -1122,7 +1144,7 @@
           (am-jmp cgc (get-self-register cgc))
           (am-jmp cgc jmp-loc))
 
-        (execute-delayed-blocks-never cgc)))))
+        (execute-delayed-actions-never cgc)))))
 
 (define (encode-ifjump-instr cgc prev-code code next-code)
   (debug "encode-ifjump-instr")
@@ -1144,7 +1166,7 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (execute-delayed-blocks-always cgc)
+    (execute-delayed-actions-always cgc)
 
     (if (apply-ifjump-optimization? cgc prev-code code)
       (let* ((inverse-jumps? (equal? "##not" prim-sym))
@@ -1170,7 +1192,7 @@
         (prim-fun cgc (then-jump true-loc false-loc) args)))
 
       (if (and true-loc false-loc)
-        (execute-delayed-blocks-never cgc))))
+        (execute-delayed-actions-never cgc))))
 
 ;; ***** Apply instruction encoding
 
