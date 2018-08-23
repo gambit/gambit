@@ -1044,11 +1044,15 @@
                   (set-proc-label-index cgc proc label label-struct-position)
                   (put-entry-point-label cgc label proc-name #f narg closure?)))
 
-              ;; Todo: Change for x86-32 and ARM
               (if closure?
                 (let ((r4 (get-self-register cgc)))
-                  (x86-pop cgc r4)
-                  (am-sub cgc r4 r4 (int-opnd 6))))))
+                  (case (get-arch-name cgc)
+                    ((x86-32) #f)
+                    ((x86-64)
+                      (x86-pop cgc r4)
+                      (am-sub cgc r4 r4 (int-opnd 6)))
+                    ((arm)
+                      (compiler-internal-error "TODO: ARM not implemented")))))))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
@@ -1230,13 +1234,14 @@
   (define width-bits (get-word-width-bits cgc))
 
   ;; Todo: Update for x86-32 and ARM
-  ;; x86-64: #xffffffF115ff == Encoded jmp [rip-15]
   (define executable-code
     (case (get-arch-name cgc)
       ((x86-32)
-        (list -127467776)) ;; (* 256 #xf866ff)))
+        (list (asm-signed-lo (* 256 #xfb66ff) 32))) ;; Encoded jmp [esi-5]
       ((x86-64)
-        (list (* 256 #xfffffff115ff)))
+        (list (* 256 #xfffffff115ff))) ;; Encoded jmp [rip-15]
+      ((arm)
+        (compiler-internal-error "TODO: ARM not implemented"))
       (else
         (compiler-error "Unknown arch"))))
   (define code-length (length executable-code))
