@@ -712,6 +712,40 @@
         (for-each (lambda (datum) (fun cgc datum)) data)
         (fun cgc data)))))
 
+(define delayed-execute-always 'always)
+(define delayed-execute-never 'never)
+
+(define (add-delayed-block cgc condition thunk)
+  (let ((blocks (codegen-context-delayed-blocks cgc))
+        (pair (cons condition thunk)))
+    (codegen-context-delayed-blocks-set! cgc
+      (if (list? blocks)
+        (cons pair blocks)
+        (list pair)))))
+
+(define (get-delayed-blocks-always cgc)
+  (filter
+    (lambda (pair) (equal? delayed-execute-always (car pair)))
+    (codegen-context-delayed-blocks cgc)))
+
+(define (get-delayed-blocks-never cgc)
+  (filter
+    (lambda (pair) (equal? delayed-execute-never (car pair)))
+    (codegen-context-delayed-blocks cgc)))
+
+(define (execute-delayed-blocks-always cgc)
+  (for-each
+    (lambda (block) ((cdr block)))
+    (get-delayed-blocks-always cgc))
+  (codegen-context-delayed-blocks-set! cgc (get-delayed-blocks-never cgc)))
+
+
+(define (execute-delayed-blocks-never cgc)
+  (for-each
+    (lambda (block) ((cdr block)))
+    (get-delayed-blocks-never cgc))
+  (codegen-context-delayed-blocks-set! cgc (get-delayed-blocks-always cgc)))
+
 ;;------------------------------------------------------------------------------
 ;;----------------------------- GVM proc encoding ------------------------------
 ;;------------------------------------------------------------------------------
@@ -1076,7 +1110,9 @@
         #f)
 
       (else
-        (am-jmp cgc jmp-loc)))))
+        (execute-delayed-blocks-always cgc)
+        (am-jmp cgc jmp-loc)
+        (execute-delayed-blocks-never cgc)))))
 
 (define (encode-ifjump-instr cgc prev-code code next-code)
   (debug "encode-ifjump-instr")
