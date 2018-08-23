@@ -1134,6 +1134,8 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
+    (execute-delayed-blocks-always cgc)
+
     (if (apply-ifjump-optimization? cgc prev-code code)
       (let* ((inverse-jumps? (equal? "##not" prim-sym))
              (apply-instr (code-gvm-instr prev-code))
@@ -1142,9 +1144,6 @@
              (apply-prim-obj (get-primitive-object cgc apply-prim-name))
              (opnds (apply-opnds apply-instr))
              (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds)))
-        (debug apply-loc)
-        (debug apply-prim-obj)
-        (debug args)
         ((get-primitive-function apply-prim-obj) cgc
           (then-jump
             (if inverse-jumps? false-loc true-loc)
@@ -1158,7 +1157,10 @@
              (args (map (lambda (opnd) (make-opnd cgc opnd)) opnds)))
         (if (not prim-obj)
           (compiler-internal-error "encode-ifjump-instr - Primitive not implemented: " prim-sym))
-        (prim-fun cgc (then-jump true-loc false-loc) args)))))
+        (prim-fun cgc (then-jump true-loc false-loc) args)))
+
+      (if (and true-loc false-loc)
+        (execute-delayed-blocks-never cgc))))
 
 ;; ***** Apply instruction encoding
 

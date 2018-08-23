@@ -32,11 +32,15 @@ codegen-context-frame
 codegen-context-frame-set!
 codegen-context-nargs
 codegen-context-nargs-set!
+codegen-context-delayed-blocks
+codegen-context-delayed-blocks-set!
 codegen-context-label-struct-position
 codegen-context-label-struct-position-set!
 
 codegen-context-registers-status
 codegen-context-registers-status-set!
+codegen-context-memory-allocated
+codegen-context-memory-allocated-set!
 
 codegen-context-primitive-labels-table
 codegen-context-primitive-labels-table-set!
