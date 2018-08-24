@@ -133,12 +133,6 @@
     x86-mov-instr             ;; am-mov
     (x86-arith-instr x86-add) ;; am-add
     (x86-arith-instr x86-sub) ;; am-sub
-    (x86-arith-instr x86-shr) ;; am-bit-shift-right
-    (x86-arith-instr x86-shl) ;; am-bit-shift-left
-    (x86-arith-instr x86-not) ;; am-not
-    (x86-arith-instr x86-and) ;; am-and
-    (x86-arith-instr x86-or)  ;; am-or
-    (x86-arith-instr x86-xor) ;; am-xor
     x86-jmp-instr             ;; am-jmp
     x86-cmp-jump-instr        ;; am-compare-jump
     x86-cmp-move-instr))      ;; am-compare-move
@@ -996,7 +990,7 @@
                  (header-offset (+ (* width pointer-header-offset) object-tag))
                  (shift-count (- (+ header-tag-width header-tag-offset log2-width) tag-width)))
             (am-mov cgc result-reg (mem-opnd obj-reg (- header-offset)))
-            (am-bit-shift-right cgc result-reg result-reg (int-opnd shift-count))
+            (x86-shr cgc result-reg (int-opnd shift-count))
             (am-return-opnd cgc result-action result-reg)))))))
 
 (define (x86-stub-prim cgc . args) #f)

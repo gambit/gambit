@@ -592,7 +592,7 @@
   (lambda (cgc result-action args)
     (check-nargs-if-necessary cgc result-action nargs)
     (load-multiple-if-necessary cgc allowed-opnds-lst args
-      (lambda (opnds)
+      (lambda opnds
         (get-multiple-free-registers cgc extra-regs-count opnds
           (lambda regs
             (apply fun (append (list cgc result-action args) opnds regs))))))))
