@@ -599,17 +599,15 @@
 
 ;; ***** Primitives - Basic primitives (##Identity and ##not)
 
-(define (##identity-primitive cgc result-action args)
-  (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args
-    (lambda (arg1)
+(define ##identity-primitive
+  (const-nargs-prim 1 0 any-opnds
+    (lambda (cgc result-action args arg1)
       (debug "identity prim: " arg1)
       (am-return-opnd cgc result-action arg1))))
 
-(define (##not cgc result-action args)
-  (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args
-    (lambda (arg1)
+(define ##not-primitive
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
       (debug "identity not: " arg1)
       (am-if-eq cgc arg1 (make-obj-opnd #f)
         (lambda (cgc) (am-return-const cgc result-action #t))
