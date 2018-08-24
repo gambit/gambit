@@ -530,10 +530,6 @@
       (lambda (reg)
         (fun reg #f))))
 
-  (define loc-in-args-count (elem-count (get-register cgc 1) args))
-  (define not-in-args (= 0 loc-in-args-count))
-  (define once-in-args (= 1 loc-in-args-count))
-
   (cond
     ((then-jump? result-action)
       (if (and
@@ -542,7 +538,9 @@
         (use-loc (then-jump-store-location result-action) #f)
         (use-loc default-opnd #t)))
     ((then-move? result-action)
-      (let ((mov-loc (then-move-store-location result-action)))
+      (let* ((mov-loc (then-move-store-location result-action))
+             (not-in-args (= 0 (elem-count mov-loc args)))
+             (once-in-args (= 1 (elem-count mov-loc args))))
         (cond
           ;; We can rearrange the expression to remove redundant move
           ((and once-in-args commutative)
@@ -557,9 +555,9 @@
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
       (cond
-        ((and once-in-args commutative)
+        ((and commutative (= 1 (elem-count (get-register cgc 1) args)))
           (use-loc (get-register cgc 1) #t))
-        (not-in-args
+        ((= 0 (elem-count (get-register cgc 1) args))
           (use-loc (get-register cgc 1) #f))
         (default-opnd
           (use-loc default-opnd #t))
