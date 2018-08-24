@@ -372,6 +372,8 @@
     (else
       (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
 
+(define any-opnd '(reg int mem lbl ind))
+(define any-opnds '((reg int mem lbl ind)))
 (define (opnd-type opnd)
   (cond
     ((reg-opnd? opnd) 'reg)
