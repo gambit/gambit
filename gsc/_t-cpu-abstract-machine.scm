@@ -114,18 +114,12 @@
           am-lbl am-data
           am-mov
           am-add am-sub
-          am-bit-shift-right am-bit-shift-left
-          am-not am-and
-          am-or  am-xor
           am-jmp am-compare-jump
           am-compare-move)
   (vector
     am-lbl am-data
     am-mov
     am-add am-sub
-    am-bit-shift-right am-bit-shift-left
-    am-not am-and
-    am-or am-xor
     am-jmp am-compare-jump
     am-compare-move))
 
@@ -190,15 +184,9 @@
 (define (am-mov cgc . args)              (apply-instruction cgc 2  args))
 (define (am-add cgc . args)              (apply-instruction cgc 3  args))
 (define (am-sub cgc . args)              (apply-instruction cgc 4  args))
-(define (am-bit-shift-right cgc . args)  (apply-instruction cgc 5  args))
-(define (am-bit-shift-left cgc . args)   (apply-instruction cgc 6  args))
-(define (am-not cgc . args)              (apply-instruction cgc 7  args))
-(define (am-and cgc . args)              (apply-instruction cgc 8  args))
-(define (am-or cgc . args)               (apply-instruction cgc 9  args))
-(define (am-xor cgc . args)              (apply-instruction cgc 10 args))
-(define (am-jmp cgc . args)              (apply-instruction cgc 11 args))
-(define (am-compare-jump cgc . args)     (apply-instruction cgc 12 args))
-(define (am-compare-move cgc . args)     (apply-instruction cgc 13 args))
+(define (am-jmp cgc . args)              (apply-instruction cgc 5 args))
+(define (am-compare-jump cgc . args)     (apply-instruction cgc 6 args))
+(define (am-compare-move cgc . args)     (apply-instruction cgc 7 args))
 
 ;; ***** AM: Routines fields
 
@@ -306,6 +294,8 @@
 (define (obj-opnd? pair)           (tagged-object? 'obj-opnd pair))
 (define (obj-opnd-value pair)        (cadr pair))
 
+;; reg-offset and scale aren't supported by the abstract machine
+;; Backends can use these fields to extend the abstract machine instructions.
 (define (mem-opnd register offset #!optional (reg-offset #f) (scale 0))
   (list 'mem-opnd register offset reg-offset scale))
 (define (mem-opnd? pair)           (tagged-object? 'mem-opnd pair))
@@ -344,7 +334,6 @@
       (else
         (compiler-internal-error "make-opnd: Unknown object: " val))))
 
-  (debug "make-opnd")
   (cond
     ((reg? opnd)
       (get-register cgc (reg-num opnd)))
@@ -468,7 +457,7 @@
 (define (load-multiple-if-necessary cgc allowed-opnds-lst opnds fun)
   (let loop ((opnds opnds) (allowed-opnds-lst allowed-opnds-lst) (safe-opnds '()))
     (if (null? opnds)
-      (fun (reverse safe-opnds))
+      (apply fun (reverse safe-opnds))
       (load-if-necessary cgc (car allowed-opnds-lst) (car opnds)
         (lambda (safe-opnd)
           (loop
@@ -635,7 +624,6 @@
   (define (filter-live-reg info)
     (and (not (elem? (car info) reserved-opnds)) (live-register? (cadr info))))
 
-  (debug "Choose-register")
   (let* ((lst
           (map list
             registers-list
@@ -714,6 +702,10 @@
         (for-each (lambda (datum) (fun cgc datum)) data)
         (fun cgc data)))))
 
+;;------------------------------------------------------------------------------
+;;------------------------------ Delayed actions -------------------------------
+;;------------------------------------------------------------------------------
+
 (define delayed-execute-always 'always)
 (define delayed-execute-never 'never)
 
@@ -759,15 +751,21 @@
     (codegen-context-delayed-actions cgc)))
 
 (define (execute-delayed-actions-always cgc)
+  (debug "execute-delayed-actions-always")
   (for-each
-    (lambda (action) ((delayed-action-thunk action)))
-    (get-delayed-actions-always cgc))
+    (lambda (action)
+      (debug "Executing delayed action: " (delayed-action-identifier action))
+      ((delayed-action-thunk action)))
+    (reverse (get-delayed-actions-always cgc)))
   (codegen-context-delayed-actions-set! cgc (get-delayed-actions-never cgc)))
 
 (define (execute-delayed-actions-never cgc)
+  (debug "execute-delayed-actions-never")
   (for-each
-    (lambda (action) ((delayed-action-thunk action)))
-    (get-delayed-actions-never cgc))
+    (lambda (action)
+      (debug "Executing delayed action: " (delayed-action-identifier action))
+      ((delayed-action-thunk action)))
+    (reverse (get-delayed-actions-never cgc)))
   (codegen-context-delayed-actions-set! cgc (get-delayed-actions-always cgc)))
 
 ;;------------------------------------------------------------------------------
@@ -844,7 +842,6 @@
 ;;  GVM Instruction Encoding
 
 (define (encode-gvm-instr cgc prev-code code next-code)
-  (debug "encode-gvm-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (instr-type (gvm-instr-type gvm-instr))
          (current-frame (gvm-instr-frame gvm-instr))
@@ -1139,13 +1136,12 @@
 
       (else
         (execute-delayed-actions-always cgc)
-        ;; jmp-loc is already loaded in self-register
+        ;; if x86: jmp-loc is already loaded in self-register
         (if (and (jump-nb-args gvm-instr)
                 (equal? 'x86-32 (get-arch-name cgc))
                 (not (lbl? jmp-opnd)))
           (am-jmp cgc (get-self-register cgc))
           (am-jmp cgc jmp-loc))
-
         (execute-delayed-actions-never cgc)))))
 
 (define (encode-ifjump-instr cgc prev-code code next-code)
