@@ -82,7 +82,7 @@
 
 ;; Pointer tagging constants
 
-(define USE_EVEN_TAG_FOR_SUBTYPED #t)
+(define USE_EVEN_TAG_FOR_SUBTYPED #f)
 
 (define pointer-header-offset 2)
 
