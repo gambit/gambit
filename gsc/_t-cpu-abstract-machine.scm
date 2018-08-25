@@ -872,8 +872,7 @@
     (if (equal? 'label instr-type)
       (begin
         (reset-registers-status cgc)
-        (update-registers-status-from-frame cgc current-frame #f))
-      (update-registers-status-from-frame cgc current-frame old-frame))
+        (update-registers-status-from-frame cgc current-frame #f)))
 
     (case instr-type
       ((label)  (encode-label-instr  cgc prev-code code next-code))
@@ -885,7 +884,9 @@
       ((switch) (encode-switch-instr cgc prev-code code next-code))
       (else
         (compiler-error
-          "encode-gvm-instr, unknown 'gvm-instr-type':" instr-type)))))
+          "encode-gvm-instr, unknown 'gvm-instr-type':" instr-type)))
+
+    (update-registers-status-from-frame cgc current-frame old-frame)))
 
 ;;  Label Instruction Encoding
 
