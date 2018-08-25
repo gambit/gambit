@@ -240,6 +240,7 @@
 :; Todo: Deduplicate labels
 (define (arm-load-label cgc rd label-opnd)
   (arm-load-data cgc rd
+    (asm-label-id (lbl-opnd-label label-opnd))
     (lambda (cgc)
       (debug "label-opnd: " label-opnd)
       (let ((label (lbl-opnd-label label-opnd)))
@@ -247,35 +248,33 @@
 
 :; Todo: Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
-  (arm-load-data cgc rd
+  (arm-load-data cgc rd #f
     (lambda (cgc)
       (debug "obj-value: " obj-value)
       (codegen-fixup-obj! cgc obj-value 32 'obj))))
 
 :; Todo: Deduplicate immediates
 (define (arm-load-imm cgc rd val)
-  (arm-load-data cgc rd
+  (arm-load-data cgc rd (number->string val)
     (lambda (cgc)
       (debug "imm value: " val)
       (am-data cgc 32 val))))
 
 :; Todo: Deduplicate references to global variables
 (define (arm-load-glo cgc rd glo-name)
-  (arm-load-data cgc rd
+  (arm-load-data cgc rd glo-name
     (lambda (cgc)
       (codegen-fixup-glo! cgc glo-name 32 (symbol-append 'glo_ glo-name)))))
 
-(define (arm-load-data cgc rd place-data)
+(define (arm-load-data cgc rd ref-name place-data)
   (define (label-dist label self offset)
     (fx- (asm-label-pos label) (fx+ self offset)))
 
   (define label-data-opnd (make-unique-label cgc "label-data" #t))
   (define label-data (lbl-opnd-label label-data-opnd))
-  (define label-data-string (symbol->string (asm-label-id label-data)))
+  (define label-data-sym (asm-label-id label-data))
 
-  (debug "label-data: " label-data)
-
-  (add-delayed-action cgc 'arm-load-data delayed-execute-never
+  (add-delayed-action cgc (symbol-append 'arm-load-data__ label-data-sym) delayed-execute-never
     (lambda ()
       (asm-align cgc 4 0)
       (am-lbl cgc label-data-opnd)
@@ -292,9 +291,9 @@
         (debug "dist: " dist)
         (debug "(fx= 0 (fxmodulo offset 4)): " (fx= 0 (fxmodulo offset 4)))
         (debug "(fx<= offset 1023): " (fx<= offset 1023))
-        (debug "label-data: " label-data  )
-        (if (or (not (fx= 0 (fxmodulo offset 2))) (fx> offset 1023))
-          (compiler-internal-error "Offset too big"))
+        (debug "label-data: " label-data)
+        ; (if (or (not (fx= 0 (fxmodulo offset 2))) (fx> offset 1023))
+        ;   (compiler-internal-error "Offset too big"))
 
         (asm-16-le cgc
           (fx+ (fxquotient offset 4)
@@ -302,7 +301,13 @@
                 #x0800
                 #x4000))
 
-        (arm-listing cgc "ldr.w" rd (string-append "[" label-data-string "]"))))))
+        (arm-listing cgc "ldr.w" rd
+          (string-append
+            "[pc, #" (symbol->string label-data-sym)
+            (if ref-name (string-append
+              " (" (if (symbol? ref-name) (symbol->string ref-name) ref-name) ")")
+              "")
+            "]"))))))
 
 ;;------------------------------------------------------------------------------
 
