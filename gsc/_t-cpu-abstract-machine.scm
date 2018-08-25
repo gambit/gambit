@@ -292,7 +292,7 @@
 
 (define (obj-opnd obj)             (list 'obj-opnd obj))
 (define (obj-opnd? pair)           (tagged-object? 'obj-opnd pair))
-(define (obj-opnd-value pair)        (cadr pair))
+(define (obj-opnd-value pair)      (cadr pair))
 
 ;; reg-offset and scale aren't supported by the abstract machine
 ;; Backends can use these fields to extend the abstract machine instructions.
@@ -951,8 +951,7 @@
 
   (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f width-bits 'self-label) ;; self ptr
   ;; so that label reference has tag ___tSUBTYPED
-  (if (and (equal? 'arm (get-arch-name cgc)) (= 1 (bitwise-and object-tag 1)))
-    (compiler-error "ARM doesn't support uneven addresses for labels")
+  (if (not (equal? 'arm (get-arch-name cgc)))
     (for-each
       (lambda (_) (am-data cgc 8 0))
       (iota 1 object-tag)))
@@ -1055,8 +1054,7 @@
   ;; Field 1: gc-map
   (am-data cgc width-bits (if internal? (get-gc-map-internal frame) (get-gc-map frame)))
   ;; so that label reference has tag ___tSUBTYPED
-  (if (and (equal? 'arm (get-arch-name cgc)) (= 1 (bitwise-and object-tag 1)))
-    (compiler-error "ARM doesn't support uneven addresses for labels")
+  (if (not (equal? 'arm (get-arch-name cgc)))
     (for-each
       (lambda (_) (am-data cgc 8 0))
       (iota 1 object-tag)))
