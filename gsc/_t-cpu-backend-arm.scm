@@ -412,9 +412,71 @@
 
 ;; Primitives
 
+(define arm-prim-##cons
+  (lambda (cgc result-action args)
+    (with-result-opnd cgc result-action args
+      allowed-opnds: '(reg)
+      fun:
+        (lambda (result-reg result-opnd-in-args)
+          (let* ((word (get-word-width cgc))
+                 (size (* word 3))
+                 (tag 3)
+                 (offset (+ tag (* 2 word))))
+
+            (am-allocate-memory cgc result-reg size offset
+              (codegen-context-frame cgc))
+
+            (am-mov cgc
+              (mem-opnd result-reg (- offset))
+              (int-opnd (* (get-word-width cgc) 3))
+              (get-word-width-bits cgc))
+
+            (am-mov cgc
+              (mem-opnd result-reg (- word offset))
+              (cadr args)
+              (get-word-width-bits cgc))
+
+            (am-mov cgc
+              (mem-opnd result-reg (- (* 2 word) offset))
+              (car args)
+              (get-word-width-bits cgc))
+
+            (am-return-opnd cgc result-action result-reg))))))
+
+(define arm-prim-##null?
+  (lambda (cgc result-action args)
+    (check-nargs-if-necessary cgc result-action 1)
+    (call-with-nargs args
+      (lambda (arg1)
+        (am-if-eq cgc arg1 (make-obj-opnd '())
+          (lambda (cgc) (am-return-const cgc result-action #t))
+          (lambda (cgc) (am-return-const cgc result-action #f))
+          #f
+          (get-word-width-bits cgc))))))
+
+(define (arm-stub-prim cgc . args) #f)
+
 (define arm-primitive-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
     (table-set! table '##not      (make-prim-obj ##not-primitive 1 #t #t))
+
+    (table-set! table '##flonum?  (make-prim-obj arm-stub-prim 1 #t #f))
+    (table-set! table '##fl+      (make-prim-obj arm-stub-prim 2 #t #f))
+    (table-set! table '+          (make-prim-obj arm-stub-prim 2 #f #f))
+    (table-set! table '-          (make-prim-obj arm-stub-prim 2 #f #f))
+    (table-set! table '<          (make-prim-obj arm-stub-prim 2 #f #f))
+
+    (table-set! table '##car      (make-prim-obj (object-read-prim pair-obj-desc 2) 1 #t #f))
+    (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
+    (table-set! table '##set-car! (make-prim-obj (object-set-prim pair-obj-desc 2) 2 #t #f))
+    (table-set! table '##set-cdr! (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
+
+    (table-set! table '##cons     (make-prim-obj arm-prim-##cons 2 #t #f))
+    (table-set! table '##null?    (make-prim-obj arm-prim-##null? 2 #t #f))
+
+    (table-set! table '##vector-ref  (make-prim-obj (object-dyn-read-prim vector-obj-desc) 2 #t #t))
+    (table-set! table '##vector-set! (make-prim-obj (object-dyn-set-prim vector-obj-desc) 3 #t #f))
+    ; (table-set! table '##vector-length (make-prim-obj x86-prim-##vector-length 1 #t #t))
 
     table))
