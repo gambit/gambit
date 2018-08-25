@@ -171,7 +171,6 @@
         (with-reg
           (lambda (reg)
             (arm-load-label cgc reg src)
-            (am-add cgc reg reg (int-opnd 1))
             (regular-move reg))))
       ((obj-opnd? src)
         (with-reg
@@ -252,7 +251,7 @@
     (lambda (cgc)
       (debug "label-opnd: " label-opnd)
       (let ((label (lbl-opnd-label label-opnd)))
-        (codegen-fixup-lbl! cgc label 0 #f 32 0 (asm-label-id label))))))
+        (codegen-fixup-lbl! cgc label object-tag #f 32 0 (asm-label-id label))))))
 
 :; Todo: Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
