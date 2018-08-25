@@ -447,7 +447,7 @@
   (get-multiple-free-registers cgc 1 needed-opnds action))
 
 (define (load-if-necessary cgc allowed-opnds opnd fun)
-  (if (elem? (opnd-type opnd) allowed-opnds)
+  (if (if (procedure? allowed-opnds) (allowed-opnds opnd) (elem? (opnd-type opnd) allowed-opnds))
     (fun opnd)
     (get-free-register cgc (list opnd)
       (lambda (reg)
