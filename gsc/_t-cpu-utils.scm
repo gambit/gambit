@@ -134,3 +134,6 @@
 
 (define (safe-car pair) (if (pair? pair) (car pair) #f))
 (define (safe-cdr pair) (if (pair? pair) (cdr pair) #f))
+
+(define (symbol-append . symbols)
+  (string->symbol (apply string-append (map symbol->string symbols))))

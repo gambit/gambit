@@ -530,10 +530,6 @@
       (lambda (reg)
         (fun reg #f))))
 
-  (define loc-in-args-count (elem-count (get-register cgc 1) args))
-  (define not-in-args (= 0 loc-in-args-count))
-  (define once-in-args (= 1 loc-in-args-count))
-
   (cond
     ((then-jump? result-action)
       (if (and
@@ -542,7 +538,9 @@
         (use-loc (then-jump-store-location result-action) #f)
         (use-loc default-opnd #t)))
     ((then-move? result-action)
-      (let ((mov-loc (then-move-store-location result-action)))
+      (let* ((mov-loc (then-move-store-location result-action))
+             (not-in-args (= 0 (elem-count mov-loc args)))
+             (once-in-args (= 1 (elem-count mov-loc args))))
         (cond
           ;; We can rearrange the expression to remove redundant move
           ((and once-in-args commutative)
@@ -557,9 +555,9 @@
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
       (cond
-        ((and once-in-args commutative)
+        ((and commutative (= 1 (elem-count (get-register cgc 1) args)))
           (use-loc (get-register cgc 1) #t))
-        (not-in-args
+        ((= 0 (elem-count (get-register cgc 1) args))
           (use-loc (get-register cgc 1) #f))
         (default-opnd
           (use-loc default-opnd #t))
@@ -594,24 +592,22 @@
   (lambda (cgc result-action args)
     (check-nargs-if-necessary cgc result-action nargs)
     (load-multiple-if-necessary cgc allowed-opnds-lst args
-      (lambda (opnds)
+      (lambda opnds
         (get-multiple-free-registers cgc extra-regs-count opnds
           (lambda regs
             (apply fun (append (list cgc result-action args) opnds regs))))))))
 
 ;; ***** Primitives - Basic primitives (##Identity and ##not)
 
-(define (##identity-primitive cgc result-action args)
-  (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args
-    (lambda (arg1)
+(define ##identity-primitive
+  (const-nargs-prim 1 0 any-opnds
+    (lambda (cgc result-action args arg1)
       (debug "identity prim: " arg1)
       (am-return-opnd cgc result-action arg1))))
 
-(define (##not cgc result-action args)
-  (check-nargs-if-necessary cgc result-action 1)
-  (call-with-nargs args
-    (lambda (arg1)
+(define ##not-primitive
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
       (debug "identity not: " arg1)
       (am-if-eq cgc arg1 (make-obj-opnd #f)
         (lambda (cgc) (am-return-const cgc result-action #t))

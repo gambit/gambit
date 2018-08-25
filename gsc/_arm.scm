@@ -501,8 +501,8 @@
           (assert (eqv? condition (arm-cond-al))
                   "thumb instructions are unconditionnal")
 
-          (assert (fx= set-flags 1)
-                  "thumb instruction implicitly sets flags")
+          ; (assert (fx= set-flags 1)
+          ;         "thumb instruction implicitly sets flags")
 
           (assert (and (fx<= d 7) (fx<= s 7))
                   "thumb instruction must use low registers")
@@ -636,8 +636,8 @@
                                        (fx= 0 (fxand imm 3)))
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxarithmetic-shift-right imm 2)
@@ -654,8 +654,8 @@
                                        (fx= 0 (fxand imm 3)))
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxarithmetic-shift-right imm 2)
@@ -681,8 +681,8 @@
                                        (fx= d s)) ;; add/sub rd, #imm8
                                   "invalid operands")
 
-                          (assert (fx= set-flags 1)
-                                  "thumb instruction implicitly sets flags")
+                          ; (assert (fx= set-flags 1)
+                          ;         "thumb instruction implicitly sets flags")
 
                           (asm-16-le cgc
                                      (fx+ imm
@@ -698,8 +698,8 @@
                  (let ((n (arm-reg-field opnd)))
                    (cond ((and (fx<= d 7) (fx<= s 7) (fx<= n 7))
 
-                          (assert (fx= set-flags 1)
-                                  "thumb instruction implicitly sets flags")
+                          ; (assert (fx= set-flags 1)
+                          ;         "thumb instruction implicitly sets flags")
 
                           (asm-16-le cgc
                                      (fx+ d
@@ -716,8 +716,8 @@
                           (assert (fx= d s)
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxand d 7)
@@ -815,8 +815,8 @@
             (assert (and (fx<= d 7) (fx= s d) (fx<= n 7))
                     "thumb instruction must use low registers")
 
-            (assert (fx= set-flags 1)
-                    "thumb instruction implicitly sets flags")
+            ; (assert (fx= set-flags 1)
+            ;         "thumb instruction implicitly sets flags")
 
             (asm-16-le cgc
                        (fx+ d
@@ -931,8 +931,8 @@
           (assert (and (fx<= d 7) (fx<= s 7))
                   "thumb instruction must use low registers")
 
-          (assert (fx= set-flags 1)
-                  "thumb instruction implicitly sets flags")
+          ; (assert (fx= set-flags 1)
+          ;         "thumb instruction implicitly sets flags")
 
           (asm-16-le cgc
                      (fx+ d
@@ -1131,8 +1131,8 @@
                                 (fx<= imm 255))
                            "invalid operands")
 
-                   (assert (fx= set-flags 1)
-                           "thumb instruction implicitly sets flags")
+                  ;  (assert (fx= set-flags 1)
+                  ;          "thumb instruction implicitly sets flags")
 
                    (asm-16-le cgc
                               (fx+ imm
@@ -1147,8 +1147,8 @@
                  (let ((n (arm-reg-field opnd)))
                    (cond ((and (fx<= d 7) (fx<= n 7))
 
-                          (assert (fx= set-flags 1)
-                                  "thumb instruction implicitly sets flags")
+                          ; (assert (fx= set-flags 1)
+                          ;         "thumb instruction implicitly sets flags")
 
                           (asm-16-le cgc
                                      (fx+ d
@@ -1162,8 +1162,8 @@
                           (assert (fx= op 0)
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxand d 7)
@@ -1234,8 +1234,8 @@
           (assert (fx= op 0)
                   "thumb does not support multiply-accumulate")
 
-          (assert (fx= set-flags 1)
-                  "thumb instruction implicitly sets flags")
+          ; (assert (fx= set-flags 1)
+          ;         "thumb instruction implicitly sets flags")
 
           (assert (and (fx<= d 7) (fx<= s 7) (fx= m d))
                   "thumb instruction must use low registers")

@@ -32,7 +32,7 @@
     (codegen-context-current-code-set!               cgc #f)
     (codegen-context-frame-set!                      cgc #f)
     (codegen-context-nargs-set!                      cgc #f)
-    (codegen-context-delayed-blocks-set!             cgc '())
+    (codegen-context-delayed-actions-set!             cgc '())
     (codegen-context-label-struct-position-set!      cgc #f)
 
     (codegen-context-registers-status-set!           cgc #f)
@@ -106,10 +106,10 @@
 (define (codegen-context-nargs-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 8) x))
 
-(define (codegen-context-delayed-blocks cgc)
+(define (codegen-context-delayed-actions cgc)
   (vector-ref cgc (+ (asm-code-block-size) 9)))
 
-(define (codegen-context-delayed-blocks-set! cgc x)
+(define (codegen-context-delayed-actions-set! cgc x)
   (vector-set! cgc (+ (asm-code-block-size) 9) x))
 
 (define (codegen-context-label-struct-position cgc)
