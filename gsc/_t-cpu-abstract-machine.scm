@@ -821,8 +821,9 @@
   (debug "Finished!")
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
-  (let ((main-lbl (lbl-opnd-label (get-main-label))))
-    (codegen-fixup-lbl! cgc main-lbl 0 #f (get-word-width-bits cgc) 0 'main-lbl)))
+  (let ((main-lbl (lbl-opnd-label (get-main-label)))
+        (offset (if (equal? 'arm (get-arch-name cgc)) object-tag 0)))
+    (codegen-fixup-lbl! cgc main-lbl offset #f (get-word-width-bits cgc) 'main-lbl)))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
