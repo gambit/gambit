@@ -3055,6 +3055,18 @@ ___processor_state ___ps;)
 {
 #ifdef __GNUC__
 
+#define PS_FP   PS_FIELD("2")
+#define PS_HP   PS_FIELD("6")
+#define PS_R(n) PS_FIELD("(" n "+7)")
+#define PS_PC   PS_FIELD("(0+5+7)")
+#define PS_NA   PS_FIELD("(1+5+7)")
+
+#if ___tSUBTYPED == 1
+#define CONTROL_POINT_TAG "1"
+#else
+#define CONTROL_POINT_TAG "2"
+#endif
+
 #ifdef ___CPU_x86
 
 #ifdef ___CPU_x86_32
@@ -3121,12 +3133,6 @@ ___processor_state ___ps;)
 
 #endif
 
-#define PS_FP   PS_FIELD("2")
-#define PS_HP   PS_FIELD("6")
-#define PS_R(n) PS_FIELD("(" n "+7)")
-#define PS_PC   PS_FIELD("(0+5+7)")
-#define PS_NA   PS_FIELD("(1+5+7)")
-
   __asm__ __volatile__ (
 
     "mov  %0, %%" reg_PS "\n\t"
@@ -3172,14 +3178,14 @@ ___processor_state ___ps;)
 
     "mov  " PS_PC ", %%" reg_TMP "\n\t"
 #ifdef ___CPU_x86_32
-    "cmpl $1048576,-1-2*4(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*4(%%" reg_TMP ")\n\t"
     "jl   setup_other_registers\n\t"
     "add  $5, %%" reg_R4 "\n\t"
     "push %%" reg_R4 "\n\t"
     "add  $-5, %%" reg_R4 "\n\t"
 #endif
 #ifdef ___CPU_x86_64
-    "cmpl $1048576,-1-2*8(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*8(%%" reg_TMP ")\n\t"
     "jl   setup_other_registers\n\t"
     "add  $3, %%" reg_R4 "\n\t"
     "push %%" reg_R4 "\n\t"
@@ -3296,13 +3302,13 @@ ___processor_state ___ps;)
     "mov  %%" reg_TMP ", " PS_PC "\n\t"
 
 #ifdef ___CPU_x86_32
-    "cmpl $1048576,-1-2*4(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*4(%%" reg_TMP ")\n\t"
     "jl   store_self_register\n\t"
     "pop  %%" reg_R4 "\n\t"
     "add  $-3, %%" reg_R4 "\n\t"
 #endif
 #ifdef ___CPU_x86_64
-    "cmpl $1048576,-1-2*8(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*8(%%" reg_TMP ")\n\t"
     "jl   store_self_register\n\t"
     "pop  %%" reg_R4 "\n\t"
     "add  $-6, %%" reg_R4 "\n\t"
@@ -3349,6 +3355,130 @@ ___processor_state ___ps;)
       "%" reg_R3,
       "%" reg_R4,
       "%" reg_HP
+  );
+
+#endif
+
+#ifdef ___CPU_arm
+
+#define reg_R0 "r0"
+#define reg_R1 "r1"
+#define reg_R2 "r2"
+#define reg_R3 "r3"
+#define reg_R4 "r4"
+#define reg_PS "r5"
+#define reg_FP "sp"
+#define reg_HP "r6"
+#define reg_TMP "r7"
+#define reg_SP "sp"
+#define reg_LR "lr"
+#define PS_FIELD(field) "[" reg_PS ",#" PS_OFFSET "+(" field "*4)]"
+#define PS_OFFSET "4"
+
+  /*
+    GVM       ___________________C_ABI___________________
+    r0   r0       parameter 1 and return value
+    r1   r1       parameter 2
+    r2   r2       parameter 3
+    r3   r3       parameter 4
+    r4   r4  CS
+    ps   r5  CS
+    hp   r6  CS
+         r7  CS
+         r8  CS
+         r9  CS
+         r10 CS
+         r11 CS  frame pointer
+         r12     intra-procedure-call scratch register
+    sp   r13 CS  stack pointer (sp)
+         r14 CS  link register (lr)
+         r15 CS  program counter (pc)
+  */
+
+  __asm__ __volatile__ (
+
+    "mov  " reg_PS ", %0\n\t"
+    "sub  " reg_PS ", #" PS_OFFSET "\n\t"
+
+    /* setup handler for returning from lowlevel code */
+
+    "adr  " reg_TMP ", return_from_lowlevel\n\t"
+    "str  " reg_TMP ", " PS_FIELD("-1") "\n\t"
+    "str  " reg_SP ", " PS_FIELD("-2") "\n\t"
+
+    /* setup frame pointer and heap pointer registers */
+
+    "ldr  " reg_FP "," PS_FP "\n\t"
+    "ldr  " reg_HP "," PS_HP "\n\t"
+
+    /* setup self register */
+
+    "ldr  " reg_R4 "," PS_R("4") "\n\t"
+
+    "\n"
+    "setup_other_registers:\n\t"
+
+    /* setup lowlevel registers from ___ps->r[...] */
+
+    "ldr  " reg_R0 "," PS_R("0") "\n\t"
+    "ldr  " reg_R1 "," PS_R("1") "\n\t"
+    "ldr  " reg_R2 "," PS_R("2") "\n\t"
+    "ldr  " reg_R3 "," PS_R("3") "\n\t"
+
+    /*
+     * set flags according to ___ps->na and jump to lowlevel code at
+     * ___ps->pc
+     */
+
+    "ldr  pc, " PS_PC "\n\t"
+
+    "\n"
+    "return_from_lowlevel:"
+    "\n\t"
+
+    /* save lowlevel registers to ___ps->r[...] */
+
+    "str  " reg_R0 ", " PS_R("0") "\n\t"
+    "str  " reg_R1 ", " PS_R("1") "\n\t"
+    "str  " reg_R2 ", " PS_R("2") "\n\t"
+    "str  " reg_R3 ", " PS_R("3") "\n\t"
+
+    /* recover the destination control point in ___ps->pc */
+
+    "sub  lr, #4\n\t"
+    "str  lr, " PS_PC "\n\t"
+
+    "ldr  " reg_TMP ", [lr, #-" CONTROL_POINT_TAG "-2*4]\n\t"
+    "cmp  " reg_TMP ", #0x100000\n\t"
+    "blt  store_self_register\n\t"
+    "sub  " reg_R4 ", #(4-" CONTROL_POINT_TAG ")\n\t"
+
+    "\n"
+    "store_self_register:\n\t"
+    "str  " reg_R4 ", " PS_R("4") "\n\t"
+
+    /* save frame pointer and heap pointer registers */
+
+    "str  " reg_FP ", " PS_FP "\n\t"
+    "str  " reg_HP ", " PS_HP "\n\t"
+
+    /* restore callee-save registers */
+
+    "ldr  " reg_SP ", " PS_FIELD("-2") "\n\t"
+
+    : /* no outputs */
+    : /* inputs */
+      "r" (___ps)
+    : /* clobbers */
+      reg_PS,
+      reg_TMP,
+      reg_R0,
+      reg_R1,
+      reg_R2,
+      reg_R3,
+      reg_R4,
+      reg_HP,
+      reg_LR
   );
 
 #endif
