@@ -822,7 +822,7 @@
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
   (let ((main-lbl (lbl-opnd-label (get-main-label))))
-    (codegen-fixup-lbl! cgc main-lbl 0 #f (get-word-width-bits cgc) 'main-lbl)))
+    (codegen-fixup-lbl! cgc main-lbl 0 #f (get-word-width-bits cgc) 0 'main-lbl)))
 
 ;; Value is Pair (Label, optional Proc-obj)
 (define (put-primitive-if-needed cgc key pair)
@@ -928,28 +928,28 @@
   (codegen-context-label-struct-position-set! cgc (+ 1 label-struct-position))
 
   (asm-align cgc (get-word-width cgc))
-  (codegen-fixup-obj! cgc (string->symbol proc-name) width-bits 'proc-name) ;; ##subprocedure-parent-name
-  (codegen-fixup-obj! cgc proc-info width-bits 'proc-info)                  ;; ##subprocedure-parent-info
-  (codegen-fixup-obj! cgc #f width-bits 'proc-nb-labels)                    ;; nb labels, Todo
+  (codegen-fixup-obj! cgc (string->symbol proc-name) width-bits 0 'proc-name) ;; ##subprocedure-parent-name
+  (codegen-fixup-obj! cgc proc-info width-bits 0 'proc-info)                  ;; ##subprocedure-parent-info
+  (codegen-fixup-obj! cgc #f width-bits 0 'proc-nb-labels)                    ;; nb labels, Todo
 
   ;; next label struct
   (codegen-fixup-lbl-late! cgc
     (lambda ()
       (get-next-label cgc proc-name (+ 1 label-struct-position) label))
-    #f width-bits
+    #f width-bits 0
     'next-label-with-structure)
   ;; parent label struct
   (if parent-label
-    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f width-bits 'parent-label)
+    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f width-bits 0 'parent-label)
     (am-data cgc width-bits 0))
 
-  (codegen-fixup-handler! cgc '___lowlevel_exec width-bits)
+  (codegen-fixup-handler! cgc '___lowlevel_exec width-bits 0)
   (am-data cgc width-bits (+ 6                               ;; PERM
                             (* 8 14)                         ;; PROCEDURE
                             (* 256 (+ nargs                  ;; Number of arguments
                               (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
-  (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f width-bits 'self-label) ;; self ptr
+  (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f width-bits 0 'self-label) ;; self ptr
   ;; so that label reference has tag ___tSUBTYPED
   (if (and (equal? 'arm (get-arch-name cgc)) (= 1 (bitwise-and object-tag 1)))
     (compiler-error "ARM doesn't support uneven addresses for labels")
@@ -1043,13 +1043,13 @@
   ;; Next label reference
   (codegen-fixup-lbl-late! cgc
     (lambda () (get-next-label cgc proc-name (+ 1 label-struct-position) label))
-    #f width-bits 'next-label-with-structure)
+    #f width-bits 0 'next-label-with-structure)
   ;; Parent label reference
   (if parent-label
-    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f width-bits 'parent-label)
+    (codegen-fixup-lbl! cgc (lbl-opnd-label parent-label) 0 #f width-bits 0 'parent-label)
     (am-data cgc width-bits 0))
   ;; Host Address
-  (codegen-fixup-handler! cgc '___lowlevel_exec width-bits)
+  (codegen-fixup-handler! cgc '___lowlevel_exec width-bits 0)
   ;; Header
   (am-data cgc width-bits (+ 6 (* 8 15)))
   ;; Field 1: gc-map

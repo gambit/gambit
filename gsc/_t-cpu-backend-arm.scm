@@ -244,14 +244,14 @@
     (lambda (cgc)
       (debug "label-opnd: " label-opnd)
       (let ((label (lbl-opnd-label label-opnd)))
-        (codegen-fixup-lbl! cgc label 0 #f 32 (asm-label-id label))))))
+        (codegen-fixup-lbl! cgc label 0 #f 32 0 (asm-label-id label))))))
 
 :; Todo: Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
   (arm-load-data cgc rd #f
     (lambda (cgc)
       (debug "obj-value: " obj-value)
-      (codegen-fixup-obj! cgc obj-value 32 'obj))))
+      (codegen-fixup-obj! cgc obj-value 32 0 'obj))))
 
 :; Todo: Deduplicate immediates
 (define (arm-load-imm cgc rd val)
@@ -264,7 +264,7 @@
 (define (arm-load-glo cgc rd glo-name)
   (arm-load-data cgc rd glo-name
     (lambda (cgc)
-      (codegen-fixup-glo! cgc glo-name 32 (symbol-append 'glo_ glo-name)))))
+      (codegen-fixup-glo! cgc glo-name 32 0 (symbol-append 'glo_ glo-name)))))
 
 (define (arm-load-data cgc rd ref-name place-data)
   (define (label-dist label self offset)

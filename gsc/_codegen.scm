@@ -170,28 +170,39 @@
             (fx< (asm-label-pos (car x)) (asm-label-pos (car y))))))
         (svect
          (c#make-stretchable-vector #f)))
+
+    (define nb-fixup-encodings 2) ;; number of fixup encodings
+    (define max-dist 127) ;; (- (quotient 256 nb-fixup-encodings) 1)
+
     (let loop1 ((i 0) (last-pos 0) (lst lst))
       (if (pair? lst)
           (let* ((x (car lst))
                  (next-pos (asm-label-pos (car x)))
                  (dist (fx- next-pos last-pos)))
             (let loop2 ((i i) (dist dist))
-              (if (fx>= dist 127)
-                  (begin
+              (if (fx>= dist max-dist)
+                  (let ((n (fxmin (fxquotient dist max-dist)
+                                  (fx- nb-fixup-encodings 1))))
                     ;; distance too large, insert "skip noop"
-                    (c#stretchable-vector-set! svect i 1)
+                    (c#stretchable-vector-set! svect i n)
                     (loop2 (fx+ i 1)
-                           (fx- dist 127)))
+                           (fx- dist (fx* n max-dist))))
                   (if (fx= (cdr x) 32)
                       (begin
                         ;; 32 bit = 4 byte fixup
-                        (c#stretchable-vector-set! svect i (fx+ 2 (fx* 2 dist)))
+                        (c#stretchable-vector-set!
+                         svect
+                         i
+                         (fx+ 0 (fx* nb-fixup-encodings (fx+ dist 1))))
                         (loop1 (fx+ i 1)
                                (fx+ next-pos 4)
                                (cdr lst)))
                       (begin
                         ;; 64 bit = 8 byte fixup
-                        (c#stretchable-vector-set! svect i (fx+ 3 (fx* 2 dist)))
+                        (c#stretchable-vector-set!
+                         svect
+                         i
+                         (fx+ 1 (fx* nb-fixup-encodings (fx+ dist 1))))
                         (loop1 (fx+ i 1)
                                (fx+ next-pos 8)
                                (cdr lst)))))))
@@ -226,62 +237,66 @@
      (lambda (cgc self)
        (asm-int-le cgc (gen-value cgc self) width)))))
 
-(define (codegen-fixup-lbl! cgc lbl offset relative? width #!optional (label-name #f))
+(define (codegen-fixup-lbl! cgc lbl offset relative? width kind #!optional (label-name #f))
   (codegen-fixup-generic!
    cgc
    width
    (lambda (cgc self)
      (fx+ (if relative? 0 1)
-          (fx* 256
-               (fx- (fx+ (asm-label-pos lbl) offset)
-                    self))))
+          (fx+ (fx* 16 kind)
+               (fx* 256
+                    (fx- (fx+ (asm-label-pos lbl) offset)
+                         self)))))
    (if label-name
-    label-name
-    #f)))
+       label-name
+       #f)))
     ; (asm-label-name lbl))))
 
-(define (codegen-fixup-lbl-late! cgc make-lbl relative? width #!optional (label-name #f))
+(define (codegen-fixup-lbl-late! cgc make-lbl relative? width kind #!optional (label-name #f))
   (codegen-fixup-generic!
    cgc
    width
    (lambda (cgc self)
      (let ((lbl (make-lbl)))
-      (if lbl
-        (fx+ (if relative? 0 1)
-              (fx* 256
-                  (fx- (asm-label-pos lbl)
-                        self)))
-        0)))
+       (if lbl
+           (fx+ (if relative? 0 1)
+                (fx+ (fx* 16 kind)
+                     (fx* 256
+                          (fx- (asm-label-pos lbl)
+                               self))))
+           0)))
    label-name))
 
-(define (codegen-fixup-obj-generic! cgc op obj width show-listing)
+(define (codegen-fixup-obj-generic! cgc op obj width kind show-listing)
   (codegen-context-fixup-obj-register! cgc obj)
   (codegen-fixup-generic!
    cgc
    width
    (lambda (cgc self)
      (fx+ op
-          (fx* 256
-               (codegen-context-fixup-obj-register! cgc obj))))
-   (if show-listing  (if (boolean? show-listing) "obj" show-listing) #f)))
+          (fx+ (fx* 16 kind)
+               (fx* 256
+                    (codegen-context-fixup-obj-register! cgc obj)))))
+   (if show-listing (if (boolean? show-listing) "obj" show-listing) #f)))
 
-(define (codegen-fixup-obj! cgc obj width #!optional (show-listing #t))
-  (codegen-fixup-obj-generic! cgc 2 obj width show-listing))
+(define (codegen-fixup-obj! cgc obj width kind #!optional (show-listing #t))
+  (codegen-fixup-obj-generic! cgc 2 obj width kind show-listing))
 
-(define (codegen-fixup-glo! cgc glo-name width #!optional (show-listing #t))
-  (codegen-fixup-obj-generic! cgc 3 glo-name width show-listing))
+(define (codegen-fixup-glo! cgc glo-name width kind #!optional (show-listing #t))
+  (codegen-fixup-obj-generic! cgc 3 glo-name width kind show-listing))
 
-(define (codegen-fixup-prm! cgc prm-name width #!optional (show-listing #t))
-  (codegen-fixup-obj-generic! cgc 4 prm-name width show-listing))
+(define (codegen-fixup-prm! cgc prm-name width kind #!optional (show-listing #t))
+  (codegen-fixup-obj-generic! cgc 4 prm-name width kind show-listing))
 
-(define (codegen-fixup-handler! cgc handler-name width)
+(define (codegen-fixup-handler! cgc handler-name width kind)
   (codegen-fixup-generic!
    cgc
    width
    (lambda (cgc self)
      (fx+ 5
-          (fx* 256
-               (c#object-pos-in-list handler-name codegen-fixup-handlers))))
+          (fx+ (fx* 16 kind)
+               (fx* 256
+                    (c#object-pos-in-list handler-name codegen-fixup-handlers)))))
    (symbol->string handler-name)))
 
 (define codegen-fixup-handlers

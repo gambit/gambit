@@ -3516,18 +3516,30 @@ ___SCMOBJ fixup_objs;)
 
   while ((loc = *ptr++) != 0)
     {
-      if (loc == 1)
+      if (loc < 2)
         pos += 127;
       else
         {
           ___WORD fixup_pos = pos + (loc>>1) - 1;
-          ___WORD x = (loc&1)
-                      ? *___CAST(___WORD*,code+fixup_pos)
-                      : *___CAST(___S32*,code+fixup_pos);
-          int op = x & 0xff;
-          ___WORD arg = x >> 8;
+          ___WORD x;
+          int op;
+          ___WORD arg;
 
-          switch (op)
+          switch (loc & 1)
+            {
+            case 0:
+              x = *___CAST(___S32*,code+fixup_pos);
+              break;
+
+            case 1:
+              x = *___CAST(___WORD*,code+fixup_pos);
+              break;
+            }
+
+          op = x & 0xff;
+          arg = x >> 8;
+
+          switch (op & 0x0f)
             {
             case 0:
               val = arg;
@@ -3563,15 +3575,22 @@ ___SCMOBJ fixup_objs;)
               break;
             }
 
-          if (loc&1)
+          switch (loc & 1)
             {
+            case 0:
+              switch (op >> 4)
+                {
+                case 0:
+                  *___CAST(___S32*,code+fixup_pos) = val;
+                  pos = fixup_pos + sizeof(___S32);
+                  break;
+                }
+              break;
+
+            case 1:
               *___CAST(___WORD*,code+fixup_pos) = val;
               pos = fixup_pos + sizeof(___WORD);
-            }
-          else
-            {
-              *___CAST(___S32*,code+fixup_pos) = val;
-              pos = fixup_pos + sizeof(___S32);
+              break;
             }
         }
     }

@@ -440,7 +440,7 @@
       (asm-8 cgc #x67))) ;; address size override prefix
 
 #|
-TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
+TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width kind)
 
 (define (x86-abs-addr cgc label offset width)
 
@@ -591,6 +591,7 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
    (x86-imm-lbl-offset imm-lbl)
    #f ;; absolute
    imm-width
+   0
    #f))
 
 (define (x86-imm-glo-encode cgc imm-glo imm-width)
@@ -598,6 +599,7 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
    cgc
    (x86-imm-glo-name imm-glo)
    imm-width
+   0
    #f))
 
 (define (x86-imm-obj-encode cgc imm-obj imm-width)
@@ -605,6 +607,7 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
    cgc
    (x86-imm-obj-value imm-obj)
    imm-width
+   0
    #f))
 
 ;;;----------------------------------------------------------------------------
