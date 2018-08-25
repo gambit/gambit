@@ -916,7 +916,7 @@
 
             (am-mov cgc
               (mem-opnd result-reg (- offset))
-              (int-opnd (* 8 3))
+              (int-opnd (* (get-word-width cgc) 3))
               (get-word-width-bits cgc))
 
             (am-mov cgc
