@@ -280,14 +280,15 @@
       (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
 (define (x86-cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
-  (define x86-opnd1 (make-x86-opnd opnd1))
-  (define x86-opnd2 (make-x86-opnd opnd2))
-
   (let* ((jumps (get-jumps condition)))
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
-      (load-if-necessary cgc '(reg mem) opnd1
-        (lambda (opnd1) (x86-cmp cgc x86-opnd1 x86-opnd2 opnds-width))))
+      (load-multiple-if-necessary cgc '((reg mem) (reg mem int)) (list opnd1 opnd2)
+        (lambda (opnd1 opnd2)
+          (x86-cmp cgc
+            (make-x86-opnd opnd1)
+            (make-x86-opnd opnd2)
+            opnds-width))))
 
     (cond
       ((and loc-false loc-true)
