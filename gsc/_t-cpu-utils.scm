@@ -137,3 +137,6 @@
 
 (define (symbol-append . symbols)
   (string->symbol (apply string-append (map symbol->string symbols))))
+
+(define (in-range? min max val)
+  (and (>= val min) (<= val max)))

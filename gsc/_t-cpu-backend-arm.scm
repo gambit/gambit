@@ -149,8 +149,13 @@
       ((int-opnd? src)
         (with-reg
           (lambda (reg)
+            (cond
+              ((and (reg-opnd? reg) (in-range? 0 255 (int-opnd-value src)))
+                (arm-mov cgc (make-arm-opnd reg) (make-arm-opnd src))
+                (regular-move reg))
+              (else
             (arm-load-imm cgc reg (int-opnd-value src))
-            (regular-move reg))))
+                (regular-move reg))))))
       ((mem-opnd? src)
         (with-reg
           (lambda (reg)
@@ -218,12 +223,14 @@
       (compiler-internal-error "arm-get-branch-conditions - Unknown condition: " condition))))
 
 (define (arm-cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
-  (let* ((conds (arm-get-branch-conditions condition)))
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
-      (load-multiple-if-necessary cgc '((reg) (reg)) (list opnd1 opnd2)
+    (load-multiple-if-necessary cgc
+      (list '(reg) reg-or-8imm-opnd?)
+      (list opnd1 opnd2)
         (lambda (reg1 opnd2) (arm-cmp cgc reg1 (make-arm-opnd opnd2)))))
 
+  (let* ((conds (arm-get-branch-conditions condition)))
     (cond
       ((and loc-false loc-true)
         (arm-b cgc (lbl-opnd-label loc-true) (car conds))
@@ -481,3 +488,11 @@
     ; (table-set! table '##vector-length (make-prim-obj x86-prim-##vector-length 1 #t #t))
 
     table))
+
+;; Int opnd utils
+
+(define (reg-or-8imm-opnd? opnd)
+  (or (reg-opnd? opnd)
+      (and
+        (int-opnd? opnd)
+        (in-range? 0 255 (int-opnd-value opnd)))))
