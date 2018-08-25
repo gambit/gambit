@@ -382,10 +382,10 @@
 
 (define (alloc-frame cgc n)
   (if (not (= 0 n))
-    (am-sub cgc
+    (am-add cgc
       (get-frame-pointer cgc)
       (get-frame-pointer cgc)
-      (int-opnd (* n (get-word-width cgc))))))
+      (int-opnd (- (* n (get-word-width cgc)))))))
 
 ;;------------------------------------------------------------------------------
 ;;--------------------------------- Conditions ---------------------------------
@@ -837,7 +837,9 @@
               (am-mov cgc reg (obj-opnd (string->symbol proc-name)))
               (am-mov cgc reg (mem-opnd reg (+ (* 8 3) -9)))
               (am-mov cgc reg (mem-opnd reg 0))
-              (am-jmp cgc reg))))))))
+              (am-jmp cgc reg)
+
+              (execute-delayed-actions-never cgc))))))))
 
 ;;  GVM Instruction Encoding
 
@@ -933,9 +935,12 @@
 
   (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f width-bits 'self-label) ;; self ptr
   ;; so that label reference has tag ___tSUBTYPED
-  (for-each
-    (lambda (_) (am-data cgc (* 8 object-tag) 0))
-    (iota 1 object-tag))
+  (if (and (equal? 'arm (get-arch-name cgc)) (= 1 (bitwise-and object-tag 1)))
+    (compiler-error "ARM doesn't support uneven addresses for labels")
+    (for-each
+      (lambda (_) (am-data cgc 8 0))
+      (iota 1 object-tag)))
+
   (am-lbl cgc label))
 
 ;; Todo: Make sure ret-pos is valid when using this function
@@ -1034,9 +1039,11 @@
   ;; Field 1: gc-map
   (am-data cgc width-bits (if internal? (get-gc-map-internal frame) (get-gc-map frame)))
   ;; so that label reference has tag ___tSUBTYPED
-  (for-each
-    (lambda (_) (am-data cgc (* 8 object-tag) 0))
-    (iota 1 object-tag))
+  (if (and (equal? 'arm (get-arch-name cgc)) (= 1 (bitwise-and object-tag 1)))
+    (compiler-error "ARM doesn't support uneven addresses for labels")
+    (for-each
+      (lambda (_) (am-data cgc 8 0))
+      (iota 1 object-tag)))
 
   (am-lbl cgc label))
 
@@ -1259,7 +1266,7 @@
       ((x86-32)
         (list (asm-signed-lo (* 256 #xfb66ff) 32))) ;; Encoded jmp [esi-5]
       ((x86-64)
-        (list (* 256 #xfffffff115ff))) ;; Encoded jmp [rip-15]
+        (list (* 256 #xfffffff115ff))) ;; Encoded call [rip-15]
       ((arm)
         (compiler-internal-error "TODO: ARM not implemented"))
       (else
