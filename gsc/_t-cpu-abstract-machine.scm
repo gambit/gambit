@@ -1470,9 +1470,13 @@
           (if USE_BRIDGE
             (append (fields-lowlevelexec) (fields-regular))
             (fields-regular)))
+         (target-offset
+          (case (get-arch-name cgc)
+            ((arm) -4)
+            (else 0)))
          (offset
           (if USE_BRIDGE
-            (- (apply + (map cadr (fields-lowlevelexec))))
+            (apply + (map cadr (fields-lowlevelexec)))
             0))
          (field (find-field fields 0)))
 
@@ -1481,5 +1485,5 @@
 
     ;; Cons of mem-opnd and width
     (cons
-      (mem-opnd (get-pstate-pointer cgc) (+ offset (car field)))
+      (mem-opnd (get-pstate-pointer cgc) (- (car field) offset target-offset))
       (cdr field))))
