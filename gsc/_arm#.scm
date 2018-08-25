@@ -8,6 +8,8 @@
 
 (namespace ("_arm#"
 
+arm-listing
+
 arm-implement
 
 arm-registers-implement
