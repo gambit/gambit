@@ -752,21 +752,33 @@
 
 (define (execute-delayed-actions-always cgc)
   (debug "execute-delayed-actions-always")
-  (for-each
-    (lambda (action)
-      (debug "Executing delayed action: " (delayed-action-identifier action))
-      ((delayed-action-thunk action)))
-    (reverse (get-delayed-actions-always cgc)))
-  (codegen-context-delayed-actions-set! cgc (get-delayed-actions-never cgc)))
+  (let ((actions (reverse (get-delayed-actions-always cgc))))
+    (if (not (null? actions))
+      (begin
+        (codegen-context-delayed-actions-set! cgc
+          (get-delayed-actions-never cgc))
+        (for-each
+          (lambda (action)
+            (debug "Executing delayed action (always): "
+              (delayed-action-identifier action))
+            ((delayed-action-thunk action)))
+          actions)
+        (execute-delayed-actions-always cgc)))))
 
 (define (execute-delayed-actions-never cgc)
   (debug "execute-delayed-actions-never")
-  (for-each
-    (lambda (action)
-      (debug "Executing delayed action: " (delayed-action-identifier action))
-      ((delayed-action-thunk action)))
-    (reverse (get-delayed-actions-never cgc)))
-  (codegen-context-delayed-actions-set! cgc (get-delayed-actions-always cgc)))
+  (let ((actions (reverse (get-delayed-actions-never cgc))))
+    (if (not (null? actions))
+      (begin
+        (codegen-context-delayed-actions-set! cgc
+          (get-delayed-actions-always cgc))
+        (for-each
+          (lambda (action)
+            (debug "Executing delayed action (never): "
+              (delayed-action-identifier action))
+            ((delayed-action-thunk action)))
+          actions)
+        (execute-delayed-actions-never cgc)))))
 
 ;;------------------------------------------------------------------------------
 ;;----------------------------- GVM proc encoding ------------------------------
@@ -802,6 +814,9 @@
   (table-for-each
     (lambda (key val) (put-primitive-if-needed cgc key val))
     (codegen-context-primitive-labels-table cgc))
+
+  (if (not (null? (get-delayed-actions-always cgc)))
+    (compiler-internal-error "Delayed actions that should be executed not reachable"))
 
   (debug "Finished!")
 
