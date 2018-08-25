@@ -42,7 +42,7 @@
 
 (define (arm-info)
   (make-cpu-info
-    'thumb                 ;; Arch name
+    'arm                   ;; Arch name
     4                      ;; Word width
     'le                    ;; Endianness
     #t                     ;; Load store architecture?
@@ -166,6 +166,7 @@
         (with-reg
           (lambda (reg)
             (arm-load-label cgc reg src)
+            (am-add cgc reg reg (int-opnd 1))
             (regular-move reg))))
       ((obj-opnd? src)
         (with-reg
