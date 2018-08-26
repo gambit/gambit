@@ -6,7 +6,6 @@
 
 (include "generic.scm")
 
-(include-adt "_x86#.scm")
 (include-adt "_asm#.scm")
 (include-adt "_codegen#.scm")
 

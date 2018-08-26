@@ -7,6 +7,7 @@
 (include "generic.scm")
 
 (include-adt "_x86#.scm")
+(include-adt "_arm#.scm")
 (include-adt "_asm#.scm")
 (include-adt "_codegen#.scm")
 
@@ -949,7 +950,7 @@
 
   (codegen-fixup-handler! cgc '___lowlevel_exec width-bits 0)
   (am-data cgc width-bits (+ 6                               ;; PERM
-                            (* 8 14)                         ;; PROCEDURE
+                            (* header-tag-mult 14)           ;; PROCEDURE
                             (* 256 (+ nargs                  ;; Number of arguments
                               (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
@@ -1054,7 +1055,7 @@
   ;; Host Address
   (codegen-fixup-handler! cgc '___lowlevel_exec width-bits 0)
   ;; Header
-  (am-data cgc width-bits (+ 6 (* 8 15)))
+  (am-data cgc width-bits (+ 6 (* header-tag-mult 15)))
   ;; Field 1: gc-map
   (am-data cgc width-bits (if internal? (get-gc-map-internal frame) (get-gc-map frame)))
   ;; so that label reference has tag ___tSUBTYPED
@@ -1314,7 +1315,7 @@
           ;; Place header
           (mov-at-clo-index 0 reg
             (int-opnd (+
-                        (* 8 14)
+                        (* header-tag-mult 14)
                         (* 256 (- size width)))))
           ;; Place entry
           (mov-at-clo-index 1 reg clo-lbl)
