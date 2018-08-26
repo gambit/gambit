@@ -314,6 +314,7 @@
 
 (define (arm-cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
     ;; In case both jump locations are false, the cmp is unnecessary.
+    ;; Todo: Use cmn is necessary
     (if (or loc-true loc-false)
     (load-multiple-if-necessary cgc
       (list '(reg) reg-or-8imm-opnd?)
