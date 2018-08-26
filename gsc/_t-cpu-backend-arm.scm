@@ -343,18 +343,18 @@
     (lambda (cgc)
       (debug "label-opnd: " label-opnd)
       (let ((label (lbl-opnd-label label-opnd)))
-        (codegen-fixup-lbl! cgc label object-tag #f 32 0 (asm-label-id label))))))
+        (codegen-fixup-lbl! cgc label object-tag #f 32 1 (asm-label-id label))))))
 
 :; Todo: Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
   (arm-load-data cgc rd #f
     (lambda (cgc)
       (debug "obj-value: " obj-value)
-      (codegen-fixup-obj! cgc obj-value 32 0 'obj))))
+      (codegen-fixup-obj! cgc obj-value 32 1 'obj))))
 
 :; Todo: Deduplicate immediates
 (define (arm-load-imm cgc rd val)
-  (arm-load-data cgc rd (number->string val)
+  (arm-load-data-old cgc rd (number->string val)
     (lambda (cgc)
       (debug "imm value: " val)
       (am-data cgc 32 val))))
@@ -363,9 +363,24 @@
 (define (arm-load-glo cgc rd glo-name)
   (arm-load-data cgc rd glo-name
     (lambda (cgc)
-      (codegen-fixup-glo! cgc glo-name 32 0 (symbol-append 'glo_ glo-name)))))
+      (codegen-fixup-glo! cgc glo-name 32 1 (symbol-append 'glo_ glo-name)))))
 
 (define (arm-load-data cgc rd ref-name place-data)
+
+  (asm-16-le cgc #xf240) ;; movw
+  (asm-16-le cgc (fxarithmetic-shift-left (arm-reg-field rd) 8))
+
+  (if (codegen-context-listing-format cgc)
+      (let ((thing
+             (if ref-name
+                 (if (symbol? ref-name) (symbol->string ref-name) ref-name)
+                 "???")))
+        (arm-listing cgc (list "movw") rd (string-append "lo16(" thing ")"))
+        (arm-listing cgc (list "movt") rd (string-append "hi16(" thing ")"))))
+
+  (place-data cgc))
+
+(define (arm-load-data-old cgc rd ref-name place-data)
   (define (label-dist label self offset)
     (fx- (asm-label-pos label) (fx+ self offset)))
 

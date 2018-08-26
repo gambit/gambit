@@ -3674,6 +3674,35 @@ ___SCMOBJ fixup_objs;)
                   *___CAST(___S32*,code+fixup_pos) = val;
                   pos = fixup_pos + sizeof(___S32);
                   break;
+
+                case 1:
+                  {
+                    /* fixup movw/movt THUMB2 pair on ARM */
+
+                    ___S16 *ptr = ___CAST(___S16*,code+fixup_pos-4);
+                    ___S16 movw0 = ptr[0];
+                    ___S16 movw1 = ptr[1];
+
+                    /* generate the movw instruction */
+                    ptr[0] = movw0
+                             + ((val >> 12) & 0x000f)  /* bits 12 to 15 */
+                             + ((val >> 1) & 0x0400);  /* bit 11 */
+                    ptr[1] = movw1
+                             + (val & 0x00ff)  /* bits 0 to 7 */
+                             + ((val << 4) & 0x7000);  /* bits 8 to 10 */
+
+                    /* generate the movt instruction */
+                    val = val >> 16;
+                    ptr[0] = movw0 + 0x0080
+                             + ((val >> 12) & 0x000f)  /* bits 12 to 15 */
+                             + ((val >> 1) & 0x0400);  /* bit 11 */
+                    ptr[1] = movw1
+                             + (val & 0x00ff)  /* bits 0 to 7 */
+                             + ((val << 4) & 0x7000);  /* bits 8 to 10 */
+
+                    pos = fixup_pos + sizeof(___S32);
+                    break;
+                  }
                 }
               break;
 
