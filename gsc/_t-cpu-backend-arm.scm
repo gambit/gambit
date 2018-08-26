@@ -200,7 +200,7 @@
             (if (in-range-aligned? 0 508 4 opnd2)
               (arm-add cgc dst opnd1 (make-arm-opnd opnd2))
               (if (in-range-aligned? 0 508 4 (int-opnd-negative opnd2))
-                (arm-add cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2)))
+                (arm-sub cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2)))
                 (compiler-internal-error
                   "Can't add/sub from sp constants not multiples of 4 or larger than 508"))))
 
