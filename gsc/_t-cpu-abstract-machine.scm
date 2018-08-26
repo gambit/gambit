@@ -833,7 +833,8 @@
          (proc (cdr pair))
          (proc-name (proc-obj-name proc))
          (prim-obj (get-primitive-object cgc (proc-obj-name proc)))
-         (defined? (or (vector-ref (lbl-opnd-label label-opnd) 1) (not proc)))) ;; See asm-label-pos (Same but without error if undefined)
+         ;; See asm-label-pos (Same but without error if undefined)
+         (defined? (or (vector-ref (lbl-opnd-label label-opnd) 1) (not proc))))
 
     (if (not defined?)
       (begin
@@ -853,7 +854,7 @@
               (debug proc-name)
               (put-entry-point-label cgc label-opnd proc-name #f 0 #f)
               (am-mov cgc reg (obj-opnd (string->symbol proc-name)))
-              (am-mov cgc reg (mem-opnd reg (+ (* 8 3) -9)))
+              (am-mov cgc reg (mem-opnd reg (+ (* (get-word-width cgc) 2) -1)))
               (am-mov cgc reg (mem-opnd reg 0))
               (am-jmp cgc reg)
 
