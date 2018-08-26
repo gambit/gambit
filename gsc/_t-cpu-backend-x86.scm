@@ -748,19 +748,20 @@
 (define x86-prim-##fixnum?
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
-          (let* ((width (get-word-width-bits cgc))
-             (x86-opnd (make-x86-opnd arg1))
-                 (shrinked-opnd (shrink-x86-opnd x86-opnd width 8)))
-            (x86-test cgc
-              (car shrinked-opnd)
-              (x86-imm-int (- (expt 2 tag-width) 1))
-              (cdr shrinked-opnd))
-            (am-cond-return cgc result-action
-              (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
-              (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
-              true-opnd: (int-opnd (format-imm-object #t))
+      (let* ((width (get-word-width-bits cgc))
+          (x86-opnd (make-x86-opnd arg1))
+              (shrinked-opnd (shrink-x86-opnd x86-opnd width 8)))
+        (x86-test cgc
+          (car shrinked-opnd)
+          (x86-imm-int (- tag-mult 1))
+          (cdr shrinked-opnd))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jne  cgc (lbl-opnd-label lbl)))
+          true-opnd: (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
+;; Todo: Use cx as and bit-test instruction
 (define x86-prim-##pair?
   (const-nargs-prim 1 1 '((reg mem))
     (lambda (cgc result-action args arg1 temp1)
@@ -772,7 +773,7 @@
         (x86-not cgc temp1)
         (x86-test cgc
           (car shrinked-temp1)
-          (x86-imm-int (- (expt 2 tag-width) 1))
+          (x86-imm-int (- tag-mult 1))
           (cdr shrinked-temp1))
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-je  cgc (lbl-opnd-label lbl)))
@@ -790,7 +791,7 @@
         (am-mov cgc temp1 arg1) ;; Save arg1
         (x86-and cgc
           (car shrinked-temp1)
-          (x86-imm-int (- (expt 2 tag-width) 1))
+          (x86-imm-int (- tag-mult 1))
           (cdr shrinked-temp1))
         (x86-cmp cgc
           (car shrinked-temp1)
@@ -1004,8 +1005,8 @@
     (table-set! table '##fixnum?        (make-prim-obj x86-prim-##fixnum?        1 #t #t))
     (table-set! table '##special?       (make-prim-obj x86-prim-##special?       1 #t #t))
     (table-set! table '##pair?          (make-prim-obj x86-prim-##pair?          1 #t #t))
-    (table-set! table '##char?          (make-prim-obj x86-prim-##char?          1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj x86-prim-##mem-allocated? 1 #t #t))
+    (table-set! table '##char?          (make-prim-obj x86-prim-##char?          1 #t #t))
 
     (table-set! table '##flonum?  (make-prim-obj x86-stub-prim 1 #t #f))
     (table-set! table '##fl+      (make-prim-obj x86-stub-prim 2 #t #f))
