@@ -338,19 +338,19 @@
 
 :; Todo: Deduplicate labels
 (define (arm-load-label cgc rd label-opnd)
+  (let ((label (lbl-opnd-label label-opnd)))
   (arm-load-data cgc rd
-    (asm-label-id (lbl-opnd-label label-opnd))
+      (asm-label-id label)
     (lambda (cgc)
       (debug "label-opnd: " label-opnd)
-      (let ((label (lbl-opnd-label label-opnd)))
-        (codegen-fixup-lbl! cgc label object-tag #f 32 1 (asm-label-id label))))))
+        (codegen-fixup-lbl! cgc label object-tag #f 32 1 #f)))))
 
 :; Todo: Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
-  (arm-load-data cgc rd #f
+  (arm-load-data cgc rd (string-append "'" (object->string obj-value))
     (lambda (cgc)
       (debug "obj-value: " obj-value)
-      (codegen-fixup-obj! cgc obj-value 32 1 'obj))))
+      (codegen-fixup-obj! cgc obj-value 32 1 #f))))
 
 :; Todo: Deduplicate immediates
 (define (arm-load-imm cgc rd val)
@@ -361,9 +361,9 @@
 
 :; Todo: Deduplicate references to global variables
 (define (arm-load-glo cgc rd glo-name)
-  (arm-load-data cgc rd glo-name
+  (arm-load-data cgc rd (string-append "&global[" (symbol->string glo-name) "]")
     (lambda (cgc)
-      (codegen-fixup-glo! cgc glo-name 32 1 (symbol-append 'glo_ glo-name)))))
+      (codegen-fixup-glo! cgc glo-name 32 1 #f))))
 
 (define (arm-load-data cgc rd ref-name place-data)
 
