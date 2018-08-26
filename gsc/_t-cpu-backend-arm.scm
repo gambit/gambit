@@ -316,10 +316,10 @@
     ;; In case both jump locations are false, the cmp is unnecessary.
     ;; Todo: Use cmn is necessary
     (if (or loc-true loc-false)
-    (load-multiple-if-necessary cgc
-      (list '(reg) reg-or-8imm-opnd?)
-      (list opnd1 opnd2)
-        (lambda (reg1 opnd2) (arm-cmp cgc reg1 (make-arm-opnd opnd2)))))
+      (load-multiple-if-necessary cgc
+        (list '(reg) reg-or-8imm-opnd?)
+        (list opnd1 opnd2)
+          (lambda (reg1 opnd2) (arm-cmp cgc reg1 (make-arm-opnd opnd2)))))
 
   (let* ((conds (arm-get-branch-conditions condition)))
     (cond
@@ -560,6 +560,54 @@
         true-opnd:  (int-opnd (format-imm-object #t))
         false-opnd: (int-opnd (format-imm-object #f))))))
 
+(define arm-prim-##fx+
+  (foldl-prim
+    (lambda (cgc accum opnd) (am-add cgc accum accum opnd))
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 0
+    start-value-null?: #t
+    reduce-1: am-mov
+    commutative: #t))
+
+(define arm-prim-##fx+?
+  (lambda (cgc result-action args)
+    (with-result-opnd cgc result-action args
+      allowed-opnds: '(reg)
+      fun:
+      (lambda (result-reg result-opnd-in-args)
+        (am-add cgc result-reg (car args) (cadr args))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-vc)))
+          (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-vs)))
+          true-opnd: result-reg
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
+(define arm-prim-##fx-
+  (foldl-prim
+    (lambda (cgc accum opnd) (am-sub cgc accum accum opnd))
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    ; start-value: 0 ;; Start the fold on the first operand
+    reduce-1: (lambda (cgc dst opnd) (am-sub cgc dst (int-opnd 0) opnd))
+    commutative: #f))
+
+(define arm-prim-##fx-?
+  (lambda (cgc result-action args)
+    (with-result-opnd cgc result-action args
+      allowed-opnds: '(reg)
+      fun:
+      (lambda (result-reg result-opnd-in-args)
+        (let* ((1-opnd? (null? (cdr args)))
+               (opnd1 (if 1-opnd? (int-opnd 0) (car args)))
+               (opnd2 (if 1-opnd? (car args) (cadr args))))
+          (am-sub cgc result-reg opnd1 opnd2)
+          (am-cond-return cgc result-action
+            (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-vc)))
+            (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-vs)))
+            true-opnd: result-reg
+            false-opnd: (int-opnd (format-imm-object #f))))))))
+
 (define (arm-compare-prim condition)
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
@@ -637,6 +685,10 @@
     (table-set! table '-          (make-prim-obj arm-stub-prim 2 #f #f))
     (table-set! table '<          (make-prim-obj arm-stub-prim 2 #f #f))
 
+    (table-set! table '##fx+      (make-prim-obj arm-prim-##fx+  2 #t #f))
+    (table-set! table '##fx+?     (make-prim-obj arm-prim-##fx+? 2 #t #t #t))
+    (table-set! table '##fx-      (make-prim-obj arm-prim-##fx-  2 #t #f))
+    (table-set! table '##fx-?     (make-prim-obj arm-prim-##fx-? 2 #t #t #t))
     (table-set! table '##fx<      (make-prim-obj arm-prim-##fx<  2 #t #t))
     (table-set! table '##fx<=     (make-prim-obj arm-prim-##fx<= 2 #t #t))
     (table-set! table '##fx>      (make-prim-obj arm-prim-##fx>  2 #t #t))
