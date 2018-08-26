@@ -289,6 +289,7 @@
 (define (int-opnd n)               (list 'int-opnd n))
 (define (int-opnd? pair)           (tagged-object? 'int-opnd pair))
 (define (int-opnd-value pair)      (cadr pair))
+(define (int-opnd-negative pair)   (int-opnd (- (int-opnd-value pair))))
 
 (define (obj-opnd obj)             (list 'obj-opnd obj))
 (define (obj-opnd? pair)           (tagged-object? 'obj-opnd pair))
@@ -817,6 +818,7 @@
 
   (if (not (null? (get-delayed-actions-always cgc)))
     (compiler-internal-error "Delayed actions that should be executed not reachable"))
+  (execute-delayed-actions-never cgc)
 
   (debug "Finished!")
 
