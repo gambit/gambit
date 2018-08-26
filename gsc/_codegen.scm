@@ -227,15 +227,15 @@
 (define (codegen-fixup-generic! cgc width gen-value #!optional (listing #f))
   (let ((lbl (asm-make-label cgc 'fixup)))
     (codegen-context-fixup-locs-add! cgc lbl width)
-    (if listing
-      (asm-listing cgc (list "'" listing)))
     (asm-label cgc lbl)
     (asm-at-assembly
      cgc
      (lambda (cgc self)
        (fxarithmetic-shift-right width 3))
      (lambda (cgc self)
-       (asm-int-le cgc (gen-value cgc self) width)))))
+       (asm-int-le cgc (gen-value cgc self) width)
+       (if listing
+           (asm-listing cgc (list "'" listing)))))))
 
 (define (codegen-fixup-lbl! cgc lbl offset relative? width kind #!optional (label-name #f))
   (codegen-fixup-generic!
