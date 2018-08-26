@@ -82,14 +82,14 @@
 
 (define (arm-instructions)
   (make-instruction-dictionnary
-    arm-label-align            ;; am-lbl
-    arm-data-instr             ;; am-data
-    arm-mov-instr              ;; am-mov
-    (arm-arith-instr arm-add)  ;; am-add
-    (arm-arith-instr arm-sub)  ;; am-sub
-    arm-jmp-instr              ;; am-jmp
-    arm-cmp-jump-instr         ;; am-compare-jump
-    am-compare-move))          ;; am-compare-move
+    arm-label-align             ;; am-lbl
+    arm-data-instr              ;; am-data
+    arm-mov-instr               ;; am-mov
+    arm-add-instr               ;; am-add
+    arm-sub-instr               ;; am-sub
+    arm-jmp-instr               ;; am-jmp
+    arm-cmp-jump-instr          ;; am-compare-jump
+    am-compare-move))           ;; am-compare-move
 
 (define (make-arm-opnd opnd)
   (cond
@@ -108,7 +108,6 @@
 
 ;; Args : CGC, reg/mem/label, reg/mem/imm/label/glo
 (define (arm-mov-instr cgc dst src #!optional (width #f))
-
   (define (with-reg fun)
     (if (reg-opnd? dst)
       (fun (make-arm-opnd dst))
@@ -151,7 +150,12 @@
           (lambda (reg)
             (cond
               ((and (reg-opnd? reg) (in-range? 0 255 (int-opnd-value src)))
-                (arm-mov cgc (make-arm-opnd reg) (make-arm-opnd src))
+                (arm-mov cgc reg (make-arm-opnd src))
+                (regular-move reg))
+              ((and (reg-opnd? reg) (in-range? -255 0 (int-opnd-value src)))
+                ;; Todo: Replace with movn
+                (arm-mov cgc reg (make-arm-opnd (int-opnd-negative src)))
+                (arm-neg cgc reg reg)
                 (regular-move reg))
               (else
             (arm-load-imm cgc reg (int-opnd-value src))
@@ -186,12 +190,99 @@
       (else
         (compiler-internal-error "Cannot move : " dst " <- " src)))))
 
-(define (arm-arith-instr instr)
-  (lambda (cgc dst opnd1 opnd2)
-    (debug "arm-arith-instr")
-    (load-multiple-if-necessary cgc '((reg) (reg) (reg)) (list dst opnd1 opnd2)
-      (lambda (dst opnd1 opnd2)
-        (instr cgc dst opnd1 (make-arm-opnd opnd2))))))
+(define (arm-add-instr cgc dest opnd1 opnd2)
+  (define (with-dest-reg dst)
+    (load-multiple-if-necessary cgc '((reg) (reg int)) (list opnd1 opnd2)
+      (lambda (opnd1 opnd2)
+        (cond
+          ;; add sp, #imm9
+          ((and (equal? dst opnd1) (arm-sp? dst) (int-opnd? opnd2))
+            (if (in-range-aligned? 0 508 4 opnd2)
+              (arm-add cgc dst opnd1 (make-arm-opnd opnd2))
+              (if (in-range-aligned? 0 508 4 (int-opnd-negative opnd2))
+                (arm-add cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2)))
+                (compiler-internal-error
+                  "Can't add/sub from sp constants not multiples of 4 or larger than 508"))))
+
+          ;; add rd, #imm8
+          ((and (equal? dst opnd1)
+                (in-range-aligned? 0 255 1 opnd2))
+            (arm-add cgc dst opnd1 (make-arm-opnd opnd2)))
+
+          ;; add rd, rn, #imm3
+          ((and (int-opnd? opnd2)
+                (in-range? 0 7 (int-opnd-value opnd2)))
+            (arm-add cgc dst opnd1 (make-arm-opnd opnd2)))
+
+          ;; add rd, rn, #imm
+          ;; add rd, rn, rm
+          (else
+            (let ((use-reg
+              (lambda (reg)
+                (am-mov cgc reg opnd2)
+                (arm-add cgc dst opnd1 reg))))
+
+            (if (int-opnd? opnd2)
+              (if (equal? dst opnd1)
+                (get-free-register cgc (list) use-reg)
+                (use-reg dst))
+              (arm-add cgc dst opnd1 opnd2)))))
+        (am-mov cgc dest dst))))
+
+  (if (and (or (arm-sp? dest) (arm-sp? opnd1) (arm-sp? opnd2))
+           (not (int-opnd? opnd2)))
+    (compiler-internal-error "arm-sub-instr -- Can't substract register from sp"))
+
+  (if (reg-opnd? dest)
+    (with-dest-reg dest)
+    (get-free-register cgc (list dest opnd1 opnd2) with-dest-reg)))
+
+(define (arm-sub-instr cgc dest opnd1 opnd2)
+  (define (with-dest-reg dst)
+    (load-multiple-if-necessary cgc '((reg) (reg int)) (list opnd1 opnd2)
+      (lambda (opnd1 opnd2)
+        (cond
+          ;; sub sp, #imm9
+          ((and (equal? dst opnd1) (arm-sp? dst) (int-opnd? opnd2))
+            (if (in-range-aligned? 0 508 4 opnd2)
+              (arm-sub cgc dst opnd1 (make-arm-opnd opnd2))
+              (if (in-range-aligned? 0 508 4 (int-opnd-negative opnd2))
+                (arm-add cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2)))
+                (compiler-internal-error
+                  "Can't add/sub from sp constants not multiples of 4 or larger than 508"))))
+
+          ;; sub rd, #imm8
+          ((and (equal? dst opnd1)
+                (in-range-aligned? 0 255 1 opnd2))
+            (arm-sub cgc dst opnd1 (make-arm-opnd opnd2)))
+
+          ;; sub rd, rn, #imm3
+          ((and (int-opnd? opnd2)
+                (in-range-aligned? 0 7 1 opnd2))
+            (arm-sub cgc dst opnd1 (make-arm-opnd opnd2)))
+
+          ;; sub rd, rn, #imm
+          ;; sub rd, rn, rm
+          (else
+            (let ((use-reg
+              (lambda (reg)
+                (if (int-opnd? opnd2)
+                  (am-mov cgc reg (int-opnd-negative opnd2))
+                  (arm-neg cgc reg opnd2))
+                (arm-add cgc dst opnd1 reg))))
+
+            (if (equal? dst opnd1)
+              (get-free-register cgc (list) use-reg)
+              (use-reg dst)))))
+        (am-mov cgc dest dst))))
+
+  (if (and (or (arm-sp? dest) (arm-sp? opnd1) (arm-sp? opnd2))
+           (not (int-opnd? opnd2)))
+    (compiler-internal-error "arm-sub-instr -- Can't substract register from sp"))
+
+  (if (reg-opnd? dest)
+    (with-dest-reg dest)
+    (get-free-register cgc (list dest opnd1 opnd2) with-dest-reg)))
 
 (define (arm-jmp-instr cgc opnd)
   (debug "arm-jmp-instr: " opnd)
@@ -490,8 +581,19 @@
 
 ;; Int opnd utils
 
+(define (arm-sp? opnd)
+  (equal? opnd (arm-sp)))
+
+(define (arm-pc? opnd)
+  (equal? opnd (arm-pc)))
+
 (define (reg-or-8imm-opnd? opnd)
   (or (reg-opnd? opnd)
       (and
         (int-opnd? opnd)
         (in-range? 0 255 (int-opnd-value opnd)))))
+
+(define (in-range-aligned? min max align opnd)
+  (and (int-opnd? opnd)
+       (in-range? min max (int-opnd-value opnd))
+       (= 0 (fxand (- align 1) (int-opnd-value opnd)))))
