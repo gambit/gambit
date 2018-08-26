@@ -510,6 +510,55 @@
 
 ;; Primitives
 
+(define arm-prim-##fixnum?
+  (const-nargs-prim 1 1 '((reg))
+    (lambda (cgc result-action args arg1 temp1)
+      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (arm-tst cgc arg1 temp1)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-eq)))
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne)))
+        true-opnd:  (int-opnd (format-imm-object #t))
+        false-opnd: (int-opnd (format-imm-object #f))))))
+
+(define arm-prim-##pair?
+  (const-nargs-prim 1 2 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1 temp2)
+      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc temp2 arg1)       ;; Save arg1
+      (arm-mvn cgc temp2 temp2)     ;; Invert bits
+      (arm-tst cgc temp2 temp1)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-eq)))
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne)))
+        true-opnd:  (int-opnd (format-imm-object #t))
+        false-opnd: (int-opnd (format-imm-object #f))))))
+
+(define arm-prim-##special?
+  (const-nargs-prim 1 2 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1 temp2)
+      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc temp2 arg1) ;; Save arg1
+      (arm-and cgc temp2 temp1)
+      (am-mov cgc temp1 (int-opnd special-int-tag))
+      (arm-cmp cgc temp2 temp1)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-eq)))
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne)))
+        true-opnd:  (int-opnd (format-imm-object #t))
+        false-opnd: (int-opnd (format-imm-object #f))))))
+
+(define arm-prim-##mem-allocated?
+  (const-nargs-prim 1 1 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1)
+      (am-mov cgc temp1 (int-opnd (bitwise-and object-tag pair-tag)))
+      (arm-tst cgc arg1 temp1)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-eq)))
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne)))
+        true-opnd:  (int-opnd (format-imm-object #t))
+        false-opnd: (int-opnd (format-imm-object #f))))))
+
 (define arm-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -558,6 +607,11 @@
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity (make-prim-obj ##identity-primitive 1 #t #t))
     (table-set! table '##not      (make-prim-obj ##not-primitive 1 #t #t))
+
+    (table-set! table '##fixnum?        (make-prim-obj arm-prim-##fixnum?        1 #t #t))
+    (table-set! table '##special?       (make-prim-obj arm-prim-##special?       1 #t #t))
+    (table-set! table '##pair?          (make-prim-obj arm-prim-##pair?          1 #t #t))
+    (table-set! table '##mem-allocated? (make-prim-obj arm-prim-##mem-allocated? 1 #t #t))
 
     (table-set! table '##flonum?  (make-prim-obj arm-stub-prim 1 #t #f))
     (table-set! table '##fl+      (make-prim-obj arm-stub-prim 2 #t #f))
