@@ -952,7 +952,7 @@
                             (* 256 (+ nargs                  ;; Number of arguments
                               (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
-  (codegen-fixup-lbl! cgc (lbl-opnd-label label) 0 #f width-bits 0 'self-label) ;; self ptr
+  (codegen-fixup-lbl! cgc (lbl-opnd-label label) 1 #f width-bits 0 'self-label) ;; self ptr
   ;; so that label reference has tag ___tSUBTYPED
   (if (not (equal? 'arm (get-arch-name cgc)))
     (for-each

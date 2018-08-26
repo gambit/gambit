@@ -3603,10 +3603,10 @@ ___SCMOBJ fixup_objs;)
 
                     /* generate the movt instruction */
                     val = val >> 16;
-                    ptr[0] = movw0 + 0x0080
+                    ptr[2] = movw0 + 0x0080
                              + ((val >> 12) & 0x000f)  /* bits 12 to 15 */
                              + ((val >> 1) & 0x0400);  /* bit 11 */
-                    ptr[1] = movw1
+                    ptr[3] = movw1
                              + (val & 0x00ff)  /* bits 0 to 7 */
                              + ((val << 4) & 0x7000);  /* bits 8 to 10 */
 
