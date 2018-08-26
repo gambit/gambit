@@ -560,6 +560,23 @@
         true-opnd:  (int-opnd (format-imm-object #t))
         false-opnd: (int-opnd (format-imm-object #f))))))
 
+(define (arm-compare-prim condition)
+  (foldl-compare-prim
+    (lambda (cgc opnd1 opnd2 true-label false-label)
+      (am-compare-jump cgc
+        condition
+        opnd1 opnd2
+        false-label true-label
+        (get-word-width-bits cgc)))
+    allowed-opnds1: '(reg)
+    allowed-opnds2: '(reg int)))
+
+(define arm-prim-##fx<  (x86-compare-prim (condition-greater #t #t)))
+(define arm-prim-##fx<= (x86-compare-prim (condition-greater #f #t)))
+(define arm-prim-##fx>  (x86-compare-prim (condition-lesser #t #t)))
+(define arm-prim-##fx>= (x86-compare-prim (condition-lesser #f #t)))
+(define arm-prim-##fx=  (x86-compare-prim condition-not-equal))
+
 (define arm-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -619,6 +636,12 @@
     (table-set! table '+          (make-prim-obj arm-stub-prim 2 #f #f))
     (table-set! table '-          (make-prim-obj arm-stub-prim 2 #f #f))
     (table-set! table '<          (make-prim-obj arm-stub-prim 2 #f #f))
+
+    (table-set! table '##fx<      (make-prim-obj arm-prim-##fx<  2 #t #t))
+    (table-set! table '##fx<=     (make-prim-obj arm-prim-##fx<= 2 #t #t))
+    (table-set! table '##fx>      (make-prim-obj arm-prim-##fx>  2 #t #t))
+    (table-set! table '##fx>=     (make-prim-obj arm-prim-##fx>= 2 #t #t))
+    (table-set! table '##fx=      (make-prim-obj arm-prim-##fx=  2 #t #t))
 
     (table-set! table '##car      (make-prim-obj (object-read-prim pair-obj-desc 2) 1 #t #f))
     (table-set! table '##cdr      (make-prim-obj (object-read-prim pair-obj-desc 1) 1 #t #f))
