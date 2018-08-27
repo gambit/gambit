@@ -89,6 +89,8 @@
 (define header-tag-width  5)
 (define header-tag-offset 3)
 (define header-tag-mult   (expt 2 header-tag-offset))
+(define header-length-offset (+ header-tag-offset header-tag-width))
+(define header-length-mult (expt 2 header-length-offset))
 
 (define tag-width         2) ;(ceiling (/ (log tag-mult) (log 2))))
 (define tag-mult          (expt 2 tag-width))
