@@ -615,15 +615,13 @@
             (am-return-opnd cgc result-action result-reg))))))
 
 (define arm-prim-##null?
-  (lambda (cgc result-action args)
-    (check-nargs-if-necessary cgc result-action 1)
-    (call-with-nargs args
-      (lambda (arg1)
-        (am-if-eq cgc arg1 (make-obj-opnd '())
-          (lambda (cgc) (am-return-const cgc result-action #t))
-          (lambda (cgc) (am-return-const cgc result-action #f))
-          #f
-          (get-word-width-bits cgc))))))
+  (const-nargs-prim 1 0 (list (lambda (_) #t))
+    (lambda (cgc result-action args arg1)
+      (am-if-eq cgc arg1 (make-obj-opnd '())
+        (lambda (cgc) (am-return-const cgc result-action #t))
+        (lambda (cgc) (am-return-const cgc result-action #f))
+        #f
+        (get-word-width-bits cgc)))))
 
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-return-opnd uses the default width
