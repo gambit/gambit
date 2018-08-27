@@ -208,11 +208,13 @@
 
           ;; add rd, #imm8
           ((and (equal? dst opnd1)
+                (int-opnd? opnd2)
                 (in-range-aligned? 0 255 1 opnd2))
             (arm-add cgc dst opnd1 (make-arm-opnd opnd2)))
 
           ;; add rd, #imm8 (neg)
           ((and (equal? dst opnd1)
+                (int-opnd? opnd2)
                 (in-range-aligned? 0 255 1 (int-opnd-negative opnd2)))
             (arm-sub cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2))))
 
@@ -236,7 +238,7 @@
 
             (if (int-opnd? opnd2)
               (if (equal? dst opnd1)
-                (get-free-register cgc (list) use-reg)
+                (get-free-register cgc (list dest opnd1 opnd2) use-reg)
                 (use-reg dst))
               (arm-add cgc dst opnd1 opnd2)))))
         (am-mov cgc dest dst))))
@@ -265,11 +267,13 @@
 
           ;; sub rd, #imm8
           ((and (equal? dst opnd1)
+                (int-opnd? opnd2)
                 (in-range-aligned? 0 255 1 opnd2))
             (arm-sub cgc dst opnd1 (make-arm-opnd opnd2)))
 
           ;; sub rd, #imm8 (neg)
           ((and (equal? dst opnd1)
+                (int-opnd? opnd2)
                 (in-range-aligned? 0 255 1 (int-opnd-negative opnd2)))
             (arm-add cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2))))
 
@@ -294,7 +298,7 @@
                 (arm-add cgc dst opnd1 reg))))
 
             (if (equal? dst opnd1)
-              (get-free-register cgc (list) use-reg)
+              (get-free-register cgc (list dst opnd1 opnd2) use-reg)
               (use-reg dst)))))
         (am-mov cgc dest dst))))
 
