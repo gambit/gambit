@@ -703,7 +703,13 @@
         (arm-lsr cgc obj-reg (arm-imm-int shift-count))
         (am-return-opnd cgc result-action obj-reg)))))
 
-(define (arm-stub-prim cgc . args) #f)
+(define (arm-stub-prim cgc result-action . args)
+  (if (then-return? result-action)
+    (put-entry-point-label cgc
+      (then-return-label result-action)
+      (then-return-prim-name result-action)
+      #f 1234 #f)
+    #f))
 
 (define arm-primitive-table
   (let ((table (make-table test: equal?)))

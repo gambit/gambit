@@ -909,7 +909,13 @@
         (x86-shr cgc obj-reg (x86-imm-int shift-count))
         (am-return-opnd cgc result-action obj-reg)))))
 
-(define (x86-stub-prim cgc . args) #f)
+(define (x86-stub-prim cgc result-action . args)
+  (if (then-return? result-action)
+    (put-entry-point-label cgc
+      (then-return-label result-action)
+      (then-return-prim-name result-action)
+      #f 1234 #f)
+    #f))
 
 (define x86-primitive-table
   (let ((table (make-table test: equal?)))
