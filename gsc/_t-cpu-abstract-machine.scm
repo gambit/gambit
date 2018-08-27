@@ -676,21 +676,63 @@
 (define (am-default-check-nargs cgc fun-label fs arg-count optional-args-values rest? place-label-fun)
   (define error-label (make-unique-label cgc "narg-error" #f))
   (debug "am-default-check-nargs: " arg-count)
+
   ;; Error handler
   (let ((temp1-field (get-processor-state-field cgc 'temp1))
         (narg-field (get-processor-state-field cgc 'nargs))
-        (error-handler (get-processor-state-field cgc 'handler_wrong_nargs)))
+        (error-handler (get-processor-state-field cgc 'handler_wrong_nargs))
+        (rest-handler (get-processor-state-field cgc 'handler_get_rest)))
     (am-lbl cgc error-label)
     (am-mov cgc (car temp1-field) fun-label (cdr temp1-field))
     (am-jmp cgc (car error-handler))
 
+    ;; Label struct before and label
     (place-label-fun fun-label)
 
-    (am-compare-jump cgc
-      condition-not-equal
-      (car narg-field) (int-opnd arg-count)
-      error-label #f
-      (cdr narg-field))))
+    (if (not rest?)
+      ;; Without rest argument
+      (am-compare-jump cgc
+        condition-not-equal
+        (car narg-field) (int-opnd arg-count)
+        error-label #f
+        (cdr narg-field))
+
+      ;; With rest argument
+      (let ((call-handler-lbl (make-unique-label cgc "call-rest-handler" #f))
+            (return-from-handler-lbl (make-unique-label cgc "return-from-rest-handler" #f))
+            (continue-lbl (make-unique-label cgc "continue" #f))
+            (rest-arg (get-nth-arg cgc fs arg-count arg-count))
+            (width (get-word-width cgc))
+            (fp (get-frame-pointer cgc)))
+
+        (am-compare-jump cgc
+          condition-not-equal
+          (car narg-field) (int-opnd (- arg-count 1))
+          call-handler-lbl #f
+          (cdr narg-field))
+        ;; Case with 0 element
+        (am-mov cgc rest-arg (obj-opnd '()) (get-word-width-bits cgc))
+        (am-sub cgc fp fp (int-opnd width)) ;; Adjusts the frame pointer
+        (am-jmp cgc continue-lbl)
+
+        (am-lbl cgc call-handler-lbl)
+
+        ;; Jump to return-from-handler-lbl if nargs < 0
+        (am-compare-jump cgc
+          (condition-lesser #f #t)
+          (car narg-field) (int-opnd 0)
+          return-from-handler-lbl #f
+          (cdr narg-field))
+
+        ;; Jump to rest handler here
+        (am-mov cgc (car temp1-field) fun-label (cdr temp1-field))
+        (am-jmp cgc (car rest-handler))
+
+        ;; Jump to continue after restoring flags
+        (am-lbl cgc return-from-handler-lbl)
+        (am-mov cgc (car narg-field) (int-opnd 0) (cdr narg-field))
+
+        (am-lbl cgc continue-lbl)))))
 
 (define bump-allocator-fudge-size 128)
 (define check-heap? #t)
