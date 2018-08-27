@@ -672,26 +672,27 @@
       allowed-opnds: '(reg)
       fun:
         (lambda (result-reg result-opnd-in-args)
-          (let* ((word (get-word-width cgc))
-                 (size (* word 3))
-                 (tag 3)
-                 (offset (+ tag (* 2 word))))
+          (let* ((width (get-word-width cgc))
+                 (size (* width 3))
+                 (tag (get-desc-pointer-tag pair-obj-desc))
+                 (subtype (reference-header-tag pair-obj-desc))
+                 (offset (+ tag (* 2 width))))
 
             (am-allocate-memory cgc result-reg size offset
               (codegen-context-frame cgc))
 
             (am-mov cgc
               (mem-opnd result-reg (- offset))
-              (int-opnd (* (get-word-width cgc) 3))
+              (int-opnd (+ (* header-tag-mult subtype) (* header-length-mult width 3)))
               (get-word-width-bits cgc))
 
             (am-mov cgc
-              (mem-opnd result-reg (- word offset))
+              (mem-opnd result-reg (- width offset))
               (cadr args)
               (get-word-width-bits cgc))
 
             (am-mov cgc
-              (mem-opnd result-reg (- (* 2 word) offset))
+              (mem-opnd result-reg (- (* 2 width) offset))
               (car args)
               (get-word-width-bits cgc))
 
@@ -779,7 +780,7 @@
       (let* ((width (if width width (get-word-width cgc)))
               (log2-width (- (integer-length width) 1))
               (header-offset (+ (* width pointer-header-offset) object-tag))
-              (shift-count (- (+ header-tag-width header-tag-offset log2-width) tag-width)))
+              (shift-count (- (+ header-length-offset log2-width) tag-width)))
         ;; Load header
         (am-mov cgc obj-reg (mem-opnd obj-reg (- header-offset)))
         ;; Shift header in order to ony keep length in bytes
