@@ -361,10 +361,10 @@
 :; Todo: Deduplicate labels
 (define (arm-load-label cgc rd label-opnd)
   (let ((label (lbl-opnd-label label-opnd)))
-  (arm-load-data cgc rd
+    (arm-load-data cgc rd
       (asm-label-id label)
-    (lambda (cgc)
-      (debug "label-opnd: " label-opnd)
+      (lambda (cgc)
+        (debug "label-opnd: " label-opnd)
         (codegen-fixup-lbl! cgc label object-tag #f 32 1 #f)))))
 
 :; Todo: Deduplicate objects
@@ -704,6 +704,86 @@
           #f
           (get-word-width-bits cgc))))))
 
+;; Doesn't support width not equal to (get-word-width cgc)
+;; as am-return-opnd uses the default width
+(define (arm-object-dyn-read-prim desc #!optional (width #f))
+  (if (immediate-desc? desc)
+    (compiler-internal-error "Object isn't a reference"))
+
+  (const-nargs-prim 2 0 '((reg) (reg int))
+    (lambda (cgc result-action args obj-reg index-opnd)
+      (let* ((width (if width width (get-word-width cgc)))
+             (index-shift (- (integer-length width) 1 tag-width))
+             (obj-tag (get-desc-pointer-tag desc))
+             (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+
+        (if (int-opnd? index-opnd)
+          (am-return-opnd cgc result-action
+            (mem-opnd obj-reg
+              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
+          (with-result-opnd cgc result-action args
+            allowed-opnds: '(reg)
+            fun:
+            (lambda (result-reg result-opnd-in-args)
+              (cond
+                ((<= 1 index-shift) ;; Multiply
+                  (arm-lsl cgc result-reg index-opnd (arm-imm-int index-shift))
+                  (arm-add cgc result-reg obj-reg result-reg))
+                ((>= -1 index-shift) ;; Divides
+                  (arm-lsr cgc result-reg index-opnd (arm-imm-int (- index-shift)))
+                  (arm-add cgc result-reg obj-reg result-reg))
+                (else
+                  (arm-add cgc result-reg obj-reg index-opnd)))
+              (am-return-opnd cgc result-action (mem-opnd result-reg (- 0-offset))))))))))
+
+;; Doesn't support width not equal to (get-word-width cgc)
+;; as am-mov uses the default width
+(define (arm-object-dyn-set-prim desc #!optional (width #f))
+  (if (immediate-desc? desc)
+    (compiler-internal-error "Object isn't a reference"))
+
+  (const-nargs-prim 3 0 '((reg) (reg int))
+    (lambda (cgc result-action args obj-reg index-opnd new-val-opnd)
+      (let* ((width (if width width (get-word-width cgc)))
+             (index-shift (- (integer-length width) 1 tag-width))
+             (obj-tag (get-desc-pointer-tag desc))
+             (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+        (if (int-opnd? index-opnd)
+          (am-mov cgc
+            (mem-opnd obj-reg
+              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
+            new-val-opnd)
+          (with-result-opnd cgc result-action args
+            allowed-opnds: '(reg)
+            fun:
+            (lambda (result-reg result-opnd-in-args)
+              (cond
+                ((<= 1 index-shift) ;; Multiply
+                  (arm-lsl cgc result-reg index-opnd (arm-imm-int index-shift))
+                  (arm-add cgc result-reg obj-reg result-reg))
+                ((>= -1 index-shift) ;; Divides
+                  (arm-lsr cgc result-reg index-opnd (arm-imm-int (- index-shift)))
+                  (arm-add cgc result-reg obj-reg result-reg))
+                (else
+                  (arm-add cgc result-reg obj-reg index-opnd)))
+              (am-mov cgc (mem-opnd result-reg (- 0-offset)) new-val-opnd))))
+        (am-return-const cgc result-action (void))))))
+
+(define (arm-prim-##vector-length #!optional (width #f))
+  (const-nargs-prim 1 0 '((reg))
+    (lambda (cgc result-action args obj-reg)
+      (let* ((width (if width width (get-word-width cgc)))
+              (log2-width (- (integer-length width) 1))
+              (header-offset (+ (* width pointer-header-offset) object-tag))
+              (shift-count (- (+ header-tag-width header-tag-offset log2-width) tag-width)))
+        ;; Load header
+        (am-mov cgc obj-reg (mem-opnd obj-reg (- header-offset)))
+        ;; Shift header in order to ony keep length in bytes
+        ;; Divides that value by the number of bytes per word
+        ;; Multiply by the tag width
+        (arm-lsr cgc obj-reg (arm-imm-int shift-count))
+        (am-return-opnd cgc result-action obj-reg)))))
+
 (define (arm-stub-prim cgc . args) #f)
 
 (define arm-primitive-table
@@ -740,9 +820,9 @@
     (table-set! table '##cons     (make-prim-obj arm-prim-##cons 2 #t #f))
     (table-set! table '##null?    (make-prim-obj arm-prim-##null? 2 #t #f))
 
-    (table-set! table '##vector-ref  (make-prim-obj (object-dyn-read-prim vector-obj-desc) 2 #t #t))
-    (table-set! table '##vector-set! (make-prim-obj (object-dyn-set-prim vector-obj-desc) 3 #t #f))
-    ; (table-set! table '##vector-length (make-prim-obj x86-prim-##vector-length 1 #t #t))
+    (table-set! table '##vector-ref  (make-prim-obj (arm-object-dyn-read-prim vector-obj-desc) 2 #t #t))
+    (table-set! table '##vector-set! (make-prim-obj (arm-object-dyn-set-prim vector-obj-desc) 3 #t #f))
+    (table-set! table '##vector-length (make-prim-obj (arm-prim-##vector-length #f) 1 #t #t))
 
     table))
 
