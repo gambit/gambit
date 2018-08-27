@@ -944,7 +944,7 @@
           #f
           (get-word-width-bits cgc))))))
 
-(define (object-dyn-read-prim desc #!optional (width #f))
+(define (x86-object-dyn-read-prim desc #!optional (width #f))
   (if (immediate-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
 
@@ -961,7 +961,7 @@
           (am-return-opnd cgc result-action
             (mem-opnd obj-reg (- 0-offset) index-opnd index-offset)))))))
 
-(define (object-dyn-set-prim desc #!optional (width #f))
+(define (x86-object-dyn-set-prim desc #!optional (width #f))
   (if (immediate-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
 
@@ -980,19 +980,19 @@
           (* 8 width))
         (am-return-const cgc result-action (void))))))
 
-(define x86-prim-##vector-length
+(define (x86-prim-##vector-length width)
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args obj-reg)
       (with-result-opnd cgc result-action args
         allowed-opnds: '(reg)
         fun:
         (lambda (result-reg result-opnd-in-args)
-          (let* ((width (get-word-width cgc))
+          (let* ((width (if width width (get-word-width cgc)))
                  (log2-width (- (integer-length width) 1))
                  (header-offset (+ (* width pointer-header-offset) object-tag))
                  (shift-count (- (+ header-tag-width header-tag-offset log2-width) tag-width)))
             (am-mov cgc result-reg (mem-opnd obj-reg (- header-offset)))
-            (x86-shr cgc result-reg (int-opnd shift-count))
+            (x86-shr cgc result-reg (x86-imm-int shift-count))
             (am-return-opnd cgc result-action result-reg)))))))
 
 (define (x86-stub-prim cgc . args) #f)
@@ -1031,8 +1031,8 @@
     (table-set! table '##cons     (make-prim-obj x86-prim-##cons 2 #t #f))
     (table-set! table '##null?    (make-prim-obj x86-prim-##null? 2 #t #f))
 
-    (table-set! table '##vector-ref  (make-prim-obj (object-dyn-read-prim vector-obj-desc) 2 #t #t))
-    (table-set! table '##vector-set! (make-prim-obj (object-dyn-set-prim vector-obj-desc) 3 #t #f))
-    (table-set! table '##vector-length (make-prim-obj x86-prim-##vector-length 1 #t #t))
+    (table-set! table '##vector-ref  (make-prim-obj (x86-object-dyn-read-prim vector-obj-desc) 2 #t #t))
+    (table-set! table '##vector-set! (make-prim-obj (x86-object-dyn-set-prim vector-obj-desc) 3 #t #f))
+    (table-set! table '##vector-length (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
 
     table))
