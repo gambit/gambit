@@ -991,7 +991,7 @@
           (let* ((prim-fun (get-primitive-function prim-obj))
                  (arity (get-primitive-arity prim-obj))
                  (args (get-args-opnds cgc (get-fun-fs cgc arity) arity)))
-            (put-entry-point-label cgc label-opnd proc-name #f 0 #f) ;; Place label in prim-fun
+            ; (put-entry-point-label cgc label-opnd proc-name #f 0 #f) ;; Place label in prim-fun
             (prim-fun cgc (then-return label-opnd proc-name) args))
 
           ;; Prim is defined in C
