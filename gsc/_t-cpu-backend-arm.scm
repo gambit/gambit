@@ -40,10 +40,12 @@
 
 ;; ARM backend info
 
+(define arm-word-width 4)
+
 (define (arm-info)
   (make-cpu-info
     'arm                   ;; Arch name
-    4                      ;; Word width
+    arm-word-width         ;; Word width
     'le                    ;; Endianness
     #t                     ;; Load store architecture?
     0                      ;; Frame offset
@@ -209,10 +211,20 @@
                 (in-range-aligned? 0 255 1 opnd2))
             (arm-add cgc dst opnd1 (make-arm-opnd opnd2)))
 
+          ;; add rd, #imm8 (neg)
+          ((and (equal? dst opnd1)
+                (in-range-aligned? 0 255 1 (int-opnd-negative opnd2)))
+            (arm-sub cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2))))
+
           ;; add rd, rn, #imm3
           ((and (int-opnd? opnd2)
                 (in-range? 0 7 (int-opnd-value opnd2)))
             (arm-add cgc dst opnd1 (make-arm-opnd opnd2)))
+
+          ;; add rd, rn, #imm3 (neg)
+          ((and (int-opnd? opnd2)
+                (in-range? 0 7 (int-opnd-value (int-opnd-negative opnd2))))
+            (arm-sub cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2))))
 
           ;; add rd, rn, #imm
           ;; add rd, rn, rm
@@ -256,10 +268,20 @@
                 (in-range-aligned? 0 255 1 opnd2))
             (arm-sub cgc dst opnd1 (make-arm-opnd opnd2)))
 
+          ;; sub rd, #imm8 (neg)
+          ((and (equal? dst opnd1)
+                (in-range-aligned? 0 255 1 (int-opnd-negative opnd2)))
+            (arm-add cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2))))
+
           ;; sub rd, rn, #imm3
           ((and (int-opnd? opnd2)
                 (in-range-aligned? 0 7 1 opnd2))
             (arm-sub cgc dst opnd1 (make-arm-opnd opnd2)))
+
+          ;; sub rd, rn, #imm3 (neg)
+          ((and (int-opnd? opnd2)
+                (in-range-aligned? 0 7 1 (int-opnd-negative opnd2)))
+            (arm-add cgc dst opnd1 (make-arm-opnd (int-opnd-negative opnd2))))
 
           ;; sub rd, rn, #imm
           ;; sub rd, rn, rm
