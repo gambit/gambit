@@ -944,6 +944,8 @@
           #f
           (get-word-width-bits cgc))))))
 
+;; Doesn't support width not equal to (get-word-width cgc)
+;; as am-return-opnd uses the default width
 (define (x86-object-dyn-read-prim desc #!optional (width #f))
   (if (immediate-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
@@ -951,16 +953,21 @@
   (const-nargs-prim 2 0 '((reg) (reg int))
     (lambda (cgc result-action args obj-reg index-opnd)
       (let* ((width (if width width (get-word-width cgc)))
-             (index-offset (- (integer-length (quotient width tag-mult)) 1))
+             (index-shift (- (integer-length width) 1 tag-width))
              (obj-tag (get-desc-pointer-tag desc))
              (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+
+        (if (> 0 index-shift)
+          (compiler-internal-error "x86-object-dyn-read-prim - Invalid index-shift"))
+
         (if (int-opnd? index-opnd)
           (am-return-opnd cgc result-action
             (mem-opnd obj-reg
-              (- (quotient (* width (int-opnd-value index-opnd)) tag-mult) 0-offset)))
+              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
           (am-return-opnd cgc result-action
-            (mem-opnd obj-reg (- 0-offset) index-opnd index-offset)))))))
+            (mem-opnd obj-reg (- 0-offset) index-opnd index-shift)))))))
 
+;; Doesn't support width not equal to (get-word-width cgc)
 (define (x86-object-dyn-set-prim desc #!optional (width #f))
   (if (immediate-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
@@ -968,14 +975,18 @@
   (const-nargs-prim 3 0 '((reg) (reg int))
     (lambda (cgc result-action args obj-reg index-opnd new-val-opnd)
       (let* ((width (if width width (get-word-width cgc)))
-             (index-offset (- (integer-length (quotient width tag-mult)) 1))
+             (index-shift (- (integer-length width) 1 tag-width))
              (obj-tag (get-desc-pointer-tag desc))
              (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+
+        (if (> 0 index-shift)
+          (compiler-internal-error "x86-object-dyn-read-prim - Invalid index-shift"))
+
         (am-mov cgc
           (if (int-opnd? index-opnd)
             (mem-opnd obj-reg
-              (- (quotient (* width (int-opnd-value index-opnd)) tag-mult) 0-offset))
-            (mem-opnd obj-reg (- 0-offset) index-opnd index-offset))
+              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
+            (mem-opnd obj-reg (- 0-offset) index-opnd index-shift))
           new-val-opnd
           (* 8 width))
         (am-return-const cgc result-action (void))))))
@@ -983,17 +994,13 @@
 (define (x86-prim-##vector-length width)
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args obj-reg)
-      (with-result-opnd cgc result-action args
-        allowed-opnds: '(reg)
-        fun:
-        (lambda (result-reg result-opnd-in-args)
-          (let* ((width (if width width (get-word-width cgc)))
-                 (log2-width (- (integer-length width) 1))
-                 (header-offset (+ (* width pointer-header-offset) object-tag))
-                 (shift-count (- (+ header-tag-width header-tag-offset log2-width) tag-width)))
-            (am-mov cgc result-reg (mem-opnd obj-reg (- header-offset)))
-            (x86-shr cgc result-reg (x86-imm-int shift-count))
-            (am-return-opnd cgc result-action result-reg)))))))
+      (let* ((width (if width width (get-word-width cgc)))
+             (log2-width (- (integer-length width) 1))
+             (header-offset (+ (* width pointer-header-offset) object-tag))
+             (shift-count (- (+ header-tag-width header-tag-offset log2-width) tag-width)))
+        (am-mov cgc obj-reg (mem-opnd obj-reg (- header-offset)))
+        (x86-shr cgc obj-reg (x86-imm-int shift-count))
+        (am-return-opnd cgc result-action obj-reg)))))
 
 (define (x86-stub-prim cgc . args) #f)
 
