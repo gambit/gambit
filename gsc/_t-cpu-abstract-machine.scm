@@ -769,9 +769,7 @@
 
       (codegen-context-memory-allocated-set! cgc bytes-allocated)
 
-      (asm-listing cgc "test1")
       (load-mem-opnd-address cgc dest-reg hp offset)
-      (asm-listing cgc "test2")
       (am-add cgc hp hp (int-opnd bytes))
 
       (if (>= bytes-allocated bump-allocator-fudge-size)
