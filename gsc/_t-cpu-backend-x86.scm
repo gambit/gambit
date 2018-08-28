@@ -827,7 +827,7 @@
 
             (am-mov cgc
               (mem-opnd result-reg (- offset))
-              (int-opnd (+ (* header-tag-mult subtype) (* header-length-mult width 3)))
+              (int-opnd (+ (* header-tag-mult subtype) (* header-length-mult width 2)))
               (get-word-width-bits cgc))
 
             (am-mov cgc
