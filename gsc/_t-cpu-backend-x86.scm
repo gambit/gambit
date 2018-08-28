@@ -928,11 +928,11 @@
     (table-set! table '##mem-allocated? (make-prim-obj x86-prim-##mem-allocated? 1 #t #t))
     (table-set! table '##char?          (make-prim-obj x86-prim-##char?          1 #t #t))
 
-    (table-set! table '##flonum?  (make-prim-obj x86-stub-prim 1 #t #f))
-    (table-set! table '##fl+      (make-prim-obj x86-stub-prim 2 #t #f))
-    (table-set! table '+          (make-prim-obj x86-stub-prim 2 #f #f))
-    (table-set! table '-          (make-prim-obj x86-stub-prim 2 #f #f))
-    (table-set! table '<          (make-prim-obj x86-stub-prim 2 #f #f))
+    ; (table-set! table '##flonum?  (make-prim-obj x86-stub-prim 1 #t #f))
+    ; (table-set! table '##fl+      (make-prim-obj x86-stub-prim 2 #t #f))
+    ; (table-set! table '+          (make-prim-obj x86-stub-prim 2 #f #f))
+    ; (table-set! table '-          (make-prim-obj x86-stub-prim 2 #f #f))
+    ; (table-set! table '<          (make-prim-obj x86-stub-prim 2 #f #f))
 
     (table-set! table '##fx+      (make-prim-obj x86-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?     (make-prim-obj x86-prim-##fx+? 2 #t #t #t))
