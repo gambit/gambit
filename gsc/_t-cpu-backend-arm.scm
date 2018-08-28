@@ -150,18 +150,20 @@
       ((int-opnd? src)
         (with-reg
           (lambda (reg)
-            (cond
-              ((and (reg-opnd? reg) (in-range? 0 255 (int-opnd-value src)))
-                (arm-mov cgc reg (make-arm-opnd src))
-                (regular-move reg))
-              ((and (reg-opnd? reg) (in-range? -255 0 (int-opnd-value src)))
-                ;; Todo: Replace with movn
-                (arm-mov cgc reg (make-arm-opnd (int-opnd-negative src)))
-                (arm-neg cgc reg reg)
-                (regular-move reg))
-              (else
-            (arm-load-imm cgc reg (int-opnd-value src))
-                (regular-move reg))))))
+            (let ((imm (int-opnd-value src)))
+              (cond
+                ((and (reg-opnd? reg) (in-range? 0 255 imm))
+                  (arm-mov cgc reg (make-arm-opnd src))
+                  (regular-move reg))
+                ((and (reg-opnd? reg) (in-range? -255 0 imm))
+                  ;; Todo: Replace with movn
+                  (arm-mov cgc reg (make-arm-opnd (int-opnd-negative src)))
+                  (arm-neg cgc reg reg)
+                  (regular-move reg))
+                (else
+                  (arm-movw cgc reg (asm-unsigned-lo16 imm))
+                  ; (arm-movt cgc reg (asm-unsigned-lo16 imm))
+                  (regular-move reg)))))))
       ((mem-opnd? src)
         (with-reg
           (lambda (reg)
@@ -378,13 +380,6 @@
       (debug "obj-value: " obj-value)
       (codegen-fixup-obj! cgc obj-value 32 1 #f))))
 
-:; Todo: Deduplicate immediates
-(define (arm-load-imm cgc rd val)
-  (arm-load-data-old cgc rd (number->string val)
-    (lambda (cgc)
-      (debug "imm value: " val)
-      (am-data cgc 32 val))))
-
 :; Todo: Deduplicate references to global variables
 (define (arm-load-glo cgc rd glo-name)
   (arm-load-data cgc rd (string-append "&global[" (symbol->string glo-name) "]")
@@ -392,7 +387,6 @@
       (codegen-fixup-glo! cgc glo-name 32 1 #f))))
 
 (define (arm-load-data cgc rd ref-name place-data)
-
   (asm-16-le cgc #xf240) ;; movw
   (asm-16-le cgc (fxarithmetic-shift-left (arm-reg-field rd) 8))
 
@@ -405,49 +399,6 @@
         (arm-listing cgc (list "movt") rd (string-append "hi16(" thing ")"))))
 
   (place-data cgc))
-
-(define (arm-load-data-old cgc rd ref-name place-data)
-  (define (label-dist label self offset)
-    (fx- (asm-label-pos label) (fx+ self offset)))
-
-  (define label-data-opnd (make-unique-label cgc "label-data" #t))
-  (define label-data (lbl-opnd-label label-data-opnd))
-  (define label-data-sym (asm-label-id label-data))
-
-  (add-delayed-action cgc (symbol-append 'arm-load-data__ label-data-sym) delayed-execute-never
-    (lambda ()
-      (asm-align cgc 4 0)
-      (am-lbl cgc label-data-opnd)
-      (place-data cgc)))
-
-  (asm-at-assembly
-    cgc
-    (lambda (cgc self) 2)
-    (lambda (cgc self)
-      (let* ((dist (label-dist label-data self 4))
-             (offset (fxarithmetic-shift-right dist 1)))
-
-        (debug "offset: " offset)
-        (debug "dist: " dist)
-        (debug "(fx= 0 (fxmodulo offset 4)): " (fx= 0 (fxmodulo offset 4)))
-        (debug "(fx<= offset 1023): " (fx<= offset 1023))
-        (debug "label-data: " label-data)
-        ; (if (or (not (fx= 0 (fxmodulo offset 2))) (fx> offset 1023))
-        ;   (compiler-internal-error "Offset too big"))
-
-        (asm-16-le cgc
-          (fx+ (fxquotient offset 4)
-                (fxarithmetic-shift-left (arm-reg-field rd) 8)
-                #x0800
-                #x4000))
-
-        (arm-listing cgc "ldr.w" rd
-          (string-append
-            "[pc, #" (symbol->string label-data-sym)
-            (if ref-name (string-append
-              " (" (if (symbol? ref-name) (symbol->string ref-name) ref-name) ")")
-              "")
-            "]"))))))
 
 ;;------------------------------------------------------------------------------
 

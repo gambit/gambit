@@ -1805,6 +1805,8 @@ BX Hs                      BX Hs
              (assert #f
                      "register or immediate value expected" opnd2))))))
 
+|#
+
 ;;;----------------------------------------------------------------------------
 
 ;;; ARM instructions: MOVW and MOVT.
@@ -1813,7 +1815,7 @@ BX Hs                      BX Hs
 
 (define (arm-instr-movw-movt cgc rd imm16 op)
 
-  (arm-assert-arm-mode cgc)
+  ; (arm-assert-arm-mode cgc)
 
   (assert (arm-reg? rd)
           "first operand must be a register" rd)
@@ -1845,6 +1847,8 @@ BX Hs                      BX Hs
   (arm-instr-movw-movt cgc rd imm16 1))
 
 ;;;----------------------------------------------------------------------------
+
+#|
 
 ;;; ARM instructions: ADDW and SUBW.
 
