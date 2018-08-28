@@ -187,7 +187,7 @@
         (with-reg
           (lambda (reg)
             (arm-load-glo cgc reg (glo-opnd-name src))
-            (arm-ldr cgc dst dst 0)
+            (arm-ldr cgc reg reg 0)
             (regular-move reg))))
       (else
         (compiler-internal-error "Cannot move : " dst " <- " src)))))
