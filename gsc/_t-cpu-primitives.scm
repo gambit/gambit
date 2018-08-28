@@ -642,4 +642,4 @@
              (header-offset (+ (* width pointer-header-offset) obj-tag))
              (total-offset (- (* width index) header-offset))
              (mem-location (opnd-with-offset obj-opnd total-offset)))
-        (am-mov cgc mem-location new-val width)))))
+        (am-mov cgc mem-location new-val (* 8 width))))))

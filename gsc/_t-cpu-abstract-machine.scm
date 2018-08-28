@@ -653,7 +653,7 @@
          (return-lbl3 (make-unique-label cgc "resume-execution")))
 
     (am-compare-jump cgc
-      (condition-lesser #t #f)
+      (condition-lesser #t #t)
       (get-frame-pointer cgc) stack-trip
       return-lbl1 #f)
 

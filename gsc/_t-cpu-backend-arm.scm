@@ -721,11 +721,11 @@
     (table-set! table '##pair?          (make-prim-obj arm-prim-##pair?          1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj arm-prim-##mem-allocated? 1 #t #t))
 
-    (table-set! table '##flonum?  (make-prim-obj arm-stub-prim 1 #t #f))
-    (table-set! table '##fl+      (make-prim-obj arm-stub-prim 2 #t #f))
-    (table-set! table '+          (make-prim-obj arm-stub-prim 2 #f #f))
-    (table-set! table '-          (make-prim-obj arm-stub-prim 2 #f #f))
-    (table-set! table '<          (make-prim-obj arm-stub-prim 2 #f #f))
+    ; (table-set! table '##flonum?  (make-prim-obj arm-stub-prim 1 #t #f))
+    ; (table-set! table '##fl+      (make-prim-obj arm-stub-prim 2 #t #f))
+    ; (table-set! table '+          (make-prim-obj arm-stub-prim 2 #f #f))
+    ; (table-set! table '-          (make-prim-obj arm-stub-prim 2 #f #f))
+    ; (table-set! table '<          (make-prim-obj arm-stub-prim 2 #f #f))
 
     (table-set! table '##fx+      (make-prim-obj arm-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?     (make-prim-obj arm-prim-##fx+? 2 #t #t #t))
