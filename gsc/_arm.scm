@@ -1823,14 +1823,15 @@ BX Hs                      BX Hs
   (let ((d (arm-reg-field rd)))
 
     (asm-16-le cgc
+               (fx+ (fxarithmetic-shift-right (fxand #xf000 imm16) 12)
+                    (fxarithmetic-shift-right (fxand #x0800 imm16) 1)
+                    (fxarithmetic-shift-left op 7)
+                    #xf240))
+
+    (asm-16-le cgc
                (fx+ (fxand #xff imm16)
                     (fxarithmetic-shift-left d 8)
-                    (fxarithmetic-shift-left (fxand #x700 imm16) 4)))
-    (asm-16-le cgc
-               (fx+ (fxarithmetic-shift-right (fxand #x7800 imm16) 11)
-                    (fxarithmetic-shift-right (fxand #x8000 imm16) 5)
-                    (fxarithmetic-shift-left op 7)
-                    #xf240)))
+                    (fxarithmetic-shift-left (fxand #x700 imm16) 4))))
 
   (if (codegen-context-listing-format cgc)
       (arm-listing cgc
