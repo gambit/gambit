@@ -161,9 +161,12 @@
                   (arm-neg cgc reg reg)
                   (regular-move reg))
                 (else
-                  (arm-movw cgc reg (asm-unsigned-lo16 imm))
-                  ; (arm-movt cgc reg (asm-unsigned-lo16 imm))
-                  (regular-move reg)))))))
+                  (let ((low (asm-unsigned-lo16 imm))
+                        (high (fxarithmetic-shift-right imm 16)))
+                    (arm-movw cgc reg low)
+                    (if (not (= 0 high))
+                      (arm-movt cgc reg high))
+                    (regular-move reg))))))))
       ((mem-opnd? src)
         (with-reg
           (lambda (reg)
