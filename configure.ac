@@ -3127,6 +3127,20 @@ if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_CLANG" = yes; then
 ])
 fi
 
+if echo " $CFLAGS $CXXFLAGS $FLAGS_OPT " | grep -e " -O[[^ ]]*[[23456789]] " > /dev/null; then
+  AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The setting of CFLAGS, CXXFLAGS and/or the --enable-c-opt is       ***
+*** selecting a C compiler optimization level >= -O2 .  This           ***
+*** typically causes run time performance that is *less* than when     ***
+*** using the default -O1 optimization level.  You may want to try it  ***
+*** both ways and use whichever yields the best performance.           ***
+***                                                                    ***
+**************************************************************************
+])
+fi
+
 if test "$C_COMP_GNUC" = yes; then
 
   if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
