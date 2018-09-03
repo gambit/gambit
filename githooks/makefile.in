@@ -70,7 +70,7 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-RCFILES = makefile.in RUN.sh
+RCFILES = makefile.in onpush.sh
 
 GENDISTFILES =
 
