@@ -3370,7 +3370,9 @@
                       (macro-mailbox-cursor-set! mb #f))
                     (macro-mailbox-cursor-set! mb next))
                   (macro-mutex-unlock! mutex)
-                  result)
+                  (let ()
+                    (declare (interrupts-enabled))
+                    result))
                 (if (##mutex-signal-and-condvar-wait!
                      mutex
                      (macro-mailbox-condvar mb)
@@ -6986,7 +6988,9 @@
                       (macro-mailbox-cursor-set! mb #f))
                     (macro-mailbox-cursor-set! mb next))
                   (macro-mutex-unlock! mutex)
-                  result)
+                  (let ()
+                    (declare (interrupts-enabled))
+                    result))
                 (if (##mutex-signal-and-condvar-wait!
                      mutex
                      (macro-mailbox-condvar mb)

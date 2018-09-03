@@ -1,6 +1,6 @@
 #!/usr/bin/env gsi-script
 
-; File: "ring.scm", Time-stamp: <2008-12-17 13:41:26 feeley>
+;; File: "ring.scm"
 
 (declare (standard-bindings))
 
