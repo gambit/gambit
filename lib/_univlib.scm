@@ -1448,7 +1448,7 @@ function g_os_device_directory_read(dev_condvar_scm) {
   }
 
   if (dev.files) {
-    if (dev.rlo === dev.rhi) {
+    if (dev.rlo > dev.rhi) {
       return theEOFObject; // EOF
     } else {
       return g_host2scm(dev.files[dev.rlo++]);
