@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -581,6 +581,11 @@
   (##declare (not interrupts-enabled))
   (macro-make-condvar name))
 
+(define-prim (##make-io-condvar name for-writing?)
+  (let ((cv (##make-condvar name)))
+    (macro-btq-owner-set! cv (if for-writing? 2 0))
+    cv))
+
 (define-prim (##mutex-lock-out-of-line! mutex absrel-timeout owner)
   #f)
 
@@ -659,8 +664,8 @@
 (define-prim (##absrel-timeout->timeout absrel-timeout)
   (error "##absrel-timeout->timeout not implemented yet"))
 
-(define-prim (##current-directory . rest)
-  (error "##current-directory not implemented yet"))
+;; (define-prim (##current-directory . rest)
+;;   (error "##current-directory not implemented yet"))
 
 (define-prim (##current-input-port)
   ##stdin-port)
@@ -717,6 +722,10 @@
 (##inline-host-declaration
 "
 var fs = require('fs');
+var process = require('process');
+const {spawn} = require('child_process');
+
+var theEOFObject;
 
 var g_CONDVAR_NAME              = 10;
 
@@ -790,6 +799,146 @@ var g_PORT_WDEVICE_CONDVAR      = 47;
 var g_PORT_DEVICE_OTHER1        = 48;
 var g_PORT_DEVICE_OTHER2        = 49;
 
+
+var g_CHAR_ENCODING_ASCII                   = (1<<0);
+var g_CHAR_ENCODING_ISO_8859_1              = (2<<0);
+var g_CHAR_ENCODING_UTF_8                   = (3<<0);
+var g_CHAR_ENCODING_UTF_16                  = (4<<0);
+var g_CHAR_ENCODING_UTF_16BE                = (5<<0);
+var g_CHAR_ENCODING_UTF_16LE                = (6<<0);
+var g_CHAR_ENCODING_UTF_FALLBACK_ASCII      = (7<<0);
+var g_CHAR_ENCODING_UTF_FALLBACK_ISO_8859_1 = (8<<0);
+var g_CHAR_ENCODING_UTF_FALLBACK_UTF_8      = (9<<0);
+var g_CHAR_ENCODING_UTF_FALLBACK_UTF_16     = (10<<0);
+var g_CHAR_ENCODING_UTF_FALLBACK_UTF_16BE   = (11<<0);
+var g_CHAR_ENCODING_UTF_FALLBACK_UTF_16LE   = (12<<0);
+var g_CHAR_ENCODING_UCS_2                   = (13<<0);
+var g_CHAR_ENCODING_UCS_2BE                 = (14<<0);
+var g_CHAR_ENCODING_UCS_2LE                 = (15<<0);
+var g_CHAR_ENCODING_UCS_4                   = (16<<0);
+var g_CHAR_ENCODING_UCS_4BE                 = (17<<0);
+var g_CHAR_ENCODING_UCS_4LE                 = (18<<0);
+var g_CHAR_ENCODING_WCHAR                   = (19<<0);
+var g_CHAR_ENCODING_NATIVE                  = (20<<0);
+
+var g_CHAR_ENCODING_ERRORS_ON               = (1<<5);
+var g_CHAR_ENCODING_ERRORS_OFF              = (2<<5);
+
+var g_EOL_ENCODING_LF                       = (1<<7);
+var g_EOL_ENCODING_CR                       = (2<<7);
+var g_EOL_ENCODING_CRLF                     = (3<<7);
+
+var g_NO_BUFFERING                          = (1<<9);
+var g_LINE_BUFFERING                        = (2<<9);
+var g_FULL_BUFFERING                        = (3<<9);
+
+var g_DECODE_STATE_LF                       = (1<<11);
+var g_DECODE_STATE_CR                       = (2<<11);
+var g_DECODE_STATE_CRLF                     = (3<<11);
+
+var g_OPEN_STATE_CLOSE                      = (1<<13);
+
+var g_PERMANENT_CLOSE                       = (1<<14)
+
+
+var g_NONE_KIND            = 0;
+var g_WAITABLE_KIND        = 1;
+var g_OBJECT_KIND          = 3;
+var g_CHARACTER_KIND       = 7;
+var g_BYTE_KIND            = 15;
+var g_DEVICE_KIND          = 31;
+
+var g_FILE_KIND            = g_DEVICE_KIND + 32;
+var g_PROCESS_KIND         = g_DEVICE_KIND + 64;
+var g_TTY_KIND             = g_DEVICE_KIND + 128;
+var g_SERIAL_KIND          = g_DEVICE_KIND + 256;
+var g_TCP_CLIENT_KIND      = g_DEVICE_KIND + 512;
+var g_TCP_SERVER_KIND      = g_OBJECT_KIND + 1024;
+var g_DIRECTORY_KIND       = g_OBJECT_KIND + 2048;
+var g_EVENT_QUEUE_KIND     = g_OBJECT_KIND + 4096;
+var g_TIMER_KIND           = g_OBJECT_KIND + 8192;
+var g_VECTOR_KIND          = g_OBJECT_KIND + 16384;
+var g_STRING_KIND          = g_CHARACTER_KIND + 32768;
+var g_U8VECTOR_KIND        = g_BYTE_KIND + 65536;
+var g_RAW_DEVICE_KIND      = g_WAITABLE_KIND + 262144;
+var g_UDP_KIND             = g_OBJECT_KIND + 524288;
+
+
+function G_Port(fd, rkind, wkind, options) {
+
+  this.fd = fd;
+  this.rkind = rkind;
+  this.wkind = wkind;
+
+  this.options = options;
+}
+
+function G_Device(fd, kind, direction, options) {
+
+  this.rbuf = new Uint8Array(1024);
+  this.rlo = 1;
+  this.rhi = 1; // 0 would mean EOF
+  this.rdone = true;
+
+  this.wbuf = new Uint8Array(1024);
+  this.wlo = 1;
+  this.whi = 1; // 0 would mean OEF
+  this.wdone = true;
+
+  // this.byte_pos = 0;
+
+  switch (direction) {
+    default:
+    case fs.constants.O_RDONLY:
+      G_Port.call(this, fd, kind, g_NONE_KIND, options);
+      break;
+    case fs.constants.O_WRONLY:
+      G_Port.call(this, fd, g_NONE_KIND, kind, options << 15);
+      break;
+    case fs.constants.O_RDWR:
+      G_Port.call(this, fd, kind, kind, options | (options << 15));
+      break;
+  }
+}
+
+function G_File(fd, name, direction) {
+
+  var options = g_PERMANENT_CLOSE | g_FULL_BUFFERING | g_EOL_ENCODING_LF |
+                  g_CHAR_ENCODING_ERRORS_ON | g_CHAR_ENCODING_ASCII;
+
+  G_Device.call(this, fd, g_FILE_KIND, direction, options);
+
+  this.name = name;
+}
+
+// TODO
+function G_Process(fd, pid, direction) {
+
+  var options = g_PERMANENT_CLOSE | g_FULL_BUFFERING | g_EOL_ENCODING_LF |
+                  g_CHAR_ENCODING_ERRORS_ON | g_CHAR_ENCODING_ASCII;
+
+  G_Device.call(this, fd, g_PROCESS_KIND, direction, options);
+
+  this.pid = pid;
+  this.status = null;
+}
+
+function G_Directory(fd, path, ignore_hidden) {
+
+  var options = 0;
+
+  G_Port.call(this, fd, g_DIRECTORY_KIND, fs.constants.O_RDONLY, options);
+
+  this.path = path;
+  this.ignore_hidden = ignore_hidden;
+
+  this.files = null;
+  this.rlo = 0;
+  this.rhi = 0;
+  this.rdone = true;
+}
+
+
 function g_os_encode_errno(code) {
   switch (code) {
     case 'EPERM':   return -1;
@@ -818,23 +967,30 @@ function g_os_decode_errno(code) {
   return 'E??? (unknown error)';
 }
 
-function g_os_translate_flags(flags) {
+function g_os_direction_from_flags(flags) {
 
-  var result;
+  var direction;
 
   switch ((flags >> 4) & 3)
     {
     default:
     case 1:
-      result = fs.constants.O_RDONLY;
+      direction = fs.constants.O_RDONLY;
       break;
     case 2:
-      result = fs.constants.O_WRONLY;
+      direction = fs.constants.O_WRONLY;
       break;
     case 3:
-      result = fs.constants.O_RDWR;
+      direction = fs.constants.O_RDWR;
       break;
     }
+
+  return direction;
+}
+
+function g_os_translate_flags(flags) {
+
+  var result = g_os_direction_from_flags(flags);
 
   if ((flags & (1 << 3)) != 0)
     result |= fs.constants.O_APPEND;
@@ -853,14 +1009,6 @@ function g_os_translate_flags(flags) {
   return g_host2scm(result);
 }
 
-function G_Device(fd) {
-  this.fd = fd;
-  this.rbuf = new Uint8Array(1024);
-  this.rlo = 1;
-  this.rhi = 1; // 0 would mean EOF
-  this.rdone = true;
-}
-
 var g_debug = false;
 
 function g_os_device_kind(dev_scm) {
@@ -870,7 +1018,15 @@ function g_os_device_kind(dev_scm) {
   if (g_debug)
     console.log('g_os_device_kind('+dev.fd+')  ***not fully implemented***');
 
-  return g_host2scm(31); // file device
+  try {
+    return g_host2scm(dev.rkind|dev.wkind);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
+  }
 }
 
 function g_os_device_stream_default_options(dev_scm) {
@@ -880,7 +1036,50 @@ function g_os_device_stream_default_options(dev_scm) {
   if (g_debug)
     console.log('g_os_device_stream_default_options('+dev.fd+')  ***not fully implemented***');
 
-  return g_host2scm(0);
+  var result = 0;
+
+  switch (dev.rkind | dev.wkind) {
+
+    case g_FILE_KIND:
+    case g_PROCESS_KIND:
+
+      var options = g_PERMANENT_CLOSE | g_FULL_BUFFERING | g_EOL_ENCODING_LF |
+                      g_CHAR_ENCODING_ERRORS_ON | g_CHAR_ENCODING_ASCII;
+
+      if (dev.rkind) result |= options;
+      if (dev.wkind) result |= (options << 15);
+
+      break;
+
+    case g_TTY_KIND:
+
+      var options = g_PERMANENT_CLOSE | g_NO_BUFFERING | g_EOL_ENCODING_LF |
+                      g_CHAR_ENCODING_ERRORS_ON | g_CHAR_ENCODING_ASCII;
+
+      if (dev.rkind) result |= options;
+      if (dev.wkind) result |= (options << 15);
+
+      break;
+
+    case g_VECTOR_KIND:
+    case g_STRING_KIND:
+    case g_U8VECTOR_KIND:
+
+      var options = g_PERMANENT_CLOSE | g_FULL_BUFFERING;
+
+      result = options | (options << 15);
+
+      if (!dev.rkind) result |= g_OPEN_STATE_CLOSE;
+      if (!dev.wkind) result |= (g_OPEN_STATE_CLOSE << 15);
+
+      break;
+
+    default:
+      result = 0;
+      break;
+  }
+
+  return g_host2scm(result);
 }
 
 function g_os_device_stream_options_set(dev_scm, options_scm) {
@@ -891,7 +1090,12 @@ function g_os_device_stream_options_set(dev_scm, options_scm) {
   if (g_debug)
     console.log('g_os_device_stream_options_set('+dev.fd+','+options+')  ***not implemented***');
 
-  return g_host2scm(-1);
+  dev.options = 0;
+
+  if (dev.rkind) dev.options |= options;
+  if (dev.wkind) dev.options |= (options << 15);
+
+  return g_host2scm(0); // no error
 }
 
 function g_os_device_stream_open_predefined(index_scm, flags_scm) {
@@ -903,22 +1107,48 @@ function g_os_device_stream_open_predefined(index_scm, flags_scm) {
     console.log('g_os_device_stream_open_predefined('+index+','+flags+')  ***not fully implemented***');
 
   var fd;
+  var direction;
 
   switch (index) {
-    case -1: fd = 0; break; // stdin
-    case -2: fd = 1; break; // stdout
-    case -3: fd = 2; break; // stderr
-    case -4: fd = 1; break; // console
+    default:
+    case -1:
+      fd = 0; // stdin
+      direction = fs.constants.O_RDONLY;
+      break;
+    case -2:
+      fd = 1; // stdout
+      direction = fs.constants.O_WRONLY;
+      break;
+    case -3:
+      fd = 2; // stderr
+      direction = fs.constants.O_WRONLY;
+      break;
+    case -4:
+      fd = 1; // console
+      direction = fs.constants.O_RDWR;
+      break;
   }
 
-  return new G_Foreign(new G_Device(fd), g_host2scm(false));
+  var options = g_PERMANENT_CLOSE | g_NO_BUFFERING | g_EOL_ENCODING_LF |
+                  g_CHAR_ENCODING_ERRORS_ON | g_CHAR_ENCODING_ASCII;
+
+  return new G_Foreign(new G_Device(fd, g_TTY_KIND, direction, options), g_host2scm(false));
 }
+
+function g_current_directory(rest_scm) {
+  var rest = g_scm2host(rest_scm);
+
+  return g_host2scm(process.cwd());
+}
+
 
 function g_os_device_stream_open_path(path_scm, flags_scm, mode_scm) {
 
   var path = g_scm2host(path_scm);
   var flags = g_scm2host(flags_scm);
   var mode = g_scm2host(mode_scm);
+
+  var direction = g_os_direction_from_flags(flags);
 
   if (g_debug)
     console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not fully implemented***');
@@ -935,7 +1165,7 @@ function g_os_device_stream_open_path(path_scm, flags_scm, mode_scm) {
     }
   }
 
-  return new G_Foreign(new G_Device(fd), g_host2scm(false));
+  return new G_Foreign(new G_File(fd, path, direction), g_host2scm(false));
 }
 
 function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
@@ -984,7 +1214,15 @@ function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   // read as many bytes as will fit in device's buffer
 
-  fs.read(dev.fd, dev.rbuf, 0, dev.rbuf.length, null, callback);
+  try {
+    fs.read(dev.fd, dev.rbuf, 0, dev.rbuf.length, null, callback);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
+  }
 
   return g_host2scm(-35); // EAGAIN
 }
@@ -999,10 +1237,45 @@ function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
   if (g_debug)
     console.log('g_os_device_stream_write('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
 
-  var n;
+  if (!dev.wdone) {
+    // write request is in progress so must wait before issuing another request
+    return g_host2scm(-35); // EAGAIN
+  }
+
+  if (dev.whi === 0) {
+    return g_host2scm(0); // 0 means EOF
+  }
+
+  n = hi-lo
+  var want = dev.whi-dev.wlo
+  
+  if (want > 0) {
+
+    if (n > want) n = want;
+
+    dev.wbuf.set(buffer.subarray(lo, lo+n), dev.wlo);
+
+    dev.wlo += n;
+
+    return g_host2scm(n); // number of bytes transferred
+  }
+
+  // start an asynchronous write request
+
+  dev.wdone = false;
+
+  function callback(err, bytesWritten, buffer) {
+    if (err) return err;
+    dev.wlo = 0;
+    dev.whi = bytesWritten; // if 0 this means EOF
+    dev.wdone = true;
+    g_scm_call(g_glo['##end-wait-for-io!'],[dev_condvar_scm]);
+  }
+
+  // write as many bytes as will fit in device's buffer
 
   try {
-    n = fs.writeSync(dev.fd, buffer, lo, hi-lo, null);
+    fs.write(dev.fd, buffer, lo, hi-lo, null, callback);
   } catch (exn) {
     if (exn instanceof Error && exn.hasOwnProperty('code')) {
       return g_host2scm(g_os_encode_errno(exn.code));
@@ -1010,8 +1283,8 @@ function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
       throw exn;
     }
   }
-
-  return g_host2scm(n);
+  
+  return g_host2scm(-35); // EAGAIN
 }
 
 function g_os_device_close(dev_scm, direction_scm) {
@@ -1038,6 +1311,7 @@ function g_os_device_close(dev_scm, direction_scm) {
   return g_host2scm(0); // no error
 }
 
+// TODO
 function g_os_device_force_output(dev_condvar_scm, level_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
@@ -1049,11 +1323,12 @@ function g_os_device_force_output(dev_condvar_scm, level_scm) {
   return g_host2scm(0); // no error
 }
 
+// TODO
 function g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
   var pos = g_scm2host(pos_scm);
-  var whence_scm = g_scm2host(whence_scm);
+  var whence = g_scm2host(whence_scm);
 
   if (g_debug)
     console.log('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
@@ -1146,7 +1421,19 @@ function g_os_device_directory_open_path(path_scm, ignore_hidden_scm) {
   if (g_debug)
     console.log('g_os_device_directory_open_path(\\''+path+'\\','+ignore_hidden+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  var fd;
+  
+  try {
+    fd = fs.openSync(path, fs.constants.O_RDONLY);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
+  }
+
+  return new G_Foreign(new G_Directory(fd, path, ignore_hidden), g_host2scm(false));
 }
 
 function g_os_device_directory_read(dev_condvar_scm) {
@@ -1156,9 +1443,58 @@ function g_os_device_directory_read(dev_condvar_scm) {
   if (g_debug)
     console.log('g_os_device_directory_read('+dev.fd+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  if (!dev.rdone) {
+    return g_host2scm(-35); // EAGAIN
+  }
+
+  if (dev.files) {
+    if (dev.rlo > dev.rhi) {
+      return theEOFObject; // EOF
+    } else {
+      return g_host2scm(dev.files[dev.rlo++]);
+    }
+  }
+
+  // start asynchronous read request
+
+  dev.rdone = false;
+
+  function callback(err, files) {
+    if (err) { return err; }
+
+    switch (dev.ignore_hidden) {
+      default:
+      case 2: // true
+        dev.files = files.filter(file => !(/^\\./).test(file));
+        break;
+      case 1: // dot-and-dot-dot
+        dev.files = files;
+        break;
+      case 0: // false
+        dev.files = ['.', '..'].concat(files);
+        break;
+    }
+
+    dev.rlo = 0;
+    dev.rhi = dev.files.length - 1;
+    dev.rdone = true;
+    g_scm_call(g_glo['##end-wait-for-io!'],[dev_condvar_scm]);
+  }
+
+  try {
+    fs.readdir(dev.path, callback);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return g_host2scm(g_os_encode_errno(exn.code));
+    } else {
+      throw exn;
+    }
+  }
+
+  return g_host2scm(-35); // EAGAIN
 }
 
+// TODO
 function g_os_device_event_queue_open(selector_scm) {
 
   var selector = g_scm2host(selector_scm);
@@ -1169,6 +1505,7 @@ function g_os_device_event_queue_open(selector_scm) {
   return g_host2scm(-1); // error
 }
 
+// TODO
 function g_os_device_event_queue_read(dev_condvar_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
@@ -1179,6 +1516,7 @@ function g_os_device_event_queue_read(dev_condvar_scm) {
   return g_host2scm(-1); // error
 }
 
+// TODO
 function g_os_device_stream_open_process(path_and_args_scm, environment_scm, directory_scm, options_scm) {
 
   if (g_debug)
@@ -1194,7 +1532,7 @@ function g_os_device_process_pid(dev_scm) {
   if (g_debug)
     console.log('g_os_device_process_pid('+dev.fd+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(dev.pid);
 }
 
 function g_os_device_process_status(dev_scm) {
@@ -1204,9 +1542,17 @@ function g_os_device_process_status(dev_scm) {
   if (g_debug)
     console.log('g_os_device_process_status('+dev.fd+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(dev.status);
 }
+
 ")
+
+(##inline-host-statement "theEOFObject = @1@;" '#!eof) ;; needed at this moment to return #!eof
+
+(define-prim (##current-directory . rest)
+  (##inline-host-expression
+   "g_current_directory(@1@)"
+   rest))
 
 (define-prim (##os-device-close dev direction)
   (##inline-host-expression

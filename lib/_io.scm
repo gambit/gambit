@@ -2198,6 +2198,721 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; Implementation of prims for character encoding and decoding
+
+;;; error code construction
+
+(define-prim (##err-code-from-char-encoding char-encoding
+                                            ctos
+                                            type
+                                            arg-num)
+  
+  (let ((t (make-s32vector 6)))
+
+    (begin
+      
+      (cond ((##fx= char-encoding (macro-char-encoding-ISO-8859-1))
+             (##s32vector-set! t 0 (macro-stoc-ISO-8859-1string-err))
+             (##s32vector-set! t 1 (macro-stoc-nonnullISO-8859-1string-err))
+             (##s32vector-set! t 2 (macro-stoc-nonnullISO-8859-1stringlist-err))
+             (##s32vector-set! t 3 (macro-ctos-ISO-8859-1string-err))
+             (##s32vector-set! t 4 (macro-ctos-nonnullISO-8859-1string-err))
+             (##s32vector-set! t 5 (macro-ctos-nonnullISO-8859-1stringlist-err)))
+            
+            ((##fx= char-encoding (macro-char-encoding-UTF-8))
+             (##s32vector-set! t 0 (macro-stoc-UTF-8string-err))
+             (##s32vector-set! t 1 (macro-stoc-nonnullUTF-8string-err))
+             (##s32vector-set! t 2 (macro-stoc-nonnullUTF-8stringlist-err))
+             (##s32vector-set! t 3 (macro-ctos-UTF-8string-err))
+             (##s32vector-set! t 4 (macro-ctos-nonnullUTF-8string-err))
+             (##s32vector-set! t 5 (macro-ctos-nonnullUTF-8stringlist-err)))
+            
+            ((##fx= char-encoding (macro-char-encoding-UTF-16))
+             (##s32vector-set! t 0 (macro-stoc-UTF-16string-err))
+             (##s32vector-set! t 1 (macro-stoc-nonnullUTF-16string-err))
+             (##s32vector-set! t 2 (macro-stoc-nonnullUTF-16stringlist-err))
+             (##s32vector-set! t 3 (macro-ctos-UTF-16string-err))
+             (##s32vector-set! t 4 (macro-ctos-nonnullUTF-16string-err))
+             (##s32vector-set! t 5 (macro-ctos-nonnullUTF-16stringlist-err)))
+            
+            ((##fx= char-encoding (macro-char-encoding-UCS-2))
+             (##s32vector-set! t 0 (macro-stoc-UCS-2string-err))
+             (##s32vector-set! t 1 (macro-stoc-nonnullUCS-2string-err))
+             (##s32vector-set! t 2 (macro-stoc-nonnullUCS-2stringlist-err))
+             (##s32vector-set! t 3 (macro-ctos-UCS-2string-err))
+             (##s32vector-set! t 4 (macro-ctos-nonnullUCS-2string-err))
+             (##s32vector-set! t 5 (macro-ctos-nonnullUCS-2stringlist-err)))
+            
+            ((##fx= char-encoding (macro-char-encoding-UCS-4))
+             (##s32vector-set! t 0 (macro-stoc-UCS-4string-err))
+             (##s32vector-set! t 1 (macro-stoc-nonnullUCS-4string-err))
+             (##s32vector-set! t 2 (macro-stoc-nonnullUCS-4stringlist-err))
+             (##s32vector-set! t 3 (macro-ctos-UCS-4string-err))
+             (##s32vector-set! t 4 (macro-ctos-nonnullUCS-4string-err))
+             (##s32vector-set! t 5 (macro-ctos-nonnullUCS-4stringlist-err)))
+            
+            ((##fx= char-encoding (macro-char-encoding-wchar))
+             (##s32vector-set! t 0 (macro-stoc-wcharstring-err))
+             (##s32vector-set! t 1 (macro-stoc-nonnullwcharstring-err))
+             (##s32vector-set! t 2 (macro-stoc-nonnullwcharstringlist-err))
+             (##s32vector-set! t 3 (macro-ctos-wcharstring-err))
+             (##s32vector-set! t 4 (macro-ctos-nonnullwcharstring-err))
+             (##s32vector-set! t 5 (macro-ctos-nonnullwcharstringlist-err)))
+            
+            ((##fx= char-encoding (macro-char-encoding-native))
+             (##s32vector-set! t 0 (macro-stoc-charstring-err))
+             (##s32vector-set! t 1 (macro-stoc-nonnullcharstring-err))
+             (##s32vector-set! t 2 (macro-stoc-nonnullcharstringlist-err))
+             (##s32vector-set! t 3 (macro-ctos-charstring-err))
+             (##s32vector-set! t 4 (macro-ctos-nonnullcharstring-err))
+             (##s32vector-set! t 5 (macro-ctos-nonnullcharstringlist-err))))
+
+      (##fx+ (##s32vector-ref t (##fx+ (##fx* ctos 3) type))
+             arg-num))))
+
+;;; main procedures for encoding and decoding
+
+(define-prim (##os-port-decode-chars! port want eof)
+  
+  (let ((e (macro-no-err))
+        (cbuf (macro-character-port-rbuf port))
+        (chi (macro-character-port-rhi port)))
+    
+    (let* ((cend
+            (if want
+                (##fxmin (##fx+ chi want) (##string-length cbuf))
+                (##string-length cbuf)))
+           (code
+            (##chars-from-bytes port cend))
+           (new-chi
+            (macro-character-port-rhi port)))
+      
+      (if (##fx= chi new-chi)
+
+          (begin
+
+            (if (and (##fx= code (macro-incomplete-char))
+                     eof)
+                (begin
+                  ;; skip bytes up to end-of-file
+                  (macro-byte-port-rlo-set! port (macro-byte-port-rhi port))
+                  (set! code (macro-illegal-char))))
+
+            (if (##fx= code (macro-illegal-char))
+
+                (let* ((options
+                        (macro-port-roptions port))
+                       (char-encoding
+                        (macro-char-encoding options))
+                       (char-encoding-errors
+                        (macro-char-encoding-errors options)))
+                  
+                  (if (##fx= char-encoding-errors
+                             (macro-char-encoding-errors-off))
+                      (set! e (##err-code-from-char-encoding (macro-char-encoding options)
+                                                             1
+                                                             0
+                                                             0))
+                      (begin
+                        (if (macro-char-encoding-supports-BMP char-encoding)
+                            (##string-set! cbuf new-chi (macro-unicode-replacement))
+                            (##string-set! cbuf new-chi (macro-unicode-question)))
+                        (macro-character-port-rhi-set! port (##fx+ new-chi 1)))))))))
+
+    e))
+
+(define-prim (##os-port-encode-chars! port)
+
+  (let ((e (macro-no-err))
+        (clo (macro-character-port-wlo port)))
+    
+    (let* ((code
+            (##chars-to-bytes port))
+           (new-clo
+            (macro-character-port-wlo port)))
+      
+      (if (and (##fx= clo new-clo)
+               (##fx= code (macro-illegal-char)))
+          
+          (let* ((options
+                  (macro-port-woptions port))
+                 (char-encoding
+                  (macro-char-encoding options))
+                 (char-encoding-errors
+                  (macro-char-encoding-errors options)))
+            
+            (if (##not (##fx= char-encoding-errors
+                              (macro-char-encoding-errors-off)))
+                
+                (begin
+                  ;; skip illegal char
+                  (macro-character-port-wlo-set! port
+                                                 (##fx+ (macro-character-port-wlo port) 1))
+                  (set! e (##err-code-from-char-encoding (macro-char-encoding options)
+                                                         0
+                                                         0
+                                                         0)))
+
+                (let ((cbuf-save
+                       (macro-character-port-wbuf port))
+                      (clo-save
+                       (macro-character-port-wlo port))
+                      (chi-save
+                       (macro-character-port-whi port))
+                      (replacement-cbuf
+                       (make-string 1)))
+                  
+                  (begin
+                    ;; add replacement character to replacement buffer
+                    (string-set! replacement-cbuf
+                                 0
+                                 (if (macro-char-encoding-supports-BMP char-encoding)
+                                     (##integer->char (macro-unicode-replacement))
+                                     (##integer->char (macro-unicode-question))))
+                    
+                    ;; substitute replacement buffer to character buffer
+                    (macro-character-port-wbuf-set! port replacement-cbuf)
+                    (macro-character-port-wlo-set! port 0)
+                    (macro-character-port-whi-set! port 1)
+                    
+                    ;; encode replacement character
+                    (##chars-to-bytes port)
+                    
+                    ;; restore original buffer and skip illegal character if it was encoded
+                    (macro-character-port-wbuf-set! port cbuf-save)
+                    (macro-character-port-wlo-set!
+                     port
+                     (##fx+ clo-save (macro-character-port-wlo port)))
+                    (macro-character-port-whi-set! port chi-save)))))))
+    
+    e))
+
+;;; other procedures for encoding and decoding
+
+(##define-macro (macro-chars-from-bytes-UTF-8)
+  `(let decode-next-UTF-8 ()
+     (begin
+       
+       (set! blo (##fx+ blo (macro-bytes-per-UTF-8)))
+       
+       (if (##fx<= blo bhi)
+           
+           (begin
+
+             (set! c (macro-get-UTF-8 -1))
+             
+             (if (##char? c)
+                 (set! c (##char->integer c)))
+
+             (cond ((##fx<= c #x7f)
+                    (macro-decode-eol decode-next-UTF-8))
+                   
+                   ((or (##fx<= c #xbf)
+                        (##fx> c #xfd))
+                    (macro-restore-blo blo
+                                       (macro-bytes-per-UTF-8)))
+                   
+                   (else
+                    (let ((orig-blo blo)
+                          (bits 6))
+                      
+                      (let loop ((b0 c)
+                                 (next (##u8vector-ref bbuf blo))
+                                 (end-UTF-8 #f))
+
+                        (if (##not end-UTF-8)
+                            
+                            (if (##not (##fx= (##fxand b0 #x40) 0))
+                                
+                                (begin
+                                  
+                                  (set! blo (##fx+ blo 1))
+                                  
+                                  (cond ((##fx> blo bhi)
+                                         (begin
+                                           (set! blo (##fx- orig-blo
+                                                            (macro-bytes-per-UTF-8)))
+                                           (if (##fx= blo blo-save)
+                                               (set! result (macro-incomplete-char)))
+                                           (loop b0 next #t)))
+                                        
+                                        ((or (##fx<= next #x7f)
+                                             (##fx> next #xbf))
+                                         (macro-restore-blo orig-blo
+                                                            (macro-bytes-per-UTF-8))
+                                         (loop b0 next #t))
+
+                                        (else
+                                         (set! c (##fx+ (##fxarithmetic-shift c 6)
+                                                        (##fxand next #x3f)))
+                                         (set! bits (##fx+ bits 5))
+                                         (loop (##fxarithmetic-shift b0 1)
+                                               (##u8vector-ref bbuf blo)
+                                               #f))))
+
+                                (begin
+                                  
+                                  (set! c (##fxand c (##fx- (##fxarithmetic-shift 1 bits)
+                                                            1)))
+                                  
+                                  (if (and (##fx>= c #x80)
+                                           (##fx>= c (##fxarithmetic-shift 1
+                                                                           (##fx- bits 5)))
+                                           (##fx<= c (macro-max-char)))
+                                      
+                                      (macro-decode-char (macro-decode-state-none)
+                                                         decode-next-UTF-8)
+
+                                      (macro-restore-blo orig-blo
+                                                         (macro-bytes-per-UTF-8)))))))))))
+           
+           (set! blo (##fx- blo (macro-bytes-per-UTF-8)))))))
+
+
+(##define-macro (macro-chars-from-bytes-UTF-16 macro-get-UTF-16)
+  
+  `(let decode-next-UTF-16 ()
+     (begin
+       (set! blo (##fx+ blo (macro-bytes-per-UTF-16)))
+       
+       (if (##fx<= blo bhi)
+
+           (begin
+             
+             (set! c (,macro-get-UTF-16 -1))
+
+             (if (##char? c)
+                 (set! c (##char->integer c)))
+
+             (cond ((##fx<= c #xd7ff)
+                    (if (##fx<= c (macro-max-char))
+                        (macro-decode-eol decode-next-UTF-16)
+                        (macro-restore-blo blo
+                                           (macro-bytes-per-UTF-16))))
+
+                   ((##fx> c #xdfff)
+                    (if (##fx<= c (macro-max-char))
+                        (macro-decode-char (macro-decode-state-none)
+                                           decode-next-UTF-16)
+                        (macro-restore-blo blo
+                                           (macro-bytes-per-UTF-16))))
+
+                   ((##fx> c #xdbff)
+                    (macro-restore-blo blo
+                                       (macro-bytes-per-UTF-16)))
+
+                   (else
+                    (begin
+                      (set! blo (##fx+ blo (macro-bytes-per-UTF-16)))
+                      (if (##fx<= blo bhi)
+                          (let ((x (,macro-get-UTF-16 -1)))
+                            (if (and (##fx> x #xdbff)
+                                     (##fx<= x #xdfff)
+                                     (begin
+                                       (set! c (##fx* c 1024))
+                                       (set! c (##fx+ c (##fx- x (##fx* #xd800 1024))))
+                                       (set! c (##fx+ c (##fx- #xdc00 #x10000)))
+                                       (##fx<= c (macro-max-char))))
+                                (macro-decode-char (macro-decode-state-none)
+                                                   decode-next-UTF-16)
+                                (macro-restore-blo blo
+                                                   (##fx* 2 (macro-bytes-per-UTF-16)))))
+                          
+                          (macro-restore-blo blo
+                                             (##fx* 2 (macro-bytes-per-UTF-16))))))))
+           
+           (set! blo (##fx- blo (macro-bytes-per-UTF-16)))))))
+
+
+(##define-macro (macro-chars-from-bytes-fallback)
+  `(if (##fx< blo bhi)
+       (let ((b0 (##u8vector-ref bbuf 0)))
+         (if (##fx>= b0 #xfe)
+
+             ;; start of UTF-16BE or UTF-16LE BOM
+             (if (##fx< (##fx+ blo 1) bhi)
+                 
+                 (if (##fx= (##u8vector-ref bbuf 1) (##fxand b0 1))
+                     ;; complete BOM
+                     (begin
+                       (set! blo (##fx+ blo 2)) ;; skip BOM
+                       (let ((char-encoding
+                              (if (##fx= b0 #xfe)
+                                  (macro-char-encoding-UTF-16BE)
+                                  (macro-char-encoding-UTF-16LE))))
+                         (macro-char-encoding-set! state char-encoding)
+                         (dispatch-on-char-encoding char-encoding)))
+                     ;; not a UTF-16BE BOM, so use fallback encoding
+                     (let ((char-encoding (macro-char-encoding-ASCII)))
+                       (macro-char-encoding-set! state char-encoding)
+                       (dispatch-on-char-encoding char-encoding)))
+                 
+                 (set! result (macro-incomplete-char)))
+
+             ;; check start of UTF-8 BOM
+             (if (or (##not (##fx= b0 #xef))
+                     (and (##fx< (##fx+ blo 1) bhi)
+                          (##not (##fx= (##u8vector-ref bbuf 1) #xbb)))
+                     (and (##fx< (##fx+ blo 2) bhi)
+                          (##not (##fx= (##u8vector-ref bbuf 2) #xbf))))
+                 
+                 ;; not a UTF-8 BOM, so use fallback encoding
+                 (let ((char-encoding (macro-char-encoding-ASCII)))
+                   (macro-char-encoding-set! state char-encoding)
+                   (dispatch-on-char-encoding char-encoding))
+
+                 (if (##fx< (##fx+ blo 2) bhi)
+                     
+                     ;; complete UTF-8 BOM
+                     (begin
+                       (set! blo (##fx+ blo 3)) ;; skip BOM
+                       (let ((char-encoding (macro-char-encoding-UTF-8)))
+                         (macro-char-encoding-set! state char-encoding)
+                         (dispatch-on-char-encoding char-encoding)))
+                     
+                     (set! result (macro-incomplete-char))))))))
+
+
+(define-prim (##chars-from-bytes port chi)
+  
+  (let ((cbuf (macro-character-port-rbuf port))
+        (clo (macro-character-port-rhi port))
+        (bbuf (macro-byte-port-rbuf port))
+        (blo (macro-byte-port-rlo port))
+        (bhi (macro-byte-port-rhi port))
+        (state (macro-port-roptions port))
+        (blo-save (macro-byte-port-rlo port)))
+    
+    (let ((char-encoding (macro-char-encoding state))
+          (result (macro-conversion-done))
+          (c #f))
+      
+      (begin
+
+        ;; fill character buffer as much as possible
+
+        (if (and (##fx< clo chi)
+                 (##fx< blo bhi))
+
+            ;; there is still some space in the character buffer and byte buffer
+
+            (let dispatch-on-char-encoding ((char-encoding char-encoding))
+              
+              (cond ((or (##fx= char-encoding (macro-char-encoding-ASCII))
+                         (##fx= char-encoding (macro-char-encoding-ISO-8859-1)))
+                     (macro-decode-chars-loop decode-next-ISO-8859-1
+                                              (macro-bytes-per-ISO-8859-1)
+                                              (macro-max-ISO-8859-1)
+                                              macro-get-ISO-8859-1))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UTF-8))
+                     (macro-chars-from-bytes-UTF-8))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UTF-16))
+                     (macro-get-decode-char-encoding macro-get-UTF-16BE
+                                                     (macro-char-encoding-UTF-16BE)
+                                                     (macro-char-encoding-UTF-16LE)
+                                                     (macro-bytes-per-UTF-16)))
+
+                    ((##fx= char-encoding (macro-char-encoding-UTF-16BE))
+                     (macro-chars-from-bytes-UTF-16 macro-get-UTF-16BE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UTF-16LE))
+                     (macro-chars-from-bytes-UTF-16 macro-get-UTF-16LE))
+                    
+                    ((or (##fx= char-encoding (macro-char-encoding-UTF-fallback-ASCII))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-ISO-8859-1))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-8))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-16))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-16BE))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-16LE)))
+                     (macro-chars-from-bytes-fallback))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-2))
+                     (macro-get-decode-char-encoding macro-get-UCS-2BE
+                                                     (macro-char-encoding-UCS-2BE)
+                                                     (macro-char-encoding-UCS-2LE)
+                                                     (macro-bytes-per-UCS-2)))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-2BE))
+                     (macro-decode-chars-loop decode-next-UCS-2BE
+                                              (macro-bytes-per-UCS-2)
+                                              (macro-max-UCS-2)
+                                              macro-get-UCS-2BE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-2LE))
+                     (macro-decode-chars-loop decode-next-UCS-2LE
+                                              (macro-bytes-per-UCS-2)
+                                              (macro-max-UCS-2)
+                                              macro-get-UCS-2LE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-4))
+                     (macro-get-decode-char-encoding macro-get-UCS-4BE
+                                                     (macro-char-encoding-UCS-4BE)
+                                                     (macro-char-encoding-UCS-4LE)
+                                                     (macro-bytes-per-UCS-4)))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-4BE))
+                     (macro-decode-chars-loop decode-next-UCS-4BE
+                                              (macro-bytes-per-UCS-4)
+                                              (macro-max-UCS-4)
+                                              macro-get-UCS-4BE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-4LE))
+                     (macro-decode-chars-loop decode-next-UCS-4LE
+                                              (macro-bytes-per-UCS-4)
+                                              (macro-max-UCS-4)
+                                              macro-get-UCS-4LE))
+                    
+                    (else
+                     (macro-decode-chars-loop decode-next-ISO-8859-1
+                                              (macro-bytes-per-ISO-8859-1)
+                                              (macro-max-ISO-8859-1)
+                                              macro-get-ISO-8859-1)))))
+
+        (macro-character-port-rhi-set! port clo)
+        (macro-byte-port-rlo-set! port blo)
+        (macro-port-roptions-set! port state)
+        result))))
+
+
+(##define-macro (macro-chars-to-bytes-UTF-8)
+  `(let encode-next-UTF-8 ()
+     (begin
+       (set! c (##char->integer (##string-ref cbuf clo)))
+       (set! clo (##fx+ clo 1))
+       
+       (if (or (##fx<= (macro-max-char) (macro-max-UTF-8))
+               (##fx<= c (macro-max-UTF-8)))
+
+           (begin
+             (set! blo (##fx+ blo (macro-bytes-per-UTF-8)))
+             (if (##fx<= blo bhi)
+                 
+                 (if (##not (##fx= c (macro-char-eol)))
+                     
+                     (begin
+                       (macro-put-UTF-8 -1 c)
+                       (if (##fx< clo chi)
+                           (encode-next-UTF-8)))
+                     
+                     (macro-encode-eol encode-next-UTF-8
+                                       (macro-bytes-per-UTF-8)
+                                       macro-put-UTF-8))
+                 
+                 (begin
+                   (set! blo (##fx- blo (macro-bytes-per-UTF-8)))
+                   (set! clo (##fx- clo 1)))))
+
+           (let ((bytes
+                  (cond ((##fx<= c #x7ff)      2)
+                        ((##fx<= c #xffff)     3)
+                        ((##fx<= c #x1fffff)   4)
+                        ((##fx<= c #x3ffffff)  5)
+                        ((##fx<= c #x7fffffff) 6)
+                        (else                  #f))))
+             
+             (if (##not bytes)
+                 
+                 (begin
+                   (set! clo (##fx- clo 1))
+                   (if (##fx= clo clo-save)
+                       (set! result (macro-illegal-char))))
+                 
+                 (let ((p (##fx+ blo bytes)))
+                   (if (##fx<= p bhi)
+                       
+                       (begin
+                         (set! blo p)
+                         
+                         (let loop ((bytes bytes))
+                           (begin
+                             (set! p (##fx- p 1))
+                             (##u8vector-set! bbuf p (##fx+ #x80 (##fxand c #x3f)))
+                             (set! c (##fxarithmetic-shift c -6))
+                             (if (##fx> bytes 2)
+                                 (loop (##fx- bytes 1)))))
+                         
+                         (set! p (##fx- p 1))
+                         
+                         (let ((0xff-shifted (##fxarithmetic-shift #xff (##fx- bytes))))
+                           (##u8vector-set! bbuf p (##fx+ c (##fx- #xff 0xff-shifted))))
+                         
+                         (if (##fx< clo chi)
+                             (encode-next-UTF-8)))
+
+                       (set! clo (##fx- clo 1))))))))))
+
+
+(##define-macro (macro-chars-to-bytes-UTF-16 macro-put-UTF-16)
+  `(let encode-next-UTF-16 ()
+     (begin
+       (set! c (##char->integer (##string-ref cbuf clo)))
+       (set! clo (##fx+ clo 1))
+
+       (cond ((##fx<= c #xdbff)
+              (begin
+                (set! blo (##fx+ blo (macro-bytes-per-UTF-16)))
+                (if (##fx<= blo bhi)
+                    (if (##fx= c (macro-char-eol))
+                        (macro-encode-eol encode-next-UTF-16
+                                          (macro-bytes-per-UTF-16)
+                                          ,macro-put-UTF-16)
+                        (begin
+                          (,macro-put-UTF-16 -1 c)
+                          (if (##fx< clo chi)
+                              (encode-next-UTF-16))))
+                    (begin
+                      (set! blo (##fx- blo (macro-bytes-per-UTF-16)))
+                      (set! clo (##fx- clo 1))))))
+
+             ((##fx> c #xffff)
+              (begin
+                (set! blo (##fx+ blo (##fx* 2 (macro-bytes-per-UTF-16))))
+                (if (##fx<= blo bhi)
+                    (begin
+                      (set! c (##fx- c #x10000))
+                      (,macro-put-UTF-16 -2 (##fx+ #xd800
+                                                   (##fxand (##fxquotient c 1024) #x3ff)))
+                      (,macro-put-UTF-16 -1 (##fx+ #xdc00
+                                                   (##fxand c #x3ff)))
+                      (if (##fx< clo chi)
+                          (encode-next-UTF-16)))
+                    (begin
+                      (set! blo (##fx- blo (##fx* 2 (macro-bytes-per-UTF-16))))
+                      (set! clo (##fx- clo 1))))))
+
+             ((##fx> c #xdfff)
+              (begin
+                (set! blo (##fx+ blo (macro-bytes-per-UTF-16)))
+                (if (##fx<= blo bhi)
+                    (begin
+                      (,macro-put-UTF-16 -1 c)
+                      (if (##fx< clo chi)
+                          (encode-next-UTF-16)))
+                    (begin
+                      (set! blo (##fx- blo (macro-bytes-per-UTF-16)))
+                      (set! clo (##fx- clo 1))))))
+
+             (else
+              (begin
+                (set! clo (##fx- clo 1))
+                (if (##fx= clo clo-save)
+                    (begin
+                      (set! result (macro-illegal-char))))))))))
+
+
+(define-prim (##chars-to-bytes port)
+  
+  (let ((cbuf (macro-character-port-wbuf port))
+        (clo (macro-character-port-wlo port))
+        (chi (macro-character-port-whi port))
+        (bbuf (macro-byte-port-wbuf port))
+        (blo (macro-byte-port-whi port))
+        (bhi (##u8vector-length (macro-byte-port-wbuf port)))
+        (state (macro-port-woptions port))
+        (clo-save (macro-character-port-wlo port)))
+    
+    (let ((char-encoding (macro-char-encoding state))
+          (result (macro-conversion-done))
+          (c #f))
+
+      (begin
+        
+        (if (##fx< clo chi)
+            
+            (let dispatch-on-char-encoding ((char-encoding char-encoding))
+              
+              (cond ((or (##fx= char-encoding (macro-char-encoding-ASCII))
+                         (##fx= char-encoding (macro-char-encoding-ISO-8859-1)))
+                     (macro-encode-chars-loop encode-next-ISO-8859-1
+                                              (macro-bytes-per-ISO-8859-1)
+                                              (macro-max-ISO-8859-1)
+                                              macro-put-ISO-8859-1))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UTF-8))
+                     (macro-chars-to-bytes-UTF-8))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UTF-16))
+                     (macro-get-encode-char-encoding macro-put-UTF-16BE
+                                                     macro-put-UTF-16LE
+                                                     (macro-char-encoding-UTF-16BE)
+                                                     (macro-char-encoding-UTF-16LE)
+                                                     (macro-bytes-per-UTF-16)))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UTF-16BE))
+                     (macro-chars-to-bytes-UTF-16 macro-put-UTF-16BE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UTF-16LE))
+                     (macro-chars-to-bytes-UTF-16 macro-put-UTF-16LE))
+                    
+                    ((or (##fx= char-encoding (macro-char-encoding-UTF-fallback-ASCII))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-ISO-8859-1))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-8))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-16))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-16BE))
+                         (##fx= char-encoding (macro-char-encoding-UTF-fallback-UTF-16LE)))
+                     (if (##fx<= (##fx+ blo 3) bhi)
+                         (begin
+                           (set! blo (##fx+ blo 3))
+                           (macro-put-UTF-8 -3 #xef) ;; UTF-8 BOM
+                           (macro-put-UTF-8 -2 #xbb)
+                           (macro-put-UTF-8 -1 #xbf)
+                           (let ((char-encoding (macro-char-encoding-UTF-8)))
+                             (macro-char-encoding-set! state char-encoding)
+                             (dispatch-on-char-encoding char-encoding)))))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-2))
+                     (macro-get-encode-char-encoding macro-put-UCS-2BE
+                                                     macro-put-UCS-2LE
+                                                     (macro-char-encoding-UCS-2BE)
+                                                     (macro-char-encoding-UCS-2LE)
+                                                     (macro-bytes-per-UCS-2)))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-2BE))
+                     (macro-encode-chars-loop encode-next-UCS-2BE
+                                              (macro-bytes-per-UCS-2)
+                                              (macro-max-UCS-2)
+                                              macro-put-UCS-2BE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-2LE))
+                     (macro-encode-chars-loop encode-next-UCS-2LE
+                                              (macro-bytes-per-UCS-2)
+                                              (macro-max-UCS-2)
+                                              macro-put-UCS-2LE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-4))
+                     (macro-get-encode-char-encoding macro-put-UCS-4BE
+                                                     macro-put-UCS-4LE
+                                                     (macro-char-encoding-UCS-4BE)
+                                                     (macro-char-encoding-UCS-4LE)
+                                                     (macro-bytes-per-UCS-4)))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-4BE))
+                     (macro-encode-chars-loop encode-next-UCS-4BE
+                                              (macro-bytes-per-UCS-4)
+                                              (macro-max-UCS-4)
+                                              macro-put-UCS-4BE))
+                    
+                    ((##fx= char-encoding (macro-char-encoding-UCS-4LE))
+                     (macro-encode-chars-loop encode-next-UCS-4LE
+                                              (macro-bytes-per-UCS-4)
+                                              (macro-max-UCS-4)
+                                              macro-put-UCS-4LE))
+                    
+                    (else
+                     (macro-encode-chars-loop encode-next-ISO-8859-1
+                                              (macro-bytes-per-ISO-8859-1)
+                                              (macro-max-ISO-8859-1)
+                                              macro-put-ISO-8859-1)))))
+
+        (macro-character-port-wlo-set! port clo)
+        (macro-byte-port-whi-set! port blo)
+        (macro-port-woptions-set! port state)
+        result))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of vector, string and u8vector ports.
 
 (##define-macro (define-prim-vector-port-procedures
