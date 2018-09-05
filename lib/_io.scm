@@ -2202,10 +2202,10 @@
 
 ;;; error code construction
 
-(define-prim (err-code-from-char-encoding char-encoding
-                                          ctos
-                                          type
-                                          arg-num)
+(define-prim (##err-code-from-char-encoding char-encoding
+                                            ctos
+                                            type
+                                            arg-num)
   
   (let ((t (make-s32vector 6)))
 
@@ -2309,10 +2309,10 @@
                   
                   (if (##fx= char-encoding-errors
                              (macro-char-encoding-errors-off))
-                      (set! e (err-code-from-char-encoding (macro-char-encoding options)
-                                                           1
-                                                           0
-                                                           0))
+                      (set! e (##err-code-from-char-encoding (macro-char-encoding options)
+                                                             1
+                                                             0
+                                                             0))
                       (begin
                         (if (macro-char-encoding-supports-BMP char-encoding)
                             (##string-set! cbuf new-chi (macro-unicode-replacement))
@@ -2348,10 +2348,10 @@
                   ;; skip illegal char
                   (macro-character-port-wlo-set! port
                                                  (##fx+ (macro-character-port-wlo port) 1))
-                  (set! e (err-code-from-char-encoding (macro-char-encoding options)
-                                                       0
-                                                       0
-                                                       0)))
+                  (set! e (##err-code-from-char-encoding (macro-char-encoding options)
+                                                         0
+                                                         0
+                                                         0)))
 
                 (let ((cbuf-save
                        (macro-character-port-wbuf port))
