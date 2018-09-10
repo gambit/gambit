@@ -3998,7 +3998,7 @@ ___SCMOBJ client_ca_path;)
   if (openssl_initialized == 0)
     {
 #if OPENSSL_VERSION_NUMBER >= 0x10100000L
-        if (!OPENSSL_init_ssl(0, NULL))
+      if (!OPENSSL_init_ssl(0, NULL))
         return ___FIX(___TLS_LIBRARY_INIT_ERR);
 #else
       if (!SSL_library_init())
