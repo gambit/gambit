@@ -3971,6 +3971,7 @@ ___SCMOBJ client_ca_path;)
 #ifndef OPENSSL_NO_DH
 
   DH *dh;
+  BIGNUM *bp, *bg;
 
 #endif
 
@@ -3996,11 +3997,17 @@ ___SCMOBJ client_ca_path;)
      https://github.com/lighttpd/lighttpd1.4/blob/master/src/network.c */
   if (openssl_initialized == 0)
     {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+      if (!OPENSSL_init_ssl(0, NULL))
+        return ___FIX(___TLS_LIBRARY_INIT_ERR);
+#else
       if (!SSL_library_init())
         return ___FIX(___TLS_LIBRARY_INIT_ERR);
 
       SSL_load_error_strings();
       OpenSSL_add_all_algorithms();
+#endif
+
 
       /* OpenSSL version format after 0.9.3:
          MMNNFFPPS: major minor fix patch status
@@ -4100,7 +4107,7 @@ ___SCMOBJ client_ca_path;)
         | SSL_OP_NO_COMPRESSION;
 
       c->tls_ctx = SSL_CTX_new (SSLv23_server_method());
-      OPENSSL_CHECK_ERROR (c->tls_ctx);
+      OPENSSL_CHECK_ERROR (___CAST(___UWORD,c->tls_ctx));
 
       /* Required identifier for client certificate verification to work with sessions */
       OPENSSL_CHECK_ERROR (SSL_CTX_set_session_id_context
@@ -4143,10 +4150,12 @@ ___SCMOBJ client_ca_path;)
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv3)));
         case 0x300:
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv2)));
         case 0x200:
+#endif
           break;
         default:
           return ___FIX(___TLS_WRONG_TLS_VERSION_ERR);
@@ -4191,16 +4200,23 @@ ___SCMOBJ client_ca_path;)
                   ___release_rc_tls_context (c);
                   return ___FIX(___TLS_DH_PARAMS_ERR);
                 }
-              dh->p = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
-              dh->g = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
-              dh->length = 160;
-              if (dh->p == NULL || dh->g == NULL)
+              bp = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
+              bg = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
+              if (dh1024_p == NULL || dh1024_g == NULL)
                 {
+                  BN_free(bp);
+                  BN_free(bg);
                   DH_free (dh);
                   ___release_rc_tls_context (c);
                   return ___FIX(___TLS_DH_PARAMS_ERR);
                 }
             }
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+          DH_set0_pqg(dh,bp,NULL,bg);
+#else
+          dh->p=bp;
+          dh->g=bg;
+#endif
           SSL_CTX_set_tmp_dh (c->tls_ctx, dh);
           OPENSSL_CHECK_ERROR (SSL_OP_SINGLE_DH_USE &
                                SSL_CTX_set_options (c->tls_ctx,
@@ -4324,7 +4340,7 @@ ___SCMOBJ client_ca_path;)
         SSL_OP_NO_COMPRESSION;
 
       c->tls_ctx = SSL_CTX_new (SSLv23_client_method());
-      OPENSSL_CHECK_ERROR (c->tls_ctx);
+      OPENSSL_CHECK_ERROR (___CAST(___UWORD,c->tls_ctx));
 
       /* Required identifier for client certificate verification to work with
          sessions. */
@@ -4369,10 +4385,12 @@ ___SCMOBJ client_ca_path;)
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv3)));
         case 0x300:
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv2)));
         case 0x200:
+#endif
           break;
         default:
           ___release_rc_tls_context (c);
