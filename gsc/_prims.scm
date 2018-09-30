@@ -482,7 +482,6 @@
 ("##eq?"                              (2)   #f ()    0    boolean extended)
 ("##eqv?"                             (2)   #f ()    0    boolean extended)
 ("##equal?"                           (2)   #f ()    0    boolean extended)
-("##eof-object?"                      (1)   #f ()    0    boolean extended)
 
 ("##fixnum?"                          (1)   #f ()    0    boolean extended)
 ("##pair?"                            (1)   #f ()    0    boolean extended)
@@ -983,6 +982,32 @@
 ("##bignum.fdigit-ref"                (2)   #f ()    0    integer extended)
 ("##bignum.fdigit-set!"               (3)   #t ()    0    #f      extended)
 
+("##eof-object?"                      (1)   #f ()    0    boolean extended)
+("##char-ready?"                      (0 1) #f ()    0    boolean extended)
+("##char-ready?0"                     (0)   #f ()    0    boolean extended)
+("##char-ready?1"                     (1)   #f ()    0    boolean extended)
+("##read"                             (0 1) #t ()    0    #f      extended)
+("##read-char"                        (0 1) #t ()    0    #f      extended)
+("##read-char0"                       (0)   #t ()    0    #f      extended)
+("##read-char1"                       (1)   #t ()    0    #f      extended)
+("##read-char0?"                      (0)   #t ()    0    #f      extended)
+("##read-char1?"                      (1)   #t ()    0    #f      extended)
+("##peek-char"                        (0 1) #t ()    0    #f      extended)
+("##peek-char0"                       (0)   #t ()    0    #f      extended)
+("##peek-char1"                       (1)   #t ()    0    #f      extended)
+("##peek-char0?"                      (0)   #t ()    0    #f      extended)
+("##peek-char1?"                      (1)   #t ()    0    #f      extended)
+("##write"                            (1 2) #t ()    0    #f      extended)
+("##display"                          (1 2) #t ()    0    #f      extended)
+("##newline"                          (0 1) #t ()    0    #f      extended)
+("##newline0"                         (0)   #t ()    0    #f      extended)
+("##newline1"                         (1)   #t ()    0    #f      extended)
+("##write-char"                       (1 2) #t ()    0    #f      extended)
+("##write-char1"                      (1)   #t ()    0    #f      extended)
+("##write-char2"                      (2)   #t ()    0    #f      extended)
+("##write-char1?"                     (1)   #t ()    0    #f      extended)
+("##write-char2?"                     (2)   #t ()    0    #f      extended)
+
 )
 )
 
@@ -1011,6 +1036,16 @@
   (lambda (proc proc-name)
     (let ((spec (get-prim-info name)))
       (lambda (env args) (if (not (safe? env)) spec proc)))))
+
+(define (spec-nargs . names) ;; Argument count specialization
+  (lambda (proc proc-name)
+    (let ((specs (map (lambda (n) (and n (get-prim-info n))) names)))
+      (lambda (env args)
+        (let* ((nargs (length args))
+               (s (and (< nargs (length specs))
+                       (list-ref specs nargs))))
+          (or s
+              proc))))))
 
 (define (spec-arith fix-name flo-name) ;; Arithmetic specialization
   (lambda (proc proc-name)
@@ -1469,6 +1504,19 @@
 (def-spec "continuation-return"  (spec-s "##continuation-return"))
 
 (def-spec "current-thread"   (spec-s "##current-thread"))
+
+(def-spec "char-ready?" (spec-u "##char-ready?"))
+(def-spec "read-char"   (spec-u "##read-char"))
+(def-spec "peek-char"   (spec-u "##peek-char"))
+(def-spec "write-char"  (spec-u "##write-char"))
+(def-spec "newline"     (spec-u "##newline"))
+
+(def-spec "##char-ready?" (spec-nargs "##char-ready?0" "##char-ready?1"))
+(def-spec "##read-char"   (spec-nargs "##read-char0"   "##read-char1"))
+(def-spec "##peek-char"   (spec-nargs "##peek-char0"   "##peek-char1"))
+(def-spec "##write-char"  (spec-nargs #f "##write-char1" "##write-char2"))
+(def-spec "##newline"     (spec-nargs "##newline0"     "##newline1"))
+
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1562,6 +1610,25 @@
      (lambda ()
        (gen source env vars invalid))
      fail)))
+
+(define (make-simple-expander gen-case)
+  (lambda (ptree oper args generate-call check-run-time-binding)
+    (let* ((source
+            (node-source ptree))
+           (env
+            (node-env ptree))
+           (vars
+            (gen-temp-vars source args)))
+      (gen-prc source env
+        vars
+        (let ((generic-call
+               (lambda ()
+                 (generate-call vars #f)))) ;; handle other cases
+          (gen-case source env
+            vars
+            check-run-time-binding
+            generic-call
+            generic-call))))))
 
 (define (setup-list-primitives)
 
@@ -2380,25 +2447,6 @@
                     cases-expansion
                     (generic-call))
                   cases-expansion))))))))
-
-  (define (make-simple-expander gen-case)
-    (lambda (ptree oper args generate-call check-run-time-binding)
-      (let* ((source
-              (node-source ptree))
-             (env
-              (node-env ptree))
-             (vars
-              (gen-temp-vars source args)))
-        (gen-prc source env
-          vars
-          (let ((generic-call
-                 (lambda ()
-                   (generate-call vars #f)))) ;; handle other cases
-            (gen-case source env
-              vars
-              check-run-time-binding
-              generic-call
-              generic-call))))))
 
   (define (make-fixnum-division-expander gen-case)
     (lambda (ptree oper args generate-call check-run-time-binding)
@@ -3870,10 +3918,55 @@
    (make-ref-set!-cas!-expander 'cas!))
 )
 
+(define (setup-io-primitives)
+
+  (define **peek-char0?-sym (string->canonical-symbol "##peek-char0?"))
+  (define **peek-char1?-sym (string->canonical-symbol "##peek-char1?"))
+
+  (define **read-char0?-sym (string->canonical-symbol "##read-char0?"))
+  (define **read-char1?-sym (string->canonical-symbol "##read-char1?"))
+
+  (define **write-char1?-sym (string->canonical-symbol "##write-char1?"))
+  (define **write-char2?-sym (string->canonical-symbol "##write-char2?"))
+
+  (define (fast-path sym)
+    (lambda (source
+             env
+             vars
+             check-run-time-binding
+             invalid
+             fail)
+      (new-disj source env
+        (gen-call-prim-vars source env
+          sym
+          vars)
+        (invalid))))
+
+  (def-exp "##peek-char0"
+           (make-simple-expander (fast-path **peek-char0?-sym)))
+
+  (def-exp "##peek-char1"
+           (make-simple-expander (fast-path **peek-char1?-sym)))
+
+  (def-exp "##read-char0"
+           (make-simple-expander (fast-path **read-char0?-sym)))
+
+  (def-exp "##read-char1"
+           (make-simple-expander (fast-path **read-char1?-sym)))
+
+  (def-exp "##write-char1"
+           (make-simple-expander (fast-path **write-char1?-sym)))
+
+  (def-exp "##write-char2"
+           (make-simple-expander (fast-path **write-char2?-sym)))
+
+)
+
 (setup-list-primitives)
 (setup-numeric-primitives)
 (setup-vector-primitives)
 (setup-structure-primitives)
+(setup-io-primitives)
 
 )
 

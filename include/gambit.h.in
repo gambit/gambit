@@ -3124,6 +3124,159 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
 
+/*
+ * The following definitions must match the structure of ports defined
+ * in _io#.scm .
+ */
+
+#define ___PORT_MUTEX                1
+#define ___PORT_RKIND                2
+#define ___PORT_WKIND                3
+#define ___PORT_NAME                 4
+#define ___PORT_WAIT                 5
+#define ___PORT_CLOSE                6
+#define ___PORT_ROPTIONS             7
+#define ___PORT_RTIMEOUT             8
+#define ___PORT_RTIMEOUT_THUNK       9
+#define ___PORT_SET_RTIMEOUT         10
+#define ___PORT_WOPTIONS             11
+#define ___PORT_WTIMEOUT             12
+#define ___PORT_WTIMEOUT_THUNK       13
+#define ___PORT_SET_WTIMEOUT         14
+#define ___PORT_IO_EXCEPTION_HANDLER 15
+
+#define ___PORT_OBJECT_READ_DATUM    16
+#define ___PORT_OBJECT_WRITE_DATUM   17
+#define ___PORT_OBJECT_NEWLINE       18
+#define ___PORT_OBJECT_FORCE_OUTPUT  19
+
+#define ___PORT_OBJECT_OTHER1        20
+#define ___PORT_OBJECT_OTHER2        21
+#define ___PORT_OBJECT_OTHER3        22
+
+#define ___PORT_CHAR_RBUF            20
+#define ___PORT_CHAR_RLO             21
+#define ___PORT_CHAR_RHI             22
+#define ___PORT_CHAR_RCHARS          23
+#define ___PORT_CHAR_RLINES          24
+#define ___PORT_CHAR_RCURLINE        25
+#define ___PORT_CHAR_RBUF_FILL       26
+#define ___PORT_CHAR_PEEK_EOFP       27
+
+#define ___PORT_CHAR_WBUF            28
+#define ___PORT_CHAR_WLO             29
+#define ___PORT_CHAR_WHI             30
+#define ___PORT_CHAR_WCHARS          31
+#define ___PORT_CHAR_WLINES          32
+#define ___PORT_CHAR_WCURLINE        33
+#define ___PORT_CHAR_WBUF_DRAIN      34
+#define ___PORT_INPUT_READTABLE      35
+#define ___PORT_OUTPUT_READTABLE     36
+#define ___PORT_OUTPUT_WIDTH         37
+
+#define ___PORT_CHAR_OTHER1          38
+#define ___PORT_CHAR_OTHER2          39
+#define ___PORT_CHAR_OTHER3          40
+#define ___PORT_CHAR_OTHER4          41
+#define ___PORT_CHAR_OTHER5          42
+
+#define ___PORT_BYTE_RBUF            38
+#define ___PORT_BYTE_RLO             39
+#define ___PORT_BYTE_RHI             40
+#define ___PORT_BYTE_RBUF_FILL       41
+
+#define ___PORT_BYTE_WBUF            42
+#define ___PORT_BYTE_WLO             43
+#define ___PORT_BYTE_WHI             44
+#define ___PORT_BYTE_WBUF_DRAIN      45
+
+#define ___PORT_BYTE_OTHER1          46
+#define ___PORT_BYTE_OTHER2          47
+
+#define ___PORT_RDEVICE_CONDVAR      46
+#define ___PORT_WDEVICE_CONDVAR      47
+
+#define ___PORT_DEVICE_OTHER1        48
+#define ___PORT_DEVICE_OTHER2        49
+
+#define ___DENV_INPUT_PORT  5
+#define ___DENV_OUTPUT_PORT 6
+
+#define ___PEEKCHAR0P \
+{ ___SCMOBJ port = ___CDR(___FIELD(___FIELD(___CURRENTTHREAD,___THREAD_DENV),___DENV_INPUT_PORT)); \
+  ___PEEKCHAR1P(port) \
+}
+
+#define ___PEEKCHAR1P(port) \
+{ ___SCMOBJ rlo; \
+  ___SCMOBJ rhi; \
+  ___SCMOBJ mutex = ___FIELD(port,___PORT_MUTEX); \
+  if (___PRIMITIVETRYLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))) \
+    { \
+      rlo = ___FIELD(port,___PORT_CHAR_RLO); \
+      rhi = ___FIELD(port,___PORT_CHAR_RHI); \
+      if (___FIXGE(rlo,rhi) || ___CHAREQP((___temp = ___STRINGREF(___FIELD(port,___PORT_CHAR_RBUF),rlo)),___CHR(10))) \
+        ___temp = ___FAL; \
+      ___PRIMITIVEUNLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2)) \
+    } \
+  else \
+    ___temp = ___FAL; \
+}
+
+#define ___READCHAR0P \
+{ ___SCMOBJ port = ___CDR(___FIELD(___FIELD(___CURRENTTHREAD,___THREAD_DENV),___DENV_INPUT_PORT)); \
+  ___READCHAR1P(port) \
+}
+
+#define ___READCHAR1P(port) \
+{ ___SCMOBJ rlo; \
+  ___SCMOBJ rhi; \
+  ___SCMOBJ mutex = ___FIELD(port,___PORT_MUTEX); \
+  if (___PRIMITIVETRYLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))) \
+    { \
+      rlo = ___FIELD(port,___PORT_CHAR_RLO); \
+      rhi = ___FIELD(port,___PORT_CHAR_RHI); \
+      if (___FIXGE(rlo,rhi) || ___CHAREQP((___temp = ___STRINGREF(___FIELD(port,___PORT_CHAR_RBUF),rlo)),___CHR(10))) \
+        ___temp = ___FAL; \
+      else \
+        ___FIELD(port,___PORT_CHAR_RLO) = ___FIXADD(rlo,___FIX(1L)); \
+      ___PRIMITIVEUNLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2)) \
+    } \
+  else \
+    ___temp = ___FAL; \
+}
+
+#define ___WRITECHAR1P(c) \
+{ ___SCMOBJ port = ___CDR(___FIELD(___FIELD(___CURRENTTHREAD,___THREAD_DENV),___DENV_OUTPUT_PORT)); \
+  ___WRITECHAR2P(c,port) \
+}
+
+#define ___WRITECHAR2P(c,port) \
+if (___CHAREQP(c,___CHR(10)) || ___FIXLT(___FIXAND(___FIELD(port,___PORT_WOPTIONS),___FIX(2047L)),___FIX(1024L))) \
+  ___temp = ___FAL; \
+else \
+  { \
+    ___SCMOBJ wbuf; \
+    ___SCMOBJ whi; \
+    ___SCMOBJ mutex = ___FIELD(port,___PORT_MUTEX); \
+    if (___PRIMITIVETRYLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))) \
+      { \
+        wbuf = ___FIELD(port,___PORT_CHAR_WBUF); \
+        whi = ___FIXADD(___FIELD(port,___PORT_CHAR_WHI),___FIX(1L)); \
+        if (___FIXGE(whi,___STRINGLENGTH(wbuf))) \
+          ___temp = ___FAL; \
+        else \
+          { \
+            ___STRINGSET(wbuf,___FIXSUB(whi,___FIX(1L)),c) \
+            ___FIELD(port,___PORT_CHAR_WHI) = whi; \
+            ___temp = ___VOID; \
+          } \
+        ___PRIMITIVEUNLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2)) \
+      } \
+    else \
+      ___temp = ___FAL; \
+  }
+
 /* IFJUMP-able operations */
 
 #define ___FIXZEROP(x)((x)==0)

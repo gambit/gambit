@@ -3235,6 +3235,22 @@
               (targ-emit
                 (if (eq? side-effects? 'expr) (list "EXPR" x) x)))))))))
 
+(define (targ-setup-inlinable-proc-io-fast-path proc-safe? name)
+  (lambda (prim)
+    (proc-obj-inlinable?-set!
+      prim
+      (lambda (env)
+        (or proc-safe?
+            (not (safe? env)))))
+    (proc-obj-inline-set!
+      prim
+      (lambda (opnds loc sn)
+        (targ-emit
+         (cons name (map (lambda (opnd) (targ-opnd opnd)) opnds)))
+        (if loc ; result is needed?
+            (targ-emit
+             (targ-loc loc '("temp"))))))))
+
 (define (targ-apply-simp-generator flo? ssb-space name)
   (lambda (opnds sn)
     (let ((code (targ-apply-simp-gen opnds flo? name)))
@@ -3839,6 +3855,21 @@
 (targ-op "##primitive-unlock!"  (targ-apply-simp-u #f #t 0 "PRIMITIVEUNLOCK"))
 
 (targ-op "##object-before?"   (targ-ifjump-simp-s #f "OBJECTBEFOREP"))
+
+(targ-op "##peek-char0?"
+         (targ-setup-inlinable-proc-io-fast-path #t "PEEKCHAR0P"))
+(targ-op "##peek-char1?"
+         (targ-setup-inlinable-proc-io-fast-path #t "PEEKCHAR1P"))
+
+(targ-op "##read-char0?"
+         (targ-setup-inlinable-proc-io-fast-path #t "READCHAR0P"))
+(targ-op "##read-char1?"
+         (targ-setup-inlinable-proc-io-fast-path #t "READCHAR1P"))
+
+(targ-op "##write-char1?"
+         (targ-setup-inlinable-proc-io-fast-path #t "WRITECHAR1P"))
+(targ-op "##write-char2?"
+         (targ-setup-inlinable-proc-io-fast-path #t "WRITECHAR2P"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

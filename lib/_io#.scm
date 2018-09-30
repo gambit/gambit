@@ -1081,115 +1081,13 @@
 ;;; Generic char port procedures.
 
 (##define-macro (macro-peek-char port)
-  `(let ((port ,port))
-
-     (##declare (not interrupts-enabled))
-
-     ;; try to get exclusive access to port and if successful perform
-     ;; operation inline
-
-     (if (macro-port-mutex-unlocked-not-abandoned-and-not-multiprocessor? port)
-
-       (let ((char-rlo (macro-character-port-rlo port))
-             (char-rhi (macro-character-port-rhi port)))
-         (if (##fx< char-rlo char-rhi)
-
-           ;; the next character is in the character read buffer
-
-           (##string-ref (macro-character-port-rbuf port) char-rlo)
-
-           ;; more characters are needed, do this out-of-line
-
-           (let ()
-             (##declare (interrupts-enabled))
-             (##peek-char port))))
-
-       ;; couldn't easily get exclusive access to port, handle this out-of-line
-
-       (let ()
-         (##declare (interrupts-enabled))
-         (##peek-char port)))))
+  `(##peek-char1 ,port))
 
 (##define-macro (macro-read-char port)
-  `(let ((port ,port))
-
-     (##declare (not interrupts-enabled))
-
-     ;; try to get exclusive access to port and if successful perform
-     ;; operation inline
-
-     (if (macro-port-mutex-unlocked-not-abandoned-and-not-multiprocessor? port)
-
-       (let ((char-rlo (macro-character-port-rlo port))
-             (char-rhi (macro-character-port-rhi port)))
-         (if (##fx< char-rlo char-rhi)
-
-           ;; the next character is in the character read buffer
-
-           (let ((c (##string-ref (macro-character-port-rbuf port) char-rlo)))
-             (if (##not (##char=? c #\newline))
-
-               ;; frequent simple case, just advance rlo
-
-               (begin
-                 (macro-character-port-rlo-set! port (##fx+ char-rlo 1))
-                 c)
-
-               ;; end-of-line processing is complex, so do it out-of-line
-
-               (let ()
-                 (##declare (interrupts-enabled))
-                 (##read-char port))))
-
-           ;; more characters are needed, do this out-of-line
-
-           (let ()
-             (##declare (interrupts-enabled))
-             (##read-char port))))
-
-       ;; couldn't easily get exclusive access to port, handle this out-of-line
-
-       (let ()
-         (##declare (interrupts-enabled))
-         (##read-char port)))))
+  `(##read-char1 ,port))
 
 (##define-macro (macro-write-char c port)
-  `(let ((c ,c)
-         (port ,port))
-
-     (##declare (not interrupts-enabled))
-
-     ;; try to get exclusive access to port and if successful perform
-     ;; operation inline
-
-     (if (and (##not (##char=? c #\newline))
-              (macro-port-mutex-unlocked-not-abandoned-and-not-multiprocessor? port))
-
-       (let ((char-wbuf (macro-character-port-wbuf port))
-             (char-whi+1 (##fx+ (macro-character-port-whi port) 1)))
-         (if (##fx< char-whi+1 (##string-length char-wbuf))
-
-           ;; adding this character would not make the character write
-           ;; buffer full, so add character and increment whi
-
-           (begin
-             (##string-set! char-wbuf (##fx- char-whi+1 1) c)
-             (macro-character-port-whi-set! port char-whi+1)
-             (##void))
-
-           ;; the character write buffer would become full, so handle
-           ;; this out-of-line
-
-           (let ()
-             (##declare (interrupts-enabled))
-             (##write-char c port))))
-
-       ;; end-of-line processing is needed or exclusive access to port
-       ;; cannot be obtained easily, so handle this out-of-line
-
-       (let ()
-         (##declare (interrupts-enabled))
-         (##write-char c port)))))
+  `(##write-char2 ,c ,port))
 
 (##define-macro (macro-peek-next-char-or-eof re) ;; possibly returns end-of-file
   `(macro-peek-char (macro-readenv-port ,re)))

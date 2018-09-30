@@ -1441,7 +1441,7 @@
 
       (##declare (not interrupts-enabled))
 
-      (##write-char #\newline port))
+      (macro-write-char #\newline port))
 
     (define (force-output port level prim arg1 arg2 arg3 arg4)
 
@@ -3554,7 +3554,7 @@
 
       (##declare (not interrupts-enabled))
 
-      (##write-char #\newline port))
+      (macro-write-char #\newline port))
 
     (define (output-width port)
 
@@ -3722,28 +3722,6 @@
           (##psettings->input-readtable psettings))
          (output-readtable
           (##psettings->output-readtable psettings))
-#|
-;;;;;;;;;;;;;;;;;;;;;;;;
-         (byte-rbuf
-          (and (##not (##fx= rkind (macro-none-kind)))
-               (##make-u8vector byte-buf-len)))
-         (byte-rlo
-          0)
-         (byte-rhi
-          0)
-         (byte-rbuf-fill
-          ##byte-rbuf-fill)
-         (byte-wbuf
-          (and (##not (##fx= wkind (macro-none-kind)))
-               (##make-u8vector byte-buf-len)))
-         (byte-wlo
-          0)
-         (byte-whi
-          0)
-         (byte-wbuf-drain
-          ##byte-wbuf-drain)
-;;;;;;;;;;;;;;;;;;;;;;;;
-|#
          (u8vector-rbuf
           (macro-fifo-elem (macro-fifo-next u8vector-fifo)))
          (u8vector-rlo
@@ -3790,7 +3768,7 @@
 
        (##declare (not interrupts-enabled))
 
-       (##write-char #\newline port))
+       (macro-write-char #\newline port))
 
      (define (output-width port)
 
@@ -4106,9 +4084,19 @@
 
 ))
 
-(define-prim (##newline port)
+(define-prim (##newline1 port)
   (##declare (not interrupts-enabled))
   ((macro-object-port-newline port) port))
+
+(define-prim (##newline0)
+  (##newline1 (macro-current-output-port)))
+
+(define-prim (##newline
+              #!optional
+              (port (macro-absent-obj)))
+  (if (##eq? port (macro-absent-obj))
+      (##newline0)
+      (##newline1 port)))
 
 (define-prim (newline
               #!optional
@@ -4583,7 +4571,7 @@
       (input-port-characters-buffered port)
       (##input-port-characters-buffered port))))
 
-(define-prim (##char-ready? port)
+(define-prim (##char-ready?1 port)
 
   (##declare (not interrupts-enabled))
 
@@ -4619,6 +4607,16 @@
                     (macro-port-mutex-unlock! port)
                     #t)))))))
 
+(define-prim (##char-ready?0)
+  (##char-ready?1 (macro-current-input-port)))
+
+(define-prim (##char-ready?
+              #!optional
+              (port (macro-absent-obj)))
+  (if (##eq? port (macro-absent-obj))
+      (##char-ready?0)
+      (##char-ready?1 port)))
+
 (define-prim (char-ready?
               #!optional
               (port (macro-absent-obj)))
@@ -4628,9 +4626,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (char-ready? p)
-        (##char-ready? p)))))
+        (##char-ready?1 p)))))
 
-(define-prim (##peek-char port)
+(define-prim (##peek-char1 port)
 
   (##declare (not interrupts-enabled))
 
@@ -4690,6 +4688,22 @@
                        (macro-port-mutex-unlock! port)
                        #!eof))))))))
 
+(define-prim (##peek-char1? port)
+  #f)
+
+(define-prim (##peek-char0)
+  (##peek-char1 (macro-current-input-port)))
+
+(define-prim (##peek-char0?)
+  (##peek-char1? (macro-current-input-port)))
+
+(define-prim (##peek-char
+              #!optional
+              (port (macro-absent-obj)))
+  (if (##eq? port (macro-absent-obj))
+      (##peek-char0)
+      (##peek-char1 port)))
+
 (define-prim (peek-char
               #!optional
               (port (macro-absent-obj)))
@@ -4699,9 +4713,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (peek-char p)
-        (##peek-char p)))))
+        (##peek-char1 p)))))
 
-(define-prim (##read-char port)
+(define-prim (##read-char1 port)
 
   (##declare (not interrupts-enabled))
 
@@ -4786,6 +4800,22 @@
                        (macro-port-mutex-unlock! port)
                        #!eof))))))))
 
+(define-prim (##read-char1? port)
+  #f)
+
+(define-prim (##read-char0)
+  (##read-char1 (macro-current-input-port)))
+
+(define-prim (##read-char0?)
+  (##read-char1? (macro-current-input-port)))
+
+(define-prim (##read-char
+              #!optional
+              (port (macro-absent-obj)))
+  (if (##eq? port (macro-absent-obj))
+      (##read-char0)
+      (##read-char1 port)))
+
 (define-prim (read-char
               #!optional
               (port (macro-absent-obj)))
@@ -4795,7 +4825,7 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (read-char p)
-        (##read-char p)))))
+        (##read-char1 p)))))
 
 (define-prim (##read-substring
               str
@@ -5174,7 +5204,7 @@
                   (##set-cdr! head (##cons first rest))
                   (##vector #f expr port-name)))))))))
 
-(define-prim (##write-char c port)
+(define-prim (##write-char2 c port)
 
   (##declare (not interrupts-enabled))
 
@@ -5261,6 +5291,23 @@
                       (##raise-os-io-exception port #f code3 write-char c port)))
                 (loop)))))))
 
+(define-prim (##write-char2? c port)
+  #f)
+
+(define-prim (##write-char1 c)
+  (##write-char2 c (macro-current-output-port)))
+
+(define-prim (##write-char1? c)
+  (##write-char2? c (macro-current-output-port)))
+
+(define-prim (##write-char
+              c
+              #!optional
+              (port (macro-absent-obj)))
+  (if (##eq? port (macro-absent-obj))
+      (##write-char1 c)
+      (##write-char2 c port)))
+
 (define-prim (write-char
               c
               #!optional
@@ -5272,7 +5319,7 @@
                port)))
       (macro-check-char c 1 (write-char c port)
         (macro-check-character-output-port p 2 (write-char c p)
-          (##write-char c p))))))
+          (##write-char2 c p))))))
 
 (define-prim (##write-substring str start end port)
   (##declare (not interrupts-enabled))
@@ -9805,7 +9852,7 @@
   (let ((limit (macro-writeenv-limit we)))
     (if (##fx< 0 limit)
         (begin
-          (##write-char c (macro-writeenv-port we))
+          (macro-write-char c (macro-writeenv-port we))
           (macro-writeenv-limit-set! we (##fx- limit 1))))))
 
 (define-prim (##wr-filler we n str)
