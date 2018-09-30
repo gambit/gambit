@@ -4146,12 +4146,12 @@ ___SCMOBJ client_ca_path;)
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_TLSv1)));
         case 0x301:
-#ifndef LIBRESSL_VERSION_NUMBER
+#ifndef OPENSSL_NO_SSL3
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv3)));
         case 0x300:
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#ifndef OPENSSL_NO_SSL2
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv2)));
@@ -4383,12 +4383,12 @@ ___SCMOBJ client_ca_path;)
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_TLSv1)));
         case 0x301:
-#ifndef LIBRESSL_VERSION_NUMBER
+#ifndef OPENSSL_NO_SSL3
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv3 &
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv3)));
         case 0x300:
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#ifndef OPENSSL_NO_SSL2
           OPENSSL_CHECK_ERROR ((SSL_OP_NO_SSLv2 &
                                 SSL_CTX_set_options (c->tls_ctx,
                                                      SSL_OP_NO_SSLv2)));
