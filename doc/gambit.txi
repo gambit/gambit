@@ -4484,6 +4484,9 @@ For example:
 @deffn {special form} define-cond-expand-feature @var{ident} @dots{}
 @end deffn
 
+@deffn {special form} case-lambda @dots{}
+@end deffn
+
 @deffn procedure finite? @var{x}
 @deffnx procedure infinite? @var{x}
 @deffnx procedure nan? @var{x}

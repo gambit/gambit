@@ -34,6 +34,7 @@ receive
 time
 cond-expand
 define-cond-expand-feature
+case-lambda
 letrec*
 
 ;; global variable

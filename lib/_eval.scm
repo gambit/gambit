@@ -4475,6 +4475,9 @@
     (define-runtime-syntax namespace
       (##make-alias-syntax '##namespace))
 
+    (define-runtime-syntax case-lambda
+      (##make-alias-syntax '##case-lambda))
+
     ##interaction-cte))
 
 ;;;============================================================================

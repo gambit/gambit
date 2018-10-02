@@ -295,6 +295,7 @@
      srfi-6 SRFI-6
      srfi-8 SRFI-8
      srfi-9 SRFI-9
+     srfi-16 SRFI-16
      srfi-18 SRFI-18
      srfi-21 SRFI-21
      srfi-22 SRFI-22
@@ -315,6 +316,232 @@
 (define-runtime-macro (define-cond-expand-feature . features)
   (##cond-expand-features (##append features (##cond-expand-features)))
   `(begin))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define-runtime-syntax ##case-lambda
+  (lambda (src)
+
+    (define (formals-count formals)
+      (let loop ((lst formals) (n 0))
+        (cond ((##pair? lst) (loop (##cdr lst) (##fx+ n 1)))
+              ((##null? lst) n)
+              (else          (##fx- -1 n)))))
+
+    (define (gen-var)
+      (##gensym))
+
+    (define (gen-vars n)
+      (if (##fx> n 0)
+          (##cons (gen-var) (gen-vars (##fx- n 1)))
+          '()))
+
+    (define (gen-absent-obj)
+      (##cons '##quote (##cons (macro-absent-obj) '())))
+
+    (##shape src src -2)
+
+    (let loop ((clauses (##cdr (##source-code src)))
+               (rev-cases '()) ;; reverse list of cases
+               (covered 0) ;; set of cases covered by clauses
+               (req-param-count #f)
+               (req-and-opt-param-count #f)
+               (need-rest-param? #f))
+      (if (##pair? clauses)
+          (let* ((clause-src
+                  (##sourcify (##car clauses) src))
+                 (clause
+                  (##source-code clause-src)))
+
+            (##shape src clause-src -2)
+
+            (let* ((formals
+                    (##source-code (##sourcify (##car clause) src)))
+                   (body
+                    (##cdr clause))
+                   (nparams
+                    (formals-count formals))
+                   (nparams*
+                    (if (##fx< nparams 0)
+                        (##fx- -1 nparams)
+                        nparams))
+                   (params-covered
+                    (if (##fx< nparams 0)
+                        (##arithmetic-shift -1 nparams*)
+                        (##arithmetic-shift 1 nparams)))
+                   (trigger
+                    (##bitwise-and params-covered
+                                   (##bitwise-not covered))))
+              (if (##equal? trigger 0)
+                  (begin
+                    ;; this case already covered by previous clauses
+                    (loop (##cdr clauses)
+                          rev-cases
+                          covered
+                          req-param-count
+                          req-and-opt-param-count
+                          need-rest-param?))
+                  (begin
+                    ;; this case not covered by previous clauses
+                    (loop (##cdr clauses)
+                          (##cons (##vector nparams '() formals body)
+                                  rev-cases)
+                          (##bitwise-ior trigger covered)
+                          (if req-param-count
+                              (##fxmin req-param-count nparams*)
+                              nparams*)
+                          (if req-and-opt-param-count
+                              (##fxmax req-and-opt-param-count nparams*)
+                              nparams*)
+                          (or need-rest-param?
+                              (##fx< nparams 0)))))))
+
+          (let* ((cases
+                  (##reverse rev-cases))
+                 (req-params
+                  (gen-vars req-param-count))
+                 (opt-params
+                  (gen-vars (##fx- req-and-opt-param-count
+                                   req-param-count)))
+                 (rest-param
+                  (if need-rest-param?
+                      (gen-var)
+                      '()))
+                 (params
+                  (##list->vector
+                   (##append req-params opt-params)))
+                 (proc-var
+                  (##gensym))
+                 (need-proc-var?
+                  #f))
+
+            (define (find-case i)
+              (let loop ((lst cases))
+                (if (##pair? lst)
+                    (let* ((c (##car lst))
+                           (nparams (##vector-ref c 0)))
+                      (if (if (##fx< nparams 0)
+                              (##fx>= i (##fx- -1 nparams))
+                              (##fx= i nparams))
+                          c
+                          (loop (##cdr lst))))
+                    #f)))
+
+            (define (flatten-formals formals)
+              (cond ((##pair? formals)
+                     (let* ((rest (##cdr formals))
+                            (flat-rest (flatten-formals rest)))
+                       (if (##eq? rest flat-rest)
+                           formals
+                           (##cons (##car formals)
+                                   flat-rest))))
+                    ((##null? formals)
+                     formals)
+                    (else
+                     (##cons formals
+                             '()))))
+
+            (define (gen-branch i case-i)
+              (let ((branch
+                     `(#f ;; placeholder for lambda expression or variable
+                       ,@(gen-arguments i case-i))))
+                (##vector-set! case-i
+                               1
+                               (##cons branch (##vector-ref case-i 1)))
+                branch))
+
+            (define (gen-params i)
+              (##vector->list
+               (##subvector params 0 i)))
+
+            (define (gen-arguments i case-i)
+              (let ((nparams (##vector-ref case-i 0)))
+                (if (##fx< nparams 0) ;; has rest parameter?
+                    (let ((nreq (##fx- -1 nparams)))
+                      (let loop ((j (##fx- (##fxmin req-and-opt-param-count i) 1))
+                                 (rest-arg rest-param))
+                        (if (##fx< j nreq)
+                            (##append (##vector->list
+                                       (##subvector params 0 nreq))
+                                      (##list rest-arg))
+                            (loop (##fx- j 1)
+                                  `(##cons ,(##vector-ref params j)
+                                           ,rest-arg)))))
+                    (gen-params i))))
+
+            (define (gen-dispatch i)
+              (let* ((case-i (find-case i))
+                     (nparams (if case-i (##vector-ref case-i 0) i)))
+                (cond ((and (##fx< nparams 0) ;; case with rest parameter
+                            (##fx>= i req-and-opt-param-count))
+                       (gen-branch i case-i))
+                      ((and (##not need-rest-param?)
+                            (##fx= i req-and-opt-param-count))
+                       (gen-branch i case-i))
+                      (else
+                       `(##if ,(if (##fx= i req-and-opt-param-count)
+                                   `(##null? ,rest-param)
+                                   `(##eq? ,(##vector-ref params i)
+                                           ,(gen-absent-obj)))
+                              ,(if case-i
+                                   (gen-branch i case-i)
+                                   (begin
+                                     (set! need-proc-var? #t)
+                                     `(##raise-wrong-number-of-arguments-exception-nary
+                                       ,proc-var
+                                       ,@(gen-params i))))
+                              ,(gen-dispatch (##fx+ i 1)))))))
+
+            (let ((dispatch (gen-dispatch req-param-count)))
+              (let loop ((lst cases) (rev-defs '()))
+                (if (##pair? lst)
+                    (let* ((c (##car lst))
+                           (calls (##vector-ref c 1)))
+                      (if (##pair? calls)
+                          (let* ((formals (##vector-ref c 2))
+                                 (body (##vector-ref c 3))
+                                 (branch
+                                  `(##lambda ,(flatten-formals formals)
+                                             ,@body)))
+                            (if (##null? (##cdr calls))
+                                (begin
+                                  (##set-car! (##car calls) branch)
+                                  (loop (##cdr lst)
+                                        rev-defs))
+                                (let ((var (gen-var)))
+                                  (##for-each (lambda (x)
+                                                (##set-car! x var))
+                                              calls)
+                                  (loop (##cdr lst)
+                                        (##cons (##list var branch)
+                                                rev-defs)))))
+                          (loop (##cdr lst)
+                                rev-defs)))
+                    (let ((lambda-expr
+                           `(##lambda
+                             ,(##append
+                               req-params
+                               (if (##pair? opt-params)
+                                   (##cons '#!optional
+                                           (##append
+                                            (##map (lambda (p)
+                                                     (##cons
+                                                      p
+                                                      (##cons
+                                                       (gen-absent-obj)
+                                                       '())))
+                                                   opt-params)
+                                            rest-param))
+                                   '()))
+                             ,(if (##pair? rev-defs)
+                                  `(##let ,(##reverse rev-defs)
+                                          ,dispatch)
+                                  dispatch))))
+                      (##expand-source-template
+                       src
+                       (if need-proc-var?
+                           `(##letrec ((,proc-var ,lambda-expr)) ,proc-var)
+                           lambda-expr)))))))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
