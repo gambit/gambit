@@ -676,12 +676,20 @@
 (define-prim (##procedure-name p)
   (and (##procedure? p)
        (or (and (##interp-procedure? p)
-                (let* (($code (##interp-procedure-code p))
-                       (rte (##interp-procedure-rte p)))
-                  (##object->lexical-var->identifier
-                   (macro-code-cte $code)
-                   rte
-                   p)))
+                (let* (($code
+                        (##interp-procedure-code p))
+                       (rte
+                        (##interp-procedure-rte p))
+                       (id
+                        (##object->lexical-var->identifier
+                         (macro-code-cte $code)
+                         rte
+                         p)))
+                  (and id
+                       (if (##uninterned-symbol? id)
+                           (or (##object->global-var->identifier p)
+                               id)
+                           id))))
            (##object->global-var->identifier p))))
 
 (define-prim (##object->lexical-var->identifier cte rte obj)
