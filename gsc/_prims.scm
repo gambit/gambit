@@ -1517,6 +1517,8 @@
 (def-spec "##write-char"  (spec-nargs #f "##write-char1" "##write-char2"))
 (def-spec "##newline"     (spec-nargs "##newline0"     "##newline1"))
 
+(def-spec "symbol->string" (spec-u "##symbol->string"))
+
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3962,11 +3964,44 @@
 
 )
 
+(define (setup-misc-primitives)
+
+  (define **symbol->string-sym (string->canonical-symbol "##symbol->string"))
+  (define **symbol-name-sym (string->canonical-symbol "##symbol-name"))
+  (define **string?-sym (string->canonical-symbol "##string?"))
+
+  (def-exp "##symbol->string"
+           (make-simple-expander
+            (lambda (source
+                     env
+                     vars
+                     check-run-time-binding
+                     invalid
+                     fail)
+              (new-call source env
+                (let ((vars2 (gen-temp-vars source '(#f))))
+                  (gen-prc source env
+                    vars2
+                    (new-tst source env
+                      (gen-call-prim source env
+                        **string?-sym
+                        (list (new-ref source env
+                                (car vars2))))
+                      (new-ref source env
+                        (car vars2))
+                      (fail))))
+                (list (gen-call-prim-vars source env
+                        **symbol-name-sym
+                        vars))))))
+
+)
+
 (setup-list-primitives)
 (setup-numeric-primitives)
 (setup-vector-primitives)
 (setup-structure-primitives)
 (setup-io-primitives)
+(setup-misc-primitives)
 
 )
 
