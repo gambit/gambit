@@ -1327,11 +1327,11 @@
 ;(def-spec "exact->inexact" (spec-arith "##fixnum->flonum" #f))
 ;(def-spec "inexact->exact" (spec-arith "##flonum->fixnum" #f))
 
-(def-spec "numerator"   (spec-u "##numerator"))
-(def-spec "denominator" (spec-u "##denominator"))
+(def-spec "numerator"   (spec-s "##numerator"))
+(def-spec "denominator" (spec-s "##denominator"))
 
-(def-spec "real-part"   (spec-u "##real-part"))
-(def-spec "imag-part"   (spec-u "##imag-part"))
+(def-spec "real-part"   (spec-s "##real-part"))
+(def-spec "imag-part"   (spec-s "##imag-part"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
