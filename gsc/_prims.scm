@@ -2209,20 +2209,6 @@
 
   (define **fixnum->flonum-sym (string->canonical-symbol "##fixnum->flonum"))
 
-  (define **char?-sym (string->canonical-symbol "##char?"))
-
-  (define **char=?-sym (string->canonical-symbol "##char=?"))
-  (define **char<?-sym (string->canonical-symbol "##char<?"))
-  (define **char>?-sym (string->canonical-symbol "##char>?"))
-  (define **char<=?-sym (string->canonical-symbol "##char<=?"))
-  (define **char>=?-sym (string->canonical-symbol "##char>=?"))
-
-  (define **char-ci=?-sym (string->canonical-symbol "##char-ci=?"))
-  (define **char-ci<?-sym (string->canonical-symbol "##char-ci<?"))
-  (define **char-ci>?-sym (string->canonical-symbol "##char-ci>?"))
-  (define **char-ci<=?-sym (string->canonical-symbol "##char-ci<=?"))
-  (define **char-ci>=?-sym (string->canonical-symbol "##char-ci>=?"))
-
   (define **mem-allocated?-sym (string->canonical-symbol "##mem-allocated?"))
   (define **subtyped?-sym (string->canonical-symbol "##subtyped?"))
   (define **subtype-sym (string->canonical-symbol "##subtype"))
@@ -2971,21 +2957,6 @@
     (define case-flonum-inexact->exact
       no-case)
 
-    (define case-char=?
-      (gen-simple-case **char?-sym **char=?-sym))
-
-    (define case-char<?
-      (gen-simple-case **char?-sym **char<?-sym))
-
-    (define case-char>?
-      (gen-simple-case **char?-sym **char>?-sym))
-
-    (define case-char<=?
-      (gen-simple-case **char?-sym **char<=?-sym))
-
-    (define case-char>=?
-      (gen-simple-case **char?-sym **char>=?-sym))
-
     (define (case-eqv?-or-equal? prim)
       (lambda (source
                env
@@ -3332,12 +3303,6 @@
       case-fixnum-inexact->exact
       case-flonum-inexact->exact))
 
-    (def-exp "char=?" (make-simple-expander case-char=?))
-    (def-exp "char<?" (make-simple-expander case-char<?))
-    (def-exp "char>?" (make-simple-expander case-char>?))
-    (def-exp "char<=?" (make-simple-expander case-char<=?))
-    (def-exp "char>=?" (make-simple-expander case-char>=?))
-
     (if (eq? (target-name targ) 'C)
         (begin
 
@@ -3353,6 +3318,67 @@
             "equal?"
             (make-simple-expander (case-eqv?-or-equal? **mem-allocated?-sym)))))
 ))
+
+(define (setup-char-primitives)
+
+  (define **char?-sym (string->canonical-symbol "##char?"))
+
+  (define **char=?-sym (string->canonical-symbol "##char=?"))
+  (define **char<?-sym (string->canonical-symbol "##char<?"))
+  (define **char>?-sym (string->canonical-symbol "##char>?"))
+  (define **char<=?-sym (string->canonical-symbol "##char<=?"))
+  (define **char>=?-sym (string->canonical-symbol "##char>=?"))
+
+;; Expanding the case independent versions isn't worth it...
+;;
+;;  (define **char-ci=?-sym (string->canonical-symbol "##char-ci=?"))
+;;  (define **char-ci<?-sym (string->canonical-symbol "##char-ci<?"))
+;;  (define **char-ci>?-sym (string->canonical-symbol "##char-ci>?"))
+;;  (define **char-ci<=?-sym (string->canonical-symbol "##char-ci<=?"))
+;;  (define **char-ci>=?-sym (string->canonical-symbol "##char-ci>=?"))
+
+  (define case-char=?
+    (gen-simple-case **char?-sym **char=?-sym))
+
+  (define case-char<?
+    (gen-simple-case **char?-sym **char<?-sym))
+
+  (define case-char>?
+    (gen-simple-case **char?-sym **char>?-sym))
+
+  (define case-char<=?
+    (gen-simple-case **char?-sym **char<=?-sym))
+
+  (define case-char>=?
+    (gen-simple-case **char?-sym **char>=?-sym))
+
+;;  (define case-char-ci=?
+;;    (gen-simple-case **char?-sym **char-ci=?-sym))
+;;
+;;  (define case-char-ci<?
+;;    (gen-simple-case **char?-sym **char-ci<?-sym))
+;;
+;;  (define case-char-ci>?
+;;    (gen-simple-case **char?-sym **char-ci>?-sym))
+;;
+;;  (define case-char-ci<=?
+;;    (gen-simple-case **char?-sym **char-ci<=?-sym))
+;;
+;;  (define case-char-ci>=?
+;;    (gen-simple-case **char?-sym **char-ci>=?-sym))
+
+  (def-exp "char=?" (make-simple-expander case-char=?))
+  (def-exp "char<?" (make-simple-expander case-char<?))
+  (def-exp "char>?" (make-simple-expander case-char>?))
+  (def-exp "char<=?" (make-simple-expander case-char<=?))
+  (def-exp "char>=?" (make-simple-expander case-char>=?))
+
+;;  (def-exp "char-ci=?" (make-simple-expander case-char-ci=?))
+;;  (def-exp "char-ci<?" (make-simple-expander case-char-ci<?))
+;;  (def-exp "char-ci>?" (make-simple-expander case-char-ci>?))
+;;  (def-exp "char-ci<=?" (make-simple-expander case-char-ci<=?))
+;;  (def-exp "char-ci>=?" (make-simple-expander case-char-ci>=?))
+)
 
 (define (setup-vector-primitives)
 
@@ -3998,6 +4024,7 @@
 
 (setup-list-primitives)
 (setup-numeric-primitives)
+(setup-char-primitives)
 (setup-vector-primitives)
 (setup-structure-primitives)
 (setup-io-primitives)
