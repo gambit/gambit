@@ -1330,8 +1330,8 @@
 (def-spec "numerator"   (spec-s "##numerator"))
 (def-spec "denominator" (spec-s "##denominator"))
 
-(def-spec "real-part"   (spec-s "##real-part"))
-(def-spec "imag-part"   (spec-s "##imag-part"))
+(def-spec "real-part"   (spec-u "##real-part"))
+(def-spec "imag-part"   (spec-u "##imag-part"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1622,42 +1622,6 @@
      (lambda ()
        (gen source env vars invalid))
      fail)))
-
-(define (fail-with-identity-when-not-safe gen)
-  (lambda (source
-           env
-           vars
-           check-run-time-binding
-           invalid
-           fail)
-    (gen source
-         env
-         vars
-         check-run-time-binding
-         invalid
-         (if (safe? env)
-             fail
-             (lambda ()
-               (new-ref source env
-                 (car vars)))))))
-
-(define (fail-with-zero-when-not-safe gen)
-  (lambda (source
-           env
-           vars
-           check-run-time-binding
-           invalid
-           fail)
-    (gen source
-         env
-         vars
-         check-run-time-binding
-         invalid
-         (if (safe? env)
-             fail
-             (lambda ()
-               (new-cst source env
-                 0))))))
 
 (define (make-simple-expander gen-case)
   (lambda (ptree oper args generate-call check-run-time-binding)
@@ -3368,16 +3332,14 @@
       (gen-simple-case **ratnum?-sym **ratnum-denominator-sym)))
 
     (def-exp
-     "##real-part"
+     "real-part"
      (make-simple-expander
-      (fail-with-identity-when-not-safe
-       (gen-simple-case **cpxnum?-sym **cpxnum-real-sym))))
+      (gen-simple-case **cpxnum?-sym **cpxnum-real-sym)))
 
     (def-exp
-     "##imag-part"
+     "imag-part"
      (make-simple-expander
-      (fail-with-zero-when-not-safe
-       (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym))))
+      (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym)))
 
     (if (eq? (target-name targ) 'C)
         (begin

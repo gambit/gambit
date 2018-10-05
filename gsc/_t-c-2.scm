@@ -3765,6 +3765,8 @@
 (targ-op "##cpxnum-make"        (targ-apply-cpxnum-make))
 (targ-op "##cpxnum-real"        (targ-ifjump-apply-u "CPXNUMREAL"))
 (targ-op "##cpxnum-imag"        (targ-ifjump-apply-u "CPXNUMIMAG"))
+(targ-op "##real-part"          (targ-ifjump-apply-u "REALPART"))
+(targ-op "##imag-part"          (targ-ifjump-apply-u "IMAGPART"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

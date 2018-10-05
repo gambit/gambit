@@ -3626,6 +3626,9 @@ ___GET_SUBTYPED(___CPXNUM_SIZE))
 #define ___CPXNUMREAL(obj)___FIELD(obj,0)
 #define ___CPXNUMIMAG(obj)___FIELD(obj,1)
 
+#define ___REALPART(obj)(___CPXNUMP(obj)?___CPXNUMREAL(obj):obj)
+#define ___IMAGPART(obj)(___CPXNUMP(obj)?___CPXNUMIMAG(obj):___FIX(0L))
+
 #define ___MAKEPROMISE(x) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE)), \
 ___ADD_SUBTYPED_ELEM(0,x), \
