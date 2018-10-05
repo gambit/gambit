@@ -120,6 +120,19 @@
                 (error "define-prim can't inline" name)))))
 
       ((_ id val)
+       #'(define-prim-no-inline id val)))))
+
+(macro-define-syntax define-prim-no-inline
+  (lambda (stx)
+    (syntax-case stx ()
+
+      ((_ (id . params) body ...)
+       #'(define-prim-no-inline id
+           (lambda params
+             (##declare (inline))
+             body ...)))
+
+      ((_ id val)
        #'(define id
            (let ()
              (##declare

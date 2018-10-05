@@ -1641,6 +1641,24 @@
                (new-ref source env
                  (car vars)))))))
 
+(define (fail-with-zero-when-not-safe gen)
+  (lambda (source
+           env
+           vars
+           check-run-time-binding
+           invalid
+           fail)
+    (gen source
+         env
+         vars
+         check-run-time-binding
+         invalid
+         (if (safe? env)
+             fail
+             (lambda ()
+               (new-cst source env
+                 0))))))
+
 (define (make-simple-expander gen-case)
   (lambda (ptree oper args generate-call check-run-time-binding)
     (let* ((source
@@ -3358,7 +3376,7 @@
     (def-exp
      "##imag-part"
      (make-simple-expander
-      (fail-with-identity-when-not-safe
+      (fail-with-zero-when-not-safe
        (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym))))
 
     (if (eq? (target-name targ) 'C)
