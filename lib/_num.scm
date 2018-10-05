@@ -3373,32 +3373,30 @@ for a discussion of branch cuts.
     (##make-polar x y)))
 
 (define-prim (##real-part x)
+  (macro-number-dispatch x x
+    x x x x (macro-cpxnum-real x)))
+
+(define-prim (real-part x)
 
   (define (type-error)
     (##fail-check-number 1 real-part x))
 
-  (macro-number-dispatch x (type-error)
-    x x x x (macro-cpxnum-real x)))
-
-(define-prim (real-part x)
   (macro-force-vars (x)
-    (let ()
-      (declare (safe))
-      (##real-part x))))
+    (macro-number-dispatch x (type-error)
+      x x x x (macro-cpxnum-real x))))
 
 (define-prim (##imag-part x)
+  (macro-number-dispatch x 0
+    0 0 0 0 (macro-cpxnum-imag x)))
+
+(define-prim (imag-part x)
 
   (define (type-error)
     (##fail-check-number 1 imag-part x))
 
-  (macro-number-dispatch x (type-error)
-    0 0 0 0 (macro-cpxnum-imag x)))
-
-(define-prim (imag-part x)
   (macro-force-vars (x)
-    (let ()
-      (declare (safe))
-      (##imag-part x))))
+    (macro-number-dispatch x (type-error)
+      0 0 0 0 (macro-cpxnum-imag x))))
 
 (define-prim (##magnitude x)
 
