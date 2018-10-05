@@ -808,10 +808,14 @@
 ("##ratnum-make"                      (2)   #f ()    0    number  extended)
 ("##ratnum-numerator"                 (1)   #f ()    0    integer extended)
 ("##ratnum-denominator"               (1)   #f ()    0    integer extended)
+("##numerator"                        (1)   #f ()    0    integer extended)
+("##denominator"                      (1)   #f ()    0    integer extended)
 
 ("##cpxnum-make"                      (2)   #f ()    0    number  extended)
 ("##cpxnum-real"                      (1)   #f ()    0    number  extended)
 ("##cpxnum-imag"                      (1)   #f ()    0    number  extended)
+("##real-part"                        (1)   #f ()    0    real    extended)
+("##imag-part"                        (1)   #f ()    0    real    extended)
 
 ("##structure-direct-instance-of?"    (2)   #f ()    0    boolean extended)
 ("##structure-instance-of?"           (2)   #f ()    0    boolean extended)
@@ -1322,6 +1326,12 @@
 
 ;(def-spec "exact->inexact" (spec-arith "##fixnum->flonum" #f))
 ;(def-spec "inexact->exact" (spec-arith "##flonum->fixnum" #f))
+
+(def-spec "numerator"   (spec-u "##numerator"))
+(def-spec "denominator" (spec-u "##denominator"))
+
+(def-spec "real-part"   (spec-u "##real-part"))
+(def-spec "imag-part"   (spec-u "##imag-part"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2212,6 +2222,14 @@
   (define **mem-allocated?-sym (string->canonical-symbol "##mem-allocated?"))
   (define **subtyped?-sym (string->canonical-symbol "##subtyped?"))
   (define **subtype-sym (string->canonical-symbol "##subtype"))
+
+  (define **ratnum?-sym (string->canonical-symbol "##ratnum?"))
+  (define **ratnum-numerator-sym (string->canonical-symbol "##ratnum-numerator"))
+  (define **ratnum-denominator-sym (string->canonical-symbol "##ratnum-denominator"))
+
+  (define **cpxnum?-sym (string->canonical-symbol "##cpxnum?"))
+  (define **cpxnum-real-sym (string->canonical-symbol "##cpxnum-real"))
+  (define **cpxnum-imag-sym (string->canonical-symbol "##cpxnum-imag"))
 
   (define (gen-fixnum-case gen)
     (gen-validating-case **fixnum?-sym gen))
@@ -3302,6 +3320,26 @@
      (make-fixflo-expander
       case-fixnum-inexact->exact
       case-flonum-inexact->exact))
+
+    (def-exp
+     "##numerator"
+     (make-simple-expander
+      (gen-simple-case **ratnum?-sym **ratnum-numerator-sym)))
+
+    (def-exp
+     "##denominator"
+     (make-simple-expander
+      (gen-simple-case **ratnum?-sym **ratnum-denominator-sym)))
+
+    (def-exp
+     "##real-part"
+     (make-simple-expander
+      (gen-simple-case **cpxnum?-sym **cpxnum-real-sym)))
+
+    (def-exp
+     "##imag-part"
+     (make-simple-expander
+      (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym)))
 
     (if (eq? (target-name targ) 'C)
         (begin
