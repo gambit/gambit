@@ -3382,7 +3382,9 @@ for a discussion of branch cuts.
 
 (define-prim (real-part x)
   (macro-force-vars (x)
-    (##real-part x)))
+    (let ()
+      (declare (safe))
+      (##real-part x))))
 
 (define-prim (##imag-part x)
 
@@ -3394,7 +3396,9 @@ for a discussion of branch cuts.
 
 (define-prim (imag-part x)
   (macro-force-vars (x)
-    (##imag-part x)))
+    (let ()
+      (declare (safe))
+      (##imag-part x))))
 
 (define-prim (##magnitude x)
 
