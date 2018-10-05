@@ -1327,11 +1327,11 @@
 ;(def-spec "exact->inexact" (spec-arith "##fixnum->flonum" #f))
 ;(def-spec "inexact->exact" (spec-arith "##flonum->fixnum" #f))
 
-(def-spec "numerator"   (spec-u "##numerator"))
-(def-spec "denominator" (spec-u "##denominator"))
+(def-spec "numerator"   (spec-s "##numerator"))
+(def-spec "denominator" (spec-s "##denominator"))
 
-(def-spec "real-part"   (spec-u "##real-part"))
-(def-spec "imag-part"   (spec-u "##imag-part"))
+(def-spec "real-part"   (spec-s "##real-part"))
+(def-spec "imag-part"   (spec-s "##imag-part"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1622,6 +1622,24 @@
      (lambda ()
        (gen source env vars invalid))
      fail)))
+
+(define (fail-with-identity-when-not-safe gen)
+  (lambda (source
+           env
+           vars
+           check-run-time-binding
+           invalid
+           fail)
+    (gen source
+         env
+         vars
+         check-run-time-binding
+         invalid
+         (if (safe? env)
+             fail
+             (lambda ()
+               (new-ref source env
+                 (car vars)))))))
 
 (define (make-simple-expander gen-case)
   (lambda (ptree oper args generate-call check-run-time-binding)
@@ -3334,12 +3352,14 @@
     (def-exp
      "##real-part"
      (make-simple-expander
-      (gen-simple-case **cpxnum?-sym **cpxnum-real-sym)))
+      (fail-with-identity-when-not-safe
+       (gen-simple-case **cpxnum?-sym **cpxnum-real-sym))))
 
     (def-exp
      "##imag-part"
      (make-simple-expander
-      (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym)))
+      (fail-with-identity-when-not-safe
+       (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym))))
 
     (if (eq? (target-name targ) 'C)
         (begin
