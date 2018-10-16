@@ -3787,14 +3787,16 @@ ___PSDKR)
 
 ___HIDDEN ___SIZE_TS scan
    ___P((___PSD
-         ___WORD *body),
+         ___WORD *body,
+         ___WORD head),
         (___PSV
-         body)
+         body,
+         head)
 ___PSDKR
-___WORD *body;)
+___WORD *body;
+___WORD head;)
 {
   ___PSGET
-  ___WORD head = body[-1];
   ___SIZE_TS words = ___HD_WORDS(head);
   int subtype = ___HD_SUBTYPE(head);
 
@@ -3966,6 +3968,32 @@ ___WORD *body;)
 }
 
 
+#define scan_no_fast_path(ptr, head) \
+do { \
+  ptr += scan ((ptr)+1, head) + 1; \
+} while (0)
+
+
+#ifdef ___USE_SCAN_NO_FAST_PATH
+
+#define scan_and_advance(ptr, head) scan_no_fast_path(ptr, head)
+
+#else
+
+#define scan_and_advance(ptr, head) \
+do { \
+  if ((head) == ___MAKE_HD_WORDS(___PAIR_SIZE,___sPAIR)) \
+    { \
+      mark_array ((ptr)+2, ___PAIR_SIZE-1); \
+      ptr += ___PAIR_SIZE+1; \
+    } \
+  else \
+    scan_no_fast_path(ptr, head); \
+} while (0)
+
+#endif
+
+
 ___HIDDEN void setup_still_objs_to_scan
    ___P((___PSDNC),
         (___PSVNC)
@@ -4001,8 +4029,9 @@ ___PSDKR)
 
   while ((base = ___CAST(___WORD*,still_objs_to_scan)) != 0)
     {
+      ___WORD *body = base + ___STILL_BODY;
       still_objs_to_scan = base[___STILL_MARK];
-      scan (___PSP base + ___STILL_BODY);
+      scan (___PSP body, body[-1]);
     }
 }
 
@@ -4017,15 +4046,15 @@ ___WORD *start;)
 {
   ___PSGET
   ___WORD *ptr = start;
+  ___WORD head;
 
 #ifdef ENABLE_GC_ACTLOG_SCAN_COMPLETE_HEAP_CHUNK
   ___ACTLOG_BEGIN_PS(scan_complete_heap_chunk,_);
 #endif
 
-  while (___TYP(*ptr) != ___FORW) /* not end of complete chunk? */
+  while (___TYP((head = *ptr)) != ___FORW) /* not end of complete chunk? */
     {
-      ptr++;
-      ptr += scan (___PSP ptr);
+      scan_and_advance(ptr, head); /* note: this advances ptr */
     }
 
 #ifdef ENABLE_GC_ACTLOG_SCAN_COMPLETE_HEAP_CHUNK
@@ -4081,10 +4110,10 @@ ___PSDKR)
 
   while (ptr != alloc_heap_ptr) /* SITUATION #1 or #2 ? */
     {
-      while (___TYP(*ptr) != ___FORW) /* not end of complete chunk? */
+      ___WORD head;
+      while (___TYP((head = *ptr)) != ___FORW) /* not end of complete chunk? */
         {
-          ptr++;
-          ptr += scan (___PSP ptr);
+          scan_and_advance(ptr, head); /* note: this advances ptr */
           if (ptr == alloc_heap_ptr) /* end of incomplete chunk? */
             {
               /* SITUATION #3, done scanning all movable objects */
