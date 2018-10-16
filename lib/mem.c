@@ -3970,7 +3970,7 @@ ___WORD head;)
 
 #define scan_no_fast_path(ptr, head) \
 do { \
-  ptr += scan ((ptr)+1, head) + 1; \
+  ptr += scan (___PSP (ptr)+1, head) + 1; \
 } while (0)
 
 
