@@ -3984,7 +3984,7 @@ do { \
 do { \
   if ((head) == ___MAKE_HD_WORDS(___PAIR_SIZE,___sPAIR)) \
     { \
-      mark_array ((ptr)+2, ___PAIR_SIZE-1); \
+      mark_array (___PSP (ptr)+2, ___PAIR_SIZE-1); \
       ptr += ___PAIR_SIZE+1; \
     } \
   else \
