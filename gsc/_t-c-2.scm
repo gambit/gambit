@@ -3625,6 +3625,9 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##values"           (targ-apply-vector-s 'values))
+(targ-op "##values-length"    (targ-apply-simp-u #f #f #f "VALUESLENGTH"))
+(targ-op "##values-ref"       (targ-apply-simp-u #f #f #f "VALUESREF"))
+(targ-op "##values-set!"      (targ-apply-simp-u #f #t #f "VALUESSET"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

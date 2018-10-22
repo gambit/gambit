@@ -3498,6 +3498,10 @@ ___GET_SUBTYPED(___BOX_SIZE))
 #define ___UNBOX(x)___BODY_AS(x,___tSUBTYPED)[0]
 #define ___SETBOX(x,y)___BODY_AS(x,___tSUBTYPED)[0]=y;
 
+#define ___VALUESLENGTH(v)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(v)))
+#define ___VALUESREF(v,i)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))
+#define ___VALUESSET(v,i,val)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))=val;
+
 #define ___VECTORLENGTH(v)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(v)))
 #define ___VECTORREF(v,i)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))
 #define ___VECTORSET(v,i,val)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB)))=val;
