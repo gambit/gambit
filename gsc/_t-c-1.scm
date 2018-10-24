@@ -40,8 +40,8 @@
 ;; nb-arg-regs = maximum number of arguments passed in registers
 ;;               1 <= nb-arg-regs <= min( 12, nb-gvm-regs-2 )
 
-(define targ-default-nb-gvm-regs 5)
-(define targ-default-nb-arg-regs 3)
+(define targ-default-nb-gvm-regs 5) ;; default value of nb-gvm-regs
+(define targ-default-nb-arg-regs 3) ;; default value of nb-arg-regs
 
 (define (targ-nb-gvm-regs) (target-nb-regs targ-target))
 (define (targ-nb-arg-regs) (target-nb-arg-regs targ-target))

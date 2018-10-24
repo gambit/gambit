@@ -2276,13 +2276,14 @@ ___SCMOBJ val;)
 
 #define IN_OBJECT           0
 #define IN_REGISTER         1
-#define IN_PROCESSOR_SCMOBJ 2
-#define IN_VM_SCMOBJ        3
-#define IN_SYMKEY_TABLE     4
-#define IN_GLOBAL_VAR       5
-#define IN_WILL_LIST        6
-#define IN_CONTINUATION     7
-#define IN_RC               8
+#define IN_SAVED            2
+#define IN_PROCESSOR_SCMOBJ 3
+#define IN_VM_SCMOBJ        4
+#define IN_SYMKEY_TABLE     5
+#define IN_GLOBAL_VAR       6
+#define IN_WILL_LIST        7
+#define IN_CONTINUATION     8
+#define IN_RC               9
 
 
 ___HIDDEN void print_prefix
@@ -2650,6 +2651,10 @@ char *msg;)
 
     case IN_REGISTER:
       ___printf (">>> The reference was found in a register\n");
+      break;
+
+    case IN_SAVED:
+      ___printf (">>> The reference was found in the saved objects\n");
       break;
 
     case IN_PROCESSOR_SCMOBJ:
@@ -5720,7 +5725,22 @@ ___PSDKR)
   reference_location = IN_REGISTER;
 #endif
 
-  mark_array (___PSP ___ps->r, ___NB_GVM_REGS);
+  mark_array (___PSP ___ps->r, sizeof(___ps->r)/sizeof(*___ps->r));
+}
+
+
+___HIDDEN void mark_saved
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_SAVED;
+#endif
+
+  mark_array (___PSP ___ps->saved, sizeof(___ps->saved)/sizeof(*___ps->saved));
 }
 
 
@@ -6025,6 +6045,8 @@ ___PSDKR)
   mark_continuation (___PSPNC);
 
   mark_registers (___PSPNC);
+
+  mark_saved (___PSPNC);
 
   mark_processor_scmobj (___PSPNC);
 

@@ -3918,8 +3918,11 @@ ___virtual_machine_state ___vms;)
    * Setup registers.
    */
 
-  for (i=0; i<___NB_GVM_REGS; i++)
+  for (i=0; i<sizeof(___ps->r)/sizeof(*___ps->r); i++)
     ___ps->r[i] = ___VOID;
+
+  for (i=0; i<sizeof(___ps->saved)/sizeof(*___ps->saved); i++)
+    ___ps->saved[i] = ___VOID;
 
   /*
    * Copy handlers from global state to processor state.

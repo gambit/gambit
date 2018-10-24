@@ -1,0 +1,84 @@
+#! /bin/sh
+
+# Utility to change the number of GVM registers.
+#
+# Usage: change-gvm-regs nb-gvm-regs nb-arg-regs
+#
+# The setting nb-gvm-regs=5 and nb-arg-regs=3 has been used
+# for many years, but the best setting depends on the processor.
+
+NB_GVM_REGS=$1
+NB_ARG_REGS=$2
+CONFIGURE_OPTIONS=$3
+
+if [ "$NB_GVM_REGS" == "" ]
+then
+  NB_GVM_REGS=5
+fi
+
+if [ $NB_GVM_REGS -lt 3 -o $NB_GVM_REGS -gt 25 ]
+then
+   echo "usage: change-gvm-regs nb-gvm-regs nb-arg-regs"
+   echo "nb-gvm-regs must be between 3 and 25"
+   exit 1
+fi
+
+if [ "$NB_ARG_REGS" == "" ]
+then
+  NB_ARG_REGS=`eval expr $NB_GVM_REGS - 2`
+fi
+
+if [ $NB_ARG_REGS -lt 1 -o $NB_ARG_REGS -gt 12 -o $NB_ARG_REGS -gt `eval expr $NB_GVM_REGS - 2` ]
+then
+   echo "usage: change-gvm-regs nb-gvm-regs nb-arg-regs"
+   echo "nb-arg-regs must be between 1 and min(12, nb-gvm-regs - 2)"
+   exit 1
+fi
+
+echo "***************************** new settings: nb-gvm-regs=$NB_GVM_REGS nb-arg-regs=$NB_ARG_REGS"
+
+if ! make bootclean > /dev/null 2>&1
+then
+  echo "***************************** 'make bootclean' failed"
+  exit 1
+fi
+
+echo "***************************** updating include/gambit.h.in and gsc/_t-c-1.scm"
+
+sed -e "s/#define ___NB_GVM_REGS .*/#define ___NB_GVM_REGS $NB_GVM_REGS/g" -e "s/#define ___NB_ARG_REGS .*/#define ___NB_ARG_REGS $NB_ARG_REGS/g" include/gambit.h.in > gambit.h.in-new
+
+diff include/gambit.h.in gambit.h.in-new
+
+sed -e "s/(define targ-default-nb-gvm-regs [0-9]*)/(define targ-default-nb-gvm-regs $NB_GVM_REGS)/g" -e "s/(define targ-default-nb-arg-regs [0-9]*)/(define targ-default-nb-arg-regs $NB_ARG_REGS)/g" gsc/_t-c-1.scm > _t-c-1.scm-new
+
+diff gsc/_t-c-1.scm _t-c-1.scm-new
+
+mv gambit.h.in-new include/gambit.h.in
+mv _t-c-1.scm-new gsc/_t-c-1.scm
+
+echo "***************************** configuring new settings for bootstrap"
+
+if ! ./configure --enable-single-host $CONFIGURE_OPTIONS COMPILATION_OPTIONS="-nb-gvm-regs $NB_GVM_REGS -nb-arg-regs $NB_ARG_REGS"
+then
+  echo "***************************** './configure --enable-single-host $CONFIGURE_OPTIONS COMPILATION_OPTIONS=\"-nb-gvm-regs $NB_GVM_REGS -nb-arg-regs $NB_ARG_REGS\"' failed"
+  exit 1
+fi
+
+echo "***************************** generating .c from .scm using new settings"
+
+if ! make -j
+then
+  echo "***************************** 'make -j' failed"
+  exit 1
+fi
+
+echo "***************************** checking that the new settings work"
+
+if ! make check
+then
+  echo "***************************** 'make check' failed"
+  exit 1
+fi
+
+echo "***************************** it appears that the new settings work"
+echo "***************************** and that it is safe to do a 'make bootstrap' now"

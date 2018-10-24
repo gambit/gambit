@@ -6068,10 +6068,18 @@ for a discussion of branch cuts.
 
 (define-prim (##bignum.make k x complement?)
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code "
+  (let ((v (##c-code #<<end-of-code
+___SCMOBJ k;
+___SCMOBJ x;
+___SCMOBJ complement;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS3(k,x,complement);
+___ps->saved[0] = k;
+___ps->saved[1] = x;
+___ps->saved[2] = complement;
+n = ___INT(k);
 
 if (n > ___CAST(___WORD, ___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
@@ -6129,9 +6137,14 @@ else
           }
       }
   }
+k = ___ps->saved[0];
+x = ___ps->saved[1];
+complement = ___ps->saved[2];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+___ps->saved[2] = ___VOID;
 if (!___FIXNUMP(result))
   {
-    ___SCMOBJ x = ___ARG2;
     ___SCMOBJ len;
     if (x == ___FAL)
       len = 0;
@@ -6142,7 +6155,7 @@ if (!___FIXNUMP(result))
           len = n;
       }
 #if ___BIG_ABASE_WIDTH == 32
-    if (___ARG3 == ___FAL)
+    if (complement == ___FAL)
       {
         for (i=0; i<len; i++)
           ___STORE_U32(___BODY_AS(result,___tSUBTYPED),i,
@@ -6169,7 +6182,7 @@ if (!___FIXNUMP(result))
             ___STORE_U32(___BODY_AS(result,___tSUBTYPED),i,___BIG_ABASE_MIN_1);
       }
 #else
-    if (___ARG3 == ___FAL)
+    if (complement == ___FAL)
       {
         for (i=0; i<len; i++)
           ___STORE_U64(___BODY_AS(result,___tSUBTYPED),i,
@@ -6198,7 +6211,10 @@ if (!___FIXNUMP(result))
 #endif
   }
 ___RESULT = result;
-" k x complement?)))
+___PUSH_ARGS3(k,x,complement);
+
+end-of-code
+)))
     (if (##fixnum? v)
         (begin
           (##raise-heap-overflow-exception)

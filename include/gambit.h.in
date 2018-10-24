@@ -1218,8 +1218,13 @@
  *                  1 <= ___NB_ARG_REGS <= min( 12, ___NB_GVM_REGS-2 )
  */
 
+#ifndef ___NB_GVM_REGS
 #define ___NB_GVM_REGS 5
+#endif
+
+#ifndef ___NB_ARG_REGS
 #define ___NB_ARG_REGS 3
+#endif
 
 /*
  * Determine if label values (a gcc extension to C) should be supported.
@@ -8841,10 +8846,12 @@ typedef struct ___processor_state_struct
     ___WORD *heap_limit;
     ___WORD *hp;
 
-    ___WORD r[___NB_GVM_REGS];
+    ___WORD r[___NB_GVM_REGS]; /* GVM registers */
 
     ___WORD pc;
     ___WORD na;
+
+    ___WORD saved[3]; /* Scheme objects protected from GC */
 
     /* these handlers are duplicated from the global state for quick access */
 

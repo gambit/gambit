@@ -137,12 +137,13 @@ test4:
 test5:
 	@echo "------------ TEST 5 (compiler generating C code)"
 	rm -f mix.c
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c mix.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
 	diff $(srcdirpfx)test5.ok mix.c
 
-test6: test5
+test6:
 	@echo "------------ TEST 6 (link and execute the code generated)"
 	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c mix.scm
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mix@exe@ -exe mix.c
 	@SETDLPATH@ ./mix@exe@ -:m5000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \

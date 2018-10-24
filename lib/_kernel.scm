@@ -2133,9 +2133,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LWS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2175,20 +2181,22 @@ else
           }
       }
   }
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result))
   {
-    ___SCMOBJ fill = ___ARG2;
     if (fill == ___ABSENT)
       fill = ___FIX(0);
     for (i=0; i<n; i++)
       ___VECTORSET(result,___FIX(i),fill)
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2199,9 +2207,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((s (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LCS)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2241,17 +2255,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___STRINGSET(result,___FIX(i),___ARG2);
+      ___STRINGSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? s)
       (begin
         (##raise-heap-overflow-exception)
@@ -2262,9 +2279,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2304,17 +2327,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S8VECTORSET(result,___FIX(i),___ARG2)
+      ___S8VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2325,9 +2351,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2367,17 +2399,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___U8VECTORSET(result,___FIX(i),___ARG2)
+      ___U8VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2388,9 +2423,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2430,17 +2471,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S16VECTORSET(result,___FIX(i),___ARG2)
+      ___S16VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2451,9 +2495,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2493,17 +2543,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___U16VECTORSET(result,___FIX(i),___ARG2)
+      ___U16VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2514,9 +2567,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2556,17 +2615,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S32VECTORSET(result,___FIX(i),___ARG2)
+      ___S32VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2577,9 +2639,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2619,17 +2687,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___U32VECTORSET(result,___FIX(i),___ARG2)
+      ___U32VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2640,9 +2711,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2691,17 +2768,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S64VECTORSET(result,___FIX(i),___ARG2)
+      ___S64VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2712,9 +2792,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2763,17 +2849,20 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___U64VECTORSET(result,___FIX(i),___ARG2)
+      ___U64VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2784,9 +2873,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2826,18 +2921,21 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
-    ___F64 fill = ___F64UNBOX(___ARG2);
+    ___F64 fill_f64 = ___F64UNBOX(fill);
     for (i=0; i<n; i++)
-      ___F32VECTORSET(result,___FIX(i),fill)
+      ___F32VECTORSET(result,___FIX(i),fill_f64);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
@@ -2848,9 +2946,15 @@ end-of-code
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
+___SCMOBJ k;
+___SCMOBJ fill;
 ___SIZE_TS i;
-___SIZE_TS n = ___INT(___ARG1);
+___SIZE_TS n;
 ___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
 if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
@@ -2899,18 +3003,21 @@ else
           }
       }
   }
-if (!___FIXNUMP(result) && ___ARG2 != ___ABSENT)
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
-    ___F64 fill = ___F64UNBOX(___ARG2);
+    ___F64 fill_f64 = ___F64UNBOX(fill);
     for (i=0; i<n; i++)
-      ___F64VECTORSET(result,___FIX(i),fill)
+      ___F64VECTORSET(result,___FIX(i),fill_f64);
   }
 ___RESULT = result;
+___PUSH_ARGS2(k,fill);
 
 end-of-code
-
-            k
-            fill)))
+)))
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
