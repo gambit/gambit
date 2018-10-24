@@ -2178,13 +2178,14 @@ ___SCMOBJ val;)
 
       if (subtype == ___sPAIR)
         {
-          ___printf ("0x%016x (... . ...)", val);
+          ___printf ("0x%" ___PRIxWORD " (... . ...)", val);
         }
       else
         {
           ___SCMOBJ sym;
           if (subtype == ___sPROCEDURE || subtype == ___sRETURN)
             {
+              ___printf ("0x%" ___PRIxWORD " ", val);
               if (subtype == ___sPROCEDURE)
                 ___printf ("#<procedure ");
               else
@@ -2265,7 +2266,7 @@ ___SCMOBJ val;)
   else if (val == ___DELETED)
     ___printf ("#deleted");
   else
-    ___printf ("#unknown(0x%016x)", val);
+    ___printf ("#unknown(0x" ___PRIxWORD ")", val);
 }
 
 #endif
@@ -2352,7 +2353,7 @@ int indent;)
       else if (obj == ___DELETED)
         ___printf ("#<deleted>\n");
       else
-        ___printf ("#<unknown>\n");
+        ___printf ("#<unknown 0x%" ___PRIxWORD ">\n", obj);
     }
   else
     {
@@ -2584,7 +2585,7 @@ char *msg;)
 
   dump_memory_map (___PSPNC);
 
-  ___printf (">>> The object 0x%016lx %s\n", obj, msg);
+  ___printf (">>> The object 0x%" ___PRIxWORD " %s\n", obj, msg);
 
   {
     int j;
@@ -2594,7 +2595,7 @@ char *msg;)
       words = 10;
     for (j=-1; j<words; j++)
       {
-        ___printf (">>>  body[%2d] = 0x%016lx\n", j, ___BODY0(obj)[j]>>shift);
+        ___printf (">>>  body[%2d] = 0x%" ___PRIxWORD "\n", j, ___BODY0(obj)[j]>>shift);
         print_object (___BODY0(obj)[j]>>shift, 1, ">>>             ", 0);
       }
   }
@@ -2632,15 +2633,15 @@ char *msg;)
         if (words <= 100)
           {
             for (i=-1; i<words; i++)
-              ___printf (">>>  body[%2d] = 0x%016lx\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%" ___PRIxWORD "\n", i, container_body[i]);
           }
         else
           {
             for (i=0; i<50; i++)
-              ___printf (">>>  body[%2d] = 0x%016lx\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%" ___PRIxWORD "\n", i, container_body[i]);
             ___printf ("...\n");
             for (i=words-50; i<words; i++)
-              ___printf (">>>  body[%2d] = 0x%016lx\n", i, container_body[i]);
+              ___printf (">>>  body[%2d] = 0x%" ___PRIxWORD "\n", i, container_body[i]);
           }
         ___printf (">>> container =\n");
         print_object (container, 4, ">>>   ", 0);
@@ -3490,7 +3491,7 @@ ___WORD *orig_ptr;)
       ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
 #ifdef SHOW_FRAMES
-        ___printf ("  frame [ra=%p] ", ___CAST(void*,ra1));
+        ___printf ("  frame [ra=0x%" ___PRIxWORD "] ", ra1);
 #endif
 
       if (ra1 == ___GSTATE->internal_return)
@@ -3670,12 +3671,12 @@ ___WORD *nextgcmap;)
       if (i == fs)
         return;
       if ((i & (___WORD_WIDTH-1)) == 0)
-      {
-        gcmap = *nextgcmap++;
+        {
+          gcmap = *nextgcmap++;
 #ifdef SHOW_FRAMES
-  ___printf ("gcmap = 0x%016x\n", gcmap);
+          ___printf ("gcmap = 0x%" ___PRIxWORD "\n", gcmap);
 #endif
-      }
+        }
       else
         gcmap >>= 1;
       i++;
@@ -3712,7 +3713,7 @@ ___PSDKR)
         ra1 = ___FP_STK(fp,-___FRAME_STACK_RA);
 
 #ifdef SHOW_FRAMES
-        ___printf ("  frame [ra=%p] ", ___CAST(void*,ra1));
+        ___printf ("  frame [ra=0x%" ___PRIxWORD "] ", ra1);
 #endif
 
         if (ra1 == ___GSTATE->internal_return)
@@ -3730,6 +3731,7 @@ ___PSDKR)
 #ifdef SHOW_FRAMES
         ___printf ("fs=%d link=%d fp=%p ra=", fs, link, fp);
         print_value (ra1);
+        ___printf ("\n");
 #endif
 
         ___FP_ADJFP(fp,-___FRAME_SPACE(fs)) /* get base of frame */
@@ -3896,7 +3898,7 @@ ___WORD head;)
 
 #ifdef SHOW_FRAMES
         ___printf ("___sFRAME object\n");
-        ___printf ("  frame [ra=%p] ", ___CAST(void*,ra));
+        ___printf ("  frame [ra=0x%" ___PRIxWORD "] ", ra);
 #endif
 
         if (ra == ___GSTATE->internal_return)

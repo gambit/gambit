@@ -1919,6 +1919,9 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___WORD ___S32
 #define ___UWORD ___U32
 #define ___WORD_WIDTH 32
+#define ___PRIdWORD "d"
+#define ___PRIuWORD "u"
+#define ___PRIxWORD "08x"
 #define ___LOG_WORD_WIDTH 5
 #define ___WS 4
 #define ___LWS 2
@@ -1930,6 +1933,9 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___WORD ___S64
 #define ___UWORD ___U64
 #define ___WORD_WIDTH 64
+#define ___PRIdWORD "ld"
+#define ___PRIuWORD "lu"
+#define ___PRIxWORD "016lx"
 #define ___LOG_WORD_WIDTH 6
 #define ___WS 8
 #define ___LWS 3
