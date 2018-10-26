@@ -91,6 +91,9 @@ setting is the benchmarking setting.  The possible values are:
 
 # -----------------------------------------------------------------------------
 
+GAMBIT_COMP=${GAMBIT_COMP:-"../../../gsc/gsc -:=../../.."}
+GAMBIT_INT=${GAMBIT_INT:-"../../../gsi/gsi -:m10000,d-,=../../.."}
+
 cleanup ()
 {
   if [ "$clean" = "true" ] ; then
@@ -171,7 +174,7 @@ nonexistent_exec ()
 gambit_comp ()
 {
   {
-    echo ../../../gsc/gsc -:=../../.. $COMPOPTS -exe -o $1.exe $1.scm
+    echo $GAMBIT_COMP $COMPOPTS -exe -o $1.exe $1.scm
   } | /usr/bin/time sh
   strip $1.exe
 }
@@ -196,7 +199,7 @@ gambit_int_comp ()
 
 gambit_int_exec ()
 {
-  printf "$REPLCOMMANDS" "$1" | ../../../gsi/gsi -:m10000,d-,=../../..
+  printf "$REPLCOMMANDS" "$1" | $GAMBIT_INT
 }
 
 # -----------------------------------------------------------------------------
