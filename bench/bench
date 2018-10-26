@@ -173,22 +173,51 @@ nonexistent_exec ()
 
 gambit_comp ()
 {
-  {
-    echo $GAMBIT_COMP $COMPOPTS -exe -o $1.exe $1.scm
-  } | /usr/bin/time sh
-  strip $1.exe
+  vers=`$GAMBIT_COMP -v | sed -e 's/ .*//g'`
+  major="`echo \"$vers\" | sed -e \"s/v\\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)\\(.*\\)/\\1/g\"`"
+  minor="`echo \"$vers\" | sed -e \"s/v\\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)\\(.*\\)/\\2/g\"`"
+  revision="`echo \"$vers\" | sed -e \"s/v\\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)\\(.*\\)/\\3/g\"`"
+  version=$(( major * 100000 + minor * 1000 + revision ))
+
+  rm -f $1.o* $1.exe
+
+  if [ "$version" -lt "403000" ] ; then
+
+    {
+      echo $GAMBIT_COMP $COMPOPTS $1.scm
+    } | /usr/bin/time sh
+
+  else
+
+    {
+      echo $GAMBIT_COMP $COMPOPTS -exe -o $1.exe $1.scm
+    } | /usr/bin/time sh
+    strip $1.exe
+
+  fi
 }
 
 gambit_exec ()
 {
   if test -f ./$1.exe
   then
+
     if command -v perf
     then
       perf stat ./$1.exe -:m10000,d-,=../../..
     else
       /usr/bin/time ./$1.exe -:m10000,d-,=../../..
     fi
+
+  else
+
+    if command -v perf
+    then
+      perf stat $GAMBIT_INT ./$1.o1 -:m10000,d-,=../../..
+    else
+      /usr/bin/time $GAMBIT_INT ./$1.o1 -:m10000,d-,=../../..
+    fi
+
   fi
 }
 
