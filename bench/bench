@@ -94,6 +94,10 @@ setting is the benchmarking setting.  The possible values are:
 GAMBIT_COMP=${GAMBIT_COMP:-"../../../gsc/gsc -:=../../.."}
 GAMBIT_INT=${GAMBIT_INT:-"../../../gsi/gsi -:m10000,d-,=../../.."}
 
+CPU_LIMIT=${CPU_LIMIT:-"300"}
+
+ulimit -t $CPU_LIMIT
+
 cleanup ()
 {
   if [ "$clean" = "true" ] ; then
