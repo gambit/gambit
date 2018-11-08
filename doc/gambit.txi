@@ -4487,6 +4487,10 @@ For example:
 @deffn {special form} case-lambda @dots{}
 @end deffn
 
+@deffn procedure list-set @var{list} @var{k} @var{val}
+@deffnx procedure list-set! @var{list} @var{k} @var{val}
+@end deffn
+
 @deffn procedure finite? @var{x}
 @deffnx procedure infinite? @var{x}
 @deffnx procedure nan? @var{x}

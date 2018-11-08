@@ -447,6 +447,39 @@
                 (loop (##cdr x) (##fx- i 1))
                 (##car x))))))))
 
+(define-prim (list-set! lst k val)
+  (macro-force-vars (k)
+    (macro-check-index k 2 (list-set! lst k val)
+      (let loop ((x lst) (i k))
+        (macro-force-vars (x)
+          (macro-check-pair x 1 (list-set! lst k val)
+            (if (##fx< 0 i)
+                (loop (##cdr x) (##fx- i 1))
+                (macro-check-mutable x 1 (list-set! lst k val)
+                  (begin
+                    (##set-car! x val)
+                    (##void))))))))))
+
+(define-prim (list-set lst k val)
+  (macro-force-vars (k)
+    (macro-check-index k 2 (list-set lst k val)
+
+      (let ()
+
+        (define (set x i)
+          (macro-force-vars (x)
+            (if (##pair? x)
+                (if (##fx< 0 i)
+                    (let ((r (set (##cdr x) (##fx- i 1))))
+                      (if (##pair? r)
+                          (##cons (##car x) r)
+                          r))
+                    (##cons val (##cdr x)))
+                #f)))
+
+        (or (set lst k)
+            (##fail-check-pair 1 list-set lst k val))))))
+
 (define-prim (##memq obj lst)
   (let loop ((x lst))
     (if (##pair? x)

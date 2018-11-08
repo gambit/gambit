@@ -384,6 +384,8 @@ list->u16vector
 list->u32vector
 list->u64vector
 list->u8vector
+list-set
+list-set!
 mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure
 mailbox-receive-timeout-exception?

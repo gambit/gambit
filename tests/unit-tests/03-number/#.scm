@@ -1,6 +1,11 @@
 (include "../#.scm")
 
+(define-macro (macro-inexact-+pi)    3.141592653589793)
+(define-macro (macro-inexact--pi)   -3.141592653589793)
 (define-macro (macro-inexact-+pi/2)  1.5707963267948966)
+(define-macro (macro-inexact--pi/2) -1.5707963267948966)
+(define-macro (macro-inexact-+pi/4)   .7853981633974483)
+(define-macro (macro-inexact-+3pi/4) 2.356194490192345)
 
 (set! epsilon 1e-12)
 
@@ -48,3 +53,89 @@
 	(c (real-part y)) (d (imag-part y)))
     (make-rectangular (- (* a c) (* b d))
 		      (+ (* a d) (* b c)))))
+
+(##define-macro (macro-cpxnum-+1/2+sqrt3/2i)
+  (make-rectangular 1/2 (/ (sqrt 3) 2)))
+
+(##define-macro (macro-cpxnum-+1/2-sqrt3/2i)
+  (make-rectangular 1/2 (- (/ (sqrt 3) 2))))
+
+(##define-macro (macro-cpxnum--1/2+sqrt3/2i)
+  (make-rectangular -1/2 (/ (sqrt 3) 2)))
+
+(##define-macro (macro-cpxnum--1/2-sqrt3/2i)
+  (make-rectangular -1/2 (- (/ (sqrt 3) 2))))
+
+(##define-macro (macro-cpxnum-+sqrt3/2+1/2i)
+  (make-rectangular (/ (sqrt 3) 2) 1/2))
+
+(##define-macro (macro-cpxnum-+sqrt3/2-1/2i)
+  (make-rectangular (/ (sqrt 3) 2) -1/2))
+
+(##define-macro (macro-cpxnum--sqrt3/2+1/2i)
+  (make-rectangular (- (/ (sqrt 3) 2)) 1/2))
+
+(##define-macro (macro-cpxnum--sqrt3/2-1/2i)
+  (make-rectangular (- (/ (sqrt 3) 2)) -1/2))
+
+(set! epsilon 1e-12)
+
+(define (test-bitwise-ior x y)
+  (cond ((or (= x -1)
+	     (= y -1))
+	 -1)
+	((and (= x 0)
+	      (= y 0))
+	 0)
+	(else (+ (* 2 (test-bitwise-ior (arithmetic-shift x -1)
+					(arithmetic-shift y -1)))
+		 (if (or (odd? x) (odd? y))
+		     1
+		     0)))))
+
+(define (test-bitwise-and x y)
+  (cond ((or (= x 0)
+	     (= y 0))
+	 0)
+	((and (= x -1)
+	      (= y -1))
+	 -1)
+	(else (+ (* 2 (test-bitwise-and (arithmetic-shift x -1)
+					(arithmetic-shift y -1)))
+		 (if (and (odd? x) (odd? y))
+		     1
+		     0)))))
+
+(define (test-bitwise-xor x y)
+  (cond ((= x y)
+	 0)
+	((or (and (= x -1)
+		  (= y 0))
+	     (and (= x 0)
+		  (= y -1)))
+	 -1)
+	(else
+	 (+ (* 2 (test-bitwise-xor (arithmetic-shift x -1)
+				   (arithmetic-shift y -1)))
+	    (if (eq? (odd? x) (odd? y))
+		0
+		1)))))
+
+(define (test-arithmetic-shift x n)
+  (if (negative? n)
+      (let* ((q (expt 2 (- n)))
+	     (bits (modulo x q)))
+	(quotient (- x bits) q))
+      (* x (expt 2 n))))
+
+(define (test-extract-bit-field size position n)
+  (bitwise-and (arithmetic-shift n (- position))
+	       (bitwise-not (arithmetic-shift -1 size))))
+
+(define (test-test-bit-field? size position n)
+  (not (eqv? (test-extract-bit-field size position n)
+	     0)))
+
+(define (test-clear-bit-field size position n)
+  (bitwise-ior (arithmetic-shift (arithmetic-shift n (- (+ size position))) (+ size position))
+	       (test-extract-bit-field position 0 n)))
