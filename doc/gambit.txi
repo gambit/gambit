@@ -5640,6 +5640,7 @@ homogeneous vector types.
 @deffnx procedure s8vector @var{exact-int8}@dots{}
 @deffnx procedure s8vector-length @var{s8vector}
 @deffnx procedure s8vector-ref @var{s8vector} @var{k}
+@deffnx procedure s8vector-set @var{s8vector} @var{k} @var{exact-int8}
 @deffnx procedure s8vector-set! @var{s8vector} @var{k} @var{exact-int8}
 @deffnx procedure s8vector->list @var{s8vector}
 @deffnx procedure list->s8vector @var{list-of-exact-int8}
@@ -5658,6 +5659,7 @@ homogeneous vector types.
 @deffnx procedure u8vector @var{exact-int8}@dots{}
 @deffnx procedure u8vector-length @var{u8vector}
 @deffnx procedure u8vector-ref @var{u8vector} @var{k}
+@deffnx procedure u8vector-set @var{u8vector} @var{k} @var{exact-int8}
 @deffnx procedure u8vector-set! @var{u8vector} @var{k} @var{exact-int8}
 @deffnx procedure u8vector->list @var{u8vector}
 @deffnx procedure list->u8vector @var{list-of-exact-int8}
@@ -5676,6 +5678,7 @@ homogeneous vector types.
 @deffnx procedure s16vector @var{exact-int16}@dots{}
 @deffnx procedure s16vector-length @var{s16vector}
 @deffnx procedure s16vector-ref @var{s16vector} @var{k}
+@deffnx procedure s16vector-set @var{s16vector} @var{k} @var{exact-int16}
 @deffnx procedure s16vector-set! @var{s16vector} @var{k} @var{exact-int16}
 @deffnx procedure s16vector->list @var{s16vector}
 @deffnx procedure list->s16vector @var{list-of-exact-int16}
@@ -5694,6 +5697,7 @@ homogeneous vector types.
 @deffnx procedure u16vector @var{exact-int16}@dots{}
 @deffnx procedure u16vector-length @var{u16vector}
 @deffnx procedure u16vector-ref @var{u16vector} @var{k}
+@deffnx procedure u16vector-set @var{u16vector} @var{k} @var{exact-int16}
 @deffnx procedure u16vector-set! @var{u16vector} @var{k} @var{exact-int16}
 @deffnx procedure u16vector->list @var{u16vector}
 @deffnx procedure list->u16vector @var{list-of-exact-int16}
@@ -5712,6 +5716,7 @@ homogeneous vector types.
 @deffnx procedure s32vector @var{exact-int32}@dots{}
 @deffnx procedure s32vector-length @var{s32vector}
 @deffnx procedure s32vector-ref @var{s32vector} @var{k}
+@deffnx procedure s32vector-set @var{s32vector} @var{k} @var{exact-int32}
 @deffnx procedure s32vector-set! @var{s32vector} @var{k} @var{exact-int32}
 @deffnx procedure s32vector->list @var{s32vector}
 @deffnx procedure list->s32vector @var{list-of-exact-int32}
@@ -5730,6 +5735,7 @@ homogeneous vector types.
 @deffnx procedure u32vector @var{exact-int32}@dots{}
 @deffnx procedure u32vector-length @var{u32vector}
 @deffnx procedure u32vector-ref @var{u32vector} @var{k}
+@deffnx procedure u32vector-set @var{u32vector} @var{k} @var{exact-int32}
 @deffnx procedure u32vector-set! @var{u32vector} @var{k} @var{exact-int32}
 @deffnx procedure u32vector->list @var{u32vector}
 @deffnx procedure list->u32vector @var{list-of-exact-int32}
@@ -5748,6 +5754,7 @@ homogeneous vector types.
 @deffnx procedure s64vector @var{exact-int64}@dots{}
 @deffnx procedure s64vector-length @var{s64vector}
 @deffnx procedure s64vector-ref @var{s64vector} @var{k}
+@deffnx procedure s64vector-set @var{s64vector} @var{k} @var{exact-int64}
 @deffnx procedure s64vector-set! @var{s64vector} @var{k} @var{exact-int64}
 @deffnx procedure s64vector->list @var{s64vector}
 @deffnx procedure list->s64vector @var{list-of-exact-int64}
@@ -5766,6 +5773,7 @@ homogeneous vector types.
 @deffnx procedure u64vector @var{exact-int64}@dots{}
 @deffnx procedure u64vector-length @var{u64vector}
 @deffnx procedure u64vector-ref @var{u64vector} @var{k}
+@deffnx procedure u64vector-set @var{u64vector} @var{k} @var{exact-int64}
 @deffnx procedure u64vector-set! @var{u64vector} @var{k} @var{exact-int64}
 @deffnx procedure u64vector->list @var{u64vector}
 @deffnx procedure list->u64vector @var{list-of-exact-int64}
@@ -5784,6 +5792,7 @@ homogeneous vector types.
 @deffnx procedure f32vector @var{inexact-real}@dots{}
 @deffnx procedure f32vector-length @var{f32vector}
 @deffnx procedure f32vector-ref @var{f32vector} @var{k}
+@deffnx procedure f32vector-set @var{f32vector} @var{k} @var{inexact-real}
 @deffnx procedure f32vector-set! @var{f32vector} @var{k} @var{inexact-real}
 @deffnx procedure f32vector->list @var{f32vector}
 @deffnx procedure list->f32vector @var{list-of-inexact-real}
@@ -5802,6 +5811,7 @@ homogeneous vector types.
 @deffnx procedure f64vector @var{inexact-real}@dots{}
 @deffnx procedure f64vector-length @var{f64vector}
 @deffnx procedure f64vector-ref @var{f64vector} @var{k}
+@deffnx procedure f64vector-set @var{f64vector} @var{k} @var{inexact-real}
 @deffnx procedure f64vector-set! @var{f64vector} @var{k} @var{inexact-real}
 @deffnx procedure f64vector->list @var{f64vector}
 @deffnx procedure list->f64vector @var{list-of-inexact-real}

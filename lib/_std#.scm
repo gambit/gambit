@@ -189,6 +189,7 @@
     (define ##vect-length    (sym "##" name '-length))
     (define ##vect-ref       (sym "##" name '-ref))
     (define ##vect-set!      (sym "##" name '-set!))
+    (define ##vect-set       (sym "##" name '-set))
     (define ##vect->list     (sym "##" name '->list))
     (define ##list->vect     (sym '##list-> name))
     (define ##vect-copy      (sym "##" name '-copy))
@@ -207,6 +208,7 @@
     (define vect-length      (sym name '-length))
     (define vect-ref         (sym name '-ref))
     (define vect-set!        (sym name '-set!))
+    (define vect-set         (sym name '-set))
     (define vect->list       (sym name '->list))
     (define list->vect       (sym 'list-> name))
     (define vect-copy        (sym name '-copy))
@@ -343,6 +345,24 @@
                      (begin
                        (,##vect-set! vect k val)
                        (##void)))))))))
+
+       (define-prim (,##vect-set vect k val)
+         (let ((result (,##vect-copy vect)))
+           (,##vect-set! result k val)
+           result))
+
+       (define-prim (,vect-set vect k val)
+         (macro-force-vars (vect k)
+           (,macro-force-elem (val)
+             (,macro-check-vect vect 1 (,vect-set vect k val)
+               (macro-check-index-range
+                 k
+                 2
+                 0
+                 (,##vect-length vect)
+                 (,vect-set vect k val)
+                 (,macro-check-elem val 3 (,vect-set vect k val)
+                   (,##vect-set vect k val)))))))
 
        (define-prim (,##vect->list vect)
          (let loop ((lst '()) (i (##fx- (,##vect-length vect) 1)))

@@ -101,6 +101,12 @@
 (check-eqv? (##s64vector-ref v5 0) 9223372036854775807)
 (check-eqv? (##s64vector-ref v5 1) 9223372036854775807)
 
+(check-equal? (##s64vector-set v2 1 99) '#s64(-9223372036854775808 99 0 1 9223372036854775807))
+(check-equal? v2 '#s64(-9223372036854775808 -2 0 1 9223372036854775807))
+(check-equal? (##s64vector-set v4 1 99) '#s64(-9223372036854775808 99))
+(check-equal? (##s64vector-set v5 1 99) '#s64(9223372036854775807 99))
+(check-equal? (##s64vector-set '#s64(11 22 33) 0 99) '#s64(99 22 33))
+
 (check-eq? (##s64vector-set! v2 1 99) v2)
 (check-eq? (##s64vector-set! v3 1 99) v3)
 (check-eq? (##s64vector-set! v4 1 99) v4)
@@ -239,6 +245,12 @@
 (check-eqv? (s64vector-ref v9 0) 9223372036854775807)
 (check-eqv? (s64vector-ref v9 1) 9223372036854775807)
 
+(check-equal? (s64vector-set v6 1 99) '#s64(-9223372036854775808 99 0 1 9223372036854775807))
+(check-equal? v6 '#s64(-9223372036854775808 -2 0 1 9223372036854775807))
+(check-equal? (s64vector-set v8 1 99) '#s64(-9223372036854775808 99))
+(check-equal? (s64vector-set v9 1 99) '#s64(9223372036854775807 99))
+(check-equal? (s64vector-set '#s64(11 22 33) 0 99) '#s64(99 22 33))
+
 (check-eq? (s64vector-set! v6 1 99) (void))
 (check-eq? (s64vector-set! v7 1 99) (void))
 (check-eq? (s64vector-set! v8 1 99) (void))
@@ -290,15 +302,15 @@
 (check-eq? (subs64vector-move! v9 0 2 v6 1) (void))
 (check-equal? v6 '#s64(9223372036854775807 9223372036854775807 99))
 
-(check-tail-exn type-exception? (lambda () (s64vector 11 bool 22)))
-(check-tail-exn type-exception? (lambda () (s64vector 11 -9223372036854775809 22)))
-(check-tail-exn type-exception? (lambda () (s64vector 11 9223372036854775808 22)))
+(check-tail-exn type-exception? (lambda () (s64vector 11 bool 22))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector 11 -9223372036854775809 22))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector 11 9223372036854775808 22))) ;; homovect only
 
 (check-tail-exn type-exception? (lambda () (make-s64vector bool)))
 (check-tail-exn type-exception? (lambda () (make-s64vector bool 11)))
-(check-tail-exn type-exception? (lambda () (make-s64vector 11 bool)))
-(check-tail-exn type-exception? (lambda () (make-s64vector 11 -9223372036854775809)))
-(check-tail-exn type-exception? (lambda () (make-s64vector 11 9223372036854775808)))
+(check-tail-exn type-exception? (lambda () (make-s64vector 11 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (make-s64vector 11 -9223372036854775809))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (make-s64vector 11 9223372036854775808))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (make-s64vector -1 0)))
 
 (check-tail-exn type-exception? (lambda () (s64vector-length bool)))
@@ -329,11 +341,19 @@
 (check-tail-exn range-exception? (lambda () (s64vector-ref v5 -1)))
 (check-tail-exn range-exception? (lambda () (s64vector-ref v5 2)))
 
+(check-tail-exn type-exception? (lambda () (s64vector-set bool 0 11)))
+(check-tail-exn type-exception? (lambda () (s64vector-set v5 bool 11)))
+(check-tail-exn type-exception? (lambda () (s64vector-set v5 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector-set v5 0 -9223372036854775809))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector-set v5 0 9223372036854775808))) ;; homovect only
+(check-tail-exn range-exception? (lambda () (s64vector-set v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (s64vector-set v5 2 0)))
+
 (check-tail-exn type-exception? (lambda () (s64vector-set! bool 0 11)))
 (check-tail-exn type-exception? (lambda () (s64vector-set! v5 bool 11)))
-(check-tail-exn type-exception? (lambda () (s64vector-set! v5 0 bool)))
-(check-tail-exn type-exception? (lambda () (s64vector-set! v5 0 -9223372036854775809)))
-(check-tail-exn type-exception? (lambda () (s64vector-set! v5 0 9223372036854775808)))
+(check-tail-exn type-exception? (lambda () (s64vector-set! v5 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector-set! v5 0 -9223372036854775809))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector-set! v5 0 9223372036854775808))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (s64vector-set! v5 -1 0)))
 (check-tail-exn range-exception? (lambda () (s64vector-set! v5 2 0)))
 
@@ -342,16 +362,16 @@
 (check-tail-exn range-exception? (lambda () (s64vector-shrink! v5 3)))
 
 (check-tail-exn type-exception? (lambda () (s64vector-fill! bool 0)))
-(check-tail-exn type-exception? (lambda () (s64vector-fill! v5 bool)))
-(check-tail-exn type-exception? (lambda () (s64vector-fill! v5 -9223372036854775809)))
-(check-tail-exn type-exception? (lambda () (s64vector-fill! v5 9223372036854775808)))
+(check-tail-exn type-exception? (lambda () (s64vector-fill! v5 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector-fill! v5 -9223372036854775809))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s64vector-fill! v5 9223372036854775808))) ;; homovect only
 
 (check-tail-exn type-exception? (lambda () (subs64vector-fill! bool 0 0 0)))
 (check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 bool 0 0)))
 (check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 0 bool 0)))
-(check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 0 0 bool)))
-(check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 0 0 -9223372036854775809)))
-(check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 0 0 9223372036854775808)))
+(check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 0 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 0 0 -9223372036854775809))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (subs64vector-fill! v5 0 0 9223372036854775808))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (subs64vector-fill! v5 -1 0 0)))
 (check-tail-exn range-exception? (lambda () (subs64vector-fill! v5 3 0 0)))
 (check-tail-exn range-exception? (lambda () (subs64vector-fill! v5 0 -1 0)))

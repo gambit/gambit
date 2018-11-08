@@ -101,6 +101,12 @@
 (check-eqv? (##s8vector-ref v5 0) 127)
 (check-eqv? (##s8vector-ref v5 1) 127)
 
+(check-equal? (##s8vector-set v2 1 99) '#s8(-128 99 0 1 127))
+(check-equal? v2 '#s8(-128 -2 0 1 127))
+(check-equal? (##s8vector-set v4 1 99) '#s8(-128 99))
+(check-equal? (##s8vector-set v5 1 99) '#s8(127 99))
+(check-equal? (##s8vector-set '#s8(11 22 33) 0 99) '#s8(99 22 33))
+
 (check-eq? (##s8vector-set! v2 1 99) v2)
 (check-eq? (##s8vector-set! v3 1 99) v3)
 (check-eq? (##s8vector-set! v4 1 99) v4)
@@ -239,6 +245,12 @@
 (check-eqv? (s8vector-ref v9 0) 127)
 (check-eqv? (s8vector-ref v9 1) 127)
 
+(check-equal? (s8vector-set v6 1 99) '#s8(-128 99 0 1 127))
+(check-equal? v6 '#s8(-128 -2 0 1 127))
+(check-equal? (s8vector-set v8 1 99) '#s8(-128 99))
+(check-equal? (s8vector-set v9 1 99) '#s8(127 99))
+(check-equal? (s8vector-set '#s8(11 22 33) 0 99) '#s8(99 22 33))
+
 (check-eq? (s8vector-set! v6 1 99) (void))
 (check-eq? (s8vector-set! v7 1 99) (void))
 (check-eq? (s8vector-set! v8 1 99) (void))
@@ -290,15 +302,15 @@
 (check-eq? (subs8vector-move! v9 0 2 v6 1) (void))
 (check-equal? v6 '#s8(127 127 99))
 
-(check-tail-exn type-exception? (lambda () (s8vector 11 bool 22)))
-(check-tail-exn type-exception? (lambda () (s8vector 11 -129 22)))
-(check-tail-exn type-exception? (lambda () (s8vector 11 128 22)))
+(check-tail-exn type-exception? (lambda () (s8vector 11 bool 22))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector 11 -129 22))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector 11 128 22))) ;; homovect only
 
 (check-tail-exn type-exception? (lambda () (make-s8vector bool)))
 (check-tail-exn type-exception? (lambda () (make-s8vector bool 11)))
-(check-tail-exn type-exception? (lambda () (make-s8vector 11 bool)))
-(check-tail-exn type-exception? (lambda () (make-s8vector 11 -129)))
-(check-tail-exn type-exception? (lambda () (make-s8vector 11 128)))
+(check-tail-exn type-exception? (lambda () (make-s8vector 11 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (make-s8vector 11 -129))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (make-s8vector 11 128))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (make-s8vector -1 0)))
 
 (check-tail-exn type-exception? (lambda () (s8vector-length bool)))
@@ -329,11 +341,19 @@
 (check-tail-exn range-exception? (lambda () (s8vector-ref v5 -1)))
 (check-tail-exn range-exception? (lambda () (s8vector-ref v5 2)))
 
+(check-tail-exn type-exception? (lambda () (s8vector-set bool 0 11)))
+(check-tail-exn type-exception? (lambda () (s8vector-set v5 bool 11)))
+(check-tail-exn type-exception? (lambda () (s8vector-set v5 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector-set v5 0 -129))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector-set v5 0 128))) ;; homovect only
+(check-tail-exn range-exception? (lambda () (s8vector-set v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (s8vector-set v5 2 0)))
+
 (check-tail-exn type-exception? (lambda () (s8vector-set! bool 0 11)))
 (check-tail-exn type-exception? (lambda () (s8vector-set! v5 bool 11)))
-(check-tail-exn type-exception? (lambda () (s8vector-set! v5 0 bool)))
-(check-tail-exn type-exception? (lambda () (s8vector-set! v5 0 -129)))
-(check-tail-exn type-exception? (lambda () (s8vector-set! v5 0 128)))
+(check-tail-exn type-exception? (lambda () (s8vector-set! v5 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector-set! v5 0 -129))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector-set! v5 0 128))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (s8vector-set! v5 -1 0)))
 (check-tail-exn range-exception? (lambda () (s8vector-set! v5 2 0)))
 
@@ -342,16 +362,16 @@
 (check-tail-exn range-exception? (lambda () (s8vector-shrink! v5 3)))
 
 (check-tail-exn type-exception? (lambda () (s8vector-fill! bool 0)))
-(check-tail-exn type-exception? (lambda () (s8vector-fill! v5 bool)))
-(check-tail-exn type-exception? (lambda () (s8vector-fill! v5 -129)))
-(check-tail-exn type-exception? (lambda () (s8vector-fill! v5 128)))
+(check-tail-exn type-exception? (lambda () (s8vector-fill! v5 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector-fill! v5 -129))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s8vector-fill! v5 128))) ;; homovect only
 
 (check-tail-exn type-exception? (lambda () (subs8vector-fill! bool 0 0 0)))
 (check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 bool 0 0)))
 (check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 0 bool 0)))
-(check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 0 0 bool)))
-(check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 0 0 -129)))
-(check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 0 0 128)))
+(check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 0 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 0 0 -129))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (subs8vector-fill! v5 0 0 128))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (subs8vector-fill! v5 -1 0 0)))
 (check-tail-exn range-exception? (lambda () (subs8vector-fill! v5 3 0 0)))
 (check-tail-exn range-exception? (lambda () (subs8vector-fill! v5 0 -1 0)))

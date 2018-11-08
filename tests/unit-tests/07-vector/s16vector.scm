@@ -101,6 +101,12 @@
 (check-eqv? (##s16vector-ref v5 0) 32767)
 (check-eqv? (##s16vector-ref v5 1) 32767)
 
+(check-equal? (##s16vector-set v2 1 99) '#s16(-32768 99 0 1 32767))
+(check-equal? v2 '#s16(-32768 -2 0 1 32767))
+(check-equal? (##s16vector-set v4 1 99) '#s16(-32768 99))
+(check-equal? (##s16vector-set v5 1 99) '#s16(32767 99))
+(check-equal? (##s16vector-set '#s16(11 22 33) 0 99) '#s16(99 22 33))
+
 (check-eq? (##s16vector-set! v2 1 99) v2)
 (check-eq? (##s16vector-set! v3 1 99) v3)
 (check-eq? (##s16vector-set! v4 1 99) v4)
@@ -239,6 +245,12 @@
 (check-eqv? (s16vector-ref v9 0) 32767)
 (check-eqv? (s16vector-ref v9 1) 32767)
 
+(check-equal? (s16vector-set v6 1 99) '#s16(-32768 99 0 1 32767))
+(check-equal? v6 '#s16(-32768 -2 0 1 32767))
+(check-equal? (s16vector-set v8 1 99) '#s16(-32768 99))
+(check-equal? (s16vector-set v9 1 99) '#s16(32767 99))
+(check-equal? (s16vector-set '#s16(11 22 33) 0 99) '#s16(99 22 33))
+
 (check-eq? (s16vector-set! v6 1 99) (void))
 (check-eq? (s16vector-set! v7 1 99) (void))
 (check-eq? (s16vector-set! v8 1 99) (void))
@@ -290,15 +302,15 @@
 (check-eq? (subs16vector-move! v9 0 2 v6 1) (void))
 (check-equal? v6 '#s16(32767 32767 99))
 
-(check-tail-exn type-exception? (lambda () (s16vector 11 bool 22)))
-(check-tail-exn type-exception? (lambda () (s16vector 11 -32769 22)))
-(check-tail-exn type-exception? (lambda () (s16vector 11 32768 22)))
+(check-tail-exn type-exception? (lambda () (s16vector 11 bool 22))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector 11 -32769 22))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector 11 32768 22))) ;; homovect only
 
 (check-tail-exn type-exception? (lambda () (make-s16vector bool)))
 (check-tail-exn type-exception? (lambda () (make-s16vector bool 11)))
-(check-tail-exn type-exception? (lambda () (make-s16vector 11 bool)))
-(check-tail-exn type-exception? (lambda () (make-s16vector 11 -32769)))
-(check-tail-exn type-exception? (lambda () (make-s16vector 11 32768)))
+(check-tail-exn type-exception? (lambda () (make-s16vector 11 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (make-s16vector 11 -32769))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (make-s16vector 11 32768))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (make-s16vector -1 0)))
 
 (check-tail-exn type-exception? (lambda () (s16vector-length bool)))
@@ -329,11 +341,19 @@
 (check-tail-exn range-exception? (lambda () (s16vector-ref v5 -1)))
 (check-tail-exn range-exception? (lambda () (s16vector-ref v5 2)))
 
+(check-tail-exn type-exception? (lambda () (s16vector-set bool 0 11)))
+(check-tail-exn type-exception? (lambda () (s16vector-set v5 bool 11)))
+(check-tail-exn type-exception? (lambda () (s16vector-set v5 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector-set v5 0 -32769))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector-set v5 0 32768))) ;; homovect only
+(check-tail-exn range-exception? (lambda () (s16vector-set v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (s16vector-set v5 2 0)))
+
 (check-tail-exn type-exception? (lambda () (s16vector-set! bool 0 11)))
 (check-tail-exn type-exception? (lambda () (s16vector-set! v5 bool 11)))
-(check-tail-exn type-exception? (lambda () (s16vector-set! v5 0 bool)))
-(check-tail-exn type-exception? (lambda () (s16vector-set! v5 0 -32769)))
-(check-tail-exn type-exception? (lambda () (s16vector-set! v5 0 32768)))
+(check-tail-exn type-exception? (lambda () (s16vector-set! v5 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector-set! v5 0 -32769))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector-set! v5 0 32768))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (s16vector-set! v5 -1 0)))
 (check-tail-exn range-exception? (lambda () (s16vector-set! v5 2 0)))
 
@@ -342,16 +362,16 @@
 (check-tail-exn range-exception? (lambda () (s16vector-shrink! v5 3)))
 
 (check-tail-exn type-exception? (lambda () (s16vector-fill! bool 0)))
-(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 bool)))
-(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 -32769)))
-(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 32768)))
+(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 -32769))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 32768))) ;; homovect only
 
 (check-tail-exn type-exception? (lambda () (subs16vector-fill! bool 0 0 0)))
 (check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 bool 0 0)))
 (check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 0 bool 0)))
-(check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 0 0 bool)))
-(check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 0 0 -32769)))
-(check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 0 0 32768)))
+(check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 0 0 bool))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 0 0 -32769))) ;; homovect only
+(check-tail-exn type-exception? (lambda () (subs16vector-fill! v5 0 0 32768))) ;; homovect only
 (check-tail-exn range-exception? (lambda () (subs16vector-fill! v5 -1 0 0)))
 (check-tail-exn range-exception? (lambda () (subs16vector-fill! v5 3 0 0)))
 (check-tail-exn range-exception? (lambda () (subs16vector-fill! v5 0 -1 0)))

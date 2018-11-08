@@ -166,6 +166,7 @@ f32vector-copy
 f32vector-fill!
 f32vector-length
 f32vector-ref
+f32vector-set
 f32vector-set!
 f32vector-shrink!
 f32vector?
@@ -176,6 +177,7 @@ f64vector-copy
 f64vector-fill!
 f64vector-length
 f64vector-ref
+f64vector-set
 f64vector-set!
 f64vector-shrink!
 f64vector?
@@ -569,6 +571,7 @@ s16vector-copy
 s16vector-fill!
 s16vector-length
 s16vector-ref
+s16vector-set
 s16vector-set!
 s16vector-shrink!
 s16vector?
@@ -579,6 +582,7 @@ s32vector-copy
 s32vector-fill!
 s32vector-length
 s32vector-ref
+s32vector-set
 s32vector-set!
 s32vector-shrink!
 s32vector?
@@ -589,6 +593,7 @@ s64vector-copy
 s64vector-fill!
 s64vector-length
 s64vector-ref
+s64vector-set
 s64vector-set!
 s64vector-shrink!
 s64vector?
@@ -599,6 +604,7 @@ s8vector-copy
 s8vector-fill!
 s8vector-length
 s8vector-ref
+s8vector-set
 s8vector-set!
 s8vector-shrink!
 s8vector?
@@ -710,6 +716,7 @@ string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
 string-ci=?-hash
+string-set
 string-shrink!
 string=?-hash
 subf32vector
@@ -849,6 +856,7 @@ u16vector-copy
 u16vector-fill!
 u16vector-length
 u16vector-ref
+u16vector-set
 u16vector-set!
 u16vector-shrink!
 u16vector?
@@ -859,6 +867,7 @@ u32vector-copy
 u32vector-fill!
 u32vector-length
 u32vector-ref
+u32vector-set
 u32vector-set!
 u32vector-shrink!
 u32vector?
@@ -869,6 +878,7 @@ u64vector-copy
 u64vector-fill!
 u64vector-length
 u64vector-ref
+u64vector-set
 u64vector-set!
 u64vector-shrink!
 u64vector?
@@ -880,6 +890,7 @@ u8vector-copy
 u8vector-fill!
 u8vector-length
 u8vector-ref
+u8vector-set
 u8vector-set!
 u8vector-shrink!
 u8vector?
@@ -933,6 +944,7 @@ vector-append
 vector-cas!
 vector-copy
 vector-inc!
+vector-set
 vector-shrink!
 void
 will-execute!
