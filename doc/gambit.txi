@@ -4495,6 +4495,38 @@ For example:
 @deffnx procedure fold-right @var{proc} @var{base} @var{list} @dots{}
 @end deffn
 
+@deffn procedure iota @var{count} @r{[}@var{start} @r{[}@var{step}@r{]}@r{]}
+@end deffn
+
+@deffn procedure circular-list @var{x} @var{y}@dots{}
+@end deffn
+
+@deffn procedure cons* @var{x} @var{y}@dots{}
+@end deffn
+
+@deffn procedure list-copy @var{list}
+@end deffn
+
+@deffn procedure list-tabulate @var{n} @var{init-proc}
+@end deffn
+
+@deffn procedure make-list @var{n} @r{[}@var{fill}@r{]}
+@end deffn
+
+@deffn procedure reverse! @var{list}
+@end deffn
+
+@deffn procedure xcons @var{d} @var{a}
+@end deffn
+
+@deffn procedure take @var{x} @var{i}
+@deffnx procedure drop @var{x} @var{i}
+@end deffn
+
+@deffn procedure last @var{pair}
+@deffnx procedure last-pair @var{pair}
+@end deffn
+
 @deffn procedure finite? @var{x}
 @deffnx procedure infinite? @var{x}
 @deffnx procedure nan? @var{x}

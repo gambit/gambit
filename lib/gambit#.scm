@@ -91,6 +91,7 @@ cfun-conversion-exception-code
 cfun-conversion-exception-message
 cfun-conversion-exception-procedure
 cfun-conversion-exception?
+circular-list
 clear-bit-field
 close-port
 command-line
@@ -104,6 +105,7 @@ condition-variable-specific-set!
 condition-variable?
 configure-command-string
 conjugate
+cons*
 console-port
 continuation-capture
 continuation-graft
@@ -145,6 +147,7 @@ display-procedure-environment
 divide-by-zero-exception-arguments
 divide-by-zero-exception-procedure
 divide-by-zero-exception?
+drop
 eq?-hash
 equal?-hash
 eqv?-hash
@@ -364,6 +367,7 @@ integer-sqrt
 invalid-hash-number-exception-arguments
 invalid-hash-number-exception-procedure
 invalid-hash-number-exception?
+iota
 join-timeout-exception-arguments
 join-timeout-exception-procedure
 join-timeout-exception?
@@ -373,6 +377,8 @@ keyword-expected-exception-procedure
 keyword-expected-exception?
 keyword-hash
 keyword?
+last
+last-pair
 link-flat
 link-incremental
 list->f32vector
@@ -386,8 +392,10 @@ list->u16vector
 list->u32vector
 list->u64vector
 list->u8vector
+list-copy
 list-set
 list-set!
+list-tabulate
 mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure
 mailbox-receive-timeout-exception?
@@ -395,6 +403,7 @@ main
 make-condition-variable
 make-f32vector
 make-f64vector
+make-list
 make-mutex
 make-parameter
 make-random-source
@@ -492,8 +501,8 @@ path-strip-extension
 path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
-port-settings-set!
 port-io-exception-handler-set!
+port-settings-set!
 port?
 pp
 pretty-print
@@ -564,6 +573,7 @@ repl-output-port
 repl-result-history-max-length-set!
 repl-result-history-ref
 replace-bit-field
+reverse!
 rpc-remote-error-exception-arguments
 rpc-remote-error-exception-message
 rpc-remote-error-exception-procedure
@@ -774,6 +784,7 @@ table-ref
 table-search
 table-set!
 table?
+take
 tanh
 tcp-client-local-socket-info
 tcp-client-peer-socket-info
@@ -793,9 +804,9 @@ thread-group->thread-list
 thread-group->thread-vector
 thread-group-name
 thread-group-parent
+thread-group-resume!
 thread-group-specific
 thread-group-specific-set!
-thread-group-resume!
 thread-group-suspend!
 thread-group-terminate!
 thread-group?
@@ -973,6 +984,7 @@ wrong-number-of-arguments-exception-arguments
 wrong-number-of-arguments-exception-procedure
 wrong-number-of-arguments-exception?
 wrong-processor-c-return-exception?
+xcons
 
 ))
 

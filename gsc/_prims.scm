@@ -481,6 +481,20 @@
 ("list-set"                           (3)   #f (1 2) 0    pair    gambit)
 ("list-set!"                          (3)   #t (1 2) 0    #f      gambit)
 
+;; srfi-1
+
+("iota"                               (1 2 3) #f 0   0    list    gambit)
+("circular-list"                      1     #f ()    0    list    gambit)
+("cons*"                              1     #f ()    0    #f      gambit)
+("list-copy"                          (1)   #f 0     0    #f      gambit)
+("list-tabulate"                      (2)   #t 0     0    list    gambit)
+("make-list"                          (1 2) #f (1)   0    list    gambit)
+("reverse!"                           (1)   #t 0     0    list    gambit)
+("xcons"                              (2)   #f ()    0    pair    gambit)
+("take"                               (2)   #f 0     0    list    gambit)
+("drop"                               (2)   #f 0     0    list    gambit)
+("last"                               (1)   #f 0     0    #f      gambit)
+("last-pair"                          (1)   #f 0     0    pair    gambit)
 ("fold"                               3     #t (1 . 3) 0  #f      gambit)
 ("fold-right"                         3     #t (1 . 3) 0  #f      gambit)
 
