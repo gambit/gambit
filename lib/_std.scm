@@ -959,7 +959,7 @@
 (define-prim (##string-ci=? str1 str2)
   (or (##eq? str1 str2)
       (let ((len1 (##string-length str1)))
-        (if (##eq? len1 (##string-length str2))
+        (if (##fx= len1 (##string-length str2))
             (let loop ((i (##fx- len1 1)))
               (cond ((##fx< i 0)
                      #t)
@@ -1051,6 +1051,45 @@
 
 ;; apply is in "_kernel.scm"
 
+(define (##proper-list-length lst)
+  (let loop ((lst lst) (n 0))
+    (macro-force-vars (lst)
+      (cond ((##pair? lst)
+             (loop (##cdr lst) (##fx+ n 1)))
+            ((##null? lst)
+             n)
+            (else
+             #f)))))
+
+(define (##cars lsts end)
+
+  (define (cars lsts end)
+    (if (##pair? lsts)
+        (let ((lst1 (##car lsts)))
+          (macro-force-vars (lst1)
+            (let ((head (##car lst1)))
+              (let ((tail (cars (##cdr lsts) end)))
+                (##cons head tail)))))
+        end))
+
+  (cars lsts end))
+
+(define (##cdrs lsts)
+
+  (define (cdrs lsts)
+    (if (##pair? lsts)
+        (let ((lst1 (##car lsts)))
+          (macro-force-vars (lst1)
+            (let ((head (##cdr lst1)))
+              (if (##pair? head)
+                  (let ((tail (cdrs (##cdr lsts))))
+                    (and tail
+                         (##cons head tail)))
+                  #f))))
+        '()))
+
+  (cdrs lsts))
+
 (define-prim (##map proc lst)
   (let loop ((x lst))
     (if (##pair? x)
@@ -1062,16 +1101,6 @@
     (macro-check-procedure proc 1 (map proc x . y)
       (let ()
 
-        (define (proper-list-length lst)
-          (let loop ((lst lst) (n 0))
-            (macro-force-vars (lst)
-              (cond ((##pair? lst)
-                     (loop (##cdr lst) (##fx+ n 1)))
-                    ((##null? lst)
-                     n)
-                    (else
-                     #f)))))
-
         (define (map-1 lst1)
           (macro-force-vars (lst1)
             (if (##pair? lst1)
@@ -1079,51 +1108,30 @@
                   (##cons result (map-1 (##cdr lst1))))
                 '())))
 
-        (define (cars lsts)
-          (if (##pair? lsts)
-              (let ((lst1 (##car lsts)))
-                (macro-force-vars (lst1)
-                  (let ((head (##car lst1)))
-                    (let ((tail (cars (##cdr lsts))))
-                      (##cons head tail)))))
-              '()))
-
-        (define (cdrs lsts)
-          (if (##pair? lsts)
-              (let ((lst1 (##car lsts)))
-                (macro-force-vars (lst1)
-                  (let ((head (##cdr lst1)))
-                    (if (##pair? head)
-                        (let ((tail (cdrs (##cdr lsts))))
-                          (and tail
-                               (##cons head tail)))
-                        #f))))
-              '()))
-
         (define (map-n lsts)
           (if lsts
-              (let ((result (##apply proc (cars lsts))))
-                (##cons result (map-n (cdrs lsts))))
+              (let ((result (##apply proc (##cars lsts '()))))
+                (##cons result (map-n (##cdrs lsts))))
               '()))
 
         (cond ((##null? y)
                (macro-if-checks
-                (let ((len1 (proper-list-length x)))
+                (let ((len1 (##proper-list-length x)))
                   (if len1
                       (map-1 x)
                       (macro-fail-check-list 2 (map proc x . y))))
                 (map-1 x)))
               (else
                (macro-if-checks
-                (let ((len1 (proper-list-length x)))
+                (let ((len1 (##proper-list-length x)))
                   (if len1
                       (let loop ((lsts y) (arg-num 3))
                         (if (##null? lsts)
                             (if (##null? x)
                                 '()
                                 (map-n (##cons x y)))
-                            (let ((len2 (proper-list-length (##car lsts))))
-                              (if (##eq? len1 len2)
+                            (let ((len2 (##proper-list-length (##car lsts))))
+                              (if (and len2 (##fx= len1 len2))
                                   (loop (##cdr lsts) (##fx+ arg-num 1))
                                   (if len2
                                       (##raise-improper-length-list-exception
@@ -1154,16 +1162,6 @@
     (macro-check-procedure proc 1 (for-each proc x . y)
       (let ()
 
-        (define (proper-list-length lst)
-          (let loop ((lst lst) (n 0))
-            (macro-force-vars (lst)
-              (cond ((##pair? lst)
-                     (loop (##cdr lst) (##fx+ n 1)))
-                    ((##null? lst)
-                     n)
-                    (else
-                     #f)))))
-
         (define (for-each-1 lst1)
           (macro-force-vars (lst1)
             (if (##pair? lst1)
@@ -1171,53 +1169,32 @@
                   (for-each-1 (##cdr lst1)))
                 (##void))))
 
-        (define (cars lsts)
-          (if (##pair? lsts)
-              (let ((lst1 (##car lsts)))
-                (macro-force-vars (lst1)
-                  (let ((head (##car lst1)))
-                    (let ((tail (cars (##cdr lsts))))
-                      (##cons head tail)))))
-              '()))
-
-        (define (cdrs lsts)
-          (if (##pair? lsts)
-              (let ((lst1 (##car lsts)))
-                (macro-force-vars (lst1)
-                  (let ((head (##cdr lst1)))
-                    (if (##pair? head)
-                        (let ((tail (cdrs (##cdr lsts))))
-                          (and tail
-                               (##cons head tail)))
-                        #f))))
-              '()))
-
         (define (for-each-n lsts)
-          (let ((tails (cdrs lsts)))
+          (let ((tails (##cdrs lsts)))
             (if tails
                 (begin
-                  (##apply proc (cars lsts))
+                  (##apply proc (##cars lsts '()))
                   (for-each-n tails))
-                (##apply proc (cars lsts)))))
+                (##apply proc (##cars lsts '())))))
 
         (cond ((##null? y)
                (macro-if-checks
-                (let ((len1 (proper-list-length x)))
+                (let ((len1 (##proper-list-length x)))
                   (if len1
                       (for-each-1 x)
                       (macro-fail-check-list 2 (for-each proc x . y))))
                 (for-each-1 x)))
               (else
                (macro-if-checks
-                (let ((len1 (proper-list-length x)))
+                (let ((len1 (##proper-list-length x)))
                   (if len1
                       (let loop ((lsts y) (arg-num 3))
                         (if (##null? lsts)
                             (if (##pair? x)
                                 (for-each-n (##cons x y))
                                 (##void))
-                            (let ((len2 (proper-list-length (##car lsts))))
-                              (if (##eq? len1 len2)
+                            (let ((len2 (##proper-list-length (##car lsts))))
+                              (if (and len2 (##fx= len1 len2))
                                   (loop (##cdr lsts) (##fx+ arg-num 1))
                                   (if len2
                                       (##raise-improper-length-list-exception
@@ -1234,6 +1211,140 @@
                 (if (##pair? x)
                     (for-each-n (##cons x y))
                     (##void)))))))))
+
+(define-prim (##fold proc base lst)
+  (let loop ((r base) (x lst))
+    (if (##pair? x)
+        (loop (proc (##car x) r)
+              (##cdr x))
+        r)))
+
+(define-prim (fold proc base x . y)
+  (macro-force-vars (proc)
+    (macro-check-procedure proc 1 (fold proc base x . y)
+      (let ()
+
+        (define (fold-1 lst1)
+          (let loop ((r base) (x lst1))
+            (macro-force-vars (x)
+              (if (##pair? x)
+                  (loop (proc (##car x) r)
+                        (##cdr x))
+                  r))))
+
+        (define (fold-n lsts)
+          (let loop ((r base) (x lsts))
+            (if x
+                (loop (##apply proc (##cars x (##list r)))
+                      (##cdrs x))
+                r)))
+
+        (cond ((##null? y)
+               (macro-if-checks
+                (let ((len1 (##proper-list-length x)))
+                  (if len1
+                      (fold-1 x)
+                      (macro-fail-check-list 3 (fold proc base x . y))))
+                (fold-1 x)))
+              (else
+               (macro-if-checks
+                (let ((len1 (##proper-list-length x)))
+                  (if len1
+                      (let loop ((lsts y) (arg-num 4))
+                        (if (##null? lsts)
+                            (if (##null? x)
+                                base
+                                (fold-n (##cons x y)))
+                            (let ((len2 (##proper-list-length (##car lsts))))
+                              (if (and len2 (##fx= len1 len2))
+                                  (loop (##cdr lsts) (##fx+ arg-num 1))
+                                  (if len2
+                                      (##raise-improper-length-list-exception
+                                       arg-num
+                                       '()
+                                       fold
+                                       proc
+                                       base
+                                       x
+                                       y)
+                                      (macro-fail-check-list
+                                       arg-num
+                                       (fold proc base x . y)))))))
+                      (macro-fail-check-list 3 (fold proc base x . y))))
+                (if (##null? x)
+                    base
+                    (fold-n (##cons x y))))))))))
+
+(define-prim (##fold-right proc base lst)
+
+  (define (fold-right x)
+    (if (##pair? x)
+        (proc (##car x)
+              (fold-right (##cdr x)))
+        base))
+
+  (fold-right lst))
+
+(define-prim (fold-right proc base x . y)
+  (macro-force-vars (proc)
+    (macro-check-procedure proc 1 (fold-right proc base x . y)
+      (let ()
+
+        (define (fold-right-1 lst1)
+
+          (define (fold-right x)
+            (macro-force-vars (x)
+              (if (##pair? x)
+                  (proc (##car x)
+                        (fold-right (##cdr x)))
+                  base)))
+
+          (fold-right lst1))
+
+        (define (fold-right-n lsts)
+
+          (define (fold-right x)
+            (if x
+                (##apply proc (##cars x (##list (fold-right (##cdrs x)))))
+                base))
+
+          (fold-right lsts))
+
+        (cond ((##null? y)
+               (macro-if-checks
+                (let ((len1 (##proper-list-length x)))
+                  (if len1
+                      (fold-right-1 x)
+                      (macro-fail-check-list 3 (fold-right proc base x . y))))
+                (fold-right-1 x)))
+              (else
+               (macro-if-checks
+                (let ((len1 (##proper-list-length x)))
+                  (if len1
+                      (let loop ((lsts y) (arg-num 4))
+                        (if (##null? lsts)
+                            (if (##null? x)
+                                base
+                                (fold-right-n (##cons x y)))
+                            (let ((len2 (##proper-list-length (##car lsts))))
+                              (if (and len2 (##fx= len1 len2))
+                                  (loop (##cdr lsts) (##fx+ arg-num 1))
+                                  (if len2
+                                      (##raise-improper-length-list-exception
+                                       arg-num
+                                       '()
+                                       fold-right
+                                       proc
+                                       base
+                                       x
+                                       y)
+                                      (macro-fail-check-list
+                                       arg-num
+                                       (fold-right proc base x . y)))))))
+                      (macro-fail-check-list 3 (fold-right proc base x . y))))
+                (if (##null? x)
+                    base
+                    (fold-right-n (##cons x y))))))))))
 
 ;; call-with-current-continuation is in "_kernel.scm"
 

@@ -4491,6 +4491,10 @@ For example:
 @deffnx procedure list-set! @var{list} @var{k} @var{val}
 @end deffn
 
+@deffn procedure fold @var{proc} @var{base} @var{list} @dots{}
+@deffnx procedure fold-right @var{proc} @var{base} @var{list} @dots{}
+@end deffn
+
 @deffn procedure finite? @var{x}
 @deffnx procedure infinite? @var{x}
 @deffnx procedure nan? @var{x}

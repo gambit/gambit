@@ -267,6 +267,8 @@ fltan
 fltanh
 fltruncate
 flzero?
+fold
+fold-right
 force-output
 foreign-address
 foreign-release!
