@@ -478,6 +478,9 @@
 ("continuation-graft"                 2     #t 0     2203 #f      gambit)
 ("continuation-return"                (2)   #t 0     0    #f      gambit)
 
+("list-set"                           (3)   #f (1 2) 0    pair    gambit)
+("list-set!"                          (3)   #t (1 2) 0    #f      gambit)
+
 ;; for system interface
 
 ("##type"                             (1)   #f ()    0    integer extended)
