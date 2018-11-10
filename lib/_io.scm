@@ -11505,6 +11505,7 @@
   '(
     ("newline"   . #\newline) ;; here to take precedence over linefeed
     ("space"     . #\space)
+    ("null"      . #\x00) ;; for R7RS compatibility
     ("nul"       . #\x00)
     ("alarm"     . #\x07)
     ("backspace" . #\x08)
@@ -11513,6 +11514,7 @@
     ("vtab"      . #\x0B)
     ("page"      . #\x0C)
     ("return"    . #\x0D)
+    ("escape"    . #\x1B) ;; for R7RS compatibility
     ("esc"       . #\x1B)
     ("delete"    . #\x7F)
     ))
