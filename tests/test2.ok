@@ -804,7 +804,6 @@
 ;;; (Argument 1) CHARACTER expected: (char-downcase 'a)
 ;;; (Argument 1) CHARACTER expected: (char-downcase "a")
 (make-string 0) => ""
-(make-string 3) => "\0\0\0"
 ;;; CALL EXPRESSION ("???") IS WRONG: (make-string 536870911)
 ;;; (Argument 1) Out of range: (make-string 12345678901234567890)
 ;;; (Argument 1) Out of range: (make-string -1)
@@ -1208,8 +1207,8 @@ A(write-char #\A '#<output-port #7 (stdout)>) => #!void
 (file-type "newdir2") => directory
 (file-type "newdir2/bbb") => regular
 ;;; No such file or directory: (file-type "notexist")
-(file-size "error.scm") => 65850
-(file-size "newdir2/bbb") => 65850
+(file-size "error.scm") => 65853
+(file-size "newdir2/bbb") => 65853
 ;;; No such file or directory: (file-size "notexist")
 ;;; #<os-exception #10>: (delete-directory "newdir2")
 (delete-file "newdir2/aaa") => #!void

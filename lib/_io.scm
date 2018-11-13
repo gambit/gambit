@@ -10466,7 +10466,11 @@
               (##wr-ch we obj))
              (else
               (let ((n (##char->integer obj)))
-                (cond ((##fx< #xffff n)
+                (cond ((macro-readtable-r7rs-compatible-write?
+                        (macro-writeenv-readtable we))
+                       (##wr-ch we #\x)
+                       (##wr-hex we n #f))
+                      ((##fx< #xffff n)
                        (##wr-ch we #\U)
                        (##wr-hex we n 8))
                       ((##fx< #xff n)
@@ -10545,6 +10549,12 @@
                 (##wr-ch we #\\)
                 (cond (x
                        (##wr-ch we x)
+                       (loop j+1 j+1 #f))
+                      ((macro-readtable-r7rs-compatible-write?
+                        (macro-writeenv-readtable we))
+                       (##wr-ch we #\x)
+                       (##wr-hex we n #f)
+                       (##wr-ch we #\;)
                        (loop j+1 j+1 #f))
                       ((##fx< #xffff n)
                        (##wr-ch we #\U)
@@ -11503,9 +11513,10 @@
 
 (define ##standard-named-char-table
   '(
+    ("null"      . #\x00) ;; for R7RS compatibility (null and escape
+    ("escape"    . #\x1B) ;; must be the two first in this list)
     ("newline"   . #\newline) ;; here to take precedence over linefeed
     ("space"     . #\space)
-    ("null"      . #\x00) ;; for R7RS compatibility
     ("nul"       . #\x00)
     ("alarm"     . #\x07)
     ("backspace" . #\x08)
@@ -11514,7 +11525,6 @@
     ("vtab"      . #\x0B)
     ("page"      . #\x0C)
     ("return"    . #\x0D)
-    ("escape"    . #\x1B) ;; for R7RS compatibility
     ("esc"       . #\x1B)
     ("delete"    . #\x7F)
     ))
@@ -12159,11 +12169,18 @@
                                (+ (* n 16) next-digit)
                                n))))
                   (else
-                   (if nb-digits
+                   (if (or (not nb-digits)
+                           (and (= nb-digits ##max-fixnum)
+                                (let ((next (macro-peek-next-char-or-eof re)))
+                                  (and (char? next)
+                                       (char=? next #\;)
+                                       (begin
+                                         (macro-read-next-char-or-eof re) ;; skip "next"
+                                         #t)))))
+                       (UCS-4 n)
                        (begin
                          (##raise-datum-parsing-exception 'invalid-hex-escape re)
-                         #\nul)
-                       (UCS-4 n)))))
+                         #\nul)))))
           (UCS-4 n))))
 
   (define (read-escape next)
@@ -12174,7 +12191,11 @@
            =>
            read-escape-octal)
           ((char=? next #\x)
-           (read-escape-hexadecimal #f))
+           (read-escape-hexadecimal
+            (if (macro-readtable-r7rs-compatible-read?
+                 (macro-readenv-readtable re))
+                ##max-fixnum
+                #f)))
           ((char=? next #\u)
            (read-escape-hexadecimal 4))
           ((char=? next #\U)
@@ -12732,10 +12753,16 @@
                       (##read-datum-or-label-or-none-or-dot re))))) ;; skip error
 
             (cond ((or ;;(##read-string=? re s "#f")
-                    (string-ci=? s "#F"))
+                    (string-ci=? s "#F")
+                    (and (macro-readtable-r7rs-compatible-read?
+                          (macro-readenv-readtable re))
+                         (string-ci=? s "#FALSE")))
                    (macro-readenv-wrap re (false-obj)))
                   ((or ;;(##read-string=? re s "#t")
-                    (string-ci=? s "#T"))
+                    (string-ci=? s "#T")
+                    (and (macro-readtable-r7rs-compatible-read?
+                          (macro-readenv-readtable re))
+                         (string-ci=? s "#TRUE")))
                    (macro-readenv-wrap re #t))
                   ((##read-string=? re s "#s8")
                    (build-vect re 's8vector))
@@ -14440,13 +14467,15 @@
 
 ;;; Setup the standard readtable.
 
-(define (##make-standard-readtable)
+(define (##make-standard-readtable #!optional (r7rs-syntax? #t))
   (let ((rt
          (macro-make-readtable
           #f ;; preserve case in symbols, character names, etc
           #t ;; keywords ending with ":" are allowed
           ##standard-escaped-char-table
-          ##standard-named-char-table
+          (if r7rs-syntax?
+              ##standard-named-char-table
+              (##cddr ##standard-named-char-table))
           ##standard-sharp-bang-table
           (##make-chartable #f) ;; all chars are non-delimiters
           (##make-chartable ##read-number/keyword/symbol)
@@ -14478,6 +14507,8 @@
           ##six-type?        ;; six-type?
           #t                 ;; r6rs-compatible-read?
           #t                 ;; r6rs-compatible-write?
+          r7rs-syntax?       ;; r7rs-compatible-read?
+          r7rs-syntax?       ;; r7rs-compatible-write?
           'multiline         ;; here-strings-allowed?
           #t                 ;; dot-at-head-of-list-allowed?
           #f                 ;; comment-handler
