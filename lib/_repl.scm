@@ -4305,11 +4305,36 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; REPL server.
+
+(define (##startup-remote-dbg)
+  (let ((remote-dbg-addr (##remote-dbg-addr)))
+    (if remote-dbg-addr
+        (let ((tgroup ##tcp-service-tgroup))
+          (##tcp-service-register!
+           (##list local-port-number: 44555
+                   local-address: remote-dbg-addr)
+           (lambda ()
+             (let ((repl-channel
+                    (##make-repl-channel-ports
+                     (##current-input-port)
+                     (##current-output-port))))
+               (macro-thread-repl-channel-set!
+                (macro-current-thread)
+                repl-channel))
+             (##repl-debug-main))
+           tgroup
+           tgroup)))))
+
+;;;----------------------------------------------------------------------------
+
 ;; enable processing of heartbeat interrupts, user interrupts, GC
 ;; interrupts, etc.
 
 (##enable-interrupts!)
 
 (##startup-parallelism!)
+
+(##startup-remote-dbg)
 
 ;;;============================================================================
