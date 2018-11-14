@@ -941,7 +941,7 @@
                         (or constructor (not (null? instance-fields))))
                    (^ (univ-emit-fn-decl
                        ctx
-                       name
+                       (if (univ-php-pre53? ctx) name "__construct")
                        #f
                        (map (lambda (field)
                               (univ-field
