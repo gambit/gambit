@@ -2465,8 +2465,7 @@
          (else #t))))
 
 (define (univ-method-reference ctx meth)
-  (if (and (eq? (target-name (ctx-target ctx)) 'php)
-           (univ-php-pre53? ctx))
+  (if (eq? (target-name (ctx-target ctx)) 'php)
       (univ-stringify-method meth)
       meth))
 

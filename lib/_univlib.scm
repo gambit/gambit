@@ -659,14 +659,9 @@
 (define-prim (##absrel-timeout->timeout absrel-timeout)
   (error "##absrel-timeout->timeout not implemented yet"))
 
-(define-prim (##current-directory . rest)
-  (error "##current-directory not implemented yet"))
-
-(define-prim (##current-input-port)
-  ##stdin-port)
-
-(define-prim (##current-output-port)
-  ##stdout-port)
+(define ##current-directory (##make-parameter "." (lambda (x) x)))
+(define ##current-input-port (##make-parameter ##stdin-port (lambda (x) x)))
+(define ##current-output-port (##make-parameter ##stdout-port (lambda (x) x)))
 
 (define-prim (pp
               obj

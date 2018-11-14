@@ -1952,22 +1952,22 @@
              (lambda (ctx)
                (let ((obj (^local-var 'obj)))
                  (^ (^if (^bool? obj)
-                         (^return (^concat "c" (^if-expr obj "0" "1"))))
+                         (^return (^if-expr obj (^str "t") (^str "f"))))
 
                     (^if (^null? obj)
-                         (^return "c2"))
+                         (^return "n"))
 
                     (^if (^void? obj)
-                         (^return "c3"))
+                         (^return "v"))
 
                     (^if (^int? obj)
-                         (^return (^concat "i" (^tostr obj))))
+                         (^return (^concat (^str "i") (^tostr obj))))
 
                     (^if (^float? obj)
-                         (^return (^concat "f" (^tostr obj))))
+                         (^return (^concat (^str "f") (^tostr obj))))
 
                     (^if (^str? obj)
-                         (^return (^concat "s" obj)))
+                         (^return (^concat (^str "s") obj)))
 
                     (univ-throw ctx "\"const_to_string error (cannot convert object)\""))))))
            (univ-method 'string_to_const '(public) 'scmobj
@@ -1979,14 +1979,17 @@
                      (prefix (^local-var 'prefix)))
                  (^ (^var-declaration 'str prefix (^string-ref code 0))
 
-                    (^if (^= prefix "c")
-                         (^return (^if-expr (^eq? (^string-ref code 1) (^str "0"))
-                                            (^bool #t)
-                                            (^if-expr (^eq? (^string-ref code 1) (^str "1"))
-                                                      (^bool #f)
-                                                      (^if-expr (^eq? (^string-ref code 1) (^str "2"))
-                                                                (^null)
-                                                                (^void))))))
+                    (^if (^= prefix "t")
+                         (^return (^bool #t)))
+
+                    (^if (^= prefix "f")
+                         (^return (^bool #f)))
+
+                    (^if (^= prefix "n")
+                         (^return (^null)))
+
+                    (^if (^= prefix "v")
+                         (^return (^void)))
 
                     (^if (^= prefix (^str "i"))
                          (^return (^str-toint (^substring code 1 (^- (^str-length code) 1)))))
