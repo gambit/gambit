@@ -916,7 +916,7 @@
                                                    (macro-psettings-address-set!
                                                     psettings
                                                     address))
-                                               (if port-number
+                                               (if (##not (##null? port-number))
                                                    (if (##eq? name 'local-address:)
                                                        (macro-psettings-local-port-number-set!
                                                         psettings

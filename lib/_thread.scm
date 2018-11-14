@@ -5139,29 +5139,29 @@
 (define-prim (##tcp-service-register! port-number-or-address-or-settings thunk tg tgroup)
   (##process-tcp-server-psettings
    #t
-   (lambda (psettings-and-server-address)
+   (lambda (psettings-and-address-and-port-number)
      (let* ((psettings
-             (##car psettings-and-server-address))
-            (server-address
-             (##cdr psettings-and-server-address))
-            (port-number
-             (macro-psettings-port-number psettings))
-            (server-address-and-port-number
-             (##cons server-address port-number)))
-       (##tcp-service-update! server-address-and-port-number
+             (##vector-ref psettings-and-address-and-port-number 0))
+            (local-address
+             (##vector-ref psettings-and-address-and-port-number 1))
+            (local-port-number
+             (##vector-ref psettings-and-address-and-port-number 2))
+            (local-address-and-local-port-number
+             (##cons local-address local-port-number)))
+       (##tcp-service-update! local-address-and-local-port-number
                               #f)
        (##open-tcp-server-aux
         #t
-        psettings-and-server-address
+        psettings-and-address-and-port-number
         (lambda (server-port)
           (let ((new-thread
                  (##make-root-thread
                   (lambda () (##tcp-service-serve server-port thunk tgroup))
-                  server-address-and-port-number
+                  local-address-and-local-port-number
                   ##tcp-service-tgroup
                   ##stdin-port
                   ##stdout-port)))
-            (##tcp-service-update! server-address-and-port-number
+            (##tcp-service-update! local-address-and-local-port-number
                                    (##cons server-port new-thread))
             (##thread-start! new-thread)
             (##void)))
@@ -5199,16 +5199,16 @@
 (define-prim (##tcp-service-unregister! port-number-or-address-or-settings)
   (##process-tcp-server-psettings
    #t
-   (lambda (psettings-and-server-address)
+   (lambda (psettings-and-address-and-port-number)
      (let* ((psettings
-             (##car psettings-and-server-address))
-            (server-address
-             (##cdr psettings-and-server-address))
-            (port-number
-             (macro-psettings-port-number psettings))
-            (server-address-and-port-number
-             (##cons server-address port-number)))
-       (##tcp-service-update! server-address-and-port-number #f)
+             (##vector-ref psettings-and-address-and-port-number 0))
+            (local-address
+             (##vector-ref psettings-and-address-and-port-number 1))
+            (local-port-number
+             (##vector-ref psettings-and-address-and-port-number 2))
+            (local-address-and-local-port-number
+             (##cons local-address local-port-number)))
+       (##tcp-service-update! local-address-and-local-port-number #f)
        (##void)))
    tcp-service-unregister!
    port-number-or-address-or-settings
@@ -8530,29 +8530,29 @@
 (define-prim (##tcp-service-register! port-number-or-address-or-settings thunk tg tgroup)
   (##process-tcp-server-psettings
    #t
-   (lambda (psettings-and-server-address)
+   (lambda (psettings-and-address-and-port-number)
      (let* ((psettings
-             (##car psettings-and-server-address))
-            (server-address
-             (##cdr psettings-and-server-address))
-            (port-number
-             (macro-psettings-port-number psettings))
-            (server-address-and-port-number
-             (##cons server-address port-number)))
-       (##tcp-service-update! server-address-and-port-number
+             (##vector-ref psettings-and-address-and-port-number 0))
+            (local-address
+             (##vector-ref psettings-and-address-and-port-number 1))
+            (local-port-number
+             (##vector-ref psettings-and-address-and-port-number 2))
+            (local-address-and-local-port-number
+             (##cons local-address local-port-number)))
+       (##tcp-service-update! local-address-and-local-port-number
                               #f)
        (##open-tcp-server-aux
         #t
-        psettings-and-server-address
+        psettings-and-address-and-port-number
         (lambda (server-port)
           (let ((new-thread
                  (##make-root-thread
                   (lambda () (##tcp-service-serve server-port thunk tgroup))
-                  server-address-and-port-number
+                  local-address-and-local-port-number
                   ##tcp-service-tgroup
                   ##stdin-port
                   ##stdout-port)))
-            (##tcp-service-update! server-address-and-port-number
+            (##tcp-service-update! local-address-and-local-port-number
                                    (##cons server-port new-thread))
             (##thread-start! new-thread)
             (##void)))
@@ -8590,16 +8590,16 @@
 (define-prim (##tcp-service-unregister! port-number-or-address-or-settings)
   (##process-tcp-server-psettings
    #t
-   (lambda (psettings-and-server-address)
+   (lambda (psettings-and-address-and-port-number)
      (let* ((psettings
-             (##car psettings-and-server-address))
-            (server-address
-             (##cdr psettings-and-server-address))
-            (port-number
-             (macro-psettings-port-number psettings))
-            (server-address-and-port-number
-             (##cons server-address port-number)))
-       (##tcp-service-update! server-address-and-port-number #f)
+             (##vector-ref psettings-and-address-and-port-number 0))
+            (local-address
+             (##vector-ref psettings-and-address-and-port-number 1))
+            (local-port-number
+             (##vector-ref psettings-and-address-and-port-number 2))
+            (local-address-and-local-port-number
+             (##cons local-address local-port-number)))
+       (##tcp-service-update! local-address-and-local-port-number #f)
        (##void)))
    tcp-service-unregister!
    port-number-or-address-or-settings
