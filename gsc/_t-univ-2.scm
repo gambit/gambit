@@ -1955,10 +1955,10 @@
                          (^return (^if-expr obj (^str "t") (^str "f"))))
 
                     (^if (^null? obj)
-                         (^return "n"))
+                         (^return (^str "n")))
 
                     (^if (^void? obj)
-                         (^return "v"))
+                         (^return (^str "v")))
 
                     (^if (^int? obj)
                          (^return (^concat (^str "i") (^tostr obj))))
@@ -1979,16 +1979,16 @@
                      (prefix (^local-var 'prefix)))
                  (^ (^var-declaration 'str prefix (^string-ref code 0))
 
-                    (^if (^= prefix "t")
+                    (^if (^= prefix (^str "t"))
                          (^return (^bool #t)))
 
-                    (^if (^= prefix "f")
+                    (^if (^= prefix (^str "f"))
                          (^return (^bool #f)))
 
-                    (^if (^= prefix "n")
+                    (^if (^= prefix (^str "n"))
                          (^return (^null)))
 
-                    (^if (^= prefix "v")
+                    (^if (^= prefix (^str "v"))
                          (^return (^void)))
 
                     (^if (^= prefix (^str "i"))
