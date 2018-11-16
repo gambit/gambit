@@ -586,6 +586,7 @@
            extender
            constructor
            constant-constructor
+           copier
            predicate
            implementer
            type-exhibitor
@@ -604,9 +605,9 @@
                    (field-name
                     (##vector-ref descr 0))
                    (options
-                    (##vector-ref descr 4))
-                   (attributes
                     (##vector-ref descr 5))
+                   (attributes
+                    (##vector-ref descr 6))
                    (init
                     (cond ((##assq 'init: attributes)
                            =>
@@ -743,6 +744,9 @@
                 (##vector-ref descr 2))
                (setter
                 (##vector-ref descr 3))
+               (fsetter
+                (and copier
+                     (##vector-ref descr 4)))
                (getter-def
                 (if getter
                     (let ((getter-name
@@ -807,8 +811,45 @@
                                ,field-index
                                ,type-expression
                                ,setter-name)))))
+                    `()))
+               (fsetter-def
+                (if fsetter
+                    (let ((fsetter-name
+                           (if (##eq? fsetter #t)
+                               (##symbol-append prefix
+                                                name
+                                                '-
+                                                field-name
+                                                '-set)
+                               fsetter))
+                          (fsetter-method
+                           (if extender
+                               '##structure-set
+                               '##direct-structure-set)))
+                      (if macros?
+                          `((##define-macro (,fsetter-name obj val)
+                              (##list '(let ()
+                                         (##declare (extended-bindings))
+                                         ,fsetter-method)
+                                      obj
+                                      val
+                                      ,field-index
+                                      ',type-expression
+                                      #f)))
+                          `((define (,fsetter-name obj val)
+                              ((let ()
+                                 (##declare (extended-bindings))
+                                 ,fsetter-method)
+                               obj
+                               val
+                               ,field-index
+                               ,type-expression
+                               ,fsetter-name)))))
                     `())))
-          (##append getter-def (##append setter-def tail))))
+          (##append getter-def
+                    (##append setter-def
+                              (##append fsetter-def
+                                        tail)))))
 
       (define (generate-structure-type-definition)
         `(define ,type-expression
@@ -825,7 +866,7 @@
             ,super-type-dynamic-expr
             ',(##type-fields type-static))))
 
-      (define (generate-constructor-predicate-getters-setters)
+      (define (generate-constructor-copier-predicate-getters-setters)
         `(,@(if type-exhibitor
                 (if macros?
                     `((##define-macro (,type-exhibitor)
@@ -870,6 +911,18 @@
                          #t))))
                 '())
 
+          ,@(if copier
+                (if macros?
+                    `((##define-macro (,copier obj)
+                        (##list '(let ()
+                                   (##declare (extended-bindings))
+                                   ##structure-copy)
+                                obj)))
+                    `((define (,copier obj)
+                        (##declare (extended-bindings))
+                        (##structure-copy obj))))
+                '())
+
           ,@(if predicate
                 (if macros?
                     `((##define-macro (,predicate obj)
@@ -910,8 +963,8 @@
       (define (generate-definitions)
         (if generative?
             (##cons (generate-structure-type-definition)
-                    (generate-constructor-predicate-getters-setters))
-            (generate-constructor-predicate-getters-setters)))
+                    (generate-constructor-copier-predicate-getters-setters))
+            (generate-constructor-copier-predicate-getters-setters)))
 
       `(begin
 
@@ -930,7 +983,7 @@
                               ',(if generative?
                                     (generate-structure-type-definition)
                                     '(begin)))
-                           (generate-constructor-predicate-getters-setters))
+                           (generate-constructor-copier-predicate-getters-setters))
                    (##list `(##define-macro (,implementer)
                               ',(##cons 'begin
                                         (generate-definitions)))))
@@ -985,6 +1038,7 @@
                field-name
                getter
                setter
+               fsetter
                local-options
                rest)
         (let loop2 ((lst2 rest)
@@ -1034,6 +1088,7 @@
                                                (##fx+ field-index 1)
                                                getter
                                                (if read-only? #f setter)
+                                               fsetter
                                                local-options
                                                attributes))
                                       rev-fields)))))
@@ -1046,6 +1101,7 @@
                       (if (##not (##assq next rev-fields))
                           (parse-field-attributes
                            next
+                           #t
                            #t
                            #t
                            options
@@ -1062,16 +1118,41 @@
                                       (let ((rest (##cdr rest)))
                                         (if (##pair? rest)
                                             (let ((setter (##car rest)))
-                                              (if (##symbol? setter)
+                                              (if (or (##symbol? setter)
+                                                      (##not setter))
+                                                  (let ((rest (##cdr rest))
+                                                        (opts (if setter
+                                                                  (##fxand options -3)
+                                                                  (##fxior options 2))))
+                                                    (if (##pair? rest)
+                                                        (let ((fsetter (##car rest)))
+                                                          (if (or (##symbol? fsetter)
+                                                                  (##not fsetter))
+                                                              (parse-field-attributes
+                                                               field-name
+                                                               getter
+                                                               setter
+                                                               fsetter
+                                                               opts
+                                                               (##cdr rest))
+                                                              (parse-field-attributes
+                                                               field-name
+                                                               getter
+                                                               setter
+                                                               #f
+                                                               opts
+                                                               rest)))
+                                                        (parse-field-attributes
+                                                         field-name
+                                                         getter
+                                                         setter
+                                                         #f
+                                                         opts
+                                                         rest)))
                                                   (parse-field-attributes
                                                    field-name
                                                    getter
-                                                   setter
-                                                   (##fxand options -3)
-                                                   (##cdr rest))
-                                                  (parse-field-attributes
-                                                   field-name
-                                                   getter
+                                                   #f
                                                    #f
                                                    (##fxior options 2)
                                                    rest)))
@@ -1079,16 +1160,19 @@
                                              field-name
                                              getter
                                              #f
+                                             #f
                                              (##fxior options 2)
                                              rest)))
                                       (parse-field-attributes
                                        field-name
                                        #t
                                        #t
+                                       #t
                                        options
                                        rest)))
                                 (parse-field-attributes
                                  field-name
+                                 #t
                                  #t
                                  #t
                                  options
@@ -1098,6 +1182,7 @@
                                 '(id:
                                   constructor:
                                   constant-constructor:
+                                  copier:
                                   predicate:
                                   extender:
                                   implementer:
@@ -1129,7 +1214,8 @@
                                          (or (##symbol? val)
                                              (and (##memq
                                                    next
-                                                   '(predicate:
+                                                   '(copier:
+                                                     predicate:
                                                      constant-constructor:))
                                                   (##not val)))))
                                   (loop1 (##cdr rest)
@@ -1207,6 +1293,14 @@
                             (##symbol-append prefix
                                              'make-constant-
                                              name))))
+                    (copier
+                     (cond ((##assq 'copier: flags)
+                            =>
+                            ##cdr)
+                           (else
+                            (##symbol-append prefix
+                                             name
+                                             '-copy))))
                     (predicate
                      (cond ((##assq 'predicate: flags)
                             =>
@@ -1258,6 +1352,7 @@
                     extender
                     constructor
                     constant-constructor
+                    copier
                     predicate
                     implementer
                     type-exhibitor

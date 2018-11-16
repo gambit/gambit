@@ -5003,6 +5003,17 @@ end-of-code
      (if proc proc ##structure-set!)
      (if proc (##list obj val) (##list obj val i type proc)))))
 
+(define-prim (##structure-set obj val i type proc)
+  (if (##structure-instance-of? obj (##type-id type))
+    (let ((result (##structure-copy obj)))
+      (##unchecked-structure-set! result val i type proc)
+      result)
+    (##raise-type-exception
+     1
+     type
+     (if proc proc ##structure-set)
+     (if proc (##list obj val) (##list obj val i type proc)))))
+
 (define-prim (##structure-cas! obj val oldval i type proc)
   (if (##structure-instance-of? obj (##type-id type))
     (begin
@@ -5034,6 +5045,17 @@ end-of-code
      (if proc proc ##direct-structure-set!)
      (if proc (##list obj val) (##list obj val i type proc)))))
 
+(define-prim (##direct-structure-set obj val i type proc)
+  (if (##structure-direct-instance-of? obj (##type-id type))
+    (let ((result (##structure-copy obj)))
+      (##unchecked-structure-set! result val i type proc)
+      result)
+    (##raise-type-exception
+     1
+     type
+     (if proc proc ##direct-structure-set)
+     (if proc (##list obj val) (##list obj val i type proc)))))
+
 (define-prim (##direct-structure-cas! obj val oldval i type proc)
   (if (##structure-direct-instance-of? obj (##type-id type))
     (begin
@@ -5052,6 +5074,22 @@ end-of-code
 (define-prim (##unchecked-structure-cas! obj val oldval i type proc)
   ;; TODO: remove after bootstrap
   (##vector-cas! obj i val oldval))
+
+(define-prim (##structure-copy obj)
+  (let* ((len (##structure-length obj))
+         (type (##structure-type obj))
+         (result (##make-structure type len)))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx> i 0)
+          (begin
+            (##unchecked-structure-set!
+             result
+             (##unchecked-structure-ref obj i type ##structure-copy)
+             i
+             type
+             ##structure-copy)
+            (loop (##fx- i 1)))
+          result))))
 
 ;;;----------------------------------------------------------------------------
 
