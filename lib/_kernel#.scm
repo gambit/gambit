@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel#.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -32,10 +32,10 @@
   constructor: #f
   opaque:
 
-  (operator  unprintable: read-only:)
-  (arguments unprintable: read-only:)
-  (code      unprintable: read-only:)
-  (rte       unprintable: read-only:)
+  (operator  unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (code      unprintable: read-only: no-functional-setter:)
+  (rte       unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception wrong-number-of-arguments-exception
@@ -43,8 +43,8 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception keyword-expected-exception
@@ -52,8 +52,8 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception unknown-keyword-argument-exception
@@ -61,8 +61,8 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception cfun-conversion-exception
@@ -70,10 +70,10 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
-  (code      unprintable: read-only:)
-  (message   unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (code      unprintable: read-only: no-functional-setter:)
+  (message   unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception sfun-conversion-exception
@@ -81,10 +81,10 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
-  (code      unprintable: read-only:)
-  (message   unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (code      unprintable: read-only: no-functional-setter:)
+  (message   unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception multiple-c-return-exception
@@ -104,8 +104,8 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception type-exception
@@ -113,10 +113,10 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
-  (arg-num   unprintable: read-only:)
-  (type-id   unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (arg-num   unprintable: read-only: no-functional-setter:)
+  (type-id   unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception os-exception
@@ -124,10 +124,10 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
-  (message   unprintable: read-only:)
-  (code      unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (message   unprintable: read-only: no-functional-setter:)
+  (code      unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception no-such-file-or-directory-exception
@@ -135,8 +135,8 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception module-not-found-exception
@@ -144,8 +144,8 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------

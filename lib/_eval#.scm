@@ -2,7 +2,7 @@
 
 ;;; File: "_eval#.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -13,9 +13,9 @@
   constructor: #f
   opaque:
 
-  (kind       unprintable: read-only:)
-  (source     unprintable: read-only:)
-  (parameters unprintable: read-only:)
+  (kind       unprintable: read-only: no-functional-setter:)
+  (source     unprintable: read-only: no-functional-setter:)
+  (parameters unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception unbound-global-exception
@@ -23,9 +23,9 @@
   constructor: #f
   opaque:
 
-  (code     unprintable: read-only:)
-  (rte      unprintable: read-only:)
-  (variable unprintable: read-only:)
+  (code     unprintable: read-only: no-functional-setter:)
+  (rte      unprintable: read-only: no-functional-setter:)
+  (variable unprintable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------

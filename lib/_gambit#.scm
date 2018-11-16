@@ -743,6 +743,7 @@
            extender
            constructor
            constant-constructor
+           copier
            predicate
            implementer
            type-exhibitor
@@ -764,6 +765,8 @@
                 (##vector-ref descr 2))
                (setter
                 (##vector-ref descr 3))
+               (fsetter
+                (##vector-ref descr 4))
                (getter-def
                 (if getter
                   (let ((getter-name
@@ -815,8 +818,37 @@
                            1
                            (,setter-name obj val)
                            (,macro-setter-name obj val))))))
+                  `()))
+               (fsetter-def
+                (if fsetter
+                  (let ((fsetter-name
+                         (if (##eq? fsetter #t)
+                           (##symbol-append prefix
+                                            name
+                                            '-
+                                            field-name
+                                            '-set)
+                           fsetter))
+                        (macro-fsetter-name
+                         (if (##eq? fsetter #t)
+                           (##symbol-append 'macro-
+                                            name
+                                            '-
+                                            field-name
+                                            '-set)
+                           (##symbol-append 'macro-
+                                            fsetter))))
+                    `((define-prim (,fsetter-name obj val)
+                        (macro-force-vars (obj)
+                          (,check
+                           obj
+                           1
+                           (,fsetter-name obj val)
+                           (,macro-fsetter-name obj val))))))
                   `())))
-          (##append getter-def (##append setter-def tail))))
+          (##append getter-def
+                    (##append setter-def
+                              (##append fsetter-def tail)))))
 
       (define (generate-constructor-predicate-getters-setters)
         `(,@(if #f;constructor;;;;;;;;;;;
@@ -865,7 +897,9 @@
            type-exhibitor: ,(##symbol-append 'macro-type- name)
            constructor: ,(##symbol-append 'macro-make- name)
            constant-constructor: ,(##symbol-append 'macro-make-constant- name)
+           copier: #f
            implementer: ,(##symbol-append 'implement-type- name)
+           no-functional-setter:
            ,@(##map (lambda (field)
                       (let* ((descr
                               (##cdr field))
@@ -875,16 +909,23 @@
                               (##vector-ref descr 2))
                              (setter
                               (##vector-ref descr 3))
-                             (options
+                             (fsetter
                               (##vector-ref descr 4))
+                             (options
+                              (##vector-ref descr 5))
                              (attributes
-                              (##vector-ref descr 5)))
+                              (##vector-ref descr 6)))
                         `(,field-name
                           ,@(if (##symbol? getter)
-                              `(,getter)
-                              `())
-                          ,@(if (##symbol? setter)
-                              `(,setter)
+                              `(,getter
+                                ,@(if (##symbol? setter)
+                                    `(,setter)
+                                    (if (##symbol? fsetter)
+                                      `(#f)
+                                      `()))
+                                ,@(if (##symbol? fsetter)
+                                    `(,fsetter)
+                                    `()))
                               `())
                           ,@(if (##fx= (##fxand options 1) 0)
                               `()
@@ -895,6 +936,9 @@
                           ,@(if (##fx= (##fxand options 4) 0)
                               `()
                               `(equality-skip:))
+                          ,@(if (##fx= (##fxand options 16) 0)
+                              `(functional-setter:)
+                              `())
                           ,@(let loop ((lst1 attributes)
                                        (lst2 '()))
                               (if (##pair? lst1)

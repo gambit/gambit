@@ -31,10 +31,7 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  reason
+  (reason unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception noncontinuable-exception
@@ -42,10 +39,7 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  reason
+  (reason unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception initialized-thread-exception
@@ -53,11 +47,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception uninitialized-thread-exception
@@ -65,11 +56,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception inactive-thread-exception
@@ -77,11 +65,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception started-thread-exception
@@ -89,11 +74,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception terminated-thread-exception
@@ -101,11 +83,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception uncaught-exception
@@ -113,12 +92,9 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
-  reason
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (reason    unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception join-timeout-exception
@@ -126,11 +102,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception mailbox-receive-timeout-exception
@@ -138,11 +111,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception rpc-remote-error-exception
@@ -150,12 +120,9 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
-  message
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (message   unprintable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------
@@ -943,6 +910,7 @@
   prefix: macro-
 
   unprintable:
+  no-functional-setter:
 
   point
   ;; the following fields are for eventual compatibility with srfi-19
@@ -2231,7 +2199,7 @@
   constructor: #f
   opaque:
 
-  (result printable: read-only:)
+  (result unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type thread-state-abnormally-terminated
@@ -2239,7 +2207,7 @@
   constructor: #f
   opaque:
 
-  (reason printable: read-only:)
+  (reason unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type thread-state-waiting
@@ -2247,8 +2215,8 @@
   constructor: #f
   opaque:
 
-  (for     printable: read-only:)
-  (timeout printable: read-only:)
+  (for     unprintable: read-only: no-functional-setter:)
+  (timeout unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type thread-state-running
@@ -2256,7 +2224,7 @@
   constructor: #f
   opaque:
 
-  (processor printable: read-only:)
+  (processor unprintable: read-only: no-functional-setter:)
 )
 
 ;;;============================================================================
@@ -2286,10 +2254,7 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  reason
+  (reason unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception noncontinuable-exception
@@ -2297,10 +2262,7 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  reason
+  (reason unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception initialized-thread-exception
@@ -2308,11 +2270,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception uninitialized-thread-exception
@@ -2320,11 +2279,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception inactive-thread-exception
@@ -2332,11 +2288,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception started-thread-exception
@@ -2344,11 +2297,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception terminated-thread-exception
@@ -2356,11 +2306,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception uncaught-exception
@@ -2368,12 +2315,9 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
-  reason
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (reason    unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception join-timeout-exception
@@ -2381,11 +2325,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception mailbox-receive-timeout-exception
@@ -2393,11 +2334,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception rpc-remote-error-exception
@@ -2405,12 +2343,9 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
-  message
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+  (message   unprintable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------
@@ -4248,7 +4183,7 @@
   constructor: #f
   opaque:
 
-  (result printable: read-only:)
+  (result unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type thread-state-abnormally-terminated
@@ -4256,7 +4191,7 @@
   constructor: #f
   opaque:
 
-  (reason printable: read-only:)
+  (reason unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type thread-state-waiting
@@ -4264,8 +4199,8 @@
   constructor: #f
   opaque:
 
-  (for     printable: read-only:)
-  (timeout printable: read-only:)
+  (for     unprintable: read-only: no-functional-setter:)
+  (timeout unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type thread-state-running
@@ -4273,7 +4208,7 @@
   constructor: #f
   opaque:
 
-  (processor printable: read-only:)
+  (processor unprintable: read-only: no-functional-setter:)
 )
 
 ;;;============================================================================

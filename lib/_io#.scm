@@ -13,9 +13,9 @@
   constructor: #f
   opaque:
 
-  (kind       unprintable: read-only:)
-  (readenv    unprintable: read-only:)
-  (parameters unprintable: read-only:)
+  (kind       unprintable: read-only: no-functional-setter:)
+  (readenv    unprintable: read-only: no-functional-setter:)
+  (parameters unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception unterminated-process-exception
@@ -23,11 +23,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception nonempty-input-port-character-buffer-exception
@@ -35,11 +32,8 @@
   constructor: #f
   opaque:
 
-  unprintable:
-  read-only:
-
-  procedure
-  arguments
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------
@@ -485,9 +479,9 @@
   id: e3dc833e-a176-42c1-bdc0-76a6c4b302f8
   constructor: #f
 
-  (name      printable: read-only:)
-  (aliases   printable: read-only:)
-  (addresses printable: read-only:)
+  (name      printable: read-only: no-functional-setter:)
+  (aliases   printable: read-only: no-functional-setter:)
+  (addresses printable: read-only: no-functional-setter:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -498,10 +492,10 @@
   id: 177749b2-beb0-4670-9ab2-4b9c01b54c1d
   constructor: #f
 
-  (name        printable: read-only:)
-  (aliases     printable: read-only:)
-  (port-number printable: read-only:)
-  (protocol    printable: read-only:)
+  (name        printable: read-only: no-functional-setter:)
+  (aliases     printable: read-only: no-functional-setter:)
+  (port-number printable: read-only: no-functional-setter:)
+  (protocol    printable: read-only: no-functional-setter:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -512,9 +506,9 @@
   id: ffc668b5-2146-42b7-ab11-7d91641f2124
   constructor: #f
 
-  (name      printable: read-only:)
-  (aliases   printable: read-only:)
-  (number    printable: read-only:)
+  (name      printable: read-only: no-functional-setter:)
+  (aliases   printable: read-only: no-functional-setter:)
+  (number    printable: read-only: no-functional-setter:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -525,9 +519,9 @@
   id: ce2e418b-96c7-4562-9cb6-419ec113704e
   constructor: #f
 
-  (name      printable: read-only:)
-  (aliases   printable: read-only:)
-  (number    printable: read-only:)
+  (name      printable: read-only: no-functional-setter:)
+  (aliases   printable: read-only: no-functional-setter:)
+  (number    printable: read-only: no-functional-setter:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -538,9 +532,9 @@
   id: 837d9768-9d27-455e-ac65-5ae59f43f79e
   constructor: #f
 
-  (family      printable: read-only:)
-  (port-number printable: read-only:)
-  (address     printable: read-only:)
+  (family      printable: read-only: no-functional-setter:)
+  (port-number printable: read-only: no-functional-setter:)
+  (address     printable: read-only: no-functional-setter:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -551,10 +545,10 @@
   id: f165f359-8685-48da-bc99-f38827ad8af9
   constructor: #f
 
-  (family       printable: read-only:)
-  (socket-type  printable: read-only:)
-  (protocol     printable: read-only:)
-  (socket-info  printable: read-only:)
+  (family       printable: read-only: no-functional-setter:)
+  (socket-type  printable: read-only: no-functional-setter:)
+  (protocol     printable: read-only: no-functional-setter:)
+  (socket-info  printable: read-only: no-functional-setter:)
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

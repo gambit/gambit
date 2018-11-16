@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd#.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -13,8 +13,8 @@
   constructor: #f
   opaque:
 
-  (message    unprintable: read-only:)
-  (parameters unprintable: read-only:)
+  (message    unprintable: read-only: no-functional-setter:)
+  (parameters unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception unbound-os-environment-variable-exception
@@ -22,8 +22,8 @@
   constructor: #f
   opaque:
 
-  (procedure unprintable: read-only:)
-  (arguments unprintable: read-only:)
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------
@@ -56,19 +56,19 @@
   constructor: #f
   opaque:
 
-  (type                   printable: read-only:)
-  (device                 printable: read-only:)
-  (inode                  printable: read-only:)
-  (mode                   printable: read-only:)
-  (number-of-links        printable: read-only:)
-  (owner                  printable: read-only:)
-  (group                  printable: read-only:)
-  (size                   printable: read-only:)
-  (last-access-time       printable: read-only:)
-  (last-modification-time printable: read-only:)
-  (last-change-time       printable: read-only:)
-  (attributes             printable: read-only:)
-  (creation-time          printable: read-only:)
+  (type                   printable: read-only: no-functional-setter:)
+  (device                 printable: read-only: no-functional-setter:)
+  (inode                  printable: read-only: no-functional-setter:)
+  (mode                   printable: read-only: no-functional-setter:)
+  (number-of-links        printable: read-only: no-functional-setter:)
+  (owner                  printable: read-only: no-functional-setter:)
+  (group                  printable: read-only: no-functional-setter:)
+  (size                   printable: read-only: no-functional-setter:)
+  (last-access-time       printable: read-only: no-functional-setter:)
+  (last-modification-time printable: read-only: no-functional-setter:)
+  (last-change-time       printable: read-only: no-functional-setter:)
+  (attributes             printable: read-only: no-functional-setter:)
+  (creation-time          printable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------
@@ -78,11 +78,11 @@
   constructor: #f
   opaque:
 
-  (name  printable: read-only:)
-  (uid   printable: read-only:)
-  (gid   printable: read-only:)
-  (home  printable: read-only:)
-  (shell printable: read-only:)
+  (name  printable: read-only: no-functional-setter:)
+  (uid   printable: read-only: no-functional-setter:)
+  (gid   printable: read-only: no-functional-setter:)
+  (home  printable: read-only: no-functional-setter:)
+  (shell printable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------
@@ -92,9 +92,9 @@
   constructor: #f
   opaque:
 
-  (name    printable: read-only:)
-  (gid     printable: read-only:)
-  (members printable: read-only:)
+  (name    printable: read-only: no-functional-setter:)
+  (gid     printable: read-only: no-functional-setter:)
+  (members printable: read-only: no-functional-setter:)
 )
 
 ;;;============================================================================
