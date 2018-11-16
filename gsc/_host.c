@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_host.c", produced by Gambit v4.9.0
+; File: "_host.c", produced by Gambit v4.9.1
 (
-409000
+409001
 (C)
 "_host"
 (("_host"))
@@ -211,6 +211,7 @@
 "##u8vector-set!"
 "##u8vector?"
 "##vector->list"
+"##write-char2"
 "<"
 "<="
 "current-readtable"
@@ -224,12 +225,11 @@
 "readtable-keywords-allowed?-set"
 "with-output-to-string"
 "write"
-"write-char"
 )
  ()
 )
 #else
-#define ___VERSION 409000
+#define ___VERSION 409001
 #define ___MODULE_NAME "_host"
 #define ___LINKER_ID ___LNK___host
 #define ___MH_PROC ___H___host
@@ -317,6 +317,7 @@ ___NEED_GLO(___G__23__23_u8vector_2d_ref)
 ___NEED_GLO(___G__23__23_u8vector_2d_set_21_)
 ___NEED_GLO(___G__23__23_u8vector_3f_)
 ___NEED_GLO(___G__23__23_vector_2d__3e_list)
+___NEED_GLO(___G__23__23_write_2d_char2)
 ___NEED_GLO(___G__3c_)
 ___NEED_GLO(___G__3c__3d_)
 ___NEED_GLO(___G___host_23_)
@@ -453,7 +454,6 @@ ___NEED_GLO(___G_readtable_2d_case_2d_conversion_3f__2d_set)
 ___NEED_GLO(___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
 ___NEED_GLO(___G_with_2d_output_2d_to_2d_string)
 ___NEED_GLO(___G_write)
-___NEED_GLO(___G_write_2d_char)
 
 ___BEGIN_SYM
 ___DEF_SYM(0,___S___host,"_host")
@@ -662,20 +662,20 @@ ___DEF_GLO(190,"##u8vector-ref")
 ___DEF_GLO(191,"##u8vector-set!")
 ___DEF_GLO(192,"##u8vector?")
 ___DEF_GLO(193,"##vector->list")
-___DEF_GLO(194,"<")
-___DEF_GLO(195,"<=")
-___DEF_GLO(196,"current-readtable")
-___DEF_GLO(197,"display")
-___DEF_GLO(198,"error")
-___DEF_GLO(199,"eval")
-___DEF_GLO(200,"input-port?")
-___DEF_GLO(201,"open-input-file")
-___DEF_GLO(202,"pp")
-___DEF_GLO(203,"readtable-case-conversion?-set")
-___DEF_GLO(204,"readtable-keywords-allowed?-set")
-___DEF_GLO(205,"with-output-to-string")
-___DEF_GLO(206,"write")
-___DEF_GLO(207,"write-char")
+___DEF_GLO(194,"##write-char2")
+___DEF_GLO(195,"<")
+___DEF_GLO(196,"<=")
+___DEF_GLO(197,"current-readtable")
+___DEF_GLO(198,"display")
+___DEF_GLO(199,"error")
+___DEF_GLO(200,"eval")
+___DEF_GLO(201,"input-port?")
+___DEF_GLO(202,"open-input-file")
+___DEF_GLO(203,"pp")
+___DEF_GLO(204,"readtable-case-conversion?-set")
+___DEF_GLO(205,"readtable-keywords-allowed?-set")
+___DEF_GLO(206,"with-output-to-string")
+___DEF_GLO(207,"write")
 ___END_GLO
 
 #define ___GLO___host_23_ ___GLO(0,___G___host_23_)
@@ -1066,34 +1066,34 @@ ___END_GLO
 #define ___PRM__23__23_u8vector_3f_ ___PRM(192,___G__23__23_u8vector_3f_)
 #define ___GLO__23__23_vector_2d__3e_list ___GLO(193,___G__23__23_vector_2d__3e_list)
 #define ___PRM__23__23_vector_2d__3e_list ___PRM(193,___G__23__23_vector_2d__3e_list)
-#define ___GLO__3c_ ___GLO(194,___G__3c_)
-#define ___PRM__3c_ ___PRM(194,___G__3c_)
-#define ___GLO__3c__3d_ ___GLO(195,___G__3c__3d_)
-#define ___PRM__3c__3d_ ___PRM(195,___G__3c__3d_)
-#define ___GLO_current_2d_readtable ___GLO(196,___G_current_2d_readtable)
-#define ___PRM_current_2d_readtable ___PRM(196,___G_current_2d_readtable)
-#define ___GLO_display ___GLO(197,___G_display)
-#define ___PRM_display ___PRM(197,___G_display)
-#define ___GLO_error ___GLO(198,___G_error)
-#define ___PRM_error ___PRM(198,___G_error)
-#define ___GLO_eval ___GLO(199,___G_eval)
-#define ___PRM_eval ___PRM(199,___G_eval)
-#define ___GLO_input_2d_port_3f_ ___GLO(200,___G_input_2d_port_3f_)
-#define ___PRM_input_2d_port_3f_ ___PRM(200,___G_input_2d_port_3f_)
-#define ___GLO_open_2d_input_2d_file ___GLO(201,___G_open_2d_input_2d_file)
-#define ___PRM_open_2d_input_2d_file ___PRM(201,___G_open_2d_input_2d_file)
-#define ___GLO_pp ___GLO(202,___G_pp)
-#define ___PRM_pp ___PRM(202,___G_pp)
-#define ___GLO_readtable_2d_case_2d_conversion_3f__2d_set ___GLO(203,___G_readtable_2d_case_2d_conversion_3f__2d_set)
-#define ___PRM_readtable_2d_case_2d_conversion_3f__2d_set ___PRM(203,___G_readtable_2d_case_2d_conversion_3f__2d_set)
-#define ___GLO_readtable_2d_keywords_2d_allowed_3f__2d_set ___GLO(204,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
-#define ___PRM_readtable_2d_keywords_2d_allowed_3f__2d_set ___PRM(204,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
-#define ___GLO_with_2d_output_2d_to_2d_string ___GLO(205,___G_with_2d_output_2d_to_2d_string)
-#define ___PRM_with_2d_output_2d_to_2d_string ___PRM(205,___G_with_2d_output_2d_to_2d_string)
-#define ___GLO_write ___GLO(206,___G_write)
-#define ___PRM_write ___PRM(206,___G_write)
-#define ___GLO_write_2d_char ___GLO(207,___G_write_2d_char)
-#define ___PRM_write_2d_char ___PRM(207,___G_write_2d_char)
+#define ___GLO__23__23_write_2d_char2 ___GLO(194,___G__23__23_write_2d_char2)
+#define ___PRM__23__23_write_2d_char2 ___PRM(194,___G__23__23_write_2d_char2)
+#define ___GLO__3c_ ___GLO(195,___G__3c_)
+#define ___PRM__3c_ ___PRM(195,___G__3c_)
+#define ___GLO__3c__3d_ ___GLO(196,___G__3c__3d_)
+#define ___PRM__3c__3d_ ___PRM(196,___G__3c__3d_)
+#define ___GLO_current_2d_readtable ___GLO(197,___G_current_2d_readtable)
+#define ___PRM_current_2d_readtable ___PRM(197,___G_current_2d_readtable)
+#define ___GLO_display ___GLO(198,___G_display)
+#define ___PRM_display ___PRM(198,___G_display)
+#define ___GLO_error ___GLO(199,___G_error)
+#define ___PRM_error ___PRM(199,___G_error)
+#define ___GLO_eval ___GLO(200,___G_eval)
+#define ___PRM_eval ___PRM(200,___G_eval)
+#define ___GLO_input_2d_port_3f_ ___GLO(201,___G_input_2d_port_3f_)
+#define ___PRM_input_2d_port_3f_ ___PRM(201,___G_input_2d_port_3f_)
+#define ___GLO_open_2d_input_2d_file ___GLO(202,___G_open_2d_input_2d_file)
+#define ___PRM_open_2d_input_2d_file ___PRM(202,___G_open_2d_input_2d_file)
+#define ___GLO_pp ___GLO(203,___G_pp)
+#define ___PRM_pp ___PRM(203,___G_pp)
+#define ___GLO_readtable_2d_case_2d_conversion_3f__2d_set ___GLO(204,___G_readtable_2d_case_2d_conversion_3f__2d_set)
+#define ___PRM_readtable_2d_case_2d_conversion_3f__2d_set ___PRM(204,___G_readtable_2d_case_2d_conversion_3f__2d_set)
+#define ___GLO_readtable_2d_keywords_2d_allowed_3f__2d_set ___GLO(205,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
+#define ___PRM_readtable_2d_keywords_2d_allowed_3f__2d_set ___PRM(205,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
+#define ___GLO_with_2d_output_2d_to_2d_string ___GLO(206,___G_with_2d_output_2d_to_2d_string)
+#define ___PRM_with_2d_output_2d_to_2d_string ___PRM(206,___G_with_2d_output_2d_to_2d_string)
+#define ___GLO_write ___GLO(207,___G_write)
+#define ___PRM_write ___PRM(207,___G_write)
 
 ___DEF_SUB_FLO(___X0,0x0L,0x0L)
 ___DEF_SUB_VEC(___X1,5UL)
@@ -2069,11 +2069,11 @@ ___DEF_SLBL(1,___L1_c_23_open_2d_input_2d_file_2a__2d_preserving_2d_case)
 ___DEF_SLBL(2,___L2_c_23_open_2d_input_2d_file_2a__2d_preserving_2d_case)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(3))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),203,___G_readtable_2d_case_2d_conversion_3f__2d_set)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),204,___G_readtable_2d_case_2d_conversion_3f__2d_set)
 ___DEF_SLBL(3,___L3_c_23_open_2d_input_2d_file_2a__2d_preserving_2d_case)
    ___SET_R2(___TRU)
    ___SET_R0(___LBL(4))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),204,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),205,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
 ___DEF_SLBL(4,___L4_c_23_open_2d_input_2d_file_2a__2d_preserving_2d_case)
    ___SET_STK(-4,___ALLOC_CLO(1UL))
    ___BEGIN_SETUP_CLO(1,___STK(-4),7)
@@ -2139,11 +2139,11 @@ ___DEF_SLBL(1,___L1_c_23_open_2d_output_2d_file_2d_preserving_2d_case)
 ___DEF_SLBL(2,___L2_c_23_open_2d_output_2d_file_2d_preserving_2d_case)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(3))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),203,___G_readtable_2d_case_2d_conversion_3f__2d_set)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),204,___G_readtable_2d_case_2d_conversion_3f__2d_set)
 ___DEF_SLBL(3,___L3_c_23_open_2d_output_2d_file_2d_preserving_2d_case)
    ___SET_R2(___TRU)
    ___SET_R0(___LBL(4))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),204,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),205,___G_readtable_2d_keywords_2d_allowed_3f__2d_set)
 ___DEF_SLBL(4,___L4_c_23_open_2d_output_2d_file_2d_preserving_2d_case)
    ___SET_STK(-4,___ALLOC_CLO(1UL))
    ___BEGIN_SETUP_CLO(1,___STK(-4),7)
@@ -2193,7 +2193,7 @@ ___DEF_SLBL(0,___L0_c_23_pp_2d_expression)
 ___DEF_GLBL(___L_c_23_pp_2d_expression)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_pp_2d_expression)
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),202,___G_pp)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),203,___G_pp)
 ___END_P_SW
 ___END_P_COD
 
@@ -2237,7 +2237,7 @@ ___DEF_SLBL(1,___L1_c_23_write_2d_returning_2d_len)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_c_23_write_2d_returning_2d_len)
    ___SET_R0(___LBL(3))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),205,___G_with_2d_output_2d_to_2d_string)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),206,___G_with_2d_output_2d_to_2d_string)
 ___DEF_SLBL(3,___L3_c_23_write_2d_returning_2d_len)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-6))
@@ -2297,7 +2297,7 @@ ___DEF_SLBL(1,___L1_c_23_display_2d_returning_2d_len)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_c_23_display_2d_returning_2d_len)
    ___SET_R0(___LBL(3))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),205,___G_with_2d_output_2d_to_2d_string)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),206,___G_with_2d_output_2d_to_2d_string)
 ___DEF_SLBL(3,___L3_c_23_display_2d_returning_2d_len)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-6))
@@ -2322,11 +2322,11 @@ ___END_P_COD
 #undef ___PH_LBL0
 #define ___PH_LBL0 97
 #undef ___PD_ALL
-#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
 #undef ___PW_ALL
-#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -2339,23 +2339,46 @@ ___DEF_SLBL(0,___L0_c_23_write_2d_word)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23_write_2d_word)
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R1)
-   ___SET_STK(3,___R2)
-   ___SET_R1(___FIXQUO(___R1,___FIX(256L)))
-   ___SET_R1(___FIXTOCHR(___R1))
-   ___SET_R0(___LBL(1))
-   ___ADJFP(8)
-   ___JUMPPRM(___SET_NARGS(2),___PRM_write_2d_char)
+   ___SET_R3(___FIXQUO(___R1,___FIX(256L)))
+   ___SET_R3(___FIXTOCHR(___R3))
+   ___WRITECHAR2P(___R3,___R2)
+   ___SET_R4(___temp)
+   ___SET_STK(1,___R1)
+   ___SET_R1(___R4)
+   ___ADJFP(1)
+   ___IF(___NOTFALSEP(___R1))
+   ___GOTO(___L3_c_23_write_2d_word)
+   ___END_IF
+   ___GOTO(___L5_c_23_write_2d_word)
 ___DEF_SLBL(1,___L1_c_23_write_2d_word)
    ___SET_R2(___STK(-5))
-   ___SET_R1(___FIXMOD(___STK(-6),___FIX(256L)))
+   ___SET_R0(___STK(-6))
+   ___ADJFP(-7)
+___DEF_GLBL(___L3_c_23_write_2d_word)
+   ___SET_R1(___FIXMOD(___STK(0),___FIX(256L)))
    ___SET_R1(___FIXTOCHR(___R1))
-   ___SET_R0(___STK(-7))
+   ___WRITECHAR2P(___R1,___R2)
+   ___SET_R3(___temp)
+   ___SET_STK(0,___R1)
+   ___SET_R1(___R3)
+   ___IF(___NOTFALSEP(___R1))
+   ___GOTO(___L4_c_23_write_2d_word)
+   ___END_IF
+   ___SET_R1(___STK(0))
    ___POLL(2)
 ___DEF_SLBL(2,___L2_c_23_write_2d_word)
-   ___ADJFP(-8)
-   ___JUMPPRM(___SET_NARGS(2),___PRM_write_2d_char)
+   ___ADJFP(-1)
+   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_write_2d_char2)
+___DEF_GLBL(___L4_c_23_write_2d_word)
+   ___ADJFP(-1)
+   ___JUMPPRM(___NOTHING,___R0)
+___DEF_GLBL(___L5_c_23_write_2d_word)
+   ___SET_STK(1,___R0)
+   ___SET_STK(2,___R2)
+   ___SET_R1(___R3)
+   ___SET_R0(___LBL(1))
+   ___ADJFP(7)
+   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_write_2d_char2)
 ___END_P_SW
 ___END_P_COD
 
@@ -2592,7 +2615,7 @@ ___DEF_SLBL(0,___L0_c_23_fatal_2d_err)
 ___DEF_GLBL(___L_c_23_fatal_2d_err)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_fatal_2d_err)
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),198,___G_error)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),199,___G_error)
 ___END_P_SW
 ___END_P_COD
 
@@ -3337,8 +3360,8 @@ ___REF_FAL,9,0)
 ,___DEF_LBL_RET(___H_c_23_display_2d_returning_2d_len,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_INTRO(___H_c_23_write_2d_word,"c#write-word",___REF_FAL,3,0)
 ,___DEF_LBL_PROC(___H_c_23_write_2d_word,2,-1)
-,___DEF_LBL_RET(___H_c_23_write_2d_word,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H_c_23_write_2d_word,___IFD(___RETI,8,8,0x3f00L))
+,___DEF_LBL_RET(___H_c_23_write_2d_word,___IFD(___RETN,5,1,0x7L))
+,___DEF_LBL_RET(___H_c_23_write_2d_word,___IFD(___RETI,1,4,0x3f0L))
 ,___DEF_LBL_INTRO(___H_c_23_character_2d__3e_unicode,"c#character->unicode",___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H_c_23_character_2d__3e_unicode,1,-1)
 ,___DEF_LBL_INTRO(___H_c_23_unicode_2d__3e_character,"c#unicode->character",___REF_FAL,1,0)
