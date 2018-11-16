@@ -745,8 +745,7 @@
                (setter
                 (##vector-ref descr 3))
                (fsetter
-                (and copier
-                     (##vector-ref descr 4)))
+                (##vector-ref descr 4))
                (getter-def
                 (if getter
                     (let ((getter-name
@@ -1026,7 +1025,9 @@
           (read-write:    . (-3 . 0))
           (read-only:     . (-3 . 2))
           (equality-test: . (-5 . 0))
-          (equality-skip: . (-5 . 4))))
+          (equality-skip: . (-5 . 4))
+          (functional-setter:    . (-17 . 0))
+          (no-functional-setter: . (-17 . 16))))
 
       (define (update-options options opt)
         (let* ((x (##cdr opt))
@@ -1074,9 +1075,14 @@
                  (let ((read-only?
                         (##not
                          (##fx= (##fxand local-options 2)
-                                0))))
-                   (if (and (##symbol? setter)
-                            read-only?)
+                                0)))
+                       (functional-setter?
+                        (##fx= (##fxand local-options 16)
+                               0)))
+                   (if (or (and (##symbol? setter)
+                                read-only?)
+                           (and (##symbol? fsetter)
+                                (##not functional-setter?)))
                        (err)
                        (loop1 (##cdr lst)
                               (##fx+ field-index 1)
@@ -1088,7 +1094,7 @@
                                                (##fx+ field-index 1)
                                                getter
                                                (if read-only? #f setter)
-                                               fsetter
+                                               (if functional-setter? fsetter #f)
                                                local-options
                                                attributes))
                                       rev-fields)))))
@@ -1115,15 +1121,16 @@
                             (if (##pair? rest)
                                 (let ((getter (##car rest)))
                                   (if (##symbol? getter)
-                                      (let ((rest (##cdr rest)))
+                                      (let ((rest (##cdr rest))
+                                            (opts (##fxior options 18)))
                                         (if (##pair? rest)
                                             (let ((setter (##car rest)))
                                               (if (or (##symbol? setter)
                                                       (##not setter))
                                                   (let ((rest (##cdr rest))
                                                         (opts (if setter
-                                                                  (##fxand options -3)
-                                                                  (##fxior options 2))))
+                                                                  (##fxand opts -3)
+                                                                  opts)))
                                                     (if (##pair? rest)
                                                         (let ((fsetter (##car rest)))
                                                           (if (or (##symbol? fsetter)
@@ -1133,7 +1140,9 @@
                                                                getter
                                                                setter
                                                                fsetter
-                                                               opts
+                                                               (if fsetter
+                                                                   (##fxand opts -17)
+                                                                   opts)
                                                                (##cdr rest))
                                                               (parse-field-attributes
                                                                field-name
@@ -1154,14 +1163,14 @@
                                                    getter
                                                    #f
                                                    #f
-                                                   (##fxior options 2)
+                                                   opts
                                                    rest)))
                                             (parse-field-attributes
                                              field-name
                                              getter
                                              #f
                                              #f
-                                             (##fxior options 2)
+                                             opts
                                              rest)))
                                       (parse-field-attributes
                                        field-name
@@ -1297,6 +1306,8 @@
                      (cond ((##assq 'copier: flags)
                             =>
                             ##cdr)
+                           ((##not constructor)
+                            #f)
                            (else
                             (##symbol-append prefix
                                              name
@@ -1409,21 +1420,23 @@
    (##apply ##string-append
             (##map ##symbol->string symbols))))
 
-(define-runtime-macro (define-type . args)
+(define-runtime-macro (##define-type . args)
   (##define-type-expand 'define-type #f #f args))
 
-(define-runtime-macro (define-structure . args)
+(define-runtime-macro (##define-structure . args)
   (##define-type-expand 'define-structure #f #f args))
 
 (define-runtime-macro (define-record-type name constructor predicate . fields)
-  `(define-type ,name
+  `(##define-type ,name
      constructor: ,constructor
+     copier: #f
      predicate: ,predicate
+     no-functional-setter:
      ,@fields))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-macro (define-type-of-thread . args)
+(define-runtime-macro (##define-type-of-thread . args)
   (##define-type-expand
     'define-type-of-thread
     (macro-type-thread)

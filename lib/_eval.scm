@@ -4466,6 +4466,15 @@
     ;;(define-runtime-syntax define-syntax
     ;;  (##make-alias-syntax '##define-syntax))
 
+    (define-runtime-syntax define-type
+      (##make-alias-syntax '##define-type))
+
+    (define-runtime-syntax define-type-of-thread
+      (##make-alias-syntax '##define-type-of-thread))
+
+    (define-runtime-syntax define-structure
+      (##make-alias-syntax '##define-structure))
+
     (define-runtime-syntax include
       (##make-alias-syntax '##include))
 
