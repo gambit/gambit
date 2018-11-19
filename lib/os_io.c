@@ -4202,7 +4202,7 @@ ___SCMOBJ client_ca_path;)
                 }
               bp = BN_bin2bn (dh1024_p, sizeof(dh1024_p), NULL);
               bg = BN_bin2bn (dh1024_g, sizeof(dh1024_g), NULL);
-              if (dh1024_p == NULL || dh1024_g == NULL)
+              if (bp == NULL || bg == NULL)
                 {
                   BN_free(bp);
                   BN_free(bg);
