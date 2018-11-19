@@ -1594,10 +1594,12 @@
 
         (cond ((##null? y)
                (macro-if-checks
-                (let ((len1 (##proper-list-length x)))
-                  (if len1
-                      (fold-1 x)
-                      (macro-fail-check-list 3 (fold proc base x . y))))
+                (macro-if-check-same-length-proper-lists
+                 (let ((len1 (##proper-list-length x)))
+                   (if len1
+                       (fold-1 x)
+                       (macro-fail-check-list 3 (fold proc base x . y))))
+                 (fold-1 x))
                 (fold-1 x)))
               (else
                (macro-if-checks
@@ -1664,10 +1666,12 @@
 
         (cond ((##null? y)
                (macro-if-checks
-                (let ((len1 (##proper-list-length x)))
-                  (if len1
-                      (fold-right-1 x)
-                      (macro-fail-check-list 3 (fold-right proc base x . y))))
+                (macro-if-check-same-length-proper-lists
+                 (let ((len1 (##proper-list-length x)))
+                   (if len1
+                       (fold-right-1 x)
+                       (macro-fail-check-list 3 (fold-right proc base x . y))))
+                 (fold-right-1 x))
                 (fold-right-1 x)))
               (else
                (macro-if-checks
