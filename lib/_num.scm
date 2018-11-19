@@ -3476,6 +3476,23 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##exact->inexact x)))
 
+(define-prim (##inexact x)
+
+  (define (type-error)
+    (##fail-check-number 1 inexact x))
+
+  (macro-number-dispatch x (type-error)
+    (##fixnum->flonum x)
+    (##exact-int->flonum x)
+    (##ratnum->flonum x)
+    x
+    (##make-rectangular (##inexact (macro-cpxnum-real x))
+                        (##inexact (macro-cpxnum-imag x)))))
+
+(define-prim (inexact x)
+  (macro-force-vars (x)
+    (##inexact x)))
+
 (define-prim (##inexact->exact x)
 
   (define (type-error)
@@ -3502,6 +3519,33 @@ for a discussion of branch cuts.
 (define-prim (inexact->exact x)
   (macro-force-vars (x)
     (##inexact->exact x)))
+
+(define-prim (##exact x)
+
+  (define (type-error)
+    (##fail-check-number 1 exact x))
+
+  (define (range-error)
+    (##raise-range-exception 1 exact x))
+
+  (macro-number-dispatch x (type-error)
+    x
+    x
+    x
+    (if (macro-flonum-rational? x)
+        (##flonum->exact x)
+        (range-error))
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (and (macro-noncpxnum-rational? real)
+               (macro-noncpxnum-rational? imag))
+          (##make-rectangular (##exact real)
+                              (##exact imag))
+          (range-error)))))
+
+(define-prim (exact x)
+  (macro-force-vars (x)
+    (##exact x)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -156,6 +156,7 @@ error
 error-exception-message
 error-exception-parameters
 error-exception?
+exact
 exit
 expression-parsing-exception-kind
 expression-parsing-exception-parameters
@@ -348,6 +349,7 @@ improper-length-list-exception?
 inactive-thread-exception-arguments
 inactive-thread-exception-procedure
 inactive-thread-exception?
+inexact
 infinite?
 initialized-thread-exception-arguments
 initialized-thread-exception-procedure

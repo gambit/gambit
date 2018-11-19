@@ -337,6 +337,9 @@
 ("infinite?"                          (1)   #f 0     0    boolean r6rs)
 ("nan?"                               (1)   #f 0     0    boolean r6rs)
 
+("inexact"                            (1)   #f 0     0    number  r6rs)
+("exact"                              (1)   #f 0     0    number  r6rs)
+
 ;; for Multilisp
 
 ("touch"                              (1)   #t 0     0    #f      multilisp)
@@ -3361,6 +3364,18 @@
 
     (def-exp
      "inexact->exact"
+     (make-fixflo-expander
+      case-fixnum-inexact->exact
+      case-flonum-inexact->exact))
+
+    (def-exp
+     "inexact"
+     (make-fixflo-expander
+      case-fixnum-exact->inexact
+      case-flonum-exact->inexact))
+
+    (def-exp
+     "exact"
      (make-fixflo-expander
       case-fixnum-inexact->exact
       case-flonum-inexact->exact))
