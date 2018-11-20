@@ -2016,9 +2016,11 @@
                       (new-tst source env
                         (gen-conj-call-prim-vars source env
                           **pair?-sym
-                          (if (safe? env) ;; in case lists are truncated by other threads
-                              lst2-vars
-                              (list (car lst2-vars))))
+                          lst2-vars
+;;                          (if (safe? env) ;; in case lists are truncated by other threads
+;;                              lst2-vars
+;;                              (list (car lst2-vars)))
+                          )
                         (new-call source env2
                           (new-prc source env
                             #f
