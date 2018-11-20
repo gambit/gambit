@@ -1070,48 +1070,48 @@
 ;;; (Argument 1) PROCEDURE expected: (apply #f '(2 3))
 (map '#<procedure #4 sqrt> '()) => ()
 (map '#<procedure #4 sqrt> '(1 4 9)) => (1 2 3)
-(map '#<procedure #4 sqrt> #f) => ()
-(map '#<procedure #4 sqrt> '(1 . #f)) => (1)
+;;; (Argument 2) LIST expected: (map '#<procedure #4 sqrt> #f)
+;;; (Argument 2) LIST expected: (map '#<procedure #4 sqrt> '(1 . #f))
 ;;; (Argument 1) PROCEDURE expected: (map #f '(1 4 9))
 (map '#<procedure #3 +> '() '()) => ()
 (map '#<procedure #3 +> '(1 2 3) '(0 2 6)) => (1 4 9)
 (map '#<procedure #3 +> '(1 2 3) '(0 2)) => (1 4)
 (map '#<procedure #3 +> '(1 2) '(0 2 6)) => (1 4)
-(map '#<procedure #3 +> #f '()) => ()
-(map '#<procedure #3 +> '() #f) => ()
-(map '#<procedure #3 +> '(1 . #f) '(0 . #f)) => (1)
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> #f '())
+;;; (Argument 3) LIST expected: (map '#<procedure #3 +> '() #f)
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> '(1 . #f) '(0 . #f))
 ;;; (Argument 1) PROCEDURE expected: (map #f '(1 2 3) '(0 2 6))
 (map '#<procedure #3 +> '() '() '()) => ()
 (map '#<procedure #3 +> '(1 2 3) '(0 2 6) '(10 100 1000)) => (11 104 1009)
 (map '#<procedure #3 +> '(1 2 3) '(0 2) '(10 100 1000)) => (11 104)
 (map '#<procedure #3 +> '(1 2) '(0 2 6) '(10 100 1000)) => (11 104)
-(map '#<procedure #3 +> #f '() '()) => ()
-(map '#<procedure #3 +> '() #f '()) => ()
-(map '#<procedure #3 +> '() '() #f) => ()
-(map '#<procedure #3 +> '(1 . #f) '(0 . #f) '(10 . #f)) => (11)
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> #f '() '())
+;;; (Argument 3) LIST expected: (map '#<procedure #3 +> '() #f '())
+;;; (Argument 4) LIST expected: (map '#<procedure #3 +> '() '() #f)
+;;; (Argument 2) LIST expected: (map '#<procedure #3 +> '(1 . #f) '(0 . #f) '(10 . #f))
 ;;; (Argument 1) PROCEDURE expected: (map #f '(1 2 3) '(0 2 6) '(10 100 1000))
 (for-each '#<procedure #4 sqrt> '()) => #!void
 (for-each '#<procedure #4 sqrt> '(1 4 9)) => #!void
-(for-each '#<procedure #4 sqrt> #f) => #!void
-(for-each '#<procedure #4 sqrt> '(1 . #f)) => #!void
+;;; (Argument 2) LIST expected: (for-each '#<procedure #4 sqrt> #f)
+;;; (Argument 2) LIST expected: (for-each '#<procedure #4 sqrt> '(1 . #f))
 ;;; (Argument 1) PROCEDURE expected: (for-each #f '(1 4 9))
 (for-each '#<procedure #3 +> '() '()) => #!void
 (for-each '#<procedure #3 +> '(1 2 3) '(0 2 6)) => #!void
 (for-each '#<procedure #3 +> '(1 2 3) '(0 2)) => #!void
 (for-each '#<procedure #3 +> '(1 2) '(0 2 6)) => #!void
-(for-each '#<procedure #3 +> #f '()) => #!void
-(for-each '#<procedure #3 +> '() #f) => #!void
-(for-each '#<procedure #3 +> '(1 . #f) '(0 . #f)) => #!void
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> #f '())
+;;; (Argument 3) LIST expected: (for-each '#<procedure #3 +> '() #f)
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> '(1 . #f) '(0 . #f))
 ;;; (Argument 1) PROCEDURE expected: (for-each #f '(1 2 3) '(0 2 6))
 (for-each '#<procedure #3 +> '() '() '()) => #!void
 (for-each '#<procedure #3 +> '(1 2 3) '(0 2 6) '(10 100 1000)) => #!void
 (for-each '#<procedure #3 +> '(1 2 3) '(0 2) '(10 100 1000)) => #!void
 (for-each '#<procedure #3 +> '(1 2 3) '(0 2) '(10 100 1000)) => #!void
 (for-each '#<procedure #3 +> '(1 2) '(0 2 6) '(10 100 1000)) => #!void
-(for-each '#<procedure #3 +> #f '() '()) => #!void
-(for-each '#<procedure #3 +> '() #f '()) => #!void
-(for-each '#<procedure #3 +> '() '() #f) => #!void
-(for-each '#<procedure #3 +> '(1 . #f) '(0 . #f) '(10 . #f)) => #!void
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> #f '() '())
+;;; (Argument 3) LIST expected: (for-each '#<procedure #3 +> '() #f '())
+;;; (Argument 4) LIST expected: (for-each '#<procedure #3 +> '() '() #f)
+;;; (Argument 2) LIST expected: (for-each '#<procedure #3 +> '(1 . #f) '(0 . #f) '(10 . #f))
 ;;; (Argument 1) PROCEDURE expected: (for-each #f '(1 2 3) '(0 2 6) '(10 100 1000))
 (force 123) => 123
 ;;; CALL EXPRESSION (call/cc #f) IS WRONG: (call-with-current-continuation #f)

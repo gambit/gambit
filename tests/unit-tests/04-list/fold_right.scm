@@ -37,10 +37,13 @@
 (check-equal? (fold-right list 99 lst2 '() lst2) 99)
 (check-equal? (fold-right list 99 '() lst2 lst2) 99)
 
-(check-tail-exn type-exception? (lambda () (fold-right bool 99 lst0)))
-;; these checks are disabled (bool is an improper list)
-;;(check-tail-exn type-exception? (lambda () (fold-right list 99 bool)))
-;;(check-tail-exn type-exception? (lambda () (fold-right list 99 lst0 bool)))
+(check-tail-exn type-exception? (lambda () (fold-right #f 99 lst0)))
+(check-tail-exn type-exception? (lambda () (fold-right list 99 #f)))
+(check-tail-exn type-exception? (lambda () (fold-right list 99 '(1 2 . #f))))
+(check-tail-exn type-exception? (lambda () (fold-right list 99 '(1 2) #f)))
+(check-tail-exn type-exception? (lambda () (fold-right list 99 '(1 2) '(3 4 . #f))))
+(check-tail-exn type-exception? (lambda () (fold-right list 99 #f '(1 2))))
+(check-tail-exn type-exception? (lambda () (fold-right list 99 '(3 4 . #f) '(1 2))))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fold-right)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fold-right list)))

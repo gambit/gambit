@@ -36,11 +36,13 @@
 (check-equal? (map list lst2 '() lst2) '())
 (check-equal? (map list '() lst2 lst2) '())
 
-(check-tail-exn type-exception? (lambda () (map bool lst0)))
-
-;; these checks are disabled (bool is an improper list)
-;;(check-tail-exn type-exception? (lambda () (map inc bool)))
-;;(check-tail-exn type-exception? (lambda () (map add lst0 bool)))
+(check-tail-exn type-exception? (lambda () (map #f lst0)))
+(check-tail-exn type-exception? (lambda () (map inc #f)))
+(check-tail-exn type-exception? (lambda () (map inc '(1 2 . #f))))
+(check-tail-exn type-exception? (lambda () (map add '(1 2) #f)))
+(check-tail-exn type-exception? (lambda () (map add '(1 2) '(3 4 . #f))))
+(check-tail-exn type-exception? (lambda () (map add #f '(1 2))))
+(check-tail-exn type-exception? (lambda () (map add '(3 4 . #f) '(1 2))))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (map)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (map inc)))

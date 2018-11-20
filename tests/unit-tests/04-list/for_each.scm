@@ -96,11 +96,13 @@
 (check-equal? res '())
 
 
-(check-tail-exn type-exception? (lambda () (for-each bool lst0)))
-
-;; these checks are disabled (bool is an improper list)
-;;(check-tail-exn type-exception? (lambda () (for-each one bool)))
-;;(check-tail-exn type-exception? (lambda () (for-each two lst0 bool)))
+(check-tail-exn type-exception? (lambda () (for-each #f lst0)))
+(check-tail-exn type-exception? (lambda () (for-each one #f)))
+(check-tail-exn type-exception? (lambda () (for-each one '(1 2 . #f))))
+(check-tail-exn type-exception? (lambda () (for-each two '(1 2) #f)))
+(check-tail-exn type-exception? (lambda () (for-each two '(1 2) '(3 4 . #f))))
+(check-tail-exn type-exception? (lambda () (for-each two #f '(1 2))))
+(check-tail-exn type-exception? (lambda () (for-each two '(3 4 . #f) '(1 2))))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (for-each)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (for-each one)))
