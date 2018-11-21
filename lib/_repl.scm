@@ -3443,9 +3443,9 @@
            (##write-string "Heap overflow" port)
            (##newline port))
 
-          ((macro-improper-length-list-exception? exc)
-           (display-arg-num (macro-improper-length-list-exception-arg-num exc))
-           (##write-string "List is not of proper length" port)
+          ((macro-length-mismatch-exception? exc)
+           (display-arg-num (macro-length-mismatch-exception-arg-num exc))
+           (##write-string "Length does not match other arguments" port)
            (##newline port)
            (display-call))
 
@@ -3661,10 +3661,10 @@
           (macro-nonempty-input-port-character-buffer-exception-procedure exc)
           (macro-nonempty-input-port-character-buffer-exception-arguments exc)))
 
-        ((macro-improper-length-list-exception? exc)
+        ((macro-length-mismatch-exception? exc)
          (##cons
-          (macro-improper-length-list-exception-procedure exc)
-          (macro-improper-length-list-exception-arguments exc)))
+          (macro-length-mismatch-exception-procedure exc)
+          (macro-length-mismatch-exception-arguments exc)))
 
         ((macro-join-timeout-exception? exc)
          (##cons

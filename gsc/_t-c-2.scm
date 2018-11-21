@@ -3382,6 +3382,8 @@
 ;;(targ-op "##exact?"           (targ-ifjump-simp-s #f "EXACTP"))
 ;;(targ-op "##inexact?"         (targ-ifjump-simp-s #f "INEXACTP"))
 
+(targ-op "##exact-integer?"     (targ-ifjump-simp-s #f "EXACTINTP"))
+
 ;; specific to C backend:
 
 (targ-op "##special?"         (targ-ifjump-simp-s #f "SPECIALP"))

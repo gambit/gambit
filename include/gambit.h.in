@@ -2947,6 +2947,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___VECTORP(x)___TESTSUBTYPE(x,___sVECTOR)
 #define ___RATNUMP(x)___TESTSUBTYPE(x,___sRATNUM)
 #define ___CPXNUMP(x)___TESTSUBTYPE(x,___sCPXNUM)
+#define ___EXACTINTP(x)(___FIXNUMP(x)||___BIGNUMP(x))
 #define ___STRUCTUREP(x)___TESTSUBTYPE(x,___sSTRUCTURE)
 #define ___BOXP(x)(___TYP((___temp=x))==___tSUBTYPED&&(___SUBTYPED_HEADER(___temp)&___LSMASK)==___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
 #define ___VALUESP(x)(___TYP((___temp=x))==___tSUBTYPED&&___TESTSUBTYPETAG(___temp,___sBOXVALUES)&&(___SUBTYPED_HEADER(___temp)&___LSMASK)!=___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))

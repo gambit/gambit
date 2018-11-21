@@ -8,8 +8,8 @@
 
 ;;; Representation of exceptions.
 
-(define-library-type-of-exception improper-length-list-exception
-  id: 15d36810-b4bf-4609-83cc-761a8868e4a0
+(define-library-type-of-exception length-mismatch-exception
+  id: C5CC1F94-644C-46FD-8655-674A3C3E517A
   constructor: #f
   opaque:
 

@@ -340,6 +340,12 @@
 ("inexact"                            (1)   #f 0     0    number  r6rs)
 ("exact"                              (1)   #f 0     0    number  r6rs)
 
+("exact-integer-sqrt"                 (1)   #f 0     0    #f      r6rs)
+
+;; for R7RS Scheme
+
+("exact-integer?"                     (1)   #f 0     0    boolean r7rs)
+
 ;; for Multilisp
 
 ("touch"                              (1)   #t 0     0    #f      multilisp)
@@ -559,6 +565,7 @@
 ("##exact?"                           (1)   #f ()    0    boolean extended)
 ("##inexact?"                         (1)   #f ()    0    boolean extended)
 ("##mutable?"                         (1)   #f ()    0    boolean extended)
+("##exact-integer?"                   (1)   #f ()    0    boolean extended)
 
 ("##special?"                         (1)   #f ()    0    boolean extended)
 ("##meroon?"                          (1)   #f ()    0    boolean extended)
@@ -1170,6 +1177,8 @@
 ;;the following primitives must check that their parameter is a number:
 ;;(def-spec "exact?"      (spec-s "##exact?"))
 ;;(def-spec "inexact?"    (spec-s "##inexact?"))
+
+(def-spec "exact-integer?" (spec-s "##exact-integer?"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -4354,6 +4363,7 @@
 (def-simp "integer?"         (constant-folder integer?       ))
 (def-simp "exact?"           (constant-folder exact?         num?))
 (def-simp "inexact?"         (constant-folder inexact?       num?))
+(def-simp "exact-integer?"   (constant-folder (lambda (x) (and (integer? x) (exact? x)))))
 (def-simp "="                (constant-folder =              num?))
 (def-simp "fx="              (constant-folder =              fix32?))
 (def-simp "fl="              (constant-folder =              flo?))

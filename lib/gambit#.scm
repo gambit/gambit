@@ -157,6 +157,8 @@ error-exception-message
 error-exception-parameters
 error-exception?
 exact
+exact-integer?
+exact-integer-sqrt
 exit
 expression-parsing-exception-kind
 expression-parsing-exception-parameters
@@ -342,10 +344,6 @@ host-info-name
 host-info?
 host-name
 identity
-improper-length-list-exception-arg-num
-improper-length-list-exception-arguments
-improper-length-list-exception-procedure
-improper-length-list-exception?
 inactive-thread-exception-arguments
 inactive-thread-exception-procedure
 inactive-thread-exception?
@@ -381,6 +379,10 @@ keyword-hash
 keyword?
 last
 last-pair
+length-mismatch-exception-arg-num
+length-mismatch-exception-arguments
+length-mismatch-exception-procedure
+length-mismatch-exception?
 link-flat
 link-incremental
 list->f32vector
@@ -960,7 +962,9 @@ user-name
 vector-append
 vector-cas!
 vector-copy
+vector-for-each
 vector-inc!
+vector-map
 vector-set
 vector-shrink!
 void

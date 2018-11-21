@@ -154,6 +154,13 @@
   (macro-force-vars (x)
     (##integer? x)))
 
+(define-prim (##exact-integer? x)
+  (macro-exact-int? x))
+
+(define-prim (exact-integer? x)
+  (macro-force-vars (x)
+    (macro-exact-int? x)))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Exactness predicates.
@@ -3037,18 +3044,15 @@ for a discussion of branch cuts.
         (##flsqrt x))
     (let ((real (##real-part x))
           (imag (##imag-part x)))
-      (cond ((and (##exact? real)
-                  (##exact? imag)
-                  (let ((discriminant (##sqrt (##+ (##* real real)
-                                                   (##* imag imag)))))
-                    (and (##exact? discriminant)
-                         (let ((result-real (##sqrt (##/ (##+ real discriminant) 2))))
-                           (and (##exact? result-real)
-                                (##make-rectangular result-real (##/ imag (##* 2 result-real))))))))
-             =>
-             values)
-            (else
-             (##csqrt (##exact->inexact x)))))))
+      (or (and (##exact? real)
+               (##exact? imag)
+               (let ((discriminant (##sqrt (##+ (##* real real)
+                                                (##* imag imag)))))
+                 (and (##exact? discriminant)
+                      (let ((result-real (##sqrt (##/ (##+ real discriminant) 2))))
+                        (and (##exact? result-real)
+                             (##make-rectangular result-real (##/ imag (##* 2 result-real))))))))
+          (##csqrt (##exact->inexact x))))))
 
 (define-prim (sqrt x)
   (macro-force-vars (x)
@@ -10253,6 +10257,25 @@ end-of-code
 (define-prim (integer-sqrt x)
   (macro-force-vars (x)
     (##integer-sqrt x)))
+
+(define-prim (##exact-integer-sqrt x)
+
+  (define (type-error)
+    (##fail-check-exact-integer 1 exact-integer-sqrt x))
+
+  (define (range-error)
+    (##raise-range-exception 1 exact-integer-sqrt x))
+
+  (if (macro-exact-int? x)
+      (if (##negative? x)
+          (range-error)
+          (let ((s (##exact-int.sqrt x)))
+            (##values (##car s) (##cdr s)))) ;; TODO: avoid pair
+      (type-error)))
+
+(define-prim (exact-integer-sqrt x)
+  (macro-force-vars (x)
+    (##exact-integer-sqrt x)))
 
 (define-prim (##exact-int.square n)
   (##* n n))

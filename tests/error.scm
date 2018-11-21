@@ -151,10 +151,10 @@
                  (call "???" '()))
                 ((heap-overflow-exception? exc)
                  (call "???" '()))
-                ((improper-length-list-exception? exc)
+                ((length-mismatch-exception? exc)
                  (call
-                  (improper-length-list-exception-procedure exc)
-                  (improper-length-list-exception-arguments exc)))
+                  (length-mismatch-exception-procedure exc)
+                  (length-mismatch-exception-arguments exc)))
                 ((join-timeout-exception? exc)
                  (call
                   (join-timeout-exception-procedure exc)
