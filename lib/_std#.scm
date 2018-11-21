@@ -168,6 +168,9 @@
                   macro-force-elem
                   macro-check-elem
                   macro-check-elem-list
+                  macro-test-elem
+                  ##fail-check-elem
+                  define-map-and-for-each
                   elem=)
 
   (define (sym . lst)
@@ -219,6 +222,8 @@
     (define subvect-move!    (sym 'sub name '-move!))
     (define subvect-fill!    (sym 'sub name '-fill!))
     (define vect-shrink!     (sym name '-shrink!))
+    (define vect-map         (sym name '-map))
+    (define vect-for-each    (sym name '-for-each))
 
     `(begin
 
@@ -724,6 +729,231 @@ end-of-code
                                  (,elem= (,##vect-ref vect1 i)
                                          (,##vect-ref vect2 i)))
                                (loop (##fx- i 1)))))))))
+
+       ,@(if define-map-and-for-each
+
+             `(
+               (define-prim (,vect-map proc x . y)
+                 (macro-force-vars (proc x)
+                   (macro-check-procedure proc 1 (,vect-map proc x . y)
+                     (,macro-check-vect x 2 (,vect-map proc x . y)
+                       (let ()
+
+                         (define (vect-map-1 x)
+
+                           ,(if macro-test-elem
+
+                                `(define (vect-map-1 i)
+                                   (if (##fx< i (,##vect-length x))
+                                       (let loop ((result
+                                                   (proc (,##vect-ref x i))))
+                                         (,macro-force-elem (result)
+                                           (if (,macro-test-elem result)
+                                               (let ((vect
+                                                      (vect-map-1
+                                                       (##fx+ i 1))))
+                                                 (,##vect-set! vect i result)
+                                                 vect)
+                                                (loop (,##fail-check-elem
+                                                       0
+                                                       proc
+                                                       (,##vect-ref x i))))))
+                                       (,##make-vect i)))
+
+                                `(define (vect-map-1 i)
+                                   (if (##fx< i (,##vect-length x))
+                                       (let ((result (proc (,##vect-ref x i))))
+                                         (,macro-force-elem (result)
+                                           (let ((vect
+                                                  (vect-map-1
+                                                   (##fx+ i 1))))
+                                             (,##vect-set! vect i result)
+                                             vect)))
+                                       (,##make-vect i))))
+
+                           (vect-map-1 0))
+
+                         (define (vect-map-n len rev-x-y)
+
+                           (define (vect-map-n i)
+                             (if (##fx< i len)
+                                 (let loop ((lst rev-x-y) (args '()))
+                                   (if (##pair? lst)
+                                       (loop (##cdr lst)
+                                             (##cons
+                                              (,##vect-ref (##car lst) i)
+                                              args))
+                                       (let ((result (##apply proc args)))
+                                         (let ((vect (vect-map-n (##fx+ i 1))))
+                                           (,##vect-set! vect i result)
+                                           vect))))
+                                 (,##make-vect i)))
+
+                           (vect-map-n 0))
+
+                         (if (##null? y)
+                             (vect-map-1 x)
+                             (if ##allow-length-mismatch?
+
+                                 (let ((len-x (,##vect-length x))
+                                       (x-y (##cons x y)))
+                                   (let loop ((lst y)
+                                              (rev-x-y (##cons x '()))
+                                              (min-len len-x)
+                                              (arg-num 3))
+                                     (if (##pair? lst)
+                                         (let ((arg (##car lst)))
+                                           (macro-force-vars (arg)
+                                             (,macro-check-vect
+                                               arg
+                                               arg-num
+                                               (,vect-map proc . x-y)
+                                               (let ((len-arg (,##vect-length arg)))
+                                                 (loop (##cdr lst)
+                                                       (##cons arg rev-x-y)
+                                                       (##fxmin min-len len-arg)
+                                                       (##fx+ arg-num 1))))))
+                                         (vect-map-n min-len rev-x-y))))
+
+                                 (let ((len-x (,##vect-length x))
+                                       (x-y (##cons x y)))
+                                   (let loop ((lst y)
+                                              (rev-x-y (##cons x '()))
+                                              (min-len len-x)
+                                              (max-len len-x)
+                                              (max-arg 2)
+                                              (arg-num 3))
+                                     (if (##pair? lst)
+                                         (let ((arg (##car lst)))
+                                           (macro-force-vars (arg)
+                                             (,macro-check-vect
+                                               arg
+                                               arg-num
+                                               (,vect-map proc . x-y)
+                                               (let ((len-arg (,##vect-length arg)))
+                                                 (if (##fx> len-arg max-len)
+                                                     (loop (##cdr lst)
+                                                           (##cons arg rev-x-y)
+                                                           len-arg
+                                                           max-len
+                                                           arg-num
+                                                           (##fx+ arg-num 1))
+                                                     (loop (##cdr lst)
+                                                           (##cons arg rev-x-y)
+                                                           (##fxmin min-len len-arg)
+                                                           max-len
+                                                           max-arg
+                                                           (##fx+ arg-num 1)))))))
+                                         (if (##fx= min-len max-len)
+                                             (vect-map-n min-len rev-x-y)
+                                             (##raise-length-mismatch-exception
+                                              max-arg
+                                              '()
+                                              ,vect-map
+                                              proc
+                                              x-y))))))))))))
+
+               (define-prim (,vect-for-each proc x . y)
+                 (macro-force-vars (proc x)
+                   (macro-check-procedure proc 1 (,vect-for-each proc x . y)
+                     (,macro-check-vect x 2 (,vect-for-each proc x . y)
+                       (let ()
+
+                         (define (vect-for-each-1 x)
+
+                           (define (vect-for-each-1 i)
+                             (if (##fx< i (,##vect-length x))
+                                 (begin
+                                   (proc (,##vect-ref x i))
+                                   (vect-for-each-1 (##fx+ i 1)))
+                                 (##void)))
+
+                           (vect-for-each-1 0))
+
+                         (define (vect-for-each-n len rev-x-y)
+
+                           (define (vect-for-each-n i)
+                             (if (##fx< i len)
+                                 (let loop ((lst rev-x-y) (args '()))
+                                   (if (##pair? lst)
+                                       (loop (##cdr lst)
+                                             (##cons
+                                              (,##vect-ref (##car lst) i)
+                                              args))
+                                       (begin
+                                         (##apply proc args)
+                                         (vect-for-each-n (##fx+ i 1)))))
+                                 (##void)))
+
+                           (vect-for-each-n 0))
+
+                         (if (##null? y)
+                             (vect-for-each-1 x)
+                             (if ##allow-length-mismatch?
+
+                                 (let ((len-x (,##vect-length x))
+                                       (x-y (##cons x y)))
+                                   (let loop ((lst y)
+                                              (rev-x-y (##cons x '()))
+                                              (min-len len-x)
+                                              (arg-num 3))
+                                     (if (##pair? lst)
+                                         (let ((arg (##car lst)))
+                                           (macro-force-vars (arg)
+                                             (,macro-check-vect
+                                               arg
+                                               arg-num
+                                               (,vect-for-each proc . x-y)
+                                               (let ((len-arg
+                                                      (,##vect-length arg)))
+                                                 (loop (##cdr lst)
+                                                       (##cons arg rev-x-y)
+                                                       (##fxmin min-len len-arg)
+                                                       (##fx+ arg-num 1))))))
+                                         (vect-for-each-n min-len rev-x-y))))
+
+                                 (let ((len-x (,##vect-length x))
+                                       (x-y (##cons x y)))
+                                   (let loop ((lst y)
+                                              (rev-x-y (##cons x '()))
+                                              (min-len len-x)
+                                              (max-len len-x)
+                                              (max-arg 2)
+                                              (arg-num 3))
+                                     (if (##pair? lst)
+                                         (let ((arg (##car lst)))
+                                           (macro-force-vars (arg)
+                                             (,macro-check-vect
+                                               arg
+                                               arg-num
+                                               (,vect-for-each proc . x-y)
+                                               (let ((len-arg
+                                                      (,##vect-length arg)))
+                                                 (if (##fx> len-arg max-len)
+                                                     (loop (##cdr lst)
+                                                           (##cons arg rev-x-y)
+                                                           len-arg
+                                                           max-len
+                                                           arg-num
+                                                           (##fx+ arg-num 1))
+                                                     (loop (##cdr lst)
+                                                           (##cons arg rev-x-y)
+                                                           (##fxmin min-len
+                                                                    len-arg)
+                                                           max-len
+                                                           max-arg
+                                                           (##fx+ arg-num 1)))))))
+                                         (if (##fx= min-len max-len)
+                                             (vect-for-each-n min-len rev-x-y)
+                                             (##raise-length-mismatch-exception
+                                              max-arg
+                                              '()
+                                              ,vect-for-each
+                                              proc
+                                              x-y))))))))))))
+               )
+
+             '())
        )))
 
 ;;;============================================================================

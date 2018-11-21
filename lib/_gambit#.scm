@@ -610,11 +610,15 @@
   (let ()
 
     (define macro-check-type (sym 'macro-check- type-id))
+    (define macro-test-type (sym 'macro-test- type-id))
     (define ##fail-check-type (sym '##fail-check- type-id))
 
     `(begin
        (##define-macro (,(sym 'implement-check-type- type-id));;;;;;;;;;
          '(define-fail-check-type ,type-id ,type))
+
+     (##define-macro (,macro-test-type var)
+       `(,',predicate ,var ,@',arguments))
 
      (##define-macro (,macro-check-type var arg-num form expr)
 

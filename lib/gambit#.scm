@@ -734,6 +734,8 @@ string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
 string-ci=?-hash
+string-for-each
+string-map
 string-set
 string-shrink!
 string=?-hash

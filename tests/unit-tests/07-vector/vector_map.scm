@@ -26,7 +26,6 @@
 (check-equal? (vector-map list vect0 vect0 '#()) '#())
 (check-equal? (vector-map list vect1 vect1 '#(1)) '#((11 11 1)))
 (check-equal? (vector-map list vect2 vect2 '#(1 2)) '#((11 11 1) (22 22 2)))
-(check-equal? (vector-map list vect2 vect2 '#(1 2)) '#((11 11 1) (22 22 2)))
 
 ;; these checks verify that vectors of different lengths can be used
 (check-equal? (vector-map list vect2 vect2 '#(1)) '#((11 11 1)))
