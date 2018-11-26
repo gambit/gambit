@@ -287,6 +287,12 @@
 (check-eq? (u8vector-fill! v6 255) (void))
 (check-equal? v6 '#u8(255 255 255))
 
+(check-eq? (u8vector-fill! v6 3 1) (void))
+(check-equal? v6 '#u8(255 3 3))
+
+(check-eq? (u8vector-fill! v6 99 0 2) (void))
+(check-equal? v6 '#u8(99 99 3))
+
 (check-eq? (subu8vector-fill! v6 0 3 9) (void))
 (check-equal? v6 '#u8(9 9 9))
 
@@ -362,6 +368,8 @@
 (check-tail-exn range-exception? (lambda () (u8vector-shrink! v5 3)))
 
 (check-tail-exn type-exception? (lambda () (u8vector-fill! bool 0)))
+(check-tail-exn type-exception? (lambda () (u8vector-fill! v5 0 bool)))
+(check-tail-exn type-exception? (lambda () (u8vector-fill! v5 0 0 bool)))
 (check-tail-exn type-exception? (lambda () (u8vector-fill! v5 bool))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (u8vector-fill! v5 -1))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (u8vector-fill! v5 256))) ;; homovect only
@@ -430,7 +438,7 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-fill! v9)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-fill! v9 0 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-fill! v9 0 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu8vector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu8vector-fill! v9)))

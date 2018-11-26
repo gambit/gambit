@@ -414,16 +414,42 @@
                                    (loop2 (##cdr x) (##fx+ i 1)))))
                              vect)))))))))
 
-       (define-prim (,##vect-fill! vect fill)
-         (,##subvect-fill! vect 0 (,##vect-length vect) fill))
+       (define-prim (,##vect-fill!
+                     vect
+                     fill
+                     #!optional
+                     (start 0)
+                     (end (,##vect-length vect)))
+         (,##subvect-fill! vect start end fill))
 
-       (define-prim (,vect-fill! vect fill)
-         (macro-force-vars (vect)
+       (define-prim (,vect-fill!
+                     vect
+                     fill
+                     #!optional
+                     (start (macro-absent-obj))
+                     (end (macro-absent-obj)))
+         (macro-force-vars (vect start end)
            (,macro-force-elem (fill)
-             (,macro-check-vect vect 1 (,vect-fill! vect fill)
-               (macro-check-mutable vect 1 (,vect-fill! vect fill)
-                 (,macro-check-elem fill 2 (,vect-fill! vect fill)
-                   (,##vect-fill! vect fill)))))))
+             (,macro-check-vect vect 1 (,vect-fill! vect fill start end)
+               (macro-check-mutable vect 1 (,vect-fill! vect fill start end)
+                 (,macro-check-elem fill 2 (,vect-fill! vect fill start end)
+                   (if (##eq? start (macro-absent-obj))
+                       (,##vect-fill! vect fill)
+                       (macro-check-index-range-incl
+                         start
+                         3
+                         0
+                         (,##vect-length vect)
+                         (,vect-fill! vect fill start end)
+                         (if (##eq? end (macro-absent-obj))
+                             (,##vect-fill! vect fill start)
+                             (macro-check-index-range-incl
+                               end
+                               4
+                               start
+                               (,##vect-length vect)
+                               (,vect-fill! vect fill start end)
+                               (,##vect-fill! vect fill start end)))))))))))
 
        (define-prim (,##vect-copy vect)
          (let ((len (,##vect-length vect)))

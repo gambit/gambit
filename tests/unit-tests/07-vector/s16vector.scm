@@ -287,6 +287,12 @@
 (check-eq? (s16vector-fill! v6 32767) (void))
 (check-equal? v6 '#s16(32767 32767 32767))
 
+(check-eq? (s16vector-fill! v6 3 1) (void))
+(check-equal? v6 '#s16(32767 3 3))
+
+(check-eq? (s16vector-fill! v6 99 0 2) (void))
+(check-equal? v6 '#s16(99 99 3))
+
 (check-eq? (subs16vector-fill! v6 0 3 9) (void))
 (check-equal? v6 '#s16(9 9 9))
 
@@ -362,6 +368,8 @@
 (check-tail-exn range-exception? (lambda () (s16vector-shrink! v5 3)))
 
 (check-tail-exn type-exception? (lambda () (s16vector-fill! bool 0)))
+(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 0 bool)))
+(check-tail-exn type-exception? (lambda () (s16vector-fill! v5 0 0 bool)))
 (check-tail-exn type-exception? (lambda () (s16vector-fill! v5 bool))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s16vector-fill! v5 -32769))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s16vector-fill! v5 32768))) ;; homovect only
@@ -430,7 +438,7 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-fill! v9)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-fill! v9 0 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-fill! v9 0 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs16vector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs16vector-fill! v9)))

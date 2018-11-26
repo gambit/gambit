@@ -287,6 +287,12 @@
 (check-eq? (s32vector-fill! v6 2147483647) (void))
 (check-equal? v6 '#s32(2147483647 2147483647 2147483647))
 
+(check-eq? (s32vector-fill! v6 3 1) (void))
+(check-equal? v6 '#s32(2147483647 3 3))
+
+(check-eq? (s32vector-fill! v6 99 0 2) (void))
+(check-equal? v6 '#s32(99 99 3))
+
 (check-eq? (subs32vector-fill! v6 0 3 9) (void))
 (check-equal? v6 '#s32(9 9 9))
 
@@ -362,6 +368,8 @@
 (check-tail-exn range-exception? (lambda () (s32vector-shrink! v5 3)))
 
 (check-tail-exn type-exception? (lambda () (s32vector-fill! bool 0)))
+(check-tail-exn type-exception? (lambda () (s32vector-fill! v5 0 bool)))
+(check-tail-exn type-exception? (lambda () (s32vector-fill! v5 0 0 bool)))
 (check-tail-exn type-exception? (lambda () (s32vector-fill! v5 bool))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s32vector-fill! v5 -2147483649))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s32vector-fill! v5 2147483648))) ;; homovect only
@@ -430,7 +438,7 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-fill! v9)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-fill! v9 0 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-fill! v9 0 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs32vector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs32vector-fill! v9)))

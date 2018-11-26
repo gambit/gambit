@@ -287,6 +287,12 @@
 (check-eq? (vector-fill! v6 255) (void))
 (check-equal? v6 '#(255 255 255))
 
+(check-eq? (vector-fill! v6 3 1) (void))
+(check-equal? v6 '#(255 3 3))
+
+(check-eq? (vector-fill! v6 99 0 2) (void))
+(check-equal? v6 '#(99 99 3))
+
 (check-eq? (subvector-fill! v6 0 3 9) (void))
 (check-equal? v6 '#(9 9 9))
 
@@ -362,6 +368,8 @@
 (check-tail-exn range-exception? (lambda () (vector-shrink! v5 3)))
 
 (check-tail-exn type-exception? (lambda () (vector-fill! bool 0)))
+(check-tail-exn type-exception? (lambda () (vector-fill! v5 0 bool)))
+(check-tail-exn type-exception? (lambda () (vector-fill! v5 0 0 bool)))
 
 
 
@@ -430,7 +438,7 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fill! v9)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fill! v9 0 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fill! v9 0 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subvector-fill!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subvector-fill! v9)))
