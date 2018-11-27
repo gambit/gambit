@@ -1694,10 +1694,49 @@
             (macro-check-exact-unsigned-int8 status 1 (exit status)
               (##exit status))))))
 
-(define-prim (##getenv name #!optional (default-value (macro-absent-obj)))
+(define-prim (##get-environment-variables)
+  (let ((result (##os-environ)))
+    (if (##fixnum? result)
+        (##raise-os-exception #f result get-environment-variables)
+        (begin
+          (let loop1 ((lst result))
+            (if (##pair? lst)
+                (let ((s (##car lst)))
+                  (let loop2 ((i 0))
+                    (if (##fx< i (##string-length s))
+                        (let ((c (##string-ref s i)))
+                          (if (##char=? c #\=)
+                              (##set-car!
+                               lst
+                               (##cons (##substring s
+                                                    0
+                                                    i)
+                                       (##substring s
+                                                    (##fx+ i 1)
+                                                    (##string-length s))))
+                              (loop2 (##fx+ i 1))))
+                        (##set-car!
+                         lst
+                         (##cons s
+                                 ""))))
+                  (loop1 (##cdr lst)))))
+          result))))
+
+(define-prim (get-environment-variables)
+  (##get-environment-variables))
+
+(define-prim (##getenv
+              name
+              #!optional
+              (default-value (macro-absent-obj)))
   (let ((result (##os-getenv name)))
     (cond ((##fixnum? result)
-           (##raise-os-exception #f result getenv name default-value))
+           (##raise-os-exception
+            #f
+            result
+            getenv
+            name
+            default-value))
           ((##not result)
            (if (##eq? default-value (macro-absent-obj))
                (##raise-unbound-os-environment-variable-exception
@@ -1711,6 +1750,21 @@
   (macro-force-vars (name)
     (macro-check-string name 1 (getenv name default-value)
       (##getenv name default-value))))
+
+(define-prim (##get-environment-variable name)
+  (let ((result (##os-getenv name)))
+    (if (##fixnum? result)
+        (##raise-os-exception
+         #f
+         result
+         get-environment-variable
+         name)
+        result)))
+
+(define-prim (get-environment-variable name)
+  (macro-force-vars (name)
+    (macro-check-string name 1 (get-environment-variable name)
+      (##get-environment-variable name))))
 
 (define-prim (##setenv name #!optional (value (macro-absent-obj)))
   (let ((code (##os-setenv name value)))

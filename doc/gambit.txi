@@ -4374,6 +4374,12 @@ For example:
 @deffn procedure jiffies-per-second
 @end deffn
 
+@deffn procedure get-environment-variable @var{name}
+@end deffn
+
+@deffn procedure get-environment-variables
+@end deffn
+
 @deffn procedure open-dummy
 @end deffn
 

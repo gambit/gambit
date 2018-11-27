@@ -31,10 +31,32 @@
        (equal? out '(0 . "foobar$UNKNOWNVAR\r\n")) ;; Windows
        )))
 
+(check-true
+ (equal? (assoc "UNKNOWNVAR" (get-environment-variables))
+         '("UNKNOWNVAR" . "foobar")))
+
 ;;; Test exceptions
 
 (check-tail-exn type-exception? (lambda () (shell-command #f)))
 (check-tail-exn type-exception? (lambda () (shell-command #f #f)))
 
+(check-tail-exn type-exception? (lambda () (getenv #f)))
+
+(check-tail-exn type-exception? (lambda () (setenv #f "foo")))
+(check-tail-exn type-exception? (lambda () (setenv "foo" #f)))
+
+(check-tail-exn type-exception? (lambda () (get-environment-variable #f)))
+
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (shell-command)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (shell-command "exit 0" #f #f)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (getenv)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (getenv "HOME" #f #f)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (setenv)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (setenv "HOME" "foo" "bar")))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (get-environment-variable)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (get-environment-variable "HOME" #f)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (get-environment-variables #f)))
