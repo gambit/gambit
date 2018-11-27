@@ -4365,6 +4365,15 @@ For example:
 @deffn procedure timeout->time @var{timeout}
 @end deffn
 
+@deffn procedure current-second
+@end deffn
+
+@deffn procedure current-jiffy
+@end deffn
+
+@deffn procedure jiffies-per-second
+@end deffn
+
 @deffn procedure open-dummy
 @end deffn
 

@@ -4397,6 +4397,15 @@
   (macro-force-vars (absrel-timeout)
     (##timeout->time absrel-timeout)))
 
+(define-prim (current-second)
+  (##current-time-point))
+
+(define-prim (current-jiffy)
+  (##current-time-point))
+
+(define-prim (jiffies-per-second)
+  1)
+
 ;;;----------------------------------------------------------------------------
 
 ;;; User accessible primitives for threads.
@@ -7367,6 +7376,15 @@
 (define-prim (timeout->time absrel-timeout)
   (macro-force-vars (absrel-timeout)
     (##timeout->time absrel-timeout)))
+
+(define-prim (current-second)
+  (##current-time-point))
+
+(define-prim (current-jiffy)
+  (##current-time-point))
+
+(define-prim (jiffies-per-second)
+  1)
 
 ;;;----------------------------------------------------------------------------
 

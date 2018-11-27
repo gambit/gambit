@@ -122,8 +122,10 @@ create-symbolic-link
 current-directory
 current-error-port
 current-exception-handler
+current-jiffy
 current-processor
 current-readtable
+current-second
 current-thread
 current-time
 current-user-interrupt-handler
@@ -368,6 +370,7 @@ invalid-hash-number-exception-arguments
 invalid-hash-number-exception-procedure
 invalid-hash-number-exception?
 iota
+jiffies-per-second
 join-timeout-exception-arguments
 join-timeout-exception-procedure
 join-timeout-exception?
