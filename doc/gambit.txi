@@ -10091,7 +10091,8 @@ For example under Windows:
 
 The procedure @code{exit} causes the process to terminate with the
 status @var{status} which must be an exact integer in the range 0 to
-255.  If it is not specified, @var{status} defaults to 0.
+255 or @code{#f}.  If it is not specified, @var{status} defaults to 0.
+When @var{status} is @code{#f} the process terminates with an error status.
 
 For example under UNIX:
 
@@ -10099,9 +10100,9 @@ For example under UNIX:
 $ @b{gsi}
 Gambit @value{VERSION}
 
-> @b{(exit 42)}
+> @b{(exit #f)}
 $ @b{echo $?}
-42
+70
 @end smallexample
 
 @end deffn

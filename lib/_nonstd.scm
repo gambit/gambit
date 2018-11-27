@@ -1689,8 +1689,10 @@
   (if (##eq? status (macro-absent-obj))
       (##exit)
       (macro-force-vars (status)
-        (macro-check-exact-unsigned-int8 status 1 (exit status)
-          (##exit status)))))
+        (if (##eq? status #f)
+            (##exit-abnormally)
+            (macro-check-exact-unsigned-int8 status 1 (exit status)
+              (##exit status))))))
 
 (define-prim (##getenv name #!optional (default-value (macro-absent-obj)))
   (let ((result (##os-getenv name)))
