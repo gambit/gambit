@@ -836,11 +836,12 @@ end-of-code
                                                     args))
                                              (let ((result
                                                     (##apply proc args)))
-                                               (let ((vect
-                                                      (vect-map-n
-                                                       (##fx+ i 1))))
-                                                 (,##vect-set! vect i result)
-                                                 vect))))
+                                               (,macro-force-elem (result)
+                                                 (let ((vect
+                                                        (vect-map-n
+                                                         (##fx+ i 1))))
+                                                   (,##vect-set! vect i result)
+                                                   vect)))))
                                        (,##make-vect i))))
 
                            (vect-map-n 0))
