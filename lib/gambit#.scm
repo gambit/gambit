@@ -327,6 +327,8 @@ fxzero?
 gc-report-set!
 generate-proper-tail-calls
 gensym
+get-environment-variable
+get-environment-variables
 get-output-string
 get-output-u8vector
 get-output-vector

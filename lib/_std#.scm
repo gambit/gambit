@@ -771,8 +771,8 @@ end-of-code
 
                                 `(define (vect-map-1 i)
                                    (if (##fx< i (,##vect-length x))
-                                       (let loop ((result
-                                                   (proc (,##vect-ref x i))))
+                                       (let err ((result
+                                                  (proc (,##vect-ref x i))))
                                          (,macro-force-elem (result)
                                            (if (,macro-test-elem result)
                                                (let ((vect
@@ -780,10 +780,10 @@ end-of-code
                                                        (##fx+ i 1))))
                                                  (,##vect-set! vect i result)
                                                  vect)
-                                                (loop (,##fail-check-elem
-                                                       0
-                                                       proc
-                                                       (,##vect-ref x i))))))
+                                                (err (,##fail-check-elem
+                                                      0
+                                                      proc
+                                                      (,##vect-ref x i))))))
                                        (,##make-vect i)))
 
                                 `(define (vect-map-1 i)
@@ -801,19 +801,47 @@ end-of-code
 
                          (define (vect-map-n len rev-x-y)
 
-                           (define (vect-map-n i)
-                             (if (##fx< i len)
-                                 (let loop ((lst rev-x-y) (args '()))
-                                   (if (##pair? lst)
-                                       (loop (##cdr lst)
-                                             (##cons
-                                              (,##vect-ref (##car lst) i)
-                                              args))
-                                       (let ((result (##apply proc args)))
-                                         (let ((vect (vect-map-n (##fx+ i 1))))
-                                           (,##vect-set! vect i result)
-                                           vect))))
-                                 (,##make-vect i)))
+                           ,(if macro-test-elem
+
+                                `(define (vect-map-n i)
+                                   (if (##fx< i len)
+                                       (let loop ((lst rev-x-y) (args '()))
+                                         (if (##pair? lst)
+                                             (loop (##cdr lst)
+                                                   (##cons
+                                                    (,##vect-ref (##car lst) i)
+                                                    args))
+                                             (let err ((result
+                                                        (##apply proc args)))
+                                               (,macro-force-elem (result)
+                                                 (if (,macro-test-elem result)
+                                                     (let ((vect
+                                                            (vect-map-n
+                                                             (##fx+ i 1))))
+                                                       (,##vect-set! vect i result)
+                                                       vect)
+                                                     (err (,##fail-check-elem
+                                                           0
+                                                           proc
+                                                           (,##vect-ref x i))))))))
+                                       (,##make-vect i)))
+
+                                `(define (vect-map-n i)
+                                   (if (##fx< i len)
+                                       (let loop ((lst rev-x-y) (args '()))
+                                         (if (##pair? lst)
+                                             (loop (##cdr lst)
+                                                   (##cons
+                                                    (,##vect-ref (##car lst) i)
+                                                    args))
+                                             (let ((result
+                                                    (##apply proc args)))
+                                               (let ((vect
+                                                      (vect-map-n
+                                                       (##fx+ i 1))))
+                                                 (,##vect-set! vect i result)
+                                                 vect))))
+                                       (,##make-vect i))))
 
                            (vect-map-n 0))
 
