@@ -1,11 +1,11 @@
 #!/usr/bin/awk -f
 
 function clearvars () {
-  cpu        = "";
   real       = "";
+  cpu        = "";
   codesize   = "";
-  failed     = 0;
   crashed    = 0;
+  failed     = 0;
   runtime    = 0;
   cycles     = "";
   instrs     = "";
@@ -17,25 +17,22 @@ function clearvars () {
 function output () {
   if (runtime == 1) {
 
+    if (real == "") {
+       crashed = 1;
+    }
+
     failure = "";
 
-    if ((crashed != 0) && (failed == 0)) {
-       failure = "crashed";
+    if (crashed != 0) {
+       failure = "CRASH";
     }
-    else if  ((crashed == 0) && (failed != 0)) {
-      failure = "failed";
-    }
-    else if  ((crashed != 0) && (failed != 0)) {
-      failure = "crashed-and-failed";
+    else if (failed != 0) {
+      failure = "FAIL";
     }
 
-    if (failure == "") {
-      printf "(%-10s %10s %10s %10s %10s %10s %10s)\n", test, real, cpu, cycles, instrs, branches, branchmisses;
-    }
-    else {
-      printf "(%-10s   %10s)\n", test, failure;
-    }
+    printf "(%-9s %9.6f %9.6f %9s %9s %9s %9s %6s)\n", test, real, cpu, cycles, instrs, branches, branchmisses, failure;
   }
+
   clearvars();
 }
 
@@ -84,12 +81,20 @@ runtime == 1 && /ERROR/ && $0 !~ /^FATAL-ERROR$/ && $0 !~ /^SCHEME-ERROR$/ && $0
   crashed = 1;
 }
 
-runtime == 1 && /^[ ]*[0-9.]+ .* cpu time \([0-9.]+ user, [0-9.]+ system\)$/ {
+runtime == 1 && /^[ ]*[0-9.]+ secs cpu time \([0-9.]+ user, [0-9.]+ system\)$/ {
   cpu = $1;
 }
 
-runtime == 1 && /^[ ]*[0-9.]+ .* real time$/ {
+runtime == 1 && /^[ ]*[0-9]+ ms cpu time \([0-9]+ user, [0-9]+ system\)$/ {
+  cpu = $1/1000;
+}
+
+runtime == 1 && /^[ ]*[0-9.]+ secs real time$/ {
   real = $1;
+}
+
+runtime == 1 && /^[ ]*[0-9]+ ms real time$/ {
+  real = $1/1000;
 }
 
 runtime == 1 && /^cpu time: ([0-9]+) real time: ([0-9]+)/ {
