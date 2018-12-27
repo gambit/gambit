@@ -667,6 +667,8 @@
 
 (define-prim (##gc-hash-table-ref gcht key))
 (define-prim (##gc-hash-table-set! gcht key val))
+(define-prim (##gc-hash-table-union! gcht key1 key2) (##c-code "___RESULT = ___GCHASHTABLEUNION(___ARG1,___ARG2,___ARG3);" gcht key1 key2)) ;; TODO: remove after bootstrap
+(define-prim (##gc-hash-table-find! gcht key1 key2) (##c-code "___RESULT = ___GCHASHTABLEFIND(___ARG1,___ARG2,___ARG3);" gcht key1 key2)) ;; TODO: remove after bootstrap
 (define-prim (##gc-hash-table-rehash! gcht-src gcht-dst))
 
 (define-prim (##smallest-prime-no-less-than n) ;; n >= 3
@@ -679,7 +681,60 @@
             (else
              (loop2 (##fx+ d 2)))))))
 
-(define-prim (##gc-hash-table-resize! table gcht loads)
+(##define-macro (define-loose-smallest-prime-no-less-than max-param res)
+  (let* ((resm1 (- res 1))
+         (2^resm1 (expt 2 resm1))
+         (2^resm1-1 (- 2^resm1 1)))
+
+    (define (to-expo n)
+      (let ((len (integer-length n)))
+        (cons (arithmetic-shift n (- res len)) len)))
+
+    (define (from-expo-lo x)
+      (arithmetic-shift (car x) (- (cdr x) res)))
+
+    (define (from-expo-hi x)
+      (- (from-expo-lo (cons (+ 1 (car x)) (cdr x))) 1))
+
+    (define (smallest-prime-no-less-than n) ;; n >= 3
+      (let loop1 ((n (if (even? n) (+ n 1) n)))
+        (let loop2 ((d 3))
+          (cond ((< n (* d d))
+                 n)
+                ((zero? (modulo n d))
+                 (loop1 (+ n 2)))
+                (else
+                 (loop2 (+ d 2)))))))
+
+    (define (vector-of-primes)
+      (let loop ((i 0) (lst '()))
+        (let* ((n (+ 2^resm1 i))
+               (x (cons (+ 2^resm1 (bitwise-and 2^resm1-1 n))
+                        (+ resm1 (arithmetic-shift n (- resm1)))))
+               (lo (from-expo-lo x)))
+          (if (<= lo max-param)
+              (let* ((hi (from-expo-hi x))
+                     (p (smallest-prime-no-less-than hi)))
+                ;;(pp (list i n x lo '.. hi p))
+                (loop (+ i 1) (cons p lst)))
+              (list->u64vector (reverse lst))))))
+
+    `(define-prim (##loose-smallest-prime-no-less-than n)
+       (let* ((primes ',(vector-of-primes))
+              (len (##fxlength n))
+              (shift (##fx- len ,res)))
+         (if (##fx< shift 0)
+             (##u64vector-ref primes 0)
+             (let ((i (##fx+ (##fxand (##fxarithmetic-shift-right n shift)
+                                      ,2^resm1-1)
+                             (##fxarithmetic-shift-left shift ,resm1))))
+               (if (##fx< i (##u64vector-length primes))
+                   (##u64vector-ref primes i)
+                   #f)))))))
+
+(define-loose-smallest-prime-no-less-than 4294967295 4)
+
+(define-prim (##gc-hash-table-resize! gcht loads)
   (let* ((count
           (macro-gc-hash-table-count gcht))
          (n
@@ -691,7 +746,7 @@
      n
      (##fxand
       (macro-gc-hash-table-flags gcht)
-      (##fxnot
+      (##fxnot ;; remove the following flags
        (##fxior
         (macro-gc-hash-table-flag-key-moved)
         (##fxior
@@ -701,18 +756,42 @@
 
 (define-prim (##gc-hash-table-allocate n flags loads)
   (if (##fx< (macro-gc-hash-table-minimal-nb-entries) n)
-      (let* ((nb-entries
-              (##smallest-prime-no-less-than (##fx+ n 1)))
-             (min-count
+      (let ((nb-entries
+             (##loose-smallest-prime-no-less-than n)))
+        (if (##not nb-entries)
+            (##raise-heap-overflow-exception)
+            (let* ((min-count
+                    (##flonum->fixnum
+                     (##fl* (##fixnum->flonum nb-entries)
+                            (##f64vector-ref loads 0))))
+                   (free
+                    (##flonum->fixnum
+                     (##fl* (##fixnum->flonum
+                             (##fx- nb-entries
+                                    (macro-gc-hash-table-minimal-free)))
+                            (##f64vector-ref loads 2)))))
+              (macro-make-gc-hash-table
+               flags
+               0
+               min-count
+               free
+               nb-entries))))
+      (macro-make-minimal-gc-hash-table
+       flags
+       0)))
+
+(define-prim (##gc-hash-table-allocate2 nb-entries flags loads)
+  (if (##fx< (macro-gc-hash-table-minimal-nb-entries) nb-entries)
+      (let* ((min-count
               (##flonum->fixnum
-               (##fl* (##fixnum->flonum n)
+               (##fl* (##fixnum->flonum nb-entries)
                       (##f64vector-ref loads 0))))
              (free
-              (##fx+ 1
-                     (##flonum->fixnum
-                      (##fl* (##fixnum->flonum
-                              (##fx- nb-entries 1))
-                             (##f64vector-ref loads 2))))))
+              (##flonum->fixnum
+               (##fl* (##fixnum->flonum
+                       (##fx- nb-entries
+                              (macro-gc-hash-table-minimal-free)))
+                      (##f64vector-ref loads 2)))))
         (macro-make-gc-hash-table
          flags
          0
@@ -1157,9 +1236,7 @@
                    (##fxmodulo h size)
                    1))
                  (step2
-                  (##fxarithmetic-shift-left
-                   (##fx+ (##fxmodulo h (##fx- size 1)) 1)
-                   1))
+                  2)
                  (size2
                   (##fxarithmetic-shift-left size 1))
                  (test
@@ -1240,7 +1317,7 @@
   (##declare (not interrupts-enabled))
   (let ((gcht (macro-table-gcht table)))
     (let ((new-gcht
-           (##gc-hash-table-resize! table gcht (macro-table-loads table))))
+           (##gc-hash-table-resize! gcht (macro-table-loads table))))
       (macro-table-gcht-set! table new-gcht)
       (let loop ((i (macro-gc-hash-table-key0)))
         (if (##fx< i (##vector-length gcht))
@@ -1306,7 +1383,7 @@
               (let ((new-gcht
                      (##gc-hash-table-rehash!
                       gcht
-                      (##gc-hash-table-resize! table gcht (macro-table-loads table)))))
+                      (##gc-hash-table-resize! gcht (macro-table-loads table)))))
                 (if (##mem-allocated? key)
                     (macro-table-gcht-set! table new-gcht)
                     (macro-table-hash-set! table new-gcht))))

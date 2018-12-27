@@ -192,10 +192,11 @@
 ;; A GC hash table is represented by an object vector
 ;; slot 0 = link to next GC hash table
 ;; slot 1 = flags (1=weak keys, 2=weak values, 4=need rehashing, ...)
-;; slot 2 = na (number of allocations before need to grow)
-;; slot 3 = nd (number of deallocations before need to shrink)
-;; slot 4 = key of entry #0
-;; slot 5 = value of entry #0
+;; slot 2 = count (nb. of keys in table)
+;; slot 3 = min-count (nb. of keys below which table needs to shrink)
+;; slot 4 = free (nb. of keys that can be added to table before need to grow)
+;; slot 5 = key of entry #0
+;; slot 6 = value of entry #0
 
 (##define-macro (macro-gc-hash-table-nb-entries ht)
   `(##fxwraplogical-shift-right
@@ -203,6 +204,7 @@
     1))
 
 (##define-macro (macro-gc-hash-table-minimal-nb-entries) 5)
+(##define-macro (macro-gc-hash-table-minimal-free) 2) ;; need 2 free entries for union/find
 
 (##define-macro (macro-make-minimal-gc-hash-table flags count)
   `(let ((ht
@@ -211,7 +213,8 @@
            ,flags
            ,count
            0 ;; min-count
-           4 ;; free
+           3 ;; free = (- (macro-gc-hash-table-minimal-nb-entries)
+             ;;           (macro-gc-hash-table-minimal-free))
            (macro-unused-obj) (macro-unused-obj)
            (macro-unused-obj) (macro-unused-obj)
            (macro-unused-obj) (macro-unused-obj)
@@ -233,6 +236,11 @@
      (##subtype-set! ht (macro-subtype-weak))
      ht))
 
+(##define-macro (macro-gc-hash-table-size ht)
+  `(##fxarithmetic-shift-right
+    (##fx- (##vector-length ,ht) (macro-gc-hash-table-key0))
+    1))
+
 (##define-macro (macro-gc-hash-table-flags ht)        `(macro-slot 1 ,ht))
 (##define-macro (macro-gc-hash-table-flags-set! ht x) `(macro-slot 1 ,ht ,x))
 (##define-macro (macro-gc-hash-table-count ht)        `(macro-slot 2 ,ht))
@@ -251,6 +259,7 @@
 (##define-macro (macro-gc-hash-table-flag-entry-deleted)  8)
 (##define-macro (macro-gc-hash-table-flag-mem-alloc-keys) 16)
 (##define-macro (macro-gc-hash-table-flag-need-rehash)    32)
+(##define-macro (macro-gc-hash-table-flag-union-find)     64)
 
 (##define-macro (macro-gc-hash-table-key-ref ht i*2)
   `(##vector-ref ,ht (##fx+ ,i*2 (macro-gc-hash-table-key0))))

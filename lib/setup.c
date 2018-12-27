@@ -4978,6 +4978,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___gc_hash_table_set
     = ___gc_hash_table_set;
 
+  ___GSTATE->___gc_hash_table_union_find
+    = ___gc_hash_table_union_find;
+
   ___GSTATE->___gc_hash_table_rehash
     = ___gc_hash_table_rehash;
 

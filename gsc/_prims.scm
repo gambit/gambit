@@ -749,6 +749,8 @@
 
 ("##gc-hash-table-ref"                (2)   #f ()    0    (#f)    extended)
 ("##gc-hash-table-set!"               (3)   #t ()    0    (#f)    extended)
+("##gc-hash-table-union!"             (3)   #t ()    0    fixnum  extended)
+("##gc-hash-table-find!"              (3)   #t ()    0    fixnum  extended)
 ("##gc-hash-table-rehash!"            (2)   #t ()    0    (#f)    extended)
 
 ("##box"                              (1)   #f ()    0    #f      extended)

@@ -3622,6 +3622,8 @@
 
 (targ-op "##gc-hash-table-ref"     (targ-apply-simp-u #f #f #f "GCHASHTABLEREF"))
 (targ-op "##gc-hash-table-set!"    (targ-apply-simp-u #f #f 0 "GCHASHTABLESET")) ;;TODO: what should be ssb-space?
+(targ-op "##gc-hash-table-union!"  (targ-apply-simp-u #f #f 0 "GCHASHTABLEUNION")) ;;TODO: what should be ssb-space?
+(targ-op "##gc-hash-table-find!"   (targ-apply-simp-u #f #f 0 "GCHASHTABLEFIND")) ;;TODO: what should be ssb-space?
 (targ-op "##gc-hash-table-rehash!" (targ-apply-simp-u #f #f 0 "GCHASHTABLEREHASH")) ;;TODO
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

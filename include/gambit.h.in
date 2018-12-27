@@ -3724,10 +3724,46 @@ ___GET_SUBTYPED(___WILL_SIZE))
 
 #define ___GCHASHTABLEREF(x,y)___EXT(___gc_hash_table_ref)(x,y)
 #define ___GCHASHTABLESET(x,y,z)___EXT(___gc_hash_table_set)(x,y,z)
+#define ___GCHASHTABLEUNION(x,y,z)___EXT(___gc_hash_table_union_find)(x,y,z,0)
+#define ___GCHASHTABLEFIND(x,y,z)___EXT(___gc_hash_table_union_find)(x,y,z,1)
 #define ___GCHASHTABLEREHASH(x,y)___EXT(___gc_hash_table_rehash)(x,y)
 
-#define ___GCHASHTABLE_HASH1(obj,mod) ((((obj)>>___TB)&___MAX_FIX)%(mod))
-#define ___GCHASHTABLE_HASH2(obj,mod) (((((obj)>>___TB)&___MAX_FIX)%((mod)-1))+1)
+#define ___ROTL32(n,shift) (((n)<<(shift)) | ((n)>>((-(shift))&31)))
+#define ___ROTR32(n,shift) (((n)>>(shift)) | ((n)<<((-(shift))&31)))
+#define ___ROTL64(n,shift) (((n)<<(shift)) | ((n)>>((-(shift))&63)))
+#define ___ROTR64(n,shift) (((n)>>(shift)) | ((n)<<((-(shift))&63)))
+
+#if ___WS == 4
+
+#define ___GCHASHTABLE_HASH_STEP_MULT(hash,step,obj,size) \
+do { \
+  ___U32 x = ___ROTR32(obj,___TB); \
+  x ^= ((4096+256+1)*___ROTL32(x,16)); \
+  hash = (___CAST(___U64,x) * ___CAST(___U32,size)) >> 32; \
+  step = 1; \
+} while (0)
+
+#else
+
+#define ___GCHASHTABLE_HASH_STEP_MULT(hash,step,obj,size) \
+do { \
+  ___U64 o = ___ROTR64(obj,___TB); \
+  ___U32 x = o ^ (o >> 32); \
+  x ^= ((4096+256+1)*___ROTL32(x,16)); \
+  hash = (___CAST(___U64,x) * ___CAST(___U32,size)) >> 32; \
+  step = 1; \
+} while (0)
+
+#endif
+
+#define ___GCHASHTABLE_HASH_STEP_MOD(hash,step,obj,size) \
+do { \
+  hash = (___CAST(___UWORD,obj)>>___TB) % (size); \
+  step = 1; \
+} while (0)
+
+#define ___GCHASHTABLE_HASH_STEP(hash,step,obj,size) \
+___GCHASHTABLE_HASH_STEP_MULT(hash,step,obj,size)
 
 #define ___GCHASHTABLE_FLAG_WEAK_KEYS      1
 #define ___GCHASHTABLE_FLAG_WEAK_VALS      2
@@ -3735,6 +3771,7 @@ ___GET_SUBTYPED(___WILL_SIZE))
 #define ___GCHASHTABLE_FLAG_ENTRY_DELETED  8
 #define ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS 16
 #define ___GCHASHTABLE_FLAG_NEED_REHASH    32
+#define ___GCHASHTABLE_FLAG_UNION_FIND     64
 
 #define ___GCHASHTABLE_NEXT      0
 #define ___GCHASHTABLE_FLAGS     1
@@ -10450,6 +10487,12 @@ typedef struct ___global_state_struct
              ___SCMOBJ key,
              ___SCMOBJ val),
             ());
+    ___SCMOBJ (*___gc_hash_table_union_find)
+       ___P((___SCMOBJ ht,
+             ___SCMOBJ key1,
+             ___SCMOBJ key2,
+             ___BOOL find),
+            ());
     ___SCMOBJ (*___gc_hash_table_rehash)
        ___P((___SCMOBJ ht_src,
              ___SCMOBJ ht_dst),
@@ -11724,6 +11767,12 @@ ___IMP_FUNC(___SCMOBJ,___gc_hash_table_set)
    ___P((___SCMOBJ ht,
          ___SCMOBJ key,
          ___SCMOBJ val),
+        ());
+___IMP_FUNC(___SCMOBJ,___gc_hash_table_union_find)
+   ___P((___SCMOBJ ht,
+         ___SCMOBJ key1,
+         ___SCMOBJ key2,
+         ___BOOL find),
         ());
 ___IMP_FUNC(___SCMOBJ,___gc_hash_table_rehash)
    ___P((___SCMOBJ ht_src,
