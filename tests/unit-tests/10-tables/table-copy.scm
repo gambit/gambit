@@ -40,7 +40,7 @@
      (check-equal? (table-ref copy 'not-found "not-found") "not-found")
      (check-not-eq? t copy)
      (check-= (table-length t) (table-length copy))
-     (check-true (##table-equal? t copy))))
+     (check-true (equal? t copy))))
 
  (list (make-table)
        (make-table weak-keys: #t)

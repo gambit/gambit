@@ -127,8 +127,6 @@
 ;;;    (##type-flags ...)
 ;;;    (##type-id ...)
 ;;;    (##type-super ...)
-;;; from _table.scm
-;;;    (##table-equal? ...)
 ;;; from _num.scm
 ;;;    (##exact-int.= ...)
 ;;;    (##ratnum.= ...)
@@ -178,21 +176,42 @@
 
 ;;;----------------------------------------------------------------------------
 
-(##define-macro (macro-numeqv?-otherwise obj1 obj2 otherwise)
+(##define-macro (macro-numeqv?-otherwise obj1 obj2 true false otherwise)
   `(macro-number-dispatch ,obj1 ,otherwise
-     (and (##fixnum? ,obj2) (##fx= ,obj1 ,obj2)) ;; obj1 = fixnum
-     (and (##bignum? ,obj2) (##exact-int.= ,obj1 ,obj2)) ;; obj1 = bignum
-     (and (##ratnum? ,obj2) (##ratnum.= ,obj1 ,obj2)) ;; obj1 = ratnum
-     (and (##flonum? ,obj2) (##fleqv? ,obj1 ,obj2)) ;; obj1 = flonum
-     (and (##cpxnum? ,obj2) ;; obj1 = cpxnum
-          (##eqv? (macro-cpxnum-real ,obj1) (macro-cpxnum-real ,obj2))
-          (##eqv? (macro-cpxnum-imag ,obj1) (macro-cpxnum-imag ,obj2)))))
+     (if (##fixnum? ,obj2) ;; obj1 = fixnum
+         (if (##fx= ,obj1 ,obj2)
+             ,true
+             ,false)
+         ,false)
+     (if (##bignum? ,obj2) ;; obj1 = bignum
+         (if (##exact-int.= ,obj1 ,obj2)
+             ,true
+             ,false)
+         ,false)
+     (if (##ratnum? ,obj2) ;; obj1 = ratnum
+         (if (##ratnum.= ,obj1 ,obj2)
+             ,true
+             ,false)
+         ,false)
+     (if (##flonum? ,obj2) ;; obj1 = flonum
+         (if (##fleqv? ,obj1 ,obj2)
+             ,true
+             ,false)
+         ,false)
+     (if (##cpxnum? ,obj2) ;; obj1 = cpxnum
+         (if (and (##eqv? (macro-cpxnum-real ,obj1) (macro-cpxnum-real ,obj2))
+                  (##eqv? (macro-cpxnum-imag ,obj1) (macro-cpxnum-imag ,obj2)))
+             ,true
+             ,false)
+         ,false)))
 
 (define-prim (##eqv? obj1 obj2)
   (or (##eq? obj1 obj2)
       (macro-numeqv?-otherwise
        obj1
        obj2
+       #t
+       #f
        #f)))
 
 (define-prim (eqv? obj1 obj2)
@@ -207,119 +226,503 @@
   (macro-force-vars (obj1 obj2)
     (##eq? obj1 obj2)))
 
+;;-----------------------------------------------------------------------------
+
+(##define-macro (macro-define-equal-objs?
+                 equal-objs?
+                 params
+                 custom-recursion-handler
+                 .
+                 local-defines)
+  `(define (,equal-objs? obj1 obj2 ,@params)
+
+     ,@local-defines
+
+     ,@(if custom-recursion-handler
+           `()
+           `((define (table-equal obj1 obj2 ,@params)
+               (conj (gc-hash-table-equal (macro-table-gcht obj1)
+                                          obj2
+                                          ,@params)
+                     (if (macro-table-test obj1)
+                         (gc-hash-table-equal (macro-table-hash obj1)
+                                              obj2
+                                              ,@params)
+                         (true))))
+
+             (define (gc-hash-table-equal ht1 table2 ,@params)
+               (##declare (not interrupts-enabled))
+               (if (##gc-hash-table? ht1)
+                   (let loop ((i (macro-gc-hash-table-key0))
+                              ,@(map (lambda (p) `(,p ,p))
+                                     params))
+                     (if (##fx< i (##vector-length ht1))
+                         (let ((key1 (##vector-ref ht1 i)))
+                           (if (or (##eq? key1 (macro-unused-obj))
+                                   (##eq? key1 (macro-deleted-obj)))
+                               (let ()
+                                 (##declare (interrupts-enabled))
+                                 (loop (##fx+ i 2)
+                                       ,@params))
+                               (let* ((val1
+                                       (##vector-ref ht1 (##fx+ i 1)))
+                                      (val2
+                                       (##table-ref table2
+                                                    key1
+                                                    (macro-unused-obj))))
+                                 (conj (,equal-objs?
+                                        val1
+                                        val2
+                                        ,@params)
+                                       (let ()
+                                         (##declare (interrupts-enabled))
+                                         (loop (##fx+ i 2)
+                                               ,@params))))))
+                         (true)))))
+
+             (define (structure-equal obj1 obj2 type len ,@params)
+               (if (##not type) ;; have we reached root of inheritance chain?
+                   (true)
+                   (let ((fields (##type-fields type)))
+                     (let loop ((i*3 (##fx- (##vector-length fields) 3))
+                                (len len)
+                                ,@(map (lambda (p) `(,p ,p))
+                                       params))
+                       (if (##fx< i*3 0) ;; time to check inherited fields?
+                           (structure-equal obj1
+                                            obj2
+                                            (##type-super type)
+                                            len
+                                            ,@params)
+                           (let ((field-attributes
+                                  (##vector-ref fields (##fx+ i*3 1)))
+                                 (len-1
+                                  (##fx- len 1)))
+                             (if (##not (##fx= ;; equality-skip flag set?
+                                         (##fxand field-attributes 4)
+                                         0))
+                                 (loop (##fx- i*3 3) ;; don't check this field
+                                       len-1
+                                       ,@params)
+                                 (conj (,equal-objs? (##unchecked-structure-ref
+                                                      obj1
+                                                      len-1
+                                                      type
+                                                      #f)
+                                                     (##unchecked-structure-ref
+                                                      obj2
+                                                      len-1
+                                                      type
+                                                      #f)
+                                                     ,@params)
+                                       (loop (##fx- i*3 3)
+                                             len-1
+                                             ,@params)))))))))))
+
+     (macro-force-vars (obj1 obj2)
+       (if (##eq? obj1 obj2)
+           (begin
+             (profile! 0)
+             (true))
+           (cond ((##pair? obj1)
+                  (profile! 1)
+                  (if (##not (##pair? obj2))
+                      (false)
+                      ,(if custom-recursion-handler
+                           `(,custom-recursion-handler obj1 obj2 ,@params)
+                           `(recursion
+                             obj1
+                             obj2
+                             (conj (,equal-objs? (##car obj1)
+                                                 (##car obj2)
+                                                 ,@params)
+                                   (,equal-objs? (##cdr obj1)
+                                                 (##cdr obj2)
+                                                 ,@params))))))
+                 ((##vector? obj1)
+                  (profile! 2)
+                  (if (##not (##vector? obj2))
+                      (false)
+                      (let ((len (##vector-length obj1)))
+                        (if (##not (##fx= len (##vector-length obj2)))
+                            (false)
+                            ,(if custom-recursion-handler
+                                 `(,custom-recursion-handler obj1 obj2 ,@params)
+                                 `(recursion
+                                   obj1
+                                   obj2
+                                   (let loop ((i (##fx- len 1))
+                                              ,@(map (lambda (p) `(,p ,p))
+                                                     params))
+                                     (if (##fx< i 0)
+                                         (true)
+                                         (conj (,equal-objs?
+                                                (##vector-ref obj1 i)
+                                                (##vector-ref obj2 i)
+                                                ,@params)
+                                               (loop (##fx- i 1)
+                                                     ,@params))))))))))
+                 ((##fixnum? obj1)
+                  (profile! 3)
+                  (if (and (##fixnum? obj2)
+                           (##fx= obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##bignum? obj1)
+                  (profile! 4)
+                  (if (and (##bignum? obj2)
+                           (##exact-int.= obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##ratnum? obj1)
+                  (profile! 5)
+                  (if (and (##ratnum? obj2)
+                           (##ratnum.= obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##flonum? obj1)
+                  (profile! 6)
+                  (if (and (##flonum? obj2)
+                           (##fleqv? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##cpxnum? obj1)
+                  (profile! 7)
+                  (if (and (##cpxnum? obj2)
+                           (##eqv? (macro-cpxnum-real obj1)
+                                   (macro-cpxnum-real obj2))
+                           (##eqv? (macro-cpxnum-imag obj1)
+                                   (macro-cpxnum-imag obj2)))
+                      (true)
+                      (false)))
+                 ((macro-table? obj1)
+                  (profile! 8)
+                  (if (##not (and (macro-table? obj2)
+                                  (##fx= (macro-table-flags obj1)
+                                         (macro-table-flags obj2))
+                                  (##eq? (macro-table-test obj1)
+                                         (macro-table-test obj2))
+                                  (if (macro-table-test obj1)
+                                      (##eq? (macro-table-hash obj1)
+                                             (macro-table-hash obj2))
+                                      #t)
+                                  (##fx= (##table-length obj1)
+                                         (##table-length obj2))))
+                      (false)
+                      ,(if custom-recursion-handler
+                           `(,custom-recursion-handler
+                             obj1
+                             obj2
+                             ,@params)
+                           `(recursion
+                             obj1
+                             obj2
+                             (table-equal
+                              obj1
+                              obj2
+                              ,@params)))))
+                 ((##structure? obj1)
+                  (profile! 9)
+                  (if (##not (##structure? obj2))
+                      (false)
+                      (let ((type (##structure-type obj1)))
+                        (if (##not (##eq? (##type-id type)
+                                          (##type-id
+                                           (##structure-type obj2))))
+                            (false)
+                            (let ((len (##structure-length obj1)))
+                              (if (##not
+                                   (and (##fx=
+                                         len
+                                         (##structure-length obj2))
+                                        (##fx= ;; not opaque?
+                                         (##fxand
+                                          (##type-flags type)
+                                          1)
+                                         0)))
+                                  (false)
+                                  ,(if custom-recursion-handler
+                                       `(,custom-recursion-handler
+                                         obj1
+                                         obj2
+                                         ,@params)
+                                       `(recursion
+                                         obj1
+                                         obj2
+                                         (structure-equal
+                                          obj1
+                                          obj2
+                                          type
+                                          len
+                                          ,@params)))))))))
+                 ((##box? obj1)
+                  (profile! 10)
+                  (if (##not (##box? obj2))
+                      (false)
+                      ,(if custom-recursion-handler
+                           `(,custom-recursion-handler
+                             obj1
+                             obj2
+                             ,@params)
+                           `(recursion
+                             obj1
+                             obj2
+                             (,equal-objs?
+                              (##unbox obj1)
+                              (##unbox obj2)
+                              ,@params)))))
+                 ((##string? obj1)
+                  (profile! 11)
+                  (if (and (##string? obj2)
+                           (##string-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##u8vector? obj1)
+                  (profile! 12)
+                  (if (and (##u8vector? obj2)
+                           (##u8vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##s8vector? obj1)
+                  (profile! 13)
+                  (if (and (##s8vector? obj2)
+                           (##s8vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##u16vector? obj1)
+                  (profile! 14)
+                  (if (and (##u16vector? obj2)
+                           (##u16vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##s16vector? obj1)
+                  (profile! 15)
+                  (if (and (##s16vector? obj2)
+                           (##s16vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##u32vector? obj1)
+                  (profile! 16)
+                  (if (and (##u32vector? obj2)
+                           (##u32vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##s32vector? obj1)
+                  (profile! 17)
+                  (if (and (##s32vector? obj2)
+                           (##s32vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##u64vector? obj1)
+                  (profile! 18)
+                  (if (and (##u64vector? obj2)
+                           (##u64vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##s64vector? obj1)
+                  (profile! 19)
+                  (if (and (##s64vector? obj2)
+                           (##s64vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##f32vector? obj1)
+                  (profile! 20)
+                  (if (and (##f32vector? obj2)
+                           (##f32vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 ((##f64vector? obj1)
+                  (profile! 21)
+                  (if (and (##f64vector? obj2)
+                           (##f64vector-equal? obj1 obj2))
+                      (true)
+                      (false)))
+                 (else
+                  (profile! 22)
+                  (false)))))))
+
+(define ##equal-hint 0)
+
+(##define-macro (macro-equal-hint-get)
+  `##equal-hint)
+
+(##define-macro (macro-equal-hint-set! hint)
+  `(let ((h ,hint))
+     (set! ##equal-hint h)))
+
 (define-prim (##equal? obj1 obj2)
 
-  (define (structure-equal obj1 obj2 type len)
-    (or (##not type) ;; have we reached root of inheritance chain?
-        (let ((fields (##type-fields type)))
-          (let loop ((i*3 (##fx- (##vector-length fields) 3))
-                     (len len))
-            (if (##fx< i*3 0)
-                (structure-equal obj1 obj2 (##type-super type) len)
-                (let ((field-attributes
-                       (##vector-ref fields (##fx+ i*3 1)))
-                      (len-1
-                       (##fx- len 1)))
-                  (and (or (##not (##fx=
-                                   (##fxand field-attributes 4)
-                                   0))
-                           (equal (##unchecked-structure-ref
-                                   obj1
-                                   len-1
-                                   type
-                                   #f)
-                                  (##unchecked-structure-ref
-                                   obj2
-                                   len-1
-                                   type
-                                   #f)))
-                       (loop (##fx- i*3 3)
-                             len-1))))))))
+  ;; various parameters to control how much effort is assigned to the fast
+  ;; and slow algorithms
 
-  (define (equal obj1 obj2)
-    (macro-force-vars (obj1 obj2)
-      (or (##eq? obj1 obj2)
-          (macro-numeqv?-otherwise
-           obj1
-           obj2
-           (cond ((##pair? obj1)
-                  (and (##pair? obj2)
-                       (equal (##car obj1) (##car obj2))
-                       (equal (##cdr obj1) (##cdr obj2))))
-                 ((##vector? obj1)
-                  (and (##vector? obj2)
-                       (##vector-equal? obj1 obj2)))
-                 ((##string? obj1)
-                  (and (##string? obj2)
-                       (##string-equal? obj1 obj2)))
-                 ((##u8vector? obj1)
-                  (and (##u8vector? obj2)
-                       (##u8vector-equal? obj1 obj2)))
-                 ((##s8vector? obj1)
-                  (and (##s8vector? obj2)
-                       (##s8vector-equal? obj1 obj2)))
-                 ((##u16vector? obj1)
-                  (and (##u16vector? obj2)
-                       (##u16vector-equal? obj1 obj2)))
-                 ((##s16vector? obj1)
-                  (and (##s16vector? obj2)
-                       (##s16vector-equal? obj1 obj2)))
-                 ((##u32vector? obj1)
-                  (and (##u32vector? obj2)
-                       (##u32vector-equal? obj1 obj2)))
-                 ((##s32vector? obj1)
-                  (and (##s32vector? obj2)
-                       (##s32vector-equal? obj1 obj2)))
-                 ((##u64vector? obj1)
-                  (and (##u64vector? obj2)
-                       (##u64vector-equal? obj1 obj2)))
-                 ((##s64vector? obj1)
-                  (and (##s64vector? obj2)
-                       (##s64vector-equal? obj1 obj2)))
-                 ((##f32vector? obj1)
-                  (and (##f32vector? obj2)
-                       (##f32vector-equal? obj1 obj2)))
-                 ((##f64vector? obj1)
-                  (and (##f64vector? obj2)
-                       (##f64vector-equal? obj1 obj2)))
-                 ((macro-table? obj1)
-                  (and (macro-table? obj2)
-                       (##table-equal? obj1 obj2)))
-                 ((##structure? obj1)
-                  (and (##structure? obj2)
-                       (let* ((type-obj1
-                               (##structure-type obj1))
-                              (type-obj2
-                               (##structure-type obj2))
-                              (type-id-obj1
-                               (##type-id type-obj1))
-                              (type-id-obj2
-                               (##type-id type-obj2)))
-                         (and (##eq? type-id-obj1
-                                     type-id-obj2)
-                              (let ((len-obj1
-                                     (##vector-length obj1)))
-                                (and (##fx=
-                                      len-obj1
-                                      (##vector-length obj2))
-                                     (##fx= ;; not opaque?
-                                      (##fxand
-                                       (##type-flags type-obj1)
-                                       1)
-                                      0)
-                                     (structure-equal
-                                      obj1
-                                      obj2
-                                      type-obj1
-                                      len-obj1)))))))
-                 ((##box? obj1)
-                  (and (##box? obj2)
-                       (equal (##unbox obj1)
-                              (##unbox obj2))))
-                 (else
-                  #f))))))
+  (define fast-bank0    150)
+  (define slow-size0    40)
+  (define fast-bank1    2000)
+  (define limit-growth  4)
+  (define hint-bloat    135)
+  (define max-used-bank 100000)
+  (define max-ht-count  4000)
+  (define loads         '#f64(0.0 0.2 0.85))
 
-  (equal obj1 obj2))
+  (##define-macro (profile! i)
+    `#f) ;; disable profiling
+
+  ;; fast equality testing using a time bank to terminate when objects
+  ;; have sharing or cycles
+
+  (macro-define-equal-objs?
+   fast-equal-objs? (bank)
+   #f
+
+   (##define-macro (true) `bank)
+   (##define-macro (false) `##min-fixnum)
+
+   (##define-macro (recursion obj1 obj2 tail-expr)
+     `(let ((bank (##fx- bank 1)))
+        (if (##fx< bank 0)
+            bank
+            ,tail-expr)))
+
+   (##define-macro (conj equal-obj?-expr tail-expr)
+     `(let ((bank ,equal-obj?-expr))
+        (if (##fx< bank 0)
+            bank
+            ,tail-expr))))
+
+  ;; slow equality testing using a hash table to check for sharing and cycles
+
+  (macro-define-equal-objs?
+   slow-equal-objs? (ht)
+   #f
+
+   (##define-macro (true) `1)
+   (##define-macro (false) `0)
+
+   (##define-macro (recursion obj1 obj2 tail-expr)
+     `(let ((r (union-find ,obj1 ,obj2 ht)))
+        (if (##not (##fx= r (false)))
+            r ;; either obj1 & obj2 were in same equiv class or need to abort
+            ,tail-expr)))
+
+   (##define-macro (conj equal-obj?-expr tail-expr)
+     `(let ((r ,equal-obj?-expr))
+        (if (##not (##fx= r (true)))
+            r ;; either obj1 & obj2 are not equal or need to abort
+            ,tail-expr)))
+
+   ;; union-find algorithm to detect sharing and cycles
+
+   (define (union-find obj1 obj2 ht)
+     (let* ((uht (##unbox ht))
+            (code (##gc-hash-table-union! uht obj1 obj2)))
+
+       ;; code
+       ;; 0    obj1 and obj2 found in ht, and in same equiv class
+       ;; 1    obj1 and obj2 found in ht, but not in same equiv class
+       ;; 2-3  only one of obj1 and obj2 found in ht (2 = need to grow ht)
+       ;; 4-5  neither obj1 or obj2 found in ht (4 = need to grow ht)
+
+       (if (##fx< code 4) ;; code = 0, 1, 2 or 3... keep track of sharing
+           (macro-gc-hash-table-min-count-set!
+            uht
+            (##fx+ 1 (macro-gc-hash-table-min-count uht))))
+
+       (if (##fx= code 0)
+           (true)
+           (if (##fxodd? code) ;; code = 1, 3 or 5
+               (false)
+               ;; hash table is full and needs to be grown
+               (if (##fx= 0 (macro-gc-hash-table-min-count uht))
+                   -1 ;; no sharing found so abort equality testing
+                   (let ((new-ht ;; sharing found so keep going
+                          (##gc-hash-table-rehash!
+                           uht
+                           (##gc-hash-table-resize! uht loads))))
+                     (##set-box! ht new-ht)
+                     (false))))))))
+
+  ;; main equality testing function
+
+  (macro-define-equal-objs?
+   main-equal-objs? ()
+   recursion-handler
+
+   (##define-macro (true) `#t)
+   (##define-macro (false) `#f)
+
+   (define (recursion-handler obj1 obj2)
+     (let ((hint (macro-equal-hint-get)))
+       (cond ((##fx= hint 0)
+              (let* ((bank fast-bank0)
+                     (fr (fast-equal-objs? obj1 obj2 bank)))
+                (if (##fx>= fr 0) ;; determine if bank was not exhausted
+                    (fast-equal-returning-true (##fx- bank fr)) ;; equal
+                    (if (##fx= fr ##min-fixnum)
+                        (fast-equal-returning-false) ;; not equal
+                        (let* ((size slow-size0) ;; exhausted available bank
+                               (ht (new-gc-hash-table size))
+                               (sr (slow-equal-objs? obj1 obj2 ht)))
+                          (if (##fx= sr -1) ;; reached limit, so try fast algo
+                              (fast obj1 obj2 fast-bank1)
+                              (slow-equal-returning
+                               (##not (##fx= sr 0))
+                               (macro-gc-hash-table-count (##unbox ht)))))))))
+             ((##fx> hint 0)
+              (fast obj1 obj2 hint))
+             (else
+              (slow obj1 obj2 (##fx- hint))))))
+
+   (define (fast obj1 obj2 limit)
+     (let* ((bank (##fx* limit-growth limit))
+            (fr (fast-equal-objs? obj1 obj2 bank)))
+       (if (##fx>= fr 0) ;; determine if bank was not exhausted
+           (fast-equal-returning-true (##fx- bank fr)) ;; equal
+           (if (##fx= fr ##min-fixnum)
+               (fast-equal-returning-false) ;; not equal
+               (slow obj1 obj2 limit))))) ;; reached limit, so try slow algo
+
+   (define (fast-equal-returning-false)
+     ;; change hint only if currently "slow"
+     (if (##fx> (macro-equal-hint-get) 0)
+         (macro-equal-hint-set! 0))
+     #f)
+
+   (define (fast-equal-returning-true used-bank)
+     ;; change hint to "fast" with 135% of used bank
+     (let ((new-bank
+            (##fxquotient (##fx* (##fxmin used-bank max-used-bank) hint-bloat)
+                          100)))
+       (macro-equal-hint-set! (##fxmax new-bank fast-bank0))
+       #t))
+
+   (define (slow obj1 obj2 limit)
+     (let* ((size limit)
+            (ht (new-gc-hash-table size))
+            (sr (slow-equal-objs? obj1 obj2 ht)))
+        (if (##fx= sr -1) ;; reached limit, so try fast algorithm
+            (fast obj1 obj2 (##fx* limit-growth limit))
+            (slow-equal-returning
+             (##not (##fx= sr 0))
+             (macro-gc-hash-table-count (##unbox ht))))))
+
+   (define (slow-equal-returning result count)
+     ;; change hint to "slow" with 135% of count
+     (let ((new-count
+            (##fxquotient (##fx* (##fxmin count max-ht-count) hint-bloat)
+                          100)))
+       (macro-equal-hint-set! (##fx- (##fxmax new-count slow-size0)))
+       result))
+
+   (define (new-gc-hash-table size)
+     (let ((uht (##gc-hash-table-allocate
+                 size
+                 (##fxior (macro-gc-hash-table-flag-mem-alloc-keys)
+                          (macro-gc-hash-table-flag-union-find))
+                 loads)))
+       (macro-gc-hash-table-min-count-set! uht 0)
+       (##box uht))))
+
+  (main-equal-objs? obj1 obj2))
 
 (define-prim (equal? obj1 obj2)
   (##equal? obj1 obj2))
@@ -424,6 +827,153 @@
   ;; for all obj2 we must have that (##equal? obj obj2) implies that
   ;; (= (##equal?-hash obj) (##equal?-hash obj2))
 
+  (##define-macro (bank0) `31)
+  (##define-macro (bk x) `(##fxand ,x 31))
+  (##define-macro (hb h b) `(##fx+ (##fxwraparithmetic-shift-left ,h 5) ,b))
+  (##define-macro (hc x) `(##fxand (##fxarithmetic-shift-right ,x 5) ,(- (expt 2 (- 32 2 5)) 1)))
+  (##define-macro (split b) `(##fxquotient (##fx+ ,b 2) 3))
+
+  (define pair-salt      171863262)
+  (define vector-salt    314126733)
+  (define table-salt     381975548)
+  (define structure-salt 473043521)
+  (define box-salt       502140387)
+
+  (define (hash obj bank)
+    (macro-force-vars (obj)
+      (cond ((##pair? obj)
+             (if (##fx= bank 0)
+                 (hb pair-salt
+                     0)
+                 (let* ((b (##fx- bank 1))
+                        (b1 (split b))
+                        (h1 (hash (##car obj)
+                                  b1))
+                        (h2 (hash (##cdr obj)
+                                  (##fx+ (##fx- b b1) (bk h1))))
+                        (h (macro-hash-combine (hc h1) (hc h2))))
+                   (if (##fx= bank (bank0))
+                       h
+                       (hb h
+                           (bk h2))))))
+            ((##vector? obj)
+             (let ((len (##vector-length obj)))
+               (if (or (##fx= bank 0) (##fx= len 0))
+                   (hb (macro-hash-combine vector-salt len)
+                       bank)
+                   (let loop ((i 0)
+                              (h vector-salt)
+                              (b (##fx- bank 1)))
+                     (if (##fx< i (##vector-length obj))
+                         (let* ((b1 (split b))
+                                (h1 (hash (##vector-ref obj i) b1)))
+                           (loop (##fx+ i 1)
+                                 (macro-hash-combine h (hc h1))
+                                 (##fx+ (##fx- b b1) (bk h1))))
+                         (if (##fx= bank (bank0))
+                             h
+                             (hb h
+                                 b)))))))
+            ((macro-table? obj)
+             (let* ((len (##table-length obj))
+                    (h0 (macro-hash-combine
+                         table-salt
+                         (macro-hash-combine
+                          (macro-table-flags obj)
+                          (macro-hash-combine
+                           (##eq?-hash (macro-table-test obj))
+                           (macro-hash-combine
+                            (if (macro-table-test obj)
+                                (##eq?-hash (macro-table-hash obj))
+                                0)
+                            len))))))
+               (if (or (##fx= bank 0) (##fx= len 0))
+                   (hb h0
+                       bank)
+                   (let* ((b (##fx- bank 1))
+                          (b1 (##fxquotient b len))
+                          (h
+                           (##table-foldl
+                            (lambda (x y)
+                              ;; must be associative and commutative because
+                              ;; end result must not depend on item ordering
+                              (##fxxor x y))
+                            h0
+                            (lambda (key val)
+                              (let ((h1 (hash val b1)))
+                                (macro-hash-combine
+                                 (hc h1)
+                                 (if (macro-table-test obj)
+                                     (let ((f (macro-table-hash obj)))
+                                       (if (##eq? f ##equal?-hash)
+                                           (hc (hash key (##fx- b1 (bk h1))))
+                                           (f key)))
+                                     0))))
+                            obj)))
+                     (if (##fx= bank (bank0))
+                         h
+                         (hb h
+                             (##fx- b (##fx* b1 len))))))))
+            ((##structure? obj)
+             (let* ((type
+                     (##structure-type obj))
+                    (type-id
+                     (##type-id type)))
+               (if (##not (##fx= ;; opaque?
+                           (##fxand
+                            (##type-flags type)
+                            1)
+                           0))
+                   (##eq?-hash obj)
+                   (let ((h
+                          (macro-hash-combine
+                           structure-salt
+                           (##eq?-hash type-id)))
+                         (len
+                          (##vector-length obj)))
+                     (if (##fx= bank 0)
+                         (hb (macro-hash-combine h len)
+                             0)
+                         (structure-hash obj
+                                         type
+                                         len
+                                         h
+                                         (##fx- bank 1)
+                                         bank))))))
+            ((##box? obj)
+             (if (##fx= bank 0)
+                 (hb box-salt
+                     0)
+                 (let* ((b1 (##fx- bank 1))
+                        (h1 (hash (##unbox obj)
+                                  b1))
+                        (h (macro-hash-combine box-salt (hc h1))))
+                   (if (##fx= bank (bank0))
+                       h
+                       (hb h
+                           (bk h1))))))
+            (else
+             (let ((h (cond ((##symbol? obj)
+                             (##symbol-hash obj))
+                            ((##keyword? obj)
+                             (##keyword-hash obj))
+                            ((and (##subtyped? obj)
+                                  (macro-subtype-bvector? (##subtype obj)))
+                             (cond ((##string? obj)
+                                    (##string=?-hash obj))
+                                   ((or (##flonum? obj)
+                                        (##bignum? obj))
+                                    (##eqv?-hash obj))
+                                   (else
+                                    ;; TODO: hash bytevectors in a portable way
+                                    (bvector-hash obj))))
+                            (else
+                             (##eqv?-hash obj)))))
+               (if (##fx= bank (bank0))
+                   h
+                   (hb h
+                       bank)))))))
+
   (define (bvector-hash obj)
 
     (define (u16vect-hash h i)
@@ -443,86 +993,45 @@
                              20)))
                     (##fx- (##fxwraplogical-shift-right len 1) 1))))
 
-  (define (structure-hash obj type len h)
-    (if (##not type) ;; have we reached root of inheritance chain?
-        h
+  (define (structure-hash obj type len h b bank)
+    (if (##not type) ;; stop when we reach root of inheritance chain
+        (if (##fx= bank (bank0))
+            h
+            (hb h
+                b))
         (let ((fields (##type-fields type)))
-          (let loop ((h 0)
-                     (i*3 (##fx- (##vector-length fields) 3))
-                     (len len))
+          (let loop ((h h)
+                     (b b)
+                     (len len)
+                     (i*3 (##fx- (##vector-length fields) 3)))
             (if (##fx< i*3 0)
-                (structure-hash obj (##type-super type) len h)
+                (structure-hash obj (##type-super type) len h b bank)
                 (let ((field-attributes
                        (##vector-ref fields (##fx+ i*3 1)))
                       (len-1
                        (##fx- len 1)))
-                  (loop (if (##fx=
-                             (##fxand field-attributes 4)
-                             0)
-                            (macro-hash-combine
-                             (hash (##unchecked-structure-ref
-                                    obj
-                                    len-1
-                                    type
-                                    #f))
-                             h)
-                            h)
-                        (##fx- i*3 3)
-                        len-1)))))))
+                  (if (##not (##fx= ;; equality-skip flag set?
+                              (##fxand field-attributes 4)
+                              0))
+                      (loop h ;; don't hash this field
+                            b
+                            len-1
+                            (##fx- i*3 3))
+                      (let* ((b1
+                              (split b))
+                             (h1
+                              (hash (##unchecked-structure-ref
+                                     obj
+                                     len-1
+                                     type
+                                     #f)
+                                    b1)))
+                           (loop (macro-hash-combine h (hc h1))
+                                 (##fx+ (##fx- b b1) (bk h1))
+                                 len-1
+                                 (##fx- i*3 3))))))))))
 
-  (define (hash obj)
-    (macro-force-vars (obj)
-      (cond ((##pair? obj)
-             (macro-hash-combine (hash (##car obj))
-                                 (hash (##cdr obj))))
-            ((##subtyped? obj)
-             (cond ((macro-subtype-bvector? (##subtype obj))
-                    (cond ((##string? obj)
-                           (##string=?-hash obj))
-                          ((or (##flonum? obj)
-                               (##bignum? obj))
-                           (##eqv?-hash obj))
-                          (else
-                           ;; TODO: hash bytevectors in a portable way
-                           (bvector-hash obj))))
-                   ((##symbol? obj)
-                    (##symbol-hash obj))
-                   ((##keyword? obj)
-                    (##keyword-hash obj))
-                   ((##vector? obj)
-                    (let loop ((i (##fx- (##vector-length obj) 1))
-                               (h 383479237))
-                      (if (##fx< i 0)
-                          h
-                          (loop (##fx- i 1)
-                                (macro-hash-combine (hash (##vector-ref obj i))
-                                                    h)))))
-                   ((macro-table? obj)
-                    (##table-equal?-hash obj))
-                   ((##structure? obj)
-                    (let* ((type
-                            (##structure-type obj))
-                           (type-id
-                            (##type-id type)))
-                      (if (##fx= ;; not opaque?
-                           (##fxand
-                            (##type-flags type)
-                            1)
-                           0)
-                          (structure-hash obj
-                                          type
-                                          (##vector-length obj)
-                                          (hash type-id))
-                          (##eq?-hash obj))))
-                   ((##box? obj)
-                    (macro-hash-combine (hash (##unbox obj))
-                                        (macro-fnv1a-offset-basis-fixnum32)))
-                   (else
-                    (##eqv?-hash obj))))
-            (else
-             (##eqv?-hash obj)))))
-
-  (hash obj))
+  (hash obj (bank0)))
 
 (define-prim (equal?-hash obj)
   (macro-force-vars (obj)
@@ -598,7 +1107,6 @@
 ;;;    (##raise-unbound-table-key-exception ...)
 ;;;    (##table->list ...)
 ;;;    (##table-copy ...)
-;;;    (##table-equal? ...)
 ;;;    (##table-length ...)
 ;;;    (##table-ref ...)
 ;;;    (##table-search ...)
@@ -1622,50 +2130,6 @@
                    table2-takes-precedence?)))
           (##table-merge table1 table2 t2-takes-precedence?))))))
 
-(define-prim (##table-equal? table1 table2)
-
-  (##declare (not interrupts-enabled))
-
-  (and (##fx= (macro-table-flags table1)
-              (macro-table-flags table2))
-       (##eq? (macro-table-test table1)
-              (macro-table-test table2))
-       (if (macro-table-test table1)
-           (##eq? (macro-table-hash table1)
-                  (macro-table-hash table2))
-           #t)
-       (let* ((len1 (##table-length table1))
-              (len2 (##table-length table2)))
-         (and (##fx= len1 len2)
-              (##not (##table-search
-                      (lambda (key1 val1)
-                        (let ((val2
-                               (##table-ref table2 key1 (macro-unused-obj))))
-                          (##not (##equal? val1 val2))))
-                      table1))))))
-
-(define-prim (##table-equal?-hash table)
-  (##table-foldl
-   (lambda (a b) ;; must be associative and commutative
-     (##fxxor a b))
-   (macro-hash-combine
-    (macro-table-flags table)
-    (macro-hash-combine
-     (##eq?-hash (macro-table-test table))
-     (macro-hash-combine
-      (if (macro-table-test table)
-          (##eq?-hash (macro-table-hash table))
-          0)
-      (##table-length table))))
-   (lambda (key val)
-     (macro-hash-combine
-      (if (macro-table-test table)
-          (let ((f (macro-table-hash table)))
-            (f key))
-          0)
-      (##equal?-hash val)))
-   table))
-
 )
 
 ;;;----------------------------------------------------------------------------
@@ -1946,22 +2410,6 @@
 (define-prim (table-for-each proc table)
   (##table-for-each proc table))
 
-(define-prim (##table-equal? table1 table2)
-
-  (##declare (not interrupts-enabled))
-
-  (and (##eq? (macro-table-test table1)
-              (macro-table-test table2))
-       (let ((len1 (##table-length table1))
-             (len2 (##table-length table2)))
-         (and (##fx= len1 len2)
-              (let ((unique (##cons #f #f)))
-                (##not (##table-search
-                        (lambda (key1 val1)
-                          (let ((val2
-                                 (##table-ref table2 key1 unique)))
-                            (##not (##equal? val1 val2))))
-                        table1)))))))
 ))
 
 ;;;----------------------------------------------------------------------------
