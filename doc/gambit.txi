@@ -11850,7 +11850,6 @@ For example:
 
 @smallexample
 > @b{(call-with-output-string
-    '()
     (lambda (p)
       (display "abc\n123def" p)
       (write (list (output-port-line p) (output-port-column p))
@@ -12281,7 +12280,7 @@ defaults to the current output-port.
 For example:
 
 @smallexample
-> @b{(call-with-output-u8vector '() (lambda (p) (write-u8 33 p)))}
+> @b{(call-with-output-u8vector (lambda (p) (write-u8 33 p)))}
 #u8(33)
 @end smallexample
 
@@ -13466,9 +13465,9 @@ For example:
 @deffnx procedure open-input-vector @r{[}@var{vector-or-settings}@r{]}
 @deffnx procedure open-output-vector @r{[}@var{vector-or-settings}@r{]}
 @deffnx procedure call-with-input-vector @var{vector-or-settings} @var{proc}
-@deffnx procedure call-with-output-vector @var{vector-or-settings} @var{proc}
+@deffnx procedure call-with-output-vector @r{[}@var{vector-or-settings@r{]}} @var{proc}
 @deffnx procedure with-input-from-vector @var{vector-or-settings} @var{thunk}
-@deffnx procedure with-output-to-vector @var{vector-or-settings} @var{thunk}
+@deffnx procedure with-output-to-vector @r{[}@var{vector-or-settings}@r{]} @var{thunk}
 
 Vector-ports represent streams of Scheme objects.  They are a direct
 subtype of object-ports (i.e. they are not character-ports).  All of
@@ -13502,12 +13501,14 @@ respectively.  The procedures @code{call-with-output-vector} and
 @code{with-output-to-vector} return the vector accumulated in the port
 (see @code{get-output-vector}).
 
-The first parameter of these procedures is either a vector of the
-elements used to initialize the stream or a list of port settings.  If
-it is not specified, the parameter of the @code{open-vector},
-@code{open-input-vector}, and @code{open-output-vector} procedures
-defaults to an empty list of port settings.  Here are the settings
-allowed in addition to the generic settings of object-ports:
+The @var{vector-or-settings} parameter of these procedures is either a
+vector of the elements used to initialize the stream or a list of port
+settings.  If it is not specified, the parameter of the
+@code{open-vector}, @code{open-input-vector},
+@code{open-output-vector}, @code{with-output-to-vector}, and
+@code{call-with-output-vector} procedures defaults to an empty list of
+port settings.  Here are the settings allowed in addition to the
+generic settings of object-ports:
 
 @itemize
 
@@ -13548,7 +13549,7 @@ For example:
 3
 > @b{(read p)}
 #!eof
-> @b{(with-output-to-vector '() (lambda () (write 1) (write 2)))}
+> @b{(with-output-to-vector (lambda () (write 1) (write 2)))}
 #(1 2)
 @end smallexample
 
@@ -13632,9 +13633,9 @@ For example:
 @deffnx procedure open-input-string @r{[}@var{string-or-settings}@r{]}
 @deffnx procedure open-output-string @r{[}@var{string-or-settings}@r{]}
 @deffnx procedure call-with-input-string @var{string-or-settings} @var{proc}
-@deffnx procedure call-with-output-string @var{string-or-settings} @var{proc}
+@deffnx procedure call-with-output-string @r{[}@var{string-or-settings}@r{]} @var{proc}
 @deffnx procedure with-input-from-string @var{string-or-settings} @var{thunk}
-@deffnx procedure with-output-to-string @var{string-or-settings} @var{thunk}
+@deffnx procedure with-output-to-string @r{[}@var{string-or-settings}@r{]} @var{thunk}
 @deffnx procedure open-string-pipe @r{[}@var{string-or-settings1} @r{[}@var{string-or-settings2}@r{]}@r{]}
 @deffnx procedure get-output-string @var{string-port}
 
@@ -13661,7 +13662,7 @@ For example:
 #\3
 > @b{(read-char p)}
 #!eof
-> @b{(with-output-to-string '() (lambda () (write 1) (write 2)))}
+> @b{(with-output-to-string (lambda () (write 1) (write 2)))}
 "12"
 @end smallexample
 
@@ -13696,9 +13697,9 @@ For example:
 @deffnx procedure open-input-u8vector @r{[}@var{u8vector-or-settings}@r{]}
 @deffnx procedure open-output-u8vector @r{[}@var{u8vector-or-settings}@r{]}
 @deffnx procedure call-with-input-u8vector @var{u8vector-or-settings} @var{proc}
-@deffnx procedure call-with-output-u8vector @var{u8vector-or-settings} @var{proc}
+@deffnx procedure call-with-output-u8vector @r{[}@var{u8vector-or-settings}@r{]} @var{proc}
 @deffnx procedure with-input-from-u8vector @var{u8vector-or-settings} @var{thunk}
-@deffnx procedure with-output-to-u8vector @var{u8vector-or-settings} @var{thunk}
+@deffnx procedure with-output-to-u8vector @r{[}@var{u8vector-or-settings}@r{]} @var{thunk}
 @deffnx procedure open-u8vector-pipe @r{[}@var{u8vector-or-settings1} @r{[}@var{u8vector-or-settings2}@r{]}@r{]}
 @deffnx procedure get-output-u8vector @var{u8vector-port}
 
@@ -13723,7 +13724,7 @@ For example:
 51
 > @b{(read-u8 p)}
 #!eof
-> @b{(with-output-to-u8vector '() (lambda () (write 1) (write 2)))}
+> @b{(with-output-to-u8vector (lambda () (write 1) (write 2)))}
 #u8(49 50)
 @end smallexample
 
@@ -13955,7 +13956,6 @@ Here is a simple example:
 @smallexample
 > @b{(define (wr obj allow?)
     (call-with-output-string
-      '()
       (lambda (p)
         (output-port-readtable-set!
           p
@@ -14026,7 +14026,6 @@ Here is an example where continuations are serialized:
 @smallexample
 > @b{(define (wr obj)
     (call-with-output-string
-     '()
      (lambda (p)
        (output-port-readtable-set!
         p
@@ -14186,7 +14185,6 @@ For example:
 @smallexample
 > @b{(define (wr obj n)
     (call-with-output-string
-      '()
       (lambda (p)
         (output-port-readtable-set!
           p
@@ -14225,7 +14223,6 @@ For example:
 @smallexample
 > @b{(define (wr obj n)
     (call-with-output-string
-      '()
       (lambda (p)
         (output-port-readtable-set!
           p

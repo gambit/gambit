@@ -3130,23 +3130,36 @@
               init-or-settings
               proc))))
 
-       (define-prim (,call-with-output-vect init-or-settings proc)
-         (macro-force-vars (init-or-settings proc)
-           (macro-check-procedure
-             proc
-             2
-             (,call-with-output-vect init-or-settings proc)
-             (,##open-vect-generic
-              (macro-direction-out)
-              (lambda (port)
-                (let ((results ;; may get bound to a multiple-values object
-                       (proc port)))
-                  (##force-output port)
-                  (##close-output-port port)
-                  (,##get-output-vect port)))
-              ,call-with-output-vect
-              init-or-settings
-              proc))))
+       (define-prim (,call-with-output-vect
+                     arg1
+                     #!optional
+                     (arg2 (macro-absent-obj)))
+
+         (define (continue init-or-settings proc)
+           (,##open-vect-generic
+            (macro-direction-out)
+            (lambda (port)
+              (let ((results ;; may get bound to a multiple-values object
+                     (proc port)))
+                (##force-output port)
+                (##close-output-port port)
+                (,##get-output-vect port)))
+            ,call-with-output-vect
+            init-or-settings
+            proc))
+
+         (macro-force-vars (arg1 arg2)
+           (if (##eq? arg2 (macro-absent-obj))
+               (macro-check-procedure
+                 arg1
+                 1
+                 (,call-with-output-vect arg1)
+                 (continue '() arg1))
+               (macro-check-procedure
+                 arg2
+                 2
+                 (,call-with-output-vect arg1 arg2)
+                 (continue arg1 arg2)))))
 
        (define-prim (,with-input-from-vect init-or-settings thunk)
          (macro-force-vars (init-or-settings thunk)
@@ -3165,23 +3178,36 @@
               init-or-settings
               thunk))))
 
-       (define-prim (,with-output-to-vect init-or-settings thunk)
-         (macro-force-vars (init-or-settings thunk)
-           (macro-check-procedure
-             thunk
-             2
-             (,with-output-to-vect init-or-settings thunk)
-             (,##open-vect-generic
-              (macro-direction-out)
-              (lambda (port)
-                (let ((results ;; may get bound to a multiple-values object
-                       (macro-dynamic-bind output-port port thunk)))
-                  (##force-output port)
-                  (##close-output-port port)
-                  (,##get-output-vect port)))
-              ,with-output-to-vect
-              init-or-settings
-              thunk)))))))
+       (define-prim (,with-output-to-vect
+                     arg1
+                     #!optional
+                     (arg2 (macro-absent-obj)))
+
+         (define (continue init-or-settings thunk)
+           (,##open-vect-generic
+            (macro-direction-out)
+            (lambda (port)
+              (let ((results ;; may get bound to a multiple-values object
+                     (macro-dynamic-bind output-port port thunk)))
+                (##force-output port)
+                (##close-output-port port)
+                (,##get-output-vect port)))
+            ,with-output-to-vect
+            init-or-settings
+            thunk))
+
+         (macro-force-vars (arg1 arg2)
+           (if (##eq? arg2 (macro-absent-obj))
+               (macro-check-procedure
+                 arg1
+                 1
+                 (,with-output-to-vect arg1)
+                 (continue '() arg1))
+               (macro-check-procedure
+                 arg2
+                 2
+                 (,with-output-to-vect arg1 arg2)
+                 (continue arg1 arg2))))))))
 
 (define-prim (##vect-port-options options kind buffering)
   (##psettings-options->options
