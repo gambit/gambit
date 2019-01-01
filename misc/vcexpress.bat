@@ -22,7 +22,7 @@
 set COMP_GEN=cl -nologo -Oityb1 -Zi -GS -RTC1 -MT -D_CRT_SECURE_NO_DEPRECATE -c -I..\include -D___SYS_TYPE_CPU=\"i686\" -D___SYS_TYPE_VENDOR=\"pc\" -D___SYS_TYPE_OS=\"visualc\"
 
 if not "%1%" == "" (
-set COMP_GEN=%COMP_GEN% -D___GAMBCDIR=\"%1%\"
+set COMP_GEN=%COMP_GEN% -D___GAMBITDIR=\"%1%\"
 )
 
 set COMP_LIB_MH=%COMP_GEN% -D___LIBRARY
@@ -33,6 +33,8 @@ set COMP_APP=%COMP_GEN% -D___SINGLE_HOST
 
 @rem We can't rely on sed being available so we generate gambit.h
 @rem from gambit.h.in by prefixing it with the needed declarations.
+
+#define @CONF_USE_SIGSET_T@
 
 echo #ifndef ___VOIDSTAR_WIDTH                 > include\gambit.h
 echo #define ___VOIDSTAR_WIDTH ___LONG_WIDTH  >> include\gambit.h
@@ -50,8 +52,8 @@ echo #ifndef ___MULTIPLE_THREADED_VMS         >> include\gambit.h
 echo #define ___SINGLE_THREADED_VMS           >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
-echo #ifndef ___USE_POSIX_THREADS             >> include\gambit.h
-echo #ifndef ___USE_WIN32_THREADS             >> include\gambit.h
+echo #ifndef ___USE_POSIX_THREAD_SYSTEM       >> include\gambit.h
+echo #ifndef ___USE_WIN32_THREAD_SYSTEM       >> include\gambit.h
 echo #define ___USE_NO_THREAD_SYSTEM          >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
@@ -60,8 +62,21 @@ echo #ifndef ___THREAD_LOCAL_STORAGE_CLASS    >> include\gambit.h
 echo #define ___NO_THREAD_LOCAL_STORAGE_CLASS >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
+echo #ifndef ___HAVE_CONDITION_VARIABLE       >> include\gambit.h
+echo #ifndef ___DONT_HAVE_CONDITION_VARIABLE  >> include\gambit.h
+echo #define ___DONT_HAVE_CONDITION_VARIABLE  >> include\gambit.h
+echo #endif                                   >> include\gambit.h
+echo #endif                                   >> include\gambit.h
+echo #ifndef ___NO_ACTIVITY_LOG               >> include\gambit.h
+echo #ifndef ___ACTIVITY_LOG                  >> include\gambit.h
+echo #define ___NO_ACTIVITY_LOG               >> include\gambit.h
+echo #endif                                   >> include\gambit.h
+echo #endif                                   >> include\gambit.h
 echo #ifndef ___BOOL                          >> include\gambit.h
 echo #define ___BOOL int                      >> include\gambit.h
+echo #endif                                   >> include\gambit.h
+echo #ifndef ___USE_SIGSET_T                  >> include\gambit.h
+echo #define ___USE_NO_SIGSET_T               >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 type include\gambit.h.in                      >> include\gambit.h
 
@@ -80,6 +95,7 @@ cd lib
 %COMP_LIB_PR% os_io.c
 %COMP_LIB_PR% os_thread.c
 %COMP_LIB_PR% c_intf.c
+%COMP_LIB_PR% actlog.c
 
 %COMP_LIB_PR% _kernel.c
 %COMP_LIB_PR% _system.c
@@ -91,20 +107,20 @@ cd lib
 %COMP_LIB_PR% _thread.c
 %COMP_LIB_PR% _repl.c
 
-%COMP_LIB_PR% _gambc.c
+%COMP_LIB_PR% _gambit.c
 
-lib -out:libgambc.lib main.obj setup.obj mem.obj os_setup.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambc.obj
+lib -out:libgambc.lib main.obj setup.obj mem.obj os_setup.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj actlog.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambit.obj
 
 cd ..
 
 cd gsi
 
 %COMP_LIB% _gsilib.c
-%COMP_LIB% _gambcgsi.c
+%COMP_LIB% _gambitgsi.c
 %COMP_APP% _gsi.c
 %COMP_APP% _gsi_.c
 
-cl -Fegsi.exe ..\lib\libgambc.lib _gsilib.obj _gambcgsi.obj _gsi.obj _gsi_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+cl -Fegsi.exe ..\lib\libgambc.lib _gsilib.obj _gambitgsi.obj _gsi.obj _gsi_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 
 cd ..
 
@@ -133,11 +149,11 @@ cd gsc
 %COMP_LIB% _t-c-2.c
 %COMP_LIB% _t-c-3.c
 %COMP_LIB% _gsclib.c
-%COMP_LIB% _gambcgsc.c
+%COMP_LIB% _gambitgsc.c
 %COMP_APP% _gsc.c
 %COMP_APP% _gsc_.c
 
-cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _assert.obj _asm.obj _x86.obj _codegen.obj _t-univ-1.obj _t-univ-2.obj _t-univ-3.obj _t-univ-4.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gambcgsc.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
+cl -Fegsc.exe ..\lib\libgambc.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _assert.obj _asm.obj _x86.obj _codegen.obj _t-univ-1.obj _t-univ-2.obj _t-univ-3.obj _t-univ-4.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gambitgsc.obj _gsc.obj _gsc_.obj Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 
 cd ..
 

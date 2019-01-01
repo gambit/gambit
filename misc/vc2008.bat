@@ -32,6 +32,8 @@ set COMP_APP=%COMP_GEN% -D___SINGLE_HOST
 @rem We can't rely on sed being available so we generate gambit.h
 @rem from gambit.h.in by prefixing it with the needed declarations.
 
+#define @CONF_USE_SIGSET_T@
+
 echo #ifndef ___VOIDSTAR_WIDTH                 > include\gambit.h
 echo #define ___VOIDSTAR_WIDTH ___LONG_WIDTH  >> include\gambit.h
 echo #endif                                   >> include\gambit.h
@@ -71,6 +73,9 @@ echo #endif                                   >> include\gambit.h
 echo #ifndef ___BOOL                          >> include\gambit.h
 echo #define ___BOOL int                      >> include\gambit.h
 echo #endif                                   >> include\gambit.h
+echo #ifndef ___USE_SIGSET_T                  >> include\gambit.h
+echo #define ___USE_NO_SIGSET_T               >> include\gambit.h
+echo #endif                                   >> include\gambit.h
 type include\gambit.h.in                      >> include\gambit.h
 
 cd lib
@@ -88,6 +93,7 @@ cd lib
 %COMP_LIB_PR% os_io.c
 %COMP_LIB_PR% os_thread.c
 %COMP_LIB_PR% c_intf.c
+%COMP_LIB_PR% actlog.c
 
 %COMP_LIB_PR% _kernel.c
 %COMP_LIB_PR% _system.c
@@ -101,7 +107,7 @@ cd lib
 
 %COMP_LIB_PR% _gambit.c
 
-lib -out:libgambc.lib main.obj setup.obj mem.obj os_setup.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambit.obj
+lib -out:libgambc.lib main.obj setup.obj mem.obj os_setup.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj actlog.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambit.obj
 
 cd ..
 
