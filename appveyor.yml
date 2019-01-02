@@ -97,20 +97,9 @@ build_script:
   - IF [%tools%]==[cygwin] sh -c "%c_comp% -v;./configure --enable-debug --enable-multiple-threaded-vms CC=%c_comp%;make -j2"
 
 
-
 test_script:
 
-  - ps: if($env:tools -eq 'vstudio.bat')
-        {
-          cd tests;
-          ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm;
-          comp mix.c test5.ok;
-          cd ..;
-        }
-        else
-        {
-          sh -c "make check";
-        }
+  - IF [%tools%]==[vstudio.bat] (cd tests & ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm & echo n | comp mix.c test5.ok & cd ..) else (sh -c "make check")
 
 
 notifications:
