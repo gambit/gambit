@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -554,8 +554,30 @@
        (##expand-source-template
         src
         `(##call-with-values
-          (lambda () ,expression)
-          (lambda ,formals ,@body)))))))
+          (##lambda () ,expression)
+          (##lambda ,formals ,@body)))))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define-runtime-syntax ##when
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -3
+     (lambda (test . expressions)
+       (##expand-source-template
+        src
+        `(##if ,test (##begin ,@expressions)))))))
+
+(define-runtime-syntax ##unless
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -3
+     (lambda (test . expressions)
+       (##expand-source-template
+        src
+        `(##if (##not ,test) (##begin ,@expressions)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

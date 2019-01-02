@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4486,6 +4486,12 @@
 
     (define-runtime-syntax case-lambda
       (##make-alias-syntax '##case-lambda))
+
+    (define-runtime-syntax when
+      (##make-alias-syntax '##when))
+
+    (define-runtime-syntax unless
+      (##make-alias-syntax '##unless))
 
     ##interaction-cte))
 

@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -36,6 +36,8 @@ cond-expand
 define-cond-expand-feature
 case-lambda
 letrec*
+when
+unless
 
 ;; global variable
 default-random-source
