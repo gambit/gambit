@@ -34,10 +34,12 @@ set COMP_APP=%COMP_GEN% -D___SINGLE_HOST
 @rem We can't rely on sed being available so we generate gambit.h
 @rem from gambit.h.in by prefixing it with the needed declarations.
 
-#define @CONF_USE_SIGSET_T@
-
 echo #ifndef ___VOIDSTAR_WIDTH                 > include\gambit.h
-echo #define ___VOIDSTAR_WIDTH ___LONG_WIDTH  >> include\gambit.h
+echo #ifdef _WIN64                            >> include\gambit.h
+echo #define ___VOIDSTAR_WIDTH 64             >> include\gambit.h
+echo #else                                    >> include\gambit.h
+echo #define ___VOIDSTAR_WIDTH 32             >> include\gambit.h
+echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #ifndef ___MAX_CHR                       >> include\gambit.h
 echo #define ___MAX_CHR 0x10ffff              >> include\gambit.h
@@ -76,7 +78,9 @@ echo #ifndef ___BOOL                          >> include\gambit.h
 echo #define ___BOOL int                      >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #ifndef ___USE_SIGSET_T                  >> include\gambit.h
+echo #ifndef ___USE_NO_SIGSET_T               >> include\gambit.h
 echo #define ___USE_NO_SIGSET_T               >> include\gambit.h
+echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 type include\gambit.h.in                      >> include\gambit.h
 
