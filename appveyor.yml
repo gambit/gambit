@@ -7,13 +7,17 @@ environment:
       tools: "msvc"
 
     - arch: "x86-64"
+      tools: "vstudio.bat"
+
+    - arch: "x86-64"
       tools: "cygwin"
 
     - arch: "x86-32"
-      tools: "mingw"
+      tools: "msvc"
 
     - arch: "x86-32"
-      tools: "msvc"
+      tools: "vstudio.bat"
+
 
 # Tests are not performed on 32 bit cygwin because of a bug in cygwin.
 # It seems that the FPU control word is not saved/restored properly
@@ -31,10 +35,20 @@ environment:
 #      tools: "cygwin"
 
 
+# Tests are not performed on 32 bit mingw because the unit test script
+# sometimes hangs, seemingly because the subprocess termination
+# notification is not received.  This might be a bug with Gambit but
+# most likely it is a bug with the mingw libraries (why would 64 bit
+# mingw not cause problems?).
+
+#    - arch: "x86-32"
+#      tools: "mingw"
+
+
 
 install:
 
-  - ps: if($env:tools -eq 'msvc')
+  - ps: if($env:tools -eq 'msvc' -or $env:tools -eq 'vstudio.bat')
         {
           $env:c_comp = 'cl';
           if($env:arch -eq 'x86-64') {
@@ -69,7 +83,10 @@ build_script:
 
   - '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall" %vcvar_arg%'
   - SET PATH=C:\MinGW\msys\1.0\bin;%PATH%
+
   - IF [%tools%]==[msvc] sh -c "%c_comp%;./configure --enable-c-opt=-Od --enable-debug CC=%c_comp%;make -j2"
+
+  - IF [%tools%]==[vstudio.bat] misc\vstudio.bat
 
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-32] SET PATH=C:\MinGW\bin;%PATH%
   - IF [%tools%]==[mingw] IF [%arch%]==[x86-64] SET PATH=C:\mingw64\bin;%PATH%
@@ -83,8 +100,17 @@ build_script:
 
 test_script:
 
-  - sh -c "make check"
-
+  - ps: if($env:tools -eq 'vstudio.bat')
+        {
+          cd tests;
+          ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm;
+          comp mix.c test5.ok;
+          cd ..;
+        }
+        else
+        {
+          sh -c "make check";
+        }
 
 
 notifications:
