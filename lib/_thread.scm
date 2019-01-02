@@ -4373,12 +4373,16 @@
 
 ;;; User accessible primitives for time objects.
 
+(##define-macro (macro-current-time-point)
+  `(begin
+     (macro-update-current-time!)
+     (macro-current-time (macro-thread-floats (macro-current-processor)))))
+
 (define-prim (##current-time-point)
-  (macro-update-current-time!)
-  (macro-current-time (macro-thread-floats (macro-current-processor))))
+  (macro-current-time-point))
 
 (define-prim (current-time)
-  (macro-make-time (##current-time-point) #f #f #f))
+  (macro-make-time (macro-current-time-point) #f #f #f))
 
 (define-prim (time? obj)
   (macro-time? obj))
@@ -4398,13 +4402,14 @@
     (##timeout->time absrel-timeout)))
 
 (define-prim (current-second)
-  (##current-time-point))
+  (macro-current-time-point))
 
 (define-prim (current-jiffy)
-  (##current-time-point))
+  (macro-update-current-time!)
+  (##inexact->exact (##flround (##fl* 1e6 (macro-current-time-point)))))
 
 (define-prim (jiffies-per-second)
-  1)
+  1000000)
 
 ;;;----------------------------------------------------------------------------
 
@@ -7353,12 +7358,16 @@
 
 ;;; User accessible primitives for time objects.
 
+(##define-macro (macro-current-time-point)
+  `(begin
+     (macro-update-current-time!)
+     (macro-current-time (macro-thread-floats (macro-current-processor)))))
+
 (define-prim (##current-time-point)
-  (macro-update-current-time!)
-  (macro-current-time (macro-thread-floats (macro-current-processor))))
+  (macro-current-time-point))
 
 (define-prim (current-time)
-  (macro-make-time (##current-time-point) #f #f #f))
+  (macro-make-time (macro-current-time-point) #f #f #f))
 
 (define-prim (time? obj)
   (macro-time? obj))
@@ -7378,13 +7387,14 @@
     (##timeout->time absrel-timeout)))
 
 (define-prim (current-second)
-  (##current-time-point))
+  (macro-current-time-point))
 
 (define-prim (current-jiffy)
-  (##current-time-point))
+  (macro-update-current-time!)
+  (##inexact->exact (##flround (##fl* 1e6 (macro-current-time-point)))))
 
 (define-prim (jiffies-per-second)
-  1)
+  1000000)
 
 ;;;----------------------------------------------------------------------------
 
