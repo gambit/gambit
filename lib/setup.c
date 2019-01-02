@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -2939,7 +2939,6 @@ ___SCMOBJ stack_marker;)
   ___SCMOBJ ___err;
 
   ___D_FP
-  ___SET_FP(___PSFP)
 
   /*
    * The C function which has called ___call() has put the arguments
@@ -2981,6 +2980,8 @@ ___SCMOBJ stack_marker;)
    */
 
   ___LD_ARG_REGS /* declare and load GVM argument registers from ___ps */
+
+  ___SET_FP(___PSFP)
 
   ___fp[-1] = ___PSR0;      /* create a frame with the same format as the */
   ___fp[-2] = stack_marker; /* one created for the return to C handler    */

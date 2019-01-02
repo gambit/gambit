@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -11512,19 +11512,21 @@ ___HIDDEN ___SCMOBJ io_module_setup ___PVOID
 #define WINSOCK_MAJOR 1
 #define WINSOCK_MINOR 1
 
-      WSADATA winsock_data;
+      {
+        WSADATA winsock_data;
 
-      if (!WSAStartup (MAKEWORD(WINSOCK_MAJOR, WINSOCK_MINOR), &winsock_data))
-        {
-          if (LOBYTE(winsock_data.wVersion) == WINSOCK_MINOR &&
-              HIBYTE(winsock_data.wVersion) == WINSOCK_MAJOR)
-            return ___FIX(___NO_ERR);
-          WSACleanup (); /* ignore error */
-        }
+        if (!WSAStartup (MAKEWORD(WINSOCK_MAJOR, WINSOCK_MINOR), &winsock_data))
+          {
+            if (LOBYTE(winsock_data.wVersion) == WINSOCK_MINOR &&
+                HIBYTE(winsock_data.wVersion) == WINSOCK_MAJOR)
+              return ___FIX(___NO_ERR);
+            WSACleanup (); /* ignore error */
+          }
 
-      e = ___FIX(___UNKNOWN_ERR);
+        e = ___FIX(___UNKNOWN_ERR);
 
-      ___device_group_cleanup (___io_mod.dgroup);
+        ___device_group_cleanup (___io_mod.dgroup);
+      }
 
 #endif
     }
