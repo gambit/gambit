@@ -5405,6 +5405,43 @@
   (##declare (not interrupts-enabled))
   (##write-substring str 0 (##string-length str) port))
 
+(define-prim (write-string
+              str
+              #!optional
+              (port (macro-absent-obj))
+              (start (macro-absent-obj))
+              (end (macro-absent-obj)))
+  (macro-force-vars (str port start end)
+    (macro-check-string
+      str
+      1
+      (write-string str port start end)
+      (let ((p
+             (if (##eq? port (macro-absent-obj))
+                 (macro-current-output-port)
+                 port)))
+        (macro-check-character-output-port
+          p
+          2
+          (write-string str port start end)
+          (if (##eq? start (macro-absent-obj))
+              (##write-substring str 0 (##string-length str) p)
+              (macro-check-index-range-incl
+                start
+                3
+                0
+                (##string-length str)
+                (write-string str port start end)
+                (if (##eq? end (macro-absent-obj))
+                    (##write-substring str start (##string-length str) p)
+                    (macro-check-index-range-incl
+                      end
+                      4
+                      start
+                      (##string-length str)
+                      (write-string str port start end)
+                      (##write-substring str start end p))))))))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Implementation of generic byte port procedures.
