@@ -5893,6 +5893,48 @@
               (write-subu8vector u8vect start end p)
               (##write-subu8vector u8vect start end p))))))))
 
+(define-prim (##write-bytevector u8vect port start end)
+  (##declare (not interrupts-enabled))
+  (##write-subu8vector u8vect start end port)
+  (##void))
+
+(define-prim (write-bytevector
+              u8vect
+              #!optional
+              (port (macro-absent-obj))
+              (start (macro-absent-obj))
+              (end (macro-absent-obj)))
+  (macro-force-vars (u8vect port start end)
+    (macro-check-u8vector
+      u8vect
+      1
+      (write-bytevector u8vect port start end)
+      (let ((p
+             (if (##eq? port (macro-absent-obj))
+                 (macro-current-output-port)
+                 port)))
+        (macro-check-byte-output-port
+          p
+          2
+          (write-bytevector u8vect port start end)
+          (if (##eq? start (macro-absent-obj))
+              (##write-bytevector u8vect p 0 (##u8vector-length u8vect))
+              (macro-check-index-range-incl
+                start
+                3
+                0
+                (##u8vector-length u8vect)
+                (write-bytevector u8vect port start end)
+                (if (##eq? end (macro-absent-obj))
+                    (##write-bytevector u8vect p start (##u8vector-length u8vect))
+                    (macro-check-index-range-incl
+                      end
+                      4
+                      start
+                      (##u8vector-length u8vect)
+                      (write-bytevector u8vect port start end)
+                      (##write-bytevector u8vect p start end))))))))))
+
 (define-prim (##options-set! port options)
 
   (##declare (not interrupts-enabled))

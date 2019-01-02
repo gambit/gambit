@@ -993,6 +993,7 @@ with-output-to-process
 with-output-to-string
 with-output-to-u8vector
 with-output-to-vector
+write-bytevector
 write-string
 write-substring
 write-subu8vector
