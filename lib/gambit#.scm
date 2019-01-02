@@ -276,6 +276,7 @@ flsquare
 fltan
 fltanh
 fltruncate
+flush-output-port
 flzero?
 fold
 fold-right

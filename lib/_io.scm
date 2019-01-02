@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4192,6 +4192,20 @@
               2
               (force-output p level)
               (##force-output p level)))))))
+
+(define-prim (flush-output-port
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-output-port)
+               port)))
+      (macro-check-object-output-port
+        p
+        1
+        (flush-output-port p)
+        (##force-output p)))))
 
 (define-prim (##wait-input-port port)
 
