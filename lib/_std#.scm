@@ -196,6 +196,8 @@
     (define ##vect->list     (sym "##" name '->list))
     (define ##list->vect     (sym '##list-> name))
     (define ##vect-copy      (sym "##" name '-copy))
+    (define ##vect-delete    (sym "##" name '-delete))
+    (define ##vect-insert    (sym "##" name '-insert))
     (define ##vect-fill!     (sym "##" name '-fill!))
     (define ##subvect        (sym '##sub name))
     (define ##append-vects   (sym '##append- name 's))
@@ -459,6 +461,21 @@
          (macro-force-vars (vect)
            (,macro-check-vect vect 1 (,vect-copy vect)
              (,##vect-copy vect))))
+
+       (define-prim (,##vect-delete vect i)
+         (let* ((len (,##vect-length vect))
+                (result (,##make-vect (##fx- len 1))))
+           (,##subvect-move! vect 0 i result 0)
+           (,##subvect-move! vect (##fx+ i 1) len result i)
+           result))
+
+       (define-prim (,##vect-insert vect i x)
+         (let* ((len (,##vect-length vect))
+                (result (,##make-vect (##fx+ len 1))))
+           (,##subvect-move! vect 0 i result 0)
+           (,##subvect-move! vect i len result (##fx+ i 1))
+           (,##vect-set! result i x)
+           result))
 
        (define-prim (,##subvect vect start end)
          (,##subvect-move!
