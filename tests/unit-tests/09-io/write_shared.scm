@@ -82,6 +82,30 @@
  "(#(#0=(#1=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #1#) #0#))")
 
 (check-equal?
+ (obj->str obj2 write-simple #f)
+ "(#(((123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) (123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ())) ((123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) (123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()))))")
+
+(check-equal?
+ (obj->str obj2 write-simple #t)
+ "(#(#0=(#1=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #1#) #0#))")
+
+(check-equal?
+ (obj->str obj2 write-simple 'serialize)
+ "(#(#0=(#1=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #1#) #0#))")
+
+(check-equal?
+ (obj->str obj2 write-shared #f)
+ "(#(#0=(#1=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #1#) #0#))")
+
+(check-equal?
+ (obj->str obj2 write-shared #t)
+ "(#(#0=(#1=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #1#) #0#))")
+
+(check-equal?
+ (obj->str obj2 write-shared 'serialize)
+ "(#(#0=(#1=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #1#) #0#))")
+
+(check-equal?
  (obj->str obj2 display #f)
  "(#(((123 -45678901234567890 1.25 #t #f   hello\nworld sym key #(1 2 3) (1 2 . 3) ()) (123 -45678901234567890 1.25 #t #f   hello\nworld sym key #(1 2 3) (1 2 . 3) ())) ((123 -45678901234567890 1.25 #t #f   hello\nworld sym key #(1 2 3) (1 2 . 3) ()) (123 -45678901234567890 1.25 #t #f   hello\nworld sym key #(1 2 3) (1 2 . 3) ()))))")
 
@@ -106,6 +130,64 @@
  "(#(#0=(#1=(123\n           -45678901234567890\n           1.25\n           #t\n           #f\n           #\\space\n           \"hello\\nworld\"\n           sym\n           key:\n           #(1 2 3)\n           (1 2 . 3)\n           ())\n       #1#)\n   #0#))\n")
 
 (set-cdr! obj2 obj2)
+
+(check-equal?
+ (obj->str obj2 write #f)
+ "#0=(#(((123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) (123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ())) ((123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) (123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()))) . #0#)")
+
+(check-equal?
+ (obj->str obj2 write #t)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+(check-equal?
+ (obj->str obj2 write 'serialize)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+;;write-simple would loop forever on obj2...
+;;(check-equal?
+;; (obj->str obj2 write-simple #f)
+;; "")
+
+(check-equal?
+ (obj->str obj2 write-simple #t)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+(check-equal?
+ (obj->str obj2 write-simple 'serialize)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+(check-equal?
+ (obj->str obj2 write-shared #f)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+(check-equal?
+ (obj->str obj2 write-shared #t)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+(check-equal?
+ (obj->str obj2 write-shared 'serialize)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f #\\space \"hello\\nworld\" sym key: #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+;;display would loop forever on obj2...
+;;(check-equal?
+;; (obj->str obj2 display #f)
+;; "")
+
+(check-equal?
+ (obj->str obj2 display #t)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f   hello\nworld sym key #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+(check-equal?
+ (obj->str obj2 display 'serialize)
+ "#0=(#(#1=(#2=(123 -45678901234567890 1.25 #t #f   hello\nworld sym key #(1 2 3) (1 2 . 3) ()) #2#) #1#) . #0#)")
+
+(check-equal?
+ (obj->str obj2 pretty-print #f)
+ "#0=(#(((123\n        -45678901234567890\n        1.25\n        #t\n        #f\n        #\\space\n        \"hello\\nworld\"\n        sym\n        key:\n        #(1 2 3)\n        (1 2 . 3)\n        ())\n       (123\n        -45678901234567890\n        1.25\n        #t\n        #f\n        #\\space\n        \"hello\\nworld\"\n        sym\n        key:\n        #(1 2 3)\n        (1 2 . 3)\n        ()))\n      ((123\n        -45678901234567890\n        1.25\n        #t\n        #f\n        #\\space\n        \"hello\\nworld\"\n        sym\n        key:\n        #(1 2 3)\n        (1 2 . 3)\n        ())\n       (123\n        -45678901234567890\n        1.25\n        #t\n        #f\n        #\\space\n        \"hello\\nworld\"\n        sym\n        key:\n        #(1 2 3)\n        (1 2 . 3)\n        ())))\n    .\n    #0#)\n")
+
+(check-equal?
+ (obj->str obj2 pretty-print #t)
+ "#0=(#(#1=(#2=(123\n              -45678901234567890\n              1.25\n              #t\n              #f\n              #\\space\n              \"hello\\nworld\"\n              sym\n              key:\n              #(1 2 3)\n              (1 2 . 3)\n              ())\n          #2#)\n      #1#)\n    .\n    #0#)\n")
 
 (check-equal?
  (obj->str obj2 pretty-print 'serialize)

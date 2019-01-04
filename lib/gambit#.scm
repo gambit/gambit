@@ -994,6 +994,8 @@ with-output-to-string
 with-output-to-u8vector
 with-output-to-vector
 write-bytevector
+write-shared
+write-simple
 write-string
 write-substring
 write-subu8vector

@@ -3883,6 +3883,160 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; Implementation of marktables based on eq? tables.
+
+;; Marktables are used to detect sharing and cycles during printing.
+;; The printer first does a marking phase to determine for every
+;; (non-trivial) subobject if it is shared or cyclical.  Then the
+;; printer uses this information in the printing phase to print labels
+;; when necessary.
+;;
+;; During the marking phase a state is kept for every subobject visited.
+;; The state transitions are:
+;;
+;;  state
+;;
+;;   -1    the subobject has not yet been visited
+;;
+;;   -2    the subobject has been visited once, and not all its children
+;;         have been visited recursively (i.e. the subobject could still be
+;;         part of a cycle, or be shared)
+;;
+;;   -3    the subobject has been visited once, and all its children have been
+;;         visited recursively (i.e. the subobject is not part of a cycle, but
+;;         it may be discovered later that it is shared)
+;;
+;;   -5    the subobject has been visited a second time but only after all its
+;;         children have been visited (i.e. the subobject is shared but it is
+;;         not part of a cycle)
+;;
+;;   -9    the subobject has been visited a second time before all its
+;;         children were visited recursively (i.e. the subobject is part
+;;         of a cycle)
+;;
+;; Negative numbers are used to encode the state to differentiate from
+;; the (non-negative) labels that are assigned during the printing phase.
+;; The bit negation of powers of 2 are used for the last 4 states to
+;; simplify creating a set of these states.
+;;
+;; Here are the state transitions for the events "begin visiting subobject"
+;; and "end visiting subobject":
+;;
+;;  state    begin/end
+;;   -1  -->   -2 / -3  (only case that triggers visiting children)
+;;   -2  -->   -9 / -3
+;;   -3  -->   -5 / -5
+;;   -5  -->   -5 / -5
+;;   -9  -->   -9 / -9
+
+(##define-macro (macro-not-yet-visited)                      -1)
+(##define-macro (macro-children-being-visited)               -2)
+(##define-macro (macro-not-part-of-a-cycle-and-maybe-shared) -3)
+(##define-macro (macro-not-part-of-a-cycle-and-is-shared)    -5)
+(##define-macro (macro-part-of-a-cycle)                      -9)
+
+(##define-macro (macro-cycle-or-shared? state-set)
+  `(##not (##fx= -1
+                 (##fxior ,state-set
+                          (##fxand (macro-not-part-of-a-cycle-and-is-shared)
+                                   (macro-part-of-a-cycle))))))
+
+(##define-macro (macro-marktable-count mt)          `(##vector-ref ,mt 0))
+(##define-macro (macro-marktable-count-set! mt x)   `(##vector-set! ,mt 0 ,x))
+(##define-macro (macro-marktable-table mt)          `(##vector-ref ,mt 1))
+(##define-macro (macro-marktable-table-set! mt x)   `(##vector-set! ,mt 1 ,x))
+(##define-macro (macro-marktable-shared? mt)        `(##vector-ref ,mt 2))
+(##define-macro (macro-marktable-shared?-set! mt x) `(##vector-set! ,mt 2 ,x))
+(##define-macro (macro-marktable-seen mt)           `(##vector-ref ,mt 3))
+(##define-macro (macro-marktable-seen-set! mt x)    `(##vector-set! ,mt 3 ,x))
+(##define-macro (macro-marktable-mask mt)           `(##vector-ref ,mt 3))
+(##define-macro (macro-marktable-mask-set! mt x)    `(##vector-set! ,mt 3 ,x))
+
+(##define-macro (macro-marktable-write-table! mt t obj x)
+  `(if (macro-marktable-shared? ,mt) ;; shared table?
+       (let ((t-copy (##table-copy ,t)))
+         (macro-marktable-table-set! ,mt t-copy)
+         (macro-marktable-shared?-set! ,mt #f)
+         (##table-set! t-copy ,obj ,x))
+       (##table-set! ,t ,obj ,x)))
+
+(define-prim (##make-marktable)
+  (##declare (not interrupts-enabled))
+  (##vector -1   ;; label counter
+            #f   ;; lazily allocated table
+            #f   ;; shared?
+            -1)) ;; set of states seen (inverted bit set), and then mask
+
+(define-prim (##marktable-table-get! mt)
+  (##declare (not interrupts-enabled))
+  (or (macro-marktable-table mt)
+      (let ((t (##make-table 0 #f #f #f ##eq?)))
+        (macro-marktable-table-set! mt t)
+        t)))
+
+(define-prim (##marktable-mark! mt obj begin?)
+  (##declare (not interrupts-enabled))
+  (let* ((t (##marktable-table-get! mt))
+         (state (##table-ref t obj (macro-not-yet-visited))))
+    (if (##fx> state (macro-not-part-of-a-cycle-and-is-shared)) ;; change state?
+        ;; equivalent:
+        ;; (not (or (##fx= state (macro-not-part-of-a-cycle-and-is-shared))
+        ;;          (##fx= state (macro-part-of-a-cycle))))
+
+        (let ((new-state ;; state transition
+               (cond ((##fx= state (macro-not-yet-visited))
+                      (if begin?
+                          (macro-children-being-visited)
+                          (macro-not-part-of-a-cycle-and-maybe-shared)))
+                     ((##fx= state (macro-children-being-visited))
+                      (if begin?
+                          (macro-part-of-a-cycle)
+                          (macro-not-part-of-a-cycle-and-maybe-shared)))
+                     (else
+                      (macro-not-part-of-a-cycle-and-is-shared)))))
+
+          (macro-marktable-seen-set!
+           mt
+           (##fxand (macro-marktable-seen mt) new-state))
+
+          (macro-marktable-write-table! mt t obj new-state)
+
+          (##fx= new-state (macro-children-being-visited)))
+
+        #f)))
+
+(define-prim (##marktable-lookup! mt obj stamp?)
+  (##declare (not interrupts-enabled))
+  (let* ((t (##marktable-table-get! mt))
+         (x (##table-ref t obj (macro-not-yet-visited))))
+    (if (##fx< x 0) ;; first time visited during printing phase
+        (and stamp? ;; allocate a label if we need to
+             (macro-cycle-or-shared? (##fxior x (macro-marktable-mask mt)))
+             (let ((label (##fx+ (macro-marktable-count mt) 1)))
+               (macro-marktable-count-set! mt label)
+               (macro-marktable-write-table! mt t obj label)
+               (##cons obj label))) ;; return id
+        x))) ;; return the label
+
+(define-prim (##marktable-save mt)
+  (##declare (not interrupts-enabled))
+  (let ((state
+         (##vector (macro-marktable-count mt)
+                   (##marktable-table-get! mt)
+                   (macro-marktable-shared? mt)
+                   (macro-marktable-seen mt))))
+    (macro-marktable-shared?-set! mt #t) ;; set "shared table" flag
+    state))
+
+(define-prim (##marktable-restore! mt state)
+  (##declare (not interrupts-enabled))
+  (macro-marktable-count-set!   mt (##vector-ref state 0))
+  (macro-marktable-table-set!   mt (##vector-ref state 1))
+  (macro-marktable-shared?-set! mt (##vector-ref state 2))
+  (macro-marktable-seen-set!    mt (##vector-ref state 3)))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of generic object port procedures.
 
 (define-prim (##port-of-kind? obj kind)
@@ -3954,11 +4108,14 @@
 
   (##declare (not interrupts-enabled))
 
-  (let ((mt
-         (and (macro-readtable-sharing-allowed? rt)
+  (let ((mt1
+         (and (or (macro-readtable-sharing-allowed? rt)
+                  (##eq? style 'write-shared)
+                  (##eq? style 'write)
+                  (##eq? style 'pretty-print))
               (##make-marktable))))
 
-    (define (make-we style)
+    (define (make-we style mt)
       (##make-writeenv
        style
        port
@@ -3973,24 +4130,42 @@
        (or (macro-readtable-max-unescaped-char rt)
            (macro-max-unescaped-char (macro-port-woptions port)))))
 
-    (if mt
-        (let ((we1 (make-we 'mark)))
-          ((macro-object-port-write-datum port) port obj we1)))
-
-    (let ((we2 (make-we style)))
+    (let* ((mt2
+            (and mt1
+                 (let ((we1 (make-we 'mark mt1)))
+                   ((macro-object-port-write-datum port) port obj we1)
+                   (let* ((seen
+                           (macro-marktable-seen mt1))
+                          (mask
+                           ;; only use labels for cycles, unless sharing matters
+                           (##fxior
+                            seen
+                            (if (or (macro-readtable-sharing-allowed? rt)
+                                    (##eq? style 'write-shared))
+                                (##fxand
+                                 (macro-not-part-of-a-cycle-and-is-shared)
+                                 (macro-part-of-a-cycle))
+                                (macro-part-of-a-cycle)))))
+                     (if (##fx= -1 mask)
+                         #f
+                         (begin
+                           (macro-marktable-mask-set! mt1 mask)
+                           mt1))))))
+           (we2
+            (make-we style mt2)))
       ((macro-object-port-write-datum port) port obj we2)
       (##fx- limit (macro-writeenv-limit we2)))))
 
-(define-prim (##write
+(define-prim (##write-with-style
               obj
               port
-              #!optional
-              (max-length ##max-fixnum)
-              (force? (macro-if-auto-forcing #t #f)))
+              max-length
+              force?
+              style)
   (if (macro-character-output-port? port)
       (begin
         (##write-generic-to-character-port
-         'write
+         style
          port
          (macro-character-port-output-readtable port)
          force?
@@ -3998,6 +4173,19 @@
          obj)
         (##void))
       ((macro-object-port-write-datum port) port obj #f)))
+
+(define-prim (##write
+              obj
+              port
+              #!optional
+              (max-length ##max-fixnum)
+              (force? (macro-if-auto-forcing #t #f)))
+  (##write-with-style
+   obj
+   port
+   max-length
+   force?
+   'write))
 
 (define-prim (write
               obj
@@ -4010,6 +4198,56 @@
                port)))
       (macro-check-object-output-port p 2 (write obj p)
         (##write obj p)))))
+
+(define-prim (##write-shared
+              obj
+              port
+              #!optional
+              (max-length ##max-fixnum)
+              (force? (macro-if-auto-forcing #t #f)))
+  (##write-with-style
+   obj
+   port
+   max-length
+   force?
+   'write-shared))
+
+(define-prim (write-shared
+              obj
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (obj port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-output-port)
+               port)))
+      (macro-check-object-output-port p 2 (write-shared obj p)
+        (##write-shared obj p)))))
+
+(define-prim (##write-simple
+              obj
+              port
+              #!optional
+              (max-length ##max-fixnum)
+              (force? (macro-if-auto-forcing #t #f)))
+  (##write-with-style
+   obj
+   port
+   max-length
+   force?
+   'write-simple))
+
+(define-prim (write-simple
+              obj
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (obj port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-output-port)
+               port)))
+      (macro-check-object-output-port p 2 (write-simple obj p)
+        (##write-simple obj p)))))
 
 (define-prim (##display
               obj
@@ -9756,117 +9994,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; Disable old implementation of marktables based on association lists.
-#;
-(begin
-
-  (define-prim (##make-marktable)
-    (##declare (not interrupts-enabled))
-    (##vector -1 '()))
-
-  (define-prim (##marktable-mark! table obj)
-    (##declare (not interrupts-enabled))
-    (let ((alist (##vector-ref table 1)))
-      (let ((x (##assq obj alist)));;;;;;;;;;;;;
-        (if x
-            (begin
-              (##set-cdr! x #t)
-              #f)
-            (begin
-              (##vector-set! table 1 (##cons (##cons obj #f) alist))
-              #t)))))
-
-  (define-prim (##marktable-lookup! table obj stamp?)
-    (##declare (not interrupts-enabled))
-    (let ((alist (##vector-ref table 1)))
-      (let ((x (##assq obj alist)));;;;;;;;;;;;;;;;
-        (if x
-            (let ((id (##cdr x)))
-              (if (and stamp? (##eq? id #t))
-                  (let ((n (##fx+ (##vector-ref table 0) 1)))
-                    (##vector-set! table 0 n)
-                    (##set-cdr! x n)
-                    x)
-                  id))
-            #f))))
-
-  (define-prim (##marktable-save table)
-    (##declare (not interrupts-enabled))
-    (##vector-ref table 0))
-
-  (define-prim (##marktable-restore! table n)
-    (##declare (not interrupts-enabled))
-    (##vector-set! table 0 n)
-    (let ((alist (##vector-ref table 1)))
-      (let loop ((lst alist))
-        (if (##pair? lst)
-            (let* ((x (##car lst))
-                   (id (##cdr x)))
-              (if (and (##fixnum? id)
-                       (##fx< n id))
-                  (##set-cdr! x #t))
-              (loop (##cdr lst)))))))
-  )
-
-;; Implementation of marktables based on eq? tables.
-
-(begin
-
-  (define-prim (##make-marktable)
-    (##declare (not interrupts-enabled))
-    (##vector -1 (##make-table 0 #f #f #f ##eq?) #f))
-
-  (define-prim (##marktable-mark! table obj)
-    (##declare (not interrupts-enabled))
-    (let* ((t (##vector-ref table 1))
-           (x (##table-ref t obj '())))
-      (if (or (##eq? x '()) (##eq? x #f))
-          (begin
-            (if (##vector-ref table 2) ;; shared table?
-                (let ((t-copy (##table-copy t)))
-                  (##vector-set! table 1 t-copy)
-                  (##vector-set! table 2 #f)
-                  (##table-set! t-copy obj (##eq? x #f)))
-                (##table-set! t obj (##eq? x #f)))
-            (##eq? x '()))
-          #f)))
-
-  (define-prim (##marktable-lookup! table obj stamp?)
-    (##declare (not interrupts-enabled))
-    (let* ((t (##vector-ref table 1))
-           (x (##table-ref t obj '())))
-      (if (##eq? x '())
-          #f
-          (if (and stamp? (##eq? x #t))
-              (let ((n (##fx+ (##vector-ref table 0) 1)))
-                (##vector-set! table 0 n)
-                (if (##vector-ref table 2) ;; shared table?
-                    (let ((t-copy (##table-copy t)))
-                      (##vector-set! table 1 t-copy)
-                      (##vector-set! table 2 #f)
-                      (##table-set! t-copy obj n))
-                    (##table-set! t obj n))
-                (##cons obj n))
-              x))))
-
-  (define-prim (##marktable-save table)
-    (##declare (not interrupts-enabled))
-    (let ((state
-           (##vector (##vector-ref table 0)
-                     (##vector-ref table 1)
-                     (##vector-ref table 2))))
-      (##vector-set! table 2 #t) ;; set "shared table" flag
-      state))
-
-  (define-prim (##marktable-restore! table state)
-    (##declare (not interrupts-enabled))
-    (##vector-set! table 0 (##vector-ref state 0))
-    (##vector-set! table 1 (##vector-ref state 1))
-    (##vector-set! table 2 (##vector-ref state 2)))
-  )
-
-;;;----------------------------------------------------------------------------
-
 (define-prim (##might-write-differently? old-obj new-obj)
   (cond ((##eq? old-obj new-obj)
          (or (##pair? new-obj)
@@ -10045,11 +10172,12 @@
 (define-prim (##wr-sn we obj type name)
   (case (macro-writeenv-style we)
     ((mark)
-     (if (##wr-mark we obj)
+     (if (##wr-mark-begin we obj)
          (begin
            (##wr-no-display we type)
            (if (##not (##eq? name (##void)))
-               (##wr-no-display we name)))))
+               (##wr-no-display we name))
+           (##wr-mark-end we obj))))
     (else
      (if (##wr-stamp we obj)
          (begin
@@ -10073,11 +10201,19 @@
       (else
        (##wr we obj)))))
 
-(define-prim (##wr-mark we obj)
+(define-prim (##wr-mark-begin we obj)
   (let ((mt (macro-writeenv-marktable we)))
     (if mt
-        (##marktable-mark! mt obj)
+        (##marktable-mark! mt obj #t)
         #t)))
+
+(define-prim (##wr-mark-end we obj)
+  (let ((mt (macro-writeenv-marktable we)))
+    (and mt
+         (##marktable-mark! mt obj #f))))
+
+(define-prim (##wr-mark we obj)
+  (##wr-mark-end we obj))
 
 (define-prim (##wr-stamp we obj)
   (let ((mt (macro-writeenv-marktable we)))
@@ -10498,10 +10634,11 @@
 
   (case (macro-writeenv-style we)
     ((mark)
-     (if (##wr-mark we obj)
+     (if (##wr-mark-begin we obj)
          (begin;;;;;;;;;;;;;;;;;;;;;;;check level and length?
            (##wr we (##car obj))
-           (##wr we (##cdr obj)))))
+           (##wr we (##cdr obj))
+           (##wr-mark-end we obj))))
     ((print)
      (##wr we (##car obj))
      (##wr we (##cdr obj)))
@@ -10725,8 +10862,10 @@
 (define-prim (##wr-vector-aux1 we obj len vect-ref open-close)
   (case (macro-writeenv-style we)
     ((mark)
-     (if (##wr-mark we obj)
-         (##wr-vector-aux2 we obj len vect-ref)))
+     (if (##wr-mark-begin we obj)
+         (begin
+           (##wr-vector-aux2 we obj len vect-ref)
+           (##wr-mark-end we obj))))
     ((print)
      (##wr-vector-aux2 we obj len vect-ref))
     (else
@@ -10994,13 +11133,14 @@
 (define-prim (##wr-serialize we obj explode open-close)
   (case (macro-writeenv-style we)
     ((mark)
-     (if (##wr-mark we obj)
+     (if (##wr-mark-begin we obj)
          (let ((vect (explode obj)))
            (##wr-vector-aux2
             we
             vect
             (##vector-length vect)
-            ##vector-ref))))
+            ##vector-ref)
+           (##wr-mark-end we obj))))
     (else
      (if (##wr-stamp we obj)
          (let ((vect (explode obj)))
@@ -11221,14 +11361,16 @@
         (else
          (case (macro-writeenv-style we)
            ((mark)
-            (if (##wr-mark we obj)
-                (for-each-visible-field
-                 (lambda (field-name value last?)
-                   (##wr-no-display we field-name)
-                   (##wr-no-display we value))
-                 obj
-                 (##structure-type obj)
-                 #t)))
+            (if (##wr-mark-begin we obj)
+                (begin
+                  (for-each-visible-field
+                   (lambda (field-name value last?)
+                     (##wr-no-display we field-name)
+                     (##wr-no-display we value))
+                   obj
+                   (##structure-type obj)
+                   #t)
+                  (##wr-mark-end we obj))))
            (else
             (if (##wr-stamp we obj)
                 (if (case (macro-writeenv-style we)
@@ -11405,8 +11547,10 @@
 (define-prim (##wr-box we obj)
   (case (macro-writeenv-style we)
     ((mark)
-     (if (##wr-mark we obj)
-         (##wr we (##unbox obj))))
+     (if (##wr-mark-begin we obj)
+         (begin
+           (##wr we (##unbox obj))
+           (##wr-mark-end we obj))))
     (else
      (if (case (macro-writeenv-style we)
            ((print) #t)
