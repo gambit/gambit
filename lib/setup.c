@@ -1501,6 +1501,7 @@ ___module_struct *module;)
         case ___sSTRUCTURE:
         case ___sRATNUM:
         case ___sCPXNUM:
+        case ___sBOXVALUES:
           p += ___SUBTYPED_BODY;
           for (i=0; i<words; i++)
             fixref (module, p+i);
