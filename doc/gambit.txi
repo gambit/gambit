@@ -13938,14 +13938,24 @@ For example:
 The procedure @code{readtable-sharing-allowed?} returns the content of
 the @samp{sharing-allowed?} field of @var{readtable}.  The reader
 recognizes the @code{#@var{n}#} and @code{#@var{n}=@var{datum}}
-notation for circular structures and the printer uses this notation if
-and only if the content of the @samp{sharing-allowed?} field is not
-@code{#f}.  Moreover when the content of the @samp{sharing-allowed?}
-field is the symbol @code{serialize}, the printer uses a special
-external representation that the reader understands and that extends
-write/read invariance to the following types: records, procedures and
-continuations.  Note that an object can be serialized and deserialized
-if and only if all of its components are serializable.
+notation for shared and circular structures and the printer uses this
+notation depending on the content of the @samp{sharing-allowed?} field
+and the printing primitive used.  When the content of the
+@samp{sharing-allowed?} field is the symbol @code{default}, the
+procedure @code{write-shared} will use this notation for shared and
+circular structures, the procedures @code{write}, @code{display},
+@code{pp}, @code{pretty-print}, @code{print}, and @code{println} will
+use this notation for circular structures, and the procedure
+@code{write-simple} does not use this notation.  When the content
+of the @samp{sharing-allowed?} field is @code{#f}, the printing procedures
+will not use this notation. When the content of the @samp{sharing-allowed?}
+field is @code{#t}, the printing procedures will use this notation
+for shared and circular structures.  Finally, when the content of the
+@samp{sharing-allowed?} field is the symbol @code{serialize}, the printer
+uses a special external representation that the reader understands and
+that extends write/read invariance to the following types: records,
+procedures and continuations.  Note that an object can be serialized and
+deserialized if and only if all of its components are serializable.
 
 The procedure @code{readtable-sharing-allowed?-set} returns a copy
 of @var{readtable} where only the @samp{sharing-allowed?} field

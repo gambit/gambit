@@ -4108,12 +4108,16 @@
 
   (##declare (not interrupts-enabled))
 
-  (let ((mt1
-         (and (or (macro-readtable-sharing-allowed? rt)
-                  (##eq? style 'write-shared)
-                  (##eq? style 'write)
-                  (##eq? style 'pretty-print))
-              (##make-marktable))))
+  (let* ((sharing-allowed?
+          (macro-readtable-sharing-allowed? rt))
+         (mt1
+          (and (if (##eq? sharing-allowed? 'default)
+                   (or (##eq? style 'write-shared)
+                       (##eq? style 'write)
+                       (##eq? style 'display)
+                       (##eq? style 'pretty-print))
+                   sharing-allowed?)
+               (##make-marktable))))
 
     (define (make-we style mt)
       (##make-writeenv
@@ -4140,8 +4144,9 @@
                            ;; only use labels for cycles, unless sharing matters
                            (##fxior
                             seen
-                            (if (or (macro-readtable-sharing-allowed? rt)
-                                    (##eq? style 'write-shared))
+                            (if (if (##eq? sharing-allowed? 'default)
+                                    (##eq? style 'write-shared)
+                                    sharing-allowed?)
                                 (##fxand
                                  (macro-not-part-of-a-cycle-and-is-shared)
                                  (macro-part-of-a-cycle))
@@ -12044,7 +12049,7 @@
          (handlers (vector-ref lm 2)))
     (if handlers
         lm
-        (vector-ref lm 1))))
+        (macro-readenv-wrap re (vector-ref lm 1)))))
 
 (define (##label-marker-fixup-handler-add! re lm handler)
   (let ((handlers (vector-ref lm 2)))
@@ -14745,7 +14750,7 @@
           (##make-chartable ##read-sharp-other)
           #f                 ;; max-unescaped-char
           #t                 ;; escape-ctrl-chars?
-          #f                 ;; sharing-allowed?
+          'default           ;; sharing-allowed?
           #f                 ;; eval-allowed?
           #f                 ;; write-extended-read-macros?
           #f                 ;; write-cdr-read-macros?

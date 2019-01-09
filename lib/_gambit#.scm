@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -108,9 +108,13 @@
                               (loop (cdr lst)))
                           (null? lst))))))
          (cond (inlinable?
-                #'(define-prim id
-                    (lambda params
-                      (id . params))))
+                (syntax-case (datum->syntax stx
+                                            (syntax->datum #'(id . params)))
+                    ()
+                  (call
+                   #'(define-prim id
+                       (lambda params
+                         call)))))
                ((not (null? (syntax->datum #'(body ...))))
                 #'(define-prim id
                     (lambda params

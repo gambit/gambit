@@ -81,58 +81,168 @@
             (##vector-ref src 3)))
 
 (define (##sourcify-deep x src)
+  (let ((visited (##make-table 0 (macro-absent-obj) #f #f ##eq?)))
 
-  (define (sourcify-deep-list lst src)
-    (cond ((##pair? lst)
-           (let* ((a (##car lst))
-                  (d (##cdr lst))
-                  (sa (sourcify-deep a src))
-                  (sd (sourcify-deep-list d src)))
-             (if (and (##eq? a sa) (##eq? d sd))
-                 lst
-                 (##cons sa sd))))
-          ((##null? lst)
-           '())
-          (else
-           (sourcify-deep lst src))))
+    (define not-yet-visited                      0)
+    (define children-being-visited               1)
+    (define not-part-of-a-cycle-and-maybe-shared 2)
+    (define not-part-of-a-cycle-and-is-shared    3)
+    (define part-of-a-cycle                      4)
 
-  (define (sourcify-deep-vector vect src)
-    (let* ((len (##vector-length vect))
-           (x (##make-vector len 0))
-           (same? #t))
-      (let loop ((i (##fx- len 1)))
-        (if (##fx< i 0)
-            (if same? vect x)
-            (let ((s (sourcify-deep (##vector-ref vect i) src)))
-              (if (##not (##eq? s (##vector-ref vect i)))
-                  (set! same? #f))
-              (##vector-set! x i s)
-              (loop (##fx- i 1)))))))
+    (define (visit obj begin?)
+      (let ((x (##table-ref visited obj not-yet-visited)))
+        (if (##fx= x not-yet-visited)
+            (begin
+              (##table-set! visited obj children-being-visited)
+              #t)
+            (let ((s (cond ((##fx= x children-being-visited)
+                            (if begin?
+                                part-of-a-cycle
+                                not-part-of-a-cycle-and-maybe-shared))
+                           ((##fx= x not-part-of-a-cycle-and-maybe-shared)
+                            not-part-of-a-cycle-and-is-shared)
+                           (else
+                            x))))
+              (##table-set! visited obj s)
+              #f))))
 
-  (define (sourcify-deep-box b src)
-    (let ((val (sourcify-deep (##unbox b) src)))
-      (if (##eq? val (##unbox b))
-          b
-          (##box val))))
+    (define (visit-begin obj)
+      (visit obj #t))
 
-  (define (sourcify-deep-aux x src)
-    (cond ((##pair? x)
-           (sourcify-deep-list x src))
-          ((##vector? x)
-           (sourcify-deep-vector x src))
-          ((##box? x)
-           (sourcify-deep-box x src))
-          (else
-           x)))
+    (define (visit-end obj)
+      (visit obj #f))
 
-  (define (sourcify-deep x src)
-    (if (##source? x)
-        (let* ((code (##source-code x))
-               (code2 (sourcify-deep-aux code x)))
-          (if (##eq? code code2) x (##sourcify-aux1 code2 x)))
-        (##sourcify-aux1 (sourcify-deep-aux x src) src)))
+    (define (analyze-pair p)
+      (and (visit-begin p)
+           (begin
+             (analyze (##car p))
+             (analyze-list (##cdr p))
+             (visit-end p))))
 
-  (sourcify-deep x src))
+    (define (analyze-list lst)
+      (cond ((##pair? lst)
+             (analyze-pair lst))
+            ((##not (##null? lst)))
+             (analyze lst)))
+
+    (define (analyze-vector v)
+      (and (visit-begin v)
+           (let loop ((i (##fx- (##vector-length v) 1)))
+             (if (##fx< i 0)
+                 (visit-end v)
+                 (begin
+                   (analyze (##vector-ref v i))
+                   (loop (##fx- i 1)))))))
+
+    (define (analyze-box b)
+      (and (visit-begin b)
+           (begin
+             (analyze (##unbox b))
+             (visit-end b))))
+
+    (define (analyze x)
+      (cond ((##source? x)
+             (and (visit-begin x)
+                  (begin
+                    (analyze (##source-code x))
+                    (visit-end x))))
+            ((##pair? x)
+             (analyze-pair x))
+            ((##vector? x)
+             (analyze-vector x))
+            ((##box? x)
+             (analyze-box x))
+            (else
+             x)))
+
+    (define (sourcify-deep-pair p src)
+      (let* ((a (##car p))
+             (d (##cdr p))
+             (sa (sourcify-deep a src))
+             (sd (sourcify-deep-list d src)))
+        (if (and (##eq? a sa) (##eq? d sd))
+            p
+            (##cons sa sd))))
+
+    (define (sourcify-deep-list lst src)
+      (cond ((##pair? lst)
+             (let ((shared-lst (##table-ref visited lst not-yet-visited)))
+               (if (##not (##fixnum? shared-lst))
+                   shared-lst
+                   (if (shared? shared-lst)
+                       (sourcify-deep lst src)
+                       (sourcify-deep-pair lst src)))))
+            ((##null? lst)
+             '())
+            (else
+             (sourcify-deep lst src))))
+
+    (define (sourcify-deep-vector v src)
+      (let* ((len (##vector-length v))
+             (new-v (##make-vector len 0))
+             (same? #t))
+        (let loop ((i (##fx- len 1)))
+          (if (##fx< i 0)
+              (if same? v new-v)
+              (let ((s (sourcify-deep (##vector-ref v i) src)))
+                (if (##not (##eq? s (##vector-ref v i)))
+                    (set! same? #f))
+                (##vector-set! new-v i s)
+                (loop (##fx- i 1)))))))
+
+    (define (sourcify-deep-box b src)
+      (let* ((val (##unbox b))
+             (new-val (sourcify-deep val src)))
+        (if (##eq? new-val val)
+            b
+            (##box new-val))))
+
+    (define (sourcify-deep-aux x src)
+      (cond ((##pair? x)
+             (sourcify-deep-pair x src))
+            ((##vector? x)
+             (sourcify-deep-vector x src))
+            ((##box? x)
+             (sourcify-deep-box x src))
+            (else
+             x)))
+
+    (define (shared? state)
+      (##fx>= state not-part-of-a-cycle-and-is-shared))
+
+    (define (sourcify-deep x src)
+      (let ((shared-x (##table-ref visited x not-yet-visited)))
+        (if (##not (##fixnum? shared-x))
+            shared-x
+            (if (##source? x)
+                (let* ((code (##source-code x))
+                       (shared-code (##table-ref visited code not-yet-visited)))
+                  (if (##not (##fixnum? shared-code))
+                      shared-code
+                      (if (or (shared? shared-x)
+                              (shared? shared-code))
+                          (let ((wrapper (##sourcify-aux1 #f x)))
+                            (##table-set! visited x wrapper)
+                            (##table-set! visited code wrapper)
+                            (let ((code2 (sourcify-deep-aux code x)))
+                              (##source-code-set! wrapper code2))
+                            wrapper)
+                          (let ((code2 (sourcify-deep-aux code x)))
+                            (if (##eq? code2 code)
+                                x
+                                (##sourcify-aux1 code2 x))))))
+                (if (shared? shared-x)
+                    (let ((wrapper (##sourcify-aux1 #f src)))
+                      (##table-set! visited x wrapper)
+                      (let ((code2 (sourcify-deep-aux x src)))
+                        (##source-code-set! wrapper code2))
+                      wrapper)
+                    (let ((code2 (sourcify-deep-aux x src)))
+                      (##sourcify-aux1 code2 src)))))))
+
+    (analyze x) ;; determine if there is sharing or cycles
+
+    (sourcify-deep x src)))
 
 (define (##source? x)
   (and (##vector? x)
@@ -146,6 +256,9 @@
 
 (define (##source-code src)
   (##vector-ref src 1))
+
+(define (##source-code-set! src code)
+  (##vector-set! src 1 code))
 
 (define (##source-locat src)
   (let ((container (##vector-ref src 2)))
@@ -161,39 +274,62 @@
          (##container->path (##locat-container locat)))))
 
 (define (##desourcify src)
+  (let ((visited (##make-table 0 (macro-absent-obj) #f #f ##eq?)))
 
-  (define (desourcify-list lst)
-    (cond ((##pair? lst)
-           (##cons (##desourcify (##car lst))
-                   (desourcify-list (##cdr lst))))
-          ((##null? lst)
-           '())
-          (else
-           (##desourcify lst))))
+    (define (share x)
+      (##table-ref visited x #f))
 
-  (define (desourcify-vector vect)
-    (let* ((len (##vector-length vect))
-           (x (##make-vector len 0)))
-      (let loop ((i (##fx- len 1)))
-        (if (##fx< i 0)
-            x
-            (begin
-              (##vector-set! x i (##desourcify (##vector-ref vect i)))
-              (loop (##fx- i 1)))))))
+    (define (desourcify-pair p)
+      (or (share p)
+          (let ((new-p (##cons #f #f)))
+            (##table-set! visited p new-p)
+            (##set-car! new-p (desourcify (##car p)))
+            (##set-cdr! new-p (desourcify-list (##cdr p)))
+            new-p)))
 
-  (if (##source? src)
-      (let ((code (##source-code src)))
-        (if (##eq? (##vector-ref (##vector-ref src 0) 0) 'source2)
-            code
-            (cond ((##pair? code)
-                   (desourcify-list code))
-                  ((##vector? code)
-                   (desourcify-vector code))
-                  ((##box? code)
-                   (##box (##desourcify (##unbox code))))
-                  (else
-                   code))))
-      src))
+    (define (desourcify-list lst)
+      (cond ((##pair? lst)
+             (desourcify-pair lst))
+            ((##null? lst)
+             '())
+            (else
+             (desourcify lst))))
+
+    (define (desourcify-vector v)
+      (or (share v)
+          (let* ((len (##vector-length v))
+                 (new-v (##make-vector len 0)))
+            (##table-set! visited v new-v)
+            (let loop ((i (##fx- len 1)))
+              (if (##fx< i 0)
+                  new-v
+                  (begin
+                    (##vector-set! new-v i (desourcify (##vector-ref v i)))
+                    (loop (##fx- i 1))))))))
+
+    (define (desourcify-box b)
+      (or (share b)
+          (let ((new-b (##box #f)))
+            (##table-set! visited b new-b)
+            (##set-box! new-b (desourcify (##unbox b)))
+            new-b)))
+
+    (define (desourcify src)
+      (if (##source? src)
+          (let ((code (##source-code src)))
+            (if (##eq? (##vector-ref (##vector-ref src 0) 0) 'source2)
+                code
+                (cond ((##pair? code)
+                       (desourcify-list code))
+                      ((##vector? code)
+                       (desourcify-vector code))
+                      ((##box? code)
+                       (desourcify-box code))
+                      (else
+                       code))))
+          src))
+
+    (desourcify src)))
 
 (define (##make-alias-syntax alias)
   (lambda (src)

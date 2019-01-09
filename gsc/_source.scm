@@ -2,7 +2,7 @@
 
 ;;; File: "_source.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -268,37 +268,62 @@
 
 ;; (source->expression source) returns the Scheme expression represented by the
 ;; source 'source'.  Note that every call with the same argument returns a
-;; different (i.e. non eq?) expression.
+;; different (i.e. non eq?) expression.  The implementation can handle cycles
+;; and shared structure.
 
 (define (source->expression source)
+  (let ((visited (make-table 'test: eq?)))
 
-  (define (list->expression l)
-    (cond ((pair? l)
-           (cons (source->expression (car l)) (list->expression (cdr l))))
-          ((null? l)
-           '())
-          (else
-           (source->expression l))))
+    (define (share x)
+      (table-ref visited x #f))
 
-  (define (vector->expression v)
-    (let* ((len (vector-length v))
-           (x (make-vector len)))
-      (let loop ((i (- len 1)))
-        (if (>= i 0)
-          (begin
-            (vector-set! x i (source->expression (vector-ref v i)))
-            (loop (- i 1)))))
-      x))
+    (define (convert-pair p)
+      (or (share p)
+          (let ((new-p (cons #f #f)))
+            (table-set! visited p new-p)
+            (set-car! new-p (convert (car p)))
+            (set-cdr! new-p (convert-list (cdr p)))
+            new-p)))
 
-  (let ((code (source-code source)))
-    (cond ((pair? code)
-           (list->expression code))
-          ((box-object? code)
-           (box-object (source->expression (unbox-object code))))
-          ((vector-object? code)
-           (vector->expression code))
-          (else
-           code))))
+    (define (convert-list lst)
+      (cond ((pair? lst)
+             (convert-pair lst))
+            ((null? lst)
+             '())
+            (else
+             (convert lst))))
+
+    (define (convert-vector v)
+      (or (share v)
+          (let* ((len (vector-length v))
+                 (new-v (make-vector len)))
+            (table-set! visited v new-v)
+            (let loop ((i (- len 1)))
+              (if (< i 0)
+                  new-v
+                  (begin
+                    (vector-set! new-v i (convert (vector-ref v i)))
+                    (loop (- i 1))))))))
+
+    (define (convert-box b)
+      (or (share b)
+          (let ((new-b (box-object #f)))
+            (table-set! visited b new-b)
+            (set-box-object! new-b (convert (unbox-object b)))
+            new-b)))
+
+    (define (convert source)
+      (let ((code (source-code source)))
+        (cond ((pair? code)
+               (convert-list code))
+              ((vector-object? code)
+               (convert-vector code))
+              ((box-object? code)
+               (convert-box code))
+              (else
+               code))))
+
+    (convert source)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

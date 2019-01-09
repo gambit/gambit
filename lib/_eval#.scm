@@ -2,7 +2,7 @@
 
 ;;; File: "_eval#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -168,18 +168,19 @@
              #f))
 
 (##define-macro (macro-step! leapable? handler-index vars . body)
+  (define (copy lst) (append lst '()))
   `(let* (($$execute-body
-           (lambda ($code rte ,@vars) ,@body))
+           (lambda ($code rte ,@(copy vars)) ,@body))
           ($$handler
            (##vector-ref (macro-code-stepper $code) ,handler-index)))
      (if $$handler
        ($$handler ,leapable?
                   $code
                   rte
-                  (lambda ($code rte ,@vars)
-                    ($$execute-body $code rte ,@vars))
-                  ,@vars)
-       ($$execute-body $code rte ,@vars))))
+                  (lambda ($code rte ,@(copy vars))
+                    ($$execute-body $code rte ,@(copy vars)))
+                  ,@(copy vars))
+       ($$execute-body $code rte ,@(copy vars)))))
 
 ;;;----------------------------------------------------------------------------
 
