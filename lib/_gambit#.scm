@@ -108,13 +108,9 @@
                               (loop (cdr lst)))
                           (null? lst))))))
          (cond (inlinable?
-                (syntax-case (datum->syntax stx
-                                            (syntax->datum #'(id . params)))
-                    ()
-                  (call
-                   #'(define-prim id
-                       (lambda params
-                         call)))))
+                #'(define-prim id
+                    (lambda params
+                      (id . params))))
                ((not (null? (syntax->datum #'(body ...))))
                 #'(define-prim id
                     (lambda params

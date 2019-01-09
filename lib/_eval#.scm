@@ -168,19 +168,18 @@
              #f))
 
 (##define-macro (macro-step! leapable? handler-index vars . body)
-  (define (copy lst) (append lst '()))
   `(let* (($$execute-body
-           (lambda ($code rte ,@(copy vars)) ,@body))
+           (lambda ($code rte ,@vars) ,@body))
           ($$handler
            (##vector-ref (macro-code-stepper $code) ,handler-index)))
      (if $$handler
        ($$handler ,leapable?
                   $code
                   rte
-                  (lambda ($code rte ,@(copy vars))
-                    ($$execute-body $code rte ,@(copy vars)))
-                  ,@(copy vars))
-       ($$execute-body $code rte ,@(copy vars)))))
+                  (lambda ($code rte ,@vars)
+                    ($$execute-body $code rte ,@vars))
+                  ,@vars)
+       ($$execute-body $code rte ,@vars))))
 
 ;;;----------------------------------------------------------------------------
 

@@ -235,26 +235,23 @@
                  .
                  local-defines)
 
-  (define (copy lst)
-    (append lst '()))
-
   `(define (,equal-objs? obj1 obj2 ,@params)
 
      ,@local-defines
 
      ,@(if custom-recursion-handler
            `()
-           `((define (table-equal obj1 obj2 ,@(copy params))
+           `((define (table-equal obj1 obj2 ,@params)
                (conj (gc-hash-table-equal (macro-table-gcht obj1)
                                           obj2
-                                          ,@(copy params))
+                                          ,@params)
                      (if (macro-table-test obj1)
                          (gc-hash-table-equal (macro-table-hash obj1)
                                               obj2
-                                              ,@(copy params))
+                                              ,@params)
                          (true))))
 
-             (define (gc-hash-table-equal ht1 table2 ,@(copy params))
+             (define (gc-hash-table-equal ht1 table2 ,@params)
                (##declare (not interrupts-enabled))
                (if (##gc-hash-table? ht1)
                    (let loop ((i (macro-gc-hash-table-key0))
@@ -267,7 +264,7 @@
                                (let ()
                                  (##declare (interrupts-enabled))
                                  (loop (##fx+ i 2)
-                                       ,@(copy params)))
+                                       ,@params))
                                (let* ((val1
                                        (##vector-ref ht1 (##fx+ i 1)))
                                       (val2
@@ -277,14 +274,14 @@
                                  (conj (,equal-objs?
                                         val1
                                         val2
-                                        ,@(copy params))
+                                        ,@params)
                                        (let ()
                                          (##declare (interrupts-enabled))
                                          (loop (##fx+ i 2)
-                                               ,@(copy params)))))))
+                                               ,@params))))))
                          (true)))))
 
-             (define (structure-equal obj1 obj2 type len ,@(copy params))
+             (define (structure-equal obj1 obj2 type len ,@params)
                (if (##not type) ;; have we reached root of inheritance chain?
                    (true)
                    (let ((fields (##type-fields type)))
@@ -297,7 +294,7 @@
                                             obj2
                                             (##type-super type)
                                             len
-                                            ,@(copy params))
+                                            ,@params)
                            (let ((field-attributes
                                   (##vector-ref fields (##fx+ i*3 1)))
                                  (len-1
@@ -307,7 +304,7 @@
                                          0))
                                  (loop (##fx- i*3 3) ;; don't check this field
                                        len-1
-                                       ,@(copy params))
+                                       ,@params)
                                  (conj (,equal-objs? (##unchecked-structure-ref
                                                       obj1
                                                       len-1
@@ -318,10 +315,10 @@
                                                       len-1
                                                       type
                                                       #f)
-                                                     ,@(copy params))
+                                                     ,@params)
                                        (loop (##fx- i*3 3)
                                              len-1
-                                             ,@(copy params))))))))))))
+                                             ,@params)))))))))))
 
      (macro-force-vars (obj1 obj2)
        (if (##eq? obj1 obj2)
@@ -333,16 +330,16 @@
                   (if (##not (##pair? obj2))
                       (false)
                       ,(if custom-recursion-handler
-                           `(,custom-recursion-handler obj1 obj2 ,@(copy params))
+                           `(,custom-recursion-handler obj1 obj2 ,@params)
                            `(recursion
                              obj1
                              obj2
                              (conj (,equal-objs? (##car obj1)
                                                  (##car obj2)
-                                                 ,@(copy params))
+                                                 ,@params)
                                    (,equal-objs? (##cdr obj1)
                                                  (##cdr obj2)
-                                                 ,@(copy params)))))))
+                                                 ,@params))))))
                  ((##vector? obj1)
                   (profile! 2)
                   (if (##not (##vector? obj2))
@@ -351,7 +348,7 @@
                         (if (##not (##fx= len (##vector-length obj2)))
                             (false)
                             ,(if custom-recursion-handler
-                                 `(,custom-recursion-handler obj1 obj2 ,@(copy params))
+                                 `(,custom-recursion-handler obj1 obj2 ,@params)
                                  `(recursion
                                    obj1
                                    obj2
@@ -363,9 +360,9 @@
                                          (conj (,equal-objs?
                                                 (##vector-ref obj1 i)
                                                 (##vector-ref obj2 i)
-                                                ,@(copy params))
+                                                ,@params)
                                                (loop (##fx- i 1)
-                                                     ,@(copy params)))))))))))
+                                                     ,@params))))))))))
                  ((##fixnum? obj1)
                   (profile! 3)
                   (if (and (##fixnum? obj2)
@@ -417,14 +414,14 @@
                            `(,custom-recursion-handler
                              obj1
                              obj2
-                             ,@(copy params))
+                             ,@params)
                            `(recursion
                              obj1
                              obj2
                              (table-equal
                               obj1
                               obj2
-                              ,@(copy params))))))
+                              ,@params)))))
                  ((##structure? obj1)
                   (profile! 9)
                   (if (##not (##structure? obj2))
@@ -449,7 +446,7 @@
                                        `(,custom-recursion-handler
                                          obj1
                                          obj2
-                                         ,@(copy params))
+                                         ,@params)
                                        `(recursion
                                          obj1
                                          obj2
@@ -458,7 +455,7 @@
                                           obj2
                                           type
                                           len
-                                          ,@(copy params))))))))))
+                                          ,@params)))))))))
                  ((##box? obj1)
                   (profile! 10)
                   (if (##not (##box? obj2))
@@ -467,14 +464,14 @@
                            `(,custom-recursion-handler
                              obj1
                              obj2
-                             ,@(copy params))
+                             ,@params)
                            `(recursion
                              obj1
                              obj2
                              (,equal-objs?
                               (##unbox obj1)
                               (##unbox obj2)
-                              ,@(copy params))))))
+                              ,@params)))))
                  ((##string? obj1)
                   (profile! 11)
                   (if (and (##string? obj2)

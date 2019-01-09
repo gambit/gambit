@@ -168,9 +168,9 @@
       (cond ((##pair? lst)
              (let ((shared-lst (##table-ref visited lst not-yet-visited)))
                (if (##not (##fixnum? shared-lst))
-                   shared-lst
+                   (##source-code shared-lst)
                    (if (shared? shared-lst)
-                       (sourcify-deep lst src)
+                       (##source-code (sourcify-deep lst src))
                        (sourcify-deep-pair lst src)))))
             ((##null? lst)
              '())
