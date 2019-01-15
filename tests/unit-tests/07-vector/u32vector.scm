@@ -219,6 +219,14 @@
 
 (check-equal? (u32vector-copy '#u32()) '#u32())
 (check-equal? (u32vector-copy v6) v6)
+(check-equal? (u32vector-copy v6 0) v6)
+(check-equal? (u32vector-copy v6 2) '#u32(0 1 4294967295))
+(check-equal? (u32vector-copy v6 0 0) '#u32())
+(check-equal? (u32vector-copy v6 4 4) '#u32())
+(check-equal? (u32vector-copy v6 0 2) '#u32(0 4294967295))
+(check-equal? (u32vector-copy v6 2 4) '#u32(0 1))
+(check-equal? (u32vector-copy v6 4 5) '#u32(4294967295))
+(check-equal? (u32vector-copy v6 0 5) v6)
 
 (check-equal? (subu32vector v6 0 0) '#u32())
 (check-equal? (subu32vector v6 4 4) '#u32())
@@ -333,6 +341,8 @@
 (check-tail-exn type-exception? (lambda () (append-u32vectors '(1 2 3))))
 
 (check-tail-exn type-exception? (lambda () (u32vector-copy bool)))
+(check-tail-exn type-exception? (lambda () (u32vector-copy v9 bool)))
+(check-tail-exn type-exception? (lambda () (u32vector-copy v9 0 bool)))
 
 (check-tail-exn type-exception? (lambda () (subu32vector bool 0 0)))
 (check-tail-exn type-exception? (lambda () (subu32vector v9 bool 0)))
@@ -416,7 +426,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-u32vectors '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u32vector-copy)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u32vector-copy v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u32vector-copy v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu32vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu32vector v1)))

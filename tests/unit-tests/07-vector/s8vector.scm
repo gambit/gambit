@@ -219,6 +219,14 @@
 
 (check-equal? (s8vector-copy '#s8()) '#s8())
 (check-equal? (s8vector-copy v6) v6)
+(check-equal? (s8vector-copy v6 0) v6)
+(check-equal? (s8vector-copy v6 2) '#s8(0 1 127))
+(check-equal? (s8vector-copy v6 0 0) '#s8())
+(check-equal? (s8vector-copy v6 4 4) '#s8())
+(check-equal? (s8vector-copy v6 0 2) '#s8(-128 -2))
+(check-equal? (s8vector-copy v6 2 4) '#s8(0 1))
+(check-equal? (s8vector-copy v6 4 5) '#s8(127))
+(check-equal? (s8vector-copy v6 0 5) v6)
 
 (check-equal? (subs8vector v6 0 0) '#s8())
 (check-equal? (subs8vector v6 4 4) '#s8())
@@ -333,6 +341,8 @@
 (check-tail-exn type-exception? (lambda () (append-s8vectors '(1 2 3))))
 
 (check-tail-exn type-exception? (lambda () (s8vector-copy bool)))
+(check-tail-exn type-exception? (lambda () (s8vector-copy v9 bool)))
+(check-tail-exn type-exception? (lambda () (s8vector-copy v9 0 bool)))
 
 (check-tail-exn type-exception? (lambda () (subs8vector bool 0 0)))
 (check-tail-exn type-exception? (lambda () (subs8vector v9 bool 0)))
@@ -416,7 +426,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-s8vectors '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s8vector-copy)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s8vector-copy v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s8vector-copy v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs8vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs8vector v1)))

@@ -453,14 +453,38 @@
                                (,vect-fill! vect fill start end)
                                (,##vect-fill! vect fill start end)))))))))))
 
-       (define-prim (,##vect-copy vect)
-         (let ((len (,##vect-length vect)))
-           (,##subvect-move! vect 0 len (,##make-vect len) 0)))
+       (define-prim (,##vect-copy
+                     vect
+                     #!optional
+                     (start 0)
+                     (end (,##vect-length vect)))
+         (let ((len (##fx- end start)))
+           (,##subvect-move! vect start end (,##make-vect len) 0)))
 
-       (define-prim (,vect-copy vect)
-         (macro-force-vars (vect)
-           (,macro-check-vect vect 1 (,vect-copy vect)
-             (,##vect-copy vect))))
+       (define-prim (,vect-copy
+                     vect
+                     #!optional
+                     (start (macro-absent-obj))
+                     (end (macro-absent-obj)))
+         (macro-force-vars (vect start end)
+           (,macro-check-vect vect 1 (,vect-copy vect start end)
+             (if (##eq? start (macro-absent-obj))
+                 (,##vect-copy vect)
+                 (macro-check-index-range-incl
+                   start
+                   2
+                   0
+                   (,##vect-length vect)
+                   (,vect-copy vect start end)
+                   (if (##eq? end (macro-absent-obj))
+                       (,##vect-copy vect start)
+                       (macro-check-index-range-incl
+                         end
+                         3
+                         start
+                         (,##vect-length vect)
+                         (,vect-copy vect start end)
+                         (,##vect-copy vect start end))))))))
 
        (define-prim (,##vect-delete vect i)
          (let* ((len (,##vect-length vect))

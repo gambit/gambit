@@ -219,6 +219,14 @@
 
 (check-equal? (u64vector-copy '#u64()) '#u64())
 (check-equal? (u64vector-copy v6) v6)
+(check-equal? (u64vector-copy v6 0) v6)
+(check-equal? (u64vector-copy v6 2) '#u64(0 1 18446744073709551615))
+(check-equal? (u64vector-copy v6 0 0) '#u64())
+(check-equal? (u64vector-copy v6 4 4) '#u64())
+(check-equal? (u64vector-copy v6 0 2) '#u64(0 18446744073709551615))
+(check-equal? (u64vector-copy v6 2 4) '#u64(0 1))
+(check-equal? (u64vector-copy v6 4 5) '#u64(18446744073709551615))
+(check-equal? (u64vector-copy v6 0 5) v6)
 
 (check-equal? (subu64vector v6 0 0) '#u64())
 (check-equal? (subu64vector v6 4 4) '#u64())
@@ -333,6 +341,8 @@
 (check-tail-exn type-exception? (lambda () (append-u64vectors '(1 2 3))))
 
 (check-tail-exn type-exception? (lambda () (u64vector-copy bool)))
+(check-tail-exn type-exception? (lambda () (u64vector-copy v9 bool)))
+(check-tail-exn type-exception? (lambda () (u64vector-copy v9 0 bool)))
 
 (check-tail-exn type-exception? (lambda () (subu64vector bool 0 0)))
 (check-tail-exn type-exception? (lambda () (subu64vector v9 bool 0)))
@@ -416,7 +426,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-u64vectors '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-copy)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-copy v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-copy v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu64vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu64vector v1)))

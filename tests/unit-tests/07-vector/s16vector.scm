@@ -219,6 +219,14 @@
 
 (check-equal? (s16vector-copy '#s16()) '#s16())
 (check-equal? (s16vector-copy v6) v6)
+(check-equal? (s16vector-copy v6 0) v6)
+(check-equal? (s16vector-copy v6 2) '#s16(0 1 32767))
+(check-equal? (s16vector-copy v6 0 0) '#s16())
+(check-equal? (s16vector-copy v6 4 4) '#s16())
+(check-equal? (s16vector-copy v6 0 2) '#s16(-32768 -2))
+(check-equal? (s16vector-copy v6 2 4) '#s16(0 1))
+(check-equal? (s16vector-copy v6 4 5) '#s16(32767))
+(check-equal? (s16vector-copy v6 0 5) v6)
 
 (check-equal? (subs16vector v6 0 0) '#s16())
 (check-equal? (subs16vector v6 4 4) '#s16())
@@ -333,6 +341,8 @@
 (check-tail-exn type-exception? (lambda () (append-s16vectors '(1 2 3))))
 
 (check-tail-exn type-exception? (lambda () (s16vector-copy bool)))
+(check-tail-exn type-exception? (lambda () (s16vector-copy v9 bool)))
+(check-tail-exn type-exception? (lambda () (s16vector-copy v9 0 bool)))
 
 (check-tail-exn type-exception? (lambda () (subs16vector bool 0 0)))
 (check-tail-exn type-exception? (lambda () (subs16vector v9 bool 0)))
@@ -416,7 +426,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-s16vectors '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-copy)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-copy v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-copy v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs16vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs16vector v1)))
