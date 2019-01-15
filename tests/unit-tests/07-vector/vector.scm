@@ -204,6 +204,10 @@
 
 (check-equal? (vector->list '#()) '())
 (check-equal? (vector->list v6) '(0 255 0 1 255))
+(check-equal? (vector->list v6 0) '(0 255 0 1 255))
+(check-equal? (vector->list v6 2) '(0 1 255))
+(check-equal? (vector->list v6 2 4) '(0 1))
+(check-equal? (vector->list v6 0 5) '(0 255 0 1 255))
 (check-equal? (vector->list v7) '(0 0))
 
 (check-equal? (list->vector '()) '#())
@@ -417,7 +421,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-length bool bool)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector->list)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector->list v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector->list v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->vector '() '())))

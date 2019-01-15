@@ -2,7 +2,7 @@
 
 ;;; File: "_std#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -371,19 +371,40 @@
                  (,macro-check-elem val 3 (,vect-set vect k val)
                    (,##vect-set vect k val)))))))
 
-       (define-prim (,##vect->list vect)
-         (let loop ((lst '()) (i (##fx- (,##vect-length vect) 1)))
-           (if (##fx< i 0)
+       (define-prim (,##vect->list
+                     vect
+                     #!optional
+                     (start 0)
+                     (end (,##vect-length vect)))
+         (let loop ((lst '()) (i (##fx- end 1)))
+           (if (##fx< i start)
                lst
                (loop (##cons (,##vect-ref vect i) lst) (##fx- i 1)))))
 
-       (define-prim (,vect->list vect)
-         (macro-force-vars (vect)
-           (,macro-check-vect vect 1 (,vect->list vect)
-             (let loop ((lst '()) (i (##fx- (,##vect-length vect) 1)))
-               (if (##fx< i 0)
-                   lst
-                   (loop (##cons (,##vect-ref vect i) lst) (##fx- i 1)))))))
+       (define-prim (,vect->list
+                     vect
+                     #!optional
+                     (start (macro-absent-obj))
+                     (end (macro-absent-obj)))
+         (macro-force-vars (vect start end)
+           (,macro-check-vect vect 1 (,vect->list vect start end)
+             (if (##eq? start (macro-absent-obj))
+                 (,##vect->list vect)
+                 (macro-check-index-range-incl
+                   start
+                   2
+                   0
+                   (,##vect-length vect)
+                   (,vect->list vect start end)
+                   (if (##eq? end (macro-absent-obj))
+                       (,##vect->list vect start)
+                       (macro-check-index-range-incl
+                         end
+                         3
+                         start
+                         (,##vect-length vect)
+                         (,vect->list vect start end)
+                         (,##vect->list vect start end))))))))
 
        (define-prim (,##list->vect lst)
          (let loop1 ((x lst) (n 0))

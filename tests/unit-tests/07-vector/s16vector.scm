@@ -204,6 +204,10 @@
 
 (check-equal? (s16vector->list '#s16()) '())
 (check-equal? (s16vector->list v6) '(-32768 -2 0 1 32767))
+(check-equal? (s16vector->list v6 0) '(-32768 -2 0 1 32767))
+(check-equal? (s16vector->list v6 2) '(0 1 32767))
+(check-equal? (s16vector->list v6 2 4) '(0 1))
+(check-equal? (s16vector->list v6 0 5) '(-32768 -2 0 1 32767))
 (check-equal? (s16vector->list v7) '(0 0))
 
 (check-equal? (list->s16vector '()) '#s16())
@@ -417,7 +421,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-length bool bool)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector->list)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector->list v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector->list v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s16vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s16vector '() '())))

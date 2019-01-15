@@ -204,6 +204,10 @@
 
 (check-equal? (s32vector->list '#s32()) '())
 (check-equal? (s32vector->list v6) '(-2147483648 -2 0 1 2147483647))
+(check-equal? (s32vector->list v6 0) '(-2147483648 -2 0 1 2147483647))
+(check-equal? (s32vector->list v6 2) '(0 1 2147483647))
+(check-equal? (s32vector->list v6 2 4) '(0 1))
+(check-equal? (s32vector->list v6 0 5) '(-2147483648 -2 0 1 2147483647))
 (check-equal? (s32vector->list v7) '(0 0))
 
 (check-equal? (list->s32vector '()) '#s32())
@@ -417,7 +421,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-length bool bool)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector->list)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector->list v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector->list v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s32vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s32vector '() '())))

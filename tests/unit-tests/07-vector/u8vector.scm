@@ -204,6 +204,10 @@
 
 (check-equal? (u8vector->list '#u8()) '())
 (check-equal? (u8vector->list v6) '(0 255 0 1 255))
+(check-equal? (u8vector->list v6 0) '(0 255 0 1 255))
+(check-equal? (u8vector->list v6 2) '(0 1 255))
+(check-equal? (u8vector->list v6 2 4) '(0 1))
+(check-equal? (u8vector->list v6 0 5) '(0 255 0 1 255))
 (check-equal? (u8vector->list v7) '(0 0))
 
 (check-equal? (list->u8vector '()) '#u8())
@@ -417,7 +421,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-length bool bool)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector->list)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector->list v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector->list v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u8vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u8vector '() '())))

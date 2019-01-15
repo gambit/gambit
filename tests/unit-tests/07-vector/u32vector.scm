@@ -204,6 +204,10 @@
 
 (check-equal? (u32vector->list '#u32()) '())
 (check-equal? (u32vector->list v6) '(0 4294967295 0 1 4294967295))
+(check-equal? (u32vector->list v6 0) '(0 4294967295 0 1 4294967295))
+(check-equal? (u32vector->list v6 2) '(0 1 4294967295))
+(check-equal? (u32vector->list v6 2 4) '(0 1))
+(check-equal? (u32vector->list v6 0 5) '(0 4294967295 0 1 4294967295))
 (check-equal? (u32vector->list v7) '(0 0))
 
 (check-equal? (list->u32vector '()) '#u32())
@@ -417,7 +421,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u32vector-length bool bool)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u32vector->list)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u32vector->list v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u32vector->list v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u32vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u32vector '() '())))

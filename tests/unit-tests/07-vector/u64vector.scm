@@ -204,6 +204,10 @@
 
 (check-equal? (u64vector->list '#u64()) '())
 (check-equal? (u64vector->list v6) '(0 18446744073709551615 0 1 18446744073709551615))
+(check-equal? (u64vector->list v6 0) '(0 18446744073709551615 0 1 18446744073709551615))
+(check-equal? (u64vector->list v6 2) '(0 1 18446744073709551615))
+(check-equal? (u64vector->list v6 2 4) '(0 1))
+(check-equal? (u64vector->list v6 0 5) '(0 18446744073709551615 0 1 18446744073709551615))
 (check-equal? (u64vector->list v7) '(0 0))
 
 (check-equal? (list->u64vector '()) '#u64())
@@ -417,7 +421,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-length bool bool)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector->list)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector->list v1 v1)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector->list v1 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u64vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u64vector '() '())))
