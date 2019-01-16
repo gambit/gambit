@@ -320,6 +320,15 @@
 (check-eq? (subs32vector-move! v9 0 2 v6 1) (void))
 (check-equal? v6 '#s32(2147483647 2147483647 99))
 
+(check-eq? (s32vector-copy! v6 0 '#s32(11 22 33)) (void))
+(check-equal? v6 '#s32(11 22 33))
+
+(check-eq? (s32vector-copy! v6 2 '#s32(33 44) 1) (void))
+(check-equal? v6 '#s32(11 22 44))
+
+(check-eq? (s32vector-copy! v6 1 '#s32(55 66 77 88) 0 2) (void))
+(check-equal? v6 '#s32(11 55 66))
+
 (check-tail-exn type-exception? (lambda () (s32vector 11 bool 22))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s32vector 11 -2147483649 22))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s32vector 11 2147483648 22))) ;; homovect only
@@ -411,6 +420,18 @@
 (check-tail-exn range-exception? (lambda () (subs32vector-move! v5 0 0 v5 -1)))
 (check-tail-exn range-exception? (lambda () (subs32vector-move! v5 0 0 v5 3)))
 
+(check-tail-exn type-exception? (lambda () (s32vector-copy! v5 0 bool 0 0)))
+(check-tail-exn type-exception? (lambda () (s32vector-copy! v5 0 v5 bool 0)))
+(check-tail-exn type-exception? (lambda () (s32vector-copy! v5 0 v5 0 bool)))
+(check-tail-exn type-exception? (lambda () (s32vector-copy! bool 0 v5 0 0)))
+(check-tail-exn type-exception? (lambda () (s32vector-copy! v5 bool v5 0 0)))
+(check-tail-exn range-exception? (lambda () (s32vector-copy! v5 0 v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (s32vector-copy! v5 0 v5 3 0)))
+(check-tail-exn range-exception? (lambda () (s32vector-copy! v5 0 v5 0 -1)))
+(check-tail-exn range-exception? (lambda () (s32vector-copy! v5 0 v5 0 3)))
+(check-tail-exn range-exception? (lambda () (s32vector-copy! v5 -1 v5 0 0)))
+(check-tail-exn range-exception? (lambda () (s32vector-copy! v5 3 v5 0 0)))
+
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (make-s32vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (make-s32vector 11 22 33)))
 
@@ -466,5 +487,10 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs32vector-move! v9 0 0)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs32vector-move! v9 0 0 v9)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs32vector-move! v9 0 0 v9 0 0)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-copy!)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-copy! v9)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-copy! v9 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-copy! v9 0 v9 0 0 0)))
 
 (check-tail-exn range-exception? (lambda () (make-s32vector (expt 2 64))))

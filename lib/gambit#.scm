@@ -173,6 +173,7 @@ f32vector
 f32vector->list
 f32vector-append
 f32vector-copy
+f32vector-copy!
 f32vector-fill!
 f32vector-length
 f32vector-ref
@@ -184,6 +185,7 @@ f64vector
 f64vector->list
 f64vector-append
 f64vector-copy
+f64vector-copy!
 f64vector-fill!
 f64vector-length
 f64vector-ref
@@ -594,6 +596,7 @@ s16vector
 s16vector->list
 s16vector-append
 s16vector-copy
+s16vector-copy!
 s16vector-fill!
 s16vector-length
 s16vector-ref
@@ -605,6 +608,7 @@ s32vector
 s32vector->list
 s32vector-append
 s32vector-copy
+s32vector-copy!
 s32vector-fill!
 s32vector-length
 s32vector-ref
@@ -616,6 +620,7 @@ s64vector
 s64vector->list
 s64vector-append
 s64vector-copy
+s64vector-copy!
 s64vector-fill!
 s64vector-length
 s64vector-ref
@@ -627,6 +632,7 @@ s8vector
 s8vector->list
 s8vector-append
 s8vector-copy
+s8vector-copy!
 s8vector-fill!
 s8vector-length
 s8vector-ref
@@ -742,6 +748,7 @@ string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
 string-ci=?-hash
+string-copy!
 string-for-each
 string-map
 string-set
@@ -882,6 +889,7 @@ u16vector
 u16vector->list
 u16vector-append
 u16vector-copy
+u16vector-copy!
 u16vector-fill!
 u16vector-length
 u16vector-ref
@@ -893,6 +901,7 @@ u32vector
 u32vector->list
 u32vector-append
 u32vector-copy
+u32vector-copy!
 u32vector-fill!
 u32vector-length
 u32vector-ref
@@ -904,6 +913,7 @@ u64vector
 u64vector->list
 u64vector-append
 u64vector-copy
+u64vector-copy!
 u64vector-fill!
 u64vector-length
 u64vector-ref
@@ -916,6 +926,7 @@ u8vector->list
 u8vector->object
 u8vector-append
 u8vector-copy
+u8vector-copy!
 u8vector-fill!
 u8vector-length
 u8vector-ref
@@ -972,6 +983,7 @@ user-name
 vector-append
 vector-cas!
 vector-copy
+vector-copy!
 vector-for-each
 vector-inc!
 vector-map

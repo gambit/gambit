@@ -320,6 +320,15 @@
 (check-eq? (subs64vector-move! v9 0 2 v6 1) (void))
 (check-equal? v6 '#s64(9223372036854775807 9223372036854775807 99))
 
+(check-eq? (s64vector-copy! v6 0 '#s64(11 22 33)) (void))
+(check-equal? v6 '#s64(11 22 33))
+
+(check-eq? (s64vector-copy! v6 2 '#s64(33 44) 1) (void))
+(check-equal? v6 '#s64(11 22 44))
+
+(check-eq? (s64vector-copy! v6 1 '#s64(55 66 77 88) 0 2) (void))
+(check-equal? v6 '#s64(11 55 66))
+
 (check-tail-exn type-exception? (lambda () (s64vector 11 bool 22))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s64vector 11 -9223372036854775809 22))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (s64vector 11 9223372036854775808 22))) ;; homovect only
@@ -411,6 +420,18 @@
 (check-tail-exn range-exception? (lambda () (subs64vector-move! v5 0 0 v5 -1)))
 (check-tail-exn range-exception? (lambda () (subs64vector-move! v5 0 0 v5 3)))
 
+(check-tail-exn type-exception? (lambda () (s64vector-copy! v5 0 bool 0 0)))
+(check-tail-exn type-exception? (lambda () (s64vector-copy! v5 0 v5 bool 0)))
+(check-tail-exn type-exception? (lambda () (s64vector-copy! v5 0 v5 0 bool)))
+(check-tail-exn type-exception? (lambda () (s64vector-copy! bool 0 v5 0 0)))
+(check-tail-exn type-exception? (lambda () (s64vector-copy! v5 bool v5 0 0)))
+(check-tail-exn range-exception? (lambda () (s64vector-copy! v5 0 v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (s64vector-copy! v5 0 v5 3 0)))
+(check-tail-exn range-exception? (lambda () (s64vector-copy! v5 0 v5 0 -1)))
+(check-tail-exn range-exception? (lambda () (s64vector-copy! v5 0 v5 0 3)))
+(check-tail-exn range-exception? (lambda () (s64vector-copy! v5 -1 v5 0 0)))
+(check-tail-exn range-exception? (lambda () (s64vector-copy! v5 3 v5 0 0)))
+
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (make-s64vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (make-s64vector 11 22 33)))
 
@@ -466,5 +487,10 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs64vector-move! v9 0 0)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs64vector-move! v9 0 0 v9)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subs64vector-move! v9 0 0 v9 0 0)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-copy!)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-copy! v9)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-copy! v9 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-copy! v9 0 v9 0 0 0)))
 
 (check-tail-exn range-exception? (lambda () (make-s64vector (expt 2 64))))

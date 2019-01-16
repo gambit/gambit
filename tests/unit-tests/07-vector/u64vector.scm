@@ -320,6 +320,15 @@
 (check-eq? (subu64vector-move! v9 0 2 v6 1) (void))
 (check-equal? v6 '#u64(18446744073709551615 18446744073709551615 99))
 
+(check-eq? (u64vector-copy! v6 0 '#u64(11 22 33)) (void))
+(check-equal? v6 '#u64(11 22 33))
+
+(check-eq? (u64vector-copy! v6 2 '#u64(33 44) 1) (void))
+(check-equal? v6 '#u64(11 22 44))
+
+(check-eq? (u64vector-copy! v6 1 '#u64(55 66 77 88) 0 2) (void))
+(check-equal? v6 '#u64(11 55 66))
+
 (check-tail-exn type-exception? (lambda () (u64vector 11 bool 22))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (u64vector 11 -1 22))) ;; homovect only
 (check-tail-exn type-exception? (lambda () (u64vector 11 18446744073709551616 22))) ;; homovect only
@@ -411,6 +420,18 @@
 (check-tail-exn range-exception? (lambda () (subu64vector-move! v5 0 0 v5 -1)))
 (check-tail-exn range-exception? (lambda () (subu64vector-move! v5 0 0 v5 3)))
 
+(check-tail-exn type-exception? (lambda () (u64vector-copy! v5 0 bool 0 0)))
+(check-tail-exn type-exception? (lambda () (u64vector-copy! v5 0 v5 bool 0)))
+(check-tail-exn type-exception? (lambda () (u64vector-copy! v5 0 v5 0 bool)))
+(check-tail-exn type-exception? (lambda () (u64vector-copy! bool 0 v5 0 0)))
+(check-tail-exn type-exception? (lambda () (u64vector-copy! v5 bool v5 0 0)))
+(check-tail-exn range-exception? (lambda () (u64vector-copy! v5 0 v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (u64vector-copy! v5 0 v5 3 0)))
+(check-tail-exn range-exception? (lambda () (u64vector-copy! v5 0 v5 0 -1)))
+(check-tail-exn range-exception? (lambda () (u64vector-copy! v5 0 v5 0 3)))
+(check-tail-exn range-exception? (lambda () (u64vector-copy! v5 -1 v5 0 0)))
+(check-tail-exn range-exception? (lambda () (u64vector-copy! v5 3 v5 0 0)))
+
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (make-u64vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (make-u64vector 11 22 33)))
 
@@ -466,5 +487,10 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu64vector-move! v9 0 0)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu64vector-move! v9 0 0 v9)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (subu64vector-move! v9 0 0 v9 0 0)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-copy!)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-copy! v9)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-copy! v9 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u64vector-copy! v9 0 v9 0 0 0)))
 
 (check-tail-exn range-exception? (lambda () (make-u64vector (expt 2 64))))

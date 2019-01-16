@@ -217,6 +217,7 @@
     (define vect->list       (sym name '->list))
     (define list->vect       (sym 'list-> name))
     (define vect-copy        (sym name '-copy))
+    (define vect-copy!       (sym name '-copy!))
     (define vect-fill!       (sym name '-fill!))
     (define subvect          (sym 'sub name))
     (define append-vects     (sym 'append- name 's))
@@ -506,6 +507,72 @@
                          (,##vect-length vect)
                          (,vect-copy vect start end)
                          (,##vect-copy vect start end))))))))
+
+       (define-prim (,vect-copy!
+                     dst-vect
+                     dst-start
+                     src-vect
+                     #!optional
+                     (src-start (macro-absent-obj))
+                     (src-end (macro-absent-obj)))
+         (macro-force-vars (dst-vect dst-start src-vect src-start src-end)
+           (let ()
+
+             (define (cont s e)
+               (if (##fx> (##fx- e s)
+                          (##fx- (,##vect-length dst-vect) dst-start))
+                   (##raise-range-exception
+                    2
+                    ,vect-copy!
+                    dst-vect
+                    dst-start
+                    src-vect
+                    src-start
+                    src-end)
+                   (begin
+                     (,##subvect-move!
+                      src-vect
+                      s
+                      e
+                      dst-vect
+                      dst-start)
+                     (##void))))
+
+             (,macro-check-vect
+               dst-vect
+               1
+               (,vect-copy! dst-vect dst-start src-vect src-start src-end)
+               (macro-check-mutable
+                 dst-vect
+                 1
+                 (,vect-copy! dst-vect dst-start src-vect src-start src-end)
+                 (macro-check-index-range-incl
+                   dst-start
+                   2
+                   0
+                   (,##vect-length dst-vect)
+                   (,vect-copy! dst-vect dst-start src-vect src-start src-end)
+                   (,macro-check-vect
+                     src-vect
+                     3
+                     (,vect-copy! dst-vect dst-start src-vect src-start src-end)
+                     (if (##eq? src-start (macro-absent-obj))
+                         (cont 0 (,##vect-length src-vect))
+                         (macro-check-index-range-incl
+                           src-start
+                           4
+                           0
+                           (,##vect-length src-vect)
+                           (,vect-copy! dst-vect dst-start src-vect src-start src-end)
+                           (if (##eq? src-end (macro-absent-obj))
+                               (cont src-start (,##vect-length src-vect))
+                               (macro-check-index-range-incl
+                                 src-end
+                                 5
+                                 src-start
+                                 (,##vect-length src-vect)
+                                 (,vect-copy! dst-vect dst-start src-vect src-start src-end)
+                                 (cont src-start src-end))))))))))))
 
        (define-prim (,##vect-delete vect i)
          (let* ((len (,##vect-length vect))
