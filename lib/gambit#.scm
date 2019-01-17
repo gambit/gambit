@@ -790,6 +790,7 @@ subvector
 subvector-fill!
 subvector-move!
 symbol-hash
+symbol=?
 system-stamp
 system-type
 system-type-string

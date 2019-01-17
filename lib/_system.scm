@@ -226,6 +226,14 @@
   (macro-force-vars (obj1 obj2)
     (##eq? obj1 obj2)))
 
+(define-prim-nary-bool (symbol=? x y)
+  #t
+  (if (##symbol? x) #t '(1))
+  (##eq? x y)
+  macro-force-vars
+  macro-no-check
+  (##pair? ##fail-check-symbol))
+
 ;;-----------------------------------------------------------------------------
 
 (##define-macro (macro-define-equal-objs?
