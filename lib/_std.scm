@@ -210,6 +210,16 @@
                   (vector-inc! vect k v)
                   (##vector-inc! vect k val))))))))))
 
+(define bytevector?        u8vector?)
+(define make-bytevector    make-u8vector)
+(define bytevector         u8vector)
+(define bytevector-length  u8vector-length)
+(define bytevector-u8-ref  u8vector-ref)
+(define bytevector-u8-set! u8vector-set!)
+(define bytevector-copy    u8vector-copy)
+(define bytevector-copy!   u8vector-copy!)
+(define bytevector-append  u8vector-append)
+
 ;;;----------------------------------------------------------------------------
 
 ;; IEEE Scheme procedures:

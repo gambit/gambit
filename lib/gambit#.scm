@@ -79,6 +79,14 @@ bitwise-xor
 box
 box?
 break
+bytevector
+bytevector-append
+bytevector-copy
+bytevector-copy!
+bytevector-length
+bytevector-u8-ref
+bytevector-u8-set!
+bytevector?
 call-with-input-process
 call-with-input-string
 call-with-input-u8vector
@@ -414,6 +422,7 @@ mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure
 mailbox-receive-timeout-exception?
 main
+make-bytevector
 make-condition-variable
 make-f32vector
 make-f64vector
