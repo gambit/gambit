@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3817,6 +3817,7 @@
     (pair-list                    . "PAIR LIST")
     (char                         . "CHARACTER")
     (char-list                    . "CHARACTER LIST")
+    (char-vector                  . "CHARACTER VECTOR")
     (string                       . "STRING")
     (string-list                  . "STRING LIST")
     (list                         . "LIST")

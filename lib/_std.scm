@@ -717,6 +717,7 @@
 
 (define-fail-check-type char 'char)
 (define-fail-check-type char-list 'char-list)
+(define-fail-check-type char-vector 'char-vector)
 
 (define-prim (##char? obj))
 

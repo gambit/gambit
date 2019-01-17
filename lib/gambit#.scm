@@ -747,6 +747,7 @@ step-level-set!
 string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
+string->vector
 string-ci=?-hash
 string-copy!
 string-for-each
@@ -981,6 +982,7 @@ user-info-shell
 user-info-uid
 user-info?
 user-name
+vector->string
 vector-append
 vector-cas!
 vector-copy

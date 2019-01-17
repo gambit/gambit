@@ -115,6 +115,9 @@
 (define-check-type char-list 'char-list
   ##char?)
 
+(define-check-type char-vector 'char-vector
+  ##char?)
+
 (define-check-type procedure 'procedure
   ##procedure?)
 
@@ -216,6 +219,8 @@
     (define vect-set         (sym name '-set))
     (define vect->list       (sym name '->list))
     (define list->vect       (sym 'list-> name))
+    (define vect->string     (sym name '->string))
+    (define string->vect     (sym 'string-> name))
     (define vect-copy        (sym name '-copy))
     (define vect-copy!       (sym name '-copy!))
     (define vect-fill!       (sym name '-fill!))
@@ -437,6 +442,92 @@
                                    (,##vect-set! vect i elem)
                                    (loop2 (##cdr x) (##fx+ i 1)))))
                              vect)))))))))
+
+       ,@(if (eq? name 'vector)
+             `(
+               (define-prim (,vect->string
+                             vect
+                             #!optional
+                             (start (macro-absent-obj))
+                             (end (macro-absent-obj)))
+
+                 (define (convert s e)
+                   (let* ((len (##fx- e s))
+                          (result (##make-string len)))
+                     (let loop ((i (##fx- len 1)))
+                       (if (##fx< i 0)
+                           result
+                           (let ((elem (,##vect-ref vect (##fx+ i s))))
+                             (macro-check-char-vector
+                               elem
+                               1
+                               (,vect->string vect start end)
+                               (begin
+                                 (##string-set! result i elem)
+                                 (loop (##fx- i 1)))))))))
+
+                 (macro-force-vars (vect start end)
+                   (,macro-check-vect
+                     vect
+                     1
+                     (,vect->string vect start end)
+                     (if (##eq? start (macro-absent-obj))
+                         (convert 0 (,##vect-length vect))
+                         (macro-check-index-range-incl
+                           start
+                           2
+                           0
+                           (,##vect-length vect)
+                           (,vect->string vect start end)
+                           (if (##eq? end (macro-absent-obj))
+                               (convert start (,##vect-length vect))
+                               (macro-check-index-range-incl
+                                 end
+                                 3
+                                 start
+                                 (,##vect-length vect)
+                                 (,vect->string vect start end)
+                                 (convert start end))))))))
+
+               (define-prim (,string->vect
+                             str
+                             #!optional
+                             (start (macro-absent-obj))
+                             (end (macro-absent-obj)))
+
+                 (define (convert s e)
+                   (let* ((len (##fx- e s))
+                          (result (,##make-vect len)))
+                     (let loop ((i (##fx- len 1)))
+                       (if (##fx< i 0)
+                           result
+                           (let ((elem (##string-ref str (##fx+ i s))))
+                             (,##vect-set! result i elem)
+                             (loop (##fx- i 1)))))))
+
+                 (macro-force-vars (str start end)
+                   (macro-check-string
+                     str
+                     1
+                     (,string->vect str start end)
+                     (if (##eq? start (macro-absent-obj))
+                         (convert 0 (##string-length str))
+                         (macro-check-index-range-incl
+                           start
+                           2
+                           0
+                           (##string-length str)
+                           (,string->vect str start end)
+                           (if (##eq? end (macro-absent-obj))
+                               (convert start (##string-length str))
+                               (macro-check-index-range-incl
+                                 end
+                                 3
+                                 start
+                                 (##string-length str)
+                                 (,string->vect str start end)
+                                 (convert start end))))))))
+               ))
 
        (define-prim (,##vect-fill!
                      vect
