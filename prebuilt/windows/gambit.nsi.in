@@ -21,7 +21,7 @@
 !define MUI_UNICON "@UNICON_FILE@"
 
 ; Welcome page
-!define MUI_WELCOMEPAGE_TEXT "-----------------------------------------------------------------------\r\n\r\nThe Gambit Scheme system is a complete, portable, efficient and reliable implementation of the Scheme programming language. For more information please visit\r\n\r\nhttp://gambitscheme.org\r\n\r\nand the Gambit chatroom https://gitter.im/feeley/gambit\r\n\r\n-----------------------------------------------------------------------\r\n\r\nThis wizard will guide you through the installation of ${PRODUCT_NAME} v${PRODUCT_VERSION} (${PRODUCT_VARIANT} variant).\r\n\r\nClick Next to continue\r\n"
+!define MUI_WELCOMEPAGE_TEXT "-----------------------------------------------------------------------\r\n\r\nThe Gambit Scheme system is a complete, portable, efficient and reliable implementation of the Scheme programming language. For more information please visit\r\n\r\nhttp://gambitscheme.org\r\n\r\nand the Gambit chatroom https://gitter.im/gambit/gambit\r\n\r\n-----------------------------------------------------------------------\r\n\r\nThis wizard will guide you through the installation of ${PRODUCT_NAME} v${PRODUCT_VERSION} (${PRODUCT_VARIANT} variant).\r\n\r\nClick Next to continue\r\n"
 !insertmacro MUI_PAGE_WELCOME
 
 ; Directory page
