@@ -759,6 +759,7 @@ step-level-set!
 string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
+string->utf8
 string->vector
 string-ci=?-hash
 string-copy!

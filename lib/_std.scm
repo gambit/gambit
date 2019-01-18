@@ -222,7 +222,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; UTF-8 decoding
+;; UTF-8 encoding and decoding
 
 (implement-library-type-invalid-utf8-encoding-exception)
 
@@ -239,7 +239,140 @@
        procedure
        arguments)))))
 
-(define-prim (##utf8-length
+(define-prim (##string->utf8-length
+              str
+              #!optional
+              (start 0)
+              (end (##string-length str)))
+  (let loop ((i start)
+             (len 0))
+    (if (##fx< i end)
+        (let ((c (##string-ref str i)))
+          (cond ((##char<=? c #\x7f)
+                 ;; 1 byte encoding (ASCII)
+                 (loop (##fx+ i 1)
+                       (##fx+ len 1)))
+                ((##char<=? c #\x7ff)
+                 ;; 2 byte encoding
+                 (loop (##fx+ i 1)
+                       (##fx+ len 2)))
+                ((##char<=? c #\xffff)
+                 ;; 3 byte encoding
+                 (loop (##fx+ i 1)
+                       (##fx+ len 3)))
+                (else
+                 ;; 4 byte encoding
+                 (loop (##fx+ i 1)
+                       (##fx+ len 4)))))
+        len)))
+
+(define-prim (##string->utf8
+              str
+              #!optional
+              (start 0)
+              (end (##string-length str)))
+  (let* ((len (##string->utf8-length str start end))
+         (result (##make-u8vector len)))
+    (if (##fx= len (##fx- end start))
+        (let loop1 ((i 0))
+          (if (##fx< i end)
+              (begin
+                (##u8vector-set!
+                 result
+                 i
+                 (##char->integer
+                  (##string-ref str (##fx+ start i))))
+                (loop1 (##fx+ i 1)))
+              result))
+        (let loop2 ((i start)
+                    (j 0))
+          (if (and (##fx< i end)
+                   (##fx< j len)) ;; account for str mutation by other thread
+              (let ((c (##char->integer (##string-ref str i))))
+                (cond ((##fx<= c #x7f)
+                       ;; 1 byte encoding (ASCII)
+                       (##u8vector-set! result j c)
+                       (loop2 (##fx+ i 1)
+                              (##fx+ j 1)))
+                      ((##fx<= c #x7ff)
+                       ;; 2 byte encoding
+                       (##u8vector-set!
+                        result
+                        j
+                        (##fx+ #xc0 (##fxarithmetic-shift-right c 6)))
+                       (##u8vector-set!
+                        result
+                        (##fx+ j 1)
+                        (##fx+ #x80 (##fxand #x3f c)))
+                       (loop2 (##fx+ i 1)
+                              (##fx+ j 2)))
+                      ((##fx<= c #xffff)
+                       ;; 3 byte encoding
+                       (##u8vector-set!
+                        result
+                        j
+                        (##fx+ #xe0 (##fxarithmetic-shift-right c 12)))
+                       (##u8vector-set!
+                        result
+                        (##fx+ j 1)
+                        (##fx+ #x80 (##fxand #x3f (##fxarithmetic-shift-right c 6))))
+                       (##u8vector-set!
+                        result
+                        (##fx+ j 2)
+                        (##fx+ #x80 (##fxand #x3f c)))
+                       (loop2 (##fx+ i 1)
+                              (##fx+ j 3)))
+                      (else
+                       ;; 4 byte encoding
+                       (##u8vector-set!
+                        result
+                        j
+                        (##fx+ #xf0 (##fxarithmetic-shift-right c 18)))
+                       (##u8vector-set!
+                        result
+                        (##fx+ j 1)
+                        (##fx+ #x80 (##fxand #x3f (##fxarithmetic-shift-right c 12))))
+                       (##u8vector-set!
+                        result
+                        (##fx+ j 2)
+                        (##fx+ #x80 (##fxand #x3f (##fxarithmetic-shift-right c 6))))
+                       (##u8vector-set!
+                        result
+                        (##fx+ j 3)
+                        (##fx+ #x80 (##fxand #x3f c)))
+                       (loop2 (##fx+ i 1)
+                              (##fx+ j 4)))))
+              result)))))
+
+(define-prim (string->utf8
+              str
+              #!optional
+              (start (macro-absent-obj))
+              (end (macro-absent-obj)))
+  (macro-force-vars (str start end)
+    (macro-check-string
+      str
+      1
+      (string->utf8 str start end)
+      (if (##eq? start (macro-absent-obj))
+          (##string->utf8 str)
+          (macro-check-index-range-incl
+            start
+            2
+            0
+            (##string-length str)
+            (string->utf8 str start end)
+            (if (##eq? end (macro-absent-obj))
+                (##string->utf8 str start)
+                (macro-check-index-range-incl
+                  end
+                  3
+                  start
+                  (##string-length str)
+                  (string->utf8 str start end)
+                  (##string->utf8 str start end))))))))
+
+(define-prim (##utf8->string-length
               u8vect
               #!optional
               (start 0)
@@ -265,7 +398,7 @@
                  (loop (##fx+ i 4)
                        (##fx+ len 1)))))
         (if (##fx> i end)
-            #f ;; invalid encoding
+            0 ;; invalid or truncated encoding
             len))))
 
 (define-prim (##utf8->string
@@ -277,133 +410,131 @@
   (define (invalid-utf8)
     (##raise-invalid-utf8-encoding-exception utf8->string u8vect start end))
 
-  (let ((len (##utf8-length u8vect start end)))
-    (if (##not len)
-        (invalid-utf8)
-        (let ((result (##make-string len)))
-          (if (##fx= len (##fx- end start))
-              (let loop1 ((i 0))
-                (if (##fx< i end)
-                    (begin
-                      (##string-set!
-                       result
-                       i
-                       (##integer->char
-                        (##u8vector-ref u8vect (##fx+ start i))))
-                      (loop1 (##fx+ i 1)))
-                    result))
-              (let loop2 ((i start)
-                          (j 0))
-                (if (##fx< i end)
-                    (if (##fx< j len) ;; account for u8vect mutation by other thread
-                        (let ((b0 (##u8vector-ref u8vect i)))
-                          (cond ((##fx< b0 #x80)
-                                 ;; 1 byte encoding (ASCII)
-                                 (##string-set!
-                                  result
-                                  j
-                                  (##integer->char b0))
-                                 (loop2 (##fx+ i 1)
-                                        (##fx+ j 1)))
-                                ((##fx< b0 #xc2)
-                                 (invalid-utf8))
-                                ((##fx< b0 #xe0)
-                                 ;; 2 byte encoding
-                                 (let* ((b1 (##u8vector-ref
-                                             u8vect
-                                             (##fx+ i 1)))
-                                        (n (##fx+
-                                            (##fxarithmetic-shift-left
-                                             (##fxand b0 #x1f)
-                                             6)
-                                            (##fxand b1 #x3f))))
-                                   (if (and (##fx= (##fxand b1 #xc0)
-                                                   #x80)
-                                            (##fx>= n #x80))
-                                       (begin
-                                         (##string-set!
-                                          result
-                                          j
-                                          (##integer->char n))
-                                         (loop2 (##fx+ i 2)
-                                                (##fx+ j 1)))
-                                       (invalid-utf8))))
-                                ((##fx< b0 #xf0)
-                                 ;; 3 byte encoding
-                                 (let* ((b1 (##u8vector-ref
-                                             u8vect
-                                             (##fx+ i 1)))
-                                        (b2 (##u8vector-ref
-                                             u8vect
-                                             (##fx+ i 2)))
-                                        (n (##fx+
-                                            (##fxarithmetic-shift-left
-                                             (##fxand b0 #x0f)
-                                             12)
-                                            (##fxarithmetic-shift-left
-                                             (##fxand b1 #x3f)
-                                             6)
-                                            (##fxand b2 #x3f))))
-                                   (if (and (##fx= (##fxand (##fxior b1
-                                                                     b2)
-                                                            #xc0)
-                                                   #x80)
-                                            (##fx>= n #x800)
-                                            (##not
-                                             (and (##fx>= n #xd800)
-                                                  (##fx<= n #xdfff))))
-                                       (begin
-                                         (##string-set!
-                                          result
-                                          j
-                                          (##integer->char n))
-                                         (loop2 (##fx+ i 3)
-                                                (##fx+ j 1)))
-                                       (invalid-utf8))))
-                                ((##fx< b0 #xf5)
-                                 ;; 4 byte encoding
-                                 (let* ((b1 (##u8vector-ref
-                                             u8vect
-                                             (##fx+ i 1)))
-                                        (b2 (##u8vector-ref
-                                             u8vect
-                                             (##fx+ i 2)))
-                                        (b3 (##u8vector-ref
-                                             u8vect
-                                             (##fx+ i 3)))
-                                        (n (##fx+
-                                            (##fxarithmetic-shift-left
-                                             (##fxand b0 #x07)
-                                             18)
-                                            (##fxarithmetic-shift-left
-                                             (##fxand b1 #x3f)
-                                             12)
-                                            (##fxarithmetic-shift-left
-                                             (##fxand b2 #x3f)
-                                             6)
-                                            (##fxand b3 #x3f))))
-                                   (if (and (##fx= (##fxand (##fxior b1
-                                                                     b2
-                                                                     b3)
-                                                            #xc0)
-                                                   #x80)
-                                            (##fx>= n #x10000)
-                                            (##fx<= n #x10ffff))
-                                       (begin
-                                         (##string-set!
-                                          result
-                                          j
-                                          (##integer->char n))
-                                         (loop2 (##fx+ i 4)
-                                                (##fx+ j 1)))
-                                       (invalid-utf8))))
-                                (else
+  (let* ((len (##utf8->string-length u8vect start end))
+         (result (##make-string len)))
+    (if (##fx= len (##fx- end start))
+        (let loop1 ((i 0))
+          (if (##fx< i end)
+              (begin
+                (##string-set!
+                 result
+                 i
+                 (##integer->char
+                  (##u8vector-ref u8vect (##fx+ start i))))
+                (loop1 (##fx+ i 1)))
+              result))
+        (let loop2 ((i start)
+                    (j 0))
+          (if (##fx< i end)
+              (if (##fx< j len) ;; account for u8vect mutation by other thread
+                  (let ((b0 (##u8vector-ref u8vect i)))
+                    (cond ((##fx< b0 #x80)
+                           ;; 1 byte encoding (ASCII)
+                           (##string-set!
+                            result
+                            j
+                            (##integer->char b0))
+                           (loop2 (##fx+ i 1)
+                                  (##fx+ j 1)))
+                          ((##fx< b0 #xc2)
+                           (invalid-utf8))
+                          ((##fx< b0 #xe0)
+                           ;; 2 byte encoding
+                           (let* ((b1 (##u8vector-ref
+                                       u8vect
+                                       (##fx+ i 1)))
+                                  (n (##fx+
+                                      (##fxarithmetic-shift-left
+                                       (##fxand b0 #x1f)
+                                       6)
+                                      (##fxand b1 #x3f))))
+                             (if (and (##fx= (##fxand b1 #xc0)
+                                             #x80)
+                                      (##fx>= n #x80))
+                                 (begin
+                                   (##string-set!
+                                    result
+                                    j
+                                    (##integer->char n))
+                                   (loop2 (##fx+ i 2)
+                                          (##fx+ j 1)))
                                  (invalid-utf8))))
-                        (invalid-utf8))
-                    (if (or (##fx> i end)
-                            (##fx< j len))
-                        (invalid-utf8)
-                        result))))))))
+                          ((##fx< b0 #xf0)
+                           ;; 3 byte encoding
+                           (let* ((b1 (##u8vector-ref
+                                       u8vect
+                                       (##fx+ i 1)))
+                                  (b2 (##u8vector-ref
+                                       u8vect
+                                       (##fx+ i 2)))
+                                  (n (##fx+
+                                      (##fxarithmetic-shift-left
+                                       (##fxand b0 #x0f)
+                                       12)
+                                      (##fxarithmetic-shift-left
+                                       (##fxand b1 #x3f)
+                                       6)
+                                      (##fxand b2 #x3f))))
+                             (if (and (##fx= (##fxand (##fxior b1
+                                                               b2)
+                                                      #xc0)
+                                             #x80)
+                                      (##fx>= n #x800)
+                                      (##not
+                                       (and (##fx>= n #xd800)
+                                            (##fx<= n #xdfff))))
+                                 (begin
+                                   (##string-set!
+                                    result
+                                    j
+                                    (##integer->char n))
+                                   (loop2 (##fx+ i 3)
+                                          (##fx+ j 1)))
+                                 (invalid-utf8))))
+                          ((##fx< b0 #xf5)
+                           ;; 4 byte encoding
+                           (let* ((b1 (##u8vector-ref
+                                       u8vect
+                                       (##fx+ i 1)))
+                                  (b2 (##u8vector-ref
+                                       u8vect
+                                       (##fx+ i 2)))
+                                  (b3 (##u8vector-ref
+                                       u8vect
+                                       (##fx+ i 3)))
+                                  (n (##fx+
+                                      (##fxarithmetic-shift-left
+                                       (##fxand b0 #x07)
+                                       18)
+                                      (##fxarithmetic-shift-left
+                                       (##fxand b1 #x3f)
+                                       12)
+                                      (##fxarithmetic-shift-left
+                                       (##fxand b2 #x3f)
+                                       6)
+                                      (##fxand b3 #x3f))))
+                             (if (and (##fx= (##fxand (##fxior b1
+                                                               b2
+                                                               b3)
+                                                      #xc0)
+                                             #x80)
+                                      (##fx>= n #x10000)
+                                      (##fx<= n #x10ffff))
+                                 (begin
+                                   (##string-set!
+                                    result
+                                    j
+                                    (##integer->char n))
+                                   (loop2 (##fx+ i 4)
+                                          (##fx+ j 1)))
+                                 (invalid-utf8))))
+                          (else
+                           (invalid-utf8))))
+                  (invalid-utf8))
+              (if (or (##fx> i end)
+                      (##fx< j len))
+                  (invalid-utf8)
+                  result))))))
 
 (define-prim (utf8->string
               u8vect
