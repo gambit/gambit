@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_DYN
-#define ___VERSION 409001
+#define ___VERSION 409002
 #include "gambit.h"
 
 #include "os_base.h"

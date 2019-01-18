@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_front.c", produced by Gambit v4.9.1
+; File: "_front.c", produced by Gambit v4.9.2
 (
-409001
+409002
 (C)
 "_front"
 (("_front"))
@@ -536,7 +536,7 @@
  ()
 )
 #else
-#define ___VERSION 409001
+#define ___VERSION 409002
 #define ___MODULE_NAME "_front"
 #define ___LINKER_ID ___LNK___front
 #define ___MH_PROC ___H___front
@@ -16348,6 +16348,9 @@ ___DEF_SLBL(33,___L33_c_23_gen_2d_switch)
 ___DEF_SLBL(34,___L34_c_23_gen_2d_switch)
 ___DEF_GLBL(___L49_c_23_gen_2d_switch)
    ___IF(___NOT(___PAIRP(___R2)))
+   ___GOTO(___L50_c_23_gen_2d_switch)
+   ___END_IF
+   ___IF(___NOT(___PAIRP(___R3)))
    ___GOTO(___L50_c_23_gen_2d_switch)
    ___END_IF
    ___SET_R4(___CAR(___R2))

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_kernel.c", produced by Gambit v4.9.1
+; File: "_kernel.c", produced by Gambit v4.9.2
 (
-409001
+409002
 (C)
 "_kernel"
 (("_kernel"))
@@ -611,7 +611,7 @@
  ()
 )
 #else
-#define ___VERSION 409001
+#define ___VERSION 409002
 #define ___MODULE_NAME "_kernel"
 #define ___LINKER_ID ___LNK___kernel
 #define ___MH_PROC ___H___kernel
@@ -3433,7 +3433,7 @@ ___DEF_SUB_VEC(___X39,6UL)
                ___VEC1(___REF_FAL)
                ___VEC0
 ___DEF_SUB_STR(___X40,6UL)
-               ___STR6(118,52,46,57,46,49)
+               ___STR6(118,52,46,57,46,50)
 ___DEF_SUB_STRUCTURE(___X41,6UL)
                ___VEC1(___REF_SUB(3))
                ___VEC1(___REF_SYM(9,___S__23__23_type_2d_2_2d_CA9CA020_2d_600A_2d_4516_2d_AA78_2d_CBE91EC8BE14))
@@ -16481,7 +16481,7 @@ ___DEF_SLBL(0,___L0__23__23_system_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L__23__23_system_2d_version)
-   ___SET_R1(___FIX(409001L))
+   ___SET_R1(___FIX(409002L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD

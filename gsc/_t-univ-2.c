@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-univ-2.c", produced by Gambit v4.9.1
+; File: "_t-univ-2.c", produced by Gambit v4.9.2
 (
-409001
+409002
 (C)
 "_t-univ-2"
 (("_t-univ-2"))
@@ -714,7 +714,7 @@
  ()
 )
 #else
-#define ___VERSION 409001
+#define ___VERSION 409002
 #define ___MODULE_NAME "_t-univ-2"
 #define ___LINKER_ID ___LNK___t_2d_univ_2d_2
 #define ___MH_PROC ___H___t_2d_univ_2d_2

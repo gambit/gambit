@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gvm.c", produced by Gambit v4.9.1
+; File: "_gvm.c", produced by Gambit v4.9.2
 (
-409001
+409002
 (C)
 "_gvm"
 (("_gvm"))
@@ -334,7 +334,7 @@
  ()
 )
 #else
-#define ___VERSION 409001
+#define ___VERSION 409002
 #define ___MODULE_NAME "_gvm"
 #define ___LINKER_ID ___LNK___gvm
 #define ___MH_PROC ___H___gvm
@@ -13395,10 +13395,6 @@ ___DEF_SLBL(32,___L32_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
    ___END_IF
    ___GOTO(___L212_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
 ___DEF_GLBL(___L210_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
-   ___IF(___NOT(___PAIRP(___R1)))
-   ___GOTO(___L212_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
-   ___END_IF
-___DEF_GLBL(___L211_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
    ___SET_R3(___CAR(___R2))
    ___SET_R4(___CAR(___R1))
    ___SET_R3(___CONS(___R4,___R3))
@@ -13412,7 +13408,16 @@ ___DEF_GLBL(___L211_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
 ___DEF_SLBL(33,___L33_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
    ___POLL(34)
 ___DEF_SLBL(34,___L34_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
+   ___IF(___NOT(___PAIRP(___R1)))
+   ___GOTO(___L212_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
+   ___END_IF
+___DEF_GLBL(___L211_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
+   ___IF(___PAIRP(___R2))
    ___GOTO(___L210_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
+   ___END_IF
+___DEF_GLBL(___L212_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
+   ___SET_R1(___NUL)
+   ___JUMPPRM(___NOTHING,___R0)
 ___DEF_SLBL(35,___L35_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
    ___SET_R1(___CONS(___STK(-6),___R1))
    ___ADJFP(-7)
@@ -13420,9 +13425,6 @@ ___DEF_SLBL(35,___L35_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
 ___DEF_SLBL(36,___L36_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
    ___ADJFP(-1)
    ___JUMPPRM(___NOTHING,___STK(1))
-___DEF_GLBL(___L212_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
-   ___SET_R1(___NUL)
-   ___JUMPPRM(___NOTHING,___R0)
 ___DEF_SLBL(37,___L37_c_23_bbs_2d_remove_2d_common_2d_code_2d_aux)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
