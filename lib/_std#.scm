@@ -18,6 +18,15 @@
   (arg-num   unprintable: read-only: no-functional-setter:)
 )
 
+(define-library-type-of-exception invalid-utf8-encoding-exception
+  id: C31D88DD-26F4-4EC3-A30D-BE96C0120CB0
+  constructor: #f
+  opaque:
+
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+)
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Define type checking macros.

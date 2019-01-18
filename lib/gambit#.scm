@@ -384,6 +384,9 @@ integer-sqrt
 invalid-hash-number-exception-arguments
 invalid-hash-number-exception-procedure
 invalid-hash-number-exception?
+invalid-utf8-encoding-exception-arguments
+invalid-utf8-encoding-exception-procedure
+invalid-utf8-encoding-exception?
 iota
 jiffies-per-second
 join-timeout-exception-arguments
@@ -991,6 +994,7 @@ user-info-shell
 user-info-uid
 user-info?
 user-name
+utf8->string
 vector->string
 vector-append
 vector-cas!

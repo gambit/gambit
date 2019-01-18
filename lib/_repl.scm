@@ -3603,6 +3603,11 @@
            (##newline port)
            (display-call))
 
+          ((macro-invalid-utf8-encoding-exception? exc)
+           (##write-string "Invalid UTF-8 encoding" port)
+           (##newline port)
+           (display-call))
+
           (else
            (##write-string "This object was raised: " port)
            (##write exc port)
