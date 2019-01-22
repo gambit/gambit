@@ -376,6 +376,7 @@ input-port-char-position
 input-port-characters-buffered
 input-port-column
 input-port-line
+input-port-open?
 input-port-readtable
 input-port-readtable-set!
 input-port-timeout-set!
@@ -515,6 +516,7 @@ output-port-byte-position
 output-port-char-position
 output-port-column
 output-port-line
+output-port-open?
 output-port-readtable
 output-port-readtable-set!
 output-port-timeout-set!

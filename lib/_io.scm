@@ -4546,6 +4546,16 @@
     (macro-check-port port 1 (close-port port)
       (##close-port port))))
 
+(define-prim (input-port-open? port)
+  (macro-force-vars (port)
+    (macro-check-input-port port 1 (input-port-open? port)
+      #t))) ;; in general, it is not possible to know if a port is "open"
+
+(define-prim (output-port-open? port)
+  (macro-force-vars (port)
+    (macro-check-output-port port 1 (output-port-open? port)
+      #t))) ;; in general, it is not possible to know if a port is "open"
+
 (define-prim (input-port-readtable port)
   (macro-force-vars (port)
     (macro-check-character-input-port port 1 (input-port-readtable port)
