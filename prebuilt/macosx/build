@@ -63,7 +63,7 @@ EOF
   chmod +x gcc
   export PATH="`pwd`:$PATH"
 
-  CFLAGS="$CONFIG_ARCH -mmacosx-version-min=10.6" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --enable-c-opt --disable-gnu-gcc-specific-options CC="gcc"
+  CFLAGS="$CONFIG_ARCH -mmacosx-version-min=10.6" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --disable-gnu-gcc-specific-options CC="gcc"
 
   cd "$herefromroot"
 
