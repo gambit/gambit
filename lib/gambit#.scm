@@ -69,6 +69,7 @@ append-vectors
 arithmetic-shift
 asinh
 atanh
+binary-port?
 bit-count
 bit-set?
 bitwise-and
@@ -832,6 +833,7 @@ terminated-thread-exception-arguments
 terminated-thread-exception-procedure
 terminated-thread-exception?
 test-bit-field?
+textual-port?
 thread-base-priority
 thread-base-priority-set!
 thread-group->thread-group-list

@@ -1176,6 +1176,14 @@
   (macro-force-vars (obj)
     (macro-output-port? obj)))
 
+(define-prim (textual-port? obj)
+  (macro-force-vars (obj)
+    (macro-character-port? obj)))
+
+(define-prim (binary-port? obj)
+  (macro-force-vars (obj)
+    (macro-byte-port? obj)))
+
 (implement-check-type-port)
 (define-fail-check-type input-port 'input-port)
 (define-fail-check-type output-port 'output-port)
