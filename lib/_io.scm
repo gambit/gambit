@@ -11626,14 +11626,18 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; IEEE Scheme procedures:
-
 (define-prim (##eof-object? x)
   (##eq? x #!eof))
 
 (define-prim (eof-object? x)
   (macro-force-vars (x)
     (##eof-object? x)))
+
+(define-prim (##eof-object)
+  #!eof);;TODO: remove after bootstrap
+
+(define-prim (eof-object)
+  (##eof-object))
 
 ;;;----------------------------------------------------------------------------
 

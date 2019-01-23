@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3844,6 +3844,7 @@
 
 (targ-op "##force"            (targ-apply-force))
 (targ-op "##void"             (targ-apply-simp-s #f #f #f "VOID"))
+(targ-op "##eof-object"       (targ-apply-simp-s #f #f #f "EOF"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

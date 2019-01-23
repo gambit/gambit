@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -345,6 +345,7 @@
 ;; for R7RS Scheme
 
 ("exact-integer?"                     (1)   #f 0     0    boolean r7rs)
+("eof-object"                         (0)   #f 0     0    #f      r7rs)
 
 ;; for Multilisp
 
@@ -941,6 +942,7 @@
 ("##identity"                         (1)   #f ()    0    (#f)    extended)
 
 ("##void"                             (0)   #f ()    0    #f      extended)
+("##eof-object"                       (0)   #f ()    0    #f      extended)
 
 ("current-thread"                     (0)   #f ()    0    #f      extended)
 ("##current-thread"                   (0)   #f ()    0    #f      extended)
@@ -1556,6 +1558,7 @@
 (def-spec "force"            (spec-s "##force"))
 (def-spec "identity"         (spec-s "##identity"))
 (def-spec "void"             (spec-s "##void"))
+(def-spec "eof-object"       (spec-s "##eof-object"))
 
 (def-spec "eqv?"             (spec-s-eqv?))
 (def-spec "##eqv?"           (spec-s-eqv?))
@@ -4666,6 +4669,7 @@
 (def-simp "keyword->string"  (constant-folder keyword-object->string))
 (def-simp "string->keyword"  (constant-folder string->keyword-object))
 (def-simp "void"             (constant-folder (lambda () void-object)))
+(def-simp "eof-object"       (constant-folder (lambda () end-of-file-object)))
 
 (def-simp "fixnum?"          (constant-folder fix32?         not-bigfix?))
 (def-simp "flonum?"          (constant-folder flo?           ))
