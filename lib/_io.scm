@@ -9471,6 +9471,15 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim (call-with-port port proc)
+  (macro-force-vars (port proc)
+    (macro-check-port port 1 (call-with-port port proc)
+      (macro-check-procedure proc 2 (call-with-port port proc)
+        (let ((results ;; may get bound to a multiple-values object
+               (proc port)))
+          (##close-port port)
+          results)))))
+
 (define-prim (with-input-from-port port thunk)
   (macro-force-vars (port thunk)
     (macro-check-input-port port 1 (with-input-from-port port thunk)

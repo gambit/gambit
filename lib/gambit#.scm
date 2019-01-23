@@ -96,6 +96,7 @@ call-with-output-process
 call-with-output-string
 call-with-output-u8vector
 call-with-output-vector
+call-with-port
 call/cc
 cfun-conversion-exception-arguments
 cfun-conversion-exception-code
