@@ -106,6 +106,23 @@
 (define-prim (error message . parameters)
   (##raise-error-exception message parameters))
 
+(define-prim (error-object? obj)
+  (macro-error-exception? obj))
+
+(define-prim (error-object-message err-obj)
+  (macro-check-error-exception
+    err-obj
+    1
+    (error-object-message err-obj)
+    (macro-error-exception-message err-obj)))
+
+(define-prim (error-object-irritants err-obj)
+  (macro-check-error-exception
+    err-obj
+    1
+    (error-object-irritants err-obj)
+    (macro-error-exception-parameters err-obj)))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define-runtime-syntax ##require-module

@@ -171,6 +171,9 @@ error
 error-exception-message
 error-exception-parameters
 error-exception?
+error-object-irritants
+error-object-message
+error-object?
 exact
 exact-integer?
 exact-integer-sqrt
