@@ -6196,6 +6196,33 @@
                       (write-bytevector u8vect port start end)
                       (##write-bytevector u8vect p start end))))))))))
 
+(define-prim (open-input-bytevector u8vect)
+  (macro-force-vars (u8vect)
+    (macro-check-u8vector
+      u8vect
+      1
+      (open-input-bytevector u8vect)
+      (##open-u8vector-generic
+       (macro-direction-in)
+       (lambda (port) port)
+       open-input-bytevector
+       u8vect))))
+
+(define-prim (open-output-bytevector)
+  (##open-u8vector-generic
+   (macro-direction-out)
+   (lambda (port) port)
+   open-output-bytevector
+   '()))
+
+(define-prim (get-output-bytevector port)
+  (macro-force-vars (port)
+    (macro-check-u8vector-output-port
+      port
+      1
+      (get-output-bytevector port)
+      (##get-output-u8vector port))))
+
 (define-prim (##options-set! port options)
 
   (##declare (not interrupts-enabled))

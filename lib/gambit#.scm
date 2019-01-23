@@ -345,6 +345,7 @@ generate-proper-tail-calls
 gensym
 get-environment-variable
 get-environment-variables
+get-output-bytevector
 get-output-string
 get-output-u8vector
 get-output-vector
@@ -493,10 +494,12 @@ open-directory
 open-dummy
 open-event-queue
 open-file
+open-input-bytevector
 open-input-process
 open-input-string
 open-input-u8vector
 open-input-vector
+open-output-bytevector
 open-output-process
 open-output-string
 open-output-u8vector
