@@ -487,6 +487,8 @@ number-of-arguments-limit-exception?
 object->serial-number
 object->string
 object->u8vector
+open-binary-input-file
+open-binary-output-file
 open-directory
 open-dummy
 open-event-queue

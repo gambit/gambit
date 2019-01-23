@@ -9383,6 +9383,14 @@
   (macro-force-vars (path-or-settings)
     (##open-input-file path-or-settings)))
 
+(define-prim (open-binary-input-file path-or-settings)
+  (##open-file-generic
+   (macro-direction-in)
+   #t
+   (lambda (port) port)
+   open-binary-input-file
+   path-or-settings))
+
 (define-prim (##open-output-file path-or-settings)
   (##open-file-generic
    (macro-direction-out)
@@ -9394,6 +9402,14 @@
 (define-prim (open-output-file path-or-settings)
   (macro-force-vars (path-or-settings)
     (##open-output-file path-or-settings)))
+
+(define-prim (open-binary-output-file path-or-settings)
+  (##open-file-generic
+   (macro-direction-out)
+   #t
+   (lambda (port) port)
+   open-binary-output-file
+   path-or-settings))
 
 (define-prim (call-with-input-file path-or-settings proc)
   (macro-force-vars (path-or-settings proc)
