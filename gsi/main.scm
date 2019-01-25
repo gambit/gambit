@@ -288,7 +288,7 @@
 
                       (define (exit-abnormally)
                         (cleanup)
-                        (##exit-abnormally))
+                        (##exit-abruptly))
 
                       (define (handling file)
                         (if (##fx< 1 nb-output-files)
