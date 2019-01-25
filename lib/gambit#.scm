@@ -162,6 +162,7 @@ divide-by-zero-exception-arguments
 divide-by-zero-exception-procedure
 divide-by-zero-exception?
 drop
+emergency-exit
 eof-object
 eq?-hash
 equal?-hash

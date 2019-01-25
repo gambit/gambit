@@ -3158,7 +3158,7 @@
                             (macro-debug-settings-user-intr-quit))))
           (if (and quit?
                    (##fx= (macro-debug-settings-level settings) 0))
-              (##exit-abnormally)
+              (##exit-abruptly)
               (##handle-interrupt quit?))))))
 
 (define-prim (##handle-interrupt quit?)
@@ -3173,7 +3173,7 @@
          output-port)
         (##newline output-port)
         (if quit?
-            (##exit-abnormally)
+            (##exit-abruptly)
             #f))))))
 
 (set! ##primordial-exception-handler-hook ##repl-exception-handler-hook)

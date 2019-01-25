@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -508,11 +508,11 @@
 (define-prim (##exit-set! x)
   (set! ##exit x))
 
-(define-prim (##exit-abnormally)
+(define-prim (##exit-abruptly)
   (##exit (macro-EXIT-CODE-SOFTWARE)))
 
 (define-prim (##exit-with-exception exc)
-  (##exit-abnormally))
+  (##exit-abruptly))
 
 (define-prim (exit #!optional (status (macro-absent-obj)))
   (if (##eq? status (macro-absent-obj))
@@ -1648,7 +1648,7 @@ function g_os_device_process_status(dev_scm) {
 
 (define-prim (error message . parameters)
   (println message)
-  (##exit-abnormally))
+  (##exit-abruptly))
 
 (define-prim (void)
   (##void))

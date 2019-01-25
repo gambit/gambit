@@ -9685,7 +9685,7 @@
   (##make-path-psettings
    direction
    (##list 'readtable: ##main-readtable)
-   ##exit-abnormally
+   ##exit-abruptly
    (lambda (psettings)
      (let ((device
             (##os-device-stream-open-predefined
@@ -10051,7 +10051,7 @@
            (let ((status (call-main (##list (##cdr ##processed-command-line)))))
              (if (##fixnum? status)
                  (##exit status)
-                 (##exit-abnormally)))))
+                 (##exit-abruptly)))))
         (else
          (lambda ()
            (call-main (##cdr ##processed-command-line))

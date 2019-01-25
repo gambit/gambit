@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4792,16 +4792,16 @@ end-of-code
 (define-prim (##exit #!optional (status (macro-EXIT-CODE-OK)))
   (##exit-with-err-code (##fx+ status 1)))
 
-(define-prim (##exit-abnormally)
-  (##exit (macro-EXIT-CODE-SOFTWARE)))
+(define-prim (##exit-abruptly #!optional (status (macro-EXIT-CODE-SOFTWARE)))
+  (##exit-with-err-code-no-cleanup (##fx+ status 1)))
 
 (define-prim (##exit-with-exception exc)
-  (##exit-abnormally))
+  (##exit-abruptly))
 
 (##interrupt-vector-set! 1 ;; ___INTR_TERMINATE
   (lambda ()
     (##declare (not interrupts-enabled))
-    (##exit-abnormally)))
+    (##exit-abruptly)))
 
 ))
 

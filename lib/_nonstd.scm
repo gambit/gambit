@@ -1726,12 +1726,21 @@
 
 (define-prim (exit #!optional (status (macro-absent-obj)))
   (if (##eq? status (macro-absent-obj))
-      (##exit)
+      (##exit (macro-EXIT-CODE-OK))
       (macro-force-vars (status)
         (if (##eq? status #f)
-            (##exit-abnormally)
+            (##exit (macro-EXIT-CODE-SOFTWARE))
             (macro-check-exact-unsigned-int8 status 1 (exit status)
               (##exit status))))))
+
+(define-prim (emergency-exit #!optional (status (macro-absent-obj)))
+  (if (##eq? status (macro-absent-obj))
+      (##exit-abruptly (macro-EXIT-CODE-OK))
+      (macro-force-vars (status)
+        (if (##eq? status #f)
+            (##exit-abruptly (macro-EXIT-CODE-SOFTWARE))
+            (macro-check-exact-unsigned-int8 status 1 (emergency-exit status)
+              (##exit-abruptly status))))))
 
 (define-prim (##get-environment-variables)
   (let ((result (##os-environ)))
