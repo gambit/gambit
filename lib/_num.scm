@@ -527,18 +527,19 @@
 (define-prim (##finite? x)
 
   (define (type-error)
-    (##fail-check-real 1 finite? x))
+    (##fail-check-number 1 finite? x))
 
   (macro-number-dispatch x (type-error)
     #t
     #t
     #t
     (##flfinite? x)
-    (if (macro-cpxnum-real? x)
-        (let ((real (macro-cpxnum-real x)))
-          (or (##not (##flonum? real))
-              (##flfinite? real)))
-        (type-error))))
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (and (or (##not (##flonum? real))
+               (##flfinite? real))
+           (or (##not (##flonum? imag))
+               (##flfinite? imag))))))
 
 (define-prim (finite? x)
   (macro-force-vars (x)
@@ -547,18 +548,25 @@
 (define-prim (##infinite? x)
 
   (define (type-error)
-    (##fail-check-real 1 infinite? x))
+    (##fail-check-number 1 infinite? x))
 
   (macro-number-dispatch x (type-error)
     #f
     #f
     #f
     (##flinfinite? x)
-    (if (macro-cpxnum-real? x)
-        (let ((real (macro-cpxnum-real x)))
-          (and (##flonum? real)
-               (##flinfinite? real)))
-        (type-error))))
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (if (##flonum? real)
+          (if (##flnan? real)
+              #f
+              (if (##flinfinite? real)
+                  (##not (and (##flonum? imag)
+                              (##flnan? imag)))
+                  (and (##flonum? imag)
+                       (##flinfinite? imag))))
+          (and (##flonum? imag)
+               (##flinfinite? imag))))))
 
 (define-prim (infinite? x)
   (macro-force-vars (x)
@@ -567,18 +575,19 @@
 (define-prim (##nan? x)
 
   (define (type-error)
-    (##fail-check-real 1 nan? x))
+    (##fail-check-number 1 nan? x))
 
   (macro-number-dispatch x (type-error)
     #f
     #f
     #f
     (##flnan? x)
-    (if (macro-cpxnum-real? x)
-        (let ((real (macro-cpxnum-real x)))
-          (and (##flonum? real)
-               (##flnan? real)))
-        (type-error))))
+    (let ((real (macro-cpxnum-real x))
+          (imag (macro-cpxnum-imag x)))
+      (or (and (##flonum? real)
+               (##flnan? real))
+          (and (##flonum? imag)
+               (##flnan? imag))))))
 
 (define-prim (nan? x)
   (macro-force-vars (x)
