@@ -325,6 +325,12 @@
 ;;;     srfi-89 SRFI-89
 ;;;     srfi-90 SRFI-90
 ;;;     srfi-91 SRFI-91
+
+     exact-closed
+     exact-complex
+     ieee-float
+     full-unicode
+     ratios
      ))
 
 (define ##cond-expand-features
@@ -332,7 +338,10 @@
 
 (define-runtime-macro (define-cond-expand-feature . features)
   (##cond-expand-features (##append features (##cond-expand-features)))
-  `(begin))
+  `(##begin))
+
+(define features
+  ##cond-expand-features)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

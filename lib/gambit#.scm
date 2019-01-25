@@ -208,6 +208,7 @@ f64vector-set
 f64vector-set!
 f64vector-shrink!
 f64vector?
+features
 file-attributes
 file-creation-time
 file-device
