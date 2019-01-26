@@ -28,12 +28,12 @@
 
 (define-prim (##raise-unterminated-process-exception port proc . args)
   (##extract-procedure-and-arguments
-   port
    proc
    args
+   port
    #f
    #f
-   (lambda (port procedure arguments dummy2 dummy3)
+   (lambda (procedure arguments port dummy2 dummy3)
      (##raise-io-exception
       port
       (macro-make-unterminated-process-exception procedure arguments)))))
@@ -42,12 +42,12 @@
 
 (define-prim (##raise-nonempty-input-port-character-buffer-exception port proc . args)
   (##extract-procedure-and-arguments
-   port
    proc
    args
+   port
    #f
    #f
-   (lambda (port procedure arguments dummy2 dummy3)
+   (lambda (procedure arguments port dummy2 dummy3)
      (##raise-io-exception
       port
       (macro-make-nonempty-input-port-character-buffer-exception procedure arguments)))))
