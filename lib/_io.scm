@@ -5772,6 +5772,58 @@
       (input-port-bytes-buffered port)
       (##input-port-bytes-buffered port))))
 
+(define-prim (##u8-ready?1 port)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-lock-and-check-input-port-character-buffer-empty
+   port
+   (u8-ready? port)
+   (let* ((byte-rlo
+           (macro-byte-port-rlo port))
+          (byte-rhi
+           (macro-byte-port-rhi port)))
+     (if (##fx< byte-rlo byte-rhi)
+         (begin
+           (macro-port-mutex-unlock! port)
+           #t)
+         (let ((code ((macro-byte-port-rbuf-fill port)
+                      port
+                      1
+                      #f)))
+           (if (##fixnum? code)
+               (if (##fx= code ##err-code-EAGAIN)
+                   (begin
+                     (macro-port-mutex-unlock! port)
+                     #f) ;; a call to read-u8 would block
+                   (begin
+                     (macro-port-mutex-unlock! port)
+                     (##raise-os-io-exception port #f code u8-ready? port)))
+               (begin
+                 (macro-port-mutex-unlock! port)
+                 #t)))))))
+
+(define-prim (##u8-ready?0)
+  (##u8-ready?1 (macro-current-input-port)))
+
+(define-prim (##u8-ready?
+              #!optional
+              (port (macro-absent-obj)))
+  (if (##eq? port (macro-absent-obj))
+      (##u8-ready?0)
+      (##u8-ready?1 port)))
+
+(define-prim (u8-ready?
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-input-port)
+               port)))
+      (macro-check-byte-input-port p 1 (u8-ready? p)
+        (##u8-ready?1 p)))))
+
 (define-prim (##read-u8 port)
 
   (##declare (not interrupts-enabled))

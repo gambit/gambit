@@ -953,6 +953,7 @@ u64vector-set
 u64vector-set!
 u64vector-shrink!
 u64vector?
+u8-ready?
 u8vector
 u8vector->list
 u8vector->object
