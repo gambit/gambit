@@ -580,6 +580,7 @@ range-exception-procedure
 range-exception?
 read-all
 read-line
+read-string
 read-substring
 read-subu8vector
 read-u8

@@ -5134,7 +5134,8 @@
               end
               port
               #!optional
-              (need (macro-absent-obj)))
+              (need (macro-absent-obj))
+              (prim read-substring))
 
   (##declare (not interrupts-enabled))
 
@@ -5212,7 +5213,7 @@
                               port
                               #f
                               code
-                              read-substring
+                              prim
                               str
                               start
                               end
@@ -5273,6 +5274,29 @@
                     5
                     (read-substring str start end port need)
                     (##read-substring str start end p need))))))))))
+
+(define-prim (read-string
+              k
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (k port)
+    (macro-check-index
+      k
+      1
+      (read-string k port)
+      (let* ((p
+              (if (##eq? port (macro-absent-obj))
+                  (macro-current-input-port)
+                  port))
+             (str
+              (##make-string k))
+             (n
+              (##read-substring str 0 k p #f read-string)))
+        (if (##fx= n 0)
+            #!eof
+            (begin
+              (##string-shrink! str n)
+              str))))))
 
 (define-prim (##read-line port separator include-separator? max-length)
 
