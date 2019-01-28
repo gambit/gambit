@@ -4319,7 +4319,8 @@
         (let ((tgroup ##tcp-service-tgroup))
           (##tcp-service-register!
            (##list local-port-number: 44555
-                   local-address: remote-dbg-addr)
+                   local-address: remote-dbg-addr
+                   output-buffering: #f)
            (lambda ()
              (let ((repl-channel
                     (##make-repl-channel-ports
