@@ -102,10 +102,51 @@
       (cons (list->vect (cons i (car lst)))
             (number (+ i 1) (cdr lst)))))
 
-  (if targ-debug-info?
-    (vector (list->vect (number 0 (queue->list targ-first-class-label-queue)))
-            (list->vect (queue->list targ-var-descr-queue)))
-    #f))
+  (targ-compact-using-sharing
+   targ-sharing-table
+   (if targ-debug-info?
+       (vector (list->vect
+                (number 0 (queue->list targ-first-class-label-queue)))
+               (list->vect
+                (queue->list targ-var-descr-queue)))
+       #f)))
+
+(define (targ-compact-using-sharing shared obj)
+
+  (define (compact obj)
+    (if (or (string? obj)
+            (pair? obj)
+            (box-object? obj)
+            (vector-object? obj))
+        (let ((x (table-ref shared obj #f)))
+          (or x
+              (cond ((string? obj)
+                     (table-set! shared obj obj)
+                     obj)
+                    ((pair? obj)
+                     (let ((p (cons #f #f)))
+                       (table-set! shared obj p)
+                       (set-car! p (compact (car obj)))
+                       (set-cdr! p (compact (cdr obj)))
+                       p))
+                    ((box-object? obj)
+                     (let ((b (box-object #f)))
+                       (table-set! shared obj b)
+                       (set-box-object! b (compact (unbox-object obj)))
+                       b))
+                    (else
+                     (let* ((len (vector-length obj))
+                            (v (make-vector len)))
+                       (table-set! shared obj v)
+                       (let loop ((i (- len 1)))
+                         (if (< i 0)
+                             v
+                             (begin
+                               (vector-set! v i (compact (vector-ref obj i)))
+                               (loop (- i 1))))))))))
+        obj))
+
+  (compact obj))
 
 (define (targ-scan-scheme-procedure bbs)
 

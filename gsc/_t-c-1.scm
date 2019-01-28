@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -359,6 +359,8 @@
 (define targ-fp-cache #f) ; floating point number cache
 (define targ-fr-cell #f)  ; cell of floating point region start
 
+(define targ-sharing-table #f) ; table for compacting meta-information
+
 (define (targ-heap-begin!)
   (set! targ-glo-vars         (make-table 'test: eq?))
   (set! targ-lbl-alloc        0)
@@ -374,6 +376,7 @@
   (set! targ-module-wr-res    (make-stretchable-vector #f))
   (set! targ-fp-cache #f)
   (set! targ-fr-cell #f)
+  (set! targ-sharing-table    (make-table))
   #f)
 
 (define (targ-heap-end!)
@@ -391,6 +394,7 @@
   (set! targ-module-wr-res #f)
   (set! targ-fp-cache #f)
   (set! targ-fr-cell #f)
+  (set! targ-sharing-table #f)
   #f)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
