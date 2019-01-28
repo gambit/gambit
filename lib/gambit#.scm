@@ -579,6 +579,7 @@ range-exception-arguments
 range-exception-procedure
 range-exception?
 read-all
+read-bytevector
 read-line
 read-string
 read-substring

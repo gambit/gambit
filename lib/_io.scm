@@ -5135,7 +5135,7 @@
               port
               #!optional
               (need (macro-absent-obj))
-              (prim read-substring))
+              (raise-os-exception? #t))
 
   (##declare (not interrupts-enabled))
 
@@ -5209,16 +5209,18 @@
                          (if (or (##fx< 0 n)
                                  (##fx= code ##err-code-EAGAIN))
                              n
-                             (##raise-os-io-exception
-                              port
-                              #f
-                              code
-                              prim
-                              str
-                              start
-                              end
-                              port
-                              need)))
+                             (if raise-os-exception?
+                                 (##raise-os-io-exception
+                                  port
+                                  #f
+                                  code
+                                  read-substring
+                                  str
+                                  start
+                                  end
+                                  port
+                                  need)
+                                 code)))
 
                         (code
 
@@ -5291,12 +5293,14 @@
              (str
               (##make-string k))
              (n
-              (##read-substring str 0 k p #f read-string)))
-        (if (##fx= n 0)
-            #!eof
-            (begin
-              (##string-shrink! str n)
-              str))))))
+              (##read-substring str 0 k p #f #f)))
+        (cond ((##fx> n 0)
+               (##string-shrink! str n)
+               str)
+              ((##fx= n 0)
+               #!eof)
+              (else
+               (##raise-os-io-exception port #f n read-string k port)))))))
 
 (define-prim (##read-line port separator include-separator? max-length)
 
@@ -5899,7 +5903,8 @@
               end
               port
               #!optional
-              (need (macro-absent-obj)))
+              (need (macro-absent-obj))
+              (raise-os-exception? #t))
 
   (##declare (not interrupts-enabled))
 
@@ -5953,16 +5958,18 @@
                           (if (or (##fx< 0 n)
                                   (##fx= code ##err-code-EAGAIN))
                               n
-                              (##raise-os-io-exception
-                               port
-                               #f
-                               code
-                               read-subu8vector
-                               u8vect
-                               start
-                               end
-                               port
-                               need)))
+                              (if raise-os-exception?
+                                  (##raise-os-io-exception
+                                   port
+                                   #f
+                                   code
+                                   read-subu8vector
+                                   u8vect
+                                   start
+                                   end
+                                   port
+                                   need)
+                                  code)))
 
                          (code
 
@@ -6018,6 +6025,31 @@
                     5
                     (read-subu8vector u8vect start end port need)
                     (##read-subu8vector u8vect start end p need))))))))))
+
+(define-prim (read-bytevector
+              k
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (k port)
+    (macro-check-index
+      k
+      1
+      (read-bytevector k port)
+      (let* ((p
+              (if (##eq? port (macro-absent-obj))
+                  (macro-current-input-port)
+                  port))
+             (u8vect
+              (##make-u8vector k))
+             (n
+              (##read-subu8vector u8vect 0 k p #f #f)))
+        (cond ((##fx> n 0)
+               (##u8vector-shrink! u8vect n)
+               u8vect)
+              ((##fx= n 0)
+               #!eof)
+              (else
+               (##raise-os-io-exception port #f n read-bytevector k port)))))))
 
 (define-prim (##write-u8 b port)
 
