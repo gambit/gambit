@@ -6051,6 +6051,55 @@
               (else
                (##raise-os-io-exception port #f n read-bytevector k port)))))))
 
+(define-prim (##read-bytevector! u8vect port start end)
+  (##declare (not interrupts-enabled))
+  (if (##fx< start end)
+      (let ((n (##read-subu8vector u8vect start end port #f #f)))
+        (cond ((##fx> n 0)
+               n)
+              ((##fx= n 0)
+               #!eof)
+              (else
+               (##raise-os-io-exception port #f n read-bytevector! u8vect port start end))))
+      0))
+
+(define-prim (read-bytevector!
+              u8vect
+              #!optional
+              (port (macro-absent-obj))
+              (start (macro-absent-obj))
+              (end (macro-absent-obj)))
+  (macro-force-vars (u8vect port start end)
+    (macro-check-u8vector
+      u8vect
+      1
+      (read-bytevector! u8vect port start end)
+      (let ((p
+             (if (##eq? port (macro-absent-obj))
+                 (macro-current-output-port)
+                 port)))
+        (macro-check-byte-output-port
+          p
+          2
+          (read-bytevector! u8vect port start end)
+          (if (##eq? start (macro-absent-obj))
+              (##read-bytevector! u8vect p 0 (##u8vector-length u8vect))
+              (macro-check-index-range-incl
+                start
+                3
+                0
+                (##u8vector-length u8vect)
+                (read-bytevector! u8vect port start end)
+                (if (##eq? end (macro-absent-obj))
+                    (##read-bytevector! u8vect p start (##u8vector-length u8vect))
+                    (macro-check-index-range-incl
+                      end
+                      4
+                      start
+                      (##u8vector-length u8vect)
+                      (read-bytevector! u8vect port start end)
+                      (##read-bytevector! u8vect p start end))))))))))
+
 (define-prim (##write-u8 b port)
 
   (##declare (not interrupts-enabled))
