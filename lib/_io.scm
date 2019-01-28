@@ -5253,29 +5253,33 @@
         str
         1
         (read-substring str start end port need)
-        (macro-check-index-range-incl
-          start
-          2
-          0
-          (##string-length str)
+        (macro-check-mutable
+          str
+          1
           (read-substring str start end port need)
           (macro-check-index-range-incl
-            end
-            3
             start
+            2
+            0
             (##string-length str)
             (read-substring str start end port need)
-            (macro-check-character-input-port
-              p
-              4
+            (macro-check-index-range-incl
+              end
+              3
+              start
+              (##string-length str)
               (read-substring str start end port need)
-              (if (##eq? need (macro-absent-obj))
-                  (##read-substring str start end p)
-                  (macro-check-index
-                    need
-                    5
-                    (read-substring str start end port need)
-                    (##read-substring str start end p need))))))))))
+              (macro-check-character-input-port
+                p
+                4
+                (read-substring str start end port need)
+                (if (##eq? need (macro-absent-obj))
+                    (##read-substring str start end p)
+                    (macro-check-index
+                      need
+                      5
+                      (read-substring str start end port need)
+                      (##read-substring str start end p need)))))))))))
 
 (define-prim (read-string
               k
@@ -6002,29 +6006,33 @@
         u8vect
         1
         (read-subu8vector u8vect start end port need)
-        (macro-check-index-range-incl
-          start
-          2
-          0
-          (##u8vector-length u8vect)
+        (macro-check-mutable
+          u8vect
+          1
           (read-subu8vector u8vect start end port need)
           (macro-check-index-range-incl
-            end
-            3
             start
+            2
+            0
             (##u8vector-length u8vect)
             (read-subu8vector u8vect start end port need)
-            (macro-check-byte-input-port
-              p
-              4
+            (macro-check-index-range-incl
+              end
+              3
+              start
+              (##u8vector-length u8vect)
               (read-subu8vector u8vect start end port need)
-              (if (##eq? need (macro-absent-obj))
-                  (##read-subu8vector u8vect start end p)
-                  (macro-check-index
-                    need
-                    5
-                    (read-subu8vector u8vect start end port need)
-                    (##read-subu8vector u8vect start end p need))))))))))
+              (macro-check-byte-input-port
+                p
+                4
+                (read-subu8vector u8vect start end port need)
+                (if (##eq? need (macro-absent-obj))
+                    (##read-subu8vector u8vect start end p)
+                    (macro-check-index
+                      need
+                      5
+                      (read-subu8vector u8vect start end port need)
+                      (##read-subu8vector u8vect start end p need)))))))))))
 
 (define-prim (read-bytevector
               k
@@ -6074,31 +6082,35 @@
       u8vect
       1
       (read-bytevector! u8vect port start end)
-      (let ((p
-             (if (##eq? port (macro-absent-obj))
-                 (macro-current-output-port)
-                 port)))
-        (macro-check-byte-output-port
-          p
-          2
-          (read-bytevector! u8vect port start end)
-          (if (##eq? start (macro-absent-obj))
-              (##read-bytevector! u8vect p 0 (##u8vector-length u8vect))
-              (macro-check-index-range-incl
-                start
-                3
-                0
-                (##u8vector-length u8vect)
-                (read-bytevector! u8vect port start end)
-                (if (##eq? end (macro-absent-obj))
-                    (##read-bytevector! u8vect p start (##u8vector-length u8vect))
-                    (macro-check-index-range-incl
-                      end
-                      4
-                      start
-                      (##u8vector-length u8vect)
-                      (read-bytevector! u8vect port start end)
-                      (##read-bytevector! u8vect p start end))))))))))
+      (macro-check-mutable
+        u8vect
+        1
+        (read-bytevector! u8vect port start end)
+        (let ((p
+               (if (##eq? port (macro-absent-obj))
+                   (macro-current-output-port)
+                   port)))
+          (macro-check-byte-output-port
+            p
+            2
+            (read-bytevector! u8vect port start end)
+            (if (##eq? start (macro-absent-obj))
+                (##read-bytevector! u8vect p 0 (##u8vector-length u8vect))
+                (macro-check-index-range-incl
+                  start
+                  3
+                  0
+                  (##u8vector-length u8vect)
+                  (read-bytevector! u8vect port start end)
+                  (if (##eq? end (macro-absent-obj))
+                      (##read-bytevector! u8vect p start (##u8vector-length u8vect))
+                      (macro-check-index-range-incl
+                        end
+                        4
+                        start
+                        (##u8vector-length u8vect)
+                        (read-bytevector! u8vect port start end)
+                        (##read-bytevector! u8vect p start end)))))))))))
 
 (define-prim (##write-u8 b port)
 
@@ -8736,23 +8748,27 @@
       u8vect
       1
       (udp-read-subu8vector u8vect start end port)
-      (macro-check-index-range-incl
-        start
-        2
-        0
-        (##u8vector-length u8vect)
+      (macro-check-mutable
+        u8vect
+        1
         (udp-read-subu8vector u8vect start end port)
         (macro-check-index-range-incl
-          end
-          3
           start
+          2
+          0
           (##u8vector-length u8vect)
           (udp-read-subu8vector u8vect start end port)
-          (macro-check-udp-input-port
-            p
-            4
+          (macro-check-index-range-incl
+            end
+            3
+            start
+            (##u8vector-length u8vect)
             (udp-read-subu8vector u8vect start end port)
-            (##udp-read-subu8vector u8vect start end p udp-read-subu8vector #f))))))))
+            (macro-check-udp-input-port
+              p
+              4
+              (udp-read-subu8vector u8vect start end port)
+              (##udp-read-subu8vector u8vect start end p udp-read-subu8vector #f)))))))))
 
 (define-prim (##udp-read-u8vector port)
   (##udp-read-subu8vector #f #f #f port udp-read-u8vector #f))
