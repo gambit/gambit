@@ -286,6 +286,9 @@ flnegative?
 flnumerator
 flodd?
 flonum?
+floor-quotient
+floor-remainder
+floor/
 flpositive?
 flround
 flscalbn
@@ -909,6 +912,9 @@ timeout->time
 top
 touch
 trace
+truncate-quotient
+truncate-remainder
+truncate/
 tty-history
 tty-history-max-length-set!
 tty-history-set!
