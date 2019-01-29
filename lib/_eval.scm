@@ -4629,6 +4629,9 @@
     (define-runtime-syntax unless
       (##make-alias-syntax '##unless))
 
+    (define-runtime-syntax syntax-error
+      (##make-alias-syntax '##syntax-error))
+
     ##interaction-cte))
 
 ;;;============================================================================

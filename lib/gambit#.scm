@@ -38,6 +38,7 @@ case-lambda
 letrec*
 when
 unless
+syntax-error
 
 ;; global variable
 default-random-source

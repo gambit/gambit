@@ -75,7 +75,6 @@ interaction-environment
 literal-identifier=?
 sc-expand
 sc-compile-expand
-syntax-error
 syntax-object->datum
 syntax->list
 syntax->vector
@@ -87,6 +86,7 @@ syntax->vector
 interaction-environment
 eval
 gensym
+syntax-error
 
 ))
 

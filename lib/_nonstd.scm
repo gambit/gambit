@@ -123,6 +123,21 @@
     (error-object-irritants err-obj)
     (macro-error-exception-parameters err-obj)))
 
+(define-runtime-syntax ##syntax-error
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -2
+     (lambda (message . args)
+       (let ((m (##desourcify message)))
+         (if (##string? m)
+             (##apply ##raise-expression-parsing-exception
+                      (##cons m (##cons src (##map ##desourcify args))))
+             (##raise-expression-parsing-exception
+              'ill-formed-special-form
+              src
+              'syntax-error)))))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define-runtime-syntax ##require-module

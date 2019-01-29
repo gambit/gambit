@@ -3426,12 +3426,18 @@
            (display-call))
 
           ((macro-expression-parsing-exception? exc)
-           (let ((x
-                  (##assq (macro-expression-parsing-exception-kind exc)
-                          ##expression-parsing-exception-names)))
-             (##write-string
-              (if x (##cdr x) "Unknown expression parsing exception")
-              port))
+           (let* ((kind
+                   (macro-expression-parsing-exception-kind exc))
+                  (name
+                   (if (##string? kind)
+                       kind
+                       (let ((x
+                              (##assq kind
+                                      ##expression-parsing-exception-names)))
+                         (if x
+                             (##cdr x)
+                             "Unknown expression parsing exception")))))
+             (##write-string name port))
            (write-items (macro-expression-parsing-exception-parameters exc))
            (##newline port)
            (let* ((source (macro-expression-parsing-exception-source exc))
