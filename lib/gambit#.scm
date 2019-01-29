@@ -212,6 +212,7 @@ features
 file-attributes
 file-creation-time
 file-device
+file-error?
 file-exists?
 file-group
 file-info
@@ -581,6 +582,7 @@ range-exception?
 read-all
 read-bytevector
 read-bytevector!
+read-error?
 read-line
 read-string
 read-substring

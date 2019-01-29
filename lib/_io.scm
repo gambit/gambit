@@ -24,6 +24,9 @@
          (lambda () (raise-exception)))
         (raise-exception))))
 
+(define-prim (read-error? obj)
+  (macro-datum-parsing-exception? obj))
+
 (implement-library-type-unterminated-process-exception)
 
 (define-prim (##raise-unterminated-process-exception port proc . args)
@@ -71,6 +74,9 @@
     (if (##procedure? handler)
         (handler exc)
         (macro-raise exc))))
+
+(define-prim (file-error? obj)
+  (macro-no-such-file-or-directory-exception? obj))
 
 ;;;----------------------------------------------------------------------------
 
