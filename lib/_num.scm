@@ -2511,9 +2511,43 @@ for a discussion of branch cuts.
         (negative-log))
     (##make-rectangular (complex-log-magnitude x) (##angle x))))
 
-(define-prim (log x)
+(define-prim (##log2 x y)
+
+  (define (general-case x y)
+    (##/ (##log x) (##log y)))
+
+  (if (and (macro-exact-int? x)
+           (macro-exact-int? y)
+           (##< 0 x)
+           (##< 1 y))
+      (let ((floor-log2-x (##fx- (##integer-length x) 1)))
+        (if (##fx= floor-log2-x ;; is n a power of 2?
+                   (##first-bit-set x))
+            (let ((floor-log2-y (##fx- (##integer-length y) 1)))
+              (if (##fx= floor-log2-y ;; is y a power of 2?
+                         (##first-bit-set y))
+                  (##/ floor-log2-x floor-log2-y)
+                  (general-case x y)))
+            (general-case x y)))
+      (general-case x y)))
+
+(define-prim (log x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
-    (##log x)))
+    (if (##eq? y (macro-absent-obj))
+        (##log x)
+        (macro-force-vars (y)
+          (cond ((##not (##number? x))
+                 (##fail-check-number 1 log x y))
+                ((##not (##number? y))
+                 (##fail-check-number 2 log x y))
+                ((##eqv? x 0)
+                 (##raise-range-exception 1 log x y))
+                ((##eqv? y 0)
+                 (##raise-range-exception 2 log x y))
+                ((##eqv? y 1)
+                 (##raise-range-exception 2 log x y))
+                (else
+                 (##log2 x y)))))))
 
 (define-prim (##sin x)
 
