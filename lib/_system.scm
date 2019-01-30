@@ -231,7 +231,7 @@
   (if (##symbol? x) #t '(1))
   (##eq? x y)
   macro-force-vars
-  macro-no-check
+  macro-check-symbol
   (##pair? ##fail-check-symbol))
 
 (define-prim-nary-bool (boolean=? x y)
