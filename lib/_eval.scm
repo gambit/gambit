@@ -968,7 +968,18 @@
                 #!optional
                 #!key
                 #!rest
-                ))))
+                ))
+      (##vector? val)
+      (##u8vector? val)
+      (##s8vector? val)
+      (##u16vector? val)
+      (##s16vector? val)
+      (##u32vector? val)
+      (##s32vector? val)
+      (##u64vector? val)
+      (##s64vector? val)
+      (##f32vector? val)
+      (##f64vector? val)))
 
 (define (##variable src)
   (let ((code (##source-code src)))

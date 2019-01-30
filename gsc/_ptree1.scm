@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1880,6 +1880,17 @@
       (key-object? code)
       (rest-object? code)
 ;;      (body-object? code)
+      (vector-object? code)
+      (u8vect? code)
+      (s8vect? code)
+      (u16vect? code)
+      (s16vect? code)
+      (u32vect? code)
+      (s32vect? code)
+      (u64vect? code)
+      (s64vect? code)
+      (f32vect? code)
+      (f64vect? code)
       ))
 
 (define (**quote-expr? source)
