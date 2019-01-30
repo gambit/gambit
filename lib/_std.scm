@@ -1673,6 +1673,16 @@
 (define-prim (##promise-result promise))
 (define-prim (##promise-result-set! promise result))
 
+(define-prim (promise? obj)
+  (##promise? obj))
+
+(define-prim (make-promise val)
+  (if (##promise? val)
+      val
+      (let ((p (##make-promise #f)))
+        (##promise-result-set! p val)
+        p)))
+
 (define-prim (##force obj)
   (if (##promise? obj)
       (let ((result (##promise-result obj)))

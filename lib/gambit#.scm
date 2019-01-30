@@ -447,6 +447,7 @@ make-f64vector
 make-list
 make-mutex
 make-parameter
+make-promise
 make-random-source
 make-root-thread
 make-s16vector
@@ -560,6 +561,7 @@ process-status
 process-times
 processor-id
 processor?
+promise?
 protocol-info
 protocol-info-aliases
 protocol-info-name

@@ -1715,12 +1715,6 @@ end-of-code
 
 ;;; Implementation of promises.
 
-(define-prim (##make-promise thunk))
-(define-prim (##promise-thunk promise))
-(define-prim (##promise-thunk-set! promise thunk))
-(define-prim (##promise-result promise))
-(define-prim (##promise-result-set! promise result))
-
 (define-prim (##force-undetermined promise thunk)
   (let ((result (##force (thunk))))
     (##c-code #<<end-of-code
