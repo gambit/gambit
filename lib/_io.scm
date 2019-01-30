@@ -6049,21 +6049,25 @@
       k
       1
       (read-bytevector k port)
-      (let* ((p
-              (if (##eq? port (macro-absent-obj))
-                  (macro-current-input-port)
-                  port))
-             (u8vect
-              (##make-u8vector k))
-             (n
-              (##read-subu8vector u8vect 0 k p #f #f)))
-        (cond ((##fx> n 0)
-               (##u8vector-shrink! u8vect n)
-               u8vect)
-              ((##fx= n 0)
-               #!eof)
-              (else
-               (##raise-os-io-exception port #f n read-bytevector k port)))))))
+      (let ((p
+             (if (##eq? port (macro-absent-obj))
+                 (macro-current-input-port)
+                 port)))
+        (macro-check-byte-input-port
+          p
+          2
+          (read-bytevector k port)
+          (let* ((u8vect
+                  (##make-u8vector k))
+                 (n
+                  (##read-subu8vector u8vect 0 k p #f #f)))
+            (cond ((##fx> n 0)
+                   (##u8vector-shrink! u8vect n)
+                   u8vect)
+                  ((##fx= n 0)
+                   #!eof)
+                  (else
+                   (##raise-os-io-exception port #f n read-bytevector k port)))))))))
 
 (define-prim (##read-bytevector! u8vect port start end)
   (##declare (not interrupts-enabled))
@@ -6096,7 +6100,7 @@
                (if (##eq? port (macro-absent-obj))
                    (macro-current-output-port)
                    port)))
-          (macro-check-byte-output-port
+          (macro-check-byte-input-port
             p
             2
             (read-bytevector! u8vect port start end)
