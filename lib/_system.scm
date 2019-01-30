@@ -234,6 +234,14 @@
   macro-no-check
   (##pair? ##fail-check-symbol))
 
+(define-prim-nary-bool (boolean=? x y)
+  #t
+  (if (##boolean? x) #t '(1))
+  (##eq? x y)
+  macro-force-vars
+  macro-check-boolean
+  (##pair? ##fail-check-boolean))
+
 ;;-----------------------------------------------------------------------------
 
 (##define-macro (macro-define-equal-objs?

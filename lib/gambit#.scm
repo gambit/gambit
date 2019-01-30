@@ -78,6 +78,7 @@ bitwise-ior
 bitwise-merge
 bitwise-not
 bitwise-xor
+boolean=?
 box
 box?
 break

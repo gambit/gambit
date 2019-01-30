@@ -575,6 +575,8 @@
   (macro-force-vars (obj)
     (##not obj)))
 
+(define-fail-check-type boolean 'boolean)
+
 (define-prim (##boolean? obj)
   (or (##eq? obj #t) (##eq? obj #f)))
 

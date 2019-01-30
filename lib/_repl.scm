@@ -3834,6 +3834,7 @@
     (list                         . "LIST")
     (symbol                       . "SYMBOL")
     (keyword                      . "KEYWORD")
+    (boolean                      . "BOOLEAN")
     (vector                       . "VECTOR")
     (vector-list                  . "VECTOR LIST")
     (s8vector                     . "S8VECTOR")

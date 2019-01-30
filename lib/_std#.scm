@@ -133,6 +133,9 @@
 (define-check-type keyword 'keyword
   ##keyword?)
 
+(define-check-type boolean 'boolean
+  ##boolean?)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (##define-macro (macro-fail-check-list arg-num form)
 
