@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1544,13 +1544,13 @@
 
 (define (se-constant val ptree loc-table)
   (se-gen
-   (cond ((self-evaluating? val)
-          val)
-         ((proc-obj? val)
+   (cond ((proc-obj? val)
           (let ((name (string->symbol (proc-obj-name val))))
             (if use-actual-primitives-in-expression?
                 (list quote-sym (eval name))
                 (list 'PRIM name))))
+         ((self-evaluating? val)
+          val)
          (else
           (list quote-sym val)))
    ptree
