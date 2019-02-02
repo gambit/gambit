@@ -672,6 +672,7 @@ ___UCS_2STRING **argv_return;)
                     {
                       if ((nb_backslashes & 1) == 0)
                         in_double_quotes ^= 1;
+#define PROCESS_PROGRAM_LIKE_OTHER_ARGS
 #ifndef PROCESS_PROGRAM_LIKE_OTHER_ARGS
                       if (argc == 0)
                         nb_backslashes = (nb_backslashes<<1) + 1;
