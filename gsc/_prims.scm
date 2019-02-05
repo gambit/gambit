@@ -931,11 +931,9 @@
 ("##subprocedure-parent-name"         (1)   #f ()    0    #f      extended)
 ("##subprocedure-parent-info"         (1)   #f ()    0    #f      extended)
 
-("##make-promise"                     (1)   #f 0     0    (#f)    extended)
-("##promise-thunk"                    (1)   #f ()    0    #f      extended)
-("##promise-thunk-set!"               (2)   #t ()    0    #f      extended)
-("##promise-result"                   (1)   #f ()    0    #f      extended)
-("##promise-result-set!"              (2)   #t ()    0    #f      extended)
+("##make-delay-promise"               (1)   #f 0     0    (#f)    extended)
+("##promise-state"                    (1)   #f ()    0    #f      extended)
+("##promise-state-set!"               (2)   #t ()    0    #f      extended)
 
 ("##force"                            (1)   #t 0     0    #f      extended)
 

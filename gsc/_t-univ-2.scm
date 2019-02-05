@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2924,8 +2924,7 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'thunk 'scmobj #f '(public)) ;; instance-fields
-            (univ-field 'result 'scmobj (^this) '(public)))))
+      (list (univ-field 'state 'scmobj #f '(public))))) ;; instance-fields
 
     ((will)
      (rts-class

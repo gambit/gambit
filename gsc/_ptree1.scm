@@ -1850,7 +1850,7 @@
 (define (pt-delay source env use)
   (let ((code (source-code source)))
     (new-call* source (add-not-safe env)
-      (new-ref-extended-bindings source **make-promise-sym env)
+      (new-ref-extended-bindings source **make-delay-promise-sym env)
       (list (new-prc source env #f #f '() '() #f #f
               (pt (cadr code) env 'true))))))
 

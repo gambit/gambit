@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-4.scm"
 
-;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2557,31 +2557,20 @@
    (lambda (ctx return arg1)
      (return (^promise? arg1)))))
 
-(univ-define-prim "##make-promise" #t
+(univ-define-prim "##make-delay-promise" #t
   (make-translated-operand-generator
    (lambda (ctx return thunk)
-     (return (^new-promise thunk)))))
+     (return (^new-delay-promise thunk)))))
 
-(univ-define-prim "##promise-thunk" #f
+(univ-define-prim "##promise-state" #f
   (make-translated-operand-generator
    (lambda (ctx return prom)
-     (return (^member (^cast* 'promise prom) 'thunk)))))
+     (return (^member (^cast* 'promise prom) 'state)))))
 
-(univ-define-prim "##promise-thunk-set!" #f
+(univ-define-prim "##promise-state-set!" #f
   (make-translated-operand-generator
-   (lambda (ctx return prom thunk)
-     (^ (^assign (^member (^cast* 'promise prom) 'thunk) thunk)
-        (return prom)))))
-
-(univ-define-prim "##promise-result" #f
-  (make-translated-operand-generator
-   (lambda (ctx return prom)
-     (return (^member (^cast* 'promise prom) 'result)))))
-
-(univ-define-prim "##promise-result-set!" #f
-  (make-translated-operand-generator
-   (lambda (ctx return prom result)
-     (^ (^assign (^member (^cast* 'promise prom) 'result) result)
+   (lambda (ctx return prom state)
+     (^ (^assign (^member (^cast* 'promise prom) 'state) state)
         (return prom)))))
 
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -3972,7 +3972,7 @@ tanh
 (define (univ-emit-closure-set! ctx expr1 expr2 expr3)
   (^assign (^array-index (univ-clo-slots ctx expr1) expr2) expr3))
 
-(define (univ-emit-new-promise ctx expr)
+(define (univ-emit-new-delay-promise ctx expr)
   (^new (^type 'promise) expr))
 
 (define (univ-emit-promise? ctx expr)

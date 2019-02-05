@@ -2780,13 +2780,13 @@
     (lambda (opnds sn)
       (targ-apply-simp-gen opnds #f "MAKEWILL"))))
 
-(define (targ-apply-make-promise)
+(define (targ-apply-make-delay-promise)
   (targ-apply-alloc
-    (lambda (n) targ-promise-space)
+    (lambda (n) targ-delay-promise-space)
     #t
     #f
     #f
-    (targ-apply-simp-generator #f #f "MAKEPROMISE")))
+    (targ-apply-simp-generator #f #f "MAKEDELAYPROMISE")))
 
 (define (targ-apply-make-continuation)
   (targ-apply-alloc
@@ -3877,11 +3877,9 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(targ-op "##make-promise"        (targ-apply-make-promise))
-(targ-op "##promise-thunk"       (targ-ifjump-apply-u "PROMISETHUNK"))
-(targ-op "##promise-thunk-set!"  (targ-apply-simp-u #f #t 1 "PROMISETHUNKSET"))
-(targ-op "##promise-result"      (targ-ifjump-apply-u "PROMISERESULT"))
-(targ-op "##promise-result-set!" (targ-apply-simp-u #f #t 1 "PROMISERESULTSET"))
+(targ-op "##make-delay-promise" (targ-apply-make-delay-promise))
+(targ-op "##promise-state"      (targ-ifjump-apply-u "PROMISESTATE"))
+(targ-op "##promise-state-set!" (targ-apply-simp-u #f #t 1 "PROMISESTATESET"))
 
 (targ-op "##force"            (targ-apply-force))
 (targ-op "##void"             (targ-apply-simp-s #f #f #f "VOID"))

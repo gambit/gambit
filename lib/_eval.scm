@@ -4583,6 +4583,9 @@
     (define-runtime-syntax delay
       (##make-alias-syntax '##delay))
 
+    (define-runtime-syntax delay-force
+      (##make-alias-syntax '##delay))
+
     (define-runtime-syntax future
       (##make-alias-syntax '##future))
 

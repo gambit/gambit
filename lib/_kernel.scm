@@ -871,49 +871,30 @@ end-of-code
 
    ___SCMOBJ ra;
    ___SCMOBJ promise;
-   ___SCMOBJ result;
+   int fs;
 
    ra = ___ps->temp1;
    promise = ___ps->temp2;
-   result = ___FIELD(promise,___PROMISE_RESULT);
 
-   if (promise != result)
-     {
-       /* promise is determined, return cached result */
+   /* setup internal return continuation frame */
 
-       ___COVER_FORCE_HANDLER_DETERMINED;
+   ___RETI_GET_CFS(ra,fs)
 
-       ___ps->temp2 = result;
-       ___JUMPEXTPRM(___NOTHING,ra)
-     }
-   else
-     {
-       /* promise is not determined */
+   ___ADJFP(___ROUND_TO_MULT(fs,___FRAME_ALIGN)-fs)
 
-       /* setup internal return continuation frame */
+   ___PUSH_REGS /* push all GVM registers (live or not) */
+   ___PUSH(ra)  /* push return address */
 
-       int fs;
+   ___ADJFP(-___RETI_RA)
 
-       ___RETI_GET_CFS(ra,fs)
+   ___SET_R0(___ps->internal_return)
 
-       ___ADJFP(___ROUND_TO_MULT(fs,___FRAME_ALIGN)-fs)
+   /* tail call to ##force-out-of-line */
 
-       ___PUSH_REGS /* push all GVM registers (live or not) */
-       ___PUSH(ra)  /* push return address */
+   ___PUSH_ARGS1(promise)
 
-       ___ADJFP(-___RETI_RA)
-
-       ___SET_R0(___ps->internal_return)
-
-       /* tail call to ##force-undetermined */
-
-       ___PUSH_ARGS2(promise,___FIELD(promise,___PROMISE_THUNK))
-
-       ___COVER_FORCE_HANDLER_NOT_DETERMINED;
-
-       ___JUMPPRM(___SET_NARGS(2),
-                  ___PRMCELL(___G__23__23_force_2d_undetermined.prm))
-     }
+   ___JUMPPRM(___SET_NARGS(1),
+              ___PRMCELL(___G__23__23_force_2d_out_2d_of_2d_line.prm))
 
 end-of-code
 
@@ -1217,7 +1198,7 @@ end-of-code
    int fs;
    ___SCMOBJ ira;
 
-   /* save result in case we are returning from ##force-undetermined */
+   /* save result in case we are returning from ##force-out-of-line */
 
    ___ps->temp2 = ___R1;
 
@@ -1715,21 +1696,65 @@ end-of-code
 
 ;;; Implementation of promises.
 
-(define-prim (##force-undetermined promise thunk)
-  (let ((result (##force (thunk))))
-    (##c-code #<<end-of-code
+(define-prim (##force-out-of-line promise)
 
-     if (___PROMISERESULT(___ARG1) == ___ARG1)
-       {
-         ___PROMISERESULTSET(___ARG1,___ARG2)
-         ___PROMISETHUNKSET(___ARG1,___FAL)
-       }
-     ___RESULT = ___PROMISERESULT(___ARG1);
+  (declare (not interrupts-enabled))
 
-end-of-code
+  (define-macro (macro-reentrant-semantics? state) #t)
 
-     promise
-     result)))
+  (define (nonreentrant-undetermined-case promise)
+    (error "Attempt to reenter nonreentrant promise" promise))
+
+  (define (chase promise thunk)
+    (let ((result1 ;; compute promise's value by calling thunk
+           (let ()
+             (declare (interrupts-enabled))
+             (thunk))))
+      (let ((state1 (##promise-state promise)))
+        (cond ((and (macro-reentrant-semantics? state1)
+                    (##not (##eq? state1 ;; is it determined now?
+                                  (##vector-ref state1 0))))
+               (##vector-ref state1 0)) ;; ignore thunk's result
+              ((##not (##promise? result1))
+               (##vector-set! state1 0 result1) ;; cache promise's value
+               (if (macro-reentrant-semantics? state1)
+                   (##vector-set! state1 1 #f))
+               result1)
+              (else
+               ;; result1 is a promise, so we need to force it
+               (let* ((state2 (##promise-state result1))
+                      (result2 (##vector-ref state2 0)))
+                 (cond ((##not (##eq? state2 result2)) ;; is it determined?
+                        (##vector-set! state1 0 result2) ;; cache promise's value
+                        (if (macro-reentrant-semantics? state1)
+                            (##vector-set! state1 1 #f))
+                        result2)
+                       (else
+                        (let ((t (##vector-ref state2 1)))
+                          (##promise-state-set! result1 state1) ;; link states
+                          (cond ((macro-reentrant-semantics? state2)
+                                 (##vector-set! state1 1 t)
+                                 (chase promise t))
+                                ((##not t)
+                                 (nonreentrant-undetermined-case promise))
+                                (else
+                                 ;; avoid space leak through thunk
+                                 (if (macro-reentrant-semantics? state2)
+                                     (##vector-set! state2 1 #f))
+                                 (chase promise t))))))))))))
+
+  (let ((state (##promise-state promise)))
+    (if (##not (##eq? state (##vector-ref state 0))) ;; is promise determined?
+        (##vector-ref state 0) ;; return cached value
+        (let ((thunk (##vector-ref state 1)))
+          (cond ((macro-reentrant-semantics? state)
+                 (chase promise thunk))
+                ((##not thunk)
+                 (nonreentrant-undetermined-case promise))
+                (else
+                 ;; avoid space leak through thunk
+                 (##vector-set! state 1 #f)
+                 (chase promise thunk)))))))
 
 ))
 

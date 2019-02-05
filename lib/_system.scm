@@ -2662,11 +2662,9 @@
  closure-code
  closure-ref
  closure-set!
- make-promise
- promise-thunk
- promise-thunk-set!
- promise-result
- promise-result-set!
+ make-delay-promise
+ promise-state
+ promise-state-set!
  box?
  box
  unbox
@@ -3392,8 +3390,7 @@
                  (begin
                    (alloc! obj)
                    (write-u8 (promise-tag))
-                   (serialize! (promise-thunk obj))
-                   (serialize! (promise-result obj)))))
+                   (serialize! (promise-state obj)))))
 
             ((char? obj)
              (let ((n (char->integer obj)))
@@ -3740,12 +3737,10 @@
                          #!rest)
 
                         ((fx= x (promise-tag))
-                         (let ((obj (make-promise #f)))
+                         (let ((obj (make-delay-promise #f)))
                            (alloc! obj)
-                           (let* ((thunk (deserialize!))
-                                  (result (deserialize!)))
-                             (promise-thunk-set! obj thunk)
-                             (promise-result-set! obj result)
+                           (let ((state (deserialize!)))
+                             (promise-state-set! obj state)
                              obj)))
 
                         ((macro-case-target ((c C) #t) (else #f))
@@ -4111,11 +4106,9 @@
  closure-code
  closure-ref
  closure-set!
- make-promise
- promise-thunk
- promise-thunk-set!
- promise-result
- promise-result-set!
+ make-delay-promise
+ promise-state
+ promise-state-set!
  box?
  box
  unbox

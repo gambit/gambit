@@ -131,7 +131,7 @@
 (define targ-box-space         (targ-max-words (* 2 targ-min-word-size)))
 (define targ-will-space        (targ-max-words (* 4 targ-min-word-size)))
 (define targ-flonum-space      (targ-max-words 16))
-(define targ-promise-space     (targ-max-words (* 3 targ-min-word-size)))
+(define targ-delay-promise-space (targ-max-words (* 5 targ-min-word-size)))
 (define targ-continuation-space(targ-max-words (* 3 targ-min-word-size)))
 (define targ-ratnum-space      (targ-max-words (* 3 targ-min-word-size)))
 (define targ-cpxnum-space      (targ-max-words (* 3 targ-min-word-size)))

@@ -1153,8 +1153,8 @@
 (define-macro (^closure-set! val1 val2 val3)
   `(univ-emit-closure-set! ctx ,val1 ,val2 ,val3))
 
-(define-macro (^new-promise expr)
-  `(univ-emit-new-promise ctx ,expr))
+(define-macro (^new-delay-promise expr)
+  `(univ-emit-new-delay-promise ctx ,expr))
 
 (define-macro (^promise? val)
   `(univ-emit-promise? ctx ,val))

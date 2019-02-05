@@ -39,6 +39,7 @@ letrec*
 when
 unless
 syntax-error
+delay-force
 
 ;; global variable
 default-random-source

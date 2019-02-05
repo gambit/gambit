@@ -3649,16 +3649,18 @@ ___GET_SUBTYPED(___CPXNUM_SIZE))
 #define ___REALPART(obj)(___CPXNUMP(obj)?___CPXNUMREAL(obj):obj)
 #define ___IMAGPART(obj)(___CPXNUMP(obj)?___CPXNUMIMAG(obj):___FIX(0L))
 
-#define ___MAKEPROMISE(x) \
-(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE)), \
-___ADD_SUBTYPED_ELEM(0,x), \
+#define ___MAKEDELAYPROMISE(x) \
+(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_STATE_SIZE,___sVECTOR)), \
+___ADD_SUBTYPED_ELEM(0,___SUBTYPED_FROM_START(___hp)), \
+___ADD_SUBTYPED_ELEM(1,x), \
+___END_ALLOC_SUBTYPED(___PROMISE_STATE_SIZE), \
+___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE)), \
+___ADD_SUBTYPED_ELEM(0,___GET_SUBTYPED(___PROMISE_STATE_SIZE)), \
 ___END_ALLOC_SUBTYPED(___PROMISE_SIZE), \
-___hp[-1]=___GET_SUBTYPED(___PROMISE_SIZE))
+___GET_SUBTYPED(___PROMISE_SIZE))
 
-#define ___PROMISETHUNK(obj)___FIELD(obj,___PROMISE_THUNK)
-#define ___PROMISETHUNKSET(obj,val)___FIELD(obj,___PROMISE_THUNK) = val;
-#define ___PROMISERESULT(obj)___FIELD(obj,___PROMISE_RESULT)
-#define ___PROMISERESULTSET(obj,val)___FIELD(obj,___PROMISE_RESULT) = val;
+#define ___PROMISESTATE(obj)___FIELD(obj,___PROMISE_STATE)
+#define ___PROMISESTATESET(obj,val)___FIELD(obj,___PROMISE_STATE) = val;
 
 #define ___MAKECONTINUATION(frame,denv) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION)), \
@@ -4072,9 +4074,9 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___SYMKEY_NEXT   2
 #define ___SYMBOL_GLOBAL 3
 
-#define ___PROMISE_SIZE   2
-#define ___PROMISE_THUNK  0
-#define ___PROMISE_RESULT 1
+#define ___PROMISE_SIZE  1
+#define ___PROMISE_STATE 0
+#define ___PROMISE_STATE_SIZE 2
 
 #define ___CONTINUATION_SIZE  2
 #define ___CONTINUATION_FRAME 0
@@ -5955,8 +5957,8 @@ ___JUMPEXTPRM(___NOTHING,___ps->handler_heap_limit) \
 #endif
 
 #define ___FORCE1(n,src) \
-if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___ps->handler_force);
-#define ___FORCE2 ___temp=___ps->temp2;}
+if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___WORD state=___FIELD(___temp,0); ___WORD val=___FIELD(state,0); if (val!=state) ___temp=val; else {___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___ps->handler_force);
+#define ___FORCE2 ___temp=___ps->temp2;}}
 #define ___FORCE3 ___temp
 
 #define ___MODULE_KIND 0

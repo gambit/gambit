@@ -2,7 +2,7 @@
 
 ;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -82,7 +82,7 @@
 (define **box-sym              (string->canonical-symbol "##box"))
 (define **unbox-sym            (string->canonical-symbol "##unbox"))
 (define **set-box!-sym         (string->canonical-symbol "##set-box!"))
-(define **make-promise-sym     (string->canonical-symbol "##make-promise"))
+(define **make-delay-promise-sym (string->canonical-symbol "##make-delay-promise"))
 
 (define ieee-scheme-sym        (string->canonical-symbol "ieee-scheme"))
 (define r4rs-scheme-sym        (string->canonical-symbol "r4rs-scheme"))

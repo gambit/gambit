@@ -1669,11 +1669,9 @@
                 (loop (##cdr x) (##fx- i 1))))
             x)))))
 
-(define-prim (##make-promise thunk))
-(define-prim (##promise-thunk promise))
-(define-prim (##promise-thunk-set! promise thunk))
-(define-prim (##promise-result promise))
-(define-prim (##promise-result-set! promise result))
+(define-prim (##make-delay-promise thunk))
+(define-prim (##promise-state promise))
+(define-prim (##promise-state-set! promise state))
 
 (define-prim (promise? obj)
   (##promise? obj))
@@ -1681,23 +1679,13 @@
 (define-prim (make-promise val)
   (if (##promise? val)
       val
-      (let ((p (##make-promise #f)))
-        (##promise-result-set! p val)
+      (let ((p (##make-delay-promise #f)))
+        (##vector-set! (##promise-state p) 0 val)
         p)))
 
 (define-prim (##force obj)
   (if (##promise? obj)
-      (let ((result (##promise-result obj)))
-        (if (##eq? result obj)
-            (let* ((r (##force ((##promise-thunk obj))))
-                   (result2 (##promise-result obj)))
-              (if (##eq? result2 obj)
-                  (begin
-                    (##promise-result-set! obj r)
-                    (##promise-thunk-set! obj #f)
-                    r)
-                  result2))
-            result))
+      (##force-out-of-line obj)
       obj))
 
 (define-prim (force obj)
