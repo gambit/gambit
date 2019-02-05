@@ -5957,7 +5957,7 @@ ___JUMPEXTPRM(___NOTHING,___ps->handler_heap_limit) \
 #endif
 
 #define ___FORCE1(n,src) \
-if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___WORD state=___FIELD(___temp,0); ___WORD val=___FIELD(state,0); if (val!=state) ___temp=val; else {___ps->temp1=___LBL(n);___ps->temp2=___temp;___JUMPEXTPRM(___NOTHING,___ps->handler_force);
+if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___ps->temp2=___temp;___pc=___FIELD(___temp,0);___temp=___FIELD(___pc,0); if (___temp==___pc){___ps->temp1=___LBL(n);___JUMPEXTPRM(___NOTHING,___ps->handler_force);
 #define ___FORCE2 ___temp=___ps->temp2;}}
 #define ___FORCE3 ___temp
 
