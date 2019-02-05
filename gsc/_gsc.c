@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc.c", produced by Gambit v4.9.2
+; File: "_gsc.c", produced by Gambit v4.9.3
 (
-409002
+409003
 (C)
 "_gsc"
 (("_gsc"))
@@ -173,7 +173,7 @@
 "##equal?"
 "##eval-top"
 "##exit"
-"##exit-abnormally"
+"##exit-abruptly"
 "##extract-language-and-tail"
 "##for-each"
 "##interaction-cte"
@@ -233,7 +233,7 @@
  ()
 )
 #else
-#define ___VERSION 409002
+#define ___VERSION 409003
 #define ___MODULE_NAME "_gsc"
 #define ___LINKER_ID ___LNK___gsc
 #define ___MH_PROC ___H___gsc
@@ -406,7 +406,7 @@ ___NEED_GLO(___G__23__23_delete_2d_file)
 ___NEED_GLO(___G__23__23_equal_3f_)
 ___NEED_GLO(___G__23__23_eval_2d_top)
 ___NEED_GLO(___G__23__23_exit)
-___NEED_GLO(___G__23__23_exit_2d_abnormally)
+___NEED_GLO(___G__23__23_exit_2d_abruptly)
 ___NEED_GLO(___G__23__23_extract_2d_language_2d_and_2d_tail)
 ___NEED_GLO(___G__23__23_for_2d_each)
 ___NEED_GLO(___G__23__23_interaction_2d_cte)
@@ -784,7 +784,7 @@ ___DEF_GLO(11,"##delete-file")
 ___DEF_GLO(12,"##equal?")
 ___DEF_GLO(13,"##eval-top")
 ___DEF_GLO(14,"##exit")
-___DEF_GLO(15,"##exit-abnormally")
+___DEF_GLO(15,"##exit-abruptly")
 ___DEF_GLO(16,"##extract-language-and-tail")
 ___DEF_GLO(17,"##for-each")
 ___DEF_GLO(18,"##interaction-cte")
@@ -875,8 +875,8 @@ ___END_GLO
 #define ___PRM__23__23_eval_2d_top ___PRM(13,___G__23__23_eval_2d_top)
 #define ___GLO__23__23_exit ___GLO(14,___G__23__23_exit)
 #define ___PRM__23__23_exit ___PRM(14,___G__23__23_exit)
-#define ___GLO__23__23_exit_2d_abnormally ___GLO(15,___G__23__23_exit_2d_abnormally)
-#define ___PRM__23__23_exit_2d_abnormally ___PRM(15,___G__23__23_exit_2d_abnormally)
+#define ___GLO__23__23_exit_2d_abruptly ___GLO(15,___G__23__23_exit_2d_abruptly)
+#define ___PRM__23__23_exit_2d_abruptly ___PRM(15,___G__23__23_exit_2d_abruptly)
 #define ___GLO__23__23_extract_2d_language_2d_and_2d_tail ___GLO(16,___G__23__23_extract_2d_language_2d_and_2d_tail)
 #define ___PRM__23__23_extract_2d_language_2d_and_2d_tail ___PRM(16,___G__23__23_extract_2d_language_2d_and_2d_tail)
 #define ___GLO__23__23_for_2d_each ___GLO(17,___G__23__23_for_2d_each)
@@ -3413,7 +3413,7 @@ ___DEF_SLBL(137,___L137__23__23_main_2d_gsi_2f_gsc)
    ___POLL(138)
 ___DEF_SLBL(138,___L138__23__23_main_2d_gsi_2f_gsc)
    ___ADJFP(-4)
-   ___JUMPGLONOTSAFE(___SET_NARGS(0),15,___G__23__23_exit_2d_abnormally)
+   ___JUMPGLONOTSAFE(___SET_NARGS(0),15,___G__23__23_exit_2d_abruptly)
 ___DEF_GLBL(___L419__23__23_main_2d_gsi_2f_gsc)
    ___SET_STK(1,___STK(-7))
    ___SET_STK(2,___KEY_options)

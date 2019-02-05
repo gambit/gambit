@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_thread.c", produced by Gambit v4.9.2
+; File: "_thread.c", produced by Gambit v4.9.3
 (
-409002
+409003
 (C)
 "_thread"
 (("_thread"))
@@ -562,7 +562,7 @@
  ()
 )
 #else
-#define ___VERSION 409002
+#define ___VERSION 409003
 #define ___MODULE_NAME "_thread"
 #define ___LINKER_ID ___LNK___thread
 #define ___MH_PROC ___H___thread

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsc_.c", produced by Gambit v4.9.2
+; File: "_gsc_.c", produced by Gambit v4.9.3
 (
-409002
+409003
 (C)
 "_gsc_"
 (("_kernel" (preload . #t)) ("_system" (preload . #t)) ("_num" (preload . #t)) ("_std" (preload . #t)) ("_eval" (preload . #t)) ("_io" (preload . #t)) ("_nonstd" (preload . #t)) ("_thread" (preload . #t)) ("_repl" (preload . #t)) ("_host" (preload . #t)) ("_utils" (preload . #t)) ("_source" (preload . #t)) ("_parms" (preload . #t)) ("_env" (preload . #t)) ("_ptree1" (preload . #t)) ("_ptree2" (preload . #t)) ("_gvm" (preload . #t)) ("_back" (preload . #t)) ("_front" (preload . #t)) ("_prims" (preload . #t)) ("_assert" (preload . #t)) ("_asm" (preload . #t)) ("_x86" (preload . #t)) ("_codegen" (preload . #t)) ("_t-univ-1" (preload . #t)) ("_t-univ-2" (preload . #t)) ("_t-univ-3" (preload . #t)) ("_t-univ-4" (preload . #t)) ("_t-c-1" (preload . #t)) ("_t-c-2" (preload . #t)) ("_t-c-3" (preload . #t)) ("_gsclib" (preload . #t)) ("_gsc" (preload . #t)))
@@ -80,6 +80,7 @@
 "##structure-set!"
 "##structure-type"
 "##structure?"
+"##syntax-error"
 "##time"
 "##type-0-0bf9b656-b071-404a-a514-0fb9d05cf518"
 "##type-0-47368926-951d-4451-92b0-dd9b4132eca9"
@@ -715,6 +716,7 @@
 "define-type"
 "define-type-of-thread"
 "delay"
+"delay-force"
 "delete"
 "deleted"
 "deleted_obj"
@@ -806,6 +808,8 @@
 "event-queue"
 "event-queue-port"
 "exact->inexact"
+"exact-closed"
+"exact-complex"
 "exact-integer"
 "exact-integer-or-string-or-settings"
 "exact-signed-int16"
@@ -902,6 +906,7 @@
 "fromCharCode"
 "fs"
 "full-name"
+"full-unicode"
 "func_get_args"
 "fut-tag"
 "future"
@@ -962,6 +967,7 @@
 "id-expected"
 "idle-processor-count"
 "ieee"
+"ieee-float"
 "if"
 "ifjump"
 "ignore-hidden"
@@ -1478,6 +1484,7 @@
 "rational"
 "rational?"
 "rationalize"
+"ratios"
 "ratnum"
 "raw-device-port"
 "rax"
@@ -1778,6 +1785,7 @@
 "start-syntax"
 "start_time"
 "started-thread-exception"
+"state"
 "state-ref"
 "state-set!"
 "static"
@@ -1839,6 +1847,7 @@
 "symbol_table"
 "symbolic-link"
 "syntax"
+"syntax-error"
 "syntax-rules"
 "sys-time"
 "t"
@@ -1887,7 +1896,6 @@
 "thread_save4"
 "threads-deq-next"
 "threads-deq-prev"
-"thunk"
 "time"
 "timeout"
 "timer-port"
@@ -2663,6 +2671,7 @@
 "##display-var-val"
 "##display-var-val-aux"
 "##display-vars"
+"##divide"
 "##dynamic-env->list"
 "##dynamic-env-bind"
 "##dynamic-let"
@@ -2717,7 +2726,7 @@
 "##execute-final-wills!"
 "##execute-jobs!"
 "##exit"
-"##exit-abnormally"
+"##exit-abruptly"
 "##exit-cleanup"
 "##exit-jobs"
 "##exit-with-err-code"
@@ -2765,6 +2774,7 @@
 "##fail-check-absrel-time"
 "##fail-check-absrel-time-or-false"
 "##fail-check-address-info"
+"##fail-check-boolean"
 "##fail-check-box"
 "##fail-check-byte-input-port"
 "##fail-check-byte-output-port"
@@ -3151,6 +3161,7 @@
 "##locat-position"
 "##locat?"
 "##log"
+"##log2"
 "##lookup-module"
 "##lookup-registered-module"
 "##loose-smallest-prime-no-less-than"
@@ -3538,6 +3549,7 @@
 "##read-all-as-a-begin-expr-from-path"
 "##read-all-as-a-begin-expr-from-port"
 "##read-all-as-a-begin-expr-from-psettings"
+"##read-bytevector!"
 "##read-char0"
 "##read-char1"
 "##read-check-labels!"
@@ -4007,6 +4019,8 @@
 "##u64vector-set"
 "##u64vector-set!"
 "##u64vector?"
+"##u8-ready?0"
+"##u8-ready?1"
 "##u8vector->list"
 "##u8vector->object"
 "##u8vector-append"
@@ -4473,8 +4487,8 @@
 "c#**letrec-sym"
 "c#**main-readtable"
 "c#**make-chartable"
+"c#**make-delay-promise-sym"
 "c#**make-filepos"
-"c#**make-promise-sym"
 "c#**make-readenv"
 "c#**make-standard-readtable"
 "c#**namespace-expr?"
@@ -5515,8 +5529,8 @@
 "c#targ-apply-ifjump-optimization?"
 "c#targ-apply-list"
 "c#targ-apply-make-continuation"
+"c#targ-apply-make-delay-promise"
 "c#targ-apply-make-keyword"
-"c#targ-apply-make-promise"
 "c#targ-apply-make-symbol"
 "c#targ-apply-make-will"
 "c#targ-apply-ratnum-make"
@@ -5556,6 +5570,7 @@
 "c#targ-code-args"
 "c#targ-code-list"
 "c#targ-code-seq"
+"c#targ-compact-using-sharing"
 "c#targ-continuation-space"
 "c#targ-cpxnum-space"
 "c#targ-current-filename"
@@ -5564,6 +5579,7 @@
 "c#targ-debug-info?"
 "c#targ-define-count"
 "c#targ-define-prefix"
+"c#targ-delay-promise-space"
 "c#targ-denominator"
 "c#targ-difference-rsrc"
 "c#targ-display"
@@ -5770,7 +5786,6 @@
 "c#targ-proc-rd-res"
 "c#targ-proc-ssb-reserved"
 "c#targ-proc-wr-res"
-"c#targ-promise-space"
 "c#targ-push-pcontext"
 "c#targ-ratnum-space"
 "c#targ-rd-fp"
@@ -5801,6 +5816,7 @@
 "c#targ-setup-jump-inlinable"
 "c#targ-setup-test-proc"
 "c#targ-setup-test-proc*"
+"c#targ-sharing-table"
 "c#targ-sn-loc"
 "c#targ-sn-opnd"
 "c#targ-sn-opnds"
@@ -6183,7 +6199,7 @@
 "c#univ-emit-new"
 "c#univ-emit-new-array"
 "c#univ-emit-new-continuation"
-"c#univ-emit-new-promise"
+"c#univ-emit-new-delay-promise"
 "c#univ-emit-new-will"
 "c#univ-emit-not"
 "c#univ-emit-null"
@@ -6738,6 +6754,9 @@
 "flnumerator"
 "flodd?"
 "floor"
+"floor-quotient"
+"floor-remainder"
+"floor/"
 "flpositive?"
 "flround"
 "flscalbn"
@@ -6931,6 +6950,7 @@
 "rational?"
 "rationalize"
 "read"
+"read-bytevector!"
 "read-char"
 "read-substring"
 "read-subu8vector"
@@ -7031,6 +7051,9 @@
 "timeout->time"
 "transcript-on"
 "truncate"
+"truncate-quotient"
+"truncate-remainder"
+"truncate/"
 "tty-history"
 "tty-history-set!"
 "tty-mode-set!"
@@ -7056,6 +7079,7 @@
 "u64vector-ref"
 "u64vector-set"
 "u64vector-set!"
+"u8-ready?"
 "u8vector"
 "u8vector->list"
 "u8vector-append"
@@ -7265,6 +7289,7 @@
 "##dot-marker"
 "##encoding->object"
 "##env-insert!"
+"##eof-object"
 "##eof-object?"
 "##eval-module-set!"
 "##eval-top-set!"
@@ -7356,7 +7381,7 @@
 "##fold"
 "##fold-right"
 "##force"
-"##force-undetermined"
+"##force-out-of-line"
 "##foreign-tags"
 "##foreign?"
 "##frame-call-display?-set!"
@@ -7469,8 +7494,8 @@
 "##main-readtable-set!"
 "##make-chartable"
 "##make-continuation"
+"##make-delay-promise"
 "##make-final-will"
-"##make-promise"
 "##make-raw-device-port"
 "##make-readtable-parameter"
 "##make-thread"
@@ -7511,10 +7536,8 @@
 "##procedure?"
 "##processed-command-line-set!"
 "##processor"
-"##promise-result"
-"##promise-result-set!"
-"##promise-thunk"
-"##promise-thunk-set!"
+"##promise-state"
+"##promise-state-set!"
 "##promise?"
 "##proper-list-length"
 "##quasi-cons"
@@ -7678,6 +7701,7 @@
 "##u64vector-delete"
 "##u64vector-insert"
 "##u64vector-shrink!"
+"##u8-ready?"
 "##u8vector"
 "##u8vector-delete"
 "##u8vector-insert"
@@ -7890,7 +7914,9 @@
 "address-info?"
 "all-bits-set?"
 "any-bits-set?"
+"binary-port?"
 "bitwise-merge"
+"boolean=?"
 "boolean?"
 "box"
 "box?"
@@ -8311,6 +8337,7 @@
 "call-with-output-process"
 "call-with-output-string"
 "call-with-output-vector"
+"call-with-port"
 "call/cc"
 "cfun-conversion-exception-arguments"
 "cfun-conversion-exception-code"
@@ -8361,6 +8388,8 @@
 "divide-by-zero-exception-arguments"
 "divide-by-zero-exception-procedure"
 "divide-by-zero-exception?"
+"emergency-exit"
+"eof-object"
 "eof-object?"
 "eq?-hash"
 "equal?-hash"
@@ -8369,6 +8398,9 @@
 "error-exception-message"
 "error-exception-parameters"
 "error-exception?"
+"error-object-irritants"
+"error-object-message"
+"error-object?"
 "exact-integer?"
 "exit"
 "expression-parsing-exception-kind"
@@ -8386,9 +8418,11 @@
 "f64vector-fill!"
 "f64vector-shrink!"
 "f64vector?"
+"features"
 "file-attributes"
 "file-creation-time"
 "file-device"
+"file-error?"
 "file-exists?"
 "file-group"
 "file-info"
@@ -8428,6 +8462,7 @@
 "foreign?"
 "gc-report-set!"
 "generate-proper-tail-calls"
+"get-output-bytevector"
 "group-info-gid"
 "group-info-members"
 "group-info-name"
@@ -8451,6 +8486,7 @@
 "input-port-characters-buffered"
 "input-port-column"
 "input-port-line"
+"input-port-open?"
 "input-port-readtable"
 "input-port-readtable-set!"
 "input-port-timeout-set!"
@@ -8481,6 +8517,7 @@
 "make-bytevector"
 "make-condition-variable"
 "make-mutex"
+"make-promise"
 "make-random-source"
 "make-root-thread"
 "make-thread"
@@ -8520,7 +8557,11 @@
 "number-of-arguments-limit-exception?"
 "object->serial-number"
 "object->u8vector"
+"open-binary-input-file"
+"open-binary-output-file"
 "open-dummy"
+"open-input-bytevector"
+"open-output-bytevector"
 "open-tcp-client"
 "open-tcp-server"
 "open-udp"
@@ -8532,6 +8573,7 @@
 "output-port-char-position"
 "output-port-column"
 "output-port-line"
+"output-port-open?"
 "output-port-readtable"
 "output-port-readtable-set!"
 "output-port-timeout-set!"
@@ -8547,6 +8589,7 @@
 "process-times"
 "processor-id"
 "processor?"
+"promise?"
 "protocol-info-aliases"
 "protocol-info-name"
 "protocol-info-number"
@@ -8567,7 +8610,10 @@
 "range-exception-procedure"
 "range-exception?"
 "read-all"
+"read-bytevector"
+"read-error?"
 "read-line"
+"read-string"
 "readtable-case-conversion?"
 "readtable-comment-handler"
 "readtable-comment-handler-set"
@@ -8703,6 +8749,7 @@
 "terminated-thread-exception-procedure"
 "terminated-thread-exception?"
 "test-bit-field?"
+"textual-port?"
 "thread-base-priority"
 "thread-base-priority-set!"
 "thread-group->thread-group-list"
@@ -8858,7 +8905,7 @@
  #f
 )
 #else
-#define ___VERSION 409002
+#define ___VERSION 409003
 #define ___LINKFILE_NAME "_gsc_"
 #define ___LINKER_ID ___LNK___gsc__
 #define ___INCREMENTAL_LINKFILE
@@ -9621,6 +9668,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_display_2d_thread_2d_state_2d_relative,___G__23_
 ___DEF_OLD_SYM_GLO(___S__23__23_display_2d_var_2d_val,___G__23__23_display_2d_var_2d_val)
 ___DEF_OLD_SYM_GLO(___S__23__23_display_2d_var_2d_val_2d_aux,___G__23__23_display_2d_var_2d_val_2d_aux)
 ___DEF_OLD_SYM_GLO(___S__23__23_display_2d_vars,___G__23__23_display_2d_vars)
+___DEF_OLD_SYM_GLO(___S__23__23_divide,___G__23__23_divide)
 ___DEF_OLD_SYM_GLO(___S__23__23_do,___G__23__23_do)
 ___DEF_OLD_SYM_GLO(___S__23__23_do_2d_loop,___G__23__23_do_2d_loop)
 ___DEF_OLD_SYM_GLO(___S__23__23_dot_2d_marker,___G__23__23_dot_2d_marker)
@@ -9636,6 +9684,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_env_2d_flatten,___G__23__23_env_2d_flatten)
 ___DEF_OLD_SYM_GLO(___S__23__23_env_2d_insert,___G__23__23_env_2d_insert)
 ___DEF_OLD_SYM_GLO(___S__23__23_env_2d_insert_21_,___G__23__23_env_2d_insert_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_env_2d_lookup,___G__23__23_env_2d_lookup)
+___DEF_OLD_SYM_GLO(___S__23__23_eof_2d_object,___G__23__23_eof_2d_object)
 ___DEF_OLD_SYM_GLO(___S__23__23_eof_2d_object_3f_,___G__23__23_eof_2d_object_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_eq_3f_,___G__23__23_eq_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_eq_3f__2d_hash,___G__23__23_eq_3f__2d_hash)
@@ -9684,7 +9733,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_execute_2d_and_2d_clear_2d_jobs_21_,___G__23__23
 ___DEF_OLD_SYM_GLO(___S__23__23_execute_2d_final_2d_wills_21_,___G__23__23_execute_2d_final_2d_wills_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_execute_2d_jobs_21_,___G__23__23_execute_2d_jobs_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_exit,___G__23__23_exit)
-___DEF_OLD_SYM_GLO(___S__23__23_exit_2d_abnormally,___G__23__23_exit_2d_abnormally)
+___DEF_OLD_SYM_GLO(___S__23__23_exit_2d_abruptly,___G__23__23_exit_2d_abruptly)
 ___DEF_OLD_SYM_GLO(___S__23__23_exit_2d_cleanup,___G__23__23_exit_2d_cleanup)
 ___DEF_OLD_SYM_GLO(___S__23__23_exit_2d_jobs,___G__23__23_exit_2d_jobs)
 ___DEF_OLD_SYM_GLO(___S__23__23_exit_2d_process,___G__23__23_exit_2d_process)
@@ -9747,6 +9796,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_abandoned_2d_mutex_2d_exception
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_absrel_2d_time,___G__23__23_fail_2d_check_2d_absrel_2d_time)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_absrel_2d_time_2d_or_2d_false,___G__23__23_fail_2d_check_2d_absrel_2d_time_2d_or_2d_false)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_address_2d_info,___G__23__23_fail_2d_check_2d_address_2d_info)
+___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_boolean,___G__23__23_fail_2d_check_2d_boolean)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_box,___G__23__23_fail_2d_check_2d_box)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_byte_2d_input_2d_port,___G__23__23_fail_2d_check_2d_byte_2d_input_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_fail_2d_check_2d_byte_2d_output_2d_port,___G__23__23_fail_2d_check_2d_byte_2d_output_2d_port)
@@ -10005,9 +10055,9 @@ ___DEF_OLD_SYM_GLO(___S__23__23_for_2d_each,___G__23__23_for_2d_each)
 ___DEF_OLD_SYM_GLO(___S__23__23_for_2d_each_2d_interp_2d_procedure,___G__23__23_for_2d_each_2d_interp_2d_procedure)
 ___DEF_OLD_SYM_GLO(___S__23__23_force,___G__23__23_force)
 ___DEF_OLD_SYM_GLO(___S__23__23_force_2d_limited_2d_string_21_,___G__23__23_force_2d_limited_2d_string_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_force_2d_out_2d_of_2d_line,___G__23__23_force_2d_out_2d_of_2d_line)
 ___DEF_OLD_SYM_GLO(___S__23__23_force_2d_output,___G__23__23_force_2d_output)
 ___DEF_OLD_SYM_GLO(___S__23__23_force_2d_output_2d_catching_2d_exceptions,___G__23__23_force_2d_output_2d_catching_2d_exceptions)
-___DEF_OLD_SYM_GLO(___S__23__23_force_2d_undetermined,___G__23__23_force_2d_undetermined)
 ___DEF_OLD_SYM_GLO(___S__23__23_foreign_2d_address,___G__23__23_foreign_2d_address)
 ___DEF_OLD_SYM_GLO(___S__23__23_foreign_2d_release_21_,___G__23__23_foreign_2d_release_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_foreign_2d_released_3f_,___G__23__23_foreign_2d_released_3f_)
@@ -10316,6 +10366,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_locat_2d_container,___G__23__23_locat_2d_contain
 ___DEF_OLD_SYM_GLO(___S__23__23_locat_2d_position,___G__23__23_locat_2d_position)
 ___DEF_OLD_SYM_GLO(___S__23__23_locat_3f_,___G__23__23_locat_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_log,___G__23__23_log)
+___DEF_OLD_SYM_GLO(___S__23__23_log2,___G__23__23_log2)
 ___DEF_OLD_SYM_GLO(___S__23__23_lookup_2d_module,___G__23__23_lookup_2d_module)
 ___DEF_OLD_SYM_GLO(___S__23__23_lookup_2d_registered_2d_module,___G__23__23_lookup_2d_registered_2d_module)
 ___DEF_OLD_SYM_GLO(___S__23__23_loose_2d_smallest_2d_prime_2d_no_2d_less_2d_than,___G__23__23_loose_2d_smallest_2d_prime_2d_no_2d_less_2d_than)
@@ -10350,6 +10401,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_code_2a_,___G__23__23_make_2d_code_2a_)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_condvar,___G__23__23_make_2d_condvar)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_continuation,___G__23__23_make_2d_continuation)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_default_2d_entry_2d_hook,___G__23__23_make_2d_default_2d_entry_2d_hook)
+___DEF_OLD_SYM_GLO(___S__23__23_make_2d_delay_2d_promise,___G__23__23_make_2d_delay_2d_promise)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_device_2d_port,___G__23__23_make_2d_device_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_device_2d_port_2d_from_2d_single_2d_device,___G__23__23_make_2d_device_2d_port_2d_from_2d_single_2d_device)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_directory_2d_port,___G__23__23_make_2d_directory_2d_port)
@@ -10383,7 +10435,6 @@ ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_params,___G__23__23_make_2d_params)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_path_2d_psettings,___G__23__23_make_2d_path_2d_psettings)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_polar,___G__23__23_make_2d_polar)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_process_2d_psettings,___G__23__23_make_2d_process_2d_psettings)
-___DEF_OLD_SYM_GLO(___S__23__23_make_2d_promise,___G__23__23_make_2d_promise)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_psettings,___G__23__23_make_2d_psettings)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_random_2d_source_2d_mrg32k3a,___G__23__23_make_2d_random_2d_source_2d_mrg32k3a)
 ___DEF_OLD_SYM_GLO(___S__23__23_make_2d_raw_2d_device_2d_port,___G__23__23_make_2d_raw_2d_device_2d_port)
@@ -10685,10 +10736,8 @@ ___DEF_OLD_SYM_GLO(___S__23__23_processed_2d_command_2d_line,___G__23__23_proces
 ___DEF_OLD_SYM_GLO(___S__23__23_processed_2d_command_2d_line_2d_set_21_,___G__23__23_processed_2d_command_2d_line_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_processor,___G__23__23_processor)
 ___DEF_OLD_SYM_GLO(___S__23__23_program_2d_descr,___G__23__23_program_2d_descr)
-___DEF_OLD_SYM_GLO(___S__23__23_promise_2d_result,___G__23__23_promise_2d_result)
-___DEF_OLD_SYM_GLO(___S__23__23_promise_2d_result_2d_set_21_,___G__23__23_promise_2d_result_2d_set_21_)
-___DEF_OLD_SYM_GLO(___S__23__23_promise_2d_thunk,___G__23__23_promise_2d_thunk)
-___DEF_OLD_SYM_GLO(___S__23__23_promise_2d_thunk_2d_set_21_,___G__23__23_promise_2d_thunk_2d_set_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_promise_2d_state,___G__23__23_promise_2d_state)
+___DEF_OLD_SYM_GLO(___S__23__23_promise_2d_state_2d_set_21_,___G__23__23_promise_2d_state_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_promise_3f_,___G__23__23_promise_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_proper_2d_length,___G__23__23_proper_2d_length)
 ___DEF_OLD_SYM_GLO(___S__23__23_proper_2d_list_2d_length,___G__23__23_proper_2d_list_2d_length)
@@ -10785,6 +10834,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_read_2d_all_2d_as_2d_a_2d_begin_2d_expr_2d_from_
 ___DEF_OLD_SYM_GLO(___S__23__23_read_2d_all_2d_as_2d_a_2d_begin_2d_expr_2d_from_2d_port,___G__23__23_read_2d_all_2d_as_2d_a_2d_begin_2d_expr_2d_from_2d_port)
 ___DEF_OLD_SYM_GLO(___S__23__23_read_2d_all_2d_as_2d_a_2d_begin_2d_expr_2d_from_2d_psettings,___G__23__23_read_2d_all_2d_as_2d_a_2d_begin_2d_expr_2d_from_2d_psettings)
 ___DEF_OLD_SYM_GLO(___S__23__23_read_2d_assoc_2d_string_3d__3f_,___G__23__23_read_2d_assoc_2d_string_3d__3f_)
+___DEF_OLD_SYM_GLO(___S__23__23_read_2d_bytevector_21_,___G__23__23_read_2d_bytevector_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_read_2d_char,___G__23__23_read_2d_char)
 ___DEF_OLD_SYM_GLO(___S__23__23_read_2d_char0,___G__23__23_read_2d_char0)
 ___DEF_OLD_SYM_GLO(___S__23__23_read_2d_char0_3f_,___G__23__23_read_2d_char0_3f_)
@@ -11229,6 +11279,7 @@ ___DEF_OLD_SYM_GLO(___S__23__23_symbol_2d_name_2d_set_21_,___G__23__23_symbol_2d
 ___DEF_OLD_SYM_GLO(___S__23__23_symbol_2d_table,___G__23__23_symbol_2d_table)
 ___DEF_OLD_SYM_GLO(___S__23__23_symbol_3f_,___G__23__23_symbol_3f_)
 ___DEF_OLD_SYM_GLO(___S__23__23_sync_2d_op_2d_interrupt_21_,___G__23__23_sync_2d_op_2d_interrupt_21_)
+___DEF_OLD_SYM_GLO(___S__23__23_syntax_2d_error,___G__23__23_syntax_2d_error)
 ___DEF_OLD_SYM_GLO(___S__23__23_system_2d_stamp,___G__23__23_system_2d_stamp)
 ___DEF_OLD_SYM_GLO(___S__23__23_system_2d_stamp_2d_saved,___G__23__23_system_2d_stamp_2d_saved)
 ___DEF_OLD_SYM_GLO(___S__23__23_system_2d_version,___G__23__23_system_2d_version)
@@ -11491,6 +11542,9 @@ ___DEF_OLD_SYM_GLO(___S__23__23_u64vector_2d_set,___G__23__23_u64vector_2d_set)
 ___DEF_OLD_SYM_GLO(___S__23__23_u64vector_2d_set_21_,___G__23__23_u64vector_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_u64vector_2d_shrink_21_,___G__23__23_u64vector_2d_shrink_21_)
 ___DEF_OLD_SYM_GLO(___S__23__23_u64vector_3f_,___G__23__23_u64vector_3f_)
+___DEF_OLD_SYM_GLO(___S__23__23_u8_2d_ready_3f_,___G__23__23_u8_2d_ready_3f_)
+___DEF_OLD_SYM_GLO(___S__23__23_u8_2d_ready_3f_0,___G__23__23_u8_2d_ready_3f_0)
+___DEF_OLD_SYM_GLO(___S__23__23_u8_2d_ready_3f_1,___G__23__23_u8_2d_ready_3f_1)
 ___DEF_OLD_SYM_GLO(___S__23__23_u8vector,___G__23__23_u8vector)
 ___DEF_OLD_SYM_GLO(___S__23__23_u8vector_2d__3e_list,___G__23__23_u8vector_2d__3e_list)
 ___DEF_OLD_SYM_GLO(___S__23__23_u8vector_2d__3e_object,___G__23__23_u8vector_2d__3e_object)
@@ -12359,6 +12413,7 @@ ___DEF_OLD_SYM_GLO(___S_bignum__from__u32,___G_bignum__from__u32)
 ___DEF_OLD_SYM_GLO(___S_bignum__make,___G_bignum__make)
 ___DEF_OLD_SYM_GLO(___S_bignum__to__s32,___G_bignum__to__s32)
 ___DEF_OLD_SYM_GLO(___S_bignum__to__u32,___G_bignum__to__u32)
+___DEF_OLD_SYM_GLO(___S_binary_2d_port_3f_,___G_binary_2d_port_3f_)
 ___DEF_OLD_SYM_GLO(___S_bit_2d_count,___G_bit_2d_count)
 ___DEF_OLD_SYM_GLO(___S_bit_2d_set_3f_,___G_bit_2d_set_3f_)
 ___DEF_OLD_SYM_GLO(___S_bitcount,___G_bitcount)
@@ -12371,6 +12426,7 @@ ___DEF_OLD_SYM_GLO(___S_bl,___G_bl)
 ___DEF_OLD_SYM_GLO(___S_block_2d_special,___G_block_2d_special)
 ___DEF_OLD_SYM_GLO(___S_bool,___G_bool)
 ___DEF_OLD_SYM_GLO(___S_boolean,___G_boolean)
+___DEF_OLD_SYM_GLO(___S_boolean_3d__3f_,___G_boolean_3d__3f_)
 ___DEF_OLD_SYM_GLO(___S_boolean_3f_,___G_boolean_3f_)
 ___DEF_OLD_SYM_GLO(___S_box,___G_box)
 ___DEF_OLD_SYM_GLO(___S_box_2d_object,___G_box_2d_object)
@@ -12482,8 +12538,8 @@ ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_letrec_2d_expr_3f_,___G_c_23__2a__2a_letrec
 ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_letrec_2d_sym,___G_c_23__2a__2a_letrec_2d_sym)
 ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_main_2d_readtable,___G_c_23__2a__2a_main_2d_readtable)
 ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_make_2d_chartable,___G_c_23__2a__2a_make_2d_chartable)
+___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym,___G_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym)
 ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_make_2d_filepos,___G_c_23__2a__2a_make_2d_filepos)
-___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_make_2d_promise_2d_sym,___G_c_23__2a__2a_make_2d_promise_2d_sym)
 ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_make_2d_readenv,___G_c_23__2a__2a_make_2d_readenv)
 ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_make_2d_readtable,___G_c_23__2a__2a_make_2d_readtable)
 ___DEF_OLD_SYM_GLO(___S_c_23__2a__2a_make_2d_standard_2d_readtable,___G_c_23__2a__2a_make_2d_standard_2d_readtable)
@@ -13772,8 +13828,8 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_ifjump,___G_c_23_targ_2d_apply_2d_
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_ifjump_2d_optimization_3f_,___G_c_23_targ_2d_apply_2d_ifjump_2d_optimization_3f_)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_list,___G_c_23_targ_2d_apply_2d_list)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_make_2d_continuation,___G_c_23_targ_2d_apply_2d_make_2d_continuation)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_make_2d_delay_2d_promise,___G_c_23_targ_2d_apply_2d_make_2d_delay_2d_promise)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_make_2d_keyword,___G_c_23_targ_2d_apply_2d_make_2d_keyword)
-___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_make_2d_promise,___G_c_23_targ_2d_apply_2d_make_2d_promise)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_make_2d_symbol,___G_c_23_targ_2d_apply_2d_make_2d_symbol)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_make_2d_will,___G_c_23_targ_2d_apply_2d_make_2d_will)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_apply_2d_ratnum_2d_make,___G_c_23_targ_2d_apply_2d_ratnum_2d_make)
@@ -13834,6 +13890,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_code_2d_args,___G_c_23_targ_2d_code_2d_args
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_code_2d_list,___G_c_23_targ_2d_code_2d_list)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_code_2d_seq,___G_c_23_targ_2d_code_2d_seq)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_combine_2d_checks_3f_,___G_c_23_targ_2d_combine_2d_checks_3f_)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_compact_2d_using_2d_sharing,___G_c_23_targ_2d_compact_2d_using_2d_sharing)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_continuation_2d_space,___G_c_23_targ_2d_continuation_2d_space)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_cpxnum_2d_space,___G_c_23_targ_2d_cpxnum_2d_space)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_current_2d_filename,___G_c_23_targ_2d_current_2d_filename)
@@ -13844,6 +13901,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_default_2d_nb_2d_arg_2d_regs,___G_c_23_targ
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_default_2d_nb_2d_gvm_2d_regs,___G_c_23_targ_2d_default_2d_nb_2d_gvm_2d_regs)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_define_2d_count,___G_c_23_targ_2d_define_2d_count)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_define_2d_prefix,___G_c_23_targ_2d_define_2d_prefix)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_delay_2d_promise_2d_space,___G_c_23_targ_2d_delay_2d_promise_2d_space)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_denominator,___G_c_23_targ_2d_denominator)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_difference_2d_rsrc,___G_c_23_targ_2d_difference_2d_rsrc)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_display,___G_c_23_targ_2d_display)
@@ -14077,7 +14135,6 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_proc_2d_name,___G_c_23_targ_2d_proc_2d_name
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_proc_2d_rd_2d_res,___G_c_23_targ_2d_proc_2d_rd_2d_res)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_proc_2d_ssb_2d_reserved,___G_c_23_targ_2d_proc_2d_ssb_2d_reserved)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_proc_2d_wr_2d_res,___G_c_23_targ_2d_proc_2d_wr_2d_res)
-___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_promise_2d_space,___G_c_23_targ_2d_promise_2d_space)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_push_2d_pcontext,___G_c_23_targ_2d_push_2d_pcontext)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_ratnum_2d_space,___G_c_23_targ_2d_ratnum_2d_space)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_rd_2d_fp,___G_c_23_targ_2d_rd_2d_fp)
@@ -14114,6 +14171,7 @@ ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_setup_2d_inlinable_2d_proc_2d_io_2d_fast_2d
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_setup_2d_jump_2d_inlinable,___G_c_23_targ_2d_setup_2d_jump_2d_inlinable)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_setup_2d_test_2d_proc,___G_c_23_targ_2d_setup_2d_test_2d_proc)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_setup_2d_test_2d_proc_2a_,___G_c_23_targ_2d_setup_2d_test_2d_proc_2a_)
+___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_sharing_2d_table,___G_c_23_targ_2d_sharing_2d_table)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_sn_2d_loc,___G_c_23_targ_2d_sn_2d_loc)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_sn_2d_opnd,___G_c_23_targ_2d_sn_2d_opnd)
 ___DEF_OLD_SYM_GLO(___S_c_23_targ_2d_sn_2d_opnds,___G_c_23_targ_2d_sn_2d_opnds)
@@ -14538,8 +14596,8 @@ ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array,___G_c
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_new,___G_c_23_univ_2d_emit_2d_new)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_new_2d_array,___G_c_23_univ_2d_emit_2d_new_2d_array)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_new_2d_continuation,___G_c_23_univ_2d_emit_2d_new_2d_continuation)
+___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,___G_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_new_2d_foreign,___G_c_23_univ_2d_emit_2d_new_2d_foreign)
-___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_new_2d_promise,___G_c_23_univ_2d_emit_2d_new_2d_promise)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_new_2d_will,___G_c_23_univ_2d_emit_2d_new_2d_will)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_not,___G_c_23_univ_2d_emit_2d_not)
 ___DEF_OLD_SYM_GLO(___S_c_23_univ_2d_emit_2d_null,___G_c_23_univ_2d_emit_2d_null)
@@ -15045,6 +15103,7 @@ ___DEF_OLD_SYM_GLO(___S_call_2d_with_2d_output_2d_process,___G_call_2d_with_2d_o
 ___DEF_OLD_SYM_GLO(___S_call_2d_with_2d_output_2d_string,___G_call_2d_with_2d_output_2d_string)
 ___DEF_OLD_SYM_GLO(___S_call_2d_with_2d_output_2d_u8vector,___G_call_2d_with_2d_output_2d_u8vector)
 ___DEF_OLD_SYM_GLO(___S_call_2d_with_2d_output_2d_vector,___G_call_2d_with_2d_output_2d_vector)
+___DEF_OLD_SYM_GLO(___S_call_2d_with_2d_port,___G_call_2d_with_2d_port)
 ___DEF_OLD_SYM_GLO(___S_call_2d_with_2d_values,___G_call_2d_with_2d_values)
 ___DEF_OLD_SYM_GLO(___S_call_2f_cc,___G_call_2f_cc)
 ___DEF_OLD_SYM_GLO(___S_cancel,___G_cancel)
@@ -15259,6 +15318,7 @@ ___DEF_OLD_SYM_GLO(___S_define_2d_syntax,___G_define_2d_syntax)
 ___DEF_OLD_SYM_GLO(___S_define_2d_type,___G_define_2d_type)
 ___DEF_OLD_SYM_GLO(___S_define_2d_type_2d_of_2d_thread,___G_define_2d_type_2d_of_2d_thread)
 ___DEF_OLD_SYM_GLO(___S_delay,___G_delay)
+___DEF_OLD_SYM_GLO(___S_delay_2d_force,___G_delay_2d_force)
 ___DEF_OLD_SYM_GLO(___S_delete,___G_delete)
 ___DEF_OLD_SYM_GLO(___S_delete_2d_directory,___G_delete_2d_directory)
 ___DEF_OLD_SYM_GLO(___S_delete_2d_file,___G_delete_2d_file)
@@ -15337,6 +15397,7 @@ ___DEF_OLD_SYM_GLO(___S_elem,___G_elem)
 ___DEF_OLD_SYM_GLO(___S_elems,___G_elems)
 ___DEF_OLD_SYM_GLO(___S_else,___G_else)
 ___DEF_OLD_SYM_GLO(___S_else_2d_clause_2d_not_2d_last,___G_else_2d_clause_2d_not_2d_last)
+___DEF_OLD_SYM_GLO(___S_emergency_2d_exit,___G_emergency_2d_exit)
 ___DEF_OLD_SYM_GLO(___S_empty_2d_body,___G_empty_2d_body)
 ___DEF_OLD_SYM_GLO(___S_empty__rest,___G_empty__rest)
 ___DEF_OLD_SYM_GLO(___S_encode,___G_encode)
@@ -15347,6 +15408,7 @@ ___DEF_OLD_SYM_GLO(___S_entry_2d_hook,___G_entry_2d_hook)
 ___DEF_OLD_SYM_GLO(___S_entrypt,___G_entrypt)
 ___DEF_OLD_SYM_GLO(___S_environment,___G_environment)
 ___DEF_OLD_SYM_GLO(___S_eof,___G_eof)
+___DEF_OLD_SYM_GLO(___S_eof_2d_object,___G_eof_2d_object)
 ___DEF_OLD_SYM_GLO(___S_eof_2d_object_3f_,___G_eof_2d_object_3f_)
 ___DEF_OLD_SYM_GLO(___S_eof__obj,___G_eof__obj)
 ___DEF_OLD_SYM_GLO(___S_eol_2d_encoding,___G_eol_2d_encoding)
@@ -15362,6 +15424,9 @@ ___DEF_OLD_SYM_GLO(___S_error_2d_exception,___G_error_2d_exception)
 ___DEF_OLD_SYM_GLO(___S_error_2d_exception_2d_message,___G_error_2d_exception_2d_message)
 ___DEF_OLD_SYM_GLO(___S_error_2d_exception_2d_parameters,___G_error_2d_exception_2d_parameters)
 ___DEF_OLD_SYM_GLO(___S_error_2d_exception_3f_,___G_error_2d_exception_3f_)
+___DEF_OLD_SYM_GLO(___S_error_2d_object_2d_irritants,___G_error_2d_object_2d_irritants)
+___DEF_OLD_SYM_GLO(___S_error_2d_object_2d_message,___G_error_2d_object_2d_message)
+___DEF_OLD_SYM_GLO(___S_error_2d_object_3f_,___G_error_2d_object_3f_)
 ___DEF_OLD_SYM_GLO(___S_escape_2d_ctrl_2d_chars_3f_,___G_escape_2d_ctrl_2d_chars_3f_)
 ___DEF_OLD_SYM_GLO(___S_escaped_2d_char_2d_table,___G_escaped_2d_char_2d_table)
 ___DEF_OLD_SYM_GLO(___S_esi,___G_esi)
@@ -15373,6 +15438,8 @@ ___DEF_OLD_SYM_GLO(___S_event_2d_queue,___G_event_2d_queue)
 ___DEF_OLD_SYM_GLO(___S_event_2d_queue_2d_port,___G_event_2d_queue_2d_port)
 ___DEF_OLD_SYM_GLO(___S_exact,___G_exact)
 ___DEF_OLD_SYM_GLO(___S_exact_2d__3e_inexact,___G_exact_2d__3e_inexact)
+___DEF_OLD_SYM_GLO(___S_exact_2d_closed,___G_exact_2d_closed)
+___DEF_OLD_SYM_GLO(___S_exact_2d_complex,___G_exact_2d_complex)
 ___DEF_OLD_SYM_GLO(___S_exact_2d_integer,___G_exact_2d_integer)
 ___DEF_OLD_SYM_GLO(___S_exact_2d_integer_2d_or_2d_string_2d_or_2d_settings,___G_exact_2d_integer_2d_or_2d_string_2d_or_2d_settings)
 ___DEF_OLD_SYM_GLO(___S_exact_2d_integer_2d_sqrt,___G_exact_2d_integer_2d_sqrt)
@@ -15455,6 +15522,7 @@ ___DEF_OLD_SYM_GLO(___S_fabs,___G_fabs)
 ___DEF_OLD_SYM_GLO(___S_false,___G_false)
 ___DEF_OLD_SYM_GLO(___S_false__obj,___G_false__obj)
 ___DEF_OLD_SYM_GLO(___S_family,___G_family)
+___DEF_OLD_SYM_GLO(___S_features,___G_features)
 ___DEF_OLD_SYM_GLO(___S_ffi,___G_ffi)
 ___DEF_OLD_SYM_GLO(___S_field,___G_field)
 ___DEF_OLD_SYM_GLO(___S_fields,___G_fields)
@@ -15462,6 +15530,7 @@ ___DEF_OLD_SYM_GLO(___S_fifo,___G_fifo)
 ___DEF_OLD_SYM_GLO(___S_file_2d_attributes,___G_file_2d_attributes)
 ___DEF_OLD_SYM_GLO(___S_file_2d_creation_2d_time,___G_file_2d_creation_2d_time)
 ___DEF_OLD_SYM_GLO(___S_file_2d_device,___G_file_2d_device)
+___DEF_OLD_SYM_GLO(___S_file_2d_error_3f_,___G_file_2d_error_3f_)
 ___DEF_OLD_SYM_GLO(___S_file_2d_exists_3f_,___G_file_2d_exists_3f_)
 ___DEF_OLD_SYM_GLO(___S_file_2d_group,___G_file_2d_group)
 ___DEF_OLD_SYM_GLO(___S_file_2d_info,___G_file_2d_info)
@@ -15555,6 +15624,9 @@ ___DEF_OLD_SYM_GLO(___S_flodd_3f_,___G_flodd_3f_)
 ___DEF_OLD_SYM_GLO(___S_flonum,___G_flonum)
 ___DEF_OLD_SYM_GLO(___S_flonum_3f_,___G_flonum_3f_)
 ___DEF_OLD_SYM_GLO(___S_floor,___G_floor)
+___DEF_OLD_SYM_GLO(___S_floor_2d_quotient,___G_floor_2d_quotient)
+___DEF_OLD_SYM_GLO(___S_floor_2d_remainder,___G_floor_2d_remainder)
+___DEF_OLD_SYM_GLO(___S_floor_2f_,___G_floor_2f_)
 ___DEF_OLD_SYM_GLO(___S_flpositive_3f_,___G_flpositive_3f_)
 ___DEF_OLD_SYM_GLO(___S_flround,___G_flround)
 ___DEF_OLD_SYM_GLO(___S_flscalbn,___G_flscalbn)
@@ -15589,6 +15661,7 @@ ___DEF_OLD_SYM_GLO(___S_from,___G_from)
 ___DEF_OLD_SYM_GLO(___S_fromCharCode,___G_fromCharCode)
 ___DEF_OLD_SYM_GLO(___S_fs,___G_fs)
 ___DEF_OLD_SYM_GLO(___S_full_2d_name,___G_full_2d_name)
+___DEF_OLD_SYM_GLO(___S_full_2d_unicode,___G_full_2d_unicode)
 ___DEF_OLD_SYM_GLO(___S_func__get__args,___G_func__get__args)
 ___DEF_OLD_SYM_GLO(___S_fut_2d_tag,___G_fut_2d_tag)
 ___DEF_OLD_SYM_GLO(___S_future,___G_future)
@@ -15649,6 +15722,7 @@ ___DEF_OLD_SYM_GLO(___S_gensym,___G_gensym)
 ___DEF_OLD_SYM_GLO(___S_get,___G_get)
 ___DEF_OLD_SYM_GLO(___S_get_2d_environment_2d_variable,___G_get_2d_environment_2d_variable)
 ___DEF_OLD_SYM_GLO(___S_get_2d_environment_2d_variables,___G_get_2d_environment_2d_variables)
+___DEF_OLD_SYM_GLO(___S_get_2d_output_2d_bytevector,___G_get_2d_output_2d_bytevector)
 ___DEF_OLD_SYM_GLO(___S_get_2d_output_2d_string,___G_get_2d_output_2d_string)
 ___DEF_OLD_SYM_GLO(___S_get_2d_output_2d_u8vector,___G_get_2d_output_2d_u8vector)
 ___DEF_OLD_SYM_GLO(___S_get_2d_output_2d_vector,___G_get_2d_output_2d_vector)
@@ -15712,6 +15786,7 @@ ___DEF_OLD_SYM_GLO(___S_id_2d_expected,___G_id_2d_expected)
 ___DEF_OLD_SYM_GLO(___S_identity,___G_identity)
 ___DEF_OLD_SYM_GLO(___S_idle_2d_processor_2d_count,___G_idle_2d_processor_2d_count)
 ___DEF_OLD_SYM_GLO(___S_ieee,___G_ieee)
+___DEF_OLD_SYM_GLO(___S_ieee_2d_float,___G_ieee_2d_float)
 ___DEF_OLD_SYM_GLO(___S_if,___G_if)
 ___DEF_OLD_SYM_GLO(___S_ifjump,___G_ifjump)
 ___DEF_OLD_SYM_GLO(___S_ignore_2d_hidden,___G_ignore_2d_hidden)
@@ -15781,6 +15856,7 @@ ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_char_2d_position,___G_input_2d_port_2d_
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_characters_2d_buffered,___G_input_2d_port_2d_characters_2d_buffered)
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_column,___G_input_2d_port_2d_column)
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_line,___G_input_2d_port_2d_line)
+___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_open_3f_,___G_input_2d_port_2d_open_3f_)
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_readtable,___G_input_2d_port_2d_readtable)
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_readtable_2d_set_21_,___G_input_2d_port_2d_readtable_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S_input_2d_port_2d_timeout_2d_set_21_,___G_input_2d_port_2d_timeout_2d_set_21_)
@@ -15975,6 +16051,7 @@ ___DEF_OLD_SYM_GLO(___S_make_2d_list,___G_make_2d_list)
 ___DEF_OLD_SYM_GLO(___S_make_2d_mutex,___G_make_2d_mutex)
 ___DEF_OLD_SYM_GLO(___S_make_2d_parameter,___G_make_2d_parameter)
 ___DEF_OLD_SYM_GLO(___S_make_2d_polar,___G_make_2d_polar)
+___DEF_OLD_SYM_GLO(___S_make_2d_promise,___G_make_2d_promise)
 ___DEF_OLD_SYM_GLO(___S_make_2d_random_2d_source,___G_make_2d_random_2d_source)
 ___DEF_OLD_SYM_GLO(___S_make_2d_reals,___G_make_2d_reals)
 ___DEF_OLD_SYM_GLO(___S_make_2d_rectangular,___G_make_2d_rectangular)
@@ -16173,17 +16250,21 @@ ___DEF_OLD_SYM_GLO(___S_object_2d_port,___G_object_2d_port)
 ___DEF_OLD_SYM_GLO(___S_odd_3f_,___G_odd_3f_)
 ___DEF_OLD_SYM_GLO(___S_ok,___G_ok)
 ___DEF_OLD_SYM_GLO(___S_old,___G_old)
+___DEF_OLD_SYM_GLO(___S_open_2d_binary_2d_input_2d_file,___G_open_2d_binary_2d_input_2d_file)
+___DEF_OLD_SYM_GLO(___S_open_2d_binary_2d_output_2d_file,___G_open_2d_binary_2d_output_2d_file)
 ___DEF_OLD_SYM_GLO(___S_open_2d_directory,___G_open_2d_directory)
 ___DEF_OLD_SYM_GLO(___S_open_2d_dummy,___G_open_2d_dummy)
 ___DEF_OLD_SYM_GLO(___S_open_2d_error,___G_open_2d_error)
 ___DEF_OLD_SYM_GLO(___S_open_2d_event_2d_queue,___G_open_2d_event_2d_queue)
 ___DEF_OLD_SYM_GLO(___S_open_2d_file,___G_open_2d_file)
+___DEF_OLD_SYM_GLO(___S_open_2d_input_2d_bytevector,___G_open_2d_input_2d_bytevector)
 ___DEF_OLD_SYM_GLO(___S_open_2d_input_2d_file,___G_open_2d_input_2d_file)
 ___DEF_OLD_SYM_GLO(___S_open_2d_input_2d_file_2a_,___G_open_2d_input_2d_file_2a_)
 ___DEF_OLD_SYM_GLO(___S_open_2d_input_2d_process,___G_open_2d_input_2d_process)
 ___DEF_OLD_SYM_GLO(___S_open_2d_input_2d_string,___G_open_2d_input_2d_string)
 ___DEF_OLD_SYM_GLO(___S_open_2d_input_2d_u8vector,___G_open_2d_input_2d_u8vector)
 ___DEF_OLD_SYM_GLO(___S_open_2d_input_2d_vector,___G_open_2d_input_2d_vector)
+___DEF_OLD_SYM_GLO(___S_open_2d_output_2d_bytevector,___G_open_2d_output_2d_bytevector)
 ___DEF_OLD_SYM_GLO(___S_open_2d_output_2d_file,___G_open_2d_output_2d_file)
 ___DEF_OLD_SYM_GLO(___S_open_2d_output_2d_process,___G_open_2d_output_2d_process)
 ___DEF_OLD_SYM_GLO(___S_open_2d_output_2d_string,___G_open_2d_output_2d_string)
@@ -16219,6 +16300,7 @@ ___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_byte_2d_position,___G_output_2d_port_2
 ___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_char_2d_position,___G_output_2d_port_2d_char_2d_position)
 ___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_column,___G_output_2d_port_2d_column)
 ___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_line,___G_output_2d_port_2d_line)
+___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_open_3f_,___G_output_2d_port_2d_open_3f_)
 ___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_readtable,___G_output_2d_port_2d_readtable)
 ___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_readtable_2d_set_21_,___G_output_2d_port_2d_readtable_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S_output_2d_port_2d_timeout_2d_set_21_,___G_output_2d_port_2d_timeout_2d_set_21_)
@@ -16314,6 +16396,7 @@ ___DEF_OLD_SYM_GLO(___S_processor_2d_deq_2d_prev,___G_processor_2d_deq_2d_prev)
 ___DEF_OLD_SYM_GLO(___S_processor_2d_id,___G_processor_2d_id)
 ___DEF_OLD_SYM_GLO(___S_processor_3f_,___G_processor_3f_)
 ___DEF_OLD_SYM_GLO(___S_promise,___G_promise)
+___DEF_OLD_SYM_GLO(___S_promise_3f_,___G_promise_3f_)
 ___DEF_OLD_SYM_GLO(___S_proper_2d_tail_2d_calls,___G_proper_2d_tail_2d_calls)
 ___DEF_OLD_SYM_GLO(___S_property__exists,___G_property__exists)
 ___DEF_OLD_SYM_GLO(___S_protected,___G_protected)
@@ -16419,6 +16502,7 @@ ___DEF_OLD_SYM_GLO(___S_range_2d_exception_3f_,___G_range_2d_exception_3f_)
 ___DEF_OLD_SYM_GLO(___S_rational,___G_rational)
 ___DEF_OLD_SYM_GLO(___S_rational_3f_,___G_rational_3f_)
 ___DEF_OLD_SYM_GLO(___S_rationalize,___G_rationalize)
+___DEF_OLD_SYM_GLO(___S_ratios,___G_ratios)
 ___DEF_OLD_SYM_GLO(___S_ratnum,___G_ratnum)
 ___DEF_OLD_SYM_GLO(___S_raw_2d_device_2d_port,___G_raw_2d_device_2d_port)
 ___DEF_OLD_SYM_GLO(___S_rax,___G_rax)
@@ -16438,14 +16522,18 @@ ___DEF_OLD_SYM_GLO(___S_rdx,___G_rdx)
 ___DEF_OLD_SYM_GLO(___S_re,___G_re)
 ___DEF_OLD_SYM_GLO(___S_read,___G_read)
 ___DEF_OLD_SYM_GLO(___S_read_2d_all,___G_read_2d_all)
+___DEF_OLD_SYM_GLO(___S_read_2d_bytevector,___G_read_2d_bytevector)
+___DEF_OLD_SYM_GLO(___S_read_2d_bytevector_21_,___G_read_2d_bytevector_21_)
 ___DEF_OLD_SYM_GLO(___S_read_2d_char,___G_read_2d_char)
 ___DEF_OLD_SYM_GLO(___S_read_2d_command,___G_read_2d_command)
 ___DEF_OLD_SYM_GLO(___S_read_2d_cont,___G_read_2d_cont)
 ___DEF_OLD_SYM_GLO(___S_read_2d_datum,___G_read_2d_datum)
 ___DEF_OLD_SYM_GLO(___S_read_2d_datum_2d_or_2d_eof,___G_read_2d_datum_2d_or_2d_eof)
+___DEF_OLD_SYM_GLO(___S_read_2d_error_3f_,___G_read_2d_error_3f_)
 ___DEF_OLD_SYM_GLO(___S_read_2d_expr,___G_read_2d_expr)
 ___DEF_OLD_SYM_GLO(___S_read_2d_line,___G_read_2d_line)
 ___DEF_OLD_SYM_GLO(___S_read_2d_sources,___G_read_2d_sources)
+___DEF_OLD_SYM_GLO(___S_read_2d_string,___G_read_2d_string)
 ___DEF_OLD_SYM_GLO(___S_read_2d_substring,___G_read_2d_substring)
 ___DEF_OLD_SYM_GLO(___S_read_2d_subu8vector,___G_read_2d_subu8vector)
 ___DEF_OLD_SYM_GLO(___S_read_2d_u8,___G_read_2d_u8)
@@ -16827,6 +16915,7 @@ ___DEF_OLD_SYM_GLO(___S_started_2d_thread_2d_exception,___G_started_2d_thread_2d
 ___DEF_OLD_SYM_GLO(___S_started_2d_thread_2d_exception_2d_arguments,___G_started_2d_thread_2d_exception_2d_arguments)
 ___DEF_OLD_SYM_GLO(___S_started_2d_thread_2d_exception_2d_procedure,___G_started_2d_thread_2d_exception_2d_procedure)
 ___DEF_OLD_SYM_GLO(___S_started_2d_thread_2d_exception_3f_,___G_started_2d_thread_2d_exception_3f_)
+___DEF_OLD_SYM_GLO(___S_state,___G_state)
 ___DEF_OLD_SYM_GLO(___S_state_2d_ref,___G_state_2d_ref)
 ___DEF_OLD_SYM_GLO(___S_state_2d_set_21_,___G_state_2d_set_21_)
 ___DEF_OLD_SYM_GLO(___S_static,___G_static)
@@ -16939,6 +17028,7 @@ ___DEF_OLD_SYM_GLO(___S_symbol_3f_,___G_symbol_3f_)
 ___DEF_OLD_SYM_GLO(___S_symbol__table,___G_symbol__table)
 ___DEF_OLD_SYM_GLO(___S_symbolic_2d_link,___G_symbolic_2d_link)
 ___DEF_OLD_SYM_GLO(___S_syntax,___G_syntax)
+___DEF_OLD_SYM_GLO(___S_syntax_2d_error,___G_syntax_2d_error)
 ___DEF_OLD_SYM_GLO(___S_syntax_2d_rules,___G_syntax_2d_rules)
 ___DEF_OLD_SYM_GLO(___S_sys_2d_time,___G_sys_2d_time)
 ___DEF_OLD_SYM_GLO(___S_system_2d_stamp,___G_system_2d_stamp)
@@ -16993,6 +17083,7 @@ ___DEF_OLD_SYM_GLO(___S_test,___G_test)
 ___DEF_OLD_SYM_GLO(___S_test_2d_bit_2d_field_3f_,___G_test_2d_bit_2d_field_3f_)
 ___DEF_OLD_SYM_GLO(___S_testator,___G_testator)
 ___DEF_OLD_SYM_GLO(___S_text,___G_text)
+___DEF_OLD_SYM_GLO(___S_textual_2d_port_3f_,___G_textual_2d_port_3f_)
 ___DEF_OLD_SYM_GLO(___S_tgroup,___G_tgroup)
 ___DEF_OLD_SYM_GLO(___S_tgroups,___G_tgroups)
 ___DEF_OLD_SYM_GLO(___S_tgroups_2d_deq_2d_next,___G_tgroups_2d_deq_2d_next)
@@ -17062,7 +17153,6 @@ ___DEF_OLD_SYM_GLO(___S_thread__save3,___G_thread__save3)
 ___DEF_OLD_SYM_GLO(___S_thread__save4,___G_thread__save4)
 ___DEF_OLD_SYM_GLO(___S_threads_2d_deq_2d_next,___G_threads_2d_deq_2d_next)
 ___DEF_OLD_SYM_GLO(___S_threads_2d_deq_2d_prev,___G_threads_2d_deq_2d_prev)
-___DEF_OLD_SYM_GLO(___S_thunk,___G_thunk)
 ___DEF_OLD_SYM_GLO(___S_time,___G_time)
 ___DEF_OLD_SYM_GLO(___S_time_2d__3e_seconds,___G_time_2d__3e_seconds)
 ___DEF_OLD_SYM_GLO(___S_time_3f_,___G_time_3f_)
@@ -17097,6 +17187,9 @@ ___DEF_OLD_SYM_GLO(___S_transcript_2d_on,___G_transcript_2d_on)
 ___DEF_OLD_SYM_GLO(___S_true,___G_true)
 ___DEF_OLD_SYM_GLO(___S_true__obj,___G_true__obj)
 ___DEF_OLD_SYM_GLO(___S_truncate,___G_truncate)
+___DEF_OLD_SYM_GLO(___S_truncate_2d_quotient,___G_truncate_2d_quotient)
+___DEF_OLD_SYM_GLO(___S_truncate_2d_remainder,___G_truncate_2d_remainder)
+___DEF_OLD_SYM_GLO(___S_truncate_2f_,___G_truncate_2f_)
 ___DEF_OLD_SYM_GLO(___S_tst_2d_tag,___G_tst_2d_tag)
 ___DEF_OLD_SYM_GLO(___S_tty_2d_history,___G_tty_2d_history)
 ___DEF_OLD_SYM_GLO(___S_tty_2d_history_2d_max_2d_length_2d_set_21_,___G_tty_2d_history_2d_max_2d_length_2d_set_21_)
@@ -17167,6 +17260,7 @@ ___DEF_OLD_SYM_GLO(___S_u64vector_2d_shrink_21_,___G_u64vector_2d_shrink_21_)
 ___DEF_OLD_SYM_GLO(___S_u64vector_3f_,___G_u64vector_3f_)
 ___DEF_OLD_SYM_GLO(___S_u8,___G_u8)
 ___DEF_OLD_SYM_GLO(___S_u8_2d_expected,___G_u8_2d_expected)
+___DEF_OLD_SYM_GLO(___S_u8_2d_ready_3f_,___G_u8_2d_ready_3f_)
 ___DEF_OLD_SYM_GLO(___S_u8vec,___G_u8vec)
 ___DEF_OLD_SYM_GLO(___S_u8vector,___G_u8vector)
 ___DEF_OLD_SYM_GLO(___S_u8vector_2d__3e_list,___G_u8vector_2d__3e_list)

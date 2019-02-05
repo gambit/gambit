@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-univ-3.c", produced by Gambit v4.9.2
+; File: "_t-univ-3.c", produced by Gambit v4.9.3
 (
-409002
+409003
 (C)
 "_t-univ-3"
 (("_t-univ-3"))
@@ -478,8 +478,8 @@
 "c#univ-emit-keyword-unbox"
 "c#univ-emit-keyword?"
 "c#univ-emit-new-continuation"
+"c#univ-emit-new-delay-promise"
 "c#univ-emit-new-foreign"
-"c#univ-emit-new-promise"
 "c#univ-emit-new-will"
 "c#univ-emit-null-obj"
 "c#univ-emit-null-obj?"
@@ -766,7 +766,7 @@
  ()
 )
 #else
-#define ___VERSION 409002
+#define ___VERSION 409003
 #define ___MODULE_NAME "_t-univ-3"
 #define ___LINKER_ID ___LNK___t_2d_univ_2d_3
 #define ___MH_PROC ___H___t_2d_univ_2d_3
@@ -1277,8 +1277,8 @@ ___NEED_GLO(___G_c_23_univ_2d_emit_2d_local_2d_var)
 ___NEED_GLO(___G_c_23_univ_2d_emit_2d_member)
 ___NEED_GLO(___G_c_23_univ_2d_emit_2d_new)
 ___NEED_GLO(___G_c_23_univ_2d_emit_2d_new_2d_continuation)
+___NEED_GLO(___G_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
 ___NEED_GLO(___G_c_23_univ_2d_emit_2d_new_2d_foreign)
-___NEED_GLO(___G_c_23_univ_2d_emit_2d_new_2d_promise)
 ___NEED_GLO(___G_c_23_univ_2d_emit_2d_new_2d_will)
 ___NEED_GLO(___G_c_23_univ_2d_emit_2d_not)
 ___NEED_GLO(___G_c_23_univ_2d_emit_2d_null)
@@ -2205,8 +2205,8 @@ ___DEF_GLO(151,"c#univ-emit-keyword?")
 ___DEF_GLO(152,"c#univ-emit-member")
 ___DEF_GLO(153,"c#univ-emit-new")
 ___DEF_GLO(154,"c#univ-emit-new-continuation")
-___DEF_GLO(155,"c#univ-emit-new-foreign")
-___DEF_GLO(156,"c#univ-emit-new-promise")
+___DEF_GLO(155,"c#univ-emit-new-delay-promise")
+___DEF_GLO(156,"c#univ-emit-new-foreign")
 ___DEF_GLO(157,"c#univ-emit-new-will")
 ___DEF_GLO(158,"c#univ-emit-null")
 ___DEF_GLO(159,"c#univ-emit-null-obj")
@@ -2861,10 +2861,10 @@ ___END_GLO
 #define ___PRM_c_23_univ_2d_emit_2d_new ___PRM(153,___G_c_23_univ_2d_emit_2d_new)
 #define ___GLO_c_23_univ_2d_emit_2d_new_2d_continuation ___GLO(154,___G_c_23_univ_2d_emit_2d_new_2d_continuation)
 #define ___PRM_c_23_univ_2d_emit_2d_new_2d_continuation ___PRM(154,___G_c_23_univ_2d_emit_2d_new_2d_continuation)
-#define ___GLO_c_23_univ_2d_emit_2d_new_2d_foreign ___GLO(155,___G_c_23_univ_2d_emit_2d_new_2d_foreign)
-#define ___PRM_c_23_univ_2d_emit_2d_new_2d_foreign ___PRM(155,___G_c_23_univ_2d_emit_2d_new_2d_foreign)
-#define ___GLO_c_23_univ_2d_emit_2d_new_2d_promise ___GLO(156,___G_c_23_univ_2d_emit_2d_new_2d_promise)
-#define ___PRM_c_23_univ_2d_emit_2d_new_2d_promise ___PRM(156,___G_c_23_univ_2d_emit_2d_new_2d_promise)
+#define ___GLO_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise ___GLO(155,___G_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+#define ___PRM_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise ___PRM(155,___G_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+#define ___GLO_c_23_univ_2d_emit_2d_new_2d_foreign ___GLO(156,___G_c_23_univ_2d_emit_2d_new_2d_foreign)
+#define ___PRM_c_23_univ_2d_emit_2d_new_2d_foreign ___PRM(156,___G_c_23_univ_2d_emit_2d_new_2d_foreign)
 #define ___GLO_c_23_univ_2d_emit_2d_new_2d_will ___GLO(157,___G_c_23_univ_2d_emit_2d_new_2d_will)
 #define ___PRM_c_23_univ_2d_emit_2d_new_2d_will ___PRM(157,___G_c_23_univ_2d_emit_2d_new_2d_will)
 #define ___GLO_c_23_univ_2d_emit_2d_null ___GLO(158,___G_c_23_univ_2d_emit_2d_null)
@@ -8513,10 +8513,10 @@ ___DEF_M_HLBL(___L2_c_23_univ_2d_emit_2d_closure_2d_set_21_)
 ___DEF_M_HLBL(___L3_c_23_univ_2d_emit_2d_closure_2d_set_21_)
 ___DEF_M_HLBL(___L4_c_23_univ_2d_emit_2d_closure_2d_set_21_)
 ___DEF_M_HLBL_INTRO
-___DEF_M_HLBL(___L0_c_23_univ_2d_emit_2d_new_2d_promise)
-___DEF_M_HLBL(___L1_c_23_univ_2d_emit_2d_new_2d_promise)
-___DEF_M_HLBL(___L2_c_23_univ_2d_emit_2d_new_2d_promise)
-___DEF_M_HLBL(___L3_c_23_univ_2d_emit_2d_new_2d_promise)
+___DEF_M_HLBL(___L0_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+___DEF_M_HLBL(___L1_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+___DEF_M_HLBL(___L2_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+___DEF_M_HLBL(___L3_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_univ_2d_emit_2d_promise_3f_)
 ___DEF_M_HLBL(___L1_c_23_univ_2d_emit_2d_promise_3f_)
@@ -36183,7 +36183,7 @@ ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
-#define ___PH_PROC ___H_c_23_univ_2d_emit_2d_new_2d_promise
+#define ___PH_PROC ___H_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise
 #undef ___PH_LBL0
 #define ___PH_LBL0 2949
 #undef ___PD_ALL
@@ -36195,16 +36195,16 @@ ___END_P_COD
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
-___DEF_P_HLBL(___L0_c_23_univ_2d_emit_2d_new_2d_promise)
-___DEF_P_HLBL(___L1_c_23_univ_2d_emit_2d_new_2d_promise)
-___DEF_P_HLBL(___L2_c_23_univ_2d_emit_2d_new_2d_promise)
-___DEF_P_HLBL(___L3_c_23_univ_2d_emit_2d_new_2d_promise)
+___DEF_P_HLBL(___L0_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+___DEF_P_HLBL(___L1_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+___DEF_P_HLBL(___L2_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
+___DEF_P_HLBL(___L3_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
 ___END_P_HLBL
 ___BEGIN_P_SW
-___DEF_SLBL(0,___L0_c_23_univ_2d_emit_2d_new_2d_promise)
+___DEF_SLBL(0,___L0_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(0,2,0,0)
-___DEF_GLBL(___L_c_23_univ_2d_emit_2d_new_2d_promise)
+___DEF_GLBL(___L_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -36212,16 +36212,16 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_new_2d_promise)
    ___SET_R2(___SYM_promise)
    ___ADJFP(8)
    ___POLL(1)
-___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_new_2d_promise)
+___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
    ___SET_R0(___LBL(2))
    ___JUMPINT(___SET_NARGS(3),___PRC(58),___L_c_23_univ_2d_emit_2d_decl)
-___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_new_2d_promise)
+___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
-___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_new_2d_promise)
+___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise)
    ___ADJFP(-8)
    ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(3033),___L0_c_23_univ_2d_emit_2d_new)
 ___END_P_SW
@@ -41857,12 +41857,12 @@ ___REF_FAL,10,0)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_closure_2d_set_21_,___IFD(___RETN,5,1,0xfL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_closure_2d_set_21_,___IFD(___RETN,5,1,0x7L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_closure_2d_set_21_,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H_c_23_univ_2d_emit_2d_new_2d_promise,"c#univ-emit-new-promise",___REF_FAL,4,0)
-
-,___DEF_LBL_PROC(___H_c_23_univ_2d_emit_2d_new_2d_promise,2,-1)
-,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_new_2d_promise,___IFD(___RETI,8,0,0x3f07L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_new_2d_promise,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_new_2d_promise,___IFD(___RETI,8,8,0x3f00L))
+,___DEF_LBL_INTRO(___H_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,"c#univ-emit-new-delay-promise",___REF_FAL,
+4,0)
+,___DEF_LBL_PROC(___H_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,2,-1)
+,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,___IFD(___RETI,8,0,0x3f07L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,___IFD(___RETN,5,0,0x7L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_INTRO(___H_c_23_univ_2d_emit_2d_promise_3f_,"c#univ-emit-promise?",___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H_c_23_univ_2d_emit_2d_promise_3f_,2,-1)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_promise_3f_,___IFD(___RETI,8,0,0x3f07L))
@@ -42696,11 +42696,11 @@ ___DEF_MOD_PRM(49,___G_c_23_univ_2d_emit_2d_closure_2d_length,2928)
 ___DEF_MOD_PRM(48,___G_c_23_univ_2d_emit_2d_closure_2d_code,2933)
 ___DEF_MOD_PRM(50,___G_c_23_univ_2d_emit_2d_closure_2d_ref,2938)
 ___DEF_MOD_PRM(51,___G_c_23_univ_2d_emit_2d_closure_2d_set_21_,2943)
-___DEF_MOD_PRM(156,___G_c_23_univ_2d_emit_2d_new_2d_promise,2949)
+___DEF_MOD_PRM(155,___G_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,2949)
 ___DEF_MOD_PRM(168,___G_c_23_univ_2d_emit_2d_promise_3f_,2954)
 ___DEF_MOD_PRM(157,___G_c_23_univ_2d_emit_2d_new_2d_will,2960)
 ___DEF_MOD_PRM(301,___G_c_23_univ_2d_emit_2d_will_3f_,2965)
-___DEF_MOD_PRM(155,___G_c_23_univ_2d_emit_2d_new_2d_foreign,2971)
+___DEF_MOD_PRM(156,___G_c_23_univ_2d_emit_2d_new_2d_foreign,2971)
 ___DEF_MOD_PRM(131,___G_c_23_univ_2d_emit_2d_foreign_3f_,2976)
 ___DEF_MOD_PRM(36,___G_c_23_univ_2d_emit_2d_call_2d_prim,2982)
 ___DEF_MOD_PRM(35,___G_c_23_univ_2d_emit_2d_call_2d_member,2985)
@@ -43022,11 +43022,11 @@ ___DEF_MOD_GLO(49,___G_c_23_univ_2d_emit_2d_closure_2d_length,2928)
 ___DEF_MOD_GLO(48,___G_c_23_univ_2d_emit_2d_closure_2d_code,2933)
 ___DEF_MOD_GLO(50,___G_c_23_univ_2d_emit_2d_closure_2d_ref,2938)
 ___DEF_MOD_GLO(51,___G_c_23_univ_2d_emit_2d_closure_2d_set_21_,2943)
-___DEF_MOD_GLO(156,___G_c_23_univ_2d_emit_2d_new_2d_promise,2949)
+___DEF_MOD_GLO(155,___G_c_23_univ_2d_emit_2d_new_2d_delay_2d_promise,2949)
 ___DEF_MOD_GLO(168,___G_c_23_univ_2d_emit_2d_promise_3f_,2954)
 ___DEF_MOD_GLO(157,___G_c_23_univ_2d_emit_2d_new_2d_will,2960)
 ___DEF_MOD_GLO(301,___G_c_23_univ_2d_emit_2d_will_3f_,2965)
-___DEF_MOD_GLO(155,___G_c_23_univ_2d_emit_2d_new_2d_foreign,2971)
+___DEF_MOD_GLO(156,___G_c_23_univ_2d_emit_2d_new_2d_foreign,2971)
 ___DEF_MOD_GLO(131,___G_c_23_univ_2d_emit_2d_foreign_3f_,2976)
 ___DEF_MOD_GLO(36,___G_c_23_univ_2d_emit_2d_call_2d_prim,2982)
 ___DEF_MOD_GLO(35,___G_c_23_univ_2d_emit_2d_call_2d_member,2985)

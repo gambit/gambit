@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_host.c", produced by Gambit v4.9.2
+; File: "_host.c", produced by Gambit v4.9.3
 (
-409002
+409003
 (C)
 "_host"
 (("_host"))
@@ -229,7 +229,7 @@
  ()
 )
 #else
-#define ___VERSION 409002
+#define ___VERSION 409003
 #define ___MODULE_NAME "_host"
 #define ___LINKER_ID ___LNK___host
 #define ___MH_PROC ___H___host

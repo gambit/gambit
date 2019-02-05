@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gvm.c", produced by Gambit v4.9.2
+; File: "_gvm.c", produced by Gambit v4.9.3
 (
-409002
+409003
 (C)
 "_gvm"
 (("_gvm"))
@@ -334,7 +334,7 @@
  ()
 )
 #else
-#define ___VERSION 409002
+#define ___VERSION 409003
 #define ___MODULE_NAME "_gvm"
 #define ___LINKER_ID ___LNK___gvm
 #define ___MH_PROC ___H___gvm

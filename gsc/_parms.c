@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_parms.c", produced by Gambit v4.9.2
+; File: "_parms.c", produced by Gambit v4.9.3
 (
-409002
+409003
 (C)
 "_parms"
 (("_parms"))
@@ -98,7 +98,7 @@
 "c#**let-sym"
 "c#**letrec*-sym"
 "c#**letrec-sym"
-"c#**make-promise-sym"
+"c#**make-delay-promise-sym"
 "c#**namespace-sym"
 "c#**not-sym"
 "c#**or-sym"
@@ -191,7 +191,7 @@
  ()
 )
 #else
-#define ___VERSION 409002
+#define ___VERSION 409003
 #define ___MODULE_NAME "_parms"
 #define ___LINKER_ID ___LNK___parms
 #define ___MH_PROC ___H___parms
@@ -238,7 +238,7 @@ ___NEED_GLO(___G_c_23__2a__2a_let_2a__2d_sym)
 ___NEED_GLO(___G_c_23__2a__2a_let_2d_sym)
 ___NEED_GLO(___G_c_23__2a__2a_letrec_2a__2d_sym)
 ___NEED_GLO(___G_c_23__2a__2a_letrec_2d_sym)
-___NEED_GLO(___G_c_23__2a__2a_make_2d_promise_2d_sym)
+___NEED_GLO(___G_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym)
 ___NEED_GLO(___G_c_23__2a__2a_namespace_2d_sym)
 ___NEED_GLO(___G_c_23__2a__2a_not_2d_sym)
 ___NEED_GLO(___G_c_23__2a__2a_or_2d_sym)
@@ -420,7 +420,7 @@ ___DEF_GLO(25,"c#**let*-sym")
 ___DEF_GLO(26,"c#**let-sym")
 ___DEF_GLO(27,"c#**letrec*-sym")
 ___DEF_GLO(28,"c#**letrec-sym")
-___DEF_GLO(29,"c#**make-promise-sym")
+___DEF_GLO(29,"c#**make-delay-promise-sym")
 ___DEF_GLO(30,"c#**namespace-sym")
 ___DEF_GLO(31,"c#**not-sym")
 ___DEF_GLO(32,"c#**or-sym")
@@ -624,8 +624,8 @@ ___END_GLO
 #define ___PRM_c_23__2a__2a_letrec_2a__2d_sym ___PRM(27,___G_c_23__2a__2a_letrec_2a__2d_sym)
 #define ___GLO_c_23__2a__2a_letrec_2d_sym ___GLO(28,___G_c_23__2a__2a_letrec_2d_sym)
 #define ___PRM_c_23__2a__2a_letrec_2d_sym ___PRM(28,___G_c_23__2a__2a_letrec_2d_sym)
-#define ___GLO_c_23__2a__2a_make_2d_promise_2d_sym ___GLO(29,___G_c_23__2a__2a_make_2d_promise_2d_sym)
-#define ___PRM_c_23__2a__2a_make_2d_promise_2d_sym ___PRM(29,___G_c_23__2a__2a_make_2d_promise_2d_sym)
+#define ___GLO_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym ___GLO(29,___G_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym)
+#define ___PRM_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym ___PRM(29,___G_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym)
 #define ___GLO_c_23__2a__2a_namespace_2d_sym ___GLO(30,___G_c_23__2a__2a_namespace_2d_sym)
 #define ___PRM_c_23__2a__2a_namespace_2d_sym ___PRM(30,___G_c_23__2a__2a_namespace_2d_sym)
 #define ___GLO_c_23__2a__2a_not_2d_sym ___GLO(31,___G_c_23__2a__2a_not_2d_sym)
@@ -1057,9 +1057,10 @@ ___DEF_SUB_STR(___X58,7UL)
 ___DEF_SUB_STR(___X59,10UL)
                ___STR8(35,35,115,101,116,45,98,111)
                ___STR2(120,33)
-___DEF_SUB_STR(___X60,14UL)
-               ___STR8(35,35,109,97,107,101,45,112)
-               ___STR6(114,111,109,105,115,101)
+___DEF_SUB_STR(___X60,20UL)
+               ___STR8(35,35,109,97,107,101,45,100)
+               ___STR8(101,108,97,121,45,112,114,111)
+               ___STR4(109,105,115,101)
 ___DEF_SUB_STR(___X61,11UL)
                ___STR8(105,101,101,101,45,115,99,104)
                ___STR3(101,109,101)
@@ -3115,7 +3116,7 @@ ___DEF_SLBL(61,___L61___parms_23_)
    ___SET_R0(___LBL(62))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),167,___G_c_23_string_2d__3e_canonical_2d_symbol)
 ___DEF_SLBL(62,___L62___parms_23_)
-   ___SET_GLO(29,___G_c_23__2a__2a_make_2d_promise_2d_sym,___R1)
+   ___SET_GLO(29,___G_c_23__2a__2a_make_2d_delay_2d_promise_2d_sym,___R1)
    ___SET_R1(___SUB(61))
    ___SET_R0(___LBL(63))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),167,___G_c_23_string_2d__3e_canonical_2d_symbol)
@@ -4527,7 +4528,7 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version)
-   ___SET_R1(___FIX(409002L))
+   ___SET_R1(___FIX(409003L))
    ___JUMPPRM(___NOTHING,___R0)
 ___END_P_SW
 ___END_P_COD
@@ -4573,7 +4574,7 @@ ___DEF_SLBL(1,___L1_c_23_compiler_2d_version_2d_string)
 ___DEF_SLBL(2,___L2_c_23_compiler_2d_version_2d_string)
    ___SET_STK(-3,___STK(-4))
    ___SET_STK(-4,___R1)
-   ___SET_R1(___FIX(2L))
+   ___SET_R1(___FIX(3L))
    ___SET_R0(___LBL(3))
    ___JUMPPRM(___SET_NARGS(1),___PRM_number_2d__3e_string)
 ___DEF_SLBL(3,___L3_c_23_compiler_2d_version_2d_string)
