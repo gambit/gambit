@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -627,7 +627,7 @@ ___SCMOBJ ___os_path_gambitdir ___PVOID
 #endif
 
 
-/* 
+/*
  * TODO: the current implementation of the lookup duplicates the
  * lookup logic because the configuration map and the map from the
  * runtime options are not represented with the same string type.  The
@@ -997,6 +997,135 @@ ___SCMOBJ path;)
 #endif
 
       ___release_string (cpath);
+    }
+
+  return result;
+}
+
+
+/*---------------------------------------------------------------------------*/
+
+
+___SCMOBJ ___os_executable_path ___PVOID
+{
+  ___SCMOBJ e;
+  ___SCMOBJ result = ___FIX(___UNIMPL_ERR);
+
+  ___CHAR_TYPE(___PATH_CE_SELECT) path_buf[___PATH_MAX_LENGTH+1];
+  void *path = NULL;
+
+#ifdef USE_GetModuleFileName
+
+  DWORD n;
+
+  path = path_buf;
+
+  n = GetModuleFileName (NULL, path, ___PATH_MAX_LENGTH+1);
+
+  if (n >= 0 && n < ___PATH_MAX_LENGTH+1) goto convert_path;
+
+  return fnf_or_err_code_from_GetLastError ();
+
+#else
+
+#ifdef USE__NSGetExecutablePath
+
+  uint32_t bufsize = sizeof (path_buf);
+
+  path = path_buf;
+
+  if (_NSGetExecutablePath (path, &bufsize) < 0)
+    {
+      path = malloc (bufsize);
+      if (path == NULL)
+        result = ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+      else if (_NSGetExecutablePath (path, &bufsize) < 0)
+        {
+          result = err_code_from_errno ();
+          free (path);
+          path = NULL;
+        }
+    }
+
+#else
+
+#if defined (USE_sysctl) && defined (CTL_KERN) && defined (KERN_PROC) && defined (KERN_PROC_PATHNAME)
+
+  {
+    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    size_t cb = sizeof (path_buf);
+
+    path = path_buf;
+
+    if (sysctl (mib, 4, path, &cb, NULL, 0) != -1) goto convert_path;
+#if !(defined (USE_readlink) && defined (USE_getpid))
+    return err_code_from_errno ();
+#endif
+  }
+
+#endif
+
+#if defined (USE_readlink) && defined (USE_getpid)
+
+  {
+    pid_t pid = getpid ();
+
+    static char *procfs_paths_to_try[] =
+      {
+       "/proc/%d/exe",
+       "/proc/%d/file",
+       "/proc/%d/path/a.out",
+       NULL
+      };
+
+    char **probe = procfs_paths_to_try;
+
+    while (*probe != NULL)
+      {
+        ___SSIZE_T size;
+        char p[100];
+
+        snprintf(p, sizeof (p), *probe++, pid);
+
+        size = readlink (p, path_buf, sizeof (path_buf));
+
+        if (size >= 0)
+          {
+            path_buf[size] = '\0';
+            path = path_buf;
+            goto convert_path;
+          }
+      }
+
+    return err_code_from_errno ();
+  }
+
+#else
+
+  return ___FIX(___UNIMPL_ERR);
+
+#endif
+
+#endif
+
+#endif
+
+ convert_path:
+
+  if (path != NULL)
+    {
+      if ((e = ___NONNULLSTRING_to_SCMOBJ
+                 (___PSTATE,
+                  path,
+                  &result,
+                  ___RETURN_POS,
+                  ___CE(___PATH_CE_SELECT)))
+          != ___FIX(___NO_ERR))
+        result = e;
+      else
+        ___release_scmobj (result);
+      if (path != path_buf)
+        free (path);
     }
 
   return result;

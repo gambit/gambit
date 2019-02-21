@@ -4316,6 +4316,11 @@ end-of-code
             scheme-object
    "___os_path_normalize_directory"))
 
+(define-prim ##os-executable-path
+  (c-lambda ()
+            scheme-object
+   "___os_executable_path"))
+
 (define-prim ##remote-dbg-addr
   (c-lambda ()
             UCS-2-string

@@ -4380,6 +4380,9 @@ For example:
 @deffn procedure get-environment-variables
 @end deffn
 
+@deffn procedure executable-path
+@end deffn
+
 @deffn procedure open-dummy
 @end deffn
 

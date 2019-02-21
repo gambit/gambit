@@ -2781,6 +2781,20 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim (##executable-path)
+  (let ((path (##os-executable-path)))
+    (if (##fixnum? path)
+        (##raise-os-exception
+         #f
+         path
+         executable-path)
+        (##path-normalize path))))
+
+(define-prim (executable-path)
+  (##executable-path))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Filesystem operations.
 
 (define-prim (##create-directory-or-fifo prim path-or-settings)

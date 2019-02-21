@@ -1,6 +1,6 @@
 /* File: "os_files.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_FILES_H
 #define ___OS_FILES_H
@@ -155,6 +155,8 @@ extern ___SCMOBJ ___os_path_gambitdir_map_lookup
 extern ___SCMOBJ ___os_path_normalize_directory
    ___P((___SCMOBJ path),
         ());
+
+extern ___SCMOBJ ___os_executable_path ___PVOID;
 
 
 /*---------------------------------------------------------------------------*/

@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -555,6 +555,15 @@
 #endif
 
 
+/* Determine how to get the executable's path.  */
+
+#ifdef HAVE__NSGETEXECUTABLEPATH
+#define USE__NSGetExecutablePath
+#else
+#define USE_readlink
+#endif
+
+
 /* Determine which function to use for miscellaneous networking features.  */
 
 #ifdef USE_NETWORKING
@@ -953,6 +962,16 @@ ___END_C_LINKAGE
 #ifdef USE_NSLinkModule
 #undef INCLUDE_mach_o_dyld_h
 #define INCLUDE_mach_o_dyld_h
+#endif
+
+#ifdef USE__NSGetExecutablePath
+#undef INCLUDE_mach_o_dyld_h
+#define INCLUDE_mach_o_dyld_h
+#endif
+
+#ifdef USE_readlink
+#undef INCLUDE_unistd_h
+#define INCLUDE_unistd_h
 #endif
 
 #ifdef USE_signal

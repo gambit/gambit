@@ -181,6 +181,7 @@ error-object?
 exact
 exact-integer?
 exact-integer-sqrt
+executable-path
 exit
 expression-parsing-exception-kind
 expression-parsing-exception-parameters
