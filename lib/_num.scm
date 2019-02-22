@@ -2512,24 +2512,33 @@ for a discussion of branch cuts.
     (##make-rectangular (complex-log-magnitude x) (##angle x))))
 
 (define-prim (##log2 x y)
+  
+  ;; Assumes x is not zero and y is not 0 or 1
 
-  (define (general-case x y)
-    (##/ (##log x) (##log y)))
+  (##define-macro (2^-40)
+    (expt 2 -40))
+  
+  (let ((inexact-result
 
-  (if (and (macro-exact-int? x)
-           (macro-exact-int? y)
-           (##< 0 x)
-           (##< 1 y))
-      (let ((floor-log2-x (##fx- (##integer-length x) 1)))
-        (if (##fx= floor-log2-x ;; is n a power of 2?
-                   (##first-bit-set x))
-            (let ((floor-log2-y (##fx- (##integer-length y) 1)))
-              (if (##fx= floor-log2-y ;; is y a power of 2?
-                         (##first-bit-set y))
-                  (##/ floor-log2-x floor-log2-y)
-                  (general-case x y)))
-            (general-case x y)))
-      (general-case x y)))
+         ;; one-argument log is careful enough to give a finite
+         ;; result for inexact-result in this case
+
+         (##/ (##log x) (##log y))))
+    (if (and (or (##fixnum? x) (##bignum? x) (##ratnum? x))
+             (or (##fixnum? y) (##bignum? y) (##ratnum? y))
+             (##positive? x) (##positive? y))
+        
+        ;; We assume that there are no more than 2^40 bits (physically)
+        ;; in a bignum and log has roughly 53 bits precision, so this
+        ;; next computation should give exact results if the answer
+        ;; is, in fact, exact.
+        
+        (let ((approx-result
+               (##rationalize (##exact inexact-result) (2^-40))))
+          (if (##eqv? x (##expt y approx-result))
+              approx-result
+              inexact-result))
+        inexact-result)))
 
 (define-prim (log x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
@@ -10071,6 +10080,7 @@ end-of-code
                  (big-quotient x y)))))))
 
 (define-prim (##exact-int.nth-root x y)
+  ;; TODO: Rewrite to return result plus remainder
   (cond ((##eqv? x 0)
          0)
         ((##eqv? x 1)

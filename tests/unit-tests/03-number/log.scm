@@ -1,5 +1,7 @@
 (include "#.scm")
 
+;;; Test one-argument log
+
 ;;; Test special values
 
 (check-eqv? (log 1) 0)
@@ -14,10 +16,34 @@
 (check-= (log -1+0.i) +3.141592653589793i)
 (check-= (log -1-0.i) -3.141592653589793i)
 
-
 ;;; Test exceptions
 
 (check-tail-exn type-exception? (lambda () (log #\c)))
 
 (check-tail-exn range-exception? (lambda () (log 0)))
 
+;;; Test two-argument log
+
+(check-= (log 3 2) 1.5849625007211563)
+
+;;; Arguments where result is exact
+
+(check-eqv?
+ (log 40254497110927943179349807054456171205137/7730993719707444524137094407
+      118587876497/40353607)
+ 11/3)
+(check-eqv?
+ (log 150094635296999121/14551915228366851806640625 78125/2187)
+ -36/7)
+
+;;; Test exceptions
+
+(check-tail-exn type-exception? (lambda () (log 2 #\c)))
+
+(check-tail-exn type-exception? (lambda () (log #t 2)))
+
+(check-tail-exn range-exception? (lambda () (log 0 2)))
+
+(check-tail-exn range-exception? (lambda () (log 3 0)))
+
+(check-tail-exn range-exception? (lambda () (log 2 1)))
