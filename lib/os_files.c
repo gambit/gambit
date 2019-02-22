@@ -1012,7 +1012,7 @@ ___SCMOBJ ___os_executable_path ___PVOID
   ___SCMOBJ result = ___FIX(___UNIMPL_ERR);
 
   ___CHAR_TYPE(___PATH_CE_SELECT) path_buf[___PATH_MAX_LENGTH+1];
-  void *path = NULL;
+  char *path = NULL;
 
 #ifdef USE_GetModuleFileName
 
@@ -1036,7 +1036,7 @@ ___SCMOBJ ___os_executable_path ___PVOID
 
   if (_NSGetExecutablePath (path, &bufsize) < 0)
     {
-      path = malloc (bufsize);
+      path = ___CAST(char*,malloc (bufsize));
       if (path == NULL)
         result = ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
       else if (_NSGetExecutablePath (path, &bufsize) < 0)
