@@ -2515,8 +2515,8 @@ for a discussion of branch cuts.
   
   ;; Assumes x is not zero and y is not 0 or 1
 
-  (##define-macro (2^-40)
-    (expt 2 -40))
+  (##define-macro (2^-20)
+    (expt 2 -20))
   
   (let ((inexact-result
 
@@ -2534,7 +2534,7 @@ for a discussion of branch cuts.
         ;; is, in fact, exact.
         
         (let ((approx-result
-               (##rationalize (##exact inexact-result) (2^-40))))
+               (##rationalize (##exact inexact-result) (2^-20))))
           (if (##eqv? x (##expt y approx-result))
               approx-result
               inexact-result))
