@@ -36,6 +36,10 @@
  (log 150094635296999121/14551915228366851806640625 78125/2187)
  -36/7)
 (check-eqv? (log (expt 3 11291039) 3) 11291039)
+(check-eqv? (log (expt 2 112923121) 2) 112923121)
+(check-eqv? (log 2 1/2) -1)
+(check-eqv? (log 1/2 2) -1)
+(check-eqv? (log 2 8) 1/3)
 
 ;;; Test exceptions
 

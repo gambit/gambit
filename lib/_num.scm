@@ -2515,30 +2515,61 @@ for a discussion of branch cuts.
   
   ;; Assumes x is not zero and y is not 0 or 1
 
+  (define (positive-exact-real? x)
+    (and (or (##fixnum? x)
+             (##bignum? x)
+             (##ratnum? x))
+         (##positive? x)))
+
+  (define (num x)
+    ;; assumes x is exact real
+    (if (##ratnum? x)
+        (##ratnum-numerator x)
+        x))
+
+  (define (den x)
+    ;; assumes x is exact real
+    (if (##ratnum? x)
+        (##ratnum-denominator x)
+        1))
+
+  (define (log_2 n)
+    ;; assumes n is positive exact integer power of 2
+    (##fx- (##integer-length n) 1))
+
+  (define (general-case x y)
+    (##/ (##log x) (##log y)))
+  
   (##define-macro (2^-20)
     (expt 2 -20))
-  
-  (let ((inexact-result
 
-         ;; one-argument log is careful enough to give a finite
-         ;; result for inexact-result in this case
+  (if (and (positive-exact-real? x)
+           (positive-exact-real? y))
+      (if (and (##power-of-two? (num x))
+               (##power-of-two? (den x))
+               (##power-of-two? (num y))
+               (##power-of-two? (den y)))
+          (##/ (##- (log_2 (num x))
+                    (log_2 (den x)))
+               (##- (log_2 (num y))
+                    (log_2 (den y))))
 
-         (##/ (##log x) (##log y))))
-    (if (and (or (##fixnum? x) (##bignum? x) (##ratnum? x))
-             (or (##fixnum? y) (##bignum? y) (##ratnum? y))
-             (##positive? x) (##positive? y))
-        
-        ;; We assume that there are no more than 2^40 bits (physically)
-        ;; in a bignum and log has roughly 53 bits precision, so this
-        ;; next computation should give exact results if the answer
-        ;; is, in fact, exact.
-        
-        (let ((approx-result
-               (##rationalize (##exact inexact-result) (2^-20))))
-          (if (##eqv? x (##expt y approx-result))
-              approx-result
-              inexact-result))
-        inexact-result)))
+          (let ((inexact-result
+                 
+                 ;; one-argument log is careful enough to give a finite
+                 ;; result for inexact-result in this case
+                 
+                 (general-case x y)))
+            
+            ;; the following computation will guess the correct result
+            ;; in many cases.
+            
+            (let ((approx-result
+                   (##rationalize (##exact inexact-result) (2^-20))))
+              (if (##eqv? x (##expt y approx-result))
+                  approx-result
+                  inexact-result))))
+      (general-case x y)))
 
 (define-prim (log x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
@@ -3058,6 +3089,13 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##sqrt x)))
 
+(define (##power-of-two? n)
+  ;; assumes n is a positive fixnum or bignum
+  (if (##fixnum? n)
+      (##fxzero? (##fxand n (##fx- n 1)))
+      (##fx= (##fx+ (##first-bit-set n) 1)
+             (##integer-length n))))
+
 (define-prim (##expt x y)
 
   (define (type-error-on-x)
@@ -3187,19 +3225,13 @@ for a discussion of branch cuts.
 
     ;; y is ratnum, x is negative exact or complex
 
-    (define (power-of-two? n)
-      (if (##fixnum? n)
-          (##fxzero? (##fxand n (##fx- n 1)))
-          (##fx= (##fx+ (##first-bit-set n) 1)
-                 (##integer-length n))))
-
     (define (exact-dyadic-root? x n)
       (and (##exact? x)
            (or (and (##fxzero? n) x)
                (exact-dyadic-root? (##sqrt x)
                                    (##fx- n 1)))))
 
-    (or (and (power-of-two? (macro-ratnum-denominator y))
+    (or (and (##power-of-two? (macro-ratnum-denominator y))
              (or (and (##eqv? (macro-ratnum-denominator y) 2)
                       (##eqv? (macro-ratnum-numerator y) 1)
                       (##sqrt x))
