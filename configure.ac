@@ -1376,6 +1376,8 @@ else
   #AC_FUNC_STAT
   #AC_FUNC_LSTAT
 
+  FLAGS_WINDOWS="-D_WINDOWS -D_WIN32_WINNT=0x0600 -DUNICODE -D_UNICODE"
+
   if test "$C_COMP_VISUALC" = yes; then
 
     PATH_SEP="\\\\\\\\\\\\\\\\"
@@ -1386,7 +1388,7 @@ else
       LIBS="$LIBS WinMM.Lib"
     fi
 
-    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
+    FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE $FLAGS_WINDOWS"
 
     # For compatibility with Windows XP
     FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_ATL_XP_TARGETING"
@@ -1405,7 +1407,7 @@ else
                  LIBS="$LIBS -lwinmm"
                fi
 
-               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE -D_WINDOWS -D_WIN32_WINNT=0x0600"
+               FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE $FLAGS_WINDOWS"
                ;;
 
             *) # check libraries for other systems
