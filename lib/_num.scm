@@ -2537,39 +2537,17 @@ for a discussion of branch cuts.
     ;; assumes n is positive exact integer power of 2
     (##fx- (##integer-length n) 1))
 
-  (define (general-case x y)
-    (##/ (##log x) (##log y)))
-  
-  (##define-macro (2^-20)
-    (expt 2 -20))
-
   (if (and (positive-exact-real? x)
-           (positive-exact-real? y))
-      (if (and (##power-of-two? (num x))
-               (##power-of-two? (den x))
-               (##power-of-two? (num y))
-               (##power-of-two? (den y)))
-          (##/ (##- (log_2 (num x))
-                    (log_2 (den x)))
-               (##- (log_2 (num y))
-                    (log_2 (den y))))
-
-          (let ((inexact-result
-                 
-                 ;; one-argument log is careful enough to give a finite
-                 ;; result for inexact-result in this case
-                 
-                 (general-case x y)))
-            
-            ;; the following computation will guess the correct result
-            ;; in many cases.
-            
-            (let ((approx-result
-                   (##rationalize (##exact inexact-result) (2^-20))))
-              (if (##eqv? x (##expt y approx-result))
-                  approx-result
-                  inexact-result))))
-      (general-case x y)))
+           (positive-exact-real? y)
+           (##power-of-two? (num x))
+           (##power-of-two? (den x))
+           (##power-of-two? (num y))
+           (##power-of-two? (den y)))
+      (##/ (##- (log_2 (num x))
+                (log_2 (den x)))
+           (##- (log_2 (num y))
+                (log_2 (den y))))
+      (##/ (##log x) (##log y))))
 
 (define-prim (log x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
