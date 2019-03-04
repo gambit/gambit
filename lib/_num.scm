@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2017 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2019 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2725,7 +2725,7 @@ for a discussion of branch cuts.
 (define-prim (##atan2 y x)
   (cond ((or (and (##flonum? x) (##flnan? x))
              (and (##flonum? y) (##flnan? y)))
-         +nan.0)
+         (macro-inexact-+nan))
         ((##eqv? 0 y)
          (if (##exact? x)
              (if (##negative? x)
@@ -4082,10 +4082,16 @@ for a discussion of branch cuts.
         (##flonum-printout x sign-prefix)))
 
   (cond ((##flnan? x)
-         (##string-copy (if (or (macro-r6rs-fp-syntax)
-                                (macro-chez-fp-syntax))
-                            "+nan.0"
-                            "+nan.")))
+         (##string-copy (if (and #f ;; always use positive sign for NaNs
+                                 (##flnegative? (##flcopysign (macro-inexact-+1) x)))
+                            (if (or (macro-r6rs-fp-syntax)
+                                    (macro-chez-fp-syntax))
+                                "-nan.0"
+                                "-nan.")
+                            (if (or (macro-r6rs-fp-syntax)
+                                    (macro-chez-fp-syntax))
+                                "+nan.0"
+                                "+nan."))))
         ((##flnegative? (##flcopysign (macro-inexact-+1) x))
          (let ((abs-x (##flcopysign x (macro-inexact-+1))))
            (cond ((##fl= abs-x (macro-inexact-+inf))
@@ -4188,6 +4194,7 @@ for a discussion of branch cuts.
   ;; <sign-inf-nan R i> : +inf.0
   ;;                    | -inf.0
   ;;                    | +nan.0
+  ;;                    | -nan.0
   ;; <sign-inf-nan R empty> : <sign-inf-nan R i>
   ;;
   ;; <ureal R> : <uinteger R>
@@ -4500,7 +4507,7 @@ for a discussion of branch cuts.
                              (or (##char=? c #\n) (##char=? c #\N)))
                            (let ((c (##string-ref str (##fx+ i 2))))
                              (or (##char=? c #\f) (##char=? c #\F))))
-                      (and (##not (##char=? sign #\-))
+                      (and ;; (##not (##char=? sign #\-))
                            (let ((c (##string-ref str i)))
                              (or (##char=? c #\n) (##char=? c #\N)))
                            (let ((c (##string-ref str (##fx+ i 1))))

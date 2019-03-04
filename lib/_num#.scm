@@ -2,7 +2,7 @@
 
 ;;; File: "_num#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -445,7 +445,7 @@
 (##define-macro (macro-inexact-+3pi/4) 2.356194490192345)
 (##define-macro (macro-inexact-+inf)  (/ +1. 0.))
 (##define-macro (macro-inexact--inf)  (/ -1. 0.))
-(##define-macro (macro-inexact-+nan)  (/ 0. 0.))
+(##define-macro (macro-inexact-+nan)  (##flcopysign (/ 0. 0.) +1.))
 (##define-macro (macro-cpxnum-+2i)    +2i)
 (##define-macro (macro-cpxnum--i)     -i)
 (##define-macro (macro-cpxnum-+i)     +i)
