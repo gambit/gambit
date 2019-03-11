@@ -4416,16 +4416,19 @@
 
 (define-prim (##force-output-catching-exceptions port)
 
-  ;; ignoring exceptions helps avoid infinite loops when forcing the
+  ;; Ignoring exceptions helps avoid infinite loops when forcing the
   ;; output of predefined ports at program exit (for example the
   ;; disk might be full while forcing stdout redirected to a file
   ;; and an attempt to write an error message on stdout for this
-  ;; exception would also raise an exception)
+  ;; exception would also raise an exception).
+  ;; Also avoid installing exception catcher when thread system
+  ;; is not yet initialized.
 
-  (##with-exception-catcher
-   (lambda (e) #f)
-   (lambda ()
-     (##force-output port))))
+  (if (macro-current-thread)
+      (##with-exception-catcher
+       (lambda (e) #f)
+       (lambda ()
+         (##force-output port)))))
 
 (define-prim (force-output
               #!optional
