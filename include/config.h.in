@@ -163,6 +163,7 @@
 #undef HAVE_WAITPID
 #undef HAVE_MMAP
 #undef HAVE_FCNTL
+#undef HAVE_GETCWD
 
 #undef HAVE_TCGETSETATTR
 

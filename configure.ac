@@ -1,6 +1,6 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -1209,6 +1209,11 @@ AC_DEFUN([AC_CHECK_STAT],
                 [#include <sys/stat.h>])
 ])
 
+AC_DEFUN([AC_CHECK_GETCWD],
+[
+  AC_CHECK_FUNCS(getcwd)
+])
+
 AC_DEFUN([AC_CHECK_SIGSET_T],
 [
   CONF_USE_SIGSET_T="___USE_NO_SIGSET_T"
@@ -1239,6 +1244,7 @@ AC_DEFUN([AC_CHECK_COMMON],
   AC_CHECK_MKDIR
   AC_CHECK_OPENDIR
   AC_CHECK_STAT
+  AC_CHECK_GETCWD
   AC_CHECK_SIGSET_T
 ])
 

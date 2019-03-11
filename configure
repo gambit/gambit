@@ -6248,6 +6248,8 @@ PATH_SEP="/"
 
 
 
+
+
 # Check for OS functions and header files
 
 if test "$ANSI_C" = yes; then
@@ -6598,6 +6600,19 @@ if test "x$ac_cv_type_struct_stat64" = xyes; then :
 $as_echo "#define HAVE_STRUCT_STAT64 /**/" >>confdefs.h
 
 fi
+
+
+
+  for ac_func in getcwd
+do :
+  ac_fn_cxx_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
+if test "x$ac_cv_func_getcwd" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GETCWD 1
+_ACEOF
+
+fi
+done
 
 
 
@@ -7455,6 +7470,19 @@ if test "x$ac_cv_type_struct_stat64" = xyes; then :
 $as_echo "#define HAVE_STRUCT_STAT64 /**/" >>confdefs.h
 
 fi
+
+
+
+  for ac_func in getcwd
+do :
+  ac_fn_cxx_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
+if test "x$ac_cv_func_getcwd" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GETCWD 1
+_ACEOF
+
+fi
+done
 
 
 

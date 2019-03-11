@@ -143,6 +143,10 @@
 
 #endif
 
+#ifdef HAVE_GETCWD
+#define USE_getcwd
+#endif
+
 #ifdef HAVE_SNPRINTF
 #define USE_snprintf
 #endif
@@ -835,6 +839,11 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_types_h
 #undef INCLUDE_sys_stat_h
 #define INCLUDE_sys_stat_h
+#undef INCLUDE_unistd_h
+#define INCLUDE_unistd_h
+#endif
+
+#ifdef USE_getcwd
 #undef INCLUDE_unistd_h
 #define INCLUDE_unistd_h
 #endif

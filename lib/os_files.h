@@ -144,6 +144,15 @@ ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
 ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
 
 
+#ifdef USE_getcwd
+
+extern char *getcwd_alloc_mem_if_needed
+   ___P((char *buf,
+         ___SIZE_T size),
+        ());
+
+#endif
+
 extern ___SCMOBJ ___os_path_homedir ___PVOID;
 
 extern ___SCMOBJ ___os_path_gambitdir ___PVOID;

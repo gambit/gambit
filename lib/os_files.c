@@ -423,6 +423,43 @@ FSSpec dst_spec;)
 /* Filesystem path expansion. */
 
 
+#ifdef USE_getcwd
+
+char *getcwd_alloc_mem_if_needed
+   ___P((char *buf,
+         ___SIZE_T size),
+        (buf,
+         size)
+char *buf;
+___SIZE_T size;)
+{
+  int e;
+
+  if (getcwd (buf, size) != 0)
+    return buf;
+
+  while (errno == ERANGE)
+    {
+      e = errno;
+      size = 2 * size;
+      if ((buf = ___CAST(char*, ___ALLOC_MEM(size))) == 0)
+        {
+          errno = e;
+          return 0;
+        }
+      if (getcwd (buf, size) != 0)
+        return buf;
+      e = errno;
+      ___FREE_MEM(buf);
+      errno = e;
+    }
+
+  return 0;
+}
+
+#endif
+
+
 ___SCMOBJ ___os_path_homedir ___PVOID
 {
   ___SCMOBJ e;
@@ -874,27 +911,30 @@ ___SCMOBJ path;)
 #ifdef USE_POSIX
 
       ___CHAR_TYPE(___PATH_CE_SELECT) old_dir[___PATH_MAX_LENGTH+1+1];
+      ___STRING_TYPE(___PATH_CE_SELECT) odir = 0;
       ___CHAR_TYPE(___PATH_CE_SELECT) normalized_dir[___PATH_MAX_LENGTH+1+1];
+      ___STRING_TYPE(___PATH_CE_SELECT) ndir = 0;
 
-      dir = normalized_dir;
-
-      if (getcwd (old_dir, ___PATH_MAX_LENGTH) == 0)
+      if ((odir = getcwd_alloc_mem_if_needed (old_dir, ___PATH_MAX_LENGTH)) == 0)
         e = err_code_from_errno ();
       else
         {
           if (p == 0)
-            dir = old_dir;
+            dir = odir;
           else
             {
               if (chdir (p) < 0)
                 e = err_code_from_errno ();
               else
                 {
-                  if (getcwd (normalized_dir, ___PATH_MAX_LENGTH) == 0)
+                  if ((ndir = getcwd_alloc_mem_if_needed (normalized_dir, ___PATH_MAX_LENGTH)) == 0)
                     e = err_code_from_errno ();
                   else
-                    e = ___FIX(___NO_ERR);
-                  if (chdir (old_dir) < 0 && e == ___FIX(___NO_ERR))
+                    {
+                      e = ___FIX(___NO_ERR);
+                      dir = ndir;
+                    }
+                  if (chdir (odir) < 0 && e == ___FIX(___NO_ERR))
                     e = err_code_from_errno ();
                 }
             }
@@ -928,6 +968,12 @@ ___SCMOBJ path;)
           else
             ___release_scmobj (result);
         }
+
+      if (odir != 0 && odir != old_dir)
+        ___FREE_MEM(odir);
+
+      if (ndir != 0 && ndir != normalized_dir)
+        ___FREE_MEM(ndir);
 
 #endif
 
