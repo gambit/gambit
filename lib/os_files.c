@@ -915,6 +915,8 @@ ___SCMOBJ path;)
       ___CHAR_TYPE(___PATH_CE_SELECT) normalized_dir[___PATH_MAX_LENGTH+1+1];
       ___STRING_TYPE(___PATH_CE_SELECT) ndir = 0;
 
+      ___MUTEX_LOCK(___files_mod.cwd_mut);
+
       if ((odir = getcwd_alloc_mem_if_needed (old_dir, ___PATH_MAX_LENGTH)) == 0)
         e = err_code_from_errno ();
       else
@@ -939,6 +941,8 @@ ___SCMOBJ path;)
                 }
             }
         }
+
+      ___MUTEX_UNLOCK(___files_mod.cwd_mut);
 
       if (e != ___FIX(___NO_ERR))
         result = e;
@@ -1932,6 +1936,7 @@ ___SCMOBJ ___setup_files_module ___PVOID
   if (!___files_mod.setup)
     {
       ___files_mod.setup = 1;
+      ___MUTEX_INIT(___files_mod.cwd_mut);
       return ___FIX(___NO_ERR);
     }
 
@@ -1944,6 +1949,7 @@ void ___cleanup_files_module ___PVOID
   if (___files_mod.setup)
     {
       ___files_mod.setup = 0;
+      ___MUTEX_DESTROY(___files_mod.cwd_mut);
     }
 }
 

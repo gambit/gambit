@@ -3802,6 +3802,8 @@ ___SUBTYPED_FROM_START(___ALIGNUP((vms)->vm_scmobj,___WS))
 
 #define ___TICKETLOCK_DECL(id) ___TICKETLOCK id;
 
+#define ___TICKETLOCK_INIT_STATIC { ___FIX(0), ___FIX(0) }
+
 #define ___TICKETLOCK_INIT(lock) \
 (lock).next_ticket = (lock).current_ticket = ___FIX(0)
 
@@ -3929,6 +3931,7 @@ ___TICKETLOCK_UNLOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)));
 
 #define ___SPINLOCK ___MUTEX
 #define ___SPINLOCK_DECL(id) ___MUTEX_DECL(id)
+#define ___SPINLOCK_INIT_STATIC ___MUTEX_INIT_STATIC
 #define ___SPINLOCK_INIT(lock) ___MUTEX_INIT(lock)
 #define ___SPINLOCK_DESTROY(lock) ___MUTEX_DESTROY(lock)
 #define ___SPINLOCK_LOCK(lock) ___MUTEX_LOCK(lock)
@@ -3938,6 +3941,7 @@ ___TICKETLOCK_UNLOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)));
 
 #define ___SPINLOCK ___TICKETLOCK
 #define ___SPINLOCK_DECL(id) ___TICKETLOCK_DECL(id)
+#define ___SPINLOCK_INIT_STATIC ___TICKETLOCK_INIT_STATIC
 #define ___SPINLOCK_INIT(lock) ___TICKETLOCK_INIT(lock)
 #define ___SPINLOCK_DESTROY(lock) ___TICKETLOCK_DESTROY(lock)
 #define ___SPINLOCK_LOCK(lock) ___TICKETLOCK_LOCK(lock)
@@ -8208,6 +8212,7 @@ typedef struct ___full_duplex_pipe
 
 #define ___MUTEX pthread_mutex_t
 #define ___MUTEX_DECL(id) ___MUTEX id;
+#define ___MUTEX_INIT_STATIC PTHREAD_MUTEX_INITIALIZER
 #define ___MUTEX_INIT(mut) (pthread_mutex_init (&mut, NULL) == 0)
 #define ___MUTEX_DESTROY(mut) (pthread_mutex_destroy (&mut) == 0)
 #define ___MUTEX_LOCK(mut) (pthread_mutex_lock (&mut) == 0)
@@ -8215,6 +8220,7 @@ typedef struct ___full_duplex_pipe
 
 #define ___CONDVAR pthread_cond_t
 #define ___CONDVAR_DECL(id) ___CONDVAR id;
+#define ___CONDVAR_INIT_STATIC PTHREAD_COND_INITIALIZER
 #define ___CONDVAR_INIT(cv) (pthread_cond_init (&cv, NULL) == 0)
 #define ___CONDVAR_DESTROY(cv) (pthread_cond_destroy (&cv) == 0)
 #define ___CONDVAR_WAIT(cv,mut) (pthread_cond_wait (&cv, &mut) == 0)
@@ -8229,6 +8235,7 @@ typedef struct ___full_duplex_pipe
 
 #define ___MUTEX CRITICAL_SECTION
 #define ___MUTEX_DECL(id) ___MUTEX id;
+#define ___MUTEX_INIT_STATIC NULL
 #define ___MUTEX_INIT(mut) InitializeCriticalSection (&mut)
 #define ___MUTEX_DESTROY(mut) DeleteCriticalSection (&mut)
 #define ___MUTEX_LOCK(mut) EnterCriticalSection (&mut)
@@ -8238,6 +8245,7 @@ typedef struct ___full_duplex_pipe
 
 #define ___CONDVAR CONDITION_VARIABLE
 #define ___CONDVAR_DECL(id) ___CONDVAR id;
+#define ___CONDVAR_INIT_STATIC CONDITION_VARIABLE_INIT
 #define ___CONDVAR_INIT(cv) InitializeConditionVariable (&cv)
 #define ___CONDVAR_DESTROY(cv)
 #define ___CONDVAR_WAIT(cv,mut) SleepConditionVariableCS (&cv, &mut, INFINITE)
@@ -8252,6 +8260,7 @@ typedef struct ___full_duplex_pipe
 
 #define ___CONDVAR int
 #define ___CONDVAR_DECL(id) ___CONDVAR id;
+#define ___CONDVAR_INIT_STATIC 0
 #define ___CONDVAR_INIT(cv) cv = 0
 #define ___CONDVAR_DESTROY(cv)
 #define ___CONDVAR_WAIT(cv,mut) do { ___MUTEX_UNLOCK(mut); ___MUTEX_LOCK(mut); } while (0)
@@ -8270,6 +8279,7 @@ typedef struct ___full_duplex_pipe
 
 #define ___MUTEX int
 #define ___MUTEX_DECL(id)
+#define ___MUTEX_INIT_STATIC 0
 #define ___MUTEX_INIT(mut)
 #define ___MUTEX_DESTROY(mut)
 #define ___MUTEX_LOCK(mut)
@@ -8277,6 +8287,7 @@ typedef struct ___full_duplex_pipe
 
 #define ___CONDVAR int
 #define ___CONDVAR_DECL(id)
+#define ___CONDVAR_INIT_STATIC 0
 #define ___CONDVAR_INIT(cv)
 #define ___CONDVAR_DESTROY(cv)
 #define ___CONDVAR_WAIT(cv,mut)

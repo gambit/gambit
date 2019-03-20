@@ -14,6 +14,17 @@ typedef struct ___files_module_struct
   {
     ___BOOL setup;
 
+#ifdef ___USE_NO_THREAD_SYSTEM
+
+#define ___FILES_MODULE_INIT
+
+#else
+
+    ___MUTEX_DECL(cwd_mut)
+
+#define ___FILES_MODULE_INIT , ___MUTEX_INIT_STATIC
+
+#endif
   } ___files_module;
 
 
