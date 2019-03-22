@@ -6636,7 +6636,7 @@ int ignore_hidden;)
 
   d->ignore_hidden = ignore_hidden;
 
-  d->dir = opendir (path);
+  d->dir = opendir_long_path (path);
 
   if (d->dir == NULL)
     {
@@ -8518,7 +8518,7 @@ int *slave_fd_ptr;)
 #else
 
   *slave_fd_ptr = -1;
-  return *master_fd_ptr = open ("/dev/ptmx", O_RDWR | O_NOCTTY);
+  return *master_fd_ptr = open_long_path ("/dev/ptmx", O_RDWR | O_NOCTTY);
 
 #endif
 #endif
@@ -8593,7 +8593,7 @@ int *slave_fd;)
   if (grantpt (master_fd) >= 0 &&
       unlockpt (master_fd) >= 0 &&
       (name = ptsname (master_fd)) != NULL &&
-      (fd = open (name, O_RDWR)) >= 0)
+      (fd = open_long_path (name, O_RDWR)) >= 0)
     {
       int tmp;
 
@@ -9017,7 +9017,7 @@ int options;)
               }
           }
 
-          if (dir == NULL || chdir (dir) == 0)
+          if (dir == NULL || chdir_long_path (dir) == 0)
             {
 #ifdef USE_environ
               if (env != NULL)
@@ -9384,12 +9384,12 @@ int mode;)
   ___printf ("path=\"%s\" fl=%d\n", path, fl);
 #endif
 
-  if ((fd = open (path,
-                  fl,
+  if ((fd = open_long_path (path,
+                            fl,
 #ifdef O_BINARY
-                  O_BINARY|
+                            O_BINARY|
 #endif
-                  mode))
+                            mode))
       < 0)
     return fnf_or_err_code_from_errno ();
 

@@ -67,6 +67,13 @@
 /*---------------------------------------------------------------------------*/
 
 /*
+ * Build with support for long paths.
+ */
+
+#define ___SUPPORT_LONG_PATH
+
+
+/*
  * We assume that the following basic features are available
  * regardless of the operating-system... otherwise we are in real
  * trouble!
@@ -115,14 +122,40 @@
 
 #ifdef HAVE_RENAME
 #define USE_rename
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_RENAMEAT
+#define USE_renameat
+#endif
+#endif
 #endif
 
 #ifdef HAVE_MKDIR
 #define USE_mkdir
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_MKDIRAT
+#define USE_mkdirat
+#endif
+#endif
+#endif
+
+#ifdef HAVE_OPEN
+#define USE_open
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_OPENAT
+#define USE_openat
+#endif
+#endif
 #endif
 
 #ifdef HAVE_OPENDIR
 #define USE_opendir
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef USE_openat
+#ifdef HAVE_FDOPENDIR
+#define USE_fdopendir
+#endif
+#endif
+#endif
 #endif
 
 #if defined(HAVE_STAT64) && defined(HAVE_STRUCT_STAT64) && !(defined(__MACOSX__) || (defined(__APPLE__) && defined(__MACH__)))
@@ -138,6 +171,11 @@
 #define ___stat stat
 #define ___lstat lstat
 #define ___fstat fstat
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_FSTATAT
+#define USE_fstatat
+#endif
+#endif
 #endif
 #endif
 
@@ -157,8 +195,6 @@
 #ifdef USE_POSIX
 
 #define USE_FDSET_RESIZING
-
-#define USE_open
 
 /* Select features based on availability */
 
@@ -200,10 +236,20 @@
 
 #ifdef HAVE_LINK
 #define USE_link
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_LINKAT
+#define USE_linkat
+#endif
+#endif
 #endif
 
 #ifdef HAVE_MKFIFO
 #define USE_mkfifo
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_MKFIFOAT
+#define USE_mkfifoat
+#endif
+#endif
 #endif
 
 #ifdef HAVE_RMDIR
@@ -221,6 +267,11 @@
 
 #ifdef HAVE_SYMLINK
 #define USE_symlink
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_SYMLINKAT
+#define USE_symlinkat
+#endif
+#endif
 #endif
 
 #ifdef HAVE_SYSCONF
@@ -255,6 +306,11 @@
 
 #ifdef HAVE_UNLINK
 #define USE_unlink
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_UNLINKAT
+#define USE_unlinkat
+#endif
+#endif
 #endif
 
 #ifdef HAVE_WAITPID
@@ -564,7 +620,14 @@
 #ifdef HAVE__NSGETEXECUTABLEPATH
 #define USE__NSGetExecutablePath
 #else
+#ifdef HAVE_READLINK
 #define USE_readlink
+#ifdef ___SUPPORT_LONG_PATH
+#ifdef HAVE_READLINKAT
+#define USE_readlinkat
+#endif
+#endif
+#endif
 #endif
 
 

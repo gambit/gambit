@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -17,6 +17,7 @@
 #include "os_tty.h"
 #include "os_shell.h"
 #include "os_io.h"
+#include "os_files.h"
 #include "mem.h"
 #include "c_intf.h"
 
@@ -822,15 +823,15 @@ ___device_tty *self;)
         ctermid (term_name); /* get controlling terminal's name */
 #endif
 
-        if ((fd = open (term_name,
+        if ((fd = open_long_path (term_name,
 #ifdef LINEEDITOR_WITH_NONBLOCKING_IO
-                        O_NONBLOCK |
+                                  O_NONBLOCK |
 #endif
 #ifdef O_BINARY
-                        O_BINARY |
+                                  O_BINARY |
 #endif
-                        O_RDWR,
-                        0))
+                                  O_RDWR,
+                                  0))
             < 0)
           {
 #ifdef ENXIO

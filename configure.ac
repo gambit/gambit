@@ -1183,18 +1183,23 @@ AC_DEFUN([AC_CHECK_REMOVE],
 AC_DEFUN([AC_CHECK_RENAME],
 [
   AC_CHECK_FUNCS(rename)
+  AC_CHECK_FUNCS(renameat)
 ])
 
 AC_DEFUN([AC_CHECK_MKDIR],
 [
   AC_CHECK_HEADERS(sys/stat.h)
+  AC_CHECK_HEADERS(sys/types.h)
+  AC_CHECK_HEADERS(fcntl.h)
   AC_CHECK_FUNCS(mkdir)
+  AC_CHECK_FUNCS(mkdirat)
 ])
 
 AC_DEFUN([AC_CHECK_OPENDIR],
 [
   AC_CHECK_HEADERS(dirent.h)
   AC_CHECK_FUNCS(opendir)
+  AC_CHECK_FUNCS(fdopendir)
 ])
 
 AC_DEFUN([AC_CHECK_STAT],
@@ -1203,6 +1208,7 @@ AC_DEFUN([AC_CHECK_STAT],
   AC_CHECK_HEADERS(sys/stat.h)
   AC_CHECK_FUNCS(stat)
   AC_CHECK_FUNCS(stat64)
+  AC_CHECK_FUNCS(fstatat)
   AC_CHECK_TYPE([struct stat64],
                 [AC_DEFINE([HAVE_STRUCT_STAT64],[],[Defined when struct stat64 is available])],
                 [],
@@ -1442,6 +1448,8 @@ else
 
   fi
 
+  AC_CHECK_FUNCS(open)
+  AC_CHECK_FUNCS(openat)
   AC_CHECK_FUNCS(pipe)
   AC_CHECK_FUNCS(socketpair)
   AC_CHECK_FUNCS(chdir)
@@ -1451,19 +1459,25 @@ else
   AC_CHECK_FUNCS(getppid)
   AC_CHECK_FUNCS(getpwnam)
   AC_CHECK_FUNCS(ioctl)
+  AC_CHECK_FUNCS(readlink)
+  AC_CHECK_FUNCS(readlinkat)
   AC_CHECK_FUNCS(link)
+  AC_CHECK_FUNCS(linkat)
   AC_CHECK_FUNCS(mkfifo)
+  AC_CHECK_FUNCS(mkfifoat)
   AC_CHECK_FUNCS(rmdir)
   AC_CHECK_FUNCS(socket)
   AC_CHECK_FUNCS(utimes)
   AC_CHECK_FUNCS(strerror)
   AC_CHECK_FUNCS(symlink)
+  AC_CHECK_FUNCS(symlinkat)
   AC_CHECK_FUNCS(sysconf)
   AC_CHECK_FUNCS(sysctl)
   AC_CHECK_FUNCS(sysctlbyname)
   AC_CHECK_FUNCS(syslog)
   AC_CHECK_FUNCS(backtrace_symbols_fd)
   AC_CHECK_FUNCS(unlink)
+  AC_CHECK_FUNCS(unlinkat)
   AC_CHECK_FUNCS(waitpid)
   AC_CHECK_FUNCS(mmap)
   AC_CHECK_FUNCS(fcntl)

@@ -2101,10 +2101,9 @@ ___SCMOBJ chase;)
     {
       ___struct_stat s;
 
-      if (((chase == ___FAL)
-           ? ___lstat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s)
-           : ___stat (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath), &s))
-          < 0)
+      if (stat_long_path (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath),
+                          &s,
+                          chase != ___FAL) < 0)
         {
           e = fnf_or_err_code_from_errno ();
           ___release_string (cpath);

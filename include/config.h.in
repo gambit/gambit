@@ -133,6 +133,8 @@
 
 /* Determine which library functions are available. */
 
+#undef HAVE_OPEN
+#undef HAVE_OPENAT
 #undef HAVE_PIPE
 #undef HAVE_SOCKETPAIR
 #undef HAVE_CHDIR
@@ -143,23 +145,32 @@
 #undef HAVE_GETPPID
 #undef HAVE_GETPWNAM
 #undef HAVE_IOCTL
+#undef HAVE_READLINK
+#undef HAVE_READLINKAT
 #undef HAVE_LINK
+#undef HAVE_LINKAT
 #undef HAVE_MKDIR
+#undef HAVE_MKDIRAT
 #undef HAVE_MKFIFO
+#undef HAVE_MKFIFOAT
 #undef HAVE_OPENDIR
+#undef HAVE_FDOPENDIR
 #undef HAVE_RMDIR
 #undef HAVE_SOCKET
 #undef HAVE_UTIMES
 #undef HAVE_STAT
 #undef HAVE_STAT64
+#undef HAVE_FSTATAT
 #undef HAVE_STRERROR
 #undef HAVE_SYMLINK
+#undef HAVE_SYMLINKAT
 #undef HAVE_SYSCONF
 #undef HAVE_SYSCTL
 #undef HAVE_SYSCTLBYNAME
 #undef HAVE_SYSLOG
 #undef HAVE_BACKTRACE_SYMBOLS_FD
 #undef HAVE_UNLINK
+#undef HAVE_UNLINKAT
 #undef HAVE_WAITPID
 #undef HAVE_MMAP
 #undef HAVE_FCNTL
@@ -242,6 +253,7 @@
 #undef HAVE__NSGETENVIRON
 #undef HAVE_REMOVE
 #undef HAVE_RENAME
+#undef HAVE_RENAMEAT
 
 #undef HAVE_PTHREAD_SETAFFINITY_NP
 

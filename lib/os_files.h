@@ -157,9 +157,108 @@ ___PATH_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native)
 
 #ifdef USE_getcwd
 
-extern char *getcwd_alloc_mem_if_needed
+extern char *getcwd_long_path
    ___P((char *buf,
          ___SIZE_T size),
+        ());
+
+#endif
+
+#ifdef USE_chdir
+
+extern int chdir_long_path
+   ___P((char *path),
+        ());
+
+#endif
+
+#ifdef USE_open
+
+extern int open_long_path
+   ___P((char *path,
+         int flags,
+         mode_t mode),
+        ());
+
+#endif
+
+#ifdef USE_mkfifo
+
+extern int mkfifo_long_path
+   ___P((char *path,
+         mode_t mode),
+        ());
+
+#endif
+
+#ifdef USE_mkdir
+
+extern int mkdir_long_path
+   ___P((char *path,
+         mode_t mode),
+        ());
+
+#endif
+
+#ifdef USE_unlink
+
+extern int unlink_long_path
+   ___P((char *path),
+        ());
+
+#endif
+
+#ifdef USE_link
+
+extern int link_long_path
+   ___P((char *oldpath,
+         char *newpath),
+        ());
+
+#endif
+
+#ifdef USE_symlink
+
+extern int symlink_long_path
+   ___P((char *target,
+         char *path),
+        ());
+
+#endif
+
+#ifdef USE_readlink
+
+extern ___SSIZE_T readlink_long_path
+   ___P((char *path,
+         char *buf,
+         ___SIZE_T bufsize),
+        ());
+
+#endif
+
+#ifdef USE_rename
+
+extern int rename_long_path
+   ___P((char *oldpath,
+         char *newpath),
+        ());
+
+#endif
+
+#ifdef USE_opendir
+
+DIR *opendir_long_path
+   ___P((char *path),
+        ());
+
+#endif
+
+#ifdef USE_stat
+
+int stat_long_path
+   ___P((char *path,
+         ___struct_stat *statbuf,
+         ___BOOL follow),
         ());
 
 #endif
