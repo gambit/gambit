@@ -2457,7 +2457,8 @@
           (cond ((##fixnum? dir)
                  (err dir))
                 (dir
-                 (expand relpath dir))
+                 (expand relpath
+                         (expand dir cd)))
                 (else
                  (let ((dir (##os-path-gambitdir)))
                    (cond ((##fixnum? dir)
