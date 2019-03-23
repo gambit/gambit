@@ -6495,17 +6495,6 @@ _ACEOF
 fi
 done
 
-  for ac_func in renameat
-do :
-  ac_fn_cxx_check_func "$LINENO" "renameat" "ac_cv_func_renameat"
-if test "x$ac_cv_func_renameat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_RENAMEAT 1
-_ACEOF
-
-fi
-done
-
 
 
   for ac_header in sys/stat.h
@@ -6550,17 +6539,6 @@ do :
 if test "x$ac_cv_func_mkdir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MKDIR 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in mkdirat
-do :
-  ac_fn_cxx_check_func "$LINENO" "mkdirat" "ac_cv_func_mkdirat"
-if test "x$ac_cv_func_mkdirat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_MKDIRAT 1
 _ACEOF
 
 fi
@@ -6645,17 +6623,6 @@ do :
 if test "x$ac_cv_func_stat64" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT64 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in fstatat
-do :
-  ac_fn_cxx_check_func "$LINENO" "fstatat" "ac_cv_func_fstatat"
-if test "x$ac_cv_func_fstatat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_FSTATAT 1
 _ACEOF
 
 fi
@@ -7433,17 +7400,6 @@ _ACEOF
 fi
 done
 
-  for ac_func in renameat
-do :
-  ac_fn_cxx_check_func "$LINENO" "renameat" "ac_cv_func_renameat"
-if test "x$ac_cv_func_renameat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_RENAMEAT 1
-_ACEOF
-
-fi
-done
-
 
 
   for ac_header in sys/stat.h
@@ -7488,17 +7444,6 @@ do :
 if test "x$ac_cv_func_mkdir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MKDIR 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in mkdirat
-do :
-  ac_fn_cxx_check_func "$LINENO" "mkdirat" "ac_cv_func_mkdirat"
-if test "x$ac_cv_func_mkdirat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_MKDIRAT 1
 _ACEOF
 
 fi
@@ -7583,17 +7528,6 @@ do :
 if test "x$ac_cv_func_stat64" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT64 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in fstatat
-do :
-  ac_fn_cxx_check_func "$LINENO" "fstatat" "ac_cv_func_fstatat"
-if test "x$ac_cv_func_fstatat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_FSTATAT 1
 _ACEOF
 
 fi
@@ -8282,45 +8216,12 @@ fi
 
   fi
 
-  for ac_func in open
+  for ac_func in backtrace_symbols_fd
 do :
-  ac_fn_cxx_check_func "$LINENO" "open" "ac_cv_func_open"
-if test "x$ac_cv_func_open" = xyes; then :
+  ac_fn_cxx_check_func "$LINENO" "backtrace_symbols_fd" "ac_cv_func_backtrace_symbols_fd"
+if test "x$ac_cv_func_backtrace_symbols_fd" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_OPEN 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in openat
-do :
-  ac_fn_cxx_check_func "$LINENO" "openat" "ac_cv_func_openat"
-if test "x$ac_cv_func_openat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_OPENAT 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in pipe
-do :
-  ac_fn_cxx_check_func "$LINENO" "pipe" "ac_cv_func_pipe"
-if test "x$ac_cv_func_pipe" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_PIPE 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in socketpair
-do :
-  ac_fn_cxx_check_func "$LINENO" "socketpair" "ac_cv_func_socketpair"
-if test "x$ac_cv_func_socketpair" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SOCKETPAIR 1
+#define HAVE_BACKTRACE_SYMBOLS_FD 1
 _ACEOF
 
 fi
@@ -8343,6 +8244,17 @@ do :
 if test "x$ac_cv_func_execvp" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_EXECVP 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in fcntl
+do :
+  ac_fn_cxx_check_func "$LINENO" "fcntl" "ac_cv_func_fcntl"
+if test "x$ac_cv_func_fcntl" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_FCNTL 1
 _ACEOF
 
 fi
@@ -8403,45 +8315,12 @@ _ACEOF
 fi
 done
 
-  for ac_func in readlink
-do :
-  ac_fn_cxx_check_func "$LINENO" "readlink" "ac_cv_func_readlink"
-if test "x$ac_cv_func_readlink" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_READLINK 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in readlinkat
-do :
-  ac_fn_cxx_check_func "$LINENO" "readlinkat" "ac_cv_func_readlinkat"
-if test "x$ac_cv_func_readlinkat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_READLINKAT 1
-_ACEOF
-
-fi
-done
-
   for ac_func in link
 do :
   ac_fn_cxx_check_func "$LINENO" "link" "ac_cv_func_link"
 if test "x$ac_cv_func_link" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LINK 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in linkat
-do :
-  ac_fn_cxx_check_func "$LINENO" "linkat" "ac_cv_func_linkat"
-if test "x$ac_cv_func_linkat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LINKAT 1
 _ACEOF
 
 fi
@@ -8458,12 +8337,45 @@ _ACEOF
 fi
 done
 
-  for ac_func in mkfifoat
+  for ac_func in mmap
 do :
-  ac_fn_cxx_check_func "$LINENO" "mkfifoat" "ac_cv_func_mkfifoat"
-if test "x$ac_cv_func_mkfifoat" = xyes; then :
+  ac_fn_cxx_check_func "$LINENO" "mmap" "ac_cv_func_mmap"
+if test "x$ac_cv_func_mmap" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_MKFIFOAT 1
+#define HAVE_MMAP 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in open
+do :
+  ac_fn_cxx_check_func "$LINENO" "open" "ac_cv_func_open"
+if test "x$ac_cv_func_open" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_OPEN 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in pipe
+do :
+  ac_fn_cxx_check_func "$LINENO" "pipe" "ac_cv_func_pipe"
+if test "x$ac_cv_func_pipe" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_PIPE 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in readlink
+do :
+  ac_fn_cxx_check_func "$LINENO" "readlink" "ac_cv_func_readlink"
+if test "x$ac_cv_func_readlink" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_READLINK 1
 _ACEOF
 
 fi
@@ -8491,12 +8403,12 @@ _ACEOF
 fi
 done
 
-  for ac_func in utimes
+  for ac_func in socketpair
 do :
-  ac_fn_cxx_check_func "$LINENO" "utimes" "ac_cv_func_utimes"
-if test "x$ac_cv_func_utimes" = xyes; then :
+  ac_fn_cxx_check_func "$LINENO" "socketpair" "ac_cv_func_socketpair"
+if test "x$ac_cv_func_socketpair" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_UTIMES 1
+#define HAVE_SOCKETPAIR 1
 _ACEOF
 
 fi
@@ -8519,17 +8431,6 @@ do :
 if test "x$ac_cv_func_symlink" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYMLINK 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in symlinkat
-do :
-  ac_fn_cxx_check_func "$LINENO" "symlinkat" "ac_cv_func_symlinkat"
-if test "x$ac_cv_func_symlinkat" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_SYMLINKAT 1
 _ACEOF
 
 fi
@@ -8579,17 +8480,6 @@ _ACEOF
 fi
 done
 
-  for ac_func in backtrace_symbols_fd
-do :
-  ac_fn_cxx_check_func "$LINENO" "backtrace_symbols_fd" "ac_cv_func_backtrace_symbols_fd"
-if test "x$ac_cv_func_backtrace_symbols_fd" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_BACKTRACE_SYMBOLS_FD 1
-_ACEOF
-
-fi
-done
-
   for ac_func in unlink
 do :
   ac_fn_cxx_check_func "$LINENO" "unlink" "ac_cv_func_unlink"
@@ -8601,12 +8491,12 @@ _ACEOF
 fi
 done
 
-  for ac_func in unlinkat
+  for ac_func in utimes
 do :
-  ac_fn_cxx_check_func "$LINENO" "unlinkat" "ac_cv_func_unlinkat"
-if test "x$ac_cv_func_unlinkat" = xyes; then :
+  ac_fn_cxx_check_func "$LINENO" "utimes" "ac_cv_func_utimes"
+if test "x$ac_cv_func_utimes" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_UNLINKAT 1
+#define HAVE_UTIMES 1
 _ACEOF
 
 fi
@@ -8623,23 +8513,101 @@ _ACEOF
 fi
 done
 
-  for ac_func in mmap
+
+  for ac_func in fstatat
 do :
-  ac_fn_cxx_check_func "$LINENO" "mmap" "ac_cv_func_mmap"
-if test "x$ac_cv_func_mmap" = xyes; then :
+  ac_fn_cxx_check_func "$LINENO" "fstatat" "ac_cv_func_fstatat"
+if test "x$ac_cv_func_fstatat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_MMAP 1
+#define HAVE_FSTATAT 1
 _ACEOF
 
 fi
 done
 
-  for ac_func in fcntl
+  for ac_func in linkat
 do :
-  ac_fn_cxx_check_func "$LINENO" "fcntl" "ac_cv_func_fcntl"
-if test "x$ac_cv_func_fcntl" = xyes; then :
+  ac_fn_cxx_check_func "$LINENO" "linkat" "ac_cv_func_linkat"
+if test "x$ac_cv_func_linkat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_FCNTL 1
+#define HAVE_LINKAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in mkdirat
+do :
+  ac_fn_cxx_check_func "$LINENO" "mkdirat" "ac_cv_func_mkdirat"
+if test "x$ac_cv_func_mkdirat" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MKDIRAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in mkfifoat
+do :
+  ac_fn_cxx_check_func "$LINENO" "mkfifoat" "ac_cv_func_mkfifoat"
+if test "x$ac_cv_func_mkfifoat" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MKFIFOAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in openat
+do :
+  ac_fn_cxx_check_func "$LINENO" "openat" "ac_cv_func_openat"
+if test "x$ac_cv_func_openat" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_OPENAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in readlinkat
+do :
+  ac_fn_cxx_check_func "$LINENO" "readlinkat" "ac_cv_func_readlinkat"
+if test "x$ac_cv_func_readlinkat" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_READLINKAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in renameat
+do :
+  ac_fn_cxx_check_func "$LINENO" "renameat" "ac_cv_func_renameat"
+if test "x$ac_cv_func_renameat" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_RENAMEAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in symlinkat
+do :
+  ac_fn_cxx_check_func "$LINENO" "symlinkat" "ac_cv_func_symlinkat"
+if test "x$ac_cv_func_symlinkat" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SYMLINKAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in unlinkat
+do :
+  ac_fn_cxx_check_func "$LINENO" "unlinkat" "ac_cv_func_unlinkat"
+if test "x$ac_cv_func_unlinkat" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_UNLINKAT 1
 _ACEOF
 
 fi

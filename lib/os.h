@@ -115,29 +115,6 @@
 
 /* avoid using these functions in favour of the Windows equivalents */
 
-#ifdef HAVE_REMOVE
-#define USE_remove_dir
-#define USE_remove_file
-#endif
-
-#ifdef HAVE_RENAME
-#define USE_rename
-#ifdef ___SUPPORT_LONG_PATH
-#ifdef HAVE_RENAMEAT
-#define USE_renameat
-#endif
-#endif
-#endif
-
-#ifdef HAVE_MKDIR
-#define USE_mkdir
-#ifdef ___SUPPORT_LONG_PATH
-#ifdef HAVE_MKDIRAT
-#define USE_mkdirat
-#endif
-#endif
-#endif
-
 #ifdef HAVE_OPEN
 #define USE_open
 #ifdef ___SUPPORT_LONG_PATH
@@ -149,11 +126,32 @@
 
 #ifdef HAVE_OPENDIR
 #define USE_opendir
-#ifdef ___SUPPORT_LONG_PATH
 #ifdef USE_openat
 #ifdef HAVE_FDOPENDIR
 #define USE_fdopendir
 #endif
+#endif
+#endif
+
+#ifdef HAVE_REMOVE
+#define USE_remove_dir
+#define USE_remove_file
+#endif
+
+#ifdef HAVE_RENAME
+#define USE_rename
+#ifdef USE_openat
+#ifdef HAVE_RENAMEAT
+#define USE_renameat
+#endif
+#endif
+#endif
+
+#ifdef HAVE_MKDIR
+#define USE_mkdir
+#ifdef USE_openat
+#ifdef HAVE_MKDIRAT
+#define USE_mkdirat
 #endif
 #endif
 #endif
@@ -171,7 +169,7 @@
 #define ___stat stat
 #define ___lstat lstat
 #define ___fstat fstat
-#ifdef ___SUPPORT_LONG_PATH
+#ifdef USE_openat
 #ifdef HAVE_FSTATAT
 #define USE_fstatat
 #endif
@@ -236,7 +234,7 @@
 
 #ifdef HAVE_LINK
 #define USE_link
-#ifdef ___SUPPORT_LONG_PATH
+#ifdef USE_openat
 #ifdef HAVE_LINKAT
 #define USE_linkat
 #endif
@@ -245,7 +243,7 @@
 
 #ifdef HAVE_MKFIFO
 #define USE_mkfifo
-#ifdef ___SUPPORT_LONG_PATH
+#ifdef USE_openat
 #ifdef HAVE_MKFIFOAT
 #define USE_mkfifoat
 #endif
@@ -267,7 +265,7 @@
 
 #ifdef HAVE_SYMLINK
 #define USE_symlink
-#ifdef ___SUPPORT_LONG_PATH
+#ifdef USE_openat
 #ifdef HAVE_SYMLINKAT
 #define USE_symlinkat
 #endif
@@ -306,7 +304,7 @@
 
 #ifdef HAVE_UNLINK
 #define USE_unlink
-#ifdef ___SUPPORT_LONG_PATH
+#ifdef USE_openat
 #ifdef HAVE_UNLINKAT
 #define USE_unlinkat
 #endif
@@ -622,7 +620,7 @@
 #else
 #ifdef HAVE_READLINK
 #define USE_readlink
-#ifdef ___SUPPORT_LONG_PATH
+#ifdef USE_openat
 #ifdef HAVE_READLINKAT
 #define USE_readlinkat
 #endif
