@@ -2,7 +2,7 @@
 
 ;;; File: "_std.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1071,6 +1071,12 @@
 
 ;; Number related procedures are in "_num.scm"
 
+;; define Unicode related macros
+
+(##include "_unicode#.scm")
+
+(macro-implement-unicode-tables)
+
 (define-fail-check-type char 'char)
 (define-fail-check-type char-list 'char-list)
 (define-fail-check-type char-vector 'char-vector)
@@ -1151,85 +1157,84 @@
   macro-force-vars
   macro-check-char)
 
-(##define-macro (case-independent-char=? x y)
-  `(##char=? (##char-downcase ,x) (##char-downcase ,y)))
+(##define-macro (macro-char-ci=? x y)
+  `(##char=? (##char-foldcase ,x) (##char-foldcase ,y)))
 
-(##define-macro (case-independent-char<? x y)
-  `(##char<? (##char-downcase ,x) (##char-downcase ,y)))
+(##define-macro (macro-char-ci<? x y)
+  `(##char<? (##char-foldcase ,x) (##char-foldcase ,y)))
 
 (define-prim-nary-bool (##char-ci=? x y)
   #t
   #t
-  (case-independent-char=? x y)
+  (macro-char-ci=? x y)
   macro-no-force
   macro-no-check)
 
 (define-prim-nary-bool (char-ci=? x y)
   #t
   #t
-  (case-independent-char=? x y)
+  (macro-char-ci=? x y)
   macro-force-vars
   macro-check-char)
 
 (define-prim-nary-bool (##char-ci<? x y)
   #t
   #t
-  (case-independent-char<? x y)
+  (macro-char-ci<? x y)
   macro-no-force
   macro-no-check)
 
 (define-prim-nary-bool (char-ci<? x y)
   #t
   #t
-  (case-independent-char<? x y)
+  (macro-char-ci<? x y)
   macro-force-vars
   macro-check-char)
 
 (define-prim-nary-bool (##char-ci>? x y)
   #t
   #t
-  (case-independent-char<? y x)
+  (macro-char-ci<? y x)
   macro-no-force
   macro-no-check)
 
 (define-prim-nary-bool (char-ci>? x y)
   #t
   #t
-  (case-independent-char<? y x)
+  (macro-char-ci<? y x)
   macro-force-vars
   macro-check-char)
 
 (define-prim-nary-bool (##char-ci<=? x y)
   #t
   #t
-  (##not (case-independent-char<? y x))
+  (##not (macro-char-ci<? y x))
   macro-no-force
   macro-no-check)
 
 (define-prim-nary-bool (char-ci<=? x y)
   #t
   #t
-  (##not (case-independent-char<? y x))
+  (##not (macro-char-ci<? y x))
   macro-force-vars
   macro-check-char)
 
 (define-prim-nary-bool (##char-ci>=? x y)
   #t
   #t
-  (##not (case-independent-char<? x y))
+  (##not (macro-char-ci<? x y))
   macro-no-force
   macro-no-check)
 
 (define-prim-nary-bool (char-ci>=? x y)
   #t
   #t
-  (##not (case-independent-char<? x y))
+  (##not (macro-char-ci<? x y))
   macro-force-vars
   macro-check-char)
 
 (define-prim (##char-alphabetic? c)
-  (or (and (##char<=? #\A c) (##char<=? c #\Z))
-      (and (##char<=? #\a c) (##char<=? c #\z))))
+  (macro-char-alphabetic? c))
 
 (define-prim (char-alphabetic? c)
   (macro-force-vars (c)
@@ -1237,7 +1242,7 @@
       (##char-alphabetic? c))))
 
 (define-prim (##char-numeric? c)
-  (and (##char<=? #\0 c) (##char<=? c #\9)))
+  (macro-char-numeric? c))
 
 (define-prim (char-numeric? c)
   (macro-force-vars (c)
@@ -1245,9 +1250,7 @@
       (##char-numeric? c))))
 
 (define-prim (##char-whitespace? c)
-  (or (and (##char<=? #\tab c)
-	   (##char<=? c #\return))
-      (##char=? c #\space)))
+  (macro-char-whitespace? c))
 
 (define-prim (char-whitespace? c)
   (macro-force-vars (c)
@@ -1255,7 +1258,7 @@
       (##char-whitespace? c))))
 
 (define-prim (##char-upper-case? c)
-  (and (##char<=? #\A c) (##char<=? c #\Z)))
+  (macro-char-upper-case? c))
 
 (define-prim (char-upper-case? c)
   (macro-force-vars (c)
@@ -1263,7 +1266,7 @@
       (##char-upper-case? c))))
 
 (define-prim (##char-lower-case? c)
-  (and (##char<=? #\a c) (##char<=? c #\z)))
+  (macro-char-lower-case? c))
 
 (define-prim (char-lower-case? c)
   (macro-force-vars (c)
@@ -1284,9 +1287,7 @@
           (##raise-range-exception 1 integer->char n)))))
 
 (define-prim (##char-upcase c)
-  (if (and (##char<=? #\a c) (##char<=? c #\z))
-      (##integer->char (##fx- (##char->integer c) 32))
-      c))
+  (macro-char-upcase c))
 
 (define-prim (char-upcase c)
   (macro-force-vars (c)
@@ -1294,14 +1295,28 @@
       (##char-upcase c))))
 
 (define-prim (##char-downcase c)
-  (if (and (##char<=? #\A c) (##char<=? c #\Z))
-      (##integer->char (##fx+ (##char->integer c) 32))
-      c))
+  (macro-char-downcase c))
 
 (define-prim (char-downcase c)
   (macro-force-vars (c)
     (macro-check-char c 1 (char-downcase c)
       (##char-downcase c))))
+
+(define-prim (##char-foldcase c)
+  (macro-char-foldcase c))
+
+(define-prim (char-foldcase c)
+  (macro-force-vars (c)
+    (macro-check-char c 1 (char-foldcase c)
+      (##char-foldcase c))))
+
+(define-prim (##digit-value c)
+  (macro-digit-value c))
+
+(define-prim (digit-value c)
+  (macro-force-vars (c)
+    (macro-check-char c 1 (digit-value c)
+      (##digit-value c))))
 
 (define-prim (##string=? str1 str2)
   (##string-equal? str1 str2))
@@ -1355,19 +1370,17 @@
   macro-force-vars
   macro-check-string)
 
+(define-prim (##string-cmp-ci str1 str2)
+  (macro-string-cmp-ci str1
+                       str2
+                       0
+                       (##string-length str1)
+                       0
+                       (##string-length str2)))
+
 (define-prim (##string-ci=? str1 str2)
   (or (##eq? str1 str2)
-      (let ((len1 (##string-length str1)))
-        (if (##fx= len1 (##string-length str2))
-            (let loop ((i (##fx- len1 1)))
-              (cond ((##fx< i 0)
-                     #t)
-                    ((##char=? (##char-downcase (##string-ref str1 i))
-                               (##char-downcase (##string-ref str2 i)))
-                     (loop (##fx- i 1)))
-                    (else
-                     #f)))
-            #f))))
+      (##fx= (##string-cmp-ci str1 str2) 0)))
 
 (define-prim-nary-bool (string-ci=? str1 str2)
   #t
@@ -1378,17 +1391,7 @@
 
 (define-prim (##string-ci<? str1 str2)
   (and (##not (##eq? str1 str2))
-       (let ((len1 (##string-length str1))
-             (len2 (##string-length str2)))
-         (let ((n (##fxmin len1 len2)))
-           (let loop ((i 0))
-             (if (##fx< i n)
-                 (let ((c1 (##char-downcase (##string-ref str1 i)))
-                       (c2 (##char-downcase (##string-ref str2 i))))
-                   (if (##char=? c1 c2)
-                       (loop (##fx+ i 1))
-                       (##char<? c1 c2)))
-                 (##fx< n len2)))))))
+       (##fx< (##string-cmp-ci str1 str2) 0)))
 
 (define-prim-nary-bool (string-ci<? str1 str2)
   #t
@@ -1417,6 +1420,17 @@
   (##not (##string-ci<? str1 str2))
   macro-force-vars
   macro-check-string)
+
+(define-prim (##string-foldcase str)
+  (macro-string-foldcase str 0 (##string-length str)))
+
+(define-prim (string-foldcase str)
+  (macro-force-vars (str)
+    (macro-check-string
+      str
+      1
+      (string-foldcase str)
+      (##string-foldcase str))))
 
 (define-prim (##copy-string-list lst)
 

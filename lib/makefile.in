@@ -1,6 +1,6 @@
 # makefile for Gambit library.
 
-# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
@@ -81,7 +81,7 @@ NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
 "_eval\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" "_repl\#.scm" \
-"_gambit\#.scm" "gambit\#.scm" \
+"_unicode\#.scm" "_gambit\#.scm" "gambit\#.scm" \
 "r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" \
 _define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
 _syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
@@ -218,6 +218,7 @@ $(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_unicode\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_define-syntax.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_syntax-boot.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform-boot.scm \

@@ -3355,6 +3355,8 @@
 
 ;; Table of inlinable operations (for 'apply' and 'ifjump' GVM instructions)
 
+(define targ-use-c-rts-char-operations #f)
+
 (define (targ-setup-inlinable)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3589,13 +3591,15 @@
 (targ-op "##char<=?"          (targ-ifjump-fold-u #f "CHARLEP"))
 (targ-op "##char>=?"          (targ-ifjump-fold-u #f "CHARGEP"))
 
-(targ-op "##char-alphabetic?" (targ-ifjump-simp-u #f "CHARALPHABETICP"))
-(targ-op "##char-numeric?"    (targ-ifjump-simp-u #f "CHARNUMERICP"))
-(targ-op "##char-whitespace?" (targ-ifjump-simp-u #f "CHARWHITESPACEP"))
-(targ-op "##char-upper-case?" (targ-ifjump-simp-u #f "CHARUPPERCASEP"))
-(targ-op "##char-lower-case?" (targ-ifjump-simp-u #f "CHARLOWERCASEP"))
-(targ-op "##char-upcase"      (targ-apply-simp-u #f #f #f "CHARUPCASE"))
-(targ-op "##char-downcase"    (targ-apply-simp-u #f #f #f "CHARDOWNCASE"))
+(if targ-use-c-rts-char-operations
+    (begin
+      (targ-op "##char-alphabetic?" (targ-ifjump-simp-u #f "CHARALPHABETICP"))
+      (targ-op "##char-numeric?"    (targ-ifjump-simp-u #f "CHARNUMERICP"))
+      (targ-op "##char-whitespace?" (targ-ifjump-simp-u #f "CHARWHITESPACEP"))
+      (targ-op "##char-upper-case?" (targ-ifjump-simp-u #f "CHARUPPERCASEP"))
+      (targ-op "##char-lower-case?" (targ-ifjump-simp-u #f "CHARLOWERCASEP"))
+      (targ-op "##char-upcase"      (targ-apply-simp-u #f #f #f "CHARUPCASE"))
+      (targ-op "##char-downcase"    (targ-apply-simp-u #f #f #f "CHARDOWNCASE"))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

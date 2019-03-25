@@ -1882,6 +1882,9 @@ ___SCMOBJ linkername;)
  */
 
 
+#ifdef ___USE_C_RTS_CHAR_OPERATIONS
+
+
 ___EXP_FUNC(___BOOL,___iswalpha)
    ___P((___UCS_4 x),
         (x)
@@ -2200,6 +2203,9 @@ ___SCMOBJ str2;)
 
 #endif
 }
+
+
+#endif
 
 
 /*---------------------------------------------------------------------------*/
@@ -4374,6 +4380,8 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
 #ifndef ___CAN_IMPORT_DYNAMICALLY
 
+#ifdef ___USE_C_RTS_CHAR_OPERATIONS
+
   ___GSTATE->___iswalpha
     = ___iswalpha;
 
@@ -4400,6 +4408,8 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___string_collate_ci
     = ___string_collate_ci;
+
+#endif
 
   ___GSTATE->___copysign
     = ___copysign;

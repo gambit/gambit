@@ -3443,6 +3443,7 @@ else \
 #define ___CHARLEP(x,y)((x)<=(y))
 #define ___CHARGEP(x,y)((x)>=(y))
 
+#ifdef ___USE_C_RTS_CHAR_OPERATIONS
 #define ___CHARALPHABETICP(x)___EXT(___iswalpha)(___INT(x))
 #define ___CHARNUMERICP(x)___EXT(___iswdigit)(___INT(x))
 #define ___CHARWHITESPACEP(x)___EXT(___iswspace)(___INT(x))
@@ -3450,6 +3451,7 @@ else \
 #define ___CHARLOWERCASEP(x)___EXT(___iswlower)(___INT(x))
 #define ___CHARUPCASE(x)___CHR(___EXT(___towupper)(___INT(x)))
 #define ___CHARDOWNCASE(x)___CHR(___EXT(___towlower)(___INT(x)))
+#endif
 
 /* APPLY-able operations */
 
@@ -9461,6 +9463,7 @@ typedef struct ___global_state_struct
 #endif
 
 #ifndef ___CAN_IMPORT_DYNAMICALLY
+#ifdef ___USE_C_RTS_CHAR_OPERATIONS
     ___BOOL (*___iswalpha)
        ___P((___UCS_4 x),
             ());
@@ -9490,6 +9493,7 @@ typedef struct ___global_state_struct
        ___P((___SCMOBJ s1,
              ___SCMOBJ s2),
             ());
+#endif
     double (*___copysign)
        ___P((double x,
              double y),
@@ -11795,6 +11799,7 @@ ___IMP_FUNC(___SCMOBJ,___gc_hash_table_rehash)
 
 #ifndef ___INCLUDED_FROM_SETUP
 ___GSTATEDECL
+#ifdef ___USE_C_RTS_CHAR_OPERATIONS
 ___IMP_FUNC(___BOOL,___iswalpha)
    ___P((___UCS_4 x),
         ());
@@ -11824,6 +11829,7 @@ ___IMP_FUNC(___SCMOBJ,___string_collate_ci)
    ___P((___SCMOBJ s1,
          ___SCMOBJ s2),
         ());
+#endif
 ___IMP_FUNC(double,___copysign)
    ___P((double x,
          double y),

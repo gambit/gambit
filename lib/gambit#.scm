@@ -106,6 +106,7 @@ cfun-conversion-exception-code
 cfun-conversion-exception-message
 cfun-conversion-exception-procedure
 cfun-conversion-exception?
+char-foldcase
 circular-list
 clear-bit-field
 close-port
@@ -152,6 +153,7 @@ deadlock-exception?
 defer-user-interrupts
 delete-directory
 delete-file
+digit-value
 directory-files
 display-continuation-backtrace
 display-continuation-dynamic-environment
@@ -792,6 +794,7 @@ string->utf8
 string->vector
 string-ci=?-hash
 string-copy!
+string-foldcase
 string-for-each
 string-map
 string-set
