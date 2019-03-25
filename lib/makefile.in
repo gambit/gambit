@@ -110,7 +110,7 @@ UNIVLIB = $(rootfromhere)/gsc/_t-univ-*.scm $(rootfromhere)/gsc/_univadt.scm
 
 LIBRARIES_SCM = $(HEADERS_SCM) digest.scm syntax-case.scm
 
-UNICODE_FILES = UnicodeData.txt PropList.txt CaseFolding.txt
+UNICODEFILES = UnicodeData.txt PropList.txt CaseFolding.txt
 
 LIBRARY = $(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
 LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) _$(GAMBITLIB)@obj@
@@ -145,9 +145,9 @@ GAMBIT_LIBS = $(GAMBIT_LIB_C)
 
 GENDISTFILES = $(MODULES_C) $(GAMBIT_LIB_C)
 
-DISTFILES = $(RCFILES) $(GENDISTFILES)
+DISTFILES = $(RCFILES) $(GENDISTFILES) $(UNICODEFILES)
 
-INSTFILES_LIB_DATA = $(LIBRARIES_SCM) $(GAMBIT_LIBS) $(UNICODE_FILES)
+INSTFILES_LIB_DATA = $(LIBRARIES_SCM) $(GAMBIT_LIBS) $(UNICODEFILES)
 
 GAMBITDIR_INCLUDE = $(rootfromhere)/include
 GAMBITDIR_LIB = $(rootfromhere)/lib
