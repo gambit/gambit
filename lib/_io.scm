@@ -5325,7 +5325,7 @@
           (if (##fx< i ml)
               (let ((c (macro-read-char port)))
                 (if (##char? c)
-                    (if (##eq? c separator)
+                    (if (##eq? c separator) ;; note: separator is a char or #f
                         (if include-separator?
                             (let ((s (##make-string (##fx+ i 1))))
                               (##string-set! s i c)
@@ -5350,7 +5350,7 @@
                  (chunk1 (read-chunk 1 m1)))
             (##string-set! chunk1 0 first)
             (if (or (##fx< (##string-length chunk1) m1)
-                    (##eq? (##string-ref chunk1 (##fx- m1 1))
+                    (##eq? (##string-ref chunk1 (##fx- m1 1)) ;; note: separator is a char or #f
                            separator)
                     (##fx= ml m1))
                 chunk1
@@ -5360,7 +5360,7 @@
                          (new-chunk (read-chunk 0 m2))
                          (new-chunks (##cons new-chunk chunks)))
                     (if (or (##fx< (##string-length new-chunk) m2)
-                            (##eq? (##string-ref new-chunk (##fx- m2 1))
+                            (##eq? (##string-ref new-chunk (##fx- m2 1)) ;; note: separator is a char or #f
                                    separator)
                             (##fx= ml m2))
                         (##append-strings (##reverse new-chunks))
@@ -5368,7 +5368,7 @@
                               new-chunks)))))))
 
         (if (##char? first)
-            (if (##eq? first separator)
+            (if (##eq? first separator) ;; note: separator is a char or #f
                 (if include-separator?
                     (##string first)
                     (##string))
@@ -11901,6 +11901,7 @@
 (##define-macro (char? . args)            `(##char? ,@args))
 (##define-macro (cons . args)             `(##cons ,@args))
 (##define-macro (eq? . args)              `(##eq? ,@args))
+(##define-macro (eqv? . args)             `(##eqv? ,@args))
 (##define-macro (complex? . args)         `(##complex? ,@args))
 (##define-macro (exact? . args)           `(##exact? ,@args))
 (##define-macro (for-each . args)         `(##for-each ,@args))
@@ -12599,7 +12600,7 @@
                   (macro-readenv-readtable re))))
            (if (and keywords-allowed?
                     (not (eq? keywords-allowed? 'prefix))
-                    (eq? (macro-peek-next-char-or-eof re) #\:))
+                    (eqv? (macro-peek-next-char-or-eof re) #\:))
                (begin
                  (macro-read-next-char-or-eof re) ;; skip #\:
                  (string->key str))
@@ -12609,7 +12610,7 @@
                      (macro-readtable-keywords-allowed?
                       (macro-readenv-readtable re))))
                 (eq? keywords-allowed? 'prefix))
-              (eq? (macro-peek-next-char-or-eof re) #\|))
+              (eqv? (macro-peek-next-char-or-eof re) #\|))
          (macro-read-next-char-or-eof re) ;; skip #\|
          (let ((str
                 (##build-escaped-string-up-to re #\|)))
@@ -12751,11 +12752,11 @@
                    (make-string i))
                   ((char=? c #\\)
                    (let ((next (macro-read-next-char-or-eof re)))
-                     (if (eq? next #\newline)
+                     (if (eqv? next #\newline)
                          (let loop3 ()
                            (let ((c (macro-read-next-char-or-eof re)))
                              (if (and (char? c)
-                                      (not (eq? c #\newline))
+                                      (not (char=? c #\newline))
                                       (eq? (##readtable-char-handler
                                             (macro-readenv-readtable re)
                                             c)
@@ -13066,16 +13067,16 @@
     (macro-read-next-char-or-eof re) ;; skip #\' or #\` or #\,
     (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
     (let ((keyword
-           (cond ((eq? next #\,)
+           (cond ((eqv? next #\,)
                   (let ((after-comma (macro-peek-next-char-or-eof re)))
-                    (if (eq? after-comma #\@)
+                    (if (eqv? after-comma #\@)
                         (begin
                           (macro-read-next-char-or-eof re) ;; skip #\@
                           (macro-readtable-sharp-unquote-splicing-keyword
                            (macro-readenv-readtable re)))
                         (macro-readtable-sharp-unquote-keyword
                          (macro-readenv-readtable re)))))
-                 ((eq? next #\`)
+                 ((eqv? next #\`)
                   (macro-readtable-sharp-quasiquote-keyword
                    (macro-readenv-readtable re)))
                  (else
@@ -13132,7 +13133,7 @@
       (let ((separator (macro-read-next-char-or-eof re)))
         (cond ((not (char? separator))
                (eof))
-              ((eq? separator #\<)
+              ((char=? separator #\<)
                ;; Multiline SCSH here string of the form
                ;; #<<END
                ;; hello world
@@ -13162,7 +13163,7 @@
                  (if (string? str)
                      (let ((len (string-length str)))
                        (if (and (< 0 len)
-                                (eq? (string-ref str (- len 1)) separator))
+                                (char=? (string-ref str (- len 1)) separator))
                            (begin
                              (##string-shrink! str (- len 1))
                              (macro-readenv-wrap re str))
@@ -13179,8 +13180,8 @@
       (string-set! s 0 #\0)
       (let* ((n (string->number s 10))
              (c (macro-peek-next-char-or-eof re)))
-        (cond ((or (and (not (eq? c #\#))
-                        (not (eq? c #\=)))
+        (cond ((or (and (not (eqv? c #\#))
+                        (not (eqv? c #\=)))
                    (not (macro-readtable-sharing-allowed?
                          (macro-readenv-readtable re))))
                (##wrap-op1* re
@@ -13188,7 +13189,7 @@
                             (macro-readtable-sharp-num-keyword
                              (macro-readenv-readtable re))
                             n))
-              ((eq? c #\#)
+              ((eqv? c #\#)
                (macro-read-next-char-or-eof re) ;; skip #\#
                (##label-marker-reference re n))
               (else
@@ -13248,7 +13249,7 @@
 
             (define (build-vect re kind)
               (let ((c (macro-read-next-char-or-eof re)))
-                (if (eq? c #\()
+                (if (eqv? c #\()
                     (macro-readenv-wrap re (##build-vector re kind start-pos #\)))
                     (begin
                       (##raise-datum-parsing-exception 'open-paren-expected re)
@@ -13257,7 +13258,7 @@
 
             (define (deserialize re implode);;;;;;;;;;;;;;;;;;;;;;;;;;;;
               (let ((c (macro-read-next-char-or-eof re)))
-                (if (eq? c #\()
+                (if (eqv? c #\()
                     (let* ((old-wrapper (macro-readenv-wrapper re))
                            (old-unwrapper (macro-readenv-unwrapper re)))
                       (macro-readenv-wrapper-set! re (lambda (re x) x))
@@ -13364,16 +13365,16 @@
     (macro-read-next-char-or-eof re) ;; skip #\' or #\` or #\,
     (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
     (let ((keyword
-           (cond ((eq? c #\,)
+           (cond ((eqv? c #\,)
                   (let ((after-comma (macro-peek-next-char-or-eof re)))
-                    (if (eq? after-comma #\@)
+                    (if (eqv? after-comma #\@)
                         (begin
                           (macro-read-next-char-or-eof re) ;; skip #\@
                           (macro-readtable-unquote-splicing-keyword
                            (macro-readenv-readtable re)))
                         (macro-readtable-unquote-keyword
                          (macro-readenv-readtable re)))))
-                 ((eq? c #\`)
+                 ((eqv? c #\`)
                   (macro-readtable-quasiquote-keyword
                    (macro-readenv-readtable re)))
                  (else
@@ -13467,7 +13468,7 @@
     (macro-read-next-char-or-eof re) ;; skip "c"
     (if (and (char=? c #\@)
              (macro-readenv-allow-script? re)
-             (eq? (macro-peek-next-char-or-eof re) #\;))
+             (eqv? (macro-peek-next-char-or-eof re) #\;))
         (begin
           (macro-read-next-char-or-eof re) ;; skip #\;
           (##script-marker))
@@ -13919,7 +13920,7 @@
 
                    ((char=? c #\@)
                     (if (and (macro-readenv-allow-script? re)
-                             (eq? (macro-peek-next-char-or-eof re) #\;))
+                             (eqv? (macro-peek-next-char-or-eof re) #\;))
                         (begin
                           (macro-read-next-char-or-eof re) ;; skip #\;
                           (##script-marker))
