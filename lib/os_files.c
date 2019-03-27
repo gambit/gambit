@@ -1568,7 +1568,7 @@ ___SCMOBJ ___os_executable_path ___PVOID
 #if defined (USE_sysctl) && defined (CTL_KERN) && defined (KERN_PROC) && defined (KERN_PROC_PATHNAME)
 
   {
-    // Each row has the format: nb_args, arg0, ..., argn
+    // Each row has the format: nb_args, arg1, ..., argn
     int mibs[] = {
 #if defined(KERN_PROC_ARGS)
       4, CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME,
@@ -1576,14 +1576,14 @@ ___SCMOBJ ___os_executable_path ___PVOID
       4, CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1,
       0
     };
-    int *mibs_iter = (int*)mibs;
+    int *mibs_probe = mibs;
     size_t cb = sizeof (path_buf);
 
     path = path_buf;
-    while (*mibs_iter != 0)
+    while (*mibs_probe != 0)
       {
-        if (sysctl (mibs_iter+1, *mibs_iter, path, &cb, NULL, 0) != -1) goto convert_path;
-        mibs_iter += *mibs_iter + 1;
+        if (sysctl (mibs_probe+1, *mibs_probe, path, &cb, NULL, 0) != -1) goto convert_path;
+        mibs_probe += *mibs_probe + 1;
       }
 
 #if !(defined (USE_readlink) && defined (USE_getpid))
