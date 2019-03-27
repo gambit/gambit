@@ -440,9 +440,11 @@ ___SIZE_T size;)
 
   while (errno == ERANGE)
     {
+      ___SIZE_T old_size = size;
       e = errno;
-      size = 2 * size;
-      if ((buf = ___CAST(char*, ___ALLOC_MEM(size))) == 0)
+      size = size << 1;
+      if ((size >> 1) != old_size ||
+          (buf = ___CAST(char*, ___ALLOC_MEM(size))) == 0)
         {
           errno = e;
           return 0;
