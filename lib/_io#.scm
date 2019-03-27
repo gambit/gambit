@@ -1040,7 +1040,7 @@
 ;; started.
 
 (define-type readenv
-  id: edd21ef2-ee48-407f-a9a9-c1c361078e55
+  id: A488CFB0-2CF4-4EEF-A8BE-930FC4CB4AB3
   type-exhibitor: macro-type-readenv
   constructor: macro-make-readenv
   implementer: implement-type-readenv
@@ -1053,7 +1053,8 @@
   readtable
   wrapper
   unwrapper
-  allow-script?
+  script-line
+  case-conversion?
   labels
   container
   filepos

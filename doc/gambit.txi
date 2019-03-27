@@ -13840,14 +13840,14 @@ For example:
 The procedure @code{readtable-case-conversion?} returns the content of
 the @samp{case-conversion?} field of @var{readtable}.  When the
 content of this field is @code{#f}, the reader preserves the case of
-symbols and keyword objects that are read (i.e. @code{Ice} and
+symbols, keyword and named characters that are read (i.e. @code{Ice} and
 @code{ice} are distinct symbols).  When the content of this field is
-the symbol @code{upcase}, the reader converts lowercase letters to
-uppercase when reading symbols and keywords (i.e. @code{Ice} is read
+the symbol @code{upcase}, the reader converts to
+uppercase (i.e. @code{Ice} is read
 as the symbol @code{(string->symbol "ICE")}).  Otherwise the reader
-converts uppercase letters to lowercase when reading symbols and
-keywords (i.e. @code{Ice} is read as the symbol @code{(string->symbol
-"ice")}).
+converts using @code{string-foldcase}, which for many letters
+converts them to lowercase
+(i.e. @code{Ice} is read as the symbol @code{(string->symbol "ice")}).
 
 The procedure @code{readtable-case-conversion?-set} returns a copy
 of @var{readtable} where only the @samp{case-conversion?} field

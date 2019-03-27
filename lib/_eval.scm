@@ -4307,6 +4307,7 @@
                          ##wrap-datum
                          ##unwrap-datum
                          #f
+                         '()
                          #f)))
     (##read-datum-or-eof re)))
 

@@ -136,6 +136,7 @@
               wrapper
               unwrapper
               allow-script?
+              case-conversion?
               read-cont)
   (macro-make-readenv
    port
@@ -143,6 +144,9 @@
    wrapper
    unwrapper
    allow-script?
+   (if (##eq? case-conversion? '()) ;; default to readtable?
+       (macro-readtable-case-conversion? readtable)
+       case-conversion?)
    (##make-table)
    #f
    0
@@ -4095,6 +4099,7 @@
                    noop
                    noop
                    #f
+                   '()
                    read-cont)))
             ((macro-object-port-read-datum port) port re)))
 
@@ -5513,7 +5518,7 @@
             (##readtable-copy-shallow readtable)))
        (macro-readtable-start-syntax-set! rt start-syntax)
        (let* ((re
-               (##make-readenv port rt wrap unwrap 'script #f))
+               (##make-readenv port rt wrap unwrap #t '() #f))
               (head
                (##cons (wrap re '##begin)
                        '())) ;; tail will be replaced with expressions read
@@ -5521,30 +5526,22 @@
                (wrap re head))
               (first
                (##read-datum-or-eof re))
-              (script-line
-               (and (##eq? first (##script-marker))
-                    (##read-line port #\newline #f ##max-fixnum)))
-              (language-and-tail
-               (##extract-language-and-tail script-line)))
-         (if language-and-tail
-             (let ((language (##car language-and-tail)))
-               (##readtable-setup-for-language! rt language)))
-         (let* ((rest
-                 (if (##eof-object? first)
-                     '()
-                     (##read-all re ##read-datum-or-eof)))
-                (port-name
-                 (##port-name port)))
-           (if close-port?
-               (##close-input-port port))
-           (cond ((##eof-object? first)
-                  (##vector #f expr port-name))
-                 ((##eq? first (##script-marker))
-                  (##set-cdr! head rest)
-                  (##vector script-line expr port-name))
-                 (else
-                  (##set-cdr! head (##cons first rest))
-                  (##vector #f expr port-name)))))))))
+              (rest
+               (if (##eof-object? first)
+                   '()
+                   (##read-all re ##read-datum-or-eof))))
+         (if close-port?
+             (##close-input-port port))
+         (if (##not (##eof-object? first))
+             (##set-cdr! head
+                         (if (##eq? first (##script-marker))
+                             rest
+                             (##cons first rest))))
+         (let* ((sl (macro-readenv-script-line re))
+                (script-line (and (##string? sl) sl)))
+           (##vector script-line
+                     expr
+                     (##port-name port))))))))
 
 (define-prim (##write-char2 c port)
 
@@ -10544,16 +10541,20 @@
         (##escape-symkey? we str))))
 
 (define-prim (##escape-symkey? we str);;;;;;;;;;;;;;;;;;;;;;;;;;
-  (let ((n (##string-length str)))
-    (let loop ((i (##fx- n 1)))
-      (if (##fx< i 0)
-          #f
-          (let ((c (##string-ref str i))
-                (rt (macro-writeenv-readtable we)))
-            (or (macro-must-escape-char? we c)
-                (##readtable-char-delimiter? rt c)
-                (##not (##char=? c (##readtable-convert-case rt c)))
-                (loop (##fx- i 1))))))))
+  (let ((rt (macro-writeenv-readtable we)))
+    (or (##not (##string=?
+                (##convert-case
+                 (macro-readtable-case-conversion? rt)
+                 str)
+                str))
+        (let ((n (##string-length str)))
+          (let loop ((i (##fx- n 1)))
+            (if (##fx< i 0)
+                #f
+                (let ((c (##string-ref str i)))
+                  (or (macro-must-escape-char? we c)
+                      (##readtable-char-delimiter? rt c)
+                      (loop (##fx- i 1))))))))))
 
 (define-prim (##wr-keyword we obj)
   (let ((uninterned? (##uninterned-keyword? obj)))
@@ -12135,28 +12136,17 @@
   (##readtable-char-delimiter?-set! rt c delimiter?)
   (##readtable-char-handler-set! rt c handler))
 
-(define (##readtable-convert-case rt c)
-  (let ((case-conversion? (macro-readtable-case-conversion? rt)))
-    (if case-conversion?
-        (if (eq? case-conversion? 'upcase)
-            (char-upcase c)
-            (char-downcase c))
-        c)))
-
-(define (##readtable-string-convert-case! rt s)
-  (let ((case-conversion? (macro-readtable-case-conversion? rt)))
-    (if case-conversion?
-        (if (eq? case-conversion? 'upcase)
-            (let loop ((i (- (string-length s) 1)))
-              (if (not (< i 0))
-                  (begin
-                    (string-set! s i (char-upcase (string-ref s i)))
-                    (loop (- i 1)))))
-            (let loop ((i (- (string-length s) 1)))
-              (if (not (< i 0))
-                  (begin
-                    (string-set! s i (char-downcase (string-ref s i)))
-                    (loop (- i 1)))))))))
+(define (##convert-case case-conversion? s)
+  (if case-conversion?
+      (if (eq? case-conversion? 'upcase)
+          (let loop ((i (- (string-length s) 1)))
+            (if (< i 0)
+                s
+                (begin
+                  (string-set! s i (char-upcase (string-ref s i)))
+                  (loop (- i 1)))))
+          (##string-foldcase s))
+      s))
 
 (define (##readtable-parse-keyword rt s intern? create?)
   (let ((keywords-allowed? (macro-readtable-keywords-allowed? rt)))
@@ -12278,9 +12268,6 @@
 ;; position where the datum starts.
 
 (define (##read-datum-or-label-or-none-or-dot re)
-  (macro-readenv-allow-script?-set!
-   re
-   (eq? (macro-readenv-allow-script? re) 'script))
   (let ((next (macro-peek-next-char-or-eof re)))
     (if (char? next)
         ((##readtable-char-handler (macro-readenv-readtable re) next) re next)
@@ -12629,16 +12616,16 @@
         (string->uninterned-symbol-object str)))
 
   (or (and intern? (string->number str 10))
-      (begin
-        (##readtable-string-convert-case!
-         (macro-readenv-readtable re)
-         str)
+      (let ((str2
+             (##convert-case
+              (macro-readenv-case-conversion? re)
+              str)))
         (or (##readtable-parse-keyword
              (macro-readenv-readtable re)
-             str
+             str2
              intern?
              #t)
-            (string->sym str)))))
+            (string->sym str2)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -12979,12 +12966,13 @@
                                        (UCS-4 n))))
                                (else
                                 #f))
-                         (let ((x
+                         (let* ((rt
+                                 (macro-readenv-readtable re))
+                                (x
                                 (##read-assoc-string=?
                                  re
                                  name
-                                 (macro-readtable-named-char-table
-                                  (macro-readenv-readtable re)))))
+                                 (macro-readtable-named-char-table rt))))
                            (if x
                                (macro-readenv-wrap re (cdr x))
                                (invalid-character-name-error))))))))))))
@@ -12997,26 +12985,55 @@
     (macro-readenv-filepos-set! re old-pos) ;; restore pos
     (##read-datum-or-label-or-none-or-dot re))) ;; read what follows comment
 
+(define (##case-conversion-set! re val)
+  (macro-readenv-case-conversion?-set! re val))
+
+(define (##read-script-line re prefix)
+  (let* ((rest-of-line
+          (##read-line (macro-readenv-port re) #\newline #f ##max-fixnum))
+         (script-line
+          (string-append prefix (if (string? rest-of-line) rest-of-line "")))
+         (language-and-tail
+          (##extract-language-and-tail script-line)))
+    (if language-and-tail
+        (let ((language (##car language-and-tail)))
+          (##readtable-setup-for-language!
+           (macro-readenv-readtable re)
+           language)))
+    (macro-readenv-script-line-set! re script-line)))
+
 (define (##read-sharp-bang re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
+
+    (define (ignore)
+      (macro-readenv-filepos-set! re old-pos) ;; restore pos
+      (##read-datum-or-label-or-none-or-dot re))
+
     (macro-read-next-char-or-eof re) ;; skip char after #\#
-    (if (macro-readenv-allow-script? re)
-        (##script-marker)
-        (begin
-          (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
-          (let ((name (##build-delimited-string re #\space 0)))
-            (let ((x
-                   (##read-assoc-string=?
-                    re
-                    name
-                    (macro-readtable-sharp-bang-table
-                     (macro-readenv-readtable re)))))
-              (if x
-                  (macro-readenv-wrap re (cdr x))
-                  (begin
-                    (##raise-datum-parsing-exception 'invalid-sharp-bang-name re name)
-                    (macro-readenv-filepos-set! re old-pos) ;; restore pos
-                    (##read-datum-or-label-or-none-or-dot re))))))))) ;; skip error
+    (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
+    (let ((name (##build-delimited-string re #\space 0)))
+      (cond ((##string=? name "fold-case")
+             (##case-conversion-set! re #t)
+             (ignore))
+            ((##string=? name "no-fold-case")
+             (##case-conversion-set! re #f)
+             (ignore))
+            (else
+             (let ((x
+                    (##read-assoc-string=?
+                     re
+                     name
+                     (macro-readtable-sharp-bang-table
+                      (macro-readenv-readtable re)))))
+               (cond (x
+                      (macro-readenv-wrap re (cdr x)))
+                     ((and (eq? (macro-readenv-script-line re) #t) ;; script allowed?
+                           (eqv? start-pos 0)) ;; at start of file
+                      (##read-script-line re name)
+                      (##script-marker))
+                     (else
+                      (##raise-datum-parsing-exception 'invalid-sharp-bang-name re name)
+                      (ignore))))))))) ;; skip error
 
 (define (##read-sharp-keyword/symbol re next start-pos)
   (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
@@ -13467,10 +13484,12 @@
   (let ((start-pos (##readenv-current-filepos re)))
     (macro-read-next-char-or-eof re) ;; skip "c"
     (if (and (char=? c #\@)
-             (macro-readenv-allow-script? re)
+             (eq? (macro-readenv-script-line re) #t) ;; script allowed?
+             (eqv? start-pos 0) ;; at start of file
              (eqv? (macro-peek-next-char-or-eof re) #\;))
         (begin
           (macro-read-next-char-or-eof re) ;; skip #\;
+          (##read-script-line re "")
           (##script-marker))
         (begin
           (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
@@ -13489,8 +13508,7 @@
 
 (define (##read-string=? re str1 str2)
   (let ((case-conversion?
-         (macro-readtable-case-conversion?
-          (macro-readenv-readtable re))))
+         (macro-readenv-case-conversion? re)))
     (if case-conversion?
         (string-ci=? str1 str2)
         (string=? str1 str2))))
@@ -13558,7 +13576,6 @@
   (define-six-token |token.}|    -11)
   (define-six-token |token.`|    -12)
   (define-six-token |token.#|    -13)
-  (define-six-token token.script -14)
 
   (define-six-op op.!      2  rl six.x!y        six.!x           )
   (define-six-op op.++     2  rl #f             six.++x six.x++  )
@@ -13696,9 +13713,6 @@
     (parse-token-starting-with re (macro-peek-next-char-or-eof re)))
 
   (define (parse-token-starting-with re c)
-    (macro-readenv-allow-script?-set!
-     re
-     (eq? (macro-readenv-allow-script? re) 'script))
     (cond ((not (char? c))
            (##none-marker))
           ((eq? (##readtable-char-handler (macro-readenv-readtable re) c)
@@ -13909,9 +13923,13 @@
                               ((char=? c #\`)
                                (one-char-token |token.`|))
                               ((char=? c #\#)
-                               (if (and (macro-readenv-allow-script? re)
+                               (if (and (eq? (macro-readenv-script-line re) #t) ;; script allowed?
+                                        (eqv? start-pos 0) ;; at start of file
                                         (char=? x #\!))
-                                   (two-char-token (##script-marker))
+                                   (begin
+                                     (macro-read-next-char-or-eof re);;skip #\!
+                                     (##read-script-line re "")
+                                     (##script-marker))
                                    (one-char-token |token.#|)))
                               ((decimal-digit? c)
                                (token (parse-number re #\0 c)))
@@ -13919,10 +13937,12 @@
                                (token (parse-identifier re c)))))))
 
                    ((char=? c #\@)
-                    (if (and (macro-readenv-allow-script? re)
+                    (if (and (eq? (macro-readenv-script-line re) #t) ;; script allowed?
+                             (eqv? start-pos 0) ;; at start of file
                              (eqv? (macro-peek-next-char-or-eof re) #\;))
                         (begin
-                          (macro-read-next-char-or-eof re) ;; skip #\;
+                          (macro-read-next-char-or-eof re);;skip #\;
+                          (##read-script-line re "")
                           (##script-marker))
                         (##none-marker)))
 
