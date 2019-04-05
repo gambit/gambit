@@ -2708,6 +2708,8 @@ double y;)
 
   if (y == 0.0)
     return 1.0;
+  else if (x == 1)
+    return 1.;
   else if (___isnan (x))
     return x;
   else if (___isnan (y))
