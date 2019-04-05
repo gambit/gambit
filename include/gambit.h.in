@@ -1475,13 +1475,6 @@
 #include <math.h>
 #endif
 
-/*
- * We assume that no C compiler has good implementations of atan2 and
- * pow.  So we need to define them in the Gambit runtime system.
- */
-
-#define ___DEFINE_ATAN2
-#define ___DEFINE_POW
 
 #ifdef ___OS_WIN32
 
@@ -1503,6 +1496,8 @@
 #define ___DEFINE_ASINH
 #define ___DEFINE_ACOSH
 #define ___DEFINE_ATANH
+#define ___DEFINE_ATAN2
+#define ___DEFINE_POW
 
 #endif
 
