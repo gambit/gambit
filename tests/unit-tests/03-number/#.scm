@@ -1,11 +1,15 @@
 (include "../#.scm")
 
-(define-macro (macro-inexact-+pi)    3.141592653589793)
-(define-macro (macro-inexact--pi)   -3.141592653589793)
-(define-macro (macro-inexact-+pi/2)  1.5707963267948966)
-(define-macro (macro-inexact--pi/2) -1.5707963267948966)
-(define-macro (macro-inexact-+pi/4)   .7853981633974483)
-(define-macro (macro-inexact-+3pi/4) 2.356194490192345)
+(define-macro (macro-inexact-+pi)     3.141592653589793)
+(define-macro (macro-inexact--pi)    -3.141592653589793)
+(define-macro (macro-inexact-+pi/2)   1.5707963267948966)
+(define-macro (macro-inexact--pi/2)  -1.5707963267948966)
+(define-macro (macro-inexact-+pi/4)    .7853981633974483)
+(define-macro (macro-inexact--pi/4)   -.7853981633974483)
+(define-macro (macro-inexact-+3pi/4)  2.356194490192345)
+(define-macro (macro-inexact--3pi/4) -2.356194490192345)
+
+(define (isnan? x) (not (= x x)))
 
 (set! epsilon 1e-12)
 
