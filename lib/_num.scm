@@ -3430,16 +3430,22 @@ for a discussion of branch cuts.
       (cond ((and (##flonum? real) (##flonum? imag))
              (##cabs x))
             ;; at least one of real or imag is exact
-            ((and (##exact? real) (##exact? imag))
-             (##sqrt (##+ (##square real) (##square imag))))
-            ;; one is exact, other is inexact
             ((and (##finite? real) (##finite? imag))
-             (##exact->inexact (##sqrt (##+ (##square (##inexact->exact real))
-                                            (##square (##inexact->exact imag))))))
-            ;; one is exact, other is not finite inexact
+             (let ((possibly-exact-result
+                    (##sqrt (##+ (##square (##inexact->exact real))
+                                 (##square (##inexact->exact imag))))))
+               (if (or (##flonum? real) (##flonum? imag))
+                   (##exact->inexact possibly-exact-result)
+                   possibly-exact-result)))
+            ;; at least one of real or imag is not finite
+            ((or (##infinite? real) (##infinite? imag))
+             +inf.0)
+            ;; At least one of real and imag is a NaN, and
+            ;; if real or imag is a flonum then it is a NaN.
+            ((##flonum? real)
+             real)
             (else
-             (##cabs (macro-cpxnum-make (##exact->inexact real)
-                                        (##exact->inexact imag))))))))
+             imag)))))
 
 (define-prim (magnitude x)
   (macro-force-vars (x)
