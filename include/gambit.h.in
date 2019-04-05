@@ -1550,6 +1550,8 @@
 #define ___HAVE_GOOD_SINH
 #define ___HAVE_GOOD_COSH
 #define ___HAVE_GOOD_TANH
+#define ___HAVE_GOOD_POW
+#define ___HAVE_GOOD_ATAN2
 
 #endif
 
