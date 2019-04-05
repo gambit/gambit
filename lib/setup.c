@@ -2677,8 +2677,12 @@ double x;)
     }
   else if (___isfinite (x) || ___isfinite (y))
     return atan2 (y, x);
+  else if (x > 0.)  /* +inf.0 */
+    /* return pi/4 with appropriate sign */
+    return ___copysign (.7853981633974483, y);
   else
-    return ___copysign (x/y, x*y); /* returns NAN with appropriate sign */
+    /* return 3pi/4 with appropriate sign */
+    return ___copysign (2.356194490192345, y);
 
 #endif
 }
