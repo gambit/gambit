@@ -2456,8 +2456,13 @@ double x;)
 
   u = 1.0 + x;
   if (u == 1.0)
+    /* x near 0. */
     return x;
+  if (u == x)
+    /* large arguments and infinities */
+    return log (u);
   else
+    /* NaNs and other arguments */
     return log (u) * (x / (u - 1.0));
 
 #endif
