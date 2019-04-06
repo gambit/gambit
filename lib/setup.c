@@ -2707,6 +2707,65 @@ double x;)
 #endif
 
 
+#ifdef ___DEFINE_HYPOT
+
+___EXP_FUNC(double,___hypot)
+   ___P((double x,
+         double y),
+        (x,
+         y)
+double x;
+double y;)
+{
+#ifdef ___HAVE_GOOD_HYPOT
+
+  return hypot (x, y);
+
+#else
+
+  /* From:
+     Branch Cuts for Complex Elementary Functions
+     or
+     Much Ado About Nothing's Sign Bit
+     by
+     W. KAHAN
+  */
+  double
+    r2   = 1.4142135623730951,
+    r2p1 = 2.414213562373095,
+    t2p1 = 1.2537167179050217e-16;
+  double t, s;
+    
+  x = fabs (x);
+  y = fabs (y);
+    
+  if (x < y) {
+    t = x; x = y; y = t;
+  }
+  if (isinf (y))
+    x = y;
+  t = x - y;
+  if (!(x == INFINITY) && !(t == x)) {
+    if (t > y) {
+      s = x / y;
+      s += sqrt(1.0 + s*s);
+      return x + y/s;
+    } else {
+      s = t/y;
+      t = s * (2.0 + s);
+      s = r2p1 + (s + (t2p1 + t/(r2 + sqrt(2.0 + t))));
+      return x + y/s;
+    }
+  }
+  else
+    return x;
+ 
+#endif
+}
+
+#endif
+
+
 #ifdef ___DEFINE_POW
 
 ___EXP_FUNC(double,___pow)

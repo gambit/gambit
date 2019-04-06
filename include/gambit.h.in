@@ -1498,6 +1498,7 @@
 #define ___DEFINE_ATANH
 #define ___DEFINE_ATAN2
 #define ___DEFINE_POW
+#define ___DEFINE_HYPOT
 
 #endif
 
@@ -1517,6 +1518,7 @@
 #define ___HAVE_GOOD_ASINH
 #define ___HAVE_GOOD_ACOSH
 #define ___HAVE_GOOD_ATANH
+#define ___HAVE_GOOD_HYPOT
 
 #endif
 
@@ -1547,6 +1549,7 @@
 #define ___HAVE_GOOD_TANH
 #define ___HAVE_GOOD_POW
 #define ___HAVE_GOOD_ATAN2
+#define ___HAVE_GOOD_HYPOT
 
 #endif
 
@@ -3391,6 +3394,11 @@ else \
 #define ___F64EXPT(x,y)___CLIBEXT(pow)(x,y)
 #else
 #define ___F64EXPT(x,y)___EXT(___pow)(x,y)
+#endif
+#ifdef ___HAVE_GOOD_HYPOT
+#define ___F64HYPOT(x,y)___CLIBEXT(hypot)(x,y)
+#else
+#define ___F64HYPOT(x,y)___EXT(___hypot)(x,y)
 #endif
 #define ___F64SQRT(x)___CLIBEXT(sqrt)(x)
 #define ___F64COPYSIGN(x,y)___EXT(___copysign)(x,y)
@@ -9570,6 +9578,12 @@ typedef struct ___global_state_struct
              double y),
             ());
 #endif
+#ifdef ___DEFINE_HYPOT
+    double (*___hypot)
+       ___P((double x,
+             double y),
+            ());
+#endif
     ___SCMOBJ (*___F64_to_STRING)
        ___P((___PSD
              double x),
@@ -11902,6 +11916,12 @@ ___IMP_FUNC(double,___atan2)
 #endif
 #ifdef ___DEFINE_POW
 ___IMP_FUNC(double,___pow)
+   ___P((double x,
+         double y),
+        ());
+#endif
+#ifdef ___DEFINE_HYPOT
+___IMP_FUNC(double,___hypot)
    ___P((double x,
          double y),
         ());
