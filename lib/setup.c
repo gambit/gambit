@@ -2445,8 +2445,20 @@ double x;)
 
 #else
 
-  /* TODO: replace with more accurate algorithm */
-  return log (x + 1.0);
+  /* Some code in _num.scm expects that log1p() is more accurate than
+     the naive algorithm.
+     This is somewhat  more accurate, see
+     https://stat.ethz.ch/pipermail/r-devel/2003-August/027396.html
+     https://books.google.com/books?id=OjUyDwAAQBAJ&pg=PA290&lpg=PA290&dq=beebe+log1p&source=bl&ots=VLxmiSk1fA&sig=ACfU3U0_8tqKemomSjKW73iJ0zUO1u3p3Q&hl=en&sa=X&ved=2ahUKEwjfxZbE8LvhAhVNm-AKHWScB7w4ChDoATAAegQICRAB#v=onepage&q=beebe%20log1p&f=false
+  */
+
+  double u;
+
+  u = 1.0 + x;
+  if (u == 1.0)
+    return x;
+  else
+    return log (u) * (x / (u - 1.0));
 
 #endif
 
