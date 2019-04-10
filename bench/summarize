@@ -1,16 +1,16 @@
 #!/usr/bin/awk -f
 
 function clearvars () {
-  real       = "";
-  cpu        = "";
-  codesize   = "";
+  real       = "#f";
+  cpu        = "#f";
+  codesize   = "#f";
   crashed    = 0;
   failed     = 0;
   runtime    = 0;
-  cycles     = "";
-  instrs     = "";
-  branches   = "";
-  branchmisses = "";
+  cycles     = "#f";
+  instrs     = "#f";
+  branches   = "#f";
+  branchmisses = "#f";
 }
 
 
@@ -18,19 +18,32 @@ function output () {
   if (runtime == 1) {
 
     if (real == "") {
-       crashed = 1;
+      crashed = 1;
     }
 
     failure = "";
 
     if (crashed != 0) {
-       failure = "CRASH";
+      failure = "CRASH";
     }
     else if (failed != 0) {
       failure = "FAIL";
     }
 
-    printf "(%-9s %9.6f %9.6f %9s %9s %9s %9s %6s)\n", test, real, cpu, cycles, instrs, branches, branchmisses, failure;
+    printf "(%-9s ", test;
+    if (real == "#f" && cpu == "#f") {
+      printf "%9s %9s ", real, cpu;
+    }
+    else if (real == "#f") {
+      printf "%9s %9.6f ", real, cpu;
+    }
+    else if (cpu == "#f") {
+      printf "%9.6f %9s ", real, cpu;
+    }
+    else {
+      printf "%9.6f %9.6f ", real, cpu;
+    }
+    printf "%9s %9s %9s %9s %6s)\n", cycles, instrs, branches, branchmisses, failure;
   }
 
   clearvars();
