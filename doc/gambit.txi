@@ -5341,6 +5341,9 @@ For example:
 @deffn procedure flexpt @var{x} @var{y}
 @end deffn
 
+@deffn procedure flhypot @var{x} @var{y}
+@end deffn
+
 @deffn procedure flfinite? @var{x}
 @end deffn
 

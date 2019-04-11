@@ -2121,60 +2121,6 @@ for a discussion of branch cuts.
 
 (macro-if-cpxnum (begin
 
-(define-prim (##cabs z)
-
-  ;; As far as I can tell, this is just magic.  It works, and I'm not
-  ;; going to touch it.
-
-  #|
-  Code to compute the constants using my computable reals package.
-
-  (load "exact-reals")
-  (define r2-exact
-    (computable-sqrt (exact->computable 2)))
-  (define r2p1-exact
-    (computable-+ r2-exact (exact->computable 1)))
-  (define r2p1
-    (computable->inexact r2p1-exact))
-  (define t2p1-exact
-    (computable-- r2p1-exact (exact->computable (inexact->exact r2p1))))
-  (define r2
-    (computable->inexact r2-exact))
-  (define t2p1
-    (computable->inexact t2p1-exact))
-  (for-each pretty-print
-            `((define r2 ,r2) (define r2p1 ,r2p1) (define t2p1 ,t2p1)))
-  |#
-  (define r2 1.4142135623730951)
-  (define r2p1 2.414213562373095)
-  (define t2p1 1.2537167179050217e-16)
-
-  (let ((x (##flabs (macro-cpxnum-real z)))
-        (y (##flabs (macro-cpxnum-imag z))))
-
-    (define (continue x y)
-      (let* ((x (if (##flinfinite? y) y x))
-             (t (##fl- x y)))
-        (if (and (##not (##fl= x +inf.0))
-                 (##not (##fl= t x)))
-            (if (##fl> t y)
-                (let* ((s (##fl/ x y))
-                       (s (##fl+ s (##flsqrt (##fl+ (macro-inexact-+1) (##fl* s s))))))
-                  (##fl+ x (##fl/ y s)))
-                (let* ((s (##fl/ t y))
-                       (t (##fl* (##fl+ (macro-inexact-+2) s) s))
-                       (s (##fl+ r2p1
-                                 (##fl+ s
-                                        (##fl+ t2p1
-                                               (##fl/ t
-                                                      (##fl+ r2 (##flsqrt (##fl+ (macro-inexact-+2) t)))))))))
-                  (##fl+ x (##fl/ y s))))
-            x)))
-
-    (if (##fl< x y)
-        (continue y x)
-        (continue x y))))
-
 (define-prim (##carg z)
   (##angle z))
 
@@ -3428,7 +3374,7 @@ for a discussion of branch cuts.
     (let ((real (macro-cpxnum-real x))
           (imag (macro-cpxnum-imag x)))
       (cond ((and (##flonum? real) (##flonum? imag))
-             (##cabs x))
+             (##flhypot real imag))
             ;; at least one of real or imag is exact
             ((and (##finite? real) (##finite? imag))
              (let ((possibly-exact-result
@@ -10854,6 +10800,73 @@ end-of-code
   (##fixnum->flonum x))
 
 (define-prim (##flcopysign x y))
+
+(define-prim (##flhypot x y)
+
+  #|
+  This function is from
+  
+  Functions from
+  Branch Cuts for Complex Elementary Functions
+  or
+  Much Ado About Nothing's Sign Bit
+  by W. Kahan
+  
+  Full reference:
+  
+  Kahan, W: Branch cuts for complex elementary functions; or, Much ado about nothing’s sign bit. In Iserles, A., and Powell, M. (eds.), The state of the art in numerical analysis. Clarendon Press (1987) pp 165-211.
+  
+  Code to compute the constants using my computable reals package.
+
+  (load "exact-reals")
+  (define r2-exact
+    (computable-sqrt (exact->computable 2)))
+  (define r2p1-exact
+    (computable-+ r2-exact (exact->computable 1)))
+  (define r2p1
+    (computable->inexact r2p1-exact))
+  (define t2p1-exact
+    (computable-- r2p1-exact (exact->computable (inexact->exact r2p1))))
+  (define r2
+    (computable->inexact r2-exact))
+  (define t2p1
+    (computable->inexact t2p1-exact))
+  (for-each pretty-print
+            `((define r2 ,r2) (define r2p1 ,r2p1) (define t2p1 ,t2p1)))
+  |#
+  
+  (define r2 1.4142135623730951)
+  (define r2p1 2.414213562373095)
+  (define t2p1 1.2537167179050217e-16)
+
+  (let ((x (##flabs x))
+        (y (##flabs y)))
+
+    (define (continue x y)
+      (let* ((x (if (##flinfinite? y) y x))
+             (t (##fl- x y)))
+        (if (and (##not (##fl= x +inf.0))
+                 (##not (##fl= t x)))
+            (if (##fl> t y)
+                (let* ((s (##fl/ x y))
+                       (s (##fl+ s (##flsqrt (##fl+ (macro-inexact-+1) (##fl* s s))))))
+                  (##fl+ x (##fl/ y s)))
+                (let* ((s (##fl/ t y))
+                       (t (##fl* (##fl+ (macro-inexact-+2) s) s))
+                       (s (##fl+ r2p1
+                                 (##fl+ s
+                                        (##fl+ t2p1
+                                               (##fl/ t
+                                                      (##fl+ r2 (##flsqrt (##fl+ (macro-inexact-+2) t)))))))))
+                  (##fl+ x (##fl/ y s))))
+            x)))
+
+    (if (##fl< x y)
+        (continue y x)
+        (continue x y))))
+  
+(define-prim-flonum (flhypot x y)
+  (##flhypot x y))
 
 (define-prim (##flonum->fixnum x))
 (define-prim (##fixnum->flonum x))

@@ -279,6 +279,7 @@ flexpm1
 flexpt
 flfinite?
 flfloor
+flhypot
 flilogb
 flinfinite?
 flinteger?
