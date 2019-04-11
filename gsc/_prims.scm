@@ -3027,8 +3027,7 @@
        (make-prim-generator **flatan-sym)))
 
     (define case-flhypot
-      (gen-asin-acos-atan-flonum-case
-       (make-prim-generator **flhypot-sym)))
+      (gen-simple-case **flonum?-sym **flhypot-sym))
 
     (define case-flexpt
       (gen-expt-flonum-case
