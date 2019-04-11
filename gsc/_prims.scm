@@ -327,6 +327,7 @@
 ("acosh"                              (1)   #f 0     0    number  gambit)
 ("flatanh"                            (1)   #f 0     0    flonum  gambit)
 ("atanh"                              (1)   #f 0     0    number  gambit)
+("flhypot"                            (2)   #f 0     0    flonum  gambit)
 ("flexpt"                             (2)   #f 0     0    flonum  r6rs)
 ("flsqrt"                             (1)   #f 0     0    flonum  r6rs)
 ("flsquare"                           (1)   #f 0     0    flonum  gambit)
@@ -668,6 +669,7 @@
 ("##flasinh"                     (1)   #f ()    0    real    extended)
 ("##flacosh"                     (1)   #f ()    0    real    extended)
 ("##flatanh"                     (1)   #f ()    0    real    extended)
+("##flhypot"                     (2)   #f ()    0    real    extended)
 ("##flexpt"                      (2)   #f ()    0    real    extended)
 ("##flsqrt"                      (1)   #f ()    0    real    extended)
 ("##flsquare"                    (1)   #f ()    0    real    extended)
@@ -1371,6 +1373,8 @@
 
 (def-spec "flatanh" (spec-u "##flatanh"))
 (def-spec "atanh"   (spec-arith #f "flatanh"))
+
+(def-spec "flhypot" (spec-u "##flhypot"))
 
 (def-spec "flexpt" (spec-u "##flexpt"))
 (def-spec "expt"   (spec-arith #f "flexpt"))
@@ -2274,6 +2278,7 @@
   (define **flasin-sym (string->canonical-symbol "##flasin"))
   (define **flacos-sym (string->canonical-symbol "##flacos"))
   (define **flatan-sym (string->canonical-symbol "##flatan"))
+  (define **flhypot-sym (string->canonical-symbol "##flhypot"))
   (define **flexpt-sym (string->canonical-symbol "##flexpt"))
   (define **flsqrt-sym (string->canonical-symbol "##flsqrt"))
   (define **flcopysign-sym (string->canonical-symbol "##flcopysign"))
@@ -3021,6 +3026,10 @@
       (gen-asin-acos-atan-flonum-case
        (make-prim-generator **flatan-sym)))
 
+    (define case-flhypot
+      (gen-asin-acos-atan-flonum-case
+       (make-prim-generator **flhypot-sym)))
+
     (define case-flexpt
       (gen-expt-flonum-case
        (make-prim-generator **flexpt-sym)))
@@ -3361,6 +3370,8 @@
 
     (def-exp "flatan" (make-simple-expander case-flatan))
     (def-exp "atan"   (make-fixflo-expander no-case case-flatan))
+
+    (def-exp "flhypot" (make-simple-expander case-flhypot))
 
     (def-exp "flexpt" (make-simple-expander case-flexpt))
     (def-exp "expt"   (make-fixflo-expander no-case case-flexpt))
@@ -4481,6 +4492,7 @@
 (def-simp "flacos"           (constant-folder-flo acos       flo?))
 (def-simp "atan"             (constant-folder-gen atan       num?))
 (def-simp "flatan"           (constant-folder-flo atan       flo?))
+(def-simp "flhypot"          (constant-folder-flo flhypot    flo?))
 (def-simp "expt"             (constant-folder-gen expt       num?))
 (def-simp "flexpt"           (constant-folder-flo expt       flo?))
 (def-simp "sqrt"             (constant-folder-gen sqrt       num?))
