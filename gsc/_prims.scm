@@ -2278,6 +2278,11 @@
   (define **flatan-sym (string->canonical-symbol "##flatan"))
   (define **flasin-sym (string->canonical-symbol "##flasin"))
   (define **flacos-sym (string->canonical-symbol "##flacos"))
+  (define **flsinh-sym (string->canonical-symbol "##flsinh"))
+  (define **flcosh-sym (string->canonical-symbol "##flcosh"))
+  (define **fltanh-sym (string->canonical-symbol "##fltanh"))
+  (define **flasinh-sym (string->canonical-symbol "##flasinh"))
+  (define **flacosh-sym (string->canonical-symbol "##flacosh"))
   (define **flatanh-sym (string->canonical-symbol "##flatanh"))
   (define **flhypot-sym (string->canonical-symbol "##flhypot"))
   (define **flexpt-sym (string->canonical-symbol "##flexpt"))
@@ -2459,6 +2464,31 @@
                                 (car vars))
                               (new-cst source env
                                 (macro-inexact--1))))))))
+       (lambda ()
+         (gen source env vars invalid))
+       fail)))
+
+  (define (gen-acosh-flonum-case gen)
+    (lambda (source
+             env
+             vars
+             check-run-time-binding
+             invalid
+             fail)
+      (gen-type-checks
+       source
+       env
+       vars
+       check-run-time-binding
+       **flonum?-sym
+       (gen-call-prim source env
+         **not-sym
+         (list (gen-call-prim source env
+                 **fl<-sym
+                 (list (new-ref source env
+                                (car vars))
+                       (new-cst source env
+                         (macro-inexact-+1))))))
        (lambda ()
          (gen source env vars invalid))
        fail)))
@@ -3003,6 +3033,9 @@
       (gen-simple-case **flonum?-sym **flexp-sym))
 
     (define case-fllog
+      (gen-simple-case **flonum?-sym **fllog-sym))
+
+    (define case-log-flonum
       (gen-log-flonum-case
        (make-prim-generator **fllog-sym)))
 
@@ -3015,18 +3048,46 @@
     (define case-fltan
       (gen-simple-case **flonum?-sym **fltan-sym))
 
-    (define case-flatan
-      (gen-simple-case **flonum?-sym **flatan-sym))
-
     (define case-flasin
+      (gen-simple-case **flonum?-sym **flasin-sym))
+
+    (define case-asin-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flasin-sym)))
 
     (define case-flacos
+      (gen-simple-case **flonum?-sym **flacos-sym))
+
+    (define case-acos-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flacos-sym)))
 
+    (define case-flatan
+      (gen-simple-case **flonum?-sym **flatan-sym))
+
+    (define case-flsinh
+      (gen-simple-case **flonum?-sym **flsinh-sym))
+
+    (define case-flcosh
+      (gen-simple-case **flonum?-sym **flcosh-sym))
+
+    (define case-fltanh
+      (gen-simple-case **flonum?-sym **fltanh-sym))
+
+    (define case-flasinh
+      (gen-simple-case **flonum?-sym **flasinh-sym))
+
+    (define case-flacosh
+      (gen-simple-case **flonum?-sym **flacosh-sym))
+
+    (define case-acosh-flonum
+      (gen-acosh-flonum-case
+       (make-prim-generator **flacosh-sym)))
+
     (define case-flatanh
+      (gen-simple-case **flonum?-sym **flatanh-sym))
+
+    (define case-atanh-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flatanh-sym)))
 
@@ -3034,10 +3095,16 @@
       (gen-simple-case **flonum?-sym **flhypot-sym))
 
     (define case-flexpt
+      (gen-simple-case **flonum?-sym **flexpt-sym))
+
+    (define case-expt-flonum
       (gen-expt-flonum-case
        (make-prim-generator **flexpt-sym)))
 
     (define case-flsqrt
+      (gen-simple-case **flonum?-sym **flsqrt-sym))
+
+    (define case-sqrt-flonum
       (gen-sqrt-flonum-case
        (make-prim-generator **flsqrt-sym)))
 
@@ -3354,7 +3421,7 @@
     (def-exp "exp"   (make-fixflo-expander no-case case-flexp))
 
     (def-exp "fllog" (make-simple-expander case-fllog))
-    (def-exp "log"   (make-fixflo-expander no-case case-fllog))
+    (def-exp "log"   (make-fixflo-expander no-case case-log-flonum))
 
     (def-exp "flsin" (make-simple-expander case-flsin))
     (def-exp "sin"   (make-fixflo-expander no-case case-flsin))
@@ -3369,21 +3436,40 @@
     (def-exp "atan"   (make-fixflo-expander no-case case-flatan))
 
     (def-exp "flasin" (make-simple-expander case-flasin))
-    (def-exp "asin"   (make-fixflo-expander no-case case-flasin))
+    (def-exp "asin"   (make-fixflo-expander no-case case-asin-flonum))
 
     (def-exp "flacos" (make-simple-expander case-flacos))
-    (def-exp "acos"   (make-fixflo-expander no-case case-flacos))
+    (def-exp "acos"   (make-fixflo-expander no-case case-acos-flonum))
 
     (def-exp "flatan" (make-simple-expander case-flatan))
     (def-exp "atan"   (make-fixflo-expander no-case case-flatan))
 
+    (def-exp "flsinh" (make-simple-expander case-flsinh))
+    (def-exp "sinh"   (make-fixflo-expander no-case case-flsinh))
+
+    (def-exp "flcosh" (make-simple-expander case-flcosh))
+    (def-exp "cosh"   (make-fixflo-expander no-case case-flcosh))
+
+    (def-exp "fltanh" (make-simple-expander case-fltanh))
+    (def-exp "tanh"   (make-fixflo-expander no-case case-fltanh))
+
+    (def-exp "flasinh" (make-simple-expander case-flasinh))
+    (def-exp "asinh"   (make-fixflo-expander no-case case-flasinh))
+
+    (def-exp "flacosh" (make-simple-expander case-flacosh))
+    (def-exp "acosh"   (make-fixflo-expander no-case case-acosh-flonum))
+
+    (def-exp "flatanh" (make-simple-expander case-flatanh))
+    (def-exp "atanh"   (make-fixflo-expander no-case case-atanh-flonum))
+
     (def-exp "flhypot" (make-simple-expander case-flhypot))
+    ;; There is no hypot function.
 
     (def-exp "flexpt" (make-simple-expander case-flexpt))
-    (def-exp "expt"   (make-fixflo-expander no-case case-flexpt))
+    (def-exp "expt"   (make-fixflo-expander no-case case-expt-flonum))
 
     (def-exp "flsqrt" (make-simple-expander case-flsqrt))
-    (def-exp "sqrt"   (make-fixflo-expander no-case case-flsqrt))
+    (def-exp "sqrt"   (make-fixflo-expander no-case case-sqrt-flonum))
 
     (def-exp "fixnum->flonum" (make-simple-expander case-fixnum->flonum))
 
