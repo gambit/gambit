@@ -2275,9 +2275,10 @@
   (define **flsin-sym (string->canonical-symbol "##flsin"))
   (define **flcos-sym (string->canonical-symbol "##flcos"))
   (define **fltan-sym (string->canonical-symbol "##fltan"))
+  (define **flatan-sym (string->canonical-symbol "##flatan"))
   (define **flasin-sym (string->canonical-symbol "##flasin"))
   (define **flacos-sym (string->canonical-symbol "##flacos"))
-  (define **flatan-sym (string->canonical-symbol "##flatan"))
+  (define **flatanh-sym (string->canonical-symbol "##flatanh"))
   (define **flhypot-sym (string->canonical-symbol "##flhypot"))
   (define **flexpt-sym (string->canonical-symbol "##flexpt"))
   (define **flsqrt-sym (string->canonical-symbol "##flsqrt"))
@@ -2427,7 +2428,7 @@
          (gen source env vars invalid))
        fail)))
 
-  (define (gen-asin-acos-atan-flonum-case gen)
+  (define (gen-asin-acos-atanh-flonum-case gen)
     (lambda (source
              env
              vars
@@ -3014,17 +3015,20 @@
     (define case-fltan
       (gen-simple-case **flonum?-sym **fltan-sym))
 
+    (define case-flatan
+      (gen-simple-case **flonum?-sym **flatan-sym))
+
     (define case-flasin
-      (gen-asin-acos-atan-flonum-case
+      (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flasin-sym)))
 
     (define case-flacos
-      (gen-asin-acos-atan-flonum-case
+      (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flacos-sym)))
 
-    (define case-flatan
-      (gen-asin-acos-atan-flonum-case
-       (make-prim-generator **flatan-sym)))
+    (define case-flatanh
+      (gen-asin-acos-atanh-flonum-case
+       (make-prim-generator **flatanh-sym)))
 
     (define case-flhypot
       (gen-simple-case **flonum?-sym **flhypot-sym))
@@ -3360,6 +3364,9 @@
 
     (def-exp "fltan" (make-simple-expander case-fltan))
     (def-exp "tan"   (make-fixflo-expander no-case case-fltan))
+
+    (def-exp "flatan" (make-simple-expander case-flatan))
+    (def-exp "atan"   (make-fixflo-expander no-case case-flatan))
 
     (def-exp "flasin" (make-simple-expander case-flasin))
     (def-exp "asin"   (make-fixflo-expander no-case case-flasin))
