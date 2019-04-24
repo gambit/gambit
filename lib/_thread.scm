@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4569,6 +4569,32 @@
 (define-prim (abort obj)
   (macro-abort obj))
 
+(define (##r7rs-with-exception-handler handler thunk)
+  (let ((original-eh (macro-current-exception-handler)))
+    (macro-dynamic-bind
+     exception-handler
+     (lambda (exc)
+       (macro-dynamic-bind
+        exception-handler
+        original-eh
+        (lambda ()
+          (handler exc))))
+     thunk)))
+
+(define (##r7rs-with-exception-catcher handler thunk)
+  (##continuation-capture
+   (lambda (cont)
+     (##r7rs-with-exception-handler
+      (lambda (exc)
+        (##continuation-graft cont handler exc))
+      thunk))))
+
+(define (##r7rs-raise exc) ;; raise noncontinuable exception
+  (##abort exc))
+
+(define (##r7rs-raise-continuable exc) ;; raise continuable exception
+  (##raise exc))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##call-with-current-continuation
@@ -7973,6 +7999,32 @@
 
 (define-prim (abort obj)
   (macro-abort obj))
+
+(define (##r7rs-with-exception-handler handler thunk)
+  (let ((original-eh (macro-current-exception-handler)))
+    (macro-dynamic-bind
+     exception-handler
+     (lambda (exc)
+       (macro-dynamic-bind
+        exception-handler
+        original-eh
+        (lambda ()
+          (handler exc))))
+     thunk)))
+
+(define (##r7rs-with-exception-catcher handler thunk)
+  (##continuation-capture
+   (lambda (cont)
+     (##r7rs-with-exception-handler
+      (lambda (exc)
+        (##continuation-graft cont handler exc))
+      thunk))))
+
+(define (##r7rs-raise exc) ;; raise noncontinuable exception
+  (##abort exc))
+
+(define (##r7rs-raise-continuable exc) ;; raise continuable exception
+  (##raise exc))
 
 ;;;----------------------------------------------------------------------------
 

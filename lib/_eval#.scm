@@ -35,9 +35,10 @@
 (##define-macro (macro-true? x) x)
 (##define-macro (macro-unbound? x) `(##unbound? ,x))
 
-(##define-macro (macro-self-var)     ''##self)
-(##define-macro (macro-selector-var) ''##selector)
-(##define-macro (macro-do-loop-var)  ''##do-loop)
+(##define-macro (macro-self-var)     ''##self##)
+(##define-macro (macro-selector-var) ''##selector##)
+(##define-macro (macro-do-loop-var)  ''##do-loop##)
+(##define-macro (macro-guard-var)    ''##guard##)
 
 ;;;----------------------------------------------------------------------------
 

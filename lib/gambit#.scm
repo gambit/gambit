@@ -26,6 +26,7 @@ c-define
 define-macro
 future
 include
+include-ci
 declare
 namespace
 this-source-file
@@ -35,11 +36,17 @@ time
 cond-expand
 define-cond-expand-feature
 case-lambda
+let*-values
+let-values
 letrec*
+letrec*-values
+letrec-values
 when
 unless
 syntax-error
 delay-force
+guard
+r7rs-guard
 
 ;; global variable
 default-random-source
@@ -1070,6 +1077,10 @@ write-u8
 wrong-number-of-arguments-exception-arguments
 wrong-number-of-arguments-exception-procedure
 wrong-number-of-arguments-exception?
+wrong-number-of-values-exception-code
+wrong-number-of-values-exception-rte
+wrong-number-of-values-exception-vals
+wrong-number-of-values-exception?
 wrong-processor-c-return-exception?
 xcons
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_thread#.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -805,37 +805,39 @@
 
 ;;; Binding of special dynamic variables.
 
-(##define-macro (macro-dynamic-bind var val thunk)
-  `(let ((val ,val) (thunk ,thunk))
+(##define-macro (macro-denv-set denv var val)
+  `(let ((denv ,denv) (val ,val))
 
      (##declare (not interrupts-enabled))
 
-     (let ((current-denv (macro-thread-denv (macro-current-thread))))
-       (##dynamic-env-bind
-        (macro-make-denv
-         (macro-denv-local current-denv)
-         ,(if (eq? var 'dynwind)
-            `val
-            `(macro-denv-dynwind current-denv))
-         ,(if (eq? var 'interrupt-mask)
-            `val
-            `(macro-denv-interrupt-mask current-denv))
-         ,(if (eq? var 'debugging-settings)
-            `val
-            `(macro-denv-debugging-settings current-denv))
-         ,(if (eq? var 'exception-handler)
-            `(##cons ##current-exception-handler val)
-            `(macro-denv-exception-handler current-denv))
-         ,(if (eq? var 'input-port)
-            `(##cons ##current-input-port val)
-            `(macro-denv-input-port current-denv))
-         ,(if (eq? var 'output-port)
-            `(##cons ##current-output-port val)
-            `(macro-denv-output-port current-denv))
-         ,(if (eq? var 'repl-context)
-            `(##cons #f val)
-            `(macro-denv-repl-context current-denv)))
-        thunk))))
+     (macro-make-denv
+      (macro-denv-local denv)
+      ,(if (eq? var 'dynwind)
+           `val
+           `(macro-denv-dynwind denv))
+      ,(if (eq? var 'interrupt-mask)
+           `val
+           `(macro-denv-interrupt-mask denv))
+      ,(if (eq? var 'debugging-settings)
+           `val
+           `(macro-denv-debugging-settings denv))
+      ,(if (eq? var 'exception-handler)
+           `(##cons ##current-exception-handler val)
+           `(macro-denv-exception-handler denv))
+      ,(if (eq? var 'input-port)
+           `(##cons ##current-input-port val)
+           `(macro-denv-input-port denv))
+      ,(if (eq? var 'output-port)
+           `(##cons ##current-output-port val)
+           `(macro-denv-output-port denv))
+      ,(if (eq? var 'repl-context)
+           `(##cons #f val)
+           `(macro-denv-repl-context denv)))))
+
+(##define-macro (macro-dynamic-bind var val thunk)
+  `(##dynamic-env-bind
+    (macro-denv-set (macro-thread-denv (macro-current-thread)) ,var ,val)
+    ,thunk))
 
 (##define-macro (macro-current-interrupt-mask)
   `(macro-denv-interrupt-mask (macro-thread-denv (macro-current-thread))))
@@ -3025,37 +3027,39 @@
 
 ;;; Binding of special dynamic variables.
 
-(##define-macro (macro-dynamic-bind var val thunk)
-  `(let ((val ,val) (thunk ,thunk))
+(##define-macro (macro-denv-set denv var val)
+  `(let ((denv ,denv) (val ,val))
 
      (##declare (not interrupts-enabled))
 
-     (let ((current-denv (macro-thread-denv (macro-current-thread))))
-       (##dynamic-env-bind
-        (macro-make-denv
-         (macro-denv-local current-denv)
-         ,(if (eq? var 'dynwind)
-            `val
-            `(macro-denv-dynwind current-denv))
-         ,(if (eq? var 'interrupt-mask)
-            `val
-            `(macro-denv-interrupt-mask current-denv))
-         ,(if (eq? var 'debugging-settings)
-            `val
-            `(macro-denv-debugging-settings current-denv))
-         ,(if (eq? var 'exception-handler)
-            `(##cons ##current-exception-handler val)
-            `(macro-denv-exception-handler current-denv))
-         ,(if (eq? var 'input-port)
-            `(##cons ##current-input-port val)
-            `(macro-denv-input-port current-denv))
-         ,(if (eq? var 'output-port)
-            `(##cons ##current-output-port val)
-            `(macro-denv-output-port current-denv))
-         ,(if (eq? var 'repl-context)
-            `(##cons #f val)
-            `(macro-denv-repl-context current-denv)))
-        thunk))))
+     (macro-make-denv
+      (macro-denv-local denv)
+      ,(if (eq? var 'dynwind)
+           `val
+           `(macro-denv-dynwind denv))
+      ,(if (eq? var 'interrupt-mask)
+           `val
+           `(macro-denv-interrupt-mask denv))
+      ,(if (eq? var 'debugging-settings)
+           `val
+           `(macro-denv-debugging-settings denv))
+      ,(if (eq? var 'exception-handler)
+           `(##cons ##current-exception-handler val)
+           `(macro-denv-exception-handler denv))
+      ,(if (eq? var 'input-port)
+           `(##cons ##current-input-port val)
+           `(macro-denv-input-port denv))
+      ,(if (eq? var 'output-port)
+           `(##cons ##current-output-port val)
+           `(macro-denv-output-port denv))
+      ,(if (eq? var 'repl-context)
+           `(##cons #f val)
+           `(macro-denv-repl-context denv)))))
+
+(##define-macro (macro-dynamic-bind var val thunk)
+  `(##dynamic-env-bind
+    (macro-denv-set (macro-thread-denv (macro-current-thread)) ,var ,val)
+    ,thunk))
 
 (##define-macro (macro-current-interrupt-mask)
   `(macro-denv-interrupt-mask (macro-thread-denv (macro-current-thread))))

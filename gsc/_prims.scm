@@ -937,6 +937,9 @@
 ("##promise-state"                    (1)   #f ()    0    #f      extended)
 ("##promise-state-set!"               (2)   #t ()    0    #f      extended)
 
+("##with-exception-catcher"           (2)   #t 0     0    (#f)    extended)
+("##r7rs-with-exception-catcher"      (2)   #t 0     0    (#f)    extended)
+
 ("##force"                            (1)   #t 0     0    #f      extended)
 
 ("##identity"                         (1)   #f ()    0    (#f)    extended)

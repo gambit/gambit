@@ -139,29 +139,48 @@
 #return(##cprc-case 2) : ($code rte)
 #return(##cprc-case 3) : ($code rte)
 
-#procedure(##cprc-case-clause)
-#return(##cprc-case-clause 1) : ($code rte)
-#return(##cprc-case-clause 2) : ($code rte)
+#procedure(##cprc-case-list)
+#return(##cprc-case-list 1) : ($code rte)
+#return(##cprc-case-list 2) : ($code rte)
 
 #procedure(##cprc-case-else)
 #return(##cprc-case-else 1) : ($code rte)
 
+#procedure(##cprc-case-send-red)
+#return(##cprc-case-send-red 1) : ($code rte)
+#return(##cprc-case-send-red 2) : ($code rte)
+#return(##cprc-case-send-red 3) : ($code rte)
+#procedure(##cprc-case-send-red 4)
+#return(##cprc-case-send-red 5) : ($code oper rte)
+#return(##cprc-case-send-red 6) : ($code rte)
+
+#procedure(##cprc-case-send-sub)
+#return(##cprc-case-send-sub 1) : ($code rte)
+#return(##cprc-case-send-sub 2) : ($code rte)
+#return(##cprc-case-send-sub 3) : ($code rte)
+#return(##cprc-case-send-sub 4) : ($code oper rte)
+#return(##cprc-case-send-sub 5) : ($code rte)
+
 #procedure(##cprc-let)
 #return(##cprc-let 1) : ($code rte)
-#return(##cprc-let 2) : ($code args i ns rte)
-#return(##cprc-let 3) : ($code i ns rte)
-#return(##cprc-let 4) : ($code args ns rte)
+#return(##cprc-let 2) : ($code ns rec? rte)
+#return(##cprc-let 3) : ($code i inner-rte ns rte)
+#return(##cprc-let 4) : ($code args i inner-rte ns rte)
+#return(##cprc-let 5) : ($code i inner-rte ns rte)
+#return(##cprc-let 6) : ($code args ns rte)
 
-#procedure(##cprc-letrec)
-#return(##cprc-letrec 1) : ($code rte)
-#return(##cprc-letrec 2) : ($code ns rte)
-#return(##cprc-letrec 3) : ($code i inner-rte ns rev-vals rte)
-#return(##cprc-letrec 4) : ($code i inner-rte ns rte)
-
-#procedure(##cprc-letrec*)
-#return(##cprc-letrec* 1) : ($code rte)
-#return(##cprc-letrec* 2) : ($code ns rte)
-#return(##cprc-letrec* 3) : ($code i inner-rte ns rte)
+#procedure(##cprc-let-values)
+#return(##cprc-let-values 1) : ($code rte)
+#return(##cprc-let-values 2) : ($code ns patterns rec? rte)
+#return(##cprc-let-values 3) : ($code arg i inner-rte j k ns pattern patterns rte)
+#return(##cprc-let-values 4) : ($code i inner-rte j ns patterns rte)
+#return(##cprc-let-values 5) : ($code rte)
+#return(##cprc-let-values 6) : ($code i inner-rte j2 ns patterns rte)
+#return(##cprc-let-values 7) : ($code args i inner-rte n ns patterns rte)
+#return(##cprc-let-values 8) : ($code arg i inner-rte n ns pattern patterns rte)
+#return(##cprc-let-values 9) : ($code arg args i inner-rte j k pattern patterns rte)
+#return(##cprc-let-values 10) : ($code args i inner-rte j patterns rte)
+#return(##cprc-let-values 11) : ($code args n ns patterns rte)
 
 #procedure(##cprc-prc-req0)
 #return(##cprc-prc-req0 1) : ($code rte)
@@ -357,6 +376,16 @@
 #return(##cprc-future 3) : ($code rte)
 #return(##cprc-future 4) : ($code rte)
 
+#procedure(##cprc-guard)
+#return(##cprc-guard 1) : ($code rte)
+#return(##cprc-guard 2) : ($code handler rte thunk)
+#procedure(##cprc-guard 3)
+#procedure(##cprc-guard 4)
+#return(##cprc-guard 5) : ($code rte)
+
+#procedure(##cprc-guard-reraise)
+#return(##cprc-guard-reraise 1) : ($code rte)
+
 #procedure(##subproblem-apply0)
 #procedure(##subproblem-apply0 1)
 #return(##subproblem-apply0 2) : ($code rte)
@@ -385,3 +414,6328 @@
 #return(##step-handler 1) : ($code execute-body leapable? other rte)
 #return(##step-handler 2) : ($code execute-body leapable? other rte)
 
+> (begin (step) (test 10 20 30 40) (exit))
+*** STOPPED IN (string)@1.16
+1> ,s
+| > test
+| #<procedure #2 test>
+*** STOPPED IN (string)@1.21
+1> ,s
+| > 10
+| 10
+*** STOPPED IN (string)@1.24
+1> ,s
+| > 20
+| 20
+*** STOPPED IN (string)@1.27
+1> ,s
+| > 30
+| 30
+*** STOPPED IN (string)@1.30
+1> ,s
+| > 40
+| 40
+*** STOPPED IN (string)@1.15
+1> ,s
+| > (test 10 20 30 40)
+*** STOPPED IN test, "debug.scm"@46.4
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set! b...
+| | #<procedure #3>
+*** STOPPED IN test, "debug.scm"@87.13
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@87.19
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@87.25
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@87.29
+w = 1
+x = 2
+y = 3
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 100
+| | 100
+*** STOPPED IN test, "debug.scm"@88.14
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@88.20
+w = 1
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@88.26
+x = 2
+w = 1
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@88.30
+y = 3
+x = 2
+w = 1
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 200
+| | 200
+*** STOPPED IN test, "debug.scm"@89.16
+w = #!unbound
+x = #!unbound
+y = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@89.22
+w = #!unbound
+x = #!unbound
+y = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@89.28
+w = #!unbound
+x = #!unbound
+y = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@89.32
+w = 1
+x = 2
+y = 3
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 300
+| | 300
+*** STOPPED IN test, "debug.scm"@90.17
+w = #!unbound
+x = #!unbound
+y = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@90.23
+w = 1
+x = #!unbound
+y = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@90.29
+w = 1
+x = 2
+y = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@90.33
+w = 1
+x = 2
+y = 3
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 400
+| | 400
+*** STOPPED IN test, "debug.scm"@91.22
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@91.21
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@91.35
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@91.34
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@91.47
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@91.54
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@91.61
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@91.63
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@91.53
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 1 2)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@91.72
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@91.84
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 4
+| | 4
+*** STOPPED IN test, "debug.scm"@91.97
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@91.104
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 5
+| | 5
+*** STOPPED IN test, "debug.scm"@91.106
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 6
+| | 6
+*** STOPPED IN test, "debug.scm"@91.96
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 5 6)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@91.118
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@91.125
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 7
+| | 7
+*** STOPPED IN test, "debug.scm"@91.127
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 8
+| | 8
+*** STOPPED IN test, "debug.scm"@91.117
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 7 8)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@91.132
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = 5
+h = '(6)
+i = 7
+j = 8
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 10
+| | 10
+*** STOPPED IN test, "debug.scm"@92.23
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@92.22
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@92.36
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@92.35
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@92.48
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@92.55
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@92.62
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@92.64
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@92.54
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 1 2)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@92.73
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@92.85
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 4
+| | 4
+*** STOPPED IN test, "debug.scm"@92.98
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@92.105
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 5
+| | 5
+*** STOPPED IN test, "debug.scm"@92.107
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 6
+| | 6
+*** STOPPED IN test, "debug.scm"@92.97
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 5 6)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@92.119
+g = 5
+h = '(6)
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@92.126
+g = 5
+h = '(6)
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 7
+| | 7
+*** STOPPED IN test, "debug.scm"@92.128
+g = 5
+h = '(6)
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 8
+| | 8
+*** STOPPED IN test, "debug.scm"@92.118
+g = 5
+h = '(6)
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 7 8)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@92.133
+i = 7
+j = 8
+g = 5
+h = '(6)
+e = 4
+f = '()
+d = 3
+c = '(1 2)
+b = '(1)
+a = '()
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 20
+| | 20
+*** STOPPED IN test, "debug.scm"@93.25
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@93.24
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@93.38
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@93.37
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@93.50
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@93.57
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@93.64
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@93.66
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@93.56
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 1 2)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@93.75
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@93.87
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 4
+| | 4
+*** STOPPED IN test, "debug.scm"@93.100
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@93.107
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 5
+| | 5
+*** STOPPED IN test, "debug.scm"@93.109
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 6
+| | 6
+*** STOPPED IN test, "debug.scm"@93.99
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 5 6)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@93.121
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@93.128
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 7
+| | 7
+*** STOPPED IN test, "debug.scm"@93.130
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 8
+| | 8
+*** STOPPED IN test, "debug.scm"@93.120
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 7 8)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@93.135
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = 5
+h = '(6)
+i = 7
+j = 8
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 30
+| | 30
+*** STOPPED IN test, "debug.scm"@94.26
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@94.25
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@94.39
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@94.38
+a = #!unbound
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@94.51
+a = '()
+b = #!unbound
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@94.58
+a = '()
+b = '(1)
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@94.65
+a = '()
+b = '(1)
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@94.67
+a = '()
+b = '(1)
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@94.57
+a = '()
+b = '(1)
+c = #!unbound
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 1 2)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@94.76
+a = '()
+b = '(1)
+c = '(1 2)
+d = #!unbound
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@94.88
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = #!unbound
+f = #!unbound
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 4
+| | 4
+*** STOPPED IN test, "debug.scm"@94.101
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@94.108
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 5
+| | 5
+*** STOPPED IN test, "debug.scm"@94.110
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 6
+| | 6
+*** STOPPED IN test, "debug.scm"@94.100
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = #!unbound
+h = #!unbound
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 5 6)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@94.122
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = 5
+h = '(6)
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > values
+| | #<procedure #4 values>
+*** STOPPED IN test, "debug.scm"@94.129
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = 5
+h = '(6)
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 7
+| | 7
+*** STOPPED IN test, "debug.scm"@94.131
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = 5
+h = '(6)
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 8
+| | 8
+*** STOPPED IN test, "debug.scm"@94.121
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = 5
+h = '(6)
+i = #!unbound
+j = #!unbound
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (values 7 8)
+| | #<unknown>
+*** STOPPED IN test, "debug.scm"@94.136
+a = '()
+b = '(1)
+c = '(1 2)
+d = 3
+e = 4
+f = '()
+g = 5
+h = '(6)
+i = 7
+j = 8
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 40
+| | 40
+*** STOPPED IN test, "debug.scm"@95.5
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > (lambda w 400)
+| | #<procedure #5>
+*** STOPPED IN test, "debug.scm"@95.20
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 1
+| | 1
+*** STOPPED IN test, "debug.scm"@95.22
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 2
+| | 2
+*** STOPPED IN test, "debug.scm"@95.24
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > 3
+| | 3
+*** STOPPED IN test, "debug.scm"@95.4
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > ((lambda w 400) 1 2 3)
+*** STOPPED IN #<procedure #5>, "debug.scm"@95.15
+w = '(1 2 3)
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 400
+| | | 400
+| | 400
+*** STOPPED IN test, "debug.scm"@46.3
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > ((lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set! ...
+*** STOPPED IN #<procedure #3>, "debug.scm"@47.7
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1)) ...
+| | | #<procedure #6>
+*** STOPPED IN #<procedure #3>, "debug.scm"@83.8
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (lambda () 1000)
+| | | #<procedure #7>
+*** STOPPED IN #<procedure #3>, "debug.scm"@83.7
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > ((lambda () 1000))
+*** STOPPED IN #<procedure #7>, "debug.scm"@83.19
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 1000
+| | | | 1000
+| | | 1000
+*** STOPPED IN #<procedure #3>, "debug.scm"@84.8
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (lambda (w) 2000)
+| | | #<procedure #8>
+*** STOPPED IN #<procedure #3>, "debug.scm"@84.26
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #3>, "debug.scm"@84.7
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > ((lambda (w) 2000) 1)
+*** STOPPED IN #<procedure #8>, "debug.scm"@84.20
+w = 1
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 2000
+| | | | 2000
+| | | 2000
+*** STOPPED IN #<procedure #3>, "debug.scm"@85.8
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (lambda (w x) 3000)
+| | | #<procedure #9>
+*** STOPPED IN #<procedure #3>, "debug.scm"@85.28
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #3>, "debug.scm"@85.30
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 2
+| | | 2
+*** STOPPED IN #<procedure #3>, "debug.scm"@85.7
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > ((lambda (w x) 3000) 1 2)
+*** STOPPED IN #<procedure #9>, "debug.scm"@85.22
+w = 1
+x = 2
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 3000
+| | | | 3000
+| | | 3000
+*** STOPPED IN #<procedure #3>, "debug.scm"@86.8
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (lambda (w x y) 4000)
+| | | #<procedure #10>
+*** STOPPED IN #<procedure #3>, "debug.scm"@86.30
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #3>, "debug.scm"@86.32
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 2
+| | | 2
+*** STOPPED IN #<procedure #3>, "debug.scm"@86.34
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 3
+| | | 3
+*** STOPPED IN #<procedure #3>, "debug.scm"@86.7
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > ((lambda (w x y) 4000) 1 2 3)
+*** STOPPED IN #<procedure #10>, "debug.scm"@86.24
+w = 1
+x = 2
+y = 3
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | | > 4000
+| | | | 4000
+| | | 4000
+*** STOPPED IN #<procedure #3>, "debug.scm"@47.6
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | > ((lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1)) (...
+*** STOPPED IN #<procedure #6>, "debug.scm"@48.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@48.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > a
+| | | 10
+*** STOPPED IN #<procedure #6>, "debug.scm"@48.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@48.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (+ a 1)
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@48.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 10
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (set! a (+ a 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@49.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@49.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > b
+| | | 20
+*** STOPPED IN #<procedure #6>, "debug.scm"@49.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@49.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (+ b 1)
+| | | 21
+*** STOPPED IN #<procedure #6>, "debug.scm"@49.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 20
+c = 30
+d = 40
+1> ,s
+| | | > (set! b (+ b 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@50.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 30
+d = 40
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@50.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 30
+d = 40
+1> ,s
+| | | > c
+| | | 30
+*** STOPPED IN #<procedure #6>, "debug.scm"@50.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 30
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@50.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 30
+d = 40
+1> ,s
+| | | > (+ c 1)
+| | | 31
+*** STOPPED IN #<procedure #6>, "debug.scm"@50.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 30
+d = 40
+1> ,s
+| | | > (set! c (+ c 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@51.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 40
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@51.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 40
+1> ,s
+| | | > d
+| | | 40
+*** STOPPED IN #<procedure #6>, "debug.scm"@51.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 40
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@51.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 40
+1> ,s
+| | | > (+ d 1)
+| | | 41
+*** STOPPED IN #<procedure #6>, "debug.scm"@51.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 40
+1> ,s
+| | | > (set! d (+ d 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@52.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@52.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > e
+| | | 100
+*** STOPPED IN #<procedure #6>, "debug.scm"@52.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@52.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ e 1)
+| | | 101
+*** STOPPED IN #<procedure #6>, "debug.scm"@52.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 100
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! e (+ e 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@53.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@53.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > f
+| | | 200
+*** STOPPED IN #<procedure #6>, "debug.scm"@53.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@53.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ f 1)
+| | | 201
+*** STOPPED IN #<procedure #6>, "debug.scm"@53.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 200
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! f (+ f 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@54.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@54.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > g
+| | | 300
+*** STOPPED IN #<procedure #6>, "debug.scm"@54.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@54.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ g 1)
+| | | 301
+*** STOPPED IN #<procedure #6>, "debug.scm"@54.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 300
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! g (+ g 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@55.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@55.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > h
+| | | 400
+*** STOPPED IN #<procedure #6>, "debug.scm"@55.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@55.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ h 1)
+| | | 401
+*** STOPPED IN #<procedure #6>, "debug.scm"@55.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 400
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! h (+ h 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@56.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@56.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > i
+| | | 10
+*** STOPPED IN #<procedure #6>, "debug.scm"@56.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@56.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ i 1)
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@56.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 10
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! i (+ i 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@57.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@57.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > j
+| | | 20
+*** STOPPED IN #<procedure #6>, "debug.scm"@57.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@57.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ j 1)
+| | | 21
+*** STOPPED IN #<procedure #6>, "debug.scm"@57.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 20
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! j (+ j 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@58.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@58.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > k
+| | | 30
+*** STOPPED IN #<procedure #6>, "debug.scm"@58.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@58.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ k 1)
+| | | 31
+*** STOPPED IN #<procedure #6>, "debug.scm"@58.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 30
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! k (+ k 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@59.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@59.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > l
+| | | 40
+*** STOPPED IN #<procedure #6>, "debug.scm"@59.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@59.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ l 1)
+| | | 41
+*** STOPPED IN #<procedure #6>, "debug.scm"@59.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 40
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! l (+ l 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@60.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@60.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > m
+| | | 400
+*** STOPPED IN #<procedure #6>, "debug.scm"@60.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@60.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ m 1)
+| | | 401
+*** STOPPED IN #<procedure #6>, "debug.scm"@60.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 400
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! m (+ m 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@61.18
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@61.20
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > n
+| | | 1000
+*** STOPPED IN #<procedure #6>, "debug.scm"@61.22
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@61.17
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ n 1)
+| | | 1001
+*** STOPPED IN #<procedure #6>, "debug.scm"@61.9
+n = 1000
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! n (+ n 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@62.18
+n = 1001
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@62.20
+n = 1001
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > o
+| | | 2000
+*** STOPPED IN #<procedure #6>, "debug.scm"@62.22
+n = 1001
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@62.17
+n = 1001
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ o 1)
+| | | 2001
+*** STOPPED IN #<procedure #6>, "debug.scm"@62.9
+n = 1001
+o = 2000
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! o (+ o 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@63.18
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > a
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@63.20
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > b
+| | | 21
+*** STOPPED IN #<procedure #6>, "debug.scm"@64.14
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > force
+| | | #<procedure #12 force>
+*** STOPPED IN #<procedure #6>, "debug.scm"@66.25
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@66.27
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > p
+| | | 3000
+*** STOPPED IN #<procedure #6>, "debug.scm"@66.29
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@66.24
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ p 1)
+| | | 3001
+*** STOPPED IN #<procedure #6>, "debug.scm"@66.16
+n = 1001
+o = 2001
+p = 3000
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! p (+ p 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@67.25
+n = 1001
+o = 2001
+p = 3001
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@67.27
+n = 1001
+o = 2001
+p = 3001
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > q
+| | | 4000
+*** STOPPED IN #<procedure #6>, "debug.scm"@67.29
+n = 1001
+o = 2001
+p = 3001
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@67.24
+n = 1001
+o = 2001
+p = 3001
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ q 1)
+| | | 4001
+*** STOPPED IN #<procedure #6>, "debug.scm"@67.16
+n = 1001
+o = 2001
+p = 3001
+q = 4000
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (set! q (+ q 1))
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@68.16
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (delay (set! z (+ z 1)))
+| | | #<promise #13>
+*** STOPPED IN #<procedure #6>, "debug.scm"@64.13
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (force (begin (set! p (+ p 1)) (set! q (+ q 1)) (delay (set! z (+ z 1...
+*** STOPPED IN #<procedure #6>, "debug.scm"@68.32
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > +
+| | | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@68.34
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > z
+| | | | 10000
+*** STOPPED IN #<procedure #6>, "debug.scm"@68.36
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 1
+| | | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@68.31
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (+ z 1)
+| | | | 10001
+*** STOPPED IN #<procedure #6>, "debug.scm"@68.23
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (set! z (+ z 1))
+| | | | #!void
+| | | #!void
+*** STOPPED IN #<procedure #6>, "debug.scm"@69.10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > append
+| | | #<procedure #14 append>
+*** STOPPED IN #<procedure #6>, "debug.scm"@69.23
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > a
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@69.32
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@69.37
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > a
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@69.31
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list a)
+| | | (11)
+*** STOPPED IN #<procedure #6>, "debug.scm"@70.23
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > b
+| | | 21
+*** STOPPED IN #<procedure #6>, "debug.scm"@70.43
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@70.48
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > b
+| | | 21
+*** STOPPED IN #<procedure #6>, "debug.scm"@70.42
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list b)
+| | | (21)
+*** STOPPED IN #<procedure #6>, "debug.scm"@71.25
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > a
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@71.31
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@71.36
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > c
+| | | 31
+*** STOPPED IN #<procedure #6>, "debug.scm"@71.30
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list c)
+| | | (31)
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.22
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > not
+| | | #<procedure #16 not>
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.26
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > d
+| | | 41
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.21
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (not d)
+| | | #f
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.43
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.48
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > d
+| | | 41
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.50
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > e
+| | | 101
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.52
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > f
+| | | 201
+*** STOPPED IN #<procedure #6>, "debug.scm"@72.42
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list d e f)
+| | | (41 101 201)
+*** STOPPED IN #<procedure #6>, "debug.scm"@73.24
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > g
+| | | 301
+*** STOPPED IN #<procedure #6>, "debug.scm"@73.29
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@74.25
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@74.30
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > h
+| | | 401
+*** STOPPED IN #<procedure #6>, "debug.scm"@74.24
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list h)
+| | | (401)
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.24
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > i
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.31
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.36
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > i
+| | | 11
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.38
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > j
+| | | 21
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.30
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list i j)
+| | | (11 21)
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.44
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > k
+| | | 31
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.47
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > l
+| | | 41
+*** STOPPED IN #<procedure #6>, "debug.scm"@75.51
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > z
+| | | 10001
+*** STOPPED IN #<procedure #6>, "debug.scm"@76.31
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN loop, "debug.scm"@76.40
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > <
+| | | #<procedure #17 <>
+*** STOPPED IN loop, "debug.scm"@76.42
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > i
+| | | 1
+*** STOPPED IN loop, "debug.scm"@76.44
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 10
+| | | 10
+*** STOPPED IN loop, "debug.scm"@76.39
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (< i 10)
+| | | #t
+*** STOPPED IN loop, "debug.scm"@76.49
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > loop
+| | | #<procedure #18 loop>
+*** STOPPED IN loop, "debug.scm"@76.55
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > *
+| | | #<procedure #19 *>
+*** STOPPED IN loop, "debug.scm"@76.57
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > i
+| | | 1
+*** STOPPED IN loop, "debug.scm"@76.59
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 2
+| | | 2
+*** STOPPED IN loop, "debug.scm"@76.54
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (* i 2)
+| | | 2
+*** STOPPED IN loop, "debug.scm"@76.48
+i = 1
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (loop (* i 2))
+*** STOPPED IN loop, "debug.scm"@76.40
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > <
+| | | | #<procedure #17 <>
+*** STOPPED IN loop, "debug.scm"@76.42
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 2
+*** STOPPED IN loop, "debug.scm"@76.44
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 10
+| | | | 10
+*** STOPPED IN loop, "debug.scm"@76.39
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (< i 10)
+| | | | #t
+*** STOPPED IN loop, "debug.scm"@76.49
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > loop
+| | | | #<procedure #18 loop>
+*** STOPPED IN loop, "debug.scm"@76.55
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > *
+| | | | #<procedure #19 *>
+*** STOPPED IN loop, "debug.scm"@76.57
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 2
+*** STOPPED IN loop, "debug.scm"@76.59
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 2
+| | | | 2
+*** STOPPED IN loop, "debug.scm"@76.54
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (* i 2)
+| | | | 4
+*** STOPPED IN loop, "debug.scm"@76.48
+i = 2
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (loop (* i 2))
+*** STOPPED IN loop, "debug.scm"@76.40
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > <
+| | | | #<procedure #17 <>
+*** STOPPED IN loop, "debug.scm"@76.42
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 4
+*** STOPPED IN loop, "debug.scm"@76.44
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 10
+| | | | 10
+*** STOPPED IN loop, "debug.scm"@76.39
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (< i 10)
+| | | | #t
+*** STOPPED IN loop, "debug.scm"@76.49
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > loop
+| | | | #<procedure #18 loop>
+*** STOPPED IN loop, "debug.scm"@76.55
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > *
+| | | | #<procedure #19 *>
+*** STOPPED IN loop, "debug.scm"@76.57
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 4
+*** STOPPED IN loop, "debug.scm"@76.59
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 2
+| | | | 2
+*** STOPPED IN loop, "debug.scm"@76.54
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (* i 2)
+| | | | 8
+*** STOPPED IN loop, "debug.scm"@76.48
+i = 4
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (loop (* i 2))
+*** STOPPED IN loop, "debug.scm"@76.40
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > <
+| | | | #<procedure #17 <>
+*** STOPPED IN loop, "debug.scm"@76.42
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 8
+*** STOPPED IN loop, "debug.scm"@76.44
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 10
+| | | | 10
+*** STOPPED IN loop, "debug.scm"@76.39
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (< i 10)
+| | | | #t
+*** STOPPED IN loop, "debug.scm"@76.49
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > loop
+| | | | #<procedure #18 loop>
+*** STOPPED IN loop, "debug.scm"@76.55
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > *
+| | | | #<procedure #19 *>
+*** STOPPED IN loop, "debug.scm"@76.57
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 8
+*** STOPPED IN loop, "debug.scm"@76.59
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 2
+| | | | 2
+*** STOPPED IN loop, "debug.scm"@76.54
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (* i 2)
+| | | | 16
+*** STOPPED IN loop, "debug.scm"@76.48
+i = 8
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (loop (* i 2))
+*** STOPPED IN loop, "debug.scm"@76.40
+i = 16
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > <
+| | | | #<procedure #17 <>
+*** STOPPED IN loop, "debug.scm"@76.42
+i = 16
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 16
+*** STOPPED IN loop, "debug.scm"@76.44
+i = 16
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > 10
+| | | | 10
+*** STOPPED IN loop, "debug.scm"@76.39
+i = 16
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > (< i 10)
+| | | | #f
+*** STOPPED IN loop, "debug.scm"@76.64
+i = 16
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > list
+| | | | #<procedure #15 list>
+*** STOPPED IN loop, "debug.scm"@76.69
+i = 16
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | | > i
+| | | | 16
+*** STOPPED IN loop, "debug.scm"@76.63
+i = 16
+loop = (lambda (i) (if (< i 10) (loop (* i 2)) (list i)))
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list i)
+| | | (16)
+*** STOPPED IN #<procedure #6>, "debug.scm"@77.25
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@77.39
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 10
+| | | 10
+*** STOPPED IN #<procedure #20>, "debug.scm"@77.46
+i = 1
+j = 10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > <
+| | | #<procedure #17 <>
+*** STOPPED IN #<procedure #20>, "debug.scm"@77.48
+i = 1
+j = 10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > i
+| | | 1
+*** STOPPED IN #<procedure #20>, "debug.scm"@77.50
+i = 1
+j = 10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > j
+| | | 10
+*** STOPPED IN #<procedure #20>, "debug.scm"@77.45
+i = 1
+j = 10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (< i j)
+| | | #t
+*** STOPPED IN #<procedure #20>, "debug.scm"@77.54
+i = 1
+j = 10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #20>, "debug.scm"@77.59
+i = 1
+j = 10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > i
+| | | 1
+*** STOPPED IN #<procedure #20>, "debug.scm"@77.53
+i = 1
+j = 10
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list i)
+| | | (1)
+*** STOPPED IN #<procedure #6>, "debug.scm"@79.20
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@79.22
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 6000
+| | | 6000
+*** STOPPED IN #<procedure #6>, "debug.scm"@79.28
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > raise
+| | | #<procedure #21 raise>
+*** STOPPED IN #<procedure #6>, "debug.scm"@79.34
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 1
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@79.27
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (raise 1)
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.29
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > char?
+| | | #<procedure #22 char?>
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.35
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > e
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.28
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (char? e)
+| | | #f
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.51
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > number?
+| | | #<procedure #23 number?>
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.59
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > e
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.50
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (number? e)
+| | | #t
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.63
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > list
+| | | #<procedure #15 list>
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.69
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.71
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 5000
+| | | 5000
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.76
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > e
+| | | 1
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.68
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (+ 5000 e)
+| | | 5001
+*** STOPPED IN #<procedure #6>, "debug.scm"@78.62
+e = 1
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (list (+ 5000 e))
+| | | (5001)
+*** STOPPED IN #<procedure #6>, "debug.scm"@82.22
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > +
+| | | #<procedure #11 +>
+*** STOPPED IN #<procedure #6>, "debug.scm"@82.24
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 8000
+| | | 8000
+*** STOPPED IN #<procedure #6>, "debug.scm"@82.30
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > raise
+| | | #<procedure #21 raise>
+*** STOPPED IN #<procedure #6>, "debug.scm"@82.36
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > 2
+| | | 2
+*** STOPPED IN #<procedure #6>, "debug.scm"@82.29
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (raise 2)
+*** STOPPED IN #<procedure #6>, "debug.scm"@81.36
+e = 2
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > char?
+| | | #<procedure #22 char?>
+*** STOPPED IN #<procedure #6>, "debug.scm"@81.42
+e = 2
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > e
+| | | 2
+*** STOPPED IN #<procedure #6>, "debug.scm"@81.35
+e = 2
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > (char? e)
+| | | #f
+*** STOPPED IN #<procedure #6>, "debug.scm"@80.38
+x = 2
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | | > '(7000)
+| | | (7000)
+*** STOPPED IN #<procedure #6>, "debug.scm"@69.9
+n = 1001
+o = 2001
+p = 3001
+q = 4001
+e = 101
+f = 201
+g = 301
+h = 401
+i = 11
+j = 21
+k = 31
+l = 41
+m = 401
+a = 11
+b = 21
+c = 31
+d = 41
+1> ,s
+| | > (append (case a ((11) (list a)) (else '())) (case b ((20) '()) (else (l...
+| | (11 21 31 41 101 201 301 401 11 21 #(31 41) 10001 16 1 5001 7000)
+| (11 21 31 41 101 201 301 401 11 21 #(31 41) 10001 16 1 5001 7000)
+*** STOPPED IN (string)@1.35
+1> ,s
+| > exit
+| #<procedure #24 exit>
+*** STOPPED IN (string)@1.34
+1> ,s
+| > (exit)

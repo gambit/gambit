@@ -40,9 +40,15 @@
 (define-prim (##and? x)   (and (##pair? x) (##eq? (##car x) 'and)))
 (define-prim (##or? x)    (and (##pair? x) (##eq? (##car x) 'or)))
 (define-prim (##void-constant? x)
-  (and (##pair? x)
-       (##eq? (##car x) 'quote)
-       (##eq? (##cadr x) (##void))))
+  (or (##eq? x (##void))
+      (and (##pair? x)
+           (##eq? (##car x) 'quote)
+           (##eq? (##cadr x) (##void)))))
+
+(define-prim (##unbegin x)
+  (if (##begin? x)
+      (##cdr x)
+      (##list x)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -118,9 +124,9 @@
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
           (val2 (##decomp (^ 1))))
-      (if (##begin? val2)
-          (##cons 'begin (##cons val1 (##cdr val2)))
-          (##list 'begin val1 val2)))))
+      (##cons 'begin
+              (##cons val1
+                      (##unbegin val2))))))
 
 (define-prim ##degen-quasi-list->vector
   (mk-degen ()
@@ -185,9 +191,8 @@
           (val2 (##decomp (^ 1)))
           (val3 (##decomp (^ 2))))
       (##build-cond
-       (if (##begin? val2)
-           (##cons val1 (##cdr val2))
-           (##list val1 val2))
+       (##cons val1
+               (##unbegin val2))
        val3))))
 
 (define-prim ##degen-cond-or
@@ -204,14 +209,15 @@
       (##build-cond (##list val1 '=> val2) val3))))
 
 (define-prim (##build-cond clause rest)
-  (cond ((##cond? rest)
-         (##cons 'cond (##cons clause (##cdr rest))))
-        ((##begin? rest)
-         (##cons 'cond (##list clause (##cons 'else (##cdr rest)))))
-        ((##void-constant? rest)
-         (##list 'cond clause))
-        (else
-         (##list 'cond clause (##list 'else rest)))))
+  (##cons 'cond
+          (##cons clause
+                  (cond ((##cond? rest)
+                         (##cdr rest))
+                        ((##void-constant? rest)
+                         '())
+                        (else
+                         (##list (##cons 'else
+                                         (##unbegin rest))))))))
 
 (define-prim ##degen-or
   (mk-degen ()
@@ -235,13 +241,12 @@
           (val2 (##decomp (^ 1))))
       (##cons 'case (##cons val1 val2)))))
 
-(define-prim ##degen-case-clause
+(define-prim ##degen-case-list
   (mk-degen ()
     (let ((val1 (##decomp (^ 0)))
           (val2 (##decomp (^ 1))))
-      (##cons (if (##begin? val1)
-                  (##cons (^ 2) (##cdr val1))
-                  (##list (^ 2) val1))
+      (##cons (##cons (^ 2)
+                      (##unbegin val1))
               val2))))
 
 (define-prim ##degen-case-else
@@ -249,9 +254,17 @@
     (let ((val (##decomp (^ 0))))
       (if (##void-constant? val)
           '()
-          (##list (if (##begin? val)
-                      (##cons 'else (##cdr val))
-                      (##list 'else val)))))))
+          (##list (##cons 'else
+                          (##unbegin val)))))))
+
+(define-prim ##degen-case-send
+  (mk-degen ()
+    (let ((val1 (##decomp (^ 0)))
+          (val2 (##decomp (^ 1))))
+      (##cons (##list (or (^ 2) 'else)
+                      '=>
+                      val1)
+              val2))))
 
 (define-prim ##degen-let
   (mk-degen ()
@@ -263,11 +276,65 @@
             (let ((body
                    (##decomp (^ 0)))
                   (bindings
-                   (##make-bindings (macro-code-ref $code (##fx- n 1))
-                                    vals)))
-              (if (##begin? body)
-                  (##cons 'let (##cons bindings (##cdr body)))
-                  (##list 'let bindings body))))))))
+                   (##make-bindings
+                    (##cte-frame-vars (macro-code-cte (^ 0)))
+                    vals))
+                  (form
+                   (case (macro-code-ref $code (##fx- (macro-code-length $code) 1))
+                     ((#f) 'let)
+                     ((#t) 'letrec)
+                     (else 'letrec*))))
+              (##cons form
+                      (##cons bindings
+                              (##unbegin body)))))))))
+
+(define-prim ##degen-let-values
+  (mk-degen ()
+    (let* ((n
+            (macro-code-length $code))
+           (body
+            (##decomp (^ 0)))
+           (bindings
+            (##make-bindings-values
+             (##cte-frame-vars (macro-code-cte (^ 0)))
+             (macro-code-ref $code (##fx- n 2))
+             $code))
+           (form
+            (case (macro-code-ref $code (##fx- (macro-code-length $code) 1))
+              ((#f) 'let-values)
+              ((#t) 'letrec-values)
+              (else 'letrec*-values))))
+      (##cons form
+              (##cons bindings
+                      (##unbegin body))))))
+
+(define-prim (##make-bindings-values vars patterns $code)
+  (let ((vars-vect (##list->vector vars))) ;;TODO: do conversion to vectors elsewhere
+    (let loop1 ((i (##fx- (##vector-length patterns) 1))
+                (j (##fx- (##vector-length vars-vect) 1))
+                (bindings '()))
+
+      (define (build j n lst)
+        (if (##fx< 0 n)
+            (build (##fx- j 1)
+                   (##fx- n 1)
+                   (##cons (##vector-ref vars-vect j) lst))
+            (loop1 (##fx- i 1)
+                   j
+                   (##cons (##list lst
+                                   (##decomp (macro-code-ref $code i)))
+                           bindings))))
+
+      (if (##fx<= i 0)
+          bindings
+          (let ((pattern (##vector-ref patterns i)))
+            (if (##fx< pattern 0)
+                (build (##fx- j 1)
+                       (##fx- -1 pattern)
+                       (##vector-ref vars-vect j))
+                (build j
+                       pattern
+                       '())))))))
 
 (define-prim (##make-bindings l1 l2)
   (if (##pair? l1)
@@ -294,26 +361,26 @@
                 (bindings
                  (##make-bindings (macro-code-ref $code (##fx- n 1))
                                   vals)))
-            (if (##begin? body)
-                (##cons sym (##cons bindings (##cdr body)))
-                (##list sym bindings body)))))))
+            (##cons sym
+                    (##cons bindings
+                            (##unbegin body))))))))
 
 (define-prim ##degen-prc-req
   (mk-degen ()
     (let* ((n (macro-code-length $code))
            (body (##decomp (^ 0)))
            (params (macro-code-ref $code (##fx- n 1))))
-      (if (##begin? body)
-          (##cons 'lambda (##cons params (##cdr body)))
-          (##list 'lambda params body)))))
+      (##cons 'lambda
+              (##cons params
+                      (##unbegin body))))))
 
 (define-prim ##degen-prc-rest
   (mk-degen ()
     (let ((body (##decomp (^ 0)))
           (params (##make-params (^ 3) #t #f '())))
-      (if (##begin? body)
-          (##cons 'lambda (##cons params (##cdr body)))
-          (##list 'lambda params body)))))
+      (##cons 'lambda
+              (##cons params
+                      (##unbegin body))))))
 
 (define-prim ##degen-prc
   (mk-degen ()
@@ -330,9 +397,9 @@
                     (macro-code-ref $code (##fx- n 4))
                     (macro-code-ref $code (##fx- n 3))
                     inits)))
-              (if (##begin? body)
-                  (##cons 'lambda (##cons params (##cdr body)))
-                  (##list 'lambda params body))))))))
+              (##cons 'lambda
+                      (##cons params
+                              (##unbegin body)))))))))
 
 (define-prim (##make-params parms rest? keys inits)
   (let* ((nb-parms
@@ -451,6 +518,22 @@
   (mk-degen ()
     (##list 'future (##decomp (^ 0)))))
 
+(define-prim ##degen-guard-reraise
+  (mk-degen ()
+    (##void)))
+
+(define ##degen-guard
+  (mk-degen (form)
+    (let ((body (##decomp (^ 0)))
+          (handler (##decomp (^ 1))))
+      (##cons form
+              (##cons (##cons
+                       (##car (##cte-frame-vars (macro-code-cte (^ 1))))
+                       (if (##pair? handler) ;; cond form?
+                           (##cdr handler)
+                           '()))
+                      (##unbegin body))))))
+
 ;;;----------------------------------------------------------------------------
 
 (define ##decomp-dispatch-table
@@ -492,12 +575,13 @@
    (##cons ##cprc-and         ##degen-and)
 
    (##cons ##cprc-case        ##degen-case)
-   (##cons ##cprc-case-clause ##degen-case-clause)
+   (##cons ##cprc-case-list   ##degen-case-list)
    (##cons ##cprc-case-else   ##degen-case-else)
+   (##cons ##cprc-case-send-red ##degen-case-send)
+   (##cons ##cprc-case-send-sub ##degen-case-send)
 
    (##cons ##cprc-let         ##degen-let)
-   (##cons ##cprc-letrec      ##degen-letrec)
-   (##cons ##cprc-letrec*     ##degen-letrec*)
+   (##cons ##cprc-let-values  ##degen-let-values)
 
    (##cons ##cprc-prc-req0    ##degen-prc-req)
    (##cons ##cprc-prc-req1    ##degen-prc-req)
@@ -522,7 +606,9 @@
 
    (##cons ##cprc-delay       ##degen-delay)
    (##cons ##cprc-future      ##degen-future)
-   ))
+
+   (##cons ##cprc-guard       (mk-degen () (degen ##degen-guard 'guard)))
+   (##cons ##cprc-guard-reraise ##degen-guard-reraise)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -726,7 +812,8 @@
   (and ;; (##var-i? var) test is redundant
    (or (##eq? var (macro-self-var))
        (##eq? var (macro-selector-var))
-       (##eq? var (macro-do-loop-var)))))
+       (##eq? var (macro-do-loop-var))
+       (##eq? var (macro-guard-var)))))
 
 (define-prim (##hidden-parameter? param)
   (or (##eq? param ##trace-depth)
@@ -3222,6 +3309,10 @@
               (macro-nonprocedure-operator-exception-code exc))
          =>
          code-loc)
+        ((and (macro-wrong-number-of-values-exception? exc)
+              (macro-wrong-number-of-values-exception-code exc))
+         =>
+         code-loc)
         (else
          (##continuation-locat cont))))
 
@@ -3605,6 +3696,13 @@
           ((macro-wrong-number-of-arguments-exception? exc)
            (##write-string
             "Wrong number of arguments passed to procedure"
+            port)
+           (##newline port)
+           (display-call))
+
+          ((macro-wrong-number-of-values-exception? exc)
+           (##write-string
+            "Wrong number of values being bound"
             port)
            (##newline port)
            (display-call))

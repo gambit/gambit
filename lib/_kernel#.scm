@@ -47,6 +47,16 @@
   (arguments unprintable: read-only: no-functional-setter:)
 )
 
+(define-library-type-of-exception wrong-number-of-values-exception
+  id: A090C430-D98F-431E-97EE-2846052FBBE0
+  constructor: #f
+  opaque:
+
+  (vals unprintable: read-only: no-functional-setter:)
+  (code unprintable: read-only: no-functional-setter:)
+  (rte  unprintable: read-only: no-functional-setter:)
+)
+
 (define-library-type-of-exception keyword-expected-exception
   id: 3fd6c57f-3c80-4436-a430-57ea4457c11e
   constructor: #f

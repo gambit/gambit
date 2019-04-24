@@ -1590,6 +1590,13 @@ end-of-code
   (macro-raise
    (macro-make-wrong-number-of-arguments-exception proc args)))
 
+(implement-library-type-wrong-number-of-values-exception)
+
+(define-prim (##raise-wrong-number-of-values-exception vals code rte)
+  (##declare (not interrupts-enabled))
+  (macro-raise
+   (macro-make-wrong-number-of-values-exception vals code rte)))
+
 (implement-library-type-keyword-expected-exception)
 
 (define-prim (##raise-keyword-expected-exception-nary proc . args)

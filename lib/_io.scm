@@ -5445,7 +5445,9 @@
               path
               readtable
               wrap
-              unwrap)
+              unwrap
+              #!optional
+              (case-conversion? '()))
 
   (define (fail)
     (##fail-check-string 1 open-input-file path))
@@ -5463,14 +5465,17 @@
             path
             readtable
             wrap
-            unwrap))))))
+            unwrap
+            case-conversion?))))))
 
 (define-prim (##read-all-as-a-begin-expr-from-psettings
               psettings
               path-or-settings
               readtable
               wrap
-              unwrap)
+              unwrap
+              #!optional
+              (case-conversion? '()))
 
   (define (fail)
     (##fail-check-string-or-settings 1 open-input-file path-or-settings))
@@ -5496,8 +5501,9 @@
                   readtable
                   wrap
                   unwrap
+                  #t
                   start-syntax
-                  #t))))
+                  case-conversion?))))
          open-input-file
          path-or-settings))))
 
@@ -5507,7 +5513,9 @@
               wrap
               unwrap
               start-syntax
-              close-port?)
+              close-port?
+              #!optional
+              (case-conversion? '()))
   (##with-exception-catcher
    (lambda (exc)
      (if close-port?
@@ -5518,7 +5526,7 @@
             (##readtable-copy-shallow readtable)))
        (macro-readtable-start-syntax-set! rt start-syntax)
        (let* ((re
-               (##make-readenv port rt wrap unwrap #t '() #f))
+               (##make-readenv port rt wrap unwrap #t case-conversion? #f))
               (head
                (##cons (wrap re '##begin)
                        '())) ;; tail will be replaced with expressions read
@@ -11991,10 +11999,19 @@
     (case           . #(1 #f 2 #t 1))
     (and            . #(1 #f 0 #f 1))
     (or             . #(1 #f 0 #f 1))
+    (when           . #(1 #t 2 #f 1))
+    (unless         . #(1 #t 2 #f 1))
+    (guard          . #(1 #f 2 #t 1))
     (let            . #(1 #t 2 #f 1)) ;; named let is handled in pretty printer
     (let*           . #(1 #t 2 #f 1))
     (letrec         . #(1 #t 2 #f 1))
     (letrec*        . #(1 #t 2 #f 1))
+    (let-values     . #(1 #t 2 #f 1))
+    (let*-values    . #(1 #t 2 #f 1))
+    (letrec-values  . #(1 #t 2 #f 1))
+    (letrec*-values . #(1 #t 2 #f 1))
+    (define-values  . #(1 #f 2 #f 1))
+    (parameterize   . #(1 #t 2 #f 1))
     (begin          . #(0 #f 1 #f 1))
     (do             . #(1 #t 3 #f 1))
     (define         . #(1 #f 2 #f 1))

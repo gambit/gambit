@@ -989,24 +989,28 @@
          src))))
 
 (define (##shape src x size)
+  (if (##not (##shape? x size))
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (let* ((code (##source-code src))
+              (head-src (##sourcify (##car code) src))
+              (head (##source-code head-src))
+              (name (##symbol->string head))
+              (len (##string-length name)))
+         (if (and (##fx< 2 len)
+                  (##char=? #\# (##string-ref name 0))
+                  (##char=? #\# (##string-ref name 1)))
+             (##string->symbol (##substring name 2 len))
+             (##desourcify head-src))))))
+
+(define (##shape? x size)
   (let* ((code (##source-code x))
          (n (##proper-length code)))
-    (if (or (##not n)
-            (if (##fx< 0 size)
-                (##not (##fx= n size))
-                (##fx< n (##fx- 0 size))))
-        (##raise-expression-parsing-exception
-         'ill-formed-special-form
-         src
-         (let* ((code (##source-code src))
-                (head (##source-code (##sourcify (##car code) src)))
-                (name (##symbol->string head))
-                (len (##string-length name)))
-           (if (and (##fx< 2 len)
-                    (##char=? #\# (##string-ref name 0))
-                    (##char=? #\# (##string-ref name 1)))
-               (##string->symbol (##substring name 2 len))
-               head))))))
+    (and n
+         (if (##fx< 0 size)
+             (##fx= n size)
+             (##not (##fx< n (##fx- 0 size)))))))
 
 (define (##proper-length lst)
   (let loop ((lst lst) (n 0))
@@ -1015,34 +1019,47 @@
           (else          #f))))
 
 (define (##include-file-as-a-begin-expr src)
+
+  (define (include-file fn-src ci?)
+    (let* ((filename-src (##sourcify fn-src src))
+           (filename (##source-code filename-src)))
+      (if (##string? filename)
+
+          (let* ((locat
+                  (##source-locat src))
+                 (relative-to-path
+                  (and locat
+                       (##container->path (##locat-container locat)))))
+            (let* ((path
+                    (##path-reference filename relative-to-path))
+                   (x
+                    (##read-all-as-a-begin-expr-from-path
+                     path
+                     (##current-readtable)
+                     ##wrap-datum
+                     ##unwrap-datum
+                     (if ci? #t '()))))
+              (if (##fixnum? x)
+                  (##raise-expression-parsing-exception
+                   'cannot-open-file
+                   src
+                   path)
+                  (##vector-ref x 1))))
+
+          (##raise-expression-parsing-exception
+           'filename-expected
+           filename-src))))
+
   (let* ((code (##source-code src))
-         (filename-src (##sourcify (##cadr code) src))
-         (filename (##source-code filename-src)))
-    (if (##string? filename)
-
-        (let* ((locat
-                (##source-locat src))
-               (relative-to-path
-                (and locat
-                     (##container->path (##locat-container locat)))))
-          (let* ((path
-                  (##path-reference filename relative-to-path))
-                 (x
-                  (##read-all-as-a-begin-expr-from-path
-                   path
-                   (##current-readtable)
-                   ##wrap-datum
-                   ##unwrap-datum)))
-            (if (##fixnum? x)
-                (##raise-expression-parsing-exception
-                 'cannot-open-file
-                 src
-                 path)
-                (##vector-ref x 1))))
-
-        (##raise-expression-parsing-exception
-         'filename-expected
-         filename-src))))
+         (ci? (##eq? (##source-code (##sourcify (##car code) src))
+                     '##include-ci))
+         (lst (##map (lambda (fn-src) (include-file fn-src ci?))
+                     (##cdr code))))
+    (if (and (##pair? lst) (##null? (##cdr lst)))
+        (##car lst)
+        (##make-source
+         (##cons '##begin lst)
+         src))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1240,16 +1257,22 @@
           (if descr
               (##comp-top top-cte (##macro-expand cte src descr) tail?)
               (case first
-                ((##begin)           (##comp-top-begin top-cte src tail?))
-                ((##define)          (##comp-top-define top-cte src tail?))
-                ((##define-macro)    (##comp-top-define-macro top-cte src tail?))
-                ((##define-syntax)   (##comp-top-define-syntax top-cte src tail?))
-                ((##include)         (##comp-top-include top-cte src tail?))
-                ((##declare)         (##comp-top-declare top-cte src tail?))
-                ((##namespace)       (##comp-top-namespace top-cte src tail?))
-;;;                ((library ##library) (##comp-top-library top-cte src tail?))
-;;;                ((export ##export)   (##comp-top-export top-cte src tail?))
-;;;                ((import ##import)   (##comp-top-import top-cte src tail?))
+                ((##begin)
+                 (##comp-top-begin top-cte src tail?))
+                ((##define)
+                 (##comp-top-define top-cte src tail?))
+                ((##define-values)
+                 (##comp-top-define-values top-cte src tail?))
+                ((##define-macro)
+                 (##comp-top-define-macro top-cte src tail?))
+                ((##define-syntax)
+                 (##comp-top-define-syntax top-cte src tail?))
+                ((##include ##include-ci)
+                 (##comp-top-include top-cte src tail?))
+                ((##declare)
+                 (##comp-top-declare top-cte src tail?))
+                ((##namespace)
+                 (##comp-top-namespace top-cte src tail?))
                 (else                (##comp-aux cte src tail? first)))))
         (##comp-simple cte src tail?))))
 
@@ -1291,8 +1314,48 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define (##comp-top-define-values top-cte src tail?)
+  (let* ((names (##define-values-names src))
+         (vars-src (##cdr names)))
+    (##append-names-checking-duplicates '() vars-src)
+    (let* ((cte
+            (##cte-top-cte top-cte))
+           (inds
+            (##list->vector
+             (##map (lambda (var-src)
+                      (##var-lookup cte var-src))
+                    vars-src)))
+           (vals
+            (##comp-subexpr cte (##define-values-vals src) #f))
+           (rest?
+            (##car names)))
+
+      ;; optimize single var case (caveat: no error when not 1 value)
+      (if (and ##optimize-single-var-bind-values?
+               (##not rest?)
+               (##fx= (##vector-length inds) 1))
+
+          (macro-gen ##gen-glo-def src
+            (##vector-ref inds 0)
+            vals)
+
+          (if rest?
+              (macro-gen ##gen-glo-define-values-rest src
+                inds
+                vals)
+              (macro-gen ##gen-glo-define-values src
+                inds
+                vals))))))
+
+(define ##optimize-single-var-bind-values? #t)
+
+(define (##optimize-single-var-bind-values?-set! x)
+  (set! ##optimize-single-var-bind-values? x))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define (##comp-top-include top-cte src tail?)
-  (##shape src src 2)
+  (##shape src src -2)
   (##comp-top top-cte
               (##include-file-as-a-begin-expr src)
               tail?))
@@ -1371,49 +1434,58 @@
   (let ((code (##source-code src)))
     (if (##pair? code)
         (let* ((first-src (##sourcify (##car code) src))
-               (first (##source-code first-src))
-               (descr (##macro-lookup cte first)))
-          (if descr
-              (##comp-expr cte (##macro-expand cte src descr) tail? subexpr?)
-              (case first
-                ((##begin)
-                 (##comp-begin cte src tail? subexpr?))
-                ((##define)
-                 (##comp-define cte src tail? subexpr?))
-                ((##define-macro)
-                 (##raise-expression-parsing-exception
-                  'ill-placed-define-macro
-                  src))
-                ((##define-syntax)
-                 (##raise-expression-parsing-exception
-                  'ill-placed-define-syntax
-                  src))
-                ((##include)
-                 (##raise-expression-parsing-exception
-                  'ill-placed-include
-                  src))
-                ((##declare)
-                 (##raise-expression-parsing-exception
-                  'ill-placed-declare
-                  src))
-                ((##namespace)
-                 (##raise-expression-parsing-exception
-                  'ill-placed-namespace
-                  src))
-;;;                ((library ##library)
-;;;                 (##raise-expression-parsing-exception
-;;;                  'ill-placed-library
-;;;                  src))
-;;;                ((export ##export)
-;;;                 (##raise-expression-parsing-exception
-;;;                  'ill-placed-export
-;;;                  src))
-;;;                ((import ##import)
-;;;                 (##raise-expression-parsing-exception
-;;;                  'ill-placed-import
-;;;                  src))
-                (else
-                 (##comp-aux cte src tail? first)))))
+               (first (##source-code first-src)))
+          (if (##eq? first ##internal-expr-marker)
+              (##comp-internal-expr cte src tail? subexpr?)
+              (let ((descr (##macro-lookup cte first)))
+                (if descr
+                    (##comp-expr cte
+                                 (##macro-expand cte src descr)
+                                 tail?
+                                 subexpr?)
+                    (case first
+                      ((##begin)
+                       (##comp-begin cte src tail? subexpr?))
+                      ((##define)
+                       (##comp-define cte src tail? subexpr?))
+                      ((##define-values)
+                       (##raise-expression-parsing-exception
+                        'ill-placed-define-values
+                        src))
+                      ((##define-macro)
+                       (##raise-expression-parsing-exception
+                        'ill-placed-define-macro
+                        src))
+                      ((##define-syntax)
+                       (##raise-expression-parsing-exception
+                        'ill-placed-define-syntax
+                        src))
+                      ((##include ##include-ci)
+                       (##raise-expression-parsing-exception
+                        'ill-placed-include
+                        src))
+                      ((##declare)
+                       (##raise-expression-parsing-exception
+                        'ill-placed-declare
+                        src))
+                      ((##namespace)
+                       (##raise-expression-parsing-exception
+                        'ill-placed-namespace
+                        src))
+;;                      ((##declare-scope)
+;;                       (##raise-expression-parsing-exception
+;;                        'ill-placed-declare-scope
+;;                        src))
+;;                      ((##namespace-scope)
+;;                       (##raise-expression-parsing-exception
+;;                        'ill-placed-namespace-scope
+;;                        src))
+;;                      ((##macro-scope)
+;;                       (##raise-expression-parsing-exception
+;;                        'ill-placed-macro-scope
+;;                        src))
+                      (else
+                       (##comp-aux cte src tail? first)))))))
         (##comp-simple cte src tail?))))
 
 (define (##comp-simple cte src tail?)
@@ -1480,6 +1552,41 @@
             (##comp-seq-aux cte src tail? subexpr? rest)))
         (##comp-expr cte first-src tail? subexpr?))))
 
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define ##internal-expr-marker '#(internal-expr))
+
+(define (##make-internal-expr src kind . data)
+  (let ((locat (##source-locat src)))
+    (##make-source
+     (##cons (##make-source ##internal-expr-marker locat)
+             (##cons kind
+                     data))
+     locat)))
+
+(define (##comp-internal-expr cte src tail? subexpr?)
+  (let* ((code (##source-code src))
+         (kind (##cadr code)))
+    (cond ((##eq? kind '##cst-no-step)
+           (let ((val (##caddr code)))
+             (macro-gen ##gen-cst-no-step src
+               val)))
+          ((##eq? kind '##loc-define-values)
+           (let* ((names-src (##caddr code))
+                  (expr (##cadddr code))
+                  (overs
+                   (##list->vector
+                    (##map (lambda (name-src)
+                             ;; only keep over (up always = 0)
+                             (loc-access-over
+                              (##var-lookup cte name-src)))
+                           names-src))))
+             (macro-gen ##gen-loc-define-values-no-step src
+               overs
+               (##comp-expr cte expr tail? subexpr?))))
+          (else
+           (##comp-expr cte 12345 tail? subexpr?)))))
+
 ;;;----------------------------------------------------------------------------
 
 (define (##comp-aux cte src tail? first)
@@ -1517,8 +1624,18 @@
      (##comp-letrec cte src tail?))
     ((##letrec*)
      (##comp-letrec* cte src tail?))
+    ((##let-values)
+     (##comp-let-values cte src tail?))
+    ((##let*-values)
+     (##comp-let*-values cte src tail?))
+    ((##letrec-values)
+     (##comp-letrec-values cte src tail?))
+    ((##letrec*-values)
+     (##comp-letrec*-values cte src tail?))
     ((##do)
      (##comp-do cte src tail?))
+    ((##guard ##r7rs-guard)
+     (##comp-guard cte src tail?))
     ((##delay)
      (##comp-delay cte src tail?))
     ((##future)
@@ -1986,6 +2103,15 @@
 (define (##comp-body cte src tail? body)
 
   (define (internal-defs cte rev-vars rev-vals body)
+
+    (define (check-unique-variable name-src name)
+      (##variable name-src)
+      (if (##memq name rev-vars)
+          (##raise-expression-parsing-exception
+           'duplicate-variable-definition
+           name-src))
+      name)
+
     (if (##pair? body)
 
         (let* ((src (##sourcify (##car body) src))
@@ -2034,8 +2160,8 @@
                                         rev-vars
                                         rev-vals
                                         (##cdr body))))
-                      ((##include)
-                       (##shape src src 2)
+                      ((##include ##include-ci)
+                       (##shape src src -2)
                        (internal-defs cte
                                       rev-vars
                                       rev-vals
@@ -2077,15 +2203,23 @@
          src)))
 
   (define (internal-defs-done cte rev-vars rev-vals body)
-    (if (##null? rev-vars)
-        (##comp-seq cte src tail? #t body)
-        (##comp-letrec-aux2 cte
-                            src
-                            tail?
-                            #t
-                            (##reverse rev-vars)
-                            (##reverse rev-vals)
-                            body)))
+    (if (##pair? rev-vars)
+        (let* ((vars
+                (##reverse rev-vars))
+               (vals
+                (##reverse rev-vals))
+               (new-cte
+                (##cte-frame-i cte vars))
+               (vals*
+                (##comp-vals new-cte src vals))
+               (body*
+                (##comp-seq new-cte src tail? #t body)))
+          (macro-gen ##gen-let src
+            vars
+            vals*
+            body*
+            '*))
+        (##comp-seq cte src tail? #t body)))
 
   (internal-defs cte '() '() body))
 
@@ -2144,6 +2278,45 @@
                     (##make-source (##void) locat))
             locat)))))
 
+(define (##define-values-names src)
+  (let* ((code (##source-code src))
+         (names-src (##sourcify (##cadr code) src))
+         (names (##source-code names-src)))
+    (if (or (##pair? names)
+            (##null? names))
+        (let loop ((lst names)
+                   (rev-names '()))
+          (cond ((##pair? lst)
+                 (let ((name-src (##car lst)))
+                   (##variable name-src)
+                   (loop (##cdr lst)
+                         (##cons name-src rev-names))))
+                ((##null? lst)
+                 (##cons #f (##reverse rev-names)))
+                (else
+                 (##variable lst)
+                 (##cons #t (##reverse (##cons lst rev-names))))))
+        (begin
+          (##variable names-src)
+          (##list #t names-src)))))
+
+(define (##define-values-vals src)
+  (let ((code (##source-code src)))
+    (##sourcify (##caddr code) src)))
+
+(define (##append-names-checking-duplicates names names-src)
+  (let loop ((names names) (lst names-src))
+    (if (##pair? lst)
+        (let* ((name-src (##car lst))
+               (name (##source-code name-src)))
+          (if (##memq name names)
+              (##raise-expression-parsing-exception
+               'duplicate-variable-definition
+               name-src))
+          (loop (##cons name names)
+                (##cdr lst)))
+        names)))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (##comp-if cte src tail?)
@@ -2170,9 +2343,16 @@
   (##shape src src -2)
   (let* ((code (##source-code src))
          (clauses (##cdr code)))
-    (##comp-cond-aux cte src tail? clauses)))
+    (##comp-cond-clauses
+     cte
+     src
+     tail?
+     clauses
+     (lambda ()
+       (macro-gen ##gen-cst-no-step src
+                  (##void))))))
 
-(define (##comp-cond-aux cte src tail? clauses)
+(define (##comp-cond-clauses cte src tail? clauses inner)
   (if (##pair? clauses)
       (let* ((clause-src (##sourcify (##car clauses) src))
              (clause (##source-code clause-src)))
@@ -2189,7 +2369,7 @@
                 ((##not (##pair? (##cdr clause)))
                  (macro-gen ##gen-cond-or src
                    (##comp-subexpr cte first-src #f)
-                   (##comp-cond-aux cte src tail? (##cdr clauses))))
+                   (##comp-cond-clauses cte src tail? (##cdr clauses) inner)))
                 (else
                  (let* ((second-src (##sourcify (##cadr clause) clause-src))
                         (second (##source-code second-src)))
@@ -2201,13 +2381,46 @@
                            (macro-gen ##gen-cond-send src
                              (##comp-subexpr cte first-src #f)
                              (##comp-subexpr cte third-src #f)
-                             (##comp-cond-aux cte src tail? (##cdr clauses)))))
+                             (##comp-cond-clauses cte src tail? (##cdr clauses) inner))))
                        (macro-gen ##gen-cond-if src
                          (##comp-subexpr cte first-src #f)
                          (##comp-seq cte src tail? #t (##cdr clause))
-                         (##comp-cond-aux cte src tail? (##cdr clauses)))))))))
-      (macro-gen ##gen-cst-no-step src
-        (##void))))
+                         (##comp-cond-clauses cte src tail? (##cdr clauses) inner))))))))
+      (inner)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define (##comp-guard cte src tail?)
+  (##shape src src -3)
+  (let* ((code (##source-code src))
+         (first-src (##sourcify (##cadr code) src)))
+    (##shape src first-src -1)
+    (let* ((first (##source-code first-src))
+           (var-src (##sourcify (##car first) src)))
+      (##variable var-src)
+      (let* ((var
+              (##source-code var-src))
+             (r7rs-guard?
+              (##eq? (##source-code (##sourcify (##car code) src))
+                     '##r7rs-guard))
+             (handler
+              (let ((cte
+                     (##cte-frame-i cte
+                                    (##list var
+                                            (macro-guard-var)))))
+                (##comp-cond-clauses
+                 cte
+                 src
+                 tail?
+                 (##cdr first)
+                 (lambda ()
+                   (macro-gen ##gen-guard-reraise src)))))
+             (body
+              (##comp-body cte src tail? (##cddr code))))
+        (macro-gen ##gen-guard src
+          body
+          handler
+          r7rs-guard?)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2255,41 +2468,65 @@
   (##shape src src -3)
   (let* ((code (##source-code src))
          (first-src (##sourcify (##cadr code) src))
+         (val (##comp-subexpr cte first-src #f))
          (clauses (##cddr code)))
-    (macro-gen ##gen-case first-src
-      (##comp-subexpr cte first-src #f)
+    (macro-gen ##gen-case src
+      val
       (let ((cte (##cte-frame-i cte (##list (macro-selector-var)))))
-        (##comp-case-aux cte src tail? clauses)))))
+        (##comp-case-clauses cte src tail? clauses)))))
 
-(define (##comp-case-aux cte src tail? clauses)
+(define (##comp-case-clauses cte src tail? clauses)
   (if (##pair? clauses)
+
       (let* ((clause-src (##sourcify (##car clauses) src))
              (clause (##source-code clause-src)))
         (##shape src clause-src -2)
         (let* ((first-src (##sourcify (##car clause) clause-src))
                (first (##source-code first-src)))
-          (if (##eq? first 'else)
-              (begin
-                (if (##not (##null? (##cdr clauses)))
-                    (##raise-expression-parsing-exception
-                     'else-clause-not-last
-                     clause-src))
-                (macro-gen ##gen-case-else clause-src
-                  (##comp-seq cte src tail? #t (##cdr clause))))
-              (let ((n (##proper-length first)))
-                (if (##not n)
-                    (##raise-expression-parsing-exception
-                     'ill-formed-selector-list
-                     first-src))
-                (macro-gen ##gen-case-clause clause-src
-                  (##desourcify first-src)
-                  (##comp-seq cte src tail? #t (##cdr clause))
-                  (##comp-case-aux cte src tail? (##cdr clauses)))))))
+
+          (if (##not (or (##eq? first 'else)
+                         (##proper-length first)))
+              (##raise-expression-parsing-exception
+               'ill-formed-selector-list
+               first-src))
+
+          (if (and (##eq? first 'else)
+                   (##not (##null? (##cdr clauses))))
+              (##raise-expression-parsing-exception
+               'else-clause-not-last
+               clause-src))
+
+          (let* ((second-src (##sourcify (##cadr clause) clause-src))
+                 (second (##source-code second-src)))
+            (if (##eq? second '=>)
+
+                (begin
+                  (##shape src clause-src 3)
+                  (let ((third-src
+                         (##sourcify (##caddr clause) clause-src)))
+                    (macro-gen ##gen-case-send clause-src
+                      (if (##eq? first 'else) #f (##desourcify first-src))
+                      (##comp-subexpr cte third-src #f)
+                      (##comp-case-clauses cte src tail? (##cdr clauses)))))
+
+                (if (##eq? first 'else)
+                    (macro-gen ##gen-case-else clause-src
+                      (##comp-seq cte src tail? #t (##cdr clause)))
+                    (macro-gen ##gen-case-list clause-src
+                      (##desourcify first-src)
+                      (##comp-seq cte src tail? #t (##cdr clause))
+                      (##comp-case-clauses cte src tail? (##cdr clauses))))))))
+
       (macro-gen ##gen-case-else src
         (macro-gen ##gen-cst-no-step src
           (##void)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define ##allow-multi-var-bindings? #t)
+
+(define (##allow-multi-var-bindings?-set! x)
+  (set! ##allow-multi-var-bindings? x))
 
 (define (##comp-let cte src tail?)
   (##shape src src -3)
@@ -2297,45 +2534,135 @@
          (first-src (##sourcify (##cadr code) src))
          (first (##source-code first-src)))
     (if (##symbol? first)
+
         (begin
           (##shape src src -4)
-          (let ((bindings-src (##sourcify (##caddr code) src)))
-            (let* ((vars (##bindings->vars src bindings-src #t #f))
-                   (vals (##bindings->vals src bindings-src))
-                   (tail? (##tail-call? cte tail?)))
-              (macro-gen ##gen-app-no-step src
-                (let ((inner-cte (##cte-frame-i cte (##list first)))
-                      (tail? #f))
-                  (macro-gen ##gen-letrec src
-                    (##list first)
-                    (let ((cte inner-cte))
-                      (##list (macro-gen ##gen-prc-req-no-step src
-                                vars
-                                (##comp-body (##cte-frame-i
-                                              cte
-                                              (##cons (macro-self-var) vars))
-                                             src
-                                             #t
-                                             (##cdddr code)))))
-                    (let ((cte inner-cte))
-                      (macro-gen ##gen-loc-ref-no-step src ;; fetch loop variable
-                        0
-                        1))))
-                (##comp-vals cte src vals)))))
-        (let* ((vars (##bindings->vars src first-src #t #f))
-               (vals (##bindings->vals src first-src)))
-          (if (##null? vars)
-              (##comp-body cte src tail? (##cddr code))
-              (let ((c
-                     (##comp-body
-                      (##cte-frame-i cte vars)
-                      src
-                      tail?
-                      (##cddr code))))
+          (let* ((bindings-src (##sourcify (##caddr code) src))
+                 (bindings (##extract-bindings src bindings-src #f #f))
+                 (vars (##map ##cadar bindings))
+                 (vals (##map ##cdr bindings))
+                 (tail? (##tail-call? cte tail?)))
+            (macro-gen ##gen-app-no-step src
+              (let ((inner-cte (##cte-frame-i cte (##list first)))
+                    (tail? #f))
                 (macro-gen ##gen-let src
-                  vars
-                  (##comp-vals cte src vals)
-                  c)))))))
+                  (##list first)
+                  (let ((cte inner-cte))
+                    (##list (macro-gen ##gen-prc-req-no-step src
+                              vars
+                              (##comp-body (##cte-frame-i
+                                            cte
+                                            (##cons (macro-self-var) vars))
+                                           src
+                                           #t
+                                           (##cdddr code)))))
+                  (let ((cte inner-cte))
+                    (macro-gen ##gen-loc-ref-no-step src ;; fetch loop variable
+                      0
+                      1))
+                  #t))
+              (##comp-vals cte src vals))))
+
+        (##comp-let-like-form cte src tail? ##allow-multi-var-bindings? #f #f))))
+
+(define (##comp-let* cte src tail?)
+  (##shape src src -3)
+  (##comp-let-like-form cte src tail? ##allow-multi-var-bindings? #t #f))
+
+(define (##comp-let-values cte src tail?)
+  (##shape src src -3)
+  (##comp-let-like-form cte src tail? 'list #f #f))
+
+(define (##comp-let*-values cte src tail?)
+  (##shape src src -3)
+  (##comp-let-like-form cte src tail? 'list #t #f))
+
+(define (##comp-letrec cte src tail?)
+  (##shape src src -3)
+  (##comp-let-like-form cte src tail? ##allow-multi-var-bindings? #f #t))
+
+(define (##comp-letrec* cte src tail?)
+  (##shape src src -3)
+  (##comp-let-like-form cte src tail? ##allow-multi-var-bindings? #f '*))
+
+(define (##comp-letrec-values cte src tail?)
+  (##shape src src -3)
+  (##comp-let-like-form cte src tail? 'list #f #t))
+
+(define (##comp-letrec*-values cte src tail?)
+  (##shape src src -3)
+  (##comp-let-like-form cte src tail? 'list #f '*))
+
+(define (##comp-let-like-form cte src tail? binding-style nested? rec?)
+  (let* ((code (##source-code src))
+         (first-src (##sourcify (##cadr code) src))
+         (first (##source-code first-src))
+         (bindings (##extract-bindings src first-src binding-style nested?)))
+
+    (define (nonest cte bindings inner)
+      (if (##pair? bindings)
+
+          (let loop ((lst (##reverse bindings))
+                     (vars '())
+                     (vals '())
+                     (patterns-list '())
+                     (mv? (and (##eq? binding-style 'list)
+                               (##not ##optimize-single-var-bind-values?))))
+            (if (##pair? lst)
+                (let* ((b (##car lst))
+                       (v (##car b))
+                       (b-pat (##car v))
+                       (b-vars (##cdr v))
+                       (b-val (##cdr b)))
+                  (loop (##cdr lst)
+                        (##append b-vars vars)
+                        (##cons b-val vals)
+                        (##cons b-pat patterns-list)
+                        (or mv? (##not (##fx= b-pat 1)))))
+                (let* ((new-cte
+                        (##cte-frame-i cte vars))
+                       (vals*
+                        (##comp-vals (if rec?
+                                         new-cte
+                                         (##cte-parent-cte new-cte))
+                                     src
+                                     vals))
+                       (body
+                        (inner new-cte)))
+                  (if mv?
+                      (let ((patterns
+                             (##list->vector
+                              (##cons (##length vars) patterns-list))))
+                        (macro-gen ##gen-let-values src
+                          vars
+                          vals*
+                          body
+                          patterns
+                          rec?))
+                      (macro-gen ##gen-let src
+                        vars
+                        vals*
+                        body
+                        rec?)))))
+
+          (inner cte)))
+
+    (define (nest cte bindings inner)
+      (if (##pair? bindings)
+          (nonest cte
+                  (##list (##car bindings))
+                  (lambda (cte)
+                    (nest cte
+                          (##cdr bindings)
+                          inner)))
+          (inner cte)))
+
+    (define (body cte)
+      (##comp-body cte src tail? (##cddr code)))
+
+    (if nested?
+        (nest cte bindings body)
+        (nonest cte bindings body))))
 
 (define (##comp-vals cte src lst)
   (if (##pair? lst)
@@ -2343,115 +2670,171 @@
               (##comp-vals cte src (##cdr lst)))
       '()))
 
-(define (##bindings->vars src bindings-src check-duplicates? allow-steps?)
+(define (##extract-bindings src bindings-src binding-style allow-dups?)
 
-  (define (bindings->vars lst rev-vars)
-    (if (##pair? lst)
-        (let* ((binding-src (##sourcify (##car lst) src))
-               (binding (##source-code binding-src)))
-          (if allow-steps?
-              (begin
-                (##shape src binding-src -2)
-                (if (##pair? (##cddr binding)) (##shape src binding-src 3)))
-              (##shape src binding-src 2))
-          (let* ((first-src (##sourcify (##car binding) binding-src))
-                 (first (##source-code first-src)))
-            (##variable first-src)
-            (if (and check-duplicates? (##memq first rev-vars))
-                (##raise-expression-parsing-exception
-                 'duplicate-variable-binding
-                 first-src))
-            (bindings->vars (##cdr lst)
-                            (##cons first rev-vars))))
-        (##reverse rev-vars)))
+  ;; binding-style can be:
+  ;;
+  ;; #f     simple var-value syntax e.g. (let ((a X) (b Y)) ...)
+  ;; #t     variables in a sequence e.g. (let ((a b c X) (d Y)) ...)
+  ;; list   variables in a list e.g. (let-values (((a b c) X) ((d . e) Y)) ...)
+  ;; step   variable + value + optional step e.g. (do ((i 0 (+ i 1))) ...)
 
-  (let* ((bindings (##source-code bindings-src))
-         (len (##proper-length bindings)))
-    (if len
-        (bindings->vars bindings '())
-        (##raise-expression-parsing-exception
-         'ill-formed-binding-list
-         bindings-src))))
+  (define (ill-formed-binding-list)
+    (##raise-expression-parsing-exception
+     'ill-formed-binding-list
+     bindings-src))
 
-(define (##bindings->vals src bindings-src)
+  (define (duplicate-variable-binding src)
+    (##raise-expression-parsing-exception
+     'duplicate-variable-binding
+     src))
 
-  (define (bindings->vals lst)
-    (if (##pair? lst)
-        (let* ((binding-src (##sourcify (##car lst) src))
-               (binding (##source-code binding-src)))
-          (##cons (##sourcify (##cadr binding) src)
-                  (bindings->vals (##cdr lst))))
-        '()))
+  (let loop1 ((lst1 (##source-code bindings-src))
+              (rev-bindings '())
+              (seen '()))
 
-  (let ((bindings (##source-code bindings-src)))
-    (bindings->vals bindings)))
+    (cond ((##null? lst1)
+           (##reverse rev-bindings))
 
-(define (##bindings->steps src bindings-src)
+          ((##pair? lst1)
+           (let* ((binding-src
+                   (##sourcify (##car lst1) src))
+                  (binding
+                   (##source-code binding-src))
+                  (len-binding
+                   (##proper-length binding)))
 
-  (define (bindings->steps lst)
-    (if (##pair? lst)
-        (let* ((binding-src (##sourcify (##car lst) src))
-               (binding (##source-code binding-src)))
-          (##cons (##sourcify (if (##pair? (##cddr binding))
-                                  (##caddr binding)
-                                  (##car binding))
-                              src)
-                  (bindings->steps (##cdr lst))))
-        '()))
+             (cond ((##eq? binding-style 'step)
+                    (case len-binding
+                      ((2 3)
+                       (let* ((var-src
+                               (##sourcify (##car binding) binding-src))
+                              (var
+                               (##source-code var-src)))
+                         (##variable var-src)
+                         (if (##memq var seen)
+                             (duplicate-variable-binding var-src)
+                             (loop1 (##cdr lst1)
+                                    (##cons (##cons var (##cdr binding))
+                                            rev-bindings)
+                                    (##cons var seen)))))
+                      (else
+                       (ill-formed-binding-list))))
 
-  (let ((bindings (##source-code bindings-src)))
-    (bindings->steps bindings)))
+                   ((##eq? binding-style 'list)
+                    (if (##eqv? 2 len-binding)
+                        (let* ((vars-src
+                                (##sourcify (##car binding) binding-src))
+                               (vars
+                                (##source-code vars-src)))
+                          (if (or (##pair? vars)
+                                  (##null? vars))
+                              (let loop2 ((lst2 vars)
+                                          (n 0)
+                                          (rev-vars '())
+                                          (seen (if allow-dups? '() seen)))
+                                (cond ((##null? lst2)
+                                       (loop1 (##cdr lst1)
+                                              (##cons
+                                               (##cons
+                                                (##cons n
+                                                        (##reverse rev-vars))
+                                                (##cadr binding))
+                                               rev-bindings)
+                                              seen))
+                                      ((##pair? lst2)
+                                       (let* ((var-src
+                                               (##sourcify (##car lst2)
+                                                           vars-src))
+                                              (var
+                                               (##source-code var-src))
+                                              (rest
+                                               (##cdr lst2)))
+                                         (##variable var-src)
+                                         (if (##memq var seen)
+                                             (duplicate-variable-binding
+                                              var-src)
+                                             (loop2 rest
+                                                    (##fx+ n 1)
+                                                    (##cons var rev-vars)
+                                                    (##cons var seen)))))
+                                      (else
+                                       (let* ((var-src
+                                               (##sourcify lst2 binding-src))
+                                              (var
+                                               (##source-code var-src)))
+                                         (##variable var-src)
+                                         (if (##memq var seen)
+                                             (duplicate-variable-binding
+                                              var-src)
+                                             (loop1 (##cdr lst1)
+                                                    (##cons
+                                                     (##cons
+                                                      (##cons (##fx- -1 n)
+                                                              (##reverse
+                                                               (##cons var
+                                                                       rev-vars)))
+                                                             (##cadr binding))
+                                                     rev-bindings)
+                                                    (##cons var seen)))))))
+                              (let* ((var-src
+                                      vars-src)
+                                     (var
+                                      (##source-code var-src)))
+                                (##variable var-src)
+                                (if (##memq var seen)
+                                    (duplicate-variable-binding
+                                     var-src)
+                                    (loop1 (##cdr lst1)
+                                           (##cons
+                                            (##cons
+                                             (##cons -1
+                                                     (##list var))
+                                             (##cadr binding))
+                                            rev-bindings)
+                                           (##cons var seen))))))
+                        (ill-formed-binding-list)))
 
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+                   (else
+                    (if (if binding-style
+                            (and len-binding (##fx>= len-binding 2))
+                            (##eqv? 2 len-binding))
+                        (let loop3 ((lst2 binding)
+                                    (n 0)
+                                    (rev-vars '())
+                                    (seen (if allow-dups? '() seen)))
+                          (if (##not (##pair? lst2))
+                              (ill-formed-binding-list)
+                              (let ((first-src
+                                     (##sourcify (##car lst2) binding-src))
+                                    (rest
+                                     (##cdr lst2)))
+                                (if (##null? rest)
+                                    (if (or (##not (##eq? binding-style #f))
+                                            (and (##pair? rev-vars)
+                                                 (##null? (##cdr rev-vars))))
+                                        (loop1 (##cdr lst1)
+                                               (##cons
+                                                (##cons
+                                                 (##cons n
+                                                         (##reverse rev-vars))
+                                                 first-src)
+                                                rev-bindings)
+                                               seen)
+                                        (ill-formed-binding-list))
+                                    (let ((first
+                                           (##source-code first-src)))
+                                      (##variable first-src)
+                                      (if (##memq first seen)
+                                          (duplicate-variable-binding first-src)
+                                          (loop3 rest
+                                                 (##fx+ n 1)
+                                                 (##cons first rev-vars)
+                                                 (##cons first seen))))))))
+                        (ill-formed-binding-list))))))
 
-(define (##comp-let* cte src tail?)
-  (##shape src src -3)
-  (let* ((code (##source-code src))
-         (bindings-src (##sourcify (##cadr code) src))
-         (vars (##bindings->vars src bindings-src #f #f))
-         (vals (##bindings->vals src bindings-src)))
-    (##comp-let*-aux cte src tail? vars vals (##cddr code))))
-
-(define (##comp-let*-aux cte src tail? vars vals body)
-  (if (##pair? vars)
-      (let ((frame (##list (##car vars))))
-        (let ((inner-cte (##cte-frame-i cte frame)))
-          (macro-gen ##gen-let src
-            frame
-            (##list (##comp-subexpr cte (##car vals) #f))
-            (##comp-let*-aux inner-cte
-                             src
-                             tail?
-                             (##cdr vars)
-                             (##cdr vals)
-                             body))))
-      (##comp-body cte src tail? body)))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(define (##comp-letrec cte src tail?)
-  (##comp-letrec-aux cte src tail? #f))
-
-(define (##comp-letrec* cte src tail?)
-  (##comp-letrec-aux cte src tail? #t))
-
-(define (##comp-letrec-aux cte src tail? *?)
-  (##shape src src -3)
-  (let* ((code (##source-code src))
-         (bindings-src (##sourcify (##cadr code) src))
-         (vars (##bindings->vars src bindings-src #t #f))
-         (vals (##bindings->vals src bindings-src)))
-    (##comp-letrec-aux2 cte src tail? *? vars vals (##cddr code))))
-
-(define (##comp-letrec-aux2 cte src tail? *? vars vals body)
-  (if (##pair? vars)
-      (let ((inner-cte (##cte-frame-i cte vars))
-            (gen-letrec (if *? ##gen-letrec* ##gen-letrec)))
-        (macro-gen gen-letrec src
-          vars
-          (##comp-vals inner-cte src vals)
-          (##comp-body inner-cte src tail? body)))
-      (##comp-body cte src tail? body)))
+          (else
+           (ill-formed-binding-list)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2463,10 +2846,11 @@
          (exit-src (##sourcify (##caddr code) src))
          (exit (##source-code exit-src)))
     (##shape src exit-src -1)
-    (let* ((vars (##bindings->vars src bindings-src #t #t))
+    (let* ((bindings (##extract-bindings src bindings-src 'step #f))
+           (vars (##map ##car bindings))
            (do-loop-vars (##list (macro-do-loop-var)))
            (inner-cte (##cte-frame-i cte do-loop-vars)))
-      (macro-gen ##gen-letrec src
+      (macro-gen ##gen-let src
         do-loop-vars
         (##list
          (let ((cte inner-cte)
@@ -2485,10 +2869,14 @@
                               (macro-gen ##gen-loc-ref-no-step src ;; fetch do-loop-var
                                 1
                                 1))
-                            (##comp-vals cte
-                                         src
-                                         (##bindings->steps src
-                                                            bindings-src))))))
+                            (##comp-vals
+                             cte
+                             src
+                             (##map (lambda (binding)
+                                      (if (##pair? (##cddr binding))
+                                          (##caddr binding)
+                                          (##sourcify (##car binding) src)))
+                                    bindings))))))
                    (if (##null? (##cdddr code))
                        call
                        (macro-gen ##gen-seq src
@@ -2501,7 +2889,8 @@
               (macro-gen ##gen-loc-ref-no-step src ;; fetch do-loop-var
                 0
                 1))
-            (##comp-vals cte src (##bindings->vals src bindings-src))))))))
+            (##comp-vals cte src (##map ##cadr bindings))))
+        #t))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2779,6 +3168,124 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define ##cprc-glo-define-values
+  (macro-make-cprc
+   (let ((vals (macro-code-run (^ 0))))
+     (macro-define-step! (vals)
+       (let ((inds (^ 1)))
+         (if (##values? vals)
+
+             (let ((len (##values-length vals)))
+               (if (##fx= len (##vector-length inds))
+                   (let loop ((i (##fx- len 1)))
+                     (if (##fx>= i 0)
+                         (begin
+                           (##global-var-set!
+                            (##vector-ref inds i)
+                            (##values-ref vals i))
+                           (loop (##fx- i 1)))
+                         (##void)))
+                   (##raise-wrong-number-of-values-exception vals)))
+
+             (if (##fx= 1 (##vector-length inds))
+                 (begin
+                   (##global-var-set!
+                    (##vector-ref inds 0)
+                    vals)
+                   (##void))
+                 (##raise-wrong-number-of-values-exception vals))))))))
+
+(define ##gen-glo-define-values
+  (macro-make-gen (inds vals)
+    (let ((stepper (##no-stepper)))
+      (macro-make-code ##cprc-glo-define-values cte src stepper (vals)
+        inds))))
+
+(define ##cprc-glo-define-values-rest
+  (macro-make-cprc
+   (let ((vals (macro-code-run (^ 0))))
+     (macro-define-step! (vals)
+       (let ((inds (^ 1)))
+         (if (##values? vals)
+
+             (let ((len (##values-length vals))
+                   (n-1 (##fx- (##vector-length inds) 1)))
+               (if (##fx>= len n-1)
+                   (let loop1 ((i (##fx- len 1)) (rest '()))
+                     (if (##fx>= i n-1)
+                         (loop1 (##fx- i 1)
+                                (##cons (##values-ref vals i) rest))
+                         (begin
+                           (##global-var-set!
+                            (##vector-ref inds n-1)
+                            rest)
+                           (let loop2 ((i i))
+                             (if (##fx>= i 0)
+                                 (begin
+                                   (##global-var-set!
+                                    (##vector-ref inds i)
+                                    (##values-ref vals i))
+                                   (loop2 (##fx- i 1)))
+                                 (##void))))))
+                   (##raise-wrong-number-of-values-exception vals)))
+
+             (if (##fx= 1 (##vector-length inds))
+                 (begin
+                   (##global-var-set!
+                    (##vector-ref inds 0)
+                    (##list vals))
+                   (##void))
+                 (if (##fx= 2 (##vector-length inds))
+                     (begin
+                       (##global-var-set!
+                        (##vector-ref inds 0)
+                        vals)
+                       (##global-var-set!
+                        (##vector-ref inds 1)
+                        '())
+                       (##void))
+                     (##raise-wrong-number-of-values-exception vals)))))))))
+
+(define ##gen-glo-define-values-rest
+  (macro-make-gen (inds vals)
+    (let ((stepper (##no-stepper)))
+      (macro-make-code ##cprc-glo-define-values-rest cte src stepper (vals)
+        inds))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define ##cprc-loc-define-values
+  (macro-make-cprc
+   (let ((vals (macro-code-run (^ 0))))
+     (macro-define-step! (vals)
+       (let ((overs (^ 1)))
+         (if (##values? vals)
+             (let ((len (##values-length vals)))
+               (if (##fx= len (##vector-length overs))
+                   (if (##fx= len 0)
+                       (##void)
+                       (let ((len-1 (##fx- len 1)))
+                         (let loop ((i 0))
+                           (if (##fx< i len-1)
+                               (begin
+                                 (macro-rte-set! rte
+                                                 (##vector-ref overs i)
+                                                 (##values-ref vals i))
+                                 (loop (##fx+ i 1)))
+                               (##values-ref vals i)))))
+                   (##raise-wrong-number-of-values-exception vals)))
+             (if (##fx= 1 (##vector-length overs))
+                 vals
+                 (##raise-wrong-number-of-values-exception vals))))))))
+
+(define ##gen-loc-define-values-no-step
+  (macro-make-gen (overs vals)
+    (let ((stepper (##no-stepper)))
+      (macro-make-code ##cprc-loc-define-values cte src stepper (vals)
+        overs))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define ##cprc-if2
   (macro-make-cprc
    (let ((pred (macro-code-run (^ 0))))
@@ -2937,6 +3444,49 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define ##cprc-guard-reraise
+  (macro-make-cprc
+    (##raise (macro-rte-ref rte 2))))
+
+(define ##gen-guard-reraise
+  (macro-make-gen ()
+    (let ((stepper (##no-stepper)))
+      (macro-make-code ##cprc-guard-reraise
+        cte
+        src
+        stepper
+        ()))))
+
+(define ##cprc-guard
+  (macro-make-cprc
+   (let* ((handler
+           (lambda (exc)
+             (let* (($code (^ 1))
+                    (rte (macro-make-rte rte exc exc)))
+               (##first-argument #f) ;; keep $code and rte are in environment-map
+               (##check-heap-limit)
+               (macro-code-run $code))))
+          (thunk
+           (lambda ()
+             (macro-code-run (^ 0)))))
+     (##check-heap-limit)
+     (##first-argument $code rte) ;; keep $code and rte are in environment-map
+     (if (^ 2)
+         (##r7rs-with-exception-catcher handler thunk)
+         (##with-exception-catcher handler thunk)))))
+
+(define ##gen-guard
+  (macro-make-gen (body handler r7rs-guard?)
+    (let ((stepper (##no-stepper)))
+      (macro-make-code ##cprc-guard
+        cte
+        src
+        stepper
+        (body handler)
+        r7rs-guard?))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define ##cprc-or
   (macro-make-cprc
    (let ((pred (macro-code-run (^ 0))))
@@ -2980,16 +3530,16 @@
     (let ((stepper (##no-stepper)))
       (macro-make-code ##cprc-case cte src stepper (val1 val2)))))
 
-(define ##cprc-case-clause
+(define ##cprc-case-list
   (macro-make-cprc
    (if (##case-memv (macro-rte-ref rte 1) (^ 2))
        (macro-code-run (^ 0))
        (macro-code-run (^ 1)))))
 
-(define ##gen-case-clause
+(define ##gen-case-list
   (macro-make-gen (cases val1 val2)
     (let ((stepper (##no-stepper)))
-      (macro-make-code ##cprc-case-clause cte src stepper (val1 val2)
+      (macro-make-code ##cprc-case-list cte src stepper (val1 val2)
         cases))))
 
 (define ##cprc-case-else
@@ -3001,97 +3551,343 @@
     (let ((stepper (##no-stepper)))
       (macro-make-code ##cprc-case-else cte src stepper (val)))))
 
+(define ##cprc-case-send-red
+  (macro-make-cprc
+   (if (or (##not (^ 2))
+           (##case-memv (macro-rte-ref rte 1) (^ 2)))
+       (let* ((oper (macro-code-run (^ 0)))
+              (arg (macro-rte-ref rte 1)))
+         (macro-force-vars (oper)
+           (if (##not (##procedure? oper))
+               (let ((args (##list arg)))
+                 (##check-heap-limit)
+                 (##first-argument ;; keep $code and rte in environment-map
+                  (##raise-nonprocedure-operator-exception oper args $code rte)
+                  $code
+                  rte))
+           (macro-call-step! (oper arg)
+             (oper arg)))))
+       (macro-code-run (^ 1)))))
+
+(define ##cprc-case-send-sub
+  (macro-make-cprc
+   (if (or (##not (^ 2))
+           (##case-memv (macro-rte-ref rte 1) (^ 2)))
+       (let* ((oper (macro-code-run (^ 0)))
+              (arg (macro-rte-ref rte 1)))
+         (macro-force-vars (oper)
+           (if (##not (##procedure? oper))
+               (let ((args (##list arg)))
+                 (##check-heap-limit)
+                 (##first-argument ;; keep $code and rte in environment-map
+                  (##raise-nonprocedure-operator-exception oper args $code rte)
+                  $code
+                  rte))
+           (##subproblem-apply1 $code rte oper arg))))
+       (macro-code-run (^ 1)))))
+
+(define ##gen-case-send
+  (macro-make-gen (cases val1 val2)
+    (let ((stepper (##no-stepper)))
+      (macro-make-code (if tail? ##cprc-case-send-red ##cprc-case-send-sub)
+        cte
+        src
+        stepper
+        (val1 val2)
+        cases))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define ##cprc-let
   (macro-make-cprc
-   (let ((ns (##fx- (macro-code-length $code) 2)))
-     (let loop1 ((i 1) (args '()))
-       (if (##fx< ns i)
-           (let ((inner-rte (macro-make-rte* rte ns)))
-             (##check-heap-limit)
-             (let loop2 ((i ns) (args args))
-               (if (##fx< 0 i)
-                   (begin
-                     (macro-rte-set! inner-rte i (##car args))
-                     (loop2 (##fx- i 1) (##cdr args)))
-                   (let* (($code
-                           (^ 0))
-                          (rte
-                           (##first-argument ;; keep $code and rte in environment-map
-                            inner-rte
-                            rte)))
-                     (macro-code-run $code)))))
-           (let ((new-args
-                  (##cons (macro-code-run (macro-code-ref $code i)) args)))
-             (##check-heap-limit)
-             (loop1 (##fx+ i 1) new-args)))))))
+   (let* ((ns (##fx- (macro-code-length $code) 2))
+          (rec? (macro-code-ref $code (##fx+ ns 1)))
+          (inner-rte (and rec?
+                          (let ((inner-rte (macro-make-rte* rte ns)))
+                            (##check-heap-limit)
+                            inner-rte))))
+
+     (define (run-body inner-rte)
+       (let* (($code
+               (^ 0))
+              (rte
+               (##first-argument ;; keep $code and rte in environment-map
+                inner-rte
+                rte)))
+         (macro-code-run $code)))
+
+     (if (##eq? rec? '*)
+
+         (let loop1 ((i 1))
+           (if (##fx<= i ns)
+               (begin
+                 (macro-rte-set! inner-rte
+                                 i
+                                 (let* (($code (macro-code-ref $code i))
+                                        (rte inner-rte))
+                                   (macro-code-run $code)))
+                 (loop1 (##fx+ i 1)))
+               (run-body inner-rte)))
+
+         (let loop2 ((i 1)
+                     (args '()))
+           (if (##fx<= i ns)
+
+               (let* ((arg
+                       (let* (($code (macro-code-ref $code i))
+                              (rte (or inner-rte rte)))
+                         (macro-code-run $code)))
+                      (new-args
+                       (##cons arg args)))
+                 (##check-heap-limit)
+                 (loop2 (##fx+ i 1)
+                        new-args))
+
+               (let ((inner-rte
+                      (or inner-rte
+                          (let ((inner-rte (macro-make-rte* rte ns)))
+                            (##check-heap-limit)
+                            inner-rte))))
+                 (let loop3 ((i ns)
+                             (args args))
+                   (if (##fx<= i 0)
+                       (run-body inner-rte)
+                       (begin
+                         (macro-rte-set! inner-rte i (##car args))
+                         (loop3 (##fx- i 1)
+                                (##cdr args))))))))))))
 
 (define ##gen-let
-  (macro-make-gen (vars vals body)
+  (macro-make-gen (vars vals body rec?)
     (let* ((stepper
             (##no-stepper))
            (c
-            (##make-code* ##cprc-let cte src stepper (##cons body vals) 1)))
-      (macro-code-set! c (##fx+ (##length vals) 1) vars)
+            (##make-code* ##cprc-let
+                          cte
+                          src
+                          stepper
+                          (##cons body vals)
+                          1))
+           (len
+            (##length vals)))
+      (macro-code-set! c (##fx+ len 1) rec?)
       c)))
 
-(define ##cprc-letrec
+(define ##cprc-let-values
   (macro-make-cprc
-   (let ((ns (##fx- (macro-code-length $code) 2)))
-     (let ((inner-rte (macro-make-rte* rte ns)))
-       (let loop1 ((i 1) (rev-vals '()))
-         (if (##fx< ns i)
-             (let loop2 ((i i) (rev-vals rev-vals))
-               (if (##fx< 1 i)
-                   (let ((new-i (##fx- i 1)))
-                     (macro-rte-set! inner-rte new-i (##car rev-vals))
-                     (loop2 new-i (##cdr rev-vals)))
-                   (let* (($code (^ 0))
-                          (rte (##first-argument inner-rte rte)))
-                     (macro-code-run $code))))
-             (let ((new-rev-vals
-                    (##cons (let* (($code (macro-code-ref $code i))
-                                   (rte inner-rte))
-                              (macro-code-run $code))
-                            rev-vals)))
-               (##check-heap-limit)
-               (loop1 (##fx+ i 1) new-rev-vals))))))))
+   (let* ((ns (##fx- (macro-code-length $code) 3))
+          (patterns (macro-code-ref $code (##fx+ ns 1)))
+          (rec? (macro-code-ref $code (##fx+ ns 2)))
+          (inner-rte (and rec?
+                          (let* ((nvars (##vector-ref patterns 0))
+                                 (inner-rte (macro-make-rte* rte nvars)))
+                            (##check-heap-limit)
+                            inner-rte))))
 
-(define ##gen-letrec
-  (macro-make-gen (vars vals body)
-    (let* ((stepper
-            (##no-stepper))
-           (c
-            (##make-code* ##cprc-letrec cte src stepper (##cons body vals) 1)))
-      (macro-code-set! c (##fx+ (##length vals) 1) vars)
-      c)))
+     (define (wrong-number-of-values arg)
+       (##first-argument ;; keep $code and rte in environment-map
+        (##raise-wrong-number-of-values-exception arg $code rte)
+        $code
+        rte))
 
-(define ##cprc-letrec*
-  (macro-make-cprc
-   (let ((ns (##fx- (macro-code-length $code) 2)))
-     (let ((inner-rte (macro-make-rte* rte ns)))
-       (let loop ((i 1))
-         (if (##fx< ns i)
-             (let* (($code (^ 0))
-                    (rte (##first-argument inner-rte rte)))
-               (macro-code-run $code))
-             (begin
-               (macro-rte-set!
+     (define (run-body inner-rte)
+       (let* (($code
+               (^ 0))
+              (rte
+               (##first-argument ;; keep $code and rte in environment-map
                 inner-rte
-                i
-                (let* (($code (macro-code-ref $code i))
-                       (rte inner-rte))
-                  (macro-code-run $code)))
-               (loop (##fx+ i 1)))))))))
+                rte)))
+         (macro-code-run $code)))
 
-(define ##gen-letrec*
-  (macro-make-gen (vars vals body)
+     (if (##eq? rec? '*)
+
+         (let loop1 ((i 1)
+                     (j 0))
+           (if (##fx> i ns)
+
+               (run-body inner-rte)
+
+               (let* ((arg
+                       (let* (($code (macro-code-ref $code i))
+                              (rte inner-rte))
+                         (macro-code-run $code)))
+                      (pattern
+                       (##vector-ref patterns i)))
+                 (if (##fx< pattern 0) ;; rest?
+                     (if (##values? arg)
+
+                         (if (##fx>= pattern (##fx- -1 (##values-length arg)))
+                             (let loop2 ((k (##fx- (##values-length arg) 1))
+                                         (rest '()))
+                               (if (##fx>= k (##fx- -1 pattern))
+                                   (let* ((x (##values-ref arg k))
+                                          (new-rest (##cons x rest)))
+                                     (##check-heap-limit)
+                                     (loop2 (##fx- k 1)
+                                            new-rest))
+                                   (let ((j2 (##fx- j pattern)))
+                                     (macro-rte-set! inner-rte j2 rest)
+                                     (let loop3 ((k k)
+                                                 (j (##fx- j2 1)))
+                                       (if (##fx>= k 0)
+                                           (let ((x (##values-ref arg k)))
+                                             (macro-rte-set! inner-rte j x)
+                                             (loop3 (##fx- k 1)
+                                                    (##fx- j 1)))
+                                           (loop1 (##fx+ i 1)
+                                                  j2))))))
+                             (wrong-number-of-values arg))
+
+                         (let ((j2 (##fx- j pattern)))
+                           (if (##fx= pattern -1) ;; var
+                               (let ((x (##list arg)))
+                                 (##check-heap-limit)
+                                 (macro-rte-set! inner-rte j2 x)
+                                 (loop1 (##fx+ i 1)
+                                        j2))
+                               (if (##fx= pattern -2) ;; (var . var)
+                                   (begin
+                                     (macro-rte-set! inner-rte j2 '())
+                                     (macro-rte-set! inner-rte (##fx- j2 1) arg)
+                                     (loop1 (##fx+ i 1)
+                                            j2))
+                                   (wrong-number-of-values arg)))))
+
+                     (let ((j2 (##fx+ j pattern)))
+                       (if (##values? arg)
+                           (if (##fx= pattern (##values-length arg))
+                               (let loop4 ((k (##fx- (##values-length arg) 1))
+                                           (j j2))
+                                 (if (##fx>= k 0)
+                                     (let ((x (##values-ref arg k)))
+                                       (macro-rte-set! inner-rte j x)
+                                       (loop4 (##fx- k 1)
+                                              (##fx- j 1)))
+                                     (loop1 (##fx+ i 1)
+                                            j2)))
+                               (wrong-number-of-values arg))
+                           (if (##fx= pattern 1) ;; (var)
+                               (begin
+                                 (macro-rte-set! inner-rte j2 arg)
+                                 (loop1 (##fx+ i 1)
+                                        j2))
+                               (wrong-number-of-values arg))))))))
+
+         (let loop5 ((i 1)
+                     (n 0)
+                     (args '()))
+           (if (##fx<= i ns)
+
+               (let* ((arg
+                       (let* (($code (macro-code-ref $code i))
+                              (rte (or inner-rte rte)))
+                         (macro-code-run $code)))
+                      (pattern
+                       (##vector-ref patterns i))
+                      (new-args
+                       (##cons arg args)))
+                 (##check-heap-limit)
+                 (if (##fx< pattern 0) ;; rest?
+                     (if (if (##values? arg)
+                             (##fx>= pattern (##fx- -1 (##values-length arg)))
+                             (or (##fx= pattern -1)   ;; var
+                                 (##fx= pattern -2))) ;; (var . var)
+                         (loop5 (##fx+ i 1)
+                                (##fx- n pattern)
+                                new-args)
+                         (wrong-number-of-values arg))
+                     (if (if (##values? arg)
+                             (##fx= pattern (##values-length arg))
+                             (##fx= pattern 1)) ;; (var)
+                         (loop5 (##fx+ i 1)
+                                (##fx+ n pattern)
+                                new-args)
+                         (wrong-number-of-values arg))))
+
+               (let ((inner-rte
+                      (or inner-rte
+                          (let* ((nvars (##vector-ref patterns 0))
+                                 (inner-rte (macro-make-rte* rte nvars)))
+                            (##check-heap-limit)
+                            inner-rte))))
+                 (let loop6 ((i ns)
+                             (j n)
+                             (args args))
+                   (if (##fx<= i 0)
+
+                       (run-body inner-rte)
+
+                       (let* ((arg
+                               (##car args))
+                              (pattern
+                               (##vector-ref patterns i)))
+                         (if (##fx< pattern 0)
+                             (if (##values? arg)
+                                 (let loop7 ((k (##fx- (##values-length arg) 1))
+                                             (rest '()))
+                                   (if (##fx>= k (##fx- -1 pattern))
+                                       (let* ((x (##values-ref arg k))
+                                              (new-rest (##cons x rest)))
+                                         (##check-heap-limit)
+                                         (loop7 (##fx- k 1)
+                                                new-rest))
+                                       (begin
+                                         (macro-rte-set! inner-rte j rest)
+                                         (let loop8 ((k k)
+                                                     (j (##fx- j 1)))
+                                           (if (##fx>= k 0)
+                                               (let ((x (##values-ref arg k)))
+                                                 (macro-rte-set! inner-rte j x)
+                                                 (loop8 (##fx- k 1)
+                                                        (##fx- j 1)))
+                                               (loop6 (##fx- i 1)
+                                                      j
+                                                      (##cdr args)))))))
+                                 (if (##fx= pattern -1)
+                                     (let ((x (##list arg)))
+                                       (##check-heap-limit)
+                                       (macro-rte-set! inner-rte j x)
+                                       (loop6 (##fx- i 1)
+                                              (##fx- j 1)
+                                              (##cdr args)))
+                                     (begin
+                                       (macro-rte-set! inner-rte j '())
+                                       (macro-rte-set! inner-rte (##fx- j 1) arg)
+                                       (loop6 (##fx- i 1)
+                                              (##fx- j 2)
+                                              (##cdr args)))))
+                             (if (##values? arg)
+                                 (let loop9 ((k (##fx- (##values-length arg) 1))
+                                             (j j))
+                                   (if (##fx>= k 0)
+                                       (let ((x (##values-ref arg k)))
+                                         (macro-rte-set! inner-rte j x)
+                                         (loop9 (##fx- k 1)
+                                                (##fx- j 1)))
+                                       (loop6 (##fx- i 1)
+                                              j
+                                              (##cdr args))))
+                                 (begin
+                                   (macro-rte-set! inner-rte j arg)
+                                   (loop6 (##fx- i 1)
+                                          (##fx- j 1)
+                                          (##cdr args)))))))))))))))
+
+(define ##gen-let-values
+  (macro-make-gen (vars vals body patterns rec?)
     (let* ((stepper
             (##no-stepper))
            (c
-            (##make-code* ##cprc-letrec* cte src stepper (##cons body vals) 1)))
-      (macro-code-set! c (##fx+ (##length vals) 1) vars)
+            (##make-code* ##cprc-let-values
+                          cte
+                          src
+                          stepper
+                          (##cons body vals)
+                          2))
+           (len
+            (##length vals)))
+      (macro-code-set! c (##fx+ len 1) patterns)
+      (macro-code-set! c (##fx+ len 2) rec?)
       c)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3591,7 +4387,12 @@
            (no
             (##fx- ni (if keys (##vector-length keys) 0)))
            (c
-            (##make-code* ##cprc-prc cte src stepper (##cons body inits) 7)))
+            (##make-code* ##cprc-prc
+                          cte
+                          src
+                          stepper
+                          (##cons body inits)
+                          7)))
       (macro-code-set! c (##fx+ ni 1) (##fx+ n 1))
       (macro-code-set! c (##fx+ ni 2) (##fx+ nr 2))
       (macro-code-set! c (##fx+ ni 3) (##fx+ (##fx+ nr 2) no))
@@ -4333,7 +5134,8 @@
             path-or-settings
             (##current-readtable)
             ##wrap-datum
-            ##unwrap-datum)))
+            ##unwrap-datum
+            '())))
       (if (##fixnum? x)
           x
           (begin
@@ -4578,8 +5380,26 @@
     (define-runtime-syntax letrec*
       (##make-alias-syntax '##letrec*))
 
+    (define-runtime-syntax let-values
+      (##make-alias-syntax '##let-values))
+
+    (define-runtime-syntax let*-values
+      (##make-alias-syntax '##let*-values))
+
+    (define-runtime-syntax letrec-values
+      (##make-alias-syntax '##letrec-values))
+
+    (define-runtime-syntax letrec*-values
+      (##make-alias-syntax '##letrec*-values))
+
     (define-runtime-syntax do
       (##make-alias-syntax '##do))
+
+    (define-runtime-syntax guard
+      (##make-alias-syntax '##guard))
+
+    (define-runtime-syntax r7rs-guard
+      (##make-alias-syntax '##r7rs-guard))
 
     (define-runtime-syntax delay
       (##make-alias-syntax '##delay))
@@ -4628,6 +5448,9 @@
 
     (define-runtime-syntax include
       (##make-alias-syntax '##include))
+
+    (define-runtime-syntax include-ci
+      (##make-alias-syntax '##include-ci))
 
     (define-runtime-syntax declare
       (##make-alias-syntax '##declare))
