@@ -3262,36 +3262,11 @@
 ;;TODO: clean up and integrate to above
 
 (define (univ-expand-inline-host-code ctx str args)
-  (let ((nb-args (length args))
-        (len (string-length str)))
-    (let loop1 ((start 0) (i 0))
-
-      (define (done)
-        (^ (substring str start len)))
-
-      (if (< i len)
-          (let ((c (string-ref str i)))
-            (if (not (char=? c #\@))
-                (loop1 start (+ i 1))
-                (let loop2 ((j (+ i 1)))
-                  (if (< j len)
-                      (let ((c (string-ref str j)))
-                        (cond ((char-numeric? c)
-                               (loop2 (+ j 1)))
-                              ((and (char=? c #\@)
-                                    (> j (+ i 1)))
-                               (let ((n
-                                      (string->number
-                                       (substring str (+ i 1) j))))
-                                 (if (and (>= n 1) (<= n nb-args))
-                                     (^ (substring str start i)
-                                        (^getopnd (list-ref args (- n 1)))
-                                        (loop1 (+ j 1) (+ j 1)))
-                                     (loop1 start (+ j 1)))))
-                              (else
-                               (loop1 start (+ j 1)))))
-                      (done)))))
-          (done)))))
+  (let ((alist (map-index (lambda (arg i)
+                            (cons (number->string (+ i 1))
+                                  (^getopnd arg)))
+                          args)))
+    (^ (string-substitute str #\@ alist))))
 
 (univ-define-prim "##inline-host-statement" #t
 
