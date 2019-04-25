@@ -6756,6 +6756,21 @@
                          output-raw
                          speed)))))
 
+(define-prim (##tty-mode-restore port #!optional (remove #t))
+  (let ((code
+         (##os-device-tty-mode-restore
+          (##port-device port)
+          remove)))
+    (if (##fx< code 0)
+        (##raise-os-io-exception
+         port
+         #f
+         code
+         ##tty-mode-restore
+         port
+         remove)
+        (##void))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Implementation of process device ports.

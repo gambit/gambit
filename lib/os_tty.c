@@ -2334,8 +2334,8 @@ ___device_tty *self;)
 
 #endif
 
-	  if (byte_avail ==  ___NBELEMS(d->output_byte) - d->output_byte_hi)
-	    break;  /* not enough space for a full multibyte character, first flush what we have */
+          if (byte_avail ==  ___NBELEMS(d->output_byte) - d->output_byte_hi)
+            break;  /* not enough space for a full multibyte character, first flush what we have */
 
           d->output_char_lo = d->output_char.length - len;
 
@@ -8499,6 +8499,25 @@ ___SCMOBJ speed;)
            !___FALSEP(input_raw),
            !___FALSEP(output_raw),
            ___INT(speed));
+
+  return e;
+}
+
+
+___SCMOBJ ___os_device_tty_mode_restore
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ remove),
+        (dev,
+         remove)
+___SCMOBJ dev;
+___SCMOBJ remove;)
+{
+  ___device_tty *d =
+    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ e;
+
+  if ((e = ___device_tty_force_open (d)) == ___FIX(___NO_ERR))
+    e = ___device_tty_mode_restore (d, !___FALSEP(remove));
 
   return e;
 }

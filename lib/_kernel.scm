@@ -4621,6 +4621,12 @@ end-of-code
             scheme-object
    "___os_device_tty_mode_set"))
 
+(define-prim ##os-device-tty-mode-restore
+  (c-lambda (scheme-object
+             scheme-object)
+            scheme-object
+   "___os_device_tty_mode_restore"))
+
 (define-prim (##os-condvar-select! devices timeout)
   (##declare (not interrupts-enabled))
   (##c-code
