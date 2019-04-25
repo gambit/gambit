@@ -992,7 +992,8 @@ end-of-code
     *          +------------+             |     .      |    |    HEAD    |<-+
     *          |  RESERVED  |             |     .      |    |  ret_adr2  |
     *          |    ...     |             |     .      |    |    ...    ----+
-    *          +------------+             +------------+    +------------+  V
+    *          +------------+             +------------+    +------------+  |
+    *                                                                       V
     *                                                                      ...
     *
     * These cases are distinguished by the tag on the pointer to the
@@ -1258,25 +1259,36 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
-;;; List utilities.
+;;; List and vector utilities.
 
-(define-prim (##assq-cdr obj lst)
+(define-prim (##assq-cdr obj lst) ;; TODO: move elsewhere
   (let loop ((x lst))
     (if (##pair? x)
-      (let ((couple (##car x)))
-        (if (##eq? obj (##cdr couple))
-          couple
-          (loop (##cdr x))))
+        (let ((couple (##car x)))
+          (if (##eq? obj (##cdr couple))
+              couple
+              (loop (##cdr x))))
         #f)))
 
-(define-prim (##assq obj lst)
+(define-prim (##assq obj lst) ;; TODO: move elsewhere
   (let loop ((x lst))
     (if (##pair? x)
-      (let ((couple (##car x)))
-        (if (##eq? obj (##car couple))
-          couple
-          (loop (##cdr x))))
+        (let ((couple (##car x)))
+          (if (##eq? obj (##car couple))
+              couple
+              (loop (##cdr x))))
         #f)))
+
+(define-prim (##reverse! lst)
+  (let loop ((prev '()) (curr lst))
+    (if (##pair? curr)
+        (let ((next (##cdr curr)))
+          (##set-cdr! curr prev)
+          (loop curr next))
+        prev)))
+
+(define-prim (##vector-last vect)
+  (##vector-ref vect (##fx- (##vector-length vect) 1)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -5147,13 +5159,15 @@ end-of-code
   (define ##program-descr
     (##c-code "___RESULT = ___GSTATE->program_descr;"))
 
-  (define ##vm-main-module-id
-    (##c-code "___RESULT = ___VMSTATE_FROM_PSTATE(___ps)->main_module_id;"))
+  (define ##vm-main-module-ref
+    (##c-code "___RESULT = ___VMSTATE_FROM_PSTATE(___ps)->main_module_ref;"))
 
-  (define (##module-init module-descr)
-    (##c-code
-     "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___PSPNC);"
-     (##vector-ref module-descr 4)))
+  (define-prim (##init-mod module-descr)
+    (let ((module-struct (macro-module-descr-module-struct module-descr)))
+      (and module-struct
+           (##c-code
+            "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___PSPNC);"
+            module-struct))))
 
   (##main-set!
    (lambda ()
@@ -5161,34 +5175,30 @@ end-of-code
 
  (else
 
-  (define (##module-init module-descr)
+  (define-prim (##init-mod module-descr)
     #f)))
 
-(define-prim (##create-module name module-descr)
-  (##vector #f name 0 module-descr))
+(define ##registered-modules '()) ;; collection of modules registered in the system
 
-(##define-macro (macro-module-name module)
-  `(##vector-ref ,module 1))
+(define-prim (##lookup-registered-module module-ref)
+  (let ((x (##lookup-module module-ref ##registered-modules)))
+    (and x (##car x))))
 
-(##define-macro (macro-module-state module)
-  `(##vector-ref ,module 2))
+(define-prim (##lookup-module module-ref modules)
+  (let loop ((lst modules))
+    (if (##pair? lst)
+        (let ((module (##car lst)))
+          (if (and module (##eq? module-ref (macro-module-module-ref module)))
+              lst
+              (loop (##cdr lst))))
+        #f)))
 
-(##define-macro (macro-module-state-set! module state)
-  `(##vector-set! ,module 2 ,state))
-
-(##define-macro (macro-module-descr module)
-  `(##vector-ref ,module 3))
-
-(define ##registered-modules '())
-
-(define-prim (##register-module-descr! name module-descr)
+(define-prim (##register-module-descr! module-ref module-descr)
   ;; TODO: make manipulation of ##registered-modules atomic
-  (let* ((name
-          (##vector-ref module-descr 0))
-         (module
-          (##create-module name module-descr))
+  (let* ((module
+          (macro-make-module module-ref module-descr))
          (x
-          (##lookup-module name ##registered-modules)))
+          (##lookup-module module-ref ##registered-modules)))
     (if x
         (##set-car! x module)
         (set! ##registered-modules
@@ -5196,102 +5206,26 @@ end-of-code
                       ##registered-modules)))
     module))
 
-(define-prim (##register-module-descrs! module-descrs)
-  (let loop ((i (##fx- (##vector-length module-descrs) 1))
-             (modules '()))
-    (if (##fx>= i 0)
+(define-prim (##register-module-descrs module-descrs)
+  (let loop1 ((i 0)
+              (preload-module-refs '()))
+    (if (##fx< i (##vector-length module-descrs))
         (let* ((module-descr
                 (##vector-ref module-descrs i))
-               (name
-                (##vector-ref module-descr 0)))
-          (loop (##fx- i 1)
-                (##cons (##register-module-descr! name module-descr)
-                        modules)))
-        modules)))
-
-(define-prim (##lookup-registered-module name)
-  (let ((x (##lookup-module name ##registered-modules)))
-    (and x (##car x))))
-
-(define-prim (##lookup-module name modules)
-  (let loop ((lst modules))
-    (if (##pair? lst)
-        (let ((module (##car lst)))
-          (if (##eq? name (macro-module-name module))
-              lst
-              (loop (##cdr lst))))
-        #f)))
-
-(define-prim (##load-required-module-structs modules force-load-last?)
-
-  (define (init module)
-    (if (##fx= (##fxand (macro-module-state module) 1) 0)
-        (begin
-
-          ;; TODO: this state change should be atomic with above test
-          ;; set state to indicate module has been initialized
-          (macro-module-state-set!
-           module
-           (##fxior (macro-module-state module) 1))
-
-          (let ((module-descr (macro-module-descr module)))
-            (if (##vector? module-descr)
-                (##module-init module-descr))))))
-
-  (define (run module)
-    (if (##fx= (##fxand (macro-module-state module) 2) 0)
-        (begin
-
-          ;; TODO: this state change should be atomic with above test
-          ;; set state to indicate module has been run
-          (macro-module-state-set!
-           module
-           (##fxior (macro-module-state module) 2))
-
-          (let ((module-descr (macro-module-descr module)))
-            (if (##vector? module-descr)
-                ((##vector-ref module-descr 1)))))))
-
-  (define (for-each-module proc)
-    (let loop ((modules modules))
-      (if (##pair? modules)
-          (let* ((module (##car modules))
-                 (module-descr (macro-module-descr module))
-                 (rest (##cdr modules))
-                 (last? (##not (##pair? rest))))
-            ;; load module if the preload flag is set or we force the loading
-            (if (or (##fx= (##fxand 1 (##vector-ref module-descr 2)) 1)
-                    (and force-load-last? last?))
-                (if last?
-                    (proc module)
-                    (begin
-                      (proc module)
-                      (loop rest)))
-                (loop rest))))))
-
-  (for-each-module init)
-  (for-each-module run))
-
-(define-prim (##default-load-required-module module-ref)
-
-  (define (err)
-    (##raise-module-not-found-exception
-     ##default-load-required-module
-     module-ref))
-
-  (cond ((##symbol? module-ref)
-         (let ((module (##lookup-registered-module module-ref)))
-           (if module
-               (##load-required-module-structs (##list module) #t)
-               (err))))
-        (else
-         (err))))
-
-(define ##load-required-module
-  ##default-load-required-module)
-
-(define-prim (##load-required-module-set! x)
-  (set! ##load-required-module x))
+               (module-refs
+                (macro-module-descr-supply-modules module-descr)))
+          (let loop2 ((j 0))
+            (if (##fx< j (##vector-length module-refs))
+                (let ((module-ref (##vector-ref module-refs j)))
+                  (##register-module-descr! module-ref module-descr)
+                  (loop2 (##fx+ j 1)))))
+          (loop1 (##fx+ i 1)
+                 (if (##fx= (##fxand 1 (macro-module-descr-flags module-descr))
+                            0)
+                     preload-module-refs
+                     (##cons (##vector-last module-refs)
+                             preload-module-refs))))
+        (##reverse! preload-module-refs))))
 
 (implement-library-type-module-not-found-exception)
 
@@ -5308,20 +5242,134 @@ end-of-code
        procedure
        arguments)))))
 
-(define-prim (##register-module-descrs-and-load! module-descrs)
-  (let ((modules (##register-module-descrs! module-descrs)))
-    (##load-required-module-structs modules #f)))
+(define-prim (##default-get-module module-ref)
+  (or (##lookup-registered-module module-ref)
+      (##raise-module-not-found-exception
+       ##default-get-module
+       module-ref)))
+
+(define ##get-module
+  ##default-get-module)
+
+(define-prim (##get-module-set! x)
+  (set! ##get-module x))
+
+(define-prim (##collect-modules module-refs
+                                #!optional
+                                (level ##max-fixnum))
+
+  (define visited '()) ;; modules visited to correctly handle circular deps
+
+  (define (visited! module-ref)
+    (set! visited (##cons module-ref visited)))
+
+  (define (visited? module-ref)
+    (let loop ((lst visited))
+      (if (##pair? lst)
+          (or (##eq? module-ref (##car lst))
+              (loop (##cdr lst)))
+          #f)))
+
+  (define (get-modules module-refs)
+
+    (define (add-module module-ref result)
+      (if (visited? module-ref)
+          result
+          (let ((module (##get-module module-ref)))
+            (visited! module-ref)
+            (if (and module
+                     (##fx< (macro-module-stage module) level))
+                (##cons module result)
+                result))))
+
+    (if (##vector? module-refs)
+
+        (let loop ((i 0)
+                   (result '()))
+          (if (##fx< i (##vector-length module-refs))
+              (loop (##fx+ i 1)
+                    (add-module (##vector-ref module-refs i) result))
+              result))
+
+        (let loop ((lst module-refs)
+                   (result '()))
+          (if (##pair? lst)
+              (loop (##cdr lst)
+                    (add-module (##car lst) result))
+              result))))
+
+  (define (collect module-refs collected-modules)
+    (let loop ((modules (##reverse! (get-modules module-refs)))
+               (collected-modules collected-modules))
+      (if (##pair? modules)
+          (loop (##cdr modules)
+                (let ((module (##car modules)))
+                  (##cons module
+                          (collect (macro-module-descr-demand-modules
+                                    (macro-module-module-descr module))
+                                   collected-modules))))
+          collected-modules)))
+
+  (##reverse! (collect module-refs '())))
+
+(define-prim (##init-modules modules
+                             #!optional
+                             (level (macro-module-last-init-stage)))
+
+  (let loop1 ((stage 1))
+
+    (define (init module)
+      (let* ((s (macro-module-stage module))
+             (module-descr (macro-module-module-descr module)))
+        (cond ((##fx>= s stage))
+              ((##fx= s 0)
+               (macro-module-stage-set! module 1)
+               (##init-mod module-descr))
+              ((##fx= s 1)
+               (macro-module-stage-set! module 2)
+               ((macro-module-descr-thunk module-descr))))))
+
+    (if (##fx<= stage level)
+        (let loop2 ((modules modules))
+          (if (##pair? modules)
+              (let ((module (##car modules)))
+                (if (##fx<= (macro-module-stage module) stage)
+                    (if (or (##fx< stage level) (##pair? (##cdr modules)))
+                        (begin
+                          (init module)
+                          (loop2 (##cdr modules)))
+                        (init module))
+                    (loop2 (##cdr modules))))
+              (loop1 (##fx+ stage 1)))))))
+
+(define-prim (##load-modules module-refs
+                             #!optional
+                             (level (macro-module-last-init-stage)))
+  (let ((modules (##collect-modules module-refs level)))
+    (##init-modules modules level)))
+
+(define-prim (##load-module module-ref
+                            #!optional
+                            (level (macro-module-last-init-stage)))
+  (##load-modules (##vector module-ref) level))
 
 (define-prim (##load-vm)
-  (let ((module-descrs (##vector-ref ##program-descr 0)))
-    (##module-init (##vector-ref module-descrs 0)) ;; init _kernel
-    (let* ((modules (##register-module-descrs! module-descrs))
-           (kernel-module (##car modules))
-           (other-modules (##cdr modules)))
-      (macro-module-state-set! kernel-module 3) ;; _kernel init and run done
-      (##load-required-module-structs other-modules #f)
-      (##load-required-module ##vm-main-module-id)
-      (##main))))
+  (let* ((module-descrs
+          (##vector-ref ##program-descr 0))
+         (this-module-descr
+          (##vector-ref module-descrs 0))
+         (this-module-ref
+          (##vector-last
+           (macro-module-descr-supply-modules this-module-descr))))
+    (##init-mod this-module-descr) ;; first stage init of this module
+    (let* ((preload-module-refs (##register-module-descrs module-descrs))
+           (this-module (##lookup-registered-module this-module-ref)))
+      (if this-module
+          (begin
+            (macro-module-stage-set! this-module 2) ;; this module init done
+            (##load-modules preload-module-refs)
+            (##load-module ##vm-main-module-ref)
+            (##main))))))
 
 (macro-case-target
  ((C)

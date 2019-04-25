@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -27,20 +27,21 @@
 
 ;; sample use:
 ;;
-;; (cf "tak" '((target c)) #f #f #f)    -- compile tak.scm to tak.c with C back-end
-;; (cf "tak" '() #f #f #f)              -- compile tak.scm with default back-end
-;; (cf "tak" '() "foo.c" #f #f)         -- compile tak.scm to foo.c
-;; (cf "tak" '((verbose)) #f #f #f)     -- produce compiler trace
-;; (cf "tak" '((report)) #f #f #f)      -- show usage of global variables
-;; (cf "tak" '((gvm)) #f #f #f)         -- write GVM code on 'tak.gvm'
-;; (cf "tak" '((debug)) #f #f #f)       -- generate code with debugging info
-;; (cf "tak" '((expansion)) #f #f #f)   -- show code after source-to-source transf.
-;; (cf "tak" '((asm) (stats)) #f #f #f) -- various back-end options
+;; (cf "tak" '((target C)) #f)    -- compile tak.scm to tak.c with C back-end
+;; (cf "tak" '() #f)              -- compile tak.scm with default back-end
+;; (cf "tak" '() "foo.c")         -- compile tak.scm to foo.c
+;; (cf "tak" '((verbose)) #f)     -- produce compiler trace
+;; (cf "tak" '((report)) #f)      -- show usage of global variables
+;; (cf "tak" '((gvm)) #f)         -- write GVM code on 'tak.gvm'
+;; (cf "tak" '((debug)) #f)       -- generate code with debugging info
+;; (cf "tak" '((expansion)) #f)   -- show code after source-to-source transf.
+;; (cf "tak" '((asm) (stats)) #f) -- various back-end options
 
 (define cf #f)
 
 (set! cf
-  (lambda (input opts output-filename-gen module-name linker-name)
+  (lambda (input opts output-filename-gen)
+
     (with-exception-handling
      (lambda ()
        (let* ((t
@@ -70,8 +71,6 @@
                           opts
                           (cons (list 'target (default-target)) opts))
                       output-filename-gen
-                      module-name
-                      linker-name
                       info-port))))
 
            result))))))
@@ -125,7 +124,7 @@
                       #t)
                      ((c dynamic exe obj link flat
                          check force keep-c
-                         o l module-name linker-name prelude postlude
+                         o l module-ref linker-name prelude postlude
                          cc-options ld-options-prelude ld-options
                          asm)
                       #t) ;; these options are innocuous
@@ -192,14 +191,84 @@
   (lambda (program)
     program))
 
-(define (compile-program-frontend
+(define (compile-frontend-aux
          input
          opts
          output-filename-gen
-         module-name
-         linker-name
          info-port
          inner)
+  (let* ((output-filename
+          (and output-filename-gen
+               (output-filename-gen)))
+         (root
+             (if output-filename
+                 (path-strip-extension output-filename)
+                 (let ((filename
+                        (if (##source? input)
+                            (##source-path input)
+                            input)))
+                   (path-strip-directory (path-strip-extension filename)))))
+         (output
+          (if output-filename
+              output-filename
+              (string-append root (caar target.file-extensions))))
+         (v1
+          (if (##source? input)
+              (vector #f (##sourcify-deep input input))
+              (read-source input #f #t)))
+         (script-line (vector-ref v1 0))
+         (expr (vector-ref v1 1))
+         (program (expand-source (wrap-program expr)))
+         (module-ref
+          (or (cond ((assq 'module-ref opts) => cadr)
+                    (else #f))
+              (string->symbol
+               (string-append (path-strip-directory root) "#"))))
+         (x (##in-new-compilation-scope
+             (lambda ()
+               (table-set! (##compilation-scope) '##module-ref module-ref)
+               (parse-program
+                program
+                (make-global-environment)
+                module-ref
+                vector))))
+         (v2 (car x))
+         (comp-scope (cdr x))
+         (lst (vector-ref v2 0))
+         (env (vector-ref v2 1))
+         (c-intf (vector-ref v2 2))
+         (parsed-program (normalize-program lst))
+         (supply-modules
+          (let ((x (table-ref comp-scope '##supply-modules '())))
+            (table-set! comp-scope '##supply-modules)
+            x))
+         (demand-modules
+          (let ((x (table-ref comp-scope '##demand-modules '())))
+            (table-set! comp-scope '##demand-modules)
+            x)))
+
+    (table-set! comp-scope '##module-ref)
+
+    (inner parsed-program
+           env
+           root
+           output
+           (if (pair? supply-modules)
+               supply-modules
+               (list module-ref))
+           demand-modules
+           c-intf
+           comp-scope
+           script-line)))
+
+(define (compile-frontend
+         input
+         opts
+         output-filename-gen
+         info-port
+         inner)
+
+  (define target-name (cadr (assq 'target opts)))
 
   (scheme-global-var-define!
    (scheme-global-var
@@ -209,108 +278,28 @@
   (env.begin!)
   (ptree.begin! info-port)
   (virtual.begin!)
+  (target-select! target-name opts info-port)
 
-  (let ((target-name (cadr (assq 'target opts))))
-    (target-select! target-name opts info-port))
+  (let ((result-thunk
+         (compile-frontend-aux
+          input
+          opts
+          output-filename-gen
+          info-port
+          inner)))
 
-  (let* ((output-filename
-          (and output-filename-gen
-               (output-filename-gen)))
-         (root
-          (if output-filename
-              (path-strip-extension output-filename)
-              (let ((filename
-                     (if (##source? input)
-                         (##source-path input)
-                         input)))
-                (path-strip-directory (path-strip-extension filename)))))
-         (output
-          (if output-filename
-              output-filename
-              (string-append root (caar target.file-extensions))))
-         (module-name
-          (or module-name
-              (string-append (path-strip-directory root) "#"))))
+    (target-unselect!)
+    (virtual.end!)
+    (ptree.end!)
+    (env.end!)
 
-    (define (add-loading-of-required-modules ptrees source env comp-scope)
-      (let ((required-modules
-             (table-ref comp-scope 'required-modules '())))
-        (if (pair? required-modules)
-            (let ((env
-                   (add-extended-bindings
-                    (add-proper-tail-calls
-                     (add-safe env)))))
-              (append
-               (map (lambda (module-ref)
-                      (new-call source env
-                                (new-ref source env
-                                         (env-lookup-global-var
-                                          env
-                                          '##load-required-module))
-                                (list (new-cst source env
-                                               module-ref))))
-                    required-modules)
-               ptrees))
-            ptrees)))
-
-    (let* ((v1
-            (if (##source? input)
-                (vector #f (##sourcify-deep input input))
-                (read-source input #f #t)))
-           (script-line (vector-ref v1 0))
-           (expr (vector-ref v1 1))
-           (program (expand-source (wrap-program expr)))
-           (x (##in-new-compilation-scope
-               (lambda ()
-                 (let ((comp-scope (##compilation-scope)))
-                   (table-set! comp-scope 'module-name module-name)
-                   (table-set! comp-scope 'linker-name linker-name))
-                 (parse-program
-                  program
-                  (make-global-environment)
-                  module-name
-                  vector))))
-           (v2 (car x))
-           (comp-scope (cdr x))
-           (lst (vector-ref v2 0))
-           (env (vector-ref v2 1))
-           (c-intf (vector-ref v2 2))
-           (ptrees (add-loading-of-required-modules lst program env comp-scope))
-           (parsed-program (normalize-program ptrees))
-           (module-name
-            (let ((mod-name (table-ref comp-scope 'module-name)))
-              (table-set! comp-scope 'module-name)
-              mod-name))
-           (linker-name
-            (let ((link-name (table-ref comp-scope 'linker-name)))
-              (table-set! comp-scope 'linker-name)
-              (or link-name
-                  module-name)))
-           (result-thunk
-            (inner parsed-program
-                   env
-                   root
-                   output
-                   module-name
-                   linker-name
-                   c-intf
-                   comp-scope
-                   script-line)))
-
-      (target-unselect!)
-      (virtual.end!)
-      (ptree.end!)
-      (env.end!)
-
-      (and result-thunk
-           (result-thunk)))))
+    (and result-thunk
+         (result-thunk))))
 
 (define (compile-program
          input
          opts
          output-filename-gen
-         module-name
-         linker-name
          info-port)
 
   (set! warnings-requested? compiler-option-warnings)
@@ -318,19 +307,17 @@
   (let ((result-thunk
          (with-exception-handling
           (lambda ()
-            (compile-program-frontend
+            (compile-frontend
              input
              opts
              output-filename-gen
-             module-name
-             linker-name
              info-port
              (lambda (parsed-program
                       env
                       root
                       output
-                      module-name
-                      linker-name
+                      supply-modules
+                      demand-modules
                       c-intf
                       comp-scope
                       script-line)
@@ -351,12 +338,12 @@
                    (set! dependency-graph (make-table test: eq?)))
 
                (let* ((module-procs
-                       (compile-parsed-program module-name
+                       (compile-parsed-program (car (last-pair supply-modules))
                                                parsed-program
                                                env
                                                c-intf
                                                info-port))
-                      (module-meta-info
+                      (module-meta-info*
                        (append
                         (table->list comp-scope)
                         (if script-line
@@ -364,10 +351,11 @@
                             '())))
                       (module-descr
                        ;; TODO: support type descriptor
-                       (vector (string->symbol module-name)
-                               (car module-procs)
-                               1 ;; preload flag, note that linker may change this
-                               module-meta-info
+                       (vector (list->vect supply-modules)
+                               (list->vect demand-modules)
+                               module-meta-info*
+                               1 ;; preload flag (linker may change this)
+                               (car module-procs) ;; module main
                                #f ;; space for foreign pointer to ___module_struct
                                )))
 
@@ -399,7 +387,12 @@
                          output
                          c-intf
                          module-descr
-                         linker-name)))
+                         (or (cond ((##assq 'linker-name opts) => ##cadr)
+                                   (else #f))
+                             (symbol->string
+                              (vector-ref supply-modules
+                                          (- (vector-length supply-modules)
+                                             1)))))))
 
                    (if result-thunk
                        (dump-c-intf module-procs root c-intf))
@@ -435,19 +428,17 @@
     (let ((result-thunk
            (with-exception-handling
             (lambda ()
-              (compile-program-frontend
+              (compile-frontend
                input
                opts
-               #f
-               #f
                #f
                #f
                (lambda (parsed-program
                         env
                         root
                         output
-                        module-name
-                        linker-name
+                        supply-modules
+                        demand-modules
                         c-intf
                         comp-scope
                         script-line)
@@ -702,12 +693,12 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define (compile-parsed-program module-name program env c-intf info-port)
-  (let* ((name
-          (string-append module-name "#"))
+(define (compile-parsed-program module-ref program env c-intf info-port)
+  (let* ((main-proc-name
+          (string-append (symbol->string module-ref) "#"))
          (main-proc
           (make-proc-obj
-           name   ;; name
+           main-proc-name ;; name
            #f     ;; c-name
            #t     ;; primitive?
            #f     ;; code
@@ -723,7 +714,9 @@
           '()))
 
     (if dependency-graph
-        (table-set! dependency-graph (string->symbol name) (varset-empty)))
+        (table-set! dependency-graph
+                    (string->symbol main-proc-name)
+                    (varset-empty)))
 
     (if info-port
         (display "Compiling:" info-port))

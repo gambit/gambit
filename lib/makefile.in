@@ -80,8 +80,8 @@ NORMAL_O_COMMA = main@obj@,setup@obj@,mem@obj@,c_intf@obj@,actlog@obj@,os_setup@
 NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
-"_eval\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" "_repl\#.scm" \
-"_unicode\#.scm" "_gambit\#.scm" "gambit\#.scm" \
+"_eval\#.scm" "_module\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" \
+"_repl\#.scm" "_unicode\#.scm" "_gambit\#.scm" "gambit\#.scm" \
 "r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" \
 _define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
 _syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
@@ -89,22 +89,23 @@ _syntax-rules-xform.scm _syntax-template.scm \
 _syntax-xform-boot.scm _syntax-xform.scm \
 _syntax.scm _with-syntax-boot.scm
 MODULES = _kernel _system _num _std \
-_eval _io _nonstd _thread _repl
+_eval _module _io _nonstd _thread _repl
 MODULES_SCM = _kernel.scm _system.scm _num.scm _std.scm \
-_eval.scm _io.scm _nonstd.scm _thread.scm _repl.scm
+_eval.scm _module.scm _io.scm _nonstd.scm _thread.scm _repl.scm
 MODULES_C = _kernel.c _system.c _num.c _std.c \
-_eval.c _io.c _nonstd.c _thread.c _repl.c
+_eval.c _module.c _io.c _nonstd.c _thread.c _repl.c
 MODULES_O = _kernel@obj@ _system@obj@ _num@obj@ _std@obj@ \
-_eval@obj@ _io@obj@ _nonstd@obj@ _thread@obj@ _repl@obj@
+_eval@obj@ _module@obj@ _io@obj@ _nonstd@obj@ _thread@obj@ _repl@obj@
 MODULES_O_PLUS = +_kernel@obj@ +_system@obj@ +_num@obj@ +_std@obj@ \
-+_eval@obj@ +_io@obj@ +_nonstd@obj@ +_thread@obj@ +_repl@obj@
++_eval@obj@ +_module@obj@ +_io@obj@ +_nonstd@obj@ +_thread@obj@ +_repl@obj@
 MODULES_O_COMMA = _kernel@obj@,_system@obj@,_num@obj@,_std@obj@,\
-+_eval@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,_repl@obj@
++_eval@obj@,+_module@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,_repl@obj@
 NORMAL_O_IN_COMPILE_ORDER = main@obj@ os_tty@obj@ c_intf@obj@ actlog@obj@ \
 os_io@obj@ setup@obj@ mem@obj@ os_files@obj@ os_setup@obj@ os_base@obj@ \
 os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
-_repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@
+_repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@ \
+_module@obj@
 
 UNIVLIB = $(rootfromhere)/gsc/_t-univ-*.scm $(rootfromhere)/gsc/_univadt.scm
 
@@ -202,6 +203,7 @@ $(srcdirpfx)$(rootfromhere)/lib/_system.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_num.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_std.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_eval.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_module.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_io.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread.scm \
@@ -216,6 +218,7 @@ $(srcdirpfx)$(rootfromhere)/lib/_system\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_num\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_std\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_eval\#.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_module\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
@@ -252,6 +255,9 @@ _std@obj@: _std.c os.h
 	@BUILD_OBJ@ -D___LIBRARY
 
 _eval@obj@: _eval.c
+	@BUILD_OBJ@ -D___LIBRARY
+
+_module@obj@: _module.c
 	@BUILD_OBJ@ -D___LIBRARY
 
 _io@obj@: _io.c

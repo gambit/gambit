@@ -1677,8 +1677,8 @@
 
 ;; C-interface stuff:
 
-(define (c-interface-begin module-name)
-  (set! c-interface-module-name module-name)
+(define (c-interface-begin module-ref)
+  (set! c-interface-module-ref module-ref)
   (set! c-interface-proc-count 0)
   (set! c-interface-obj-count 0)
   (set! c-interface-types scheme-to-c-notation)
@@ -1697,7 +1697,7 @@
                         (reverse c-interface-procs)
                         (reverse c-interface-inits)
                         (reverse c-interface-objs))))
-    (set! c-interface-module-name #f)
+    (set! c-interface-module-ref #f)
     (set! c-interface-proc-count #f)
     (set! c-interface-obj-count #f)
     (set! c-interface-types #f)
@@ -1711,7 +1711,7 @@
     (set! c-interface-objs #f)
     i))
 
-(define c-interface-module-name #f)
+(define c-interface-module-ref #f)
 (define c-interface-proc-count #f)
 (define c-interface-obj-count #f)
 (define c-interface-types #f)
@@ -2816,7 +2816,7 @@
   (let* ((index
           (number->string c-interface-proc-count))
          (scheme-name
-          (string-append c-interface-module-name "#" index))
+          (string-append (symbol->string c-interface-module-ref) "#" index))
          (c-name
           (string-append c-id-prefix (scheme-id->c-id scheme-name)))
          (arity

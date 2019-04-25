@@ -844,6 +844,8 @@
           extension?
           output
           name
+          (list name) ;; supply-modules
+          '()         ;; demand-modules
           input-mods-and-flags
           (if extension?
             (list (list (targ-mod-name (car input-mods))))
@@ -868,26 +870,46 @@
 
         output))))
 
-(define (targ-make-mod name mods-and-flags sym-rsrc key-rsrc glo-rsrc script-line)
-  (vector name mods-and-flags sym-rsrc key-rsrc glo-rsrc script-line))
+(define (targ-make-mod name
+                       supply-modules
+                       demand-modules
+                       mods-and-flags
+                       sym-rsrc
+                       key-rsrc
+                       glo-rsrc
+                       meta-info)
+  (vector name
+          supply-modules
+          demand-modules
+          mods-and-flags
+          sym-rsrc
+          key-rsrc
+          glo-rsrc
+          meta-info))
 
 (define (targ-mod-name module-info)
   (vector-ref module-info 0))
 
-(define (targ-mod-mods-and-flags module-info)
+(define (targ-mod-supply-modules module-info)
   (vector-ref module-info 1))
 
-(define (targ-mod-sym-rsrc module-info)
+(define (targ-mod-demand-modules module-info)
   (vector-ref module-info 2))
 
-(define (targ-mod-key-rsrc module-info)
+(define (targ-mod-mods-and-flags module-info)
   (vector-ref module-info 3))
 
-(define (targ-mod-glo-rsrc module-info)
+(define (targ-mod-sym-rsrc module-info)
   (vector-ref module-info 4))
 
-(define (targ-mod-meta-info module-info)
+(define (targ-mod-key-rsrc module-info)
   (vector-ref module-info 5))
+
+(define (targ-mod-glo-rsrc module-info)
+  (vector-ref module-info 6))
+
+(define (targ-mod-meta-info module-info)
+  (vector-ref module-info 7))
 
 (define targ-generated-c-file-first-line
   (string-append "#ifdef " c-id-prefix "LINKER_INFO"))
@@ -895,46 +917,46 @@
 (define (targ-get-mod file-and-flags-and-link-info)
   (let ((file (car file-and-flags-and-link-info))
         (flags (cadr file-and-flags-and-link-info))
-        (link-info (caddr file-and-flags-and-link-info)))
+        (link-info (list->vector (caddr file-and-flags-and-link-info))))
 
     (define (combine-flags flags1 flags2)
       (append flags1 flags2))
 
-    (if link-info
-        (let* ((name (caddr link-info))
-               (mods (map (lambda (x)
-                            (cons (car x) (combine-flags flags (cdr x))))
-                          (cadddr link-info)))
-               (rest (cddddr link-info))
-               (syms (car rest))
-               (keys (cadr rest))
-               (glos-supplied-and-demanded (caddr rest))
-               (glos-supplied-and-not-demanded (cadddr rest))
-               (glos-not-supplied (car (cddddr rest)))
-               (script-line (cadr (cddddr rest))))
-          (targ-make-mod
-           name
-           mods
-           (map (lambda (sym)
-                  (targ-make-rsrc sym '() '()))
-                syms)
-           (map (lambda (key)
-                  (targ-make-rsrc key '() '()))
-                keys)
-           (targ-union-rsrc
-            (map (lambda (glo)
-                   (targ-make-rsrc glo (list file) (list file)))
-                 glos-supplied-and-demanded)
-            (targ-union-rsrc
-             (map (lambda (glo)
-                    (targ-make-rsrc glo '() (list file)))
-                  glos-supplied-and-not-demanded)
-             (map (lambda (glo)
-                    (targ-make-rsrc glo (list file) '()))
-                  glos-not-supplied)))
-           script-line))
-        (compiler-error
-         (string-append "incorrectly formatted file " file)))))
+    (let* ((name (vector-ref link-info 2))
+           (supply-modules (vector-ref link-info 3))
+           (demand-modules (vector-ref link-info 4))
+           (mods (map (lambda (x)
+                        (cons (car x) (combine-flags flags (cdr x))))
+                      (vector-ref link-info 5)))
+           (syms (vector-ref link-info 6))
+           (keys (vector-ref link-info 7))
+           (glos-supplied-and-demanded (vector-ref link-info 8))
+           (glos-supplied-and-not-demanded (vector-ref link-info 9))
+           (glos-not-supplied (vector-ref link-info 10))
+           (meta-info (vector-ref link-info 11)))
+      (targ-make-mod
+       name
+       supply-modules
+       demand-modules
+       mods
+       (map (lambda (sym)
+              (targ-make-rsrc sym '() '()))
+            syms)
+       (map (lambda (key)
+              (targ-make-rsrc key '() '()))
+            keys)
+       (targ-union-rsrc
+        (map (lambda (glo)
+               (targ-make-rsrc glo (list file) (list file)))
+             glos-supplied-and-demanded)
+        (targ-union-rsrc
+         (map (lambda (glo)
+                (targ-make-rsrc glo '() (list file)))
+              glos-supplied-and-not-demanded)
+         (map (lambda (glo)
+                (targ-make-rsrc glo (list file) '()))
+              glos-not-supplied)))
+       meta-info))))
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -966,10 +988,15 @@
           (map targ-glo-rsrc glo-list))
          (ofd-count
           (targ-get-ofd-count prc-list))
+         (supply-modules
+          (vector-ref module-descr 0))
+         (demand-modules
+          (vector-ref module-descr 1))
          (module-name
-          (symbol->string (vector-ref module-descr 0)))
+          (symbol->string
+           (vector-ref supply-modules (- (vector-length supply-modules) 1))))
          (module-meta-info
-          (vector-ref module-descr 3))
+          (vector-ref module-descr 2))
          (script-line
           (cond ((assq 'script-line module-meta-info) => cdr)
                 (else #f))))
@@ -977,7 +1004,10 @@
     (targ-start-dump
      filename
      module-name
-     (list (list module-name))
+     (map symbol->string (vector->list supply-modules))
+     (map symbol->string (vector->list demand-modules))
+     (list (cons module-name ;; module name
+                 '()))       ;; flags
      sym-rsrc
      key-rsrc
      glo-rsrc
@@ -1013,6 +1043,8 @@
           extension?
           filename
           name
+          supply-modules
+          demand-modules
           all-mods-and-flags
           old-mods-and-flags
           new-mods-and-flags
@@ -1042,11 +1074,13 @@
     (targ-start-dump
      filename
      name
+     supply-modules
+     demand-modules
      all-mods-and-flags
      sym-rsrc
      key-rsrc
      glo-rsrc
-     #f)
+     '())
 
     (targ-dump-module-info
      name
@@ -1084,6 +1118,8 @@
 (define (targ-start-dump
          filename
          name
+         supply-modules
+         demand-modules
          mods-and-flags
          sym-rsrc
          key-rsrc
@@ -1121,6 +1157,12 @@
   (write name targ-port)
   (targ-line)
 
+  (write supply-modules targ-port)
+  (targ-line)
+
+  (write demand-modules targ-port)
+  (targ-line)
+
   (write mods-and-flags targ-port)
   (targ-line)
 
@@ -1130,8 +1172,6 @@
   (targ-write-rsrc-names (keep targ-rsrc-supplied-and-not-demanded? glo-rsrc))
   (targ-write-rsrc-names (keep targ-rsrc-not-supplied? glo-rsrc))
 
-  (display " " targ-port) ;; some C preprocessors don't like #f or #( at the
-                          ;; beginning of a line
   (write module-meta-info targ-port)
   (targ-line)
 

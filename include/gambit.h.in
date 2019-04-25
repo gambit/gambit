@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -6778,6 +6778,13 @@ ___PSDKR) { ___PSGET
 #define ___DEF_MOD_GLO(i,glo,n)___GLO(i,glo)=___MLBL(n);
 #define ___END_MOD_GLO return ___FIX(___NO_ERR); }
 
+#define ___MODULE_DESCR_SUPPLY_MODS   0
+#define ___MODULE_DESCR_DEMAND_MODS   1
+#define ___MODULE_DESCR_META_INFO     2
+#define ___MODULE_DESCR_FLAGS         3
+#define ___MODULE_DESCR_THUNK         4
+#define ___MODULE_DESCR_MODULE_STRUCT 5
+
 #define ___BEGIN_MOD_SYM_KEY ___LOCAL ___module_struct ___module_descr = { \
   ___VERSION, \
   ___MODULE_KIND, \
@@ -9236,7 +9243,7 @@ typedef struct ___virtual_machine_state_struct
 
     ___vmstate_mem mem; /* memory management state */
 
-    ___SCMOBJ main_module_id; /* symbol identifying the VM's main module */
+    ___SCMOBJ main_module_ref; /* symbol identifying the VM's main module */
 
 #ifndef ___SINGLE_VM
 

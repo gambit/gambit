@@ -1071,48 +1071,42 @@
 (define-prim (##expand-source-set! x)
   (set! ##expand-source x))
 
-(define (##compile-module top-cte src)
-  (##compile-in-compilation-scope
-   top-cte
-   src
-   #f
-   (lambda (cte src tail?)
-     (let* ((lib+body
-             (##extract-library src))
-            (new-src
-             (if lib+body
-                 (let* ((lib (##car lib+body))
-                        (body (##cdr lib+body))
-                        (new-lib (##generate-library-prelude lib)))
-                   (##sourcify
-                    (##cons (##sourcify '##begin src)
-                            (##cons new-lib
-                                    body))
-                    src))
-                 src)))
-       (let ((tail? #f))
-         (##comp-top top-cte new-src tail?))))))
-
 (define (##compile-top top-cte src)
-  (##compile-in-compilation-scope
-   top-cte
-   src
-   #f
-   (lambda (cte src tail?)
-     (let ((tail? #f))
-       (##comp-top top-cte src tail?)))))
+  (##extract-demand-modules
+   (##compile-in-compilation-scope
+    top-cte
+    src
+    #f
+    (lambda (cte src tail?)
+      (let ((tail? #f))
+        (##comp-top top-cte src tail?))))))
 
 (define (##compile-inner cte src)
-  (##compile-in-compilation-scope
-   cte
-   src
-   #f
-   (lambda (cte src tail?)
-     (macro-gen ##gen-top src
-       (##comp-inner
-        (##cte-frame-i cte (##list (macro-self-var)))
-        src
-        tail?)))))
+  (##extract-demand-modules
+   (##compile-in-compilation-scope
+    cte
+    src
+    #f
+    (lambda (cte src tail?)
+      (macro-gen ##gen-top src
+        (##comp-inner
+         (##cte-frame-i cte (##list (macro-self-var)))
+         src
+         tail?))))))
+
+(define (##extract-demand-modules x)
+  (let* ((code
+          (##car x))
+         (comp-scope
+          (##cdr x))
+         (demand-modules
+          (##table-ref comp-scope '##demand-modules '())))
+    (##cons code
+            demand-modules)))
+
+(define (##setup-requirements-and-run c rte)
+  (##load-modules (##cdr c))
+  (macro-code-run (##car c)))
 
 (define (##convert-source-to-locat! code)
 
@@ -1152,28 +1146,10 @@
          (code
           (##car x))
          (comp-scope
-          (##cdr x))
-         (required-modules
-          (##table-ref comp-scope 'required-modules '())))
-
-    (define (add-loading-of-required-modules required-modules code)
-      (if (##pair? required-modules)
-
-          (let ((module-ref (##car required-modules)))
-            (macro-gen ##gen-seq src
-              (macro-gen ##gen-app-no-step src
-                (macro-gen ##gen-glo-ref src
-                  (##make-global-var '##load-required-module))
-                (##list (macro-gen ##gen-cst-no-step src
-                          module-ref)))
-              (add-loading-of-required-modules
-               (##cdr required-modules)
-               code)))
-
-          code))
-
-    (##convert-source-to-locat!
-     (add-loading-of-required-modules required-modules code))))
+          (##cdr x)))
+    (##cons
+     (##convert-source-to-locat! code)
+     comp-scope)))
 
 (define (##in-new-compilation-scope thunk)
   (let* ((comp-scope
@@ -1185,65 +1161,6 @@
            thunk)))
     (##cons result
             comp-scope)))
-
-(define (##cte-process-import cte src)
-  (let* ((code (##source-code src))
-         (lib-name-src (##sourcify (##cadr code) src))
-         (lib-name (##source-code lib-name-src))
-         (include-file (##add-import-requirement lib-name)))
-    (if include-file
-        (##sourcify (##list (##sourcify '##include src)
-                            (##sourcify include-file src))
-                    src)
-        (##sourcify (##list (##sourcify '##begin src))
-                    src))))
-
-(define-prim (##add-import-requirement lib-name)
-  (let ((comp-scope (##compilation-scope)))
-    (##table-set!
-     comp-scope
-     'imports
-     (##cons lib-name
-             (##table-ref comp-scope 'imports '())))
-    #f))
-
-(define-prim (##add-import-requirement-set! x)
-  (set! ##add-import-requirement x))
-
-(define (##extract-library expr)
-  #f #; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  (let* ((src (##sourcify expr (##make-source #f #f)))
-         (code (##source-code src)))
-    (and (##pair? code)
-         (let* ((h-src (##sourcify (##car code) src))
-                (h (##source-code h-src)))
-           (and (##eq? h '##begin)
-                (##pair? (##cdr code))
-                (let* ((lib-src (##sourcify (##cadr code) src))
-                       (lib (##source-code lib-src)))
-                  (and (##pair? lib)
-                       (let* ((libh-src (##sourcify (##car lib) src))
-                              (libh (##source-code libh-src)))
-                         (and (or (##eq? libh 'library)
-                                  (##eq? libh '##library))
-                              (begin
-                                (##shape lib-src lib-src -3)
-                                (cond ((##null? (##cdddr lib))
-                                       (##cons lib-src
-                                               (##cddr code)))
-                                      ((##null? (##cddr code))
-                                       (##cons lib-src
-                                               (##cdddr lib)))
-                                      (else
-                                       (##raise-expression-parsing-exception
-                                        'ill-placed-library
-                                        lib-src)))))))))))))
-
-(define-prim (##generate-library-prelude lib)
-  lib)
-
-(define-prim (##generate-library-prelude-set! x)
-  (set! ##generate-library-prelude x))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1273,6 +1190,9 @@
                  (##comp-top-declare top-cte src tail?))
                 ((##namespace)
                  (##comp-top-namespace top-cte src tail?))
+;;                ((##declare-scope)   (##comp-top-declare-scope top-cte src tail?))
+;;                ((##namespace-scope) (##comp-top-namespace-scope top-cte src tail?))
+;;                ((##macro-scope)     (##comp-top-macro-scope top-cte src tail?))
                 (else                (##comp-aux cte src tail? first)))))
         (##comp-simple cte src tail?))))
 
@@ -1396,31 +1316,6 @@
     (##top-cte-process-namespace! top-cte src)
     (macro-gen ##gen-cst-no-step src
       (##void))))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(define (##comp-top-library top-cte src tail?)
-
-  ;; The library form is handled specially because it must be the only
-  ;; form in the module.
-
-  (##raise-expression-parsing-exception
-   'ill-placed-library
-   src))
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(define (##comp-top-export top-cte src tail?)
-  (##shape src src -2)
-  #f);;;;;;;;;;;;;;;;;;;;;;;
-
-;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-(define (##comp-top-import top-cte src tail?)
-  (##shape src src 2)
-  (##comp-top top-cte
-              (##cte-process-import top-cte src)
-              tail?))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2180,21 +2075,27 @@
                                       rev-vars
                                       rev-vals
                                       (##cdr body)))
-;;;                      ((library ##library)
-;;;                       (##raise-expression-parsing-exception
-;;;                        'ill-placed-library
-;;;                        src))
-;;;                      ((export ##export)
-;;;                       (##raise-expression-parsing-exception
-;;;                        'ill-placed-export
-;;;                        src))
-;;;                      ((import ##import)
-;;;                       (##shape src src 2)
-;;;                       (internal-defs cte
-;;;                                      rev-vars
-;;;                                      rev-vals
-;;;                                      (##cons (##cte-process-import cte src)
-;;;                                              (##cdr body))))
+;;                      ((##declare-scope)
+;;                       (##shape src src -1)
+;;                       ;;............
+;;                       (internal-defs cte
+;;                                      rev-vars
+;;                                      rev-vals
+;;                                      (##cdr body)))
+;;                      ((##namespace-scope)
+;;                       (##shape src src -1)
+;;                       ;;............
+;;                       (internal-defs cte
+;;                                      rev-vars
+;;                                      rev-vals
+;;                                      (##cdr body)))
+;;                      ((##macro-scope)
+;;                       (##shape src src -1)
+;;                       ;;............
+;;                       (internal-defs cte
+;;                                      rev-vars
+;;                                      rev-vals
+;;                                      (##cdr body)))
                       (else
                        (internal-defs-done cte rev-vars rev-vals body)))))))
 
@@ -4789,17 +4690,17 @@
 ;;; Evaluation in a top environment within the current continuation.
 
 (define-prim (##eval-module src top-cte)
-  (let ((c (##compile-module top-cte (##sourcify src (##make-source #f #f)))))
-    (let ((rte #f))
-      (macro-code-run c))))
+  (let ((c (##compile-top top-cte
+                          (##sourcify src (##make-source #f #f)))))
+    (##setup-requirements-and-run c #f)))
 
 (define-prim (##eval-module-set! x)
   (set! ##eval-module x))
 
 (define-prim (##eval-top src top-cte)
-  (let ((c (##compile-top top-cte (##sourcify src (##make-source #f #f)))))
-    (let ((rte #f))
-      (macro-code-run c))))
+  (let ((c (##compile-top top-cte
+                          (##sourcify src (##make-source #f #f)))))
+    (##setup-requirements-and-run c #f)))
 
 (define-prim (##eval-top-set! x)
   (set! ##eval-top x))
@@ -5166,7 +5067,13 @@
              (let ((module-descrs (##vector-ref result 0))
                    (script-line (##vector-ref result 2)))
                (script-callback script-line abs-path)
-               (##register-module-descrs-and-load! module-descrs)
+               (##register-module-descrs module-descrs)
+               (##load-modules
+                (##list->vector
+                 (##map (lambda (md)
+                          (##vector-last
+                           (macro-module-descr-supply-modules md)))
+                        (##vector->list module-descrs))))
                (##path-unresolve abs-path))))))
 
   (define (load-no-ext psettings path)

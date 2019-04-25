@@ -1990,14 +1990,6 @@
                 (loop tail)
                 (##car lst))))))))
 
-(define-prim (##reverse! lst)
-  (let loop ((prev '()) (curr lst))
-    (if (##pair? curr)
-        (let ((next (##cdr curr)))
-          (##set-cdr! curr prev)
-          (loop curr next))
-        prev)))
-
 (define-prim (reverse! lst)
   (let loop ((prev '()) (curr lst))
     (macro-force-vars (curr)

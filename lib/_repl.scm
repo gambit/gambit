@@ -3193,8 +3193,7 @@
                            repl-context
                            (lambda ()
                              (receiver
-                              (let ((rte rte))
-                                (macro-code-run c))))))))
+                              (##setup-requirements-and-run c rte)))))))
 
   (let ((src2 (##sourcify src (##make-source #f #f))))
     (cond ((##interp-continuation? cont)

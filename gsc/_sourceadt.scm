@@ -20,3 +20,6 @@
 
 (define (source-locat x)
   (##source-locat x))
+
+(define (sourcify x src)
+  (##sourcify x src))

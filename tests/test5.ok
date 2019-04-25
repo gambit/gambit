@@ -4,6 +4,8 @@
 409003
 (C)
 "mix"
+("mix")
+()
 (("mix"))
 (
 "*"
@@ -406,7 +408,7 @@
 "with-exception-handler"
 "write"
 )
- ()
+()
 )
 #else
 #define ___VERSION 409003
@@ -419,7 +421,7 @@
 #define ___GLOCOUNT 319
 #define ___SUPCOUNT 168
 #define ___CNSCOUNT 547
-#define ___SUBCOUNT 271
+#define ___SUBCOUNT 273
 #define ___LBLCOUNT 3694
 #define ___OFDCOUNT 40
 #define ___MODDESCR ___REF_SUB(270)
@@ -3319,12 +3321,18 @@ ___DEF_SUB_STR(___X269,32UL)
                ___STR8(42,32,45,48,46,32,48,46)
                ___STR8(41,32,33,61,32,45,48,46)
                ___STR0
-___DEF_SUB_VEC(___X270,5UL)
-               ___VEC1(___REF_SYM(45,___S_mix))
-               ___VEC1(___REF_PRC(1))
-               ___VEC1(___REF_FIX(1))
+___DEF_SUB_VEC(___X270,6UL)
+               ___VEC1(___REF_SUB(271))
+               ___VEC1(___REF_SUB(272))
                ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FAL)
+               ___VEC0
+___DEF_SUB_VEC(___X271,1UL)
+               ___VEC1(___REF_SYM(45,___S_mix))
+               ___VEC0
+___DEF_SUB_VEC(___X272,0UL)
                ___VEC0
 
 ___BEGIN_SUB
@@ -3599,6 +3607,8 @@ ___BEGIN_SUB
 ,___DEF_SUB(___X268)
 ,___DEF_SUB(___X269)
 ,___DEF_SUB(___X270)
+,___DEF_SUB(___X271)
+,___DEF_SUB(___X272)
 ___END_SUB
 
 

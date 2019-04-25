@@ -2,9 +2,57 @@
 
 ;;; File: "_kernel#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
+
+;;; Representation of modules.
+
+(##define-macro (macro-make-module module-ref module-descr)
+  `(##vector ,module-ref 0 ,module-descr))
+
+(##define-macro (macro-module-module-ref module)
+  `(##vector-ref ,module 0))
+
+(##define-macro (macro-module-stage module)
+  `(##vector-ref ,module 1))
+
+(##define-macro (macro-module-stage-set! module x)
+  `(##vector-set! ,module 1 ,x))
+
+(##define-macro (macro-module-module-descr module)
+  `(##vector-ref ,module 2))
+
+(##define-macro (macro-module-descr-supply-modules module-descr)
+  `(##vector-ref ,module-descr 0))
+
+(##define-macro (macro-module-descr-demand-modules module-descr)
+  `(##vector-ref ,module-descr 1))
+
+(##define-macro (macro-module-descr-meta-info module-descr)
+  `(##vector-ref ,module-descr 2))
+
+(##define-macro (macro-module-descr-flags module-descr)
+  `(##vector-ref ,module-descr 3))
+
+(##define-macro (macro-module-descr-flags-set! module-descr x)
+  `(##vector-set! ,module-descr 3 ,x))
+
+(##define-macro (macro-module-descr-thunk module-descr)
+  `(##vector-ref ,module-descr 4))
+
+(##define-macro (macro-module-descr-thunk-set! module-descr x)
+  `(##vector-set! ,module-descr 4 ,x))
+
+(##define-macro (macro-module-descr-module-struct module-descr)
+  `(##vector-ref ,module-descr 5))
+
+(##define-macro (macro-module-descr-module-struct-set! module-descr x)
+  `(##vector-set! ,module-descr 5 ,x))
+
+(##define-macro (macro-module-last-init-stage) 2)
+
+;;;----------------------------------------------------------------------------
 
 ;;; Representation of exceptions.
 

@@ -31,7 +31,13 @@
 (define **let*-sym             (string->canonical-symbol "##let*"))
 (define **letrec-sym           (string->canonical-symbol "##letrec"))
 (define **letrec*-sym          (string->canonical-symbol "##letrec*"))
+(define **let-values-sym       (string->canonical-symbol "##let-values"))
+(define **let*-values-sym      (string->canonical-symbol "##let*-values"))
+(define **letrec-values-sym    (string->canonical-symbol "##letrec-values"))
+(define **letrec*-values-sym   (string->canonical-symbol "##letrec*-values"))
 (define **do-sym               (string->canonical-symbol "##do"))
+(define **guard-sym            (string->canonical-symbol "##guard"))
+(define **r7rs-guard-sym       (string->canonical-symbol "##r7rs-guard"))
 (define **delay-sym            (string->canonical-symbol "##delay"))
 (define **future-sym           (string->canonical-symbol "##future"))
 (define **c-define-type-sym    (string->canonical-symbol "##c-define-type"))
@@ -48,6 +54,10 @@
 (define **declare-sym          (string->canonical-symbol "##declare"))
 (define **namespace-sym        (string->canonical-symbol "##namespace"))
 (define **this-source-file-sym (string->canonical-symbol "##this-source-file"))
+
+(define **declare-scope-sym    (string->canonical-symbol "##declare-scope"))
+(define **namespace-scope-sym  (string->canonical-symbol "##namespace-scope"))
+(define **macro-scope-sym      (string->canonical-symbol "##macro-scope"))
 
 (define quote-sym              (string->canonical-symbol "quote"))
 (define set!-sym               (string->canonical-symbol "set!"))
@@ -83,6 +93,8 @@
 (define **unbox-sym            (string->canonical-symbol "##unbox"))
 (define **set-box!-sym         (string->canonical-symbol "##set-box!"))
 (define **make-delay-promise-sym (string->canonical-symbol "##make-delay-promise"))
+(define **r7rs-with-exception-catcher-sym (string->canonical-symbol "##r7rs-with-exception-catcher"))
+(define **with-exception-catcher-sym (string->canonical-symbol "##with-exception-catcher"))
 
 (define ieee-scheme-sym        (string->canonical-symbol "ieee-scheme"))
 (define r4rs-scheme-sym        (string->canonical-symbol "r4rs-scheme"))

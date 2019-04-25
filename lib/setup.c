@@ -1721,14 +1721,14 @@ ___module_struct *module;)
       ___SCMOBJ descr = module->moddescr;
 
       if (ctx->flags != ___FAL) /* override compiler flags */
-        ___FIELD(descr,2) = ctx->flags;
+        ___FIELD(descr,___MODULE_DESCR_FLAGS) = ctx->flags;
 
       if ((err = ___NONNULLPOINTER_to_SCMOBJ
                    (NULL, /* allocate as permanent object */
                     ___CAST(void*,module),
                     ___FAL,
                     NULL,
-                    &___FIELD(descr,4),
+                    &___FIELD(descr,___MODULE_DESCR_MODULE_STRUCT),
                     ___RETURN_POS))
           != ___FIX(___NO_ERR))
         return err;
@@ -5285,6 +5285,7 @@ ___setup_params_struct *setup_params;)
   ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
   ___processor_state ___ps = ___PSTATE_FROM_PROCESSOR_ID(0,___vms);
   ___SCMOBJ module_descrs;
+  ___SCMOBJ supply_modules;
   ___mod_or_lnk mol;
 
   /*
@@ -5416,17 +5417,20 @@ ___setup_params_struct *setup_params;)
 
       module_descrs = ___FIELD(___GSTATE->program_descr,0);
 
-      ___vms->main_module_id =
-        ___FIELD(___FIELD(module_descrs,
-                          ___INT(___VECTORLENGTH(module_descrs))-1),
-                 0);
+      supply_modules = ___FIELD(___FIELD(module_descrs,
+                                         ___INT(___VECTORLENGTH(module_descrs))-1),
+                                ___MODULE_DESCR_SUPPLY_MODS);
+
+      ___vms->main_module_ref = ___FIELD(supply_modules,
+                                         ___INT(___VECTORLENGTH(supply_modules))-1);
 
       /*
        * Start virtual machine execution by loading _kernel module.
        */
 
       err = ___run (___PSP
-                    ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),1));
+                    ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),
+                             ___MODULE_DESCR_THUNK));
     } while (0);
 
   /*

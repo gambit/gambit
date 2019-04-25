@@ -2,7 +2,7 @@
 
 ;;; File: "_env.scm"
 
-;;; Copyright (c) 1994-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -75,24 +75,33 @@
   (let ((name* (or (and (not (full-name? name))
                         (env-namespace-lookup env name))
                    name)))
-    (vector (vector-ref env 0)
-            (cons (cons name* def) (env-macros-ref env))
-            (env-decl-ref env)
-            (env-namespace-ref env)
-            (env-parent-ref env))))
+    (env-macros-set env (cons (cons name* def) (env-macros-ref env)))))
+
+(define (env-macros-set env macro)
+  (vector (vector-ref env 0)
+          macro
+          (env-decl-ref env)
+          (env-namespace-ref env)
+          (env-parent-ref env)))
 
 (define (env-declare env d)
+  (env-decl-set env (cons d (env-decl-ref env))))
+
+(define (env-decl-set env decl)
   (vector (vector-ref env 0)
           (env-macros-ref env)
-          (cons d (env-decl-ref env))
+          decl
           (env-namespace-ref env)
           (env-parent-ref env)))
 
 (define (env-namespace env n)
+  (env-namespace-set env (cons n (env-namespace-ref env))))
+
+(define (env-namespace-set env namespace)
   (vector (vector-ref env 0)
           (env-macros-ref env)
           (env-decl-ref env)
-          (cons n (env-namespace-ref env))
+          namespace
           (env-parent-ref env)))
 
 (define (env-vars-ref env)       (car (vector-ref env 0)))

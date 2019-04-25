@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -97,12 +97,8 @@
                           (set! ##processed-command-line
                             (##cons script-path rest)))))))
 
-              (##load file
-                      script-callback
-                      #t
-                      #t
-                      #f
-                      #f)
+              (##load-module-or-file file
+                                     script-callback)
 
               (if starter
                 (starter)
@@ -198,11 +194,6 @@
                           (##assq 'prelude options))
                          (post
                           (##assq 'postlude options))
-                         (module-name
-                          (let ((x (##assq 'module-name options)))
-                            (if x
-                                (##cadr x)
-                                #f)))
                          (linker-name
                           (let ((x (##assq 'linker-name options)))
                             (if x
@@ -305,16 +296,12 @@
                                  file
                                  options: opts
                                  output: output
-                                 module-name: module-name
-                                 linker-name: linker-name
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options)
                                 (compile-file
                                  file
                                  options: opts
-                                 module-name: module-name
-                                 linker-name: linker-name
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options))
@@ -326,14 +313,10 @@
                                 (compile-file-to-target
                                  file
                                  options: opts
-                                 output: output
-                                 module-name: module-name
-                                 linker-name: linker-name)
+                                 output: output)
                                 (compile-file-to-target
                                  file
-                                 options: opts
-                                 module-name: module-name
-                                 linker-name: linker-name))
+                                 options: opts))
                             (exit-abnormally)))
 
                       (define (do-build-executable obj-files output-filename)
@@ -733,7 +716,7 @@
                            (debug) (debug-location) (debug-source) (debug-environments)
                            (track-scheme)
                            (o string) (l string)
-                           (module-name string) (linker-name string)
+                           (module-ref symbol) (linker-name string)
                            (prelude string) (postlude string)
                            (cc-options string)
                            (ld-options-prelude string) (ld-options string))))

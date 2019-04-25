@@ -140,38 +140,46 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-syntax ##require-module
+(define (##compilation-scope-add-to-ordered-set! key obj)
+  (let* ((comp-scope
+          (##compilation-scope))
+         (ordered-set
+          (##table-ref comp-scope key '())))
+    (if (##pair? ordered-set)
+        (let loop ((lst ordered-set))
+          (if (##not (##eq? (##car lst) obj))
+              (let ((rest (##cdr lst)))
+                (if (##pair? rest)
+                    (loop rest)
+                    (##set-cdr! lst (##list obj))))))
+        (##table-set! comp-scope key (##list obj)))))
+
+(define (##expand-compilation-scope-ordered-set-adder key src)
+  (##deconstruct-call
+   src
+   2
+   (lambda (sym-src)
+     (let ((sym (##desourcify sym-src)))
+
+       (if (##not (##symbol? sym))
+           (##raise-expression-parsing-exception
+            'ill-formed-special-form
+            src
+            (##source-strip (##car (##source-strip src)))))
+
+       (##compilation-scope-add-to-ordered-set! key sym))
+
+     (##expand-source-template
+      src
+      `(##begin)))))
+
+(define-runtime-syntax ##demand-module
   (lambda (src)
-    (##deconstruct-call
-     src
-     2
-     (lambda (module-ref-src)
-       (let ((module-ref (##desourcify module-ref-src)))
+    (##expand-compilation-scope-ordered-set-adder '##demand-modules src)))
 
-         (if (##not (##symbol? module-ref))
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##source-strip (##car (##source-strip src)))))
-
-         (let* ((comp-scope
-                 (##compilation-scope))
-                (required-modules
-                 (##table-ref comp-scope 'required-modules '())))
-           (if (##pair? required-modules)
-               (let loop ((lst required-modules))
-                 (if (##not (##eq? (##car lst) module-ref))
-                     (let ((rest (##cdr lst)))
-                       (if (##pair? rest)
-                           (loop rest)
-                           (##set-cdr! lst (##list module-ref))))))
-               (##table-set! comp-scope
-                             'required-modules
-                             (##list module-ref))))
-
-         (##expand-source-template
-          src
-          `(##begin)))))))
+(define-runtime-syntax ##supply-module
+  (lambda (src)
+    (##expand-compilation-scope-ordered-set-adder '##supply-modules src)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
