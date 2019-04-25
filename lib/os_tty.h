@@ -485,6 +485,11 @@ extern ___SCMOBJ ___os_device_tty_mode_set
          ___SCMOBJ speed),
         ());
 
+extern ___SCMOBJ ___os_device_tty_mode_restore
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ restore),
+        ());
+
 
 /*---------------------------------------------------------------------------*/
 
