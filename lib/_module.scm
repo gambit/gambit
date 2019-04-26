@@ -156,14 +156,19 @@
              nb-dots
              (split-rest rest))))))
 
+  (define (parse head rest)
+    (and (valid-module-ref-part? head)
+         (let ((head-str (module-ref-part->string head)))
+           (parse-head-rest head-str rest))))
+
   (if (##string? str-or-src)
       (parse-head-rest str-or-src '())
       (let ((code (##source-strip str-or-src)))
-        (and (##pair? code)
-             (let ((head (##source-strip (##car code))))
-               (and (valid-module-ref-part? head)
-                    (let ((head-str (module-ref-part->string head)))
-                      (parse-head-rest head-str (##cdr code)))))))))
+        (if (##pair? code)
+            (parse (##source-strip (##car code))
+                   (##cdr code))
+            (parse code
+                   '())))))
 
 (define-prim (##string-split-at str sep #!optional (rest '()))
   (let ((len (##string-length str)))
@@ -441,6 +446,10 @@
 (define-prim (##install-module-set! x)
   (set! ##install-module x))
 
+(define-prim (##search-or-else-install-module modref)
+  (or (##search-module modref)
+      (##install-module modref)))
+
 (##get-module-set!
  (lambda (module-ref)
 
@@ -453,9 +462,7 @@
        (let ((modref (##string->modref (##symbol->string module-ref))))
          (if (##not modref)
              (err)
-             (let ((mod-info
-                    (or (##search-module modref)
-                        (##install-module modref))))
+             (let ((mod-info (##search-or-else-install-module modref)))
                (if mod-info ;; found module?
                    (##get-module-from-file module-ref modref mod-info)
                    (err))))))))
@@ -501,5 +508,40 @@
 
 (define-prim (##debug-modules?-set! x)
   (set! ##debug-modules? x))
+
+;;;----------------------------------------------------------------------------
+
+(define-runtime-syntax ##include*
+  (lambda (src)
+    (##deconstruct-call
+     src
+     2
+     (lambda (arg-src)
+       (let ((x (##parse-module-ref arg-src)))
+         (if (or (##not x) (##not (##fx= (##car x) 0)))
+             (##raise-expression-parsing-exception
+              'ill-formed-special-form
+              src
+              (##source-strip (##car (##source-strip src))))
+             (let* ((modref (##cdr x))
+                    (mod-info (##search-or-else-install-module modref)))
+               (if (##not mod-info)
+                   (##raise-expression-parsing-exception
+                    'module-not-found
+                    src
+                    (##desourcify arg-src))
+                   (let ((path
+                          (##path-expand (##string-append
+                                          (##vector-ref mod-info 1)
+                                          "#"
+                                          (##car (##vector-ref mod-info 2)))
+                                         (##vector-ref mod-info 0)))
+                         (port
+                          (##vector-ref mod-info 4)))
+                     (if port
+                         (##close-port port))
+                     (if (##file-exists? path)
+                         `(##include ,path)
+                         `(##begin)))))))))))
 
 ;;;============================================================================
