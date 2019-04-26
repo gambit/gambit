@@ -4096,6 +4096,7 @@
     (ill-formed-macro-transformer     . "Macro transformer must be a lambda expression")
     (reserved-used-as-variable        . "Reserved identifier can't be used as a variable:")
     (ill-formed-special-form          . "Ill-formed special form:")
+    (module-not-found                 . "Module not found:")
     (cannot-open-file                 . "Can't open file")
     (filename-expected                . "Filename expected")
     (ill-placed-define                . "Ill-placed 'define'")
