@@ -346,9 +346,9 @@
               ##main-readtable
               ##wrap-datum
               ##unwrap-datum
-              '()
               (##cdr ext) ;; start-syntax
-              #t)))       ;; close-port?
+              #t          ;; close-port?
+              '())))
         (if (##fixnum? x)
             (##raise-os-exception
              #f

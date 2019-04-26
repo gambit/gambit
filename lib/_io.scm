@@ -5501,8 +5501,8 @@
                   readtable
                   wrap
                   unwrap
-                  #t
                   start-syntax
+                  #t
                   case-conversion?))))
          open-input-file
          path-or-settings))))
