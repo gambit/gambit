@@ -156,14 +156,19 @@
              nb-dots
              (split-rest rest))))))
 
+  (define (parse head rest)
+    (and (valid-module-ref-part? head)
+         (let ((head-str (module-ref-part->string head)))
+           (parse-head-rest head-str rest))))
+
   (if (##string? str-or-src)
       (parse-head-rest str-or-src '())
       (let ((code (##source-strip str-or-src)))
-        (and (##pair? code)
-             (let ((head (##source-strip (##car code))))
-               (and (valid-module-ref-part? head)
-                    (let ((head-str (module-ref-part->string head)))
-                      (parse-head-rest head-str (##cdr code)))))))))
+        (if (##pair? code)
+            (parse (##source-strip (##car code))
+                   (##cdr code))
+            (parse code
+                   '())))))
 
 (define-prim (##string-split-at str sep #!optional (rest '()))
   (let ((len (##string-length str)))
