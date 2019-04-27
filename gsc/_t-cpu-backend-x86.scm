@@ -274,13 +274,16 @@
           (cons x86-jae x86-jb))
         ((and (not (cond-is-equal condition)) (not (cond-is-signed condition)))
           (cons x86-ja x86-jbe))))
-    ((not-equal) (flip (get-jumps (inverse-condition condition))))
-    ((lesser) (flip (get-jumps (inverse-condition condition))))
+    ((not-equal) (flip (get-jumps (invert-condition condition))))
+    ((lesser) (flip (get-jumps (invert-condition condition))))
     (else
       (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
-(define (x86-cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
-  (let* ((jumps (get-jumps condition)))
+(define (x86-cmp-jump-instr cgc test loc-true loc-false #!optional (opnds-width #f))
+  (let* ((condition (test-condition test))
+         (opnd1 (test-operand1 test))
+         (opnd2 (test-operand2 test))
+         (jumps (get-jumps condition)))
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
       (load-multiple-if-necessary cgc '((reg mem) (reg mem int)) (list opnd1 opnd2)
@@ -301,10 +304,14 @@
       (else
         (debug "am-compare-jump: No jump encoded")))))
 
-(define (x86-cmp-move-instr cgc condition dest opnd1 opnd2 true-opnd false-opnd #!optional (opnds-width #f))
-  (let* ((jumps (get-jumps condition))
+(define (x86-cmp-move-instr cgc test dest true-opnd false-opnd #!optional (opnds-width #f))
+  (let* ((condition (test-condition test))
+         (opnd1 (test-operand1 test))
+         (opnd2 (test-operand2 test))
+         (jumps (get-jumps condition))
          (label-true (make-unique-label cgc "mov-true" #f))
          (label-false (make-unique-label cgc "mov-false" #f)))
+
     ;; In case both jump locations are false, the cmp is unnecessary.
     (load-if-necessary cgc '(reg mem) opnd1
       (lambda (opnd1) (x86-cmp cgc opnd1 opnd2 opnds-width)))
@@ -797,8 +804,7 @@
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
-        condition
-        opnd1 opnd2
+        (mk-test condition opnd1 opnd2)
         false-label true-label
         (get-word-width-bits cgc)))
     allowed-opnds1: '(reg mem)

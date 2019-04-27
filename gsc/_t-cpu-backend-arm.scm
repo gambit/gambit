@@ -91,7 +91,7 @@
     arm-sub-instr               ;; am-sub
     arm-jmp-instr               ;; am-jmp
     arm-cmp-jump-instr          ;; am-compare-jump
-    am-compare-move))           ;; am-compare-move
+    arm-cmp-move-instr))        ;; am-compare-move
 
 (define (make-arm-opnd opnd)
   (cond
@@ -338,12 +338,17 @@
           (cons (arm-cond-hs) (arm-cond-lo)))
         ((and (not (cond-is-equal condition)) (not (cond-is-signed condition)))
           (cons (arm-cond-hi) (arm-cond-ls)))))
-    ((not-equal) (flip (arm-get-branch-conditions (inverse-condition condition))))
-    ((lesser) (flip (arm-get-branch-conditions (inverse-condition condition))))
+    ((not-equal) (flip (arm-get-branch-conditions (invert-condition condition))))
+    ((lesser) (flip (arm-get-branch-conditions (invert-condition condition))))
     (else
       (compiler-internal-error "arm-get-branch-conditions - Unknown condition: " condition))))
 
-(define (arm-cmp-jump-instr cgc condition opnd1 opnd2 loc-true loc-false #!optional (opnds-width #f))
+(define (arm-cmp-jump-instr cgc test loc-true loc-false #!optional (opnds-width #f))
+  (let* ((condition (test-condition test))
+         (opnd1 (test-operand1 test))
+         (opnd2 (test-operand2 test))
+         (conds (arm-get-branch-conditions condition)))
+
     ;; In case both jump locations are false, the cmp is unnecessary.
     ;; Todo: Use cmn is necessary
     (if (or loc-true loc-false)
@@ -352,7 +357,6 @@
         (list opnd1 opnd2)
           (lambda (reg1 opnd2) (arm-cmp cgc reg1 (make-arm-opnd opnd2)))))
 
-  (let* ((conds (arm-get-branch-conditions condition)))
     (cond
       ((and loc-false loc-true)
         (arm-b cgc (lbl-opnd-label loc-true) (car conds))

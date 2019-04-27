@@ -54,10 +54,11 @@
 (define (am-if cgc opnd1 opnd2 condition on-true on-false #!optional (actions-return #f) (opnds-width #f))
   (let ((true-label (make-unique-label cgc "if-true" #f))
         (false-label (make-unique-label cgc "if-false" #f))
-        (continue-label (make-unique-label cgc "continue-label" #f)))
+        (continue-label (make-unique-label cgc "continue-label" #f))
+        (test (mk-test condition opnd1 opnd2)))
     (cond
       ((and on-true on-false)
-        (am-compare-jump cgc condition opnd1 opnd2 #f false-label opnds-width)
+        (am-compare-jump cgc test #f false-label opnds-width)
         (on-true cgc)
         (if (not actions-return)
           (am-jmp cgc continue-label))
@@ -65,12 +66,12 @@
         (on-false cgc)
         (am-lbl cgc continue-label))
       (on-true
-        (am-compare-jump cgc condition opnd1 opnd2 #f continue-label opnds-width)
+        (am-compare-jump cgc test #f continue-label opnds-width)
         (on-true cgc)
         (if (not actions-return)
           (am-jmp cgc continue-label)))
       (on-false
-        (am-compare-jump cgc condition opnd1 opnd2 continue-label #f opnds-width)
+        (am-compare-jump cgc test continue-label #f opnds-width)
         (on-false cgc)
         (if (not actions-return)
           (am-jmp cgc continue-label))))))
@@ -126,8 +127,7 @@
           (load-if-necessary cgc '(reg mem) opnd
             (lambda (opnd)
               (am-compare-jump cgc
-                condition-not-equal
-                opnd false-opnd
+                (mk-test condition-not-equal opnd false-opnd)
                 true-jmp false-jmp
                 (get-word-width-bits cgc)))))))
     ((then-move? result-action)
