@@ -657,7 +657,7 @@
 
     (am-lbl cgc return-lbl3)
 
-    (add-delayed-action cgc 'poll delayed-execute-never
+    (add-delayed-action cgc 'poll delayed-local-never-execute
       (lambda ()
         ;; Jump to handler
         (am-lbl cgc return-lbl1)
@@ -754,7 +754,7 @@
           (am-lbl cgc return-lbl3)
 
           ;; Add internal return point after unconditional jump
-          (add-delayed-action cgc 'heap-limit-check delayed-execute-never
+          (add-delayed-action cgc 'heap-limit-check delayed-local-never-execute
             (lambda ()
               ;; Jump to handler
               (am-lbl cgc return-lbl1)
@@ -774,7 +774,7 @@
         (check-heap-limit)
         ;; Add delayed action to make sure the heap limit is tested before an
         ;; unconditional jump.
-        (add-delayed-action-unique cgc 'heap-limit-check delayed-execute-always
+        (add-delayed-action-unique cgc 'heap-limit-check delayed-local-always-execute
           (lambda ()
             (if (> (codegen-context-memory-allocated cgc) 0)
               (check-heap-limit))))))))
@@ -850,8 +850,41 @@
 ;;------------------------------ Delayed actions -------------------------------
 ;;------------------------------------------------------------------------------
 
-(define delayed-execute-always 'always)
-(define delayed-execute-never 'never)
+;; Sometimes, we may want to place code in the program without it being in
+;; the current execution path. For example, some error handlers are only
+;; called in extraordinary circumstances and don't need to be spacially local
+;; to the code it's called by. Ideally, we would want to place that error handler
+;; out of any direct code path so we never have to skip over it, thus saving a
+;; jump instruction and increasing instruction density. Another use is to add
+;; data. Take for example ARM's move instruction. It can only load some
+;; immediates -- the values that can't must be loaded from memory. Thus, we need
+;; a way to make sure those immediates exist somewhere in memory.
+
+;; Other times, we need to execute some code, but it can wait right before
+;; exiting the current basic block. For example, heap overflow must be regularly
+;; tested and the fudge often allows us to wait until the end of the basic block.
+;; This is a necessary optimization as testing the heap after each allocation is
+;; very expensive.
+
+;; Delayed actions are a solution to those problems. They give us the option of
+;; placing code in the future at point at different points of the code.
+;; Depending on the situation, we may want:
+;;    Code that gets executed at the end of basic block
+;;      Useful for polling
+;;    Code that is out of the current execution path, but spacially close.
+;;      Useful for error handlers/internal return points used only by basic block.
+;;    Code that's "somewhere"
+;;      Useful when having code used by many different part of the code
+;; We may add more in the future when necessary.
+
+;; Under the hood, they're just thunks that get executed either:
+;;  At the end of a basic block before the unconditional jump
+;;  At the end of a basic block after the unconditional jump
+;;  After the last basic block (Near the non-inlined primitives)
+
+(define delayed-local-always-execute 'local-always)
+(define delayed-local-never-execute  'local-never)
+(define delayed-global               'global-never)
 
 (define (delayed-action identifier condition thunk)
   (list identifier condition thunk))
@@ -884,45 +917,31 @@
   (let ((actions (codegen-context-delayed-actions cgc)))
     (elem? identifier (map delayed-action-identifier actions))))
 
-(define (get-delayed-actions-always cgc)
+(define (get-delayed-actions cgc condition)
   (filter
-    (lambda (action) (equal? delayed-execute-always (delayed-action-condition action)))
+    (lambda (action) (equal? condition (delayed-action-condition action)))
     (codegen-context-delayed-actions cgc)))
 
-(define (get-delayed-actions-never cgc)
+(define (get-other-delayed-actions cgc condition)
   (filter
-    (lambda (action) (equal? delayed-execute-never (delayed-action-condition action)))
+    (lambda (action) (not (equal? condition (delayed-action-condition action))))
     (codegen-context-delayed-actions cgc)))
 
-(define (execute-delayed-actions-always cgc)
-  (debug "execute-delayed-actions-always")
-  (let ((actions (reverse (get-delayed-actions-always cgc))))
+(define (execute-delayed-actions cgc condition)
+  (debug "execute-delayed-actions: " condition)
+  (let ((actions (reverse (get-delayed-actions cgc condition))))
+    (codegen-context-delayed-actions-set! cgc
+      (get-other-delayed-actions cgc condition))
+    (for-each
+      (lambda (action)
+        (debug "Executing delayed action (always): "
+          (delayed-action-identifier action))
+        ((delayed-action-thunk action)))
+      actions)
+    ;; Some delayed actions may have added more delayed actions.
+    ;; Execute these actions immediately if their condition == condition
     (if (not (null? actions))
-      (begin
-        (codegen-context-delayed-actions-set! cgc
-          (get-delayed-actions-never cgc))
-        (for-each
-          (lambda (action)
-            (debug "Executing delayed action (always): "
-              (delayed-action-identifier action))
-            ((delayed-action-thunk action)))
-          actions)
-        (execute-delayed-actions-always cgc)))))
-
-(define (execute-delayed-actions-never cgc)
-  (debug "execute-delayed-actions-never")
-  (let ((actions (reverse (get-delayed-actions-never cgc))))
-    (if (not (null? actions))
-      (begin
-        (codegen-context-delayed-actions-set! cgc
-          (get-delayed-actions-always cgc))
-        (for-each
-          (lambda (action)
-            (debug "Executing delayed action (never): "
-              (delayed-action-identifier action))
-            ((delayed-action-thunk action)))
-          actions)
-        (execute-delayed-actions-never cgc)))))
+      (execute-delayed-actions cgc condition))))
 
 ;;------------------------------------------------------------------------------
 ;;----------------------------- GVM proc encoding ------------------------------
@@ -959,9 +978,10 @@
     (lambda (key val) (put-primitive-if-needed cgc key val))
     (codegen-context-primitive-labels-table cgc))
 
-  (if (not (null? (get-delayed-actions-always cgc)))
+  (if (not (null? (get-delayed-actions cgc delayed-local-always-execute)))
     (compiler-internal-error "Delayed actions that should be executed not reachable"))
-  (execute-delayed-actions-never cgc)
+  (execute-delayed-actions cgc delayed-local-never-execute)
+  (execute-delayed-actions cgc delayed-global)
 
   (debug "Finished!")
 
@@ -1001,7 +1021,7 @@
               (am-mov cgc reg (mem-opnd reg 0))
               (am-jmp cgc reg)
 
-              (execute-delayed-actions-never cgc))))))))
+              (execute-delayed-actions cgc delayed-local-never-execute))))))))
 
 ;;  GVM Instruction Encoding
 
@@ -1307,14 +1327,14 @@
         #f)
 
       (else
-        (execute-delayed-actions-always cgc)
+        (execute-delayed-actions cgc delayed-local-always-execute)
         ;; if x86: jmp-loc is already loaded in self-register
         (if (and (jump-nb-args gvm-instr)
                 (equal? 'x86-32 (get-arch-name cgc))
                 (not (lbl? jmp-opnd)))
           (am-jmp cgc (get-self-register cgc))
           (am-jmp cgc jmp-loc))
-        (execute-delayed-actions-never cgc)))))
+        (execute-delayed-actions cgc delayed-local-never-execute)))))
 
 (define (encode-ifjump-instr cgc prev-code code next-code)
   (debug "encode-ifjump-instr")
@@ -1336,7 +1356,7 @@
     ;; Pop stack if necessary
     (alloc-frame cgc (proc-frame-slots-gained code))
 
-    (execute-delayed-actions-always cgc)
+    (execute-delayed-actions cgc delayed-local-always-execute)
 
     (if (apply-ifjump-optimization? cgc prev-code code)
       (let* ((inverse-jumps? (equal? "##not" prim-sym))
@@ -1362,7 +1382,7 @@
         (prim-fun cgc (then-jump true-loc false-loc) args)))
 
       (if (and true-loc false-loc)
-        (execute-delayed-actions-never cgc))))
+        (execute-delayed-actions cgc delayed-local-never-execute))))
 
 ;; ***** Apply instruction encoding
 
