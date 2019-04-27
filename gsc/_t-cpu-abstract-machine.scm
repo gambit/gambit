@@ -388,8 +388,13 @@
       (int-opnd (- (* n (get-word-width cgc)))))))
 
 ;;------------------------------------------------------------------------------
-;;--------------------------------- Conditions ---------------------------------
+;;------------------------------ Tests/Conditions ------------------------------
 ;;------------------------------------------------------------------------------
+
+(define (mk-test operator operand1 operand2) (list operator operand1 operand2))
+(define (test-condition test) (car test))
+(define (test-operand1 test) (cadr test))
+(define (test-operand2 test) (caddr test))
 
 (define condition-equal (list 'equal))
 (define condition-not-equal (list 'not-equal))
@@ -413,7 +418,7 @@
     ((greater) (caddr cond))
     ((lesser) (caddr cond))))
 
-(define (inverse-condition cond)
+(define (invert-condition cond)
   (case (car cond)
     ((equal)
       condition-not-equal)
@@ -651,8 +656,7 @@
          (return-lbl3 (make-unique-label cgc "resume-execution")))
 
     (am-compare-jump cgc
-      (condition-lesser #t #t)
-      (get-frame-pointer cgc) stack-trip
+      (mk-test (condition-lesser #t #t) (get-frame-pointer cgc) stack-trip)
       return-lbl1 #f)
 
     (am-lbl cgc return-lbl3)
@@ -690,8 +694,7 @@
     (if (not rest?)
       ;; Without rest argument
       (am-compare-jump cgc
-        condition-not-equal
-        (car narg-field) (int-opnd arg-count)
+        (mk-test condition-not-equal (car narg-field) (int-opnd arg-count))
         error-label #f
         (cdr narg-field))
 
@@ -704,8 +707,7 @@
             (fp (get-frame-pointer cgc)))
 
         (am-compare-jump cgc
-          condition-not-equal
-          (car narg-field) (int-opnd (- arg-count 1))
+          (mk-test condition-not-equal (car narg-field) (int-opnd (- arg-count 1)))
           call-handler-lbl #f
           (cdr narg-field))
         ;; Case with 0 element
@@ -717,8 +719,7 @@
 
         ;; Jump to return-from-handler-lbl if nargs < 0
         (am-compare-jump cgc
-          (condition-lesser #f #t)
-          (car narg-field) (int-opnd 0)
+          (mk-test (condition-lesser #f #t) (car narg-field) (int-opnd 0))
           return-from-handler-lbl #f
           (cdr narg-field))
 
@@ -746,9 +747,9 @@
           ;; Reset bytes allocated count
           (codegen-context-memory-allocated-set! cgc 0)
 
+          ;; Not "or equal", because we can't exceed the fudge
           (am-compare-jump cgc
-            (condition-greater #f #f) ;; Not "or equal", because we can't exceed the fudge
-            (get-heap-pointer cgc) heap-limit
+            (mk-test (condition-greater #f #f) (get-heap-pointer cgc) heap-limit)
             return-lbl1 #f)
 
           (am-lbl cgc return-lbl3)
