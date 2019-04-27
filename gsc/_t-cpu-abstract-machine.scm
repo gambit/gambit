@@ -17,56 +17,54 @@
 ;;
 ;;  We define an abstract instruction set which we program against for most of
 ;;  the backend. Most of the code is moving data between registers and the stack
-;;  and jumping to locations, so it reduces the repetion between native backends
-;;  (x86, x64, ARM, Risc V, etc.).
+;;  and jumping to locations, so it allows the reuse of most of the code between
+;;  native backends (x86, x64, ARM, Risc V, etc.).
 ;;
-;;  Notes:
-;;    1 - Some instructions have a default implementation when possible.
-;;
-;;    2 - Unless specified, the args of the instructions is:
-;;        CGC, Destination register, Operand 1, Operand 2
-;;        If the architecture is load store,
-;;          Destination register: Register
-;;          Operands: Register, Immediate
-;;        Else
-;;          Destination register: Register, Memory, Label
-;;          Operands: Register, Immediate, Memory
-;;
-;;        The am-mov instruction acts like both load and store.
 ;;
 ;;  The following non-branching instructions are required:
-;;    am-lbl  : Place label.
-;;       Args : CGC, Label, Alignment (Multiple . Offset)
-;;    am-mov  : Move value between operands.
-;;       Args : CGC, reg/mem/label, reg/mem/imm/label
+;;    am-lbl cgc label #!optional alignment
+;;      Place label.
+;;      alignment: (Multiple, Offset)
 ;;
-;;    am-add  : Operand 1 = Operand 2 + Operand 3
-;;    am-sub  : Operand 1 = Operand 2 - Operand 3
+;;    am-mov cgc destination source
+;;      Move value in source into destination.
+;;      It is used both as load and store on load/store architectures.
+;;      destination: reg/mem/label
+;;      source: reg/mem/imm/label
+;;      TODO: Global
 ;;
-;;    am-bit-shift-right : Shifts register to the right by some constant
-;;    am-bit-shift-left  : Shifts register to the left by some constant
-;;                  Args : CGC, Destination register, Shifted register, constant
-;;
-;;    am-not  : Logical not
-;;    am-and  : Logical and
-;;    am-or   : Logical or
-;;    am-xor  : Logical xor
+;;    am-add cgc destination operand1 operand2
+;;      Add operand1 and operand2, puts the result in destination.
+;;      destination = operand1 + operand2
+;;    am-sub cgc destination operand1 operand2
+;;      Subtracts operand2 from operand2, puts the result in destination.
+;;      destination = operand1 - operand2
 ;;
 ;;  The following branching instructions are required:
-;;    am-jmp          : Jump to location
-;;               Args : CGC, jmp-opnd
-;;    am-compare-jump : Jump to location only if condition is set after comparison
-;;               Args : CGC, location-true(jmp-opnd), location-false(jmp-opnd), operand1, operand2 condition (optional) opnds-width
-;;      Where jmp-opnd = reg/mem/label
-;;            data Condition = Equal
-;;                           | NotEqual
-;;                           | Greater eq(bool) signed(bool)
-;;                           | NotGreater eq(bool) signed(bool)
+;;    am-jmp cgc destination
+;;      Jump to location.
+;;      destination: reg/mem/label
+;;    am-compare-jump cgc test destination-if-true destination-if-false
+;;      Jump to location only if condition is set after comparison.
+;;      test: (condition, operand1, operand2)
+;;    am-compare-move cgc test destination source-true source-false
+;;      Move value choosen by the test into destination.
+;;      destination:  reg/mem/label
+;;      source-true:  reg/mem/imm/label
+;;      source-false: reg/mem/imm/label
 ;;
-;;  The following non-instructions function have to be defined
-;;    am-data  : Place at current location the value with given width.
-;;               Width is 8, 16, 32 or 64 bits
-;;               Args : cgc width value
+;;      data Condition = Equal
+;;                     | NotEqual
+;;                     | Greater Equal Signed
+;;                     | NotGreater Equal Signed
+;;
+;;      type Equal  = Bool
+;;      type Signed = Bool
+;;
+;;  The following no-op instruction have to be defined
+;;    am-data cgc width value
+;;      Place at current location the value with given width.
+;;      width: '8 | '16 | '32 | '64
 ;;
 ;;  To add new backend, see x64 backend as example.
 
