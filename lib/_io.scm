@@ -6756,19 +6756,11 @@
                          output-raw
                          speed)))))
 
-(define-prim (##tty-mode-restore port #!optional (remove #t))
+(define-prim (##tty-mode-reset)
   (let ((code
-         (##os-device-tty-mode-restore
-          (##port-device port)
-          remove)))
+         (##os-device-tty-mode-reset)))
     (if (##fx< code 0)
-        (##raise-os-io-exception
-         port
-         #f
-         code
-         ##tty-mode-restore
-         port
-         remove)
+        (##raise-os-exception #f code ##tty-mode-reset)
         (##void))))
 
 ;;;----------------------------------------------------------------------------

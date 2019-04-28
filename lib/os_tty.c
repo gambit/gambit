@@ -297,11 +297,11 @@ ___device_tty *self;)
 
 ___HIDDEN ___SCMOBJ ___device_tty_mode_update
    ___P((___device_tty *self,
-         ___BOOL current),
+         ___BOOL undo),
         (self,
-         current)
+         undo)
 ___device_tty *self;
-___BOOL current;)
+___BOOL undo;)
 {
   ___device_tty *d = self;
   ___SCMOBJ e = ___FIX(___NO_ERR);
@@ -330,7 +330,7 @@ ___BOOL current;)
 
 #endif
 
-    if (current)
+    if (!undo)
       {
         if (d->input_allow_special)
           {
@@ -550,7 +550,7 @@ ___BOOL current;)
     DWORD hin_mode = d->hin_initial_mode;
     DWORD hout_mode = d->hout_initial_mode;
 
-    if (current)
+    if (!undo)
       {
         if (d->input_allow_special)
           hin_mode |= (ENABLE_PROCESSED_INPUT);
@@ -605,8 +605,9 @@ ___BOOL remove;)
 
   while (curr != d)
     {
-      if ((e = ___device_tty_mode_update (curr, 0)) != ___FIX(___NO_ERR))
+      if ((e = ___device_tty_mode_update (curr, 1)) != ___FIX(___NO_ERR))
         break;
+      curr->stage = TTY_STAGE_MODE_NOT_SAVED;
       next = curr->mode_save_stack_next;
       curr->mode_save_stack_next = prev;
       prev = curr;
@@ -614,26 +615,35 @@ ___BOOL remove;)
     }
 
   if (e == ___FIX(___NO_ERR) &&
-      curr != NULL &&
-      (e = ___device_tty_mode_update (curr, !remove)) == ___FIX(___NO_ERR) &&
+      d == NULL &&
       remove)
     {
-      d->stage = TTY_STAGE_MODE_NOT_SAVED;
-      curr = curr->mode_save_stack_next; /* remove d from mode save stack */
+      ___tty_mod.mode_save_stack = NULL; /* save stack has been emptied */
     }
-
-  while (prev != NULL)
+  else
     {
-      ___SCMOBJ e2;
-      next = curr;
-      curr = prev;
-      prev = prev->mode_save_stack_next;
-      curr->mode_save_stack_next = next;
-      if ((e2 = ___device_tty_mode_get (curr)) != ___FIX(___NO_ERR) ||
-          (e2 = ___device_tty_mode_update (curr, 1)) != ___FIX(___NO_ERR))
+      if (e == ___FIX(___NO_ERR) &&
+          curr != NULL &&
+          (e = ___device_tty_mode_update (curr, remove)) == ___FIX(___NO_ERR))
         {
-          if (e == ___FIX(___NO_ERR))
-            e = e2;
+          curr->stage = TTY_STAGE_MODE_NOT_SAVED;
+          if (remove)
+            curr = curr->mode_save_stack_next; /* remove d from mode save stack */
+        }
+
+      while (prev != NULL)
+        {
+          ___SCMOBJ e2;
+          next = curr;
+          curr = prev;
+          prev = prev->mode_save_stack_next;
+          curr->mode_save_stack_next = next;
+          if ((e2 = ___device_tty_mode_get (curr)) != ___FIX(___NO_ERR) ||
+              (e2 = ___device_tty_mode_update (curr, 0)) != ___FIX(___NO_ERR))
+            {
+              if (e == ___FIX(___NO_ERR))
+                e = e2;
+            }
         }
     }
 
@@ -8504,22 +8514,9 @@ ___SCMOBJ speed;)
 }
 
 
-___SCMOBJ ___os_device_tty_mode_restore
-   ___P((___SCMOBJ dev,
-         ___SCMOBJ remove),
-        (dev,
-         remove)
-___SCMOBJ dev;
-___SCMOBJ remove;)
+___SCMOBJ ___os_device_tty_mode_reset ___PVOID
 {
-  ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
-  ___SCMOBJ e;
-
-  if ((e = ___device_tty_force_open (d)) == ___FIX(___NO_ERR))
-    e = ___device_tty_mode_restore (d, !___FALSEP(remove));
-
-  return e;
+  return ___device_tty_mode_restore (NULL, 1);
 }
 
 
@@ -8556,7 +8553,7 @@ void tty_signal_handler (int sig)
       }
 
     case SIGCONT:
-      ___device_tty_mode_restore (0, 0); /***************/
+      ___device_tty_mode_restore (NULL, 0); /***************/
       break;
     }
 }

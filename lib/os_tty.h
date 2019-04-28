@@ -1,6 +1,6 @@
 /* File: "os_tty.h" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -485,10 +485,7 @@ extern ___SCMOBJ ___os_device_tty_mode_set
          ___SCMOBJ speed),
         ());
 
-extern ___SCMOBJ ___os_device_tty_mode_restore
-   ___P((___SCMOBJ dev,
-         ___SCMOBJ restore),
-        ());
+extern ___SCMOBJ ___os_device_tty_mode_reset ___PVOID;
 
 
 /*---------------------------------------------------------------------------*/
