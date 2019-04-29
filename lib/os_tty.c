@@ -354,14 +354,12 @@ ___BOOL undo;)
                                      | ICRNL
                                      | INLCR
                                      | IGNCR
-                                     | ICRNL
                                      | IXON
                                      | IXOFF
 #ifdef IUCLC
                                      | IUCLC
 #endif
                                      );
-            new_termios.c_iflag &= ~(ICRNL);
             new_termios.c_lflag &= ~(ICANON | ECHO | ECHOCTL);
 
 #ifndef _POSIX_VDISABLE
@@ -607,7 +605,8 @@ ___BOOL remove;)
     {
       if ((e = ___device_tty_mode_update (curr, 1)) != ___FIX(___NO_ERR))
         break;
-      curr->stage = TTY_STAGE_MODE_NOT_SAVED;
+      if (d == NULL)
+        curr->stage = TTY_STAGE_MODE_NOT_SAVED;
       next = curr->mode_save_stack_next;
       curr->mode_save_stack_next = prev;
       prev = curr;
