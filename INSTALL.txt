@@ -209,10 +209,14 @@ The configure options which are specific to the Gambit system are:
   --enable-inline-jumps   generate inline code for jumps
   --enable-char-size=N    Scheme character size in bytes (N = 1, 2 or 4)
   --enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native
-                          Filesystem path encoding (default is ucs2 on Windows
+                          filesystem path encoding (default is ucs2 on Windows
                           and utf8 on other OSes)
   --enable-default-runtime-options=...
-                          Default runtime options (default is none)
+                          default runtime options (default is none)
+  --enable-module-search-order=...
+                          module search order (default is ~~lib,~~userlib)
+  --enable-module-whitelist=...
+                          module whitelist (default is github.com/gambit)
   --enable-ansi-c         link only with ANSI C libraries
   --enable-symlinks       use symbolic links for installed files not in the
                           central installation directory

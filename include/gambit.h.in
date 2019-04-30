@@ -9284,6 +9284,8 @@ typedef struct ___setup_params_struct
     int stdio_settings;
     ___UCS_2STRING gambitdir;
     ___UCS_2STRING *gambitdir_map;
+    ___UCS_2STRING *module_search_order;
+    ___UCS_2STRING *module_whitelist;
     ___UCS_2STRING remote_dbg_addr;
     ___UCS_2STRING rpc_server_addr;
     ___mod_or_lnk (*linker) ___P((___global_state),());

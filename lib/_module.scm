@@ -12,9 +12,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define ##module-search-order
-  '("~~userlib"
-    "~~lib"))
+(define ##module-search-order (##os-module-search-order))
 
 (define-prim (##module-search-order-set! x)
   (set! ##module-search-order x))

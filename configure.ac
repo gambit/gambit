@@ -536,6 +536,44 @@ fi
 
 ###############################################################################
 #
+# Determine module search order.
+
+AC_ARG_ENABLE(module-search-order,
+              AC_HELP_STRING([--enable-module-search-order=...],
+                             [Module search order (default is ~~lib,~~userlib)]),
+              ENABLE_MODULE_SEARCH_ORDER=$enableval,
+              ENABLE_MODULE_SEARCH_ORDER=[~~lib,~~userlib])
+
+DEFAULT_RUNTIME_OPTIONS=""
+
+if test "$ENABLE_MODULE_SEARCH_ORDER" != ""; then
+  MODULE_SEARCH_ORDER=`echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e "s/^/:/" -e "s/,/,:/g"`
+  if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+    DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
+  fi
+  DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS$MODULE_SEARCH_ORDER"
+fi
+
+###############################################################################
+#
+# Determine module whitelist.
+
+AC_ARG_ENABLE(module-whitelist,
+              AC_HELP_STRING([--enable-module-whitelist=...],
+                             [Module whitelist (default is github.com/gambit)]),
+              ENABLE_MODULE_WHITELIST=$enableval,
+              ENABLE_MODULE_WHITELIST=[github.com/gambit])
+
+if test "$ENABLE_MODULE_WHITELIST" != ""; then
+  MODULE_WHITELIST=`echo "$ENABLE_MODULE_WHITELIST" | sed -e "s/^/./" -e "s/,/,./g"`
+  if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+    DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
+  fi
+  DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS$MODULE_WHITELIST"
+fi
+
+###############################################################################
+#
 # Determine default runtime options.
 
 AC_ARG_ENABLE(default-runtime-options,
@@ -545,7 +583,14 @@ AC_ARG_ENABLE(default-runtime-options,
               ENABLE_DEFAULT_RUNTIME_OPTIONS=)
 
 if test "$ENABLE_DEFAULT_RUNTIME_OPTIONS" != ""; then
-  DEFAULT_RUNTIME_OPTIONS=`echo "$ENABLE_DEFAULT_RUNTIME_OPTIONS" | sed -e "s/\(.\)/'\1',/g" -e "s/''',/'\\\\\\\\'',/g" -e "s/'\\\\\\\\',/'\\\\\\\\\\\\\\\\',/g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
+  if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+    DEFAULT_RUNTIME_OPTIONS=",$DEFAULT_RUNTIME_OPTIONS"
+  fi
+  DEFAULT_RUNTIME_OPTIONS="$ENABLE_DEFAULT_RUNTIME_OPTIONS$DEFAULT_RUNTIME_OPTIONS"
+fi
+
+if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+  DEFAULT_RUNTIME_OPTIONS=`echo "$DEFAULT_RUNTIME_OPTIONS" | sed -e "s/\(.\)/'\1', /g" -e "s/''', /'\\\\\\\\'', /g" -e "s/'\\\\\\\\', /'\\\\\\\\\\\\\\\\', /g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
   AC_DEFINE_UNQUOTED([___DEFAULT_RUNTIME_OPTIONS],[$DEFAULT_RUNTIME_OPTIONS],[Select default runtime options])
 fi
 

@@ -4194,32 +4194,34 @@ ___EXP_FUNC(void,___setup_params_reset)
         (setup_params)
 ___setup_params_struct *setup_params;)
 {
-  setup_params->version           = 0;
-  setup_params->argv              = setup_params->reset_argv;
-  setup_params->min_heap          = 0;
-  setup_params->max_heap          = 0;
-  setup_params->live_percent      = 0;
+  setup_params->version             = 0;
+  setup_params->argv                = setup_params->reset_argv;
+  setup_params->min_heap            = 0;
+  setup_params->max_heap            = 0;
+  setup_params->live_percent        = 0;
 #ifdef ___SINGLE_THREADED_VMS
-  setup_params->parallelism_level = 1;
+  setup_params->parallelism_level   = 1;
 #else
-  setup_params->parallelism_level = 0;
+  setup_params->parallelism_level   = 0;
 #endif
-  setup_params->adjust_heap_hook  = 0;
-  setup_params->display_error     = 0;
-  setup_params->fatal_error       = 0;
-  setup_params->standard_level    = 0;
-  setup_params->debug_settings    = 0;
-  setup_params->file_settings     = 0;
-  setup_params->terminal_settings = 0;
-  setup_params->stdio_settings    = 0;
-  setup_params->gambitdir         = 0;
-  setup_params->gambitdir_map     = 0;
-  setup_params->remote_dbg_addr   = 0;
-  setup_params->rpc_server_addr   = 0;
-  setup_params->linker            = 0;
-  setup_params->reset_argv0[0]    = 0;
-  setup_params->reset_argv[0]     = setup_params->reset_argv0;
-  setup_params->reset_argv[1]     = 0;
+  setup_params->adjust_heap_hook    = 0;
+  setup_params->display_error       = 0;
+  setup_params->fatal_error         = 0;
+  setup_params->standard_level      = 0;
+  setup_params->debug_settings      = 0;
+  setup_params->file_settings       = 0;
+  setup_params->terminal_settings   = 0;
+  setup_params->stdio_settings      = 0;
+  setup_params->gambitdir           = 0;
+  setup_params->gambitdir_map       = 0;
+  setup_params->module_search_order = 0;
+  setup_params->module_whitelist    = 0;
+  setup_params->remote_dbg_addr     = 0;
+  setup_params->rpc_server_addr     = 0;
+  setup_params->linker              = 0;
+  setup_params->reset_argv0[0]      = 0;
+  setup_params->reset_argv[0]       = setup_params->reset_argv0;
+  setup_params->reset_argv[1]       = 0;
 }
 
 

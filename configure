@@ -915,7 +915,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -960,6 +959,8 @@ enable_gnu_gcc_specific_options
 enable_gnu_gcc_no_strict_aliasing
 enable_char_size
 enable_path_encoding
+enable_module_search_order
+enable_module_whitelist
 enable_default_runtime_options
 enable_shared
 enable_ansi_c
@@ -1045,7 +1046,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1298,15 +1298,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1444,7 +1435,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1597,7 +1588,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1681,6 +1671,10 @@ Optional Features:
   --enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native
                           Filesystem path encoding (default is ucs2 on Windows
                           and utf8 on other OSes)
+  --enable-module-search-order=...
+                          Module search order (default is ~~lib,~~userlib)
+  --enable-module-whitelist=...
+                          Module whitelist (default is github.com/gambit)
   --enable-default-runtime-options=...
                           Default runtime options (default is none)
   --enable-shared         build the Scheme runtime system as a shared library
@@ -5029,6 +5023,48 @@ fi
 
 ###############################################################################
 #
+# Determine module search order.
+
+# Check whether --enable-module-search-order was given.
+if test "${enable_module_search_order+set}" = set; then :
+  enableval=$enable_module_search_order; ENABLE_MODULE_SEARCH_ORDER=$enableval
+else
+  ENABLE_MODULE_SEARCH_ORDER=~~lib,~~userlib
+fi
+
+
+DEFAULT_RUNTIME_OPTIONS=""
+
+if test "$ENABLE_MODULE_SEARCH_ORDER" != ""; then
+  MODULE_SEARCH_ORDER=`echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e "s/^/:/" -e "s/,/,:/g"`
+  if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+    DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
+  fi
+  DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS$MODULE_SEARCH_ORDER"
+fi
+
+###############################################################################
+#
+# Determine module whitelist.
+
+# Check whether --enable-module-whitelist was given.
+if test "${enable_module_whitelist+set}" = set; then :
+  enableval=$enable_module_whitelist; ENABLE_MODULE_WHITELIST=$enableval
+else
+  ENABLE_MODULE_WHITELIST=github.com/gambit
+fi
+
+
+if test "$ENABLE_MODULE_WHITELIST" != ""; then
+  MODULE_WHITELIST=`echo "$ENABLE_MODULE_WHITELIST" | sed -e "s/^/./" -e "s/,/,./g"`
+  if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+    DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
+  fi
+  DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS$MODULE_WHITELIST"
+fi
+
+###############################################################################
+#
 # Determine default runtime options.
 
 # Check whether --enable-default-runtime-options was given.
@@ -5040,7 +5076,14 @@ fi
 
 
 if test "$ENABLE_DEFAULT_RUNTIME_OPTIONS" != ""; then
-  DEFAULT_RUNTIME_OPTIONS=`echo "$ENABLE_DEFAULT_RUNTIME_OPTIONS" | sed -e "s/\(.\)/'\1',/g" -e "s/''',/'\\\\\\\\'',/g" -e "s/'\\\\\\\\',/'\\\\\\\\\\\\\\\\',/g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
+  if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+    DEFAULT_RUNTIME_OPTIONS=",$DEFAULT_RUNTIME_OPTIONS"
+  fi
+  DEFAULT_RUNTIME_OPTIONS="$ENABLE_DEFAULT_RUNTIME_OPTIONS$DEFAULT_RUNTIME_OPTIONS"
+fi
+
+if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
+  DEFAULT_RUNTIME_OPTIONS=`echo "$DEFAULT_RUNTIME_OPTIONS" | sed -e "s/\(.\)/'\1', /g" -e "s/''', /'\\\\\\\\'', /g" -e "s/'\\\\\\\\', /'\\\\\\\\\\\\\\\\', /g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
 
 cat >>confdefs.h <<_ACEOF
 #define ___DEFAULT_RUNTIME_OPTIONS $DEFAULT_RUNTIME_OPTIONS

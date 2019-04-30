@@ -2028,7 +2028,7 @@ Enable line-editing (applies to terminals only).
 Disable line-editing (applies to terminals only).
 @end table
 
-@opindex -::
+@opindex -:,
 @cindex GAMBOPT, environment variable
 When a program's execution starts, the runtime system obtains the
 runtime options by processing in turn various sources of runtime options:
@@ -2038,7 +2038,7 @@ script, the first command line argument of the
 program.  Any runtime option can be overriden by a subsequent source
 of runtime options.  It is sometimes useful to prevent overriding
 the runtime options of the script line.  This can be achieved by
-starting the script line runtime options with @samp{-::}.  In
+starting the script line runtime options with @samp{-:,}.  In
 this case the environment variable @samp{GAMBOPT} is ignored,
 and the first command line argument of the program is
 not used for runtime options (it is treated like a normal

@@ -1,6 +1,6 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit system */
 
@@ -18,11 +18,12 @@
 
 
 ___HIDDEN ___UCS_2 gambopt_env_name[] =
-{ 'G', 'A', 'M', 'B', 'O', 'P', 'T', '\0' };
+{'G', 'A', 'M', 'B', 'O', 'P', 'T', '\0'};
 
 #ifdef ___DEFAULT_RUNTIME_OPTIONS
 ___HIDDEN ___UCS_2 default_runtime_options[] = ___DEFAULT_RUNTIME_OPTIONS;
 #endif
+
 
 ___HIDDEN ___SCMOBJ usage_err
    ___P((int debug_settings),
@@ -61,6 +62,10 @@ int debug_settings;)
         "  =DIRECTORY      override central Gambit installation directory\n"
         "  ~~DIR=DIRECTORY override Gambit installation directory ~~DIR (where DIR can\n"
         "                  be the special \"bin\" and \"lib\", or empty, or any identifier)\n"
+        "  :[DIRECTORY]    add directory to module search order (or reset it)\n"
+        "  .[SOURCE]       add source to module auto-install whitelist (or reset it)\n"
+        "  .+|-            when installing a module that is not on the whitelist,\n"
+        "                  ask interactively if module should be installed (on|off)\n"
         "  +ARGUMENT       add ARGUMENT to the command line before other arguments\n"
         "  f[OPT...]       set file options; see below for OPT\n"
         "  t[OPT...]       set terminal options; see below for OPT\n"
@@ -166,6 +171,25 @@ ___BOOL free_old;)
 }
 
 
+___HIDDEN void free_strvec
+   ___P((___UCS_2STRING **strvec,
+         int *len),
+        (strvec,
+         len)
+___UCS_2STRING **strvec;
+int *len;)
+{
+  while (*len > 0)
+    ___free_UCS_2STRING ((*strvec)[--*len]);
+
+  if (*strvec != 0)
+    {
+      ___FREE_MEM(*strvec);
+      *strvec = 0;
+    }
+}
+
+
 int ___main
    ___P((___mod_or_lnk (*linker)(___global_state)),
         (linker)
@@ -185,6 +209,10 @@ ___mod_or_lnk (*linker)();)
   ___UCS_2STRING gambitdir;
   ___UCS_2STRING *gambitdir_map;
   int gambitdir_map_len;
+  ___UCS_2STRING *module_search_order;
+  int module_search_order_len;
+  ___UCS_2STRING *module_whitelist;
+  int module_whitelist_len;
   ___UCS_2STRING gambopt;
   ___UCS_2STRING remote_dbg_addr;
   ___UCS_2STRING rpc_server_addr;
@@ -207,6 +235,10 @@ ___mod_or_lnk (*linker)();)
   gambitdir = 0;
   gambitdir_map = 0;
   gambitdir_map_len = 0;
+  module_search_order = 0;
+  module_search_order_len = 0;
+  module_whitelist = 0;
+  module_whitelist_len = 0;
   gambopt = 0;
   cmd_line_runtime_options = 0;
   remote_dbg_addr = 0;
@@ -237,7 +269,7 @@ ___mod_or_lnk (*linker)();)
    * - the script line
    * - the first command line argument if it is of the form -:XXX
    *
-   * When a source of runtime options starts with a colon it is the
+   * When a source of runtime options starts with a comma it is the
    * sole source of runtime options and the first command line
    * argument will not be processed specially, even if it is of the
    * form -:XXX).  Otherwise the runtime options are accumulated from
@@ -245,7 +277,7 @@ ___mod_or_lnk (*linker)();)
    */
 
 #ifdef ___DEFAULT_RUNTIME_OPTIONS
-  if (default_runtime_options[0] == ':')
+  if (default_runtime_options[0] == ',')
     {
       options_source_min = 0;
       options_source_max = 0;
@@ -258,7 +290,7 @@ ___mod_or_lnk (*linker)();)
         goto after_setup;
 
       if (gambopt != 0 &&
-          gambopt[0] == ':')
+          gambopt[0] == ',')
         {
           options_source_min = 1;
           options_source_max = 1;
@@ -286,7 +318,7 @@ ___mod_or_lnk (*linker)();)
             }
 
           if (script_line != 0 &&
-              script_line[0] == ':')
+              script_line[0] == ',')
             {
               options_source_min = 2;
               options_source_max = 2;
@@ -303,7 +335,7 @@ ___mod_or_lnk (*linker)();)
                   cmd_line_runtime_options += 2;
                   contract_argv = 1;
 
-                  if (cmd_line_runtime_options[0] == ':')
+                  if (cmd_line_runtime_options[0] == ',')
                     options_source_min = 3;
 
                   options_source_max = 3;
@@ -344,7 +376,7 @@ ___mod_or_lnk (*linker)();)
       if (arg == 0)
         continue;
 
-      if (arg[0] == ':')
+      if (arg[0] == ',')
         arg++;
 
       do
@@ -594,6 +626,74 @@ ___mod_or_lnk (*linker)();)
                 break;
               }
 
+            case ':':
+              {
+                ___UCS_2STRING dir;
+
+                if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
+                  {
+                    free_strvec (&module_search_order,
+                                 &module_search_order_len);
+                    if (*arg != ',') arg++;
+                  }
+                else
+                  {
+                    int pos = 0;
+
+                    if (!extend_strvec (&module_search_order, pos, 1, module_search_order != 0))
+                      {
+                        e = ___FIX(___HEAP_OVERFLOW_ERR);
+                        goto after_setup;
+                      }
+
+                    if ((dir = extract_string (&arg)) == 0)
+                      {
+                        e = ___FIX(___HEAP_OVERFLOW_ERR);
+                        goto after_setup;
+                      }
+
+                    module_search_order[pos] = dir;
+
+                    module_search_order_len++;
+                  }
+
+                break;
+              }
+
+            case '.':
+              {
+                ___UCS_2STRING src;
+
+                if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
+                  {
+                    free_strvec (&module_whitelist,
+                                 &module_whitelist_len);
+                    if (*arg != ',') arg++;
+                  }
+                else
+                  {
+                    int pos = module_whitelist_len;
+
+                    if (!extend_strvec (&module_whitelist, pos, 1, module_whitelist != 0))
+                      {
+                        e = ___FIX(___HEAP_OVERFLOW_ERR);
+                        goto after_setup;
+                      }
+
+                    if ((src = extract_string (&arg)) == 0)
+                      {
+                        e = ___FIX(___HEAP_OVERFLOW_ERR);
+                        goto after_setup;
+                      }
+
+                    module_whitelist[pos] = src;
+
+                    module_whitelist_len++;
+                  }
+
+                break;
+              }
+
             case '+':
               {
                 ___UCS_2STRING extra_arg;
@@ -780,22 +880,24 @@ ___mod_or_lnk (*linker)();)
 
   ___setup_params_reset (&setup_params);
 
-  setup_params.version           = ___VERSION;
-  setup_params.argv              = current_argv;
-  setup_params.min_heap          = min_heap_len;
-  setup_params.max_heap          = max_heap_len;
-  setup_params.live_percent      = live_percent;
-  setup_params.parallelism_level = parallelism_level;
-  setup_params.standard_level    = standard_level;
-  setup_params.debug_settings    = debug_settings;
-  setup_params.file_settings     = file_settings;
-  setup_params.terminal_settings = terminal_settings;
-  setup_params.stdio_settings    = stdio_settings;
-  setup_params.gambitdir         = gambitdir;
-  setup_params.gambitdir_map     = gambitdir_map;
-  setup_params.remote_dbg_addr   = remote_dbg_addr;
-  setup_params.rpc_server_addr   = rpc_server_addr;
-  setup_params.linker            = linker;
+  setup_params.version             = ___VERSION;
+  setup_params.argv                = current_argv;
+  setup_params.min_heap            = min_heap_len;
+  setup_params.max_heap            = max_heap_len;
+  setup_params.live_percent        = live_percent;
+  setup_params.parallelism_level   = parallelism_level;
+  setup_params.standard_level      = standard_level;
+  setup_params.debug_settings      = debug_settings;
+  setup_params.file_settings       = file_settings;
+  setup_params.terminal_settings   = terminal_settings;
+  setup_params.stdio_settings      = stdio_settings;
+  setup_params.gambitdir           = gambitdir;
+  setup_params.gambitdir_map       = gambitdir_map;
+  setup_params.module_search_order = module_search_order;
+  setup_params.module_whitelist    = module_whitelist;
+  setup_params.remote_dbg_addr     = remote_dbg_addr;
+  setup_params.rpc_server_addr     = rpc_server_addr;
+  setup_params.linker              = linker;
 
   e = ___setup (&setup_params);
 
@@ -807,11 +909,12 @@ ___mod_or_lnk (*linker)();)
   if (current_argv != argv)
     ___FREE_MEM(current_argv);
 
-  while (gambitdir_map_len > 0)
-    ___free_UCS_2STRING (gambitdir_map[--gambitdir_map_len]);
-
-  if (gambitdir_map != 0)
-    ___FREE_MEM(gambitdir_map);
+  free_strvec (&gambitdir_map,
+               &gambitdir_map_len);
+  free_strvec (&module_search_order,
+               &module_search_order_len);
+  free_strvec (&module_whitelist,
+               &module_whitelist_len);
 
   ___free_UCS_2STRING (gambitdir);
   ___free_UCS_2STRING (gambopt);

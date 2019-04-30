@@ -4340,6 +4340,16 @@ end-of-code
             scheme-object
    "___os_executable_path"))
 
+(define-prim ##os-module-search-order
+  (c-lambda ()
+            scheme-object
+   "___os_module_search_order"))
+
+(define-prim ##os-module-whitelist
+  (c-lambda ()
+            scheme-object
+   "___os_module_whitelist"))
+
 (define-prim ##remote-dbg-addr
   (c-lambda ()
             UCS-2-string

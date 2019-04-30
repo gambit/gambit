@@ -277,6 +277,10 @@ extern ___SCMOBJ ___os_path_normalize_directory
 
 extern ___SCMOBJ ___os_executable_path ___PVOID;
 
+extern ___SCMOBJ ___os_module_search_order ___PVOID;
+
+extern ___SCMOBJ ___os_module_whitelist ___PVOID;
+
 
 /*---------------------------------------------------------------------------*/
 
