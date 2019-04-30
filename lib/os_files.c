@@ -1705,6 +1705,12 @@ ___SCMOBJ ___os_module_whitelist ___PVOID
 }
 
 
+___SCMOBJ ___os_module_install_mode ___PVOID
+{
+  return ___FIX(___GSTATE->setup_params.module_install_mode);
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 /* File system operations. */

@@ -276,6 +276,13 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; Module install mode.
+
+(##define-macro (macro-module-install-off) 0)
+(##define-macro (macro-module-install-ask) 1)
+
+;;;----------------------------------------------------------------------------
+
 ;;; Terminal settings.
 
 (##define-macro (macro-terminal-settings-encoding-mask)    15)

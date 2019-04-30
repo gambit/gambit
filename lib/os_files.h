@@ -281,6 +281,8 @@ extern ___SCMOBJ ___os_module_search_order ___PVOID;
 
 extern ___SCMOBJ ___os_module_whitelist ___PVOID;
 
+extern ___SCMOBJ ___os_module_install_mode ___PVOID;
+
 
 /*---------------------------------------------------------------------------*/
 

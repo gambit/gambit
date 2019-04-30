@@ -213,6 +213,7 @@ ___mod_or_lnk (*linker)();)
   int module_search_order_len;
   ___UCS_2STRING *module_whitelist;
   int module_whitelist_len;
+  int module_install_mode;
   ___UCS_2STRING gambopt;
   ___UCS_2STRING remote_dbg_addr;
   ___UCS_2STRING rpc_server_addr;
@@ -239,6 +240,7 @@ ___mod_or_lnk (*linker)();)
   module_search_order_len = 0;
   module_whitelist = 0;
   module_whitelist_len = 0;
+  module_install_mode = ___MODULE_INSTALL_MODE_INITIAL;
   gambopt = 0;
   cmd_line_runtime_options = 0;
   remote_dbg_addr = 0;
@@ -670,6 +672,15 @@ ___mod_or_lnk (*linker)();)
                                  &module_whitelist_len);
                     if (*arg != ',') arg++;
                   }
+                else if ((*arg == '+' || *arg == '-') &&
+                         (arg[1] == '\0' || (arg[1] == ',' && arg[2] != ',')))
+                  {
+                    if (*arg == '+')
+                      module_install_mode = ___MODULE_INSTALL_MODE_ASK;
+                    else
+                      module_install_mode = ___MODULE_INSTALL_MODE_OFF;
+                    arg += 2;
+                  }
                 else
                   {
                     int pos = module_whitelist_len;
@@ -895,6 +906,7 @@ ___mod_or_lnk (*linker)();)
   setup_params.gambitdir_map       = gambitdir_map;
   setup_params.module_search_order = module_search_order;
   setup_params.module_whitelist    = module_whitelist;
+  setup_params.module_install_mode = module_install_mode;
   setup_params.remote_dbg_addr     = remote_dbg_addr;
   setup_params.rpc_server_addr     = rpc_server_addr;
   setup_params.linker              = linker;

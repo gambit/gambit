@@ -4350,6 +4350,11 @@ end-of-code
             scheme-object
    "___os_module_whitelist"))
 
+(define-prim ##os-module-install-mode
+  (c-lambda ()
+            scheme-object
+   "___os_module_install_mode"))
+
 (define-prim ##remote-dbg-addr
   (c-lambda ()
             UCS-2-string

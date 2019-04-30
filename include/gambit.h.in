@@ -9286,6 +9286,7 @@ typedef struct ___setup_params_struct
     ___UCS_2STRING *gambitdir_map;
     ___UCS_2STRING *module_search_order;
     ___UCS_2STRING *module_whitelist;
+    int module_install_mode;
     ___UCS_2STRING remote_dbg_addr;
     ___UCS_2STRING rpc_server_addr;
     ___mod_or_lnk (*linker) ___P((___global_state),());
@@ -9358,6 +9359,10 @@ typedef struct ___setup_params_struct
   << ___DEBUG_SETTINGS_REPL_SHIFT) | \
  (___DEBUG_SETTINGS_USER_INTR_REPL \
   << ___DEBUG_SETTINGS_USER_INTR_SHIFT))
+
+#define ___MODULE_INSTALL_MODE_INITIAL ___MODULE_INSTALL_MODE_OFF
+#define ___MODULE_INSTALL_MODE_OFF     0
+#define ___MODULE_INSTALL_MODE_ASK     1
 
 /* Global state structure */
 
