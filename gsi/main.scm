@@ -74,6 +74,11 @@
                          (warn-missing-argument-for-option option-name)
                          (loop rest
                                #t))))
+                    ((##assq option-name ##gsi-option-handlers)
+                     =>
+                     (lambda (x)
+                       ((##cdr x) rest)
+                       (##exit)))
                     (else
                      (warn-unknown-option option-name)
                      (loop rest
@@ -606,49 +611,53 @@
            cont)
     (let loop1 ((args arguments)
                 (rev-options '()))
+
+      (define (add-option key-val)
+        (##cons key-val rev-options))
+
       (if (and (##pair? args)
                (option? (##car args)))
 
-        (let* ((opt-sym (convert-option (##car args)))
-               (rest (##cdr args))
-               (x (##assq opt-sym allowed-options)))
-          (if x
-              (cond ((##not (##pair? (##cdr x)))
-                     (loop1 rest
-                            (##cons (##cons opt-sym
-                                            '())
-                                    rev-options)))
-                    ((##not (##pair? rest))
-                     (if warn?
-                         (warn-missing-argument-for-option opt-sym))
-                     (loop1 rest rev-options))
-                    (else
-                     (let ((opt-val (##car rest)))
-                       (case (##cadr x)
-                         ((symbol)
-                          (let ((val (##string->symbol opt-val)))
-                            (loop1 (##cdr rest)
-                                   (##cons (##list opt-sym val)
-                                           rev-options))))
-                         ((fixnum)
-                          (let ((val (##string->number opt-val)))
-                            (if (##fixnum? val)
-                                (loop1 (##cdr rest)
-                                       (##cons (##list opt-sym val)
-                                               rev-options))
-                                (begin
-                                  (if warn?
-                                      (warn-fixnum-argument-expected-for-option opt-sym))
+          (let* ((opt-sym (convert-option (##car args)))
+                 (rest (##cdr args))
+                 (x (##assq opt-sym allowed-options)))
+            (if x
+                (cond ((##not (##cdr x))
+                       (cont (##reverse (add-option (##list opt-sym)))
+                             (##cdr args)))
+                      ((##not (##pair? (##cdr x)))
+                       (loop1 rest
+                              (add-option (##cons opt-sym '()))))
+                      ((##not (##pair? rest))
+                       (if warn?
+                           (warn-missing-argument-for-option opt-sym))
+                       (loop1 rest
+                              rev-options))
+                      (else
+                       (let ((opt-val (##car rest)))
+                         (case (##cadr x)
+                           ((symbol)
+                            (let ((val (##string->symbol opt-val)))
+                              (loop1 (##cdr rest)
+                                     (add-option (##list opt-sym val)))))
+                           ((fixnum)
+                            (let ((val (##string->number opt-val)))
+                              (if (##fixnum? val)
                                   (loop1 (##cdr rest)
-                                         rev-options)))))
-                         (else
-                          (loop1 (##cdr rest)
-                                 (##cons (##list opt-sym
-                                                 opt-val)
-                                         rev-options)))))))
-              (cont (##reverse rev-options) args)))
+                                         (add-option (##list opt-sym val)))
+                                  (begin
+                                    (if warn?
+                                        (warn-fixnum-argument-expected-for-option opt-sym))
+                                    (loop1 (##cdr rest)
+                                           rev-options)))))
+                           (else
+                            (loop1 (##cdr rest)
+                                   (add-option (##list opt-sym opt-val))))))))
+                (cont (##reverse rev-options)
+                      args)))
 
-        (cont (##reverse rev-options) args))))
+          (cont (##reverse rev-options)
+                args))))
 
   (##load-support-libraries)
 
@@ -755,6 +764,11 @@
                                 known-options
                                 arguments
                                 target)))))))))))))))
+
+;;(define ##gsi-option-handlers '()) ;; OK to be undefined
+
+(define (##gsi-option-handlers-set! x)
+  (set! ##gsi-option-handlers x))
 
 (##main-set! ##main-gsi/gsc)
 
