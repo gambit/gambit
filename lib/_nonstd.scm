@@ -2806,7 +2806,11 @@
 
 ;;; Filesystem operations.
 
-(define-prim (##create-directory-or-fifo prim path-or-settings)
+(define-prim (##create-directory-or-fifo
+              prim
+              path-or-settings
+              #!optional
+              (raise-os-exception? #t))
 
   (define (fail)
     (##fail-check-string-or-settings 1 prim path-or-settings))
@@ -2838,7 +2842,9 @@
                        (##os-create-directory resolved-path permissions)
                        (##os-create-fifo resolved-path permissions))))
              (if (##fx< code 0)
-                 (##raise-os-exception #f code prim path-or-settings)
+                 (if raise-os-exception?
+                     (##raise-os-exception #f code prim path-or-settings)
+                     code)
                  (##void))))))))
 
 (define-prim (##create-directory path-or-settings)
@@ -2855,7 +2861,11 @@
   (macro-force-vars (path-or-settings)
     (##create-fifo path-or-settings)))
 
-(define-prim (##create-link old-path new-path)
+(define-prim (##create-link
+              old-path
+              new-path
+              #!optional
+              (raise-os-exception? #t))
   (let* ((resolved-old-path
           (##path-resolve old-path))
          (resolved-new-path
@@ -2863,7 +2873,9 @@
          (code
           (##os-create-link resolved-old-path resolved-new-path)))
     (if (##fx< code 0)
-        (##raise-os-exception #f code create-link old-path new-path)
+        (if raise-os-exception?
+            (##raise-os-exception #f code create-link old-path new-path)
+            code)
         (##void))))
 
 (define-prim (create-link old-path new-path)
@@ -2872,7 +2884,11 @@
       (macro-check-string new-path 2 (create-link old-path new-path)
         (##create-link old-path new-path)))))
 
-(define-prim (##create-symbolic-link old-path new-path)
+(define-prim (##create-symbolic-link
+              old-path
+              new-path
+              #!optional
+              (raise-os-exception? #t))
   (let* ((resolved-old-path
           (##path-resolve old-path))
          (resolved-new-path
@@ -2880,7 +2896,9 @@
          (code
           (##os-create-symbolic-link resolved-old-path resolved-new-path)))
     (if (##fx< code 0)
-        (##raise-os-exception #f code create-symbolic-link old-path new-path)
+        (if raise-os-exception?
+            (##raise-os-exception #f code create-symbolic-link old-path new-path)
+            code)
         (##void))))
 
 (define-prim (create-symbolic-link old-path new-path)
@@ -2889,17 +2907,22 @@
       (macro-check-string new-path 2 (create-symbolic-link old-path new-path)
         (##create-symbolic-link old-path new-path)))))
 
-(define-prim (##delete-directory path)
+(define-prim (##delete-directory
+              path
+              #!optional
+              (raise-os-exception? #t))
   (let* ((resolved-path
           (##path-resolve path))
          (code
           (##os-delete-directory resolved-path)))
     (if (##fx< code 0)
-        (##raise-os-exception
-         #f
-         code
-         delete-directory
-         path)
+        (if raise-os-exception?
+            (##raise-os-exception
+             #f
+             code
+             delete-directory
+             path)
+            code)
         (##void))))
 
 (define-prim (delete-directory path)
@@ -2907,7 +2930,11 @@
     (macro-check-string path 1 (delete-directory path)
       (##delete-directory path))))
 
-(define-prim (##rename-file old-path new-path)
+(define-prim (##rename-file
+              old-path
+              new-path
+              #!optional
+              (raise-os-exception? #t))
   (let* ((resolved-old-path
           (##path-resolve old-path))
          (resolved-new-path
@@ -2917,12 +2944,14 @@
            resolved-old-path
            resolved-new-path)))
     (if (##fx< code 0)
-        (##raise-os-exception
-         #f
-         code
-         rename-file
-         old-path
-         new-path)
+        (if raise-os-exception?
+            (##raise-os-exception
+             #f
+             code
+             rename-file
+             old-path
+             new-path)
+            code)
         (##void))))
 
 (define-prim (rename-file old-path new-path)
@@ -2931,7 +2960,11 @@
       (macro-check-string new-path 2 (rename-file old-path new-path)
         (##rename-file old-path new-path)))))
 
-(define-prim (##copy-file old-path new-path)
+(define-prim (##copy-file
+              old-path
+              new-path
+              #!optional
+              (raise-os-exception? #t))
   (let* ((resolved-old-path
           (##path-resolve old-path))
          (resolved-new-path
@@ -2941,12 +2974,14 @@
            resolved-old-path
            resolved-new-path)))
     (if (##fx< code 0)
-        (##raise-os-exception
-         #f
-         code
-         copy-file
-         old-path
-         new-path)
+        (if raise-os-exception?
+            (##raise-os-exception
+             #f
+             code
+             copy-file
+             old-path
+             new-path)
+            code)
         (##void))))
 
 (define-prim (copy-file old-path new-path)
@@ -2955,17 +2990,22 @@
       (macro-check-string new-path 2 (copy-file old-path new-path)
         (##copy-file old-path new-path)))))
 
-(define-prim (##delete-file path)
+(define-prim (##delete-file
+              path
+              #!optional
+              (raise-os-exception? #t))
   (let* ((resolved-path
           (##path-resolve path))
          (code
           (##os-delete-file resolved-path)))
     (if (##fx< code 0)
-        (##raise-os-exception
-         #f
-         code
-         delete-file
-         path)
+        (if raise-os-exception?
+            (##raise-os-exception
+             #f
+             code
+             delete-file
+             path)
+            code)
         (##void))))
 
 (define-prim (delete-file path)
