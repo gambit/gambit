@@ -1,6 +1,6 @@
 /* File: "os_base.h" */
 
-/* Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_BASE_H
 #define ___OS_BASE_H
@@ -236,6 +236,7 @@ ___err_code_from_errno()
 
 #define ___ERR_CODE_EAGAIN ___FIX(___ERRNO_ERR(EAGAIN))
 #define ___ERR_CODE_ENOENT ___FIX(___ERRNO_ERR(ENOENT))
+#define ___ERR_CODE_EEXIST ___FIX(___ERRNO_ERR(EEXIST))
 
 #endif
 
@@ -308,6 +309,9 @@ ___err_code_from_GetLastError()
 
 #define ___ERR_CODE_ERROR_FILE_NOT_FOUND \
 ___FIX(___WIN32_ERR(ERROR_FILE_NOT_FOUND))
+
+#define ___ERR_CODE_ERROR_ALREADY_EXISTS \
+___FIX(___WIN32_ERR(ERROR_ALREADY_EXISTS))
 
 #endif
 

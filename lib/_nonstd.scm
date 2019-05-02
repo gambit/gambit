@@ -2806,6 +2806,52 @@
 
 ;;; Filesystem operations.
 
+(define-prim (##create-temporary-directory
+              path-or-settings
+              #!optional
+              (raise-os-exception? #t))
+
+  (define (fail)
+    (##fail-check-string-or-settings 1 create-temporary-directory path-or-settings))
+
+  (##make-psettings
+   (macro-direction-inout)
+   '(path:
+     permissions:)
+   (cond ((##string? path-or-settings)
+          (##list 'path: path-or-settings))
+         (else
+          path-or-settings))
+   fail
+   (lambda (psettings)
+     (let ((path
+            (macro-psettings-path psettings)))
+       (if (##not (##string? path))
+           (fail)
+           (let ((pid (##os-getpid))
+                 (permissions (##psettings->permissions psettings #o777)))
+             (let loop ((i 0))
+               (let* ((resolved-path
+                       (##path-resolve
+                        (##string-append path
+                                         (##number->string pid)
+                                         (if (##fx= i 0)
+                                             ""
+                                             (##number->string i)))))
+                      (code
+                       (##os-create-directory resolved-path permissions)))
+                 (if (##fx< code 0)
+                     (if (##fx= code ##err-code-EEXIST)
+                         (loop (##fx- i 1))
+                         (if raise-os-exception?
+                             (##raise-os-exception #f code create-temporary-directory path-or-settings)
+                             code))
+                     resolved-path)))))))))
+
+(define-prim (create-temporary-directory path-or-settings)
+  (macro-force-vars (path-or-settings)
+    (##create-temporary-directory path-or-settings)))
+
 (define-prim (##create-directory-or-fifo
               prim
               path-or-settings
@@ -3555,31 +3601,31 @@
 ;;
 ;; (define-runtime-macro (six.label identifier stat)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.goto expr)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.switch expr stat)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.case expr stat)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.break)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.continue)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.return . expr)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.clause expr)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.x:-y x y)
 ;;   `(void))
-;; 
+;;
 ;; (define-runtime-macro (six.!)
 ;;   `(void))
 

@@ -142,6 +142,7 @@ create-directory
 create-fifo
 create-link
 create-symbolic-link
+create-temporary-directory
 current-directory
 current-error-port
 current-exception-handler

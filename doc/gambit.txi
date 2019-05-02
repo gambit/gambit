@@ -9871,10 +9871,16 @@ For example under UNIX:
 @section Filesystem operations
 
 @deffn procedure create-directory @var{path-or-settings}
+@deffnx procedure create-temporary-directory @var{path-or-settings}
 
-This procedure creates a directory.  The argument
+These procedures create directories.  The argument
 @var{path-or-settings} is either a string denoting a filesystem path
 or a list of port settings which must contain a @code{path:} setting.
+The procedure @code{create-directory} returns an unspecified value.
+In the case of @code{create-temporary-directory} the path is
+used as a prefix to generate new directory paths until the path of a
+directory not currently existing is generated and that path
+is returned.
 Here are the settings allowed:
 
 @itemize
@@ -9898,6 +9904,8 @@ For example:
 
 @smallexample
 > @b{(create-directory "newdir")}
+> @b{(create-temporary-directory "/tmp/foo.")}
+"/tmp/foo.85812"
 > @b{(create-directory "newdir")}
 *** ERROR IN (console)@@2.1 -- File exists
 (create-directory "newdir")

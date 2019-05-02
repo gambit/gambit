@@ -4090,6 +4090,9 @@ end-of-code
 (define ##err-code-EINTR
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EINTR));"))
 
+(define ##err-code-EEXIST
+  (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EEXIST));"))
+
 (define ##err-code-unimplemented
   (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
 

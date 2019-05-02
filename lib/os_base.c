@@ -1222,6 +1222,9 @@ ___SCMOBJ ___err_code_from_GetLastError ___PVOID
   if (e == ERROR_FILE_NOT_FOUND || e == ERROR_PATH_NOT_FOUND)
     return ___ERR_CODE_ENOENT;
 
+  if (e == ERROR_ALREADY_EXISTS)
+    return ___ERR_CODE_EEXIST;
+
   return ___FIX(___WIN32_ERR(e));
 }
 
