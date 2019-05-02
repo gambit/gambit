@@ -509,7 +509,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-runtime-syntax ##include*
+(define-runtime-syntax ##import
   (lambda (src)
     (##deconstruct-call
      src
