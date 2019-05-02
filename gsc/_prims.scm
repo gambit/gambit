@@ -589,7 +589,7 @@
 ("##acos"                               (1)   #f 0     0    number  extended)
 ("##atan"                               (1)   #f 0     0    number  extended)  ;; ##atan takes only one argument
 ("##expt"                               (2)   #f 0     0    number  extended)
-("s##qrt"                               (1)   #f 0     0    number  extended)
+("##sqrt"                               (1)   #f 0     0    number  extended)
 
 ("##fxmax"                       1     #f ()    0    fixnum  extended)
 ("##fxmin"                       1     #f ()    0    fixnum  extended)
