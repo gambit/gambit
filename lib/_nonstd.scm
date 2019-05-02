@@ -2841,13 +2841,19 @@
                  (##raise-os-exception #f code prim path-or-settings)
                  (##void))))))))
 
+(define-prim (##create-directory path-or-settings)
+  (##create-directory-or-fifo create-directory path-or-settings))
+
 (define-prim (create-directory path-or-settings)
   (macro-force-vars (path-or-settings)
-    (##create-directory-or-fifo create-directory path-or-settings)))
+    (##create-directory path-or-settings)))
+
+(define-prim (##create-fifo path-or-settings)
+  (##create-directory-or-fifo create-fifo path-or-settings))
 
 (define-prim (create-fifo path-or-settings)
   (macro-force-vars (path-or-settings)
-    (##create-directory-or-fifo create-fifo path-or-settings)))
+    (##create-fifo path-or-settings)))
 
 (define-prim (##create-link old-path new-path)
   (let* ((resolved-old-path
