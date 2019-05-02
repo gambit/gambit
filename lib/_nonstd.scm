@@ -2157,7 +2157,7 @@
              (macro-time-point a-time)
              (macro-time-point m-time))))
       (if (##fx< code 0)
-          (##raise-os-exception #f code file-last-access-and-modification-times-set! a-absrel-timeout m-absrel-timeout)
+          (##raise-os-exception #f code file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
           (##void))))
 
   (macro-force-vars (path a-absrel-timeout m-absrel-timeout)
