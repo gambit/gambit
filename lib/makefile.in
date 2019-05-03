@@ -4,7 +4,7 @@
 
 herefromroot = lib
 rootfromhere = ..
-SUBDIRS = @RTLIBSUBSYS@
+SUBDIRS = @RTLIBSUBSYS@ gambit
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@

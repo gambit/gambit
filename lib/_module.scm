@@ -529,17 +529,21 @@
                     src
                     (##desourcify arg-src))
                    (let ((path
-                          (##path-expand (##string-append
-                                          (##vector-ref mod-info 1)
-                                          "#"
-                                          (##car (##vector-ref mod-info 2)))
-                                         (##vector-ref mod-info 0)))
+                          (##path-normalize
+                           (##path-expand (##string-append
+                                           (##vector-ref mod-info 1)
+                                           "#"
+                                           (##car (##vector-ref mod-info 2)))
+                                          (##vector-ref mod-info 0))
+                           #f))
                          (port
                           (##vector-ref mod-info 4)))
                      (if port
                          (##close-port port))
-                     (if (##file-exists? path)
-                         `(##include ,path)
-                         `(##begin)))))))))))
+                     `(##begin
+                       ,@(if (##file-exists? path)
+                             `((##include ,path))
+                             `())
+                       (##demand-module ,arg-src)))))))))))
 
 ;;;============================================================================

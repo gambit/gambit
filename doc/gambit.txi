@@ -105,7 +105,7 @@ This manual documents Gambit.  It covers release @value{VERSION}.
 * Runtime options::                 Runtime options
 * Debugging::                       Debugging
 * Scheme extensions::               Scheme extensions
-* Namespaces::                      Namespaces
+* Modules::                         Modules
 * Characters and strings::          Characters and strings
 * Numbers::                         Numbers
 * Homogeneous vectors::             Homogeneous vectors
@@ -256,7 +256,7 @@ automatically.
 * Runtime options::                 Runtime options
 * Debugging::                       Debugging
 * Scheme extensions::               Scheme extensions
-* Namespaces::                      Namespaces
+* Modules::                         Modules
 * Characters and strings::          Characters and strings
 * Numbers::                         Numbers
 * Homogeneous vectors::             Homogeneous vectors
@@ -3138,7 +3138,7 @@ Here is what a typical @samp{.emacs} file will look like:
 The implementation and documentation for GUIDE, the Gambit Universal
 IDE, are not yet complete.
 
-@node Scheme extensions, Namespaces, Debugging, Top
+@node Scheme extensions, Modules, Debugging, Top
 @chapter Scheme extensions
 
 @menu
@@ -4616,12 +4616,223 @@ For example:
 @deffnx {special form} six.~x @var{x}
 @end deffn
 
-@node Namespaces, Characters and strings, Scheme extensions, Top
-@chapter Namespaces
+@node Modules, Characters and strings, Scheme extensions, Top
+@chapter Modules
 
-TO DO!
+@menu
+* Basic Modules:: Basic Modules
+* R7RS modules::  R7RS modules
+@end menu
 
-@node Characters and strings, Numbers, Namespaces, Top
+@node Basic Modules, R7RS Modules, Modules, Modules
+@section Basic Modules
+
+@menu
+* load procedure and include form::   load procedure and include form
+* ##demand-module form::              ##demand-module form
+* ##namespace and ##import forms::    ##namespace and ##import forms
+@end menu
+
+In this section various basic modularization approaches and constructs
+offered by Gambit are compared.
+
+@node load procedure and include form, ##demand-module form, Basic Modules, Basic Modules
+@subsection @code{load} procedure and @code{include} form
+
+The @code{load} procedure and the @code{include} form can be used to
+modularize code in a basic way.  Essentially, the code that implements
+the module's functionality is put in a source code file and this
+module is accessed by other code by using a @code{load} or
+@code{include} of that file.  Here is an example of an @code{angle0}
+module that is used by an @code{angle0-app} main program:
+
+@smallexample
+;;;---------------------------------------- file: @b{angle0/angle0.scm}
+(define factor (/ (atan 1) 45))
+(define (deg->rad x) (* x factor))
+(define (rad->deg x) (/ x factor))
+
+;;;---------------------------------------- file: @b{angle0-app.scm}
+(load "angle0/angle0.scm")   ;; or (include "angle0/angle0.scm")
+(println "90 degrees is " (deg->rad 90) " radians")
+
+;; run with:  gsi angle0-app.scm
+@end smallexample
+
+This modularization approach, which was the Scheme way up to R5RS, has
+a number of issues:
+
+@itemize @bullet{}
+
+@item
+It requires knowing where in the filesystem the module is installed,
+which hinders code sharing among different programs and users.
+
+@item
+When a module is needed by more than one other module there will be
+code duplication, redundant evaluation/compilation, and probably
+incorrect execution if the module has side effects that should only
+happen once (displaying a message, opening a database on the
+filesystem, initializing the module's state, etc).
+
+@item
+All the definitions of a module will be put in the global environment
+(including macro definitions when using @code{include} but not when
+using @code{load}).  This pollutes the global environment with
+definitions that were not intended to be exported by the module's
+designer, such as the variable @code{factor} in the above example that
+is only meant to be used by the @code{deg->rad} and @code{rad->deg}
+procedures.  Other modules may also need a @code{factor} variable
+internally, for instance to convert distances from the metric to the
+english system. Nothing prevents such accidental clashes.
+
+@end itemize
+
+@node ##demand-module form, ##namespace and ##import forms, load procedure and include form, Basic Modules
+@subsection @code{##demand-module} form
+
+The @code{##demand-module} form offers a way to avoid the issues of
+multiple loading and filesystem localization of modules.  The sole
+parameter of this form is an (unevaluated) symbol that identifies the
+module on which the module containing the @code{##demand-module}
+depends.  When a module @code{A} contains a @code{(##demand-module
+B)}, Gambit's runtime system will ensure that module @code{B} is
+loaded before module @code{A} is loaded.  It also registers the module
+in a cache when it is loaded so that it is loaded exactly once.  In
+other words the @code{##demand-module} form expresses the requirement
+that the current module needs the functionality of another module.  A
+module can contain multiple uses of @code{##demand-module} and
+possibly more than once for a given module.  The
+@code{##demand-module} form can appear anywhere a @code{define} can
+appear.
+
+Gambit's runtime system searches for modules in various directories,
+by default in @code{~~lib} then in @code{~~userlib} (which maps to
+@code{~/.gambit_userlib} by default).  These two directories are where
+builtin modules and user installed modules are located respectively.
+The source code for a module @code{@b{M}} is searched, in each of the
+@dfn{module search order} directories, first in
+@code{@b{M/M}@var{.ext}} and then in @code{@b{M}@var{.ext}}, where
+@var{.ext} is one of the acceptable Scheme source code file extensions
+(@code{.scm}, @code{.six}, etc).  The list of module search order
+directories can be extended with the @code{-::} runtime option.
+
+With @code{##demand-module} the previous example can be rewritten
+like this:
+
+@smallexample
+;;;---------------------------------------- file: @b{angle1/angle1.scm}
+(define factor (/ (atan 1) 45))
+(define (deg->rad x) (* x factor))
+(define (rad->deg x) (/ x factor))
+
+;;;---------------------------------------- file: @b{angle1-app.scm}
+(##demand-module angle1)
+(println "90 degrees is " (deg->rad 90) " radians")
+
+;; run with:  gsi -::. angle1-app.scm
+;;
+;; or put angle1/angle1.scm in ~/.gambit_userlib to avoid the -::.
+@end smallexample
+
+@node ##namespace and ##import forms, , ##demand-module form, Basic Modules
+@subsection @code{##namespace} and @code{##import} forms
+
+The @code{##namespace} form offers a way to avoid name clashes by
+specifying a mapping between identifiers.  The mapping it specifies
+has the same scope as a macro definition: it applies to the rest of a
+source code file if it is at top level, or applies to the rest of the
+body of a binding form if it is used in the body of a binding form.
+The call @code{(##namespace ("foo#" a b))} specifies that a reference
+to @code{a} becomes @code{foo#a} and a reference to @code{b} becomes
+@code{foo#b}.  Here @code{foo#} is the namespace.  Finer control over
+the mapping is possible by using aliases as in @code{(##namespace
+("foo#" (a bar) b))} which maps @code{a} to @code{foo#bar} and
+@code{b} to @code{foo#b}.  Multiple namespace specifications can
+appear in the body of the @code{##namespace} form.  When no
+identifiers are specified, the mapping maps all identifiers not
+containing @code{#} to the namespace.  For example in the scope of
+@code{(##namespace ("foo#"))} the reference @code{x} maps to
+@code{foo#x} and the reference @code{bar#x} remains unchanged.
+
+Given that modules are identified by a unique symbol, the global names
+defined by a module @code{M} can be put in the namespace @code{M#} to
+avoid name clashes with other modules.  The source code of module
+@code{M} and the modules depending on @code{M} can explicitly prefix
+the global names defined by @code{M} with @code{M#} or use a
+@code{##namespace} form make this prefixing implicit.  By convention
+the namespace definition for the identifiers exported by module @code{M}
+is specified in the source code file @code{M#.scm}
+in the same directory as the @code{M.scm} file.
+
+Using this convention and the @code{include} and @code{##namespace}
+forms, the previous example can be rewritten like this:
+
+@smallexample
+;;;---------------------------------------- file: @b{angle2/angle2#.scm}
+(##namespace ("angle2#" deg->rad rad->deg))
+
+;;;---------------------------------------- file: @b{angle2/angle2.scm}
+(include "angle2#.scm")
+(##namespace ("angle2#" factor))
+(define factor (/ (atan 1) 45))
+(define (deg->rad x) (* x factor))
+(define (rad->deg x) (/ x factor))
+
+;;;---------------------------------------- file: @b{angle2-app.scm}
+(include "angle2/angle2#.scm")
+(##demand-module angle2)
+(println "90 degrees is " (deg->rad 90) " radians")
+@end smallexample
+
+Note that the parameters of the two @code{include} forms are
+different, but this is correct because the paths are relative to the
+file containing the @code{include} form.  However the module
+localization problem has been reintroduced for the file
+@code{angle2/angle2#.scm}.
+
+This problem can be solved using the @code{##import} form that
+combines the semantics of the @code{include} and
+@code{##demand-module} forms.  The call @code{(##import M)} will use
+the module search order directories to locate the source code file of
+module @code{M} and will do an @code{include} of the file
+@code{M#@var{.ext}} if it exists in the same directory, and a
+@code{(##demand-module M)}.  Using a (builtin) module @code{gambit}
+containing all the global names exported by Gambit's runtime system
+and the @code{##import} form, the previous example can be rewritten
+like this:
+
+@smallexample
+;;;---------------------------------------- file: @b{angle3/angle3#.scm}
+(##namespace ("angle3#" deg->rad rad->deg))
+
+;;;---------------------------------------- file: @b{angle3/angle3.scm}
+(##namespace ("angle3#")) ;; map all identifiers to angle3# namespace
+(##import gambit)         ;; except those defined by Gambit's RTS
+(define factor (/ (atan 1) 45))
+(define (deg->rad x) (* x factor))
+(define (rad->deg x) (/ x factor))
+
+;;;---------------------------------------- file: @b{angle3-app.scm}
+(##import angle3)
+(println "90 degrees is " (deg->rad 90) " radians")
+@end smallexample
+
+In this example the @code{(##import angle3)} takes care of the namespace
+mapping and the loading of @code{angle3.scm} because it is equivalent to:
+
+@smallexample
+(begin
+ (include "angle3/angle3#.scm")
+ (##demand-module angle3))
+@end smallexample
+
+@node R7RS Modules, , Basic Modules, Modules
+@section R7RS Modules
+
+TODO!
+
+@node Characters and strings, Numbers, Modules, Top
 @chapter Characters and strings
 
 Gambit supports the Unicode character encoding standard.  Scheme
