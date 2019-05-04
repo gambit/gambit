@@ -1,12 +1,12 @@
-# makefile for gambit module.
+# makefile for gambit/git module.
 
 # Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
-herefromroot = lib/gambit
-rootfromhere = ../..
-SUBDIRS = git pkg tar
-HEADERS_SCM = gambit\#.scm
-MODULES_SCM = gambit.scm
+herefromroot = lib/gambit/git
+rootfromhere = ../../..
+SUBDIRS =
+HEADERS_SCM = git\#.scm
+MODULES_SCM = git.scm
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@

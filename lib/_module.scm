@@ -546,4 +546,16 @@
                              `())
                        (##demand-module ,arg-src)))))))))))
 
+;;;----------------------------------------------------------------------------
+
+(define (##gsi-option-update args)
+  ((##eval '(let () (##import gambit/pkg) gsi-option-update)) args))
+
+(define (##gsi-option-install args)
+  ((##eval '(let () (##import gambit/pkg) gsi-option-install)) args))
+
+(define ##gsi-option-handlers
+ (##list (##cons 'update  ##gsi-option-update)
+         (##cons 'install ##gsi-option-install)))
+
 ;;;============================================================================

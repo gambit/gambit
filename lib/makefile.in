@@ -342,8 +342,8 @@ install-post-comp-sc: all
 	@SETDLPATH@ $(srcdirpfx)$(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -warnings syntax-case
 
 install-post: all
-	c_libdir="$(DESTDIR)$(prefix)/lib"; \
-	i_libdir="$(DESTDIR)$(libdir)"; \
+	c_libdir="$(DESTDIR)$(prefix)/$(herefromroot)"; \
+	i_libdir="$(DESTDIR)$(libdir)`echo $(herefromroot)/ | sed -e s:^lib:: -e s:/\\$$::`"; \
 	t_libdir="$$i_libdir"; \
 	$(srcdirpfx)$(rootfromhere)/mkidirs "$$i_libdir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
@@ -370,8 +370,8 @@ install-post: all
 uninstall-pre:
 
 uninstall-post:
-	c_libdir="$(DESTDIR)$(prefix)/lib"; \
-	i_libdir="$(DESTDIR)$(libdir)"; \
+	c_libdir="$(DESTDIR)$(prefix)/$(herefromroot)"; \
+	i_libdir="$(DESTDIR)$(libdir)`echo $(herefromroot)/ | sed -e s:^lib:: -e s:/\\$$::`"; \
 	t_libdir="$$i_libdir"; \
 	if test "@ENABLE_SYMLINKS@" = "yes"; then \
 	  t_libdir="$$c_libdir"; \
