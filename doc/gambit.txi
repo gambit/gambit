@@ -4620,21 +4620,22 @@ For example:
 @chapter Modules
 
 @menu
-* Basic Modules:: Basic Modules
-* R7RS modules::  R7RS modules
+* Basic Modules::       Basic Modules
+* Installing Modules::  Installing Modules
 @end menu
 
-@node Basic Modules, R7RS Modules, Modules, Modules
+@node Basic Modules, Installing Modules, Modules, Modules
 @section Basic Modules
 
 @menu
 * load procedure and include form::   load procedure and include form
 * ##demand-module form::              ##demand-module form
 * ##namespace and ##import forms::    ##namespace and ##import forms
+* Macros::                            Macros
 @end menu
 
 In this section various basic modularization approaches and constructs
-offered by Gambit are compared.
+offered by Gambit are explained and compared.
 
 @node load procedure and include form, ##demand-module form, Basic Modules, Basic Modules
 @subsection @code{load} procedure and @code{include} form
@@ -4735,7 +4736,7 @@ like this:
 ;; or put angle1/angle1.scm in ~/.gambit_userlib to avoid the -::.
 @end smallexample
 
-@node ##namespace and ##import forms, , ##demand-module form, Basic Modules
+@node ##namespace and ##import forms, Macros, ##demand-module form, Basic Modules
 @subsection @code{##namespace} and @code{##import} forms
 
 The @code{##namespace} form offers a way to avoid name clashes by
@@ -4795,7 +4796,7 @@ This problem can be solved using the @code{##import} form that
 combines the semantics of the @code{include} and
 @code{##demand-module} forms.  The call @code{(##import M)} will use
 the module search order directories to locate the source code file of
-module @code{M} and will do an @code{include} of the file
+module @code{M} and will do an @code{include} of the ``hash'' file
 @code{M#@var{.ext}} if it exists in the same directory, and a
 @code{(##demand-module M)}.  Using a (builtin) module @code{gambit}
 containing all the global names exported by Gambit's runtime system
@@ -4827,8 +4828,83 @@ mapping and the loading of @code{angle3.scm} because it is equivalent to:
  (##demand-module angle3))
 @end smallexample
 
-@node R7RS Modules, , Basic Modules, Modules
-@section R7RS Modules
+@node Macros, , ##namespace and ##import forms, Basic Modules
+@subsection Macros
+
+In addition to procedures, a module @code{M} may export macros.  The
+file @code{M#.scm} is the designated place to put exported macro
+definitions.  These macro definitions will essentially be copied at
+the point where the @code{##import} of the module is done.  Macros
+that are needed strictly for the implementation of a module may be
+defined in the file @code{M.scm} and these macro definitions will not
+be visible elsewhere.  Note that the macros defined with
+@code{define-macro} are not hygienic, so the macro definition writer
+should take care to explicitly indicate what identifiers resolve to
+using fully qualified identifiers (i.e. containing a @code{#} sign).
+
+To explain these issues, lets extend our example module in the
+following ways.  First we want the module to export the macros
+@code{sind} and @code{asind} that are like the @code{sin} and
+@code{asin} procedures but use degrees instead of radians.  Note that
+it would be a better design for @code{sind} and @code{asind} to be
+procedures, but we'll implement them as macros for the sake of the
+example.  Second we want the procedures @code{deg->rad} and @code{rad->deg}
+to check that their argument is a real number using a @code{check-real}
+macro.
+
+In a setting where name clashes are not an issue these macros can be
+defined as follows:
+
+@smallexample
+(define-macro (sind x) `(sin (deg->rad ,x)))
+(define-macro (asind x) `(rad->deg (asin ,x)))
+(define-macro (check-real x y)
+  `(if (real? ,x) ,y (error "not real!")))
+@end smallexample
+
+Name clashes will occur when the locations where these macros are
+called are in the scope of new bindings for @code{sin},
+@code{deg->rad}, @code{if}, @code{error}, etc which are identifiers
+used in the expanded code.  A name clash can also happen for the name
+@code{define-macro} itself.  To remove the possibility of name clashes
+the @code{##namespace} form and fully qualified identifiers can be
+used.  All the Gambit special forms, such as @code{let}, @code{if},
+and @code{define-macro}, have a fully qualified version (@code{##let},
+@code{##if}, and @code{##define-macro}). Gambit predefined procedures,
+such as @code{sin}, @code{real?}, and @code{error}, don't necessarily
+have a fully qualified version (some do and some don't) but an empty
+namespace definition in a @code{##let} form can be used to avoid the
+clash, i.e. @code{(##let () (##namespace ("") sin))} refers to the global
+variable @code{sin} whatever scope it is in.  With these forms our
+example can be written like this:
+
+@smallexample
+;;;---------------------------------------- file: @b{angle4/angle4#.scm}
+(##namespace ("angle4#" deg->rad rad->deg))
+(##define-macro (sind x) `((##let () (##namespace ("")) sin)
+                           (angle4#deg->rad ,x)))
+(##define-macro (asind x) `(angle4#rad->deg
+                            ((##let () (##namespace ("")) asin) ,x)))
+
+;;;---------------------------------------- file: @b{angle4/angle4.scm}
+(##namespace ("angle4#")) ;; map all identifiers to angle4# namespace
+(##import gambit)         ;; except those defined by Gambit's RTS
+(##define-macro (check-real x y)
+  `(##if ((##let () (##namespace ("")) real?) ,x)
+         ,y
+         ((##let () (##namespace ("")) error) "not real!")))
+(define factor (/ (atan 1) 45))
+(define (deg->rad x) (check-real x (* x factor)))
+(define (rad->deg x) (check-real x (/ x factor)))
+
+;;;---------------------------------------- file: @b{angle4-app.scm}
+(##import angle4)
+(println "90 degrees is " (deg->rad 90) " radians")
+(println "sind(90) is " (sind 90))
+@end smallexample
+
+@node Installing Modules, , Basic Modules, Modules
+@section Installing Modules
 
 TODO!
 

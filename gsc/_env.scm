@@ -147,8 +147,10 @@
 
     (define (search-vars vars)
       (if (pair? vars)
-          (let ((v (car vars)))
-            (if (eq? (var-name v) name)
+          (let* ((v (car vars))
+                 (vn (var-name v)))
+            (if (and (eq? vn name)
+                     (eq? (full-name? vn) full?))
                 (proc env name v)
                 (search-vars (cdr vars))))
           (let ((env* (env-parent-ref env)))
