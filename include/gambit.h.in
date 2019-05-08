@@ -371,6 +371,23 @@
 
 #endif
 
+#ifndef ___CPU_riscv
+
+#ifdef riscv
+#define ___CPU_riscv
+#else
+#ifdef __riscv
+#define ___CPU_riscv
+#else
+#ifdef __riscv__
+#define ___CPU_riscv
+#else
+#endif
+#endif
+#endif
+
+#endif
+
 #ifdef __aarch64__
 #define ___CPU_aarch64
 #else
@@ -431,6 +448,10 @@
 #endif
 
 #ifdef ___CPU_vax
+#define ___LITTLE_ENDIAN
+#endif
+
+#ifdef ___CPU_riscv
 #define ___LITTLE_ENDIAN
 #endif
 
