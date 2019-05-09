@@ -423,8 +423,12 @@
 #ifdef __ia64__
 #define ___CPU_ia64
 #else
+#ifdef __itanium__
+#define ___CPU_ia64
+#else
 #ifdef _M_IA64
 #define ___CPU_ia64
+#endif
 #endif
 #endif
 #endif
@@ -442,7 +446,7 @@
 /*
  * Determine the byte order endianness based on the processor type.
  * We assume that all processors are little-endian, except the sparc and
- * m68k.  The PowerPC, MIPS and ARM can be either big-endian or
+ * m68k.  The PowerPC, MIPS, ARM and Itanium can be either big-endian or
  * little-endian so extra tests are needed.
  */
 
@@ -516,7 +520,11 @@
 #endif
 
 #ifdef ___CPU_ia64
+#ifdef __BIG_ENDIAN__
+#define ___BIG_ENDIAN
+#else
 #define ___LITTLE_ENDIAN
+#endif
 #endif
 
 #ifdef EMSCRIPTEN
