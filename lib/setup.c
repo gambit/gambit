@@ -2735,10 +2735,10 @@ double y;)
     r2p1 = 2.414213562373095,
     t2p1 = 1.2537167179050217e-16;
   double t, s;
-    
+
   x = fabs (x);
   y = fabs (y);
-    
+
   if (x < y) {
     t = x; x = y; y = t;
   }
@@ -2759,7 +2759,7 @@ double y;)
   }
   else
     return x;
- 
+
 #endif
 }
 
@@ -4128,6 +4128,7 @@ ___virtual_machine_state ___vms;)
 ___EXP_FUNC(void,___cleanup) ___PVOID
 {
   ___processor_state ___ps = ___PSTATE;
+  ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
 
   /*
    * Only do cleanup once after successful setup.
@@ -4139,6 +4140,9 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
   ___GSTATE->setup_state = 2;
 
   ___cleanup_all_interrupt_handling ();
+
+  if (___vms->processor_count == 0)
+    return;
 
 #ifndef ___SINGLE_THREADED_VMS
 
@@ -4160,16 +4164,12 @@ ___EXP_FUNC(void,___cleanup) ___PVOID
 
   ___MUTEX_LOCK(___GSTATE->vm_list_mut);
 
-  {
-    ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
-
-    do
-      {
-        ___vms = ___vms->prev;
-        ___cleanup_vmstate (___vms);
-      }
-    while (___vms != &___GSTATE->vmstate0);
-  }
+  do
+    {
+      ___vms = ___vms->prev;
+      ___cleanup_vmstate (___vms);
+    }
+  while (___vms != &___GSTATE->vmstate0);
 
   ___MUTEX_DESTROY(___GSTATE->vm_list_mut);
 
@@ -5307,9 +5307,11 @@ ___setup_params_struct *setup_params;)
 
   ___GSTATE->setup_state = 2;
 
-   /*
-    * Setup virtual machine circular list.
-    */
+  /*
+   * Set virtual machine to clean state.
+   */
+
+  ___vms->processor_count = 0;
 
 #ifndef ___SINGLE_VM
 
@@ -5317,6 +5319,28 @@ ___setup_params_struct *setup_params;)
 
   ___vms->prev = ___vms;
   ___vms->next = ___vms;
+
+#endif
+
+#ifdef ___DEBUG
+
+  /*
+   * Check that the endianness is correct.
+   */
+
+  ___U16 endianness_test = 0x0102;
+
+  if (*___CAST(___U8*,&endianness_test) !=
+#ifdef ___LITTLE_ENDIAN
+      0x02
+#else
+      0x01
+#endif
+      )
+    {
+      static char *msgs[] = { "Endianness is incorrectly set!", NULL };
+      ___fatal_error (msgs);
+    }
 
 #endif
 
