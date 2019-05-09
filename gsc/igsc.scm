@@ -1,5 +1,5 @@
 #! /bin/sh
-":";if test "`basename $0`" == "igsc.scm" ; then exec /usr/bin/env gsi -:dar,=`dirname $0`/.. -f $0 $*; else exec /usr/bin/env gsi -:dar,=`dirname $0` -f $0 $*; fi
+":";THISDIR="`dirname $0`";GSI="$THISDIR/../gsi/gsi";if test "`basename $0`" == "igsc.scm" ; then exec $GSI -:dar,=$THISDIR/.. -f $0 $*; else exec $GSI -:dar,=$THISDIR -f $0 $*; fi
 
 ;;;============================================================================
 

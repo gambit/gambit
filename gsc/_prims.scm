@@ -580,6 +580,17 @@
 ("##subtyped.flonum?"                 (1)   #f ()    0    boolean extended)
 ("##subtyped.bignum?"                 (1)   #f ()    0    boolean extended)
 
+("##exp"                                (1)   #f 0     0    number  extended)
+("##log"                                (1)   #f 0     0    number  extended)
+("##sin"                                (1)   #f 0     0    number  extended)
+("##cos"                                (1)   #f 0     0    number  extended)
+("##tan"                                (1)   #f 0     0    number  extended)
+("##asin"                               (1)   #f 0     0    number  extended)
+("##acos"                               (1)   #f 0     0    number  extended)
+("##atan"                               (1)   #f 0     0    number  extended)  ;; ##atan takes only one argument
+("##expt"                               (2)   #f 0     0    number  extended)
+("##sqrt"                               (1)   #f 0     0    number  extended)
+
 ("##fxmax"                       1     #f ()    0    fixnum  extended)
 ("##fxmin"                       1     #f ()    0    fixnum  extended)
 ("##fxwrap+"                     0     #f ()    0    fixnum  extended)
@@ -1384,8 +1395,6 @@
 
 (def-spec "flsqrt" (spec-u "##flsqrt"))
 (def-spec "sqrt"   (spec-arith #f "flsqrt"))
-
-(def-spec "flsquare" (spec-u "##flsquare"))
 
 (def-spec "fixnum->flonum" (spec-u "##fixnum->flonum"))
 
@@ -3435,9 +3444,6 @@
     (def-exp "fltan" (make-simple-expander case-fltan))
     (def-exp "tan"   (make-fixflo-expander no-case case-fltan))
 
-    (def-exp "flatan" (make-simple-expander case-flatan))
-    (def-exp "atan"   (make-fixflo-expander no-case case-flatan))
-
     (def-exp "flasin" (make-simple-expander case-flasin))
     (def-exp "asin"   (make-fixflo-expander no-case case-asin-flonum))
 
@@ -4593,6 +4599,18 @@
 (def-simp "sqrt"             (constant-folder-gen sqrt       num?))
 (def-simp "flsqrt"           (constant-folder-flo sqrt       flo?))
 (def-simp "expt"             (constant-folder-gen expt       num?))
+(def-simp "sinh"             (constant-folder-gen sinh       num?))
+(def-simp "flsinh"           (constant-folder-flo sinh       flo?))
+(def-simp "cosh"             (constant-folder-gen cosh       num?))
+(def-simp "flcosh"           (constant-folder-flo cosh       flo?))
+(def-simp "tanh"             (constant-folder-gen tanh       num?))
+(def-simp "fltanh"           (constant-folder-flo tanh       flo?))
+(def-simp "asinh"            (constant-folder-gen asinh      num?))
+(def-simp "flasinh"          (constant-folder-flo asinh      flo?))
+(def-simp "acosh"            (constant-folder-gen acosh      num?))
+(def-simp "flacosh"          (constant-folder-flo acosh      flo?))
+;; (def-simp "atanh"            (constant-folder-gen atanh      num?)) ;; TODO: arg must not be +1 or -1
+(def-simp "flatanh"          (constant-folder-flo atanh      flo?))
 (def-simp "##flonum->fixnum" (constant-folder-fix inexact->exact flo?))
 
 (def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
