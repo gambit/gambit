@@ -75,7 +75,7 @@
 
 ;; Special objects.
 
-(##define-macro (macro-absent-obj)   `',c#absent-object) ;;(##type-cast -6 (##type #f)))
+(##define-macro (macro-absent-obj)   `',(##absent-object)) ;;(##type-cast -6 (##type #f)))
 (##define-macro (macro-unbound1-obj) `',(##type-cast -7 (##type #f)))
 (##define-macro (macro-unbound2-obj) `',(##type-cast -8 (##type #f)))
 (##define-macro (macro-unused-obj)   `',(##type-cast -14 (##type #f)))
