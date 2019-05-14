@@ -8,8 +8,8 @@
 ;;;============================================================================
 
 (##namespace ("gambit/pkg#"
-              debug-mode?
-              debug-mode?-set!
+              ; debug-mode?
+              ; debug-mode?-set!
               https-proto
               install
               install-hook
@@ -21,6 +21,7 @@
               uninstall
               update
               gsi-option-update
+              gsi-option-uninstall
               gsi-option-install))
 
 ;;;============================================================================

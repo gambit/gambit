@@ -554,8 +554,12 @@
 (define (##gsi-option-install args)
   ((##eval '(let () (##import gambit/pkg) gsi-option-install)) args))
 
+(define (##gsi-option-uninstall args)
+  ((##eval '(let () (##import gambit/pkg) gsi-option-uninstall)) args))
+
 (define ##gsi-option-handlers
  (##list (##cons 'update  ##gsi-option-update)
+         (##cons 'uninstall ##gsi-option-uninstall)
          (##cons 'install ##gsi-option-install)))
 
 ;;;============================================================================
