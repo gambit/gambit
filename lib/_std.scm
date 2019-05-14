@@ -990,6 +990,21 @@
                 (macro-check-list x 2 (assoc obj lst c)
                   #f))))))))
 
+(define-prim (##remq elem lst)
+
+  (define (rem elem lst)
+    (if (##pair? lst)
+        (let* ((lst2 (rem elem (##cdr lst)))
+               (x (##car lst)))
+          (if (##eq? x elem)
+              lst2
+              (if (##eq? lst2 (##cdr lst))
+                  lst
+                  (##cons x lst2))))
+        '()))
+
+  (rem elem lst))
+
 (define-fail-check-type symbol 'symbol)
 
 (define-prim (##make-uninterned-symbol name hash))

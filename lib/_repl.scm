@@ -1887,7 +1887,7 @@
           (##vector-set! settings 1 #f)
           (if (##not (##vector-ref settings 0))
               (##interp-procedure-entry-hook-set! proc #f))))
-    (set! ##trace-list (##remove proc ##trace-list))))
+    (set! ##trace-list (##remq proc ##trace-list))))
 
 (define-prim (trace . args)
   (if (##pair? args)
@@ -1929,7 +1929,7 @@
           (##vector-set! settings 0 #f)
           (if (##not (##vector-ref settings 1))
               (##interp-procedure-entry-hook-set! proc #f))))
-    (set! ##break-list (##remove proc ##break-list))))
+    (set! ##break-list (##remq proc ##break-list))))
 
 (define-prim (break . args)
   (if (##pair? args)
@@ -2124,15 +2124,6 @@
          (rte
           #f))
     (##interp-procedure-wrapper $code rte)))
-
-(define-prim (##remove elem lst)
-  (let loop ((lst1 lst) (lst2 '()))
-    (if (##pair? lst1)
-        (let ((x (##car lst1)))
-          (if (##eq? x elem)
-              (##append (##reverse lst2) (##cdr lst1))
-              (loop (##cdr lst1) (##cons x lst2))))
-        lst)))
 
 ;;;============================================================================
 
