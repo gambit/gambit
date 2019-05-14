@@ -329,7 +329,29 @@
 
   (define gambits '(gambit GAMBIT Gambit))
 
-  `'(,@gambits
+  (define (split sym)
+    (let* ((str (symbol->string sym))
+           (len (string-length str))
+           (x (memv #\- (string->list str)))
+           (i (if x (- len (length x)) len)))
+      (cons (substring str 0 i)
+            (substring str i len))))
+
+  (define (keep-disable/enable syms) ;; extract enable/disable features
+    (let loop ((seen '()) (lst syms))
+      (if (pair? lst)
+          (loop (let* ((sym (car lst))
+                       (x (split sym)))
+                  (if (and (member (car x) '("enable" "disable"))
+                           (not (assoc (cdr x) seen))) ;; keep most recent
+                      (cons (cons (cdr x) sym) seen)
+                      seen))
+                (cdr lst))
+          (reverse (map cdr seen)))))
+
+  `'(;; propagate disable/enable features that are used for compilation
+     ,@(keep-disable/enable (##cond-expand-features))
+     ,@gambits
      srfi-0 SRFI-0
      srfi-4 SRFI-4
      srfi-6 SRFI-6
@@ -359,8 +381,34 @@
 (define ##cond-expand-features
   (##make-parameter (generate-cond-expand-features)))
 
+(define (##add-cond-expand-features lst features)
+  (let loop ((lst lst)
+             (features features))
+    (if (##pair? lst)
+        (loop (##cdr lst)
+              (let ((f (##car lst)))
+                (if (##not (##symbol? f))
+                    features
+                    (##cons
+                     f
+                     (let ((s (##symbol->string f)))
+                       (let ((e (##string-prefix=? s "enable-")))
+                         (if e
+                             (##remq (##string->symbol
+                                      (##string-append "disable-" e))
+                                     features)
+                             (let ((d (##string-prefix=? s "disable-")))
+                               (if d
+                                   (##remq (##string->symbol
+                                            (##string-append "enable-" d))
+                                           features)
+                                   features)))))))))
+        features)))
+
 (define-runtime-macro (define-cond-expand-feature . features)
-  (##cond-expand-features (##append features (##cond-expand-features)))
+  (##cond-expand-features
+   (##add-cond-expand-features features
+                               (##cond-expand-features)))
   `(##begin))
 
 (define features

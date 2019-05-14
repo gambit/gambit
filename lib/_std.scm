@@ -1467,6 +1467,28 @@
 
   (copy lst 1))
 
+(define-prim (##string-prefix=? str prefix)
+  (let ((prefix-len (##string-length prefix)))
+    (and (##fx>= (##string-length str) prefix-len)
+         (let loop ((i 0))
+           (if (##fx< i prefix-len)
+               (and (##char=? (##string-ref str i)
+                              (##string-ref prefix i))
+                    (loop (##fx+ i 1)))
+               (##substring str i (##string-length str)))))))
+
+(define-prim (##string-suffix=? str suffix)
+  (let ((suffix-len (##string-length suffix)))
+    (and (##fx>= (##string-length str) suffix-len)
+         (let loop ((i suffix-len))
+           (if (##fx> i 0)
+               (and (##char=? (##string-ref str
+                                            (##fx- (##string-length str) i))
+                              (##string-ref suffix
+                                            (##fx- suffix-len i)))
+                    (loop (##fx- i 1)))
+               (##substring str 0 (##fx- (##string-length str) suffix-len)))))))
+
 (define-fail-check-type procedure 'procedure)
 
 (define-prim (##procedure? obj)
