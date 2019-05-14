@@ -1634,6 +1634,11 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define-prim (##absent-object)
+  (macro-absent-obj))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define-prim (process-times)
   (##process-times))
 
