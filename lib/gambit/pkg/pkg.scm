@@ -25,6 +25,7 @@
 ;;;    uninstall
 ;;;    update
 ;;;    gsi-option-update
+;;;    gsi-option-uninstall
 ;;;    gsi-option-install
 
 (declare
@@ -44,14 +45,16 @@
               delete-directory
               delete-file
               file-exists?
-              file-type
+              ; XXX: not in namespace ##
+              ; file-type
               eof-object?
               eq?
               for-each
               list
               not
               null?
-              open-directory
+              ; XXX: not compatible with ##open-directory
+              ; open-directory
               pair?
               path-expand
               read
@@ -150,7 +153,7 @@
 
 
 ;; Return #f if module is not hosted
-(define (uninstall module to)
+(define (uninstall module #!optional (to #f))
 
   ;; return the prefix if prefix/folder exists else #f.
   (define (start-width? folder prefix)
@@ -165,6 +168,15 @@
     (if debug-mode?
         (println "rm " file))
     (delete-file file))
+
+  (define (delete-single-folder-if-empty folder)
+    (let ((port (open-directory
+                 (list path: folder
+                       ignore-hidden: 'dot-and-dot-dot))))
+      (let ((result? (eof-object? (read port))))
+        (close-input-port port)
+
+        (and result? (delete-single-folder folder)))))
 
   (define (delete-folder-tree folder)
     (let loop ((port (open-directory
@@ -205,6 +217,16 @@
                 (delete-single-file filepath)
                 (loop port folder-name folder-stack post-folder-stack))))))))
 
+  (define (cleanup-install-folder folder prefix)
+    (if (< 0 (string-length folder))
+      (let ((folder-name (path-expand folder prefix)))
+        (delete-single-folder-if-empty folder-name)
+        (cleanup-install-folder
+          (path-strip-trailing-directory-separator
+            (path-directory folder)) prefix)
+        #t)))
+
+
   (let ((modref (##string->modref module)))
     (and modref
          (pair? (macro-modref-host modref))
@@ -214,8 +236,13 @@
                   (if (pair? (cdr modref-path))
                       (loop (cdr modref-path))
                       (macro-modref-path-set! modref modref-path)))
-                (delete-folder-tree
-                 (path-expand (##modref->string modref) prefix)))))))
+                (let ((mod-path (##modref->string modref)))
+                  (and
+                    (delete-folder-tree
+                      (path-expand mod-path prefix))
+                    (cleanup-install-folder
+                      (path-strip-trailing-directory-separator
+                        (path-directory mod-path)) prefix))))))))
 
 (define (installed? module)
   (let ((modref (##string->modref module)))
@@ -230,7 +257,7 @@
              (close-input-port port)
              #t)))))
 
-(define (update mod #!optional (from #f))
+(define (update mod #!optional (to #f))
   (let ((modref (##string->modref mod)))
     (and (pair? (macro-modref-host modref))
          (null? (macro-modref-tag modref))
@@ -239,12 +266,12 @@
            (let ((module-master-path (##modref->string modref)))
              (let ((repo (git-repository-open
                           (path-expand module-master-path
-                                       (module-path from)))))
+                                       (module-path to)))))
                (and repo (git-pull repo))))))))
 
 (define (install-hook modref)
   (let ((mod-name (##modref->string modref)))
-    (let ((result (install mod-name #t #t)))
+    (let ((result (install mod-name #f #t)))
       (if debug-mode?
           (println "install-hook==>" result))
       (and result (##search-module modref)))))
@@ -254,24 +281,24 @@
 (define (gsi-option-update args)
 
   (define (usage)
-    (println "Usage: gsi -update [-from dir] module ..."))
+    (println "Usage: gsi -update [-to dir] module ..."))
 
   (if (null? args)
       (usage)
       (let loop ((rest (cdr args))
                  (arg (car args))
-                 (from (path-expand "~~userlib")))
+                 (to (path-expand "~~userlib")))
         (cond
-         ((string=? arg "-from")
+         ((string=? arg "-to")
           (if (or (null? rest) (null? (cdr rest)))
               (usage)
               (loop (cddr rest) (cadr rest) (car rest))))
          (else
-          (println (string-append "update " arg " from " from))
-          (or (update arg from)
-              (println (string-append "Unable to update '" arg "' from '" from "'\n")))
+          (println (string-append "update " arg " to " to))
+          (or (update arg to)
+              (println (string-append "Unable to update '" arg "' to '" to "'\n")))
           (if (pair? rest)
-              (loop (cdr rest) (car rest) from)))))))
+              (loop (cdr rest) (car rest) to)))))))
 
 (define (gsi-option-install args)
 
@@ -294,5 +321,25 @@
               (println (string-append "Unable to install '" arg "' to '" to "'\n")))
           (if (pair? rest)
               (loop (cdr rest) (car rest) to)))))))
+
+(define (gsi-option-uninstall args)
+  (define (usage)
+    (println "Usage: gsi -uninstall [-to dir] module ..."))
+
+  (if (null? args)
+    (usage)
+    (let loop ((rest (cdr args))
+               (arg (car args))
+               (to (path-expand "~~userlib")))
+      (cond ((string=? arg "-to")
+             (if (or (null? rest) (null? (cdr rest)))
+                 (usage)
+                 (loop (cddr rest) (cadr rest) (car rest))))
+            (else
+             (println (string-append "uninstall " arg " to " to))
+             (or (uninstall arg to)
+                 (println (string-append "Unable to uninstall '" arg "' to " to)))
+             (if (pair? rest)
+                 (loop (cdr rest) (car rest) to)))))))
 
 ;;;============================================================================
