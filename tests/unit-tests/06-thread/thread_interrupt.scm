@@ -10,7 +10,7 @@
         (integer-sqrt num) ;; waste some time
         (waste-time (- n 1)))))
 
-(define var 0)
+(define var #f)
 
 (define t1
   (make-mythread))
@@ -20,7 +20,8 @@
    (lambda ()
      (parameterize ((current-user-interrupt-handler
                      (lambda () (set! var (+ var 1)) 123)))
-       (waste-time 200)
+       (set! var 0)
+       (waste-time 100)
        (set! var (+ var 10))))))
 
 (check-tail-exn inactive-thread-exception? (lambda () (thread-interrupt! t1)))
@@ -29,12 +30,13 @@
 
 (thread-start! t2)
 
-(waste-time 100)
+(let loop ()
+  (or var (loop)))
 
 (check-eq? (thread-interrupt! t2 current-thread) t2)
 (check-equal? (thread-interrupt! t2) 123)
 
-(waste-time 300)
+(waste-time 200)
 
 (check-equal? var 11)
 
