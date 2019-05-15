@@ -3481,8 +3481,8 @@
            (##newline port)
            (display-call))
 
-          ((macro-unbound-table-key-exception? exc)
-           (##write-string "Unbound table key" port)
+          ((macro-unbound-key-exception? exc)
+           (##write-string "Unbound key" port)
            (##newline port)
            (display-call))
 
@@ -3735,10 +3735,10 @@
           (macro-invalid-hash-number-exception-procedure exc)
           (macro-invalid-hash-number-exception-arguments exc)))
 
-        ((macro-unbound-table-key-exception? exc)
+        ((macro-unbound-key-exception? exc)
          (##cons
-          (macro-unbound-table-key-exception-procedure exc)
-          (macro-unbound-table-key-exception-arguments exc)))
+          (macro-unbound-key-exception-procedure exc)
+          (macro-unbound-key-exception-arguments exc)))
 
         ((macro-unbound-serial-number-exception? exc)
          (##cons

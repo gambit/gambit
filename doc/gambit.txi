@@ -6721,7 +6721,7 @@ The procedure @code{table-ref} returns the value bound to the object
 @var{default} is specified, @var{default} is returned.  When
 @var{default} is not specified but an @var{init} parameter was
 specified when @var{table} was created, @var{init} is returned.
-Otherwise an unbound-table-key-exception object is raised.
+Otherwise an unbound-key-exception object is raised.
 
 For example:
 
@@ -6736,7 +6736,7 @@ For example:
 #f
 > @b{(define t2 (make-table))}
 > @b{(table-ref t2 (list 4 5))}
-*** ERROR IN (console)@@7.1 -- Unbound table key
+*** ERROR IN (console)@@7.1 -- Unbound key
 (table-ref '#<table #2> '(4 5))
 @end smallexample
 
@@ -6761,7 +6761,7 @@ For example:
 > @b{(table-ref t (list 1 2))}
 3
 > @b{(table-ref t (list 4 5))}
-*** ERROR IN (console)@@7.1 -- Unbound table key
+*** ERROR IN (console)@@7.1 -- Unbound key
 (table-ref '#<table #2> '(4 5))
 @end smallexample
 
@@ -6879,22 +6879,22 @@ For example:
 
 @end deffn
 
-@deffn procedure unbound-table-key-exception? @var{obj}
-@deffnx procedure unbound-table-key-exception-procedure @var{exc}
-@deffnx procedure unbound-table-key-exception-arguments @var{exc}
+@deffn procedure unbound-key-exception? @var{obj}
+@deffnx procedure unbound-key-exception-procedure @var{exc}
+@deffnx procedure unbound-key-exception-arguments @var{exc}
 
-Unbound-table-key-exception objects are raised by the procedure
+Unbound-key-exception objects are raised by the procedure
 @code{table-ref} when the key does not have a binding in the table.
-The parameter @var{exc} must be an unbound-table-key-exception object.
+The parameter @var{exc} must be an unbound-key-exception object.
 
-The procedure @code{unbound-table-key-exception?} returns
-@code{#t} when @var{obj} is a unbound-table-key-exception
+The procedure @code{unbound-key-exception?} returns
+@code{#t} when @var{obj} is a unbound-key-exception
 object and @code{#f} otherwise.
 
-The procedure @code{unbound-table-key-exception-procedure}
+The procedure @code{unbound-key-exception-procedure}
 returns the procedure that raised @var{exc}.
 
-The procedure @code{unbound-table-key-exception-arguments}
+The procedure @code{unbound-key-exception-arguments}
 returns the list of arguments of the procedure that raised @var{exc}.
 
 For example:
@@ -6902,10 +6902,10 @@ For example:
 @smallexample
 > @b{(define t (make-table))}
 > @b{(define (handler exc)
-    (if (unbound-table-key-exception? exc)
-        (list (unbound-table-key-exception-procedure exc)
-              (unbound-table-key-exception-arguments exc))
-        'not-unbound-table-key-exception))}
+    (if (unbound-key-exception? exc)
+        (list (unbound-key-exception-procedure exc)
+              (unbound-key-exception-arguments exc))
+        'not-unbound-key-exception))}
 > @b{(with-exception-catcher
     handler
     (lambda () (table-ref t '(1 2))))}

@@ -1012,9 +1012,9 @@ unbound-os-environment-variable-exception?
 unbound-serial-number-exception-arguments
 unbound-serial-number-exception-procedure
 unbound-serial-number-exception?
-unbound-table-key-exception-arguments
-unbound-table-key-exception-procedure
-unbound-table-key-exception?
+unbound-key-exception-arguments
+unbound-key-exception-procedure
+unbound-key-exception?
 unbox
 unbreak
 uncaught-exception-arguments

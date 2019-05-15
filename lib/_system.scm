@@ -1118,10 +1118,10 @@
 
 ;;; exports:
 ;;;    (##fail-check-table ...)
-;;;    (##fail-check-unbound-table-key-exception ...)
+;;;    (##fail-check-unbound-key-exception ...)
 ;;;    (##list->table ...)
 ;;;    (##make-table ...)
-;;;    (##raise-unbound-table-key-exception ...)
+;;;    (##raise-unbound-key-exception ...)
 ;;;    (##table->list ...)
 ;;;    (##table-copy ...)
 ;;;    (##table-length ...)
@@ -1136,9 +1136,9 @@
 ;;;    (table-ref ...)
 ;;;    (table-set! ...)
 ;;;    (table? ...)
-;;;    (unbound-table-key-exception-arguments ...)
-;;;    (unbound-table-key-exception-procedure ...)
-;;;    (unbound-table-key-exception? ...)
+;;;    (unbound-key-exception-arguments ...)
+;;;    (unbound-key-exception-procedure ...)
+;;;    (unbound-key-exception? ...)
 
 ;;;----------------------------------------------------------------------------
 
@@ -1149,9 +1149,9 @@
 (define-check-type table (macro-type-table)
   macro-table?)
 
-(implement-library-type-unbound-table-key-exception)
+(implement-library-type-unbound-key-exception)
 
-(define-prim (##raise-unbound-table-key-exception proc . args)
+(define-prim (##raise-unbound-key-exception proc . args)
   (##extract-procedure-and-arguments
    proc
    args
@@ -1160,7 +1160,7 @@
    #f
    (lambda (procedure arguments dummy1 dummy2 dummy3)
      (macro-raise
-      (macro-make-unbound-table-key-exception
+      (macro-make-unbound-key-exception
        procedure
        arguments)))))
 
@@ -1809,7 +1809,7 @@
                  ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
                   (macro-table-init table))
                  (else
-                  (##raise-unbound-table-key-exception
+                  (##raise-unbound-key-exception
                    table-ref
                    table
                    key))))
@@ -1823,7 +1823,7 @@
                     ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
                      (macro-table-init table))
                     (else
-                     (##raise-unbound-table-key-exception
+                     (##raise-unbound-key-exception
                       table-ref
                       table
                       key)))
@@ -2250,7 +2250,7 @@
        ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
         (macro-table-init table))
        (else
-        (##raise-unbound-table-key-exception
+        (##raise-unbound-key-exception
          table-ref
          table
          key))))

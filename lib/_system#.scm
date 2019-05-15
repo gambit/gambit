@@ -2,7 +2,7 @@
 
 ;;; File: "_system#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -17,7 +17,7 @@
   (arguments unprintable: read-only: no-functional-setter:)
 )
 
-(define-library-type-of-exception unbound-table-key-exception
+(define-library-type-of-exception unbound-key-exception
   id: 1a1e928d-8df4-11d9-8894-00039301ba52
   constructor: #f
   opaque:
