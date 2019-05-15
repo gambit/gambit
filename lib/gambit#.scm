@@ -161,6 +161,7 @@ deadlock-exception?
 defer-user-interrupts
 delete-directory
 delete-file
+delete-file-or-directory
 digit-value
 directory-files
 display-continuation-backtrace

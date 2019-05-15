@@ -10291,7 +10291,17 @@ must be a string denoting the path of an existing file.
 
 This procedure deletes the directory @var{path}.  The argument
 @var{path} must be a string denoting the path of an existing
-directory.
+empty directory.
+
+@end deffn
+
+@deffn procedure delete-file-or-directory @var{path} @r{[}@var{recursive?}@r{]}
+
+This procedure deletes the file or directory @var{path}.  The argument
+@var{path} must be a string denoting the path of an existing file or
+directory.  If @var{recursive?} is specified and is true, directories
+are recursively deleted.  Otherwise only empty directories can be
+deleted.
 
 @end deffn
 

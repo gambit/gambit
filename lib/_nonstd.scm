@@ -3112,6 +3112,75 @@
     (macro-check-string path 1 (delete-file path)
       (##delete-file path))))
 
+(define-prim (##delete-file-or-directory
+              path
+              #!optional
+              (recursive? (macro-absent-obj))
+              (raise-os-exception? #t))
+  (let ((rec? (if (##eq? recursive? (macro-absent-obj)) #f recursive?)))
+
+    (define (del-dir-content dir-path)
+      (##open-directory
+       #f
+       (lambda (dir-port)
+         (if (##fixnum? dir-port)
+             dir-port
+             (let loop ()
+               (let ((filename (##read dir-port)))
+                 (if (##eof-object? filename)
+                     (begin
+                       (##close-port dir-port)
+                       #f)
+                     (let ((result (del (##path-expand filename dir-path))))
+                       (if result
+                           (begin
+                             (##close-port dir-port)
+                             result)
+                           (loop))))))))
+       open-directory
+       (##list path: dir-path
+               ignore-hidden: 'dot-and-dot-dot)))
+
+    (define (del path)
+      (let ((info (##file-info path #f)))
+        (if (##fixnum? info)
+            info
+            (case (macro-file-info-type info)
+              ((directory)
+               (or (and rec?
+                        (del-dir-content path))
+                   (let ((result (##delete-directory path #f)))
+                     (if (##fixnum? result)
+                         result
+                         #f))))
+              (else
+               (let ((result (##delete-file path #f)))
+                 (if (##fixnum? result)
+                     result
+                     #f)))))))
+
+    (let ((result (del path)))
+      (if result
+          (if raise-os-exception?
+              (##raise-os-exception
+               #f
+               result
+               delete-file-or-directory
+               path
+               recursive?)
+              result)
+          (##void)))))
+
+(define-prim (delete-file-or-directory
+              path
+              #!optional
+              (recursive? (macro-absent-obj)))
+  (macro-force-vars (path recursive?)
+    (macro-check-string path 1 (delete-file-or-directory path recursive?)
+      (if (##eq? recursive? (macro-absent-obj))
+          (##delete-file-or-directory path)
+          (##delete-file-or-directory path recursive?)))))
+
 (define-prim (##directory-files
               #!optional
               (path-or-settings (macro-absent-obj)))
