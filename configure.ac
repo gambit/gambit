@@ -66,6 +66,8 @@ fi
 
 RTLIB_COND_EXPAND_FEATURES=""
 
+BUILD_TARGETS="C"
+
 userlibdir="~/.gambit_userlib"
 
 ###############################################################################
@@ -3152,6 +3154,7 @@ AC_SUBST(emacsdir)
 AC_SUBST(HELP_BROWSER)
 AC_SUBST(COMPILATION_OPTIONS)
 AC_SUBST(RTLIB_COND_EXPAND_FEATURES)
+AC_SUBST(BUILD_TARGETS)
 
 AC_PROG_MAKE_SET
 

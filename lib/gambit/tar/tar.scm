@@ -10,7 +10,9 @@
 
 (##declare (extended-bindings) (not safe))
 
-(##import gambit/tar)
+(##include "tar#.scm")
+
+(##supply-module gambit/tar)
 
 (##namespace ("##"
               car

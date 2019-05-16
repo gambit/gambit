@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -306,6 +306,44 @@
                  (##raise-error-exception
                   "target compilation or link failed while compiling"
                   (##list filename))))))))
+
+(define (##build-module path target options)
+  (let* ((module-dir
+          (##path-normalize (##path-directory path)))
+         (module-filename
+          (##path-strip-directory path))
+         (module-filename-noext
+          (##path-strip-extension module-filename))
+         (module-object-filename
+          (##string-append module-filename-noext ".o1"))
+         (build-subdir
+          (##module-build-subdir-path module-dir module-filename-noext target))
+         (cc-options
+          "")
+         (ld-options-prelude
+          "")
+         (ld-options
+          ""))
+
+    ;; create build subdirectory (removing it first to make sure it is empty)
+    (##delete-file-or-directory build-subdir #t #f)
+    (##create-directory build-subdir)
+
+    (let ((target-file
+           (##compile-file-to-target
+            path
+            (##list (##list 'target target)
+                    (##list 'linker-name module-object-filename))
+            build-subdir)))
+      (and target-file
+           (##compile-file
+            target-file
+            options
+            (##path-expand module-object-filename build-subdir)
+            cc-options
+            ld-options-prelude
+            ld-options)
+           build-subdir))))
 
 (define (##build-executable
          obj-files

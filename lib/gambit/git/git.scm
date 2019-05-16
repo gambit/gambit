@@ -33,6 +33,8 @@
 (##import gambit/git)
 (##import gambit/tar)
 
+(##supply-module gambit/git)
+
 ;;; XXX: may be unstable because of this namespace declaration
 (##namespace ("##"
               ;; call-with-input-process

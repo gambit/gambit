@@ -632,6 +632,7 @@ ac_includes_default="\
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 SET_MAKE
+BUILD_TARGETS
 RTLIB_COND_EXPAND_FEATURES
 COMPILATION_OPTIONS
 HELP_BROWSER
@@ -3053,6 +3054,8 @@ if test "${COMPILATION_OPTIONS+set}" != set; then
 fi
 
 RTLIB_COND_EXPAND_FEATURES=""
+
+BUILD_TARGETS="C"
 
 userlibdir="~/.gambit_userlib"
 
@@ -14879,6 +14882,7 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
+
 
 
 

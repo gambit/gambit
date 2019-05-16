@@ -36,6 +36,8 @@
 (##include "~~lib/gambit#.scm")
 (##include "~~lib/_module#.scm")
 
+(##supply-module gambit/pkg)
+
 (##namespace ("##"
               car
               cdr

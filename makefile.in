@@ -312,6 +312,9 @@ release: fake_target
 publish-release: fake_target
 	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
 
+build-mods:
+	@cd lib && $(MAKE) $(MDEFINES) $@
+
 update-unicode:
 	@cd lib && $(MAKE) $(MDEFINES) $@
 

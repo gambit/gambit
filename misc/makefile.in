@@ -1,6 +1,6 @@
 # makefile for Gambit miscellanea.
 
-# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 herefromroot = misc
 rootfromhere = ..

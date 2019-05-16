@@ -35,6 +35,8 @@ LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
 
+BUILD_TARGETS = @BUILD_TARGETS@
+
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBITLIB = @GAMBITLIB@
 GAMBITGSCLIB = @GAMBITGSCLIB@
@@ -334,6 +336,10 @@ bootstrap-post:
 	  fi \
 	fi
 
+build-mods-pre:
+
+build-mods-post:
+
 install-pre:
 
 install-post-comp-sc: all
@@ -449,7 +455,7 @@ all-recursive:
 	  done \
 	fi
 
-bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+bootstrap-recursive build-mods-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -469,6 +475,12 @@ bootstrap: bootstrap-post
 bootstrap-post: bootstrap-recursive
 
 bootstrap-recursive: bootstrap-pre
+
+build-mods: build-mods-post
+
+build-mods-post: build-mods-recursive
+
+build-mods-recursive: build-mods-pre
 
 install: install-post
 

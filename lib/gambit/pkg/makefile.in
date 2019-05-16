@@ -7,6 +7,7 @@ rootfromhere = ../../..
 SUBDIRS =
 HEADERS_SCM = pkg\#.scm
 MODULES_SCM = pkg.scm
+MAIN_MODULES = pkg
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -36,6 +37,8 @@ GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
 LIB_PREFIX = @LIB_PREFIX@
 LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
 LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
+
+BUILD_TARGETS = @BUILD_TARGETS@
 
 LIB_EXTENSION = @LIB_EXTENSION@
 GAMBITLIB = @GAMBITLIB@
@@ -95,6 +98,16 @@ bootstrap-pre:
 
 bootstrap-post:
 
+build-mods-pre:
+	@for target in $(BUILD_TARGETS); do \
+	  for main_mod in $(MAIN_MODULES); do \
+	    echo "------- building module $$main_mod for $$target"; \
+	    $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ())))) (if x (println x) (exit 1)))"; \
+	  done; \
+	done
+
+build-mods-post:
+
 install-pre:
 
 install-post: all
@@ -109,10 +122,23 @@ install-post: all
 	for file in $(INSTFILES_LIB_DATA); do \
 	  $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
 	done; \
+	for build_dir in *@gambit*; do \
+	  if test -d "$$build_dir"; then \
+	    $(srcdirpfx)$(rootfromhere)/mkidirs "$$t_libdir/$$build_dir"; \
+	    for file in $$build_dir/*; do \
+	      $(INSTALL_PROGRAM) "$$file" "$$t_libdir/$$file"; \
+	    done; \
+	  fi; \
+	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_LIB_DATA); do \
 	    (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
+	  done; \
+	  for build_dir in *@gambit*; do \
+	    if test -d "$$build_dir"; then \
+	      (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$build_dir" "$$build_dir"); \
+	    fi; \
 	  done; \
 	fi
 
@@ -184,7 +210,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+all-recursive bootstrap-recursive build-mods-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -204,6 +230,12 @@ bootstrap: bootstrap-post
 bootstrap-post: bootstrap-recursive
 
 bootstrap-recursive: bootstrap-pre
+
+build-mods: build-mods-post
+
+build-mods-post: build-mods-recursive
+
+build-mods-recursive: build-mods-pre
 
 install: install-post
 
@@ -238,6 +270,7 @@ mostlyclean-recursive: mostlyclean-pre
 clean: clean-post
 
 clean-post: clean-recursive
+	rm -rf *@gambit*
 
 clean-recursive: clean-pre
 
