@@ -40,14 +40,16 @@
               ;; call-with-input-process
               cons
               eof-object?
-              file-exists?
+              ;; file-exists?
               list
               member
               newline
               not
-              print
+              ;; print
               ;; println
+              procedure?
               process-status
+              read-char
               ;; read-line
               string-append
               =))
@@ -58,25 +60,36 @@
         (##close-port port)
         (##process-status port)
         results))
-    (open-input-process ,path-or-settings)))
+    (##open-input-process ,path-or-settings)))
+
+(define-macro (file-exists? path)
+  `(##file-exists? ,path #f))
+
+(define-macro (read-line port)
+  `(##read-line ,port #\newline #t ##max-fixnum))
+
 
 (implement-type-git-repository)
 
 (define (git-repository-open path)
+  ;; TODO: Check if directory
   (and (file-exists? path)
        (macro-make-git-repository path)))
 
-(define (git-command args proc directory #!optional (prompt? #f))
-
+(define (git-command args proc directory #!optional interactive?)
   (##tty-mode-reset)
 
   (call-with-input-process
-   (list path: "git"
-         arguments: args
-         directory: directory
-         environment: (and (not prompt?)
-                           (cons "GIT_TERMINAL_PROMPT=0" (##os-environ))))
-   proc))
+    (list path: "git"
+          arguments: args
+          directory: directory
+          stdin-redirection: #f
+          stdout-redirection: (not interactive?)
+          stderr-redirection: (not interactive?)
+          pseudo-terminal: interactive?
+          environment: (and (not interactive?)
+                            (cons "GIT_TERMINAL_PROMPT=0" (##os-environ))))
+    proc))
 
 (define (git-archive repo ref)
   (and (macro-git-repository? repo)
@@ -87,47 +100,40 @@
                              (tar-unpack-port p))
                            (macro-git-repository-path repo))))))
 
-(define (git-clone url dir #!optional prompt?)
+(define (git-clone url dir #!optional proc interactive?)
   (and (not (file-exists? dir))
        (git-command (list "clone" url dir)
                     (lambda (p)
-                      (let ((line (read-line p)))
-                        ;; XXX: add quiet?
-                        (if (not (eof-object? line))
-                            (println line)))
-                      (= (process-status p) 0))
-                    #f
-                    prompt?)
+                      (if (procedure? proc)
+                        (proc p)
+                        (= (process-status p) 0)))
+                    #f             ;; current directory
+                    interactive?)  ;; interactive
        (macro-make-git-repository dir)))
 
 
 ;; Add remote
-(define (git-pull repo)
+(define (git-pull repo #!optional proc interactive?)
   (and (macro-git-repository? repo)
        (git-command
         (list "pull" "origin")
         (lambda (p)
-          (let loop ()
-            (let ((line (read-line p)))
-              (cond
-               ((not (eof-object? line))
-                (println line)
-                (loop))
-               (else (= (process-status p) 0))))))
-        (macro-git-repository-path repo))))
+          (if (procedure? proc)
+            (proc p)
+            (= (process-status p) 0)))
+        (macro-git-repository-path repo)
+        interactive?)))
 
-(define (git-status repo)
+(define (git-status repo #!optional proc interactive?)
   (and (macro-git-repository? repo)
        (git-command
         (list "status")
         (lambda (p)
-          (let loop ()
-            (let ((line (read-line p)))
-              (cond
-               ((not (eof-object? line))
-                (println line)
-                (loop))))))
-        (macro-git-repository-path repo))))
+          (if (procedure? proc)
+            (proc p)
+            (= (process-status p) 0)))
+        (macro-git-repository-path repo)
+        interactive?)))
 
 (define (git-tag repo)
   (and (macro-git-repository? repo)

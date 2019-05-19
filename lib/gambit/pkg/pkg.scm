@@ -39,28 +39,28 @@
 (##supply-module gambit/pkg)
 
 (##namespace ("##"
+              <
               car
               cdr
+              cadr
+              cddr
               close-input-port
               cons
               create-directory
-              delete-directory
-              delete-file
-              file-exists?
-              ; XXX: not in namespace ##
-              ; file-type
+              delete-file-or-directory
               eof-object?
               eq?
               for-each
               list
               not
               null?
-              ; XXX: not compatible with ##open-directory
-              ; open-directory
               pair?
               path-expand
+              path-directory
+              path-strip-trailing-directory-separator
               read
               string-append
+              string-length
               string=?
               vector-ref
               vector?))
@@ -69,6 +69,22 @@
 (##import gambit/tar)
 
 (define-macro (tree-master) "tree/master")
+
+(define-macro (file-exists? x)
+  `(##file-exists? ,x #f))
+
+(define-macro (println . args)
+  (if (null? args)
+    `(##newline (##current-output-port))
+    `(begin
+      ,(if (null? (cdr args))
+         `(##display ,(car args) (##current-output-port))
+         `(##for-each
+           (lambda (e)
+             (##display e (##current-output-port)))
+           ,args))
+       (##newline (##current-output-port)))))
+
 
 (define (module-path to)
   (path-expand
@@ -161,73 +177,15 @@
   (define (start-width? folder prefix)
     (and (file-exists? (path-expand folder prefix)) prefix))
 
-  (define (delete-single-folder folder)
-    (if debug-mode?
-        (println "rmdir " folder))
-    (delete-directory folder))
-
-  (define (delete-single-file file)
-    (if debug-mode?
-        (println "rm " file))
-    (delete-file file))
-
-  (define (delete-single-folder-if-empty folder)
-    (let ((port (open-directory
-                 (list path: folder
-                       ignore-hidden: 'dot-and-dot-dot))))
-      (let ((result? (eof-object? (read port))))
-        (close-input-port port)
-
-        (and result? (delete-single-folder folder)))))
-
-  (define (delete-folder-tree folder)
-    (let loop ((port (open-directory
-                      (list path: folder
-                            ignore-hidden: 'dot-and-dot-dot)))
-               (folder-name folder)
-               (folder-stack '())
-               (post-folder-stack '()))
-      (let ((file (read port)))
-        (if (eof-object? file)
-            (let ()
-              (close-input-port port)
-              (if (pair? folder-stack)
-                  (loop (open-directory
-                         (list path: (car folder-stack)
-                               ignore-hidden: 'dot-and-dot-dot))
-                        (car folder-stack)
-                        (cdr folder-stack)
-                        (cons folder-name post-folder-stack))
-
-                  (let ()
-                    (delete-single-folder folder-name)
-                    (for-each
-                     (lambda (post-folder)
-                       (delete-single-folder post-folder))
-                     post-folder-stack)
-                    #t)))
-
-            (let* ((filepath (path-expand file folder-name))
-                   (type (file-type filepath)))
-              (cond
-               ((eq? type 'directory)
-                (loop port
-                      folder-name
-                      (cons filepath folder-stack)
-                      post-folder-stack))
-               (else
-                (delete-single-file filepath)
-                (loop port folder-name folder-stack post-folder-stack))))))))
 
   (define (cleanup-install-folder folder prefix)
     (if (< 0 (string-length folder))
       (let ((folder-name (path-expand folder prefix)))
-        (delete-single-folder-if-empty folder-name)
+        (##delete-file-or-directory folder-name #f #f)
         (cleanup-install-folder
           (path-strip-trailing-directory-separator
             (path-directory folder)) prefix)
         #t)))
-
 
   (let ((modref (##string->modref module)))
     (and modref
@@ -240,8 +198,8 @@
                       (macro-modref-path-set! modref modref-path)))
                 (let ((mod-path (##modref->string modref)))
                   (and
-                    (delete-folder-tree
-                      (path-expand mod-path prefix))
+                    (delete-file-or-directory
+                      (path-expand mod-path prefix) #t)
                     (cleanup-install-folder
                       (path-strip-trailing-directory-separator
                         (path-directory mod-path)) prefix))))))))
