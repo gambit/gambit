@@ -540,11 +540,14 @@
                           (##vector-ref mod-info 4)))
                      (if port
                          (##close-port port))
-                     `(##begin
-                       ,@(if (##file-exists? path)
-                             `((##include ,path))
-                             `())
-                       (##demand-module ,arg-src)))))))))))
+                     (let ((module-ref
+                            (##string->symbol
+                             (##modref->string modref))))
+                       `(##begin
+                         ,@(if (##file-exists? path)
+                               `((##include ,path))
+                               `())
+                         (##demand-module ,module-ref))))))))))))
 
 ;;;----------------------------------------------------------------------------
 
