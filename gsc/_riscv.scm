@@ -171,7 +171,7 @@
 ;;;----------------------------------------------------------------------------
 
 ;;; RISC-V R-type instructions: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND,
-;;;                             ADDW, SUBW, SLLW, SRLW, SRAW.
+;;; ADDW, SUBW, SLLW, SRLW, SRAW.
 
 (define (riscv-add cgc rd rs1 rs2)
   (riscv-type-r cgc rd rs1 rs2 #x0000))
@@ -266,8 +266,7 @@
 ;;;----------------------------------------------------------------------------
 
 ;;; RISC-V I-type instructions: JALR, LB, LH, LW, LBU, LHU, ADDI, SLTI, SLTIU,
-;;;                             XORI, ORI, ANDI, SLLI, SRLI, SRAI, LWU, LD,
-;;;                             ADDIW, SLLIW, SRLIW, SRAIW.
+;;; XORI, ORI, ANDI, SLLI, SRLI, SRAI, LWU, LD, ADDIW, SLLIW, SRLIW, SRAIW.
 
 (define (riscv-jalr cgc rd rs1 imm)
   (riscv-type-i cgc rd rs1 imm #x0000 #x67)
@@ -556,5 +555,30 @@
                     (riscv-reg-field rd)
                     7)
                   (riscv-imm->instr imm))))
+
+;;;----------------------------------------------------------------------------
+
+;;; RISC-V instructions: FENCE, FENCE.I, ECALL, EBREAK.
+
+; TODO FENCE
+
+(define (riscv-fence.i cgc)
+  (asm-32-le cgc #x100f)
+  (if (codegen-context-listing-format cgc)
+      (riscv-listing cgc "fence.i")))
+
+(define (riscv-ecall cgc)
+  (asm-32-le cgc #x73)
+  (if (codegen-context-listing-format cgc)
+      (riscv-listing cgc "ecall")))
+
+(define (riscv-ebreak cgc)
+  (asm-32-le cgc #x100073)
+  (if (codegen-context-listing-format cgc)
+      (riscv-listing cgc "ebreak")))
+
+;;;----------------------------------------------------------------------------
+
+;;; TODO RISC-V CSR instructions: CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI.
 
 ;;;============================================================================
