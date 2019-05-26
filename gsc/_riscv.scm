@@ -170,13 +170,14 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; RISC-V R-type instructions: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND.
+;;; RISC-V R-type instructions: ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND,
+;;;                             ADDW, SUBW, SLLW, SRLW, SRAW.
 
 (define (riscv-add cgc rd rs1 rs2)
   (riscv-type-r cgc rd rs1 rs2 #x0000))
 
 (define (riscv-sub cgc rd rs1 rs2)
-  (riscv-type-r cgc rd rs1 rs2 #x0000 #x40000000)
+  (riscv-type-r cgc rd rs1 rs2 #x0000 #x33 #x40000000)
   (if (codegen-context-listing-format cgc)
       (riscv-listing cgc "sub" rd rs1 rs2)))
 
@@ -196,7 +197,7 @@
   (riscv-type-r cgc rd rs1 rs2 #x5000))
 
 (define (riscv-sra cgc rd rs1 rs2)
-  (riscv-type-r cgc rd rs1 rs2 #x5000 #x40000000)
+  (riscv-type-r cgc rd rs1 rs2 #x5000 #x33 #x40000000)
   (if (codegen-context-listing-format cgc)
       (riscv-listing cgc "sra" rd rs1 rs2)))
 
@@ -206,7 +207,31 @@
 (define (riscv-and cgc rd rs1 rs2)
   (riscv-type-r cgc rd rs1 rs2 #x7000))
 
-(define (riscv-type-r cgc rd rs1 rs2 funct3 #!optional (funct7 #x0) (opcode #x33))
+(define (riscv-addw cgc rd rs1 rs2)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-r cgc rd rs1 rs2 #x0000 #x3b))
+
+(define (riscv-subw cgc rd rs1 rs2)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-r cgc rd rs1 rs2 #x0000 #x3b #x40000000)
+  (if (codegen-context-listing-format cgc)
+      (riscv-listing cgc "subw" rd rs1 rs2)))
+
+(define (riscv-sllw cgc rd rs1 rs2)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-r cgc rd rs1 rs2 #x1000 #x3b))
+
+(define (riscv-srlw cgc rd rs1 rs2)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-r cgc rd rs1 rs2 #x5000 #x3b))
+
+(define (riscv-sraw cgc rd rs1 rs2)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-r cgc rd rs1 rs2 #x5000 #x3b #x40000000)
+  (if (codegen-context-listing-format cgc)
+      (riscv-listing cgc "sraw" rd rs1 rs2)))
+
+(define (riscv-type-r cgc rd rs1 rs2 funct3 #!optional (opcode #x33) (funct7 #x0))
 
   (assert (and (riscv-reg? rd)
                (riscv-reg? rs1)
@@ -230,9 +255,10 @@
   (if (and (codegen-context-listing-format cgc)
            (fx= funct7 #x0))
       (riscv-listing cgc
-                     (vector-ref
-                       #("add" "sll" "slt" "sltu" "xor" "srl" "or" "and")
-                       (fxarithmetic-shift funct3 -12))
+                     (list (vector-ref
+                             #("add" "sll" "slt" "sltu" "xor" "srl" "or" "and")
+                             (fxarithmetic-shift funct3 -12))
+                           (if (fx= opcode #x3b) "w" ""))
                      rd
                      rs1
                      rs2)))
@@ -240,7 +266,8 @@
 ;;;----------------------------------------------------------------------------
 
 ;;; RISC-V I-type instructions: JALR, LB, LH, LW, LBU, LHU, ADDI, SLTI, SLTIU,
-;;;                             XORI, ORI, ANDI, SLLI, SRLI, SRAI.
+;;;                             XORI, ORI, ANDI, SLLI, SRLI, SRAI, LWU, LD,
+;;;                             ADDIW, SLLIW, SRLIW, SRAIW.
 
 (define (riscv-jalr cgc rd rs1 imm)
   (riscv-type-i cgc rd rs1 imm #x0000 #x67)
@@ -295,6 +322,38 @@
     (if (codegen-context-listing-format cgc)
         (riscv-listing cgc "srai" rd rs1 imm))))
 
+(define (riscv-lwu cgc rd rs1 imm)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-i cgc rd rs1 imm #x6000 #x03))
+
+(define (riscv-ld cgc rd rs1 imm)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-i cgc rd rs1 imm #x3000 #x03))
+
+(define (riscv-addiw cgc rd rs1 imm)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-i cgc rd rs1 imm #x0000 #x1b
+    (if (codegen-context-listing-format cgc)
+        (riscv-listing cgc "addiw" rd rs1 imm))))
+
+(define (riscv-slliw cgc rd rs1 imm)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-i cgc rd rs1 imm #x1000 #x1b
+    (if (codegen-context-listing-format cgc)
+        (riscv-listing cgc "slliw" rd rs1 imm))))
+
+(define (riscv-srliw cgc rd rs1 imm)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-i cgc rd rs1 imm #x5000 #x1b
+    (if (codegen-context-listing-format cgc)
+        (riscv-listing cgc "srliw" rd rs1 imm))))
+
+(define (riscv-sraiw cgc rd rs1 imm)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-i cgc rd rs1 imm #x5000 #x1b
+    (if (codegen-context-listing-format cgc)
+        (riscv-listing cgc "sraiw" rd rs1 imm))))
+
 (define (riscv-type-i cgc rd rs1 imm funct3 #!optional (opcode #x13))
 
   (assert (and (riscv-reg? rd)
@@ -332,7 +391,8 @@
         (if (fx= opcode #x03)
             (riscv-listing cgc
                            (vector-ref
-                             #("lb" "lh" "lw" "lbu" "lhu")
+                             #("lb" "lh" "lw" "ld"
+                               "lbu" "lhu" "lwu")
                              (fxarithmetic-shift funct3 -12))
                            rd
                            (string-append (number->string (riscv-imm-int-value imm))
@@ -340,7 +400,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;; RISC-V S-type instructions: SB, SH, SW.
+;;; RISC-V S-type instructions: SB, SH, SW, SD.
 
 (define (riscv-sb cgc rs1 rs2 imm)
   (riscv-type-s cgc rs1 rs2 imm #x0000))
@@ -350,6 +410,10 @@
 
 (define (riscv-sw cgc rs1 rs2 imm)
   (riscv-type-s cgc rs1 rs2 imm #x2000))
+
+(define (riscv-sd cgc rs1 rs2 imm)
+  (riscv-assert-64bit-mode cgc)
+  (riscv-type-s cgc rs1 rs2 imm #x3000))
 
 (define (riscv-type-s cgc rs1 rs2 imm funct3 #!optional (opcode #x23))
 
@@ -376,7 +440,7 @@
   (if (codegen-context-listing-format cgc)
       (riscv-listing cgc
                      (vector-ref
-                       #("sb" "sh" "sw")
+                       #("sb" "sh" "sw" "sd")
                        (fxarithmetic-shift funct3 -12))
                      rs2
                      (string-append (number->string (riscv-imm-int-value imm))
