@@ -148,7 +148,7 @@
 (define (riscv-dq cgc . elems)
   (riscv-data-elems cgc elems 64))
 
-(define (riscv-data-elems cgc elems width)
+(define (riscv-data-elems cgc elems width) ; XXX
 
   (define max-per-line 4)
 
@@ -570,7 +570,25 @@
 
 ;;; RISC-V instructions: FENCE, FENCE.I, ECALL, EBREAK.
 
-; TODO FENCE
+(define (riscv-fence cgc pred succ) ; XXX
+
+  (define (print-iorw val)
+    (string-append (if (fxbit-set? 3 val) "i" "")
+                   (if (fxbit-set? 2 val) "o" "")
+                   (if (fxbit-set? 1 val) "r" "")
+                   (if (fxbit-set? 0 val) "w" "")))
+
+  (assert (and (fx> pred 0) (fx< pred 16))
+          "improper predecessor value")
+  (assert (and (fx> succ 0) (fx< succ 16))
+          "improper successor value")
+
+  (asm-32-le cgc (fx+ #xf
+                      (fxarithmetic-shift succ 20)
+                      (fxarithmetic-shift pred 24)))
+
+  (if (codegen-context-listing-format cgc)
+      (riscv-listing cgc "fence" (print-iorw pred) (print-iorw succ))))
 
 (define (riscv-fence.i cgc)
   (asm-32-le cgc #x100f)
