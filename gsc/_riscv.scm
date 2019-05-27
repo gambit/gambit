@@ -28,6 +28,9 @@
 (define (riscv-64bit-mode? cgc)
   (eq? (codegen-context-arch cgc) 'RV64I))
 
+(define (riscv-word-width cgc)
+  (if (riscv-64bit-mode? cgc) 64 32))
+
 (define-macro (riscv-assert-64bit-mode cgc)
   `(assert (riscv-64bit-mode? ,cgc)
            "instruction only valid for RV64I"))
@@ -42,10 +45,15 @@
 
 (define (riscv-imm? x) (pair? x))
 
-(define (riscv-imm-int value #!optional (type 'I)) (cons value type))
-(define (riscv-imm-int? x) (and (pair? x) (fixnum? (car x)) (symbol? (cdr x))))
-(define (riscv-imm-int-value x) (car x))
-(define (riscv-imm-int-type x) (cdr x))
+(define (riscv-imm-int value #!optional (type 'I)) (cons type value))
+(define (riscv-imm-int? x) (and (pair? x) (symbol? (car x)) (fixnum? (cdr x))))
+(define (riscv-imm-int-type x) (car x))
+(define (riscv-imm-int-value x) (cdr x))
+
+(define (riscv-imm-lbl label #!optional (offset 0)) (cons offset label))
+(define (riscv-imm-lbl? x) (and (pair? x) (fixnum? (car x)) (vector? (cdr x))))
+(define (riscv-imm-lbl-offset x) (car x))
+(define (riscv-imm-lbl-label x) (cdr x))
 
 (define (riscv-imm->instr imm)
   (let ((val (riscv-imm-int-value imm)))
@@ -70,7 +78,7 @@
                   (fxarithmetic-shift (fxand val #x800) 9)
                   (fxarithmetic-shift (fxand val #x7fe) 20)
                   (fxarithmetic-shift (fxand val #x100000) 11)))
-        (error "invalid immediate type" imm)))))
+        (else (error "invalid immediate type" imm))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -82,9 +90,12 @@
     (cond ((riscv-reg? opnd)
            (riscv-register-name opnd))
           ((riscv-imm? opnd)
-           (if (riscv-imm-int? opnd)
-               (riscv-imm-int-value opnd)
-               (error "unsupported immediate" opnd)))
+           (cond ((riscv-imm-int? opnd)
+                  (riscv-imm-int-value opnd))
+                 ((riscv-imm-lbl? opnd)
+                  (asm-label-name (riscv-imm-lbl-label opnd)))
+                 (else
+                   (error "unsupported immediate" opnd))))
           (else
             opnd)))
 
@@ -137,7 +148,7 @@
 (define (riscv-dq cgc . elems)
   (riscv-data-elems cgc elems 64))
 
-(define (riscv-data-elems cgc elems width) ; TODO Simplify
+(define (riscv-data-elems cgc elems width)
 
   (define max-per-line 4)
 
@@ -177,9 +188,7 @@
   (riscv-type-r cgc rd rs1 rs2 #x0000))
 
 (define (riscv-sub cgc rd rs1 rs2)
-  (riscv-type-r cgc rd rs1 rs2 #x0000 #x33 #x40000000)
-  (if (codegen-context-listing-format cgc)
-      (riscv-listing cgc "sub" rd rs1 rs2)))
+  (riscv-type-r cgc rd rs1 rs2 #x0000 #x33 #x40000000))
 
 (define (riscv-sll cgc rd rs1 rs2)
   (riscv-type-r cgc rd rs1 rs2 #x1000))
@@ -197,9 +206,7 @@
   (riscv-type-r cgc rd rs1 rs2 #x5000))
 
 (define (riscv-sra cgc rd rs1 rs2)
-  (riscv-type-r cgc rd rs1 rs2 #x5000 #x33 #x40000000)
-  (if (codegen-context-listing-format cgc)
-      (riscv-listing cgc "sra" rd rs1 rs2)))
+  (riscv-type-r cgc rd rs1 rs2 #x5000 #x33 #x40000000))
 
 (define (riscv-or cgc rd rs1 rs2)
   (riscv-type-r cgc rd rs1 rs2 #x6000))
@@ -213,9 +220,7 @@
 
 (define (riscv-subw cgc rd rs1 rs2)
   (riscv-assert-64bit-mode cgc)
-  (riscv-type-r cgc rd rs1 rs2 #x0000 #x3b #x40000000)
-  (if (codegen-context-listing-format cgc)
-      (riscv-listing cgc "subw" rd rs1 rs2)))
+  (riscv-type-r cgc rd rs1 rs2 #x0000 #x3b #x40000000))
 
 (define (riscv-sllw cgc rd rs1 rs2)
   (riscv-assert-64bit-mode cgc)
@@ -227,9 +232,7 @@
 
 (define (riscv-sraw cgc rd rs1 rs2)
   (riscv-assert-64bit-mode cgc)
-  (riscv-type-r cgc rd rs1 rs2 #x5000 #x3b #x40000000)
-  (if (codegen-context-listing-format cgc)
-      (riscv-listing cgc "sraw" rd rs1 rs2)))
+  (riscv-type-r cgc rd rs1 rs2 #x5000 #x3b #x40000000))
 
 (define (riscv-type-r cgc rd rs1 rs2 funct3 #!optional (opcode #x33) (funct7 #x0))
 
@@ -252,11 +255,12 @@
                     20)
                   funct7))
 
-  (if (and (codegen-context-listing-format cgc)
-           (fx= funct7 #x0))
+  (if (codegen-context-listing-format cgc)
       (riscv-listing cgc
                      (list (vector-ref
-                             #("add" "sll" "slt" "sltu" "xor" "srl" "or" "and")
+                             (if (fx= funct7 #x0)
+                                 #("add" "sll" "slt" "sltu" "xor" "srl" "or" "and")
+                                 #("sub" "???" "???" "????" "???" "sra" "??" "???"))
                              (fxarithmetic-shift funct3 -12))
                            (if (fx= opcode #x3b) "w" ""))
                      rd
@@ -307,19 +311,19 @@
   (riscv-type-i cgc rd rs1 imm #x7000))
 
 (define (riscv-slli cgc rd rs1 shamt)
+  (assert (and (fx>= shamt 0) (fx< shamt (riscv-word-width cgc)))
+          "improper shift amount")
   (riscv-type-i cgc rd rs1 (riscv-imm-int shamt) #x1000))
 
 (define (riscv-srli cgc rd rs1 shamt)
-  (let ((imm (riscv-imm-int shamt)))
-    (riscv-type-i cgc rd rs1 imm #x5000)
-    (if (codegen-context-listing-format cgc)
-        (riscv-listing cgc "srli" rd rs1 imm))))
+  (assert (and (fx>= shamt 0) (fx< shamt (riscv-word-width cgc)))
+          "improper shift amount")
+  (riscv-type-i cgc rd rs1 (riscv-imm-int shamt) #x5000))
 
 (define (riscv-srai cgc rd rs1 shamt)
-  (let ((imm (riscv-imm-int (fx+ #x400 shamt))))
-    (riscv-type-i cgc rd rs1 imm #x5000)
-    (if (codegen-context-listing-format cgc)
-        (riscv-listing cgc "srai" rd rs1 imm))))
+  (assert (and (fx>= shamt 0) (fx< shamt (riscv-word-width cgc)))
+          "improper shift amount")
+  (riscv-type-i cgc rd rs1 (riscv-imm-int (fx+ #x400 shamt)) #x5000))
 
 (define (riscv-lwu cgc rd rs1 imm)
   (riscv-assert-64bit-mode cgc)
@@ -331,27 +335,25 @@
 
 (define (riscv-addiw cgc rd rs1 imm)
   (riscv-assert-64bit-mode cgc)
-  (riscv-type-i cgc rd rs1 imm #x0000 #x1b
-    (if (codegen-context-listing-format cgc)
-        (riscv-listing cgc "addiw" rd rs1 imm))))
+  (riscv-type-i cgc rd rs1 imm #x0000 #x1b))
 
-(define (riscv-slliw cgc rd rs1 imm)
+(define (riscv-slliw cgc rd rs1 shamt)
   (riscv-assert-64bit-mode cgc)
-  (riscv-type-i cgc rd rs1 imm #x1000 #x1b
-    (if (codegen-context-listing-format cgc)
-        (riscv-listing cgc "slliw" rd rs1 imm))))
+  (assert (and (fx>= shamt 0) (fx< shamt 32))
+          "improper shift amount")
+  (riscv-type-i cgc rd rs1 (riscv-imm-int shamt) #x1000 #x1b))
 
-(define (riscv-srliw cgc rd rs1 imm)
+(define (riscv-srliw cgc rd rs1 shamt)
   (riscv-assert-64bit-mode cgc)
-  (riscv-type-i cgc rd rs1 imm #x5000 #x1b
-    (if (codegen-context-listing-format cgc)
-        (riscv-listing cgc "srliw" rd rs1 imm))))
+  (assert (and (fx>= shamt 0) (fx< shamt 32))
+          "improper shift amount")
+  (riscv-type-i cgc rd rs1 (riscv-imm-int shamt) #x5000 #x1b))
 
-(define (riscv-sraiw cgc rd rs1 imm)
+(define (riscv-sraiw cgc rd rs1 shamt)
   (riscv-assert-64bit-mode cgc)
-  (riscv-type-i cgc rd rs1 imm #x5000 #x1b
-    (if (codegen-context-listing-format cgc)
-        (riscv-listing cgc "sraiw" rd rs1 imm))))
+  (assert (and (fx>= shamt 0) (fx< shamt 32))
+          "improper shift amount")
+  (riscv-type-i cgc rd rs1 (riscv-imm-int (fx+ #x400 shamt)) #x5000 #x1b))
 
 (define (riscv-type-i cgc rd rs1 imm funct3 #!optional (opcode #x13))
 
@@ -376,26 +378,28 @@
                   (riscv-imm->instr imm)))
 
   (if (codegen-context-listing-format cgc)
-      (begin
-        (if (and (fx= opcode #x13) (not (fx= funct3 #x5000)))
-            (riscv-listing cgc
-                           (vector-ref
-                             #("addi" "slli" "slti" "sltiu"
-                               "xori" "sr?i" "ori" "andi")
-                             (fxarithmetic-shift funct3 -12))
-                           rd
-                           rs1
-                           imm))
-
-        (if (fx= opcode #x03)
-            (riscv-listing cgc
-                           (vector-ref
-                             #("lb" "lh" "lw" "ld"
-                               "lbu" "lhu" "lwu")
-                             (fxarithmetic-shift funct3 -12))
-                           rd
-                           (string-append (number->string (riscv-imm-int-value imm))
-                                          "(" (riscv-register-name rs1) ")"))))))
+      (cond ((fx= opcode #x03)
+             (riscv-listing cgc
+                            (vector-ref
+                              #("lb" "lh" "lw" "ld" "lbu" "lhu" "lwu")
+                              (fxarithmetic-shift funct3 -12))
+                            rd
+                            (string-append (number->string (riscv-imm-int-value imm))
+                                           "(" (riscv-register-name rs1) ")")))
+            ((or (fx= opcode #x13) (fx= opcode #x1b)) ; XXX
+             (riscv-listing cgc
+                            (list (vector-ref
+                                    (vector "addi" "slli" "slti" "sltiu" "xori"
+                                            (if (fxbit-set? 30 (riscv-imm-int-value imm)) "srai" "srli")
+                                            "ori" "andi")
+                                    (fxarithmetic-shift funct3 -12))
+                                  (if (fx= opcode #x1b) "w" ""))
+                            rd
+                            rs1
+                            (if (or (fx= funct3 #x1000) (fx= funct3 #x5000))
+                                (fxand (if (and (riscv-64bit-mode? cgc) (fx= opcode #x13)) #x3f #x1f)
+                                       (fxarithmetic-shift (riscv-imm-int-value imm) -20))
+                                imm))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -474,9 +478,12 @@
                (riscv-imm? imm))
           "invalid operands")
 
-  (assert (and (riscv-imm-int? imm)
-               (eq? (riscv-imm-int-type imm) 'B))
+  (assert (or (riscv-imm-lbl? imm)
+              (and (riscv-imm-int? imm)
+                   (eq? (riscv-imm-int-type imm) 'B)))
           "incorrect immediate type")
+
+  ; TODO Label
 
   (asm-32-le cgc
              (fx+ opcode
@@ -545,9 +552,12 @@
                (riscv-imm? imm))
           "invalid operands")
 
-  (assert (and (riscv-imm-int? imm)
-               (eq? (riscv-imm-int-type imm) 'J))
+  (assert (or (riscv-imm-lbl? imm)
+              (and (riscv-imm-int? imm)
+                   (eq? (riscv-imm-int-type imm) 'J)))
           "incorrect immediate type")
+
+  ; TODO Label
 
   (asm-32-le cgc
              (fx+ opcode
