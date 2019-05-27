@@ -49,6 +49,40 @@ riscv-x30
 riscv-x31
 riscv-pc
 
+riscv-zero
+riscv-ra
+riscv-sp
+riscv-gp
+riscv-tp
+riscv-t0
+riscv-t1
+riscv-t2
+riscv-s0
+riscv-fp
+riscv-s1
+riscv-a0
+riscv-a1
+riscv-a2
+riscv-a3
+riscv-a4
+riscv-a5
+riscv-a6
+riscv-a7
+riscv-s2
+riscv-s3
+riscv-s4
+riscv-s5
+riscv-s6
+riscv-s7
+riscv-s8
+riscv-s9
+riscv-s10
+riscv-s11
+riscv-t3
+riscv-t4
+riscv-t5
+riscv-t6
+
 riscv-arch-set!
 riscv-64bit-mode?
 riscv-word-width
@@ -146,17 +180,19 @@ riscv-ebreak
      (riscv-registers-implement)))
 
 (define-macro (riscv-define-registers . regs)
-  (let* ((names
-           (make-vector 33))
-         (defs
-           (map (lambda (r)
-                  (let ((name (symbol->string (car r)))
-                        (code (cadr r)))
-                    (vector-set! names code name)
-                    `(define-macro (,(string->symbol
-                                       (string-append "riscv-" name)))
-                       ,code)))
-                regs)))
+  (let* ((names (make-vector 33))
+         (defs (apply
+                 append
+                 (map (lambda (r)
+                        (let ((code (car r)))
+                          (vector-set! names code (symbol->string (cadr r)))
+                          (map (lambda (name)
+                                 `(define-macro (,(string->symbol
+                                                    (string-append "riscv-"
+                                                                   (symbol->string name))))
+                                    ,code))
+                               (cdr r))))
+                      regs)))) ; XXX
     `(begin
        (define-macro (riscv-registers-implement)
          `(begin
@@ -169,38 +205,38 @@ riscv-ebreak
        ,@defs)))
 
 (riscv-define-registers
-  (x0   0)  ;; hardwired to 0, ignores writes
-  (x1   1)  ;; return address for jumps
-  (x2   2)  ;; stack pointer
-  (x3   3)  ;; global pointer
-  (x4   4)  ;; thread pointer
-  (x5   5)  ;; temporary register 0
-  (x6   6)  ;; temporary register 1
-  (x7   7)  ;; temporary register 2
-  (x8   8)  ;; saved register 0 or frame pointer
-  (x9   9)  ;; saved register 1
-  (x10 10)  ;; return value or function argument 0
-  (x11 11)  ;; return value or function argument 1
-  (x12 12)  ;; function argument 2
-  (x13 13)  ;; function argument 3
-  (x14 14)  ;; function argument 4
-  (x15 15)  ;; function argument 5
-  (x16 16)  ;; function argument 6
-  (x17 17)  ;; function argument 7
-  (x18 18)  ;; saved register 2
-  (x19 19)  ;; saved register 3
-  (x20 20)  ;; saved register 4
-  (x21 21)  ;; saved register 5
-  (x22 22)  ;; saved register 6
-  (x23 23)  ;; saved register 7
-  (x24 24)  ;; saved register 8
-  (x25 25)  ;; saved register 9
-  (x26 26)  ;; saved register 10
-  (x27 27)  ;; saved register 11
-  (x28 28)  ;; temporary register 3
-  (x29 29)  ;; temporary register 4
-  (x30 30)  ;; temporary register 5
-  (x31 31)  ;; temporary register 6
-  (pc  32)) ;; program counter
+  (0 x0 zero)  ;; hardwired to 0, ignores writes
+  (1 x1 ra)    ;; return address for jumps
+  (2 x2 sp)    ;; stack pointer
+  (3 x3 gp)    ;; global pointer
+  (4 x4 tp)    ;; thread pointer
+  (5 x5 t0)    ;; temporary register 0
+  (6 x6 t1)    ;; temporary register 1
+  (7 x7 t2)    ;; temporary register 2
+  (8 x8 s0 fp) ;; saved register 0 or frame pointer
+  (9 x9 s1)    ;; saved register 1
+  (10 x10 a0)  ;; return value or function argument 0
+  (11 x11 a1)  ;; return value or function argument 1
+  (12 x12 a2)  ;; function argument 2
+  (13 x13 a3)  ;; function argument 3
+  (14 x14 a4)  ;; function argument 4
+  (15 x15 a5)  ;; function argument 5
+  (16 x16 a6)  ;; function argument 6
+  (17 x17 a7)  ;; function argument 7
+  (18 x18 s2)  ;; saved register 2
+  (19 x19 s3)  ;; saved register 3
+  (20 x20 s4)  ;; saved register 4
+  (21 x21 s5)  ;; saved register 5
+  (22 x22 s6)  ;; saved register 6
+  (23 x23 s7)  ;; saved register 7
+  (24 x24 s8)  ;; saved register 8
+  (25 x25 s9)  ;; saved register 9
+  (26 x26 s10) ;; saved register 10
+  (27 x27 s11) ;; saved register 11
+  (28 x28 t3)  ;; temporary register 3
+  (29 x29 t4)  ;; temporary register 4
+  (30 x30 t5)  ;; temporary register 5
+  (31 x31 t6)  ;; temporary register 6
+  (32 pc))     ;; program counter
 
 ;;;============================================================================
