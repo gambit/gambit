@@ -118,12 +118,12 @@
 (univ-define-prim "##cpxnum-real" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'cpxnum arg1) 'real)))))
+     (return (^member (^cast* 'cpxnum arg1) (^public 'real))))))
 
 (univ-define-prim "##cpxnum-imag" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'cpxnum arg1) 'imag)))))
+     (return (^member (^cast* 'cpxnum arg1) (^public 'imag))))))
 
 (univ-define-prim-bool "##cpxnum?" #t
   (make-translated-operand-generator
@@ -138,12 +138,12 @@
 (univ-define-prim "##ratnum-numerator" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'ratnum arg1) 'num)))))
+     (return (^member (^cast* 'ratnum arg1) (^public 'num))))))
 
 (univ-define-prim "##ratnum-denominator" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'ratnum arg1) 'den)))))
+     (return (^member (^cast* 'ratnum arg1) (^public 'den))))))
 
 (univ-define-prim-bool "##ratnum?" #t
   (make-translated-operand-generator
@@ -187,7 +187,8 @@
   (make-translated-operand-generator
    (lambda (ctx return arg)
     (let ((max-sqrt (inexact->exact (floor (sqrt univ-fixnum-max)))))
-      (return (^if-expr (^or (^> (^fixnum-unbox arg) (^int max-sqrt))
+      (return (^if-expr 'scmobj
+                        (^or (^> (^fixnum-unbox arg) (^int max-sqrt))
                              (^< (^fixnum-unbox arg) (^int (- max-sqrt))))
                         (^obj #f)
                         (^fixnum-box (^* (^fixnum-unbox arg)
@@ -197,7 +198,8 @@
 (univ-define-prim "##fxmax" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (return (^if-expr (^> (^fixnum-unbox arg1) (^fixnum-unbox arg2))
+     (return (^if-expr 'scmobj
+                       (^> (^fixnum-unbox arg1) (^fixnum-unbox arg2))
                        arg1
                        arg2)))))
 
@@ -205,7 +207,8 @@
 (univ-define-prim "##fxmin" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (return (^if-expr (^< (^fixnum-unbox arg1) (^fixnum-unbox arg2))
+     (return (^if-expr 'scmobj
+                       (^< (^fixnum-unbox arg1) (^fixnum-unbox arg2))
                        arg1
                        arg2)))))
 
@@ -277,6 +280,7 @@
 
         ((java)
          (^if-expr
+          'scmobj
           (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
              (^fixnum-unbox arg1)
              " + "
@@ -288,6 +292,9 @@
              ") == " (^rts-field-use 'inttemp1))
           (^fixnum-box (^rts-field-use 'inttemp2))
           (^obj #f)))
+
+        ((go)
+         (^ "~~~TODO4:fx+?~~~"))
 
         (else
          (compiler-internal-error
@@ -361,6 +368,7 @@
 
         ((java)
          (^if-expr
+          'scmobj
           (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
              (^fixnum-unbox arg1)
              " * "
@@ -372,6 +380,9 @@
              ") == " (^rts-field-use 'inttemp1))
           (^fixnum-box (^rts-field-use 'inttemp2))
           (^obj #f)))
+
+        ((go)
+         (^ "~~~TODO4:fx*?~~~"))
 
         (else
          (compiler-internal-error
@@ -450,6 +461,7 @@
 
         ((java)
          (^if-expr
+          'scmobj
           (^ "(" (^rts-field-use 'inttemp2) " = (" (^rts-field-use 'inttemp1) " = "
              (if arg2
                  (^ (^fixnum-unbox arg1) " - " (^fixnum-unbox arg2))
@@ -461,6 +473,9 @@
              ") == " (^rts-field-use 'inttemp1))
           (^fixnum-box (^rts-field-use 'inttemp2))
           (^obj #f)))
+
+        ((go)
+         (^ "~~~TODO4:fx-?~~~"))
 
         (else
          (compiler-internal-error
@@ -544,7 +559,7 @@
    (lambda (ctx return arg)
      (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
        (^ (^var-declaration 'int tmp (^fixnum-unbox arg))
-          (^assign tmp (^if-expr (^< tmp (^int 0)) (^bitnot tmp) tmp))
+          (^assign tmp (^if-expr 'int (^< tmp (^int 0)) (^bitnot tmp) tmp))
           (^popcount! tmp)
           (return (^fixnum-box tmp)))))))
 
@@ -553,7 +568,7 @@
     (lambda (ctx return arg)
       (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
         (^ (^var-declaration 'int tmp (^fixnum-unbox arg))
-           (^assign tmp (^if-expr (^< tmp (^int 0)) (^bitnot tmp) tmp))
+           (^assign tmp (^if-expr 'int (^< tmp (^int 0)) (^bitnot tmp) tmp))
            (let gen-shift ((s 1) (acc (^)))
              (if (>= s univ-word-bits)
                  acc
@@ -570,7 +585,7 @@
       (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
         (^ (^var-declaration 'int tmp (^fixnum-unbox arg))
            (^assign tmp (^bitxor tmp (^- tmp (^int 1))))
-           (^assign tmp (^if-expr (^< tmp (^int 0)) (^bitnot tmp) tmp))
+           (^assign tmp (^if-expr 'int (^< tmp (^int 0)) (^bitnot tmp) tmp))
            (^popcount! tmp)
            (return (^fixnum-box (^- tmp (^int 1)))))))))
 
@@ -591,7 +606,8 @@
    (lambda (ctx return arg1 arg2)
      (return
       (^fixnum-box
-       (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+       (^if-expr 'int
+                 (^< (^fixnum-unbox arg2) (^int 0))
                  (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
                  (univ-wrap ctx (^<< (^fixnum-unbox arg1)
                                      (^fixnum-unbox arg2)))))))))
@@ -600,15 +616,18 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+      (^if-expr 'scmobj
+                (^< (^fixnum-unbox arg2) (^int 0))
 
-                (^if-expr (^> (^- (^fixnum-unbox arg2))
+                (^if-expr 'scmobj
+                          (^> (^- (^fixnum-unbox arg2))
                               (^int (- univ-word-bits univ-tag-bits)))
                           (^obj #f)
                           (^fixnum-box
                            (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))))
 
-                (^if-expr (^> (^fixnum-unbox arg2)
+                (^if-expr 'scmobj
+                          (^> (^fixnum-unbox arg2)
                               (^int (- univ-word-bits univ-tag-bits)))
                           (^obj #f)
 
@@ -621,9 +640,10 @@
    (lambda (ctx return arg1 arg2)
      (return
       (^fixnum-box
-        (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
-                  (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
-                  (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2))))))))
+       (^if-expr 'int
+                 (^< (^fixnum-unbox arg2) (^int 0))
+                 (^>> (^fixnum-unbox arg1) (^- (^fixnum-unbox arg2)))
+                 (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2))))))))
 
 ;; TODO: Use a single expression
 ;; TODO: Maybe test -(univ-word-bits - univ-tag-bits) <= arg2 <= univ-word-bits - univ-tag-bits
@@ -639,16 +659,18 @@
                       (univ-wrap ctx (^<< (^fixnum-unbox arg1)
                                           (^fixnum-unbox arg2))))
              (return
-               (^if-expr (^= (^fixnum-unbox arg1)
-                             (^>> (^rts-field-use 'inttemp1) (^fixnum-unbox arg2)))
-                         (^fixnum-box (^rts-field-use 'inttemp1))
-                         (^obj #f))))))))
+              (^if-expr 'scmobj
+                        (^= (^fixnum-unbox arg1)
+                            (^>> (^rts-field-use 'inttemp1) (^fixnum-unbox arg2)))
+                        (^fixnum-box (^rts-field-use 'inttemp1))
+                        (^obj #f))))))))
 
 (univ-define-prim "##fxwraparithmetic-shift-left" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^if-expr (^= (^fixnum-unbox arg2)
+      (^if-expr 'scmobj
+                (^= (^fixnum-unbox arg2)
                     (^int (- univ-word-bits univ-tag-bits 1)))
                 (^obj 0)
                 (^fixnum-box (univ-wrap ctx
@@ -659,12 +681,14 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^if-expr (^or (^< (^fixnum-unbox arg2)
+      (^if-expr 'scmobj
+                (^or (^< (^fixnum-unbox arg2)
                          (^int 0))
                      (^> (^fixnum-unbox arg2)
                          (^int (- univ-word-bits univ-tag-bits))))
                 (^obj #f)
-                (^if-expr (^= (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits 1)))
+                (^if-expr 'scmobj
+                          (^= (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits 1)))
                           (^obj 0)
                           (^fixnum-box (univ-wrap ctx
                                                   (^<< (^fixnum-unbox arg1)
@@ -681,10 +705,12 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^if-expr (^or (^< (^fixnum-unbox arg2) (^int 0))
+      (^if-expr 'scmobj
+                (^or (^< (^fixnum-unbox arg2) (^int 0))
                 (^> (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits))))
            (^obj #f)
-           (^if-expr (^= (^>> (univ-wrap ctx (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2)))
+           (^if-expr 'scmobj
+                     (^= (^>> (univ-wrap ctx (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2)))
                               (^fixnum-unbox arg2))
                          (^fixnum-unbox arg1))
                      (^fixnum-box (^<< (^fixnum-unbox arg1) (^fixnum-unbox arg2)))
@@ -700,13 +726,15 @@
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+      (^if-expr 'scmobj
+                (^< (^fixnum-unbox arg2) (^int 0))
                 (^obj #f)
 
                 (^fixnum-box
                  (^>> (^fixnum-unbox arg1)
                       (^parens
-                       (^if-expr (^> (^fixnum-unbox arg2)
+                       (^if-expr 'int
+                                 (^> (^fixnum-unbox arg2)
                                      (^int (- univ-word-bits univ-tag-bits)))
                                  (^int (- univ-word-bits univ-tag-bits))
                                  (^fixnum-unbox arg2))))))))))
@@ -716,56 +744,65 @@
    (lambda (ctx return arg1 arg2)
      (return
       (^fixnum-box
-        (^>> (^parens (^if-expr (^> (^fixnum-unbox arg2) (^int 0))
-                                    (^bitand (^fixnum-unbox arg1) (^int univ-fixnum-max*2+1))
-                                    (^fixnum-unbox arg1)))
-             (^fixnum-unbox arg2)))))))
+       (^>> (^parens (^if-expr 'int
+                               (^> (^fixnum-unbox arg2) (^int 0))
+                               (^bitand (^fixnum-unbox arg1) (^int univ-fixnum-max*2+1))
+                               (^fixnum-unbox arg1)))
+            (^fixnum-unbox arg2)))))))
 
 (univ-define-prim "##fxwraplogical-shift-right?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return
-      (^if-expr (^< (^fixnum-unbox arg2) (^int 0))
+      (^if-expr 'scmobj
+                (^< (^fixnum-unbox arg2) (^int 0))
                 (^obj #f)
                 (^fixnum-box
                   (^>> (^parens
-                        (^if-expr (^> (^fixnum-unbox arg2) (^int 0))
+                        (^if-expr 'int
+                                  (^> (^fixnum-unbox arg2) (^int 0))
                                   (^bitand (^fixnum-unbox arg1)
                                            (^int univ-fixnum-max*2+1))
                                   (^fixnum-unbox arg1)))
                        (^parens
                         (^if-expr
-                          (^> (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits)))
-                          (^int (- univ-word-bits univ-tag-bits))
-                          (^fixnum-unbox arg2))))))))))
+                         'int
+                         (^> (^fixnum-unbox arg2) (^int (- univ-word-bits univ-tag-bits)))
+                         (^int (- univ-word-bits univ-tag-bits))
+                         (^fixnum-unbox arg2))))))))))
 
 (univ-define-prim "##fxwrapabs" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
     (return
-      (^if-expr (^>= (^fixnum-unbox arg) (^int 0))
-                arg
-                (^if-expr (^= (^fixnum-unbox arg) (^int univ-fixnum-min))
-                          arg
-                          (^fixnum-box (^- (^fixnum-unbox arg)))))))))
+     (^if-expr 'scmobj
+               (^>= (^fixnum-unbox arg) (^int 0))
+               arg
+               (^if-expr 'scmobj
+                         (^= (^fixnum-unbox arg) (^int univ-fixnum-min))
+                         arg
+                         (^fixnum-box (^- (^fixnum-unbox arg)))))))))
 
 (univ-define-prim "##fxabs" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
     (return
-      (^if-expr (^>= (^fixnum-unbox arg) (^int 0))
-                arg
-                (^fixnum-box (^- (^fixnum-unbox arg))))))))
+     (^if-expr 'scmobj
+               (^>= (^fixnum-unbox arg) (^int 0))
+               arg
+               (^fixnum-box (^- (^fixnum-unbox arg))))))))
 
 (univ-define-prim "##fxabs?" #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
     (return
-      (^if-expr (^>= (^fixnum-unbox arg) (^int 0))
-                arg
-                (^if-expr (^= (^fixnum-unbox arg) (^int univ-fixnum-min))
-                          (^obj #f)
-                          (^fixnum-box (^- (^fixnum-unbox arg)))))))))
+     (^if-expr 'scmobj
+               (^>= (^fixnum-unbox arg) (^int 0))
+               arg
+               (^if-expr 'scmobj
+                         (^= (^fixnum-unbox arg) (^int univ-fixnum-min))
+                         (^obj #f)
+                         (^fixnum-box (^- (^fixnum-unbox arg)))))))))
 
 (univ-define-prim-bool "##fxzero?" #t
   (make-translated-operand-generator
@@ -863,7 +900,8 @@
 (univ-define-prim "##flmax" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (return (^if-expr (^> (^flonum-unbox arg1) (^flonum-unbox arg2))
+     (return (^if-expr 'scmobj
+                       (^> (^flonum-unbox arg1) (^flonum-unbox arg2))
                        arg1
                        arg2)))))
 
@@ -871,7 +909,8 @@
 (univ-define-prim "##flmin" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (return (^if-expr (^< (^flonum-unbox arg1) (^flonum-unbox arg2))
+     (return (^if-expr 'scmobj
+                       (^< (^flonum-unbox arg1) (^flonum-unbox arg2))
                        arg1
                        arg2)))))
 
@@ -918,18 +957,23 @@
 
     ((python)
      ;;TODO: cleanup the Python code
-     (^if-expr (^= arg2 (^float targ-inexact-+0))
-               (^if-expr (^= arg1 (^float targ-inexact-+0))
+     (^if-expr 'f64
+               (^= arg2 (^float targ-inexact-+0))
+               (^if-expr 'f64
+                         (^= arg1 (^float targ-inexact-+0))
                          "float('nan')"
                          (^float-copysign "float('inf')" (^* arg1 arg2)))
                (^/ arg1 arg2)))
 
     ((php)
      ;;TODO: cleanup the PHP code
-     (^if-expr (^= arg2 (^float targ-inexact-+0))
-               (^if-expr (^= arg1 (^float targ-inexact-+0))
+     (^if-expr 'f64
+               (^= arg2 (^float targ-inexact-+0))
+               (^if-expr 'f64
+                         (^= arg1 (^float targ-inexact-+0))
                          "NAN"
-                         (^if-expr (^eq? (^call-prim "strval" (^* arg1 (^float targ-inexact-+0)))
+                         (^if-expr 'f64
+                                   (^eq? (^call-prim "strval" (^* arg1 (^float targ-inexact-+0)))
                                          (^call-prim "strval" arg2))
                                    "INF"
                                    "-INF"))
@@ -1065,22 +1109,29 @@
           ;; arg2 = -0.0 requires a special case
           (^* (^call-prim 'abs (^flonum-unbox arg1))
               (^parens
-               (^if-expr (^> (^flonum-unbox arg2)
+               (^if-expr 'f64
+                         (^> (^flonum-unbox arg2)
                              (^float targ-inexact-+0))
                          (^int 1)
-                         (^if-expr (^< (^flonum-unbox arg2)
+                         (^if-expr 'f64
+                                   (^< (^flonum-unbox arg2)
                                        (^float targ-inexact-+0))
                                    (^int -1)
-                                   (^if-expr (^eq? (^call-prim
+                                   (^if-expr 'f64
+                                             (^eq? (^call-prim
                                                     'strval
                                                     (^flonum-unbox arg2))
                                                    (^str "-0"))
                                              (^int -1)
                                              (^int 1)))))))))
 
+       ((go)
+        (^ "~~~TODO4:flcopysign~~~"))
+
        (else
         (return
-         (^if-expr (univ-floats-have-same-sign?
+         (^if-expr 'scmobj
+                   (univ-floats-have-same-sign?
                     ctx
                     (^flonum-unbox arg1)
                     (^flonum-unbox arg2))
@@ -2159,22 +2210,27 @@
            (weak-values (^boolean-unbox weak-values)))
        (case (target-name (ctx-target ctx))
          ((python ruby)
-          (return (^if-expr (^and weak-keys weak-values)
-                            (^new (^rts-class-use 'hashtable_weak_keys_values))
-                            (^if-expr weak-keys
-                                      (^new (^rts-class-use 'hashtable_weak_keys))
-                                      (^if-expr weak-values
-                                                (^new (^rts-class-use 'hashtable_weak_values))
-                                                (^new (^rts-class-use 'hashtable)))))))
+          (return (^if-expr 'scmobj
+                            (^and weak-keys weak-values)
+                            (^new* (^rts-class-use 'hashtable_weak_keys_values) '())
+                            (^if-expr 'scmobj
+                                      weak-keys
+                                      (^new* (^rts-class-use 'hashtable_weak_keys) '())
+                                      (^if-expr 'scmobj
+                                                weak-values
+                                                (^new* (^rts-class-use 'hashtable_weak_values) '())
+                                                (^new* (^rts-class-use 'hashtable) '()))))))
          ((js)
           ;; Note : WeakMap in javascript is a Map object with weak-keys.
           ;; However, a WeakMap's keys are not enumerable, which makes functions
           ;; such as table-for-each and table->list impossible to implement
-          (return (^new 'Map)))
+          (return (^new* 'Map '())))
          ((php)
-          (return (^new (^rts-class-use 'hashtable))))
+          (return (^new* (^rts-class-use 'hashtable) '())))
          ((java)
-          (return (^call-member (^new (^rts-class-use 'hashtable)) 'init weak-keys weak-values)))
+          (return (^call-member (^new* (^rts-class-use 'hashtable) '()) 'init weak-keys weak-values)))
+         ((go)
+          (^ "~~~TODO4:univ-table-make-hashtable~~~"))
          (else
           (compiler-internal-error
            "##univ-table-make-hashtable, unknown target")))))))
@@ -2189,6 +2245,8 @@
           (^dict-key-exists? dict key))
          ((js php java)
           (^call-member dict 'has key))
+         ((go)
+          (^ "~~~TODO4:univ-table-key-exists?~~~"))
          (else
           (compiler-internal-error
            "##univ-table-key-exists?, unknown target"))))))))
@@ -2206,6 +2264,8 @@
            (^rts-method-use 'hostarray2list)
            (^call-member 'Array 'from
                          (^call-member dict 'keys))))
+         ((go)
+          (^ "~~~TODO4:univ-table-keys~~~"))
          (else
           (compiler-internal-error
            "##univ-table-keys, unknown target")))))))
@@ -2216,9 +2276,11 @@
      (return
       (case (target-name (ctx-target ctx))
         ((python ruby)
-         (^dict-get dict key))
+         (^dict-get 'scmobj dict key))
         ((js php java)
          (^call-member dict 'get key))
+        ((go)
+         (^ "~~~TODO4:univ-table-ref~~~"))
         (else
          (compiler-internal-error
           "##univ-table-ref, unknown target")))))))
@@ -2229,10 +2291,12 @@
      (^
       (case (target-name (ctx-target ctx))
         ((python ruby)
-         (^dict-set dict key val))
+         (^dict-set 'scmobj dict key val))
         ((js php java)
          (^expr-statement
           (^call-member dict 'set key val)))
+        ((go)
+         (^ "~~~TODO4:univ-table-set!~~~"))
         (else
          (compiler-internal-error
           "##univ-table-set!, unknown target")))
@@ -2248,6 +2312,8 @@
         ((js php java)
          (^expr-statement
           (^call-member dict 'delete key)))
+         ((go)
+          (^ "~~~TODO4:univ-table-delete~~~"))
         (else
          (compiler-internal-error
           "##univ-table-delete, unknown target")))
@@ -2265,6 +2331,8 @@
           (^member dict 'size))
          ((php java)
           (^call-member dict 'size))
+         ((go)
+          (^ "~~~TODO4:univ-table-length~~~"))
          (else
           (compiler-internal-error
            "##univ-table-length, unknown target"))))))))
@@ -2294,12 +2362,12 @@
    (lambda (ctx return sym)
      ;;;;FIXME for host representation
      (return
-       (^str->string (^member (^cast* 'symbol sym) 'name))))))
+       (^str->string (^member (^cast* 'symbol sym) (^public 'name)))))))
 
 (univ-define-prim "##symbol-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym name)
-     (^ (^assign (^member (^cast* 'symbol sym) 'name)
+     (^ (^assign (^member (^cast* 'symbol sym) (^public 'name))
                  (^string->str name))
         (return sym)))))
 
@@ -2307,18 +2375,18 @@
   (make-translated-operand-generator
    (lambda (ctx return sym)
      ;;;;FIXME for host representation
-     (return (^member (^cast* 'symbol sym) 'hash)))))
+     (return (^member (^cast* 'symbol sym) (^public 'hash))))))
 
 (univ-define-prim "##symbol-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym hash)
-     (^ (^assign (^member (^cast* 'symbol sym) 'hash) hash)
+     (^ (^assign (^member (^cast* 'symbol sym) (^public 'hash)) hash)
         (return sym)))))
 
 (univ-define-prim "##symbol-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member (^cast* 'symbol sym) 'interned)))));;;;FIXME for host representation
+     (return (^member (^cast* 'symbol sym) (^public 'interned))))));;;;FIXME for host representation
 
 (univ-define-prim-bool "##keyword?" #t
   (make-translated-operand-generator
@@ -2345,12 +2413,12 @@
    (lambda (ctx return key)
      ;;;;FIXME for host representation
      (return
-       (^str->string (^member (^cast* 'keyword key) 'name))))))
+       (^str->string (^member (^cast* 'keyword key) (^public 'name)))))))
 
 (univ-define-prim "##keyword-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key name)
-     (^ (^assign (^member (^cast* 'keyword key) 'name)
+     (^ (^assign (^member (^cast* 'keyword key) (^public 'name))
                  (^string->str name))
         (return key)))))
 
@@ -2358,18 +2426,18 @@
   (make-translated-operand-generator
    (lambda (ctx return key)
      ;;;;FIXME for host representation
-     (return (^member (^cast* 'keyword key) 'hash)))))
+     (return (^member (^cast* 'keyword key) (^public 'hash))))))
 
 (univ-define-prim "##keyword-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key hash)
-     (^ (^assign (^member (^cast* 'keyword key) 'hash) hash)
+     (^ (^assign (^member (^cast* 'keyword key) (^public 'hash)) hash)
         (return key)))))
 
 (univ-define-prim "##keyword-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member (^cast* 'keyword key) 'interned)))));;;;FIXME for host representation
+     (return (^member (^cast* 'keyword key) (^public 'interned))))));;;;FIXME for host representation
 
 (univ-define-prim-bool "##closure?" #t
   (make-translated-operand-generator
@@ -2444,8 +2512,7 @@
 (define (univ-prm-name ctx name)
   (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
       (^str name)
-      (^cast* 'symbol
-              (^obj (string->symbol name)))))
+      (^obj (string->symbol name))))
 
 (define (univ-ctrlpt-reference-to-ctrlpt ctx ref)
   ref
@@ -2458,9 +2525,9 @@
       ref))
 
 (define (univ-parent-entry-point-has-null-parent? ctx)
-  (and (eq? (univ-procedure-representation ctx) 'host)
+  (and (not (eq? (univ-procedure-representation ctx) 'class))
        (case (target-name (ctx-target ctx))
-         ((js) #f)
+         ((js go) #f)
          ((php) (not (univ-php-pre53? ctx)))
          (else #t))))
 
@@ -2493,7 +2560,8 @@
    (lambda (result)
      (return
       (if (univ-parent-entry-point-has-null-parent? ctx)
-          (^if-expr (^null? result)
+          (^if-expr 'ctrlpt
+                    (^null? result)
                     (^cast* 'ctrlpt arg1)
                     (univ-ctrlpt-reference-to-ctrlpt ctx result))
           result)))))
@@ -2565,12 +2633,12 @@
 (univ-define-prim "##promise-state" #f
   (make-translated-operand-generator
    (lambda (ctx return prom)
-     (return (^member (^cast* 'promise prom) 'state)))))
+     (return (^member (^cast* 'promise prom) (^public 'state))))))
 
 (univ-define-prim "##promise-state-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return prom state)
-     (^ (^assign (^member (^cast* 'promise prom) 'state) state)
+     (^ (^assign (^member (^cast* 'promise prom) (^public 'state)) state)
         (return prom)))))
 
 
@@ -2615,24 +2683,24 @@
 (univ-define-prim "##continuation-frame" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (^member (^cast* 'continuation cont) 'frame)))))
+     (return (^member (^cast* 'continuation cont) (^public 'frame))))))
 
 (univ-define-prim "##continuation-frame-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return cont frame)
-     (^ (^assign (^member (^cast* 'continuation cont) 'frame)
+     (^ (^assign (^member (^cast* 'continuation cont) (^public 'frame))
                  (^cast* 'frame frame))
         (return cont)))))
 
 (univ-define-prim "##continuation-denv" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (^member (^cast* 'continuation cont) 'denv)))))
+     (return (^member (^cast* 'continuation cont) (^public 'denv))))))
 
 (univ-define-prim "##continuation-denv-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return cont denv)
-     (^ (^assign (^member (^cast* 'continuation cont) 'denv) denv)
+     (^ (^assign (^member (^cast* 'continuation cont) (^public 'denv)) denv)
         (return cont)))))
 
 (univ-define-prim "##continuation-next" #t
@@ -2646,7 +2714,7 @@
 (univ-define-prim "##continuation-ret" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))))))
+     (return (univ-frame-ra ctx (^member (^cast* 'continuation cont) (^public 'frame)))))))
 
 (define (univ-get-cont-ra-field attrib)
   (make-translated-operand-generator
@@ -2654,7 +2722,7 @@
      (univ-get-ra-field
       ctx
       return
-      (univ-frame-ra ctx (^member (^cast* 'continuation cont) 'frame))
+      (univ-frame-ra ctx (^member (^cast* 'continuation cont) (^public 'frame)))
       attrib))))
 
 (univ-define-prim "##continuation-fs"   #f (univ-get-cont-ra-field 'fs))
@@ -2666,7 +2734,7 @@
      (return
       (univ-frame-ref
        ctx
-       (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
+       (^frame-unbox (^member (^cast* 'continuation cont) (^public 'frame)))
        (^fixnum-unbox index))))))
 
 (univ-define-prim "##continuation-set!" #t
@@ -2674,7 +2742,7 @@
    (lambda (ctx return cont index val)
      (^ (univ-frame-set!
          ctx
-         (^frame-unbox (^member (^cast* 'continuation cont) 'frame))
+         (^frame-unbox (^member (^cast* 'continuation cont) (^public 'frame)))
          (^fixnum-unbox index)
          val)
         (return cont)))))
@@ -2684,7 +2752,7 @@
    (lambda (ctx return cont index)
      (return
       (^boolean-box
-       (univ-frame-slot-live? ctx (^member (^cast* 'continuation cont) 'frame) index))))))
+       (univ-frame-slot-live? ctx (^member (^cast* 'continuation cont) (^public 'frame)) index))))))
 
 (univ-define-prim-bool "##frame?" #t
   (make-translated-operand-generator
@@ -2799,23 +2867,23 @@
 (univ-define-prim "##will-testator" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member (^cast* 'will will) 'testator)))))
+     (return (^member (^cast* 'will will) (^public 'testator))))))
 
 (univ-define-prim "##will-testator-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will testator)
-     (^ (^assign (^member (^cast* 'will will) 'testator) testator)
+     (^ (^assign (^member (^cast* 'will will) (^public 'testator)) testator)
         (return will)))))
 
 (univ-define-prim "##will-action" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member (^cast* 'will will) 'action)))))
+     (return (^member (^cast* 'will will) (^public 'action))))))
 
 (univ-define-prim "##will-action-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will action)
-     (^ (^assign (^member (^cast* 'will will) 'action) action)
+     (^ (^assign (^member (^cast* 'will will) (^public 'action)) action)
         (return will)))))
 
 (univ-define-prim-bool "##foreign?" #t
@@ -2826,7 +2894,7 @@
 (univ-define-prim "##foreign-tags" #t
   (make-translated-operand-generator
    (lambda (ctx return foreign)
-     (return (^member (^cast* 'foreign foreign) 'tags)))))
+     (return (^member (^cast* 'foreign foreign) (^public 'tags))))))
 
 (univ-define-prim "##apply" #f
 
@@ -2943,7 +3011,8 @@
                          (^bitand (^parens (^+ (^rts-field-use 'inttemp1) (^int 1)))
                                   (^int univ-mdigit-base-minus-1))))
         (return
-         (^if-expr (^= (^rts-field-use 'inttemp1)
+         (^if-expr 'scmobj
+                   (^= (^rts-field-use 'inttemp1)
                        (^int univ-mdigit-base-minus-1))
                    (^obj 1)
                    (^obj 0)))))))
@@ -2960,7 +3029,8 @@
                          (^bitand (^parens (^- (^rts-field-use 'inttemp1) (^int 1)))
                                   (^int univ-mdigit-base-minus-1))))
         (return
-         (^if-expr (^= (^rts-field-use 'inttemp1)
+         (^if-expr 'scmobj
+                   (^= (^rts-field-use 'inttemp1)
                        (^int 0))
                    (^obj 1)
                    (^obj 0)))))))
@@ -2982,7 +3052,8 @@
                  (^cast* 'bigdigit
                          (^rts-field-use 'inttemp2)))
         (return
-         (^if-expr (^< (^rts-field-use 'inttemp2)
+         (^if-expr 'scmobj
+                   (^< (^rts-field-use 'inttemp2)
                        (^+ (^rts-field-use 'inttemp1) (^fixnum-unbox arg5)))
                    (^obj 1)
                    (^obj 0)))))))
@@ -3004,7 +3075,8 @@
                  (^cast* 'bigdigit
                          (^rts-field-use 'inttemp2)))
         (return
-         (^if-expr (^> (^rts-field-use 'inttemp2)
+         (^if-expr 'scmobj
+                   (^> (^rts-field-use 'inttemp2)
                        (^- (^rts-field-use 'inttemp1) (^fixnum-unbox arg5)))
                    (^obj 1)
                    (^obj 0)))))))
@@ -3069,7 +3141,8 @@
                  (^>> (^rts-field-use 'inttemp1) (^int univ-mdigit-width)))
         (return
          (^fixnum-box
-          (^if-expr (^> (^rts-field-use 'inttemp1) (^int 0))
+          (^if-expr 'int
+                    (^> (^rts-field-use 'inttemp1) (^int 0))
                     (^- (^rts-field-use 'inttemp1) (^int univ-mdigit-base))
                     (^rts-field-use 'inttemp1))))))))
 
