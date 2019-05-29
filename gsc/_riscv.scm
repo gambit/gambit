@@ -50,7 +50,7 @@
 (define (riscv-imm-int-type x) (car x))
 (define (riscv-imm-int-value x) (cdr x))
 
-(define (riscv-imm-lbl label #!optional (offset 0)) (cons offset label))
+(define (riscv-imm-lbl label #!optional (offset 4)) (cons offset label)) ; XXX
 (define (riscv-imm-lbl? x) (and (pair? x) (fixnum? (car x)) (vector? (cdr x))))
 (define (riscv-imm-lbl-offset x) (car x))
 (define (riscv-imm-lbl-label x) (cdr x))
@@ -473,6 +473,10 @@
 
 (define (riscv-type-b cgc rs1 rs2 imm funct3 #!optional (opcode #x63))
 
+  (define (label-dist self imm)
+    (fx- (asm-label-pos (riscv-imm-lbl-label imm))
+         (fx+ self (riscv-imm-lbl-offset imm))))
+
   (assert (and (riscv-reg? rs1)
                (riscv-reg? rs2)
                (riscv-imm? imm))
@@ -483,18 +487,38 @@
                    (eq? (riscv-imm-int-type imm) 'B)))
           "incorrect immediate type")
 
-  ; TODO Label
+  (if (riscv-imm-lbl? imm)
+      (asm-at-assembly cgc
+                       (lambda (cgc self)
+                         4)
+                       (lambda (cgc self)
+                         (let* ((dist (label-dist self imm))
+                                (imm (riscv-imm-int dist 'B))) ; XXX
 
-  (asm-32-le cgc
-             (fx+ opcode
-                  funct3
-                  (fxarithmetic-shift
-                    (riscv-reg-field rs1)
-                    15)
-                  (fxarithmetic-shift
-                    (riscv-reg-field rs2)
-                    20)
-                  (riscv-imm->instr imm)))
+                           (assert (and (fx>= dist -4096)
+                                        (fx<= dist 4095))
+                                   "branch label too far")
+
+                           (asm-32-le cgc
+                                      (fx+ opcode
+                                           funct3
+                                           (fxarithmetic-shift
+                                             (riscv-reg-field rs1)
+                                             15)
+                                           (fxarithmetic-shift
+                                             (riscv-reg-field rs2)
+                                             20)
+                                           (riscv-imm->instr imm))))))
+      (asm-32-le cgc
+                 (fx+ opcode
+                      funct3
+                      (fxarithmetic-shift
+                        (riscv-reg-field rs1)
+                        15)
+                      (fxarithmetic-shift
+                        (riscv-reg-field rs2)
+                        20)
+                      (riscv-imm->instr imm))))
 
   (if (codegen-context-listing-format cgc)
       (riscv-listing cgc
@@ -548,6 +572,10 @@
 
 (define (riscv-type-j cgc rd imm opcode)
 
+  (define (label-dist self imm)
+    (fx- (asm-label-pos (riscv-imm-lbl-label imm))
+         (fx+ self (riscv-imm-lbl-offset imm))))
+
   (assert (and (riscv-reg? rd)
                (riscv-imm? imm))
           "invalid operands")
@@ -557,14 +585,30 @@
                    (eq? (riscv-imm-int-type imm) 'J)))
           "incorrect immediate type")
 
-  ; TODO Label
+  (if (riscv-imm-lbl? imm)
+      (asm-at-assembly cgc
+                       (lambda (cgc self)
+                         4)
+                       (lambda (cgc self)
+                         (let* ((dist (label-dist self imm))
+                                (imm (riscv-imm-int dist 'J))) ; XXX
 
-  (asm-32-le cgc
-             (fx+ opcode
-                  (fxarithmetic-shift
-                    (riscv-reg-field rd)
-                    7)
-                  (riscv-imm->instr imm))))
+                           (assert (and (fx>= dist -1048576)
+                                        (fx<= dist 1048575))
+                                   "branch label too far")
+
+                           (asm-32-le cgc
+                                      (fx+ opcode
+                                           (fxarithmetic-shift
+                                             (riscv-reg-field rd)
+                                             7)
+                                           (riscv-imm->instr imm))))))
+      (asm-32-le cgc
+                 (fx+ opcode
+                      (fxarithmetic-shift
+                        (riscv-reg-field rd)
+                        7)
+                      (riscv-imm->instr imm)))))
 
 ;;;----------------------------------------------------------------------------
 
