@@ -64,8 +64,8 @@ int debug_settings;)
         "                  be the special \"bin\" and \"lib\", or empty, or any identifier)\n"
         "  :[DIRECTORY]    add directory to module search order (or reset it)\n"
         "  .[SOURCE]       add source to module auto-install whitelist (or reset it)\n"
-        "  .+|-            when installing a module that is not on the whitelist,\n"
-        "                  ask interactively if module should be installed (on|off)\n"
+        "  .+|.-|.?        when an uninstalled module is not on the whitelist, ask user\n"
+        "                  if it should be installed (always|never|default=when REPL)\n"
         "  +ARGUMENT       add ARGUMENT to the command line before other arguments\n"
         "  f[OPT...]       set file options; see below for OPT\n"
         "  t[OPT...]       set terminal options; see below for OPT\n"
@@ -672,13 +672,15 @@ ___mod_or_lnk (*linker)();)
                                  &module_whitelist_len);
                     if (*arg != ',') arg++;
                   }
-                else if ((*arg == '+' || *arg == '-') &&
+                else if ((*arg == '+' || *arg == '-' || *arg == '?') &&
                          (arg[1] == '\0' || (arg[1] == ',' && arg[2] != ',')))
                   {
                     if (*arg == '+')
-                      module_install_mode = ___MODULE_INSTALL_MODE_ASK;
+                      module_install_mode = ___MODULE_INSTALL_MODE_ASK_ALWAYS;
+                    else if (*arg == '-')
+                      module_install_mode = ___MODULE_INSTALL_MODE_ASK_NEVER;
                     else
-                      module_install_mode = ___MODULE_INSTALL_MODE_OFF;
+                      module_install_mode = ___MODULE_INSTALL_MODE_ASK_WHEN_REPL;
                     arg += 2;
                   }
                 else
