@@ -213,7 +213,7 @@
            (let ()
 
              (define (check dirs2)
-               (check-mod (##car dirs) (join dirs2 root)))
+               (check-mod (##car dirs) (join dirs2 root) root dirs2))
 
              (or (check nested-dirs)
                  (and (##pair? nested-dirs)
@@ -265,7 +265,7 @@
           path
           (macro-absent-obj))))))
 
-  (define (check-mod mod-filename-noext mod-dir)
+  (define (check-mod mod-filename-noext mod-dir root path)
     (let ((mod-path-noext (##path-expand mod-filename-noext mod-dir)))
 
       (define (check-source-with-ext ext)
@@ -274,7 +274,13 @@
            mod-path
            (lambda (port)
              (and (##not (##fixnum? port))
-                  (##vector mod-dir mod-filename-noext ext mod-path port))))))
+                  (##vector mod-dir
+                            mod-filename-noext
+                            ext
+                            mod-path
+                            port
+                            root
+                            path))))))
 
       (let loop ((exts ##scheme-file-extensions))
         (and (##pair? exts)
