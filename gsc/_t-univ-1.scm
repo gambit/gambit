@@ -2762,7 +2762,8 @@
                                     (cond ((lbl? opnd)
                                            (todo-lbl-num! (lbl-num opnd))
                                            (gvm-lbl-use ctx opnd))
-                                          ((obj? opnd)
+                                          ((and (obj? opnd)
+                                                (proc-obj? (obj-val opnd)))
                                            (^obj-proc-as 'jumpable
                                                          (obj-val opnd)))
                                           (else
