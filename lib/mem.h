@@ -229,7 +229,8 @@ extern ___SCMOBJ ___glo_struct_to_global_var
         ());
 
 extern ___SCMOBJ ___obj_to_global_var
-   ___P((___SCMOBJ obj,
+   ___P((___processor_state ___ps,
+         ___SCMOBJ obj,
          ___BOOL prm),
         ());
 
