@@ -1203,9 +1203,11 @@ ___glo_struct *glo;)
 
 
 ___glo_struct *___glo_list_search_obj
-   ___P((___SCMOBJ obj,
+   ___P((___processor_state ___ps,
+         ___SCMOBJ obj,
          ___BOOL prm),
-        (obj,
+        (___ps,
+         obj,
          prm)
 ___SCMOBJ obj;
 ___BOOL prm;)
@@ -1285,9 +1287,11 @@ ___glo_struct *glo;)
 
 
 ___SCMOBJ ___obj_to_global_var
-   ___P((___SCMOBJ obj,
+   ___P((___processor_state ___ps,
+         ___SCMOBJ obj,
          ___BOOL prm),
-        (obj,
+        (___ps,
+         obj,
          prm)
 ___SCMOBJ obj;
 ___BOOL prm;)
@@ -1298,7 +1302,7 @@ ___BOOL prm;)
    * is checked, otherwise the val field is checked.
    */
 
-  return ___glo_struct_to_global_var (___glo_list_search_obj (obj, prm));
+  return ___glo_struct_to_global_var (___glo_list_search_obj (___ps,obj, prm));
 }
 
 
