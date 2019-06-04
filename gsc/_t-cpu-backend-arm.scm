@@ -371,7 +371,7 @@
 (define (arm-cmp-move-instr cgc condition dest opnd1 opnd2 true-opnd false-opnd #!optional (opnds-width #f))
   (compiler-internal-error "TODO: arm-cmp-move-instr"))
 
-:; Todo: Deduplicate labels
+;; TODO Deduplicate labels
 (define (arm-load-label cgc rd label-opnd)
   (let ((label (lbl-opnd-label label-opnd)))
     (arm-load-data cgc rd
@@ -380,14 +380,14 @@
         (debug "label-opnd: " label-opnd)
         (codegen-fixup-lbl! cgc label object-tag #f 32 1 #f)))))
 
-:; Todo: Deduplicate objects
+;; TODO Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
   (arm-load-data cgc rd (string-append "'" (object->string obj-value))
     (lambda (cgc)
       (debug "obj-value: " obj-value)
       (codegen-fixup-obj! cgc obj-value 32 1 #f))))
 
-:; Todo: Deduplicate references to global variables
+;; TODO Deduplicate references to global variables
 (define (arm-load-glo cgc rd glo-name)
   (arm-load-data cgc rd (string-append "&global[" (symbol->string glo-name) "]")
     (lambda (cgc)
@@ -534,11 +534,11 @@
     allowed-opnds1: '(reg)
     allowed-opnds2: '(reg int)))
 
-(define arm-prim-##fx<  (x86-compare-prim (condition-greater #t #t)))
-(define arm-prim-##fx<= (x86-compare-prim (condition-greater #f #t)))
-(define arm-prim-##fx>  (x86-compare-prim (condition-lesser #t #t)))
-(define arm-prim-##fx>= (x86-compare-prim (condition-lesser #f #t)))
-(define arm-prim-##fx=  (x86-compare-prim condition-not-equal))
+(define arm-prim-##fx<  (arm-compare-prim (condition-greater #t #t)))
+(define arm-prim-##fx<= (arm-compare-prim (condition-greater #f #t)))
+(define arm-prim-##fx>  (arm-compare-prim (condition-lesser #t #t)))
+(define arm-prim-##fx>= (arm-compare-prim (condition-lesser #f #t)))
+(define arm-prim-##fx=  (arm-compare-prim condition-not-equal))
 
 (define arm-prim-##cons
   (lambda (cgc result-action args)
