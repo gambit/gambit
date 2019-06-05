@@ -99,10 +99,8 @@
     ((int-opnd? opnd) (arm-imm-int (int-opnd-value opnd)))
     (else (compiler-internal-error "make-arm-opnd - Unknown opnd: " opnd))))
 
-(define (arm-label-align cgc label-opnd #!optional (align #f))
-  (if align
-    (asm-align cgc (car align) (cdr align) 0)
-    (asm-align cgc 4 0))
+(define (arm-label-align cgc label-opnd #!optional (align '(4 . 0)))
+  (asm-align cgc (car align) (cdr align))
   (arm-label cgc (lbl-opnd-label label-opnd)))
 
 (define arm-data-instr
@@ -402,9 +400,10 @@
              (if ref-name
                  (if (symbol? ref-name) (symbol->string ref-name) ref-name)
                  "???")))
-        (arm-listing cgc (list "movw") rd (string-append "lo16(" thing ")"))
-        (arm-listing cgc (list "movt") rd (string-append "hi16(" thing ")"))))
+        (arm-listing cgc "movw" rd (string-append "lo16(" thing ")"))
+        (arm-listing cgc "movt" rd (string-append "hi16(" thing ")"))))
 
+  ; Refer to machine_code_block_fixup in lib/setup.c
   (place-data cgc))
 
 ;;------------------------------------------------------------------------------
