@@ -2,7 +2,7 @@
 //  ViewController.m
 //
 //  Created by Marc Feeley on 11-03-06.
-//  Copyright 2011-2012 UniversitÃ© de MontrÃ©al. All rights reserved.
+//  Copyright 2011-2019 UniversitÃ© de MontrÃ©al. All rights reserved.
 //
 #define DEBUG_UI_not
 
@@ -37,11 +37,11 @@ ViewController *theViewController = nil;
 
 /*
  * Define SCHEME_LIBRARY_LINKER as the name of the Scheme library
- * prefixed with "____20_" and suffixed with "__".  This is the
+ * prefixed with "___LNK_" and suffixed with "__".  This is the
  * function that initializes the Scheme library.
  */
 
-#define SCHEME_LIBRARY_LINKER ____20_program__
+#define SCHEME_LIBRARY_LINKER ___LNK_program__
 
 ___BEGIN_C_LINKAGE
 extern ___mod_or_lnk SCHEME_LIBRARY_LINKER (___global_state_struct*);
@@ -662,13 +662,13 @@ void set_navigation(int n) {
 }
 
 
-- (void)queue_action:(void(^)())action {
+- (void)queue_action:(void(^)(void))action {
 
   [queuedActions addObject:[action copy]];
 }
 
 
-- (void)queue_action_asap:(void(^)())action {
+- (void)queue_action_asap:(void(^)(void))action {
 
   [self queue_action:action];
 

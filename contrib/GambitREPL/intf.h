@@ -15,4 +15,4 @@ extern void send_text_input(NSString *);
 
 extern void send_key_input(NSString *);
 
-extern double heartbeat();
+extern double heartbeat(void);

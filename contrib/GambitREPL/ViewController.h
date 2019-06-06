@@ -19,12 +19,12 @@
 
 void set_ext_keys(int view, NSString *portrait_small, NSString *landscape_small, NSString *portrait_large, NSString *landscape_large);
 void set_navigation(int n);
-void show_cancelButton();
-void hide_cancelButton();
+void show_cancelButton(void);
+void hide_cancelButton(void);
 void show_webView(int view, BOOL kbdEnabled, BOOL kbdShouldShrinkView);
 void show_textView(int view, BOOL kbdEnabled, BOOL kbdShouldShrinkView);
 void show_imageView(int view, BOOL kbdEnabled, BOOL kbdShouldShrinkView);
-void show_currentView();
+void show_currentView(void);
 void set_textView_font(int view, NSString *name, int size);
 void set_textView_content(int view, NSString *str);
 NSString *get_textView_content(int view);
@@ -40,22 +40,22 @@ void add_key_input_to_currentView(NSString *input);
 NSString *eval_js_in_webView(int view, NSString *script);
 void open_URL(NSString *url);
 BOOL send_SMS(NSString *recipient, NSString *messsage);
-BOOL pick_image();
+BOOL pick_image(void);
 void set_idle_timer(BOOL enable);
 void set_toolbar_alpha(double alpha);
-void show_toolbar();
-void hide_toolbar();
-void toggle_toolbar();
+void show_toolbar(void);
+void hide_toolbar(void);
+void toggle_toolbar(void);
 void segm_ctrl_set_title(int segment, NSString *title);
 void segm_ctrl_insert(int segment, NSString *title);
 void segm_ctrl_remove(int segment);
-void segm_ctrl_remove_all();
+void segm_ctrl_remove_all(void);
 void set_pref(NSString *key, NSString *value);
 NSString *get_pref(NSString *key);
 void set_pasteboard(NSString *value);
-NSString *get_pasteboard();
-NSString *get_documents_dir();
-void request_icloud_container_dir();
+NSString *get_pasteboard(void);
+NSString *get_documents_dir(void);
+void request_icloud_container_dir(void);
 void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSString *accept_button);
 void setup_location_updates(double desired_accuracy, double distance_filter);
 
@@ -105,7 +105,7 @@ void setup_location_updates(double desired_accuracy, double distance_filter);
 @property (strong) NSMetadataQuery *metadataQuery;
 #endif
 
-- (void)queue_action:(void(^)())action;
+- (void)queue_action:(void(^)(void))action;
 - (void)send_event:(NSString*)name;
 - (void)send_text_input:(NSString*)input;
 - (void)send_key_input:(NSString*)input;
