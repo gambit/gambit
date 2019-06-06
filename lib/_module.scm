@@ -349,13 +349,15 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (##compile-mod top-cte src module-ref)
+(define (##compile-mod top-cte src module-ref module-root modref-path)
   (##compile-in-compilation-scope
    top-cte
    src
    #f
    (lambda (cte src tail?)
      (##table-set! (##compilation-scope) '##module-ref module-ref)
+     (##table-set! (##compilation-scope) '##module-root module-root)
+     (##table-set! (##compilation-scope) '##modref-path modref-path)
      (let ((tail? #f))
        (##comp-top top-cte src tail?)))))
 
@@ -390,7 +392,9 @@
         (mod-filename-noext (##vector-ref mod-info 1))
         (ext                (##vector-ref mod-info 2))
         (mod-path           (##vector-ref mod-info 3))
-        (port               (##vector-ref mod-info 4)))
+        (port               (##vector-ref mod-info 4))
+        (root               (##vector-ref mod-info 5))
+        (path               (##vector-ref mod-info 6)))
 
     (define (get-from-source-file)
       (let ((x
@@ -418,7 +422,7 @@
                     (##compile-mod
                      (##top-cte-clone ##interaction-cte)
                      (##sourcify src (##make-source #f #f))
-                     module-ref))
+                     module-ref root path))
                    (code
                     (##car c))
                    (comp-scope
@@ -488,8 +492,39 @@
           (get-from-source-file)))))
 
 (define-prim (##install-module modref)
+  (define (module-prefix=? str prefix)
+    (let ((str-len (##string-length str))
+          (prefix-len (##string-length prefix)))
+    (and
+      (##fx<= prefix-len str-len)
+      (let loop ((i 0))
+        (if (##fx< i prefix-len)
+          (let ((c1 (##string-ref prefix i))
+                (c2 (##string-ref str i)))
+            (and
+              (##char=? c1 c2)
+              (loop (##fx+ i 1))))
+          (if (##fx= i str-len)
+            #t
+            (##char=? #\/ (##string-ref str i))))))))
+
   (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
-  #f)
+
+  (let ((mod-string (##modref->string modref)))
+    (and
+      ((let () (##namespace ("" member)) member) ;; TODO: Change member to ##member.
+       mod-string
+       (##os-module-whitelist)
+       (lambda (a b)
+         (module-prefix=? a b)))
+
+      (begin
+        (##load-module 'gambit/pkg)
+        ;; TODO: Suppress warning undefined symbol.
+        (gambit/pkg#install mod-string)
+
+        modref))))
+
 
 (define-prim (##install-module-set! x)
   (set! ##install-module x))
