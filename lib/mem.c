@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 409003
@@ -1203,13 +1203,18 @@ ___glo_struct *glo;)
 
 
 ___glo_struct *___glo_list_search_obj
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___BOOL prm),
-        (obj,
+        (___PSV
+         obj,
          prm)
+___PSDKR
 ___SCMOBJ obj;
 ___BOOL prm;)
 {
+  ___PSGET
+
   ___glo_struct *glo = 0;
   int glo_depth = 999999999;
   int i;
@@ -1285,20 +1290,25 @@ ___glo_struct *glo;)
 
 
 ___SCMOBJ ___obj_to_global_var
-   ___P((___SCMOBJ obj,
+   ___P((___PSD
+         ___SCMOBJ obj,
          ___BOOL prm),
-        (obj,
+        (___PSV
+         obj,
          prm)
+___PSDKR
 ___SCMOBJ obj;
 ___BOOL prm;)
 {
+  ___PSGET
+
   /*
    * Find the global variable that is bound to the object obj.
    * If prm is true then the prm field of the global variable
    * is checked, otherwise the val field is checked.
    */
 
-  return ___glo_struct_to_global_var (___glo_list_search_obj (obj, prm));
+  return ___glo_struct_to_global_var (___glo_list_search_obj (___PSP obj, prm));
 }
 
 

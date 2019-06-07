@@ -3994,7 +3994,7 @@ end-of-code
 
 (define-prim (##object->global-var obj primitive?)
   (##c-code
-   "___RESULT = ___obj_to_global_var (___ARG1, !___FALSEP(___ARG2));"
+   "___RESULT = ___obj_to_global_var (___PSP ___ARG1, !___FALSEP(___ARG2));"
    obj
    primitive?))
 
