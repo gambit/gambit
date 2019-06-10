@@ -5352,6 +5352,9 @@
     (define-runtime-syntax define-type-of-thread
       (##make-alias-syntax '##define-type-of-thread))
 
+    (define-runtime-syntax define-record-type
+      (##make-alias-syntax '##define-record-type))
+
     (define-runtime-syntax define-structure
       (##make-alias-syntax '##define-structure))
 

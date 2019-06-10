@@ -1545,7 +1545,7 @@
 (define-runtime-macro (##define-structure . args)
   (##define-type-expand 'define-structure #f #f args))
 
-(define-runtime-macro (define-record-type name constructor predicate . fields)
+(define-runtime-macro (##define-record-type name constructor predicate . fields)
   `(##define-type ,name
      constructor: ,constructor
      copier: #f
