@@ -223,7 +223,7 @@
 
 ;;; Comparison predicates.
 
-(define-prim (##= x y)
+(define-prim (##=2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -285,15 +285,22 @@
       (##cpxnum.= x (macro-noncpxnum->cpxnum y))
       (##cpxnum.= x y))))
 
+(define-prim-nary-bool (##= x y)
+  #t
+  #t
+  (##=2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary-bool (= x y)
   #t
   (if (##number? x) #t '(1))
-  (##= x y)
+  (##=2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-number))
 
-(define-prim (##< x y #!optional (nan-result #f))
+(define-prim (##<2 x y #!optional (nan-result #f))
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -391,34 +398,62 @@
               (type-error-on-y)))
         (type-error-on-x))))
 
+(define-prim-nary-bool (##< x y)
+  #t
+  #t
+  (##<2 x y #f)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary-bool (< x y)
   #t
   (if (##real? x) #t '(1))
-  (##< x y #f)
+  (##<2 x y #f)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-real))
+
+(define-prim-nary-bool (##> x y)
+  #t
+  #t
+  (##<2 y x #f)
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (> x y)
   #t
   (if (##real? x) #t '(1))
-  (##< y x #f)
+  (##<2 y x #f)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-real))
+
+(define-prim-nary-bool (##<= x y)
+  #t
+  #t
+  (##not (##<2 y x #t))
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (<= x y)
   #t
   (if (##real? x) #t '(1))
-  (##not (##< y x #t))
+  (##not (##<2 y x #t))
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-real))
 
+(define-prim-nary-bool (##>= x y)
+  #t
+  #t
+  (##not (##<2 x y #t))
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary-bool (>= x y)
   #t
   (if (##real? x) #t '(1))
-  (##not (##< x y #t))
+  (##not (##<2 x y #t))
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-real))
@@ -597,7 +632,7 @@
 
 ;;; Max and min.
 
-(define-prim (##max x y)
+(define-prim (##max2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -651,15 +686,22 @@
               (type-error-on-y)))
         (type-error-on-x))))
 
+(define-prim-nary (##max x y)
+  ()
+  x
+  (##max2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (max x y)
   ()
   (if (##real? x) x '(1))
-  (##max x y)
+  (##max2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-real))
 
-(define-prim (##min x y)
+(define-prim (##min2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -713,10 +755,17 @@
               (type-error-on-y)))
         (type-error-on-x))))
 
+(define-prim-nary (##min x y)
+  ()
+  x
+  (##min2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (min x y)
   ()
   (if (##real? x) x '(1))
-  (##min x y)
+  (##min2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-real))
@@ -725,7 +774,7 @@
 
 ;;; +, *, -, /
 
-(define-prim (##+ x y)
+(define-prim (##+2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -787,16 +836,23 @@
       (##cpxnum.+ x (macro-noncpxnum->cpxnum y))
       (##cpxnum.+ x y))))
 
+(define-prim-nary (##+ x y)
+  0
+  x
+  (##+2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (+ x y)
   0
   (if (##number? x) x '(1))
-  (##+ x y)
+  (##+2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-number)
   (##not ##raise-fixnum-overflow-exception))
 
-(define-prim (##* x y)
+(define-prim (##*2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -898,10 +954,17 @@
       (##cpxnum.* x (macro-noncpxnum->cpxnum y))
       (##cpxnum.* x y))))
 
+(define-prim-nary (##* x y)
+  1
+  x
+  (##*2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (* x y)
   1
   (if (##number? x) x '(1))
-  (##* x y)
+  (##*2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-number)
@@ -953,7 +1016,7 @@
     (##make-rectangular (##negate (macro-cpxnum-real x))
                         (##negate (macro-cpxnum-imag x)))))
 
-(define-prim (##- x y)
+(define-prim (##-2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -1011,10 +1074,17 @@
       (##cpxnum.- x (macro-noncpxnum->cpxnum y))
       (##cpxnum.- x y))))
 
+(define-prim-nary (##- x y)
+  ()
+  (##negate x)
+  (##-2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (- x y)
   ()
   (##negate x)
-  (##- x y)
+  (##-2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-number)
@@ -1058,7 +1128,7 @@
 (##define-macro (macro-qr-q qr)     `(##values-ref ,qr 0))
 (##define-macro (macro-qr-r qr)     `(##values-ref ,qr 1))
 
-(define-prim (##/ x y)
+(define-prim (##/2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -1155,10 +1225,17 @@
       (##cpxnum./ (macro-noncpxnum->cpxnum x) y)
       (##cpxnum./ x y))))
 
+(define-prim-nary (##/ x y)
+  ()
+  (##inverse x)
+  (##/2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (/ x y)
   ()
   (##inverse x)
-  (##/ x y)
+  (##/2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-number)
@@ -1425,7 +1502,7 @@
 
 ;;; gcd, lcm
 
-(define-prim (##gcd x y)
+(define-prim (##gcd2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -1843,15 +1920,22 @@
              (exact-gcd x y)
              (##exact->inexact (exact-gcd x y))))))
 
+(define-prim-nary (##gcd x y)
+  0
+  (##abs x)
+  (##gcd2 x y)
+  macro-force-vars
+  macro-no-check)
+
 (define-prim-nary (gcd x y)
   0
   (if (##integer? x) (##abs x) '(1))
-  (##gcd x y)
+  (##gcd2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-integer))
 
-(define-prim (##lcm x y)
+(define-prim (##lcm2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -1876,10 +1960,17 @@
              (exact-lcm x y)
              (inexact-lcm x y)))))
 
+(define-prim-nary (##lcm x y)
+  1
+  (##abs x)
+  (##lcm2 x y)
+  macro-force-vars
+  macro-no-check)
+
 (define-prim-nary (lcm x y)
   1
   (if (##integer? x) (##abs x) '(1))
-  (##lcm x y)
+  (##lcm2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-integer))
@@ -2645,7 +2736,7 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##acos x)))
 
-(define-prim (##atan x)
+(define-prim (##atan x #!optional (y (macro-absent-obj)))
 
   (define (type-error)
     (##fail-check-number 1 atan x))
@@ -2653,20 +2744,22 @@ for a discussion of branch cuts.
   (define (range-error)
     (##raise-range-exception 1 atan x))
 
-  (macro-number-dispatch x (type-error)
-    (if (##fxzero? x)
-        0
-        (##flatan (##fixnum->flonum x)))
-    (##flatan (##exact-int->flonum x))
-    (##flatan (##ratnum->flonum x))
-    (##flatan x)
-    (let ((real (macro-cpxnum-real x))
-          (imag (macro-cpxnum-imag x)))
-      (if (and (##eqv? real 0)
-               (or (##eqv? imag 1)
-                   (##eqv? imag -1)))
-          (range-error)
-          (##* -i (##atanh (##* +i x)))))))
+  (if (##eq? y (macro-absent-obj))
+      (macro-number-dispatch x (type-error)
+        (if (##fxzero? x)
+            0
+            (##flatan (##fixnum->flonum x)))
+        (##flatan (##exact-int->flonum x))
+        (##flatan (##ratnum->flonum x))
+        (##flatan x)
+        (let ((real (macro-cpxnum-real x))
+              (imag (macro-cpxnum-imag x)))
+          (if (and (##eqv? real 0)
+                   (or (##eqv? imag 1)
+                       (##eqv? imag -1)))
+              (range-error)
+              (##* -i (##atanh (##* +i x))))))
+      (##atan2 x y)))
 
 (define-prim (##atan2 y x)
   (cond ((or (and (##flonum? x) (##flnan? x))
@@ -5770,9 +5863,9 @@ for a discussion of branch cuts.
 (define-prim (##integer->char x))
 (define-prim (##char->integer x))
 
-;;; ------------------------------------------------------------------------------
+;;;------------------------------------------------------------------------------
 ;;; Bignum Operations
-;;; ------------------------------------------------------------------------------
+;;;------------------------------------------------------------------------------
 ;;;
 ;;; The bignum operations were implemented mostly by Brad Lucier
 ;;; (http://www.math.purdue.edu/~lucier) with some coding guidance from
@@ -5918,7 +6011,7 @@ for a discussion of branch cuts.
 (define-prim (##bignum.fast-gcd-size-set! x)
   (set! ##bignum.fast-gcd-size x))
 
-;;; -------------------------------------------------------------------------------
+;;;-----------------------------------------------------------------------------
 
 ;;; These are the low-level operations on adigits, mdigits, and fdigits.
 ;;; Two-argument functions are generally destructive, and overwrite part of
