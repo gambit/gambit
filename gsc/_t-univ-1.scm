@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -34,6 +34,8 @@
       (case (target-name (ctx-target ctx))
         ((java)
          'class)
+        ((go)
+         'package)
         (else
          'global))))
 
@@ -46,6 +48,8 @@
          (if (univ-php-pre53? ctx)
              'class
              'host))
+        ((go)
+         'struct)
         (else
          'host))))
 
@@ -67,7 +71,11 @@
 
 (define (univ-void-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-void)
-      'host))
+      (case (target-name (ctx-target ctx))
+        ((go)
+         'class)
+        (else
+         'host))))
 
 (define (univ-eof-representation ctx)
   'class)
@@ -102,7 +110,11 @@
          'host))))
 
 (define (univ-char-representation ctx)
-  'class)
+  (case (target-name (ctx-target ctx))
+;;    ((go)
+;;     'host)
+    (else
+     'class)))
 
 (define (univ-fixnum-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-fixnum)
@@ -173,7 +185,11 @@
 
 (define (univ-string-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-string)
-      'class))
+      (case (target-name (ctx-target ctx))
+;;        ((go)
+;;         'host)
+        (else
+         'class))))
 
 (define (univ-symbol-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-symbol)
@@ -196,6 +212,9 @@
 
     ((ruby)
      'to_s)
+
+    ((go)
+     'String)
 
     (else
      (compiler-internal-error
@@ -381,6 +400,7 @@
 (univ-setup 'php    '((".php"  . PHP))         '((pre53)) '())
 
 (univ-setup 'java   '((".java" . Java))        '((pre7))  '())
+(univ-setup 'go     '((".go"   . Go))          '()        '())
 ;;(univ-setup 'c      '((".c"    . C))           '()       '())
 ;;(univ-setup 'c++    '((".cc"   . C++))         '()       '())
 ;;(univ-setup 'objc   '((".m"    . Objective-C)) '()       '())
@@ -521,6 +541,12 @@
     (univ-display x port)
     (close-output-port port)))
 
+(define (univ-display-to-string x)
+  (let ((port (open-output-string)))
+    (univ-display x port)
+    (close-output-port port)
+    (get-output-string port)))
+
 ;;;----------------------------------------------------------------------------
 
 ;; The frame constraints are defined by the parameters
@@ -617,6 +643,9 @@
     ((ruby)
      (^ array ".map { |x| " fn "(x) } " ))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-map~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-map, unknown target"))))
@@ -635,6 +664,9 @@
 
     ((ruby)
      (^ fn ".( *" array " )"))
+
+    ((go)
+     (^ "~~~TODO1:univ-emit-call-with-arg-array~~~"))
 
     (else
      (compiler-internal-error
@@ -655,6 +687,9 @@
     ((java)
      (^ (^decl type name) (if init (^ " = " init) (^)) ";\n"))
 
+    ((go)
+     (^ "var " name (if type (^ " " (^type type)) "") (if init (^ " = " init) (^)) "\n"))
+
     (else
      (compiler-internal-error
       "univ-emit-var-declaration, unknown target"))))
@@ -665,7 +700,7 @@
     ((js php java)
      (^ expr ";\n"))
 
-    ((python ruby)
+    ((python ruby go)
      (^ expr "\n"))
 
     (else
@@ -701,11 +736,20 @@
             (^))
         "end\n"))
 
+    ((go)
+     (^ "if " test " {\n"
+        (univ-indent true)
+        (if false
+            (^ "} else {\n"
+               (univ-indent false))
+            (^))
+        "}\n"))
+
     (else
      (compiler-internal-error
       "univ-emit-if, unknown target"))))
 
-(define (univ-emit-if-expr ctx expr1 expr2 expr3)
+(define (univ-emit-if-expr ctx type expr1 expr2 expr3)
   (case (target-name (ctx-target ctx))
 
     ((js ruby java)
@@ -717,9 +761,36 @@
     ((python)
      (^ expr2 " if " expr1 " else " expr3))
 
+    ((go)
+     (^apply (univ-emit-fn-decl
+              ctx
+              #f
+              type
+              '()
+              (^if expr1
+                   (^return expr2)
+                   (^return expr3)))
+             '()))
+
     (else
      (compiler-internal-error
       "univ-emit-if-expr, unknown target"))))
+
+(define (univ-emit-if-instanceof ctx class expr true false)
+  (case (target-name (ctx-target ctx))
+
+    ((go)
+     (^ "switch " expr ".(type) {\n"
+        "case " class ":\n"
+        (univ-indent true)
+        (if false
+            (^ "default:\n"
+               (univ-indent false)
+               "}\n")
+            "}\n")))
+
+    (else
+     (^if (^instanceof class expr) true false))))
 
 (define (univ-emit-while ctx test body)
   (case (target-name (ctx-target ctx))
@@ -738,6 +809,11 @@
         (univ-indent body)
         "end\n"))
 
+    ((go)
+     (^ "for " test " {\n"
+        (univ-indent body)
+        "}\n"))
+
     (else
      (compiler-internal-error
       "univ-emit-while, unknown target"))))
@@ -754,7 +830,7 @@
     ((ruby)
      (^ expr1 ".equal?(" expr2 ")"))
 
-    ((java)
+    ((java go)
      (^ expr1 " == " expr2))
 
     (else
@@ -764,7 +840,7 @@
 (define (univ-emit-+ ctx expr1 #!optional (expr2 #f))
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (if expr2
          (^ expr1 " + " expr2)
          (^ "+ " expr1)))
@@ -776,7 +852,7 @@
 (define (univ-emit-- ctx expr1 #!optional (expr2 #f))
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (if expr2
          (^ expr1 " - " expr2)
          (^ "- " expr1)))
@@ -788,7 +864,7 @@
 (define (univ-emit-* ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (^ expr1 " * " expr2))
 
     (else
@@ -798,7 +874,7 @@
 (define (univ-emit-/ ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (^ expr1 " / " expr2))
 
     (else
@@ -827,6 +903,9 @@
                            (^int univ-fixnum-max*2+1)))
          (^int univ-fixnum-max+1)))
 
+    ((go)
+     (^ "~~~TODO1:univ-wrap~~~"))
+
     (else
      (compiler-internal-error
       "univ-wrap, unknown target"))))
@@ -852,6 +931,9 @@
     ((php python ruby java)
      (univ-wrap ctx (^* expr1 expr2)))
 
+    ((go)
+     (^ "~~~TODO1:univ-wrap*~~~"))
+
     (else
      (compiler-internal-error
       "univ-wrap*, unknown target"))))
@@ -863,12 +945,15 @@
     ;; The default behavior is to round down, but it should round toward 0
     (univ-wrap ctx (^float-toint (^parens (^/ expr1 (^float-fromint expr2))))))
 
+   ((go)
+    (^ "~~~TODO1:univ-wrap/~~~"))
+
    (else (univ-wrap ctx (^/ expr1 expr2)))))
 
 (define (univ-emit-<< ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (^ expr1 " << " expr2))
 
     (else
@@ -878,7 +963,7 @@
 (define (univ-emit->> ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (^ expr1 " >> " expr2))
 
     (else
@@ -901,6 +986,9 @@
                 (^- (^int univ-word-bits) expr2)))
           (^int 1))))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit->>>~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit->>>, unknown target"))))
@@ -911,6 +999,9 @@
     ((js php python ruby java)
      (^ "~ " expr))
 
+    ((go)
+     (^ "^ " expr))
+
     (else
      (compiler-internal-error
       "univ-emit-bitnot, unknown target"))))
@@ -918,7 +1009,7 @@
 (define (univ-emit-bitand ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (^ expr1 " & " expr2))
 
     (else
@@ -928,7 +1019,7 @@
 (define (univ-emit-bitior ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (^ expr1 " | " expr2))
 
     (else
@@ -938,7 +1029,7 @@
 (define (univ-emit-bitxor ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      (^ expr1 " ^ " expr2))
 
     (else
@@ -951,7 +1042,7 @@
     ((js)
      (^ expr1 " === " expr2))
 
-    ((python ruby php java)
+    ((python ruby php java go)
      (^ expr1 " == " expr2))
 
     (else
@@ -964,7 +1055,7 @@
     ((js)
      (^ expr1 " !== " expr2))
 
-    ((python ruby php java)
+    ((python ruby php java go)
      (^ expr1 " != " expr2))
 
     (else
@@ -986,7 +1077,7 @@
 (define (univ-emit-comparison ctx comp expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js python ruby php java)
+    ((js python ruby php java go)
      (^ expr1 comp expr2))
 
     (else
@@ -996,7 +1087,7 @@
 (define (univ-emit-not ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php ruby java)
+    ((js php ruby java go)
      (^ "!" expr))
 
     ((python)
@@ -1009,7 +1100,7 @@
 (define (univ-emit-&& ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php java)
+    ((js ruby php java go)
      (^ expr1 " && " expr2))
 
     ((python)
@@ -1022,7 +1113,7 @@
 (define (univ-emit-and ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby java)
+    ((js ruby java go)
      (^ expr1 " && " expr2))
 
     ((python)
@@ -1038,7 +1129,7 @@
 (define (univ-emit-or ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php java)
+    ((js ruby php java go)
      (^ expr1 " || " expr2)) ;; TODO: PHP || operator always yields a boolean
 
     ((python)
@@ -1051,7 +1142,7 @@
 (define (univ-emit-concat ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
-    ((js python ruby java)
+    ((js python ruby java go)
      (^ expr1 " + " expr2))
 
     ((php)
@@ -1076,16 +1167,33 @@
     ((ruby)
      (^ expr ".to_s"))
 
+    ((go)
+     (univ-add-module-import ctx "fmt")
+     (^call-prim (^member 'fmt 'Sprintf) (^str "%v") expr))
+
     (else
      (compiler-internal-error
       "univ-emit-tostr, unknown target"))))
 
+(define (univ-emit-conv* ctx type-name expr)
+  (case (target-name (ctx-target ctx))
+    ((go)
+     (^ (^type type-name) (^parens expr)))
+    (else
+     (^cast* type-name expr))))
+
 (define (univ-emit-cast ctx type expr)
-  (^parens (^ (^parens type) (^parens expr))))
+  (case (target-name (ctx-target ctx))
+    ((java)
+     (^parens (^ (^parens type) (^parens expr))))
+    ((go)
+     (^member expr (^parens type)))
+    (else
+     expr)))
 
 (define (univ-emit-cast* ctx type-name expr)
   (case (target-name (ctx-target ctx))
-    ((java)
+    ((java go)
      (^cast (^type type-name) expr))
     (else
      expr)))
@@ -1096,6 +1204,30 @@
 (define (univ-emit-cast*-jumpable ctx expr)
   (^cast* 'jumpable expr))
 
+(define (univ-emit-upcast* ctx from-type-name to-type-name expr)
+  (case (target-name (ctx-target ctx))
+    ((go)
+     ;; expr must be a pointer to a struct inheriting the type
+     (if (eq? from-type-name to-type-name)
+         expr
+         (^ "&" (^member (if (and (pair? expr) (equal? (car expr) "&"))
+                             (cdr expr)
+                             (^parens expr))
+                         (univ-rts-type-alias ctx to-type-name)))))
+    (else
+     (^cast* to-type-name expr))))
+
+(define (univ-emit-downcast* ctx type-name expr)
+  (case (target-name (ctx-target ctx))
+    ((go)
+     ;; expr must be an interface type
+     (^member expr (^parens (^type type-name))))
+    (else
+     (^cast* type-name expr))))
+
+(define (univ-emit-downupcast* ctx down-type-name up-type-name expr)
+  (^upcast* down-type-name up-type-name (^downcast* down-type-name  expr)))
+
 (define (univ-emit-seq ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -1105,6 +1237,9 @@
     ((ruby)
      (^parens (^ expr1 " ; " expr2)))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-seq~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-seq, unknown target"))))
@@ -1112,7 +1247,7 @@
 (define (univ-emit-parens ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php python java)
+    ((js ruby php python java go)
      (^ "(" expr ")"))
 
     (else
@@ -1127,7 +1262,7 @@
 (define (univ-emit-local-var ctx name)
   (case (target-name (ctx-target ctx))
 
-    ((js python ruby java)
+    ((js python ruby java go)
      name)
 
     ((php)
@@ -1140,7 +1275,7 @@
 (define (univ-emit-global-var ctx name)
   (case (target-name (ctx-target ctx))
 
-    ((js python java)
+    ((js python java go)
      name)
 
     ((php ruby)
@@ -1153,7 +1288,7 @@
 (define (univ-emit-global-function ctx name)
   (case (target-name (ctx-target ctx))
 
-    ((js python java)
+    ((js python java go)
      name)
 
     ((php ruby) name);;TODO: added
@@ -1165,14 +1300,14 @@
      (compiler-internal-error
       "univ-emit-global-function, unknown target"))))
 
-(define (univ-emit-this-mod-field ctx name)
-  (^mod-field (ctx-module-name ctx) name))
+(define (univ-emit-this-mod-field ctx name public?)
+  (univ-emit-mod-field ctx (ctx-module-name ctx) name public?))
 
-(define (univ-emit-this-mod-method ctx name)
-  (^mod-method (ctx-module-name ctx) name))
+(define (univ-emit-this-mod-method ctx name public?)
+  (univ-emit-mod-method ctx (ctx-module-name ctx) name public?))
 
-(define (univ-emit-this-mod-jumpable ctx name)
-  (^mod-jumpable (ctx-module-name ctx) name))
+(define (univ-emit-this-mod-jumpable ctx name public?)
+  (univ-emit-mod-jumpable ctx (ctx-module-name ctx) name public?))
 
 (define (univ-emit-mod-member ctx mod-name name)
   (if (and (case (target-name (ctx-target ctx))
@@ -1183,161 +1318,188 @@
              (else
               #t))
            (eq? (ctx-module-name ctx) mod-name)) ;; optimize access to self
-      name
+      (tt"AAA"name)
       (case (target-name (ctx-target ctx))
 
-        ((js python ruby java)
-         (^member (^prefix-class mod-name) name))
+        ((js python ruby java go)
+         (tt"BBB"(^member mod-name name)))
 
         ((php)
-         (^ (^prefix-class mod-name) "::" name))
+         (tt"BBB"(^ mod-name "::" name)))
 
         (else
          (compiler-internal-error
           "univ-emit-mod-member, unknown target")))))
 
-(define (univ-emit-mod-field ctx mod-name name)
+(define (univ-emit-mod-field ctx mod-name name public?)
   (case (univ-module-representation ctx)
 
-    ((class)
-     (tt"000"(univ-emit-mod-member ctx mod-name name)))
+    ((class package)
+     (tt"CCC"(univ-emit-mod-member ctx mod-name (^prefix name public?))))
 
     (else
-     (tt"111"(^global-var (^prefix name))))))
+     (tt"CCC"(^global-var (^prefix name public?))))))
 
-(define (univ-emit-mod-method ctx mod-name name)
+(define (univ-emit-mod-method ctx mod-name name public?)
   (case (univ-module-representation ctx)
 
-    ((class)
-     (tt"222"(univ-emit-mod-member ctx mod-name name)))
+    ((class package)
+     (tt"DDD"(univ-emit-mod-member ctx mod-name (^prefix name public?))))
 
     (else
-     (tt"333"(^global-function (^prefix name))))))
+     (tt"DDD"(^global-function (^prefix name public?))))))
 
 (define (univ-mod-jumpable-is-field? ctx)
   (eq? (target-name (ctx-target ctx)) 'ruby))
 
-(define (univ-emit-mod-jumpable ctx mod-name name)
-  (if (eq? (univ-procedure-representation ctx) 'class)
-      (let ((x (^mod-field mod-name name)))
+(define (univ-emit-mod-jumpable ctx mod-name name public?)
+  (^id-to-jumpable
+   (case (univ-procedure-representation ctx)
+     ((class)
+      (let ((x (univ-emit-mod-field ctx mod-name name public?)))
         (use-global ctx x)
-        x)
+        x))
+     ((struct)
+      (univ-emit-mod-field ctx mod-name name public?))
+     (else
       (if (univ-mod-jumpable-is-field? ctx)
-          (^mod-field mod-name name)
+          (univ-emit-mod-field ctx mod-name name public?)
           (univ-method-reference
            ctx
-           (^mod-method mod-name name)))))
+           (univ-emit-mod-method ctx mod-name name public?)))))))
 
+;;obsolete
+#;
 (define (univ-emit-mod-class ctx mod-name name)
   (case (univ-module-representation ctx)
 
-    ((class)
-     (tt"444"(univ-emit-mod-member ctx mod-name name)))
+    ((class package)
+     (tt"EEE"(univ-emit-mod-member ctx mod-name name)))
 
     (else
-     (tt"555"(^prefix-class name)))))
+     (tt"EEE"(^prefix-class name)))))
 
-(define (univ-emit-rts-method ctx name)
+(define (univ-emit-id-to-jumpable ctx name)
+  (case (target-name (ctx-target ctx))
+    ((go) (^ "&" name))
+    (else name)))
+
+(define (univ-emit-rts-method ctx name public?)
   (case (univ-module-representation ctx)
 
     ((class)
-     (tt"666"name))
+     (tt"FFF"name))
+
+    ((package)
+     (tt"FFF"(^prefix name public?)))
 
     (else
-     (tt"777"(^global-function (^prefix name))))))
+     (tt"FFF"(^global-function (^prefix name))))))
 
-(define (univ-emit-rts-method-ref ctx name)
+(define (univ-emit-rts-method-ref ctx name public?)
   (case (univ-module-representation ctx)
 
     ((class)
-     (tt"66"(univ-emit-mod-member ctx (univ-rts-module-name ctx) name)))
+     (tt"GGG"(univ-emit-mod-member ctx (ctx-rts-module-name ctx) name)))
+
+    ((package)
+     (tt"GGG"(univ-emit-mod-member ctx (ctx-rts-module-name ctx) (^prefix name public?))))
 
     (else
-     (tt"77"(^global-function (^prefix name))))))
+     (tt"GGG"(^global-function (^prefix name))))))
 
-(define (univ-emit-rts-method-use ctx name)
+(define (univ-emit-rts-method-use ctx name public?)
   (univ-use-rtlib ctx name)
-  (univ-emit-rts-method-ref ctx name))
+  (univ-emit-rts-method-ref ctx name public?))
 
-(define (univ-emit-rts-field ctx name)
+(define (univ-emit-rts-field ctx name public?)
   (case (univ-module-representation ctx)
 
     ((class)
-     (tt"888"name))
+     (tt"HHH"name))
+
+    ((package)
+     (tt"HHH"(^prefix name #t)))
 
     (else
-     (tt"999"(^global-var (^prefix name))))))
+     (tt"HHH"(^global-var (^prefix name))))))
 
-(define (univ-emit-rts-field-ref ctx name)
+(define (univ-emit-rts-field-ref ctx name public?)
   (case (univ-module-representation ctx)
 
     ((class)
-     (tt"88"(univ-emit-mod-member ctx (univ-rts-module-name ctx) name)))
+     (tt"III"(univ-emit-mod-member ctx (ctx-rts-module-name ctx) name)))
+
+    ((package)
+     (tt"III"(univ-emit-mod-member ctx (ctx-rts-module-name ctx) (^prefix name public?))))
 
     (else
-     (tt"99"(^global-var (^prefix name))))))
+     (tt"III"(^global-var (^prefix name))))))
 
-(define (univ-emit-rts-field-use ctx name)
+(define (univ-emit-rts-field-use ctx name public?)
   (univ-use-rtlib ctx name)
-  (let ((x (univ-emit-rts-field-ref ctx name)))
+  (let ((x (univ-emit-rts-field-ref ctx name public?)))
     (use-global ctx x)
     x))
 
 (define (univ-emit-rts-jumpable-use ctx name)
   (univ-use-rtlib ctx name)
-  (^mod-jumpable (univ-rts-module-name ctx) name))
+  (univ-emit-mod-jumpable ctx (ctx-rts-module-name ctx) name #f))
 
-(define (univ-emit-rts-class ctx name)
+(define (univ-emit-rts-class ctx name public?)
   (let ((real-name (univ-rts-type-alias ctx name)))
     (case (univ-module-representation ctx)
 
-      ((class)
-       (tt"0"(univ-emit-mod-member ctx (univ-rts-module-name ctx) real-name)))
+      ((class package)
+       (tt"JJJ"(univ-emit-mod-member ctx (ctx-rts-module-name ctx) real-name)))
 
       (else
-       (tt"1"(^prefix-class real-name))))))
+       (tt"JJJ"(^prefix-class real-name))))))
 
-(define (univ-emit-rts-class-ref ctx name)
+(define (univ-emit-rts-class-ref ctx name public?)
   (let ((real-name (univ-rts-type-alias ctx name)))
     (case (univ-module-representation ctx)
 
-      ((class)
-       (tt"00"(univ-emit-mod-member ctx (univ-rts-module-name ctx) real-name)))
+      ((class package)
+       (tt"KKK"(univ-emit-mod-member ctx (ctx-rts-module-name ctx) real-name)))
 
       (else
-       (tt"11"(^prefix-class real-name))))))
+       (tt"KKK"(^prefix-class real-name))))))
 
-(define (univ-emit-rts-class-use ctx name)
+(define (univ-emit-rts-class-use ctx name public?)
   (univ-use-rtlib ctx name)
-  (univ-emit-rts-class-ref ctx name))
+  (univ-emit-rts-class-ref ctx name public?))
 
 (define (univ-rts-module-name ctx)
   (case (target-name (ctx-target ctx))
 
-    ((js php python ruby java)
+    ((js php python ruby java go)
      "RTS")
 
     (else
      (compiler-internal-error
       "univ-rts-module-name, unknown target"))))
 
-(define (univ-emit-prefix ctx name)
+(define (univ-emit-prefix ctx name public?)
   (case (univ-module-representation ctx)
 
     ((class)
-     name)
+     (tt"LLL"name))
+
+    ((package)
+     (tt"LLL"(^ (if public? "G_" "") name)))
 
     (else
-     (^ (ctx-ns-prefix ctx) name))))
+     (tt"LLL"(^ (ctx-ns-prefix ctx) name)))))
 
-(define (univ-emit-prefix-class ctx name)
+(define (univ-emit-prefix-class ctx name public?)
   (case (univ-module-representation ctx)
 
-;    ((class)
-;     name)
+;    ((class package)
+;     (tt"MMM"name))
 
     (else
-     (^ (ctx-ns-prefix-class ctx) name))))
+     (tt"MMM"(^ (ctx-ns-prefix-class ctx) name)))))
 
 (define (univ-emit-assign-expr ctx loc expr)
   (^ loc " = " expr))
@@ -1378,7 +1540,7 @@
                 (embed-expr (inc-general loc expr)
                             (eq? (target-name (ctx-target ctx)) 'php)))))
 
-        ((python)
+        ((python go)
          (^ (^expr-statement (inc-general loc expr))
             (embed-read loc)))
 
@@ -1392,7 +1554,7 @@
 (define (univ-emit-alias ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js python ruby java)
+    ((js python ruby java go)
      expr)
 
     ((php)
@@ -1405,7 +1567,7 @@
 (define (univ-emit-unalias ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js python ruby java)
+    ((js python ruby java go)
      (^))
 
     ((php)
@@ -1431,6 +1593,9 @@
     ((java)
      (^ expr ".getClass().isArray()"))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-array?~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-array?, unknown target"))))
@@ -1442,10 +1607,10 @@
      (^ expr ".length"))
 
     ((php)
-     (^ "count(" expr ")"))
+     (^ "count" (^parens expr)))
 
-    ((python)
-     (^ "len(" expr ")"))
+    ((python go)
+     (^ "len" (^parens expr)))
 
     (else
      (compiler-internal-error
@@ -1469,7 +1634,7 @@
      (^expr-statement
       (^ expr1 ".slice!(" expr2 "," expr1 ".length)")))
 
-    ((java)
+    ((java go)
      ;; assumes expr1 is an lvalue, and creates a copy of the array
      (^assign expr1 (^subarray expr1 0 expr2)))
 
@@ -1496,6 +1661,9 @@
       (^call-prim (^member expr1 'slice!) expr2 (^member expr1 'length))
       expr1))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-array-shrink-possibly-copy!~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-array-shrink-possibly-copy!, unknown target"))))
@@ -1513,6 +1681,9 @@
        destpos
        len)))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-move-array-to-array~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-move-array-to-array, unknown target"))))
@@ -1520,7 +1691,7 @@
 (define (univ-emit-copy-array-to-extensible-array ctx expr len)
   (case (target-name (ctx-target ctx))
 
-    ((js php ruby java)
+    ((js php ruby java go)
      (^subarray expr 0 len))
 
     ((python)
@@ -1539,6 +1710,9 @@
     ((python)
      (^assign var (^ "[" var "[i] for i in range(" len ")]")))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-extensible-array-to-array!~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-extensible-array-to-array!, unknown target"))))
@@ -1554,6 +1728,10 @@
                       len
                       (^ start ", " (^+ start len)))
                 ")]"))
+
+    ((go)
+     (^ "~~~TODO1:univ-emit-extensible-subarray~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-extensible-subarray, unknown target"))))
@@ -1569,7 +1747,7 @@
     ((php)
      (^call-prim 'array_slice expr1 expr2 expr3))
 
-    ((python)
+    ((python go)
      (^ expr1 "[" expr2 ":" (if (equal? expr2 0) expr3 (^+ expr2 expr3)) "]"))
 
     ((ruby)
@@ -1590,12 +1768,22 @@
 (define (univ-emit-array-index ctx expr1 expr2)
   (^ expr1 "[" expr2 "]"))
 
-(define (univ-emit-prop-index ctx expr1 expr2 expr3)
+(define (univ-emit-prop-index ctx type expr1 expr2 expr3)
   (if expr3
-      (^if-expr (^prop-index-exists? expr1 expr2)
-                (^prop-index expr1 expr2)
+      (^if-expr type
+                (^prop-index-exists? expr1 expr2)
+                (^prop-index type expr1 expr2)
                 expr3)
       (^ expr1 "[" expr2 "]")))
+
+(define (univ-emit-prop-index-or-null ctx type expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((go)
+     (^prop-index type expr1 expr2))
+
+    (else
+     (^prop-index type expr1 expr2 (^null)))))
 
 (define (univ-emit-prop-index-exists? ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
@@ -1612,6 +1800,9 @@
     ((ruby)
      (^ expr1 ".has_key?(" expr2 ")"))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-prop-index-exists?~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-prop-index-exists?, unknown target"))))
@@ -1620,13 +1811,16 @@
   (case (target-name (ctx-target ctx))
 
     ((js python ruby)
-     (^prop-index obj (^str name)))
+     (^prop-index 'scmobj obj (^str name)))
 
     ((php)
      (^call-prim
       (^rts-method-use 'get)
       obj
       (^str name)))
+
+    ((go)
+     (^ "~~~TODO1:univ-emit-get~~~"))
 
     (else
      (compiler-internal-error
@@ -1636,7 +1830,7 @@
   (case (target-name (ctx-target ctx))
 
     ((js python ruby)
-     (^assign-expr (^prop-index obj (^str name)) val))
+     (^assign-expr (^prop-index 'scmobj obj (^str name)) val))
 
     ((php)
      (^call-prim
@@ -1644,6 +1838,9 @@
       obj
       (^str name)
       val))
+
+    ((go)
+     (^ "~~~TODO1:univ-emit-set~~~"))
 
     (else
      (compiler-internal-error
@@ -1665,6 +1862,9 @@
      (^call-prim
       (^member expr1 'instance_variable_defined?) (^ ":@" expr2)))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-attribute-exists?~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-prop-index-exists?, unknown target"))))
@@ -1679,10 +1879,9 @@
 
 (define (univ-dump-code targ procs output c-intf module-descr linker-name sem-changing-options sem-preserving-options)
   (let* ((module-name-str
-          (symbol->string (vector-ref module-descr 0)))
-
-         (module-name
-          (scheme-id->c-id module-name-str))
+          (symbol->string
+           (let ((v (vector-ref module-descr 0)))
+             (vector-ref v (- (vector-length v) 1)))))
 
          (module-proc
           (list-ref procs 0))
@@ -1692,14 +1891,27 @@
            targ
            sem-changing-options
            sem-preserving-options
-           module-name
+           "" ;; module-name filled in later
+           "" ;; rt-module-name filled in later
            (univ-ns-prefix sem-changing-options)
            (univ-ns-prefix-class sem-changing-options)
            "zzz" ;;;;;;;;;;;;;;;;;
            (make-objs-used)
            (make-resource-set)
            (make-table)
+           (queue-empty)
+           (queue-empty)
            (queue-empty)))
+
+         (module-name
+          (univ-display-to-string
+           (^prefix-class (scheme-id->c-id module-name-str) #t)))
+
+         (_
+          (begin
+            (ctx-rts-module-name-set! ctx (univ-rts-module-name ctx))
+            (ctx-module-name-set! ctx module-name)
+            (univ-add-module-import ctx (ctx-rts-module-name ctx))))
 
          (defs-procs
            (univ-dump-procs ctx procs))
@@ -1707,7 +1919,7 @@
          (code-module
           (univ-defs->code
            ctx
-           (^prefix-class module-name)
+           module-name
            (univ-defs-combine
             (univ-objs-defs ctx)
             (univ-defs-combine
@@ -1727,8 +1939,10 @@
         rtlib-features
         (ctx-glo-used ctx)
         #f)
+       (univ-module-header ctx module-name)
        code-decls
        code-module
+       (univ-module-footer ctx)
        (univ-link-info-footer ctx))))
 
 (define (univ-module-register ctx module-descr)
@@ -1789,8 +2003,7 @@
               (map car (keep (lambda (x) (not (eq? (cdr x) 'rd))) glos))
               (map car (keep (lambda (x) (eq? (cdr x) 'rdwr)) glos))
               module-meta-info))
-       "\n\n"
-       (univ-external-libs ctx))))
+       "\n\n")))
 
 (define (univ-link-info-footer ctx)
   (univ-source-file-footer (target-name (ctx-target ctx))))
@@ -1944,16 +2157,21 @@
            sem-changing-options
            '() ;; semantics-preserving-options
            ""  ;; module-name filled in later
+           ""  ;; rts-module-name filled in later
            (univ-ns-prefix sem-changing-options)
            (univ-ns-prefix-class sem-changing-options)
            "zzz" ;;;;;;;;;;;;
            (make-objs-used)
            (make-resource-set)
            (make-table)
+           (queue-empty)
+           (queue-empty)
            (queue-empty)))
 
          (_
-          (ctx-module-name-set! ctx (univ-rts-module-name ctx)))
+          (begin
+           (ctx-rts-module-name-set! ctx (univ-rts-module-name ctx))
+           (ctx-module-name-set! ctx (ctx-rts-module-name ctx))))
 
          (rtlib-init
           (univ-rtlib-init ctx mods-and-flags))
@@ -1977,7 +2195,7 @@
          (code-rtlib
           (univ-defs->code
            ctx
-           (^prefix-class (univ-rts-module-name ctx))
+           (ctx-module-name ctx)
            (univ-rtlib-defs ctx rtlib-init)))
 
          (code-decls
@@ -1991,20 +2209,16 @@
               features-used
               (ctx-glo-used ctx)
               #f)
+             (univ-module-header ctx (ctx-module-name ctx))
              code-entry
              code-rtlib
              code-decls
+             (univ-module-footer ctx)
              (univ-link-info-footer ctx))))
 
     (univ-display-to-file code output)
 
     output))
-
-;;TODO: add constants
-#;
-(define (univ-module-header ctx)
-  (^ (^var-declaration 'scmobj (gvm-state-cst ctx) (^extensible-array-literal 'scmobj '()))
-     "\n"))
 
 (define (univ-objs-defs ctx)
   (let* ((objs-used (ctx-objs-used ctx))
@@ -2025,22 +2239,21 @@
                                    (car (vector-ref state 1))))
                               ;;(pp (list cst obj));;;;;;;;;;;;;;;
                               (set-car! (vector-ref state 1)
-                                        (^this-mod-field cst))
+                                        (univ-emit-this-mod-field ctx cst #f))
                               (univ-add-field
                                defs
                                (univ-field
                                 cst
-                                'scmobj ;; (univ-obj-type obj)
-                                val
-                                '(public))))
+                                (univ-obj-type obj)
+                                val)))
                             defs)))))
           defs))))
 
 (define (univ-obj-use ctx obj force-var? gen-expr)
 
   (define (use-cst cst)
-    (if (not (eq? (univ-module-representation ctx) 'class))
-        (use-global ctx (^this-mod-field cst))))
+    (if (eq? (univ-module-representation ctx) 'global)
+        (use-global ctx (univ-emit-this-mod-field ctx cst #f))))
 
   (let* ((objs-used (ctx-objs-used ctx))
          (table (objs-used-table objs-used))
@@ -2059,7 +2272,7 @@
                  (string-append
                   "cst"
                   (number->string (table-length table))
-                  (if (eq? (univ-module-representation ctx) 'class)
+                  (if (not (eq? (univ-module-representation ctx) 'global))
                       ""
                       (string-append "_" (ctx-module-name ctx))))))
                (state
@@ -2189,125 +2402,139 @@
                          (else
                           (compiler-internal-error
                            "scan-gvm-label, unknown label type"))))
+                      (entry
+                       (bbs-entry-lbl-num bbs))
+                      (lbl-num
+                       (label-lbl-num gvm-instr))
+                      (parent?
+                       (= lbl-num entry))
+                      (jumpable-type
+                       (case (label-type gvm-instr)
+                         ((entry)  (if parent?
+                                       'parententrypt
+                                       'entrypt))
+                         ((return) 'returnpt)
+                         (else     'ctrlpt)))
                       (gen-body
                        (lambda (ctx)
-                         (^ (case (label-type gvm-instr)
+                         (^ (if (let ((node
+                                       (comment-get
+                                        (gvm-instr-comment gvm-instr)
+                                        'node)))
+                                  (and node
+                                       (node-env node)
+                                       (debug? (node-env node))))
+                                (^expr-statement
+                                 (^call-prim
+                                  (^rts-method-use 'println)
+                                  (^ "\"*** entering " id "\"")))
+                                "")
+
+                            (case (label-type gvm-instr)
 
                               ((entry)
                                (univ-label-entry ctx
                                                  gvm-instr
-                                                 (^mod-jumpable
+                                                 jumpable-type
+                                                 (univ-emit-mod-jumpable
+                                                  ctx
                                                   (ctx-module-name ctx)
-                                                  id)))
+                                                  id
+                                                  #f)))
 
                               (else
                                (^)))
-
                             (proc ctx))))
-                      (entry
-                       (bbs-entry-lbl-num bbs))
-                      (lbl-num
-                       (label-lbl-num gvm-instr)))
+                      (ctrlpt-id
+                       (stretchable-vector-length ctrlpts)))
+
+                 (stretchable-vector-set!
+                  ctrlpts
+                  ctrlpt-id
+                  (cons jumpable-type lbl-num))
 
                  (univ-jumpable-declaration-defs
-
                   ctx
+                  #t ;; global?
+                  id ;; name
+                  jumpable-type ;; jumpable-type
+                  '() ;; params
+                  (append ;; attribs
 
-                  ;; global?
-                  #t
+                   (list
+                    (univ-field 'id
+                                'int
+                                (^int ctrlpt-id)
+                                '(inherited))
+                    (univ-field 'parent
+                                'parententrypt
+                                (cond ((and parent?
+                                            (univ-parent-entry-point-has-null-parent? ctx))
+                                       (^null))
+                                      ((and parent?
+                                            (eq? (univ-procedure-representation ctx)
+                                                 'class))
+                                       (^this))
+                                      (else
+                                       (let ((the-ns (ctx-ns ctx)))
+                                         (lambda (ctx2)
+                                           (let ((ns (ctx-ns ctx2)))
+                                             (ctx-ns-set! ctx2 the-ns)
+                                             (let ((x (univ-ctrlpt-reference
+                                                       ctx2
+                                                       entry)))
+                                               (ctx-ns-set! ctx2 ns)
+                                               x))))))
+                                '(inherited)))
 
-                  ;; name
-                  id
+                   (if (eq? jumpable-type 'ctrlpt)
 
-                  ;; jumpable-type
-                  (case (label-type gvm-instr)
-                    ((entry)  (if (= lbl-num entry)
-                                  'parententrypt
-                                  'entrypt))
-                    ((return) 'returnpt)
-                    (else     'ctrlpt))
+                       '()
 
-                  ;; params
-                  '()
-
-                  ;; attribs
-                  (if (memq (label-type gvm-instr) '(entry return))
-
-                      (append
-
-                       (let ((ctrlpt-id
-                              (stretchable-vector-length ctrlpts)))
-                         (stretchable-vector-set!
-                          ctrlpts
-                          ctrlpt-id
-                          lbl-num)
-                         (list (univ-field 'id
-                                           'int
-                                           (^int ctrlpt-id)
-                                           '(inherited))
-                               (univ-field 'parent
-                                           'parententrypt
-                                           (let ((entry? (= lbl-num entry)))
-                                             (cond ((and entry?
-                                                         (univ-parent-entry-point-has-null-parent? ctx))
-                                                    (^null))
-                                                   ((and entry?
-                                                         (eq? (univ-procedure-representation ctx) 'class))
-                                                    (^this))
-                                                   (else
-                                                    (let ((the-ns (ctx-ns ctx)))
-                                                      (lambda (ctx2)
-                                                        (let ((ns (ctx-ns ctx2)))
-                                                          (ctx-ns-set! ctx2 the-ns)
-                                                          (let ((x (univ-ctrlpt-reference
-                                                                    ctx2
-                                                                    entry)))
-                                                            (ctx-ns-set! ctx2 ns)
-                                                            x)))))))
-                                           '(inherited))))
-
-                       (if (eq? (label-type gvm-instr) 'return)
+                       (if (eq? jumpable-type 'returnpt)
 
                            (let ((info (frame-info gvm-instr)))
-                             (list (univ-field 'fs
-                                               'int
-                                               (^int (vector-ref info 0))
-                                               '(inherited))
-                                   (univ-field 'link
-                                               'int
-                                               (^int (+ (vector-ref info 1) 1))
-                                               '(inherited))))
+                             (list
+                              (univ-field 'fs
+                                          'int
+                                          (^int (vector-ref info 0))
+                                          '(inherited))
+                              (univ-field 'link
+                                          'int
+                                          (^int (+ (vector-ref info 1) 1))
+                                          '(inherited))))
 
                            (append
-                            (list (univ-field
-                                   'nfree
-                                   'int
-                                   (if (label-entry-closed? gvm-instr)
-                                       (let* ((frame (gvm-instr-frame gvm-instr))
-                                              (nfree (length (frame-closed frame))))
-                                         (^int nfree))
-                                       (^int -1))
-                                   '(inherited)))
-                            (if (= lbl-num entry)
-                                (list (univ-field (univ-proc-name-attrib ctx)
-                                                  'symbol
-                                                  (lambda (ctx)
-                                                    (univ-prm-name ctx (proc-obj-name p)))
-                                                  '(inherited))
-                                      (univ-field 'ctrlpts
-                                                  '(array ctrlpt)
-                                                  ctrlpts-init
-                                                  '(inherited))
-                                      (univ-field 'info
-                                                  'scmobj
-                                                  (^obj #f) ;; TODO
-                                                  '(inherited)))
-                                '()))))
+                            (list
+                             (univ-field
+                              'nfree
+                              'int
+                              (if (label-entry-closed? gvm-instr)
+                                  (let* ((frame (gvm-instr-frame gvm-instr))
+                                         (nfree (length (frame-closed frame))))
+                                    (^int nfree))
+                                  (^int -1))
+                              '(inherited)))
+                            (if parent?
+                                (list
+                                 (univ-field (univ-proc-name-attrib ctx)
+                                             'symbol
+                                             (lambda (ctx)
+                                               (univ-prm-name
+                                                ctx
+                                                (proc-obj-name p)))
+                                             '(inherited))
+                                 (univ-field 'ctrlpts
+                                             '(array ctrlpt)
+                                             ctrlpts-init
+                                             '(inherited))
+                                 (univ-field 'info
+                                             'scmobj
+                                             (^obj #f) ;; TODO
+                                             '(inherited)))
+                                '())))))
 
-                      '())
-
-                  ;; body
-                  (univ-emit-fn-body ctx header gen-body))))))
+                  (univ-emit-fn-body ctx header gen-body)))))) ;; body
 
           (define (unwind-stack? gvm-instr)
             (let ((node (comment-get (gvm-instr-comment gvm-instr) 'node)))
@@ -2532,10 +2759,18 @@
                                         (^call-prim
                                          (^rts-method-use 'check_procedure)
                                          (scan-gvm-opnd ctx opnd)))
-                                    (let ((o (scan-gvm-opnd ctx opnd)))
-                                      (if (or (lbl? opnd) (obj? opnd))
-                                          o
-                                          (^cast*-jumpable o))))
+                                    (cond ((lbl? opnd)
+                                           (todo-lbl-num! (lbl-num opnd))
+                                           (gvm-lbl-use ctx opnd))
+                                          ((and (obj? opnd)
+                                                (proc-obj? (obj-val opnd)))
+                                           (^obj-proc-as 'jumpable
+                                                         (obj-val opnd)))
+                                          (else
+                                           (^downupcast*
+                                            (if nb-args 'entrypt 'returnpt)
+                                            'jumpable
+                                            (^getopnd opnd)))))
                                 poll?
                                 (and
 
@@ -2551,6 +2786,11 @@
                                     ;; avoid call optimization on PHP
                                     ;; because it generates syntactically
                                     ;; incorrect code (PHP grammar issue)
+                                    #f)
+                                   ((go)
+                                    ;; avoid call optimization on go
+                                    ;; because there is no speed advantage
+                                    ;; to do it
                                     #f)
                                    (else
                                     #t)))))))))))
@@ -2615,8 +2855,12 @@
                          (ctrlpts-array
                           (^array-literal
                            (univ-ctrlpt-reference-type ctx)
-                           (map (lambda (n)
-                                  (univ-ctrlpt-reference ctx n))
+                           (map (lambda (jt-n)
+                                  (let* ((jumpable-type (car jt-n))
+                                         (n (cdr jt-n)))
+                                    (^upcast* jumpable-type
+                                              'ctrlpt
+                                              (univ-ctrlpt-reference ctx n))))
                                 (stretchable-vector->list ctrlpts)))))
                     (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
 
@@ -2642,9 +2886,10 @@
                   (lambda (ctx)
                     (let ((name (string->symbol (proc-obj-name p))))
                       (^ "\n"
-                         (^setpeps name (^obj p))
+                         ;; p is a parententrypt
+                         (^setpeps name (^obj-proc-as 'parententrypt p))
                          (if (proc-obj-primitive? p)
-                             (^setglo name (^obj p))
+                             (^setglo name (^obj-proc-as 'scmobj p))
                              (^)))))))
             (univ-add-init (univ-add-init bbs-defs init1) init2))))
 
@@ -2653,13 +2898,16 @@
                   (ctx-semantics-changing-options global-ctx)
                   (ctx-semantics-preserving-options global-ctx)
                   (ctx-module-name global-ctx)
+                  (ctx-rts-module-name global-ctx)
                   (ctx-ns-prefix global-ctx)
                   (ctx-ns-prefix-class global-ctx)
                   (scheme-id->c-id (proc-obj-name p))
                   (ctx-objs-used global-ctx)
                   (ctx-rtlib-features-used global-ctx)
                   (ctx-glo-used global-ctx)
-                  (ctx-decls global-ctx))))
+                  (ctx-decls global-ctx)
+                  (ctx-inits global-ctx)
+                  (ctx-imports global-ctx))))
         (let ((x (proc-obj-code p)))
           (if (bbs? x)
               (scan-bbs ctx x)
@@ -2672,7 +2920,7 @@
           defs
           (loop (univ-defs-combine defs (dump-proc (queue-get! proc-left))))))))
 
-(define (univ-label-entry ctx gvm-instr id)
+(define (univ-label-entry ctx gvm-instr jumpable-type id)
   (let* ((nb-parms (label-entry-nb-parms gvm-instr))
          (opts (label-entry-opts gvm-instr))
          (keys (label-entry-keys gvm-instr))
@@ -2712,7 +2960,7 @@
                      (^rts-method-use 'wrong_key_args)
                      (if closed?
                          (^cast*-jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
-                         id)
+                         (^upcast* jumpable-type 'entrypt id))
                      error)))))
            (keys
             (let ((error (^local-var 'error)))
@@ -2730,9 +2978,9 @@
                     (^return-call-prim
                      (^rts-method-use 'wrong_key_args)
                      (if closed?
-                         (^cast*-jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
-                         id)
-                     error)))))
+                         (^downcast* 'jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
+                         (^upcast* jumpable-type 'entrypt id)))
+                     error))))
            (else
             (^if (if rest?
                      (^not (^call-prim
@@ -2743,8 +2991,8 @@
                  (^return-call-prim
                   (^rts-method-use 'wrong_nargs)
                   (if closed?
-                      (^cast*-jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
-                      id)))))
+                      (^downcast* 'jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
+                      (^upcast* jumpable-type 'entrypt id))))))
 
           (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                 (nb-stacked* (max 0 (- nb-parms (univ-nb-arg-regs ctx)))))
@@ -2823,17 +3071,21 @@
          semantics-changing-options
          semantics-preserving-options
          module-name
+         rts-module-name
          ns-prefix
          ns-prefix-class
          ns
          objs-used
          rtlib-features-used
          glo-used
-         decls)
+         decls
+         inits
+         imports)
   (vector target
           semantics-changing-options
           semantics-preserving-options
           module-name
+          rts-module-name
           ns-prefix
           ns-prefix-class
           ns
@@ -2846,7 +3098,9 @@
           objs-used
           rtlib-features-used
           glo-used
-          decls))
+          decls
+          inits
+          imports))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
@@ -2860,44 +3114,61 @@
 (define (ctx-module-name ctx)              (vector-ref ctx 3))
 (define (ctx-module-name-set! ctx x)       (vector-set! ctx 3 x))
 
-(define (ctx-ns-prefix ctx)                (vector-ref ctx 4))
-(define (ctx-ns-prefix-set! ctx x)         (vector-set! ctx 4 x))
+(define (ctx-rts-module-name ctx)          (vector-ref ctx 4))
+(define (ctx-rts-module-name-set! ctx x)   (vector-set! ctx 4 x))
 
-(define (ctx-ns-prefix-class ctx)          (vector-ref ctx 5))
-(define (ctx-ns-prefix-class-set! ctx x)   (vector-set! ctx 5 x))
+(define (ctx-ns-prefix ctx)                (vector-ref ctx 5))
+(define (ctx-ns-prefix-set! ctx x)         (vector-set! ctx 5 x))
 
-(define (ctx-ns ctx)                       (vector-ref ctx 6))
-(define (ctx-ns-set! ctx x)                (vector-set! ctx 6 x))
+(define (ctx-ns-prefix-class ctx)          (vector-ref ctx 6))
+(define (ctx-ns-prefix-class-set! ctx x)   (vector-set! ctx 6 x))
 
-(define (ctx-stack-base-offset ctx)        (vector-ref ctx 7))
-(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 7 x))
+(define (ctx-ns ctx)                       (vector-ref ctx 7))
+(define (ctx-ns-set! ctx x)                (vector-set! ctx 7 x))
 
-(define (ctx-serial-num ctx)               (vector-ref ctx 8))
-(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 8 x))
+(define (ctx-stack-base-offset ctx)        (vector-ref ctx 8))
+(define (ctx-stack-base-offset-set! ctx x) (vector-set! ctx 8 x))
 
-(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 9))
-(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 9 x))
+(define (ctx-serial-num ctx)               (vector-ref ctx 9))
+(define (ctx-serial-num-set! ctx x)        (vector-set! ctx 9 x))
 
-(define (ctx-resources-used-rd ctx)        (vector-ref ctx 10))
-(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 10 x))
+(define (ctx-allow-jump-destination-inlining? ctx)        (vector-ref ctx 10))
+(define (ctx-allow-jump-destination-inlining?-set! ctx x) (vector-set! ctx 10 x))
 
-(define (ctx-resources-used-wr ctx)        (vector-ref ctx 11))
-(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 11 x))
+(define (ctx-resources-used-rd ctx)        (vector-ref ctx 11))
+(define (ctx-resources-used-rd-set! ctx x) (vector-set! ctx 11 x))
 
-(define (ctx-globals-used ctx)             (vector-ref ctx 12))
-(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 12 x))
+(define (ctx-resources-used-wr ctx)        (vector-ref ctx 12))
+(define (ctx-resources-used-wr-set! ctx x) (vector-set! ctx 12 x))
 
-(define (ctx-objs-used ctx)                (vector-ref ctx 13))
-(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 13 x))
+(define (ctx-globals-used ctx)             (vector-ref ctx 13))
+(define (ctx-globals-used-set! ctx x)      (vector-set! ctx 13 x))
 
-(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 14))
-(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 14 x))
+(define (ctx-objs-used ctx)                (vector-ref ctx 14))
+(define (ctx-objs-used-set! ctx x)         (vector-set! ctx 14 x))
 
-(define (ctx-glo-used ctx)                 (vector-ref ctx 15))
-(define (ctx-glo-used-set! ctx x)          (vector-set! ctx 15 x))
+(define (ctx-rtlib-features-used ctx)        (vector-ref ctx 15))
+(define (ctx-rtlib-features-used-set! ctx x) (vector-set! ctx 15 x))
 
-(define (ctx-decls ctx)                    (vector-ref ctx 16))
-(define (ctx-decls-set! ctx x)             (vector-set! ctx 16 x))
+(define (ctx-glo-used ctx)                 (vector-ref ctx 16))
+(define (ctx-glo-used-set! ctx x)          (vector-set! ctx 16 x))
+
+(define (ctx-decls ctx)                    (vector-ref ctx 17))
+(define (ctx-decls-set! ctx x)             (vector-set! ctx 17 x))
+
+(define (ctx-inits ctx)                    (vector-ref ctx 18))
+(define (ctx-inits-set! ctx x)             (vector-set! ctx 18 x))
+
+(define (ctx-imports ctx)                  (vector-ref ctx 19))
+(define (ctx-imports-set! ctx x)           (vector-set! ctx 19 x))
+
+(define (univ-add-module-init ctx init)
+  (queue-put! (ctx-inits ctx) init))
+
+(define (univ-add-module-import ctx imp)
+  (let ((imps (ctx-imports ctx)))
+    (if (not (member imp (queue->list imps)))
+        (queue-put! imps imp))))
 
 (define (with-stack-base-offset ctx n proc)
   (let ((save (ctx-stack-base-offset ctx)))
@@ -2970,7 +3241,6 @@
   (resource-set-add! (ctx-globals-used ctx) global))
 
 (define (univ-use-rtlib ctx feature)
-  ;;(pp (list 'use-rtlib feature));;;;;;;;;;;;
   (resource-set-add! (ctx-rtlib-features-used ctx) feature)
   (symbol->string feature))
 
@@ -3094,13 +3364,16 @@
   (case (univ-procedure-representation ctx)
 
     ((class)
-     (^member (^cast* 'closure closure) 'slots))
+     (^member (^cast* 'closure closure) (^public 'slots)))
+
+    ((struct)
+     (^ "~~~TODO1:univ-clo-slots~~~"))
 
     (else
      (case (target-name (ctx-target ctx))
        ((php)
-        ;;(^member (^cast* 'closure closure) 'slots)
-        (^member closure 'slots))
+        ;;(^member (^cast* 'closure closure) (^public 'slots))
+        (^member closure (^public 'slots)))
        (else
         (^jump closure (^bool #t)))))))
 
@@ -3129,40 +3402,48 @@
     (table-set! t name (if (or (not x) (eq? dir x)) dir 'rdwr))))
 
 (define (univ-emit-getpeps ctx name)
-  (^dict-get (gvm-state-peps-use ctx 'rd)
+  (^dict-get 'entrypt
+             (gvm-state-peps-use ctx 'rd)
              (^str (symbol->string name))))
 
 (define (univ-emit-setpeps ctx name val)
-  (^dict-set (gvm-state-peps-use ctx 'rd)
+  (^dict-set 'entrypt
+             (gvm-state-peps-use ctx 'rd)
              (^str (symbol->string name))
              val))
 
 (define (univ-emit-getglo ctx name)
   (univ-glo-dependency ctx name 'rd)
-  (^dict-get (gvm-state-glo-use ctx 'rd)
+  (^dict-get 'scmobj
+             (gvm-state-glo-use ctx 'rd)
              (^str (symbol->string name))))
 
 (define (univ-emit-setglo ctx name val)
   (univ-glo-dependency ctx name 'wr)
-  (^dict-set (gvm-state-glo-use ctx 'rd)
+  (^dict-set 'scmobj
+             (gvm-state-glo-use ctx 'rd)
              (^str (symbol->string name))
              val))
 
 (define (univ-emit-glo-var-ref ctx sym)
-  (^dict-get (gvm-state-glo-use ctx 'rd)
+  (^dict-get 'scmobj
+             (gvm-state-glo-use ctx 'rd)
              (^symbol-unbox sym)))
 
 (define (univ-emit-glo-var-primitive-ref ctx sym)
-  (^dict-get (gvm-state-peps-use ctx 'rd)
+  (^dict-get 'entrypt
+             (gvm-state-peps-use ctx 'rd)
              (^symbol-unbox sym)))
 
 (define (univ-emit-glo-var-set! ctx sym val)
-  (^dict-set (gvm-state-glo-use ctx 'rd)
+  (^dict-set 'scmobj
+             (gvm-state-glo-use ctx 'rd)
              (^symbol-unbox sym)
              val))
 
 (define (univ-emit-glo-var-primitive-set! ctx sym val)
-  (^dict-set (gvm-state-peps-use ctx 'rd)
+  (^dict-set 'scmobj
+             (gvm-state-peps-use ctx 'rd)
              (^symbol-unbox sym)
              val))
 
@@ -3259,7 +3540,7 @@
                      obj
                      force-var?
                      (lambda ()
-                       (^new (^type 'bignum)
+                       (^new 'bignum
                              (^array-literal
                               'bigdigit
                               (univ-bignum->digits obj)))))))))
@@ -3310,10 +3591,7 @@
          (^rest))
 
         ((proc-obj? obj)
-         (let ((name (proc-obj-name obj)))
-           (if (proc-obj-code obj) ;; procedure defined in this module?
-               (^this-mod-jumpable (gvm-proc-use ctx name))
-               (^getpeps (string->symbol name)))))
+         (univ-emit-obj-proc-as ctx 'scmobj obj))
 
         ((pair? obj)
          (univ-obj-use
@@ -3481,6 +3759,17 @@
           (string-append
            "UNIMPLEMENTED OBJECT: "
            (object->string obj))))))
+
+(define (univ-emit-obj-proc-as ctx type obj)
+  (let* ((name
+          (proc-obj-name obj))
+         (parent-entry-point
+          (if (proc-obj-code obj) ;; procedure defined in this module?
+              (univ-emit-this-mod-jumpable ctx (gvm-proc-use ctx name) #f)
+              (^getpeps (string->symbol name)))))
+    (if (eq? type 'scmobj)
+        (^conv* 'scmobj (^upcast* 'parententrypt 'entrypt parent-entry-point))
+        (^upcast* 'parententrypt type parent-entry-point))))
 
 (define (univ-emit-obj ctx obj)
   (univ-emit-obj* ctx obj #t))
@@ -3663,7 +3952,7 @@
      (let ((array (^ "[" (univ-separated-list "," elems) "]"))
            (typed-array-constructor (univ-js-typed-array-constructor ctx type)))
        (if typed-array-constructor
-           (^new typed-array-constructor array)
+           (^new* typed-array-constructor (list array))
            array)))
 
     ((python ruby)
@@ -3674,6 +3963,9 @@
 
     ((java)
      (^ "new " (^type (list 'array type)) "{" (univ-separated-list "," elems) "}"))
+
+    ((go)
+     (^ "[]" (^type type) "{" (univ-separated-list "," elems) "}"))
 
     (else
      (compiler-internal-error
@@ -3695,27 +3987,15 @@
     (else
      (univ-emit-array-literal ctx type elems))))
 
-(define (univ-emit-make-stack ctx)
-  (case (target-name (ctx-target ctx))
-
-    ((js php python ruby)
-     (^extensible-array-literal 'scmobj '()))
-
-    ((java)
-     (^new-array 'scmobj 10000));;TODO: fix size
-
-    (else
-     (compiler-internal-error
-      "univ-emit-make-stack, unknown target"))))
-
 (define (univ-emit-new-array ctx type len)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^new (^type (list 'array type)) len))
+     (^new (list 'array type) len))
 
     ((php)
-     (^if-expr (^= len (^int 0)) ;; array_fill does not like len=0
+     (^if-expr 'scmobj
+               (^= len (^int 0)) ;; array_fill does not like len=0
                (^array-literal type '())
                (^call-prim
                 "array_fill"
@@ -3731,6 +4011,9 @@
 
     ((java)
      (^ "new " (^type type) "[" len "]"))
+
+    ((go)
+     (^ "make(" (^type (list 'array type)) "," len ")"))
 
     (else
      (compiler-internal-error
@@ -3755,7 +4038,8 @@
 
     ((php)
      (return
-      (^if-expr (^= len (^int 0)) ;; array_fill does not like len=0
+      (^if-expr 'scmobj
+                (^= len (^int 0)) ;; array_fill does not like len=0
                 (^array-literal type '())
                 (^call-prim
                  "array_fill"
@@ -3786,6 +4070,9 @@
           "
           (return elems))))
 
+    ((go)
+     (^ "~~~TODO1:univ-emit-make-array~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-make-array, unknown target"))))
@@ -3793,7 +4080,7 @@
 ;; =============================================================================
 
 (define (gvm-lbl-use ctx lbl)
-  (^this-mod-jumpable (gvm-lbl-use-aux ctx lbl)))
+  (univ-emit-this-mod-jumpable ctx (gvm-lbl-use-aux ctx lbl) #f))
 
 (define (gvm-lbl-use-aux ctx lbl)
   (gvm-bb-use ctx (lbl-num lbl) (ctx-ns ctx)))
@@ -3804,7 +4091,7 @@
 (define (gvm-bb-use ctx num ns)
   (let ((id (lbl->id ctx num ns)))
     ;;TODO: remove?
-    ;;(use-global ctx (^mod-field "AAA" id))
+    ;;(use-global ctx (univ-emit-mod-field ctx "ZZZ" id))
     id))
 
 (define (lbl->id ctx num ns)

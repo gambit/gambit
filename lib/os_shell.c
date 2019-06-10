@@ -1,6 +1,6 @@
 /* File: "os_shell.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -808,6 +808,15 @@ ___SCMOBJ ___os_environ ___PVOID
 /* Shell command. */
 
 
+#define ___USE_system
+
+#ifdef TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE == 1
+#undef ___USE_system
+#endif
+#endif
+
+
 #if 1
 
 ___SCMOBJ ___os_shell_command
@@ -816,6 +825,9 @@ ___SCMOBJ ___os_shell_command
 ___SCMOBJ cmd;)
 {
   ___SCMOBJ e;
+
+#ifdef ___USE_system
+
   char *ccmd;
 
   if ((e = ___SCMOBJ_to_NONNULLCHARSTRING
@@ -841,6 +853,12 @@ ___SCMOBJ cmd;)
 
       ___release_string (ccmd);
     }
+
+#else
+
+  e = ___UNIMPL_ERR;
+
+#endif
 
   return e;
 }

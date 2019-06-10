@@ -621,25 +621,27 @@ c-declare-end
 
   (##declare (not interrupts-enabled))
 
-  (let* ((run-queue
-          (macro-run-queue))
-         (runnable-threads?
-          (##not
-           (let ((root (macro-btq-left run-queue)))
-             (and (##not (##eq? root run-queue))
-                  (##eq? (macro-btq-left root) run-queue)
-                  (##eq? (macro-btq-right root) run-queue))))))
-    (if runnable-threads?
+  (let ((current-processor
+         (macro-current-processor)))
+
+    ;; check if there are runnable threads
+
+    (let ((next-thread
+           (macro-btq-leftmost current-processor)))
+      (if (##not (##eq? next-thread current-processor))
 
         (begin
           ;; There are other threads that can run, so request
           ;; to call "heartbeat" real soon to run those threads.
           interval-runnable)
 
+        ;; there are no runnable threads, so check if there are threads
+        ;; waiting for a timeout or for a device to become ready
+
         (let* ((next-sleeper
-                (macro-toq-leftmost run-queue))
+                (macro-toq-leftmost current-processor))
                (sleep-interval
-                (if (##eq? next-sleeper run-queue)
+                (if (##eq? next-sleeper current-processor)
                     +inf.0
                     (begin
                       ;; There is a sleeping thread, so figure out in
@@ -649,12 +651,12 @@ c-declare-end
                               (##current-time-point))
                        interval-min-wait))))
                (next-condvar
-                (macro-btq-deq-next run-queue))
+                (macro-btq-deq-next current-processor))
                (io-interval
-                (if (##eq? next-condvar run-queue)
+                (if (##eq? next-condvar current-processor)
                     interval-no-io-pending ;; I/O is not pending, just relax
                     interval-io-pending))) ;; I/O is pending, so come back soon
-          (##flmin sleep-interval io-interval)))))
+          (##flmin sleep-interval io-interval))))))
 
 (define interval-runnable 0.0)
 (set! interval-runnable 0.0)

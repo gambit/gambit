@@ -14,8 +14,11 @@
 (define-macro (^if test true #!optional (false #f))
   `(univ-emit-if ctx ,test ,true ,false))
 
-(define-macro (^if-expr expr1 expr2 expr3)
-  `(univ-emit-if-expr ctx ,expr1 ,expr2 ,expr3))
+(define-macro (^if-expr type expr1 expr2 expr3)
+  `(univ-emit-if-expr ctx ,type ,expr1 ,expr2 ,expr3))
+
+(define-macro (^if-instanceof class expr true #!optional (false #f))
+  `(univ-emit-if-instanceof ctx ,class ,expr ,true ,false))
 
 (define-macro (^while test body)
   `(univ-emit-while ctx ,test ,body))
@@ -92,8 +95,11 @@
 (define-macro (^tostr expr)
   `(univ-emit-tostr ctx ,expr))
 
-(define-macro (^cast type-name expr)
-  `(univ-emit-cast ctx ,type-name ,expr))
+(define-macro (^conv* type-name expr)
+  `(univ-emit-conv* ctx ,type-name ,expr))
+
+(define-macro (^cast type expr)
+  `(univ-emit-cast ctx ,type ,expr))
 
 (define-macro (^cast* type-name expr)
   `(univ-emit-cast* ctx ,type-name ,expr))
@@ -103,6 +109,15 @@
 
 (define-macro (^cast*-jumpable expr)
   `(univ-emit-cast*-jumpable ctx ,expr))
+
+(define-macro (^upcast* from-type-name to-type-name expr)
+  `(univ-emit-upcast* ctx ,from-type-name ,to-type-name ,expr))
+
+(define-macro (^downcast* type-name expr)
+  `(univ-emit-downcast* ctx ,type-name ,expr))
+
+(define-macro (^downupcast* down-type-name up-type-name expr)
+  `(univ-emit-downupcast* ctx ,down-type-name ,up-type-name ,expr))
 
 (define-macro (^seq expr1 expr2)
   `(univ-emit-seq ctx ,expr1 ,expr2))
@@ -122,46 +137,37 @@
 (define-macro (^global-function name)
   `(univ-emit-global-function ctx ,name))
 
-(define-macro (^this-mod-field name)
-  `(univ-emit-this-mod-field ctx ,name))
+(define-macro (^id-to-jumpable name)
+  `(univ-emit-id-to-jumpable ctx ,name))
 
-(define-macro (^this-mod-method name)
-  `(univ-emit-this-mod-method ctx ,name))
+(define-macro (^rts-field name)      `(univ-emit-rts-field ctx ,name #t))
+(define-macro (^rts-field-priv name) `(univ-emit-rts-field ctx ,name #f))
+(define-macro (^rts-field-ref name)  `(univ-emit-rts-field-ref ctx ,name #t))
+(define-macro (^rts-field-ref-priv name)  `(univ-emit-rts-field-ref ctx ,name #f))
+(define-macro (^rts-field-use name)  `(univ-emit-rts-field-use ctx ,name #t))
+(define-macro (^rts-field-use-priv name) `(univ-emit-rts-field-use ctx ,name #f))
 
-(define-macro (^this-mod-jumpable name)
-  `(univ-emit-this-mod-jumpable ctx ,name))
+(define-macro (^rts-method name)     `(univ-emit-rts-method ctx ,name #t))
+(define-macro (^rts-method-priv name) `(univ-emit-rts-method ctx ,name #f))
+(define-macro (^rts-method-ref name) `(univ-emit-rts-method-ref ctx ,name #t))
+(define-macro (^rts-method-ref-priv name) `(univ-emit-rts-method-ref ctx ,name #f))
+(define-macro (^rts-method-use name) `(univ-emit-rts-method-use ctx ,name #t))
+(define-macro (^rts-method-use-priv name) `(univ-emit-rts-method-use ctx ,name #f))
 
-(define-macro (^mod-field mod-name name)
-  `(univ-emit-mod-field ctx ,mod-name ,name))
-
-(define-macro (^mod-method mod-name name)
-  `(univ-emit-mod-method ctx ,mod-name ,name))
-
-(define-macro (^mod-jumpable mod-name name)
-  `(univ-emit-mod-jumpable ctx ,mod-name ,name))
-
-(define-macro (^mod-class mod-name name)
-  `(univ-emit-mod-class ctx ,mod-name ,name))
-
-(define-macro (^rts-field name)      `(univ-emit-rts-field ctx ,name))
-(define-macro (^rts-field-ref name)  `(univ-emit-rts-field-ref ctx ,name))
-(define-macro (^rts-field-use name)  `(univ-emit-rts-field-use ctx ,name))
-
-(define-macro (^rts-method name)     `(univ-emit-rts-method ctx ,name))
-(define-macro (^rts-method-ref name) `(univ-emit-rts-method-ref ctx ,name))
-(define-macro (^rts-method-use name) `(univ-emit-rts-method-use ctx ,name))
-
-(define-macro (^rts-class name)      `(univ-emit-rts-class ctx ,name))
-(define-macro (^rts-class-ref name)  `(univ-emit-rts-class-ref ctx ,name))
-(define-macro (^rts-class-use name)  `(univ-emit-rts-class-use ctx ,name))
+(define-macro (^rts-class name)      `(univ-emit-rts-class ctx ,name #t))
+(define-macro (^rts-class-priv name) `(univ-emit-rts-class ctx ,name #f))
+(define-macro (^rts-class-ref name)  `(univ-emit-rts-class-ref ctx ,name #t))
+(define-macro (^rts-class-ref-priv name)  `(univ-emit-rts-class-ref ctx ,name #f))
+(define-macro (^rts-class-use name)  `(univ-emit-rts-class-use ctx ,name #t))
+(define-macro (^rts-class-use-priv name) `(univ-emit-rts-class-use ctx ,name #f))
 
 (define-macro (^rts-jumpable-use name) `(univ-emit-rts-jumpable-use ctx ,name))
 
-(define-macro (^prefix name)
-  `(univ-emit-prefix ctx ,name))
+(define-macro (^prefix name #!optional (public? #f))
+  `(univ-emit-prefix ctx ,name ,public?))
 
-(define-macro (^prefix-class name)
-  `(univ-emit-prefix-class ctx ,name))
+(define-macro (^prefix-class name #!optional (public? #f))
+  `(univ-emit-prefix-class ctx ,name ,public?))
 
 (define-macro (^assign-expr loc expr)
   `(univ-emit-assign-expr ctx ,loc ,expr))
@@ -208,8 +214,11 @@
 (define-macro (^array-index expr1 expr2)
   `(univ-emit-array-index ctx ,expr1 ,expr2))
 
-(define-macro (^prop-index expr1 expr2 #!optional (expr3 #f))
-  `(univ-emit-prop-index ctx ,expr1 ,expr2 ,expr3))
+(define-macro (^prop-index type expr1 expr2 #!optional (expr3 #f))
+  `(univ-emit-prop-index ctx ,type ,expr1 ,expr2 ,expr3))
+
+(define-macro (^prop-index-or-null type expr1 expr2)
+  `(univ-emit-prop-index-or-null ctx ,type ,expr1 ,expr2))
 
 (define-macro (^prop-index-exists? expr1 expr2)
   `(univ-emit-prop-index-exists? ctx ,expr1 ,expr2))
@@ -225,6 +234,9 @@
 
 (define-macro (^obj obj)
   `(univ-emit-obj ctx ,obj))
+
+(define-macro (^obj-proc-as type obj)
+  `(univ-emit-obj-proc-as ctx ,type ,obj))
 
 (define-macro (^array-literal type elems)
   `(univ-emit-array-literal ctx ,type ,elems))
@@ -253,8 +265,17 @@
 (define-macro (^this)
   `(univ-emit-this ctx))
 
-(define-macro (^new class . params)
-  `(univ-emit-new ctx ,class ,@params))
+(define-macro (^new type . params)
+  `(univ-emit-new ctx ,type ,@params))
+
+(define-macro (^new* class params)
+  `(univ-emit-new* ctx ,class ,params))
+
+(define-macro (^construct class . params)
+  `(univ-emit-construct ctx ,class ,@params))
+
+(define-macro (^construct* class params)
+  `(univ-emit-construct* ctx ,class ,params))
 
 (define-macro (^typeof type expr)
   `(univ-emit-typeof ctx ,type ,expr))
@@ -310,6 +331,7 @@
     ,params
     ,attribs
     (univ-emit-fn-body ctx ,header (lambda (ctx) ,body))
+    #f
     #t))
 
 (define-macro (^tos)
@@ -540,18 +562,17 @@
 (define-macro (^empty-dict type)
   `(univ-emit-empty-dict ctx ,type))
 
-;; TODO: remove, obsolete?
-(define-macro (^dict alist)
-  `(univ-emit-dict ctx ,alist))
-
 (define-macro (^dict-key-exists? expr1 expr2)
   `(univ-emit-dict-key-exists? ctx ,expr1 ,expr2))
 
-(define-macro (^dict-get expr1 expr2 #!optional (expr3 #f))
-  `(univ-emit-dict-get ctx ,expr1 ,expr2 ,expr3))
+(define-macro (^dict-get type expr1 expr2 #!optional (expr3 #f))
+  `(univ-emit-dict-get ctx ,type ,expr1 ,expr2 ,expr3))
 
-(define-macro (^dict-set expr1 expr2 expr3)
-  `(univ-emit-dict-set ctx ,expr1 ,expr2 ,expr3))
+(define-macro (^dict-get-or-null type expr1 expr2)
+  `(univ-emit-dict-get-or-null ctx ,type ,expr1 ,expr2))
+
+(define-macro (^dict-set type expr1 expr2 expr3)
+  `(univ-emit-dict-set ctx ,type ,expr1 ,expr2 ,expr3))
 
 (define-macro (^dict-delete expr1 expr2)
   `(univ-emit-dict-delete ctx ,expr1 ,expr2))
@@ -561,6 +582,9 @@
 
 (define-macro (^member expr name)
   `(univ-emit-member ctx ,expr ,name))
+
+(define-macro (^public name)
+  `(univ-emit-public ctx ,name))
 
 (define-macro (^pair? expr)
   `(univ-emit-pair? ctx ,expr))
