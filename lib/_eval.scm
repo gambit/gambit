@@ -5358,6 +5358,12 @@
     (define-runtime-syntax define-structure
       (##make-alias-syntax '##define-structure))
 
+    (define-runtime-syntax parameterize
+      (##make-alias-syntax '##parameterize))
+
+    (define-runtime-syntax receive
+      (##make-alias-syntax '##receive))
+
     (define-runtime-syntax include
       (##make-alias-syntax '##include))
 
@@ -5369,6 +5375,12 @@
 
     (define-runtime-syntax namespace
       (##make-alias-syntax '##namespace))
+
+    (define-runtime-syntax this-source-file
+      (##make-alias-syntax '##this-source-file))
+
+    (define-runtime-syntax cond-expand
+      (##make-alias-syntax '##cond-expand))
 
     (define-runtime-syntax case-lambda
       (##make-alias-syntax '##case-lambda))

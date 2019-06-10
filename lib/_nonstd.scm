@@ -183,7 +183,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-syntax parameterize
+(define-runtime-syntax ##parameterize
   (lambda (src)
     (##deconstruct-call
      src
@@ -219,7 +219,7 @@
                        (let* ((param-val (##car params-vals))
                               (param (##car param-val))
                               (val (##cdr param-val)))
-                         (##list '##parameterize
+                         (##list '##parameterize1
                                  (##car param)
                                  (##car val)
                                  (##list 'lambda
@@ -250,7 +250,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-syntax this-source-file
+(define-runtime-syntax ##this-source-file
   (lambda (src)
     (let ((path (##source-path src)))
       (if path
@@ -261,7 +261,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-syntax cond-expand
+(define-runtime-syntax ##cond-expand
   (lambda (src)
     (##deconstruct-call
      src
@@ -642,7 +642,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-runtime-syntax receive
+(define-runtime-syntax ##receive
   (lambda (src)
     (##deconstruct-call
      src
