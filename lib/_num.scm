@@ -10647,17 +10647,22 @@ end-of-code
 (define-prim-flonum (flabs x)
   (##flabs x))
 
+(define-prim (##flnumerator x)
+  (if (##flzero? x)
+      x
+      (##exact->inexact (##numerator (##flonum->exact x)))))
+
 (define-prim-flonum (flnumerator x)
-  (cond ((##flzero? x)
-         x)
-        ((macro-flonum-rational? x)
-         (##exact->inexact (##numerator (##flonum->exact x))))
-        (else
-         (##fail-check-rational 1 flnumerator x))))
+  (if (macro-flonum-rational? x)
+      (##flnumerator x)
+      (##fail-check-rational 1 flnumerator x)))
+
+(define-prim (##fldenominator x)
+  (##exact->inexact (##denominator (##flonum->exact x))))
 
 (define-prim-flonum (fldenominator x)
   (if (macro-flonum-rational? x)
-      (##exact->inexact (##denominator (##flonum->exact x)))
+      (##fldenominator x)
       (##fail-check-rational 1 fldenominator x)))
 
 (define-prim (##flfloor x))
