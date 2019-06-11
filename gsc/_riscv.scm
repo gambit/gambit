@@ -191,7 +191,16 @@
 
 (define (riscv-nop cgc)
   (riscv-addi cgc (riscv-x0) (riscv-x0) (riscv-imm-int 0)))
-; (define (riscv-li cgc rd immediate))
+(define (riscv-li cgc rd immediate) ; XXX
+  (let ((val (riscv-imm-int-value immediate)))
+    (cond
+      ((and (fx>= val -2048) (fx<= val 2047))
+       (riscv-addi cgc rd (riscv-x0) immediate))
+      ((and (fx>= val -2147483648) (fx<= val 2147483647))
+       (riscv-lui cgc rd (riscv-imm-int (fxand val #xfffff000) 'U))
+       (riscv-addi cgc rd (riscv-x0) (riscv-imm-int (fxand val #xfff))))
+      (else
+        (error "loading of unsupported value" val)))))
 (define (riscv-mv cgc rd rs)
   (riscv-addi cgc rd rs (riscv-imm-int 0)))
 (define (riscv-not cgc rd rs)
@@ -248,12 +257,12 @@
   (riscv-auipc cgc (riscv-x6)
                (riscv-imm-int (fxand (riscv-imm-int-value offset) #xfffff000) 'U)) ; XXX
   (riscv-jalr cgc (riscv-x1) (riscv-x6)
-              (riscv-imm-int (fxand (riscv-imm-int-value offset) #x00000fff) 'I))) ; XXX
+              (riscv-imm-int (fxand (riscv-imm-int-value offset) #xfff)))) ; XXX
 (define (riscv-tail cgc offset)
   (riscv-auipc cgc (riscv-x6)
                (riscv-imm-int (fxand (riscv-imm-int-value offset) #xfffff000) 'U)) ; XXX
   (riscv-jalr cgc (riscv-x0) (riscv-x6)
-              (riscv-imm-int (fxand (riscv-imm-int-value offset) #x00000fff) 'I))) ; XXX
+              (riscv-imm-int (fxand (riscv-imm-int-value offset) #xfff)))) ; XXX
 
 ; (define (riscv-fence cgc)
 ;   (riscv-fence cgc #b1111 #b1111))
