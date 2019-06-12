@@ -343,10 +343,10 @@
 (##define-macro (macro-parameter-descr param)
   `(##closure-ref ,param 1))
 
-(define-prim (##parameterize param val thunk)
+(define-prim (##parameterize1 param val thunk)
   (##declare (not interrupts-enabled))
-  (macro-check-procedure param 1 (##parameterize param val thunk)
-    (macro-check-procedure thunk 3 (##parameterize param val thunk)
+  (macro-check-procedure param 1 (##parameterize1 param val thunk)
+    (macro-check-procedure thunk 3 (##parameterize1 param val thunk)
       (if (##parameter? param)
         (##dynamic-let
          param
@@ -4381,21 +4381,33 @@
 (define-prim (##current-time-point)
   (macro-current-time-point))
 
-(define-prim (current-time)
+(define-prim (##current-time)
   (macro-make-time (macro-current-time-point) #f #f #f))
+
+(define-prim (current-time)
+  (##current-time))
+
+(define-prim (##time? obj)
+  (macro-time? obj))
 
 (define-prim (time? obj)
   (macro-time? obj))
+
+(define-prim (##time->seconds t)
+  (macro-time-point t))
 
 (define-prim (time->seconds t)
   (macro-force-vars (t)
     (macro-check-time t 1 (time->seconds t)
       (macro-time-point t))))
 
+(define-prim (##seconds->time s)
+  (macro-make-time (macro-real->inexact s) #f #f #f))
+
 (define-prim (seconds->time s)
   (macro-force-vars (s)
     (macro-check-real s 1 (seconds->time s)
-      (macro-make-time (macro-real->inexact s) #f #f #f))))
+      (##seconds->time s))))
 
 (define-prim (timeout->time absrel-timeout)
   (macro-force-vars (absrel-timeout)
@@ -5134,7 +5146,7 @@
 
 ;;; Implementation of TCP service register.
 
-(define ##tcp-service-table (##make-table))
+(define ##tcp-service-table (##make-table-aux))
 (define ##tcp-service-mutex (##make-mutex 'tcp-service))
 (define ##tcp-service-tgroup (##make-tgroup 'tcp-service #f))
 
@@ -5619,10 +5631,10 @@
 (##define-macro (macro-parameter-descr param)
   `(##closure-ref ,param 1))
 
-(define-prim (##parameterize param val thunk)
+(define-prim (##parameterize1 param val thunk)
   (##declare (not interrupts-enabled))
-  (macro-check-procedure param 1 (##parameterize param val thunk)
-    (macro-check-procedure thunk 3 (##parameterize param val thunk)
+  (macro-check-procedure param 1 (##parameterize1 param val thunk)
+    (macro-check-procedure thunk 3 (##parameterize1 param val thunk)
       (if (##parameter? param)
         (##dynamic-let
          param
@@ -7392,21 +7404,33 @@
 (define-prim (##current-time-point)
   (macro-current-time-point))
 
-(define-prim (current-time)
+(define-prim (##current-time)
   (macro-make-time (macro-current-time-point) #f #f #f))
+
+(define-prim (current-time)
+  (##current-time))
+
+(define-prim (##time? obj)
+  (macro-time? obj))
 
 (define-prim (time? obj)
   (macro-time? obj))
+
+(define-prim (##time->seconds t)
+  (macro-time-point t))
 
 (define-prim (time->seconds t)
   (macro-force-vars (t)
     (macro-check-time t 1 (time->seconds t)
       (macro-time-point t))))
 
+(define-prim (##seconds->time s)
+  (macro-make-time (macro-real->inexact s) #f #f #f))
+
 (define-prim (seconds->time s)
   (macro-force-vars (s)
     (macro-check-real s 1 (seconds->time s)
-      (macro-make-time (macro-real->inexact s) #f #f #f))))
+      (##seconds->time s))))
 
 (define-prim (timeout->time absrel-timeout)
   (macro-force-vars (absrel-timeout)
@@ -8565,7 +8589,7 @@
 
 ;;; Implementation of TCP service register.
 
-(define ##tcp-service-table (##make-table))
+(define ##tcp-service-table (##make-table-aux))
 (define ##tcp-service-mutex (macro-make-mutex 'tcp-service))
 (define ##tcp-service-tgroup (macro-make-tgroup 'tcp-service #f))
 

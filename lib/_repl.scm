@@ -1783,7 +1783,7 @@
 
   (define (output-to-repl proc)
     (let ((old (##current-user-interrupt-handler)))
-      (##parameterize
+      (##parameterize1
        ##current-user-interrupt-handler
        ##defer-user-interrupts
        (lambda ()
@@ -1806,7 +1806,7 @@
 
        (define (nest wrapper)
          (let ((result
-                (##parameterize
+                (##parameterize1
                  ##trace-depth
                  depth
                  (lambda () (wrapper execute)))))
@@ -2611,7 +2611,7 @@
      (##repl-context-with-clean-exception-handling
       repl-context
       (lambda ()
-        (##parameterize
+        (##parameterize1
          ##current-user-interrupt-handler
          ##void ;; ignore user interrupts
          (lambda ()

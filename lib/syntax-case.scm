@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "syntax-case.scm", Time-stamp: <2015-09-02 18:43:30 feeley>
+;;; File: "syntax-case.scm"
 
-;;; Copyright (c) 1998-2008 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1998-2019 by Marc Feeley, All Rights Reserved.
 
 ;;; This is version 3.2 .
 
@@ -154,7 +154,7 @@ syntax-error
 (and (> (string-length str) 2)
 (string=? (substring str 0 2) "%%"))))))
 
-(define prop-table (##make-table))
+(define prop-table (##make-table-aux))
 
 (define remprop
 (lambda (sym key)

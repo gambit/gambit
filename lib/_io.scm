@@ -147,7 +147,7 @@
    (if (##eq? case-conversion? '()) ;; default to readtable?
        (macro-readtable-case-conversion? readtable)
        case-conversion?)
-   (##make-table)
+   (##make-table-aux)
    #f
    0
    read-cont))
@@ -3988,7 +3988,7 @@
 (define-prim (##marktable-table-get! mt)
   (##declare (not interrupts-enabled))
   (or (macro-marktable-table mt)
-      (let ((t (##make-table 0 #f #f #f ##eq?)))
+      (let ((t (##make-table-aux 0 #f #f #f ##eq?)))
         (macro-marktable-table-set! mt t)
         t)))
 
@@ -9636,23 +9636,40 @@
    open-binary-output-file
    path-or-settings))
 
+(define-prim (##call-with-input-file path-or-settings proc)
+  (##open-file-generic
+   (macro-direction-in)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (proc port)))
+       (##close-port port)
+       results))
+   call-with-input-file
+   path-or-settings
+   proc))
+
 (define-prim (call-with-input-file path-or-settings proc)
   (macro-force-vars (path-or-settings proc)
     (macro-check-procedure
       proc
       2
       (call-with-input-file path-or-settings proc)
-      (##open-file-generic
-       (macro-direction-in)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (proc port)))
-           (##close-port port)
-           results))
-       call-with-input-file
-       path-or-settings
-       proc))))
+      (##call-with-input-file path-or-settings proc))))
+
+(define-prim (##call-with-output-file path-or-settings proc)
+  (##open-file-generic
+   (macro-direction-out)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (proc port)))
+       (##force-output port)
+       (##close-port port)
+       results))
+   call-with-output-file
+   path-or-settings
+   proc))
 
 (define-prim (call-with-output-file path-or-settings proc)
   (macro-force-vars (path-or-settings proc)
@@ -9660,18 +9677,20 @@
       proc
       2
       (call-with-output-file path-or-settings proc)
-      (##open-file-generic
-       (macro-direction-out)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (proc port)))
-           (##force-output port)
-           (##close-port port)
-           results))
-       call-with-output-file
-       path-or-settings
-       proc))))
+      (##call-with-output-file path-or-settings proc))))
+
+(define-prim (##with-input-from-file path-or-settings thunk)
+  (##open-file-generic
+   (macro-direction-in)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (macro-dynamic-bind input-port port thunk)))
+       (##close-port port)
+       results))
+   with-input-from-file
+   path-or-settings
+   thunk))
 
 (define-prim (with-input-from-file path-or-settings thunk)
   (macro-force-vars (path-or-settings thunk)
@@ -9679,17 +9698,21 @@
       thunk
       2
       (with-input-from-file path-or-settings thunk)
-      (##open-file-generic
-       (macro-direction-in)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (macro-dynamic-bind input-port port thunk)))
-           (##close-port port)
-           results))
-       with-input-from-file
-       path-or-settings
-       thunk))))
+      (##with-input-from-file path-or-settings thunk))))
+
+(define-prim (##with-output-to-file path-or-settings thunk)
+  (##open-file-generic
+   (macro-direction-out)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (macro-dynamic-bind output-port port thunk)))
+       (##force-output port)
+       (##close-port port)
+       results))
+   with-output-to-file
+   path-or-settings
+   thunk))
 
 (define-prim (with-output-to-file path-or-settings thunk)
   (macro-force-vars (path-or-settings thunk)
@@ -9697,41 +9720,39 @@
       thunk
       2
       (with-output-to-file path-or-settings thunk)
-      (##open-file-generic
-       (macro-direction-out)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (macro-dynamic-bind output-port port thunk)))
-           (##force-output port)
-           (##close-port port)
-           results))
-       with-output-to-file
-       path-or-settings
-       thunk))))
+      (##with-output-to-file path-or-settings thunk))))
 
 ;;;----------------------------------------------------------------------------
+
+(define-prim (##call-with-port port proc)
+  (let ((results ;; may get bound to a multiple-values object
+         (proc port)))
+    (##close-port port)
+    results))
 
 (define-prim (call-with-port port proc)
   (macro-force-vars (port proc)
     (macro-check-port port 1 (call-with-port port proc)
       (macro-check-procedure proc 2 (call-with-port port proc)
-        (let ((results ;; may get bound to a multiple-values object
-               (proc port)))
-          (##close-port port)
-          results)))))
+        (##call-with-port port proc)))))
+
+(define-prim (##with-input-from-port port thunk)
+  (macro-dynamic-bind input-port port thunk))
 
 (define-prim (with-input-from-port port thunk)
   (macro-force-vars (port thunk)
     (macro-check-input-port port 1 (with-input-from-port port thunk)
       (macro-check-procedure thunk 2 (with-input-from-port port thunk)
-        (macro-dynamic-bind input-port port thunk)))))
+        (##with-input-from-port port thunk)))))
+
+(define-prim (##with-output-to-port port thunk)
+  (macro-dynamic-bind output-port port thunk))
 
 (define-prim (with-output-to-port port thunk)
   (macro-force-vars (port thunk)
     (macro-check-output-port port 1 (with-output-to-port port thunk)
       (macro-check-procedure thunk 2 (with-output-to-port port thunk)
-        (macro-dynamic-bind output-port port thunk)))))
+        (##with-output-to-port port thunk)))))
 
 ;;;----------------------------------------------------------------------------
 

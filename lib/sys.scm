@@ -703,7 +703,7 @@
 (define-prim (table? obj)
   (macro-table? obj))
 
-(define-prim (##make-table
+(define-prim (##make-table-aux
               #!optional
               (size (macro-absent-obj))
               (init (macro-absent-obj))
@@ -979,7 +979,7 @@
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
-  (##make-table
+  (##make-table-aux
    size
    init
    weak-keys
@@ -1273,7 +1273,7 @@
     (macro-check-table table 1 (table->list table)
       (##table->list table))))
 
-(define-prim (##list->table
+(define-prim (##list->table-aux
               lst
               #!optional
               (size (macro-absent-obj))
@@ -1285,7 +1285,7 @@
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
   (let ((table
-         (##make-table
+         (##make-table-aux
           size
           init
           weak-keys
@@ -1340,7 +1340,7 @@
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
-  (##list->table
+  (##list->table-aux
    lst
    size
    init
@@ -1382,7 +1382,7 @@
          (max-load
           (##f64vector-ref loads 2)))
     (let ((t
-           (##make-table
+           (##make-table-aux
             size
             init
             weak-keys
@@ -1474,8 +1474,8 @@
 
 (define ##last-serial-number 0)
 
-(define ##object-to-serial-number-table (##make-table 0 #f #t #f ##eq?))
-(define ##serial-number-to-object-table (##make-table 0 #f #f #t ##eq?))
+(define ##object-to-serial-number-table (##make-table-aux 0 #f #t #f ##eq?))
+(define ##serial-number-to-object-table (##make-table-aux 0 #f #f #t ##eq?))
 
 (define-prim (##object->serial-number obj)
   (let loop ()
@@ -2080,7 +2080,7 @@
   `(##integer-length ,@args))
 
 (##define-macro (make-table . args)
-  `(##make-table 0 #f #f #f ##eq?))
+  `(##make-table-aux 0 #f #f #f ##eq?))
 
 (##define-macro (table-ref . args)
   `(##table-ref ,@args))
@@ -3153,7 +3153,7 @@
   `(##integer-length ,@args))
 
 (##define-macro (make-table . args)
-  `(##make-table 0 #f #f #f ##eq?))
+  `(##make-table-aux 0 #f #f #f ##eq?))
 
 (##define-macro (table-ref . args)
   `(##table-ref ,@args))
@@ -4268,7 +4268,7 @@
   `(##integer-length ,@args))
 
 (##define-macro (make-table . args)
-  `(##make-table 0 #f #f #f ##eq?))
+  `(##make-table-aux 0 #f #f #f ##eq?))
 
 (##define-macro (table-ref . args)
   `(##table-ref ,@args))
@@ -5328,7 +5328,7 @@
   `(##integer-length ,@args))
 
 (##define-macro (make-table . args)
-  `(##make-table 0 #f #f #f ##eq?))
+  `(##make-table-aux 0 #f #f #f ##eq?))
 
 (##define-macro (table-ref . args)
   `(##table-ref ,@args))

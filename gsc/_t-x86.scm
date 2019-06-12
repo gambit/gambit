@@ -381,7 +381,7 @@
 ;;;; ***** DUMPING OF A COMPILATION MODULE
 
 ;; Table from symbol to asm-labels.
-(define nat-labels (make-table test: eq?))
+(define nat-labels (make-table 'test: eq?))
 
 ;; nat-label-ref: finds the label associated with a symbol. Creates it if
 ;;                it doesn't exist.
@@ -399,7 +399,7 @@
 
 
 ;; Table from symbol to pstate offset.
-(define nat-globals (make-table test: eq?))
+(define nat-globals (make-table 'test: eq?))
 
 ;; Get the memory address of a symbol. If the symbol doesn't exist,
 ;; add it to the table.

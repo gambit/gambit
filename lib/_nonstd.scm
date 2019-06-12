@@ -2039,6 +2039,48 @@
 
 (implement-library-type-file-info)
 
+(define-prim (##file-info? obj)
+  (macro-file-info? obj))
+
+(define-prim (##file-info-type info)
+  (macro-file-info-type info))
+
+(define-prim (##file-info-device info)
+  (macro-file-info-device info))
+
+(define-prim (##file-info-inode info)
+  (macro-file-info-inode info))
+
+(define-prim (##file-info-mode info)
+  (macro-file-info-mode info))
+
+(define-prim (##file-info-number-of-links info)
+  (macro-file-info-number-of-links info))
+
+(define-prim (##file-info-owner info)
+  (macro-file-info-owner info))
+
+(define-prim (##file-info-group info)
+  (macro-file-info-group info))
+
+(define-prim (##file-info-size info)
+  (macro-file-info-size info))
+
+(define-prim (##file-info-last-access-time info)
+  (macro-file-info-last-access-time info))
+
+(define-prim (##file-info-last-modification-time info)
+  (macro-file-info-last-modification-time info))
+
+(define-prim (##file-info-last-change-time info)
+  (macro-file-info-last-change-time info))
+
+(define-prim (##file-info-attributes info)
+  (macro-file-info-attributes info))
+
+(define-prim (##file-info-creation-time info)
+  (macro-file-info-creation-time info))
+
 (define-prim (##file-info
               path
               #!optional

@@ -335,7 +335,7 @@
                      (newline port)))
 
                (if compiler-option-dg
-                   (set! dependency-graph (make-table test: eq?)))
+                   (set! dependency-graph (make-table 'test: eq?)))
 
                (let* ((module-procs
                        (compile-parsed-program (car (last-pair supply-modules))
@@ -727,7 +727,7 @@
     (set! *bbs* main-bbs)
     (set! *global-env* env)
 
-    (set! definition-table (make-table test: eq?))
+    (set! definition-table (make-table 'test: eq?))
     (set! live-definition-queue '())
     (set! proc-queue '())
     (set! known-procs '())

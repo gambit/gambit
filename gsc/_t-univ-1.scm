@@ -2286,7 +2286,7 @@
 
 (define (make-objs-used)
   (vector '()
-          (make-table test: eq?)))
+          (make-table 'test: eq?)))
 
 (define (objs-used-stack ou)        (vector-ref ou 0))
 (define (objs-used-stack-set! ou x) (vector-set! ou 0 x))

@@ -1453,25 +1453,43 @@
               (type-error-on-x)))
         (type-error-on-y))))
 
+(define-prim (##floor-remainder x y)
+  (##divide x y 0))
+
 (define-prim (floor-remainder x y)
   (macro-force-vars (x y)
     (##divide x y 0)))
+
+(define-prim (##floor-quotient x y)
+  (##divide x y 1))
 
 (define-prim (floor-quotient x y)
   (macro-force-vars (x y)
     (##divide x y 1)))
 
+(define-prim (##floor/ x y)
+  (##divide x y 2))
+
 (define-prim (floor/ x y)
   (macro-force-vars (x y)
     (##divide x y 2)))
+
+(define-prim (##truncate-remainder x y)
+  (##divide x y 4))
 
 (define-prim (truncate-remainder x y)
   (macro-force-vars (x y)
     (##divide x y 4)))
 
+(define-prim (##truncate-quotient x y)
+  (##divide x y 5))
+
 (define-prim (truncate-quotient x y)
   (macro-force-vars (x y)
     (##divide x y 5)))
+
+(define-prim (##truncate/ x y)
+  (##divide x y 6))
 
 (define-prim (truncate/ x y)
   (macro-force-vars (x y)
@@ -4862,7 +4880,7 @@ for a discussion of branch cuts.
 
 ;;; Bitwise operations.
 
-(define-prim (##bitwise-ior x y)
+(define-prim (##bitwise-ior2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -4901,15 +4919,22 @@ for a discussion of branch cuts.
               (bignum-bitwise-ior x x-length y y-length)
               (bignum-bitwise-ior y y-length x x-length)))))))
 
+(define-prim-nary (##bitwise-ior x y)
+  0
+  x
+  (##bitwise-ior2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (bitwise-ior x y)
   0
   (if (macro-exact-int? x) x '(1))
-  (##bitwise-ior x y)
+  (##bitwise-ior2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-exact-integer))
 
-(define-prim (##bitwise-xor x y)
+(define-prim (##bitwise-xor2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -4950,15 +4975,22 @@ for a discussion of branch cuts.
               (bignum-bitwise-xor x x-length y y-length)
               (bignum-bitwise-xor y y-length x x-length)))))))
 
+(define-prim-nary (##bitwise-xor x y)
+  0
+  x
+  (##bitwise-xor2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (bitwise-xor x y)
   0
   (if (macro-exact-int? x) x '(1))
-  (##bitwise-xor x y)
+  (##bitwise-xor2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-exact-integer))
 
-(define-prim (##bitwise-and x y)
+(define-prim (##bitwise-and2 x y)
 
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
@@ -4997,10 +5029,17 @@ for a discussion of branch cuts.
               (bignum-bitwise-and x x-length y y-length)
               (bignum-bitwise-and y y-length x x-length)))))))
 
+(define-prim-nary (##bitwise-and x y)
+  -1
+  x
+  (##bitwise-and2 x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary (bitwise-and x y)
   -1
   (if (macro-exact-int? x) x '(1))
-  (##bitwise-and x y)
+  (##bitwise-and2 x y)
   macro-force-vars
   macro-no-check
   (##pair? ##fail-check-exact-integer))
@@ -5128,8 +5167,8 @@ for a discussion of branch cuts.
     (##integer-length x)))
 
 (define-prim (##bitwise-merge x y z)
-  (##bitwise-ior (##bitwise-and (##bitwise-not x) y)
-                 (##bitwise-and x z)))
+  (##bitwise-ior2 (##bitwise-and2 (##bitwise-not x) y)
+                  (##bitwise-and2 x z)))
 
 (define-prim (bitwise-merge x y z)
   (macro-force-vars (x y z)
@@ -5184,7 +5223,7 @@ for a discussion of branch cuts.
     (##bit-set? x y)))
 
 (define-prim (##any-bits-set? x y)
-  (##not (##eqv? (##bitwise-and x y) 0)))
+  (##not (##eqv? (##bitwise-and2 x y) 0)))
 
 (define-prim (any-bits-set? x y)
   (macro-force-vars (x y)
@@ -5196,7 +5235,7 @@ for a discussion of branch cuts.
            (##any-bits-set? x y)))))
 
 (define-prim (##all-bits-set? x y)
-  (##= x (##bitwise-and x y)))
+  (##= x (##bitwise-and2 x y)))
 
 (define-prim (all-bits-set? x y)
   (macro-force-vars (x y)
@@ -5308,9 +5347,9 @@ for a discussion of branch cuts.
 
 (define-prim (##replace-bit-field size position newfield n)
   (let ((m (##bit-mask size)))
-    (##bitwise-ior
-     (##bitwise-and n (##bitwise-not (##arithmetic-shift m position)))
-     (##arithmetic-shift (##bitwise-and newfield m) position))))
+    (##bitwise-ior2
+     (##bitwise-and2 n (##bitwise-not (##arithmetic-shift m position)))
+     (##arithmetic-shift (##bitwise-and2 newfield m) position))))
 
 (define-prim (replace-bit-field size position newfield n)
   (macro-force-vars (size position newfield n)
@@ -9704,7 +9743,7 @@ end-of-code
 
 ;;; Bignum division.
 
-(define ##reciprocal-cache (##make-table 0 #f #t #f ##eq?))
+(define ##reciprocal-cache (##make-table-aux 0 #f #t #f ##eq?))
 
 (define ##bignum.mdigit-width/2
   (##fxquotient ##bignum.mdigit-width 2))
@@ -11548,7 +11587,7 @@ end-of-code
         (random-fixnum-from-time))
 
       (define (simple-random16)
-        (let ((r (##bitwise-and seed16 65535)))
+        (let ((r (##bitwise-and2 seed16 65535)))
           (set! seed16
                 (##+ (##* 30903 r)
                      (##arithmetic-shift seed16 -16)))

@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2188,7 +2188,7 @@
                 (string<? (symbol->string (car x))
                           (symbol->string (car y))))))
 
-  (define not-defined (make-table test: eq?))
+  (define not-defined (make-table 'test: eq?))
 
   (for-each
    (lambda (referrer-dependencies)

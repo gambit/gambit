@@ -50,10 +50,10 @@
 (##define-macro (macro-parameter-descr param)
   `(##closure-ref ,param 1))
 
-(define-prim (##parameterize param val thunk)
+(define-prim (##parameterize1 param val thunk)
   (##declare (not interrupts-enabled))
-  (macro-check-procedure param 1 (##parameterize param val thunk)
-    (macro-check-procedure thunk 3 (##parameterize param val thunk)
+  (macro-check-procedure param 1 (##parameterize1 param val thunk)
+    (macro-check-procedure thunk 3 (##parameterize1 param val thunk)
       (if (##parameter? param)
           (##dynamic-let
            param

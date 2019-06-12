@@ -81,7 +81,7 @@
             (##vector-ref src 3)))
 
 (define (##sourcify-deep x src)
-  (let ((visited (##make-table 0 (macro-absent-obj) #f #f ##eq?)))
+  (let ((visited (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?)))
 
     (define not-yet-visited                      0)
     (define children-being-visited               1)
@@ -274,7 +274,7 @@
          (##container->path (##locat-container locat)))))
 
 (define (##desourcify src)
-  (let ((visited (##make-table 0 (macro-absent-obj) #f #f ##eq?)))
+  (let ((visited (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?)))
 
     (define (share x)
       (##table-ref visited x #f))
@@ -1155,9 +1155,9 @@
 
 (define (##in-new-compilation-scope thunk)
   (let* ((comp-scope
-          (##make-table 0 (macro-absent-obj) #f #f ##eq?))
+          (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
          (result
-          (##parameterize
+          (##parameterize1
            ##compilation-scope
            comp-scope
            thunk)))

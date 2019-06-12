@@ -679,7 +679,7 @@
   (macro-force-vars (obj)
     (##null? obj)))
 
-(define-prim (list? lst)
+(define-prim (##list? lst)
   ;; This procedure may get into an infinite loop if another thread
   ;; mutates "lst" (if lst1 and lst2 each point to disconnected cycles).
   (let loop ((lst1 lst) (lst2 lst))
@@ -697,6 +697,9 @@
                      (loop (##cdr lst1) (##cdr lst2)))
                     (else
                      (##null? lst1)))))))))
+
+(define-prim (list? lst)
+  (##list? lst))
 
 (define-prim (##list . lst)
   lst)
@@ -718,9 +721,9 @@
           (macro-check-list x 1 (length lst)
             n)))))
 
-(define-prim (##append lst1 lst2)
+(define-prim (##append2 lst1 lst2)
   (if (##pair? lst1)
-      (##cons (##car lst1) (##append (##cdr lst1) lst2))
+      (##cons (##car lst1) (##append2 (##cdr lst1) lst2))
       lst2))
 
 (define-prim (##append-lists lst)
@@ -729,9 +732,21 @@
         (let loop ((rev-lst (##cdr rev-lst)) (result (##car rev-lst)))
           (if (##pair? rev-lst)
               (loop (##cdr rev-lst)
-                    (##append (##car rev-lst) result))
+                    (##append2 (##car rev-lst) result))
               result)))
       '()))
+
+(define-prim (##append
+              #!optional
+              (lst1 (macro-absent-obj))
+              (lst2 (macro-absent-obj))
+              #!rest
+              others)
+  (if (##eq? lst2 (macro-absent-obj))
+      (if (##eq? lst1 (macro-absent-obj))
+          '()
+          lst1)
+      (##append-lists (##cons lst1 (##cons lst2 others)))))
 
 (define-prim (append
               #!optional
@@ -829,6 +844,12 @@
           (macro-check-list x 1 (reverse lst)
             result)))))
 
+(define-prim (##list-ref lst k)
+  (let loop ((x lst) (i k))
+    (if (##fx< 0 i)
+        (loop (##cdr x) (##fx- i 1))
+        (##car x))))
+
 (define-prim (list-ref lst k)
   (macro-force-vars (k)
     (macro-check-index k 2 (list-ref lst k)
@@ -838,6 +859,14 @@
             (if (##fx< 0 i)
                 (loop (##cdr x) (##fx- i 1))
                 (##car x))))))))
+
+(define-prim (##list-set! lst k val)
+  (let loop ((x lst) (i k))
+    (if (##fx< 0 i)
+        (loop (##cdr x) (##fx- i 1))
+        (begin
+          (##set-car! x val)
+          (##void)))))
 
 (define-prim (list-set! lst k val)
   (macro-force-vars (k)
@@ -851,6 +880,15 @@
                   (begin
                     (##set-car! x val)
                     (##void))))))))))
+
+(define-prim (##list-set lst k val)
+
+  (define (set x i)
+    (if (##fx< 0 i)
+        (##cons (##car x) (set (##cdr x) (##fx- i 1)))
+        (##cons val (##cdr x))))
+
+  (set lst k))
 
 (define-prim (list-set lst k val)
   (macro-force-vars (k)
@@ -893,6 +931,16 @@
             (macro-check-list x 2 (memq obj lst)
               #f))))))
 
+(define-prim (##memv obj lst)
+  (let loop ((x lst))
+    (if (##pair? x)
+        (if (let ()
+              (##declare (generic)) ;; avoid fixnum specific ##eqv?
+              (##eqv? obj (##car x)))
+            x
+            (loop (##cdr x)))
+        #f)))
+
 (define-prim (memv obj lst)
   (macro-force-vars (obj)
     (let loop ((x lst))
@@ -908,10 +956,10 @@
             (macro-check-list x 2 (memv obj lst)
               #f))))))
 
-(define-prim (##member obj lst)
+(define-prim (##member obj lst #!optional (compare ##equal?))
   (let loop ((x lst))
     (if (##pair? x)
-        (if (##equal? obj (##car x))
+        (if (compare obj (##car x))
             x
             (loop (##cdr x)))
         #f)))
@@ -930,6 +978,8 @@
                 (macro-check-list x 2 (member obj lst c)
                   #f))))))))
 
+;; ##assq defined in _kernel.scm
+
 (define-prim (assq obj lst)
   (macro-force-vars (obj)
     (let loop ((x lst))
@@ -945,6 +995,17 @@
                           (loop (##cdr x))))))))
             (macro-check-list x 2 (assq obj lst)
               #f))))))
+
+(define-prim (##assv obj lst)
+  (let loop ((x lst))
+    (if (##pair? x)
+        (let ((couple (##car x)))
+          (if (let ()
+                (##declare (generic)) ;; avoid fixnum specific ##eqv?
+                (##eqv? obj (##car couple)))
+              couple
+              (loop (##cdr x))))
+        #f)))
 
 (define-prim (assv obj lst)
   (macro-force-vars (obj)
@@ -964,11 +1025,11 @@
             (macro-check-list x 2 (assv obj lst)
               #f))))))
 
-(define-prim (##assoc obj lst)
+(define-prim (##assoc obj lst #!optional (compare ##equal?))
   (let loop ((x lst))
     (if (##pair? x)
         (let ((couple (##car x)))
-          (if (##equal? obj (##car couple))
+          (if (compare obj (##car couple))
               couple
               (loop (##cdr x))))
         #f)))
@@ -1333,17 +1394,21 @@
     (macro-check-char c 1 (digit-value c)
       (##digit-value c))))
 
-(define-prim (##string=? str1 str2)
-  (##string-equal? str1 str2))
+(define-prim-nary-bool (##string=? str1 str2)
+  #t
+  #t
+  (##string-equal? str1 str2)
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string=? str1 str2)
   #t
   #t
-  (##string=? str1 str2)
+  (##string-equal? str1 str2)
   macro-force-vars
   macro-check-string)
 
-(define-prim (##string<? str1 str2)
+(define-prim (##string<?2 str1 str2)
   (and (##not (##eq? str1 str2))
        (let ((len1 (##string-length str1))
              (len2 (##string-length str2)))
@@ -1357,31 +1422,59 @@
                        (##char<? c1 c2)))
                  (##fx< n len2)))))))
 
+(define-prim-nary-bool (##string<? str1 str2)
+  #t
+  #t
+  (##string<?2 str1 str2)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary-bool (string<? str1 str2)
   #t
   #t
-  (##string<? str1 str2)
+  (##string<?2 str1 str2)
   macro-force-vars
   macro-check-string)
+
+(define-prim-nary-bool (##string>? str1 str2)
+  #t
+  #t
+  (##string<?2 str2 str1)
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string>? str1 str2)
   #t
   #t
-  (##string<? str2 str1)
+  (##string<?2 str2 str1)
   macro-force-vars
   macro-check-string)
+
+(define-prim-nary-bool (##string<=? str1 str2)
+  #t
+  #t
+  (##not (##string<?2 str2 str1))
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string<=? str1 str2)
   #t
   #t
-  (##not (##string<? str2 str1))
+  (##not (##string<?2 str2 str1))
   macro-force-vars
   macro-check-string)
+
+(define-prim-nary-bool (##string>=? str1 str2)
+  #t
+  #t
+  (##not (##string<?2 str1 str2))
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string>=? str1 str2)
   #t
   #t
-  (##not (##string<? str1 str2))
+  (##not (##string<?2 str1 str2))
   macro-force-vars
   macro-check-string)
 
@@ -1393,46 +1486,81 @@
                        0
                        (##string-length str2)))
 
-(define-prim (##string-ci=? str1 str2)
+(define-prim (##string-ci=?2 str1 str2)
   (or (##eq? str1 str2)
       (##fx= (##string-cmp-ci str1 str2) 0)))
+
+(define-prim-nary-bool (##string-ci=? str1 str2)
+  #t
+  #t
+  (##string-ci=?2 str1 str2)
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string-ci=? str1 str2)
   #t
   #t
-  (##string-ci=? str1 str2)
+  (##string-ci=?2 str1 str2)
   macro-force-vars
   macro-check-string)
 
-(define-prim (##string-ci<? str1 str2)
+(define-prim (##string-ci<?2 str1 str2)
   (and (##not (##eq? str1 str2))
        (##fx< (##string-cmp-ci str1 str2) 0)))
+
+(define-prim-nary-bool (##string-ci<? str1 str2)
+  #t
+  #t
+  (##string-ci<?2 str1 str2)
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string-ci<? str1 str2)
   #t
   #t
-  (##string-ci<? str1 str2)
+  (##string-ci<?2 str1 str2)
   macro-force-vars
   macro-check-string)
+
+(define-prim-nary-bool (##string-ci>? str1 str2)
+  #t
+  #t
+  (##string-ci<?2 str2 str1)
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string-ci>? str1 str2)
   #t
   #t
-  (##string-ci<? str2 str1)
+  (##string-ci<?2 str2 str1)
   macro-force-vars
   macro-check-string)
+
+(define-prim-nary-bool (##string-ci<=? str1 str2)
+  #t
+  #t
+  (##not (##string-ci<?2 str2 str1))
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string-ci<=? str1 str2)
   #t
   #t
-  (##not (##string-ci<? str2 str1))
+  (##not (##string-ci<?2 str2 str1))
   macro-force-vars
   macro-check-string)
+
+(define-prim-nary-bool (##string-ci>=? str1 str2)
+  #t
+  #t
+  (##not (##string-ci<?2 str1 str2))
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (string-ci>=? str1 str2)
   #t
   #t
-  (##not (##string-ci<? str1 str2))
+  (##not (##string-ci<?2 str1 str2))
   macro-force-vars
   macro-check-string)
 
@@ -1572,11 +1700,37 @@
 
   (cdrs lsts))
 
-(define-prim (##map proc lst)
-  (let loop ((x lst))
-    (if (##pair? x)
-        (##cons (proc (##car x)) (loop (##cdr x)))
-        '())))
+(define-prim (##map proc x . y)
+
+  (define (map-1 x)
+
+    (define (map-1 lst1)
+      (if (##pair? lst1)
+          (let* ((result (proc (##car lst1)))
+                 (tail (map-1 (##cdr lst1))))
+            (##cons result tail))
+          '()))
+
+    (map-1 x))
+
+  (define (map-n x-y)
+
+    (define (map-n lsts)
+      (let ((rests (##cdrs lsts)))
+        (if (##not rests)
+            '()
+            (if (##pair? rests)
+                (let* ((args (##cars lsts '()))
+                       (result (##apply proc args))
+                       (tail (map-n rests)))
+                  (##cons result tail))
+                '()))))
+
+    (map-n x-y))
+
+  (if (##null? y)
+      (map-1 x)
+      (map-n (##cons x y))))
 
 (define-prim (map proc x . y)
   (macro-force-vars (proc)
@@ -1647,13 +1801,36 @@
             (map-1 x)
             (map-n (##cons x y)))))))
 
-(define-prim (##for-each proc lst)
-  (let loop ((x lst))
-    (if (##pair? x)
-        (begin
-          (proc (##car x))
-          (loop (##cdr x)))
-        (##void))))
+(define-prim (##for-each proc x . y)
+
+  (define (for-each-1 x)
+
+    (define (for-each-1 lst1)
+      (if (##pair? lst1)
+          (begin
+            (proc (##car lst1))
+            (for-each-1 (##cdr lst1)))
+          (##void)))
+
+    (for-each-1 x))
+
+  (define (for-each-n x-y)
+
+    (define (for-each-n lsts)
+      (let ((rests (##cdrs lsts)))
+        (if (##not rests)
+            (##void)
+            (if (##pair? rests)
+                (begin
+                  (##apply proc (##cars lsts '()))
+                  (for-each-n rests))
+                (##void)))))
+
+    (for-each-n x-y))
+
+  (if (##null? y)
+      (for-each-1 x)
+      (for-each-n (##cons x y))))
 
 (define-prim (for-each proc x . y)
   (macro-force-vars (proc)
@@ -1709,6 +1886,12 @@
 ;;;----------------------------------------------------------------------------
 
 ;; R4RS Scheme procedures:
+
+(define-prim (##list-tail lst k)
+  (let loop ((x lst) (i k))
+    (if (##fx< 0 i)
+        (loop (##cdr x) (##fx- i 1))
+        x)))
 
 (define-prim (list-tail lst k)
   (macro-force-vars (k)
@@ -1884,10 +2067,13 @@
 
 ;; SRFI-1 procedures:
 
+(define-prim (##xcons d a)
+  (##cons a d))
+
 (define-prim (xcons d a)
   (##cons a d))
 
-(define-prim (cons* x . rest)
+(define-prim (##cons*-aux x rest)
   (if (##pair? rest)
       (let loop ((x x) (probe rest))
         (let ((y (##car probe))
@@ -1899,6 +2085,12 @@
                 (##set-cdr! probe y)
                 rest))))
       x))
+
+(define-prim (##cons* x . rest)
+  (##cons*-aux x rest))
+
+(define-prim (cons* x . rest)
+  (##cons*-aux x rest))
 
 (define-prim (##make-list n #!optional (fill 0))
   (let loop ((i n) (result '()))
@@ -1913,17 +2105,20 @@
           (##make-list n)
           (##make-list n fill)))))
 
+(define-prim (##list-tabulate n init-proc)
+  (let loop ((i n) (result '()))
+    (if (##fx> i 0)
+        (let ((i (##fx- i 1)))
+          (loop i (##cons (init-proc i) result)))
+        result)))
+
 (define-prim (list-tabulate n init-proc)
   (macro-force-vars (n init-proc)
     (macro-check-index n 1 (list-tabulate n init-proc)
       (macro-check-procedure init-proc 2 (list-tabulate n init-proc)
-        (let loop ((i n) (result '()))
-          (if (##fx> i 0)
-              (let ((i (##fx- i 1)))
-                (loop i (##cons (init-proc i) result)))
-              result))))))
+        (##list-tabulate n init-proc)))))
 
-(define-prim (list-copy lst)
+(define-prim (##list-copy lst)
 
   (define (copy lst)
     (macro-force-vars (lst)
@@ -1932,6 +2127,14 @@
           lst)))
 
   (copy lst))
+
+(define-prim (list-copy lst)
+  (##list-copy lst))
+
+(define-prim (##circular-list x . rest)
+  (let ((result (##cons x rest)))
+    (##set-cdr! (##last-pair result) result)
+    result))
 
 (define-prim (circular-list x . rest)
   (let ((result (##cons x rest)))
@@ -1971,6 +2174,16 @@
                       (##fail-check-number 3 iota count start step)
                       (##iota count start step))))))))
 
+(define-prim (##take x i)
+  (let loop ((probe x)
+             (j i)
+             (rev-result '()))
+    (if (##fx> j 0)
+        (loop (##cdr probe)
+              (##fx- j 1)
+              (##cons (##car probe) rev-result))
+        (##reverse! rev-result))))
+
 (define-prim (take x i)
   (macro-force-vars (i)
     (macro-check-index i 2 (take x i)
@@ -1984,6 +2197,14 @@
                       (##fx- j 1)
                       (##cons (##car probe) rev-result))))
             (##reverse! rev-result))))))
+
+(define-prim (##drop x i)
+  (let loop ((probe x)
+             (j i))
+    (if (##fx> j 0)
+        (loop (##cdr probe)
+              (##fx- j 1))
+        probe)))
 
 (define-prim (drop x i)
   (macro-force-vars (i)
@@ -2026,6 +2247,8 @@
             (if (##pair? tail)
                 (loop tail)
                 (##car lst))))))))
+
+;; ##reverse! defined in _kernel.scm
 
 (define-prim (reverse! lst)
   (let loop ((prev '()) (curr lst))

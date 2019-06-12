@@ -211,6 +211,7 @@
     (define ##vect->list     (sym "##" name '->list))
     (define ##list->vect     (sym '##list-> name))
     (define ##vect-copy      (sym "##" name '-copy))
+    (define ##vect-copy!     (sym "##" name '-copy!))
     (define ##vect-delete    (sym "##" name '-delete))
     (define ##vect-insert    (sym "##" name '-insert))
     (define ##vect-fill!     (sym "##" name '-fill!))
@@ -610,6 +611,20 @@
                          (,##vect-length vect)
                          (,vect-copy vect start end)
                          (,##vect-copy vect start end))))))))
+
+       (define-prim (,##vect-copy!
+                     dst-vect
+                     dst-start
+                     src-vect
+                     #!optional
+                     (src-start 0)
+                     (src-end (,##vect-length src-vect)))
+         (,##subvect-move!
+          src-vect
+          src-start
+          src-end
+          dst-vect
+          dst-start))
 
        (define-prim (,vect-copy!
                      dst-vect

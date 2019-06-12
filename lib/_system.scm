@@ -226,6 +226,13 @@
   (macro-force-vars (obj1 obj2)
     (##eq? obj1 obj2)))
 
+(define-prim-nary-bool (##symbol=? x y)
+  #t
+  #t
+  (##eq? x y)
+  macro-no-force
+  macro-no-check)
+
 (define-prim-nary-bool (symbol=? x y)
   #t
   (if (##symbol? x) #t '(1))
@@ -233,6 +240,13 @@
   macro-force-vars
   macro-check-symbol
   (##pair? ##fail-check-symbol))
+
+(define-prim-nary-bool (##boolean=? x y)
+  #t
+  #t
+  (##eq? x y)
+  macro-no-force
+  macro-no-check)
 
 (define-prim-nary-bool (boolean=? x y)
   #t
@@ -1119,8 +1133,8 @@
 ;;; exports:
 ;;;    (##fail-check-table ...)
 ;;;    (##fail-check-unbound-key-exception ...)
-;;;    (##list->table ...)
-;;;    (##make-table ...)
+;;;    (##list->table-aux ...)
+;;;    (##make-table-aux ...)
 ;;;    (##raise-unbound-key-exception ...)
 ;;;    (##table->list ...)
 ;;;    (##table-copy ...)
@@ -1163,6 +1177,9 @@
       (macro-make-unbound-key-exception
        procedure
        arguments)))))
+
+(define-prim (##table? obj)
+  (macro-table? obj))
 
 (define-prim (table? obj)
   (macro-table? obj))
@@ -1375,7 +1392,7 @@
         base))
     base))
 
-(define-prim (##make-table
+(define-prim (##make-table-aux
               #!optional
               (size (macro-absent-obj))
               (init (macro-absent-obj))
@@ -1641,6 +1658,26 @@
 
   (check-size 0))
 
+(define-prim (##make-table
+              #!key
+              (size (macro-absent-obj))
+              (init (macro-absent-obj))
+              (weak-keys (macro-absent-obj))
+              (weak-values (macro-absent-obj))
+              (test (macro-absent-obj))
+              (hash (macro-absent-obj))
+              (min-load (macro-absent-obj))
+              (max-load (macro-absent-obj)))
+  (##make-table-aux
+   size
+   init
+   weak-keys
+   weak-values
+   test
+   hash
+   min-load
+   max-load))
+
 (define-prim (make-table
               #!key
               (size (macro-absent-obj))
@@ -1651,7 +1688,7 @@
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
-  (##make-table
+  (##make-table-aux
    size
    init
    weak-keys
@@ -1961,7 +1998,7 @@
     (macro-check-table table 1 (table->list table)
       (##table->list table))))
 
-(define-prim (##list->table
+(define-prim (##list->table-aux
               lst
               #!optional
               (size (macro-absent-obj))
@@ -1973,7 +2010,7 @@
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
   (let ((table
-         (##make-table
+         (##make-table-aux
           size
           init
           weak-keys
@@ -2017,6 +2054,28 @@
                            max-load: max-load)
               table))))))
 
+(define-prim (##list->table
+              lst
+              #!key
+              (size (macro-absent-obj))
+              (init (macro-absent-obj))
+              (weak-keys (macro-absent-obj))
+              (weak-values (macro-absent-obj))
+              (test (macro-absent-obj))
+              (hash (macro-absent-obj))
+              (min-load (macro-absent-obj))
+              (max-load (macro-absent-obj)))
+  (##list->table-aux
+   lst
+   size
+   init
+   weak-keys
+   weak-values
+   test
+   hash
+   min-load
+   max-load))
+
 (define-prim (list->table
               lst
               #!key
@@ -2028,7 +2087,7 @@
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
-  (##list->table
+  (##list->table-aux
    lst
    size
    init
@@ -2070,7 +2129,7 @@
          (max-load
           (##f64vector-ref loads 2)))
     (let ((t
-           (##make-table
+           (##make-table-aux
             size
             init
             weak-keys
@@ -2090,7 +2149,10 @@
     (macro-check-table table 1 (table-copy table)
       (##table-copy table))))
 
-(define-prim (##table-merge! table1 table2 table2-takes-precedence?)
+(define-prim (##table-merge! table1
+                             table2
+                             #!optional
+                             (table2-takes-precedence? #f))
   (if table2-takes-precedence?
       (##table-for-each
        (lambda (k v)
@@ -2123,7 +2185,10 @@
                    table2-takes-precedence?)))
           (##table-merge! table1 table2 t2-takes-precedence?))))))
 
-(define-prim (##table-merge table1 table2 table2-takes-precedence?)
+(define-prim (##table-merge table1
+                            table2
+                            #!optional
+                            (table2-takes-precedence? #f))
   (##table-merge! (##table-copy table1)
                   table2
                   table2-takes-precedence?))
@@ -2153,7 +2218,7 @@
 
  (else
 
-(define-prim (##make-table
+(define-prim (##make-table-aux
               #!optional
               (size (macro-absent-obj))
               (init (macro-absent-obj))
@@ -2208,7 +2273,7 @@
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
-  (##make-table
+  (##make-table-aux
    size
    init
    weak-keys
@@ -2317,7 +2382,7 @@
     (macro-check-table table 1 (table->list table)
       (##table->list table))))
 
-(define-prim (##list->table
+(define-prim (##list->table-aux
               lst
               #!optional
               (size (macro-absent-obj))
@@ -2329,7 +2394,7 @@
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
   (let ((table
-         (##make-table
+         (##make-table-aux
           size
           init
           weak-keys
@@ -2371,6 +2436,19 @@
                         max-load: max-load)
            table)))))
 
+(define-prim (##list->table
+              lst
+              #!key
+              (size (macro-absent-obj))
+              (init (macro-absent-obj))
+              (weak-keys (macro-absent-obj))
+              (weak-values (macro-absent-obj))
+              (test (macro-absent-obj))
+              (hash (macro-absent-obj))
+              (min-load (macro-absent-obj))
+              (max-load (macro-absent-obj)))
+  (##list->table-aux lst))
+
 (define-prim (list->table
               lst
               #!key
@@ -2382,10 +2460,10 @@
               (hash (macro-absent-obj))
               (min-load (macro-absent-obj))
               (max-load (macro-absent-obj)))
-  (##list->table lst))
+  (##list->table-aux lst))
 
 (define-prim (##table-copy table)
-  (let ((copy (##make-table
+  (let ((copy (##make-table-aux
                (macro-absent-obj) ;; size
                (macro-table-init table) ;; init
                (##fxand 1 (macro-table-flags table)) ;; weak-keys
@@ -2441,7 +2519,7 @@
 ;;;    (##fail-check-exact-integer ...)
 ;;;    (##raise-range-exception ...)
 ;;; from _table.scm
-;;;    (##make-table ...)
+;;;    (##make-table-aux ...)
 ;;;    (##table-ref ...)
 ;;;    (##table-set! ...)
 
@@ -2475,8 +2553,8 @@
 
 (define ##last-serial-number 0)
 
-(define ##object-to-serial-number-table (##make-table 0 #f #t #f ##eq?))
-(define ##serial-number-to-object-table (##make-table 0 #f #f #t ##eq?))
+(define ##object-to-serial-number-table (##make-table-aux 0 #f #t #f ##eq?))
+(define ##serial-number-to-object-table (##make-table-aux 0 #f #f #t ##eq?))
 
 (define-prim (##object->serial-number obj)
   (let loop ()
@@ -2534,7 +2612,7 @@
 ;;;    (##eq? ...)
 ;;;    (##eqv? ...)
 ;;; from _table.scm
-;;;    (##make-table ...)
+;;;    (##make-table-aux ...)
 ;;;    (##table-ref ...)
 ;;;    (##table-set! ...)
 ;;; from _num.scm
@@ -2806,7 +2884,7 @@
   `##max-char)
 
 (##define-macro (make-table . args)
-  `(##make-table 0 #f #f #f ##eq?))
+  `(##make-table-aux 0 #f #f #f ##eq?))
 
 ;; Representation of fifos.
 
