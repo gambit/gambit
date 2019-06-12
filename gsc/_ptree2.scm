@@ -1776,8 +1776,8 @@
 (define (c-proc-arity x)       (vector-ref x 3))
 (define (c-proc-body x)        (vector-ref x 4))
 
-(define (**c-define-type-expr? source)
-  (and (match **c-define-type-sym -3 source)
+(define (**c-define-type-expr? source env)
+  (and (match **c-define-type-sym -3 source env)
        (or (let ((len (length (source-code source))))
              (and (or (= len 3) (= len 6))
                   (proper-c-type-definition? source)))
@@ -1850,8 +1850,8 @@
               (source-code (cadddr (cdr code)))
               (source-code (cadddr (cddr code)))))))
 
-(define (**c-declare-expr? source)
-  (and (match **c-declare-sym 2 source)
+(define (**c-declare-expr? source env)
+  (and (match **c-declare-sym 2 source env)
        (let ((code (source-code source)))
          (or (string? (source-code (cadr code)))
              (pt-syntax-error
@@ -1861,8 +1861,8 @@
 (define (c-declaration-body source)
   (cadr (source-code source)))
 
-(define (**c-initialize-expr? source)
-  (and (match **c-initialize-sym 2 source)
+(define (**c-initialize-expr? source env)
+  (and (match **c-initialize-sym 2 source env)
        (let ((code (source-code source)))
          (or (string? (source-code (cadr code)))
              (pt-syntax-error
@@ -1872,8 +1872,8 @@
 (define (c-initialization-body source)
   (cadr (source-code source)))
 
-(define (**c-lambda-expr? source)
-  (and (match **c-lambda-sym 4 source)
+(define (**c-lambda-expr? source env)
+  (and (match **c-lambda-sym 4 source env)
        (let ((code (source-code source)))
          (if (not (string? (source-code (cadddr code))))
            (pt-syntax-error
@@ -1882,7 +1882,7 @@
            (check-c-function-type (cadr code) (caddr code) #f)))))
 
 (define (**c-define-expr? source env)
-  (and (match **c-define-sym -7 source)
+  (and (match **c-define-sym -7 source env)
        (proper-c-definition? source env)))
 
 (define (proper-c-definition? source env)

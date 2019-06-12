@@ -875,10 +875,12 @@
   (and (##symbol? name)
        (let ((ind (##cte-lookup cte name)))
          (case (##vector-ref ind 0)
+           ((not-found)
+            (##vector-ref ind 1))
            ((macro)
             (##vector-ref ind 2))
            (else
-            #f)))))
+            name)))))
 
 (define-prim (##macro-lookup-set! x)
   (set! ##macro-lookup x))
@@ -1171,11 +1173,10 @@
         (cte (##cte-top-cte top-cte)))
     (if (##pair? code)
         (let* ((first-src (##sourcify (##car code) src))
-               (first (##source-code first-src))
-               (descr (##macro-lookup cte first)))
-          (if descr
+               (descr (##macro-lookup cte (##source-code first-src))))
+          (if (vector? descr)
               (##comp-top top-cte (##macro-expand cte src descr) tail?)
-              (case first
+              (case descr
                 ((##begin)
                  (##comp-top-begin top-cte src tail?))
                 ((##define)
@@ -1195,7 +1196,7 @@
 ;;                ((##declare-scope)   (##comp-top-declare-scope top-cte src tail?))
 ;;                ((##namespace-scope) (##comp-top-namespace-scope top-cte src tail?))
 ;;                ((##macro-scope)     (##comp-top-macro-scope top-cte src tail?))
-                (else                (##comp-aux cte src tail? first)))))
+                (else                (##comp-aux cte src tail? descr)))))
         (##comp-simple cte src tail?))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1330,17 +1331,16 @@
 (define (##comp-expr cte src tail? subexpr?)
   (let ((code (##source-code src)))
     (if (##pair? code)
-        (let* ((first-src (##sourcify (##car code) src))
-               (first (##source-code first-src)))
-          (if (##eq? first ##internal-expr-marker)
+        (let ((first-src (##sourcify (##car code) src)))
+          (if (##eq? (##source-code first-src) ##internal-expr-marker)
               (##comp-internal-expr cte src tail? subexpr?)
-              (let ((descr (##macro-lookup cte first)))
-                (if descr
+              (let ((descr (##macro-lookup cte (##source-code first-src))))
+                (if (vector? descr)
                     (##comp-expr cte
                                  (##macro-expand cte src descr)
                                  tail?
                                  subexpr?)
-                    (case first
+                    (case descr
                       ((##begin)
                        (##comp-begin cte src tail? subexpr?))
                       ((##define)
@@ -1382,7 +1382,7 @@
 ;;                        'ill-placed-macro-scope
 ;;                        src))
                       (else
-                       (##comp-aux cte src tail? first)))))))
+                       (##comp-aux cte src tail? descr)))))))
         (##comp-simple cte src tail?))))
 
 (define (##comp-simple cte src tail?)
@@ -2016,16 +2016,15 @@
           (if (##not (##pair? code))
               (internal-defs-done cte rev-vars rev-vals body)
               (let* ((first-src (##sourcify (##car code) src))
-                     (first (##source-code first-src))
-                     (descr (##macro-lookup cte first)))
-                (if descr
+                     (descr (##macro-lookup cte (##source-code first-src))))
+                (if (vector? descr)
                     (internal-defs cte
                                    rev-vars
                                    rev-vals
                                    (##cons
                                     (##macro-expand cte src descr)
                                     (##cdr body)))
-                    (case first
+                    (case descr
                       ((##begin)
                        (##shape src src -1)
                        (internal-defs cte
@@ -2046,7 +2045,7 @@
                                           (##cons val rev-vals)
                                           (##cdr body)))))
                       ((##define-macro ##define-syntax)
-                       (let* ((def-syntax? (##eq? first '##define-syntax))
+                       (let* ((def-syntax? (##eq? descr '##define-syntax))
                               (name-src (##definition-name src))
                               (name (##source-code name-src))
                               (val (##definition-value src)))

@@ -633,7 +633,7 @@
                  lst
                  cont))
 
-              ((**begin-cmd-or-expr? source)
+              ((**begin-cmd-or-expr? source env)
                (parse-exprs
                  (append (begin-body source) (cdr exprs))
                  env
@@ -674,7 +674,7 @@
                  lst
                  cont))
 
-              ((**include-expr? source)
+              ((**include-expr? source env)
 
                (if *ptree-port*
                  (display "  " *ptree-port*))
@@ -690,7 +690,7 @@
                    lst
                    cont)))
 
-              ((**declare-expr? source)
+              ((**declare-expr? source env)
 
                (if *ptree-port*
                  (begin
@@ -703,7 +703,7 @@
                  lst
                  cont))
 
-              ((**namespace-expr? source)
+              ((**namespace-expr? source env)
 
                (if *ptree-port*
                  (begin
@@ -716,7 +716,7 @@
                  lst
                  cont))
 
-              ((**declare-scope-expr? source)
+              ((**declare-scope-expr? source env)
                (let ((save (env-decl-ref env)))
                  (parse-exprs
                    (declare-scope-body source)
@@ -729,7 +729,7 @@
                        lst
                        cont)))))
 
-              ((**namespace-scope-expr? source)
+              ((**namespace-scope-expr? source env)
                (let ((save (env-namespace-ref env)))
                  (parse-exprs
                    (namespace-scope-body source)
@@ -742,7 +742,7 @@
                        lst
                        cont)))))
 
-              ((**macro-scope-expr? source)
+              ((**macro-scope-expr? source env)
                (let ((save (env-macros-ref env)))
                  (parse-exprs
                    (macro-scope-body source)
@@ -755,7 +755,7 @@
                        lst
                        cont)))))
 
-              ((**c-define-type-expr? source)
+              ((**c-define-type-expr? source env)
                (let ((name (source-code (c-type-definition-name source)))
                      (type (c-type-definition-type source)))
 
@@ -772,7 +772,7 @@
                    lst
                    cont)))
 
-              ((**c-declare-expr? source)
+              ((**c-declare-expr? source env)
                (let ((body (source-code (c-declaration-body source))))
 
                  (if *ptree-port*
@@ -788,7 +788,7 @@
                    lst
                    cont)))
 
-              ((**c-initialize-expr? source)
+              ((**c-initialize-expr? source env)
                (let ((body (source-code (c-initialization-body source))))
 
                  (if *ptree-port*
@@ -906,22 +906,22 @@
 
 (define (pt source env use)
   (cond ((macro-expr? source env)        (pt (macro-expand source env) env use))
-        ((self-eval-expr? source)        (pt-self-eval source env use))
-        ((**quote-expr? source)          (pt-quote source env use))
-        ((**quasiquote-expr? source)     (pt-quasiquote source env use))
+        ((self-eval-expr? source env)    (pt-self-eval source env use))
+        ((**quote-expr? source env)      (pt-quote source env use))
+        ((**quasiquote-expr? source env) (pt-quasiquote source env use))
         ((var-expr? source env)          (pt-var source env use))
         ((**set!-expr? source env)       (pt-set! source env use))
         ((**lambda-expr? source env)     (pt-lambda source env use))
-        ((**if-expr? source)             (pt-if source env use))
-        ((**cond-expr? source)           (pt-cond source env use))
-        ((**and-expr? source)            (pt-and source env use))
-        ((**or-expr? source)             (pt-or source env use))
-        ((**case-expr? source)           (pt-case source env use))
+        ((**if-expr? source env)         (pt-if source env use))
+        ((**cond-expr? source env)       (pt-cond source env use))
+        ((**and-expr? source env)        (pt-and source env use))
+        ((**or-expr? source env)         (pt-or source env use))
+        ((**case-expr? source env)       (pt-case source env use))
         ((**let-expr? source env)        (pt-let source env use))
         ((**let*-expr? source env)       (pt-let* source env use))
         ((**letrec-expr? source env)     (pt-letrec source env use #f))
         ((**letrec*-expr? source env)    (pt-letrec source env use #t))
-        ((**begin-expr? source)          (pt-begin source env use))
+        ((**begin-expr? source env)      (pt-begin source env use))
         ((**do-expr? source env)         (pt-do source env use))
         ((**guard-expr? source env)      (pt-guard source env use #f))
         ((**r7rs-guard-expr? source env) (pt-guard source env use #t))
@@ -933,28 +933,28 @@
          (pt-syntax-error source "Ill-placed 'define-macro'"))
         ((**define-syntax-expr? source env)
          (pt-syntax-error source "Ill-placed 'define-syntax'"))
-        ((**include-expr? source)
+        ((**include-expr? source env)
          (pt-syntax-error source "Ill-placed 'include'"))
-        ((**declare-expr? source)
+        ((**declare-expr? source env)
          (pt-syntax-error source "Ill-placed 'declare'"))
-        ((**namespace-expr? source)
+        ((**namespace-expr? source env)
          (pt-syntax-error source "Ill-placed 'namespace'"))
-        ((**declare-scope-expr? source)
+        ((**declare-scope-expr? source env)
          (pt-syntax-error source "Ill-placed 'declare-scope'"))
-        ((**namespace-scope-expr? source)
+        ((**namespace-scope-expr? source env)
          (pt-syntax-error source "Ill-placed 'namespace-scope'"))
-        ((**macro-scope-expr? source)
+        ((**macro-scope-expr? source env)
          (pt-syntax-error source "Ill-placed 'macro-scope'"))
-        ((**c-define-type-expr? source)
+        ((**c-define-type-expr? source env)
          (pt-syntax-error source "Ill-placed 'c-define-type'"))
-        ((**c-declare-expr? source)
+        ((**c-declare-expr? source env)
          (pt-syntax-error source "Ill-placed 'c-declare'"))
-        ((**c-initialize-expr? source)
+        ((**c-initialize-expr? source env)
          (pt-syntax-error source "Ill-placed 'c-initialize'"))
-        ((**c-lambda-expr? source)         (pt-c-lambda source env use))
+        ((**c-lambda-expr? source env)     (pt-c-lambda source env use))
         ((**c-define-expr? source env)
          (pt-syntax-error source "Ill-placed 'c-define'"))
-        ((combination-expr? source)      (pt-combination source env use))
+        ((combination-expr? source env)    (pt-combination source env use))
         (else
          (pt-syntax-error source "Ill-formed expression"))))
 
@@ -1462,7 +1462,7 @@
                                (cdr exprs))
                          env
                          cont))
-          ((**begin-cmd-or-expr? (car exprs))
+          ((**begin-cmd-or-expr? (car exprs) env)
            (extract-defs defs
                          non-defs
                          (append (begin-body (car exprs))
@@ -1488,7 +1488,7 @@
                          (cdr exprs)
                          (add-macro (car exprs) env)
                          cont))
-          ((**include-expr? (car exprs))
+          ((**include-expr? (car exprs) env)
            (if *ptree-port*
              (display "  " *ptree-port*))
            (let ((x (include-expr->source (car exprs) *ptree-port*)))
@@ -1499,19 +1499,19 @@
                            (cons x (cdr exprs))
                            env
                            cont)))
-          ((**declare-expr? (car exprs))
+          ((**declare-expr? (car exprs) env)
            (extract-defs defs
                          non-defs
                          (cdr exprs)
                          (add-declarations (car exprs) env)
                          cont))
-          ((**namespace-expr? (car exprs))
+          ((**namespace-expr? (car exprs) env)
            (extract-defs defs
                          non-defs
                          (cdr exprs)
                          (add-namespace (car exprs) env)
                          cont))
-          ((**declare-scope-expr? (car exprs))
+          ((**declare-scope-expr? (car exprs) env)
            (let ((save (env-decl-ref env)))
              (extract-defs defs
                            non-defs
@@ -1523,7 +1523,7 @@
                                            (cdr exprs)
                                            (env-decl-set env save)
                                            cont)))))
-          ((**namespace-scope-expr? (car exprs))
+          ((**namespace-scope-expr? (car exprs) env)
            (let ((save (env-namespace-ref env)))
              (extract-defs defs
                            non-defs
@@ -1535,7 +1535,7 @@
                                            (cdr exprs)
                                            (env-namespace-set env save)
                                            cont)))))
-          ((**macro-scope-expr? (car exprs))
+          ((**macro-scope-expr? (car exprs) env)
            (let ((save (env-macros-ref env)))
              (extract-defs defs
                            non-defs
@@ -1994,7 +1994,7 @@
 
 ;; Expression identification predicates and syntax checking.
 
-(define (self-eval-expr? source)
+(define (self-eval-expr? source env)
   (let ((code (source-code source)))
     (self-evaluating? code)))
 
@@ -2026,20 +2026,20 @@
       (f64vect? code)
       ))
 
-(define (**quote-expr? source)
-  (match **quote-sym 2 source))
+(define (**quote-expr? source env)
+  (match **quote-sym 2 source env))
 
-(define (**quasiquote-expr? source)
-  (match **quasiquote-sym 2 source))
+(define (**quasiquote-expr? source env)
+  (match **quasiquote-sym 2 source env))
 
 (define (quasiquote-expr? source)
-  (match quasiquote-sym 2 source))
+  (match quasiquote-sym 2 source #f))
 
 (define (unquote-expr? source)
-  (match unquote-sym 2 source))
+  (match unquote-sym 2 source #f))
 
 (define (unquote-splicing-expr? source)
-  (match unquote-splicing-sym 2 source))
+  (match unquote-splicing-sym 2 source #f))
 
 (define (var-expr? source env)
   (let ((code (source-code source)))
@@ -2056,35 +2056,35 @@
     (symbol-object? code)))
 
 (define (**set!-expr? source env)
-  (match **set!-sym 3 source))
+  (match **set!-sym 3 source env))
 
 (define (**lambda-expr? source env)
-  (match **lambda-sym -3 source))
+  (match **lambda-sym -3 source env))
 
 (define (lambda-expr? source env)
-  (match lambda-sym -3 source))
+  (match lambda-sym -3 source env))
 
-(define (**if-expr? source)
-  (and (match **if-sym -3 source)
+(define (**if-expr? source env)
+  (and (match **if-sym -3 source env)
        (or (<= (length (source-code source)) 4)
            (ill-formed-special-form source))))
 
-(define (**cond-expr? source)
-  (and (match **cond-sym -2 source)
+(define (**cond-expr? source env)
+  (and (match **cond-sym -2 source env)
        (proper-clauses? source)))
 
-(define (**and-expr? source)
-  (match **and-sym -1 source))
+(define (**and-expr? source env)
+  (match **and-sym -1 source env))
 
-(define (**or-expr? source)
-  (match **or-sym -1 source))
+(define (**or-expr? source env)
+  (match **or-sym -1 source env))
 
-(define (**case-expr? source)
-  (and (match **case-sym -3 source)
+(define (**case-expr? source env)
+  (and (match **case-sym -3 source env)
        (proper-case-clauses? source)))
 
 (define (**let-expr? source env)
-  (and (match **let-sym -3 source)
+  (and (match **let-sym -3 source env)
        (let ((code (source-code source)))
          (if (bindable-var? (cadr code) env)
            (and (proper-bindings? (caddr code) #t env)
@@ -2093,29 +2093,29 @@
            (proper-bindings? (cadr code) #t env)))))
 
 (define (**let*-expr? source env)
-  (and (match **let*-sym -3 source)
+  (and (match **let*-sym -3 source env)
        (proper-bindings? (cadr (source-code source)) #f env)))
 
 (define (**letrec-expr? source env)
-  (and (match **letrec-sym -3 source)
+  (and (match **letrec-sym -3 source env)
        (proper-bindings? (cadr (source-code source)) #t env)))
 
 (define (**letrec*-expr? source env)
-  (and (match **letrec*-sym -3 source)
+  (and (match **letrec*-sym -3 source env)
        (proper-bindings? (cadr (source-code source)) #t env)))
 
 (define (**do-expr? source env)
-  (and (match **do-sym -3 source)
+  (and (match **do-sym -3 source env)
        (proper-do-bindings? source env)
        (proper-do-exit? source)))
 
 (define (**guard-expr? source env)
-  (match **guard-sym -3 source)) ;; TODO: fix
+  (match **guard-sym -3 source env)) ;; TODO: fix
 
 (define (**r7rs-guard-expr? source env)
-  (match **r7rs-guard-sym -3 source)) ;; TODO: fix
+  (match **r7rs-guard-sym -3 source env)) ;; TODO: fix
 
-(define (combination-expr? source)
+(define (combination-expr? source env)
   (let ((code (source-code source)))
     (and (pair? code)
          (let ((length (proper-length code)))
@@ -2126,11 +2126,11 @@
 
 (define (**delay-expr? source env)
   (and (not (eq? (scheme-dialect env) ieee-scheme-sym))
-       (match **delay-sym 2 source)))
+       (match **delay-sym 2 source env)))
 
 (define (**future-expr? source env)
   (and (eq? (scheme-dialect env) multilisp-sym)
-       (match **future-sym 2 source)))
+       (match **future-sym 2 source env)))
 
 (define (macro-expr? source env)
   (let ((code (source-code source)))
@@ -2145,61 +2145,75 @@
                           (ill-formed-special-form source)))
                     (ill-formed-special-form source))))))))
 
-(define (**begin-cmd-or-expr? source)
-  (match **begin-sym -1 source))
+(define (**begin-cmd-or-expr? source env)
+  (match **begin-sym -1 source env))
 
-(define (**begin-expr? source)
-  (match **begin-sym -2 source))
+(define (**begin-expr? source env)
+  (match **begin-sym -2 source env))
 
 (define (**define-expr? source env)
-  (match **define-sym -2 source))
+  (match **define-sym -2 source env))
 
 (define (**define-macro-expr? source env)
-  (match **define-macro-sym -3 source))
+  (match **define-macro-sym -3 source env))
 
 (define (**define-syntax-expr? source env)
-  (match **define-syntax-sym 3 source))
+  (match **define-syntax-sym 3 source env))
 
-(define (**include-expr? source)
-  (and (match **include-sym 2 source)
+(define (**include-expr? source env)
+  (and (match **include-sym 2 source env)
        (let ((filename (cadr (source-code source))))
          (if (not (string? (source-code filename)))
            (pt-syntax-error filename "Filename expected"))
          #t)))
 
-(define (**declare-expr? source)
-  (match **declare-sym -1 source))
+(define (**declare-expr? source env)
+  (match **declare-sym -1 source env))
 
-(define (**namespace-expr? source)
-  (match **namespace-sym -1 source))
+(define (**namespace-expr? source env)
+  (match **namespace-sym -1 source env))
 
-(define (**declare-scope-expr? source)
-  (match **declare-scope-sym -1 source))
+(define (**declare-scope-expr? source env)
+  (match **declare-scope-sym -1 source env))
 
 (define (declare-scope-body source)
   (cdr (source-code source)))
 
-(define (**namespace-scope-expr? source)
-  (match **namespace-scope-sym -1 source))
+(define (**namespace-scope-expr? source env)
+  (match **namespace-scope-sym -1 source env))
 
 (define (namespace-scope-body source)
   (cdr (source-code source)))
 
-(define (**macro-scope-expr? source)
-  (match **macro-scope-sym -1 source))
+(define (**macro-scope-expr? source env)
+  (match **macro-scope-sym -1 source env))
 
 (define (macro-scope-body source)
   (cdr (source-code source)))
 
-(define (match head size source)
+(define (match head size source env)
   (let ((code (source-code source)))
+
+    (define (check name)
+      (and (eq? name head)
+           (let ((length (proper-length code)))
+             (if length
+                 (or (if (> size 0) (= length size) (>= length (- size)))
+                     (ill-formed-special-form source))
+                 (ill-formed-special-form source)))))
+
     (and (pair? code)
-         (eq? (source-code (car code)) head)
-         (let ((length (proper-length code)))
-           (if length
-             (or (if (> size 0) (= length size) (>= length (- size)))
-                 (ill-formed-special-form source))
-             (ill-formed-special-form source))))))
+         (let ((first (source-code (car code))))
+           (and (symbol? first)
+                (if env
+                    (env-lookup
+                     env
+                     first
+                     #f
+                     (lambda (env name x)
+                       (and (not x)
+                            (check name))))
+                    (check first)))))))
 
 (define (ill-formed-special-form source)
   (pt-syntax-error
