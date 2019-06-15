@@ -15,15 +15,15 @@
 
 ;;; The HAMT procedures exported by this module are:
 ;;;
-;;;  (hamt? obj)                    returns #t iff obj is a HAMT
-;;;  (make-hamt)                    returns an empty HAMT
-;;;  (hamt-ref hamt key [default])  return the value associated to key in hamt
-;;;  (hamt-set hamt key val)        return a copy of hamt where key maps to val
-;;;  (hamt-remove hamt key)         return a copy of hamt where key is removed
-;;;  (hamt->list hamt)              return an association list representation
-;;;                                 of hamt
+;;;  (hamt? obj)                    return #t iff obj is a HAMT
+;;;  (make-hamt)                    return an empty HAMT
 ;;;  (list->hamt alist)             return a HAMT with the associations taken
 ;;;                                 from the association list alist
+;;;  (hamt->list hamt)              return an association list representation
+;;;                                 of hamt
+;;;  (hamt-ref hamt key [default])  return the value associated to key in hamt
+;;;  (hamt-set hamt key [val])      return a copy of hamt where key maps to val
+;;;                                 (or where key is removed if val is absent)
 
 ;;; The procedures make-hamt and list->hamt take additional keyword
 ;;; parameters to specify how equality is tested and how keys are
@@ -40,17 +40,16 @@
 ;;;
 ;;; The hash procedure must accept a single key parameter, return a
 ;;; fixnum, and be consistent with the key comparison procedure.  When
-;;; hash is not specified, a default hash procedure is used.  The
-;;; default hash procedure is reasonably good when the key comparison
-;;; procedure is eq?, eqv?, equal?, string=?, or string-ci=?.
+;;; hash is not specified, and the test procedure is not one of the
+;;; special ones, the HAMT degenerates to a list with access time
+;;; linear in the number of elements in the HAMT.
 
 (##namespace ("gambit/hamt#"
               hamt?
               make-hamt
-              hamt-ref
-              hamt-set
-              hamt-remove
               hamt->list
-              list->hamt))
+              list->hamt
+              hamt-ref
+              hamt-set))
 
 ;;;============================================================================

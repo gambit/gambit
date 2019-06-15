@@ -89,7 +89,95 @@ _define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
 _syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
 _syntax-rules-xform.scm _syntax-template.scm \
 _syntax-xform-boot.scm _syntax-xform.scm \
-_syntax.scm _with-syntax-boot.scm
+_syntax.scm _with-syntax-boot.scm \
+"_prim\#.scm" \
+"_prim-boolean\#.scm" \
+"_prim-boolean-r4rs\#.scm" \
+"_prim-boolean-r7rs\#.scm" \
+"_prim-box\#.scm" \
+"_prim-box-gambit\#.scm" \
+"_prim-bytevector\#.scm" \
+"_prim-bytevector-r7rs\#.scm" \
+"_prim-char\#.scm" \
+"_prim-char-r4rs\#.scm" \
+"_prim-char-r7rs\#.scm" \
+"_prim-exception\#.scm" \
+"_prim-exception-gambit\#.scm" \
+"_prim-f32vector\#.scm" \
+"_prim-f32vector-gambit\#.scm" \
+"_prim-f64vector\#.scm" \
+"_prim-f64vector-gambit\#.scm" \
+"_prim-filesystem\#.scm" \
+"_prim-filesystem-gambit\#.scm" \
+"_prim-filesystem-r7rs\#.scm" \
+"_prim-fixnum\#.scm" \
+"_prim-fixnum-gambit\#.scm" \
+"_prim-flonum\#.scm" \
+"_prim-flonum-gambit\#.scm" \
+"_prim-foreign\#.scm" \
+"_prim-foreign-gambit\#.scm" \
+"_prim-keyword\#.scm" \
+"_prim-keyword-gambit\#.scm" \
+"_prim-list\#.scm" \
+"_prim-list-gambit\#.scm" \
+"_prim-list-r4rs\#.scm" \
+"_prim-list-r7rs\#.scm" \
+"_prim-misc\#.scm" \
+"_prim-misc-gambit\#.scm" \
+"_prim-misc-r4rs\#.scm" \
+"_prim-misc-r5rs\#.scm" \
+"_prim-misc-r7rs\#.scm" \
+"_prim-number\#.scm" \
+"_prim-number-gambit\#.scm" \
+"_prim-number-r4rs\#.scm" \
+"_prim-number-r7rs\#.scm" \
+"_prim-os\#.scm" \
+"_prim-os-gambit\#.scm" \
+"_prim-os-r7rs\#.scm" \
+"_prim-port\#.scm" \
+"_prim-port-gambit\#.scm" \
+"_prim-port-r4rs\#.scm" \
+"_prim-port-r7rs\#.scm" \
+"_prim-s16vector\#.scm" \
+"_prim-s16vector-gambit\#.scm" \
+"_prim-s32vector\#.scm" \
+"_prim-s32vector-gambit\#.scm" \
+"_prim-s64vector\#.scm" \
+"_prim-s64vector-gambit\#.scm" \
+"_prim-s8vector\#.scm" \
+"_prim-s8vector-gambit\#.scm" \
+"_prim-six\#.scm" \
+"_prim-six-gambit\#.scm" \
+"_prim-special-forms\#.scm" \
+"_prim-special-forms-gambit\#.scm" \
+"_prim-special-forms-r4rs\#.scm" \
+"_prim-special-forms-r7rs\#.scm" \
+"_prim-string\#.scm" \
+"_prim-string-gambit\#.scm" \
+"_prim-string-r4rs\#.scm" \
+"_prim-string-r7rs\#.scm" \
+"_prim-symbol\#.scm" \
+"_prim-symbol-gambit\#.scm" \
+"_prim-symbol-r4rs\#.scm" \
+"_prim-symbol-r7rs\#.scm" \
+"_prim-table\#.scm" \
+"_prim-table-gambit\#.scm" \
+"_prim-thread\#.scm" \
+"_prim-thread-gambit\#.scm" \
+"_prim-u16vector\#.scm" \
+"_prim-u16vector-gambit\#.scm" \
+"_prim-u32vector\#.scm" \
+"_prim-u32vector-gambit\#.scm" \
+"_prim-u64vector\#.scm" \
+"_prim-u64vector-gambit\#.scm" \
+"_prim-u8vector\#.scm" \
+"_prim-u8vector-gambit\#.scm" \
+"_prim-vector\#.scm" \
+"_prim-vector-gambit\#.scm" \
+"_prim-vector-r4rs\#.scm" \
+"_prim-vector-r7rs\#.scm" \
+"_prim-will\#.scm" \
+"_prim-will-gambit\#.scm"
 MODULES = _kernel _system _num _std \
 _eval _module _io _nonstd _thread _repl
 MODULES_SCM = _kernel.scm _system.scm _num.scm _std.scm \
