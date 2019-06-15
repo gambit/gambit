@@ -3548,7 +3548,7 @@
 
 (targ-op "##flexp"       (targ-apply-simpflo-u #t "F64EXP"))
 (targ-op "##flexpm1"     (targ-apply-simpflo-u #t "F64EXPM1"))
-(targ-op "##fllog"       (targ-apply-simpflo-u #t "F64LOG"))
+(targ-op "##fllog"       (targ-apply-simpflo2-u #t "F64LOG" "F64LOG2"))
 (targ-op "##fllog1p"     (targ-apply-simpflo-u #t "F64LOG1P"))
 (targ-op "##flsin"       (targ-apply-simpflo-u #t "F64SIN"))
 (targ-op "##flcos"       (targ-apply-simpflo-u #t "F64COS"))

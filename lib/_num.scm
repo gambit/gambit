@@ -2441,7 +2441,7 @@ for a discussion of branch cuts.
     (and (##fl< y (macro-inexact-+inf))
          (##fl<= (macro-flonum-min-normal) y))))
 
-(define-prim (##log x)
+(define-prim (##log x #!optional (y (macro-absent-obj)))
 
   (define (type-error)
     (##fail-check-number 1 log x))
@@ -2545,26 +2545,28 @@ for a discussion of branch cuts.
                  (log-mag abs-r abs-i)
                  (log-mag abs-i abs-r))))))
 
-  (macro-number-dispatch x (type-error)
-    (if (##fxzero? x)
-        (range-error)
-        (if (##fxnegative? x)
+  (if (##eq? y (macro-absent-obj))
+      (macro-number-dispatch x (type-error)
+        (if (##fxzero? x)
+            (range-error)
+            (if (##fxnegative? x)
+                (negative-log)
+                (if (##eqv? x 1)
+                    0
+                    (exact-log x))))
+        (if (##bignum.negative? x)
             (negative-log)
-            (if (##eqv? x 1)
-                0
-                (exact-log x))))
-    (if (##bignum.negative? x)
-        (negative-log)
-        (exact-log x))
-    (if (##negative? (macro-ratnum-numerator x))
-        (negative-log)
-        (exact-log x))
-    (if (or (##flnan? x)
-            (##not (##flnegative?
-                    (##flcopysign (macro-inexact-+1) x))))
-        (##fllog x)
-        (negative-log))
-    (##make-rectangular (complex-log-magnitude x) (##angle x))))
+            (exact-log x))
+        (if (##negative? (macro-ratnum-numerator x))
+            (negative-log)
+            (exact-log x))
+        (if (or (##flnan? x)
+                (##not (##flnegative?
+                        (##flcopysign (macro-inexact-+1) x))))
+            (##fllog x)
+            (negative-log))
+        (##make-rectangular (complex-log-magnitude x) (##angle x)))
+      (##log2 x y)))
 
 (define-prim (##log2 x y)
   
@@ -10840,10 +10842,18 @@ end-of-code
 (define-prim-flonum (flexpm1 x)
   (##flexpm1 x))
 
-(define-prim (##fllog x))
+(define-prim (##fllog x #!optional (y (macro-absent-obj)))
+  (if (##eq? y (macro-absent-obj))
+      (##fllog x)
+      (##fllog x y)))
 
-(define-prim-flonum (fllog x)
-  (##fllog x))
+(define-prim (fllog x #!optional (y (macro-absent-obj)))
+  (macro-force-vars (x y)
+    (macro-check-flonum x 1 (fllog x y)
+      (if (##eq? y (macro-absent-obj))
+          (##fllog x)
+          (macro-check-flonum y 2 (fllog x y)
+            (##fllog x y))))))
 
 (define-prim (##fllog1p x))
 

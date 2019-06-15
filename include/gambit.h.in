@@ -3439,6 +3439,7 @@ else \
 #define ___F64EXPM1(x)___EXT(___expm1)(x)
 #endif
 #define ___F64LOG(x)___CLIBEXT(log)(x)
+#define ___F64LOG2(x,y)(___CLIBEXT(log)(x)/___CLIBEXT(log)(y))
 #ifdef ___HAVE_GOOD_LOG1P
 #define ___F64LOG1P(x)___CLIBEXT(log1p)(x)
 #else

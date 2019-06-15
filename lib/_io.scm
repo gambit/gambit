@@ -4081,7 +4081,9 @@
   (##declare (not interrupts-enabled))
   ((macro-port-name port) port))
 
-(define-prim (##read port)
+(define-prim (##read
+              #!optional
+              (port (macro-current-input-port)))
 
   (##declare (not interrupts-enabled))
 
@@ -4200,8 +4202,8 @@
 
 (define-prim (##write
               obj
-              port
               #!optional
+              (port (macro-current-output-port))
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
@@ -4225,8 +4227,8 @@
 
 (define-prim (##write-shared
               obj
-              port
               #!optional
+              (port (macro-current-output-port))
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
@@ -4250,8 +4252,8 @@
 
 (define-prim (##write-simple
               obj
-              port
               #!optional
+              (port (macro-current-output-port))
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
@@ -4275,8 +4277,8 @@
 
 (define-prim (##display
               obj
-              port
               #!optional
+              (port (macro-current-output-port))
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
@@ -4302,8 +4304,8 @@
 
 (define-prim (##pretty-print
               obj
-              port
               #!optional
+              (port (macro-current-output-port))
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
@@ -4329,8 +4331,8 @@
 
 (define-prim (##print
               obj
-              port
               #!optional
+              (port (macro-current-output-port))
               (max-length ##max-fixnum)
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
@@ -4406,8 +4408,8 @@
   (##void))
 
 (define-prim (##force-output
-              port
               #!optional
+              (port (macro-current-output-port))
               (level (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   ((macro-object-port-force-output port)
@@ -5146,8 +5148,8 @@
               str
               start
               end
-              port
               #!optional
+              (port (macro-current-input-port))
               (need (macro-absent-obj))
               (raise-os-exception? #t))
 

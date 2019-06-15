@@ -3191,7 +3191,7 @@ end-of-code
 
 ;;; Apply.
 
-(define-prim (##apply proc args)
+(define-prim (##apply proc arg1 . rest)
 
   (##declare (not inline))
 
@@ -3239,7 +3239,19 @@ end-of-code
 end-of-code
 ))
 
-  (app proc args))
+  (if (##pair? rest)
+
+      (let loop ((prev arg1) (lst rest))
+        (let ((temp (##car lst)))
+          (##set-car! lst prev)
+          (let ((tail (##cdr lst)))
+            (if (##pair? tail)
+                (loop temp tail)
+                (begin
+                  (##set-cdr! lst temp)
+                  (app proc rest))))))
+
+      (app proc arg1)))
 
 ;;;----------------------------------------------------------------------------
 

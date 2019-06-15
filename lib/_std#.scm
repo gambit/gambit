@@ -774,113 +774,118 @@
        (macro-case-target
 
         ((c C)
-         (define-prim ,##subvect-move!
-           (c-lambda (scheme-object  ;; src-vect
-                      scheme-object  ;; src-start
-                      scheme-object  ;; src-end
-                      scheme-object  ;; dst-vect
-                      scheme-object) ;; dst-start
-                     scheme-object
-                     ,(string-append
-                       (case ##subvect-move!
-                         ((##subvector-move!)
+         (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
+           (##c-code
+            ,(string-append
 #<<end-of-code
-  void *src = ___CAST(void*,&___FIELD(___arg1,___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FIELD(___arg4,___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___WS;
+{
+end-of-code
+              (case ##subvect-move!
+                ((##subvector-move!)
+#<<end-of-code
+  void *src = ___CAST(void*,&___FIELD(___ARG1,___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FIELD(___ARG4,___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___WS;
 end-of-code
 )
-                         ((##substring-move!)
+                ((##substring-move!)
 #<<end-of-code
   void *src =
         ___CAST(void*,
-                ___CS_SELECT(&___FETCH_U8(___BODY(___arg1),___INT(___arg2)),
-                             &___FETCH_U16(___BODY(___arg1),___INT(___arg2)),
-                             &___FETCH_U32(___BODY(___arg1),___INT(___arg2))));
+                ___CS_SELECT(&___FETCH_U8(___BODY(___ARG1),___INT(___ARG2)),
+                             &___FETCH_U16(___BODY(___ARG1),___INT(___ARG2)),
+                             &___FETCH_U32(___BODY(___ARG1),___INT(___ARG2))));
   void *dst =
         ___CAST(void*,
-                ___CS_SELECT(&___FETCH_U8(___BODY(___arg4),___INT(___arg5)),
-                             &___FETCH_U16(___BODY(___arg4),___INT(___arg5)),
-                             &___FETCH_U32(___BODY(___arg4),___INT(___arg5))));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * ___CS;
+                ___CS_SELECT(&___FETCH_U8(___BODY(___ARG4),___INT(___ARG5)),
+                             &___FETCH_U16(___BODY(___ARG4),___INT(___ARG5)),
+                             &___FETCH_U32(___BODY(___ARG4),___INT(___ARG5))));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___CS;
 end-of-code
 )
-                         ((##subs8vector-move!)
+                ((##subs8vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S8(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S8);
+  void *src = ___CAST(void*,&___FETCH_S8(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S8);
 end-of-code
 )
-                         ((##subu8vector-move!)
+                ((##subu8vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U8(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U8);
+  void *src = ___CAST(void*,&___FETCH_U8(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U8);
 end-of-code
 )
-                         ((##subs16vector-move!)
+                ((##subs16vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S16(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S16);
+  void *src = ___CAST(void*,&___FETCH_S16(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S16);
 end-of-code
 )
-                         ((##subu16vector-move!)
+                ((##subu16vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U16(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U16);
+  void *src = ___CAST(void*,&___FETCH_U16(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U16);
 end-of-code
 )
-                         ((##subs32vector-move!)
+                ((##subs32vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S32(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S32);
+  void *src = ___CAST(void*,&___FETCH_S32(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S32);
 end-of-code
 )
-                         ((##subu32vector-move!)
+                ((##subu32vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U32(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U32);
+  void *src = ___CAST(void*,&___FETCH_U32(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U32);
 end-of-code
 )
-                         ((##subs64vector-move!)
+                ((##subs64vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_S64(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___S64);
+  void *src = ___CAST(void*,&___FETCH_S64(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S64);
 end-of-code
 )
-                         ((##subu64vector-move!)
+                ((##subu64vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FETCH_U64(___BODY(___arg1),___INT(___arg2)));
-  void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___arg4),___INT(___arg5)));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___U64);
+  void *src = ___CAST(void*,&___FETCH_U64(___BODY(___ARG1),___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___ARG4),___INT(___ARG5)));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U64);
 end-of-code
 )
-                         ((##subf32vector-move!)
+                ((##subf32vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,___CAST(___F32*,___BODY(___arg1))+___INT(___arg2));
-  void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___arg4))+___INT(___arg5));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F32);
+  void *src = ___CAST(void*,___CAST(___F32*,___BODY(___ARG1))+___INT(___ARG2));
+  void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___ARG4))+___INT(___ARG5));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___F32);
 end-of-code
 )
-                         ((##subf64vector-move!)
+                ((##subf64vector-move!)
 #<<end-of-code
-  void *src = ___CAST(void*,___CAST(___F64*,___BODY(___arg1))+___INT(___arg2));
-  void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___arg4))+___INT(___arg5));
-  ___SIZE_TS len = ___INT(___FIXSUB(___arg3,___arg2)) * sizeof (___F64);
+  void *src = ___CAST(void*,___CAST(___F64*,___BODY(___ARG1))+___INT(___ARG2));
+  void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___ARG4))+___INT(___ARG5));
+  ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___F64);
 end-of-code
 ))
 
 #<<end-of-code
   memmove (dst, src, len);
-  ___result = ___arg4;
+  ___RESULT = ___ARG4;
+}
 end-of-code
-))))
+)
+
+            src-vect
+            src-start
+            src-end
+            dst-vect
+            dst-start)))
 
         (else
          (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
