@@ -2,7 +2,7 @@
 
 ; File: "tcltk.scm"
 
-; Copyright (c) 1997-2015 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1997-2019 by Marc Feeley, All Rights Reserved.
 
 ; This is the Gambit interface for Tcl/Tk.
 
@@ -372,7 +372,7 @@ c-lambda-end
 (define (tcltk#start-event-loop-thread)
   (if (##not ##tcltk-event-loop-thread)
       (set! ##tcltk-event-loop-thread
-            (##parameterize
+            (##parameterize1
              ##current-user-interrupt-handler
              (lambda () #f) ; prevent user interrupts
              (lambda ()

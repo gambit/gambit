@@ -1,8 +1,8 @@
 ;==============================================================================
 
-; File: "http.scm", Time-stamp: <2013-01-22 11:39:32 feeley>
+; File: "http.scm"
 
-; Copyright (c) 2005-2008 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
@@ -37,53 +37,52 @@
 
     (loop 0 start)))
 
-(define-macro make-token-table
-  (lambda alist
+(define-macro (make-token-table . alist)
 
-    ; "alist" is a list of lists of the form "(string expression)"
+  ; "alist" is a list of lists of the form "(string expression)"
 
-    ; The result is a perfect hash-table represented as a vector of
-    ; length 2*N, where N is the hash modulus.  If the string S is in
-    ; the hash-table it is at index
-    ;
-    ;   X = (* 2 (modulo (hash-substring S 0 (string-length S)) N))
-    ;
-    ; and the associated expression is at index X+1.
+  ; The result is a perfect hash-table represented as a vector of
+  ; length 2*N, where N is the hash modulus.  If the string S is in
+  ; the hash-table it is at index
+  ;
+  ;   X = (* 2 (modulo (hash-substring S 0 (string-length S)) N))
+  ;
+  ; and the associated expression is at index X+1.
 
-    (define hash-substring    ; repeated from above to be
-      (lambda (str start end) ; available for macro expansion
+  (define hash-substring    ; repeated from above to be
+    (lambda (str start end) ; available for macro expansion
 
-        (define loop
-          (lambda (h i)
-            (if (< i end)
-                (loop (modulo (+ (* h 5063) (char->integer (string-ref str i)))
-                              65536)
-                      (+ i 1))
-                h)))
+      (define loop
+        (lambda (h i)
+          (if (< i end)
+              (loop (modulo (+ (* h 5063) (char->integer (string-ref str i)))
+                            65536)
+                    (+ i 1))
+              h)))
 
-        (loop 0 start)))
+      (loop 0 start)))
 
-    (define make-perfect-hash-table
-      (lambda (alist)
-        (let loop1 ((n (length alist)))
-          (let ((v (make-vector (* 2 n) #f)))
-            (let loop2 ((lst alist))
-              (if (pair? lst)
-                  (let* ((x (car lst))
-                         (str (car x)))
-                    (let ((h
-                           (* 2
-                              (modulo (hash-substring str 0 (string-length str))
-                                      n))))
-                      (if (vector-ref v h)
-                          (loop1 (+ n 1))
-                          (begin
-                            (vector-set! v h str)
-                            (vector-set! v (+ h 1) (cadr x))
-                            (loop2 (cdr lst))))))
-                  v))))))
+  (define make-perfect-hash-table
+    (lambda (alist)
+      (let loop1 ((n (length alist)))
+        (let ((v (make-vector (* 2 n) #f)))
+          (let loop2 ((lst alist))
+            (if (pair? lst)
+                (let* ((x (car lst))
+                       (str (car x)))
+                  (let ((h
+                         (* 2
+                            (modulo (hash-substring str 0 (string-length str))
+                                    n))))
+                    (if (vector-ref v h)
+                        (loop1 (+ n 1))
+                        (begin
+                          (vector-set! v h str)
+                          (vector-set! v (+ h 1) (cadr x))
+                          (loop2 (cdr lst))))))
+                v))))))
 
-      (cons 'vector (vector->list (make-perfect-hash-table alist)))))
+    (cons 'vector (vector->list (make-perfect-hash-table alist))))
 
 (define token-table-lookup-substring
   (lambda (table str start end)
