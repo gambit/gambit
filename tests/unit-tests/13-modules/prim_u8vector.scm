@@ -1,0 +1,32 @@
+(include "#.scm")
+
+(check-same-behavior ("" "##" "~~lib/_prim-u8vector#.scm")
+
+;; Gambit
+
+(append-u8vectors '(#u8(1) #u8(2) #u8(3)))
+(list->u8vector '(1 2 3))
+(make-u8vector 5) (make-u8vector 5 9)
+(subu8vector '#u8(1 2 3 4 5) 1 3)
+
+(let ((x (u8vector 1 2 3 4 5))) (subu8vector-fill! x 1 3 99) x)
+(let ((x (u8vector 1 2 3 4)) (y (u8vector 6 7 8 9 0))) (subu8vector-move! x 2 3 y 1) y)
+(u8vector) (u8vector 1) (u8vector 1 2) (u8vector 1 2 3)
+(u8vector->list '#u8(1 2 3 4 5))
+(u8vector-append) (u8vector-append '#u8(1)) (u8vector-append '#u8(1) '#u8(2)) (u8vector-append '#u8(1) '#u8(2) '#u8(3))
+(u8vector-copy '#u8(1 2 3 4 5))
+(u8vector-copy '#u8(1 2 3 4 5) 1)
+(u8vector-copy '#u8(1 2 3 4 5) 1 3)
+(let ((x (u8vector 1 2 3 4)) (y (u8vector 6 7 8 9 0))) (u8vector-copy! y 1 x) y)
+(let ((x (u8vector 1 2 3 4)) (y (u8vector 6 7 8 9 0))) (u8vector-copy! y 1 x 2) y)
+(let ((x (u8vector 1 2 3 4)) (y (u8vector 6 7 8 9 0))) (u8vector-copy! y 1 x 2 3) y)
+(let ((x (u8vector 1 2 3 4 5))) (u8vector-fill! x 99) x)
+(let ((x (u8vector 1 2 3 4 5))) (u8vector-fill! x 99 1) x)
+(let ((x (u8vector 1 2 3 4 5))) (u8vector-fill! x 99 1 3) x)
+(u8vector-length '#u8(1 2 3 4 5))
+(u8vector-ref '#u8(1 2 3 4 5) 2)
+(u8vector-set '#u8(1 2 3 4 5) 2 99)
+(let ((x (u8vector 1 2 3 4 5))) (u8vector-set! x 2 99) x)
+(let ((x (u8vector 1 2 3 4 5))) (u8vector-shrink! x 3) x)
+(u8vector? '#u8(1 2 3)) (u8vector? 123)
+)

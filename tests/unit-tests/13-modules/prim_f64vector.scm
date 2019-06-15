@@ -1,0 +1,32 @@
+(include "#.scm")
+
+(check-same-behavior ("" "##" "~~lib/_prim-f64vector#.scm")
+
+;; Gambit
+
+(append-f64vectors '(#f64(1.) #f64(2.) #f64(3.)))
+(list->f64vector '(1. 2. 3.))
+(make-f64vector 5) (make-f64vector 5 9.)
+(subf64vector '#f64(1. 2. 3. 4. 5.) 1 3)
+
+(let ((x (f64vector 1. 2. 3. 4. 5.))) (subf64vector-fill! x 1 3 99.) x)
+(let ((x (f64vector 1. 2. 3. 4.)) (y (f64vector 6. 7. 8. 9. 0.))) (subf64vector-move! x 2 3 y 1) y)
+(f64vector) (f64vector 1.) (f64vector 1. 2.) (f64vector 1. 2. 3.)
+(f64vector->list '#f64(1. 2. 3. 4. 5.))
+(f64vector-append) (f64vector-append '#f64(1.)) (f64vector-append '#f64(1.) '#f64(2.)) (f64vector-append '#f64(1.) '#f64(2.) '#f64(3.))
+(f64vector-copy '#f64(1. 2. 3. 4. 5.))
+(f64vector-copy '#f64(1. 2. 3. 4. 5.) 1)
+(f64vector-copy '#f64(1. 2. 3. 4. 5.) 1 3)
+(let ((x (f64vector 1. 2. 3. 4.)) (y (f64vector 6. 7. 8. 9. 0.))) (f64vector-copy! y 1 x) y)
+(let ((x (f64vector 1. 2. 3. 4.)) (y (f64vector 6. 7. 8. 9. 0.))) (f64vector-copy! y 1 x 2) y)
+(let ((x (f64vector 1. 2. 3. 4.)) (y (f64vector 6. 7. 8. 9. 0.))) (f64vector-copy! y 1 x 2 3) y)
+(let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-fill! x 99.) x)
+(let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-fill! x 99. 1) x)
+(let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-fill! x 99. 1 3) x)
+(f64vector-length '#f64(1. 2. 3. 4. 5.))
+(f64vector-ref '#f64(1. 2. 3. 4. 5.) 2)
+(f64vector-set '#f64(1. 2. 3. 4. 5.) 2 99.)
+(let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-set! x 2 99.) x)
+(let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-shrink! x 3) x)
+(f64vector? '#f64(1. 2. 3.)) (f64vector? 123)
+)

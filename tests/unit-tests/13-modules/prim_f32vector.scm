@@ -1,0 +1,32 @@
+(include "#.scm")
+
+(check-same-behavior ("" "##" "~~lib/_prim-f32vector#.scm")
+
+;; Gambit
+
+(append-f32vectors '(#f32(1.) #f32(2.) #f32(3.)))
+(list->f32vector '(1. 2. 3.))
+(make-f32vector 5) (make-f32vector 5 9.)
+(subf32vector '#f32(1. 2. 3. 4. 5.) 1 3)
+
+(let ((x (f32vector 1. 2. 3. 4. 5.))) (subf32vector-fill! x 1 3 99.) x)
+(let ((x (f32vector 1. 2. 3. 4.)) (y (f32vector 6. 7. 8. 9. 0.))) (subf32vector-move! x 2 3 y 1) y)
+(f32vector) (f32vector 1.) (f32vector 1. 2.) (f32vector 1. 2. 3.)
+(f32vector->list '#f32(1. 2. 3. 4. 5.))
+(f32vector-append) (f32vector-append '#f32(1.)) (f32vector-append '#f32(1.) '#f32(2.)) (f32vector-append '#f32(1.) '#f32(2.) '#f32(3.))
+(f32vector-copy '#f32(1. 2. 3. 4. 5.))
+(f32vector-copy '#f32(1. 2. 3. 4. 5.) 1)
+(f32vector-copy '#f32(1. 2. 3. 4. 5.) 1 3)
+(let ((x (f32vector 1. 2. 3. 4.)) (y (f32vector 6. 7. 8. 9. 0.))) (f32vector-copy! y 1 x) y)
+(let ((x (f32vector 1. 2. 3. 4.)) (y (f32vector 6. 7. 8. 9. 0.))) (f32vector-copy! y 1 x 2) y)
+(let ((x (f32vector 1. 2. 3. 4.)) (y (f32vector 6. 7. 8. 9. 0.))) (f32vector-copy! y 1 x 2 3) y)
+(let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-fill! x 99.) x)
+(let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-fill! x 99. 1) x)
+(let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-fill! x 99. 1 3) x)
+(f32vector-length '#f32(1. 2. 3. 4. 5.))
+(f32vector-ref '#f32(1. 2. 3. 4. 5.) 2)
+(f32vector-set '#f32(1. 2. 3. 4. 5.) 2 99.)
+(let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-set! x 2 99.) x)
+(let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-shrink! x 3) x)
+(f32vector? '#f32(1. 2. 3.)) (f32vector? 123)
+)
