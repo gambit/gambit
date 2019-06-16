@@ -888,14 +888,14 @@
      (##declare
       (not safe) ;; avoid procedure check on the call to the handler
       (interrupts-enabled)) ;; make sure exceptions can be interrupted
-     ((macro-current-exception-handler) obj)))
+     (if (macro-current-thread)
+         ((macro-current-exception-handler) obj)
+         (##exit-with-exception obj)))) ;; exit when exception is raised
+                                        ;; before thread system is initialized
 
 (##define-macro (macro-abort obj)
   `(let ((obj ,obj))
-     (##declare
-      (not safe) ;; avoid procedure check on the call to the handler
-      (interrupts-enabled)) ;; make sure exceptions can be interrupted
-     ((macro-current-exception-handler) obj)
+     (macro-raise obj)
      (##abort (macro-make-noncontinuable-exception obj))))
 
 ;;;----------------------------------------------------------------------------
@@ -3110,14 +3110,14 @@
      (##declare
       (not safe) ;; avoid procedure check on the call to the handler
       (interrupts-enabled)) ;; make sure exceptions can be interrupted
-     ((macro-current-exception-handler) obj)))
+     (if (macro-current-thread)
+         ((macro-current-exception-handler) obj)
+         (##exit-with-exception obj)))) ;; exit when exception is raised
+                                        ;; before thread system is initialized
 
 (##define-macro (macro-abort obj)
   `(let ((obj ,obj))
-     (##declare
-      (not safe) ;; avoid procedure check on the call to the handler
-      (interrupts-enabled)) ;; make sure exceptions can be interrupted
-     ((macro-current-exception-handler) obj)
+     (macro-raise obj)
      (##abort (macro-make-noncontinuable-exception obj))))
 
 ;;;----------------------------------------------------------------------------
