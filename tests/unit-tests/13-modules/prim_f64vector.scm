@@ -6,7 +6,7 @@
 
 (append-f64vectors '(#f64(1.) #f64(2.) #f64(3.)))
 (list->f64vector '(1. 2. 3.))
-(make-f64vector 5) (make-f64vector 5 9.)
+(f64vector-length (make-f64vector 5)) (make-f64vector 5 9.)
 (subf64vector '#f64(1. 2. 3. 4. 5.) 1 3)
 
 (let ((x (f64vector 1. 2. 3. 4. 5.))) (subf64vector-fill! x 1 3 99.) x)

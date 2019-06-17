@@ -1,0 +1,32 @@
+(include "#.scm")
+
+(check-same-behavior ("" "##" "~~lib/_prim-u64vector#.scm")
+
+;; Gambit
+
+(append-u64vectors '(#u64(1) #u64(2) #u64(3)))
+(list->u64vector '(1 2 3))
+(u64vector-length (make-u64vector 5)) (make-u64vector 5 9)
+(subu64vector '#u64(1 2 3 4 5) 1 3)
+
+(let ((x (u64vector 1 2 3 4 5))) (subu64vector-fill! x 1 3 99) x)
+(let ((x (u64vector 1 2 3 4)) (y (u64vector 6 7 8 9 0))) (subu64vector-move! x 2 3 y 1) y)
+(u64vector) (u64vector 1) (u64vector 1 2) (u64vector 1 2 3)
+(u64vector->list '#u64(1 2 3 4 5))
+(u64vector-append) (u64vector-append '#u64(1)) (u64vector-append '#u64(1) '#u64(2)) (u64vector-append '#u64(1) '#u64(2) '#u64(3))
+(u64vector-copy '#u64(1 2 3 4 5))
+(u64vector-copy '#u64(1 2 3 4 5) 1)
+(u64vector-copy '#u64(1 2 3 4 5) 1 3)
+(let ((x (u64vector 1 2 3 4)) (y (u64vector 6 7 8 9 0))) (u64vector-copy! y 1 x) y)
+(let ((x (u64vector 1 2 3 4)) (y (u64vector 6 7 8 9 0))) (u64vector-copy! y 1 x 2) y)
+(let ((x (u64vector 1 2 3 4)) (y (u64vector 6 7 8 9 0))) (u64vector-copy! y 1 x 2 3) y)
+(let ((x (u64vector 1 2 3 4 5))) (u64vector-fill! x 99) x)
+(let ((x (u64vector 1 2 3 4 5))) (u64vector-fill! x 99 1) x)
+(let ((x (u64vector 1 2 3 4 5))) (u64vector-fill! x 99 1 3) x)
+(u64vector-length '#u64(1 2 3 4 5))
+(u64vector-ref '#u64(1 2 3 4 5) 2)
+(u64vector-set '#u64(1 2 3 4 5) 2 99)
+(let ((x (u64vector 1 2 3 4 5))) (u64vector-set! x 2 99) x)
+(let ((x (u64vector 1 2 3 4 5))) (u64vector-shrink! x 3) x)
+(u64vector? '#u64(1 2 3)) (u64vector? 123)
+)

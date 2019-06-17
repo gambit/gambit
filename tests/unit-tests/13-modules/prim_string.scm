@@ -5,7 +5,7 @@
 ;; R4RS
 
 (list->string '(#\a #\b #\c))
-(make-string 5) (make-string 5 #\x)
+(string-length (make-string 5)) (make-string 5 #\x)
 (string) (string #\a) (string #\a #\b) (string #\a #\b #\c)
 (string->list "abcde")
 (string-append) (string-append "a") (string-append "a" "b") (string-append "a" "b" "c")

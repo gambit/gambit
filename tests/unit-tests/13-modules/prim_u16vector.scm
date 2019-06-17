@@ -6,7 +6,7 @@
 
 (append-u16vectors '(#u16(1) #u16(2) #u16(3)))
 (list->u16vector '(1 2 3))
-(make-u16vector 5) (make-u16vector 5 9)
+(u16vector-length (make-u16vector 5)) (make-u16vector 5 9)
 (subu16vector '#u16(1 2 3 4 5) 1 3)
 
 (let ((x (u16vector 1 2 3 4 5))) (subu16vector-fill! x 1 3 99) x)

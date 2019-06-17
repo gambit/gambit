@@ -6,7 +6,7 @@
 
 (append-f32vectors '(#f32(1.) #f32(2.) #f32(3.)))
 (list->f32vector '(1. 2. 3.))
-(make-f32vector 5) (make-f32vector 5 9.)
+(f32vector-length (make-f32vector 5)) (make-f32vector 5 9.)
 (subf32vector '#f32(1. 2. 3. 4. 5.) 1 3)
 
 (let ((x (f32vector 1. 2. 3. 4. 5.))) (subf32vector-fill! x 1 3 99.) x)

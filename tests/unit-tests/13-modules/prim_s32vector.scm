@@ -6,7 +6,7 @@
 
 (append-s32vectors '(#s32(1) #s32(2) #s32(3)))
 (list->s32vector '(1 2 3))
-(make-s32vector 5) (make-s32vector 5 9)
+(s32vector-length (make-s32vector 5)) (make-s32vector 5 9)
 (subs32vector '#s32(1 2 3 4 5) 1 3)
 
 (let ((x (s32vector 1 2 3 4 5))) (subs32vector-fill! x 1 3 99) x)

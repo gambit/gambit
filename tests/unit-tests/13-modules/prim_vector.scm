@@ -5,7 +5,7 @@
 ;; R4RS
 
 (list->vector '(1 2 3))
-(make-vector 5) (make-vector 5 9)
+(vector-length (make-vector 5)) (make-vector 5 9)
 (vector) (vector 1) (vector 1 2) (vector 1 2 3)
 (vector->list '#(1 2 3 4 5))
 (let ((x (vector 1 2 3 4 5))) (vector-fill! x 99) x)

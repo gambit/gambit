@@ -6,7 +6,7 @@
 
 (append-u32vectors '(#u32(1) #u32(2) #u32(3)))
 (list->u32vector '(1 2 3))
-(make-u32vector 5) (make-u32vector 5 9)
+(u32vector-length (make-u32vector 5)) (make-u32vector 5 9)
 (subu32vector '#u32(1 2 3 4 5) 1 3)
 
 (let ((x (u32vector 1 2 3 4 5))) (subu32vector-fill! x 1 3 99) x)
