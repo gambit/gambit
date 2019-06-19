@@ -1301,7 +1301,10 @@
      force-output
      )))
 
-(define (open-dummy)
+(define-prim (##open-dummy)
+  (##make-dummy-port))
+
+(define-prim (open-dummy)
   (##make-dummy-port))
 
 ;;;----------------------------------------------------------------------------
@@ -2353,6 +2356,13 @@
     (define open-output-vect          (sym 'open-output- name))
     (define get-output-vect           (sym 'get-output- name))
 
+    (define ##call-with-input-vect    (sym '##call-with-input- name))
+    (define ##call-with-output-vect   (sym '##call-with-output- name))
+    (define ##call-with-output-vect-aux (sym '##call-with-output- name '-aux))
+    (define ##with-input-from-vect    (sym '##with-input-from- name))
+    (define ##with-output-to-vect     (sym '##with-output-to- name))
+    (define ##with-output-to-vect-aux (sym '##with-output-to- name '-aux))
+
     (define call-with-input-vect      (sym 'call-with-input- name))
     (define call-with-output-vect     (sym 'call-with-output- name))
     (define with-input-from-vect      (sym 'with-input-from- name))
@@ -3131,53 +3141,75 @@
              (,get-output-vect port)
              (,##get-output-vect port))))
 
+       (define-prim (,##call-with-input-vect init-or-settings proc)
+         (,##open-vect-generic
+          (macro-direction-in)
+          (lambda (port)
+            (let ((results ;; may get bound to a multiple-values object
+                   (proc port)))
+              (##close-input-port port)
+              results))
+          ,call-with-input-vect
+          init-or-settings
+          proc))
+
        (define-prim (,call-with-input-vect init-or-settings proc)
          (macro-force-vars (init-or-settings proc)
            (macro-check-procedure
              proc
              2
              (,call-with-input-vect init-or-settings proc)
-             (,##open-vect-generic
-              (macro-direction-in)
-              (lambda (port)
-                (let ((results ;; may get bound to a multiple-values object
-                       (proc port)))
-                  (##close-input-port port)
-                  results))
-              ,call-with-input-vect
-              init-or-settings
-              proc))))
+             (,##call-with-input-vect init-or-settings proc))))
+
+       (define-prim (,##call-with-output-vect-aux init-or-settings proc)
+         (,##open-vect-generic
+          (macro-direction-out)
+          (lambda (port)
+            (let ((results ;; may get bound to a multiple-values object
+                   (proc port)))
+              (##force-output port)
+              (##close-output-port port)
+              (,##get-output-vect port)))
+          ,call-with-output-vect
+          init-or-settings
+          proc))
+
+       (define-prim (,##call-with-output-vect
+                     arg1
+                     #!optional
+                     (arg2 (macro-absent-obj)))
+         (if (##eq? arg2 (macro-absent-obj))
+             (,##call-with-output-vect-aux '() arg1)
+             (,##call-with-output-vect-aux arg1 arg2)))
 
        (define-prim (,call-with-output-vect
                      arg1
                      #!optional
                      (arg2 (macro-absent-obj)))
-
-         (define (continue init-or-settings proc)
-           (,##open-vect-generic
-            (macro-direction-out)
-            (lambda (port)
-              (let ((results ;; may get bound to a multiple-values object
-                     (proc port)))
-                (##force-output port)
-                (##close-output-port port)
-                (,##get-output-vect port)))
-            ,call-with-output-vect
-            init-or-settings
-            proc))
-
          (macro-force-vars (arg1 arg2)
            (if (##eq? arg2 (macro-absent-obj))
                (macro-check-procedure
                  arg1
                  1
                  (,call-with-output-vect arg1)
-                 (continue '() arg1))
+                 (,##call-with-output-vect-aux '() arg1))
                (macro-check-procedure
                  arg2
                  2
                  (,call-with-output-vect arg1 arg2)
-                 (continue arg1 arg2)))))
+                 (,##call-with-output-vect-aux arg1 arg2)))))
+
+       (define-prim (,##with-input-from-vect init-or-settings thunk)
+         (,##open-vect-generic
+          (macro-direction-in)
+          (lambda (port)
+            (let ((results ;; may get bound to a multiple-values object
+                   (macro-dynamic-bind input-port port thunk)))
+              (##close-input-port port)
+              results))
+          ,with-input-from-vect
+          init-or-settings
+          thunk))
 
        (define-prim (,with-input-from-vect init-or-settings thunk)
          (macro-force-vars (init-or-settings thunk)
@@ -3185,47 +3217,45 @@
              thunk
              2
              (,with-input-from-vect init-or-settings thunk)
-             (,##open-vect-generic
-              (macro-direction-in)
-              (lambda (port)
-                (let ((results ;; may get bound to a multiple-values object
-                       (macro-dynamic-bind input-port port thunk)))
-                  (##close-input-port port)
-                  results))
-              ,with-input-from-vect
-              init-or-settings
-              thunk))))
+             (,##with-input-from-vect init-or-settings thunk))))
+
+       (define-prim (,##with-output-to-vect-aux init-or-settings thunk)
+         (,##open-vect-generic
+          (macro-direction-out)
+          (lambda (port)
+            (let ((results ;; may get bound to a multiple-values object
+                   (macro-dynamic-bind output-port port thunk)))
+              (##force-output port)
+              (##close-output-port port)
+              (,##get-output-vect port)))
+          ,with-output-to-vect
+          init-or-settings
+          thunk))
+
+       (define-prim (,##with-output-to-vect
+                     arg1
+                     #!optional
+                     (arg2 (macro-absent-obj)))
+         (if (##eq? arg2 (macro-absent-obj))
+             (,##with-output-to-vect-aux '() arg1)
+             (,##with-output-to-vect-aux arg1 arg2)))
 
        (define-prim (,with-output-to-vect
                      arg1
                      #!optional
                      (arg2 (macro-absent-obj)))
-
-         (define (continue init-or-settings thunk)
-           (,##open-vect-generic
-            (macro-direction-out)
-            (lambda (port)
-              (let ((results ;; may get bound to a multiple-values object
-                     (macro-dynamic-bind output-port port thunk)))
-                (##force-output port)
-                (##close-output-port port)
-                (,##get-output-vect port)))
-            ,with-output-to-vect
-            init-or-settings
-            thunk))
-
          (macro-force-vars (arg1 arg2)
            (if (##eq? arg2 (macro-absent-obj))
                (macro-check-procedure
                  arg1
                  1
                  (,with-output-to-vect arg1)
-                 (continue '() arg1))
+                 (,##with-output-to-vect-aux '() arg1))
                (macro-check-procedure
                  arg2
                  2
                  (,with-output-to-vect arg1 arg2)
-                 (continue arg1 arg2))))))))
+                 (,##with-output-to-vect-aux arg1 arg2))))))))
 
 (define-prim (##vect-port-options options kind buffering)
   (##psettings-options->options
@@ -4572,33 +4602,47 @@
     (macro-check-output-port port 1 (output-port-open? port)
       #t))) ;; in general, it is not possible to know if a port is "open"
 
+(define-prim (##input-port-readtable port)
+  (macro-character-port-input-readtable port))
+
 (define-prim (input-port-readtable port)
   (macro-force-vars (port)
     (macro-check-character-input-port port 1 (input-port-readtable port)
-      (macro-character-port-input-readtable port))))
+      (##input-port-readtable port))))
+
+(define-prim (##input-port-readtable-set! port rt)
+  (macro-character-port-input-readtable-set! port rt)
+  (##void))
 
 (define-prim (input-port-readtable-set! port rt)
   (macro-force-vars (port rt)
     (macro-check-character-input-port port 1 (input-port-readtable-set! port rt)
       (macro-check-readtable rt 2 (input-port-readtable-set! port rt)
-        (begin
-          (macro-character-port-input-readtable-set! port rt)
-          (##void))))))
+        (##input-port-readtable-set! port rt)))))
+
+(define-prim (##output-port-readtable port)
+  (macro-character-port-output-readtable port))
 
 (define-prim (output-port-readtable port)
   (macro-force-vars (port)
     (macro-check-character-output-port port 1 (output-port-readtable port)
-      (macro-character-port-output-readtable port))))
+      (##output-port-readtable port))))
+
+(define-prim (##output-port-readtable-set! port rt)
+  (macro-character-port-output-readtable-set! port rt)
+  (##void))
 
 (define-prim (output-port-readtable-set! port rt)
   (macro-force-vars (port rt)
     (macro-check-character-output-port port 1 (output-port-readtable-set! port rt)
       (macro-check-readtable rt 2 (output-port-readtable-set! port rt)
-        (begin
-          (macro-character-port-output-readtable-set! port rt)
-          (##void))))))
+        (##output-port-readtable-set! port rt)))))
 
-(define-prim (##input-port-timeout-set! port absrel-timeout thunk)
+(define-prim (##input-port-timeout-set!
+              port
+              absrel-timeout
+              #!optional
+              (thunk (lambda () #f)))
   (##declare (not interrupts-enabled))
   (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
     ((macro-port-set-rtimeout port) port timeout thunk)))
@@ -4609,25 +4653,27 @@
               #!optional
               (t (macro-absent-obj)))
   (macro-force-vars (port absrel-timeout t)
-    (let ((thunk
-           (if (##eq? t (macro-absent-obj))
-               (lambda () #f)
-               t)))
-      (macro-check-input-port
-        port
-        1
+    (macro-check-input-port
+      port
+      1
+      (input-port-timeout-set! port absrel-timeout t)
+      (macro-check-absrel-time-or-false
+        absrel-timeout
+        2
         (input-port-timeout-set! port absrel-timeout t)
-        (macro-check-absrel-time-or-false
-          absrel-timeout
-          2
-          (input-port-timeout-set! port absrel-timeout t)
-          (macro-check-procedure
-            thunk
-            3
-            (input-port-timeout-set! port absrel-timeout t)
-            (##input-port-timeout-set! port absrel-timeout thunk)))))))
+        (if (##eq? t (macro-absent-obj))
+            (##input-port-timeout-set! port absrel-timeout t)
+            (macro-check-procedure
+              t
+              3
+              (input-port-timeout-set! port absrel-timeout t)
+              (##input-port-timeout-set! port absrel-timeout t)))))))
 
-(define-prim (##output-port-timeout-set! port absrel-timeout thunk)
+(define-prim (##output-port-timeout-set!
+              port
+              absrel-timeout
+              #!optional
+              (thunk (lambda () #f)))
   (##declare (not interrupts-enabled))
   (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
     ((macro-port-set-wtimeout port) port timeout thunk)))
@@ -4638,23 +4684,21 @@
               #!optional
               (t (macro-absent-obj)))
   (macro-force-vars (port absrel-timeout t)
-    (let ((thunk
-           (if (##eq? t (macro-absent-obj))
-               (lambda () #f)
-               t)))
-      (macro-check-output-port
-        port
-        1
+    (macro-check-output-port
+      port
+      1
+      (output-port-timeout-set! port absrel-timeout t)
+      (macro-check-absrel-time-or-false
+        absrel-timeout
+        2
         (output-port-timeout-set! port absrel-timeout t)
-        (macro-check-absrel-time-or-false
-          absrel-timeout
-          2
-          (output-port-timeout-set! port absrel-timeout t)
-          (macro-check-procedure
-            thunk
-            3
-            (output-port-timeout-set! port absrel-timeout t)
-            (##output-port-timeout-set! port absrel-timeout thunk)))))))
+        (if (##eq? t (macro-absent-obj))
+            (##output-port-timeout-set! port absrel-timeout)
+            (macro-check-procedure
+              t
+              3
+              (output-port-timeout-set! port absrel-timeout t)
+              (##output-port-timeout-set! port absrel-timeout t)))))))
 
 (define-prim (##port-io-exception-handler-set! port handler)
   (##declare (not interrupts-enabled))
@@ -5322,7 +5366,12 @@
               (else
                (##raise-os-io-exception port #f n read-string k port)))))))
 
-(define-prim (##read-line port separator include-separator? max-length)
+(define-prim (##read-line
+              #!optional
+              (port (macro-current-input-port))
+              (separator #\newline)
+              (include-separator? #f)
+              (max-length ##max-fixnum))
 
   (define max-chunk-length 512)
 
@@ -5416,7 +5465,10 @@
           (read-line port separator include-separator? max-length)
           (##read-line p sep inc-sep? ml))))))
 
-(define-prim (##read-all port-or-readenv reader)
+(define-prim (##read-all
+              #!optional
+              (port-or-readenv (macro-current-input-port))
+              (reader ##read))
   (let ((fifo (macro-make-fifo)))
     (let loop ()
       (let ((obj (reader port-or-readenv)))
@@ -5848,7 +5900,9 @@
       (macro-check-byte-input-port p 1 (u8-ready? p)
         (##u8-ready?1 p)))))
 
-(define-prim (##read-u8 port)
+(define-prim (##read-u8
+              #!optional
+              (port (macro-current-input-port)))
 
   (##declare (not interrupts-enabled))
 
@@ -5921,8 +5975,8 @@
               u8vect
               start
               end
-              port
               #!optional
+              (port (macro-current-input-port))
               (need (macro-absent-obj))
               (raise-os-exception? #t))
 
@@ -6079,7 +6133,12 @@
                   (else
                    (##raise-os-io-exception port #f n read-bytevector k port)))))))))
 
-(define-prim (##read-bytevector! u8vect port start end)
+(define-prim (##read-bytevector!
+              u8vect
+              #!optional
+              (port (macro-current-input-port))
+              (start 0)
+              (end (##u8vector-length u8vect)))
   (##declare (not interrupts-enabled))
   (if (##fx< start end)
       (let ((n (##read-subu8vector u8vect start end port #f #f)))
@@ -6132,7 +6191,10 @@
                         (read-bytevector! u8vect port start end)
                         (##read-bytevector! u8vect p start end)))))))))))
 
-(define-prim (##write-u8 b port)
+(define-prim (##write-u8
+              b
+              #!optional
+              (port (macro-current-output-port)))
 
   (##declare (not interrupts-enabled))
 
@@ -6216,7 +6278,12 @@
         (macro-check-byte-output-port p 2 (write-u8 b p)
           (##write-u8 b p))))))
 
-(define-prim (##write-subu8vector u8vect start end port)
+(define-prim (##write-subu8vector
+              u8vect
+              start
+              end
+              #!optional
+              (port (macro-current-output-port)))
 
   (##declare (not interrupts-enabled))
 
@@ -6343,7 +6410,12 @@
               (write-subu8vector u8vect start end p)
               (##write-subu8vector u8vect start end p))))))))
 
-(define-prim (##write-bytevector u8vect port start end)
+(define-prim (##write-bytevector
+              u8vect
+              #!optional
+              (port (macro-current-output-port))
+              (start 0)
+              (end (##u8vector-length u8vect)))
   (##declare (not interrupts-enabled))
   (##write-subu8vector u8vect start end port)
   (##void))
@@ -6937,24 +7009,42 @@
   (macro-force-vars (path-or-settings)
     (##open-output-process path-or-settings)))
 
+(define-prim (##call-with-input-process path-or-settings proc)
+  (##open-process-generic
+   (macro-direction-in)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (proc port)))
+       (##close-port port)
+       (##process-status port) ;; wait for process to terminate
+       results))
+   call-with-input-process
+   path-or-settings
+   proc))
+
 (define-prim (call-with-input-process path-or-settings proc)
   (macro-force-vars (path-or-settings proc)
     (macro-check-procedure
       proc
       2
       (call-with-input-process path-or-settings proc)
-      (##open-process-generic
-       (macro-direction-in)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (proc port)))
-           (##close-port port)
-           (##process-status port) ;; wait for process to terminate
-           results))
-       call-with-input-process
-       path-or-settings
-       proc))))
+      (##call-with-input-process path-or-settings proc))))
+
+(define-prim (##call-with-output-process path-or-settings proc)
+  (##open-process-generic
+   (macro-direction-out)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (proc port)))
+       (##force-output port)
+       (##close-port port)
+       (##process-status port) ;; wait for process to terminate
+       results))
+   call-with-output-process
+   path-or-settings
+   proc))
 
 (define-prim (call-with-output-process path-or-settings proc)
   (macro-force-vars (path-or-settings proc)
@@ -6962,19 +7052,21 @@
       proc
       2
       (call-with-output-process path-or-settings proc)
-      (##open-process-generic
-       (macro-direction-out)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (proc port)))
-           (##force-output port)
-           (##close-port port)
-           (##process-status port) ;; wait for process to terminate
-           results))
-       call-with-output-process
-       path-or-settings
-       proc))))
+      (##call-with-output-process path-or-settings proc))))
+
+(define-prim (##with-input-from-process path-or-settings thunk)
+  (##open-process-generic
+   (macro-direction-in)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (macro-dynamic-bind input-port port thunk)))
+       (##close-port port)
+       (##process-status port) ;; wait for process to terminate
+       results))
+   with-input-from-process
+   path-or-settings
+   thunk))
 
 (define-prim (with-input-from-process path-or-settings thunk)
   (macro-force-vars (path-or-settings thunk)
@@ -6982,18 +7074,22 @@
       thunk
       2
       (with-input-from-process path-or-settings thunk)
-      (##open-process-generic
-       (macro-direction-in)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (macro-dynamic-bind input-port port thunk)))
-           (##close-port port)
-           (##process-status port) ;; wait for process to terminate
-           results))
-       with-input-from-process
-       path-or-settings
-       thunk))))
+      (##with-input-from-process path-or-settings thunk))))
+
+(define-prim (##with-output-to-process path-or-settings thunk)
+  (##open-process-generic
+   (macro-direction-out)
+   #t
+   (lambda (port)
+     (let ((results ;; may get bound to a multiple-values object
+            (macro-dynamic-bind output-port port thunk)))
+       (##force-output port)
+       (##close-port port)
+       (##process-status port) ;; wait for process to terminate
+       results))
+   with-output-to-process
+   path-or-settings
+   thunk))
 
 (define-prim (with-output-to-process path-or-settings thunk)
   (macro-force-vars (path-or-settings thunk)
@@ -7001,19 +7097,7 @@
       thunk
       2
       (with-output-to-process path-or-settings thunk)
-      (##open-process-generic
-       (macro-direction-out)
-       #t
-       (lambda (port)
-         (let ((results ;; may get bound to a multiple-values object
-                (macro-dynamic-bind output-port port thunk)))
-           (##force-output port)
-           (##close-port port)
-           (##process-status port) ;; wait for process to terminate
-           results))
-       with-output-to-process
-       path-or-settings
-       thunk))))
+      (##with-output-to-process path-or-settings thunk))))
 
 (define-prim (##process-pid port)
   (##os-device-process-pid (##port-device port)))
@@ -9227,7 +9311,7 @@
       (##io-condvar-port-set! rdevice-condvar port)
       port)))
 
-(define-prim (##open-directory
+(define-prim (##open-directory-aux
               raise-os-exception?
               cont
               prim
@@ -9264,15 +9348,20 @@
                      (cont rdevice))
                  (cont (##make-directory-port rdevice path)))))))))
 
+(define-prim (##open-directory
+              #!optional
+              (path-or-settings (macro-absent-obj)))
+  (##open-directory-aux
+   #t
+   (lambda (port) port)
+   open-directory
+   path-or-settings))
+
 (define-prim (open-directory
               #!optional
               (path-or-settings (macro-absent-obj)))
   (macro-force-vars (path-or-settings)
-    (##open-directory
-     #t
-     (lambda (port) port)
-     open-directory
-     path-or-settings)))
+    (##open-directory path-or-settings)))
 
 ;;;----------------------------------------------------------------------------
 

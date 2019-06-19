@@ -21,11 +21,11 @@ delete-directory
 delete-file-or-directory
 directory-files
 executable-path
-file-attributes
-file-creation-time
-file-device
-file-error?
-file-group
+(file-attributes file-attributes#unimplemented)
+(file-creation-time file-creation-time#unimplemented)
+(file-device file-device#unimplemented)
+(file-error? file-error?#unimplemented)
+(file-group file-group#unimplemented)
 file-info
 file-info-attributes
 file-info-creation-time
@@ -41,16 +41,16 @@ file-info-owner
 file-info-size
 file-info-type
 file-info?
-file-inode
-file-last-access-and-modification-times-set!
-file-last-access-time
-file-last-change-time
-file-last-modification-time
-file-mode
-file-number-of-links
-file-owner
-file-size
-file-type
+(file-inode file-inode#unimplemented)
+(file-last-access-and-modification-times-set! file-last-access-and-modification-times-set!#unimplemented)
+(file-last-access-time file-last-access-time#unimplemented)
+(file-last-change-time file-last-change-time#unimplemented)
+(file-last-modification-time file-last-modification-time#unimplemented)
+(file-mode file-mode#unimplemented)
+(file-number-of-links file-number-of-links#unimplemented)
+(file-owner file-owner#unimplemented)
+(file-size file-size#unimplemented)
+(file-type file-type#unimplemented)
 path-directory
 path-expand
 path-extension

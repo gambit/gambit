@@ -3162,7 +3162,7 @@
   (let ((rec? (if (##eq? recursive? (macro-absent-obj)) #f recursive?)))
 
     (define (del-dir-content dir-path)
-      (##open-directory
+      (##open-directory-aux
        #f
        (lambda (dir-port)
          (if (##fixnum? dir-port)
@@ -3226,7 +3226,7 @@
 (define-prim (##directory-files
               #!optional
               (path-or-settings (macro-absent-obj)))
-  (##open-directory
+  (##open-directory-aux
    #t
    (lambda (port)
      (let ((files (##read-all port ##read)))

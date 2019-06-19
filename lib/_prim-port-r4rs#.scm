@@ -8,7 +8,7 @@
 
 ;;; Port operations in R4RS.
 
-(##namespace ("##unimplemented#"
+(##namespace ("##"
 
 call-with-input-file
 call-with-output-file
