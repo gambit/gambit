@@ -5774,25 +5774,6 @@ ___JUMPEXTPRM(___NOTHING,___ps->handler_get_key_rest)}
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
-#ifdef ___CPU_arm
-
-#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
-#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
-do { \
-     /* generate ARM THUMB2 instructions: mov r4,pc ; ldr pc,[r4,#-8] */ \
-     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xf854467cL; \
-     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0x0000fc08L; \
-   } while (0)
-
-#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
-#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
-do { \
-     /* generate ARM THUMB2 instructions: ldr r7,[r5] ; blx r7 */ \
-     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x47b8682fL; \
-   } while (0)
-
-#endif
-
 #ifdef ___CPU_x86
 
 /* Useful to have constant bit pattern in low 16 bits of pstate */
@@ -5839,6 +5820,45 @@ do { \
    } while (0)
 
 #endif
+
+#endif
+
+#ifdef ___CPU_arm
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate ARM THUMB2 instructions: mov r4,pc ; ldr pc,[r4,#-8] */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xf854467cL; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0x0000fc08L; \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate ARM THUMB2 instructions: ldr r7,[r5] ; blx r7 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x47b8682fL; \
+   } while (0)
+
+#endif
+
+#ifdef ___CPU_riscv
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate RISC-V instructions: auipc s6, 0x0; jr -8(s6) */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x00000b17; \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xff8b0067; \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate RISC-V instructions: lw s7, 0(s0); jalr s7 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x00042b83; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0x000b80e7; \
+   } while (0)
 
 #endif
 
