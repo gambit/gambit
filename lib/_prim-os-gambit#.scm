@@ -8,73 +8,83 @@
 
 ;;; OS operations in Gambit.
 
-(##namespace ("##unimplemented#"
+(##namespace ("##"
 
-address-info-family
-address-info-protocol
-address-info-socket-info
-address-info-socket-type
-address-info?
-address-infos
-configure-command-string
-cpu-time
+(address-info-family address-info-family#unimplemented)
+(address-info-protocol address-info-protocol#unimplemented)
+(address-info-socket-info address-info-socket-info#unimplemented)
+(address-info-socket-type address-info-socket-type#unimplemented)
+(address-info? address-info?#unimplemented)
+(address-infos address-infos#unimplemented)
+(configure-command-string configure-command-string#unimplemented)
+(cpu-time cpu-time#unimplemented)
+
 current-time
-current-user-interrupt-handler
-defer-user-interrupts
-err-code->string
+
+(current-user-interrupt-handler current-user-interrupt-handler#unimplemented)
+(defer-user-interrupts defer-user-interrupts#unimplemented)
+(err-code->string err-code->string#unimplemented)
+
 getenv
-group-info
-group-info-gid
-group-info-members
-group-info-name
-group-info?
-host-info
-host-info-addresses
-host-info-aliases
-host-info-name
-host-info?
-host-name
-network-info
-network-info-aliases
-network-info-name
-network-info-number
-network-info?
-process-times
-protocol-info
-protocol-info-aliases
-protocol-info-name
-protocol-info-number
-protocol-info?
-real-time
+
+(group-info group-info#unimplemented)
+(group-info-gid group-info-gid#unimplemented)
+(group-info-members group-info-members#unimplemented)
+(group-info-name group-info-name#unimplemented)
+(group-info? group-info?#unimplemented)
+(host-info host-info#unimplemented)
+(host-info-addresses host-info-addresses#unimplemented)
+(host-info-aliases host-info-aliases#unimplemented)
+(host-info-name host-info-name#unimplemented)
+(host-info? host-info?#unimplemented)
+(host-name host-name#unimplemented)
+(network-info network-info#unimplemented)
+(network-info-aliases network-info-aliases#unimplemented)
+(network-info-name network-info-name#unimplemented)
+(network-info-number network-info-number#unimplemented)
+(network-info? network-info?#unimplemented)
+(process-times process-times#unimplemented)
+(protocol-info protocol-info#unimplemented)
+(protocol-info-aliases protocol-info-aliases#unimplemented)
+(protocol-info-name protocol-info-name#unimplemented)
+(protocol-info-number protocol-info-number#unimplemented)
+(protocol-info? protocol-info?#unimplemented)
+(real-time real-time#unimplemented)
+
 seconds->time
-service-info
-service-info-aliases
-service-info-name
-service-info-port-number
-service-info-protocol
-service-info?
+
+(service-info service-info#unimplemented)
+(service-info-aliases service-info-aliases#unimplemented)
+(service-info-name service-info-name#unimplemented)
+(service-info-port-number service-info-port-number#unimplemented)
+(service-info-protocol service-info-protocol#unimplemented)
+(service-info? service-info?#unimplemented)
+
 setenv
-shell-command
-socket-info-address
-socket-info-family
-socket-info-port-number
-socket-info?
-system-stamp
-system-type
-system-type-string
-system-version
-system-version-string
+
+(shell-command shell-command#unimplemented)
+(socket-info-address socket-info-address#unimplemented)
+(socket-info-family socket-info-family#unimplemented)
+(socket-info-port-number socket-info-port-number#unimplemented)
+(socket-info? socket-info?#unimplemented)
+(system-stamp system-stamp#unimplemented)
+(system-type system-type#unimplemented)
+(system-type-string system-type-string#unimplemented)
+(system-version system-version#unimplemented)
+(system-version-string system-version-string#unimplemented)
+
 time->seconds
 time?
-timeout->time
-user-info
-user-info-gid
-user-info-home
-user-info-name
-user-info-shell
-user-info-uid
-user-info?
-user-name
+
+(timeout->time timeout->time#unimplemented)
+(user-info user-info#unimplemented)
+(user-info-gid user-info-gid#unimplemented)
+(user-info-home user-info-home#unimplemented)
+(user-info-name user-info-name#unimplemented)
+(user-info-shell user-info-shell#unimplemented)
+(user-info-uid user-info-uid#unimplemented)
+(user-info? user-info?#unimplemented)
+(user-name user-name#unimplemented)
 
 ))
 

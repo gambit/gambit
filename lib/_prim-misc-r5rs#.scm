@@ -8,14 +8,14 @@
 
 ;;; Miscellaneous operations added by R5RS.
 
-(##namespace ("##unimplemented#"
+(##namespace ("##"
 
 call-with-values
 dynamic-wind
 eval
-interaction-environment
-null-environment
-scheme-report-environment
+(interaction-environment interaction-environment#unimplemented)
+(null-environment null-environment#unimplemented)
+(scheme-report-environment scheme-report-environment#unimplemented)
 values
 
 ))

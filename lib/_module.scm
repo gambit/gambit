@@ -331,9 +331,9 @@
                (##string-append path-noext
                                 ".o"
                                 (##number->string version 10))))
-             (_ (if ##debug-modules? (pp (list '##file-info resolved-path))));;;;;;;;;;;;;
+             (_ (if ##debug-modules? (pp (list '##file-info-aux resolved-path))));;;;;;;;;;;;;
              (resolved-info
-              (##file-info resolved-path))
+              (##file-info-aux resolved-path))
              (resolved-path-exists?
               (##not (##fixnum? resolved-info))))
         (if resolved-path-exists?

@@ -8,16 +8,19 @@
 
 ;;; OS operations in R7RS.
 
-(##namespace ("##unimplemented#"
+(##namespace ("##"
 
 command-line
-current-jiffy
-current-second
-emergency-exit
+
+(current-jiffy current-jiffy#unimplemented)
+(current-second current-second#unimplemented)
+(emergency-exit emergency-exit#unimplemented)
+
 exit
-get-environment-variable
-get-environment-variables
-jiffies-per-second
+
+(get-environment-variable get-environment-variable#unimplemented)
+(get-environment-variables get-environment-variables#unimplemented)
+(jiffies-per-second jiffies-per-second#unimplemented)
 
 ))
 

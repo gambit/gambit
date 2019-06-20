@@ -7990,6 +7990,11 @@
 
 ;;; User accessible primitives for exception handling.
 
+(define-prim (##with-exception-handler handler thunk)
+  (macro-dynamic-bind exception-handler
+   handler
+   thunk))
+
 (define-prim (with-exception-handler handler thunk)
   (macro-force-vars (handler thunk)
     (macro-check-procedure handler 1 (with-exception-handler handler thunk)

@@ -5090,7 +5090,7 @@
                                       ".o"
                                       (##number->string version 10))))
                    (resolved-info
-                    (##file-info resolved-path))
+                    (##file-info-aux resolved-path))
                    (resolved-path-exists?
                     (##not (##fixnum? resolved-info))))
               (if resolved-path-exists?
@@ -5106,7 +5106,7 @@
                                     (##string-append path (##caar lst)))
                                    (src-file-info
                                     (if (##string? src-file-path)
-                                        (##file-info src-file-path)
+                                        (##file-info-aux src-file-path)
                                         0))
                                    (src-file-path-exists?
                                     (##not (##fixnum? src-file-info))))

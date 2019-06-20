@@ -89,7 +89,8 @@
 ;;;                                 (or where key is removed if val is absent)
 
 (define (hamt? obj)
-  (macro-hamt? obj))
+  (macro-force-vars (hamt)
+    (macro-hamt? obj)))
 
 (define (make-hamt
          #!key
@@ -178,51 +179,54 @@
       (check-test 1))))
 
 (define (hamt->list hamt)
-  (macro-check-hamt
-    hamt
-    1
-    (hamt->list hamt)
-    (hamt*->list (macro-hamt-tree hamt))))
+  (macro-force-vars (hamt)
+    (macro-check-hamt
+      hamt
+      1
+      (hamt->list hamt)
+      (hamt*->list (macro-hamt-tree hamt)))))
 
 (define (hamt-ref
          hamt
          key
          #!optional
          (default-value (macro-absent-obj)))
-  (macro-check-hamt
-    hamt
-    1
-    (hamt-ref hamt key default-value)
-    (let ((x (hamt*-ref (macro-hamt-tree hamt) key hamt)))
-      (if x
-          (cdr x)
-          (if (eq? default-value (macro-absent-obj))
-              (##raise-unbound-key-exception
-               hamt-ref
-               hamt
-               key)
-              default-value)))))
+  (macro-force-vars (hamt key)
+    (macro-check-hamt
+      hamt
+      1
+      (hamt-ref hamt key default-value)
+      (let ((x (hamt*-ref (macro-hamt-tree hamt) key hamt)))
+        (if x
+            (cdr x)
+            (if (eq? default-value (macro-absent-obj))
+                (##raise-unbound-key-exception
+                 hamt-ref
+                 hamt
+                 key)
+                default-value))))))
 
 (define (hamt-set
          hamt
          key
          #!optional
          (val (macro-absent-obj)))
-  (macro-check-hamt
-    hamt
-    1
-    (hamt-set hamt key val)
-    (if (eq? val (macro-absent-obj))
-        (let* ((tree (macro-hamt-tree hamt))
-               (new-tree (hamt*-remove tree key hamt)))
-          (if (eq? tree new-tree)
-              hamt
-              (macro-make-hamt (macro-hamt-test hamt)
-                               (macro-hamt-hash hamt)
-                               new-tree)))
-        (macro-make-hamt (macro-hamt-test hamt)
-                         (macro-hamt-hash hamt)
-                         (hamt*-set (macro-hamt-tree hamt) key val hamt)))))
+  (macro-force-vars (hamt key)
+    (macro-check-hamt
+      hamt
+      1
+      (hamt-set hamt key val)
+      (if (eq? val (macro-absent-obj))
+          (let* ((tree (macro-hamt-tree hamt))
+                 (new-tree (hamt*-remove tree key hamt)))
+            (if (eq? tree new-tree)
+                hamt
+                (macro-make-hamt (macro-hamt-test hamt)
+                                 (macro-hamt-hash hamt)
+                                 new-tree)))
+          (macro-make-hamt (macro-hamt-test hamt)
+                           (macro-hamt-hash hamt)
+                           (hamt*-set (macro-hamt-tree hamt) key val hamt))))))
 
 (define (test->hash test-fn)
   (declare (extended-bindings) (standard-bindings))

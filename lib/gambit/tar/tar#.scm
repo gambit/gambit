@@ -8,7 +8,7 @@
 
 ;;; Tar file packing/unpacking.
 
-(##namespace ("##"
+(##namespace ("gambit/tar#"
               tar-pack-file
               tar-pack-port
               tar-pack-u8vector

@@ -8,82 +8,20 @@
 
 ;;; Tar file packing/unpacking.
 
-(##declare (extended-bindings) (not safe))
-
-(##include "tar#.scm")
-
 (##supply-module gambit/tar)
 
-(##namespace ("##"
-              car
-              cdr
-              char->integer
-              close-input-port
-              close-output-port
-              cons
-              create-directory
-              current-directory
-              directory-files
-              eq?
-              floor
-              force-output
-              fx*
-              fx+
-              fx-
-              fx<
-              fx<=
-              fx=
-              fx>
-              fx>=
-              fxmin
-              fxmodulo
-              get-output-u8vector
-              inexact->exact
-              integer->char
-              list
-              make-string
-              make-u8vector
-              not
-              number->string
-              open-input-file
-              open-input-u8vector
-              open-output-file
-              open-output-u8vector
-              pair?
-              path-expand
-              path-strip-trailing-directory-separator
-              raise
-              read-subu8vector
-              reverse
-              string->number
-              string->utf8
-              string-append
-              string-length
-              string-ref
-              string-set!
-              string=?
-              substring
-              subu8vector
-              subu8vector-move!
-              u8vector-length
-              u8vector-ref
-              u8vector-set!
-              utf8->string
-              void
-              write-subu8vector)
-             (""
-              file-info
-              file-info-group
-              file-info-last-access-time
-              file-info-last-change-time
-              file-info-last-modification-time
-              file-info-mode
-              file-info-owner
-              file-info-size
-              file-info-type
-              file-last-access-and-modification-times-set!
-              seconds->time
-              time->seconds))
+(##namespace ("gambit/tar#"))    ;; in gambit/tar#
+(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
+                                 ;; macro-absent-obj, etc
+
+(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
+(declare (not safe))          ;; claim code has no type errors
+(declare (block))             ;; claim no global is assigned (such as tar?)
+
+;;;----------------------------------------------------------------------------
+
+(##include "tar#.scm")
 
 (implement-type-tar-rec)
 
@@ -106,7 +44,7 @@
 
 ;; Packing tar files.
 
-(define (tar-pack-port tar-rec-list port-out)
+(define (tar-pack-port-aux tar-rec-list port-out)
 
   (define tar-format 'gnu) ;; can be gnu, ustar or v7
 ;;  (define tar-format 'ustar)
@@ -295,22 +233,36 @@
           (write-pad (fx* 2 512))
           (void)))))
 
+(define (tar-pack-port tar-rec-list port-out)
+  (macro-force-vars (tar-rec-list port-out)
+    (macro-check-character-output-port
+      port-out
+      2
+      (tar-pack-port tar-rec-list port-out)
+      (tar-pack-port-aux tar-rec-list port-out))))
+
 (define (tar-pack-file tar-rec-list path)
-  (let ((port-out (open-output-file path)))
-    (tar-pack-port tar-rec-list port-out)
-    (close-output-port port-out)
-    (void)))
+  (macro-force-vars (tar-rec-list path)
+    (macro-check-string
+      path
+      2
+      (tar-pack-file tar-rec-list path)
+      (let ((port-out (open-output-file path)))
+        (tar-pack-port-aux tar-rec-list port-out)
+        (close-output-port port-out)
+        (void)))))
 
 (define (tar-pack-u8vector tar-rec-list)
-  (let ((port-out (open-output-u8vector)))
-    (tar-pack-port tar-rec-list port-out)
-    (get-output-u8vector port-out)))
+  (macro-force-vars (tar-rec-list)
+    (let ((port-out (open-output-u8vector)))
+      (tar-pack-port-aux tar-rec-list port-out)
+      (get-output-u8vector port-out))))
 
 ;;;----------------------------------------------------------------------------
 
 ;; Unpacking tar files.
 
-(define (tar-unpack-port port-in)
+(define (tar-unpack-port-aux port-in)
 
   ;; Error handling.
 
@@ -499,24 +451,39 @@
           result
           (raise result)))))
 
+(define (tar-unpack-port port-in)
+  (macro-force-vars (port-in)
+    (macro-check-character-input-port
+      port-in
+      1
+      (tar-unpack-port port-in)
+      (tar-unpack-port-aux port-in))))
+
 (define (tar-unpack-file path)
-  (let* ((port-in (open-input-file path))
-         (result (tar-unpack-port port-in)))
-    (close-input-port port-in)
-    result))
+  (macro-force-vars (path)
+    (macro-check-string
+      path
+      1
+      (tar-unpack-file path)
+      (let* ((port-in (open-input-file path))
+             (result (tar-unpack-port-aux port-in)))
+        (close-input-port port-in)
+        result))))
 
 (define (tar-unpack-u8vector u8vect)
-  (let* ((port-in (open-input-u8vector u8vect))
-         (result (tar-unpack-port port-in)))
-    (close-input-port port-in)
-    result))
+  (macro-force-vars (u8vect)
+    (macro-check-u8vector
+      u8vect
+      1
+      (tar-unpack-u8vector u8vect)
+      (let* ((port-in (open-input-u8vector u8vect))
+             (result (tar-unpack-port-aux port-in)))
+        (close-input-port port-in)
+        result))))
 
 ;;;----------------------------------------------------------------------------
 
-(define (tar-rec-list-read
-         #!optional
-         (paths '())
-         (from-dir (current-directory)))
+(define (tar-rec-list-read-aux paths from-dir)
 
   (define force-times #f)
 
@@ -610,12 +577,37 @@
             '()
             "")))
 
+(define (tar-rec-list-read
+         #!optional
+         (p (macro-absent-obj))
+         (fd (macro-absent-obj)))
+  (macro-force-vars (p fd)
+    (let ((paths
+           (if (eq? p (macro-absent-obj))
+               '()
+               p))
+          (from-dir
+           (if (eq? fd (macro-absent-obj))
+               (current-directory)
+               fd)))
+      (let loop ((x paths) (rev-paths '()))
+        (if (pair? x)
+            (let ((path (car x)))
+              (macro-force-vars (path)
+                (if (string? path)
+                    (let ((rest (cdr x)))
+                      (macro-force-vars (rest)
+                        (loop rest (cons path rev-paths))))
+                    (##fail-check-string-list 1 tar-rec-list-read p fd))))
+            (macro-check-string
+              from-dir
+              2
+              (tar-rec-list-read p fd)
+              (tar-rec-list-read-aux (reverse rev-paths) from-dir)))))))
+
 ;;;----------------------------------------------------------------------------
 
-(define (tar-rec-list-write
-         tar-rec-list
-         #!optional
-         (to-dir (current-directory)))
+(define (tar-rec-list-write-aux tar-rec-list to-dir)
 
   (define (change-times path atime mtime)
     (file-last-access-and-modification-times-set!
@@ -643,24 +635,26 @@
       (change-times path atime mtime)))
 
   (define (write-tar-rec tar-rec)
-    (let* ((name (macro-tar-rec-name tar-rec))
-           (type (macro-tar-rec-type tar-rec))
-           (mode (macro-tar-rec-mode tar-rec))
-           (atime (macro-tar-rec-atime tar-rec))
-           (mtime (macro-tar-rec-mtime tar-rec))
-           (content (macro-tar-rec-content tar-rec))
-           (path (path-expand name to-dir)))
-      (case type
-        ((directory)
-         (write-directory path mode atime mtime)
-         #f)
-        ((regular)
-         (write-regular path mode atime mtime content)
-         #f)
-        ((pax-g pax-x)
-         #f)
-        (else
-         (macro-make-tar-exception "tar unsupported file type")))))
+    (if (not (macro-tar-rec? tar-rec))
+        (macro-make-tar-exception "tar-rec list expected")
+        (let* ((name (macro-tar-rec-name tar-rec))
+               (type (macro-tar-rec-type tar-rec))
+               (mode (macro-tar-rec-mode tar-rec))
+               (atime (macro-tar-rec-atime tar-rec))
+               (mtime (macro-tar-rec-mtime tar-rec))
+               (content (macro-tar-rec-content tar-rec))
+               (path (path-expand name to-dir)))
+          (case type
+            ((directory)
+             (write-directory path mode atime mtime)
+             #f)
+            ((regular)
+             (write-regular path mode atime mtime content)
+             #f)
+            ((pax-g pax-x)
+             #f)
+            (else
+             (macro-make-tar-exception "tar unsupported file type"))))))
 
   (let loop ((lst tar-rec-list))
     (if (pair? lst)
@@ -669,5 +663,16 @@
           (if exc
               (raise exc)
               (loop (cdr lst)))))))
+
+(define (tar-rec-list-write
+         tar-rec-list
+         #!optional
+         (to-dir (current-directory)))
+  (macro-force-vars (tar-rec-list to-dir)
+    (macro-check-string
+      to-dir
+      2
+      (tar-rec-list-write tar-rec-list to-dir)
+      (tar-rec-list-write-aux tar-rec-list to-dir))))
 
 ;;;============================================================================

@@ -690,8 +690,8 @@
 (define-prim (##fail-check-absrel-time-or-false . rest)
   (error "##fail-check-absrel-time-or-false not implemented yet"))
 
-(define-prim (##file-info path #!optional (chase? (macro-absent-obj)))
-  (error "##file-info not implemented yet"))
+(define-prim (##file-info-aux path #!optional (chase? (macro-absent-obj)))
+  (error "##file-info-aux not implemented yet"))
 
 (define-prim (##foreign-address f)
   (error "##foreign-address not implemented yet"))

@@ -42,7 +42,7 @@ file-info-size
 file-info-type
 file-info?
 (file-inode file-inode#unimplemented)
-(file-last-access-and-modification-times-set! file-last-access-and-modification-times-set!#unimplemented)
+file-last-access-and-modification-times-set!
 (file-last-access-time file-last-access-time#unimplemented)
 (file-last-change-time file-last-change-time#unimplemented)
 (file-last-modification-time file-last-modification-time#unimplemented)

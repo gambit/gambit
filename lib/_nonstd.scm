@@ -1913,8 +1913,11 @@
           (macro-check-string value 2 (setenv name value)
             (##setenv name value))))))
 
-(define-prim (command-line)
+(define-prim (##command-line)
   ##processed-command-line)
+
+(define-prim (command-line)
+  (##command-line))
 
 (define-prim (##shell-command-blocking cmd)
   (let ((code (##os-shell-command cmd)))
@@ -2081,7 +2084,7 @@
 (define-prim (##file-info-creation-time info)
   (macro-file-info-creation-time info))
 
-(define-prim (##file-info
+(define-prim (##file-info-aux
               path
               #!optional
               (chase? (macro-absent-obj)))
@@ -2118,21 +2121,30 @@
           (##subtype-set! result (macro-subtype-structure))
           result))))
 
+(define-prim (##file-info
+              path
+              #!optional
+              (chase? #t)
+              (raise-os-exception? #t))
+  (let ((info (##file-info-aux path chase?)))
+    (if (##fixnum? info)
+        (and raise-os-exception?
+             (##raise-os-exception #f info file-info path chase? raise-os-exception?))
+        info)))
+
 (define-prim (file-info
               path
               #!optional
-              (chase? (macro-absent-obj)))
-  (macro-force-vars (path chase?)
-    (macro-check-string path 1 (file-info path chase?)
-      (let ((info (##file-info path chase?)))
-        (if (##fixnum? info)
-            (##raise-os-exception #f info file-info path chase?)
-            info)))))
+              (chase? (macro-absent-obj))
+              (raise-os-exception? (macro-absent-obj)))
+  (macro-force-vars (path chase? raise-os-exception?)
+    (macro-check-string path 1 (file-info path chase? raise-os-exception?)
+      (##file-info path chase? raise-os-exception?))))
 
 (define-prim (file-type path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-type path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-type path)
             (macro-file-info-type info))))))
@@ -2140,7 +2152,7 @@
 (define-prim (file-device path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-device path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-device path)
             (macro-file-info-device info))))))
@@ -2148,7 +2160,7 @@
 (define-prim (file-inode path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-inode path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-inode path)
             (macro-file-info-inode info))))))
@@ -2156,7 +2168,7 @@
 (define-prim (file-mode path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-mode path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-mode path)
             (macro-file-info-mode info))))))
@@ -2164,7 +2176,7 @@
 (define-prim (file-number-of-links path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-number-of-links path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-number-of-links path)
             (macro-file-info-number-of-links info))))))
@@ -2172,7 +2184,7 @@
 (define-prim (file-owner path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-owner path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-owner path)
             (macro-file-info-owner info))))))
@@ -2180,7 +2192,7 @@
 (define-prim (file-group path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-group path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-group path)
             (macro-file-info-group info))))))
@@ -2188,7 +2200,7 @@
 (define-prim (file-size path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-size path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-size path)
             (macro-file-info-size info))))))
@@ -2196,7 +2208,7 @@
 (define-prim (file-last-access-time path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-last-access-time path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-last-access-time path)
             (macro-file-info-last-access-time info))))))
@@ -2204,7 +2216,7 @@
 (define-prim (file-last-modification-time path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-last-modification-time path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-last-modification-time path)
             (macro-file-info-last-modification-time info))))))
@@ -2212,7 +2224,7 @@
 (define-prim (file-last-change-time path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-last-change-time path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-last-change-time path)
             (macro-file-info-last-change-time info))))))
@@ -2220,7 +2232,7 @@
 (define-prim (file-attributes path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-attributes path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-attributes path)
             (macro-file-info-attributes info))))))
@@ -2228,12 +2240,12 @@
 (define-prim (file-creation-time path)
   (macro-force-vars (path)
     (macro-check-string path 1 (file-creation-time path)
-      (let ((info (##file-info path)))
+      (let ((info (##file-info-aux path)))
         (if (##fixnum? info)
             (##raise-os-exception #f info file-creation-time path)
             (macro-file-info-creation-time info))))))
 
-(define-prim (file-last-access-and-modification-times-set!
+(define-prim (##file-last-access-and-modification-times-set!
               path
               #!optional
               (a-absrel-timeout (macro-absent-obj))
@@ -2255,23 +2267,33 @@
           (##raise-os-exception #f code file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
           (##void))))
 
+  (macro-check-string path
+    1
+    (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
+    (if (##eq? a-absrel-timeout (macro-absent-obj))
+        (change 0 #f)
+        (macro-check-absrel-time
+          a-absrel-timeout
+          2
+          (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
+          (if (##eq? m-absrel-timeout (macro-absent-obj))
+              (change a-absrel-timeout #f)
+              (macro-check-absrel-time
+                m-absrel-timeout
+                3
+                (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
+                (change a-absrel-timeout m-absrel-timeout)))))))
+
+(define-prim (file-last-access-and-modification-times-set!
+              path
+              #!optional
+              (a-absrel-timeout (macro-absent-obj))
+              (m-absrel-timeout (macro-absent-obj)))
   (macro-force-vars (path a-absrel-timeout m-absrel-timeout)
-    (macro-check-string path
-      1
-      (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
-      (if (##eq? a-absrel-timeout (macro-absent-obj))
-          (change 0 #f)
-          (macro-check-absrel-time
-            a-absrel-timeout
-            2
-            (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
-            (if (##eq? m-absrel-timeout (macro-absent-obj))
-                (change a-absrel-timeout #f)
-                (macro-check-absrel-time
-                  m-absrel-timeout
-                  3
-                  (file-last-access-and-modification-times-set! path a-absrel-timeout m-absrel-timeout)
-                  (change a-absrel-timeout m-absrel-timeout))))))))
+    (##file-last-access-and-modification-times-set!
+     path
+     a-absrel-timeout
+     m-absrel-timeout)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3184,7 +3206,7 @@
                ignore-hidden: 'dot-and-dot-dot)))
 
     (define (del path)
-      (let ((info (##file-info path #f)))
+      (let ((info (##file-info-aux path #f)))
         (if (##fixnum? info)
             info
             (case (macro-file-info-type info)
