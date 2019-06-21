@@ -67,10 +67,10 @@ port-io-exception-handler-set!
 port-settings-set!
 (pp pp#unimplemented)
 pretty-print
-(print print#unimplemented)
-(println println#unimplemented)
-(process-pid process-pid#unimplemented)
-(process-status process-status#unimplemented)
+print
+println
+process-pid
+process-status
 read-all
 read-substring
 read-subu8vector

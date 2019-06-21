@@ -4359,7 +4359,7 @@
       (macro-check-character-output-port p 2 (pretty-print obj p)
         (##pretty-print obj p)))))
 
-(define-prim (##print
+(define-prim (##print-aux
               obj
               #!optional
               (port (macro-current-output-port))
@@ -4378,6 +4378,11 @@
 
  ((C)
 
+(define-prim (##print
+              #!key (port (macro-current-output-port))
+              #!rest body)
+  (##print-aux body port))
+
 (define-prim (print
               #!key (port (macro-absent-obj))
               #!rest body)
@@ -4387,7 +4392,13 @@
                (macro-current-output-port)
                port)))
       (macro-check-character-output-port p 2 (print port: p . body)
-        (##print body p)))))
+        (##print-aux body p)))))
+
+(define-prim (##println
+              #!key (port (macro-current-output-port))
+              #!rest body)
+  (##print-aux body port)
+  (##newline port))
 
 (define-prim (println
               #!key (port (macro-absent-obj))
@@ -4399,7 +4410,7 @@
                port)))
       (macro-check-character-output-port p 2 (println port: p . body)
         (begin
-          (##print body p)
+          (##print-aux body p)
           (##newline p))))))
 
 ))

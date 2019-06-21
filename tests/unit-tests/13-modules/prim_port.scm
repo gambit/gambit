@@ -104,6 +104,9 @@
 
 (let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##with-input-from-file x (lambda () (read-line))))) (##delete-file x) result))
 (let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##call-with-input-file x (lambda (p) (read-line p))))) (##delete-file x) result))
+(let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##call-with-input-file x (lambda (p) (read-line p #\newline))))) (##delete-file x) result))
+(let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##call-with-input-file x (lambda (p) (read-line p #\newline #t))))) (##delete-file x) result))
+(let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##call-with-input-file x (lambda (p) (read-line p #\newline #t 5))))) (##delete-file x) result))
 
 ;;unimplemented;;(let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##with-input-from-file x (lambda () (read-string 1))))) (##delete-file x) result))
 ;;unimplemented;;(let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##call-with-input-file x (lambda (p) (read-string 1 p))))) (##delete-file x) result))
@@ -251,10 +254,14 @@
 
 (##with-output-to-string (lambda () (pretty-print '(1 2 3)))) (##call-with-output-string (lambda (p) (pretty-print '(1 2 3) p)))
 
-;;unimplemented;;print
-;;unimplemented;;println
-;;unimplemented;;process-pid
-;;unimplemented;;process-status
+(##with-output-to-string (lambda () (print '(1 . 2)))) (##call-with-output-string (lambda (p) (print port: p '(1 . 2)))) (##call-with-output-string (lambda (p) (print port: p '(1 . 2) 3)))
+(##with-output-to-string (lambda () (println '(1 . 2)))) (##call-with-output-string (lambda (p) (println port: p '(1 . 2)))) (##call-with-output-string (lambda (p) (println port: p '(1 . 2) 3)))
+
+(let* ((p (##open-input-process (##list path: "echo" arguments: (##list "prim_port.scm")))) (result (##number? (process-pid p)))) (##close-input-port p) result)
+
+(let* ((p (##open-input-process (##list path: "echo" arguments: (##list "prim_port.scm")))) (result (##number? (process-status p)))) (##close-input-port p) result)
+(let* ((p (##open-input-process (##list path: "echo" arguments: (##list "prim_port.scm")))) (result (##number? (process-status p 10)))) (##close-input-port p) result)
+(let* ((p (##open-input-process (##list path: "echo" arguments: (##list "prim_port.scm")))) (result (##number? (process-status p 10 42)))) (##close-input-port p) result)
 
 (let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##with-input-from-file x (lambda () (read-all))))) (##delete-file x) result))
 (let ((x "test_file.txt")) (##with-output-to-file x ##newline) (let ((result (##call-with-input-file x (lambda (p) (read-all p))))) (##delete-file x) result))
