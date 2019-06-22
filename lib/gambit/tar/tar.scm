@@ -60,6 +60,9 @@
   (define (tar-illegal-field)
     (macro-make-tar-exception "tar illegal field"))
 
+  (define (tar-rec-expected)
+    (macro-make-tar-exception "tar-rec expected"))
+
   (define (write-pad n)
     (write-subu8vector
      (make-u8vector n 0)
@@ -215,8 +218,10 @@
       (write-pad (fxmodulo (fx- size) 512))))
 
   (define (write-tar-rec tr)
-    (or (write-header tr)
-        (write-content tr)))
+    (if (not (macro-tar-rec? tr))
+        (tar-rec-expected)
+        (or (write-header tr)
+            (write-content tr))))
 
   (define (write-tar-rec-list tar-rec-list)
     (let loop ((lst tar-rec-list))
