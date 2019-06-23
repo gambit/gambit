@@ -49,7 +49,9 @@
               make-hamt
               hamt->list
               list->hamt
+              hamt-length
               hamt-ref
-              hamt-set))
+              hamt-set
+              hamt-search))
 
 ;;;============================================================================

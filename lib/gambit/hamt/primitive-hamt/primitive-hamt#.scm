@@ -19,6 +19,9 @@
 ;;;  (ref hamt key)      lookup the key and return #f or the pair (key . value)
 ;;;  (set hamt key val)  return a copy of hamt where key maps to val
 ;;;  (remove hamt key)   return a copy of hamt with the entry for key removed
+;;;  (search proc hamt)  call (proc key val) for each key in a left to right
+;;;                      scan of the hamt, returning the first result that is
+;;;                      not #f
 ;;;  (->list hamt)       return an association list representation of hamt
 ;;;  (<-list alist)      return a HAMT with the associations from alist
 
@@ -27,15 +30,23 @@
 ;;; definitions that implement the HAMT operations specialized for the
 ;;; equality and hashing procedures passed as arguments to the macro
 ;;; (i.e. the equ? and equ?-hash parameters).  The parameters make,
-;;; ref, set, remove, ->list, <-list, alist-search, and alist-remove
-;;; are identifiers that are the names of the procedures defined for
-;;; those operations.  Any of those parameters can be #f to indicate
-;;; the definition of that operation is not needed.  The implementer
-;;; parameter is the name of the macro defined by the expansion of
-;;; define-hamt.  Calling the implementer macro with no argument
-;;; expands to the set of procedure definitions that implement the
-;;; HAMT operations (this allows the call to define-hamt and the
-;;; defines of the procedures to be in separate source files).
+;;; ref, set, remove, search, ->list, <-list, alist-search, and
+;;; alist-remove are identifiers that are the names of the procedures
+;;; defined for those operations.  Any of those parameters can be #f
+;;; to indicate the definition of that operation is not needed.  The
+;;; length-inc!  parameter is the name of a procedure or macro that is
+;;; called by the set procedure when the key does not exist in the
+;;; hamt.  It can be #f when no length management is needed.  There is
+;;; no need for a length-dec! parameter because the remove procedure
+;;; is optimized to not allocate a new hamt when the key does not
+;;; exist in the input hamt.  In other words, the number of elements
+;;; in the hamt has been decreased by 1 if and only if (not (eq? hamt
+;;; (remove hamt key))).  The implementer parameter is the name of the
+;;; macro defined by the expansion of define-hamt.  Calling the
+;;; implementer macro with no argument expands to the set of procedure
+;;; definitions that implement the HAMT operations (this allows the
+;;; call to define-hamt and the defines of the procedures to be in
+;;; separate source files if needed).
 
 ;;; For example, to create a HAMT specialized for keys that are
 ;;; symbols the define-hamt macro could be called as follows:
@@ -46,10 +57,12 @@
 ;;;   symhamt-ref
 ;;;   symhamt-set
 ;;;   symhamt-remove
+;;;   symhamt-search
 ;;;   symhamt->list
 ;;;   symhamt<-list
 ;;;   symhamt-alist-search
 ;;;   symhamt-alist-remove
+;;;   #f ;; no length-inc! method
 ;;;   eq?
 ;;;   symbol-hash)
 ;;;
@@ -62,6 +75,7 @@
 ;;;  (define (symhamt-ref symhamt sym) ...)
 ;;;  (define (symhamt-set symhamt sym val) ...)
 ;;;  (define (symhamt-remove symhamt sym) ...)
+;;;  (define (symhamt-search proc symhamt) ...)
 ;;;  (define (symhamt->list symhamt) ...)
 ;;;  (define (symhamt<-list alist) ...)
 ;;;  (define (symhamt-alist-search sym alist) ...)
@@ -76,10 +90,12 @@
                   ref
                   set
                   remove
+                  search
                   ->list
                   <-list
                   alist-search
                   alist-remove
+                  length-inc!
                   equ?
                   equ?-hash
                   #!optional
@@ -288,10 +304,15 @@
                         (macro-compressed-vector-ref
                          curr
                          i
-                         (macro-compressed-vector-insert
-                          (if (fx= 1 next-h) ;; max level reached?
-                              (list kv) ;; create a 1 element alist containing kv
-                              kv))      ;; simply put kv here
+                         (begin
+                           ;; key is being added so update length if needed
+                           ,@(if length-inc!
+                                 `((,length-inc! ,@equ?-ctx))
+                                 `())
+                           (macro-compressed-vector-insert
+                            (if (fx= 1 next-h) ;; max level reached?
+                                (list kv) ;; create a 1 element alist containing kv
+                                kv)))     ;; simply put kv here
                          (lambda (x)
                            ;; x is the element at index i
                            ;; when next-h is 1, curr is a node at the max level and
@@ -301,26 +322,38 @@
                            (macro-compressed-vector-replace
                             (cond ((fx= 1 next-h) ;; max level reached?
                                    ;; put kv in alist
-                                   (cons
-                                    kv
-                                    (,(or alist-remove 'macro-alist-remove)
-                                     (car kv)
-                                     x
-                                     ,@equ?-ctx)))
+                                   (let ((alist
+                                          (,(or alist-remove 'macro-alist-remove)
+                                           (car kv)
+                                           x
+                                           ,@equ?-ctx)))
+                                     ;; if alist did not change then key is
+                                     ;; being added so update length if needed
+                                     ,@(if length-inc!
+                                           `((if (eq? x alist)
+                                                 (,length-inc! ,@equ?-ctx)))
+                                           `())
+                                     (cons kv alist)))
                                   ((pair? x)
                                    (let* ((kv2 x)
                                           (k2 (car kv2)))
                                      (if (,equ? k2 (car kv) ,@equ?-ctx)
-                                         kv
-                                         (let ((h2
-                                                (let loop ((b ,stop-bit)
-                                                           (h2 (macro-hash k2)))
-                                                  (if (fx= 0
-                                                           (fxand b next-h))
-                                                      (loop (fxarithmetic-shift-right b ,log2-arity)
-                                                            (fxarithmetic-shift-right h2 ,log2-arity))
-                                                      h2))))
-                                           (collision kv next-h kv2 h2)))))
+                                         kv ;; no length change
+                                         (begin
+                                           ;; key collision of different keys
+                                           ;; so update length if needed
+                                           ,@(if length-inc!
+                                                 `((,length-inc! ,@equ?-ctx))
+                                                 `())
+                                           (let ((h2
+                                                  (let loop ((b ,stop-bit)
+                                                             (h2 (macro-hash k2)))
+                                                    (if (fx= 0
+                                                             (fxand b next-h))
+                                                        (loop (fxarithmetic-shift-right b ,log2-arity)
+                                                              (fxarithmetic-shift-right h2 ,log2-arity))
+                                                        h2))))
+                                             (collision kv next-h kv2 h2))))))
                                   (else
                                    (set x kv next-h ,@equ?-ctx))))))))
 
@@ -439,6 +472,34 @@
                       (remove hamt key h ,@equ?-ctx))))
                 `())
 
+          ,@(if search
+                `((##define (,search proc hamt)
+
+                    ,@local-declarations
+
+                    (define (search x level)
+                      (if (fx= level ,max-depth)
+                          (search-list x)
+                          (if (pair? x)
+                              (proc (car x) (cdr x))
+                              (search-vect x
+                                           (fx- (vector-length x) 1)
+                                           (fx+ level 1)))))
+
+                    (define (search-list x)
+                      (and (pair? x)
+                           (let ((kv (car x)))
+                             (or (proc (car kv) (cdr kv))
+                                 (search-list (cdr x))))))
+
+                    (define (search-vect x i level)
+                      (and (fx> i 0)
+                           (or (search (vector-ref x i) level)
+                               (search-vect x (fx- i 1) level))))
+
+                    (search hamt 0)))
+                `())
+
           ,@(if ->list
                 `((##define (,->list hamt)
 
@@ -457,8 +518,9 @@
 
                     (define (convert-list x tail)
                       (if (pair? x)
-                          (convert-list (cdr x)
-                                        (cons (car x) tail))
+                          (let ((kv (car x)))
+                            (convert-list (cdr x)
+                                          (cons kv tail)))
                           tail))
 
                     (define (convert-vect x i level tail)

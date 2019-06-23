@@ -37,6 +37,7 @@
   test
   hash
   tree
+  length
 )
 
 (define-macro (macro-check-hamt var arg-num form expr)
@@ -63,13 +64,16 @@
   hamt*-ref
   hamt*-set
   hamt*-remove
+  hamt*-search
   hamt*->list
   hamt*<-list
   hamt*-alist-search
   hamt*-alist-remove
-  (lambda (key1 key2 hamt-object) ((macro-hamt-test hamt-object) key1 key2))
-  (lambda (key hamt-object) ((macro-hamt-hash hamt-object) key))
-  (hamt-object)
+  (lambda (hamt-obj)
+    (macro-hamt-length-set! hamt-obj (fx+ (macro-hamt-length hamt-obj) 1)))
+  (lambda (key1 key2 hamt-obj) ((macro-hamt-test hamt-obj) key1 key2))
+  (lambda (key hamt-obj) ((macro-hamt-hash hamt-obj) key))
+  (hamt-obj)
 )
 
 (implement-hamt*)
@@ -84,9 +88,13 @@
 ;;;                                 from the association list alist
 ;;;  (hamt->list hamt)              return an association list representation
 ;;;                                 of hamt
+;;;  (hamt-length hamt)             return the number of keys in hamt
 ;;;  (hamt-ref hamt key [default])  return the value associated to key in hamt
 ;;;  (hamt-set hamt key [val])      return a copy of hamt where key maps to val
 ;;;                                 (or where key is removed if val is absent)
+;;;  (hamt-search hamt proc)        call (proc key val) for each key in a left
+;;;                                 to right scan of the hamt, returning the
+;;;                                 first result that is not #f
 
 (define (hamt? obj)
   (macro-force-vars (hamt)
@@ -128,7 +136,8 @@
       (define (checks-done test-fn hash-fn)
         (macro-make-hamt test-fn
                          hash-fn
-                         (make-hamt*)))
+                         (make-hamt*)
+                         0))
 
       (check-test 0))))
 
@@ -172,7 +181,8 @@
         (let ((hamt
                (macro-make-hamt test-fn
                                 hash-fn
-                                (make-hamt*))))
+                                (make-hamt*)
+                                0)))
           (macro-hamt-tree-set! hamt (hamt*<-list alist hamt))
           hamt))
 
@@ -185,6 +195,14 @@
       1
       (hamt->list hamt)
       (hamt*->list (macro-hamt-tree hamt)))))
+
+(define (hamt-length hamt)
+  (macro-force-vars (hamt)
+    (macro-check-hamt
+      hamt
+      1
+      (hamt-length hamt)
+      (macro-hamt-length hamt))))
 
 (define (hamt-ref
          hamt
@@ -223,10 +241,29 @@
                 hamt
                 (macro-make-hamt (macro-hamt-test hamt)
                                  (macro-hamt-hash hamt)
-                                 new-tree)))
-          (macro-make-hamt (macro-hamt-test hamt)
-                           (macro-hamt-hash hamt)
-                           (hamt*-set (macro-hamt-tree hamt) key val hamt))))))
+                                 new-tree
+                                 (fx- (macro-hamt-length hamt) 1))))
+          (let ((new-hamt
+                 (macro-make-hamt (macro-hamt-test hamt)
+                                  (macro-hamt-hash hamt)
+                                  #f
+                                  (macro-hamt-length hamt))))
+            (macro-hamt-tree-set!
+             new-hamt
+             (hamt*-set (macro-hamt-tree hamt) key val new-hamt))
+            new-hamt)))))
+
+(define (hamt-search proc hamt)
+  (macro-force-vars (proc hamt)
+    (macro-check-procedure
+      proc
+      1
+      (hamt-search proc hamt)
+      (macro-check-hamt
+        hamt
+        2
+        (hamt-search proc hamt)
+        (hamt*-search proc (macro-hamt-tree hamt))))))
 
 (define (test->hash test-fn)
   (declare (extended-bindings) (standard-bindings))
