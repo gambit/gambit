@@ -614,6 +614,12 @@
 
 (define (tar-rec-list-write-aux tar-rec-list to-dir)
 
+  (define (tar-rec-list-expected)
+    (macro-make-tar-exception "tar-rec list expected"))
+
+  (define (tar-unsupported-file-type)
+    (macro-make-tar-exception "tar unsupported file type"))
+
   (define (change-times path atime mtime)
     (file-last-access-and-modification-times-set!
      path
@@ -641,7 +647,7 @@
 
   (define (write-tar-rec tar-rec)
     (if (not (macro-tar-rec? tar-rec))
-        (macro-make-tar-exception "tar-rec list expected")
+        (tar-rec-list-expected)
         (let* ((name (macro-tar-rec-name tar-rec))
                (type (macro-tar-rec-type tar-rec))
                (mode (macro-tar-rec-mode tar-rec))
@@ -659,7 +665,7 @@
             ((pax-g pax-x)
              #f)
             (else
-             (macro-make-tar-exception "tar unsupported file type"))))))
+             (tar-unsupported-file-type))))))
 
   (let loop ((lst tar-rec-list))
     (if (pair? lst)
