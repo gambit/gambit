@@ -376,7 +376,7 @@
       (asm-label-id label)
       (lambda (cgc)
         (debug "label-opnd: " label-opnd)
-        (codegen-fixup-lbl! cgc label object-tag #f 32 1 #f)))))
+        (codegen-fixup-lbl! cgc label object-tag #f 32 1)))))
 
 ;; TODO Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
