@@ -499,7 +499,7 @@
 ;             (let ((dst (get-nth-arg cgc fs nargs n))
 ;                   (src (get-nth-arg cgc fs arg-count n)))
 ;               (am-mov cgc dst src (get-word-width-bits cgc))))
-;           (iota min-frame-to-move arg-count))))
+;           (iota arg-count min-frame-to-move))))
 
 ;     (define (place-case arg-count case-label next-case-label)
 ;       (debug "place-case: " arg-count)
@@ -535,7 +535,7 @@
 ;               (get-word-width-bits cgc)))
 
 ;           default-values-to-move
-;           (iota 0 (length default-values-to-move)))
+;           (iota (length default-values-to-move)))
 
 ;         ;; Place empty list
 ;         (if rest?
@@ -547,7 +547,7 @@
 ;       (am-jmp cgc continue-label))
 
 ;     (debug "place-optional-arguments-switch")
-;     (let* ((nargs-to-test (iota nargs-no-opts nargs-no-rest))
+;     (let* ((nargs-to-test (iota nargs-no-rest nargs-no-opts))
 ;            (last-label (if rest? rest-label error-label)))
 
 ;       ;; Because testing ps->nargs changes the flags register,

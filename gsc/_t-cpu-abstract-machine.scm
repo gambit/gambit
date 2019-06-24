@@ -633,7 +633,7 @@
           (map list
             registers-list
             registers-status-list
-            (iota 0 (length registers-list))))
+            (iota (length registers-list))))
          (live-registers (filter filter-live-reg lst))
          (filtered (filter filter-available-reg lst))
          (sorted (sort-list filtered sort-fun)))
@@ -812,10 +812,10 @@
 ;; Todo: Optimize. This is not very efficient...
 (define (get-nth-arg cgc start-fs total nth)
   (define (get-frames count)
-    (map (lambda (i) (frame cgc start-fs i)) (iota 1 count)))
+    (map (lambda (i) (frame cgc start-fs i)) (iota count 1)))
 
   (define (get-registers count)
-    (map (lambda (i) (get-register cgc i)) (iota 1 count)))
+    (map (lambda (i) (get-register cgc i)) (iota count 1)))
 
   (let* ((target (codegen-context-target cgc))
          (narg-in-regs (target-nb-arg-regs target))
@@ -829,7 +829,7 @@
 (define (get-args-opnds cgc start-fs total)
   (map
     (lambda (n) (get-nth-arg cgc start-fs total n))
-    (iota 1 total)))
+    (iota total 1)))
 
 ;; ***** Utils - Abstract machine definition helper
 
@@ -1126,7 +1126,7 @@
   (if (not (equal? 'arm (get-arch-name cgc)))
     (for-each
       (lambda (_) (am-data cgc 8 0))
-      (iota 1 object-tag)))
+      (iota object-tag 1)))
 
   (am-lbl cgc label))
 
@@ -1229,7 +1229,7 @@
   (if (not (equal? 'arm (get-arch-name cgc)))
     (for-each
       (lambda (_) (am-data cgc 8 0))
-      (iota 1 object-tag)))
+      (iota object-tag 1)))
 
   (am-lbl cgc label))
 
@@ -1490,7 +1490,7 @@
           (for-each
             (lambda (code i) (mov-at-clo-index (+ 1 i) reg (int-opnd code)))
             executable-code
-            (iota 1 code-length))
+            (iota code-length 1))
           ;; Place value of free variables if not a clo-loc of another closure
           (let loop ((opnds clo-opnds) (n (+ 1 code-length 1)))
             (if (not (null? opnds))

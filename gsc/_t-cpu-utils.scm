@@ -50,11 +50,6 @@
           (worker (cdr lst) count)))))
   (worker elems 0))
 
-(define (iota start end)
-  (if (> start end)
-    '()
-    (cons start (iota (+ start 1) end))))
-
 (define (filter pred elems)
   (if (null? elems)
     '()
