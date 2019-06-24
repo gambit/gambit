@@ -641,7 +641,7 @@
       (use-register (car sorted))
       (if (not (null? live-registers))
         (use-register (car live-registers))
-        (compiler-internal-error "No free or saveable live registers to use")))))
+        (compiler-internal-error "choose-register - No free or saveable live registers to use")))))
 
 ;;------------------------------------------------------------------------------
 ;;------------------------------ Default routines ------------------------------
