@@ -22,61 +22,42 @@
 ;;; The procedure git-command allows executing git commands that
 ;;; aren't implemented with exported procedures such as `git fetch`.
 
-(declare
-  (not safe)
-  (extended-bindings))
+(##supply-module gambit/git)
 
-(namespace ("gambit/git#"))
-(##include "~~lib/gambit#.scm")
+(##namespace ("gambit/git#"))
+(##include "~~lib/_prim#.scm")
+(##include "~~lib/_gambit#.scm")
 (##include "~~lib/_module#.scm")
 
 (##import gambit/git)
 (##import gambit/tar)
 
-(##supply-module gambit/git)
+(declare
+  (block)
+  (not safe)
+  (extended-bindings))
 
-;;; XXX: may be unstable because of this namespace declaration
-(##namespace ("##"
-              ;; call-with-input-process
-              cons
-              eof-object?
-              ;; file-exists?
-              list
-              member
-              newline
-              not
-              ;; print
-              ;; println
-              procedure?
-              process-status
-              read-char
-              ;; read-line
-              string-append
-              =))
+;;;----------------------------------------------------------------------------
 
-(define-macro (call-with-input-process path-or-settings proc)
-  `((lambda (port)
-      (let ((results (,proc port)))
-        (##close-port port)
-        (##process-status port)
-        results))
-    (##open-input-process ,path-or-settings)))
-
-(define-macro (file-exists? path)
-  `(##file-exists? ,path #f))
-
-(define-macro (read-line port)
-  `(##read-line ,port #\newline #t ##max-fixnum))
-
+(##include "git#.scm")
 
 (implement-type-git-repository)
 
 (define (git-repository-open path)
-  ;; TODO: Check if directory
-  (and (file-exists? path)
-       (macro-make-git-repository path)))
+  (macro-force-vars (path)
+    (macro-check-string
+      path
+      1
+      (git-repository-open path)
+      (and (file-exists? path)
+           (eq? 'directory (file-info-type (file-info path)))
+           (macro-make-git-repository (path-expand path))))))
 
-(define (git-command args proc directory #!optional interactive?)
+(define (git-command-aux args proc repo interactive?)
+  ;; TODO: Move this code to git-command instead
+  (let ((directory (and (macro-git-repository? repo)
+                        (macro-git-repository-path repo))))
+
   (##tty-mode-reset)
 
   (call-with-input-process
@@ -89,64 +70,134 @@
           pseudo-terminal: interactive?
           environment: (and (not interactive?)
                             (cons "GIT_TERMINAL_PROMPT=0" (##os-environ))))
-    proc))
+    proc)))
+
+(define (git-command args proc #!optional (repo (macro-absent-obj)) (i? (macro-absent-obj)))
+  (macro-force-vars (args proc repo i?)
+    (let ((interactive? (if (eq? i? (macro-absent-obj))
+                            #f
+                            i?)))
+
+      (let loop ((x args) (rev-args '()))
+        (if (pair? x)
+          (let ((arg (car x)))
+            (macro-force-vars (arg)
+                              (if (string? arg)
+                                (let ((rest (cdr x)))
+                                  (macro-force-vars (rest)
+                                                    (loop rest (cons arg rev-args))))
+                                (##fail-check-string-list 1 git-command args proc d i?))))
+          (macro-check-procedure
+            proc
+            2
+            (git-command args proc repo i?)
+            (git-command-aux (reverse rev-args) proc repo interactive?)))))))
 
 (define (git-archive repo ref)
   (and (macro-git-repository? repo)
        (let ((tags (git-tag repo)))
          (and (member ref tags)
-              (git-command (list "archive" ref)
-                           (lambda (p)
-                             (tar-unpack-port p))
-                           (macro-git-repository-path repo))))))
+              (git-command-aux (list "archive" ref)
+                               (lambda (p)
+                                 (tar-unpack-port p))
+                               repo
+                               #f)))))
 
-(define (git-clone url dir #!optional proc interactive?)
-  (and (not (file-exists? dir))
-       (git-command (list "clone" url dir)
-                    (lambda (p)
-                      (if (procedure? proc)
-                        (proc p)
-                        (= (process-status p) 0)))
-                    #f             ;; current directory
-                    interactive?)  ;; interactive
-       (macro-make-git-repository dir)))
-
+(define (git-clone url dir
+                   #!optional
+                   (cb (macro-absent-obj))
+                   (i? (macro-absent-obj)))
+  (macro-force-vars (url dir cb i?)
+    (let ((proc (if (or (eq? cb (macro-absent-obj))
+                        (eq? cb #f))
+                    (lambda (port)
+                      (and
+                        (= (process-status port) 0)
+                        (macro-make-git-repository
+                          (path-expand dir))))
+                    cb))
+          (interactive? (if (eq? i? (macro-absent-obj))
+                            #f
+                            i?)))
+      (macro-check-string
+        url
+        1
+        (git-clone url dir cb i?)
+        (macro-check-string
+          dir
+          2
+          (git-clone url dir cb i?)
+          (macro-check-procedure
+            proc
+            3
+            (git-clone url dir cb i?)
+            (and (not (file-exists? dir))
+                 (git-command-aux (list "clone" url dir)
+                                  proc
+                                  #f                     ;; current directory
+                                  interactive?))))))))   ;; interactive
 
 ;; Add remote
-(define (git-pull repo #!optional proc interactive?)
-  (and (macro-git-repository? repo)
-       (git-command
-        (list "pull" "origin")
-        (lambda (p)
-          (if (procedure? proc)
-            (proc p)
-            (= (process-status p) 0)))
-        (macro-git-repository-path repo)
-        interactive?)))
+(define (git-pull repo
+                  #!optional
+                  (cb (macro-absent-obj))
+                  (i? (macro-absent-obj)))
+  (macro-force-vars (repo cb i?)
+    (let ((proc (if (eq? cb (macro-absent-obj))
+                    (lambda (port)
+                      (= (process-status port) 0))
+                    cb))
+          (interactive? (if (eq? i? (macro-absent-obj))
+                            #f
+                            i?)))
+      (macro-check-procedure
+        proc
+        2
+        (git-pull repo cb i?)
+        (and (macro-git-repository? repo)
+             (git-command-aux
+               (list "pull" "origin")
+               proc
+               repo
+               interactive?))))))
 
-(define (git-status repo #!optional proc interactive?)
-  (and (macro-git-repository? repo)
-       (git-command
-        (list "status")
-        (lambda (p)
-          (if (procedure? proc)
-            (proc p)
-            (= (process-status p) 0)))
-        (macro-git-repository-path repo)
-        interactive?)))
+(define (git-status repo
+                    #!optional
+                    (cb (macro-absent-obj))
+                    (i? (macro-absent-obj)))
+  (macro-force-vars (repo cb i?)
+    (let ((proc (if (eq? cb (macro-absent-obj))
+                    (lambda (port)
+                      (= (process-status port) 0))
+                    cb))
+          (interactive? (if (eq? i? (macro-absent-obj))
+                            #f
+                            i?)))
+      (macro-check-procedure
+        proc
+        2
+        (git-status repo cb i?)
+        (and (macro-git-repository? repo)
+             (git-command-aux
+               (list "status")
+               proc
+               repo
+               interactive?))))))
 
 (define (git-tag repo)
-  (and (macro-git-repository? repo)
-       (git-command
-        (list "tag")
-        (lambda (p)
-          (let loop ((tags-rev '()))
-            (let ((current-tag (read-line p)))
-              (if (eof-object? current-tag)
-                  tags-rev
-                  (loop (cons current-tag tags-rev))))))
-
-        ;; Directory
-        (macro-git-repository-path repo))))
+  (macro-force-vars (repo)
+    (and (macro-git-repository? repo)
+         (git-command-aux
+           (list "tag")
+           (lambda (p)
+             (let loop ((tags-rev '()))
+               (let ((current-tag (read-line p)))
+                 (if (eof-object? current-tag)
+                   tags-rev
+                   (loop (cons current-tag tags-rev))))))
+           ;; Repository
+           repo
+           ;; Not interractive
+           #f))))
 
 ;;;============================================================================
