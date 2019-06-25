@@ -32,8 +32,8 @@
   (define cpu-prim-proc-table
     (let ((t (make-prim-proc-table)))
       (for-each
-      (lambda (x) (prim-proc-add! t x))
-      '())
+        (lambda (x) (prim-proc-add! t x))
+        '())
       t))
 
   (define (cpu-prim-info name)
@@ -44,7 +44,7 @@
       (if proc
           proc
           (compiler-internal-error
-          "cpu-get-prim-info, unknown primitive:" name))))
+            "cpu-get-prim-info, unknown primitive:" name))))
 
   (define (cpu-inlinable name)
     (let ((prim (cpu-get-prim-info name)))
@@ -98,10 +98,9 @@
       (table-for-each
         (lambda (name proc-obj)
           (if (get-primitive-inlinable proc-obj)
-            (cpu-inlinable (symbol->string name)))
+              (cpu-inlinable (symbol->string name)))
           (if (get-primitive-testable proc-obj)
-            (cpu-testable (symbol->string name)))
-          )
+              (cpu-testable (symbol->string name))))
         (get-primitive-table-target targ))
 
       #f)
@@ -165,11 +164,11 @@
     (compile-file-to-target "dummy.scm"
                             output: filename
                             module-name: module-name
-                            options: '((target C))
+                            options: `((linker-name ,module-name) (target C))
                             expression: `((##machine-code-fixup
-                                  ',code
-                                  ',fixup-locs
-                                  ',fixup-objs)))
+                                           ',code
+                                           ',fixup-locs
+                                           ',fixup-objs)))
 
     (debug "Output file: " filename)))
 
