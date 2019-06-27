@@ -113,6 +113,7 @@ riscv-dd
 riscv-dq
 
 riscv-nop
+riscv-li
 riscv-mv
 riscv-not
 riscv-neg

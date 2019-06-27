@@ -241,7 +241,7 @@
 
 (define (riscv-jmp-instr cgc opnd)
   (if (lbl-opnd? opnd)
-      (riscv-j cgc (lbl-opnd-label opnd))
+      (riscv-j cgc (make-riscv-opnd opnd))
       (load-if-necessary cgc '(reg int lbl) opnd
         (lambda (opnd)
           (if (reg-opnd? opnd)
@@ -282,14 +282,15 @@
         (list opnd1 opnd2)
         (lambda (reg1 reg2)
           (cond ((and loc-true loc-false)
-                 ((car instrs) cgc reg1 reg2 (lbl-opnd-label loc-true))
-                 (riscv-j cgc (lbl-opnd-label loc-false)))
+                 ((car instrs) cgc reg1 reg2 (make-riscv-opnd loc-true))
+                 (riscv-j cgc (make-riscv-opnd loc-false)))
                 ((and loc-true (not loc-false))
-                 ((car instrs) cgc reg1 reg2 (lbl-opnd-label loc-true)))
+                 ((car instrs) cgc reg1 reg2 (make-riscv-opnd loc-true)))
                 ((and (not loc-true) loc-false)
-                 ((cdr instrs) cgc reg1 reg2 (lbl-opnd-label loc-false)))))))))
+                 ((cdr instrs) cgc reg1 reg2 (make-riscv-opnd loc-false)))))))))
 
-; TODO riscv-cmp-move-instr
+(define (riscv-cmp-move-instr cgc condition dest opnd1 opnd2 true-opnd false-opnd #!optional (opnds-width #f))
+  (compiler-internal-error "TODO riscv-cmp-move-instr"))
 
 ;;------------------------------------------------------------------------------
 
@@ -318,7 +319,7 @@
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
-        true-opnd: (int-opnd (format-imm-object #t))
+        true-opnd:  (int-opnd (format-imm-object #t))
         false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define riscv-prim-##pair?
@@ -376,11 +377,11 @@
           (lambda (cgc lbl) ; XXX
             (riscv-slt cgc (car args) result-reg (car args))
             (riscv-sltz cgc (cadr args) (cadr args))
-            (riscv-beq cgc (car args) (cadr args) (lbl-opnd-label lbl)))
+            (riscv-beq cgc (car args) (cadr args) (make-riscv-opnd lbl)))
           (lambda (cgc lbl) ; XXX Overflow
             (riscv-slt cgc (car args) result-reg (car args))
             (riscv-sltz cgc (cadr args) (cadr args))
-            (riscv-bne cgc (car args) (cadr args) (lbl-opnd-label lbl)))
+            (riscv-bne cgc (car args) (cadr args) (make-riscv-opnd lbl)))
           true-opnd: result-reg
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
@@ -407,11 +408,11 @@
             (lambda (cgc lbl) ; XXX
               (riscv-slt cgc opnd1 result-reg opnd1)
               (riscv-sltz cgc opnd2 opnd2)
-              (riscv-bne cgc opnd1 opnd2 (lbl-opnd-label lbl)))
+              (riscv-bne cgc opnd1 opnd2 (make-riscv-opnd lbl)))
             (lambda (cgc lbl) ; XXX Overflow
               (riscv-slt cgc opnd1 result-reg opnd1)
               (riscv-sltz cgc opnd2 opnd2)
-              (riscv-beq cgc opnd1 opnd2 (lbl-opnd-label lbl)))
+              (riscv-beq cgc opnd1 opnd2 (make-riscv-opnd lbl)))
             true-opnd: result-reg
             false-opnd: (int-opnd (format-imm-object #f))))))))
 
@@ -419,8 +420,7 @@
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
       (am-compare-jump cgc
-        condition
-        opnd1 opnd2
+        (mk-test condition opnd1 opnd2)
         false-label true-label
         (get-word-width-bits cgc)))
     allowed-opnds1: '(reg mem)
