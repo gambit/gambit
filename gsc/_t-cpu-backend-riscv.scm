@@ -155,15 +155,15 @@
              (list dst src src) ; XXX
              (lambda (reg)
                (riscv-load-glo cgc reg (glo-opnd-name dst))
-               (riscv-sd cgc reg src (riscv-imm-int 0 'S))))) ; XXX
+               (riscv-sw cgc reg src (riscv-imm-int 0 'S))))) ; XXX
           ((mem-opnd? dst)
            (if (unaligned-mem-opnd? dst)
                (get-free-register cgc
                  (list dst src src) ; XXX
                  (lambda (reg)
                    (am-add cgc reg (mem-opnd-base dst) (int-opnd (mem-opnd-offset dst)))
-                   (riscv-sd cgc reg src (riscv-imm-int 0 'S)))) ; XXX
-               (riscv-sd cgc (mem-opnd-base dst) src (riscv-imm-int (mem-opnd-offset dst) 'S)))) ; XXX
+                   (riscv-sw cgc reg src (riscv-imm-int 0 'S)))) ; XXX
+               (riscv-sw cgc (mem-opnd-base dst) src (riscv-imm-int (mem-opnd-offset dst) 'S)))) ; XXX
           (else
             (compiler-internal-error
               "riscv-mov-instr - Unknown or incompatible destination: " dst)))))
@@ -186,7 +186,7 @@
          (with-reg
            (lambda (reg)
              (riscv-load-glo cgc reg (glo-opnd-name src))
-             (riscv-ld cgc reg reg (riscv-imm-int 0)) ; XXX
+             (riscv-lw cgc reg reg (riscv-imm-int 0)) ; XXX
              (regular-move reg))))
         ((obj-opnd? src)
          (with-reg
@@ -199,8 +199,8 @@
              (if (unaligned-mem-opnd? src)
                  (begin
                    (am-add cgc reg (mem-opnd-base src) (int-opnd (mem-opnd-offset src)))
-                   (riscv-ld cgc reg reg (riscv-imm-int 0))) ; XXX
-                 (riscv-ld cgc reg (mem-opnd-base src) (riscv-imm-int (mem-opnd-offset src)))) ; XXX
+                   (riscv-lw cgc reg reg (riscv-imm-int 0))) ; XXX
+                 (riscv-lw cgc reg (mem-opnd-base src) (riscv-imm-int (mem-opnd-offset src)))) ; XXX
              (regular-move reg))))
         (else
           (compiler-internal-error "Cannot move : " dst " <- " src)))))

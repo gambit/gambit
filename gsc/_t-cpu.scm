@@ -116,6 +116,7 @@
 (target-add (x86-32-target))
 (target-add (x86-64-target))
 (target-add (arm-target))
+(target-add (riscv-target))
 
 ;;;-----------------------------------------------------------------------------
 ;; ***** GVM Encoding
