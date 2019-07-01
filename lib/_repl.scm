@@ -4156,6 +4156,7 @@
     ;;    (ill-placed-import                . "Ill-placed 'import'")
     (unknown-location                 . "Unknown location")
     (ill-formed-expression            . "Ill-formed expression")
+    (ill-formed-define-module-alias   . "Ill-formed define-module-alias")
     (unsupported-special-form         . "Interpreter does not support")
     (parameter-must-be-id             . "Parameter must be an identifier")
     (parameter-must-be-id-or-default  . "Parameter must be an identifier or default binding")

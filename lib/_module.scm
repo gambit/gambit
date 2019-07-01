@@ -14,6 +14,9 @@
 
 (define ##module-search-order (##os-module-search-order))
 
+(define ##module-aliases
+  (make-parameter '()))
+
 (define-prim (##module-search-order-set! x)
   (set! ##module-search-order x))
 
@@ -612,6 +615,164 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim (##search-setup-file
+              rpath root
+              #!optional
+              (alt-name (macro-absent-obj)))
+  (define (try-open fn)
+    (with-exception-handler
+      (lambda (exn)
+        #f)
+      (lambda ()
+        (##open-input-file fn))))
+
+  (define (rpath-join p lst)
+    (if (##pair? lst)
+        (rpath-join
+          (##path-expand p (##car lst))
+          (##cdr lst))
+        p))
+
+  (define (parent-directory dir)
+    (##path-directory
+      (##path-strip-trailing-directory-separator
+        dir)))
+
+  (macro-force-vars (rpath root alt-name)
+    (let ((name (if (##eq? alt-name (macro-absent-obj))
+                  "_setup_.scm"
+                  alt-name)))
+
+      (let loop ((dir (if (##pair? rpath)
+                          (rpath-join (##car rpath) (##cdr rpath))
+                          "")))
+        (let ((fn (##path-expand name (##path-expand dir root))))
+          (let ((port (try-open fn)))
+            (if port
+              (##vector fn port)
+              (and
+                (##fx< 0 (##string-length dir))
+                (loop (parent-directory dir))))))))))
+
+(define-prim (##extend-aliases-from-rpath rpath root)
+  (define (read-setup-file-from-port port)
+    (let ((ret (##read-all-as-a-begin-expr-from-port
+                  port
+                  (##current-readtable)
+                  ##wrap-datum
+                  ##unwrap-datum #f #t)))
+      (and (##vector? ret)
+           (##vector-ref ret 1))))
+
+  (let ((result (##search-setup-file rpath root)))
+    (and
+      (##vector? result)
+      (let* ((port (##vector-ref result 1))
+             (src (read-setup-file-from-port port)))
+        (##deconstruct-call
+         src
+         -1
+         (lambda srcs
+           (##for-each
+             (lambda (decl-src)
+               (let ((decl (##source-strip decl-src)))
+                 (and (##pair? decl)
+                      (case (##source-strip (##car decl))
+                        ((##define-module-alias define-module-alias)
+                         (##parse-define-module-alias decl-src))
+
+                        (else #f)))))
+             srcs)))))))
+
+(define-prim (##apply-module-alias modref)
+  (let ((modstr (##modref->string modref)))
+    (let loop ((rest (##module-aliases)))
+      (if (##pair? rest)
+        (let ((alias (##car rest)))
+          (cond
+            ((##string-prefix=? modstr (##car alias))
+             => (lambda (suffix)
+                  (or
+                    (##string->modref
+                     (##string-append
+                       (##cdr alias)
+                       suffix))
+                    modref)))
+            (else (loop (##cdr rest)))))
+        modref))))
+
+;;;----------------------------------------------------------------------------
+
+(define-prim ##parse-define-module-alias
+  (lambda (src)
+    (define (directory-separator? pattern pos)
+      (##char=? (##string-ref pattern pos) #\/))
+
+    (define (ill-formed-define-module-alias)
+      (##raise-expression-parsing-exception
+       'ill-formed-define-module-alias
+       src))
+
+    (define (rpath-join p lst)
+      (if (##pair? lst)
+          (rpath-join
+            (let ((cur (##car lst)))
+              (if (##symbol? cur)
+                (##path-expand p (##symbol->string cur))
+                (ill-formed-define-module-alias)))
+            (##cdr lst))
+          p))
+
+
+    (define (module-alias->string alias)
+      (cond
+        ((##symbol? alias)
+         (##symbol->string alias))
+
+        ((##pair? alias)
+         (let ((cur (##car alias)))
+           (if (##symbol? cur)
+             (rpath-join (##symbol->string cur) (##cdr alias))
+             (ill-formed-define-module-alias))))
+
+        (else
+          (ill-formed-define-module-alias))))
+
+  (##deconstruct-call
+   src
+   3
+   (lambda (name-src value-src)
+     (let ((name (##desourcify name-src))
+           (value (##desourcify value-src)))
+       (let ((name-str (module-alias->string name))
+             (value-str (module-alias->string value)))
+         (if (or
+               (directory-separator? name-str 0)
+               (directory-separator? value-str 0)
+
+               (directory-separator?
+                 name-str (##fx- (##string-length name-str) 1))
+
+               (directory-separator?
+                 value-str (##fx- (##string-length value-str) 1)))
+
+           (ill-formed-define-module-alias)
+
+           ;; Create alias pair
+           (##module-aliases
+            (##cons
+              (##cons name-str value-str)
+              (##module-aliases))))))))))
+
+
+(define-runtime-syntax ##define-module-alias
+  ##parse-define-module-alias)
+
+(define-runtime-syntax define-module-alias
+  (##make-alias-syntax '##define-module-alias))
+
+;;;----------------------------------------------------------------------------
+
 (define-runtime-syntax ##import
   (lambda (src)
     (##deconstruct-call
@@ -624,7 +785,26 @@
               'ill-formed-special-form
               src
               (##source-strip (##car (##source-strip src))))
-             (let ((mod-info (##search-or-else-install-module modref)))
+             (let* ((locat (##source-locat src))
+                    (locat-filename (and (##vector? locat) (##vector-ref locat 0)))
+                    (rpath-root (if (or
+                                      (##not locat-filename) ;; if local-filename is #f
+                                      (and (##pair? locat-filename)
+                                           (##symbol? (##car locat-filename))))
+                                   (##vector
+                                    '()
+                                    (current-directory))
+                                   (##vector
+                                    (##table-ref (##compilation-scope) '##modref-path '())
+                                    (##table-ref (##compilation-scope) '##module-root (##path-directory locat-filename)))))
+                    (modref (parameterize ((##module-aliases (##module-aliases)))
+                              (##extend-aliases-from-rpath
+                               (##vector-ref rpath-root 0)
+                               (##vector-ref rpath-root 1))
+                              (##apply-module-alias modref)))
+
+                    (mod-info (##search-or-else-install-module modref)))
+
                (if (##not mod-info)
                    (##raise-expression-parsing-exception
                     'module-not-found
