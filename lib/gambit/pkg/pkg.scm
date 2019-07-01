@@ -155,7 +155,8 @@
 
                    (if install-path
                        (and (not (file-exists? install-path))
-                            (let ((repo (git-clone url clone-path #f prompt?)))
+                            (let ((repo (or (git-clone url clone-path #f prompt?)
+                                            (git-repository-open clone-path))))
                               (and repo
                                    (let ((tar-rec-list (git-archive repo (car tag))))
                                      (create-directory install-path)
