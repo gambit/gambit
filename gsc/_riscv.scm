@@ -244,12 +244,12 @@
 
 (define (riscv-j cgc offset)
   (riscv-jal cgc (riscv-x0) offset))
-; (define (riscv-jal cgc offset)
-;   (riscv-jal cgc (riscv-x1) offset))
+(define (riscv-jal* cgc offset)
+  (riscv-jal cgc (riscv-x1) offset))
 (define (riscv-jr cgc rs)
   (riscv-jalr cgc (riscv-x0) rs (riscv-imm-int 0)))
-; (define (riscv-jalr cgc rs)
-;   (riscv-jalr cgc (riscv-x1) rs (riscv-imm-int 0)))
+(define (riscv-jalr* cgc rs)
+  (riscv-jalr cgc (riscv-x1) rs (riscv-imm-int 0)))
 (define (riscv-ret cgc)
   (riscv-jalr cgc (riscv-x0) (riscv-x1) (riscv-imm-int 0)))
 ; XXX Repetition
@@ -263,9 +263,6 @@
                (riscv-imm-int (fxand (riscv-imm-int-value offset) #xfffff000) 'U)) ; XXX
   (riscv-jalr cgc (riscv-x0) (riscv-x6)
               (riscv-imm-int (fxand (riscv-imm-int-value offset) #xfff)))) ; XXX
-
-; (define (riscv-fence cgc)
-;   (riscv-fence cgc #b1111 #b1111))
 
 ;; TODO Pseudoinstructions for accessing control and status registers
 
@@ -694,7 +691,7 @@
 
 ;;; RISC-V instructions: FENCE, FENCE.I, ECALL, EBREAK.
 
-(define (riscv-fence cgc pred succ) ; XXX
+(define (riscv-fence cgc #!optional (pred #b1111) (succ #b1111)) ; XXX
 
   (define (print-iorw val)
     (string-append (if (fxbit-set? 3 val) "i" "")
