@@ -5849,7 +5849,7 @@ do { \
 do { \
      /* generate RISC-V instructions: auipc s6, 0x0; jr -8(s6) */ \
      (ptr)[___LABEL_LOWLEVEL_CODE] = 0x00000b17; \
-     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xff8b0067; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0xff8b0067; \
    } while (0)
 
 #define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 2

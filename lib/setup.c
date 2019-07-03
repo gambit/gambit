@@ -3708,13 +3708,14 @@ ___SCMOBJ fixup_objs;)
                   {
                     /* fixup lui/addi pair on RISC-V */
 
-                    ___S32 *ptr = ___CAST(___S32*,code+fixup_pos-8);
+                    ___S32 *ptr = ___CAST(___S32*,code+fixup_pos-4);
+                    ___S32 opcode = ptr[0] & 0x7f; /* opcode for lui */
+                    ___S32 rd = ptr[0] & 0xf80;
 
-                    /* XXX */
-                    ptr[0] += val & 0xfffff000;    // lui
-                    ptr[1] += (val & 0xfff) << 20; // addi
+                    ptr[0] = opcode + rd + (val & 0xfffff000);
+                    ptr[1] = (opcode - 0x24) + rd + (rd << 8) + (val << 20);
 
-                    pos = fixup_pos; // XXX
+                    pos = fixup_pos + sizeof(___S32);
                     break;
                   }
                 }

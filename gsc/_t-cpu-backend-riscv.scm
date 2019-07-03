@@ -120,7 +120,7 @@
 
   (codegen-context-listing-format-set! cgc #f)
   (riscv-lui cgc rd (riscv-imm-int 0 'U))
-  (riscv-addi cgc rd (riscv-zero) (riscv-imm-int 0))
+  ; (riscv-addi cgc rd (riscv-zero) (riscv-imm-int 0))
 
   (if cgc-format?
       (let ((sym (if ref-name
