@@ -18,7 +18,7 @@
 ;;  We define an abstract instruction set which we program against for most of
 ;;  the backend. Most of the code is moving data between registers and the stack
 ;;  and jumping to locations, so it allows the reuse of most of the code between
-;;  native backends (x86, x64, ARM, Risc V, etc.).
+;;  native backends (x86, x64, ARM, RISC-V, etc.).
 ;;
 ;;
 ;;  The following non-branching instructions are required:
@@ -988,7 +988,7 @@
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
   (let ((main-lbl (lbl-opnd-label (get-main-label)))
-        (offset (if (equal? 'arm (get-arch-name cgc)) object-tag 0)))
+        (offset (if (member (get-arch-name cgc) '(x86-32 x86-64)) 0 object-tag)))
     (codegen-fixup-lbl! cgc main-lbl offset #f (get-word-width-bits cgc) 0 'main-lbl)))
 
 ;; Value is Pair (Label, optional Proc-obj)
@@ -1119,14 +1119,14 @@
 
   (codegen-fixup-lbl! cgc
     (lbl-opnd-label label)
-    (if (equal? 'arm (get-arch-name cgc)) 1 0)
+    (if (member (get-arch-name cgc) '(x86-32 x86-64)) 0 object-tag) ; XXX object-tag?
     #f width-bits 0 'self-label) ;; self ptr
 
   ;; so that label reference has tag ___tSUBTYPED
-  (if (not (equal? 'arm (get-arch-name cgc)))
-    (for-each
-      (lambda (_) (am-data cgc 8 0))
-      (iota object-tag 1)))
+  (if (member (get-arch-name cgc) '(x86-32 x86-64))
+      (for-each
+        (lambda (_) (am-data cgc 8 0))
+        (iota object-tag 1)))
 
   (am-lbl cgc label))
 
@@ -1226,10 +1226,10 @@
   ;; Field 1: gc-map
   (am-data cgc width-bits (if internal? (get-gc-map-internal frame) (get-gc-map frame)))
   ;; so that label reference has tag ___tSUBTYPED
-  (if (not (equal? 'arm (get-arch-name cgc)))
-    (for-each
-      (lambda (_) (am-data cgc 8 0))
-      (iota object-tag 1)))
+  (if (member (get-arch-name cgc) '(x86-32 x86-64))
+      (for-each
+        (lambda (_) (am-data cgc 8 0))
+        (iota object-tag 1)))
 
   (am-lbl cgc label))
 
@@ -1266,7 +1266,9 @@
                       (x86-pop cgc r4)
                       (am-sub cgc r4 r4 (int-opnd 6)))
                     ((arm)
-                      (compiler-internal-error "TODO: ARM not implemented")))))))
+                      (compiler-internal-error "TODO: ARM not implemented"))
+                    (else
+                      (compiler-error "Unknown arch")))))))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
@@ -1642,7 +1644,7 @@
             (fields-regular)))
          (target-offset
           (case (get-arch-name cgc)
-            ((arm) -4)
+            ((arm) -4) ; XXX riscv?
             (else 0)))
          (offset
           (if USE_BRIDGE
