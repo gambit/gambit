@@ -1,67 +1,37 @@
 ;;;============================================================================
 
-;;; File: "digest.scm", Time-stamp: <2009-02-19 23:38:26 feeley>
+;;; File: "gambit/digest/digest.scm"
 
-;;; Copyright (c) 2005-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Contains procedures to compute message digests.
+;;; Message digest computation.
 
-(##namespace ("digest#"))
-(##include "~~lib/gambit#.scm")
+(##supply-module gambit/digest)
 
-(declare
- (standard-bindings)
- (extended-bindings)
- (not inline)
- (not safe))
+(##namespace ("gambit/digest#")) ;; in gambit/digest#
+(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
+                                 ;; macro-absent-obj, etc
 
-(define-macro (fx+ . args) `(##fx+ ,@args))
-(define-macro (fx- . args) `(##fx- ,@args))
-(define-macro (fx* . args) `(##fx* ,@args))
-(define-macro (fxquotient . args) `(##fxquotient ,@args))
-(define-macro (fxmin . args) `(##fxmin ,@args))
-(define-macro (fx= . args) `(##fx= ,@args))
-(define-macro (fx< . args) `(##fx< ,@args))
-(define-macro (fx> . args) `(##fx> ,@args))
-(define-macro (fx<= . args) `(##fx<= ,@args))
-(define-macro (fx>= . args) `(##fx>= ,@args))
-(define-macro (fxnot . args) `(##fxnot ,@args))
-(define-macro (fxand . args) `(##fxand ,@args))
-(define-macro (fxior . args) `(##fxior ,@args))
-(define-macro (fxxor . args) `(##fxxor ,@args))
-(define-macro (fxarithmetic-shift-right . args) `(##fxarithmetic-shift-right ,@args))
-(define-macro (fxarithmetic-shift-left . args) `(##fxarithmetic-shift-left ,@args))
-(define-macro (make-vector . args) `(##make-vector ,@args))
-(define-macro (make-u8vector . args) `(##make-u8vector ,@args))
-(define-macro (u8vector . args) `(##u8vector ,@args))
-(define-macro (u8vector-length . args) `(##u8vector-length ,@args))
-(define-macro (u8vector-ref . args) `(##u8vector-ref ,@args))
-(define-macro (u8vector-set! . args) `(##u8vector-set! ,@args))
-(define-macro (read-subu8vector . args) `(##read-subu8vector ,@args))
-(define-macro (string-append . args) `(##string-append ,@args))
-(define-macro (make-string . args) `(##make-string ,@args))
-(define-macro (open-input-file . args) `(##open-input-file ,@args))
-(define-macro (close-input-port . args) `(##close-input-port ,@args))
-(define-macro (number->string . args) `(##number->string ,@args))
+(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
+(declare (not safe))          ;; claim code has no type errors
+(declare (block))             ;; claim no global is assigned
 
 ;;;----------------------------------------------------------------------------
 
-(define-type digest
-  id: digest-f65996cb-c1aa-4ee9-86cd-1af55b5ddb74
-  end
-  update
-  state)
+(##include "digest#.scm")
+
+;;;----------------------------------------------------------------------------
+
+(implement-type-digest)
 
 ;;;----------------------------------------------------------------------------
 
 ;; CRC32 digest.
 
-(define-type crc32-digest
-  id: crc32-digest-f65996cb-c1aa-4ee9-86cd-1af55b5ddb74
-  hi16
-  lo16)
+(implement-type-crc32-digest)
 
 (define crc32-table '#(
 #x0000 #x0000 #x7707 #x3096 #xEE0E #x612C #x9909 #x51BA
@@ -131,9 +101,9 @@
 ))
 
 (define (digest-update-crc32 digest u8vect start end)
-  (let ((state (digest-state digest)))
-    (let ((hi16 (crc32-digest-hi16 state))
-          (lo16 (crc32-digest-lo16 state)))
+  (let ((state (macro-digest-state digest)))
+    (let ((hi16 (macro-crc32-digest-hi16 state))
+          (lo16 (macro-crc32-digest-lo16 state)))
       (let loop ((i start)
                  (hi hi16)
                  (lo lo16))
@@ -151,8 +121,8 @@
                      (fx+ (fxarithmetic-shift-left (fxand hi #xff) 8)
                           (fxarithmetic-shift-right lo 8)))))
             (begin
-              (crc32-digest-hi16-set! state hi)
-              (crc32-digest-lo16-set! state lo)))))))
+              (macro-crc32-digest-hi16-set! state hi)
+              (macro-crc32-digest-lo16-set! state lo)))))))
 
 (define (end-crc32 digest result-type)
 
@@ -163,9 +133,9 @@
           s
           (string-append (make-string (fx- 4 len) #\0) s))))
 
-  (let ((state (digest-state digest)))
-    (let ((hi16 (fxxor (crc32-digest-hi16 state) #xffff))
-          (lo16 (fxxor (crc32-digest-lo16 state) #xffff)))
+  (let ((state (macro-digest-state digest)))
+    (let ((hi16 (fxxor (macro-crc32-digest-hi16 state) #xffff))
+          (lo16 (fxxor (macro-crc32-digest-lo16 state) #xffff)))
       (case result-type
         ((hex)
          (string-append (hex16 hi16) (hex16 lo16)))
@@ -175,13 +145,13 @@
                    (fxand #xff hi16)
                    (fxarithmetic-shift-right hi16 8)))
         (else
-         (error "unsupported digest result-type" result-type))))))
+         (error "unsupported message digest result-type" result-type))))))
 
 (define (open-digest-crc32)
-  (make-digest
+  (macro-make-digest
    end-crc32
    digest-update-crc32
-   (make-crc32-digest #xffff #xffff)))
+   (macro-make-crc32-digest #xffff #xffff)))
 
 ;; Useful for debugging:
 
@@ -214,9 +184,9 @@
 
 #;
 (define (digest-update-crc32 digest u8vect start end)
-  (let ((state (digest-state digest)))
-    (let ((hi16 (crc32-digest-hi16 state))
-          (lo16 (crc32-digest-lo16 state)))
+  (let ((state (macro-digest-state digest)))
+    (let ((hi16 (macro-crc32-digest-hi16 state))
+          (lo16 (macro-crc32-digest-lo16 state)))
       (let loop ((i start)
                  (crc (fx+ (arithmetic-shift hi16 16)
                            lo16)))
@@ -233,10 +203,10 @@
                     (loop (fx+ i 1)
                           crc))))
             (begin
-              (crc32-digest-hi16-set!
+              (macro-crc32-digest-hi16-set!
                state
                (arithmetic-shift crc -16))
-              (crc32-digest-lo16-set!
+              (macro-crc32-digest-lo16-set!
                state
                (bitwise-and crc #xffff))))))))
 )
@@ -403,53 +373,45 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-type block-digest
-  id: block-digest-f65996cb-c1aa-4ee9-86cd-1af55b5ddb74
-  hash-update
-  hash
-  block
-  block-pos
-  bit-pos
-  big-endian?
-  width)
+(implement-type-block-digest)
 
 (define (convert-hash-block digest result-type)
-  (let* ((bd (digest-state digest))
-         (hash (block-digest-hash bd)))
+  (let* ((bd (macro-digest-state digest))
+         (hash (macro-block-digest-hash bd)))
     (case result-type
       ((hex)
        (hash-block->hex-string
         hash
-        (block-digest-big-endian? bd)
-        (block-digest-width bd)))
+        (macro-block-digest-big-endian? bd)
+        (macro-block-digest-width bd)))
       ((u8vector)
        (hash-block->u8vector
         hash
-        (block-digest-big-endian? bd)
-        (block-digest-width bd)))
+        (macro-block-digest-big-endian? bd)
+        (macro-block-digest-width bd)))
       (else
-       (error "unsupported digest result-type" result-type)))))
+       (error "unsupported message digest result-type" result-type)))))
 
 (define (process-last-block digest)
   (let* ((bd
-          (digest-state digest))
+          (macro-digest-state digest))
          (block-pos
-          (block-digest-block-pos bd))
+          (macro-block-digest-block-pos bd))
          (bit-pos
-          (block-digest-bit-pos bd))
+          (macro-block-digest-bit-pos bd))
          (buf
-          (make-u8vector 8 0)))
+          (u8vector 0 0 0 0 0 0 0 0))) ;; 8 byte buffer
 
     (digest-update-u8 digest #x80) ;; add byte-aligned 1 bit
 
     (let ((zero-padding-bytes
            (fxquotient
-            (fxand 511 (fx- 448 (block-digest-bit-pos bd)))
+            (fxand 511 (fx- 448 (macro-block-digest-bit-pos bd)))
             8)))
       (let loop1 ((n zero-padding-bytes))
         (if (fx< 0 n)
             (let ((m (fxmin 8 n)))
-              (digest-update-subu8vector
+              (digest-update-subu8vector-aux
                digest
                buf
                0
@@ -476,7 +438,7 @@
             (loop2 (fx+ i 1)
                    (fxarithmetic-shift-right n 8)))))
 
-    (if (block-digest-big-endian? bd)
+    (if (macro-block-digest-big-endian? bd)
         (let loop3 ((i 3))
           (if (fx>= i 0)
               (let ((t (u8vector-ref buf i)))
@@ -484,15 +446,15 @@
                 (u8vector-set! buf (fx- 7 i) t)
                 (loop3 (fx- i 1))))))
 
-    (digest-update-subu8vector digest buf 0 8)));; add message length (in bits)
+    (digest-update-subu8vector-aux digest buf 0 8)));; add message length (in bits)
 
 (define (end-block-digest digest result-type)
   (process-last-block digest)
   (convert-hash-block digest result-type))
 
 (define (digest-update-block-digest digest u8vect start end)
-  (let* ((bd (digest-state digest))
-         (block (block-digest-block bd)))
+  (let* ((bd (macro-digest-state digest))
+         (block (macro-block-digest-block bd)))
 
     (define (aligned8 i bit-pos)
 
@@ -502,7 +464,7 @@
           (let ((j (fxarithmetic-shift-right bit-pos 4)))
             (if (fx= 0 (fxand bit-pos 15))
                 (begin
-                  (if (block-digest-big-endian? bd)
+                  (if (macro-block-digest-big-endian? bd)
                       (let ((j (fxxor j 1)))
                         (vector-set!
                          block
@@ -517,7 +479,7 @@
                   (let ((new-bit-pos (fx+ bit-pos 8)))
                     (aligned8 (fx+ i 1) new-bit-pos)))
                 (begin
-                  (if (block-digest-big-endian? bd)
+                  (if (macro-block-digest-big-endian? bd)
                       (let ((j (fxxor j 1)))
                         (vector-set!
                          block
@@ -534,13 +496,13 @@
                   (let ((new-bit-pos (fx+ bit-pos 8)))
                     (if (fx= 512 new-bit-pos)
                       (begin
-                        ((block-digest-hash-update bd) digest)
-                        (block-digest-block-pos-set!
+                        ((macro-block-digest-hash-update bd) digest)
+                        (macro-block-digest-block-pos-set!
                          bd
-                         (fx+ (block-digest-block-pos bd) 1))
+                         (fx+ (macro-block-digest-block-pos bd) 1))
                         (aligned16 (fx+ i 1) 0))
                       (aligned16 (fx+ i 1) new-bit-pos))))))
-          (block-digest-bit-pos-set! bd bit-pos)))
+          (macro-block-digest-bit-pos-set! bd bit-pos)))
 
     (define (aligned16 i bit-pos)
 
@@ -548,7 +510,7 @@
 
       (if (fx< (fx+ i 1) end)
           (let ((j (fxarithmetic-shift-right bit-pos 4)))
-            (if (block-digest-big-endian? bd)
+            (if (macro-block-digest-big-endian? bd)
                 (let ((j (fxxor j 1)))
                   (vector-set!
                    block
@@ -569,15 +531,15 @@
             (let ((new-bit-pos (fx+ bit-pos 16)))
               (if (fx= 512 new-bit-pos)
                   (begin
-                    ((block-digest-hash-update bd) digest)
-                    (block-digest-block-pos-set!
+                    ((macro-block-digest-hash-update bd) digest)
+                    (macro-block-digest-block-pos-set!
                      bd
-                     (fx+ (block-digest-block-pos bd) 1))
+                     (fx+ (macro-block-digest-block-pos bd) 1))
                     (aligned16 (fx+ i 2) 0))
                   (aligned16 (fx+ i 2) new-bit-pos))))
           (aligned8 i bit-pos)))
 
-    (let ((bit-pos (block-digest-bit-pos bd)))
+    (let ((bit-pos (macro-block-digest-bit-pos bd)))
       (cond ((fx= 0 (fxand bit-pos 15)) ;; 16 bit boundary?
              (aligned16 start bit-pos))
             (else
@@ -631,9 +593,9 @@
       (fxnot ,z)))))
 
 (define (digest-update-md5 digest)
-  (let* ((bd (digest-state digest))
-         (hash (block-digest-hash bd))
-         (block (block-digest-block bd)))
+  (let* ((bd (macro-digest-state digest))
+         (hash (macro-block-digest-hash bd))
+         (block (macro-block-digest-block bd)))
 
     (define (stage1 A-L A-H B-L B-H C-L C-H D-L D-H)
       (wstp A B (fn-F B C D)  0 #xD76A #xA478  7
@@ -736,10 +698,10 @@
     (stage1 A-L A-H B-L B-H C-L C-H D-L D-H)))))))
 
 (define (open-digest-md5)
-  (make-digest
+  (macro-make-digest
    end-block-digest
    digest-update-block-digest
-   (make-block-digest
+   (macro-make-block-digest
     digest-update-md5
     (hash-block-init-md5)
     (make-vector 32 0)
@@ -760,9 +722,9 @@
           #xe1f0 #xc3d2))
 
 (define (digest-update-sha-1 digest)
-  (let* ((bd (digest-state digest))
-         (hash (block-digest-hash bd))
-         (block (block-digest-block bd)))
+  (let* ((bd (macro-digest-state digest))
+         (hash (macro-block-digest-hash bd))
+         (block (macro-block-digest-block bd)))
     (wref OLDA hash 0
     (wref OLDB hash 1
     (wref OLDC hash 2
@@ -849,10 +811,10 @@
             (wadd NEWE E OLDE (wset hash 4 NEWE))))))))))))
 
 (define (open-digest-sha-1)
-  (make-digest
+  (macro-make-digest
    end-block-digest
    digest-update-block-digest
-   (make-block-digest
+   (macro-make-block-digest
     digest-update-sha-1
     (hash-block-init-sha-1)
     (make-vector 160 0)
@@ -939,9 +901,9 @@
    ,body)))))))))))))))))))))))))))
 
 (define (digest-update-sha-256 digest)
-  (let* ((bd (digest-state digest))
-         (hash (block-digest-hash bd))
-         (block (block-digest-block bd)))
+  (let* ((bd (macro-digest-state digest))
+         (hash (macro-block-digest-hash bd))
+         (block (macro-block-digest-block bd)))
 
     (define (stage1 A-L A-H B-L B-H C-L C-H D-L D-H
                     E-L E-H F-L F-H G-L G-H H-L H-H)
@@ -1070,10 +1032,10 @@
             E-L E-H F-L F-H G-L G-H H-L H-H)))))))))))
 
 (define (open-digest-sha-224)
-  (make-digest
+  (macro-make-digest
    end-block-digest
    digest-update-block-digest
-   (make-block-digest
+   (macro-make-block-digest
     digest-update-sha-256
     (hash-block-init-sha-224)
     (make-vector 160 0)
@@ -1083,10 +1045,10 @@
     224)))
 
 (define (open-digest-sha-256)
-  (make-digest
+  (macro-make-digest
    end-block-digest
    digest-update-block-digest
-   (make-block-digest
+   (macro-make-block-digest
     digest-update-sha-256
     (hash-block-init-sha-256)
     (make-vector 160 0)
@@ -1114,131 +1076,184 @@
 ;;    ((sha-512 SHA-512)
 ;;     (open-digest-sha-512))
     (else
-     (error "unknown hashing algorithm" algorithm))))
-
-(define-macro (digest-default-result-type) ''hex)
+     (error "unknown message digest hashing algorithm" algorithm))))
 
 (define (close-digest
          digest
          #!optional
-         (result-type (digest-default-result-type)))
-  ((digest-end digest) digest result-type))
+         (result-type (macro-absent-obj)))
+  (macro-force-vars (digest result-type)
+    (if (not (macro-digest? digest))
+        (##raise-type-exception
+         1
+         (macro-digest-type)
+         close-digest
+         (list digest result-type))
+        ((macro-digest-end digest)
+         digest
+         (if (eq? result-type (macro-absent-obj))
+             'hex
+             result-type)))))
 
 (define (digest-update-subu8vector digest u8vect start end)
-  ((digest-update digest) digest u8vect start end))
+  (macro-force-vars (digest u8vect start end)
+    (if (not (macro-digest? digest))
+        (##raise-type-exception
+         1
+         (macro-digest-type)
+         digest-update-subu8vector
+         (list digest u8vect start end))
+        (macro-check-u8vector
+          u8vect
+          2
+          (digest-update-subu8vector digest u8vect start end)
+          (macro-check-index-range-incl
+            start
+            3
+            0
+            (u8vector-length u8vect)
+            (digest-update-subu8vector digest u8vect start end)
+            (macro-check-index-range-incl
+              end
+              4
+              start
+              (u8vector-length u8vect)
+              (digest-update-subu8vector digest u8vect start end)
+              (digest-update-subu8vector-aux digest u8vect start end)))))))
 
-(define zero-u8vector (make-u8vector 4 0))
+(define (digest-update-subu8vector-aux digest u8vect start end)
+  ((macro-digest-update digest) digest u8vect start end))
 
-(define (get-zero-u8vector) zero-u8vector)
+(define (get-zero-u8vector) '#u8(0 0 0 0)) ;; constant 4 bytes
 
 (define (digest-update-u8 digest n) ;; assumes n is a fixnum
-  (digest-update-subu8vector
-   digest
-   (if (eqv? n 0)
-       (get-zero-u8vector)
-       (make-u8vector 1 (fxand n #xff)))
-   0
-   1))
+  (macro-force-vars (digest n)
+    (if (not (macro-digest? digest))
+        (##raise-type-exception
+         1
+         (macro-digest-type)
+         digest-update-u8
+         (list digest n))
+        (macro-check-exact-unsigned-int8
+         n
+         2
+         (digest-update-u8 digest n)
+         (digest-update-subu8vector-aux
+          digest
+          (if (eqv? n 0)
+              (get-zero-u8vector)
+              (u8vector (fxand n #xff)))
+          0
+          1)))))
 
 (define (digest-update-u16-le digest n) ;; assumes n is a fixnum
-  (digest-update-subu8vector
-   digest
-   (if (eqv? n 0)
-       (get-zero-u8vector)
-       (let ((u8vect (make-u8vector 2)))
-         (u8vector-set!
-          u8vect
+  (macro-force-vars (digest n)
+    (if (not (macro-digest? digest))
+        (##raise-type-exception
+         1
+         (macro-digest-type)
+         digest-update-u8
+         (list digest n))
+        (macro-check-exact-unsigned-int16
+         n
+         2
+         (digest-update-u8 digest n)
+         (digest-update-subu8vector-aux
+          digest
+          (if (eqv? n 0)
+              (get-zero-u8vector)
+              (u8vector (fxand n #xff)
+                        (fxand (fxarithmetic-shift-right n 8) #xff)))
           0
-          (fxand n #xff))
-         (u8vector-set!
-          u8vect
-          1
-          (fxand (fxarithmetic-shift-right n 8) #xff))
-         u8vect))
-   0
-   2))
+          2)))))
 
 (define (digest-update-u16-be digest n) ;; assumes n is a fixnum
-  (digest-update-subu8vector
-   digest
-   (if (eqv? n 0)
-       (get-zero-u8vector)
-       (let ((u8vect (make-u8vector 2)))
-         (u8vector-set!
-          u8vect
-          1
-          (fxand n #xff))
-         (u8vector-set!
-          u8vect
+  (macro-force-vars (digest n)
+    (if (not (macro-digest? digest))
+        (##raise-type-exception
+         1
+         (macro-digest-type)
+         digest-update-u8
+         (list digest n))
+        (macro-check-exact-unsigned-int16
+         n
+         2
+         (digest-update-u8 digest n)
+         (digest-update-subu8vector-aux
+          digest
+          (if (eqv? n 0)
+              (get-zero-u8vector)
+              (u8vector (fxand (fxarithmetic-shift-right n 8) #xff)
+                        (fxand n #xff)))
           0
-          (fxand (fxarithmetic-shift-right n 8) #xff))
-         u8vect))
-   0
-   2))
+          2)))))
 
-(define (digest-update-u32-le digest n) ;; assumes n is a fixnum
-  (digest-update-subu8vector
-   digest
-   (if (eqv? n 0)
-       (get-zero-u8vector)
-       (let ((u8vect (make-u8vector 4)))
-         (u8vector-set!
-          u8vect
+(define (digest-update-u32-le digest n)
+  (macro-force-vars (digest n)
+    (if (not (macro-digest? digest))
+        (##raise-type-exception
+         1
+         (macro-digest-type)
+         digest-update-u8
+         (list digest n))
+        (macro-check-exact-unsigned-int32
+         n
+         2
+         (digest-update-u8 digest n)
+         (digest-update-subu8vector-aux
+          digest
+          (if (eqv? n 0)
+              (get-zero-u8vector)
+              ;; n might be a bignum on a 32 bit machine, so use bitwise ops
+              (let ((n>>8 (arithmetic-shift n -8)))
+                (u8vector (bitwise-and n #xff)
+                          (fxand n>>8 #xff)
+                          (fxand (fxarithmetic-shift-right n>>8 8) #xff)
+                          (fxand (fxarithmetic-shift-right n>>8 16) #xff))))
           0
-          (fxand n #xff))
-         (u8vector-set!
-          u8vect
-          1
-          (fxand (fxarithmetic-shift-right n 8) #xff))
-         (u8vector-set!
-          u8vect
-          2
-          (fxand (fxarithmetic-shift-right n 16) #xff))
-         (u8vector-set!
-          u8vect
-          3
-          (fxand (fxarithmetic-shift-right n 24) #xff))
-         u8vect))
-   0
-   4))
+          4)))))
 
-(define (digest-update-u32-be digest n) ;; assumes n is a fixnum
-  (digest-update-subu8vector
-   digest
-   (if (eqv? n 0)
-       (get-zero-u8vector)
-       (let ((u8vect (make-u8vector 4)))
-         (u8vector-set!
-          u8vect
-          3
-          (fxand n #xff))
-         (u8vector-set!
-          u8vect
-          2
-          (fxand (fxarithmetic-shift-right n 8) #xff))
-         (u8vector-set!
-          u8vect
-          1
-          (fxand (fxarithmetic-shift-right n 16) #xff))
-         (u8vector-set!
-          u8vect
+(define (digest-update-u32-be digest n)
+  (macro-force-vars (digest n)
+    (if (not (macro-digest? digest))
+        (##raise-type-exception
+         1
+         (macro-digest-type)
+         digest-update-u8
+         (list digest n))
+        (macro-check-exact-unsigned-int32
+         n
+         2
+         (digest-update-u8 digest n)
+         (digest-update-subu8vector-aux
+          digest
+          (if (eqv? n 0)
+              (get-zero-u8vector)
+              ;; n might be a bignum on a 32 bit machine, so use bitwise ops
+              (let ((n>>8 (arithmetic-shift n -8)))
+                (u8vector (fxand (fxarithmetic-shift-right n>>8 16) #xff)
+                          (fxand (fxarithmetic-shift-right n>>8 8) #xff)
+                          (fxand n>>8 #xff)
+                          (bitwise-and n #xff))))
           0
-          (fxand (fxarithmetic-shift-right n 24) #xff))
-         u8vect))
-   0
-   4))
+          4)))))
 
 (define (digest-string
          str
          algorithm
          #!optional
-         (result-type (digest-default-result-type)))
-  (digest-substring
-   str
-   0
-   (string-length str)
-   algorithm
-   result-type))
+         (result-type (macro-absent-obj)))
+  (macro-force-vars (str algorithm result-type)
+    (macro-check-string
+      str
+      1
+      (digest-string str algorithm result-type)
+      (digest-substring-aux
+       str
+       0
+       (string-length str)
+       algorithm
+       result-type))))
 
 (define (digest-substring
          str
@@ -1246,27 +1261,61 @@
          end
          algorithm
          #!optional
-         (result-type (digest-default-result-type)))
-  (let* ((len (fx- end start))
-         (u8vect (make-u8vector len)))
-    (let loop ((i 0))
-      (if (fx< i len)
-          (begin
-            (u8vector-set! u8vect i (char->integer (string-ref str i)))
-            (loop (fx+ i 1)))
-          (digest-subu8vector u8vect 0 len algorithm result-type)))))
+         (result-type (macro-absent-obj)))
+  (macro-force-vars (str start end algorithm result-type)
+    (macro-check-string
+      str
+      1
+      (digest-substring str start end algorithm result-type)
+      (macro-check-index-range-incl
+        start
+        2
+        0
+        (string-length str)
+        (digest-substring str start end algorithm result-type)
+        (macro-check-index-range-incl
+          end
+          3
+          start
+          (string-length str)
+          (digest-substring str start end algorithm result-type)
+          (digest-substring-aux
+           str
+           start
+           end
+           algorithm
+           result-type))))))
+
+(define (digest-substring-aux
+         str
+         start
+         end
+         algorithm
+         result-type)
+  (let ((u8vect (string->utf8 str start end)))
+    (digest-subu8vector-aux
+     u8vect
+     0
+     (u8vector-length u8vect)
+     algorithm
+     result-type)))
 
 (define (digest-u8vector
          u8vect
          algorithm
          #!optional
-         (result-type (digest-default-result-type)))
-  (digest-subu8vector
-   u8vect
-   0
-   (u8vector-length u8vect)
-   algorithm
-   result-type))
+         (result-type (macro-absent-obj)))
+  (macro-force-vars (u8vect algorithm result-type)
+    (macro-check-u8vector
+      u8vect
+      1
+      (digest-u8vector u8vect algorithm result-type)
+      (digest-subu8vector-aux
+       u8vect
+       0
+       (u8vector-length u8vect)
+       algorithm
+       result-type))))
 
 (define (digest-subu8vector
          u8vect
@@ -1274,161 +1323,58 @@
          end
          algorithm
          #!optional
-         (result-type (digest-default-result-type)))
+         (result-type (macro-absent-obj)))
+  (macro-force-vars (u8vect start end algorithm result-type)
+    (macro-check-u8vector
+      u8vect
+      1
+      (digest-subu8vector u8vect start end algorithm result-type)
+      (macro-check-index-range-incl
+        start
+        2
+        0
+        (u8vector-length u8vect)
+        (digest-subu8vector u8vect start end algorithm result-type)
+        (macro-check-index-range-incl
+          end
+          3
+          start
+          (u8vector-length u8vect)
+          (digest-subu8vector u8vect start end algorithm result-type)
+          (digest-subu8vector-aux u8vect start end algorithm result-type))))))
+
+(define (digest-subu8vector-aux
+         u8vect
+         start
+         end
+         algorithm
+         result-type)
   (let ((digest (open-digest algorithm)))
-    (digest-update-subu8vector digest u8vect start end)
+    (digest-update-subu8vector-aux digest u8vect start end)
     (close-digest digest result-type)))
 
 (define (digest-file
-         filename
+         path
          algorithm
          #!optional
-         (result-type (digest-default-result-type)))
-  (let ((digest (open-digest algorithm)))
-    (let* ((in (open-input-file filename))
-           (bufsize 1024)
-           (buf (make-u8vector bufsize)))
-      (let loop ()
-        (let ((n (read-subu8vector buf 0 bufsize in)))
-          (if (fx= n 0)
-              (begin
-                (close-input-port in)
-                (close-digest digest result-type))
-              (begin
-                (digest-update-subu8vector digest buf 0 n)
-                (loop))))))))
-
-;;;----------------------------------------------------------------------------
-
-;; Self tests.
-
-#;
-(begin
-
- (define crc32-test-vectors
-   '(
-     ("" 0 ""
-      "00000000")
-     ("" 0 "a"
-      "e8b7be43")
-     ("" 0 "abc"
-      "352441c2")
-     ("" 0 "abcdefghijklmnopqrstuvwxyz"
-      "4c2750bd")
-     ("" 0 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-      "1fc2e6d2")
-     ("" 0 "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
-      "7ca94a72")
-     ))
-
- (define md5-test-vectors
-   '(
-     ;; from RFC 1321:
-     ("" 0 ""
-      "d41d8cd98f00b204e9800998ecf8427e")
-     ("" 0 "a"
-      "0cc175b9c0f1b6a831c399e269772661")
-     ("" 0 "abc"
-      "900150983cd24fb0d6963f7d28e17f72")
-     ("" 0 "message digest"
-      "f96b697d7cb7938d525a2f31aaf161d0")
-     ("" 0 "abcdefghijklmnopqrstuvwxyz"
-      "c3fcd3d76192e4007dfb496cca67e13b")
-     ("" 0 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-      "d174ab98d277d9f5a5611c2c9f419d9f")
-     ("" 0 "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
-      "57edf4a22be3c955ac49da2e2107b67a")
-     ))
-
- (define sha-1-test-vectors
-   '(
-     ("" 0 ""
-      "da39a3ee5e6b4b0d3255bfef95601890afd80709")
-     ;; from RFC 3174:
-     ("" 0 "abc"
-      "a9993e364706816aba3e25717850c26c9cd0d89d")
-     ("" 0 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
-      "84983e441c3bd26ebaae4aa1f95129e5e54670f1")
-;;     ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 10000 ""
-;;      "34aa973cd4c4daa4f61eeb2bdbad27316534016f")
-     ("0123456701234567012345670123456701234567012345670123456701234567" 10 ""
-      "dea356a2cddd90c7a7ecedc5ebb563934f460452")
-     ))
-
- (define sha-224-test-vectors
-   '(
-     ;; from RFC 3874:
-     ("" 0 "abc"
-      "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7")
-     ("" 0 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
-      "75388b16512776cc5dba5da1fd890150b0c6455cb4f58b1952522525")
-;;     ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 10000 ""
-;;      "20794655980c91d8bbb4c1ea97618a4bf03f42581948b2ee4ee7ad67")
-    ))
-
- (define sha-256-test-vectors
-   '(
-     ("" 0 ""
-      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
-     ;; from FIPS-180-2:
-     ("" 0 "abc"
-      "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
-     ("" 0 "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
-      "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1")
-;;     ("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 10000 ""
-;;      "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0")
-    ))
-
- (define (test-digest)
-
-   (define (t algorithm vectors)
-
-     (namespace ("" pp list->u8vector))
-
-     (for-each
-      (lambda (v)
-        (let ((str1 (car v))
-              (repeat (cadr v))
-              (str2 (caddr v))
-              (expect (cadddr v)))
-          (let ((md
-                 (if (fx= repeat 0)
-                     (digest-string str2 algorithm 'hex)
-                     (let ((u8vect1
-                            (list->u8vector
-                             (map char->integer (string->list str1))))
-                           (u8vect2
-                            (list->u8vector
-                             (map char->integer (string->list str2))))
-                           (digest
-                            (open-digest algorithm)))
-                       (let loop ((i 0))
-                         (if (fx< i repeat)
-                             (begin
-                               (digest-update-subu8vector
-                                digest
-                                u8vect1
-                                0
-                                (u8vector-length u8vect1))
-                               (loop (fx+ i 1)))
-                             (begin
-                               (digest-update-subu8vector
-                                digest
-                                u8vect2
-                                0
-                                (u8vector-length u8vect2))
-                               (close-digest digest 'hex))))))))
-            (if (not (string-ci=? md expect))
-                (pp (list '***error*** md expect))))))
-      vectors))
-
-   (t 'crc32 crc32-test-vectors)
-   (t 'md5 md5-test-vectors)
-   (t 'sha-1 sha-1-test-vectors)
-   (t 'sha-224 sha-224-test-vectors)
-   (t 'sha-256 sha-256-test-vectors)
-)
-
- (test-digest))
+         (result-type (macro-absent-obj)))
+  (macro-force-vars (path algorithm result-type)
+    (macro-check-string
+      path
+      1
+      (digest-file path algorithm result-type)
+      (let ((digest (open-digest algorithm)))
+        (let* ((port (open-input-file path))
+               (bufsize 1024)
+               (buf (make-u8vector bufsize)))
+          (let loop ()
+            (let ((n (read-subu8vector buf 0 bufsize port)))
+              (if (fx= n 0)
+                  (begin
+                    (close-input-port port)
+                    (close-digest digest result-type))
+                  (begin
+                    (digest-update-subu8vector-aux digest buf 0 n)
+                    (loop))))))))))
 
 ;;;============================================================================

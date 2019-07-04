@@ -24,7 +24,9 @@
 (divide-by-zero-exception-arguments divide-by-zero-exception-arguments#unimplemented)
 (divide-by-zero-exception-procedure divide-by-zero-exception-procedure#unimplemented)
 (divide-by-zero-exception? divide-by-zero-exception?#unimplemented)
-(error error#unimplemented)
+
+error
+
 (error-exception-message error-exception-message#unimplemented)
 (error-exception-parameters error-exception-parameters#unimplemented)
 (error-exception? error-exception?#unimplemented)

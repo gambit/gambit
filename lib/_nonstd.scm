@@ -103,6 +103,9 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define-prim (##error message . parameters)
+  (##raise-error-exception message parameters))
+
 (define-prim (error message . parameters)
   (##raise-error-exception message parameters))
 
