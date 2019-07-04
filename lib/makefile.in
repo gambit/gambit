@@ -84,7 +84,7 @@ NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
 "_eval\#.scm" "_module\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" \
 "_repl\#.scm" "_unicode\#.scm" "_gambit\#.scm" "gambit\#.scm" \
-"r5rs\#.scm" "r4rs\#.scm" "digest\#.scm" \
+"r5rs\#.scm" "r4rs\#.scm" \
 _define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
 _syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
 _syntax-rules-xform.scm _syntax-template.scm \
@@ -199,7 +199,7 @@ _module@obj@
 
 UNIVLIB = $(rootfromhere)/gsc/_t-univ-*.scm $(rootfromhere)/gsc/_univadt.scm
 
-LIBRARIES_SCM = $(HEADERS_SCM) digest.scm syntax-case.scm
+LIBRARIES_SCM = $(HEADERS_SCM) syntax-case.scm
 
 UNICODEFILES = UnicodeData.txt PropList.txt CaseFolding.txt
 
