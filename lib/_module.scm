@@ -685,12 +685,18 @@
              srcs)))))))
 
 (define-prim (##apply-module-alias modref)
+  (define (modref-prefix=? mod prefix)
+    (let ((suffix (##string-prefix=? mod prefix)))
+      (and (or (##fx=    0   (##string-length suffix))
+               (##char=? #\/ (##string-ref suffix 0 )))
+           suffix)))
+
   (let ((modstr (##modref->string modref)))
     (let loop ((rest (##module-aliases)))
       (if (##pair? rest)
         (let ((alias (##car rest)))
           (cond
-            ((##string-prefix=? modstr (##car alias))
+            ((modref-prefix=? modstr (##car alias))
              => (lambda (suffix)
                   (or
                     (##string->modref
