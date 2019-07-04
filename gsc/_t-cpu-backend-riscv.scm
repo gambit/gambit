@@ -99,21 +99,21 @@
     (riscv-load-data cgc rd
       (asm-label-id label) ; XXX
       (lambda (cgc)
-        (codegen-fixup-lbl! cgc label object-tag #f 32 2 #f)))))
+        (codegen-fixup-lbl! cgc label object-tag #f (get-word-width-bits cgc) 2)))))
 
 ; TODO Deduplicate objects
 (define (riscv-load-obj cgc rd obj-value)
   (riscv-load-data cgc rd
     (string-append "'" (object->string obj-value)) ; XXX
     (lambda (cgc)
-      (codegen-fixup-obj! cgc obj-value 32 2 #f))))
+      (codegen-fixup-obj! cgc obj-value (get-word-width-bits cgc) 2 #f))))
 
 ; TODO Deduplicate references to global variables
 (define (riscv-load-glo cgc rd glo-name)
   (riscv-load-data cgc rd
     (string-append "&global[" (symbol->string glo-name) "]") ; XXX
     (lambda (cgc)
-      (codegen-fixup-glo! cgc glo-name 32 2 #f))))
+      (codegen-fixup-glo! cgc glo-name (get-word-width-bits cgc) 2 #f))))
 
 (define (riscv-load-data cgc rd ref-name place-data)
   (define cgc-format? (codegen-context-listing-format cgc))
@@ -565,7 +565,7 @@
     (put-entry-point-label cgc
       (then-return-label result-action)
       (then-return-prim-name result-action)
-      #f 1234 #f)
+      #f 1234 #f) ; XXX
     #f))
 
 (define riscv-primitive-table

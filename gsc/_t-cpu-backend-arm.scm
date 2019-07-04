@@ -376,20 +376,20 @@
       (asm-label-id label)
       (lambda (cgc)
         (debug "label-opnd: " label-opnd)
-        (codegen-fixup-lbl! cgc label object-tag #f 32 1)))))
+        (codegen-fixup-lbl! cgc label object-tag #f (get-word-width-bits cgc) 1)))))
 
 ;; TODO Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
   (arm-load-data cgc rd (string-append "'" (object->string obj-value))
     (lambda (cgc)
       (debug "obj-value: " obj-value)
-      (codegen-fixup-obj! cgc obj-value 32 1 #f))))
+      (codegen-fixup-obj! cgc obj-value (get-word-width-bits cgc) 1 #f))))
 
 ;; TODO Deduplicate references to global variables
 (define (arm-load-glo cgc rd glo-name)
   (arm-load-data cgc rd (string-append "&global[" (symbol->string glo-name) "]")
     (lambda (cgc)
-      (codegen-fixup-glo! cgc glo-name 32 1 #f))))
+      (codegen-fixup-glo! cgc glo-name (get-word-width-bits cgc) 1 #f))))
 
 (define (arm-load-data cgc rd ref-name place-data)
   (asm-16-le cgc #xf240) ;; movw
