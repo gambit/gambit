@@ -15037,7 +15037,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/gambit/makefile lib/gambit/git/makefile lib/gambit/pkg/makefile lib/gambit/tar/makefile lib/gambit/hamt/makefile lib/gambit/hamt/primitive-hamt/makefile lib/gambit/digest/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambcomp-js.unix bin/gambcomp-js.bat.windows bin/gambcomp-python.unix bin/gambcomp-python.bat.windows bin/gambcomp-ruby.unix bin/gambcomp-ruby.bat.windows bin/gambcomp-php.unix bin/gambcomp-php.bat.windows bin/gambcomp-java.unix bin/gambcomp-java.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/gambit/makefile lib/gambit/git/makefile lib/gambit/pkg/makefile lib/gambit/tar/makefile lib/gambit/hamt/makefile lib/gambit/hamt/primitive-hamt/makefile lib/gambit/digest/makefile lib/gambit/zlib/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambcomp-js.unix bin/gambcomp-js.bat.windows bin/gambcomp-python.unix bin/gambcomp-python.bat.windows bin/gambcomp-ruby.unix bin/gambcomp-ruby.bat.windows bin/gambcomp-php.unix bin/gambcomp-php.bat.windows bin/gambcomp-java.unix bin/gambcomp-java.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -15740,6 +15740,7 @@ do
     "lib/gambit/hamt/makefile") CONFIG_FILES="$CONFIG_FILES lib/gambit/hamt/makefile" ;;
     "lib/gambit/hamt/primitive-hamt/makefile") CONFIG_FILES="$CONFIG_FILES lib/gambit/hamt/primitive-hamt/makefile" ;;
     "lib/gambit/digest/makefile") CONFIG_FILES="$CONFIG_FILES lib/gambit/digest/makefile" ;;
+    "lib/gambit/zlib/makefile") CONFIG_FILES="$CONFIG_FILES lib/gambit/zlib/makefile" ;;
     "$RTLIBMAKEFILES") CONFIG_FILES="$CONFIG_FILES $RTLIBMAKEFILES" ;;
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;
