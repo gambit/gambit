@@ -5844,10 +5844,28 @@ do { \
 
 #ifdef ___CPU_riscv
 
+#if __riscv_xlen == 64
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* XXX generate RISC-V instructions: auipc s6, 0x0; jr -16(s6) */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xff0b006700000b17L; \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* XXX generate RISC-V instructions: lw s7, 0(s0); jalr s7 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x000b80e700042b83L; \
+   } while (0)
+
+#else
+
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
 #define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
 do { \
-     /* generate RISC-V instructions: auipc s6, 0x0; jr -8(s6) */ \
+     /* XXX generate RISC-V instructions: auipc s6, 0x0; jr -8(s6) */ \
      (ptr)[___LABEL_LOWLEVEL_CODE] = 0x00000b17; \
      (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0xff8b0067; \
    } while (0)
@@ -5859,6 +5877,8 @@ do { \
      (ptr)[___LABEL_LOWLEVEL_CODE] = 0x00042b83; \
      (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0x000b80e7; \
    } while (0)
+
+#endif
 
 #endif
 

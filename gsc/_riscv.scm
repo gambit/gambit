@@ -604,7 +604,7 @@
       (instr-code imm)
       (asm-at-assembly cgc
                        (lambda (cgc self)
-                         4)
+                         4) ; XXX
                        (lambda (cgc self)
                          (let* ((dist (label-dist self imm))
                                 (imm (riscv-imm-int dist 'B))) ; XXX
@@ -691,7 +691,7 @@
       (instr-code imm)
       (asm-at-assembly cgc
                        (lambda (cgc self)
-                         4)
+                         4) ; XXX
                        (lambda (cgc self)
                          (let* ((dist (label-dist self imm))
                                 (imm (riscv-imm-int dist 'J))) ; XXX

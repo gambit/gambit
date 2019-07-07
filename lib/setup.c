@@ -3706,14 +3706,14 @@ ___SCMOBJ fixup_objs;)
 
                 case 2:
                   {
-                    /* fixup lui/addi pair on RISC-V */
+                    /* fixup lui/addi pair on 32-bit RISC-V */
 
                     ___S32 *ptr = ___CAST(___S32*,code+fixup_pos-4);
                     ___S32 opcode = ptr[0] & 0x7f; /* opcode for lui */
                     ___S32 rd = ptr[0] & 0xf80;
 
-                    ptr[0] = opcode + rd + (val & 0xfffff000);
-                    ptr[1] = (opcode - 0x24) + rd + (rd << 8) + (val << 20);
+                    ptr[0] = opcode + rd + (val & 0xfffff000); /* lui */
+                    ptr[1] = (opcode - 0x24) + rd + (rd << 8) + (val << 20); /* addi */
 
                     pos = fixup_pos + sizeof(___S32);
                     break;
@@ -3722,8 +3722,27 @@ ___SCMOBJ fixup_objs;)
               break;
 
             case 1:
-              *___CAST(___WORD*,code+fixup_pos) = val;
-              pos = fixup_pos + sizeof(___WORD);
+              switch (op >> 4)
+                {
+                case 0:
+                  *___CAST(___WORD*,code+fixup_pos) = val;
+                  pos = fixup_pos + sizeof(___WORD);
+                  break;
+
+                case 2:
+                  {
+                    /* fixup jal/ld pair on 64-bit RISC-V */
+
+                    ___S32 *ptr = ___CAST(___S32*,code+fixup_pos-8);
+
+                    ptr[3] = ptr[1]; /* ld */
+                    ptr[2] = val >> 32;
+                    ptr[1] = val;
+
+                    pos = fixup_pos + sizeof(___WORD);
+                    break;
+                  }
+                }
               break;
             }
         }

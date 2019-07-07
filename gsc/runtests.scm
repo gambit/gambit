@@ -182,7 +182,7 @@
     (cdr d)))
 
 (define (target-compiles-to-o1? target)
-  (member target '("C" "x86-32" "x86-64" "arm" "riscv")))
+  (member target '("C" "x86-32" "x86-64" "arm" "riscv-32" "riscv-64")))
 
 (define (test-with-each-target file)
   (map (lambda (t)
@@ -281,7 +281,10 @@
     ("arm" ".o1"      ()
                       "./gsc" "-i")
 
-    ("riscv" ".o1"    ()
+    ("riscv-32" ".o1" ()
+                      "./gsc" "-i")
+
+    ("riscv-64" ".o1" ()
                       "./gsc" "-i")
 
     ("java"   ".java" ()
@@ -622,7 +625,8 @@
                  (set! stress? #t))
                 ((equal? word "no-cleanup")
                  (set! cleanup? #f))
-                ((member word '("C" "js" "python" "ruby" "php" "java" "x86-32" "x86-64" "arm" "riscv"))
+                ((member word '("C" "js" "python" "ruby" "php" "java"
+                                "x86-32" "x86-64" "arm" "riscv-32" "riscv-64"))
                  (set! targets
                        (cons (string->symbol word)
                              targets)))

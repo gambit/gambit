@@ -12,38 +12,54 @@
 
 ;;------------------------------------------------------------------------------
 
-;; Constants
-
 (define riscv-nb-gvm-regs 5)
 (define riscv-nb-arg-regs 3)
 
-;;------------------------------------------------------------------------------
-;;------------------------------- RISC-V backend -------------------------------
-;;------------------------------------------------------------------------------
-
-(define (riscv-target)
-  (make-cpu-target
-    (riscv-abstract-machine-info)
-    'riscv '((".c" . RISCV)) riscv-nb-gvm-regs riscv-nb-arg-regs)) ; XXX
-
-(define (riscv-abstract-machine-info)
-  (make-backend make-cgc-riscv (riscv-info) (riscv-instructions) (riscv-routines)))
-
-(define (make-cgc-riscv)
+(define (make-cgc-riscv arch)
   (let ((cgc (make-codegen-context)))
     (codegen-context-listing-format-set! cgc 'gnu)
     (asm-init-code-block cgc 0 'le)
-    (riscv-arch-set! cgc 'RV32I)
+    (riscv-arch-set! cgc arch)
     cgc))
+
+;;------------------------------------------------------------------------------
+;;--------------------------- RISC-V 32-bit backend ----------------------------
+;;------------------------------------------------------------------------------
+
+(define (riscv-32-target)
+  (make-cpu-target
+    (make-backend make-cgc-riscv-32 (riscv-32-info) (riscv-instructions) (riscv-routines))
+    'riscv-32 '((".c" . RISCV-32)) riscv-nb-gvm-regs riscv-nb-arg-regs)) ; XXX
+
+(define (make-cgc-riscv-32)
+  (make-cgc-riscv 'RV32I))
+
+(define (riscv-32-info)
+  (riscv-info 'RV32I 4))
+
+;;------------------------------------------------------------------------------
+;;--------------------------- RISC-V 64-bit backend ----------------------------
+;;------------------------------------------------------------------------------
+
+(define (riscv-64-target)
+  (make-cpu-target
+    (make-backend make-cgc-riscv-64 (riscv-64-info) (riscv-instructions) (riscv-routines))
+    'riscv-64 '((".c" . RISCV-64)) riscv-nb-gvm-regs riscv-nb-arg-regs)) ; XXX
+
+(define (make-cgc-riscv-64)
+  (make-cgc-riscv 'RV64I))
+
+(define (riscv-64-info)
+  (riscv-info 'RV64I 8))
 
 ;;------------------------------------------------------------------------------
 
 ;; RISC-V backend info
 
-(define (riscv-info)
+(define (riscv-info arch width)
   (make-cpu-info
-    'RV32I                ;; Arch name
-    4                     ;; Word width
+    arch                  ;; Arch name
+    width                 ;; Word width
     'le                   ;; Endianness
     #t                    ;; Load-store architecture?
     0                     ;; Frame offset
@@ -86,7 +102,7 @@
     ((lbl-opnd? opnd) (riscv-imm-lbl (lbl-opnd-label opnd) (lbl-opnd-offset opnd)))
     (else (compiler-internal-error "make-riscv-opnd - Unknown opnd: " opnd))))
 
-(define (riscv-label-align cgc label-opnd #!optional (align '(4 . 0)))
+(define (riscv-label-align cgc label-opnd #!optional (align '(4 . 0))) ; XXX
   (asm-align cgc (car align) (cdr align)) ; XXX NOP in RV32I is 4 bytes with value 0x13
   (riscv-label cgc (lbl-opnd-label label-opnd)))
 
@@ -119,8 +135,26 @@
   (define cgc-format? (codegen-context-listing-format cgc))
 
   (codegen-context-listing-format-set! cgc #f)
-  (riscv-lui cgc rd (riscv-imm-int 0 'U))
-  ; (riscv-addi cgc rd (riscv-zero) (riscv-imm-int 0))
+  (if (= (get-word-width cgc) 8)
+      (begin
+        ; Hack to load value
+        (riscv-jal cgc (riscv-s7) (riscv-imm-int 12 'J))
+        (riscv-ld cgc rd (riscv-s7) (riscv-imm-int 0))
+
+        ; Worst case of load immediate
+        ; (riscv-lui cgc rd (riscv-imm-int 0 'U))
+        ; (riscv-addiw cgc rd rd (riscv-imm-int 0))
+        ; (riscv-slli cgc rd rd 0)
+        ; (riscv-addi cgc rd rd (riscv-imm-int 0))
+        ; (riscv-slli cgc rd rd 0)
+        ; (riscv-addi cgc rd rd (riscv-imm-int 0))
+        ;; (riscv-slli cgc rd rd 0)
+        ;; (riscv-addi cgc rd rd (riscv-imm-int 0))
+        )
+      (begin
+        (riscv-lui cgc rd (riscv-imm-int 0 'U))
+        ; (riscv-addi cgc rd rd (riscv-imm-int 0))
+        ))
 
   (if cgc-format?
       (let ((sym (if ref-name
@@ -128,8 +162,7 @@
                          (symbol->string ref-name)
                          ref-name)
                      "???")))
-        (riscv-listing cgc "lui" rd (string-append "%hi(" sym ")"))
-        (riscv-listing cgc "addi" rd (riscv-zero) (string-append "%lo(" sym ")"))
+        (riscv-listing cgc "li" rd sym)
         (codegen-context-listing-format-set! cgc cgc-format?)))
 
   (place-data cgc))
@@ -143,67 +176,69 @@
             (func (make-riscv-opnd reg))))))
 
   (define (unaligned-mem-opnd? mem-opnd)
-    (not (= 0 (modulo (mem-opnd-offset mem-opnd) 4))))
+    (not (= 0 (modulo (mem-opnd-offset mem-opnd) 4)))) ; XXX
 
   (define (regular-move src)
     (if (not (equal? dst src))
-        (cond
-          ((reg-opnd? dst)
-           (riscv-mv cgc (make-riscv-opnd dst) src))
-          ((glo-opnd? dst)
-           (get-free-register cgc
-             (list dst src src) ; XXX
-             (lambda (reg)
-               (riscv-load-glo cgc reg (glo-opnd-name dst))
-               (riscv-sw cgc reg src (riscv-imm-int 0 'S))))) ; XXX
-          ((mem-opnd? dst)
-           (if (unaligned-mem-opnd? dst)
-               (get-free-register cgc
-                 (list dst src src) ; XXX
-                 (lambda (reg)
-                   (am-add cgc reg (mem-opnd-base dst) (int-opnd (mem-opnd-offset dst)))
-                   (riscv-sw cgc reg src (riscv-imm-int 0 'S)))) ; XXX
-               (riscv-sw cgc (mem-opnd-base dst) src (riscv-imm-int (mem-opnd-offset dst) 'S)))) ; XXX
-          (else
-            (compiler-internal-error
-              "riscv-mov-instr - Unknown or incompatible destination: " dst)))))
+        (let ((64-bit? (= (get-word-width cgc) 8)))
+          (cond
+            ((reg-opnd? dst)
+             (riscv-mv cgc (make-riscv-opnd dst) src))
+            ((glo-opnd? dst)
+             (get-free-register cgc
+               (list dst src src) ; XXX
+               (lambda (reg)
+                 (riscv-load-glo cgc reg (glo-opnd-name dst))
+                 ((if 64-bit? riscv-sd riscv-sw) cgc reg src (riscv-imm-int 0 'S))))) ; XXX
+            ((mem-opnd? dst)
+             (if (unaligned-mem-opnd? dst)
+                 (get-free-register cgc
+                   (list dst src src) ; XXX
+                   (lambda (reg)
+                     (am-add cgc reg (mem-opnd-base dst) (int-opnd (mem-opnd-offset dst)))
+                     ((if 64-bit? riscv-sd riscv-sw) cgc reg src (riscv-imm-int 0 'S)))) ; XXX
+                 ((if 64-bit? riscv-sd riscv-sw) cgc (mem-opnd-base dst) src (riscv-imm-int (mem-opnd-offset dst) 'S)))) ; XXX
+            (else
+              (compiler-internal-error
+                "riscv-mov-instr - Unknown or incompatible destination: " dst))))))
 
   (if (not (equal? dst src))
-      (cond
-        ((reg-opnd? src)
-         (regular-move (make-riscv-opnd src)))
-        ((int-opnd? src)
-         (with-reg
-           (lambda (reg)
-             (riscv-li cgc reg (make-riscv-opnd src))
-             (regular-move reg))))
-        ((lbl-opnd? src)
-         (with-reg
-           (lambda (reg)
-             (riscv-load-lbl cgc reg src)
-             (regular-move reg))))
-        ((glo-opnd? src)
-         (with-reg
-           (lambda (reg)
-             (riscv-load-glo cgc reg (glo-opnd-name src))
-             (riscv-lw cgc reg reg (riscv-imm-int 0)) ; XXX
-             (regular-move reg))))
-        ((obj-opnd? src)
-         (with-reg
-           (lambda (reg)
-             (riscv-load-obj cgc reg (obj-opnd-value src))
-             (regular-move reg))))
-        ((mem-opnd? src)
-         (with-reg
-           (lambda (reg)
-             (if (unaligned-mem-opnd? src)
-                 (begin
-                   (am-add cgc reg (mem-opnd-base src) (int-opnd (mem-opnd-offset src)))
-                   (riscv-lw cgc reg reg (riscv-imm-int 0))) ; XXX
-                 (riscv-lw cgc reg (mem-opnd-base src) (riscv-imm-int (mem-opnd-offset src)))) ; XXX
-             (regular-move reg))))
-        (else
-          (compiler-internal-error "Cannot move : " dst " <- " src)))))
+      (let ((64-bit? (= (get-word-width cgc) 8)))
+        (cond
+          ((reg-opnd? src)
+           (regular-move (make-riscv-opnd src)))
+          ((int-opnd? src)
+           (with-reg
+             (lambda (reg)
+               (riscv-li cgc reg (make-riscv-opnd src))
+               (regular-move reg))))
+          ((lbl-opnd? src)
+           (with-reg
+             (lambda (reg)
+               (riscv-load-lbl cgc reg src)
+               (regular-move reg))))
+          ((glo-opnd? src)
+           (with-reg
+             (lambda (reg)
+               (riscv-load-glo cgc reg (glo-opnd-name src))
+               ((if 64-bit? riscv-ld riscv-lw) cgc reg reg (riscv-imm-int 0)) ; XXX
+               (regular-move reg))))
+          ((obj-opnd? src)
+           (with-reg
+             (lambda (reg)
+               (riscv-load-obj cgc reg (obj-opnd-value src))
+               (regular-move reg))))
+          ((mem-opnd? src)
+           (with-reg
+             (lambda (reg)
+               (if (unaligned-mem-opnd? src)
+                   (begin
+                     (am-add cgc reg (mem-opnd-base src) (int-opnd (mem-opnd-offset src)))
+                     ((if 64-bit? riscv-ld riscv-lw) cgc reg reg (riscv-imm-int 0))) ; XXX
+                   ((if 64-bit? riscv-ld riscv-lw) cgc reg (mem-opnd-base src) (riscv-imm-int (mem-opnd-offset src)))) ; XXX
+               (regular-move reg))))
+          (else
+            (compiler-internal-error "Cannot move : " dst " <- " src))))))
 
 (define (riscv-arith-instr instr cgc dest opnd1 opnd2)
   (define (with-dest-reg dst)
