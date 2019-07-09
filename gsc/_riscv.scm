@@ -46,7 +46,7 @@
 (define (riscv-imm? x) (pair? x))
 
 (define (riscv-imm-int value #!optional (type 'I)) (cons type value))
-(define (riscv-imm-int? x) (and (pair? x) (symbol? (car x)) (fixnum? (cdr x))))
+(define (riscv-imm-int? x) (and (pair? x) (symbol? (car x)) (number? (cdr x)))) ; XXX
 (define (riscv-imm-int-type x) (car x))
 (define (riscv-imm-int-value x) (cdr x))
 
@@ -191,16 +191,30 @@
 
 (define (riscv-nop cgc)
   (riscv-addi cgc (riscv-x0) (riscv-x0) (riscv-imm-int 0)))
-(define (riscv-li cgc rd immediate) ; XXX
-  (let ((val (riscv-imm-int-value immediate)))
-    (cond
-      ((and (fx>= val -2048) (fx<= val 2047))
-       (riscv-addi cgc rd (riscv-x0) immediate))
-      ((and (fx>= val -2147483648) (fx<= val 2147483647))
-       (riscv-lui cgc rd (riscv-imm-int (fxand val #xfffff000) 'U))
-       (riscv-addi cgc rd (riscv-x0) (riscv-imm-int (fxand val #xfff))))
-      (else
-        (error "loading of unsupported value" val)))))
+(define (riscv-li cgc rd immediate) ; XXX Implementation inspired from LLVM
+  (let* ((val (riscv-imm-int-value immediate))
+         (lo12 (fx- (fxand (fx+ val #x800) #xfff) #x800))
+         (hi52 (fxarithmetic-shift (fx+ val #x800) -12)))
+    (if (and (fx>= val -2147483648) (fx<= val 2147483647))
+        (let ((hi20 (fxand hi52 #xfffff)))
+          (if (not (fxzero? hi20))
+              (riscv-lui cgc rd (riscv-imm-int hi20 'U)))
+          (if (or (not (fxzero? lo12)) (fxzero? hi20))
+              (let ((instr (if (riscv-64bit-mode? cgc) riscv-addiw riscv-addi))
+                    (rs (if (fxzero? hi20) (riscv-x0) rd)))
+                (instr cgc rd rs (riscv-imm-int lo12)))))
+        (begin
+          (riscv-assert-64bit-mode cgc)
+          (let* ((shamt (fx+ 12 (fxfirst-bit-set (asm-unsigned-lo64 hi52)))) ; XXX
+                 (hi52 (fxarithmetic-shift-right
+                         (asm-signed-lo64 (fxarithmetic-shift
+                                            (fxarithmetic-shift-right hi52 (fx- shamt 12))
+                                            shamt)) ; XXX
+                         shamt)))
+            (riscv-li cgc rd (riscv-imm-int hi52))
+            (riscv-slli cgc rd rd shamt)
+            (if (not (fxzero? lo12))
+                (riscv-addi cgc rd rd (riscv-imm-int lo12))))))))
 (define (riscv-mv cgc rd rs)
   (riscv-addi cgc rd rs (riscv-imm-int 0)))
 (define (riscv-not cgc rd rs)
