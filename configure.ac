@@ -3171,6 +3171,7 @@ lib/gambit/hamt/makefile \
 lib/gambit/hamt/primitive-hamt/makefile \
 lib/gambit/digest/makefile \
 lib/gambit/zlib/makefile \
+lib/gambit/test/makefile \
 $RTLIBMAKEFILES \
 gsi/makefile \
 gsc/makefile \
