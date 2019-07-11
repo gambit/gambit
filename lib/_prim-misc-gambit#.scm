@@ -26,14 +26,18 @@
 (display-exception display-exception#unimplemented)
 (display-exception-in-context display-exception-in-context#unimplemented)
 (display-procedure-environment display-procedure-environment#unimplemented)
-(eq?-hash eq?-hash#unimplemented)
-(equal?-hash equal?-hash#unimplemented)
-(eqv?-hash eqv?-hash#unimplemented)
+
+eq?-hash
+equal?-hash
+eqv?-hash
+
 (gc-report-set! gc-report-set!#unimplemented)
 (generate-proper-tail-calls generate-proper-tail-calls#unimplemented)
 (help help#unimplemented)
 (help-browser help-browser#unimplemented)
-(identity identity#unimplemented)
+
+identity
+
 (link-flat link-flat#unimplemented)
 (link-incremental link-incremental#unimplemented)
 (main main#unimplemented)

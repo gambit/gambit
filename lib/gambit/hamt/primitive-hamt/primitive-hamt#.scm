@@ -16,51 +16,70 @@
 ;;; The HAMT operations are:
 ;;;
 ;;;  (make)              create an empty HAMT
-;;;  (ref hamt key)      lookup the key and return #f or the pair (key . value)
+;;;  (hamt? obj)         returns #t iff obj is a hamt (note: not a unique type)
+;;;  (empty? hamt)       returns #t iff the hamt is empty
+;;;  (ref hamt key)      lookup the key and return #f or the pair (key . val)
 ;;;  (set hamt key val)  return a copy of hamt where key maps to val
 ;;;  (remove hamt key)   return a copy of hamt with the entry for key removed
-;;;  (search proc hamt)  call (proc key val) for each key in a left to right
+;;;  (search hamt proc)  call (proc key val) for each key in a left to right
 ;;;                      scan of the hamt, returning the first result that is
 ;;;                      not #f
+;;;  (fold hamt proc base) do "base <- (proc base key val)" for each key
+;;;                      in a left to right scan of the hamt and return the
+;;;                      final value of base
+;;;  (for-each hamt proc) call (proc key val) for each key in a left to
+;;;                      right scan of the hamt
 ;;;  (->list hamt)       return an association list representation of hamt
 ;;;  (<-list alist)      return a HAMT with the associations from alist
+;;;  (<-reversed-list alist) return (<-list (reverse alist)) so later
+;;;                      occurrences of a key in alist have precedence
+;;;                      over earlier ones (this operation is faster
+;;;                      than <-list and should be used instead of
+;;;                      <-list when the alist is known to not have
+;;;                      duplicate keys)
 
 ;;; The HAMT data structure is implemented through a macro called
 ;;; define-hamt.  It is a generator of the set of procedure
 ;;; definitions that implement the HAMT operations specialized for the
 ;;; equality and hashing procedures passed as arguments to the macro
 ;;; (i.e. the equ? and equ?-hash parameters).  The parameters make,
-;;; ref, set, remove, search, ->list, <-list, alist-search, and
-;;; alist-remove are identifiers that are the names of the procedures
-;;; defined for those operations.  Any of those parameters can be #f
-;;; to indicate the definition of that operation is not needed.  The
-;;; length-inc!  parameter is the name of a procedure or macro that is
-;;; called by the set procedure when the key does not exist in the
-;;; hamt.  It can be #f when no length management is needed.  There is
-;;; no need for a length-dec! parameter because the remove procedure
-;;; is optimized to not allocate a new hamt when the key does not
-;;; exist in the input hamt.  In other words, the number of elements
-;;; in the hamt has been decreased by 1 if and only if (not (eq? hamt
-;;; (remove hamt key))).  The implementer parameter is the name of the
-;;; macro defined by the expansion of define-hamt.  Calling the
-;;; implementer macro with no argument expands to the set of procedure
-;;; definitions that implement the HAMT operations (this allows the
-;;; call to define-hamt and the defines of the procedures to be in
-;;; separate source files if needed).
+;;; ref, set, remove, search, fold, for-each, ->list, <-list,
+;;; <-reversed-list, alist-ref, and alist-remove are identifiers that
+;;; are the names of the procedures defined for those operations.  Any
+;;; of those parameters can be #f to indicate the definition of that
+;;; operation is not needed.  The length-inc!  parameter is the name
+;;; of a procedure or macro that is called by the set procedure when
+;;; the key does not exist in the hamt.  It can be #f when no length
+;;; management is needed.  There is no need for a length-dec!
+;;; parameter because the remove procedure is optimized to not
+;;; allocate a new hamt when the key does not exist in the input hamt.
+;;; In other words, the number of elements in the hamt has been
+;;; decreased by 1 if and only if (not (eq? hamt (remove hamt key))).
+;;; The implementer parameter is the name of the macro defined by the
+;;; expansion of define-hamt.  Calling the implementer macro with no
+;;; argument expands to the set of procedure definitions that
+;;; implement the HAMT operations (this allows the call to define-hamt
+;;; and the defines of the procedures to be in separate source files
+;;; if needed).
 
 ;;; For example, to create a HAMT specialized for keys that are
 ;;; symbols the define-hamt macro could be called as follows:
 ;;;
 ;;; (define-hamt
 ;;;   implement-symhamt
+;;;   symhamt?
+;;;   symhamt-empty?
 ;;;   symhamt-make
 ;;;   symhamt-ref
 ;;;   symhamt-set
 ;;;   symhamt-remove
 ;;;   symhamt-search
+;;;   symhamt-fold
+;;;   symhamt-for-each
 ;;;   symhamt->list
 ;;;   symhamt<-list
-;;;   symhamt-alist-search
+;;;   symhamt<-reversed-list
+;;;   symhamt-alist-ref
 ;;;   symhamt-alist-remove
 ;;;   #f ;; no length-inc! method
 ;;;   eq?
@@ -71,29 +90,39 @@
 ;;; This will expand to the following procedure definitions:
 ;;;
 ;;; (begin
+;;;  (define (symhamt? obj) ...)
+;;;  (define (symhamt-empty? hamt) ...)
 ;;;  (define (symhamt-make) ...)
 ;;;  (define (symhamt-ref symhamt sym) ...)
 ;;;  (define (symhamt-set symhamt sym val) ...)
 ;;;  (define (symhamt-remove symhamt sym) ...)
-;;;  (define (symhamt-search proc symhamt) ...)
+;;;  (define (symhamt-search symhamt proc) ...)
+;;;  (define (symhamt-fold symhamt proc base) ...)
+;;;  (define (symhamt-for-each symhamt proc) ...)
 ;;;  (define (symhamt->list symhamt) ...)
 ;;;  (define (symhamt<-list alist) ...)
-;;;  (define (symhamt-alist-search sym alist) ...)
-;;;  (define (symhamt-alist-remove sym alist) ...))
+;;;  (define (symhamt<-reversed-list alist) ...)
+;;;  (define (symhamt-alist-ref alist sym) ...)
+;;;  (define (symhamt-alist-remove alist sym) ...))
 
 (##namespace ("gambit/hamt/primitive-hamt#"
               define-hamt))
 
 (##define-macro (define-hamt
                   implementer
+                  isa?
+                  empty?
                   make
                   ref
                   set
                   remove
                   search
+                  fold
+                  for-each
                   ->list
                   <-list
-                  alist-search
+                  <-reversed-list
+                  alist-ref
                   alist-remove
                   length-inc!
                   equ?
@@ -128,35 +157,35 @@
                 (fxand ,',hash-mask
                        (,',equ?-hash ,x ,@',equ?-ctx))))
 
-      (define-macro (macro-alist-search key lst ,@equ?-ctx)
+      (define-macro (macro-alist-ref lst key ,@equ?-ctx)
         `(let ()
 
-           (define (search key lst ,@',equ?-ctx)
+           (define (ref lst key ,@',equ?-ctx)
              (if (pair? lst)
                  (let ((x (car lst)))
                    (if (,',equ? (car x) key ,@',equ?-ctx)
                        x
-                       (search key (cdr lst) ,@',equ?-ctx)))
+                       (ref (cdr lst) key ,@',equ?-ctx)))
                  #f))
 
-           (search ,key ,lst ,@,(cons 'list equ?-ctx))))
+           (ref ,lst ,key ,@,(cons 'list equ?-ctx))))
 
-      (define-macro (macro-alist-remove key lst ,@equ?-ctx)
+      (define-macro (macro-alist-remove lst key ,@equ?-ctx)
         `(let ()
 
-           (define (remove key lst ,@',equ?-ctx)
+           (define (remove lst key ,@',equ?-ctx)
              (if (pair? lst)
                  (let ((x (car lst)))
                    (if (,',equ? (car x) key ,@',equ?-ctx)
                        (cdr lst)
                        (let* ((rest (cdr lst))
-                              (lst2 (remove key rest ,@',equ?-ctx)))
+                              (lst2 (remove rest key ,@',equ?-ctx)))
                          (if (eq? rest lst2)
                              lst
                              (cons x lst2)))))
                  '()))
 
-           (remove ,key ,lst ,@,(cons 'list equ?-ctx))))
+           (remove ,lst ,key ,@,(cons 'list equ?-ctx))))
 
       ;; Implementation of compressed vectors, which are used for the
       ;; internal nodes of the HAMT.
@@ -252,6 +281,18 @@
      (##define-macro (,implementer)
        '(##begin
 
+          ,@(if isa?
+                `((##define (,isa? obj)
+                    ,@local-declarations
+                    (vector? obj)))
+                `())
+
+          ,@(if empty?
+                `((##define (,empty? hamt)
+                    ,@local-declarations
+                    (fxzero? (macro-compressed-vector-bitmap hamt))))
+                `())
+
           ,@(if make
                 `((##define (,make)
                     ,@local-declarations
@@ -280,7 +321,7 @@
                            ;; otherwise, curr is not at the max level and x is a pair or
                            ;; compressed vector
                            (if (fx= 1 next-h) ;; max level reached?
-                               (,(or alist-search 'macro-alist-search) key x ,@equ?-ctx)
+                               (,(or alist-ref 'macro-alist-ref) x key ,@equ?-ctx)
                                (if (pair? x)
                                    (and (,equ? (car x) key ,@equ?-ctx)
                                         x)
@@ -473,7 +514,7 @@
                 `())
 
           ,@(if search
-                `((##define (,search proc hamt)
+                `((##define (,search hamt proc)
 
                     ,@local-declarations
 
@@ -483,7 +524,7 @@
                           (if (pair? x)
                               (proc (car x) (cdr x))
                               (search-vect x
-                                           (fx- (vector-length x) 1)
+                                           1
                                            (fx+ level 1)))))
 
                     (define (search-list x)
@@ -493,11 +534,74 @@
                                  (search-list (cdr x))))))
 
                     (define (search-vect x i level)
-                      (and (fx> i 0)
+                      (and (fx< i (vector-length x))
                            (or (search (vector-ref x i) level)
-                               (search-vect x (fx- i 1) level))))
+                               (search-vect x (fx+ i 1) level))))
 
                     (search hamt 0)))
+                `())
+
+          ,@(if fold
+                `((##define (,fold hamt proc base)
+
+                    ,@local-declarations
+
+                    (define (fold x base level)
+                      (if (fx= level ,max-depth)
+                          (fold-list x base)
+                          (if (pair? x)
+                              (proc base (car x) (cdr x))
+                              (fold-vect x
+                                         base
+                                         1
+                                         (fx+ level 1)))))
+
+                    (define (fold-list x base)
+                      (if (pair? x)
+                          (let ((kv (car x)))
+                            (fold-list (cdr x)
+                                       (proc base (car kv) (cdr kv))))
+                          base))
+
+                    (define (fold-vect x base i level)
+                      (if (fx< i (vector-length x))
+                          (fold-vect x
+                                     (fold (vector-ref x i) base level)
+                                     (fx+ i 1)
+                                     level)
+                          base))
+
+                    (fold hamt base 0)))
+                `())
+
+          ,@(if for-each
+                `((##define (,for-each hamt proc)
+
+                    ,@local-declarations
+
+                    (define (for-each x level)
+                      (if (fx= level ,max-depth)
+                          (for-each-list x)
+                          (if (pair? x)
+                              (proc (car x) (cdr x))
+                              (for-each-vect x
+                                             1
+                                             (fx+ level 1)))))
+
+                    (define (for-each-list x)
+                      (and (pair? x)
+                           (let ((kv (car x)))
+                             (proc (car kv) (cdr kv))
+                             (for-each-list (cdr x)))))
+
+                    (define (for-each-vect x i level)
+                      (and (fx< i (vector-length x))
+                           (begin
+                             (for-each (vector-ref x i) level)
+                             (for-each-vect x (fx+ i 1) level))))
+
+                    (for-each hamt 0)
+                    (void)))
                 `())
 
           ,@(if ->list
@@ -534,8 +638,16 @@
                     (convert hamt 0 '())))
                 `())
 
-          ,@(if (and make set <-list)
+          ,@(if (and make set <-list <-reversed-list)
                 `((##define (,<-list lst ,@equ?-ctx)
+
+                    ,@local-declarations
+
+                    (,<-reversed-list (reverse lst) ,@equ?-ctx)))
+                `())
+
+          ,@(if (and make set <-reversed-list)
+                `((##define (,<-reversed-list lst ,@equ?-ctx)
 
                     ,@local-declarations
 
@@ -547,16 +659,16 @@
                           hamt))))
                 `())
 
-          ,@(if alist-search
-                `((##define (,alist-search key lst ,@equ?-ctx)
+          ,@(if alist-ref
+                `((##define (,alist-ref lst key ,@equ?-ctx)
                     ,@local-declarations
-                    (macro-alist-search key lst ,@equ?-ctx)))
+                    (macro-alist-ref lst key ,@equ?-ctx)))
                 `())
 
           ,@(if alist-remove
-                `((##define (,alist-remove key lst ,@equ?-ctx)
+                `((##define (,alist-remove lst key ,@equ?-ctx)
                     ,@local-declarations
-                    (macro-alist-remove key lst ,@equ?-ctx)))
+                    (macro-alist-remove lst key ,@equ?-ctx)))
                 `())
 
           ))))
