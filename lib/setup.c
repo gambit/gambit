@@ -3573,6 +3573,178 @@ ___processor_state ___ps;)
 
 #endif
 
+#ifdef ___CPU_riscv
+
+#define reg_R0 "s2"
+#define reg_R1 "s3"
+#define reg_R2 "s4"
+#define reg_R3 "s5"
+#define reg_R4 "s6"
+#define reg_PS "s0"
+#define reg_FP "sp"
+#define reg_HP "s1"
+#define reg_TMP0 "s7"
+#define reg_TMP1 "s8"
+#define reg_SP "sp"
+#define reg_RA "ra" /* XXX */
+
+/* XXX */
+#if __riscv_xlen == 64
+#define PS_OFFSET "8"
+#define PS_FIELD(field) PS_OFFSET "+(" field "*8)(" reg_PS ")"
+#else
+#define PS_OFFSET "4"
+#define PS_FIELD(field) PS_OFFSET "+(" field "*4)(" reg_PS ")"
+#endif
+
+  /*
+     TODO
+  */
+
+  __asm__ __volatile__ (
+
+    "mv " reg_PS ", %0\n\t"
+    "addi " reg_PS ", " reg_PS ", -" PS_OFFSET "\n\t"
+
+    /* setup handler for returning from lowlevel code */
+
+    "la " reg_TMP0 ", return_from_lowlevel\n\t" // XXX
+#if __riscv_xlen == 64
+    "sd " reg_TMP0 ", " PS_FIELD("-1") "\n\t"
+    "sd " reg_SP ", " PS_FIELD("-2") "\n\t"
+#else
+    "sw " reg_TMP0 ", " PS_FIELD("-1") "\n\t"
+    "sw " reg_SP ", " PS_FIELD("-2") "\n\t"
+#endif
+
+    /* setup frame pointer and heap pointer registers */
+
+#if __riscv_xlen == 64
+    "ld " reg_FP ", " PS_FP "\n\t"
+    "ld " reg_HP ", " PS_HP "\n\t"
+#else
+    "lw " reg_FP ", " PS_FP "\n\t"
+    "lw " reg_HP ", " PS_HP "\n\t"
+#endif
+
+    /* setup self register */
+
+#if __riscv_xlen == 64
+    "ld " reg_R4 ", " PS_R("4") "\n\t"
+#else
+    "lw " reg_R4 ", " PS_R("4") "\n\t"
+#endif
+
+    "\n"
+    "setup_other_registers:\n\t"
+
+    /* setup lowlevel registers from ___ps->r[...] */
+
+#if __riscv_xlen == 64
+    "ld " reg_R0 ", " PS_R("0") "\n\t"
+    "ld " reg_R1 ", " PS_R("1") "\n\t"
+    "ld " reg_R2 ", " PS_R("2") "\n\t"
+    "ld " reg_R3 ", " PS_R("3") "\n\t"
+#else
+    "lw " reg_R0 ", " PS_R("0") "\n\t"
+    "lw " reg_R1 ", " PS_R("1") "\n\t"
+    "lw " reg_R2 ", " PS_R("2") "\n\t"
+    "lw " reg_R3 ", " PS_R("3") "\n\t"
+#endif
+
+    /*
+     * set flags according to ___ps->na and jump to lowlevel code at
+     * ___ps->pc
+     */
+
+#if __riscv_xlen == 64
+    "ld " reg_TMP0 ", " PS_PC "\n\t"
+#else
+    "lw " reg_TMP0 ", " PS_PC "\n\t"
+#endif
+    "jr " reg_TMP0 "\n\t" // XXX
+
+    "\n"
+    "return_from_lowlevel:"
+    "\n\t"
+
+    /* save lowlevel registers to ___ps->r[...] */
+
+#if __riscv_xlen == 64
+    "sd " reg_R0 ", " PS_R("0") "\n\t"
+    "sd " reg_R1 ", " PS_R("1") "\n\t"
+    "sd " reg_R2 ", " PS_R("2") "\n\t"
+    "sd " reg_R3 ", " PS_R("3") "\n\t"
+#else
+    "sw " reg_R0 ", " PS_R("0") "\n\t"
+    "sw " reg_R1 ", " PS_R("1") "\n\t"
+    "sw " reg_R2 ", " PS_R("2") "\n\t"
+    "sw " reg_R3 ", " PS_R("3") "\n\t"
+#endif
+
+    /* recover the destination control point in ___ps->pc */
+
+    "addi " reg_RA ", " reg_RA ", -" PS_OFFSET "\n\t" /* XXX */
+#if __riscv_xlen == 64
+    "sd " reg_RA ", " PS_PC "\n\t"
+#else
+    "sw " reg_RA ", " PS_PC "\n\t"
+#endif
+
+    /* XXX */
+#if __riscv_xlen == 64
+    "ld " reg_TMP0 ", -" CONTROL_POINT_TAG "-(2*8)(" reg_RA ")\n\t"
+#else
+    "lw " reg_TMP0 ", -" CONTROL_POINT_TAG "-(2*4)(" reg_RA ")\n\t"
+#endif
+    "li " reg_TMP1 ", 0x100000\n\t"
+    "blt " reg_TMP0 ", " reg_TMP1 ", store_self_register\n\t"
+    "addi " reg_R4 ", " reg_R4 ", " PS_OFFSET "-" CONTROL_POINT_TAG "\n\t"
+
+    "\n"
+    "store_self_register:\n\t"
+#if __riscv_xlen == 64
+    "sd " reg_R4 ", " PS_R("4") "\n\t"
+#else
+    "sw " reg_R4 ", " PS_R("4") "\n\t"
+#endif
+
+    /* save frame pointer and heap pointer registers */
+
+#if __riscv_xlen == 64
+    "sd " reg_FP ", " PS_FP "\n\t"
+    "sd " reg_HP ", " PS_HP "\n\t"
+#else
+    "sw " reg_FP ", " PS_FP "\n\t"
+    "sw " reg_HP ", " PS_HP "\n\t"
+#endif
+
+    /* restore callee-save registers */
+
+#if __riscv_xlen == 64
+    "ld " reg_SP ", " PS_FIELD("-2") "\n\t"
+#else
+    "lw " reg_SP ", " PS_FIELD("-2") "\n\t"
+#endif
+
+    : /* no outputs */
+    : /* inputs */
+      "r" (___ps)
+    : /* clobbers */
+      reg_PS,
+      reg_TMP0,
+      reg_TMP1,
+      reg_R0,
+      reg_R1,
+      reg_R2,
+      reg_R3,
+      reg_R4,
+      reg_HP,
+      reg_RA
+  );
+
+#endif
+
 #endif
 
   return ___ps->pc;
