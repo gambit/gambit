@@ -3498,22 +3498,22 @@ ___processor_state ___ps;)
 
     /* setup frame pointer and heap pointer registers */
 
-    "ldr  " reg_FP "," PS_FP "\n\t"
-    "ldr  " reg_HP "," PS_HP "\n\t"
+    "ldr  " reg_FP ", " PS_FP "\n\t"
+    "ldr  " reg_HP ", " PS_HP "\n\t"
 
     /* setup self register */
 
-    "ldr  " reg_R4 "," PS_R("4") "\n\t"
+    "ldr  " reg_R4 ", " PS_R("4") "\n\t"
 
     "\n"
     "setup_other_registers:\n\t"
 
     /* setup lowlevel registers from ___ps->r[...] */
 
-    "ldr  " reg_R0 "," PS_R("0") "\n\t"
-    "ldr  " reg_R1 "," PS_R("1") "\n\t"
-    "ldr  " reg_R2 "," PS_R("2") "\n\t"
-    "ldr  " reg_R3 "," PS_R("3") "\n\t"
+    "ldr  " reg_R0 ", " PS_R("0") "\n\t"
+    "ldr  " reg_R1 ", " PS_R("1") "\n\t"
+    "ldr  " reg_R2 ", " PS_R("2") "\n\t"
+    "ldr  " reg_R3 ", " PS_R("3") "\n\t"
 
     /*
      * set flags according to ___ps->na and jump to lowlevel code at
@@ -3535,10 +3535,10 @@ ___processor_state ___ps;)
 
     /* recover the destination control point in ___ps->pc */
 
-    "sub  lr, #4\n\t"
-    "str  lr, " PS_PC "\n\t"
+    "sub  " reg_LR ", #4\n\t"
+    "str  " reg_LR ", " PS_PC "\n\t"
 
-    "ldr  " reg_TMP ", [lr, #-" CONTROL_POINT_TAG "-2*4]\n\t"
+    "ldr  " reg_TMP ", [" reg_LR ", #-" CONTROL_POINT_TAG "-2*4]\n\t"
     "cmp  " reg_TMP ", #0x100000\n\t"
     "blt  store_self_register\n\t"
     "sub  " reg_R4 ", #(4-" CONTROL_POINT_TAG ")\n\t"
