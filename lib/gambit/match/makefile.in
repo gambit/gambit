@@ -1,13 +1,13 @@
-# makefile for gambit module.
+# makefile for gambit/match module.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 2008-2019 by Marc Feeley, All Rights Reserved.
 
-herefromroot = lib/gambit
-rootfromhere = ../..
-SUBDIRS = git pkg tar hamt digest zlib test match
-HEADERS_SCM = gambit\#.scm
-MODULES_SCM = gambit.scm
-MAIN_MODULES =
+herefromroot = lib/gambit/match
+rootfromhere = ../../..
+SUBDIRS =
+HEADERS_SCM = match\#.scm match-expand\#.scm
+MODULES_SCM = match.scm match-expand.scm
+MAIN_MODULES = match match-expand
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
