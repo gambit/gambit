@@ -5064,7 +5064,7 @@ EOF
       '()
       (lambda (ctx)
        (let ((obj (^local-var 'obj))
-             (arguments  (^local-var 'arguments))
+             (args  (^local-var 'args))
              (scm_procedure (^local-var 'scm_procedure)))
          (^
           ;; TODO: since prim-function-declaration is supposed to be removed
@@ -5074,17 +5074,28 @@ EOF
            'object
            (case (target-name (ctx-target ctx))         ;argument
             ((js php) '())
-            ((python ruby) (list (univ-field '*arguments '()))))
+            ((python ruby) (list (univ-field '*args '()))))
            "\n"                                         ;header
            (^)                                          ;attribs
            (^ (case (target-name (ctx-target ctx))      ;body
+               ((js)
+                (^var-declaration
+                 '()
+                 args
+                 (^call-prim (^member (^member (^member "Array" 'prototype)
+                                               'slice) 'call)
+                             (^local-var 'arguments))))
                ((php)
-                (^var-declaration '() arguments (^call-prim 'func_get_args)))
-               (else (^)))
+                (^var-declaration
+                 '()
+                 args
+                 (^call-prim 'func_get_args)))
+               (else
+                (^)))
               (^return
                (^call-prim (^rts-method-ref 'host2scm_call)
                            obj
-                           arguments))))
+                           args))))
             (^return scm_procedure))))))
 
     ((scm2host)
@@ -5330,7 +5341,7 @@ EOF
   } else if (typeof obj === 'number') {
     return obj
   } else if (typeof obj === 'function') {
-    return function () { return Gambit.js2scm_call(obj, arguments); };
+    return function () { return Gambit.js2scm_call(obj, Array.prototype.slice.call(arguments)); };
   } else if (typeof obj === 'object') {
     if (obj instanceof Array) {
       return obj.map(Gambit.scm2js);
