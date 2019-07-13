@@ -3580,9 +3580,9 @@ ___processor_state ___ps;)
 #define reg_R2 "s4"
 #define reg_R3 "s5"
 #define reg_R4 "s6"
-#define reg_PS "s0"
+#define reg_PS "s10"
 #define reg_FP "sp"
-#define reg_HP "s1"
+#define reg_HP "s11"
 #define reg_TMP0 "s7"
 #define reg_TMP1 "s8"
 #define reg_SP "sp"
@@ -3885,7 +3885,7 @@ ___SCMOBJ fixup_objs;)
                     ___S32 rd = ptr[0] & 0xf80;
 
                     ptr[0] = opcode + rd + (val & 0xfffff000); /* lui */
-                    ptr[1] = (opcode - 0x24) + rd + (rd << 8) + (val << 20); /* addi */
+                    ptr[1] = (opcode - 0x24) + rd + (rd << 8) + (val << 20); /* XXX addi */
 
                     pos = fixup_pos + sizeof(___S32);
                     break;

@@ -67,9 +67,9 @@
     riscv-nb-gvm-regs     ;; GVM register count
     riscv-nb-arg-regs     ;; GVM register count for passing arguments
     riscv-registers       ;; Main registers
-    (riscv-s0)            ;; Processor state pointer (PS)
+    (riscv-s10)           ;; Processor state pointer (PS)
     (riscv-sp)            ;; Stack pointer (SP)
-    (riscv-s1)))          ;; Heap pointer (HP)
+    (riscv-s11)))         ;; Heap pointer (HP)
 
 (define riscv-registers
   (vector
