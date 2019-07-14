@@ -103,8 +103,10 @@
     ((lbl-opnd? opnd) (riscv-imm-lbl (lbl-opnd-label opnd) (lbl-opnd-offset opnd)))
     (else (compiler-internal-error "make-riscv-opnd - Unknown opnd: " opnd))))
 
-(define (riscv-label-align cgc label-opnd #!optional (align '(4 . 0))) ; XXX
-  (asm-align cgc (car align) (cdr align)) ; XXX NOP in RV32I is 4 bytes with value 0x13
+(define (riscv-label-align cgc label-opnd #!optional (align #f))
+  (if align ; XXX NOP in RV32I is 4 bytes with value 0x13
+      (asm-align cgc (car align) (cdr align))
+      (asm-align cgc (get-word-width cgc) 0))
   (riscv-label cgc (lbl-opnd-label label-opnd)))
 
 (define riscv-data-instr
@@ -177,7 +179,7 @@
             (func (make-riscv-opnd reg))))))
 
   (define (unaligned-mem-opnd? mem-opnd)
-    (not (= 0 (modulo (mem-opnd-offset mem-opnd) 4)))) ; XXX
+    (not (= 0 (modulo (mem-opnd-offset mem-opnd) (get-word-width cgc))))) ; XXX
 
   (define (regular-move src)
     (if (not (equal? dst src))

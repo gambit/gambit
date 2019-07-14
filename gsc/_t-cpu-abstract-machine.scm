@@ -1644,7 +1644,8 @@
             (fields-regular)))
          (target-offset
           (case (get-arch-name cgc)
-            ((arm) -4) ; XXX riscv?
+            ((RV32I arm) -4)
+            ((RV64I) -8)
             (else 0)))
          (offset
           (if USE_BRIDGE

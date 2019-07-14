@@ -3662,7 +3662,7 @@ ___processor_state ___ps;)
 #else
     "lw " reg_TMP0 ", " PS_PC "\n\t"
 #endif
-    "jr " reg_TMP0 "\n\t" // XXX
+    "jr " reg_TMP0 "\n\t"
 
     "\n"
     "return_from_lowlevel:"
@@ -3684,7 +3684,7 @@ ___processor_state ___ps;)
 
     /* recover the destination control point in ___ps->pc */
 
-    "addi " reg_RA ", " reg_RA ", -" PS_OFFSET "\n\t" /* XXX */
+    "addi " reg_RA ", " reg_RA ", -" PS_OFFSET "+" CONTROL_POINT_TAG "\n\t" /* XXX */
 #if __riscv_xlen == 64
     "sd " reg_RA ", " PS_PC "\n\t"
 #else
@@ -3699,7 +3699,7 @@ ___processor_state ___ps;)
 #endif
     "li " reg_TMP1 ", 0x100000\n\t"
     "blt " reg_TMP0 ", " reg_TMP1 ", store_self_register\n\t"
-    "addi " reg_R4 ", " reg_R4 ", " PS_OFFSET "-" CONTROL_POINT_TAG "\n\t"
+    "addi " reg_R4 ", " reg_R4 ", -" PS_OFFSET "+" CONTROL_POINT_TAG "\n\t" /* XXX */
 
     "\n"
     "store_self_register:\n\t"
