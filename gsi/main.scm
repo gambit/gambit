@@ -50,7 +50,8 @@
 
   (define (interpreter-interactive-or-batch-mode arguments)
     (let loop ((lst arguments)
-               (batch-mode? #f))
+               (batch-mode? #f)
+               (load-options '()))
       (if (##pair? lst)
         (let ((file
                (##car lst))
@@ -61,7 +62,8 @@
               (cond ((##eq? option-name '||)
                      (##repl-debug #f #t)
                      (loop rest
-                           #t))
+                           #t
+                           load-options))
                     ((##eq? option-name 'e)
                      (if (##pair? rest)
                        (let ((src (read-source-from-string
@@ -69,20 +71,31 @@
                                    #f)))
                          (##eval-top src ##interaction-cte)
                          (loop (##cdr rest)
-                               #t))
+                               #t
+                               load-options))
                        (begin
                          (warn-missing-argument-for-option option-name)
                          (loop rest
-                               #t))))
+                               #t
+                               load-options))))
                     ((##assq option-name ##gsi-option-handlers)
                      =>
                      (lambda (x)
                        ((##cdr x) rest)
                        (##exit)))
+                    ((##eq? option-name 'test)
+                     (loop rest
+                           batch-mode?
+                           (##cons 'test (##remq 'test load-options))))
+                    ((##eq? option-name 'notest)
+                     (loop rest
+                           batch-mode?
+                           (##remq 'test load-options)))
                     (else
                      (warn-unknown-option option-name)
                      (loop rest
-                           batch-mode?))))
+                           batch-mode?
+                           load-options))))
             (let* ((starter
                     #f)
                    (script-callback
@@ -102,13 +115,13 @@
                           (set! ##processed-command-line
                             (##cons script-path rest)))))))
 
-              (##load-module-or-file file
-                                     script-callback)
+              (##load-module-or-file file load-options script-callback)
 
               (if starter
                 (starter)
                 (loop rest
-                      #t)))))
+                      #t
+                      load-options)))))
         (if (##not batch-mode?)
           (##repl-debug-main)
           (##exit)))))

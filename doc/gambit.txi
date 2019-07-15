@@ -282,10 +282,15 @@ automatically.
 Synopsis:
 
 @example
-@b{}gsi @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]} @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}@r{@var{file}}@r{]}@r{]}@dots{}
+@b{}gsi @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]} @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}-test@r{]} @r{[}-notest@r{]} @r{[}@r{@var{file}}@r{]}@r{]}@dots{}
 @end example
 
 @pindex gsi
+@opindex -
+@opindex -e
+@opindex -f
+@opindex -i
+@opindex -v
 The interpreter is executed in @dfn{interactive mode} when no file or
 @samp{-} or @samp{-e} option is given on the command line.  Otherwise
 the interpreter is executed in @dfn{batch mode}.  The @samp{-i} option
@@ -360,9 +365,15 @@ What happens when errors occur is explained in @ref{Debugging}.
 @node GSI batch mode, GSI customization, GSI interactive mode, GSI
 @section Batch mode
 
+@opindex -
+@opindex -e
+@opindex -test
+@opindex -notest
 In batch mode the command line arguments denote files to be loaded,
-REPL interactions to start (@samp{-} option), and expressions to be
-evaluated (@samp{-e} option).  Note that the @samp{-} and @samp{-e}
+REPL interactions to start (@samp{-} option), expressions to be
+evaluated (@samp{-e} option), and tests to be run after loading
+a file (@samp{-test} and @samp{-notest} options).  Note that the
+@samp{-}, @samp{-e}, @samp{-test}, and @samp{-notest}
 options can be interspersed with the files on the command line and can
 occur multiple times.  The interpreter processes the command line
 arguments from left to right, loading files with the @code{load}
@@ -389,6 +400,15 @@ the extension of the file loaded is @samp{.six} the content of the
 file will be parsed using the Scheme infix syntax extension (see
 @ref{Scheme infix syntax extension}).  Otherwise, @code{gsi} will
 parse the file using the normal Scheme prefix syntax.
+
+@opindex -test
+@opindex -notest
+For all files after a @samp{-test} option and before the next
+@samp{-notest} option, after loading the file the interpreter will
+attempt to load a test file with the same name but with the extension
+removed and the suffix @code{-test} added.  The usual file extensions
+are tried including the @samp{.o@var{n}} extension.  An error is
+reported if a test file can't be located.
 
 The ports associated with @samp{(current-input-port)},
 @samp{(current-output-port)} and @samp{(current-error-port)} initially

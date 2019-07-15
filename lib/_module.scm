@@ -471,23 +471,41 @@
                    (##get-module-from-file module-ref modref mod-info)
                    (err))))))))
 
-(define-prim (##load-module-or-file mod-str script-callback)
+(define-prim (##load-module-or-file
+              mod-str
+              #!optional
+              (load-options '())
+              (script-callback (lambda (script-line script-path) #f)))
 
   (define (fallback)
-    (##load mod-str
-            script-callback
-            #t   ;; clone-cte?
-            #t   ;; raise-os-exception?
-            #f   ;; linker-name
-            #f)) ;; quiet?
+    (after-file-load
+     (##load mod-str
+             script-callback
+             #t  ;; clone-cte?
+             #t  ;; raise-os-exception?
+             #f  ;; linker-name
+             #f) ;; quiet?
+     mod-str))
+
+  (define (after-file-load result path)
+    (if (##memq 'test load-options)
+        (##load (##string-append (##path-strip-extension path) "-test")
+                (lambda (script-line script-path) #f)
+                #t   ;; clone-cte?
+                #t   ;; raise-os-exception?
+                #f   ;; linker-name
+                #f)) ;; quiet?
+    result)
 
   (if (##not (##string=? "" (##path-extension mod-str)))
       (fallback)
       (let ((modref (##string->modref mod-str)))
         (if (##not modref)
             (fallback)
-            (let ((module-ref (##string->symbol mod-str)))
-              (or (##lookup-registered-module module-ref)
+            (let* ((module-ref (##string->symbol mod-str))
+                   (module (##lookup-registered-module module-ref)))
+              (if module
+                  (##load-module (macro-module-module-ref module))
                   (let ((mod-info (##search-module
                                    modref
                                    (##cons "" ##module-search-order))))
@@ -505,7 +523,9 @@
                           (if x
                               (script-callback (##cdr x)
                                                (##vector-ref mod-info 3)))
-                          (##load-module (macro-module-module-ref module)))
+                          (after-file-load
+                           (##load-module (macro-module-module-ref module))
+                           (##vector-ref mod-info 3)))
                         (fallback)))))))))
 
 (define ##debug-modules? #f)
