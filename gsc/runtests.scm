@@ -93,7 +93,7 @@
   (let* ((port
           (open-process (list path: path
                               arguments: args
-                              ;; stderr-redirection: #t
+                              stderr-redirection: #f
                               )))
          (output
           (read-line port #f))
@@ -231,7 +231,7 @@
           (path-strip-extension file))
          (x
           (if (target-compiles-to-o1? target)
-              (run "./gsc" "-:=.." "-target" target file)
+              (run "./gsc" "-:=.." "-target" target "-e" "(let ((mo c#make-obj)) (set! c#make-obj (lambda (val) (if (c#proc-obj? val) (let* ((name (c#proc-obj-name val)) (sym (string->symbol name))) (if (and (not (member sym '(##machine-code-fixup))) (##string-prefix=? name \"##\")) (begin (println port: ##stderr-port \"\\n*** this primitive not inlined: \" sym) '(exit 1))))) (mo val))))" file)
               (apply run
                      (append (list "./gsc" "-:=.." "-o" (path-directory file) "-target" target "-link" "-flat")
                              options
