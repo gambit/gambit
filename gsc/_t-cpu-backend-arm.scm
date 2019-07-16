@@ -474,6 +474,22 @@
         true-opnd:  (int-opnd (format-imm-object #t))
         false-opnd: (int-opnd (format-imm-object #f))))))
 
+(define arm-prim-##char?
+  (const-nargs-prim 1 2 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1 temp2)
+      (let ((test-int
+              (- special-int-tag (expt 2 (- (get-word-width-bits cgc) 1)))))
+        (am-mov cgc temp1 arg1) ;; Save arg1
+        (am-mov cgc temp2 (int-opnd test-int))
+        (arm-and cgc temp1 temp2)
+        (am-mov cgc temp2 (int-opnd special-int-tag))
+        (arm-cmp cgc temp1 temp2)
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-eq)))
+          (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne)))
+          true-opnd:  (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
 (define arm-prim-##fx+
   (foldl-prim
     (lambda (cgc accum opnd) (am-add cgc accum accum opnd))
@@ -676,6 +692,7 @@
     (table-set! table '##special?       (make-prim-obj arm-prim-##special?       1 #t #t))
     (table-set! table '##pair?          (make-prim-obj arm-prim-##pair?          1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj arm-prim-##mem-allocated? 1 #t #t))
+    (table-set! table '##char?          (make-prim-obj arm-prim-##char?          1 #t #t))
 
     ; (table-set! table '##flonum?  (make-prim-obj arm-stub-prim 1 #t #f))
     ; (table-set! table '##fl+      (make-prim-obj arm-stub-prim 2 #t #f))

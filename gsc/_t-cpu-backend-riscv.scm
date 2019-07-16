@@ -394,6 +394,20 @@
         true-opnd:  (int-opnd (format-imm-object #t))
         false-opnd: (int-opnd (format-imm-object #f))))))
 
+(define riscv-prim-##char?
+  (const-nargs-prim 1 2 '((reg mem))
+    (lambda (cgc result-action args arg1 temp1 temp2)
+      (let ((test-int
+              (- special-int-tag (expt 2 (- (get-word-width-bits cgc) 1)))))
+        (am-mov cgc temp1 (int-opnd test-int))
+        (riscv-and cgc temp1 arg1 temp1)
+        (am-mov cgc temp2 (int-opnd special-int-tag))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
+          (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
+          true-opnd:  (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
 (define riscv-prim-##fx+
   (foldl-prim
     (lambda (cgc accum opnd) (am-add cgc accum accum opnd))
@@ -615,6 +629,7 @@
     (table-set! table '##pair?          (make-prim-obj riscv-prim-##pair?          1 #t #t))
     (table-set! table '##special?       (make-prim-obj riscv-prim-##special?       1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj riscv-prim-##mem-allocated? 1 #t #t))
+    (table-set! table '##char?          (make-prim-obj riscv-prim-##char?          1 #t #t))
 
     ; (table-set! table '##flonum?      (make-prim-obj riscv-stub-prim 1 #t #f))
     ; (table-set! table '##fl+          (make-prim-obj riscv-stub-prim 2 #t #f))
