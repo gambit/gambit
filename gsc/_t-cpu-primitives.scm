@@ -616,24 +616,26 @@
 
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
-;; Header is index 0
-(define (object-read-prim desc index #!optional (width #f))
+(define (object-read-prim desc opers #!optional (width #f))
   (if (immediate-desc? desc)
-    (compiler-internal-error "Object isn't a reference"))
+      (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args obj-opnd)
       (let* ((width (if width width (get-word-width cgc)))
-              (obj-tag (get-desc-pointer-tag desc))
-              (header-offset (+ (* width pointer-header-offset) obj-tag))
-              (total-offset (- (* width index) header-offset))
-              (mem-location (opnd-with-offset obj-opnd total-offset)))
-        (am-return-opnd cgc result-action mem-location)))))
+             (obj-tag (get-desc-pointer-tag desc))
+             (header-offset (+ (* width pointer-header-offset) obj-tag))) ;; Header is index 0
+        (for-each
+          (lambda (op)
+            (let ((offset (- (* width (if (eq? op 'a) 2 1)) header-offset)))
+              (am-mov cgc obj-opnd (opnd-with-offset obj-opnd offset))))
+          (reverse opers))
+        (am-return-opnd cgc result-action obj-opnd)))))
 
 ;; Header is index 0
 (define (object-set-prim desc index #!optional (width #f))
   (if (immediate-desc? desc)
-    (compiler-internal-error "Object isn't a reference"))
+      (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 2 0 '((reg))
     (lambda (cgc result-action args obj-opnd new-val)
