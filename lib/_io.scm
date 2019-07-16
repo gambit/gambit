@@ -9878,11 +9878,11 @@
               name
               index
               #!optional
-              (settings (macro-absent-obj)))
+              (settings '()))
 
   (##make-path-psettings
    direction
-   (##list 'readtable: ##main-readtable)
+   settings
    ##exit-abruptly
    (lambda (psettings)
      (let ((device
@@ -9913,14 +9913,15 @@
   ##console-port)
 
 (define-prim (##open-all-predefined)
-  (set! ##stdin-port
-        (##open-predefined (macro-direction-in)    '(stdin)   -1))
-  (set! ##stdout-port
-        (##open-predefined (macro-direction-out)   '(stdout)  -2))
-  (set! ##stderr-port
-        (##open-predefined (macro-direction-out)   '(stderr)  -3))
-  (set! ##console-port
-        (##open-predefined (macro-direction-inout) '(console) -4)))
+  (let ((settings (##list 'readtable: ##main-readtable)))
+    (set! ##stdin-port
+      (##open-predefined (macro-direction-in)    '(stdin)   -1 settings))
+    (set! ##stdout-port
+      (##open-predefined (macro-direction-out)   '(stdout)  -2 settings))
+    (set! ##stderr-port
+      (##open-predefined (macro-direction-out)   '(stderr)  -3 settings))
+    (set! ##console-port
+      (##open-predefined (macro-direction-inout) '(console) -4 settings))))
 
 ;;;----------------------------------------------------------------------------
 
