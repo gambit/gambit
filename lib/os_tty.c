@@ -8597,6 +8597,8 @@ ___SCMOBJ ___setup_user_interrupt_handling ___PVOID
   ___set_signal_handler (SIGTERM, tty_signal_handler);
   ___set_signal_handler (SIGWINCH, tty_signal_handler);
   ___set_signal_handler (SIGCONT, tty_signal_handler);
+  ___set_signal_handler (SIGTTOU, SIG_IGN);
+  ___set_signal_handler (SIGTTIN, SIG_IGN);
 
   {
     ___sigset_type sigs;
@@ -8630,6 +8632,8 @@ void ___cleanup_user_interrupt_handling ___PVOID
   ___set_signal_handler (SIGTERM, SIG_DFL);
   ___set_signal_handler (SIGWINCH, SIG_DFL);
   ___set_signal_handler (SIGCONT, SIG_DFL);
+  ___set_signal_handler (SIGTTOU, SIG_DFL);
+  ___set_signal_handler (SIGTTIN, SIG_DFL);
 
   {
     ___sigset_type sigs;
