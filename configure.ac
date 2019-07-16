@@ -3185,7 +3185,11 @@ lib/gambit/pkg/makefile \
 lib/gambit/tar/makefile \
 lib/gambit/hamt/makefile \
 lib/gambit/hamt/primitive-hamt/makefile \
+lib/gambit/http/makefile \
+lib/gambit/uri/makefile \
 lib/gambit/digest/makefile \
+lib/gambit/termite/makefile \
+lib/gambit/termite/otp/makefile \
 lib/gambit/zlib/makefile \
 lib/gambit/test/makefile \
 lib/gambit/match/makefile \
