@@ -17,6 +17,6 @@ match
 (##define-syntax match
   (lambda (src)
     (##import gambit/match/match-expand)
-    (match-expand src #f)))
+    (match-expand src #f #f #f)))
 
 ;;;============================================================================

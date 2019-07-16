@@ -23,7 +23,11 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (match-expand src use-question-mark-prefix-pattern-variables?)
+(define (match-expand
+         src
+         use-question-mark-prefix-pattern-variables?
+         use-exhaustive-cases?
+         use-else?)
 
   (define expansion-debug? #f)
 
@@ -67,16 +71,16 @@
                  `(##let ((,pattern-var ,var))
                     ,yes)))
               ((null? pattern)
-               `(##if (##null? ,var) ,yes ,no))
+               `(##if (##null? ,var) ,yes ,(no)))
               ((symbol? pattern)
-               `(##if (##eq? ,var ',pattern) ,yes ,no))
+               `(##if (##eq? ,var ',pattern) ,yes ,(no)))
               ((boolean? pattern)
-               `(##if (##eq? ,var ,pattern) ,yes ,no))
+               `(##if (##eq? ,var ,pattern) ,yes ,(no)))
               ((or (number? pattern)
                    (char? pattern))
-               `(##if (##eqv? ,var ,pattern) ,yes ,no))
+               `(##if (##eqv? ,var ,pattern) ,yes ,(no)))
               ((string? pattern)
-               `(##if (##equal? ,var ,pattern) ,yes ,no))
+               `(##if (##equal? ,var ,pattern) ,yes ,(no)))
               ((pair? pattern)
                (let ((carvar (gensym))
                      (cdrvar (gensym)))
@@ -86,53 +90,86 @@
                             carvar
                             (car pattern)
                             `(##let ((,cdrvar (##cdr ,var)))
-                                    ,(if-equal?
-                                      cdrvar
-                                      (cdr pattern)
-                                      yes
-                                      no))
+                               ,(if-equal?
+                                 cdrvar
+                                 (cdr pattern)
+                                 yes
+                                 no))
                             no))
-                        ,no)))
+                        ,(no))))
               (else
                (error "unknown match pattern")))))
 
+    (define (else-clause? sc)
+      (and use-else?
+           (eq? (source-code (car sc)) 'else)))
+
     (let* ((var
             (gensym))
-           (fns
-            (map (lambda (x) (gensym))
-                 clauses))
            (default
-             (gensym)))
+             (gensym))
+           (clauses*
+            (let loop ((lst (reverse clauses))
+                       (last default)
+                       (clauses* (list (cons default (cons #f #t)))))
+              (if (pair? lst)
+                  (let* ((name (gensym))
+                         (clause (car lst))
+                         (sc (source-code clause)))
+                    (cond ((not (pair? sc))
+                           (error "clause must be a list"))
+                          ((and (else-clause? sc)
+                                (not (eq? last default)))
+                           (error "else clause must be last")))
+                    (loop (cdr lst)
+                          name
+                          (cons (cons name (cons last clause)) clauses*)))
+                  clauses*)))
+           (defs
+            '()))
 
-      (let ((expansion
-             `(##let ((,var ,subject))
-                ,@(map (lambda (fn1 fn2 clause)
-                         (let ((sc (source-code clause)))
-                           (if (not (pair? sc))
-                               (error "clause must be a list")
-                               `(##define (,fn1)
-                                  ,(if (eq? (source-code (car sc)) 'else)
-                                       `(##begin ,@(cdr sc))
-                                       (if-equal?
-                                        var
-                                        (car sc)
-                                        (if (and (eq? (source-code (cadr sc))
-                                                      'when)
-                                                 (pair? (cddr sc)))
-                                            `(##if ,(caddr sc)
-                                                   (##begin ,@(cdddr sc))
-                                                   (,fn2))
-                                            `(##begin ,@(cdr sc)))
-                                        `(,fn2)))))))
-                            fns
-                            (append (cdr fns) (list default))
-                            clauses)
+      (define (call-clause-fn name)
+        (let* ((x (assq name clauses*))
+               (next (cadr x))
+               (clause (cddr x)))
 
-                     (##define (,default)
-                       ;; (error "match failed" ,var)
-                       #f)
+          (define (no)
+            (call-clause-fn next))
 
-                     (,(car fns)))))
+          (if clause
+              (begin
+                (set-cdr! (cdr x) #f) ;; generate once
+                (set! defs
+                  (cons `(##define (,name)
+                           ,(if next
+                                (let ((sc (source-code clause)))
+                                  (if (else-clause? sc)
+                                      `(##let () ,@(cdr sc))
+                                      (if-equal?
+                                       var
+                                       (car sc)
+                                       (if (and (pair? (cdr sc))
+                                                (eq? (source-code (cadr sc))
+                                                     'when)
+                                                (pair? (cddr sc)))
+                                           `(##if ,(caddr sc)
+                                                  (##let () ,@(cdddr sc))
+                                                  ,(no))
+                                           `(##let () ,@(cdr sc)))
+                                       no)))
+                                (if use-exhaustive-cases?
+                                    `(##error "match failed" ,var)
+                                    `#f)))
+                        defs))))
+
+          `(,name)))
+
+      (let* ((body
+              (call-clause-fn (car (car clauses*))))
+             (expansion
+              `(##let ((,var ,subject))
+                 ,@defs
+                 ,body)))
         (if expansion-debug? (pretty-print expansion))
         expansion)))
 
