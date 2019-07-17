@@ -26,7 +26,8 @@
 (define (immediate-type desc) (list-ref desc 1))
 (define (immediate-encode-fun desc) (list-ref desc 2))
 
-(define (reference-desc type header-tag header-fun encode-fun) (list 'ref type header-tag header-fun encode-fun))
+(define (reference-desc type header-tag header-fun encode-fun)
+  (list 'ref type header-tag header-fun encode-fun))
 (define (reference-desc? desc) (eqv? 'ref (car desc)))
 (define (reference-type desc) (list-ref desc 1))
 (define (reference-header-tag desc) (list-ref desc 2))
@@ -35,17 +36,15 @@
 
 (define (immediate-object? object)
   (immediate-desc? (get-object-description object)))
-
 (define (reference-object? object)
   (reference-desc? (get-object-description object)))
 
 (define (format-imm-object object)
   (let ((desc (get-object-description object)))
-    (cond
-      ((immediate-desc? desc)
-       ((immediate-encode-fun desc) object))
-      (else
-        (compiler-internal-error "format-imm-object - Object must be an immediate: " object)))))
+    (if (immediate-desc? desc)
+        ((immediate-encode-fun desc) object)
+        (compiler-internal-error
+          "format-imm-object - Object must be an immediate: " object))))
 
 (define (get-object-description object)
   (cond
@@ -82,7 +81,8 @@
           (eqv? 'pair (reference-type desc)))
      pair-tag)
     (else
-      (compiler-internal-error "get-desc-pointer-tag - Unknown object description: " desc))))
+      (compiler-internal-error
+        "get-desc-pointer-tag - Unknown object description: " desc))))
 
 ;; Pointer tagging constants
 
