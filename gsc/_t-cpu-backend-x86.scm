@@ -664,8 +664,8 @@
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
       (let* ((width (get-word-width-bits cgc))
-          (x86-opnd (make-x86-opnd arg1))
-              (shrinked-opnd (shrink-x86-opnd x86-opnd width 8)))
+             (x86-opnd (make-x86-opnd arg1))
+             (shrinked-opnd (shrink-x86-opnd x86-opnd width 8)))
         (x86-test cgc
           (car shrinked-opnd)
           (x86-imm-int (- tag-mult 1))
@@ -816,6 +816,18 @@
 (define x86-prim-##fx>= (x86-compare-prim (condition-lesser #f #t)))
 (define x86-prim-##fx=  (x86-compare-prim condition-not-equal))
 
+(define (x86-prim-##fxparity? parity)
+  (const-nargs-prim 1 0 '((reg))
+    (lambda (cgc result-action args arg1)
+      (let ((width (get-word-width-bits cgc))
+            (x86-opnd (make-x86-opnd arg1)))
+        (x86-test cgc x86-opnd (x86-imm-int (format-imm-object 1)))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) ((if (eq? parity 'even) x86-je x86-jne) cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) ((if (eq? parity 'even) x86-jne x86-je) cgc (lbl-opnd-label lbl)))
+          true-opnd:  (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
 (define x86-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -950,6 +962,9 @@
     (table-set! table '##fx>            (make-prim-obj x86-prim-##fx>  2 #t #t))
     (table-set! table '##fx>=           (make-prim-obj x86-prim-##fx>= 2 #t #t))
     (table-set! table '##fx=            (make-prim-obj x86-prim-##fx=  2 #t #t))
+
+    (table-set! table '##fxeven?        (make-prim-obj (x86-prim-##fxparity? 'even) 1 #t #t))
+    (table-set! table '##fxodd?         (make-prim-obj (x86-prim-##fxparity? 'odd)  1 #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-obj-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-obj-desc '(d)) 1 #t #f))

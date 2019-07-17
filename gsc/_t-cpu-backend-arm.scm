@@ -554,6 +554,17 @@
 (define arm-prim-##fx>= (arm-compare-prim (condition-lesser #f #t)))
 (define arm-prim-##fx=  (arm-compare-prim condition-not-equal))
 
+(define (arm-prim-##fxparity? parity)
+  (const-nargs-prim 1 1 '((reg))
+    (lambda (cgc result-action args arg1 temp1)
+      (am-mov cgc temp1 (int-opnd (format-imm-object 1)))
+      (arm-tst cgc arg1 temp1)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (if (eq? parity 'even) (arm-cond-eq) (arm-cond-ne))))
+        (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (if (eq? parity 'even) (arm-cond-ne) (arm-cond-eq))))
+        true-opnd:  (int-opnd (format-imm-object #t))
+        false-opnd: (int-opnd (format-imm-object #f))))))
+
 (define arm-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -710,6 +721,9 @@
     (table-set! table '##fx>            (make-prim-obj arm-prim-##fx>  2 #t #t))
     (table-set! table '##fx>=           (make-prim-obj arm-prim-##fx>= 2 #t #t))
     (table-set! table '##fx=            (make-prim-obj arm-prim-##fx=  2 #t #t))
+
+    (table-set! table '##fxeven?        (make-prim-obj (arm-prim-##fxparity? 'even) 1 #t #t))
+    (table-set! table '##fxodd?         (make-prim-obj (arm-prim-##fxparity? 'odd)  1 #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-obj-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-obj-desc '(d)) 1 #t #f))

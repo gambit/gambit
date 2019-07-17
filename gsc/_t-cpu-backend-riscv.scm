@@ -484,6 +484,16 @@
 (define riscv-prim-##fx>= (riscv-compare-prim (condition-lesser #f #t)))
 (define riscv-prim-##fx=  (riscv-compare-prim condition-not-equal))
 
+(define (riscv-prim-##fxparity? parity)
+  (const-nargs-prim 1 1 '((reg mem))
+    (lambda (cgc result-action args arg1 tmp1)
+      (riscv-andi cgc tmp1 arg1 (riscv-imm-int (format-imm-object 1)))
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl) ((if (eq? parity 'even) riscv-beqz riscv-bnez) cgc tmp1 (make-riscv-opnd lbl)))
+        (lambda (cgc lbl) ((if (eq? parity 'even) riscv-bnez riscv-beqz) cgc tmp1 (make-riscv-opnd lbl)))
+        true-opnd:  (int-opnd (format-imm-object #t))
+        false-opnd: (int-opnd (format-imm-object #f))))))
+
 (define riscv-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -647,6 +657,9 @@
     (table-set! table '##fx>            (make-prim-obj riscv-prim-##fx>  2 #t #t))
     (table-set! table '##fx>=           (make-prim-obj riscv-prim-##fx>= 2 #t #t))
     (table-set! table '##fx=            (make-prim-obj riscv-prim-##fx=  2 #t #t))
+
+    (table-set! table '##fxeven?        (make-prim-obj (riscv-prim-##fxparity? 'even) 1 #t #t))
+    (table-set! table '##fxodd?         (make-prim-obj (riscv-prim-##fxparity? 'odd)  1 #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-obj-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-obj-desc '(d)) 1 #t #f))
