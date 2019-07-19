@@ -334,7 +334,7 @@
               (am-jmp cgc (get-register cgc 0))
 
               (am-lbl cgc false-label)
-              (am-mov cgc mov-loc true-jmp width)
+              (am-mov cgc mov-loc true-opnd width)
               (am-jmp cgc (get-register cgc 0))))))
 
       ((then-nothing? result-action)
