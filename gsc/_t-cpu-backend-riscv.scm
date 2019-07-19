@@ -287,9 +287,6 @@
               (riscv-j cgc (make-riscv-opnd opnd)))))))
 
 (define (riscv-branch-instrs condition)
-  (define (flip pair)
-    (cons (cdr pair) (car pair)))
-
   (case (get-condition condition)
     ((equal)
      (cons riscv-beq riscv-bne))

@@ -1,44 +1,31 @@
 ;;==============================================================================
 
-;;; File: "_t-cpu-abstract-machine.scm"
+;;; File: "_t-cpu-utils.scm"
 
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
 
 ;;------------------------------------------------------------------------------
 
-;; ***** Utils
-
 (define (debug . items)
   (if (output-port? cpu-debug-port)
-    (begin
-      (for-each (lambda (str) (display str cpu-debug-port)) items)
-      (newline cpu-debug-port))))
+      (begin
+        (for-each (lambda (item) (display item cpu-debug-port)) items)
+        (newline cpu-debug-port))))
 
-;; ***** Utils - Lists
+(define (flip pair)
+  (cons (cdr pair) (car pair)))
 
-(define (make-bitmap lst)
-  (define bitmap 0)
-  (define bit-value 1)
-  (for-each
-    (lambda (x)
-      (if x
-        (set! bitmap (+ bitmap bit-value)))
-      (set! bit-value (* 2 bit-value)))
-    lst)
-  bitmap)
+(define (in-range? min max val)
+  (and (>= val min) (<= val max)))
 
-(define (find pred elems #!optional (index 0))
-  (if (null? elems)
-    -1
-    (if (pred (car elems))
-      index
-      (find pred (cdr elems) (+ 1 index)))))
-
-(define (index-of elem elems)
-  (find (lambda (var) (equal? var elem)) elems))
+(define (index-of elem lst #!optional (=? equal?))
+  (let loop ((i 0) (lst lst))
+    (cond ((null? lst) #f)
+          ((=? elem (car lst)) i)
+          (else (loop (+ i 1) (cdr lst))))))
 
 (define (elem? elem elems)
-  (not (= -1 (index-of elem elems))))
+  (if (member elem elems) #t #f))
 
 (define (elem-count elem elems)
   (define (worker lst count)
@@ -57,49 +44,10 @@
       (cons (car elems) (filter pred (cdr elems)))
       (filter pred (cdr elems)))))
 
-(define (map-nth list nth fun)
-  (if (= 0 nth)
-    (cons (fun (car list)) (cdr list))
-    (cons (car list) (map-nth (cdr list) (- nth 1) fun))))
-
-(define (reorder-list elems indexes)
-  (if (null? indexes)
-    '()
-    (cons
-      (list-ref elems (car indexes))
-      (reorder-list elems (cdr indexes)))))
-
-(define (swap-index index1 index2 elems)
-  (define (build-list elems index elem1 elem2)
-    (cond ((null? elems)
-           '())
-          ((= index index1)
-           (cons elem2 (build-list (cdr elems) (+ 1 index) elem1 elem2)))
-          ((= index index2)
-           (cons elem1 (build-list (cdr elems) (+ 1 index) elem1 elem2)))
-          (else
-           (cons (car elems) (build-list (cdr elems) (+ 1 index) elem1 elem2)))))
-  (build-list elems 0 (list-ref elems index1) (list-ref elems index2)))
-
-(define (take-n lst n)
-  (if (or (null? lst) (<= n 0))
-    '()
-    (cons (car lst) (take-n (cdr lst) (- n 1)))))
-
 (define (drop-n lst n)
   (if (or (null? lst) (<= n 0))
     lst
     (drop-n (cdr lst) (- n 1))))
-
-(define (drop-first elem lst)
-  (if (null? lst)
-    lst
-    (let ((fst (car lst)))
-      (if (equal? elem fst)
-        (cdr lst)
-        (cons fst (drop-first elem (cdr lst)))))))
-
-(define (flip pair) (cons (cdr pair) (car pair)))
 
 (define (sort-list l <?)
   (define (mergesort l)
@@ -126,12 +74,5 @@
 
   (mergesort l))
 
-
 (define (safe-car pair) (if (pair? pair) (car pair) #f))
 (define (safe-cdr pair) (if (pair? pair) (cdr pair) #f))
-
-(define (symbol-append . symbols)
-  (string->symbol (apply string-append (map symbol->string symbols))))
-
-(define (in-range? min max val)
-  (and (>= val min) (<= val max)))

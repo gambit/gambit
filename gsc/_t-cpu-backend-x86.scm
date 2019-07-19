@@ -259,8 +259,6 @@
         (x86-jmp cgc (make-x86-opnd opnd))))))
 
 (define (get-jumps condition)
-  (define (flip pair) (cons (cdr pair) (car pair)))
-
   (case (get-condition condition)
     ((equal)
       (cons x86-je  x86-jne))

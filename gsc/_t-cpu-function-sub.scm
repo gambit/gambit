@@ -122,14 +122,6 @@
 
 ;; ***** Instruction substitution - Arguments helper functions
 
-(define (map-argument arg-index fun)
-  (lambda (args)
-    (map-nth args arg-index fun)))
-
-(define (reorganize-args list)
-  (lambda (args)
-    (reorder-list args list)))
-
 (define (all bools)
   (if (null? bools)
     #t

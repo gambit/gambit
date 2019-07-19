@@ -322,7 +322,6 @@
         (arm-bx cgc (make-arm-opnd opnd))))))
 
 (define (arm-get-branch-conditions condition)
-  (define (flip pair) (cons (cdr pair) (car pair)))
   (case (get-condition condition)
     ((equal)
       (cons (arm-cond-eq)  (arm-cond-ne)))
