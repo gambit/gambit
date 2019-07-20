@@ -1788,29 +1788,35 @@ ___SCMOBJ ___setup_base_module ___PVOID
 {
   if (___base_mod.refcount++ == 0)
     {
+#ifdef ___BASE_MODULE_INIT_CODE
+      ___BASE_MODULE_INIT_CODE;
+#endif
+
 #ifdef USE_CLASSIC_MACOS
 
-      long response;
+      {
+        long response;
 
-      ___base_mod.has_GetUTCDateTime = trap_exists (_UTCDateTime);
-      ___base_mod.has_GetDateTime = trap_exists (_GetDateTime);
-      ___base_mod.has_ReadLocation = trap_exists (_ReadLocation);
-      ___base_mod.has_Delay = trap_exists (_Delay);
-      ___base_mod.has_IdleUpdate = trap_exists (_IdleUpdate);
-      ___base_mod.has_WaitNextEvent = trap_exists (_WaitNextEvent);
-      ___base_mod.has_OSDispatch = trap_exists (_OSDispatch);
+        ___base_mod.has_GetUTCDateTime = trap_exists (_UTCDateTime);
+        ___base_mod.has_GetDateTime = trap_exists (_GetDateTime);
+        ___base_mod.has_ReadLocation = trap_exists (_ReadLocation);
+        ___base_mod.has_Delay = trap_exists (_Delay);
+        ___base_mod.has_IdleUpdate = trap_exists (_IdleUpdate);
+        ___base_mod.has_WaitNextEvent = trap_exists (_WaitNextEvent);
+        ___base_mod.has_OSDispatch = trap_exists (_OSDispatch);
 
-      ___base_mod.has_FindFolder =
-        (Gestalt (gestaltFindFolderAttr, &response) == noErr &&
-         test_bit (response, gestaltFindFolderPresent));
+        ___base_mod.has_FindFolder =
+          (Gestalt (gestaltFindFolderAttr, &response) == noErr &&
+           test_bit (response, gestaltFindFolderPresent));
 
-      ___base_mod.has_AliasMgr =
-        (Gestalt (gestaltAliasMgrAttr, &response) == noErr &&
-         test_bit (response, gestaltAliasMgrPresent));
+        ___base_mod.has_AliasMgr =
+          (Gestalt (gestaltAliasMgrAttr, &response) == noErr &&
+           test_bit (response, gestaltAliasMgrPresent));
 
-      ___base_mod.has_AppleEvents =
-        (Gestalt (gestaltAppleEventsAttr, &response) == noErr &&
-         test_bit (response, gestaltAppleEventsPresent));
+        ___base_mod.has_AppleEvents =
+          (Gestalt (gestaltAppleEventsAttr, &response) == noErr &&
+           test_bit (response, gestaltAppleEventsPresent));
+      }
 
 #endif
 
