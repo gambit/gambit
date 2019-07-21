@@ -5195,13 +5195,13 @@ EOF
                           (^if (^pair? elem)
                                (^assign
                                  (^array-index
-                                  obj
+                                  jsobj
                                   (^call-prim (^rts-method-ref 'scm2host)
                                               (^getcar elem)))
                                  (^call-prim (^rts-method-ref 'scm2host)
                                              (^getcdr elem)))
                                (^assign
-                                 (^array-index obj i)
+                                 (^array-index jsobj i)
                                  (^call-prim
                                   (^rts-method-ref 'scm2host)
                                   elem)))
@@ -5271,6 +5271,8 @@ EOF
                               frame)))
           (^return ra))))))
 
+    ;;deprecated:
+    #;
     ((js2scm)
      (rts-method
       'js2scm
@@ -5322,6 +5324,8 @@ EOF
   }
 ")))))
 
+    ;;deprecated:
+    #;
     ((scm2js)
      (rts-method
       'scm2js
@@ -5374,6 +5378,8 @@ EOF
 EOF
 )))
 
+    ;;deprecated:
+    #;
     ((scm2js_call)
      (rts-method
       'scm2js_call
@@ -5412,6 +5418,8 @@ EOF
 EOF
 )))
 
+    ;;deprecated:
+    #;
     ((js2scm_call)
      (rts-method
       'js2scm_call
@@ -5464,10 +5472,12 @@ EOF
         (univ-use-rtlib ctx 'scm2host)
         (univ-use-rtlib ctx 'scm_procedure2host)
         (univ-use-rtlib ctx 'scm2host_call)
-        (univ-use-rtlib ctx 'js2scm)
-        (univ-use-rtlib ctx 'scm2js)
-        (univ-use-rtlib ctx 'js2scm_call)
-        (univ-use-rtlib ctx 'scm2js_call))
+        ;;deprecated:
+        ;;(univ-use-rtlib ctx 'js2scm)
+        ;;(univ-use-rtlib ctx 'scm2js)
+        ;;(univ-use-rtlib ctx 'js2scm_call)
+        ;;(univ-use-rtlib ctx 'scm2js_call)
+        )
        ((python ruby php)
         (univ-use-rtlib ctx 'host_function2scm)
         (univ-use-rtlib ctx 'host2scm)
