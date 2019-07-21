@@ -1247,7 +1247,7 @@
                                                     (^int 1)))
                                                (^int 0)))
 
-                                     (^setglo '##vm-main-module-id
+                                     (^setglo '##vm-main-module-ref
                                               (^vector-ref
                                                temp
                                                (^- (^vector-length temp)
@@ -5794,7 +5794,7 @@ EOF
 (define (univ-rtlib-init ctx mods-and-flags)
 
   ;; automatically defined global variables
-  (univ-glo-use ctx '##vm-main-module-id 'wr)
+  (univ-glo-use ctx '##vm-main-module-ref 'wr)
   (univ-glo-use ctx '##program-descr 'wr)
 
   (^expr-statement
