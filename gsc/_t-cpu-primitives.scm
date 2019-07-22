@@ -80,8 +80,6 @@
   (am-if cgc opnd1 opnd2 condition-equal on-true on-false actions-return opnds-width))
 
 (define (am-return-const cgc result-action value)
-  (debug "am-return-const")
-  (debug "result-action: " result-action)
   (cond
     ((then-jump? result-action)
       (if (then-jump-move? result-action)
@@ -105,14 +103,11 @@
         (make-obj-opnd value)
         (get-word-width-bits cgc))
       (am-jmp cgc (get-register cgc 0)))
-    ((then-nothing? result-action)
-      (debug "result-action is nop"))
+    ((then-nothing? result-action) #f) ; XXX
     (else
       (compiler-internal-error "prim-return-const - Unknown result-action" result-action))))
 
 (define (am-return-opnd cgc result-action opnd #!key (opnd-not-false #f))
-  (debug "am-return-opnd")
-  (debug "result-action: " result-action)
   (cond
     ((then-jump? result-action)
       (let ((false-opnd (make-obj-opnd #f))
@@ -136,14 +131,12 @@
     ((then-return? result-action)
       (am-mov cgc (get-register cgc 1) opnd (get-word-width-bits cgc))
       (am-jmp cgc (get-register cgc 0)))
-    ((then-nothing? result-action)
-      (debug "result-action is nop"))
+    ((then-nothing? result-action) #f) ; XXX
     (else
       (compiler-internal-error "prim-return-opnd - Unknown result-action" result-action))))
 
 (define (am-return-boolean cgc result-action action #!key (fall-through #t))
   (define width (get-word-width-bits cgc))
-  (debug "am-return-boolean")
   (let ((true-label (make-unique-label cgc "if-true" #f))
         (false-label (make-unique-label cgc "if-false" #f))
         (continue-label (make-unique-label cgc "continue-label" #f)))
@@ -199,7 +192,6 @@
         (am-mov cgc (get-register cgc 1) (make-obj-opnd (not fall-through)) width)
         (am-jmp cgc (get-register cgc 0)))
       ((then-nothing? result-action)
-        (debug "result-action is nop")
         (action true-label false-label)
         (am-lbl cgc true-label)
         (am-lbl cgc false-label))
@@ -209,7 +201,6 @@
 (define (am-cond-return cgc result-action true-jmp false-jmp
           #!key true-opnd false-opnd)
   (define width (get-word-width-bits cgc))
-  (debug "am-cond-return: " result-action)
   (let ((continue-label (make-unique-label cgc "continue" #f))
         (false-label (make-unique-label cgc "if-false" #f)))
     (cond
@@ -277,9 +268,7 @@
                   (am-jmp cgc true-dst)
 
                   (am-lbl cgc false-label)
-                  (am-mov cgc mov-loc false-opnd width))
-                (else
-                  (debug "am-compare-jump: No jump encoded"))))
+                  (am-mov cgc mov-loc false-opnd width))))
             (cond
               ((and true-dst false-dst)
                 (true-jmp cgc true-dst)
@@ -287,9 +276,7 @@
               ((and (not true-dst) false-dst)
                 (false-jmp cgc false-dst))
               ((and true-dst (not false-dst))
-                (true-jmp cgc true-dst))
-              (else
-                (debug "am-compare-jump: No jump encoded"))))))
+                (true-jmp cgc true-dst))))))
 
       ((then-move? result-action)
         (let ((mov-loc (then-move-store-location result-action)))
@@ -337,8 +324,7 @@
               (am-mov cgc mov-loc true-opnd width)
               (am-jmp cgc (get-register cgc 0))))))
 
-      ((then-nothing? result-action)
-        (debug "result-action is nop"))
+      ((then-nothing? result-action) #f) ; XXX
 
       (else
         (compiler-internal-error "am-cond-return - Unknown result-action" result-action)))))
@@ -354,8 +340,6 @@
   (define (none? a) (equal? 'none a))
 
   (lambda (cgc result-action args)
-    (debug "foldl-prim")
-
     ;; The difference between a function and an inlined function is that the
     ;; arguments for the inlined function are unrolled while they are placed in
     ;; a list as the last argument of the function.
@@ -430,7 +414,6 @@
                 (commutative #f))
   (lambda (cgc result-action args)
     (define args-length (length args))
-    (debug "foldl-compare-prim")
 
     ;; The difference between a function and an inlined function is that the
     ;; arguments for the inlined function are unrolled while they are placed in
@@ -442,14 +425,11 @@
       (cond
         ;; Empty case
         ((= 0 args-length)
-          (debug "empty case")
           (am-return-const cgc result-action empty-val))
         ;; 1 argument case
         ((= 1 args-length)
-          (debug "1 argument case")
           (am-return-const cgc result-action reduce-1))
         ((= 2 args-length)
-          (debug "2 arguments case")
           (load-if-necessary cgc allowed-opnds1 (car args)
             (lambda (arg1)
               (load-if-necessary cgc allowed-opnds2 (cadr args)
@@ -463,7 +443,6 @@
                         (reduce-2+ cgc arg1 arg2 true-label false-label)))))))))
         ;; General case
         (else
-          (debug "general case")
           (am-return-boolean cgc result-action
             (lambda (true-label false-label)
               (for-each
@@ -480,8 +459,6 @@
           #!key (allowed-opnds '(reg))
                 (empty-val #t))
   (lambda (cgc result-action args)
-    (debug "foldl-boolean-prim")
-
     ;; The difference between a function and an inlined function is that the
     ;; arguments for the inlined function are unrolled while they are placed in
     ;; a list as the last argument of the function.
@@ -563,7 +540,6 @@
         (else
           (use-extra-reg (get-register cgc 1)))))
     ((then-nothing? result-action)
-      (debug "result-action is nop")
       (get-free-register cgc args (lambda (reg) (fun reg #f))))
     (else
       (compiler-internal-error "with-result-opnd - Unknown result-action" result-action))))
@@ -601,13 +577,11 @@
 (define ##identity-primitive
   (const-nargs-prim 1 0 any-opnds
     (lambda (cgc result-action args arg1)
-      (debug "identity prim: " arg1)
       (am-return-opnd cgc result-action arg1))))
 
 (define ##not-primitive
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
-      (debug "identity not: " arg1)
       (am-if-eq cgc arg1 (make-obj-opnd #f)
         (lambda (cgc) (am-return-const cgc result-action #t))
         (lambda (cgc) (am-return-const cgc result-action #f))

@@ -648,7 +648,6 @@
 ;;------------------------------------------------------------------------------
 
 (define (am-default-poll cgc frame)
-  (debug "am-default-poll")
   (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
          (temp1 (get-processor-state-field cgc 'temp1))
          (return-lbl1 (make-unique-label cgc "call-poll-handler"))
@@ -671,13 +670,11 @@
 
 ;; Nargs passing
 (define (am-default-set-nargs cgc arg-count)
-  (debug "am-default-set-nargs: " arg-count)
   (let ((narg-field (get-processor-state-field cgc 'nargs)))
     (am-mov cgc (car narg-field) (int-opnd arg-count) (cdr narg-field))))
 
 (define (am-default-check-nargs cgc fun-label fs arg-count optional-args-values rest? place-label-fun)
   (define error-label (make-unique-label cgc "narg-error" #f))
-  (debug "am-default-check-nargs: " arg-count)
 
   ;; Error handler
   (let ((temp1-field (get-processor-state-field cgc 'temp1))
@@ -780,8 +777,7 @@
             (if (> (codegen-context-memory-allocated cgc) 0)
               (check-heap-limit))))))))
 
-(define (am-default-place-extra-data cgc)
-  (debug "am-default-place-extra-data"))
+(define (am-default-place-extra-data cgc) #f) ; XXX
 
 ;;------------------------------------------------------------------------------
 ;;----------------------------------- Utils ------------------------------------
@@ -791,7 +787,6 @@
 
 ;; Must set arguments before calling this function
 (define (jump-with-return-point cgc location return-lbl frame internal?)
-  (debug "jump-with-return-point")
   (let* ((proc (codegen-context-current-proc cgc))
          (struct-position (codegen-context-label-struct-position cgc)))
 
@@ -803,7 +798,6 @@
 
 (define (call-handler cgc sym frame return-loc)
   (let* ((handler-loc (car (get-processor-state-field cgc sym))))
-    (debug "handler-loc: " handler-loc)
     (jump-with-return-point cgc handler-loc return-loc frame #t)))
 
 ;;  Utils: Function call arguments
@@ -823,7 +817,6 @@
          (frames (get-frames narg-in-frames))
          (regs (get-registers narg-in-regs))
          (arg-opnds (append frames regs)))
-    (debug "get-nth-arg: " arg-opnds)
     (list-ref arg-opnds (- nth 1))))
 
 (define (get-args-opnds cgc start-fs total)
@@ -929,14 +922,11 @@
     (codegen-context-delayed-actions cgc)))
 
 (define (execute-delayed-actions cgc condition)
-  (debug "execute-delayed-actions: " condition)
   (let ((actions (reverse (get-delayed-actions cgc condition))))
     (codegen-context-delayed-actions-set! cgc
       (get-other-delayed-actions cgc condition))
     (for-each
       (lambda (action)
-        (debug "Executing delayed action (always): "
-          (delayed-action-identifier action))
         ((delayed-action-thunk action)))
       actions)
     ;; Some delayed actions may have added more delayed actions.
@@ -958,7 +948,6 @@
       (get-proc-label cgc main-proc (label-lbl-num instr))))
 
   (define (encode-proc proc)
-    (debug "Encoding proc")
     (codegen-context-current-proc-set! cgc proc)
     (codegen-context-label-struct-position-set! cgc 1)
     (let loop ((codes (get-code-list proc))
@@ -969,12 +958,10 @@
           (encode-gvm-instr cgc prev-code code next-code)
           (loop (cdr codes) code)))))
 
-  (debug "Encode procs")
   (map encode-proc procs2)
 
   (am-place-extra-data cgc)
 
-  (debug "Adding primitives")
   (table-for-each
     (lambda (key val) (put-primitive-if-needed cgc key val))
     (codegen-context-primitive-labels-table cgc))
@@ -983,8 +970,6 @@
     (compiler-internal-error "Delayed actions that should be executed not reachable"))
   (execute-delayed-actions cgc delayed-local-never-execute)
   (execute-delayed-actions cgc delayed-global)
-
-  (debug "Finished!")
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
   (let ((main-lbl (lbl-opnd-label (get-main-label)))
@@ -1002,7 +987,6 @@
 
     (if (not defined?)
       (begin
-        (debug "Putting primitive: " (proc-obj-name proc))
         (if prim-obj
           ;; Prim is defined in native backend
           (let* ((prim-fun (get-primitive-function prim-obj))
@@ -1015,7 +999,6 @@
           ;; We simply passthrough to C. Has some overhead, but calling C has lots of overhead anyway
           (get-free-register cgc '()
             (lambda (reg)
-              (debug proc-name)
               (put-entry-point-label cgc label-opnd proc-name #f 0 #f)
               (am-mov cgc reg (obj-opnd (string->symbol proc-name)))
               (am-mov cgc reg (mem-opnd reg (+ (* (get-word-width cgc) 2) -1)))
@@ -1031,8 +1014,6 @@
          (instr-type (gvm-instr-type gvm-instr))
          (current-frame (gvm-instr-frame gvm-instr))
          (old-frame (codegen-context-frame cgc)))
-
-    (debug "encode-gvm-instr: " instr-type)
 
     (codegen-context-current-code-set! cgc code)
     (codegen-context-frame-set! cgc current-frame)
@@ -1243,8 +1224,6 @@
          (label-num (label-lbl-num gvm-instr))
          (label (get-proc-label cgc proc label-num)))
 
-    (debug "encode-label-instr: " label)
-
     (case (label-type gvm-instr)
       ((entry)
         (let ((narg (label-entry-nb-parms gvm-instr))
@@ -1291,7 +1270,6 @@
     (if (stk? opnd)
       (frame cgc (proc-jmp-frame-size code) (stk-num opnd))
       (make-opnd cgc opnd)))
-  (debug "encode-jump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
          (jmp-opnd (jump-opnd gvm-instr))
@@ -1340,7 +1318,6 @@
         (execute-delayed-actions cgc delayed-local-never-execute)))))
 
 (define (encode-ifjump-instr cgc prev-code code next-code)
-  (debug "encode-ifjump-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (proc (codegen-context-current-proc cgc))
          (next-label-num (+ 1 (label-lbl-num (bb-label-instr (code-bb code)))))
@@ -1390,7 +1367,6 @@
 ;; ***** Apply instruction encoding
 
 (define (encode-apply-instr cgc prev-code code next-code)
-  (debug "encode-apply-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (prim-sym (proc-obj-name (apply-prim gvm-instr)))
          (prim-obj (get-primitive-object cgc prim-sym))
@@ -1399,8 +1375,7 @@
          (then (if loc (then-move (make-opnd cgc loc)) then-nothing))
          (args (map (lambda (opnd) (make-opnd cgc opnd)) (apply-opnds gvm-instr))))
     (if (not (apply-ifjump-optimization? cgc code next-code))
-      (prim-fun cgc then args)
-      (debug "Apply: Optimizing apply and ifjump"))))
+      (prim-fun cgc then args))))
 
 (define OPTIMIZE_APPLY_IFJUMP #t)
 
@@ -1431,7 +1406,6 @@
 
 (define (encode-copy-instr cgc prev-code code next-code)
   (define empty-frame-val #f); (int-opnd 0))
-  (debug "encode-copy-instr")
   (let* ((gvm-instr (code-gvm-instr code))
          (src (copy-opnd gvm-instr))
          (dst (copy-loc gvm-instr))
@@ -1509,8 +1483,6 @@
                     (mov-at-clo-index n reg opnd)))
                 (loop (cdr opnds) (+ n 1)))))))))
 
-  (debug "encode-close-instr")
-
   (let loop ((closures (close-parms gvm-instr))
              (closure-locs
                 (map
@@ -1535,7 +1507,6 @@
 ;; ***** Switch instruction encoding
 
 (define (encode-switch-instr cgc prev-code code next-code)
-  (debug "encode-switch-instr")
   (compiler-internal-error
     "encode-switch-instr: switch instruction not implemented"))
 

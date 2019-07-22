@@ -77,16 +77,9 @@
       (let ((does-match? (match? args expr))
             (enabled (rule-enabled? rule-id)))
         (cond
-          ((and does-match? (not enabled))
-            (begin
-              (debug "Not applying rule with id: " rule-id)
-              #f))
-          ((and does-match? enabled)
-            (begin
-              (debug "Applying rule with id: " rule-id)
-              #t))
-          (else
-            #f))))
+          ((and does-match? (not enabled)) #f)
+          ((and does-match? enabled) #t)
+          (else #f))))
     sub
     args-map))
 

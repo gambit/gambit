@@ -137,8 +137,6 @@
 
 ;;----------------------------------------------------------------------------
 
-(define cpu-debug-port #f)
-
 ; FIXME
 (define (cpu-dump targ
                   procs
@@ -150,35 +148,42 @@
                   sem-preserving-options
                   info-port)
 
-  (set! cpu-debug-port info-port)
-  (if (output-port? cpu-debug-port)
-      (virtual.dump-gvm procs cpu-debug-port))
+  (if (output-port? info-port)
+      (virtual.dump-gvm procs info-port))
 
   (let ((cgc ((get-make-cgc-fun targ))))
     (codegen-context-target-set! cgc targ)
     (encode-procs cgc procs)
     (lambda ()
-      (create-target-file output linker-name cgc)
+      (create-target-file output linker-name cgc info-port)
       output)))
 
 ;;----------------------------------------------------------------------------
 
 ; FIXME
-(define (create-target-file filename module-name cgc)
+(define (create-target-file filename module-name cgc info-port)
   (let* ((code (asm-assemble-to-u8vector cgc))
          (fixup-locs (codegen-context-fixup-locs->vector cgc))
          (fixup-objs (codegen-context-fixup-objs->vector cgc)))
 
-    (if (output-port? cpu-debug-port)
-        (asm-display-listing cgc cpu-debug-port #t))
+    (if (output-port? info-port)
+        (begin
+          (asm-display-listing cgc info-port #t)
 
-    (debug ";; code = " code)
-    (debug ";; fixup-locs = " fixup-locs)
-    (debug ";; fixup-objs = " fixup-objs)
+          (display ";; code = " info-port)
+          (display code info-port)
+          (newline info-port)
+
+          (display ";; fixup-locs = " info-port)
+          (display fixup-locs info-port)
+          (newline info-port)
+
+          (display ";; fixup-objs = " info-port)
+          (display fixup-objs info-port)
+          (newline info-port)))
 
     ;; Calls compiler to create objfile.o1 using the C backend.
     ;; When the file is loaded, it will execute the x86 code.
-    (debug "Compiling")
     (compile-file-to-target "dummy.scm"
                             output: filename
                             module-name: module-name
@@ -186,9 +191,7 @@
                             expression: `((##machine-code-fixup
                                            ',code
                                            ',fixup-locs
-                                           ',fixup-objs)))
-
-    (debug "Output file: " filename)))
+                                           ',fixup-objs)))))
 
 ;;----------------------------------------------------------------------------
 

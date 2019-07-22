@@ -289,9 +289,7 @@
       ((and (not loc-true) loc-false)
         ((cdr jumps) cgc (lbl-opnd-label loc-false)))
       ((and loc-true (not loc-false))
-        ((car jumps) cgc (lbl-opnd-label loc-true)))
-      (else
-        (debug "am-compare-jump: No jump encoded")))))
+        ((car jumps) cgc (lbl-opnd-label loc-true))))))
 
 (define (x86-cmp-move-instr cgc test dest true-opnd false-opnd #!optional (opnds-width #f))
   (let* ((condition (test-condition test))
@@ -320,9 +318,7 @@
       ((and true-opnd (not false-opnd))
         ((cdr jumps) cgc label-false) ;; Jump if false
         (am-mov cgc dest true-opnd)
-        (am-lbl cgc label-false))
-      (else
-        (debug "am-compare-move: No move encoded")))))
+        (am-lbl cgc label-false)))))
 
 ;;------------------------------------------------------------------------------
 
@@ -340,7 +336,6 @@
     am-default-place-extra-data))
 
 ; (define (x86-check-nargs-simple cgc arg-count jmp-loc error-label if-equal?)
-;   (debug "x86-check-narg-simple: " arg-count)
 ;   (let ((narg-field (get-processor-state-field cgc 'nargs)))
 
 ;     (x86-cmp cgc (car narg-field) (int-opnd arg-count) (cdr narg-field))
@@ -379,8 +374,6 @@
 ;     (list flags-a flags-b flags-c flags-d flags-e))
 ;   (define tests
 ;     (if use-f-flag all-tests (cdr all-tests)))
-
-;   (debug "x86-set-narg: " nargs)
 
 ;   (if (passed-in-ps nargs)
 ;     ;; Use processor state to pass narg
@@ -491,7 +484,6 @@
 ;           (iota arg-count min-frame-to-move))))
 
 ;     (define (place-case arg-count case-label next-case-label)
-;       (debug "place-case: " arg-count)
 ;       (am-lbl cgc case-label)
 ;       (if (not (x86-check-nargs-simple cgc arg-count next-case-label error-label #f check-flags))
 ;         (set! check-flags #f))
@@ -535,7 +527,6 @@
 
 ;       (am-jmp cgc continue-label))
 
-;     (debug "place-optional-arguments-switch")
 ;     (let* ((nargs-to-test (iota nargs-no-rest nargs-no-opts))
 ;            (last-label (if rest? rest-label error-label)))
 
@@ -599,8 +590,6 @@
 ;         (int-opnd 0)
 ;         (cdr narg-field))
 ;       (am-jmp cgc continue-label)))
-
-;   (debug "x86-check-narg: " nargs)
 
 ;   ;; Error handler
 ;   (let ((temp1-field (get-processor-state-field cgc 'temp1))

@@ -6,12 +6,6 @@
 
 ;;------------------------------------------------------------------------------
 
-(define (debug . items)
-  (if (output-port? cpu-debug-port)
-      (begin
-        (for-each (lambda (item) (display item cpu-debug-port)) items)
-        (newline cpu-debug-port))))
-
 (define (flip pair)
   (cons (cdr pair) (car pair)))
 

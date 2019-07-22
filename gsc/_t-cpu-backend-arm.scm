@@ -129,8 +129,6 @@
           (compiler-internal-error
             "arm-mov-instr - Unknown or incompatible destination: " dst)))))
 
-  (debug "arm-mov-instr: " dst " <= " src)
-
   (if (not (equal? dst src))
     (cond
       ((reg-opnd? src)
@@ -304,7 +302,6 @@
     (get-free-register cgc (list dest opnd1 opnd2) with-dest-reg)))
 
 (define (arm-jmp-instr cgc opnd)
-  (debug "arm-jmp-instr: " opnd)
   (if (lbl-opnd? opnd)
     (arm-b cgc (lbl-opnd-label opnd))
     (load-if-necessary cgc '(reg) opnd
@@ -351,9 +348,7 @@
       ((and (not loc-true) loc-false)
         (arm-b cgc (lbl-opnd-label loc-false) (cdr conds)))
       ((and loc-true (not loc-false))
-        (arm-b cgc (lbl-opnd-label loc-true) (car conds)))
-      (else
-        (debug "am-compare-jump: No jump encoded")))))
+        (arm-b cgc (lbl-opnd-label loc-true) (car conds))))))
 
 (define (arm-cmp-move-instr cgc condition dest opnd1 opnd2 true-opnd false-opnd #!optional (opnds-width #f))
   (compiler-internal-error "TODO: arm-cmp-move-instr"))
@@ -364,14 +359,12 @@
     (arm-load-data cgc rd
       (asm-label-id label)
       (lambda (cgc)
-        (debug "label-opnd: " label-opnd)
         (codegen-fixup-lbl! cgc label object-tag #f (get-word-width-bits cgc) 1)))))
 
 ;; TODO Deduplicate objects
 (define (arm-load-obj cgc rd obj-value)
   (arm-load-data cgc rd (string-append "'" (object->string obj-value))
     (lambda (cgc)
-      (debug "obj-value: " obj-value)
       (codegen-fixup-obj! cgc obj-value (get-word-width-bits cgc) 1 #f))))
 
 ;; TODO Deduplicate references to global variables
