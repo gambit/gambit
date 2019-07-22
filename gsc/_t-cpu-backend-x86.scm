@@ -16,20 +16,14 @@
 
 ; (define x86-narg-register  (x86-cl))  ;; number of arguments register
 
-(define x86-nb-gvm-regs 5)
-(define x86-nb-arg-regs 3)
-
 ;;------------------------------------------------------------------------------
 ;;----------------------------  x86 32-bit backend  ----------------------------
 ;;------------------------------------------------------------------------------
 
 (define (x86-32-target)
   (make-cpu-target
-    (x86-32-abstract-machine-info)
-    'x86 '((".c" . X86)) x86-nb-gvm-regs x86-nb-arg-regs))
-
-(define (x86-32-abstract-machine-info)
-  (make-backend make-cgc-x86-32 (x86-32-info) (x86-instructions) (x86-routines)))
+    'x86 '((".c" . X86))
+    (make-backend make-cgc-x86-32 (x86-32-info) (x86-instructions) (x86-routines))))
 
 (define (make-cgc-x86-32)
   (let ((cgc (make-codegen-context)))
@@ -44,11 +38,8 @@
 
 (define (x86-64-target)
   (make-cpu-target
-    (x86-64-abstract-machine-info)
-    'x86-64 '((".c" . X86-64)) x86-nb-gvm-regs x86-nb-arg-regs))
-
-(define (x86-64-abstract-machine-info)
-  (make-backend make-cgc-x86-64 (x86-64-info) (x86-instructions) (x86-routines)))
+    'x86-64 '((".c" . X86-64))
+    (make-backend make-cgc-x86-64 (x86-64-info) (x86-instructions) (x86-routines))))
 
 (define (make-cgc-x86-64)
   (let ((cgc (make-codegen-context)))
@@ -63,18 +54,18 @@
 
 (define (x86-32-info)
   (make-cpu-info
-    'x86-32               ;; Arch name
-    4                     ;; Word width
-    'le                   ;; Endianness
-    FORCE_LOAD_STORE_ARCH ;; Load store architecture?
-    0                     ;; Frame offset
-    x86-primitive-table   ;; Primitive table
-    x86-nb-gvm-regs       ;; GVM register count
-    x86-nb-arg-regs       ;; GVM register count for passing arguments
-    x86-32-registers      ;; Main registers
-    (x86-ecx)             ;; Processor state pointer
-    (x86-esp)             ;; Stack pointer
-    (x86-ebp)             ;; Heap pointer
+    'x86-32                 ;; Arch name
+    4                       ;; Word width
+    'le                     ;; Endianness
+    #f                      ;; Load store architecture?
+    0                       ;; Frame offset
+    x86-primitive-table     ;; Primitive table
+    cpu-default-nb-gvm-regs ;; GVM register count
+    cpu-default-nb-arg-regs ;; GVM register count for passing arguments
+    x86-32-registers        ;; Main registers
+    (x86-ecx)               ;; Processor state pointer
+    (x86-esp)               ;; Stack pointer
+    (x86-ebp)               ;; Heap pointer
   ))
 
 (define x86-32-registers
@@ -91,18 +82,18 @@
 
 (define (x86-64-info)
   (make-cpu-info
-    'x86-64               ;; Arch name
-    8                     ;; Word width
-    'le                   ;; Endianness
-    FORCE_LOAD_STORE_ARCH ;; Load store architecture?
-    0                     ;; Frame offset
-    x86-primitive-table   ;; Primitive table
-    x86-nb-gvm-regs       ;; GVM register count
-    x86-nb-arg-regs       ;; GVM register count for passing arguments
-    x86-64-registers      ;; Main registers
-    (x86-rcx)             ;; Processor state pointer
-    (x86-rsp)             ;; Stack pointer
-    (x86-rbp)             ;; Heap pointer
+    'x86-64                 ;; Arch name
+    8                       ;; Word width
+    'le                     ;; Endianness
+    #f                      ;; Load store architecture?
+    0                       ;; Frame offset
+    x86-primitive-table     ;; Primitive table
+    cpu-default-nb-gvm-regs ;; GVM register count
+    cpu-default-nb-arg-regs ;; GVM register count for passing arguments
+    x86-64-registers        ;; Main registers
+    (x86-rcx)               ;; Processor state pointer
+    (x86-rsp)               ;; Stack pointer
+    (x86-rbp)               ;; Heap pointer
   ))
 
 ;; Registers

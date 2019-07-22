@@ -12,9 +12,6 @@
 
 ;;------------------------------------------------------------------------------
 
-(define riscv-nb-gvm-regs 5)
-(define riscv-nb-arg-regs 3)
-
 (define (make-cgc-riscv arch)
   (let ((cgc (make-codegen-context)))
     (codegen-context-listing-format-set! cgc 'gnu)
@@ -28,8 +25,8 @@
 
 (define (riscv-32-target)
   (make-cpu-target
-    (make-backend make-cgc-riscv-32 (riscv-32-info) (riscv-instructions) (riscv-routines))
-    'riscv-32 '((".c" . RISCV-32)) riscv-nb-gvm-regs riscv-nb-arg-regs)) ; XXX
+    'riscv-32 '((".c" . RISCV-32))
+    (make-backend make-cgc-riscv-32 (riscv-32-info) (riscv-instructions) (riscv-routines)))) ; XXX
 
 (define (make-cgc-riscv-32)
   (make-cgc-riscv 'RV32I))
@@ -43,8 +40,8 @@
 
 (define (riscv-64-target)
   (make-cpu-target
-    (make-backend make-cgc-riscv-64 (riscv-64-info) (riscv-instructions) (riscv-routines))
-    'riscv-64 '((".c" . RISCV-64)) riscv-nb-gvm-regs riscv-nb-arg-regs)) ; XXX
+    'riscv-64 '((".c" . RISCV-64))
+    (make-backend make-cgc-riscv-64 (riscv-64-info) (riscv-instructions) (riscv-routines)))) ; XXX
 
 (define (make-cgc-riscv-64)
   (make-cgc-riscv 'RV64I))
@@ -58,18 +55,18 @@
 
 (define (riscv-info arch width)
   (make-cpu-info
-    arch                  ;; Arch name
-    width                 ;; Word width
-    'le                   ;; Endianness
-    #t                    ;; Load-store architecture?
-    0                     ;; Frame offset
-    riscv-primitive-table ;; Primitive table
-    riscv-nb-gvm-regs     ;; GVM register count
-    riscv-nb-arg-regs     ;; GVM register count for passing arguments
-    riscv-registers       ;; Main registers
-    (riscv-s10)           ;; Processor state pointer (PS)
-    (riscv-sp)            ;; Stack pointer (SP)
-    (riscv-s11)))         ;; Heap pointer (HP)
+    arch                    ;; Arch name
+    width                   ;; Word width
+    'le                     ;; Endianness
+    #t                      ;; Load-store architecture?
+    0                       ;; Frame offset
+    riscv-primitive-table   ;; Primitive table
+    cpu-default-nb-gvm-regs ;; GVM register count
+    cpu-default-nb-arg-regs ;; GVM register count for passing arguments
+    riscv-registers         ;; Main registers
+    (riscv-s10)             ;; Processor state pointer (PS)
+    (riscv-sp)              ;; Stack pointer (SP)
+    (riscv-s11)))           ;; Heap pointer (HP)
 
 (define riscv-registers
   (vector

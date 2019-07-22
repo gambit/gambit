@@ -1402,6 +1402,8 @@
       (prim-fun cgc then args)
       (debug "Apply: Optimizing apply and ifjump"))))
 
+(define OPTIMIZE_APPLY_IFJUMP #t)
+
 ;; Checks for the pattern:
 ;;    loc = (prim ...)         <- gvm-instr1
 ;;    if loc ...               <- gvm-instr2
@@ -1581,6 +1583,8 @@
 ;;  End: Low level exec processor state structure
 ;;  Start: Regular processor state structure <-- ps register
 ;;  End: Regular processor state structure
+
+(define USE_BRIDGE #t)
 
 ;; Todo: Support gvm-reg other than 0|1|2|3|4
 (define (get-processor-state-field cgc sym)

@@ -11,23 +11,13 @@
 (include-adt "_codegen#.scm")
 
 ;;------------------------------------------------------------------------------
-
-;; Constants
-
-(define arm-nb-gvm-regs 5)
-(define arm-nb-arg-regs 3)
-
-;;------------------------------------------------------------------------------
 ;;-------------------------------- ARM backend  --------------------------------
 ;;------------------------------------------------------------------------------
 
 (define (arm-target)
   (make-cpu-target
-    (arm-abstract-machine-info)
-    'arm '((".c" . ARM)) arm-nb-gvm-regs arm-nb-arg-regs))
-
-(define (arm-abstract-machine-info)
-  (make-backend make-cgc-arm (arm-info) (arm-instructions) (arm-routines)))
+    'arm '((".c" . ARM))
+    (make-backend make-cgc-arm (arm-info) (arm-instructions) (arm-routines))))
 
 (define (make-cgc-arm)
   (let ((cgc (make-codegen-context)))
@@ -44,18 +34,18 @@
 
 (define (arm-info)
   (make-cpu-info
-    'arm                   ;; Arch name
-    arm-word-width         ;; Word width
-    'le                    ;; Endianness
-    #t                     ;; Load store architecture?
-    0                      ;; Frame offset
-    arm-primitive-table    ;; Primitive table
-    arm-nb-gvm-regs        ;; GVM register count
-    arm-nb-arg-regs        ;; GVM register count for passing arguments
-    arm-registers          ;; Main registers
-    (arm-r5)               ;; Processor state pointer
-    (arm-r13)              ;; Stack pointer
-    (arm-r6)               ;; Heap pointer
+    'arm                    ;; Arch name
+    arm-word-width          ;; Word width
+    'le                     ;; Endianness
+    #t                      ;; Load store architecture?
+    0                       ;; Frame offset
+    arm-primitive-table     ;; Primitive table
+    cpu-default-nb-gvm-regs ;; GVM register count
+    cpu-default-nb-arg-regs ;; GVM register count for passing arguments
+    arm-registers           ;; Main registers
+    (arm-r5)                ;; Processor state pointer
+    (arm-r13)               ;; Stack pointer
+    (arm-r6)                ;; Heap pointer
   ))
 
 (define arm-registers
