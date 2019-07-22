@@ -203,7 +203,7 @@ OBJECTS = $(LIBRARY_OBJECTS) $(EXECUTABLE_OBJECTS)
 
 RCFILES = makefile.in fixnum.scm generic.scm igsc.scm $(MODULES_SCM) \
 $(LIBRARIES_SCM) _envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm \
-_univadt.scm runtests.scm _t-x86.scm _arm.scm "_arm\#.scm" _riscv.scm "_riscv\#.scm"
+_univadt.scm _cpuadt.scm runtests.scm _t-x86.scm _arm.scm "_arm\#.scm" _riscv.scm "_riscv\#.scm"
 
 GENDISTFILES = $(MODULES_C) _$(GAMBITGSCLIB).c _gsc_.c
 
