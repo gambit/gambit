@@ -180,6 +180,7 @@ gambit-v*.exe
 gambit-v*.tgz
 *~
 .DS_Store
+.gdb_history
 */.DS_Store
 *.obj
 *.manifest
