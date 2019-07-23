@@ -732,14 +732,6 @@
         (arm-lsr cgc obj-reg (arm-imm-int shift-count))
         (am-return-opnd cgc result-action obj-reg)))))
 
-(define (arm-stub-prim cgc result-action . args)
-  (if (then-return? result-action)
-    (put-entry-point-label cgc
-      (then-return-label result-action)
-      (then-return-prim-name result-action)
-      #f 1234 #f)
-    #f))
-
 (define arm-primitive-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity       (make-prim-obj ##identity-primitive    1 #t #t))
@@ -786,12 +778,6 @@
     (table-set! table '##f64vector?    (make-prim-obj (arm-prim-##subtype? f64vector-obj-desc)    1 #t #t))
     (table-set! table '##flonum?       (make-prim-obj (arm-prim-##subtype? flonum-obj-desc)       1 #t #t))
     (table-set! table '##bignum?       (make-prim-obj (arm-prim-##subtype? bignum-obj-desc)       1 #t #t))
-
-    ; (table-set! table '##flonum?      (make-prim-obj arm-stub-prim 1 #t #f))
-    ; (table-set! table '##fl+          (make-prim-obj arm-stub-prim 2 #t #f))
-    ; (table-set! table '+              (make-prim-obj arm-stub-prim 2 #f #f))
-    ; (table-set! table '-              (make-prim-obj arm-stub-prim 2 #f #f))
-    ; (table-set! table '<              (make-prim-obj arm-stub-prim 2 #f #f))
 
     (table-set! table '##fx+            (make-prim-obj arm-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?           (make-prim-obj arm-prim-##fx+? 2 #t #t #t))

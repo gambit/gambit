@@ -969,14 +969,6 @@
         (x86-shr cgc obj-reg (x86-imm-int shift-count))
         (am-return-opnd cgc result-action obj-reg)))))
 
-(define (x86-stub-prim cgc result-action . args)
-  (if (then-return? result-action)
-    (put-entry-point-label cgc
-      (then-return-label result-action)
-      (then-return-prim-name result-action)
-      #f 1234 #f)
-    #f))
-
 (define x86-primitive-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity       (make-prim-obj ##identity-primitive    1 #t #t))
@@ -1023,12 +1015,6 @@
     (table-set! table '##f64vector?     (make-prim-obj (x86-prim-##subtype? f64vector-obj-desc)    1 #t #t))
     (table-set! table '##flonum?        (make-prim-obj (x86-prim-##subtype? flonum-obj-desc)       1 #t #t))
     (table-set! table '##bignum?        (make-prim-obj (x86-prim-##subtype? bignum-obj-desc)       1 #t #t))
-
-    ; (table-set! table '##flonum?      (make-prim-obj x86-stub-prim 1 #t #f))
-    ; (table-set! table '##fl+          (make-prim-obj x86-stub-prim 2 #t #f))
-    ; (table-set! table '+              (make-prim-obj x86-stub-prim 2 #f #f))
-    ; (table-set! table '-              (make-prim-obj x86-stub-prim 2 #f #f))
-    ; (table-set! table '<              (make-prim-obj x86-stub-prim 2 #f #f))
 
     (table-set! table '##fx+            (make-prim-obj x86-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?           (make-prim-obj x86-prim-##fx+? 2 #t #t #t))
