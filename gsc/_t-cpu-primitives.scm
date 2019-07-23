@@ -637,6 +637,15 @@
         #f
         (get-word-width-bits cgc)))))
 
+(define ##fxzero?-primitive
+  (const-nargs-prim 1 0 '((reg mem)) ; XXX
+    (lambda (cgc result-action args arg1)
+      (am-if-eq cgc arg1 (make-obj-opnd 0)
+        (lambda (cgc) (am-return-const cgc result-action #t))
+        (lambda (cgc) (am-return-const cgc result-action #f))
+        #f
+        (get-word-width-bits cgc)))))
+
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
 (define (object-read-prim desc opers #!optional (width #f))
