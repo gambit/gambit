@@ -537,6 +537,15 @@
         true-opnd:  (int-opnd (format-imm-object #t))
         false-opnd: (int-opnd (format-imm-object #f))))))
 
+(define (riscv-prim-##fxsign? sign)
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl) ((if (eq? sign 'positive) riscv-bgtz riscv-bltz) cgc arg1 (make-riscv-opnd lbl)))
+        (lambda (cgc lbl) ((if (eq? sign 'positive) riscv-blez riscv-bgez) cgc arg1 (make-riscv-opnd lbl)))
+        true-opnd:  (int-opnd (format-imm-object #t))
+        false-opnd: (int-opnd (format-imm-object #f))))))
+
 (define riscv-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -713,8 +722,10 @@
     (table-set! table '##fx>=           (make-prim-obj riscv-prim-##fx>= 2 #t #t))
     (table-set! table '##fx=            (make-prim-obj riscv-prim-##fx=  2 #t #t))
 
-    (table-set! table '##fxeven?        (make-prim-obj (riscv-prim-##fxparity? 'even) 1 #t #t))
-    (table-set! table '##fxodd?         (make-prim-obj (riscv-prim-##fxparity? 'odd)  1 #t #t))
+    (table-set! table '##fxeven?        (make-prim-obj (riscv-prim-##fxparity? 'even)   1 #t #t))
+    (table-set! table '##fxodd?         (make-prim-obj (riscv-prim-##fxparity? 'odd)    1 #t #t))
+    (table-set! table '##fxnegative?    (make-prim-obj (riscv-prim-##fxsign? 'negative) 1 #t #t))
+    (table-set! table '##fxpositive?    (make-prim-obj (riscv-prim-##fxsign? 'positive) 1 #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-obj-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-obj-desc '(d)) 1 #t #f))

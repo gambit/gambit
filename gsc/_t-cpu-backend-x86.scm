@@ -879,6 +879,17 @@
           true-opnd:  (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
+(define (x86-prim-##fxsign? sign)
+  (const-nargs-prim 1 0 '((reg))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-opnd (make-x86-opnd arg1)))
+        (x86-cmp cgc x86-opnd (x86-imm-int 0))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) ((if (eq? sign 'positive) x86-jg x86-jl) cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) ((if (eq? sign 'positive) x86-jle x86-jge) cgc (lbl-opnd-label lbl)))
+          true-opnd:  (int-opnd (format-imm-object #t))
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
 (define x86-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -1026,8 +1037,10 @@
     (table-set! table '##fx>=           (make-prim-obj x86-prim-##fx>= 2 #t #t))
     (table-set! table '##fx=            (make-prim-obj x86-prim-##fx=  2 #t #t))
 
-    (table-set! table '##fxeven?        (make-prim-obj (x86-prim-##fxparity? 'even) 1 #t #t))
-    (table-set! table '##fxodd?         (make-prim-obj (x86-prim-##fxparity? 'odd)  1 #t #t))
+    (table-set! table '##fxeven?        (make-prim-obj (x86-prim-##fxparity? 'even)    1 #t #t))
+    (table-set! table '##fxodd?         (make-prim-obj (x86-prim-##fxparity? 'odd)     1 #t #t))
+    (table-set! table '##fxnegative?    (make-prim-obj (x86-prim-##fxsign? 'negative)  1 #t #t))
+    (table-set! table '##fxpositive?    (make-prim-obj (x86-prim-##fxsign? 'positive)  1 #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-obj-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-obj-desc '(d)) 1 #t #f))
