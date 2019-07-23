@@ -405,6 +405,17 @@
           true-opnd:  (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
+(define riscv-prim-##boolean?
+  (const-nargs-prim 1 1 any-opnds
+    (lambda (cgc result-action args arg1 tmp1)
+      (let ((test-int (+ (* tag-mult true-object-val) tag-mask)))
+        (riscv-andi cgc tmp1 arg1 (riscv-imm-int test-int))
+        (am-if-eq cgc tmp1 (make-obj-opnd #t)
+          (lambda (cgc) (am-return-const cgc result-action #t))
+          (lambda (cgc) (am-return-const cgc result-action #f))
+          #f
+          (get-word-width-bits cgc))))))
+
 (define riscv-prim-##fx+
   (foldl-prim
     (lambda (cgc accum opnd) (am-add cgc accum accum opnd))
@@ -639,6 +650,7 @@
     (table-set! table '##special?       (make-prim-obj riscv-prim-##special?       1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj riscv-prim-##mem-allocated? 1 #t #t))
     (table-set! table '##char?          (make-prim-obj riscv-prim-##char?          1 #t #t))
+    (table-set! table '##boolean?       (make-prim-obj riscv-prim-##boolean?       1 #t #t))
 
     ; (table-set! table '##flonum?      (make-prim-obj riscv-stub-prim 1 #t #f))
     ; (table-set! table '##fl+          (make-prim-obj riscv-stub-prim 2 #t #f))

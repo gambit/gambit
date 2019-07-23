@@ -98,6 +98,7 @@
 
 (define tag-width            2) ;(ceiling (/ (log tag-mult) (log 2))))
 (define tag-mult             (expt 2 tag-width))
+(define tag-mask             (- tag-mult 1))
 
 (define fixnum-tag           0)
 (define object-tag           (if USE_EVEN_TAG_FOR_SUBTYPED 2 1))

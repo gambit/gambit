@@ -750,6 +750,20 @@
           true-opnd: (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
+(define x86-prim-##boolean?
+  (const-nargs-prim 1 1 any-opnds
+    (lambda (cgc result-action args arg1 tmp1)
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (x86-tmp1 (make-x86-opnd tmp1))
+            (test-int (+ (* tag-mult true-object-val) tag-mask)))
+        (am-mov cgc tmp1 arg1)
+        (x86-and cgc x86-tmp1 (x86-imm-int test-int))
+        (am-if-eq cgc tmp1 (make-obj-opnd #t)
+          (lambda (cgc) (am-return-const cgc result-action #t))
+          (lambda (cgc) (am-return-const cgc result-action #f))
+          #f
+          (get-word-width-bits cgc))))))
+
 (define x86-prim-##fx+
   (foldl-prim
     (make-function-x86-opnds x86-add)
@@ -945,6 +959,7 @@
     (table-set! table '##pair?          (make-prim-obj x86-prim-##pair?          1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj x86-prim-##mem-allocated? 1 #t #t))
     (table-set! table '##char?          (make-prim-obj x86-prim-##char?          1 #t #t))
+    (table-set! table '##boolean?       (make-prim-obj x86-prim-##boolean?       1 #t #t))
 
     ; (table-set! table '##flonum?      (make-prim-obj x86-stub-prim 1 #t #f))
     ; (table-set! table '##fl+          (make-prim-obj x86-stub-prim 2 #t #f))
