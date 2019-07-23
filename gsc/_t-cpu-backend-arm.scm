@@ -696,8 +696,9 @@
 (define arm-primitive-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity       (make-prim-obj ##identity-primitive 1 #t #t))
-    (table-set! table '##not            (make-prim-obj ##not-primitive 1 #t #t))
-    (table-set! table '##void           (make-prim-obj ##void-primitive 0 #t #t))
+    (table-set! table '##not            (make-prim-obj ##not-primitive      1 #t #t))
+    (table-set! table '##void           (make-prim-obj ##void-primitive     0 #t #t))
+    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive      2 #t #t))
 
     (table-set! table '##fixnum?        (make-prim-obj arm-prim-##fixnum?        1 #t #t))
     (table-set! table '##special?       (make-prim-obj arm-prim-##special?       1 #t #t))
