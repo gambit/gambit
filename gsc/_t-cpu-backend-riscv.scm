@@ -569,15 +569,6 @@
 
             (am-return-opnd cgc result-action result-reg))))))
 
-(define riscv-prim-##null?
-  (const-nargs-prim 1 0 (list (lambda (_) #t))
-    (lambda (cgc result-action args arg1)
-      (am-if-eq cgc arg1 (make-obj-opnd '())
-        (lambda (cgc) (am-return-const cgc result-action #t))
-        (lambda (cgc) (am-return-const cgc result-action #f))
-        #f
-        (get-word-width-bits cgc)))))
-
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-return-opnd uses the default width
 (define (riscv-object-dyn-read-prim desc #!optional (width #f))
@@ -679,6 +670,7 @@
     (table-set! table '##not            (make-prim-obj ##not-primitive      1 #t #t))
     (table-set! table '##void           (make-prim-obj ##void-primitive     0 #t #t))
     (table-set! table '##eq?            (make-prim-obj ##eq?-primitive      2 #t #t))
+    (table-set! table '##null?          (make-prim-obj ##null?-primitive    1 #t #f))
 
     (table-set! table '##fixnum?        (make-prim-obj riscv-prim-##fixnum?        1 #t #t))
     (table-set! table '##pair?          (make-prim-obj riscv-prim-##pair?          1 #t #t))
@@ -773,7 +765,6 @@
     (table-set! table '##set-cdr!       (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
 
     (table-set! table '##cons           (make-prim-obj riscv-prim-##cons 2 #t #f))
-    (table-set! table '##null?          (make-prim-obj riscv-prim-##null? 2 #t #f))
 
     (table-set! table '##vector-ref     (make-prim-obj (riscv-object-dyn-read-prim vector-obj-desc) 2 #t #t))
     (table-set! table '##vector-set!    (make-prim-obj (riscv-object-dyn-set-prim vector-obj-desc) 3 #t #f))
