@@ -619,6 +619,20 @@
     (lambda (cgc result-action args)
       (am-return-const cgc result-action #!void))))
 
+(define ##eof-object-primitive
+  (const-nargs-prim 0 0 '(())
+    (lambda (cgc result-action args)
+      (am-return-const cgc result-action #!eof))))
+
+(define ##eof-object?-primitive
+  (const-nargs-prim 1 0 (list (lambda (_) #t))
+    (lambda (cgc result-action args arg1)
+      (am-if-eq cgc arg1 (make-obj-opnd #!eof)
+        (lambda (cgc) (am-return-const cgc result-action #t))
+        (lambda (cgc) (am-return-const cgc result-action #f))
+        #f
+        (get-word-width-bits cgc)))))
+
 (define ##null?-primitive
   (const-nargs-prim 1 0 (list (lambda (_) #t))
     (lambda (cgc result-action args arg1)

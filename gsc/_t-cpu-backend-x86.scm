@@ -979,12 +979,14 @@
 
 (define x86-primitive-table
   (let ((table (make-table test: equal?)))
-    (table-set! table '##identity       (make-prim-obj ##identity-primitive 1 #t #t))
-    (table-set! table '##not            (make-prim-obj ##not-primitive      1 #t #t))
-    (table-set! table '##void           (make-prim-obj ##void-primitive     0 #t #t))
-    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive      2 #t #t))
-    (table-set! table '##null?          (make-prim-obj ##null?-primitive    1 #t #f))
-    (table-set! table '##fxzero?        (make-prim-obj ##fxzero?-primitive  1 #t #t))
+    (table-set! table '##identity       (make-prim-obj ##identity-primitive    1 #t #t))
+    (table-set! table '##not            (make-prim-obj ##not-primitive         1 #t #t))
+    (table-set! table '##void           (make-prim-obj ##void-primitive        0 #t #t))
+    (table-set! table '##eof-object     (make-prim-obj ##eof-object-primitive  0 #t #t))
+    (table-set! table '##eof-object?    (make-prim-obj ##eof-object?-primitive 1 #t #t))
+    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive         2 #t #t))
+    (table-set! table '##null?          (make-prim-obj ##null?-primitive       1 #t #f))
+    (table-set! table '##fxzero?        (make-prim-obj ##fxzero?-primitive     1 #t #t))
 
     (table-set! table '##fixnum?        (make-prim-obj x86-prim-##fixnum?        1 #t #t))
     (table-set! table '##special?       (make-prim-obj x86-prim-##special?       1 #t #t))
