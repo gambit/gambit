@@ -666,7 +666,7 @@
              (shrinked-opnd (shrink-x86-opnd x86-opnd width 8)))
         (x86-test cgc
           (car shrinked-opnd)
-          (x86-imm-int (- tag-mult 1))
+          (x86-imm-int tag-mask)
           (cdr shrinked-opnd))
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
@@ -686,7 +686,7 @@
         (x86-not cgc temp1)
         (x86-test cgc
           (car shrinked-temp1)
-          (x86-imm-int (- tag-mult 1))
+          (x86-imm-int tag-mask)
           (cdr shrinked-temp1))
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-je  cgc (lbl-opnd-label lbl)))
@@ -704,7 +704,7 @@
         (am-mov cgc temp1 arg1) ;; Save arg1
         (x86-and cgc
           (car shrinked-temp1)
-          (x86-imm-int (- tag-mult 1))
+          (x86-imm-int tag-mask)
           (cdr shrinked-temp1))
         (x86-cmp cgc
           (car shrinked-temp1)
@@ -769,7 +769,7 @@
     (lambda (cgc result-action args arg1 tmp1)
       (let ((x86-tmp1 (make-x86-opnd tmp1)))
         (am-mov cgc tmp1 arg1)
-        (x86-and cgc x86-tmp1 (x86-imm-int (- tag-mult 1)))
+        (x86-and cgc x86-tmp1 (x86-imm-int tag-mask))
         (x86-cmp cgc x86-tmp1 (x86-imm-int object-tag))
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-je cgc (lbl-opnd-label lbl)))
@@ -781,26 +781,24 @@
   (const-nargs-prim 1 1 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1)
       (let ((width (get-word-width cgc))
-            (x86-tmp1 (make-x86-opnd tmp1))
-            (subtype-mask (fxarithmetic-shift (- (expt 2 header-tag-width) 1) header-tag-offset))
-            (subtype-tag (fxarithmetic-shift (reference-header-tag subtype-desc) header-tag-offset)))
+            (x86-tmp1 (make-x86-opnd tmp1)))
         (am-mov cgc tmp1 arg1)
-        (x86-and cgc x86-tmp1 (x86-imm-int (- tag-mult 1)))
+        (x86-and cgc x86-tmp1 (x86-imm-int tag-mask))
         (x86-cmp cgc x86-tmp1 (x86-imm-int object-tag))
         (am-cond-return cgc result-action
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- (+ object-tag width width))))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-mask))
-            (x86-cmp cgc x86-tmp1 (x86-imm-int subtype-tag))
+            (x86-cmp cgc x86-tmp1 (x86-imm-int (subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- (+ object-tag width width))))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-mask))
-            (x86-cmp cgc x86-tmp1 (x86-imm-int subtype-tag))
+            (x86-cmp cgc x86-tmp1 (x86-imm-int (subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
           true-opnd:  (int-opnd (format-imm-object #f))
           false-opnd: (int-opnd (format-imm-object #t)))))))

@@ -349,7 +349,7 @@
 (define riscv-prim-##fixnum?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc temp1 (int-opnd tag-mask))
       (riscv-and cgc temp2 arg1 temp1) ; XXX
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
@@ -360,7 +360,7 @@
 (define riscv-prim-##pair?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc temp1 (int-opnd tag-mask))
       (riscv-not cgc temp2 arg1)
       (riscv-and cgc temp2 temp1 temp2) ; XXX
       (am-cond-return cgc result-action
@@ -373,7 +373,7 @@
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (am-mov cgc temp1 (int-opnd special-int-tag))
-      (riscv-andi cgc temp2 arg1 (riscv-imm-int (- tag-mult 1))) ; XXX
+      (riscv-andi cgc temp2 arg1 (riscv-imm-int tag-mask)) ; XXX
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
@@ -420,7 +420,7 @@
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
       (am-mov cgc tmp1 (int-opnd object-tag))
-      (riscv-andi cgc tmp2 arg1 (riscv-imm-int (- tag-mult 1)))
+      (riscv-andi cgc tmp2 arg1 (riscv-imm-int tag-mask))
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc tmp1 tmp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl)))
@@ -430,25 +430,23 @@
 (define (riscv-prim-##subtype? subtype-desc) ; XXX
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
-      (let ((width (get-word-width-bits cgc))
-            (subtype-mask (fxarithmetic-shift (- (expt 2 header-tag-width) 1) header-tag-offset))
-            (subtype-tag (fxarithmetic-shift (reference-header-tag subtype-desc) header-tag-offset)))
+      (let ((width (get-word-width-bits cgc)))
         (am-mov cgc tmp1 (int-opnd object-tag))
-        (riscv-andi cgc tmp2 arg1 (riscv-imm-int (- tag-mult 1)))
+        (riscv-andi cgc tmp2 arg1 (riscv-imm-int tag-mask))
         (am-cond-return cgc result-action
           (lambda (cgc lbl)
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- (+ object-tag width width))))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
             (riscv-andi cgc tmp1 tmp1 (riscv-imm-int subtype-mask))
-            (am-mov cgc tmp2 (int-opnd subtype-tag))
+            (am-mov cgc tmp2 (int-opnd (subtype-tag subtype-desc)))
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl)))
           (lambda (cgc lbl)
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- (+ object-tag width width))))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
             (riscv-andi cgc tmp1 tmp1 (riscv-imm-int subtype-mask))
-            (am-mov cgc tmp2 (int-opnd subtype-tag))
+            (am-mov cgc tmp2 (int-opnd (subtype-tag subtype-desc)))
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl)))
           true-opnd:  (int-opnd (format-imm-object #f))
           false-opnd: (int-opnd (format-imm-object #t)))))))

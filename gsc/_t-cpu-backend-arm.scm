@@ -427,7 +427,7 @@
 (define arm-prim-##fixnum?
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 temp1)
-      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc temp1 (int-opnd tag-mask))
       (arm-tst cgc arg1 temp1)
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (arm-b cgc (lbl-opnd-label lbl) (arm-cond-eq)))
@@ -438,7 +438,7 @@
 (define arm-prim-##pair?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc temp1 (int-opnd tag-mask))
       (am-mov cgc temp2 arg1)       ;; Save arg1
       (arm-mvn cgc temp2 temp2)     ;; Invert bits
       (arm-tst cgc temp2 temp1)
@@ -451,7 +451,7 @@
 (define arm-prim-##special?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc temp1 (int-opnd tag-mask))
       (am-mov cgc temp2 arg1) ;; Save arg1
       (arm-and cgc temp2 temp1)
       (am-mov cgc temp1 (int-opnd special-int-tag))
@@ -505,7 +505,7 @@
 (define arm-prim-##subtyped?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
-      (am-mov cgc tmp1 (int-opnd (- tag-mult 1)))
+      (am-mov cgc tmp1 (int-opnd tag-mask))
       (am-mov cgc tmp2 (int-opnd object-tag))
       (arm-and cgc tmp1 arg1)
       (arm-cmp cgc tmp1 tmp2)
@@ -518,10 +518,8 @@
 (define (arm-prim-##subtype? subtype-desc) ; XXX
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
-      (let ((width (get-word-width-bits cgc))
-            (subtype-mask (fxarithmetic-shift (- (expt 2 header-tag-width) 1) header-tag-offset))
-            (subtype-tag (fxarithmetic-shift (reference-header-tag subtype-desc) header-tag-offset)))
-        (am-mov cgc tmp1 (int-opnd (- tag-mult 1)))
+      (let ((width (get-word-width-bits cgc)))
+        (am-mov cgc tmp1 (int-opnd tag-mask))
         (am-mov cgc tmp2 (int-opnd object-tag))
         (arm-and cgc tmp1 arg1)
         (arm-cmp cgc tmp1 tmp2)
@@ -529,19 +527,19 @@
           (lambda (cgc lbl)
             (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- (+ object-tag width width))))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
             (am-mov cgc tmp2 (int-opnd subtype-mask))
             (arm-and cgc tmp1 tmp2)
-            (am-mov cgc tmp2 (int-opnd subtype-tag))
+            (am-mov cgc tmp2 (int-opnd (subtype-tag subtype-desc)))
             (arm-cmp cgc tmp1 tmp2)
             (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne)))
           (lambda (cgc lbl)
             (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- (+ object-tag width width))))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
             (am-mov cgc tmp2 (int-opnd subtype-mask))
             (arm-and cgc tmp1 tmp2)
-            (am-mov cgc tmp2 (int-opnd subtype-tag))
+            (am-mov cgc tmp2 (int-opnd (subtype-tag subtype-desc)))
             (arm-cmp cgc tmp1 tmp2)
             (arm-b cgc (lbl-opnd-label lbl) (arm-cond-ne)))
           true-opnd:  (int-opnd (format-imm-object #f))

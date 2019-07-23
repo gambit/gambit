@@ -105,6 +105,11 @@
 (define special-int-tag      (if USE_EVEN_TAG_FOR_SUBTYPED 1 2))
 (define pair-tag             3)
 
+(define subtype-mask
+  (fxarithmetic-shift (- (expt 2 header-tag-width) 1) header-tag-offset))
+(define (subtype-tag desc)
+  (fxarithmetic-shift (reference-header-tag desc) header-tag-offset))
+
 (define (tag-number val tag)
   (+ (* tag-mult val) tag))
 
