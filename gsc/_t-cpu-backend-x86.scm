@@ -750,15 +750,15 @@
           true-opnd: (int-opnd (format-imm-object #t))
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
-(define x86-prim-##boolean?
+(define (x86-prim-##boolean-or? val)
   (const-nargs-prim 1 1 any-opnds
     (lambda (cgc result-action args arg1 tmp1)
       (let ((x86-arg1 (make-x86-opnd arg1))
             (x86-tmp1 (make-x86-opnd tmp1))
-            (test-int (+ (* tag-mult true-object-val) tag-mask)))
+            (test-int (+ (* tag-mult val) tag-mask)))
         (am-mov cgc tmp1 arg1)
         (x86-and cgc x86-tmp1 (x86-imm-int test-int))
-        (am-if-eq cgc tmp1 (make-obj-opnd #t)
+        (am-if-eq cgc tmp1 (int-opnd (tag-number val special-int-tag))
           (lambda (cgc) (am-return-const cgc result-action #t))
           (lambda (cgc) (am-return-const cgc result-action #f))
           #f
@@ -996,7 +996,10 @@
     (table-set! table '##pair?          (make-prim-obj x86-prim-##pair?          1 #t #t))
     (table-set! table '##mem-allocated? (make-prim-obj x86-prim-##mem-allocated? 1 #t #t))
     (table-set! table '##char?          (make-prim-obj x86-prim-##char?          1 #t #t))
-    (table-set! table '##boolean?       (make-prim-obj x86-prim-##boolean?       1 #t #t))
+
+    (table-set! table '##boolean?       (make-prim-obj (x86-prim-##boolean-or? true-object-val) 1 #t #t))
+    (table-set! table '##false-or-null? (make-prim-obj (x86-prim-##boolean-or? nil-object-val)  1 #t #t))
+    (table-set! table '##false-or-void? (make-prim-obj (x86-prim-##boolean-or? void-object-val) 1 #t #t))
 
     (table-set! table '##subtyped?      (make-prim-obj x86-prim-##subtyped? 1 #t #t))
     (table-set! table '##vector?        (make-prim-obj (x86-prim-##subtype? vector-obj-desc)       1 #t #t))
