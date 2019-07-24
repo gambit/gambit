@@ -23,11 +23,11 @@
 
 (define (make-prim-obj fun arity inlinable testable #!optional (apply-ifjump-fusable #f))
   (vector 'prim fun arity inlinable testable apply-ifjump-fusable))
-(define (get-primitive-function prim-object)  (vector-ref prim-object 1))
-(define (get-primitive-arity prim-object)     (vector-ref prim-object 2))
-(define (get-primitive-inlinable prim-object) (vector-ref prim-object 3))
-(define (get-primitive-testable prim-object)  (vector-ref prim-object 4))
-(define (get-primitive-apply-ifjump-fusable prim-object) (vector-ref prim-object 5))
+(define (get-primitive-function prim-object)        (vector-ref prim-object 1))
+(define (get-primitive-arity prim-object)           (vector-ref prim-object 2))
+(define (get-primitive-inlinable? prim-object)      (vector-ref prim-object 3))
+(define (get-primitive-testable? prim-object)       (vector-ref prim-object 4))
+(define (get-primitive-jump-inlinable? prim-object) (vector-ref prim-object 5))
 
 (define (then-jump true-location false-location #!optional (move-loc #f))
   (list 'jump true-location false-location move-loc))

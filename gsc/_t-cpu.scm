@@ -1,4 +1,4 @@
-;;============================================================================
+;;=============================================================================
 
 ;;; File: "_t-cpu.scm"
 
@@ -13,7 +13,7 @@
 (include-adt "_sourceadt.scm")
 (include-adt "_cpuadt.scm")
 
-;;----------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
 
 (define cpu-frame-reserve   3) ; XXX
 (define cpu-frame-alignment 4) ; XXX
@@ -21,7 +21,7 @@
 (define cpu-default-nb-gvm-regs 5) ;; total of available registers
 (define cpu-default-nb-arg-regs 3) ;; max args passed in registers
 
-;;----------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
 
 (define cpu-prim-proc-table
   (let ((t (make-prim-proc-table)))
@@ -33,33 +33,39 @@
 (define (cpu-prim-info name)
   (prim-proc-info cpu-prim-proc-table name))
 
-;;----------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
+
+(define (cpu-set-nb-regs targ sem-changing-opts)
+  (let ((nb-gvm-regs (get-option sem-changing-opts
+                                 'nb-gvm-regs
+                                 cpu-default-nb-gvm-regs))
+        (nb-arg-regs (get-option sem-changing-opts
+                                 'nb-arg-regs
+                                 cpu-default-nb-arg-regs)))
+
+    (if (or (< nb-gvm-regs 3) (> nb-gvm-regs 25))
+        (compiler-error "nb-gvm-regs option must be between 3 and 25"))
+
+    (if (or (< nb-arg-regs 1) (> nb-arg-regs (- nb-gvm-regs 2)))
+        (compiler-error
+          (string-append "nb-arg-regs option must be between 1 and "
+                         (number->string (- nb-gvm-regs 2)))))
+
+    (target-nb-regs-set! targ nb-gvm-regs)
+    (target-nb-arg-regs-set! targ nb-arg-regs)))
+
+;;-----------------------------------------------------------------------------
 
 ;; Initialization/finalization of back-end.
 
-(define (make-cpu-target
-          target-arch
-          file-extensions
-          abstract-machine-info) ; FIXME
-
-  (define (cpu-inlinable name) ; FIXME
-    (let ((prim (cpu-prim-info (string->canonical-symbol name))))
-      (proc-obj-inlinable?-set! prim (lambda (env) #t))))
-
-  (define (cpu-testable name) ; FIXME
-    (let ((prim (cpu-prim-info (string->canonical-symbol name))))
-      (proc-obj-testable?-set! prim (lambda (env) #t))))
-
-  (define (cpu-jump-inlinable name) ; FIXME
-    (let ((prim (cpu-prim-info (string->canonical-symbol name))))
-      (proc-obj-jump-inlinable?-set! prim (lambda (env) #t))))
+(define (cpu-make-target target-arch file-extensions backend-info)
 
   (let ((targ (make-target
                 12
                 target-arch
                 file-extensions
-                '() ; FIXME
-                '() ; FIXME
+                '() ; XXX
+                '() ; XXX
                 1)))
 
     (define (begin! sem-changing-opts
@@ -79,65 +85,60 @@
                     sem-preserving-opts
                     info-port)))
 
-      ;; Linking
-      (target-link-info-set!
-        targ
-        (lambda (file) #f)) ; XXX
+      (target-link-info-set!  targ (lambda (file) #f)) ; XXX
 
       (target-link-set!
         targ
         (lambda (extension? inputs output linker-name warnings?) #f)) ; XXX
 
-      ;; Primitives
       (target-prim-info-set! targ cpu-prim-info)
 
-      ;; Frame
       (target-frame-constraints-set!
         targ
         (make-frame-constraints cpu-frame-reserve cpu-frame-alignment))
 
-      ;; XXX
-      (target-proc-result-set! targ (make-reg 1))
-      (target-task-return-set! targ (make-reg 0))
+      (target-proc-result-set! targ (make-reg 1)) ; XXX
 
-      ;; XXX
-      (target-switch-testable?-set! targ (lambda (obj) #f))
-      (target-eq-testable?-set! targ (lambda (obj) #f))
-      (target-object-type-set! targ (lambda (obj) 'bignum))
+      (target-task-return-set! targ (make-reg 0)) ; XXX
 
-      ;; Registers
-      (let ((nb-gvm-regs (get-option sem-changing-opts
-                                     'nb-gvm-regs
-                                     cpu-default-nb-gvm-regs))
-            (nb-arg-regs (get-option sem-changing-opts
-                                     'nb-arg-regs
-                                     cpu-default-nb-arg-regs)))
-        (target-nb-regs-set! targ nb-gvm-regs)
-        (target-nb-arg-regs-set! targ nb-arg-regs))
+      (target-switch-testable?-set! targ (lambda (obj) #f)) ; XXX
 
-      ;; FIXME
-      (table-for-each
-        (lambda (name proc-obj)
-          (if (get-primitive-inlinable proc-obj)
-              (cpu-inlinable (symbol->string name)))
-          (if (get-primitive-testable proc-obj)
-              (cpu-testable (symbol->string name))))
-        (get-primitive-table-target targ))
+      (target-eq-testable?-set! targ (lambda (obj) #f)) ; XXX
+
+      (target-object-type-set! targ (lambda (obj) 'bignum)) ; XXX
+
+      (cpu-set-nb-regs targ sem-changing-opts)
 
       #f)
 
     (define (end!)
+
+      (table-for-each
+        (lambda (name proc-obj)
+          (let ((prim (cpu-prim-info name)))
+            (proc-obj-inlinable?-set!
+              prim
+              (lambda (env) (get-primitive-inlinable? proc-obj)))
+
+            (proc-obj-testable?-set!
+              prim
+              (lambda (env) (get-primitive-testable? proc-obj)))
+
+            (proc-obj-jump-inlinable?-set!
+              prim
+              (lambda (env) (get-primitive-jump-inlinable? proc-obj))))) ; XXX
+        (get-primitive-table targ))
+
       #f)
 
     (target-begin!-set! targ begin!)
     (target-end!-set! targ end!)
-    (target-extra-set! targ 0 abstract-machine-info)
+    (target-extra-set! targ 0 backend-info)
 
     targ))
 
-;;----------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
 
-; FIXME
 (define (cpu-dump targ
                   procs
                   output
@@ -148,56 +149,41 @@
                   sem-preserving-options
                   info-port)
 
-  (if (output-port? info-port)
+  (if info-port
       (virtual.dump-gvm procs info-port))
 
-  (let ((cgc ((get-make-cgc-fun targ))))
-    (codegen-context-target-set! cgc targ)
-    (encode-procs cgc procs)
-    (lambda ()
-      (create-target-file output linker-name cgc info-port)
-      output)))
+  (let ((cgc ((get-make-cgc-fun targ)))) ; XXX
+    (codegen-context-target-set! cgc targ) ; XXX
+    (encode-procs cgc procs) ; XXX
+    (cpu-compile output linker-name info-port cgc)
+    (lambda () output)))
 
-;;----------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
 
-; FIXME
-(define (create-target-file filename module-name cgc info-port)
-  (let* ((code (asm-assemble-to-u8vector cgc))
-         (fixup-locs (codegen-context-fixup-locs->vector cgc))
-         (fixup-objs (codegen-context-fixup-objs->vector cgc)))
+(define (cpu-compile output linker-name info-port cgc)
+  (let ((code (asm-assemble-to-u8vector cgc))
+        (fixup-locs (codegen-context-fixup-locs->vector cgc))
+        (fixup-objs (codegen-context-fixup-objs->vector cgc)))
 
-    (if (output-port? info-port)
-        (begin
-          (asm-display-listing cgc info-port #t)
+    (if info-port
+        (asm-display-listing cgc info-port #t))
 
-          (display ";; code = " info-port)
-          (display code info-port)
-          (newline info-port)
-
-          (display ";; fixup-locs = " info-port)
-          (display fixup-locs info-port)
-          (newline info-port)
-
-          (display ";; fixup-objs = " info-port)
-          (display fixup-objs info-port)
-          (newline info-port)))
-
-    ;; Calls compiler to create objfile.o1 using the C backend.
-    ;; When the file is loaded, it will execute the x86 code.
-    (compile-file-to-target "dummy.scm"
-                            output: filename
-                            module-name: module-name
-                            options: `((linker-name ,module-name) (target C))
+    ;; The compiler creates an object file using the C backend.
+    ;; When loaded, it will execute the assembly code.
+    (compile-file-to-target "cpu.scm"
+                            options: `((linker-name ,linker-name))
+                            output: output
                             expression: `((##machine-code-fixup
-                                           ',code
-                                           ',fixup-locs
-                                           ',fixup-objs)))))
+                                           ,code
+                                           ,fixup-locs
+                                           ,fixup-objs)))))
 
-;;----------------------------------------------------------------------------
+;;-----------------------------------------------------------------------------
 
-; FIXME
 (target-add (x86-32-target))
 (target-add (x86-64-target))
 (target-add (arm-target))
 (target-add (riscv-32-target))
 (target-add (riscv-64-target))
+
+;;;============================================================================

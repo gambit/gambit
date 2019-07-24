@@ -15,7 +15,7 @@
 ;;------------------------------------------------------------------------------
 
 (define (arm-target)
-  (make-cpu-target
+  (cpu-make-target
     'arm '((".c" . ARM))
     (make-backend make-cgc-arm (arm-info) (arm-instructions) (arm-routines))))
 
@@ -33,7 +33,7 @@
 (define arm-word-width 4)
 
 (define (arm-info)
-  (make-cpu-info
+  (cpu-make-info
     'arm                    ;; Arch name
     arm-word-width          ;; Word width
     'le                     ;; Endianness

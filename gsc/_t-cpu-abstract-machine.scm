@@ -98,7 +98,7 @@
 ;;    main-registers  : (Vector) Registers that map directly to GVM registers
 ;;    extra-registers : (Vector) Extra registers that can be overwritten at any time.
 ;;      Note: #extra-registers must >= 3.
-(define (make-cpu-info
+(define (cpu-make-info
           arch-name word-width endianness load-store frame-offset
           primitive-table
           gvm-reg-count gvm-arg-reg-count registers
@@ -159,7 +159,7 @@
 (define (get-endianness cgc)        (get-in-cgc cgc info-index 2))
 (define (is-load-store? cgc)        (get-in-cgc cgc info-index 3))
 (define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
-(define (get-primitive-table cgc)   (get-in-cgc cgc info-index 5))
+(define (get-primitives cgc)        (get-in-cgc cgc info-index 5))
 (define (get-gvm-reg-count cgc)     (get-in-cgc cgc info-index 6))
 (define (get-gvm-arg-reg-count cgc) (get-in-cgc cgc info-index 7))
 (define (get-registers  cgc)        (get-in-cgc cgc info-index 8))
@@ -167,10 +167,11 @@
 (define (get-frame-pointer cgc)     (get-in-cgc cgc info-index 10))
 (define (get-heap-pointer cgc)      (get-in-cgc cgc info-index 11))
 
-(define (get-primitive-table-target targ) (get-in-target targ info-index 5))
+(define (get-primitive-table targ)
+  (get-in-target targ info-index 5))
 
 (define (get-primitive-object cgc name)
-  (let* ((table (get-primitive-table cgc)))
+  (let* ((table (get-primitives cgc)))
     (table-ref table (string->symbol name) #f)))
 
 ;; ***** AM: Instructions fields
@@ -1391,7 +1392,7 @@
            (let* ((prim-sym (proc-obj-name (apply-prim gvm-instr1)))
                   (prim-obj (get-primitive-object cgc prim-sym)))
             (and prim-obj
-                  (get-primitive-apply-ifjump-fusable prim-obj)))
+                  (get-primitive-jump-inlinable? prim-obj)))
           (let ((test (proc-obj-name (ifjump-test gvm-instr2))))
             (or (equal? test "##identity")
                 (equal? test "##not")))

@@ -442,8 +442,7 @@
                     (else
                      (print-byte x)
                      (loop1 (cdr lst) (fx+ pos 1) (fx+ col byte-width))))))
-        (if (fx> col 0)
-            (newline port)))))
+        (newline port))))
 
 ;; (asm-assemble cb) assembles the code block and returns the number
 ;; of bytes in the code block.  After assembly, the label objects will

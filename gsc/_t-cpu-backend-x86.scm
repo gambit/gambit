@@ -21,7 +21,7 @@
 ;;------------------------------------------------------------------------------
 
 (define (x86-32-target)
-  (make-cpu-target
+  (cpu-make-target
     'x86 '((".c" . X86))
     (make-backend make-cgc-x86-32 (x86-32-info) (x86-instructions) (x86-routines))))
 
@@ -37,7 +37,7 @@
 ;;------------------------------------------------------------------------------
 
 (define (x86-64-target)
-  (make-cpu-target
+  (cpu-make-target
     'x86-64 '((".c" . X86-64))
     (make-backend make-cgc-x86-64 (x86-64-info) (x86-instructions) (x86-routines))))
 
@@ -53,7 +53,7 @@
 ;; x86 backend info
 
 (define (x86-32-info)
-  (make-cpu-info
+  (cpu-make-info
     'x86-32                 ;; Arch name
     4                       ;; Word width
     'le                     ;; Endianness
@@ -81,7 +81,7 @@
 ;; x86 64-bit backend info
 
 (define (x86-64-info)
-  (make-cpu-info
+  (cpu-make-info
     'x86-64                 ;; Arch name
     8                       ;; Word width
     'le                     ;; Endianness

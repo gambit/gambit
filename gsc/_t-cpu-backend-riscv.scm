@@ -24,7 +24,7 @@
 ;;------------------------------------------------------------------------------
 
 (define (riscv-32-target)
-  (make-cpu-target
+  (cpu-make-target
     'riscv-32 '((".c" . RISCV-32))
     (make-backend make-cgc-riscv-32 (riscv-32-info) (riscv-instructions) (riscv-routines)))) ; XXX
 
@@ -39,7 +39,7 @@
 ;;------------------------------------------------------------------------------
 
 (define (riscv-64-target)
-  (make-cpu-target
+  (cpu-make-target
     'riscv-64 '((".c" . RISCV-64))
     (make-backend make-cgc-riscv-64 (riscv-64-info) (riscv-instructions) (riscv-routines)))) ; XXX
 
@@ -54,7 +54,7 @@
 ;; RISC-V backend info
 
 (define (riscv-info arch width)
-  (make-cpu-info
+  (cpu-make-info
     arch                    ;; Arch name
     width                   ;; Word width
     'le                     ;; Endianness
