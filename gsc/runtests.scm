@@ -93,7 +93,7 @@
   (let* ((port
           (open-process (list path: path
                               arguments: args
-                              stderr-redirection: #f
+                              pseudo-terminal: #t
                               )))
          (output
           (read-line port #f))
@@ -238,6 +238,7 @@
                              (list file))))))
     (if (not (= (car x) 0))
         (begin
+          (print (cdr x))
           (println "\n*** compilation failed with target " target)
           (exit 1)))
     (if (and (not (target-compiles-to-o1? target))
