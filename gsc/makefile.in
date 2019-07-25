@@ -89,7 +89,7 @@ _env _ptree1 _ptree2 _gvm _back _front \
 _prims _assert _asm _x86 _arm _riscv _codegen \
 _t-univ-1 _t-univ-2 _t-univ-3 _t-univ-4 \
 _t-cpu-abstract-machine _t-cpu-primitives \
-_t-cpu-objects-desc _t-cpu-function-sub _t-cpu-utils \
+_t-cpu-objects-desc _t-cpu-utils \
 _t-cpu-backend-x86 _t-cpu-backend-arm _t-cpu-backend-riscv \
 _t-cpu \
 _t-c-1 _t-c-2 _t-c-3 \
@@ -99,7 +99,7 @@ _env.scm _ptree1.scm _ptree2.scm _gvm.scm _back.scm _front.scm \
 _prims.scm _assert.scm _asm.scm _x86.scm _arm.scm _riscv.scm _codegen.scm \
 _t-univ-1.scm _t-univ-2.scm _t-univ-3.scm _t-univ-4.scm \
 _t-cpu-abstract-machine.scm _t-cpu-primitives.scm \
-_t-cpu-objects-desc.scm _t-cpu-function-sub.scm _t-cpu-utils.scm \
+_t-cpu-objects-desc.scm _t-cpu-utils.scm \
 _t-cpu-backend-x86.scm _t-cpu-backend-arm.scm _t-cpu-backend-riscv.scm \
 _t-cpu.scm \
 _t-c-1.scm _t-c-2.scm _t-c-3.scm \
@@ -109,7 +109,7 @@ _env.c _ptree1.c _ptree2.c _gvm.c _back.c _front.c \
 _prims.c _assert.c _asm.c _x86.c _arm.c _riscv.c _codegen.c \
 _t-univ-1.c _t-univ-2.c _t-univ-3.c _t-univ-4.c \
 _t-cpu-abstract-machine.c _t-cpu-primitives.c \
-_t-cpu-objects-desc.c _t-cpu-function-sub.c _t-cpu-utils.c \
+_t-cpu-objects-desc.c _t-cpu-utils.c \
 _t-cpu-backend-x86.c _t-cpu-backend-arm.c _t-cpu-backend-riscv.c \
 _t-cpu.c \
 _t-c-1.c _t-c-2.c _t-c-3.c \
@@ -119,7 +119,7 @@ _env@obj@ _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _back@obj@ _front@obj@ \
 _prims@obj@ _assert@obj@ _asm@obj@ _x86@obj@ _arm@obj@ _riscv@obj@ _codegen@obj@ \
 _t-univ-1@obj@ _t-univ-2@obj@ _t-univ-3@obj@ _t-univ-4@obj@ \
 _t-cpu-abstract-machine@obj@ _t-cpu-primitives@obj@ \
-_t-cpu-objects-desc@obj@ _t-cpu-function-sub@obj@ _t-cpu-utils@obj@ \
+_t-cpu-objects-desc@obj@ _t-cpu-utils@obj@ \
 _t-cpu-backend-x86@obj@ _t-cpu-backend-arm@obj@ _t-cpu-backend-riscv@obj@ \
 _t-cpu@obj@ \
 _t-c-1@obj@ _t-c-2@obj@ _t-c-3@obj@ \
@@ -129,7 +129,7 @@ LIBRARY_MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
 +_prims@obj@ +_assert@obj@ +_asm@obj@ +_x86@obj@ +_arm@obj@ +_riscv@obj@ +_codegen@obj@ \
 +_t-univ-1@obj@ +_t-univ-2@obj@ +_t-univ-3@obj@ +_t-univ-4@obj@ \
 +_t-cpu-abstract-machine@obj@ +_t-cpu-primitives@obj@ \
-+_t-cpu-objects-desc@obj@ +_t-cpu-function-sub@obj@ +_t-cpu-utils@obj@ \
++_t-cpu-objects-desc@obj@ +_t-cpu-utils@obj@ \
 +_t-cpu-backend-x86@obj@ +_t-cpu-backend-arm@obj@ +_t-cpu-backend-riscv@obj@ \
 +_t-cpu@obj@ \
 +_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ \
@@ -139,7 +139,7 @@ _env@obj@,_ptree1@obj@,_ptree2@obj@,_gvm@obj@,_back@obj@,_front@obj@,\
 _prims@obj@,_assert@obj@,_asm@obj@,_x86@obj@,_arm@obj@,_riscv@obj@,_codegen@obj@,\
 _t-univ-1@obj@,_t-univ-2@obj@,_t-univ-3@obj@,_t-univ-4@obj@,\
 _t-cpu-abstract-machine@obj@,_t-cpu-primitives@obj@,\
-_t-cpu-objects-desc@obj@,_t-cpu-function-sub@obj@,_t-cpu-utils@obj@,\
+_t-cpu-objects-desc@obj@,_t-cpu-utils@obj@,\
 _t-cpu-backend-x86@obj@,_t-cpu-backend-arm@obj@,_t-cpu-backend-riscv@obj@,\
 _t-cpu@obj@,\
 _t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,\
@@ -151,7 +151,7 @@ _t-c-1@obj@ _gvm@obj@ _source@obj@ _t-c-3@obj@ \
 _arm@obj@ _riscv@obj@ _t-cpu@obj@ \
 _t-cpu-abstract-machine@obj@ _t-cpu-primitives@obj@ \
 _t-cpu-backend-x86@obj@ _t-cpu-backend-arm@obj@ _t-cpu-backend-riscv@obj@ \
-_t-cpu-function-sub@obj@ _t-cpu-objects-desc@obj@ _t-cpu-utils@obj@ \
+_t-cpu-objects-desc@obj@ _t-cpu-utils@obj@ \
 _utils@obj@ _parms@obj@ _gsclib@obj@ _env@obj@ \
 _back@obj@ _host@obj@ _codegen@obj@ _assert@obj@
 LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \
