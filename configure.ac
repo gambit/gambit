@@ -257,6 +257,18 @@ AC_ARG_ENABLE(c-opt,
 
 ###############################################################################
 #
+# Check if position independent code should be generated (this is usually
+# enabled but can cause problems in some situations so this is mostly intended
+# as a way to disable it).
+
+AC_ARG_ENABLE(pic,
+              AC_HELP_STRING([--enable-pic],
+                             [build system with position independent code (default is YES)]),
+              ENABLE_PIC=$enableval,
+              ENABLE_PIC=yes)
+
+###############################################################################
+#
 # Check if the system is to be debugged.
 
 AC_ARG_ENABLE(debug,
@@ -2203,10 +2215,12 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fbranch_probabilities"
   fi
 
-  if test "x$DASH_fPIC" != x; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fPIC"
-  else
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpic"
+  if test "$ENABLE_PIC" != no; then
+    if test "x$DASH_fPIC" != x; then
+      FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fPIC"
+    else
+      FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpic"
+    fi
   fi
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_common"
@@ -2295,7 +2309,9 @@ else
                FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_xO2"
              fi
 
-             FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_KPIC"
+             if test "$ENABLE_PIC" != no; then
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_KPIC"
+             fi
 
              FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_G"
              ;;

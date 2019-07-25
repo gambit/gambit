@@ -941,6 +941,7 @@ enable_option_checking
 enable_cplusplus
 enable_guide
 enable_c_opt
+enable_pic
 enable_debug
 enable_debug_log
 enable_debug_c_backtrace
@@ -1630,6 +1631,8 @@ Optional Features:
   --enable-cplusplus      compile using C++ compiler (default is NO)
   --enable-guide          include the Gambit Universal IDE (default is NO)
   --enable-c-opt[=level]  use higher C optimization level (default is NO)
+  --enable-pic            build system with position independent code (default
+                          is YES)
   --enable-debug          build system so that it can be debugged (default is
                           NO)
   --enable-debug-log      build system so that it generates a debugging log
@@ -4671,6 +4674,20 @@ else
   ENABLE_C_OPT=no
 fi
 
+
+
+###############################################################################
+#
+# Check if position independent code should be generated (this is usually
+# enabled but can cause problems in some situations so this is mostly intended
+# as a way to disable it).
+
+# Check whether --enable-pic was given.
+if test "${enable_pic+set}" = set; then :
+  enableval=$enable_pic; ENABLE_PIC=$enableval
+else
+  ENABLE_PIC=yes
+fi
 
 
 ###############################################################################
@@ -11779,10 +11796,12 @@ $as_echo "#define ___DONT_UNLOAD_DYN_CODE /**/" >>confdefs.h
     FLAGS_OBJ_DYN_LIB_EXE="$FLAGS_OBJ_DYN_LIB_EXE$DASH_fbranch_probabilities"
   fi
 
-  if test "x$DASH_fPIC" != x; then
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fPIC"
-  else
-    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpic"
+  if test "$ENABLE_PIC" != no; then
+    if test "x$DASH_fPIC" != x; then
+      FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fPIC"
+    else
+      FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpic"
+    fi
   fi
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_common"
@@ -12081,7 +12100,9 @@ DASH_G="$ac_cv_DASH_G"
                FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_xO2"
              fi
 
-             FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_KPIC"
+             if test "$ENABLE_PIC" != no; then
+               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_KPIC"
+             fi
 
              FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_G"
              ;;

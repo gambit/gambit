@@ -186,6 +186,8 @@ The configure options which are specific to the Gambit system are:
                           use GNU GCC -fno-strict-aliasing option (default=YES)
   --enable-cplusplus      compile using C++ compiler
   --enable-shared         build the Scheme runtime system as a shared library
+  --enable-pic            build system with position independent code (default
+                          is YES)
   --enable-debug          build system so that it can be debugged
   --enable-debug-log      build system so that it generates a debugging log
                           file
