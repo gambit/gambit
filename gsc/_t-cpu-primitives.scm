@@ -495,7 +495,7 @@
           (default-opnd #f))
 
   (define (use-loc loc in-args?)
-    (if (and loc (elem? (opnd-type loc) allowed-opnds))
+    (if (and loc (member (opnd-type loc) allowed-opnds))
       (fun loc in-args?)
       (get-free-register cgc args
         (lambda (reg)
@@ -510,13 +510,13 @@
     ((then-jump? result-action)
       (if (and
             (then-jump-move? result-action)
-            (not (elem? (then-jump-store-location result-action) args)))
+            (not (member (then-jump-store-location result-action) args)))
         (use-loc (then-jump-store-location result-action) #f)
         (use-loc default-opnd #t)))
     ((then-move? result-action)
       (let* ((mov-loc (then-move-store-location result-action))
-             (not-in-args (= 0 (elem-count mov-loc args)))
-             (once-in-args (= 1 (elem-count mov-loc args))))
+             (not-in-args (= 0 (count mov-loc args)))
+             (once-in-args (= 1 (count mov-loc args))))
         (cond
           ;; We can rearrange the expression to remove redundant move
           ((and once-in-args commutative)
@@ -531,9 +531,9 @@
     ((then-return? result-action)
       ;; We can rearrange the expression to remove redundant move
       (cond
-        ((and commutative (= 1 (elem-count (get-register cgc 1) args)))
+        ((and commutative (= 1 (count (get-register cgc 1) args)))
           (use-loc (get-register cgc 1) #t))
-        ((= 0 (elem-count (get-register cgc 1) args))
+        ((= 0 (count (get-register cgc 1) args))
           (use-loc (get-register cgc 1) #f))
         (default-opnd
           (use-loc default-opnd #t))

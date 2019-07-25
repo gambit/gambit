@@ -5,12 +5,8 @@
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
 ;;; Copyright (c) 2019 by Abdelhakim Qbaich, All Rights Reserved.
 
-(include "generic.scm")
+(include "fixnum.scm")
 
-(include-adt "_envadt.scm")
-(include-adt "_gvmadt.scm")
-(include-adt "_ptreeadt.scm")
-(include-adt "_sourceadt.scm")
 (include-adt "_cpuadt.scm")
 
 ;;-----------------------------------------------------------------------------
@@ -186,4 +182,4 @@
 (target-add (riscv-32-target))
 (target-add (riscv-64-target))
 
-;;;============================================================================
+;;=============================================================================

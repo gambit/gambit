@@ -453,7 +453,9 @@
   (get-multiple-free-registers cgc 1 needed-opnds action))
 
 (define (load-if-necessary cgc allowed-opnds opnd fun)
-  (if (if (procedure? allowed-opnds) (allowed-opnds opnd) (elem? (opnd-type opnd) allowed-opnds))
+  (if (if (procedure? allowed-opnds)
+          (allowed-opnds opnd)
+          (member (opnd-type opnd) allowed-opnds))
     (fun opnd)
     (get-free-register cgc (list opnd)
       (lambda (reg)
@@ -472,7 +474,7 @@
             (cons safe-opnd safe-opnds)))))))
 
 (define (mov-into cgc opnd allowed-opnds needed-opnds fun)
-  (if (elem? (opnd-type opnd) allowed-opnds)
+  (if (member (opnd-type opnd) allowed-opnds)
     (fun opnd)
     (get-free-register cgc needed-opnds
       (lambda (reg)
@@ -600,7 +602,7 @@
     (let* ((current-frame (codegen-context-frame cgc))
            (frame-size (frame-size current-frame)))
       (let loop ((i 2))
-        (if (not (elem? (frame cgc frame-size (+ frame-size 1 i)) reserved-opnds))
+        (if (not (member (frame cgc frame-size (+ frame-size 1 i)) reserved-opnds))
           (frame cgc frame-size (+ frame-size 1 i))
           (loop (+ i 1))))))
 
@@ -623,12 +625,12 @@
 
   (define (filter-available-reg info)
     (and
-      (not (elem? (car info) reserved-opnds))
+      (not (member (car info) reserved-opnds))
       (not (live-register? (cadr info)))
       (not (live-saved-register? (cadr info)))))
 
   (define (filter-live-reg info)
-    (and (not (elem? (car info) reserved-opnds)) (live-register? (cadr info))))
+    (and (not (member (car info) reserved-opnds)) (live-register? (cadr info))))
 
   (let* ((lst
           (map list
@@ -910,7 +912,7 @@
 
 (define (delayed-action-exist? cgc identifier)
   (let ((actions (codegen-context-delayed-actions cgc)))
-    (elem? identifier (map delayed-action-identifier actions))))
+    (member identifier (map delayed-action-identifier actions))))
 
 (define (get-delayed-actions cgc condition)
   (filter
@@ -1475,7 +1477,7 @@
             (if (not (null? opnds))
               (let ((opnd (car opnds)))
                 (cond
-                  ((elem? opnd unitialized-locs)
+                  ((member opnd unitialized-locs)
                     (set! clo-ref-fields
                       (cons (list loc n opnd) clo-ref-fields)))
                   ((equal? opnd loc)
