@@ -382,11 +382,15 @@ typedef struct ___device_tty_struct
 #endif
 
 #ifdef USE_POSIX
-
     int fd;
-    struct termios initial_termios;
-    int initial_flags;
+#endif
 
+#ifdef USE_tcgetsetattr
+    struct termios initial_termios;
+#endif
+
+#ifdef USE_fcntl
+    int initial_flags;
 #endif
 
 #ifdef USE_WIN32
@@ -491,13 +495,7 @@ extern ___SCMOBJ ___os_device_tty_mode_reset ___PVOID;
 /*---------------------------------------------------------------------------*/
 
 
-#ifdef USE_POSIX
 #define TERMINAL_EMULATION_USES_CURSES
-#endif
-
-#ifdef USE_WIN32
-#define TERMINAL_EMULATION_USES_CURSES
-#endif
 
 
 struct ___curses_struct

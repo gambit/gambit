@@ -234,31 +234,49 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
-#ifdef USE_tcgetsetattr
-#ifdef USE_fcntl
+#ifdef ___USE_POSIX
 
-#ifdef ___DEBUG_TTY
+  int fd = d->fd;
 
-  ___printf ("tcgetattr  d->fd = %d\n", d->fd);
+  if (fd < 0)
+    return ___FIX(___NO_ERR);
+
+#else
+
+#if defined(USE_tcgetsetattr) || defined(USE_fcntl)
+
+  int fd = 0; /* fileno(___stdin) */
 
 #endif
 
-  if (d->fd < 0)
-    return ___FIX(___NO_ERR);
+#endif
 
-  if (tcgetattr (d->fd, &d->initial_termios) < 0 ||
-      (d->initial_flags = fcntl (d->fd, F_GETFL, 0)) < 0)
+#ifdef USE_tcgetsetattr
+
+#ifdef ___DEBUG_TTY
+
+  ___printf ("tcgetattr  fd = %d\n", fd);
+
+#endif
+
+  if (tcgetattr (fd, &d->initial_termios) < 0)
     return err_code_from_errno ();
 
 #ifdef ___DEBUG_TTY
 
-  ___printf ("___device_tty_mode_get  d->fd = %d\n", d->fd);
+  ___printf ("___device_tty_mode_get  fd = %d\n", fd);
   ___printf ("  d->initial_termios.c_iflag = 0x%08x\n", d->initial_termios.c_iflag);
   ___printf ("  d->initial_termios.c_oflag = 0x%08x\n", d->initial_termios.c_oflag);
   ___printf ("  d->initial_termios.c_lflag = 0x%08x\n", d->initial_termios.c_lflag);
 
 #endif
+
 #endif
+
+#ifdef USE_fcntl
+
+ if ((d->initial_flags = fcntl (fd, F_GETFL, 0)) < 0)
+    return err_code_from_errno ();
 
 #endif
 
@@ -306,19 +324,31 @@ ___BOOL undo;)
   ___device_tty *d = self;
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-#ifdef USE_tcgetsetattr
-#ifdef USE_fcntl
+#ifdef ___USE_POSIX
 
-  if (d->fd < 0)
+  int fd = d->fd;
+
+  if (fd < 0)
     return ___FIX(___NO_ERR);
+
+#else
+
+#if defined(USE_tcgetsetattr) || defined(USE_fcntl)
+
+  int fd = 0; /* fileno(___stdin) */
+
+#endif
+
+#endif
+
+#ifdef USE_tcgetsetattr
 
   {
     struct termios new_termios = d->initial_termios;
-    int new_flags = d->initial_flags;
 
 #ifdef ___DEBUG_TTY
 
-    ___printf ("tcsetattr  d->fd = %d\n", d->fd);
+    ___printf ("tcsetattr  fd = %d\n", fd);
     ___printf ("  d->lineeditor_mode = %d\n", d->lineeditor_mode);
     ___printf ("  d->input_allow_special = %d\n", d->input_allow_special);
     ___printf ("  d->input_echo = %d\n", d->input_echo);
@@ -395,8 +425,13 @@ ___BOOL undo;)
             new_termios.c_cc[VSTATUS]  = _POSIX_VDISABLE;
 #endif
 
-            new_termios.c_cc[VMIN]     = 1;
-            new_termios.c_cc[VTIME]    = 0;
+#ifdef USE_POSIX
+            new_termios.c_cc[VMIN]     = 1; /* wait for first char then */
+            new_termios.c_cc[VTIME]    = 0; /* return it if no other avail */
+#else
+            new_termios.c_cc[VMIN]     = 0; /* wait up to 1/10 of a second */
+            new_termios.c_cc[VTIME]    = 1; /* for a character */
+#endif
           }
         else
           {
@@ -522,8 +557,6 @@ ___BOOL undo;)
                 cfsetospeed (&new_termios, speed_code);
               }
           }
-
-        new_flags = new_flags | O_NONBLOCK;
       }
 
 #ifdef ___DEBUG_TTY
@@ -534,12 +567,25 @@ ___BOOL undo;)
 
 #endif
 
-    if (tcsetattr (d->fd, TCSANOW, &new_termios) < 0 ||
-        fcntl (d->fd, F_SETFL, new_flags) < 0)
+    if (tcsetattr (fd, TCSANOW, &new_termios) < 0)
       e = err_code_from_errno ();
   }
 
 #endif
+
+#ifdef USE_fcntl
+  {
+    int new_flags = d->initial_flags;
+
+    if (!undo)
+      {
+        new_flags = new_flags | O_NONBLOCK;
+      }
+
+    if (fcntl (fd, F_SETFL, new_flags) < 0)
+      e = err_code_from_errno ();
+  }
+
 #endif
 
 #ifdef USE_WIN32
@@ -1008,6 +1054,26 @@ ___stream_index *len_done;)
 {
   ___device_tty *d = self;
 
+#ifndef USE_POSIX
+#ifndef USE_WIN32
+
+  {
+    int n;
+
+    if ((n = ___fwrite (buf, 1, len, ___stdout)) != len)
+      {
+        ___clearerr (___stdout);
+        return ___FIX(___UNKNOWN_ERR);
+      }
+
+    ___fflush (___stdout);
+
+    *len_done = n;
+  }
+
+#endif
+#endif
+
 #ifdef USE_POSIX
 
   {
@@ -1069,6 +1135,7 @@ ___stream_index *len_done;)
   return ___device_tty_write (d, buf, len, len_done);
 }
 
+
 ___HIDDEN ___SCMOBJ ___device_tty_read_raw_no_lineeditor
    ___P((___device_tty *self,
          ___U8 *buf,
@@ -1087,6 +1154,37 @@ ___stream_index *len_done;)
 
   if (d->base.base.read_stage != ___STAGE_OPEN)
     return ___FIX(___CLOSED_DEVICE_ERR);
+
+#ifndef USE_POSIX
+#ifndef USE_WIN32
+
+  {
+    int n;
+
+#ifdef ___DEBUG_TTY
+    ___printf ("read len=%d\n", len);
+#endif
+
+    if ((n = ___fread (buf, 1, len, ___stdin)) == 0)
+      {
+        /*
+         * The TTY is set with a VMIN=0 and VTIME=1 so it will
+         * return n=0 when no key has been pressed, so don't
+         * treat this as an end of file.
+         */
+        ___clearerr (___stdin);
+        return ___ERR_CODE_EAGAIN;
+      }
+
+#ifdef ___DEBUG_TTY
+    ___printf ("read n=%d\n", n);
+#endif
+
+    *len_done = n;
+  }
+
+#endif
+#endif
 
 #ifdef USE_POSIX
 
@@ -3114,19 +3212,17 @@ ___U8 *text_arg;)
 
     case TERMINAL_CTRL - ___UNICODE_BELL:
       {
-#ifdef USE_POSIX
+#ifdef USE_WIN32
+
+        if (!MessageBeep (MB_OK))
+          e = err_code_from_GetLastError ();
+
+#else
 
         {
           ___C c = ___UNICODE_BELL;
           e = lineeditor_output (d, &c, 1);
         }
-
-#endif
-
-#ifdef USE_WIN32
-
-        if (!MessageBeep (MB_OK))
-          e = err_code_from_GetLastError ();
 
 #endif
 
@@ -3147,15 +3243,6 @@ ___U8 *text_arg;)
                              d->terminal_col;
 
         d->terminal_delayed_wrap = 0;
-
-#ifdef USE_POSIX
-
-        {
-          ___C c = ___UNICODE_BACKSPACE;
-          e = lineeditor_output (d, &c, 1);
-        }
-
-#endif
 
 #ifdef USE_WIN32
 
@@ -3179,6 +3266,13 @@ ___U8 *text_arg;)
               if (!SetConsoleCursorPosition (d->hout, pos))
                 e = err_code_from_GetLastError ();
             }
+        }
+
+#else
+
+        {
+          ___C c = ___UNICODE_BACKSPACE;
+          e = lineeditor_output (d, &c, 1);
         }
 
 #endif
@@ -3208,15 +3302,6 @@ ___U8 *text_arg;)
                              d->terminal_col;
 
         d->terminal_delayed_wrap = 0;
-
-#ifdef USE_POSIX
-
-        {
-          ___C c = ___UNICODE_LINEFEED;
-          e = lineeditor_output (d, &c, 1);
-        }
-
-#endif
 
 #ifdef USE_WIN32
 
@@ -3270,6 +3355,13 @@ ___U8 *text_arg;)
             }
         }
 
+#else
+
+        {
+          ___C c = ___UNICODE_LINEFEED;
+          e = lineeditor_output (d, &c, 1);
+        }
+
 #endif
 
         break;
@@ -3280,15 +3372,6 @@ ___U8 *text_arg;)
         d->terminal_col = 0;
         d->terminal_cursor = d->terminal_row * d->terminal_nb_cols;
         d->terminal_delayed_wrap = 0;
-
-#ifdef USE_POSIX
-
-        {
-          ___C c = ___UNICODE_RETURN;
-          e = lineeditor_output (d, &c, 1);
-        }
-
-#endif
 
 #ifdef USE_WIN32
 
@@ -3308,6 +3391,13 @@ ___U8 *text_arg;)
             }
         }
 
+#else
+
+        {
+          ___C c = ___UNICODE_RETURN;
+          e = lineeditor_output (d, &c, 1);
+        }
+
 #endif
 
         break;
@@ -3315,12 +3405,6 @@ ___U8 *text_arg;)
 
     case TERMINAL_SET_ATTRS:
       {
-#ifdef USE_POSIX
-
-        e = lineeditor_output_set_attrs (d, arg);
-
-#endif
-
 #ifdef USE_WIN32
 
         {
@@ -3371,6 +3455,10 @@ ___U8 *text_arg;)
           if (!SetConsoleTextAttribute (d->hout, attr))
             e = err_code_from_GetLastError ();
         }
+
+#else
+
+        e = lineeditor_output_set_attrs (d, arg);
 
 #endif
 
@@ -5194,12 +5282,14 @@ int plain;)
 
   if (lineeditor_under_emacs ())
     d->input_echo = 0;
+#if defined(USE_POSIX) || defined(USE_WIN32) || defined(USE_tcgetsetattr)
   else
     {
       if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.terminal_settings) !=
           ___TERMINAL_LINE_EDITING_OFF)
         d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
     }
+#endif
 
   /* for terminal emulation */
 
@@ -7539,6 +7629,14 @@ ___device_select_state *state;)
 
   if (for_writing)
     {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
+
+      state->devs[i] = NULL;
+
+#endif
+#endif
+
 #ifdef USE_POSIX
 
       if (d->fd < 0 || ___FD_ISSET(d->fd, state->writefds))
@@ -7555,6 +7653,14 @@ ___device_select_state *state;)
     }
   else
     {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
+
+      state->devs[i] = NULL;
+
+#endif
+#endif
+
 #ifdef USE_POSIX
 
       if (d->fd < 0 || ___FD_ISSET(d->fd, state->readfds))
@@ -8229,6 +8335,9 @@ int direction;)
 {
 #ifndef USE_POSIX
 #ifndef USE_WIN32
+
+  ___setbuf (___stdin, NULL);
+  ___setbuf (___stdout, NULL);
 
   return ___device_tty_setup_from_stdio (dev,
                                          dgroup,

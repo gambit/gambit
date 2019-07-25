@@ -7395,14 +7395,14 @@ ___stream_index *len_done;)
     if (stream == ___stdin)
       len = 1; /* only read 1 byte at a time to prevent blocking on tty */
 
-    if ((n = fread (buf, 1, len, stream)) == 0)
+    if ((n = ___fread (buf, 1, len, stream)) == 0)
       {
-        if (ferror (stream))
+        if (___ferror (stream))
           {
-            clearerr (stream);
+            ___clearerr (stream);
             return ___FIX(___UNKNOWN_ERR);
           }
-        clearerr (stream);
+        ___clearerr (stream);
       }
 
     *len_done = n;
@@ -7469,11 +7469,11 @@ ___stream_index *len_done;)
     if (stream == 0)
       stream = ___stdout;
 
-    if ((n = fwrite (buf, 1, len, stream)) == 0)
+    if ((n = ___fwrite (buf, 1, len, stream)) == 0)
       {
-        if (ferror (stream))
+        if (___ferror (stream))
           {
-            clearerr (stream);
+            ___clearerr (stream);
             return ___FIX(___UNKNOWN_ERR);
           }
       }
@@ -7828,7 +7828,6 @@ int *direction;)
 
 #endif
 #endif
-
 
 #ifdef USE_POSIX
 
@@ -9966,6 +9965,22 @@ ___SCMOBJ flags;)
 
   switch (___INT(index))
     {
+    case -4:
+      {
+        ___device_tty *d;
+
+        if ((e = ___device_tty_setup_console
+                   (&d,
+                    ___global_device_group (),
+                    direction))
+            != ___FIX(___NO_ERR))
+          return e;
+
+        dev = ___CAST(___device_stream*,d);
+
+        break;
+      }
+
     default:
       {
         switch (___INT(index))
@@ -9978,9 +9993,6 @@ ___SCMOBJ flags;)
             break;
           case -3:
             stream = ___stderr;
-            break;
-          case -4:
-            stream = 0;
             break;
           default:
             stream = fdopen (___INT(index), mode);

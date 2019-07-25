@@ -48,6 +48,23 @@ extern int ___fflush
    ___P((___FILE *stream),
         ());
 
+extern int ___ferror
+   ___P((___FILE *stream),
+        ());
+
+extern int ___feof
+   ___P((___FILE *stream),
+        ());
+
+extern void ___clearerr
+   ___P((___FILE *stream),
+        ());
+
+extern void ___setbuf
+   ___P((___FILE *stream,
+         char *buf),
+        ());
+
 #ifdef ___DEBUG_LOG
 
 extern int ___printf

@@ -187,6 +187,10 @@
 #define USE_snprintf
 #endif
 
+#ifdef HAVE_TERMIOS_H
+#define USE_tcgetsetattr
+#endif
+
 
 /* Operating-system specific features we require */
 
@@ -296,10 +300,6 @@
 
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
 #define USE_backtrace_symbols_fd
-#endif
-
-#ifdef HAVE_TCGETSETATTR
-#define USE_tcgetsetattr
 #endif
 
 #ifdef HAVE_UNLINK

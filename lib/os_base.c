@@ -110,6 +110,41 @@ ___FILE *stream;)
 }
 
 
+int ___ferror
+   ___P((___FILE *stream),
+        (stream)
+___FILE *stream;)
+{
+  return ferror (stream);
+}
+
+int ___feof
+   ___P((___FILE *stream),
+        (stream)
+___FILE *stream;)
+{
+  return feof (stream);
+}
+
+void ___clearerr
+   ___P((___FILE *stream),
+        (stream)
+___FILE *stream;)
+{
+  clearerr (stream);
+}
+
+void ___setbuf
+   ___P((___FILE *stream,
+         char *buf),
+        (stream,
+         buf)
+___FILE *stream;
+char *buf;)
+{
+  setbuf (stream, buf);
+}
+
 #ifdef ___DEBUG_LOG
 
 #include <stdarg.h>
@@ -117,7 +152,8 @@ ___FILE *stream;)
 int ___printf
    ___P((const char *format,
          ...),
-        (format, ...)
+        (format,
+         ...)
 const char *format;)
 {
   va_list ap;
