@@ -344,7 +344,7 @@
 ;; Primitives
 
 (define riscv-prim-##fixnum?
-  (const-nargs-prim 1 2 '((reg mem))
+  (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (am-mov cgc temp1 (int-opnd tag-mask))
       (riscv-and cgc temp2 arg1 temp1) ; XXX
@@ -355,7 +355,7 @@
         false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define riscv-prim-##pair?
-  (const-nargs-prim 1 2 '((reg mem))
+  (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (am-mov cgc temp1 (int-opnd tag-mask))
       (riscv-not cgc temp2 arg1)
@@ -367,7 +367,7 @@
         false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define riscv-prim-##special?
-  (const-nargs-prim 1 2 '((reg mem))
+  (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (am-mov cgc temp1 (int-opnd special-int-tag))
       (riscv-andi cgc temp2 arg1 (riscv-imm-int tag-mask)) ; XXX
@@ -378,7 +378,7 @@
         false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define riscv-prim-##mem-allocated?
-  (const-nargs-prim 1 2 '((reg mem))
+  (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (am-mov cgc temp1 (int-opnd (bitwise-and object-tag pair-tag)))
       (riscv-and cgc temp2 arg1 temp1) ; XXX
@@ -389,7 +389,7 @@
         false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define riscv-prim-##char?
-  (const-nargs-prim 1 2 '((reg mem))
+  (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (let ((test-int
               (- special-int-tag (expt 2 (- (get-word-width-bits cgc) 1)))))
@@ -403,7 +403,7 @@
           false-opnd: (int-opnd (format-imm-object #f)))))))
 
 (define (riscv-prim-##boolean-or? val)
-  (const-nargs-prim 1 1 any-opnds
+  (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 tmp1)
       (let ((test-int (+ (* tag-mult val) tag-mask)))
         (riscv-andi cgc tmp1 arg1 (riscv-imm-int test-int))
@@ -414,7 +414,7 @@
           (get-word-width-bits cgc))))))
 
 (define riscv-prim-##subtyped?
-  (const-nargs-prim 1 2 '((reg mem))
+  (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
       (am-mov cgc tmp1 (int-opnd object-tag))
       (riscv-andi cgc tmp2 arg1 (riscv-imm-int tag-mask))
@@ -425,7 +425,7 @@
         false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define (riscv-prim-##subtype? subtype-desc) ; XXX
-  (const-nargs-prim 1 2 '((reg mem))
+  (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
       (let ((width (get-word-width-bits cgc)))
         (am-mov cgc tmp1 (int-opnd object-tag))
@@ -458,24 +458,21 @@
     reduce-1: am-mov
     commutative: #t))
 
-(define riscv-prim-##fx+?
-  (lambda (cgc result-action args)
-    (with-result-opnd cgc result-action args
-      allowed-opnds: '(reg)
-      fun:
-      (lambda (result-reg result-opnd-in-args)
-        (am-add cgc result-reg (car args) (cadr args))
-        (am-cond-return cgc result-action
-          (lambda (cgc lbl) ; XXX
-            (riscv-slt cgc (car args) result-reg (car args))
-            (riscv-sltz cgc (cadr args) (cadr args))
-            (riscv-beq cgc (car args) (cadr args) (make-riscv-opnd lbl)))
-          (lambda (cgc lbl) ; XXX Overflow
-            (riscv-slt cgc (car args) result-reg (car args))
-            (riscv-sltz cgc (cadr args) (cadr args))
-            (riscv-bne cgc (car args) (cadr args) (make-riscv-opnd lbl)))
-          true-opnd: result-reg
-          false-opnd: (int-opnd (format-imm-object #f)))))))
+(define riscv-prim-##fx+? ; XXX
+  (const-nargs-prim 2 1 '((reg))
+    (lambda (cgc result-action args arg1 arg2 tmp1)
+      (am-add cgc tmp1 arg1 arg2)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl)
+          (riscv-slt cgc arg1 tmp1 arg1)
+          (riscv-sltz cgc arg2 arg2)
+          (riscv-beq cgc arg1 arg2 (make-riscv-opnd lbl)))
+        (lambda (cgc lbl)
+          (riscv-slt cgc arg1 tmp1 arg1)
+          (riscv-sltz cgc arg2 arg2)
+          (riscv-bne cgc arg1 arg2 (make-riscv-opnd lbl)))
+        true-opnd:  tmp1 ; XXX
+        false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define riscv-prim-##fx-
   (foldl-prim
@@ -486,27 +483,21 @@
     reduce-1: (lambda (cgc dst opnd) (am-sub cgc dst (riscv-zero) opnd))
     commutative: #f))
 
-(define riscv-prim-##fx-?
-  (lambda (cgc result-action args)
-    (with-result-opnd cgc result-action args
-      allowed-opnds: '(reg)
-      fun:
-      (lambda (result-reg result-opnd-in-args)
-        (let* ((1-opnd? (null? (cdr args)))
-               (opnd1 (if 1-opnd? (riscv-zero) (car args)))
-               (opnd2 (if 1-opnd? (car args) (cadr args))))
-          (am-sub cgc result-reg opnd1 opnd2)
-          (am-cond-return cgc result-action
-            (lambda (cgc lbl) ; XXX
-              (riscv-slt cgc opnd1 result-reg opnd1)
-              (riscv-sltz cgc opnd2 opnd2)
-              (riscv-bne cgc opnd1 opnd2 (make-riscv-opnd lbl)))
-            (lambda (cgc lbl) ; XXX Overflow
-              (riscv-slt cgc opnd1 result-reg opnd1)
-              (riscv-sltz cgc opnd2 opnd2)
-              (riscv-beq cgc opnd1 opnd2 (make-riscv-opnd lbl)))
-            true-opnd: result-reg
-            false-opnd: (int-opnd (format-imm-object #f))))))))
+(define riscv-prim-##fx-? ; XXX
+  (const-nargs-prim 2 1 '((reg))
+    (lambda (cgc result-action args arg1 arg2 tmp1)
+      (am-sub cgc tmp1 arg1 arg2)
+      (am-cond-return cgc result-action
+        (lambda (cgc lbl)
+          (riscv-slt cgc arg1 tmp1 arg1)
+          (riscv-sltz cgc arg2 arg2)
+          (riscv-beq cgc arg1 arg2 (make-riscv-opnd lbl)))
+        (lambda (cgc lbl)
+          (riscv-slt cgc arg1 tmp1 arg1)
+          (riscv-sltz cgc arg2 arg2)
+          (riscv-bne cgc arg1 arg2 (make-riscv-opnd lbl)))
+        true-opnd:  tmp1 ; XXX
+        false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define (riscv-compare-prim condition)
   (foldl-compare-prim
@@ -525,7 +516,7 @@
 (define riscv-prim-##fx=  (riscv-compare-prim condition-not-equal))
 
 (define (riscv-prim-##fxparity? parity)
-  (const-nargs-prim 1 1 '((reg mem))
+  (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 tmp1)
       (riscv-andi cgc tmp1 arg1 (riscv-imm-int (format-imm-object 1)))
       (am-cond-return cgc result-action
@@ -535,7 +526,7 @@
         false-opnd: (int-opnd (format-imm-object #f))))))
 
 (define (riscv-prim-##fxsign? sign)
-  (const-nargs-prim 1 0 '((reg mem))
+  (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args arg1)
       (am-cond-return cgc result-action
         (lambda (cgc lbl) ((if (eq? sign 'positive) riscv-bgtz riscv-bltz) cgc arg1 (make-riscv-opnd lbl)))

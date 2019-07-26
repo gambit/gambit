@@ -193,27 +193,27 @@
   (riscv-addi cgc (riscv-x0) (riscv-x0) (riscv-imm-int 0)))
 (define (riscv-li cgc rd immediate) ; XXX Implementation inspired from LLVM
   (let* ((val (riscv-imm-int-value immediate))
-         (lo12 (fx- (fxand (fx+ val #x800) #xfff) #x800))
-         (hi52 (fxarithmetic-shift (fx+ val #x800) -12)))
-    (if (and (fx>= val -2147483648) (fx<= val 2147483647))
-        (let ((hi20 (fxand hi52 #xfffff)))
-          (if (not (fxzero? hi20))
-              (riscv-lui cgc rd (riscv-imm-int hi20 'U)))
-          (if (or (not (fxzero? lo12)) (fxzero? hi20))
+         (lo12 (- (bitwise-and (+ val #x800) #xfff) #x800))
+         (hi52 (arithmetic-shift (+ val #x800) -12)))
+    (if (and (>= val -2147483648) (<= val 2147483647))
+        (let ((hi20 (bitwise-and hi52 #xfffff)))
+          (if (not (zero? hi20))
+              (riscv-lui cgc rd (riscv-imm-int (arithmetic-shift hi20 12) 'U)))
+          (if (or (not (zero? lo12)) (zero? hi20))
               (let ((instr (if (riscv-64bit-mode? cgc) riscv-addiw riscv-addi))
-                    (rs (if (fxzero? hi20) (riscv-x0) rd)))
+                    (rs (if (zero? hi20) (riscv-x0) rd)))
                 (instr cgc rd rs (riscv-imm-int lo12)))))
         (begin
           (riscv-assert-64bit-mode cgc)
-          (let* ((shamt (fx+ 12 (fxfirst-bit-set (asm-unsigned-lo64 hi52)))) ; XXX
-                 (hi52 (fxarithmetic-shift-right
-                         (asm-signed-lo64 (fxarithmetic-shift
-                                            (fxarithmetic-shift-right hi52 (fx- shamt 12))
-                                            shamt)) ; XXX
-                         shamt)))
+          (let* ((shamt (+ 12 (first-bit-set (asm-unsigned-lo64 hi52))))
+                 (hi52 (arithmetic-shift
+                         (asm-signed-lo64 (arithmetic-shift
+                                            (arithmetic-shift hi52 (- (- shamt 12)))
+                                            shamt))
+                         (- shamt))))
             (riscv-li cgc rd (riscv-imm-int hi52))
             (riscv-slli cgc rd rd shamt)
-            (if (not (fxzero? lo12))
+            (if (not (zero? lo12))
                 (riscv-addi cgc rd rd (riscv-imm-int lo12))))))))
 (define (riscv-mv cgc rd rs)
   (riscv-addi cgc rd rs (riscv-imm-int 0)))
