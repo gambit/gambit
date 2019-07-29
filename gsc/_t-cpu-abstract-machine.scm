@@ -1250,7 +1250,7 @@
                     ((arm)
                       (compiler-internal-error "TODO: ARM not implemented"))
                     (else
-                      (compiler-error "Unknown arch")))))))
+                      (compiler-error "encode-label-instr, unknown arch")))))))
 
       ((return)
           (set-proc-label-index cgc proc label label-struct-position)
@@ -1437,7 +1437,7 @@
       ((arm)
         (compiler-internal-error "TODO: ARM not implemented"))
       (else
-        (compiler-error "Unknown arch"))))
+        (compiler-error "encode-close-instr, unknown arch"))))
   (define code-length (length executable-code))
 
   (define clo-ref-fields '())
