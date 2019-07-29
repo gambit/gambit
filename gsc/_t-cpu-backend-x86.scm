@@ -831,6 +831,44 @@
             true-opnd: result-reg
             false-opnd: (int-opnd (format-imm-object #f))))))))
 
+(define x86-prim-##fxnot
+  (const-nargs-prim 1 0 '((reg))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-arg1 (make-x86-opnd arg1)))
+        (x86-not cgc x86-arg1)
+        (x86-and cgc x86-arg1 (x86-imm-int -4))
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##fxand
+  (foldl-prim
+    (make-function-x86-opnds x86-and)
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    start-value: -1
+    start-value-null?: #t
+    reduce-1: am-mov
+    commutative: #t))
+
+(define x86-prim-##fxior
+  (foldl-prim
+    (make-function-x86-opnds x86-or)
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 0
+    start-value-null?: #t
+    reduce-1: am-mov
+    commutative: #t))
+
+(define x86-prim-##fxxor
+  (foldl-prim
+    (make-function-x86-opnds x86-xor)
+    allowed-opnds: '(reg mem int)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 0
+    start-value-null?: #t
+    reduce-1: am-mov
+    commutative: #t))
+
 (define (x86-compare-prim condition)
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
@@ -1024,6 +1062,11 @@
     (table-set! table '##fx>            (make-prim-obj x86-prim-##fx>  2 #t #t))
     (table-set! table '##fx>=           (make-prim-obj x86-prim-##fx>= 2 #t #t))
     (table-set! table '##fx=            (make-prim-obj x86-prim-##fx=  2 #t #t))
+
+    (table-set! table '##fxnot          (make-prim-obj x86-prim-##fxnot 1 #t #t))
+    (table-set! table '##fxand          (make-prim-obj x86-prim-##fxand 2 #t #t))
+    (table-set! table '##fxior          (make-prim-obj x86-prim-##fxior 2 #t #t))
+    (table-set! table '##fxxor          (make-prim-obj x86-prim-##fxxor 2 #t #t))
 
     (table-set! table '##fxeven?        (make-prim-obj (x86-prim-##fxparity? 'even)    1 #t #t))
     (table-set! table '##fxodd?         (make-prim-obj (x86-prim-##fxparity? 'odd)     1 #t #t))
