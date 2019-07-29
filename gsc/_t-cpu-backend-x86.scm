@@ -834,6 +834,11 @@
 (define (x86-compare-prim condition)
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
+      (if (and true-label
+               (or (eq? (vector-ref (lbl-opnd-label true-label) 2) 'if-true)
+                   (eq? (vector-ref (lbl-opnd-label true-label) 2) 'continue-label)))
+          (set! true-label #f))
+
       (am-compare-jump cgc
         (mk-test condition opnd1 opnd2)
         false-label true-label
@@ -947,7 +952,7 @@
             (mem-opnd obj-reg (- 0-offset) index-opnd index-shift))
           new-val-opnd
           (* 8 width))
-        (am-return-const cgc result-action (void))))))
+        (am-return-opnd cgc result-action obj-reg)))))
 
 (define (x86-prim-##vector-length width)
   (const-nargs-prim 1 0 '((reg))
