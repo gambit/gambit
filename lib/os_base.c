@@ -118,6 +118,7 @@ ___FILE *stream;)
   return ferror (stream);
 }
 
+
 int ___feof
    ___P((___FILE *stream),
         (stream)
@@ -126,6 +127,7 @@ ___FILE *stream;)
   return feof (stream);
 }
 
+
 void ___clearerr
    ___P((___FILE *stream),
         (stream)
@@ -133,6 +135,7 @@ ___FILE *stream;)
 {
   clearerr (stream);
 }
+
 
 void ___setbuf
    ___P((___FILE *stream,
@@ -144,6 +147,7 @@ char *buf;)
 {
   setbuf (stream, buf);
 }
+
 
 #ifdef ___DEBUG_LOG
 
@@ -329,7 +333,13 @@ ___SIZE_T bytes;)
 #ifndef USE_mmap
 #ifndef USE_VirtualAlloc
 
-  return NULL;
+  /* allocate a normal block and hope it is executable */
+
+#ifdef ___DEBUG_ALLOC_MEM
+  return ___alloc_mem (bytes, lineno, file);
+#else
+  return ___alloc_mem (bytes);
+#endif
 
 #endif
 #endif
@@ -378,6 +388,12 @@ void *ptr;)
 {
 #ifndef USE_mmap
 #ifndef USE_VirtualAlloc
+
+#ifdef ___DEBUG_ALLOC_MEM
+  ___free_mem (ptr, lineno, file);
+#else
+  ___free_mem (ptr);
+#endif
 
 #endif
 #endif
