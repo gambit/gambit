@@ -831,6 +831,31 @@
             true-opnd: result-reg
             false-opnd: (int-opnd (format-imm-object #f))))))))
 
+(define x86-prim-##fx*
+  (foldl-prim
+    (lambda (cgc . args)
+      (x86-sar cgc (make-x86-opnd (car args)) (x86-imm-int 2))
+      (apply x86-imul (cons cgc (map make-x86-opnd args))))
+    allowed-opnds: '(reg mem)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 1
+    start-value-null?: #t
+    reduce-1: am-mov
+    commutative: #t))
+
+(define x86-prim-##fx*?
+  (const-nargs-prim 2 0 '((reg mem))
+    (lambda (cgc result-action args arg1 arg2)
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (x86-arg2 (make-x86-opnd arg2)))
+        (x86-sar cgc x86-arg1 (x86-imm-int 2))
+        (x86-imul cgc x86-arg1 x86-arg2)
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jo  cgc (lbl-opnd-label lbl)))
+          true-opnd: arg1
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
 (define x86-prim-##fxnot
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args arg1)
@@ -1057,6 +1082,8 @@
     (table-set! table '##fx+?           (make-prim-obj x86-prim-##fx+? 2 #t #t #t))
     (table-set! table '##fx-            (make-prim-obj x86-prim-##fx-  2 #t #f))
     (table-set! table '##fx-?           (make-prim-obj x86-prim-##fx-? 2 #t #t #t))
+    (table-set! table '##fx*            (make-prim-obj x86-prim-##fx*  2 #t #f))
+    (table-set! table '##fx*?           (make-prim-obj x86-prim-##fx*? 2 #t #t #t))
     (table-set! table '##fx<            (make-prim-obj x86-prim-##fx<  2 #t #t))
     (table-set! table '##fx<=           (make-prim-obj x86-prim-##fx<= 2 #t #t))
     (table-set! table '##fx>            (make-prim-obj x86-prim-##fx>  2 #t #t))
