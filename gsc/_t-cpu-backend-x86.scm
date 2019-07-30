@@ -894,6 +894,34 @@
     reduce-1: am-mov
     commutative: #t))
 
+(define x86-prim-##fxabs
+  (const-nargs-prim 1 1 '((reg mem))
+    (lambda (cgc result-action args arg1 tmp1)
+      (let ((width (get-word-width-bits cgc))
+            (x86-arg1 (make-x86-opnd arg1))
+            (x86-tmp1 (make-x86-opnd tmp1)))
+        (am-mov cgc tmp1 arg1)
+        (x86-sar cgc x86-tmp1 (x86-imm-int (- width 1)))
+        (x86-xor cgc x86-arg1 x86-tmp1)
+        (am-sub cgc arg1 arg1 tmp1)
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##fxabs?
+  (const-nargs-prim 1 1 '((reg mem))
+    (lambda (cgc result-action args arg1 tmp1)
+      (let ((width (get-word-width-bits cgc))
+            (x86-arg1 (make-x86-opnd arg1))
+            (x86-tmp1 (make-x86-opnd tmp1)))
+        (am-mov cgc tmp1 (int-opnd (format-imm-object (- (expt 2 (- width 3))))))
+        (am-if-eq cgc arg1 tmp1
+          (lambda (cgc) (am-return-const cgc result-action #f))
+          (lambda (cgc)
+            (am-mov cgc tmp1 arg1)
+            (x86-sar cgc x86-tmp1 (x86-imm-int (- width 1)))
+            (x86-xor cgc x86-arg1 x86-tmp1)
+            (am-sub cgc arg1 arg1 tmp1)
+            (am-return-opnd cgc result-action arg1)))))))
+
 (define (x86-compare-prim condition)
   (foldl-compare-prim
     (lambda (cgc opnd1 opnd2 true-label false-label)
@@ -1094,6 +1122,9 @@
     (table-set! table '##fxand          (make-prim-obj x86-prim-##fxand 2 #t #t))
     (table-set! table '##fxior          (make-prim-obj x86-prim-##fxior 2 #t #t))
     (table-set! table '##fxxor          (make-prim-obj x86-prim-##fxxor 2 #t #t))
+
+    (table-set! table '##fxabs          (make-prim-obj x86-prim-##fxabs  1 #t #t))
+    (table-set! table '##fxabs?         (make-prim-obj x86-prim-##fxabs? 1 #t #t))
 
     (table-set! table '##fxeven?        (make-prim-obj (x86-prim-##fxparity? 'even)    1 #t #t))
     (table-set! table '##fxodd?         (make-prim-obj (x86-prim-##fxparity? 'odd)     1 #t #t))
