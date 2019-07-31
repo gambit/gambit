@@ -918,6 +918,18 @@
     reduce-1: am-mov
     commutative: #t))
 
+(define x86-prim-##fxif
+  (const-nargs-prim 3 0 '((reg mem))
+    (lambda (cgc result-action args arg1 arg2 arg3)
+      (let ((width (get-word-width-bits cgc))
+            (x86-arg1 (make-x86-opnd arg1))
+            (x86-arg2 (make-x86-opnd arg2))
+            (x86-arg3 (make-x86-opnd arg3)))
+        (x86-and cgc x86-arg2 x86-arg1)
+        (x86-not cgc x86-arg1)
+        (x86-and cgc x86-arg1 x86-arg3)
+        (x86-or  cgc x86-arg1 x86-arg2)))))
+
 (define x86-prim-##fxabs
   (const-nargs-prim 1 1 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1)
@@ -1199,6 +1211,7 @@
     (table-set! table '##fxand          (make-prim-obj x86-prim-##fxand 2 #t #t))
     (table-set! table '##fxior          (make-prim-obj x86-prim-##fxior 2 #t #t))
     (table-set! table '##fxxor          (make-prim-obj x86-prim-##fxxor 2 #t #t))
+    (table-set! table '##fxif           (make-prim-obj x86-prim-##fxif  3 #t #t))
 
     (table-set! table '##fxabs          (make-prim-obj x86-prim-##fxabs  1 #t #t))
     (table-set! table '##fxabs?         (make-prim-obj x86-prim-##fxabs? 1 #t #t))
