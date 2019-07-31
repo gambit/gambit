@@ -252,7 +252,7 @@
 (define (get-jumps condition)
   (case (get-condition condition)
     ((equal)
-      (cons x86-je  x86-jne))
+      (cons x86-je x86-jne))
     ((greater)
       (cond
         ((and (cond-is-equal condition) (cond-is-signed condition))
@@ -269,10 +269,11 @@
       (compiler-internal-error "get-jumps - Unknown condition: " condition))))
 
 (define (x86-cmp-jump-instr cgc test loc-true loc-false #!optional (opnds-width #f))
-  (let* ((condition (test-condition test))
-         (opnd1 (test-operand1 test))
-         (opnd2 (test-operand2 test))
-         (jumps (get-jumps condition)))
+  (let ((condition (test-condition test))
+        (opnd1 (test-operand1 test))
+        (opnd2 (test-operand2 test))
+        (jumps (get-jumps (test-condition test))))
+
     ;; In case both jump locations are false, the cmp is unnecessary.
     (if (or loc-true loc-false)
       (load-multiple-if-necessary cgc '((reg mem) (reg mem int)) (list opnd1 opnd2)
@@ -291,34 +292,57 @@
       ((and loc-true (not loc-false))
         ((car jumps) cgc (lbl-opnd-label loc-true))))))
 
-(define (x86-cmp-move-instr cgc test dest true-opnd false-opnd #!optional (opnds-width #f))
-  (let* ((condition (test-condition test))
-         (opnd1 (test-operand1 test))
-         (opnd2 (test-operand2 test))
-         (jumps (get-jumps condition))
-         (label-true (make-unique-label cgc "mov-true" #f))
-         (label-false (make-unique-label cgc "mov-false" #f)))
+(define (get-moves condition) ; XXX
+  (case (get-condition condition)
+    ((equal)
+      (cons x86-cmove x86-cmovne))
+    ((greater)
+      (cond
+        ((and (cond-is-equal condition) (cond-is-signed condition))
+          (cons x86-cmovge x86-cmovl))
+        ((and (not (cond-is-equal condition)) (cond-is-signed condition))
+          (cons x86-cmovg x86-cmovle))
+        ((and (cond-is-equal condition) (not (cond-is-signed condition)))
+          (cons x86-cmovae x86-cmovb))
+        ((and (not (cond-is-equal condition)) (not (cond-is-signed condition)))
+          (cons x86-cmova x86-cmovbe))))
+    ((not-equal) (flip (get-moves (invert-condition condition))))
+    ((lesser) (flip (get-moves (invert-condition condition))))
+    (else
+      (compiler-internal-error "get-moves - Unknown condition: " condition))))
 
-    ;; In case both jump locations are false, the cmp is unnecessary.
-    (load-if-necessary cgc '(reg mem) opnd1
-      (lambda (opnd1) (x86-cmp cgc opnd1 opnd2 opnds-width)))
+(define (x86-cmp-move-instr cgc test dest true-opnd false-opnd #!optional (opnds-width #f))
+  (let ((condition (test-condition test))
+        (opnd1 (test-operand1 test))
+        (opnd2 (test-operand2 test))
+        (moves (get-moves (test-condition test))))
+
+    ;; In case both operands are false, the cmp is unnecessary.
+    (if (or true-opnd false-opnd)
+      (load-multiple-if-necessary cgc '((reg mem) (reg mem int)) (list opnd1 opnd2)
+        (lambda (opnd1 opnd2)
+          (x86-cmp cgc
+            (make-x86-opnd opnd1)
+            (make-x86-opnd opnd2)
+            opnds-width))))
 
     (cond
       ((and true-opnd false-opnd)
-        ((car jumps) cgc label-true)
-        (am-mov cgc dest false-opnd)
-        (am-jmp cgc label-false)
-        (am-lbl cgc label-true)
         (am-mov cgc dest true-opnd)
-        (am-lbl cgc label-false))
-      ((and (not true-opnd) false-opnd)
-        ((car jumps) cgc label-true) ;; Jump if true
-        (am-mov cgc dest false-opnd)
-        (am-lbl cgc label-true))
+        ((cdr moves) cgc
+          (make-x86-opnd dest)
+          (make-x86-opnd false-opnd)
+          opnds-width))
       ((and true-opnd (not false-opnd))
-        ((cdr jumps) cgc label-false) ;; Jump if false
-        (am-mov cgc dest true-opnd)
-        (am-lbl cgc label-false)))))
+        ((car moves) cgc
+          (make-x86-opnd dest)
+          (make-x86-opnd true-opnd)
+          opnds-width))
+      ((and (not true-opnd) false-opnd)
+        ((cdr moves) cgc
+          (make-x86-opnd dest)
+          (make-x86-opnd false-opnd)
+          opnds-width)))))
 
 ;;------------------------------------------------------------------------------
 

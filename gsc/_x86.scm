@@ -1812,6 +1812,114 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width kind)
 
 ;;;----------------------------------------------------------------------------
 
+;;; X86 instructions: CMOVA, CMOVAE, CMOVB, CMOVBE, CMOVC, CMOVE, CMOVG,
+;;; CMOVGE, CMOVL, CMOVLE, CMOVNA, CMOVNAE, CMOVNB, CMOVNBE, CMOVNC, CMOVNE,
+;;; CMOVNG, CMOVNGE, CMOVNL, CMOVNLE, CMOVNO, CMOVNP, CMOVNS, CMOVNZ, CMOVO,
+;;; CMOVP, CMOVPE, CMOVPO, CMOVS, CMOVZ
+
+; XXX Lazy
+(define (x86-cmova cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmova" #x47))
+(define (x86-cmovae cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovae" #x43))
+(define (x86-cmovb cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovb" #x42))
+(define (x86-cmovbe cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovbe" #x46))
+(define (x86-cmovc cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovc" #x42))
+(define (x86-cmove cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmove" #x44))
+(define (x86-cmovg cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovg" #x4f))
+(define (x86-cmovge cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovge" #x4d))
+(define (x86-cmovl cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovl" #x4c))
+(define (x86-cmovle cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovle" #x4e))
+(define (x86-cmovna cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovna" #x46))
+(define (x86-cmovnae cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnae" #x42))
+(define (x86-cmovnb cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnb" #x43))
+(define (x86-cmovnbe cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnbe" #x47))
+(define (x86-cmovnc cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnc" #x43))
+(define (x86-cmovne cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovne" #x45))
+(define (x86-cmovng cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovng" #x4e))
+(define (x86-cmovnge cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnge" #x4c))
+(define (x86-cmovnl cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnl" #x4d))
+(define (x86-cmovnle cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnle" #x4f))
+(define (x86-cmovno cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovno" #x41))
+(define (x86-cmovnp cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnp" #x4b))
+(define (x86-cmovns cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovns" #x49))
+(define (x86-cmovnz cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnz" #x45))
+(define (x86-cmovo cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovno" #x40))
+(define (x86-cmovp cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovp" #x4a))
+(define (x86-cmovpe cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovpe" #x4a))
+(define (x86-cmovpo cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovpo" #x4b))
+(define (x86-cmovs cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovs" #x48))
+(define (x86-cmovz cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovz" #x44))
+
+(define (x86-cmovcc cgc reg opnd width name op)
+
+  (define (listing width-opnd)
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     name
+                     0
+                     reg
+                     (if (x86-reg? opnd)
+                         opnd
+                         (x86-force-width opnd width-opnd)))))
+
+  (assert (x86-reg? reg)
+          "destination of popcnt must be a register" reg)
+
+  (assert (not (x86-reg8? reg))
+          "destination of popcnt must not be an 8 bit register" reg)
+
+  (assert (if (x86-reg? opnd)
+              (or (not width)
+                  (fx= (x86-reg-width opnd) width))
+              width)
+          "missing or inconsistent operand width" width)
+
+  (let ((width-reg (x86-reg-width reg))
+        (width-opnd (or width (x86-reg-width opnd))))
+
+    (assert (or (and (fx= width-reg 16) (fx= width-opnd 16))
+                (and (fx= width-reg 32) (fx= width-opnd 32))
+                (and (fx= width-reg 64) (fx= width-opnd 64)))
+            "invalid combination of operands" reg opnd)
+
+    (x86-opnd-prefix-reg-opnd cgc reg opnd)
+    (x86-esc-opcode cgc)
+    (asm-8 cgc op)
+    (x86-opnd-modrm/sib-reg-opnd cgc reg opnd)
+
+    (listing width-opnd)))
+
+;;;----------------------------------------------------------------------------
+
 ;;; X86 instructions: POPCNT, LZCNT.
 
 (define (x86-popcnt cgc reg opnd #!optional (width #f))
