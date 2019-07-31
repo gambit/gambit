@@ -1810,4 +1810,54 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width kind)
         (else
          (general width))))
 
+;;;----------------------------------------------------------------------------
+
+;;; X86 instructions: POPCNT, LZCNT.
+
+(define (x86-popcnt cgc reg opnd #!optional (width #f))
+  (x86-count cgc reg opnd width #xb8))
+
+(define (x86-lzcnt cgc reg opnd #!optional (width #f))
+  (x86-count cgc reg opnd width #xbd))
+
+(define (x86-count cgc reg opnd width op)
+
+  (define (listing width-opnd)
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     (if (= op #xb8) "popcnt" "lzcnt")
+                     0
+                     reg
+                     (if (x86-reg? opnd)
+                         opnd
+                         (x86-force-width opnd width-opnd)))))
+
+  (assert (x86-reg? reg)
+          "destination of popcnt must be a register" reg)
+
+  (assert (not (x86-reg8? reg))
+          "destination of popcnt must not be an 8 bit register" reg)
+
+  (assert (if (x86-reg? opnd)
+              (or (not width)
+                  (fx= (x86-reg-width opnd) width))
+              width)
+          "missing or inconsistent operand width" width)
+
+  (let ((width-reg (x86-reg-width reg))
+        (width-opnd (or width (x86-reg-width opnd))))
+
+    (assert (or (and (fx= width-reg 16) (fx= width-opnd 16))
+                (and (fx= width-reg 32) (fx= width-opnd 32))
+                (and (fx= width-reg 64) (fx= width-opnd 64)))
+            "invalid combination of operands" reg opnd)
+
+    (asm-8 cgc #xf3)
+    (x86-opnd-prefix-reg-opnd cgc reg opnd)
+    (x86-esc-opcode cgc)
+    (asm-8 cgc op)
+    (x86-opnd-modrm/sib-reg-opnd cgc reg opnd)
+
+    (listing width-opnd)))
+
 ;;;============================================================================
