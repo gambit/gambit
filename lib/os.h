@@ -564,6 +564,7 @@
 
 #ifdef HAVE_SIGACTION
 #define USE_sigaction
+#define USE_SIGNALS
 #ifndef HAVE_SIGEMPTYSET
 #undef USE_sigaction
 #endif
@@ -578,6 +579,7 @@
 #ifndef USE_sigaction
 #ifdef HAVE_SIGNAL
 #define USE_signal
+#define USE_SIGNALS
 #endif
 #endif
 

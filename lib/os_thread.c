@@ -433,7 +433,7 @@ void *ptr;)
 #endif
 
 
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
 int ___thread_sigmask
    ___P((int how,

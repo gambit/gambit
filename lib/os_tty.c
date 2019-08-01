@@ -8628,7 +8628,7 @@ ___SCMOBJ ___os_device_tty_mode_reset ___PVOID
 }
 
 
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
 
 void tty_signal_handler (int sig)
@@ -8700,7 +8700,7 @@ DWORD dwCtrlType;)
 
 ___SCMOBJ ___setup_user_interrupt_handling ___PVOID
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___set_signal_handler (SIGINT, tty_signal_handler);
   ___set_signal_handler (SIGTERM, tty_signal_handler);
@@ -8735,7 +8735,7 @@ ___SCMOBJ ___setup_user_interrupt_handling ___PVOID
 
 void ___cleanup_user_interrupt_handling ___PVOID
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___set_signal_handler (SIGINT, SIG_DFL);
   ___set_signal_handler (SIGTERM, SIG_DFL);
@@ -8771,7 +8771,7 @@ ___EXP_FUNC(void,___mask_user_interrupts_begin)
         (state)
 ___mask_user_interrupts_state *state;)
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___sigset_type sigs;
 
@@ -8792,7 +8792,7 @@ ___EXP_FUNC(void,___mask_user_interrupts_end)
         (state)
 ___mask_user_interrupts_state *state;)
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___thread_sigmask (SIG_SETMASK, state->sigset+1, NULL);
 

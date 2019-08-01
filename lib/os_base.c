@@ -1753,7 +1753,7 @@ ___HIDDEN void cleanup_fp ___PVOID
 /* Interrupt handling. */
 
 
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
 
 void ___set_signal_handler

@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -2940,7 +2940,7 @@ ___SCMOBJ ___setup_os ___PVOID
             if ((e = ___setup_dyn_module ()) == ___FIX(___NO_ERR)) {
               if ((e = ___setup_tty_module (user_intr, terminate_intr)) == ___FIX(___NO_ERR)) {
                 if ((e = ___setup_io_module ()) == ___FIX(___NO_ERR)) {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 #ifdef USE_CRASH_SIGNAL_HANDLER
                   ___set_signal_handler (SIGTERM, crash_signal_handler);
                   ___set_signal_handler (SIGBUS,  crash_signal_handler);

@@ -1,6 +1,6 @@
 /* File: "os_time.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1043,7 +1043,7 @@ ___EXP_FUNC(void,___mask_heartbeat_interrupts_begin)
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___thread_sigmask1 (SIG_BLOCK, HEARTBEAT_SIG, state->sigset+0);
 
@@ -1056,7 +1056,7 @@ ___EXP_FUNC(void,___mask_heartbeat_interrupts_end)
         (state)
 ___mask_heartbeat_interrupts_state *state;)
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___thread_sigmask (SIG_SETMASK, state->sigset+0, NULL);
 
@@ -1066,7 +1066,7 @@ ___mask_heartbeat_interrupts_state *state;)
 
 ___SCMOBJ ___setup_heartbeat_interrupt_handling ___PVOID
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___set_signal_handler (HEARTBEAT_SIG, heartbeat_interrupt_handler);
 
@@ -1082,7 +1082,7 @@ void ___cleanup_heartbeat_interrupt_handling ___PVOID
 {
   ___set_heartbeat_interval (-1.0);
 
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___set_signal_handler (HEARTBEAT_SIG, SIG_IGN);
 
