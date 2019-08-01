@@ -126,10 +126,9 @@
           poll
           set-narg
           check-narg
-          check-narg-simple
           allocate-memory
           place-extra-data)
-  (vector poll set-narg check-narg check-narg-simple allocate-memory place-extra-data))
+  (vector poll set-narg check-narg allocate-memory place-extra-data))
 
 (define (get-in-target target i1 i2)
   (let* ((info (target-extra target 0))
@@ -196,9 +195,8 @@
 (define (am-poll cgc . args)               (apply-routine cgc 0 args))
 (define (am-set-narg cgc . args)           (apply-routine cgc 1 args))
 (define (am-check-nargs cgc . args)        (apply-routine cgc 2 args))
-(define (am-check-nargs-simple cgc . args) (apply-routine cgc 3 args))
-(define (am-allocate-memory cgc . args)    (apply-routine cgc 4 args))
-(define (am-place-extra-data cgc . args)   (apply-routine cgc 5 args))
+(define (am-allocate-memory cgc . args)    (apply-routine cgc 3 args))
+(define (am-place-extra-data cgc . args)   (apply-routine cgc 4 args))
 
 ;;------------------------------------------------------------------------------
 ;;-----------------------------  Label functions  ------------------------------

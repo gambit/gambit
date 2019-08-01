@@ -353,7 +353,6 @@
     am-default-poll
     am-default-set-nargs
     am-default-check-nargs
-    x86-check-nargs-simple
     (am-default-allocate-memory
       (lambda (cgc dest-reg base-reg offset)
         (x86-lea cgc dest-reg (x86-mem offset base-reg))))

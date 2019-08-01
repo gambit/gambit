@@ -397,7 +397,6 @@
     am-default-poll
     am-default-set-nargs
     am-default-check-nargs
-    arm-check-nargs-simple
     (am-default-allocate-memory
       (lambda (cgc dest-reg base-reg offset)
         (am-add cgc dest-reg base-reg (int-opnd offset))))
