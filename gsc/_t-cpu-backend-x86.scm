@@ -929,6 +929,38 @@
         (x86-and cgc x86-arg1 x86-arg3)
         (x86-or  cgc x86-arg1 x86-arg2)))))
 
+(define x86-prim-##fxmin
+  (foldl-prim
+    (lambda (cgc . args)
+      (am-compare-move cgc
+        (mk-test (condition-lesser #f #t) (car args) (cadr args))
+        (make-x86-opnd (car args))
+        (make-x86-opnd (car args))
+        (make-x86-opnd (cadr args))
+        (get-word-width-bits cgc)))
+    allowed-opnds: '(reg mem)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 'none
+    start-value-null?: #f
+    reduce-1: am-mov
+    commutative: #t))
+
+(define x86-prim-##fxmax
+  (foldl-prim
+    (lambda (cgc . args)
+      (am-compare-move cgc
+        (mk-test (condition-greater #f #t) (car args) (cadr args))
+        (make-x86-opnd (car args))
+        (make-x86-opnd (car args))
+        (make-x86-opnd (cadr args))
+        (get-word-width-bits cgc)))
+    allowed-opnds: '(reg mem)
+    allowed-opnds-accum: '(reg mem)
+    start-value: 'none
+    start-value-null?: #f
+    reduce-1: am-mov
+    commutative: #t))
+
 (define x86-prim-##fxabs
   (const-nargs-prim 1 1 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1)
@@ -1231,6 +1263,8 @@
     (table-set! table '##fxior          (make-prim-obj x86-prim-##fxior 2 #t #t))
     (table-set! table '##fxxor          (make-prim-obj x86-prim-##fxxor 2 #t #t))
     (table-set! table '##fxif           (make-prim-obj x86-prim-##fxif  3 #t #t))
+    (table-set! table '##fxmin          (make-prim-obj x86-prim-##fxmin 2 #t #t))
+    (table-set! table '##fxmax          (make-prim-obj x86-prim-##fxmax 2 #t #t))
 
     (table-set! table '##fxabs          (make-prim-obj x86-prim-##fxabs     1 #t #t))
     (table-set! table '##fxabs?         (make-prim-obj x86-prim-##fxabs?    1 #t #t))
