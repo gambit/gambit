@@ -942,6 +942,26 @@
         (am-sub cgc arg1 arg1 tmp1)
         (am-return-opnd cgc result-action arg1)))))
 
+(define x86-prim-##fxsquare
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-arg1 (make-x86-opnd arg1)))
+        (x86-sar cgc x86-arg1 (x86-imm-int 1))
+        (x86-imul cgc x86-arg1 x86-arg1)
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##fxsquare?
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-arg1 (make-x86-opnd arg1)))
+        (x86-sar cgc x86-arg1 (x86-imm-int 1))
+        (x86-imul cgc x86-arg1 x86-arg1)
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl) (x86-jo  cgc (lbl-opnd-label lbl)))
+          true-opnd: arg1
+          false-opnd: (int-opnd (format-imm-object #f)))))))
+
 (define x86-prim-##fxabs?
   (const-nargs-prim 1 1 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1)
@@ -1213,8 +1233,10 @@
     (table-set! table '##fxxor          (make-prim-obj x86-prim-##fxxor 2 #t #t))
     (table-set! table '##fxif           (make-prim-obj x86-prim-##fxif  3 #t #t))
 
-    (table-set! table '##fxabs          (make-prim-obj x86-prim-##fxabs  1 #t #t))
-    (table-set! table '##fxabs?         (make-prim-obj x86-prim-##fxabs? 1 #t #t))
+    (table-set! table '##fxabs          (make-prim-obj x86-prim-##fxabs     1 #t #t))
+    (table-set! table '##fxabs?         (make-prim-obj x86-prim-##fxabs?    1 #t #t))
+    (table-set! table '##fxsquare       (make-prim-obj x86-prim-##fxsquare  1 #t #t))
+    (table-set! table '##fxsquare?      (make-prim-obj x86-prim-##fxsquare? 1 #t #t))
 
     (table-set! table '##fxbit-count    (make-prim-obj x86-prim-##fxbit-count 1 #t #t))
     (table-set! table '##fxlength       (make-prim-obj (x86-prim-##fxlength)  1 #t #t))
