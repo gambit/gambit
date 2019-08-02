@@ -115,7 +115,7 @@
     (riscv-load-data cgc rd
       (asm-label-id label) ; XXX
       (lambda (cgc)
-        (codegen-fixup-lbl! cgc label object-tag #f (get-word-width-bits cgc) 2)))))
+        (codegen-fixup-lbl! cgc label (type-tag 'subtyped) #f (get-word-width-bits cgc) 2)))))
 
 ; TODO Deduplicate objects
 (define (riscv-load-obj cgc rd obj-value)
@@ -345,68 +345,68 @@
 (define riscv-prim-##fixnum?
   (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd tag-mask))
+      (am-mov cgc temp1 (int-opnd type-tag-mask))
       (riscv-and cgc temp2 arg1 temp1) ; XXX
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
-        true-opnd:  (int-opnd (format-imm-object #t))
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        true-opnd:  (int-opnd (imm-encode #t))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define riscv-prim-##pair?
   (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd tag-mask))
+      (am-mov cgc temp1 (int-opnd type-tag-mask))
       (riscv-not cgc temp2 arg1)
       (riscv-and cgc temp2 temp1 temp2) ; XXX
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
-        true-opnd:  (int-opnd (format-imm-object #t))
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        true-opnd:  (int-opnd (imm-encode #t))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define riscv-prim-##special?
   (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd special-int-tag))
-      (riscv-andi cgc temp2 arg1 (riscv-imm-int tag-mask)) ; XXX
+      (am-mov cgc temp1 (int-opnd (type-tag 'special)))
+      (riscv-andi cgc temp2 arg1 (riscv-imm-int type-tag-mask)) ; XXX
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
-        true-opnd:  (int-opnd (format-imm-object #t))
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        true-opnd:  (int-opnd (imm-encode #t))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define riscv-prim-##mem-allocated?
   (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (am-mov cgc temp1 (int-opnd (bitwise-and object-tag pair-tag)))
+      (am-mov cgc temp1 (int-opnd (bitwise-and (type-tag 'subtyped) (type-tag 'pair))))
       (riscv-and cgc temp2 arg1 temp1) ; XXX
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
-        true-opnd:  (int-opnd (format-imm-object #t))
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        true-opnd:  (int-opnd (imm-encode #t))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define riscv-prim-##char?
   (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (let ((test-int
-              (- special-int-tag (expt 2 (- (get-word-width-bits cgc) 1)))))
+              (- (type-tag 'special) (expt 2 (- (get-word-width-bits cgc) 1)))))
         (am-mov cgc temp1 (int-opnd test-int))
         (riscv-and cgc temp1 arg1 temp1)
-        (am-mov cgc temp2 (int-opnd special-int-tag))
+        (am-mov cgc temp2 (int-opnd (type-tag 'special)))
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (riscv-beq cgc temp1 temp2 (make-riscv-opnd lbl)))
           (lambda (cgc lbl) (riscv-bne cgc temp1 temp2 (make-riscv-opnd lbl)))
-          true-opnd:  (int-opnd (format-imm-object #t))
-          false-opnd: (int-opnd (format-imm-object #f)))))))
+          true-opnd:  (int-opnd (imm-encode #t))
+          false-opnd: (int-opnd (imm-encode #f)))))))
 
-(define (riscv-prim-##boolean-or? val)
+(define (riscv-prim-##boolean-or? desc)
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 tmp1)
-      (let ((test-int (+ (* tag-mult val) tag-mask)))
+      (let ((test-int (+ (- ((imm-encoder desc) #f) (type-tag 'special)) type-tag-mask)))
         (riscv-andi cgc tmp1 arg1 (riscv-imm-int test-int))
-        (am-if-eq cgc tmp1 (int-opnd (tag-number val special-int-tag))
+        (am-if-eq cgc tmp1 (int-opnd ((imm-encoder desc) #f))
           (lambda (cgc) (am-return-const cgc result-action #t))
           (lambda (cgc) (am-return-const cgc result-action #f))
           #f
@@ -415,37 +415,37 @@
 (define riscv-prim-##subtyped?
   (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
-      (am-mov cgc tmp1 (int-opnd object-tag))
-      (riscv-andi cgc tmp2 arg1 (riscv-imm-int tag-mask))
+      (am-mov cgc tmp1 (int-opnd (type-tag 'subtyped)))
+      (riscv-andi cgc tmp2 arg1 (riscv-imm-int type-tag-mask))
       (am-cond-return cgc result-action
         (lambda (cgc lbl) (riscv-beq cgc tmp1 tmp2 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl)))
-        true-opnd:  (int-opnd (format-imm-object #t))
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        true-opnd:  (int-opnd (imm-encode #t))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define (riscv-prim-##subtype? subtype-desc) ; XXX
   (const-nargs-prim 1 2 '((reg))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
       (let ((width (get-word-width-bits cgc)))
-        (am-mov cgc tmp1 (int-opnd object-tag))
-        (riscv-andi cgc tmp2 arg1 (riscv-imm-int tag-mask))
+        (am-mov cgc tmp1 (int-opnd (type-tag 'subtyped)))
+        (riscv-andi cgc tmp2 arg1 (riscv-imm-int type-tag-mask))
         (am-cond-return cgc result-action
           (lambda (cgc lbl)
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
-            (riscv-andi cgc tmp1 tmp1 (riscv-imm-int subtype-mask))
-            (am-mov cgc tmp2 (int-opnd (subtype-tag subtype-desc)))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (type-tag 'subtyped) width width)))
+            (riscv-andi cgc tmp1 tmp1 (riscv-imm-int subtype-tag-mask))
+            (am-mov cgc tmp2 (int-opnd (subtype-tag (ref-subtype subtype-desc))))
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl)))
           (lambda (cgc lbl)
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 object-tag width width)))
-            (riscv-andi cgc tmp1 tmp1 (riscv-imm-int subtype-mask))
-            (am-mov cgc tmp2 (int-opnd (subtype-tag subtype-desc)))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (type-tag 'subtyped) width width)))
+            (riscv-andi cgc tmp1 tmp1 (riscv-imm-int subtype-tag-mask))
+            (am-mov cgc tmp2 (int-opnd (subtype-tag (ref-subtype subtype-desc))))
             (riscv-bne cgc tmp1 tmp2 (make-riscv-opnd lbl)))
-          true-opnd:  (int-opnd (format-imm-object #f))
-          false-opnd: (int-opnd (format-imm-object #t)))))))
+          true-opnd:  (int-opnd (imm-encode #f))
+          false-opnd: (int-opnd (imm-encode #t)))))))
 
 (define riscv-prim-##fx+
   (foldl-prim
@@ -471,7 +471,7 @@
           (riscv-sltz cgc arg2 arg2)
           (riscv-bne cgc arg1 arg2 (make-riscv-opnd lbl)))
         true-opnd:  tmp1 ; XXX
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define riscv-prim-##fx-
   (foldl-prim
@@ -496,7 +496,7 @@
           (riscv-sltz cgc arg2 arg2)
           (riscv-bne cgc arg1 arg2 (make-riscv-opnd lbl)))
         true-opnd:  tmp1 ; XXX
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define (riscv-compare-prim condition)
   (foldl-compare-prim
@@ -517,12 +517,12 @@
 (define (riscv-prim-##fxparity? parity)
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 tmp1)
-      (riscv-andi cgc tmp1 arg1 (riscv-imm-int (format-imm-object 1)))
+      (riscv-andi cgc tmp1 arg1 (riscv-imm-int (imm-encode 1)))
       (am-cond-return cgc result-action
         (lambda (cgc lbl) ((if (eq? parity 'even) riscv-beqz riscv-bnez) cgc tmp1 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) ((if (eq? parity 'even) riscv-bnez riscv-beqz) cgc tmp1 (make-riscv-opnd lbl)))
-        true-opnd:  (int-opnd (format-imm-object #t))
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        true-opnd:  (int-opnd (imm-encode #t))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define (riscv-prim-##fxsign? sign)
   (const-nargs-prim 1 0 '((reg))
@@ -530,8 +530,8 @@
       (am-cond-return cgc result-action
         (lambda (cgc lbl) ((if (eq? sign 'positive) riscv-bgtz riscv-bltz) cgc arg1 (make-riscv-opnd lbl)))
         (lambda (cgc lbl) ((if (eq? sign 'positive) riscv-blez riscv-bgez) cgc arg1 (make-riscv-opnd lbl)))
-        true-opnd:  (int-opnd (format-imm-object #t))
-        false-opnd: (int-opnd (format-imm-object #f))))))
+        true-opnd:  (int-opnd (imm-encode #t))
+        false-opnd: (int-opnd (imm-encode #f))))))
 
 (define riscv-prim-##cons
   (lambda (cgc result-action args)
@@ -541,8 +541,8 @@
         (lambda (result-reg result-opnd-in-args)
           (let* ((width (get-word-width cgc))
                  (size (* width 3))
-                 (tag (get-desc-pointer-tag pair-obj-desc))
-                 (subtype (reference-header-tag pair-obj-desc))
+                 (tag (desc-type-tag pair-desc))
+                 (subtype (subtype-tag (ref-subtype pair-desc)))
                  (offset (+ tag (* 2 width))))
 
             (am-allocate-memory cgc result-reg size offset
@@ -550,7 +550,7 @@
 
             (am-mov cgc
               (mem-opnd result-reg (- offset))
-              (int-opnd (+ (* header-tag-mult subtype) (* header-length-mult width 2)))
+              (int-opnd (+ subtype (arithmetic-shift (* width 2) (fx+ head-type-tag-bits subtype-tag-bits))))
               (get-word-width-bits cgc))
 
             (am-mov cgc
@@ -568,14 +568,14 @@
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-return-opnd uses the default width
 (define (riscv-object-dyn-read-prim desc #!optional (width #f))
-  (if (immediate-desc? desc)
+  (if (imm-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 2 0 '((reg) (reg int))
     (lambda (cgc result-action args obj-reg index-opnd)
       (let* ((width (if width width (get-word-width cgc)))
-             (index-shift (- (integer-length width) 1 tag-width))
-             (obj-tag (get-desc-pointer-tag desc))
+             (index-shift (- (integer-length width) 1 type-tag-bits))
+             (obj-tag (desc-type-tag desc))
              (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
 
         (if (> 0 index-shift)
@@ -603,14 +603,14 @@
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-mov uses the default width
 (define (riscv-object-dyn-set-prim desc #!optional (width #f))
-  (if (immediate-desc? desc)
+  (if (imm-desc? desc)
     (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 3 0 '((reg) (reg int))
     (lambda (cgc result-action args obj-reg index-opnd new-val-opnd)
       (let* ((width (if width width (get-word-width cgc)))
-             (index-shift (- (integer-length width) 1 tag-width))
-             (obj-tag (get-desc-pointer-tag desc))
+             (index-shift (- (integer-length width) 1 type-tag-bits))
+             (obj-tag (desc-type-tag desc))
              (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
 
         (if (> 0 index-shift)
@@ -642,8 +642,8 @@
     (lambda (cgc result-action args obj-reg)
       (let* ((width (if width width (get-word-width cgc)))
              (log2-width (- (integer-length width) 1))
-             (header-offset (+ (* width pointer-header-offset) object-tag))
-             (shift-count (- (+ header-length-offset log2-width) tag-width)))
+             (header-offset (+ (* width pointer-header-offset) (type-tag 'subtyped)))
+             (shift-count (- (+ head-type-tag-bits subtype-tag-bits log2-width) type-tag-bits)))
         ;; Load header
         (am-mov cgc obj-reg (mem-opnd obj-reg (- header-offset)))
         ;; Shift header in order to ony keep length in bytes
@@ -669,38 +669,38 @@
     (table-set! table '##mem-allocated? (make-prim-obj riscv-prim-##mem-allocated? 1 #t #t))
     (table-set! table '##char?          (make-prim-obj riscv-prim-##char?          1 #t #t))
 
-    (table-set! table '##boolean?       (make-prim-obj (riscv-prim-##boolean-or? true-object-val) 1 #t #t))
-    (table-set! table '##false-or-null? (make-prim-obj (riscv-prim-##boolean-or? nil-object-val)  1 #t #t))
-    (table-set! table '##false-or-void? (make-prim-obj (riscv-prim-##boolean-or? void-object-val) 1 #t #t))
+    (table-set! table '##boolean?       (make-prim-obj (riscv-prim-##boolean-or? tru-desc)  1 #t #t))
+    (table-set! table '##false-or-null? (make-prim-obj (riscv-prim-##boolean-or? nul-desc)  1 #t #t))
+    (table-set! table '##false-or-void? (make-prim-obj (riscv-prim-##boolean-or? void-desc) 1 #t #t))
 
     (table-set! table '##subtyped?     (make-prim-obj riscv-prim-##subtyped? 1 #t #t))
-    (table-set! table '##vector?       (make-prim-obj (riscv-prim-##subtype? vector-obj-desc)       1 #t #t))
-    (table-set! table '##ratnum?       (make-prim-obj (riscv-prim-##subtype? ratnum-obj-desc)       1 #t #t))
-    (table-set! table '##cpxnum?       (make-prim-obj (riscv-prim-##subtype? cpxnum-obj-desc)       1 #t #t))
-    (table-set! table '##structure?    (make-prim-obj (riscv-prim-##subtype? structure-obj-desc)    1 #t #t))
-    (table-set! table '##meroon?       (make-prim-obj (riscv-prim-##subtype? meroon-obj-desc)       1 #t #t))
-    (table-set! table '##jazz?         (make-prim-obj (riscv-prim-##subtype? jazz-obj-desc)         1 #t #t))
-    (table-set! table '##symbol?       (make-prim-obj (riscv-prim-##subtype? symbol-obj-desc)       1 #t #t))
-    (table-set! table '##keyword?      (make-prim-obj (riscv-prim-##subtype? keyword-obj-desc)      1 #t #t))
-    (table-set! table '##frame?        (make-prim-obj (riscv-prim-##subtype? frame-obj-desc)        1 #t #t))
-    (table-set! table '##continuation? (make-prim-obj (riscv-prim-##subtype? continuation-obj-desc) 1 #t #t))
-    (table-set! table '##promise?      (make-prim-obj (riscv-prim-##subtype? promise-obj-desc)      1 #t #t))
-    (table-set! table '##procedure?    (make-prim-obj (riscv-prim-##subtype? procedure-obj-desc)    1 #t #t))
-    (table-set! table '##return?       (make-prim-obj (riscv-prim-##subtype? return-obj-desc)       1 #t #t))
-    (table-set! table '##foreign?      (make-prim-obj (riscv-prim-##subtype? foreign-obj-desc)      1 #t #t))
-    (table-set! table '##string?       (make-prim-obj (riscv-prim-##subtype? string-obj-desc)       1 #t #t))
-    (table-set! table '##s8vector?     (make-prim-obj (riscv-prim-##subtype? s8vector-obj-desc)     1 #t #t))
-    (table-set! table '##u8vector?     (make-prim-obj (riscv-prim-##subtype? u8vector-obj-desc)     1 #t #t))
-    (table-set! table '##s16vector?    (make-prim-obj (riscv-prim-##subtype? s16vector-obj-desc)    1 #t #t))
-    (table-set! table '##u16vector?    (make-prim-obj (riscv-prim-##subtype? u16vector-obj-desc)    1 #t #t))
-    (table-set! table '##s32vector?    (make-prim-obj (riscv-prim-##subtype? s32vector-obj-desc)    1 #t #t))
-    (table-set! table '##u32vector?    (make-prim-obj (riscv-prim-##subtype? u32vector-obj-desc)    1 #t #t))
-    (table-set! table '##f32vector?    (make-prim-obj (riscv-prim-##subtype? f32vector-obj-desc)    1 #t #t))
-    (table-set! table '##s64vector?    (make-prim-obj (riscv-prim-##subtype? s64vector-obj-desc)    1 #t #t))
-    (table-set! table '##u64vector?    (make-prim-obj (riscv-prim-##subtype? u64vector-obj-desc)    1 #t #t))
-    (table-set! table '##f64vector?    (make-prim-obj (riscv-prim-##subtype? f64vector-obj-desc)    1 #t #t))
-    (table-set! table '##flonum?       (make-prim-obj (riscv-prim-##subtype? flonum-obj-desc)       1 #t #t))
-    (table-set! table '##bignum?       (make-prim-obj (riscv-prim-##subtype? bignum-obj-desc)       1 #t #t))
+    (table-set! table '##vector?       (make-prim-obj (riscv-prim-##subtype? vector-desc)       1 #t #t))
+    (table-set! table '##ratnum?       (make-prim-obj (riscv-prim-##subtype? ratnum-desc)       1 #t #t))
+    (table-set! table '##cpxnum?       (make-prim-obj (riscv-prim-##subtype? cpxnum-desc)       1 #t #t))
+    (table-set! table '##structure?    (make-prim-obj (riscv-prim-##subtype? structure-desc)    1 #t #t))
+    (table-set! table '##meroon?       (make-prim-obj (riscv-prim-##subtype? meroon-desc)       1 #t #t))
+    (table-set! table '##jazz?         (make-prim-obj (riscv-prim-##subtype? jazz-desc)         1 #t #t))
+    (table-set! table '##symbol?       (make-prim-obj (riscv-prim-##subtype? symbol-desc)       1 #t #t))
+    (table-set! table '##keyword?      (make-prim-obj (riscv-prim-##subtype? keyword-desc)      1 #t #t))
+    (table-set! table '##frame?        (make-prim-obj (riscv-prim-##subtype? frame-desc)        1 #t #t))
+    (table-set! table '##continuation? (make-prim-obj (riscv-prim-##subtype? continuation-desc) 1 #t #t))
+    (table-set! table '##promise?      (make-prim-obj (riscv-prim-##subtype? promise-desc)      1 #t #t))
+    (table-set! table '##procedure?    (make-prim-obj (riscv-prim-##subtype? procedure-desc)    1 #t #t))
+    (table-set! table '##return?       (make-prim-obj (riscv-prim-##subtype? return-desc)       1 #t #t))
+    (table-set! table '##foreign?      (make-prim-obj (riscv-prim-##subtype? foreign-desc)      1 #t #t))
+    (table-set! table '##string?       (make-prim-obj (riscv-prim-##subtype? string-desc)       1 #t #t))
+    (table-set! table '##s8vector?     (make-prim-obj (riscv-prim-##subtype? s8vector-desc)     1 #t #t))
+    (table-set! table '##u8vector?     (make-prim-obj (riscv-prim-##subtype? u8vector-desc)     1 #t #t))
+    (table-set! table '##s16vector?    (make-prim-obj (riscv-prim-##subtype? s16vector-desc)    1 #t #t))
+    (table-set! table '##u16vector?    (make-prim-obj (riscv-prim-##subtype? u16vector-desc)    1 #t #t))
+    (table-set! table '##s32vector?    (make-prim-obj (riscv-prim-##subtype? s32vector-desc)    1 #t #t))
+    (table-set! table '##u32vector?    (make-prim-obj (riscv-prim-##subtype? u32vector-desc)    1 #t #t))
+    (table-set! table '##f32vector?    (make-prim-obj (riscv-prim-##subtype? f32vector-desc)    1 #t #t))
+    (table-set! table '##s64vector?    (make-prim-obj (riscv-prim-##subtype? s64vector-desc)    1 #t #t))
+    (table-set! table '##u64vector?    (make-prim-obj (riscv-prim-##subtype? u64vector-desc)    1 #t #t))
+    (table-set! table '##f64vector?    (make-prim-obj (riscv-prim-##subtype? f64vector-desc)    1 #t #t))
+    (table-set! table '##flonum?       (make-prim-obj (riscv-prim-##subtype? flonum-desc)       1 #t #t))
+    (table-set! table '##bignum?       (make-prim-obj (riscv-prim-##subtype? bignum-desc)       1 #t #t))
 
     (table-set! table '##fx+            (make-prim-obj riscv-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?           (make-prim-obj riscv-prim-##fx+? 2 #t #t #t))
@@ -717,47 +717,47 @@
     (table-set! table '##fxnegative?    (make-prim-obj (riscv-prim-##fxsign? 'negative) 1 #t #t))
     (table-set! table '##fxpositive?    (make-prim-obj (riscv-prim-##fxsign? 'positive) 1 #t #t))
 
-    (table-set! table '##car            (make-prim-obj (object-read-prim pair-obj-desc '(a)) 1 #t #f))
-    (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-obj-desc '(d)) 1 #t #f))
+    (table-set! table '##car            (make-prim-obj (object-read-prim pair-desc '(a)) 1 #t #f))
+    (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-desc '(d)) 1 #t #f))
 
-    (table-set! table '##caar           (make-prim-obj (object-read-prim pair-obj-desc '(a a)) 1 #t #f))
-    (table-set! table '##cadr           (make-prim-obj (object-read-prim pair-obj-desc '(a d)) 1 #t #f))
-    (table-set! table '##cddr           (make-prim-obj (object-read-prim pair-obj-desc '(d d)) 1 #t #f))
-    (table-set! table '##cdar           (make-prim-obj (object-read-prim pair-obj-desc '(d a)) 1 #t #f))
+    (table-set! table '##caar           (make-prim-obj (object-read-prim pair-desc '(a a)) 1 #t #f))
+    (table-set! table '##cadr           (make-prim-obj (object-read-prim pair-desc '(a d)) 1 #t #f))
+    (table-set! table '##cddr           (make-prim-obj (object-read-prim pair-desc '(d d)) 1 #t #f))
+    (table-set! table '##cdar           (make-prim-obj (object-read-prim pair-desc '(d a)) 1 #t #f))
 
-    (table-set! table '##caaar          (make-prim-obj (object-read-prim pair-obj-desc '(a a a)) 1 #t #f))
-    (table-set! table '##caadr          (make-prim-obj (object-read-prim pair-obj-desc '(a a d)) 1 #t #f))
-    (table-set! table '##cadar          (make-prim-obj (object-read-prim pair-obj-desc '(a d a)) 1 #t #f))
-    (table-set! table '##caddr          (make-prim-obj (object-read-prim pair-obj-desc '(a d d)) 1 #t #f))
-    (table-set! table '##cdaar          (make-prim-obj (object-read-prim pair-obj-desc '(d a a)) 1 #t #f))
-    (table-set! table '##cdadr          (make-prim-obj (object-read-prim pair-obj-desc '(d a d)) 1 #t #f))
-    (table-set! table '##cddar          (make-prim-obj (object-read-prim pair-obj-desc '(d d a)) 1 #t #f))
-    (table-set! table '##cdddr          (make-prim-obj (object-read-prim pair-obj-desc '(d d d)) 1 #t #f))
+    (table-set! table '##caaar          (make-prim-obj (object-read-prim pair-desc '(a a a)) 1 #t #f))
+    (table-set! table '##caadr          (make-prim-obj (object-read-prim pair-desc '(a a d)) 1 #t #f))
+    (table-set! table '##cadar          (make-prim-obj (object-read-prim pair-desc '(a d a)) 1 #t #f))
+    (table-set! table '##caddr          (make-prim-obj (object-read-prim pair-desc '(a d d)) 1 #t #f))
+    (table-set! table '##cdaar          (make-prim-obj (object-read-prim pair-desc '(d a a)) 1 #t #f))
+    (table-set! table '##cdadr          (make-prim-obj (object-read-prim pair-desc '(d a d)) 1 #t #f))
+    (table-set! table '##cddar          (make-prim-obj (object-read-prim pair-desc '(d d a)) 1 #t #f))
+    (table-set! table '##cdddr          (make-prim-obj (object-read-prim pair-desc '(d d d)) 1 #t #f))
 
-    (table-set! table '##caaaar         (make-prim-obj (object-read-prim pair-obj-desc '(a a a a)) 1 #t #f))
-    (table-set! table '##cdaaar         (make-prim-obj (object-read-prim pair-obj-desc '(d a a a)) 1 #t #f))
-    (table-set! table '##cadaar         (make-prim-obj (object-read-prim pair-obj-desc '(a d a a)) 1 #t #f))
-    (table-set! table '##cddaar         (make-prim-obj (object-read-prim pair-obj-desc '(d d a a)) 1 #t #f))
-    (table-set! table '##caadar         (make-prim-obj (object-read-prim pair-obj-desc '(a a d a)) 1 #t #f))
-    (table-set! table '##cdadar         (make-prim-obj (object-read-prim pair-obj-desc '(d a d a)) 1 #t #f))
-    (table-set! table '##caddar         (make-prim-obj (object-read-prim pair-obj-desc '(a d d a)) 1 #t #f))
-    (table-set! table '##cdddar         (make-prim-obj (object-read-prim pair-obj-desc '(d d d a)) 1 #t #f))
-    (table-set! table '##caaadr         (make-prim-obj (object-read-prim pair-obj-desc '(a a a d)) 1 #t #f))
-    (table-set! table '##cdaadr         (make-prim-obj (object-read-prim pair-obj-desc '(d a a d)) 1 #t #f))
-    (table-set! table '##cadadr         (make-prim-obj (object-read-prim pair-obj-desc '(a d a d)) 1 #t #f))
-    (table-set! table '##cddadr         (make-prim-obj (object-read-prim pair-obj-desc '(d d a d)) 1 #t #f))
-    (table-set! table '##caaddr         (make-prim-obj (object-read-prim pair-obj-desc '(a a d d)) 1 #t #f))
-    (table-set! table '##cdaddr         (make-prim-obj (object-read-prim pair-obj-desc '(d a d d)) 1 #t #f))
-    (table-set! table '##cadddr         (make-prim-obj (object-read-prim pair-obj-desc '(a d d d)) 1 #t #f))
-    (table-set! table '##cddddr         (make-prim-obj (object-read-prim pair-obj-desc '(d d d d)) 1 #t #f))
+    (table-set! table '##caaaar         (make-prim-obj (object-read-prim pair-desc '(a a a a)) 1 #t #f))
+    (table-set! table '##cdaaar         (make-prim-obj (object-read-prim pair-desc '(d a a a)) 1 #t #f))
+    (table-set! table '##cadaar         (make-prim-obj (object-read-prim pair-desc '(a d a a)) 1 #t #f))
+    (table-set! table '##cddaar         (make-prim-obj (object-read-prim pair-desc '(d d a a)) 1 #t #f))
+    (table-set! table '##caadar         (make-prim-obj (object-read-prim pair-desc '(a a d a)) 1 #t #f))
+    (table-set! table '##cdadar         (make-prim-obj (object-read-prim pair-desc '(d a d a)) 1 #t #f))
+    (table-set! table '##caddar         (make-prim-obj (object-read-prim pair-desc '(a d d a)) 1 #t #f))
+    (table-set! table '##cdddar         (make-prim-obj (object-read-prim pair-desc '(d d d a)) 1 #t #f))
+    (table-set! table '##caaadr         (make-prim-obj (object-read-prim pair-desc '(a a a d)) 1 #t #f))
+    (table-set! table '##cdaadr         (make-prim-obj (object-read-prim pair-desc '(d a a d)) 1 #t #f))
+    (table-set! table '##cadadr         (make-prim-obj (object-read-prim pair-desc '(a d a d)) 1 #t #f))
+    (table-set! table '##cddadr         (make-prim-obj (object-read-prim pair-desc '(d d a d)) 1 #t #f))
+    (table-set! table '##caaddr         (make-prim-obj (object-read-prim pair-desc '(a a d d)) 1 #t #f))
+    (table-set! table '##cdaddr         (make-prim-obj (object-read-prim pair-desc '(d a d d)) 1 #t #f))
+    (table-set! table '##cadddr         (make-prim-obj (object-read-prim pair-desc '(a d d d)) 1 #t #f))
+    (table-set! table '##cddddr         (make-prim-obj (object-read-prim pair-desc '(d d d d)) 1 #t #f))
 
-    (table-set! table '##set-car!       (make-prim-obj (object-set-prim pair-obj-desc 2) 2 #t #f))
-    (table-set! table '##set-cdr!       (make-prim-obj (object-set-prim pair-obj-desc 1) 2 #t #f))
+    (table-set! table '##set-car!       (make-prim-obj (object-set-prim pair-desc 2) 2 #t #f))
+    (table-set! table '##set-cdr!       (make-prim-obj (object-set-prim pair-desc 1) 2 #t #f))
 
     (table-set! table '##cons           (make-prim-obj riscv-prim-##cons 2 #t #f))
 
-    (table-set! table '##vector-ref     (make-prim-obj (riscv-object-dyn-read-prim vector-obj-desc) 2 #t #t))
-    (table-set! table '##vector-set!    (make-prim-obj (riscv-object-dyn-set-prim vector-obj-desc) 3 #t #f))
+    (table-set! table '##vector-ref     (make-prim-obj (riscv-object-dyn-read-prim vector-desc) 2 #t #t))
+    (table-set! table '##vector-set!    (make-prim-obj (riscv-object-dyn-set-prim vector-desc) 3 #t #f))
     (table-set! table '##vector-length  (make-prim-obj (riscv-prim-##vector-length #f) 1 #t #t))
 
     table))

@@ -637,13 +637,13 @@
 ;; ***** Primitives - Default Primitives - Memory read/write/test
 
 (define (object-read-prim desc opers #!optional (width #f))
-  (if (immediate-desc? desc)
+  (if (imm-desc? desc)
       (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args obj-opnd)
       (let* ((width (if width width (get-word-width cgc)))
-             (obj-tag (get-desc-pointer-tag desc))
+             (obj-tag (desc-type-tag desc))
              (header-offset (+ (* width pointer-header-offset) obj-tag))) ;; Header is index 0
         (for-each
           (lambda (op)
@@ -654,13 +654,13 @@
 
 ;; Header is index 0
 (define (object-set-prim desc index #!optional (width #f))
-  (if (immediate-desc? desc)
+  (if (imm-desc? desc)
       (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 2 0 '((reg))
     (lambda (cgc result-action args obj-opnd new-val)
       (let* ((width (if width width (get-word-width cgc)))
-             (obj-tag (get-desc-pointer-tag desc))
+             (obj-tag (desc-type-tag desc))
              (header-offset (+ (* width pointer-header-offset) obj-tag))
              (total-offset (- (* width index) header-offset))
              (mem-location (opnd-with-offset obj-opnd total-offset)))

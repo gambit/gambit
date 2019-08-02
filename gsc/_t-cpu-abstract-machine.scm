@@ -326,9 +326,9 @@
     (cond
       ((proc-obj? val)
         (get-parent-proc-label cgc val))
-      ((immediate-object? val)
-        (int-opnd (format-imm-object val)))
-      ((reference-object? val)
+      ((imm-object? val)
+        (int-opnd (imm-encode val)))
+      ((ref-object? val)
         (obj-opnd val))
       (else
         (compiler-internal-error "make-opnd: Unknown object: " val))))
@@ -353,9 +353,9 @@
 
 (define (make-obj-opnd val)
   (cond
-    ((immediate-object? val)
-      (int-opnd (format-imm-object val)))
-    ((reference-object? val)
+    ((imm-object? val)
+      (int-opnd (imm-encode val)))
+    ((ref-object? val)
       (obj-opnd val))
     (else
       (compiler-internal-error "make-obj-opnd: Unknown object: " val))))
@@ -974,7 +974,7 @@
 
   ;; specify value returned by create-procedure (i.e. procedure reference)
   (let ((main-lbl (lbl-opnd-label (get-main-label)))
-        (offset (if (member (get-arch-name cgc) '(x86-32 x86-64)) 0 object-tag)))
+        (offset (if (member (get-arch-name cgc) '(x86-32 x86-64)) 0 (type-tag 'subtyped))))
     (codegen-fixup-lbl! cgc main-lbl offset #f (get-word-width-bits cgc) 0 'main-lbl)))
 
 ;; Value is Pair (Label, optional Proc-obj)
@@ -1095,20 +1095,20 @@
 
   (codegen-fixup-handler! cgc '___lowlevel_exec width-bits 0)
   (am-data cgc width-bits (+ 6                               ;; PERM
-                            (* header-tag-mult 14)           ;; PROCEDURE
+                            (arithmetic-shift 14 head-type-tag-bits) ;; PROCEDURE
                             (* 256 (+ nargs                  ;; Number of arguments
                               (* 4096 (if closure? 1 0)))))) ;; Is closure?
 
   (codegen-fixup-lbl! cgc
     (lbl-opnd-label label)
-    (if (member (get-arch-name cgc) '(x86-32 x86-64)) 0 object-tag) ; XXX object-tag?
+    (if (member (get-arch-name cgc) '(x86-32 x86-64)) 0 (type-tag 'subtyped)) ; XXX object-tag?
     #f width-bits 0 'self-label) ;; self ptr
 
   ;; so that label reference has tag ___tSUBTYPED
   (if (member (get-arch-name cgc) '(x86-32 x86-64))
       (for-each
         (lambda (_) (am-data cgc 8 0))
-        (iota object-tag 1)))
+        (iota (type-tag 'subtyped) 1)))
 
   (am-lbl cgc label))
 
@@ -1204,14 +1204,14 @@
   ;; Host Address
   (codegen-fixup-handler! cgc '___lowlevel_exec width-bits 0)
   ;; Header
-  (am-data cgc width-bits (+ 6 (* header-tag-mult 15)))
+  (am-data cgc width-bits (+ 6 (arithmetic-shift 15 head-type-tag-bits)))
   ;; Field 1: gc-map
   (am-data cgc width-bits (if internal? (get-gc-map-internal frame) (get-gc-map frame)))
   ;; so that label reference has tag ___tSUBTYPED
   (if (member (get-arch-name cgc) '(x86-32 x86-64))
       (for-each
         (lambda (_) (am-data cgc 8 0))
-        (iota object-tag 1)))
+        (iota (type-tag 'subtyped) 1)))
 
   (am-lbl cgc label))
 
@@ -1421,7 +1421,7 @@
   (define proc (codegen-context-current-proc cgc))
   (define gvm-instr (code-gvm-instr code))
   (define frame (gvm-instr-frame gvm-instr))
-  (define offset (+ object-tag (* pointer-header-offset (get-word-width cgc))))
+  (define offset (+ (type-tag 'subtyped) (* pointer-header-offset (get-word-width cgc))))
   (define width (get-word-width cgc))
   (define width-bits (get-word-width-bits cgc))
 
@@ -1461,7 +1461,7 @@
           ;; Place header
           (mov-at-clo-index 0 reg
             (int-opnd (+
-                        (* header-tag-mult 14)
+                        (arithmetic-shift 14 head-type-tag-bits)
                         (* 256 (- size width)))))
           ;; Place entry
           (mov-at-clo-index 1 reg clo-lbl)
