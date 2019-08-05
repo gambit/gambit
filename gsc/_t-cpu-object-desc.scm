@@ -130,7 +130,7 @@
 
 (define ref-type-tag desc-type-tag)
 (define (ref-subtype-tag desc)
-  (subtype-tag (desc-type desc)))
+  (subtype-tag (ref-subtype desc)))
 
 (define (ref-type? type)
   (or (eq? type 'subtyped)
@@ -167,8 +167,8 @@
 (define (special-desc val)
   (imm-desc
     'special
-    (lambda (_)
-      (tagged-value val 'special)))) ; XXX
+    (lambda (#!optional (_ #f)) ; XXX
+      (tagged-value val 'special))))
 
 (define fal-desc      (special-desc -1))
 (define tru-desc      (special-desc -2))

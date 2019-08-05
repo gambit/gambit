@@ -727,7 +727,7 @@
              (shrinked-temp1 (shrink-x86-opnd x86-arg1 width 8)))
         (x86-test cgc
           (car shrinked-temp1)
-          (x86-imm-int (bitwise-and (type-tag 'subtyped) (type-tag 'pair)))
+          (x86-imm-int (fxand (type-tag 'mem1) (type-tag 'mem2)))
           (cdr shrinked-temp1))
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-jne cgc (lbl-opnd-label lbl)))
@@ -738,15 +738,14 @@
 (define x86-prim-##char?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
-      (let* ((x86-temp1 (make-x86-opnd temp1))
+      (let* ((width (get-word-width-bits cgc))
+             (x86-temp1 (make-x86-opnd temp1))
              (x86-temp2 (make-x86-opnd temp2))
-             (width (get-word-width-bits cgc))
-             (test-int
-              (- (type-tag 'special) (expt 2 (- (get-word-width-bits cgc) 1)))))
+             (test-int (- (desc-type-tag char-desc) (arithmetic-shift 1 (- width 1)))))
         (am-mov cgc temp1 arg1) ;; Save arg1
         (am-mov cgc temp2 (int-opnd test-int) width)
         (x86-and cgc x86-temp1 x86-temp2 width)
-        (x86-cmp cgc x86-temp1 (x86-imm-int (type-tag 'special)) width)
+        (x86-cmp cgc x86-temp1 (x86-imm-int (desc-type-tag char-desc)) width)
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-je cgc  (lbl-opnd-label lbl)))
           (lambda (cgc lbl) (x86-jne cgc (lbl-opnd-label lbl)))
@@ -758,10 +757,10 @@
     (lambda (cgc result-action args arg1 tmp1)
       (let ((x86-arg1 (make-x86-opnd arg1))
             (x86-tmp1 (make-x86-opnd tmp1))
-            (test-int (+ (- ((imm-encoder desc) #f) (type-tag 'special)) type-tag-mask)))
+            (test-int (+ ((imm-encoder desc)) (- type-tag-mask (desc-type-tag desc)))))
         (am-mov cgc tmp1 arg1)
         (x86-and cgc x86-tmp1 (x86-imm-int test-int))
-        (am-if-eq cgc tmp1 (int-opnd ((imm-encoder desc) #f))
+        (am-if-eq cgc tmp1 (int-opnd ((imm-encoder desc)))
           (lambda (cgc) (am-return-const cgc result-action #t))
           (lambda (cgc) (am-return-const cgc result-action #f))
           #f
@@ -792,16 +791,16 @@
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (type-tag 'subtyped) width width)))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (desc-type-tag subtype-desc) (* width pointer-header-offset)))) ; XXX
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
-            (x86-cmp cgc x86-tmp1 (x86-imm-int (subtype-tag (ref-subtype subtype-desc))))
+            (x86-cmp cgc x86-tmp1 (x86-imm-int (ref-subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (type-tag 'subtyped) width width)))
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (desc-type-tag subtype-desc) (* width pointer-header-offset)))) ; XXX
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
-            (x86-cmp cgc x86-tmp1 (x86-imm-int (subtype-tag (ref-subtype subtype-desc))))
+            (x86-cmp cgc x86-tmp1 (x86-imm-int (ref-subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
           true-opnd:  (int-opnd (imm-encode #f))
           false-opnd: (int-opnd (imm-encode #t)))))))
@@ -857,7 +856,7 @@
 (define x86-prim-##fx*
   (foldl-prim
     (lambda (cgc . args)
-      (x86-sar cgc (make-x86-opnd (car args)) (x86-imm-int 2))
+      (x86-sar cgc (make-x86-opnd (car args)) (x86-imm-int type-tag-bits))
       (apply x86-imul (cons cgc (map make-x86-opnd args))))
     allowed-opnds: '(reg mem)
     allowed-opnds-accum: '(reg mem)
@@ -871,7 +870,7 @@
     (lambda (cgc result-action args arg1 arg2)
       (let ((x86-arg1 (make-x86-opnd arg1))
             (x86-arg2 (make-x86-opnd arg2)))
-        (x86-sar cgc x86-arg1 (x86-imm-int 2))
+        (x86-sar cgc x86-arg1 (x86-imm-int type-tag-bits))
         (x86-imul cgc x86-arg1 x86-arg2)
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
@@ -884,7 +883,7 @@
     (lambda (cgc result-action args arg1)
       (let ((x86-arg1 (make-x86-opnd arg1)))
         (x86-not cgc x86-arg1)
-        (x86-and cgc x86-arg1 (x86-imm-int -4))
+        (x86-and cgc x86-arg1 (x86-imm-int (imm-encode -1)))
         (am-return-opnd cgc result-action arg1)))))
 
 (define x86-prim-##fxand
@@ -977,7 +976,7 @@
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
       (let ((x86-arg1 (make-x86-opnd arg1)))
-        (x86-sar cgc x86-arg1 (x86-imm-int 1))
+        (x86-sar cgc x86-arg1 (x86-imm-int 1)) ; XXX
         (x86-imul cgc x86-arg1 x86-arg1)
         (am-return-opnd cgc result-action arg1)))))
 
@@ -985,7 +984,7 @@
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
       (let ((x86-arg1 (make-x86-opnd arg1)))
-        (x86-sar cgc x86-arg1 (x86-imm-int 1))
+        (x86-sar cgc x86-arg1 (x86-imm-int 1)) ; XXX
         (x86-imul cgc x86-arg1 x86-arg1)
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
@@ -999,7 +998,7 @@
       (let ((width (get-word-width-bits cgc))
             (x86-arg1 (make-x86-opnd arg1))
             (x86-tmp1 (make-x86-opnd tmp1)))
-        (am-mov cgc tmp1 (int-opnd (imm-encode (- (expt 2 (- width 3))))))
+        (am-mov cgc tmp1 (int-opnd (- (arithmetic-shift 1 (- width 1)))))
         (am-if-eq cgc arg1 tmp1
           (lambda (cgc) (am-return-const cgc result-action #f))
           (lambda (cgc)
@@ -1018,7 +1017,7 @@
         (am-mov cgc tmp1 arg1)
         (x86-sar cgc x86-tmp1 (x86-imm-int (- width 1)))
         (x86-xor cgc x86-arg1 x86-tmp1)
-        (x86-and cgc x86-arg1 (x86-imm-int (imm-encode -1))) ; x86 sar at beginning instead?
+        (x86-and cgc x86-arg1 (x86-imm-int (imm-encode -1))) ; XXX x86 sar at beginning instead?
         (x86-popcnt cgc x86-arg1 x86-arg1)
         (x86-shl cgc x86-arg1 (x86-imm-int 2))))))
 
@@ -1033,7 +1032,7 @@
       (let ((width (get-word-width-bits cgc))
             (x86-arg1 (make-x86-opnd arg1))
             (x86-tmp1 (make-x86-opnd tmp1)))
-        (x86-sar cgc x86-arg1 (x86-imm-int 2)) ; Remove tag
+        (x86-sar cgc x86-arg1 (x86-imm-int type-tag-bits)) ; Remove tag
         ; Negate if negative
         (am-mov cgc tmp1 arg1)
         (x86-sar cgc x86-tmp1 (x86-imm-int (- width 1)))
@@ -1046,15 +1045,15 @@
           (rounding cgc x86-arg1 x86-tmp1 32))
         ; Count number of bits
         (x86-popcnt cgc x86-arg1 x86-arg1)
-        (x86-shl cgc x86-arg1 (x86-imm-int 2))))))
+        (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits))))))
 
 (define x86-prim-##fxbit-set?
   (const-nargs-prim 2 0 '((reg))
     (lambda (cgc result-action args arg1 arg2)
       (let ((x86-arg1 (make-x86-opnd arg1))
             (x86-arg2 (make-x86-opnd arg2)))
-        (x86-sar cgc x86-arg1 (x86-imm-int 2)) ; XXX
-        (x86-sar cgc x86-arg2 (x86-imm-int 2)) ; XXX
+        (x86-sar cgc x86-arg1 (x86-imm-int type-tag-bits))
+        (x86-sar cgc x86-arg2 (x86-imm-int type-tag-bits))
         (x86-bt cgc x86-arg2 x86-arg1)
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-jb cgc (lbl-opnd-label lbl)))
@@ -1099,7 +1098,7 @@
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args arg1)
       (let ((x86-opnd (make-x86-opnd arg1)))
-        (x86-cmp cgc x86-opnd (x86-imm-int 0))
+        (x86-cmp cgc x86-opnd (x86-imm-int (imm-encode 0)))
         (am-cond-return cgc result-action
           (lambda (cgc lbl) ((if (eq? sign 'positive) x86-jg x86-jl) cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl) ((if (eq? sign 'positive) x86-jle x86-jge) cgc (lbl-opnd-label lbl)))
@@ -1114,16 +1113,15 @@
         (lambda (result-reg result-opnd-in-args)
           (let* ((width (get-word-width cgc))
                  (size (* width 3))
-                 (tag (desc-type-tag pair-desc))
-                 (subtype (subtype-tag (ref-subtype pair-desc)))
-                 (offset (+ tag (* 2 width))))
+                 (offset (+ (desc-type-tag pair-desc) (* 2 width))))
 
             (am-allocate-memory cgc result-reg size offset
               (codegen-context-frame cgc))
 
             (am-mov cgc
               (mem-opnd result-reg (- offset))
-              (int-opnd (+ subtype (arithmetic-shift (* width 2) (fx+ head-type-tag-bits subtype-tag-bits))))
+              (int-opnd (+ (ref-subtype-tag pair-desc)
+                           (arithmetic-shift (* width 2) (fx+ head-type-tag-bits subtype-tag-bits)))) ; FIXME
               (get-word-width-bits cgc))
 
             (am-mov cgc
@@ -1140,56 +1138,56 @@
 
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-return-opnd uses the default width
-(define (x86-object-dyn-read-prim desc #!optional (width #f))
+(define (x86-object-dyn-read-prim desc) ; FIXME
   (if (imm-desc? desc)
-    (compiler-internal-error "Object isn't a reference"))
+      (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 2 0 '((reg) (reg int))
     (lambda (cgc result-action args obj-reg index-opnd)
-      (let* ((width (if width width (get-word-width cgc)))
+      (let* ((width (get-word-width cgc))
              (index-shift (- (integer-length width) 1 type-tag-bits))
              (obj-tag (desc-type-tag desc))
              (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
 
         (if (> 0 index-shift)
-          (compiler-internal-error "x86-object-dyn-read-prim - Invalid index-shift"))
+            (compiler-internal-error "x86-object-dyn-read-prim - Invalid index-shift"))
 
         (if (int-opnd? index-opnd)
-          (am-return-opnd cgc result-action
-            (mem-opnd obj-reg
-              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
-          (am-return-opnd cgc result-action
-            (mem-opnd obj-reg (- 0-offset) index-opnd index-shift)))))))
+            (am-return-opnd cgc result-action
+              (mem-opnd obj-reg
+                (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
+            (am-return-opnd cgc result-action
+              (mem-opnd obj-reg (- 0-offset) index-opnd index-shift)))))))
 
 ;; Doesn't support width not equal to (get-word-width cgc)
-(define (x86-object-dyn-set-prim desc #!optional (width #f))
+(define (x86-object-dyn-set-prim desc) ; FIXME
   (if (imm-desc? desc)
-    (compiler-internal-error "Object isn't a reference"))
+      (compiler-internal-error "Object isn't a reference"))
 
   (const-nargs-prim 3 0 '((reg) (reg int))
     (lambda (cgc result-action args obj-reg index-opnd new-val-opnd)
-      (let* ((width (if width width (get-word-width cgc)))
+      (let* ((width (get-word-width cgc))
              (index-shift (- (integer-length width) 1 type-tag-bits))
              (obj-tag (desc-type-tag desc))
              (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
 
         (if (> 0 index-shift)
-          (compiler-internal-error "x86-object-dyn-read-prim - Invalid index-shift"))
+            (compiler-internal-error "x86-object-dyn-set-prim - Invalid index-shift"))
 
         (am-mov cgc
           (if (int-opnd? index-opnd)
-            (mem-opnd obj-reg
-              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
-            (mem-opnd obj-reg (- 0-offset) index-opnd index-shift))
+              (mem-opnd obj-reg
+                (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
+              (mem-opnd obj-reg (- 0-offset) index-opnd index-shift))
           new-val-opnd
           (* 8 width))
         (am-return-opnd cgc result-action obj-reg)))))
 
-(define (x86-prim-##vector-length width)
+(define x86-prim-##vector-length ; FIXME
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args obj-reg)
-      (let* ((width (if width width (get-word-width cgc)))
-             (log2-width (- (integer-length width) 1))
+      (let* ((width (get-word-width cgc))
+             (log2-width (- (fxlength width) 1))
              (header-offset (+ (* width pointer-header-offset) (type-tag 'subtyped)))
              (shift-count (- (+ head-type-tag-bits subtype-tag-bits log2-width) type-tag-bits)))
         (am-mov cgc obj-reg (mem-opnd obj-reg (- header-offset)))
@@ -1321,6 +1319,6 @@
 
     (table-set! table '##vector-ref     (make-prim-obj (x86-object-dyn-read-prim vector-desc) 2 #t #t))
     (table-set! table '##vector-set!    (make-prim-obj (x86-object-dyn-set-prim vector-desc) 3 #t #f))
-    (table-set! table '##vector-length  (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
+    (table-set! table '##vector-length  (make-prim-obj x86-prim-##vector-length 1 #t #t))
 
     table))
