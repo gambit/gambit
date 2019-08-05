@@ -105,10 +105,6 @@
 
       (cpu-set-nb-regs targ sem-changing-opts)
 
-      #f)
-
-    (define (end!)
-
       (table-for-each
         (lambda (name proc-obj)
           (let ((prim (cpu-prim-info name)))
@@ -124,6 +120,10 @@
               prim
               (lambda (env) (get-primitive-jump-inlinable? proc-obj))))) ; XXX
         (get-primitive-table targ))
+
+      #f)
+
+    (define (end!)
 
       #f)
 
