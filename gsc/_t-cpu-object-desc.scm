@@ -89,6 +89,14 @@
 
 ;;-----------------------------------------------------------------------------
 
+(define (body-offset type width)
+  (fx- 0 (type-tag type) width))
+
+(define (header-offset type width)
+  (fx- 0 (type-tag type) width width))
+
+;;-----------------------------------------------------------------------------
+
 (define (desc-type desc)    (vector-ref desc 1))
 (define (desc-encoder desc) (vector-ref desc 2))
 
@@ -139,7 +147,7 @@
 (define ref-encoder? desc-encoder?)
 
 (define (ref-subtype? subtype)
-  (assq subtype subtype-tags)) ; XXX
+  (assq subtype subtype-tags))
 
 (define (ref-desc? desc)
   (and (eq? 'ref (vector-ref desc 0))
@@ -439,7 +447,5 @@
         ((ref-encoder desc) object)
         (compiler-internal-error
           "ref-encode, object not of reference type" object))))
-
-(define pointer-header-offset 2) ; FIXME
 
 ;;=============================================================================

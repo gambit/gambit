@@ -1421,7 +1421,7 @@
   (define proc (codegen-context-current-proc cgc))
   (define gvm-instr (code-gvm-instr code))
   (define frame (gvm-instr-frame gvm-instr))
-  (define offset (+ (type-tag 'subtyped) (* pointer-header-offset (get-word-width cgc))))
+  (define offset (header-offset 'subtyped (get-word-width cgc)))
   (define width (get-word-width cgc))
   (define width-bits (get-word-width-bits cgc))
 
@@ -1445,7 +1445,7 @@
   ;; Index 0 is header
   (define (mov-at-clo-index index reg opnd)
     (am-mov cgc
-      (mem-opnd reg (- (* width index) offset))
+      (mem-opnd reg (+ (* width index) offset))
       opnd width-bits))
 
   (define (allocate-closure clo unitialized-locs)
@@ -1456,7 +1456,7 @@
 
       (mov-into cgc loc '(reg) clo-opnds
         (lambda (reg)
-          (am-allocate-memory cgc reg size offset frame)
+          (am-allocate-memory cgc reg size (- offset) frame)
 
           ;; Place header
           (mov-at-clo-index 0 reg

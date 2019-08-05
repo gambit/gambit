@@ -791,14 +791,14 @@
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (desc-type-tag subtype-desc) (* width pointer-header-offset)))) ; XXX
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (header-offset (desc-type subtype-desc) width))) ; XXX
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
             (x86-cmp cgc x86-tmp1 (x86-imm-int (ref-subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (- 0 (desc-type-tag subtype-desc) (* width pointer-header-offset)))) ; XXX
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (header-offset (desc-type subtype-desc) width))) ; XXX
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
             (x86-cmp cgc x86-tmp1 (x86-imm-int (ref-subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
@@ -1146,8 +1146,7 @@
     (lambda (cgc result-action args obj-reg index-opnd)
       (let* ((width (get-word-width cgc))
              (index-shift (- (integer-length width) 1 type-tag-bits))
-             (obj-tag (desc-type-tag desc))
-             (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+             (0-offset (body-offset (desc-type desc) width)))
 
         (if (> 0 index-shift)
             (compiler-internal-error "x86-object-dyn-read-prim - Invalid index-shift"))
@@ -1155,9 +1154,9 @@
         (if (int-opnd? index-opnd)
             (am-return-opnd cgc result-action
               (mem-opnd obj-reg
-                (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
+                (+ (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
             (am-return-opnd cgc result-action
-              (mem-opnd obj-reg (- 0-offset) index-opnd index-shift)))))))
+              (mem-opnd obj-reg 0-offset index-opnd index-shift)))))))
 
 ;; Doesn't support width not equal to (get-word-width cgc)
 (define (x86-object-dyn-set-prim desc) ; FIXME
@@ -1168,8 +1167,7 @@
     (lambda (cgc result-action args obj-reg index-opnd new-val-opnd)
       (let* ((width (get-word-width cgc))
              (index-shift (- (integer-length width) 1 type-tag-bits))
-             (obj-tag (desc-type-tag desc))
-             (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+             (0-offset (body-offset (desc-type desc) width)))
 
         (if (> 0 index-shift)
             (compiler-internal-error "x86-object-dyn-set-prim - Invalid index-shift"))
@@ -1177,8 +1175,8 @@
         (am-mov cgc
           (if (int-opnd? index-opnd)
               (mem-opnd obj-reg
-                (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
-              (mem-opnd obj-reg (- 0-offset) index-opnd index-shift))
+                (+ (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
+              (mem-opnd obj-reg 0-offset index-opnd index-shift))
           new-val-opnd
           (* 8 width))
         (am-return-opnd cgc result-action obj-reg)))))
@@ -1188,9 +1186,9 @@
     (lambda (cgc result-action args obj-reg)
       (let* ((width (get-word-width cgc))
              (log2-width (- (fxlength width) 1))
-             (header-offset (+ (* width pointer-header-offset) (type-tag 'subtyped)))
+             (header-offset (header-offset 'subtyped width))
              (shift-count (- (+ head-type-tag-bits subtype-tag-bits log2-width) type-tag-bits)))
-        (am-mov cgc obj-reg (mem-opnd obj-reg (- header-offset)))
+        (am-mov cgc obj-reg (mem-opnd obj-reg header-offset))
         (x86-shr cgc obj-reg (x86-imm-int shift-count))
         (am-return-opnd cgc result-action obj-reg)))))
 

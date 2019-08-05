@@ -655,13 +655,12 @@
     (lambda (cgc result-action args obj-reg index-opnd)
       (let* ((width (if width width (get-word-width cgc)))
              (index-shift (- (integer-length width) 1 type-tag-bits))
-             (obj-tag (desc-type-tag desc))
-             (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+             (0-offset (body-offset (desc-type desc) width)))
 
         (if (int-opnd? index-opnd)
           (am-return-opnd cgc result-action
             (mem-opnd obj-reg
-              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
+              (+ (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset)))
           (with-result-opnd cgc result-action args
             allowed-opnds: '(reg)
             fun:
@@ -675,7 +674,7 @@
                   (arm-add cgc result-reg obj-reg result-reg))
                 (else
                   (arm-add cgc result-reg obj-reg index-opnd)))
-              (am-return-opnd cgc result-action (mem-opnd result-reg (- 0-offset))))))))))
+              (am-return-opnd cgc result-action (mem-opnd result-reg 0-offset)))))))))
 
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-mov uses the default width
@@ -687,12 +686,11 @@
     (lambda (cgc result-action args obj-reg index-opnd new-val-opnd)
       (let* ((width (if width width (get-word-width cgc)))
              (index-shift (- (integer-length width) 1 type-tag-bits))
-             (obj-tag (desc-type-tag desc))
-             (0-offset (+ (* width (- pointer-header-offset 1)) obj-tag)))
+             (0-offset (body-offset (desc-type desc) width)))
         (if (int-opnd? index-opnd)
           (am-mov cgc
             (mem-opnd obj-reg
-              (- (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
+              (+ (arithmetic-shift (int-opnd-value index-opnd) index-shift) 0-offset))
             new-val-opnd)
           (with-result-opnd cgc result-action args
             allowed-opnds: '(reg)
@@ -707,7 +705,7 @@
                   (arm-add cgc result-reg obj-reg result-reg))
                 (else
                   (arm-add cgc result-reg obj-reg index-opnd)))
-              (am-mov cgc (mem-opnd result-reg (- 0-offset)) new-val-opnd))))
+              (am-mov cgc (mem-opnd result-reg 0-offset) new-val-opnd))))
         (am-return-const cgc result-action (void))))))
 
 (define (arm-prim-##vector-length #!optional (width #f))
@@ -715,10 +713,10 @@
     (lambda (cgc result-action args obj-reg)
       (let* ((width (if width width (get-word-width cgc)))
               (log2-width (- (integer-length width) 1))
-              (header-offset (+ (* width pointer-header-offset) (type-tag 'subtyped)))
+              (header-offset (header-offset 'subtyped width))
               (shift-count (- (+ head-type-tag-bits subtype-tag-bits log2-width) type-tag-bits)))
         ;; Load header
-        (am-mov cgc obj-reg (mem-opnd obj-reg (- header-offset)))
+        (am-mov cgc obj-reg (mem-opnd obj-reg header-offset))
         ;; Shift header in order to ony keep length in bytes
         ;; Divides that value by the number of bytes per word
         ;; Multiply by the tag width
