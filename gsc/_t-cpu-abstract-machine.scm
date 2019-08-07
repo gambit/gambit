@@ -39,6 +39,12 @@
 ;;    am-sub cgc destination operand1 operand2
 ;;      Subtracts operand2 from operand2, puts the result in destination.
 ;;      destination = operand1 - operand2
+;;    am-mul cgc destination operand1 operand2
+;;      Multiplies operand1 and operand2, puts the result in destination.
+;;      destination = operand1 * operand2
+;;    am-div cgc destination operand1 operand2
+;;      Divides operand1 by operand2, puts the result in destination.
+;;      destination = operand1 / operand2
 ;;
 ;;  The following branching instructions are required:
 ;;    am-jmp cgc destination
@@ -112,13 +118,13 @@
 (define (make-instruction-dictionnary
           am-lbl am-data
           am-mov
-          am-add am-sub
+          am-add am-sub am-mul am-div
           am-jmp am-compare-jump
           am-compare-move)
   (vector
     am-lbl am-data
     am-mov
-    am-add am-sub
+    am-add am-sub am-mul am-div
     am-jmp am-compare-jump
     am-compare-move))
 
@@ -178,14 +184,16 @@
 (define (apply-instruction cgc index args)
   (exec-in-cgc cgc instructions-index index (cons cgc args)))
 
-(define (am-lbl cgc . args)              (apply-instruction cgc 0  args))
-(define (am-data cgc . args)             (apply-instruction cgc 1  args))
-(define (am-mov cgc . args)              (apply-instruction cgc 2  args))
-(define (am-add cgc . args)              (apply-instruction cgc 3  args))
-(define (am-sub cgc . args)              (apply-instruction cgc 4  args))
-(define (am-jmp cgc . args)              (apply-instruction cgc 5 args))
-(define (am-compare-jump cgc . args)     (apply-instruction cgc 6 args))
-(define (am-compare-move cgc . args)     (apply-instruction cgc 7 args))
+(define (am-lbl cgc . args)              (apply-instruction cgc 0 args))
+(define (am-data cgc . args)             (apply-instruction cgc 1 args))
+(define (am-mov cgc . args)              (apply-instruction cgc 2 args))
+(define (am-add cgc . args)              (apply-instruction cgc 3 args))
+(define (am-sub cgc . args)              (apply-instruction cgc 4 args))
+(define (am-mul cgc . args)              (apply-instruction cgc 5 args))
+(define (am-div cgc . args)              (apply-instruction cgc 6 args))
+(define (am-jmp cgc . args)              (apply-instruction cgc 7 args))
+(define (am-compare-jump cgc . args)     (apply-instruction cgc 8 args))
+(define (am-compare-move cgc . args)     (apply-instruction cgc 9 args))
 
 ;; ***** AM: Routines fields
 

@@ -79,6 +79,8 @@
     arm-mov-instr               ;; am-mov
     arm-add-instr               ;; am-add
     arm-sub-instr               ;; am-sub
+    arm-mul-instr               ;; am-mul
+    arm-div-instr               ;; am-div
     arm-jmp-instr               ;; am-jmp
     arm-cmp-jump-instr          ;; am-compare-jump
     arm-cmp-move-instr))        ;; am-compare-move
@@ -300,6 +302,27 @@
   (if (reg-opnd? dest)
     (with-dest-reg dest)
     (get-free-register cgc (list dest opnd1 opnd2) with-dest-reg)))
+
+(define (arm-mul-instr cgc dest opnd1 opnd2)
+  (define (with-dest-reg dst)
+    (load-multiple-if-necessary cgc '((reg) (reg)) (list opnd1 opnd2)
+      (lambda (opnd1 opnd2)
+        (let ((use-reg (lambda (reg) (arm-mul cgc dst opnd1 opnd2))))
+          (if (equal? dst opnd1)
+              (get-free-register cgc (list dst opnd1 opnd2) use-reg)
+              (use-reg dst)))
+        (am-mov cgc dest dst))))
+
+  (if (or (or (arm-pc? dest) (arm-pc? opnd1) (arm-pc? opnd2))
+          (or (arm-sp? dest) (arm-sp? opnd1) (arm-sp? opnd2)))
+      (compiler-internal-error "arm-mul-instr -- Can't use PC or SP"))
+
+  (if (reg-opnd? dest)
+      (with-dest-reg dest)
+      (get-free-register cgc (list dest opnd1 opnd2) with-dest-reg)))
+
+(define (arm-div-instr cgc dest opnd1 opnd2)
+  (compiler-internal-error "TODO arm-div-instr + encoding"))
 
 (define (arm-jmp-instr cgc opnd)
   (if (lbl-opnd? opnd)

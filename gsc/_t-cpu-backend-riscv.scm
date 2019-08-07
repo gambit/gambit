@@ -89,6 +89,8 @@
     riscv-mov-instr             ;; am-mov
     riscv-add-instr             ;; am-add
     riscv-sub-instr             ;; am-sub
+    riscv-mul-instr             ;; am-mul
+    riscv-div-instr             ;; am-div
     riscv-jmp-instr             ;; am-jmp
     riscv-cmp-jump-instr        ;; am-compare-jump
     riscv-cmp-move-instr))      ;; am-compare-move
@@ -273,6 +275,12 @@
                      (if (int-opnd? opnd2)
                          (int-opnd-negative opnd2)
                          opnd2)))
+
+(define (riscv-mul-instr cgc dest opnd1 opnd2)
+  (compiler-internal-error "TODO riscv-mul-instr + encoding of M extension"))
+
+(define (riscv-div-instr cgc dest opnd1 opnd2)
+  (compiler-internal-error "TODO riscv-div-instr + encoding of M extension"))
 
 (define (riscv-jmp-instr cgc opnd)
   (if (lbl-opnd? opnd)

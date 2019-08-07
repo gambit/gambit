@@ -119,14 +119,16 @@
 
 (define (x86-instructions)
   (make-instruction-dictionnary
-    x86-label-align           ;; am-lbl
-    x86-data-instr            ;; am-data
-    x86-mov-instr             ;; am-mov
-    (x86-arith-instr x86-add) ;; am-add
-    (x86-arith-instr x86-sub) ;; am-sub
-    x86-jmp-instr             ;; am-jmp
-    x86-cmp-jump-instr        ;; am-compare-jump
-    x86-cmp-move-instr))      ;; am-compare-move
+    x86-label-align            ;; am-lbl
+    x86-data-instr             ;; am-data
+    x86-mov-instr              ;; am-mov
+    (x86-arith-instr x86-add)  ;; am-add
+    (x86-arith-instr x86-sub)  ;; am-sub
+    (x86-arith-instr x86-imul) ;; am-mul
+    (x86-arith-instr x86-idiv) ;; am-div
+    x86-jmp-instr              ;; am-jmp
+    x86-cmp-jump-instr         ;; am-compare-jump
+    x86-cmp-move-instr))       ;; am-compare-move
 
 (define (make-x86-opnd opnd)
   (cond
@@ -184,6 +186,7 @@
     (let ((x86-result-loc (make-x86-opnd result-loc))
           (x86-opnd1 (make-x86-opnd opnd1))
           (x86-opnd2 (make-x86-opnd opnd2)))
+      ; TODO Optimize mul/div using shifts if possible
       (if (equal? result-loc opnd1)
           (instr cgc x86-result-loc x86-opnd2)
           (begin
@@ -857,7 +860,7 @@
   (foldl-prim
     (lambda (cgc . args)
       (x86-sar cgc (make-x86-opnd (car args)) (x86-imm-int type-tag-bits))
-      (apply x86-imul (cons cgc (map make-x86-opnd args))))
+      (apply am-mul (cons cgc (cons (car args) args))))
     allowed-opnds: '(reg mem)
     allowed-opnds-accum: '(reg mem)
     start-value: 1
@@ -871,7 +874,7 @@
       (let ((x86-arg1 (make-x86-opnd arg1))
             (x86-arg2 (make-x86-opnd arg2)))
         (x86-sar cgc x86-arg1 (x86-imm-int type-tag-bits))
-        (x86-imul cgc x86-arg1 x86-arg2)
+        (am-mul cgc arg1 arg1 arg2)
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl) (x86-jo  cgc (lbl-opnd-label lbl)))
@@ -977,7 +980,7 @@
     (lambda (cgc result-action args arg1)
       (let ((x86-arg1 (make-x86-opnd arg1)))
         (x86-sar cgc x86-arg1 (x86-imm-int 1)) ; XXX
-        (x86-imul cgc x86-arg1 x86-arg1)
+        (am-mul cgc arg1 arg1 arg1)
         (am-return-opnd cgc result-action arg1)))))
 
 (define x86-prim-##fxsquare?
@@ -985,7 +988,7 @@
     (lambda (cgc result-action args arg1)
       (let ((x86-arg1 (make-x86-opnd arg1)))
         (x86-sar cgc x86-arg1 (x86-imm-int 1)) ; XXX
-        (x86-imul cgc x86-arg1 x86-arg1)
+        (am-mul cgc arg1 arg1 arg1)
         (am-cond-return cgc result-action
           (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl) (x86-jo  cgc (lbl-opnd-label lbl)))
