@@ -125,7 +125,9 @@
             ((x86-imm? opnd)
              (list "$"
                    (cond ((x86-imm-int? opnd)
-                          (x86-imm-int-value opnd))
+                          (if (>= (x86-imm-int-value opnd) 0)
+                              (list "0x" (number->string (x86-imm-int-value opnd) 16))
+                              (list "-0x" (number->string (- (x86-imm-int-value opnd)) 16))))
                          ((x86-imm-lbl? opnd)
                           (list (asm-label-name (x86-imm-lbl-label opnd))
                                 (x86-offset->string (x86-imm-lbl-offset opnd))))
@@ -163,7 +165,10 @@
                                                                  scale)
                                                                 ")"))))
                                           '(")"))))))
-                     (if (fx= offset 0) x (cons offset x)))
+                     (if (fx= offset 0)
+                         x
+                         (cons (if (fxpositive? offset) "0x" "-0x")
+                               (cons (number->string (fxabs offset) 16) x))))
                    offset)))
             (else
              opnd)))
