@@ -929,7 +929,8 @@
         (x86-and cgc x86-arg2 x86-arg1)
         (x86-not cgc x86-arg1)
         (x86-and cgc x86-arg1 x86-arg3)
-        (x86-or  cgc x86-arg1 x86-arg2)))))
+        (x86-or  cgc x86-arg1 x86-arg2)
+        (am-return-opnd cgc result-action arg1)))))
 
 (define x86-prim-##fxmin
   (foldl-prim
@@ -978,22 +979,32 @@
 (define x86-prim-##fxsquare
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
-      (let ((x86-arg1 (make-x86-opnd arg1)))
-        (x86-sar cgc x86-arg1 (x86-imm-int 1)) ; XXX
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (odd-tag? (fxodd? type-tag-bits)))
+        (x86-sar cgc x86-arg1 (x86-imm-int (if odd-tag? type-tag-bits (/ type-tag-bits 2))))
         (am-mul cgc arg1 arg1 arg1)
+        (if odd-tag?
+            (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits)))
         (am-return-opnd cgc result-action arg1)))))
 
 (define x86-prim-##fxsquare?
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
-      (let ((x86-arg1 (make-x86-opnd arg1)))
-        (x86-sar cgc x86-arg1 (x86-imm-int 1)) ; XXX
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (odd-tag? (fxodd? type-tag-bits)))
+        (x86-sar cgc x86-arg1 (x86-imm-int (if odd-tag? type-tag-bits (/ type-tag-bits 2))))
         (am-mul cgc arg1 arg1 arg1)
         (am-cond-return cgc result-action
-          (lambda (cgc lbl) (x86-jno cgc (lbl-opnd-label lbl)))
-          (lambda (cgc lbl) (x86-jo  cgc (lbl-opnd-label lbl)))
-          true-opnd: arg1
-          false-opnd: (int-opnd (imm-encode #f)))))))
+          (lambda (cgc lbl)
+            (x86-jo cgc (lbl-opnd-label lbl))
+            (if odd-tag?
+                (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits))))
+          (lambda (cgc lbl)
+            (x86-jo cgc (lbl-opnd-label lbl))
+            (if odd-tag?
+                (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits))))
+          true-opnd: (int-opnd (imm-encode #f))
+          false-opnd: arg1)))))
 
 (define x86-prim-##fxabs?
   (const-nargs-prim 1 1 '((reg mem))
@@ -1202,7 +1213,7 @@
     (table-set! table '##void           (make-prim-obj ##void-primitive        0 #t #t))
     (table-set! table '##eof-object     (make-prim-obj ##eof-object-primitive  0 #t #t))
     (table-set! table '##eof-object?    (make-prim-obj ##eof-object?-primitive 1 #t #t))
-    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive         2 #t #t))
+    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive         2 #t #t #t))
     (table-set! table '##null?          (make-prim-obj ##null?-primitive       1 #t #f))
     (table-set! table '##fxzero?        (make-prim-obj ##fxzero?-primitive     1 #t #t))
 

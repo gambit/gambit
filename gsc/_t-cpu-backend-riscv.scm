@@ -412,9 +412,9 @@
 (define (riscv-prim-##boolean-or? desc)
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 tmp1)
-      (let ((test-int (+ (- ((imm-encoder desc) #f) (type-tag 'special)) type-tag-mask)))
+      (let ((test-int (+ ((imm-encoder desc)) (- type-tag-mask (desc-type-tag desc)))))
         (riscv-andi cgc tmp1 arg1 (riscv-imm-int test-int))
-        (am-if-eq cgc tmp1 (int-opnd ((imm-encoder desc) #f))
+        (am-if-eq cgc tmp1 (int-opnd ((imm-encoder desc)))
           (lambda (cgc) (am-return-const cgc result-action #t))
           (lambda (cgc) (am-return-const cgc result-action #f))
           #f
@@ -665,7 +665,7 @@
     (table-set! table '##void           (make-prim-obj ##void-primitive        0 #t #t))
     (table-set! table '##eof-object     (make-prim-obj ##eof-object-primitive  0 #t #t))
     (table-set! table '##eof-object?    (make-prim-obj ##eof-object?-primitive 1 #t #t))
-    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive         2 #t #t))
+    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive         2 #t #t #t))
     (table-set! table '##null?          (make-prim-obj ##null?-primitive       1 #t #f))
     (table-set! table '##fxzero?        (make-prim-obj ##fxzero?-primitive     1 #t #t))
 
