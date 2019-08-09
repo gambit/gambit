@@ -657,14 +657,14 @@
 ;;------------------------------------------------------------------------------
 
 (define (am-default-poll cgc frame)
-  (let* ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
-         (temp1 (get-processor-state-field cgc 'temp1))
-         (return-lbl1 (make-unique-label cgc "call-poll-handler"))
-         (return-lbl2 (make-unique-label cgc "return-from-poll-handler"))
-         (return-lbl3 (make-unique-label cgc "resume-execution")))
+  (let ((stack-trip (car (get-processor-state-field cgc 'stack-trip)))
+        (temp1 (get-processor-state-field cgc 'temp1))
+        (return-lbl1 (make-unique-label cgc "call-poll-handler"))
+        (return-lbl2 (make-unique-label cgc "return-from-poll-handler"))
+        (return-lbl3 (make-unique-label cgc "resume-execution")))
 
     (am-compare-jump cgc
-      (mk-test (condition-lesser #t #t) (get-frame-pointer cgc) stack-trip)
+      (mk-test (condition-lesser #f #t) (get-frame-pointer cgc) stack-trip)
       return-lbl1 #f)
 
     (am-lbl cgc return-lbl3)
@@ -1590,6 +1590,9 @@
     (gvm-reg4                ,word-width)
     (program-counter         ,word-width)
     (nargs                   ,word-width)
+    (saved-obj0              ,word-width)
+    (saved-obj1              ,word-width)
+    (saved-obj2              ,word-width)
     (handler_sfun_conv_error ,word-width)
     (handler_cfun_conv_error ,word-width)
     (handler_stack_limit     ,word-width)
