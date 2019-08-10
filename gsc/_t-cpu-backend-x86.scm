@@ -165,7 +165,7 @@
 
   (cond
     ((x86-reg? opnd)
-      (let* ((index (index-of opnd regs))
+      (let* ((index (pos-in-list opnd regs))
              (row (quotient index 4))
              (new-col (- (integer-length (/ width 8)) 1))
              (new-index (+ new-col (* 4 row))))

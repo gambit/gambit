@@ -1131,7 +1131,7 @@
   (define width-bits (get-word-width-bits cgc))
 
   (define (get-ret-pos vars)
-    (index-of 'ret (map var-name vars)))
+    (pos-in-list 'ret (map var-name vars)))
 
   (define (build-gc-map slots live?)
     (let loop ((i 0) (2^i 1) (lst slots) (gc-map 0))

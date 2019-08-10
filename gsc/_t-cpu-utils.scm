@@ -19,12 +19,6 @@
 (define (in-range? min max val)
   (and (>= val min) (<= val max)))
 
-(define (index-of item lst #!optional (=? equal?))
-  (let loop ((i 0) (lst lst))
-    (cond ((null? lst) #f)
-          ((=? item (car lst)) i)
-          (else (loop (+ i 1) (cdr lst))))))
-
 (define (count item lst #!optional (=? equal?))
   (cond ((null? lst) 0)
         ((=? item (car lst))
