@@ -1386,30 +1386,24 @@
     (if (not (apply-ifjump-optimization? cgc code next-code))
       (prim-fun cgc then args))))
 
-(define OPTIMIZE_APPLY_IFJUMP #t)
-
 ;; Checks for the pattern:
 ;;    loc = (prim ...)         <- gvm-instr1
 ;;    if loc ...               <- gvm-instr2
 (define (apply-ifjump-optimization? cgc code1 code2)
-  (if (and OPTIMIZE_APPLY_IFJUMP code1 code2)
-    (let ((gvm-instr1 (code-gvm-instr code1))
-          (gvm-instr2 (code-gvm-instr code2)))
-      (and (eq? (gvm-instr-type gvm-instr1) 'apply)
-           (eq? (gvm-instr-type gvm-instr2) 'ifjump)
-           (let* ((prim-sym (proc-obj-name (apply-prim gvm-instr1)))
-                  (prim-obj (get-primitive-object cgc prim-sym)))
-            (and prim-obj
-                  (get-primitive-jump-inlinable? prim-obj)))
-          (let ((test (proc-obj-name (ifjump-test gvm-instr2))))
-            (or (equal? test "##identity")
-                (equal? test "##not")))
-          (let ((opnds (ifjump-opnds gvm-instr2)))
-            (and (pair? opnds)
-                 (null? (cdr opnds))
-                 (eqv? (apply-loc gvm-instr1)
-                       (car opnds))))))
-    #f))
+  (if (and code1 code2)
+      (let ((gvm-instr1 (code-gvm-instr code1))
+            (gvm-instr2 (code-gvm-instr code2)))
+        (and (eq? (gvm-instr-type gvm-instr1) 'apply)
+             (eq? (gvm-instr-type gvm-instr2) 'ifjump)
+             (let* ((prim-sym (proc-obj-name (apply-prim gvm-instr1)))
+                    (prim-obj (get-primitive-object cgc prim-sym)))
+               (and prim-obj (get-primitive-jump-inlinable? prim-obj)))
+             (let ((opnds (ifjump-opnds gvm-instr2)))
+               (and (pair? opnds)
+                    (null? (cdr opnds))
+                    (eqv? (apply-loc gvm-instr1)
+                          (car opnds))))))
+      #f))
 
 ;; ***** Copy instruction encoding
 

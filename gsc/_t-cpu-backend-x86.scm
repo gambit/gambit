@@ -794,14 +794,14 @@
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (header-offset (desc-type subtype-desc) width))) ; XXX
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (header-offset 'subtyped width))) ; XXX
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
             (x86-cmp cgc x86-tmp1 (x86-imm-int (ref-subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
           (lambda (cgc lbl)
             (x86-jne cgc (lbl-opnd-label lbl))
             (am-mov cgc tmp1 arg1)
-            (am-mov cgc tmp1 (opnd-with-offset tmp1 (header-offset (desc-type subtype-desc) width))) ; XXX
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 (header-offset 'subtyped width))) ; XXX
             (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
             (x86-cmp cgc x86-tmp1 (x86-imm-int (ref-subtype-tag subtype-desc)))
             (x86-jne cgc (lbl-opnd-label lbl)))
@@ -1199,7 +1199,7 @@
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args obj-reg)
       (let* ((width (get-word-width cgc))
-             (log2-width (- (fxlength width) 1))
+             (log2-width (fx- (fxlength width) 1))
              (header-offset (header-offset 'subtyped width))
              (shift-count (- (+ head-type-tag-bits subtype-tag-bits log2-width) type-tag-bits)))
         (am-mov cgc obj-reg (mem-opnd obj-reg header-offset))

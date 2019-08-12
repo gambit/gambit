@@ -1,13 +1,13 @@
-;;==============================================================================
+;;=============================================================================
 
-;;; File: "_t-cpu-abstract-machine.scm"
+;;; File: "_t-cpu-primitives.scm"
 
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
+;;; Copyright (c) 2019 by Abdelhakim Qbaich, All Rights Reserved.
 
-(include "generic.scm")
+(include "fixnum.scm")
 
-(include-adt "_asm#.scm")
-(include-adt "_codegen#.scm")
+;;-----------------------------------------------------------------------------
 
 ;; ***** Primitives
 

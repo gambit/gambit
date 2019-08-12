@@ -194,7 +194,7 @@
 
 ;;-----------------------------------------------------------------------------
 
-; FIXME Encoders (Should take into account length, tag, subtag, head tag, pointer?)
+; TODO Encoders
 
 (define pair-desc
   (ref-desc
@@ -401,16 +401,16 @@
         ((complex? object)            cpxnum-desc)
         ((structure-object? object)   structure-desc)
         ((box? object)                boxvalues-desc)
-        ; TODO meroon-desc
-        ; TODO jazz-desc
+        ((##meroon? object)           meroon-desc)
+        ((##jazz? object)             jazz-desc)
         ((symbol? object)             symbol-desc)
         ((keyword? object)            keyword-desc)
-        ; TODO frame-desc
+        ((##frame? object)            frame-desc)
         ((continuation? object)       continuation-desc)
         ((promise? object)            promise-desc)
         ; TODO weak-desc
         ((procedure? object)          procedure-desc)
-        ; TODO return-desc
+        ((##return? object)           return-desc)
         ((foreign? object)            foreign-desc)
         ((string? object)             string-desc)
         ((s8vector? object)           s8vector-desc)
@@ -441,7 +441,7 @@
         (compiler-internal-error
           "imm-encode, object not of immediate type" object))))
 
-(define (ref-encode object) ; FIXME
+(define (ref-encode object)
   (let ((desc (object->desc object)))
     (if (ref-desc? desc)
         ((ref-encoder desc) object)
