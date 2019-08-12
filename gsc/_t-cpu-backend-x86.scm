@@ -769,6 +769,57 @@
           #f
           (get-word-width-bits cgc))))))
 
+(define x86-prim-##type
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-arg1 (make-x86-opnd arg1)))
+        (x86-and cgc x86-arg1 (x86-imm-int type-tag-mask))
+        (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits))
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##type-cast
+  (const-nargs-prim 2 0 '((reg mem))
+    (lambda (cgc result-action args arg1 arg2)
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (x86-arg2 (make-x86-opnd arg2)))
+        (x86-and cgc x86-arg1 (x86-imm-int (fxnot type-tag-mask)))
+        (x86-sar cgc x86-arg2 (x86-imm-int type-tag-bits))
+        (am-add cgc arg1 arg1 arg2)
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##subtype
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (offset (header-offset 'subtyped (get-word-width cgc))))
+        (am-mov cgc arg1 (mem-opnd arg1 offset))
+        (x86-and cgc x86-arg1 (x86-imm-int subtype-tag-mask))
+        (x86-sar cgc x86-arg1 (x86-imm-int (fx- head-type-tag-bits type-tag-bits)))
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##subtype-set!
+  (const-nargs-prim 2 1 '((reg mem))
+    (lambda (cgc result-action args arg1 arg2 tmp1)
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (x86-arg2 (make-x86-opnd arg2))
+            (x86-tmp1 (make-x86-opnd tmp1))
+            (offset (header-offset 'subtyped (get-word-width cgc))))
+        (am-mov cgc tmp1 (mem-opnd arg1 offset)) ; header
+        (x86-and cgc x86-tmp1 (x86-imm-int (fxnot subtype-tag-mask)))
+        (x86-shl cgc x86-arg2 (x86-imm-int (fx- head-type-tag-bits type-tag-bits)))
+        (am-add cgc tmp1 tmp1 arg2)
+        (am-mov cgc (mem-opnd arg1 offset) tmp1)
+        (am-return-opnd cgc result-action arg1)))))
+
+(define (x86-prim-##type-ref index)
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let* ((x86-arg1 (make-x86-opnd arg1))
+             (width (get-word-width cgc))
+             (offset (+ (body-offset 'subtyped width)
+                        (fxarithmetic-shift index (fx- (fxlength width) 1)))))
+        (am-return-opnd cgc result-action (opnd-with-offset arg1 offset))))))
+
 (define x86-prim-##subtyped?
   (const-nargs-prim 1 1 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1)
@@ -807,6 +858,19 @@
             (x86-jne cgc (lbl-opnd-label lbl)))
           true-opnd:  (int-opnd (imm-encode #f))
           false-opnd: (int-opnd (imm-encode #t)))))))
+
+(define (x86-prim-##subtyped.subtype? subtype-desc) ; XXX
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-arg1 (make-x86-opnd arg1))
+            (offset (header-offset 'subtyped (get-word-width cgc))))
+        (am-mov cgc arg1 (mem-opnd arg1 offset))
+        (x86-and cgc x86-arg1 (x86-imm-int subtype-tag-mask))
+        (am-if-eq cgc arg1 (int-opnd (ref-subtype-tag subtype-desc))
+          (lambda (cgc) (am-return-const cgc result-action #t))
+          (lambda (cgc) (am-return-const cgc result-action #f))
+          #f
+          (get-word-width-bits cgc))))))
 
 (define x86-prim-##fx+
   (foldl-prim
@@ -1227,6 +1291,17 @@
     (table-set! table '##false-or-null? (make-prim-obj (x86-prim-##boolean-or? nul-desc)  1 #t #t))
     (table-set! table '##false-or-void? (make-prim-obj (x86-prim-##boolean-or? void-desc) 1 #t #t))
 
+    (table-set! table '##type           (make-prim-obj x86-prim-##type         1 #t #t))
+    (table-set! table '##type-cast      (make-prim-obj x86-prim-##type-cast    2 #t #t))
+    (table-set! table '##subtype        (make-prim-obj x86-prim-##subtype      1 #t #t))
+    (table-set! table '##subtype-set!   (make-prim-obj x86-prim-##subtype-set! 2 #t #t))
+
+    (table-set! table '##type-id        (make-prim-obj (x86-prim-##type-ref 1) 1 #t #t))
+    (table-set! table '##type-name      (make-prim-obj (x86-prim-##type-ref 2) 1 #t #t))
+    (table-set! table '##type-flags     (make-prim-obj (x86-prim-##type-ref 3) 1 #t #t))
+    (table-set! table '##type-super     (make-prim-obj (x86-prim-##type-ref 4) 1 #t #t))
+    (table-set! table '##type-fields    (make-prim-obj (x86-prim-##type-ref 5) 1 #t #t))
+
     (table-set! table '##subtyped?      (make-prim-obj x86-prim-##subtyped? 1 #t #t #t))
     (table-set! table '##vector?        (make-prim-obj (x86-prim-##subtype? vector-desc)       1 #t #t #t))
     (table-set! table '##ratnum?        (make-prim-obj (x86-prim-##subtype? ratnum-desc)       1 #t #t #t))
@@ -1255,6 +1330,11 @@
     (table-set! table '##f64vector?     (make-prim-obj (x86-prim-##subtype? f64vector-desc)    1 #t #t #t))
     (table-set! table '##flonum?        (make-prim-obj (x86-prim-##subtype? flonum-desc)       1 #t #t #t))
     (table-set! table '##bignum?        (make-prim-obj (x86-prim-##subtype? bignum-desc)       1 #t #t #t))
+
+    (table-set! table '##subtyped.bignum? (make-prim-obj (x86-prim-##subtyped.subtype? bignum-desc) 1 #t #t #t))
+    (table-set! table '##subtyped.flonum? (make-prim-obj (x86-prim-##subtyped.subtype? flonum-desc) 1 #t #t #t))
+    (table-set! table '##subtyped.symbol? (make-prim-obj (x86-prim-##subtyped.subtype? symbol-desc) 1 #t #t #t))
+    (table-set! table '##subtyped.vector? (make-prim-obj (x86-prim-##subtyped.subtype? vector-desc) 1 #t #t #t))
 
     (table-set! table '##fx+            (make-prim-obj x86-prim-##fx+  2 #t #f))
     (table-set! table '##fx+?           (make-prim-obj x86-prim-##fx+? 2 #t #t #t))
