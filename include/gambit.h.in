@@ -3230,8 +3230,6 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXASHRP(x,y)((y)>=___FIX(0)?___FIXASHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 #define ___FIXWRAPLSHR(x,y)((___WORD)(((___UWORD)(x)>>___INT(y))&~___TMASK))
 #define ___FIXWRAPLSHRP(x,y)((y)>=___FIX(0)?___FIXWRAPLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
-#define ___FIXLSHR(x,y)___FIXWRAPLSHR(x,y) /*TODO: remove*/
-#define ___FIXLSHRP(x,y)___FIXWRAPLSHRP(x,y) /*TODO: remove*/
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
 

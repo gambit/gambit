@@ -1183,6 +1183,55 @@
           true-opnd:  (int-opnd (imm-encode #t))
           false-opnd: (int-opnd (imm-encode #f)))))))
 
+(define (x86-prim-##fxshift dir)
+  (const-nargs-prim 2 0 '((reg) (int))
+    (lambda (cgc result-action args arg1 arg2)
+      (let* ((width (get-word-width-bits cgc))
+             (x86-arg1 (make-x86-opnd arg1))
+             (x86-shamt (x86-imm-int
+               (modulo (fxarithmetic-shift-right (int-opnd-value arg2) type-tag-bits) 256))))
+        (if (eq? dir 'left)
+            (x86-shl cgc x86-arg1 x86-shamt width)
+            (begin
+              (x86-sar cgc x86-arg1 x86-shamt width)
+              (x86-and cgc x86-arg1 (x86-imm-int (fxnot type-tag-mask)) width)))
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##fxshift-left? ; XXX
+  (const-nargs-prim 2 1 '((reg) (int) (reg mem))
+    (lambda (cgc result-action args arg1 arg2 tmp1)
+      (let* ((width (get-word-width-bits cgc))
+             (fxwidth (fx- width type-tag-bits))
+             (shamt (fxarithmetic-shift-right (int-opnd-value arg2) type-tag-bits)))
+        (if (or (fx< shamt 0) (fx> shamt fxwidth))
+            (am-return-const cgc result-action #f)
+            (let ((x86-arg1 (make-x86-opnd arg1))
+                  (x86-tmp1 (make-x86-opnd tmp1))
+                  (x86-shamt (x86-imm-int shamt)))
+              (am-mov cgc tmp1 arg1)
+              (x86-shl cgc x86-arg1 x86-shamt width)
+              (x86-sar cgc x86-arg1 x86-shamt width)
+              (am-if-eq cgc arg1 tmp1
+                (lambda (cgc)
+                  (x86-shl cgc x86-arg1 x86-shamt width)
+                  (am-return-opnd cgc result-action arg1))
+                (lambda (cgc) (am-return-const cgc result-action #f))
+                #f width)))))))
+
+(define x86-prim-##fxshift-right?
+  (const-nargs-prim 2 0 '((reg) (int))
+    (lambda (cgc result-action args arg1 arg2)
+      (let* ((width (get-word-width-bits cgc))
+             (fxwidth (fx- width type-tag-bits))
+             (shamt (fxarithmetic-shift-right (int-opnd-value arg2) type-tag-bits)))
+        (if (fx< shamt 0)
+            (am-return-const cgc result-action #f)
+            (let ((x86-arg1 (make-x86-opnd arg1))
+                  (x86-shamt (x86-imm-int (fxmin shamt fxwidth))))
+              (x86-sar cgc x86-arg1 x86-shamt width)
+              (x86-and cgc x86-arg1 (x86-imm-int (fxnot type-tag-mask)) width)
+              (am-return-opnd cgc result-action arg1)))))))
+
 (define x86-prim-##cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
@@ -1375,6 +1424,11 @@
     (table-set! table '##fxodd?         (make-prim-obj (x86-prim-##fxparity? 'odd)     1 #t #t #t))
     (table-set! table '##fxnegative?    (make-prim-obj (x86-prim-##fxsign? 'negative)  1 #t #t #t))
     (table-set! table '##fxpositive?    (make-prim-obj (x86-prim-##fxsign? 'positive)  1 #t #t #t))
+
+    (table-set! table '##fxarithmetic-shift-left   (make-prim-obj (x86-prim-##fxshift 'left)  2 #t #t))
+    (table-set! table '##fxarithmetic-shift-right  (make-prim-obj (x86-prim-##fxshift 'right) 2 #t #t))
+    (table-set! table '##fxarithmetic-shift-left?  (make-prim-obj x86-prim-##fxshift-left?    2 #t #t #t))
+    (table-set! table '##fxarithmetic-shift-right? (make-prim-obj x86-prim-##fxshift-right?   2 #t #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-desc '(d)) 1 #t #f))
