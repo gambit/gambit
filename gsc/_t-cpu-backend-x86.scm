@@ -1308,16 +1308,17 @@
           (* 8 width))
         (am-return-opnd cgc result-action obj-reg)))))
 
-(define x86-prim-##vector-length ; FIXME
+(define (x86-prim-##vector-length size)
   (const-nargs-prim 1 0 '((reg))
-    (lambda (cgc result-action args obj-reg)
+    (lambda (cgc result-action args arg1)
       (let* ((width (get-word-width cgc))
              (log2-width (fx- (fxlength width) 1))
-             (header-offset (header-offset 'subtyped width))
-             (shift-count (- (+ head-type-tag-bits subtype-tag-bits log2-width) type-tag-bits)))
-        (am-mov cgc obj-reg (mem-opnd obj-reg header-offset))
-        (x86-shr cgc obj-reg (x86-imm-int shift-count))
-        (am-return-opnd cgc result-action obj-reg)))))
+             (offset (header-offset 'subtyped width))
+             (shamt (+ head-type-tag-bits subtype-tag-bits (or size log2-width))))
+        (am-mov cgc arg1 (mem-opnd arg1 offset))
+        (x86-shr cgc arg1 (x86-imm-int shamt))
+        (x86-shl cgc arg1 (x86-imm-int type-tag-bits))
+        (am-return-opnd cgc result-action arg1)))))
 
 (define x86-primitive-table
   (let ((table (make-table test: equal?)))
@@ -1471,6 +1472,17 @@
 
     (table-set! table '##vector-ref     (make-prim-obj (x86-object-dyn-read-prim vector-desc) 2 #t #t))
     (table-set! table '##vector-set!    (make-prim-obj (x86-object-dyn-set-prim vector-desc) 3 #t #f))
-    (table-set! table '##vector-length  (make-prim-obj x86-prim-##vector-length 1 #t #t))
+
+    (table-set! table '##vector-length    (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
+    (table-set! table '##u8vector-length  (make-prim-obj (x86-prim-##vector-length 0)  1 #t #t))
+    (table-set! table '##s8vector-length  (make-prim-obj (x86-prim-##vector-length 0)  1 #t #t))
+    (table-set! table '##u16vector-length (make-prim-obj (x86-prim-##vector-length 1)  1 #t #t))
+    (table-set! table '##s16vector-length (make-prim-obj (x86-prim-##vector-length 1)  1 #t #t))
+    (table-set! table '##u32vector-length (make-prim-obj (x86-prim-##vector-length 2)  1 #t #t))
+    (table-set! table '##s32vector-length (make-prim-obj (x86-prim-##vector-length 2)  1 #t #t))
+    (table-set! table '##f32vector-length (make-prim-obj (x86-prim-##vector-length 2)  1 #t #t))
+    (table-set! table '##u64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
+    (table-set! table '##s64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
+    (table-set! table '##f64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
 
     table))
