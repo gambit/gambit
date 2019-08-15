@@ -187,6 +187,7 @@
           (x86-opnd1 (make-x86-opnd opnd1))
           (x86-opnd2 (make-x86-opnd opnd2)))
       ; TODO Optimize mul/div using shifts if possible
+      ; TODO 0 - something should use NEG
       (if (equal? result-loc opnd1)
           (instr cgc x86-result-loc x86-opnd2)
           (begin
@@ -872,10 +873,10 @@
           #f
           (get-word-width-bits cgc))))))
 
-(define x86-prim-##fx+
+(define (x86-prim-##fx+ wrap?)
   (foldl-prim
     (make-function-x86-opnds x86-add)
-    allowed-opnds: '(reg mem int)
+    allowed-opnds: (if wrap? '(reg mem) '(reg mem int))
     allowed-opnds-accum: '(reg mem)
     start-value: 0
     start-value-null?: #t
@@ -895,13 +896,14 @@
           true-opnd: result-reg
           false-opnd: (int-opnd (imm-encode #f)))))))
 
-(define x86-prim-##fx-
+(define (x86-prim-##fx- wrap?)
   (foldl-prim
     (make-function-x86-opnds x86-sub)
-    allowed-opnds: '(reg mem int)
+    allowed-opnds: (if wrap? '(reg mem) '(reg mem int))
     allowed-opnds-accum: '(reg mem)
-    ; start-value: 0 ;; Start the fold on the first operand
-    reduce-1: (lambda (cgc dst opnd) (am-sub cgc dst (int-opnd 0) opnd))
+    reduce-1: (lambda (cgc dst opnd)
+                (am-mov cgc dst opnd)
+                (x86-neg cgc (make-x86-opnd dst)))
     commutative: #f))
 
 (define x86-prim-##fx-?
@@ -920,12 +922,12 @@
             true-opnd: result-reg
             false-opnd: (int-opnd (imm-encode #f))))))))
 
-(define x86-prim-##fx*
+(define (x86-prim-##fx* wrap?)
   (foldl-prim
     (lambda (cgc . args)
-      (x86-sar cgc (make-x86-opnd (car args)) (x86-imm-int type-tag-bits))
+      ((if wrap? x86-shr x86-sar) cgc (make-x86-opnd (car args)) (x86-imm-int type-tag-bits))
       (apply am-mul (cons cgc (cons (car args) args))))
-    allowed-opnds: '(reg mem)
+    allowed-opnds: (if wrap? '(reg mem) '(reg mem imm))
     allowed-opnds-accum: '(reg mem)
     start-value: 1
     start-value-null?: #t
@@ -1386,12 +1388,17 @@
     (table-set! table '##subtyped.symbol? (make-prim-obj (x86-prim-##subtyped.subtype? symbol-desc) 1 #t #t #t))
     (table-set! table '##subtyped.vector? (make-prim-obj (x86-prim-##subtyped.subtype? vector-desc) 1 #t #t #t))
 
-    (table-set! table '##fx+            (make-prim-obj x86-prim-##fx+  2 #t #f))
+    (table-set! table '##fx+            (make-prim-obj (x86-prim-##fx+ #f) 2 #t #f))
+    (table-set! table '##fx-            (make-prim-obj (x86-prim-##fx- #f) 2 #t #f))
+    (table-set! table '##fx*            (make-prim-obj (x86-prim-##fx* #f) 2 #t #f))
+
     (table-set! table '##fx+?           (make-prim-obj x86-prim-##fx+? 2 #t #t #t))
-    (table-set! table '##fx-            (make-prim-obj x86-prim-##fx-  2 #t #f))
     (table-set! table '##fx-?           (make-prim-obj x86-prim-##fx-? 2 #t #t #t))
-    (table-set! table '##fx*            (make-prim-obj x86-prim-##fx*  2 #t #f))
     (table-set! table '##fx*?           (make-prim-obj x86-prim-##fx*? 2 #t #t #t))
+
+    (table-set! table '##fxwrap+        (make-prim-obj (x86-prim-##fx+ #t) 2 #t #f))
+    (table-set! table '##fxwrap-        (make-prim-obj (x86-prim-##fx- #t) 2 #t #f))
+    (table-set! table '##fxwrap*        (make-prim-obj (x86-prim-##fx* #t) 2 #t #f))
 
     (table-set! table '##fx<            (make-prim-obj x86-prim-##<  2 #t #t #t))
     (table-set! table '##fx<=           (make-prim-obj x86-prim-##<= 2 #t #t #t))
@@ -1414,6 +1421,7 @@
 
     (table-set! table '##fxabs          (make-prim-obj x86-prim-##fxabs     1 #t #t))
     (table-set! table '##fxabs?         (make-prim-obj x86-prim-##fxabs?    1 #t #t #t))
+    (table-set! table '##fxwrapabs      (make-prim-obj x86-prim-##fxabs     1 #t #t)) ; XXX
     (table-set! table '##fxsquare       (make-prim-obj x86-prim-##fxsquare  1 #t #t))
     (table-set! table '##fxsquare?      (make-prim-obj x86-prim-##fxsquare? 1 #t #t #t))
 
