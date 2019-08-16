@@ -1162,6 +1162,14 @@
 (define x86-prim-##>= (x86-compare-prim (condition-lesser #f #t)))
 (define x86-prim-##=  (x86-compare-prim condition-not-equal))
 
+(define (x86-prim-##integer-char to?)
+  (const-nargs-prim 1 0 '((reg mem))
+    (lambda (cgc result-action args arg1)
+      (let ((x86-arg1 (make-x86-opnd arg1)))
+        (x86-and cgc x86-arg1 (x86-imm-int (fxnot type-tag-mask)))
+        (if to? (am-add cgc arg1 arg1 (int-opnd (type-tag 'special))))
+        (am-return-opnd cgc result-action arg1)))))
+
 (define (x86-prim-##fxparity? parity)
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args arg1)
@@ -1405,11 +1413,15 @@
     (table-set! table '##fx>            (make-prim-obj x86-prim-##>  2 #t #t #t))
     (table-set! table '##fx>=           (make-prim-obj x86-prim-##>= 2 #t #t #t))
     (table-set! table '##fx=            (make-prim-obj x86-prim-##=  2 #t #t #t))
+
     (table-set! table '##char<?         (make-prim-obj x86-prim-##<  2 #t #t #t))
     (table-set! table '##char<=?        (make-prim-obj x86-prim-##<= 2 #t #t #t))
     (table-set! table '##char>?         (make-prim-obj x86-prim-##>  2 #t #t #t))
     (table-set! table '##char>=?        (make-prim-obj x86-prim-##>= 2 #t #t #t))
     (table-set! table '##char=?         (make-prim-obj x86-prim-##=  2 #t #t #t))
+
+    (table-set! table '##char->integer (make-prim-obj (x86-prim-##integer-char #f) 1 #t #t))
+    (table-set! table '##integer->char (make-prim-obj (x86-prim-##integer-char #t) 1 #t #t))
 
     (table-set! table '##fxnot          (make-prim-obj x86-prim-##fxnot 1 #t #t))
     (table-set! table '##fxand          (make-prim-obj x86-prim-##fxand 2 #t #t))
