@@ -2154,14 +2154,14 @@
             settings
             (macro-debug-settings-repl-mask))
            (macro-debug-settings-repl-shift))))
-    (cond ((##fx= x (macro-debug-settings-repl-stdio))
-           (##make-repl-channel-ports ##stdin-port
-                                      ##stdout-port
-                                      ##stderr-port))
-          (else
+    (cond ((##fx= x (macro-debug-settings-repl-console))
            (##make-repl-channel-ports ##console-port
                                       ##console-port
-                                      ##console-port)))))
+                                      ##console-port))
+          (else
+           (##make-repl-channel-ports ##stdin-port
+                                      ##stdout-port
+                                      ##stderr-port)))))
 
 (define-prim (##repl-input-port)
   (let* ((ct (macro-current-thread))
