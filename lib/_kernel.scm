@@ -4859,9 +4859,15 @@ end-of-code
 
    err-code))
 
+(define ##cleaning-up? #f)
+
 (define-prim (##exit-cleanup)
-  (##execute-and-clear-jobs! ##exit-jobs)
-  (##execute-final-wills!))
+  (let ((is-in-cleanup? ##cleaning-up?))
+    (set! ##cleaning-up? #t) ;; only do cleanup once
+    (if (##not is-in-cleanup?)
+        (begin
+          (##execute-and-clear-jobs! ##exit-jobs)
+          (##execute-final-wills!)))))
 
 (define-prim (##exit-with-err-code err-code)
   (##exit-cleanup)
@@ -4874,7 +4880,7 @@ end-of-code
   (##exit-with-err-code-no-cleanup (##fx+ status 1)))
 
 (define-prim (##exit-with-exception exc)
-  (##exit-abruptly))
+  (##exit (macro-EXIT-CODE-SOFTWARE)))
 
 (##interrupt-vector-set! 1 ;; ___INTR_TERMINATE
   (lambda ()
