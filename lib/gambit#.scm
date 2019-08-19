@@ -635,6 +635,7 @@ readtable?
 real-time
 rename-file
 repl-display-environment?
+repl-error-port
 repl-input-port
 repl-output-port
 repl-result-history-max-length-set!

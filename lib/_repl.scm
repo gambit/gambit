@@ -1812,33 +1812,33 @@
                  (lambda () (wrapper execute)))))
 
            (output-to-repl
-            (lambda (first output-port)
+            (lambda (first port)
               (let ((width
-                     (##fx+ (indent depth output-port) 1)))
-                (##write-string " " output-port)
+                     (##fx+ (indent depth port) 1)))
+                (##write-string " " port)
                 (##write-string
                  (##object->string
                   result
-                  (##fx- (##output-port-width output-port) width)
-                  output-port)
-                 output-port)
-                (##newline output-port)
+                  (##fx- (##output-port-width port) width)
+                  port)
+                 port)
+                (##newline port)
                 #t)))
 
            result))
 
        (output-to-repl
-        (lambda (first output-port)
+        (lambda (first port)
           (let ((width
-                 (##fx+ (indent depth output-port) 3)))
-            (##write-string " > " output-port)
+                 (##fx+ (indent depth port) 3)))
+            (##write-string " > " port)
             (##write-string
              (##object->string
               form
-              (##fx- (##output-port-width output-port) width)
-              output-port)
-             output-port)
-            (##newline output-port)
+              (##fx- (##output-port-width port) width)
+              port)
+             port)
+            (##newline port)
             #t)))
 
        (if leap?
@@ -2028,13 +2028,13 @@
 
 (define-prim (##step-handler-get-command $code rte)
   (##repl
-   (lambda (first output-port)
+   (lambda (first port)
      (##display-situation
       "STOPPED"
       (##extract-container $code rte)
       (##code-locat $code)
-      output-port)
-     (##newline output-port)
+      port)
+     (##newline port)
      #f)))
 
 (define-prim (##step-handler-continue cmd leapable? $code rte execute-body other)
@@ -2067,14 +2067,14 @@
                     (if id ;; procedure is bound to a global variable
                         (begin
                           (##repl
-                           (lambda (first output-port)
+                           (lambda (first port)
                              (##write-string
                               "*** WARNING -- Rebinding global variable \""
-                              output-port)
-                             (##write id output-port)
+                              port)
+                             (##write id port)
                              (##write-string
                               "\" to an interpreted procedure\n"
-                              output-port)
+                              port)
                              #t))
                           (let ((new-proc
                                  (##make-interp-procedure proc)))
@@ -2155,9 +2155,13 @@
             (macro-debug-settings-repl-mask))
            (macro-debug-settings-repl-shift))))
     (cond ((##fx= x (macro-debug-settings-repl-stdio))
-           (##make-repl-channel-ports ##stdin-port ##stdout-port))
+           (##make-repl-channel-ports ##stdin-port
+                                      ##stdout-port
+                                      ##stderr-port))
           (else
-           (##make-repl-channel-ports ##console-port ##console-port)))))
+           (##make-repl-channel-ports ##console-port
+                                      ##console-port
+                                      ##console-port)))))
 
 (define-prim (##repl-input-port)
   (let* ((ct (macro-current-thread))
@@ -2174,6 +2178,14 @@
 
 (define-prim (repl-output-port)
   (##repl-output-port))
+
+(define-prim (##repl-error-port)
+  (let* ((ct (macro-current-thread))
+         (channel (##thread-repl-channel-get! ct)))
+    (macro-repl-channel-error-port channel)))
+
+(define-prim (repl-error-port)
+  (##repl-error-port))
 
 (define-prim (##repl-channel-acquire-ownership!)
   (let* ((ct (macro-current-thread))
@@ -2210,13 +2222,25 @@
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
     ((macro-repl-channel-write-results channel) channel results)))
 
-(define-prim (##repl-channel-display-monoline-message writer)
+(define-prim (##repl-channel-display-monoline-message
+              writer
+              #!optional
+              (err? #f))
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
-    ((macro-repl-channel-display-monoline-message channel) channel writer)))
+    ((macro-repl-channel-display-monoline-message channel)
+     channel
+     writer
+     err?)))
 
-(define-prim (##repl-channel-display-multiline-message writer)
+(define-prim (##repl-channel-display-multiline-message
+              writer
+              #!optional
+              (err? #f))
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
-    ((macro-repl-channel-display-multiline-message channel) channel writer)))
+    ((macro-repl-channel-display-multiline-message channel)
+     channel
+     writer
+     err?)))
 
 (define-prim (##repl-channel-display-continuation cont depth)
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
@@ -2318,13 +2342,14 @@
 
 (implement-type-repl-channel-ports)
 
-(define-prim (##make-repl-channel-ports input-port output-port)
+(define-prim (##make-repl-channel-ports input-port output-port error-port)
   (macro-make-repl-channel-ports
 
    (##make-mutex 'channel-arbiter)
    (macro-current-thread)
    input-port
    output-port
+   error-port
    (##make-empty-repl-result-history)
 
    ##repl-channel-ports-read-command
@@ -2413,20 +2438,34 @@
              (##pretty-print obj output-port ##max-fixnum #f))))
      results)))
 
-(define-prim (##repl-channel-ports-display-monoline-message channel writer)
-  (let ((output-port (macro-repl-channel-output-port channel)))
-    (writer output-port)
-    (##newline output-port)))
+(define-prim (##repl-channel-ports-display-monoline-message
+              channel
+              writer
+              #!optional
+              (err? #f))
+  (let ((port
+         (if err?
+             (macro-repl-channel-error-port channel)
+             (macro-repl-channel-output-port channel))))
+    (writer port)
+    (##newline port)))
 
-(define-prim (##repl-channel-ports-display-multiline-message channel writer)
-  (let ((output-port (macro-repl-channel-output-port channel)))
-    (writer output-port)))
+(define-prim (##repl-channel-ports-display-multiline-message
+              channel
+              writer
+              #!optional
+              (err? #f))
+  (let ((port
+         (if err?
+             (macro-repl-channel-error-port channel)
+             (macro-repl-channel-output-port channel))))
+    (writer port)))
 
 (define-prim (##repl-channel-ports-display-continuation channel cont depth)
   (if (##repl-display-environment?)
       (##repl-channel-display-multiline-message
-       (lambda (output-port)
-         (##cmd-e cont output-port #t)))))
+       (lambda (port)
+         (##cmd-e cont port #t)))))
 
 (define-prim (##repl-channel-ports-pinpoint-continuation channel cont)
   #f)
@@ -2463,12 +2502,17 @@
 (define-prim (##make-initial-repl-context)
   (macro-make-repl-context -1 0 #f #f #f #f #f))
 
-(define-prim (##repl #!optional (write-reason #f) (reason #f) (toplevel? #f))
+(define-prim (##repl
+              #!optional
+              (write-reason #f)
+              (reason #f)
+              (toplevel? #f)
+              (err? #f))
 
   (define (repl)
     (##continuation-capture
      (lambda (cont)
-       (##repl-within cont write-reason reason))))
+       (##repl-within cont write-reason reason err?))))
 
   (if toplevel?
       (##with-no-result-expected-toplevel (lambda () (repl)))
@@ -2477,7 +2521,11 @@
 (define-prim (##repl-set! x)
   (set! ##repl x))
 
-(define-prim (##repl-debug #!optional (write-reason #f) (toplevel? #f))
+(define-prim (##repl-debug
+              #!optional
+              (write-reason #f)
+              (toplevel? #f)
+              (err? #f))
   (let* ((old-setting
           (##set-debug-settings!
            (##fx+ (macro-debug-settings-error-mask)
@@ -2485,7 +2533,7 @@
            (##fx+ (macro-debug-settings-error-repl)
                   (macro-debug-settings-user-intr-repl))))
          (results
-          (##repl write-reason #f toplevel?)))
+          (##repl write-reason #f toplevel? err?)))
     (##set-debug-settings!
      (macro-debug-settings-error-mask)
      old-setting)
@@ -2498,7 +2546,7 @@
   (##current-error-port (##repl-output-port))
 
   (##repl-debug
-   (lambda (first output-port)
+   (lambda (first port)
 
      (##define-macro (attrs kind)
 
@@ -2528,17 +2576,17 @@
          (else
           (make-text-attr style-normal default-color default-color))))
 
-     (if (##tty? output-port)
-         (##tty-text-attributes-set! output-port (attrs input) (attrs banner)))
+     (if (##tty? port)
+         (##tty-text-attributes-set! port (attrs input) (attrs banner)))
 
-     (##write-string "Gambit " output-port)
-     (##write-string (##system-version-string) output-port)
+     (##write-string "Gambit " port)
+     (##write-string (##system-version-string) port)
 
-     (if (##tty? output-port)
-         (##tty-text-attributes-set! output-port (attrs input) (attrs output)))
+     (if (##tty? port)
+         (##tty-text-attributes-set! port (attrs input) (attrs output)))
 
-     (##newline output-port)
-     (##newline output-port)
+     (##newline port)
+     (##newline port)
      #f)
    #t)
 
@@ -2549,7 +2597,7 @@
    (macro-repl-context-cont repl-context)
    (macro-repl-context-depth repl-context)))
 
-(define-prim (##repl-within cont write-reason reason)
+(define-prim (##repl-within cont write-reason reason err?)
   (let* ((prev-repl-context
           (##thread-repl-context-get!))
          (repl-context
@@ -2569,11 +2617,12 @@
               repl-context
               (lambda ()
                 (##repl-channel-display-multiline-message
-                 (lambda (output-port)
+                 (lambda (port)
                    (let ((first (##repl-first-interesting cont)))
                      (##declare (not safe)) ;; avoid procedure check on the call
                      ;; write-reason returns #f if REPL is to be started
-                     (write-reason first output-port)))))))
+                     (write-reason first port)))
+                 err?))))
 
         (##repl-channel-release-ownership!)
 
@@ -2591,9 +2640,9 @@
        (if (and (##not (##repl-channel-pinpoint-continuation cont))
                 show-frame?)
            (##repl-channel-display-multiline-message
-            (lambda (output-port)
+            (lambda (port)
               (##cmd-y cont
-                       output-port
+                       port
                        #t
                        (macro-repl-context-depth repl-context)))))
        (##repl-context-display-continuation repl-context)))))
@@ -2867,9 +2916,9 @@
 
 (define-prim (##repl-cmd-st repl-context)
   (##repl-channel-display-multiline-message
-   (lambda (output-port)
+   (lambda (port)
      (##cmd-st (macro-thread-tgroup (macro-current-thread))
-               output-port)))
+               port)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-b repl-context)
@@ -2883,28 +2932,28 @@
 
 (define-prim (##repl-cmd-b-be-bed display-env? repl-context)
   (##repl-channel-display-multiline-message
-   (lambda (output-port)
+   (lambda (port)
      (##cmd-b (##repl-first-interesting
                (macro-repl-context-cont repl-context))
-              output-port
+              port
               (macro-repl-context-depth repl-context)
               display-env?)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-i repl-context)
   (##repl-channel-display-multiline-message
-   (lambda (output-port)
+   (lambda (port)
      (##cmd-i (##repl-first-interesting
                (macro-repl-context-cont repl-context))
-              output-port)))
+              port)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-y repl-context)
   (##repl-channel-display-multiline-message
-   (lambda (output-port)
+   (lambda (port)
      (##cmd-y (##repl-first-interesting
                (macro-repl-context-cont repl-context))
-              output-port
+              port
               #t
               (macro-repl-context-depth repl-context))))
   (##repl-context-prompt repl-context))
@@ -2917,9 +2966,9 @@
 
 (define-prim (##repl-cmd-e-ed display-env? repl-context)
   (##repl-channel-display-multiline-message
-   (lambda (output-port)
+   (lambda (port)
      (##cmd-e (macro-repl-context-cont repl-context)
-              output-port
+              port
               display-env?)))
   (##repl-context-prompt repl-context))
 
@@ -3032,7 +3081,7 @@
                  (let ((cont
                         (##repl-first-interesting
                          proc-or-cont)))
-                   (##repl-within cont #f #f))
+                   (##repl-within cont #f #f #f))
                  (let ((proc
                         proc-or-cont))
                    (##repl-within-proc
@@ -3041,11 +3090,11 @@
                      repl-context))))
              (begin
                (##repl-channel-display-multiline-message
-                (lambda (output-port)
+                (lambda (port)
                   (if (or (##eq? cmd 'e)
                           (##eq? cmd 'ed))
                       (##cmd-e proc-or-cont
-                               output-port
+                               port
                                (if (##eq? cmd 'ed)
                                    'dynamic
                                    #t))
@@ -3053,7 +3102,7 @@
                              (##repl-first-interesting
                               proc-or-cont)))
                         (##cmd-b cont
-                                 output-port
+                                 port
                                  depth
                                  (if (##eq? cmd 'bed)
                                      'dynamic
@@ -3116,9 +3165,9 @@
        (define (handle thread-or-tgroup)
          (##repl-channel-acquire-ownership!)
          (##repl-channel-display-multiline-message
-          (lambda (output-port)
+          (lambda (port)
             (##cmd-st thread-or-tgroup
-                      output-port)))
+                      port)))
          (##repl-context-prompt repl-context))
 
        (cond ((macro-tgroup? val)
@@ -3161,7 +3210,7 @@
                  (##continuation-graft
                   cont2
                   (lambda ()
-                    (##repl-within cont3 #f #f))))))
+                    (##repl-within cont3 #f #f #f))))))
 
             (##continuation-graft
              cont
@@ -3211,18 +3260,20 @@
                     (macro-debug-settings-uncaught settings)))
         (other-handler exc)
         (##repl
-         (lambda (first output-port)
+         (lambda (first port)
            (let ((quit? (##fx= (macro-debug-settings-error settings)
                                (macro-debug-settings-error-quit))))
              (if (and quit?
                       (##fx= (macro-debug-settings-level settings) 0))
                  (##exit-with-exception exc)
                  (begin
-                   (##display-exception-in-context exc first output-port)
+                   (##display-exception-in-context exc first port)
                    (if quit?
                        (##exit-with-exception exc)
                        #f)))))
-         exc))))
+         exc
+         #f
+         #t))))
 
 (define-prim (##default-user-interrupt-handler)
   (let* ((settings (##set-debug-settings! 0 0))
@@ -3242,13 +3293,13 @@
   (##with-no-result-expected
    (lambda ()
      (##repl
-      (lambda (first output-port)
+      (lambda (first port)
         (##display-situation
          "INTERRUPTED"
          (##continuation-creator first)
          (##continuation-locat first)
-         output-port)
-        (##newline output-port)
+         port)
+        (##newline port)
         (if quit?
             (##exit-abruptly)
             #f))))))
@@ -4421,6 +4472,7 @@
              (let ((repl-channel
                     (##make-repl-channel-ports
                      (##current-input-port)
+                     (##current-output-port)
                      (##current-output-port))))
                (macro-thread-repl-channel-set!
                 (macro-current-thread)
