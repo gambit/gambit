@@ -1099,7 +1099,25 @@
         (x86-xor cgc x86-arg1 x86-tmp1)
         (x86-and cgc x86-arg1 (x86-imm-int (imm-encode -1))) ; XXX x86 sar at beginning instead?
         (x86-popcnt cgc x86-arg1 x86-arg1)
-        (x86-shl cgc x86-arg1 (x86-imm-int 2))))))
+        (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits))))))
+
+(define x86-prim-##fxfirst-bit-set
+  (const-nargs-prim 1 1 '((reg))
+    (lambda (cgc result-action args arg1 tmp1)
+      (let ((width (get-word-width-bits cgc))
+            (x86-arg1 (make-x86-opnd arg1))
+            (x86-tmp1 (make-x86-opnd tmp1)))
+        (am-if-eq cgc arg1 (int-opnd (imm-encode 0))
+          (lambda (cgc)
+            (am-return-const cgc result-action -1))
+          (lambda (cgc)
+            (x86-sar cgc x86-arg1 (x86-imm-int type-tag-bits))
+            (am-mov cgc tmp1 arg1)
+            (x86-neg cgc x86-tmp1)
+            (x86-and cgc x86-arg1 x86-tmp1)
+            (x86-lzcnt cgc x86-arg1 x86-arg1)
+            (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits)))
+          #f width)))))
 
 (define (x86-prim-##fxlength) ; XXX
   (define (rounding cgc arg tmp shamt) ; XXX
@@ -1437,9 +1455,10 @@
     (table-set! table '##fxsquare       (make-prim-obj x86-prim-##fxsquare  1 #t #t))
     (table-set! table '##fxsquare?      (make-prim-obj x86-prim-##fxsquare? 1 #t #t #t))
 
-    (table-set! table '##fxbit-count    (make-prim-obj x86-prim-##fxbit-count 1 #t #t))
-    (table-set! table '##fxlength       (make-prim-obj (x86-prim-##fxlength)  1 #t #t))
-    (table-set! table '##fxbit-set?     (make-prim-obj x86-prim-##fxbit-set?  2 #t #t #t))
+    (table-set! table '##fxbit-count     (make-prim-obj x86-prim-##fxbit-count     1 #t #t))
+    (table-set! table '##fxfirst-bit-set (make-prim-obj x86-prim-##fxfirst-bit-set 1 #t #t))
+    (table-set! table '##fxlength        (make-prim-obj (x86-prim-##fxlength)      1 #t #t))
+    (table-set! table '##fxbit-set?      (make-prim-obj x86-prim-##fxbit-set?      2 #t #t #t))
 
     (table-set! table '##fxeven?        (make-prim-obj (x86-prim-##fxparity? 'even)    1 #t #t #t))
     (table-set! table '##fxodd?         (make-prim-obj (x86-prim-##fxparity? 'odd)     1 #t #t #t))
