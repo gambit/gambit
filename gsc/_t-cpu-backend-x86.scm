@@ -873,6 +873,34 @@
           #f
           (get-word-width-bits cgc))))))
 
+(define (x86-prim-##cpx-part imag?)
+  (const-nargs-prim 1 1 '((reg mem))
+    (lambda (cgc result-action args arg1 tmp1)
+      (let* ((width (get-word-width cgc))
+             (body-offset (+ (body-offset 'subtyped width) (if imag? width 0)))
+             (header-offset (header-offset 'subtyped width))
+             (x86-tmp1 (make-x86-opnd tmp1)))
+        (am-mov cgc tmp1 arg1)
+        (x86-and cgc x86-tmp1 (x86-imm-int type-tag-mask))
+        (x86-cmp cgc x86-tmp1 (x86-imm-int (type-tag 'subtyped)))
+        (am-cond-return cgc result-action
+          (lambda (cgc lbl)
+            (x86-jne cgc (lbl-opnd-label lbl))
+            (am-mov cgc tmp1 arg1)
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 header-offset))
+            (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
+            (x86-cmp cgc x86-tmp1 (x86-imm-int (subtype-tag 'cpxnum)))
+            (x86-jne cgc (lbl-opnd-label lbl)))
+          (lambda (cgc lbl)
+            (x86-jne cgc (lbl-opnd-label lbl))
+            (am-mov cgc tmp1 arg1)
+            (am-mov cgc tmp1 (opnd-with-offset tmp1 header-offset))
+            (x86-and cgc x86-tmp1 (x86-imm-int subtype-tag-mask))
+            (x86-cmp cgc x86-tmp1 (x86-imm-int (subtype-tag 'cpxnum)))
+            (x86-jne cgc (lbl-opnd-label lbl)))
+          true-opnd:  (if imag? (int-opnd (imm-encode 0)) arg1)
+          false-opnd: (mem-opnd arg1 body-offset))))))
+
 (define (x86-prim-##fx+ wrap?)
   (foldl-prim
     (make-function-x86-opnds x86-add)
@@ -1519,6 +1547,9 @@
     (table-set! table '##fxarithmetic-shift-right?    (make-prim-obj x86-prim-##fxshift-right?       2 #t #t #t))
     (table-set! table '##fxwraparithmetic-shift-left? (make-prim-obj x86-prim-##fxwrapshift-left?    2 #t #t #t))
     (table-set! table '##fxwraplogical-shift-right?   (make-prim-obj x86-prim-##fxwrapshift-right?   2 #t #t #t))
+
+    (table-set! table '##real-part      (make-prim-obj (x86-prim-##cpx-part #f) 1 #t #t))
+    (table-set! table '##imag-part      (make-prim-obj (x86-prim-##cpx-part #t) 1 #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-desc '(d)) 1 #t #f))
