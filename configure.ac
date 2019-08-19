@@ -3380,7 +3380,7 @@ case "$target_os" in
 *** (including waiting for input at the REPL).  For more information,    ***
 *** please see:                                                          ***
 ***   https://github.com/gambit/gambit/issues/403                        ***
-***   https://stackoverflow.com/questions/591826/it-really-looks-like-os-x-has-a-bug-when-using-poll-on-a-named-pipe-fifo ***
+***   https://stackoverflow.com/questions/591826                         ***
 ***                                                                      ***
 ****************************************************************************
 ])

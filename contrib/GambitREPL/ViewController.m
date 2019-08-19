@@ -1570,7 +1570,7 @@ void popup_alert(NSString *title, NSString *msg, NSString *cancel_button, NSStri
 #else
 
   // Hack to work around an iOS bug found here:
-  // http://stackoverflow.com/questions/18340360/strange-uitextview-behavior-setting-range-within-textviewdidchangeselection
+  // http://stackoverflow.com/questions/18340360
 
   dispatch_async(dispatch_get_main_queue(), ^{
       inputTextViewEnable = NO;
