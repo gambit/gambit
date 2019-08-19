@@ -16583,6 +16583,42 @@ $as_echo "$as_me:
 
 fi
 
+case "$target_os" in
+
+  darwin*)
+    if test "$ENABLE_POLL" = yes; then
+      { $as_echo "$as_me:${as_lineno-$LINENO}:
+****************************************************************************
+***                                                                      ***
+*** The target OS is macOS and the option \"--enable-poll\" was specified. ***
+*** This combination should be avoided because there is a bug in macOS   ***
+*** that causes \"poll\" on ttys and named pipes to misbehave, causing     ***
+*** a busy wait loop consuming 100% CPU when waiting on those devices    ***
+*** (including waiting for input at the REPL).  For more information,    ***
+*** please see:                                                          ***
+***   https://github.com/gambit/gambit/issues/403                        ***
+***   https://stackoverflow.com/questions/591826/it-really-looks-like-os-x-has-a-bug-when-using-poll-on-a-named-pipe-fifo ***
+***                                                                      ***
+****************************************************************************
+" >&5
+$as_echo "$as_me:
+****************************************************************************
+***                                                                      ***
+*** The target OS is macOS and the option \"--enable-poll\" was specified. ***
+*** This combination should be avoided because there is a bug in macOS   ***
+*** that causes \"poll\" on ttys and named pipes to misbehave, causing     ***
+*** a busy wait loop consuming 100% CPU when waiting on those devices    ***
+*** (including waiting for input at the REPL).  For more information,    ***
+*** please see:                                                          ***
+***   https://github.com/gambit/gambit/issues/403                        ***
+***   https://stackoverflow.com/questions/591826/it-really-looks-like-os-x-has-a-bug-when-using-poll-on-a-named-pipe-fifo ***
+***                                                                      ***
+****************************************************************************
+" >&6;}
+    fi
+
+esac
+
 if false; then
 
 if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
