@@ -235,7 +235,8 @@
 (##define-macro (macro-debug-settings-repl-ide)            0)
 (##define-macro (macro-debug-settings-repl-console)        1)
 (##define-macro (macro-debug-settings-repl-stdio)          2)
-(##define-macro (macro-debug-settings-repl-remote)         3)
+(##define-macro (macro-debug-settings-repl-stdio-and-err)  3)
+(##define-macro (macro-debug-settings-repl-remote)         4)
 (##define-macro (macro-debug-settings-repl-shift)          7)
 
 (##define-macro (macro-debug-settings-user-intr-mask)      1536)

@@ -9405,7 +9405,8 @@ typedef struct ___setup_params_struct
 #define ___DEBUG_SETTINGS_REPL_IDE            0
 #define ___DEBUG_SETTINGS_REPL_CONSOLE        1
 #define ___DEBUG_SETTINGS_REPL_STDIO          2
-#define ___DEBUG_SETTINGS_REPL_REMOTE         3
+#define ___DEBUG_SETTINGS_REPL_STDIO_AND_ERR  3
+#define ___DEBUG_SETTINGS_REPL_REMOTE         4
 #define ___DEBUG_SETTINGS_REPL_SHIFT          7
 #define ___DEBUG_SETTINGS_USER_INTR_MASK      (3<<9)
 #define ___DEBUG_SETTINGS_USER_INTR_REPL      0
