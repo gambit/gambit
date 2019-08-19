@@ -1377,6 +1377,21 @@
         (x86-shl cgc arg1 (x86-imm-int type-tag-bits))
         (am-return-opnd cgc result-action arg1)))))
 
+(define (x86-prim-field-ref index)
+  (const-nargs-prim 1 0 '((reg))
+    (lambda (cgc result-action args arg1)
+      (let* ((width (get-word-width cgc))
+             (offset (+ (body-offset 'subtyped width) (* index width))))
+        (am-return-opnd cgc result-action (mem-opnd arg1 offset))))))
+
+(define (x86-prim-field-set index)
+  (const-nargs-prim 2 0 '((reg))
+    (lambda (cgc result-action args arg1 arg2)
+      (let* ((width (get-word-width cgc))
+             (offset (+ (body-offset 'subtyped width) (* index width))))
+        (am-mov cgc (mem-opnd arg1 offset) arg2)
+        (am-return-opnd cgc result-action arg1)))))
+
 (define x86-primitive-table
   (let ((table (make-table test: equal?)))
     (table-set! table '##identity       (make-prim-obj ##identity-primitive    1 #t #t))
@@ -1408,6 +1423,7 @@
     (table-set! table '##type-flags     (make-prim-obj (x86-prim-##type-ref 3) 1 #t #t))
     (table-set! table '##type-super     (make-prim-obj (x86-prim-##type-ref 4) 1 #t #t))
     (table-set! table '##type-fields    (make-prim-obj (x86-prim-##type-ref 5) 1 #t #t))
+    (table-set! table '##structure-type (make-prim-obj (x86-prim-##type-ref 0) 1 #t #t))
 
     (table-set! table '##subtyped?      (make-prim-obj x86-prim-##subtyped? 1 #t #t #t))
     (table-set! table '##vector?        (make-prim-obj (x86-prim-##subtype? vector-desc)       1 #t #t #t))
@@ -1543,10 +1559,15 @@
 
     (table-set! table '##cons           (make-prim-obj x86-prim-##cons 2 #t #f))
 
-    (table-set! table '##vector-ref     (make-prim-obj (x86-object-dyn-read-prim vector-desc) 2 #t #t))
-    (table-set! table '##vector-set!    (make-prim-obj (x86-object-dyn-set-prim vector-desc) 3 #t #f))
+    (table-set! table '##vector-ref     (make-prim-obj (x86-object-dyn-read-prim vector-desc)    2 #t #t))
+    (table-set! table '##values-ref     (make-prim-obj (x86-object-dyn-read-prim boxvalues-desc) 2 #t #t))
+
+    (table-set! table '##vector-set!    (make-prim-obj (x86-object-dyn-set-prim vector-desc)    3 #t #f))
+    (table-set! table '##values-set!    (make-prim-obj (x86-object-dyn-set-prim boxvalues-desc) 3 #t #f))
 
     (table-set! table '##vector-length    (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
+    (table-set! table '##values-length    (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
+
     (table-set! table '##u8vector-length  (make-prim-obj (x86-prim-##vector-length 0)  1 #t #t))
     (table-set! table '##s8vector-length  (make-prim-obj (x86-prim-##vector-length 0)  1 #t #t))
     (table-set! table '##u16vector-length (make-prim-obj (x86-prim-##vector-length 1)  1 #t #t))
@@ -1557,5 +1578,33 @@
     (table-set! table '##u64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
     (table-set! table '##s64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
     (table-set! table '##f64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
+
+    (table-set! table '##symbol-name        (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+    (table-set! table '##will-testator      (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))
+    (table-set! table '##will-action        (make-prim-obj (x86-prim-field-ref 2) 1 #t #t))
+    (table-set! table '##ratnum-numerator   (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+    (table-set! table '##ratnum-denominator (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))
+    (table-set! table '##cpxnum-real        (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+    (table-set! table '##cpxnum-imag        (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))
+    (table-set! table '##continuation-denv  (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))
+    (table-set! table '##symbol-hash        (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))
+    (table-set! table '##keyword-name       (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+    (table-set! table '##keyword-hash       (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))
+    (table-set! table '##promise-state      (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+    (table-set! table '##foreign-tags       (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+    (table-set! table '##keyword-interned?  (make-prim-obj (x86-prim-field-ref 2) 1 #t #t #t))
+    (table-set! table '##symbol-interned?   (make-prim-obj (x86-prim-field-ref 2) 1 #t #t #t))
+    (table-set! table '##unbox              (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+
+    (table-set! table '##symbol-name-set!        (make-prim-obj (x86-prim-field-set 0) 2 #t #t))
+    (table-set! table '##will-testator-set!      (make-prim-obj (x86-prim-field-set 1) 2 #t #t))
+    (table-set! table '##will-action-set!        (make-prim-obj (x86-prim-field-set 2) 2 #t #t))
+    (table-set! table '##continuation-denv-set!  (make-prim-obj (x86-prim-field-set 1) 2 #t #t))
+    (table-set! table '##symbol-hash-set!        (make-prim-obj (x86-prim-field-set 1) 2 #t #t))
+    (table-set! table '##keyword-name-set!       (make-prim-obj (x86-prim-field-set 0) 2 #t #t))
+    (table-set! table '##keyword-hash-set!       (make-prim-obj (x86-prim-field-set 1) 2 #t #t))
+    (table-set! table '##promise-state-set!      (make-prim-obj (x86-prim-field-set 0) 2 #t #t))
+    (table-set! table '##continuation-frame-set! (make-prim-obj (x86-prim-field-set 0) 2 #t #t))
+    (table-set! table '##set-box!                (make-prim-obj (x86-prim-field-set 0) 2 #t #t))
 
     table))
