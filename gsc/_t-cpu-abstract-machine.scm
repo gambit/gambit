@@ -93,6 +93,7 @@
 ;;    self-register: r4 gvm register
 ;;    frame-pointer-reg: Register pointing to current frame
 ;;    frame-offset: Offset to frame
+;;    clo-trampoline-size: Closure trampoline size
 ;;
 ;;    primitive-table : Table between symbol and primitive object
 ;;      For symbols: see _prims.scm
@@ -105,13 +106,13 @@
 ;;    extra-registers : (Vector) Extra registers that can be overwritten at any time.
 ;;      Note: #extra-registers must >= 3.
 (define (cpu-make-info
-          arch-name word-width endianness load-store frame-offset
-          primitive-table
+          arch-name word-width endianness load-store
+          frame-offset clo-trampoline-size primitive-table
           gvm-reg-count gvm-arg-reg-count registers
           pstate-pointer frame-pointer heap-pointer)
   (vector
-    arch-name word-width endianness load-store frame-offset
-    primitive-table
+    arch-name word-width endianness load-store
+    frame-offset clo-trampoline-size primitive-table
     gvm-reg-count gvm-arg-reg-count registers
     pstate-pointer frame-pointer heap-pointer))
 
@@ -125,8 +126,8 @@
     am-lbl am-data
     am-mov
     am-add am-sub am-mul am-div
-    am-jmp am-compare-jump
-    am-compare-move))
+    am-jmp
+    am-compare-jump am-compare-move))
 
 (define (make-routine-dictionnary
           poll
@@ -158,22 +159,23 @@
          (field (vector-ref info 0)))
     field))
 
-(define (get-arch-name cgc)         (get-in-cgc cgc info-index 0))
-(define (get-word-width cgc)        (get-in-cgc cgc info-index 1))
-(define (get-word-width-bits cgc)   (* 8 (get-word-width cgc)))
-(define (get-endianness cgc)        (get-in-cgc cgc info-index 2))
-(define (is-load-store? cgc)        (get-in-cgc cgc info-index 3))
-(define (get-frame-offset cgc)      (get-in-cgc cgc info-index 4))
-(define (get-primitives cgc)        (get-in-cgc cgc info-index 5))
-(define (get-gvm-reg-count cgc)     (get-in-cgc cgc info-index 6))
-(define (get-gvm-arg-reg-count cgc) (get-in-cgc cgc info-index 7))
-(define (get-registers  cgc)        (get-in-cgc cgc info-index 8))
-(define (get-pstate-pointer cgc)    (get-in-cgc cgc info-index 9))
-(define (get-frame-pointer cgc)     (get-in-cgc cgc info-index 10))
-(define (get-heap-pointer cgc)      (get-in-cgc cgc info-index 11))
+(define (get-arch-name cgc)           (get-in-cgc cgc info-index 0))
+(define (get-word-width cgc)          (get-in-cgc cgc info-index 1))
+(define (get-word-width-bits cgc)     (* 8 (get-word-width cgc)))
+(define (get-endianness cgc)          (get-in-cgc cgc info-index 2))
+(define (is-load-store? cgc)          (get-in-cgc cgc info-index 3))
+(define (get-frame-offset cgc)        (get-in-cgc cgc info-index 4))
+(define (get-clo-trampoline-size cgc) (get-in-cgc cgc info-index 5))
+(define (get-primitives cgc)          (get-in-cgc cgc info-index 6))
+(define (get-gvm-reg-count cgc)       (get-in-cgc cgc info-index 7))
+(define (get-gvm-arg-reg-count cgc)   (get-in-cgc cgc info-index 8))
+(define (get-registers  cgc)          (get-in-cgc cgc info-index 9))
+(define (get-pstate-pointer cgc)      (get-in-cgc cgc info-index 10))
+(define (get-frame-pointer cgc)       (get-in-cgc cgc info-index 11))
+(define (get-heap-pointer cgc)        (get-in-cgc cgc info-index 12))
 
 (define (get-primitive-table targ)
-  (get-in-target targ info-index 5))
+  (get-in-target targ info-index 6))
 
 (define (get-primitive-object cgc name)
   (let* ((table (get-primitives cgc)))

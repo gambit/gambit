@@ -32,7 +32,7 @@
   (make-cgc-riscv 'RV32I))
 
 (define (riscv-32-info)
-  (riscv-info 'RV32I 4))
+  (riscv-info 'RV32I 4 3))
 
 ;;------------------------------------------------------------------------------
 ;;--------------------------- RISC-V 64-bit backend ----------------------------
@@ -47,19 +47,20 @@
   (make-cgc-riscv 'RV64I))
 
 (define (riscv-64-info)
-  (riscv-info 'RV64I 8))
+  (riscv-info 'RV64I 8 2))
 
 ;;------------------------------------------------------------------------------
 
 ;; RISC-V backend info
 
-(define (riscv-info arch width)
+(define (riscv-info arch width clo-trampoline-size)
   (cpu-make-info
     arch                    ;; Arch name
     width                   ;; Word width
     'le                     ;; Endianness
     #t                      ;; Load-store architecture?
     0                       ;; Frame offset
+    clo-trampoline-size     ;; Closure trampoline size
     riscv-primitive-table   ;; Primitive table
     cpu-default-nb-gvm-regs ;; GVM register count
     cpu-default-nb-arg-regs ;; GVM register count for passing arguments

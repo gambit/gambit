@@ -59,6 +59,7 @@
     'le                     ;; Endianness
     #f                      ;; Load store architecture?
     0                       ;; Frame offset
+    2                       ;; Closure trampoline size
     x86-primitive-table     ;; Primitive table
     cpu-default-nb-gvm-regs ;; GVM register count
     cpu-default-nb-arg-regs ;; GVM register count for passing arguments
@@ -87,6 +88,7 @@
     'le                     ;; Endianness
     #f                      ;; Load store architecture?
     0                       ;; Frame offset
+    1                       ;; Closure trampoline size
     x86-primitive-table     ;; Primitive table
     cpu-default-nb-gvm-regs ;; GVM register count
     cpu-default-nb-arg-regs ;; GVM register count for passing arguments
