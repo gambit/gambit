@@ -84,7 +84,7 @@
 
 ;; Lengths in bytes are located in the head of memory allocated objects.
 (define length-mask
-  (bitwise-not ; XXX
+  (fxnot ; XXX
     (fx- (fxarithmetic-shift 1 (fx+ head-type-tag-bits subtype-tag-bits)) 1)))
 
 ;;-----------------------------------------------------------------------------
