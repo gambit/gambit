@@ -1393,6 +1393,39 @@
           (* 8 width))
         (am-return-opnd cgc result-action obj-reg)))))
 
+(define x86-prim-##unchecked-structure-ref
+  (const-nargs-prim 4 0 '((reg) (reg int))
+    (lambda (cgc result-action args arg1 arg2 arg3 arg4)
+      (let* ((width (get-word-width cgc))
+             (offset (body-offset 'subtyped width))
+             (shamt (fx- (fxlength width) 1 type-tag-bits)))
+        (am-return-opnd cgc result-action
+          (if (int-opnd? arg2)
+              (mem-opnd arg1 (fx+ offset (fxarithmetic-shift (int-opnd-value arg2) shamt)))
+              (mem-opnd arg1 offset arg2 shamt)))))))
+
+(define x86-prim-##unchecked-structure-set!
+  (const-nargs-prim 5 0 '((reg) (reg int))
+    (lambda (cgc result-action args arg1 arg2 arg3 arg4 arg5)
+      (let* ((width (get-word-width cgc))
+             (offset (body-offset 'subtyped width))
+             (shamt (fx- (fxlength width) 1 type-tag-bits)))
+        (am-mov cgc
+          (if (int-opnd? arg3)
+              (mem-opnd arg1 (fx+ offset (fxarithmetic-shift (int-opnd-value arg3) shamt)))
+              (mem-opnd arg1 offset arg3 shamt))
+          arg2
+          (get-word-width-bits cgc))
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##structure-type-set!
+  (const-nargs-prim 2 0 '((reg) (reg int))
+    (lambda (cgc result-action args arg1 arg2)
+      (let* ((width (get-word-width cgc))
+             (offset (body-offset 'subtyped width)))
+        (am-mov cgc (mem-opnd arg1 offset) arg2)
+        (am-return-opnd cgc result-action arg1)))))
+
 (define (x86-prim-##vector-length size)
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args arg1)
@@ -1595,6 +1628,10 @@
 
     (table-set! table '##vector-set!    (make-prim-obj (x86-object-dyn-set-prim vector-desc)    3 #t #f))
     (table-set! table '##values-set!    (make-prim-obj (x86-object-dyn-set-prim boxvalues-desc) 3 #t #f))
+
+    (table-set! table '##structure-type-set!      (make-prim-obj x86-prim-##structure-type-set!      2 #t #f))
+    (table-set! table '##unchecked-structure-ref  (make-prim-obj x86-prim-##unchecked-structure-ref  4 #t #t))
+    (table-set! table '##unchecked-structure-set! (make-prim-obj x86-prim-##unchecked-structure-set! 5 #t #f))
 
     (table-set! table '##vector-length    (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
     (table-set! table '##values-length    (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
