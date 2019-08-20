@@ -1333,7 +1333,7 @@
             (am-mov cgc
               (mem-opnd result-reg (- offset))
               (int-opnd (+ (ref-subtype-tag pair-desc)
-                           (arithmetic-shift (* width 2) (fx+ head-type-tag-bits subtype-tag-bits)))) ; FIXME
+                           (arithmetic-shift (* width 2) (fx+ head-type-tag-bits subtype-tag-bits)))) ; XXX
               (get-word-width-bits cgc))
 
             (am-mov cgc
@@ -1350,7 +1350,7 @@
 
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-return-opnd uses the default width
-(define (x86-object-dyn-read-prim desc) ; FIXME
+(define (x86-object-dyn-read-prim desc) ; XXX
   (if (imm-desc? desc)
       (compiler-internal-error "Object isn't a reference"))
 
@@ -1371,7 +1371,7 @@
               (mem-opnd obj-reg 0-offset index-opnd index-shift)))))))
 
 ;; Doesn't support width not equal to (get-word-width cgc)
-(define (x86-object-dyn-set-prim desc) ; FIXME
+(define (x86-object-dyn-set-prim desc) ; XXX
   (if (imm-desc? desc)
       (compiler-internal-error "Object isn't a reference"))
 
@@ -1543,6 +1543,8 @@
     (table-set! table '##char>?         (make-prim-obj x86-prim-##>  2 #t #t #t))
     (table-set! table '##char>=?        (make-prim-obj x86-prim-##>= 2 #t #t #t))
     (table-set! table '##char=?         (make-prim-obj x86-prim-##=  2 #t #t #t))
+
+    (table-set! table '##object-before? (make-prim-obj x86-prim-##<  2 #t #t #t))
 
     (table-set! table '##char->integer (make-prim-obj (x86-prim-##integer-char #f) 1 #t #t))
     (table-set! table '##integer->char (make-prim-obj (x86-prim-##integer-char #t) 1 #t #t))
