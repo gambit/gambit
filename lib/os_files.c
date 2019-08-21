@@ -1327,7 +1327,7 @@ ___SCMOBJ path;)
         ___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath);
       ___STRING_TYPE(___PATH_CE_SELECT) dir;
 
-#ifndef USE_POSIX
+#ifndef USE_chdir
 #ifndef USE_WIN32
 
       ___CHAR_TYPE(___PATH_CE_SELECT) normalized_dir[___PATH_MAX_LENGTH+1+1];
@@ -1376,7 +1376,7 @@ ___SCMOBJ path;)
 #endif
 #endif
 
-#ifdef USE_POSIX
+#ifdef USE_chdir
 
       ___CHAR_TYPE(___PATH_CE_SELECT) old_dir[___PATH_MAX_LENGTH+1+1];
       ___STRING_TYPE(___PATH_CE_SELECT) odir = 0;
