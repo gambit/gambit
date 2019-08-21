@@ -1428,7 +1428,7 @@
         (am-mov cgc (mem-opnd arg1 offset) arg2)
         (am-return-opnd cgc result-action arg1)))))
 
-(define (x86-prim-##vector-length size)
+(define (x86-prim-length #!optional (size #f) (clo? #f))
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args arg1)
       (let* ((width (get-word-width cgc))
@@ -1437,6 +1437,8 @@
              (shamt (fx+ head-type-tag-bits subtype-tag-bits (or size log2-width))))
         (am-mov cgc arg1 (mem-opnd arg1 offset))
         (x86-shr cgc arg1 (x86-imm-int shamt))
+        (if clo?
+          (am-sub cgc arg1 arg1 (int-opnd (get-clo-trampoline-size cgc))))
         (x86-shl cgc arg1 (x86-imm-int type-tag-bits))
         (am-return-opnd cgc result-action arg1)))))
 
@@ -1451,6 +1453,27 @@
         (x86-and cgc (make-x86-opnd (mem-opnd arg1 offset)) (x86-imm-int (fxnot length-mask)) (* 8 width))
         (x86-shl cgc x86-arg2 (x86-imm-int shamt))
         (am-add cgc (mem-opnd arg1 offset) (mem-opnd arg1 offset) arg2)
+        (am-return-opnd cgc result-action arg1)))))
+
+(define x86-prim-##closure-ref
+  (const-nargs-prim 2 0 '((reg))
+    (lambda (cgc result-action args arg1 arg2)
+      (let* ((width (get-word-width cgc))
+             (log2-width (fx- (fxlength width) 1))
+             (offset (body-offset 'subtyped width))
+             (shamt (fx- log2-width type-tag-bits))) ; XXX
+        (am-add cgc arg2 arg2 (int-opnd (imm-encode (get-clo-trampoline-size cgc))))
+        (am-return-opnd cgc result-action (mem-opnd arg1 offset arg2 shamt))))))
+
+(define x86-prim-##closure-set!
+  (const-nargs-prim 3 0 '((reg))
+    (lambda (cgc result-action args arg1 arg2 arg3)
+      (let* ((width (get-word-width cgc))
+             (log2-width (fx- (fxlength width) 1))
+             (offset (body-offset 'subtyped width))
+             (shamt (fx- log2-width type-tag-bits))) ; XXX
+        (am-add cgc arg2 arg2 (int-opnd (imm-encode (get-clo-trampoline-size cgc))))
+        (am-mov cgc (mem-opnd arg1 offset arg2 shamt) arg3)
         (am-return-opnd cgc result-action arg1)))))
 
 (define (x86-prim-field-ref index)
@@ -1640,29 +1663,33 @@
 
     (table-set! table '##cons           (make-prim-obj x86-prim-##cons 2 #t #f))
 
-    (table-set! table '##vector-ref     (make-prim-obj (x86-object-dyn-read-prim vector-desc)    2 #t #t))
-    (table-set! table '##values-ref     (make-prim-obj (x86-object-dyn-read-prim boxvalues-desc) 2 #t #t))
+    (table-set! table '##vector-ref     (make-prim-obj (x86-object-dyn-read-prim vector-desc) 2 #t #t))
+    (table-set! table '##vector-set!    (make-prim-obj (x86-object-dyn-set-prim vector-desc)  3 #t #f))
 
-    (table-set! table '##vector-set!    (make-prim-obj (x86-object-dyn-set-prim vector-desc)    3 #t #f))
-    (table-set! table '##values-set!    (make-prim-obj (x86-object-dyn-set-prim boxvalues-desc) 3 #t #f))
+    (table-set! table '##values-ref     (make-prim-obj (x86-object-dyn-read-prim boxvalues-desc) 2 #t #t))
+    (table-set! table '##values-set!    (make-prim-obj (x86-object-dyn-set-prim boxvalues-desc)  3 #t #f))
+
+    (table-set! table '##closure-ref    (make-prim-obj x86-prim-##closure-ref  2 #t #t))
+    (table-set! table '##closure-set!   (make-prim-obj x86-prim-##closure-set! 3 #t #f))
 
     (table-set! table '##structure-type-set!      (make-prim-obj x86-prim-##structure-type-set!      2 #t #f))
     (table-set! table '##unchecked-structure-ref  (make-prim-obj x86-prim-##unchecked-structure-ref  4 #t #t))
     (table-set! table '##unchecked-structure-set! (make-prim-obj x86-prim-##unchecked-structure-set! 5 #t #f))
 
-    (table-set! table '##vector-length    (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
-    (table-set! table '##values-length    (make-prim-obj (x86-prim-##vector-length #f) 1 #t #t))
+    (table-set! table '##vector-length    (make-prim-obj (x86-prim-length) 1 #t #t))
+    (table-set! table '##values-length    (make-prim-obj (x86-prim-length) 1 #t #t))
+    (table-set! table '##closure-length   (make-prim-obj (x86-prim-length #f #t) 1 #t #t))
 
-    (table-set! table '##u8vector-length  (make-prim-obj (x86-prim-##vector-length 0)  1 #t #t))
-    (table-set! table '##s8vector-length  (make-prim-obj (x86-prim-##vector-length 0)  1 #t #t))
-    (table-set! table '##u16vector-length (make-prim-obj (x86-prim-##vector-length 1)  1 #t #t))
-    (table-set! table '##s16vector-length (make-prim-obj (x86-prim-##vector-length 1)  1 #t #t))
-    (table-set! table '##u32vector-length (make-prim-obj (x86-prim-##vector-length 2)  1 #t #t))
-    (table-set! table '##s32vector-length (make-prim-obj (x86-prim-##vector-length 2)  1 #t #t))
-    (table-set! table '##f32vector-length (make-prim-obj (x86-prim-##vector-length 2)  1 #t #t))
-    (table-set! table '##u64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
-    (table-set! table '##s64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
-    (table-set! table '##f64vector-length (make-prim-obj (x86-prim-##vector-length 3)  1 #t #t))
+    (table-set! table '##u8vector-length  (make-prim-obj (x86-prim-length 0) 1 #t #t))
+    (table-set! table '##s8vector-length  (make-prim-obj (x86-prim-length 0) 1 #t #t))
+    (table-set! table '##u16vector-length (make-prim-obj (x86-prim-length 1) 1 #t #t))
+    (table-set! table '##s16vector-length (make-prim-obj (x86-prim-length 1) 1 #t #t))
+    (table-set! table '##u32vector-length (make-prim-obj (x86-prim-length 2) 1 #t #t))
+    (table-set! table '##s32vector-length (make-prim-obj (x86-prim-length 2) 1 #t #t))
+    (table-set! table '##f32vector-length (make-prim-obj (x86-prim-length 2) 1 #t #t))
+    (table-set! table '##u64vector-length (make-prim-obj (x86-prim-length 3) 1 #t #t))
+    (table-set! table '##s64vector-length (make-prim-obj (x86-prim-length 3) 1 #t #t))
+    (table-set! table '##f64vector-length (make-prim-obj (x86-prim-length 3) 1 #t #t))
 
     (table-set! table '##vector-shrink!    (make-prim-obj (x86-prim-##vector-shrink! #f) 2 #t #f))
 
@@ -1690,6 +1717,7 @@
     (table-set! table '##keyword-hash       (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))
     (table-set! table '##promise-state      (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
     (table-set! table '##foreign-tags       (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
+    (table-set! table '##closure-code       (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
     (table-set! table '##keyword-interned?  (make-prim-obj (x86-prim-field-ref 2) 1 #t #t #t))
     (table-set! table '##symbol-interned?   (make-prim-obj (x86-prim-field-ref 2) 1 #t #t #t))
     (table-set! table '##unbox              (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
