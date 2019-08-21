@@ -3366,6 +3366,28 @@ if test "$C_COMP_GNUC" = yes; then
 
 fi
 
+case "$target_os" in
+
+  darwin*)
+    if test "$ENABLE_POLL" = yes; then
+      AC_MSG_NOTICE([
+****************************************************************************
+***                                                                      ***
+*** The target OS is macOS and the option "--enable-poll" was specified. ***
+*** This combination should be avoided because there is a bug in macOS   ***
+*** that causes "poll" on ttys and named pipes to misbehave, causing     ***
+*** a busy wait loop consuming 100% CPU when waiting on those devices    ***
+*** (including waiting for input at the REPL).  For more information,    ***
+*** please see:                                                          ***
+***   https://github.com/gambit/gambit/issues/403                        ***
+***   https://stackoverflow.com/questions/591826                         ***
+***                                                                      ***
+****************************************************************************
+])
+    fi
+
+esac
+
 if false; then
 
 if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then

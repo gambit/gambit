@@ -52,9 +52,9 @@ int debug_settings;)
         "                              single-step mode|quit with error status)\n"
         "                    R|D|Q     user interrupt handling (create a new REPL|\n"
         "                              defer handling|quit with error status)\n"
-        "                    i|c|-|@[HOST][:PORT]\n"
+        "                    i|c|-|+|@[HOST][:PORT]\n"
         "                              select REPL interaction channel (ide|console|\n"
-        "                              standard input and output|remote debugger\n"
+        "                              stdin/out|stdin/out/err|remote debugger\n"
         "                              (defaults: HOST=127.0.0.1, PORT=44555))\n"
         "                    0..9      verbosity level\n"
         "  @[INTF][:PORT]  set main RPC server configuration; defaults: INTF=127.0.0.1,\n"
@@ -538,6 +538,12 @@ ___mod_or_lnk (*linker)();)
                                       (debug_settings
                                        & ~___DEBUG_SETTINGS_REPL_MASK)
                                       | (___DEBUG_SETTINGS_REPL_STDIO
+                                         << ___DEBUG_SETTINGS_REPL_SHIFT);
+                                    break;
+                          case '+': debug_settings =
+                                      (debug_settings
+                                       & ~___DEBUG_SETTINGS_REPL_MASK)
+                                      | (___DEBUG_SETTINGS_REPL_STDIO_AND_ERR
                                          << ___DEBUG_SETTINGS_REPL_SHIFT);
                                     break;
 

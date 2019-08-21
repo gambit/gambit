@@ -25,7 +25,7 @@
 )
 
 (define-type repl-channel
-  id: 6bf088a7-814f-4139-860a-69a757570569
+  id: AF00D7A3-BE60-4317-9643-11B11A549995
   extender: define-type-of-repl-channel
   constructor: macro-make-repl-channel
   implementer: implement-type-repl-channel
@@ -38,6 +38,7 @@
   last-owner   ;; thread that last owned this repl-channel
   input-port
   output-port
+  error-port
   result-history
 
   read-command
@@ -51,7 +52,7 @@
 )
 
 (define-type-of-repl-channel repl-channel-ports
-  id: 4e2301a4-27c7-4eef-b8fd-e046e192500c
+  id: F0D4186A-EAEE-4360-AD82-69AF8BC21831
   extender: define-type-of-repl-channel-ports
   constructor: macro-make-repl-channel-ports
   implementer: implement-type-repl-channel-ports

@@ -1498,21 +1498,69 @@ function g_os_device_process_status(dev_scm) {
 
      (##declare (not interrupts-enabled))
 
+     ;; these macros are defined to prevent the normal thread
+     ;; inheritance mechanism when a root thread is created
+
+     (##define-macro (macro-current-thread)
+       `#f)
+
+     (##define-macro (macro-thread-denv thread)
+       `#f)
+
+     (##define-macro (macro-denv-local denv)
+       `(macro-make-env local-binding '() '()))
+
+     (##define-macro (macro-denv-dynwind denv)
+       `##initial-dynwind)
+
+     (##define-macro (macro-denv-interrupt-mask denv)
+       `interrupt-mask)
+
+     (##define-macro (macro-denv-debugging-settings denv)
+       `debugging-settings)
+
+     (##define-macro (macro-denv-input-port denv)
+       `(##cons ##current-input-port input-port))
+
+     (##define-macro (macro-denv-output-port denv)
+       `(##cons ##current-output-port output-port))
+
+     (##define-macro (macro-thread-denv-cache1 thread)
+       `local-binding)
+
+     (##define-macro (macro-thread-denv-cache2 thread)
+       `local-binding)
+
+     (##define-macro (macro-thread-denv-cache3 thread)
+       `local-binding)
+
+     (##define-macro (macro-thread-floats thread)
+       `#f)
+
+     (##define-macro (macro-base-priority floats)
+       `(macro-thread-root-base-priority))
+
+     (##define-macro (macro-quantum floats)
+       `(macro-thread-root-quantum))
+
+     (##define-macro (macro-priority-boost floats)
+       `(macro-thread-root-priority-boost))
+
      (let ((p (macro-current-thread)))
        (macro-thread-tgroup-set! thread tgroup)
-       (macro-thread-floats-set! thread (macro-make-floats))
+       (macro-thread-floats-set! thread (macro-make-thread-floats p))
        (macro-thread-name-set! thread name)
-       ;;(macro-thread-end-condvar-set! thread (macro-make-thread-end-condvar p))
-       ;;(macro-thread-resume-thunk-set! thread
-       ;; (lambda ()
-       ;;   (##thread-execute-and-end! thunk)))
-       ;;(macro-thread-cont-set! thread (macro-make-thread-cont p))
-       ;;(macro-thread-denv-set! thread (macro-make-thread-denv p))
-       ;;(macro-thread-denv-cache1-set! thread (macro-make-thread-denv-cache1 p))
-       ;;(macro-thread-denv-cache2-set! thread (macro-make-thread-denv-cache2 p))
-       ;;(macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
+       (macro-thread-end-condvar-set! thread (macro-make-thread-end-condvar p))
+       (macro-thread-resume-thunk-set! thread
+        (lambda ()
+          (##thread-execute-and-end! thunk)))
+       (macro-thread-cont-set! thread (macro-make-thread-cont p))
+       (macro-thread-denv-set! thread (macro-make-thread-denv p))
+       (macro-thread-denv-cache1-set! thread (macro-make-thread-denv-cache1 p))
+       (macro-thread-denv-cache2-set! thread (macro-make-thread-denv-cache2 p))
+       (macro-thread-denv-cache3-set! thread (macro-make-thread-denv-cache3 p))
        (macro-btq-deq-init! thread)
-       ;;(macro-tgroup-threads-deq-insert-at-tail! tgroup thread)
+       (macro-tgroup-threads-deq-insert-at-tail! tgroup thread)
        thread)))
 
 (define (##startup-threading!)
@@ -1540,7 +1588,19 @@ function g_os_device_process_status(dev_scm) {
             (macro-tgroup-threads-deq-init! tg)
             tg))
          (primordial-thread
-          (macro-current-thread)))
+          (macro-current-thread))
+         (interrupt-mask
+          0)
+         (debugging-settings
+          0)
+         (local-binding
+          (##cons ##current-directory
+                  (macro-parameter-descr-value
+                   (macro-parameter-descr ##current-directory))))
+         (input-port
+          ##stdin-port)
+         (output-port
+          ##stdout-port))
 
     (macro-thread-init2! primordial-thread #f 'primordial primordial-tgroup)
 
