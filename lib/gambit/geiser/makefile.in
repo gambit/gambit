@@ -1,13 +1,13 @@
-# makefile for gambit module.
+# makefile for gambit/geiser module.
 
 # Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
-herefromroot = lib/gambit
-rootfromhere = ../..
-SUBDIRS = git pkg tar hamt digest zlib test match geiser
-HEADERS_SCM = gambit\#.scm
-MODULES_SCM = gambit.scm
-MAIN_MODULES =
+herefromroot = lib/gambit/geiser
+rootfromhere = ../../..
+SUBDIRS =
+HEADERS_SCM = geiser\#.scm
+MODULES_SCM = geiser.scm
+MAIN_MODULES = geiser
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
