@@ -127,7 +127,7 @@
     (x86-arith-instr x86-add)  ;; am-add
     (x86-arith-instr x86-sub)  ;; am-sub
     (x86-arith-instr x86-imul) ;; am-mul
-    (x86-arith-instr x86-idiv) ;; am-div
+    x86-div-instr              ;; am-div
     x86-jmp-instr              ;; am-jmp
     x86-cmp-jump-instr         ;; am-compare-jump
     x86-cmp-move-instr))       ;; am-compare-move
@@ -175,26 +175,38 @@
     ((x86-mem? opnd) (cons opnd width))
     (else (cons opnd opnd-width))))
 
-; (define (apply-and-mov fun)
-;   (lambda (cgc result-reg opnd1 opnd2)
-;     (if (equal? result-reg opnd1)
-;         (fun cgc result-reg opnd2)
-;         (begin
-;           (x86-mov cgc result-reg opnd1)
-;           (fun cgc result-reg opnd2)))))
-
 (define (x86-arith-instr instr)
   (lambda (cgc result-loc opnd1 opnd2)
     (let ((x86-result-loc (make-x86-opnd result-loc))
           (x86-opnd1 (make-x86-opnd opnd1))
           (x86-opnd2 (make-x86-opnd opnd2)))
-      ; TODO Optimize mul/div using shifts if possible
+      ; TODO Optimize mul using shifts if possible
       ; TODO 0 - something should use NEG
       (if (equal? result-loc opnd1)
           (instr cgc x86-result-loc x86-opnd2)
           (begin
             (x86-mov cgc x86-result-loc x86-opnd1)
             (instr cgc x86-result-loc x86-opnd2))))))
+
+(define (x86-div-instr cgc dest opnd1 opnd2 #!optional (width #f) (remainder? #f)) ; XXX
+  (define (shrink x86-opnd)
+    (car (shrink-x86-opnd x86-opnd 64 (or width 64))))
+
+  (let ((x86-dest      (make-x86-opnd dest))
+        (x86-opnd1     (shrink (make-x86-opnd opnd1)))
+        (x86-opnd2     (shrink (make-x86-opnd opnd2)))
+        (x86-quotient  (shrink (x86-rax)))
+        (x86-remainder (if (fx= width 8) (x86-al) (shrink (x86-rdx)))))
+    ; TODO Optimize div using shifts if possible
+    (x86-mov cgc (if (fx= width 8) (x86-ax) x86-quotient) x86-opnd1 (fxmax width 16))
+    (case width
+      ((16) (x86-cwd cgc))
+      ((32) (x86-cdq cgc))
+      ((64) (x86-cqo cgc)))
+    (x86-idiv cgc x86-opnd2)
+    (if (and remainder? (fx= width 8))
+        (x86-shr cgc (x86-ax) (x86-imm-int 8)))
+    (x86-movsx cgc x86-dest (if remainder? x86-remainder x86-quotient) width)))
 
 (define (x86-label-align cgc label-opnd #!optional (align #f))
   (if align (asm-align cgc (car align) (cdr align) #x90))
@@ -964,6 +976,36 @@
     reduce-1: am-mov
     commutative: #t))
 
+(define (x86-prim-##fx/ wrap?)
+  (const-nargs-prim 2 1 '((int) (int) (reg)) ; XXX
+    (lambda (cgc result-action args arg1 arg2 tmp1)
+      (let ((width (fxmax (fxlength (int-opnd-value arg1))
+                          (fxlength (int-opnd-value arg2)))))
+        (if (and wrap? (= (int-opnd-value arg2) (imm-encode -1)))
+            (begin
+              (am-mov cgc tmp1 arg1)
+              (x86-neg cgc (make-x86-opnd tmp1)))
+            (begin
+              (am-mov cgc tmp1 arg2) ; XXX width
+              (am-div cgc tmp1 arg1 tmp1 (cond ((fx> width 32) 64)
+                                               ((fx> width 16) 32)
+                                               ((fx> width 8) 16)
+                                               (else 8)))
+              (x86-shl cgc (make-x86-opnd tmp1) (x86-imm-int type-tag-bits))))
+        (am-return-opnd cgc result-action tmp1)))))
+
+(define x86-prim-##fx%
+  (const-nargs-prim 2 1 '((int) (int) (reg)) ; XXX
+    (lambda (cgc result-action args arg1 arg2 tmp1)
+      (let ((width (fxmax (fxlength (int-opnd-value arg1))
+                          (fxlength (int-opnd-value arg2)))))
+        (am-mov cgc tmp1 arg2) ; XXX width
+        (am-div cgc tmp1 arg1 tmp1 (cond ((fx> width 32) 64)
+                                         ((fx> width 16) 32)
+                                         ((fx> width 8) 16)
+                                         (else 8)) #t)
+        (am-return-opnd cgc result-action tmp1)))))
+
 (define x86-prim-##fx*?
   (const-nargs-prim 2 0 '((reg mem))
     (lambda (cgc result-action args arg1 arg2)
@@ -1605,6 +1647,9 @@
     (table-set! table '##fx+            (make-prim-obj (x86-prim-##fx+ #f) 2 #t #f))
     (table-set! table '##fx-            (make-prim-obj (x86-prim-##fx- #f) 2 #t #f))
     (table-set! table '##fx*            (make-prim-obj (x86-prim-##fx* #f) 2 #t #f))
+    (table-set! table '##fxquotient     (make-prim-obj (x86-prim-##fx/ #f) 2 #t #f))
+    (table-set! table '##fxwrapquotient (make-prim-obj (x86-prim-##fx/ #t) 2 #t #f))
+    (table-set! table '##fxremainder    (make-prim-obj x86-prim-##fx%      2 #t #f))
 
     (table-set! table '##fx+?           (make-prim-obj x86-prim-##fx+? 2 #t #t #t))
     (table-set! table '##fx-?           (make-prim-obj x86-prim-##fx-? 2 #t #t #t))
