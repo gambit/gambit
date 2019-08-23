@@ -1,11 +1,25 @@
+;;;============================================================================
+
+;;; File: "gambit/geiser/geiser.scm"
+
+;;; Copyright (c) 2019 by Mathieu Perron, All Rights Reserved.
+
+;;;============================================================================
+
+;;; Geiser support.
+
 (##supply-module gambit/geiser)
-;; scheme
-;;; gambit.scm gambit geiser interaction
+
 (##namespace ("gambit/geiser#")) ;; in gambit/geiser#
-(##include "~~lib/gambit#.scm")
-;;(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-;;(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
-;; macro-absent-obj, etc
+(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
+                                 ;; macro-absent-obj, etc
+
+;(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
+;(declare (not safe))          ;; claim code has no type errors
+;(declare (block))             ;; claim no global is assigned
+
+;;;----------------------------------------------------------------------------
 
 (define-macro (geiser:capture-output x . xs)
   (let ((out (gensym))
@@ -1132,3 +1146,4 @@
 ;;    (write `(port ,port))
 ;;    (newline)))
 
+;;;============================================================================

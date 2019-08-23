@@ -1,3 +1,13 @@
+;;;============================================================================
+
+;;; File: "gambit/geiser/geiser#.scm"
+
+;;; Copyright (c) 2019 by Mathieu Perron, All Rights Reserved.
+
+;;;============================================================================
+
+;;; Geiser support.
+
 (##namespace ("gambit/geiser#"
 
 geiser:load-file
@@ -10,3 +20,5 @@ geiser:module-completions
 geiser:completions
 
 ))
+
+;;;============================================================================
