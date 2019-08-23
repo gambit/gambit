@@ -1413,14 +1413,14 @@
         (lambda (result-reg result-opnd-in-args)
           (let* ((width (get-word-width cgc))
                  (size (* width 3))
-                 (offset (+ (desc-type-tag pair-desc) (* 2 width))))
+                 (offset (+ (type-tag 'pair) (* 2 width))))
 
             (am-allocate-memory cgc result-reg size offset
               (codegen-context-frame cgc))
 
             (am-mov cgc
               (mem-opnd result-reg (- offset))
-              (int-opnd (+ (ref-subtype-tag pair-desc)
+              (int-opnd (+ (subtype-tag 'pair)
                            (arithmetic-shift (* width 2) (fx+ head-type-tag-bits subtype-tag-bits)))) ; XXX
               (get-word-width-bits cgc))
 
@@ -1435,6 +1435,40 @@
               (get-word-width-bits cgc))
 
             (am-return-opnd cgc result-action result-reg))))))
+
+(define (x86-prim-##make-uninterned desc)
+  (const-nargs-prim 2 1 '((reg mem int) (reg))
+    (lambda (cgc result-action args arg1 arg2 tmp1)
+      (let* ((width (get-word-width cgc))
+             (size (* width (+ (ref-size desc) 1)))
+             (offset (+ (ref-type-tag desc) (* 2 width)))
+             (args (list arg1 arg2 (int-opnd (imm-encode #f)))))
+
+            (am-allocate-memory cgc tmp1 size offset
+              (codegen-context-frame cgc))
+
+            (am-mov cgc
+              (mem-opnd tmp1 (- offset))
+              (int-opnd (+ (head-type-tag 'movable0)
+                           (ref-subtype-tag desc)
+                           (arithmetic-shift
+                             (fx- size width)
+                             (fx+ head-type-tag-bits subtype-tag-bits))))
+              (* width 8))
+
+            (let loop ((args (if (equal? desc keyword-desc)
+                                 args
+                                 (append args (list (int-opnd (imm-encode 0))))))
+                       (offset (- width offset)))
+              (if (not (null? args))
+                  (begin
+                    (am-mov cgc
+                      (mem-opnd tmp1 offset)
+                      (car args)
+                      (* width 8))
+                    (loop (cdr args) (+ offset width)))))
+
+              (am-return-opnd cgc result-action tmp1)))))
 
 ;; Doesn't support width not equal to (get-word-width cgc)
 ;; as am-return-opnd uses the default width
@@ -1796,6 +1830,9 @@
     (table-set! table '##u64vector-shrink! (make-prim-obj (x86-prim-##vector-shrink! 3)  2 #t #f))
     (table-set! table '##s64vector-shrink! (make-prim-obj (x86-prim-##vector-shrink! 3)  2 #t #f))
     (table-set! table '##f64vector-shrink! (make-prim-obj (x86-prim-##vector-shrink! 3)  2 #t #f))
+
+    (table-set! table '##make-uninterned-keyword (make-prim-obj (x86-prim-##make-uninterned keyword-desc) 2 #t #f))
+    (table-set! table '##make-uninterned-symbol  (make-prim-obj (x86-prim-##make-uninterned symbol-desc)  2 #t #f))
 
     (table-set! table '##symbol-name        (make-prim-obj (x86-prim-field-ref 0) 1 #t #t))
     (table-set! table '##will-testator      (make-prim-obj (x86-prim-field-ref 1) 1 #t #t))

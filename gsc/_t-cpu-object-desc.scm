@@ -129,12 +129,13 @@
 
 ;;-----------------------------------------------------------------------------
 
-(define (ref-desc type encoder subtype)
-  (vector 'ref type encoder subtype))
+(define (ref-desc type encoder subtype #!optional (size #f))
+  (vector 'ref type encoder subtype size))
 
 (define ref-type desc-type)
 (define ref-encoder desc-encoder)
 (define (ref-subtype desc) (vector-ref desc 3))
+(define (ref-size desc)    (vector-ref desc 4))
 
 (define ref-type-tag desc-type-tag)
 (define (ref-subtype-tag desc)
@@ -149,11 +150,15 @@
 (define (ref-subtype? subtype)
   (assq subtype subtype-tags))
 
+(define (ref-size? size)
+  (or (fixnum? size) (eq? size #f)))
+
 (define (ref-desc? desc)
   (and (eq? 'ref (vector-ref desc 0))
        (ref-type?    (ref-type desc))
        (ref-encoder? (ref-encoder desc))
-       (ref-subtype? (ref-subtype desc))))
+       (ref-subtype? (ref-subtype desc))
+       (ref-size?    (ref-size desc))))
 
 ;;-----------------------------------------------------------------------------
 
@@ -200,7 +205,7 @@
   (ref-desc
     'pair
     (lambda (val) #f)
-    'pair))
+    'pair 2))
 
 (define vector-desc
   (ref-desc
@@ -212,13 +217,13 @@
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'ratnum))
+    'ratnum 2))
 
 (define cpxnum-desc
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'cpxnum))
+    'cpxnum 2))
 
 (define structure-desc
   (ref-desc
@@ -230,7 +235,7 @@
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'boxvalues))
+    'boxvalues 1))
 
 (define meroon-desc
   (ref-desc
@@ -248,13 +253,13 @@
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'symbol))
+    'symbol 4))
 
 (define keyword-desc
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'keyword))
+    'keyword 3))
 
 (define frame-desc
   (ref-desc
@@ -266,19 +271,19 @@
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'continuation))
+    'continuation 2))
 
 (define promise-desc
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'promise))
+    'promise 1))
 
 (define weak-desc
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'weak))
+    'weak 3))
 
 (define procedure-desc
   (ref-desc
@@ -296,7 +301,7 @@
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'foreign))
+    'foreign 3))
 
 (define string-desc
   (ref-desc
@@ -368,7 +373,7 @@
   (ref-desc
     'subtyped
     (lambda (val) #f)
-    'flonum))
+    'flonum)) ; XXX size
 
 (define bignum-desc
   (ref-desc
