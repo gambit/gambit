@@ -2583,8 +2583,9 @@
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs banner)))
 
-     (##write-string "Gambit " port)
+     (##write-string "  Gambit " port)
      (##write-string (##system-version-string) port)
+     (##write-string "  " port)
 
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs output)))
