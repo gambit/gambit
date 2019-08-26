@@ -2574,7 +2574,7 @@
 
        (case kind
          ((banner)
-          (make-text-attr style-bold   default-color color-cyan))
+          (make-text-attr style-bold   color-white color-cyan))
          ((input)
           (make-text-attr style-bold   default-color default-color))
          (else
