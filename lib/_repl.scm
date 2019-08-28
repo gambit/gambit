@@ -2559,35 +2559,47 @@
        (define style-underline 2)
        (define style-reverse   4)
 
-       (define color-black   0)
-       (define color-red     1)
-       (define color-green   2)
-       (define color-yellow  3)
-       (define color-blue    4)
-       (define color-magenta 5)
-       (define color-cyan    6)
-       (define color-white   7)
-       (define default-color 8)
+       (define color-black          0)
+       (define color-red            1)
+       (define color-green          2)
+       (define color-yellow         3)
+       (define color-blue           4)
+       (define color-magenta        5)
+       (define color-cyan           6)
+       (define color-white          7)
+       (define color-bright-black   8)
+       (define color-bright-red     9)
+       (define color-bright-green   10)
+       (define color-bright-yellow  11)
+       (define color-bright-blue    12)
+       (define color-bright-magenta 13)
+       (define color-bright-cyan    14)
+       (define color-bright-white   15)
+       (define default-color        256)
 
        (define (make-text-attr style fg bg)
-         (+ (* style 256) fg (* bg 16)))
+         (+ (* style 262144) fg (* bg 512)))
 
        (case kind
          ((banner)
-          (make-text-attr style-bold   default-color color-cyan))
+          (make-text-attr style-bold   color-bright-black color-bright-cyan))
          ((input)
           (make-text-attr style-bold   default-color default-color))
          (else
           (make-text-attr style-normal default-color default-color))))
 
      (if (##tty? port)
-         (##tty-text-attributes-set! port (attrs input) (attrs banner)))
+         (begin
+           (##tty-text-attributes-set! port (attrs input) (attrs banner))
+           (##write-string " " port)))
 
      (##write-string "Gambit " port)
      (##write-string (##system-version-string) port)
 
      (if (##tty? port)
-         (##tty-text-attributes-set! port (attrs input) (attrs output)))
+         (begin
+           (##write-string " " port)
+           (##tty-text-attributes-set! port (attrs input) (attrs output))))
 
      (##newline port)
      (##newline port)

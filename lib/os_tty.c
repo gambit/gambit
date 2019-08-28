@@ -2633,6 +2633,20 @@ int rep;)
                         else
                           n = 0;
 
+                        /*
+                         * support 256 colors by using
+                         *   "\033[38;5;%p1%dm" instead of "\033[3%p1%dm"
+                         * and
+                         *   "\033[48;5;%p1%dm" instead of "\033[4%p1%dm"
+                         */
+                        if (*p == 'm' && n >= 8)
+                          {
+                            lineeditor_output_curses ('8');
+                            lineeditor_output_curses (';');
+                            lineeditor_output_curses ('5');
+                            lineeditor_output_curses (';');
+                          }
+
                         while (d*10 <= n)
                           d *= 10;
 
@@ -3939,6 +3953,25 @@ int len;)
                           fg = x-30;
                         else if (x >= 40 && x <= 47)
                           bg = x-40;
+                        else if (x >= 90 && x <= 97)
+                          fg = (x-90)+8;
+                        else if (x >= 100 && x <= 107)
+                          bg = (x-100)+8;
+                        else if (x == 38 || x == 48)
+                          {
+                            if (j+2 <= pn && d->terminal_param[j+1] == 5)
+                              {
+                                int n = d->terminal_param[j+2];
+                                if (n >= 0 && n <= 255)
+                                  {
+                                    if (x == 38)
+                                      fg = n;
+                                    else
+                                      bg = n;
+                                  }
+                              }
+                            j += 2;
+                          }
                       }
                     arg = MAKE_TEXT_ATTRS(style,fg,bg);
                   }
