@@ -370,14 +370,19 @@
 
                               (handling-module module-ref)
 
-                              (##build-module
-                               mod-path
-                               (c#target-name target)
-                               (##cons
-                                (##list 'module-ref (##string->symbol module-ref))
-                                opts)))
+                              (let ((result
+                                      (##call-build-script
+                                       (path-expand "_build_.scm" mod-dir)
+                                       target options)))
+                                (if (##not result)
+                                  (##build-module
+                                   mod-path
+                                   (c#target-name target)
+                                   (##cons
+                                    (##list 'module-ref (##string->symbol module-ref))
+                                    opts)))))
 
-                            (exit-abnormally))))
+                            (##error (##string-append "Module not found '" module-ref "'")))))
 
 
                       (define (do-build-file-or-module file opts output)
