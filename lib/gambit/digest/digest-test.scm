@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "gambit/digest/test.scm"
+;;; File: "gambit/digest/digest-test.scm"
 
 ;;; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
 
@@ -9,6 +9,7 @@
 ;;; Test message digest computation.
 
 (##import gambit/digest)
+(##import gambit/test)
 
 (define crc32-test-vectors
   '(
@@ -84,7 +85,7 @@
 ;;      "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0")
    ))
 
-(define (test-digest)
+(define (digest-test)
 
   (namespace ("" pp list->u8vector))
 
@@ -123,6 +124,8 @@
                                0
                                (u8vector-length u8vect2))
                               (close-digest digest 'hex))))))))
+           (check-equal? md expect)
+           '
            (if (not (string-ci=? md expect))
                (pp (list '***error*** algorithm md expect))))))
      vectors))
@@ -134,6 +137,6 @@
   (t 'sha-256 sha-256-test-vectors)
 )
 
-(test-digest)
+(digest-test)
 
 ;;;============================================================================
