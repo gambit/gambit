@@ -21,7 +21,6 @@
   (set! ##module-search-order x))
 
 ;;;----------------------------------------------------------------------------
-
 (define-prim (##modref->string modref #!optional (namespace? #f))
   (let* ((host
           (macro-modref-host modref))
@@ -515,7 +514,7 @@
 
   (let ((mod-string (##modref->string modref)))
     (and
-      ((let () (##namespace ("" member)) member) ;; TODO: Change member to ##member.
+      (##member
        mod-string
        (##os-module-whitelist)
        (lambda (a b)
@@ -687,7 +686,8 @@
 (define-prim (##apply-module-alias modref)
   (define (modref-prefix=? mod prefix)
     (let ((suffix (##string-prefix=? mod prefix)))
-      (and (or (##fx=    0   (##string-length suffix))
+      (and (##string? suffix)
+           (or (##fx=    0   (##string-length suffix))
                (##char=? #\/ (##string-ref suffix 0 )))
            suffix)))
 
@@ -724,7 +724,7 @@
           (rpath-join
             (let ((cur (##car lst)))
               (if (##symbol? cur)
-                (##path-expand p (##symbol->string cur))
+                (##path-expand (##symbol->string cur) p)
                 (ill-formed-define-module-alias)))
             (##cdr lst))
           p))
@@ -768,7 +768,10 @@
            (##module-aliases
             (##cons
               (##cons name-str value-str)
-              (##module-aliases))))))))))
+              (##module-aliases))))))
+     (##expand-source-template
+      src
+      `(##begin))))))
 
 
 (define-runtime-syntax ##define-module-alias
