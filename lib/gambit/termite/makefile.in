@@ -6,7 +6,7 @@ herefromroot = lib/gambit/termite
 rootfromhere = ../../..
 SUBDIRS = otp
 HEADERS_SCM = termite\#.scm
-MODULES_SCM = termite.scm data.scm deftype.scm match-support.scm io.scm process-mgmt.scm recv.scm uuid.scm
+MODULES_SCM = termite.scm data.scm deftype.scm match-support.scm io.scm process.scm recv.scm uuid.scm
 MAIN_MODULES = termite
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
