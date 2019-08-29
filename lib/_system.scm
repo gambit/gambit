@@ -3739,6 +3739,16 @@
             (deserialize-subprocedure-with-id! subproc-id)))))
 
   (define (deserialize-subprocedure-with-id! subproc-id)
+    (define (get-subprocedure proc err parent-name subproc-id)
+      (let ((obj (proc parent-name subproc-id)))
+        (##display parent-name ##stdout-port)
+        (##newline ##stdout-port)
+        (if obj
+          (begin
+            (alloc! obj)
+            obj)
+          (err))))
+
     (let ((v (deserialize!)))
       (if (not (eqv? v (##system-version)))
           (err)
@@ -3757,15 +3767,18 @@
                       (let ((name
                              (string->symbol (deserialize-string! x #x7f))))
                         (alloc! name)
-                        name)))
-                 (parent
-                  (##global-var-primitive-ref
-                   (##make-global-var parent-name))))
-            (if (not (procedure? parent)) ;; should also check subproc-id
-                (err)
-                (let ((obj (##make-subprocedure parent subproc-id)))
-                  (alloc! obj)
-                  obj))))))
+                        name))))
+
+            (get-subprocedure
+              ##get-subprocedure-from-name-and-id
+              (lambda ()
+                (get-subprocedure
+                  ##unknown-procedure-handler
+                  err
+                  parent-name
+                  subproc-id))
+              parent-name
+              subproc-id)))))
 
   (define (create-global-var-if-needed sym)
     (let ((x (read-u8)))
@@ -4149,6 +4162,18 @@
           (##u8vector->object u8vect)
           (macro-check-procedure transform 2 (u8vector->object u8vect transform)
             (##u8vector->object u8vect transform))))))
+
+(define-prim (##get-subprocedure-from-name-and-id name subproc-id)
+  (let ((parent (##global-var-primitive-ref
+                 (##make-global-var name))))
+    (and (procedure? parent)
+         (##make-subprocedure parent subproc-id))))
+
+(define-prim (##unknown-procedure-handler name subproc-id)
+  #f)
+
+(define-prim (##unknown-procedure-handler-set! x)
+  (set! ##unknown-procedure-handler x))
 
 (##namespace (""
  structure?
