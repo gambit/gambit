@@ -193,6 +193,8 @@
 
 (object->u8vector '(123 #f "")) (object->u8vector '(123 #f "") (lambda (x) (if (not x) '() x)))
 
+(u8vector->object (object->u8vector '(123 #f ""))) (u8vector->object (object->u8vector '(123 #f "")) (lambda (x) (if (not x) '() x)))
+
 (let* ((p (open-directory)) (result (##read p))) (##close-port p) result)
 (let* ((p (open-directory ".")) (result (##read p))) (##close-port p) result)
 

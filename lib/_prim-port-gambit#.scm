@@ -118,6 +118,7 @@ read-subu8vector
 (udp-source-socket-info udp-source-socket-info#unimplemented)
 (udp-write-subu8vector udp-write-subu8vector#unimplemented)
 (udp-write-u8vector udp-write-u8vector#unimplemented)
+u8vector->object
 with-input-from-port
 with-input-from-process
 with-input-from-string
