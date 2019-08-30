@@ -22,14 +22,14 @@
 
 ;;;----------------------------------------------------------------------------
 (define-prim (##modref->string modref #!optional (namespace? #f))
-  (let* ((host
-          (macro-modref-host modref))
+  (let* ((account
+          (macro-modref-account modref))
          (tag
           (macro-modref-tag modref))
          (rpath
           (macro-modref-rpath modref))
          (parts
-          (##append (if host (##reverse host) '())
+          (##append (if account (##reverse account) '())
                     (##reverse
                      (if tag
                          (##cons (##string-append (##car rpath) "@" tag)
@@ -298,7 +298,7 @@
                       (check (##cdr nested-dirs)))))))
 
     (let* ((host
-            (macro-modref-host modref))
+            (macro-modref-account modref))
            (tag
             (macro-modref-tag modref))
            (rpath
