@@ -20,17 +20,23 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##modref->string modref #!optional (namespace? #f))
-  (let* ((rpath
-          (##reverse (macro-modref-path modref)))
+  (let* ((account
+          (macro-modref-account modref))
+         (tag
+          (macro-modref-tag modref))
+         (rpath
+          (macro-modref-rpath modref))
          (parts
-          (##append (##reverse (macro-modref-host modref))
-                    (##cons (##car rpath)
-                            (##append (##reverse (macro-modref-tag modref))
-                                      (##cdr rpath)))))
+          (##append (if account (##reverse account) '())
+                    (##reverse
+                     (if tag
+                         (##cons (##string-append (##car rpath) "@" tag)
+                                 (##cdr rpath))
+                         rpath))))
          (name
           (##append-strings
            (##map (lambda (x)
-                    (##string-append x "/"))
+                    (##string-append x (##string ##module-path-sep)))
                   parts))))
     (let ((len-1 (##fx- (##string-length name) 1)))
       (if namespace?
@@ -38,15 +44,17 @@
           (##string-shrink! name len-1)))
     name))
 
-(define-prim (##string->modref str)
-  (let ((x (##parse-module-ref str)))
+;;;----------------------------------------------------------------------------
+
+(define ##module-path-sep #\/)
+
+(define-prim (##parse-module-ref str-or-src)
+  (let ((x (##parse-module-ref-possibly-relative str-or-src)))
     (and x
          (##fx= (##car x) 0)
          (##cdr x))))
 
-;;;----------------------------------------------------------------------------
-
-(define-prim (##parse-module-ref str-or-src)
+(define-prim (##parse-module-ref-possibly-relative str-or-src)
 
   (define (valid-module-ref-part? x)
     (or (##symbol? x)
@@ -57,87 +65,113 @@
         (##symbol->string x)
         (##number->string x)))
 
-  (define (split-at-path-sep str rest)
-    (and rest
-         (##string-split-at str #\/ rest)))
+  (define (reverse-split-at-module-path-sep str tail)
+    (and tail
+         (##reverse-string-split-at str ##module-path-sep tail)))
 
-  (define (split-rest lst)
-    (if (##pair? lst)
-        (let ((x (##source-strip (##car lst))))
-          (and (valid-module-ref-part? x)
-               (split-at-path-sep (module-ref-part->string x)
-                                  (split-rest (##cdr lst)))))
-        (if (##null? lst)
-            '()
-            #f)))
+  (define (reverse-split-path lst tail)
+    (let loop ((lst lst) (rev-parts tail))
+      (if (##pair? lst)
+          (let ((x (##source-strip (##car lst)))
+                (rest (##cdr lst)))
+            (and (valid-module-ref-part? x)
+                 (let ((str (module-ref-part->string x)))
+                   (and (##fx>= (##string-length str) 1)
+                        (if (##char=? (##string-ref str 0) #\@)
+                            (if (or (##pair? rest) (##not (##pair? rev-parts)))
+                                #f
+                                (##cons (##string-append (##car rev-parts) str)
+                                        (##cdr rev-parts)))
+                            (loop rest
+                                  (reverse-split-at-module-path-sep
+                                   str
+                                   rev-parts)))))))
+          (if (##null? lst)
+              rev-parts
+              #f))))
 
-  (define (valid-component? str in-hostname?)
+  (define (valid-component? str context)
     (let ((len (##string-length str)))
-      (and (##fx> len 0)
-           (or (##not in-hostname?)
+      (and (##fx>= len 1) ;; component must not be empty
+           (or (##not (##eq? context 'host))
+               ;; a host name component must not start or end with "-"
                (##not (or (##char=? (##string-ref str 0) #\-)
                           (##char=? (##string-ref str (##fx- len 1)) #\-))))
            (let loop ((i (##fx- len 1)))
              (if (##fx< i 0)
                  #t
                  (let ((c (##string-ref str i)))
-                   (if (or (and (##char>=? c #\a) (##char<=? c #\z))
-                           (and (##char>=? c #\A) (##char<=? c #\Z))
-                           (and (##char>=? c #\0) (##char<=? c #\9))
-                           (##char=? c #\-)
-                           (and (##not in-hostname?)
-                                (or (##char=? c #\_)
-                                    (##char=? c #\.))))
-                       (loop (##fx- i 1)))))))))
+                   ;; otherwise a-z, A-Z, 0-9 and "-" are allowed
+                   (and (or (and (##char>=? c #\a) (##char<=? c #\z))
+                            (and (##char>=? c #\A) (##char<=? c #\Z))
+                            (and (##char>=? c #\0) (##char<=? c #\9))
+                            (##char=? c #\-)
+                            (and (##not (##eq? context 'host))
+                                 (or
+                                  ;; except in host name, allow "_" and
+                                  (##char=? c #\_)
+                                  ;; in tag, allow "."
+                                  (and (##eq? context 'tag)
+                                       (##char=? c #\.)))))
+                        (loop (##fx- i 1)))))))))
 
-  (define (valid-components? lst in-hostname?)
+  (define (valid-components? lst context)
     (if (##pair? lst)
-        (and (valid-component? (##car lst) in-hostname?)
-             (valid-components? (##cdr lst) in-hostname?))
+        (let ((head (##car lst))
+              (rest (##cdr lst)))
+          (and (valid-component? head context)
+               (valid-components? rest context)))
         #t))
 
-  (define (valid-hostname? str)
-    (let ((x (##string-split-at str #\. '())))
-      (and (##pair? x)
-           (##pair? (##cdr x))
-           (valid-components? x #t))))
+  (define (valid-host-name? str) ;; syntax: component.component[.component]*
+    (let ((x (##reverse-string-split-at str #\. '())))
+      (and (##pair? (##cdr x)) ;; must have at least one "."
+           (valid-components? x 'host)))) ;; and valid host components
 
-  (define (parse-hosted hostname parts)
-    (and (##pair? parts)
-         (let ((username (##car parts))
-               (parts (##cdr parts)))
-           (and (##pair? parts)
-                (let ((repo (##car parts))
-                      (parts (##cdr parts)))
-                  (if (##pair? parts)
-                      (let ((tree (##car parts))
-                            (parts (##cdr parts)))
-                        (and (##pair? parts)
-                             (let ((tag (##car parts))
-                                   (parts (##cdr parts)))
-                               (macro-make-modref
-                                (##list username hostname)
-                                (##list tag tree)
-                                (##reverse (##cons repo parts))))))
-                      (macro-make-modref
-                       (##list username hostname)
-                       '()
-                       (##list repo))))))))
+  (define (parse-rest-with-tag nb-dots tag rev-parts)
+    (and (##pair? rev-parts)
+         (let loop ((prev2 #f) (prev1 #f) (curr rev-parts))
+           (let ((part (##car curr))
+                 (next (##cdr curr)))
+             (if (##pair? next)
+                 (and (valid-component? part 'path)
+                      (loop prev1 curr next))
+                 (if (and prev2
+                          (valid-host-name? part))
+                     (begin
+                       (##set-cdr! prev2 '()) ;; terminate path
+                       (cons nb-dots
+                             (macro-make-modref prev1 ;; account and host name
+                                                tag
+                                                rev-parts)))
+                     (and (valid-component? part 'path)
+                          (##not tag) ;; must not have a tag
+                          (cons nb-dots
+                                (macro-make-modref #f
+                                                   tag
+                                                   rev-parts)))))))))
 
-  (define (validate-rest nb-dots parts)
-    (and (##pair? parts)
-         (valid-components? (##cdr parts) #f)
-         (let ((head (##car parts)))
-           (if (valid-hostname? head)
-               (let ((modref (parse-hosted head (##cdr parts))))
-                 (and modref
-                      (##cons nb-dots modref)))
-               (and (valid-component? head #f)
-                    (##cons nb-dots
-                            (macro-make-modref
-                             '()
-                             '()
-                             (##reverse parts))))))))
+  (define (parse-rest nb-dots rev-parts)
+    (if (##pair? rev-parts)
+        (let* ((head (##car rev-parts))
+               (x (##reverse-string-split-at head #\@ '()))
+               (len (##length x)))
+          (cond ((##fx> len 2) ;; improper syntax to have more than one "@"
+                 #f)
+                ((##fx= len 2) ;; one "@", check for valid tag
+                 (let ((tag (##car x)))
+                   (and (valid-component? tag 'tag)
+                        (parse-rest-with-tag nb-dots
+                                             tag
+                                             (##cons (##cadr x)
+                                                     (##cdr rev-parts))))))
+                (else
+                 (parse-rest-with-tag nb-dots
+                                      #f
+                                      rev-parts))))
+        (parse-rest-with-tag nb-dots
+                             #f
+                             rev-parts)))
 
   (define (parse-head-rest head-str rest)
     (let ((len-head-str (##string-length head-str)))
@@ -145,14 +179,18 @@
         (if (##fx< nb-dots len-head-str)
             (if (##char=? (##string-ref head-str nb-dots) #\.)
                 (loop (##fx+ nb-dots 1))
-                (validate-rest
+                (parse-rest
                  nb-dots
-                 (split-at-path-sep
-                  (##substring head-str nb-dots len-head-str)
-                  (split-rest rest))))
-            (validate-rest
+                 (reverse-split-path
+                  rest
+                  (reverse-split-at-module-path-sep
+                   (##substring head-str nb-dots len-head-str)
+                   '()))))
+            (parse-rest
              nb-dots
-             (split-rest rest))))))
+             (reverse-split-path
+              rest
+              '()))))))
 
   (define (parse head rest)
     (and (valid-module-ref-part? head)
@@ -168,19 +206,20 @@
             (parse code
                    '())))))
 
-(define-prim (##string-split-at str sep #!optional (rest '()))
+(define (##reverse-string-split-at str sep #!optional (rest '()))
   (let ((len (##string-length str)))
-    (let loop ((i (##fx- len 1)) (j len) (lst rest))
-      (if (##fx< i 0)
-          (##cons (##substring str 0 j) lst)
-          (let ((c (##string-ref str i)))
+    (let loop ((i 0) (j 0) (lst rest))
+      (if (##fx< j (##string-length str))
+          (let ((c (##string-ref str j))
+                (j+1 (##fx+ j 1)))
             (if (##char=? c sep)
-                (loop (##fx- i 1)
-                      i
-                      (##cons (##substring str (##fx+ i 1) j) lst))
-                (loop (##fx- i 1)
-                      j
-                      lst)))))))
+                (loop j+1
+                      j+1
+                      (##cons (##substring str i j) lst))
+                (loop i
+                      j+1
+                      lst)))
+          (##cons (##substring str i j) lst)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -219,21 +258,25 @@
                  (and (##pair? nested-dirs)
                       (check (##cdr nested-dirs)))))))
 
-    (let ((path (macro-modref-path modref)))
-      (if (and (##null? (macro-modref-host modref))
-               (##null? (macro-modref-tag modref)))
+    (let* ((account
+            (macro-modref-account modref))
+           (tag
+            (macro-modref-tag modref))
+           (rpath
+            (macro-modref-rpath modref)))
+      (if account
 
-          (search path
-                  path
-                  dir
+          (search rpath
+                  (butlast rpath)
+                  (join (##list (##string-append "@" (or tag "")))
+                        (##path-expand (last rpath)
+                                       (join account
+                                             dir)))
                   check-mod)
 
-          (search path
-                  (butlast path)
-                  (join (macro-modref-tag modref)
-                        (##path-expand (last path)
-                                       (join (macro-modref-host modref)
-                                             dir)))
+          (search rpath
+                  rpath
+                  dir
                   check-mod))))
 
   (let loop ((lst search-order))
@@ -463,7 +506,7 @@
       module-ref))
 
    (or (##lookup-registered-module module-ref)
-       (let ((modref (##string->modref (##symbol->string module-ref))))
+       (let ((modref (##parse-module-ref (##symbol->string module-ref))))
          (if (##not modref)
              (err)
              (let ((mod-info (##search-or-else-install-module modref)))
@@ -497,36 +540,35 @@
                 #f)) ;; quiet?
     result)
 
-  (if (##not (##string=? "" (##path-extension mod-str)))
-      (fallback)
-      (let ((modref (##string->modref mod-str)))
-        (if (##not modref)
-            (fallback)
-            (let* ((module-ref (##string->symbol mod-str))
-                   (module (##lookup-registered-module module-ref)))
-              (if module
-                  (##load-module (macro-module-module-ref module))
-                  (let ((mod-info (##search-module
-                                   modref
-                                   (##cons "" ##module-search-order))))
-                    (if mod-info ;; found module?
-                        (let* ((module
-                                (##get-module-from-file module-ref
-                                                        modref
-                                                        mod-info))
-                               (module-descr
-                                (macro-module-module-descr module))
-                               (meta-info
-                                (macro-module-descr-meta-info module-descr))
-                               (x
-                                (##assq 'script-line meta-info)))
-                          (if x
-                              (script-callback (##cdr x)
-                                               (##vector-ref mod-info 3)))
-                          (after-file-load
-                           (##load-module (macro-module-module-ref module))
-                           (##vector-ref mod-info 3)))
-                        (fallback)))))))))
+  (let ((modref (##parse-module-ref mod-str)))
+    (if (##not modref)
+        (fallback)
+        (let* ((module-ref (##string->symbol mod-str))
+               (module (##lookup-registered-module module-ref)))
+          ;;(pp (##vector-copy modref))
+          (if module
+              (##load-module (macro-module-module-ref module))
+              (let ((mod-info (##search-module
+                               modref
+                               (##cons "" ##module-search-order))))
+                (if mod-info ;; found module?
+                    (let* ((module
+                               (##get-module-from-file module-ref
+                                                       modref
+                                                       mod-info))
+                           (module-descr
+                            (macro-module-module-descr module))
+                           (meta-info
+                            (macro-module-descr-meta-info module-descr))
+                           (x
+                            (##assq 'script-line meta-info)))
+                      (if x
+                          (script-callback (##cdr x)
+                                           (##vector-ref mod-info 3)))
+                      (after-file-load
+                       (##load-module (macro-module-module-ref module))
+                       (##vector-ref mod-info 3)))
+                    (fallback))))))))
 
 (define ##debug-modules? #f)
 
@@ -541,14 +583,13 @@
      src
      2
      (lambda (arg-src)
-       (let ((x (##parse-module-ref arg-src)))
-         (if (or (##not x) (##not (##fx= (##car x) 0)))
+       (let ((modref (##parse-module-ref arg-src)))
+         (if (##not modref)
              (##raise-expression-parsing-exception
               'ill-formed-special-form
               src
               (##source-strip (##car (##source-strip src))))
-             (let* ((modref (##cdr x))
-                    (mod-info (##search-or-else-install-module modref)))
+             (let ((mod-info (##search-or-else-install-module modref)))
                (if (##not mod-info)
                    (##raise-expression-parsing-exception
                     'module-not-found
