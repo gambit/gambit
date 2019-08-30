@@ -20,14 +20,14 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##modref->string modref #!optional (namespace? #f))
-  (let* ((account
-          (macro-modref-account modref))
+  (let* ((host
+          (macro-modref-host modref))
          (tag
           (macro-modref-tag modref))
          (rpath
           (macro-modref-rpath modref))
          (parts
-          (##append (if account (##reverse account) '())
+          (##append (if host (##reverse host) '())
                     (##reverse
                      (if tag
                          (##cons (##string-append (##car rpath) "@" tag)
@@ -259,19 +259,19 @@
                  (and (##pair? nested-dirs)
                       (check (##cdr nested-dirs)))))))
 
-    (let* ((account
-            (macro-modref-account modref))
+    (let* ((host
+            (macro-modref-host modref))
            (tag
             (macro-modref-tag modref))
            (rpath
             (macro-modref-rpath modref)))
-      (if account
+      (if host
 
           (search rpath
                   (butlast rpath)
                   (join (##list (##string-append "@" (or tag "")))
                         (##path-expand (last rpath)
-                                       (join account
+                                       (join host
                                              dir)))
                   check-mod)
 
@@ -545,20 +545,19 @@
     (if (##not modref)
         (fallback)
         (let* ((module-ref (##string->symbol mod-str))
-               (module (##lookup-registered-module module-ref)))
-          ;;(pp (##vector-copy modref))
-          (if module
-              (##load-module (macro-module-module-ref module))
+               (mod (##lookup-registered-module module-ref)))
+          (if mod
+              (##load-module (macro-module-module-ref mod))
               (let ((mod-info (##search-module
                                modref
                                (##cons "" ##module-search-order))))
                 (if mod-info ;; found module?
-                    (let* ((module
-                               (##get-module-from-file module-ref
-                                                       modref
-                                                       mod-info))
+                    (let* ((mod
+                            (##get-module-from-file module-ref
+                                                    modref
+                                                    mod-info))
                            (module-descr
-                            (macro-module-module-descr module))
+                            (macro-module-module-descr mod))
                            (meta-info
                             (macro-module-descr-meta-info module-descr))
                            (x
@@ -567,7 +566,7 @@
                           (script-callback (##cdr x)
                                            (##vector-ref mod-info 3)))
                       (after-file-load
-                       (##load-module (macro-module-module-ref module))
+                       (##load-module (macro-module-module-ref mod))
                        (##vector-ref mod-info 3)))
                     (fallback))))))))
 
