@@ -10,6 +10,8 @@
 
 (##namespace ("gambit/define-library#"))
 
+(##include "define-library#.scm")
+
 (##include "~~lib/gambit#.scm")
 (##include "~~lib/_gambit#.scm")
 (##include "~~lib/_module#.scm")

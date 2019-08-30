@@ -1,4 +1,3 @@
 
-(##namespace ("gambit/define-library#"
-              define-library import))
+(##namespace ("" define-library import))
 
