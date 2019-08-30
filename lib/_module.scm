@@ -136,7 +136,8 @@
              (if (##pair? next)
                  (and (valid-component? part 'path)
                       (loop prev1 curr next))
-                 (if (and prev2
+                 (if (and (##fx= nb-dots 0) ;; hosted module?
+                          prev2
                           (valid-host-name? part))
                      (begin
                        (##set-cdr! prev2 '()) ;; terminate path
