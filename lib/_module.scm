@@ -46,6 +46,42 @@
           (##string-shrink! name len-1)))
     name))
 
+(define (##modref->path modref full?)
+  (define (last lst)
+    (if (pair? (cdr lst))
+      (last (cdr lst))
+      (car lst)))
+
+  (define (butlast lst)
+    (if (pair? (cdr lst))
+      (cons (car lst) (butlast (cdr lst)))
+      '()))
+
+  (define (join parts dir)
+    (if (pair? parts)
+      (join (cdr parts)
+            (if (string? dir) ;; Avoid trailing '/'
+              (path-expand dir (car parts))
+              (car parts)))
+      dir))
+
+  (let ((account (macro-modref-account modref))
+        (tag (macro-modref-tag modref))
+        (rpath (macro-modref-rpath modref)))
+    (let ((module-name (last rpath))
+          (rest (butlast rpath)))
+      ;; rpath contains at least one element.
+      (if full?
+        (join account
+              (join
+                (list (string-append "@" (or tag "")) module-name)
+                (join rest #f)))
+        ;; ignore the rest of rpath.
+        (join account
+              (path-expand
+                (string-append "@" (or tag ""))
+                module-name))))))
+
 ;;;----------------------------------------------------------------------------
 
 (define ##module-path-sep #\/)

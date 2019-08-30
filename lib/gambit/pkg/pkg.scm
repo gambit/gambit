@@ -13,8 +13,6 @@
 ;;;
 ;;; It exports the following functionalities:
 ;;;
-;;;    debug-mode?
-;;;    debug-mode?-set!
 ;;;    https-proto
 ;;;    install
 ;;;    install-hook
@@ -68,11 +66,6 @@
     (module-default-proto-set! proto)
     (set! module-default-proto proto)))
 
-;; Debug mode
-(define debug-mode? #f)
-(define (debug-mode?-set! x)
-  (set! debug-mode? x))
-
 ;; Installation function
 (define (install mod
                  #!optional
@@ -87,10 +80,15 @@
          (cdr lst))
         path))
 
+  (define (last lst)
+    (if (pair? (cdr lst))
+        (last (cdr lst))
+        (car lst)))
+
   (define (check-status process)
     (eq? (process-status process) 0))
 
-  ;; XXX: Variable names
+  ;; XXX: Variable names are bad
   (macro-force-vars (mod to p? p)
     (let ((repo-path (if (or (eq? to (macro-absent-obj))
                              (eq? to #f))
@@ -117,48 +115,34 @@
           (install mod to p? p)
           (let ((modref (##parse-module-ref mod)))
             (and modref
-                 (pair? (macro-modref-host modref))
-                 (let* ((module-name
-                         (let loop ((path (macro-modref-path modref)))
-                           (if (pair? (cdr path))
-                               (loop (cdr path))
-                               (car path))))
+                 (pair? (macro-modref-account modref))
+                 (let* ((account (macro-modref-account modref))
+                        (tag (macro-modref-tag modref))
+                        (rpath (macro-modref-rpath modref))
 
-                        ;; null? if no tag specify
-                        (tag
-                         (macro-modref-tag modref))
+                        (module-name (last rpath))
 
                         ;; url without the protocol
-                        (base-url
-                         (join-rev module-name
-                                   (macro-modref-host modref)))
+                        (base-url (join-rev module-name account))
 
                         ;; url used to clone the repo.
-                        (url
-                         (proto base-url))
-
-                        (archive-path
-                         (path-expand base-url repo-path))
-
-                        (supplied-version?
-                         (pair? tag))
+                        (url (proto base-url))
 
                         ;; Path on the file system where to clone
                         (clone-path
-                         (path-expand (tree-master) archive-path))
+                          (join-rev
+                            "@"
+                            (list base-url repo-path)))
 
-                        (install-path
-                         (and supplied-version?
-                              (let ((version (join-rev (car tag) (cdr tag))))
-                                (and (not (string=? (tree-master) version))
-                                     (path-expand version archive-path))))))
+                        (install-path (path-expand (##modref->path modref #f) repo-path)))
 
-                   (if install-path
+                   (if (string=? install-path clone-path)
+                       (git-clone url clone-path check-status prompt?)
                        (and (not (file-exists? install-path))
                             (let ((repo (or (git-clone url clone-path #f prompt?)
                                             (git-repository-open clone-path))))
                               (and repo
-                                   (let ((tar-rec-list (git-archive repo (car tag)))
+                                   (let ((tar-rec-list (git-archive repo tag))
                                          (tmp-dir (create-temporary-directory install-path)))
                                      (with-exception-handler
                                        (lambda (_)
@@ -166,9 +150,7 @@
                                          #f)
                                        (lambda ()
                                          (tar-rec-list-write tar-rec-list tmp-dir)
-                                         (rename-file tmp-dir install-path)))))))
-
-                       (git-clone url clone-path check-status prompt?)))))))))))
+                                         (rename-file tmp-dir install-path)))))))))))))))))
 
 
 ;; Return #f if module is not hosted
@@ -204,28 +186,19 @@
           (uninstall module t)
           (let ((modref (##parse-module-ref module)))
             (and modref
-                 (pair? (macro-modref-host modref))
-                 (let ((prefix (start-width? module to)))
-                   (and prefix
-                        (let loop ((modref-path (macro-modref-path modref)))
-                          (if (pair? (cdr modref-path))
-                              (loop (cdr modref-path))
-                              (macro-modref-path-set! modref modref-path)))
-                        (let ((mod-path (##modref->string modref)))
-                          (and
-                            (delete-file-or-directory
-                              (path-expand mod-path prefix) #t)
-                            (cleanup-install-folder
-                              (path-strip-trailing-directory-separator
-                                (path-directory mod-path)) prefix))))))))))))
+                 (pair? (macro-modref-account modref))
+                 (let* ((mod-path (##modref->path modref #f))
+                        (full-path (path-expand mod-path to)))
+                   (display full-path) (newline)
+                   (and (file-exists? full-path)
+                        (delete-file-or-directory
+                          (path-expand full-path) #t)
+                        (cleanup-install-folder
+                          (path-strip-trailing-directory-separator
+                            (path-directory mod-path)) to))))))))))
 
 (define (installed? module)
   (let ((modref (##parse-module-ref module)))
-
-    (and (pair? (macro-modref-host modref))
-         (null? (macro-modref-tag modref))
-         (macro-modref-tag-set! modref (list (tree-master))))
-
     (let ((result (##search-module modref)))
       (and (vector? result)
            (let ((port (vector-ref result 4)))
@@ -250,11 +223,10 @@
           2
           (update mod t)
           (let ((modref (##parse-module-ref mod)))
-            (and (pair? (macro-modref-host modref))
-                 (null? (macro-modref-tag modref))
+            (and (pair? (macro-modref-account modref))
+                 (not (macro-modref-tag modref))
                  (let ()
-                   (macro-modref-tag-set! modref (list (tree-master)))
-                   (let ((module-master-path (##modref->string modref)))
+                   (let ((module-master-path (##modref->path modref #f)))
                      (let ((repo (git-repository-open
                                   (path-expand module-master-path to))))
                        (and repo (git-pull repo))))))))))))
