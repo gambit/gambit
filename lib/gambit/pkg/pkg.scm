@@ -115,7 +115,7 @@
           proto
           4
           (install mod to p? p)
-          (let ((modref (##string->modref mod)))
+          (let ((modref (##parse-module-ref mod)))
             (and modref
                  (pair? (macro-modref-host modref))
                  (let* ((module-name
@@ -158,10 +158,15 @@
                             (let ((repo (or (git-clone url clone-path #f prompt?)
                                             (git-repository-open clone-path))))
                               (and repo
-                                   (let ((tar-rec-list (git-archive repo (car tag))))
-                                     (create-directory install-path)
-                                     (tar-rec-list-write tar-rec-list install-path)
-                                     #t))))
+                                   (let ((tar-rec-list (git-archive repo (car tag)))
+                                         (tmp-dir (create-temporary-directory install-path)))
+                                     (with-exception-handler
+                                       (lambda (_)
+                                         (delete-file-or-directory tmp-dir #t)
+                                         #f)
+                                       (lambda ()
+                                         (tar-rec-list-write tar-rec-list tmp-dir)
+                                         (rename-file tmp-dir install-path)))))))
 
                        (git-clone url clone-path check-status prompt?)))))))))))
 
@@ -197,7 +202,7 @@
           to
           2
           (uninstall module t)
-          (let ((modref (##string->modref module)))
+          (let ((modref (##parse-module-ref module)))
             (and modref
                  (pair? (macro-modref-host modref))
                  (let ((prefix (start-width? module to)))
@@ -215,7 +220,7 @@
                                 (path-directory mod-path)) prefix))))))))))))
 
 (define (installed? module)
-  (let ((modref (##string->modref module)))
+  (let ((modref (##parse-module-ref module)))
 
     (and (pair? (macro-modref-host modref))
          (null? (macro-modref-tag modref))
@@ -244,7 +249,7 @@
           to
           2
           (update mod t)
-          (let ((modref (##string->modref mod)))
+          (let ((modref (##parse-module-ref mod)))
             (and (pair? (macro-modref-host modref))
                  (null? (macro-modref-tag modref))
                  (let ()
@@ -271,7 +276,7 @@
               (loop (cddr rest) (cadr rest) (car rest))))
          (else
           (println (string-append "update " arg " to " to))
-          (or (update arg to)
+          (or (update arg (path-expand to))
               (println (string-append "Unable to update '" arg "' to '" to "'\n")))
           (if (pair? rest)
               (loop (cdr rest) (car rest) to)))))))
@@ -285,7 +290,7 @@
       (usage)
       (let loop ((rest (cdr args))
                  (arg (car args))
-                 (to (path-expand "~~userlib")))
+                 (to "~~userlib"))
         (cond
          ((string=? arg "-to")
           (if (or (null? rest) (null? (cdr rest)))
@@ -293,8 +298,8 @@
               (loop (cddr rest) (cadr rest) (car rest))))
          (else
           (println (string-append "install " arg " to " to))
-          (or (install arg to)
-              (println (string-append "Unable to install '" arg "' to '" to "'\n")))
+          (or (install arg (path-expand to))
+              (println (string-append "Unable to install '" arg "' to " to)))
           (if (pair? rest)
               (loop (cdr rest) (car rest) to)))))))
 
@@ -306,14 +311,14 @@
     (usage)
     (let loop ((rest (cdr args))
                (arg (car args))
-               (to (path-expand "~~userlib")))
+               (to "~~userlib"))
       (cond ((string=? arg "-to")
              (if (or (null? rest) (null? (cdr rest)))
                  (usage)
                  (loop (cddr rest) (cadr rest) (car rest))))
             (else
              (println (string-append "uninstall " arg " to " to))
-             (or (uninstall arg to)
+             (or (uninstall arg (path-expand to))
                  (println (string-append "Unable to uninstall '" arg "' to " to)))
              (if (pair? rest)
                  (loop (cdr rest) (car rest) to)))))))

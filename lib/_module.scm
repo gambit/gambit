@@ -699,7 +699,7 @@
             ((modref-prefix=? modstr (##car alias))
              => (lambda (suffix)
                   (or
-                    (##string->modref
+                    (##parse-module-ref
                      (##string-append
                        (##cdr alias)
                        suffix))
