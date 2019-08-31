@@ -563,7 +563,7 @@
                   (modref (##parse-module-ref library-name))
 
                   ;; Test if modref-path == .../ + name-default-string
-                  (valid? (if (null? (macro-modref-account modref))
+                  (valid? (if (null? (macro-modref-host modref))
                             (string=? library-name name-default-string)
                             (let ((mod-path (macro-modref-rpath modref)))
                               (has-suffix?

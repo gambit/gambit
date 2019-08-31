@@ -115,15 +115,15 @@
           (install mod to p? p)
           (let ((modref (##parse-module-ref mod)))
             (and modref
-                 (pair? (macro-modref-account modref))
-                 (let* ((account (macro-modref-account modref))
+                 (pair? (macro-modref-host modref))
+                 (let* ((host (macro-modref-host modref))
                         (tag (macro-modref-tag modref))
                         (rpath (macro-modref-rpath modref))
 
                         (module-name (last rpath))
 
                         ;; url without the protocol
-                        (base-url (join-rev module-name account))
+                        (base-url (join-rev module-name host))
 
                         ;; url used to clone the repo.
                         (url (proto base-url))
@@ -186,7 +186,7 @@
           (uninstall module t)
           (let ((modref (##parse-module-ref module)))
             (and modref
-                 (pair? (macro-modref-account modref))
+                 (pair? (macro-modref-host modref))
                  (let* ((mod-path (##modref->path modref #f))
                         (full-path (path-expand mod-path to)))
                    (display full-path) (newline)
@@ -223,7 +223,7 @@
           2
           (update mod t)
           (let ((modref (##parse-module-ref mod)))
-            (and (pair? (macro-modref-account modref))
+            (and (pair? (macro-modref-host modref))
                  (not (macro-modref-tag modref))
                  (let ()
                    (let ((module-master-path (##modref->path modref #f)))
