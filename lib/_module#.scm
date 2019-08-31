@@ -15,9 +15,9 @@
   opaque:
   unprintable:
 
-  account ;; #f or list: (account host)
-  tag     ;; #f or string
-  rpath   ;; non-empty list of path in reverse order
+  host   ;; #f or list: (account host)
+  tag    ;; #f or string
+  rpath  ;; non-empty list of path in reverse order
 )
 
 ;;;============================================================================
