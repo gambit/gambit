@@ -386,7 +386,7 @@
 
 
                       (define (do-build-file-or-module file opts output)
-                        (let* ((modref (##string->modref file))
+                        (let* ((modref (##parse-module-ref file))
                                (module? (and modref
                                              (##fx= 0 (##string-length
                                                        (##path-extension
