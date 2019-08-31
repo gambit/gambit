@@ -5,9 +5,9 @@
 herefromroot = lib/gambit/define-library
 rootfromhere = ../../..
 SUBDIRS =
-HEADERS_SCM = define-library\#.scm
-MODULES_SCM = define-library.scm
-MAIN_MODULES = define-library
+HEADERS_SCM = define-library\#.scm define-library-expand\#.scm
+MODULES_SCM = define-library.scm define-library-expand.scm
+MAIN_MODULES = define-library define-library-expand
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
