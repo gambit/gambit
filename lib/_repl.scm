@@ -1082,6 +1082,7 @@
 ,e   | ,(e X)   : Display environment of current frame or X (proc/cont/thread)
 ,ed  | ,(ed X)  : Like ,e and ,(e X) but also display dynamic environment
 ,st  | ,(st X)  : Display current thread group, or X (thread/thread group)
+,stg | ,(stg X) : Like ,st and ,(st X) but display thread groups recursively
 ,(v X)          : Start a REPL visiting X (proc/cont/thread)
 " port))
 
@@ -1576,6 +1577,14 @@
       (##display-thread-group-state thread-or-tgroup port))
   (##void))
 
+(define-prim (##cmd-stg thread-or-tgroup port)
+  (let ((tgroup
+         (if (macro-thread? thread-or-tgroup)
+           (macro-thread-tgroup thread-or-tgroup)
+           thread-or-tgroup)))
+    (##display-thread-group-state tgroup port #t)
+    (##void)))
+
 (define-prim (##display-thread-state thread port)
   (let ((now (##current-time-point)))
     (##display-thread-state-relative thread port now)))
@@ -1640,15 +1649,30 @@
                (##write ts port))))
       (##newline port))))
 
-(define-prim (##display-thread-group-state tgroup port)
-  (let* ((threads (##tgroup->thread-vector tgroup))
-         (now (##current-time-point)))
-    (let loop ((i 0))
-      (if (##fx< i (##vector-length threads))
+(define-prim (##display-thread-group-state tgroup port #!optional (recur? #f))
+  (define (display-tgroup-threads tgroup port now)
+    (let ((threads (##tgroup->thread-vector tgroup)))
+      (let loop ((i 0))
+        (if (##fx< i (##vector-length threads))
           (let ((thread (##vector-ref threads i)))
             (##display-thread-state-relative thread port now)
             (loop (##fx+ i 1)))
           i))))
+
+  (define (display-tgroup-recursive tgroup port now)
+    (let* ((tgroups (##tgroup->tgroup-vector tgroup))
+           (count (display-tgroup-threads tgroup port now)))
+      (let loop ((i 0) (j count))
+        (if (##fx< i (##vector-length tgroups))
+          (let* ((tgroup (##vector-ref tgroups i))
+                 (count (display-tgroup-recursive tgroup port now)))
+            (loop (##fx+ i 1) (##fx+ j count)))
+          j))))
+
+  (let ((now (##current-time-point)))
+    (if recur?
+      (display-tgroup-recursive tgroup port now)
+      (display-tgroup-threads tgroup port now))))
 
 (define-prim (##top timeout tgroup port)
 
@@ -2937,6 +2961,13 @@
                port)))
   (##repl-context-prompt repl-context))
 
+(define-prim (##repl-cmd-stg repl-context)
+  (##repl-channel-display-multiline-message
+   (lambda (output-port)
+     (##cmd-stg (macro-thread-tgroup (macro-current-thread))
+                output-port)))
+  (##repl-context-prompt repl-context))
+
 (define-prim (##repl-cmd-b repl-context)
   (##repl-cmd-b-be-bed #f repl-context))
 
@@ -3013,6 +3044,7 @@
           (##cons 'q   ##repl-cmd-q)
           (##cons 'qt  ##repl-cmd-qt)
           (##cons 'st  ##repl-cmd-st)
+          (##cons 'stg ##repl-cmd-stg)
           (##cons 'b   ##repl-cmd-b)
           (##cons 'be  ##repl-cmd-be)
           (##cons 'bed ##repl-cmd-bed)
@@ -3196,6 +3228,33 @@
                "THREAD or THREAD-GROUP expected"
                repl-context)))))))
 
+(define-prim (##repl-cmd-stg-with-1-arg arg repl-context)
+  (##repl-channel-release-ownership!)
+  (##eval-within
+   arg
+   (macro-repl-context-cont repl-context)
+   repl-context
+   (lambda (results)
+     (let ((val results))
+
+       (define (handle thread-or-tgroup)
+         (##repl-channel-acquire-ownership!)
+         (##repl-channel-display-multiline-message
+          (lambda (output-port)
+            (##cmd-stg thread-or-tgroup
+                       output-port)))
+         (##repl-context-prompt repl-context))
+
+       (cond ((macro-tgroup? val)
+              (handle val))
+             ((macro-thread? val)
+              (handle val))
+             (else
+              (##repl-channel-acquire-ownership!)
+              (##repl-cmd-invalid
+               "THREAD or THREAD-GROUP expected"
+               repl-context)))))))
+
 (define ##repl-commands-with-1-arg
   (##list (##cons 'h   ##repl-cmd-h-with-1-arg)
           (##cons 'c   ##repl-cmd-c-with-1-arg)
@@ -3208,6 +3267,7 @@
           (##cons 'ed  ##repl-cmd-ed-with-1-arg)
           (##cons 'v   ##repl-cmd-v-with-1-arg)
           (##cons 'st  ##repl-cmd-st-with-1-arg)
+          (##cons 'stg ##repl-cmd-stg-with-1-arg)
           ))
 
 (define-prim (##repl-commands-with-1-arg-set! x)
