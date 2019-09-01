@@ -1,6 +1,6 @@
 # makefile for gambit/pkg module.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
 
 herefromroot = lib/gambit/pkg
 rootfromhere = ../../..

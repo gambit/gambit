@@ -308,30 +308,31 @@
                   (##list filename))))))))
 
 (define (##pkg-config mod #!optional (option (macro-absent-obj)))
+
   (define pkg-options
     '((cflags . "--cflags")
       (libs . "--libs")))
 
-  (define (##helper args)
+  (define (helper args)
     (##call-with-input-process
-      (list path:     "pkg-config"
+     (list path: "pkg-config"
             arguments: args
             stdout-redirection: #t
             stderr-redirection: #t)
       (lambda (port)
-        (and (= (##process-status port) 0)
+        (and (##fx= (##process-status port) 0)
              (##read-line port)))))
 
   (macro-force-vars (mod option)
     (if (##eq? option (macro-absent-obj))
-      (##helper (##list "--cflags" "--libs" mod))
-      (let ((opt (cond ((##assq option pkg-options) => ##cdr) (else #f))))
-         (and opt (##helper (##list opt mod)))))))
+        (helper (##list "--cflags" "--libs" mod))
+        (let ((opt (cond ((##assq option pkg-options) => ##cdr) (else #f))))
+          (and opt (##helper (##list opt mod)))))))
 
 (define (##call-build-script path target options)
-  (and (file-exists? path)
+  (and (##file-exists? path)
        ;; TODO: pass context variable to script
-       (eval `(let () (include ,path)))))
+       (##eval `(let () (include ,path)))))
 
 
 (define (##build-module path target options)
@@ -345,10 +346,28 @@
           (##string-append module-filename-noext ".o1"))
          (build-subdir
           (##module-build-subdir-path module-dir module-filename-noext target))
+         (config-file
+           (##path-expand "_config_.scm" module-dir))
+         (config
+           (and (##file-exists? config-file)
+                (eval `(let () (##include ,config-file)))))
+         ;; Handle cc-options correctly
          (cc-options
-          "")
+          (if (##pair? config)
+              (cond
+                ((##assq 'cc-options config)
+                 => cadr)
+                (else
+                  ""))
+              ""))
          (ld-options-prelude
-          "")
+          (if (##pair? config)
+              (cond
+                ((##assq 'ld-options config)
+                 => cadr)
+                (else
+                  ""))
+              ""))
          (ld-options
           ""))
 

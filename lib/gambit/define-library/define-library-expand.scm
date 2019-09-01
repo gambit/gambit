@@ -146,7 +146,8 @@
                          module-root modref-path)
   (let ((src (read-first port)))
     (if (eof-object? src)
-      (##raise-expression-parsing-exception
+      #f
+      #;(##raise-expression-parsing-exception
        'define-library-expected
        (##make-source src `#(,(string->symbol name))))
       (parse-define-library src import-name module-root modref-path))))
@@ -516,7 +517,8 @@
     (if (not (and (pair? form)
                   (eq? 'define-library (##source-strip (car form)))))
 
-        (##raise-expression-parsing-exception
+        #f
+        #;(##raise-expression-parsing-exception
          'define-library-expected
          src)
 
@@ -818,12 +820,22 @@
               import-set-src
               import-set-src
               modref-alias-str
-              (libdef-namespace ld)
-              (idmap-macros (libdef-exports ld))
-              (and (null? (libdef-body ld)) (null? (libdef-imports ld)))
-              (idmap-map (libdef-exports ld))))))
+              (and ld (libdef-namespace ld))
+              (and ld (idmap-macros (libdef-exports ld)))
+              (and ld (null? (libdef-body ld)) (null? (libdef-imports ld)))
+              (and ld (idmap-map (libdef-exports ld)))))))
 
       (import-set-err))))
+
+
+;;; Debug procedure.
+#;(define (trace-expansion srcs)
+  (for-each
+    (lambda (expr)
+      (display (object->string expr))
+      (newline))
+    (cdr (##desourcify srcs)))
+  srcs)
 
 (define (define-library-expand src)
   (let* ((ld (parse-define-library src #f #f #f))
@@ -878,9 +890,11 @@
         (println "define-library-expand==>libdef-namespace: " (libdef-namespace ld))
         (println)))
 
+    ;;; Uncomment to debug expansion
+    ; (trace-expansion
     (##expand-source-template
      src
-     (if (null? ld-imports)
+     (if (and (null? (libdef-body ld)) (null? ld-imports))
        `(##begin) ;; empty library
        `(##begin
          (##supply-module ,(string->symbol (libdef-name ld)))
@@ -901,6 +915,8 @@
          ,@ld-imports
          ,@(libdef-body ld)
          (##namespace ("")))))))
+    ; )
+
 
 (define (import-expand src)
   ;; Local ctx
@@ -948,53 +964,60 @@
            (set! rev-global-imports (cons idmap rev-global-imports))))
        args-srcs)))
 
+  ;;; Uncomment to debug expansion
+  ; (trace-expansion
   (##expand-source-template
    src
    `(##begin
      ,@(map (lambda (idmap)
 
-              `(##begin
+              (if (idmap-namespace idmap)
+                  `(##begin
 
-                ;; Imports dynamic (for functions)
-                ,(let ((symbol-name (string->symbol (idmap-name idmap))))
-                   ;; Special library
-                   (if debug-mode?
-                     (let ()
-                       (println "import-expand==>import: " symbol-name)
-                       (println "import-expand==>namespace: " (idmap-namespace idmap))
-                       (println)))
+                    ;; Decide if the module needed to have to be loaded. (only exports symbols).
+                    ,(let ((symbol-name (string->symbol (idmap-name idmap))))
+                       ;; Special library
+                       (if debug-mode?
+                         (let ()
+                           (println "import-expand==>import: " symbol-name)
+                           (println "import-expand==>namespace: " (idmap-namespace idmap))
+                           (println)))
 
-                   (if (idmap-only-export? idmap)
-                     `(##begin)
-                     `(##demand-module ,symbol-name)))
+                       (if (idmap-only-export? idmap)
+                         `(##begin)
+                         `(##demand-module ,symbol-name)))
 
 
-                ,@(if (pair? (idmap-map idmap))
-                   `((##namespace (,(idmap-namespace idmap)
-                      ,@(map (lambda (i)
-                               (if (eq? (car i) (cdr i))
-                                 (car i)
-                                 (list (car i) (cdr i))))
-                             (idmap-map idmap)))))
-                   '())
+                    ,@(if (pair? (idmap-map idmap))
+                       `((##namespace (,(idmap-namespace idmap)
+                          ,@(map (lambda (i)
+                                   (if (eq? (car i) (cdr i))
+                                     (car i)
+                                     (list (car i) (cdr i))))
+                                 (idmap-map idmap)))))
+                       '())
 
-                ;; Macro Handler !!!
-                ,@(apply
-                    append
-                    (map (lambda (m)
-                           (let ((id (car m)))
-                             (if #t ;(table-ref imports id #f) ;; macro is imported?
-                               `((##define-syntax
-                                  ,(string->symbol
-                                     (string-append
-                                       (idmap-namespace idmap)
-                                       (symbol->string id)))
-                                  (##lambda (src)
-                                   (syn#apply-rules
-                                     (##quote ,(cdr m))
-                                     src))))
-                               '())))
-                         (idmap-macros idmap)))))
+                    ;; Macro Handler !!!
+                    ,@(apply
+                        append
+                        (map (lambda (m)
+                               (let ((id (car m)))
+                                 (if #t ;(table-ref imports id #f) ;; macro is imported?
+                                   `((##define-syntax
+                                      ,(string->symbol
+                                         (string-append
+                                           (idmap-namespace idmap)
+                                           (symbol->string id)))
+                                      (##lambda (src)
+                                       (syn#apply-rules
+                                         (##quote ,(cdr m))
+                                         src))))
+                                   '())))
+                             (idmap-macros idmap))))
+
+                  ;; This was not a define-library import.
+                  `(##import ,(string->symbol (idmap-name idmap)))))
             rev-global-imports))))))
+  ; )
 
 ;;;============================================================================
