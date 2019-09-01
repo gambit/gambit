@@ -313,7 +313,7 @@
     '((cflags . "--cflags")
       (libs . "--libs")))
 
-  (define (helper args)
+  (define (run-pkg-config args)
     (##call-with-input-process
      (list path: "pkg-config"
             arguments: args
@@ -325,9 +325,9 @@
 
   (macro-force-vars (mod option)
     (if (##eq? option (macro-absent-obj))
-        (helper (##list "--cflags" "--libs" mod))
+        (run-pkg-config (##list "--cflags" "--libs" mod))
         (let ((opt (cond ((##assq option pkg-options) => ##cdr) (else #f))))
-          (and opt (##helper (##list opt mod)))))))
+          (and opt (run-pkg-config (##list opt mod)))))))
 
 (define (##call-build-script path target options)
   (and (##file-exists? path)
