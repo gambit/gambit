@@ -16,72 +16,8 @@
 (##include "~~lib/_gambit#.scm")
 (##include "~~lib/_module#.scm")
 
-(##namespace ("##"
-
-+
--
-<
-<=
-=
->
->=
-append
-apply
-assoc
-assq
-caddr
-cadr
-car
-cdar
-cdddr
-cddr
-cdr
-close-input-port
-cons
-display
-eof-object?
-eq?
-equal?
-error
-for-each
-length
-list
-list->vector
-make-table
-map
-memq
-newline
-not
-null?
-object->string
-pair?
-path-directory
-path-expand
-path-strip-trailing-directory-separator
-println
-reverse
-reverse!
-set-car!
-string->symbol
-string-append
-string-length
-string-ref
-string=?
-string?
-substring
-symbol->string
-symbol?
-table->list
-table-ref
-table-set!
-vector
-vector->list
-vector-length
-vector-ref
-vector-set!
-vector? 
-
-))
+(##include "~~lib/_prim#.scm")
+(##namespace ("" define-syntax))
 
 ;;;============================================================================
 
@@ -876,7 +812,7 @@ vector?
                        (ill-formed-library-name)
                        modstr)))
 
-                 (modref-alias (let ((modref (##parse-module-ref import-name-path))) ;; XXX: may bug in near future
+                 (modref-alias (let ((modref (##parse-module-ref import-name-path)))
                                  ;(if modref
                                     (##apply-module-alias modref)
 
