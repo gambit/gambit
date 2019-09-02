@@ -16,6 +16,73 @@
 (##include "~~lib/_gambit#.scm")
 (##include "~~lib/_module#.scm")
 
+(##namespace ("##"
+
++
+-
+<
+<=
+=
+>
+>=
+append
+apply
+assoc
+assq
+caddr
+cadr
+car
+cdar
+cdddr
+cddr
+cdr
+close-input-port
+cons
+display
+eof-object?
+eq?
+equal?
+error
+for-each
+length
+list
+list->vector
+make-table
+map
+memq
+newline
+not
+null?
+object->string
+pair?
+path-directory
+path-expand
+path-strip-trailing-directory-separator
+println
+reverse
+reverse!
+set-car!
+string->symbol
+string-append
+string-length
+string-ref
+string=?
+string?
+substring
+symbol->string
+symbol?
+table->list
+table-ref
+table-set!
+vector
+vector->list
+vector-length
+vector-ref
+vector-set!
+vector? 
+
+))
+
 ;;;============================================================================
 
 ;; Setup implementation of define-syntax and syntax-rules.
@@ -33,7 +100,8 @@
       (append
        '(
          (cannot-find-library            . "Cannot find library")
-         (define-library-expected        . "define-library form expected")
+         (r7rs-library-expected          . "R7RS library expected")
+         ; (define-library-expected        . "define-library form expected")
          (ill-formed-library-name        . "Ill-formed library name")
          (ill-formed-library-decl        . "Ill-formed library declaration")
          (ill-formed-export-spec         . "Ill-formed export spec")
@@ -644,6 +712,11 @@
        'ill-formed-library-name
        import-set-src))
 
+    (define (r7rs-library-expected)
+      (##raise-expression-parsing-exception
+       'r7rs-library-expected
+       import-set-src))
+
     (define (count-dot str)
       (let ((len (string-length str)))
         (let loop ((i 0))
@@ -678,104 +751,105 @@
           (if (not (pair? args-srcs))
             (import-set-err)
             (let ((idmap (parse-import-set (car args-srcs) ctx-library)))
-              (case head
+              (if (not (idmap-namespace idmap))
+                  (r7rs-library-expected)
+                  (case head
 
-                ((rename)
-                 (let ((idmap (parse-import-set (car args-srcs) ctx-library)))
-                   (let loop ((lst (cdr args-srcs)) (renames '()))
-                     (cond ((null? lst)
-                            (make-idmap
-                              import-set-src
-                              (idmap-name-src idmap)
-                              (idmap-name idmap)
-                              (idmap-namespace idmap)
-                              (idmap-macros idmap)
-                              (idmap-only-export? idmap)
-                              (append (map (lambda (r)
-                                             (cons (cdr r) (cdar r)))
-                                           renames)
-                                      (keep (lambda (x)
-                                              (not (assq x renames)))
-                                            (idmap-map idmap)))))
-                           ((pair? lst)
-                            (let* ((ren-src (car lst))
-                                   (ren (##source-strip ren-src)))
-                              (if (not (and (pair? ren)
-                                            (pair? (cdr ren))
-                                            (null? (cddr ren))))
-                                (import-set-err)
-                                (let* ((id1-src (car ren))
-                                       (id1 (##source-strip id1-src))
-                                       (id2-src (cadr ren))
-                                       (id2 (##source-strip id2-src)))
-                                  (if (not (and (symbol? id1)
-                                                (symbol? id2)))
-                                    (import-set-err)
-                                    (let ((x
-                                            (assq id1 (idmap-map idmap))))
-                                      (if (not x)
-                                        (##raise-expression-parsing-exception
-                                         'unexported-identifier
-                                         id1-src
-                                         id1)
-                                        (loop (cdr lst)
-                                              (cons (cons x id2)
-                                                    renames)))))))))
-                           (else
-                             (import-set-err))))))
+                    ((rename)
+                     (let loop ((lst (cdr args-srcs)) (renames '()))
+                       (cond ((null? lst)
+                              (make-idmap
+                                import-set-src
+                                (idmap-name-src idmap)
+                                (idmap-name idmap)
+                                (idmap-namespace idmap)
+                                (idmap-macros idmap)
+                                (idmap-only-export? idmap)
+                                (append (map (lambda (r)
+                                               (cons (cdr r) (cdar r)))
+                                             renames)
+                                        (keep (lambda (x)
+                                                (not (assq x renames)))
+                                              (idmap-map idmap)))))
+                             ((pair? lst)
+                              (let* ((ren-src (car lst))
+                                     (ren (##source-strip ren-src)))
+                                (if (not (and (pair? ren)
+                                              (pair? (cdr ren))
+                                              (null? (cddr ren))))
+                                  (import-set-err)
+                                  (let* ((id1-src (car ren))
+                                         (id1 (##source-strip id1-src))
+                                         (id2-src (cadr ren))
+                                         (id2 (##source-strip id2-src)))
+                                    (if (not (and (symbol? id1)
+                                                  (symbol? id2)))
+                                      (import-set-err)
+                                      (let ((x
+                                              (assq id1 (idmap-map idmap))))
+                                        (if (not x)
+                                          (##raise-expression-parsing-exception
+                                           'unexported-identifier
+                                           id1-src
+                                           id1)
+                                          (loop (cdr lst)
+                                                (cons (cons x id2)
+                                                      renames)))))))))
+                             (else
+                               (import-set-err)))))
 
-                ((prefix)
-                 (if (not (and (pair? (cdr args-srcs))
-                               (null? (cddr args-srcs))))
-                   (import-set-err)
-                   (let* ((prefix-src
-                            (cadr args-srcs))
-                          (prefix
-                            (##source-strip prefix-src)))
-                     (if (not (symbol? prefix))
+                    ((prefix)
+                     (if (not (and (pair? (cdr args-srcs))
+                                   (null? (cddr args-srcs))))
                        (import-set-err)
-                       (make-idmap
-                         import-set-src
-                         (idmap-name-src idmap)
-                         (idmap-name idmap)
-                         (idmap-namespace idmap)
-                         (idmap-macros idmap)
-                         (idmap-only-export? idmap)
-                         (let ((prefix-str (symbol->string prefix)))
-                           (map (lambda (x)
-                                  (cons (string->symbol
-                                          (string-append
-                                            prefix-str
-                                            (symbol->string (car x))))
-                                        (cdr x)))
-                                (idmap-map idmap))))))))
+                       (let* ((prefix-src
+                                (cadr args-srcs))
+                              (prefix
+                                (##source-strip prefix-src)))
+                         (if (not (symbol? prefix))
+                           (import-set-err)
+                           (make-idmap
+                             import-set-src
+                             (idmap-name-src idmap)
+                             (idmap-name idmap)
+                             (idmap-namespace idmap)
+                             (idmap-macros idmap)
+                             (idmap-only-export? idmap)
+                             (let ((prefix-str (symbol->string prefix)))
+                               (map (lambda (x)
+                                      (cons (string->symbol
+                                              (string-append
+                                                prefix-str
+                                                (symbol->string (car x))))
+                                            (cdr x)))
+                                    (idmap-map idmap))))))))
 
-                (else
-                  (let* ((ids
-                          (map (lambda (id-src)
-                                 (let ((id (##source-strip id-src)))
-                                   (if (not (symbol? id))
-                                     (##raise-expression-parsing-exception
-                                      'id-expected
-                                      id-src)
-                                     (if (not (assq id (idmap-map idmap)))
-                                       (##raise-expression-parsing-exception
-                                        'unexported-identifier
-                                        id-src
-                                        id)
-                                       id))))
-                               (cdr args-srcs)))
-                        (only-keep (if (eq? head 'only)
-                              (lambda (x) (memq (car x) ids))
-                              (lambda (x) (not (memq (car x) ids))))))
-                    (make-idmap
-                      import-set-src
-                      (idmap-name-src idmap)
-                      (idmap-name idmap)
-                      (idmap-namespace idmap)
-                      (keep only-keep (idmap-macros idmap))
-                      (idmap-only-export? idmap)
-                      (keep only-keep (idmap-map idmap))))))))
+                    (else
+                      (let* ((ids
+                              (map (lambda (id-src)
+                                     (let ((id (##source-strip id-src)))
+                                       (if (not (symbol? id))
+                                         (##raise-expression-parsing-exception
+                                          'id-expected
+                                          id-src)
+                                         (if (not (assq id (idmap-map idmap)))
+                                           (##raise-expression-parsing-exception
+                                            'unexported-identifier
+                                            id-src
+                                            id)
+                                           id))))
+                                   (cdr args-srcs)))
+                            (only-keep (if (eq? head 'only)
+                                  (lambda (x) (memq (car x) ids))
+                                  (lambda (x) (not (memq (car x) ids))))))
+                        (make-idmap
+                          import-set-src
+                          (idmap-name-src idmap)
+                          (idmap-name idmap)
+                          (idmap-namespace idmap)
+                          (keep only-keep (idmap-macros idmap))
+                          (idmap-only-export? idmap)
+                          (keep only-keep (idmap-map idmap)))))))))
 
           (let* ((dot-and-modref (parse-name import-set-src))
 
