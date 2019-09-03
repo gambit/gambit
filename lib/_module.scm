@@ -556,10 +556,9 @@
        (lambda (a b)
          (module-prefix=? a b)))
 
-      (begin
-        (##load-module 'gambit/pkg)
-        ;; TODO: Suppress warning undefined symbol.
-        (and (gambit/pkg#install mod-string) modref)))))
+      (and ((##eval '(let () (##import gambit/pkg) install)) mod-string)
+           ;; Return the modref
+           modref))))
 
 
 (define-prim (##install-module-set! x)
