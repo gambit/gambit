@@ -36,8 +36,7 @@
       (append
        '(
          (cannot-find-library            . "Cannot find library")
-         (r7rs-library-expected          . "R7RS library expected")
-         ; (define-library-expected        . "define-library form expected")
+         (define-library-expected        . "define-library form expected")
          (ill-formed-library-name        . "Ill-formed library name")
          (ill-formed-library-decl        . "Ill-formed library declaration")
          (ill-formed-export-spec         . "Ill-formed export spec")
@@ -648,9 +647,9 @@
        'ill-formed-library-name
        import-set-src))
 
-    (define (r7rs-library-expected)
+    (define (define-library-expected)
       (##raise-expression-parsing-exception
-       'r7rs-library-expected
+       'define-library-expected
        import-set-src))
 
     (define (count-dot str)
@@ -688,7 +687,7 @@
             (import-set-err)
             (let ((idmap (parse-import-set (car args-srcs) ctx-library)))
               (if (not (idmap-namespace idmap))
-                  (r7rs-library-expected)
+                  (define-library-expected)
                   (case head
 
                     ((rename)
