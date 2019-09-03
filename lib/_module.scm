@@ -544,7 +544,7 @@
               (loop (##fx+ i 1))))
           (if (##fx= i str-len)
             #t
-            (##char=? #\/ (##string-ref str i))))))))
+            (##char=? ##module-path-sep (##string-ref str i))))))))
 
   (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
 
@@ -559,9 +559,7 @@
       (begin
         (##load-module 'gambit/pkg)
         ;; TODO: Suppress warning undefined symbol.
-        (gambit/pkg#install mod-string)
-
-        modref))))
+        (and (gambit/pkg#install mod-string) modref)))))
 
 
 (define-prim (##install-module-set! x)
@@ -569,7 +567,8 @@
 
 (define-prim (##search-or-else-install-module modref)
   (or (##search-module modref)
-      (##install-module modref)))
+      (and (##install-module modref)
+           (##search-module modref))))
 
 (##get-module-set!
  (lambda (module-ref)

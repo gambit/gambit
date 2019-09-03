@@ -357,7 +357,7 @@
                             (exit-abnormally)))
 
                       (define (do-build-module module-ref modref opts)
-                        (let ((mod-info (##search-module modref)))
+                        (let ((mod-info (##search-or-else-install-module modref)))
                           (if mod-info
                             (let ((mod-dir            (##vector-ref mod-info 0))
                                   (mod-filename-noext (##vector-ref mod-info 1))

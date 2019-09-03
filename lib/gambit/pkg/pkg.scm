@@ -141,8 +141,10 @@
                        (and (not (file-exists? install-path))
                             (let ((repo (or (git-clone url clone-path #f prompt?)
                                             (git-repository-open clone-path))))
-                              (and repo
-                                   (let ((tar-rec-list (git-archive repo tag))
+                              (and repo ;; (git-repository? repo)
+                                   (let ((tar-rec-list (or (git-archive repo tag)
+                                                           (and (git-pull repo)
+                                                                (git-archive repo tag))))
                                          (tmp-dir (create-temporary-directory install-path)))
                                      (with-exception-handler
                                        (lambda (_)
