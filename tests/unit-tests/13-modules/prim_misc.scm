@@ -48,10 +48,21 @@
 ;;unimplemented;;call/cc
 ;;unimplemented;;compile-file
 ;;unimplemented;;compile-file-to-target
-;;unimplemented;;continuation-capture
-;;unimplemented;;continuation-graft
-;;unimplemented;;continuation-return
-;;unimplemented;;continuation?
+
+(continuation-capture (lambda (k) (##cons 42 (continuation-graft k (lambda () 123)))))
+(continuation-capture (lambda (k a) (##cons 42 (continuation-graft k ##list a))) 1)
+(continuation-capture (lambda (k a b) (##cons 42 (continuation-graft k ##list a b))) 1 2)
+(continuation-capture (lambda (k a b c) (##cons 42 (continuation-graft k ##list a b c))) 1 2 3)
+(continuation-capture (lambda (k a b c d) (##cons 42 (continuation-graft k ##list a b c d))) 1 2 3 4)
+
+(continuation-capture (lambda (k) (##cons 42 (continuation-return k 123))))
+(##call-with-values (lambda () (continuation-capture (lambda (k a) (##cons 42 (continuation-return k a))) 1)) ##list)
+(##call-with-values (lambda () (continuation-capture (lambda (k a b) (##cons 42 (continuation-return k a b))) 1 2)) ##list)
+(##call-with-values (lambda () (continuation-capture (lambda (k a b c) (##cons 42 (continuation-return k a b c))) 1 2 3)) ##list)
+(##call-with-values (lambda () (continuation-capture (lambda (k a b c d) (##cons 42 (continuation-return k a b c d))) 1 2 3 4)) ##list)
+
+(continuation? (##continuation-capture (lambda (k) k)))
+
 ;;unimplemented;;display-continuation-backtrace
 ;;unimplemented;;display-continuation-dynamic-environment
 ;;unimplemented;;display-continuation-environment
@@ -82,7 +93,6 @@
 ;;unimplemented;;step-level-set!
 ;;unimplemented;;touch
 ;;unimplemented;;trace
-;;unimplemented;;u8vector->object
 ;;unimplemented;;unbreak
 ;;unimplemented;;untrace
 

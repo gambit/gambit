@@ -307,6 +307,15 @@
                                (##write-string ":\n" output-port)
                                #t))))
 
+                      (define (handling-module module)
+                        (if (##fx< 1 nb-output-files)
+                            (##repl
+                             (lambda (first output-port)
+                               (##write-string "Building module: " output-port)
+                               (##write-string module output-port)
+                               (##write-string "\n" output-port)
+                               #t))))
+
                       (define (do-compile-file file opts output)
                         (handling file)
                         (or (if output
@@ -346,6 +355,45 @@
                              ld-options-prelude
                              ld-options)
                             (exit-abnormally)))
+
+                      (define (do-build-module module-ref modref opts)
+                        (let ((mod-info (##search-or-else-install-module modref)))
+                          (if mod-info
+                            (let ((mod-dir            (##vector-ref mod-info 0))
+                                  (mod-filename-noext (##vector-ref mod-info 1))
+                                  (ext                (##vector-ref mod-info 2))
+                                  (mod-path           (##vector-ref mod-info 3))
+                                  (port               (##vector-ref mod-info 4)))
+
+                              ;; close unused port.
+                              (##close-input-port port)
+
+                              (handling-module module-ref)
+
+                              (let ((result
+                                      (##call-build-script
+                                       (path-expand "_build_.scm" mod-dir)
+                                       target options)))
+                                (if (##not result)
+                                  (##build-module
+                                   mod-path
+                                   (c#target-name target)
+                                   (##cons
+                                    (##list 'module-ref (##string->symbol module-ref))
+                                    opts)))))
+
+                            (##error (##string-append "Module not found '" module-ref "'")))))
+
+
+                      (define (do-build-file-or-module file opts output)
+                        (let* ((modref (##parse-module-ref file))
+                               (module? (and modref
+                                             (##fx= 0 (##string-length
+                                                       (##path-extension
+                                                        (##car (##vector-ref modref 3))))))))
+                          (if module?
+                            (do-build-module file modref opts)
+                            (do-compile-file file opts output))))
 
                       (let loop2 ((lst arguments))
                         (if (##pair? lst)
@@ -399,7 +447,7 @@
                                           (else
                                            (case type
                                              ((dyn)
-                                              (do-compile-file
+                                              (do-build-file-or-module
                                                file
                                                options
                                                output))

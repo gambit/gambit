@@ -4,7 +4,7 @@
 
 herefromroot = lib/gambit
 rootfromhere = ../..
-SUBDIRS = git pkg tar hamt digest zlib test match geiser
+SUBDIRS = git pkg tar hamt http digest define-library termite uri zlib test match geiser
 HEADERS_SCM = gambit\#.scm
 MODULES_SCM = gambit.scm
 MAIN_MODULES =

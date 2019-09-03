@@ -10237,7 +10237,8 @@
         new-rt))))
 
 (define ##scheme-file-extensions
-  '((".scm" . #f)
+  '((".sld" . #f)
+    (".scm" . #f)
     (".six" . six)
     ))
 

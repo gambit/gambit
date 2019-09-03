@@ -5342,9 +5342,6 @@
     (define-runtime-syntax define-macro
       (##make-alias-syntax '##define-macro))
 
-    ;;(define-runtime-syntax define-syntax
-    ;;  (##make-alias-syntax '##define-syntax))
-
     (define-runtime-syntax define-type
       (##make-alias-syntax '##define-type))
 
@@ -5392,6 +5389,30 @@
 
     (define-runtime-syntax syntax-error
       (##make-alias-syntax '##syntax-error))
+
+    (define-runtime-syntax define-syntax
+      (##make-alias-syntax '##define-syntax))
+
+    (define-runtime-syntax syntax-rules
+      (lambda (src)
+        ((##eval '(lambda (src)
+                    (##import gambit/define-library/define-library-expand)
+                    (syn#syntax-rules-form-transformer src)))
+         src)))
+
+    (define-runtime-syntax define-library
+      (lambda (src)
+        ((##eval '(lambda (src)
+                    (##import gambit/define-library/define-library-expand)
+                    (define-library-expand src)))
+         src)))
+
+    (define-runtime-syntax import
+      (lambda (src)
+        ((##eval '(lambda (src)
+                    (##import gambit/define-library/define-library-expand)
+                    (import-expand src)))
+         src)))
 
     ##interaction-cte))
 

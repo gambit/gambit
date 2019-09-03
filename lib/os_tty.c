@@ -728,7 +728,7 @@ int speed;)
   d->speed = speed;
   /**************** TODO: end critical section (must block SIGCONT) */
 
-  return ___device_tty_mode_restore (d, 0);
+  return ___device_tty_mode_restore (d, 1);
 }
 
 

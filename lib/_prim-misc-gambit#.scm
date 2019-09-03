@@ -14,10 +14,12 @@
 (call/cc call/cc#unimplemented)
 (compile-file compile-file#unimplemented)
 (compile-file-to-target compile-file-to-target#unimplemented)
-(continuation-capture continuation-capture#unimplemented)
-(continuation-graft continuation-graft#unimplemented)
-(continuation-return continuation-return#unimplemented)
-(continuation? continuation?#unimplemented)
+
+continuation-capture
+continuation-graft
+continuation-return
+continuation?
+
 (display-continuation-backtrace display-continuation-backtrace#unimplemented)
 (display-continuation-dynamic-environment display-continuation-dynamic-environment#unimplemented)
 (display-continuation-environment display-continuation-environment#unimplemented)
@@ -52,7 +54,6 @@ identity
 (step-level-set! step-level-set!#unimplemented)
 (touch touch#unimplemented)
 (trace trace#unimplemented)
-(u8vector->object u8vector->object#unimplemented)
 (unbreak unbreak#unimplemented)
 (untrace untrace#unimplemented)
 

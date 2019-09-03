@@ -307,6 +307,34 @@
                   "target compilation or link failed while compiling"
                   (##list filename))))))))
 
+(define (##pkg-config mod #!optional (option (macro-absent-obj)))
+
+  (define pkg-options
+    '((cflags . "--cflags")
+      (libs . "--libs")))
+
+  (define (run-pkg-config args)
+    (##call-with-input-process
+     (list path: "pkg-config"
+            arguments: args
+            stdout-redirection: #t
+            stderr-redirection: #t)
+      (lambda (port)
+        (and (##fx= (##process-status port) 0)
+             (##read-line port)))))
+
+  (macro-force-vars (mod option)
+    (if (##eq? option (macro-absent-obj))
+        (run-pkg-config (##list "--cflags" "--libs" mod))
+        (let ((opt (cond ((##assq option pkg-options) => ##cdr) (else #f))))
+          (and opt (run-pkg-config (##list opt mod)))))))
+
+(define (##call-build-script path target options)
+  (and (##file-exists? path)
+       ;; TODO: pass context variable to script
+       (##eval `(let () (include ,path)))))
+
+
 (define (##build-module path target options)
   (let* ((module-dir
           (##path-normalize (##path-directory path)))
@@ -318,10 +346,28 @@
           (##string-append module-filename-noext ".o1"))
          (build-subdir
           (##module-build-subdir-path module-dir module-filename-noext target))
+         (config-file
+           (##path-expand "_config_.scm" module-dir))
+         (config
+           (and (##file-exists? config-file)
+                (eval `(let () (##include ,config-file)))))
+         ;; Handle cc-options correctly
          (cc-options
-          "")
+          (if (##pair? config)
+              (cond
+                ((##assq 'cc-options config)
+                 => cadr)
+                (else
+                  ""))
+              ""))
          (ld-options-prelude
-          "")
+          (if (##pair? config)
+              (cond
+                ((##assq 'ld-options config)
+                 => cadr)
+                (else
+                  ""))
+              ""))
          (ld-options
           ""))
 
@@ -332,8 +378,10 @@
     (let ((target-file
            (##compile-file-to-target
             path
-            (##list (##list 'target target)
-                    (##list 'linker-name module-object-filename))
+            (##cons (##list 'target target)
+                    (##cons
+                      (##list 'linker-name module-object-filename)
+                      options))
             build-subdir)))
       (and target-file
            (##compile-file
