@@ -14,6 +14,8 @@
 (##namespace ("" ;; these identifier bindings are specific to Gambit
 
 ;; special forms
+define-library
+define-module-alias
 define-record-type
 define-structure
 define-type
@@ -25,6 +27,7 @@ c-lambda
 c-define
 define-macro
 future
+import
 include
 include-ci
 declare
