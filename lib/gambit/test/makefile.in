@@ -154,6 +154,12 @@ uninstall-post:
 	for file in $(INSTFILES_LIB_DATA); do \
 	  rm -f "$$t_libdir/$$file"; \
 	done; \
+	for build_dir in *@gambit*; do \
+	  for file in $$build_dir/*; do \
+	    rm -f "$$t_libdir/$$file"; \
+	  done; \
+	  rmdir "$$t_libdir/$$build_dir" 2> /dev/null; \
+	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  for file in $(INSTFILES_LIB_DATA); do \
 	    rm -f "$$i_libdir/$$file"; \
