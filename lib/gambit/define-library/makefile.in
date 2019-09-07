@@ -8,9 +8,9 @@ SUBDIRS =
 HEADERS_SCM = define-library\#.scm define-library-expand\#.scm
 
 MODULES_SCM = define-library.scm define-library-expand.scm \
-							syntaxboot.scm syntaxcasexformboot.scm syntaxcasexform.scm syntaxcommon.scm \
-							syntaxpattern.scm syntaxrulesxform.scm syntax.scm syntaxtemplate.scm \
-							syntaxxformboot.scm syntaxxform.scm withsyntaxboot.scm
+	syntaxboot.scm syntaxcasexformboot.scm syntaxcasexform.scm syntaxcommon.scm \
+	syntaxpattern.scm syntaxrulesxform.scm syntax.scm syntaxtemplate.scm \
+	syntaxxformboot.scm syntaxxform.scm withsyntaxboot.scm
 
 MAIN_MODULES = define-library define-library-expand
 
@@ -158,6 +158,12 @@ uninstall-post:
 	fi; \
 	for file in $(INSTFILES_LIB_DATA); do \
 	  rm -f "$$t_libdir/$$file"; \
+	done; \
+	for build_dir in *@gambit*; do \
+	  for file in $$build_dir/*; do \
+	    rm -f "$$t_libdir/$$file"; \
+	  done; \
+	  rmdir "$$t_libdir/$$build_dir" 2> /dev/null; \
 	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  for file in $(INSTFILES_LIB_DATA); do \

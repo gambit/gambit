@@ -569,8 +569,8 @@
                   (modref (##parse-module-ref library-name))
 
                   ;; Test if modref-path == .../ + name-default-string
-                  (valid? (if (null? (macro-modref-host modref))
-                            (string=? library-name name-default-string)
+                  #;(valid? (if (not (macro-modref-host modref))
+                            (has-suffix? library-name name-default-string)
                             (let ((mod-path (macro-modref-rpath modref)))
                               (has-suffix?
                                 (join-rev (car mod-path) (cdr mod-path))
@@ -580,7 +580,7 @@
                    (make-ctx src
                              name-src
                              library-name
-                             (if valid? ; namespace
+                             (if #t ; valid? ; namespace
                                (##modref->string modref #t)
                                (##raise-expression-parsing-exception
                                 'invalid-module-name

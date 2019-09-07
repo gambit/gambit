@@ -3195,6 +3195,7 @@ lib/gambit/zlib/makefile \
 lib/gambit/test/makefile \
 lib/gambit/match/makefile \
 lib/gambit/geiser/makefile \
+lib/scheme/makefile \
 $RTLIBMAKEFILES \
 gsi/makefile \
 gsc/makefile \

@@ -1,13 +1,19 @@
-# makefile for gambit/tar module.
+# makefile for all scheme modules.
 
 # Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
-herefromroot = lib/gambit/uri
-rootfromhere = ../../..
+herefromroot = lib/scheme
+rootfromhere = ../..
 SUBDIRS =
-HEADERS_SCM = uri\#.scm
-MODULES_SCM = uri.scm
-MAIN_MODULES = uri
+HEADERS_SCM =
+
+MODULES_SCM = eval/eval.sld inexact/inexact.sld case-lambda/case-lambda.sld \
+	process-context/process-context.sld char/char.sld time/time.sld cxr/cxr.sld \
+	read/read.sld lazy/lazy.sld write/write.sld file/file.sld complex/complex.sld \
+	base/base.sld repl/repl.sld load/load.sld
+
+MODULES_SUBDIR = eval inexact case-lambda process-context char time cxr read lazy write file complex base repl load
+MAIN_MODULES =
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -100,9 +106,9 @@ bootstrap-post:
 
 modules-pre:
 	@for target in $(BUILD_TARGETS); do \
-	  for main_mod in $(MAIN_MODULES); do \
+	  for main_mod in $(MODULES_SUBDIR); do \
 	    echo "------- building module $$main_mod for $$target"; \
-	    $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ())))) (if x (println x) (exit 1)))"; \
+	    $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod/$$main_mod\" (quote $$target) (quote ())))) (if x (println x) (exit 1)))" || exit $$?; \
 	  done; \
 	done
 
@@ -119,6 +125,19 @@ install-post: all
 	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$c_libdir"; \
 	  t_libdir="$$c_libdir"; \
 	fi; \
+	for module_subdir in $(MODULES_SUBDIR); do \
+	  $(srcdirpfx)$(rootfromhere)/mkidirs "$$t_libdir/$$module_subdir"; \
+	  for build_dir in $$module_subdir/*@gambit* ; do \
+	      if test -d "$$build_dir"; then \
+	        $(srcdirpfx)$(rootfromhere)/mkidirs "$$t_libdir/$$build_dir"; \
+	        for file in $$build_dir/*; do \
+	          if test -r $$file; then \
+	            $(INSTALL_PROGRAM) "$$file" $$t_libdir/$$file; \
+	          fi; \
+	        done; \
+	      fi; \
+	    done; \
+	done; \
 	for file in $(INSTFILES_LIB_DATA); do \
 	  $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
 	done; \
@@ -154,17 +173,20 @@ uninstall-post:
 	for file in $(INSTFILES_LIB_DATA); do \
 	  rm -f "$$t_libdir/$$file"; \
 	done; \
-	for build_dir in *@gambit*; do \
-	  for file in $$build_dir/*; do \
-	    rm -f "$$t_libdir/$$file"; \
-	  done; \
-	  rmdir "$$t_libdir/$$build_dir" 2> /dev/null; \
-	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  for file in $(INSTFILES_LIB_DATA); do \
 	    rm -f "$$i_libdir/$$file"; \
 	  done; \
 	fi; \
+	for module_subdir in $(MODULES_SUBDIR); do \
+	  for build_dir in $$module_subdir/*@gambit*; do \
+	    for file in $$build_dir/*; do \
+	      rm -f -- "$$t_libdir/$$file"; \
+	    done; \
+	    rmdir -- "$$t_libdir/$$build_dir" 2> /dev/null; \
+	  done; \
+	  rmdir -- "$$t_libdir/$$module_subdir" 2> /dev/null; \
+	done; \
 	rmdir "$$t_libdir" 2> /dev/null; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  rmdir "$$i_libdir" 2> /dev/null; \
@@ -276,6 +298,18 @@ mostlyclean-recursive: mostlyclean-pre
 clean: clean-post
 
 clean-post: clean-recursive
+	for module_subdir in $(MODULES_SUBDIR); do \
+	  if test -d "$$module_subdir"; then \
+	    for build_dir in $$module_subdir/*@gambit*; do \
+	      if test -d "$$build_dir"; then \
+	        for file in $$build_dir/*; do \
+	          rm -f -- "$$file"; \
+	        done; \
+	        rmdir -- "$$build_dir"; \
+	      fi; \
+	    done; \
+	  fi; \
+	done
 	rm -rf *@gambit*
 
 clean-recursive: clean-pre
