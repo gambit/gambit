@@ -9,10 +9,10 @@ HEADERS_SCM =
 
 MODULES_SCM = eval/eval.sld inexact/inexact.sld case-lambda/case-lambda.sld \
 	process-context/process-context.sld char/char.sld time/time.sld cxr/cxr.sld \
-	read/read.sld lazy/lazy.sld write/write.sld file/file.sld complex/complex.sld \
-	base/base.sld repl/repl.sld load/load.sld
+	read/read.sld r5rs/r5rs.sld lazy/lazy.sld write/write.sld file/file.sld \
+	complex/complex.sld base/base.sld repl/repl.sld load/load.sld
 
-MODULES_SUBDIR = eval inexact case-lambda process-context char time cxr read lazy write file complex base repl load
+MODULES_SUBDIR = eval inexact case-lambda process-context char time cxr read r5rs lazy write file complex base repl load
 MAIN_MODULES =
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
