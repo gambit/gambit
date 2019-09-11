@@ -143,6 +143,15 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define (##compilation-scope-append-attribs! key attribs)
+  (let* ((comp-scope
+          (##compilation-scope))
+         (curr-attribs
+          (##table-ref comp-scope key '())))
+    (if (##pair? curr-attribs)
+        (##set-cdr! (##last-pair curr-attribs) attribs)
+        (##table-set! comp-scope key attribs))))
+
 (define (##compilation-scope-add-to-ordered-set! key obj)
   (let* ((comp-scope
           (##compilation-scope))
@@ -176,6 +185,20 @@
       src
       `(##begin)))))
 
+(define (##expand-meta-info src)
+  (##deconstruct-call
+   src
+   -2
+   (lambda (key-src . rest)
+     (let ((key (##source-strip key-src)))
+       (if (##not (##symbol? key))
+           (##deconstruct-call src 1 ##list) ;; signal a syntax error
+           (let ((attribs (##map ##desourcify rest)))
+             (##compilation-scope-append-attribs! key attribs)
+             (##expand-source-template
+              src
+              `(##begin))))))))
+
 (define-runtime-syntax ##demand-module
   (lambda (src)
     (##expand-compilation-scope-ordered-set-adder '##demand-modules src)))
@@ -183,6 +206,10 @@
 (define-runtime-syntax ##supply-module
   (lambda (src)
     (##expand-compilation-scope-ordered-set-adder '##supply-modules src)))
+
+(define-runtime-syntax ##meta-info
+  (lambda (src)
+    (##expand-meta-info src)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

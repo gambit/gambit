@@ -337,6 +337,9 @@
                (if compiler-option-dg
                    (set! dependency-graph (make-table 'test: eq?)))
 
+               (if script-line
+                   (table-set! comp-scope 'script-line (list script-line)))
+
                (let* ((module-procs
                        (compile-parsed-program (car (last-pair supply-modules))
                                                parsed-program
@@ -344,11 +347,7 @@
                                                c-intf
                                                info-port))
                       (module-meta-info*
-                       (append
-                        (table->list comp-scope)
-                        (if script-line
-                            (list (cons 'script-line script-line))
-                            '())))
+                       (table->list comp-scope))
                       (module-descr
                        ;; TODO: support type descriptor
                        (vector (list->vect supply-modules)

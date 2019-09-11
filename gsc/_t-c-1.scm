@@ -834,8 +834,13 @@
                           (targ-mod-meta-info (car lst)))
                          (script-line
                           (cond ((and (pair? module-meta-info)
-                                      (assq 'script-line module-meta-info)) => cdr)
-                                (else #f))))
+                                      (assq 'script-line module-meta-info))
+                                 =>
+                                 (lambda (pair)
+                                   (let ((x (cdr pair)))
+                                     (if (pair? x) (car x) x))))
+                                (else
+                                 #f))))
                     (loop (cdr lst)
                           (or script-line
                               last-script-line)))
@@ -998,8 +1003,13 @@
          (module-meta-info
           (vector-ref module-descr 2))
          (script-line
-          (cond ((assq 'script-line module-meta-info) => cdr)
-                (else #f))))
+          (cond ((assq 'script-line module-meta-info)
+                 =>
+                 (lambda (pair)
+                   (let ((x (cdr pair)))
+                     (if (pair? x) (car x) x))))
+                (else
+                 #f))))
 
     (targ-start-dump
      filename
@@ -1126,6 +1136,13 @@
          glo-rsrc
          module-meta-info)
 
+  (define (display-escaped obj)
+    ;; writes obj so that it can't be part of valid C code (even in a
+    ;; C comment or C string)
+    (targ-display "#|*/\"*/\"")
+    (write obj targ-port)
+    (targ-display "|#"))
+
   (set! targ-port (open-output-file-preserving-case filename))
   (set! targ-line-size 0)
   (set! targ-line-number 1)
@@ -1172,7 +1189,34 @@
   (targ-write-rsrc-names (keep targ-rsrc-supplied-and-not-demanded? glo-rsrc))
   (targ-write-rsrc-names (keep targ-rsrc-not-supplied? glo-rsrc))
 
-  (write module-meta-info targ-port)
+  (targ-display "( ")
+  (display-escaped 'meta-info)
+  (targ-line)
+  (let loop1 ((lst module-meta-info))
+    (if (pair? lst)
+        (let* ((key-attribs (car lst))
+               (key (car key-attribs))
+               (attribs (cdr key-attribs)))
+          (targ-display "(")
+          (write key targ-port)
+          (if (not (or (pair? attribs) (null? attribs)))
+              (begin
+                (targ-display " .")
+                (set! attribs (list attribs))))
+          (targ-line)
+          (let loop2 ((attribs attribs))
+            (if (pair? attribs)
+                (let ((attrib (car attribs)))
+                  (display-escaped key)
+                  (targ-display " ")
+                  (write attrib targ-port)
+                  (targ-line)
+                  (loop2 (cdr attribs)))))
+          (targ-display ")")
+          (targ-line)
+          (loop1 (cdr lst)))))
+  (targ-display ") ")
+  (display-escaped 'meta-info)
   (targ-line)
 
   (targ-display ")")
