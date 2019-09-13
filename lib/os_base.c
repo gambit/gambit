@@ -1222,7 +1222,7 @@ int code;)
      are library-specific codes. Since we are dealing here only with high-level
      errors, we need to offset the error to use it as index. */
   int generic_err_code = code - 65000;
-  if (generic_err_code >= 0 && code <= 65536)
+  if (generic_err_code >= 0 && generic_err_code < sizeof (tls_messages) / sizeof (*tls_messages))
     {
       return tls_messages[generic_err_code];
     }
