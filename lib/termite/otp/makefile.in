@@ -1,13 +1,13 @@
-# makefile for gambit/tar module.
+# makefile for termite/otp module.
 
 # Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
-herefromroot = lib/gambit/termite
+herefromroot = lib/termite/otp
 rootfromhere = ../../..
-SUBDIRS = otp
-HEADERS_SCM = termite\#.scm
-MODULES_SCM = termite.scm data.scm deftype.scm match-support.scm io.scm process.scm recv.scm uuid.scm
-MAIN_MODULES = termite
+SUBDIRS =
+HEADERS_SCM =
+MODULES_SCM = gen_event.scm gen_server.scm
+MAIN_MODULES =
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -153,12 +153,6 @@ uninstall-post:
 	fi; \
 	for file in $(INSTFILES_LIB_DATA); do \
 	  rm -f "$$t_libdir/$$file"; \
-	done; \
-	for build_dir in *@gambit*; do \
-	  for file in $$build_dir/*; do \
-	    rm -f "$$t_libdir/$$file"; \
-	  done; \
-	  rmdir "$$t_libdir/$$build_dir" 2> /dev/null; \
 	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  for file in $(INSTFILES_LIB_DATA); do \

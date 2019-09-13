@@ -13,6 +13,10 @@
 ;; ----------------------------------------------------------------------------
 ;; Some basic utilities
 
+(##supply-module termite/match-support)
+(##namespace ("termite/match-support#"))
+(##import gambit)
+
 (define (filter pred? lst)
   (cond
     ((null? lst) '())

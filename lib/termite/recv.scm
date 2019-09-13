@@ -43,6 +43,7 @@
 
         ;; RECV code when there is no timeout
         `(let ,loop ((,msg ((let () (##namespace ("")) thread-mailbox-next))))
+           (##import termite/match)
            (match/action
              ((let () (##namespace ("")) thread-mailbox-extract-and-rewind))
              (,loop

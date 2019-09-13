@@ -2,7 +2,7 @@
 ;; Copyright (C) 2005-2019 by FrédéricHamel, All Rights Reserved.
 ;; File: ~~lib/gambit/termite/termite.scm
 
-(##supply-module gambit/termite)
+(##supply-module termite)
 
 ;; this is the main file for the Termite system
 (##namespace ("termite#"))
