@@ -4216,8 +4216,8 @@ ___setup_params_struct *setup_params;)
   setup_params->gambitdir_map       = 0;
   setup_params->module_search_order = 0;
   setup_params->module_whitelist    = 0;
-  setup_params->remote_dbg_addr     = 0;
-  setup_params->rpc_server_addr     = 0;
+  setup_params->repl_client_addr    = 0;
+  setup_params->repl_server_addr    = 0;
   setup_params->linker              = 0;
   setup_params->reset_argv0[0]      = 0;
   setup_params->reset_argv[0]       = setup_params->reset_argv0;

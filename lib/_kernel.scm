@@ -4370,15 +4370,15 @@ end-of-code
             scheme-object
    "___os_module_install_mode"))
 
-(define-prim ##remote-dbg-addr
+(define-prim ##repl-server-addr
   (c-lambda ()
             UCS-2-string
-   "___return(___GSTATE->setup_params.remote_dbg_addr);"))
+   "___return(___GSTATE->setup_params.repl_server_addr);"))
 
-(define-prim ##rpc-server-addr
+(define-prim ##repl-client-addr
   (c-lambda ()
             UCS-2-string
-   "___return(___GSTATE->setup_params.rpc_server_addr);"))
+   "___return(___GSTATE->setup_params.repl_client_addr);"))
 
 ;;;----------------------------------------------------------------------------
 

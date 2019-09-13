@@ -2138,7 +2138,44 @@
         (macro-thread-repl-channel thread))))
 
 (define (##default-thread-make-repl-channel thread)
-  ##stdio/console-repl-channel)
+  (let ((addr (##repl-client-addr)))
+    (if (##not addr)
+        ##stdio/console-repl-channel
+        (let loop ((attempt 1) (max-wait 0.25))
+
+          (define (attempt-failed code)
+            (if (##fx< attempt 25) ;; max wait about 100 seconds
+                (begin
+                  (##thread-sleep! max-wait)
+                  (loop (##fx+ attempt 1) (##fl* max-wait 1.2)))
+                (##exit-with-err-code code)))
+
+          (##open-tcp-client
+           #f
+           (lambda (port)
+             (if (##fixnum? port)
+                 (begin
+                   (attempt-failed port))
+                 (begin
+                   (##output-port-timeout-set! port max-wait)
+                   (let ((x (##tcp-client-socket-info
+                             port
+                             tcp-client-peer-socket-info
+                             #f)))
+                     (if (##fixnum? x)
+                         (attempt-failed x)
+                         (begin
+                           (##output-port-timeout-set!
+                            port
+                            (macro-inexact-+inf))
+                           (##make-repl-channel-ports
+                            port
+                            port
+                            port)))))))
+           open-tcp-client
+           (##list port-number: 44556
+                   address: addr
+                   output-buffering: #f))))))
 
 (define ##thread-make-repl-channel ##default-thread-make-repl-channel)
 
@@ -2154,18 +2191,19 @@
             settings
             (macro-debug-settings-repl-mask))
            (macro-debug-settings-repl-shift))))
-    (cond ((##fx= x (macro-debug-settings-repl-console))
-           (##make-repl-channel-ports
-            ##console-port
-            ##console-port
-            ##console-port))
-          (else
+    (cond ((or (##fx= x (macro-debug-settings-repl-stdio))
+               (##fx= x (macro-debug-settings-repl-stdio-and-err)))
            (##make-repl-channel-ports
             ##stdin-port
             ##stdout-port
             (if (##fx= x (macro-debug-settings-repl-stdio-and-err))
                 ##stderr-port
-                ##stdout-port))))))
+                ##stdout-port)))
+          (else
+           (##make-repl-channel-ports
+            ##console-port
+            ##console-port
+            ##console-port)))))
 
 (define-prim (##repl-input-port)
   (let* ((ct (macro-current-thread))
@@ -4465,26 +4503,28 @@
 
 ;; REPL server.
 
-(define (##startup-remote-dbg)
-  (let ((remote-dbg-addr (##remote-dbg-addr)))
-    (if remote-dbg-addr
-        (let ((tgroup ##tcp-service-tgroup))
-          (##tcp-service-register!
-           (##list local-port-number: 44555
-                   local-address: remote-dbg-addr
-                   output-buffering: #f)
-           (lambda ()
-             (let ((repl-channel
-                    (##make-repl-channel-ports
-                     (##current-input-port)
-                     (##current-output-port)
-                     (##current-output-port))))
-               (macro-thread-repl-channel-set!
-                (macro-current-thread)
-                repl-channel))
-             (##repl-debug-main))
-           tgroup
-           tgroup)))))
+(define (##startup-repl-server)
+  (##start-repl-server (##repl-server-addr)))
+
+(define (##start-repl-server repl-server-addr)
+  (if repl-server-addr
+      (let ((tgroup ##tcp-service-tgroup))
+        (##tcp-service-register!
+         (##list local-port-number: 44555
+                 local-address: repl-server-addr
+                 output-buffering: #f)
+         (lambda ()
+           (let ((repl-channel
+                  (##make-repl-channel-ports
+                   (##current-input-port)
+                   (##current-output-port)
+                   (##current-output-port))))
+             (macro-thread-repl-channel-set!
+              (macro-current-thread)
+              repl-channel))
+           (##repl-debug-main))
+         tgroup
+         tgroup))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4495,6 +4535,6 @@
 
 (##startup-parallelism!)
 
-(##startup-remote-dbg)
+(##startup-repl-server)
 
 ;;;============================================================================

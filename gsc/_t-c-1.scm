@@ -1207,6 +1207,7 @@
           (let loop2 ((attribs attribs))
             (if (pair? attribs)
                 (let ((attrib (car attribs)))
+                  (targ-display " ")
                   (display-escaped key)
                   (targ-display " ")
                   (write attrib targ-port)

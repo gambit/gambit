@@ -5056,7 +5056,7 @@ fi
 DEFAULT_RUNTIME_OPTIONS=""
 
 if test "$ENABLE_MODULE_SEARCH_ORDER" != ""; then
-  MODULE_SEARCH_ORDER=`echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e "s/^/:/" -e "s/,/,:/g"`
+  MODULE_SEARCH_ORDER=`echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e "s/^/search=/" -e "s/,/,search=/g"`
   if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
     DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
   fi
@@ -5076,7 +5076,7 @@ fi
 
 
 if test "$ENABLE_MODULE_WHITELIST" != ""; then
-  MODULE_WHITELIST=`echo "$ENABLE_MODULE_WHITELIST" | sed -e "s/^/./" -e "s/,/,./g"`
+  MODULE_WHITELIST=`echo "$ENABLE_MODULE_WHITELIST" | sed -e "s/^/whitelist=/" -e "s/,/,whitelist=/g"`
   if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
     DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
   fi
@@ -15058,7 +15058,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/gambit/makefile lib/gambit/git/makefile lib/gambit/pkg/makefile lib/gambit/tar/makefile lib/gambit/hamt/makefile lib/gambit/hamt/primitive-hamt/makefile lib/gambit/http/makefile lib/gambit/uri/makefile lib/gambit/define-library/makefile lib/gambit/digest/makefile lib/gambit/termite/makefile lib/gambit/termite/otp/makefile lib/gambit/zlib/makefile lib/gambit/test/makefile lib/gambit/match/makefile lib/gambit/geiser/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambcomp-js.unix bin/gambcomp-js.bat.windows bin/gambcomp-python.unix bin/gambcomp-python.bat.windows bin/gambcomp-ruby.unix bin/gambcomp-ruby.bat.windows bin/gambcomp-php.unix bin/gambcomp-php.bat.windows bin/gambcomp-java.unix bin/gambcomp-java.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/gambit/makefile lib/gambit/git/makefile lib/gambit/pkg/makefile lib/gambit/tar/makefile lib/gambit/hamt/makefile lib/gambit/hamt/primitive-hamt/makefile lib/gambit/http/makefile lib/gambit/uri/makefile lib/gambit/define-library/makefile lib/gambit/digest/makefile lib/gambit/termite/makefile lib/gambit/termite/otp/makefile lib/gambit/zlib/makefile lib/gambit/test/makefile lib/gambit/match/makefile lib/gambit/geiser/makefile lib/scheme/makefile $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambcomp-js.unix bin/gambcomp-js.bat.windows bin/gambcomp-python.unix bin/gambcomp-python.bat.windows bin/gambcomp-ruby.unix bin/gambcomp-ruby.bat.windows bin/gambcomp-php.unix bin/gambcomp-php.bat.windows bin/gambcomp-java.unix bin/gambcomp-java.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -15770,6 +15770,7 @@ do
     "lib/gambit/test/makefile") CONFIG_FILES="$CONFIG_FILES lib/gambit/test/makefile" ;;
     "lib/gambit/match/makefile") CONFIG_FILES="$CONFIG_FILES lib/gambit/match/makefile" ;;
     "lib/gambit/geiser/makefile") CONFIG_FILES="$CONFIG_FILES lib/gambit/geiser/makefile" ;;
+    "lib/scheme/makefile") CONFIG_FILES="$CONFIG_FILES lib/scheme/makefile" ;;
     "$RTLIBMAKEFILES") CONFIG_FILES="$CONFIG_FILES $RTLIBMAKEFILES" ;;
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;

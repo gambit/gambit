@@ -38,39 +38,52 @@ int debug_settings;)
       msgs[0] =
         "Usage: program [-:OPTION,OPTION...] ...\n"
         "where OPTION is one of:\n"
-        "  mHEAPSIZE       set minimum heap size in kilobytes\n"
-        "  hHEAPSIZE       set maximum heap size in kilobytes\n"
-        "  lLIVEPERCENT    set heap live ratio after GC in percent\n"
+        "  min-heap=SIZE      set minimum heap size, shorthand: mSIZE\n"
+        "  max-heap=SIZE      set maximum heap size, shorthand: hSIZE\n"
+        "                     the heap SIZE may end with G, M or K (default)\n"
+        "  live-ratio=RATIO   set heap live ratio after GC in percent, shorthand: lRATIO\n"
 #ifndef ___SINGLE_THREADED_VMS
-        "  pLEVEL          set parallelism level (default = 50% of cpus)\n"
+        "  parallelism=LEVEL  set parallelism level, shorthand: pLEVEL, where LEVEL can\n"
+        "                     be positive (nb of processors), negative (nb of unused\n"
+        "                     processors), or end with % (ratio of available processors)\n"
 #endif
-        "  s|S             set standard Scheme mode (on|off)\n"
-        "  d[OPT...]       set debugging options; OPT is one of:\n"
-        "                    p|a       treat uncaught exceptions as errors\n"
-        "                              (primordial-thread only|all threads)\n"
-        "                    r|s|q     error handling (create a new REPL|start in\n"
-        "                              single-step mode|quit with error status)\n"
-        "                    R|D|Q     user interrupt handling (create a new REPL|\n"
-        "                              defer handling|quit with error status)\n"
-        "                    i|c|-|+|@[HOST][:PORT]\n"
-        "                              select REPL interaction channel (ide|console|\n"
-        "                              stdin/out|stdin/out/err|remote debugger\n"
-        "                              (defaults: HOST=127.0.0.1, PORT=44555))\n"
-        "                    0..9      verbosity level\n"
-        "  @[INTF][:PORT]  set main RPC server configuration; defaults: INTF=127.0.0.1,\n"
-        "                  PORT=44556; when INTF=* all interfaces accept connections\n"
-        "  =DIRECTORY      override central Gambit installation directory\n"
-        "  ~~DIR=DIRECTORY override Gambit installation directory ~~DIR (where DIR can\n"
-        "                  be the special \"bin\" and \"lib\", or empty, or any identifier)\n"
-        "  :[DIRECTORY]    add directory to module search order (or reset it)\n"
-        "  .[SOURCE]       add source to module auto-install whitelist (or reset it)\n"
-        "  .+|.-|.?        when an uninstalled module is not on the whitelist, ask user\n"
-        "                  if it should be installed (always|never|default=when REPL)\n"
-        "  +ARGUMENT       add ARGUMENT to the command line before other arguments\n"
-        "  f[OPT...]       set file options; see below for OPT\n"
-        "  t[OPT...]       set terminal options; see below for OPT\n"
-        "  -[OPT...]       set standard input and output options; see below for OPT\n"
-        "where OPT is one of:\n"
+        "  gambit             set Gambit mode, shorthand: S (default mode)\n"
+        "  r5rs               set R5RS mode, shorthand: s\n"
+        "  r7rs               set R7RS mode\n"
+        "  debug[=[OPT...]]   set debugging options, shorthand: d[OPT...], OPT is one of\n"
+        "                      p|a       treat uncaught exceptions as errors\n"
+        "                                (primordial-thread only|all threads)\n"
+        "                      r|s|q     error handling (create a new REPL|start in\n"
+        "                                single-step mode|quit with error status)\n"
+        "                      R|D|Q     user interrupt handling (create a new REPL|\n"
+        "                                defer handling|quit with error status)\n"
+        "                      0..9      verbosity level\n"
+        "                      c         use console as REPL interaction channel\n"
+        "                      -         use stdin/out as REPL interaction channel\n"
+        "                      +         use stdin/out/err as REPL interaction channel\n"
+        "                      @[HOST][:PORT]\n"
+        "                                open connection to HOST:PORT for each thread\n"
+        "                                needing a REPL interaction channel\n"
+        "                                (defaults to 127.0.0.1:44556)\n"
+        "                      $[INTF][:PORT]\n"
+        "                                start a REPL server accepting incoming\n"
+        "                                connections on INTF:PORT\n"
+        "                                (defaults to 127.0.0.1:44555)\n"
+        "  ~~NAME=DIR         override Gambit installation directory ~~NAME where NAME\n"
+        "                     can be the special \"bin\" and \"lib\", or empty, or any id\n"
+        "  search=[DIR]       add directory to module search order (or reset it)\n"
+        "  whitelist=[SOURCE] add source to module auto-install whitelist (or reset it)\n"
+        "  ask-install=WHEN   when an uninstalled module is not on the whitelist, ask\n"
+        "                     user if it should be installed, where WHEN is one of\n"
+        "                      always    always ask\n"
+        "                      never     never ask\n"
+        "                      repl      only if a REPL is running (default)\n"
+        "  add-arg=ARGUMENT   add ARGUMENT to the command line before other arguments,\n"
+        "                     shorthand: +ARGUMENT\n"
+        "  file-settings=[IO...]      set file IO settings, shorthand: f[IO...]\n"
+        "  terminal-settings=[IO...]  set terminal IO settings, shorthand: t[IO...]\n"
+        "  stdio-settings=[IO...]     set stdin/out/err IO settings, shorthand: -[IO...]\n"
+        "where IO is one of\n"
         "  A|1|2|4|6|8|U   character encoding (ASCII|ISO-8859-1|UCS-2/4|UTF-16/8|UTF)\n"
         "  l|c|cl          end-of-line encoding (LF|CR|CR-LF)\n"
         "  u|n|f           buffering (unbuffered|newline buffered|fully buffered)\n"
@@ -90,36 +103,107 @@ ___HIDDEN ___UCS_2STRING extract_string
 ___UCS_2STRING *start;)
 {
   ___UCS_2 c;
-  ___UCS_2STRING p1 = *start;
-  ___UCS_2STRING p2;
+  ___UCS_2STRING end = *start;
+  ___UCS_2STRING p1 = end;
   int n = 0;
   ___UCS_2STRING result;
 
-  while ((c = *p1) != '\0' && (c != ',' || p1[1] == ','))
+  while ((c = *end) != '\0' && (c != ',' || end[1] == ','))
     {
-      p1++;
+      end++;
       if (c == ',')
-        p1++;
+        end++;
       n++;
     }
 
-  p2 = *start;
-  *start = p1;
+  *start = end;
 
   result = ___CAST(___UCS_2STRING,
                    ___ALLOC_MEM((n+1) * sizeof (___UCS_2)));
 
   if (result != 0)
     {
-      p1 = result;
-      while ((c = *p2) != '\0' && (c != ',' || p2[1] == ','))
+      ___UCS_2STRING p2 = result;
+      while (p1 < end)
         {
-          p2++;
+          c = *p1++;
           if (c == ',')
-            p2++;
-          *p1++ = c;
+            p1++;
+          *p2++ = c;
         }
-      *p1++ = '\0';
+      *p2++ = '\0';
+    }
+
+  return result;
+}
+
+
+___HIDDEN int is_alpha
+   ___P((___UCS_2 c),
+        (c)
+___UCS_2 c;)
+{
+  return ((c  >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+}
+
+
+___HIDDEN int is_digit
+   ___P((___UCS_2 c),
+        (c)
+___UCS_2 c;)
+{
+  return (c >= '0' && c <= '9');
+}
+
+
+___HIDDEN int is_alpha_or_digit
+   ___P((___UCS_2 c),
+        (c)
+___UCS_2 c;)
+{
+  return is_alpha (c) ||  is_digit (c);
+}
+
+
+___HIDDEN ___UCS_2STRING extract_addr
+   ___P((___UCS_2STRING *start),
+        (start)
+___UCS_2STRING *start;)
+{
+  ___UCS_2 c;
+  ___UCS_2STRING end = *start;
+  ___UCS_2STRING p1 = end;
+  int n = 0;
+  ___UCS_2STRING result;
+
+  while (is_alpha_or_digit (c = *end) || c == '.' || c == '-')
+    {
+      end++;
+      n++;
+    }
+
+  if (*end == ':' && is_digit (end[1]))
+    {
+      end += 2;
+      n += 2;
+      while (is_digit (*end))
+        {
+          end++;
+          n++;
+        }
+    }
+
+  *start = end;
+
+  result = ___CAST(___UCS_2STRING,
+                   ___ALLOC_MEM((n+1) * sizeof (___UCS_2)));
+
+  if (result != 0)
+    {
+      ___UCS_2STRING p2 = result;
+      while (p1 < end)
+        *p2++ = *p1++;
+      *p2++ = '\0';
     }
 
   return result;
@@ -190,6 +274,40 @@ int *len;)
 }
 
 
+___HIDDEN int starts_with
+   ___P((___UCS_2STRING start,
+         char *prefix),
+        (start,
+         prefix)
+___UCS_2STRING start;
+char *prefix;)
+{
+  while (*prefix != '\0')
+    {
+      if (*start++ != *prefix++) return 0;
+    }
+
+  return 1;
+}
+
+
+___HIDDEN int option_equal
+   ___P((___UCS_2STRING start,
+         char *option),
+        (start,
+         option)
+___UCS_2STRING start;
+char *option;)
+{
+  while (*option != '\0')
+    {
+      if (*start++ != *option++) return 0;
+    }
+
+  return (*option == '\0' || *option == ' ' || *option == ',');
+}
+
+
 int ___main
    ___P((___mod_or_lnk (*linker)(___global_state)),
         (linker)
@@ -215,8 +333,8 @@ ___mod_or_lnk (*linker)();)
   int module_whitelist_len;
   int module_install_mode;
   ___UCS_2STRING gambopt;
-  ___UCS_2STRING remote_dbg_addr;
-  ___UCS_2STRING rpc_server_addr;
+  ___UCS_2STRING repl_client_addr;
+  ___UCS_2STRING repl_server_addr;
   unsigned long min_heap_len;
   unsigned long max_heap_len;
   int live_percent;
@@ -243,8 +361,8 @@ ___mod_or_lnk (*linker)();)
   module_install_mode = ___MODULE_INSTALL_MODE_INITIAL;
   gambopt = 0;
   cmd_line_runtime_options = 0;
-  remote_dbg_addr = 0;
-  rpc_server_addr = 0;
+  repl_client_addr = 0;
+  repl_server_addr = 0;
   min_heap_len = 0;
   max_heap_len = 0;
   live_percent = 0;
@@ -383,24 +501,159 @@ ___mod_or_lnk (*linker)();)
 
       do
         {
-          ___UCS_2STRING s = arg++;
+          ___UCS_2STRING s = arg;
+
+          while (is_alpha_or_digit (*arg) || *arg == '-')
+            arg++;
+
+          if (arg - s >= 2) /* at least 2 char keyword */
+            {
+              if (*arg == '=') /* followed by '=' */
+                {
+                  arg++;
+                  if (starts_with (s, "min-heap"))
+                    goto mhlp_options;
+                  else if (starts_with (s, "max-heap"))
+                    {
+                      s += 4; /* point to the 'h' */
+                      goto mhlp_options;
+                    }
+                  else if (starts_with (s, "live"))
+                    goto mhlp_options;
+                  else if (starts_with (s, "parallelism"))
+                    goto mhlp_options;
+                  else if (starts_with (s, "debug"))
+                    goto debug_option;
+                  else if (starts_with (s, "file-settings"))
+                    goto io_settings_options;
+                  else if (starts_with (s, "terminal-settings"))
+                    goto io_settings_options;
+                  else if (starts_with (s, "stdio-settings"))
+                    {
+                      s += 5; /* point to the '-' */
+                      goto io_settings_options;
+                    }
+                  else if (starts_with (s, "add-arg"))
+                    goto add_arg_option;
+                  else if (starts_with (s, "search"))
+                    {
+                      ___UCS_2STRING dir;
+
+                      if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
+                        {
+                          free_strvec (&module_search_order,
+                                       &module_search_order_len);
+                        }
+                      else
+                        {
+                          int pos = 0;
+
+                          if (!extend_strvec (&module_search_order, pos, 1, module_search_order != 0))
+                            {
+                              e = ___FIX(___HEAP_OVERFLOW_ERR);
+                              goto after_setup;
+                            }
+
+                          if ((dir = extract_string (&arg)) == 0)
+                            {
+                              e = ___FIX(___HEAP_OVERFLOW_ERR);
+                              goto after_setup;
+                            }
+
+                          module_search_order[pos] = dir;
+
+                          module_search_order_len++;
+                        }
+
+                      continue;
+                    }
+                  else if (starts_with (s, "whitelist"))
+                    {
+                      ___UCS_2STRING src;
+
+                      if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
+                        {
+                          free_strvec (&module_whitelist,
+                                       &module_whitelist_len);
+                        }
+                      else
+                        {
+                          int pos = module_whitelist_len;
+
+                          if (!extend_strvec (&module_whitelist, pos, 1, module_whitelist != 0))
+                            {
+                              e = ___FIX(___HEAP_OVERFLOW_ERR);
+                              goto after_setup;
+                            }
+
+                          if ((src = extract_string (&arg)) == 0)
+                            {
+                              e = ___FIX(___HEAP_OVERFLOW_ERR);
+                              goto after_setup;
+                            }
+
+                          module_whitelist[pos] = src;
+
+                          module_whitelist_len++;
+                        }
+
+                      continue;
+                    }
+                  else if (starts_with (s, "ask-install"))
+                    {
+                      if (option_equal (arg, "always"))
+                        {
+                          arg += 6;
+                          module_install_mode = ___MODULE_INSTALL_MODE_ASK_ALWAYS;
+                        }
+                      else if (option_equal (arg, "never"))
+                        {
+                          arg += 5;
+                          module_install_mode = ___MODULE_INSTALL_MODE_ASK_NEVER;
+                        }
+                      else if (option_equal (arg, "repl"))
+                        {
+                          arg += 4;
+                          module_install_mode = ___MODULE_INSTALL_MODE_ASK_WHEN_REPL;
+                        }
+                      else
+                        {
+                          e = usage_err (debug_settings);
+                          goto after_setup;
+                        }
+                      continue;
+                    }
+                }
+              else if (option_equal (s, "debug"))
+                goto debug_option;
+              else if (option_equal (s, "r5rs"))
+                goto r5rs_option;
+              else if (option_equal (s, "r7rs"))
+                goto r7rs_option;
+              else if (option_equal (s, "gambit"))
+                goto gambit_option;
+            }
+
+          arg = s+1;
+
           switch (*s)
             {
             case 'm':
             case 'h':
             case 'l':
             case 'p':
+            mhlp_options:
               {
                 unsigned long argval = 0;
                 int neg = *arg == '-';
-                if (neg && *s == 'p' && arg[1] >= '0' && arg[1] <= '9')
+                if (neg && *s == 'p' && is_digit (arg[1]))
                   arg++;
-                while (*arg >= '0' && *arg <= '9')
+                while (is_digit (*arg))
                   {
                     unsigned int n = *arg - '0';
-                    if (argval > (LARGEST_ULONG>>10)/10 ||
-                        (argval == (LARGEST_ULONG>>10)/10 &&
-                         n > ((LARGEST_ULONG>>10)-argval*10)))
+                    if (argval > LARGEST_ULONG/10 ||
+                        (argval == LARGEST_ULONG/10 &&
+                         n > (LARGEST_ULONG-argval*10)))
                       {
                         e = usage_err (debug_settings);
                         goto after_setup;
@@ -416,11 +669,36 @@ ___mod_or_lnk (*linker)();)
                 switch (*s)
                   {
                   case 'm':
-                    min_heap_len = argval<<10;
-                    break;
                   case 'h':
-                    max_heap_len = argval<<10;
-                    break;
+                    {
+                      int shift = 10;
+                      unsigned long orig = argval;
+                      if (*arg == 'G')
+                        {
+                          shift = 30;
+                          arg++;
+                        }
+                      else if (*arg == 'M')
+                        {
+                          shift = 20;
+                          arg++;
+                        }
+                      else if (*arg == 'K')
+                        {
+                          arg++;
+                        }
+                      argval = argval << shift;
+                      if ((argval >> shift) != orig)
+                        {
+                          e = usage_err (debug_settings);
+                          goto after_setup;
+                        }
+                      if (*s == 'm')
+                        min_heap_len = argval;
+                      else
+                        max_heap_len = argval;
+                      break;
+                    }
                   case 'l':
                     if (argval > 100)
                       argval = 100;
@@ -449,22 +727,29 @@ ___mod_or_lnk (*linker)();)
                 break;
               }
 
-            case 's':
-              standard_level = 5;
-              break;
-
             case 'S':
+            gambit_option:
               standard_level = 1;
               break;
 
+            case 's':
+            r5rs_option:
+              standard_level = 5;
+              break;
+
+            r7rs_option:
+              standard_level = 7;
+              break;
+
             case 'd':
+            debug_option:
               {
                 if (*arg == '\0' || *arg == ' ' || *arg == ',')
                   debug_settings = ___DEBUG_SETTINGS_DEFAULT;
                 else
                   while (*arg != '\0' && *arg != ' ' && *arg != ',')
                     {
-                      if (*arg >= '0' && *arg <= '9')
+                      if (is_digit (*arg))
                         {
                           debug_settings =
                             (debug_settings & ~___DEBUG_SETTINGS_LEVEL_MASK)
@@ -522,12 +807,6 @@ ___mod_or_lnk (*linker)();)
                                       | (___DEBUG_SETTINGS_USER_INTR_QUIT
                                          << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
                                     break;
-                          case 'i': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_REPL_MASK)
-                                      | (___DEBUG_SETTINGS_REPL_IDE
-                                         << ___DEBUG_SETTINGS_REPL_SHIFT);
-                                    break;
                           case 'c': debug_settings =
                                       (debug_settings
                                        & ~___DEBUG_SETTINGS_REPL_MASK)
@@ -546,51 +825,32 @@ ___mod_or_lnk (*linker)();)
                                       | (___DEBUG_SETTINGS_REPL_STDIO_AND_ERR
                                          << ___DEBUG_SETTINGS_REPL_SHIFT);
                                     break;
-
-                          case '@':
-                            debug_settings =
-                              (debug_settings
-                               & ~___DEBUG_SETTINGS_REPL_MASK)
-                              | (___DEBUG_SETTINGS_REPL_REMOTE
-                                 << ___DEBUG_SETTINGS_REPL_SHIFT);
-                            ___free_UCS_2STRING (remote_dbg_addr);
-                            remote_dbg_addr = extract_string (&arg);
-                            if (remote_dbg_addr == 0)
-                              {
-                                e = ___FIX(___HEAP_OVERFLOW_ERR);
-                                goto after_setup;
-                              }
-                            break;
-
+                          case '@': debug_settings =
+                                      (debug_settings
+                                       & ~___DEBUG_SETTINGS_REPL_MASK)
+                                      | (___DEBUG_SETTINGS_REPL_CLIENT
+                                         << ___DEBUG_SETTINGS_REPL_SHIFT);
+                                    ___free_UCS_2STRING (repl_client_addr);
+                                    repl_client_addr = extract_addr (&arg);
+                                    if (repl_client_addr == 0)
+                                      {
+                                        e = ___FIX(___HEAP_OVERFLOW_ERR);
+                                        goto after_setup;
+                                      }
+                                    break;
+                          case '$': ___free_UCS_2STRING (repl_server_addr);
+                                    repl_server_addr = extract_addr (&arg);
+                                    if (repl_server_addr == 0)
+                                      {
+                                        e = ___FIX(___HEAP_OVERFLOW_ERR);
+                                        goto after_setup;
+                                      }
+                                    break;
                           default:
                             e = usage_err (debug_settings);
                             goto after_setup;
                           }
                     }
-                break;
-              }
-
-            case '@':
-              {
-                ___free_UCS_2STRING (rpc_server_addr);
-                rpc_server_addr = extract_string (&arg);
-                if (rpc_server_addr == 0)
-                  {
-                    e = ___FIX(___HEAP_OVERFLOW_ERR);
-                    goto after_setup;
-                  }
-                break;
-              }
-
-            case '=':
-              {
-                ___free_UCS_2STRING (gambitdir);
-                gambitdir = extract_string (&arg);
-                if (gambitdir == 0)
-                  {
-                    e = ___FIX(___HEAP_OVERFLOW_ERR);
-                    goto after_setup;
-                  }
                 break;
               }
 
@@ -608,8 +868,7 @@ ___mod_or_lnk (*linker)();)
                 s = arg;
 
                 while ((c = *s++) != '=')
-                  if (!(((c >= 'a') && (c <= 'z')) ||
-                        ((c >= 'A') && (c <= 'Z'))))
+                  if (!is_alpha_or_digit (c))
                     {
                       e = usage_err (debug_settings);
                       goto after_setup;
@@ -631,89 +890,24 @@ ___mod_or_lnk (*linker)();)
 
                 gambitdir_map_len++;
 
-                break;
-              }
-
-            case ':':
-              {
-                ___UCS_2STRING dir;
-
-                if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
+                if (s[-2] == '~')
                   {
-                    free_strvec (&module_search_order,
-                                 &module_search_order_len);
-                    if (*arg != ',') arg++;
-                  }
-                else
-                  {
-                    int pos = 0;
-
-                    if (!extend_strvec (&module_search_order, pos, 1, module_search_order != 0))
+                    /* also set gambitdir on ~~=... */
+                    arg = s;
+                    ___free_UCS_2STRING (gambitdir);
+                    gambitdir = extract_string (&arg);
+                    if (gambitdir == 0)
                       {
                         e = ___FIX(___HEAP_OVERFLOW_ERR);
                         goto after_setup;
                       }
-
-                    if ((dir = extract_string (&arg)) == 0)
-                      {
-                        e = ___FIX(___HEAP_OVERFLOW_ERR);
-                        goto after_setup;
-                      }
-
-                    module_search_order[pos] = dir;
-
-                    module_search_order_len++;
-                  }
-
-                break;
-              }
-
-            case '.':
-              {
-                ___UCS_2STRING src;
-
-                if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
-                  {
-                    free_strvec (&module_whitelist,
-                                 &module_whitelist_len);
-                    if (*arg != ',') arg++;
-                  }
-                else if ((*arg == '+' || *arg == '-' || *arg == '?') &&
-                         (arg[1] == '\0' || (arg[1] == ',' && arg[2] != ',')))
-                  {
-                    if (*arg == '+')
-                      module_install_mode = ___MODULE_INSTALL_MODE_ASK_ALWAYS;
-                    else if (*arg == '-')
-                      module_install_mode = ___MODULE_INSTALL_MODE_ASK_NEVER;
-                    else
-                      module_install_mode = ___MODULE_INSTALL_MODE_ASK_WHEN_REPL;
-                    arg += 2;
-                  }
-                else
-                  {
-                    int pos = module_whitelist_len;
-
-                    if (!extend_strvec (&module_whitelist, pos, 1, module_whitelist != 0))
-                      {
-                        e = ___FIX(___HEAP_OVERFLOW_ERR);
-                        goto after_setup;
-                      }
-
-                    if ((src = extract_string (&arg)) == 0)
-                      {
-                        e = ___FIX(___HEAP_OVERFLOW_ERR);
-                        goto after_setup;
-                      }
-
-                    module_whitelist[pos] = src;
-
-                    module_whitelist_len++;
                   }
 
                 break;
               }
 
             case '+':
+            add_arg_option:
               {
                 ___UCS_2STRING extra_arg;
 
@@ -742,6 +936,7 @@ ___mod_or_lnk (*linker)();)
             case 't':
             case 'f':
             case '-':
+            io_settings_options:
               {
                 int settings = 0;
 
@@ -869,6 +1064,7 @@ ___mod_or_lnk (*linker)();)
                 break;
               }
             }
+
         } while (*arg++ == ',');
 
       if (arg[-1] != '\0' && arg[-1] != ' ')
@@ -915,8 +1111,8 @@ ___mod_or_lnk (*linker)();)
   setup_params.module_search_order = module_search_order;
   setup_params.module_whitelist    = module_whitelist;
   setup_params.module_install_mode = module_install_mode;
-  setup_params.remote_dbg_addr     = remote_dbg_addr;
-  setup_params.rpc_server_addr     = rpc_server_addr;
+  setup_params.repl_client_addr    = repl_client_addr;
+  setup_params.repl_server_addr    = repl_server_addr;
   setup_params.linker              = linker;
 
   e = ___setup (&setup_params);
@@ -938,8 +1134,8 @@ ___mod_or_lnk (*linker)();)
 
   ___free_UCS_2STRING (gambitdir);
   ___free_UCS_2STRING (gambopt);
-  ___free_UCS_2STRING (remote_dbg_addr);
-  ___free_UCS_2STRING (rpc_server_addr);
+  ___free_UCS_2STRING (repl_client_addr);
+  ___free_UCS_2STRING (repl_server_addr);
 
   if (e == ___FIX(___NO_ERR))
     {

@@ -130,7 +130,7 @@
               (lambda ()
                 (print "settings set auto-confirm 1\n"
                        "command script import clean_exit.py\n"
-                       "run -:d-,flu,=.. -f " file "\n"
+                       "run -:d-,flu,~~=.. -f " file "\n"
                        "clean_exit\n"
                        "frame variable\n"
                        "thread backtrace all\n"
@@ -147,7 +147,7 @@
                 "dbg-script"
               (lambda ()
                 (print "set $_exitcode = -1\n"
-                       "run -:d-,flu,=.. -f " file "\n"
+                       "run -:d-,flu,~~=.. -f " file "\n"
                        "if $_exitcode != -1\n"
                        "  quit $_exitcode\n"
                        "end\n"
@@ -162,7 +162,7 @@
               (delete-file "dbg-script")
               result)))
 
-      (run "../gsi/gsi" "-:d-,flu,=.." "-f" file)))
+      (run "../gsi/gsi" "-:d-,flu,~~=.." "-f" file)))
 
 (define (test-using-mode file mode target)
   (case target
@@ -171,7 +171,7 @@
             (run-gsi-under-debugger file (eq? mode 'gsi-dbg)))
            ((member mode '(gsc gsc-dbg))
             (let* ((filename "_test.o1")
-                   (result (run "../gsc/gsc" "-:d-,flu,=.." "-f" "-o" filename file)))
+                   (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-f" "-o" filename file)))
               (if (= 0 (car result))
                   (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg))))
                     (if cleanup? (delete-file filename))
@@ -179,7 +179,7 @@
                   result)))))
     (else
      (let* ((filename "_test.bat")
-            (result (run "../gsc/gsc" "-:d-,flu,=.." "-warnings" "-target" (symbol->string target) "-exe" "-o" filename file)))
+            (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-o" filename file)))
        (if (string? (cdr result))
            (begin
              (print (cdr result))

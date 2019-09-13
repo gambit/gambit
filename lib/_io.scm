@@ -7827,13 +7827,17 @@
   (##subtype-set! si (macro-subtype-structure))
   si)
 
-(define-prim (##tcp-client-socket-info port prim)
+(define-prim (##tcp-client-socket-info
+              port
+              prim
+              #!optional
+              (raise-os-exception? #t))
   (let loop ()
     (let ((result
            (##os-device-tcp-client-socket-info
             (macro-condvar-name
-             (or (macro-device-port-rdevice-condvar port)
-                 (macro-device-port-wdevice-condvar port)))
+             (or (macro-device-port-wdevice-condvar port)
+                 (macro-device-port-rdevice-condvar port)))
             (##eq? prim tcp-client-peer-socket-info))))
       (if (##fixnum? result)
 
@@ -7843,7 +7847,9 @@
                         (macro-port-wtimeout port))
                        ((macro-port-wtimeout-thunk port))))
               (loop)
-              (##raise-os-io-exception port #f result prim port))
+              (if raise-os-exception?
+                  (##raise-os-io-exception port #f result prim port)
+                  result))
 
           (##socket-info-setup! result)))))
 

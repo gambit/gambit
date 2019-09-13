@@ -3739,10 +3739,11 @@
             (deserialize-subprocedure-with-id! subproc-id)))))
 
   (define (deserialize-subprocedure-with-id! subproc-id)
+
     (define (get-subprocedure proc err parent-name subproc-id)
       (let ((obj (proc parent-name subproc-id)))
-        (##display parent-name ##stdout-port)
-        (##newline ##stdout-port)
+        ;;(##display parent-name ##stdout-port)
+        ;;(##newline ##stdout-port)
         (if obj
           (begin
             (alloc! obj)

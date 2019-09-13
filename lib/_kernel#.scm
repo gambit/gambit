@@ -231,7 +231,7 @@
 (##define-macro (macro-debug-settings-error-quit)          2)
 (##define-macro (macro-debug-settings-error-shift)         5)
 
-(##define-macro (macro-debug-settings-repl-mask)           384)
+(##define-macro (macro-debug-settings-repl-mask)           896)
 (##define-macro (macro-debug-settings-repl-ide)            0)
 (##define-macro (macro-debug-settings-repl-console)        1)
 (##define-macro (macro-debug-settings-repl-stdio)          2)
@@ -239,11 +239,11 @@
 (##define-macro (macro-debug-settings-repl-remote)         4)
 (##define-macro (macro-debug-settings-repl-shift)          7)
 
-(##define-macro (macro-debug-settings-user-intr-mask)      1536)
+(##define-macro (macro-debug-settings-user-intr-mask)      3072)
 (##define-macro (macro-debug-settings-user-intr-repl)      0)
 (##define-macro (macro-debug-settings-user-intr-defer)     1)
 (##define-macro (macro-debug-settings-user-intr-quit)      2)
-(##define-macro (macro-debug-settings-user-intr-shift)     9)
+(##define-macro (macro-debug-settings-user-intr-shift)     10)
 
 (##define-macro (macro-debug-settings-level settings)
   `(##fxwraplogical-shift-right

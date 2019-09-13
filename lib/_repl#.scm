@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "_repl#.scm", Time-stamp: <2009-02-11 21:28:56 feeley>
+;;; File: "_repl#.scm"
 
-;;; Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

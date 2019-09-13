@@ -561,7 +561,7 @@ AC_ARG_ENABLE(module-search-order,
 DEFAULT_RUNTIME_OPTIONS=""
 
 if test "$ENABLE_MODULE_SEARCH_ORDER" != ""; then
-  MODULE_SEARCH_ORDER=`echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e "s/^/:/" -e "s/,/,:/g"`
+  MODULE_SEARCH_ORDER=`echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e "s/^/search=/" -e "s/,/,search=/g"`
   if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
     DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
   fi
@@ -579,7 +579,7 @@ AC_ARG_ENABLE(module-whitelist,
               ENABLE_MODULE_WHITELIST=[github.com/gambit])
 
 if test "$ENABLE_MODULE_WHITELIST" != ""; then
-  MODULE_WHITELIST=`echo "$ENABLE_MODULE_WHITELIST" | sed -e "s/^/./" -e "s/,/,./g"`
+  MODULE_WHITELIST=`echo "$ENABLE_MODULE_WHITELIST" | sed -e "s/^/whitelist=/" -e "s/,/,whitelist=/g"`
   if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
     DEFAULT_RUNTIME_OPTIONS="$DEFAULT_RUNTIME_OPTIONS,"
   fi
