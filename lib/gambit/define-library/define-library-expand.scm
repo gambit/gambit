@@ -930,6 +930,7 @@
      (if (and (null? (libdef-body ld)) (null? ld-imports))
        `(##begin) ;; empty library
        `(##begin
+         (##declare (block))
          (##supply-module ,(string->symbol (libdef-name ld)))
          ,@(if (null? (libdef-cc-options ld))
                `()
