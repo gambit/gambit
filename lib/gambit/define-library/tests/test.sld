@@ -2,15 +2,14 @@
 
 ;; this program should be run with the command
 ;;
-;; gsi -e '(load "define-library")' github.com/feeley/digest/digest test.scm
+;; gsi test.scm
 
 (define-library (test)
 
-  (import (only (gambit)
-                define quote pp ;; required directly in the body
-                if not begin) ;; required by expansions of when and unless
-          (https://github.com/feeley/digest)
-          (when-unless))
+  (import (only (scheme base) define quote unless)
+
+          (gambit)
+          (gambit digest))
 
   (begin
 

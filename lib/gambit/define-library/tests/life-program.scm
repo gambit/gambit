@@ -1,3 +1,9 @@
+;; File: life-program.scm
+
+;; this program should be run with the command
+;;
+;; gsi -:search=.. life-program.scm
+
 ;; Main program.
 (import (scheme base)
         (only (example life) life)
@@ -19,4 +25,5 @@
 #;(grid-put! grid 3 2 #t)
 
 ;; Run for 5000 iterations.
-(life grid 5000)
+;; Lower the 3rd parameter to speed up the animation.
+(life grid 5000 1)

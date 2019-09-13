@@ -1,11 +1,9 @@
 
 (define-library (example life)
-  
   (export life)
 
-  (import (except (scheme base) when set!) ;; when not implemented in gambit.
-          (only (scheme thread) thread-sleep!)
-          (only (when-unless) when)
+  (import (except (scheme base) set!)
+          (only (gambit) thread-sleep!)
           (scheme write)
           (example grid))
 
