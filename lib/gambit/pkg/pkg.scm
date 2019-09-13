@@ -146,14 +146,21 @@
                                                            (and (git-pull repo)
                                                                 (git-archive repo tag))))
                                          (tmp-dir (create-temporary-directory install-path)))
-                                     (with-exception-handler
-                                       (lambda (_)
+                                     (if (pair? tar-rec-list)
+                                       (with-exception-handler
+                                         (lambda (_)
+                                           (delete-file-or-directory tmp-dir #t)
+                                           #f)
+                                         (lambda ()
+                                           ;; This raise an exception on error
+                                           (tar-rec-list-write tar-rec-list tmp-dir)
+                                           (rename-file tmp-dir install-path)
+                                           ;; Installation succeed
+                                           #t))
+                                       (begin
                                          (delete-file-or-directory tmp-dir #t)
-                                         #f)
-                                       (lambda ()
-                                         (tar-rec-list-write tar-rec-list tmp-dir)
-                                         (rename-file tmp-dir install-path)))))))))))))))))
-
+                                         ;; Failed
+                                         #f))))))))))))))))
 
 ;; Return #f if module is not hosted
 (define (uninstall module
