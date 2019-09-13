@@ -518,7 +518,7 @@ ___mod_or_lnk (*linker)();)
                       s += 4; /* point to the 'h' */
                       goto mhlp_options;
                     }
-                  else if (starts_with (s, "live"))
+                  else if (starts_with (s, "live-ratio"))
                     goto mhlp_options;
                   else if (starts_with (s, "parallelism"))
                     goto mhlp_options;
