@@ -36,8 +36,8 @@ EXE_EXTENSION=@EXE_EXTENSION_SH@
 BAT_EXTENSION=@BAT_EXTENSION_SH@
 
 GAMBCOMP_CC_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"cc-options|# \""
-GAMBCOMP_LD_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"ld-options|# \""
 GAMBCOMP_LD_OPTIONS_PRELUDE_REGEXP="^ #|\\*/\"\\*/\"ld-options-prelude|# \""
+GAMBCOMP_LD_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"ld-options|# \""
 GAMBCOMP_PKG_CONFIG_REGEXP="^ #|\\*/\"\\*/\"pkg-config|# \""
 
 get_meta_info()
@@ -63,7 +63,7 @@ process_pkg_config()
   IFS='
 '
   for pkg in $(get_meta_info "$1" "${GAMBCOMP_PKG_CONFIG_REGEXP}"); do
-    if test "${PKG_CONFIG}" == ""; then
+    if test -z "${PKG_CONFIG}"; then
       echo "the pkg-config program is unavailable but is needed to get C compiler options for package '$pkg' which is a dependency of '$1'"
       exit 1
     else
@@ -77,8 +77,8 @@ process_pkg_config()
 extract_cc_ld_options()
 {
   GAMBCOMP_CC_OPTIONS=""
-  GAMBCOMP_LD_OPTIONS=""
   GAMBCOMP_LD_OPTIONS_PRELUDE=""
+  GAMBCOMP_LD_OPTIONS=""
 
   for file in "$@"; do
     process_pkg_config "$file"
@@ -89,11 +89,11 @@ extract_cc_ld_options()
     get_meta_info_list "$file" "${GAMBCOMP_CC_OPTIONS_REGEXP}"
     GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${GAMBCOMP_META_INFO_LIST}"
 
-    get_meta_info_list "$file" "${GAMBCOMP_LD_OPTIONS_REGEXP}"
-    GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${GAMBCOMP_META_INFO_LIST}"
-
     get_meta_info_list "$file" "${GAMBCOMP_LD_OPTIONS_PRELUDE_REGEXP}"
     GAMBCOMP_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}${GAMBCOMP_META_INFO_LIST}"
+
+    get_meta_info_list "$file" "${GAMBCOMP_LD_OPTIONS_REGEXP}"
+    GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${GAMBCOMP_META_INFO_LIST}"
 
   done
 }
@@ -106,7 +106,7 @@ case "$1" in
 
     BUILD_OBJ_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${BUILD_OBJ_CC_OPTIONS}"
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test ! -z "${GAMBCOMP_VERBOSE}"; then
       echo @BUILD_OBJ_ECHO@
     fi
 
@@ -118,10 +118,10 @@ case "$1" in
     extract_cc_ld_options ${BUILD_DYN_INPUT_FILENAMES}
 
     BUILD_DYN_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${BUILD_DYN_CC_OPTIONS}"
-    BUILD_DYN_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}${BUILD_DYN_CC_OPTIONS_PRELUDE}"
-    BUILD_DYN_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${BUILD_DYN_CC_OPTIONS}"
+    BUILD_DYN_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}${BUILD_DYN_LD_OPTIONS_PRELUDE}"
+    BUILD_DYN_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${BUILD_DYN_LD_OPTIONS}"
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test ! -z "${GAMBCOMP_VERBOSE}"; then
       echo @BUILD_DYN_ECHO@
     fi
 
@@ -130,7 +130,7 @@ case "$1" in
 
   "lib")
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test ! -z "${GAMBCOMP_VERBOSE}"; then
       echo @BUILD_LIB_ECHO@
     fi
 
@@ -139,7 +139,7 @@ case "$1" in
 
   "exe")
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test ! -z "${GAMBCOMP_VERBOSE}"; then
       echo @BUILD_EXE_ECHO@
     fi
 
