@@ -862,14 +862,18 @@ CONF_MAX_CHR
 CONF_ACTIVITY_LOG
 ENABLE_GUIDE
 QTINCPATH
+PKG_CONFIG_BAT
 C_PREPROC_BAT
 C_COMPILER_BAT
+PKG_CONFIG_SH
 C_PREPROC_SH
 C_COMPILER_SH
+PKG_CONFIG_MF
 C_PREPROC_MF
 C_COMPILER_MF
 C_PREPROC
 C_COMPILER
+PKG_CONFIG
 CXXCPP
 ac_ct_CXX
 CXXFLAGS
@@ -4524,6 +4528,52 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
   C_PREPROC=$CXXCPP
 
 fi
+
+# Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_PKG_CONFIG+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+as_dummy="$PATH:/usr/bin:/usr/bin/X11:/usr/local/bin"
+for as_dir in $as_dummy
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+$as_echo "$PKG_CONFIG" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+
+
+
+
 
 
 
@@ -14779,6 +14829,7 @@ ESC_ECHO_BAT="sed -e s/\${/%/g -e s/}/%/g"
 
 C_COMPILER_MF=`echo "$C_COMPILER" | $ESC_MF`
 C_PREPROC_MF=`echo "$C_PREPROC" | $ESC_MF`
+PKG_CONFIG_MF=`echo "$PKG_CONFIG" | $ESC_MF`
 
 FLAGS_OBJ_MF=`echo "$FLAGS_OBJ" | $ESC_MF`
 FLAGS_DYN_MF=`echo "$FLAGS_DYN" | $ESC_MF`
@@ -14813,6 +14864,7 @@ BAT_EXTENSION_MF=`echo "$BAT_EXTENSION" | $ESC_MF`
 
 C_COMPILER_SH=`echo "$C_COMPILER" | $ESC_SH`
 C_PREPROC_SH=`echo "$C_PREPROC" | $ESC_SH`
+PKG_CONFIG_SH=`echo "$PKG_CONFIG" | $ESC_SH`
 
 FLAGS_OBJ_SH=`echo "$FLAGS_OBJ" | $ESC_SH`
 FLAGS_DYN_SH=`echo "$FLAGS_DYN" | $ESC_SH`
@@ -14847,6 +14899,7 @@ BAT_EXTENSION_SH=`echo "$BAT_EXTENSION" | $ESC_SH`
 
 C_COMPILER_BAT=`echo "$C_COMPILER" | $ESC_BAT`
 C_PREPROC_BAT=`echo "$C_PREPROC" | $ESC_BAT`
+PKG_CONFIG_BAT=`echo "$PKG_CONFIG" | $ESC_BAT`
 
 FLAGS_OBJ_BAT=`echo "$FLAGS_OBJ" | $ESC_BAT`
 FLAGS_DYN_BAT=`echo "$FLAGS_DYN" | $ESC_BAT`

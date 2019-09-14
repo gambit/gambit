@@ -4,6 +4,7 @@
 
 C_COMPILER=@C_COMPILER_SH@
 C_PREPROC=@C_PREPROC_SH@
+PKG_CONFIG=@PKG_CONFIG_SH@
 
 FLAGS_OBJ=@FLAGS_OBJ_SH@
 FLAGS_DYN=@FLAGS_DYN_SH@
@@ -34,9 +35,76 @@ OBJ_EXTENSION=@OBJ_EXTENSION_SH@
 EXE_EXTENSION=@EXE_EXTENSION_SH@
 BAT_EXTENSION=@BAT_EXTENSION_SH@
 
+GAMBCOMP_CC_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"cc-options|# \""
+GAMBCOMP_LD_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"ld-options|# \""
+GAMBCOMP_LD_OPTIONS_PRELUDE_REGEXP="^ #|\\*/\"\\*/\"ld-options-prelude|# \""
+GAMBCOMP_PKG_CONFIG_REGEXP="^ #|\\*/\"\\*/\"pkg-config|# \""
+
+get_meta_info()
+{
+  grep "$2" "$1" | sed -e s,"$2",,g -e s,"\"$",,g
+}
+
+get_meta_info_list()
+{
+  GAMBCOMP_META_INFO_LIST=""
+  GAMBCOMP_SAVE_IFS="$IFS"
+  IFS='
+'
+  for info in $(get_meta_info "$1" "$2"); do
+    GAMBCOMP_META_INFO_LIST="${GAMBCOMP_META_INFO_LIST}$info "
+  done
+  IFS="${GAMBCOMP_SAVE_IFS}"
+}
+
+process_pkg_config()
+{
+  GAMBCOMP_SAVE_IFS="$IFS"
+  IFS='
+'
+  for pkg in $(get_meta_info "$1" "${GAMBCOMP_PKG_CONFIG_REGEXP}"); do
+    if test "${PKG_CONFIG}" == ""; then
+      echo "the pkg-config program is unavailable but is needed to get C compiler options for package '$pkg' which is a dependency of '$1'"
+      exit 1
+    else
+      GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}$(${PKG_CONFIG} --cflags $pkg) "
+      GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}$(${PKG_CONFIG} --libs $pkg) "
+    fi
+  done
+  IFS="${GAMBCOMP_SAVE_IFS}"
+}
+
+extract_cc_ld_options()
+{
+  GAMBCOMP_CC_OPTIONS=""
+  GAMBCOMP_LD_OPTIONS=""
+  GAMBCOMP_LD_OPTIONS_PRELUDE=""
+
+  for file in "$@"; do
+    process_pkg_config "$file"
+  done
+
+  for file in "$@"; do
+
+    get_meta_info_list "$file" "${GAMBCOMP_CC_OPTIONS_REGEXP}"
+    GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${GAMBCOMP_META_INFO_LIST}"
+
+    get_meta_info_list "$file" "${GAMBCOMP_LD_OPTIONS_REGEXP}"
+    GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${GAMBCOMP_META_INFO_LIST}"
+
+    get_meta_info_list "$file" "${GAMBCOMP_LD_OPTIONS_PRELUDE_REGEXP}"
+    GAMBCOMP_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}${GAMBCOMP_META_INFO_LIST}"
+
+  done
+}
+
 case "$1" in
 
   "obj")
+
+    extract_cc_ld_options ${BUILD_OBJ_INPUT_FILENAMES}
+
+    BUILD_OBJ_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${BUILD_OBJ_CC_OPTIONS}"
 
     if test "${GAMBCOMP_VERBOSE}" != ""; then
       echo @BUILD_OBJ_ECHO@
@@ -46,6 +114,12 @@ case "$1" in
     ;;
 
   "dyn")
+
+    extract_cc_ld_options ${BUILD_DYN_INPUT_FILENAMES}
+
+    BUILD_DYN_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${BUILD_DYN_CC_OPTIONS}"
+    BUILD_DYN_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}${BUILD_DYN_CC_OPTIONS_PRELUDE}"
+    BUILD_DYN_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${BUILD_DYN_CC_OPTIONS}"
 
     if test "${GAMBCOMP_VERBOSE}" != ""; then
       echo @BUILD_DYN_ECHO@
@@ -78,6 +152,10 @@ case "$1" in
 
   "C_PREPROC")
     echo "${C_PREPROC}"
+    ;;
+
+  "PKG_CONFIG")
+    echo "${PKG_CONFIG}"
     ;;
 
   "FLAGS_OBJ")
@@ -183,6 +261,7 @@ case "$1" in
 
     echo C_COMPILER=`echo "${C_COMPILER}" | ${ESC_SH}`
     echo C_PREPROC=`echo "${C_PREPROC}" | ${ESC_SH}`
+    echo PKG_CONFIG=`echo "${PKG_CONFIG}" | ${ESC_SH}`
 
     echo FLAGS_OBJ=`echo "${FLAGS_OBJ}" | ${ESC_SH}`
     echo FLAGS_DYN=`echo "${FLAGS_DYN}" | ${ESC_SH}`
