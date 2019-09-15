@@ -15,11 +15,8 @@
     string-ci-hash
     hash-by-identity
     make-hash-table
-    ;;;hash-table-size
-    hash-table-equivalence-function
-    hash-table-hash-function
     hash-table?
-    list->hash-table
+    alist->hash-table
     hash-table-equivalence-function
     hash-table-hash-function
     hash-table-ref
