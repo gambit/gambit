@@ -495,34 +495,32 @@ insufficient memory to allocate critical tables.
 For example, if the shell is @code{sh}:
 
 @smallexample
-$ @b{gsi -:d0 -e "(pretty-print (expt 2 100))"}
+$ @b{gsi -e "(pretty-print (expt 2 100))"}
 1267650600228229401496703205376
 $ @b{echo $?}
 0
-$ @b{gsi -:d0,unknown @r{@i{# try to use an unknown runtime option}}}
+$ @b{gsi -e "(pretty-print (expo 2 100))"}
+*** ERROR IN (string)@@1.16 -- Unbound variable: expo
+$ @b{echo $?}
+70
+$ @b{gsi -:debug=0 -e "(pretty-print (expo 2 100))"}
+$ @b{echo $?}
+70
+$ @b{gsi -:debug=0,unknown @r{@i{# try to use an unknown runtime option}}}
 $ @b{echo $?}
 64
-$ @b{gsi -:d0 nonexistent.scm @r{@i{# try to load a file that does not exist}}}
+$ @b{gsi -:debug=0 nonexistent.scm @r{@i{# try to load a file that does not exist}}}
 $ @b{echo $?}
 70
 $ @b{gsi nonexistent.scm}
-*** ERROR IN ##main -- No such file or directory
+*** ERROR IN ##load-module-or-file -- No such file or directory
 (load "nonexistent.scm")
 $ @b{echo $?}
 70
 @end smallexample
 
-@smallexample
-@b{}$ @b{gsi -:m4000000 @r{@i{# ask for a 4 gigabyte heap}}}
-*** malloc: vm_allocate(size=528384) failed (error code=3)
-*** malloc[15068]: error: Can't allocate region
-$ @b{echo $?}
-71
-@end smallexample
-
-Note the use of the runtime option @samp{-:d0} that prevents error
-messages from being output, and the runtime option @samp{-:m4000000}
-which sets the minimum heap size to 4 gigabytes.
+Note the use of the runtime option @samp{-:debug=0} that prevents error
+messages from being output.
 
 @node Scheme scripts, , GSI exit status, GSI
 @section Scheme scripts
@@ -724,7 +722,7 @@ For example:
 
 @smallexample
 $ @b{cat square.scm}
-#!/usr/local/Gambit/bin/gsi-script -:d0
+#!/usr/local/Gambit/bin/gsi-script -:debug=0
 (define (main arg)
   (pretty-print (expt (string->number arg) 2)))
 $ @b{gsi square 30        @r{@i{# gsi will load square.scm}}}
@@ -735,7 +733,7 @@ $ @b{./square 30}
 $ @b{./square 1 2 3       @r{@i{# too many arguments to main}}}
 $ @b{echo $?}
 70
-$ @b{./square -:d1 1 2 3  @r{@i{# ask for error message}}}
+$ @b{./square -:debug=1 1 2 3  @r{@i{# ask for error message}}}
 *** ERROR -- Wrong number of arguments passed to procedure
 (main "1" "2" "3")
 @end smallexample
@@ -1829,94 +1827,117 @@ parameters to the runtime system.  This option must appear first on
 the command line.  The colon is followed by a comma separated list of
 options with no intervening spaces.  The available options are:
 
-@table @code
-@item m@var{HEAPSIZE}
-Set minimum heap size in kilobytes.
-@item h@var{HEAPSIZE}
-Set maximum heap size in kilobytes.
-@item l@var{LIVEPERCENT}
-Set heap occupation after garbage collection.
-@item s
-Select standard Scheme mode.
-@item S
-Select Gambit Scheme mode.
-@item d@r{[}@var{OPT}...@r{]}
+@table @r
+
+@item @code{@b{min-heap=}}@var{SIZE} or the shorthand @code{@b{m}}@var{SIZE}
+Set minimum heap size.
+
+@item @code{@b{max-heap=}}@var{SIZE} or the shorthand @code{@b{h}}@var{SIZE}
+Set maximum heap size.
+
+@item @code{@b{live-ratio=}}@var{RATIO} or the shorthand @code{@b{l}}@var{RATIO}
+Set the ratio of heap that is live after a garbage collection.
+
+@item @code{@b{gambit}} or the (deprecated) shorthand @code{@b{S}}
+Select Gambit Scheme mode. This is the default mode.
+
+@item @code{@b{r5rs}} or the (deprecated) shorthand @code{@b{s}}
+Select R5RS Scheme mode.
+
+@item @code{@b{r7rs}}
+Select R7RS Scheme mode.
+
+@item @code{@b{debug}}@r{[}@code{@b{=}}@r{[}@var{OPT}...@r{]]} or the shorthand @code{@b{d}}@r{[}@var{OPT}...@r{]}
 Set debugging options.
-@item @@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
-Override the configuration of the main RPC server.
-@item =@var{DIRECTORY}
-Override the central installation directory.
-@item ~~@var{DIR}=@var{DIRECTORY}
-Override the @var{DIR} installation directory.
-@item +@var{ARGUMENT}
+
+@item @code{@b{~~}}@var{NAME}@code{@b{=}}@var{DIRECTORY}
+Override the @var{NAME} installation directory.
+
+@item @code{@b{add-arg=}}@var{ARGUMENT} or the shorthand @code{@b{+}}@var{ARGUMENT}
 Add @var{ARGUMENT} to the command line before other arguments.
-@item f@r{[}@var{OPT}...@r{]}
-Set file options.
-@item t@r{[}@var{OPT}...@r{]}
-Set terminal options.
-@item -@r{[}@var{OPT}...@r{]}
-Set standard input and output options.
+
+@item @code{@b{file-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{f}}@r{[}@var{IO}...@r{]}
+Set file I/O settings.
+
+@item @code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{t}}@r{[}@var{IO}...@r{]}
+Set terminal I/O settings.
+
+@item @code{@b{stdio-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{-}}@r{[}@var{IO}...@r{]}
+Set stdio I/O settings.
+
 @end table
 
-@opindex -:m
-The @samp{m} option specifies the minimum size of the heap.  The
-@samp{m} is immediately followed by an integer indicating the number
-of kilobytes of memory.  The heap will not shrink lower than this
-size.  By default, the minimum size is 0.
+@opindex -:min-heap=@var{SIZE}
+@opindex -:m@var{SIZE}
+@opindex -:max-heap=@var{SIZE}
+@opindex -:h@var{SIZE}
+The @code{@b{min-heap=}}@var{SIZE} and @code{@b{max-heap=}}@var{SIZE}
+options set limits on the size of the heap.  The @var{SIZE} is an
+integer that may be followed by @code{@b{G}} (gigabytes), @code{@b{M}}
+(megabytes), or @code{@b{K}} or nothing (kilobytes).  The heap will
+not shrink lower than the minimum heap size which defaults to 0.  The
+heap will not grow larger than the maximum heap size if it is set (by
+default the heap may grow until the virtual memory is exhausted).
 
-@opindex -:h
-The @samp{h} option specifies the maximum size of the heap.  The
-@samp{h} is immediately followed by an integer indicating the number
-of kilobytes of memory.  The heap will not grow larger than this size.
-By default, there is no limit (i.e.  the heap will grow until the
-virtual memory is exhausted).
+@opindex -:live-ratio=@var{RATIO}
+@opindex -:l@var{RATIO}
+The @code{@b{live-ratio=}}@var{RATIO} option sets the percentage of
+the heap that will be occupied with live objects after the heap is
+resized at the end of a garbage collection.  @var{RATIO} is an integer
+between 1 and 100 inclusively indicating the desired percentage.  The
+garbage collector resizes the heap to reach this percentage occupation
+(roughly), within the limits of the @code{min-heap} and
+@code{max-heap} options.  By default, the percentage is 50.
 
-@opindex -:l
-The @samp{l} option specifies the percentage of the heap that will be
-occupied with live objects after the heap is resized at the end of a
-garbage collection.  The @samp{l} is immediately followed by an
-integer between 1 and 100 inclusively indicating the desired
-percentage.  The garbage collector resizes the heap to reach this
-percentage occupation.  By default, the percentage is 50.
-
+@opindex -:gambit
+@opindex -:r5rs
+@opindex -:r7rs
 @opindex -:s
 @opindex -:S
-The @samp{s} option selects standard Scheme mode.  In this mode the
-reader is case-insensitive and keywords are not recognized.  The
-@samp{S} option selects Gambit Scheme mode (the reader is case-sensitive
-and recognizes keywords which end with a colon).  By default Gambit
-Scheme mode is used.
+The @code{@b{gambit}}, @code{@b{r5rs}} and @code{@b{r7rs}} options
+configure the runtime system to conform to Gambit Scheme, R5RS Scheme
+and R7RS Scheme respectively.  The reader is case-insensitive in
+@code{@b{r5rs}} mode, and is case-sensitive in @code{@b{r7rs}} and
+@code{@b{gambit}} modes.  The reader supports keywords only in
+@code{@b{gambit}} mode, which is the default mode.
 
+@opindex -:debug
 @opindex -:d
-The @samp{d} option sets various debugging options.  The letter
-@samp{d} is followed by a sequence of letters indicating suboptions.
+The @code{@b{debug=}}@var{OPT,...} option sets various debugging options.
+The equal sign is followed by a sequence of letters indicating suboptions.
 
-@table @code
+@table @r
 
-@item p
+@item @code{@b{p}}
+@opindex -:debug=p
 @opindex -:dp
 Uncaught exceptions will be treated as ``errors'' in the primordial thread
 only.
 
-@item a
+@item @code{@b{a}}
+@opindex -:debug=a
 @opindex -:da
 Uncaught exceptions will be treated as ``errors'' in all threads.
 
-@item r
+@item @code{@b{r}}
+@opindex -:debug=r
 @opindex -:dr
 When an ``error'' occurs a new REPL will be started.
 
-@item s
+@item @code{@b{s}}
+@opindex -:debug=s
 @opindex -:ds
 When an ``error'' occurs a new REPL will be started.
 Moreover the program starts in single-stepping mode.
 
-@item q
+@item @code{@b{q}}
+@opindex -:debug=q
 @opindex -:dq
 When an ``error'' occurs the program will terminate with a nonzero
 exit status.
 
-@item R
+@item @code{@b{R}}
+@opindex -:debug=R
 @opindex -:dR
 @kindex ^C
 When a user interrupt occurs a new REPL will be started.  User
@@ -1926,81 +1947,94 @@ For example, under Microsoft Windows, @key{^C} works fine with the
 standard console but with the MSYS terminal window it terminates the
 process.
 
-@item D
+@item @code{@b{D}}
+@opindex -:debug=D
 @opindex -:dD
 When a user interrupt occurs it will be deferred until the parameter
 @code{current-user-interrupt-handler} is bound.
 
-@item Q
+@item @code{@b{Q}}
+@opindex -:debug=Q
 @opindex -:dQ
 When a user interrupt occurs the program will terminate with a nonzero
 exit status.
 
 @item @var{LEVEL}
+@opindex -:debug=@var{LEVEL}
 @opindex -:d@var{LEVEL}
 The verbosity level is set to @var{LEVEL} (a digit from 0 to 9).
 At level 0 the runtime system will not display error messages
 and warnings.
 
-@item i
-@opindex -:di
-The REPL interaction channel will be the IDE REPL window (if the IDE
-is available).
-
-@item c
+@item @code{@b{c}}
+@opindex -:debug=c
 @opindex -:dc
 The REPL interaction channel will be the console.
 
-@item -
+@item @code{@b{-}}
+@opindex -:debug=-
 @opindex -:d-
 The REPL interaction channel will be standard input and standard output.
 
-@item @@@r{[}@var{HOST}@r{]}@r{[}:@var{PORT}@r{]}
+@item @code{@b{+}}
+@opindex -:debug=+
+@opindex -:d+
+The REPL interaction channel will be standard input and standard output
+and standard error.
+
+@item @code{@b{@@}}@r{[}@var{HOST}@r{]}@r{[}@code{@b{:}}@var{PORT}@r{]}
+@opindex -:debug=@@@r{[}@var{HOST}@r{]}@r{[}:@var{PORT}@r{]}
 @opindex -:d@@@r{[}@var{HOST}@r{]}@r{[}:@var{PORT}@r{]}
-The REPL interaction channel will be connected to the remote debugger
-at address @var{HOST}:@var{PORT} (if there is a remote debugger at
-that address).  The default @var{HOST} is 127.0.0.1 and the default
-@var{PORT} is 44555.
-THIS OPTION IS NOT YET IMPLEMENTED!
+When a REPL is started by a thread a connection will be established
+with the address @var{HOST}:@var{PORT} and that will be the REPL's
+interaction channel.  The default @var{HOST} is 127.0.0.1 and the
+default @var{PORT} is 44556.
+
+@item @code{@b{$}}@r{[}@var{INTF}@r{]}@r{[}@code{@b{:}}@var{PORT}@r{]}
+@opindex -:debug=$@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
+@opindex -:d$@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}
+The runtime system will open a socket to listen on port number
+@var{PORT} for incoming connections on the network interface with
+address @var{INTF}.  The default @var{INTF} is 127.0.0.1 and the
+default @var{PORT} is 44555.
 
 @end table
 
-The default debugging options are equivalent to @code{-:dpqQ1i}
+The default debugging options are equivalent to @code{debug=pqQ1-}
 (i.e. an uncaught exception in the primordial thread terminates the
-program after displaying an error message).  When the letter @samp{d}
-is not followed by suboptions, it is equivalent to @code{-:dprR1i}
-(i.e. a new REPL is started only when an uncaught exception occurs in
-the primordial thread).  When @code{gsi} and @code{gsc} are running
-the main REPL, the debugging options are changed to cause errors in
-the primordial thread and user interrupts to start a nested REPL.
+program after displaying an error message).  When the option
+@code{debug} is used without suboptions it is equivalent to
+@code{debug=prR1-} (i.e. a new REPL is started only when an uncaught
+exception occurs in the primordial thread).  When @code{gsi} and
+@code{gsc} are running the main REPL, the debugging options are
+changed to cause errors in the primordial thread and user interrupts
+to start a nested REPL.
 
-@opindex -:@
-The @samp{@@@r{[}@var{INTF}@r{]}@r{[}:@var{PORT}@r{]}} option
-overrides the configuration of the main RPC server.  The default
-@var{INTF} is 127.0.0.1 and the default @var{PORT} is 44556.
-THIS OPTION IS NOT YET IMPLEMENTED!
+@opindex -:~~@var{NAME}=@var{DIRECTORY}
+The @code{@b{~~}}@var{NAME}@code{@b{=}}@var{DIRECTORY} option
+overrides the setting of the @var{NAME} installation directory.  If
+@var{NAME} is empty, it will override the central installation
+directory.
 
-@opindex -:=
-The @samp{=@var{DIRECTORY}} option overrides the setting of the
-central installation directory.
+@opindex -:add-arg=@var{ARGUMENT}
+@opindex -:+@var{ARGUMENT}
+The @code{@b{add-arg=}}@var{ARGUMENT} option adds the text that
+follows to the command line before other arguments.
 
-@opindex -:~~
-The @samp{~~@var{DIR}=@var{DIRECTORY}} option overrides the setting of
-the @var{DIR} installation directory.
-
-@opindex -:+
-The @samp{+} option adds the text that follows to the command line
-before other arguments.
-
-@opindex -:f
-@opindex -:t
-@opindex -:-
-The @samp{f}, @samp{t} and @samp{-} options specify the default
+@opindex -:file-settings=@r{[}@var{IO}...@r{]}
+@opindex -:terminal-settings=@r{[}@var{IO}...@r{]}
+@opindex -:stdio-settings=@r{[}@var{IO}...@r{]}
+@opindex -:f@r{[}@var{IO}...@r{]}
+@opindex -:t@r{[}@var{IO}...@r{]}
+@opindex -:-@r{[}@var{IO}...@r{]}
+The options @code{@b{file-settings=}}@r{[}@var{IO}...@r{]},
+@code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]}, and
+@code{@b{stdio-settings=}}@r{[}@var{IO}...@r{]} set the default I/O
 settings of the ports created for files, terminals and standard input
 and output respectively.  The default character encoding, end-of-line
 encoding and buffering can be set.  Moreover, for terminals the
-line-editing feature can be enabled or disabled.  The @samp{f},
-@samp{t} and @samp{-} must be followed by a sequence of these options:
+line-editing feature can be enabled or disabled.  Each @var{IO} is a
+one or two letter code as follows:
 
 @table @code
 @item A
@@ -2067,15 +2101,14 @@ command line argument even if it starts with @samp{-:}).
 For example:
 
 @smallexample
-$ @b{GAMBOPT=d0,=~/my-gambit2}
-$ @b{export GAMBOPT}
+$ @b{export GAMBOPT=debug=0,~~=~/my-gambit2}
 $ @b{gsi -e '(pretty-print (path-expand "~~")) (/ 1 0)'}
 "/Users/feeley/my-gambit2/"
 $ @b{echo $?}
 70
-$ @b{gsi -:d1 -e '(pretty-print (path-expand "~~")) (/ 1 0)'}
+$ @b{gsi -:debug=1 -e '(pretty-print (path-expand "~~")) (/ 1 0)'}
 "/Users/feeley/my-gambit2/"
-*** ERROR IN (string)@@1.3 -- Divide by zero
+*** ERROR IN (string)@@1.35 -- Divide by zero
 (/ 1 0)
 @end smallexample
 
@@ -3080,7 +3113,7 @@ from your load-path and that the following lines are in your
 (autoload 'gambit-mode "gambit" "Hook Gambit mode into scheme.")
 (add-hook 'inferior-scheme-mode-hook (function gambit-inferior-mode))
 (add-hook 'scheme-mode-hook (function gambit-mode))
-(setq scheme-program-name "gsi -:d-")
+(setq scheme-program-name "gsi -:debug=-")
 @end smallexample
 
 Alternatively, if you don't mind always loading this package,
@@ -3146,7 +3179,7 @@ Here is what a typical @samp{.emacs} file will look like:
 @b{}(setq load-path ; add directory containing gambit.el
   (cons "/usr/local/Gambit/share/emacs/site-lisp"
         load-path))
-(setq scheme-program-name "/tmp/gsi -:d-") ; if gsi not in executable path
+(setq scheme-program-name "/tmp/gsi -:debug=-") ; if gsi not in executable path
 (setq gambit-highlight-color "gray") ; if you don't like the default
 (setq gambit-repl-command-prefix "\e") ; if you want M-c, M-s, etc
 (require 'gambit)
@@ -4939,7 +4972,7 @@ the range 0 to #x10ffff (inclusive) but not in the range #xd800 to
 to read such source code properly @code{gsi} and @code{gsc} must be
 told which character encoding to use for reading the source code
 (i.e. ASCII, ISO-8859-1, UTF-8, etc).  This can be done by specifying
-the runtime option @samp{-:f} when @code{gsi} and @code{gsc} are
+the runtime option @samp{-:file-settings=...} when @code{gsi} and @code{gsc} are
 started.
 
 @menu
@@ -8583,7 +8616,7 @@ handler will display an error message (if the primordial thread raised
 the exception) or the thread will silently terminate with no error
 message (if it is not the primordial thread that raised the
 exception).  This default behavior can be changed through the
-@samp{-:d} runtime option (@pxref{Runtime options}).
+@samp{-:debug=...} runtime option (@pxref{Runtime options}).
 
 Predefined procedures normally raise exceptions by performing a
 tail-call to the exception handler (the exceptions are ``complex''
@@ -10000,9 +10033,8 @@ directory denoted is the central installation directory.  Otherwise
 what follows the @samp{~~} is the name of the installation directory,
 for example @samp{~~lib} denotes the @samp{lib} installation
 directory.  Note that the location of the installation directories may
-be overridden by using the @samp{-:=@var{DIRECTORY}} and
-@samp{-:~~@var{DIR}=@var{DIRECTORY}} runtime options or by defining
-the @samp{GAMBOPT} environment variable.
+be overridden by using the @samp{-:~~@var{NAME}=@var{DIRECTORY}}
+runtime option or by defining the @samp{GAMBOPT} environment variable.
 
 @cindex ~
 A path which starts with the character @samp{~} not followed by
@@ -10449,7 +10481,7 @@ followed by the remaining command line arguments.
 For example under UNIX:
 
 @smallexample
-$ @b{gsi -:d -e "(pretty-print (command-line))"}
+$ @b{gsi -:debug -e "(pretty-print (command-line))"}
 ("gsi" "-e" "(pretty-print (command-line))")
 $ @b{cat foo}
 #!/usr/local/Gambit/bin/gsi-script
@@ -13787,7 +13819,7 @@ For example:
 @deffnx procedure open-input-vector @r{[}@var{vector-or-settings}@r{]}
 @deffnx procedure open-output-vector @r{[}@var{vector-or-settings}@r{]}
 @deffnx procedure call-with-input-vector @var{vector-or-settings} @var{proc}
-@deffnx procedure call-with-output-vector @r{[}@var{vector-or-settings@r{]}} @var{proc}
+@deffnx procedure call-with-output-vector @r{[}@var{vector-or-settings}@r{]} @var{proc}
 @deffnx procedure with-input-from-vector @var{vector-or-settings} @var{thunk}
 @deffnx procedure with-output-to-vector @r{[}@var{vector-or-settings}@r{]} @var{thunk}
 
