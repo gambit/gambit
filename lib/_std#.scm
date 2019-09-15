@@ -732,44 +732,65 @@
                  (,subvect vect start end)
                  (,##subvect vect start end))))))
 
-       (define-prim (,##append-vects lst #!optional (vect-append? #f))
+       (define-prim (,##append-vects
+                     lst
+                     #!optional
+                     (sep (macro-absent-obj)))
          (let loop1 ((n 0)
-                     (lst1 lst)
-                     (lst2 '())
+                     (probe lst)
                      (arg-num 1))
-           (cond ((##pair? lst1)
-                  (let ((vect (##car lst1)))
+           (cond ((##pair? probe)
+                  (let ((vect (##car probe)))
                     (macro-force-vars (vect)
                       (if (##not (,##vect? vect))
-                          (if vect-append?
+                          (if (##eq? sep (macro-deleted-obj))
                               (,##fail-check-vect arg-num '() ,vect-append lst)
-                              (,##fail-check-vect-list 1 ,append-vects lst))
+                              (,##fail-check-vect-list 1 ,append-vects lst sep))
                           (loop1 (##fx+ n (,##vect-length vect))
-                                 (##cdr lst1)
-                                 (##cons vect lst2)
+                                 (##cdr probe)
                                  (##fx+ arg-num 1))))))
-                 ((##null? lst1)
-                  (let ((result (,##make-vect n)))
-                    (let loop2 ((n n)
-                                (lst2 lst2))
-                      (if (##pair? lst2)
-                          (let* ((vect (##car lst2))
-                                 (len (,##vect-length vect))
-                                 (new-n (##fx- n len)))
-                            (,##subvect-move! vect 0 len result new-n)
-                            (loop2 new-n (##cdr lst2)))
-                          result))))
+                 ((##null? probe)
+                  (if (##not (or (##eq? sep (macro-deleted-obj)) ;; for vect-append
+                                 (##eq? sep (macro-absent-obj))
+                                 (,##vect? sep)))
+                      (,##fail-check-vect 2 '() ,append-vects lst sep)
+                      (if (##not (##pair? lst))
+                          (,##make-vect 0)
+                          (let* ((n
+                                  (if (,##vect? sep)
+                                      (##fx+ n
+                                             (##fx* (##fx- arg-num 2)
+                                                    (,##vect-length sep)))
+                                      n))
+                                 (result
+                                  (,##make-vect n)))
+                            (let loop2 ((i 0)
+                                        (probe lst))
+                              (let* ((vect (##car probe))
+                                     (len (,##vect-length vect)))
+                                (,##subvect-move! vect 0 len result i)
+                                (let* ((i+len (##fx+ i len))
+                                       (rest (##cdr probe)))
+                                  (if (##pair? rest)
+                                      (if (,##vect? sep)
+                                          (let ((len-sep (,##vect-length sep)))
+                                            (,##subvect-move! sep 0 len-sep result i+len)
+                                            (loop2 (##fx+ i+len len-sep)
+                                                   rest))
+                                          (loop2 i+len
+                                                 rest))
+                                      result))))))))
                  (else
-                  (,##fail-check-vect-list 1 ,append-vects lst)))))
+                  (,##fail-check-vect-list 1 ,append-vects lst sep)))))
 
-       (define-prim (,append-vects lst)
-         (,##append-vects lst #f))
+       (define-prim (,append-vects lst #!optional (sep (macro-absent-obj)))
+         (,##append-vects lst sep))
 
        (define-prim (,##vect-append . lst)
-         (,##append-vects lst #t))
+         (,##append-vects lst (macro-deleted-obj)))
 
        (define-prim (,vect-append . lst)
-         (,##append-vects lst #t))
+         (,##append-vects lst (macro-deleted-obj)))
 
        (macro-case-target
 

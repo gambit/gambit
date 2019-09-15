@@ -220,6 +220,7 @@
 (check-equal? (vector-append v6 v7 v6) '#(0 255 0 1 255 0 0 0 255 0 1 255))
 
 (check-equal? (append-vectors (list v6 v7 v6)) '#(0 255 0 1 255 0 0 0 255 0 1 255))
+(check-equal? (append-vectors (list v6 v7 v6) '#(1 1 1)) '#(0 255 0 1 255 1 1 1 0 0 1 1 1 0 255 0 1 255))
 
 (check-equal? (vector-copy '#()) '#())
 (check-equal? (vector-copy v6) v6)
@@ -352,6 +353,7 @@
 
 (check-tail-exn type-exception? (lambda () (append-vectors bool)))
 (check-tail-exn type-exception? (lambda () (append-vectors '(1 2 3))))
+(check-tail-exn type-exception? (lambda () (append-vectors (list v9 v9) bool)))
 
 (check-tail-exn type-exception? (lambda () (vector-copy bool)))
 (check-tail-exn type-exception? (lambda () (vector-copy v9 bool)))
@@ -448,7 +450,7 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->vector '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-vectors)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-vectors '() '())))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-vectors '() '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-copy)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-copy v1 0 0 0)))
