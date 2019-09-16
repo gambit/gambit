@@ -135,6 +135,33 @@
     (define (obj-file? file)
       (##string=? (##path-extension file) ##os-obj-extension-string-saved))
 
+    (define (combine-option! opt)
+      (let loop1 ((lst options))
+        (if (##pair? lst)
+            (let ((x (##car lst)))
+              (if (##not (##eq? (##car x) opt))
+                  (loop1 (##cdr lst))
+                  (let loop2 ((lst (##cdr lst))
+                              (prev lst)
+                              (tail (##last-pair x)))
+                    (if (##pair? lst)
+                        (let ((x (##car lst)))
+                          (if (##not (##eq? (##car x) opt))
+                              (loop2 (##cdr lst)
+                                     lst
+                                     tail)
+                              (let ((next-lst (##cdr lst)))
+                                (##set-cdr! tail (##cdr x))
+                                (##set-cdr! prev next-lst)
+                                (loop2 next-lst
+                                       prev
+                                       (##last-pair tail))))))))))))
+
+    (combine-option! 'cc-options)
+    (combine-option! 'ld-options-prelude)
+    (combine-option! 'ld-options)
+    (combine-option! 'pkg-config)
+
     (let* ((c-opt?       (##assq 'c options))
            (link-opt?    (##assq 'link options))
            (exe-opt?     (##assq 'exe options))
@@ -220,18 +247,23 @@
                          (cc-options
                           (let ((x (##assq 'cc-options options)))
                             (if x
-                                (##cadr x)
-                                "")))
+                                (##cdr x)
+                                '())))
                          (ld-options-prelude
                           (let ((x (##assq 'ld-options-prelude options)))
                             (if x
-                                (##cadr x)
-                                "")))
+                                (##cdr x)
+                                '())))
                          (ld-options
                           (let ((x (##assq 'ld-options options)))
                             (if x
-                                (##cadr x)
-                                ""))))
+                                (##cdr x)
+                                '())))
+                         (pkg-config
+                          (let ((x (##assq 'pkg-config options)))
+                            (if x
+                                (##cdr x)
+                                '()))))
 
                     (if (or pre post)
                         (set! c#wrap-program
@@ -269,7 +301,8 @@
                     (let ((rev-gen-files '())
                           (rev-obj-files '())
                           (rev-tmp-files '())
-                          (flags '()))
+                          (flags '())
+                          (meta-info-file #f))
 
                       (define (add-gen-file file)
                         (set! rev-gen-files
@@ -325,13 +358,15 @@
                                  output: output
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
-                                 ld-options: ld-options)
+                                 ld-options: ld-options
+                                 pkg-config: pkg-config)
                                 (compile-file
                                  file
                                  options: opts
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
-                                 ld-options: ld-options))
+                                 ld-options: ld-options
+                                 pkg-config: pkg-config))
                             (exit-abnormally)))
 
                       (define (do-compile-file-to-target file opts output)
@@ -353,7 +388,9 @@
                              output-filename
                              cc-options
                              ld-options-prelude
-                             ld-options)
+                             ld-options
+                             pkg-config
+                             meta-info-file)
                             (exit-abnormally)))
 
                       (define (do-build-module module-ref modref opts)
@@ -539,6 +576,7 @@
                                                              warnings?: warnings-opt?))))))
                                           (and link-file
                                                (begin
+                                                 (set! meta-info-file link-file)
                                                  (add-gen-file link-file)
                                                  (if exe?
                                                      (let ((obj-link-file
@@ -789,7 +827,9 @@
                            (module-ref symbol) (linker-name string)
                            (prelude string) (postlude string)
                            (cc-options string)
-                           (ld-options-prelude string) (ld-options string))))
+                           (ld-options-prelude string)
+                           (ld-options string)
+                           (pkg-config string))))
 
                    ;; parse command line to try to find the -target option
                    (split-command-line

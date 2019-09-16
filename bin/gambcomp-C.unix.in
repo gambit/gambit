@@ -48,30 +48,22 @@ get_meta_info()
 get_meta_info_list()
 {
   GAMBCOMP_META_INFO_LIST=""
-  GAMBCOMP_SAVE_IFS="$IFS"
-  IFS='
-'
   for info in $(get_meta_info "$1" "$2"); do
     GAMBCOMP_META_INFO_LIST="${GAMBCOMP_META_INFO_LIST}$info "
   done
-  IFS="${GAMBCOMP_SAVE_IFS}"
 }
 
 process_pkg_config()
 {
-  GAMBCOMP_SAVE_IFS="$IFS"
-  IFS='
-'
-  for pkg in $(get_meta_info "$1" "${GAMBCOMP_PKG_CONFIG_REGEXP}"); do
+  for pkg in $1; do
     if test -z "${PKG_CONFIG}"; then
-      echo "the pkg-config program is unavailable but is needed to get C compiler options for package '$pkg' which is a dependency of '$1'"
+      echo "the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags $pkg' and 'pkg-config --libs $pkg'"
       exit 1
     else
       GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}$(${PKG_CONFIG} --cflags $pkg) "
       GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}$(${PKG_CONFIG} --libs $pkg) "
     fi
   done
-  IFS="${GAMBCOMP_SAVE_IFS}"
 }
 
 extract_cc_ld_options()
@@ -80,11 +72,17 @@ extract_cc_ld_options()
   GAMBCOMP_LD_OPTIONS_PRELUDE=""
   GAMBCOMP_LD_OPTIONS=""
 
-  for file in "$@"; do
-    process_pkg_config "$file"
-  done
+  GAMBCOMP_SAVE_IFS="$IFS"
+  IFS='
+'
 
-  for file in "$@"; do
+  if test ! -z "$1"; then
+    process_pkg_config "$(get_meta_info "$1" "${GAMBCOMP_PKG_CONFIG_REGEXP}")"
+  fi
+
+  process_pkg_config "$2"
+
+  for file in $1; do
 
     get_meta_info_list "$file" "${GAMBCOMP_CC_OPTIONS_REGEXP}"
     GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${GAMBCOMP_META_INFO_LIST}"
@@ -96,15 +94,21 @@ extract_cc_ld_options()
     GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${GAMBCOMP_META_INFO_LIST}"
 
   done
+
+  GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}$3"
+  GAMBCOMP_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}$4"
+  GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}$5"
+
+  IFS="${GAMBCOMP_SAVE_IFS}"
 }
 
 case "$1" in
 
   "obj")
 
-    extract_cc_ld_options ${BUILD_OBJ_INPUT_FILENAMES}
+    extract_cc_ld_options "${BUILD_OBJ_META_INFO_FILE}" "${BUILD_OBJ_PKG_CONFIG}" "${BUILD_OBJ_CC_OPTIONS}" "${BUILD_OBJ_LD_OPTIONS_PRELUDE}" "${BUILD_OBJ_LD_OPTIONS}"
 
-    BUILD_OBJ_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${BUILD_OBJ_CC_OPTIONS}"
+    BUILD_OBJ_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}"
 
     if test ! -z "${GAMBCOMP_VERBOSE}"; then
       echo @BUILD_OBJ_ECHO@
@@ -115,11 +119,11 @@ case "$1" in
 
   "dyn")
 
-    extract_cc_ld_options ${BUILD_DYN_INPUT_FILENAMES}
+    extract_cc_ld_options "${BUILD_DYN_META_INFO_FILE}" "${BUILD_DYN_PKG_CONFIG}" "${BUILD_DYN_CC_OPTIONS}" "${BUILD_DYN_LD_OPTIONS_PRELUDE}" "${BUILD_DYN_LD_OPTIONS}"
 
-    BUILD_DYN_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}${BUILD_DYN_CC_OPTIONS}"
-    BUILD_DYN_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}${BUILD_DYN_LD_OPTIONS_PRELUDE}"
-    BUILD_DYN_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}${BUILD_DYN_LD_OPTIONS}"
+    BUILD_DYN_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}"
+    BUILD_DYN_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}"
+    BUILD_DYN_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}"
 
     if test ! -z "${GAMBCOMP_VERBOSE}"; then
       echo @BUILD_DYN_ECHO@
@@ -138,6 +142,12 @@ case "$1" in
     ;;
 
   "exe")
+
+    extract_cc_ld_options "${BUILD_EXE_META_INFO_FILE}" "${BUILD_EXE_PKG_CONFIG}" "${BUILD_EXE_CC_OPTIONS}" "${BUILD_EXE_LD_OPTIONS_PRELUDE}" "${BUILD_EXE_LD_OPTIONS}"
+
+    BUILD_EXE_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}"
+    BUILD_EXE_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}"
+    BUILD_EXE_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}"
 
     if test ! -z "${GAMBCOMP_VERBOSE}"; then
       echo @BUILD_EXE_ECHO@

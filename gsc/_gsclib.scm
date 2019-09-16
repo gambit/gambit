@@ -124,6 +124,22 @@
                    options
                    output-filename-gen))))))
 
+(define (##string-or-string-list? x)
+  (or (##string? x)
+      (let loop ((lst x))
+        (cond ((##pair? lst)
+               (and (##string? (##car lst))
+                    (loop (##cdr lst))))
+              ((##null? lst)
+               #t)
+              (else
+               #f)))))
+
+(define (##string-or-string-list-join x sep)
+  (if (##string? x)
+      x
+      (##append-strings x sep)))
+
 (define (compile-file
          filename
          #!rest other;;;;;;;;;;
@@ -133,7 +149,9 @@
          (cc-options (macro-absent-obj))
          (ld-options-prelude (macro-absent-obj))
          (ld-options (macro-absent-obj))
+         (pkg-config (macro-absent-obj))
          (expression (macro-absent-obj)))
+
   (macro-force-vars (filename)
     (macro-check-string filename 1 (compile-file filename . other) ;;;;;;
       (let* ((opts
@@ -149,19 +167,24 @@
                     output)))
              (cc-opts
               (if (##eq? cc-options (macro-absent-obj))
-                  ""
+                  '()
                   (macro-force-vars (cc-options)
                     cc-options)))
              (ld-opts-prelude
               (if (##eq? ld-options-prelude (macro-absent-obj))
-                  ""
+                  '()
                   (macro-force-vars (ld-options-prelude)
                     ld-options-prelude)))
              (ld-opts
               (if (##eq? ld-options (macro-absent-obj))
-                  ""
+                  '()
                   (macro-force-vars (ld-options)
                     ld-options)))
+             (pkg-cfg
+              (if (##eq? pkg-config (macro-absent-obj))
+                  '()
+                  (macro-force-vars (pkg-config)
+                    pkg-config)))
              (filename-or-source
               (if (##eq? expression (macro-absent-obj))
                   filename
@@ -173,21 +196,24 @@
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
                (error "list expected for options: parameter")) ;;;;;;;
-              ((##not (##string? out))
+              ((##not (##string-or-string-list? out))
                (error "string expected for output: parameter")) ;;;;;;;;;;
-              ((##not (##string? cc-opts))
-               (error "string expected for cc-options: parameter")) ;;;;;;;;;;
-              ((##not (##string? ld-opts-prelude))
-               (error "string expected for ld-options-prelude: parameter")) ;;;;;;;;;;
-              ((##not (##string? ld-opts))
-               (error "string expected for ld-options: parameter")) ;;;;;;;;;;
+              ((##not (##string-or-string-list? cc-opts))
+               (error "string or string list expected for cc-options: parameter")) ;;;;;;;;;;
+              ((##not (##string-or-string-list? ld-opts-prelude))
+               (error "string or string list expected for ld-options-prelude: parameter")) ;;;;;;;;;;
+              ((##not (##string-or-string-list? ld-opts))
+               (error "string or string list expected for ld-options: parameter")) ;;;;;;;;;;
+              ((##not (##string-or-string-list? pkg-cfg))
+               (error "string or string list expected for pkg-config: parameter")) ;;;;;;;;;;
               (else
                (##compile-file filename-or-source
                                opts
                                out
                                cc-opts
                                ld-opts-prelude
-                               ld-opts)))))))
+                               ld-opts
+                               pkg-cfg)))))))
 
 (define (##compile-file
          filename-or-source
@@ -195,7 +221,8 @@
          output
          cc-options
          ld-options-prelude
-         ld-options)
+         ld-options
+         pkg-config)
   (let* ((options
           (##compile-options-normalize options))
          (target
@@ -295,9 +322,16 @@
                    (##list target-filename)
                    output-filename-no-dir
                    (##assq 'verbose options)
-                   (##list (##cons "CC_OPTIONS" cc-options)
-                           (##cons "LD_OPTIONS_PRELUDE" ld-options-prelude)
-                           (##cons "LD_OPTIONS" ld-options)))))
+                   (##list (##cons "CC_OPTIONS"
+                                   (##string-or-string-list-join cc-options " "))
+                           (##cons "LD_OPTIONS_PRELUDE"
+                                   (##string-or-string-list-join ld-options-prelude " "))
+                           (##cons "LD_OPTIONS"
+                                   (##string-or-string-list-join ld-options " "))
+                           (##cons "PKG_CONFIG"
+                                   (##string-or-string-list-join pkg-config "\n"))
+                           (##cons "META_INFO_FILE"
+                                   target-filename)))))
              (if (and (##not (##assq 'keep-c options))
                       (##not (##string=? filename target-filename)))
                  (##delete-file target-filename))
@@ -356,20 +390,34 @@
           (if (##pair? config)
               (cond
                 ((##assq 'cc-options config)
-                 => cadr)
+                 => ##cdr)
                 (else
-                  ""))
-              ""))
+                 '()))
+              '()))
          (ld-options-prelude
           (if (##pair? config)
               (cond
-                ((##assq 'ld-options config)
-                 => cadr)
+                ((##assq 'ld-options-prelude config)
+                 => ##cdr)
                 (else
-                  ""))
-              ""))
+                 '()))
+              '()))
          (ld-options
-          ""))
+          (if (##pair? config)
+              (cond
+                ((##assq 'ld-options config)
+                 => ##cdr)
+                (else
+                 '()))
+              '()))
+         (pkg-config
+          (if (##pair? config)
+              (cond
+                ((##assq 'pkg-config config)
+                 => ##cdr)
+                (else
+                 '()))
+              '())))
 
     ;; create build subdirectory (removing it first to make sure it is empty)
     (##delete-file-or-directory build-subdir #t #f)
@@ -390,7 +438,8 @@
             (##path-expand module-object-filename build-subdir)
             cc-options
             ld-options-prelude
-            ld-options)
+            ld-options
+            pkg-config)
            build-subdir))))
 
 (define (##build-executable
@@ -399,7 +448,9 @@
          output-filename
          cc-options
          ld-options-prelude
-         ld-options)
+         ld-options
+         pkg-config
+         meta-info-file)
   (let* ((options
           (##compile-options-normalize options))
          (target
@@ -416,9 +467,16 @@
            obj-files
            output-filename-no-dir
            (##assq 'verbose options)
-           (##list (##cons "CC_OPTIONS" cc-options)
-                   (##cons "LD_OPTIONS_PRELUDE" ld-options-prelude)
-                   (##cons "LD_OPTIONS" ld-options)))))
+           (##list (##cons "CC_OPTIONS"
+                           (##string-or-string-list-join cc-options " "))
+                   (##cons "LD_OPTIONS_PRELUDE"
+                           (##string-or-string-list-join ld-options-prelude " "))
+                   (##cons "LD_OPTIONS"
+                           (##string-or-string-list-join ld-options " "))
+                   (##cons "PKG_CONFIG"
+                           (##string-or-string-list-join pkg-config "\n"))
+                   (##cons "META_INFO_FILE"
+                           (or meta-info-file ""))))))
     (if (##fx= exit-status 0)
         output-filename
         (##raise-error-exception
@@ -457,11 +515,6 @@
 
   (define (relative-to-output-dir filename)
     (##path-normalize (##path-expand filename) #t output-dir))
-
-  (define (separate lst sep)
-    (if (##pair? lst)
-        (##cons sep (##cons (##car lst) (separate (##cdr lst) sep)))
-        '()))
 
   (let* ((gambitdir-bin
           (install-dir "~~bin"))
@@ -510,9 +563,9 @@
                       (##append
                        (##list
                         (##cons "INPUT_FILENAMES"
-                                (##append-strings
-                                 (##cdr (separate input-filenames-relative
-                                                  " "))))
+                                (##string-or-string-list-join
+                                 input-filenames-relative
+                                 " "))
                         (##cons "OUTPUT_FILENAME"
                                 output-filename))
                        options))

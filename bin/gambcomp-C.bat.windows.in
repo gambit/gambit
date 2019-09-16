@@ -4,6 +4,7 @@ rem The following settings are determined by the configure script.
 
 set C_COMPILER=@C_COMPILER_BAT@
 set C_PREPROC=@C_PREPROC_BAT@
+set PKG_CONFIG=@PKG_CONFIG_BAT@
 
 set FLAGS_OBJ=@FLAGS_OBJ_BAT@
 set FLAGS_DYN=@FLAGS_DYN_BAT@
@@ -99,6 +100,13 @@ if not "%1" == ""C_PREPROC"" goto not_C_PREPROC
 echo.%C_PREPROC%
 goto end
 :not_C_PREPROC
+
+if "%1" == "PKG_CONFIG" goto PKG_CONFIG
+if not "%1" == ""PKG_CONFIG"" goto not_PKG_CONFIG
+:PKG_CONFIG
+echo.%PKG_CONFIG%
+goto end
+:not_PKG_CONFIG
 
 if "%1" == "FLAGS_OBJ" goto FLAGS_OBJ
 if not "%1" == ""FLAGS_OBJ"" goto not_FLAGS_OBJ

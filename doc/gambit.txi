@@ -750,6 +750,7 @@ Synopsis:
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
     @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
+    @r{[}-pkg-config @r{@var{pkg-config-args}}@r{]}
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]} @r{[}-dg@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
     @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
@@ -848,6 +849,9 @@ Add options to the command that invokes the C compiler.
 Add options to the command that invokes the C linker.
 @item -ld-options @var{options}
 Add options to the command that invokes the C linker.
+@item -pkg-config @var{pkg-config-args}
+Use the @code{pkg-config} program to determine options for the
+C compiler and C linker.
 @item -warnings
 Display warnings.
 @item -verbose
@@ -907,21 +911,21 @@ The @samp{-i} option forces the compiler to process the remaining
 command line arguments like the interpreter.
 
 @opindex -prelude
-The @samp{-prelude} option adds the specified expressions to the top of
-the source code being compiled.  The main use of this option is to
-supply declarations on the command line.  For example the following
-invocation of the compiler will compile the file @samp{bench.scm} in
-unsafe mode:
+The @samp{-prelude} option adds the specified expressions to the top
+of the source code being compiled.  It can appear multiple times.  The
+main use of this option is to supply declarations on the command line.
+For example the following invocation of the compiler will compile the
+file @samp{bench.scm} in unsafe mode:
 
 @smallexample
 $ @b{gsc -prelude "(declare (not safe))" bench.scm}
 @end smallexample
 
 @opindex -postlude
-The @samp{-postlude} option adds the specified expressions to the bottom
-of the source code being compiled.  The main use of this option is to
-supply the expression that will start the execution of the program.  For
-example:
+The @samp{-postlude} option adds the specified expressions to the
+bottom of the source code being compiled.  It can appear multiple
+times.  The main use of this option is to supply the expression that
+will start the execution of the program.  For example:
 
 @smallexample
 $ @b{gsc -postlude "(start-bench)" bench.scm}
@@ -930,11 +934,12 @@ $ @b{gsc -postlude "(start-bench)" bench.scm}
 @opindex -cc-options
 The @samp{-cc-options} option is only meaningful when a dynamically
 loadable object file is being generated (neither the @samp{-c} or
-@samp{-link} options are used).  The @samp{-cc-options} option adds
-the specified options to the command that invokes the C compiler.  The
-main use of this option is to specify the include path, some symbols
-to define or undefine, the optimization level, or any C compiler
-option that is different from the default.  For example:
+@samp{-link} options are used).  It can appear multiple times.  The
+@samp{-cc-options} option adds the specified options to the command
+that invokes the C compiler.  The main use of this option is to
+specify the include path, some symbols to define or undefine, the
+optimization level, or any C compiler option that is different from
+the default.  For example:
 
 @smallexample
 $ @b{gsc -cc-options "-U___SINGLE_HOST -O2 -I../include" bench.scm}
@@ -944,19 +949,31 @@ $ @b{gsc -cc-options "-U___SINGLE_HOST -O2 -I../include" bench.scm}
 @opindex -ld-options
 The @samp{-ld-options-prelude} and @samp{-ld-options} options are only
 meaningful when a dynamically loadable object file is being generated
-(neither the @samp{-c} or @samp{-link} options are used).  The
-@samp{-ld-options-prelude} and @samp{-ld-options} options add the
-specified options to the command that invokes the C linker (the
-options in @var{ld-options-prelude} are passed to the C linker before
-the input file and the options in @var{ld-options} are passed after).
-The main use of this option is to specify additional object files or
-libraries that need to be linked, or any C linker option that is
-different from the default (such as the library search path and flags
-to select between static and dynamic linking).  For example:
+(neither the @samp{-c} or @samp{-link} options are used).  They can
+appear multiple times.  The @samp{-ld-options-prelude} and
+@samp{-ld-options} options add the specified options to the command
+that invokes the C linker (the options in @var{ld-options-prelude} are
+passed to the C linker before the input file and the options in
+@var{ld-options} are passed after).  The main use of this option is to
+specify additional object files or libraries that need to be linked,
+or any C linker option that is different from the default (such as the
+library search path and flags to select between static and dynamic
+linking).  For example:
 
 @smallexample
 $ @b{gsc -ld-options "-L/usr/X11R6/lib -lX11 -dynamic" bench.scm}
 @end smallexample
+
+@opindex -pkg-config
+The @samp{-pkg-config} option invokes the @code{pkg-config} program to
+determine the options to add to the command that invokes the C
+compiler and C linker.  It can appear multiple times.  The
+@code{pkg-config} program is passed the arguments in the string
+@var{pkg-config-args} in addition to either @code{--cflags} or
+@code{--libs}.  It is typical for @var{pkg-config-args} to be the name
+of a system library, such as @code{"sqlite3"}, but other
+@code{pkg-config} options can be specified, such as @code{"--static
+sqlite3"}.
 
 @opindex -warnings
 The @samp{-warnings} option displays on standard output all warnings
@@ -1903,7 +1920,7 @@ and R7RS Scheme respectively.  The reader is case-insensitive in
 
 @opindex -:debug
 @opindex -:d
-The @code{@b{debug=}}@var{OPT,...} option sets various debugging options.
+The @code{@b{debug=}}@var{OPT},... option sets various debugging options.
 The equal sign is followed by a sequence of letters indicating suboptions.
 
 @table @r
@@ -3546,8 +3563,8 @@ For example:
 
 @deffn procedure append-strings @var{lst} @r{[}@var{separator}@r{]}
 
-This procedure returns a newly allocated string whose elements form
-the concatenation of all the strings in the list @var{lst}. If the
+This procedure returns a newly allocated string which is the
+concatenation of all the strings in the list @var{lst}. If the
 optional string @var{separator} argument is specified, it will be
 added between all the elements of @var{lst}.  Without the
 @var{separator} argument the result is the same as @code{(apply
@@ -4769,7 +4786,8 @@ that the current module needs the functionality of another module.  A
 module can contain multiple uses of @code{##demand-module} and
 possibly more than once for a given module.  The
 @code{##demand-module} form can appear anywhere a @code{define} can
-appear.
+appear.  There is also a @code{##supply-module} form that should
+appear in the module to declare the module's identity.
 
 Gambit's runtime system searches for modules in various directories,
 by default in @code{~~lib} then in @code{~~userlib} (which maps to
@@ -4779,25 +4797,26 @@ The source code for a module @code{@b{M}} is searched, in each of the
 @dfn{module search order} directories, first in
 @code{@b{M/M}@var{.ext}} and then in @code{@b{M}@var{.ext}}, where
 @var{.ext} is one of the acceptable Scheme source code file extensions
-(@code{.scm}, @code{.six}, etc).  The list of module search order
-directories can be extended with the @code{-::} runtime option.
+(@code{.sld}, @code{.scm}, @code{.six}, etc).  The list of module search order
+directories can be extended with the @code{-:search=}@var{DIR} runtime option.
 
-With @code{##demand-module} the previous example can be rewritten
-like this:
+With @code{##demand-module} and @code{##supply-module} the previous
+example can be rewritten like this:
 
 @smallexample
 ;;;---------------------------------------- file: @b{angle1/angle1.scm}
+(##supply-module angle1) ;; declare that this is the module angle1
 (define factor (/ (atan 1) 45))
 (define (deg->rad x) (* x factor))
 (define (rad->deg x) (/ x factor))
 
 ;;;---------------------------------------- file: @b{angle1-app.scm}
-(##demand-module angle1)
+(##demand-module angle1) ;; declare dependency on module angle1
 (println "90 degrees is " (deg->rad 90) " radians")
 
-;; run with:  gsi -::. angle1-app.scm
+;; run with:  gsi -:search=. angle1-app.scm
 ;;
-;; or put angle1/angle1.scm in ~/.gambit_userlib to avoid the -::.
+;; or put angle1/angle1.scm in ~/.gambit_userlib to avoid the -:search=.
 @end smallexample
 
 @node ##namespace and ##import forms, Macros, ##demand-module form, Basic Modules
@@ -4825,10 +4844,10 @@ defined by a module @code{M} can be put in the namespace @code{M#} to
 avoid name clashes with other modules.  The source code of module
 @code{M} and the modules depending on @code{M} can explicitly prefix
 the global names defined by @code{M} with @code{M#} or use a
-@code{##namespace} form make this prefixing implicit.  By convention
-the namespace definition for the identifiers exported by module @code{M}
-is specified in the source code file @code{M#.scm}
-in the same directory as the @code{M.scm} file.
+@code{##namespace} form to make this prefixing implicit.  By
+convention the namespace definition for the identifiers exported by
+module @code{M} is specified in the source code file @code{M#.scm} in
+the same directory as the @code{M.scm} file.
 
 Using this convention and the @code{include} and @code{##namespace}
 forms, the previous example can be rewritten like this:
@@ -4840,6 +4859,7 @@ forms, the previous example can be rewritten like this:
 ;;;---------------------------------------- file: @b{angle2/angle2.scm}
 (include "angle2#.scm")
 (##namespace ("angle2#" factor))
+(##supply-module angle2)
 (define factor (/ (atan 1) 45))
 (define (deg->rad x) (* x factor))
 (define (rad->deg x) (/ x factor))
@@ -4860,8 +4880,8 @@ This problem can be solved using the @code{##import} form that
 combines the semantics of the @code{include} and
 @code{##demand-module} forms.  The call @code{(##import M)} will use
 the module search order directories to locate the source code file of
-module @code{M} and will do an @code{include} of the ``hash'' file
-@code{M#@var{.ext}} if it exists in the same directory, and a
+module @code{M} and will expand to an @code{include} of the ``hash''
+file @code{M#@var{.ext}} if it exists in the same directory, and a
 @code{(##demand-module M)}.  Using a (builtin) module @code{gambit}
 containing all the global names exported by Gambit's runtime system
 and the @code{##import} form, the previous example can be rewritten
@@ -4874,6 +4894,7 @@ like this:
 ;;;---------------------------------------- file: @b{angle3/angle3.scm}
 (##namespace ("angle3#")) ;; map all identifiers to angle3# namespace
 (##import gambit)         ;; except those defined by Gambit's RTS
+(##supply-module angle3)
 (define factor (/ (atan 1) 45))
 (define (deg->rad x) (* x factor))
 (define (rad->deg x) (/ x factor))
@@ -4953,6 +4974,7 @@ example can be written like this:
 ;;;---------------------------------------- file: @b{angle4/angle4.scm}
 (##namespace ("angle4#")) ;; map all identifiers to angle4# namespace
 (##import gambit)         ;; except those defined by Gambit's RTS
+(##supply-module angle4)
 (##define-macro (check-real x y)
   `(##if ((##let () (##namespace ("")) real?) ,x)
          ,y

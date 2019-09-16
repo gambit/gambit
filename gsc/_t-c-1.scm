@@ -825,26 +825,73 @@
                  (map targ-mod-key-rsrc input-mods)))
              (glo-rsrc
                (targ-union-list-of-rsrc
-                 (map targ-mod-glo-rsrc input-mods)))
-             (script-line
-              (let loop ((lst input-mods)
-                         (last-script-line #f))
-                (if (pair? lst)
-                  (let* ((module-meta-info
-                          (targ-mod-meta-info (car lst)))
-                         (script-line
-                          (cond ((and (pair? module-meta-info)
-                                      (assq 'script-line module-meta-info))
-                                 =>
-                                 (lambda (pair)
-                                   (let ((x (cdr pair)))
-                                     (if (pair? x) (car x) x))))
-                                (else
-                                 #f))))
+                 (map targ-mod-glo-rsrc input-mods))))
+
+        (define (combine-meta-info input-mods)
+          (let loop ((lst input-mods)
+                     (last-script-line #f)
+                     (rev-ld-options-prelude '())
+                     (rev-ld-options '())
+                     (rev-pkg-config '()))
+            (if (pair? lst)
+                (let ((module-meta-info
+                       (targ-mod-meta-info (car lst))))
+
+                  (define (get key)
+                    (and (pair? module-meta-info)
+                         (assq key module-meta-info)))
+
+                  (let ((script-line
+                         (cond ((get 'script-line)
+                                =>
+                                (lambda (pair)
+                                  (let ((x (cdr pair)))
+                                    (if (pair? x) (car x) x))))
+                               (else
+                                #f)))
+                        (ld-options-prelude
+                         (cond ((get 'ld-options-prelude)
+                                =>
+                                cdr)
+                               (else
+                                '())))
+                        (ld-options
+                         (cond ((get 'ld-options)
+                                =>
+                                cdr)
+                               (else
+                                '())))
+                        (pkg-config
+                         (cond ((get 'pkg-config)
+                                =>
+                                cdr)
+                               (else
+                                '()))))
                     (loop (cdr lst)
                           (or script-line
-                              last-script-line)))
-                  last-script-line))))
+                              last-script-line)
+                          (append (reverse ld-options-prelude)
+                                  rev-ld-options-prelude)
+                          (append (reverse ld-options)
+                                  rev-ld-options)
+                          (append (reverse pkg-config)
+                                  rev-pkg-config))))
+                (append (if last-script-line
+                            (list (list 'script-line last-script-line))
+                            '())
+                        (if (pair? rev-ld-options-prelude)
+                            (list (cons 'ld-options-prelude
+                                        (reverse rev-ld-options-prelude)))
+                            '())
+                        (if (pair? rev-ld-options)
+                            (list (cons 'ld-options
+                                        (reverse rev-ld-options)))
+                            '())
+                        (if (pair? rev-pkg-config)
+                            (list (cons 'pkg-config
+                                        (reverse rev-pkg-config)))
+                            '())))))
+
         (targ-link-aux
           extension?
           output
@@ -870,7 +917,7 @@
           sym-rsrc
           key-rsrc
           glo-rsrc
-          script-line
+          (combine-meta-info input-mods)
           warnings?)
 
         output))))
@@ -1001,15 +1048,7 @@
           (symbol->string
            (vector-ref supply-modules (- (vector-length supply-modules) 1))))
          (module-meta-info
-          (vector-ref module-descr 2))
-         (script-line
-          (cond ((assq 'script-line module-meta-info)
-                 =>
-                 (lambda (pair)
-                   (let ((x (cdr pair)))
-                     (if (pair? x) (car x) x))))
-                (else
-                 #f))))
+          (vector-ref module-descr 2)))
 
     (targ-start-dump
      filename
@@ -1028,7 +1067,7 @@
      linker-name
      #f
      #f
-     script-line)
+     module-meta-info)
 
     (targ-define-count "SYMCOUNT" (length sym-list))
     (targ-define-count "KEYCOUNT" (length key-list))
@@ -1064,7 +1103,7 @@
           sym-rsrc
           key-rsrc
           glo-rsrc
-          script-line
+          linkfile-meta-info
           warnings?)
 
   (if warnings?
@@ -1090,14 +1129,14 @@
      sym-rsrc
      key-rsrc
      glo-rsrc
-     '())
+     linkfile-meta-info)
 
     (targ-dump-module-info
      name
      name
      #t
      extension?
-     script-line)
+     linkfile-meta-info)
 
     (targ-display "#include \"gambit.h\"")
     (targ-line)
@@ -1134,7 +1173,7 @@
          sym-rsrc
          key-rsrc
          glo-rsrc
-         module-meta-info)
+         meta-info)
 
   (define (display-escaped obj)
     ;; writes obj so that it can't be part of valid C code (even in a
@@ -1192,7 +1231,7 @@
   (targ-display "( ")
   (display-escaped 'meta-info)
   (targ-line)
-  (let loop1 ((lst module-meta-info))
+  (let loop1 ((lst meta-info))
     (if (pair? lst)
         (let* ((key-attribs (car lst))
                (key (car key-attribs))
@@ -1250,7 +1289,7 @@
   (targ-display ")")
   (targ-line))
 
-(define (targ-dump-module-info name linker-name linkfile? extension? script-line)
+(define (targ-dump-module-info name linker-name linkfile? extension? meta-info)
 
   (targ-macro-definition '("VERSION")
                          (compiler-version))
@@ -1273,10 +1312,18 @@
       (targ-macro-definition '("MH_PROC")
                              (targ-c-id-host name)))
 
-  (targ-macro-definition '("SCRIPT_LINE")
-                         (if script-line
-                             (targ-c-string script-line)
-                             0)))
+  (let ((script-line
+         (cond ((assq 'script-line meta-info)
+                =>
+                (lambda (pair)
+                  (let ((x (cdr pair)))
+                    (if (pair? x) (car x) x))))
+               (else
+                #f))))
+    (targ-macro-definition '("SCRIPT_LINE")
+                           (if script-line
+                               (targ-c-string script-line)
+                               0))))
 
 (define (targ-dump-sym-key-glo-comp sym-list key-list glo-list)
 

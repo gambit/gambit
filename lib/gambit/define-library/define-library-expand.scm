@@ -72,6 +72,7 @@
   name
   namespace
   cc-options
+  ld-options-prelude
   ld-options
   pkg-config
   exports
@@ -229,6 +230,7 @@
     imports-tbl
     rev-pkg-config
     rev-cc-options
+    rev-ld-options-prelude
     rev-ld-options
     rev-imports
     rev-body
@@ -314,6 +316,20 @@
                            (cons
                              (##source-strip (car args-srcs))
                              (ctx-rev-cc-options ctx))
+                           (cdr args-srcs) library-decl-err))
+                       (parse-body ctx rest-srcs))))
+
+                  ((ld-options-prelude)
+                   (if (not (and (pair? args-srcs)
+                                 (string? (##source-strip (car args-srcs)))))
+                     (library-decl-err)
+                     (begin
+                       (ctx-rev-ld-options-prelude-set!
+                         ctx
+                         (parse-string-args
+                           (cons
+                             (##source-strip (car args-srcs))
+                             (ctx-rev-ld-options-prelude ctx))
                            (cdr args-srcs) library-decl-err))
                        (parse-body ctx rest-srcs))))
 
@@ -589,6 +605,7 @@
                              (make-table test: eq?)
                              '() ; rev-pkg-config
                              '() ; rev-cc-options
+                             '() ; rev-ld-options-prelude
                              '() ; rev-ld-options
                              '()
                              '())))
@@ -619,6 +636,7 @@
                 (ctx-namespace ctx)
 
                 (reverse! (ctx-rev-cc-options ctx))
+                (reverse! (ctx-rev-ld-options-prelude ctx))
                 (reverse! (ctx-rev-ld-options ctx))
                 (reverse! (ctx-rev-pkg-config ctx))
 
@@ -913,19 +931,18 @@
        `(##begin) ;; empty library
        `(##begin
          (##supply-module ,(string->symbol (libdef-name ld)))
-         ,@(let ((build-options-arguments
-                  `(,@(if (null? (libdef-cc-options ld))
-                        `()
-                        `((cc-options ,@(libdef-cc-options ld))))
-                     ,@(if (null? (libdef-ld-options ld))
-                         '()
-                         `((ld-options ,@(libdef-ld-options ld))))
-                     ,@(if (null? (libdef-pkg-config ld))
-                         '()
-                         `((pkg-config ,@(libdef-pkg-config ld)))))))
-            (if (null? build-options-arguments)
-              '()
-              `((##quote (##build-options ,@build-options-arguments)))))
+         ,@(if (null? (libdef-cc-options ld))
+               `()
+               `((##meta-info cc-options ,@(libdef-cc-options ld))))
+         ,@(if (null? (libdef-ld-options-prelude ld))
+               `()
+               `((##meta-info ld-options-prelude ,@(libdef-ld-options-prelude ld))))
+         ,@(if (null? (libdef-ld-options ld))
+               `()
+               `((##meta-info ld-options ,@(libdef-ld-options ld))))
+         ,@(if (null? (libdef-pkg-config ld))
+               `()
+               `((##meta-info pkg-config ,@(libdef-pkg-config ld))))
          (##namespace (,(libdef-namespace ld)))
          ,@ld-imports
          ,@(libdef-body ld)
