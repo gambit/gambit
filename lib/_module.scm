@@ -821,15 +821,12 @@
 
     (define (module-alias->string alias)
       (cond
-        ((##symbol? alias)
-         (##symbol->string alias))
-
-        ((##pair? alias)
-         (let ((cur (##car alias)))
-           (if (##symbol? cur)
-             (rpath-join (##symbol->string cur) (##cdr alias))
-             (ill-formed-define-module-alias))))
-
+        ((or (##symbol? alias)
+             (##pair? alias))
+         (let ((modref (##parse-module-ref alias)))
+           (if (macro-modref? modref)
+               (##modref->string modref)
+               (ill-formed-define-module-alias))))
         (else
           (ill-formed-define-module-alias))))
 
