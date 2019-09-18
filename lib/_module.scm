@@ -546,23 +546,8 @@
             #t
             (##char=? ##module-path-sep (##string-ref str i))))))))
 
-  (define (repl-ask? question)
-    (##desourcify
-     (##parameterize1
-      ##current-user-interrupt-handler
-      ##void ;; ignore user interrupts
-      (lambda ()
-        (##repl-channel-acquire-ownership!)
-        (##repl-channel-display-multiline-message
-         (lambda (port)
-           (##display question port)))
-        (let* ((channel (##thread-repl-channel-get! (macro-current-thread)))
-               (answer ((macro-repl-channel-ports-read-expr channel) channel)))
-          (##repl-channel-release-ownership!)
-          answer)))))
-
   (define (repl-confirm? question)
-    (##memq (repl-ask? question) '(y yes)))
+    (##memq (##string->symbol (##repl-channel-confirm question)) '(y yes)))
 
   ;;; handle the ask-install value (always, repl, never)
   (define (module-install-confirm? mod-string)
