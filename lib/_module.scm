@@ -569,6 +569,30 @@
       (and (##install-module modref)
            (##search-module modref))))
 
+(define-prim (##search-or-else-install-and-build-module modref)
+
+  (define (compile-module-from-name modref)
+    (let (#;(build-module (##global-var-ref
+                         (##make-global-var '##build-module)))
+          (mod-string (##modref->string modref)))
+      (if ##debug-modules? (pp (##list 'compile-module-from-name mod-string)))
+
+      (##call-with-output-process
+        (##list path: (##path-expand "~~bin/gsc-script")
+                stdin-redirection: #f
+                stdout-redirection: #f
+                stderr-redirection: #f
+                arguments: (##list (##string-append "-:~~userlib=" (path-expand "~~userlib"))
+                                   "-target" (##symbol->string (macro-target)) mod-string))
+        (lambda (pid)
+          (let ((status (##process-status pid)))
+            (##eq? status 0))))))
+
+  (or (##search-module modref)
+      (and (##install-module modref)
+           (compile-module-from-name modref)
+           (##search-module modref))))
+
 (##get-module-set!
  (lambda (module-ref)
 
@@ -581,7 +605,7 @@
        (let ((modref (##parse-module-ref (##symbol->string module-ref))))
          (if (##not modref)
              (err)
-             (let ((mod-info (##search-or-else-install-module modref)))
+             (let ((mod-info (##search-or-else-install-and-build-module modref)))
                (if mod-info ;; found module?
                    (##get-module-from-file module-ref modref mod-info)
                    (err))))))))
@@ -846,7 +870,7 @@
                                (##vector-ref rpath-root 1))
                               (##apply-module-alias modref)))
 
-                    (mod-info (##search-or-else-install-module modref)))
+                    (mod-info (##search-or-else-install-and-build-module modref)))
 
                (if (##not mod-info)
                    (##raise-expression-parsing-exception
