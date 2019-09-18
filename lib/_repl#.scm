@@ -25,7 +25,7 @@
 )
 
 (define-type repl-channel
-  id: AF00D7A3-BE60-4317-9643-11B11A549995
+  id: F351CF0B-9C1B-4352-8CA2-032C14F7DE99
   extender: define-type-of-repl-channel
   constructor: macro-make-repl-channel
   implementer: implement-type-repl-channel
@@ -49,10 +49,12 @@
   pinpoint-continuation
   really-exit?
   newline
+  ask
+  confirm
 )
 
 (define-type-of-repl-channel repl-channel-ports
-  id: F0D4186A-EAEE-4360-AD82-69AF8BC21831
+  id: D7D5784C-16DC-4453-8832-CC05A6FE9353
   extender: define-type-of-repl-channel-ports
   constructor: macro-make-repl-channel-ports
   implementer: implement-type-repl-channel-ports

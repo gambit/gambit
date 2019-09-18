@@ -2300,6 +2300,14 @@
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
     ((macro-repl-channel-newline channel) channel)))
 
+(define-prim (##repl-channel-ask prompt echo?)
+  (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
+    ((macro-repl-channel-ask channel) channel prompt echo?)))
+
+(define-prim (##repl-channel-confirm prompt)
+  (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
+    ((macro-repl-channel-confirm channel) channel prompt)))
+
 (##define-macro (macro-repl-result-history-max-max-length)
   10)
 
@@ -2402,6 +2410,8 @@
    ##repl-channel-ports-pinpoint-continuation
    ##repl-channel-ports-really-exit?
    ##repl-channel-ports-newline
+   ##repl-channel-ports-ask
+   ##repl-channel-ports-confirm
 
    (let ((history-initialized? #f))
      (lambda (channel)
@@ -2523,6 +2533,26 @@
 (define-prim (##repl-channel-ports-newline channel)
   (let ((output-port (macro-repl-channel-output-port channel)))
     (##newline output-port)))
+
+(define-prim (##repl-channel-ports-ask channel prompt echo?)
+  (let ((input-port (macro-repl-channel-input-port channel))
+        (output-port (macro-repl-channel-output-port channel)))
+    (##write-string prompt output-port)
+    (##repl-channel-discard-buffered-input channel)
+    (let ((answer (##read-line input-port)))
+      (##output-port-column-set! output-port 1)
+      answer)))
+
+(define-prim (##repl-channel-ports-confirm channel prompt)
+  (##repl-channel-ports-ask channel prompt #t))
+
+(define-prim (##repl-channel-discard-buffered-input channel)
+  (let ((input-port (macro-repl-channel-input-port channel)))
+    (##input-port-timeout-set! input-port (macro-inexact-+0))
+    (let loop ()
+      (if (##char? (##read-char input-port))
+          (loop)
+          (##input-port-timeout-set! input-port (macro-inexact-+inf))))))
 
 ;;;============================================================================
 
