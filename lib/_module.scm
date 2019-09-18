@@ -546,20 +546,51 @@
             #t
             (##char=? ##module-path-sep (##string-ref str i))))))))
 
+  (define (repl-ask? question)
+    (##desourcify
+     (##parameterize1
+      ##current-user-interrupt-handler
+      ##void ;; ignore user interrupts
+      (lambda ()
+        (##repl-channel-acquire-ownership!)
+        (##repl-channel-display-multiline-message
+         (lambda (port)
+           (##display question port)))
+        (let* ((channel (##thread-repl-channel-get! (macro-current-thread)))
+               (answer ((macro-repl-channel-ports-read-expr channel) channel)))
+          (##repl-channel-release-ownership!)
+          answer)))))
+
+  (define (repl-confirm? question)
+    (##memq (repl-ask? question) '(y yes)))
+
+  ;;; handle the ask-install value (always, repl, never)
+  (define (module-install-confirm? mod-string)
+    (let ((install-mode (##os-module-install-mode)))
+      (and (or (##fx= 2 (##os-module-install-mode))
+               (and (##fx= 1 (##os-module-install-mode))
+                    (macro-thread-repl-channel
+                      (macro-current-thread))))
+          (begin
+            (repl-confirm?
+              (##string-append
+               "Hosted module " mod-string
+               " is required but is not installed.\nDownload and install (y/n)? "))))))
+
   (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
 
   (let ((mod-string (##modref->string modref)))
     (and
-      (##member
-       mod-string
-       (##os-module-whitelist)
-       (lambda (a b)
-         (module-prefix=? a b)))
+      (or (##member
+           mod-string
+           (##os-module-whitelist)
+           (lambda (a b)
+             (module-prefix=? a b)))
+          (module-install-confirm? mod-string))
 
-      (and ((##eval '(let () (##import gambit/pkg) install)) mod-string)
-           ;; Return the modref
-           modref))))
-
+      ((##eval '(let () (##import gambit/pkg) install)) mod-string)
+      ;; Return the modref
+      modref)))
 
 (define-prim (##install-module-set! x)
   (set! ##install-module x))
