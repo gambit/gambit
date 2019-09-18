@@ -1,22 +1,22 @@
 ;; Copyright (C) 2005-2009 by Guillaume Germain, All Rights Reserved.
 ;; Copyright (C) 2005-2019 by FrédéricHamel, All Rights Reserved.
-;; File: ~~lib/gambit/termite/termite.scm
-
+;; File: ~~lib/termite/termite.scm
 (##supply-module termite)
-
-;; this is the main file for the Termite system
-(##namespace ("termite#"))
-
-;(##include "~~lib/gambit#.scm")
-;(##include "~~lib/_gambit#.scm")
-(##include "~~lib/_prim#.scm")
-(##include "termite#.scm")
 
 (declare
   (standard-bindings)
   (extended-bindings)
   (not safe)
   (block))
+
+;; this is the main file for the Termite system
+(##namespace ("termite#"))
+
+(##include "~~lib/_prim#.scm")
+(##include "~~lib/_gambit#.scm")
+
+(##include "termite#.scm")
+(##import termite/utils)
 
 ;; ----------------------------------------------------------------------------
 ;; System configuration & global data
@@ -228,11 +228,11 @@
       ((let () (##namespace ("")) mutex-unlock!) *global-mutex*)
       x))
   (else
-    (let () ((upid (make-upid (make-uuid) (current-node))))
-    (table-set! *local->foreign* obj upid)
-    (table-set! *foreign->local* upid obj)
-    ((let () (##namespace ("")) mutex-unlock!) *global-mutex*)
-    upid))))
+    (let ((upid (make-upid (make-uuid) (current-node))))
+      (table-set! *local->foreign* obj upid)
+      (table-set! *foreign->local* upid obj)
+      ((let () (##namespace ("")) mutex-unlock!) *global-mutex*)
+      upid))))
 
 (define (tag->utag obj)
   ((let () (##namespace ("")) mutex-lock!) *global-mutex*)
@@ -368,9 +368,11 @@
 
     ((proxy? obj)
      (let ((p (proxy-upid obj)))
+       (macro-if-auto-forcing
        (delay
          ; Timeout: 6min
-         (!? p 'get 360 'relay))))
+         (!? p 'get 360 'relay))
+       (!? p 'get 360 'relay))))
 
     ((tag? obj)
      (utag->tag obj))
@@ -722,7 +724,7 @@
          (newline)
          (for-each (lambda (m) (display m) (newline)) messages)
          (force-output))))
-    (_ (display "catch-all rule invoked in reporte-event")))
+    (_ (display "catch-all rule invoked in report-event")))
   port)
 
 (define file-output-log-handler
@@ -731,8 +733,12 @@
   (lambda (args)
     (match args
     ((filename)
+     (macro-if-auto-forcing
          (delay
            (open-output-file (list path: filename
+                                 create: 'maybe
+                                 append: #t)))
+         (open-output-file (list path: filename
                                  create: 'maybe
                                  append: #t))))))
   ;; event

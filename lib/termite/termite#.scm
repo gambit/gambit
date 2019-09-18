@@ -62,16 +62,11 @@
   #f)
 
 ;; make it available at compile-time and run-time
-;(##include "match-support.scm")
-
 ;; make it available at run-time
-#;(compile-time-load "~~lib/gambit/termite/match-support.scm")
-
 (##import termite/match)
 
 ;; ----------------------------------------------------------------------------
 ;; Macros
-(include "recv.scm")
-(include "deftype.scm")
-(include "uuid.scm")
+(##include "recv.scm")
+(##include "deftype.scm")
 

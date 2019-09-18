@@ -45,7 +45,9 @@
         `(let ,loop ((,msg ((let () (##namespace ("")) thread-mailbox-next))))
            (##import termite/match)
            (match/action
-             ((let () (##namespace ("")) thread-mailbox-extract-and-rewind))
+             (let ((result ((let () (##namespace ("")) thread-mailbox-extract-and-rewind))))
+               ;(display ,msg) (newline)
+               result)
              (,loop
                ((let () (##namespace ("")) thread-mailbox-next)))
              ,msg

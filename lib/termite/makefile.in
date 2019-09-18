@@ -5,9 +5,9 @@
 herefromroot = lib/termite
 rootfromhere = ../..
 SUBDIRS = otp
-HEADERS_SCM = termite\#.scm match\#.scm match-support\#.scm
-MODULES_SCM = termite.scm data.scm deftype.scm match.scm match-support.scm io.scm process.scm recv.scm uuid.scm
-MAIN_MODULES = termite match match-support
+HEADERS_SCM = termite\#.scm match\#.scm match-support\#.scm utils\#.scm
+MODULES_SCM = termite.scm data.scm deftype.scm match.scm match-support.scm io.scm process.scm recv.scm uuid.scm utils.scm
+MAIN_MODULES = termite match match-support utils
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
