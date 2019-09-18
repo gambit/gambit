@@ -45,10 +45,8 @@
 
 (##include "pkg#.scm")
 
-(define-macro (tree-master) "tree/master")
-
 (define-macro (default-install-prefix)
-  (path-expand "~~userlib"))
+  `(path-expand "~~userlib"))
 
 ;; Protocols
 (define (https-proto mod)
