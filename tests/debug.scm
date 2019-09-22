@@ -8,7 +8,7 @@
 
 (define (redirect-repl-input str)
   (let ((c (##make-repl-channel-ports (open-input-string str)
-                                      ##stdout-port ##stderr-port)))
+                                      ##stdout-port ##stdout-port)))
     (##direct-structure-set! c
                              (lambda (channel)
                                (let* ((input-port
@@ -30,7 +30,7 @@
                                        (write (##desourcify expr) output-port)
                                        (newline output-port)))
                                  expr))
-                             15
+                             17
                              (##structure-type c)
                              #f)
     (set! ##stdio/console-repl-channel c)))
