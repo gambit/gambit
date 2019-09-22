@@ -1,7 +1,7 @@
 
 (define-library (gambit thread)
   (namespace "")
-  
+
   ;; Subset of thread functionality
   (export
     make-thread

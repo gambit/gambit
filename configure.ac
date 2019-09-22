@@ -3198,8 +3198,8 @@ lib/gambit/http/makefile \
 lib/gambit/uri/makefile \
 lib/gambit/define-library/makefile \
 lib/gambit/digest/makefile \
-lib/gambit/termite/makefile \
-lib/gambit/termite/otp/makefile \
+lib/termite/makefile \
+lib/termite/otp/makefile \
 lib/gambit/zlib/makefile \
 lib/gambit/test/makefile \
 lib/gambit/match/makefile \

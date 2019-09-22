@@ -57,22 +57,16 @@
 ;(##define-macro (macro-termite-modules func . args)
 ; `((termite-modules ,func) ,@args))
 
-(##define-macro (compile-time-load filename)
+#;(##define-macro (compile-time-load filename)
   (load filename)
   #f)
 
 ;; make it available at compile-time and run-time
-(##include "match-support.scm")
-
 ;; make it available at run-time
-(compile-time-load "~~lib/gambit/termite/match-support.scm")
-
+(##import termite/match)
 
 ;; ----------------------------------------------------------------------------
 ;; Macros
-
-(include "match.scm")
-(include "recv.scm")
-(include "deftype.scm")
-(include "uuid.scm")
+(##include "recv.scm")
+(##include "deftype.scm")
 

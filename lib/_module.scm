@@ -546,20 +546,36 @@
             #t
             (##char=? ##module-path-sep (##string-ref str i))))))))
 
+  (define (repl-confirm? question)
+    (##memq (##string->symbol (##repl-channel-confirm question)) '(y yes)))
+
+  ;;; handle the ask-install value (always, repl, never)
+  (define (module-install-confirm? mod-string)
+    (let ((install-mode (##os-module-install-mode)))
+      (and (or (##fx= 2 (##os-module-install-mode))
+               (and (##fx= 1 (##os-module-install-mode))
+                    (macro-thread-repl-channel
+                      (macro-current-thread))))
+          (begin
+            (repl-confirm?
+              (##string-append
+               "Hosted module " mod-string
+               " is required but is not installed.\nDownload and install (y/n)? "))))))
+
   (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
 
   (let ((mod-string (##modref->string modref)))
     (and
-      (##member
-       mod-string
-       (##os-module-whitelist)
-       (lambda (a b)
-         (module-prefix=? a b)))
+      (or (##member
+           mod-string
+           (##os-module-whitelist)
+           (lambda (a b)
+             (module-prefix=? a b)))
+          (module-install-confirm? mod-string))
 
-      (and ((##eval '(let () (##import gambit/pkg) install)) mod-string)
-           ;; Return the modref
-           modref))))
-
+      ((##eval '(let () (##import gambit/pkg) install)) mod-string)
+      ;; Return the modref
+      modref)))
 
 (define-prim (##install-module-set! x)
   (set! ##install-module x))
@@ -567,6 +583,30 @@
 (define-prim (##search-or-else-install-module modref)
   (or (##search-module modref)
       (and (##install-module modref)
+           (##search-module modref))))
+
+(define-prim (##search-or-else-install-and-build-module modref)
+
+  (define (compile-module-from-name modref)
+    (let (#;(build-module (##global-var-ref
+                         (##make-global-var '##build-module)))
+          (mod-string (##modref->string modref)))
+      (if ##debug-modules? (pp (##list 'compile-module-from-name mod-string)))
+
+      (##call-with-output-process
+        (##list path: (##path-expand "~~bin/gsc-script")
+                stdin-redirection: #f
+                stdout-redirection: #f
+                stderr-redirection: #f
+                arguments: (##list (##string-append "-:~~userlib=" (path-expand "~~userlib"))
+                                   "-target" (##symbol->string (macro-target)) mod-string))
+        (lambda (pid)
+          (let ((status (##process-status pid)))
+            (##eq? status 0))))))
+
+  (or (##search-module modref)
+      (and (##install-module modref)
+           (compile-module-from-name modref)
            (##search-module modref))))
 
 (##get-module-set!
@@ -581,7 +621,7 @@
        (let ((modref (##parse-module-ref (##symbol->string module-ref))))
          (if (##not modref)
              (err)
-             (let ((mod-info (##search-or-else-install-module modref)))
+             (let ((mod-info (##search-or-else-install-and-build-module modref)))
                (if mod-info ;; found module?
                    (##get-module-from-file module-ref modref mod-info)
                    (err))))))))
@@ -766,15 +806,12 @@
 
     (define (module-alias->string alias)
       (cond
-        ((##symbol? alias)
-         (##symbol->string alias))
-
-        ((##pair? alias)
-         (let ((cur (##car alias)))
-           (if (##symbol? cur)
-             (rpath-join (##symbol->string cur) (##cdr alias))
-             (ill-formed-define-module-alias))))
-
+        ((or (##symbol? alias)
+             (##pair? alias))
+         (let ((modref (##parse-module-ref alias)))
+           (if (macro-modref? modref)
+               (##modref->string modref)
+               (ill-formed-define-module-alias))))
         (else
           (ill-formed-define-module-alias))))
 
@@ -846,7 +883,7 @@
                                (##vector-ref rpath-root 1))
                               (##apply-module-alias modref)))
 
-                    (mod-info (##search-or-else-install-module modref)))
+                    (mod-info (##search-or-else-install-and-build-module modref)))
 
                (if (##not mod-info)
                    (##raise-expression-parsing-exception

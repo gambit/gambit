@@ -1,3 +1,3 @@
 
-(import (Module:C))
+(import (Module-C))
 (main)

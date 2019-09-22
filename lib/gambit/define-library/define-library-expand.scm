@@ -112,9 +112,7 @@
      src
      (##desourcify src)))
 
-  (let ((mod-info (or (##search-module modref)
-                      (and (##install-module modref)
-                           (##search-module modref)))))
+  (let ((mod-info (##search-or-else-install-and-build-module modref)))
     (if mod-info
       (let ((mod-dir            (##vector-ref mod-info 0))
             (mod-filename-noext (##vector-ref mod-info 1))
@@ -930,6 +928,7 @@
      (if (and (null? (libdef-body ld)) (null? ld-imports))
        `(##begin) ;; empty library
        `(##begin
+         (##declare (block))
          (##supply-module ,(string->symbol (libdef-name ld)))
          ,@(if (null? (libdef-cc-options ld))
                `()

@@ -45,7 +45,7 @@
               (lambda (pair)
                 (match pair
                   ((handler . state)
-                   (cons handler 
+                   (cons handler
                          ((event-handler-notify handler) event state)))))
               handlers)))
 

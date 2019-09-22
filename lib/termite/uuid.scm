@@ -7,8 +7,8 @@
   (let* ((rs ((let () (##namespace ("")) make-random-source)))
          (ri ((let () (##namespace ("")) random-source-make-integers) rs)))
     ((let () (##namespace ("")) random-source-randomize!) rs)
-	(lambda ()
-	  (ri 65536))))
+      (lambda ()
+        (ri 65536))))
 
 (define (make-uuid)
   (define hex

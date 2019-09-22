@@ -1,4 +1,8 @@
+
+(##namespace ("termite/match#" match/action match))
+
 (define-macro (match/action on-success on-fail datum . clauses)
+  (##import termite/match-support)
   (let ((tmp (gensym))
         (succ (gensym))	
         (fail (gensym)))
@@ -11,6 +15,7 @@
 
 
 (define-macro (match datum . clauses)
+  (##import termite/match-support)
   (let ((tmp (gensym))
         (fail (gensym)))
 
@@ -19,7 +24,7 @@
                      (raise
                        (list bad-match: ,tmp)))))
        ,(compile-pattern-match
-          #f
-          `(,fail)
-          clauses
-          tmp))))
+            #f
+            `(,fail)
+            clauses
+            tmp))))
