@@ -160,7 +160,7 @@ lib/os_tty.o
 lib/setup.o
 prebuilt/macosx/build-phase2
 prebuilt/windows/build-phase2
-makefile
+/makefile
 misc/makefile
 tests/makefile
 autom4te.cache
