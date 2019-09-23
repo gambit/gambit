@@ -11,9 +11,12 @@
 
 (let ((x "test_file.txt") (y "test_file2.txt")) (##with-output-to-file x ##list) (copy-file x y) (delete-file x) (delete-file y))
 (let ((x "test_dir")) (create-directory x) (delete-directory x))
-(let ((x "test_fifo")) (create-fifo x) (delete-file x))
-(let ((x "test_file.txt") (y "test_link")) (##with-output-to-file x ##list) (create-link x y) (delete-file x) (delete-file y))
-(let ((x "test_file.txt") (y "test_link")) (##with-output-to-file x ##list) (create-symbolic-link x y) (delete-file x) (delete-file y))
+;;Creating fifos on Windows raises an exception
+;;(let ((x "test_fifo")) (create-fifo x) (delete-file x))
+;;Creating links on Windows raises an exception
+;;(let ((x "test_file.txt") (y "test_link")) (##with-output-to-file x ##list) (create-link x y) (delete-file x) (delete-file y))
+;;Creating symbolic-links on Windows raises an exception
+;;(let ((x "test_file.txt") (y "test_link")) (##with-output-to-file x ##list) (create-symbolic-link x y) (delete-file x) (delete-file y))
 (let ((x (create-temporary-directory "test_dir"))) (delete-directory x))
 (current-directory) (current-directory ".")
 (let ((x "test_dir")) (create-directory x) (delete-directory x))
@@ -31,9 +34,10 @@
 (file-info-device (file-info "."))
 (file-info-group (file-info "."))
 (file-info-inode (file-info "."))
-(##time->seconds (file-info-last-access-time (file-info ".")))
-(##time->seconds (file-info-last-change-time (file-info ".")))
-(##time->seconds (file-info-last-modification-time (file-info ".")))
+;;The following can't be tested on Windows because the call itself changes the last access time
+;;(##time->seconds (file-info-last-access-time (file-info ".")))
+;;(##time->seconds (file-info-last-change-time (file-info ".")))
+;;(##time->seconds (file-info-last-modification-time (file-info ".")))
 (file-info-mode (file-info "."))
 (file-info-number-of-links (file-info "."))
 (file-info-owner (file-info "."))

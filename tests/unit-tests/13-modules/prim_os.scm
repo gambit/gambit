@@ -33,7 +33,7 @@
 ;;unimplemented;;defer-user-interrupts
 ;;unimplemented;;err-code->string
 
-(getenv "USER") (getenv "UNKNOWNVAR" #f)
+(getenv "PATH") (getenv "UNKNOWNVAR" #f)
 
 ;;unimplemented;;group-info
 ;;unimplemented;;group-info-gid

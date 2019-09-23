@@ -562,6 +562,8 @@
 
 /* Determine which signal interface to use.  */
 
+#ifndef USE_WIN32
+
 #ifdef HAVE_SIGACTION
 #define USE_sigaction
 #define USE_SIGNALS
@@ -581,6 +583,8 @@
 #define USE_signal
 #define USE_SIGNALS
 #endif
+#endif
+
 #endif
 
 
