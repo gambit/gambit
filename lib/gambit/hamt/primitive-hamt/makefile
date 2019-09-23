@@ -6,5 +6,6 @@ SUBDIRS =
 HEADERS_SCM = primitive-hamt\#.scm
 MODULES_SCM = primitive-hamt.scm
 MAIN_MODULES = primitive-hamt
+OTHER_RCFILES = makefile
 
 include $(libfromhere)/module-common.mk

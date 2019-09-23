@@ -7,5 +7,6 @@ SUBDIRS =
 HEADERS_SCM = http\#.scm
 MODULES_SCM = http.scm
 MAIN_MODULES = http
+OTHER_RCFILES = makefile
 
 include $(libfromhere)/module-common.mk

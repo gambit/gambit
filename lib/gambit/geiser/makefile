@@ -6,5 +6,6 @@ SUBDIRS =
 HEADERS_SCM = geiser\#.scm
 MODULES_SCM = geiser.scm
 MAIN_MODULES = geiser
+OTHER_RCFILES = makefile
 
 include $(libfromhere)/module-common.mk

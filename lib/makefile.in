@@ -216,7 +216,7 @@ LIBRARY_LIBS =
 
 OBJECTS = $(LIBRARY_OBJECTS)
 
-RCFILES = makefile.in header.scm $(MODULES_SCM) sys.scm \
+RCFILES = makefile.in module-common.mk.in header.scm $(MODULES_SCM) sys.scm \
 $(LIBRARIES_SCM) $(NORMAL_SOURCES) check___P check___P.st \
 psyntax69c.pp psyntax69c.ss psyntax73.pp psyntax73.ss \
 syntax-case-build syntax-case-expand-file \
