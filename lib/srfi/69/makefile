@@ -4,8 +4,8 @@ herefromlib = srfi/69
 libfromhere = ../..
 SUBDIRS =
 HEADERS_SCM = 69\#.scm
-MODULES_SCM = 69.scm
+MODULES_SCM = 69.scm 69.sld 69-test.scm
 MAIN_MODULES = 69
-OTHER_RCFILES = makefile 69.sld 69-test.scm
+OTHER_RCFILES = makefile
 
 include $(libfromhere)/module-common.mk

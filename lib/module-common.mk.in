@@ -8,8 +8,9 @@
 # libfromhere = ../../../..        # as many .. as components in herefromlib
 # SUBDIRS = <subdir1> <subdir2>    # as many as there are subdirs
 # HEADERS_SCM = foo\#.scm
-# MODULES_SCM = foo.scm
+# MODULES_SCM = foo.scm foo.sld foo-test.scm
 # MAIN_MODULES = foo
+# OTHER_RCFILES = makefile
 # include $(libfromhere)/module-common.mk
 
 herefromroot = lib/$(herefromlib)

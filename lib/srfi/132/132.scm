@@ -23,9 +23,9 @@
 (##include "lib/lmsort.scm")
 (##include "lib/vhsort.scm")
 (##include "lib/visort.scm")
-(##include "lib/vmsort.scm")
+;;(##include "lib/vmsort.scm")  ;; commented out due to duplicate definition
 (##include "lib/vqsort2.scm")
-(##include "lib/vqsort3.scm")
+;;(##include "lib/vqsort3.scm")  ;; commented out due to duplicate definition
 
 
 ;;; Predicate
