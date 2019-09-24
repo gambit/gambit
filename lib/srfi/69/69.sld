@@ -1,15 +1,16 @@
 ;;;============================================================================
 
-;;; File: "srfi/69/69#.scm"
+;;; File: "srfi/69/69.sld"
 
-;;; Copyright (c) 2018-2019 by Antoine Doucet, All Rights Reserved.
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; SRFI 69, Basic hash tables
 
-(##namespace ("srfi/69#"
+(define-library (srfi 69)
+
+  (export
 
 hash
 string-hash
@@ -36,6 +37,8 @@ hash-table->alist
 hash-table-copy
 hash-table-merge!
 
-))
+)
+
+  (include "69.scm"))
 
 ;;;============================================================================

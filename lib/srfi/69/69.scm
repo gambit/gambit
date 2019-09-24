@@ -7,7 +7,7 @@
 
 ;;;============================================================================
 
-;;; SRFI 69, Basic hash tables.
+;;; SRFI 69, Basic hash tables
 
 (##supply-module srfi/69)
 
@@ -15,6 +15,8 @@
 (##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
 (##include "~~lib/_gambit#.scm") ;; for macro-check-string,
                                  ;; macro-absent-obj, etc
+
+(##include "69#.scm")
 
 (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 (declare (not safe))          ;; claim code has no type errors
@@ -137,7 +139,7 @@
 (define (string-hash str #!optional (bound (macro-max-fixnum32)))
   (modulo (string=?-hash str) bound))
 
-(define (string-ci-hash #!optional (bound (macro-max-fixnum32)))
+(define (string-ci-hash str #!optional (bound (macro-max-fixnum32)))
   (modulo (string-ci=?-hash str) bound))
 
 (define (hash-by-identity obj #!optional (bound (macro-max-fixnum32)))

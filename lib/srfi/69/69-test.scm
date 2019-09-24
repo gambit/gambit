@@ -9,9 +9,8 @@
 
 ;;; SRFI 69, Basic hash tables.
 
-(##import srfi/69)
-(##import gambit/test)
-
+(import (srfi 69))
+(import (gambit test))
 
 ;;;============================================================================
 

@@ -2,7 +2,7 @@
 
 herefromlib = srfi
 libfromhere = ..
-SUBDIRS = 69 132
+SUBDIRS = 23 28 69 132
 HEADERS_SCM =
 MODULES_SCM =
 MAIN_MODULES =

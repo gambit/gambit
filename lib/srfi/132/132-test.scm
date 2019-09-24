@@ -9,8 +9,8 @@
 
 ;;; SRFI 132, Sort Libraries
 
-(##import srfi/132)
-(##import gambit/test)
+(import (srfi 132))
+(import (gambit test))
 
 (##include "lib/vr7rs.scm")
 (##include "lib/vqsort3.scm")

@@ -105,11 +105,17 @@ bootstrap-pre:
 bootstrap-post:
 
 modules-pre:
-	@echo ">>>> `echo $(herefromlib) | sed -e 's,[^/]*$$,,' -e 's,., ,g'``echo $(herefromlib) | sed -e 's,.*/,,'`/"; \
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
 	for target in $(BUILD_TARGETS); do \
 	  for main_mod in $(MAIN_MODULES); do \
-	    echo ">>>>                              -> building $$main_mod for $$target"; \
-	    $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ())))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
+	    if test "$$main_mod" = "$$here_suffix"; then \
+	      modref="$(herefromlib)"; \
+	    else \
+	      modref="$(herefromlib)/$$main_mod"; \
+	    fi; \
+	    echo ">>>> building module $$modref for $$target"; \
+	    $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
 	  done; \
 	done
 
