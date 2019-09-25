@@ -564,8 +564,9 @@
 
   (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
 
-  (let ((mod-string (##modref->string modref)))
-    (and
+  (and
+    (pair? (macro-modref-host modref))
+    (let ((mod-string (##modref->string modref)))
       (or (##member
            mod-string
            (##os-module-whitelist)
@@ -594,7 +595,7 @@
       (if ##debug-modules? (pp (##list 'compile-module-from-name mod-string)))
 
       (##call-with-output-process
-        (##list path: (##path-expand "~~bin/gsc-script")
+        (##list path: (##path-expand "gsc-script" (##path-expand "~~bin"))
                 stdin-redirection: #f
                 stdout-redirection: #f
                 stderr-redirection: #f
