@@ -581,17 +581,18 @@
   (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
 
   (and (##pair? (macro-modref-host modref))
-       (let ((modstr (##modref->string modref)))
-         (or (##member
-              modstr
-              (##os-module-whitelist)
-              (lambda (a b)
-                (module-prefix=? a b)))
-             (module-install-confirm? modstr))
+       (let ((mod-string (##modref->string modref)))
+         (and (or (##member
+                   mod-string
+                   (##os-module-whitelist)
+                   (lambda (a b)
+                     (module-prefix=? a b)))
+                  ;; Ask user to install.
+                  (module-install-confirm? mod-string))
 
-         ((##eval '(let () (##import gambit/pkg) install)) modstr)
-         ;; Return the modref
-         modref)))
+              ((##eval '(let () (##import gambit/pkg) install)) mod-string)
+              ;; Return the modref
+              modref))))
 
 (define-prim (##install-module-set! x)
   (set! ##install-module x))

@@ -45,6 +45,16 @@
 
 (##include "pkg#.scm")
 
+(define-type pkg-exception
+  id: 65615C63-2EC3-43F7-89C2-ADC230DFD651
+  constructor: macro-make-pkg-exception
+  copier: #f
+  opaque:
+  macros:
+  prefix: macro-
+
+  (message read-only: no-functional-setter:))
+
 (define-macro (default-install-prefix)
   `(path-expand "~~userlib"))
 
@@ -64,12 +74,29 @@
     (module-default-proto-set! proto)
     (set! module-default-proto proto)))
 
+(define (cleanup-install-folder folder prefix)
+  (if (< 0 (string-length folder))
+    (let ((folder-name (path-expand folder prefix)))
+      (if (not (fixnum? (##delete-file-or-directory folder-name #f #f)))
+          (cleanup-install-folder
+            (path-strip-trailing-directory-separator
+              (path-directory folder)) prefix)))))
+
 ;; Installation function
 (define (install mod
                  #!optional
                  (to (macro-absent-obj))
                  (p? (macro-absent-obj))
                  (p (macro-absent-obj)))
+
+  (define (unable-to-install-module)
+    (macro-make-pkg-exception "Unable to install module"))
+
+  (define (unable-to-install-specific-version mod)
+    (macro-make-pkg-exception (string-append "Unable to install specific version of " mod)))
+
+  (define (module-already-installed mod)
+    (macro-make-pkg-exception (string-append "Module " mod " is already installed")))
 
   (define (join-rev path lst)
     (if (pair? lst)
@@ -112,15 +139,15 @@
           4
           (install mod to p? p)
           (let ((modref (##parse-module-ref mod)))
-            (and modref
-                 (pair? (macro-modref-host modref))
+            (and (macro-modref? modref)
+                 (pair? (macro-modref-host modref)) ;; Hosted
                  (let* ((host (macro-modref-host modref))
                         (tag (macro-modref-tag modref))
                         (rpath (macro-modref-rpath modref))
 
                         (module-name (last rpath))
 
-                        ;; url without the protocol
+                        ;; url without the protocol and version
                         (base-url (join-rev module-name host))
 
                         ;; url used to clone the repo.
@@ -135,48 +162,53 @@
                         (install-path (path-expand (##modref->path modref #f) repo-path)))
 
                    (if (string=? install-path clone-path)
-                       (git-clone url clone-path check-status prompt?)
-                       (and (not (file-exists? install-path))
-                            (let ((repo (or (git-clone url clone-path #f prompt?)
-                                            (git-repository-open clone-path))))
-                              (and repo ;; (git-repository? repo)
-                                   (let ((tar-rec-list (or (git-archive repo tag)
-                                                           (and (git-pull repo)
-                                                                (git-archive repo tag))))
-                                         (tmp-dir (create-temporary-directory install-path)))
-                                     (if (pair? tar-rec-list)
-                                       (with-exception-handler
-                                         (lambda (_)
-                                           (delete-file-or-directory tmp-dir #t)
-                                           #f)
-                                         (lambda ()
-                                           ;; This raise an exception on error
-                                           (tar-rec-list-write tar-rec-list tmp-dir)
-                                           (rename-file tmp-dir install-path)
-                                           ;; Installation succeed
-                                           #t))
-                                       (begin
-                                         (delete-file-or-directory tmp-dir #t)
-                                         ;; Failed
-                                         #f))))))))))))))))
+                       (let ((result (git-clone url clone-path check-status prompt?)))
+                         (or result
+                             (begin
+                               (cleanup-install-folder base-url repo-path)
+                               (raise (unable-to-install-module)))))
+                       (if (file-exists? install-path)
+                           (raise (module-already-installed base-url))
+                           (let ((repo (or (git-clone url clone-path #f prompt?)
+                                           (git-repository-open clone-path))))
+                             (if repo ;; (git-repository? repo)
+                                  (let ((tar-rec-list (or (git-archive repo tag)
+                                                          (and (git-pull repo)
+                                                               (git-archive repo tag))))
+                                        (tmp-dir (create-temporary-directory install-path)))
+                                    (if (pair? tar-rec-list)
+                                      (with-exception-catcher
+                                        (lambda (exn)
+                                          (delete-file-or-directory tmp-dir #t)
+                                          ;; Propagate exception
+                                          (raise exn))
+
+                                        (lambda ()
+                                          ;; This raise an exception on error
+                                          (tar-rec-list-write tar-rec-list tmp-dir)
+                                          (rename-file tmp-dir install-path)))
+                                      (begin
+                                        (delete-file-or-directory tmp-dir #t)
+                                        (cleanup-install-folder base-url repo-path)
+                                        (raise (unable-to-install-specific-version base-url)))))
+                                  (begin
+                                    (cleanup-install-folder base-url repo-path)
+                                    (raise (unable-to-install-module))))))))))))))))
 
 ;; Return #f if module is not hosted
 (define (uninstall module
                    #!optional
                    (t (macro-absent-obj)))
 
+  (define (invalid-hosted-module)
+    (macro-make-pkg-exception "Invalid hosted module"))
+
+  (define (module-not-install module)
+    (macro-make-pkg-exception (string-append "Module " module " is not installed")))
+
   ;; return the prefix if prefix/folder exists else #f.
   (define (start-width? folder prefix)
     (and (file-exists? (path-expand folder prefix)) prefix))
-
-  (define (cleanup-install-folder folder prefix)
-    (if (< 0 (string-length folder))
-      (let ((folder-name (path-expand folder prefix)))
-        (##delete-file-or-directory folder-name #f #f)
-        (cleanup-install-folder
-          (path-strip-trailing-directory-separator
-            (path-directory folder)) prefix)
-        #t)))
 
   (macro-force-vars (module t)
     (let ((to (if (or (eq? t (macro-absent-obj))
@@ -192,17 +224,18 @@
           2
           (uninstall module t)
           (let ((modref (##parse-module-ref module)))
-            (and modref
-                 (pair? (macro-modref-host modref))
-                 (let* ((mod-path (##modref->path modref #f))
-                        (full-path (path-expand mod-path to)))
-                   (display full-path) (newline)
-                   (and (file-exists? full-path)
-                        (delete-file-or-directory
-                          (path-expand full-path) #t)
+            (if (and (macro-modref? modref)
+                     (pair? (macro-modref-host modref)))
+                (let* ((mod-path (##modref->path modref #f))
+                       (full-path (path-expand mod-path to)))
+                  (if (file-exists? full-path)
+                      (begin
+                        (delete-file-or-directory (path-expand full-path) #t)
                         (cleanup-install-folder
                           (path-strip-trailing-directory-separator
-                            (path-directory mod-path)) to))))))))))
+                            (path-directory mod-path)) to))
+                      (raise (module-not-install module))))
+                (raise (invalid-hosted-module)))))))))
 
 (define (installed? module)
   (let ((modref (##parse-module-ref module)))
@@ -277,8 +310,14 @@
               (loop (cddr rest) (cadr rest) (car rest))))
          (else
           (println (string-append "install " arg " to " to))
-          (or (install arg (path-expand to))
-              (println (string-append "Unable to install '" arg "' to " to)))
+          (with-exception-handler
+            (lambda (exn)
+              (cond
+                ((macro-pkg-exception? exn)
+                 (println (string-append "*** INSTALLATION ERROR -- " (macro-pkg-exception-message exn))))
+                (else
+                  (println exn))))
+            (lambda () (install arg (path-expand to))))
           (if (pair? rest)
               (loop (cdr rest) (car rest) to)))))))
 
@@ -297,9 +336,17 @@
                  (loop (cddr rest) (cadr rest) (car rest))))
             (else
              (println (string-append "uninstall " arg " to " to))
-             (or (uninstall arg (path-expand to))
-                 (println (string-append "Unable to uninstall '" arg "' to " to)))
-             (if (pair? rest)
-                 (loop (cdr rest) (car rest) to)))))))
+             (with-exception-handler
+               (lambda (exn)
+                 (cond
+                   ((macro-pkg-exception? exn)
+                    (println (string-append "UNINSTALLATION ERROR -- " (macro-pkg-exception-message exn))))
+                   (else
+                     (println exn))))
+
+               (lambda ()
+                 (uninstall arg (path-expand to))
+                 (if (pair? rest)
+                     (loop (cdr rest) (car rest) to)))))))))
 
 ;;;============================================================================
