@@ -580,18 +580,18 @@
 
   (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
 
-  (let ((modstr (##modref->string modref)))
-    (and
-      (or (##member
-           modstr
-           (##os-module-whitelist)
-           (lambda (a b)
-             (module-prefix=? a b)))
-          (module-install-confirm? modstr))
+  (and (##pair? (macro-modref-host modref))
+       (let ((modstr (##modref->string modref)))
+         (or (##member
+              modstr
+              (##os-module-whitelist)
+              (lambda (a b)
+                (module-prefix=? a b)))
+             (module-install-confirm? modstr))
 
-      ((##eval '(let () (##import gambit/pkg) install)) modstr)
-      ;; Return the modref
-      modref)))
+         ((##eval '(let () (##import gambit/pkg) install)) modstr)
+         ;; Return the modref
+         modref)))
 
 (define-prim (##install-module-set! x)
   (set! ##install-module x))
@@ -610,7 +610,7 @@
       (if ##debug-modules? (pp (##list 'compile-module-from-name modstr)))
 
       (##call-with-output-process
-        (##list path: (##path-expand "~~bin/gsc-script")
+        (##list path: (##path-expand "gsc-script" (##path-expand "~~bin"))
                 stdin-redirection: #f
                 stdout-redirection: #f
                 stderr-redirection: #f
