@@ -91,8 +91,8 @@ setting is the benchmarking setting.  The possible values are:
 
 # -----------------------------------------------------------------------------
 
-GAMBIT_COMP=${GAMBIT_COMP:-"../../../gsc/gsc -:=../../.."}
-GAMBIT_INT=${GAMBIT_INT:-"../../../gsi/gsi -:m10000,d-,=../../.."}
+GAMBIT_COMP=${GAMBIT_COMP:-"../../../gsc/gsc -:~~=../../.."}
+GAMBIT_INT=${GAMBIT_INT:-"../../../gsi/gsi -:m10000,d-,~~=../../.."}
 
 CPU_LIMIT=${CPU_LIMIT:-"300"}
 
@@ -208,9 +208,9 @@ gambit_exec ()
 
     if command -v perf
     then
-      perf stat ./$1.exe -:m10000,d-,=../../..
+      perf stat ./$1.exe -:m10000,d-,~~=../../..
     else
-      /usr/bin/time ./$1.exe -:m10000,d-,=../../..
+      /usr/bin/time ./$1.exe -:m10000,d-,~~=../../..
     fi
 
   else
