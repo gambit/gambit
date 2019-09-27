@@ -880,6 +880,8 @@ ___mod_or_lnk (*linker)();)
                     goto after_setup;
                   }
 
+                s = arg; /* for testing ~~=... pattern */
+
                 if ((dir = extract_string (&arg)) == 0)
                   {
                     e = ___FIX(___HEAP_OVERFLOW_ERR);
@@ -890,22 +892,25 @@ ___mod_or_lnk (*linker)();)
 
                 gambitdir_map_len++;
 
-                if (s[-2] == '~')
-                  {
-                    /* also set gambitdir on ~~=... */
-                    arg = s;
-                    ___free_UCS_2STRING (gambitdir);
-                    gambitdir = extract_string (&arg);
-                    if (gambitdir == 0)
-                      {
-                        e = ___FIX(___HEAP_OVERFLOW_ERR);
-                        goto after_setup;
-                      }
-                  }
+                if (s[-2] != '~')
+                  break;
 
-                break;
+                arg = s+1; /* also set gambitdir on ~~=... */
+
+                /* fall through to next case */
               }
 
+            case '=': /* Note: the -:=... pattern is deprecated */
+              {
+                ___free_UCS_2STRING (gambitdir);
+                gambitdir = extract_string (&arg);
+                if (gambitdir == 0)
+                  {
+                    e = ___FIX(___HEAP_OVERFLOW_ERR);
+                    goto after_setup;
+                  }
+                break;
+              }
             case '+':
             add_arg_option:
               {
