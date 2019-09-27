@@ -5,7 +5,7 @@ herefromlib = gambit/http
 libfromhere = ../..
 SUBDIRS =
 HEADERS_SCM = http\#.scm
-MODULES_SCM = http.scm
+MODULES_SCM = http.scm http-test.scm
 MAIN_MODULES = http
 OTHER_RCFILES = makefile
 
