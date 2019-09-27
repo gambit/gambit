@@ -220,46 +220,40 @@
          (expr (vector-ref v1 1))
          (program (expand-source (wrap-program expr)))
          (module-ref
-          (or (cond ((assq 'module-ref opts) => cadr)
-                    (else #f))
-              (string->symbol
-               (string-append (path-strip-directory root) "#"))))
-         (x (##in-new-compilation-scope
-             (lambda ()
-               (table-set! (##compilation-scope) '##module-ref module-ref)
-               (parse-program
-                program
-                (make-global-environment)
-                module-ref
-                vector))))
-         (v2 (car x))
-         (comp-scope (cdr x))
-         (lst (vector-ref v2 0))
-         (env (vector-ref v2 1))
-         (c-intf (vector-ref v2 2))
-         (parsed-program (normalize-program lst))
-         (supply-modules
-          (let ((x (table-ref comp-scope '##supply-modules '())))
-            (table-set! comp-scope '##supply-modules)
-            x))
-         (demand-modules
-          (let ((x (table-ref comp-scope '##demand-modules '())))
-            (table-set! comp-scope '##demand-modules)
-            x)))
+          (cond ((assq 'module-ref opts) => cadr)
+                (else
+                 (string->symbol (path-strip-directory root))))))
 
-    (table-set! comp-scope '##module-ref)
+    (##call-with-values
+     (lambda ()
+       (##in-new-compilation-ctx
+        (lambda ()
+          (if script-line
+              (##compilation-ctx-meta-info-add! 'script-line script-line))
+          (##compilation-ctx-module-ref-set! module-ref)
+          (parse-program
+           program
+           (make-global-environment)
+           module-ref
+           values))))
+     (lambda (v2 comp-ctx)
 
-    (inner parsed-program
-           env
-           root
-           output
-           (if (pair? supply-modules)
-               supply-modules
-               (list module-ref))
-           demand-modules
-           c-intf
-           comp-scope
-           script-line)))
+       (if (null? (macro-compilation-ctx-supply-modules comp-ctx))
+           (macro-compilation-ctx-supply-modules-set!
+            comp-ctx
+            (list module-ref)))
+
+       (let* ((lst (vector-ref v2 0))
+              (env (vector-ref v2 1))
+              (c-intf (vector-ref v2 2))
+              (parsed-program (normalize-program lst)))
+
+         (inner parsed-program
+                env
+                root
+                output
+                c-intf
+                comp-ctx))))))
 
 (define (compile-frontend
          input
@@ -316,11 +310,8 @@
                       env
                       root
                       output
-                      supply-modules
-                      demand-modules
                       c-intf
-                      comp-scope
-                      script-line)
+                      comp-ctx)
 
                (if compiler-option-expansion
                    (let ((port (current-output-port)))
@@ -337,22 +328,24 @@
                (if compiler-option-dg
                    (set! dependency-graph (make-table 'test: eq?)))
 
-               (if script-line
-                   (table-set! comp-scope 'script-line (list script-line)))
-
-               (let* ((module-procs
+               (let* ((meta-info
+                       (##meta-info->alist
+                        (macro-compilation-ctx-meta-info comp-ctx)))
+                      (supply-modules
+                       (macro-compilation-ctx-supply-modules comp-ctx))
+                      (demand-modules
+                       (macro-compilation-ctx-demand-modules comp-ctx))
+                      (module-procs
                        (compile-parsed-program (car (last-pair supply-modules))
                                                parsed-program
                                                env
                                                c-intf
                                                info-port))
-                      (module-meta-info*
-                       (table->list comp-scope))
                       (module-descr
                        ;; TODO: support type descriptor
                        (vector (list->vect supply-modules)
                                (list->vect demand-modules)
-                               module-meta-info*
+                               meta-info
                                1 ;; preload flag (linker may change this)
                                (car module-procs) ;; module main
                                #f ;; space for foreign pointer to ___module_struct
@@ -436,11 +429,8 @@
                         env
                         root
                         output
-                        supply-modules
-                        demand-modules
                         c-intf
-                        comp-scope
-                        script-line)
+                        comp-ctx)
                  (let ((result
                         (map (lambda (x)
                                (parse-tree->expression x loc-table))

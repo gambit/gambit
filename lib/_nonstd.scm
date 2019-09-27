@@ -143,30 +143,7 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define (##compilation-scope-append-attribs! key attribs)
-  (let* ((comp-scope
-          (##compilation-scope))
-         (curr-attribs
-          (##table-ref comp-scope key '())))
-    (if (##pair? curr-attribs)
-        (##set-cdr! (##last-pair curr-attribs) attribs)
-        (##table-set! comp-scope key attribs))))
-
-(define (##compilation-scope-add-to-ordered-set! key obj)
-  (let* ((comp-scope
-          (##compilation-scope))
-         (ordered-set
-          (##table-ref comp-scope key '())))
-    (if (##pair? ordered-set)
-        (let loop ((lst ordered-set))
-          (if (##not (##eq? (##car lst) obj))
-              (let ((rest (##cdr lst)))
-                (if (##pair? rest)
-                    (loop rest)
-                    (##set-cdr! lst (##list obj))))))
-        (##table-set! comp-scope key (##list obj)))))
-
-(define (##expand-compilation-scope-ordered-set-adder key src)
+(define (##expand-supply-or-demand-module supply? src)
   (##deconstruct-call
    src
    2
@@ -179,11 +156,23 @@
             src
             (##source-strip (##car (##source-strip src)))))
 
-       (##compilation-scope-add-to-ordered-set! key sym))
+       (if supply?
+           (##compilation-ctx-supply-modules-add! sym)
+           (##compilation-ctx-demand-modules-add! sym)))
 
      (##expand-source-template
       src
       `(##begin)))))
+
+(define-runtime-syntax ##supply-module
+  (lambda (src)
+    (##expand-supply-or-demand-module #t src)))
+
+(define-runtime-syntax ##demand-module
+  (lambda (src)
+    (##expand-supply-or-demand-module #f src)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (##expand-meta-info src)
   (##deconstruct-call
@@ -194,18 +183,13 @@
        (if (##not (##symbol? key))
            (##deconstruct-call src 1 ##list) ;; signal a syntax error
            (let ((attribs (##map ##desourcify rest)))
-             (##compilation-scope-append-attribs! key attribs)
+             (##for-each
+              (lambda (attrib)
+                (##compilation-ctx-meta-info-add! key attrib))
+              attribs)
              (##expand-source-template
               src
               `(##begin))))))))
-
-(define-runtime-syntax ##demand-module
-  (lambda (src)
-    (##expand-compilation-scope-ordered-set-adder '##demand-modules src)))
-
-(define-runtime-syntax ##supply-module
-  (lambda (src)
-    (##expand-compilation-scope-ordered-set-adder '##supply-modules src)))
 
 (define-runtime-syntax ##meta-info
   (lambda (src)

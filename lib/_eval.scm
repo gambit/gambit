@@ -1029,26 +1029,23 @@
            (filename (##source-code filename-src)))
       (if (##string? filename)
 
-          (let* ((locat
-                  (##source-locat src))
-                 (relative-to-path
-                  (and locat
-                       (##container->path (##locat-container locat)))))
-            (let* ((path
-                    (##path-reference filename relative-to-path))
-                   (x
-                    (##read-all-as-a-begin-expr-from-path
-                     path
-                     (##current-readtable)
-                     ##wrap-datum
-                     ##unwrap-datum
-                     (if ci? #t '()))))
-              (if (##fixnum? x)
-                  (##raise-expression-parsing-exception
-                   'cannot-open-file
-                   src
-                   path)
-                  (##vector-ref x 1))))
+          (let* ((relative-to-path
+                  (##source-path src))
+                 (path
+                  (##path-reference filename relative-to-path))
+                 (x
+                  (##read-all-as-a-begin-expr-from-path
+                   path
+                   (##current-readtable)
+                   ##wrap-datum
+                   ##unwrap-datum
+                   (if ci? #t '()))))
+            (if (##fixnum? x)
+                (##raise-expression-parsing-exception
+                 'cannot-open-file
+                 src
+                 path)
+                (##vector-ref x 1)))
 
           (##raise-expression-parsing-exception
            'filename-expected
@@ -1076,41 +1073,59 @@
   (set! ##expand-source x))
 
 (define (##compile-top top-cte src)
-  (##extract-demand-modules
-   (##compile-in-compilation-scope
-    top-cte
-    src
-    #f
-    (lambda (cte src tail?)
-      (let ((tail? #f))
-        (##comp-top top-cte src tail?))))))
+  (##call-with-values
+   (lambda ()
+     (##compile-in-new-compilation-ctx
+      top-cte
+      src
+      #f
+      (lambda (cte src tail?)
+        (let ((tail? #f))
+          (##comp-top top-cte src tail?)))))
+   ##extract-demand-modules))
 
 (define (##compile-inner cte src)
-  (##extract-demand-modules
-   (##compile-in-compilation-scope
-    cte
-    src
-    #f
-    (lambda (cte src tail?)
-      (macro-gen ##gen-top src
-        (##comp-inner
-         (##cte-frame-i cte (##list (macro-self-var)))
-         src
-         tail?))))))
+  (##call-with-values
+   (lambda ()
+     (##compile-in-new-compilation-ctx
+      cte
+      src
+      #f
+      (lambda (cte src tail?)
+        (macro-gen ##gen-top src
+          (##comp-inner
+           (##cte-frame-i cte (##list (macro-self-var)))
+           src
+           tail?)))))
+   ##extract-demand-modules))
 
-(define (##extract-demand-modules x)
-  (let* ((code
-          (##car x))
-         (comp-scope
-          (##cdr x))
-         (demand-modules
-          (##table-ref comp-scope '##demand-modules '())))
-    (##cons code
-            demand-modules)))
+(define (##extract-demand-modules code comp-ctx)
+  (##cons code
+          (macro-compilation-ctx-demand-modules comp-ctx)))
 
 (define (##setup-requirements-and-run c rte)
   (##load-modules (##cdr c))
   (macro-code-run (##car c)))
+
+;;;----------------------------------------------------------------------------
+
+;;; Handling of compilation context.
+
+(define ##compilation-scope;;TODO: deprecated interface
+  (##make-parameter #f))
+
+(define ##compilation-ctx
+  (##make-parameter #f))
+
+(define (##compile-in-new-compilation-ctx cte src tail? proc)
+  (##call-with-values
+   (lambda ()
+     (##in-new-compilation-ctx
+      (lambda ()
+        (proc cte (##expand-source src) tail?))))
+   (lambda (code comp-ctx)
+     (##values (##convert-source-to-locat! code)
+               comp-ctx))))
 
 (define (##convert-source-to-locat! code)
 
@@ -1137,34 +1152,89 @@
   (convert! #f code)
   code)
 
-(define ##compilation-scope
-  (##make-parameter #f))
-
-(define (##compile-in-compilation-scope cte src tail? proc)
-  (let* ((src
-          (##expand-source src))
-         (x
-          (##in-new-compilation-scope
-           (lambda ()
-             (proc cte src tail?))))
-         (code
-          (##car x))
-         (comp-scope
-          (##cdr x)))
-    (##cons
-     (##convert-source-to-locat! code)
-     comp-scope)))
-
-(define (##in-new-compilation-scope thunk)
-  (let* ((comp-scope
+(define (##in-new-compilation-ctx thunk)
+  (let* ((comp-scope;;TODO: deprecated interface
           (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
+         (comp-ctx
+          (macro-make-compilation-ctx))
          (result
           (##parameterize1
-           ##compilation-scope
+           ##compilation-scope;;TODO: deprecated interface
            comp-scope
-           thunk)))
-    (##cons result
-            comp-scope)))
+           (lambda ()
+             (##parameterize1
+              ##compilation-ctx
+              comp-ctx
+              thunk)))))
+    (##values result
+              comp-ctx)))
+
+(define (##compilation-ctx-supply-modules-add! module-ref)
+  (let ((ctx (##compilation-ctx)))
+    (macro-compilation-ctx-supply-modules-set!
+     ctx
+     (##add-to-set-ordered!
+      (macro-compilation-ctx-supply-modules ctx)
+      module-ref))))
+
+(define (##compilation-ctx-demand-modules-add! module-ref)
+  (let ((ctx (##compilation-ctx)))
+    (macro-compilation-ctx-demand-modules-set!
+     ctx
+     (##add-to-set-ordered!
+      (macro-compilation-ctx-demand-modules ctx)
+      module-ref))))
+
+(define (##compilation-ctx-meta-info-add! key val)
+  (let* ((ctx (##compilation-ctx))
+         (meta-info (macro-compilation-ctx-meta-info ctx)))
+    (##meta-info-add! meta-info key val)))
+
+(define (##make-meta-info)
+  (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
+
+(define (##meta-info->alist meta-info)
+  (##table->list meta-info)) ;; TODO: sort the list
+
+(define (##meta-info-add! meta-info key val)
+  (##table-set! meta-info key (##meta-info-combine! meta-info key val)))
+
+(define (##meta-info-combine! meta-info key val)
+  (case key
+    ((script-line)
+     ;; just keep the last value
+     (##list val))
+    ((cc-options ld-options pkg-config)
+     ;; the meta-info is an ordered-set
+     (##add-to-set-ordered! (##table-ref meta-info key '()) val))
+    (else
+     ;; the default is to accumulate all the meta-info in a list
+     (##add-to-tail! (##table-ref meta-info key '()) val))))
+
+(define (##add-to-tail! lst obj)
+  (if (##pair? lst)
+      (begin
+        (##set-cdr! (##last-pair lst) (##list obj))
+        lst)
+      (##list obj)))
+
+(define (##add-to-set-ordered! ordered-set obj)
+  (if (##pair? ordered-set)
+      (let loop ((lst ordered-set))
+        (if (##not (##equal? (##car lst) obj))
+            (let ((rest (##cdr lst)))
+              (if (##pair? rest)
+                  (loop rest)
+                  (begin
+                    ;; obj not in ordered set, so add it at end of list
+                    (##set-cdr! lst (##list obj))
+                    ordered-set)))
+            ordered-set)) ;; obj already in the ordered set
+      (##list obj))) ;; ordered set was empty, so create singleton set
+
+(define (##compilation-ctx-module-ref-set! module-ref)
+  (let ((ctx (##compilation-ctx)))
+    (macro-compilation-ctx-module-ref-set! ctx module-ref)))
 
 ;;;----------------------------------------------------------------------------
 

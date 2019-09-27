@@ -278,8 +278,9 @@
 
 ;;; Module install mode.
 
-(##define-macro (macro-module-install-off) 0)
-(##define-macro (macro-module-install-ask) 1)
+(##define-macro (macro-module-install-mode-ask-never)     0)
+(##define-macro (macro-module-install-mode-ask-when-repl) 1)
+(##define-macro (macro-module-install-mode-ask-always)    2)
 
 ;;;----------------------------------------------------------------------------
 

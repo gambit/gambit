@@ -720,14 +720,20 @@
   (let ((locat-or-position (macro-code-locat $code)))
     (if (or (##locat? locat-or-position) (##not locat-or-position))
         locat-or-position
-        (let loop ((parent (macro-code-link $code)))
-          (if parent
+        (let loop ((parent (macro-code-parent $code)))
+          (if (macro-code-root-parent? parent)
+              #f
               (let ((locat-or-position-parent (macro-code-locat parent)))
                 (if (##locat? locat-or-position-parent)
                     (##make-locat (##locat-container locat-or-position-parent)
                                   locat-or-position)
-                    (loop (macro-code-link parent))))
-              #f)))))
+                    (loop (macro-code-parent parent)))))))))
+
+(define-prim (##code-root-parent $code)
+  (let loop ((parent $code))
+    (if (macro-code-root-parent? parent)
+        parent
+        (loop (macro-code-parent parent)))))
 
 (define-prim (##subprocedure-source-info proc)
   (let ((info (##subprocedure-info proc)))

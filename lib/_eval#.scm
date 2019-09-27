@@ -50,12 +50,16 @@
          (if (pair? l)
            (loop (cdr l)
                  (+ i 1)
-                 (cons `(##vector-set! (##vector-ref $code ,i) 0 $code) r))
+                 (cons `(macro-code-parent-set! (##vector-ref $code ,i) $code)
+                       r))
            (reverse r)))
      $code))
 
-(##define-macro (macro-code-link c)
+(##define-macro (macro-code-parent c)
   `(##vector-ref ,c 0))
+
+(##define-macro (macro-code-parent-set! c l)
+  `(##vector-set! ,c 0 ,l))
 
 (##define-macro (macro-code-cprc c)
   `(##vector-ref ,c 1))
@@ -89,7 +93,10 @@
          (parent ,parent))
      (and (##vector? child)
           (##fx< 3 (##vector-length child))
-          (##eq? (macro-code-link child) parent))))
+          (##eq? (macro-code-parent child) parent))))
+
+(##define-macro (macro-code-root-parent? parent)
+  `(##not (##vector? ,parent)))
 
 (##define-macro (macro-code-run c)
   `(let (($$code ,c))
@@ -181,6 +188,66 @@
                     ($$execute-body $code rte ,@vars))
                   ,@vars)
        ($$execute-body $code rte ,@vars))))
+
+;;;----------------------------------------------------------------------------
+
+;;; Macros to attach attributes to the code.
+
+(##define-macro (macro-make-code-attributes
+                 supply-modules
+                 demand-modules
+                 meta-info
+                 code)
+  `(##values ,supply-modules
+             ,demand-modules
+             ,meta-info
+             ,code))
+
+(##define-macro (macro-code-attributes-supply-modules attr)
+  `(##values-ref ,attr 0))
+
+(##define-macro (macro-code-attributes-demand-modules attr)
+  `(##values-ref ,attr 1))
+
+(##define-macro (macro-code-attributes-meta-info attr)
+  `(##values-ref ,attr 2))
+
+(##define-macro (macro-code-attributes-code attr)
+  `(##values-ref ,attr 3))
+
+;;;----------------------------------------------------------------------------
+
+;;; Macros to manipulate the compilation context.
+
+(##define-macro (macro-make-compilation-ctx)
+  `(##vector '() ;; supply-modules
+             '() ;; demand-modules
+             (##make-meta-info) ;; meta-info
+             #f)) ;; module-ref
+
+(##define-macro (macro-compilation-ctx-supply-modules ctx)
+  `(##vector-ref ,ctx 0))
+
+(##define-macro (macro-compilation-ctx-supply-modules-set! ctx supply-modules)
+  `(##vector-set! ,ctx 0 ,supply-modules))
+
+(##define-macro (macro-compilation-ctx-demand-modules ctx)
+  `(##vector-ref ,ctx 1))
+
+(##define-macro (macro-compilation-ctx-demand-modules-set! ctx demand-modules)
+  `(##vector-set! ,ctx 1 ,demand-modules))
+
+(##define-macro (macro-compilation-ctx-meta-info ctx)
+  `(##vector-ref ,ctx 2))
+
+(##define-macro (macro-compilation-ctx-meta-info-set! ctx meta-info)
+  `(##vector-set! ,ctx 2 ,meta-info))
+
+(##define-macro (macro-compilation-ctx-module-ref ctx)
+  `(##vector-ref ,ctx 3))
+
+(##define-macro (macro-compilation-ctx-module-ref-set! ctx module-ref)
+  `(##vector-set! ,ctx 3 ,module-ref))
 
 ;;;----------------------------------------------------------------------------
 

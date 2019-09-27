@@ -544,6 +544,7 @@
          src
          -2
          (lambda (name-src . body-srcs)
+           ;;TODO: deprecated interface
            (let* ((module-ref (or modref-str (table-ref (##compilation-scope) '##module-ref #f)))
                   (module-root (table-ref (##compilation-scope) '##module-root module-root))
                   (modref-path (table-ref (##compilation-scope) '##modref-path modref-path))
@@ -609,12 +610,14 @@
                              '())))
 
              (if debug-mode?
-               (let ()
-                 (println "parse-define-library==>compilation-scope: " (object->string (table->list (##compilation-scope))))
-                 (println "parse-define-library==>module-ref: " module-ref)
-                 (println "parse-define-library==>modref-str: " modref-str)
-                 (println "parse-define-library==>library-name: " library-name)
-                 (println)))
+                 (let ()
+                   ;;TODO: deprecated interface
+
+                   (println "parse-define-library==>compilation-scope: " (object->string (table->list (##compilation-scope))))
+                   (println "parse-define-library==>module-ref: " module-ref)
+                   (println "parse-define-library==>modref-str: " modref-str)
+                   (println "parse-define-library==>library-name: " library-name)
+                   (println)))
 
              ;; parse-body modify ctx
              (parameterize ((##module-aliases (##module-aliases)))
@@ -857,7 +860,8 @@
 
 
 ;;; Debug procedure.
-#;(define (trace-expansion srcs)
+#;
+(define (trace-expansion srcs)
   (for-each
     (lambda (expr)
       (display (object->string expr))
@@ -946,7 +950,7 @@
          ,@ld-imports
          ,@(libdef-body ld)
          (##namespace ("")))))))
-    ; )
+   ; )
 
 
 (define (import-expand src)
@@ -957,17 +961,19 @@
     (char=? (string-ref pattern pos) #\/))
 
   (if debug-mode?
-    (begin
-      (display "module-ref: ")
-      (display (##table-ref (##compilation-scope) '##module-ref #f))
-      (newline)
-      (display "module-root: ")
-      (display (##table-ref (##compilation-scope) '##module-root #f))
-      (newline)
-      (display "modref-path: ")
-      (display (##table-ref (##compilation-scope) '##modref-path #f))
-      (newline)))
+      (begin
+        ;;TODO: deprecated interface
 
+        (display "module-ref: ")
+        (display (##table-ref (##compilation-scope) '##module-ref #f))
+        (newline)
+        (display "module-root: ")
+        (display (##table-ref (##compilation-scope) '##module-root #f))
+        (newline)
+        (display "modref-path: ")
+        (display (##table-ref (##compilation-scope) '##modref-path #f))
+        (newline)))
+;;TODO:rewrite
   (let* ((locat (##source-locat src))
          (locat-filename (and (##vector? locat) (##vector-ref locat 0)))
          (rpath-root (if (or (##not locat-filename) ;; locat-filename is #f
@@ -977,6 +983,7 @@
                         '()
                         (##current-directory))
                        (##vector
+                        ;;TODO: deprecated interface
                         (##table-ref (##compilation-scope) 'modref-path '())
                         (##table-ref (##compilation-scope) 'module-root (##path-directory locat-filename))))))
     ;; Clone alias environment.
