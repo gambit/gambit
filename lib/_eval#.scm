@@ -223,7 +223,8 @@
   `(##vector '() ;; supply-modules
              '() ;; demand-modules
              (##make-meta-info) ;; meta-info
-             #f)) ;; module-ref
+             #f ;; module-ref
+             '())) ;; module-aliases
 
 (##define-macro (macro-compilation-ctx-supply-modules ctx)
   `(##vector-ref ,ctx 0))
@@ -248,6 +249,12 @@
 
 (##define-macro (macro-compilation-ctx-module-ref-set! ctx module-ref)
   `(##vector-set! ,ctx 3 ,module-ref))
+
+(##define-macro (macro-compilation-ctx-module-aliases ctx)
+   `(##vector-ref ,ctx 4))
+
+(##define-macro (macro-compilation-ctx-module-aliases-set! ctx module-aliases)
+   `(##vector-set! ,ctx 4 ,module-aliases))
 
 ;;;----------------------------------------------------------------------------
 

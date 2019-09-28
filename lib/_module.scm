@@ -17,9 +17,6 @@
 (define-prim (##module-search-order-set! x)
   (set! ##module-search-order x))
 
-(define ##module-aliases
-  (##make-parameter '()))
-
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##modref->string modref #!optional (namespace? #f))
@@ -755,36 +752,41 @@
       (and (##vector? ret)
            (##vector-ref ret 1))))
 
-  (let ((result (##search-setup-file rpath root)))
-    (and
-      (##vector? result)
-      (let* ((port (##vector-ref result 1))
-             (src (read-setup-file-from-port port)))
-        (##deconstruct-call
-         src
-         -1
-         (lambda srcs
-           (##for-each
-             (lambda (decl-src)
-               (let ((decl (##source-strip decl-src)))
-                 (and (##pair? decl)
-                      (case (##source-strip (##car decl))
-                        ((##define-module-alias define-module-alias)
-                         (##parse-define-module-alias decl-src))
+  (let* ((result (##search-setup-file rpath root))
+         (comp-ctx (##compilation-ctx))
+         (module-aliases (macro-compilation-ctx-module-aliases comp-ctx)))
+    (if (##vector? result)
+        (let* ((port (##vector-ref result 1))
+               (src (read-setup-file-from-port port)))
+          (##deconstruct-call
+           src
+           -1
+           (lambda srcs
+             (##fold
+               (lambda (decl-src base)
+                 (let ((decl (##source-strip decl-src)))
+                   (and (##pair? decl)
+                        (case (##source-strip (##car decl))
+                          ((##define-module-alias define-module-alias)
+                           (##extend-module-aliases
+                            (##validate-define-module-alias decl-src)
+                            base))
 
-                        (else #f)))))
-             srcs)))))))
+                          (else base)))))
+               module-aliases
+               srcs))))
+        module-aliases)))
 
-(define-prim (##apply-module-alias modref)
+(define-prim (##apply-module-alias modref module-aliases)
   (define (modref-prefix=? mod prefix)
     (let ((suffix (##string-prefix=? mod prefix)))
       (and (##string? suffix)
-           (or (##fx=    0   (##string-length suffix))
-               (##char=? #\/ (##string-ref suffix 0 )))
+           (or (##fx= 0 (##string-length suffix))
+               (##char=? ##module-path-sep (##string-ref suffix 0)))
            suffix)))
 
   (let ((modstr (##modref->string modref)))
-    (let loop ((rest (##module-aliases)))
+    (let loop ((rest module-aliases))
       (if (##pair? rest)
         (let ((alias (##car rest)))
           (cond
@@ -801,10 +803,12 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim ##parse-define-module-alias
+;;; validate and return the alias pair
+(define-prim ##validate-define-module-alias
   (lambda (src)
     (define (directory-separator? pattern pos)
-      (##char=? (##string-ref pattern pos) #\/))
+      ;;; XXX: ##module-path-sep break this???
+      (##char=? (##string-ref pattern pos) ##module-path-sep))
 
     (define (ill-formed-define-module-alias)
       (##raise-expression-parsing-exception
@@ -821,7 +825,6 @@
             (##cdr lst))
           p))
 
-
     (define (module-alias->string alias)
       (cond
         ((or (##symbol? alias)
@@ -833,35 +836,37 @@
         (else
           (ill-formed-define-module-alias))))
 
-  (##deconstruct-call
-   src
-   3
-   (lambda (name-src value-src)
-     (let ((name (##desourcify name-src))
-           (value (##desourcify value-src)))
-       (let ((name-str (module-alias->string name))
-             (value-str (module-alias->string value)))
-         (if (or
-               (directory-separator? name-str 0)
-               (directory-separator? value-str 0)
-
-               (directory-separator?
-                 name-str (##fx- (##string-length name-str) 1))
-
-               (directory-separator?
-                 value-str (##fx- (##string-length value-str) 1)))
-
-           (ill-formed-define-module-alias)
-
-           ;; Create alias pair
-           (##module-aliases
-            (##cons
-              (##cons name-str value-str)
-              (##module-aliases))))))
-     (##expand-source-template
+    (##deconstruct-call
       src
-      `(##begin))))))
+      3
+      (lambda (name-src value-src)
+        (let ((name (##desourcify name-src))
+              (value (##desourcify value-src)))
+          (let ((name-str (module-alias->string name))
+                (value-str (module-alias->string value)))
+            (if (or
+                  (directory-separator? name-str 0)
+                  (directory-separator? value-str 0)
 
+                  (directory-separator?
+                    name-str (##fx- (##string-length name-str) 1))
+
+                  (directory-separator?
+                    value-str (##fx- (##string-length value-str) 1)))
+
+              (ill-formed-define-module-alias)
+
+              ;;; TODO: make and abstraction to alias
+              (##cons name-str value-str))))))))
+
+(define-prim ##parse-define-module-alias
+  (lambda (src)
+    (##compilation-ctx-module-aliases-add!
+     (##validate-define-module-alias src))
+
+    (##expand-source-template
+     src
+     `(##begin))))
 
 (define-runtime-syntax ##define-module-alias
   ##parse-define-module-alias)
@@ -903,10 +908,10 @@
                                       '##module-root
                                       (##path-directory relative-to-path))))
 
-                    (modref
-                     (parameterize ((##module-aliases (##module-aliases)))
-                       (##extend-aliases-from-rpath rpath root)
-                       (##apply-module-alias modref)))
+
+                    (module-aliases (##extend-aliases-from-rpath rpath root))
+
+                    (modref (##apply-module-alias modref module-aliases))
 
                     (mod-info
                      (##search-or-else-install-and-build-module modref)))

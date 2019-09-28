@@ -234,7 +234,7 @@
     rev-body
   )
 
-  (define (parse-body ctx body-srcs)
+  (define (parse-body ctx body-srcs module-aliases)
     (if (pair? body-srcs)
         (let* ((lib-decl-src (car body-srcs))
                (lib-decl (##source-strip lib-decl-src))
@@ -254,15 +254,15 @@
 
                   ((export)
                    (parse-export-decl ctx args-srcs)
-                   (parse-body ctx rest-srcs))
+                   (parse-body ctx rest-srcs module-aliases))
 
                   ((import)
-                   (parse-import-decl ctx args-srcs)
-                   (parse-body ctx rest-srcs))
+                   (parse-import-decl ctx args-srcs module-aliases)
+                   (parse-body ctx rest-srcs module-aliases))
 
                   ((begin)
                    (parse-begin-decl ctx args-srcs)
-                   (parse-body ctx rest-srcs))
+                   (parse-body ctx rest-srcs module-aliases))
 
                   ((include include-ci include-library-declarations)
                    (parse-body
@@ -272,11 +272,12 @@
                              args-srcs
                              lib-decl-src
                              head)
-                            rest-srcs)))
+                            rest-srcs)
+                    module-aliases))
 
                   ((cond-expand)
                    ;;TODO: actually implement
-                   (parse-body ctx rest-srcs))
+                   (parse-body ctx rest-srcs module-aliases))
 
                   ((namespace) ;; extension to R7RS
                    (if (not (and (pair? args-srcs)
@@ -287,7 +288,7 @@
                          (ctx-namespace-set!
                           ctx
                           (##source-strip (car args-srcs)))
-                         (parse-body ctx rest-srcs))))
+                         (parse-body ctx rest-srcs module-aliases))))
 
                   ((pkg-config)
                    (if (not (and (pair? args-srcs)
@@ -301,7 +302,7 @@
                              (##source-strip (car args-srcs))
                              (ctx-rev-pkg-config ctx))
                            (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs))))
+                       (parse-body ctx rest-srcs module-aliases))))
 
                   ((cc-options)
                    (if (not (and (pair? args-srcs)
@@ -315,7 +316,7 @@
                              (##source-strip (car args-srcs))
                              (ctx-rev-cc-options ctx))
                            (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs))))
+                       (parse-body ctx rest-srcs module-aliases))))
 
                   ((ld-options-prelude)
                    (if (not (and (pair? args-srcs)
@@ -329,7 +330,7 @@
                              (##source-strip (car args-srcs))
                              (ctx-rev-ld-options-prelude ctx))
                            (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs))))
+                       (parse-body ctx rest-srcs module-aliases))))
 
                   ((ld-options)
                    (if (not (and (pair? args-srcs)
@@ -343,7 +344,7 @@
                              (##source-strip (car args-srcs))
                              (ctx-rev-ld-options ctx))
                            (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs))))
+                       (parse-body ctx rest-srcs module-aliases))))
 
                   (else
                    (library-decl-err))))
@@ -443,14 +444,14 @@
                 (else
                  (export-spec-err))))))
 
-  (define (parse-import-decl ctx import-sets-srcs)
+  (define (parse-import-decl ctx import-sets-srcs module-aliases)
     (if (pair? import-sets-srcs)
         (let* ((import-set-src (car import-sets-srcs))
                (rest-srcs (cdr import-sets-srcs))
                ;;; Why ctx in parse-import-set? Cause not used...
-               (idmap (parse-import-set import-set-src (ctx-name ctx))))
+               (idmap (parse-import-set import-set-src module-aliases (ctx-name ctx))))
           (add-imports! ctx import-set-src idmap)
-          (parse-import-decl ctx rest-srcs))))
+          (parse-import-decl ctx rest-srcs module-aliases))))
 
   (define (parse-begin-decl ctx body-srcs)
     (ctx-rev-body-set! ctx (append (reverse body-srcs) (ctx-rev-body ctx))))
@@ -545,7 +546,8 @@
          -2
          (lambda (name-src . body-srcs)
            ;;TODO: deprecated interface
-           (let* ((module-ref (or modref-str (table-ref (##compilation-scope) '##module-ref #f)))
+           (let* ((comp-ctx (##compilation-ctx))
+                  (module-ref (or modref-str (macro-compilation-ctx-module-ref comp-ctx)))
                   (module-root (table-ref (##compilation-scope) '##module-root module-root))
                   (modref-path (table-ref (##compilation-scope) '##modref-path modref-path))
 
@@ -620,12 +622,8 @@
                    (println)))
 
              ;; parse-body modify ctx
-             (parameterize ((##module-aliases (##module-aliases)))
-               (##extend-aliases-from-rpath
-                modref-path
-                module-root)
-
-               (parse-body ctx body-srcs))
+             (let ((module-aliases (##extend-aliases-from-rpath modref-path module-root)))
+               (parse-body ctx body-srcs module-aliases))
 
              (let* ((body (reverse (ctx-rev-body ctx)))
                     (macros (parse-macros ctx body))
@@ -654,7 +652,7 @@
 
                 body))))))))
 
-(define (parse-import-set import-set-src #!optional (ctx-library #f))
+(define (parse-import-set import-set-src module-aliases #!optional (ctx-library #f))
   (let ((import-set (##source-strip import-set-src)))
 
     (define (import-set-err)
@@ -705,7 +703,7 @@
 
           (if (not (pair? args-srcs))
             (import-set-err)
-            (let ((idmap (parse-import-set (car args-srcs) ctx-library)))
+            (let ((idmap (parse-import-set (car args-srcs) module-aliases ctx-library)))
               (if (not (idmap-namespace idmap))
                   (define-library-expected (idmap-src idmap))
                   (case head
@@ -833,7 +831,7 @@
 
                  (modref-alias (let ((modref (##parse-module-ref import-name-path)))
                                  ;(if modref
-                                    (##apply-module-alias modref)
+                                    (##apply-module-alias modref module-aliases)
 
                                     #;(##raise-expression-parsing-exception
                                      'ill-formed-import-set
@@ -973,24 +971,21 @@
         (display "modref-path: ")
         (display (##table-ref (##compilation-scope) '##modref-path #f))
         (newline)))
-;;TODO:rewrite
-  (let* ((locat (##source-locat src))
-         (locat-filename (and (##vector? locat) (##vector-ref locat 0)))
-         (rpath-root (if (or (##not locat-filename) ;; locat-filename is #f
-                             (and (##pair? locat-filename)
-                                  (##symbol? (##car locat-filename))))
-                       (##vector
-                        '()
-                        (##current-directory))
-                       (##vector
-                        ;;TODO: deprecated interface
-                        (##table-ref (##compilation-scope) 'modref-path '())
-                        (##table-ref (##compilation-scope) 'module-root (##path-directory locat-filename))))))
-    ;; Clone alias environment.
-    (parameterize ((##module-aliases (##module-aliases)))
-      (##extend-aliases-from-rpath
-       (##vector-ref rpath-root 0)
-       (##vector-ref rpath-root 1))
+
+  (let* ((src-path (##source-path src))
+         (rpath
+           (if (##not src-path)
+               '()
+               (##table-ref (##compilation-scope) ;; TODO: deprecated interface
+                             '##modref-path '())))
+
+         (root
+           (if (##not src-path)
+               (##current-directory)
+               (##table-ref (##compilation-scope) ;; TODO: deprecated interface
+                            '##module-root (##path-directory src-path))))
+
+         (module-aliases (##extend-aliases-from-rpath rpath root)))
 
   (##deconstruct-call
    src
@@ -998,7 +993,7 @@
    (lambda args-srcs
      (map
        (lambda (args-src)
-         (let ((idmap (parse-import-set args-src)))
+         (let ((idmap (parse-import-set args-src module-aliases)))
            (set! rev-global-imports (cons idmap rev-global-imports))))
        args-srcs)))
 
@@ -1055,7 +1050,7 @@
 
                   ;; This was not a define-library import.
                   `(##import ,(string->symbol (idmap-name idmap)))))
-            rev-global-imports))))))
+            rev-global-imports)))))
   ; )
 
 ;;;============================================================================

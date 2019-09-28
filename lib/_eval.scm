@@ -1190,6 +1190,16 @@
          (meta-info (macro-compilation-ctx-meta-info ctx)))
     (##meta-info-add! meta-info key val)))
 
+(define (##compilation-ctx-module-aliases-add! alias)
+  (let* ((ctx (##compilation-ctx))
+         (module-aliases (macro-compilation-ctx-module-aliases (##compilation-ctx))))
+    (macro-compilation-ctx-module-aliases-set!
+     ctx
+     (##extend-module-aliases alias module-aliases))))
+
+(define (##extend-module-aliases alias module-aliases)
+  (##cons alias module-aliases))
+
 (define (##make-meta-info)
   (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
 
