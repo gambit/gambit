@@ -857,6 +857,7 @@ ___mod_or_lnk (*linker)();)
             case '~':
               {
                 ___UCS_2STRING dir;
+                ___UCS_2STRING after_tilde;
                 ___UCS_2 c;
 
                 if (*arg++ != '~')
@@ -865,7 +866,8 @@ ___mod_or_lnk (*linker)();)
                     goto after_setup;
                   }
 
-                s = arg;
+                after_tilde = arg;
+                s = after_tilde;
 
                 while ((c = *s++) != '=')
                   if (!is_alpha_or_digit (c))
@@ -880,8 +882,6 @@ ___mod_or_lnk (*linker)();)
                     goto after_setup;
                   }
 
-                s = arg; /* for testing ~~=... pattern */
-
                 if ((dir = extract_string (&arg)) == 0)
                   {
                     e = ___FIX(___HEAP_OVERFLOW_ERR);
@@ -892,10 +892,10 @@ ___mod_or_lnk (*linker)();)
 
                 gambitdir_map_len++;
 
-                if (s[-2] != '~')
+                if (after_tilde[0] != '=')
                   break;
 
-                arg = s+1; /* also set gambitdir on ~~=... */
+                arg = after_tilde+1; /* also set gambitdir on ~~=... */
 
                 /* fall through to next case */
               }
