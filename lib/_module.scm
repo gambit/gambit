@@ -80,13 +80,19 @@
 
 (define ##module-path-sep #\/)
 
-(define-prim (##parse-module-ref str-or-src)
-  (let ((x (##parse-module-ref-possibly-relative str-or-src)))
+(define-prim (##parse-module-ref
+              str-or-src
+              #!optional
+              (allow-empty-path? #f))
+  (let ((x (##parse-module-ref-possibly-relative str-or-src allow-empty-path?)))
     (and x
          (##fx= (##car x) 0)
          (##cdr x))))
 
-(define-prim (##parse-module-ref-possibly-relative str-or-src)
+(define-prim (##parse-module-ref-possibly-relative
+              str-or-src
+              #!optional
+              (allow-empty-path? #f))
 
   (define (valid-module-ref-part? x)
     (or (##symbol? x)
@@ -161,28 +167,33 @@
            (valid-components? x 'host)))) ;; and valid host components
 
   (define (parse-rest-with-tag nb-dots tag rev-parts)
-    (and (##pair? rev-parts)
-         (let loop ((prev2 #f) (prev1 #f) (curr rev-parts))
-           (let ((part (##car curr))
-                 (next (##cdr curr)))
-             (if (##pair? next)
-                 (and (valid-component? part 'path)
-                      (loop prev1 curr next))
-                 (if (and (##fx= nb-dots 0) ;; hosted module?
-                          prev2
-                          (valid-host-name? part))
-                     (begin
-                       (##set-cdr! prev2 '()) ;; terminate path
-                       (cons nb-dots
-                             (macro-make-modref prev1 ;; account and host name
-                                                tag
-                                                rev-parts)))
-                     (and (valid-component? part 'path)
-                          (##not tag) ;; must not have a tag
-                          (cons nb-dots
-                                (macro-make-modref #f
-                                                   tag
-                                                   rev-parts)))))))))
+
+    (define (done host)
+      (and (or (##pair? rev-parts)
+               allow-empty-path?)
+           (##cons nb-dots
+                   (macro-make-modref host
+                                      tag
+                                      rev-parts))))
+
+    (if (##pair? rev-parts)
+        (let loop ((prev2 #f) (prev1 #f) (curr rev-parts))
+          (let ((part (##car curr))
+                (next (##cdr curr)))
+            (if (##pair? next)
+                (and (valid-component? part 'path)
+                     (loop prev1 curr next))
+                (if (and (##fx= nb-dots 0) ;; hosted module?
+                         (valid-host-name? part))
+                    (and prev1
+                         (begin
+                           (if prev2
+                               (##set-cdr! prev2 '()) ;; terminate path
+                               (set! rev-parts '()))
+                           (done prev1)))
+                    (and (valid-component? part 'path)
+                         (done #f))))))
+        (done #f)))
 
   (define (parse-rest nb-dots rev-parts)
     (if (##pair? rev-parts)
@@ -196,8 +207,11 @@
                    (and (valid-component? tag 'tag)
                         (parse-rest-with-tag nb-dots
                                              tag
-                                             (##cons (##cadr x)
-                                                     (##cdr rev-parts))))))
+                                             (let ((name (##cadr x))
+                                                   (tail (##cdr rev-parts)))
+                                               (if (##string=? name "")
+                                                   tail
+                                                   (##cons name tail)))))))
                 (else
                  (parse-rest-with-tag nb-dots
                                       #f
@@ -297,14 +311,14 @@
             (macro-modref-tag modref))
            (rpath
             (macro-modref-rpath modref)))
-      (if host
-
+      (if (or host tag)
           (search rpath
                   (butlast rpath)
                   (join (##list (##string-append "@" (or tag "")))
                         (##path-expand (last rpath)
-                                       (join host
-                                             dir)))
+                                       (if host
+                                           (join host dir)
+                                           dir)))
                   check-mod)
 
           (search rpath
@@ -762,7 +776,9 @@
            src
            -1
            (lambda srcs
-             (##fold
+             (##append
+              module-aliases
+              (##fold
                (lambda (decl-src base)
                  (let ((decl (##source-strip decl-src)))
                    (and (##pair? decl)
@@ -773,34 +789,45 @@
                             base))
 
                           (else base)))))
-               module-aliases
-               srcs))))
+               '()
+               srcs)))))
         module-aliases)))
 
 (define (##apply-module-alias modref module-alias)
  (let* ((in (##car module-alias))
         (in-host (macro-modref-host in))
         (in-tag (macro-modref-tag in))
+        (in-rpath (macro-modref-rpath in))
+
         (out (##cdr module-alias))
         (out-host (macro-modref-host out))
-        (out-tag (macro-modref-tag out)))
+        (out-tag (macro-modref-tag out))
+        (out-rpath (macro-modref-rpath out)))
 
-   (and (##equal? (macro-modref-host modref) in-host)
-        (if (or in-tag (##not out-host))
-            (##equal? (macro-modref-tag modref) in-tag)
-            #t)
-        (let loop ((spath (##reverse (macro-modref-rpath modref)))
-                   (ipath (##reverse (macro-modref-rpath in))))
-          (if (##pair? ipath)
-            (and (##pair? spath)
-                 (##string=? (##car spath) (##car ipath))
-                 (loop (##cdr spath) (##cdr ipath)))               ;; prefix of spath matches so append rest of spath to alias
-              (macro-make-modref
-               out-host
-               (and out-host
-                    (or out-tag (macro-modref-tag modref)))
-               (##append (##reverse spath)
-                         (macro-modref-rpath out))))))))
+   (if (and (##not out-host) out-tag (##null? out-rpath)
+            (##not in-tag) (##pair? in-rpath)
+            (##equal? (macro-modref-host modref) in-host)
+            (##equal? (macro-modref-rpath modref) in-rpath))
+       (macro-make-modref
+         in-host
+         out-tag
+         in-rpath)
+
+       (and (##equal? (macro-modref-host modref) in-host)
+            (if in-tag
+                (##equal? (macro-modref-tag modref) in-tag)
+                #t)
+            (let loop ((spath (##reverse (macro-modref-rpath modref)))
+                       (ipath (##reverse (macro-modref-rpath in))))
+              (if (##pair? ipath)
+                (and (##pair? spath)
+                     (##string=? (##car spath) (##car ipath))
+                     (loop (##cdr spath) (##cdr ipath)))               ;; prefix of spath matches so append rest of spath to alias
+                  (macro-make-modref
+                   out-host
+                   (or out-tag (macro-modref-tag modref))
+                   (##append (##reverse spath)
+                             (macro-modref-rpath out)))))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -812,11 +839,11 @@
        'ill-formed-define-module-alias
        src))
 
-    (define (module-alias->modref alias)
+    (define (module-alias->modref alias allow-empty-path?)
       (cond
         ((or (##symbol? alias)
              (##pair? alias))
-         (let ((modref (##parse-module-ref alias)))
+         (let ((modref (##parse-module-ref alias allow-empty-path?)))
            (if (macro-modref? modref)
                modref
                (ill-formed-define-module-alias))))
@@ -829,8 +856,8 @@
       (lambda (name-src value-src)
         (let* ((name (##desourcify name-src))
                (value (##desourcify value-src))
-               (name-modref (module-alias->modref name))
-               (value-modref (module-alias->modref value)))
+               (name-modref (module-alias->modref name #f))
+               (value-modref (module-alias->modref value #t)))
 
           ;;; TODO: make and abstraction to alias
           (##cons name-modref value-modref))))))
@@ -887,13 +914,14 @@
 
                     (module-aliases (##extend-aliases-from-rpath rpath root))
 
-                    (alias (##assoc modref module-aliases))
-
                     (modref-alias
-                      (or
-                        (and alias (##apply-module-alias modref alias))
-                        ;; Not aliased
-                        modref))
+                      (let loop ((mod modref)
+                                 (rest module-aliases))
+                        (if (pair? rest)
+                            (let ((alias (car rest)))
+                              (loop (or (##apply-module-alias mod alias) mod)
+                                    (cdr rest)))
+                            mod)))
 
                     (mod-info
                      (##search-or-else-install-and-build-module modref-alias)))
