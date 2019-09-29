@@ -829,9 +829,12 @@
                        (ill-formed-library-name)
                        modstr)))
 
-                 (modref-alias (let ((modref (##parse-module-ref import-name-path)))
+                 (modref-alias (let* ((modref (##parse-module-ref import-name-path))
+                                      (alias (##assoc modref module-aliases)))
                                  ;(if modref
-                                    (##apply-module-alias modref module-aliases)
+                                    (or (and alias (##apply-module-alias modref alias))
+                                        modref)
+
 
                                     #;(##raise-expression-parsing-exception
                                      'ill-formed-import-set

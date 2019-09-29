@@ -12,7 +12,6 @@
   implementer: implement-type-modref
   macros:
   prefix: macro-
-  opaque:
   unprintable:
 
   host   ;; #f or list: (account host)
