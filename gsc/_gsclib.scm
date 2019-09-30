@@ -341,34 +341,6 @@
                   "target compilation or link failed while compiling"
                   (##list filename))))))))
 
-(define (##pkg-config mod #!optional (option (macro-absent-obj)))
-
-  (define pkg-options
-    '((cflags . "--cflags")
-      (libs . "--libs")))
-
-  (define (run-pkg-config args)
-    (##call-with-input-process
-     (list path: "pkg-config"
-            arguments: args
-            stdout-redirection: #t
-            stderr-redirection: #t)
-      (lambda (port)
-        (and (##fx= (##process-status port) 0)
-             (##read-line port)))))
-
-  (macro-force-vars (mod option)
-    (if (##eq? option (macro-absent-obj))
-        (run-pkg-config (##list "--cflags" "--libs" mod))
-        (let ((opt (cond ((##assq option pkg-options) => ##cdr) (else #f))))
-          (and opt (run-pkg-config (##list opt mod)))))))
-
-(define (##call-build-script path target options)
-  (and (##file-exists? path)
-       ;; TODO: pass context variable to script
-       (##eval `(let () (include ,path)))))
-
-
 (define (##build-module path target options)
   (let* ((module-dir
           (##path-normalize (##path-directory path)))
