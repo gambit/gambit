@@ -55,8 +55,8 @@
 
   (message read-only: no-functional-setter:))
 
-(define-macro (default-install-prefix)
-  `(path-expand "~~userlib"))
+(define (default-installation-directory)
+  (path-expand "~~userlib"))
 
 ;; Protocols
 (define (https-proto mod)
@@ -117,7 +117,7 @@
   (macro-force-vars (mod to p? p)
     (let ((repo-path (if (or (eq? to (macro-absent-obj))
                              (eq? to #f))
-                         (default-install-prefix)
+                         (default-installation-directory)
                          to))
           (prompt? (if (eq? p? (macro-absent-obj))
                        #f
@@ -213,7 +213,7 @@
   (macro-force-vars (module t)
     (let ((to (if (or (eq? t (macro-absent-obj))
                       (eq? t #f))
-                  (default-install-prefix)
+                  (default-installation-directory)
                   t)))
       (macro-check-string
         module
@@ -251,7 +251,7 @@
   (macro-force-vars (mod t)
     (let ((to (if (or (eq? t (macro-absent-obj))
                       (eq? t #f))
-                (default-install-prefix)
+                (default-installation-directory)
                 t)))
 
       (macro-check-string
@@ -280,7 +280,7 @@
       (usage)
       (let loop ((rest (cdr args))
                  (arg (car args))
-                 (to (path-expand "~~userlib")))
+                 (to (default-installation-directory)))
         (cond
          ((string=? arg "-to")
           (if (or (null? rest) (null? (cdr rest)))
@@ -302,7 +302,7 @@
       (usage)
       (let loop ((rest (cdr args))
                  (arg (car args))
-                 (to "~~userlib"))
+                 (to (default-installation-directory)))
         (cond
          ((string=? arg "-to")
           (if (or (null? rest) (null? (cdr rest)))
@@ -329,7 +329,7 @@
     (usage)
     (let loop ((rest (cdr args))
                (arg (car args))
-               (to "~~userlib"))
+               (to (default-installation-directory)))
       (cond ((string=? arg "-to")
              (if (or (null? rest) (null? (cdr rest)))
                  (usage)
