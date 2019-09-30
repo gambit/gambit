@@ -961,9 +961,9 @@
 (define (macro-expand source env)
   (let ((code (source-code source)))
     (let* ((descr (env-lookup-macro env (source-code (car code))))
-           (expander (##macro-descr-expander descr)))
-      (##sourcify-deep
-       (if (##macro-descr-def-syntax? descr)
+           (expander (**macro-descr-expander descr)))
+      (sourcify-deep
+       (if (**macro-descr-def-syntax? descr)
            (expander source)
            (apply expander (cdr (source->expression source))))
        source))))
@@ -2140,7 +2140,7 @@
            (and descr
                 (let ((len (proper-length code)))
                   (if len
-                    (let ((size (##macro-descr-size descr)))
+                    (let ((size (**macro-descr-size descr)))
                       (or (if (> size 0) (= len size) (>= len (- size)))
                           (ill-formed-special-form source)))
                     (ill-formed-special-form source))))))))
@@ -2778,7 +2778,7 @@
             (pt-syntax-error proc "Macro expander must be a procedure")
             (env-macro env
                        (source-code var)
-                       (##make-macro-descr def-syntax? size expander proc)))))
+                       (**make-macro-descr def-syntax? size expander proc)))))
 
     (let* ((var (definition-name source env))
            (proc (definition-value source)))

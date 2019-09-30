@@ -204,8 +204,8 @@
              (if output-filename
                  (path-strip-extension output-filename)
                  (let ((filename
-                        (if (##source? input)
-                            (##source-path input)
+                        (if (source? input)
+                            (source-path input)
                             input)))
                    (path-strip-directory (path-strip-extension filename)))))
          (output
@@ -213,8 +213,8 @@
               output-filename
               (string-append root (caar target.file-extensions))))
          (v1
-          (if (##source? input)
-              (vector #f (##sourcify-deep input input))
+          (if (source? input)
+              (vector #f (sourcify-deep input input))
               (read-source input #f #t)))
          (script-line (vector-ref v1 0))
          (expr (vector-ref v1 1))
@@ -224,13 +224,13 @@
                 (else
                  (string->symbol (path-strip-directory root))))))
 
-    (##call-with-values
+    (call-with-values
      (lambda ()
-       (##in-new-compilation-ctx
+       (**in-new-compilation-ctx
         (lambda ()
           (if script-line
-              (##compilation-ctx-meta-info-add! 'script-line script-line))
-          (##compilation-ctx-module-ref-set! module-ref)
+              (**compilation-ctx-meta-info-add! 'script-line script-line))
+          (**compilation-ctx-module-ref-set! module-ref)
           (parse-program
            program
            (make-global-environment)
@@ -238,8 +238,8 @@
            values))))
      (lambda (v2 comp-ctx)
 
-       (if (null? (macro-compilation-ctx-supply-modules comp-ctx))
-           (macro-compilation-ctx-supply-modules-set!
+       (if (null? (**macro-compilation-ctx-supply-modules comp-ctx))
+           (**macro-compilation-ctx-supply-modules-set!
             comp-ctx
             (list module-ref)))
 
@@ -329,12 +329,12 @@
                    (set! dependency-graph (make-table 'test: eq?)))
 
                (let* ((meta-info
-                       (##meta-info->alist
-                        (macro-compilation-ctx-meta-info comp-ctx)))
+                       (**meta-info->alist
+                        (**macro-compilation-ctx-meta-info comp-ctx)))
                       (supply-modules
-                       (macro-compilation-ctx-supply-modules comp-ctx))
+                       (**macro-compilation-ctx-supply-modules comp-ctx))
                       (demand-modules
-                       (macro-compilation-ctx-demand-modules comp-ctx))
+                       (**macro-compilation-ctx-demand-modules comp-ctx))
                       (module-procs
                        (compile-parsed-program (car (last-pair supply-modules))
                                                parsed-program
@@ -379,7 +379,7 @@
                          output
                          c-intf
                          module-descr
-                         (or (cond ((##assq 'linker-name opts) => ##cadr)
+                         (or (cond ((assq 'linker-name opts) => cadr)
                                    (else #f))
                              (symbol->string
                               (vector-ref supply-modules
