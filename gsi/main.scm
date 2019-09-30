@@ -396,28 +396,24 @@
                       (define (do-build-module module-ref modref opts)
                         (let ((mod-info (##search-or-else-install-module modref)))
                           (if mod-info
-                            (let ((mod-dir            (##vector-ref mod-info 0))
-                                  (mod-filename-noext (##vector-ref mod-info 1))
-                                  (ext                (##vector-ref mod-info 2))
-                                  (mod-path           (##vector-ref mod-info 3))
-                                  (port               (##vector-ref mod-info 4)))
 
-                              ;; close unused port.
-                              (##close-input-port port)
+                              (let ((mod-dir            (##vector-ref mod-info 0))
+                                    (mod-filename-noext (##vector-ref mod-info 1))
+                                    (ext                (##vector-ref mod-info 2))
+                                    (mod-path           (##vector-ref mod-info 3))
+                                    (port               (##vector-ref mod-info 4)))
 
-                              (handling-module module-ref)
+                                ;; close unused port.
+                                (##close-input-port port)
 
-                              (let ((result
-                                      (##call-build-script
-                                       (path-expand "_build_.scm" mod-dir)
-                                       target options)))
-                                (if (##not result)
-                                  (##build-module
-                                   mod-path
-                                   (c#target-name target)
-                                   (##cons
-                                    (##list 'module-ref (##string->symbol module-ref))
-                                    opts)))))
+                                (handling-module module-ref)
+
+                                (##build-module
+                                 mod-path
+                                 (c#target-name target)
+                                 (##cons
+                                  (##list 'module-ref (##string->symbol module-ref))
+                                  opts)))
 
                             (##error (##string-append "Module not found '" module-ref "'")))))
 
