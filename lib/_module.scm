@@ -507,7 +507,7 @@
                      demand-modules
                      meta-info
                      code))
-                   (pp (list 'code-parent= (##subvector (##vector-copy (macro-code-parent code)) 0 3)))
+                   ;;(pp (list 'code-parent= (##subvector (##vector-copy (macro-code-parent code)) 0 3)))
                    (##register-module-descrs (##vector module-descr))
                    (or (##lookup-registered-module module-ref)
                        (err)))))))))
