@@ -2596,17 +2596,21 @@
           (cond ((##fixnum? dir)
                  (err dir))
                 (dir
-                 (expand relpath
-                         (expand dir cd)))
+                 (let ((expanded-dir
+                        (##path-expand-in-initial-current-directory dir)))
+                   (expand relpath
+                           expanded-dir)))
                 (else
                  (let ((dir (##os-path-gambitdir)))
-                   (cond ((##fixnum? dir)
-                          (err dir))
-                         ((##fx= 0 (##string-length instdir-name))
-                          (expand relpath dir))
-                         (else
-                          (expand relpath
-                                  (expand instdir-name dir)))))))))
+                   (if (##fixnum? dir)
+                       (err dir)
+                       (let ((expanded-dir
+                              (##path-expand-in-initial-current-directory dir)))
+                         (expand relpath
+                                 (if (##fx= 0 (##string-length instdir-name))
+                                     expanded-dir
+                                     (expand instdir-name
+                                             expanded-dir))))))))))
 
       (let ((t-end (tilde-end)))
         (if (##fx< 0 t-end)
@@ -2654,6 +2658,9 @@
                   (absolute vol-end dir-sep?))))))
 
     (expand path (if (##eq? origin (macro-absent-obj)) #f origin))))
+
+(define-prim (##path-expand-in-initial-current-directory path)
+  (##path-expand path ##initial-current-directory))
 
 (define-prim (path-expand
               path

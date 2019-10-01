@@ -311,19 +311,22 @@
 (define current-error-port
   ##current-error-port)
 
+(define ##initial-current-directory
+  (let ((current-dir
+         (##os-path-normalize-directory #f)))
+    (if (##fixnum? current-dir)
+        (##exit-with-err-code current-dir)
+        current-dir)))
+
 (define-prim (##current-directory-filter val)
   (if (##eq? val (macro-absent-obj))
-    (let ((current-dir
-           (##os-path-normalize-directory #f)))
-      (if (##fixnum? current-dir)
-        (##exit-with-err-code current-dir)
-        current-dir))
-    (macro-check-string val 1 (##current-directory val)
-      (let ((normalized-dir
-             (##os-path-normalize-directory (##path-expand val))))
-        (if (##fixnum? normalized-dir)
-          (##raise-os-exception #f normalized-dir ##current-directory val)
-          normalized-dir)))))
+      ##initial-current-directory
+      (macro-check-string val 1 (##current-directory val)
+        (let ((normalized-dir
+               (##os-path-normalize-directory (##path-expand val))))
+          (if (##fixnum? normalized-dir)
+              (##raise-os-exception #f normalized-dir ##current-directory val)
+              normalized-dir)))))
 
 (define ##current-directory
   (##make-parameter
@@ -5599,19 +5602,22 @@
 (define current-error-port
   ##current-error-port)
 
+(define ##initial-current-directory
+  (let ((current-dir
+         (##os-path-normalize-directory #f)))
+    (if (##fixnum? current-dir)
+        (##exit-with-err-code current-dir)
+        current-dir)))
+
 (define-prim (##current-directory-filter val)
   (if (##eq? val (macro-absent-obj))
-    (let ((current-dir
-           (##os-path-normalize-directory #f)))
-      (if (##fixnum? current-dir)
-        (##exit-with-err-code current-dir)
-        current-dir))
-    (macro-check-string val 1 (##current-directory val)
-      (let ((normalized-dir
-             (##os-path-normalize-directory (##path-expand val))))
-        (if (##fixnum? normalized-dir)
-          (##raise-os-exception #f normalized-dir ##current-directory val)
-          normalized-dir)))))
+      ##initial-current-directory
+      (macro-check-string val 1 (##current-directory val)
+        (let ((normalized-dir
+               (##os-path-normalize-directory (##path-expand val))))
+          (if (##fixnum? normalized-dir)
+              (##raise-os-exception #f normalized-dir ##current-directory val)
+              normalized-dir)))))
 
 (define ##current-directory
   (##make-parameter
