@@ -80,9 +80,9 @@ infodir="$(infodir)" emacsdir="$(emacsdir)"
 
 SUBDIRS = include lib gsi gsc bin misc doc tests examples contrib prebuilt bench githooks
 
-RCFILES = README INSTALL.txt LICENSE-2.0.txt LGPL.txt \
+RCFILES = README README.md INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
-relpath gsc-boot.unix gsc-boot.bat.windows
+relpath gsc-boot.unix gsc-boot.bat.windows .travis.yml appveyor.yml
 
 GITRCFILES = .gitignore .gitattributes
 HGRCFILES = .hgignore .hgtags
