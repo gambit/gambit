@@ -944,7 +944,7 @@
                       #f ;; module-ref
                       '())) ;; module-aliases
              (result
-              (parameterize ((**compilation-ctx comp-ctx)) thunk)))
+              (parameterize ((**compilation-ctx comp-ctx)) (thunk))))
         (values result
                 comp-ctx))
 
