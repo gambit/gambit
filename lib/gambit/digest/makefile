@@ -4,7 +4,7 @@ herefromlib = gambit/digest
 libfromhere = ../..
 SUBDIRS =
 HEADERS_SCM = digest\#.scm
-MODULES_SCM = digest.scm
+MODULES_SCM = digest.scm digest-test.scm
 MAIN_MODULES = digest
 OTHER_RCFILES = makefile
 

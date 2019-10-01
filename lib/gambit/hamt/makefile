@@ -4,7 +4,7 @@ herefromlib = gambit/hamt
 libfromhere = ../..
 SUBDIRS = primitive-hamt
 HEADERS_SCM = hamt\#.scm
-MODULES_SCM = hamt.scm
+MODULES_SCM = hamt.scm hamt-test.scm
 MAIN_MODULES = hamt
 OTHER_RCFILES = makefile
 

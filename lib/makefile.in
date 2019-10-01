@@ -220,7 +220,7 @@ RCFILES = makefile.in module-common.mk.in header.scm $(MODULES_SCM) sys.scm \
 $(LIBRARIES_SCM) $(NORMAL_SOURCES) check___P check___P.st \
 psyntax69c.pp psyntax69c.ss psyntax73.pp psyntax73.ss \
 syntax-case-build syntax-case-expand-file \
-syntax-case-postlude.scm syntax-case-prelude.scm
+syntax-case-postlude.scm syntax-case-prelude.scm _univlib.scm
 
 GAMBIT_LIB_C = _$(GAMBITLIB).c
 

@@ -4,7 +4,7 @@ herefromlib = gambit/uri
 libfromhere = ../..
 SUBDIRS =
 HEADERS_SCM = uri\#.scm
-MODULES_SCM = uri.scm
+MODULES_SCM = uri.scm uri-test.scm
 MAIN_MODULES = uri
 OTHER_RCFILES = makefile
 
