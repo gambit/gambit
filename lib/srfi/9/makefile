@@ -1,11 +1,11 @@
 # Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
-herefromlib = srfi
-libfromhere = ..
-SUBDIRS = 0 4 6 8 9 23 28 69 132
-HEADERS_SCM =
-MODULES_SCM =
-MAIN_MODULES =
+herefromlib = srfi/9
+libfromhere = ../..
+SUBDIRS =
+HEADERS_SCM = 9\#.scm
+MODULES_SCM = 9.scm 9.sld 9-test.scm
+MAIN_MODULES = 9
 OTHER_RCFILES = makefile
 
 include $(libfromhere)/module-common.mk
