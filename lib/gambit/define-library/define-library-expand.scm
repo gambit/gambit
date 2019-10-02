@@ -106,13 +106,14 @@
     (split-path 0 '())))
 
 (define (get-libdef modref modref-str reference-src)
+
   (define (err src)
     (##raise-expression-parsing-exception
      'cannot-find-library
      src
      (##desourcify src)))
 
-  (let ((mod-info (##search-or-else-install-and-build-module modref)))
+  (let ((mod-info (##search-or-else-install-module modref #t)))
     (if mod-info
       (let ((mod-dir            (##vector-ref mod-info 0))
             (mod-filename-noext (##vector-ref mod-info 1))

@@ -209,6 +209,9 @@
                                     (warn-unknown-option option-name)
                                     (loop1 rest
                                            nb-output-files)))))
+                          ((##module-search-directory? file)
+                           (loop1 rest
+                                  nb-output-files))
                           ((obj-file? file)
                            (loop1 rest
                                   nb-output-files))
@@ -395,40 +398,39 @@
                              meta-info-file)
                             (exit-abnormally)))
 
-                      (define (do-build-module module-ref modref opts)
-                        (let ((mod-info (##search-or-else-install-module modref)))
-                          (if mod-info
+                      (define (do-build-module-or-file module-or-file opts output)
 
-                              (let ((mod-dir            (##vector-ref mod-info 0))
-                                    (mod-filename-noext (##vector-ref mod-info 1))
-                                    (ext                (##vector-ref mod-info 2))
-                                    (mod-path           (##vector-ref mod-info 3))
-                                    (port               (##vector-ref mod-info 4)))
+                        (define (build-file)
+                          (do-compile-file module-or-file opts output))
 
-                                ;; close unused port.
-                                (##close-input-port port)
+                        (let ((modref (##parse-module-ref module-or-file)))
+                          (if (##not modref)
 
-                                (handling-module module-ref)
+                              (build-file)
 
-                                (##build-module
-                                 mod-path
-                                 (c#target-name target)
-                                 (##cons
-                                  (##list 'module-ref (##string->symbol module-ref))
-                                  opts)))
+                              (let ((mod-info
+                                     (##search-or-else-install-module modref #f)))
+                                (if mod-info
+                                    (let ((mod-dir            (##vector-ref mod-info 0))
+                                          (mod-filename-noext (##vector-ref mod-info 1))
+                                          (ext                (##vector-ref mod-info 2))
+                                          (mod-path           (##vector-ref mod-info 3))
+                                          (port               (##vector-ref mod-info 4)))
 
-                            (##error (##string-append "Module not found '" module-ref "'")))))
+                                      ;; close unused port.
+                                      (##close-input-port port)
 
+                                      (handling-module module-or-file)
 
-                      (define (do-build-file-or-module file opts output)
-                        (let* ((modref (##parse-module-ref file))
-                               (module? (and modref
-                                             (##fx= 0 (##string-length
-                                                       (##path-extension
-                                                        (##car (##vector-ref modref 3))))))))
-                          (if module?
-                            (do-build-module file modref opts)
-                            (do-compile-file file opts output))))
+                                      (##build-module
+                                       mod-path
+                                       (c#target-name target)
+                                       (##cons
+                                        (##list 'module-ref
+                                                (##string->symbol module-or-file))
+                                        opts)))
+
+                                    (build-file))))))
 
                       (let loop2 ((lst arguments))
                         (if (##pair? lst)
@@ -457,7 +459,10 @@
                                           (else
                                            (loop2 rest))))
                                   (let ((root (##path-strip-extension file)))
-                                    (cond ((target-file? file)
+                                    (cond ((##module-search-directory? file)
+                                           (##module-search-order-add! file)
+                                           (loop2 rest))
+                                          ((target-file? file)
                                            (if (##memq type '(exe obj))
                                                (let ((obj-file
                                                       (do-compile-file
@@ -482,7 +487,7 @@
                                           (else
                                            (case type
                                              ((dyn)
-                                              (do-build-file-or-module
+                                              (do-build-module-or-file
                                                file
                                                options
                                                output))

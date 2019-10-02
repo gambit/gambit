@@ -14,11 +14,8 @@
 
 (define ##module-search-order (##os-module-search-order))
 
-(define-prim (##module-search-order-set! x)
-  (set! ##module-search-order x))
-
 (define-prim (##module-search-order-add! dir)
-  (##module-search-order-set! (##cons dir ##module-search-order)))
+  (set! ##module-search-order (##cons dir ##module-search-order)))
 
 (define-prim (##module-search-directory? str)
   (let ((len (##string-length str)))
@@ -50,6 +47,7 @@
         name)))
 
 (define (##modref->path modref full?)
+
   (define (last lst)
     (if (pair? (cdr lst))
       (last (cdr lst))
@@ -279,11 +277,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##search-module-aux
-              modref
-              check-mod
-              #!optional
-              (search-order ##module-search-order))
+(define-prim (##search-module-aux modref check-mod search-order)
 
   (define (last lst)
     (if (##pair? (##cdr lst))
@@ -321,6 +315,7 @@
            (rpath
             (macro-modref-rpath modref)))
       (if (or host tag)
+
           (search rpath
                   (butlast rpath)
                   (join (##list (##string-append "@" (or tag "")))
@@ -620,14 +615,7 @@
 (define-prim (##search-or-else-install-module
               modref
               #!optional
-              (search-order ##module-search-order))
-  (or (##search-module modref search-order)
-      (and (##install-module modref)
-           (##search-module modref search-order))))
-
-(define-prim (##search-or-else-install-and-build-module
-              modref
-              #!optional
+              (build? #f)
               (search-order ##module-search-order))
 
   (define (install-dir name rest)
@@ -636,11 +624,11 @@
           (##cons (##string-append "~~" name "=" dir) rest)
           rest)))
 
-  (define (compile-module-from-name modref)
+  (define (build-module modref)
     (let (#;(build-module (##global-var-ref
                          (##make-global-var '##build-module)))
           (modstr (##modref->string modref)))
-      (if ##debug-modules? (pp (##list 'compile-module-from-name modstr)))
+      (if ##debug-modules? (pp (##list 'build-module modstr)))
 
       (##call-with-output-process
         (##list path: (##path-expand "gsc-script" (##path-expand "~~bin"))
@@ -663,7 +651,7 @@
 
   (or (##search-module modref search-order)
       (and (##install-module modref)
-           (compile-module-from-name modref)
+           (or (##not build?) (build-module modref))
            (##search-module modref search-order))))
 
 (##get-module-set!
@@ -678,7 +666,7 @@
        (let ((modref (##parse-module-ref (##symbol->string module-ref))))
          (if (##not modref)
              (err)
-             (let ((mod-info (##search-or-else-install-and-build-module modref)))
+             (let ((mod-info (##search-or-else-install-module modref #t)))
                (if mod-info ;; found module?
                    (##get-module-from-file module-ref modref mod-info)
                    (err))))))))
@@ -723,11 +711,7 @@
               ;; module is in the registered module table, so load it
               (##load-module (macro-module-module-ref mod))
 
-              (let ((mod-info
-                     (##search-or-else-install-module
-                      modref
-                      (##cons ##initial-current-directory
-                              ##module-search-order))))
+              (let ((mod-info (##search-or-else-install-module modref #f)))
                 (if mod-info
 
                     ;; module was found somewhere in the module search order
@@ -968,7 +952,7 @@
                             mod)))
 
                     (mod-info
-                     (##search-or-else-install-and-build-module modref-alias)))
+                     (##search-or-else-install-module modref-alias #t)))
 
                (if (##not mod-info)
                    (##raise-expression-parsing-exception
