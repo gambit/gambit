@@ -53,12 +53,12 @@
                (batch-mode? #f)
                (load-options '()))
       (if (##pair? lst)
-        (let ((file
+        (let ((arg
                (##car lst))
               (rest
                (##cdr lst)))
-          (if (option? file)
-            (let ((option-name (convert-option file)))
+          (if (option? arg)
+            (let ((option-name (convert-option arg)))
               (cond ((##eq? option-name '||)
                      (##repl-debug #f #t)
                      (loop rest
@@ -115,7 +115,9 @@
                           (set! ##processed-command-line
                             (##cons script-path rest)))))))
 
-              (##load-module-or-file file load-options script-callback)
+              (if (##module-search-directory? arg)
+                  (##module-search-order-add! arg)
+                  (##load-module-or-file arg load-options script-callback))
 
               (if starter
                 (starter)

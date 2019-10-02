@@ -17,6 +17,15 @@
 (define-prim (##module-search-order-set! x)
   (set! ##module-search-order x))
 
+(define-prim (##module-search-order-add! dir)
+  (##module-search-order-set! (##cons dir ##module-search-order)))
+
+(define-prim (##module-search-directory? str)
+  (let ((len (##string-length str)))
+    (and (##fx>= len 1)
+         (or (##char=? (##string-ref str (##fx- len 1)) #\.)
+             (##string=? (##path-strip-directory str) "")))))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##modref->string modref #!optional (namespace? #f))
@@ -329,7 +338,7 @@
   (let loop ((lst search-order))
     (and (##pair? lst)
          (let ((search-in (##car lst)))
-           (or (search-dir (##path-expand search-in))
+           (or (search-dir (##path-expand-in-initial-current-directory search-in))
                (loop (##cdr lst)))))))
 
 (define-prim (##search-module
@@ -660,8 +669,8 @@
               (load-options '())
               (script-callback (lambda (script-line script-path) #f)))
 
-  (define (fallback)
-    (after-file-load
+  (define (load-file)
+    (after-load
      (##load module-or-file
              script-callback
              #t  ;; clone-cte?
@@ -670,7 +679,7 @@
              #f) ;; quiet?
      module-or-file))
 
-  (define (after-file-load result path)
+  (define (after-load result path)
     (if (##memq 'test load-options)
         (##load (##string-append (##path-strip-extension path) "-test")
                 (lambda (script-line script-path) #f)
@@ -682,16 +691,28 @@
 
   (let ((modref (##parse-module-ref module-or-file)))
     (if (##not modref)
-        (fallback)
+
+        ;; not a valid module-ref syntax, so load as a file
+        (load-file)
+
         (let* ((modstr (##modref->string modref))
                (module-ref (##string->symbol modstr))
                (mod (##lookup-registered-module module-ref)))
           (if mod
+
+              ;; module is in the registered module table, so load it
               (##load-module (macro-module-module-ref mod))
-              (let ((mod-info (##search-module
-                               modref
-                               (##cons "" ##module-search-order))))
-                (if mod-info ;; found module?
+
+              (let ((mod-info
+                     (##search-module
+                      modref
+                      (##cons ##initial-current-directory
+                              ##module-search-order))))
+                (if mod-info
+
+                    ;; module was found somewhere in the module search order
+                    ;; or in the initial current directory, so load it from
+                    ;; the filesystem
                     (let* ((mod
                             (##get-module-from-file module-ref
                                                     modref
@@ -705,10 +726,12 @@
                       (if x
                           (script-callback (##cdr x)
                                            (##vector-ref mod-info 3)))
-                      (after-file-load
+                      (after-load
                        (##load-module (macro-module-module-ref mod))
                        (##vector-ref mod-info 3)))
-                    (fallback))))))))
+
+                    ;; last resort is to load a file
+                    (load-file))))))))
 
 (define ##debug-modules? #f)
 
@@ -718,7 +741,8 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##search-setup-file
-              rpath root
+              rpath
+              root
               #!optional
               (alt-name (macro-absent-obj)))
   (define (try-open fn)
