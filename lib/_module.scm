@@ -617,12 +617,24 @@
 (define-prim (##install-module-set! x)
   (set! ##install-module x))
 
-(define-prim (##search-or-else-install-module modref)
-  (or (##search-module modref)
+(define-prim (##search-or-else-install-module
+              modref
+              #!optional
+              (search-order ##module-search-order))
+  (or (##search-module modref search-order)
       (and (##install-module modref)
-           (##search-module modref))))
+           (##search-module modref search-order))))
 
-(define-prim (##search-or-else-install-and-build-module modref)
+(define-prim (##search-or-else-install-and-build-module
+              modref
+              #!optional
+              (search-order ##module-search-order))
+
+  (define (install-dir name rest)
+    (let ((dir (##os-path-gambitdir-map-lookup name)))
+      (if dir
+          (##cons (##string-append "~~" name "=" dir) rest)
+          rest)))
 
   (define (compile-module-from-name modref)
     (let (#;(build-module (##global-var-ref
@@ -635,16 +647,24 @@
                 stdin-redirection: #f
                 stdout-redirection: #f
                 stderr-redirection: #f
-                arguments: (##list (##string-append "-:~~userlib=" (path-expand "~~userlib"))
-                                   "-target" (##symbol->string (macro-target)) modstr))
+                arguments:
+                (##list (##append-strings
+                         (##cons (##string-append "-:=" (##os-path-gambitdir))
+                                 (install-dir "lib"
+                                              (install-dir "userlib"
+                                                           '())))
+                         ",")
+                        "-target"
+                        (##symbol->string (macro-target))
+                        modstr))
         (lambda (pid)
           (let ((status (##process-status pid)))
             (##eq? status 0))))))
 
-  (or (##search-module modref)
+  (or (##search-module modref search-order)
       (and (##install-module modref)
            (compile-module-from-name modref)
-           (##search-module modref))))
+           (##search-module modref search-order))))
 
 (##get-module-set!
  (lambda (module-ref)
@@ -704,7 +724,7 @@
               (##load-module (macro-module-module-ref mod))
 
               (let ((mod-info
-                     (##search-module
+                     (##search-or-else-install-module
                       modref
                       (##cons ##initial-current-directory
                               ##module-search-order))))
