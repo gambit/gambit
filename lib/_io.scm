@@ -6178,7 +6178,7 @@
         (read-bytevector! u8vect port start end)
         (let ((p
                (if (##eq? port (macro-absent-obj))
-                   (macro-current-output-port)
+                   (macro-current-input-port)
                    port)))
           (macro-check-byte-input-port
             p
