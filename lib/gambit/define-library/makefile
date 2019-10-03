@@ -6,7 +6,7 @@ SUBDIRS =
 
 HEADERS_SCM = define-library\#.scm define-library-expand\#.scm
 
-MODULES_SCM = define-library.scm define-library-expand.scm \
+MODULES_SCM = define-library.scm define-library-expand.scm define-library-test.scm \
               syntaxboot.scm syntaxcasexformboot.scm syntaxcasexform.scm syntaxcommon.scm \
               syntaxpattern.scm syntaxrulesxform.scm syntax.scm syntaxtemplate.scm \
               syntaxxformboot.scm syntaxxform.scm withsyntaxboot.scm

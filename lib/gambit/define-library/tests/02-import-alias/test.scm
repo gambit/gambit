@@ -1,3 +1,0 @@
-
-(import (Module-C))
-(main)
