@@ -277,8 +277,12 @@
                     module-aliases))
 
                   ((cond-expand)
-                   ;;TODO: actually implement
-                   (parse-body ctx rest-srcs module-aliases))
+                   (let ((x (##cond-expand-build lib-decl-src args-srcs)))
+                     (parse-body
+                      ctx
+                      (append (cdr x) ;; get rid of "begin"
+                              rest-srcs)
+                      module-aliases)))
 
                   ((namespace) ;; extension to R7RS
                    (if (not (and (pair? args-srcs)
@@ -291,7 +295,7 @@
                           (##source-strip (car args-srcs)))
                          (parse-body ctx rest-srcs module-aliases))))
 
-                  ((pkg-config)
+                  ((pkg-config) ;; extension to R7RS
                    (if (not (and (pair? args-srcs)
                                  (string? (##source-strip (car args-srcs)))))
                      (library-decl-err)
@@ -305,7 +309,7 @@
                            (cdr args-srcs) library-decl-err))
                        (parse-body ctx rest-srcs module-aliases))))
 
-                  ((cc-options)
+                  ((cc-options) ;; extension to R7RS
                    (if (not (and (pair? args-srcs)
                                  (string? (##source-strip (car args-srcs)))))
                      (library-decl-err)
@@ -319,7 +323,7 @@
                            (cdr args-srcs) library-decl-err))
                        (parse-body ctx rest-srcs module-aliases))))
 
-                  ((ld-options-prelude)
+                  ((ld-options-prelude) ;; extension to R7RS
                    (if (not (and (pair? args-srcs)
                                  (string? (##source-strip (car args-srcs)))))
                      (library-decl-err)
@@ -333,7 +337,7 @@
                            (cdr args-srcs) library-decl-err))
                        (parse-body ctx rest-srcs module-aliases))))
 
-                  ((ld-options)
+                  ((ld-options) ;; extension to R7RS
                    (if (not (and (pair? args-srcs)
                                  (string? (##source-strip (car args-srcs)))))
                      (library-decl-err)
