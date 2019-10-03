@@ -907,78 +907,83 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim (##find-mod-info src arg-src)
+  (let ((modref (##parse-module-ref arg-src)))
+    (if (##not modref)
+
+        (##raise-expression-parsing-exception
+         'ill-formed-special-form
+         src
+         (##source-strip (##car (##source-strip src))))
+
+        (let* ((relative-to-path
+                (##source-path src))
+
+               (rpath
+                (if (##not relative-to-path)
+                    '()
+                    (##table-ref (##compilation-scope);;TODO: deprecated interface
+                                 '##modref-path
+                                 '())))
+
+               (root
+                ;; TODO: make this depend on the modref of the current code
+                (if (##not relative-to-path)
+                    (##current-directory)
+                    (##table-ref (##compilation-scope);;TODO: deprecated interface
+                                 '##module-root
+                                 (##path-directory relative-to-path))))
+
+               (module-aliases
+                (##extend-aliases-from-rpath rpath root))
+
+               (final-modref
+                (let loop1 ((mod modref))
+                  (let loop2 ((mod mod)
+                              (rest module-aliases))
+                    (if (##pair? rest)
+                        (let ((m (##apply-module-alias mod (##car rest))))
+                          (if m
+                              (loop1 m)
+                              (loop2 mod
+                                     (##cdr rest))))
+                        mod)))))
+
+          (##values (##search-or-else-install-module final-modref #t)
+                    (##string->symbol (##modref->string final-modref)))))))
+
 (define-runtime-syntax ##import
   (lambda (src)
     (##deconstruct-call
      src
      2
      (lambda (arg-src)
-       (let ((modref (##parse-module-ref arg-src)))
-         (if (##not modref)
-
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##source-strip (##car (##source-strip src))))
-
-             (let* ((relative-to-path
-                     (##source-path src))
-
-                    (rpath
-                     (if (##not relative-to-path)
-                         '()
-                         (##table-ref (##compilation-scope);;TODO: deprecated interface
-                                      '##modref-path
-                                      '())))
-
-                    (root
-                     ;; TODO: make this depend on the modref of the current code
-                     (if (##not relative-to-path)
-                         (##current-directory)
-                         (##table-ref (##compilation-scope);;TODO: deprecated interface
-                                      '##module-root
-                                      (##path-directory relative-to-path))))
-
-
-                    (module-aliases (##extend-aliases-from-rpath rpath root))
-
-                    (modref-alias
-                      (let loop ((mod modref)
-                                 (rest module-aliases))
-                        (if (pair? rest)
-                            (let ((alias (car rest)))
-                              (loop (or (##apply-module-alias mod alias) mod)
-                                    (cdr rest)))
-                            mod)))
-
-                    (mod-info
-                     (##search-or-else-install-module modref-alias #t)))
-
-               (if (##not mod-info)
-                   (##raise-expression-parsing-exception
-                    'module-not-found
-                    src
-                    (##desourcify arg-src))
-                   (let ((sharp-path
-                          (##path-normalize
-                           (##path-expand (##string-append
-                                           (##vector-ref mod-info 1)
-                                           "#"
-                                           (##car (##vector-ref mod-info 2)))
-                                          (##vector-ref mod-info 0))
-                           #f))
-                         (port
-                          (##vector-ref mod-info 4)))
-                     (if port
-                         (##close-port port))
-                     (let ((module-ref
-                            (##string->symbol
-                             (##modref->string modref-alias))))
-                       `(##begin
-                         ,@(if (##file-exists? sharp-path)
-                               `((##include ,sharp-path))
-                               `())
-                         (##demand-module ,module-ref))))))))))))
+       (##call-with-values
+        (lambda ()
+          (##find-mod-info src arg-src))
+        (lambda (mod-info module-ref)
+          (if (##not mod-info)
+              (##raise-expression-parsing-exception
+               'module-not-found
+               src
+               (##desourcify arg-src))
+              (let ((sharp-path
+                     (##path-normalize
+                      (##path-expand (##string-append
+                                      (##vector-ref mod-info 1)
+                                      "#"
+                                      (##car (##vector-ref mod-info 2)))
+                                     (##vector-ref mod-info 0))
+                      #f))
+                    (port
+                     (##vector-ref mod-info 4)))
+                (if port
+                    (##close-port port))
+                `(##begin
+                  ,@(if (##file-exists? sharp-path)
+                        `((##include ,sharp-path))
+                        `())
+                  (##demand-module ,module-ref))))))))))
 
 ;;;----------------------------------------------------------------------------
 

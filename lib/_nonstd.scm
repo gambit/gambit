@@ -308,6 +308,26 @@
                                 (loop (##cdr lst))
                                 (##not (##eq? first 'and))))
                           (##eq? first 'and))))
+                   ((##eq? first 'library)
+                    (##shape src (##sourcify feature-requirement src) 2)
+                    (let* ((lib-src (##cadr feature-requirement))
+                           (modref (##parse-module-ref lib-src)))
+                      (if (##not modref)
+                          (##raise-expression-parsing-exception
+                           'ill-formed-special-form
+                           src
+                           'cond-expand)
+                          (##call-with-values
+                           (lambda ()
+                             (##find-mod-info src lib-src))
+                           (lambda (mod-info module-ref)
+                             (if (##not mod-info)
+                                 #f
+                                 (let ((port
+                                        (##vector-ref mod-info 4)))
+                                   (if port
+                                       (##close-port port))
+                                   #t)))))))
                    (else
                     (macro-raise
                      (macro-make-expression-parsing-exception
