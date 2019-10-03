@@ -5,35 +5,35 @@
 ;;; Olin Shivers 10/98.
 
 ;;; Exports:
-;;; (%vector-merge  < v1 v2 [start1 end1 start2 end2])          -> vector
-;;; (%vector-merge! < v v1 v2 [start0 start1 end1 start2 end2]) -> unspecific
+;;; (@vector-merge  < v1 v2 [start1 end1 start2 end2])          -> vector
+;;; (@vector-merge! < v v1 v2 [start0 start1 end1 start2 end2]) -> unspecific
 ;;;
 ;;; (vector-merge-sort  < v [start end temp]) -> vector
 ;;; (vector-merge-sort! < v [start end temp]) -> unspecific
 
 
-(##include "vr7rs.scm")
 ;;; Merge
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; (%vector-merge < v1 v2 [start1 end1 start2 end2]) -> vector
-;;; (%vector-merge! < v v1 v2 [start start1 end1 start2 end2]) -> unspecific
+;;; (@vector-merge < v1 v2 [start1 end1 start2 end2]) -> vector
+;;; (@vector-merge! < v v1 v2 [start start1 end1 start2 end2]) -> unspecific
 ;;;
 ;;; Stable vector merge -- V1's elements come out ahead of equal V2 elements.
 
-(define (%vector-merge < v1 v2 #!optional (start1 0)
+(##include "vr7rs.scm")
+(define (@vector-merge < v1 v2 #!optional (start1 0)
                                          (end1 (vector-length v1))
                                          (start2 0) 
                                          (end2 (vector-length v2)))
      (let ((ans (make-vector (+ (- end1 start1) (- end2 start2)))))
-       (%%vector-merge! < ans v1 v2 0 start1 end1 start2 end2)
+       (@@vector-merge! < ans v1 v2 0 start1 end1 start2 end2)
        ans))
 
-(define (%vector-merge! < v v1 v2 #!optional (start 0) 
+(define (@vector-merge! < v v1 v2 #!optional (start 0) 
                                             (start1 0) 
                                             (end1 (vector-length v1))
                                             (start2 0) 
                                             (end2 (vector-length v2)))
-	(%%vector-merge! < v v1 v2 start start1 end1 start2 end2))
+	(@@vector-merge! < v v1 v2 start start1 end1 start2 end2))
 
 
 ;;; This routine is not exported. The code is tightly bummed.
@@ -50,7 +50,7 @@
 ;;; safely convert this procedure to use unsafe ops -- which is why it isn't
 ;;; exported. This will provide *huge* speedup.
 
-(define (%%vector-merge! elt< v v1 v2 start start1 end1 start2 end2)
+(define (@@vector-merge! elt< v v1 v2 start start1 end1 start2 end2)
   (letrec ((vblit (lambda (fromv j i end) ; Blit FROMV[J,END) to V[I,?].
 		    (let lp ((j j) (i i))
 		      (vector-set! v i (vector-ref fromv j))
@@ -86,7 +86,7 @@
 (define (vector-merge-sort! < v #!optional (start 0)
                                            (end (vector-length v))
                                            (temp (vector-copy v))) 
-       (%vector-merge-sort! < v start end temp))
+       (@vector-merge-sort! < v start end temp))
 
 (define (vector-merge-sort < v #!optional (start 0)
                                           (end (vector-length v)))
@@ -95,7 +95,7 @@
        ans))
 
 
-;;; %VECTOR-MERGE-SORT! is not exported.
+;;; @VECTOR-MERGE-SORT! is not exported.
 ;;; Preconditions:
 ;;;   V TEMP vectors
 ;;;   START END fixnums
@@ -109,7 +109,7 @@
 ;;; case -- an already sorted vector -- it runs in linear time. Worst case
 ;;; is still O(n lg n) time.
 
-(define (%vector-merge-sort! elt< v0 l r temp0)
+(define (@vector-merge-sort! elt< v0 l r temp0)
   (define (xor a b) (not (eq? a b)))
 
   ;; Merge v1[l,l+len1) and v2[l+len1,l+len1+len2) into target[l,l+len1+len2)
