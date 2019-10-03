@@ -1,4 +1,4 @@
-;;;============================================================================
+;;============================================================================
 
 ;;; File: "srfi/132/132-test.scm"
 
@@ -12,8 +12,8 @@
 (import (srfi 132))
 (import (gambit test))
 
-(##include "lib/vr7rs.scm")
-(##include "lib/vqsort3.scm")
+(##include "vr7rs.scm")
+(##include "vqsort3.scm")
 
 
 ;;; r7rs-vector-copy
@@ -209,6 +209,7 @@
  wrong-number-of-arguments-exception?
  (lambda () (vector-stable-sort! < '#(0 1) 0 0 '#(0 1) 0)))
 
+
 ;;; list-merge
 
 (let ((lst1from-list-merge '(0 1 2))
@@ -331,6 +332,7 @@
  wrong-number-of-arguments-exception?
  (lambda () (vector-delete-neighbor-dups! = '#(0 1) 0 0 0)))
 
+
 ;;; vector-find-median
 
 (let ((vecfrom-vector-find-median '#(0 3 2 1 24 26 63 61 74 72 ) ))
@@ -359,6 +361,7 @@
  wrong-number-of-arguments-exception?
  (lambda () (vector-find-median! < '#(0 1) 0 0 0)))
 
+
 ;;; vector-select!
 
 (check-equal? (vector-select! < '#(3 4 5 0 2 5) 2) 3)
@@ -370,6 +373,7 @@
 (check-tail-exn
  wrong-number-of-arguments-exception?
  (lambda () (vector-select! < '#(0 1) 0 0 1 0)))
+
 
 ;;; vector-separate!
 
@@ -384,6 +388,7 @@
 (check-tail-exn
  wrong-number-of-arguments-exception?
  (lambda () (vector-separate! < '#(0 1) 0 0 1 0)))
+
 
 ;;; Optional
 

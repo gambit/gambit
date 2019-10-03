@@ -1,4 +1,4 @@
-;;; The sort package -- delete neighboring duplicate elts
+/;; The sort package -- delete neighboring duplicate elts
 ;;; Copyright (c) 1998 by Olin Shivers.
 ;;; This code is open-source; see the end of the file for porting and
 ;;; more copyright information.

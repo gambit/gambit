@@ -11,6 +11,10 @@
 
 (##namespace ("srfi/132#"
 
+r7rs-vector-copy
+r7rs-vector-copy!
+r7rs-vector-fill!
+
 list-sorted?
 vector-sorted?
 list-sort
