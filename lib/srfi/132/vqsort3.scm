@@ -76,7 +76,7 @@
 ;;;   so that is what we do.
 
 
-(include "visort.scm")
+(##include "visort.scm")
 
 (define (vector-quick-sort3 c v #!optional (start 0) (end (vector-length v)))
     (let ((ans (subvector v start end)))

@@ -16,16 +16,15 @@
 (##include "~~lib/_gambit#.scm")                 ;; for macro-check-procedure, 
 (##include "132#.scm")
 
-(##include "lib/merge.scm")
-(##include "lib/delndups.scm")
-(##include "lib/select.scm")
+(##include "merge.scm")
+(##include "delndups.scm")
+(##include "select.scm")
 
-(##include "lib/lmsort.scm")
-(##include "lib/vhsort.scm")
-(##include "lib/visort.scm")
-;;(##include "lib/vmsort.scm")  ;; commented out due to duplicate definition
-(##include "lib/vqsort2.scm")
-;;(##include "lib/vqsort3.scm")  ;; commented out due to duplicate definition
+(##include "lmsort.scm")
+(##include "vhsort.scm")
+(##include "vmsort.scm")
+(##include "vqsort2.scm")
+(##include "vqsort3.scm")
 
 
 ;;; Predicate
@@ -97,8 +96,8 @@
 
 (define list-merge %list-merge)
 (define list-merge! %list-merge!)
-(define vector-merge %vector-merge)
-(define vector-merge! %vector-merge!)
+(define vector-merge @vector-merge)
+(define vector-merge! @vector-merge!)
 
 ;;; Deleting duplicate neighbors
 
