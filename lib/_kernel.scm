@@ -5219,6 +5219,10 @@ end-of-code
   (let ((x (##lookup-module module-ref ##registered-modules)))
     (and x (##car x))))
 
+(define-prim (##remove-registered-module module-ref)
+  (let ((x (##lookup-module module-ref ##registered-modules)))
+    (and x (##set-car! x #f))))
+
 (define-prim (##lookup-module module-ref modules)
   (let loop ((lst modules))
     (if (##pair? lst)
