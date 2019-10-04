@@ -409,7 +409,7 @@
                               (build-file)
 
                               (let ((mod-info
-                                     (##search-or-else-install-module modref #f)))
+                                     (##search-or-else-install-module modref)))
                                 (if mod-info
                                     (let ((mod-dir            (##vector-ref mod-info 0))
                                           (mod-filename-noext (##vector-ref mod-info 1))

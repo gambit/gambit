@@ -553,9 +553,56 @@
                 mod-filename-noext
                 mod-dir))))
 
-      (if object-file-path
-          (get-from-object-file object-file-path)
-          (get-from-source-file)))))
+      (cond (object-file-path
+             (get-from-object-file object-file-path))
+
+            ((##file-exists?
+              (##path-expand
+               (##string-append mod-filename-noext "._must-build_")
+               mod-dir))
+             (##build-mod modref)
+             (let ((object-file-path
+                    (search-for-object-file
+                     mod-filename-noext
+                     (##module-build-subdir-path mod-dir
+                                                 mod-filename-noext
+                                                 (macro-target)))))
+               (if object-file-path
+                   (get-from-object-file object-file-path)
+                   (get-from-source-file))))
+
+            (else
+             (get-from-source-file))))))
+
+(define-prim (##build-mod modref)
+
+  (define (install-dir name rest)
+    (let ((dir (##os-path-gambitdir-map-lookup name)))
+      (if dir
+          (##cons (##string-append "~~" name "=" dir) rest)
+          rest)))
+
+  (let ((modstr (##modref->string modref)))
+    (if ##debug-modules? (pp (##list 'build-mod modstr)))
+
+    (##call-with-output-process
+     (##list path: (##path-expand "gsc-script" (##path-expand "~~bin"))
+             stdin-redirection: #f
+             stdout-redirection: #f
+             stderr-redirection: #f
+             arguments:
+             (##list (##append-strings
+                      (##cons (##string-append "-:=" (##os-path-gambitdir))
+                              (install-dir "lib"
+                                           (install-dir "userlib"
+                                                        '())))
+                      ",")
+                     "-target"
+                     (##symbol->string (macro-target))
+                     modstr))
+     (lambda (pid)
+       (let ((status (##process-status pid)))
+         (##eq? status 0))))))
 
 (define-prim (##install-module modref)
 
@@ -615,43 +662,9 @@
 (define-prim (##search-or-else-install-module
               modref
               #!optional
-              (build? #f)
               (search-order ##module-search-order))
-
-  (define (install-dir name rest)
-    (let ((dir (##os-path-gambitdir-map-lookup name)))
-      (if dir
-          (##cons (##string-append "~~" name "=" dir) rest)
-          rest)))
-
-  (define (build-module modref)
-    (let (#;(build-module (##global-var-ref
-                         (##make-global-var '##build-module)))
-          (modstr (##modref->string modref)))
-      (if ##debug-modules? (pp (##list 'build-module modstr)))
-
-      (##call-with-output-process
-        (##list path: (##path-expand "gsc-script" (##path-expand "~~bin"))
-                stdin-redirection: #f
-                stdout-redirection: #f
-                stderr-redirection: #f
-                arguments:
-                (##list (##append-strings
-                         (##cons (##string-append "-:=" (##os-path-gambitdir))
-                                 (install-dir "lib"
-                                              (install-dir "userlib"
-                                                           '())))
-                         ",")
-                        "-target"
-                        (##symbol->string (macro-target))
-                        modstr))
-        (lambda (pid)
-          (let ((status (##process-status pid)))
-            (##eq? status 0))))))
-
   (or (##search-module modref search-order)
       (and (##install-module modref)
-           (or (##not build?) (build-module modref))
            (##search-module modref search-order))))
 
 (##get-module-set!
@@ -666,7 +679,7 @@
        (let ((modref (##parse-module-ref (##symbol->string module-ref))))
          (if (##not modref)
              (err)
-             (let ((mod-info (##search-or-else-install-module modref #t)))
+             (let ((mod-info (##search-or-else-install-module modref)))
                (if mod-info ;; found module?
                    (##get-module-from-file module-ref modref mod-info)
                    (err))))))))
@@ -711,7 +724,7 @@
               ;; module is in the registered module table, so load it
               (##load-module (macro-module-module-ref mod))
 
-              (let ((mod-info (##search-or-else-install-module modref #f)))
+              (let ((mod-info (##search-or-else-install-module modref)))
                 (if mod-info
 
                     ;; module was found somewhere in the module search order
@@ -950,7 +963,7 @@
                                      (##cdr rest))))
                         mod)))))
 
-          (##values (##search-or-else-install-module final-modref #t)
+          (##values (##search-or-else-install-module final-modref)
                     (##string->symbol (##modref->string final-modref)))))))
 
 (define-runtime-syntax ##import
