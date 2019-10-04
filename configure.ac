@@ -69,6 +69,7 @@ RTLIB_COND_EXPAND_FEATURES=""
 BUILD_TARGETS="C"
 
 userlibdir="~/.gambit_userlib"
+installdir="~~userlib"
 
 ###############################################################################
 #
@@ -2875,6 +2876,8 @@ fi
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_USERLIB=\"\\\"`echo \"$userlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INSTALL=\"\\\"`echo \"$installdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 if test "$ENABLE_SYMLINKS" != yes; then
 

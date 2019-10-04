@@ -1197,6 +1197,9 @@ ___HIDDEN ___STRING_TYPE(___CONFIG_GAMBITDIR_MAP_CE_SELECT) config_gambitdir_map
 #ifdef ___GAMBITDIR_USERLIB
   "userlib=" ___GAMBITDIR_USERLIB,
 #endif
+#ifdef ___GAMBITDIR_INSTALL
+  "install=" ___GAMBITDIR_INSTALL,
+#endif
 #ifdef ___GAMBITDIR_SHARE
   "share=" ___GAMBITDIR_SHARE,
 #endif
