@@ -728,8 +728,9 @@
                            (x
                             (##assq 'script-line meta-info)))
                       (if x
-                          (script-callback (##cdr x)
-                                           (##vector-ref mod-info 3)))
+                          (let ((y (##cdr x)))
+                            (script-callback (if (##pair? y) (##car y) y)
+                                             (##vector-ref mod-info 3))))
                       (after-load
                        (##load-module (macro-module-module-ref mod))
                        (##vector-ref mod-info 3)))
