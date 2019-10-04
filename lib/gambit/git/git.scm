@@ -51,6 +51,8 @@
       (git-repository-open path)
       (and (file-exists? path)
            (eq? 'directory (file-info-type (file-info path)))
+           ;;; Test if it contains .git
+           (eq? 'directory (file-info-type (file-info (path-expand ".git" path))))
            (macro-make-git-repository (path-expand path))))))
 
 (define (git-command-aux args proc repo interactive?)
@@ -95,13 +97,12 @@
 
 (define (git-archive repo ref)
   (and (macro-git-repository? repo)
-       (let ((tags (git-tag repo)))
-         (and (member ref tags)
-              (git-command-aux (list "archive" ref)
-                               (lambda (p)
-                                 (tar-unpack-port p))
-                               repo
-                               #f)))))
+       ;; Remove tags restriction.
+       (git-command-aux (list "archive" ref)
+                        (lambda (p)
+                          (tar-unpack-port p))
+                        repo
+                        #f)))
 
 (define (git-clone url dir
                    #!optional

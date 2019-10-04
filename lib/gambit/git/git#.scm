@@ -16,7 +16,10 @@
               git-pull
               git-status
               git-tag
-              git-repository-open))
+              git-repository-open
+
+              macro-git-repository?
+              macro-git-repository-path))
 
 (define-type git-repository
   id: AF9B3B94-EE56-4D95-A323-AEE3C97E70FC

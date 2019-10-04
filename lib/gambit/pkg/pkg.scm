@@ -56,7 +56,7 @@
   (message read-only: no-functional-setter:))
 
 (define (default-installation-directory)
-  (path-expand "~~userlib"))
+  (path-expand "~~instlib"))
 
 ;; Protocols
 (define (https-proto mod)
@@ -74,6 +74,7 @@
     (module-default-proto-set! proto)
     (set! module-default-proto proto)))
 
+;; remove folder tree from the prefix
 (define (cleanup-install-folder folder prefix)
   (if (< 0 (string-length folder))
     (let ((folder-name (path-expand folder prefix)))
@@ -82,133 +83,216 @@
             (path-strip-trailing-directory-separator
               (path-directory folder)) prefix)))))
 
+(define (invalid-module-name)
+  (macro-make-pkg-exception "Invalid module name"))
+
+(define (unable-to-install-module)
+  (macro-make-pkg-exception "Unable to install module"))
+
+(define (unable-to-install-specific-version mod)
+  (macro-make-pkg-exception (string-append "Unable to install specific version of " mod)))
+
+(define (module-already-installed mod)
+  (macro-make-pkg-exception (string-append "Module " mod " is already installed")))
+
+(define (install-archive archive output)
+  (let ((tmp-dir (create-temporary-directory output)))
+    (with-exception-catcher
+      (lambda (exn)
+        (delete-file-or-directory tmp-dir #t)
+        (raise exn))
+      (lambda ()
+        (tar-rec-list-write archive tmp-dir)
+        (rename-file tmp-dir output)))))
+
+(define (install-hosted modref install-dir prompt? url-transformer)
+  (let* ((host (macro-modref-host modref))
+         (tag (macro-modref-tag modref))
+         (rpath (macro-modref-rpath modref))
+
+         (module-name (last rpath))
+         (base-url (fold (lambda (a b)
+                           (path-expand b a))
+                         module-name host))
+
+         (url (url-transformer base-url)) ;; transform url
+
+         (clone-path (path-expand "@" base-url))
+         (cache (path-expand clone-path install-dir))
+         (output (path-expand (##modref->path modref #f) install-dir)))
+
+    (if (file-exists? output)
+        (raise (module-already-installed (##modref->string modref)))
+        ;;; update here
+        (let ((repo (or (git-repository-open cache)
+                        (git-clone url
+                                   cache
+                                   #f
+                                   prompt?))))
+          (if (macro-git-repository? repo)
+              (if tag
+                  (let ((archive (or (git-archive repo tag)
+                                     (and (git-pull repo) ;; Replace with update
+                                          (git-archive repo tag)))))
+                    (if (pair? archive)
+                        (install-archive archive output)
+                        (raise (unable-to-install-specific-version (##modref->string modref))))))
+              (begin
+                (cleanup-install-folder clone-path install-dir)
+                (raise (unable-to-install-module))))))))
+
+(define (install-local modref install-dir)
+  (let* ((tag (macro-modref-tag modref))
+         (at-tag (string-append "@" (or tag "")))
+
+
+         (rpath (macro-modref-rpath modref))
+         (mod-name (car rpath))
+         (local-modref (macro-make-modref
+                         #f
+                         tag
+                         (list mod-name)))
+
+         (mod-path (fold (lambda (p acc)
+                              (path-expand acc p))
+                            (car rpath)
+                            (cdr rpath)))
+
+         (origin (git-repository-open
+                   (path-expand mod-path)))
+         (clone-path (path-expand "@" mod-name))
+         (cache (path-expand clone-path install-dir))
+         (output (path-expand
+                   (path-expand at-tag mod-name)
+                   install-dir)))
+
+    (if (file-exists? output)
+        (raise (module-already-installed (##modref->string local-modref)))
+
+        (let ((repo (or (git-repository-open cache)
+                        (and (macro-git-repository? origin)
+                             (git-clone (macro-git-repository-path origin) cache)))))
+          (if (macro-git-repository? repo)
+              (if tag
+                  (let ((archive (or (git-archive repo tag)
+                                     (and (git-pull repo)
+                                          (git-archive repo tag)))))
+                    (if (pair? archive)
+                        (install-archive archive output)
+                        (raise (unable-to-install-specific-version
+                                 (##modref->string local-modref))))))
+              (begin
+                (cleanup-install-folder clone-path install-dir)
+                (raise (unable-to-install-module))))))))
+
+
+(define (install-modref modref install-dir prompt? url-transformer)
+  (if (pair? (macro-modref-host modref))
+    (install-hosted modref install-dir prompt? url-transformer)
+    (install-local modref install-dir)))
+
+(define (install-aux modstr install-dir prompt? url-transformer)
+  (let ((modref (##parse-module-ref modstr)))
+    (if (macro-modref? modref)
+        (install-modref modref install-dir prompt? url-transformer)
+        (raise (invalid-module-name)))))
+
 ;; Installation function
-(define (install mod
+(define (install modstr
                  #!optional
-                 (to (macro-absent-obj))
-                 (p? (macro-absent-obj))
-                 (p (macro-absent-obj)))
-
-  (define (unable-to-install-module)
-    (macro-make-pkg-exception "Unable to install module"))
-
-  (define (unable-to-install-specific-version mod)
-    (macro-make-pkg-exception (string-append "Unable to install specific version of " mod)))
-
-  (define (module-already-installed mod)
-    (macro-make-pkg-exception (string-append "Module " mod " is already installed")))
-
-  (define (join-rev path lst)
-    (if (pair? lst)
-        (join-rev
-         (path-expand path (car lst))
-         (cdr lst))
-        path))
-
-  (define (last lst)
-    (if (pair? (cdr lst))
-        (last (cdr lst))
-        (car lst)))
-
-  (define (check-status process)
-    (eq? (process-status process) 0))
-
-  ;; XXX: Variable names are bad
-  (macro-force-vars (mod to p? p)
-    (let ((repo-path (if (or (eq? to (macro-absent-obj))
-                             (eq? to #f))
-                         (default-installation-directory)
-                         to))
-          (prompt? (if (eq? p? (macro-absent-obj))
-                       #f
-                       p?))
-          (proto (if (eq? p (macro-absent-obj))
-                     module-default-proto
-                     p)))
-
+                 (install-dir (macro-absent-obj))
+                 (prompt? (macro-absent-obj))
+                 (url-transformer (macro-absent-obj)))
+  (macro-force-vars (modstr install-dir prompt? url-transformer)
     (macro-check-string
-      mod
+      modstr
       1
-      (install mod to p? p)
-      (macro-check-string
-        repo-path
-        2
-        (install mod to p? p)
-        (macro-check-procedure
-          proto
-          4
-          (install mod to p? p)
-          (let ((modref (##parse-module-ref mod)))
-            (and (macro-modref? modref)
-                 (pair? (macro-modref-host modref)) ;; Hosted
-                 (let* ((host (macro-modref-host modref))
-                        (tag (macro-modref-tag modref))
-                        (rpath (macro-modref-rpath modref))
+      (install modstr install-dir prompt? url-transformer)
+      (let ((dir (if (or (##eq? install-dir (macro-absent-obj))
+                         (##not install-dir))
+                     (default-installation-directory)
+                     (macro-check-string
+                       install-dir
+                       2
+                       (install modstr install-dir prompt? url-transformer)
+                       install-dir))))
+        (let ((transformer (if (or (##eq? url-transformer (macro-absent-obj))
+                                   (##not url-transformer))
+                               module-default-proto
+                               (macro-check-procedure
+                                 url-transformer
+                                 4
+                                 (install modstr install-dir prompt? url-transformer)
+                                 url-transformer))))
+          (install-aux modstr
+                       dir
+                       (if (##eq? prompt? (macro-absent-obj))
+                           #f
+                           prompt?)
+                       transformer))))))
 
-                        (module-name (last rpath))
+(define (uninstall-aux module dir)
 
-                        ;; url without the protocol and version
-                        (base-url (join-rev module-name host))
+  (define (invalid-module-name)
+    (macro-make-pkg-exception "Invalid module name"))
 
-                        ;; url used to clone the repo.
-                        (url (proto base-url))
+  (define (module-not-install module)
+    (macro-make-pkg-exception (string-append "Module " module " is not installed")))
 
-                        ;; Path on the file system where to clone
-                        (clone-path
-                          (join-rev
-                            "@"
-                            (list base-url repo-path)))
+  (define (uninstall-modref modref install-dir)
+    (let* ((tag (macro-modref-tag modref))
+           (mod-path (##modref->string
+                      (macro-make-modref
+                       (macro-modref-host modref)
+                       #f
+                       (##list (##last (macro-modref-rpath modref)))))))
+      (if tag
+          (let ((at-tag (string-append "@" tag)))
+             (delete-file-or-directory
+               (path-expand
+                 (path-expand
+                   at-tag
+                   mod-path)
+                 install-dir)
+               #t)
+             (cleanup-install-folder mod-path install-dir))
+            (let ((root-path (path-expand mod-path install-dir)))
+              (if (and (file-exists? root-path)
+                       (eq? (file-info-type
+                              (file-info root-path))
+                            'directory))
+                  (begin
+                    (for-each
+                      (lambda (ver)
+                        (case (string-ref ver 0)
+                          ((#\@)
+                            (delete-file-or-directory
+                               (path-expand
+                                  (path-expand ver mod-path)
+                                  install-dir) #t))))
+                      (directory-files root-path))
+                    (cleanup-install-folder mod-path install-dir))
+                  (raise (module-not-install mod-path)))))))
 
-                        (install-path (path-expand (##modref->path modref #f) repo-path)))
 
-                   (if (string=? install-path clone-path)
-                       (let ((result (git-clone url clone-path check-status prompt?)))
-                         (or result
-                             (begin
-                               (cleanup-install-folder base-url repo-path)
-                               (raise (unable-to-install-module)))))
-                       (if (file-exists? install-path)
-                           (raise (module-already-installed base-url))
-                           (let ((repo (or (git-clone url clone-path #f prompt?)
-                                           (git-repository-open clone-path))))
-                             (if repo ;; (git-repository? repo)
-                                  (let ((tar-rec-list (or (git-archive repo tag)
-                                                          (and (git-pull repo)
-                                                               (git-archive repo tag))))
-                                        (tmp-dir (create-temporary-directory install-path)))
-                                    (if (pair? tar-rec-list)
-                                      (with-exception-catcher
-                                        (lambda (exn)
-                                          (delete-file-or-directory tmp-dir #t)
-                                          ;; Propagate exception
-                                          (raise exn))
-
-                                        (lambda ()
-                                          ;; This raise an exception on error
-                                          (tar-rec-list-write tar-rec-list tmp-dir)
-                                          (rename-file tmp-dir install-path)))
-                                      (begin
-                                        (delete-file-or-directory tmp-dir #t)
-                                        (cleanup-install-folder base-url repo-path)
-                                        (raise (unable-to-install-specific-version base-url)))))
-                                  (begin
-                                    (cleanup-install-folder base-url repo-path)
-                                    (raise (unable-to-install-module))))))))))))))))
+  (let ((modref (##parse-module-ref module)))
+    (if (macro-modref? modref)
+        (let ((install-dir (path-expand dir)))
+          (if (pair? (macro-modref-host modref))
+              (let ((mod-info (##search-module modref (list install-dir))))
+                (if mod-info
+                    (let ((mod-info-dir  (vector-ref mod-info 0))
+                          (mod-info-port (vector-ref mod-info 4)))
+                      (close-input-port mod-info-port)
+                      (uninstall-modref modref install-dir))
+                    (raise (module-not-install module))))
+              (uninstall-modref modref install-dir)))
+        (raise (invalid-module-name)))))
 
 ;; Return #f if module is not hosted
 (define (uninstall module
                    #!optional
                    (t (macro-absent-obj)))
-
-  (define (invalid-hosted-module)
-    (macro-make-pkg-exception "Invalid hosted module"))
-
-  (define (module-not-install module)
-    (macro-make-pkg-exception (string-append "Module " module " is not installed")))
-
-  ;; return the prefix if prefix/folder exists else #f.
-  (define (start-width? folder prefix)
-    (and (file-exists? (path-expand folder prefix)) prefix))
 
   (macro-force-vars (module t)
     (let ((to (if (or (eq? t (macro-absent-obj))
@@ -223,28 +307,17 @@
           to
           2
           (uninstall module t)
-          (let ((modref (##parse-module-ref module)))
-            (if (and (macro-modref? modref)
-                     (pair? (macro-modref-host modref)))
-                (let* ((mod-path (##modref->path modref #f))
-                       (full-path (path-expand mod-path to)))
-                  (if (file-exists? full-path)
-                      (begin
-                        (delete-file-or-directory (path-expand full-path) #t)
-                        (cleanup-install-folder
-                          (path-strip-trailing-directory-separator
-                            (path-directory mod-path)) to))
-                      (raise (module-not-install module))))
-                (raise (invalid-hosted-module)))))))))
+          (uninstall-aux module to))))))
 
-(define (installed? module)
+(define (installed? module #!optional (dir #f))
   (let ((modref (##parse-module-ref module)))
-    (let ((result (##search-module modref)))
+    (let ((result (##search-module modref dir)))
       (and (vector? result)
            (let ((port (vector-ref result 4)))
              (close-input-port port)
              #t)))))
 
+;; git-pull and remove *@gambit...
 (define (update mod
                 #!optional
                 (t (macro-absent-obj)))
@@ -274,7 +347,7 @@
 (define (gsi-option-update args)
 
   (define (usage)
-    (println "Usage: gsi -update [-to dir] module ..."))
+    (println "Usage: gsi -update [-dir dir] module ..."))
 
   (if (null? args)
       (usage)
@@ -282,7 +355,7 @@
                  (arg (car args))
                  (to (default-installation-directory)))
         (cond
-         ((string=? arg "-to")
+         ((string=? arg "-dir")
           (if (or (null? rest) (null? (cdr rest)))
               (usage)
               (loop (cddr rest) (cadr rest) (car rest))))
@@ -296,7 +369,7 @@
 (define (gsi-option-install args)
 
   (define (usage)
-    (println "Usage: gsi -install [-to dir] module ..."))
+    (println "Usage: gsi -install [-dir dir] module ..."))
 
   (if (null? args)
       (usage)
@@ -304,33 +377,40 @@
                  (arg (car args))
                  (to (default-installation-directory)))
         (cond
-         ((string=? arg "-to")
+         ((string=? arg "-dir")
           (if (or (null? rest) (null? (cdr rest)))
               (usage)
               (loop (cddr rest) (cadr rest) (car rest))))
+
+         ((##parse-module-ref arg)
+          => (lambda (modref)
+               (println (string-append "install " arg " to " to))
+               (with-exception-handler
+                 (lambda (exn)
+                   (cond
+                     ((macro-pkg-exception? exn)
+                      (println (string-append "*** INSTALLATION ERROR -- " (macro-pkg-exception-message exn))))
+                     (else
+                       (println exn))))
+                 (lambda ()
+                   (install-modref modref (path-expand to) #f module-default-proto)))
+
+               (if (pair? rest)
+                 (loop (cdr rest) (car rest) to))))
+
          (else
-          (println (string-append "install " arg " to " to))
-          (with-exception-handler
-            (lambda (exn)
-              (cond
-                ((macro-pkg-exception? exn)
-                 (println (string-append "*** INSTALLATION ERROR -- " (macro-pkg-exception-message exn))))
-                (else
-                  (println exn))))
-            (lambda () (install arg (path-expand to))))
-          (if (pair? rest)
-              (loop (cdr rest) (car rest) to)))))))
+           (usage))))))
 
 (define (gsi-option-uninstall args)
   (define (usage)
-    (println "Usage: gsi -uninstall [-to dir] module ..."))
+    (println "Usage: gsi -uninstall [-dir dir] module ..."))
 
   (if (null? args)
     (usage)
     (let loop ((rest (cdr args))
                (arg (car args))
                (to (default-installation-directory)))
-      (cond ((string=? arg "-to")
+      (cond ((string=? arg "-dir")
              (if (or (null? rest) (null? (cdr rest)))
                  (usage)
                  (loop (cddr rest) (cadr rest) (car rest))))
