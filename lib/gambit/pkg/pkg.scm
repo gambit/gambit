@@ -95,6 +95,9 @@
 (define (module-already-installed mod)
   (macro-make-pkg-exception (string-append "Module " mod " is already installed")))
 
+(define (module-not-installed module)
+  (macro-make-pkg-exception (string-append "Module " module " is not installed")))
+
 (define (install-archive archive output)
   (let ((tmp-dir (create-temporary-directory output)))
     (with-exception-catcher
@@ -132,7 +135,7 @@
           (if (macro-git-repository? repo)
               (if tag
                   (let ((archive (or (git-archive repo tag)
-                                     (and (git-pull repo) ;; Replace with update
+                                     (and (update-modref modref install-dir) ;; TODO: handle prompt? in update
                                           (git-archive repo tag)))))
                     (if (pair? archive)
                         (install-archive archive output)
@@ -175,7 +178,7 @@
           (if (macro-git-repository? repo)
               (if tag
                   (let ((archive (or (git-archive repo tag)
-                                     (and (git-pull repo)
+                                     (and (update-modref local-modref install-dir)
                                           (git-archive repo tag)))))
                     (if (pair? archive)
                         (install-archive archive output)
@@ -232,13 +235,6 @@
                        transformer))))))
 
 (define (uninstall-aux module dir)
-
-  (define (invalid-module-name)
-    (macro-make-pkg-exception "Invalid module name"))
-
-  (define (module-not-install module)
-    (macro-make-pkg-exception (string-append "Module " module " is not installed")))
-
   (define (uninstall-modref modref install-dir)
     (let* ((tag (macro-modref-tag modref))
            (mod-path (##modref->string
@@ -272,7 +268,7 @@
                                   install-dir) #t))))
                       (directory-files root-path))
                     (cleanup-install-folder mod-path install-dir))
-                  (raise (module-not-install mod-path)))))))
+                  (raise (module-not-installed mod-path)))))))
 
 
   (let ((modref (##parse-module-ref module)))
@@ -285,7 +281,7 @@
                           (mod-info-port (vector-ref mod-info 4)))
                       (close-input-port mod-info-port)
                       (uninstall-modref modref install-dir))
-                    (raise (module-not-install module))))
+                    (raise (module-not-installed module))))
               (uninstall-modref modref install-dir)))
         (raise (invalid-module-name)))))
 
@@ -317,6 +313,46 @@
              (close-input-port port)
              #t)))))
 
+(define (update-modref modref dir)
+  (define (string-contain? str pat)
+    (and (< (string-length pat) (string-length str) )
+         (let ((len (- (string-length str)
+                       (string-length pat))))
+           (let loop ((i-str 0) (i-pat 0))
+             (or (and (= i-pat (string-length pat)) (- i-str (string-length pat)))
+                 (and (< i-str len)
+                      (if (char=? (string-ref str i-str)
+                                  (string-ref pat i-pat))
+                          (loop (+ i-str 1) (+ i-pat 1))
+                          (loop (+ i-str 1) 0))))))))
+
+  (if (macro-modref? modref)
+      (let* ((cache-modref
+               (macro-make-modref
+                 (macro-modref-host modref)
+                 #f
+                 (macro-modref-rpath modref)))
+             (mod-info (##search-module cache-modref (##list dir))))
+        (if (not mod-info)
+            (raise (module-not-installed mod))
+            (let* ((mod-info-root (vector-ref mod-info 0))
+                   (repo (git-repository-open mod-info-root)))
+              (close-input-port (##vector-ref mod-info 4))
+
+              (and (git-pull repo)
+                   (for-each
+                     (lambda (build-dir)
+                       (let ((full-path (path-expand build-dir mod-info-root)))
+                         (if (and (eq? (file-info-type (file-info full-path)) 'directory)
+                                  (string-contain? build-dir "@gambit"))
+                             (delete-file-or-directory full-path #t))))
+                     (directory-files mod-info-root))))))
+      (raise (invalid-module-name))))
+
+(define (update-aux mod dir)
+  (let ((modref (##parse-module-ref mod)))
+    (update-modref modref dir)))
+
 ;; git-pull and remove *@gambit...
 (define (update mod
                 #!optional
@@ -335,19 +371,15 @@
           to
           2
           (update mod t)
-          (let ((modref (##parse-module-ref mod)))
-            (and (pair? (macro-modref-host modref))
-                 (not (macro-modref-tag modref))
-                 (let ()
-                   (let ((module-master-path (##modref->path modref #f)))
-                     (let ((repo (git-repository-open
-                                  (path-expand module-master-path to))))
-                       (and repo (git-pull repo))))))))))))
+          (update-aux mod to))))))
 
 (define (gsi-option-update args)
 
   (define (usage)
-    (println "Usage: gsi -update [-dir dir] module ..."))
+    (##repl (lambda (first port)
+              (##write-string "Usage: gsi -update [-dir dir] module ..." port)
+              (##newline port)
+              #t)))
 
   (if (null? args)
       (usage)
@@ -360,16 +392,37 @@
               (usage)
               (loop (cddr rest) (cadr rest) (car rest))))
          (else
-          (println (string-append "update " arg " to " to))
-          (or (update arg (path-expand to))
-              (println (string-append "Unable to update '" arg "' to '" to "'\n")))
+          (##repl (lambda (first port)
+                    (##write-string "updating " port)
+                    (##write-string arg port)
+                    (##write-string " to " port)
+                    (##write-string to port)
+                    (##newline port)
+                    #t))
+          (with-exception-catcher
+            (lambda (exn)
+              (cond
+                ((macro-pkg-exception? exn)
+                 (##repl (lambda (first port)
+                           (##write-string "*** UPDATE ERROR -- " port)
+                           (##write-string (macro-pkg-exception-message exn) port)
+                           (##newline port)
+                           #t)))
+                (else
+                  (raise exn))))
+            (lambda ()
+              (update arg (path-expand to))))
+
           (if (pair? rest)
               (loop (cdr rest) (car rest) to)))))))
 
 (define (gsi-option-install args)
 
   (define (usage)
-    (println "Usage: gsi -install [-dir dir] module ..."))
+    (##repl (lambda (first port)
+              (##write-string "Usage: gsi -install [-dir dir] module ..." port)
+              (##newline port)
+              #t)))
 
   (if (null? args)
       (usage)
@@ -384,14 +437,24 @@
 
          ((##parse-module-ref arg)
           => (lambda (modref)
-               (println (string-append "install " arg " to " to))
-               (with-exception-handler
+               (##repl (lambda (first port)
+                       (##write-string "installing " port)
+                       (##write-string arg port)
+                       (##write-string " to " port)
+                       (##write-string to port)
+                       (##newline port)
+                       #t))
+               (with-exception-catcher
                  (lambda (exn)
                    (cond
                      ((macro-pkg-exception? exn)
-                      (println (string-append "*** INSTALLATION ERROR -- " (macro-pkg-exception-message exn))))
+                      (##repl (lambda (first port)
+                                (##write-string "*** INSTALLATION ERROR -- " port)
+                                (##write-string (macro-pkg-exception-message exn) port)
+                                (##newline port)
+                                #t)))
                      (else
-                       (println exn))))
+                      (raise exn))))
                  (lambda ()
                    (install-modref modref (path-expand to) #f module-default-proto)))
 
@@ -403,7 +466,11 @@
 
 (define (gsi-option-uninstall args)
   (define (usage)
-    (println "Usage: gsi -uninstall [-dir dir] module ..."))
+    (##repl
+     (lambda (first port)
+       (##write-string "Usage: gsi -uninstall [-dir dir] module ..." port)
+       (##newline port)
+       #t)))
 
   (if (null? args)
     (usage)
@@ -415,14 +482,24 @@
                  (usage)
                  (loop (cddr rest) (cadr rest) (car rest))))
             (else
-             (println (string-append "uninstall " arg " to " to))
+             (##repl (lambda (first port)
+                       (##write-string "uninstalling " port)
+                       (##write-string arg port)
+                       (##write-string " to " port)
+                       (##write-string to port)
+                       (##newline port)
+                       #t))
              (with-exception-handler
                (lambda (exn)
                  (cond
                    ((macro-pkg-exception? exn)
-                    (println (string-append "UNINSTALLATION ERROR -- " (macro-pkg-exception-message exn))))
+                    (##repl (lambda (first port)
+                              (##write-string "UNINSTALLATION ERROR -- " port)
+                              (##write-string (macro-pkg-exception-message exn) port)
+                              (##newline port)
+                              #t)))
                    (else
-                     (println exn))))
+                     (raise exn))))
 
                (lambda ()
                  (uninstall arg (path-expand to))
