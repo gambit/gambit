@@ -163,6 +163,7 @@
     (combine-option! 'ld-options-prelude)
     (combine-option! 'ld-options)
     (combine-option! 'pkg-config)
+    (combine-option! 'pkg-config-path)
 
     (let* ((c-opt?       (##assq 'c options))
            (link-opt?    (##assq 'link options))
@@ -268,6 +269,11 @@
                           (let ((x (##assq 'pkg-config options)))
                             (if x
                                 (##cdr x)
+                                '())))
+                         (pkg-config-path
+                          (let ((x (##assq 'pkg-config-path options)))
+                            (if x
+                                (##cdr x)
                                 '()))))
 
                     (if (or pre post)
@@ -364,14 +370,16 @@
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options
-                                 pkg-config: pkg-config)
+                                 pkg-config: pkg-config
+                                 pkg-config-path: pkg-config-path)
                                 (compile-file
                                  file
                                  options: opts
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options
-                                 pkg-config: pkg-config))
+                                 pkg-config: pkg-config
+                                 pkg-config-path: pkg-config-path))
                             (exit-abnormally)))
 
                       (define (do-compile-file-to-target file opts output)
@@ -395,6 +403,7 @@
                              ld-options-prelude
                              ld-options
                              pkg-config
+                             pkg-config-path
                              meta-info-file)
                             (exit-abnormally)))
 
@@ -832,7 +841,8 @@
                            (cc-options string)
                            (ld-options-prelude string)
                            (ld-options string)
-                           (pkg-config string))))
+                           (pkg-config string)
+                           (pkg-config-path string))))
 
                    ;; parse command line to try to find the -target option
                    (split-command-line

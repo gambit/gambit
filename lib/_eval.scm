@@ -1214,7 +1214,7 @@
     ((script-line)
      ;; just keep the last value
      (##list val))
-    ((cc-options ld-options pkg-config)
+    ((cc-options ld-options ld-options-prelude pkg-config pkg-config-path)
      ;; the meta-info is an ordered-set
      (##add-to-set-ordered! (##table-ref meta-info key '()) val))
     (else

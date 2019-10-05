@@ -126,7 +126,7 @@
                          check force keep-c
                          o l module-ref linker-name prelude postlude
                          cc-options ld-options-prelude ld-options
-                         pkg-config asm)
+                         pkg-config pkg-config-path asm)
                       #t) ;; these options are innocuous
                      (else
                       ;; OK if the option is a target specific option

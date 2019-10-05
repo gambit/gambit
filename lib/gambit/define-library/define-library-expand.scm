@@ -47,16 +47,10 @@
          )
        ##expression-parsing-exception-names))
 
-
-(define (parts->path parts dir)
-  (if (null? parts)
-      dir
-      (parts->path (cdr parts) (##path-expand (car parts) dir))))
-
 ;;;============================================================================
 
 (define-type idmap
-  id: idmap
+  id: E4059B2A-C618-402F-8B43-A77D6C89E466
   (src unprintable:)
   (name-src unprintable:)
   name
@@ -67,14 +61,12 @@
 )
 
 (define-type libdef
+  id: B2B06949-BB51-4D4D-87AE-651B297CF0DE
   (src unprintable:)
   (name-src unprintable:)
   name
   namespace
-  cc-options
-  ld-options-prelude
-  ld-options
-  pkg-config
+  meta-info
   exports
   imports
   body
@@ -105,6 +97,11 @@
                 rev-result)))))
     (split-path 0 '())))
 
+(define (parts->path parts dir)
+  (if (null? parts)
+      dir
+      (parts->path (cdr parts) (##path-expand (car parts) dir))))
+
 (define (get-libdef import-src reference-src)
 
   (define (err src)
@@ -113,7 +110,7 @@
      src
      (##desourcify src)))
 
-  (##call-with-values
+  (call-with-values
    (lambda ()
      (##find-mod-info reference-src import-src))
 
@@ -223,17 +220,14 @@
 (define (parse-define-library src modref-str module-root modref-path)
 
   (define-type ctx
-    id: ctx
+    id: B8BC23AA-15B6-4ABE-ABCE-0E8C8F639A3F
     (src unprintable:)
     (name-src unprintable:)
     name
     namespace
     exports-tbl
     imports-tbl
-    rev-pkg-config
-    rev-cc-options
-    rev-ld-options-prelude
-    rev-ld-options
+    meta-info-tbl
     rev-imports
     rev-body
   )
@@ -298,61 +292,23 @@
                           (##source-strip (car args-srcs)))
                          (parse-body ctx rest-srcs module-aliases))))
 
-                  ((pkg-config) ;; extension to R7RS
-                   (if (not (and (pair? args-srcs)
-                                 (string? (##source-strip (car args-srcs)))))
-                     (library-decl-err)
-                     (begin
-                       (ctx-rev-pkg-config-set!
-                         ctx
-                         (parse-string-args
-                           (cons
-                             (##source-strip (car args-srcs))
-                             (ctx-rev-pkg-config ctx))
-                           (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs module-aliases))))
-
-                  ((cc-options) ;; extension to R7RS
-                   (if (not (and (pair? args-srcs)
-                                 (string? (##source-strip (car args-srcs)))))
-                     (library-decl-err)
-                     (begin
-                       (ctx-rev-cc-options-set!
-                         ctx
-                         (parse-string-args
-                           (cons
-                             (##source-strip (car args-srcs))
-                             (ctx-rev-cc-options ctx))
-                           (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs module-aliases))))
-
-                  ((ld-options-prelude) ;; extension to R7RS
-                   (if (not (and (pair? args-srcs)
-                                 (string? (##source-strip (car args-srcs)))))
-                     (library-decl-err)
-                     (begin
-                       (ctx-rev-ld-options-prelude-set!
-                         ctx
-                         (parse-string-args
-                           (cons
-                             (##source-strip (car args-srcs))
-                             (ctx-rev-ld-options-prelude ctx))
-                           (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs module-aliases))))
-
-                  ((ld-options) ;; extension to R7RS
-                   (if (not (and (pair? args-srcs)
-                                 (string? (##source-strip (car args-srcs)))))
-                     (library-decl-err)
-                     (begin
-                       (ctx-rev-ld-options-set!
-                         ctx
-                         (parse-string-args
-                           (cons
-                             (##source-strip (car args-srcs))
-                             (ctx-rev-ld-options ctx))
-                           (cdr args-srcs) library-decl-err))
-                       (parse-body ctx rest-srcs module-aliases))))
+                  ((cc-options ;; extensions to R7RS
+                    ld-options
+                    ld-options-prelude
+                    pkg-config
+                    pkg-config-path)
+                   (let loop ((lst args-srcs))
+                     (if (pair? lst)
+                         (let ((arg (##source-strip (car args-srcs))))
+                           (if (not (string? arg))
+                               (library-decl-err)
+                               (begin
+                                 (##meta-info-add!
+                                  (ctx-meta-info-tbl ctx)
+                                  head
+                                  arg)
+                                 (loop (cdr lst)))))
+                         (parse-body ctx rest-srcs module-aliases))))
 
                   (else
                    (library-decl-err))))
@@ -612,10 +568,7 @@
                                 name-src))
                              (make-table test: eq?)
                              (make-table test: eq?)
-                             '() ; rev-pkg-config
-                             '() ; rev-cc-options
-                             '() ; rev-ld-options-prelude
-                             '() ; rev-ld-options
+                             (make-table test: eq?)
                              '()
                              '())))
 
@@ -643,10 +596,7 @@
                 (ctx-name ctx)
                 (ctx-namespace ctx)
 
-                (reverse! (ctx-rev-cc-options ctx))
-                (reverse! (ctx-rev-ld-options-prelude ctx))
-                (reverse! (ctx-rev-ld-options ctx))
-                (reverse! (ctx-rev-pkg-config ctx))
+                (table->list (ctx-meta-info-tbl ctx))
 
                 (make-idmap
                  (ctx-src ctx)
@@ -817,7 +767,7 @@
 
                  (module-ref (##string->symbol (##modref->string import-modref))))
 
-            (##call-with-values
+            (call-with-values
              (lambda ()
                (get-libdef
                  (##make-source module-ref (##source-locat import-set-src))
@@ -841,9 +791,7 @@
 #;
 (define (trace-expansion srcs)
   (for-each
-    (lambda (expr)
-      (display (object->string expr))
-      (newline))
+    ##pretty-print
     (cdr (##desourcify srcs)))
   srcs)
 
@@ -912,26 +860,18 @@
        `(##begin
          (##declare (block))
          (##supply-module ,(string->symbol (libdef-name ld)))
-         ,@(if (null? (libdef-cc-options ld))
-               `()
-               `((##meta-info cc-options ,@(libdef-cc-options ld))))
-         ,@(if (null? (libdef-ld-options-prelude ld))
-               `()
-               `((##meta-info ld-options-prelude ,@(libdef-ld-options-prelude ld))))
-         ,@(if (null? (libdef-ld-options ld))
-               `()
-               `((##meta-info ld-options ,@(libdef-ld-options ld))))
-         ,@(if (null? (libdef-pkg-config ld))
-               `()
-               `((##meta-info pkg-config ,@(libdef-pkg-config ld))))
+         ,@(map (lambda (kv)
+                  `(##meta-info ,(car kv) ,@(cdr kv)))
+                (libdef-meta-info ld))
          (##namespace (,(libdef-namespace ld)))
          ,@ld-imports
          ,@(libdef-body ld)
          (##namespace ("")))))))
-   ; )
+    ; )
 
 
 (define (import-expand src)
+
   ;; Local ctx
   (define rev-global-imports '())
 

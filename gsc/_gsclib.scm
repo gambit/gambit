@@ -150,6 +150,7 @@
          (ld-options-prelude (macro-absent-obj))
          (ld-options (macro-absent-obj))
          (pkg-config (macro-absent-obj))
+         (pkg-config-path (macro-absent-obj))
          (expression (macro-absent-obj)))
 
   (macro-force-vars (filename)
@@ -185,6 +186,11 @@
                   '()
                   (macro-force-vars (pkg-config)
                     pkg-config)))
+             (pkg-cfg-path
+              (if (##eq? pkg-config-path (macro-absent-obj))
+                  '()
+                  (macro-force-vars (pkg-config-path)
+                    pkg-config-path)))
              (filename-or-source
               (if (##eq? expression (macro-absent-obj))
                   filename
@@ -206,6 +212,8 @@
                (error "string or string list expected for ld-options: parameter")) ;;;;;;;;;;
               ((##not (##string-or-string-list? pkg-cfg))
                (error "string or string list expected for pkg-config: parameter")) ;;;;;;;;;;
+              ((##not (##string-or-string-list? pkg-cfg-path))
+               (error "string or string list expected for pkg-config-path: parameter")) ;;;;;;;;;;
               (else
                (##compile-file filename-or-source
                                opts
@@ -213,7 +221,8 @@
                                cc-opts
                                ld-opts-prelude
                                ld-opts
-                               pkg-cfg)))))))
+                               pkg-cfg
+                               pkg-cfg-path)))))))
 
 (define (##compile-file
          filename-or-source
@@ -222,7 +231,8 @@
          cc-options
          ld-options-prelude
          ld-options
-         pkg-config)
+         pkg-config
+         pkg-config-path)
   (let* ((options
           (##compile-options-normalize options))
          (target
@@ -330,8 +340,13 @@
                                    (##string-or-string-list-join ld-options " "))
                            (##cons "PKG_CONFIG"
                                    (##string-or-string-list-join pkg-config "\n"))
+                           (##cons "PKG_CONFIG_PATH"
+                                   (##string-or-string-list-join pkg-config-path "\n"))
                            (##cons "META_INFO_FILE"
-                                   target-filename)))))
+                                   (##path-normalize
+                                    (##path-expand target-filename)
+                                    #t
+                                    output-dir))))))
              (if (and (##not (##assq 'keep-c options))
                       (##not (##string=? filename target-filename)))
                  (##delete-file target-filename))
@@ -389,6 +404,14 @@
                  => ##cdr)
                 (else
                  '()))
+              '()))
+         (pkg-config-path
+          (if (##pair? config)
+              (cond
+                ((##assq 'pkg-config-path config)
+                 => ##cdr)
+                (else
+                 '()))
               '())))
 
     ;; create build subdirectory (removing it first to make sure it is empty)
@@ -411,7 +434,8 @@
             cc-options
             ld-options-prelude
             ld-options
-            pkg-config)
+            pkg-config
+            pkg-config-path)
            build-subdir))))
 
 (define (##build-executable
@@ -422,6 +446,7 @@
          ld-options-prelude
          ld-options
          pkg-config
+         pkg-config-path
          meta-info-file)
   (let* ((options
           (##compile-options-normalize options))
@@ -447,6 +472,8 @@
                            (##string-or-string-list-join ld-options " "))
                    (##cons "PKG_CONFIG"
                            (##string-or-string-list-join pkg-config "\n"))
+                   (##cons "PKG_CONFIG_PATH"
+                           (##string-or-string-list-join pkg-config-path "\n"))
                    (##cons "META_INFO_FILE"
                            (or meta-info-file ""))))))
     (if (##fx= exit-status 0)

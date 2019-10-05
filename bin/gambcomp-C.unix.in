@@ -39,6 +39,7 @@ GAMBCOMP_CC_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"cc-options|# \""
 GAMBCOMP_LD_OPTIONS_PRELUDE_REGEXP="^ #|\\*/\"\\*/\"ld-options-prelude|# \""
 GAMBCOMP_LD_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"ld-options|# \""
 GAMBCOMP_PKG_CONFIG_REGEXP="^ #|\\*/\"\\*/\"pkg-config|# \""
+GAMBCOMP_PKG_CONFIG_PATH_REGEXP="^ #|\\*/\"\\*/\"pkg-config-path|# \""
 
 get_meta_info()
 {
@@ -60,8 +61,22 @@ process_pkg_config()
       echo "the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags $pkg' and 'pkg-config --libs $pkg'"
       exit 1
     else
+      set -e
       GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}$(${PKG_CONFIG} --cflags $pkg) "
       GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}$(${PKG_CONFIG} --libs $pkg) "
+      set +e
+    fi
+  done
+}
+
+process_pkg_config_path()
+{
+  for path in $1; do
+    if test -z "${GAMBCOMP_PKG_CONFIG_PATH}"; then
+      GAMBCOMP_PKG_CONFIG_PATH="$path"
+    else
+      # prepend path so that last path added has priority
+      GAMBCOMP_PKG_CONFIG_PATH="$path:${GAMBCOMP_PKG_CONFIG_PATH}"
     fi
   done
 }
@@ -71,10 +86,19 @@ extract_cc_ld_options()
   GAMBCOMP_CC_OPTIONS=""
   GAMBCOMP_LD_OPTIONS_PRELUDE=""
   GAMBCOMP_LD_OPTIONS=""
+  GAMBCOMP_PKG_CONFIG_PATH="${PKG_CONFIG_PATH}"
 
   GAMBCOMP_SAVE_IFS="$IFS"
   IFS='
 '
+
+  if test ! -z "$1"; then
+    process_pkg_config_path "$(get_meta_info "$1" "${GAMBCOMP_PKG_CONFIG_PATH_REGEXP}")"
+  fi
+
+  process_pkg_config_path "$3"
+
+  export PKG_CONFIG_PATH="${GAMBCOMP_PKG_CONFIG_PATH}"
 
   if test ! -z "$1"; then
     process_pkg_config "$(get_meta_info "$1" "${GAMBCOMP_PKG_CONFIG_REGEXP}")"
@@ -95,9 +119,9 @@ extract_cc_ld_options()
 
   done
 
-  GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}$3"
-  GAMBCOMP_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}$4"
-  GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}$5"
+  GAMBCOMP_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}$4"
+  GAMBCOMP_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}$5"
+  GAMBCOMP_LD_OPTIONS="${GAMBCOMP_LD_OPTIONS}$6"
 
   IFS="${GAMBCOMP_SAVE_IFS}"
 }
@@ -106,7 +130,7 @@ case "$1" in
 
   "obj")
 
-    extract_cc_ld_options "${BUILD_OBJ_META_INFO_FILE}" "${BUILD_OBJ_PKG_CONFIG}" "${BUILD_OBJ_CC_OPTIONS}" "${BUILD_OBJ_LD_OPTIONS_PRELUDE}" "${BUILD_OBJ_LD_OPTIONS}"
+    extract_cc_ld_options "${BUILD_OBJ_META_INFO_FILE}" "${BUILD_OBJ_PKG_CONFIG}" "${BUILD_OBJ_PKG_CONFIG_PATH}" "${BUILD_OBJ_CC_OPTIONS}" "${BUILD_OBJ_LD_OPTIONS_PRELUDE}" "${BUILD_OBJ_LD_OPTIONS}"
 
     BUILD_OBJ_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}"
 
@@ -119,7 +143,7 @@ case "$1" in
 
   "dyn")
 
-    extract_cc_ld_options "${BUILD_DYN_META_INFO_FILE}" "${BUILD_DYN_PKG_CONFIG}" "${BUILD_DYN_CC_OPTIONS}" "${BUILD_DYN_LD_OPTIONS_PRELUDE}" "${BUILD_DYN_LD_OPTIONS}"
+    extract_cc_ld_options "${BUILD_DYN_META_INFO_FILE}" "${BUILD_DYN_PKG_CONFIG}" "${BUILD_DYN_PKG_CONFIG_PATH}" "${BUILD_DYN_CC_OPTIONS}" "${BUILD_DYN_LD_OPTIONS_PRELUDE}" "${BUILD_DYN_LD_OPTIONS}"
 
     BUILD_DYN_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}"
     BUILD_DYN_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}"
@@ -143,7 +167,7 @@ case "$1" in
 
   "exe")
 
-    extract_cc_ld_options "${BUILD_EXE_META_INFO_FILE}" "${BUILD_EXE_PKG_CONFIG}" "${BUILD_EXE_CC_OPTIONS}" "${BUILD_EXE_LD_OPTIONS_PRELUDE}" "${BUILD_EXE_LD_OPTIONS}"
+    extract_cc_ld_options "${BUILD_EXE_META_INFO_FILE}" "${BUILD_EXE_PKG_CONFIG}" "${BUILD_EXE_PKG_CONFIG_PATH}" "${BUILD_EXE_CC_OPTIONS}" "${BUILD_EXE_LD_OPTIONS_PRELUDE}" "${BUILD_EXE_LD_OPTIONS}"
 
     BUILD_EXE_CC_OPTIONS="${GAMBCOMP_CC_OPTIONS}"
     BUILD_EXE_LD_OPTIONS_PRELUDE="${GAMBCOMP_LD_OPTIONS_PRELUDE}"
