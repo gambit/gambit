@@ -325,10 +325,19 @@
                                            dir)))
                   check-mod)
 
-          (search rpath
-                  rpath
-                  dir
-                  check-mod))))
+          (let ((main-repo-path
+                 (##path-expand "@" (##path-expand (last rpath) dir))))
+            (if (##file-exists? main-repo-path)
+
+                (search rpath
+                        (butlast rpath)
+                        main-repo-path
+                        check-mod)
+
+                (search rpath
+                        rpath
+                        dir
+                        check-mod))))))
 
   (let loop ((lst search-order))
     (and (##pair? lst)
