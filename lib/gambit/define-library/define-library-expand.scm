@@ -784,7 +784,13 @@
                  (and (libdef? ld) (null? (libdef-body ld)) (null? (libdef-imports ld)))
                  (and (libdef? ld) (idmap-map (libdef-exports ld)))))))))
 
-      (import-set-err))))
+      (if (symbol? import-set)
+          (parse-import-set (##make-source
+                             (list import-set)
+                             (##source-locat import-set-src))
+                            module-aliases
+                            ctx-library)
+          (import-set-err)))))
 
 
 ;;; Debug procedure.
