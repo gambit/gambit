@@ -808,11 +808,13 @@ string->utf8
 string->vector
 string-ci=?-hash
 string-copy!
+string-downcase
 string-foldcase
 string-for-each
 string-map
 string-set
 string-shrink!
+string-upcase
 string=?-hash
 subf32vector
 subf32vector-fill!

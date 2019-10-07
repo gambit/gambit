@@ -1564,6 +1564,46 @@
   macro-force-vars
   macro-check-string)
 
+(define (##string-upcase str)
+  (let* ((start 0)
+         (end (##string-length str))
+         (len (##fx- end start))
+         (result (##make-string len)))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< i 0)
+          result
+          (begin
+            (##string-set! result i (macro-char-upcase (##string-ref str i)))
+            (loop (##fx- i 1)))))))
+
+(define-prim (string-upcase str)
+  (macro-force-vars (str)
+    (macro-check-string
+      str
+      1
+      (string-upcase str)
+      (##string-upcase str))))
+
+(define (##string-downcase str)
+  (let* ((start 0)
+         (end (##string-length str))
+         (len (##fx- end start))
+         (result (##make-string len)))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< i 0)
+          result
+          (begin
+            (##string-set! result i (macro-char-downcase (##string-ref str i)))
+            (loop (##fx- i 1)))))))
+
+(define-prim (string-downcase str)
+  (macro-force-vars (str)
+    (macro-check-string
+      str
+      1
+      (string-downcase str)
+      (##string-downcase str))))
+
 (define-prim (##string-foldcase str)
   (macro-string-foldcase str 0 (##string-length str)))
 
