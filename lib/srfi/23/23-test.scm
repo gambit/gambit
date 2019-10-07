@@ -9,7 +9,7 @@
 ;;; SRFI 23, Error reporting mechanism
 
 (import (srfi 23))
-(import (gambit test))
+(import (_test))
 
 ;;;============================================================================
 

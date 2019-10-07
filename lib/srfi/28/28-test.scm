@@ -9,7 +9,7 @@
 ;;; SRFI 28, Basic Format Strings
 
 (import (srfi 28))
-(import (gambit test))
+(import (_test))
 
 ;;;============================================================================
 

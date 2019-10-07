@@ -9,7 +9,7 @@
 ;;; SRFI 9, Defining Record Types
 
 (import (srfi 9))
-(import (gambit test))
+(import (_test))
 
 ;;;============================================================================
 

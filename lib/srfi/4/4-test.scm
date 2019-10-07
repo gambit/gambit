@@ -9,7 +9,7 @@
 ;;; SRFI 4, Homogeneous numeric vector datatypes
 
 (import (srfi 4))
-(import (gambit test))
+(import (_test))
 
 ;;;============================================================================
 

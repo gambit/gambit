@@ -661,7 +661,7 @@
              ;; Ask user to install.
              (module-install-confirm? mod-string))
 
-         ((##eval '(let () (##import gambit/pkg) install)) mod-string)
+         ((##eval '(let () (##import _pkg) install)) mod-string)
          ;; Return the modref
          modref)))
 
@@ -1011,13 +1011,13 @@
 ;;;----------------------------------------------------------------------------
 
 (define (##gsi-option-update args)
-  ((##eval '(let () (##import gambit/pkg) gsi-option-update)) args))
+  ((##eval '(let () (##import _pkg) gsi-option-update)) args))
 
 (define (##gsi-option-install args)
-  ((##eval '(let () (##import gambit/pkg) gsi-option-install)) args))
+  ((##eval '(let () (##import _pkg) gsi-option-install)) args))
 
 (define (##gsi-option-uninstall args)
-  ((##eval '(let () (##import gambit/pkg) gsi-option-uninstall)) args))
+  ((##eval '(let () (##import _pkg) gsi-option-uninstall)) args))
 
 (define ##gsi-option-handlers
  (##list (##cons 'update  ##gsi-option-update)

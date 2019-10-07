@@ -9,8 +9,12 @@
 ;;; SRFI 8, receive: Binding to multiple values
 
 (import (srfi 8))
-(import (gambit test))
+(import (_test))
 
 ;;;============================================================================
+
+(receive (x y) (values 11 22)
+  (check-equal? x 11)
+  (check-equal? y 22))
 
 ;;;============================================================================

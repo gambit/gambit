@@ -10,7 +10,7 @@
 ;;; SRFI 132, Sort Libraries
 
 (import (srfi 132))
-(import (gambit test))
+(import (_test))
 
 (##include "vr7rs.scm")
 (##include "vqsort3.scm")

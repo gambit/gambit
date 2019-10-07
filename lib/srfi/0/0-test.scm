@@ -9,7 +9,7 @@
 ;;; SRFI 0, Feature-based conditional expansion construct
 
 (import (srfi 0))
-(import (gambit test))
+(import (_test))
 
 ;;;============================================================================
 

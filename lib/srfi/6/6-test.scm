@@ -9,7 +9,7 @@
 ;;; SRFI 6, Basic String Ports
 
 (import (srfi 6))
-(import (gambit test))
+(import (_test))
 
 ;;;============================================================================
 

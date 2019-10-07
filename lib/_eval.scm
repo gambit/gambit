@@ -5476,21 +5476,21 @@
     (define-runtime-syntax syntax-rules
       (lambda (src)
         ((##eval '(lambda (src)
-                    (##import gambit/define-library/define-library-expand)
+                    (##import _define-library/define-library-expand)
                     (syn#syntax-rules-form-transformer src)))
          src)))
 
     (define-runtime-syntax define-library
       (lambda (src)
         ((##eval '(lambda (src)
-                    (##import gambit/define-library/define-library-expand)
+                    (##import _define-library/define-library-expand)
                     (define-library-expand src)))
          src)))
 
     (define-runtime-syntax import
       (lambda (src)
         ((##eval '(lambda (src)
-                    (##import gambit/define-library/define-library-expand)
+                    (##import _define-library/define-library-expand)
                     (import-expand src)))
          src)))
 
