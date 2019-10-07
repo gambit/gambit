@@ -4,7 +4,7 @@
 
 herefromroot = lib
 rootfromhere = ..
-SUBDIRS = @RTLIBSUBSYS@ _define-library _digest _geiser _git _hamt _http _match _pkg _tar _test _uri _zlib scheme termite srfi
+SUBDIRS = @RTLIBSUBSYS@ _define-library _digest _geiser _git _hamt _http _match _pkg _tar _test _uri _zlib gambit scheme termite srfi
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@

@@ -2,10 +2,10 @@
 
 herefromlib = gambit
 libfromhere = ..
-SUBDIRS = git pkg tar hamt http digest define-library uri zlib test match geiser
+SUBDIRS =
 HEADERS_SCM = gambit\#.scm
 MODULES_SCM = gambit.scm
-MAIN_MODULES =
+MAIN_MODULES = gambit
 OTHER_RCFILES = makefile
 
 include $(libfromhere)/module-common.mk
