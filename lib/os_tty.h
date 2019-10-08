@@ -60,21 +60,29 @@ typedef int tty_text_attrs;
 #define TEXT_STYLE_UNDERLINE 2
 #define TEXT_STYLE_REVERSE   4
 
-#define TEXT_COLOR_BLACK   0
-#define TEXT_COLOR_RED     1
-#define TEXT_COLOR_GREEN   2
-#define TEXT_COLOR_YELLOW  3
-#define TEXT_COLOR_BLUE    4
-#define TEXT_COLOR_MAGENTA 5
-#define TEXT_COLOR_CYAN    6
-#define TEXT_COLOR_WHITE   7
-#define DEFAULT_TEXT_COLOR 8
+#define TEXT_COLOR_BLACK          0
+#define TEXT_COLOR_RED            1
+#define TEXT_COLOR_GREEN          2
+#define TEXT_COLOR_YELLOW         3
+#define TEXT_COLOR_BLUE           4
+#define TEXT_COLOR_MAGENTA        5
+#define TEXT_COLOR_CYAN           6
+#define TEXT_COLOR_WHITE          7
+#define TEXT_COLOR_BRIGHT_BLACK   8
+#define TEXT_COLOR_BRIGHT_RED     9
+#define TEXT_COLOR_BRIGHT_GREEN   10
+#define TEXT_COLOR_BRIGHT_YELLOW  11
+#define TEXT_COLOR_BRIGHT_BLUE    12
+#define TEXT_COLOR_BRIGHT_MAGENTA 13
+#define TEXT_COLOR_BRIGHT_CYAN    14
+#define TEXT_COLOR_BRIGHT_WHITE   15
+#define DEFAULT_TEXT_COLOR        256
 
-#define GET_STYLE(x)(((x)>>8)&3)
-#define GET_FOREGROUND_COLOR(x)((x)&15)
-#define GET_BACKGROUND_COLOR(x)(((x)>>4)&15)
+#define GET_STYLE(x)(((x)>>18)&3)
+#define GET_FOREGROUND_COLOR(x)((x)&511)
+#define GET_BACKGROUND_COLOR(x)(((x)>>9)&511)
 
-#define MAKE_TEXT_ATTRS(s,f,b)(((s)<<8)+(f)+((b)<<4))
+#define MAKE_TEXT_ATTRS(s,f,b)(((s)<<18)+(f)+((b)<<9))
 
 #define INITIAL_TEXT_ATTRS \
 MAKE_TEXT_ATTRS(TEXT_STYLE_NORMAL,DEFAULT_TEXT_COLOR,DEFAULT_TEXT_COLOR)
