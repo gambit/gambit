@@ -1017,4 +1017,8 @@
 ;;  (macro-compilation-ctx-module-ref-set! ctx module-ref)
 )
 
+(if (##unbound? ;; TODO: remove dynamic check after bootstrap
+     (##global-var-ref (##make-global-var '##parameterize)))
+    (##global-var-set! (##make-global-var '##parameterize) ##parameterize1))
+
 ;"
