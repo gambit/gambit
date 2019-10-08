@@ -92,7 +92,7 @@
 
 (define (setup-ide-repl-channel ide-repl-connection tgroup)
   (receive (in-port out-port) (make-ide-repl-ports ide-repl-connection tgroup)
-    (let ((repl-channel (##make-repl-channel-ports in-port out-port)))
+    (let ((repl-channel (##make-repl-channel-ports in-port out-port out-port)))
       (table-set! repl-channel-table tgroup repl-channel))))
 
 (define (start-ide-repl)
