@@ -146,12 +146,6 @@ x86-arch-set!
 x86-64bit-mode?
 x86-word-width
 
-x86-imm-int
-x86-imm-int?
-x86-imm-int-value
-x86-imm-lbl
-x86-mem
-
 x86-imm?
 
 x86-imm-int
@@ -172,6 +166,17 @@ x86-imm-late-handler
 x86-imm-obj
 x86-imm-obj?
 x86-imm-obj-value
+
+x86-imm-glo
+x86-imm-glo?
+x86-imm-glo-name
+
+x86-mem
+x86-mem?
+x86-mem-offset
+x86-mem-reg1
+x86-mem-reg2
+x86-mem-scale
 
 x86-label
 x86-db
@@ -278,6 +283,40 @@ x86-bt
 x86-bts
 x86-btr
 x86-btc
+
+x86-cmova
+x86-cmovae
+x86-cmovb
+x86-cmovbe
+x86-cmovc
+x86-cmove
+x86-cmovg
+x86-cmovge
+x86-cmovl
+x86-cmovle
+x86-cmovna
+x86-cmovnae
+x86-cmovnb
+x86-cmovnbe
+x86-cmovnc
+x86-cmovne
+x86-cmovng
+x86-cmovnge
+x86-cmovnl
+x86-cmovnle
+x86-cmovno
+x86-cmovnp
+x86-cmovns
+x86-cmovnz
+x86-cmovo
+x86-cmovp
+x86-cmovpe
+x86-cmovpo
+x86-cmovs
+x86-cmovz
+
+x86-popcnt
+x86-lzcnt
 
 ))
 

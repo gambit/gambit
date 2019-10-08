@@ -2,11 +2,13 @@
 
 ;;; File: "_arm#.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-(namespace (""
+(namespace ("_arm#"
+
+arm-listing
 
 arm-implement
 
@@ -131,6 +133,10 @@ arm-muls
 arm-mla
 arm-mlas
 
+arm-ldr
+arm-ldrb
+arm-str
+arm-strb
 
 
 

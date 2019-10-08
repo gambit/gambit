@@ -71,6 +71,10 @@
 (define (x86-imm-lbl-offset x) (car x))
 (define (x86-imm-lbl-label x) (cdr x))
 
+(define (x86-imm-glo name) (cons #f name))
+(define (x86-imm-glo? x) (and (pair? x) (symbol? (cdr x))))
+(define (x86-imm-glo-name x) (cdr x))
+
 (define (x86-imm-late handler width) (cons width handler))
 (define (x86-imm-late? x) (and (pair? x) (procedure? (cdr x))))
 (define (x86-imm-late-width x) (car x))
@@ -121,10 +125,14 @@
             ((x86-imm? opnd)
              (list "$"
                    (cond ((x86-imm-int? opnd)
-                          (x86-imm-int-value opnd))
+                          (if (>= (x86-imm-int-value opnd) 0)
+                              (list "0x" (number->string (x86-imm-int-value opnd) 16))
+                              (list "-0x" (number->string (- (x86-imm-int-value opnd)) 16))))
                          ((x86-imm-lbl? opnd)
                           (list (asm-label-name (x86-imm-lbl-label opnd))
                                 (x86-offset->string (x86-imm-lbl-offset opnd))))
+                         ((x86-imm-glo? opnd)
+                          (list "&global[" (x86-imm-glo-name opnd) "]"))
                          ((x86-imm-late? opnd)
                           ((x86-imm-late-handler opnd) cgc 'listing))
                          ((x86-imm-obj? opnd)
@@ -157,7 +165,10 @@
                                                                  scale)
                                                                 ")"))))
                                           '(")"))))))
-                     (if (fx= offset 0) x (cons offset x)))
+                     (if (fx= offset 0)
+                         x
+                         (cons (if (fxpositive? offset) "0x" "-0x")
+                               (cons (number->string (fxabs offset) 16) x))))
                    offset)))
             (else
              opnd)))
@@ -209,6 +220,8 @@
                    ((x86-imm-lbl? opnd)
                     (list (asm-label-name (x86-imm-lbl-label opnd))
                           (x86-offset->string (x86-imm-lbl-offset opnd))))
+                   ((x86-imm-glo? opnd)
+                    (list "&global[" (x86-imm-glo-name opnd) "]"))
                    ((x86-imm-late? opnd)
                     ((x86-imm-late-handler opnd) cgc 'listing))
                    ((x86-imm-obj? opnd)
@@ -432,7 +445,7 @@
       (asm-8 cgc #x67))) ;; address size override prefix
 
 #|
-TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
+TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width kind)
 
 (define (x86-abs-addr cgc label offset width)
 
@@ -565,6 +578,9 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
         ((x86-imm-lbl? imm)
          (x86-imm-lbl-encode cgc imm imm-width)
          imm)
+        ((x86-imm-glo? imm)
+         (x86-imm-glo-encode cgc imm imm-width)
+         imm)
         ((x86-imm-late? imm)
          ((x86-imm-late-handler imm) cgc 'encode))
         ((x86-imm-obj? imm)
@@ -579,13 +595,25 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
    (x86-imm-lbl-label imm-lbl)
    (x86-imm-lbl-offset imm-lbl)
    #f ;; absolute
-   imm-width))
+   imm-width
+   0
+   #f))
+
+(define (x86-imm-glo-encode cgc imm-glo imm-width)
+  (codegen-fixup-glo!
+   cgc
+   (x86-imm-glo-name imm-glo)
+   imm-width
+   0
+   #f))
 
 (define (x86-imm-obj-encode cgc imm-obj imm-width)
   (codegen-fixup-obj!
    cgc
    (x86-imm-obj-value imm-obj)
-   imm-width))
+   imm-width
+   0
+   #f))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1078,32 +1106,32 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
 
 (define (x86-jmp cgc opnd)
   (if (asm-label? opnd)
-      (x86-jump-label cgc opnd x86-jmp-rel8-opcode)
+      (x86-jump-label cgc opnd x86-jmp-rel8-opcode #f)
       (x86-jump-general cgc opnd 4)))
 
 (define (x86-call cgc opnd)
   (if (asm-label? opnd)
-      (x86-jump-label cgc opnd x86-call-rel32-opcode)
+      (x86-jump-label cgc opnd x86-call-rel32-opcode #f)
       (x86-jump-general cgc opnd 2)))
 
-(define (x86-jo cgc label)  (x86-jump-label cgc label x86-jo-rel8-opcode))
-(define (x86-jno cgc label) (x86-jump-label cgc label x86-jno-rel8-opcode))
-(define (x86-jb cgc label)  (x86-jump-label cgc label x86-jb-rel8-opcode))
-(define (x86-jae cgc label) (x86-jump-label cgc label x86-jae-rel8-opcode))
-(define (x86-je cgc label)  (x86-jump-label cgc label x86-je-rel8-opcode))
-(define (x86-jne cgc label) (x86-jump-label cgc label x86-jne-rel8-opcode))
-(define (x86-jbe cgc label) (x86-jump-label cgc label x86-jbe-rel8-opcode))
-(define (x86-ja cgc label)  (x86-jump-label cgc label x86-ja-rel8-opcode))
-(define (x86-js cgc label)  (x86-jump-label cgc label x86-js-rel8-opcode))
-(define (x86-jns cgc label) (x86-jump-label cgc label x86-jns-rel8-opcode))
-(define (x86-jp cgc label)  (x86-jump-label cgc label x86-jp-rel8-opcode))
-(define (x86-jnp cgc label) (x86-jump-label cgc label x86-jnp-rel8-opcode))
-(define (x86-jl cgc label)  (x86-jump-label cgc label x86-jl-rel8-opcode))
-(define (x86-jge cgc label) (x86-jump-label cgc label x86-jge-rel8-opcode))
-(define (x86-jle cgc label) (x86-jump-label cgc label x86-jle-rel8-opcode))
-(define (x86-jg cgc label)  (x86-jump-label cgc label x86-jg-rel8-opcode))
+(define (x86-jo cgc label)  (x86-jump-label cgc label x86-jo-rel8-opcode #t))
+(define (x86-jno cgc label) (x86-jump-label cgc label x86-jno-rel8-opcode #t))
+(define (x86-jb cgc label)  (x86-jump-label cgc label x86-jb-rel8-opcode #t))
+(define (x86-jae cgc label) (x86-jump-label cgc label x86-jae-rel8-opcode #t))
+(define (x86-je cgc label)  (x86-jump-label cgc label x86-je-rel8-opcode #t))
+(define (x86-jne cgc label) (x86-jump-label cgc label x86-jne-rel8-opcode #t))
+(define (x86-jbe cgc label) (x86-jump-label cgc label x86-jbe-rel8-opcode #t))
+(define (x86-ja cgc label)  (x86-jump-label cgc label x86-ja-rel8-opcode #t))
+(define (x86-js cgc label)  (x86-jump-label cgc label x86-js-rel8-opcode #t))
+(define (x86-jns cgc label) (x86-jump-label cgc label x86-jns-rel8-opcode #t))
+(define (x86-jp cgc label)  (x86-jump-label cgc label x86-jp-rel8-opcode #t))
+(define (x86-jnp cgc label) (x86-jump-label cgc label x86-jnp-rel8-opcode #t))
+(define (x86-jl cgc label)  (x86-jump-label cgc label x86-jl-rel8-opcode #t))
+(define (x86-jge cgc label) (x86-jump-label cgc label x86-jge-rel8-opcode #t))
+(define (x86-jle cgc label) (x86-jump-label cgc label x86-jle-rel8-opcode #t))
+(define (x86-jg cgc label)  (x86-jump-label cgc label x86-jg-rel8-opcode #t))
 
-(define (x86-jump-label cgc label opcode)
+(define (x86-jump-label cgc label opcode labels-only)
 
   (define (listing width)
     (if (codegen-context-listing-format cgc)
@@ -1123,6 +1151,10 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
   (define (label-dist label self offset)
     (fx- (asm-label-pos label)
          (fx+ self offset)))
+
+  (assert (or (not labels-only)
+              (asm-label? label))
+          "Jump on condition on invalid operand" label)
 
   (asm-at-assembly
 
@@ -1183,6 +1215,49 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
                    (if (fx= field 4) "jmp" "call")
                    -1
                    opnd)))
+
+;;;----------------------------------------------------------------------------
+
+;;; X86 instructions: SETO, SETNO, SETB, SETAE, SETE, SETNE, SETBE, SETA,
+;;; SETS, SETNS, SETP, SETNP, SETL, SETGE, SETLE, and SETG.
+
+;; Conditional set opcodes
+
+(define (x86-seto cgc opnd)  (x86-set-cc cgc opnd   0))
+(define (x86-setno cgc opnd) (x86-set-cc cgc opnd   1))
+(define (x86-setb cgc opnd)  (x86-set-cc cgc opnd   2))
+(define (x86-setae cgc opnd) (x86-set-cc cgc opnd   3))
+(define (x86-sete cgc opnd)  (x86-set-cc cgc opnd   4))
+(define (x86-setne cgc opnd) (x86-set-cc cgc opnd   5))
+(define (x86-setbe cgc opnd) (x86-set-cc cgc opnd   6))
+(define (x86-seta cgc opnd)  (x86-set-cc cgc opnd   7))
+(define (x86-sets cgc opnd)  (x86-set-cc cgc opnd   8))
+(define (x86-setns cgc opnd) (x86-set-cc cgc opnd   9))
+(define (x86-setp cgc opnd)  (x86-set-cc cgc opnd  10))
+(define (x86-setnp cgc opnd) (x86-set-cc cgc opnd  11))
+(define (x86-setl cgc opnd)  (x86-set-cc cgc opnd  12))
+(define (x86-setge cgc opnd) (x86-set-cc cgc opnd  13))
+(define (x86-setle cgc opnd) (x86-set-cc cgc opnd  14))
+(define (x86-setg cgc opnd)  (x86-set-cc cgc opnd  15))
+
+(define (x86-set-cc cgc opnd cc)
+
+  (define (listing opnd)
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     (vector-ref
+                      '#("seto" "setno" "setb" "setae"
+                         "sete" "setne" "setbe" "seta"
+                         "sets" "setns" "setp" "setnp"
+                         "setl" "setge" "setle" "setg")
+                      cc)
+                     opnd)))
+
+  (x86-esc-opcode cgc)
+  (asm-8 cgc (+ #x90 cc))  ;; opcode
+  (x86-opnd-prefix cgc 0 0 opnd #f) ;; prefix (width is implicit)
+  (x86-opnd-modrm/sib cgc 0 opnd) ;; ModR/M
+  (listing opnd))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1251,7 +1326,7 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
     (listing opnd))
 
   (cond ((and (fx= op #x50) ;; push?
-              (x86-imm-int? opnd))
+              (x86-imm? opnd))
          (immediate))
         ((x86-reg? opnd)
          (register))
@@ -1739,5 +1814,163 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width)
          (general (x86-reg-width opnd2)))
         (else
          (general width))))
+
+;;;----------------------------------------------------------------------------
+
+;;; X86 instructions: CMOVA, CMOVAE, CMOVB, CMOVBE, CMOVC, CMOVE, CMOVG,
+;;; CMOVGE, CMOVL, CMOVLE, CMOVNA, CMOVNAE, CMOVNB, CMOVNBE, CMOVNC, CMOVNE,
+;;; CMOVNG, CMOVNGE, CMOVNL, CMOVNLE, CMOVNO, CMOVNP, CMOVNS, CMOVNZ, CMOVO,
+;;; CMOVP, CMOVPE, CMOVPO, CMOVS, CMOVZ
+
+; XXX Lazy
+(define (x86-cmova cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmova" #x47))
+(define (x86-cmovae cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovae" #x43))
+(define (x86-cmovb cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovb" #x42))
+(define (x86-cmovbe cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovbe" #x46))
+(define (x86-cmovc cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovc" #x42))
+(define (x86-cmove cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmove" #x44))
+(define (x86-cmovg cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovg" #x4f))
+(define (x86-cmovge cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovge" #x4d))
+(define (x86-cmovl cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovl" #x4c))
+(define (x86-cmovle cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovle" #x4e))
+(define (x86-cmovna cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovna" #x46))
+(define (x86-cmovnae cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnae" #x42))
+(define (x86-cmovnb cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnb" #x43))
+(define (x86-cmovnbe cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnbe" #x47))
+(define (x86-cmovnc cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnc" #x43))
+(define (x86-cmovne cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovne" #x45))
+(define (x86-cmovng cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovng" #x4e))
+(define (x86-cmovnge cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnge" #x4c))
+(define (x86-cmovnl cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnl" #x4d))
+(define (x86-cmovnle cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnle" #x4f))
+(define (x86-cmovno cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovno" #x41))
+(define (x86-cmovnp cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnp" #x4b))
+(define (x86-cmovns cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovns" #x49))
+(define (x86-cmovnz cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovnz" #x45))
+(define (x86-cmovo cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovno" #x40))
+(define (x86-cmovp cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovp" #x4a))
+(define (x86-cmovpe cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovpe" #x4a))
+(define (x86-cmovpo cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovpo" #x4b))
+(define (x86-cmovs cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovs" #x48))
+(define (x86-cmovz cgc reg opnd #!optional (width #f))
+  (x86-cmovcc cgc reg opnd width "cmovz" #x44))
+
+(define (x86-cmovcc cgc reg opnd width name op)
+
+  (define (listing width-opnd)
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     name
+                     0
+                     reg
+                     (if (x86-reg? opnd)
+                         opnd
+                         (x86-force-width opnd width-opnd)))))
+
+  (assert (x86-reg? reg)
+          "destination of popcnt must be a register" reg)
+
+  (assert (not (x86-reg8? reg))
+          "destination of popcnt must not be an 8 bit register" reg)
+
+  (assert (if (x86-reg? opnd)
+              (or (not width)
+                  (fx= (x86-reg-width opnd) width))
+              width)
+          "missing or inconsistent operand width" width)
+
+  (let ((width-reg (x86-reg-width reg))
+        (width-opnd (or width (x86-reg-width opnd))))
+
+    (assert (or (and (fx= width-reg 16) (fx= width-opnd 16))
+                (and (fx= width-reg 32) (fx= width-opnd 32))
+                (and (fx= width-reg 64) (fx= width-opnd 64)))
+            "invalid combination of operands" reg opnd)
+
+    (x86-opnd-prefix-reg-opnd cgc reg opnd)
+    (x86-esc-opcode cgc)
+    (asm-8 cgc op)
+    (x86-opnd-modrm/sib-reg-opnd cgc reg opnd)
+
+    (listing width-opnd)))
+
+;;;----------------------------------------------------------------------------
+
+;;; X86 instructions: POPCNT, LZCNT.
+
+(define (x86-popcnt cgc reg opnd #!optional (width #f))
+  (x86-count cgc reg opnd width #xb8))
+
+(define (x86-lzcnt cgc reg opnd #!optional (width #f))
+  (x86-count cgc reg opnd width #xbd))
+
+(define (x86-count cgc reg opnd width op)
+
+  (define (listing width-opnd)
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     (if (= op #xb8) "popcnt" "lzcnt")
+                     0
+                     reg
+                     (if (x86-reg? opnd)
+                         opnd
+                         (x86-force-width opnd width-opnd)))))
+
+  (assert (x86-reg? reg)
+          "destination of popcnt must be a register" reg)
+
+  (assert (not (x86-reg8? reg))
+          "destination of popcnt must not be an 8 bit register" reg)
+
+  (assert (if (x86-reg? opnd)
+              (or (not width)
+                  (fx= (x86-reg-width opnd) width))
+              width)
+          "missing or inconsistent operand width" width)
+
+  (let ((width-reg (x86-reg-width reg))
+        (width-opnd (or width (x86-reg-width opnd))))
+
+    (assert (or (and (fx= width-reg 16) (fx= width-opnd 16))
+                (and (fx= width-reg 32) (fx= width-opnd 32))
+                (and (fx= width-reg 64) (fx= width-opnd 64)))
+            "invalid combination of operands" reg opnd)
+
+    (asm-8 cgc #xf3)
+    (x86-opnd-prefix-reg-opnd cgc reg opnd)
+    (x86-esc-opcode cgc)
+    (asm-8 cgc op)
+    (x86-opnd-modrm/sib-reg-opnd cgc reg opnd)
+
+    (listing width-opnd)))
 
 ;;;============================================================================

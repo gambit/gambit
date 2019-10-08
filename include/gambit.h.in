@@ -3230,8 +3230,6 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXASHRP(x,y)((y)>=___FIX(0)?___FIXASHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 #define ___FIXWRAPLSHR(x,y)((___WORD)(((___UWORD)(x)>>___INT(y))&~___TMASK))
 #define ___FIXWRAPLSHRP(x,y)((y)>=___FIX(0)?___FIXWRAPLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
-#define ___FIXLSHR(x,y)___FIXWRAPLSHR(x,y) /*TODO: remove*/
-#define ___FIXLSHRP(x,y)___FIXWRAPLSHRP(x,y) /*TODO: remove*/
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
 
@@ -5817,6 +5815,67 @@ do { \
 do { \
      /* generate x86-64 instruction: call *-8(%rcx) */ \
      (ptr)[___LABEL_LOWLEVEL_CODE] = 0xf851ff << (8*___tSUBTYPED); \
+   } while (0)
+
+#endif
+
+#endif
+
+#ifdef ___CPU_arm
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate ARM THUMB2 instructions: mov r4,pc ; ldr pc,[r4,#-8] */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xf854467cL; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0x0000fc08L; \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate ARM THUMB2 instructions: ldr r7,[r5] ; blx r7 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x47b8682fL; \
+   } while (0)
+
+#endif
+
+#ifdef ___CPU_riscv
+
+#if __riscv_xlen == 64
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* XXX generate RISC-V instructions: auipc s6, 0x0; ld s6, -16(s6); jr s6 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0xff0b3b0300000b17L; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0x000b0067; \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 1
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate RISC-V instructions: ld s7, 0(s10); jalr s7 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x000b80e7000d3b83L; \
+   } while (0)
+
+#else
+
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SIZE 3
+#define ___CLO_LOWLEVEL_TRAMPOLINE_SETUP(ptr,lbl) \
+do { \
+     /* generate RISC-V instructions: auipc s6, 0x0; lw s6, -8(s6); jr s6 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x00000b17; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0xff8b2b03; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+2] = 0x000b0067; \
+   } while (0)
+
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SIZE 2
+#define ___LABEL_LOWLEVEL_TRAMPOLINE_SETUP(ptr) \
+do { \
+     /* generate RISC-V instructions: lw s7, 0(s10); jalr s7 */ \
+     (ptr)[___LABEL_LOWLEVEL_CODE] = 0x000d2b83; \
+     (ptr)[___LABEL_LOWLEVEL_CODE+1] = 0x000b80e7; \
    } while (0)
 
 #endif

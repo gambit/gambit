@@ -3210,6 +3210,16 @@ bin/gambcomp-php.unix \
 bin/gambcomp-php.bat.windows \
 bin/gambcomp-java.unix \
 bin/gambcomp-java.bat.windows \
+bin/gambcomp-x86.unix \
+bin/gambcomp-x86.bat.windows \
+bin/gambcomp-x86-64.unix \
+bin/gambcomp-x86-64.bat.windows \
+bin/gambcomp-arm.unix \
+bin/gambcomp-arm.bat.windows \
+bin/gambcomp-riscv-32.unix \
+bin/gambcomp-riscv-32.bat.windows \
+bin/gambcomp-riscv-64.unix \
+bin/gambcomp-riscv-64.bat.windows \
 bin/gambdoc.unix \
 bin/gambdoc.bat.windows \
 misc/makefile \

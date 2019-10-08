@@ -1,0 +1,282 @@
+@echo off
+
+rem The following settings are determined by the configure script.
+
+set C_COMPILER=@C_COMPILER_BAT@
+set C_PREPROC=@C_PREPROC_BAT@
+
+set FLAGS_OBJ=@FLAGS_OBJ_BAT@
+set FLAGS_DYN=@FLAGS_DYN_BAT@
+set FLAGS_LIB=@FLAGS_LIB_BAT@
+set FLAGS_EXE=@FLAGS_EXE_BAT@
+
+set FLAGS_OPT=@FLAGS_OPT_BAT@
+set FLAGS_OPT_RTS=@FLAGS_OPT_RTS_BAT@
+
+set DEFS_OBJ=@DEFS_OBJ_BAT@
+set DEFS_DYN=@DEFS_DYN_BAT@
+set DEFS_LIB=@DEFS_LIB_BAT@
+set DEFS_EXE=@DEFS_EXE_BAT@
+
+set BUILD_OBJ=@BUILD_OBJ_BAT@
+set BUILD_DYN=@BUILD_DYN_BAT@
+set BUILD_LIB=@BUILD_LIB_BAT@
+set BUILD_EXE=@BUILD_EXE_BAT@
+
+set DEFS=@DEFS_BAT@
+set LIBS=@LIBS_BAT@
+set GAMBITLIB=@GAMBITLIB_BAT@
+set GAMBITGSCLIB=@GAMBITGSCLIB_BAT@
+set GAMBITGSILIB=@GAMBITGSILIB_BAT@
+set LIB_PREFIX=@LIB_PREFIX_BAT@
+set LIB_EXTENSION=@LIB_EXTENSION_BAT@
+set OBJ_EXTENSION=@OBJ_EXTENSION_BAT@
+set EXE_EXTENSION=@EXE_EXTENSION_BAT@
+set BAT_EXTENSION=@BAT_EXTENSION_BAT@
+
+if "%1" == "obj" goto obj
+if not "%1" == ""obj"" goto not_obj
+:obj
+
+if not "%GAMBCOMP_VERBOSE%" == "yes" goto not_obj_verbose
+echo.@BUILD_OBJ_ECHO_BAT@
+:not_obj_verbose
+
+@BUILD_OBJ_ECHO_BAT@
+
+goto end
+:not_obj
+
+if "%1" == "dyn" goto dyn
+if not "%1" == ""dyn"" goto not_dyn
+:dyn
+
+if not "%GAMBCOMP_VERBOSE%" == "yes" goto not_dyn_verbose
+echo.@BUILD_DYN_ECHO_BAT@
+:not_dyn_verbose
+
+@BUILD_DYN_ECHO_BAT@
+
+goto end
+:not_dyn
+
+if "%1" == "lib" goto lib
+if not "%1" == ""lib"" goto not_lib
+:lib
+
+if not "%GAMBCOMP_VERBOSE%" == "yes" goto not_lib_verbose
+echo.@BUILD_LIB_ECHO_BAT@
+:not_lib_verbose
+
+@BUILD_LIB_ECHO_BAT@
+
+goto end
+:not_lib
+
+if "%1" == "exe" goto exe
+if not "%1" == ""exe"" goto not_exe
+:exe
+
+if not "%GAMBCOMP_VERBOSE%" == "yes" goto not_exe_verbose
+echo.@BUILD_EXE_ECHO_BAT@
+:not_exe_verbose
+
+@BUILD_EXE_ECHO_BAT@
+
+goto end
+:not_exe
+
+if "%1" == "C_COMPILER" goto C_COMPILER
+if not "%1" == ""C_COMPILER"" goto not_C_COMPILER
+:C_COMPILER
+echo.%C_COMPILER%
+goto end
+:not_C_COMPILER
+
+if "%1" == "C_PREPROC" goto C_PREPROC
+if not "%1" == ""C_PREPROC"" goto not_C_PREPROC
+:C_PREPROC
+echo.%C_PREPROC%
+goto end
+:not_C_PREPROC
+
+if "%1" == "FLAGS_OBJ" goto FLAGS_OBJ
+if not "%1" == ""FLAGS_OBJ"" goto not_FLAGS_OBJ
+:FLAGS_OBJ
+echo.%FLAGS_OBJ%
+goto end
+:not_FLAGS_OBJ
+
+if "%1" == "FLAGS_DYN" goto FLAGS_DYN
+if not "%1" == ""FLAGS_DYN"" goto not_FLAGS_DYN
+:FLAGS_DYN
+echo.%FLAGS_DYN%
+goto end
+:not_FLAGS_DYN
+
+if "%1" == "FLAGS_LIB" goto FLAGS_LIB
+if not "%1" == ""FLAGS_LIB"" goto not_FLAGS_LIB
+:FLAGS_LIB
+echo.%FLAGS_LIB%
+goto end
+:not_FLAGS_LIB
+
+if "%1" == "FLAGS_EXE" goto FLAGS_EXE
+if not "%1" == ""FLAGS_EXE"" goto not_FLAGS_EXE
+:FLAGS_EXE
+echo.%FLAGS_EXE%
+goto end
+:not_FLAGS_EXE
+
+if "%1" == "FLAGS_OPT" goto FLAGS_OPT
+if not "%1" == ""FLAGS_OPT"" goto not_FLAGS_OPT
+:FLAGS_OPT
+echo.%FLAGS_OPT%
+goto end
+:not_FLAGS_OPT
+
+if "%1" == "FLAGS_OPT_RTS" goto FLAGS_OPT_RTS
+if not "%1" == ""FLAGS_OPT_RTS"" goto not_FLAGS_OPT_RTS
+:FLAGS_OPT_RTS
+echo.%FLAGS_OPT_RTS%
+goto end
+:not_FLAGS_OPT_RTS
+
+if "%1" == "DEFS_OBJ" goto DEFS_OBJ
+if not "%1" == ""DEFS_OBJ"" goto not_DEFS_OBJ
+:DEFS_OBJ
+echo.%DEFS_OBJ%
+goto end
+:not_DEFS_OBJ
+
+if "%1" == "DEFS_DYN" goto DEFS_DYN
+if not "%1" == ""DEFS_DYN"" goto not_DEFS_DYN
+:DEFS_DYN
+echo.%DEFS_DYN%
+goto end
+:not_DEFS_DYN
+
+if "%1" == "DEFS_LIB" goto DEFS_LIB
+if not "%1" == ""DEFS_LIB"" goto not_DEFS_LIB
+:DEFS_LIB
+echo.%DEFS_LIB%
+goto end
+:not_DEFS_LIB
+
+if "%1" == "DEFS_EXE" goto DEFS_EXE
+if not "%1" == ""DEFS_EXE"" goto not_DEFS_EXE
+:DEFS_EXE
+echo.%DEFS_EXE%
+goto end
+:not_DEFS_EXE
+
+if "%1" == "BUILD_OBJ" goto BUILD_OBJ
+if not "%1" == ""BUILD_OBJ"" goto not_BUILD_OBJ
+:BUILD_OBJ
+echo.%BUILD_OBJ%
+goto end
+:not_BUILD_OBJ
+
+if "%1" == "BUILD_DYN" goto BUILD_DYN
+if not "%1" == ""BUILD_DYN"" goto not_BUILD_DYN
+:BUILD_DYN
+echo.%BUILD_DYN%
+goto end
+:not_BUILD_DYN
+
+if "%1" == "BUILD_LIB" goto BUILD_LIB
+if not "%1" == ""BUILD_LIB"" goto not_BUILD_LIB
+:BUILD_LIB
+echo.%BUILD_LIB%
+goto end
+:not_BUILD_LIB
+
+if "%1" == "BUILD_EXE" goto BUILD_EXE
+if not "%1" == ""BUILD_EXE"" goto not_BUILD_EXE
+:BUILD_EXE
+echo.%BUILD_EXE%
+goto end
+:not_BUILD_EXE
+
+if "%1" == "DEFS" goto DEFS
+if not "%1" == ""DEFS"" goto not_DEFS
+:DEFS
+echo.%DEFS%
+goto end
+:not_DEFS
+
+if "%1" == "LIBS" goto LIBS
+if not "%1" == ""LIBS"" goto not_LIBS
+:LIBS
+echo.%LIBS%
+goto end
+:not_LIBS
+
+if "%1" == "GAMBITLIB_DEFS" goto GAMBITLIB_DEFS
+if not "%1" == ""GAMBITLIB_DEFS"" goto not_GAMBITLIB_DEFS
+:GAMBITLIB_DEFS
+echo.%GAMBITLIB_DEFS%
+goto end
+:not_GAMBITLIB_DEFS
+
+if "%1" == "GAMBITLIB" goto GAMBITLIB
+if not "%1" == ""GAMBITLIB"" goto not_GAMBITLIB
+:GAMBITLIB
+echo.%GAMBITLIB%
+goto end
+:not_GAMBITLIB
+
+if "%1" == "GAMBITGSCLIB" goto GAMBITGSCLIB
+if not "%1" == ""GAMBITGSCLIB"" goto not_GAMBITGSCLIB
+:GAMBITGSCLIB
+echo.%GAMBITGSCLIB%
+goto end
+:not_GAMBITGSCLIB
+
+if "%1" == "GAMBITGSILIB" goto GAMBITGSILIB
+if not "%1" == ""GAMBITGSILIB"" goto not_GAMBITGSILIB
+:GAMBITGSILIB
+echo.%GAMBITGSILIB%
+goto end
+:not_GAMBITGSILIB
+
+if "%1" == "LIB_PREFIX" goto LIB_PREFIX
+if not "%1" == ""LIB_PREFIX"" goto not_LIB_PREFIX
+:LIB_PREFIX
+echo.%LIB_PREFIX%
+goto end
+:not_LIB_PREFIX
+
+if "%1" == "LIB_EXTENSION" goto LIB_EXTENSION
+if not "%1" == ""LIB_EXTENSION"" goto not_LIB_EXTENSION
+:LIB_EXTENSION
+echo.%LIB_EXTENSION%
+goto end
+:not_LIB_EXTENSION
+
+if "%1" == "OBJ_EXTENSION" goto OBJ_EXTENSION
+if not "%1" == ""OBJ_EXTENSION"" goto not_OBJ_EXTENSION
+:OBJ_EXTENSION
+echo.%OBJ_EXTENSION%
+goto end
+:not_OBJ_EXTENSION
+
+if "%1" == "EXE_EXTENSION" goto EXE_EXTENSION
+if not "%1" == ""EXE_EXTENSION"" goto not_EXE_EXTENSION
+:EXE_EXTENSION
+echo.%EXE_EXTENSION%
+goto end
+:not_EXE_EXTENSION
+
+if "%1" == "BAT_EXTENSION" goto BAT_EXTENSION
+if not "%1" == ""BAT_EXTENSION"" goto not_BAT_EXTENSION
+:BAT_EXTENSION
+echo.%BAT_EXTENSION%
+goto end
+:not_BAT_EXTENSION
+
+echo.gambcomp-C.bat unknown operation "%1"
+exit /b 1
+
+:end
+exit /b 0

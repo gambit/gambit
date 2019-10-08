@@ -4,7 +4,7 @@
 
 ;;; File: "runtests.scm"
 
-;;; Copyright (c) 2012-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -93,7 +93,7 @@
   (let* ((port
           (open-process (list path: path
                               arguments: args
-                              ;; stderr-redirection: #t
+                              pseudo-terminal: #t
                               )))
          (output
           (read-line port #f))
@@ -181,6 +181,9 @@
     (delete-file "expected")
     (cdr d)))
 
+(define (target-compiles-to-o1? target)
+  (member target '("C" "x86-32" "x86-64" "arm" "riscv-32" "riscv-64")))
+
 (define (test-with-each-target file)
   (map (lambda (t)
          (let ((target (car t))
@@ -208,7 +211,7 @@
                          (if (not (equal? target "gambit"))
                              (if cleanup?
                                  (begin
-                                   (if (not (equal? target "C"))
+                                   (if (not (target-compiles-to-o1? target))
                                        (delete-file out_))
                                    (delete-file out)
                                    (if (equal? target "java")
@@ -227,15 +230,18 @@
   (let* ((file-no-ext
           (path-strip-extension file))
          (x
-          (if (equal? target "C")
-              (run "./gsc" "-:=.."                      file)
+          (if (target-compiles-to-o1? target)
+              (run "./gsc" "-:=.." "-target" target "-e" "(let ((mo c#make-obj) (seen (make-table))) (set! c#make-obj (lambda rest (let ((val (and (pair? rest) (car rest)))) (if (c#proc-obj? val) (let* ((name (c#proc-obj-name val)) (sym (string->symbol name))) (if (and (not (table-ref seen sym #f)) (not (member sym '(##machine-code-fixup))) (##string-prefix=? name \"##\")) (begin (table-set! seen sym #t) (println port: ##stderr-port \"\\n*** this primitive not inlined: \" sym) '(exit 1))))) (if (pair? rest) (mo val) (mo))))))" file)
               (apply run
                      (append (list "./gsc" "-:=.." "-o" (path-directory file) "-target" target "-link" "-flat")
                              options
                              (list file))))))
     (if (not (= (car x) 0))
-        (error "couldn't compile" file target))
-    (if (and (not (equal? target "C"))
+        (begin
+          (print (cdr x))
+          (println "\n*** compilation failed with target " target)
+          (exit 1)))
+    (if (and (not (target-compiles-to-o1? target))
              (not (equal? target "java")))
         (begin
           (shell-command
@@ -264,8 +270,23 @@
     ("x86"    #f      ()
                       "./gsc32" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
 
-    ("x86-64" #f      ()
-                      "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+;;    ("x86-64" #f      ()
+;;                      "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+
+;;    ("x86-32" ".o1"   ()
+;;                      "./gsc" "-i")
+
+    ("x86-64" ".o1"   ()
+                      "./gsc" "-i")
+
+    ("arm" ".o1"      ()
+                      "./gsc" "-i")
+
+    ("riscv-32" ".o1" ()
+                      "./gsc" "-i")
+
+    ("riscv-64" ".o1" ()
+                      "./gsc" "-i")
 
     ("java"   ".java" ()
                       "java")
@@ -605,7 +626,8 @@
                  (set! stress? #t))
                 ((equal? word "no-cleanup")
                  (set! cleanup? #f))
-                ((member word '("C" "js" "python" "ruby" "php" "java"))
+                ((member word '("C" "js" "python" "ruby" "php" "java"
+                                "x86-32" "x86-64" "arm" "riscv-32" "riscv-64"))
                  (set! targets
                        (cons (string->symbol word)
                              targets)))

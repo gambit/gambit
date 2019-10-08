@@ -3145,6 +3145,18 @@ ___processor_state ___ps;)
 {
 #ifdef __GNUC__
 
+#define PS_FP   PS_FIELD("2")
+#define PS_HP   PS_FIELD("6")
+#define PS_R(n) PS_FIELD("(" n "+7)")
+#define PS_PC   PS_FIELD("(0+5+7)")
+#define PS_NA   PS_FIELD("(1+5+7)")
+
+#if ___tSUBTYPED == 1
+#define CONTROL_POINT_TAG "1"
+#else
+#define CONTROL_POINT_TAG "2"
+#endif
+
 #ifdef ___CPU_x86
 
 #ifdef ___CPU_x86_32
@@ -3211,12 +3223,6 @@ ___processor_state ___ps;)
 
 #endif
 
-#define PS_FP   PS_FIELD("2")
-#define PS_HP   PS_FIELD("6")
-#define PS_R(n) PS_FIELD("(" n "+7)")
-#define PS_PC   PS_FIELD("(0+5+7)")
-#define PS_NA   PS_FIELD("(1+5+7)")
-
   __asm__ __volatile__ (
 
     "mov  %0, %%" reg_PS "\n\t"
@@ -3225,20 +3231,20 @@ ___processor_state ___ps;)
 
     /* account for red zone */
 
-    "add  $-128, %%" reg_SP "\n\t"
+    // "add  $-128, %%" reg_SP "\n\t"
 
 #endif
 
     /* save callee-save registers */
 
-    "push %%" reg_R0 "\n\t"
-    "push %%" reg_R1 "\n\t"
-    "push %%" reg_R2 "\n\t"
-    "push %%" reg_R3 "\n\t"
-    "push %%" reg_R4 "\n\t"
+    // "push %%" reg_R0 "\n\t"
+    // "push %%" reg_R1 "\n\t"
+    // "push %%" reg_R2 "\n\t"
+    // "push %%" reg_R3 "\n\t"
+    // "push %%" reg_R4 "\n\t"
+    // "push %%" reg_HP "\n\t"
     /* "push %%" reg_PS "\n\t" */
     /* "push %%" reg_FP "\n\t" */
-    "push %%" reg_HP "\n\t"
 
     /* setup handler for returning from lowlevel code */
 
@@ -3262,14 +3268,14 @@ ___processor_state ___ps;)
 
     "mov  " PS_PC ", %%" reg_TMP "\n\t"
 #ifdef ___CPU_x86_32
-    "cmpl $1048576,-1-2*4(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*4(%%" reg_TMP ")\n\t"
     "jl   setup_other_registers\n\t"
     "add  $5, %%" reg_R4 "\n\t"
     "push %%" reg_R4 "\n\t"
     "add  $-5, %%" reg_R4 "\n\t"
 #endif
 #ifdef ___CPU_x86_64
-    "cmpl $1048576,-1-2*8(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*8(%%" reg_TMP ")\n\t"
     "jl   setup_other_registers\n\t"
     "add  $3, %%" reg_R4 "\n\t"
     "push %%" reg_R4 "\n\t"
@@ -3291,52 +3297,54 @@ ___processor_state ___ps;)
      * ___ps->pc
      */
 
-    "cmpl $0, " PS_NA "\n\t"
-    "je   nargs_0\n\t"
-    "cmpl $1, " PS_NA "\n\t"
-    "je   nargs_1\n\t"
-    "cmpl $2, " PS_NA "\n\t"
-    "je   nargs_2\n\t"
-    "cmpl $3, " PS_NA "\n\t"
-    "je   nargs_3\n\t"
-    "cmpl $4, " PS_NA "\n\t"
-    "je   nargs_4\n\t"
-
-    "\n"
-    "nargs_in_ps_na:\n\t"
-    /* set flags so these jumps succeed: jae jne jle jno jp  ja  jl  js */
-    "cmp  $0, %%cl\n\t"
     "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_0:\n\t"
-    /* set flags so these jumps succeed: jb  jne jle jno jp  jbe jl  js */
-    "cmp  $-3, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "cmpl $0, " PS_NA "\n\t"
+    // "je   nargs_0\n\t"
+    // "cmpl $1, " PS_NA "\n\t"
+    // "je   nargs_1\n\t"
+    // "cmpl $2, " PS_NA "\n\t"
+    // "je   nargs_2\n\t"
+    // "cmpl $3, " PS_NA "\n\t"
+    // "je   nargs_3\n\t"
+    // "cmpl $4, " PS_NA "\n\t"
+    // "je   nargs_4\n\t"
 
-    "\n"
-    "nargs_1:\n\t"
-    /* set flags so these jumps succeed: jae je  jle jno jp  jbe jge jns */
-    "cmp  %%cl, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_in_ps_na:\n\t"
+    // /* set flags so these jumps succeed: jae jne jle jno jp  ja  jl  js */
+    // "cmp  $0, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_2:\n\t"
-    /* set flags so these jumps succeed: jae jne jg  jno jp  ja  jge jns */
-    "cmp  $-123, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_0:\n\t"
+    // /* set flags so these jumps succeed: jb  jne jle jno jp  jbe jl  js */
+    // "cmp  $-3, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_3:\n\t"
-    /* set flags so these jumps succeed: jae jne jle jo  jp  ja  jl  jns */
-    "cmp  $10, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_1:\n\t"
+    // /* set flags so these jumps succeed: jae je  jle jno jp  jbe jge jns */
+    // "cmp  %%cl, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
-    "\n"
-    "nargs_4:\n\t"
-    /* set flags so these jumps succeed: jae jne jle jno jnp ja  jl  js */
-    "cmp  $2, %%cl\n\t"
-    "jmp  *" PS_PC "\n\t"
+    // "\n"
+    // "nargs_2:\n\t"
+    // /* set flags so these jumps succeed: jae jne jg  jno jp  ja  jge jns */
+    // "cmp  $-123, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
+
+    // "\n"
+    // "nargs_3:\n\t"
+    // /* set flags so these jumps succeed: jae jne jle jo  jp  ja  jl  jns */
+    // "cmp  $10, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
+
+    // "\n"
+    // "nargs_4:\n\t"
+    // /* set flags so these jumps succeed: jae jne jle jno jnp ja  jl  js */
+    // "cmp  $2, %%cl\n\t"
+    // "jmp  *" PS_PC "\n\t"
 
     "\n"
     "return_from_lowlevel:"
@@ -3344,31 +3352,31 @@ ___processor_state ___ps;)
 
     /* recover ___ps->na from flags */
 
-    "jae  nargs_not_0\n\t"
-    "movl $0, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0:\n\t"
+    // "jae  nargs_not_0\n\t"
+    // "movl $0, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0:\n\t"
 
-    "jne  nargs_not_0_or_1\n\t"
-    "movl $1, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0_or_1:\n\t"
+    // "jne  nargs_not_0_or_1\n\t"
+    // "movl $1, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0_or_1:\n\t"
 
-    "jle  nargs_not_0_or_1_or_2\n\t"
-    "movl $2, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0_or_1_or_2:\n\t"
+    // "jle  nargs_not_0_or_1_or_2\n\t"
+    // "movl $2, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0_or_1_or_2:\n\t"
 
-    "jno  nargs_not_0_or_1_or_2_or_3\n\t"
-    "movl $3, " PS_NA "\n\t"
-    "jmp  nargs_done\n"
-    "nargs_not_0_or_1_or_2_or_3:\n\t"
+    // "jno  nargs_not_0_or_1_or_2_or_3\n\t"
+    // "movl $3, " PS_NA "\n\t"
+    // "jmp  nargs_done\n"
+    // "nargs_not_0_or_1_or_2_or_3:\n\t"
 
-    "jp   nargs_done\n\t"
-    "movl $4, " PS_NA "\n\t"
+    // "jp   nargs_done\n\t"
+    // "movl $4, " PS_NA "\n\t"
 
-    "\n"
-    "nargs_done:\n\t"
+    // "\n"
+    // "nargs_done:\n\t"
 
     /* save lowlevel registers to ___ps->r[...] */
 
@@ -3384,13 +3392,13 @@ ___processor_state ___ps;)
     "mov  %%" reg_TMP ", " PS_PC "\n\t"
 
 #ifdef ___CPU_x86_32
-    "cmpl $1048576,-1-2*4(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*4(%%" reg_TMP ")\n\t"
     "jl   store_self_register\n\t"
     "pop  %%" reg_R4 "\n\t"
     "add  $-3, %%" reg_R4 "\n\t"
 #endif
 #ifdef ___CPU_x86_64
-    "cmpl $1048576,-1-2*8(%%" reg_TMP ")\n\t"
+    "cmpl $0x100000,-" CONTROL_POINT_TAG "-2*8(%%" reg_TMP ")\n\t"
     "jl   store_self_register\n\t"
     "pop  %%" reg_R4 "\n\t"
     "add  $-6, %%" reg_R4 "\n\t"
@@ -3408,20 +3416,20 @@ ___processor_state ___ps;)
     /* restore callee-save registers */
 
     "mov  " PS_FIELD("-2") ", %%" reg_SP "\n\t"
-    "pop  %%" reg_HP "\n\t"
     /* "pop  %%" reg_FP "\n\t" */
     /* "pop  %%" reg_PS "\n\t" */
-    "pop  %%" reg_R4 "\n\t"
-    "pop  %%" reg_R3 "\n\t"
-    "pop  %%" reg_R2 "\n\t"
-    "pop  %%" reg_R1 "\n\t"
-    "pop  %%" reg_R0 "\n\t"
+    // "pop  %%" reg_HP "\n\t"
+    // "pop  %%" reg_R4 "\n\t"
+    // "pop  %%" reg_R3 "\n\t"
+    // "pop  %%" reg_R2 "\n\t"
+    // "pop  %%" reg_R1 "\n\t"
+    // "pop  %%" reg_R0 "\n\t"
 
 #ifdef ___CPU_x86_64
 
     /* account for red zone */
 
-    "add  $128, %%" reg_SP "\n\t"
+    // "add  $128, %%" reg_SP "\n\t"
 
 #endif
 
@@ -3430,7 +3438,309 @@ ___processor_state ___ps;)
       "m" (___ps)
     : /* clobbers */
       "%" reg_PS,
-      "%" reg_TMP
+      "%" reg_TMP,
+      "%" reg_R0,
+      "%" reg_R1,
+      "%" reg_R2,
+      "%" reg_R3,
+      "%" reg_R4,
+      "%" reg_HP
+  );
+
+#endif
+
+#ifdef ___CPU_arm
+
+#define reg_R0 "r0"
+#define reg_R1 "r1"
+#define reg_R2 "r2"
+#define reg_R3 "r3"
+#define reg_R4 "r4"
+#define reg_PS "r5"
+#define reg_FP "sp"
+#define reg_HP "r6"
+#define reg_TMP "r7"
+#define reg_SP "sp"
+#define reg_LR "lr"
+#define PS_FIELD(field) "[" reg_PS ",#" PS_OFFSET "+(" field "*4)]"
+#define PS_OFFSET "4"
+
+  /*
+    GVM       ___________________C_ABI___________________
+    r0   r0       parameter 1 and return value
+    r1   r1       parameter 2
+    r2   r2       parameter 3
+    r3   r3       parameter 4
+    r4   r4  CS
+    ps   r5  CS
+    hp   r6  CS
+         r7  CS
+         r8  CS
+         r9  CS
+         r10 CS
+         r11 CS  frame pointer
+         r12     intra-procedure-call scratch register
+    sp   r13 CS  stack pointer (sp)
+         r14 CS  link register (lr)
+         r15 CS  program counter (pc)
+  */
+
+  __asm__ __volatile__ (
+
+    "mov  " reg_PS ", %0\n\t"
+    "sub  " reg_PS ", #" PS_OFFSET "\n\t"
+
+    /* setup handler for returning from lowlevel code */
+
+    "adr  " reg_TMP ", return_from_lowlevel\n\t"
+    "str  " reg_TMP ", " PS_FIELD("-1") "\n\t"
+    "str  " reg_SP ", " PS_FIELD("-2") "\n\t"
+
+    /* setup frame pointer and heap pointer registers */
+
+    "ldr  " reg_FP ", " PS_FP "\n\t"
+    "ldr  " reg_HP ", " PS_HP "\n\t"
+
+    /* setup self register */
+
+    "ldr  " reg_R4 ", " PS_R("4") "\n\t"
+
+    "\n"
+    "setup_other_registers:\n\t"
+
+    /* setup lowlevel registers from ___ps->r[...] */
+
+    "ldr  " reg_R0 ", " PS_R("0") "\n\t"
+    "ldr  " reg_R1 ", " PS_R("1") "\n\t"
+    "ldr  " reg_R2 ", " PS_R("2") "\n\t"
+    "ldr  " reg_R3 ", " PS_R("3") "\n\t"
+
+    /*
+     * set flags according to ___ps->na and jump to lowlevel code at
+     * ___ps->pc
+     */
+
+    "ldr  pc, " PS_PC "\n\t"
+
+    "\n"
+    "return_from_lowlevel:"
+    "\n\t"
+
+    /* save lowlevel registers to ___ps->r[...] */
+
+    "str  " reg_R0 ", " PS_R("0") "\n\t"
+    "str  " reg_R1 ", " PS_R("1") "\n\t"
+    "str  " reg_R2 ", " PS_R("2") "\n\t"
+    "str  " reg_R3 ", " PS_R("3") "\n\t"
+
+    /* recover the destination control point in ___ps->pc */
+
+    "sub  " reg_LR ", #4\n\t"
+    "str  " reg_LR ", " PS_PC "\n\t"
+
+    "ldr  " reg_TMP ", [" reg_LR ", #-" CONTROL_POINT_TAG "-2*4]\n\t"
+    "cmp  " reg_TMP ", #0x100000\n\t"
+    "blt  store_self_register\n\t"
+    "sub  " reg_R4 ", #(4-" CONTROL_POINT_TAG ")\n\t"
+
+    "\n"
+    "store_self_register:\n\t"
+    "str  " reg_R4 ", " PS_R("4") "\n\t"
+
+    /* save frame pointer and heap pointer registers */
+
+    "str  " reg_FP ", " PS_FP "\n\t"
+    "str  " reg_HP ", " PS_HP "\n\t"
+
+    /* restore callee-save registers */
+
+    "ldr  " reg_SP ", " PS_FIELD("-2") "\n\t"
+
+    : /* no outputs */
+    : /* inputs */
+      "r" (___ps)
+    : /* clobbers */
+      reg_PS,
+      reg_TMP,
+      reg_R0,
+      reg_R1,
+      reg_R2,
+      reg_R3,
+      reg_R4,
+      reg_HP,
+      reg_LR
+  );
+
+#endif
+
+#ifdef ___CPU_riscv
+
+#define reg_R0 "s2"
+#define reg_R1 "s3"
+#define reg_R2 "s4"
+#define reg_R3 "s5"
+#define reg_R4 "s6"
+#define reg_PS "s10"
+#define reg_FP "sp"
+#define reg_HP "s11"
+#define reg_TMP0 "s7"
+#define reg_TMP1 "s8"
+#define reg_SP "sp"
+#define reg_RA "ra" /* XXX */
+
+/* XXX */
+#if __riscv_xlen == 64
+#define PS_OFFSET "8"
+#define PS_FIELD(field) PS_OFFSET "+(" field "*8)(" reg_PS ")"
+#else
+#define PS_OFFSET "4"
+#define PS_FIELD(field) PS_OFFSET "+(" field "*4)(" reg_PS ")"
+#endif
+
+  /*
+     TODO
+  */
+
+  __asm__ __volatile__ (
+
+    "mv " reg_PS ", %0\n\t"
+    "addi " reg_PS ", " reg_PS ", -" PS_OFFSET "\n\t"
+
+    /* setup handler for returning from lowlevel code */
+
+    "la " reg_TMP0 ", return_from_lowlevel\n\t" // XXX
+#if __riscv_xlen == 64
+    "sd " reg_TMP0 ", " PS_FIELD("-1") "\n\t"
+    "sd " reg_SP ", " PS_FIELD("-2") "\n\t"
+#else
+    "sw " reg_TMP0 ", " PS_FIELD("-1") "\n\t"
+    "sw " reg_SP ", " PS_FIELD("-2") "\n\t"
+#endif
+
+    /* setup frame pointer and heap pointer registers */
+
+#if __riscv_xlen == 64
+    "ld " reg_FP ", " PS_FP "\n\t"
+    "ld " reg_HP ", " PS_HP "\n\t"
+#else
+    "lw " reg_FP ", " PS_FP "\n\t"
+    "lw " reg_HP ", " PS_HP "\n\t"
+#endif
+
+    /* setup self register */
+
+#if __riscv_xlen == 64
+    "ld " reg_R4 ", " PS_R("4") "\n\t"
+#else
+    "lw " reg_R4 ", " PS_R("4") "\n\t"
+#endif
+
+    "\n"
+    "setup_other_registers:\n\t"
+
+    /* setup lowlevel registers from ___ps->r[...] */
+
+#if __riscv_xlen == 64
+    "ld " reg_R0 ", " PS_R("0") "\n\t"
+    "ld " reg_R1 ", " PS_R("1") "\n\t"
+    "ld " reg_R2 ", " PS_R("2") "\n\t"
+    "ld " reg_R3 ", " PS_R("3") "\n\t"
+#else
+    "lw " reg_R0 ", " PS_R("0") "\n\t"
+    "lw " reg_R1 ", " PS_R("1") "\n\t"
+    "lw " reg_R2 ", " PS_R("2") "\n\t"
+    "lw " reg_R3 ", " PS_R("3") "\n\t"
+#endif
+
+    /*
+     * set flags according to ___ps->na and jump to lowlevel code at
+     * ___ps->pc
+     */
+
+#if __riscv_xlen == 64
+    "ld " reg_TMP0 ", " PS_PC "\n\t"
+#else
+    "lw " reg_TMP0 ", " PS_PC "\n\t"
+#endif
+    "jr " reg_TMP0 "\n\t"
+
+    "\n"
+    "return_from_lowlevel:"
+    "\n\t"
+
+    /* save lowlevel registers to ___ps->r[...] */
+
+#if __riscv_xlen == 64
+    "sd " reg_R0 ", " PS_R("0") "\n\t"
+    "sd " reg_R1 ", " PS_R("1") "\n\t"
+    "sd " reg_R2 ", " PS_R("2") "\n\t"
+    "sd " reg_R3 ", " PS_R("3") "\n\t"
+#else
+    "sw " reg_R0 ", " PS_R("0") "\n\t"
+    "sw " reg_R1 ", " PS_R("1") "\n\t"
+    "sw " reg_R2 ", " PS_R("2") "\n\t"
+    "sw " reg_R3 ", " PS_R("3") "\n\t"
+#endif
+
+    /* recover the destination control point in ___ps->pc */
+
+    "addi " reg_RA ", " reg_RA ", -" PS_OFFSET "+" CONTROL_POINT_TAG "\n\t" /* XXX */
+#if __riscv_xlen == 64
+    "sd " reg_RA ", " PS_PC "\n\t"
+#else
+    "sw " reg_RA ", " PS_PC "\n\t"
+#endif
+
+    /* XXX */
+#if __riscv_xlen == 64
+    "ld " reg_TMP0 ", -" CONTROL_POINT_TAG "-(2*8)(" reg_RA ")\n\t"
+#else
+    "lw " reg_TMP0 ", -" CONTROL_POINT_TAG "-(2*4)(" reg_RA ")\n\t"
+#endif
+    "li " reg_TMP1 ", 0x100000\n\t"
+    "blt " reg_TMP0 ", " reg_TMP1 ", store_self_register\n\t"
+    "addi " reg_R4 ", " reg_R4 ", -" PS_OFFSET "+" CONTROL_POINT_TAG "\n\t" /* XXX */
+
+    "\n"
+    "store_self_register:\n\t"
+#if __riscv_xlen == 64
+    "sd " reg_R4 ", " PS_R("4") "\n\t"
+#else
+    "sw " reg_R4 ", " PS_R("4") "\n\t"
+#endif
+
+    /* save frame pointer and heap pointer registers */
+
+#if __riscv_xlen == 64
+    "sd " reg_FP ", " PS_FP "\n\t"
+    "sd " reg_HP ", " PS_HP "\n\t"
+#else
+    "sw " reg_FP ", " PS_FP "\n\t"
+    "sw " reg_HP ", " PS_HP "\n\t"
+#endif
+
+    /* restore callee-save registers */
+
+#if __riscv_xlen == 64
+    "ld " reg_SP ", " PS_FIELD("-2") "\n\t"
+#else
+    "lw " reg_SP ", " PS_FIELD("-2") "\n\t"
+#endif
+
+    : /* no outputs */
+    : /* inputs */
+      "r" (___ps)
+    : /* clobbers */
+      reg_PS,
+      reg_TMP0,
+      reg_TMP1,
+      reg_R0,
+      reg_R1,
+      reg_R2,
+      reg_R3,
+      reg_R4,
+      reg_HP,
+      reg_RA
   );
 
 #endif
@@ -3468,18 +3778,30 @@ ___SCMOBJ fixup_objs;)
 
   while ((loc = *ptr++) != 0)
     {
-      if (loc == 1)
+      if (loc < 2)
         pos += 127;
       else
         {
           ___WORD fixup_pos = pos + (loc>>1) - 1;
-          ___WORD x = (loc&1)
-                      ? *___CAST(___WORD*,code+fixup_pos)
-                      : *___CAST(___S32*,code+fixup_pos);
-          int op = x & 0xff;
-          ___WORD arg = x >> 8;
+          ___WORD x;
+          int op;
+          ___WORD arg;
 
-          switch (op)
+          switch (loc & 1)
+            {
+            case 0:
+              x = *___CAST(___S32*,code+fixup_pos);
+              break;
+
+            case 1:
+              x = *___CAST(___WORD*,code+fixup_pos);
+              break;
+            }
+
+          op = x & 0xff;
+          arg = x >> 8;
+
+          switch (op & 0x0f)
             {
             case 0:
               val = arg;
@@ -3515,15 +3837,85 @@ ___SCMOBJ fixup_objs;)
               break;
             }
 
-          if (loc&1)
+          switch (loc & 1)
             {
-              *___CAST(___WORD*,code+fixup_pos) = val;
-              pos = fixup_pos + sizeof(___WORD);
-            }
-          else
-            {
-              *___CAST(___S32*,code+fixup_pos) = val;
-              pos = fixup_pos + sizeof(___S32);
+            case 0:
+              switch (op >> 4)
+                {
+                case 0:
+                  *___CAST(___S32*,code+fixup_pos) = val;
+                  pos = fixup_pos + sizeof(___S32);
+                  break;
+
+                case 1:
+                  {
+                    /* fixup movw/movt THUMB2 pair on ARM */
+
+                    ___S16 *ptr = ___CAST(___S16*,code+fixup_pos-4);
+                    ___S16 movw0 = ptr[0];
+                    ___S16 movw1 = ptr[1];
+
+                    /* generate the movw instruction */
+                    ptr[0] = movw0
+                             + ((val >> 12) & 0x000f)  /* bits 12 to 15 */
+                             + ((val >> 1) & 0x0400);  /* bit 11 */
+                    ptr[1] = movw1
+                             + (val & 0x00ff)  /* bits 0 to 7 */
+                             + ((val << 4) & 0x7000);  /* bits 8 to 10 */
+
+                    /* generate the movt instruction */
+                    val = val >> 16;
+                    ptr[2] = movw0 + 0x0080
+                             + ((val >> 12) & 0x000f)  /* bits 12 to 15 */
+                             + ((val >> 1) & 0x0400);  /* bit 11 */
+                    ptr[3] = movw1
+                             + (val & 0x00ff)  /* bits 0 to 7 */
+                             + ((val << 4) & 0x7000);  /* bits 8 to 10 */
+
+                    pos = fixup_pos + sizeof(___S32);
+                    break;
+                  }
+
+                case 2:
+                  {
+                    /* fixup lui/addi pair on 32-bit RISC-V */
+
+                    ___S32 *ptr = ___CAST(___S32*,code+fixup_pos-4);
+                    ___S32 opcode = ptr[0] & 0x7f; /* opcode for lui */
+                    ___S32 rd = ptr[0] & 0xf80;
+
+                    ptr[0] = opcode + rd + (val & 0xfffff000); /* lui */
+                    ptr[1] = (opcode - 0x24) + rd + (rd << 8) + (val << 20); /* XXX addi */
+
+                    pos = fixup_pos + sizeof(___S32);
+                    break;
+                  }
+                }
+              break;
+
+            case 1:
+              switch (op >> 4)
+                {
+                case 0:
+                  *___CAST(___WORD*,code+fixup_pos) = val;
+                  pos = fixup_pos + sizeof(___WORD);
+                  break;
+
+                case 2:
+                  {
+                    /* fixup jal/ld pair on 64-bit RISC-V */
+
+                    ___S32 *ptr = ___CAST(___S32*,code+fixup_pos-8);
+
+                    ptr[3] = ptr[1]; /* ld */
+                    ptr[2] = val >> 32;
+                    ptr[1] = val;
+
+                    pos = fixup_pos + sizeof(___WORD);
+                    break;
+                  }
+                }
+              break;
             }
         }
     }

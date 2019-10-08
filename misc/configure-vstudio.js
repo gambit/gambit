@@ -425,6 +425,36 @@ FixupFile(
 
 FixupFile(
     fso,
+    gambitRoot + "\\bin\\gambcomp-x86.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-x86.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-x86-64.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-x86-64.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-arm.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-arm.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-riscv-32.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-riscv-32.bat",
+    {});
+
+FixupFile(
+    fso,
+    gambitRoot + "\\bin\\gambcomp-riscv-64.bat.windows.in",
+    gambitRoot + "\\bin\\gambcomp-riscv-64.bat",
+    {});
+
+FixupFile(
+    fso,
     gambitRoot + "\\bin\\gambdoc.bat.windows.in",
     gambitRoot + "\\bin\\gambdoc.bat",
     {});

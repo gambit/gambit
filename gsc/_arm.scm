@@ -2,7 +2,7 @@
 
 ;;; File: "_arm.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -300,7 +300,7 @@
                       ;; an unconditional branch instruction.
 
                       (thumb-branch-and-link cgc label offs))))))
-          
+
           (asm-at-assembly
 
            cgc
@@ -501,8 +501,8 @@
           (assert (eqv? condition (arm-cond-al))
                   "thumb instructions are unconditionnal")
 
-          (assert (fx= set-flags 1)
-                  "thumb instruction implicitly sets flags")
+          ; (assert (fx= set-flags 1)
+          ;         "thumb instruction implicitly sets flags")
 
           (assert (and (fx<= d 7) (fx<= s 7))
                   "thumb instruction must use low registers")
@@ -636,8 +636,8 @@
                                        (fx= 0 (fxand imm 3)))
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxarithmetic-shift-right imm 2)
@@ -654,8 +654,8 @@
                                        (fx= 0 (fxand imm 3)))
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxarithmetic-shift-right imm 2)
@@ -681,8 +681,8 @@
                                        (fx= d s)) ;; add/sub rd, #imm8
                                   "invalid operands")
 
-                          (assert (fx= set-flags 1)
-                                  "thumb instruction implicitly sets flags")
+                          ; (assert (fx= set-flags 1)
+                          ;         "thumb instruction implicitly sets flags")
 
                           (asm-16-le cgc
                                      (fx+ imm
@@ -698,8 +698,8 @@
                  (let ((n (arm-reg-field opnd)))
                    (cond ((and (fx<= d 7) (fx<= s 7) (fx<= n 7))
 
-                          (assert (fx= set-flags 1)
-                                  "thumb instruction implicitly sets flags")
+                          ; (assert (fx= set-flags 1)
+                          ;         "thumb instruction implicitly sets flags")
 
                           (asm-16-le cgc
                                      (fx+ d
@@ -716,8 +716,8 @@
                           (assert (fx= d s)
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxand d 7)
@@ -815,8 +815,8 @@
             (assert (and (fx<= d 7) (fx= s d) (fx<= n 7))
                     "thumb instruction must use low registers")
 
-            (assert (fx= set-flags 1)
-                    "thumb instruction implicitly sets flags")
+            ; (assert (fx= set-flags 1)
+            ;         "thumb instruction implicitly sets flags")
 
             (asm-16-le cgc
                        (fx+ d
@@ -931,8 +931,8 @@
           (assert (and (fx<= d 7) (fx<= s 7))
                   "thumb instruction must use low registers")
 
-          (assert (fx= set-flags 1)
-                  "thumb instruction implicitly sets flags")
+          ; (assert (fx= set-flags 1)
+          ;         "thumb instruction implicitly sets flags")
 
           (asm-16-le cgc
                      (fx+ d
@@ -1131,8 +1131,8 @@
                                 (fx<= imm 255))
                            "invalid operands")
 
-                   (assert (fx= set-flags 1)
-                           "thumb instruction implicitly sets flags")
+                  ;  (assert (fx= set-flags 1)
+                  ;          "thumb instruction implicitly sets flags")
 
                    (asm-16-le cgc
                               (fx+ imm
@@ -1147,8 +1147,8 @@
                  (let ((n (arm-reg-field opnd)))
                    (cond ((and (fx<= d 7) (fx<= n 7))
 
-                          (assert (fx= set-flags 1)
-                                  "thumb instruction implicitly sets flags")
+                          ; (assert (fx= set-flags 1)
+                          ;         "thumb instruction implicitly sets flags")
 
                           (asm-16-le cgc
                                      (fx+ d
@@ -1162,8 +1162,8 @@
                           (assert (fx= op 0)
                                   "invalid operands")
 
-                          (assert (fx= set-flags 0)
-                                  "thumb instruction can't set flags")
+                          ; (assert (fx= set-flags 0)
+                          ;         "thumb instruction can't set flags")
 
                           (asm-16-le cgc
                                      (fx+ (fxand d 7)
@@ -1234,8 +1234,8 @@
           (assert (fx= op 0)
                   "thumb does not support multiply-accumulate")
 
-          (assert (fx= set-flags 1)
-                  "thumb instruction implicitly sets flags")
+          ; (assert (fx= set-flags 1)
+          ;         "thumb instruction implicitly sets flags")
 
           (assert (and (fx<= d 7) (fx<= s 7) (fx= m d))
                   "thumb instruction must use low registers")
@@ -1275,36 +1275,215 @@
 
 ;;; ARM instructions: LDR, LDRB, STR, and STRB.
 
-(define (arm-ldr cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 1 0))
+(define (arm-ldr cgc
+                 rd
+                 rb
+                 offset
+                 #!optional
+                 (pre? #t)
+                 (write-back? #f)
+                 (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #t #f))
 
-(define (arm-ldrb cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 1 1))
+(define (arm-ldrb cgc
+                  rd
+                  rb
+                  offset
+                  #!optional
+                  (pre? #t)
+                  (write-back? #f)
+                  (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #t #t))
 
-(define (arm-str cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 0 0))
+(define (arm-str cgc
+                 rd
+                 rb
+                 offset
+                 #!optional
+                 (pre? #t)
+                 (write-back? #f)
+                 (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #f #f))
 
-(define (arm-strb cgc rd rb offset #!optional (condition (arm-cond-al)))
-  (arm-load-store cgc rd rb offset condition 0 1))
+(define (arm-strb cgc
+                  rd
+                  rb
+                  offset
+                  #!optional
+                  (pre? #t)
+                  (write-back? #f)
+                  (condition (arm-cond-al)))
+  (arm-load-store cgc rd rb offset pre? write-back? condition #f #t))
 
-(define (arm-load-store cgc rd rb offset condition op byte)
+(define (arm-load-store cgc rd rb offset pre? write-back? condition load? byte?)
+
+  (define (listing wide?)
+    (if (codegen-context-listing-format cgc)
+        (arm-listing
+         cgc
+         (list (vector-ref
+                '#("str" "strb" "ldr" "ldrb")
+                (fx+ (if load? 2 0) (if byte? 1 0)))
+               (arm-condition-name* condition)
+               (if wide? ".w" ""))
+         rd
+         (if pre?
+             (string-append "["
+                            (arm-register-name rb)
+                            (if (fx= offset 0)
+                                ""
+                                (string-append ",#"
+                                               (number->string offset)))
+                            (if write-back? "]!" "]"))
+             (string-append "["
+                            (arm-register-name rb)
+                            "], #"
+                            (number->string offset))))))
 
   (assert (and (arm-reg? rd)
-               (arm-reg? rb)
-               (arm-imm-int? offset))
+               (arm-reg? rb))
           "invalid operands")
 
-  (if (codegen-context-listing-format cgc)
-      (arm-listing
-       cgc
-       (list (vector-ref
-              '#("str" "strb" "ldr" "ldrb")
-              (fx+ (fx* 2 op) byte))
-             (arm-condition-name* condition)
-             (if (and (fx= set-flags 1) (not (arm-thumb-mode? cgc))) "s" ""))
-       rd
-       opnd1
-       offset)))
+  (let* ((d (arm-reg-field rd))
+         (b (arm-reg-field rb)))
+
+    (if (arm-thumb-mode? cgc)
+
+        (begin
+
+          (assert (eqv? condition (arm-cond-al))
+                  "thumb instructions are unconditionnal")
+
+          (cond ((and (or (eqv? rb (arm-sp))
+                          (and (eqv? rb (arm-pc))
+                               load?))
+                      (fx<= d 7)
+                      (fx>= offset 0)
+                      (fx<= offset 1023)
+                      (not byte?)
+                      pre?
+                      (not write-back?))
+
+                 (assert (fx= 0 (fxmodulo offset 4))
+                         "offset must be a multiple of 4")
+
+                 (asm-16-le cgc
+                            (fx+ (fxquotient offset 4)
+                                 (fxarithmetic-shift-left d 8)
+                                 (if load? #x0800 0)
+                                 (if (eqv? rb (arm-sp))
+                                     #x9000
+                                     #x4000)))
+
+                 (listing #f))
+
+                ((and (fx<= d 7)
+                      (fx<= b 7)
+                      (fx>= offset 0)
+                      (fx<= offset (if byte? 31 127))
+                      pre?
+                      (not write-back?))
+
+                 (assert (or byte? (fx= 0 (fxmodulo offset 4)))
+                         "offset must be a multiple of 4")
+
+                 (asm-16-le cgc
+                            (fx+ d
+                                 (fxarithmetic-shift-left b 3)
+                                 (fxarithmetic-shift-left
+                                  (if byte? offset (fxquotient offset 4))
+                                  6)
+                                 (if load? #x0800 0)
+                                 (if byte? #x1000 0)
+                                 #x6000))
+
+                 (listing #f))
+
+                ((and (eqv? rb (arm-pc))
+                      load?
+                      pre?
+                      (not write-back?))
+
+                 (let ((o (fxabs offset)))
+
+                   (assert (fx<= o 4095)
+                           "absolute offset must fit in 12 bits")
+
+                   (asm-16-le cgc
+                              (fx+ (if byte?           0 #x0040)
+                                   (if (fx>= offset 0) #x0080 0)
+                                   #xf81f))
+
+                   (asm-16-le cgc
+                              (fx+ o
+                                   (fxarithmetic-shift-left d 12)))
+
+                   (listing #t)))
+
+                ((and (fx>= offset 0)
+                      pre?
+                      (not write-back?))
+
+                 (assert (fx<= offset 4095)
+                         "offset must fit in 12 bits")
+
+                 (asm-16-le cgc
+                            (fx+ b
+                                 (if load? #x0010 0)
+                                 (if byte? 0 #x0040)
+                                 #xf880))
+
+                 (asm-16-le cgc
+                            (fx+ offset
+                                 (fxarithmetic-shift-left d 12)))
+
+                 (listing #t))
+
+                (else
+
+                 (let ((o (fxabs offset)))
+
+                   (assert (fx<= o 255)
+                           "absolute offset must fit in 8 bits")
+
+                   (asm-16-le cgc
+                              (fx+ b
+                                   (if load? #x0010 0)
+                                   (if byte? 0 #x0040)
+                                   #xf800))
+
+                   (asm-16-le cgc
+                              (fx+ o
+                                   (if write-back?     #x0100 0)
+                                   (if (fx>= offset 0) #x0200 0)
+                                   (if pre?            #x0400 0)
+                                   #x0800
+                                   (fxarithmetic-shift-left d 12)))
+
+                   (listing #f)))))
+
+        (begin
+
+          (let ((o (fxabs offset)))
+
+            (assert (fx<= o 4095)
+                  "absolute offset must fit in 12 bits")
+
+            (asm-16-le cgc
+                       (fx+ o
+                            (fxarithmetic-shift-left d 12)))
+
+            (asm-16-le cgc
+                       (fx+ b
+                            (if load?         #x10  0)
+                            (if write-back?   #x20  0)
+                            (if byte?         #x40  0)
+                            (if (>= offset 0) #x80  0)
+                            (if pre?          #x100 0)
+                            #x400
+                            (fxarithmetic-shift-left condition 12)))
+
+            (listing #f))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1469,7 +1648,6 @@ BX Hs                      BX Hs
 
 
 
-|#
 
 ;;;----------------------------------------------------------------------------
 
@@ -1627,6 +1805,8 @@ BX Hs                      BX Hs
              (assert #f
                      "register or immediate value expected" opnd2))))))
 
+|#
+
 ;;;----------------------------------------------------------------------------
 
 ;;; ARM instructions: MOVW and MOVT.
@@ -1635,7 +1815,7 @@ BX Hs                      BX Hs
 
 (define (arm-instr-movw-movt cgc rd imm16 op)
 
-  (arm-assert-arm-mode cgc)
+  ; (arm-assert-arm-mode cgc)
 
   (assert (arm-reg? rd)
           "first operand must be a register" rd)
@@ -1643,14 +1823,15 @@ BX Hs                      BX Hs
   (let ((d (arm-reg-field rd)))
 
     (asm-16-le cgc
+               (fx+ (fxarithmetic-shift-right (fxand #xf000 imm16) 12)
+                    (fxarithmetic-shift-right (fxand #x0800 imm16) 1)
+                    (fxarithmetic-shift-left op 7)
+                    #xf240))
+
+    (asm-16-le cgc
                (fx+ (fxand #xff imm16)
                     (fxarithmetic-shift-left d 8)
-                    (fxarithmetic-shift-left (fxand #x700 imm16) 4)))
-    (asm-16-le cgc
-               (fx+ (fxarithmetic-shift-right (fxand #x7800 imm16) 11)
-                    (fxarithmetic-shift-right (fxand #x8000 imm16) 5)
-                    (fxarithmetic-shift-left op 7)
-                    #xf240)))
+                    (fxarithmetic-shift-left (fxand #x700 imm16) 4))))
 
   (if (codegen-context-listing-format cgc)
       (arm-listing cgc
@@ -1667,6 +1848,8 @@ BX Hs                      BX Hs
   (arm-instr-movw-movt cgc rd imm16 1))
 
 ;;;----------------------------------------------------------------------------
+
+#|
 
 ;;; ARM instructions: ADDW and SUBW.
 
@@ -1846,7 +2029,6 @@ BX Hs                      BX Hs
 
 ;;;----------------------------------------------------------------------------
 
-#|
 
 (define (thumb-movs cgc rd n)
   (asm-8 cgc n)

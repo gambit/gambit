@@ -614,7 +614,7 @@
 
 (define (reverse-append! xrev y)
   (if (null? xrev)
-      y 
+      y
       (let ((temp (cdr xrev)))
         (set-cdr! xrev y)
         (reverse-append! temp xrev))))
