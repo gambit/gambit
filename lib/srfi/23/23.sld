@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/23/23.sld"
+;;; File: "23.sld"
 
 ;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 

@@ -50,6 +50,8 @@ syntax-error
 delay-force
 guard
 r7rs-guard
+syntax
+syntax-case
 
 ;; global variable
 default-random-source
@@ -156,6 +158,7 @@ current-second
 current-thread
 current-time
 current-user-interrupt-handler
+datum->syntax
 datum-parsing-exception-kind
 datum-parsing-exception-parameters
 datum-parsing-exception-readenv
@@ -853,6 +856,9 @@ subvector-fill!
 subvector-move!
 symbol-hash
 symbol=?
+syntax->datum
+syntax->list
+syntax->vector
 system-stamp
 system-type
 system-type-string

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/6/6.scm"
+;;; File: "6.scm"
 
 ;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 

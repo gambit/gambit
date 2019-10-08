@@ -17,13 +17,14 @@
 (##include "~~lib/_module#.scm")
 
 (##include "~~lib/_prim#.scm")
-(##namespace ("" define-syntax))
+
+;;(##namespace ("" define-syntax import))
 
 ;;;============================================================================
 
 ;; Setup implementation of define-syntax and syntax-rules.
-(##include "syntax.scm")
-(##include "syntaxrulesxform.scm")
+;;(##include "syntax.scm")
+;;(##include "syntaxrulesxform.scm")
 
 ;;;============================================================================
 

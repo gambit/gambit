@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/132/132.sld"
+;;; File: "132.sld"
 
 ;;; Copyright (c) 2018-2019 by Antoine Doucet, All Rights Reserved.
 ;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.

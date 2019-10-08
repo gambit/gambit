@@ -13,10 +13,16 @@
 ;;;----------------------------------------------------------------------------
 
 (define (datum->syntax src datum)
-  (##sourcify datum src))
+  (cond ((##source? src)
+         (##sourcify datum src))
+        (else
+         (error "source object expected"))))
 
 (define (syntax->datum src)
-  (##desourcify src))
+  (cond ((##source? src)
+         (##desourcify src))
+        (else
+         (error "source object expected"))))
 
 (define (syntax->list src)
   (cond ((##source? src)

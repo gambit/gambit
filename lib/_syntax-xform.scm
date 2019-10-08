@@ -37,6 +37,18 @@
          #'(##let ()
 
              (##define-syntax syntax
+;#|TODO: remove semicolon after bootstrap to remove redundant dynamic test
+               (if (##unbound? (##global-var-ref
+                                (##make-global-var 'syn#syntax-form-transformer)))
+                   (##eval '(lambda (src)
+                              (##include "~~lib/_syntax-xform.scm")
+                              (syn#syntax-form-transformer src 'new-pvars)))
+                   (lambda (src) (syn#syntax-form-transformer src 'new-pvars)))
+;|#            (lambda (src) (syn#syntax-form-transformer src 'new-pvars))
+             )
+
+             #;
+             (##define-syntax syntax
                (##lambda (##src)
                  (##include "~~lib/_syntax-xform.scm")
                  (syn#syntax-form-transformer ##src 'new-pvars)))

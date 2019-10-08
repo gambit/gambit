@@ -1009,4 +1009,42 @@
          (##cons 'uninstall ##gsi-option-uninstall)
          (##cons 'install ##gsi-option-install)))
 
+;;;----------------------------------------------------------------------------
+
+;;; Accelerate syntax transformations.
+
+(##include "~~lib/_syntax-xform.scm")
+(##include "~~lib/_syntax-case-xform.scm")
+(##include "~~lib/_syntax-rules-xform.scm")
+
+(##include "~~lib/_syntax.scm")
+
+(define (syn#define-syntax-form-transformer src)
+  (syntax-case src ()
+    ((_ id fn)
+     #'(##define-syntax id
+         (##lambda (##src)
+;;           (##include "~~lib/_syntax.scm")
+           (fn ##src))))))
+
+(define-runtime-syntax define-syntax
+  (lambda (src)
+    (let ((locat (##source-locat src)))
+      (##make-source
+       (##cons (##make-source '##define-syntax locat)
+               (##cdr (##source-code src)))
+       locat))))
+
+(define-runtime-syntax syntax
+  (lambda (src)
+    (syn#syntax-form-transformer src '())))
+
+(define-runtime-syntax syntax-case
+  (lambda (src)
+    (syn#syntax-case-form-transformer src)))
+
+(define-runtime-syntax syntax-rules
+  (lambda (src)
+    (syn#syntax-rules-form-transformer src)))
+
 ;;;============================================================================

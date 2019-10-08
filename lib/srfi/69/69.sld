@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/69/69.sld"
+;;; File: "69.sld"
 
 ;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 

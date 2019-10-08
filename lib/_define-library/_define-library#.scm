@@ -6,18 +6,19 @@
 
 ;;;============================================================================
 
-(##namespace ("" define-library define-syntax syntax-rules import))
-
-(##define-syntax import
- (lambda (src)
-   (##import _define-library/define-library-expand)
-   (import-expand src)))
+(##namespace ("" define-library import))
 
 (##define-syntax define-library
- (lambda (src)
-   (##import _define-library/define-library-expand)
-   (define-library-expand src)))
+  (lambda (src)
+    (##import _define-library/define-library-expand)
+    (define-library-expand src)))
 
+(##define-syntax import
+  (lambda (src)
+    (##import _define-library/define-library-expand)
+    (import-expand src)))
+
+#;
 (##define-syntax define-syntax
   (lambda (src)
     (let ((locat (##source-locat src)))
@@ -26,6 +27,7 @@
                (##cdr (##source-code src)))
        locat))))
 
+#;
 (##define-syntax syntax-rules
   (lambda (src)
     (##import _define-library/define-library-expand)

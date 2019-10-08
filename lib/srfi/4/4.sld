@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/4/4.sld"
+;;; File: "4.sld"
 
 ;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 

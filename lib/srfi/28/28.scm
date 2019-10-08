@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/28/28.scm"
+;;; File: "28.scm"
 
 ;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 

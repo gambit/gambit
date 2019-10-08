@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/28/28.sld"
+;;; File: "28.sld"
 
 ;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
