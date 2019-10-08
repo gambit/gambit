@@ -11,6 +11,140 @@
 
 (define (##main-gsi/gsc)
 
+  ;; In the usages "^" stands for the program name.
+
+  (define gsc-usage #<<usage-end
+usage: ^ [options] [source ...]
+
+This is the Gambit Scheme compiler.
+
+Each source can be:
+    file.scm, file.ss             Scheme source code.
+    file.six                      Scheme with infix syntax extension.
+    file.sld                      Scheme (R7RS) library.
+    file.c, file.cc               C source code.
+    file.o                        Compiled object file.
+    file.js, file.py, ...         Compiled code for other targets.
+    github.com/gambit/hello       Module from public Git repository.
+    github.com/gambit/hello@1.0   Specific version of module.
+    directory/                    (Add directory to search path.)
+    .                             (Add current directory to search path.)
+
+Output mode
+    [-dynamic]  Compile Scheme to a shared object (.dll/.dylib/.so).
+    -c          Compile Scheme to target lang source files (.c, .js, etc.)
+    -link       Compile Scheme to source files and generate a link file.
+    -obj        Compile Scheme via target to object files (.o, .obj).
+    -exe        Compile Scheme via target to an executable program.
+    -target l   Target language to compile to (C, go, js, php, python).
+
+Output options
+    -o output   Output filename or directory.
+    -keep-c     Do not delete intermediate target language source files.
+
+Scheme compiler and linker options
+    -prelude 'expression ...'   Add expressions before the source code.
+    -postlude 'expression ...'  Add expressions after the source code.
+    -module-name name           Name of the generated module.
+    -linker-name name           Low-level init function exported by module.
+    -l base                     Link file of the base library to use.
+    -flat                       Make flat (instead of incremental) link file.
+
+Target language compiler and linker options
+    -pkg-config library         Add compile and link flags from pkg-config.
+    -pkg-config-path dir        Add directory to pkg-config search path.
+    -cc-options 'option ...'    Extra command line options for C compiler.
+    -ld-options 'option ...'    Extra command line options for C linker.
+    -ld-options-prelude 'option ...'
+
+Debug information options
+    -debug                 Include all debug info.
+    -debug-source          Include source code debug info.
+    -debug-location        Include source code location debug info.
+    -debug-environments    Include environment debug info.
+    -track-scheme          Emit '#line' directives referring to Scheme code.
+
+Auxiliary information options
+    -gvm             Write GVM bytecode listings to file.gvm.
+    -cfg             Write GVM control flow graph to file.cfg.
+    -dg              Write dependency graph to file.dg.
+    -expansion       Display source code after expanding macros.
+    -report          Display global variable usage report.
+    -verbose         Display trace of compiler activity.
+    -warnings        Display warnings.
+
+Interpreter options
+    -i               Process rest of command line like the interpreter.
+    -e expression    Evaluate the given Scheme expression at this point.
+    -                Start a REPL interaction at this point.
+
+Global options
+    -f               Do not process `.gambini` initialization files.
+    -:opt1,opt2,...  Runtime system options. Try `-:help`.
+
+Version and help commands
+    -v               Show version information.
+    -h               Show this help screen.
+usage-end
+)
+
+  (define gsi-usage #<<usage-end
+usage: ^ [options] [file-or-module...]
+
+This is the Gambit Scheme interpreter.
+
+Interactive mode (read-eval-print loop)
+    ^ [global options]
+
+Batch mode
+    ^ [global options] file-or-module...
+    Where each file-or-module is one of:
+      github.com/gambit/hello       Run module from public Git repository.
+      github.com/gambit/hello@1.0   Run specific version of module.
+      file.scm       Run Scheme script. If the script starts with `#!` then
+                     any remaining command line arguments are passed to it.
+      file.o1        Run Scheme code from object file compiled by Gambit.
+      file.sld       Load Scheme (R7RS) library.
+      directory/     Add directory to search path.
+      .              Add current directory to search path.
+      -e expression  Evaluate the given Scheme expression at this point.
+      -              Drop into a REPL at this point (continue with ,c)
+
+Module management commands
+    ^ [global options] -install   github.com/gambit/hello
+    ^ [global options] -uninstall github.com/gambit/hello
+    ^ [global options] -update    github.com/gambit/hello
+
+Global options
+    -f               Do not process `.gambini` initialization files.
+    -:opt1,opt2,...  Runtime system options. Try `-:help`.
+
+Version and help commands
+    -v               Show version information.
+    -h               Show this help screen.
+usage-end
+)
+
+  (define (write-usage-to-port usage program-name port)
+    (let ((n (##string-length usage)))
+      (let loop ((a 0) (b 0))
+        (cond ((##fx= b n)
+               (##write-substring usage a b port)
+               (##newline port))
+              ((##char=? #\^ (##string-ref usage b))
+               (##write-substring usage a b port)
+               (##write-string program-name port)
+               (loop (##fx+ b 1) (##fx+ b 1)))
+              (else (loop a (##fx+ b 1)))))))
+
+  (define (basename string)
+    (let ((n (##string-length string)))
+      (let loop ((i n))
+        (if (##fx= i 0) string
+            (let* ((h (- i 1)) (c (##string-ref string h)))
+              (if (or (##char=? c #\/) (##char=? c #\\) (##char=? c #\:))
+                  (##substring string i n) (loop h)))))))
+
   (define (in-homedir filename)
     (let ((homedir (##path-expand "~")))
       (##string-append homedir filename)))
@@ -768,7 +902,7 @@
 
     (split-command-line
       (##cdr ##processed-command-line)
-      '((f) (i) (v))
+      '((f) (h) (i) (v))
       #t
       (lambda (main-options arguments)
         (let ((skip-initialization-file?
@@ -798,6 +932,13 @@
                  (##write-string " " ##stdout-port)
                  (##write ##os-configure-command-string-saved ##stdout-port)
                  (##newline ##stdout-port)
+                 (##exit))
+
+                ((##assq 'h main-options)
+                 (write-usage-to-port
+                  (if (interpreter-or #f) gsi-usage gsc-usage)
+                  (basename (##car (##command-line)))
+                  ##stdout-port)
                  (##exit))
 
                 ((interpreter-or force-interpreter?)
