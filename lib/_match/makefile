@@ -4,7 +4,7 @@ herefromlib = _match
 libfromhere = ..
 SUBDIRS =
 HEADERS_SCM = _match\#.scm match-expand\#.scm
-MODULES_SCM = _match.scm match-expand.scm _match-test.scm
+MODULES_SCM = _match.scm match-expand.scm test.scm
 MAIN_MODULES = _match match-expand
 OTHER_RCFILES = makefile
 

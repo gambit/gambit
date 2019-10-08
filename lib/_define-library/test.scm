@@ -1,12 +1,12 @@
 ;;;============================================================================
 
-;;; File: "_define-library-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2014-2019 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
-(##import _test)
+(import _test)
 
 (define (gsi . arguments)
   (let* ((port
@@ -58,9 +58,6 @@
          "    display newline)\n"
          "  (namespace \"\"))")))
     (values test-dir lib-dir)))
-
-
-
 
 (define (test1 dir lib-dir)
   (let ((test1-dir (path-expand "test1" dir)))

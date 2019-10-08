@@ -1,13 +1,13 @@
 ;;;============================================================================
 
-;;; File: "_uri-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
-(##import _uri)
-(##import _test)
+(import _uri)
+(import _test)
 
 (define query "a=1&b=2")
 (define query-result (string->uri-query query #f))

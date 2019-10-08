@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "_digest-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
 
@@ -8,8 +8,8 @@
 
 ;;; Test message digest computation.
 
-(##import _digest)
-(##import _test)
+(import _digest)
+(import _test)
 
 (define crc32-test-vectors
   '(

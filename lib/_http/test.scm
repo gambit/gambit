@@ -1,14 +1,14 @@
 ;;;============================================================================
 
-;;; File: "_http-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
-(##import _test)
-(##import _uri)
-(##import _http)
+(import _test)
+(import _uri)
+(import _http)
 
 ;;; From examples/web-server
 (define permissive-read-line
@@ -18,7 +18,7 @@
                (> (string-length s) 0)
                (char=? (string-ref s (- (string-length s) 1)) #\return))
           ; efficient version of (substring s 0 (- (string-length s) 1))
-          (begin (##string-shrink! s (- (string-length s) 1)) s)
+          (begin (string-shrink! s (- (string-length s) 1)) s)
           s))))
 
 (define find-char-pos

@@ -1,6 +1,6 @@
 ;;;============================================================================
 
-;;; File: "srfi/132/132-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2018-2019 by Antoine Doucet, All Rights Reserved.
 ;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.

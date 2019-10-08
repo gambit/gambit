@@ -1,13 +1,13 @@
 ;;;============================================================================
 
-;;; File: "_match-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2008-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-(##import _match)
-(##import _test)
+(import _match)
+(import _test)
 
 (define (f x)
   (match (* x x)

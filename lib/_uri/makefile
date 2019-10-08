@@ -4,7 +4,7 @@ herefromlib = _uri
 libfromhere = ..
 SUBDIRS =
 HEADERS_SCM = _uri\#.scm
-MODULES_SCM = _uri.scm _uri-test.scm
+MODULES_SCM = _uri.scm test.scm
 MAIN_MODULES = _uri
 OTHER_RCFILES = makefile
 

@@ -1,13 +1,13 @@
 ;;;============================================================================
 
-;;; File: "_hamt-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-(##import _hamt)
-(##import _test)
+(import _hamt)
+(import _test)
 
 (check-false (hamt? 42))
 (check-true (hamt? (make-hamt)))

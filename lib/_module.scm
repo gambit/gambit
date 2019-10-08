@@ -696,28 +696,15 @@
 (define-prim (##load-module-or-file
               module-or-file
               #!optional
-              (load-options '())
               (script-callback (lambda (script-line script-path) #f)))
 
   (define (load-file)
-    (after-load
-     (##load module-or-file
-             script-callback
-             #t  ;; clone-cte?
-             #t  ;; raise-os-exception?
-             #f  ;; linker-name
-             #f) ;; quiet?
-     module-or-file))
-
-  (define (after-load result path)
-    (if (##memq 'test load-options)
-        (##load (##string-append (##path-strip-extension path) "-test")
-                (lambda (script-line script-path) #f)
-                #t   ;; clone-cte?
-                #t   ;; raise-os-exception?
-                #f   ;; linker-name
-                #f)) ;; quiet?
-    result)
+    (##load module-or-file
+            script-callback
+            #t   ;; clone-cte?
+            #t   ;; raise-os-exception?
+            #f   ;; linker-name
+            #f)) ;; quiet?
 
   (let ((modref (##parse-module-ref module-or-file)))
     (if (##not modref)
@@ -753,9 +740,7 @@
                           (let ((y (##cdr x)))
                             (script-callback (if (##pair? y) (##car y) y)
                                              (##vector-ref mod-info 3))))
-                      (after-load
-                       (##load-module (macro-module-module-ref mod))
-                       (##vector-ref mod-info 3)))
+                      (##load-module (macro-module-module-ref mod)))
 
                     ;; last resort is to load a file
                     (load-file))))))))

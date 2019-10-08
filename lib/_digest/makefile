@@ -4,7 +4,7 @@ herefromlib = _digest
 libfromhere = ..
 SUBDIRS =
 HEADERS_SCM = _digest\#.scm
-MODULES_SCM = _digest.scm _digest-test.scm
+MODULES_SCM = _digest.scm test.scm
 MAIN_MODULES = _digest
 OTHER_RCFILES = makefile
 

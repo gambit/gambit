@@ -4,7 +4,7 @@ herefromlib = _hamt
 libfromhere = ..
 SUBDIRS = primitive-hamt
 HEADERS_SCM = _hamt\#.scm
-MODULES_SCM = _hamt.scm _hamt-test.scm
+MODULES_SCM = _hamt.scm test.scm
 MAIN_MODULES = _hamt
 OTHER_RCFILES = makefile
 

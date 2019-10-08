@@ -1,12 +1,12 @@
 ;;;============================================================================
 
-;;; File: "_test-test.scm"
+;;; File: "test.scm"
 
 ;;; Copyright (c) 2013-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-(##import _test)
+(import _test)
 
 (define-syntax macro-set-current-directory-to-this-source-file-directory
   (lambda (src)
