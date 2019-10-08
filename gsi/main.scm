@@ -83,33 +83,34 @@
                      (warn-unknown-option option-name)
                      (loop rest
                            batch-mode?))))
-            (let* ((starter
-                    #f)
-                   (script-callback
-                    (lambda (script-line script-path)
-                      (if script-line
-                        (let ((language-and-tail
-                               (##extract-language-and-tail
-                                script-line)))
-                          (set! starter
-                            (if language-and-tail
-                              (let ((language (##car language-and-tail)))
-                                (##readtable-setup-for-language!
-                                 (##current-readtable)
-                                 language)
-                                (##start-main language))
-                              ##exit))
-                          (set! ##processed-command-line
-                            (##cons script-path rest)))))))
-
-              (if (##module-search-directory? arg)
+            (if (##module-search-directory? arg)
+                (begin
                   (##module-search-order-add! arg)
-                  (##load-module-or-file arg script-callback))
-
-              (if starter
-                (starter)
-                (loop rest
-                      #t)))))
+                  (loop rest
+                        batch-mode?))
+                (let* ((starter
+                        #f)
+                       (script-callback
+                        (lambda (script-line script-path)
+                          (if script-line
+                              (let ((language-and-tail
+                                     (##extract-language-and-tail
+                                      script-line)))
+                                (set! starter
+                                  (if language-and-tail
+                                      (let ((language (##car language-and-tail)))
+                                        (##readtable-setup-for-language!
+                                         (##current-readtable)
+                                         language)
+                                        (##start-main language))
+                                      ##exit))
+                                (set! ##processed-command-line
+                                  (##cons script-path rest)))))))
+                  (##load-module-or-file arg script-callback)
+                  (if starter
+                      (starter)
+                      (loop rest
+                            #t))))))
         (if (##not batch-mode?)
           (##repl-debug-main)
           (##exit)))))
