@@ -859,11 +859,14 @@
                 (and (##pair? spath)
                      (##string=? (##car spath) (##car ipath))
                      (loop (##cdr spath) (##cdr ipath)))               ;; prefix of spath matches so append rest of spath to alias
-                  (macro-make-modref
-                   out-host
-                   (or out-tag (macro-modref-tag modref))
-                   (##append (##reverse spath)
-                             (macro-modref-rpath out)))))))))
+                (let ((rpath (##append
+                              (##reverse spath)
+                              (macro-modref-rpath out))))
+                  (and (##pair? rpath)
+                       (macro-make-modref
+                         out-host
+                         (or out-tag (macro-modref-tag modref))
+                         rpath)))))))))
 
 ;;;----------------------------------------------------------------------------
 

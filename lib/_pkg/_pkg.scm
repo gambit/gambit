@@ -98,6 +98,9 @@
 (define (module-not-installed module)
   (macro-make-pkg-exception (string-append "Module " module " is not installed")))
 
+(define (module-not-found module)
+  (macro-make-pkg-exception (string-append "Module not found " module)))
+
 (define (install-archive archive output)
   (let ((tmp-dir (create-temporary-directory output)))
     (with-exception-catcher
@@ -334,7 +337,7 @@
                  (macro-modref-rpath modref)))
              (mod-info (##search-module cache-modref (##list dir))))
         (if (not mod-info)
-            (raise (module-not-installed mod))
+            (raise (module-not-found (##modref->string modref)))
             (let* ((mod-info-root (vector-ref mod-info 0))
                    (repo (git-repository-open mod-info-root)))
               (close-input-port (##vector-ref mod-info 4))
