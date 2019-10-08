@@ -101,17 +101,19 @@
 (define (module-not-found module)
   (macro-make-pkg-exception (string-append "Module not found " module)))
 
-(define (install-archive archive output)
+(define (install-archive archive output raise-exn)
   (let ((tmp-dir (create-temporary-directory output)))
     (with-exception-catcher
       (lambda (exn)
         (delete-file-or-directory tmp-dir #t)
-        (raise exn))
+        (if raise-exn
+            (raise exn)
+            #f))
       (lambda ()
         (tar-rec-list-write archive tmp-dir)
         (rename-file tmp-dir output)))))
 
-(define (install-hosted modref install-dir prompt? url-transformer)
+(define (install-hosted modref install-dir prompt? url-transformer raise-exn)
   (let* ((host (macro-modref-host modref))
          (tag (macro-modref-tag modref))
          (rpath (macro-modref-rpath modref))
@@ -128,7 +130,9 @@
          (output (path-expand (##modref->path modref #f) install-dir)))
 
     (if (file-exists? output)
-        (raise (module-already-installed (##modref->string modref)))
+        (if raise-exn
+            (raise (module-already-installed (##modref->string modref)))
+            #f)
         ;;; update here
         (let ((repo (or (git-repository-open cache)
                         (git-clone url
@@ -138,16 +142,20 @@
           (if (macro-git-repository? repo)
               (if tag
                   (let ((archive (or (git-archive repo tag)
-                                     (and (update-modref modref install-dir) ;; TODO: handle prompt? in update
+                                     (and (update-modref modref install-dir raise-exn) ;; TODO: handle prompt? in update
                                           (git-archive repo tag)))))
                     (if (pair? archive)
-                        (install-archive archive output)
-                        (raise (unable-to-install-specific-version (##modref->string modref))))))
+                        (install-archive archive output raise-exn)
+                        (if raise-exn
+                            (raise (unable-to-install-specific-version (##modref->string modref)))
+                            #f))))
               (begin
                 (cleanup-install-folder clone-path install-dir)
-                (raise (unable-to-install-module))))))))
+                (if raise-exn
+                    (raise (unable-to-install-module))
+                    #f)))))))
 
-(define (install-local modref install-dir)
+(define (install-local modref install-dir raise-exn)
   (let* ((tag (macro-modref-tag modref))
          (at-tag (string-append "@" (or tag "")))
 
@@ -173,7 +181,9 @@
                    install-dir)))
 
     (if (file-exists? output)
-        (raise (module-already-installed (##modref->string local-modref)))
+        (if raise-exn
+            (raise (module-already-installed (##modref->string local-modref)))
+            #f)
 
         (let ((repo (or (git-repository-open cache)
                         (and (macro-git-repository? origin)
@@ -181,46 +191,53 @@
           (if (macro-git-repository? repo)
               (if tag
                   (let ((archive (or (git-archive repo tag)
-                                     (and (update-modref local-modref install-dir)
+                                     (and (update-modref local-modref install-dir raise-exn)
                                           (git-archive repo tag)))))
                     (if (pair? archive)
-                        (install-archive archive output)
-                        (raise (unable-to-install-specific-version
-                                 (##modref->string local-modref))))))
+                        (install-archive archive output raise-exn)
+                        (if raise-exn
+                            (raise (unable-to-install-specific-version
+                                   (##modref->string local-modref)))
+                            #f))))
               (begin
                 (cleanup-install-folder clone-path install-dir)
-                (raise (unable-to-install-module))))))))
+                (if raise-exn
+                    (raise (unable-to-install-module))
+                    #f)))))))
 
 
-(define (install-modref modref install-dir prompt? url-transformer)
+(define (install-modref modref install-dir prompt? url-transformer raise-exn)
   (if (pair? (macro-modref-host modref))
-    (install-hosted modref install-dir prompt? url-transformer)
-    (install-local modref install-dir)))
+    (install-hosted modref install-dir prompt? url-transformer raise-exn)
+    (install-local modref install-dir raise-exn)))
 
-(define (install-aux modstr install-dir prompt? url-transformer)
+(define (install-aux modstr install-dir prompt? url-transformer raise-exn)
   (let ((modref (##parse-module-ref modstr)))
     (if (macro-modref? modref)
-        (install-modref modref install-dir prompt? url-transformer)
-        (raise (invalid-module-name)))))
+        (install-modref modref install-dir prompt? url-transformer raise-exn)
+        (if raise-exn
+            (raise (invalid-module-name))
+            #f))))
 
 ;; Installation function
 (define (install modstr
                  #!optional
                  (install-dir (macro-absent-obj))
                  (prompt? (macro-absent-obj))
-                 (url-transformer (macro-absent-obj)))
+                 (url-transformer (macro-absent-obj))
+                 (raise-exn (macro-absent-obj)))
   (macro-force-vars (modstr install-dir prompt? url-transformer)
     (macro-check-string
       modstr
       1
-      (install modstr install-dir prompt? url-transformer)
+      (install modstr install-dir prompt? url-transformer raise-exn)
       (let ((dir (if (or (##eq? install-dir (macro-absent-obj))
                          (##not install-dir))
                      (default-installation-directory)
                      (macro-check-string
                        install-dir
                        2
-                       (install modstr install-dir prompt? url-transformer)
+                       (install modstr install-dir prompt? url-transformer raise-exn)
                        install-dir))))
         (let ((transformer (if (or (##eq? url-transformer (macro-absent-obj))
                                    (##not url-transformer))
@@ -228,14 +245,17 @@
                                (macro-check-procedure
                                  url-transformer
                                  4
-                                 (install modstr install-dir prompt? url-transformer)
+                                 (install modstr install-dir prompt? url-transformer raise-exn)
                                  url-transformer))))
           (install-aux modstr
                        dir
                        (if (##eq? prompt? (macro-absent-obj))
                            #f
                            prompt?)
-                       transformer))))))
+                       transformer
+                       (if (##eq? raise-exn (macro-absent-obj))
+                           #f
+                           raise-exn)))))))
 
 (define (uninstall-aux module dir)
   (define (uninstall-modref modref install-dir)
@@ -316,7 +336,7 @@
              (close-input-port port)
              #t)))))
 
-(define (update-modref modref dir)
+(define (update-modref modref dir raise-exn)
   (define (string-contain? str pat)
     (and (< (string-length pat) (string-length str) )
          (let ((len (- (string-length str)
@@ -337,7 +357,9 @@
                  (macro-modref-rpath modref)))
              (mod-info (##search-module cache-modref (##list dir))))
         (if (not mod-info)
-            (raise (module-not-found (##modref->string modref)))
+            (if raise-exn
+                (raise (module-not-found (##modref->string modref)))
+                #f)
             (let* ((mod-info-root (vector-ref mod-info 0))
                    (repo (git-repository-open mod-info-root)))
               (close-input-port (##vector-ref mod-info 4))
@@ -350,7 +372,9 @@
                                   (string-contain? build-dir "@gambit"))
                              (delete-file-or-directory full-path #t))))
                      (directory-files mod-info-root))))))
-      (raise (invalid-module-name))))
+      (if raise-exn
+          (raise (invalid-module-name))
+          #f)))
 
 (define (update-aux mod dir)
   (let ((modref (##parse-module-ref mod)))
@@ -459,7 +483,7 @@
                      (else
                       (raise exn))))
                  (lambda ()
-                   (install-modref modref (path-expand to) #f module-default-proto)))
+                   (install-modref modref (path-expand to) #f module-default-proto #t)))
 
                (if (pair? rest)
                  (loop (cdr rest) (car rest) to))))
