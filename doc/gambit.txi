@@ -133,7 +133,7 @@ This manual documents Gambit.  It covers release @value{VERSION}.
 @pindex gsi
 @pindex gsc
 The Gambit programming system is a full implementation of the Scheme
-language which conforms to the R4RS, R5RS and IEEE Scheme standards.  It
+language which conforms to the R4RS, R5RS, R7RS and IEEE Scheme standards.  It
 consists of two main programs: @code{gsi}, the Gambit Scheme
 interpreter, and @code{gsc}, the Gambit Scheme compiler.
 
@@ -165,7 +165,7 @@ installation models.
 In the first model there is a single directory where all the Gambit
 installation directories are stored.  This @dfn{central installation
 directory} is typically @code{/usr/local/Gambit} under UNIX,
-@code{/Library/Gambit} under Mac OS X and @code{C:/Program
+@code{/Library/Gambit} under macOS and @code{C:/Program
 Files/Gambit} under Microsoft Windows.  This may have been
 overridden when the system was built with the command @samp{configure
 --prefix=/my/Gambit}.  If the system was built with the command
@@ -193,7 +193,7 @@ Executable programs such as the interpreter @code{gsi} and compiler
 @code{gsc} can be found in the @code{bin} installation directory.
 Adding this directory to the @code{PATH} environment variable allows
 these programs to be started by simply entering their name.  This is
-done automatically by the Mac OS X and Microsoft Windows installers.
+done automatically by the macOS and Microsoft Windows installers.
 
 The runtime library is located in the @code{lib} installation
 directory.  When the system's runtime library is built as a
@@ -204,7 +204,7 @@ directory must be in the path searched by the system for
 shared-libraries.  This path is normally specified through an
 environment variable which is @code{LD_LIBRARY_PATH} on most versions
 of UNIX, @code{LIBPATH} on AIX, @code{SHLIB_PATH} on HPUX,
-@code{DYLD_LIBRARY_PATH} on Mac OS X, and @code{PATH} on Microsoft
+@code{DYLD_LIBRARY_PATH} on macOS, and @code{PATH} on Microsoft
 Windows.  If the shell is @code{sh}, the setting of the path can be
 made for a single execution by prefixing the program name with the
 environment variable assignment, as in:
@@ -244,7 +244,7 @@ $ @b{export CPATH=/usr/local/Gambit/include}
 @end smallexample
 
 Note that this may have been done by the installation process.  In
-particular, the Mac OS X and Microsoft Windows prebuilt installers set
+particular, the macOS and Microsoft Windows prebuilt installers set
 up the environment so that the @code{gcc} compiler finds these files
 automatically.
 
@@ -282,7 +282,9 @@ automatically.
 Synopsis:
 
 @example
-@b{}gsi @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]} @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}-test@r{]} @r{[}-notest@r{]} @r{[}@r{@var{file}}@r{]}@r{]}@dots{}
+@b{}gsi @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-v@r{]}
+    @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}-install@r{]} @r{[}-uninstall@r{]} @r{[}-update@r{]}
+    @r{ [}@r{@var{search-directory-or-module-or-file}}@r{]}@r{]}@dots{}
 @end example
 
 @pindex gsi
@@ -290,20 +292,29 @@ Synopsis:
 @opindex -e
 @opindex -f
 @opindex -i
+@opindex -h
 @opindex -v
-The interpreter is executed in @dfn{interactive mode} when no file or
-@samp{-} or @samp{-e} option is given on the command line.  Otherwise
-the interpreter is executed in @dfn{batch mode}.  The @samp{-i} option
-is ignored by the interpreter.  The initialization file will be
-examined unless the @samp{-f} option is present (@pxref{GSI
-customization}).  The @samp{-v} option prints the system version
-string, system time stamp, operating system type, and configure script
-options on standard output and exits.  Runtime options are explained
-in @ref{Runtime options}.
+@opindex -install
+@opindex -uninstall
+@opindex -update
+The interpreter is executed in @dfn{batch mode} when the command line
+contains a module or file or a @samp{-}, or @samp{-e} option.  The
+interpreter is executed in @dfn{module management mode} when the
+command line contains the @samp{-install}, @samp{-uninstall}, or
+@samp{-update} option.  Otherwise the interpreter is executed in
+@dfn{interactive mode}.  The @samp{-i} option is ignored by the
+interpreter.  The initialization file will be examined unless the
+@samp{-f} option is present (@pxref{GSI customization}).  The
+@samp{-h} option prints brief usage information on standard output and
+exits.  The @samp{-v} option prints the system version string, system
+time stamp, operating system type, and configure script options on
+standard output and exits.  Runtime options are explained in
+@ref{Runtime options}.
 
 @menu
 * GSI interactive mode::            Interactive mode
 * GSI batch mode::                  Batch mode
+* GSI module management mode::      Module management mode
 * GSI customization::               Customization
 * GSI exit status::                 Process exit status
 * Scheme scripts::                  Scheme scripts
@@ -315,35 +326,35 @@ in @ref{Runtime options}.
 In interactive mode a read-eval-print loop (REPL) is started for the
 user to interact with the interpreter.  At each iteration of this loop
 the interpreter displays a prompt, reads a command and executes it.
-The commands can be expressions to evaluate (the typical case)
-or special commands related to debugging, for example @samp{,q} to
+The commands can be expressions to evaluate (the typical case) or
+special commands related to debugging, for example @samp{,q} to
 terminate the process (for a complete list of commands see
-@ref{Debugging}).  Most commands produce some output, such as the
-value or error message resulting from an evaluation.
+@ref{Debugging} or use the @samp{,?} command).  Most commands produce
+some output, such as the value or error message resulting from an
+evaluation.
 
 The input and output of the interaction is done on the
 @dfn{interaction channel}.  The interaction channel can be specified
 through the runtime options but if none is specified the system uses a
-reasonable default that depends on the system's configuration.  When
-the system's runtime library was built with support for GUIDE, the
-Gambit Universal IDE (with the command @samp{configure
---enable-guide}) the interaction channel corresponds to the
-@dfn{console window} of the primordial thread (for details see
-@ref{GUIDE}), otherwise the interaction channel is the user's
-@dfn{console}, also known as the @dfn{controlling terminal} in the
-UNIX world.  When the REPL starts, the ports associated with
+reasonable default that depends on the system's configuration.
+Typically the program's standard input and output are used as the
+interaction channel.  When using the runtime option @samp{-:debug=c},
+the interaction channel is the user's @dfn{console}, also known as the
+@dfn{controlling terminal} in the UNIX world.
+
+When the REPL starts, the ports associated with
 @samp{(current-input-port)}, @samp{(current-output-port)} and
 @samp{(current-error-port)} all refer to the interaction channel.
 
 Expressions are evaluated in the global @dfn{interaction environment}.
 The interpreter adds to this environment any definition entered using
-the @code{define} and @code{define-macro}
-special forms.  Once the evaluation of an expression is completed, the
-value or values resulting from the evaluation are output to the
-interaction channel by the pretty printer.  The special ``void''
-object is not output.  This object is returned by most procedures and
-special forms which the Scheme standard defines as returning an
-unspecified value (e.g. @code{write}, @code{set!}, @code{define}).
+the @code{define} and @code{define-macro} special forms.  Once the
+evaluation of an expression is completed, the value or values
+resulting from the evaluation are output to the interaction channel by
+the pretty printer.  The special @dfn{void object} is not output.  This
+object is returned by most procedures and special forms which are
+defined as returning an unspecified value (e.g. @code{write},
+@code{set!}, @code{define}).
 
 Here is a sample interaction with @code{gsi}:
 
@@ -362,64 +373,80 @@ Gambit @value{VERSION}
 
 What happens when errors occur is explained in @ref{Debugging}.
 
-@node GSI batch mode, GSI customization, GSI interactive mode, GSI
+@node GSI batch mode, GSI module management mode, GSI interactive mode, GSI
 @section Batch mode
 
 @opindex -
 @opindex -e
-@opindex -test
-@opindex -notest
-In batch mode the command line arguments denote files to be loaded,
-REPL interactions to start (@samp{-} option), expressions to be
-evaluated (@samp{-e} option), and tests to be run after loading
-a file (@samp{-test} and @samp{-notest} options).  Note that the
-@samp{-}, @samp{-e}, @samp{-test}, and @samp{-notest}
-options can be interspersed with the files on the command line and can
-occur multiple times.  The interpreter processes the command line
-arguments from left to right, loading files with the @code{load}
-procedure and evaluating expressions with the @code{eval} procedure in
-the global interaction environment.  After this processing the
-interpreter exits.
+In batch mode the command line arguments denote modules and files to
+execute, REPL interactions to start (@samp{-} option), and expressions
+to be evaluated (@samp{-e} option).  Those options can be interspersed
+with the search directories, modules, and files on the command line
+and can occur multiple times.
 
-When the file name has no extension the @code{load} procedure first
-attempts to load the file with no extension as a Scheme source file.
-If that file doesn't exist it will search for both a source file and
-an object file.  The object file's name is obtained by adding to the
-file name a @samp{.o@var{n}} extension with the highest consecutive
-version number starting with 1.  The source file's name is obtained by
-adding to the file name the file extensions @samp{.scm} and
-@samp{.six} (the first found is the source file).  If both a source
-file and an object file exist, then the one with the latest
-modification time is loaded.  Otherwise the file that is found is
-loaded.  When the file name has an extension, the @code{load}
-procedure will only attempt to load the file with that specific name.
+In addition to these options the command line may contain 3 types of
+non-options: @dfn{search directories}, @dfn{modules}, and @dfn{files}.
 
-When the extension of the file loaded is @samp{.scm} the content of
-the file will be parsed using the normal Scheme prefix syntax.  When
-the extension of the file loaded is @samp{.six} the content of the
-file will be parsed using the Scheme infix syntax extension (see
-@ref{Scheme infix syntax extension}).  Otherwise, @code{gsi} will
-parse the file using the normal Scheme prefix syntax.
+@table @dfn
 
-@opindex -test
-@opindex -notest
-For all files after a @samp{-test} option and before the next
-@samp{-notest} option, after loading the file the interpreter will
-attempt to load a test file with the same name but with the extension
-removed and the suffix @code{-test} added.  The usual file extensions
-are tried including the @samp{.o@var{n}} extension.  An error is
-reported if a test file can't be located.
+@item Search directories
+Search directories are locations in the file system that are searched
+to resolve references to modules.  Any command line argument that ends
+with a path separator or a @samp{.} is treated as a search directory.
+By default the search order is initially @code{~~lib} (which contains
+builtin modules) followed by @code{~~userlib} (which contains user
+installed modules and is typically the directory
+@code{.gambit_userlib} in the user's home directory).  Search
+directories on the command line are added to the front of the search
+order, and thus take precedence over the default search order.
+
+@item Modules
+Modules are either @dfn{unversionned} or @dfn{versionned} (managed by
+the @code{git} version-control system).  There are two flavors of
+versionned modules: @dfn{hosted} modules have a @code{git} repository
+on a network accessible repository manager site such as
+@code{github.com} and @code{gitlab.com}, and @dfn{local} modules have
+a @code{git} repository on the local file system.  Module names have a
+syntax similar to the paths used to identify files.  They consist of one
+or more non-empty parts separated by @samp{/}.  The last part may end
+with a suffix of the form @code{@@@r{@var{version}}}.  Only the
+first part and version may contain @samp{.}, otherwise only the
+characters a-z, A-Z, 0-9, @samp{-}, and @samp{_} are permitted.  If
+there are at least 3 parts and the first part contains at least one
+@samp{.}  and no @samp{_}, then it refers to a hosted module (1st part
+= host, 2nd part = account, 3rd part = repository name).  For example
+@code{github.com/gambit/hello@@1.0} is a hosted module reference.
+Otherwise it refers to a local versionned module or an unversionned
+module, for example @code{foobar} or @code{A/B/C/D}.
+
+@item Files
+Files are simple code containers located on the local file system.
+They are also identified by a path.  If a path is a valid
+module or file, it is interpreted as a module.  Note that a path
+with a last component containing an extension, such as @samp{.scm},
+and no @code{@@}, is always interpreted as a file.
+
+@end table
+
+The interpreter processes the command line arguments from left to
+right.  Search directories are added to the search order.  Files are
+executed using the @code{load} procedure.  Modules are requested using
+the @code{##demand-module} special form (this form is explained in
+@ref{Modules}, but essentially it causes that module to be searched in
+the search order and executed once).  The @samp{-e} option uses the
+@code{eval} procedure to evaluate expressions in the global
+interaction environment.  After this processing the interpreter exits.
 
 The ports associated with @samp{(current-input-port)},
 @samp{(current-output-port)} and @samp{(current-error-port)} initially
 refer respectively to the standard input (@samp{stdin}), standard
 output (@samp{stdout}) and the standard error (@samp{stderr}) of the
 interpreter.  This is true even in REPLs started with the @samp{-}
-option.  The usual interaction channel (console or IDE's console
-window) is still used to read expressions and commands and to display
-results.  This makes it possible to use REPLs to debug programs which
-read the standard input and write to the standard output, even when
-these have been redirected.
+option.  The usual interaction channel is still used to read
+expressions and commands and to display results.  This makes it
+possible to use REPLs to debug programs which read the standard input
+and write to the standard output, even when these have been
+redirected.
 
 Here is a sample use of the interpreter in batch mode, under UNIX:
 
@@ -431,13 +458,37 @@ display("world"); newline();
 $ @b{gsi h.scm - w.six -e "(pretty-print 1)(pretty-print 2)"}
 hello
 > @b{(define (display x) (write (reverse (string->list x))))}
-> @b{,(c 0)}
+> @b{,c}
 (#\d #\l #\r #\o #\w)
 1
 2
+$ @b{gsi . h w   @r{@i{# add . to search order to load modules h and w}}}
+hello
+world
 @end smallexample
 
-@node GSI customization, GSI exit status, GSI batch mode, GSI
+@node GSI module management mode, GSI customization, GSI interactive mode, GSI
+@section Module management mode
+
+@opindex -install
+@opindex -uninstall
+@opindex -upgrade
+Module management operations are executed using the command line
+options @samp{-install}, @samp{-uninstall}, and @samp{-update}
+which respectively install, uninstall and update modules.
+Module management is explained in detail in @ref{Modules}, but
+here are a few examples:
+
+@smallexample
+$ @b{gsi -install github.com/gambit/hello}
+installing github.com/gambit/hello to /Users/feeley/.gambit_userlib/
+$ @b{gsi github.com/gambit/hello@@1.0}
+hello world!
+$ @b{gsi -uninstall github.com/gambit/hello}
+uninstalling github.com/gambit/hello from /Users/feeley/.gambit_userlib/
+@end smallexample
+
+@node GSI customization, GSI exit status, GSI module management mode, GSI
 @section Customization
 
 There are two ways to customize the interpreter.  When the interpreter
@@ -450,14 +501,15 @@ modes should go in that file.
 Extensions which are meant to apply to a single user or to a specific
 working directory are best placed in the @dfn{initialization file},
 which is a file containing Scheme code.  In all modes, the interpreter
-first tries to locate the initialization file by searching the following
-locations: @file{.gambini} and @file{~/.gambini} (with no extension, a
-@samp{.scm} extension, and a @samp{.six} extension in that order).  The
-first file that is found is examined as though the expression
-@code{(include @var{initialization-file})} had been entered at the
-read-eval-print loop where @var{initialization-file} is the file that
-was found.  Note that by using an @code{include} the macros defined in
-the initialization file will be visible from the read-eval-print loop
+first tries to locate the initialization file by searching the
+following locations: @file{.gambini} and @file{~/.gambini} (with no
+extension, a @samp{.sld} extension, a @samp{.scm} extension, and a
+@samp{.six} extension in that order).  The first file that is found is
+examined as though the expression @code{(include
+@var{initialization-file})} had been entered at the read-eval-print
+loop where @var{initialization-file} is the file that was found.  Note
+that by using an @code{include} the macros defined in the
+initialization file will be visible from the read-eval-print loop
 (this would not have been the case if @code{load} had been used).  The
 initialization file is not searched for or examined when the @samp{-f}
 option is specified.
@@ -622,15 +674,15 @@ the script to process them).
 @end itemize
 
 @menu
-* Scripts under UNIX and Mac OS X:: Scripts under UNIX and Mac OS X
+* Scripts under UNIX and macOS::    Scripts under UNIX and macOS
 * Scripts under Microsoft Windows:: Scripts under Microsoft Windows
 * Compiling scripts::               Compiling scripts
 @end menu
 
-@node Scripts under UNIX and Mac OS X, Scripts under Microsoft Windows, Scheme scripts, Scheme scripts
-@subsection Scripts under UNIX and Mac OS X
+@node Scripts under UNIX and macOS, Scripts under Microsoft Windows, Scheme scripts, Scheme scripts
+@subsection Scripts under UNIX and macOS
 
-Under UNIX and Mac OS X, the Gambit installation process creates the
+Under UNIX and macOS, the Gambit installation process creates the
 executable @samp{gsi} and also the executables @samp{six},
 @samp{gsi-script}, @samp{six-script}, @samp{scheme-r5rs},
 @samp{scheme-srfi-0}, etc as links to @samp{gsi}.  A Scheme script
@@ -678,7 +730,7 @@ SRFI 22 recommends.  For example here is a script that mimics the UNIX
 (for-each display-file (cdr (command-line)))
 @end smallexample
 
-@node Scripts under Microsoft Windows, Compiling scripts, Scripts under UNIX and Mac OS X, Scheme scripts
+@node Scripts under Microsoft Windows, Compiling scripts, Scripts under UNIX and macOS, Scheme scripts
 @subsection Scripts under Microsoft Windows
 
 Under Microsoft Windows, the Gambit installation process creates the
@@ -746,11 +798,11 @@ $ @b{./square -:debug=1 1 2 3  @r{@i{# ask for error message}}}
 Synopsis:
 
 @example
-@b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-v@r{]}
+@b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-v@r{]}
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
     @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
-    @r{[}-pkg-config @r{@var{pkg-config-args}}@r{]}
+    @r{[}-pkg-config @r{@var{pkg-config-args}}@r{]} @r{[}-pkg-config-path @r{@var{pkg-config-path}}@r{]}
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]} @r{[}-dg@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
     @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
@@ -852,6 +904,8 @@ Add options to the command that invokes the C linker.
 @item -pkg-config @var{pkg-config-args}
 Use the @code{pkg-config} program to determine options for the
 C compiler and C linker.
+@item -pkg-config-path @var{pkg-config-path}
+Add a path to the @code{PKG_CONFIG_PATH} environment variable.
 @item -warnings
 Display warnings.
 @item -verbose
@@ -961,19 +1015,26 @@ library search path and flags to select between static and dynamic
 linking).  For example:
 
 @smallexample
-$ @b{gsc -ld-options "-L/usr/X11R6/lib -lX11 -dynamic" bench.scm}
+$ @b{gsc -ld-options "-L/usr/X11R6/lib -lX11 -dynamic" app.scm}
 @end smallexample
 
 @opindex -pkg-config
-The @samp{-pkg-config} option invokes the @code{pkg-config} program to
-determine the options to add to the command that invokes the C
-compiler and C linker.  It can appear multiple times.  The
-@code{pkg-config} program is passed the arguments in the string
+@opindex -pkg-config-path
+The @samp{-pkg-config} option will cause the @code{pkg-config} program
+to be invoked to determine the options to add to the command that
+invokes the C compiler and C linker.  It can appear multiple times.
+The @code{pkg-config} program is passed the arguments in the string
 @var{pkg-config-args} in addition to either @code{--cflags} or
 @code{--libs}.  It is typical for @var{pkg-config-args} to be the name
 of a system library, such as @code{"sqlite3"}, but other
 @code{pkg-config} options can be specified, such as @code{"--static
-sqlite3"}.
+sqlite3"}.  The @samp{-pkg-config-path} options adds a path to the
+@code{PKG_CONFIG_PATH} environment variable for use by the
+@code{pkg-config} program to find @samp{.pc} files.  For example:
+
+@smallexample
+$ @b{gsc -pkg-config "x11" -pkg-config-path "/usr/share/pkgconfig" app.scm}
+@end smallexample
 
 @opindex -warnings
 The @samp{-warnings} option displays on standard output all warnings
@@ -1293,7 +1354,7 @@ to add the options @samp{-I/usr/local/Gambit/include
 -L/usr/local/Gambit/lib} to access the @samp{gambit.h} header file
 and the Gambit runtime library).
 
-Here is an example under Mac OS X:
+Here is an example under macOS:
 
 @smallexample
 $ @b{uname -srmp}
@@ -1363,7 +1424,7 @@ When compiling the C files and link file generated, the flag
 compiler and linker must be told to generate a dynamically loadable
 shared library.
 
-Here is an example under Mac OS X:
+Here is an example under macOS:
 
 @smallexample
 $ @b{uname -srmp}
@@ -3097,7 +3158,7 @@ Same as typing @samp{#||#,l;} (REPL command to leap the computation).
 
 @end table
 
-On Mac OS X, depending on your configuration, you may have to press
+On macOS, depending on your configuration, you may have to press
 the @code{fn} key to access the function key @code{F12} and the
 @code{option} key to access the other function keys.
 
@@ -3813,27 +3874,9 @@ For example:
 
 @end deffn
 
-@deffn {special form} include @r{@i{file}}
-
-The @i{file} parameter must be a string naming an existing file
-containing Scheme source code.  The @code{include} special form
-splices the content of the specified source file.  This form can only
-appear where a @code{define} form is acceptable.
-
-For example:
-
-@smallexample
-@b{}(include "macros.scm")
-
-(define (f lst)
-  (include "sort.scm")
-  (map sqrt (sort lst)))
-@end smallexample
-
-@end deffn
-
 @deffn {special form} define-macro (@r{@i{name}} @r{@i{define-formals}}) @r{@i{body}}
 @findex include
+@findex import
 
 Define @i{name} as a macro special form which expands into @i{body}.
 This form can only appear where a @code{define} form is acceptable.
@@ -3841,9 +3884,10 @@ Macros are lexically scoped.  The scope of a local macro definition
 extends from the definition to the end of the body of the surrounding
 binding construct.  Macros defined at the top level of a Scheme module
 are only visible in that module.  To have access to the macro
-definitions contained in a file, that file must be included using the
-@code{include} special form.  Macros which are visible from the REPL are
-also visible during the compilation of Scheme source files.
+definitions contained in a file, that file must be included either
+directly using the @code{include} special form or indirectly with the
+@code{import} special form.  Macros which are visible from the REPL
+are also visible during the compilation of Scheme source files.
 
 For example:
 
@@ -4701,32 +4745,144 @@ For example:
 @chapter Modules
 
 @menu
-* Basic Modules::       Basic Modules
-* Installing Modules::  Installing Modules
+* Old-Fashioned Modules::   Old-Fashioned Modules
+* Primitive Modules::       Primitive Modules
+* R7RS Compatible Modules:: R7RS Compatible Modules
+* Installing Modules::      Installing Modules
 @end menu
 
-@node Basic Modules, Installing Modules, Modules, Modules
-@section Basic Modules
+Gambit supports multiple modularization approaches and constructs:
+old-fashioned modules, primitive modules and R7RS compatible modules.
+These are described in that order, which corresponds to increased
+abstraction level.  Unless there is a need for detailed control over
+the modules, it is best to use the R7RS compatible module system for
+the development of new code.
 
-@menu
-* load procedure and include form::   load procedure and include form
-* ##demand-module form::              ##demand-module form
-* ##namespace and ##import forms::    ##namespace and ##import forms
-* Macros::                            Macros
-@end menu
+@node Old-Fashioned Modules, Primitive Modules, Modules, Modules
+@section Old-Fashioned Modules
 
-In this section various basic modularization approaches and constructs
-offered by Gambit are explained and compared.
+The old-fashioned way of modularizing code, which was popular up to
+R5RS, is also supported by Gambit.  It consists of using the
+@code{load} procedure and the @code{include} form.  We discuss it
+first to introduce some useful terms and explain the shortcomings
+of this modularization approach.
 
-@node load procedure and include form, ##demand-module form, Basic Modules, Basic Modules
-@subsection @code{load} procedure and @code{include} form
+@deffn procedure load @var{path}
 
-The @code{load} procedure and the @code{include} form can be used to
-modularize code in a basic way.  Essentially, the code that implements
-the module's functionality is put in a source code file and this
-module is accessed by other code by using a @code{load} or
-@code{include} of that file.  Here is an example of an @code{angle0}
-module that is used by an @code{angle0-app} main program:
+The @code{load} procedure's @var{path} argument, a string, specifies
+the location in the file system of a file to load.  Loading a file
+executes the code contained in the file, which is either source code
+or compiled code (a dynamically loadable @dfn{object file} created by
+the Gambit Scheme compiler, see the procedure @code{compile-file}).
+When @var{path} has no extension the @code{load} procedure first
+attempts to load the file with no extension as a Scheme source file.
+If that file doesn't exist it will search for both a source file and
+an object file.  The object file's path is obtained by adding to
+@var{path} a @samp{.o@var{n}} extension with the highest consecutive
+version number starting with 1.  The source file's path is obtained by
+adding to @var{path} the file extensions @samp{.sld}, @samp{.scm} and
+@samp{.six} (the first found is the source file).  If both a source
+file and an object file exist, then the one with the latest
+modification time is loaded.  Otherwise the file that is found is
+loaded.  When @var{path} has an extension, the @code{load} procedure
+will only attempt to load the file with that specific extension.
+After executing the code contained in the file, the @code{load}
+procedure returns the path of the file that was loaded.
+
+When a source code file is loaded its extension is used to determine
+how it is parsed, unless the file's first line is a special script
+line (see @ref{Scheme scripts}).  When the extension is different from
+@samp{.six} the content of the file is parsed using the normal Scheme
+prefix syntax.  When the extension is @samp{.six} the content of the
+file is parsed using the Scheme infix syntax extension (see
+@ref{Scheme infix syntax extension}).
+
+Due to operating system limitations, loading a given @samp{.o@var{n}}
+object file more than once in the same process is not supported.  It
+is possible however to recompile the source code file to create a new
+@samp{.o@var{m}} object file with @var{m} > @var{n} and load that
+object file.
+
+For example:
+
+@smallexample
+$ @b{cat my-mod.scm}
+(define (double x) (* x 2))
+(display "my-mod has finished loading!!!\n")
+$ @b{gsi}
+Gambit @value{VERSION}
+
+> @b{(load "my-mod")}
+my-mod has finished loading!!!
+"/Users/feeley/gambit/doc/my-mod.scm"
+> @b{(double 21)}
+42
+> @b{(load "my-mod.scm")}
+my-mod has finished loading!!!
+"/Users/feeley/gambit/doc/my-mod.scm"
+> @b{,q}
+$ @b{gsc my-mod}
+$ @b{gsi}
+Gambit @value{VERSION}
+
+> @b{(load "my-mod")}
+my-mod has finished loading!!!
+"/Users/feeley/gambit/doc/my-mod.o1"
+> @b{(double 21)}
+42
+> @b{(load "my-mod")}
+*** ERROR IN (console)@@3.1 -- Can't load a given object file more than once
+(load "my-mod")
+1> 
+@end smallexample
+
+Note that any macro definition in the loaded file is local to the file
+and is not visible from the REPL or other files that loaded this file.
+The @code{include} form can be used to access the macros defined in
+another file.
+
+@end deffn
+
+@deffn {special form} include @var{path}
+
+The @i{path} argument must be a string specifying the location of an
+existing file containing Scheme source code.  Relative paths are
+relative to the file that contains the @code{include} form.  The
+@code{include} special form splices the content of the specified
+source file.  This form can only appear where a @code{define} form is
+acceptable, i.e. at top level or in the body of a binding form.
+
+For example:
+
+@smallexample
+$ @b{cat my-defs.scm}
+(define-macro (double x) `(* ,x 2))
+(define (quad y) (double (double y)))
+(display "howdy!\n")
+$ @b{cat my-includer.scm }
+(define (f x)
+  (include "my-defs.scm")
+  (+ 1 (quad x)))
+$ @b{gsi}
+Gambit @value{VERSION}
+
+> @b{(load "my-includer")}
+"/Users/feeley/udem-dlteam/gambit/my-includer.scm"
+> @b{(f 10)}
+howdy!
+41
+> @b{(f 20)}
+howdy!
+81
+@end smallexample
+
+@end deffn
+
+With old-fashioned modularization, the code that implements the
+module's functionality is put in a source code file and this module is
+accessed by other code by using a @code{load} or @code{include} of
+that file.  Here is an example of an @code{angle0} module that is used
+by an @code{angle0-app} main program:
 
 @smallexample
 ;;;---------------------------------------- file: @b{angle0/angle0.scm}
@@ -4734,44 +4890,56 @@ module that is used by an @code{angle0-app} main program:
 (define (deg->rad x) (* x factor))
 (define (rad->deg x) (/ x factor))
 
-;;;---------------------------------------- file: @b{angle0-app.scm}
+;;;---------------------------------------- file: @b{app0.scm}
 (load "angle0/angle0.scm")   ;; or (include "angle0/angle0.scm")
 (println "90 degrees is " (deg->rad 90) " radians")
 
-;; run with:  gsi angle0-app.scm
+;; run with:  gsi app0.scm
 @end smallexample
 
-This modularization approach, which was the Scheme way up to R5RS, has
-a number of issues:
+This modularization approach has a number of issues:
 
 @itemize @bullet{}
 
 @item
-It requires knowing where in the filesystem the module is installed,
-which hinders code sharing among different programs and users.
+It hinders code sharing among different programs and users because a
+shared module's location in the filesystem must be known to all
+modules loading or including it.
 
 @item
 When a module is needed by more than one other module there will be
 code duplication, redundant evaluation/compilation, and probably
 incorrect execution if the module has side effects that should only
 happen once (displaying a message, opening a database on the
-filesystem, initializing the module's state, etc).
+filesystem, initializing the module's state, etc).  Moreover, when the
+module has been compiled to an object file it can't be loaded more
+than once.
 
 @item
 All the definitions of a module will be put in the global environment
-(including macro definitions when using @code{include} but not when
-using @code{load}).  This pollutes the global environment with
-definitions that were not intended to be exported by the module's
-designer, such as the variable @code{factor} in the above example that
-is only meant to be used by the @code{deg->rad} and @code{rad->deg}
-procedures.  Other modules may also need a @code{factor} variable
-internally, for instance to convert distances from the metric to the
-english system. Nothing prevents such accidental clashes.
+(including top level macro definitions when using a top level
+@code{include} but not when using @code{load}).  This pollutes the
+global environment with definitions that were not intended to be
+exported by the module's designer, such as the variable @code{factor}
+in the above example that is only meant to be used by the
+@code{deg->rad} and @code{rad->deg} procedures.  Other modules may
+also need a @code{factor} variable internally, for instance to convert
+distances from the metric to the english system. Nothing prevents such
+accidental clashes.
 
 @end itemize
 
-@node ##demand-module form, ##namespace and ##import forms, load procedure and include form, Basic Modules
-@subsection @code{##demand-module} form
+@node Primitive Modules, R7RS Modules, Old-Fashioned Modules, Modules
+@section Primitive Modules
+
+@menu
+* ##demand-module and ##supply-module forms:: ##demand-module and ##supply-module forms
+* ##namespace and ##import forms::            ##namespace and ##import forms
+* Macros::                                    Macros
+@end menu
+
+@node ##demand-module and ##supply-module forms, ##namespace and ##import forms, Primitive Modules, Primitive Modules
+@subsection @code{##demand-module} and @code{##supply-module} forms
 
 The @code{##demand-module} form offers a way to avoid the issues of
 multiple loading and filesystem localization of modules.  The sole
@@ -4786,7 +4954,7 @@ that the current module needs the functionality of another module.  A
 module can contain multiple uses of @code{##demand-module} and
 possibly more than once for a given module.  The
 @code{##demand-module} form can appear anywhere a @code{define} can
-appear.  There is also a @code{##supply-module} form that should
+appear.  There is also a related @code{##supply-module} form that should
 appear in the module to declare the module's identity.
 
 Gambit's runtime system searches for modules in various directories,
@@ -4794,11 +4962,13 @@ by default in @code{~~lib} then in @code{~~userlib} (which maps to
 @code{~/.gambit_userlib} by default).  These two directories are where
 builtin modules and user installed modules are located respectively.
 The source code for a module @code{@b{M}} is searched, in each of the
-@dfn{module search order} directories, first in
-@code{@b{M/M}@var{.ext}} and then in @code{@b{M}@var{.ext}}, where
-@var{.ext} is one of the acceptable Scheme source code file extensions
-(@code{.sld}, @code{.scm}, @code{.six}, etc).  The list of module search order
-directories can be extended with the @code{-:search=}@var{DIR} runtime option.
+@dfn{search order} directories, first in @code{@b{M/M}@var{.ext}} and
+then in @code{@b{M}@var{.ext}}, where @var{.ext} is one of the
+acceptable Scheme source code file extensions (@code{.sld},
+@code{.scm}, @code{.six}, etc).  The list of module search order
+directories can be extended with the @code{-:search=}@var{DIR} runtime
+option or by a command line argument to @code{gsi} that ends with a
+path separator or a @samp{.}.
 
 With @code{##demand-module} and @code{##supply-module} the previous
 example can be rewritten like this:
@@ -4810,16 +4980,17 @@ example can be rewritten like this:
 (define (deg->rad x) (* x factor))
 (define (rad->deg x) (/ x factor))
 
-;;;---------------------------------------- file: @b{angle1-app.scm}
+;;;---------------------------------------- file: @b{app1.scm}
 (##demand-module angle1) ;; declare dependency on module angle1
 (println "90 degrees is " (deg->rad 90) " radians")
 
-;; run with:  gsi -:search=. angle1-app.scm
+;; run with either:  gsi . app1.scm
+;;              or:  gsi -:search=. app1.scm
 ;;
-;; or put angle1/angle1.scm in ~/.gambit_userlib to avoid the -:search=.
+;; or install the angle1 module to avoid the . and -:search=.
 @end smallexample
 
-@node ##namespace and ##import forms, Macros, ##demand-module form, Basic Modules
+@node ##namespace and ##import forms, Macros, ##demand-module and ##supply-module forms, Primitive Modules
 @subsection @code{##namespace} and @code{##import} forms
 
 The @code{##namespace} form offers a way to avoid name clashes by
@@ -4864,7 +5035,7 @@ forms, the previous example can be rewritten like this:
 (define (deg->rad x) (* x factor))
 (define (rad->deg x) (/ x factor))
 
-;;;---------------------------------------- file: @b{angle2-app.scm}
+;;;---------------------------------------- file: @b{app2.scm}
 (include "angle2/angle2#.scm")
 (##demand-module angle2)
 (println "90 degrees is " (deg->rad 90) " radians")
@@ -4899,7 +5070,7 @@ like this:
 (define (deg->rad x) (* x factor))
 (define (rad->deg x) (/ x factor))
 
-;;;---------------------------------------- file: @b{angle3-app.scm}
+;;;---------------------------------------- file: @b{app3.scm}
 (##import angle3)
 (println "90 degrees is " (deg->rad 90) " radians")
 @end smallexample
@@ -4913,7 +5084,7 @@ mapping and the loading of @code{angle3.scm} because it is equivalent to:
  (##demand-module angle3))
 @end smallexample
 
-@node Macros, , ##namespace and ##import forms, Basic Modules
+@node Macros, , ##namespace and ##import forms, Primitive Modules
 @subsection Macros
 
 In addition to procedures, a module @code{M} may export macros.  The
@@ -4983,11 +5154,16 @@ example can be written like this:
 (define (deg->rad x) (check-real x (* x factor)))
 (define (rad->deg x) (check-real x (/ x factor)))
 
-;;;---------------------------------------- file: @b{angle4-app.scm}
+;;;---------------------------------------- file: @b{app4.scm}
 (##import angle4)
 (println "90 degrees is " (deg->rad 90) " radians")
 (println "sind(90) is " (sind 90))
 @end smallexample
+
+@node R7RS Modules, Installing Modules, Primitive Modules, Modules
+@section R7RS Compatible Modules
+
+TODO!
 
 @node Installing Modules, , Basic Modules, Modules
 @section Installing Modules
@@ -10050,9 +10226,9 @@ specific user and the @dfn{installation directories}.
 
 A @dfn{path} is a string that denotes a file, for example
 @code{"src/readme.txt"}.  Each component of a path is separated by a
-@samp{/} under UNIX and Mac OS X and by a @samp{/} or @samp{\} under
+@samp{/} under UNIX and macOS and by a @samp{/} or @samp{\} under
 MSDOS and Microsoft Windows.  A leading separator indicates an
-absolute path under UNIX, Mac OS X, MSDOS and Microsoft Windows.  A
+absolute path under UNIX, macOS, MSDOS and Microsoft Windows.  A
 path which does not contain a path separator is relative to the
 @dfn{current working directory} on all operating systems.  A volume
 specifier such as @samp{C:} may prefix a file name under MSDOS and
@@ -10072,7 +10248,7 @@ runtime option or by defining the @samp{GAMBOPT} environment variable.
 A path which starts with the character @samp{~} not followed by
 @samp{~} denotes a file in the user's home directory.  The user's home
 directory is contained in the @samp{HOME} environment variable under
-UNIX, Mac OS X, MSDOS and Microsoft Windows.  Under MSDOS and
+UNIX, macOS, MSDOS and Microsoft Windows.  Under MSDOS and
 Microsoft Windows, if the @samp{HOME} environment variable is not
 defined, the environment variables @samp{HOMEDRIVE} and
 @samp{HOMEPATH} are concatenated if they are defined.  If this fails
@@ -10082,7 +10258,7 @@ instead.
 @cindex ~username
 A path which starts with the characters @samp{~@var{username}}
 denotes a file in the home directory of the given user.  Under UNIX
-and Mac OS X this is found using the password file.  There is no
+and macOS this is found using the password file.  There is no
 equivalent under MSDOS and Microsoft Windows.
 
 @deffn procedure current-directory @r{[}@var{new-current-directory}@r{]}
@@ -10412,7 +10588,7 @@ There is no default value for this setting.
 @code{ignore-hidden:} ( @code{#f} | @code{#t} | @code{dot-and-dot-dot} )
 
 This setting controls whether hidden-files will be returned.  Under
-UNIX and Mac OS X hidden-files are those that start with a period
+UNIX and macOS hidden-files are those that start with a period
 (such as @samp{.}, @samp{..}, and @samp{.profile}).  Under Microsoft
 Windows hidden files are the @samp{.} and @samp{..} entries and the
 files whose ``hidden file'' attribute is set.  A setting of @code{#f}
@@ -12073,7 +12249,7 @@ When @var{level} is 2, in addition to the operations for @var{level} =
 operating system is requested to wait until the device reports that
 the data was saved by the device (e.g. actually written to disk in the
 case of a file).  This operation can take a long time on some
-operating systems.  On Mac OS X this corresponds to a @code{fcntl}
+operating systems.  On macOS this corresponds to a @code{fcntl}
 system call with operation @code{F_FULLFSYNC}.
 
 For example:
@@ -13808,7 +13984,7 @@ There is no default value for this setting.
 @code{ignore-hidden:} ( @code{#f} | @code{#t} | @code{dot-and-dot-dot} )
 
 This setting controls whether hidden-files will be returned.  Under
-UNIX and Mac OS X hidden-files are those that start with a period
+UNIX and macOS hidden-files are those that start with a period
 (such as @samp{.}, @samp{..}, and @samp{.profile}).  Under Microsoft
 Windows hidden files are the @samp{.} and @samp{..} entries and the
 files whose ``hidden file'' attribute is set.  A setting of @code{#f}
