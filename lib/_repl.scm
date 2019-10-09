@@ -2953,7 +2953,7 @@
   (##repl-channel-display-monoline-message
    (lambda (output-port)
      (##write (##desourcify src) output-port)
-     (##write-string " is an unknown command" output-port)))
+     (##write-string " is an unknown command. Try ,help" output-port)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-invalid msg repl-context)
@@ -2975,8 +2975,7 @@
          (proc
           (and proc-and-args
                (##car proc-and-args))))
-    (if proc
-        (##help proc)))
+    (##help (or proc help)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-d repl-context)

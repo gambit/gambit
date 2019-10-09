@@ -68,10 +68,10 @@ Auxiliary information options
     -gvm             Write GVM intermediate representation to file.gvm
     -cfg             Write GVM control flow graph to file.cfg
     -dg              Write variable/procedure dependency graph to file.dg
-    -expansion       Display source code after code transformations
-    -report          Display global variable usage report
-    -verbose         Display trace of compiler activity
-    -warnings        Display warnings
+    -expansion       Show source code after code transformations
+    -report          Show global variable usage report
+    -verbose         Show trace of compiler activity
+    -warnings        Show warnings
 
 Interpreter options
     -i               Process rest of command line like the interpreter
