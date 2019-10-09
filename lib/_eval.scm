@@ -5382,6 +5382,9 @@
     (define-runtime-syntax letrec*-values
       (##make-alias-syntax '##letrec*-values))
 
+    (define-runtime-syntax define-values
+      (##make-alias-syntax '##define-values))
+
     (define-runtime-syntax do
       (##make-alias-syntax '##do))
 
