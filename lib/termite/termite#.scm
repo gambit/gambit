@@ -7,6 +7,7 @@
         ;; Termite "primordials"
         self ! ? ?? !? on make-node spawn pid?
         spawn-link remote-spawn remote-spawn-link
+        spawn-linked-to
         ;; Useful
         make-tag current-node
         ;; Process linking for error propagation
@@ -42,6 +43,11 @@
         ;; Debugging proxy
         proxy-print-debugging-info
         proxy-reset-counter
+
+        ;; Process manipulation
+        alive?
+        wait-for
+
         ;; Lazyness paremeter
         ;termite-modules
         ;max-length-get

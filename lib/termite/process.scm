@@ -108,6 +108,12 @@
 ;; procedure able to determine the status of a process (alive, dead,
 ;; waiting, etc.) and the procedure should work on remote processes
 
+(define (wait-for pid)
+  (%wait-for pid))
+
+(define (alive? pid)
+  (%alive? pid))
+
 ;; * Wait for the end of a process 'pid'.  Does not return anything.
 ;; Warning: will not work on remote processes.
 (define (%wait-for pid)
