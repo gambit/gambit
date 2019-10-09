@@ -1067,7 +1067,7 @@
 
 (define-prim (##cmd-? port)
   (##write-string
-",?              : Summary of comma commands
+",?   | ,help    : Summary of comma commands
 ,h   | ,(h X)   : Help on procedure of last error or procedure/macro named X
 ,q              : Terminate the process
 ,qt             : Terminate the current thread
@@ -3080,23 +3080,24 @@
        repl-context)))
 
 (define ##repl-commands-no-args
-  (##list (##cons '?   ##repl-cmd-?)
-          (##cons 'h   ##repl-cmd-h)
-          (##cons 'd   ##repl-cmd-d)
-          (##cons 't   ##repl-cmd-t)
-          (##cons 'q   ##repl-cmd-q)
-          (##cons 'qt  ##repl-cmd-qt)
-          (##cons 'st  ##repl-cmd-st)
-          (##cons 'b   ##repl-cmd-b)
-          (##cons 'be  ##repl-cmd-be)
-          (##cons 'bed ##repl-cmd-bed)
-          (##cons 'i   ##repl-cmd-i)
-          (##cons 'y   ##repl-cmd-y)
-          (##cons 'e   ##repl-cmd-e)
-          (##cons 'ed  ##repl-cmd-ed)
-          (##cons 'c   ##repl-cmd-c)
-          (##cons 's   ##repl-cmd-s)
-          (##cons 'l   ##repl-cmd-l)
+  (##list (##cons '?    ##repl-cmd-?)
+          (##cons 'help ##repl-cmd-?)
+          (##cons 'h    ##repl-cmd-h)
+          (##cons 'd    ##repl-cmd-d)
+          (##cons 't    ##repl-cmd-t)
+          (##cons 'q    ##repl-cmd-q)
+          (##cons 'qt   ##repl-cmd-qt)
+          (##cons 'st   ##repl-cmd-st)
+          (##cons 'b    ##repl-cmd-b)
+          (##cons 'be   ##repl-cmd-be)
+          (##cons 'bed  ##repl-cmd-bed)
+          (##cons 'i    ##repl-cmd-i)
+          (##cons 'y    ##repl-cmd-y)
+          (##cons 'e    ##repl-cmd-e)
+          (##cons 'ed   ##repl-cmd-ed)
+          (##cons 'c    ##repl-cmd-c)
+          (##cons 's    ##repl-cmd-s)
+          (##cons 'l    ##repl-cmd-l)
           ))
 
 (define-prim (##repl-commands-no-args-set! x)
@@ -4295,6 +4296,7 @@
             (install-dir "~~bin"))
            (gambitdir-doc
             (install-dir "~~doc")))
+      (##os-device-tty-mode-reset) ;; rest terminal settings
       (##open-process-generic
        (macro-direction-inout)
        #t
@@ -4379,9 +4381,9 @@
 (define-prim (##help subject)
   (##help-hook subject))
 
-(define-prim (help subject)
+(define-prim (help #!optional (subject (macro-absent-obj)))
   (macro-force-vars (subject)
-    (##help subject)))
+    (##help (if (##eq? subject (macro-absent-obj)) help subject))))
 
 ;;;----------------------------------------------------------------------------
 
