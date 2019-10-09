@@ -39,7 +39,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit, a portable implementation of Scheme.
 
-Copyright (C) 1994-2016 Marc Feeley.
+Copyright (C) 1994-2019 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -71,7 +71,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2016 Marc Feeley.
+Copyright @copyright{} 1994-2019 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -282,7 +282,7 @@ automatically.
 Synopsis:
 
 @example
-@b{}gsi @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-v@r{]}
+@b{}gsi @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-help@r{]} @r{[}-v@r{]}
     @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}-install@r{]} @r{[}-uninstall@r{]} @r{[}-update@r{]}
     @r{ [}@r{@var{search-directory-or-module-or-file}}@r{]}@r{]}@dots{}
 @end example
@@ -305,11 +305,11 @@ command line contains the @samp{-install}, @samp{-uninstall}, or
 @dfn{interactive mode}.  The @samp{-i} option is ignored by the
 interpreter.  The initialization file will be examined unless the
 @samp{-f} option is present (@pxref{GSI customization}).  The
-@samp{-h} option prints brief usage information on standard output and
-exits.  The @samp{-v} option prints the system version string, system
-time stamp, operating system type, and configure script options on
-standard output and exits.  Runtime options are explained in
-@ref{Runtime options}.
+@samp{-h} and @samp{-help} options print brief usage information on
+standard output and exit.  The @samp{-v} option prints the system
+version string, system time stamp, operating system type, and
+configure script options on standard output and exits.  Runtime
+options are explained in @ref{Runtime options}.
 
 @menu
 * GSI interactive mode::            Interactive mode
@@ -329,7 +329,7 @@ the interpreter displays a prompt, reads a command and executes it.
 The commands can be expressions to evaluate (the typical case) or
 special commands related to debugging, for example @samp{,q} to
 terminate the process (for a complete list of commands see
-@ref{Debugging} or use the @samp{,?} command).  Most commands produce
+@ref{Debugging} or use the @samp{,help} command).  Most commands produce
 some output, such as the value or error message resulting from an
 evaluation.
 
@@ -798,7 +798,7 @@ $ @b{./square -:debug=1 1 2 3  @r{@i{# ask for error message}}}
 Synopsis:
 
 @example
-@b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-v@r{]}
+@b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-help@r{]} @r{[}-v@r{]}
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
     @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
@@ -2281,8 +2281,9 @@ In addition to expressions, the REPL accepts the following special
 ``comma'' commands:
 
 @table @code
-@item ,?
+@item ,? @r{and} ,help
 @cmindex ,?
+@cmindex ,help
 Give a summary of the REPL commands.
 
 @item ,(h @var{subject})
@@ -2601,7 +2602,7 @@ lst = '(5 2 hello 9 1)
 @node Procedures related to debugging, Console line-editing, Debugging example, Debugging
 @section Procedures related to debugging
 
-@deffn procedure help @var{subject}
+@deffn procedure help @r{[}@var{subject}@r{]}
 @deffnx procedure help-browser @r{[}@var{new-value}@r{]}
 
 The @code{help} procedure displays the section of the Gambit manual
@@ -2609,8 +2610,9 @@ with the definition of the procedure or special form @var{subject},
 which must be a procedure or symbol.  For example the call @code{(help
 gensym)} will show the section documenting the @code{gensym} procedure
 and the call @code{(help 'time)} will show the section documenting the
-@code{time} special form.  The @code{help} procedure returns the void
-object.
+@code{time} special form.  When the @var{subject} is absent, the
+documentation of the @code{help} procedure is shown. The @code{help}
+procedure returns the void object.
 
 The parameter object @code{help-browser} is bound to a string naming
 the external program that is used by the @code{help} procedure to view
@@ -4929,7 +4931,7 @@ accidental clashes.
 
 @end itemize
 
-@node Primitive Modules, R7RS Modules, Old-Fashioned Modules, Modules
+@node Primitive Modules, R7RS Compatible Modules, Old-Fashioned Modules, Modules
 @section Primitive Modules
 
 @menu
@@ -5160,12 +5162,12 @@ example can be written like this:
 (println "sind(90) is " (sind 90))
 @end smallexample
 
-@node R7RS Modules, Installing Modules, Primitive Modules, Modules
+@node R7RS Compatible Modules, Installing Modules, Primitive Modules, Modules
 @section R7RS Compatible Modules
 
 TODO!
 
-@node Installing Modules, , Basic Modules, Modules
+@node Installing Modules, , R7RS Compatible Modules, Modules
 @section Installing Modules
 
 TODO!
@@ -13840,7 +13842,7 @@ Fewer bytes will be read by @code{udp-read-subu8vector} if the
 received datagram's length is less than @var{end}-@var{start}.
 @code{udp-write-subu8vector} always transfers @var{end}-@var{start}
 bytes, but note that this must be less than 65536 bytes, and some
-operating systems have a lower limit (for example MacOS limits the
+operating systems have a lower limit (for example macOS limits the
 number of bytes to 9216 by default).  If a timeout occurs before a
 datagram is transferred and the timeout thunk returns @code{#f} (see
 the procedure @code{input-port-timeout-set!}) then @code{#f} is
@@ -17041,7 +17043,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit system release @value{VERSION} is Copyright @copyright{}
-1994-2016 by Marc Feeley, all rights reserved.  The Gambit system
+1994-2019 by Marc Feeley, all rights reserved.  The Gambit system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two
