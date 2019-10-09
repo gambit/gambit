@@ -2975,8 +2975,7 @@
          (proc
           (and proc-and-args
                (##car proc-and-args))))
-    (if proc
-        (##help proc)))
+    (##help (or proc help)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-d repl-context)
