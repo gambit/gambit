@@ -37,7 +37,7 @@ int debug_settings;)
       char *msgs[2];
       msgs[0] =
         "Usage: program [-:OPTION,OPTION...] ...\n"
-        "where OPTION is one of:\n"
+        "The -: flag sets options for the Gambit runtime system. OPTION is one of:\n"
         "  min-heap=SIZE      set minimum heap size, shorthand: mSIZE\n"
         "  max-heap=SIZE      set maximum heap size, shorthand: hSIZE\n"
         "                     the heap SIZE may end with G, M or K (default)\n"
