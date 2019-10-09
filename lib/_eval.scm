@@ -5303,6 +5303,7 @@
   (##define-macro (macro-extension-file)
     "~~lib/gambext")
 
+  #; ;;TODO: remove
   (##define-macro (macro-syntax-case-file)
     "~~lib/syntax-case")
 
@@ -5313,6 +5314,7 @@
           #f
           #f)
 
+  #; ;;TODO: remove
   (let ((standard-level (##get-standard-level)))
     (if (##fx<= 4 standard-level)
         (##load (macro-syntax-case-file)
