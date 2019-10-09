@@ -1,15 +1,3 @@
----
-
-Gambit at 30 meeting
-====================
-
-Those interested in Gambit Scheme and its development are invited to register for the **Gambit at 30** meeting which will be held in Montreal October 12-13 2019.  More details can be found at **[this link.](https://mailman.iro.umontreal.ca/pipermail/gambit-list/2019-September/009152.html)**
-
----
-
-<br/><br/><br/>
-
-
 |Linux and OS X|Windows|
 |:--:|:--:|
 |[![Build Status: Linux and OS X](https://travis-ci.org/gambit/gambit.svg?branch=master)](https://travis-ci.org/gambit/gambit)|[![Build Status: Windows](https://ci.appveyor.com/api/projects/status/github/gambit/gambit?branch=master&svg=true)](https://ci.appveyor.com/project/feeley/gambit/branch/master)|
@@ -32,9 +20,9 @@ Quick-install instructions for a typical installation
     git clone https://github.com/gambit/gambit.git
     cd gambit
     ./configure
-    make -j8
-    make check
-    make doc
-    sudo make install
+    make -j            # build runtime library, gsi and gsc
+    make check         # run self tests (optional but recommended)
+    make doc           # build the documentation
+    sudo make install  # install
 
 Detailed installation instructions are given in the file "INSTALL.txt".

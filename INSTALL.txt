@@ -32,9 +32,9 @@ The Gambit source code can be obtained in different ways.
    ball.  Alternatively, use wget or curl from the command line,
    for example:
 
-     % wget http://www.iro.umontreal.ca/~gambit/download/gambit/v4.8/source/gambit-v4_8_0-devel.tgz
-     % tar zxf gambit-v4_8_0-devel.tgz
-     % mv gambit-v4_8_0-devel gambit
+     % wget http://www.iro.umontreal.ca/~gambit/download/gambit/v4.9/source/gambit-v4_9_3-devel.tgz
+     % tar zxf gambit-v4_9_3-devel.tgz
+     % mv gambit-v4_9_3-devel gambit
      % cd gambit
 
    Note that releases come in two flavors.  The "developer" release,
@@ -68,7 +68,7 @@ On a computer with multiple cores it is normally beneficial to build
 the system in parallel by adding a "-j" option to the invocation
 of make:
 
-  % make -j8
+  % make -j
 
 
 3) Recommended "configure" script options
@@ -125,7 +125,7 @@ the C files are so large, the compile time is very sensitive to the
 computational complexity of the optimization algorithms.  See the
 table at the end of this file for performance information for
 different versions of GCC.  On a recent multicore computer a "make -j"
-typically takes 30 seconds.
+typically takes less than 2 minutes.
 
 Finally, in order to support installing multiple versions of Gambit,
 it is recommended to use these options:
@@ -148,7 +148,7 @@ directory with the option --prefix:
   % ./configure --prefix=/Users/feeley/my-gambit
   % make install
   % ~/my-gambit/bin/gsi
-  Gambit v4.8.0
+  Gambit v4.9.3
   ...
 
 If the --prefix option is not used, the default is to install all
@@ -373,16 +373,16 @@ are installed in their final destination.
 
 When --enable-shared is used, the option --enable-versioned-shared-libs
 will add a version number after the shared library extension.  For
-example the Gambit v4.8.0 runtime shared library which is normally
-libgambit.so will be named libgambit.so.4.8.0 .  This also creates
+example the Gambit v4.9.3 runtime shared library which is normally
+libgambit.so will be named libgambit.so.4.9.3 .  This also creates
 symbolic links to the shared library under the names libgambit.so and
 libgambit.so.4 .
 
 The option --enable-lib-suffix will add an explicit suffix to the names
 of the libraries.  If not specified the suffix will default to the version
-number. For example the Gambit v4.8.0 runtime library which is normally
-libgambit.a will be named libgambit-v4_8_0.a and it must be linked to with
-the C compiler option -lgambit-v4_8_0 .  If you give this option a value,
+number. For example the Gambit v4.9.3 runtime library which is normally
+libgambit.a will be named libgambit-v4_9_3.a and it must be linked to with
+the C compiler option -lgambit-v4_9_3 .  If you give this option a value,
 as in --enable-lib-suffix=<suffix> then <suffix> will be used as a suffix.
 
 By default the configure script will use the GCC compiler to build the
