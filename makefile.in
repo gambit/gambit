@@ -106,6 +106,7 @@ all:
 all-pre: gsc-boot@exe@
 
 all-post:
+	$(MAKE) modules
 
 from-scratch: fake_target
 	$(MAKE) bootclean
