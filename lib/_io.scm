@@ -10352,11 +10352,14 @@
 
 (define-prim (##readtable-setup-for-standard-level! rt)
   (let ((standard-level (##get-standard-level)))
-    (cond ((##fx= 1 standard-level)
+    (cond ((##fx= 1 standard-level) ;; Gambit language
            (macro-readtable-case-conversion?-set! rt #f)
            (macro-readtable-keywords-allowed?-set! rt #t))
-          ((##fx< 1 standard-level)
+          ((##fx= 5 standard-level) ;; R5RS language
            (macro-readtable-case-conversion?-set! rt #t)
+           (macro-readtable-keywords-allowed?-set! rt #f))
+          ((##fx< 1 standard-level) ;; R7RS language
+           (macro-readtable-case-conversion?-set! rt #f)
            (macro-readtable-keywords-allowed?-set! rt #f)))))
 
 (define-prim (##make-readtable-parameter readtable)
