@@ -40,6 +40,9 @@
 /* Define as 1 if you want to compile each Scheme file into one C function.  */
 #undef ___SINGLE_HOST
 
+/* Define as 1 if you want to mix the execution of C and machine code.  */
+#undef ___SUPPORT_LOWLEVEL_EXEC
+
 /* Define as 1 if you want trampoline jumps to be inlined.  */
 #undef ___INLINE_JUMPS
 

@@ -188,6 +188,8 @@ The configure options which are specific to the Gambit system are:
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-pic            build system with position independent code (default
                           is YES)
+  --enable-lowlevel-exec  build system so C and machine code can be mixed
+                          (default is NO)
   --enable-debug          build system so that it can be debugged
   --enable-debug-log      build system so that it generates a debugging log
                           file
