@@ -376,14 +376,15 @@
           (raise (invalid-module-name))
           #f)))
 
-(define (update-aux mod dir)
+(define (update-aux mod dir raise-exn)
   (let ((modref (##parse-module-ref mod)))
-    (update-modref modref dir)))
+    (update-modref modref dir raise-exn)))
 
 ;; git-pull and remove *@gambit...
 (define (update mod
                 #!optional
-                (t (macro-absent-obj)))
+                (t (macro-absent-obj))
+                (raise-exn (macro-absent-obj)))
   (macro-force-vars (mod t)
     (let ((to (if (or (eq? t (macro-absent-obj))
                       (eq? t #f))
@@ -393,12 +394,14 @@
       (macro-check-string
         mod
         1
-        (update mod t)
+        (update mod t raise-exn)
         (macro-check-string
           to
           2
-          (update mod t)
-          (update-aux mod to))))))
+          (update mod t raise-exn)
+          (update-aux mod to (if (eq? raise-exn (macro-absent-obj))
+                                 #f
+                                 raise-exn)))))))
 
 (define (gsi-option-update args)
 
@@ -438,7 +441,7 @@
                 (else
                   (raise exn))))
             (lambda ()
-              (update arg (path-expand to))))
+              (update arg (path-expand to) #t)))
 
           (if (pair? rest)
               (loop (cdr rest) (car rest) to)))))))
