@@ -86,8 +86,8 @@
 (define (invalid-module-name)
   (macro-make-pkg-exception "Invalid module name"))
 
-(define (unable-to-install-module)
-  (macro-make-pkg-exception "Unable to install module"))
+(define (unable-to-install-module module)
+  (macro-make-pkg-exception (string-append "Unable to install module " module)))
 
 (define (unable-to-install-specific-version mod)
   (macro-make-pkg-exception (string-append "Unable to install specific version of " mod)))
@@ -99,7 +99,7 @@
   (macro-make-pkg-exception (string-append "Module " module " is not installed")))
 
 (define (module-not-found module)
-  (macro-make-pkg-exception (string-append "Module not found " module)))
+  (macro-make-pkg-exception (string-append "Module not found: " module)))
 
 (define (install-archive archive output raise-exn)
   (let ((tmp-dir (create-temporary-directory output)))
@@ -152,7 +152,7 @@
               (begin
                 (cleanup-install-folder clone-path install-dir)
                 (if raise-exn
-                    (raise (unable-to-install-module))
+                    (raise (unable-to-install-module module-name))
                     #f)))))))
 
 (define (install-local modref install-dir raise-exn)
@@ -202,7 +202,7 @@
               (begin
                 (cleanup-install-folder clone-path install-dir)
                 (if raise-exn
-                    (raise (unable-to-install-module))
+                    (raise (unable-to-install-module mod-name))
                     #f)))))))
 
 
