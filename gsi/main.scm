@@ -892,7 +892,7 @@ usage-end
 
     (split-command-line
       (##cdr ##processed-command-line)
-      '((f) (h) (help) (i) (v))
+      '((f) (h) (help) (-help) (i) (v))
       #t
       (lambda (main-options arguments)
         (let ((skip-initialization-file?
@@ -923,7 +923,8 @@ usage-end
                  (##exit))
 
                 ((or (##assq 'h main-options)
-                     (##assq 'help main-options))
+                     (##assq 'help main-options)
+                     (##assq '-help main-options))
                  (write-usage-to-port
                   (if (interpreter-or #f) gsi-usage gsc-usage)
                   (##path-strip-extension
