@@ -235,7 +235,7 @@
            program
            (make-global-environment)
            module-ref
-           values))))
+           vector))))
      (lambda (v2 comp-ctx)
 
        (if (null? (**macro-compilation-ctx-supply-modules comp-ctx))
