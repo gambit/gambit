@@ -3863,13 +3863,14 @@
 (define-prim (##object->encoding obj)
   (let* ((hi (##type-cast obj (macro-type-fixnum)))
          (lo (##type obj)))
-    (##+ (##* (if (##fx< hi 0) (##- hi ##bignum.2*min-fixnum) hi)
-              4)
+    (##+ (##arithmetic-shift
+          (if (##fx< hi 0) (##- hi ##bignum.2*min-fixnum) hi)
+          2)
          lo)))
 
 (define-prim (##encoding->object encoding)
-  (let* ((hi (##quotient encoding 4))
-         (lo (##modulo encoding 4))
+  (let* ((hi (##arithmetic-shift encoding -2))
+         (lo (##bitwise-and encoding 3))
          (x (if (##fixnum? hi) hi (##+ hi ##bignum.2*min-fixnum))))
     (##type-cast x lo)))
 
