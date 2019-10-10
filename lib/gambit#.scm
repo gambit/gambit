@@ -44,6 +44,7 @@ let-values
 letrec*
 letrec*-values
 letrec-values
+define-values
 when
 unless
 syntax-error
