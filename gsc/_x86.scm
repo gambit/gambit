@@ -2,7 +2,7 @@
 
 ;;; File: "_x86.scm"
 
-;;; Copyright (c) 2010-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2010-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1972,5 +1972,75 @@ TODO: reimplement with (codegen-fixup-lbl! cgc lbl offset relative? width kind)
     (x86-opnd-modrm/sib-reg-opnd cgc reg opnd)
 
     (listing width-opnd)))
+
+;;;----------------------------------------------------------------------------
+
+;;; X86 instructions: IN, OUT.
+
+(define (x86-in-imm cgc reg n)
+  (let ((width-reg (x86-reg-width reg)))
+    (assert (and (fx= (x86-reg-field reg) 0) ;; only allow AL, AX, EAX
+                 (not (fx= width-reg 64)))
+            "invalid register operand" reg)
+
+    (x86-opnd-size-override-prefix cgc width-reg)
+    (asm-8 cgc (if (fx= width-reg 8) #xe4 #xe5)) ;; opcode
+    (asm-8 cgc n)
+
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     "in"
+                     width-reg
+                     reg
+                     (x86-imm-int n 0)))))
+
+(define (x86-in-dx cgc reg)
+  (let ((width-reg (x86-reg-width reg)))
+    (assert (and (fx= (x86-reg-field reg) 0) ;; only allow AL, AX, EAX
+                 (not (fx= width-reg 64)))
+            "invalid register operand" reg)
+
+    (x86-opnd-size-override-prefix cgc width-reg)
+    (asm-8 cgc (if (fx= width-reg 8) #xec #xed)) ;; opcode
+
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     "in"
+                     width-reg
+                     reg
+                     (x86-dx)))))
+
+(define (x86-out-imm cgc n reg)
+  (let ((width-reg (x86-reg-width reg)))
+    (assert (and (fx= (x86-reg-field reg) 0) ;; only allow AL, AX, EAX
+                 (not (fx= width-reg 64)))
+            "invalid register operand" reg)
+
+    (x86-opnd-size-override-prefix cgc width-reg)
+    (asm-8 cgc (if (fx= width-reg 8) #xe6 #xe7)) ;; opcode
+    (asm-8 cgc n)
+
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     "out"
+                     width-reg
+                     (x86-imm-int n 0)
+                     reg))))
+
+(define (x86-out-dx cgc reg)
+  (let ((width-reg (x86-reg-width reg)))
+    (assert (and (fx= (x86-reg-field reg) 0) ;; only allow AL, AX, EAX
+                 (not (fx= width-reg 64)))
+            "invalid register operand" reg)
+
+    (x86-opnd-size-override-prefix cgc width-reg)
+    (asm-8 cgc (if (fx= width-reg 8) #xee #xef)) ;; opcode
+
+    (if (codegen-context-listing-format cgc)
+        (x86-listing cgc
+                     "out"
+                     width-reg
+                     (x86-dx)
+                     reg))))
 
 ;;;============================================================================

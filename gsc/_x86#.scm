@@ -2,7 +2,7 @@
 
 ;;; File: "_x86#.scm"
 
-;;; Copyright (c) 2010-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2010-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -317,6 +317,11 @@ x86-cmovz
 
 x86-popcnt
 x86-lzcnt
+
+x86-in-imm
+x86-in-dx
+x86-out-imm
+x86-out-dx
 
 ))
 
