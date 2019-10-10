@@ -74,14 +74,24 @@
     (module-default-proto-set! proto)
     (set! module-default-proto proto)))
 
-;; remove folder tree from the prefix
-(define (cleanup-install-folder folder prefix)
-  (if (< 0 (string-length folder))
-    (let ((folder-name (path-expand folder prefix)))
-      (if (not (fixnum? (##delete-file-or-directory folder-name #f #f)))
-          (cleanup-install-folder
-            (path-strip-trailing-directory-separator
-              (path-directory folder)) prefix)))))
+
+;;; remove folder tree from the prefix
+(define (cleanup-install-folder modref prefix)
+  (define (normalize-dir path)
+    (parameterize ((current-directory path)) (current-directory)))
+
+  (define (cleanup-install-folder-aux folder prefix)
+    ;; (##pretty-print `(cleanup-install-folder ,folder ,prefix))
+    (if (not (fx= 0 (string-length folder)))
+        (let* ((folder-name (path-expand folder prefix))
+               (result (##delete-file-or-directory folder-name #f #f)))
+          (if (##not (##fixnum? result))
+              (cleanup-install-folder-aux
+                (path-strip-trailing-directory-separator
+                  (path-directory folder)) prefix)))))
+
+  (let ((norm-prefix (normalize-dir prefix)))
+    (cleanup-install-folder-aux (##modref->string modref) norm-prefix)))
 
 (define (invalid-module-name)
   (macro-make-pkg-exception "Invalid module name"))
@@ -119,9 +129,13 @@
          (rpath (macro-modref-rpath modref))
 
          (module-name (last rpath))
-         (base-url (fold (lambda (a b)
-                           (path-expand b a))
-                         module-name host))
+
+         (clone-modref (macro-make-modref
+                         host
+                         #f
+                         (list module-name)))
+
+         (base-url (##modref->string clone-modref))
 
          (url (url-transformer base-url)) ;; transform url
 
@@ -150,7 +164,7 @@
                             (raise (unable-to-install-specific-version (##modref->string modref)))
                             #f))))
               (begin
-                (cleanup-install-folder clone-path install-dir)
+                (cleanup-install-folder clone-modref install-dir)
                 (if raise-exn
                     (raise (unable-to-install-module module-name))
                     #f)))))))
@@ -167,6 +181,8 @@
                          tag
                          (list mod-name)))
 
+         (clone-modref (macro-modref-tag-set local-modref #f))
+
          (mod-path (fold (lambda (p acc)
                               (path-expand acc p))
                             (car rpath)
@@ -174,7 +190,9 @@
 
          (origin (git-repository-open
                    (path-expand mod-path)))
+
          (clone-path (path-expand "@" mod-name))
+
          (cache (path-expand clone-path install-dir))
          (output (path-expand
                    (path-expand at-tag mod-name)
@@ -200,7 +218,7 @@
                                    (##modref->string local-modref)))
                             #f))))
               (begin
-                (cleanup-install-folder clone-path install-dir)
+                (cleanup-install-folder clone-modref install-dir)
                 (if raise-exn
                     (raise (unable-to-install-module mod-name))
                     #f)))))))
@@ -260,53 +278,51 @@
 (define (uninstall-aux module dir)
   (define (uninstall-modref modref install-dir)
     (let* ((tag (macro-modref-tag modref))
-           (mod-path (##modref->string
-                      (macro-make-modref
-                       (macro-modref-host modref)
-                       #f
-                       (##list (##last (macro-modref-rpath modref)))))))
+           (modref-no-tag
+             (macro-make-modref
+               (macro-modref-host modref)
+               #f
+               (##list (##last (macro-modref-rpath modref)))))
+           (mod-path (##modref->string modref-no-tag)))
       (if tag
-          (let ((at-tag (string-append "@" tag)))
-             (delete-file-or-directory
-               (path-expand
-                 (path-expand
-                   at-tag
-                   mod-path)
-                 install-dir)
-               #t)
-             (cleanup-install-folder mod-path install-dir))
-            (let ((root-path (path-expand mod-path install-dir)))
-              (if (and (file-exists? root-path)
-                       (eq? (file-info-type
-                              (file-info root-path))
-                            'directory))
-                  (begin
-                    (for-each
-                      (lambda (ver)
-                        (case (string-ref ver 0)
-                          ((#\@)
-                            (delete-file-or-directory
-                               (path-expand
-                                  (path-expand ver mod-path)
-                                  install-dir) #t))))
-                      (directory-files root-path))
-                    (cleanup-install-folder mod-path install-dir))
-                  (raise (module-not-installed mod-path)))))))
+          (begin
+            (delete-file-or-directory
+              (path-expand
+                (##modref->path modref #f)
+                install-dir)
+              #t)
+            (cleanup-install-folder modref-no-tag install-dir))
+          (let ((root-path (path-expand mod-path install-dir)))
+            (if (not (and (file-exists? root-path)
+                          (eq? (file-info-type
+                                 (file-info root-path))
+                               'directory)))
+                (raise (module-not-installed mod-path))
+
+                (begin
+                  (for-each
+                    (lambda (ver)
+                      (case (string-ref ver 0)
+                        ((#\@)
+                          (delete-file-or-directory
+                             (path-expand
+                                (path-expand ver mod-path)
+                                install-dir) #t))))
+                    (directory-files root-path))
+                  (cleanup-install-folder modref-no-tag install-dir)))))))
 
 
   (let ((modref (##parse-module-ref module)))
-    (if (macro-modref? modref)
-        (let ((install-dir (path-expand dir)))
-          (if (pair? (macro-modref-host modref))
-              (let ((mod-info (##search-module modref (list install-dir))))
-                (if mod-info
-                    (let ((mod-info-dir  (vector-ref mod-info 0))
-                          (mod-info-port (vector-ref mod-info 4)))
-                      (close-input-port mod-info-port)
-                      (uninstall-modref modref install-dir))
-                    (raise (module-not-installed module))))
-              (uninstall-modref modref install-dir)))
-        (raise (invalid-module-name)))))
+    (if (not (macro-modref? modref))
+        (raise (invalid-module-name))
+        (let* ((install-dir (path-expand dir))
+               (mod-info (##search-module modref (list install-dir))))
+          (if (not mod-info)
+              (raise (module-not-installed module))
+              (let ((mod-info-dir  (vector-ref mod-info 0))
+                    (mod-info-port (vector-ref mod-info 4)))
+                (close-input-port mod-info-port)
+                (uninstall-modref modref install-dir)))))))
 
 ;; Return #f if module is not hosted
 (define (uninstall module
@@ -519,7 +535,7 @@
                        (##write-string to port)
                        (##newline port)
                        #t))
-             (with-exception-handler
+             (with-exception-catcher
                (lambda (exn)
                  (cond
                    ((macro-pkg-exception? exn)
