@@ -13,9 +13,11 @@
 string->utf8
 (string->vector string->vector#unimplemented)
 string-copy!
+string-downcase
 string-foldcase
 (string-for-each string-for-each#unimplemented)
 (string-map string-map#unimplemented)
+string-upcase
 utf8->string
 (vector->string vector->string#unimplemented)
 
