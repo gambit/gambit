@@ -46,7 +46,7 @@
         (##string-append name "#")
         name)))
 
-(define (##modref->path modref full?)
+(define (##modref->path modref full? tag?)
 
   (define (last lst)
     (if (pair? (cdr lst))
@@ -75,13 +75,17 @@
       (if full?
         (join host
               (join
-                (list (string-append "@" (or tag "")) module-name)
+                (if (not tag?)
+                    (list module-name)
+                    (list (string-append "@" (or tag "")) module-name))
                 (join rest #f)))
         ;; ignore the rest of rpath.
         (join host
-              (path-expand
-                (string-append "@" (or tag ""))
-                module-name))))))
+              (if (not tag?)
+                  module-name
+                  (path-expand
+                    (string-append "@" (or tag ""))
+                    module-name)))))))
 
 ;;;----------------------------------------------------------------------------
 

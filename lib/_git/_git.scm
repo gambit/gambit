@@ -52,7 +52,10 @@
       (and (file-exists? path)
            (eq? 'directory (file-info-type (file-info path)))
            ;;; Test if it contains .git
-           (eq? 'directory (file-info-type (file-info (path-expand ".git" path))))
+           (let ((git-path (path-expand ".git" path)))
+             (and
+               (file-exists? git-path)
+               (eq? 'directory (file-info-type (file-info git-path)))))
            (macro-make-git-repository (path-expand path))))))
 
 (define (git-command-aux args proc repo interactive?)
@@ -110,17 +113,27 @@
                    (cb (macro-absent-obj))
                    (i? (macro-absent-obj)))
   (macro-force-vars (url dir cb i?)
-    (let ((proc (if (or (eq? cb (macro-absent-obj))
-                        (eq? cb #f))
-                    (lambda (port)
-                      (and
-                        (= (process-status port) 0)
-                        (macro-make-git-repository
-                          (path-expand dir))))
-                    cb))
-          (interactive? (if (eq? i? (macro-absent-obj))
-                            #f
-                            i?)))
+    (let* ((interactive? (if (eq? i? (macro-absent-obj))
+                             #f
+                             i?))
+
+           (proc (if (not (or (eq? cb (macro-absent-obj))
+                              (eq? cb #f)))
+                     cb
+                     (lambda (pid)
+                       (if (= (process-status pid) 0)
+                           (macro-make-git-repository
+                            (path-expand dir))
+                           (begin
+                             (if (not interactive?)
+                                 (##repl
+                                  (lambda (first port)
+                                    (##newline port)
+                                    (##write-string (read-line pid #f) port)
+                                    (##newline port)
+                                    #t)))
+                             #f))))))
+
       (macro-check-string
         url
         1

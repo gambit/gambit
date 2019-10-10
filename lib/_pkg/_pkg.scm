@@ -91,7 +91,7 @@
                   (path-directory folder)) prefix)))))
 
   (let ((norm-prefix (normalize-dir prefix)))
-    (cleanup-install-folder-aux (##modref->string modref) norm-prefix)))
+    (cleanup-install-folder-aux (##modref->path modref #f #f) norm-prefix)))
 
 (define (invalid-module-name)
   (macro-make-pkg-exception "Invalid module name"))
@@ -135,13 +135,14 @@
                          #f
                          (list module-name)))
 
+         ;;
          (base-url (##modref->string clone-modref))
 
          (url (url-transformer base-url)) ;; transform url
 
-         (clone-path (path-expand "@" base-url))
+         (clone-path (##modref->path clone-modref #f #t))
          (cache (path-expand clone-path install-dir))
-         (output (path-expand (##modref->path modref #f) install-dir)))
+         (output (path-expand (##modref->path modref #f #t) install-dir)))
 
     (if (file-exists? output)
         (if raise-exn
@@ -283,12 +284,12 @@
                (macro-modref-host modref)
                #f
                (##list (##last (macro-modref-rpath modref)))))
-           (mod-path (##modref->string modref-no-tag)))
+           (mod-path (##modref->path modref-no-tag #f #f)))
       (if tag
           (begin
             (delete-file-or-directory
               (path-expand
-                (##modref->path modref #f)
+                (##modref->path modref #f #t)
                 install-dir)
               #t)
             (cleanup-install-folder modref-no-tag install-dir))
@@ -304,10 +305,10 @@
                     (lambda (ver)
                       (case (string-ref ver 0)
                         ((#\@)
-                          (delete-file-or-directory
-                             (path-expand
-                                (path-expand ver mod-path)
-                                install-dir) #t))))
+                         (delete-file-or-directory
+                           (path-expand
+                             (path-expand ver mod-path)
+                             install-dir) #t))))
                     (directory-files root-path))
                   (cleanup-install-folder modref-no-tag install-dir)))))))
 
