@@ -456,7 +456,7 @@ AC_ARG_ENABLE(lowlevel-exec,
               AC_HELP_STRING([--enable-lowlevel-exec],
                              [build system so C and machine code can be mixed (default is NO)]),
               ENABLE_LOWLEVEL_EXEC=$enableval,
-              ENABLE_LOWLEVEL_EXEC=yes)
+              ENABLE_LOWLEVEL_EXEC=no)
 
 if test "$ENABLE_LOWLEVEL_EXEC" = yes; then
   AC_DEFINE([___SUPPORT_LOWLEVEL_EXEC],[],[Enable lowlevel code execution])
