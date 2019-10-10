@@ -776,7 +776,7 @@ usage-end
         "*** WARNING -- Unknown or improperly placed -"
         output-port)
        (##write-string (##symbol->string opt-sym) output-port)
-       (##write-string " option\n" output-port)
+       (##write-string " option ignored (try -help)\n" output-port)
        #t)))
 
   (define (warn-multiple-output-files-and-o-option)
