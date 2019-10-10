@@ -467,7 +467,7 @@ hello
 world
 @end smallexample
 
-@node GSI module management mode, GSI customization, GSI interactive mode, GSI
+@node GSI module management mode, GSI customization, GSI batch mode, GSI
 @section Module management mode
 
 @opindex -install
