@@ -62,6 +62,7 @@ On most Unix platforms the system is easily built using configure/make:
 The system can then be tested and installed using the following commands:
 
   % make check
+  % make modules       # compile the builtin modules (optional)
   % sudo make install
 
 On a computer with multiple cores it is normally beneficial to build

@@ -19,7 +19,7 @@ Quick-install instructions for a typical installation
 
     git clone https://github.com/gambit/gambit.git
     cd gambit
-    ./configure
+    ./configure        # --enable-single-host optional but recommended
     make -j            # build runtime library, gsi and gsc
     make modules       # compile the builtin modules (optional but recommended)
     make check         # run self tests (optional but recommended)
