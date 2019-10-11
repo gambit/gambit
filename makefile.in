@@ -106,7 +106,7 @@ all:
 all-pre: gsc-boot@exe@
 
 all-post:
-	$(MAKE) modules
+	@echo "**** to compile the builtin modules you should: make modules"
 
 from-scratch: fake_target
 	$(MAKE) bootclean
