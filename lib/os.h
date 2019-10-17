@@ -281,11 +281,15 @@
 #endif
 
 #ifdef HAVE_SYSCTL
+#ifndef __linux__
 #define USE_sysctl
+#endif
 #endif
 
 #ifdef HAVE_SYSCTLBYNAME
+#ifndef __linux__
 #define USE_sysctlbyname
+#endif
 #endif
 
 #ifdef HAVE_SYSLOG
