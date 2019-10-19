@@ -811,7 +811,7 @@
                           (map (lambda (m)
                                  (let ((id (car m)))
                                    (if (table-ref imports id #f) ;; macro is imported?
-                                       `((##define-syntax
+                                       `((##define-syntax ,id
                                            (##lambda (src)
                                                      (syn#apply-rules
                                                       (##quote ,(cdr m))
