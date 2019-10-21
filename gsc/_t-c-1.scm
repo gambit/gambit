@@ -361,6 +361,8 @@
 
 (define targ-sharing-table #f) ; table for compacting meta-information
 
+(define targ-unique-name-table #f) ; table for generating unique procedure object names
+
 (define (targ-heap-begin!)
   (set! targ-glo-vars         (make-table 'test: eq?))
   (set! targ-lbl-alloc        0)
@@ -377,6 +379,7 @@
   (set! targ-fp-cache #f)
   (set! targ-fr-cell #f)
   (set! targ-sharing-table    (make-table))
+  (set! targ-unique-name-table (make-table))
   #f)
 
 (define (targ-heap-end!)
@@ -395,6 +398,7 @@
   (set! targ-fp-cache #f)
   (set! targ-fr-cell #f)
   (set! targ-sharing-table #f)
+  (set! targ-unique-name-table #f)
   #f)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1778,7 +1782,8 @@
        (let* ((proc (car obj))
               (c-name (proc-obj-c-name proc))
               (name (proc-obj-name proc))
-              (host (targ-c-id-host name))
+              (unique-name (targ-unique-name proc))
+              (host (targ-c-id-host unique-name))
               (p (cdr obj))
               (info (car p))
               (val-lbls (vector-ref info 1))
@@ -1788,7 +1793,7 @@
            (targ-display ","))
          (set! i (+ i 1))
          (targ-code* (list "DEF_LBL_INTRO"
-                           (targ-c-id-host name)
+                           host
                            (if (proc-obj-primitive? proc)
                              (targ-c-string name)
                              0)
@@ -1878,6 +1883,37 @@
       (targ-code* '("END_OFD"))
       (targ-line))))
 
+(define (targ-unique-name proc)
+
+  (define (version n)
+    (string-append "_V" (number->string n) "_"))
+
+  (let* ((name (proc-obj-name proc))
+         (state (table-ref targ-unique-name-table name #f)))
+    (if state
+        (or (table-ref (vector-ref state 3) proc #f)
+            (let* ((count (vector-ref state 0))
+                   (count+1 (+ count 1))
+                   (unique-name (cons (version count+1) name)))
+              (vector-set! state 0 count+1)
+              (if (= count+1 2)
+                  (targ-cell-set! (vector-ref state 1) (version 1)))
+              (vector-set! state 2 unique-name)
+              (table-set! (vector-ref state 3) proc unique-name)
+              unique-name))
+        (let* ((conflicts (make-table 'test: eq?))
+               (cell (targ-make-cell "")) ;; for now use empty version
+               (unique-name (cons cell name))
+               (state (vector 1 cell unique-name conflicts)))
+           (table-set! targ-unique-name-table name state)
+           (table-set! conflicts proc unique-name)
+           unique-name))))
+
+(define (targ-last-unique-name proc)
+  (let* ((name (proc-obj-name proc))
+         (state (table-ref targ-unique-name-table name #f)))
+    (vector-ref state 2)))
+
 (define (targ-get-ofd-count objs)
   (let ((n 0))
     (for-each
@@ -1901,6 +1937,8 @@
   (let* ((proc (car obj))
          (p (cdr obj))
          (name (proc-obj-name proc))
+         (unique-name (targ-unique-name proc))
+         (host (targ-c-id-host unique-name))
          (info (car p))
          (code (vector-ref info 0))
          (rd-res (vector-ref info 2))
@@ -1912,7 +1950,7 @@
       (targ-code val)
       (targ-line))
 
-    (def "PH_PROC" (targ-c-id-host name))
+    (def "PH_PROC" host)
     (def "PH_LBL0" (caddr p))
 
     (targ-begin-cod rd-res wr-res
@@ -1932,12 +1970,12 @@
                             (list "DEF_SLBL"
                                   (targ-lbl-num lbl)
                                   (targ-make-glbl (targ-lbl-num lbl)
-                                                  name))))
+                                                  unique-name))))
                          ((targ-lbl-goto? lbl)
                           (targ-code*
                             (list "DEF_GLBL"
                                   (targ-make-glbl (targ-lbl-num lbl)
-                                                  name)))))))
+                                                  unique-name)))))))
                 ((and (pair? x)
                       (eq? (car x) 'line))
                  (set! targ-source-line-number (cadr x))
@@ -2005,14 +2043,16 @@
        (let* ((proc (car obj))
               (p (cdr obj))
               (name (proc-obj-name proc))
+              (unique-name (targ-unique-name proc))
               (info (car p))
               (val-lbls (vector-ref info 1)))
          (for-each
           (lambda (lbl)
             (if lbl
-              (let ((x (targ-make-glbl (targ-lbl-num lbl) name)))
-                (targ-code* (list def-hlbl x)))
-              (targ-code* (list def-hlbl-intro))))
+                (let ((x (targ-make-glbl (targ-lbl-num lbl)
+                                         unique-name)))
+                  (targ-code* (list def-hlbl x)))
+                (targ-code* (list def-hlbl-intro))))
           (cons #f val-lbls))))
      objs)
 
@@ -2136,7 +2176,7 @@
     (targ-display-prefixed "L")
     (targ-code n)
     (targ-display "_")
-    (targ-display (targ-name->c-id name)))
+    (targ-display-c-id name))
 
   (if (pair? x)
     (let ((head (car x)) (tail (cdr x)))
@@ -2148,15 +2188,15 @@
         ((c-hex)       (targ-display-c-hex       tail))
         ((c-char)      (targ-display-c-char      tail))
         ((c-string)    (targ-display-c-string    tail))
-        ((c-id-linker) (targ-display-c-id        targ-linker-tag tail))
-        ((c-id-host)   (targ-display-c-id        targ-host-tag   tail))
-        ((c-id-glo)    (targ-display-c-id        targ-glo-tag    tail))
-        ((c-id-glo2)   (targ-display-c-id        targ-glo2-tag   tail))
-        ((c-id-prm2)   (targ-display-c-id        targ-prm2-tag   tail))
-        ((c-id-sym)    (targ-display-c-id        targ-sym-tag    tail))
-        ((c-id-sym2)   (targ-display-c-id        targ-sym2-tag   tail))
-        ((c-id-key)    (targ-display-c-id        targ-key-tag    tail))
-        ((c-id-key2)   (targ-display-c-id        targ-key2-tag   tail))
+        ((c-id-linker) (targ-display-prefixed-c-id targ-linker-tag tail))
+        ((c-id-host)   (targ-display-prefixed-c-id targ-host-tag   tail))
+        ((c-id-glo)    (targ-display-prefixed-c-id targ-glo-tag    tail))
+        ((c-id-glo2)   (targ-display-prefixed-c-id targ-glo2-tag   tail))
+        ((c-id-prm2)   (targ-display-prefixed-c-id targ-prm2-tag   tail))
+        ((c-id-sym)    (targ-display-prefixed-c-id targ-sym-tag    tail))
+        ((c-id-sym2)   (targ-display-prefixed-c-id targ-sym2-tag   tail))
+        ((c-id-key)    (targ-display-prefixed-c-id targ-key-tag    tail))
+        ((c-id-key2)   (targ-display-prefixed-c-id targ-key2-tag   tail))
         ((sub-name)    (targ-display-prefixed "X") (targ-code tail))
         ((glbl)        (goto-lbl (car tail) (cadr tail)))
         ((d-)          (two-heads "D_"        tail '()))
@@ -2477,11 +2517,15 @@
              (write-next-byte x1)
              (write-next-byte x0))))))
 
-(define (targ-display-c-id type name)
+(define (targ-display-prefixed-c-id type name)
   (targ-display-prefixed type)
-  (targ-display-no-line-info (targ-name->c-id name)))
+  (targ-display-c-id name))
 
-(define (targ-name->c-id s)
-  (scheme-id->c-id s))
+(define (targ-display-c-id name)
+  (if (pair? name)
+      (begin
+        (targ-code (car name))
+        (targ-display-no-line-info (scheme-id->c-id (cdr name))))
+      (targ-display-no-line-info (scheme-id->c-id name))))
 
 ;;;----------------------------------------------------------------------------
