@@ -23,7 +23,7 @@ Quick-install instructions for a typical installation
     make -j            # build runtime library, gsi and gsc
     make modules       # compile the builtin modules (optional but recommended)
     make check         # run self tests (optional but recommended)
-    make doc           # build the documentation (optional but recommended)
+    make doc           # build the documentation
     sudo make install  # install
 
 Detailed installation instructions are given in the file "INSTALL.txt".
