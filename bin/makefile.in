@@ -82,8 +82,8 @@ gambcomp-python.unix.in gambcomp-python.bat.windows.in \
 gambcomp-ruby.unix.in gambcomp-ruby.bat.windows.in \
 gambcomp-php.unix.in gambcomp-php.bat.windows.in \
 gambcomp-java.unix.in gambcomp-java.bat.windows.in \
-gambcomp-86.unix.in gambcomp-x86.bat.windows.in \
-gambcomp-86-64.unix.in gambcomp-x86-64.bat.windows.in \
+gambcomp-x86.unix.in gambcomp-x86.bat.windows.in \
+gambcomp-x86-64.unix.in gambcomp-x86-64.bat.windows.in \
 gambcomp-arm.unix.in gambcomp-arm.bat.windows.in \
 gambcomp-riscv-32.unix.in gambcomp-riscv-32.bat.windows.in \
 gambcomp-riscv-64.unix.in gambcomp-riscv-64.bat.windows.in \
