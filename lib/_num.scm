@@ -1525,7 +1525,7 @@
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
 
-  (define (##fast-gcd u v)
+  (define (fast-gcd u v)
 
     ;; See the paper "Fast Reduction and Composition of Binary
     ;; Quadratic Forms" by Arnold Schoenhage.  His algorithm and proof
@@ -1925,7 +1925,7 @@
                    ;; in the gcd.
                    (##arithmetic-shift (##gcd x y)
                                        (##fxmin first-x-bit first-y-bit))
-                   (##fast-gcd x y)))))))
+                   (fast-gcd x y)))))))
 
   (cond ((##not (##integer? x))
          (type-error-on-x))
@@ -3126,7 +3126,7 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##sqrt x)))
 
-(define (##power-of-two? n)
+(define-prim (##power-of-two? n)
   ;; assumes n is a positive fixnum or bignum
   (if (##fixnum? n)
       (##fxzero? (##fxand n (##fx- n 1)))
