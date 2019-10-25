@@ -8544,7 +8544,7 @@ end-of-code
        ))
 
     (define (make-w log-n)
-      (let* ((n (##expt 2 log-n))  ;; number of complexes
+      (let* ((n (##fxarithmetic-shift-left 1 log-n))  ;; number of complexes
              (result (##make-f64vector (##fx* 2 n))))
 
         (define (copy-low-lut)
@@ -9171,7 +9171,7 @@ end-of-code
     |#
 
     (define (make-w-rac log-n)
-      (let* ((n (##expt 2 log-n))
+      (let* ((n (##fxarithmetic-shift-left 1 log-n))
              (result (##make-f64vector n)))   ;; contains n/2 complexes
 
         (define (copy-lut lut stride)
