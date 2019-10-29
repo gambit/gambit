@@ -35,11 +35,11 @@ OBJ_EXTENSION=@OBJ_EXTENSION_SH@
 EXE_EXTENSION=@EXE_EXTENSION_SH@
 BAT_EXTENSION=@BAT_EXTENSION_SH@
 
-GAMBCOMP_CC_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"cc-options|# \""
-GAMBCOMP_LD_OPTIONS_PRELUDE_REGEXP="^ #|\\*/\"\\*/\"ld-options-prelude|# \""
-GAMBCOMP_LD_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"ld-options|# \""
-GAMBCOMP_PKG_CONFIG_REGEXP="^ #|\\*/\"\\*/\"pkg-config|# \""
-GAMBCOMP_PKG_CONFIG_PATH_REGEXP="^ #|\\*/\"\\*/\"pkg-config-path|# \""
+GAMBCOMP_CC_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"cc-options|#\""
+GAMBCOMP_LD_OPTIONS_PRELUDE_REGEXP="^ #|\\*/\"\\*/\"ld-options-prelude|#\""
+GAMBCOMP_LD_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"ld-options|#\""
+GAMBCOMP_PKG_CONFIG_REGEXP="^ #|\\*/\"\\*/\"pkg-config|#\""
+GAMBCOMP_PKG_CONFIG_PATH_REGEXP="^ #|\\*/\"\\*/\"pkg-config-path|#\""
 
 get_meta_info()
 {
@@ -58,7 +58,7 @@ process_pkg_config()
 {
   for pkg in $1; do
     if test -z "${PKG_CONFIG}"; then
-      echo "the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags $pkg' and 'pkg-config --libs $pkg'"
+      echo "*** WARNING -- the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags $pkg' and 'pkg-config --libs $pkg'"
       exit 1
     else
       set -e

@@ -836,7 +836,8 @@
                      (last-script-line #f)
                      (rev-ld-options-prelude '())
                      (rev-ld-options '())
-                     (rev-pkg-config '()))
+                     (rev-pkg-config '())
+                     (rev-pkg-config-path '()))
             (if (pair? lst)
                 (let ((module-meta-info
                        (targ-mod-meta-info (car lst))))
@@ -870,6 +871,12 @@
                                 =>
                                 cdr)
                                (else
+                                '())))
+                        (pkg-config-path
+                         (cond ((get 'pkg-config-path)
+                                =>
+                                cdr)
+                               (else
                                 '()))))
                     (loop (cdr lst)
                           (or script-line
@@ -879,7 +886,9 @@
                           (append (reverse ld-options)
                                   rev-ld-options)
                           (append (reverse pkg-config)
-                                  rev-pkg-config))))
+                                  rev-pkg-config)
+                          (append (reverse pkg-config-path)
+                                  rev-pkg-config-path))))
                 (append (if last-script-line
                             (list (list 'script-line last-script-line))
                             '())
@@ -894,6 +903,10 @@
                         (if (pair? rev-pkg-config)
                             (list (cons 'pkg-config
                                         (reverse rev-pkg-config)))
+                            '())
+                        (if (pair? rev-pkg-config-path)
+                            (list (cons 'pkg-config-path
+                                        (reverse rev-pkg-config-path)))
                             '())))))
 
         (targ-link-aux
@@ -1252,7 +1265,6 @@
                 (let ((attrib (car attribs)))
                   (targ-display " ")
                   (display-escaped key)
-                  (targ-display " ")
                   (write attrib targ-port)
                   (targ-line)
                   (loop2 (cdr attribs)))))
