@@ -11110,7 +11110,7 @@ end-of-code
         (f1 x))))
 
 (define-prim (##flonum-expt2 n)
-  (##flexpt 2. (##fixnum->flonum n)))
+  (##flexpt (macro-inexact-+2) (##fixnum->flonum n)))
 
 (define-prim (##flonum->exact-int x)
   (let loop1 ((z (##flabs x))
