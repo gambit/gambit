@@ -325,7 +325,7 @@
                      options
                      (lambda () target-filename)))
            (let ((exit-status
-                  (##gambcomp
+                  (##gambuild
                    (c#target-name target)
                    type
                    output-dir
@@ -457,7 +457,7 @@
          (output-filename-no-dir
           (##path-strip-directory output-filename))
          (exit-status
-          (##gambcomp
+          (##gambuild
            (c#target-name target)
            'exe
            output-dir
@@ -482,7 +482,7 @@
          "target link failed while linking"
          obj-files))))
 
-(define (##gambcomp
+(define (##gambuild
          target
          op
          output-dir
@@ -503,7 +503,7 @@
     (##string-append (##car name-val) "=" (##cdr name-val)))
 
   (define (prefixed-arg name-val)
-    (arg (##cons (##string-append arg-prefix (##car name-val))
+    (arg (##cons (##string-append arg-prefix (##car name-val) "_PARAM")
                  (##cdr name-val))))
 
   (define (install-dir path)
@@ -533,7 +533,7 @@
      open-process
      (##list path:
              (##string-append gambitdir-bin
-                              "gambcomp-"
+                              "gambuild-"
                               (##symbol->string target)
                               ##os-bat-extension-string-saved)
              arguments:
@@ -545,7 +545,7 @@
               (##map arg
                      (##append
                       (if verbose?
-                          (##list (##cons "GAMBCOMP_VERBOSE" "yes"))
+                          (##list (##cons "GAMBUILD_VERBOSE" "yes"))
                           '())
                       (##list
                        (##cons "GAMBITDIR_BIN"
@@ -564,7 +564,7 @@
                         (##cons "INPUT_FILENAMES"
                                 (##string-or-string-list-join
                                  input-filenames-relative
-                                 " "))
+                                 "\n"))
                         (##cons "OUTPUT_FILENAME"
                                 output-filename))
                        options))

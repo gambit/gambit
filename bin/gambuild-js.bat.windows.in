@@ -1,0 +1,67 @@
+@echo off
+
+if "%1" == "obj" goto obj
+if not "%1" == ""obj"" goto not_obj
+:obj
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_obj_verbose
+echo.type nul ^> "%BUILD_OBJ_OUTPUT_FILENAME_PARAM%"
+echo.for %%f in (%BUILD_OBJ_INPUT_FILENAMES_PARAM%) do type %%f ^>^> "%BUILD_OBJ_OUTPUT_FILENAME_PARAM%"
+:not_obj_verbose
+
+type nul > "%BUILD_OBJ_OUTPUT_FILENAME_PARAM%"
+for %%f in (%BUILD_OBJ_INPUT_FILENAMES_PARAM%) do type %%f >> "%BUILD_OBJ_OUTPUT_FILENAME_PARAM%"
+
+goto end
+:not_obj
+
+if "%1" == "dyn" goto dyn
+if not "%1" == ""dyn"" goto not_dyn
+:dyn
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_dyn_verbose
+echo.type nul ^> "%BUILD_DYN_OUTPUT_FILENAME_PARAM%"
+echo.for %%f in (%BUILD_DYN_INPUT_FILENAMES_PARAM%) do type %%f ^>^> "%BUILD_DYN_OUTPUT_FILENAME_PARAM%"
+:not_dyn_verbose
+
+type nul > "%BUILD_DYN_OUTPUT_FILENAME_PARAM%"
+for %%f in (%BUILD_DYN_INPUT_FILENAMES_PARAM%) do type %%f >> "%BUILD_DYN_OUTPUT_FILENAME_PARAM%"
+
+goto end
+:not_dyn
+
+if "%1" == "lib" goto lib
+if not "%1" == ""lib"" goto not_lib
+:lib
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_lib_verbose
+echo.echo BUILD_LIB not yet implemented
+:not_lib_verbose
+
+echo BUILD_LIB not yet implemented
+
+goto end
+:not_lib
+
+if "%1" == "exe" goto exe
+if not "%1" == ""exe"" goto not_exe
+:exe
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_exe_verbose
+echo.echo.@node -e "var g_fs = require('fs'); var g_path = require('path'); var g_eval = eval; function g_readfile(path) { return fs.readFileSync(path).toString(); } var g_batchfile = g_path.resolve(process.argv[1]); if (!(/\.bat/i).test(g_batchfile)) g_batchfile += '.bat'; process.argv[1] = g_batchfile; var g_script = g_readfile(g_batchfile); g_script = g_script.replace(/.*\r\n.*\r\n/,'\r\n\r\n'); eval(g_script);" %%0 %%* ^> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+echo.echo.@exit /b %%ERRORLEVEL%% ^>^> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+echo.for %%f in (%BUILD_EXE_INPUT_FILENAMES_PARAM% "%GAMBITDIR_LIB%\_gambit.js") do type %%f ^>^> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+:not_exe_verbose
+
+echo.@node -e "var g_fs = require('fs'); var g_path = require('path'); var g_eval = eval; function g_readfile(path) { return fs.readFileSync(path).toString(); } var g_batchfile = g_path.resolve(process.argv[1]); if (!(/\.bat/i).test(g_batchfile)) g_batchfile += '.bat'; process.argv[1] = g_batchfile; var g_script = g_readfile(g_batchfile); g_script = g_script.replace(/.*\r\n.*\r\n/,'\r\n\r\n'); eval(g_script);" %%0 %%* > "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+echo.@exit /b %%ERRORLEVEL%% >> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+for %%f in (%BUILD_EXE_INPUT_FILENAMES_PARAM% "%GAMBITDIR_LIB%\_gambit.js") do type %%f >> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+
+goto end
+:not_exe
+
+echo.gambuild-js.bat unknown operation "%1"
+exit /b 1
+
+:end
+exit /b 0

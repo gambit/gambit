@@ -1259,11 +1259,13 @@ world
 @end smallexample
 
 The detailed steps which are performed can be viewed by setting the
-@samp{GAMBCOMP_VERBOSE} environment variable to a nonnull value.  For
-example:
+@samp{GAMBUILD_VERBOSE} environment variable to a nonnull value.
+Alternatively, @code{gsc}'s @samp{-verbose} option can be used (it
+implicitly sets the @samp{GAMBUILD_VERBOSE} environment variable).
+For example:
 
 @smallexample
-$ @b{export GAMBCOMP_VERBOSE=yes}
+$ @b{export GAMBUILD_VERBOSE=yes}
 $ @b{gsc -o hello.exe -exe h.scm w.six}
 h.scm:
 /Users/feeley/gambit/doc/h.c:

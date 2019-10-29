@@ -245,9 +245,9 @@ GAMBITDIR_LIB = $(rootfromhere)/lib
 GAMBITDIR_LIB_GSI = $(rootfromhere)/gsi
 GAMBITDIR_LIB_GSC = $(rootfromhere)/gsc
 
-BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
-BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS) $(GAMBITLIB_DEFS) -D___PRIMAL
-BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
+BUILD_OBJ_OUTPUT_FILENAME_PARAM = $*@obj@
+BUILD_OBJ_CC_OPTIONS_PARAM =  -I$(srcdir) $(DEFS) $(GAMBITLIB_DEFS) -D___PRIMAL
+BUILD_OBJ_INPUT_FILENAMES_PARAM = $(srcdirpfx)$*.c
 
 PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
 

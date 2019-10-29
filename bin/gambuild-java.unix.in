@@ -1,0 +1,60 @@
+#! /bin/sh
+
+case "$1" in
+
+  "obj")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "cat ${BUILD_OBJ_INPUT_FILENAMES_PARAM} > \"${BUILD_OBJ_OUTPUT_FILENAME_PARAM}\""
+    fi
+
+    cat ${BUILD_OBJ_INPUT_FILENAMES_PARAM} > "${BUILD_OBJ_OUTPUT_FILENAME_PARAM}"
+    ;;
+
+  "dyn")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "cat ${BUILD_DYN_INPUT_FILENAMES_PARAM} > \"${BUILD_DYN_OUTPUT_FILENAME_PARAM}\""
+    fi
+
+    cat ${BUILD_DYN_INPUT_FILENAMES_PARAM} > "${BUILD_DYN_OUTPUT_FILENAME_PARAM}"
+    ;;
+
+  "lib")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "echo BUILD_LIB not yet implemented"
+    fi
+
+    echo BUILD_LIB not yet implemented
+    ;;
+
+  "exe")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "mkdir \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp\""
+      echo "javac -d \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp\" $(echo $BUILD_EXE_INPUT_FILENAMES_PARAM | sed 's/\.o /.java /g; s/\.o$/.java/') \"${GAMBITDIR_LIB}/_gambit.java\""
+      echo "jar cfe \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}.jar\" $(echo ${BUILD_EXE_OUTPUT_FILENAME_PARAM} | grep -oP '[^/]*_(?=\.o)') \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp/*.class\""
+      echo "rm -rf \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp\""
+
+      echo "echo \"#! /bin/sh\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+      echo "echo \"java -jar ${BUILD_EXE_OUTPUT_FILENAME_PARAM}.jar\" >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+      echo "chmod +x \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+    fi
+
+    mkdir "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp"
+    javac -d "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp" $(echo $BUILD_EXE_INPUT_FILENAMES_PARAM | sed 's/\.o /.java /g; s/\.o$/.java/') "${GAMBITDIR_LIB}/_gambit.java"
+    jar cfe "${BUILD_EXE_OUTPUT_FILENAME_PARAM}.jar" $(echo ${BUILD_EXE_OUTPUT_FILENAME_PARAM} | grep -oP '[^/]*_(?=\.o)') "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp/*.class"
+    rm -rf "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp"
+
+    echo "#! /bin/sh" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+    echo "java -jar ${BUILD_EXE_OUTPUT_FILENAME_PARAM}.jar" >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+    chmod +x "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+    ;;
+
+  *)
+    echo "gambuild-java unknown operation \"$1\""
+    exit 1
+    ;;
+
+esac

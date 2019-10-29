@@ -186,15 +186,15 @@ set DEFS_DYN_BAT=%DEFS_COMMON% -D___DYNAMIC
 set DEFS_LIB_BAT=%DEFS_COMMON%
 set DEFS_EXE_BAT=%DEFS_COMMON%
 
-set BUILD_OBJ_BAT=%%%%C_COMPILER%%%% %%%%FLAGS_OPT%%%% %%%%FLAGS_OBJ%%%% %%%%DEFS_OBJ%%%% -I"%%%%GAMBITDIR_INCLUDE%%%%" -c -Fo"%%%%BUILD_OBJ_OUTPUT_FILENAME%%%%" %%%%BUILD_OBJ_CC_OPTIONS%%%% %%%%BUILD_OBJ_INPUT_FILENAMES%%%%
-set BUILD_DYN_BAT=%%%%C_COMPILER%%%% %%%%FLAGS_OPT%%%% %%%%FLAGS_DYN%%%% %%%%DEFS_DYN%%%% -I"%%%%GAMBITDIR_INCLUDE%%%%" -Fe"%%%%BUILD_DYN_OUTPUT_FILENAME%%%%" %%%%BUILD_DYN_CC_OPTIONS%%%% %%%%BUILD_DYN_LD_OPTIONS_PRELUDE%%%% %%%%BUILD_DYN_INPUT_FILENAMES%%%% %%%%BUILD_DYN_LD_OPTIONS%%%%
+set BUILD_OBJ_BAT=%%%%C_COMPILER%%%% %%%%FLAGS_OPT%%%% %%%%FLAGS_OBJ%%%% %%%%DEFS_OBJ%%%% -I"%%%%GAMBITDIR_INCLUDE%%%%" -c -Fo"%%%%BUILD_OBJ_OUTPUT_FILENAME_PARAM%%%%" %%%%BUILD_OBJ_CC_OPTIONS_PARAM%%%% %%%%BUILD_OBJ_INPUT_FILENAMES_PARAM%%%%
+set BUILD_DYN_BAT=%%%%C_COMPILER%%%% %%%%FLAGS_OPT%%%% %%%%FLAGS_DYN%%%% %%%%DEFS_DYN%%%% -I"%%%%GAMBITDIR_INCLUDE%%%%" -Fe"%%%%BUILD_DYN_OUTPUT_FILENAME_PARAM%%%%" %%%%BUILD_DYN_CC_OPTIONS_PARAM%%%% %%%%BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM%%%% %%%%BUILD_DYN_INPUT_FILENAMES_PARAM%%%% %%%%BUILD_DYN_LD_OPTIONS_PARAM%%%%
 set BUILD_LIB_BAT=echo BUILD_LIB not yet implemented
-set BUILD_EXE_BAT=%%%%C_COMPILER%%%% %%%%FLAGS_EXE%%%% %%%%DEFS_EXE%%%% -I"%%%%GAMBITDIR_INCLUDE%%%%"  -Fe"%%%%BUILD_EXE_OUTPUT_FILENAME%%%%" %%%%BUILD_EXE_CC_OPTIONS%%%% %%%%BUILD_EXE_LD_OPTIONS_PRELUDE%%%% %%%%BUILD_EXE_INPUT_FILENAMES%%%% "%%%%GAMBITDIR_LIB%%%%/libgambit.lib" %%%%LIBS%%%% %%%%BUILD_EXE_LD_OPTIONS%%%% %FLAGS_LINK%
+set BUILD_EXE_BAT=%%%%C_COMPILER%%%% %%%%FLAGS_EXE%%%% %%%%DEFS_EXE%%%% -I"%%%%GAMBITDIR_INCLUDE%%%%"  -Fe"%%%%BUILD_EXE_OUTPUT_FILENAME_PARAM%%%%" %%%%BUILD_EXE_CC_OPTIONS_PARAM%%%% %%%%BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM%%%% %%%%BUILD_EXE_INPUT_FILENAMES_PARAM%%%% "%%%%GAMBITDIR_LIB%%%%/libgambit.lib" %%%%LIBS%%%% %%%%BUILD_EXE_LD_OPTIONS_PARAM%%%% %FLAGS_LINK%
 
-set BUILD_OBJ_ECHO_BAT=%%C_COMPILER%% %%FLAGS_OPT%% %%FLAGS_OBJ%% %%DEFS_OBJ%% -I"%%GAMBITDIR_INCLUDE%%" -c -Fo"%%BUILD_OBJ_OUTPUT_FILENAME%%" %%BUILD_OBJ_CC_OPTIONS%% %%BUILD_OBJ_INPUT_FILENAMES%%
-set BUILD_DYN_ECHO_BAT=%%C_COMPILER%% %%FLAGS_OPT%% %%FLAGS_DYN%% %%DEFS_DYN%% -I"%%GAMBITDIR_INCLUDE%%" -Fe"%%BUILD_DYN_OUTPUT_FILENAME%%" %%BUILD_DYN_CC_OPTIONS%% %%BUILD_DYN_LD_OPTIONS_PRELUDE%% %%BUILD_DYN_INPUT_FILENAMES%% %%BUILD_DYN_LD_OPTIONS%%
+set BUILD_OBJ_ECHO_BAT=%%C_COMPILER%% %%FLAGS_OPT%% %%FLAGS_OBJ%% %%DEFS_OBJ%% -I"%%GAMBITDIR_INCLUDE%%" -c -Fo"%%BUILD_OBJ_OUTPUT_FILENAME_PARAM%%" %%BUILD_OBJ_CC_OPTIONS_PARAM%% %%BUILD_OBJ_INPUT_FILENAMES_PARAM%%
+set BUILD_DYN_ECHO_BAT=%%C_COMPILER%% %%FLAGS_OPT%% %%FLAGS_DYN%% %%DEFS_DYN%% -I"%%GAMBITDIR_INCLUDE%%" -Fe"%%BUILD_DYN_OUTPUT_FILENAME_PARAM%%" %%BUILD_DYN_CC_OPTIONS_PARAM%% %%BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM%% %%BUILD_DYN_INPUT_FILENAMES_PARAM%% %%BUILD_DYN_LD_OPTIONS_PARAM%%
 set BUILD_LIB_ECHO_BAT=echo BUILD_LIB not yet implemented
-set BUILD_EXE_ECHO_BAT=%%C_COMPILER%% %%FLAGS_EXE%% %%DEFS_EXE%% -I"%%GAMBITDIR_INCLUDE%%"  -Fe"%%BUILD_EXE_OUTPUT_FILENAME%%" %%BUILD_EXE_CC_OPTIONS%% %%BUILD_EXE_LD_OPTIONS_PRELUDE%% %%BUILD_EXE_INPUT_FILENAMES%% "%%GAMBITDIR_LIB%%/libgambit.lib" %%LIBS%% %%BUILD_EXE_LD_OPTIONS%% %%FLAGS_LINK%%
+set BUILD_EXE_ECHO_BAT=%%C_COMPILER%% %%FLAGS_EXE%% %%DEFS_EXE%% -I"%%GAMBITDIR_INCLUDE%%"  -Fe"%%BUILD_EXE_OUTPUT_FILENAME_PARAM%%" %%BUILD_EXE_CC_OPTIONS_PARAM%% %%BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM%% %%BUILD_EXE_INPUT_FILENAMES_PARAM%% "%%GAMBITDIR_LIB%%/libgambit.lib" %%LIBS%% %%BUILD_EXE_LD_OPTIONS_PARAM%% %%FLAGS_LINK%%
 
 set DEFS_BAT=
 set LIBS_BAT= %LIBS%
@@ -207,287 +207,287 @@ set OBJ_EXTENSION_BAT=.obj
 set EXE_EXTENSION_BAT=.exe
 set BAT_EXTENSION_BAT=.bat
 
-echo @echo off> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo rem The following settings are determined by the configure script.>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo set C_COMPILER=%C_COMPILER_BAT%>> gambcomp-C.bat
-echo set C_PREPROC=%C_PREPROC_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo set FLAGS_OBJ=%FLAGS_OBJ_BAT%>> gambcomp-C.bat
-echo set FLAGS_DYN=%FLAGS_DYN_BAT%>> gambcomp-C.bat
-echo set FLAGS_LIB=%FLAGS_LIB_BAT%>> gambcomp-C.bat
-echo set FLAGS_EXE=%FLAGS_EXE_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo set FLAGS_OPT=%FLAGS_OPT_BAT%>> gambcomp-C.bat
-echo set FLAGS_OPT_RTS=%FLAGS_OPT_RTS_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo set DEFS_OBJ=%DEFS_OBJ_BAT%>> gambcomp-C.bat
-echo set DEFS_DYN=%DEFS_DYN_BAT%>> gambcomp-C.bat
-echo set DEFS_LIB=%DEFS_LIB_BAT%>> gambcomp-C.bat
-echo set DEFS_EXE=%DEFS_EXE_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo set BUILD_OBJ=%BUILD_OBJ_BAT%>> gambcomp-C.bat
-echo set BUILD_DYN=%BUILD_DYN_BAT%>> gambcomp-C.bat
-echo set BUILD_LIB=%BUILD_LIB_BAT%>> gambcomp-C.bat
-echo set BUILD_EXE=%BUILD_EXE_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo set DEFS=%DEFS_BAT%>> gambcomp-C.bat
-echo set LIBS=%LIBS_BAT%>> gambcomp-C.bat
-echo set GAMBITLIB=%GAMBITLIB_BAT%>> gambcomp-C.bat
-echo set GAMBITGSCLIB=%GAMBITGSCLIB_BAT%>> gambcomp-C.bat
-echo set GAMBITGSILIB=%GAMBITGSILIB_BAT%>> gambcomp-C.bat
-echo set LIB_PREFIX=%LIB_PREFIX_BAT%>> gambcomp-C.bat
-echo set LIB_EXTENSION=%LIB_EXTENSION_BAT%>> gambcomp-C.bat
-echo set OBJ_EXTENSION=%OBJ_EXTENSION_BAT%>> gambcomp-C.bat
-echo set EXE_EXTENSION=%EXE_EXTENSION_BAT%>> gambcomp-C.bat
-echo set BAT_EXTENSION=%BAT_EXTENSION_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "obj" goto obj>> gambcomp-C.bat
-echo if not "%%1" == ""obj"" goto not_obj>> gambcomp-C.bat
-echo :obj>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if not "%%GAMBCOMP_VERBOSE%%" == "yes" goto not_obj_verbose>> gambcomp-C.bat
-echo echo.%BUILD_OBJ_ECHO_BAT%>> gambcomp-C.bat
-echo :not_obj_verbose>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo %BUILD_OBJ_ECHO_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_obj>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "dyn" goto dyn>> gambcomp-C.bat
-echo if not "%%1" == ""dyn"" goto not_dyn>> gambcomp-C.bat
-echo :dyn>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if not "%%GAMBCOMP_VERBOSE%%" == "yes" goto not_dyn_verbose>> gambcomp-C.bat
-echo echo.%BUILD_DYN_ECHO_BAT%>> gambcomp-C.bat
-echo :not_dyn_verbose>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo %BUILD_DYN_ECHO_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_dyn>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "lib" goto lib>> gambcomp-C.bat
-echo if not "%%1" == ""lib"" goto not_lib>> gambcomp-C.bat
-echo :lib>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if not "%%GAMBCOMP_VERBOSE%%" == "yes" goto not_lib_verbose>> gambcomp-C.bat
-echo echo.%BUILD_LIB_ECHO_BAT%>> gambcomp-C.bat
-echo :not_lib_verbose>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo %BUILD_LIB_ECHO_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_lib>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "exe" goto exe>> gambcomp-C.bat
-echo if not "%%1" == ""exe"" goto not_exe>> gambcomp-C.bat
-echo :exe>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if not "%%GAMBCOMP_VERBOSE%%" == "yes" goto not_exe_verbose>> gambcomp-C.bat
-echo echo.%BUILD_EXE_ECHO_BAT%>> gambcomp-C.bat
-echo :not_exe_verbose>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo %BUILD_EXE_ECHO_BAT%>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_exe>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "C_COMPILER" goto C_COMPILER>> gambcomp-C.bat
-echo if not "%%1" == ""C_COMPILER"" goto not_C_COMPILER>> gambcomp-C.bat
-echo :C_COMPILER>> gambcomp-C.bat
-echo echo.%%C_COMPILER%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_C_COMPILER>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "C_PREPROC" goto C_PREPROC>> gambcomp-C.bat
-echo if not "%%1" == ""C_PREPROC"" goto not_C_PREPROC>> gambcomp-C.bat
-echo :C_PREPROC>> gambcomp-C.bat
-echo echo.%%C_PREPROC%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_C_PREPROC>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "FLAGS_OBJ" goto FLAGS_OBJ>> gambcomp-C.bat
-echo if not "%%1" == ""FLAGS_OBJ"" goto not_FLAGS_OBJ>> gambcomp-C.bat
-echo :FLAGS_OBJ>> gambcomp-C.bat
-echo echo.%%FLAGS_OBJ%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_FLAGS_OBJ>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "FLAGS_DYN" goto FLAGS_DYN>> gambcomp-C.bat
-echo if not "%%1" == ""FLAGS_DYN"" goto not_FLAGS_DYN>> gambcomp-C.bat
-echo :FLAGS_DYN>> gambcomp-C.bat
-echo echo.%%FLAGS_DYN%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_FLAGS_DYN>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "FLAGS_LIB" goto FLAGS_LIB>> gambcomp-C.bat
-echo if not "%%1" == ""FLAGS_LIB"" goto not_FLAGS_LIB>> gambcomp-C.bat
-echo :FLAGS_LIB>> gambcomp-C.bat
-echo echo.%%FLAGS_LIB%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_FLAGS_LIB>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "FLAGS_EXE" goto FLAGS_EXE>> gambcomp-C.bat
-echo if not "%%1" == ""FLAGS_EXE"" goto not_FLAGS_EXE>> gambcomp-C.bat
-echo :FLAGS_EXE>> gambcomp-C.bat
-echo echo.%%FLAGS_EXE%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_FLAGS_EXE>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "FLAGS_OPT" goto FLAGS_OPT>> gambcomp-C.bat
-echo if not "%%1" == ""FLAGS_OPT"" goto not_FLAGS_OPT>> gambcomp-C.bat
-echo :FLAGS_OPT>> gambcomp-C.bat
-echo echo.%%FLAGS_OPT%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_FLAGS_OPT>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "FLAGS_OPT_RTS" goto FLAGS_OPT_RTS>> gambcomp-C.bat
-echo if not "%%1" == ""FLAGS_OPT_RTS"" goto not_FLAGS_OPT_RTS>> gambcomp-C.bat
-echo :FLAGS_OPT_RTS>> gambcomp-C.bat
-echo echo.%%FLAGS_OPT_RTS%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_FLAGS_OPT_RTS>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "DEFS_OBJ" goto DEFS_OBJ>> gambcomp-C.bat
-echo if not "%%1" == ""DEFS_OBJ"" goto not_DEFS_OBJ>> gambcomp-C.bat
-echo :DEFS_OBJ>> gambcomp-C.bat
-echo echo.%%DEFS_OBJ%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_DEFS_OBJ>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "DEFS_DYN" goto DEFS_DYN>> gambcomp-C.bat
-echo if not "%%1" == ""DEFS_DYN"" goto not_DEFS_DYN>> gambcomp-C.bat
-echo :DEFS_DYN>> gambcomp-C.bat
-echo echo.%%DEFS_DYN%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_DEFS_DYN>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "DEFS_LIB" goto DEFS_LIB>> gambcomp-C.bat
-echo if not "%%1" == ""DEFS_LIB"" goto not_DEFS_LIB>> gambcomp-C.bat
-echo :DEFS_LIB>> gambcomp-C.bat
-echo echo.%%DEFS_LIB%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_DEFS_LIB>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "DEFS_EXE" goto DEFS_EXE>> gambcomp-C.bat
-echo if not "%%1" == ""DEFS_EXE"" goto not_DEFS_EXE>> gambcomp-C.bat
-echo :DEFS_EXE>> gambcomp-C.bat
-echo echo.%%DEFS_EXE%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_DEFS_EXE>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "BUILD_OBJ" goto BUILD_OBJ>> gambcomp-C.bat
-echo if not "%%1" == ""BUILD_OBJ"" goto not_BUILD_OBJ>> gambcomp-C.bat
-echo :BUILD_OBJ>> gambcomp-C.bat
-echo echo.%%BUILD_OBJ%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_BUILD_OBJ>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "BUILD_DYN" goto BUILD_DYN>> gambcomp-C.bat
-echo if not "%%1" == ""BUILD_DYN"" goto not_BUILD_DYN>> gambcomp-C.bat
-echo :BUILD_DYN>> gambcomp-C.bat
-echo echo.%%BUILD_DYN%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_BUILD_DYN>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "BUILD_LIB" goto BUILD_LIB>> gambcomp-C.bat
-echo if not "%%1" == ""BUILD_LIB"" goto not_BUILD_LIB>> gambcomp-C.bat
-echo :BUILD_LIB>> gambcomp-C.bat
-echo echo.%%BUILD_LIB%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_BUILD_LIB>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "BUILD_EXE" goto BUILD_EXE>> gambcomp-C.bat
-echo if not "%%1" == ""BUILD_EXE"" goto not_BUILD_EXE>> gambcomp-C.bat
-echo :BUILD_EXE>> gambcomp-C.bat
-echo echo.%%BUILD_EXE%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_BUILD_EXE>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "DEFS" goto DEFS>> gambcomp-C.bat
-echo if not "%%1" == ""DEFS"" goto not_DEFS>> gambcomp-C.bat
-echo :DEFS>> gambcomp-C.bat
-echo echo.%%DEFS%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_DEFS>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "LIBS" goto LIBS>> gambcomp-C.bat
-echo if not "%%1" == ""LIBS"" goto not_LIBS>> gambcomp-C.bat
-echo :LIBS>> gambcomp-C.bat
-echo echo.%%LIBS%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_LIBS>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "GAMBITLIB_DEFS" goto GAMBITLIB_DEFS>> gambcomp-C.bat
-echo if not "%%1" == ""GAMBITLIB_DEFS"" goto not_GAMBITLIB_DEFS>> gambcomp-C.bat
-echo :GAMBITLIB_DEFS>> gambcomp-C.bat
-echo echo.%%GAMBITLIB_DEFS%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_GAMBITLIB_DEFS>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "GAMBITLIB" goto GAMBITLIB>> gambcomp-C.bat
-echo if not "%%1" == ""GAMBITLIB"" goto not_GAMBITLIB>> gambcomp-C.bat
-echo :GAMBITLIB>> gambcomp-C.bat
-echo echo.%%GAMBITLIB%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_GAMBITLIB>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "GAMBITGSCLIB" goto GAMBITGSCLIB>> gambcomp-C.bat
-echo if not "%%1" == ""GAMBITGSCLIB"" goto not_GAMBITGSCLIB>> gambcomp-C.bat
-echo :GAMBITGSCLIB>> gambcomp-C.bat
-echo echo.%%GAMBITGSCLIB%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_GAMBITGSCLIB>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "GAMBITGSILIB" goto GAMBITGSILIB>> gambcomp-C.bat
-echo if not "%%1" == ""GAMBITGSILIB"" goto not_GAMBITGSILIB>> gambcomp-C.bat
-echo :GAMBITGSILIB>> gambcomp-C.bat
-echo echo.%%GAMBITGSILIB%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_GAMBITGSILIB>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "LIB_PREFIX" goto LIB_PREFIX>> gambcomp-C.bat
-echo if not "%%1" == ""LIB_PREFIX"" goto not_LIB_PREFIX>> gambcomp-C.bat
-echo :LIB_PREFIX>> gambcomp-C.bat
-echo echo.%%LIB_PREFIX%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_LIB_PREFIX>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "LIB_EXTENSION" goto LIB_EXTENSION>> gambcomp-C.bat
-echo if not "%%1" == ""LIB_EXTENSION"" goto not_LIB_EXTENSION>> gambcomp-C.bat
-echo :LIB_EXTENSION>> gambcomp-C.bat
-echo echo.%%LIB_EXTENSION%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_LIB_EXTENSION>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "OBJ_EXTENSION" goto OBJ_EXTENSION>> gambcomp-C.bat
-echo if not "%%1" == ""OBJ_EXTENSION"" goto not_OBJ_EXTENSION>> gambcomp-C.bat
-echo :OBJ_EXTENSION>> gambcomp-C.bat
-echo echo.%%OBJ_EXTENSION%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_OBJ_EXTENSION>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "EXE_EXTENSION" goto EXE_EXTENSION>> gambcomp-C.bat
-echo if not "%%1" == ""EXE_EXTENSION"" goto not_EXE_EXTENSION>> gambcomp-C.bat
-echo :EXE_EXTENSION>> gambcomp-C.bat
-echo echo.%%EXE_EXTENSION%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_EXE_EXTENSION>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo if "%%1" == "BAT_EXTENSION" goto BAT_EXTENSION>> gambcomp-C.bat
-echo if not "%%1" == ""BAT_EXTENSION"" goto not_BAT_EXTENSION>> gambcomp-C.bat
-echo :BAT_EXTENSION>> gambcomp-C.bat
-echo echo.%%BAT_EXTENSION%%>> gambcomp-C.bat
-echo goto end>> gambcomp-C.bat
-echo :not_BAT_EXTENSION>> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo echo.gambcomp-C.bat unknown operation "%%1">> gambcomp-C.bat
-echo exit /b 1 >> gambcomp-C.bat
-echo.>> gambcomp-C.bat
-echo :end>> gambcomp-C.bat
-echo exit /b 0 >> gambcomp-C.bat
+echo @echo off> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo rem The following settings are determined by the configure script.>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo set C_COMPILER=%C_COMPILER_BAT%>> gambuild-C.bat
+echo set C_PREPROC=%C_PREPROC_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo set FLAGS_OBJ=%FLAGS_OBJ_BAT%>> gambuild-C.bat
+echo set FLAGS_DYN=%FLAGS_DYN_BAT%>> gambuild-C.bat
+echo set FLAGS_LIB=%FLAGS_LIB_BAT%>> gambuild-C.bat
+echo set FLAGS_EXE=%FLAGS_EXE_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo set FLAGS_OPT=%FLAGS_OPT_BAT%>> gambuild-C.bat
+echo set FLAGS_OPT_RTS=%FLAGS_OPT_RTS_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo set DEFS_OBJ=%DEFS_OBJ_BAT%>> gambuild-C.bat
+echo set DEFS_DYN=%DEFS_DYN_BAT%>> gambuild-C.bat
+echo set DEFS_LIB=%DEFS_LIB_BAT%>> gambuild-C.bat
+echo set DEFS_EXE=%DEFS_EXE_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo set BUILD_OBJ=%BUILD_OBJ_BAT%>> gambuild-C.bat
+echo set BUILD_DYN=%BUILD_DYN_BAT%>> gambuild-C.bat
+echo set BUILD_LIB=%BUILD_LIB_BAT%>> gambuild-C.bat
+echo set BUILD_EXE=%BUILD_EXE_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo set DEFS=%DEFS_BAT%>> gambuild-C.bat
+echo set LIBS=%LIBS_BAT%>> gambuild-C.bat
+echo set GAMBITLIB=%GAMBITLIB_BAT%>> gambuild-C.bat
+echo set GAMBITGSCLIB=%GAMBITGSCLIB_BAT%>> gambuild-C.bat
+echo set GAMBITGSILIB=%GAMBITGSILIB_BAT%>> gambuild-C.bat
+echo set LIB_PREFIX=%LIB_PREFIX_BAT%>> gambuild-C.bat
+echo set LIB_EXTENSION=%LIB_EXTENSION_BAT%>> gambuild-C.bat
+echo set OBJ_EXTENSION=%OBJ_EXTENSION_BAT%>> gambuild-C.bat
+echo set EXE_EXTENSION=%EXE_EXTENSION_BAT%>> gambuild-C.bat
+echo set BAT_EXTENSION=%BAT_EXTENSION_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "obj" goto obj>> gambuild-C.bat
+echo if not "%%1" == ""obj"" goto not_obj>> gambuild-C.bat
+echo :obj>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if not "%%GAMBUILD_VERBOSE%%" == "yes" goto not_obj_verbose>> gambuild-C.bat
+echo echo.%BUILD_OBJ_ECHO_BAT%>> gambuild-C.bat
+echo :not_obj_verbose>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo %BUILD_OBJ_ECHO_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_obj>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "dyn" goto dyn>> gambuild-C.bat
+echo if not "%%1" == ""dyn"" goto not_dyn>> gambuild-C.bat
+echo :dyn>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if not "%%GAMBUILD_VERBOSE%%" == "yes" goto not_dyn_verbose>> gambuild-C.bat
+echo echo.%BUILD_DYN_ECHO_BAT%>> gambuild-C.bat
+echo :not_dyn_verbose>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo %BUILD_DYN_ECHO_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_dyn>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "lib" goto lib>> gambuild-C.bat
+echo if not "%%1" == ""lib"" goto not_lib>> gambuild-C.bat
+echo :lib>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if not "%%GAMBUILD_VERBOSE%%" == "yes" goto not_lib_verbose>> gambuild-C.bat
+echo echo.%BUILD_LIB_ECHO_BAT%>> gambuild-C.bat
+echo :not_lib_verbose>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo %BUILD_LIB_ECHO_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_lib>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "exe" goto exe>> gambuild-C.bat
+echo if not "%%1" == ""exe"" goto not_exe>> gambuild-C.bat
+echo :exe>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if not "%%GAMBUILD_VERBOSE%%" == "yes" goto not_exe_verbose>> gambuild-C.bat
+echo echo.%BUILD_EXE_ECHO_BAT%>> gambuild-C.bat
+echo :not_exe_verbose>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo %BUILD_EXE_ECHO_BAT%>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_exe>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "C_COMPILER" goto C_COMPILER>> gambuild-C.bat
+echo if not "%%1" == ""C_COMPILER"" goto not_C_COMPILER>> gambuild-C.bat
+echo :C_COMPILER>> gambuild-C.bat
+echo echo.%%C_COMPILER%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_C_COMPILER>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "C_PREPROC" goto C_PREPROC>> gambuild-C.bat
+echo if not "%%1" == ""C_PREPROC"" goto not_C_PREPROC>> gambuild-C.bat
+echo :C_PREPROC>> gambuild-C.bat
+echo echo.%%C_PREPROC%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_C_PREPROC>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "FLAGS_OBJ" goto FLAGS_OBJ>> gambuild-C.bat
+echo if not "%%1" == ""FLAGS_OBJ"" goto not_FLAGS_OBJ>> gambuild-C.bat
+echo :FLAGS_OBJ>> gambuild-C.bat
+echo echo.%%FLAGS_OBJ%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_FLAGS_OBJ>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "FLAGS_DYN" goto FLAGS_DYN>> gambuild-C.bat
+echo if not "%%1" == ""FLAGS_DYN"" goto not_FLAGS_DYN>> gambuild-C.bat
+echo :FLAGS_DYN>> gambuild-C.bat
+echo echo.%%FLAGS_DYN%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_FLAGS_DYN>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "FLAGS_LIB" goto FLAGS_LIB>> gambuild-C.bat
+echo if not "%%1" == ""FLAGS_LIB"" goto not_FLAGS_LIB>> gambuild-C.bat
+echo :FLAGS_LIB>> gambuild-C.bat
+echo echo.%%FLAGS_LIB%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_FLAGS_LIB>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "FLAGS_EXE" goto FLAGS_EXE>> gambuild-C.bat
+echo if not "%%1" == ""FLAGS_EXE"" goto not_FLAGS_EXE>> gambuild-C.bat
+echo :FLAGS_EXE>> gambuild-C.bat
+echo echo.%%FLAGS_EXE%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_FLAGS_EXE>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "FLAGS_OPT" goto FLAGS_OPT>> gambuild-C.bat
+echo if not "%%1" == ""FLAGS_OPT"" goto not_FLAGS_OPT>> gambuild-C.bat
+echo :FLAGS_OPT>> gambuild-C.bat
+echo echo.%%FLAGS_OPT%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_FLAGS_OPT>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "FLAGS_OPT_RTS" goto FLAGS_OPT_RTS>> gambuild-C.bat
+echo if not "%%1" == ""FLAGS_OPT_RTS"" goto not_FLAGS_OPT_RTS>> gambuild-C.bat
+echo :FLAGS_OPT_RTS>> gambuild-C.bat
+echo echo.%%FLAGS_OPT_RTS%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_FLAGS_OPT_RTS>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "DEFS_OBJ" goto DEFS_OBJ>> gambuild-C.bat
+echo if not "%%1" == ""DEFS_OBJ"" goto not_DEFS_OBJ>> gambuild-C.bat
+echo :DEFS_OBJ>> gambuild-C.bat
+echo echo.%%DEFS_OBJ%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_DEFS_OBJ>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "DEFS_DYN" goto DEFS_DYN>> gambuild-C.bat
+echo if not "%%1" == ""DEFS_DYN"" goto not_DEFS_DYN>> gambuild-C.bat
+echo :DEFS_DYN>> gambuild-C.bat
+echo echo.%%DEFS_DYN%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_DEFS_DYN>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "DEFS_LIB" goto DEFS_LIB>> gambuild-C.bat
+echo if not "%%1" == ""DEFS_LIB"" goto not_DEFS_LIB>> gambuild-C.bat
+echo :DEFS_LIB>> gambuild-C.bat
+echo echo.%%DEFS_LIB%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_DEFS_LIB>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "DEFS_EXE" goto DEFS_EXE>> gambuild-C.bat
+echo if not "%%1" == ""DEFS_EXE"" goto not_DEFS_EXE>> gambuild-C.bat
+echo :DEFS_EXE>> gambuild-C.bat
+echo echo.%%DEFS_EXE%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_DEFS_EXE>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "BUILD_OBJ" goto BUILD_OBJ>> gambuild-C.bat
+echo if not "%%1" == ""BUILD_OBJ"" goto not_BUILD_OBJ>> gambuild-C.bat
+echo :BUILD_OBJ>> gambuild-C.bat
+echo echo.%%BUILD_OBJ%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_BUILD_OBJ>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "BUILD_DYN" goto BUILD_DYN>> gambuild-C.bat
+echo if not "%%1" == ""BUILD_DYN"" goto not_BUILD_DYN>> gambuild-C.bat
+echo :BUILD_DYN>> gambuild-C.bat
+echo echo.%%BUILD_DYN%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_BUILD_DYN>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "BUILD_LIB" goto BUILD_LIB>> gambuild-C.bat
+echo if not "%%1" == ""BUILD_LIB"" goto not_BUILD_LIB>> gambuild-C.bat
+echo :BUILD_LIB>> gambuild-C.bat
+echo echo.%%BUILD_LIB%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_BUILD_LIB>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "BUILD_EXE" goto BUILD_EXE>> gambuild-C.bat
+echo if not "%%1" == ""BUILD_EXE"" goto not_BUILD_EXE>> gambuild-C.bat
+echo :BUILD_EXE>> gambuild-C.bat
+echo echo.%%BUILD_EXE%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_BUILD_EXE>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "DEFS" goto DEFS>> gambuild-C.bat
+echo if not "%%1" == ""DEFS"" goto not_DEFS>> gambuild-C.bat
+echo :DEFS>> gambuild-C.bat
+echo echo.%%DEFS%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_DEFS>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "LIBS" goto LIBS>> gambuild-C.bat
+echo if not "%%1" == ""LIBS"" goto not_LIBS>> gambuild-C.bat
+echo :LIBS>> gambuild-C.bat
+echo echo.%%LIBS%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_LIBS>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "GAMBITLIB_DEFS" goto GAMBITLIB_DEFS>> gambuild-C.bat
+echo if not "%%1" == ""GAMBITLIB_DEFS"" goto not_GAMBITLIB_DEFS>> gambuild-C.bat
+echo :GAMBITLIB_DEFS>> gambuild-C.bat
+echo echo.%%GAMBITLIB_DEFS%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_GAMBITLIB_DEFS>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "GAMBITLIB" goto GAMBITLIB>> gambuild-C.bat
+echo if not "%%1" == ""GAMBITLIB"" goto not_GAMBITLIB>> gambuild-C.bat
+echo :GAMBITLIB>> gambuild-C.bat
+echo echo.%%GAMBITLIB%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_GAMBITLIB>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "GAMBITGSCLIB" goto GAMBITGSCLIB>> gambuild-C.bat
+echo if not "%%1" == ""GAMBITGSCLIB"" goto not_GAMBITGSCLIB>> gambuild-C.bat
+echo :GAMBITGSCLIB>> gambuild-C.bat
+echo echo.%%GAMBITGSCLIB%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_GAMBITGSCLIB>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "GAMBITGSILIB" goto GAMBITGSILIB>> gambuild-C.bat
+echo if not "%%1" == ""GAMBITGSILIB"" goto not_GAMBITGSILIB>> gambuild-C.bat
+echo :GAMBITGSILIB>> gambuild-C.bat
+echo echo.%%GAMBITGSILIB%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_GAMBITGSILIB>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "LIB_PREFIX" goto LIB_PREFIX>> gambuild-C.bat
+echo if not "%%1" == ""LIB_PREFIX"" goto not_LIB_PREFIX>> gambuild-C.bat
+echo :LIB_PREFIX>> gambuild-C.bat
+echo echo.%%LIB_PREFIX%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_LIB_PREFIX>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "LIB_EXTENSION" goto LIB_EXTENSION>> gambuild-C.bat
+echo if not "%%1" == ""LIB_EXTENSION"" goto not_LIB_EXTENSION>> gambuild-C.bat
+echo :LIB_EXTENSION>> gambuild-C.bat
+echo echo.%%LIB_EXTENSION%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_LIB_EXTENSION>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "OBJ_EXTENSION" goto OBJ_EXTENSION>> gambuild-C.bat
+echo if not "%%1" == ""OBJ_EXTENSION"" goto not_OBJ_EXTENSION>> gambuild-C.bat
+echo :OBJ_EXTENSION>> gambuild-C.bat
+echo echo.%%OBJ_EXTENSION%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_OBJ_EXTENSION>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "EXE_EXTENSION" goto EXE_EXTENSION>> gambuild-C.bat
+echo if not "%%1" == ""EXE_EXTENSION"" goto not_EXE_EXTENSION>> gambuild-C.bat
+echo :EXE_EXTENSION>> gambuild-C.bat
+echo echo.%%EXE_EXTENSION%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_EXE_EXTENSION>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo if "%%1" == "BAT_EXTENSION" goto BAT_EXTENSION>> gambuild-C.bat
+echo if not "%%1" == ""BAT_EXTENSION"" goto not_BAT_EXTENSION>> gambuild-C.bat
+echo :BAT_EXTENSION>> gambuild-C.bat
+echo echo.%%BAT_EXTENSION%%>> gambuild-C.bat
+echo goto end>> gambuild-C.bat
+echo :not_BAT_EXTENSION>> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo echo.gambuild-C.bat unknown operation "%%1">> gambuild-C.bat
+echo exit /b 1 >> gambuild-C.bat
+echo.>> gambuild-C.bat
+echo :end>> gambuild-C.bat
+echo exit /b 0 >> gambuild-C.bat
 
 cd ..

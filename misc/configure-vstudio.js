@@ -384,73 +384,73 @@ FixupFile(
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-C.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-C.bat",
+    gambitRoot + "\\bin\\gambuild-C.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-C.bat",
     {
         "C_COMPILER_BAT": GetCCompiler(true),
-        "BUILD_OBJ_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" -c -Fo%BUILD_OBJ_OUTPUT_FILENAME% %BUILD_OBJ_CC_OPTIONS% %BUILD_OBJ_INPUT_FILENAMES%",
-        "BUILD_DYN_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" -D___DYNAMIC -LD -Fe%BUILD_DYN_OUTPUT_FILENAME% %BUILD_DYN_CC_OPTIONS% %BUILD_DYN_LD_OPTIONS_PRELUDE% %BUILD_DYN_INPUT_FILENAMES% %BUILD_DYN_LD_OPTIONS%",
-        "BUILD_EXE_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" %GAMBITLIB_LOC% -Fe%BUILD_EXE_OUTPUT_FILENAME% %BUILD_EXE_CC_OPTIONS% %BUILD_EXE_LD_OPTIONS_PRELUDE% %BUILD_EXE_INPUT_FILENAMES% \"%GAMBITDIR_LIB%\\libgambit.lib\" Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib %GAMBITLIB_LINK% %BUILD_EXE_LD_OPTIONS%"
+        "BUILD_OBJ_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" -c -Fo%BUILD_OBJ_OUTPUT_FILENAME_PARAM% %BUILD_OBJ_CC_OPTIONS_PARAM% %BUILD_OBJ_INPUT_FILENAMES_PARAM%",
+        "BUILD_DYN_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" -D___DYNAMIC -LD -Fe%BUILD_DYN_OUTPUT_FILENAME_PARAM% %BUILD_DYN_CC_OPTIONS_PARAM% %BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM% %BUILD_DYN_INPUT_FILENAMES_PARAM% %BUILD_DYN_LD_OPTIONS_PARAM%",
+        "BUILD_EXE_ECHO_BAT": "%C_COMPILER% -I\"%GAMBITDIR_INCLUDE%\" %GAMBITLIB_LOC% -Fe%BUILD_EXE_OUTPUT_FILENAME_PARAM% %BUILD_EXE_CC_OPTIONS_PARAM% %BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM% %BUILD_EXE_INPUT_FILENAMES_PARAM% \"%GAMBITDIR_LIB%\\libgambit.lib\" Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib %GAMBITLIB_LINK% %BUILD_EXE_LD_OPTIONS_PARAM%"
     });
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-js.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-js.bat",
+    gambitRoot + "\\bin\\gambuild-js.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-js.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-python.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-python.bat",
+    gambitRoot + "\\bin\\gambuild-python.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-python.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-ruby.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-ruby.bat",
+    gambitRoot + "\\bin\\gambuild-ruby.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-ruby.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-php.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-php.bat",
+    gambitRoot + "\\bin\\gambuild-php.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-php.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-java.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-java.bat",
+    gambitRoot + "\\bin\\gambuild-java.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-java.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-x86.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-x86.bat",
+    gambitRoot + "\\bin\\gambuild-x86.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-x86.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-x86-64.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-x86-64.bat",
+    gambitRoot + "\\bin\\gambuild-x86-64.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-x86-64.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-arm.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-arm.bat",
+    gambitRoot + "\\bin\\gambuild-arm.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-arm.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-riscv-32.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-riscv-32.bat",
+    gambitRoot + "\\bin\\gambuild-riscv-32.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-riscv-32.bat",
     {});
 
 FixupFile(
     fso,
-    gambitRoot + "\\bin\\gambcomp-riscv-64.bat.windows.in",
-    gambitRoot + "\\bin\\gambcomp-riscv-64.bat",
+    gambitRoot + "\\bin\\gambuild-riscv-64.bat.windows.in",
+    gambitRoot + "\\bin\\gambuild-riscv-64.bat",
     {});
 
 FixupFile(
