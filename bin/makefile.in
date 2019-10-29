@@ -115,7 +115,7 @@ gambuild-C@bat@: makefile gambuild-C.unix gambuild-C.bat.windows
 	  cp gambuild-C.unix gambuild-C@bat@; \
 	  chmod +x gambuild-C@bat@; \
 	else \
-	  cp gambuild-C.bat.windows gambuild-C@bat@; \
+	  sed 's/$/\r/g' gambuild-C.bat.windows > gambuild-C@bat@; \
 	fi
 
 gambuild-js@bat@: makefile gambuild-js.unix gambuild-js.bat.windows
@@ -124,7 +124,7 @@ gambuild-js@bat@: makefile gambuild-js.unix gambuild-js.bat.windows
 	  cp gambuild-js.unix gambuild-js@bat@; \
 	  chmod +x gambuild-js@bat@; \
 	else \
-	  cp gambuild-js.bat.windows gambuild-js@bat@; \
+	  sed 's/$/\r/g' gambuild-js.bat.windows > gambuild-js@bat@; \
 	fi
 
 gambuild-python@bat@: makefile gambuild-python.unix gambuild-python.bat.windows
@@ -133,7 +133,7 @@ gambuild-python@bat@: makefile gambuild-python.unix gambuild-python.bat.windows
 	  cp gambuild-python.unix gambuild-python@bat@; \
 	  chmod +x gambuild-python@bat@; \
 	else \
-	  cp gambuild-python.bat.windows gambuild-python@bat@; \
+	  sed 's/$/\r/g' gambuild-python.bat.windows > gambuild-python@bat@; \
 	fi
 
 gambuild-ruby@bat@: makefile gambuild-ruby.unix gambuild-ruby.bat.windows
@@ -142,7 +142,7 @@ gambuild-ruby@bat@: makefile gambuild-ruby.unix gambuild-ruby.bat.windows
 	  cp gambuild-ruby.unix gambuild-ruby@bat@; \
 	  chmod +x gambuild-ruby@bat@; \
 	else \
-	  cp gambuild-ruby.bat.windows gambuild-ruby@bat@; \
+	  sed 's/$/\r/g' gambuild-ruby.bat.windows > gambuild-ruby@bat@; \
 	fi
 
 gambuild-php@bat@: makefile gambuild-php.unix gambuild-php.bat.windows
@@ -151,7 +151,7 @@ gambuild-php@bat@: makefile gambuild-php.unix gambuild-php.bat.windows
 	  cp gambuild-php.unix gambuild-php@bat@; \
 	  chmod +x gambuild-php@bat@; \
 	else \
-	  cp gambuild-php.bat.windows gambuild-php@bat@; \
+	  sed 's/$/\r/g' gambuild-php.bat.windows > gambuild-php@bat@; \
 	fi
 
 gambuild-java@bat@: makefile gambuild-java.unix gambuild-java.bat.windows
@@ -160,7 +160,7 @@ gambuild-java@bat@: makefile gambuild-java.unix gambuild-java.bat.windows
 	  cp gambuild-java.unix gambuild-java@bat@; \
 	  chmod +x gambuild-java@bat@; \
 	else \
-	  cp gambuild-java.bat.windows gambuild-java@bat@; \
+	  sed 's/$/\r/g' gambuild-java.bat.windows > gambuild-java@bat@; \
 	fi
 
 gambuild-x86@bat@: makefile gambuild-x86.unix gambuild-x86.bat.windows
@@ -169,7 +169,7 @@ gambuild-x86@bat@: makefile gambuild-x86.unix gambuild-x86.bat.windows
 	  cp gambuild-x86.unix gambuild-x86@bat@; \
 	  chmod +x gambuild-x86@bat@; \
 	else \
-	  cp gambuild-x86.bat.windows gambuild-x86@bat@; \
+	  sed 's/$/\r/g' gambuild-x86.bat.windows > gambuild-x86@bat@; \
 	fi
 
 gambuild-x86-64@bat@: makefile gambuild-x86-64.unix gambuild-x86-64.bat.windows
@@ -178,7 +178,7 @@ gambuild-x86-64@bat@: makefile gambuild-x86-64.unix gambuild-x86-64.bat.windows
 	  cp gambuild-x86-64.unix gambuild-x86-64@bat@; \
 	  chmod +x gambuild-x86-64@bat@; \
 	else \
-	  cp gambuild-x86-64.bat.windows gambuild-x86-64@bat@; \
+	  sed 's/$/\r/g' gambuild-x86-64.bat.windows > gambuild-x86-64@bat@; \
 	fi
 
 gambuild-arm@bat@: makefile gambuild-arm.unix gambuild-arm.bat.windows
@@ -187,7 +187,7 @@ gambuild-arm@bat@: makefile gambuild-arm.unix gambuild-arm.bat.windows
 	  cp gambuild-arm.unix gambuild-arm@bat@; \
 	  chmod +x gambuild-arm@bat@; \
 	else \
-	  cp gambuild-arm.bat.windows gambuild-arm@bat@; \
+	  sed 's/$/\r/g' gambuild-arm.bat.windows > gambuild-arm@bat@; \
 	fi
 
 gambuild-riscv-32@bat@: makefile gambuild-riscv-32.unix gambuild-riscv-32.bat.windows
@@ -196,7 +196,7 @@ gambuild-riscv-32@bat@: makefile gambuild-riscv-32.unix gambuild-riscv-32.bat.wi
 	  cp gambuild-riscv-32.unix gambuild-riscv-32@bat@; \
 	  chmod +x gambuild-riscv-32@bat@; \
 	else \
-	  cp gambuild-riscv-32.bat.windows gambuild-riscv-32@bat@; \
+	  sed 's/$/\r/g' gambuild-riscv-32.bat.windows > gambuild-riscv-32@bat@; \
 	fi
 
 gambuild-riscv-64@bat@: makefile gambuild-riscv-64.unix gambuild-riscv-64.bat.windows
@@ -205,7 +205,7 @@ gambuild-riscv-64@bat@: makefile gambuild-riscv-64.unix gambuild-riscv-64.bat.wi
 	  cp gambuild-riscv-64.unix gambuild-riscv-64@bat@; \
 	  chmod +x gambuild-riscv-64@bat@; \
 	else \
-	  cp gambuild-riscv-64.bat.windows gambuild-riscv-64@bat@; \
+	  sed 's/$/\r/g' gambuild-riscv-64.bat.windows > gambuild-riscv-64@bat@; \
 	fi
 
 gambdoc@bat@: makefile gambdoc.unix gambdoc.bat.windows
@@ -214,7 +214,7 @@ gambdoc@bat@: makefile gambdoc.unix gambdoc.bat.windows
 	  cp gambdoc.unix gambdoc@bat@; \
 	  chmod +x gambdoc@bat@; \
 	else \
-	  cp gambdoc.bat.windows gambdoc@bat@; \
+	  sed 's/$/\r/g' gambdoc.bat.windows > gambdoc@bat@; \
 	fi
 
 six@exe@: makefile

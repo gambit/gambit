@@ -17,7 +17,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -138,7 +138,9 @@ if test "$ENABLE_CPLUSPLUS" = yes; then
 
 fi
 
-AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
+# Don't search for pkg-config, just assume it is in the path
+#AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
+PKG_CONFIG="pkg-config"
 
 AC_SUBST(C_COMPILER)
 AC_SUBST(C_PREPROC)
