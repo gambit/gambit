@@ -140,6 +140,9 @@
       x
       (##append-strings x sep)))
 
+(define (##multiple-args-join x)
+  (##string-or-string-list-join x "\n"))
+
 (define (compile-file
          filename
          #!rest other;;;;;;;;;;
@@ -333,15 +336,15 @@
                    output-filename-no-dir
                    (##assq 'verbose options)
                    (##list (##cons "CC_OPTIONS"
-                                   (##string-or-string-list-join cc-options " "))
+                                   (##multiple-args-join cc-options))
                            (##cons "LD_OPTIONS_PRELUDE"
-                                   (##string-or-string-list-join ld-options-prelude " "))
+                                   (##multiple-args-join ld-options-prelude))
                            (##cons "LD_OPTIONS"
-                                   (##string-or-string-list-join ld-options " "))
+                                   (##multiple-args-join ld-options))
                            (##cons "PKG_CONFIG"
-                                   (##string-or-string-list-join pkg-config "\n"))
+                                   (##multiple-args-join pkg-config))
                            (##cons "PKG_CONFIG_PATH"
-                                   (##string-or-string-list-join pkg-config-path "\n"))
+                                   (##multiple-args-join pkg-config-path))
                            (##cons "META_INFO_FILE"
                                    (##path-normalize
                                     (##path-expand target-filename)
@@ -357,6 +360,11 @@
                   (##list filename))))))))
 
 (define (##build-module path target options)
+
+  (define (get-option key)
+    (cond ((##assq key options) => ##cdr)
+          (else '())))
+
   (let* ((module-dir
           (##path-normalize (##path-directory path)))
          (module-filename
@@ -367,52 +375,16 @@
           (##string-append module-filename-noext ".o1"))
          (build-subdir
           (##module-build-subdir-path module-dir module-filename-noext target))
-         (config-file
-           (##path-expand "_config_.scm" module-dir))
-         (config
-           (and (##file-exists? config-file)
-                (eval `(let () (##include ,config-file)))))
-         ;; Handle cc-options correctly
          (cc-options
-          (if (##pair? config)
-              (cond
-                ((##assq 'cc-options config)
-                 => ##cdr)
-                (else
-                 '()))
-              '()))
+          (get-option 'cc-options))
          (ld-options-prelude
-          (if (##pair? config)
-              (cond
-                ((##assq 'ld-options-prelude config)
-                 => ##cdr)
-                (else
-                 '()))
-              '()))
+          (get-option 'ld-options-prelude))
          (ld-options
-          (if (##pair? config)
-              (cond
-                ((##assq 'ld-options config)
-                 => ##cdr)
-                (else
-                 '()))
-              '()))
+          (get-option 'ld-options))
          (pkg-config
-          (if (##pair? config)
-              (cond
-                ((##assq 'pkg-config config)
-                 => ##cdr)
-                (else
-                 '()))
-              '()))
+          (get-option 'pkg-config))
          (pkg-config-path
-          (if (##pair? config)
-              (cond
-                ((##assq 'pkg-config-path config)
-                 => ##cdr)
-                (else
-                 '()))
-              '())))
+          (get-option 'pkg-config-path)))
 
     ;; create build subdirectory (removing it first to make sure it is empty)
     (##delete-file-or-directory build-subdir #t #f)
@@ -465,15 +437,15 @@
            output-filename-no-dir
            (##assq 'verbose options)
            (##list (##cons "CC_OPTIONS"
-                           (##string-or-string-list-join cc-options " "))
+                           (##multiple-args-join cc-options))
                    (##cons "LD_OPTIONS_PRELUDE"
-                           (##string-or-string-list-join ld-options-prelude " "))
+                           (##multiple-args-join ld-options-prelude))
                    (##cons "LD_OPTIONS"
-                           (##string-or-string-list-join ld-options " "))
+                           (##multiple-args-join ld-options))
                    (##cons "PKG_CONFIG"
-                           (##string-or-string-list-join pkg-config "\n"))
+                           (##multiple-args-join pkg-config))
                    (##cons "PKG_CONFIG_PATH"
-                           (##string-or-string-list-join pkg-config-path "\n"))
+                           (##multiple-args-join pkg-config-path))
                    (##cons "META_INFO_FILE"
                            (or meta-info-file ""))))))
     (if (##fx= exit-status 0)
@@ -562,9 +534,8 @@
                       (##append
                        (##list
                         (##cons "INPUT_FILENAMES"
-                                (##string-or-string-list-join
-                                 input-filenames-relative
-                                 "\n"))
+                                (##multiple-args-join
+                                 input-filenames-relative))
                         (##cons "OUTPUT_FILENAME"
                                 output-filename))
                        options))
