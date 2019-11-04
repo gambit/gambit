@@ -1,0 +1,5 @@
+container:
+  image: gcc:latest
+task:
+  build_script: ./configure && make -j
+  tests_script: make check
