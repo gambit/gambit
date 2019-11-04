@@ -160,11 +160,6 @@ dummy-gsc-boot:
 	chmod +x gsc-boot@exe@
 
 gsc-boot@exe@:
-	@if [ -e .git ]; then \
-	  echo "**** .git exists"; \
-	fi
-	$(GIT) --version
-	$(GIT) describe --tags
 	@if [ -e .git ] && \
 	    $(GIT) --version > /dev/null 2> /dev/null && \
 	    $(GIT) describe --tags > /dev/null 2> /dev/null && \

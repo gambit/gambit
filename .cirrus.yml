@@ -1,5 +1,5 @@
 container:
   image: gcc:latest
 task:
-  build_script: ./configure && make -j
+  build_script: git fetch --tags && ./configure && make -j
   tests_script: make check
