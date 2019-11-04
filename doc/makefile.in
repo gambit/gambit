@@ -271,7 +271,7 @@ clean-pre: mostlyclean-pre
 
 clean-post: mostlyclean-post
 	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.log *.pg \
-	  *.toc *.tp *.vr *.tmp
+	  *.toc *.tp *.vr *.cm *.fl *.op *.tmp
 
 distclean-pre: clean-pre
 

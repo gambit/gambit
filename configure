@@ -11,7 +11,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -871,9 +871,9 @@ C_COMPILER_SH
 PKG_CONFIG_MF
 C_PREPROC_MF
 C_COMPILER_MF
+PKG_CONFIG
 C_PREPROC
 C_COMPILER
-PKG_CONFIG
 CXXCPP
 ac_ct_CXX
 CXXFLAGS
@@ -1844,7 +1844,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 _ACEOF
   exit
 fi
@@ -4533,47 +4533,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 fi
 
-# Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_PKG_CONFIG+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $PKG_CONFIG in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-as_dummy="$PATH:/usr/bin:/usr/bin/X11:/usr/local/bin"
-for as_dir in $as_dummy
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKG_CONFIG="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  ;;
-esac
-fi
-PKG_CONFIG=$ac_cv_path_PKG_CONFIG
-if test -n "$PKG_CONFIG"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
-$as_echo "$PKG_CONFIG" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
+# Don't search for pkg-config, just assume it is in the path
+#AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
+PKG_CONFIG="pkg-config"
 
 
 
@@ -14651,11 +14613,11 @@ if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME_PARAM}\" \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME_PARAM}\" \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME_PARAM}\" \${BUILD_DYN_CC_OPTIONS_PARAM} \${BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_DYN_INPUT_FILENAMES_PARAM} \${BUILD_DYN_LD_OPTIONS_PARAM}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
@@ -14667,19 +14629,19 @@ if test "$C_COMP_VISUALC" = yes; then
     SUBSYS_MIN_REQ_VERSION="5.01"
   fi
 
-  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS} -link -subsystem:console,${SUBSYS_MIN_REQ_VERSION} -entry:WinMainCRTStartup"
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME_PARAM}\" \${BUILD_EXE_CC_OPTIONS_PARAM} \${BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_EXE_INPUT_FILENAMES_PARAM} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS_PARAM} -link -subsystem:console,${SUBSYS_MIN_REQ_VERSION} -entry:WinMainCRTStartup"
 
 else
 
-  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \${BUILD_OBJ_OUTPUT_FILENAME_PARAM} \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \${BUILD_OBJ_OUTPUT_FILENAME_PARAM} \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -o \"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -o \${BUILD_DYN_OUTPUT_FILENAME_PARAM} \${BUILD_DYN_CC_OPTIONS_PARAM} \${BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_DYN_INPUT_FILENAMES_PARAM} \${BUILD_DYN_LD_OPTIONS_PARAM}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
-  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -o \"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS}"
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -o \${BUILD_EXE_OUTPUT_FILENAME_PARAM} \${BUILD_EXE_CC_OPTIONS_PARAM} \${BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_EXE_INPUT_FILENAMES_PARAM} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS_PARAM}"
 
 fi
 
@@ -15138,7 +15100,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/module-common.mk $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambcomp-C.unix bin/gambcomp-C.bat.windows bin/gambcomp-js.unix bin/gambcomp-js.bat.windows bin/gambcomp-python.unix bin/gambcomp-python.bat.windows bin/gambcomp-ruby.unix bin/gambcomp-ruby.bat.windows bin/gambcomp-php.unix bin/gambcomp-php.bat.windows bin/gambcomp-java.unix bin/gambcomp-java.bat.windows bin/gambcomp-x86.unix bin/gambcomp-x86.bat.windows bin/gambcomp-x86-64.unix bin/gambcomp-x86-64.bat.windows bin/gambcomp-arm.unix bin/gambcomp-arm.bat.windows bin/gambcomp-riscv-32.unix bin/gambcomp-riscv-32.bat.windows bin/gambcomp-riscv-64.unix bin/gambcomp-riscv-64.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/module-common.mk $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambuild-C.unix bin/gambuild-C.bat.windows bin/gambuild-js.unix bin/gambuild-js.bat.windows bin/gambuild-python.unix bin/gambuild-python.bat.windows bin/gambuild-ruby.unix bin/gambuild-ruby.bat.windows bin/gambuild-php.unix bin/gambuild-php.bat.windows bin/gambuild-java.unix bin/gambuild-java.bat.windows bin/gambuild-x86.unix bin/gambuild-x86.bat.windows bin/gambuild-x86-64.unix bin/gambuild-x86-64.bat.windows bin/gambuild-arm.unix bin/gambuild-arm.bat.windows bin/gambuild-riscv-32.unix bin/gambuild-riscv-32.bat.windows bin/gambuild-riscv-64.unix bin/gambuild-riscv-64.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -15839,28 +15801,28 @@ do
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;
     "bin/makefile") CONFIG_FILES="$CONFIG_FILES bin/makefile" ;;
-    "bin/gambcomp-C.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-C.unix" ;;
-    "bin/gambcomp-C.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-C.bat.windows" ;;
-    "bin/gambcomp-js.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-js.unix" ;;
-    "bin/gambcomp-js.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-js.bat.windows" ;;
-    "bin/gambcomp-python.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-python.unix" ;;
-    "bin/gambcomp-python.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-python.bat.windows" ;;
-    "bin/gambcomp-ruby.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-ruby.unix" ;;
-    "bin/gambcomp-ruby.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-ruby.bat.windows" ;;
-    "bin/gambcomp-php.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-php.unix" ;;
-    "bin/gambcomp-php.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-php.bat.windows" ;;
-    "bin/gambcomp-java.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-java.unix" ;;
-    "bin/gambcomp-java.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-java.bat.windows" ;;
-    "bin/gambcomp-x86.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-x86.unix" ;;
-    "bin/gambcomp-x86.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-x86.bat.windows" ;;
-    "bin/gambcomp-x86-64.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-x86-64.unix" ;;
-    "bin/gambcomp-x86-64.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-x86-64.bat.windows" ;;
-    "bin/gambcomp-arm.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-arm.unix" ;;
-    "bin/gambcomp-arm.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-arm.bat.windows" ;;
-    "bin/gambcomp-riscv-32.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-riscv-32.unix" ;;
-    "bin/gambcomp-riscv-32.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-riscv-32.bat.windows" ;;
-    "bin/gambcomp-riscv-64.unix") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-riscv-64.unix" ;;
-    "bin/gambcomp-riscv-64.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambcomp-riscv-64.bat.windows" ;;
+    "bin/gambuild-C.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-C.unix" ;;
+    "bin/gambuild-C.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-C.bat.windows" ;;
+    "bin/gambuild-js.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-js.unix" ;;
+    "bin/gambuild-js.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-js.bat.windows" ;;
+    "bin/gambuild-python.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-python.unix" ;;
+    "bin/gambuild-python.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-python.bat.windows" ;;
+    "bin/gambuild-ruby.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-ruby.unix" ;;
+    "bin/gambuild-ruby.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-ruby.bat.windows" ;;
+    "bin/gambuild-php.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-php.unix" ;;
+    "bin/gambuild-php.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-php.bat.windows" ;;
+    "bin/gambuild-java.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-java.unix" ;;
+    "bin/gambuild-java.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-java.bat.windows" ;;
+    "bin/gambuild-x86.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-x86.unix" ;;
+    "bin/gambuild-x86.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-x86.bat.windows" ;;
+    "bin/gambuild-x86-64.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-x86-64.unix" ;;
+    "bin/gambuild-x86-64.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-x86-64.bat.windows" ;;
+    "bin/gambuild-arm.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-arm.unix" ;;
+    "bin/gambuild-arm.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-arm.bat.windows" ;;
+    "bin/gambuild-riscv-32.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-riscv-32.unix" ;;
+    "bin/gambuild-riscv-32.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-riscv-32.bat.windows" ;;
+    "bin/gambuild-riscv-64.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-riscv-64.unix" ;;
+    "bin/gambuild-riscv-64.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-riscv-64.bat.windows" ;;
     "bin/gambdoc.unix") CONFIG_FILES="$CONFIG_FILES bin/gambdoc.unix" ;;
     "bin/gambdoc.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambdoc.bat.windows" ;;
     "misc/makefile") CONFIG_FILES="$CONFIG_FILES misc/makefile" ;;

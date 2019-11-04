@@ -1,0 +1,50 @@
+#! /bin/sh
+
+case "$1" in
+
+  "obj")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "cat ${BUILD_OBJ_INPUT_FILENAMES_PARAM} > \"${BUILD_OBJ_OUTPUT_FILENAME_PARAM}\""
+    fi
+
+    cat ${BUILD_OBJ_INPUT_FILENAMES_PARAM} > "${BUILD_OBJ_OUTPUT_FILENAME_PARAM}"
+    ;;
+
+  "dyn")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "cat ${BUILD_DYN_INPUT_FILENAMES_PARAM} > \"${BUILD_DYN_OUTPUT_FILENAME_PARAM}\""
+    fi
+
+    cat ${BUILD_DYN_INPUT_FILENAMES_PARAM} > "${BUILD_DYN_OUTPUT_FILENAME_PARAM}"
+    ;;
+
+  "lib")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "echo BUILD_LIB not yet implemented"
+    fi
+
+    echo BUILD_LIB not yet implemented
+    ;;
+
+  "exe")
+
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      echo "echo \"#! /usr/bin/env python\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+      echo "cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} \"${GAMBITDIR_LIB}/_gambit.py\" >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+      echo "chmod +x \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+    fi
+
+    echo "#! /usr/bin/env python" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+    cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${GAMBITDIR_LIB}/_gambit.py" >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+    chmod +x "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+    ;;
+
+  *)
+    echo "gambuild-python unknown operation \"$1\""
+    exit 1
+    ;;
+
+esac

@@ -26,9 +26,12 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (normalize-program ptrees)
-  (let* ((lst (expand-primitive-calls ptrees))
+  (let* ((lst ptrees)
+         (lst (expand-primitive-calls lst))
          (lst (assignment-convert lst))
+         (lst (remove-dead-definitions lst))
          (lst (beta-reduce lst))
+         (lst (remove-dead-definitions lst))
          (lst (lambda-lift lst)))
 
     (if (null? lst) ;; must return at least one ptree
@@ -612,6 +615,129 @@
            (var-boxed?-set! cloned-var (var-boxed? var))
            cloned-var))
        vars))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;
+;; Removal of dead definitions:
+;; ---------------------------
+
+;; (remove-dead-definitions ptrees) takes a list of parse-trees and
+;; removes all top-level definitions that are not live.  The liveness of
+;; top-level definitions is related to the liveness of global variables.
+;;
+;; For a top-level expression expr that is not a global variable
+;; definition, the free variables of expr are live global variables.
+;;
+;; A top-level definition (define var expr) is live iff at that
+;; definition the declaration (optimize-dead-definitions var) is not in
+;; effect or, the global variable var is live and there isn't a top-level
+;; definition of var later in the program or there is a set! of var in
+;; a live part of the program.  If the definition is live then var and
+;; the free variables of expr are live global variables.
+
+(define (remove-dead-definitions ptrees)
+
+  (define (mutated-globals ptree)
+    ;; returns set of all mutated global variables in ptree
+    (let ((mg (varset-union-multi
+               (map mutated-globals
+                    (node-children ptree)))))
+      (if (set? ptree)
+          (let ((var (set-var ptree)))
+            (if (global? var)
+                (varset-adjoin mg var)
+                mg))
+          mg)))
+
+  (define (dead-defs-fixpoint live mutated possibly-dead-defs)
+    (let loop ((rev-lst (reverse possibly-dead-defs))
+               (live live)
+               (mutated mutated)
+               (remaining-possibly-dead-defs '())
+               (changed? #f))
+      (if (pair? rev-lst)
+          (let* ((x (car rev-lst))
+                 (defined-later? (car x))
+                 (ptree (cdr x))
+                 (var (def-var ptree)))
+            (if (and (varset-member? var live)
+                     (or (not defined-later?)
+                         (varset-member? var mutated)))
+                (loop (cdr rev-lst)
+                      (varset-union live (free-variables ptree))
+                      (varset-union mutated (mutated-globals ptree))
+                      remaining-possibly-dead-defs
+                      #t)
+                (loop (cdr rev-lst)
+                      live
+                      mutated
+                      (cons x remaining-possibly-dead-defs)
+                      changed?)))
+          (if changed?
+              ;; repeat when set of remaining-possibly-dead-defs changed
+              (dead-defs-fixpoint live
+                                  mutated
+                                  remaining-possibly-dead-defs)
+              ;; remaining-possibly-dead-defs are really dead
+              (list->ptset (map cdr remaining-possibly-dead-defs))))))
+
+  (define (dead-defs)
+    (let loop ((rev-lst (reverse ptrees)) ;; visit definitions in reverse order
+               (later-defs (varset-empty))
+               (live (varset-empty))
+               (mutated (varset-empty))
+               (possibly-dead-defs '()))
+      (if (pair? rev-lst)
+          (let ((ptree (car rev-lst)))
+            (if (def? ptree)
+                (let* ((var
+                        (def-var ptree))
+                       (defined-later?
+                         (varset-member? var later-defs))
+                       (certainly-live-def?
+                        (or
+                         ;; this definition isn't marked for optimization
+                         (not (optimize-dead-definitions?
+                               (var-name var)
+                               (node-env ptree)))
+                         ;; var certainly live and no following def of this var
+                         (and (varset-member? var live)
+                              (not defined-later?)))))
+                  (if certainly-live-def?
+                      (loop (cdr rev-lst)
+                            (varset-adjoin later-defs var)
+                            (varset-union live (free-variables ptree))
+                            (varset-union mutated (mutated-globals ptree))
+                            possibly-dead-defs)
+                      (loop (cdr rev-lst)
+                            (varset-adjoin later-defs var)
+                            live
+                            mutated
+                            (cons (cons defined-later? ptree)
+                                  possibly-dead-defs))))
+                (loop (cdr rev-lst)
+                      later-defs
+                      (varset-union live (free-variables ptree))
+                      (varset-union mutated (mutated-globals ptree))
+                      possibly-dead-defs)))
+          (dead-defs-fixpoint live
+                              mutated
+                              possibly-dead-defs))))
+
+  (let ((dead (dead-defs)))
+    (if (ptset-empty? dead)
+
+        ;; no defs to remove so return the same list of parse trees...
+        ;; (allows using eq? on resulting list)
+        ptrees
+
+        (keep (lambda (ptree)
+                (if (ptset-member? ptree dead)
+                    (begin
+                      (delete-ptree ptree)
+                      #f)
+                    #t))
+              ptrees))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

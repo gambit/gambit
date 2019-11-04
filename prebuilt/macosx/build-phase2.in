@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -52,7 +52,8 @@ install_gambit()
 {
   cd "$rootfromhere"
   make clean
-  make -j 4
+  make -j
+  make modules
   make install
 
   if [ "$RUN_TESTS" == "0" ] ; then

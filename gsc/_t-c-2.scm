@@ -36,7 +36,7 @@
         (write (string->canonical-symbol (proc-obj-name proc)) targ-info-port)
         (display ">" targ-info-port)))
 
-    (set! targ-proc-name               (proc-obj-name proc))
+    (set! targ-proc-unique-name        (targ-unique-name proc))
     (set! targ-proc-code               (make-stretchable-vector #f))
     (set! targ-proc-code-length        0)
     (set! targ-proc-rd-res             (make-stretchable-vector #f))
@@ -203,7 +203,8 @@
                      (targ-ref-lbl-val targ-proc-entry-lbl)
                      arity 0 0))
     (targ-emit (list 'append
-                     (list "DEF_GLBL" (targ-make-glbl "" targ-proc-name))
+                     (list "DEF_GLBL"
+                           (targ-make-glbl "" targ-proc-unique-name))
                      #\newline))
 
 ;;    (targ-repr-begin-block! 'entry targ-proc-entry-lbl)
@@ -267,7 +268,7 @@
 
 ;; Information attached to a procedure
 
-(define targ-proc-name            #f) ; procedure's name
+(define targ-proc-unique-name     #f) ; procedure's unique name
 (define targ-proc-code            #f) ; code of the procedure
 (define targ-proc-code-length     #f) ; length of code of the procedure
 (define targ-proc-entry-lbl       #f) ; entry label
@@ -356,7 +357,7 @@
 (define (targ-ref-lbl-goto n)
   (let ((x (targ-get-lbl n)))
     (vector-set! x 1 #t)
-    (targ-make-glbl (targ-lbl-num x) targ-proc-name)))
+    (targ-make-glbl (targ-lbl-num x) targ-proc-unique-name)))
 
 (define (targ-lbl-goto? lbl-struct)
   (vector-ref lbl-struct 1))
@@ -978,7 +979,8 @@
 
     (if (= lbl targ-proc-entry-lbl)
       (targ-emit (list 'append
-                       (list "DEF_GLBL" (targ-make-glbl "" targ-proc-name))
+                       (list "DEF_GLBL"
+                             (targ-make-glbl "" targ-proc-unique-name))
                        #\newline)))
 
     (targ-begin-fr)
@@ -1496,20 +1498,21 @@
                      (list "JUMPPRM"
                            set-nargs
                            x))
-                   (let ((name (proc-obj-name proc)))
+                   (let ((name (proc-obj-name proc))
+                         (unique-name (targ-unique-name proc)))
                      (if (targ-arg-check-avoidable? proc nb-args)
                        (targ-emit
                          (list "JUMPINT"
                                set-nargs
                                x
-                               (targ-make-glbl "" name)))
+                               (targ-make-glbl "" unique-name)))
                        (targ-emit
                          (list 'seq
                                set-nargs
                                (list "JUMPINT"
                                      '("NOTHING")
                                      x
-                                     (targ-make-glbl 0 name)))))))))
+                                     (targ-make-glbl 0 unique-name)))))))))
               ((glo? opnd)
 ;;               (targ-repr-exit-block! #f)
                (let ((name (glo-name opnd)))

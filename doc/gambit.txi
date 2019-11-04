@@ -401,9 +401,9 @@ directories on the command line are added to the front of the search
 order, and thus take precedence over the default search order.
 
 @item Modules
-Modules are either @dfn{unversionned} or @dfn{versionned} (managed by
+Modules are either @dfn{unversioned} or @dfn{versioned} (managed by
 the @code{git} version-control system).  There are two flavors of
-versionned modules: @dfn{hosted} modules have a @code{git} repository
+versioned modules: @dfn{hosted} modules have a @code{git} repository
 on a network accessible repository manager site such as
 @code{github.com} and @code{gitlab.com}, and @dfn{local} modules have
 a @code{git} repository on the local file system.  Module names have a
@@ -416,7 +416,7 @@ there are at least 3 parts and the first part contains at least one
 @samp{.}  and no @samp{_}, then it refers to a hosted module (1st part
 = host, 2nd part = account, 3rd part = repository name).  For example
 @code{github.com/gambit/hello@@1.0} is a hosted module reference.
-Otherwise it refers to a local versionned module or an unversionned
+Otherwise it refers to a local versioned module or an unversioned
 module, for example @code{foobar} or @code{A/B/C/D}.
 
 @item Files
@@ -1259,11 +1259,13 @@ world
 @end smallexample
 
 The detailed steps which are performed can be viewed by setting the
-@samp{GAMBCOMP_VERBOSE} environment variable to a nonnull value.  For
-example:
+@samp{GAMBUILD_VERBOSE} environment variable to a nonnull value.
+Alternatively, @code{gsc}'s @samp{-verbose} option can be used (it
+implicitly sets the @samp{GAMBUILD_VERBOSE} environment variable).
+For example:
 
 @smallexample
-$ @b{export GAMBCOMP_VERBOSE=yes}
+$ @b{export GAMBUILD_VERBOSE=yes}
 $ @b{gsc -o hello.exe -exe h.scm w.six}
 h.scm:
 /Users/feeley/gambit/doc/h.c:

@@ -1014,8 +1014,12 @@
 
 (univ-define-prim "##fllog" #f
   (make-translated-operand-generator
-   (lambda (ctx return arg)
-     (return (^flonum-box (^float-log (^flonum-unbox arg)))))))
+   (lambda (ctx return arg1 #!optional (arg2 #f))
+     (return
+      (^flonum-box
+       (if arg2
+           (^float targ-inexact-+0) ;; TODO: implement 2 argument fllog
+           (^float-log (^flonum-unbox arg1))))))))
 
 (univ-define-prim "##flsin" #f
   (make-translated-operand-generator
@@ -1080,6 +1084,11 @@
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-atanh (^flonum-unbox arg)))))))
+
+(univ-define-prim "##flhypot" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return (^flonum-box (^float targ-inexact-+0)))))) ;; TODO: implement flhypot
 
 (univ-define-prim "##flexpt" #f
   (make-translated-operand-generator

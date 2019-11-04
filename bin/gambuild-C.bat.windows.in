@@ -1,0 +1,594 @@
+@echo off
+
+rem The following settings are determined by the configure script.
+
+set C_COMPILER=@C_COMPILER_BAT@
+set C_PREPROC=@C_PREPROC_BAT@
+set PKG_CONFIG=@PKG_CONFIG_BAT@
+
+set FLAGS_OBJ=@FLAGS_OBJ_BAT@
+set FLAGS_DYN=@FLAGS_DYN_BAT@
+set FLAGS_LIB=@FLAGS_LIB_BAT@
+set FLAGS_EXE=@FLAGS_EXE_BAT@
+
+set FLAGS_OPT=@FLAGS_OPT_BAT@
+set FLAGS_OPT_RTS=@FLAGS_OPT_RTS_BAT@
+
+set DEFS_OBJ=@DEFS_OBJ_BAT@
+set DEFS_DYN=@DEFS_DYN_BAT@
+set DEFS_LIB=@DEFS_LIB_BAT@
+set DEFS_EXE=@DEFS_EXE_BAT@
+
+set BUILD_OBJ=@BUILD_OBJ_BAT@
+set BUILD_DYN=@BUILD_DYN_BAT@
+set BUILD_LIB=@BUILD_LIB_BAT@
+set BUILD_EXE=@BUILD_EXE_BAT@
+
+set DEFS=@DEFS_BAT@
+set LIBS=@LIBS_BAT@
+set GAMBITLIB=@GAMBITLIB_BAT@
+set GAMBITGSCLIB=@GAMBITGSCLIB_BAT@
+set GAMBITGSILIB=@GAMBITGSILIB_BAT@
+set LIB_PREFIX=@LIB_PREFIX_BAT@
+set LIB_EXTENSION=@LIB_EXTENSION_BAT@
+set OBJ_EXTENSION=@OBJ_EXTENSION_BAT@
+set EXE_EXTENSION=@EXE_EXTENSION_BAT@
+set BAT_EXTENSION=@BAT_EXTENSION_BAT@
+
+rem Encoding of strings and paths using shell syntax
+
+set SHELL_STRING_ENCODE=if defined _arg (set ^"_arg=!_arg:=\"!^"^&set ^"_arg=!_arg:=\\!^"^&set ^"_arg=!_arg:=^^!^"^&set ^"_arg=!_arg:=^&!^"^&set ^"_arg=!_arg:=^|!^"^&set ^"_arg=!_arg:=^>!^"^&set ^"_result=!_arg:=^<!^") else (set ^"_result=^")
+
+set SHELL_PATH_ENCODE=if defined _arg (set ^"_arg=!_arg:="!^"^&set ^"_arg=!_arg:=\!^"^&set ^"_arg=!_arg:=^^!^"^&set ^"_arg=!_arg:=^&!^"^&set ^"_arg=!_arg:=^|!^"^&set ^"_arg=!_arg:=^>!^"^&set ^"_result=!_arg:=^<!^") else (set ^"_result=^")
+
+goto :select_operation
+
+
+rem Scheme string syntax decoding
+
+:scheme_string_decode
+setlocal EnableDelayedExpansion
+set "_arg=!_arg:<=!"
+set "_arg=!_arg:>=!"
+set "_arg=!_arg:|=!"
+set "_arg=!_arg:&=!"
+set "_arg=!_arg:^=!"
+set "_arg=!_arg:\\=!"
+set "_arg=!_arg:\"=!"
+set "_arg=!_arg:\a=!"
+set "_arg=!_arg:\t=	!"
+set "_arg=!_arg:\v=!"
+set "_arg=!_arg:\f=!"
+set "_arg=!_arg:\=!"
+endlocal & set "_result=%_arg%"
+exit /b 0
+
+
+rem Plain string decoding
+
+:plain_string_decode
+setlocal EnableDelayedExpansion
+set "_arg=!_arg:<=!"
+set "_arg=!_arg:>=!"
+set "_arg=!_arg:|=!"
+set "_arg=!_arg:&=!"
+set "_arg=!_arg:^=!"
+set "_arg=!_arg:\=!"
+set "_arg=!_arg:"=!"
+endlocal & set "_result=%_arg%"
+exit /b 0
+
+
+:for_each_line_of_var
+for /f "tokens=1* delims==" %%i in ('set %for_each_line_of_var_var%') do (
+  if not "%%j" == "" (
+    set "_arg=%%j"
+    call %for_each_line_of_var_handle%
+    goto :for_each_line_of_var_continue
+  )
+  goto :for_each_line_of_var_done
+)
+:for_each_line_of_var_done
+exit /b 0
+:for_each_line_of_var_continue
+for /f "delims= skip=1" %%i in ('set %for_each_line_of_var_var%') do (
+  set "_arg=%%i"
+  call %for_each_line_of_var_handle%
+)
+exit /b 0
+
+
+:for_each_meta_info_of_file
+for /f "delims=# tokens=2*" %%i in ('findstr /r /c:^"^^^ ^#^|^\^*^/^\^"^\^*^/^\^"%for_each_meta_info_of_file_key%^|^#^"^" "%for_each_meta_info_of_file_file%"') do (
+  set "_arg=%%~j"
+  call :scheme_string_decode
+  call %for_each_meta_info_of_file_handle%
+)
+exit /b 0
+
+
+:augment_pkg_config_path_from_files
+set "for_each_meta_info_of_file_file=%_arg%"
+set "for_each_meta_info_of_file_key=pkg-config-path"
+set "for_each_meta_info_of_file_handle=:accumulate_pkg_config_path"
+call :for_each_meta_info_of_file
+exit /b 0
+
+
+:augment_pkg_config_path_from_var
+call :plain_string_decode
+call :accumulate_pkg_config_path
+exit /b 0
+
+
+:process_pkg_config_from_files
+set "for_each_meta_info_of_file_file=%_arg%"
+set "for_each_meta_info_of_file_key=pkg-config"
+set "for_each_meta_info_of_file_handle=:process_pkg_config"
+call :for_each_meta_info_of_file
+exit /b 0
+
+
+:process_pkg_config_from_var
+call :plain_string_decode
+call :process_pkg_config
+exit /b 0
+
+
+:process_pkg_config
+set "pc_args=%_result%"
+if defined PKG_CONFIG goto pkg_config_defined
+echo *** WARNING -- the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags %pc_args%' and 'pkg-config --libs %pc_args%'
+exit /b 1
+:pkg_config_defined
+for /f "delims=" %%i in ('%PKG_CONFIG% --cflags %pc_args%') do (
+  set "_arg=%%i"
+  call :plain_string_decode
+  call :accumulate_cc_options
+)
+for /f "delims=" %%i in ('%PKG_CONFIG% --libs %pc_args%') do (
+  set "_arg=%%i"
+  call :plain_string_decode
+  call :accumulate_ld_options
+)
+exit /b 0
+
+
+:process_cc_ld_options_from_files
+set "for_each_meta_info_of_file_file=%_arg%"
+set "for_each_meta_info_of_file_key=cc-options"
+set "for_each_meta_info_of_file_handle=:process_cc_options"
+call :for_each_meta_info_of_file
+set "for_each_meta_info_of_file_key=ld-options-prelude"
+set "for_each_meta_info_of_file_handle=:process_ld_options_prelude"
+call :for_each_meta_info_of_file
+set "for_each_meta_info_of_file_key=ld-options"
+set "for_each_meta_info_of_file_handle=:process_ld_options"
+call :for_each_meta_info_of_file
+exit /b 0
+
+
+:process_cc_options
+call :plain_string_decode
+call :accumulate_cc_options
+exit /b 0
+
+
+:process_ld_options_prelude
+call :plain_string_decode
+call :accumulate_ld_options_prelude
+exit /b 0
+
+
+:process_ld_options
+call :plain_string_decode
+call :accumulate_ld_options
+exit /b 0
+
+
+:accumulate_pkg_config_path
+if defined GAMBUILD_PKG_CONFIG_PATH (
+  rem prepend path so that last path added has priority
+  set "GAMBUILD_PKG_CONFIG_PATH=%_result%;%GAMBUILD_PKG_CONFIG_PATH%"
+) else (
+  set "GAMBUILD_PKG_CONFIG_PATH=%_result%"
+)
+exit /b 0
+
+
+:accumulate_cc_options
+if defined GAMBUILD_CC_OPTIONS (
+  set "GAMBUILD_CC_OPTIONS=%GAMBUILD_CC_OPTIONS%%_result% "
+) else (
+  set "GAMBUILD_CC_OPTIONS=%_result%"
+)
+exit /b 0
+
+
+:accumulate_ld_options_prelude
+if defined GAMBUILD_LD_OPTIONS_PRELUDE (
+  set "GAMBUILD_LD_OPTIONS_PRELUDE=%GAMBUILD_LD_OPTIONS_PRELUDE%%_result% "
+) else (
+  set "GAMBUILD_LD_OPTIONS_PRELUDE=%_result%"
+)
+exit /b 0
+
+
+:accumulate_ld_options
+if defined GAMBUILD_LD_OPTIONS (
+  set "GAMBUILD_LD_OPTIONS=%GAMBUILD_LD_OPTIONS%%_result% "
+) else (
+  set "GAMBUILD_LD_OPTIONS=%_result%"
+)
+exit /b 0
+
+
+:extract_cc_ld_options
+
+rem ----------------------------------------------------------------------
+rem Augment PKG_CONFIG_PATH with the meta information from files in
+rem META_INFO_FILE_PARAM and the paths in PKG_CONFIG_PATH_PARAM.
+rem ----------------------------------------------------------------------
+
+set "GAMBUILD_CC_OPTIONS="
+set "GAMBUILD_LD_OPTIONS_PRELUDE="
+set "GAMBUILD_LD_OPTIONS="
+
+if defined PKG_CONFIG_PATH (
+  set "_arg=%PKG_CONFIG_PATH%"
+  call :plain_string_decode
+) else (
+  set "_result="
+)
+
+set "GAMBUILD_PKG_CONFIG_PATH=%_result%"
+
+rem Process META_INFO_FILE_PARAM (actual variable name in %1)
+
+set "for_each_line_of_var_var=%1"
+set "for_each_line_of_var_handle=:augment_pkg_config_path_from_files"
+call :for_each_line_of_var
+
+rem Process PKG_CONFIG_PATH_PARAM (actual variable name in %3)
+
+set "for_each_line_of_var_var=%3"
+set "for_each_line_of_var_handle=:augment_pkg_config_path_from_var"
+call :for_each_line_of_var
+
+if not defined GAMBUILD_PKG_CONFIG_PATH goto :done_pkg_config_path
+
+setlocal EnableDelayedExpansion
+set _arg=!GAMBUILD_PKG_CONFIG_PATH!
+%SHELL_PATH_ENCODE%
+endlocal & set "PKG_CONFIG_PATH=%_result%"
+
+:done_pkg_config_path
+
+rem ----------------------------------------------------------------------
+rem Use the meta information from files in META_INFO_FILE_PARAM and
+rem the package names in PKG_CONFIG_PATH to call pkg-config to
+rem accumulate C compiler and linker options.
+rem ----------------------------------------------------------------------
+
+rem Process META_INFO_FILE_PARAM (actual variable name in %1)
+
+set "for_each_line_of_var_var=%1"
+set "for_each_line_of_var_handle=:process_pkg_config_from_files"
+call :for_each_line_of_var
+
+rem Process PKG_CONFIG_PARAM (actual variable name in %2)
+
+set "for_each_line_of_var_var=%2"
+set "for_each_line_of_var_handle=:process_pkg_config_from_var"
+call :for_each_line_of_var
+
+rem ----------------------------------------------------------------------
+rem Use the meta information from files in META_INFO_FILE_PARAM to
+rem accumulate C compiler and linker options from cc-options,
+rem ld-options-prelude and ld-options.
+rem ----------------------------------------------------------------------
+
+rem Process META_INFO_FILE_PARAM (actual variable name in %1)
+
+set "for_each_line_of_var_var=%1"
+set "for_each_line_of_var_handle=:process_cc_ld_options_from_files"
+call :for_each_line_of_var
+
+set "BUILD_DYN_CC_OPTIONS=%GAMBUILD_CC_OPTIONS%%BUILD_DYN_CC_OPTIONS_PARAM%"
+set "BUILD_DYN_LD_OPTIONS_PRELUDE=%GAMBUILD_LD_OPTIONS_PRELUDE%%BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM%"
+set "BUILD_DYN_LD_OPTIONS=%GAMBUILD_LD_OPTIONS%%BUILD_DYN_LD_OPTIONS_PARAM%"
+
+setlocal EnableDelayedExpansion
+set "_arg=!GAMBUILD_CC_OPTIONS!"
+%SHELL_STRING_ENCODE%
+set "GAMBUILD_CC_OPTIONS=!_result!"
+set "_arg=!GAMBUILD_LD_OPTIONS_PRELUDE!"
+%SHELL_STRING_ENCODE%
+set "GAMBUILD_LD_OPTIONS_PRELUDE=!_result!"
+set "_arg=!GAMBUILD_LD_OPTIONS!"
+%SHELL_STRING_ENCODE%
+set "GAMBUILD_LD_OPTIONS=!_result!"
+endlocal & (
+  set "GAMBUILD_CC_OPTIONS=%GAMBUILD_CC_OPTIONS%"
+  set "GAMBUILD_LD_OPTIONS_PRELUDE=%GAMBUILD_LD_OPTIONS_PRELUDE%"
+  set "GAMBUILD_LD_OPTIONS=%GAMBUILD_LD_OPTIONS%"
+)
+
+exit /b 0
+
+
+:select_operation
+
+if "%1" == "obj" goto obj
+if not "%1" == ""obj"" goto not_obj
+:obj
+
+call :extract_cc_ld_options BUILD_OBJ_META_INFO_FILE_PARAM BUILD_OBJ_PKG_CONFIG_PARAM BUILD_OBJ_PKG_CONFIG_PATH_PARAM
+
+set "BUILD_OBJ_CC_OPTIONS_PARAM=%GAMBUILD_CC_OPTIONS%%BUILD_OBJ_CC_OPTIONS_PARAM%"
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_obj_verbose
+echo.%C_COMPILER% %FLAGS_OPT% %FLAGS_OBJ% %DEFS_OBJ% -I"%GAMBITDIR_INCLUDE%" -c -o "%BUILD_OBJ_OUTPUT_FILENAME_PARAM%" %BUILD_OBJ_CC_OPTIONS_PARAM% %BUILD_OBJ_INPUT_FILENAMES_PARAM%
+:not_obj_verbose
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_obj_verbose
+echo.@BUILD_OBJ_ECHO_BAT@
+:not_obj_verbose
+
+@BUILD_OBJ_ECHO_BAT@
+
+goto end
+:not_obj
+
+if "%1" == "dyn" goto dyn
+if not "%1" == ""dyn"" goto not_dyn
+:dyn
+
+call :extract_cc_ld_options BUILD_DYN_META_INFO_FILE_PARAM BUILD_DYN_PKG_CONFIG_PARAM BUILD_DYN_PKG_CONFIG_PATH_PARAM
+
+set "BUILD_DYN_CC_OPTIONS_PARAM=%GAMBUILD_CC_OPTIONS%%BUILD_DYN_CC_OPTIONS_PARAM%"
+set "BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM=%GAMBUILD_LD_OPTIONS_PRELUDE%%BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM%"
+set "BUILD_DYN_LD_OPTIONS_PARAM=%GAMBUILD_LD_OPTIONS%%BUILD_DYN_LD_OPTIONS_PARAM%"
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_dyn_verbose
+echo.@BUILD_DYN_ECHO_BAT@
+:not_dyn_verbose
+
+@BUILD_DYN_ECHO_BAT@
+
+goto end
+:not_dyn
+
+if "%1" == "lib" goto lib
+if not "%1" == ""lib"" goto not_lib
+:lib
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_lib_verbose
+echo.@BUILD_LIB_ECHO_BAT@
+:not_lib_verbose
+
+@BUILD_LIB_ECHO_BAT@
+
+goto end
+:not_lib
+
+if "%1" == "exe" goto exe
+if not "%1" == ""exe"" goto not_exe
+:exe
+
+call :extract_cc_ld_options BUILD_EXE_META_INFO_FILE_PARAM BUILD_EXE_PKG_CONFIG_PARAM BUILD_EXE_PKG_CONFIG_PATH_PARAM
+
+set "BUILD_EXE_CC_OPTIONS_PARAM=%GAMBUILD_CC_OPTIONS%%BUILD_EXE_CC_OPTIONS_PARAM%"
+set "BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM=%GAMBUILD_LD_OPTIONS_PRELUDE%%BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM%"
+set "BUILD_EXE_LD_OPTIONS_PARAM=%GAMBUILD_LD_OPTIONS%%BUILD_EXE_LD_OPTIONS_PARAM%"
+
+if not "%GAMBUILD_VERBOSE%" == "yes" goto not_exe_verbose
+echo.@BUILD_EXE_ECHO_BAT@
+:not_exe_verbose
+
+@BUILD_EXE_ECHO_BAT@
+
+goto end
+:not_exe
+
+if "%1" == "C_COMPILER" goto C_COMPILER
+if not "%1" == ""C_COMPILER"" goto not_C_COMPILER
+:C_COMPILER
+echo.%C_COMPILER%
+goto end
+:not_C_COMPILER
+
+if "%1" == "C_PREPROC" goto C_PREPROC
+if not "%1" == ""C_PREPROC"" goto not_C_PREPROC
+:C_PREPROC
+echo.%C_PREPROC%
+goto end
+:not_C_PREPROC
+
+if "%1" == "PKG_CONFIG" goto PKG_CONFIG
+if not "%1" == ""PKG_CONFIG"" goto not_PKG_CONFIG
+:PKG_CONFIG
+echo.%PKG_CONFIG%
+goto end
+:not_PKG_CONFIG
+
+if "%1" == "FLAGS_OBJ" goto FLAGS_OBJ
+if not "%1" == ""FLAGS_OBJ"" goto not_FLAGS_OBJ
+:FLAGS_OBJ
+echo.%FLAGS_OBJ%
+goto end
+:not_FLAGS_OBJ
+
+if "%1" == "FLAGS_DYN" goto FLAGS_DYN
+if not "%1" == ""FLAGS_DYN"" goto not_FLAGS_DYN
+:FLAGS_DYN
+echo.%FLAGS_DYN%
+goto end
+:not_FLAGS_DYN
+
+if "%1" == "FLAGS_LIB" goto FLAGS_LIB
+if not "%1" == ""FLAGS_LIB"" goto not_FLAGS_LIB
+:FLAGS_LIB
+echo.%FLAGS_LIB%
+goto end
+:not_FLAGS_LIB
+
+if "%1" == "FLAGS_EXE" goto FLAGS_EXE
+if not "%1" == ""FLAGS_EXE"" goto not_FLAGS_EXE
+:FLAGS_EXE
+echo.%FLAGS_EXE%
+goto end
+:not_FLAGS_EXE
+
+if "%1" == "FLAGS_OPT" goto FLAGS_OPT
+if not "%1" == ""FLAGS_OPT"" goto not_FLAGS_OPT
+:FLAGS_OPT
+echo.%FLAGS_OPT%
+goto end
+:not_FLAGS_OPT
+
+if "%1" == "FLAGS_OPT_RTS" goto FLAGS_OPT_RTS
+if not "%1" == ""FLAGS_OPT_RTS"" goto not_FLAGS_OPT_RTS
+:FLAGS_OPT_RTS
+echo.%FLAGS_OPT_RTS%
+goto end
+:not_FLAGS_OPT_RTS
+
+if "%1" == "DEFS_OBJ" goto DEFS_OBJ
+if not "%1" == ""DEFS_OBJ"" goto not_DEFS_OBJ
+:DEFS_OBJ
+echo.%DEFS_OBJ%
+goto end
+:not_DEFS_OBJ
+
+if "%1" == "DEFS_DYN" goto DEFS_DYN
+if not "%1" == ""DEFS_DYN"" goto not_DEFS_DYN
+:DEFS_DYN
+echo.%DEFS_DYN%
+goto end
+:not_DEFS_DYN
+
+if "%1" == "DEFS_LIB" goto DEFS_LIB
+if not "%1" == ""DEFS_LIB"" goto not_DEFS_LIB
+:DEFS_LIB
+echo.%DEFS_LIB%
+goto end
+:not_DEFS_LIB
+
+if "%1" == "DEFS_EXE" goto DEFS_EXE
+if not "%1" == ""DEFS_EXE"" goto not_DEFS_EXE
+:DEFS_EXE
+echo.%DEFS_EXE%
+goto end
+:not_DEFS_EXE
+
+if "%1" == "BUILD_OBJ" goto BUILD_OBJ
+if not "%1" == ""BUILD_OBJ"" goto not_BUILD_OBJ
+:BUILD_OBJ
+echo.%BUILD_OBJ%
+goto end
+:not_BUILD_OBJ
+
+if "%1" == "BUILD_DYN" goto BUILD_DYN
+if not "%1" == ""BUILD_DYN"" goto not_BUILD_DYN
+:BUILD_DYN
+echo.%BUILD_DYN%
+goto end
+:not_BUILD_DYN
+
+if "%1" == "BUILD_LIB" goto BUILD_LIB
+if not "%1" == ""BUILD_LIB"" goto not_BUILD_LIB
+:BUILD_LIB
+echo.%BUILD_LIB%
+goto end
+:not_BUILD_LIB
+
+if "%1" == "BUILD_EXE" goto BUILD_EXE
+if not "%1" == ""BUILD_EXE"" goto not_BUILD_EXE
+:BUILD_EXE
+echo.%BUILD_EXE%
+goto end
+:not_BUILD_EXE
+
+if "%1" == "DEFS" goto DEFS
+if not "%1" == ""DEFS"" goto not_DEFS
+:DEFS
+echo.%DEFS%
+goto end
+:not_DEFS
+
+if "%1" == "LIBS" goto LIBS
+if not "%1" == ""LIBS"" goto not_LIBS
+:LIBS
+echo.%LIBS%
+goto end
+:not_LIBS
+
+if "%1" == "GAMBITLIB_DEFS" goto GAMBITLIB_DEFS
+if not "%1" == ""GAMBITLIB_DEFS"" goto not_GAMBITLIB_DEFS
+:GAMBITLIB_DEFS
+echo.%GAMBITLIB_DEFS%
+goto end
+:not_GAMBITLIB_DEFS
+
+if "%1" == "GAMBITLIB" goto GAMBITLIB
+if not "%1" == ""GAMBITLIB"" goto not_GAMBITLIB
+:GAMBITLIB
+echo.%GAMBITLIB%
+goto end
+:not_GAMBITLIB
+
+if "%1" == "GAMBITGSCLIB" goto GAMBITGSCLIB
+if not "%1" == ""GAMBITGSCLIB"" goto not_GAMBITGSCLIB
+:GAMBITGSCLIB
+echo.%GAMBITGSCLIB%
+goto end
+:not_GAMBITGSCLIB
+
+if "%1" == "GAMBITGSILIB" goto GAMBITGSILIB
+if not "%1" == ""GAMBITGSILIB"" goto not_GAMBITGSILIB
+:GAMBITGSILIB
+echo.%GAMBITGSILIB%
+goto end
+:not_GAMBITGSILIB
+
+if "%1" == "LIB_PREFIX" goto LIB_PREFIX
+if not "%1" == ""LIB_PREFIX"" goto not_LIB_PREFIX
+:LIB_PREFIX
+echo.%LIB_PREFIX%
+goto end
+:not_LIB_PREFIX
+
+if "%1" == "LIB_EXTENSION" goto LIB_EXTENSION
+if not "%1" == ""LIB_EXTENSION"" goto not_LIB_EXTENSION
+:LIB_EXTENSION
+echo.%LIB_EXTENSION%
+goto end
+:not_LIB_EXTENSION
+
+if "%1" == "OBJ_EXTENSION" goto OBJ_EXTENSION
+if not "%1" == ""OBJ_EXTENSION"" goto not_OBJ_EXTENSION
+:OBJ_EXTENSION
+echo.%OBJ_EXTENSION%
+goto end
+:not_OBJ_EXTENSION
+
+if "%1" == "EXE_EXTENSION" goto EXE_EXTENSION
+if not "%1" == ""EXE_EXTENSION"" goto not_EXE_EXTENSION
+:EXE_EXTENSION
+echo.%EXE_EXTENSION%
+goto end
+:not_EXE_EXTENSION
+
+if "%1" == "BAT_EXTENSION" goto BAT_EXTENSION
+if not "%1" == ""BAT_EXTENSION"" goto not_BAT_EXTENSION
+:BAT_EXTENSION
+echo.%BAT_EXTENSION%
+goto end
+:not_BAT_EXTENSION
+
+echo.gambuild-C.bat unknown operation "%1"
+exit /b 1
+
+:end
+exit /b 0

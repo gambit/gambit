@@ -17,7 +17,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -138,7 +138,9 @@ if test "$ENABLE_CPLUSPLUS" = yes; then
 
 fi
 
-AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
+# Don't search for pkg-config, just assume it is in the path
+#AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
+PKG_CONFIG="pkg-config"
 
 AC_SUBST(C_COMPILER)
 AC_SUBST(C_PREPROC)
@@ -2746,11 +2748,11 @@ if test "$C_COMP_VISUALC" = yes; then
 
   ########## Microsoft Visual C++ compiler
 
-  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME_PARAM}\" \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -Fo\"\${BUILD_OBJ_OUTPUT_FILENAME_PARAM}\" \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -Fe\"\${BUILD_DYN_OUTPUT_FILENAME_PARAM}\" \${BUILD_DYN_CC_OPTIONS_PARAM} \${BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_DYN_INPUT_FILENAMES_PARAM} \${BUILD_DYN_LD_OPTIONS_PARAM}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
@@ -2762,19 +2764,19 @@ if test "$C_COMP_VISUALC" = yes; then
     SUBSYS_MIN_REQ_VERSION="5.01"
   fi
 
-  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS} -link -subsystem:console,${SUBSYS_MIN_REQ_VERSION} -entry:WinMainCRTStartup"
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -Fe\"\${BUILD_EXE_OUTPUT_FILENAME_PARAM}\" \${BUILD_EXE_CC_OPTIONS_PARAM} \${BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_EXE_INPUT_FILENAMES_PARAM} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS_PARAM} -link -subsystem:console,${SUBSYS_MIN_REQ_VERSION} -entry:WinMainCRTStartup"
 
 else
 
-  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ_RTS="\${C_COMPILER} \${FLAGS_OPT_RTS} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \${BUILD_OBJ_OUTPUT_FILENAME_PARAM} \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \"\${BUILD_OBJ_OUTPUT_FILENAME}\" \${BUILD_OBJ_CC_OPTIONS} \${BUILD_OBJ_INPUT_FILENAMES}"
+  BUILD_OBJ="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_OBJ} \${DEFS_OBJ} -I\"\${GAMBITDIR_INCLUDE}\" -c -o \${BUILD_OBJ_OUTPUT_FILENAME_PARAM} \${BUILD_OBJ_CC_OPTIONS_PARAM} \${BUILD_OBJ_INPUT_FILENAMES_PARAM}"
 
-  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -o \"\${BUILD_DYN_OUTPUT_FILENAME}\" \${BUILD_DYN_CC_OPTIONS} \${BUILD_DYN_LD_OPTIONS_PRELUDE} \${BUILD_DYN_INPUT_FILENAMES} \${BUILD_DYN_LD_OPTIONS}"
+  BUILD_DYN="\${C_COMPILER} \${FLAGS_OPT} \${FLAGS_DYN} \${DEFS_DYN} -I\"\${GAMBITDIR_INCLUDE}\" -o \${BUILD_DYN_OUTPUT_FILENAME_PARAM} \${BUILD_DYN_CC_OPTIONS_PARAM} \${BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_DYN_INPUT_FILENAMES_PARAM} \${BUILD_DYN_LD_OPTIONS_PARAM}"
 
   BUILD_LIB="echo BUILD_LIB not yet implemented"
 
-  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -o \"\${BUILD_EXE_OUTPUT_FILENAME}\" \${BUILD_EXE_CC_OPTIONS} \${BUILD_EXE_LD_OPTIONS_PRELUDE} \${BUILD_EXE_INPUT_FILENAMES} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS}"
+  BUILD_EXE="\${C_COMPILER} \${FLAGS_EXE} \${DEFS_EXE} -I\"\${GAMBITDIR_INCLUDE}\" ${GAMBITLIB_LOC} -o \${BUILD_EXE_OUTPUT_FILENAME_PARAM} \${BUILD_EXE_CC_OPTIONS_PARAM} \${BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM} \${BUILD_EXE_INPUT_FILENAMES_PARAM} ${GAMBITLIB_LINK} \${LIBS} \${BUILD_EXE_LD_OPTIONS_PARAM}"
 
 fi
 
@@ -3213,28 +3215,28 @@ $RTLIBMAKEFILES \
 gsi/makefile \
 gsc/makefile \
 bin/makefile \
-bin/gambcomp-C.unix \
-bin/gambcomp-C.bat.windows \
-bin/gambcomp-js.unix \
-bin/gambcomp-js.bat.windows \
-bin/gambcomp-python.unix \
-bin/gambcomp-python.bat.windows \
-bin/gambcomp-ruby.unix \
-bin/gambcomp-ruby.bat.windows \
-bin/gambcomp-php.unix \
-bin/gambcomp-php.bat.windows \
-bin/gambcomp-java.unix \
-bin/gambcomp-java.bat.windows \
-bin/gambcomp-x86.unix \
-bin/gambcomp-x86.bat.windows \
-bin/gambcomp-x86-64.unix \
-bin/gambcomp-x86-64.bat.windows \
-bin/gambcomp-arm.unix \
-bin/gambcomp-arm.bat.windows \
-bin/gambcomp-riscv-32.unix \
-bin/gambcomp-riscv-32.bat.windows \
-bin/gambcomp-riscv-64.unix \
-bin/gambcomp-riscv-64.bat.windows \
+bin/gambuild-C.unix \
+bin/gambuild-C.bat.windows \
+bin/gambuild-js.unix \
+bin/gambuild-js.bat.windows \
+bin/gambuild-python.unix \
+bin/gambuild-python.bat.windows \
+bin/gambuild-ruby.unix \
+bin/gambuild-ruby.bat.windows \
+bin/gambuild-php.unix \
+bin/gambuild-php.bat.windows \
+bin/gambuild-java.unix \
+bin/gambuild-java.bat.windows \
+bin/gambuild-x86.unix \
+bin/gambuild-x86.bat.windows \
+bin/gambuild-x86-64.unix \
+bin/gambuild-x86-64.bat.windows \
+bin/gambuild-arm.unix \
+bin/gambuild-arm.bat.windows \
+bin/gambuild-riscv-32.unix \
+bin/gambuild-riscv-32.bat.windows \
+bin/gambuild-riscv-64.unix \
+bin/gambuild-riscv-64.bat.windows \
 bin/gambdoc.unix \
 bin/gambdoc.bat.windows \
 misc/makefile \

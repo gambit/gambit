@@ -38,7 +38,7 @@ case "$1" in
 
   "obj")
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test "${GAMBUILD_VERBOSE}" != ""; then
       echo @BUILD_OBJ_ECHO@
     fi
 
@@ -47,7 +47,7 @@ case "$1" in
 
   "dyn")
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test "${GAMBUILD_VERBOSE}" != ""; then
       echo @BUILD_DYN_ECHO@
     fi
 
@@ -56,7 +56,7 @@ case "$1" in
 
   "lib")
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test "${GAMBUILD_VERBOSE}" != ""; then
       echo @BUILD_LIB_ECHO@
     fi
 
@@ -65,7 +65,7 @@ case "$1" in
 
   "exe")
 
-    if test "${GAMBCOMP_VERBOSE}" != ""; then
+    if test "${GAMBUILD_VERBOSE}" != ""; then
       echo @BUILD_EXE_ECHO@
     fi
 
@@ -215,7 +215,7 @@ case "$1" in
     ;;
 
   *)
-    echo "gambcomp-C unknown operation \"$1\""
+    echo "gambuild-C unknown operation \"$1\""
     exit 1
     ;;
 

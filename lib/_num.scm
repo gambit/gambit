@@ -1525,7 +1525,7 @@
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
 
-  (define (##fast-gcd u v)
+  (define (fast-gcd u v)
 
     ;; See the paper "Fast Reduction and Composition of Binary
     ;; Quadratic Forms" by Arnold Schoenhage.  His algorithm and proof
@@ -1925,7 +1925,7 @@
                    ;; in the gcd.
                    (##arithmetic-shift (##gcd x y)
                                        (##fxmin first-x-bit first-y-bit))
-                   (##fast-gcd x y)))))))
+                   (fast-gcd x y)))))))
 
   (cond ((##not (##integer? x))
          (type-error-on-x))
@@ -3126,7 +3126,7 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##sqrt x)))
 
-(define (##power-of-two? n)
+(define-prim (##power-of-two? n)
   ;; assumes n is a positive fixnum or bignum
   (if (##fixnum? n)
       (##fxzero? (##fxand n (##fx- n 1)))
@@ -8544,7 +8544,7 @@ end-of-code
        ))
 
     (define (make-w log-n)
-      (let* ((n (##expt 2 log-n))  ;; number of complexes
+      (let* ((n (##fxarithmetic-shift-left 1 log-n))  ;; number of complexes
              (result (##make-f64vector (##fx* 2 n))))
 
         (define (copy-low-lut)
@@ -9171,7 +9171,7 @@ end-of-code
     |#
 
     (define (make-w-rac log-n)
-      (let* ((n (##expt 2 log-n))
+      (let* ((n (##fxarithmetic-shift-left 1 log-n))
              (result (##make-f64vector n)))   ;; contains n/2 complexes
 
         (define (copy-lut lut stride)
@@ -11110,12 +11110,7 @@ end-of-code
         (f1 x))))
 
 (define-prim (##flonum-expt2 n)
-  (cond ((##fxzero? n)
-         (macro-inexact-+1))
-        ((##fxnegative? n)
-         (##expt (macro-inexact-+1/2) (##fx- n)))
-        (else
-         (##expt (macro-inexact-+2) n))))
+  (##flexpt (macro-inexact-+2) (##fixnum->flonum n)))
 
 (define-prim (##flonum->exact-int x)
   (let loop1 ((z (##flabs x))
