@@ -762,6 +762,7 @@
               root
               #!optional
               (alt-name (macro-absent-obj)))
+
   (define (try-open fn)
     (with-exception-handler
       (lambda (exn)
@@ -798,6 +799,7 @@
                 (loop (parent-directory dir))))))))))
 
 (define-prim (##extend-aliases-from-rpath rpath root)
+
   (define (read-setup-file-from-port port)
     (let ((ret (##read-all-as-a-begin-expr-from-port
                   port
@@ -807,9 +809,14 @@
       (and (##vector? ret)
            (##vector-ref ret 1))))
 
-  (let* ((result (##search-setup-file rpath root))
-         (comp-ctx (##compilation-ctx))
-         (module-aliases (macro-compilation-ctx-module-aliases comp-ctx)))
+  (let* ((result
+          (##search-setup-file rpath root))
+         (comp-ctx
+          (##compilation-ctx))
+         (module-aliases
+          (if comp-ctx
+              (macro-compilation-ctx-module-aliases comp-ctx)
+              '())))
     (if (##vector? result)
         (let* ((port (##vector-ref result 1))
                (src (read-setup-file-from-port port)))
