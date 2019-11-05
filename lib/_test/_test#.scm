@@ -26,6 +26,10 @@ check-not-false
 check-exn
 check-tail-exn
 
+test-all?-set!
+test-quiet?-set!
+test-verbose?-set!
+
 $expand-check$
 
 ))
@@ -108,25 +112,28 @@ $expand-check$
          (expand-check-rel src positive? relation expr1 val))))
 
     (define (expand-check-rel src positive? relation expr1 expr2)
-      (let ((report (failed-check-generate src '$actual-result$)))
+      (let ((passed (check-action-generate src '$actual-result$ #t))
+            (failed (check-action-generate src '$actual-result$ #f)))
         `(##let (($actual-result$ ,(##sourcify expr1 src))
                  ($expected-result$ ,(##sourcify expr2 src)))
            (##if (,relation $actual-result$ $expected-result$)
-                 ,(if positive? #f report)
-                 ,(if positive? report #f)))))
+                 ,(if positive? passed failed)
+                 ,(if positive? failed passed)))))
 
     (define (expand-check-= src)
       (##deconstruct-call
        src
        -3
        (lambda (expr1 expr2 #!optional (tolerance '_test#epsilon) comment)
-         (let ((msg (failed-check-message src)))
+         (let ((passed-msg (check-message-generate src #t))
+               (failed-msg (check-message-generate src #f)))
            (##sourcify
             (list (##sourcify '_test#check-=-proc src)
                   (##sourcify expr1 src)
                   (##sourcify expr2 src)
                   (##sourcify tolerance src)
-                  (##sourcify msg src))
+                  (##sourcify passed-msg src)
+                  (##sourcify failed-msg src))
             src)))))
 
     (define (expand-check-exn src tail-exn?)
@@ -134,16 +141,18 @@ $expand-check$
        src
        -3
        (lambda (exn? thunk #!optional comment)
-         (let ((msg (failed-check-message src)))
+         (let ((passed-msg (check-message-generate src #t))
+               (failed-msg (check-message-generate src #f)))
            (##sourcify
             (list (##sourcify '_test#check-exn-proc src)
                   (##sourcify exn? src)
                   (##sourcify thunk src)
-                  (##sourcify msg src)
+                  (##sourcify passed-msg src)
+                  (##sourcify failed-msg src)
                   (##sourcify tail-exn? src))
             src)))))
 
-    (define (failed-check-message src)
+    (define (check-message-generate src passed?)
       (call-with-output-string
         ""
         (lambda (port)
@@ -152,13 +161,16 @@ $expand-check$
                 (begin
                   (##display-locat locat #t port)
                   (display ": " port))))
-          (display "FAILED " port)
+          (display (if passed? "PASSED " "FAILED ") port)
           (write (##desourcify src) port))))
 
-    (define (failed-check-generate src actual-result)
+    (define (check-action-generate src actual-result passed?)
       (##sourcify
-       (list (##sourcify '_test#failed-check src)
-             (##sourcify (failed-check-message src) src)
+       (list (##sourcify (if passed?
+                             '_test#passed-test
+                             '_test#failed-test)
+                         src)
+             (##sourcify (check-message-generate src passed?) src)
              (##sourcify actual-result src))
        src))
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_test.scm"
 
-;;; Copyright (c) 2013-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2019 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -21,32 +21,81 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define epsilon 0)
+(define test-all? #f) ;; default is to stop at first failure
+(define test-quiet? #f) ;; default is to display summary of tests run
+(define test-verbose? #f) ;; default is to not display passed tests
+(define epsilon 0) ;; default tolerance for check-= numerical check
 
-(define failed-check? #f)
+(define nb-passed-tests 0) ;; number of tests that passed
+(define nb-failed-tests 0) ;; number of tests that failed
+
+(define redirect-test-output-port (##make-parameter #f))
+
+(define (test-output-port)
+  (or (redirect-test-output-port)
+      (##repl-output-port)))
 
 ;; at exit, verify if any checks failed
 (let ((##exit-old ##exit))
   (set! ##exit
         (lambda rest
-          (if (pair? rest)
-              (##exit-old (car rest))
-              (##exit-with-err-code-no-cleanup
-               (if failed-check? 2 1))))))
 
-(define (failed-check msg #!optional (actual-result (macro-absent-obj)))
-  (println
+          (set! ##exit ##exit-old) ;; in case there's another call to exit
+
+          (if (not test-quiet?)
+              (let ((output-port (test-output-port)))
+
+                (define (plural n thing)
+                  (display n output-port)
+                  (display thing output-port)
+                  (if (fx> n 1)
+                      (display "s" output-port)))
+
+                (display "*** " output-port)
+                (if (fx= nb-failed-tests 0)
+                    (display "all tests passed" output-port)
+                    (begin
+                      (plural nb-failed-tests " test")
+                      (display " failed" output-port)))
+                (if (or test-all? (fx= nb-failed-tests 0))
+                    (display " out of a total of " output-port)
+                    (display " after " output-port))
+                (plural (fx+ nb-failed-tests nb-passed-tests) " test")
+                (display "\n" output-port)))
+
+          (if (pair? rest)
+              (##exit (car rest))
+              (##exit-with-err-code-no-cleanup
+               (if (fx> nb-failed-tests 0) 2 1))))))
+
+(define (passed-test passed-msg #!optional (actual-result (macro-absent-obj)))
+  (set! nb-passed-tests (fx+ nb-passed-tests 1))
+  (if test-verbose?
+      (display
+       (call-with-output-string
+         ""
+         (lambda (port)
+           (display passed-msg port)
+           (newline port)))
+       (test-output-port))))
+
+(define (failed-test failed-msg #!optional (actual-result (macro-absent-obj)))
+  (set! nb-failed-tests (fx+ nb-failed-tests 1))
+  (display
    (call-with-output-string
     ""
     (lambda (port)
-      (display msg port)
+      (display failed-msg port)
       (if (not (eq? actual-result (macro-absent-obj)))
           (begin
             (display " GOT " port)
-            (write actual-result port))))))
-  (set! failed-check? #t))
+            (write actual-result port)))
+      (newline port)))
+   (test-output-port))
+  (if (not test-all?)
+      (##exit)))
 
-(define (check-exn-proc exn? thunk msg tail-exn?)
+(define (check-exn-proc exn? thunk passed-msg failed-msg tail-exn?)
   (##continuation-capture
    (lambda (return)
      (with-exception-handler
@@ -58,14 +107,16 @@
             (lambda ()
               (let ((creator (##continuation-creator cont)))
                 (cond ((not (exn? e))
-                       (failed-check msg e))
+                       (failed-test failed-msg e))
                       ((and tail-exn?
                             (not (eq? creator call-thunk)))
-                       (failed-check
-                        msg
-                        (list 'nontail-exception-raised-in creator))))))))))
+                       (failed-test
+                        failed-msg
+                        (list 'nontail-exception-raised-in creator)))
+                      (else
+                       (passed-test passed-msg)))))))))
       (lambda ()
-        (failed-check msg (call-thunk thunk)))))))
+        (failed-test failed-msg (call-thunk thunk)))))))
 
 (define call-thunk
   (let ()
@@ -77,11 +128,21 @@
       ;; make sure continuation of thunk has call-thunk as creator
       (##first-argument (thunk)))))
 
-(define (check-=-proc n1 n2 tolerance msg)
+(define (check-=-proc n1 n2 tolerance passed-msg failed-msg)
   (if (or (not (number? n1))
           (not (number? n2))
           (< tolerance (magnitude (- n1 n2))))
-      (failed-check msg n1)))
+      (failed-test failed-msg n1)
+      (passed-test passed-msg n1)))
+
+(define (test-all?-set! val)
+  (set! test-all? val))
+
+(define (test-quiet?-set! val)
+  (set! test-quiet? val))
+
+(define (test-verbose?-set! val)
+  (set! test-verbose? val))
 
 #;
 (define (exit0-when-unimplemented-operation-os-exception thunk)
