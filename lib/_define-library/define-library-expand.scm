@@ -846,9 +846,6 @@
   ;; Local ctx
   (define rev-global-imports '())
 
-  (define (directory-separator? pattern pos)
-    (char=? (string-ref pattern pos) #\/))
-
   (let* ((src-path (##source-path src))
          (rpath
            (if (##not src-path)
