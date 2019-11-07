@@ -43,8 +43,8 @@ Output options
     -keep-c     Do not delete intermediate target language source files
 
 Scheme compiler and linker options
-    -prelude 'expression ...'   Add expressions before the source code
-    -postlude 'expression ...'  Add expressions after the source code
+    -prelude 'expr ...'         Add expressions before the source code
+    -postlude 'expr ...'        Add expressions after the source code
     -module-name name           Name of the generated module
     -linker-name name           Low-level init function exported by module
     -l base                     Link file of the base library to use
@@ -53,9 +53,9 @@ Scheme compiler and linker options
 C compiler and linker options
     -pkg-config library         Get compile and link flags using pkg-config
     -pkg-config-path dir        Add directory to pkg-config search path
-    -cc-options 'option ...'    Extra command line options for C compiler
-    -ld-options 'option ...'    Extra command line options for C linker
-    -ld-options-prelude 'option ...'
+    -cc-options 'option'        Extra command line options for C compiler
+    -ld-options 'option'        Extra command line options for C linker
+    -ld-options-prelude 'option'
 
 Debug information options
     -debug                 Include all debug info
@@ -75,7 +75,7 @@ Auxiliary information options
 
 Interpreter options
     -i               Process rest of command line like the interpreter
-    -e 'expression'  Evaluate the given Scheme expression at this point
+    -e 'expr ...'    Evaluate the given Scheme expressions at this point
     -                Drop into a REPL at this point (continue with ,c)
 
 Global options
@@ -107,7 +107,7 @@ Batch mode
       file.scm         Run Scheme script (when the script starts with '#!' or
                        '@;' it receives any remaining command line arguments)
       file.oN          Run dynamically loadable object file produced by gsc
-      -e 'expression'  Evaluate the given Scheme expression at this point
+      -e 'expr ...'    Evaluate the given Scheme expression at this point
       -                Drop into a REPL at this point (continue with ,c)
 
 Module management
