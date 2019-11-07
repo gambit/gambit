@@ -35,6 +35,10 @@ OBJ_EXTENSION=@OBJ_EXTENSION_SH@
 EXE_EXTENSION=@EXE_EXTENSION_SH@
 BAT_EXTENSION=@BAT_EXTENSION_SH@
 
+ALL_BUILD_FEATURES=@ALL_BUILD_FEATURES_SH@
+BUILD_FEATURE_C_COMP=@BUILD_FEATURE_C_COMP_SH@
+BUILD_FEATURE_OS="unix"
+
 GAMBUILD_CC_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"cc-options|#"
 GAMBUILD_LD_OPTIONS_PRELUDE_REGEXP="^ #|\\*/\"\\*/\"ld-options-prelude|#"
 GAMBUILD_LD_OPTIONS_REGEXP="^ #|\\*/\"\\*/\"ld-options|#"
@@ -44,6 +48,11 @@ GAMBUILD_PKG_CONFIG_PATH_REGEXP="^ #|\\*/\"\\*/\"pkg-config-path|#"
 GAMBUILD_SPACE=' '
 GAMBUILD_NL='
 '
+
+scheme_string_decode()
+{
+  printf "%s" "$1" | sed -e "s,\\\\\\\",\\\",g" -e "s,\\\\\\\\,,g" -e "s,\\\\t,	,g" -e "s,\\\\v,,g" -e "s,\\\\f,,g" -e "s,,\\\\,g" -e "s,^\",,g" -e "s,\"$,,g"
+}
 
 shell_string_encode()
 {
@@ -69,16 +78,89 @@ sed_quote()
   printf "%s" "$1" | sed 's/[&/\]/\\&/g'
 }
 
+eval_sexpr()
+{
+  sexpr="$(printf "%s" "$1" | sed -e "s,\\\\\\\\,,g" -e "s,\\\\\\\",,g" -e "s,',,g" -e "s,\\\\t,	,g" -e "s,\\\\v,,g" -e "s,\\\\f,,g")"
+
+  # temporarily remove doublequotes in strings
+  sexpr="$(printf "%s" "$sexpr" | sed -e "s/\\\\\\\\\\\\\\\\//g" -e "s/\\\\\\\\\"//g")"
+
+  # create a table of the strings in sexpr
+  str=
+  prev=""
+  while test "$sexpr" != "$prev"; do
+    prev="$sexpr"
+    str=_$str
+    eval "STR$str=$(printf "%s" "$sexpr" | sed -e "s/[^\\\"]*\\\"\\([^\\\"]*\\)\\\".*/\\1/" -e "s/^/'/" -e "s/$/'/")"
+    sexpr="$(printf "%s" "$sexpr" | sed -e "s/\\\"[^\\\"]*\\\"/$str/")"
+  done
+
+  sexpr="$(printf "%s" "$sexpr" | sed -e "s/)/ )/g")"
+
+  GAMBUILD_SAVE_IFS2="$IFS"
+  IFS="${GAMBUILD_SPACE}"
+
+  for feature in ${ALL_BUILD_FEATURES}; do
+    if test "$feature" == "${BUILD_FEATURE_OS}" -o \
+            "$feature" == "${BUILD_FEATURE_C_COMP}"; then
+      sexpr="$(printf "%s" "$sexpr" | sed -e "s/ $feature / #t /g")"
+    else
+      sexpr="$(printf "%s" "$sexpr" | sed -e "s/ $feature / #f /g")"
+    fi
+  done
+
+  IFS="${GAMBUILD_SAVE_IFS2}"
+
+  # apply reduction rules until a normal form is reached
+  prev=""
+  while test "$sexpr" != "$prev"; do
+    prev="$sexpr"
+    sexpr="$(printf "%s" "$sexpr" | sed \
+      -e "s/(and #t /(and /g" \
+      -e "s/(and #f #t /(and #f /g" \
+      -e "s/(and #f #f /(and #f /g" \
+      -e "s/(and #f )/#f/g" \
+      -e "s/(and )/#t/g" \
+      -e "s/(or #f /(or /g" \
+      -e "s/(or #t #t /(or #t /g" \
+      -e "s/(or #t #f /(or #t /g" \
+      -e "s/(or #t )/#t/g" \
+      -e "s/(or )/#f/g" \
+      -e "s/(not #t )/#f/g" \
+      -e "s/(not #f )/#t/g" \
+      -e "s/^(when #t \([^() ]*\) )/\1/g" \
+      -e "s/^(when #f \([^() ]*\) )//g")"
+  done
+
+  if test "$sexpr" != "" ; then
+    if printf "%s" "$sexpr" | grep "^_*$" > /dev/null ; then
+      # get string and put doublequotes back in string
+      eval "printf \"%s\" \"\\\"\$STR$sexpr\\\"\"" | sed -e "s//'/g" -e "s//\\\\\"/g" -e "s//\\\\\\\\/g"
+    else
+      printf "%s" "unsupported expression"
+    fi
+  fi
+}
+
 get_meta_info()
 {
-  grep "$2\(\"\|(when unix \"\)" "$1" | sed -e "s,$2\((when unix \)\{0\,1\}\",,g" -e "s,\")\{0\,1\}\$,,g" -e "s,\\\\\\\",\\\",g" -e "s,\\\\\\\\,,g" -e "s,\\\\t,	,g" -e "s,\\\\v,,g" -e "s,\\\\f,,g" -e "s,,\\\\,g"
+  for info in $(grep "$2" "$1" | sed -e "s,$2,,g"); do
+    val_info="$(eval_sexpr "$info")"
+    if test "$val_info" != ""; then
+      if test "$val_info" == "unsupported expression"; then
+        printf "%s\n" "*** WARNING -- unsupported meta-info is being ignored: $info" >> /dev/tty
+      else
+        printf "%s\n" "$val_info"
+      fi
+    fi
+  done
 }
 
 get_meta_info_list()
 {
   GAMBUILD_META_INFO_LIST=""
   for info in $(get_meta_info "$1" "$2"); do
-    GAMBUILD_META_INFO_LIST="${GAMBUILD_META_INFO_LIST}$(shell_quote ${info}) "
+    GAMBUILD_META_INFO_LIST="${GAMBUILD_META_INFO_LIST}$(shell_quote "$(scheme_string_decode "${info}")") "
   done
 }
 
@@ -86,7 +168,7 @@ process_pkg_config()
 {
   for arg in $1; do
     if test -z "${PKG_CONFIG}"; then
-      printf "%s\n" "*** WARNING -- the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags $arg' and 'pkg-config --libs $arg'"
+      printf "%s\n" "*** WARNING -- the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags $arg' and 'pkg-config --libs $arg'" >> /dev/tty
       exit 1
     else
       set -e
@@ -401,6 +483,18 @@ case "$1" in
     printf "%s\n" "${BAT_EXTENSION}"
     ;;
 
+  "ALL_BUILD_FEATURES")
+    printf "%s\n" "${ALL_BUILD_FEATURES}"
+    ;;
+
+  "BUILD_FEATURE_OS")
+    printf "%s\n" "${BUILD_FEATURE_OS}"
+    ;;
+
+  "BUILD_FEATURE_C_COMP")
+    printf "%s\n" "${BUILD_FEATURE_C_COMP}"
+    ;;
+
   "")
     # Dump configure script settings
 
@@ -438,10 +532,13 @@ case "$1" in
     echo OBJ_EXTENSION=`echo "${OBJ_EXTENSION}" | ${ESC_SH}`
     echo EXE_EXTENSION=`echo "${EXE_EXTENSION}" | ${ESC_SH}`
     echo BAT_EXTENSION=`echo "${BAT_EXTENSION}" | ${ESC_SH}`
+    echo ALL_BUILD_FEATURES=`echo "${ALL_BUILD_FEATURES}" | ${ESC_SH}`
+    echo BUILD_FEATURE_OS=`echo "${BUILD_FEATURE_OS}" | ${ESC_SH}`
+    echo BUILD_FEATURE_C_COMP=`echo "${BUILD_FEATURE_C_COMP}" | ${ESC_SH}`
     ;;
 
   *)
-    echo "gambcomp-C unknown operation \"$1\""
+    echo "gambuild-C unknown operation \"$1\""
     exit 1
     ;;
 
