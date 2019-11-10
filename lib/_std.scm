@@ -2433,4 +2433,94 @@
             (fold-right-1 x)
             (fold-right-n (##cons x y)))))))
 
+(define-prim (##list-sort! proc lst)
+
+  ;; Stable mergesort algorithm
+
+  (define (sort lst len)
+    (if (##fx= len 1)
+        (begin
+          (##set-cdr! lst '())
+          lst)
+        (let ((len1 (##fxarithmetic-shift-right len 1)))
+          (let loop ((n len1) (tail lst))
+            (if (##fx> n 0)
+                (loop (##fx- n 1) (##cdr tail))
+                (let ((x (sort tail (##fx- len len1))))
+                  (merge (sort lst len1) x)))))))
+
+  (define (merge lst1 lst2)
+    (if (##pair? lst1)
+        (if (##pair? lst2)
+            (let ((x1 (##car lst1))
+                  (x2 (##car lst2)))
+              (if (proc x2 x1)
+                  (merge-loop lst2 lst2 lst1 (##cdr lst2))
+                  (merge-loop lst1 lst1 (##cdr lst1) lst2)))
+            lst1)
+        lst2))
+
+  (define (merge-loop result prev lst1 lst2)
+    (if (##pair? lst1)
+        (if (##pair? lst2)
+            (let ((x1 (##car lst1))
+                  (x2 (##car lst2)))
+              (if (proc x2 x1)
+                  (begin
+                    (##set-cdr! prev lst2)
+                    (merge-loop result lst2 lst1 (##cdr lst2)))
+                  (begin
+                    (##set-cdr! prev lst1)
+                    (merge-loop result lst1 (##cdr lst1) lst2))))
+            (begin
+              (##set-cdr! prev lst1)
+              result))
+        (begin
+          (##set-cdr! prev lst2)
+          result)))
+
+  (let ((len (##length lst)))
+    (if (##fx= len 0)
+        '()
+        (sort lst len))))
+
+(define-prim (##list-sort proc lst)
+  (##list-sort! proc (##list-copy lst)))
+
+(define-prim (##string-contains
+              str
+              substr
+              #!optional
+              (start1 (macro-absent-obj))
+              (end1 (macro-absent-obj))
+              (start2 (macro-absent-obj))
+              (end2 (macro-absent-obj)))
+  (let* ((s1
+          (if (##eq? start1 (macro-absent-obj))
+              0
+              start1))
+         (e1
+          (if (##eq? end1 (macro-absent-obj))
+              (##string-length str)
+              end1))
+         (s2
+          (if (##eq? start2 (macro-absent-obj))
+              0
+              start2))
+         (e2
+          (if (##eq? end2 (macro-absent-obj))
+              (##string-length substr)
+              end2)))
+    (let* ((len (##fx- e2 s2))
+	   (limit (##fx- e1 len)))
+      (let loop1 ((i s1))
+	(and (##fx<= i limit)
+             (let loop2 ((j (##fx- len 1)))
+               (if (##fx>= j 0)
+                   (if (##char=? (##string-ref str (##fx+ i j))
+                                 (##string-ref substr j))
+                       (loop2 (##fx- j 1))
+                       (loop1 (##fx+ i 1)))
+                   i)))))))
+
 ;;;============================================================================

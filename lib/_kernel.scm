@@ -3979,6 +3979,22 @@ end-of-code
    name
    symbol?))
 
+(define-prim (##symkey-table-foldl f base symkey-table)
+  (let loop1 ((i (##fx- (##vector-length symkey-table) 1)) ;; skip element 0 = count
+              (result base))
+    (if (##fx> i 0)
+        (let loop2 ((symkey (##vector-ref symkey-table i))
+                    (result result))
+          (if (##subtyped? symkey)
+              (loop2 (##vector-ref symkey 2) ;; next in bucket
+                     (f result symkey))
+              (loop1 (##fx- i 1)
+                     result)))
+        result)))
+
+(define-prim (##symbol-table-foldl f base)
+  (##symkey-table-foldl f base (##symbol-table)))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Global variables.
@@ -4012,6 +4028,15 @@ end-of-code
 
 (define-prim (##global-var->identifier gv)
   gv)
+
+(define-prim (##global-var-table-foldl f base)
+  (##symbol-table-foldl
+   (lambda (lst sym)
+     (if (and (##global-var? sym)
+              (##not (##unbound? (##global-var-ref sym))))
+         (f lst sym)
+         lst))
+   base))
 
 ;;;----------------------------------------------------------------------------
 
