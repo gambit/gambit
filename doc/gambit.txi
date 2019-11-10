@@ -2645,6 +2645,64 @@ For example:
 
 @end deffn
 
+@deffn procedure apropos @r{[}@var{substring} @r{[}@var{port}@r{]}@r{]}
+
+The @code{apropos} procedure writes to the port @var{port} a report of
+all the global variables whose name contains @var{substring}, a string
+or symbol.  If @var{substring} is not specified the report contains
+all the global variables.  If it is not specified, @var{port} defaults
+to the interaction channel (i.e. the output will appear at the REPL).
+The @code{apropos} procedure returns the void object.
+
+The global variables are grouped into namespaces.  The empty
+namespace, if it is relevant, is last.  This reduces the likelihood it
+will scroll off the screen if there are several global variables in
+other namespaces, which are typically less interesting.
+
+Note that with the @code{apropos} procedure it is possible to reveal
+the existence of procedures of the runtime system and modules that are
+not intended to be called by user code.  These procedures often avoid
+type checking their arguments or must be called in a specific context,
+so calling them incorrectly may crash the system.  On the other hand
+it also allows discovering the existence of certain functionalities
+that may have gone unnoticed.
+
+For example:
+
+@smallexample
+> @b{(apropos "cons")}
+"##" namespace:
+  10^-constants, cons, cons*, cons*-aux, console-port,
+  constant-expression-value, constant-expression?,
+  cprc-quasi-cons, deconstruct-call,
+  define-type-construct-constant, degen-quasi-cons,
+  gen-quasi-cons, quasi-cons, stdio/console-repl-channel,
+  void-constant?, xcons
+empty namespace:
+  cons, cons*, console-port, xcons
+> @b{(import (srfi 69))}
+> @b{(apropos "table?")}
+"##" namespace:
+  gc-hash-table?, mutable?, readtable?, table?
+"srfi/69#" namespace:
+  hash-table?
+empty namespace:
+  readtable?, table?
+> @b{(apropos "srfi/69#")}
+"srfi/69#" namespace:
+  ||, alist->hash-table, hash, hash-by-identity,
+  hash-table->alist, hash-table-copy, hash-table-delete!,
+  hash-table-equivalence-function, hash-table-exists?,
+  hash-table-fold, hash-table-hash-function,
+  hash-table-keys, hash-table-merge!, hash-table-ref,
+  hash-table-ref/default, hash-table-set!, hash-table-size,
+  hash-table-update!, hash-table-update!/default,
+  hash-table-values, hash-table-walk, hash-table?,
+  make-hash-table, string-ci-hash, string-hash
+@end smallexample
+
+@end deffn
+
 @deffn procedure repl-result-history-ref @var{i}
 @deffnx procedure repl-result-history-max-length-set! @var{n}
 

@@ -813,14 +813,16 @@
 (define-prim (##namespace-separators-set! x)
   (set! ##namespace-separators x))
 
+(define (##namespace-separator-index str)
+  (let loop ((i (##fx- (##string-length str) 1)))
+    (if (##fx< i 0)
+        -1
+        (if (##memv (##string-ref str i) ##namespace-separators)
+            i
+            (loop (##fx- i 1))))))
+
 (define (##full-name? sym) ;; full name if it contains a namespace separator
-  (let ((str (##symbol->string sym)))
-    (let loop ((i (##fx- (##string-length str) 1)))
-      (if (##fx< i 0)
-          #f
-          (if (##memq (##string-ref str i) ##namespace-separators)
-              #t
-              (loop (##fx- i 1)))))))
+  (##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
 
 (define (##make-full-name prefix sym)
   (if (##fx= (##string-length prefix) 0)
