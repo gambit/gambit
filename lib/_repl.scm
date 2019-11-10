@@ -4386,9 +4386,122 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim (##apropos
+              #!optional
+              (substring (macro-absent-obj))
+              (port (macro-absent-obj)))
+  (let ((ns-tbl
+         (##make-table))
+        (substring
+         (cond ((##eq? substring (macro-absent-obj))
+                "")
+               ((##symbol? substring)
+                (##symbol->string substring))
+               (else
+                substring)))
+        (port
+         (if (##eq? port (macro-absent-obj))
+             (##repl-output-port)
+             port)))
+
+    (define (interesting? str)
+      (##string-contains str substring))
+
+    (define (add-interesting-symbol sym)
+      (let ((str (##symbol->string sym)))
+        (if (interesting? str)
+            (let* ((i (##fx+ 1 (##namespace-separator-index str)))
+                   (ns (##substring str 0 i))
+                   (name (##substring str i (##string-length str))))
+              (##table-set! ns-tbl
+                            ns
+                            (##cons name (##table-ref ns-tbl ns '())))))))
+
+    (define (add-interesting-global-vars)
+      (##global-var-table-foldl
+       (lambda (dummy global-var)
+         (add-interesting-symbol global-var))
+       #f))
+
+    (define (display-namespaces ns-alist)
+      (##for-each
+       (lambda (x)
+         (let* ((width (##fx- (##output-port-width port) 1))
+                (ns (##car x))
+                (names (##cdr x)))
+           (if (##string=? ns "")
+               (##write-string "empty" port)
+               (##write ns port))
+           (##write-string " namespace:" port)
+           (let loop ((lst names) (sep "") (pos width))
+             (if (##pair? lst)
+                 (let* ((repr
+                         (##object->string (##string->symbol (##car lst))))
+                        (len
+                         (##string-length repr))
+                        (new-pos
+                         (##fx+ pos (##fx+ (##string-length sep) 1 len))))
+                   (##write-string sep port)
+                   (if (##fx< new-pos width)
+                       (begin
+                         (##write-string " " port)
+                         (##write-string repr port)
+                         (loop (##cdr lst)
+                               ","
+                               new-pos))
+                       (begin
+                         (##newline port)
+                         (##write-string "  " port)
+                         (##write-string repr port)
+                         (loop (##cdr lst)
+                               ","
+                               (##fx+ 2 len)))))))
+           (##newline port)))
+       ns-alist))
+
+    (add-interesting-global-vars)
+
+    (let ((empty-ns
+           (##table-ref ns-tbl "" '())))
+      (##table-set! ns-tbl "") ;; remove empty namespace to put it last
+      (let* ((sorted-ns-alist
+              (##list-sort!
+               (lambda (x y) (##string<? (##car x) (##car y)))
+               (##table->list ns-tbl)))
+             (ns-alist
+              (##map (lambda (x)
+                       (##set-cdr! x (##list-sort! ##string<? (##cdr x))))
+                     (if (##pair? empty-ns)
+                         (##append sorted-ns-alist
+                                   (##list (##cons "" empty-ns)))
+                         sorted-ns-alist))))
+        (display-namespaces ns-alist)))))
+
+(define-prim (apropos
+              #!optional
+              (substring (macro-absent-obj))
+              (port (macro-absent-obj)))
+
+  (define (apro param)
+    (if (##eq? port (macro-absent-obj))
+        (##apropos param)
+        (macro-check-output-port port 2 (apropos substring port)
+          (##apropos param port))))
+
+  (macro-force-vars (substring port)
+    (if (##eq? substring (macro-absent-obj))
+        (##apropos)
+        (if (##symbol? substring)
+            (apro substring)
+            (macro-check-string substring 1 (apropos substring port)
+              (apro substring))))))
+
+;;;----------------------------------------------------------------------------
+
 (define-runtime-macro (time
                        expr
-                       #!optional (port (macro-absent-obj)))
+                       #!optional
+                       (port (macro-absent-obj)))
   (if (eq? port (macro-absent-obj))
       `(##time (lambda () ,expr) ',expr)
       `(##time (lambda () ,expr) ',expr ,port)))

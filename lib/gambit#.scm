@@ -81,6 +81,7 @@ append-u32vectors
 append-u64vectors
 append-u8vectors
 append-vectors
+apropos
 arithmetic-shift
 asinh
 atanh
