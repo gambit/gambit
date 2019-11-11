@@ -896,6 +896,7 @@ CFLAGS
 CC
 HAVE_SPECIAL_CXX
 HAVE_SPECIAL_CC
+BOOTSTRAP_CONFIGURE_FLAGS
 target_os
 target_vendor
 target_cpu
@@ -3080,6 +3081,14 @@ instlibdir="~~userlib"
 
 ###############################################################################
 #
+# To accumulate flags to propagate to bootstrap configure script.
+
+BOOTSTRAP_CONFIGURE_FLAGS=""
+
+
+
+###############################################################################
+#
 # Check if the system must be compiled using the C compiler or C++ compiler.
 
 # Check whether --enable-cplusplus was given.
@@ -4725,6 +4734,10 @@ else
 fi
 
 
+if test "$ENABLE_DEBUG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug"
+fi
+
 # Check if a debugging log file (gambit.log) should be generated.
 
 # Check whether --enable-debug-log was given.
@@ -4734,6 +4747,10 @@ else
   ENABLE_DEBUG_LOG=no
 fi
 
+
+if test "$ENABLE_DEBUG_LOG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-log"
+fi
 
 # Check if a C backtrace should be produced when a program crashes.
 
@@ -4746,6 +4763,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_C_BACKTRACE" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-c-backtrace"
 
 $as_echo "#define ___DEBUG_C_BACKTRACE /**/" >>confdefs.h
 
@@ -4763,6 +4781,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-ctrl-flow-history"
 
 $as_echo "#define ___DEBUG_CTRL_FLOW_HISTORY /**/" >>confdefs.h
 
@@ -4781,6 +4800,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-host-changes"
 
 $as_echo "#define ___DEBUG_HOST_CHANGES /**/" >>confdefs.h
 
@@ -4799,6 +4819,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_ALLOC_MEM" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-alloc-mem"
 
 $as_echo "#define ___DEBUG_ALLOC_MEM /**/" >>confdefs.h
 
@@ -4817,6 +4838,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-garbage-collect"
 
 $as_echo "#define ___DEBUG_GARBAGE_COLLECT /**/" >>confdefs.h
 

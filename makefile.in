@@ -48,6 +48,8 @@ RC = @RC@
 GIT = @GIT@
 HG = @HG@
 
+BOOTSTRAP_CONFIGURE_FLAGS = @BOOTSTRAP_CONFIGURE_FLAGS@
+
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 includedir = @includedir@
@@ -128,7 +130,7 @@ boot-most-recent-release-gsc-boot: fake_target
 	mkdir -p boot
 	$(GIT) archive tags/$(PACKAGE_VERSION) | (cd boot && tar xf -)
 	cd boot && \
-	./configure CC='$(C_COMPILER)' && \
+	./configure $(BOOTSTRAP_CONFIGURE_FLAGS) CC='$(C_COMPILER)' && \
 	$(MAKE) bootstrap
 
 boot-wip-compiler: fake_target
@@ -145,7 +147,7 @@ boot-wip-compiler-gsc-gsc: boot-most-recent-release
 	cd boot && \
 	rm -f gsc/makefile && \
 	cp ../gsc/makefile.in ../gsc/*.scm gsc && \
-	./configure CC='$(C_COMPILER)' && \
+	./configure $(BOOTSTRAP_CONFIGURE_FLAGS) CC='$(C_COMPILER)' && \
 	for i in lib gsi gsc ; do (cd $$i ; $(MAKE) all) ; done
 
 wip-gsc-boot: boot-wip-compiler
