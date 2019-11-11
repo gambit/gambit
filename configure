@@ -981,6 +981,7 @@ enable_default_runtime_options
 enable_shared
 enable_ansi_c
 enable_symlinks
+enable_gambitdir
 enable_interpreter_name
 enable_compiler_name
 enable_multiple_versions
@@ -1702,6 +1703,8 @@ Optional Features:
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
   --enable-symlinks       use symbolic links for installed files not in the
                           central installation directory (default is YES)
+  --enable-gambitdir=DIR  Path to use for the Gambit central installation
+                          directory (default is to use --prefix)
   --enable-interpreter-name=INTERP
                           Name to use for Gambit interpreter (default is gsi)
   --enable-compiler-name=COMP
@@ -5580,6 +5583,18 @@ if test "${enable_symlinks+set}" = set; then :
   enableval=$enable_symlinks; ENABLE_SYMLINKS=$enableval
 else
   ENABLE_SYMLINKS=no
+fi
+
+
+###############################################################################
+#
+# Determine the path of the Gambit central installation directory.
+
+# Check whether --enable-gambitdir was given.
+if test "${enable_gambitdir+set}" = set; then :
+  enableval=$enable_gambitdir; ENABLE_GAMBITDIR=$enableval
+else
+  ENABLE_GAMBITDIR=
 fi
 
 
@@ -14811,39 +14826,46 @@ if test "$datadir" = "\${datarootdir}"; then
   datadir="\${prefix}/share"
 fi
 
-GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+if test "$ENABLE_GAMBITDIR" != ""; then
+
+  GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$ENABLE_GAMBITDIR\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+else
+
+  GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+  if test "$ENABLE_SYMLINKS" != yes; then
+
+    if test "$bindir" != "\${prefix}/bin"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$includedir" != "\${prefix}/include"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$libdir" != "\${prefix}/lib"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$docdir" != "\${prefix}/doc"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$infodir" != "\${prefix}/info"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$datadir" != "\${prefix}/share"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+  fi
+fi
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_USERLIB=\"\\\"`echo \"$userlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INSTLIB=\"\\\"`echo \"$instlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-
-if test "$ENABLE_SYMLINKS" != yes; then
-
-  if test "$bindir" != "\${prefix}/bin"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$includedir" != "\${prefix}/include"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$libdir" != "\${prefix}/lib"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$docdir" != "\${prefix}/doc"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$infodir" != "\${prefix}/info"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$datadir" != "\${prefix}/share"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-fi
 
 emacsdir="\${datadir}/emacs/site-lisp"
 

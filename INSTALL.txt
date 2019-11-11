@@ -159,7 +159,7 @@ subdirectories can be redirected to other directories using
 the following configure options:
 
   --bindir=DIR            executables (gsi, gsc, ...)
-  --libdir=DIR            libraries (libgambit.a, syntax-case.scm, ...)
+  --libdir=DIR            libraries (libgambit.a, _gambit#.scm, ...)
   --includedir=DIR        C header files (gambit.h, ...)
   --docdir=DIR            documentation (gambit.pdf, gambit.html, ...)
   --infodir=DIR           info documentation (gambit.info, ...)
@@ -224,7 +224,10 @@ The configure options which are specific to the Gambit system are:
                           module whitelist (default is github.com/gambit)
   --enable-ansi-c         link only with ANSI C libraries
   --enable-symlinks       use symbolic links for installed files not in the
-                          central installation directory
+                          Gambit central installation directory
+  --enable-gambitdir=...  set the default binding of ~~ (the central
+                          installation directory) to override the default
+                          which is the directory specified by --prefix
   --enable-interpreter-name=INTERP
                           choose name for Gambit interpreter (default = gsi)
   --enable-compiler-name=COMP
