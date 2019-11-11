@@ -73,6 +73,14 @@ instlibdir="~~userlib"
 
 ###############################################################################
 #
+# To accumulate flags to propagate to bootstrap configure script.
+
+BOOTSTRAP_CONFIGURE_FLAGS=""
+
+AC_SUBST(BOOTSTRAP_CONFIGURE_FLAGS)
+
+###############################################################################
+#
 # Check if the system must be compiled using the C compiler or C++ compiler.
 
 AC_ARG_ENABLE(cplusplus,
@@ -285,6 +293,10 @@ AC_ARG_ENABLE(debug,
               ENABLE_DEBUG=$enableval,
               ENABLE_DEBUG=no)
 
+if test "$ENABLE_DEBUG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug"
+fi
+
 # Check if a debugging log file (gambit.log) should be generated.
 
 AC_ARG_ENABLE(debug-log,
@@ -292,6 +304,10 @@ AC_ARG_ENABLE(debug-log,
                              [build system so that it generates a debugging log file (default is NO)]),
               ENABLE_DEBUG_LOG=$enableval,
               ENABLE_DEBUG_LOG=no)
+
+if test "$ENABLE_DEBUG_LOG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-log"
+fi
 
 # Check if a C backtrace should be produced when a program crashes.
 
@@ -302,6 +318,7 @@ AC_ARG_ENABLE(debug-c-backtrace,
               ENABLE_DEBUG_C_BACKTRACE=no)
 
 if test "$ENABLE_DEBUG_C_BACKTRACE" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-c-backtrace"
   AC_DEFINE([___DEBUG_C_BACKTRACE],[],[Enable generation of debugging log file])
   ENABLE_DEBUG=yes
 fi
@@ -315,6 +332,7 @@ AC_ARG_ENABLE(debug-ctrl-flow-history,
               ENABLE_DEBUG_CTRL_FLOW_HISTORY=no)
 
 if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-ctrl-flow-history"
   AC_DEFINE([___DEBUG_CTRL_FLOW_HISTORY],[],[Enable debugging of control flow history])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_CTRL_FLOW_HISTORY"
   ENABLE_DEBUG_LOG=yes
@@ -329,6 +347,7 @@ AC_ARG_ENABLE(debug-host-changes,
               ENABLE_DEBUG_HOST_CHANGES=no)
 
 if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-host-changes"
   AC_DEFINE([___DEBUG_HOST_CHANGES],[],[Enable debugging of host changes])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_HOST_CHANGES"
   ENABLE_DEBUG_LOG=yes
@@ -343,6 +362,7 @@ AC_ARG_ENABLE(debug-alloc-mem,
               ENABLE_DEBUG_ALLOC_MEM=no)
 
 if test "$ENABLE_DEBUG_ALLOC_MEM" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-alloc-mem"
   AC_DEFINE([___DEBUG_ALLOC_MEM],[],[Enable debugging the memory allocations])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_ALLOC_MEM"
   ENABLE_DEBUG_LOG=yes
@@ -357,6 +377,7 @@ AC_ARG_ENABLE(debug-garbage-collect,
               ENABLE_DEBUG_GARBAGE_COLLECT=no)
 
 if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-garbage-collect"
   AC_DEFINE([___DEBUG_GARBAGE_COLLECT],[],[Enable debugging of garbage collect])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_GARBAGE_COLLECT"
   ENABLE_DEBUG_LOG=yes
@@ -2001,6 +2022,10 @@ if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_
   GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
 fi
 
+if test "$C_COMP_CLANG" = yes -a "$C_COMP_CLANG_VERSION" -ge 1100000; then
+  OMIT_FRAME_POINTER_POSSIBLE_BUG=yes
+fi
+
 case "$target_os" in
   darwin*) # strangely this bug only appears on Mac OS
     if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
@@ -2228,17 +2253,19 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
 
-  case "$target_os" in
+  if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
+    case "$target_os" in
 
-     mingw*) # MinGW's setjmp seems to need the frame pointer
-             ;;
+       mingw*) # MinGW's setjmp seems to need the frame pointer
+               ;;
 
-          *) # other systems are fine as far as I can tell
-             if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
-               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fomit_frame_pointer"
-             fi
-             ;;
-  esac
+            *) # other systems are fine as far as I can tell
+               if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
+                 FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fomit_frame_pointer"
+               fi
+               ;;
+    esac
+  fi
 
   if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
