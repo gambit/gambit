@@ -2663,17 +2663,13 @@
           (make-text-attr style-normal default-color default-color))))
 
      (if (##tty? port)
-         (begin
-           (##tty-text-attributes-set! port (attrs input) (attrs banner))
-           (##write-string " " port)))
+         (##tty-text-attributes-set! port (attrs input) (attrs banner)))
 
      (##write-string "Gambit " port)
      (##write-string (##system-version-string) port)
 
      (if (##tty? port)
-         (begin
-           (##write-string " " port)
-           (##tty-text-attributes-set! port (attrs input) (attrs output))))
+         (##tty-text-attributes-set! port (attrs input) (attrs output)))
 
      (##newline port)
      (##newline port)
