@@ -101,8 +101,8 @@ eval_sexpr()
   IFS="${GAMBUILD_SPACE}"
 
   for feature in ${ALL_BUILD_FEATURES}; do
-    if test "$feature" == "${BUILD_FEATURE_OS}" -o \
-            "$feature" == "${BUILD_FEATURE_C_COMP}"; then
+    if test "$feature" = "${BUILD_FEATURE_OS}" -o \
+            "$feature" = "${BUILD_FEATURE_C_COMP}"; then
       sexpr="$(printf "%s" "$sexpr" | sed -e "s/ $feature / #t /g")"
     else
       sexpr="$(printf "%s" "$sexpr" | sed -e "s/ $feature / #f /g")"
@@ -147,7 +147,7 @@ get_meta_info()
   for info in $(grep "$2" "$1" | sed -e "s,$2,,g"); do
     val_info="$(eval_sexpr "$info")"
     if test "$val_info" != ""; then
-      if test "$val_info" == "unsupported expression"; then
+      if test "$val_info" = "unsupported expression"; then
         printf "%s\n" "*** WARNING -- unsupported meta-info is being ignored: $info" >> /dev/tty
       else
         printf "%s\n" "$val_info"
