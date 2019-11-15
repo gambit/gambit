@@ -160,7 +160,7 @@ get_meta_info_list()
 {
   GAMBUILD_META_INFO_LIST=""
   for info in $(get_meta_info "$1" "$2"); do
-    GAMBUILD_META_INFO_LIST="${GAMBUILD_META_INFO_LIST}$(shell_quote "$(scheme_string_decode "${info}")") "
+    GAMBUILD_META_INFO_LIST="${GAMBUILD_META_INFO_LIST}$(scheme_string_decode "${info}") "
   done
 }
 
@@ -171,12 +171,15 @@ process_pkg_config()
       printf "%s\n" "*** WARNING -- the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags $arg' and 'pkg-config --libs $arg'" >> /dev/tty
       exit 1
     else
+      GAMBUILD_SAVE_IFS2="$IFS"
+      IFS="${GAMBUILD_SPACE}"
       set -e
       GAMBUILD_CFLAGS="$(${PKG_CONFIG} --cflags $arg)"
-      accumulate_cc_options "${GAMBUILD_CFLAGS}" "${GAMBUILD_SPACE}"
       GAMBUILD_LIBS="$(${PKG_CONFIG} --libs $arg)"
-      accumulate_ld_options "${GAMBUILD_LIBS}" "${GAMBUILD_SPACE}"
       set +e
+      IFS="${GAMBUILD_SAVE_IFS2}"
+      accumulate_cc_options "${GAMBUILD_CFLAGS}" "${GAMBUILD_NL}"
+      accumulate_ld_options "${GAMBUILD_LIBS}" "${GAMBUILD_NL}"
     fi
   done
 }
@@ -186,7 +189,7 @@ accumulate_cc_options()
   GAMBUILD_SAVE_IFS2="$IFS"
   IFS="$2"
   for flag in $1 ; do
-    GAMBUILD_CC_OPTIONS="${GAMBUILD_CC_OPTIONS}$(shell_quote $flag) "
+    GAMBUILD_CC_OPTIONS="${GAMBUILD_CC_OPTIONS}$flag "
   done
   IFS="${GAMBUILD_SAVE_IFS2}"
 }
@@ -196,7 +199,7 @@ accumulate_ld_options_prelude()
   GAMBUILD_SAVE_IFS2="$IFS"
   IFS="$2"
   for flag in $1 ; do
-    GAMBUILD_LD_OPTIONS_PRELUDE="${GAMBUILD_LD_OPTIONS_PRELUDE}$(shell_quote $flag) "
+    GAMBUILD_LD_OPTIONS_PRELUDE="${GAMBUILD_LD_OPTIONS_PRELUDE}$flag "
   done
   IFS="${GAMBUILD_SAVE_IFS2}"
 }
@@ -206,7 +209,7 @@ accumulate_ld_options()
   GAMBUILD_SAVE_IFS2="$IFS"
   IFS="$2"
   for flag in $1 ; do
-    GAMBUILD_LD_OPTIONS="${GAMBUILD_LD_OPTIONS}$(shell_quote $flag) "
+    GAMBUILD_LD_OPTIONS="${GAMBUILD_LD_OPTIONS}$flag "
   done
   IFS="${GAMBUILD_SAVE_IFS2}"
 }
@@ -275,14 +278,14 @@ substitute_common()
     -e "s\${PKG_CONFIG}$(sed_quote "${PKG_CONFIG}")g" \
     -e "s\${GAMBITDIR_INCLUDE}$(sed_quote "${GAMBITDIR_INCLUDE}")g" \
     -e "s\${GAMBITDIR_LIB}$(sed_quote "${GAMBITDIR_LIB}")g" \
-    -e "s\${DEFS_DYN}$(sed_quote "$(shell_quote "${DEFS_DYN}")")g" \
-    -e "s\${DEFS_EXE}$(sed_quote "$(shell_quote "${DEFS_EXE}")")g" \
-    -e "s\${DEFS_OBJ}$(sed_quote "$(shell_quote "${DEFS_OBJ}")")g" \
-    -e "s\${FLAGS_DYN}$(sed_quote "$(shell_quote "${FLAGS_DYN}")")g" \
-    -e "s\${FLAGS_EXE}$(sed_quote "$(shell_quote "${FLAGS_EXE}")")g" \
-    -e "s\${FLAGS_OBJ}$(sed_quote "$(shell_quote "${FLAGS_OBJ}")")g" \
-    -e "s\${FLAGS_OPT}$(sed_quote "$(shell_quote "${FLAGS_OPT}")")g" \
-    -e "s\${LIBS}$(sed_quote "$(shell_quote "${LIBS}")")g"
+    -e "s\${DEFS_DYN}$(sed_quote "${DEFS_DYN}")g" \
+    -e "s\${DEFS_EXE}$(sed_quote "${DEFS_EXE}")g" \
+    -e "s\${DEFS_OBJ}$(sed_quote "${DEFS_OBJ}")g" \
+    -e "s\${FLAGS_DYN}$(sed_quote "${FLAGS_DYN}")g" \
+    -e "s\${FLAGS_EXE}$(sed_quote "${FLAGS_EXE}")g" \
+    -e "s\${FLAGS_OBJ}$(sed_quote "${FLAGS_OBJ}")g" \
+    -e "s\${FLAGS_OPT}$(sed_quote "${FLAGS_OPT}")g" \
+    -e "s\${LIBS}$(sed_quote "${LIBS}")g"
 }
 
 substitute_obj()
