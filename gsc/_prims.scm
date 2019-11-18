@@ -5240,21 +5240,17 @@
                                                   (cons num?
                                                         (cons nz-num?
                                                               nz-num?))))
-(def-simp "fl/"              (constant-folder-flo /
-                                                  (list nz-flo?)
-                                                        (cons flo?
-                                                              (cons nz-flo?
-                                                                    nz-flo?))))
-(def-simp "abs"              (constant-folder-gen abs          num?))
-(def-simp "fxwrapabs"        (constant-folder-fix abs          fix32?))
-(def-simp "fxabs"            (constant-folder-fix abs          fix32?))
-(def-simp "fxabs?"           (constant-folder-fix abs          fix32?))
-(def-simp "flabs"            (constant-folder-flo abs          flo?))
-(def-simp "square"           (constant-folder-gen square       num?))
-(def-simp "fxwrapsquare"     (constant-folder-fix square       fix32?))
-(def-simp "fxsquare"         (constant-folder-fix square       fix32?))
-(def-simp "fxsquare?"        (constant-folder-fix square       fix32?))
-(def-simp "flsquare"         (constant-folder-flo square       flo?))
+(def-simp "fl/"              (constant-folder-flo /          flo?))
+(def-simp "abs"              (constant-folder-gen abs        num?))
+(def-simp "fxwrapabs"        (constant-folder-fix abs        fix32?))
+(def-simp "fxabs"            (constant-folder-fix abs        fix32?))
+(def-simp "fxabs?"           (constant-folder-fix abs        fix32?))
+(def-simp "flabs"            (constant-folder-flo abs        flo?))
+(def-simp "square"           (constant-folder-gen square     num?))
+(def-simp "fxwrapsquare"     (constant-folder-fix square     fix32?))
+(def-simp "fxsquare"         (constant-folder-fix square     fix32?))
+(def-simp "fxsquare?"        (constant-folder-fix square     fix32?))
+(def-simp "flsquare"         (constant-folder-flo square     flo?))
 (def-simp "quotient"         (constant-folder-gen quotient
                                                   (list int? nz-int?)))
 (def-simp "fxwrapquotient"   (constant-folder-fix quotient

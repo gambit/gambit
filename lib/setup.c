@@ -2273,6 +2273,15 @@ double x;)
 }
 
 
+___EXP_FUNC(___BOOL,___isinf)
+   ___P((double x),
+        (x)
+double x;)
+{
+  return x != 0.0 && x == 2.0*x;
+}
+
+
 ___EXP_FUNC(___BOOL,___isnan)
    ___P((double x),
         (x)
@@ -2742,18 +2751,18 @@ double y;)
   if (x < y) {
     t = x; x = y; y = t;
   }
-  if (isinf (y))
+  if (___isinf (y))
     x = y;
   t = x - y;
-  if (!(x == INFINITY) && !(t == x)) {
+  if (!___isinf (x) && !(t == x)) {
     if (t > y) {
       s = x / y;
-      s += sqrt(1.0 + s*s);
+      s += sqrt (1.0 + s*s);
       return x + y/s;
     } else {
       s = t/y;
       t = s * (2.0 + s);
-      s = r2p1 + (s + (t2p1 + t/(r2 + sqrt(2.0 + t))));
+      s = r2p1 + (s + (t2p1 + t/(r2 + sqrt (2.0 + t))));
       return x + y/s;
     }
   }
@@ -4892,6 +4901,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___isfinite
     = ___isfinite;
+
+  ___GSTATE->___isinf
+    = ___isinf;
 
   ___GSTATE->___isnan
     = ___isnan;

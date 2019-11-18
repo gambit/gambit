@@ -317,7 +317,10 @@ bootstrap-pre:
 
 bootstrap-post:
 	rm -f $(rootfromhere)/gsc-boot@bat@ $(rootfromhere)/gsc-boot@exe@ $(rootfromhere)/gsc-boot
-	cp $(EXECUTABLE) $(rootfromhere)/gsc-boot@exe@
+	cp $(EXECUTABLE) $(rootfromhere)/gsc-boot
+	if test "@exe@" != ""; then \
+	  cp $(EXECUTABLE) $(rootfromhere)/gsc-boot@exe@; \
+	fi
 	if test "@ENABLE_SHARED@" = "yes"; then \
 	  cp $(LIBRARY)$(LIB_VERSION_SUFFIX) $(rootfromhere)/$(LIBRARY)$(LIB_VERSION_SUFFIX); \
 	  if test "$(LIB_VERSION_SUFFIX)" != ""; then \

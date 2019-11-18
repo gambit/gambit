@@ -72,7 +72,7 @@ mandir = @mandir@
 
 RCFILES = makefile.in README simple-make-project.tgz \
 openwatcom.bat vcexpress.bat vctoolkit.bat vc2008.bat vstudio.zip \
-vstudio.bat vc2012.bat configure-vstudio.js \
+vstudio.bat vc2012.bat configure-vstudio.js vswsl.bat \
 proj_msc.zip conf_msc conf_msc.sed conf_mpp.sed \
 proj_wat.zip conf_wat conf_wat.sed conf_wpp.sed conf_win.sed \
 proj_bor.zip conf_bor conf_bor.sed conf_bpp.sed \

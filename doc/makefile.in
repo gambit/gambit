@@ -145,7 +145,7 @@ stamp.vti: gambit.txi $(rootfromhere)/configure.ac
 checkdoc:
 	rm -f *.o[0123456789]* fifo
 	rm -rf newdir
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi checkdoc.scm
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ checkdoc.scm
 	diff gambit.txi gambit.txi-correct
 
 bootstrap-pre:
