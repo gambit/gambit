@@ -9807,38 +9807,47 @@ fi
 # For details see the messages printed at the end of the configure script.
 
 if test "$C_COMP_GNUC" = yes; then
+
   if ac_fn_cxx_compute_int "$LINENO" "__GNUC__*100000+__GNUC_MINOR__*1000+__GNUC_PATCHLEVEL__" "C_COMP_GNUC_VERSION"        ""; then :
 
 fi
 
+
 fi
 
 if test "$C_COMP_CLANG" = yes; then
+
   if ac_fn_cxx_compute_int "$LINENO" "__clang_major__*100000+__clang_minor__*1000+__clang_patchlevel__" "C_COMP_CLANG_VERSION"        ""; then :
 
 fi
 
-fi
 
-if test "$C_COMP_LLVM" = yes -a "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -lt 405000; then
-  LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG=yes
-fi
+  if test "$C_COMP_CLANG_VERSION" -ge 1100000; then
+    OMIT_FRAME_POINTER_POSSIBLE_BUG=yes
+  fi
 
-if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_GNUC_VERSION" -lt 404000 -a "$ENABLE_SINGLE_HOST" = yes; then
-  GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
-fi
+else
+  if test "$C_COMP_GNUC" = yes; then
 
-if test "$C_COMP_CLANG" = yes -a "$C_COMP_CLANG_VERSION" -ge 1100000; then
-  OMIT_FRAME_POINTER_POSSIBLE_BUG=yes
-fi
-
-case "$target_os" in
-  darwin*) # strangely this bug only appears on Mac OS
-    if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
-      GNU_GCC_IPA_RA_POSSIBLE_BUG=yes
+    if test "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_GNUC_VERSION" -lt 404000 -a "$ENABLE_SINGLE_HOST" = yes; then
+      GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
     fi
-    ;;
-esac
+
+    if test "$C_COMP_GNUC_VERSION" -lt 405000 -a "$C_COMP_LLVM" = yes; then
+      LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG=yes
+    fi
+
+    case "$target_os" in
+      darwin*) # strangely this bug only appears on Mac OS
+        if test "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
+          GNU_GCC_IPA_RA_POSSIBLE_BUG=yes
+        fi
+        ;;
+    esac
+
+  fi
+fi
+
 
 ###############################################################################
 #
@@ -14555,14 +14564,11 @@ HG="hg"
 exe="$EXEEXT"
 obj=".$OBJEXT"
 
-case "$target_os" in
-
-   mingw*) bat=".bat"
-           ;;
-
-        *) bat=""
-           ;;
-esac
+if test "$exe" = ".exe"; then
+  bat=".bat"
+else
+  bat=""
+fi
 
 LIB_VERSION_SUFFIX=""
 LIB_MAJOR_VERSION_SUFFIX=""
@@ -14629,7 +14635,7 @@ else
 
     LIB_PREFIX="lib"
     LIB_EXTENSION=".lib"
-    MAKE_LIBRARY='lib -out:$(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS)'
+    MAKE_LIBRARY='lib.exe -out:$(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB=':'
     LINK_FOR_INSTALL=':'

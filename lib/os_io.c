@@ -8114,10 +8114,8 @@ HANDLE h;)
   ___printf ("GetFileType -> %d\n", ___CAST(int,GetFileType (h)));
 #endif
 
-  if (GetNumberOfConsoleInputEvents (h, &n))
-    return ___TTY_DEVICE_KIND;
-
-  if (GetConsoleCursorInfo (h, &cinfo))
+  if (GetNumberOfConsoleInputEvents (h, &n) ||
+      GetConsoleCursorInfo (h, &cinfo))
     return ___TTY_DEVICE_KIND;
 
   if (GetCommState (h, &dcb))
@@ -8126,10 +8124,9 @@ HANDLE h;)
   if (GetFileType (h) == FILE_TYPE_PIPE)
     return ___PIPE_DEVICE_KIND;
 
-  if (GetFileType (h) == FILE_TYPE_CHAR)
-    return ___FILE_DEVICE_KIND;
-
-  if (GetFileInformationByHandle (h, &finfo))
+  if (GetFileType (h) == FILE_TYPE_CHAR ||
+      GetFileType (h) == FILE_TYPE_DISK ||
+      GetFileInformationByHandle (h, &finfo))
     return ___FILE_DEVICE_KIND;
 
   return ___NONE_KIND;

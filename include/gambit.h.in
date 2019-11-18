@@ -3512,7 +3512,11 @@ else \
 #define ___F64ODDP(x)(___F64INTEGERP(x) && (x)!=2.0*___F64FLOOR((x)*0.5))
 #define ___F64EVENP(x)(___F64INTEGERP(x) && (x)==2.0*___F64FLOOR((x)*0.5))
 #define ___F64FINITEP(x)___EXT(___isfinite)(x)
+#ifdef ___USE_ISINF
+#define ___F64INFINITEP(x)___EXT(___isinf)(x)
+#else
 #define ___F64INFINITEP(x)((x)!=0.0 && (x)==2.0*(x))
+#endif
 #ifdef ___USE_ISNAN
 #define ___F64NANP(x)___EXT(___isnan)(x)
 #else
@@ -9676,6 +9680,9 @@ typedef struct ___global_state_struct
     ___BOOL (*___isfinite)
        ___P((double x),
             ());
+    ___BOOL (*___isinf)
+       ___P((double x),
+            ());
     ___BOOL (*___isnan)
        ___P((double x),
             ());
@@ -12016,6 +12023,9 @@ ___IMP_FUNC(double,___copysign)
          double y),
         ());
 ___IMP_FUNC(___BOOL,___isfinite)
+   ___P((double x),
+        ());
+___IMP_FUNC(___BOOL,___isinf)
    ___P((double x),
         ());
 ___IMP_FUNC(___BOOL,___isnan)

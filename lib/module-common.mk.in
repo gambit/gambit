@@ -118,7 +118,7 @@ modules-pre:
 	    need_to_build_module=no; \
 	    build_dir="$$main_mod@gambit409003@$$target"; \
 	    if test ! -d "$$build_dir" \
-	         -o "$(rootfromhere)/gsc/gsc" -nt "$$build_dir" \
+	         -o "$(rootfromhere)/gsc/gsc@exe@" -nt "$$build_dir" \
 	         -o -f "$$main_mod.sld" -a "$$main_mod.sld" -nt "$$build_dir" \
 	         -o -f "$$main_mod.scm" -a "$$main_mod.scm" -nt "$$build_dir" \
 	         -o -f "$$main_mod#.scm" -a "$$main_mod#.scm" -nt "$$build_dir"; then \
@@ -126,7 +126,7 @@ modules-pre:
 	    fi; \
 	    if test "$$need_to_build_module" = "yes"; then \
 	      echo ">>>> building module $$modref for $$target"; \
-	      @SETDLPATH@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
+	      @SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
 	    else \
 	      echo ">>>> no need to build module $$modref for $$target"; \
 	    fi; \
