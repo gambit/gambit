@@ -189,7 +189,7 @@
          'filename-expected
          filename-src))))
 
-(define (parse-name name-src)
+(define (parse-name name-src allow-empty-path?)
 
     (define (library-name-err)
       (##raise-expression-parsing-exception
@@ -203,7 +203,7 @@
           (let ((head (car spec)))
             (if (memq head '(rename prefix only except))
                 (library-name-err) ;; conflict with import declaration syntax
-                (let ((dot-and-modref (##parse-module-ref-possibly-relative spec)))
+                (let ((dot-and-modref (##parse-module-ref-possibly-relative spec allow-empty-path?)))
                   (or dot-and-modref (library-name-err))))))))
 
 (define (parse-define-library src modref-str module-root modref-path)
@@ -506,7 +506,7 @@
 
                   ;; ("A" "B" "C")
                   (dot-and-modref
-                    (parse-name name-src))
+                    (parse-name name-src #f))
 
                   (name-default (if (> 0 (car dot-and-modref))
                                     (##raise-expression-parsing-exception
@@ -706,7 +706,7 @@
                           (idmap-only-export? idmap)
                           (keep only-keep (idmap-map idmap)))))))))
 
-          (let* ((dot-and-modref (parse-name import-set-src))
+          (let* ((dot-and-modref (parse-name import-set-src ctx-library))
 
                  (dot (car dot-and-modref))
                  (modref (cdr dot-and-modref))
