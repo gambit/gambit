@@ -1644,7 +1644,10 @@
 #define ___HAVE_GOOD_TANH
 #define ___HAVE_GOOD_POW
 #define ___HAVE_GOOD_ATAN2
+
+#ifndef __MINGW32__
 #define ___HAVE_GOOD_HYPOT
+#endif
 
 #endif
 
