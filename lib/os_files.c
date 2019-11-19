@@ -1979,6 +1979,35 @@ ___SCMOBJ path;)
             (___CAST(___STRING_TYPE(___DELETE_DIRECTORY_PATH_CE_SELECT),
                      cpath)))
         e = fnf_or_err_code_from_GetLastError ();
+#ifdef USE_GetFileAttributesEx
+      else
+        {
+          /*
+           * On Windows, a call to RemoveDirectory doesn't immediately
+           * delete the directory.  Instead the directory is marked
+           * for deletion, so it is necessary to busy-wait for the OS
+           * to actually delete it.  Unfortunately, this introduces a
+           * race condition where some other process may be creating a
+           * file or directory with the same name.  A better solution
+           * would be to move the directory to a safe place with a
+           * unique name and then call RemoveDirectory on it.
+           */
+          for (;;)
+            {
+              WIN32_FILE_ATTRIBUTE_DATA fad;
+              if (!GetFileAttributesEx
+                     (___CAST(___STRING_TYPE(___DELETE_DIRECTORY_PATH_CE_SELECT),
+                              cpath),
+                      GetFileExInfoStandard,
+                      &fad))
+                {
+                  DWORD err = GetLastError ();
+                  if (err == ERROR_FILE_NOT_FOUND)
+                    break;
+                }
+            }
+        }
+#endif
       ___release_string (cpath);
     }
 
