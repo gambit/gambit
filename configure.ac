@@ -1525,7 +1525,7 @@ else
 
   if test "$C_COMP_VISUALC" = yes; then
 
-    PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+    PATH_SEP="\\\\\\\\\\\\\\\\"
 
     LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
 
@@ -1544,7 +1544,7 @@ else
 
        mingw*) # add Windows libraries needed by MinGW
 
-               PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+               PATH_SEP="\\\\\\\\\\\\\\\\"
 
                LIBS="$LIBS -lws2_32"
 

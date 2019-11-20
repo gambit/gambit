@@ -1613,7 +1613,10 @@
 #define ___HAVE_GOOD_ASINH
 #define ___HAVE_GOOD_ACOSH
 #define ___HAVE_GOOD_ATANH
+
+#if _MSC_VER >= 1900
 #define ___HAVE_GOOD_HYPOT
+#endif
 
 #endif
 
