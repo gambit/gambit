@@ -3367,8 +3367,8 @@ int direction;)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   d->base.base.vtbl = &___device_pipe_table;
-  d->fd_rd = fd_rd;
-  d->fd_wr = fd_wr;
+  d->fd_rd = (direction & ___DIRECTION_RD) ? fd_rd : -1;
+  d->fd_wr = (direction & ___DIRECTION_WR) ? fd_wr : -1;
   d->poll_interval_nsecs = 1; /* wait until writing end is opened */
 
   *dev = d;
