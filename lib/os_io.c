@@ -2865,6 +2865,7 @@ typedef struct ___device_pipe_struct
 #ifdef USE_POSIX
     int fd_wr;  /* file descriptor for "write" pipe (-1 if none) */
     int fd_rd;  /* file descriptor for "read" pipe (-1 if none) */
+    int poll_interval_nsecs;  /* interval between read attempts */
 #endif
 
 #ifdef USE_WIN32
@@ -3004,6 +3005,16 @@ ___device_select_state *state;)
             {
               if (d->fd_rd >= 0)
                 ___device_select_add_fd (state, d->fd_rd, 0);
+              if (d->poll_interval_nsecs > 0)
+                {
+                  int interval = d->poll_interval_nsecs * 6 / 5;
+                  if (interval < 1000000)
+                    interval = 1000000; /* min interval = 0.001 secs */
+                  else if (interval > 200000000)
+                    interval = 200000000; /* max interval = 0.2 sec */
+                  d->poll_interval_nsecs = interval;
+                  ___device_select_add_relative_timeout (state, i, interval * 1e-9);
+                }
             }
 #endif
 
@@ -3046,7 +3057,9 @@ ___device_select_state *state;)
         }
       else
         {
-          if (d->fd_rd < 0 || ___FD_ISSET(d->fd_rd, state->readfds))
+          if (d->fd_rd < 0 ||
+              d->poll_interval_nsecs > 0 ||
+              ___FD_ISSET(d->fd_rd, state->readfds))
             state->devs[i] = NULL;
         }
 
@@ -3132,16 +3145,29 @@ ___stream_index *len_done;)
     {
       int n = 0;
 
-      if ((n = read (d->fd_rd, buf, len)) < 0)
+      if ((n = read (d->fd_rd, buf, len)) == 0)
         {
+          if (d->poll_interval_nsecs > 0)
+            {
+              errno = EAGAIN;
+              e = err_code_from_errno ();
+            }
+
+        }
+      else
+        {
+          d->poll_interval_nsecs = 0;
+          if (n < 0)
+            {
 #if 0
-          if (errno == EIO) errno = EAGAIN;
+              if (errno == EIO) errno = EAGAIN;
 #else
-          if (errno == EIO) /* on linux, treating EIO as EAGAIN gives an infinite loop */
-            n = 0;
-          else
+              if (errno == EIO) /* on linux, treating EIO as EAGAIN gives an infinite loop */
+                n = 0;
+              else
 #endif
-            e = err_code_from_errno ();
+                e = err_code_from_errno ();
+            }
         }
 
       *len_done = n;
@@ -3343,6 +3369,7 @@ int direction;)
   d->base.base.vtbl = &___device_pipe_table;
   d->fd_rd = fd_rd;
   d->fd_wr = fd_wr;
+  d->poll_interval_nsecs = 1; /* wait until writing end is opened */
 
   *dev = d;
 
@@ -3735,6 +3762,7 @@ int direction;)
   d->base.base.base.vtbl = &___device_process_table;
   d->base.fd_rd = fd_stdout;
   d->base.fd_wr = fd_stdin;
+  d->base.poll_interval_nsecs = 0; /* writing end already opened */
   d->pid = pid;
   d->status = -1;
   d->got_status = 0;
@@ -7838,7 +7866,7 @@ int fd;)
 {
   /*
    * Determine what kind of device is attached to the file descriptor
-   * (tty, socket, or regular file).
+   * (tty, socket, pipe, or regular file).
    */
 
   if (isatty (fd))
@@ -7852,27 +7880,13 @@ int fd;)
     if (___fstat (fd, &s) < 0)
       return ___NONE_KIND;
 
-    if (S_ISREG(s.st_mode))
-      return ___FILE_DEVICE_KIND;
-
-#if 0
-
-    if (S_ISDIR(s.st_mode))
-      return ???;
-
-    if (S_ISLNK(s.st_mode))
-      return ???;
-
-#endif
-
-    if (S_ISCHR(s.st_mode))
-      return ___FILE_DEVICE_KIND;
-
-    if (S_ISBLK(s.st_mode))
+    if (S_ISREG(s.st_mode) ||
+        S_ISCHR(s.st_mode) ||
+        S_ISBLK(s.st_mode))
       return ___FILE_DEVICE_KIND;
 
     if (S_ISFIFO(s.st_mode))
-      return ___FILE_DEVICE_KIND;
+      return ___PIPE_DEVICE_KIND;
 
 #ifdef USE_NETWORKING
     if (S_ISSOCK(s.st_mode))
@@ -8019,6 +8033,33 @@ int direction;)
             if ((e = ___device_file_setup_from_fd
                        (&d,
                         dgroup,
+                        fd,
+                        direction))
+                == ___FIX(___NO_ERR))
+              *dev = ___CAST(___device_stream*,d);
+
+            break;
+          }
+
+        case ___PIPE_DEVICE_KIND:
+          {
+            ___device_pipe *d;
+
+#ifdef USE_NONBLOCKING_FILE_IO
+
+            /*
+             * Setup file descriptor to perform nonblocking I/O.
+             */
+
+            if (___set_fd_blocking_mode (fd, 0) != 0) /* set nonblocking mode */
+              return err_code_from_errno ();
+
+#endif
+
+            if ((e = ___device_pipe_setup_from_fd
+                       (&d,
+                        dgroup,
+                        fd,
                         fd,
                         direction))
                 == ___FIX(___NO_ERR))

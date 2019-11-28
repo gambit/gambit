@@ -1533,7 +1533,7 @@ ___SCMOBJ ___os_executable_path ___PVOID
   ___SCMOBJ result = ___FIX(___UNIMPL_ERR);
 
   ___CHAR_TYPE(___PATH_CE_SELECT) path_buf[___PATH_MAX_LENGTH+1];
-  char *path = NULL;
+  ___STRING_TYPE(___PATH_CE_SELECT) path = NULL;
 
 #ifdef USE_GetModuleFileName
 
