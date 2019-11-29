@@ -15198,7 +15198,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/module-common.mk $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambuild-C.unix bin/gambuild-C.bat.windows bin/gambuild-js.unix bin/gambuild-js.bat.windows bin/gambuild-python.unix bin/gambuild-python.bat.windows bin/gambuild-ruby.unix bin/gambuild-ruby.bat.windows bin/gambuild-php.unix bin/gambuild-php.bat.windows bin/gambuild-java.unix bin/gambuild-java.bat.windows bin/gambuild-x86.unix bin/gambuild-x86.bat.windows bin/gambuild-x86-64.unix bin/gambuild-x86-64.bat.windows bin/gambuild-arm.unix bin/gambuild-arm.bat.windows bin/gambuild-riscv-32.unix bin/gambuild-riscv-32.bat.windows bin/gambuild-riscv-64.unix bin/gambuild-riscv-64.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/module-common.mk $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambvcs.unix bin/gambvcs.bat.windows bin/gambuild-C.unix bin/gambuild-C.bat.windows bin/gambuild-js.unix bin/gambuild-js.bat.windows bin/gambuild-python.unix bin/gambuild-python.bat.windows bin/gambuild-ruby.unix bin/gambuild-ruby.bat.windows bin/gambuild-php.unix bin/gambuild-php.bat.windows bin/gambuild-java.unix bin/gambuild-java.bat.windows bin/gambuild-x86.unix bin/gambuild-x86.bat.windows bin/gambuild-x86-64.unix bin/gambuild-x86-64.bat.windows bin/gambuild-arm.unix bin/gambuild-arm.bat.windows bin/gambuild-riscv-32.unix bin/gambuild-riscv-32.bat.windows bin/gambuild-riscv-64.unix bin/gambuild-riscv-64.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -15899,6 +15899,8 @@ do
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;
     "bin/makefile") CONFIG_FILES="$CONFIG_FILES bin/makefile" ;;
+    "bin/gambvcs.unix") CONFIG_FILES="$CONFIG_FILES bin/gambvcs.unix" ;;
+    "bin/gambvcs.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambvcs.bat.windows" ;;
     "bin/gambuild-C.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-C.unix" ;;
     "bin/gambuild-C.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-C.bat.windows" ;;
     "bin/gambuild-js.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-js.unix" ;;

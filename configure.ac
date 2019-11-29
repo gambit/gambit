@@ -3299,6 +3299,8 @@ $RTLIBMAKEFILES \
 gsi/makefile \
 gsc/makefile \
 bin/makefile \
+bin/gambvcs.unix \
+bin/gambvcs.bat.windows \
 bin/gambuild-C.unix \
 bin/gambuild-C.bat.windows \
 bin/gambuild-js.unix \

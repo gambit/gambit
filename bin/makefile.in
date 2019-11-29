@@ -76,6 +76,7 @@ GSI_EXECUTABLE_INSTALLED = @ENABLE_INTERPRETER_NAME@@exe@
 GSC_EXECUTABLE_INSTALLED = @ENABLE_COMPILER_NAME@@exe@
 
 RCFILES = makefile.in \
+gambvcs.unix.in gambvcs.bat.windows.in \
 gambuild-C.unix.in gambuild-C.bat.windows.in \
 gambuild-js.unix.in gambuild-js.bat.windows.in \
 gambuild-python.unix.in gambuild-python.bat.windows.in \
@@ -93,7 +94,7 @@ GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gambuild-C@bat@ \
+INSTFILES_BIN_PROG = gambvcs@bat@ gambuild-C@bat@ \
 gambuild-js@bat@ gambuild-python@bat@ gambuild-ruby@bat@ gambuild-php@bat@ gambuild-java@bat@ \
 gambuild-x86@bat@ gambuild-x86-64@bat@ gambuild-arm@bat@ gambuild-riscv-32@bat@ gambuild-riscv-64@bat@ \
 gambdoc@bat@
@@ -107,7 +108,16 @@ all:
 
 all-pre:
 
-all-post: gambuild-C@bat@ gambuild-js@bat@ gambuild-python@bat@ gambuild-ruby@bat@ gambuild-php@bat@ gambuild-java@bat@ gambuild-x86@bat@ gambuild-x86-64@bat@ gambuild-arm@bat@ gambuild-riscv-32@bat@ gambuild-riscv-64@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gambvcs@bat@ gambuild-C@bat@ gambuild-js@bat@ gambuild-python@bat@ gambuild-ruby@bat@ gambuild-php@bat@ gambuild-java@bat@ gambuild-x86@bat@ gambuild-x86-64@bat@ gambuild-arm@bat@ gambuild-riscv-32@bat@ gambuild-riscv-64@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+
+gambvcs@bat@: makefile gambvcs.unix gambvcs.bat.windows
+	rm -f gambvcs@bat@
+	if test "@bat@" = ""; then \
+	  cp gambvcs.unix gambvcs@bat@; \
+	  chmod +x gambvcs@bat@; \
+	else \
+	  sed "s/\$$/\r/g" gambvcs.bat.windows > gambvcs@bat@; \
+	fi
 
 gambuild-C@bat@: makefile gambuild-C.unix gambuild-C.bat.windows
 	rm -f gambuild-C@bat@
