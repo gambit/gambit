@@ -234,7 +234,7 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
-#ifdef ___USE_POSIX
+#ifdef USE_POSIX
 
   int fd = d->fd;
 
@@ -275,7 +275,7 @@ ___device_tty *self;)
 
 #ifdef USE_fcntl
 
- if ((d->initial_flags = fcntl (fd, F_GETFL, 0)) < 0)
+  if ((d->initial_flags = fcntl (fd, F_GETFL, 0)) < 0)
     return err_code_from_errno ();
 
 #endif
@@ -324,7 +324,7 @@ ___BOOL undo;)
   ___device_tty *d = self;
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-#ifdef ___USE_POSIX
+#ifdef USE_POSIX
 
   int fd = d->fd;
 
