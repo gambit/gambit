@@ -463,6 +463,8 @@
          verbose?
          options)
 
+  (define prefix "GAMBUILD_")
+
   (define arg-prefix
     (case op
       ((obj) "BUILD_OBJ_")
@@ -471,79 +473,46 @@
       ((exe) "BUILD_EXE_")
       (else  "BUILD_OTHER_")))
 
-  (define (arg name-val)
-    (##string-append (##car name-val) "=" (##cdr name-val)))
-
-  (define (prefixed-arg name-val)
-    (arg (##cons (##string-append arg-prefix (##car name-val) "_PARAM")
-                 (##cdr name-val))))
-
-  (define (install-dir path)
-    (parameterize
-     ((##current-directory
-       (##path-expand path)))
-     (##current-directory)))
-
   (define (relative-to-output-dir filename)
     (##path-normalize (##path-expand filename) #t output-dir))
 
-  (let* ((gambitdir-bin
-          (install-dir "~~bin"))
-         (gambitdir-include
-          (install-dir "~~include"))
-         (gambitdir-lib
-          (install-dir "~~lib"))
-         (input-filenames-relative
-          (##map relative-to-output-dir input-filenames)))
-    (##open-process-generic
-     (macro-direction-inout)
-     #t
-     (lambda (port)
-       (let ((status (##process-status port)))
-         (##close-port port)
-         status))
-     open-process
-     (##list path:
-             (##string-append gambitdir-bin
-                              "gambuild-"
-                              (##symbol->string target)
-                              ##os-bat-extension-string-saved)
-             arguments:
-             (##list (##symbol->string op))
-             directory:
-             output-dir
-             environment:
-             (##append
-              (##map arg
-                     (##append
-                      (if verbose?
-                          (##list (##cons "GAMBUILD_VERBOSE" "yes"))
-                          '())
-                      (##list
-                       (##cons "GAMBITDIR_BIN"
-                               (##path-strip-trailing-directory-separator
-                                gambitdir-bin))
-                       (##cons "GAMBITDIR_INCLUDE"
-                               (##path-strip-trailing-directory-separator
-                                gambitdir-include))
-                       (##cons "GAMBITDIR_LIB"
-                               (##path-strip-trailing-directory-separator
-                                gambitdir-lib)))))
-              (##append
-               (##map prefixed-arg
-                      (##append
-                       (##list
-                        (##cons "INPUT_FILENAMES"
-                                (##multiple-args-join
-                                 input-filenames-relative))
-                        (##cons "OUTPUT_FILENAME"
-                                output-filename))
-                       options))
-               (let ((env (##os-environ)))
-                 (if (##fixnum? env) '() env))))
-             stdin-redirection: #f
-             stdout-redirection: #f
-             stderr-redirection: #f))))
+  (let* ((path
+          (##path-expand
+           (##string-append "gambuild-"
+                            (##symbol->string target)
+                            ##os-bat-extension-string-saved)
+           (##path-normalize-directory-existing "~~bin")))
+         (add-vars ;; pass arguments in shell environment variables
+          (##append
+           (if verbose?
+               (##shell-var-bindings
+                (##list (##cons "VERBOSE" "yes"))
+                prefix
+                "")
+               '())
+           (##shell-var-bindings
+            (##append
+             (##list (##cons "INPUT_FILENAMES"
+                             (##multiple-args-join
+                              (##map relative-to-output-dir input-filenames)))
+                     (##cons "OUTPUT_FILENAME"
+                             output-filename))
+             options)
+            arg-prefix)
+           (##shell-var-bindings
+            (##shell-install-dirs '("include" "lib"))
+            ""
+            ""))))
+
+    (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
+
+    (##run-subprocess
+     path
+     (##list (##symbol->string op)) ;; single argument is operation
+     #f  ;; don't capture output
+     #f  ;; don't redirect stdin
+     output-dir  ;; run in output directory
+     add-vars)))
 
 (define (##extract-target options)
   (let ((t (##assq 'target options)))
