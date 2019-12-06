@@ -2787,6 +2787,14 @@
           (macro-check-string origin 2 (path-expand path origin)
             (##path-expand path origin))))))
 
+(define-prim (##path-join parts dir)
+  (let loop ((lst parts)
+             (result dir))
+    (if (##pair? lst)
+        (loop (##cdr lst)
+              (##path-expand (##car lst) result))
+        result)))
+
 (define-prim (##path-normalize
               path
               #!optional
