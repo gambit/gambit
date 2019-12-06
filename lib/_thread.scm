@@ -318,15 +318,18 @@
         (##exit-with-err-code current-dir)
         current-dir)))
 
+(define-prim (##path-normalize-directory-existing path)
+  (let ((normalized-dir
+         (##os-path-normalize-directory (##path-expand path))))
+    (if (##fixnum? normalized-dir)
+        (##raise-os-exception #f normalized-dir ##current-directory path)
+        normalized-dir)))
+
 (define-prim (##current-directory-filter val)
   (if (##eq? val (macro-absent-obj))
       ##initial-current-directory
       (macro-check-string val 1 (##current-directory val)
-        (let ((normalized-dir
-               (##os-path-normalize-directory (##path-expand val))))
-          (if (##fixnum? normalized-dir)
-              (##raise-os-exception #f normalized-dir ##current-directory val)
-              normalized-dir)))))
+        (##path-normalize-directory-existing val))))
 
 (define ##current-directory
   (##make-parameter
@@ -5609,15 +5612,18 @@
         (##exit-with-err-code current-dir)
         current-dir)))
 
+(define-prim (##path-normalize-directory-existing path)
+  (let ((normalized-dir
+         (##os-path-normalize-directory (##path-expand path))))
+    (if (##fixnum? normalized-dir)
+        (##raise-os-exception #f normalized-dir ##current-directory path)
+        normalized-dir)))
+
 (define-prim (##current-directory-filter val)
   (if (##eq? val (macro-absent-obj))
       ##initial-current-directory
       (macro-check-string val 1 (##current-directory val)
-        (let ((normalized-dir
-               (##os-path-normalize-directory (##path-expand val))))
-          (if (##fixnum? normalized-dir)
-              (##raise-os-exception #f normalized-dir ##current-directory val)
-              normalized-dir)))))
+        (##path-normalize-directory-existing val))))
 
 (define ##current-directory
   (##make-parameter
