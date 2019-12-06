@@ -2288,6 +2288,15 @@
                 (loop tail)
                 (##car lst))))))))
 
+(define-prim (##butlast lst)
+
+  (define (butlast lst)
+    (if (##pair? (##cdr lst))
+        (##cons (##car lst) (butlast (##cdr lst)))
+        '()))
+
+  (butlast lst))
+
 ;; ##reverse! defined in _kernel.scm
 
 (define-prim (reverse! lst)
