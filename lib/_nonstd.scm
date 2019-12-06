@@ -1959,6 +1959,120 @@
         (##raise-os-exception #f code ##shell-command-blocking cmd)
         code)))
 
+(define-prim (##run-subprocess
+              path
+              #!optional
+              (arguments (macro-absent-obj))
+              (capture? (macro-absent-obj))
+              (null-stdin? (macro-absent-obj))
+              (directory (macro-absent-obj))
+              (add-vars (macro-absent-obj))
+              (raise-os-exception? (macro-absent-obj))
+              (cont (macro-absent-obj)))
+
+  ;;                subprocess stdout/stderr
+  ;; capture? = #f  not redirected (so will appear on current stdout/stderr)
+  ;; capture? = #t  captured to a string and returned in cdr of result
+  ;; capture? = ()  captured but discarded
+
+  ;; null-stdin? = #f  subprocess stdin will be the same as current stdin
+  ;; null-stdin? = #t  subprocess stdin will be empty
+
+  (##open-process-generic
+   (if (##eq? null-stdin? #t)
+       (macro-direction-in)
+       (macro-direction-inout))
+   #f
+   (lambda (port)
+     (let ((cont2 (if (##eq? cont (macro-absent-obj)) ##identity cont)))
+       (if (##fixnum? port)
+           (if (##eq? raise-os-exception? #f)
+               (cont2 port)
+               (##raise-os-exception
+                #f
+                port
+                ##run-subprocess
+                path
+                arguments
+                capture?
+                null-stdin?
+                directory
+                add-vars
+                raise-os-exception?
+                cont))
+           (begin
+             (if (##not (##eq? null-stdin? #t))
+                 (##close-output-port port))
+             (if (##eq? capture? #t)
+                 (let* ((out (##read-line port #f #f ##max-fixnum))
+                        (output (if (##string? out) out "")))
+                   (##close-input-port port)
+                   (let ((status (##process-status port)))
+                     (cont2 (##cons status output))))
+                 (let loop ()
+                   (if (##char? (##read-char port))
+                       (loop)
+                       (begin
+                         (##close-input-port port)
+                         (cont2 (##process-status port))))))))))
+   open-process
+   (let ((cap (##not (or (##eq? capture? (macro-absent-obj))
+                         (##not capture?)))))
+     (##list path: path
+             arguments: (if (##eq? arguments (macro-absent-obj)) '() arguments)
+             directory: (if (##eq? directory (macro-absent-obj)) #f directory)
+             environment:
+             (##append (if (##eq? add-vars (macro-absent-obj)) '() add-vars)
+                       (let ((env (##os-environ)))
+                         (if (##fixnum? env) '() env)))
+             stdin-redirection: (##eq? null-stdin? #t)
+             stdout-redirection: cap
+             stderr-redirection: cap))))
+
+(define-prim (##shell-var-binding
+              var
+              val
+              #!optional
+              (var-prefix (macro-absent-obj))
+              (var-suffix (macro-absent-obj)))
+  (##string-append
+   (if (##eq? var-prefix (macro-absent-obj)) "" var-prefix)
+   var
+   (if (##eq? var-suffix (macro-absent-obj)) "_PARAM" var-suffix)
+   "="
+   val))
+
+(define-prim (##shell-var-bindings
+              alist
+              #!optional
+              (var-prefix (macro-absent-obj))
+              (var-suffix (macro-absent-obj)))
+  (##map (lambda (var-val)
+           (##shell-var-binding (##car var-val)
+                                (##cdr var-val)
+                                var-prefix
+                                var-suffix))
+         alist))
+
+(define-prim (##shell-args-numbered lst)
+
+  (define (gen lst i)
+    (if (##pair? lst)
+        (##cons (##cons (##string-append "ARG" (##number->string i 10))
+                        (##car lst))
+                (gen (##cdr lst) (##fx+ i 1)))
+        '()))
+
+  (gen lst 1))
+
+(define-prim (##shell-install-dirs lst)
+  (##map (lambda (str)
+           (##cons (##string-append "GAMBITDIR_" (##string-upcase str))
+                   (##path-strip-trailing-directory-separator
+                    (##path-normalize-directory-existing
+                     (##string-append "~~" str)))))
+         lst))
+
 (define ##shell-program #f)
 (define ##shell-command-fallback #t)
 
@@ -1986,48 +2100,28 @@
         sp)))
 
 (define-prim (##shell-command cmd #!optional (capture? (macro-absent-obj)))
-  (let* ((shell-prog
-          (##get-shell-program))
-         (cap
-          (if (##eq? capture? (macro-absent-obj))
-              #f
-              (and capture? #t)))
-         (path-or-settings
-          (##list path: (##car shell-prog)
-                  arguments:
-                  (##list
-                   (##cdr shell-prog)
-                   cmd)
-                  stdin-redirection: #f
-                  stdout-redirection: cap
-                  stderr-redirection: cap)))
-    (##open-process-generic
-     (macro-direction-inout)
-     #f
-     (lambda (port)
-       (if (##fixnum? port)
+  (let ((shell-prog (##get-shell-program)))
+    (##run-subprocess
+     (##car shell-prog)
+     (##list (##cdr shell-prog) cmd)
+     capture?
+     #f  ;; subprocess will receive same stdin as current stdin
+     #f  ;; use current directory
+     '() ;; no additional environment variables
+     #f  ;; don't raise OS exceptions
+     (lambda (result)
+       (if (and (##fixnum? result)
+                (##fx< result 0))
            (if (and ##shell-command-fallback
-                    (##fx= port ##err-code-unimplemented))
+                    (##fx= result ##err-code-unimplemented))
                (let ((code (##os-shell-command cmd)))
                  (if (##fx< code 0)
                      (##raise-os-exception #f code shell-command cmd capture?)
-                     (if cap
+                     (if (##eq? capture? #t)
                          (##cons code "")
                          code)))
-               (##raise-os-exception #f port shell-command cmd capture?))
-           (if cap
-               (begin
-                 (##close-output-port port)
-                 (let* ((out (##read-line port #f #f ##max-fixnum))
-                        (output (if (##string? out) out "")))
-                   (##close-input-port port)
-                   (let ((status (##process-status port)))
-                     (##cons status output))))
-               (begin
-                 (##close-port port)
-                 (##process-status port)))))
-     open-process
-     path-or-settings)))
+               (##raise-os-exception #f result shell-command cmd capture?))
+           result)))))
 
 #;
 (define-prim (##escape-string str escape-char to-escape)
