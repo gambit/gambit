@@ -4269,64 +4269,39 @@
 
 (define-prim (##gambdoc . args)
 
-  (define (gambdoc args)
+  (define prefix "GAMBDOC_")
 
-    (define (gen-args args i)
-      (if (##null? args)
-          '()
-          (##cons (arg (##string-append "ARG" (##number->string i 10))
-                       (##car args))
-                  (gen-args (##cdr args) (##fx+ i 1)))))
+  (let* ((path
+          (##path-expand
+           (##string-append "gambdoc"
+                            ##os-bat-extension-string-saved)
+           (##path-normalize-directory-existing "~~bin")))
+         (add-vars ;; pass arguments in shell environment variables
+          (##append
+           (##shell-var-bindings
+            (##shell-args-numbered args)
+            prefix)
+           (##shell-var-bindings
+            (##shell-install-dirs '("doc"))
+            ""
+            ""))))
 
-    (define (arg name val)
-      (##string-append "GAMBDOC_" name "=" val))
+    (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
 
-    (define (install-dir path)
-      (parameterize
-       ((##current-directory
-         (##path-expand path)))
-       (##current-directory)))
+    (let ((exit-status
+           (##run-subprocess
+            path
+            '() ;; no arguments
+            #f  ;; don't capture output
+            #f  ;; don't redirect stdin
+            #f  ;; run in current directory
+            add-vars)))
 
-    (let* ((gambitdir-bin
-            (install-dir "~~bin"))
-           (gambitdir-doc
-            (install-dir "~~doc")))
-      (##os-device-tty-mode-reset) ;; rest terminal settings
-      (##open-process-generic
-       (macro-direction-inout)
-       #t
-       (lambda (port)
-         (let ((status (##process-status port)))
-           (##close-port port)
-           status))
-       open-process
-       (##list path:
-               (##string-append gambitdir-bin
-                                "gambdoc"
-                                ##os-bat-extension-string-saved)
-               arguments:
-               '()
-               environment:
-               (##append
-                (let ((env (##os-environ)))
-                  (if (##fixnum? env) '() env))
-                (##cons (arg "GAMBITDIR_BIN"
-                             (##path-strip-trailing-directory-separator
-                              gambitdir-bin))
-                        (##cons (arg "GAMBITDIR_DOC"
-                                     (##path-strip-trailing-directory-separator
-                                      gambitdir-doc))
-                                (gen-args args 1))))
-               stdin-redirection: #f
-               stdout-redirection: #f
-               stderr-redirection: #f))))
-
-  (let ((exit-status (gambdoc args)))
-    (if (##fx= exit-status 0)
-        (##void)
-        (##raise-error-exception
-         "failed to display the document"
-         args))))
+      (if (##fx= exit-status 0)
+          (##void)
+          (##raise-error-exception
+           "failed to display the document"
+           args)))))
 
 (define-prim (##escape-link str)
   (##apply ##string-append

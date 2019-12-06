@@ -1,25 +1,23 @@
 @echo off
 
 rem Script parameters are passed in the following environment variables:
-rem   GAMBDOC_GAMBITDIR_BIN
-rem   GAMBDOC_GAMBITDIR_DOC
-rem   GAMBDOC_ARG1
-rem   GAMBDOC_ARG2
-rem   GAMBDOC_ARG3
-rem   GAMBDOC_ARG4
+rem   GAMBITDIR_DOC
+rem   GAMBDOC_ARG1_PARAM
+rem   GAMBDOC_ARG2_PARAM
+rem   GAMBDOC_ARG3_PARAM
+rem   GAMBDOC_ARG4_PARAM
 rem   ...
 
-rem echo GAMBDOC_GAMBITDIR_BIN = %GAMBDOC_GAMBITDIR_BIN%
-rem echo GAMBDOC_GAMBITDIR_DOC = %GAMBDOC_GAMBITDIR_DOC%
-rem echo GAMBDOC_ARG1 = %GAMBDOC_ARG1%
-rem echo GAMBDOC_ARG2 = %GAMBDOC_ARG2%
-rem echo GAMBDOC_ARG3 = %GAMBDOC_ARG3%
-rem echo GAMBDOC_ARG3 = %GAMBDOC_ARG4%
+rem echo GAMBITDIR_DOC = %GAMBITDIR_DOC%
+rem echo GAMBDOC_ARG1_PARAM = %GAMBDOC_ARG1_PARAM%
+rem echo GAMBDOC_ARG2_PARAM = %GAMBDOC_ARG2_PARAM%
+rem echo GAMBDOC_ARG3_PARAM = %GAMBDOC_ARG3_PARAM%
+rem echo GAMBDOC_ARG4_PARAM = %GAMBDOC_ARG4_PARAM%
 
-if "%GAMBDOC_ARG1%" == "help" goto operation_help
+if "%GAMBDOC_ARG1_PARAM%" == "help" goto operation_help
 
-echo *** WARNING -- unsupported operation: %GAMBDOC_ARG1%
-exit 1
+echo *** WARNING -- unsupported operation: %GAMBDOC_ARG1_PARAM%
+exit /b 1
 
 :operation_help
 
@@ -27,9 +25,9 @@ set browser_list=explorer.exe netscape.exe mozilla.exe firefox.exe lynx.exe
 
 rem if "@HELP_BROWSER@" != "" set browser_list=@HELP_BROWSER@
 
-set browser_list=%browser_list% %GAMBDOC_ARG3%
+set browser_list=%browser_list% %GAMBDOC_ARG3_PARAM%
 
-set url="file://%GAMBDOC_GAMBITDIR_DOC%\gambit.html#%GAMBDOC_ARG4%"
+set url="file://%GAMBITDIR_DOC%\gambit.html#%GAMBDOC_ARG4_PARAM%"
 
 set browser=
 
@@ -40,10 +38,10 @@ if not "%browser%" == "" goto start_browser
 echo *** WARNING -- none of these browsers can be found to view the documentation:
 echo ***            %browser_list%
 
-exit 1
+exit /b 1
 
 :start_browser
 
 %browser% %url%
 
-exit 0
+exit /b 0
