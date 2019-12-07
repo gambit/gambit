@@ -237,7 +237,8 @@ extract_cc_ld_options()
   IFS="${GAMBUILD_NL}"
 
   if test ! -z "$1"; then
-    process_pkg_config_path "$(get_meta_info "$1" "${GAMBUILD_PKG_CONFIG_PATH_REGEXP}")"
+    get_meta_info_list "$1" "${GAMBUILD_PKG_CONFIG_PATH_REGEXP}"
+    process_pkg_config_path "${GAMBUILD_META_INFO_LIST}"
   fi
 
   process_pkg_config_path "$3"
@@ -245,7 +246,8 @@ extract_cc_ld_options()
   export PKG_CONFIG_PATH="${GAMBUILD_PKG_CONFIG_PATH}"
 
   if test ! -z "$1"; then
-    process_pkg_config "$(get_meta_info "$1" "${GAMBUILD_PKG_CONFIG_REGEXP}")"
+    get_meta_info_list "$1" "${GAMBUILD_PKG_CONFIG_REGEXP}"
+    process_pkg_config "${GAMBUILD_META_INFO_LIST}"
   fi
 
   process_pkg_config "$2"
