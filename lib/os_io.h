@@ -1,6 +1,6 @@
 /* File: "os_io.h" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -303,7 +303,7 @@ extern ___device_group *___global_device_group ___PVOID;
 
 /*---------------------------------------------------------------------------*/
 
-typedef int ___stream_index;
+typedef ___SSIZE_T ___stream_index;
 
 /* Nonblocking pipes */
 

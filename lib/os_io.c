@@ -7342,7 +7342,7 @@ int whence;)
 #ifndef USE_POSIX
 #ifndef USE_WIN32
 
-      int new_pos;
+      ___stream_index new_pos;
       ___FILE *stream = d->stream;
 
       if (stream == 0)
@@ -7359,7 +7359,7 @@ int whence;)
 
 #ifdef USE_POSIX
 
-      int new_pos;
+      ___stream_index new_pos;
 
       if ((new_pos = lseek (d->fd, *pos, whence)) < 0)
         return err_code_from_errno ();
@@ -9551,15 +9551,15 @@ ___SCMOBJ whence;)
   ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
   ___device_stream *d =
     ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
-  ___S32 p;
+  ___SSIZE_T p;
   ___SCMOBJ e;
   ___SCMOBJ result;
 
-  if ((e = ___SCMOBJ_to_S32 (___PSA(___PSTATE) pos, &p, 2)) == ___FIX(___NO_ERR))
+  if ((e = ___SCMOBJ_to_SSIZE_T (___PSA(___PSTATE) pos, &p, 2)) == ___FIX(___NO_ERR))
     e = ___device_stream_seek (d, &p, ___INT(whence));
 
   if (e != ___FIX(___NO_ERR) ||
-      (e = ___S32_to_SCMOBJ (___PSTATE, p, &result, ___RETURN_POS)) != ___FIX(___NO_ERR))
+      (e = ___SSIZE_T_to_SCMOBJ (___PSTATE, p, &result, ___RETURN_POS)) != ___FIX(___NO_ERR))
     result = e;
   /* TODO: check if ___release_scmobj (...); needed to avoid memory leak */
 
