@@ -617,13 +617,13 @@ ___SIZE_TS *majflt;)
 
 char *___format_filepos
    ___P((char *path,
-         ___SIZE_TS filepos,
+         ___SSIZE_T filepos,
          ___BOOL pinpoint),
         (path,
          filepos,
          pinpoint)
 char *path;
-___SIZE_TS filepos;
+___SSIZE_T filepos;
 ___BOOL pinpoint;)
 {
 #ifdef USE_MACOS

@@ -4338,7 +4338,7 @@ end-of-code
 
 (define-prim ##format-filepos
   (c-lambda (char-string
-             size_t
+             ssize_t
              bool)
             char-string
    "___format_filepos"))
