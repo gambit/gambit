@@ -826,6 +826,7 @@ DASH_fomit_frame_pointer
 DASH_ftrapv
 DASH_fwrapv
 DASH_fno_strict_aliasing
+DASH_fno_trapping_math
 DASH_fno_math_errno
 DASH_Ofast
 DASH_O3
@@ -842,14 +843,13 @@ DASH_Wno_write_strings
 DASH_Wno_unused
 DASH_W
 DASH_Wall
+DASH_no_cpp_precomp
 DASH_mpc64
 DASH_mieee_with_inexact
 DASH_mieee
 DASH_fno_keep_inline_dllexport
 DASH_fno_move_loop_invariants
-DASH_fno_trapping_math
 DASH_fschedule_insns2
-DASH_no_cpp_precomp
 CONF_HAVE_CONDITION_VARIABLE
 CONF_THREAD_LOCAL_STORAGE_CLASS
 CONF_THREAD_SYSTEM
@@ -9862,9 +9862,7 @@ if test "$C_COMP_GNUC" = yes; then
   if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
     # clang does not support these options:
-    DASH_no_cpp_precomp=""
     DASH_fschedule_insns2=""
-    DASH_fno_trapping_math=""
     DASH_fno_move_loop_invariants=""
     DASH_fno_keep_inline_dllexport=""
     #DASH_fpermissive=""
@@ -9874,51 +9872,6 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_fno_ipa_ra=""
 
   else
-
-    # preprocessor options:
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -no-cpp-precomp" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -no-cpp-precomp... " >&6; }
-if ${ac_cv_DASH_no_cpp_precomp+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-no-cpp-precomp"
-CXXFLAGS="-no-cpp-precomp"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_no_cpp_precomp=" -no-cpp-precomp"
-else
-  ac_cv_DASH_no_cpp_precomp=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_no_cpp_precomp" >&5
-$as_echo "$ac_cv_DASH_no_cpp_precomp" >&6; }
-DASH_no_cpp_precomp="$ac_cv_DASH_no_cpp_precomp"
-
-
 
     # optimization options:
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fschedule-insns2" >&5
@@ -9962,49 +9915,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fschedule_insns2" >&5
 $as_echo "$ac_cv_DASH_fschedule_insns2" >&6; }
 DASH_fschedule_insns2="$ac_cv_DASH_fschedule_insns2"
-
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-trapping-math" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -fno-trapping-math... " >&6; }
-if ${ac_cv_DASH_fno_trapping_math+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-fno-trapping-math"
-CXXFLAGS="-fno-trapping-math"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_fno_trapping_math=" -fno-trapping-math"
-else
-  ac_cv_DASH_fno_trapping_math=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_trapping_math" >&5
-$as_echo "$ac_cv_DASH_fno_trapping_math" >&6; }
-DASH_fno_trapping_math="$ac_cv_DASH_fno_trapping_math"
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-move-loop-invariants" >&5
@@ -10226,6 +10136,51 @@ DASH_mpc64="$ac_cv_DASH_mpc64"
 
 
   fi
+
+  # preprocessor options:
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -no-cpp-precomp" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -no-cpp-precomp... " >&6; }
+if ${ac_cv_DASH_no_cpp_precomp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-no-cpp-precomp"
+CXXFLAGS="-no-cpp-precomp"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_no_cpp_precomp=" -no-cpp-precomp"
+else
+  ac_cv_DASH_no_cpp_precomp=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_no_cpp_precomp" >&5
+$as_echo "$ac_cv_DASH_no_cpp_precomp" >&6; }
+DASH_no_cpp_precomp="$ac_cv_DASH_no_cpp_precomp"
+
+
 
   # debugging options:
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -Wall" >&5
@@ -10918,6 +10873,49 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_math_errno" >&5
 $as_echo "$ac_cv_DASH_fno_math_errno" >&6; }
 DASH_fno_math_errno="$ac_cv_DASH_fno_math_errno"
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-trapping-math" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fno-trapping-math... " >&6; }
+if ${ac_cv_DASH_fno_trapping_math+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fno-trapping-math"
+CXXFLAGS="-fno-trapping-math"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fno_trapping_math=" -fno-trapping-math"
+else
+  ac_cv_DASH_fno_trapping_math=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_trapping_math" >&5
+$as_echo "$ac_cv_DASH_fno_trapping_math" >&6; }
+DASH_fno_trapping_math="$ac_cv_DASH_fno_trapping_math"
 
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-strict-aliasing" >&5

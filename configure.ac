@@ -2066,9 +2066,7 @@ if test "$C_COMP_GNUC" = yes; then
   if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
     # clang does not support these options:
-    DASH_no_cpp_precomp=""
     DASH_fschedule_insns2=""
-    DASH_fno_trapping_math=""
     DASH_fno_move_loop_invariants=""
     DASH_fno_keep_inline_dllexport=""
     #DASH_fpermissive=""
@@ -2079,12 +2077,8 @@ if test "$C_COMP_GNUC" = yes; then
 
   else
 
-    # preprocessor options:
-    AC_CHECK_C_COMPILER_OPT(-no-cpp-precomp,DASH_no_cpp_precomp)
-
     # optimization options:
     AC_CHECK_C_COMPILER_OPT(-fschedule-insns2,DASH_fschedule_insns2)
-    AC_CHECK_C_COMPILER_OPT(-fno-trapping-math,DASH_fno_trapping_math)
     AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
     AC_CHECK_C_COMPILER_OPT(-fno-keep-inline-dllexport,DASH_fno_keep_inline_dllexport)
     #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
@@ -2094,6 +2088,9 @@ if test "$C_COMP_GNUC" = yes; then
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
     AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
   fi
+
+  # preprocessor options:
+  AC_CHECK_C_COMPILER_OPT(-no-cpp-precomp,DASH_no_cpp_precomp)
 
   # debugging options:
   AC_CHECK_C_COMPILER_OPT(-Wall,DASH_Wall)
@@ -2116,6 +2113,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-O3,DASH_O3)
   AC_CHECK_C_COMPILER_OPT(-Ofast,DASH_Ofast)
   AC_CHECK_C_COMPILER_OPT(-fno-math-errno,DASH_fno_math_errno)
+  AC_CHECK_C_COMPILER_OPT(-fno-trapping-math,DASH_fno_trapping_math)
   AC_CHECK_C_COMPILER_OPT(-fno-strict-aliasing,DASH_fno_strict_aliasing)
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-ftrapv,DASH_ftrapv)
