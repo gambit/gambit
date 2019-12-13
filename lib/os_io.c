@@ -9063,6 +9063,8 @@ int options;)
               execvp (argv[0], argv);
               /* the exec failed, errno will be returned to parent */
             }
+          else
+            errno = 0; /* special code indicating chdir failed */
 
         return_errno:
 
@@ -9106,8 +9108,13 @@ int options;)
         e = err_code_from_errno ();
       else if (n == sizeof (execvp_errno))
         {
-          errno = execvp_errno;
-          e = err_code_from_errno ();
+          if (execvp_errno == 0) /* chdir failed? */
+            e = ___FIX(1); /* indicate current directory couldn't be set */
+          else
+            {
+              errno = execvp_errno;
+              e = err_code_from_errno ();
+            }
         }
       else if (n != 0)
         e = ___FIX(___UNKNOWN_ERR);
@@ -9242,35 +9249,44 @@ int options;)
         }
 #endif
 
-      if (si.hStdError == INVALID_HANDLE_VALUE ||
-          !CreateProcess
-             (NULL, /* module name                              */
-              ccmd, /* command line                             */
-              NULL, /* process handle not inheritable           */
-              NULL, /* thread handle not inheritable            */
-              TRUE, /* set handle inheritance to TRUE           */
-              (CP_ENV_FLAGS | ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
-              cenv, /* child's environment                      */
-              dir,  /* child's starting directory               */
-              &si,  /* pointer to STARTUPINFO structure         */
-              &pi)) /* pointer to PROCESS_INFORMATION structure */
+      if (si.hStdError == INVALID_HANDLE_VALUE)
         e = err_code_from_GetLastError ();
       else
         {
-          direction = ___DIRECTION_RD|___DIRECTION_WR;
+          if (!CreateProcess
+                 (NULL, /* module name                              */
+                  ccmd, /* command line                             */
+                  NULL, /* process handle not inheritable           */
+                  NULL, /* thread handle not inheritable            */
+                  TRUE, /* set handle inheritance to TRUE           */
+                  (CP_ENV_FLAGS | ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
+                  cenv, /* child's environment                      */
+                  dir,  /* child's starting directory               */
+                  &si,  /* pointer to STARTUPINFO structure         */
+                  &pi)) /* pointer to PROCESS_INFORMATION structure */
+            {
+              if (GetLastError () == ERROR_DIRECTORY)
+                e = ___FIX(1); /* indicate setting starting directory failed */
+              else
+                e = err_code_from_GetLastError ();
+            }
+          else
+            {
+              direction = ___DIRECTION_RD|___DIRECTION_WR;
 
-          e = ___device_process_setup_from_process
-                (&d,
-                 dgroup,
-                 pi,
-                 hstdin_wr,
-                 hstdout_rd,
-                 direction);
+              e = ___device_process_setup_from_process
+                    (&d,
+                     dgroup,
+                     pi,
+                     hstdin_wr,
+                     hstdout_rd,
+                     direction);
 
-          *dev = ___CAST(___device_stream*,d);
+              *dev = ___CAST(___device_stream*,d);
 
-          if (e == ___FIX(___NO_ERR))
-            device_transfer_close_responsibility (___CAST(___device*,d));
+              if (e == ___FIX(___NO_ERR))
+                device_transfer_close_responsibility (___CAST(___device*,d));
+            }
         }
     }
 

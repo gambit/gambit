@@ -1990,7 +1990,9 @@
                (cont2 port)
                (##raise-os-exception
                 #f
-                port
+                (if (##fx= port 1) ;; couldn't set current directory?
+                    ##err-code-ENOENT ;; pretend directory does not exist
+                    port)
                 ##run-subprocess
                 path
                 arguments
@@ -3153,15 +3155,27 @@
                      code)
                  (##void))))))))
 
-(define-prim (##create-directory path-or-settings)
-  (##create-directory-or-fifo create-directory path-or-settings))
+(define-prim (##create-directory
+              path-or-settings
+              #!optional
+              (raise-os-exception? #t))
+  (##create-directory-or-fifo
+   create-directory
+   path-or-settings
+   raise-os-exception?))
 
 (define-prim (create-directory path-or-settings)
   (macro-force-vars (path-or-settings)
     (##create-directory path-or-settings)))
 
-(define-prim (##create-fifo path-or-settings)
-  (##create-directory-or-fifo create-fifo path-or-settings))
+(define-prim (##create-fifo
+              path-or-settings
+              #!optional
+              (raise-os-exception? #t))
+  (##create-directory-or-fifo
+   create-fifo
+   path-or-settings
+   raise-os-exception?))
 
 (define-prim (create-fifo path-or-settings)
   (macro-force-vars (path-or-settings)

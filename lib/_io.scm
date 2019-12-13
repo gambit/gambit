@@ -6964,7 +6964,9 @@
                       (if raise-os-exception?
                           (##raise-os-exception
                            #f
-                           device
+                           (if (##fx= device 1) ;; couldn't set current directory?
+                               ##err-code-ENOENT ;; pretend directory does not exist
+                               device)
                            prim
                            path-or-settings
                            arg2)
