@@ -1124,9 +1124,15 @@
     (##fl/ (macro-inexact-+1) x)
     (##cpxnum./ (macro-noncpxnum->cpxnum 1) x)))
 
-(##define-macro (macro-make-qr q r) `(##values ,q ,r))
-(##define-macro (macro-qr-q qr)     `(##values-ref ,qr 0))
-(##define-macro (macro-qr-r qr)     `(##values-ref ,qr 1))
+(cond-expand
+  (use-pairs-for-qr-structures
+   (##define-macro (macro-make-qr q r) `(##cons ,q ,r))
+   (##define-macro (macro-qr-q qr)     `(##car ,qr))
+   (##define-macro (macro-qr-r qr)     `(##cdr ,qr)))
+  (else
+   (##define-macro (macro-make-qr q r) `(##values ,q ,r))
+   (##define-macro (macro-qr-q qr)     `(##values-ref ,qr 0))
+   (##define-macro (macro-qr-r qr)     `(##values-ref ,qr 1))))
 
 (define-prim (##/2 x y)
 
@@ -6526,29 +6532,83 @@ end-of-code
       (let ((n (##fx- (##bignum.adigit-length result) 1)))
 
         (cond ((##bignum.adigit-zero? result n)
+
+               ;; result is a bignum of the form:
+               ;;   0000 abcd .... efgh (adigits in binary)
+               ;;    n   n-1        0   (adigit index)
+
+               ;; we know result represents a nonnegative integer
+               ;; must check if adigits abcd .... are also 0000
+
                (let loop1 ((i (##fx- n 1)))
                  (cond ((##fx< i 0)
+                        ;; all adigits are 0000
                         0)
                        ((##bignum.adigit-zero? result i)
+                        ;; continue skipping top adigits that are 0000
                         (loop1 (##fx- i 1)))
                        ((##bignum.adigit-negative? result i)
+                        ;; result is a bignum of the form:
+                        ;;   0000 .... 0000 1bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; so we must include adigit i+1 to avoid result
+                        ;; being interpreted as a negative integer
                         (##bignum.adigit-shrink! result (##fx+ i 2)))
                        (else
+                        ;; result is a bignum of the form:
+                        ;;   0000 .... 0000 0bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; with 0bcd != 0000, so the top 0000 adigits can
+                        ;; be removed without changing the sign of result
                         (##bignum.adigit-shrink! result (##fx+ i 1))))))
 
               ((##bignum.adigit-ones? result n)
+
+               ;; result is a bignum of the form:
+               ;;   1111 abcd .... efgh (adigits in binary)
+               ;;    n   n-1        0   (adigit index)
+
+               ;; we know result represents a negative integer
+               ;; must check if adigits abcd .... are also 1111
+
                (let loop2 ((i (##fx- n 1)))
                  (cond ((##fx< i 0)
+                        ;; all adigits are 1111
                         -1)
                        ((##bignum.adigit-ones? result i)
+                        ;; continue skipping top adigits that are 1111
                         (loop2 (##fx- i 1)))
                        ((##not (##bignum.adigit-negative? result i))
+                        ;; result is a bignum of the form:
+                        ;;   1111 .... 1111 0bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; so we must include adigit i+1 to avoid result
+                        ;; being interpreted as a nonnegative integer
                         (##bignum.adigit-shrink! result (##fx+ i 2)))
                        (else
+                        ;; result is a bignum of the form:
+                        ;;   1111 .... 1111 1bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; with 1bcd != 1111, so the top 1111 adigits can
+                        ;; be removed without changing the sign of result
                         (##bignum.adigit-shrink! result (##fx+ i 1))))))
 
               (else
                result)))))
+
+(macro-if-enable-assert-normalized-exact-int
+
+ (define-prim (##bignum.normalized? x)
+   (let ((n (##fx- (##bignum.adigit-length x) 1)))
+     (and (##fx>= n 0)
+          (cond ((##bignum.adigit-zero? x n)
+                 (and (##fx> n 0)
+                      (##bignum.adigit-negative? x (##fx- n 1))))
+                ((##bignum.adigit-ones? x n)
+                 (and (##fx> n 0)
+                      (##not (##bignum.adigit-negative? x (##fx- n 1)))))
+                (else
+                 #t))))))
 
 ;;; Bignum multiplication.
 
@@ -9745,6 +9805,16 @@ end-of-code
 
 ;;; Bignum division.
 
+(cond-expand
+  (use-pairs-for-rb-structures
+   (##define-macro (macro-make-rb r b) `(##cons ,r ,b))
+   (##define-macro (macro-rb-r rb)     `(##car ,rb))
+   (##define-macro (macro-rb-b rb)     `(##cdr ,rb)))
+  (else
+   (##define-macro (macro-make-rb r b) `(##values ,r ,b))
+   (##define-macro (macro-rb-r rb)     `(##values-ref ,rb 0))
+   (##define-macro (macro-rb-b rb)     `(##values-ref ,rb 1))))
+
 (define ##reciprocal-cache (##make-table-aux 0 #f #t #f ##eq?))
 
 (define ##bignum.mdigit-width/2
@@ -9762,27 +9832,30 @@ end-of-code
   ;; u is an unnormalized bignum, v is a normalized exact-int
   ;; 0 < v <= u
 
-  (define (##exact-int.reciprocal v bits)
+  (define (reciprocal v bits)
 
-    ;; returns an approximation to the reciprocal of
+    ;; computes an approximation to the reciprocal of
     ;; .v1 v2 v3 ...
-    ;; where v1 is the highest set bit of v; result is of the form
+    ;; where v1 is the highest set bit of v; the reciprocal is of the form
     ;; xx . xxxxxxxxxxxxxxxxxxx where there are bits + 1 bits to the
-    ;; right of the binary point. The result is always <= 2.
+    ;; right of the binary point. The reciprocal is always <= 2.
     ;; See Knuth, volume 2, Algorithm R in Section 4.3.3
 
-    (let ((cached-value (##table-ref ##reciprocal-cache v #f)))
-      (if (and cached-value
-               (##not (##fx< (##cdr cached-value) bits)))
-          cached-value
+    ;; this procedure returns a rb structure containing the reciprocal
+    ;; in the r field and the number of bits in the b field
+
+    (let ((cached-rb (##table-ref ##reciprocal-cache v #f)))
+      (if (and cached-rb
+               (##not (##fx< (macro-rb-b cached-rb) bits)))
+          cached-rb
           (let ((v-length (##integer-length v)))
 
             (define (recip v bits)
-              (cond ((and cached-value
-                          (##not (##fx< (##cdr cached-value) bits)))
-                     cached-value)
+              (cond ((and cached-rb
+                          (##not (##fx< (macro-rb-b cached-rb) bits)))
+                     cached-rb)
                     ((##fx<= bits ##bignum.mdigit-width/2)
-                     (macro-make-qr
+                     (macro-make-rb
                       (##fxquotient
                        ##bignum.mdigit-base*16
                        (##arithmetic-shift
@@ -9798,8 +9871,8 @@ end-of-code
                              (recip v high-bits))
                             (z           ;; high-bits + 1 to right of point
                              (##arithmetic-shift
-                              (macro-qr-q z-bits)
-                              (##fx- high-bits (macro-qr-r z-bits))))
+                              (macro-rb-r z-bits)
+                              (##fx- high-bits (macro-rb-b z-bits))))
                             (v-bits      ;; bits + 3 to right of point
                              (##arithmetic-shift
                               v
@@ -9820,12 +9893,12 @@ end-of-code
                               temp
                               (##fx- bits-to-shift))))
                        (if (##fx< (##first-bit-set temp) bits-to-shift)
-                           (macro-make-qr (##+ shifted-temp 1) bits)
-                           (macro-make-qr shifted-temp bits))))))
+                           (macro-make-rb (##+ shifted-temp 1) bits)
+                           (macro-make-rb shifted-temp bits))))))
 
-            (let ((result (recip v bits)))
-              (##table-set! ##reciprocal-cache v result)
-              result)))))
+            (let ((rb (recip v bits)))
+              (##table-set! ##reciprocal-cache v rb)
+              rb)))))
 
   (define (naive-div u v)
 
@@ -10020,9 +10093,9 @@ end-of-code
                      (length-difference (##fx- u-length v-length)))
                 (if (##fx< length-difference ##bignum.fft-mul-min-width)
                     (naive-div u v)
-                    (let* ((z-bits (##exact-int.reciprocal v length-difference))
-                           (z (macro-qr-q z-bits))
-                           (bits (macro-qr-r z-bits)))
+                    (let* ((z-bits (reciprocal v length-difference))
+                           (z (macro-rb-r z-bits))
+                           (bits (macro-rb-b z-bits)))
                       (let ((test-quotient
                              (##bignum.arithmetic-shift
                               (##* (##bignum.arithmetic-shift
