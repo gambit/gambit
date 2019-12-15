@@ -425,6 +425,37 @@
               big)
           fix)))))
 
+(macro-define-syntax macro-if-enable-assert-normalized-exact-int
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-enable-assert-normalized-exact-int yes (##begin)))
+      ((_ yes no)
+       #'no))))
+
+(macro-define-syntax macro-assert-normalized-exact-int
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ expr)
+       #'(macro-if-enable-assert-normalized-exact-int
+          (##let (($val expr))
+            (##if (##not (##or (##fixnum? $val)
+                               (##bignum.normalized? $val)))
+                  (##error "normalized exact integer expected:" $val))
+            $val)
+          (##begin))))))
+
+(macro-define-syntax define-prim-normalized-exact-int
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ pattern . body)
+       #'(define-prim pattern
+           (macro-if-enable-assert-normalized-exact-int
+            (##let (($result (##let () . body)))
+              (macro-assert-normalized-exact-int $result)
+              $result)
+            (##let () . body)))))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Miscellaneous constants.
