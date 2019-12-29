@@ -74,6 +74,8 @@
                `(##if (##null? ,var) ,yes ,(no)))
               ((symbol? pattern)
                `(##if (##eq? ,var ',pattern) ,yes ,(no)))
+              ((keyword? pattern)
+               `(##if (##eq? ,var ',pattern) ,yes ,(no)))
               ((boolean? pattern)
                `(##if (##eq? ,var ,pattern) ,yes ,(no)))
               ((or (number? pattern)
