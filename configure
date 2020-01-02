@@ -11,7 +11,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -1856,7 +1856,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 _ACEOF
   exit
 fi
@@ -8763,6 +8763,28 @@ do :
 if test "x$ac_cv_func_renameat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RENAMEAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in renameat2
+do :
+  ac_fn_cxx_check_func "$LINENO" "renameat2" "ac_cv_func_renameat2"
+if test "x$ac_cv_func_renameat2" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_RENAMEAT2 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in renameatx_np
+do :
+  ac_fn_cxx_check_func "$LINENO" "renameatx_np" "ac_cv_func_renameatx_np"
+if test "x$ac_cv_func_renameatx_np" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_RENAMEATX_NP 1
 _ACEOF
 
 fi

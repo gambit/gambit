@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -236,6 +236,9 @@ file-attributes
 file-creation-time
 file-device
 file-error?
+file-exists-exception-arguments
+file-exists-exception-procedure
+file-exists-exception?
 file-exists?
 file-group
 file-info

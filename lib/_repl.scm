@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3738,6 +3738,11 @@
 
           ((macro-no-such-file-or-directory-exception? exc)
            (##write-string "No such file or directory" port)
+           (##newline port)
+           (display-call))
+
+          ((macro-file-exists-exception? exc)
+           (##write-string "File exists" port)
            (##newline port)
            (display-call))
 

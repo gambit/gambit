@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2835,7 +2835,7 @@
              allow-relative?
              origin
              raise-os-exception?)
-            path)
+            p)
         (if (or (##eq? allow-relative? (macro-absent-obj))
                 (##not allow-relative?))
             p
@@ -3254,6 +3254,7 @@
               old-path
               new-path
               #!optional
+              (replace? (macro-absent-obj))
               (raise-os-exception? #t))
   (let* ((resolved-old-path
           (##path-resolve old-path))
@@ -3262,7 +3263,8 @@
          (code
           (##os-rename-file
            resolved-old-path
-           resolved-new-path)))
+           resolved-new-path
+           (##not (##eq? replace? #f))))) ;; default is replace? = #t
     (if (##fx< code 0)
         (if raise-os-exception?
             (##raise-os-exception
@@ -3270,15 +3272,20 @@
              code
              rename-file
              old-path
-             new-path)
+             new-path
+             replace?)
             code)
         (##void))))
 
-(define-prim (rename-file old-path new-path)
-  (macro-force-vars (old-path new-path)
-    (macro-check-string old-path 1 (rename-file old-path new-path)
-      (macro-check-string new-path 2 (rename-file old-path new-path)
-        (##rename-file old-path new-path)))))
+(define-prim (rename-file
+              old-path
+              new-path
+              #!optional
+              (replace? (macro-absent-obj)))
+  (macro-force-vars (old-path new-path replace?)
+    (macro-check-string old-path 1 (rename-file old-path new-path replace?)
+      (macro-check-string new-path 2 (rename-file old-path new-path replace?)
+        (##rename-file old-path new-path replace?)))))
 
 (define-prim (##copy-file
               old-path

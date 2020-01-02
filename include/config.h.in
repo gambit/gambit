@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -257,6 +257,8 @@
 #undef HAVE_REMOVE
 #undef HAVE_RENAME
 #undef HAVE_RENAMEAT
+#undef HAVE_RENAMEAT2
+#undef HAVE_RENAMEATX_NP
 
 #undef HAVE_PTHREAD_SETAFFINITY_NP
 

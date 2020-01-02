@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -814,37 +814,123 @@ ___SIZE_T bufsize;)
 
 int rename_long_path
    ___P((char *oldpath,
-         char *newpath),
+         char *newpath,
+         ___BOOL replace),
         (oldpath,
-         newpath)
+         newpath,
+         replace)
 char *oldpath;
-char *newpath;)
+char *newpath;
+___BOOL replace;)
 {
-#ifdef USE_renameat
-
   int result = -1;
-  int olddir;
-  int newdir;
-  char *oldpath2;
-  char *newpath2;
 
-  if ((oldpath2 = at_long_path (&olddir, oldpath)) != NULL)
+#ifdef USE_stat
+
+  if (!replace)
     {
-      if ((newpath2 = at_long_path (&newdir, newpath)) != NULL)
+      /*
+       * When replace is false, it is an error if the destination is
+       * an existing file.  This situation can be detected by
+       * renameat2 and renameatx_np but only on some filesystems
+       * (which we can't know ahead of time), so we do an explicit
+       * check with stat to see if the destination is an existing file
+       * (which is either a double check if the filesystem supports
+       * detecting this, or the only check if the filesystem doesn't
+       * support detecting this, in which case it is not atomic).
+       */
+
+      ___struct_stat statbuf;
+
+      if (stat_long_path (newpath, &statbuf, 0) == 0) /* file exists? */
         {
-          result = renameat (olddir, oldpath2, newdir, newpath2);
-          at_close_dir (newdir);
+          errno = EEXIST; /* fake the error */
+          return result;
         }
-      at_close_dir (olddir);
+      else if (errno != ENOENT)
+        {
+          return result;
+        }
     }
 
-  return result;
+#endif
+
+#ifdef USE_renameat
+
+  {
+    int olddir;
+    int newdir;
+    char *oldpath2;
+    char *newpath2;
+
+    if ((oldpath2 = at_long_path (&olddir, oldpath)) != NULL)
+      {
+        if ((newpath2 = at_long_path (&newdir, newpath)) != NULL)
+          {
+#ifdef USE_renameatx_np
+            unsigned int flags = 0;
+            if (!replace) flags |= RENAME_EXCL;
+            result = renameatx_np (olddir, oldpath2, newdir, newpath2, flags);
+#else
+#ifdef USE_renameat2
+            unsigned int flags = 0;
+            if (!replace) flags |= RENAME_NOREPLACE;
+            result = renameat2 (olddir, oldpath2, newdir, newpath2, flags);
+#else
+#ifdef USE_link
+#ifdef USE_unlink
+            if (!replace)
+              {
+#ifdef USE_linkat
+                result = linkat (olddir, oldpath2, newdir, newpath2, 0);
+#else
+                result = link (oldpath, newpath);
+#endif
+                if (result == 0)
+                  {
+#ifdef USE_unlinkat
+                    result = unlinkat (olddir, oldpath2, 0);
+#else
+                    result = unlink (oldpath);
+#endif
+                  }
+              }
+            else
+#endif
+#endif
+              {
+                /* renameat's API does not support a NOREPLACE flag */
+                result = renameat (olddir, oldpath2, newdir, newpath2);
+              }
+#endif
+#endif
+            at_close_dir (newdir);
+          }
+        at_close_dir (olddir);
+      }
+  }
 
 #else
 
-  return rename (oldpath, newpath);
+#ifdef USE_link
+#ifdef USE_unlink
+  if (!replace)
+    {
+      result = link (oldpath, newpath);
+      if (result == 0)
+        result = unlink (oldpath);
+    }
+  else
+#endif
+#endif
+    {
+      /* rename's API does not support a NOREPLACE flag */
+      result = rename (oldpath, newpath);
+    }
 
 #endif
+
+  return result;
 }
 
 #endif
@@ -2099,26 +2185,19 @@ ___SCMOBJ path;)
 
 ___SCMOBJ ___os_rename_file
    ___P((___SCMOBJ path1,
-         ___SCMOBJ path2),
+         ___SCMOBJ path2,
+         ___SCMOBJ replace),
         (path1,
-         path2)
+         path2,
+         replace)
 ___SCMOBJ path1;
-___SCMOBJ path2;)
+___SCMOBJ path2;
+___SCMOBJ replace;)
 {
   ___SCMOBJ e;
   void *cpath1;
   void *cpath2;
 
-#ifndef USE_rename
-#ifndef USE_MoveFile
-
-  e = ___FIX(___UNIMPL_ERR);
-
-#endif
-#endif
-
-#ifdef USE_rename
-
   if ((e = ___SCMOBJ_to_NONNULLSTRING
              (___PSA(___PSTATE)
               path1,
@@ -2137,51 +2216,49 @@ ___SCMOBJ path2;)
                   0))
           == ___FIX(___NO_ERR))
         {
-          if (rename_long_path (___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),cpath1),
-                                ___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),cpath2))
-              < 0)
-            e = fnf_or_err_code_from_errno ();
-          ___release_string (cpath2);
-        }
-      ___release_string (cpath1);
-    }
-
-#else
 
 #ifdef USE_MoveFile
 
-  if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (___PSA(___PSTATE)
-              path1,
-              &cpath1,
-              1,
-              ___CE(___RENAME_FILE_PATH_CE_SELECT),
-              0))
-      == ___FIX(___NO_ERR))
-    {
-      if ((e = ___SCMOBJ_to_NONNULLSTRING
-                 (___PSA(___PSTATE)
-                  path2,
-                  &cpath2,
-                  2,
-                  ___CE(___RENAME_FILE_PATH_CE_SELECT),
-                  0))
-          == ___FIX(___NO_ERR))
-        {
+#ifdef USE_MoveFileEx
+          DWORD flags = MOVEFILE_COPY_ALLOWED;
+          if (___NOTFALSEP(replace)) flags |= MOVEFILE_REPLACE_EXISTING;
+          if (!MoveFileEx
+                (___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),
+                         cpath1),
+                 ___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),
+                         cpath2),
+                 flags))
+            e = fnf_or_err_code_from_GetLastError ();
+#else
           if (!MoveFile
                 (___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),
                          cpath1),
                  ___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),
                          cpath2)))
             e = fnf_or_err_code_from_GetLastError ();
+#endif
+
+#else
+
+#ifdef USE_rename
+
+          if (rename_long_path (___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),cpath1),
+                                ___CAST(___STRING_TYPE(___RENAME_FILE_PATH_CE_SELECT),cpath2),
+                                ___NOTFALSEP(replace))
+              < 0)
+            e = fnf_or_err_code_from_errno ();
+
+#else
+
+          e = ___FIX(___UNIMPL_ERR);
+
+#endif
+#endif
+
           ___release_string (cpath2);
         }
       ___release_string (cpath1);
     }
-
-#endif
-
-#endif
 
   return e;
 }

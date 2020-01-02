@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1642,9 +1642,12 @@ end-of-code
    #f
    (lambda (procedure arguments message code dummy)
      (macro-raise
-      (if (##fx= code ##err-code-ENOENT)
-        (macro-make-no-such-file-or-directory-exception procedure arguments)
-        (macro-make-os-exception procedure arguments message code))))))
+      (cond ((##fx= code ##err-code-ENOENT)
+             (macro-make-no-such-file-or-directory-exception procedure arguments))
+            ((##fx= code ##err-code-EEXIST)
+             (macro-make-file-exists-exception procedure arguments))
+            (else
+             (macro-make-os-exception procedure arguments message code)))))))
 
 (implement-library-type-no-such-file-or-directory-exception)
 
@@ -1658,6 +1661,21 @@ end-of-code
    (lambda (procedure arguments dummy1 dummy2 dummy3)
      (macro-raise
       (macro-make-no-such-file-or-directory-exception
+       procedure
+       arguments)))))
+
+(implement-library-type-file-exists-exception)
+
+(define-prim (##raise-file-exists-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-file-exists-exception
        procedure
        arguments)))))
 ))
@@ -4828,6 +4846,7 @@ end-of-code
 
 (define-prim ##os-rename-file
   (c-lambda (scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_rename_file"))

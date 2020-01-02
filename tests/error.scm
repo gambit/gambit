@@ -1,6 +1,6 @@
 ; File: "error.scm"
 
-; Copyright (c) 1998-2018 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2020 by Marc Feeley, All Rights Reserved.
 
 ; Test program for error processing.
 
@@ -221,6 +221,10 @@
                  (call
                   (no-such-file-or-directory-exception-procedure exc)
                   (no-such-file-or-directory-exception-arguments exc)))
+                ((file-exists-exception? exc)
+                 (call
+                  (file-exists-exception-procedure exc)
+                  (file-exists-exception-arguments exc)))
                 (else
                  (call "???" '()))))
         thunk))))
