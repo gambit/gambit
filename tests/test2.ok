@@ -1188,8 +1188,8 @@ A(write-char #\A '#<output-port #7 (stdout)>) => #!void
 (cdr-command-line) => ("-f" "error.scm")
 (shell-command "echo hello > newfile1") => 0
 (create-directory "newdir1") => #!void
-;;; #<os-exception #8>: (create-directory "newdir1")
-;;; #<os-exception #9>: (create-directory "newfile1")
+;;; File exists: (create-directory "newdir1")
+;;; File exists: (create-directory "newfile1")
 (rename-file "newdir1" "newdir2") => #!void
 ;;; No such file or directory: (rename-file "newdir1" "newdir2")
 (rename-file "newfile1" "newdir2/aaa") => #!void
@@ -1207,10 +1207,10 @@ A(write-char #\A '#<output-port #7 (stdout)>) => #!void
 (file-type "newdir2") => directory
 (file-type "newdir2/bbb") => regular
 ;;; No such file or directory: (file-type "notexist")
-(file-size "error.scm") => 65838
-(file-size "newdir2/bbb") => 65838
+(file-size "error.scm") => 66021
+(file-size "newdir2/bbb") => 66021
 ;;; No such file or directory: (file-size "notexist")
-;;; #<os-exception #10>: (delete-directory "newdir2")
+;;; #<os-exception #8>: (delete-directory "newdir2")
 (delete-file "newdir2/aaa") => #!void
 (delete-file "newdir2/bbb") => #!void
 ;;; No such file or directory: (delete-file "newdir2/ccc")

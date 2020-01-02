@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -143,9 +143,17 @@
 #ifdef USE_openat
 #ifdef HAVE_RENAMEAT
 #define USE_renameat
+#ifdef HAVE_RENAMEAT2
+#define USE_renameat2
+#else
+#ifdef HAVE_RENAMEATX_NP
+#define USE_renameatx_np
 #endif
 #endif
 #endif
+#endif
+#endif
+
 
 #ifdef HAVE_MKDIR
 #define USE_mkdir
@@ -377,6 +385,7 @@
 #define USE_GetFileAttributesEx
 #define USE_GetLastError
 #define USE_MoveFile
+#define USE_MoveFileEx
 #define USE_RemoveDirectory
 #define USE_SetCurrentDirectory
 #define USE_SetEnvironmentVariable

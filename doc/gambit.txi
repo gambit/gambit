@@ -39,7 +39,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit, a portable implementation of Scheme.
 
-Copyright (C) 1994-2019 Marc Feeley.
+Copyright (C) 1994-2020 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -71,7 +71,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2019 Marc Feeley.
+Copyright @copyright{} 1994-2020 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -9195,6 +9195,46 @@ For example:
 
 @end deffn
 
+@deffn procedure file-exists-exception? @var{obj}
+@deffnx procedure file-exists-exception-procedure @var{exc}
+@deffnx procedure file-exists-exception-arguments @var{exc}
+
+File-exists-exception objects are raised by procedures
+which access the filesystem (such as @code{open-output-file} and
+@code{create-directory}) when the path specified is an existing
+file on the filesystem.  The parameter @var{exc} must be a
+file-exists-exception object.
+
+The procedure @code{file-exists-exception?} returns
+@code{#t} when @var{obj} is a file-exists-exception
+object and @code{#f} otherwise.
+
+The procedure @code{file-exists-exception-procedure}
+returns the procedure that raised @var{exc}.
+
+The procedure @code{file-exists-exception-arguments}
+returns the list of arguments of the procedure that raised @var{exc}.
+
+For example:
+
+@smallexample
+> @b{(define (handler exc)
+    (if (file-exists-exception? exc)
+        (list (file-exists-exception-procedure exc)
+              (file-exists-exception-arguments exc))
+        'not-file-exists-exception))}
+> @b{(with-exception-catcher
+    handler
+    (lambda () (with-output-to-file '(path: "foo" create: #t) newline)))}
+> @b{(with-exception-catcher
+    handler
+    (lambda () (with-output-to-file '(path: "foo" create: #t) newline)))}
+(#<procedure #2 with-output-to-file>
+ ((path: "foo" create: #t) #<procedure #3 newline>))
+@end smallexample
+
+@end deffn
+
 @deffn procedure unbound-os-environment-variable-exception? @var{obj}
 @deffnx procedure unbound-os-environment-variable-exception-procedure @var{exc}
 @deffnx procedure unbound-os-environment-variable-exception-arguments @var{exc}
@@ -10583,13 +10623,17 @@ symbolic link to create.
 
 @end deffn
 
-@deffn procedure rename-file @var{source-path} @var{destination-path}
+@deffn procedure rename-file @var{source-path} @var{destination-path} @r{[}@var{replace?}@r{]}
 
 This procedure renames the file @var{source-path} to
 @var{destination-path}.  The argument @var{source-path} must be a
 string denoting the path of an existing file.  The argument
 @var{destination-path} must be a string denoting the new path of the
-file.
+file.  If @var{replace?} is absent or true, an existing
+@var{destination-path} will be replaced by @var{source-path}.
+Otherwise, the rename operation will fail if @var{destination-path}
+exists.  Not all filesystems support atomic renaming and existence
+testing.
 
 @end deffn
 
@@ -17103,7 +17147,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit system release @value{VERSION} is Copyright @copyright{}
-1994-2019 by Marc Feeley, all rights reserved.  The Gambit system
+1994-2020 by Marc Feeley, all rights reserved.  The Gambit system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two
