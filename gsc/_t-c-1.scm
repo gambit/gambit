@@ -549,6 +549,16 @@
                (newline)))))
     lst))
 
+(define (targ-validate-modules supply-modules demand-modules)
+  (for-each
+   (lambda (mod)
+     (if (not (member mod supply-modules))
+         (begin
+           (display "*** WARNING -- dynamic loading of module ")
+           (write mod)
+           (newline))))
+   demand-modules))
+
 (define all-warnings #t)
 (set! all-warnings #f)
 
@@ -809,6 +819,16 @@
                 (equal? (car (cadr info)) (target-name targ-target))
                 info)))))
 
+(define (targ-set-of lst)
+  (let loop ((lst lst) (result '()))
+    (if (null? lst)
+        (reverse result)
+        (let ((x (car lst)))
+          (loop (cdr lst)
+                (if (member x result)
+                    result
+                    (cons x result)))))))
+
 (define (targ-link extension? inputs output linker-name warnings?)
   (with-exception-handling
     (lambda ()
@@ -821,6 +841,12 @@
                (map targ-get-mod inputs))
              (input-mods-and-flags
                (append-lists (map targ-mod-mods-and-flags input-mods)))
+             (supply-modules
+              (targ-set-of
+               (append-lists (map targ-mod-supply-modules input-mods))))
+             (demand-modules
+              (targ-set-of
+               (append-lists (map targ-mod-demand-modules input-mods))))
              (sym-rsrc
                (targ-union-list-of-rsrc
                  (map targ-mod-sym-rsrc input-mods)))
@@ -913,8 +939,8 @@
           extension?
           output
           name
-          (list name) ;; supply-modules
-          '()         ;; demand-modules
+          supply-modules
+          demand-modules
           input-mods-and-flags
           (if extension?
             (list (list (targ-mod-name (car input-mods))))
@@ -1124,7 +1150,9 @@
           warnings?)
 
   (if warnings?
-      (targ-validate-rsrc glo-rsrc))
+      (begin
+        (targ-validate-rsrc glo-rsrc)
+        (targ-validate-modules supply-modules demand-modules)))
 
   (let* ((old-sym-glo-rsrc
           (targ-union-rsrc old-sym-rsrc old-glo-rsrc))
