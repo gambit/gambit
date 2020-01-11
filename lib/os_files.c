@@ -875,7 +875,15 @@ ___BOOL replace;)
 #ifdef USE_renameat2
             unsigned int flags = 0;
             if (!replace) flags |= RENAME_NOREPLACE;
+#ifdef USE_renameat2_syscall
+            /*
+             * glibc does not have a wrapper for renameat2 so use a syscall
+             * to call it... see: https://stackoverflow.com/questions/41655386/no-renameat2-system-call-function-on-ubuntu-16-04
+             */
+            result = syscall (SYS_renameat2, olddir, oldpath2, newdir, newpath2, flags);
+#else
             result = renameat2 (olddir, oldpath2, newdir, newpath2, flags);
+#endif
 #else
 #ifdef USE_link
 #ifdef USE_unlink

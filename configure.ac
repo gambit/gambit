@@ -1468,6 +1468,8 @@ else
   AC_CHECK_HEADERS(strings.h)
   AC_CHECK_HEADERS(memory.h)
   AC_CHECK_HEADERS(sys/sysctl.h)
+  AC_CHECK_HEADERS(sys/syscall.h)
+  AC_CHECK_HEADERS(linux/fs.h)
   AC_CHECK_HEADERS(ws2tcpip.h)
   AC_CHECK_HEADERS(TargetConditionals.h)
   AC_CHECK_HEADERS(AvailabilityMacros.h)
