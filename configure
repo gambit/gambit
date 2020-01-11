@@ -7388,6 +7388,30 @@ fi
 
 done
 
+  for ac_header in sys/syscall.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/syscall.h" "ac_cv_header_sys_syscall_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_syscall_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SYS_SYSCALL_H 1
+_ACEOF
+
+fi
+
+done
+
+  for ac_header in linux/fs.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "linux/fs.h" "ac_cv_header_linux_fs_h" "$ac_includes_default"
+if test "x$ac_cv_header_linux_fs_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LINUX_FS_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in ws2tcpip.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "ws2tcpip.h" "ac_cv_header_ws2tcpip_h" "$ac_includes_default"

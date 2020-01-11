@@ -145,6 +145,11 @@
 #define USE_renameat
 #ifdef HAVE_RENAMEAT2
 #define USE_renameat2
+#ifdef HAVE_SYS_SYSCALL_H
+#ifdef HAVE_LINUX_FS_H
+#define USE_renameat2_syscall
+#endif
+#endif
 #else
 #ifdef HAVE_RENAMEATX_NP
 #define USE_renameatx_np
@@ -153,7 +158,6 @@
 #endif
 #endif
 #endif
-
 
 #ifdef HAVE_MKDIR
 #define USE_mkdir
@@ -1332,6 +1336,13 @@ ___END_C_LINKAGE
 #define INCLUDE_fcntl_h
 #endif
 
+#ifdef USE_renameat2_syscall
+#undef INCLUDE_sys_syscall_h
+#define INCLUDE_sys_syscall_h
+#undef INCLUDE_linux_fs_h
+#define INCLUDE_linux_fs_h
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -1453,6 +1464,18 @@ ___END_C_LINKAGE
 #ifdef INCLUDE_sys_mman_h
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
+#endif
+
+#ifdef INCLUDE_sys_syscall_h
+#ifdef HAVE_SYS_SYSCALL_H
+#include <sys/syscall.h>
+#endif
+#endif
+
+#ifdef INCLUDE_linux_fs_h
+#ifdef HAVE_LINUX_FS_H
+#include <linux/fs.h>
 #endif
 #endif
 
