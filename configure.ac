@@ -1998,9 +1998,15 @@ fi
 if test "$ENABLE_OPENSSL" = yes; then
 
   case "$target_os" in
-    darwin*) # OS X ships a very old version and considers OpenSSL deprecated
-             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
-             LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+    darwin*) # macOS ships an old version of the OpenSSL library, so it should
+             # be installed with "brew install openssl"
+             OPENSSL_DIR="/usr/local/opt/openssl@1.1"
+             if test "$ENABLE_OPENSSL_STATIC_LINK" = yes; then
+               LIBS="$LIBS $OPENSSL_DIR/lib/libssl.a $OPENSSL_DIR/lib/libcrypto.a"
+             else
+               LIBS="$LIBS -L$OPENSSL_DIR/lib -lssl -lcrypto"
+             fi
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"$OPENSSL_DIR/include\""
              ;;
     mingw*) # Search in typical locations
              CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""

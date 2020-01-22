@@ -1,6 +1,6 @@
 #! /usr/bin/env gsi -:d-
 
-;; Copyright (c) 2011-2018 by Marc Feeley, All Rights Reserved.
+;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
 
 ;; This program allows execution of commands on a remote host.  The
 ;; "remote host" may be a real computer or a VM running locally in
@@ -75,7 +75,7 @@
 
 (define host-aliases
   '(;;("macosx"    "localhost") ;; override VirtualBox VM
-    ("macosx"    "High-Sierra-VM1")
+    ("macosx"    "Mojave-VM1")
     ("windows"   "Windows-7-Ultimate-x64-VM1")
     ("farm"      "frontal.iro.umontreal.ca" "gambit" "?" 22)
     ("localhost" "localhost")
@@ -89,6 +89,7 @@
   '(("Snow-Leopard-x86-VM1"       "administrator" "pass999word" 2211)
     ("El-Capitan-VM1"             "admin"         "pass999word" 2212)
     ("High-Sierra-VM1"            "admin"         "pass999word" 2213)
+    ("Mojave-VM1"                 "administrator" "pass999word" 2214)
     ("Windows-7-Ultimate-x86-VM1" "Admin"         "pass999word" 2221)
     ("Windows-7-Ultimate-x86-VM2" "Admin"         "pass999word" 2222)
     ("Windows-7-Ultimate-x86-VM3" "Admin"         "pass999word" 2223)
@@ -216,6 +217,32 @@
 
     (end-process port #f)))
 
+(define (wait-for-ssh-server ssh-port)
+  (let ((start (current-time)))
+    (let loop ()
+      (if (> (- (time->seconds (current-time)) (time->seconds start)) 70)
+          #f ;; timed out
+          (with-exception-catcher
+           (lambda (exc)
+             ;;(pretty-print exc)
+             (thread-sleep! 1) ;; try again in 1 second
+             (loop))
+           (lambda ()
+             ;;(println "trying...")
+             (let* ((port (open-tcp-client
+                           (list address: "localhost"
+                                 port-number: ssh-port)))
+                    (x (with-exception-catcher
+                        (lambda (exc)
+                          #f)
+                        (lambda ()
+                          (input-port-timeout-set! port 1)
+                          (read-line port)))))
+               (close-port port)
+               (if (not (string? x))
+                   (raise "did not connect to ssh server")
+                   #t))))))))
+
 (define (start-vbox-vm vbox-vm)
   (if vbox-vm
       (let ((vm-name (list-ref vbox-vm 0)))
@@ -224,12 +251,11 @@
                                 "\" --natpf1 \"ssh,tcp,localhost,"
                                 (number->string ssh-port)
                                 ",,22\""))
-             (if (sh (string-append "VBoxManage startvm --type headless \""
-                                    vm-name
-                                    "\""))
-                 (begin
-                   (thread-sleep! 70) ;; allow some time for VM to boot up
-                   #t)
+             (if (and (sh (string-append "VBoxManage startvm --type headless \""
+                                         vm-name
+                                         "\""))
+                      (wait-for-ssh-server ssh-port))
+                 #t ;; VM is ready
                  (begin
                    (end-vbox-vm vbox-vm)
                    #f))))
