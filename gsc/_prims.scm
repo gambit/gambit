@@ -3552,6 +3552,68 @@
              **fxquotient-sym
              vars)))))
 
+    (define case-fixnum/
+      (gen-fixnum-case
+       (make-nary-generator
+        gen-fixnum-0 ; ignored
+        (lambda (source env vars invalid)
+          ;; call / to compute inverse
+          (invalid))
+        (lambda (source env vars invalid)
+          (new-tst source env
+            (gen-disj-multi source env
+              (map (lambda (var)
+                     (gen-call-prim source env
+                       **fx<=-sym
+                       (list (new-cst source env
+                               -1)
+                             (new-ref source env
+                               var)
+                             (new-cst source env
+                               0))))
+                   (reverse (cdr vars))))
+            (invalid)
+            (let ()
+
+              (define (fold-quotient accu-var rest-vars)
+                (if (null? rest-vars)
+                    (new-ref source env
+                      accu-var)
+                    (let* ((rest-var1 (car rest-vars))
+                           (q-var (new-temp-variable source 'quotient))
+                           (r-var (new-temp-variable source 'remainder)))
+                      (new-call source env
+                        (new-prc source env
+                          #f
+                          #f
+                          (list q-var r-var)
+                          '()
+                          #f
+                          #f
+                          (new-tst source env
+                            (gen-call-prim source env
+                              **fx=-sym
+                              (list (new-ref source env
+                                      r-var)
+                                    (new-cst source env
+                                      0)))
+                            (fold-quotient q-var (cdr rest-vars))
+                            (invalid)))
+                        (list (gen-call-prim source env
+                                **fxquotient-sym
+                                (list (new-ref source env
+                                        accu-var)
+                                      (new-ref source env
+                                        rest-var1)))
+                              (gen-call-prim source env
+                                **fxremainder-sym
+                                (list (new-ref source env
+                                        accu-var)
+                                      (new-ref source env
+                                        rest-var1))))))))
+
+              (fold-quotient (car vars) (cdr vars))))))))
+
     (define case-fxremainder
       (gen-fixnum-division-case
        (make-prim-generator **fxremainder-sym)))
@@ -4071,7 +4133,7 @@
     (def-exp "-"       (make-fixflo-expander case-fx- case-fl-))
 
     (def-exp "fl/"     (make-simple-expander case-fl/))
-    (def-exp "/"       (make-fixflo-expander no-case case-fl/))
+    (def-exp "/"       (make-fixflo-expander case-fixnum/ case-fl/))
 
     (def-exp "fxwrapquotient" (make-simple-expander case-fxwrapquotient))
     (def-exp "fxquotient"     (make-simple-expander case-fxquotient))
