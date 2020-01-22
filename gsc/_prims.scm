@@ -5375,6 +5375,7 @@
 ;; (def-simp "atanh"            (constant-folder-gen atanh      num?)) ;; TODO: arg must not be +1 or -1
 (def-simp "flatanh"          (constant-folder-flo atanh      flo?))
 (def-simp "##flonum->fixnum" (constant-folder-fix inexact->exact flo?))
+(def-simp "fixnum->flonum"   (constant-folder-flo exact->inexact fix32?))
 
 (def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
 (def-simp "make-polar"       (constant-folder-gen make-polar     real?))
