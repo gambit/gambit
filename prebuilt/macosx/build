@@ -16,17 +16,17 @@ export INSTALL_PREFIX="/Library/Gambit"
 
 cd "`dirname $0`"
 
-for VARIANT in intel32 intel64; do
+for VARIANT in intel64; do
 
   cd "$rootfromhere"
 
   case "$VARIANT" in
-      intel32) CONFIG_ARCH="-arch i386"
-               CONFIG_BUILD="--build=i386-apple-darwin13.0.2"
-               RUN_TESTS=1
-               ;;
       intel64) CONFIG_ARCH="-arch x86_64 -m64"
                CONFIG_BUILD="--build=x86_64-apple-darwin13.0.2"
+               RUN_TESTS=1
+               ;;
+      intel32) CONFIG_ARCH="-arch i386"
+               CONFIG_BUILD="--build=i386-apple-darwin13.0.2"
                RUN_TESTS=1
                ;;
            G3) CONFIG_ARCH="-arch ppc750"
@@ -55,15 +55,19 @@ for VARIANT in intel32 intel64; do
 
   # use GNU gcc and hide options for compatibility with LLVM gcc
 
+  SYSROOT="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"
+  #GCCDIR="/usr/local/Cellar/gcc/8.3.0_2/lib/gcc/8/gcc/x86_64-apple-darwin18/8.3.0"
+  GCCDIR="/usr/local/Cellar/gcc/9.2.0_3/lib/gcc/9/gcc/x86_64-apple-darwin18/9.2.0"
+
   rm -f `pwd`/gcc
   cat <<EOF > gcc
 #!/bin/sh
-exec /usr/local/Cellar/gcc/8.1.0/bin/gcc-8 -fschedule-insns2 -fno-trapping-math -fwrapv -fmodulo-sched -freschedule-modulo-scheduled-loops -static-libgcc "\$@"
+exec gcc-9 -nostdinc --sysroot=$SYSROOT -isystem $SYSROOT/usr/include -I $GCCDIR/include -fschedule-insns2 -fno-trapping-math -fwrapv -fmodulo-sched -freschedule-modulo-scheduled-loops -static-libgcc "\$@"
 EOF
   chmod +x gcc
   export PATH="`pwd`:$PATH"
 
-  CFLAGS="$CONFIG_ARCH -mmacosx-version-min=10.6" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --disable-gnu-gcc-specific-options CC="gcc"
+  CFLAGS="$CONFIG_ARCH -mmacosx-version-min=10.12" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --disable-gnu-gcc-specific-options --enable-openssl ENABLE_OPENSSL_STATIC_LINK=yes CC="gcc"
 
   cd "$herefromroot"
 
