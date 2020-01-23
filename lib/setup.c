@@ -21,6 +21,7 @@
 #include "mem.h"
 #include "c_intf.h"
 #include "actlog.h"
+#include <stdio.h>
 
 
 /*---------------------------------------------------------------------------*/
@@ -5701,6 +5702,8 @@ ___setup_params_struct *setup_params;)
   if (setup_params == 0 ||
       setup_params->version != ___VERSION)
     return ___FIX(___UNKNOWN_ERR);
+
+  set_gstate(___GSTATE);
 
   /*
    * Remember setup parameters.
