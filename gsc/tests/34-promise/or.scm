@@ -1,7 +1,7 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
-(define x1 (##make-promise (lambda () 1)))
-(define x2 (##make-promise (lambda () 2)))
+(define x1 (##make-delay-promise (lambda () 1)))
+(define x2 (##make-delay-promise (lambda () 2)))
 
 (define (which z)
   (cond ((##eq? z x1)

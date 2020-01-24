@@ -20,7 +20,7 @@
 (define r (##values 1 2 3 4 5 6))
 (define s (##make-values 2 999))
 (define t (##box 0))
-(define u (##make-promise (lambda () "promise result")))
+(define u (##make-delay-promise (lambda () "promise result")))
 (define v (##make-will 1 (lambda (x) "will called")))
 
 (define (test x)
