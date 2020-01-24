@@ -1,7 +1,7 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
-(define v1 (##make-promise (lambda () 1)))
-(define v2 (##make-promise (lambda () 2)))
+(define v1 (##make-delay-promise (lambda () 1)))
+(define v2 (##make-delay-promise (lambda () 2)))
 
 (define (test2 x y)
   (println (##eq? x y))
