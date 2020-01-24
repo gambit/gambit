@@ -1570,19 +1570,22 @@
           (or s
               proc))))))
 
-(define (spec-arith fix-name flo-name unsafe-name) ;; Arithmetic specialization
+(define (spec-arith fix-name flo-name . unsafe-name) ;; Arithmetic specialization
   (lambda (proc proc-name)
-    (let ((fix-spec (if fix-name (get-prim-info fix-name) proc))
-          (flo-spec (if flo-name (get-prim-info flo-name) proc))
-          (unsafe-spec (if unsafe-name (get-prim-info unsafe-name) proc)))
+    (let ((fix-spec
+           (if fix-name (get-prim-info fix-name) proc))
+          (flo-spec
+           (if flo-name (get-prim-info flo-name) proc))
+          (unsafe-spec
+           (if (pair? unsafe-name) (get-prim-info (car unsafe-name)) proc)))
       (lambda (env args)
         (let ((arith (arith-implementation proc-name env)))
-          (cond ((eq? arith fixnum-sym)
+          (cond ((and (not (safe? env)) (not (eq? unsafe-spec proc)))
+                 unsafe-spec)
+                ((eq? arith fixnum-sym)
                  fix-spec)
                 ((eq? arith flonum-sym)
                  flo-spec)
-                ((not (safe? env))
-                 unsafe-spec)
                 (else
                  proc)))))))
 
@@ -1628,30 +1631,49 @@
 
 ;; number
 
-(def-spec "*"                  (spec-arith "fx*"  "fl*"  "##*"))
-(def-spec "+"                  (spec-arith "fx+"  "fl+"  "##+"))
-(def-spec "-"                  (spec-arith "fx-"  "fl-"  "##-"))
-(def-spec "/"                  (spec-arith #f     "fl/"  "##/"))
-(def-spec "<"                  (spec-arith "fx<"  "fl<"  "##<"))
-(def-spec "<="                 (spec-arith "fx<=" "fl<=" "##<="))
-(def-spec "="                  (spec-arith "fx="  "fl="  "##="))
-(def-spec ">"                  (spec-arith "fx>"  "fl>"  "##>"))
-(def-spec ">="                 (spec-arith "fx>=" "fl>=" "##>="))
-(def-spec "abs"                (spec-arith "fxabs" "flabs" "##abs"))
-(def-spec "acos"               (spec-arith #f "flacos" "##acos"))
+(def-spec "*"                  (spec-arith "fx*"       "fl*"       "##*"))
+(def-spec "##*"                (spec-arith "##fx*"     "##fl*"))
+(def-spec "+"                  (spec-arith "fx+"       "fl+"       "##+"))
+(def-spec "##+"                (spec-arith "##fx+"     "##fl+"))
+(def-spec "-"                  (spec-arith "fx-"       "fl-"       "##-"))
+(def-spec "##-"                (spec-arith "##fx-"     "##fl-"))
+(def-spec "/"                  (spec-arith #f          "fl/"       "##/"))
+(def-spec "##/"                (spec-arith #f          "##fl/"))
+(def-spec "<"                  (spec-arith "fx<"       "fl<"       "##<"))
+(def-spec "##<"                (spec-arith "##fx<"     "##fl<"))
+(def-spec "<="                 (spec-arith "fx<="      "fl<="      "##<="))
+(def-spec "##<="               (spec-arith "##fx<="    "##fl<="))
+(def-spec "="                  (spec-arith "fx="       "fl="       "##="))
+(def-spec "##="                (spec-arith "##fx="     "##fl="))
+(def-spec ">"                  (spec-arith "fx>"       "fl>"       "##>"))
+(def-spec "##>"                (spec-arith "##fx>"     "##fl>"))
+(def-spec ">="                 (spec-arith "fx>="      "fl>="      "##>="))
+(def-spec "##>="               (spec-arith "##fx>="    "##fl>="))
+(def-spec "abs"                (spec-arith "fxabs"     "flabs"     "##abs"))
+(def-spec "##abs"              (spec-arith "##fxabs"   "##flabs"))
+(def-spec "acos"               (spec-arith #f          "flacos"    "##acos"))
+(def-spec "##acos"             (spec-arith #f          "##flacos"))
 (def-spec "angle"              (spec-u "##angle"))
-(def-spec "asin"               (spec-arith #f "flasin" "##asin"))
-(def-spec "atan"               (spec-arith #f "flatan" "##atan"))
+(def-spec "asin"               (spec-arith #f          "flasin"    "##asin"))
+(def-spec "##asin"             (spec-arith #f          "##flasin"))
+(def-spec "atan"               (spec-arith #f          "flatan"    "##atan"))
+(def-spec "##atan"             (spec-arith #f          "##flatan"))
 (def-spec "ceiling"            (spec-arith "##identity" "flceiling" "##ceiling"))
+(def-spec "##ceiling"          (spec-arith "##identity" "##flceiling"))
 (def-spec "complex?"           (spec-s "##complex?"))
-(def-spec "cos"                (spec-arith #f "flcos" "##cos"))
+(def-spec "cos"                (spec-arith #f          "flcos"     "##cos"))
+(def-spec "##cos"              (spec-arith #f          "##flcos"))
 (def-spec "denominator"        (spec-u "##denominator"))
-(def-spec "even?"              (spec-arith "fxeven?" "fleven?" "##even?"))
+(def-spec "even?"              (spec-arith "fxeven?"   "fleven?"   "##even?"))
+(def-spec "##even?"            (spec-arith "##fxeven?" "##fleven?"))
 (def-spec "exact->inexact"     (spec-u "##exact->inexact"))
 (def-spec "exact?"             (spec-u "##exact?"))
-(def-spec "exp"                (spec-arith #f "flexp" "##exp"))
-(def-spec "expt"               (spec-arith #f "flexpt" "##expt"))
-(def-spec "floor"              (spec-arith "##identity" "flfloor" "##floor"))
+(def-spec "exp"                (spec-arith #f          "flexp"     "##exp"))
+(def-spec "##exp"              (spec-arith #f          "##flexp"))
+(def-spec "expt"               (spec-arith #f          "flexpt"    "##expt"))
+(def-spec "##expt"             (spec-arith #f          "##flexpt"))
+(def-spec "floor"              (spec-arith "##identity" "flfloor"   "##floor"))
+(def-spec "##floor"            (spec-arith "##identity" "##flfloor"))
 (def-spec "gcd"                (spec-u "##gcd"))
 (def-spec "imag-part"          (spec-u "##imag-part"))
 (def-spec "inexact->exact"     (spec-u "##inexact->exact"))
@@ -1659,40 +1681,62 @@
 (def-spec "integer?"           (spec-s "##integer?"))
 (def-spec "lcm"                (spec-u "##lcm"))
 (def-spec "log"                (spec-arith #f "fllog" "##log"))
+(def-spec "##log"              (spec-arith #f "##fllog"))
 (def-spec "magnitude"          (spec-u "##magnitude"))
 (def-spec "make-polar"         (spec-u "##make-polar"))
 (def-spec "make-rectangular"   (spec-u "##make-rectangular"))
-(def-spec "max"                (spec-arith "fxmax" "flmax" "##max"))
-(def-spec "min"                (spec-arith "fxmin" "flmin" "##min"))
-(def-spec "modulo"             (spec-arith "fxmodulo" #f "##modulo"))
-(def-spec "negative?"          (spec-arith "fxnegative?" "flnegative?" "##negative?"))
+(def-spec "max"                (spec-arith "fxmax"   "flmax" "##max"))
+(def-spec "##max"              (spec-arith "##fxmax" "##flmax"))
+(def-spec "min"                (spec-arith "fxmin"   "flmin" "##min"))
+(def-spec "##min"              (spec-arith "##fxmin" "##flmin"))
+(def-spec "modulo"             (spec-arith "fxmodulo"   #f "##modulo"))
+(def-spec "##modulo"           (spec-arith "##fxmodulo" #f))
+(def-spec "negative?"          (spec-arith "fxnegative?"   "flnegative?" "##negative?"))
+(def-spec "##negative?"        (spec-arith "##fxnegative?" "##flnegative?"))
 (def-spec "number->string"     (spec-u "##number->string"))
 (def-spec "number?"            (spec-s "##number?"))
 (def-spec "numerator"          (spec-u "##numerator"))
-(def-spec "odd?"               (spec-arith "fxodd?" "flodd?" "##odd?"))
-(def-spec "positive?"          (spec-arith "fxpositive?" "flpositive?" "##positive?"))
-(def-spec "quotient"           (spec-arith "fxquotient" #f "##quotient"))
+(def-spec "odd?"               (spec-arith "fxodd?"   "flodd?" "##odd?"))
+(def-spec "##odd?"             (spec-arith "##fxodd?" "##flodd?"))
+(def-spec "positive?"          (spec-arith "fxpositive?"   "flpositive?" "##positive?"))
+(def-spec "##positive?"        (spec-arith "##fxpositive?" "##flpositive?"))
+(def-spec "quotient"           (spec-arith "fxquotient"   #f "##quotient"))
+(def-spec "##quotient"         (spec-arith "##fxquotient" #f))
 (def-spec "rational?"          (spec-s "##rational?"))
 (def-spec "rationalize"        (spec-u "##rationalize"))
 (def-spec "real-part"          (spec-u "##real-part"))
 (def-spec "real?"              (spec-s "##real?"))
-(def-spec "remainder"          (spec-arith "fxremainder" #f "##remainder"))
+(def-spec "remainder"          (spec-arith "fxremainder"   #f "##remainder"))
+(def-spec "##remainder"        (spec-arith "##fxremainder" #f))
 (def-spec "round"              (spec-arith "##identity" "flround" "##round"))
+(def-spec "##round"            (spec-arith "##identity" "##flround"))
 (def-spec "sin"                (spec-arith #f "flsin" "##sin"))
+(def-spec "##sin"              (spec-arith #f "##flsin"))
 (def-spec "sqrt"               (spec-arith #f "flsqrt" "##sqrt"))
+(def-spec "##sqrt"             (spec-arith #f "##flsqrt"))
 (def-spec "string->number"     (spec-u "##string->number"))
 (def-spec "tan"                (spec-arith #f "fltan" "##tan"))
+(def-spec "##tan"              (spec-arith #f "##fltan"))
 (def-spec "truncate"           (spec-arith "##identity" "fltruncate" "##truncate"))
-(def-spec "zero?"              (spec-arith "fxzero?" "flzero?" "##zero?"))
+(def-spec "##truncate"         (spec-arith "##identity" "##fltruncate"))
+(def-spec "zero?"              (spec-arith "fxzero?"   "flzero?" "##zero?"))
+(def-spec "##zero?"            (spec-arith "##fxzero?" "##flzero?"))
 
-(def-spec "bitwise-ior"        (spec-arith "fxior" #f "##bitwise-ior"))
-(def-spec "bitwise-xor"        (spec-arith "fxxor" #f "##bitwise-xor"))
-(def-spec "bitwise-and"        (spec-arith "fxand" #f "##bitwise-and"))
-(def-spec "bitwise-not"        (spec-arith "fxnot" #f "##bitwise-not"))
+(def-spec "bitwise-ior"        (spec-arith "fxior"   #f "##bitwise-ior"))
+(def-spec "##bitwise-ior"      (spec-arith "##fxior" #f))
+(def-spec "bitwise-xor"        (spec-arith "fxxor"   #f "##bitwise-xor"))
+(def-spec "##bitwise-xor"      (spec-arith "##fxxor" #f))
+(def-spec "bitwise-and"        (spec-arith "fxand"   #f "##bitwise-and"))
+(def-spec "##bitwise-and"      (spec-arith "##fxand" #f))
+(def-spec "bitwise-not"        (spec-arith "fxnot"   #f "##bitwise-not"))
+(def-spec "##bitwise-not"      (spec-arith "##fxnot" #f))
 (def-spec "exact-integer-sqrt" (spec-u "##exact-integer-sqrt"))
 (def-spec "finite?"            (spec-arith #f "flfinite?" "##finite?"))
+(def-spec "##finite?"          (spec-arith #f "##flfinite?"))
 (def-spec "infinite?"          (spec-arith #f "flinfinite?" "##infinite?"))
+(def-spec "##infinite?"        (spec-arith #f "##flinfinite?"))
 (def-spec "nan?"               (spec-arith #f "flnan?" "##nan?"))
+(def-spec "##nan?"             (spec-arith #f "##flnan?"))
 (def-spec "inexact"            (spec-u "##inexact"))
 (def-spec "exact"              (spec-u "##exact"))
 
@@ -1700,17 +1744,22 @@
 (def-spec "floor-quotient"     (spec-u "##floor-quotient"))
 (def-spec "floor-remainder"    (spec-u "##floor-remainder"))
 (def-spec "floor/"             (spec-u "##floor/"))
-(def-spec "square"             (spec-arith "fxsquare" "flsquare" "##square"))
+(def-spec "square"             (spec-arith "fxsquare"   "flsquare" "##square"))
+(def-spec "##square"           (spec-arith "##fxsquare" "##flsquare"))
 (def-spec "truncate-quotient"  (spec-u "##truncate-quotient"))
 (def-spec "truncate-remainder" (spec-u "##truncate-remainder"))
 (def-spec "truncate/"          (spec-u "##truncate/"))
 
 (def-spec "acosh"              (spec-arith #f "flacosh" "##acosh"))
+(def-spec "##acosh"            (spec-arith #f "##flacosh"))
 (def-spec "all-bits-set?"      (spec-u "##all-bits-set?"))
 (def-spec "any-bits-set?"      (spec-u "##any-bits-set?"))
-(def-spec "arithmetic-shift"   (spec-arith "fxarithmetic-shift" #f "##arithmetic-shift"))
+(def-spec "arithmetic-shift"   (spec-arith "fxarithmetic-shift"   #f "##arithmetic-shift"))
+(def-spec "##arithmetic-shift" (spec-arith "##fxarithmetic-shift" #f))
 (def-spec "asinh"              (spec-arith #f "flasinh" "##asinh"))
+(def-spec "##asinh"            (spec-arith #f "##flasinh"))
 (def-spec "atanh"              (spec-arith #f "flatanh" "##atanh"))
+(def-spec "##atanh"            (spec-arith #f "##flatanh"))
 (def-spec "bit-count"          (spec-u "##bit-count"))
 (def-spec "bit-set?"           (spec-u "##bit-set?"))
 (def-spec "bitwise-merge"      (spec-u "##bitwise-merge"))
@@ -1718,6 +1767,7 @@
 (def-spec "conjugate"          (spec-u "##conjugate"))
 (def-spec "copy-bit-field"     (spec-u "##copy-bit-field"))
 (def-spec "cosh"               (spec-arith #f "flcosh" "##cosh"))
+(def-spec "##cosh"             (spec-arith #f "##flcosh"))
 (def-spec "extract-bit-field"  (spec-u "##extract-bit-field"))
 (def-spec "first-bit-set"      (spec-u "##first-bit-set"))
 (def-spec "integer-length"     (spec-u "##integer-length"))
@@ -1725,7 +1775,9 @@
 (def-spec "integer-sqrt"       (spec-u "##integer-sqrt"))
 (def-spec "replace-bit-field"  (spec-u "##replace-bit-field"))
 (def-spec "sinh"               (spec-arith #f "flsinh" "##sinh"))
+(def-spec "##sinh"             (spec-arith #f "##flsinh"))
 (def-spec "tanh"               (spec-arith #f "fltanh" "##tanh"))
+(def-spec "##tanh"             (spec-arith #f "##fltanh"))
 (def-spec "test-bit-field?"    (spec-u "##test-bit-field?"))
 
 #|
@@ -2325,6 +2377,10 @@
     (proc-obj-expandable?-set! proc (lambda (env) #t))
     (proc-obj-expand-set! proc expander)))
 
+(define (def-exp2 name expander)
+  (def-exp (string-append "##" name) expander)
+  (def-exp name expander))
+
 (define (gen-check-run-time-binding
          check-run-time-binding
          source
@@ -2372,7 +2428,7 @@
            env
            vars
            check-run-time-binding
-           invalid
+           out-of-line
            fail)
     (gen-type-checks
      source
@@ -2390,7 +2446,7 @@
            env
            vars
            check-run-time-binding
-           invalid
+           out-of-line
            fail)
     (gen-type-checks
      source
@@ -2400,7 +2456,7 @@
      check-prim
      #f
      (lambda ()
-       (gen source env vars invalid))
+       (gen source env vars out-of-line))
      fail)))
 
 (define (make-simple-expander gen-case)
@@ -2560,7 +2616,7 @@
     (setup-set-c...r!-primitive 0)  ; set-car!
     (setup-set-c...r!-primitive 1)) ; set-cdr!
 
-  (define (make-assq-memq-expander prim)
+  (define (make-assq-memq-expander prim unsafe?)
     (lambda (ptree oper args generate-call check-run-time-binding)
       (let* ((source
               (node-source ptree))
@@ -2637,7 +2693,7 @@
                                             **cdr-sym
                                             (list lst1-var))))))
 
-                              (if (safe? env)
+                              (if (and (not unsafe?) (safe? env))
                                 (new-tst source env
                                   (gen-call-prim-vars source env
                                     **pair?-sym
@@ -2666,7 +2722,7 @@
                         (list (gen-call-prim-vars source env
                                 **car-sym
                                 (list lst1-var))))
-                      (if (safe? env)
+                      (if (and (not unsafe?) (safe? env))
                         (new-tst source env
                           (gen-call-prim-vars source env
                             **null?-sym
@@ -2688,7 +2744,7 @@
                              (not check-run-time-binding)))
             (gen-main-loop))))))
 
-  (define (make-map-for-each-expander prim)
+  (define (make-map-for-each-expander prim unsafe?)
     (lambda (ptree oper args generate-call check-run-time-binding)
       (let* ((source
               (node-source ptree))
@@ -2750,7 +2806,7 @@
                         (gen-conj-call-prim-vars source env
                           **pair?-sym
                           lst2-vars
-;;                          (if (safe? env) ;; in case lists are truncated by other threads
+;;                          (if (and (not unsafe?) (safe? env)) ;; in case lists are truncated by other threads
 ;;                              lst2-vars
 ;;                              (list (car lst2-vars)))
                           )
@@ -2841,7 +2897,7 @@
         (gen-prc source env
           vars
           (let ((check-proc
-                 (and (safe? env)
+                 (and (and (not unsafe?) (safe? env))
                       (let ((f-arg (car args)))
                         (and (not (or (prc? f-arg)
                                       (and (cst? f-arg)
@@ -2861,7 +2917,7 @@
                        (check-run-time-binding))
                       (else
                        check-proc))
-                (if (safe? env)
+                (if (and (not unsafe?) (safe? env))
                   (gen-check)
                   (gen-main-loop))
                 (generate-call vars
@@ -2871,12 +2927,18 @@
   (setup-c...r-primitives)
   (setup-set-c...r!-primitives)
 
-  (def-exp "assq" (make-assq-memq-expander 'assq))
-  (def-exp "assv" (make-assq-memq-expander 'assv))
-  (def-exp "memq" (make-assq-memq-expander 'memq))
-  (def-exp "memv" (make-assq-memq-expander 'memv))
-  (def-exp "map" (make-map-for-each-expander 'map))
-  (def-exp "for-each" (make-map-for-each-expander 'for-each)))
+  (def-exp "assq"       (make-assq-memq-expander 'assq #f))
+  (def-exp "##assq"     (make-assq-memq-expander 'assq #t))
+  (def-exp "assv"       (make-assq-memq-expander 'assv #f))
+  (def-exp "##assv"     (make-assq-memq-expander 'assv #t))
+  (def-exp "memq"       (make-assq-memq-expander 'memq #f))
+  (def-exp "##memq"     (make-assq-memq-expander 'memq #t))
+  (def-exp "memv"       (make-assq-memq-expander 'memv #f))
+  (def-exp "##memv"     (make-assq-memq-expander 'memv #t))
+  (def-exp "map"        (make-map-for-each-expander 'map #f))
+  (def-exp "##map"      (make-map-for-each-expander 'map #t))
+  (def-exp "for-each"   (make-map-for-each-expander 'for-each #f))
+  (def-exp "##for-each" (make-map-for-each-expander 'for-each #t)))
 
 (define (setup-numeric-primitives)
 
@@ -3028,7 +3090,7 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (gen-type-checks
        source
@@ -3045,7 +3107,7 @@
                        (new-cst source env
                          0)))))
        (lambda ()
-         (gen source env vars invalid))
+         (gen source env vars out-of-line))
        fail)))
 
   (define (gen-flonum-case gen)
@@ -3056,7 +3118,7 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (gen-type-checks
        source
@@ -3079,7 +3141,7 @@
                                  (new-ref source env
                                    (car vars)))))))))
        (lambda ()
-         (gen source env vars invalid))
+         (gen source env vars out-of-line))
        fail)))
 
   (define (gen-expt-flonum-case gen)
@@ -3087,7 +3149,7 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (gen-type-checks
        source
@@ -3105,7 +3167,7 @@
            **flinteger?-sym
            (list (cadr vars))))
        (lambda ()
-         (gen source env vars invalid))
+         (gen source env vars out-of-line))
        fail)))
 
   (define (gen-sqrt-flonum-case gen)
@@ -3113,7 +3175,7 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (gen-type-checks
        source
@@ -3127,7 +3189,7 @@
                  **flnegative?-sym
                  vars)))
        (lambda ()
-         (gen source env vars invalid))
+         (gen source env vars out-of-line))
        fail)))
 
   (define (gen-finite-flonum-case gen)
@@ -3135,7 +3197,7 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (gen-type-checks
        source
@@ -3147,7 +3209,7 @@
          **flfinite?-sym
          vars)
        (lambda ()
-         (gen source env vars invalid))
+         (gen source env vars out-of-line))
        fail)))
 
   (define (gen-asin-acos-atanh-flonum-case gen)
@@ -3155,7 +3217,7 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (gen-type-checks
        source
@@ -3182,7 +3244,7 @@
                               (new-cst source env
                                 (macro-inexact--1))))))))
        (lambda ()
-         (gen source env vars invalid))
+         (gen source env vars out-of-line))
        fail)))
 
   (define (gen-acosh-flonum-case gen)
@@ -3190,7 +3252,7 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (gen-type-checks
        source
@@ -3207,14 +3269,34 @@
                        (new-cst source env
                          (macro-inexact-+1))))))
        (lambda ()
-         (gen source env vars invalid))
+         (gen source env vars out-of-line))
+       fail)))
+
+  (define (gen-odd-even-flonum-case gen)
+    (lambda (source
+             env
+             vars
+             check-run-time-binding
+             out-of-line
+             fail)
+      (gen-type-checks
+       source
+       env
+       vars
+       check-run-time-binding
+       **flonum?-sym
+       (gen-call-prim-vars source env
+         **flinteger?-sym
+         vars)
+       (lambda ()
+         (gen source env vars out-of-line))
        fail)))
 
   (define (no-case source
                    env
                    vars
                    check-run-time-binding
-                   invalid
+                   out-of-line
                    fail)
     (fail))
 
@@ -3293,44 +3375,44 @@
                      generic-call))))))))
 
   (define (make-prim-generator prim)
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (gen-call-prim-vars source env prim vars)))
 
   (define gen-fixnum-0
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (new-cst source env
         0)))
 
   (define gen-fixnum-1
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (new-cst source env
         1)))
 
   (define gen-flonum-0
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (new-cst source env
         (macro-inexact-+0))))
 
   (define gen-flonum-1
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (new-cst source env
         (macro-inexact-+1))))
 
   (define gen-first-arg
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (new-ref source env
         (car vars))))
 
   (define (make-nary-generator zero one two-or-more)
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (cond ((null? vars)
-             (zero source env vars invalid))
+             (zero source env vars out-of-line))
             ((null? (cdr vars))
-             (one source env vars invalid))
+             (one source env vars out-of-line))
             (else
-             (two-or-more source env vars invalid)))))
+             (two-or-more source env vars out-of-line)))))
 
-  (define (gen-fold source env vars invalid op-sym)
+  (define (gen-fold source env vars out-of-line op-sym)
 
     (define (fold result vars)
       (if (null? vars)
@@ -3347,13 +3429,13 @@
           (cdr vars)))
 
   (define (make-fold-generator op-sym)
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (gen-fold source env
         vars
-        invalid
+        out-of-line
         op-sym)))
 
-  (define (gen-conditional-fold source env vars invalid gen-op)
+  (define (gen-conditional-fold source env vars out-of-line gen-op)
 
     (define (conditional-fold result-var vars intermediate-result-vars)
       (if (null? vars)
@@ -3369,7 +3451,7 @@
                 (conditional-fold var
                                   (cdr vars)
                                   (cdr intermediate-result-vars))
-                (invalid)))
+                (out-of-line)))
             (list (gen-op source env result-var (car vars)))))))
 
     (conditional-fold (car vars)
@@ -3377,17 +3459,17 @@
                       (gen-temp-vars source (cdr vars))))
 
   (define (make-conditional-fold-generator conditional-op-sym)
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (gen-conditional-fold source env
         vars
-        invalid
+        out-of-line
         (lambda (source env var1 var2)
           (gen-call-prim-vars source env
             conditional-op-sym
             (list var1 var2))))))
 
   (define (make-conditional-fixed-arity-generator conditional-op-sym)
-    (lambda (source env vars invalid)
+    (lambda (source env vars out-of-line)
       (let ((var (car (gen-temp-vars source '(#f)))))
         (new-call source env
           (gen-prc source env
@@ -3397,7 +3479,7 @@
                 var)
               (new-ref source env
                 var)
-              (invalid)))
+              (out-of-line)))
           (list (gen-call-prim-vars source env
                   conditional-op-sym
                   vars))))))
@@ -3474,7 +3556,7 @@
        (make-nary-generator
         gen-fixnum-1
         gen-first-arg
-        (lambda (source env vars invalid)
+        (lambda (source env vars out-of-line)
           (new-tst source env
             (gen-disj-multi source env
               (map (lambda (var)
@@ -3489,7 +3571,7 @@
               0)
             (gen-conditional-fold source env
               vars
-              invalid
+              out-of-line
               (lambda (source env var1 var2)
                 (new-tst source env
                   (gen-call-prim source env
@@ -3517,10 +3599,10 @@
        (make-nary-generator
         gen-fixnum-0 ; ignored
         (make-conditional-fixed-arity-generator **fx-?-sym)
-        (lambda (source env vars invalid)
+        (lambda (source env vars out-of-line)
           (gen-conditional-fold source env
             vars
-            invalid
+            out-of-line
             (lambda (source env var1 var2)
               (gen-call-prim-vars source env
                 **fx-?-sym
@@ -3528,14 +3610,14 @@
 
     (define case-fxwrapquotient
       (gen-fixnum-division-case
-       (lambda (source env vars invalid)
+       (lambda (source env vars out-of-line)
          (gen-call-prim-vars source env
            **fxwrapquotient-sym
            vars))))
 
     (define case-fxquotient
       (gen-fixnum-division-case
-       (lambda (source env vars invalid)
+       (lambda (source env vars out-of-line)
          (new-tst source env
            (gen-call-prim source env
              **eqv?-sym
@@ -3547,7 +3629,7 @@
              (gen-call-prim-vars source env
                **fx-?-sym
                (list (car vars)))
-             (invalid))
+             (out-of-line))
            (gen-call-prim-vars source env
              **fxquotient-sym
              vars)))))
@@ -3556,10 +3638,10 @@
       (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0 ; ignored
-        (lambda (source env vars invalid)
+        (lambda (source env vars out-of-line)
           ;; call / to compute inverse
-          (invalid))
-        (lambda (source env vars invalid)
+          (out-of-line))
+        (lambda (source env vars out-of-line)
           (new-tst source env
             (gen-disj-multi source env
               (map (lambda (var)
@@ -3572,7 +3654,7 @@
                              (new-cst source env
                                0))))
                    (reverse (cdr vars))))
-            (invalid)
+            (out-of-line)
             (let ()
 
               (define (fold-quotient accu-var rest-vars)
@@ -3598,7 +3680,7 @@
                                     (new-cst source env
                                       0)))
                             (fold-quotient q-var (cdr rest-vars))
-                            (invalid)))
+                            (out-of-line)))
                         (list (gen-call-prim source env
                                 **fxquotient-sym
                                 (list (new-ref source env
@@ -3730,10 +3812,12 @@
       (gen-simple-case **flonum?-sym **flnegative?-sym))
 
     (define case-flodd?
-      (gen-simple-case **flonum?-sym **flodd?-sym))
+      (gen-odd-even-flonum-case
+       (make-prim-generator **flodd?-sym)))
 
     (define case-fleven?
-      (gen-simple-case **flonum?-sym **fleven?-sym))
+      (gen-odd-even-flonum-case
+       (make-prim-generator **fleven?-sym)))
 
     (define case-flfinite?
       (gen-simple-case **flonum?-sym **flfinite?-sym))
@@ -3899,7 +3983,7 @@
                env
                vars
                check-run-time-binding
-               invalid
+               out-of-line
                fail)
         (gen-check-run-time-binding
          check-run-time-binding
@@ -3936,7 +4020,7 @@
                                **subtype-sym
                                (list (new-ref source env
                                        var2)))))
-                     (invalid)))))))
+                     (out-of-line)))))))
          fail)))
 
     (define case-real?
@@ -3944,7 +4028,7 @@
                env
                vars
                check-run-time-binding
-               invalid
+               out-of-line
                fail)
         (gen-check-run-time-binding
          check-run-time-binding
@@ -3963,7 +4047,7 @@
                env
                vars
                check-run-time-binding
-               invalid
+               out-of-line
                fail)
         (gen-check-run-time-binding
          check-run-time-binding
@@ -3983,7 +4067,7 @@
                env
                vars
                check-run-time-binding
-               invalid
+               out-of-line
                fail)
         (gen-check-run-time-binding
          check-run-time-binding
@@ -4000,7 +4084,7 @@
                env
                vars
                check-run-time-binding
-               invalid
+               out-of-line
                fail)
         (gen-check-run-time-binding
          check-run-time-binding
@@ -4021,7 +4105,7 @@
                env
                vars
                check-run-time-binding
-               invalid
+               out-of-line
                fail)
         (gen-check-run-time-binding
          check-run-time-binding
@@ -4048,67 +4132,67 @@
 
     (def-exp "fx=" (make-simple-expander case-fx=))
     (def-exp "fl=" (make-simple-expander case-fl=))
-    (def-exp "="   (make-fixflo-expander case-fx= case-fl=))
+    (def-exp2"="   (make-fixflo-expander case-fx= case-fl=))
 
     (def-exp "fx<" (make-simple-expander case-fx<))
     (def-exp "fl<" (make-simple-expander case-fl<))
-    (def-exp "<"   (make-fixflo-expander case-fx< case-fl<))
+    (def-exp2"<"   (make-fixflo-expander case-fx< case-fl<))
 
     (def-exp "fx>" (make-simple-expander case-fx>))
     (def-exp "fl>" (make-simple-expander case-fl>))
-    (def-exp ">"   (make-fixflo-expander case-fx> case-fl>))
+    (def-exp2">"   (make-fixflo-expander case-fx> case-fl>))
 
     (def-exp "fx<=" (make-simple-expander case-fx<=))
     (def-exp "fl<=" (make-simple-expander case-fl<=))
-    (def-exp "<="   (make-fixflo-expander case-fx<= case-fl<=))
+    (def-exp2"<="   (make-fixflo-expander case-fx<= case-fl<=))
 
     (def-exp "fx>=" (make-simple-expander case-fx>=))
     (def-exp "fl>=" (make-simple-expander case-fl>=))
-    (def-exp ">="   (make-fixflo-expander case-fx>= case-fl>=))
+    (def-exp2">="   (make-fixflo-expander case-fx>= case-fl>=))
 
     (def-exp "flinteger?" (make-simple-expander case-flinteger?))
 
     (def-exp "fxzero?" (make-simple-expander case-fxzero?))
     (def-exp "flzero?" (make-simple-expander case-flzero?))
-    (def-exp "zero?"   (make-fixflo-expander case-fxzero? case-flzero?))
+    (def-exp2"zero?"   (make-fixflo-expander case-fxzero? case-flzero?))
 
     (def-exp "fxpositive?" (make-simple-expander case-fxpositive?))
     (def-exp "flpositive?" (make-simple-expander case-flpositive?))
-    (def-exp "positive?"   (make-fixflo-expander case-fxpositive? case-flpositive?))
+    (def-exp2"positive?"   (make-fixflo-expander case-fxpositive? case-flpositive?))
 
     (def-exp "fxnegative?" (make-simple-expander case-fxnegative?))
     (def-exp "flnegative?" (make-simple-expander case-flnegative?))
-    (def-exp "negative?"   (make-fixflo-expander case-fxnegative? case-flnegative?))
+    (def-exp2"negative?"   (make-fixflo-expander case-fxnegative? case-flnegative?))
 
     (def-exp "fxodd?" (make-simple-expander case-fxodd?))
     (def-exp "flodd?" (make-simple-expander case-flodd?))
-    (def-exp "odd?"   (make-fixflo-expander case-fxodd? case-flodd?))
+    (def-exp2"odd?"   (make-fixflo-expander case-fxodd? case-flodd?))
 
     (def-exp "fxeven?" (make-simple-expander case-fxeven?))
     (def-exp "fleven?" (make-simple-expander case-fleven?))
-    (def-exp "even?"   (make-fixflo-expander case-fxeven? case-fleven?))
+    (def-exp2"even?"   (make-fixflo-expander case-fxeven? case-fleven?))
 
     (def-exp "flfinite?" (make-simple-expander case-flfinite?))
-    (def-exp "finite?"   (make-fixflo-expander no-case case-flfinite?))
+    (def-exp2"finite?"   (make-fixflo-expander no-case case-flfinite?))
 
     (def-exp "flinfinite?" (make-simple-expander case-flinfinite?))
-    (def-exp "infinite?"   (make-fixflo-expander no-case case-flinfinite?))
+    (def-exp2"infinite?"   (make-fixflo-expander no-case case-flinfinite?))
 
     (def-exp "flnan?" (make-simple-expander case-flnan?))
-    (def-exp "nan?"   (make-fixflo-expander no-case case-flnan?))
+    (def-exp2"nan?"   (make-fixflo-expander no-case case-flnan?))
 
     (def-exp "fxmax" (make-simple-expander case-fxmax))
     (def-exp "flmax" (make-simple-expander case-flmax))
-    (def-exp "max"   (make-fixflo-expander case-fxmax case-flmax))
+    (def-exp2"max"   (make-fixflo-expander case-fxmax case-flmax))
 
     (def-exp "fxmin" (make-simple-expander case-fxmin))
     (def-exp "flmin" (make-simple-expander case-flmin))
-    (def-exp "min"   (make-fixflo-expander case-fxmin case-flmin))
+    (def-exp2"min"   (make-fixflo-expander case-fxmin case-flmin))
 
     (def-exp "fxwrap+" (make-simple-expander case-fxwrap+))
     (def-exp "fx+"     (make-simple-expander case-fx+))
     (def-exp "fl+"     (make-simple-expander case-fl+))
-    (def-exp "+"       (make-fixflo-expander
+    (def-exp2"+"       (make-fixflo-expander
                          case-fx+
                          (gen-flonum-case
                           (make-nary-generator
@@ -4119,7 +4203,7 @@
     (def-exp "fxwrap*" (make-simple-expander case-fxwrap*))
     (def-exp "fx*"     (make-simple-expander case-fx*))
     (def-exp "fl*"     (make-simple-expander case-fl*))
-    (def-exp "*"       (make-fixflo-expander
+    (def-exp2"*"       (make-fixflo-expander
                          case-fx*
                          (gen-flonum-case
                           (make-nary-generator
@@ -4130,20 +4214,20 @@
     (def-exp "fxwrap-" (make-simple-expander case-fxwrap-))
     (def-exp "fx-"     (make-simple-expander case-fx-))
     (def-exp "fl-"     (make-simple-expander case-fl-))
-    (def-exp "-"       (make-fixflo-expander case-fx- case-fl-))
+    (def-exp2"-"       (make-fixflo-expander case-fx- case-fl-))
 
     (def-exp "fl/"     (make-simple-expander case-fl/))
-    (def-exp "/"       (make-fixflo-expander case-fixnum/ case-fl/))
+    (def-exp2"/"       (make-fixflo-expander case-fixnum/ case-fl/))
 
     (def-exp "fxwrapquotient" (make-simple-expander case-fxwrapquotient))
     (def-exp "fxquotient"     (make-simple-expander case-fxquotient))
-    (def-exp "quotient"       (make-fixnum-division-expander case-fxquotient))
+    (def-exp2"quotient"       (make-fixnum-division-expander case-fxquotient))
 
     (def-exp "fxremainder" (make-simple-expander case-fxremainder))
-    (def-exp "remainder"   (make-fixnum-division-expander case-fxremainder))
+    (def-exp2"remainder"   (make-fixnum-division-expander case-fxremainder))
 
     (def-exp "fxmodulo" (make-simple-expander case-fxmodulo))
-    (def-exp "modulo"   (make-fixnum-division-expander case-fxmodulo))
+    (def-exp2"modulo"   (make-fixnum-division-expander case-fxmodulo))
 
     (def-exp "fxnot" (make-simple-expander case-fxnot))
 
@@ -4153,13 +4237,13 @@
 
     (def-exp "fxxor" (make-simple-expander case-fxxor))
 
-    (def-exp "bitwise-not" (make-simple-expander case-bitwise-not))
+    (def-exp2"bitwise-not" (make-simple-expander case-bitwise-not))
 
-    (def-exp "bitwise-and" (make-simple-expander case-bitwise-and))
+    (def-exp2"bitwise-and" (make-simple-expander case-bitwise-and))
 
-    (def-exp "bitwise-ior" (make-simple-expander case-bitwise-ior))
+    (def-exp2"bitwise-ior" (make-simple-expander case-bitwise-ior))
 
-    (def-exp "bitwise-xor" (make-simple-expander case-bitwise-xor))
+    (def-exp2"bitwise-xor" (make-simple-expander case-bitwise-xor))
 
     (def-exp "fxwraparithmetic-shift"
       (make-simple-expander case-fxwraparithmetic-shift))
@@ -4177,118 +4261,118 @@
     (def-exp "fxwrapabs" (make-simple-expander case-fxwrapabs))
     (def-exp "fxabs" (make-simple-expander case-fxabs))
     (def-exp "flabs" (make-simple-expander case-flabs))
-    (def-exp "abs"   (make-fixflo-expander case-fxabs case-flabs))
+    (def-exp2"abs"   (make-fixflo-expander case-fxabs case-flabs))
 
     (def-exp "fxwrapsquare" (make-simple-expander case-fxwrapsquare))
     (def-exp "fxsquare" (make-simple-expander case-fxsquare))
     (def-exp "flsquare" (make-simple-expander case-flsquare))
-    (def-exp "square"   (make-fixflo-expander case-fxsquare case-flsquare))
+    (def-exp2"square"   (make-fixflo-expander case-fxsquare case-flsquare))
 
     (def-exp "flfloor" (make-simple-expander case-flfloor))
-    (def-exp "floor"   (make-fixflo-expander no-case case-flfloor))
+    (def-exp2"floor"   (make-fixflo-expander no-case case-flfloor))
 
     (def-exp "flceiling" (make-simple-expander case-flceiling))
-    (def-exp "ceiling"   (make-fixflo-expander no-case case-flceiling))
+    (def-exp2"ceiling"   (make-fixflo-expander no-case case-flceiling))
 
     (def-exp "fltruncate" (make-simple-expander case-fltruncate))
-    (def-exp "truncate"   (make-fixflo-expander no-case case-fltruncate))
+    (def-exp2"truncate"   (make-fixflo-expander no-case case-fltruncate))
 
     (def-exp "flround" (make-simple-expander case-flround))
-    (def-exp "round"   (make-fixflo-expander no-case case-flround))
+    (def-exp2"round"   (make-fixflo-expander no-case case-flround))
 
     (def-exp "flexp" (make-simple-expander case-flexp))
-    (def-exp "exp"   (make-fixflo-expander no-case case-flexp))
+    (def-exp2"exp"   (make-fixflo-expander no-case case-flexp))
 
     (def-exp "fllog" (make-simple-expander case-fllog))
-    (def-exp "log"   (make-fixflo-expander no-case case-log-flonum))
+    (def-exp2"log"   (make-fixflo-expander no-case case-log-flonum))
 
     (def-exp "flsin" (make-simple-expander case-flsin))
-    (def-exp "sin"   (make-fixflo-expander no-case case-flsin))
+    (def-exp2"sin"   (make-fixflo-expander no-case case-flsin))
 
     (def-exp "flcos" (make-simple-expander case-flcos))
-    (def-exp "cos"   (make-fixflo-expander no-case case-flcos))
+    (def-exp2"cos"   (make-fixflo-expander no-case case-flcos))
 
     (def-exp "fltan" (make-simple-expander case-fltan))
-    (def-exp "tan"   (make-fixflo-expander no-case case-fltan))
+    (def-exp2"tan"   (make-fixflo-expander no-case case-fltan))
 
     (def-exp "flasin" (make-simple-expander case-flasin))
-    (def-exp "asin"   (make-fixflo-expander no-case case-asin-flonum))
+    (def-exp2"asin"   (make-fixflo-expander no-case case-asin-flonum))
 
     (def-exp "flacos" (make-simple-expander case-flacos))
-    (def-exp "acos"   (make-fixflo-expander no-case case-acos-flonum))
+    (def-exp2"acos"   (make-fixflo-expander no-case case-acos-flonum))
 
     (def-exp "flatan" (make-simple-expander case-flatan))
-    (def-exp "atan"   (make-fixflo-expander no-case case-flatan))
+    (def-exp2"atan"   (make-fixflo-expander no-case case-flatan))
 
     (def-exp "flsinh" (make-simple-expander case-flsinh))
-    (def-exp "sinh"   (make-fixflo-expander no-case case-flsinh))
+    (def-exp2"sinh"   (make-fixflo-expander no-case case-flsinh))
 
     (def-exp "flcosh" (make-simple-expander case-flcosh))
-    (def-exp "cosh"   (make-fixflo-expander no-case case-flcosh))
+    (def-exp2"cosh"   (make-fixflo-expander no-case case-flcosh))
 
     (def-exp "fltanh" (make-simple-expander case-fltanh))
-    (def-exp "tanh"   (make-fixflo-expander no-case case-fltanh))
+    (def-exp2"tanh"   (make-fixflo-expander no-case case-fltanh))
 
     (def-exp "flasinh" (make-simple-expander case-flasinh))
-    (def-exp "asinh"   (make-fixflo-expander no-case case-flasinh))
+    (def-exp2"asinh"   (make-fixflo-expander no-case case-flasinh))
 
     (def-exp "flacosh" (make-simple-expander case-flacosh))
-    (def-exp "acosh"   (make-fixflo-expander no-case case-acosh-flonum))
+    (def-exp2"acosh"   (make-fixflo-expander no-case case-acosh-flonum))
 
     (def-exp "flatanh" (make-simple-expander case-flatanh))
-    (def-exp "atanh"   (make-fixflo-expander no-case case-atanh-flonum))
+    (def-exp2"atanh"   (make-fixflo-expander no-case case-atanh-flonum))
 
     (def-exp "flhypot" (make-simple-expander case-flhypot))
     ;; There is no hypot function.
 
     (def-exp "flexpt" (make-simple-expander case-flexpt))
-    (def-exp "expt"   (make-fixflo-expander no-case case-expt-flonum))
+    (def-exp2"expt"   (make-fixflo-expander no-case case-expt-flonum))
 
     (def-exp "flsqrt" (make-simple-expander case-flsqrt))
-    (def-exp "sqrt"   (make-fixflo-expander no-case case-sqrt-flonum))
+    (def-exp2"sqrt"   (make-fixflo-expander no-case case-sqrt-flonum))
 
-    (def-exp "fixnum->flonum" (make-simple-expander case-fixnum->flonum))
+    (def-exp2"fixnum->flonum" (make-simple-expander case-fixnum->flonum))
 
-    (def-exp
+    (def-exp2
      "exact->inexact"
      (make-fixflo-expander
       case-fixnum-exact->inexact
       case-flonum-exact->inexact))
 
-    (def-exp
+    (def-exp2
      "inexact->exact"
      (make-fixflo-expander
       case-fixnum-inexact->exact
       case-flonum-inexact->exact))
 
-    (def-exp
+    (def-exp2
      "inexact"
      (make-fixflo-expander
       case-fixnum-exact->inexact
       case-flonum-exact->inexact))
 
-    (def-exp
+    (def-exp2
      "exact"
      (make-fixflo-expander
       case-fixnum-inexact->exact
       case-flonum-inexact->exact))
 
-    (def-exp
-     "##numerator"
+    (def-exp2
+     "numerator"
      (make-simple-expander
       (gen-simple-case **ratnum?-sym **ratnum-numerator-sym)))
 
-    (def-exp
-     "##denominator"
+    (def-exp2
+     "denominator"
      (make-simple-expander
       (gen-simple-case **ratnum?-sym **ratnum-denominator-sym)))
 
-    (def-exp
+    (def-exp2
      "real-part"
      (make-simple-expander
       (gen-simple-case **cpxnum?-sym **cpxnum-real-sym)))
 
-    (def-exp
+    (def-exp2
      "imag-part"
      (make-simple-expander
       (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym)))
@@ -4296,12 +4380,8 @@
     (if (eq? (target-name targ) 'C)
         (begin
 
-          (def-exp
+          (def-exp2
             "eqv?"
-            (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
-
-          (def-exp
-            "##eqv?"
             (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
 
           (def-exp
@@ -4952,13 +5032,13 @@
              env
              vars
              check-run-time-binding
-             invalid
+             out-of-line
              fail)
       (new-disj source env
         (gen-call-prim-vars source env
           sym
           vars)
-        (invalid))))
+        (out-of-line))))
 
   (def-exp "##peek-char0"
            (make-simple-expander (fast-path **peek-char0?-sym)))
@@ -4992,7 +5072,7 @@
                      env
                      vars
                      check-run-time-binding
-                     invalid
+                     out-of-line
                      fail)
               (new-call source env
                 (let ((vars2 (gen-temp-vars source '(#f))))
