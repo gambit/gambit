@@ -4237,13 +4237,13 @@
 
     (def-exp "fxxor" (make-simple-expander case-fxxor))
 
-    (def-exp2"bitwise-not" (make-simple-expander case-bitwise-not))
+    (def-exp "bitwise-not" (make-simple-expander case-bitwise-not))
 
-    (def-exp2"bitwise-and" (make-simple-expander case-bitwise-and))
+    (def-exp "bitwise-and" (make-simple-expander case-bitwise-and))
 
-    (def-exp2"bitwise-ior" (make-simple-expander case-bitwise-ior))
+    (def-exp "bitwise-ior" (make-simple-expander case-bitwise-ior))
 
-    (def-exp2"bitwise-xor" (make-simple-expander case-bitwise-xor))
+    (def-exp "bitwise-xor" (make-simple-expander case-bitwise-xor))
 
     (def-exp "fxwraparithmetic-shift"
       (make-simple-expander case-fxwraparithmetic-shift))
@@ -4331,7 +4331,7 @@
     (def-exp "flsqrt" (make-simple-expander case-flsqrt))
     (def-exp2"sqrt"   (make-fixflo-expander no-case case-sqrt-flonum))
 
-    (def-exp2"fixnum->flonum" (make-simple-expander case-fixnum->flonum))
+    (def-exp "fixnum->flonum" (make-simple-expander case-fixnum->flonum))
 
     (def-exp2
      "exact->inexact"
