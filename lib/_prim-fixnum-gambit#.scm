@@ -2,7 +2,7 @@
 
 ;;; File: "_prim-fixnum-gambit#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -21,11 +21,14 @@ fx>
 fx>=
 fxabs
 fxand
+fxandc1
+fxandc2
 fxarithmetic-shift
 fxarithmetic-shift-left
 fxarithmetic-shift-right
 fxbit-count
 fxbit-set?
+fxeqv
 fxeven?
 fxfirst-bit-set
 fxif
@@ -34,9 +37,13 @@ fxlength
 fxmax
 fxmin
 fxmodulo
+fxnand
 fxnegative?
+fxnor
 fxnot
 fxodd?
+fxorc1
+fxorc2
 fxpositive?
 fxquotient
 fxremainder

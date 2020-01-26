@@ -2,7 +2,7 @@
 
 ;;; File: "_prim-number-gambit#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -19,9 +19,16 @@ atanh
 bit-count
 bit-set?
 bitwise-and
+bitwise-andc1
+bitwise-andc2
+bitwise-eqv
 bitwise-ior
 bitwise-merge
+bitwise-nand
+bitwise-nor
 bitwise-not
+bitwise-orc1
+bitwise-orc2
 bitwise-xor
 clear-bit-field
 conjugate

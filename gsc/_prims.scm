@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -146,14 +146,28 @@
 ("zero?"                              (1)   #f 0     0    boolean ieee)
 ("##zero?"                            (1)   #f ()    0    boolean extended)
 
-("bitwise-ior"                        0     #f 0     0    integer r6rs)
-("##bitwise-ior"                      0     #f ()    0    integer extended)
-("bitwise-xor"                        0     #f 0     0    integer r6rs)
-("##bitwise-xor"                      0     #f ()    0    integer extended)
 ("bitwise-and"                        0     #f 0     0    integer r6rs)
 ("##bitwise-and"                      0     #f ()    0    integer extended)
+("bitwise-andc1"                      (2)   #f ()    0    integer extended)
+("##bitwise-andc1"                    (2)   #f ()    0    integer extended)
+("bitwise-andc2"                      (2)   #f ()    0    integer extended)
+("##bitwise-andc2"                    (2)   #f ()    0    integer extended)
+("bitwise-eqv"                        0     #f 0     0    integer extended)
+("##bitwise-eqv"                      0     #f ()    0    integer extended)
+("bitwise-ior"                        0     #f 0     0    integer r6rs)
+("##bitwise-ior"                      0     #f ()    0    integer extended)
+("bitwise-nand"                       (2)   #f ()    0    integer extended)
+("##bitwise-nand"                     (2)   #f ()    0    integer extended)
+("bitwise-nor"                        (2)   #f ()    0    integer extended)
+("##bitwise-nor"                      (2)   #f ()    0    integer extended)
 ("bitwise-not"                        (1)   #f 0     0    integer r6rs)
 ("##bitwise-not"                      (1)   #f ()    0    integer extended)
+("bitwise-orc1"                       (2)   #f ()    0    integer extended)
+("##bitwise-orc1"                     (2)   #f ()    0    integer extended)
+("bitwise-orc2"                       (2)   #f ()    0    integer extended)
+("##bitwise-orc2"                     (2)   #f ()    0    integer extended)
+("bitwise-xor"                        0     #f 0     0    integer r6rs)
+("##bitwise-xor"                      0     #f ()    0    integer extended)
 ("exact-integer-sqrt"                 (1)   #f 0     0    #f      r6rs)
 ("##exact-integer-sqrt"               (1)   #f ()    0    #f      extended)
 ("finite?"                            (1)   #f 0     0    boolean r6rs)
@@ -255,9 +269,16 @@
 ("##bignum.adigit-copy!"              (4)   #t ()    0    #f      extended)
 ("##bignum.adigit-cat!"               (7)   #t ()    0    #f      extended)
 ("##bignum.adigit-bitwise-and!"       (4)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-andc1!"     (4)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-andc2!"     (4)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-eqv!"       (4)   #t ()    0    #f      extended)
 ("##bignum.adigit-bitwise-ior!"       (4)   #t ()    0    #f      extended)
-("##bignum.adigit-bitwise-xor!"       (4)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-nand!"      (4)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-nor!"       (4)   #t ()    0    #f      extended)
 ("##bignum.adigit-bitwise-not!"       (2)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-orc1!"      (4)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-orc2!"      (4)   #t ()    0    #f      extended)
+("##bignum.adigit-bitwise-xor!"       (4)   #t ()    0    #f      extended)
 ("##bignum.fdigit-length"             (1)   #f ()    0    integer extended)
 ("##bignum.fdigit-ref"                (2)   #f ()    0    integer extended)
 ("##bignum.fdigit-set!"               (3)   #t ()    0    #f      extended)
@@ -297,6 +318,10 @@
 ("##fx>="                             0     #f ()    0    boolean extended)
 ("fxand"                              0     #f 0     0    fixnum  r6rs)
 ("##fxand"                            0     #f ()    0    fixnum  extended)
+("fxandc1"                            (2)   #f 0     0    fixnum  extended)
+("##fxandc1"                          (2)   #f ()    0    fixnum  extended)
+("fxandc2"                            (2)   #f 0     0    fixnum  extended)
+("##fxandc2"                          (2)   #f ()    0    fixnum  extended)
 ("fxarithmetic-shift"                 (2)   #f 0     0    fixnum  r6rs)
 ("##fxarithmetic-shift"               (2)   #f ()    0    fixnum  extended)
 ("##fxarithmetic-shift?"              (2)   #f ()    0    #f      extended)
@@ -312,6 +337,8 @@
 ("##fxbit-set?"                       (2)   #f ()    0    fixnum  extended)
 ("fxeven?"                            (1)   #f 0     0    boolean r6rs)
 ("##fxeven?"                          (1)   #f ()    0    boolean extended)
+("fxeqv"                              0     #f 0     0    fixnum  extended)
+("##fxeqv"                            0     #f ()    0    fixnum  extended)
 ("fxfirst-bit-set"                    (1)   #f 0     0    fixnum  r6rs)
 ("##fxfirst-bit-set"                  (1)   #f ()    0    fixnum  extended)
 ("fxif"                               (3)   #f 0     0    fixnum  r6rs)
@@ -328,10 +355,18 @@
 ("##fxmodulo"                         (2)   #f ()    0    fixnum  extended)
 ("fxnegative?"                        (1)   #f 0     0    boolean r6rs)
 ("##fxnegative?"                      (1)   #f ()    0    boolean extended)
+("fxnand"                             (2)   #f 0     0    fixnum  extended)
+("##fxnand"                           (2)   #f ()    0    fixnum  extended)
+("fxnor"                              (2)   #f 0     0    fixnum  extended)
+("##fxnor"                            (2)   #f ()    0    fixnum  extended)
 ("fxnot"                              (1)   #f 0     0    fixnum  r6rs)
 ("##fxnot"                            (1)   #f ()    0    fixnum  extended)
 ("fxodd?"                             (1)   #f 0     0    boolean r6rs)
 ("##fxodd?"                           (1)   #f ()    0    boolean extended)
+("fxorc1"                             (2)   #f 0     0    fixnum  extended)
+("##fxorc1"                           (2)   #f ()    0    fixnum  extended)
+("fxorc2"                             (2)   #f 0     0    fixnum  extended)
+("##fxorc2"                           (2)   #f ()    0    fixnum  extended)
 ("fxpositive?"                        (1)   #f 0     0    boolean r6rs)
 ("##fxpositive?"                      (1)   #f ()    0    boolean extended)
 ("fxquotient"                         (2)   #f 0     0    fixnum  r6rs)
@@ -1722,14 +1757,29 @@
 (def-spec "zero?"              (spec-arith "fxzero?"   "flzero?" "##zero?"))
 (def-spec "##zero?"            (spec-arith "##fxzero?" "##flzero?"))
 
-(def-spec "bitwise-ior"        (spec-arith "fxior"   #f "##bitwise-ior"))
-(def-spec "##bitwise-ior"      (spec-arith "##fxior" #f))
-(def-spec "bitwise-xor"        (spec-arith "fxxor"   #f "##bitwise-xor"))
-(def-spec "##bitwise-xor"      (spec-arith "##fxxor" #f))
-(def-spec "bitwise-and"        (spec-arith "fxand"   #f "##bitwise-and"))
-(def-spec "##bitwise-and"      (spec-arith "##fxand" #f))
-(def-spec "bitwise-not"        (spec-arith "fxnot"   #f "##bitwise-not"))
-(def-spec "##bitwise-not"      (spec-arith "##fxnot" #f))
+(def-spec "bitwise-and"        (spec-arith "fxand"     #f "##bitwise-and"))
+(def-spec "##bitwise-and"      (spec-arith "##fxand"   #f))
+(def-spec "bitwise-andc1"      (spec-arith "fxandc1"   #f "##bitwise-andc1"))
+(def-spec "##bitwise-andc1"    (spec-arith "##fxandc1" #f))
+(def-spec "bitwise-andc2"      (spec-arith "fxandc2"   #f "##bitwise-andc2"))
+(def-spec "##bitwise-andc2"    (spec-arith "##fxandc2" #f))
+(def-spec "bitwise-eqv"        (spec-arith "fxeqv"     #f "##bitwise-eqv"))
+(def-spec "##bitwise-eqv"      (spec-arith "##fxeqv"   #f))
+(def-spec "bitwise-ior"        (spec-arith "fxior"     #f "##bitwise-ior"))
+(def-spec "##bitwise-ior"      (spec-arith "##fxior"   #f))
+(def-spec "bitwise-nand"       (spec-arith "fxnand"    #f "##bitwise-nand"))
+(def-spec "##bitwise-nand"     (spec-arith "##fxnand"  #f))
+(def-spec "bitwise-nor"        (spec-arith "fxnor"     #f "##bitwise-nor"))
+(def-spec "##bitwise-nor"      (spec-arith "##fxnor"   #f))
+(def-spec "bitwise-not"        (spec-arith "fxnot"     #f "##bitwise-not"))
+(def-spec "##bitwise-not"      (spec-arith "##fxnot"   #f))
+(def-spec "bitwise-orc1"       (spec-arith "fxorc1"    #f "##bitwise-orc1"))
+(def-spec "##bitwise-orc1"     (spec-arith "##fxorc1"  #f))
+(def-spec "bitwise-orc2"       (spec-arith "fxorc2"    #f "##bitwise-orc2"))
+(def-spec "##bitwise-orc2"     (spec-arith "##fxorc2"  #f))
+(def-spec "bitwise-xor"        (spec-arith "fxxor"     #f "##bitwise-xor"))
+(def-spec "##bitwise-xor"      (spec-arith "##fxxor"   #f))
+
 (def-spec "exact-integer-sqrt" (spec-u "##exact-integer-sqrt"))
 (def-spec "finite?"            (spec-arith #f "flfinite?" "##finite?"))
 (def-spec "##finite?"          (spec-arith #f "##flfinite?"))
@@ -1812,11 +1862,14 @@
 (def-spec "fx>"                (spec-u "##fx>"))
 (def-spec "fx>="               (spec-u "##fx>="))
 (def-spec "fxand"              (spec-u "##fxand"))
+(def-spec "fxandc1"            (spec-u "##fxandc1"))
+(def-spec "fxandc2"            (spec-u "##fxandc2"))
 (def-spec "fxarithmetic-shift" (spec-u "##fxarithmetic-shift"))
 (def-spec "fxarithmetic-shift-left" (spec-u "##fxarithmetic-shift-left"))
 (def-spec "fxarithmetic-shift-right" (spec-u "##fxarithmetic-shift-right"))
 (def-spec "fxbit-count"        (spec-u "##fxbit-count"))
 (def-spec "fxbit-set?"         (spec-u "##fxbit-set?"))
+(def-spec "fxeqv"              (spec-u "##fxeqv"))
 (def-spec "fxeven?"            (spec-u "##fxeven?"))
 (def-spec "fxfirst-bit-set"    (spec-u "##fxfirst-bit-set"))
 (def-spec "fxif"               (spec-u "##fxif"))
@@ -1826,8 +1879,12 @@
 (def-spec "fxmin"              (spec-u "##fxmin"))
 (def-spec "fxmodulo"           (spec-u "##fxmodulo"))
 (def-spec "fxnegative?"        (spec-u "##fxnegative?"))
+(def-spec "fxnand"             (spec-u "##fxnot"))
+(def-spec "fxnor"              (spec-u "##fxnot"))
 (def-spec "fxnot"              (spec-u "##fxnot"))
 (def-spec "fxodd?"             (spec-u "##fxodd?"))
+(def-spec "fxorc1"             (spec-u "##fxorc1"))
+(def-spec "fxorc2"             (spec-u "##fxorc2"))
 (def-spec "fxpositive?"        (spec-u "##fxpositive?"))
 (def-spec "fxquotient"         (spec-u "##fxquotient"))
 (def-spec "fxremainder"        (spec-u "##fxremainder"))
@@ -2990,15 +3047,29 @@
   (define **fxsquare-sym (string->canonical-symbol "##fxsquare"))
   (define **fxsquare?-sym (string->canonical-symbol "##fxsquare?"))
 
-  (define **fxnot-sym (string->canonical-symbol "##fxnot"))
-  (define **fxand-sym (string->canonical-symbol "##fxand"))
-  (define **fxior-sym (string->canonical-symbol "##fxior"))
-  (define **fxxor-sym (string->canonical-symbol "##fxxor"))
+  (define **fxand-sym   (string->canonical-symbol "##fxand"))
+  (define **fxandc1-sym (string->canonical-symbol "##fxandc1"))
+  (define **fxandc2-sym (string->canonical-symbol "##fxandc2"))
+  (define **fxeqv-sym   (string->canonical-symbol "##fxeqv"))
+  (define **fxior-sym   (string->canonical-symbol "##fxior"))
+  (define **fxnand-sym  (string->canonical-symbol "##fxnand"))
+  (define **fxnor-sym   (string->canonical-symbol "##fxnor"))
+  (define **fxnot-sym   (string->canonical-symbol "##fxnot"))
+  (define **fxorc1-sym  (string->canonical-symbol "##fxorc1"))
+  (define **fxorc2-sym  (string->canonical-symbol "##fxorc2"))
+  (define **fxxor-sym   (string->canonical-symbol "##fxxor"))
 
-  (define bitwise-not-sym (string->canonical-symbol "bitwise-not"))
-  (define bitwise-and-sym (string->canonical-symbol "bitwise-and"))
-  (define bitwise-ior-sym (string->canonical-symbol "bitwise-ior"))
-  (define bitwise-xor-sym (string->canonical-symbol "bitwise-xor"))
+  (define bitwise-and-sym   (string->canonical-symbol "bitwise-and"))
+  (define bitwise-andc1-sym (string->canonical-symbol "bitwise-andc1"))
+  (define bitwise-andc2-sym (string->canonical-symbol "bitwise-andc2"))
+  (define bitwise-eqv-sym   (string->canonical-symbol "bitwise-eqv"))
+  (define bitwise-ior-sym   (string->canonical-symbol "bitwise-ior"))
+  (define bitwise-nand-sym  (string->canonical-symbol "bitwise-nand"))
+  (define bitwise-nor-sym   (string->canonical-symbol "bitwise-nor"))
+  (define bitwise-not-sym   (string->canonical-symbol "bitwise-not"))
+  (define bitwise-orc1-sym  (string->canonical-symbol "bitwise-orc1"))
+  (define bitwise-orc2-sym  (string->canonical-symbol "bitwise-orc2"))
+  (define bitwise-xor-sym   (string->canonical-symbol "bitwise-xor"))
 
   (define **fxwraparithmetic-shift-sym
     (string->canonical-symbol "##fxwraparithmetic-shift"))
@@ -3718,28 +3789,37 @@
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator **fxsquare?-sym)))
 
-    (define case-fxnot
-      (gen-simple-case **fixnum?-sym **fxnot-sym))
-
     (define case-fxand
       (gen-simple-case **fixnum?-sym **fxand-sym))
+
+    (define case-fxandc1
+      (gen-simple-case **fixnum?-sym **fxandc1-sym))
+
+    (define case-fxandc2
+      (gen-simple-case **fixnum?-sym **fxandc2-sym))
+
+    (define case-fxeqv
+      (gen-simple-case **fixnum?-sym **fxeqv-sym))
 
     (define case-fxior
       (gen-simple-case **fixnum?-sym **fxior-sym))
 
-    (define case-fxxor
-      (gen-simple-case **fixnum?-sym **fxxor-sym))
+    (define case-fxnand
+      (gen-simple-case **fixnum?-sym **fxnand-sym))
 
-    (define case-bitwise-not
+    (define case-fxnor
+      (gen-simple-case **fixnum?-sym **fxnor-sym))
+
+    (define case-fxnot
       (gen-simple-case **fixnum?-sym **fxnot-sym))
 
-    (define case-bitwise-and
-      (gen-simple-case **fixnum?-sym **fxand-sym))
+    (define case-fxorc1
+      (gen-simple-case **fixnum?-sym **fxorc1-sym))
 
-    (define case-bitwise-ior
-      (gen-simple-case **fixnum?-sym **fxior-sym))
+    (define case-fxorc2
+      (gen-simple-case **fixnum?-sym **fxorc2-sym))
 
-    (define case-bitwise-xor
+    (define case-fxxor
       (gen-simple-case **fixnum?-sym **fxxor-sym))
 
     (define case-fxwraparithmetic-shift
@@ -4229,21 +4309,29 @@
     (def-exp "fxmodulo" (make-simple-expander case-fxmodulo))
     (def-exp2"modulo"   (make-fixnum-division-expander case-fxmodulo))
 
-    (def-exp "fxnot" (make-simple-expander case-fxnot))
+    (def-exp "fxand"   (make-simple-expander case-fxand))
+    (def-exp "fxandc1" (make-simple-expander case-fxandc1))
+    (def-exp "fxandc2" (make-simple-expander case-fxandc2))
+    (def-exp "fxeqv"   (make-simple-expander case-fxeqv))
+    (def-exp "fxior"   (make-simple-expander case-fxior))
+    (def-exp "fxnand"  (make-simple-expander case-fxnand))
+    (def-exp "fxnor"   (make-simple-expander case-fxnor))
+    (def-exp "fxnot"   (make-simple-expander case-fxnot))
+    (def-exp "fxorc1"  (make-simple-expander case-fxorc1))
+    (def-exp "fxorc2"  (make-simple-expander case-fxorc2))
+    (def-exp "fxxor"   (make-simple-expander case-fxxor))
 
-    (def-exp "fxand" (make-simple-expander case-fxand))
-
-    (def-exp "fxior" (make-simple-expander case-fxior))
-
-    (def-exp "fxxor" (make-simple-expander case-fxxor))
-
-    (def-exp2"bitwise-not" (make-simple-expander case-bitwise-not))
-
-    (def-exp2"bitwise-and" (make-simple-expander case-bitwise-and))
-
-    (def-exp2"bitwise-ior" (make-simple-expander case-bitwise-ior))
-
-    (def-exp2"bitwise-xor" (make-simple-expander case-bitwise-xor))
+    (def-exp2"bitwise-and"   (make-simple-expander case-fxand))
+    (def-exp2"bitwise-andc1" (make-simple-expander case-fxandc1))
+    (def-exp2"bitwise-andc2" (make-simple-expander case-fxandc2))
+    (def-exp2"bitwise-eqv"   (make-simple-expander case-fxeqv))
+    (def-exp2"bitwise-ior"   (make-simple-expander case-fxior))
+    (def-exp2"bitwise-nand"  (make-simple-expander case-fxnand))
+    (def-exp2"bitwise-nor"   (make-simple-expander case-fxnor))
+    (def-exp2"bitwise-not"   (make-simple-expander case-fxnot))
+    (def-exp2"bitwise-orc1"  (make-simple-expander case-fxorc1))
+    (def-exp2"bitwise-orc2"  (make-simple-expander case-fxorc2))
+    (def-exp2"bitwise-xor"   (make-simple-expander case-fxxor))
 
     (def-exp "fxwraparithmetic-shift"
       (make-simple-expander case-fxwraparithmetic-shift))
@@ -5456,6 +5544,34 @@
 (def-simp "flatanh"          (constant-folder-flo atanh      flo?))
 (def-simp "##flonum->fixnum" (constant-folder-fix inexact->exact flo?))
 (def-simp "fixnum->flonum"   (constant-folder-flo exact->inexact fix32?))
+
+#|
+;; TODO: enable after bootstrap
+
+(def-simp "fxand"            (constant-folder-fix fxand   fix32?)
+(def-simp "fxandc1"          (constant-folder-fix fxandc1 fix32?)
+(def-simp "fxandc2"          (constant-folder-fix fxandc2 fix32?)
+(def-simp "fxeqv"            (constant-folder-fix fxeqv   fix32?)
+(def-simp "fxior"            (constant-folder-fix fxior   fix32?)
+(def-simp "fxnand"           (constant-folder-fix fxnand  fix32?)
+(def-simp "fxnor"            (constant-folder-fix fxnor   fix32?)
+(def-simp "fxnot"            (constant-folder-fix fxnot   fix32?)
+(def-simp "fxorc1"           (constant-folder-fix fxorc1  fix32?)
+(def-simp "fxorc2"           (constant-folder-fix fxorc2  fix32?)
+(def-simp "fxxor"            (constant-folder-fix fxxor   fix32?)
+
+(def-simp "bitwise-and"      (constant-folder-gen bitwise-and   int?)
+(def-simp "bitwise-andc1"    (constant-folder-gen bitwise-andc1 int?)
+(def-simp "bitwise-andc2"    (constant-folder-gen bitwise-andc2 int?)
+(def-simp "bitwise-eqv"      (constant-folder-gen bitwise-eqv   int?)
+(def-simp "bitwise-ior"      (constant-folder-gen bitwise-ior   int?)
+(def-simp "bitwise-nand"     (constant-folder-gen bitwise-nand  int?)
+(def-simp "bitwise-nor"      (constant-folder-gen bitwise-nor   int?)
+(def-simp "bitwise-not"      (constant-folder-gen bitwise-not   int?)
+(def-simp "bitwise-orc1"     (constant-folder-gen bitwise-orc1  int?)
+(def-simp "bitwise-orc2"     (constant-folder-gen bitwise-orc2  int?)
+(def-simp "bitwise-xor"      (constant-folder-gen bitwise-xor   int?)
+|#
 
 (def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
 (def-simp "make-polar"       (constant-folder-gen make-polar     real?))
