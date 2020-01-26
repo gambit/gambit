@@ -169,6 +169,7 @@ void ___time_get_current_time
         (tim)
 ___time *tim;)
 {
+#ifndef USE_emscripten_get_now
 #ifndef USE_clock_gettime_realtime
 #ifndef USE_getclock
 #ifndef USE_GetSystemTimeAsFileTime
@@ -185,6 +186,15 @@ ___time *tim;)
 #endif
 #endif
 #endif
+#endif
+#endif
+
+#ifdef USE_emscripten_get_now
+
+  /* The emscripten_get_now function is higher resolution than gettimeofday */
+
+  *tim = emscripten_get_now () / 1000.0; /* convert to seconds */
+
 #endif
 
 #ifdef USE_clock_gettime_realtime
