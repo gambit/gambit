@@ -476,6 +476,9 @@
 
 /* Determine which function for getting real time is most precise.  */
 
+#ifdef HAVE_EMSCRIPTEN_GET_NOW
+#define USE_emscripten_get_now
+#else
 #ifdef HAVE_CLOCK_GETTIME
 #define USE_clock_gettime_realtime
 #else
@@ -493,6 +496,7 @@
 #else
 #ifdef HAVE_TIME
 #define USE_time
+#endif
 #endif
 #endif
 #endif
@@ -1006,6 +1010,11 @@ ___END_C_LINKAGE
 #ifdef USE_times
 #undef INCLUDE_sys_times_h
 #define INCLUDE_sys_times_h
+#endif
+
+#ifdef USE_emscripten_get_now
+#undef INCLUDE_emscripten_h
+#define INCLUDE_emscripten_h
 #endif
 
 #ifdef USE_clock_gettime_realtime
@@ -1540,6 +1549,12 @@ extern int h_errno;
 #ifdef INCLUDE_grp_h
 #ifdef HAVE_GRP_H
 #include <grp.h>
+#endif
+#endif
+
+#ifdef INCLUDE_emscripten_h
+#ifdef HAVE_EMSCRIPTEN_H
+#include "emscripten.h"
 #endif
 #endif
 

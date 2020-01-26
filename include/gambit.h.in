@@ -527,7 +527,7 @@
 #endif
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 #define ___LITTLE_ENDIAN
 #endif
 
