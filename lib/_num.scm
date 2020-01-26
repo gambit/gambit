@@ -5065,6 +5065,196 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##bitwise-not x)))
 
+(define-prim (##bitwise-andc1 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-andc1 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-andc1 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-and2 (##bitwise-not x) y))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxandc1 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-andc1 x y)
+  (macro-force-vars (x y)
+    (##bitwise-andc1 x y)))
+
+(define-prim (##bitwise-andc2 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-andc2 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-andc2 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-and2 x (##bitwise-not y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxandc2 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-andc2 x y)
+  (macro-force-vars (x y)
+    (##bitwise-andc2 x y)))
+
+(define-prim (##bitwise-nand x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-nand x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-nand x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-not (##bitwise-and2 x y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxnand x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (##bitwise-eqv2 x y)
+
+  (##define-macro (type-error-on-x) `'(1))
+  (##define-macro (type-error-on-y) `'(2))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-not (##bitwise-xor2 x y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxeqv x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim-nary (##bitwise-eqv x y)
+  0
+  x
+  (##bitwise-eqv2 x y)
+  macro-no-force
+  macro-no-check)
+
+(define-prim-nary (bitwise-eqv x y)
+  0
+  (if (macro-exact-int? x) x '(1))
+  (##bitwise-eqv2 x y)
+  macro-force-vars
+  macro-no-check
+  (##pair? ##fail-check-exact-integer))
+
+(define-prim (bitwise-nand x y)
+  (macro-force-vars (x y)
+    (##bitwise-nand x y)))
+
+(define-prim (##bitwise-nor x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-nor x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-nor x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-not (##bitwise-ior2 x y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxnor x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-nor x y)
+  (macro-force-vars (x y)
+    (##bitwise-nor x y)))
+
+(define-prim (##bitwise-orc1 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-orc1 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-orc1 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-ior2 (##bitwise-not x) y))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxorc1 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-orc1 x y)
+  (macro-force-vars (x y)
+    (##bitwise-orc1 x y)))
+
+(define-prim (##bitwise-orc2 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-orc2 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-orc2 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-ior2 x (##bitwise-not y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxorc2 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-orc2 x y)
+  (macro-force-vars (x y)
+    (##bitwise-orc2 x y)))
+
 (define-prim (##arithmetic-shift x y)
 
   (define (type-error-on-x)
@@ -5747,6 +5937,56 @@ for a discussion of branch cuts.
   macro-force-vars
   macro-check-fixnum)
 
+(define-prim (##fxandc1 x y)
+  (##fxand (##fxnot x) y))
+
+(define-prim-fixnum (fxandc1 x y)
+  (##fxandc1 x y))
+
+(define-prim (##fxandc2 x y)
+  (##fxand x (##fxnot y)))
+
+(define-prim-fixnum (fxandc2 x y)
+  (##fxandc2 x y))
+
+(define-prim-nary (##fxeqv x y)
+  -1
+  x
+  (##fxeqv x y)
+  macro-no-force
+  macro-no-check)
+
+(define-prim-nary (fxeqv x y)
+  -1
+  x
+  (##fxeqv x y)
+  macro-force-vars
+  macro-check-fixnum)
+
+(define-prim (##fxnand x y)
+  (##fxnot (##fxand x y)))
+
+(define-prim-fixnum (fxnand x y)
+  (##fxnand x y))
+
+(define-prim (##fxnor x y)
+  (##fxnot (##fxior x y)))
+
+(define-prim-fixnum (fxnor x y)
+  (##fxnor x y))
+
+(define-prim (##fxorc1 x y)
+  (##fxior (##fxnot x) y))
+
+(define-prim-fixnum (fxorc1 x y)
+  (##fxorc1 x y))
+
+(define-prim (##fxorc2 x y)
+  (##fxior x (##fxnot y)))
+
+(define-prim-fixnum (fxorc2 x y)
+  (##fxorc2 x y))
+
 (define-prim (##fxif x y z))
 
 (define-prim (fxif x y z)
@@ -6165,14 +6405,35 @@ for a discussion of branch cuts.
 ;;; Sets x[i] to x[i] & y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-bitwise-and! x i y j))
 
+;;; Sets x[i] to ~x[i] & y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-andc1! x i y j))
+
+;;; Sets x[i] to x[i] & ~y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-andc2! x i y j))
+
+;;; Sets x[i] to ~(x[i] ^ y[j]) (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-eqv! x i y j))
+
 ;;; Sets x[i] to x[i] | y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-bitwise-ior! x i y j))
 
-;;; Sets x[i] to x[i] ^ y[j] (accessing x and y as adigits)
-(define-prim (##bignum.adigit-bitwise-xor! x i y j))
+;;; Sets x[i] to ~(x[i] & y[j]) (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-nand! x i y j))
+
+;;; Sets x[i] to ~(x[i] | y[j]) (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-nor! x i y j))
 
 ;;; Sets x[i] to !x[i] (accessing x as adigits)
 (define-prim (##bignum.adigit-bitwise-not! x i))
+
+;;; Sets x[i] to ~x[i] | y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-orc1! x i y j))
+
+;;; Sets x[i] to x[i] | ~y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-orc2! x i y j))
+
+;;; Sets x[i] to x[i] ^ y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-xor! x i y j))
 
 (macro-case-target
  ((C)

@@ -18,6 +18,8 @@
 
 (fxabs -10) (fxabs 10)
 (fxand) (fxand 13) (fxand 13 7) (fxand 13 7 6)
+(fxandc1 12 5)
+(fxandc2 12 5)
 
 (fxarithmetic-shift 241 -2)
 (fxarithmetic-shift 241 0)
@@ -32,6 +34,7 @@
 
 (fxbit-count -8) (fxbit-count -1) (fxbit-count 0) (fxbit-count 256)
 (fxbit-set? 0 5) (fxbit-set? 1 5) (fxbit-set? 2 5) (fxbit-set? 10 5)
+(fxeqv) (fxeqv 85) (fxeqv 85 204) (fxeqv 85 204 240)
 (fxeven? -1) (fxeven? 0) (fxeven? 1)
 (fxfirst-bit-set -8)(fxfirst-bit-set 0)(fxfirst-bit-set 1)(fxfirst-bit-set 8)
 (fxif 12 10 5)
@@ -40,9 +43,13 @@
 (fxmax 1) (fxmax 1 2) (fxmax 2 1) (fxmax 1 3 2) (fxmax 2 4 1 3)
 (fxmin 1) (fxmin 1 2) (fxmin 2 1) (fxmin 1 3 2) (fxmin 2 4 1 3)
 (fxmodulo 17 3) (fxmodulo -17 -3) (fxmodulo -17 3) (fxmodulo 17 -3)
+(fxnand 12 5)
 (fxnegative? -1) (fxnegative? 0) (fxnegative? 1)
+(fxnor 12 5)
 (fxnot -1) (fxnot 0) (fxnot 1) (fxnot 5) (fxnot ##max-fixnum)
 (fxodd? -1) (fxodd? 0) (fxodd? 1)
+(fxorc1 12 5)
+(fxorc2 12 5)
 (fxpositive? -1) (fxpositive? 0) (fxpositive? 1)
 (fxquotient 17 3) (fxquotient -17 -3) (fxquotient -17 3) (fxquotient 17 -3)
 (fxremainder 17 3) (fxremainder -17 -3) (fxremainder -17 3) (fxremainder 17 -3)

@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -2841,18 +2841,45 @@ ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 ___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
+#define ___BIGAANDC1(x,i,y,j) \
+___BIGATEMP= ~___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAANDC2(x,i,y,j) \
+___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ~___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAEQV(x,i,y,j) \
+___BIGATEMP= ~(___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) ^ ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB)); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
 #define ___BIGAIOR(x,i,y,j) \
 ___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
-#define ___BIGAXOR(x,i,y,j) \
-___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) ^ ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+#define ___BIGANAND(x,i,y,j) \
+___BIGATEMP= ~(___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB)); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGANOR(x,i,y,j) \
+___BIGATEMP= ~(___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB)); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
 #define ___BIGANOT(x,i) \
 ___BIGATEMP= ~___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
+#define ___BIGAORC1(x,i,y,j) \
+___BIGATEMP= ~___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAORC2(x,i,y,j) \
+___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ~___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAXOR(x,i,y,j) \
+___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) ^ ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
 
 #define ___BIGNEGATIVEP(x) \
@@ -3144,12 +3171,19 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___FIXREM(x,y)((___WORD)((x)%(y)))/****is this ok?*******/
 #define ___FIXMOD(x,y)((___temp=___FIXREM((___ps->temp1=x),(___ps->temp2=y)))==0?___FIX(0):((___ps->temp1<0)==(___ps->temp2<0)?___temp:___FIXADD(___temp,___ps->temp2)))
-#define ___FIXNOT(x)((___WORD)((x)^~___TMASK))
 #define ___FIXAND(x,y)((___WORD)((x)&(y)))
-#define ___FIX_M1 ___FIX(-1)
+#define ___FIXANDC1(x,y)((___WORD)(~(x)&(y)))
+#define ___FIXANDC2(x,y)((___WORD)((x)&~(y)))
+#define ___FIXEQV(x,y)((___WORD)(((x)^(y))^~___TMASK))
 #define ___FIXIOR(x,y)((___WORD)((x)|(y)))
+#define ___FIXNAND(x,y)((___WORD)(((x)&(y))^~___TMASK))
+#define ___FIXNOR(x,y)((___WORD)(((x)|(y))^~___TMASK))
+#define ___FIXNOT(x)((___WORD)((x)^~___TMASK))
+#define ___FIXORC1(x,y)((___WORD)(((x)^~___TMASK)|(y)))
+#define ___FIXORC2(x,y)((___WORD)((x)|((y)^~___TMASK)))
 #define ___FIXXOR(x,y)((___WORD)((x)^(y)))
 #define ___FIXIF(x,y,z)((___WORD)(((x)&(y))|(~(x)&(z))))
+#define ___FIX_M1 ___FIX(-1)
 
 #define ___FIXWRAPABS(x)((x)<0?___FIXWRAPNEG(x):(x))
 #define ___FIXABS(x)((x)<0?___FIXNEG(x):(x))

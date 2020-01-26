@@ -5480,6 +5480,59 @@ For example:
 
 @end deffn
 
+@deffn procedure bitwise-andc1 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``and'' of the bitwise complement
+of the exact integer @var{n1} and the exact integer @var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-andc1 11 26)  @r{@i{; ...00001011 ...00011010}}}
+16
+> @b{(bitwise-andc1 -12 26) @r{@i{; ...11110100 ...00011010}}}
+10
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-andc2 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``and'' of the exact integer
+@var{n1} and the bitwise complement of the exact integer @var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-andc2 11 26)  @r{@i{; ...00001011 ...00011010}}}
+1
+> @b{(bitwise-andc2 11 -27) @r{@i{; ...00001011 ...11100101}}}
+10
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-eqv @var{n}@dots{}
+
+This procedure returns the bitwise complement of the bitwise
+``exclusive-or'' of the exact integers @var{n}@dots{}.  The value -1
+is returned when there are no arguments.
+
+For example:
+
+@smallexample
+> @b{(bitwise-eqv 6 12)  @r{@i{; ...00000110 ...00001100}}}
+-11
+> @b{(bitwise-eqv 6 -4)  @r{@i{; ...00000110 ...11111100}}}
+5
+> @b{(bitwise-eqv -6 -4) @r{@i{; ...11111010 ...11111100}}}
+-7
+> @b{(bitwise-eqv)}
+-1
+@end smallexample
+
+@end deffn
+
 @deffn procedure bitwise-ior @var{n}@dots{}
 
 This procedure returns the bitwise ``inclusive-or'' of the exact
@@ -5501,6 +5554,89 @@ For example:
 
 @end deffn
 
+@deffn procedure bitwise-nand @var{n1} @var{n2}
+
+This procedure returns the bitwise complement of the bitwise ``and''
+of the exact integer @var{n1} and the exact integer @var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-nand 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-11
+> @b{(bitwise-nand 11 -27) @r{@i{; ...00001011 ...11100101}}}
+-2
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-nor @var{n1} @var{n2}
+
+This procedure returns the bitwise complement of the bitwise
+``inclusive-or'' of the exact integer @var{n1} and the exact integer
+@var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-nor 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-28
+> @b{(bitwise-nor 11 -27) @r{@i{; ...00001011 ...11100101}}}
+16
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-not @var{n}
+
+This procedure returns the bitwise complement of the exact integer
+@var{n}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-not 3)  @r{@i{; ...00000011}}}
+-4
+> @b{(bitwise-not -1) @r{@i{; ...11111111}}}
+0
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-orc1 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``inclusive-or'' of the bitwise
+complement of the exact integer @var{n1} and the exact integer
+@var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-orc1 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-2
+> @b{(bitwise-orc1 -12 26) @r{@i{; ...11110100 ...00011010}}}
+27
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-orc2 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``inclusive-or'' of the exact
+integer @var{n1} and the bitwise complement of the exact integer
+@var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-orc2 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-17
+> @b{(bitwise-orc2 11 -27) @r{@i{; ...00001011 ...11100101}}}
+27
+@end smallexample
+
+@end deffn
+
 @deffn procedure bitwise-xor @var{n}@dots{}
 
 This procedure returns the bitwise ``exclusive-or'' of the exact
@@ -5517,22 +5653,6 @@ For example:
 > @b{(bitwise-xor -6 -4) @r{@i{; ...11111010 ...11111100}}}
 6
 > @b{(bitwise-xor)}
-0
-@end smallexample
-
-@end deffn
-
-@deffn procedure bitwise-not @var{n}
-
-This procedure returns the bitwise complement of the exact integer
-@var{n}.
-
-For example:
-
-@smallexample
-> @b{(bitwise-not 3)  @r{@i{; ...00000011}}}
--4
-> @b{(bitwise-not -1) @r{@i{; ...11111111}}}
 0
 @end smallexample
 
@@ -5753,6 +5873,12 @@ For example:
 @deffn procedure fxand @var{n1}@dots{}
 @end deffn
 
+@deffn procedure fxandc1 @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxandc2 @var{n1} @var{n2}
+@end deffn
+
 @deffn procedure fxarithmetic-shift @var{n1} @var{n2}
 @end deffn
 
@@ -5766,6 +5892,9 @@ For example:
 @end deffn
 
 @deffn procedure fxbit-set? @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxeqv @var{n1}@dots{}
 @end deffn
 
 @deffn procedure fxeven? @var{n}
@@ -5795,10 +5924,22 @@ For example:
 @deffn procedure fxnegative? @var{n}
 @end deffn
 
+@deffn procedure fxnand @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxnor @var{n1} @var{n2}
+@end deffn
+
 @deffn procedure fxnot @var{n}
 @end deffn
 
 @deffn procedure fxodd? @var{n}
+@end deffn
+
+@deffn procedure fxorc1 @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxorc2 @var{n1} @var{n2}
 @end deffn
 
 @deffn procedure fxpositive? @var{n}

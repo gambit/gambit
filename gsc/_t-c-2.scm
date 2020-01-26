@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3461,9 +3461,16 @@
 (targ-op "##fxquotient"     (targ-apply-fold-u #f #f       #f       "FIXQUO"))
 (targ-op "##fxremainder"    (targ-apply-fold-u #f #f       #f       "FIXREM"))
 (targ-op "##fxmodulo"       (targ-apply-fold-u #f #f       #f       "FIXMOD"))
-(targ-op "##fxnot"          (targ-apply-simp-u #f #f       #f       "FIXNOT"))
 (targ-op "##fxand"          (targ-apply-fold-u #f "FIX_M1" "FIXPOS" "FIXAND"))
+(targ-op "##fxandc1"        (targ-apply-simp-u #f #f       #f       "FIXANDC1"))
+(targ-op "##fxandc2"        (targ-apply-simp-u #f #f       #f       "FIXANDC2"))
+(targ-op "##fxeqv"          (targ-apply-fold-u #f "FIX_M1" "FIXPOS" "FIXEQV"))
 (targ-op "##fxior"          (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXIOR"))
+(targ-op "##fxnand"         (targ-apply-simp-u #f #f       #f       "FIXNAND"))
+(targ-op "##fxnor"          (targ-apply-simp-u #f #f       #f       "FIXNOR"))
+(targ-op "##fxnot"          (targ-apply-simp-u #f #f       #f       "FIXNOT"))
+(targ-op "##fxorc1"         (targ-apply-simp-u #f #f       #f       "FIXORC1"))
+(targ-op "##fxorc2"         (targ-apply-simp-u #f #f       #f       "FIXORC2"))
 (targ-op "##fxxor"          (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXXOR"))
 (targ-op "##fxif"           (targ-apply-simp-u #f #f #f "FIXIF"))
 (targ-op "##fxbit-count"    (targ-apply-simp-u #f #f #f "FIXBITCOUNT"))
@@ -3801,10 +3808,17 @@
 (targ-op "##bignum.adigit-shrink!"   (targ-apply-simp-u #f #t #f "BIGASHRINK"))
 (targ-op "##bignum.adigit-copy!"     (targ-apply-simp-u #f #t #f "BIGACOPY"))
 (targ-op "##bignum.adigit-cat!"      (targ-apply-simp-u #f #t #f "BIGACAT"))
-(targ-op "##bignum.adigit-bitwise-and!"(targ-apply-simp-u #f #t #f "BIGAAND"))
-(targ-op "##bignum.adigit-bitwise-ior!"(targ-apply-simp-u #f #t #f "BIGAIOR"))
-(targ-op "##bignum.adigit-bitwise-xor!"(targ-apply-simp-u #f #t #f "BIGAXOR"))
-(targ-op "##bignum.adigit-bitwise-not!"(targ-apply-simp-u #f #t #f "BIGANOT"))
+(targ-op "##bignum.adigit-bitwise-and!"  (targ-apply-simp-u #f #t #f "BIGAAND"))
+(targ-op "##bignum.adigit-bitwise-andc1!"(targ-apply-simp-u #f #t #f "BIGAANDC1"))
+(targ-op "##bignum.adigit-bitwise-andc2!"(targ-apply-simp-u #f #t #f "BIGAANDC2"))
+(targ-op "##bignum.adigit-bitwise-eqv!"  (targ-apply-simp-u #f #t #f "BIGAEQV"))
+(targ-op "##bignum.adigit-bitwise-ior!"  (targ-apply-simp-u #f #t #f "BIGAIOR"))
+(targ-op "##bignum.adigit-bitwise-nand!" (targ-apply-simp-u #f #t #f "BIGANAND"))
+(targ-op "##bignum.adigit-bitwise-nor!"  (targ-apply-simp-u #f #t #f "BIGANOR"))
+(targ-op "##bignum.adigit-bitwise-not!"  (targ-apply-simp-u #f #t #f "BIGANOT"))
+(targ-op "##bignum.adigit-bitwise-orc1!" (targ-apply-simp-u #f #t #f "BIGAORC1"))
+(targ-op "##bignum.adigit-bitwise-orc2!" (targ-apply-simp-u #f #t #f "BIGAORC2"))
+(targ-op "##bignum.adigit-bitwise-xor!"  (targ-apply-simp-u #f #t #f "BIGAXOR"))
 
 (targ-op "##bignum.fdigit-length"    (targ-apply-simp-u #f #f #f "BIGFLENGTH"))
 (targ-op "##bignum.fdigit-ref"       (targ-apply-simp-u #f #f #f "BIGFREF"))
