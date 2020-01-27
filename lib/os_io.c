@@ -7848,11 +7848,24 @@ int *direction;)
       *direction = ___DIRECTION_WR;
       break;
     case 3:
+      if (flags & 1) {
+          *mode = "w+b";
+      } else if (flags & 8){
+          *mode = "a+b";
+      } else {
+          *mode = "r+b";
+      }
+      *direction = ___DIRECTION_RD|___DIRECTION_WR;
+      break;
+    }
+     /*
+    case 3:
       // This is bugged! The truncate params are not even in the bits 5 and 6
       *mode = "r+b";
       *direction = ___DIRECTION_RD|___DIRECTION_WR;
       break;
     }
+    */
 }
 
 #endif
