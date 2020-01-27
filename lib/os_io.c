@@ -7848,7 +7848,8 @@ int *direction;)
       *direction = ___DIRECTION_WR;
       break;
     case 3:
-      *mode = "w+b";
+      // This is bugged! The truncate params are not even in the bits 5 and 6
+      *mode = "r+b";
       *direction = ___DIRECTION_RD|___DIRECTION_WR;
       break;
     }
