@@ -5703,7 +5703,11 @@ ___setup_params_struct *setup_params;)
       setup_params->version != ___VERSION)
     return ___FIX(___UNKNOWN_ERR);
 
+#ifdef GAMBIT_GSTATE
+
   set_gstate(___GSTATE);
+
+#endif
 
   /*
    * Remember setup parameters.
