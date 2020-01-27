@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -634,7 +634,7 @@
                          (##raise-expression-parsing-exception
                           'namespace-prefix-must-be-string
                           space-src)
-                         (if (##not (##valid-prefix? space))
+                         (if (##not (##namespace-valid? space))
                              (##raise-expression-parsing-exception
                               'ill-formed-namespace-prefix
                               space-src)
@@ -829,15 +829,15 @@
       sym
       (##string->symbol (##string-append prefix (##symbol->string sym)))))
 
-(define (##valid-prefix? str)
+(define (##namespace-valid? str)
 
   ;; non-null name followed by a namespace separator at end is
   ;; valid as is the special prefix ""
 
-  (let ((l (##string-length str)))
-    (or (##fx= l 0)
-        (and (##not (##fx< l 2))
-             (##memq (##string-ref str (##fx- l 1))
+  (let ((len (##string-length str)))
+    (or (##fx= len 0)
+        (and (##not (##fx< len 2))
+             (##memq (##string-ref str (##fx- len 1))
                      ##namespace-separators)))))
 
 (define (##var-lookup cte src)
