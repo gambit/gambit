@@ -161,13 +161,13 @@
 
   (search env name (full-name? name)))
 
-(define (valid-prefix? str) ; non-null name followed by a "#" at end is
-  (let ((l (string-length str)))   ; valid as is the special prefix ""
-    (or (= l 0)
-        (and (>= l 2)
-             (char=? (string-ref str (- l 1)) #\#)))))
+(define (namespace-valid? str)     ;; non-null name followed by a "#" at end
+  (let ((len (string-length str))) ;; is valid as is the special prefix ""
+    (or (= len 0)
+        (and (>= len 2)
+             (char=? (string-ref str (- len 1)) #\#)))))
 
-(define (full-name? sym)              ; full name if it contains a "#"
+(define (full-name? sym)           ;; full name if it contains a "#"
   (let ((str (symbol->string sym)))
     (let loop ((i (- (string-length str) 1)))
       (if (< i 0)

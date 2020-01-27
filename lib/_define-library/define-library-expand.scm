@@ -50,7 +50,7 @@
   namespace
   macros
   only-export?
-  map
+  mapping
 )
 
 (define-type libdef
@@ -217,11 +217,13 @@
     exports-tbl
     imports-tbl
     meta-info-tbl
+    rev-pending-exports
     rev-imports
     rev-body
+    module-aliases
   )
 
-  (define (parse-body ctx body-srcs module-aliases)
+  (define (parse-body ctx body-srcs)
     (if (pair? body-srcs)
         (let* ((lib-decl-src (car body-srcs))
                (lib-decl (##source-strip lib-decl-src))
@@ -240,16 +242,22 @@
                 (case head
 
                   ((export)
-                   (parse-export-decl ctx args-srcs)
-                   (parse-body ctx rest-srcs module-aliases))
+                   ;; export clauses have to be handled after handling
+                   ;; other clauses of the define-library because the effect
+                   ;; will depend on what is imported and the namespace,
+                   ;; so we simply add them to a pending exports list
+                   (ctx-rev-pending-exports-set!
+                    ctx
+                    (cons args-srcs (ctx-rev-pending-exports ctx)))
+                   (parse-body ctx rest-srcs))
 
                   ((import)
-                   (parse-import-decl ctx args-srcs module-aliases)
-                   (parse-body ctx rest-srcs module-aliases))
+                   (parse-import-decl ctx args-srcs)
+                   (parse-body ctx rest-srcs))
 
                   ((begin)
                    (parse-begin-decl ctx args-srcs)
-                   (parse-body ctx rest-srcs module-aliases))
+                   (parse-body ctx rest-srcs))
 
                   ((include include-ci include-library-declarations)
                    (parse-body
@@ -259,27 +267,27 @@
                              args-srcs
                              lib-decl-src
                              head)
-                            rest-srcs)
-                    module-aliases))
+                            rest-srcs)))
 
                   ((cond-expand)
                    (let ((x (##cond-expand-build lib-decl-src args-srcs)))
                      (parse-body
                       ctx
                       (append (cdr x) ;; get rid of "begin"
-                              rest-srcs)
-                      module-aliases)))
+                              rest-srcs))))
 
                   ((namespace) ;; extension to R7RS
                    (if (not (and (pair? args-srcs)
-                                 (null? (cdr args-srcs))
-                                 (string? (##source-strip (car args-srcs)))))
+                                 (null? (cdr args-srcs))))
                        (library-decl-err)
-                       (begin
-                         (ctx-namespace-set!
-                          ctx
-                          (##source-strip (car args-srcs)))
-                         (parse-body ctx rest-srcs module-aliases))))
+                       (let ((space
+                              (##source-strip (car args-srcs))))
+                         (if (not (and (string? space)
+                                       (##namespace-valid? space)))
+                             (library-decl-err)
+                             (begin
+                               (ctx-namespace-set! ctx space)
+                               (parse-body ctx rest-srcs))))))
 
                   ((cc-options ;; extensions to R7RS
                     ld-options
@@ -297,7 +305,7 @@
                                   head
                                   arg)
                                  (loop (cdr lst)))))
-                         (parse-body ctx rest-srcs module-aliases))))
+                         (parse-body ctx rest-srcs))))
 
                   (else
                    (library-decl-err))))
@@ -306,13 +314,20 @@
 
   (define (add-identifier-export! ctx internal-id-src external-id-src)
     (let* ((internal-id (##source-strip internal-id-src))
-           (external-id (##source-strip external-id-src)))
-      (if (table-ref (ctx-exports-tbl ctx) external-id #f)
+           (external-id (##source-strip external-id-src))
+           (exports-tbl (ctx-exports-tbl ctx))
+           (imports-tbl (ctx-imports-tbl ctx)))
+      (if (table-ref exports-tbl external-id #f)
           (##raise-expression-parsing-exception
            'duplicate-identifier-export
            external-id-src
            external-id)
-          (table-set! (ctx-exports-tbl ctx) external-id internal-id))))
+          (table-set! exports-tbl
+                      external-id
+                      (or (table-ref imports-tbl internal-id #f)
+                          (string->symbol
+                           (string-append (ctx-namespace ctx)
+                                          (symbol->string internal-id))))))))
 
   (define (add-imports! ctx import-set-src idmap)
     (let* ((name
@@ -329,24 +344,26 @@
                          (ctx-rev-imports ctx)))
                   tbl))))
       (for-each (lambda (x)
-                  (let* ((external-id (if (symbol? x) x (car x)))
-                         (internal-id (if (symbol? x) x (cdr x)))
-                         (already-imported-from
-                          (table-ref (ctx-imports-tbl ctx) external-id #f)))
-                    (if (and already-imported-from
+                  (let* ((external-id (car x))
+                         (internal-id (cdr x))
+                         (imports-tbl (ctx-imports-tbl ctx))
+                         (existing-mapping
+                          (table-ref imports-tbl external-id #f)))
+                    (if (and existing-mapping
                              ;; ignore redundant imports from a given library
-                             (not (equal? (idmap-namespace idmap)
-                                          already-imported-from)))
+                             (not (eq? internal-id existing-mapping)))
                         (##raise-expression-parsing-exception
                          'duplicate-identifier-import
                          import-set-src
                          external-id)
                         (begin
-                          (table-set! (ctx-imports-tbl ctx)
+                          (table-set! imports-tbl
                                       external-id
-                                      (idmap-namespace idmap))
-                          (table-set! tbl internal-id external-id)))))
-                (idmap-map idmap))))
+                                      internal-id)
+                          (table-set! tbl
+                                      internal-id
+                                      external-id)))))
+                (idmap-mapping idmap))))
 
   (define (parse-export-decl ctx export-specs-srcs)
     (if (pair? export-specs-srcs)
@@ -397,14 +414,13 @@
                 (else
                  (export-spec-err))))))
 
-  (define (parse-import-decl ctx import-sets-srcs module-aliases)
+  (define (parse-import-decl ctx import-sets-srcs)
     (if (pair? import-sets-srcs)
         (let* ((import-set-src (car import-sets-srcs))
                (rest-srcs (cdr import-sets-srcs))
-               ;;; Why ctx in parse-import-set? Cause not used...
-               (idmap (parse-import-set import-set-src module-aliases (ctx-name ctx))))
+               (idmap (parse-import-set import-set-src (ctx-module-aliases ctx) (ctx-name ctx))))
           (add-imports! ctx import-set-src idmap)
-          (parse-import-decl ctx rest-srcs module-aliases))))
+          (parse-import-decl ctx rest-srcs))))
 
   (define (parse-begin-decl ctx body-srcs)
     (ctx-rev-body-set! ctx (append (reverse body-srcs) (ctx-rev-body ctx))))
@@ -538,20 +554,21 @@
                    (make-ctx src
                              name-src
                              library-name
-                             (if #t ; valid? ; namespace
-                               (##modref->string modref #t)
-                               (##raise-expression-parsing-exception
-                                'invalid-module-name
-                                name-src))
+                             (##modref->string modref #t)
                              (make-table test: eq?)
                              (make-table test: eq?)
                              (make-table test: eq?)
                              '()
-                             '())))
+                             '()
+                             '()
+                             (##extend-aliases-from-rpath modref-path
+                                                          module-root))))
 
-             ;; parse-body modify ctx
-             (let ((module-aliases (##extend-aliases-from-rpath modref-path module-root)))
-               (parse-body ctx body-srcs module-aliases))
+             (parse-body ctx body-srcs)
+
+             (for-each (lambda (args-srcs)
+                         (parse-export-decl ctx args-srcs))
+                       (reverse (ctx-rev-pending-exports ctx)))
 
              (let* ((body (reverse (ctx-rev-body ctx)))
                     (macros (parse-macros ctx body))
@@ -625,7 +642,7 @@
                                              renames)
                                         (keep (lambda (x)
                                                 (not (assq x renames)))
-                                              (idmap-map idmap)))))
+                                              (idmap-mapping idmap)))))
                              ((pair? lst)
                               (let* ((ren-src (car lst))
                                      (ren (##source-strip ren-src)))
@@ -641,7 +658,7 @@
                                                   (symbol? id2)))
                                       (import-set-err)
                                       (let ((x
-                                              (assq id1 (idmap-map idmap))))
+                                              (assq id1 (idmap-mapping idmap))))
                                         (if (not x)
                                           (##raise-expression-parsing-exception
                                            'unexported-identifier
@@ -677,7 +694,7 @@
                                                 prefix-str
                                                 (symbol->string (car x))))
                                             (cdr x)))
-                                    (idmap-map idmap))))))))
+                                    (idmap-mapping idmap))))))))
 
                     (else
                       (let* ((ids
@@ -687,24 +704,25 @@
                                          (##raise-expression-parsing-exception
                                           'id-expected
                                           id-src)
-                                         (if (not (assq id (idmap-map idmap)))
+                                         (if (not (assq id (idmap-mapping idmap)))
                                            (##raise-expression-parsing-exception
                                             'unexported-identifier
                                             id-src
                                             id)
                                            id))))
                                    (cdr args-srcs)))
-                            (only-keep (if (eq? head 'only)
-                                  (lambda (x) (memq (car x) ids))
-                                  (lambda (x) (not (memq (car x) ids))))))
+                            (keep-id
+                             (lambda (x)
+                               (eq? (eq? head 'except)
+                                    (not (memq (car x) ids))))))
                         (make-idmap
                           import-set-src
                           (idmap-name-src idmap)
                           (idmap-name idmap)
                           (idmap-namespace idmap)
-                          (keep only-keep (idmap-macros idmap))
+                          (keep keep-id (idmap-macros idmap))
                           (idmap-only-export? idmap)
-                          (keep only-keep (idmap-map idmap)))))))))
+                          (keep keep-id (idmap-mapping idmap)))))))))
 
           (let* ((dot-and-modref (parse-name import-set-src ctx-library))
 
@@ -749,7 +767,7 @@
                  (and (libdef? ld) (libdef-namespace ld))
                  (and (libdef? ld) (idmap-macros (libdef-exports ld)))
                  (and (libdef? ld) (null? (libdef-body ld)) (null? (libdef-imports ld)))
-                 (and (libdef? ld) (idmap-map (libdef-exports ld)))))))))
+                 (and (libdef? ld) (idmap-mapping (libdef-exports ld)))))))))
 
       (if (symbol? import-set)
           (parse-import-set (##make-source
@@ -795,16 +813,8 @@
                                `()
                                `((##demand-module ,name-symbol))))
 
-                         (let ((imports-list (table->list imports)))
-                           (if (null? imports-list)
-                               '()
-                               `((##namespace
-                                  (,(idmap-namespace idmap)
-                                   ,@(map (lambda (i)
-                                            (if (eq? (car i) (cdr i))
-                                                (car i)
-                                                (list (cdr i) (car i))))
-                                          imports-list))))))
+                         (mapping->namespace-declaration
+                          (table->list imports))
 
                          (apply
                           append
@@ -840,6 +850,15 @@
             ,@(libdef-body ld)
             (##namespace (""))))))))
 
+(define (mapping->namespace-declaration mapping)
+  (if (pair? mapping)
+      `((##namespace (""
+                      ,@(map (lambda (i)
+                               (if (eq? (car i) (cdr i))
+                                   (car i)
+                                   (list (cdr i) (car i))))
+                             mapping))))
+      '()))
 
 (define (import-expand src)
 
@@ -867,7 +886,7 @@
    (lambda args-srcs
      (map
        (lambda (args-src)
-         (let ((idmap (parse-import-set args-src module-aliases)))
+         (let ((idmap (parse-import-set args-src module-aliases #f)))
            (set! rev-global-imports (cons idmap rev-global-imports))))
        args-srcs)))
 
@@ -893,15 +912,9 @@
                               `()
                               `((##demand-module ,symbol-name))))
 
-
-                        (if (pair? (idmap-map idmap))
-                            `((##namespace (,(idmap-namespace idmap)
-                                            ,@(map (lambda (i)
-                                                     (if (eq? (car i) (cdr i))
-                                                         (car i)
-                                                         (list (car i) (cdr i))))
-                                                   (idmap-map idmap)))))
-                            '())
+                        (mapping->namespace-declaration
+                         (map (lambda (x) (cons (cdr x) (car x)))
+                              (idmap-mapping idmap)))
 
                         ;; Macro Handler !!!
                         (apply

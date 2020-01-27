@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2714,7 +2714,7 @@
                    (space (source-code space-source)))
               (cond ((not (string? space))
                      (pt-syntax-error source "Ill-formed namespace"))
-                    ((not (valid-prefix? space))
+                    ((not (namespace-valid? space))
                      (pt-syntax-error space-source "Illegal namespace"))
                     (else
                      (let ()
