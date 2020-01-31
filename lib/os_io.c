@@ -63,7 +63,7 @@ int newsize;)
       if (writefds == NULL)
         goto error;
 
-#ifdef USE_select
+#ifdef USE_exceptfds
       exceptfds = ___ALLOC_MEM(newbytes);
       if (exceptfds == NULL)
         goto error;
@@ -76,9 +76,9 @@ int newsize;)
   if (___ps->os.fdset.writefds != NULL)
     ___FREE_MEM(___ps->os.fdset.writefds);
 
-#ifdef USE_select
+#ifdef USE_exceptfds
   if (___ps->os.fdset.exceptfds != NULL)
-  ___FREE_MEM(___ps->os.fdset.exceptfds);
+    ___FREE_MEM(___ps->os.fdset.exceptfds);
 #endif
 
   ___ps->os.fdset.readfds = readfds;
@@ -928,7 +928,8 @@ ___time timeout;)
     state.exceptfds = ___CAST(___fdbits*, ___ps->os.fdset.exceptfds);
     ___FD_ZERO(state.readfds, ___ps->os.fdset.size);
     ___FD_ZERO(state.writefds, ___ps->os.fdset.size);
-    ___FD_ZERO(state.exceptfds, ___ps->os.fdset.size);
+    if (state.exceptfds != NULL)
+      ___FD_ZERO(state.exceptfds, ___ps->os.fdset.size);
   }
 #endif
 
@@ -8452,7 +8453,7 @@ int sig;)
 
 ___SCMOBJ ___setup_child_interrupt_handling ___PVOID
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___set_signal_handler (SIGPIPE, SIG_IGN);
   ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
@@ -8467,7 +8468,7 @@ ___SCMOBJ ___setup_child_interrupt_handling ___PVOID
 
 void ___cleanup_child_interrupt_handling ___PVOID
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___set_signal_handler (SIGPIPE, SIG_DFL);
   ___set_signal_handler (SIGCHLD, SIG_DFL);
@@ -8483,7 +8484,7 @@ ___EXP_FUNC(void,___mask_child_interrupts_begin)
         (state)
 ___mask_child_interrupts_state *state;)
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___thread_sigmask1 (SIG_BLOCK, SIGCHLD, state->sigset+2);
 
@@ -8496,7 +8497,7 @@ ___EXP_FUNC(void,___mask_child_interrupts_end)
         (state)
 ___mask_child_interrupts_state *state;)
 {
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
   ___thread_sigmask (SIG_SETMASK, state->sigset+2, NULL);
 

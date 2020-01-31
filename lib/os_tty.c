@@ -753,17 +753,20 @@ ___device_tty *self;)
 
       if (d->fd < 0)
         {
-          size.ws_row = 24;
-          size.ws_col = 80;
+          d->terminal_nb_cols = TERMINAL_NB_COLS_UNLIMITED;
+          d->terminal_nb_rows = 24;
         }
-      else if (ioctl (d->fd, TIOCGWINSZ, &size) < 0)
-        return err_code_from_errno ();
+      else
+        {
+          if (ioctl (d->fd, TIOCGWINSZ, &size) < 0)
+            return err_code_from_errno ();
 
-      if (size.ws_col > 0)
-        d->terminal_nb_cols = size.ws_col;
+          if (size.ws_col > 0)
+            d->terminal_nb_cols = size.ws_col;
 
-      if (size.ws_row > 0)
-        d->terminal_nb_rows = size.ws_row;
+          if (size.ws_row > 0)
+            d->terminal_nb_rows = size.ws_row;
+        }
 
 #endif
 #endif
@@ -5074,7 +5077,7 @@ ___BOOL emacs_bindings;)
   /* default values appropriate for "xterm": */
 
   int rows = 24;
-  int cols = 80;
+  int cols = TERMINAL_NB_COLS_UNLIMITED;
   ___BOOL has_auto_left_margin = 0;
   ___BOOL has_auto_right_margin = 1;
   ___BOOL has_eat_newline_glitch = 1;
@@ -5245,7 +5248,7 @@ ___BOOL emacs_bindings;)
   if (rows <= 0)
     rows = 24;
   if (cols <= 0)
-    cols = 80;
+    cols = TERMINAL_NB_COLS_UNLIMITED;
 
   d->terminal_nb_cols = cols;
   d->terminal_nb_rows = rows;
@@ -5328,7 +5331,7 @@ int plain;)
 
   d->emulate_terminal = 1;
 
-  d->terminal_nb_cols = 80;
+  d->terminal_nb_cols = TERMINAL_NB_COLS_UNLIMITED;
   d->terminal_nb_rows = 24;
   d->terminal_size = d->terminal_nb_rows * d->terminal_nb_cols;
   d->has_auto_left_margin = 0;
@@ -8006,7 +8009,12 @@ ___device_stream *self;)
     return e;
 
   if ((e = ___device_tty_update_size (d)) == ___FIX(___NO_ERR))
-    return ___FIX(d->terminal_nb_cols);
+    {
+      if (d->terminal_nb_cols == TERMINAL_NB_COLS_UNLIMITED)
+        return ___FIX(80); /* reasonable for pretty-printing */
+      else
+        return ___FIX(d->terminal_nb_cols);
+    }
 
   return e;
 }
