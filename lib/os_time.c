@@ -931,7 +931,7 @@ ___HIDDEN void cleanup_process_times ___PVOID
 
 ___F64 ___get_heartbeat_interval ___PVOID
 {
-  return 0.0;
+  return ___time_mod.current_heartbeat_interval;
 }
 
 
@@ -940,6 +940,10 @@ void ___set_heartbeat_interval
         (seconds)
 ___F64 seconds;)
 {
+  if (seconds < 0.0) /* turn heartbeat off */
+    ___time_mod.current_heartbeat_interval = 0.0;
+  else
+    ___time_mod.current_heartbeat_interval = seconds;
 }
 
 
