@@ -216,6 +216,7 @@
     namespace
     exports-tbl
     imports-tbl
+    macros-tbl
     meta-info-tbl
     rev-pending-exports
     rev-imports
@@ -325,9 +326,8 @@
           (table-set! exports-tbl
                       external-id
                       (or (table-ref imports-tbl internal-id #f)
-                          (string->symbol
-                           (string-append (ctx-namespace ctx)
-                                          (symbol->string internal-id))))))))
+                          (##make-full-name (ctx-namespace ctx)
+                                            internal-id))))))
 
   (define (add-imports! ctx import-set-src idmap)
     (let* ((name
@@ -357,6 +357,11 @@
                          import-set-src
                          external-id)
                         (begin
+                          (let ((m (assq internal-id (idmap-macros idmap))))
+                            (if m ;; a macro is being imported, so remember def
+                                (table-set! (ctx-macros-tbl ctx)
+                                            internal-id
+                                            (cdr m))))
                           (table-set! imports-tbl
                                       external-id
                                       internal-id)
@@ -418,7 +423,10 @@
     (if (pair? import-sets-srcs)
         (let* ((import-set-src (car import-sets-srcs))
                (rest-srcs (cdr import-sets-srcs))
-               (idmap (parse-import-set import-set-src (ctx-module-aliases ctx) (ctx-name ctx))))
+               (idmap
+                (parse-import-set import-set-src
+                                  (ctx-module-aliases ctx)
+                                  (ctx-name ctx))))
           (add-imports! ctx import-set-src idmap)
           (parse-import-decl ctx rest-srcs))))
 
@@ -437,44 +445,40 @@
         '()))
 
   (define (parse-macros ctx body)
-    (let loop ((expr-srcs body) (rev-macros '()))
-
-      (define (done)
-        (reverse rev-macros))
-
-      (if (not (pair? expr-srcs))
-          (done)
+    (let loop ((expr-srcs body))
+      (if (pair? expr-srcs)
           (let* ((expr-src (car expr-srcs))
-                 (expr (##source-strip expr-src)))
-            (if (not (and (pair? expr)
-                          (eq? (##source-strip (car expr)) 'define-syntax)
-                          (pair? (cdr expr))
-                          (symbol? (##source-strip (cadr expr)))
-                          (pair? (cddr expr))
-                          (let ((x (##source-strip (caddr expr))))
-                            (and (pair? x)
-                                 (eq? (##source-strip (car x)) 'syntax-rules))) ;; TODO: eval the body if not syntax-rules.
-                          (null? (cdddr expr))))
-                (done)
-                (let ((id (##source-strip (cadr expr)))
-                      (crules (syn#syntax-rules->crules (caddr expr))))
+                 (expr (##source-strip expr-src))
+                 (sym
+                  (and (pair? expr)
+                       (eq? (##source-strip (car expr)) 'define-syntax)
+                       (pair? (cdr expr))
+                       (pair? (cddr expr))
+                       (null? (cdddr expr))
+                       (##source-strip (cadr expr)))))
+            (if (not (symbol? sym))
+                (loop (cdr expr-srcs)) ;; keep looking for syntax defs
+                (let* ((id
+                        (if (##full-name? sym)
+                            sym
+                            (##make-full-name (ctx-namespace ctx)
+                                              sym)))
+                       (def
+                        (##make-source
+                         `(##define-syntax ,id ,(caddr expr))
+                         (##source-locat expr-src))))
 
-                  (define (generate-local-macro-def id crules expr-src)
-                    (let ((locat (##source-locat expr-src)))
-                      (##make-source
-                       `(##define-syntax ,id
-                          (##lambda (##src)
-                            (syn#apply-rules ',crules ##src)))
-                       locat)))
+                  (if (table-ref (ctx-exports-tbl ctx) sym #f) ;;exported?
+                      (if (table-ref (ctx-macros-tbl ctx) id #f) ;; already def?
+                          (##raise-expression-parsing-exception
+                           'duplicate-exported-macro-definition
+                           expr-src)
+                          (table-set! (ctx-macros-tbl ctx) id def)))
 
-                  ;; replace original define-syntax by local macro def
-                  ;; to avoid having to load syntax-rules implementation
-                  (set-car! expr-srcs
-                            (generate-local-macro-def id crules expr-src))
+                  ;; replace original define-syntax by def with resolved id
+                  (set-car! expr-srcs def)
 
-                  (loop (cdr expr-srcs)
-                        (cons (cons id crules)
-                              rev-macros))))))))
+                  (loop (cdr expr-srcs))))))))
 
   (define (parse-string-args base args-srcs err)
     (if (pair? args-srcs)
@@ -554,10 +558,11 @@
                    (make-ctx src
                              name-src
                              library-name
-                             (##modref->string modref #t)
-                             (make-table test: eq?)
-                             (make-table test: eq?)
-                             (make-table test: eq?)
+                             (##modref->string modref #t) ;; namespace
+                             (make-table test: eq?) ;; exports-tbl
+                             (make-table test: eq?) ;; imports-tbl
+                             (make-table test: eq?) ;; macros-tbl
+                             (make-table test: eq?) ;; meta-info-tbl
                              '()
                              '()
                              '()
@@ -570,30 +575,34 @@
                          (parse-export-decl ctx args-srcs))
                        (reverse (ctx-rev-pending-exports ctx)))
 
-             (let* ((body (reverse (ctx-rev-body ctx)))
-                    (macros (parse-macros ctx body))
-                    (ctxsrc (ctx-src ctx)))
+             (let ((body (reverse (ctx-rev-body ctx))))
 
-               (make-libdef
-                ctxsrc
-                (ctx-name-src ctx)
-                (ctx-name ctx)
-                (ctx-namespace ctx)
+               (parse-macros ctx body)
 
-                (table->list (ctx-meta-info-tbl ctx))
+               (let ((ctxsrc (ctx-src ctx))
+                     (exports (ctx-exports-tbl ctx))
+                     (imports (ctx-rev-imports ctx)))
 
-                (make-idmap
-                 (ctx-src ctx)
-                 (ctx-name-src ctx)
-                 (ctx-name ctx)
-                 (ctx-namespace ctx)
-                 macros
-                 (and (null? body) (null? (ctx-rev-imports ctx))) ;; Replace with good value
-                 (table->list (ctx-exports-tbl ctx)))
+                 (make-libdef
+                  ctxsrc
+                  (ctx-name-src ctx)
+                  (ctx-name ctx)
+                  (ctx-namespace ctx)
 
-                (map cdr (reverse (ctx-rev-imports ctx)))
+                  (table->list (ctx-meta-info-tbl ctx))
 
-                body))))))))
+                  (make-idmap
+                   (ctx-src ctx)
+                   (ctx-name-src ctx)
+                   (ctx-name ctx)
+                   (ctx-namespace ctx)
+                   (table->list (ctx-macros-tbl ctx))
+                   (and (null? body) (null? imports)) ;; Replace with good value
+                   (table->list exports))
+
+                  (map cdr (reverse imports))
+
+                  body)))))))))
 
 (define (parse-import-set import-set-src module-aliases #!optional (ctx-library #f))
   (let ((import-set (##source-strip import-set-src)))
@@ -821,16 +830,11 @@
                           (map (lambda (m)
                                  (let ((id (car m)))
                                    (if (table-ref imports id #f) ;; macro is imported?
-                                       `((##define-syntax ,id
-                                           (##lambda (src)
-                                                     (syn#apply-rules
-                                                      (##quote ,(cdr m))
-                                                      src))))
+                                       `(,(cdr m))
                                        '())))
                                (idmap-macros idmap)))))))
 
                 (libdef-imports ld)))))
-
     (show-expansion
      (and debug-expansion?
           (let ((s (##desourcify src)))
