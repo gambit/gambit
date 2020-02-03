@@ -5469,10 +5469,10 @@ end-of-code
   (c-lambda ((pointer int8) int32 int8) void "*(___arg1 + ___arg2) = ___arg3;"))
 
 (define read-i32
-  (c-lambda ((pointer int8) int32) int32 "___return(*((int32_t)(___arg1 + ___arg2)));"))
+  (c-lambda ((pointer int8) int32) int32 "___return(*((int32_t*)(___arg1 + ___arg2)));"))
 
 (define write-i32
-  (c-lambda ((pointer int8) int32 int32) void "*((int32_t)(___arg1 + ___arg2)) = ___arg3;"))
+  (c-lambda ((pointer int8) int32 int32) void "*((int32_t*)(___arg1 + ___arg2)) = ___arg3;"))
 
 
 ;;; ===========================================================================
