@@ -5454,11 +5454,32 @@ end-of-code
             (##load-module ##vm-main-module-ref)
             (##main))))))
 
+;;; ===========================================================================
+;;; START FFI interface with mimosa
+;;; ===========================================================================
+
 (define read-i8
   (c-lambda ((pointer int8) int32) int8 "___return(*(___arg1 + ___arg2));"))
 
 (define write-i8
   (c-lambda ((pointer int8) int32 int8) void "*(___arg1 + ___arg2) = ___arg3;"))
+
+(define read-i16
+  (c-lambda ((pointer int8) int32) int16 "___return(*((int16*)(___arg1 + ___arg2)));"))
+
+(define write-i16
+  (c-lambda ((pointer int8) int32 int16) void "*((int16*)(___arg1 + ___arg2)) = ___arg3;"))
+
+(define read-i32
+  (c-lambda ((pointer int8) int32) int32 "___return(*((int32)(___arg1 + ___arg2)));"))
+
+(define write-i32
+  (c-lambda ((pointer int8) int32 int32) void "*((int32)(___arg1 + ___arg2)) = ___arg3;"))
+
+;;; ===========================================================================
+;;; END FFI interface with mimosa
+;;; ===========================================================================
+
     
 (macro-case-target
  ((C)
