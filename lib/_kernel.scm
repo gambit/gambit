@@ -5475,10 +5475,10 @@ end-of-code
   (c-lambda ((pointer int8) int32 int32) void "*((int*)(___arg1 + ___arg2)) = ___arg3;"))
 
 (define read-iu8
-  (c-lambda ((pointer int8) int32) uint8 "___return(*(___arg1 + ___arg2));"))
+  (c-lambda ((pointer int8) int32) unsigned-int8 "___return(*(___arg1 + ___arg2));"))
 
 (define read-iu32
-  (c-lambda ((pointer int8) int32) uint32 "___return(*((int*)(___arg1 + ___arg2)));"))
+  (c-lambda ((pointer int8) int32) unsigned-uint32 "___return(*((int*)(___arg1 + ___arg2)));"))
 
 ;;; ===========================================================================
 ;;; END FFI interface with mimosa
