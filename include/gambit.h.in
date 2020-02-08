@@ -3344,9 +3344,10 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___PORT_RDEVICE_CONDVAR      46
 #define ___PORT_WDEVICE_CONDVAR      47
+#define ___PORT_EVENT_CONDVAR        48
 
-#define ___PORT_DEVICE_OTHER1        48
-#define ___PORT_DEVICE_OTHER2        49
+#define ___PORT_DEVICE_OTHER1        49
+#define ___PORT_DEVICE_OTHER2        50
 
 #define ___DENV_INPUT_PORT  5
 #define ___DENV_OUTPUT_PORT 6

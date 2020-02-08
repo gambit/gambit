@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1211,16 +1211,26 @@
 
 ;;; I/O condition variables.
 
-(define-prim (##make-io-condvar name for-writing?)
+(define-macro (macro-io-condvar-for-reading) 0)
+(define-macro (macro-io-condvar-for-writing) 2)
+(define-macro (macro-io-condvar-for-event)   4)
+
+(define-prim (##make-io-condvar name kind)
   (let ((cv (##make-condvar name)))
-    (macro-btq-owner-set! cv (if for-writing? 2 0))
+    (macro-btq-owner-set! cv kind)
     cv))
+
+(define-prim (##make-io-condvar-for-reading name)
+  (##make-io-condvar name (macro-io-condvar-for-reading)))
+
+(define-prim (##make-io-condvar-for-writing name)
+  (##make-io-condvar name (macro-io-condvar-for-writing)))
+
+(define-prim (##make-io-condvar-for-event name)
+  (##make-io-condvar name (macro-io-condvar-for-event)))
 
 (define-prim (##io-condvar? cv)
   (##fixnum? (macro-btq-owner cv)))
-
-(define-prim (##io-condvar-for-writing? cv)
-  (##not (##fx= 0 (##fxand 2 (macro-btq-owner cv)))))
 
 (define-prim (##io-condvar-port cv)
   (macro-condvar-specific cv))
@@ -1414,10 +1424,17 @@
           ##byte-wbuf-drain)
          (rdevice-condvar
           (and (##not (##fx= rkind (macro-none-kind)))
-               (##make-rdevice-condvar rdevice)))
+               (##make-io-condvar-for-reading rdevice)))
          (wdevice-condvar
           (and (##not (##fx= wkind (macro-none-kind)))
-               (##make-wdevice-condvar wdevice))))
+               (##make-io-condvar-for-writing wdevice)))
+         (event-condvar
+          (cond ((##fx= rkind (macro-process-kind))
+                 (##make-io-condvar-for-event rdevice))
+                ((##fx= wkind (macro-process-kind))
+                 (##make-io-condvar-for-event wdevice))
+                (else
+                 #f))))
 
     (define (name port)
 
@@ -1683,18 +1700,15 @@
             byte-wbuf-drain
             rdevice-condvar
             wdevice-condvar
+            event-condvar ;; only used for process ports
             device-name)))
       (if rdevice-condvar
           (##io-condvar-port-set! rdevice-condvar port))
       (if wdevice-condvar
           (##io-condvar-port-set! wdevice-condvar port))
+      (if event-condvar
+          (##io-condvar-port-set! event-condvar port))
       port)))
-
-(define-prim (##make-rdevice-condvar rdevice)
-  (##make-io-condvar rdevice #f))
-
-(define-prim (##make-wdevice-condvar wdevice)
-  (##make-io-condvar wdevice #t))
 
 (define-prim (##make-device-port-from-single-device
               device-name
@@ -3335,9 +3349,9 @@
          (vector-wlo
           (##fx- len vector-whi))
          (vector-rcondvar
-          (##make-io-condvar #f #f))
+          (##make-io-condvar-for-reading #f))
          (vector-wcondvar
-          (##make-io-condvar #f #t))
+          (##make-io-condvar-for-writing #f))
          (vector-buffering-limit
           #f))
 
@@ -3595,9 +3609,9 @@
          (output-readtable
           (##psettings->output-readtable psettings))
          (string-rcondvar
-          (##make-io-condvar #f #f))
+          (##make-io-condvar-for-reading #f))
          (string-wcondvar
-          (##make-io-condvar #f #t))
+          (##make-io-condvar-for-writing #f))
          (string-width
           (##psettings->output-width psettings))
          (string-buffering-limit
@@ -3809,9 +3823,9 @@
          (u8vector-wlo
           (##fx- len u8vector-whi))
          (u8vector-rcondvar
-          (##make-io-condvar #f #f))
+          (##make-io-condvar-for-reading #f))
          (u8vector-wcondvar
-          (##make-io-condvar #f #t))
+          (##make-io-condvar-for-writing #f))
          (u8vector-width
           (##psettings->output-width psettings))
          (u8vector-buffering-limit
@@ -7128,34 +7142,37 @@
               #!optional
               (absrel-timeout (macro-absent-obj))
               (timeout-val (macro-absent-obj)))
+
+  (define (err)
+    (##raise-unterminated-process-exception
+     port
+     process-status
+     port
+     timeout-val))
   (let ((timeout
-         (macro-time-point
-          (##timeout->time
-           (if (##eq? absrel-timeout (macro-absent-obj))
-               #f
-               absrel-timeout)))))
-    (let loop ((poll-interval 0.001))
-      (let ((result (##os-device-process-status (##port-device port))))
-        (cond ((##not result)
-               (let ((now (##current-time-point)))
-                 (if (##fl< now timeout)
-                     (begin
-                       ;; Polling is evil but fixing this would require
-                       ;; substantial changes to the I/O subsystem.  We'll
-                       ;; tackle that in a future release.
-                       (##thread-sleep! poll-interval)
-                       (loop (##flmin 0.2 (##fl* 1.2 poll-interval))))
-                     (if (##eq? timeout-val (macro-absent-obj))
-                         (##raise-unterminated-process-exception
-                          port
-                          process-status
-                          port
-                          timeout-val)
-                         timeout-val))))
-              ((##fx< result 0)
-               (##raise-os-io-exception port #f result process-status port))
-              (else
-               result))))))
+         (if (##eq? absrel-timeout (macro-absent-obj))
+             #t
+             (macro-time-point
+              (##timeout->time absrel-timeout)))))
+    (let loop ()
+      (if (##wait-for-io!
+           (macro-device-port-event-condvar port)
+           timeout)
+
+          ;; ##wait-for-io! returned before timeout
+          (let ((result (##os-device-process-status (##port-device port))))
+            (cond ((##not result)
+                   ;; the process is not yet terminated, so wait some more
+                   (loop))
+                  ((##fx< result 0)
+                   (##raise-os-io-exception port #f result process-status port))
+                  (else
+                   result)))
+
+          ;; timeout expired
+          (if (##eq? timeout-val (macro-absent-obj))
+              (err)
+              timeout-val)))))
 
 (define-prim (process-status
               port
@@ -8108,7 +8125,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (##make-rdevice-condvar rdevice)))
+         (##make-io-condvar-for-reading rdevice)))
 
     (define (server-name port)
 
@@ -8534,10 +8551,10 @@
           #f)
          (rdevice-condvar
           (and (##not (##fx= rkind (macro-none-kind)))
-               (##make-rdevice-condvar device)))
+               (##make-io-condvar-for-reading device)))
          (wdevice-condvar
           (and (##not (##fx= wkind (macro-none-kind)))
-               (##make-wdevice-condvar device))))
+               (##make-io-condvar-for-writing device))))
 
     (define (name port)
 
@@ -9191,7 +9208,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (##make-rdevice-condvar rdevice)))
+         (##make-io-condvar-for-reading rdevice)))
 
     (define (name port)
 
@@ -9408,7 +9425,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (##make-rdevice-condvar rdevice)))
+         (##make-io-condvar-for-reading rdevice)))
 
     (define (name port)
 
@@ -9891,10 +9908,10 @@
          #f)
         (rdevice-condvar
          (and (##not (##fx= direction (macro-direction-out)))
-              (##make-rdevice-condvar device)))
+              (##make-io-condvar-for-reading device)))
         (wdevice-condvar
          (and (##not (##fx= direction (macro-direction-in)))
-              (##make-wdevice-condvar device))))
+              (##make-io-condvar-for-writing device))))
 
     (define (name port)
 
