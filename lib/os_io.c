@@ -5183,6 +5183,7 @@ ___stream_index *len_done;)
             {
             /* The SSL connection is closed: nothing to do */
             case SSL_ERROR_ZERO_RETURN:
+              *len_done = 0;
               return ___FIX(___NO_ERR);
               /* Internal/protocol error */
             case SSL_ERROR_SYSCALL:
