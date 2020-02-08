@@ -16647,6 +16647,7 @@ c-lambda-end
 #<<c-lambda-end
    char *s = (char *)malloc (2);
    if (s != NULL) @{ s[0] = ___arg1; s[1] = 0; @}
+   ___return(s);
    #define ___AT_END if (s != NULL) free (s);
 c-lambda-end
 ))
