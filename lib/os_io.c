@@ -807,18 +807,18 @@ ___time timeout;)
 void ___device_select_add_fd
    ___P((___device_select_state *state,
          int fd,
-         ___BOOL for_writing),
+         int for_op),
         (state,
          fd,
-         for_writing)
+         for_op)
 ___device_select_state *state;
 int fd;
-___BOOL for_writing;)
+int for_op;)
 {
-  if (for_writing)
-    ___FD_SET(fd, state->writefds);
-  else
+  if (for_op == FOR_READING)
     ___FD_SET(fd, state->readfds);
+  else
+    ___FD_SET(fd, state->writefds);
 
   if (fd >= state->highest_fd_plus_1)
     state->highest_fd_plus_1 = fd+1;
@@ -831,20 +831,20 @@ ___BOOL for_writing;)
 void ___device_select_add_fd
    ___P((___device_select_state *state,
          int fd,
-         ___BOOL for_writing),
+         int for_op),
         (state,
          fd,
-         for_writing)
+         for_op)
 ___device_select_state *state;
 int fd;
-___BOOL for_writing;)
+int for_op;)
 {
   state->pollfds[state->pollfd_count].fd = fd;
 
-  if (for_writing)
-    state->pollfds[state->pollfd_count].events = POLLOUT;
-  else
+  if (for_op == FOR_READING)
     state->pollfds[state->pollfd_count].events = POLLIN;
+  else
+    state->pollfds[state->pollfd_count].events = POLLOUT;
 
   ++state->pollfd_count;
 }
@@ -882,18 +882,23 @@ ___SCMOBJ ___device_select
    ___P((___device **devs,
          int nb_read_devs,
          int nb_write_devs,
+         int nb_event_devs,
          ___time timeout),
         (devs,
          nb_read_devs,
          nb_write_devs,
+         nb_event_devs,
          timeout)
 ___device **devs;
 int nb_read_devs;
 int nb_write_devs;
+int nb_event_devs;
 ___time timeout;)
 {
   ___SCMOBJ e;
-  int nb_devs;
+  int event_pos = nb_event_devs;
+  int write_pos = event_pos + nb_write_devs;
+  int read_pos = write_pos + nb_read_devs;
   ___device_select_state state;
   int pass;
   int dev_list;
@@ -908,8 +913,6 @@ ___time timeout;)
 
 #endif
 #endif
-
-  nb_devs = nb_read_devs + nb_write_devs;
 
   state.devs = devs;
 
@@ -949,7 +952,9 @@ ___time timeout;)
 
   /* monitor self-pipe for available data to read */
 
-  ___device_select_add_fd (&state, ___PSTATE->os.select_abort.reading_fd, 0);
+  ___device_select_add_fd (&state,
+                           ___PSTATE->os.select_abort.reading_fd,
+                           FOR_READING);
 
 #endif
 
@@ -972,11 +977,11 @@ ___time timeout;)
 
 #endif
 
-  if (nb_devs > 0)
+  if (read_pos > 0)
     {
-      state.devs_next[nb_devs-1] = -1;
+      state.devs_next[read_pos-1] = -1;
 
-      for (i=nb_devs-2; i>=0; i--)
+      for (i=read_pos-2; i>=0; i--)
         state.devs_next[i] = i+1;
 
       dev_list = 0;
@@ -996,7 +1001,9 @@ ___time timeout;)
           ___device *d = devs[i];
           if ((e = ___device_select_virt
                      (d,
-                      i>=nb_read_devs,
+                      i>=write_pos ? FOR_READING
+                                   : i>=event_pos ? FOR_WRITING
+                                                  : FOR_EVENT,
                       i,
                       pass,
                       &state))
@@ -1443,13 +1450,15 @@ ___time timeout;)
 
   if (e == ___FIX(___NO_ERR))
     {
-      for (i=nb_devs-1; i>=0; i--)
+      for (i=read_pos-1; i>=0; i--)
         {
           ___device *d = devs[i];
           if (d != NULL)
             if ((e = ___device_select_virt
                        (d,
-                        i>=nb_read_devs,
+                        i>=write_pos ? FOR_READING
+                                     : i>=event_pos ? FOR_WRITING
+                                                    : FOR_EVENT,
                         i,
                         ___SELECT_PASS_CHECK,
                         &state))
@@ -1618,7 +1627,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 1, 0, ___time_mod.time_pos_infinity);
+      e = ___device_select (devs, 1, 0, 0, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -1632,7 +1641,7 @@ ___device *self;)
         return e;
 
       devs[0] = self;
-      e = ___device_select (devs, 0, 1, ___time_mod.time_pos_infinity);
+      e = ___device_select (devs, 0, 1, 0, ___time_mod.time_pos_infinity);
       if (e != ___FIX(___NO_ERR))
         return e;
     }
@@ -1674,17 +1683,17 @@ ___device *self;)
 
 ___HIDDEN ___SCMOBJ device_timer_select_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
@@ -1911,17 +1920,17 @@ ___device_stream_pump *pump;)
 
 ___SCMOBJ ___device_stream_select_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
@@ -1930,12 +1939,12 @@ ___device_select_state *state;)
 
 #ifdef USE_PUMPS
 
-  int stage = (for_writing
-               ? d->base.write_stage
-               : d->base.read_stage);
-  ___device_stream_pump *p = (for_writing
-                              ? d->write_pump
-                              : d->read_pump);
+  int stage = (for_op == FOR_READING
+               ? d->base.read_stage
+               : d->base.write_stage);
+  ___device_stream_pump *p = (for_op == FOR_READING
+                              ? d->read_pump
+                              : d->write_pump);
 
   if (p != NULL)
     {
@@ -1947,10 +1956,10 @@ ___device_select_state *state;)
             wait_obj = p->thread;
           else
             {
-              if (for_writing)
-                wait_obj = p->pipe.wevent;
-              else
+              if (for_op == FOR_READING)
                 wait_obj = p->pipe.revent;
+              else
+                wait_obj = p->pipe.wevent;
             }
 
           ___device_select_add_wait_obj (state, i, wait_obj);
@@ -1975,7 +1984,7 @@ ___device_select_state *state;)
 
   return ___device_stream_select_raw_virt
            (d,
-            for_writing,
+            for_op,
             i,
             pass,
             state);
@@ -2538,25 +2547,25 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_serial_select_raw_virt
    ___P((___device_stream *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device_stream *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_serial *d = ___CAST(___device_serial*,self);
-  int stage = (for_writing
-               ? d->base.base.write_stage
-               : d->base.base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.base.read_stage
+               : d->base.base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -2970,25 +2979,25 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_pipe_select_raw_virt
    ___P((___device_stream *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device_stream *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_pipe *d = ___CAST(___device_pipe*,self);
-  int stage = (for_writing
-               ? d->base.base.write_stage
-               : d->base.base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.base.read_stage
+               : d->base.base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -2997,15 +3006,10 @@ ___device_select_state *state;)
       else
         {
 #ifdef USE_POSIX
-          if (for_writing)
-            {
-              if (d->fd_wr >= 0)
-                ___device_select_add_fd (state, d->fd_wr, 1);
-            }
-          else
+          if (for_op == FOR_READING)
             {
               if (d->fd_rd >= 0)
-                ___device_select_add_fd (state, d->fd_rd, 0);
+                ___device_select_add_fd (state, d->fd_rd, for_op);
               if (d->poll_interval_nsecs > 0)
                 {
                   int interval = d->poll_interval_nsecs * 6 / 5;
@@ -3017,15 +3021,15 @@ ___device_select_state *state;)
                   ___device_select_add_relative_timeout (state, i, interval * 1e-9);
                 }
             }
+          else
+            {
+              if (d->fd_wr >= 0)
+                ___device_select_add_fd (state, d->fd_wr, for_op);
+            }
 #endif
 
 #ifdef USE_WIN32
-          if (for_writing)
-            {
-              if (d->h_wr != NULL)
-                ___device_select_add_wait_obj (state, i, d->h_wr);
-            }
-          else
+          if (for_op == FOR_READING)
             {
               if (d->h_rd != NULL)
                 {
@@ -3037,6 +3041,11 @@ ___device_select_state *state;)
                   d->poll_interval_nsecs = interval;
                   ___device_select_add_relative_timeout (state, i, interval * 1e-9);
                 }
+            }
+          else
+            {
+              if (d->h_wr != NULL)
+                ___device_select_add_wait_obj (state, i, d->h_wr);
             }
 #endif
         }
@@ -3051,16 +3060,16 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (for_writing)
-        {
-          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, state->writefds))
-            state->devs[i] = NULL;
-        }
-      else
+      if (for_op == FOR_READING)
         {
           if (d->fd_rd < 0 ||
               d->poll_interval_nsecs > 0 ||
               ___FD_ISSET(d->fd_rd, state->readfds))
+            state->devs[i] = NULL;
+        }
+      else
+        {
+          if (d->fd_wr < 0 || ___FD_ISSET(d->fd_wr, state->writefds))
             state->devs[i] = NULL;
         }
 
@@ -3068,14 +3077,14 @@ ___device_select_state *state;)
 
 #ifdef USE_WIN32
 
-      if (for_writing)
+      if (for_op == FOR_READING)
         {
-          if (d->h_wr != NULL && state->devs_next[i] != -1)
+          if (d->h_rd != NULL)
             state->devs[i] = NULL;
         }
       else
         {
-          if (d->h_rd != NULL)
+          if (d->h_wr != NULL && state->devs_next[i] != -1)
             state->devs[i] = NULL;
         }
 
@@ -3450,6 +3459,7 @@ typedef struct ___device_process_struct
     int status;          /* process status */
     ___BOOL got_status;  /* was the status retrieved? */
     ___BOOL cleanuped;   /* has process been cleaned-up? */
+    int event_check_interval_nsecs;  /* interval between event checks */
   } ___device_process;
 
 typedef struct ___device_process_vtbl_struct
@@ -3565,22 +3575,49 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_process_select_raw_virt
    ___P((___device_stream *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device_stream *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
-  return ___device_pipe_select_raw_virt (self, for_writing, i, pass, state);
+  ___device_process *d = ___CAST(___device_process*,self);
+
+  if (for_op != FOR_EVENT)
+    return ___device_pipe_select_raw_virt (self, for_op, i, pass, state);
+
+  if (pass == ___SELECT_PASS_1)
+    {
+      if (d->got_status)
+        state->timeout = ___time_mod.time_neg_infinity;
+      else
+        {
+          int interval = d->event_check_interval_nsecs * 6 / 5;
+          if (interval < 1000000)
+            interval = 1000000; /* min interval = 0.001 secs */
+          else if (interval > 200000000)
+            interval = 200000000; /* max interval = 0.2 sec */
+          d->event_check_interval_nsecs = interval;
+          ___device_select_add_relative_timeout (state, i, interval * 1e-9);
+        }
+      return ___FIX(___SELECT_SETUP_DONE);
+    }
+
+  /* pass == ___SELECT_PASS_CHECK */
+
+  if (d->got_status)
+    state->devs[i] = NULL;
+
+  return ___FIX(___NO_ERR);
 }
 
 ___HIDDEN ___SCMOBJ ___device_process_release_raw_virt
@@ -3768,6 +3805,7 @@ int direction;)
   d->status = -1;
   d->got_status = 0;
   d->cleanuped = 0;
+  d->event_check_interval_nsecs = 0;
 
   *dev = d;
 
@@ -3817,6 +3855,7 @@ int direction;)
   d->status = -1;
   d->got_status = 0;
   d->cleanuped = 0;
+  d->event_check_interval_nsecs = 0;
 
   *dev = d;
 
@@ -4689,8 +4728,8 @@ typedef struct ___device_tcp_client_struct
 
     SSL *tls;
 
-    /* Handle WANT_WRITE/READ error codes by OpenSSL: want_write[for_writing] */
-    int want_write[2];
+    /* Handle WANT_WRITE/WANT_READ error codes by OpenSSL: want_op[for_op] */
+    int want_op[2];
 
 #if OPENSSL_VERSION_NUMBER < 0x009080cfL
 
@@ -4777,12 +4816,14 @@ int direction;)
     {
       if (SSL_is_init_finished(d->tls))
         {
-          /* Make for_writing in select have the natural meaning (read for read,
-             write for write). Note that this is not strictly necessary, since
-             we are resetting to this state after each ___device_select_add_fd
-             call on TLS-enabled sockets. */
-          d->want_write[0] = 0;
-          d->want_write[1] = 1;
+          /*
+           * Make for_op in select have the natural meaning (read for
+           * read, write for write). Note that this is not strictly
+           * necessary, since we are resetting to this state after
+           * each ___device_select_add_fd call on TLS-enabled sockets.
+           */
+          d->want_op[FOR_READING] = FOR_READING;
+          d->want_op[FOR_WRITING] = FOR_WRITING;
 
           clear_tls_error_queue();
           err = SSL_shutdown (d->tls);
@@ -4875,25 +4916,25 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_tcp_client_select_raw_virt
    ___P((___device_stream *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device_stream *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_tcp_client *d = ___CAST(___device_tcp_client*,self);
-  int stage = (for_writing
-               ? d->base.base.write_stage
-               : d->base.base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.base.read_stage
+               : d->base.base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -4924,17 +4965,15 @@ ___device_select_state *state;)
                      some cases (during TLS handshake), invert the naturally
                      expected operation (a write requiring a select for read,
                      and viceversa). */
-                  ___device_select_add_fd (state,
-                                           d->s,
-                                           d->want_write[for_writing]);
-                  /* Once the the select is done, return the for_writing to
+                  ___device_select_add_fd (state, d->s, d->want_op[for_op]);
+                  /* Once the select is done, return the for_op to
                      its regular meaning (read for read, write for write) */
-                  d->want_write[for_writing] = for_writing;
+                  d->want_op[for_op] = for_op;
                 }
               else
-                ___device_select_add_fd (state, d->s, for_writing);
+                ___device_select_add_fd (state, d->s, for_op);
 #else
-              ___device_select_add_fd (state, d->s, for_writing);
+              ___device_select_add_fd (state, d->s, for_op);
 #endif
             }
 
@@ -4963,26 +5002,26 @@ ___device_select_state *state;)
 
       else if (d->tls != NULL)
         {
-      /* If the connection uses TLS, choose the direction of add_fd
-         according to previous WANT_WRITE/WANT_READ. This will, in
-         some cases (during TLS handshake), invert the naturally
-         expected operation (a write requiring a select for read,
-         and viceversa). */
-          if (d->want_write[for_writing])
-            d->io_events |= (FD_WRITE | FD_CLOSE);
-          else
+          /* If the connection uses TLS, choose the direction of add_fd
+             according to previous WANT_WRITE/WANT_READ. This will, in
+             some cases (during TLS handshake), invert the naturally
+             expected operation (a write requiring a select for read,
+             and viceversa). */
+          if (d->want_op[for_op] == FOR_READING)
             d->io_events |= (FD_READ | FD_CLOSE);
-       /* Once the select is done, return for_writing to
-          its regular meaning (read for read, write for write) */
-          d->want_write[for_writing] = for_writing;
+          else
+            d->io_events |= (FD_WRITE | FD_CLOSE);
+          /* Once the select is done, return for_op to
+             its regular meaning (read for read, write for write) */
+          d->want_op[for_op] = for_op;
         }
 
 #endif
 
-      else if (for_writing)
-        d->io_events |= (FD_WRITE | FD_CLOSE);
-      else
+      else if (for_op == FOR_READING)
         d->io_events |= (FD_READ | FD_CLOSE);
+      else
+        d->io_events |= (FD_WRITE | FD_CLOSE);
 
       return ___FIX(___NO_ERR);
     }
@@ -5010,9 +5049,9 @@ ___device_select_state *state;)
 #ifdef USE_POSIX
 
       if (d->try_connect_again != 0 ||
-          (for_writing
-           ? ___FD_ISSET(d->s, state->writefds)
-           : ___FD_ISSET(d->s, state->readfds)))
+          (for_op == FOR_READING
+           ? ___FD_ISSET(d->s, state->readfds)
+           : ___FD_ISSET(d->s, state->writefds)))
         {
           d->connect_done = 1;
           state->devs[i] = NULL;
@@ -5158,12 +5197,12 @@ ___stream_index *len_done;)
           switch (err)
             {
             case SSL_ERROR_WANT_READ:
-              /* want read, not for_writing (that is, for reading) */
-              d->want_write[0] = 0;
+              /* want read, FOR_READING */
+              d->want_op[FOR_READING] = FOR_READING;
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_WRITE:
-              /* want write, not for_writing (that is, for reading) */
-              d->want_write[0] = 1;
+              /* want write, FOR_READING */
+              d->want_op[FOR_READING] = FOR_WRITING;
               return ___ERR_CODE_EAGAIN;
             /* These errors require straight repetition */
             case SSL_ERROR_WANT_ACCEPT:
@@ -5290,12 +5329,12 @@ ___stream_index *len_done;)
           switch (err)
             {
             case SSL_ERROR_WANT_READ:
-              /* want read, for_writing */
-              d->want_write[1] = 0;
+              /* want read, FOR_WRITING */
+              d->want_op[FOR_WRITING] = FOR_READING;
               return ___ERR_CODE_EAGAIN;
             case SSL_ERROR_WANT_WRITE:
-              /* want write, for_writing */
-              d->want_write[1] = 1;
+              /* want write, FOR_WRITING */
+              d->want_op[FOR_WRITING] = FOR_WRITING;
               return ___ERR_CODE_EAGAIN;
             /* These errors require straight repetition */
             case SSL_ERROR_WANT_ACCEPT:
@@ -5769,25 +5808,25 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_tcp_server_select_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_tcp_server *d = ___CAST(___device_tcp_server*,self);
-  int stage = (for_writing
-               ? d->base.write_stage
-               : d->base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.read_stage
+               : d->base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -5796,7 +5835,7 @@ ___device_select_state *state;)
       else
         {
 #ifdef USE_POSIX
-          ___device_select_add_fd (state, d->s, for_writing);
+          ___device_select_add_fd (state, d->s, for_op);
 #endif
 
 #ifdef USE_WIN32
@@ -6123,25 +6162,25 @@ ___HIDDEN ___SCMOBJ ___device_udp_close_virt
 
 ___HIDDEN ___SCMOBJ ___device_udp_select_raw_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_udp *d = ___CAST(___device_udp*,self);
-  int stage = (for_writing
-               ? d->base.write_stage
-               : d->base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.read_stage
+               : d->base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -6154,7 +6193,7 @@ ___device_select_state *state;)
         {
 #ifdef USE_POSIX
 
-          ___device_select_add_fd (state, d->s, for_writing);
+          ___device_select_add_fd (state, d->s, for_op);
 
           return ___FIX(___SELECT_SETUP_DONE);
 
@@ -6174,10 +6213,10 @@ ___device_select_state *state;)
 
   else if (pass == ___SELECT_PASS_2)
     {
-      if (for_writing)
-        d->io_events |= (FD_WRITE | FD_CLOSE);
-      else
+      if (for_op == FOR_READING)
         d->io_events |= (FD_READ | FD_CLOSE);
+      else
+        d->io_events |= (FD_WRITE | FD_CLOSE);
 
       return ___FIX(___NO_ERR);
     }
@@ -6204,9 +6243,9 @@ ___device_select_state *state;)
     {
 #ifdef USE_POSIX
 
-      if (for_writing
-          ? ___FD_ISSET(d->s, state->writefds)
-          : ___FD_ISSET(d->s, state->readfds))
+      if (for_op == FOR_READING
+          ? ___FD_ISSET(d->s, state->readfds)
+          : ___FD_ISSET(d->s, state->writefds))
         state->devs[i] = NULL;
 
 #endif
@@ -6562,17 +6601,17 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_directory_select_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
@@ -6871,25 +6910,25 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_event_queue_select_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_event_queue *d = ___CAST(___device_event_queue*,self);
-  int stage = (for_writing
-               ? d->base.write_stage
-               : d->base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.read_stage
+               : d->base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -7172,25 +7211,25 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_file_select_raw_virt
    ___P((___device_stream *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device_stream *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_file *d = ___CAST(___device_file*,self);
-  int stage = (for_writing
-               ? d->base.base.write_stage
-               : d->base.base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.base.read_stage
+               : d->base.base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -7207,7 +7246,7 @@ ___device_select_state *state;)
 #endif
 
 #ifdef USE_POSIX
-          ___device_select_add_fd (state, d->fd, for_writing);
+          ___device_select_add_fd (state, d->fd, for_op);
 #endif
         }
       return ___FIX(___SELECT_SETUP_DONE);
@@ -7229,9 +7268,9 @@ ___device_select_state *state;)
 
 #ifdef USE_POSIX
 
-      if (for_writing
-           ? ___FD_ISSET(d->fd, state->writefds)
-           : ___FD_ISSET(d->fd, state->readfds))
+      if (for_op == FOR_READING
+           ? ___FD_ISSET(d->fd, state->readfds)
+           : ___FD_ISSET(d->fd, state->writefds))
         state->devs[i] = NULL;
 
 #endif
@@ -8414,7 +8453,8 @@ int sig;)
       ___device *head;
       pid_t pid = ___waitpid_no_EINTR (-1, &status, WNOHANG);
 
-      if (pid <= 0)
+      if (pid <= 0 ||
+          !(WIFEXITED(status) || WIFSIGNALED(status)))
         break;
 
       /*
@@ -8436,8 +8476,7 @@ int sig;)
 
                   if (dev->pid == pid)
                     {
-                      if (WIFEXITED(status) || WIFSIGNALED(status))
-                        ___device_process_status_set (dev, status); /* ignore error */
+                      ___device_process_status_set (dev, status); /* ignore error */
                       break;
                     }
                 }
@@ -9766,25 +9805,25 @@ ___HIDDEN ___SCMOBJ ___device_raw_close_virt
 
 ___HIDDEN ___SCMOBJ ___device_raw_select_raw_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
 {
   ___device_raw *d = ___CAST(___device_raw*,self);
-  int stage = (for_writing
-               ? d->base.write_stage
-               : d->base.read_stage);
+  int stage = (for_op == FOR_READING
+               ? d->base.read_stage
+               : d->base.write_stage);
 
   if (pass == ___SELECT_PASS_1)
     {
@@ -9801,7 +9840,7 @@ ___device_select_state *state;)
 #endif
 
 #ifdef USE_POSIX
-          ___device_select_add_fd (state, d->fd, for_writing);
+          ___device_select_add_fd (state, d->fd, for_op);
 #endif
         }
       return ___FIX(___SELECT_SETUP_DONE);
@@ -9823,9 +9862,9 @@ ___device_select_state *state;)
 
 #ifdef USE_POSIX
 
-      if (for_writing
-           ? ___FD_ISSET(d->fd, state->writefds)
-           : ___FD_ISSET(d->fd, state->readfds))
+      if (for_op == FOR_READING
+           ? ___FD_ISSET(d->fd, state->readfds)
+           : ___FD_ISSET(d->fd, state->writefds))
         state->devs[i] = NULL;
 
 #endif
@@ -11207,15 +11246,16 @@ ___SCMOBJ timeout;)
 
   if (___FALSEP(devices))
     {
-      e = ___device_select (NULL, 0, 0, to);
+      e = ___device_select (NULL, 0, 0, 0, to);
     }
   else
     {
       ___device *devs[MAX_CONDVARS];
       ___SCMOBJ condvars[MAX_CONDVARS];
       ___SCMOBJ condvar;
+      int event_pos = 0;
+      int write_pos = 0;
       int read_pos = 0;
-      int write_pos = MAX_CONDVARS;
       int i;
       int j;
 
@@ -11224,72 +11264,57 @@ ___SCMOBJ timeout;)
       while (condvar != devices)
         {
           ___SCMOBJ owner = ___FIELD(condvar,___BTQ_OWNER);
-          if (read_pos < write_pos)
+          if (read_pos < MAX_CONDVARS-1)
             {
-              if (owner & ___FIX(2))
-                condvars[--write_pos] = condvar;
-              else
-                condvars[read_pos++] = condvar;
               ___FIELD(condvar,___BTQ_OWNER) = owner & ~___FIX(1);
+              switch (___INT(owner)>>1)
+                {
+                case FOR_READING:
+                  condvars[read_pos++] = condvar;
+                  break;
+                case FOR_WRITING:
+                  condvars[read_pos++] = condvars[write_pos];
+                  condvars[write_pos++] = condvar;
+                  break;
+                case FOR_EVENT:
+                  condvars[read_pos++] = condvars[write_pos];
+                  condvars[write_pos++] = condvars[event_pos];
+                  condvars[event_pos++] = condvar;
+                  break;
+                }
             }
           else
             {
-              to = ___time_mod.time_neg_infinity;
               ___FIELD(condvar,___BTQ_OWNER) = owner | ___FIX(1);
+              to = ___time_mod.time_neg_infinity;
             }
           condvar = ___FIELD(condvar,___BTQ_DEQ_NEXT);
         }
 
-      i = 0;
-
-      while (i < read_pos)
+      for (i=0; i<read_pos; i++)
         {
           devs[i] = ___CAST(___device*,
                             ___FIELD(___FIELD(condvars[i],___CONDVAR_NAME),
                                      ___FOREIGN_PTR));
-          i++;
-        }
-
-      j = MAX_CONDVARS;
-
-      while (j > write_pos)
-        {
-          j--;
-          devs[i] = ___CAST(___device*,
-                            ___FIELD(___FIELD(condvars[j],___CONDVAR_NAME),
-                                     ___FOREIGN_PTR));
-          i++;
         }
 
       ___PRIMITIVEUNLOCK(devices,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
-      e = ___device_select (devs, read_pos, MAX_CONDVARS-write_pos, to);
+      e = ___device_select (devs,
+                            read_pos - write_pos,
+                            write_pos - event_pos,
+                            event_pos,
+                            to);
 
       ___PRIMITIVELOCK(devices,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
-      i = 0;
-
-      while (i < read_pos)
+      for (i=0; i<read_pos; i++)
         {
           if (devs[i] == NULL)
             {
               condvar = condvars[i];
               ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
             }
-          i++;
-        }
-
-      j = MAX_CONDVARS;
-
-      while (j > write_pos)
-        {
-          j--;
-          if (devs[i] == NULL)
-            {
-              condvar = condvars[j];
-              ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
-            }
-          i++;
         }
     }
 

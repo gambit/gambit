@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -149,7 +149,8 @@
 (##define-macro (macro-device-kind)   31) ;; can also do device operations
 
 (##define-macro (macro-file-kind)        (+ 31 32))
-(##define-macro (macro-process-kind)     (+ 31 64))
+(##define-macro (macro-pipe-kind)        (+ 31 64))
+(##define-macro (macro-process-kind)     (+ 31 64 131072))
 (##define-macro (macro-tty-kind)         (+ 31 128))
 (##define-macro (macro-serial-kind)      (+ 31 256))
 (##define-macro (macro-tcp-client-kind)  (+ 31 512))
@@ -327,6 +328,7 @@
 
   rdevice-condvar    ;; device condvar from which bytes are read
   wdevice-condvar    ;; device condvar to which bytes are written
+  event-condvar      ;; only used for process ports
   name               ;; name of device
 )
 

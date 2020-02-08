@@ -7586,17 +7586,17 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_tty_select_raw_virt
    ___P((___device_stream *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device_stream *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
@@ -7607,7 +7607,9 @@ ___device_select_state *state;)
   if ((e = ___device_tty_force_open (d)) != ___FIX(___NO_ERR))
     return e;
 
-  if ((for_writing ? d->base.base.write_stage : d->base.base.read_stage)
+  if ((for_op == FOR_READING
+       ? d->base.base.read_stage
+       : d->base.base.write_stage)
       != ___STAGE_OPEN)
     return ___FIX(___CLOSED_DEVICE_ERR);
 
@@ -7623,7 +7625,7 @@ ___device_select_state *state;)
              ___time_mod.time_neg_infinity);
         }
       else
-        ___device_select_add_fd (state, d->fd, for_writing);
+        ___device_select_add_fd (state, d->fd, for_op);
 
 #endif
 
@@ -7631,10 +7633,10 @@ ___device_select_state *state;)
 
       HANDLE wait_obj;
 
-      if (for_writing)
-        wait_obj = d->hin;
-      else
+      if (for_op == FOR_READING)
         wait_obj = d->hout;
+      else
+        wait_obj = d->hin;
 
       ___device_select_add_wait_obj (state, i, wait_obj);
 
@@ -7642,7 +7644,7 @@ ___device_select_state *state;)
 
 #ifdef USE_LINEEDITOR
 
-      if (!for_writing)
+      if (for_op == FOR_READING)
         {
           if (lineeditor_read_ready (d))
             ___device_select_add_timeout
@@ -7663,31 +7665,7 @@ ___device_select_state *state;)
 
   /* pass == ___SELECT_PASS_CHECK */
 
-  if (for_writing)
-    {
-#ifndef USE_POSIX
-#ifndef USE_WIN32
-
-      state->devs[i] = NULL;
-
-#endif
-#endif
-
-#ifdef USE_POSIX
-
-      if (d->fd < 0 || ___FD_ISSET(d->fd, state->writefds))
-        state->devs[i] = NULL;
-
-#endif
-
-#ifdef USE_WIN32
-
-      if (state->devs_next[i] != -1)
-        state->devs[i] = NULL;
-
-#endif
-    }
-  else
+  if (for_op == FOR_READING)
     {
 #ifndef USE_POSIX
 #ifndef USE_WIN32
@@ -7717,6 +7695,30 @@ ___device_select_state *state;)
           (d->current.paren_balance_in_progress &&
            state->timeout_reached &&
            !___time_less (state->timeout, d->current.paren_balance_end)))
+        state->devs[i] = NULL;
+
+#endif
+    }
+  else
+    {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
+
+      state->devs[i] = NULL;
+
+#endif
+#endif
+
+#ifdef USE_POSIX
+
+      if (d->fd < 0 || ___FD_ISSET(d->fd, state->writefds))
+        state->devs[i] = NULL;
+
+#endif
+
+#ifdef USE_WIN32
+
+      if (state->devs_next[i] != -1)
         state->devs[i] = NULL;
 
 #endif
