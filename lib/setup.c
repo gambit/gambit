@@ -5759,6 +5759,12 @@ ___setup_params_struct *setup_params;)
 
   setup_dynamic_linking ();
 
+#ifdef GAMBIT_GSTATE
+
+  set_gstate(___GSTATE);
+
+#endif
+
   /*
    * Setup the operating system and memory management modules.
    */
@@ -5864,12 +5870,6 @@ ___setup_params_struct *setup_params;)
                     ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),
                              ___MODULE_DESCR_THUNK));
     } while (0);
-
-#ifdef GAMBIT_GSTATE
-
-  set_gstate(___GSTATE);
-
-#endif
 
   /*
    * Cleanup if there are any errors.
