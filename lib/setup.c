@@ -5703,11 +5703,6 @@ ___setup_params_struct *setup_params;)
       setup_params->version != ___VERSION)
     return ___FIX(___UNKNOWN_ERR);
 
-#ifdef GAMBIT_GSTATE
-
-  set_gstate(___GSTATE);
-
-#endif
 
   /*
    * Remember setup parameters.
@@ -5869,6 +5864,14 @@ ___setup_params_struct *setup_params;)
                     ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),
                              ___MODULE_DESCR_THUNK));
     } while (0);
+
+#ifdef GAMBIT_GSTATE
+
+  set_gstate(___GSTATE);
+
+#else
+#error "Compile with Gambit GSTATE"
+#endif
 
   /*
    * Cleanup if there are any errors.
