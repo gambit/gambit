@@ -1326,7 +1326,7 @@ end-of-code
 ))
 
 (define ##interrupt-vector
-  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f))
+  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f #f #f #f #f #f))
 
 (define-prim (##interrupt-handler)
 
