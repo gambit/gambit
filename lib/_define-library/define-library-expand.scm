@@ -449,13 +449,26 @@
       (if (pair? expr-srcs)
           (let* ((expr-src (car expr-srcs))
                  (expr (##source-strip expr-src))
-                 (sym
+                 (head
                   (and (pair? expr)
-                       (eq? (##source-strip (car expr)) 'define-syntax)
-                       (pair? (cdr expr))
+                       (##source-strip (car expr))))
+                 (def-syntax?
+                   (memq head '(define-syntax ##define-syntax)))
+                 (def-macro?
+                   (memq head '(define-macro ##define-macro)))
+                 (sym
+                  (and (pair? (cdr expr))
                        (pair? (cddr expr))
-                       (null? (cdddr expr))
-                       (##source-strip (cadr expr)))))
+                       (let ((x (##source-strip (cadr expr))))
+                         (cond (def-syntax?
+                                 (and (null? (cdddr expr))
+                                      x))
+                               (def-macro?
+                                 (if (pair? x)
+                                     (##source-strip (car x))
+                                     x))
+                               (else
+                                #f))))))
             (if (not (symbol? sym))
                 (loop (cdr expr-srcs)) ;; keep looking for syntax defs
                 (let* ((id
@@ -463,9 +476,25 @@
                             sym
                             (##make-full-name (ctx-namespace ctx)
                                               sym)))
+                       (val-src
+                        (caddr expr))
+                       (val
+                        (##source-strip val-src))
                        (def
                         (##make-source
-                         `(##define-syntax ,id ,(caddr expr))
+                         (if def-syntax?
+                             (if (and (pair? val)
+                                      (eq? (##source-strip (car val))
+                                           'syntax-rules))
+                                 (let ((crules
+                                        (syn#syntax-rules->crules val-src)))
+                                   `(##define-syntax ,id
+                                      (##lambda (##src)
+                                                (syn#apply-rules ',crules
+                                                                 ##src))))
+                                 `(##define-syntax ,id ,val-src))
+                             `(##define-macro ,id
+                                ,(##definition-value expr-src)))
                          (##source-locat expr-src))))
 
                   (if (table-ref (ctx-exports-tbl ctx) sym #f) ;;exported?
@@ -924,18 +953,7 @@
                         (apply
                          append
                          (map (lambda (m)
-                                (let ((id (car m)))
-                                  (if #t ;(table-ref imports id #f) ;; macro is imported?
-                                      `((##define-syntax
-                                          ,(string->symbol
-                                            (string-append
-                                             (idmap-namespace idmap)
-                                             (symbol->string id)))
-                                          (##lambda (src)
-                                                    (syn#apply-rules
-                                                     (##quote ,(cdr m))
-                                                     src))))
-                                      '())))
+                                `(,(cdr m)))
                               (idmap-macros idmap))))))
 
                  rev-global-imports))))
