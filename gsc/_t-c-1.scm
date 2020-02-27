@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -318,7 +318,7 @@
      output
      c-decls
      c-inits
-     (map targ-use-obj c-objs)
+     (map (lambda (x) (cons (car x) (targ-use-obj (cdr x)))) c-objs)
      module-descr
      linker-name)
 
@@ -1781,7 +1781,7 @@
       (let loop ((i 0) (lst c-objs))
         (if (pair? lst)
           (let ((x (car lst)))
-            (targ-macro-definition (cons 'c-obj- i) x)
+            (targ-macro-definition (car x) (cdr x))
             (loop (+ i 1) (cdr lst)))))))
 
   (if (pair? c-decls)

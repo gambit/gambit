@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1891,11 +1891,18 @@
     (cons initialization-code-string c-interface-inits))
   #f)
 
-(define (add-c-obj obj)
-  (set! c-interface-obj-count (+ c-interface-obj-count 1))
-  (set! c-interface-objs
-    (cons obj c-interface-objs))
-  #f)
+(define (add-c-obj name obj)
+  (let ((name
+         (or name
+             (string-append
+              c-id-prefix
+              "C_OBJ_"
+              (number->string c-interface-obj-count)))))
+    (if (not (assoc name c-interface-objs))
+        (begin
+          (set! c-interface-obj-count (+ c-interface-obj-count 1))
+          (set! c-interface-objs (cons (cons name obj) c-interface-objs))))
+    name))
 
 (define (make-c-intf decls procs inits objs) (vector decls procs inits objs))
 (define (c-intf-decls c-intf)        (vector-ref c-intf 0))
@@ -2334,16 +2341,13 @@
            (if (false-object? tag)
              (string-append c-id-prefix "FAL")
              (let* ((tag-list (if (symbol-object? tag) (list tag) tag))
-                    (x (object-pos-in-list tag-list c-interface-objs)))
-               (string-append
-                c-id-prefix
-                "C_OBJ_"
-                (number->string
-                 (if x
-                   (- (- c-interface-obj-count x) 1)
-                   (let ((n c-interface-obj-count))
-                     (add-c-obj tag-list)
-                     n))))))))
+                    (name (and (symbol-object? (car tag-list))
+                               (string-append
+                                c-id-prefix
+                                "C_TAG_"
+                                (scheme-id->c-id
+                                 (symbol->string (car tag-list)))))))
+               (add-c-obj name tag-list)))))
       (if to-scmobj?
 
         (string-append
