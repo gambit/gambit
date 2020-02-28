@@ -10689,11 +10689,14 @@
     (or (##fx= n 0)
         (and (##fx= n 1)
              (##char=? (##string-ref str 0) #\.))
-        (and (##char=? (##string-ref str 0) #\#)
-             (or (##fx= n 1)
-                 (let ((next (##string-ref str 1)))
-                   (and (##not (##char=? next #\#))
-                        (##not (##char=? next #\%))))))
+        (let loop ((i 0))
+          (if (and (##fx< i n)
+                   (##char=? (##string-ref str i) #\#))
+              (loop (##fx+ i 1))
+              (or (##fx= i 1)
+                  (and (macro-readtable-sharp-seq-keyword
+                        (macro-writeenv-readtable we))
+                       (##fx= i n)))))
         (##string->number str 10 #t)
         (and (##fx< 1 n)
              (let ((keywords-allowed?
@@ -13215,32 +13218,39 @@
 (define (##read-sharp-keyword/symbol re next start-pos)
   (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
   (let ((str (##build-delimited-string re #\# 1)))
-    (let ((n (string-length str)))
-      (let loop ((i (- n 1)))
-        (cond ((< i 0)
-               (##wrap-op1* re
-                            start-pos
-                            (macro-readtable-sharp-seq-keyword
-                             (macro-readenv-readtable re))
-                            (- n 1)))
-              ((char=? #\# (string-ref str i))
-               (loop (- i 1)))
-              (else
-               (let ((obj (##string->number/keyword/symbol re str #t)))
-                 (macro-readenv-wrap re obj))))))))
+    (let ((sharp-seq-keyword
+           (macro-readtable-sharp-seq-keyword
+            (macro-readenv-readtable re))))
+      (or (and sharp-seq-keyword
+               (let ((n (string-length str)))
+                 (let loop ((i 0))
+                   (cond ((>= i n)
+                          (##wrap-op1* re
+                                       start-pos
+                                       sharp-seq-keyword
+                                       (- n 1)))
+                         ((char=? #\# (string-ref str i))
+                          (loop (+ i 1)))
+                         (else
+                          #f)))))
+          (let ((obj (##string->number/keyword/symbol re str #t)))
+            (macro-readenv-wrap re obj))))))
 
 (define (##read-sharp-colon re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
     (macro-read-next-char-or-eof re) ;; skip char after #\#
     (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
-    (let ((c (macro-read-next-char-or-eof re)))
-      (if (char? c)
-          (let ((obj (##build-delimited-number/keyword/symbol re c #f)))
-            (macro-readenv-wrap re obj))
+    (let ((next (macro-peek-next-char-or-eof re)))
+      (if (or (not (char? next))
+              (##readtable-char-delimiter? (macro-readenv-readtable re) next))
           (begin
-            (##raise-datum-parsing-exception 'incomplete-form-eof-reached re)
+            (##raise-datum-parsing-exception 'invalid-token re)
             (macro-readenv-filepos-set! re old-pos) ;; restore pos
-            (##read-datum-or-label-or-none-or-dot re)))))) ;; skip error
+            (##read-datum-or-label-or-none-or-dot re)) ;; skip error
+          (begin
+            (macro-read-next-char-or-eof re) ;; skip char after #\:
+            (let ((obj (##build-delimited-number/keyword/symbol re next #f)))
+              (macro-readenv-wrap re obj)))))))
 
 (define (##read-sharp-semicolon re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
@@ -13525,16 +13535,20 @@
                    (##wrap re
                            start-pos
                            (macro-absent-obj)))
-                  ((##read-string=? re s "#")
-                   (##wrap-op1* re
-                                start-pos
-                                (macro-readtable-sharp-seq-keyword
-                                 (macro-readenv-readtable re))
-                                0))
                   (else
-                   (##raise-datum-parsing-exception 'invalid-token re)
-                   (macro-readenv-filepos-set! re old-pos) ;; restore pos
-                   (##read-datum-or-label-or-none-or-dot re)))))))) ;; skip error
+                   (let ((sharp-seq-keyword
+                          (macro-readtable-sharp-seq-keyword
+                           (macro-readenv-readtable re))))
+                     (if (and sharp-seq-keyword
+                              (##read-string=? re s "#"))
+                         (##wrap-op1* re
+                                      start-pos
+                                      sharp-seq-keyword
+                                      0)
+                         (begin
+                           (##raise-datum-parsing-exception 'invalid-token re)
+                           (macro-readenv-filepos-set! re old-pos) ;; restore pos
+                           (##read-datum-or-label-or-none-or-dot re))))))))))) ;; skip error
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
