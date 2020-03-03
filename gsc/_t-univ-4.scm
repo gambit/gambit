@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-4.scm"
 
-;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -3305,6 +3305,24 @@
                                                 (^fixnum-unbox arg4)))))
         (return arg1)))))
 
+(univ-define-prim "##bignum.adigit-bitwise-andc1!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     ;; TODO: implement
+     (return arg1))))
+
+(univ-define-prim "##bignum.adigit-bitwise-andc2!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     ;; TODO: implement
+     (return arg1))))
+
+(univ-define-prim "##bignum.adigit-bitwise-eqv!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     ;; TODO: implement
+     (return arg1))))
+
 (univ-define-prim "##bignum.adigit-bitwise-ior!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
@@ -3317,6 +3335,40 @@
                                                 (^fixnum-unbox arg4)))))
         (return arg1)))))
 
+(univ-define-prim "##bignum.adigit-bitwise-nand!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     ;; TODO: implement
+     (return arg1))))
+
+(univ-define-prim "##bignum.adigit-bitwise-nor!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     ;; TODO: implement
+     (return arg1))))
+
+(univ-define-prim "##bignum.adigit-bitwise-not!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitnot (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2)))))
+        (return arg1)))))
+
+(univ-define-prim "##bignum.adigit-bitwise-orc1!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     ;; TODO: implement
+     (return arg1))))
+
+(univ-define-prim "##bignum.adigit-bitwise-orc2!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     ;; TODO: implement
+     (return arg1))))
+
 (univ-define-prim "##bignum.adigit-bitwise-xor!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
@@ -3327,16 +3379,6 @@
                                                 (^fixnum-unbox arg2))
                                   (^array-index (^bignum-digits arg3)
                                                 (^fixnum-unbox arg4)))))
-        (return arg1)))))
-
-(univ-define-prim "##bignum.adigit-bitwise-not!" #f
-  (make-translated-operand-generator
-   (lambda (ctx return arg1 arg2)
-     (^ (^assign (^array-index (^bignum-digits arg1)
-                               (^fixnum-unbox arg2))
-                 (^cast* 'bigdigit
-                         (^bitnot (^array-index (^bignum-digits arg1)
-                                                (^fixnum-unbox arg2)))))
         (return arg1)))))
 
 ;;----------------------------------------------------------------------------
