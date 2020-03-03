@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -1075,6 +1075,8 @@
                         (^null)   ;; threads-deq-next
                         (^null)   ;; threads-deq-prev
                         (^null)   ;; floats
+                        (^null)   ;; btq-container
+                        (^null)   ;; toq-container
                         (^null)   ;; name
                         (^null)   ;; end-condvar
                         (^null)   ;; exception?
@@ -1089,6 +1091,8 @@
                         (^null)   ;; specific
                         (^null)   ;; resume-thunk
                         (^null)   ;; interrupts
+                        (^null)   ;; last-processor
+                        ;;(^null)   ;; pinned
                         )))
                 '(public)))
 
@@ -3893,7 +3897,7 @@ EOF
       '() ;; class-fields
       (list (univ-field 'name 'str #f '(public)) ;; instance-fields
             (univ-field 'hash 'scmobj #f '(public))
-            (univ-field 'interned 'scmobj (^obj #f) '(public)))
+            (univ-field 'interned 'scmobj #f '(public)))
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method

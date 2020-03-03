@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -125,10 +125,12 @@
       (macro-check-procedure thunk 2 (with-exception-catcher catcher thunk)
         (##with-exception-catcher catcher thunk)))))
 
+(define (##primordial-exception-handler exc)
+  (##thread-end-with-uncaught-exception! exc))
+
 (define ##current-exception-handler
   (##make-parameter
-   (lambda (exc)
-     (##thread-end-with-uncaught-exception! exc))
+   ##primordial-exception-handler
    (lambda (val)
      (macro-check-procedure val 1 (##current-exception-handler val)
        val))))
@@ -1422,6 +1424,7 @@ function g_os_device_process_status(dev_scm) {
   ##the-processor)
 
 (define ##primordial-thread #f)
+(define ##initial-dynwind #f)
 
 (define-prim (##make-root-thread
               thunk
