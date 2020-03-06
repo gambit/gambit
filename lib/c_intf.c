@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -3546,6 +3546,12 @@ int char_encoding;)
   int len;
   int i;
 
+  if (___FALSEP(obj)) /* #f counts as NULL */
+    {
+      *x = 0;
+      return ___FIX(___NO_ERR);
+    }
+
   list1 = obj;
   list2 = obj;
   len = 0;
@@ -5715,7 +5721,10 @@ int char_encoding;)
   int i;
 
   if (string_list == 0)
-    return err_code_from_char_encoding (char_encoding, 1, 2, arg_num);
+    {
+      *obj = ___FAL;
+      return ___FIX(___NO_ERR);
+    }
 
   i = 0;
 
@@ -6420,9 +6429,18 @@ char **str_list_char;
 ___UCS_2STRING **str_list_UCS_2;
 int char_encoding;)
 {
-  ___SCMOBJ e = ___FIX(___HEAP_OVERFLOW_ERR);
+  ___SCMOBJ e;
   ___UCS_2STRING *lst;
-  int len = 0;
+  int len;
+
+  if (str_list_char == 0)
+    {
+      *str_list_UCS_2 = 0;
+      return ___FIX(___NO_ERR);
+    }
+
+  e = ___FIX(___HEAP_OVERFLOW_ERR);
+  len = 0;
 
   while (str_list_char[len] != 0)
     len++;
