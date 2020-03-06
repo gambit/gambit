@@ -2076,11 +2076,9 @@ end-of-code
    "___set_standard_level (___INT(___ARG1)); ___RESULT = ___VOID;"
    level))
 
-(define-prim (##set-gambitdir! dir)
+(define-prim (##get-debug-settings)
   (##declare (not interrupts-enabled))
-  ((c-lambda (UCS-2-string) void
-             "___addref_string (___arg1); ___set_gambitdir (___arg1);")
-   dir))
+  (##c-code "___RESULT = ___FIX(___get_debug_settings ());"))
 
 (define-prim (##set-debug-settings! mask new-settings)
   (##declare (not interrupts-enabled))
@@ -2089,6 +2087,106 @@ end-of-code
       ___FIX(___set_debug_settings (___INT(___ARG1), ___INT(___ARG2)));"
    mask
    new-settings))
+
+(define-prim (##get-file-settings)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_file_settings ());"))
+
+(define-prim (##set-file-settings! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_file_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim (##get-terminal-settings)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_terminal_settings ());"))
+
+(define-prim (##set-terminal-settings! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_terminal_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim (##get-stdio-settings)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_stdio_settings ());"))
+
+(define-prim (##set-stdio-settings! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_stdio_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim ##get-gambitdir
+  (c-lambda ()
+            UCS-2-string
+    "___return(___get_gambitdir ());"))
+
+(define-prim ##set-gambitdir!
+  (c-lambda (UCS-2-string)
+            void
+    "___addref_string (___arg1); ___set_gambitdir (___arg1);"))
+
+(define-prim ##get-gambitdir-map
+  (c-lambda ()
+            nonnull-UCS-2-string-list
+    "___return(___get_gambitdir_map ());"))
+
+(define-prim ##set-gambitdir-map!
+  (c-lambda (nonnull-UCS-2-string-list)
+            void
+    "___addref_string_list (___arg1); ___set_gambitdir_map (___arg1);"))
+
+(define-prim ##get-module-search-order
+  (c-lambda ()
+            nonnull-UCS-2-string-list
+    "___return(___get_module_search_order ());"))
+
+(define-prim ##set-module-search-order!
+  (c-lambda (nonnull-UCS-2-string-list)
+            void
+    "___addref_string_list (___arg1); ___set_module_search_order (___arg1);"))
+
+(define-prim ##get-module-whitelist
+  (c-lambda ()
+            nonnull-UCS-2-string-list
+    "___return(___get_module_whitelist ());"))
+
+(define-prim ##set-module-whitelist!
+  (c-lambda (nonnull-UCS-2-string-list)
+            void
+    "___addref_string_list (___arg1); ___set_module_whitelist (___arg1);"))
+
+(define-prim (##get-module-install-mode)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_module_install_mode ());"))
+
+(define-prim (##set-module-install-mode! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_module_install_mode (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim ##get-repl-client-addr
+  (c-lambda ()
+            UCS-2-string
+    "___return(___get_repl_client_addr ());"))
+
+(define-prim ##set-repl-client-addr!
+  (c-lambda (UCS-2-string)
+            void
+    "___addref_string (___arg1); ___set_repl_client_addr (___arg1);"))
+
+(define-prim ##get-repl-server-addr
+  (c-lambda ()
+            UCS-2-string
+    "___return(___get_repl_server_addr ());"))
+
+(define-prim ##set-repl-server-addr!
+  (c-lambda (UCS-2-string)
+            void
+    "___addref_string (___arg1); ___set_repl_server_addr (___arg1);"))
 
 ;;;----------------------------------------------------------------------------
 
