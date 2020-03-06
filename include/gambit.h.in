@@ -10789,12 +10789,50 @@ typedef struct ___global_state_struct
     void (*___set_standard_level)
        ___P((int level),
             ());
-    void (*___set_gambitdir)
-       ___P((___UCS_2STRING gambitdir),
-            ());
+    int (*___get_debug_settings) ___PVOID;
     int (*___set_debug_settings)
        ___P((int mask,
              int new_settings),
+            ());
+    int (*___get_file_settings) ___PVOID;
+    void (*___set_file_settings)
+       ___P((int settings),
+            ());
+    int (*___get_terminal_settings) ___PVOID;
+    void (*___set_terminal_settings)
+       ___P((int settings),
+            ());
+    int (*___get_stdio_settings) ___PVOID;
+    void (*___set_stdio_settings)
+       ___P((int settings),
+            ());
+    ___UCS_2STRING (*___get_gambitdir) ___PVOID;
+    void (*___set_gambitdir)
+       ___P((___UCS_2STRING gambitdir),
+            ());
+    ___UCS_2STRING* (*___get_gambitdir_map) ___PVOID;
+    void (*___set_gambitdir_map)
+       ___P((___UCS_2STRING *gambitdir_map),
+            ());
+    ___UCS_2STRING* (*___get_module_search_order) ___PVOID;
+    void (*___set_module_search_order)
+       ___P((___UCS_2STRING *module_search_order),
+            ());
+    ___UCS_2STRING* (*___get_module_whitelist) ___PVOID;
+    void (*___set_module_whitelist)
+       ___P((___UCS_2STRING *module_whitelist),
+            ());
+    int (*___get_module_install_mode) ___PVOID;
+    void (*___set_module_install_mode)
+       ___P((int module_install_mode),
+            ());
+    ___UCS_2STRING (*___get_repl_client_addr) ___PVOID;
+    void (*___set_repl_client_addr)
+       ___P((___UCS_2STRING repl_client_addr),
+            ());
+    ___UCS_2STRING (*___get_repl_server_addr) ___PVOID;
+    void (*___set_repl_server_addr)
+       ___P((___UCS_2STRING repl_server_addr),
             ());
     ___program_startup_info_struct *(*___get_program_startup_info) ___PVOID;
     ___SCMOBJ (*___call)
@@ -12203,13 +12241,52 @@ ___IMP_FUNC(int,___get_standard_level) ___PVOID;
 ___IMP_FUNC(void,___set_standard_level)
    ___P((int level),
         ());
-___IMP_FUNC(void,___set_gambitdir)
-   ___P((___UCS_2STRING gambitdir),
-        ());
+___IMP_FUNC(int,___get_debug_settings) ___PVOID;
 ___IMP_FUNC(int,___set_debug_settings)
    ___P((int mask,
          int new_settings),
         ());
+___IMP_FUNC(int,___get_file_settings) ___PVOID;
+___IMP_FUNC(void,___set_file_settings)
+   ___P((int settings),
+        ());
+___IMP_FUNC(int,___get_terminal_settings) ___PVOID;
+___IMP_FUNC(void,___set_terminal_settings)
+   ___P((int settings),
+        ());
+___IMP_FUNC(int,___get_stdio_settings) ___PVOID;
+___IMP_FUNC(void,___set_stdio_settings)
+   ___P((int settings),
+        ());
+___IMP_FUNC(___UCS_2STRING,___get_gambitdir) ___PVOID;
+___IMP_FUNC(void,___set_gambitdir)
+   ___P((___UCS_2STRING gambitdir),
+        ());
+___IMP_FUNC(___UCS_2STRING*,___get_gambitdir_map) ___PVOID;
+___IMP_FUNC(void,___set_gambitdir_map)
+   ___P((___UCS_2STRING *gambitdir_map),
+        ());
+___IMP_FUNC(___UCS_2STRING*,___get_module_search_order) ___PVOID;
+___IMP_FUNC(void,___set_module_search_order)
+   ___P((___UCS_2STRING *module_search_order),
+        ());
+___IMP_FUNC(___UCS_2STRING*,___get_module_whitelist) ___PVOID;
+___IMP_FUNC(void,___set_module_whitelist)
+   ___P((___UCS_2STRING *module_whitelist),
+        ());
+___IMP_FUNC(int,___get_module_install_mode) ___PVOID;
+___IMP_FUNC(void,___set_module_install_mode)
+   ___P((int module_install_mode),
+        ());
+___IMP_FUNC(___UCS_2STRING,___get_repl_client_addr) ___PVOID;
+___IMP_FUNC(void,___set_repl_client_addr)
+   ___P((___UCS_2STRING repl_client_addr),
+        ());
+___IMP_FUNC(___UCS_2STRING,___get_repl_server_addr) ___PVOID;
+___IMP_FUNC(void,___set_repl_server_addr)
+   ___P((___UCS_2STRING repl_server_addr),
+        ());
+
 ___IMP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
    ___PVOID;
 ___IMP_FUNC(___SCMOBJ,___call)
