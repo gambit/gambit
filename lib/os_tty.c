@@ -8694,11 +8694,13 @@ void tty_signal_handler (int sig)
       {
         ___device_tty *probe = ___tty_mod.mode_save_stack;
 
-        while (probe != NULL)
-          {
-            probe->size_needs_update = 1;
-            probe = probe->mode_save_stack_next;
-          }
+        if (probe != NULL)
+          do
+            {
+              probe->size_needs_update = 1;
+              probe = probe->mode_save_stack_next;
+            }
+          while (probe != NULL && probe != ___tty_mod.mode_save_stack);
 
         break;
       }
