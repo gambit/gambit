@@ -765,9 +765,24 @@
 
 (define-prim (##equal? obj1 obj2)
 
+  (##define-macro (profile! i)
+    `#f) ;; disable profiling
+
   (macro-define-equal-objs?
    equal-objs? ()
-   #f)
+   #f
+
+   (##define-macro (macro-table-hash obj) `#f)
+   (##define-macro (macro-table-gcht obj) `#f)
+
+   (##define-macro (true) `#t)
+   (##define-macro (false) `#f)
+
+   (##define-macro (recursion obj1 obj2 tail-expr)
+     tail-expr)
+
+   (##define-macro (conj equal-obj?-expr tail-expr)
+     `(and ,equal-obj?-expr ,tail-expr)))
 
   (equal-objs? obj1 obj2))
 
