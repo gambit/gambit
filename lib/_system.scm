@@ -759,6 +759,8 @@
 
   (main-equal-objs? obj1 obj2))
 
+)
+
  (else
 
 (define-prim (##equal? obj1 obj2)
@@ -769,7 +771,7 @@
 
   (equal-objs? obj1 obj2))
 
-)))
+))
 
 (define-prim (equal? obj1 obj2)
   (##equal? obj1 obj2))
