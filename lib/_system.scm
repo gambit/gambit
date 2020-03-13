@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -572,6 +572,10 @@
                   (profile! 22)
                   (false)))))))
 
+(macro-case-target
+
+ ((C)
+
 (define ##equal-hint 0)
 
 (##define-macro (macro-equal-hint-get)
@@ -754,6 +758,35 @@
        (##box uht))))
 
   (main-equal-objs? obj1 obj2))
+
+)
+
+ (else
+
+(define-prim (##equal? obj1 obj2)
+
+  (##define-macro (profile! i)
+    `#f) ;; disable profiling
+
+  (macro-define-equal-objs?
+   equal-objs? ()
+   #f
+
+   (##define-macro (macro-table-hash obj) `#f)
+   (##define-macro (macro-table-gcht obj) `#f)
+
+   (##define-macro (true) `#t)
+   (##define-macro (false) `#f)
+
+   (##define-macro (recursion obj1 obj2 tail-expr)
+     tail-expr)
+
+   (##define-macro (conj equal-obj?-expr tail-expr)
+     `(and ,equal-obj?-expr ,tail-expr)))
+
+  (equal-objs? obj1 obj2))
+
+))
 
 (define-prim (equal? obj1 obj2)
   (##equal? obj1 obj2))

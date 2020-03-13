@@ -631,11 +631,10 @@
    ((js)
     (##inline-host-declaration
      "
-      var g_argv;
-      if (Object.prototype.hasOwnProperty.call(function () {return this;}(),'process'))
+      var g_argv = [];
+      if ((function () { return this !== this.window; })()) { // nodejs?
         g_argv = process.argv.slice(1);
-      else
-        g_argv = arguments;
+      }
      ")
     (##vector->list (##inline-host-expression "g_host2scm(g_argv)")))
 
@@ -704,17 +703,16 @@
 (define-prim (##mutex-signal-and-condvar-wait! mutex condvar timeout)
   (error "##mutex-signal-and-condvar-wait! not implemented yet"))
 
-(define ##err-code-EAGAIN -35)
+(define ##err-code-ENOENT  -2)
 (define ##err-code-EINTR   -4)
-(define ##err-code-ENOENT  -1)
+(define ##err-code-EEXIST -17)
+(define ##err-code-EAGAIN -35)
 
 (macro-case-target
  ((js)
 
 (##inline-host-declaration
 "
-var fs = require('fs');
-
 var g_CONDVAR_NAME              = 10;
 
 var g_PORT_MUTEX                = 1;
@@ -787,67 +785,79 @@ var g_PORT_WDEVICE_CONDVAR      = 47;
 var g_PORT_DEVICE_OTHER1        = 48;
 var g_PORT_DEVICE_OTHER2        = 49;
 
-function g_os_encode_errno(code) {
-  switch (code) {
-    case 'EPERM':   return -1;
-    case 'ENOENT':  return -2;
-    case 'EINTR':   return -4;
-    case 'EIO':     return -5;
-    case 'EBADF':   return -9;
-    case 'EACCESS': return -13;
-    case 'EEXIST':  return -17;
-    case 'EAGAIN':  return -35;
-  }
-  return -9999;
-}
+var g_os_encode_errno;
+var g_os_decode_errno;
+var g_os_translate_flags;
 
-function g_os_decode_errno(code) {
-  switch (code) {
-    case -1:  return 'EPERM (Operation not permitted)';
-    case -2:  return 'ENOENT (No such file or directory)';
-    case -4:  return 'EINTR (Interrupted system call)';
-    case -5:  return 'EIO (Input/output error)';
-    case -9:  return 'EBADF (Bad file descriptor)';
-    case -13: return 'EACCESS (Permission denied)';
-    case -17: return 'EEXIST (File exists)';
-    case -35: return 'EAGAIN (Resource temporarily unavailable)';
-  }
-  return 'E??? (unknown error)';
-}
+var fs;
 
-function g_os_translate_flags(flags) {
+if ((function () { return this !== this.window; })()) { // nodejs?
 
-  var result;
+  fs = require('fs');
 
-  switch ((flags >> 4) & 3)
-    {
-    default:
-    case 1:
-      result = fs.constants.O_RDONLY;
-      break;
-    case 2:
-      result = fs.constants.O_WRONLY;
-      break;
-    case 3:
-      result = fs.constants.O_RDWR;
-      break;
+  g_os_encode_errno = function (code) {
+    switch (code) {
+      case 'EPERM':   return -1;
+      case 'ENOENT':  return -2;
+      case 'EINTR':   return -4;
+      case 'EIO':     return -5;
+      case 'EBADF':   return -9;
+      case 'EACCESS': return -13;
+      case 'EEXIST':  return -17;
+      case 'EAGAIN':  return -35;
     }
+    return -9999;
+  };
 
-  if ((flags & (1 << 3)) != 0)
-    result |= fs.constants.O_APPEND;
-
-  switch ((flags >> 1) & 3)
-    {
-    default:
-    case 0: break;
-    case 1: result |= fs.constants.O_CREAT; break;
-    case 2: result |= fs.constants.O_CREAT|fs.constants.O_EXCL; break;
+  g_os_decode_errno = function (code) {
+    switch (code) {
+      case -1:  return 'EPERM (Operation not permitted)';
+      case -2:  return 'ENOENT (No such file or directory)';
+      case -4:  return 'EINTR (Interrupted system call)';
+      case -5:  return 'EIO (Input/output error)';
+      case -9:  return 'EBADF (Bad file descriptor)';
+      case -13: return 'EACCESS (Permission denied)';
+      case -17: return 'EEXIST (File exists)';
+      case -35: return 'EAGAIN (Resource temporarily unavailable)';
     }
+    return 'E??? (unknown error)';
+  };
 
-  if ((flags & 1) != 0)
-    result |= fs.constants.O_TRUNC;
+  g_os_translate_flags = function (flags) {
 
-  return g_host2scm(result);
+    var result;
+
+    switch ((flags >> 4) & 3)
+      {
+      default:
+      case 1:
+        result = fs.constants.O_RDONLY;
+        break;
+      case 2:
+        result = fs.constants.O_WRONLY;
+        break;
+      case 3:
+        result = fs.constants.O_RDWR;
+        break;
+      }
+
+    if ((flags & (1 << 3)) != 0)
+      result |= fs.constants.O_APPEND;
+
+    switch ((flags >> 1) & 3)
+      {
+      default:
+      case 0: break;
+      case 1: result |= fs.constants.O_CREAT; break;
+      case 2: result |= fs.constants.O_CREAT|fs.constants.O_EXCL; break;
+      }
+
+    if ((flags & 1) != 0)
+      result |= fs.constants.O_TRUNC;
+
+    return g_host2scm(result);
+  };
+
 }
 
 function G_Device(fd) {
@@ -877,7 +887,7 @@ function g_os_device_stream_default_options(dev_scm) {
   if (g_debug)
     console.log('g_os_device_stream_default_options('+dev.fd+')  ***not fully implemented***');
 
-  return g_host2scm(0);
+  return g_host2scm(2<<9); // line buffering
 }
 
 function g_os_device_stream_options_set(dev_scm, options_scm) {
@@ -917,6 +927,10 @@ function g_os_device_stream_open_path(path_scm, flags_scm, mode_scm) {
   var flags = g_scm2host(flags_scm);
   var mode = g_scm2host(mode_scm);
 
+  if ((function () { return this === this.window; })()) {
+    throw Error('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not implemented***');
+  }
+
   if (g_debug)
     console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not fully implemented***');
 
@@ -941,6 +955,10 @@ function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
   var buffer = g_scm2host(buffer_scm);
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
+
+  if ((function () { return this === this.window; })()) {
+    throw Error('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
+  }
 
   if (g_debug)
     console.log('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
@@ -986,6 +1004,8 @@ function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
   return g_host2scm(-35); // EAGAIN
 }
 
+var g_stdout_buf = [];
+
 function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
@@ -998,13 +1018,32 @@ function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   var n;
 
-  try {
-    n = fs.writeSync(dev.fd, buffer, lo, hi-lo, null);
-  } catch (exn) {
-    if (exn instanceof Error && exn.hasOwnProperty('code')) {
-      return g_host2scm(g_os_encode_errno(exn.code));
-    } else {
-      throw exn;
+  if ((function () { return this === this.window; })()) {
+
+    if (dev.fd === 1) { // stdout?
+      for (var i=lo; i<hi; i++) {
+        var c = buffer[i];
+        if (c === 10) {
+          console.log(String.fromCharCode.apply(null, g_stdout_buf));
+          g_stdout_buf = [];
+        } else {
+          g_stdout_buf.push(c);
+        }
+      }
+    }
+
+    n = hi-lo;
+
+  } else {
+
+    try {
+      n = fs.writeSync(dev.fd, buffer, lo, hi-lo, null);
+    } catch (exn) {
+      if (exn instanceof Error && exn.hasOwnProperty('code')) {
+        return g_host2scm(g_os_encode_errno(exn.code));
+      } else {
+        throw exn;
+      }
     }
   }
 
@@ -1019,15 +1058,19 @@ function g_os_device_close(dev_scm, direction_scm) {
   if (g_debug)
     console.log('g_os_device_close('+dev.fd+','+direction+')  ***not fully implemented***');
 
-  if ((direction & 1) != 0 ||  // DIRECTION_RD
-      (direction & 2) != 0) {  // DIRECTION_WR
-    try {
-      fs.closeSync(dev.fd);
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_errno(exn.code));
-      } else {
-        throw exn;
+  if ((function () { return this === this.window; })()) {
+  } else {
+
+    if ((direction & 1) != 0 ||  // DIRECTION_RD
+        (direction & 2) != 0) {  // DIRECTION_WR
+      try {
+        fs.closeSync(dev.fd);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return g_host2scm(g_os_encode_errno(exn.code));
+        } else {
+          throw exn;
+        }
       }
     }
   }
@@ -1051,6 +1094,10 @@ function g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm) {
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
   var pos = g_scm2host(pos_scm);
   var whence_scm = g_scm2host(whence_scm);
+
+  if ((function () { return this === this.window; })()) {
+    throw Error('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
+  }
 
   if (g_debug)
     console.log('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
@@ -1340,6 +1387,9 @@ function g_os_device_process_status(dev_scm) {
 
 (define-prim (##os-device-tty-mode-set! dev input-allow-special input-echo input-raw output-raw speed)
   (error "##os-device-tty-mode-set! not implemented yet"))
+
+(define-prim (##os-device-tty-mode-reset dev)
+  (error "##os-device-tty-mode-reset not implemented yet"))
 
 (define-prim (##os-device-tty-paren-balance-duration-set! dev duration)
   (error "##os-device-tty-paren-balance-duration-set! not implemented yet"))
@@ -1644,6 +1694,14 @@ function g_os_device_process_status(dev_scm) {
 (define (##end-wait-for-io! dev-condvar)
   (##device-condvar-broadcast-no-reschedule! dev-condvar)
   (##thread-schedule!))
+
+(define-prim (##thread-execute-and-end! thunk)
+  (##declare (not interrupts-enabled))
+  (##thread-end-current-thread! #f (thunk)))
+
+(define-prim (##thread-end-current-thread! exception? result)
+  (##declare (not interrupts-enabled))
+  (##exit-process 1))
 
 (define-prim (##thread-resume-execution!)
   (##declare (not interrupts-enabled))
