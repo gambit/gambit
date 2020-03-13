@@ -1731,6 +1731,8 @@ end-of-code
   (macro-raise
    (macro-make-number-of-arguments-limit-exception proc args)))
 
+))
+
 ;;; Implementation of promises.
 
 (define-prim (##force-out-of-line promise)
@@ -1792,8 +1794,6 @@ end-of-code
                  ;; avoid space leak through thunk
                  (##vector-set! state 1 #f)
                  (chase promise thunk)))))))
-
-))
 
 ;;;----------------------------------------------------------------------------
 

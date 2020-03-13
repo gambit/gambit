@@ -4364,15 +4364,9 @@ EOF
         (let ((s (^local-var 's)))
           (case (target-name (ctx-target ctx))
             ((js)
-             (^if (^prop-index-exists?
-                   "function () {return this;}()"
-                   (^str "console"))
-                  (^expr-statement
-                   (^call-prim (^member (^global-var 'console) 'log)
-                               s))
-                  (^expr-statement
-                   (^call-prim "print"
-                               s))))
+             (^expr-statement
+              (^call-prim (^member (^global-var 'console) 'log)
+                          s)))
             ((python)
              (^expr-statement (^call-prim "print" s)))
             ((ruby php)
@@ -4433,8 +4427,14 @@ EOF
         (let ((code (^local-var 'code)))
           (case (target-name (ctx-target ctx))
             ((js)
-             (^expr-statement
-              (^call-prim (^member (^global-var 'process) 'exit) code)))
+             (^if "(function () { return this !== this.window; })()"
+                  (^expr-statement
+                   (^call-prim (^member (^global-var 'process) 'exit) code))
+                  (univ-throw ctx
+                              (^call-prim (^global-var 'Error)
+                                          (^concat
+                                           (^str "process exiting with code=")
+                                           code)))))
             ((python ruby php)
              (^expr-statement (^call-prim "exit" code)))
             ((java)
