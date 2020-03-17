@@ -10103,9 +10103,7 @@
     (macro-readtable? obj)))
 
 (define-prim (##readtable-copy-shallow rt)
-  (let ((copy (##vector-copy rt)))
-    (##subtype-set! copy (macro-subtype-structure))
-    copy))
+  (macro-readtable-copy rt))
 
 (define-prim (##readtable-copy rt)
   (let ((copy (##readtable-copy-shallow rt)))
