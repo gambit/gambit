@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -192,6 +192,7 @@
 (implement-type-thread)
 (implement-type-mutex)
 (implement-type-condvar)
+(implement-type-tgroups)
 (implement-type-tgroup)
 
 (implement-library-type-thread-state-uninitialized)
@@ -5486,6 +5487,7 @@
 (implement-type-thread)
 (implement-type-mutex)
 (implement-type-condvar)
+(implement-type-tgroups)
 (implement-type-tgroup)
 
 (implement-library-type-thread-state-uninitialized)

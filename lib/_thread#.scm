@@ -2,7 +2,7 @@
 
 ;;; File: "_thread#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1841,6 +1841,29 @@
 
 ;;; Representation of thread groups.
 
+(define-type thread-groups
+  id: EACE4200-EB43-4891-852A-03C7B5D385E4
+  type-exhibitor: macro-type-tgroups
+  constructor: macro-construct-tgroups
+  implementer: implement-type-tgroups
+  predicate: macro-tgroups?
+  opaque:
+  macros:
+  prefix: macro-
+
+  unprintable:
+
+  (lock1
+   macro-tgroups-lock1)
+
+  (tgroups-deq-next
+   macro-tgroups-tgroups-deq-next
+   macro-tgroups-tgroups-deq-next-set!)
+  (tgroups-deq-prev
+   macro-tgroups-tgroups-deq-prev
+   macro-tgroups-tgroups-deq-prev-set!)
+)
+
 (define-type thread-group
   id: 713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3
   type-exhibitor: macro-type-tgroup
@@ -1895,7 +1918,7 @@
 (##define-macro (macro-make-tgroup name parent)
   `(let ((name ,name) (parent ,parent))
      (let* ((tgroups
-             (##vector #f #f #f #f))
+             (macro-construct-tgroups #f #f #f))
             (tgroup
              (macro-construct-tgroup
               0
@@ -3821,6 +3844,26 @@
 
 ;;; Representation of thread groups.
 
+(define-type thread-groups
+  id: EACE4200-EB43-4891-852A-03C7B5D385E4
+  type-exhibitor: macro-type-tgroups
+  constructor: macro-construct-tgroups
+  implementer: implement-type-tgroups
+  predicate: macro-tgroups?
+  opaque:
+  macros:
+  prefix: macro-
+
+  unprintable:
+
+  (tgroups-deq-next
+   macro-tgroups-tgroups-deq-next
+   macro-tgroups-tgroups-deq-next-set!)
+  (tgroups-deq-prev
+   macro-tgroups-tgroups-deq-prev
+   macro-tgroups-tgroups-deq-prev-set!)
+)
+
 (define-type thread-group
   id: 713f0ba8-1d76-4a68-8dfa-eaebd4aef1e3
   type-exhibitor: macro-type-tgroup
@@ -3883,7 +3926,7 @@
 (##define-macro (macro-make-tgroup name parent)
   `(let ((name ,name) (parent ,parent))
      (let* ((tgroups
-             (##vector #f #f #f))
+             (macro-construct-tgroups #f #f))
             (tgroup
              (macro-construct-tgroup
               #f
