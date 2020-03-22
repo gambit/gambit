@@ -379,6 +379,9 @@
 (define-macro (^setglo name val)
   `(univ-emit-setglo ctx ,name ,val))
 
+(define-macro (^glo-var? sym)
+  `(univ-emit-glo-var? ctx ,sym))
+
 (define-macro (^glo-var-ref sym)
   `(univ-emit-glo-var-ref ctx ,sym))
 

@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1313,8 +1313,11 @@ ___SCMOBJ protocol;)
 
 
 ___SCMOBJ ___os_host_info
-   ___P((___SCMOBJ host),
-        (host)
+   ___P((___SCMOBJ hi,
+         ___SCMOBJ host),
+        (hi,
+         host)
+___SCMOBJ hi;
 ___SCMOBJ host;)
 {
 #ifndef USE_gethostbyname
@@ -1325,16 +1328,17 @@ ___SCMOBJ host;)
 
 #ifdef USE_gethostbyname
 
-  ___SCMOBJ e;
-  ___SCMOBJ vect;
-  ___SCMOBJ lst;
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result = ___FIX(___NO_ERR);
   ___SCMOBJ x;
-  ___SCMOBJ p;
+  ___SCMOBJ lst;
   int i;
   struct hostent *he = 0;
   char *chost = 0;
 
   ___SCMOBJ ___temp; /* needed by the ___U8VECTORP and ___U16VECTORP macros */
+
+  ___ps->saved[0] = hi;
 
 #ifdef USE_POSIX
 
@@ -1351,8 +1355,8 @@ ___SCMOBJ host;)
     {
       struct in_addr ia;
 
-      if ((e = ___SCMOBJ_to_in_addr (host, &ia, 1)) != ___FIX(___NO_ERR))
-        return e;
+      if ((result = ___SCMOBJ_to_in_addr (host, &ia, 1)) != ___FIX(___NO_ERR))
+        goto done;
 
       he = gethostbyaddr (___CAST(char*,&ia), 4, AF_INET);
     }
@@ -1361,8 +1365,8 @@ ___SCMOBJ host;)
     {
       struct in6_addr ia;
 
-      if ((e = ___SCMOBJ_to_in6_addr (host, &ia, 1)) != ___FIX(___NO_ERR))
-        return e;
+      if ((result = ___SCMOBJ_to_in6_addr (host, &ia, 1)) != ___FIX(___NO_ERR))
+        goto done;
 
       he = gethostbyaddr (___CAST(char*,&ia), 16, AF_INET6);
     }
@@ -1377,9 +1381,11 @@ ___SCMOBJ host;)
        * invalid character is seen then return an error.
        */
 
-      if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___PSTATE) host, &chost, 1))
+      if ((result = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___ps)
+                                                    host,
+                                                    &chost, 1))
           != ___FIX(___NO_ERR))
-        return e;
+        goto done;
 
 #ifdef USE_inet_pton
 
@@ -1414,39 +1420,29 @@ ___SCMOBJ host;)
   if (he == 0)
     {
 #ifdef USE_POSIX
-      e = err_code_from_h_errno ();
+      result = err_code_from_h_errno ();
 #endif
 
 #ifdef USE_WIN32
-      e = err_code_from_WSAGetLastError ();
+      result = err_code_from_WSAGetLastError ();
 #endif
     }
 
   ___release_string (chost);
 
-  if (e != ___FIX(___NO_ERR))
-    return e;
-
-  vect = ___make_vector (___PSTATE, 4, ___FAL);
-
-  if (___FIXNUMP(vect))
-    return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+  if (result != ___FIX(___NO_ERR))
+    goto done;
 
   /* convert h_name to string */
 
-  if ((e = ___CHARSTRING_to_SCMOBJ
-             (___PSTATE,
-              ___CAST(char*,he->h_name),
-              &x,
-              ___RETURN_POS))
+  if ((result = ___CHARSTRING_to_SCMOBJ (___ps,
+                                         ___CAST(char*,he->h_name),
+                                         &x,
+                                         ___RETURN_POS))
       != ___FIX(___NO_ERR))
-    {
-      ___release_scmobj (vect);
-      return e;
-    }
+    goto done;
 
-  ___FIELD(vect,1) = x;
-  ___release_scmobj (x);
+  ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
 
   /* convert h_aliases to strings */
 
@@ -1457,34 +1453,31 @@ ___SCMOBJ host;)
   lst = ___NUL;
   while (i-- > 0)
     {
-      if ((e = ___CHARSTRING_to_SCMOBJ
-                 (___PSTATE,
-                  ___CAST(char*,he->h_aliases[i]),
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___CHARSTRING_to_SCMOBJ (___ps,
+                                             ___CAST(char*,he->h_aliases[i]),
+                                             &x,
+                                             ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (lst);
-          ___release_scmobj (vect);
-          return e;
+          goto done;
         }
 
-      p = ___make_pair (___PSTATE, x, lst);
+      result = ___make_pair (___ps, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
 
-      if (___FIXNUMP(p))
+      if (___FIXNUMP(result))
         {
-          ___release_scmobj (vect);
-          return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+          result = ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+          goto done;
         }
 
-      lst = p;
+      lst = result;
     }
 
-  ___FIELD(vect,2) = lst;
-  ___release_scmobj (lst);
+  ___FIELD(___ps->saved[0],2) = ___release_scmobj (lst);
 
   /* convert h_addr_list to u8/u16vectors */
 
@@ -1523,34 +1516,37 @@ ___SCMOBJ host;)
       if (___FIXNUMP(x))
         {
           ___release_scmobj (lst);
-          ___release_scmobj (vect);
-          return x;
+          result = x;
+          goto done;
         }
 
-      p = ___make_pair (___PSTATE, x, lst);
+      result = ___make_pair (___ps, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
 
-      if (___FIXNUMP(p))
+      if (___FIXNUMP(result))
         {
-          ___release_scmobj (vect);
-          return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+          result = ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+          goto done;
         }
 
-      lst = p;
+      lst = result;
     }
 
-  ___FIELD(vect,3) = lst;
-  ___release_scmobj (lst);
-  ___release_scmobj (vect);
+  ___FIELD(___ps->saved[0],3) = ___release_scmobj (lst);
 
   /* guarantee that at least one address is returned */
 
   if (lst == ___NUL)
-    return ___FIX(___H_ERRNO_ERR(NO_ADDRESS));
+    result = ___FIX(___H_ERRNO_ERR(NO_ADDRESS));
+  else
+    result = ___ps->saved[0];
 
-  return vect;
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
+
+  return result;
 
 #endif
 }
@@ -1575,7 +1571,10 @@ ___SCMOBJ ___os_host_name ___PVOID
   if (gethostname (name, HOSTNAME_MAX_LEN) < 0)
     return err_code_from_errno ();
 
-  if ((e = ___NONNULLCHARSTRING_to_SCMOBJ (___PSTATE, name, &result, ___RETURN_POS))
+  if ((e = ___NONNULLCHARSTRING_to_SCMOBJ (___PSTATE,
+                                           name,
+                                           &result,
+                                           ___RETURN_POS))
       != ___FIX(___NO_ERR))
     return e;
 
@@ -1590,10 +1589,13 @@ ___SCMOBJ ___os_host_name ___PVOID
 /* Access to service information. */
 
 ___SCMOBJ ___os_service_info
-   ___P((___SCMOBJ service,
+   ___P((___SCMOBJ si,
+         ___SCMOBJ service,
          ___SCMOBJ protocol),
-        (service,
+        (si,
+         service,
          protocol)
+___SCMOBJ si;
 ___SCMOBJ service;
 ___SCMOBJ protocol;)
 {
@@ -1605,15 +1607,18 @@ ___SCMOBJ protocol;)
 
 #ifdef USE_getservbyname
 
-  ___SCMOBJ e;
-  ___SCMOBJ vect;
-  ___SCMOBJ lst;
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result = ___FIX(___NO_ERR);
   ___SCMOBJ x;
-  ___SCMOBJ p;
+  ___SCMOBJ lst;
   int i;
   struct servent *se;
   char *cservice;
   char *cprotocol;
+
+  ___SCMOBJ ___temp; /* needed by the ___U8VECTORP and ___U16VECTORP macros */
+
+  ___ps->saved[0] = si;
 
   /*
    * Convert the Scheme string to a C "char*" string.  If an invalid
@@ -1621,16 +1626,22 @@ ___SCMOBJ protocol;)
    */
 
   if (!___FIXNUMP(service))
-    if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___PSTATE) service, &cservice, 1))
+    if ((result = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___ps)
+                                                  service,
+                                                  &cservice,
+                                                  1))
         != ___FIX(___NO_ERR))
-      return e;
+      goto done;
 
-  if ((e = ___SCMOBJ_to_CHARSTRING (___PSA(___PSTATE) protocol, &cprotocol, 2))
+  if ((result = ___SCMOBJ_to_CHARSTRING (___PSA(___ps)
+                                         protocol,
+                                         &cprotocol,
+                                         2))
       != ___FIX(___NO_ERR))
     {
       if (!___FIXNUMP(service))
         ___release_string (cservice);
-      return e;
+      goto done;
     }
 
 #ifdef USE_POSIX
@@ -1651,13 +1662,13 @@ ___SCMOBJ protocol;)
     {
 #ifdef USE_POSIX
 
-      e = err_code_from_h_errno ();
+      result = err_code_from_h_errno ();
 
 #endif
 
 #ifdef USE_WIN32
 
-      e = err_code_from_WSAGetLastError ();
+      result = err_code_from_WSAGetLastError ();
 
 #endif
     }
@@ -1668,25 +1679,19 @@ ___SCMOBJ protocol;)
   if (!___FIXNUMP(service))
     ___release_string (cservice);
 
-  if (e != ___FIX(___NO_ERR))
-    return e;
-
-  vect = ___make_vector (___PSTATE, 5, ___FAL);
-
-  if (___FIXNUMP(vect))
-    return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/************/
+  if (result != ___FIX(___NO_ERR))
+    goto done;
 
   /* convert s_name to string */
 
-  if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, se->s_name, &x, ___RETURN_POS))
+  if ((result = ___CHARSTRING_to_SCMOBJ (___ps,
+                                         se->s_name,
+                                         &x,
+                                         ___RETURN_POS))
       != ___FIX(___NO_ERR))
-    {
-      ___release_scmobj (vect);
-      return e;
-    }
+    goto done;
 
-  ___FIELD(vect,1) = x;
-  ___release_scmobj (x);
+  ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
 
   /* convert s_aliases to strings */
 
@@ -1697,48 +1702,53 @@ ___SCMOBJ protocol;)
   lst = ___NUL;
   while (i-- > 0)
     {
-      if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, se->s_aliases[i], &x, ___RETURN_POS))
+      if ((result = ___CHARSTRING_to_SCMOBJ (___ps,
+                                             se->s_aliases[i],
+                                             &x,
+                                             ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (lst);
-          ___release_scmobj (vect);
-          return e;
+          goto done;
         }
 
-      p = ___make_pair (___PSTATE, x, lst);
+      result = ___make_pair (___ps, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
 
-      if (___FIXNUMP(p))
+      if (___FIXNUMP(result))
         {
-          ___release_scmobj (vect);
-          return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/*******************/
+          result = ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+          goto done;
         }
 
-      lst = p;
+      lst = result;
     }
 
-  ___FIELD(vect,2) = lst;
-  ___release_scmobj (lst);
+  ___FIELD(___ps->saved[0],2) = ___release_scmobj (lst);
 
   /* convert s_port to integer */
 
-  ___FIELD(vect,3) = ___FIX(ntohs (se->s_port));
+  ___FIELD(___ps->saved[0],3) = ___FIX(ntohs (se->s_port));
 
   /* convert s_name to string */
 
-  if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, se->s_proto, &x, ___RETURN_POS))
+  if ((result = ___CHARSTRING_to_SCMOBJ (___ps,
+                                         se->s_proto,
+                                         &x,
+                                         ___RETURN_POS))
       != ___FIX(___NO_ERR))
-    {
-      ___release_scmobj (vect);
-      return e;
-    }
+    goto done;
 
-  ___FIELD(vect,4) = x;
-  ___release_scmobj (x);
+  ___FIELD(___ps->saved[0],4) = ___release_scmobj (x);
 
-  return ___release_scmobj (vect);
+  result = ___ps->saved[0];
+
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
+
+  return result;
 
 #endif
 }
@@ -1749,8 +1759,11 @@ ___SCMOBJ protocol;)
 /* Access to protocol information. */
 
 ___SCMOBJ ___os_protocol_info
-   ___P((___SCMOBJ protocol),
-        (protocol)
+   ___P((___SCMOBJ pi,
+         ___SCMOBJ protocol),
+        (pi,
+         protocol)
+___SCMOBJ pi;
 ___SCMOBJ protocol;)
 {
 #ifndef USE_getprotobyname
@@ -1761,14 +1774,15 @@ ___SCMOBJ protocol;)
 
 #ifdef USE_getprotobyname
 
-  ___SCMOBJ e = ___FIX(___NO_ERR);
-  ___SCMOBJ vect;
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result = ___FIX(___NO_ERR);
   ___SCMOBJ lst;
   ___SCMOBJ x;
-  ___SCMOBJ p;
   int i;
   struct protoent *pe;
   char *cprotocol;
+
+  ___ps->saved[0] = pi;
 
   /*
    * Convert the Scheme string to a C "char*" string.  If an invalid
@@ -1776,9 +1790,12 @@ ___SCMOBJ protocol;)
    */
 
   if (!___FIXNUMP(protocol))
-    if ((e = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___PSTATE) protocol, &cprotocol, 1))
+    if ((result = ___SCMOBJ_to_NONNULLCHARSTRING (___PSA(___ps)
+                                                  protocol,
+                                                  &cprotocol,
+                                                  1))
         != ___FIX(___NO_ERR))
-      return e;
+      goto done;
 
 #ifdef USE_POSIX
 
@@ -1798,13 +1815,13 @@ ___SCMOBJ protocol;)
     {
 #ifdef USE_POSIX
 
-      e = err_code_from_h_errno ();
+      result = err_code_from_h_errno ();
 
 #endif
 
 #ifdef USE_WIN32
 
-      e = err_code_from_WSAGetLastError ();
+      result = err_code_from_WSAGetLastError ();
 
 #endif
     }
@@ -1812,25 +1829,19 @@ ___SCMOBJ protocol;)
   if (!___FIXNUMP(protocol))
     ___release_string (cprotocol);
 
-  if (e != ___FIX(___NO_ERR))
-    return e;
-
-  vect = ___make_vector (___PSTATE, 4, ___FAL);
-
-  if (___FIXNUMP(vect))
-    return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/************/
+  if (result != ___FIX(___NO_ERR))
+    goto done;
 
   /* convert p_name to string */
 
-  if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, pe->p_name, &x, ___RETURN_POS))
+  if ((result = ___CHARSTRING_to_SCMOBJ (___ps,
+                                         pe->p_name,
+                                         &x,
+                                         ___RETURN_POS))
       != ___FIX(___NO_ERR))
-    {
-      ___release_scmobj (vect);
-      return e;
-    }
+    goto done;
 
-  ___FIELD(vect,1) = x;
-  ___release_scmobj (x);
+  ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
 
   /* convert p_aliases to strings */
 
@@ -1841,36 +1852,42 @@ ___SCMOBJ protocol;)
   lst = ___NUL;
   while (i-- > 0)
     {
-      if ((e = ___CHARSTRING_to_SCMOBJ (___PSTATE, pe->p_aliases[i], &x, ___RETURN_POS))
+      if ((result = ___CHARSTRING_to_SCMOBJ (___ps,
+                                             pe->p_aliases[i],
+                                             &x,
+                                             ___RETURN_POS))
           != ___FIX(___NO_ERR))
         {
           ___release_scmobj (lst);
-          ___release_scmobj (vect);
-          return e;
+          goto done;
         }
 
-      p = ___make_pair (___PSTATE, x, lst);
+      result = ___make_pair (___ps, x, lst);
 
       ___release_scmobj (x);
       ___release_scmobj (lst);
 
-      if (___FIXNUMP(p))
+      if (___FIXNUMP(result))
         {
-          ___release_scmobj (vect);
-          return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/*******************/
+          result = ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+          goto done;
         }
 
-      lst = p;
+      lst = result;
     }
 
-  ___FIELD(vect,2) = lst;
-  ___release_scmobj (lst);
+  ___FIELD(___ps->saved[0],2) = ___release_scmobj (lst);
 
   /* convert p_proto to integer */
 
-  ___FIELD(vect,3) = ___FIX(pe->p_proto);
+  ___FIELD(___ps->saved[0],3) = ___FIX(pe->p_proto);
 
-  return ___release_scmobj (vect);
+  result = ___ps->saved[0];
+
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
+
+  return result;
 
 #endif
 }
@@ -1881,8 +1898,11 @@ ___SCMOBJ protocol;)
 /* Access to network information. */
 
 ___SCMOBJ ___os_network_info
-   ___P((___SCMOBJ network),
-        (network)
+   ___P((___SCMOBJ ni,
+         ___SCMOBJ network),
+        (ni,
+         network)
+___SCMOBJ ni;
 ___SCMOBJ network;)
 {
 #ifndef USE_getnetbyname
@@ -2013,76 +2033,47 @@ ___SCMOBJ modification_time;)
 /* Access to file information. */
 
 ___SCMOBJ ___os_file_info
-   ___P((___SCMOBJ path,
+   ___P((___SCMOBJ fi,
+         ___SCMOBJ path,
          ___SCMOBJ chase),
-        (path,
+        (fi,
+         path,
          chase)
+___SCMOBJ fi;
 ___SCMOBJ path;
 ___SCMOBJ chase;)
 {
-  ___SCMOBJ e;
+  ___processor_state ___ps = ___PSTATE;
   ___SCMOBJ result;
-  ___SCMOBJ x;
   void *cpath;
+
+  ___ps->saved[0] = fi;
 
 #ifndef USE_stat
 #ifndef USE_GetFileAttributesEx
 
-  if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (___PSA(___PSTATE)
-              path,
-              &cpath,
-              1,
-              ___CE(___INFO_PATH_CE_SELECT),
-              0))
+  if ((result = ___SCMOBJ_to_NONNULLSTRING (___PSA(___ps)
+                                            path,
+                                            &cpath,
+                                            1,
+                                            ___CE(___INFO_PATH_CE_SELECT),
+                                            0))
       == ___FIX(___NO_ERR))
     {
       ___FILE *check_exist = ___fopen (cpath, "r");
 
       if (check_exist == 0)
         {
-          e = fnf_or_err_code_from_errno ();
+          result = fnf_or_err_code_from_errno ();
           ___release_string (cpath);
-          return e;
+          goto done;
         }
 
       ___fclose (check_exist);
 
       ___release_string (cpath);
 
-      result = ___make_vector (___PSTATE, 14, ___FAL);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
-
-      ___FIELD(result,1) = ___FIX(0); /* unknown type */
-      ___FIELD(result,2) = ___FIX(0);
-      ___FIELD(result,3) = ___FIX(0);
-      ___FIELD(result,4) = ___FIX(0);
-      ___FIELD(result,5) = ___FIX(0);
-      ___FIELD(result,6) = ___FIX(0);
-      ___FIELD(result,7) = ___FIX(0);
-      ___FIELD(result,8) = ___FIX(0);
-
-      if ((e = ___F64_to_SCMOBJ (___PSTATE,
-                                 ___CAST(___F64,NEG_INFINITY),
-                                 &x,
-                                 ___RETURN_POS))
-          != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
-
-      ___FIELD(result,9) = x;
-      ___FIELD(result,10) = x;
-      ___FIELD(result,11) = x;
-      ___FIELD(result,12) = ___FIX(0);
-      ___FIELD(result,13) = x;
-
-      ___release_scmobj (x);
-
-      return ___release_scmobj (result);
+      result = ___ps->saved[0];
     }
 
 #endif
@@ -2090,138 +2081,117 @@ ___SCMOBJ chase;)
 
 #ifdef USE_stat
 
-  if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (___PSA(___PSTATE)
-              path,
-              &cpath,
-              1,
-              ___CE(___INFO_PATH_CE_SELECT),
-              0))
+  if ((result = ___SCMOBJ_to_NONNULLSTRING
+                  (___PSA(___ps)
+                   path,
+                   &cpath,
+                   1,
+                   ___CE(___INFO_PATH_CE_SELECT),
+                   0))
       == ___FIX(___NO_ERR))
     {
       ___struct_stat s;
+      ___SCMOBJ x;
 
       if (stat_long_path (___CAST(___STRING_TYPE(___INFO_PATH_CE_SELECT),cpath),
                           &s,
                           chase != ___FAL) < 0)
         {
-          e = fnf_or_err_code_from_errno ();
+          result = fnf_or_err_code_from_errno ();
           ___release_string (cpath);
-          return e;
+          goto done;
         }
 
       ___release_string (cpath);
 
-      result = ___make_vector (___PSTATE, 14, ___FAL);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
-
       if (S_ISREG(s.st_mode))
-        ___FIELD(result,1) = ___FIX(1);
+        x = ___FIX(1);
       else if (S_ISDIR(s.st_mode))
-        ___FIELD(result,1) = ___FIX(2);
+        x = ___FIX(2);
       else if (S_ISCHR(s.st_mode))
-        ___FIELD(result,1) = ___FIX(3);
+        x = ___FIX(3);
       else if (S_ISBLK(s.st_mode))
-        ___FIELD(result,1) = ___FIX(4);
+        x = ___FIX(4);
       else if (S_ISFIFO(s.st_mode))
-        ___FIELD(result,1) = ___FIX(5);
+        x = ___FIX(5);
       else if (S_ISLNK(s.st_mode))
-        ___FIELD(result,1) = ___FIX(6);
+        x = ___FIX(6);
       else if (S_ISSOCK(s.st_mode))
-        ___FIELD(result,1) = ___FIX(7);
+        x = ___FIX(7);
       else
-        ___FIELD(result,1) = ___FIX(0);
+        x = ___FIX(0);
 
-      if ((e = ___ULONGLONG_to_SCMOBJ (___PSTATE,
-                                       ___CAST(___ULONGLONG,s.st_dev),
-                                       &x,
-                                       ___RETURN_POS))
+      ___FIELD(___ps->saved[0],1) = x;
+
+      if ((result = ___ULONGLONG_to_SCMOBJ (___ps,
+                                            ___CAST(___ULONGLONG,s.st_dev),
+                                            &x,
+                                            ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,2) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],2) = ___release_scmobj (x);
 
-      if ((e = ___LONGLONG_to_SCMOBJ (___PSTATE,
-                                      ___CAST(___LONGLONG,s.st_ino),
-                                      &x,
-                                      ___RETURN_POS))
+      if ((result = ___LONGLONG_to_SCMOBJ (___ps,
+                                           ___CAST(___LONGLONG,s.st_ino),
+                                           &x,
+                                           ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,3) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],3) = ___release_scmobj (x);
 
-      ___FIELD(result,4) =
+      ___FIELD(___ps->saved[0],4) =
         ___FIX(s.st_mode & (S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO));
 
-      if ((e = ___ULONGLONG_to_SCMOBJ (___PSTATE,
-                                       ___CAST(___ULONGLONG,s.st_nlink),
-                                       &x,
-                                       ___RETURN_POS))
+      if ((result = ___ULONGLONG_to_SCMOBJ (___ps,
+                                            ___CAST(___ULONGLONG,s.st_nlink),
+                                            &x,
+                                            ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,5) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],5) = ___release_scmobj (x);
 
-      ___FIELD(result,6) = ___FIX(s.st_uid);
+      ___FIELD(___ps->saved[0],6) = ___FIX(s.st_uid);
 
-      ___FIELD(result,7) = ___FIX(s.st_gid);
+      ___FIELD(___ps->saved[0],7) = ___FIX(s.st_gid);
 
-      if ((e = ___LONGLONG_to_SCMOBJ (___PSTATE,
-                                      ___CAST(___LONGLONG,s.st_size),
+      if ((result = ___LONGLONG_to_SCMOBJ (___ps,
+                                           ___CAST(___LONGLONG,s.st_size),
+                                           &x,
+                                           ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        goto done;
+
+      ___FIELD(___ps->saved[0],8) = ___release_scmobj (x);
+
+      if ((result = ___F64_to_SCMOBJ (___ps,
+                                      ___CAST(___F64,s.st_atime),
                                       &x,
                                       ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,8) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],9) = ___release_scmobj (x);
 
-      if ((e = ___F64_to_SCMOBJ (___PSTATE, ___CAST(___F64,s.st_atime), &x, ___RETURN_POS))
+      if ((result = ___F64_to_SCMOBJ (___ps,
+                                      ___CAST(___F64,s.st_mtime),
+                                      &x,
+                                      ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,9) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],10) = ___release_scmobj (x);
 
-      if ((e = ___F64_to_SCMOBJ (___PSTATE, ___CAST(___F64,s.st_mtime), &x, ___RETURN_POS))
+      if ((result = ___F64_to_SCMOBJ (___ps,
+                                      ___CAST(___F64,s.st_ctime),
+                                      &x,
+                                      ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,10) = x;
-      ___release_scmobj (x);
-
-      if ((e = ___F64_to_SCMOBJ (___PSTATE, ___CAST(___F64,s.st_ctime), &x, ___RETURN_POS))
-          != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
-
-      ___FIELD(result,11) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],11) = ___release_scmobj (x);
 
 #ifndef FILE_ATTRIBUTE_READ_ONLY
 #define FILE_ATTRIBUTE_READ_ONLY 1
@@ -2235,41 +2205,37 @@ ___SCMOBJ chase;)
 #define FILE_ATTRIBUTE_NORMAL 128
 #endif
 
-      ___FIELD(result,12) =
+      ___FIELD(___ps->saved[0],12) =
         ___FIX(S_ISDIR(s.st_mode)
                ? FILE_ATTRIBUTE_DIRECTORY
                : FILE_ATTRIBUTE_NORMAL);
 
-      if ((e = ___F64_to_SCMOBJ (___PSTATE,
-                                 ___CAST(___F64,NEG_INFINITY),
-                                 &x,
-                                 ___RETURN_POS))
+      if ((result = ___F64_to_SCMOBJ (___ps,
+                                      ___CAST(___F64,NEG_INFINITY),
+                                      &x,
+                                      ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,13) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],13) = ___release_scmobj (x);
 
-      return ___release_scmobj (result);
+      result = ___ps->saved[0];
     }
 
 #endif
 
 #ifdef USE_GetFileAttributesEx
 
-  if ((e = ___SCMOBJ_to_NONNULLSTRING
-             (___PSA(___PSTATE)
-              path,
-              &cpath,
-              1,
-              ___CE(___INFO_PATH_CE_SELECT),
-              0))
+  if ((result = ___SCMOBJ_to_NONNULLSTRING (___PSA(___ps)
+                                            path,
+                                            &cpath,
+                                            1,
+                                            ___CE(___INFO_PATH_CE_SELECT),
+                                            0))
       == ___FIX(___NO_ERR))
     {
       WIN32_FILE_ATTRIBUTE_DATA fad;
+      ___SCMOBJ x;
       ___time atime;
       ___time wtime;
       ___time ctime;
@@ -2279,106 +2245,92 @@ ___SCMOBJ chase;)
               GetFileExInfoStandard,
               &fad))
         {
-          e = err_code_from_GetLastError ();
+          result = err_code_from_GetLastError ();
           ___release_string (cpath);
-          return e;
+          goto done;
         }
 
       ___release_string (cpath);
 
-      result = ___make_vector (___PSTATE, 14, ___FAL);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
-
       if (fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        ___FIELD(result,1) = ___FIX(2);
+        x = ___FIX(2);
       else
-        ___FIELD(result,1) = ___FIX(1);
+        x = ___FIX(1);
 
-      ___FIELD(result,2) = ___FIX(0);
-      ___FIELD(result,3) = ___FIX(0);
+      ___FIELD(___ps->saved[0],1) = x;
+
+      ___FIELD(___ps->saved[0],2) = ___FIX(0);
+
+      ___FIELD(___ps->saved[0],3) = ___FIX(0);
 
       if (fad.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
-        ___FIELD(result,4) = ___FIX(0333);
+        x = ___FIX(0333);
       else
-        ___FIELD(result,4) = ___FIX(0777);
+        x = ___FIX(0777);
 
-      ___FIELD(result,5) = ___FIX(1);
-      ___FIELD(result,6) = ___FIX(0);
-      ___FIELD(result,7) = ___FIX(0);
+      ___FIELD(___ps->saved[0],4) = x;
 
-      if ((e = ___U64_to_SCMOBJ
-                 (___PSTATE,
-                  ___U64_from_UM32_UM32(fad.nFileSizeHigh,fad.nFileSizeLow),
-                  &x,
-                  ___RETURN_POS))
+      ___FIELD(___ps->saved[0],5) = ___FIX(1);
+
+      ___FIELD(___ps->saved[0],6) = ___FIX(0);
+
+      ___FIELD(___ps->saved[0],7) = ___FIX(0);
+
+      if ((result = ___U64_to_SCMOBJ (___ps,
+                                      ___U64_from_UM32_UM32(fad.nFileSizeHigh,fad.nFileSizeLow),
+                                      &x,
+                                      ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,8) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],8) = ___release_scmobj (x);
 
       ___time_from_FILETIME (&atime, fad.ftLastAccessTime);
 
-      if ((e = ___F64_to_SCMOBJ
-                 (___PSTATE,
-                  ___time_to_seconds (atime),
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___F64_to_SCMOBJ (___ps,
+                                      ___time_to_seconds (atime),
+                                      &x,
+                                      ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,9) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],9) = ___release_scmobj (x);
 
       ___time_from_FILETIME (&wtime, fad.ftLastWriteTime);
 
-      if ((e = ___F64_to_SCMOBJ
-                 (___PSTATE,
-                  ___time_to_seconds (wtime),
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___F64_to_SCMOBJ (___ps,
+                                      ___time_to_seconds (wtime),
+                                      &x,
+                                      ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,10) = x;
-      ___FIELD(result,11) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],10) = x;
 
-      ___FIELD(result,12) = ___FIX(fad.dwFileAttributes);
+      ___FIELD(___ps->saved[0],11) = ___release_scmobj (x);
+
+      ___FIELD(___ps->saved[0],12) = ___FIX(fad.dwFileAttributes);
 
       ___time_from_FILETIME (&ctime, fad.ftCreationTime);
 
-      if ((e = ___F64_to_SCMOBJ
-                 (___PSTATE,
-                  ___time_to_seconds (ctime),
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___F64_to_SCMOBJ (___ps,
+                                      ___time_to_seconds (ctime),
+                                      &x,
+                                      ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,13) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],13) = ___release_scmobj (x);
 
-      return ___release_scmobj (result);
+      result = ___ps->saved[0];
     }
 
 #endif
 
-  return e;
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
+
+  return result;
 }
 
 
@@ -2387,15 +2339,13 @@ ___SCMOBJ chase;)
 /* Access to user information. */
 
 ___SCMOBJ ___os_user_info
-   ___P((___SCMOBJ user),
-        (user)
+   ___P((___SCMOBJ ui,
+         ___SCMOBJ user),
+        (ui,
+         user)
+___SCMOBJ ui;
 ___SCMOBJ user;)
 {
-  ___SCMOBJ e = ___FIX(___NO_ERR);
-  ___SCMOBJ result;
-  ___SCMOBJ x;
-  void *cuser = 0;
-
 #ifndef USE_getpwnam
 
   return ___FIX(___UNIMPL_ERR);
@@ -2404,27 +2354,33 @@ ___SCMOBJ user;)
 
 #ifdef USE_getpwnam
 
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result;
+  void *cuser = 0;
   struct passwd *p;
+
+  ___ps->saved[0] = ui;
 
 #define ___USER_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if (___FIXNUMP(user) ||
-      (e = ___SCMOBJ_to_NONNULLSTRING
-             (___PSA(___PSTATE)
-              user,
-              &cuser,
-              1,
-              ___CE(___USER_CE_SELECT),
-              0))
+      (result = ___SCMOBJ_to_NONNULLSTRING (___PSA(___ps)
+                                            user,
+                                            &cuser,
+                                            1,
+                                            ___CE(___USER_CE_SELECT),
+                   0))
       == ___FIX(___NO_ERR))
     {
+      ___SCMOBJ x;
+
       if (___FIXNUMP(user))
         {
           if ((p = getpwuid (___INT(user)))
               == 0)
             {
-              e = err_code_from_errno ();
-              return e;
+              result = err_code_from_errno ();
+              goto done;
             }
         }
       else
@@ -2432,71 +2388,54 @@ ___SCMOBJ user;)
           if ((p = getpwnam (___CAST(___STRING_TYPE(___USER_CE_SELECT),cuser)))
               == 0)
             {
-              e = err_code_from_errno ();
+              result = err_code_from_errno ();
               ___release_string (cuser);
-              return e;
+              goto done;
             }
 
           ___release_string (cuser);
         }
 
-      result = ___make_vector (___PSTATE, 6, ___FAL);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
-
-      if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (___PSTATE,
-                  p->pw_name,
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___NONNULLCHARSTRING_to_SCMOBJ (___ps,
+                                                    p->pw_name,
+                                                    &x,
+                                                    ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,1) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
 
-      ___FIELD(result,2) = ___FIX(p->pw_uid);
+      ___FIELD(___ps->saved[0],2) = ___FIX(p->pw_uid);
 
-      ___FIELD(result,3) = ___FIX(p->pw_gid);
+      ___FIELD(___ps->saved[0],3) = ___FIX(p->pw_gid);
 
-      if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (___PSTATE,
-                  p->pw_dir,
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___NONNULLCHARSTRING_to_SCMOBJ (___ps,
+                                                    p->pw_dir,
+                                                    &x,
+                                                    ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,4) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],4) = ___release_scmobj (x);
 
-      if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (___PSTATE,
-                  p->pw_shell,
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___NONNULLCHARSTRING_to_SCMOBJ (___ps,
+                                                    p->pw_shell,
+                                                    &x,
+                                                    ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,5) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],5) = ___release_scmobj (x);
 
-      return ___release_scmobj (result);
+      result = ___ps->saved[0];
     }
 
-#endif
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
 
-  return e;
+  return result;
+
+#endif
 }
 
 
@@ -2522,11 +2461,10 @@ ___SCMOBJ ___os_user_name ___PVOID
     result = e;
   else
     {
-      if ((e = ___UCS_2STRING_to_SCMOBJ
-                 (___PSTATE,
-                  cstr,
-                  &result,
-                  ___RETURN_POS))
+      if ((e = ___UCS_2STRING_to_SCMOBJ (___PSTATE,
+                                         cstr,
+                                         &result,
+                                         ___RETURN_POS))
           != ___FIX(___NO_ERR))
         result = e;
       else
@@ -2545,15 +2483,13 @@ ___SCMOBJ ___os_user_name ___PVOID
 /* Access to group information. */
 
 ___SCMOBJ ___os_group_info
-   ___P((___SCMOBJ group),
-        (group)
+   ___P((___SCMOBJ gi,
+         ___SCMOBJ group),
+        (gi,
+         group)
+___SCMOBJ gi;
 ___SCMOBJ group;)
 {
-  ___SCMOBJ e = ___FIX(___NO_ERR);
-  ___SCMOBJ result;
-  ___SCMOBJ x;
-  void *cgroup = 0;
-
 #ifndef USE_getgrnam
 
   return ___FIX(___UNIMPL_ERR);
@@ -2562,18 +2498,23 @@ ___SCMOBJ group;)
 
 #ifdef USE_getgrnam
 
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result = ___FIX(___NO_ERR);
+  ___SCMOBJ x;
+  void *cgroup = 0;
   struct group *g;
+
+  ___ps->saved[0] = gi;
 
 #define ___GROUP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 
   if (___FIXNUMP(group) ||
-      (e = ___SCMOBJ_to_NONNULLSTRING
-             (___PSA(___PSTATE)
-              group,
-              &cgroup,
-              1,
-              ___CE(___GROUP_CE_SELECT),
-              0))
+      (result = ___SCMOBJ_to_NONNULLSTRING (___PSA(___ps)
+                                            group,
+                                            &cgroup,
+                                            1,
+                                            ___CE(___GROUP_CE_SELECT),
+                                            0))
       == ___FIX(___NO_ERR))
     {
       if (___FIXNUMP(group))
@@ -2581,8 +2522,8 @@ ___SCMOBJ group;)
           if ((g = getgrgid (___INT(group)))
               == 0)
             {
-              e = err_code_from_errno ();
-              return e;
+              result = err_code_from_errno ();
+              goto done;
             }
         }
       else
@@ -2590,55 +2531,44 @@ ___SCMOBJ group;)
           if ((g = getgrnam (___CAST(___STRING_TYPE(___GROUP_CE_SELECT),cgroup)))
               == 0)
             {
-              e = err_code_from_errno ();
+              result = err_code_from_errno ();
               ___release_string (cgroup);
-              return e;
+              goto done;
             }
 
           ___release_string (cgroup);
         }
 
-      result = ___make_vector (___PSTATE, 3, ___FAL);
-
-      if (___FIXNUMP(result))
-        return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);/**********/
-
-      if ((e = ___NONNULLCHARSTRING_to_SCMOBJ
-                 (___PSTATE,
-                  g->gr_name,
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___NONNULLCHARSTRING_to_SCMOBJ (___ps,
+                                                    g->gr_name,
+                                                    &x,
+                                                    ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,1) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
 
-      ___FIELD(result,2) = ___FIX(g->gr_gid);
+      ___FIELD(___ps->saved[0],2) = ___FIX(g->gr_gid);
 
-      if ((e = ___NONNULLCHARSTRINGLIST_to_SCMOBJ
-                 (___PSTATE,
-                  g->gr_mem,
-                  &x,
-                  ___RETURN_POS))
+      if ((result = ___NONNULLCHARSTRINGLIST_to_SCMOBJ
+                      (___ps,
+                       g->gr_mem,
+                       &x,
+                       ___RETURN_POS))
           != ___FIX(___NO_ERR))
-        {
-          ___release_scmobj (result);
-          return e;
-        }
+        goto done;
 
-      ___FIELD(result,3) = x;
-      ___release_scmobj (x);
+      ___FIELD(___ps->saved[0],3) = ___release_scmobj (x);
 
-      return ___release_scmobj (result);
+      result = ___ps->saved[0];
     }
 
-#endif
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
 
-  return e;
+  return result;
+
+#endif
 }
 
 

@@ -2661,18 +2661,47 @@
 (univ-define-prim "##current-thread" #t
   (make-translated-operand-generator
    (lambda (ctx return)
-     (return (^rts-field-use 'current_thread)))))
+     (return (gvm-state-current-thread ctx)))))
 
-;;TODO: ("##run-queue"                    (0)   #f ()    0    #f      extended)
+(univ-define-prim "##current-processor" #t
+  (make-translated-operand-generator
+   (lambda (ctx return)
+     (return (gvm-state-current-processor ctx)))))
 
-;;TODO: ("##thread-save!"                 1     #t ()    1113 (#f)    extended)
-;;TODO: ("##thread-restore!"              2     #t ()    2203 #f      extended)
+(univ-define-prim "##current-processor-id" #t
+  (make-translated-operand-generator
+   (lambda (ctx return)
+     (return (^obj 0)))))
 
-;;TODO: ("##continuation-capture"         1     #t ()    1113 (#f)    extended)
-;;TODO: ("##continuation-graft"           2     #t ()    2203 #f      extended)
-;;TODO: ("##continuation-graft-no-winding" 2     #t ()    2203 #f      extended)
-;;TODO: ("##continuation-return"           (2)   #t ()    0    #f      extended)
-;;TODO: ("##continuation-return-no-winding"(2)   #t ()    0    #f      extended)
+(univ-define-prim "##processor" #t
+  (make-translated-operand-generator
+   (lambda (ctx return id)
+     (return (gvm-state-current-processor ctx)))))
+
+(univ-define-prim "##current-vm" #t
+  (make-translated-operand-generator
+   (lambda (ctx return)
+     (return (gvm-state-current-vm ctx)))))
+
+(univ-define-prim "##primitive-lock!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return obj index1 index2)
+     (return (^obj #f))))) ;;TODO
+
+(univ-define-prim "##primitive-trylock!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return obj index1 index2)
+     (return (^obj #f))))) ;;TODO
+
+(univ-define-prim "##primitive-unlock!" #t
+  (make-translated-operand-generator
+   (lambda (ctx return obj index1 index2)
+     (return (^obj #f))))) ;;TODO
+
+(univ-define-prim "##object-before?" #t
+  (make-translated-operand-generator
+   (lambda (ctx return obj1 obj2)
+     (return (^obj #f))))) ;;TODO
 
 (define (univ-end-of-cont-marker ctx)
   (^void-obj))
@@ -2921,12 +2950,11 @@
                       fs
                       "apply")))
 
-;;TODO: ("##call-with-current-continuation"1     #t ()    1113 (#f)    extended)
-
 (univ-define-prim-bool "##global-var?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^bool #f))))) ;;TODO: implement
+     (return
+      (^glo-var? arg1)))))
 
 (univ-define-prim "##make-global-var" #f
   (make-translated-operand-generator
@@ -3400,6 +3428,7 @@
              (obj? (car opnds))
              (string? (obj-val (car opnds))))
         (^ (univ-expand-inline-host-code ctx (obj-val (car opnds)) (cdr opnds))
+           "\n"
            (return #f))
         (compiler-internal-error "##inline-host-statement requires a constant string argument"))))
 

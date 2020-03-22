@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2406,6 +2406,9 @@
     ((java)
      (^cast* 'f64 expr))
 
+    ((go)
+     (^ "~~~TODO3:univ-emit-float-fromint~~~"))
+
     (else
      (compiler-internal-error
       "univ-emit-float-fromint, unknown target"))))
@@ -3291,7 +3294,7 @@ tanh
       "univ-emit-vect?, type not implemented"))))
 
 (define (univ-emit-vector-box ctx expr)
-  (case (univ-vector-representation ctx)
+  (case (univ-vector-representation ctx 'scmobj)
 
     ((class)
      (^new 'vector expr))
@@ -3300,7 +3303,7 @@ tanh
      expr)))
 
 (define (univ-emit-vector-unbox ctx expr)
-  (case (univ-vector-representation ctx)
+  (case (univ-vector-representation ctx 'scmobj)
 
     ((class)
      (^member (^cast* 'vector expr) (^public 'elems)))
@@ -3315,7 +3318,7 @@ tanh
      (^call-prim (^rts-method-use 'is_vector) expr))
 
     (else
-     (case (univ-vector-representation ctx)
+     (case (univ-vector-representation ctx 'scmobj)
 
        ((class)
         (^instanceof (^type 'vector) (^cast*-scmobj expr)))
@@ -3336,7 +3339,7 @@ tanh
   (^assign (^array-index (^vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-u8vector-box ctx expr)
-  (case (univ-u8vector-representation ctx)
+  (case (univ-vector-representation ctx 'u8)
 
     ((class)
      (^new 'u8vector expr))
@@ -3345,7 +3348,7 @@ tanh
      expr)))
 
 (define (univ-emit-u8vector-unbox ctx expr)
-  (case (univ-u8vector-representation ctx)
+  (case (univ-vector-representation ctx 'u8)
 
     ((class)
      (^member (^cast* 'u8vector expr) (^public 'elems)))
@@ -3360,7 +3363,7 @@ tanh
      (^call-prim (^rts-method-use 'is_u8vector) expr))
 
     (else
-     (case (univ-u8vector-representation ctx)
+     (case (univ-vector-representation ctx 'u8)
 
        ((class)
         (^instanceof (^type 'u8vector) (^cast*-scmobj expr)))
@@ -3386,7 +3389,7 @@ tanh
                          expr2)))))
 
 (define (univ-emit-u8vector-shrink! ctx expr1 expr2)
-  (case (univ-u8vector-representation ctx)
+  (case (univ-vector-representation ctx 'u8)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 'u8vector expr1 expr2))
@@ -3404,7 +3407,7 @@ tanh
   (^assign (^array-index (^u8vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-u16vector-box ctx expr)
-  (case (univ-u16vector-representation ctx)
+  (case (univ-vector-representation ctx 'u16)
 
     ((class)
      (^new 'u16vector expr))
@@ -3413,7 +3416,7 @@ tanh
      (^downcast* '(array u16) expr))))
 
 (define (univ-emit-u16vector-unbox ctx expr)
-  (case (univ-u16vector-representation ctx)
+  (case (univ-vector-representation ctx 'u16)
 
     ((class)
      (^member (^cast* 'u16vector expr) (^public 'elems)))
@@ -3428,7 +3431,7 @@ tanh
      (^call-prim (^rts-method-use 'is_u16vector) expr))
 
     (else
-     (case (univ-u16vector-representation ctx)
+     (case (univ-vector-representation ctx 'u16)
 
        ((class)
         (^instanceof (^type 'u16vector) (^cast*-scmobj expr)))
@@ -3440,7 +3443,7 @@ tanh
   (^array-length (^u16vector-unbox expr)))
 
 (define (univ-emit-u16vector-shrink! ctx expr1 expr2)
-  (case (univ-u16vector-representation ctx)
+  (case (univ-vector-representation ctx 'u16)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 'u16vector expr1 expr2))
@@ -3458,7 +3461,7 @@ tanh
   (^assign (^array-index (^u16vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-u32vector-box ctx expr)
-  (case (univ-u32vector-representation ctx)
+  (case (univ-vector-representation ctx 'u32)
 
     ((class)
      (^new 'u32vector expr))
@@ -3467,7 +3470,7 @@ tanh
      expr)))
 
 (define (univ-emit-u32vector-unbox ctx expr)
-  (case (univ-u32vector-representation ctx)
+  (case (univ-vector-representation ctx 'u32)
 
     ((class)
      (^member (^cast* 'u32vector expr) (^public 'elems)))
@@ -3482,7 +3485,7 @@ tanh
      (^call-prim (^rts-method-use 'is_u32vector) expr))
 
     (else
-     (case (univ-u32vector-representation ctx)
+     (case (univ-vector-representation ctx 'u32)
 
        ((class)
         (^instanceof (^type 'u32vector) (^cast*-scmobj expr)))
@@ -3494,7 +3497,7 @@ tanh
   (^array-length (^u32vector-unbox expr)))
 
 (define (univ-emit-u32vector-shrink! ctx expr1 expr2)
-  (case (univ-u32vector-representation ctx)
+  (case (univ-vector-representation ctx 'u32)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 'u32vector expr1 expr2))
@@ -3509,7 +3512,7 @@ tanh
   (^assign (^array-index (^u32vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-u64vector-box ctx expr)
-  (case (univ-u64vector-representation ctx)
+  (case (univ-vector-representation ctx 'u64)
 
     ((class)
      (^new 'u64vector expr))
@@ -3518,7 +3521,7 @@ tanh
      expr)))
 
 (define (univ-emit-u64vector-unbox ctx expr)
-  (case (univ-u64vector-representation ctx)
+  (case (univ-vector-representation ctx 'u64)
 
     ((class)
      (^member (^cast* 'u64vector expr) (^public 'elems)))
@@ -3533,7 +3536,7 @@ tanh
      (^call-prim (^rts-method-use 'is_u64vector) expr))
 
     (else
-     (case (univ-u64vector-representation ctx)
+     (case (univ-vector-representation ctx 'u64)
 
        ((class)
         (^instanceof (^type 'u64vector) (^cast*-scmobj expr)))
@@ -3545,7 +3548,7 @@ tanh
   (^array-length (^u64vector-unbox expr)))
 
 (define (univ-emit-u64vector-shrink! ctx expr1 expr2)
-  (case (univ-u64vector-representation ctx)
+  (case (univ-vector-representation ctx 'u64)
 
 ;;    ((class)
 ;;     (univ-shrink-by-copying-elems! ctx 'u64vector expr1 expr2))
@@ -3560,7 +3563,7 @@ tanh
   (^assign (^array-index (^u64vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-s8vector-box ctx expr)
-  (case (univ-s8vector-representation ctx)
+  (case (univ-vector-representation ctx 's8)
 
     ((class)
      (^new 's8vector expr))
@@ -3569,7 +3572,7 @@ tanh
      expr)))
 
 (define (univ-emit-s8vector-unbox ctx expr)
-  (case (univ-s8vector-representation ctx)
+  (case (univ-vector-representation ctx 's8)
 
     ((class)
      (^member (^cast* 's8vector expr) (^public 'elems)))
@@ -3584,7 +3587,7 @@ tanh
      (^call-prim (^rts-method-use 'is_s8vector) expr))
 
     (else
-     (case (univ-s8vector-representation ctx)
+     (case (univ-vector-representation ctx 's8)
 
        ((class)
         (^instanceof (^type 's8vector) (^cast*-scmobj expr)))
@@ -3596,7 +3599,7 @@ tanh
   (^array-length (^s8vector-unbox expr)))
 
 (define (univ-emit-s8vector-shrink! ctx expr1 expr2)
-  (case (univ-s8vector-representation ctx)
+  (case (univ-vector-representation ctx 's8)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 's8vector expr1 expr2))
@@ -3611,7 +3614,7 @@ tanh
   (^assign (^array-index (^s8vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-s16vector-box ctx expr)
-  (case (univ-s16vector-representation ctx)
+  (case (univ-vector-representation ctx 's16)
 
     ((class)
      (^new 's16vector expr))
@@ -3620,7 +3623,7 @@ tanh
      expr)))
 
 (define (univ-emit-s16vector-unbox ctx expr)
-  (case (univ-s16vector-representation ctx)
+  (case (univ-vector-representation ctx 's16)
 
     ((class)
      (^member (^cast* 's16vector expr) (^public 'elems)))
@@ -3635,7 +3638,7 @@ tanh
      (^call-prim (^rts-method-use 'is_s16vector) expr))
 
     (else
-     (case (univ-s16vector-representation ctx)
+     (case (univ-vector-representation ctx 's16)
 
        ((class)
         (^instanceof (^type 's16vector) (^cast*-scmobj expr)))
@@ -3647,7 +3650,7 @@ tanh
   (^array-length (^s16vector-unbox expr)))
 
 (define (univ-emit-s16vector-shrink! ctx expr1 expr2)
-  (case (univ-s16vector-representation ctx)
+  (case (univ-vector-representation ctx 's16)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 's16vector expr1 expr2))
@@ -3662,7 +3665,7 @@ tanh
   (^assign (^array-index (^s16vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-s32vector-box ctx expr)
-  (case (univ-s32vector-representation ctx)
+  (case (univ-vector-representation ctx 's32)
 
     ((class)
      (^new 's32vector expr))
@@ -3671,7 +3674,7 @@ tanh
      expr)))
 
 (define (univ-emit-s32vector-unbox ctx expr)
-  (case (univ-s32vector-representation ctx)
+  (case (univ-vector-representation ctx 's32)
 
     ((class)
      (^member (^cast* 's32vector expr) (^public 'elems)))
@@ -3686,7 +3689,7 @@ tanh
      (^call-prim (^rts-method-use 'is_s32vector) expr))
 
     (else
-     (case (univ-s32vector-representation ctx)
+     (case (univ-vector-representation ctx 's32)
 
        ((class)
         (^instanceof (^type 's32vector) (^cast*-scmobj expr)))
@@ -3698,7 +3701,7 @@ tanh
   (^array-length (^s32vector-unbox expr)))
 
 (define (univ-emit-s32vector-shrink! ctx expr1 expr2)
-  (case (univ-s32vector-representation ctx)
+  (case (univ-vector-representation ctx 's32)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 's32vector expr1 expr2))
@@ -3713,7 +3716,7 @@ tanh
   (^assign (^array-index (^s32vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-s64vector-box ctx expr)
-  (case (univ-s64vector-representation ctx)
+  (case (univ-vector-representation ctx 's64)
 
     ((class)
      (^new 's64vector expr))
@@ -3722,7 +3725,7 @@ tanh
      expr)))
 
 (define (univ-emit-s64vector-unbox ctx expr)
-  (case (univ-s64vector-representation ctx)
+  (case (univ-vector-representation ctx 's64)
 
     ((class)
      (^member (^cast* 's64vector expr) (^public 'elems)))
@@ -3737,7 +3740,7 @@ tanh
      (^call-prim (^rts-method-use 'is_s64vector) expr))
 
     (else
-     (case (univ-s64vector-representation ctx)
+     (case (univ-vector-representation ctx 's64)
 
        ((class)
         (^instanceof (^type 's64vector) (^cast*-scmobj expr)))
@@ -3749,7 +3752,7 @@ tanh
   (^array-length (^s64vector-unbox expr)))
 
 (define (univ-emit-s64vector-shrink! ctx expr1 expr2)
-  (case (univ-s64vector-representation ctx)
+  (case (univ-vector-representation ctx 's64)
 
 ;;    ((class)
 ;;     (univ-shrink-by-copying-elems! ctx 's64vector expr1 expr2))
@@ -3764,7 +3767,7 @@ tanh
   (^assign (^array-index (^s64vector-unbox expr1) expr2) expr3))
 
 (define (univ-emit-f32vector-box ctx expr)
-  (case (univ-f32vector-representation ctx)
+  (case (univ-vector-representation ctx 'f32)
 
     ((class)
      (^new 'f32vector expr))
@@ -3773,7 +3776,7 @@ tanh
      expr)))
 
 (define (univ-emit-f32vector-unbox ctx expr)
-  (case (univ-f32vector-representation ctx)
+  (case (univ-vector-representation ctx 'f32)
 
     ((class)
      (^member (^cast* 'f32vector expr) (^public 'elems)))
@@ -3788,7 +3791,7 @@ tanh
      (^call-prim (^rts-method-use 'is_f32vector) expr))
 
     (else
-     (case (univ-f32vector-representation ctx)
+     (case (univ-vector-representation ctx 'f32)
 
        ((class)
         (^instanceof (^type 'f32vector) (^cast*-scmobj expr)))
@@ -3800,7 +3803,7 @@ tanh
   (^array-length (^f32vector-unbox expr)))
 
 (define (univ-emit-f32vector-shrink! ctx expr1 expr2)
-  (case (univ-f32vector-representation ctx)
+  (case (univ-vector-representation ctx 'f32)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 'f32vector expr1 expr2))
@@ -3816,7 +3819,7 @@ tanh
 
 
 (define (univ-emit-f64vector-box ctx expr)
-  (case (univ-f64vector-representation ctx)
+  (case (univ-vector-representation ctx 'f64)
 
     ((class)
      (^new 'f64vector expr))
@@ -3825,7 +3828,7 @@ tanh
      expr)))
 
 (define (univ-emit-f64vector-unbox ctx expr)
-  (case (univ-f64vector-representation ctx)
+  (case (univ-vector-representation ctx 'f64)
 
     ((class)
      (^member (^cast* 'f64vector expr) (^public 'elems)))
@@ -3834,7 +3837,7 @@ tanh
      (^downcast* '(array f64) expr))))
 
 (define (univ-emit-f64vector? ctx expr)
-  (case (univ-f64vector-representation ctx)
+  (case (univ-vector-representation ctx 'f64)
 
     ((class)
      (^instanceof (^type 'f64vector) (^cast*-scmobj expr)))
@@ -3852,7 +3855,7 @@ tanh
   (^array-length (^f64vector-unbox expr)))
 
 (define (univ-emit-f64vector-shrink! ctx expr1 expr2)
-  (case (univ-f64vector-representation ctx)
+  (case (univ-vector-representation ctx 'f64)
 
     ((class)
      (univ-shrink-by-copying-elems! ctx 'f64vector expr1 expr2))

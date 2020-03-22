@@ -43,9 +43,7 @@
     (set! targ-proc-wr-res             (make-stretchable-vector #f))
     (set! targ-proc-lbl-tbl            (queue-empty))
     (set! targ-proc-lbl-tbl-ord        (queue-empty))
-    (set! targ-debug-info?             #f)
-    (set! targ-var-descr-queue         (queue-empty))
-    (set! targ-first-class-label-queue (queue-empty))
+    (set! targ-debug-info-state        (make-debug-info-state))
 
 ;;    (targ-repr-begin-proc!)
 
@@ -70,7 +68,8 @@
                 (targ-cell-set! (targ-lbl-num x) i)
                 (loop2 (cdr l) (+ i 1) (cons x val-lbls)))
               (loop2 (cdr l) i val-lbls)))
-          (let ((info (targ-debug-info)))
+          (let ((info (debug-info-generate targ-debug-info-state
+                                           targ-sharing-table)))
             (targ-use-obj info)
             (set! targ-lbl-alloc (+ targ-lbl-alloc (+ i 1)))
             (set-car! p
@@ -93,60 +92,6 @@
       (newline targ-info-port))
 
     ))
-
-(define (targ-debug-info)
-
-  (define (number i lst)
-    (if (null? lst)
-      '()
-      (cons (list->vect (cons i (car lst)))
-            (number (+ i 1) (cdr lst)))))
-
-  (targ-compact-using-sharing
-   targ-sharing-table
-   (if targ-debug-info?
-       (vector (list->vect
-                (number 0 (queue->list targ-first-class-label-queue)))
-               (list->vect
-                (queue->list targ-var-descr-queue)))
-       #f)))
-
-(define (targ-compact-using-sharing shared obj)
-
-  (define (compact obj)
-    (if (or (string? obj)
-            (pair? obj)
-            (box-object? obj)
-            (vector-object? obj))
-        (let ((x (table-ref shared obj #f)))
-          (or x
-              (cond ((string? obj)
-                     (table-set! shared obj obj)
-                     obj)
-                    ((pair? obj)
-                     (let ((p (cons #f #f)))
-                       (table-set! shared obj p)
-                       (set-car! p (compact (car obj)))
-                       (set-cdr! p (compact (cdr obj)))
-                       p))
-                    ((box-object? obj)
-                     (let ((b (box-object #f)))
-                       (table-set! shared obj b)
-                       (set-box-object! b (compact (unbox-object obj)))
-                       b))
-                    (else
-                     (let* ((len (vector-length obj))
-                            (v (make-vector len)))
-                       (table-set! shared obj v)
-                       (let loop ((i (- len 1)))
-                         (if (< i 0)
-                             v
-                             (begin
-                               (vector-set! v i (compact (vector-ref obj i)))
-                               (loop (- i 1))))))))))
-        obj))
-
-  (compact obj))
 
 (define (targ-scan-scheme-procedure bbs)
 
@@ -281,9 +226,7 @@
 (define targ-proc-heap-reserved   #f) ; heap space reserved
 (define targ-proc-ssb-reserved    #f) ; SSB space reserved
 
-(define targ-debug-info?             #f) ; generate debug information?
-(define targ-var-descr-queue         #f)
-(define targ-first-class-label-queue #f)
+(define targ-debug-info-state     #f) ; debug information accumulator
 
 (define targ-proc-instr-node      #f)
 (define targ-proc-entry-frame     #f)
@@ -583,161 +526,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (targ-add-var-descr! descr)
-
-  (define (index x l)
-    (let loop ((l l) (i 0))
-      (cond ((not (pair? l))    #f)
-            ((equal? (car l) x) i)
-            (else               (loop (cdr l) (+ i 1))))))
-
-  (let ((n (index descr (queue->list targ-var-descr-queue))))
-    (if n
-      n
-      (let ((m (length (queue->list targ-var-descr-queue))))
-        (queue-put! targ-var-descr-queue descr)
-        m))))
-
-(define (targ-add-first-class-label! node slots frame)
-
-  (define (encode slot)
-    (let ((v (car slot))
-          (i (cdr slot)))
-      (+ (* i 32768)
-         (if (pair? v)
-           (* (targ-add-var-descr! (map encode v)) 2)
-           (+ (* (targ-add-var-descr! (var-name v)) 2)
-              (if (var-boxed? v) 1 0))))))
-
-  (define (closure-env-slot closure-vars stack-slots)
-    (let loop ((i 1) (lst1 closure-vars) (lst2 '()))
-      (if (null? lst1)
-        lst2
-        (let ((x (car lst1)))
-          (if (not (frame-live? x frame))
-            (loop (+ i 1)
-                  (cdr lst1)
-                  lst2)
-            (let ((y (assq (var-name x) stack-slots)))
-              (if (and y (not (eq? x (cadr y))))
-                (begin
-                  (if (< (var-lexical-level (cadr y))
-                         (var-lexical-level x))
-                      (let ()
-                        (##namespace ("" pp));****************
-                        (pp (list
-                             'closure-vars: (map var-name closure-vars)
-                             'stack-slots: (map car stack-slots)
-                             'source: (source->expression (node-source node))
-                             ))
-                        (compiler-internal-error
-                         "targ-add-first-class-label!, variable conflict")))
-                  (loop (+ i 1)
-                        (cdr lst1)
-                        lst2))
-                (loop (+ i 1)
-                      (cdr lst1)
-                      (cons (cons x i) lst2)))))))))
-
-  (define (accessible-slots)
-    (let loop1 ((i 1)
-                (lst1 slots)
-                (lst2 '())
-                (closure-env #f)
-                (closure-env-index #f))
-      (if (pair? lst1)
-        (let* ((var (car lst1))
-               (x (frame-live? var frame)))
-          (cond ((pair? x) ; closure environment?
-                 (if (or (not closure-env) (eq? var closure-env))
-                   (loop1 (+ i 1)
-                          (cdr lst1)
-                          lst2
-                          var
-                          i)
-                   (compiler-internal-error
-                    "targ-add-first-class-label!, multiple closure environments")))
-                ((or (not x) (temp-var? x)) ; not live or temporary var
-                 (loop1 (+ i 1)
-                        (cdr lst1)
-                        lst2
-                        closure-env
-                        closure-env-index))
-                (else
-                 (let* ((name (var-name x))
-                        (y (assq name lst2)))
-                   (if (and y (not (eq? x (cadr y))))
-                     (let ((level-x (var-lexical-level x))
-                           (level-y (var-lexical-level (cadr y))))
-                       (cond ((< level-x level-y)
-                              (loop1 (+ i 1)
-                                     (cdr lst1)
-                                     lst2
-                                     closure-env
-                                     closure-env-index))
-                             ((< level-y level-x)
-                              (loop1 (+ i 1)
-                                     (cdr lst1)
-                                     (cons (cons name (cons x i)) (remq y lst2))
-                                     closure-env
-                                     closure-env-index))
-                             (else
-                              ; Two different live variables have the same
-                              ; name and lexical level, both variables will
-                              ; be kept in the debugging information
-                              ; descriptor even though in the actual program
-                              ; only one of the two variables is in scope.
-                              ; "flatten" causes this condition to happen.
-                              ; TODO: take variable scopes into account.
-                              (loop1 (+ i 1)
-                                     (cdr lst1)
-                                     (cons (cons name (cons x i)) lst2)
-                                     closure-env
-                                     closure-env-index))))
-                     (loop1 (+ i 1)
-                            (cdr lst1)
-                            (cons (cons name (cons x i)) lst2)
-                            closure-env
-                            closure-env-index))))))
-        (let* ((x
-                (if closure-env
-                  (closure-env-slot (frame-live? closure-env frame) lst2)
-                  '()))
-               (accessible-stack-slots
-                (map cdr lst2)))
-          (if (null? x)
-            accessible-stack-slots
-            (cons (cons x closure-env-index)
-                  accessible-stack-slots))))))
-
-  (let* ((env
-          (and node (node-env node)))
-         (label-descr
-          (cons (if (and env
-                         (debug? env)
-                         (or (debug-location? env)
-                             (debug-source? env)))
-                    (let ((src (node-source node)))
-                      (set! targ-debug-info? #t)
-                      (if (debug-location? env)
-                          (if (debug-source? env)
-                              src
-                              (source-locat src))
-                          (source->expression src)))
-                    #f)
-                (if (and env
-                         (or (and (debug? env)
-                                  (debug-environments? env))
-                             (environment-map? env)))
-                    (begin
-                      (set! targ-debug-info? #t)
-                      (map encode (accessible-slots)))
-                    '()))))
-    (queue-put! targ-first-class-label-queue label-descr)
-    label-descr))
-
-;;;----------------------------------------------------------------------------
-
 (define (targ-gen-gvm-instr prev-gvm-instr gvm-instr next-gvm-instr sn)
 
   (define (next-lbl)
@@ -889,10 +677,12 @@
 
 (define (targ-gen-label-entry lbl nb-parms opts keys rest? closed? sn)
 
-  (let ((label-descr (targ-add-first-class-label!
-                       targ-proc-instr-node
-                       '()
-                       targ-proc-exit-frame)))
+  (let ((label-descr
+         (debug-info-add!
+          targ-debug-info-state
+          targ-proc-instr-node
+          '()
+          targ-proc-exit-frame)))
     (if (= lbl targ-proc-entry-lbl)
       (begin
         (targ-emit-label-entry lbl nb-parms label-descr)
@@ -1002,7 +792,8 @@
 
     (define (generate fs vars gc-map)
       (let ((label-descr
-             (targ-add-first-class-label!
+             (debug-info-add!
+              targ-debug-info-state
               targ-proc-instr-node
               vars
               frame))

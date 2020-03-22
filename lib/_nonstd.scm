@@ -2220,16 +2220,36 @@
               (chase? (macro-absent-obj)))
   (let* ((resolved-path
           (##path-resolve path))
+         (fi
+          (macro-make-file-info ;; will be initialized by ##os-file-info
+           0  ;; type
+           0  ;; device
+           0  ;; inode
+           0  ;; mode
+           0  ;; number-of-links
+           0  ;; owner
+           0  ;; group
+           0  ;; size
+           (macro-inexact--inf) ;; last-access-time
+           (macro-inexact--inf) ;; last-modification-time
+           (macro-inexact--inf) ;; last-change-time
+           0  ;; attributes
+           (macro-inexact--inf)));; creation-time
          (result
-          (##os-file-info resolved-path
+          (##os-file-info fi
+                          resolved-path
                           (if (##eq? chase? (macro-absent-obj))
                               #t
                               chase?))))
+
+    (define (convert-time t)
+      (macro-make-time t #f #f #f))
+
     (if (##fixnum? result)
         result
         (begin
           (let ((type
-                 (case (##vector-ref result 1)
+                 (case (macro-file-info-type result)
                    ((1)  'regular)
                    ((2)  'directory)
                    ((3)  'character-special)
@@ -2238,17 +2258,41 @@
                    ((6)  'symbolic-link)
                    ((7)  'socket)
                    (else 'unknown))))
-            (##vector-set! result 1 type))
-          (##vector-set! result 9
-                         (macro-make-time (##vector-ref result 9) #f #f #f))
-          (##vector-set! result 10
-                         (macro-make-time (##vector-ref result 10) #f #f #f))
-          (##vector-set! result 11
-                         (macro-make-time (##vector-ref result 11) #f #f #f))
-          (##vector-set! result 13
-                         (macro-make-time (##vector-ref result 13) #f #f #f))
-          (##structure-type-set! result (macro-type-file-info))
-          (##subtype-set! result (macro-subtype-structure))
+            (##unchecked-structure-set!
+             result
+             type
+             1
+             (macro-type-file-info)
+             #f))
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-last-access-time result))
+           9
+           (macro-type-file-info)
+           #f)
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-last-modification-time result))
+           10
+           (macro-type-file-info)
+           #f)
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-last-change-time result))
+           11
+           (macro-type-file-info)
+           #f)
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-creation-time result))
+           13
+           (macro-type-file-info)
+           #f)
+
           result))))
 
 (define-prim (##file-info
@@ -2431,10 +2475,8 @@
               path
               #!optional
               (chase? (macro-absent-obj)))
-  (let* ((resolved-path
-          (##path-resolve path))
-         (result
-          (##os-file-info resolved-path
+  (let ((result
+         (##file-info-aux path
                           (if (##eq? chase? (macro-absent-obj))
                               #t
                               chase?))))
@@ -2454,14 +2496,17 @@
 
 (implement-library-type-user-info)
 
-(define-prim (##user-info user)
-  (let ((result (##os-user-info user)))
+(define-prim (##user-info
+              user
+              #!optional
+              (raise-os-exception? #t))
+  (let* ((ui (macro-make-user-info #f #f #f #f #f))
+         (result (##os-user-info ui user)))
     (if (##fixnum? result)
-        (##raise-os-exception #f result user-info user)
-        (begin
-          (##structure-type-set! result (macro-type-user-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        (if raise-os-exception?
+            (##raise-os-exception #f result user-info user)
+            result)
+        result)))
 
 (define-prim (user-info user)
   (macro-force-vars (user)
@@ -2484,13 +2529,11 @@
 (implement-library-type-group-info)
 
 (define-prim (##group-info group)
-  (let ((result (##os-group-info group)))
+  (let* ((gi (macro-make-group-info #f #f #f))
+         (result (##os-group-info gi group)))
     (if (##fixnum? result)
         (##raise-os-exception #f result group-info group)
-        (begin
-          (##structure-type-set! result (macro-type-group-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (group-info group)
   (macro-force-vars (group)
@@ -2754,11 +2797,11 @@
                       relpath
                       instdir-name)))
                   (else
-                   (let ((info (##os-user-info (##substring p 1 t-end))))
+                   (let ((info (##user-info (##substring p 1 t-end) #f)))
                      (prepend-directory
                       (if (##fixnum? info)
                           info
-                          (##vector-ref info 4)) ;; home dir
+                          (macro-user-info-home info))
                       t-end))))
 
             (let* ((vol-end

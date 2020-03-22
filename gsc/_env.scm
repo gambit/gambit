@@ -2,7 +2,7 @@
 
 ;;; File: "_env.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -51,6 +51,11 @@
 
 (define empty-var '())
 
+(define (resize-var-list lst n)
+  (let loop ((lst lst) (n n))
+    (cond ((= n 0) lst)
+          ((< n 0) (loop (cdr lst) (+ n 1)))
+          (else    (loop (cons empty-var lst) (- n 1))))))
 
 ;; structure that represents environments:
 
