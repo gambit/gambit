@@ -31,15 +31,31 @@ case "$1" in
 
   "exe")
 
-    if test "${GAMBUILD_VERBOSE}" != ""; then
-      echo "echo \"#! /usr/bin/env python\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
-      echo "cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} \"${GAMBITDIR_LIB}/_gambit.py\" >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
-      echo "chmod +x \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+    if test "${BUILD_EXE_BASE_LIBRARY_PARAM}" == ""; then
+      BUILD_EXE_BASE_LIB="${GAMBITDIR_LIB}/_gambit.py"
+    else
+      BUILD_EXE_BASE_LIB="${BUILD_EXE_BASE_LIBRARY_PARAM}.py"
     fi
 
-    echo "#! /usr/bin/env python" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
-    cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${GAMBITDIR_LIB}/_gambit.py" >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
-    chmod +x "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+    if test "${GAMBUILD_VERBOSE}" != ""; then
+      case "${BUILD_EXE_OUTPUT_FILENAME_PARAM}" in
+        *.py) echo cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "\"${BUILD_EXE_BASE_LIB}\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+              ;;
+           *) echo "echo \"#! /usr/bin/env python\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+              echo cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "\"${BUILD_EXE_BASE_LIB}\" >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+              echo "chmod +x \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+              ;;
+      esac
+    fi
+
+    case "${BUILD_EXE_OUTPUT_FILENAME_PARAM}" in
+      *.py) cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${BUILD_EXE_BASE_LIB}" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+            ;;
+         *) echo "#! /usr/bin/env python" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+            cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${BUILD_EXE_BASE_LIB}" >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+            chmod +x "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+            ;;
+    esac
     ;;
 
   *)
