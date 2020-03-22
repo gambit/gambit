@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -505,8 +505,9 @@ usage-end
                                  options: opts))
                             (exit-abnormally)))
 
-                      (define (do-build-executable obj-files output-filename)
+                      (define (do-build-executable base obj-files output-filename)
                         (or (##build-executable
+                             base
                              obj-files
                              options
                              output-filename
@@ -719,6 +720,7 @@ usage-end
                                                     (##reverse rev-obj-files)))
 
                                                (do-build-executable
+                                                base
                                                 obj-files
                                                 (let ((expanded-output
                                                        (and output

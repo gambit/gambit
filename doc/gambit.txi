@@ -1683,7 +1683,7 @@ Gambit @value{VERSION}
 @end smallexample
 @end deffn
 
-@deffn procedure compile-file @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{expression:} @var{expression}@r{]} @r{[}@code{cc-options:} @var{cc-options}@r{]} @r{[}@code{ld-options-prelude:} @var{ld-options-prelude}@r{]} @r{[}@code{ld-options:} @var{ld-options}@r{]}
+@deffn procedure compile-file @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{base:} @var{base}@r{]} @r{[}@code{expression:} @var{expression}@r{]} @r{[}@code{cc-options:} @var{cc-options}@r{]} @r{[}@code{ld-options-prelude:} @var{ld-options-prelude}@r{]} @r{[}@code{ld-options:} @var{ld-options}@r{]}
 @pindex gsc
 @findex load
 @cindex object file

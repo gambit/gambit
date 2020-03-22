@@ -47,6 +47,13 @@ if "%1" == "exe" goto exe
 if not "%1" == ""exe"" goto not_exe
 :exe
 
+if not "%BUILD_EXE_BASE_LIBRARY_PARAM%" == "" goto not_exe_base_lib
+set "BUILD_EXE_BASE_LIB=%GAMBITDIR_LIB%\_gambit.java"
+goto exe_base_lib_done
+:not_exe_base_lib
+set "BUILD_EXE_BASE_LIB=%BUILD_EXE_BASE_LIBRARY_PARAM%.java"
+:exe_base_lib_done
+
 if not "%GAMBUILD_VERBOSE%" == "yes" goto not_exe_verbose
 ; TODO
 echo.echo.0^^^<0# : ^^^^^>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
