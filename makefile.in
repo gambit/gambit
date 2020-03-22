@@ -1,6 +1,6 @@
 # makefile for Gambit system.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -315,7 +315,7 @@ release: fake_target
 publish-release: fake_target
 	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
 
-modules:
+modules _gambit.java _gambit.js _gambit.php _gambit.py _gambit.rb _gambit.go:
 	@cd lib && $(MAKE) $(MDEFINES) $@
 
 update-unicode:

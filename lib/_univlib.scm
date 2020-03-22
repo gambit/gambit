@@ -683,19 +683,20 @@ function g_user_info(ui, user) {
       } else {
         throw exn;
       }
-    ui.slots[1] = g_host2scm(pw.name)
-    ui.slots[2] = g_host2scm(pw.uid)
-    ui.slots[3] = g_host2scm(pw.gid)
-    ui.slots[4] = g_host2scm(pw.dir)
-    ui.slots[5] = g_host2scm(pw.shell)
-    return ui
+    }
+    ui.slots[1] = g_host2scm(pw.name);
+    ui.slots[2] = g_host2scm(pw.uid);
+    ui.slots[3] = g_host2scm(pw.gid);
+    ui.slots[4] = g_host2scm(pw.dir);
+    ui.slots[5] = g_host2scm(pw.shell);
+    return ui;
   } else {
-    ui.slots[1] = g_host2scm('user')
-    ui.slots[2] = g_host2scm(111)
-    ui.slots[3] = g_host2scm(222)
-    ui.slots[4] = g_host2scm('/home/user')
-    ui.slots[5] = g_host2scm('/bin/sh')
-    return ui
+    ui.slots[1] = g_host2scm('user');
+    ui.slots[2] = g_host2scm(111);
+    ui.slots[3] = g_host2scm(222);
+    ui.slots[4] = g_host2scm('/home/user');
+    ui.slots[5] = g_host2scm('/bin/sh');
+    return ui;
   }
 }
 
@@ -710,15 +711,16 @@ function g_group_info(gi, group) {
       } else {
         throw exn;
       }
-    gi.slots[1] = g_host2scm(gr.name)
-    gi.slots[2] = g_host2scm(gr.gid)
-    gi.slots[3] = g_host2scm(gr.members)
-    return gi
+    }
+    gi.slots[1] = g_host2scm(gr.name);
+    gi.slots[2] = g_host2scm(gr.gid);
+    gi.slots[3] = g_host2scm(gr.members);
+    return gi;
   } else {
-    gi.slots[1] = g_host2scm('group')
-    gi.slots[2] = g_host2scm(222)
-    gi.slots[3] = g_host2scm([])
-    return gi
+    gi.slots[1] = g_host2scm('group');
+    gi.slots[2] = g_host2scm(222);
+    gi.slots[3] = g_host2scm([]);
+    return gi;
   }
 }
 

@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -43,6 +43,7 @@ install_gambit()
   make clean
   make -j
   make modules
+  make _gambit.js _gambit.py
   make install
 
   if [ "$RUN_TESTS" == "0" ] ; then
