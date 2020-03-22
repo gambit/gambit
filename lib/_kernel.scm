@@ -1231,6 +1231,8 @@ end-of-code
    (let () (##declare (not warnings)) (0))) ; create a return point
 )
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##dynamic-env-bind denv thunk)
@@ -1254,8 +1256,6 @@ end-of-code
           (macro-thread-denv-cache2-set! current-thread x)
           (macro-thread-denv-cache3-set! current-thread x)
           results)))))
-
-))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1325,9 +1325,6 @@ end-of-code
 end-of-code
 ))
 
-(define ##interrupt-vector
-  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f))
-
 (define-prim (##interrupt-handler)
 
   (##declare (not interrupts-enabled))
@@ -1373,6 +1370,9 @@ end-of-code
                   (loop))
                 (handler)))))))
 
+(define ##interrupt-vector
+  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f))
+
 (define-prim (##interrupt-vector-set! code handler)
   (##declare (not interrupts-enabled))
   (##vector-set! ##interrupt-vector code handler))
@@ -1388,7 +1388,7 @@ end-of-code
 ;; is used.  The procedure (##get-heartbeat-interval! u64vect i) is
 ;; used to retrieve the current heartbeat interval.
 
-(define-prim (##get-heartbeat-interval! u64vect i)
+(define-prim (##get-heartbeat-interval! floats i)
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
@@ -1400,7 +1400,7 @@ end-of-code
 
 end-of-code
 
-   u64vect
+   floats
    i))
 
 (define-prim (##set-heartbeat-interval! seconds)
@@ -4843,12 +4843,14 @@ end-of-code
 
 (define-prim ##os-file-info
   (c-lambda (scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_file_info"))
 
 (define-prim ##os-user-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_user_info"))
 
@@ -4858,7 +4860,8 @@ end-of-code
    "___os_user_name"))
 
 (define-prim ##os-group-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_group_info"))
 
@@ -4873,7 +4876,8 @@ end-of-code
    "___os_address_infos"))
 
 (define-prim ##os-host-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_host_info"))
 
@@ -4884,17 +4888,20 @@ end-of-code
 
 (define-prim ##os-service-info
   (c-lambda (scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_service_info"))
 
 (define-prim ##os-protocol-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_protocol_info"))
 
 (define-prim ##os-network-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_network_info"))
 
@@ -4976,17 +4983,6 @@ end-of-code
 
 ;;; Program startup and exit.
 
-(define ##exit-jobs (##make-jobs))
-
-;;; (##add-exit-job! thunk) can be called to add a job to
-;;; do when the program exits.  (##clear-exit-jobs!) clears the jobs.
-
-(define-prim (##add-exit-job! thunk)
-  (##add-job! ##exit-jobs thunk))
-
-(define-prim (##clear-exit-jobs!)
-  (##clear-jobs! ##exit-jobs))
-
 (macro-case-target
 
  ((C)
@@ -5000,6 +4996,19 @@ end-of-code
 end-of-code
 
    err-code))
+
+))
+
+(define ##exit-jobs (##make-jobs))
+
+;;; (##add-exit-job! thunk) can be called to add a job to
+;;; do when the program exits.  (##clear-exit-jobs!) clears the jobs.
+
+(define-prim (##add-exit-job! thunk)
+  (##add-job! ##exit-jobs thunk))
+
+(define-prim (##clear-exit-jobs!)
+  (##clear-jobs! ##exit-jobs))
 
 (define ##cleaning-up? #f)
 
@@ -5028,8 +5037,6 @@ end-of-code
   (lambda ()
     (##declare (not interrupts-enabled))
     (##exit-abruptly)))
-
-))
 
 ;;;----------------------------------------------------------------------------
 

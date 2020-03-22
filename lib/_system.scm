@@ -2296,6 +2296,26 @@
 
   (check-test 0))
 
+(define-prim (##make-table
+              #!key
+              (size (macro-absent-obj))
+              (init (macro-absent-obj))
+              (weak-keys (macro-absent-obj))
+              (weak-values (macro-absent-obj))
+              (test (macro-absent-obj))
+              (hash (macro-absent-obj))
+              (min-load (macro-absent-obj))
+              (max-load (macro-absent-obj)))
+  (##make-table-aux
+   size
+   init
+   weak-keys
+   weak-values
+   test
+   hash
+   min-load
+   max-load))
+
 (define-prim (make-table
               #!key
               (size (macro-absent-obj))

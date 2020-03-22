@@ -7200,14 +7200,17 @@
 
 (implement-library-type-host-info)
 
-(define-prim (##host-info host)
-  (let ((result (##os-host-info host)))
+(define-prim (##host-info
+              host
+              #!optional
+              (raise-os-exception? #t))
+  (let* ((hi (macro-make-host-info #f #f #f))
+         (result (##os-host-info hi host)))
     (if (##fixnum? result)
-        (##raise-os-exception #f result host-info host)
-        (begin
-          (##structure-type-set! result (macro-type-host-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        (if raise-os-exception?
+            (##raise-os-exception #f result host-info host)
+            result)
+        result)))
 
 (define-prim (host-info host)
   (macro-force-vars (host)
@@ -7245,24 +7248,24 @@
               service
               #!optional
               (protocol (macro-absent-obj)))
-  (let ((result
-         (##os-service-info
-          service
-          (cond ((##string? protocol)
-                 protocol)
-                ((##fixnum? protocol)
-                 (let ((p (##protocol-info protocol)))
-                   (macro-protocol-info-name p)))
-                ((macro-protocol-info? protocol)
-                 (macro-protocol-info-name protocol))
-                (else
-                 #f)))))
+  (let* ((si
+          (macro-make-service-info #f #f #f #f))
+         (result
+          (##os-service-info
+           si
+           service
+           (cond ((##string? protocol)
+                  protocol)
+                 ((##fixnum? protocol)
+                  (let ((p (##protocol-info protocol)))
+                    (macro-protocol-info-name p)))
+                 ((macro-protocol-info? protocol)
+                  (macro-protocol-info-name protocol))
+                 (else
+                  #f)))))
     (if (##fixnum? result)
         (##raise-os-exception #f result service-info service protocol)
-        (begin
-          (##structure-type-set! result (macro-type-service-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (service-info
               service
@@ -7288,14 +7291,11 @@
 (implement-library-type-protocol-info)
 
 (define-prim (##protocol-info protocol)
-  (let ((result
-         (##os-protocol-info protocol)))
+  (let* ((pi (macro-make-protocol-info #f #f #f))
+         (result (##os-protocol-info pi protocol)))
     (if (##fixnum? result)
         (##raise-os-exception #f result protocol-info protocol)
-        (begin
-          (##structure-type-set! result (macro-type-protocol-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (protocol-info protocol)
   (macro-force-vars (protocol)
@@ -7312,14 +7312,11 @@
 (implement-library-type-network-info)
 
 (define-prim (##network-info network)
-  (let ((result
-         (##os-network-info network)))
+  (let* ((ni (macro-make-network-info #f #f #f))
+         (result (##os-network-info ni network)))
     (if (##fixnum? result)
         (##raise-os-exception #f result network-info network)
-        (begin
-          (##structure-type-set! result (macro-type-network-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (network-info network)
   (macro-force-vars (network)
@@ -7759,7 +7756,7 @@
        (let ((address-or-host
               (macro-psettings-address psettings)))
          (if (##string? address-or-host)
-             (let ((info (##os-host-info address-or-host)))
+             (let ((info (##host-info address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -7773,7 +7770,7 @@
        (let ((local-address-or-host
               (macro-psettings-local-address psettings)))
          (if (##string? local-address-or-host)
-             (let ((info (##os-host-info local-address-or-host)))
+             (let ((info (##host-info local-address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -8329,7 +8326,7 @@
                   (macro-psettings-address psettings) ;; for backward compatibility
                   (macro-psettings-local-address psettings))))
          (if (##string? local-address-or-host)
-             (let ((info (##os-host-info local-address-or-host)))
+             (let ((info (##host-info local-address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings arg2 arg3 arg4)
@@ -8734,7 +8731,7 @@
        (let ((local-address-or-host
               (macro-psettings-local-address psettings)))
          (if (##string? local-address-or-host)
-             (let ((info (##os-host-info local-address-or-host)))
+             (let ((info (##host-info local-address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -8746,7 +8743,7 @@
        (let ((address-or-host
               (macro-psettings-address psettings)))
          (if (##string? address-or-host)
-             (let ((info (##os-host-info address-or-host)))
+             (let ((info (##host-info address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -9134,7 +9131,7 @@
 
       (define (stage1)
         (if (##string? address)
-            (let ((info (##os-host-info address)))
+            (let ((info (##host-info address #f)))
               (if (##fixnum? info)
                   (##raise-os-exception #f info udp-destination-set! address port-number port)
                   (stage2 (##car (macro-host-info-addresses info)))))

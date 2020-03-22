@@ -115,24 +115,36 @@ Module management
     ^ [global options] -uninstall github.com/gambit/hello
     ^ [global options] -update    github.com/gambit/hello
 
-Global options
-    -:opt1,opt2,...  Runtime system options (try '-:help' for details)
-    -f               Do not process '.gambini' initialization files
-    -v               Show version information
-    -h, -help        Show this help
+Global options^R
+    -f         Do not process '.gambini' initialization files
+    -v         Show version information
+    -h, -help  Show this help
 
 usage-end
 )
 
+  (define runtime-options-usage
+    (macro-case-target
+     ((C)
+      "\n    -:opt,...  Runtime system options (try '-:help' for details)")
+     (else
+      "")))
+
   (define (write-usage-to-port usage program-name port)
     (let loop ((i 0) (j 0))
       (if (##fx< j (##string-length usage))
-          (if (##char=? #\^ (##string-ref usage j))
-              (begin
-                (##write-substring usage i j port)
-                (##write-string program-name port)
-                (loop (##fx+ j 1) (##fx+ j 1)))
-              (loop i (##fx+ j 1)))
+          (let ((j+1 (##fx+ j 1)))
+            (if (##not (##char=? #\^ (##string-ref usage j)))
+                (loop i j+1)
+                (begin
+                  (##write-substring usage i j port)
+                  (case (##string-ref usage j+1)
+                    ((#\R)
+                     (##write-string runtime-options-usage port)
+                     (loop (##fx+ j+1 1) (##fx+ j+1 1)))
+                    (else
+                     (##write-string program-name port)
+                     (loop j+1 j+1))))))
           (##write-substring usage i j port))))
 
   (define (in-homedir filename)

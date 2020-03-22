@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2739,6 +2739,229 @@
           ">"))
         (else
          (object->string val))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define (make-debug-info-state)
+  (vector #f              ;; debug-info?
+          (queue-empty)   ;; first-class-label-queue
+          (queue-empty))) ;; var-descr-queue
+
+(define (debug-info-generate debug-info-state sharing-table)
+
+  (define (number i lst)
+    (if (null? lst)
+      '()
+      (cons (list->vect (cons i (car lst)))
+            (number (+ i 1) (cdr lst)))))
+
+  (debug-info-compact-using-sharing
+   sharing-table
+   (if (vector-ref debug-info-state 0) ;; debug-info?
+       (vector (list->vect
+                (number
+                 0
+                 (queue->list
+                  (vector-ref debug-info-state 1)))) ;; first-class-label-queue
+               (list->vect
+                (queue->list
+                 (vector-ref debug-info-state 2)))) ;; var-descr-queue
+       #f)))
+
+(define (debug-info-compact-using-sharing sharing-table obj)
+
+  (define (compact obj)
+    (if (or (string? obj)
+            (pair? obj)
+            (box-object? obj)
+            (vector-object? obj))
+        (let ((x (table-ref sharing-table obj #f)))
+          (or x
+              (cond ((string? obj)
+                     (table-set! sharing-table obj obj)
+                     obj)
+                    ((pair? obj)
+                     (let ((p (cons #f #f)))
+                       (table-set! sharing-table obj p)
+                       (set-car! p (compact (car obj)))
+                       (set-cdr! p (compact (cdr obj)))
+                       p))
+                    ((box-object? obj)
+                     (let ((b (box-object #f)))
+                       (table-set! sharing-table obj b)
+                       (set-box-object! b (compact (unbox-object obj)))
+                       b))
+                    (else
+                     (let* ((len (vector-length obj))
+                            (v (make-vector len)))
+                       (table-set! sharing-table obj v)
+                       (let loop ((i (- len 1)))
+                         (if (< i 0)
+                             v
+                             (begin
+                               (vector-set! v i (compact (vector-ref obj i)))
+                               (loop (- i 1))))))))))
+        obj))
+
+  (compact obj))
+
+(define (debug-info-add! debug-info-state node slots frame)
+
+  (define first-class-label-queue (vector-ref debug-info-state 1))
+  (define var-descr-queue (vector-ref debug-info-state 2))
+
+  (define (add-var-descr! descr)
+
+    (define (index x lst)
+      (let loop ((lst lst) (i 0))
+        (cond ((not (pair? lst))    #f)
+              ((equal? (car lst) x) i)
+              (else                 (loop (cdr lst) (+ i 1))))))
+
+    (let ((n (index descr (queue->list var-descr-queue))))
+      (if n
+          n
+          (let ((m (length (queue->list var-descr-queue))))
+            (queue-put! var-descr-queue descr)
+            m))))
+
+  (define (encode slot)
+    (let ((v (car slot))
+          (i (cdr slot)))
+      (+ (* i 32768)
+         (if (pair? v)
+           (* (add-var-descr! (map encode v)) 2)
+           (+ (* (add-var-descr! (var-name v)) 2)
+              (if (var-boxed? v) 1 0))))))
+
+  (define (closure-env-slot closure-vars stack-slots)
+    (let loop ((i 1) (lst1 closure-vars) (lst2 '()))
+      (if (null? lst1)
+        lst2
+        (let ((x (car lst1)))
+          (if (not (frame-live? x frame))
+            (loop (+ i 1)
+                  (cdr lst1)
+                  lst2)
+            (let ((y (assq (var-name x) stack-slots)))
+              (if (and y (not (eq? x (cadr y))))
+                (begin
+                  (if (< (var-lexical-level (cadr y))
+                         (var-lexical-level x))
+                      (let ()
+                        (##namespace ("" pp));****************
+                        (pp (list
+                             'closure-vars: (map var-name closure-vars)
+                             'stack-slots: (map car stack-slots)
+                             'source: (source->expression (node-source node))
+                             ))
+                        (compiler-internal-error
+                         "debug-info-add!, variable conflict")))
+                  (loop (+ i 1)
+                        (cdr lst1)
+                        lst2))
+                (loop (+ i 1)
+                      (cdr lst1)
+                      (cons (cons x i) lst2)))))))))
+
+  (define (accessible-slots)
+    (let loop1 ((i 1)
+                (lst1 slots)
+                (lst2 '())
+                (closure-env #f)
+                (closure-env-index #f))
+      (if (pair? lst1)
+        (let* ((var (car lst1))
+               (x (frame-live? var frame)))
+          (cond ((pair? x) ; closure environment?
+                 (if (or (not closure-env) (eq? var closure-env))
+                   (loop1 (+ i 1)
+                          (cdr lst1)
+                          lst2
+                          var
+                          i)
+                   (compiler-internal-error
+                    "debug-info-add!, multiple closure environments")))
+                ((or (not x) (temp-var? x)) ; not live or temporary var
+                 (loop1 (+ i 1)
+                        (cdr lst1)
+                        lst2
+                        closure-env
+                        closure-env-index))
+                (else
+                 (let* ((name (var-name x))
+                        (y (assq name lst2)))
+                   (if (and y (not (eq? x (cadr y))))
+                     (let ((level-x (var-lexical-level x))
+                           (level-y (var-lexical-level (cadr y))))
+                       (cond ((< level-x level-y)
+                              (loop1 (+ i 1)
+                                     (cdr lst1)
+                                     lst2
+                                     closure-env
+                                     closure-env-index))
+                             ((< level-y level-x)
+                              (loop1 (+ i 1)
+                                     (cdr lst1)
+                                     (cons (cons name (cons x i)) (remq y lst2))
+                                     closure-env
+                                     closure-env-index))
+                             (else
+                              ; Two different live variables have the same
+                              ; name and lexical level, both variables will
+                              ; be kept in the debugging information
+                              ; descriptor even though in the actual program
+                              ; only one of the two variables is in scope.
+                              ; "flatten" causes this condition to happen.
+                              ; TODO: take variable scopes into account.
+                              (loop1 (+ i 1)
+                                     (cdr lst1)
+                                     (cons (cons name (cons x i)) lst2)
+                                     closure-env
+                                     closure-env-index))))
+                     (loop1 (+ i 1)
+                            (cdr lst1)
+                            (cons (cons name (cons x i)) lst2)
+                            closure-env
+                            closure-env-index))))))
+        (let* ((x
+                (if closure-env
+                  (closure-env-slot (frame-live? closure-env frame) lst2)
+                  '()))
+               (accessible-stack-slots
+                (map cdr lst2)))
+          (if (null? x)
+            accessible-stack-slots
+            (cons (cons x closure-env-index)
+                  accessible-stack-slots))))))
+
+  (let* ((env
+          (and node (node-env node)))
+         (label-descr
+          (cons (if (and env
+                         (debug? env)
+                         (or (debug-location? env)
+                             (debug-source? env)))
+                    (let ((src (node-source node)))
+                      (vector-set! debug-info-state 0 #t) ;; debug-info? = #t
+                      (if (debug-location? env)
+                          (if (debug-source? env)
+                              src
+                              (source-locat src))
+                          (source->expression src)))
+                    #f)
+                (if (and env
+                         (or (and (debug? env)
+                                  (debug-environments? env))
+                             (environment-map? env)))
+                    (begin
+                      (vector-set! debug-info-state 0 #t) ;; debug-info? = #t
+                      (map encode (accessible-slots)))
+                    '()))))
+
+    (queue-put! first-class-label-queue label-descr)
+
+    label-descr))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
