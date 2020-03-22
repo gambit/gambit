@@ -31,7 +31,7 @@ case "$1" in
 
   "exe")
 
-    if test "${BUILD_EXE_BASE_LIBRARY_PARAM}" == ""; then
+    if test "${BUILD_EXE_BASE_LIBRARY_PARAM}" = ""; then
       BUILD_EXE_BASE_LIB="${GAMBITDIR_LIB}/_gambit.php"
     else
       BUILD_EXE_BASE_LIB="${BUILD_EXE_BASE_LIBRARY_PARAM}.php"
