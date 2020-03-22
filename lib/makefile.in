@@ -1,6 +1,6 @@
 # makefile for Gambit library.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
@@ -452,6 +452,11 @@ install-post: all
 	for file in $(INSTFILES_LIB_DATA); do \
 	  $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
 	done; \
+	for file in $(GAMBIT_LIBS_UNIV); do \
+	  if test -e "$$file"; then \
+	    $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
+	  fi; \
+	done; \
 	for file in $(LIBRARIES); do \
 	  $(INSTALL_LIB) "$$file" "$$t_libdir/$$file"; \
 	  @FIXLIB@ "$$t_libdir/$$file"; \
@@ -463,6 +468,11 @@ install-post: all
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES); do \
 	    (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
+	  done; \
+	  for file in $(GAMBIT_LIBS_UNIV); do \
+	    if test -e "$$file"; then \
+	      (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
+	    fi; \
 	  done; \
 	fi
 
