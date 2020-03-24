@@ -514,17 +514,33 @@
                     (^fixnum-unbox arg1)
                     (^fixnum-unbox arg2)))))))
 
-(univ-define-prim "##fxnot" #f
-  (make-translated-operand-generator
-   (lambda (ctx return arg)
-     (return
-      (^fixnum-box (^bitnot (^fixnum-unbox arg)))))))
-
 (univ-define-prim "##fxand" #f
   (univ-fold-left
    (lambda (ctx)           (^int -1))
    (lambda (ctx arg1)      arg1)
    (lambda (ctx arg1 arg2) (^bitand arg1 arg2))
+   univ-emit-fixnum-unbox
+   univ-emit-fixnum-box))
+
+(univ-define-prim "##fxandc1" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^bitand (^parens (^bitnot (^fixnum-unbox arg1)))
+                            (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##fxandc2" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^bitand (^fixnum-unbox arg1)
+                            (^parens (^bitnot (^fixnum-unbox arg2)))))))))
+
+(univ-define-prim "##fxeqv" #f
+  (univ-fold-left
+   (lambda (ctx)           (^int -1))
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^bitnot (^parens (^bitxor arg1 arg2))))
    univ-emit-fixnum-unbox
    univ-emit-fixnum-box))
 
@@ -535,6 +551,40 @@
    (lambda (ctx arg1 arg2) (^bitior arg1 arg2))
    univ-emit-fixnum-unbox
    univ-emit-fixnum-box))
+
+(univ-define-prim "##fxnand" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^bitnot (^parens (^bitand (^fixnum-unbox arg1)
+                                              (^fixnum-unbox arg2)))))))))
+
+(univ-define-prim "##fxnor" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^bitnot (^parens (^bitior (^fixnum-unbox arg1)
+                                              (^fixnum-unbox arg2)))))))))
+
+(univ-define-prim "##fxnot" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return
+      (^fixnum-box (^bitnot (^fixnum-unbox arg)))))))
+
+(univ-define-prim "##fxorc1" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^bitior (^parens (^bitnot (^fixnum-unbox arg1)))
+                            (^fixnum-unbox arg2)))))))
+
+(univ-define-prim "##fxorc2" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2)
+     (return
+      (^fixnum-box (^bitior (^fixnum-unbox arg1)
+                            (^parens (^bitnot (^fixnum-unbox arg2)))))))))
 
 (univ-define-prim "##fxxor" #f
   (univ-fold-left

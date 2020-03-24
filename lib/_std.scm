@@ -275,7 +275,7 @@
          (result (##make-u8vector len)))
     (if (##fx= len (##fx- end start))
         (let loop1 ((i 0))
-          (if (##fx< i end)
+          (if (##fx< i len)
               (begin
                 (##u8vector-set!
                  result
@@ -414,7 +414,7 @@
          (result (##make-string len)))
     (if (##fx= len (##fx- end start))
         (let loop1 ((i 0))
-          (if (##fx< i end)
+          (if (##fx< i len)
               (begin
                 (##string-set!
                  result

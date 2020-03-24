@@ -102,7 +102,7 @@
     (close-port port)
     (cons status output)))
 
-(define (run-gsi-under-debugger file debug?)
+(define (run-gsi-under-debugger file debug? target)
   (if debug?
 
       (if (equal? (cadr (system-type)) 'apple)
@@ -162,24 +162,29 @@
               (delete-file "dbg-script")
               result)))
 
-      (run "../gsi/gsi" "-:d-,flu,~~=.." "-f" file)))
+      (case target
+        ((C)
+         (run "../gsi/gsi" "-:d-,flu,~~=.." "-f" file))
+        (else
+         (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
+           (run gsi "-f" file))))))
 
 (define (test-using-mode file mode target)
   (case target
     ((C)
      (cond ((member mode '(gsi gsi-dbg))
-            (run-gsi-under-debugger file (eq? mode 'gsi-dbg)))
+            (run-gsi-under-debugger file (eq? mode 'gsi-dbg) target))
            ((member mode '(gsc gsc-dbg))
             (let* ((filename "_test.o1")
                    (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-f" "-o" filename file)))
               (if (= 0 (car result))
-                  (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg))))
+                  (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg) target)))
                     (if cleanup? (delete-file filename))
                     result)
                   result)))))
     (else
      (let* ((filename "_test.bat")
-            (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-o" filename file)))
+            (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
        (if (string? (cdr result))
            (begin
              (print (cdr result))
@@ -301,7 +306,7 @@
         (let ((word (substring (car args) 1 (string-length (car args)))))
           (cond ((equal? word "stress")
                  (set! stress? #t))
-                ((member word '("C" "js" "python" "ruby" "php" "java"))
+                ((member word '("C" "js" "python" "ruby" "php" "go" "java"))
                  (set! targets
                        (cons (string->symbol word)
                              targets)))
