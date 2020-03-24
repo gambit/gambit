@@ -167,7 +167,7 @@ def g_set_process_times(vect):
 (define (##current-vm-resize vm n) #f)
 
 (define (##get-standard-level) 0)
-(define (##set-debug-settings! mask new-settings) #f)
+(define (##set-debug-settings! mask new-settings) 0)
 
 (define (##disable-interrupts!) #f)
 (define (##enable-interrupts!) #f)
@@ -243,6 +243,79 @@ def g_set_process_times(vect):
 (define-prim (##make-subprocedure parent id))
 (define-prim (##subprocedure-parent-info proc))
 (define-prim (##subprocedure-parent-name proc))
+
+;;;----------------------------------------------------------------------------
+
+;;; Continuation objects.
+
+(define-prim (##explode-continuation cont)
+  (##vector (##continuation-frame cont)
+            (##continuation-denv cont)))
+
+(define-prim (##continuation-frame cont))
+
+(define-prim (##continuation-frame-set! cont frame))
+
+(define-prim (##continuation-denv cont))
+
+(define-prim (##continuation-denv-set! cont denv))
+
+(define-prim (##explode-frame frame)
+  (let ((fs (##frame-fs frame)))
+    (let ((v (##make-vector (##fx+ fs 1))))
+      (##vector-set! v 0 (##frame-ret frame))
+      (let loop ((i fs))
+        (if (##fx< 0 i)
+          (begin
+            (if (##frame-slot-live? frame i)
+              (##vector-set!
+               v
+               i
+               (##frame-ref frame i)))
+            (loop (##fx- i 1)))
+          v)))))
+
+(define-prim (##frame-ret frame))
+
+(define-prim (##continuation-ret cont))
+
+(define-prim (##return-fs return))
+
+(define-prim (##frame-fs frame))
+
+(define-prim (##continuation-fs cont))
+
+(define-prim (##frame-link frame))
+
+(define-prim (##continuation-link cont))
+
+(define-prim (##frame-slot-live? frame i))
+
+(define-prim (##continuation-slot-live? cont i))
+
+(define-prim (##frame-ref frame i))
+
+(define-prim (##frame-set! frame i val))
+
+(define-prim (##continuation-ref cont i))
+
+(define-prim (##continuation-set! cont i val))
+
+(define-prim (##make-frame ret))
+
+(define-prim (##make-continuation frame denv))
+
+;;(define-prim (##continuation-copy cont))
+;;(define-prim (##continuation-next! cont))
+
+(define-prim (##continuation-next cont))
+
+(define-prim (##continuation-last cont)
+  (let loop ((cont cont))
+    (let ((next (##continuation-next cont)))
+      (if next
+          (loop next)
+          cont))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1026,13 +1099,13 @@ def g_normalize_dir(path):
         throw Error('process exiting with code=' + code);
       }
      "
-     err-code))
+     (##fx- err-code 1)))
 
    ((python)
-    (##inline-host-statement "exit(@1@)" err-code))
+    (##inline-host-statement "exit(@1@)" (##fx- err-code 1)))
 
    (else
-    (println "unimplemented ##exit-with-err-code-no-cleanup called with code=")
+    (println "unimplemented ##exit-with-err-code-no-cleanup called with err-code=")
     (println err-code))))
 
 (define (##execute-final-wills!)

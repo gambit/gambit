@@ -2294,7 +2294,8 @@
                (ctrlpts (make-stretchable-vector #f))
                (ctrlpts-init (list #f))
                (debug-info-state (make-debug-info-state))
-               (debug-info-init (list #f)))
+               (debug-info-init (list #f))
+               (debug-info-labels-rev '()))
 
           (define (todo-lbl-num! n)
             (queue-put! bb-todo (lbl-num->bb n bbs)))
@@ -2430,24 +2431,25 @@
                   ctrlpt-id
                   (cons jumpable-type lbl-num))
 
-                 (let ((node
-                        (comment-get
-                         (gvm-instr-comment gvm-instr)
-                         'node))
-                       (frame
-                        (gvm-instr-frame gvm-instr)))
-                   (case (label-type gvm-instr)
-                     ((entry)
+                 (case (label-type gvm-instr)
+                   ((entry return)
+                    (let ((node
+                           (comment-get
+                            (gvm-instr-comment gvm-instr)
+                            'node))
+                          (frame
+                           (gvm-instr-frame gvm-instr)))
+
+                      (set! debug-info-labels-rev
+                        (cons ctrlpt-id
+                              debug-info-labels-rev))
+
                       (debug-info-add!
                        debug-info-state
                        node
-                       '()
-                       frame))
-                     ((return)
-                      (debug-info-add!
-                       debug-info-state
-                       node
-                       (reverse (frame-slots frame))
+                       (if (eq? (label-type gvm-instr) 'entry)
+                           '()
+                           (reverse (frame-slots frame)))
                        frame))))
 
                  (univ-jumpable-declaration-defs
@@ -2889,9 +2891,18 @@
                              (^setglo name (^obj-proc-as 'scmobj p))
                              (^)))))))
 
-            (set-car! debug-info-init
-                      (^obj (debug-info-generate debug-info-state
-                                                 sharing-table)))
+            (let ((debug-info
+                   (debug-info-generate debug-info-state
+                                        sharing-table)))
+              (if debug-info
+                  (let loop ((i 0) (lst (reverse debug-info-labels-rev)))
+                    (if (pair? lst)
+                        (begin
+                          (vector-set! (vector-ref (vector-ref debug-info 0) i)
+                                       0
+                                       (car lst))
+                          (loop (+ i 1) (cdr lst))))))
+              (set-car! debug-info-init (^obj debug-info)))
 
             (univ-add-init (univ-add-init bbs-defs init1) init2))))
 

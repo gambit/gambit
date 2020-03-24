@@ -40,7 +40,7 @@ Output mode
 
 Output options
     -o output   Output filename or directory
-    -keep-c     Do not delete intermediate target language source files
+    -keep-temp  Do not delete intermediate target language source files
 
 Scheme compiler and linker options
     -prelude 'expression ...'   Add expressions before the source code
@@ -351,19 +351,18 @@ usage-end
 
                   (let* ((output
                           (let ((x (##assq 'o options)))
-                            (cond ((##not x)
-                                   #f)
-                                  ((and (##not (##memq type '(link exe)))
-                                        (##fx< 1 nb-output-files)
-                                        (let ((outdir (##path-normalize (##cadr x))))
-                                          (##equal?
-                                           outdir
-                                           (##path-strip-trailing-directory-separator
-                                            outdir))))
-                                   (warn-multiple-output-files-and-o-option)
-                                   #f)
-                                  (else
-                                   (##cadr x)))))
+                            (and x
+                                 (let ((output (##path-normalize (##cadr x))))
+                                   (if (and (##not (##memq type '(link exe)))
+                                            (##fx< 1 nb-output-files)
+                                            (##equal?
+                                             output
+                                             (##path-strip-trailing-directory-separator
+                                              output)))
+                                       (begin
+                                         (warn-multiple-output-files-and-o-option)
+                                         #f)
+                                       output)))))
                          (pre
                           (##assq 'prelude options))
                          (post
@@ -458,9 +457,12 @@ usage-end
                                       rev-tmp-files)))
 
                       (define (cleanup)
-                        (##for-each
-                         ##delete-file
-                         (##reverse rev-tmp-files)))
+                        (if (##not (##assq 'keep-temp options))
+                            (##for-each
+                             (lambda (path)
+                               (if (##not (##equal? path output))
+                                   (##delete-file path)))
+                             (##reverse rev-tmp-files))))
 
                       (define (exit-abnormally)
                         (cleanup)
@@ -648,8 +650,7 @@ usage-end
                                                             #f)))
                                                       (add-obj-file obj-file)
                                                       (add-tmp-file obj-file)
-                                                      (if (##not (##assq 'keep-c options))
-                                                          (add-tmp-file gen-file)))))))
+                                                      (add-tmp-file gen-file))))))
                                            (loop2 rest))))))
 
                             (let* ((flat?
@@ -722,8 +723,7 @@ usage-end
                                                              #f)))
                                                        (add-obj-file-at-head obj-link-file)
                                                        (add-tmp-file obj-link-file)
-                                                       (if (##not (##assq 'keep-c options))
-                                                           (add-tmp-file link-file))))))))
+                                                       (add-tmp-file link-file)))))))
 
 
                                     (if exe?
@@ -963,7 +963,7 @@ usage-end
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (warnings) (verbose) (report)
-                           (expansion) (gvm) (cfg) (dg) (asm) (keep-c)
+                           (expansion) (gvm) (cfg) (dg) (asm) (keep-temp)
 ;;TODO: enable and document when compiler supports these options
 ;;                           (type-checking) (no-type-checking)
 ;;                           (auto-forcing) (no-auto-forcing)

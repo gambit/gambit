@@ -806,7 +806,7 @@ Synopsis:
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]} @r{[}-dg@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
     @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
-    @r{[}-o @r{@var{output}}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @r{@var{base}}@r{]}
+    @r{[}-o @r{@var{output}}@r{]} @r{[}-c@r{]} @r{[}-keep-temp@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @r{@var{base}}@r{]}
     @r{[}-module-ref @r{@var{module-ref}}@r{]} @r{[}-linker-name @r{@var{linker-name}}@r{]}
     @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}@r{@var{file}}@r{]}@r{]}@dots{}
 @end example
@@ -939,8 +939,8 @@ files (this is the default).
 Compile Scheme source files into an executable program.
 @item -obj
 Compile Scheme source files to object files.
-@item -keep-c
-Keep any intermediate @samp{.c} files that are generated.
+@item -keep-temp
+Keep any intermediate files that are generated.
 @item -c
 Compile Scheme source files to C without generating link file.
 @item -link
@@ -1121,7 +1121,7 @@ written.
 @opindex -exe
 @opindex -obj
 @opindex -link
-@opindex -keep-c
+@opindex -keep-temp
 @flindex @var{last}_.c
 If the @samp{-link} or @samp{-exe} options appear on the command line,
 the Gambit linker is invoked to generate the link file from the set of
@@ -1138,8 +1138,8 @@ files (@samp{.o} or @samp{.obj} extensions).  If neither the
 @samp{-link}, @samp{-c}, @samp{-exe}, @samp{-obj} options appear on
 the command line, the Scheme source files are compiled to dynamically
 loadable object files (@samp{.o@var{n}} extension).  The
-@samp{-keep-c} option will prevent the deletion of any intermediate
-@samp{.c} file that is generated.  Note that in this case the
+@samp{-keep-temp} option will prevent the deletion of any intermediate
+files that are generated.  Note that in this case the
 intermediate @samp{.c} file will be generated in the same directory as
 the Scheme source file even if the @samp{-o} option is used.
 
