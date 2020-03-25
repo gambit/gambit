@@ -1015,31 +1015,34 @@ g_executable_path = os.path.abspath(__file__)
   (##inline-host-declaration "
 
 function g_normalize_dir(path) {
-  var old = process.cwd();
-  var dir;
-  if (path === false) {
-    dir = old;
-  } else {
-    try {
-      process.chdir(path);
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
-      } else {
-        throw exn;
+  if ((function () { return this !== this.window; })()) { // nodejs?
+    var old = process.cwd();
+    var dir;
+    if (path === false) {
+      dir = old;
+    } else {
+      try {
+        process.chdir(path);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return g_host2scm(g_os_encode_error(exn));
+        } else {
+          throw exn;
+        }
       }
+      dir = process.cwd();
+      process.chdir(old);
     }
-    dir = process.cwd();
-    process.chdir(old);
-  }
-  if (dir[dir.length-1] === '/' || dir[dir.length-1] === '\\\\') {
-    return g_host2scm(dir);
-  } else if (dir[0] === '/') {
-    return g_host2scm(dir + '/')
+    if (dir[dir.length-1] === '/' || dir[dir.length-1] === '\\\\') {
+      return g_host2scm(dir);
+    } else if (dir[0] === '/') {
+      return g_host2scm(dir + '/')
+    } else {
+      return g_host2scm(dir + '\\\\')
+    }
   } else {
-    return g_host2scm(dir + '\\\\')
+    return '/';
   }
-  return '/';
 }
 
 "))
