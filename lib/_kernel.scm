@@ -1375,7 +1375,8 @@ end-of-code
 
 (define-prim (##interrupt-vector-set! code handler)
   (##declare (not interrupts-enabled))
-  (##vector-set! ##interrupt-vector code handler))
+  (##vector-set! ##interrupt-vector code handler)
+  (##void))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2020,7 +2021,16 @@ end-of-code
   (##gc-finalize!)
   (##execute-jobs! ##gc-interrupt-jobs))
 
-(##interrupt-vector-set! 4 ##handle-gc-interrupt!) ;; ___INTR_GC
+(define-prim (##intr-gc-handler-set! handler)
+  (##interrupt-vector-set! 4 handler)) ;; ___INTR_GC
+
+(define ##feature-intr-gc
+  (##intr-gc-handler-set! ##handle-gc-interrupt!))
+
+(macro-case-target
+ ((C)
+  ##feature-intr-gc)
+ (else))
 
 ;;;----------------------------------------------------------------------------
 
@@ -5033,10 +5043,16 @@ end-of-code
 (define-prim (##exit-with-exception exc)
   (##exit (macro-EXIT-CODE-SOFTWARE)))
 
-(##interrupt-vector-set! 1 ;; ___INTR_TERMINATE
-  (lambda ()
-    (##declare (not interrupts-enabled))
-    (##exit-abruptly)))
+(define-prim (##intr-terminate-handler-set! handler)
+  (##interrupt-vector-set! 1 handler)) ;; ___INTR_TERMINATE
+
+(define ##feature-intr-terminate
+  (##intr-terminate-handler-set! ##exit-abruptly))
+
+(macro-case-target
+ ((C)
+  ##feature-intr-terminate)
+ (else))
 
 ;;;----------------------------------------------------------------------------
 

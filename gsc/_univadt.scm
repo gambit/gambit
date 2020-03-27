@@ -694,6 +694,9 @@
 (define-macro (^float-atanh val)
   `(univ-emit-float-atanh ctx ,val))
 
+(define-macro (^float-hypot val1 val2)
+  `(univ-emit-float-hypot ctx ,val1 ,val2))
+
 (define-macro (^float-expt val1 val2)
   `(univ-emit-float-expt ctx ,val1 ,val2))
 

@@ -572,8 +572,18 @@
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (univ-object-type targ obj)
-  ;;(pretty-print (list 'univ-object-type 'targ obj))
-  'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
+  (cond ((number? obj)
+         (if (and (integer? obj)
+                  (exact? obj))
+             (let ()
+               (declare (generic))
+               (if (and (>= obj -536870912)
+                        (<= obj 536870911))
+                   'fixnum
+                   'bignum))
+             'other))
+        (else
+         'other)))
 
 ;;;----------------------------------------------------------------------------
 

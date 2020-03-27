@@ -797,10 +797,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-(macro-case-target
-
- ((C)
-
 (define-prim (##symbol-hash sym))
 
 (define-prim (symbol-hash sym)
@@ -814,6 +810,51 @@
   (macro-force-vars (key)
     (macro-check-keyword key 1 (keyword-hash key)
       (##keyword-hash key))))
+
+(define-prim (##string=?-hash str)
+
+  ;; for all str2 we must have that (##string=? str str2) implies that
+  ;; (= (##string=?-hash str) (##string=?-hash str2))
+
+  ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
+
+  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
+             (i 0))
+    (if (##fx< i (##string-length str))
+        (loop (macro-hash-combine
+               h
+               (##char->integer (##string-ref str i)))
+              (##fx+ i 1))
+        h)))
+
+(define-prim (string=?-hash str)
+  (macro-force-vars (str)
+    (macro-check-string str 1 (string=?-hash str)
+      (##string=?-hash str))))
+
+(define-prim (##string-ci=?-hash str)
+
+  ;; for all str2 we must have that (##string-ci=? str str2) implies that
+  ;; (= (##string-ci=?-hash str) (##string-ci=?-hash str2))
+
+  ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
+
+  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
+             (i 0))
+    (if (##fx< i (##string-length str))
+        (loop (macro-hash-combine
+               h
+               (##char->integer (##char-downcase (##string-ref str i))))
+              (##fx+ i 1))
+        h)))
+
+(define-prim (string-ci=?-hash str)
+  (macro-force-vars (str)
+    (macro-check-string str 1 (string-ci=?-hash str)
+      (##string-ci=?-hash str))))
+
+(define-prim (##generic-hash obj)
+  0)
 
 (define-prim (##eq?-hash obj)
 
@@ -885,6 +926,10 @@
 (define-prim (eqv?-hash obj)
   (macro-force-vars (obj)
     (##eqv?-hash obj)))
+
+(macro-case-target
+
+ ((C)
 
 (define-prim (##equal?-hash obj)
 
@@ -1100,51 +1145,6 @@
 (define-prim (equal?-hash obj)
   (macro-force-vars (obj)
     (##equal?-hash obj)))
-
-(define-prim (##string=?-hash str)
-
-  ;; for all str2 we must have that (##string=? str str2) implies that
-  ;; (= (##string=?-hash str) (##string=?-hash str2))
-
-  ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
-
-  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
-             (i 0))
-    (if (##fx< i (##string-length str))
-        (loop (macro-hash-combine
-               h
-               (##char->integer (##string-ref str i)))
-              (##fx+ i 1))
-        h)))
-
-(define-prim (string=?-hash str)
-  (macro-force-vars (str)
-    (macro-check-string str 1 (string=?-hash str)
-      (##string=?-hash str))))
-
-(define-prim (##string-ci=?-hash str)
-
-  ;; for all str2 we must have that (##string-ci=? str str2) implies that
-  ;; (= (##string-ci=?-hash str) (##string-ci=?-hash str2))
-
-  ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
-
-  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
-             (i 0))
-    (if (##fx< i (##string-length str))
-        (loop (macro-hash-combine
-               h
-               (##char->integer (##char-downcase (##string-ref str i))))
-              (##fx+ i 1))
-        h)))
-
-(define-prim (string-ci=?-hash str)
-  (macro-force-vars (str)
-    (macro-check-string str 1 (string-ci=?-hash str)
-      (##string-ci=?-hash str))))
-
-(define-prim (##generic-hash obj)
-  0)
 
 ))
 

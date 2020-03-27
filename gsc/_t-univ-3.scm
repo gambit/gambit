@@ -2543,7 +2543,15 @@
 (define (univ-emit-float-truncate ctx expr)
   (case (target-name (ctx-target ctx))
 
-    ((js php java python)
+    ((js)
+     (univ-ident-when-special-float
+      ctx
+      expr
+      (^parens
+       (^+ (^float-math 'trunc expr)
+           (^float targ-inexact-+0))))) ;; avoid negative zero
+
+    ((php java python)
      (univ-ident-when-special-float
       ctx
       expr
@@ -2856,6 +2864,9 @@ Ruby:
 
     (else
      (^call-prim (^rts-method-use 'atanh) expr))))
+
+(define (univ-emit-float-hypot ctx expr1 expr2)
+  (^float-math 'hypot expr1 expr2))
 
 (define (univ-emit-float-expt ctx expr1 expr2)
   (case (target-name (ctx-target ctx))

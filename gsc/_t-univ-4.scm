@@ -1068,7 +1068,9 @@
      (return
       (^flonum-box
        (if arg2
-           (^float targ-inexact-+0) ;; TODO: implement 2 argument fllog
+           (univ-ieee/ ctx
+                       (^float-log (^flonum-unbox arg1))
+                       (^float-log (^flonum-unbox arg2)))
            (^float-log (^flonum-unbox arg1))))))))
 
 (univ-define-prim "##flsin" #f
@@ -1138,7 +1140,8 @@
 (univ-define-prim "##flhypot" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
-     (return (^flonum-box (^float targ-inexact-+0)))))) ;; TODO: implement flhypot
+     (return (^flonum-box (^float-hypot (^flonum-unbox arg1)
+                                        (^flonum-unbox arg2)))))))
 
 (univ-define-prim "##flexpt" #f
   (make-translated-operand-generator
@@ -3386,20 +3389,55 @@
 (univ-define-prim "##bignum.adigit-bitwise-andc1!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     ;; TODO: implement
-     (return arg1))))
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitand
+                          (^parens
+                           (^bitand (^parens
+                                     (^bitnot
+                                      (^array-index (^bignum-digits arg1)
+                                                    (^fixnum-unbox arg2))))
+                                    (^array-index (^bignum-digits arg3)
+                                                  (^fixnum-unbox arg4))))
+                          (^int univ-mdigit-base-minus-1))))
+
+        (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-andc2!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     ;; TODO: implement
-     (return arg1))))
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitand
+                          (^parens
+                           (^bitand (^array-index (^bignum-digits arg1)
+                                                  (^fixnum-unbox arg2))
+                                    (^parens
+                                     (^bitnot
+                                      (^array-index (^bignum-digits arg3)
+                                                    (^fixnum-unbox arg4))))))
+                          (^int univ-mdigit-base-minus-1))))
+        (return arg1)))))
+
 
 (univ-define-prim "##bignum.adigit-bitwise-eqv!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     ;; TODO: implement
-     (return arg1))))
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitand
+                          (^parens
+                           (^bitnot
+                            (^parens
+                             (^bitxor (^array-index (^bignum-digits arg1)
+                                                    (^fixnum-unbox arg2))
+                                      (^array-index (^bignum-digits arg3)
+                                                    (^fixnum-unbox arg4))))))
+                          (^int univ-mdigit-base-minus-1))))
+        (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-ior!" #f
   (make-translated-operand-generator
@@ -3416,14 +3454,36 @@
 (univ-define-prim "##bignum.adigit-bitwise-nand!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     ;; TODO: implement
-     (return arg1))))
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitand
+                          (^parens
+                           (^bitnot
+                            (^parens
+                             (^bitand (^array-index (^bignum-digits arg1)
+                                                    (^fixnum-unbox arg2))
+                                      (^array-index (^bignum-digits arg3)
+                                                    (^fixnum-unbox arg4))))))
+                          (^int univ-mdigit-base-minus-1))))
+        (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-nor!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     ;; TODO: implement
-     (return arg1))))
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitand
+                          (^parens
+                           (^bitnot
+                            (^parens
+                             (^bitior (^array-index (^bignum-digits arg1)
+                                                    (^fixnum-unbox arg2))
+                                      (^array-index (^bignum-digits arg3)
+                                                    (^fixnum-unbox arg4))))))
+                          (^int univ-mdigit-base-minus-1))))
+        (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-not!" #f
   (make-translated-operand-generator
@@ -3431,21 +3491,44 @@
      (^ (^assign (^array-index (^bignum-digits arg1)
                                (^fixnum-unbox arg2))
                  (^cast* 'bigdigit
-                         (^bitnot (^array-index (^bignum-digits arg1)
-                                                (^fixnum-unbox arg2)))))
+                         (^bitxor (^array-index (^bignum-digits arg1)
+                                                (^fixnum-unbox arg2))
+                                  (^int univ-mdigit-base-minus-1))))
         (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-orc1!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     ;; TODO: implement
-     (return arg1))))
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitand
+                          (^parens
+                           (^bitior (^parens
+                                     (^bitnot
+                                      (^array-index (^bignum-digits arg1)
+                                                    (^fixnum-unbox arg2))))
+                                    (^array-index (^bignum-digits arg3)
+                                                  (^fixnum-unbox arg4))))
+                          (^int univ-mdigit-base-minus-1))))
+        (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-orc2!" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2 arg3 arg4)
-     ;; TODO: implement
-     (return arg1))))
+     (^ (^assign (^array-index (^bignum-digits arg1)
+                               (^fixnum-unbox arg2))
+                 (^cast* 'bigdigit
+                         (^bitand
+                          (^parens
+                           (^bitior (^array-index (^bignum-digits arg1)
+                                                  (^fixnum-unbox arg2))
+                                    (^parens
+                                     (^bitnot
+                                      (^array-index (^bignum-digits arg3)
+                                                    (^fixnum-unbox arg4))))))
+                          (^int univ-mdigit-base-minus-1))))
+        (return arg1)))))
 
 (univ-define-prim "##bignum.adigit-bitwise-xor!" #f
   (make-translated-operand-generator
