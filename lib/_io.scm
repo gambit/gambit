@@ -10383,26 +10383,6 @@
      (macro-check-readtable val 1 (##make-readtable-parameter val)
        val))))
 
-(define main ;; predefine main procedure so scripts don't have to
-  (##first-argument
-   (lambda args 0)))
-
-(define-prim (##start-main language)
-
-  (define (call-main args)
-    (##apply-with-procedure-check main args))
-
-  (cond ((macro-language-srfi-22? language)
-         (lambda ()
-           (let ((status (call-main (##list (##cdr ##processed-command-line)))))
-             (if (##fixnum? status)
-                 (##exit status)
-                 (##exit-abruptly)))))
-        (else
-         (lambda ()
-           (call-main (##cdr ##processed-command-line))
-           (##exit)))))
-
 (##define-macro (macro-ctrl-char? c)
   `(or (##char<? ,c #\space) (##char=? ,c #\delete)))
 
@@ -15333,22 +15313,47 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define ##main-readtable (##make-standard-readtable))
+(define ##main-readtable
+  (let ((rt (##make-standard-readtable)))
+
+    (macro-case-target
+
+     ((C)
+      ;; Setup readtable according to program's script line.
+      (let* ((program-script-line
+              (##vector-ref ##program-descr 2))
+             (language-and-tail
+              (##extract-language-and-tail program-script-line)))
+        (if language-and-tail
+            (let ((language (##car language-and-tail)))
+              (##readtable-setup-for-language! rt language)
+              (##main-set! (##start-main language))))))
+
+     (else))
+
+    rt))
 
 (define-prim (##main-readtable-set! x)
   (set! ##main-readtable-set! x))
 
-;;;----------------------------------------------------------------------------
+(define main ;; predefine main procedure so scripts don't have to
+  (##first-argument
+   (lambda args 0)))
 
-;;; Setup readtable according to program's script line.
+(define-prim (##start-main language)
 
-(let* ((program-script-line
-        (##vector-ref ##program-descr 2))
-       (language-and-tail
-        (##extract-language-and-tail program-script-line)))
-  (if language-and-tail
-      (let ((language (##car language-and-tail)))
-        (##readtable-setup-for-language! ##main-readtable language)
-        (##main-set! (##start-main language)))))
+  (define (call-main args)
+    (##apply-with-procedure-check main args))
+
+  (cond ((macro-language-srfi-22? language)
+         (lambda ()
+           (let ((status (call-main (##list (##cdr ##processed-command-line)))))
+             (if (##fixnum? status)
+                 (##exit status)
+                 (##exit-abruptly)))))
+        (else
+         (lambda ()
+           (call-main (##cdr ##processed-command-line))
+           (##exit)))))
 
 ;;;============================================================================

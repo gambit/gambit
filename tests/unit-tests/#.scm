@@ -16,8 +16,10 @@
         (lambda rest
           (if (pair? rest)
               (##exit-old (car rest))
-              (##exit-with-err-code-no-cleanup
-               (if ##failed-check? 2 1))))))
+              (begin
+                (##exit-cleanup)
+                (##exit-with-err-code-no-cleanup
+                 (if ##failed-check? 2 1)))))))
 
 (define ##failed-check-absent '$$fake-absent-object$$)
 

@@ -2464,7 +2464,7 @@
          (gen-uniform-type-checks source env
            vars
            (lambda (var)
-             (gen-call-prim-vars source env check-prim (list var)))
+             (gen-call-prim-vars-notsafe source env check-prim (list var)))
            tail)))
     (if (or type-checks
             check-run-time-binding)
@@ -2495,7 +2495,7 @@
      check-prim
      #f
      (lambda ()
-       (gen-call-prim-vars source env prim vars))
+       (gen-call-prim-vars-notsafe source env prim vars))
      fail)))
 
 (define (gen-validating-case check-prim gen)
@@ -2577,11 +2577,11 @@
         (define (gen-tst-pair pattern var body check)
           (new-tst source env
             (let ((x (and check (check)))
-                  (y (gen-call-prim-vars source env **pair?-sym (list var))))
+                  (y (gen-call-prim-vars-notsafe source env **pair?-sym (list var))))
               (if x
                 (new-conj source env x y)
                 y))
-            (gen-call-prim-vars source env (op-prim pattern) (list var))
+            (gen-call-prim-vars-notsafe source env (op-prim pattern) (list var))
             body))
 
         (define (gen-c...r pattern var)
@@ -2647,7 +2647,7 @@
           (gen-prc source env
             vars
             (let ((type-check
-                   (gen-call-prim-vars source env
+                   (gen-call-prim-vars-notsafe source env
                      **pair?-sym
                      (list (car vars)))))
               (new-tst source env
@@ -2657,10 +2657,10 @@
                       (check-run-time-binding)
                       type-check)
                     type-check)
-                  (gen-call-prim-vars source env
+                  (gen-call-prim-vars-notsafe source env
                     **mutable?-sym
                     (list (car vars))))
-                (gen-call-prim-vars source env
+                (gen-call-prim-vars-notsafe source env
                   (op-prim pattern)
                   vars)
                 (generate-call vars
@@ -2716,7 +2716,7 @@
                     #f
                     #f
                     (new-tst source env
-                      (gen-call-prim-vars source env
+                      (gen-call-prim-vars-notsafe source env
                         **pair?-sym
                         (list lst1-var))
                       (new-call source env2
@@ -2732,13 +2732,13 @@
 
                               (define (gen-test)
                                 (new-tst source env
-                                  (gen-call-prim source env
+                                  (gen-call-prim-notsafe source env
                                     (if (eq? prim 'assq)
                                         **eq?-sym
                                         **eqv?-sym)
                                     (list (new-ref source env
                                             obj-var)
-                                          (gen-call-prim-vars source env
+                                          (gen-call-prim-vars-notsafe source env
                                             **car-sym
                                             (list x-var))))
                                   (new-ref source env
@@ -2746,13 +2746,13 @@
                                   (new-call source env2
                                     (new-ref source env
                                       loop-var)
-                                    (list (gen-call-prim-vars source env
+                                    (list (gen-call-prim-vars-notsafe source env
                                             **cdr-sym
                                             (list lst1-var))))))
 
                               (if (and (not unsafe?) (safe? env))
                                 (new-tst source env
-                                  (gen-call-prim-vars source env
+                                  (gen-call-prim-vars-notsafe source env
                                     **pair?-sym
                                     (list x-var))
                                   (gen-test)
@@ -2760,7 +2760,7 @@
                                                  (not check-run-time-binding)))
                                 (gen-test)))
                             (new-tst source env
-                              (gen-call-prim source env
+                              (gen-call-prim-notsafe source env
                                 (if (eq? prim 'memq)
                                     **eq?-sym
                                     **eqv?-sym)
@@ -2773,15 +2773,15 @@
                               (new-call source env2
                                 (new-ref source env
                                   loop-var)
-                                (list (gen-call-prim-vars source env
+                                (list (gen-call-prim-vars-notsafe source env
                                         **cdr-sym
                                         (list lst1-var)))))))
-                        (list (gen-call-prim-vars source env
+                        (list (gen-call-prim-vars-notsafe source env
                                 **car-sym
                                 (list lst1-var))))
                       (if (and (not unsafe?) (safe? env))
                         (new-tst source env
-                          (gen-call-prim-vars source env
+                          (gen-call-prim-vars-notsafe source env
                             **null?-sym
                             (list lst1-var))
                           (new-cst source env
@@ -2816,17 +2816,17 @@
              (lst-vars
               (cdr vars)))
 
-        (define (gen-conj-call-prim-vars source env prim vars)
+        (define (gen-conj-call-prim-vars-notsafe source env prim vars)
           (if (pair? vars)
               (let ((code
-                     (gen-call-prim-vars source env
+                     (gen-call-prim-vars-notsafe source env
                        prim
                        (list (car vars)))))
                 (if (null? (cdr vars))
                     code
                     (new-conj source env
                       code
-                      (gen-conj-call-prim-vars source env prim (cdr vars)))))
+                      (gen-conj-call-prim-vars-notsafe source env prim (cdr vars)))))
               (new-cst source env
                 #t)))
 
@@ -2860,7 +2860,7 @@
                       #f
                       #f
                       (new-tst source env
-                        (gen-conj-call-prim-vars source env
+                        (gen-conj-call-prim-vars-notsafe source env
                           **pair?-sym
                           lst2-vars
 ;;                          (if (and (not unsafe?) (safe? env)) ;; in case lists are truncated by other threads
@@ -2880,12 +2880,12 @@
                                      (new-ref source env
                                        loop2-var)
                                      (map (lambda (var)
-                                            (gen-call-prim-vars source env
+                                            (gen-call-prim-vars-notsafe source env
                                               **cdr-sym
                                               (list var)))
                                           lst2-vars))))
                               (if (eq? prim 'map)
-                                (gen-call-prim source env
+                                (gen-call-prim-notsafe source env
                                   **cons-sym
                                   (list (new-ref source env
                                           x-var)
@@ -2895,7 +2895,7 @@
                                   (new-ref source env
                                     f-var)
                                   (map (lambda (var)
-                                            (gen-call-prim-vars source env
+                                            (gen-call-prim-vars-notsafe source env
                                               **car-sym
                                               (list var)))
                                           lst2-vars))))
@@ -2932,19 +2932,19 @@
                       #f
                       #f
                       (new-tst source env
-                        (gen-conj-call-prim-vars source env
+                        (gen-conj-call-prim-vars-notsafe source env
                           **pair?-sym
                           lst1-vars)
                         (new-call source env
                           (new-ref source env
                             loop1-var)
                           (map (lambda (var)
-                                 (gen-call-prim-vars source env
+                                 (gen-call-prim-vars-notsafe source env
                                    **cdr-sym
                                    (list var)))
                                lst1-vars))
                         (new-tst source env
-                          (gen-conj-call-prim-vars source env
+                          (gen-conj-call-prim-vars-notsafe source env
                             **null?-sym
                             lst1-vars)
                           (gen-main-loop)
@@ -2959,7 +2959,7 @@
                         (and (not (or (prc? f-arg)
                                       (and (cst? f-arg)
                                            (proc-obj? (cst-val f-arg)))))
-                             (gen-call-prim-vars source env
+                             (gen-call-prim-vars-notsafe source env
                                **procedure?-sym
                                (list f-var)))))))
             (if (or check-run-time-binding
@@ -3169,9 +3169,9 @@
        vars
        check-run-time-binding
        **fixnum?-sym
-       (gen-call-prim source env
+       (gen-call-prim-notsafe source env
          **not-sym
-         (list (gen-call-prim source env
+         (list (gen-call-prim-notsafe source env
                  **eqv?-sym
                  (list (new-ref source env
                          (cadr vars))
@@ -3198,14 +3198,14 @@
        check-run-time-binding
        **flonum?-sym
        (new-disj source env
-         (gen-call-prim-vars source env
+         (gen-call-prim-vars-notsafe source env
            **flnan?-sym
            vars)
-         (gen-call-prim source env
+         (gen-call-prim-notsafe source env
            **not-sym
-           (list (gen-call-prim source env
+           (list (gen-call-prim-notsafe source env
                    **flnegative?-sym
-                   (list (gen-call-prim source env
+                   (list (gen-call-prim-notsafe source env
                            **flcopysign-sym
                            (list (new-cst source env
                                    (macro-inexact-+1))
@@ -3229,12 +3229,12 @@
        check-run-time-binding
        **flonum?-sym
        (new-disj source env
-         (gen-call-prim source env
+         (gen-call-prim-notsafe source env
            **not-sym
-           (list (gen-call-prim-vars source env
+           (list (gen-call-prim-vars-notsafe source env
                    **flnegative?-sym
                    (list (car vars)))))
-         (gen-call-prim-vars source env
+         (gen-call-prim-vars-notsafe source env
            **flinteger?-sym
            (list (cadr vars))))
        (lambda ()
@@ -3254,9 +3254,9 @@
        vars
        check-run-time-binding
        **flonum?-sym
-       (gen-call-prim source env
+       (gen-call-prim-notsafe source env
          **not-sym
-         (list (gen-call-prim-vars source env
+         (list (gen-call-prim-vars-notsafe source env
                  **flnegative?-sym
                  vars)))
        (lambda ()
@@ -3276,7 +3276,7 @@
        vars
        check-run-time-binding
        **flonum?-sym
-       (gen-call-prim-vars source env
+       (gen-call-prim-vars-notsafe source env
          **flfinite?-sym
          vars)
        (lambda ()
@@ -3298,17 +3298,17 @@
        **flonum?-sym
        (and (= (length vars) 1)
             (new-conj source env
-              (gen-call-prim source env
+              (gen-call-prim-notsafe source env
                 **not-sym
-                (list (gen-call-prim source env
+                (list (gen-call-prim-notsafe source env
                         **fl<-sym
                         (list (new-cst source env
                                 (macro-inexact-+1))
                               (new-ref source env
                                 (car vars))))))
-              (gen-call-prim source env
+              (gen-call-prim-notsafe source env
                 **not-sym
-                (list (gen-call-prim source env
+                (list (gen-call-prim-notsafe source env
                         **fl<-sym
                         (list (new-ref source env
                                 (car vars))
@@ -3331,9 +3331,9 @@
        vars
        check-run-time-binding
        **flonum?-sym
-       (gen-call-prim source env
+       (gen-call-prim-notsafe source env
          **not-sym
-         (list (gen-call-prim source env
+         (list (gen-call-prim-notsafe source env
                  **fl<-sym
                  (list (new-ref source env
                                 (car vars))
@@ -3356,7 +3356,7 @@
        vars
        check-run-time-binding
        **flonum?-sym
-       (gen-call-prim-vars source env
+       (gen-call-prim-vars-notsafe source env
          **flinteger?-sym
          vars)
        (lambda ()
@@ -3447,7 +3447,7 @@
 
   (define (make-prim-generator prim)
     (lambda (source env vars out-of-line)
-      (gen-call-prim-vars source env prim vars)))
+      (gen-call-prim-vars-notsafe source env prim vars)))
 
   (define gen-fixnum-0
     (lambda (source env vars out-of-line)
@@ -3488,7 +3488,7 @@
     (define (fold result vars)
       (if (null? vars)
         result
-        (fold (gen-call-prim source env
+        (fold (gen-call-prim-notsafe source env
                 op-sym
                 (list result
                       (new-ref source env
@@ -3535,7 +3535,7 @@
         vars
         out-of-line
         (lambda (source env var1 var2)
-          (gen-call-prim-vars source env
+          (gen-call-prim-vars-notsafe source env
             conditional-op-sym
             (list var1 var2))))))
 
@@ -3551,7 +3551,7 @@
               (new-ref source env
                 var)
               (out-of-line)))
-          (list (gen-call-prim-vars source env
+          (list (gen-call-prim-vars-notsafe source env
                   conditional-op-sym
                   vars))))))
 
@@ -3631,7 +3631,7 @@
           (new-tst source env
             (gen-disj-multi source env
               (map (lambda (var)
-                     (gen-call-prim source env
+                     (gen-call-prim-notsafe source env
                        **eqv?-sym
                        (list (new-ref source env
                                var)
@@ -3645,16 +3645,16 @@
               out-of-line
               (lambda (source env var1 var2)
                 (new-tst source env
-                  (gen-call-prim source env
+                  (gen-call-prim-notsafe source env
                     **eqv?-sym
                     (list (new-ref source env
                             var2)
                           (new-cst source env
                             -1)))
-                  (gen-call-prim-vars source env
+                  (gen-call-prim-vars-notsafe source env
                     **fx-?-sym
                     (list var1))
-                  (gen-call-prim-vars source env
+                  (gen-call-prim-vars-notsafe source env
                     **fx*?-sym
                     (list var1 var2))))))))))
 
@@ -3675,14 +3675,14 @@
             vars
             out-of-line
             (lambda (source env var1 var2)
-              (gen-call-prim-vars source env
+              (gen-call-prim-vars-notsafe source env
                 **fx-?-sym
                 (list var1 var2))))))))
 
     (define case-fxwrapquotient
       (gen-fixnum-division-case
        (lambda (source env vars out-of-line)
-         (gen-call-prim-vars source env
+         (gen-call-prim-vars-notsafe source env
            **fxwrapquotient-sym
            vars))))
 
@@ -3690,18 +3690,18 @@
       (gen-fixnum-division-case
        (lambda (source env vars out-of-line)
          (new-tst source env
-           (gen-call-prim source env
+           (gen-call-prim-notsafe source env
              **eqv?-sym
              (list (new-ref source env
                      (cadr vars))
                    (new-cst source env
                      -1)))
            (new-disj source env
-             (gen-call-prim-vars source env
+             (gen-call-prim-vars-notsafe source env
                **fx-?-sym
                (list (car vars)))
              (out-of-line))
-           (gen-call-prim-vars source env
+           (gen-call-prim-vars-notsafe source env
              **fxquotient-sym
              vars)))))
 
@@ -3716,7 +3716,7 @@
           (new-tst source env
             (gen-disj-multi source env
               (map (lambda (var)
-                     (gen-call-prim source env
+                     (gen-call-prim-notsafe source env
                        **fx<=-sym
                        (list (new-cst source env
                                -1)
@@ -3744,7 +3744,7 @@
                           #f
                           #f
                           (new-tst source env
-                            (gen-call-prim source env
+                            (gen-call-prim-notsafe source env
                               **fx=-sym
                               (list (new-ref source env
                                       r-var)
@@ -3752,13 +3752,13 @@
                                       0)))
                             (fold-quotient q-var (cdr rest-vars))
                             (out-of-line)))
-                        (list (gen-call-prim source env
+                        (list (gen-call-prim-notsafe source env
                                 **fxquotient-sym
                                 (list (new-ref source env
                                         accu-var)
                                       (new-ref source env
                                         rest-var1)))
-                              (gen-call-prim source env
+                              (gen-call-prim-notsafe source env
                                 **fxremainder-sym
                                 (list (new-ref source env
                                         accu-var)
@@ -4073,30 +4073,30 @@
            (let ((var1 (car vars))
                  (var2 (cadr vars)))
              (new-disj source env
-               (gen-call-prim source env
+               (gen-call-prim-notsafe source env
                  **eq?-sym
                  (list (new-ref source env
                          var1)
                        (new-ref source env
                          var2)))
                (new-conj source env
-                 (gen-call-prim source env
+                 (gen-call-prim-notsafe source env
                    prim
                    (list (new-ref source env
                            var1)))
                  (new-conj source env
-                   (gen-call-prim source env
+                   (gen-call-prim-notsafe source env
                      prim
                      (list (new-ref source env
                              var2)))
                    (new-conj source env
-                     (gen-call-prim source env
+                     (gen-call-prim-notsafe source env
                        **fx=-sym
-                       (list (gen-call-prim source env
+                       (list (gen-call-prim-notsafe source env
                                **subtype-sym
                                (list (new-ref source env
                                        var1)))
-                             (gen-call-prim source env
+                             (gen-call-prim-notsafe source env
                                **subtype-sym
                                (list (new-ref source env
                                        var2)))))
@@ -4116,10 +4116,10 @@
          env
          (lambda ()
            (new-disj source env
-             (gen-call-prim-vars source env **fixnum?-sym vars)
+             (gen-call-prim-vars-notsafe source env **fixnum?-sym vars)
              (new-disj source env
-               (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source env **real?-sym vars))))
+               (gen-call-prim-vars-notsafe source env **flonum?-sym vars)
+               (gen-call-prim-vars-notsafe source env **real?-sym vars))))
          fail)))
 
     (define case-rational?
@@ -4135,11 +4135,11 @@
          env
          (lambda ()
            (new-disj source env
-             (gen-call-prim-vars source env **fixnum?-sym vars)
+             (gen-call-prim-vars-notsafe source env **fixnum?-sym vars)
              (new-tst source env
-               (gen-call-prim-vars source env **flonum?-sym vars)
-               (gen-call-prim-vars source env **flfinite?-sym vars)
-               (gen-call-prim-vars source env **rational?-sym vars))))
+               (gen-call-prim-vars-notsafe source env **flonum?-sym vars)
+               (gen-call-prim-vars-notsafe source env **flfinite?-sym vars)
+               (gen-call-prim-vars-notsafe source env **rational?-sym vars))))
          fail)))
 
     (define case-integer?
@@ -4155,8 +4155,8 @@
          env
          (lambda ()
            (new-disj source env
-             (gen-call-prim-vars source env **fixnum?-sym vars)
-             (gen-call-prim-vars source env **integer?-sym vars)))
+             (gen-call-prim-vars-notsafe source env **fixnum?-sym vars)
+             (gen-call-prim-vars-notsafe source env **integer?-sym vars)))
          fail)))
 
     (define (case-exact? fallback)
@@ -4172,11 +4172,11 @@
          env
          (lambda ()
            (new-disj source env
-             (gen-call-prim-vars source env **fixnum?-sym vars)
+             (gen-call-prim-vars-notsafe source env **fixnum?-sym vars)
              (new-conj source env
-               (gen-call-prim source env
+               (gen-call-prim-notsafe source env
                  **not-sym
-                 (list (gen-call-prim-vars source env **flonum?-sym vars)))
+                 (list (gen-call-prim-vars-notsafe source env **flonum?-sym vars)))
                (gen-call-prim-vars source env fallback vars))))
          fail)))
 
@@ -4193,11 +4193,11 @@
          env
          (lambda ()
            (new-conj source env
-             (gen-call-prim source env
+             (gen-call-prim-notsafe source env
                **not-sym
-               (list (gen-call-prim-vars source env **fixnum?-sym vars)))
+               (list (gen-call-prim-vars-notsafe source env **fixnum?-sym vars)))
              (new-disj source env
-               (gen-call-prim-vars source env **flonum?-sym vars)
+               (gen-call-prim-vars-notsafe source env **flonum?-sym vars)
                (gen-call-prim-vars source env fallback vars))))
          fail)))
 
@@ -4615,7 +4615,7 @@
       (lambda (source env var)
         (if (eq? hi-type 'bignum)
 
-            (gen-call-prim-vars source env
+            (gen-call-prim-vars-notsafe source env
               **fixnum?-sym
               (list var))
 
@@ -4632,7 +4632,7 @@
                   interval-check
 
                   (new-conj source env
-                    (gen-call-prim source env
+                    (gen-call-prim-notsafe source env
                       **fixnum?-sym
                       (list (new-cst source env
                               hi)))
@@ -4640,25 +4640,25 @@
 
   (define (make-flonum-checker)
     (lambda (source env var)
-      (gen-call-prim-vars source env
+      (gen-call-prim-vars-notsafe source env
         **flonum?-sym
         (list var))))
 
   (define (gen-fixnum-interval-check source env var lo hi incl?)
     (let* ((fixnum-check
-            (gen-call-prim-vars source env
+            (gen-call-prim-vars-notsafe source env
               **fixnum?-sym
               (list var)))
            (interval-check
             (new-conj source env
               fixnum-check
               (new-conj source env
-                (gen-call-prim source env
+                (gen-call-prim-notsafe source env
                   **fx<=-sym
                   (list lo
                         (new-ref source env
                           var)))
-                (gen-call-prim source env
+                (gen-call-prim-notsafe source env
                   (if incl? **fx<=-sym **fx<-sym)
                   (list (new-ref source env
                           var)
@@ -4693,12 +4693,12 @@
           (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str))))
 
       (define (gen-type-check source env vect-arg)
-        (gen-call-prim-vars source env
+        (gen-call-prim-vars-notsafe source env
           **vect?-sym
           (list vect-arg)))
 
       (define (gen-mutability-check source env vect-arg)
-        (gen-call-prim-vars source env
+        (gen-call-prim-vars-notsafe source env
           **mutable?-sym
           (list vect-arg)))
 
@@ -4707,7 +4707,7 @@
           index-arg
           (new-cst source env
             0)
-          (gen-call-prim-vars source env
+          (gen-call-prim-vars-notsafe source env
             **vect-length-sym
             (list vect-arg))
           #f))
@@ -4735,7 +4735,7 @@
                         rtb-check))
                     type-check))
                  (call-prim
-                  (gen-call-prim-vars source env
+                  (gen-call-prim-vars-notsafe source env
                     **vect-length-sym
                     vars)))
             (gen-prc source env
@@ -4802,7 +4802,7 @@
                             rtb-check))
                       type-mutability-index-value-check))
                  (call-prim
-                  (gen-call-prim-vars source env
+                  (gen-call-prim-vars-notsafe source env
                     (case kind
                       ((ref)  **vect-ref-sym)
                       ((set!) **vect-set!-sym)
@@ -4877,7 +4877,7 @@
    #f
    #f
    (lambda (source env var)
-     (gen-call-prim-vars source env
+     (gen-call-prim-vars-notsafe source env
        **char?-sym
        (list var))))
 
@@ -5054,11 +5054,11 @@
     (string->canonical-symbol "##unchecked-structure-cas!"))
 
   (define (gen-type-check source env obj-arg type-arg)
-    (gen-call-prim source env
+    (gen-call-prim-notsafe source env
       **structure-direct-instance-of?-sym
       (list (new-ref source env
               obj-arg)
-            (gen-call-prim-vars source env
+            (gen-call-prim-vars-notsafe source env
               **type-id-sym
               (list type-arg)))))
 
@@ -5077,7 +5077,7 @@
              (type-check
               (gen-type-check source env obj-var type-var))
              (call-prim
-              (gen-call-prim-vars source env
+              (gen-call-prim-vars-notsafe source env
                 (case kind
                   ((ref)  **unchecked-structure-ref-sym)
                   ((set!) **unchecked-structure-set!-sym)
@@ -5123,7 +5123,7 @@
              out-of-line
              fail)
       (new-disj source env
-        (gen-call-prim-vars source env
+        (gen-call-prim-vars-notsafe source env
           sym
           vars)
         (out-of-line))))
@@ -5167,14 +5167,14 @@
                   (gen-prc source env
                     vars2
                     (new-tst source env
-                      (gen-call-prim source env
+                      (gen-call-prim-notsafe source env
                         **string?-sym
                         (list (new-ref source env
                                 (car vars2))))
                       (new-ref source env
                         (car vars2))
                       (fail))))
-                (list (gen-call-prim-vars source env
+                (list (gen-call-prim-vars-notsafe source env
                         **symbol-name-sym
                         vars))))))
 
