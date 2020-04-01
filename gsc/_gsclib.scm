@@ -355,7 +355,7 @@
                      pkg-config
                      pkg-config-path
                      target-filename-relative-to-output-dir))))
-             (if (and (##not (##assq 'keep-c options))
+             (if (and (##not (##assq 'keep-temp options))
                       (##not (##string=? filename target-filename)))
                  (##delete-file target-filename))
              (if (##fx= exit-status 0)
