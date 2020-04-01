@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -123,7 +123,7 @@
                       (set! compiler-option-track-scheme       #t)
                       #t)
                      ((c dynamic exe obj link flat
-                         check force keep-c
+                         check force keep-temp
                          o l module-ref linker-name prelude postlude
                          cc-options ld-options-prelude ld-options
                          pkg-config pkg-config-path asm)
