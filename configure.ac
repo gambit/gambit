@@ -66,8 +66,6 @@ fi
 
 RTLIB_COND_EXPAND_FEATURES=""
 
-BUILD_TARGETS="C"
-
 userlibdir="~/.gambit_userlib"
 instlibdir="~~userlib"
 
@@ -654,6 +652,28 @@ if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
   DEFAULT_RUNTIME_OPTIONS=`echo "$DEFAULT_RUNTIME_OPTIONS" | sed -e "s/\(.\)/'\1', /g" -e "s/''', /'\\\\\\\\'', /g" -e "s/'\\\\\\\\', /'\\\\\\\\\\\\\\\\', /g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
   AC_DEFINE_UNQUOTED([___DEFAULT_RUNTIME_OPTIONS],[$DEFAULT_RUNTIME_OPTIONS],[Select default runtime options])
 fi
+
+###############################################################################
+#
+# Determine targets to build.
+
+AC_ARG_ENABLE(targets,
+              AC_HELP_STRING([--enable-targets=...],
+                             [Targets to build in addition to C (default is none)]),
+              ENABLE_TARGETS=$enableval,
+              ENABLE_TARGETS=)
+
+BUILD_TARGETS="C"
+
+if test "$ENABLE_TARGETS" != ""; then
+  for t in `echo "$ENABLE_TARGETS" | sed -e 's/,/ /g'`; do
+    if test "$t" != "C"; then
+      BUILD_TARGETS="$BUILD_TARGETS $t"
+    fi
+  done
+fi
+
+echo BUILD_TARGETS="$BUILD_TARGETS"
 
 ###############################################################################
 #

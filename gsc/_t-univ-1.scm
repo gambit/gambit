@@ -660,11 +660,14 @@
      (compiler-internal-error
       "univ-emit-call-with-arg-array, unknown target"))))
 
-(define (univ-emit-var-declaration ctx type name #!optional (init #f))
+(define univ-js-define-globals-using-assignment #t) ;; for nodejs scoping rules
+
+(define (univ-emit-var-declaration ctx type name #!optional (init #f) (global? #f))
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^ "var " name (if init (^ " = " init) (^)) ";\n"))
+     (^ (if (and global? univ-js-define-globals-using-assignment) "" "var ")
+        name (if init (^ " = " init) (^)) ";\n"))
 
     ((python ruby)
      (^ name " = " (or init (^obj #f)) "\n"))

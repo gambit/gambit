@@ -240,7 +240,7 @@
              ((and (pair? type) (eq? (car type) 'dict))
               (base (^ "map[" (^type (cadr type)) "]" (^type (caddr type)))))
              ((and (pair? type) (eq? (car type) 'fn))
-              (univ-emit-fn-decl ctx #f (caddr type) (cadr type) #f))
+              (univ-emit-fn-decl ctx #f (caddr type) (cadr type)))
              (else
               (case type
                 ((frm)      (decl* '(array scmobj) #f))
@@ -299,7 +299,7 @@
   (define (emit-method m)
     (univ-emit-function-declaration
      ctx
-     #t
+     global?
      (univ-method-name m)
      (univ-method-result-type m)
      (univ-method-params m)
@@ -328,11 +328,11 @@
            (name2 (^prefix name1 public?))
            (name (if global? (^global-var name2) (^local-var name2))))
       (^
-       (univ-emit-var-declaration
-        ctx
+       (^var-declaration
         (univ-field-type f)
         name
-        (univ-field-init f))
+        (univ-field-init f)
+        global?)
        (if (eq? (univ-field-type f) 'jumpable)
            (univ-emit-function-attribs
             ctx
@@ -638,7 +638,7 @@
     (case (target-name (ctx-target ctx))
 
       ((js go)
-       (^ (univ-emit-fn-decl ctx name result-type params body modifier)
+       (^ (univ-emit-fn-decl ctx name result-type params body modifier global?)
           (if (null? attribs)
               (^ "\n")
               (^ "\n"
@@ -658,7 +658,8 @@
                               (^)
                               (univ-emit-function-attribs ctx name attribs))
                           body))
-                  modifier)
+                  modifier
+                  global?)
                  "\n")))
          (cond (prim?
                 decl)
@@ -684,7 +685,7 @@
                 (^assign name decl)))))
 
       ((python)
-       (^ (univ-emit-fn-decl ctx name result-type params body modifier)
+       (^ (univ-emit-fn-decl ctx name result-type params body modifier global?)
           (if (null? attribs)
               (^)
               (^ "\n"
@@ -693,7 +694,7 @@
       ((ruby)
        (^ (if prim?
 
-              (^ (univ-emit-fn-decl ctx name result-type params body modifier)
+              (^ (univ-emit-fn-decl ctx name result-type params body modifier global?)
                  "\n")
 
               (let ((parameters
@@ -710,7 +711,7 @@
           (univ-emit-function-attribs ctx name attribs)))
 
       ((java);;TODO adapt to Java
-       (^ (univ-emit-fn-decl ctx name result-type params body modifier)
+       (^ (univ-emit-fn-decl ctx name result-type params body modifier global?)
           "\n"
           (univ-emit-function-attribs ctx name attribs)))
 
@@ -725,19 +726,28 @@
          params
          body
          #!optional
-         (modifier #f))
+         (modifier #f)
+         (global? #f))
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (let ((formals
-            (univ-separated-list
-             ","
-             (map univ-field-name params))))
-       (^ "function " (or name "") "(" formals ") {"
-          (if body
-              (univ-indent body)
-              "")
-          "}")))
+     (let* ((formals
+             (univ-separated-list
+              ","
+              (map univ-field-name params)))
+            (fn-name
+             (and (or (not global?)
+                      (not univ-js-define-globals-using-assignment))
+                  name))
+            (fn
+             (^ "function " (or fn-name "") "(" formals ") {"
+                (if body
+                    (univ-indent body)
+                    "")
+                "}")))
+       (if (or (not name) fn-name)
+           fn
+           (^var-declaration 'ctrlpt name fn global?))))
 
     ((php)
      (let ((formals
@@ -947,7 +957,7 @@
              ((go)
               (^ (^local-var name) (if type (^ " " (^type type)) "") "\n"))
              (else
-              (univ-emit-var-declaration ctx type (^local-var name) (except-this init)))))))
+              (^var-declaration type (^local-var name) (except-this init)))))))
 
     (define (except-this v)
       (case (target-name (ctx-target ctx))
@@ -1104,7 +1114,9 @@
                     (not (null? instance-fields)))
                 (^ (assign-field-decls (^this) instance-fields)
                    (if constructor (constructor ctx) (^)))
-                (^))))))
+                (^))))
+         #f
+         (not obj)))
 
       (let ((objname name)) ;;(if obj (^member obj name) name)))
         ;;(pp (list obj name objname))

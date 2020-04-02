@@ -5,8 +5,8 @@
       `'()
       `(list ,@forms)))
 
-(define-macro (^var-declaration type name #!optional (init #f))
-  `(univ-emit-var-declaration ctx ,type ,name ,init))
+(define-macro (^var-declaration type name #!optional (init #f) (global? #f))
+  `(univ-emit-var-declaration ctx ,type ,name ,init ,global?))
 
 (define-macro (^expr-statement expr)
   `(univ-emit-expr-statement ctx ,expr))

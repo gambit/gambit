@@ -222,6 +222,7 @@ The configure options which are specific to the Gambit system are:
                           module search order (default is ~~lib,~~userlib)
   --enable-module-whitelist=...
                           module whitelist (default is github.com/gambit)
+  --enable-targets=...    targets to build in addition to C
   --enable-ansi-c         link only with ANSI C libraries
   --enable-symlinks       use symbolic links for installed files not in the
                           Gambit central installation directory

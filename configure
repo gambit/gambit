@@ -978,6 +978,7 @@ enable_path_encoding
 enable_module_search_order
 enable_module_whitelist
 enable_default_runtime_options
+enable_targets
 enable_shared
 enable_ansi_c
 enable_symlinks
@@ -1698,6 +1699,7 @@ Optional Features:
                           Module whitelist (default is github.com/gambit)
   --enable-default-runtime-options=...
                           Default runtime options (default is none)
+  --enable-targets=...    Targets to build in addition to C (default is none)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
@@ -3076,8 +3078,6 @@ if test "${COMPILATION_OPTIONS+set}" != set; then
 fi
 
 RTLIB_COND_EXPAND_FEATURES=""
-
-BUILD_TARGETS="C"
 
 userlibdir="~/.gambit_userlib"
 instlibdir="~~userlib"
@@ -5180,6 +5180,30 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
+
+###############################################################################
+#
+# Determine targets to build.
+
+# Check whether --enable-targets was given.
+if test "${enable_targets+set}" = set; then :
+  enableval=$enable_targets; ENABLE_TARGETS=$enableval
+else
+  ENABLE_TARGETS=
+fi
+
+
+BUILD_TARGETS="C"
+
+if test "$ENABLE_TARGETS" != ""; then
+  for t in `echo "$ENABLE_TARGETS" | sed -e 's/,/ /g'`; do
+    if test "$t" != "C"; then
+      BUILD_TARGETS="$BUILD_TARGETS $t"
+    fi
+  done
+fi
+
+echo BUILD_TARGETS="$BUILD_TARGETS"
 
 ###############################################################################
 #
