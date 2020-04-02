@@ -395,18 +395,17 @@
     (##delete-file-or-directory build-subdir #t #f)
     (##create-directory build-subdir)
 
-    (let ((target-file
-           (##compile-file-to-target
-            path
+    (let* ((opts
             (##cons (##list 'target target)
                     (##cons
-                      (##list 'linker-name module-object-filename)
-                      options))
-            build-subdir)))
+                     (##list 'linker-name module-object-filename)
+                     options)))
+           (target-file
+            (##compile-file-to-target path opts build-subdir)))
       (and target-file
            (##compile-file
             target-file
-            options
+            opts
             (##path-expand module-object-filename build-subdir)
             #f ;; base
             cc-options

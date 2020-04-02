@@ -13,63 +13,63 @@
 
 if ((function () { return this !== this.window; })()) { // nodejs?
 
-  var os = require('os');
-  var fs = require('fs');
-  var vm = require('vm');
-  var process = require('process');
-  var child_process = require('child_process')
+  os = require('os');
+  fs = require('fs');
+  vm = require('vm');
+  process = require('process');
+  child_process = require('child_process')
 
-  function g_os_encode_error(exn) {
+  g_os_encode_error = function (exn) {
     switch (exn.code) {
-      case 'EPERM':   return -1;
-      case 'ENOENT':  return -2;
-      case 'EINTR':   return -4;
-      case 'EIO':     return -5;
-      case 'EBADF':   return -9;
-      case 'EACCESS': return -13;
-      case 'EEXIST':  return -17;
-      case 'EAGAIN':  return -35;
+      case 'EPERM':  return -1;
+      case 'ENOENT': return -2;
+      case 'EINTR':  return -4;
+      case 'EIO':    return -5;
+      case 'EBADF':  return -9;
+      case 'EACCES': return -13;
+      case 'EEXIST': return -17;
+      case 'EAGAIN': return -35;
     }
     return -8888;
-  }
+  };
 
-  function g_os_decode_error(code) {
+  g_os_decode_error = function (code) {
     switch (code) {
       case -1:  return 'EPERM (Operation not permitted)';
       case -2:  return 'ENOENT (No such file or directory)';
       case -4:  return 'EINTR (Interrupted system call)';
       case -5:  return 'EIO (Input/output error)';
       case -9:  return 'EBADF (Bad file descriptor)';
-      case -13: return 'EACCESS (Permission denied)';
+      case -13: return 'EACCES (Permission denied)';
       case -17: return 'EEXIST (File exists)';
       case -35: return 'EAGAIN (Resource temporarily unavailable)';
     }
     return 'E??? (unknown error)';
-  }
+  };
 }
 
-function g_current_time() {
+g_current_time = function () {
   return new Date().getTime() / 1000;
-}
+};
 
-var g_start_time = g_current_time();
+g_start_time = g_current_time();
 
-function g_set_process_times(vect) {
+g_set_process_times = function (vect) {
   var elapsed = g_current_time() - g_start_time;
   vect.elems[0] = elapsed;
   vect.elems[1] = 0.0;
   vect.elems[2] = elapsed;
   return vect;
-}
+};
 
-function G_Device(fd) {
+G_Device = function (fd) {
   this.fd = fd;
   this.rbuf = new Uint8Array(1024);
   this.rlo = 1;
   this.rhi = 1; // 0 would mean EOF
-}
+};
 
-var g_os_debug = false;
+g_os_debug = false;
 
 "))
 
@@ -97,7 +97,7 @@ def g_os_encode_error(exn):
         return -9
     elif e == errno.EBADF:
         return -13
-    elif e == errno.EACCESS:
+    elif e == errno.EACCES:
         return -17
     elif e == errno.EEXIST:
         return -35
@@ -116,7 +116,7 @@ def g_os_decode_error(code):
     elif code == -9:
         return 'EBADF (Bad file descriptor)'
     elif code == -13:
-        return 'EACCESS (Permission denied)'
+        return 'EACCES (Permission denied)'
     elif code == -17:
         return 'EEXIST (File exists)'
     elif code == -35:
@@ -176,8 +176,6 @@ g_os_debug = False
 (define (##os-module-install-mode) 1)
 (define (##os-module-search-order) '("~~lib" "~~userlib"))
 (define (##os-module-whitelist)    '("github.com/gambit"))
-(define (##os-load-object-file path linker-name)
-  '#("load-object-file not implemented" "___LNK_name"))
 
 (define (##get-parallelism-level) 1)
 (define (##cpu-count) 1)
@@ -477,44 +475,37 @@ g_os_debug = False
  ((js)
   (##inline-host-declaration "
 
-function g_eval(expr) {
+g_eval = function (expr) {
   return (1,eval)(expr);
-}
+};
 
-function g_exec(stmts) {
+g_exec = function (stmts) {
   (1,eval)(stmts);
-}
+};
 
-if (this !== this.window) { // nodejs?
-  // hack for now to get around an issue with nodejs that the code containing
-  // the Gambit runtime library is in a module... not in the global scope
-  (function (x) { this.g_scm2host = x; })(g_scm2host); // export functions
-  (function (x) { this.g_host2scm = x; })(g_host2scm);
-}
+g_host_define_function = function (name, params, expr) {
+  g_exec(name + '= function (' + params + ') { return ' + expr + '; };');
+};
 
-function g_host_define_function(name, params, expr) {
-  g_exec('function ' + name + '(' + params + ') { return ' + expr + '; }');
-}
+g_host_define_procedure = function (name, params, stmts) {
+  g_exec(name + '= function (' + params + ') {' + stmts + '\\n};');
+};
 
-function g_host_define_procedure(name, params, stmts) {
-  g_exec('function ' + name + '(' + params + ') {' + stmts + '\\n}');
-}
-
-function g_host_function_call(fn, args) {
+g_host_function_call = function (fn, args) {
   return g_eval(fn).apply(this, args);
-}
+};
 
-function g_host_procedure_call(proc, args) {
+g_host_procedure_call = function (proc, args) {
   g_eval(proc).apply(this, args);
-}
+};
 
-function g_host_eval(expr) {
+g_host_eval = function (expr) {
   return g_eval(expr);
-}
+};
 
-function g_host_exec(stmts) {
+g_host_exec = function (stmts) {
   g_exec(stmts);
-}
+};
 
 "))
 
@@ -783,7 +774,7 @@ def g_host_exec(stmts):
    ((js)
     (##inline-host-declaration "
 
-function g_user_info(ui, user) {
+g_user_info = function (ui, user) {
   if ((function () { return this !== this.window; })()) { // nodejs?
     try {
       var posix = require('posix');
@@ -809,7 +800,7 @@ function g_user_info(ui, user) {
     ui.slots[5] = g_host2scm('/bin/sh');
     return ui;
   }
-}
+};
 
 ")
     (##inline-host-expression "g_user_info(@1@, g_scm2host(@2@))" ui user))
@@ -849,7 +840,7 @@ def g_user_info(ui, user):
    ((js)
     (##inline-host-declaration "
 
-function g_group_info(gi, group) {
+g_group_info = function (gi, group) {
   if ((function () { return this !== this.window; })()) { // nodejs?
     try {
       var posix = require('posix');
@@ -871,7 +862,7 @@ function g_group_info(gi, group) {
     gi.slots[3] = g_host2scm([]);
     return gi;
   }
-}
+};
 
 ")
     (##inline-host-expression "g_group_info(@1@, g_scm2host(@2@))" gi group))
@@ -959,14 +950,14 @@ def g_group_info(gi, group):
    ((js)
     (##inline-host-declaration "
 
-function g_shell_command(cmd) {
+g_shell_command = function (cmd) {
   var r = child_process.spawnSync('sh',['-c',cmd]);
   var output = r.stdout.toString();
   if (output.length > 0) {
     console.log(output.replace(/\\n$/, ''));
   }
   return 256 * ((r.status === null) ? 0 : r.status);
-}
+};
 
 ")
     (##inline-host-expression
@@ -1020,7 +1011,7 @@ def g_shell_command(cmd):
    ((js)
     (##inline-host-declaration "
 
-var g_executable_path = ((function () { return this !== this.window; })()) ? __filename : '/program';
+g_executable_path = ((function () { return this !== this.window; })()) ? __filename : '/program';
 
 ")
     (##inline-host-expression "g_host2scm(g_executable_path)"))
@@ -1048,7 +1039,7 @@ g_executable_path = os.path.abspath(__file__)
    ((js)
     (##inline-host-declaration "
 
-function g_normalize_dir(path) {
+g_normalize_dir = function (path) {
   if ((function () { return this !== this.window; })()) { // nodejs?
     var old = process.cwd();
     var dir;
@@ -1077,7 +1068,7 @@ function g_normalize_dir(path) {
   } else {
     return '/';
   }
-}
+};
 
 ")
     (##inline-host-expression "g_normalize_dir(g_scm2host(@1@))" path))
@@ -1217,7 +1208,7 @@ def g_normalize_dir(path):
    ((js)
     (##inline-host-declaration "
 
-var g_argv = [];
+g_argv = [];
 if ((function () { return this !== this.window; })()) { // nodejs?
   g_argv = process.argv.slice(1);
 }
@@ -1252,7 +1243,7 @@ if ((function () { return this !== this.window; })()) { // nodejs?
    ((js)
     (##inline-host-declaration "
 
-function g_file_info(fi, path, chase) {
+g_file_info = function (fi, path, chase) {
 
   if ((function () { return this !== this.window; })()) { // nodejs?
 
@@ -1308,7 +1299,7 @@ function g_file_info(fi, path, chase) {
   } else {
     return g_host2scm(-5555);
   }
-}
+};
 
 ")
     (##inline-host-expression
@@ -1379,6 +1370,65 @@ def g_file_info(fi, path, chase):
 
 ;;;----------------------------------------------------------------------------
 
+;;; Loading of compiled files.
+
+(define (##os-load-object-file path linker-name)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+g_load_object_file = function (path, linker_name) {
+
+  if ((function () { return this !== this.window; })()) { // nodejs?
+
+    try {
+      require(path);
+    } catch (exn) {
+      if (exn instanceof Error && exn.hasOwnProperty('code')) {
+        return g_host2scm(g_os_encode_error(exn));
+      } else {
+        throw exn;
+      }
+    }
+
+    return [[g_module_latest_registered], null, false];
+
+  } else {
+    return [g_host2scm('unimplemented ##os-load-object-file'), g_host2scm(linker_name)];
+  }
+};
+
+")
+    (##inline-host-expression
+     "g_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
+     path
+     linker-name))
+
+   ((python)
+    (##inline-host-declaration "
+
+def g_load_object_file(path, linker_name):
+
+    try:
+        g_exec(open(path).read())
+    except OSError as exn:
+        return g_host2scm(g_os_encode_error(exn))
+
+    return [[g_module_latest_registered], g_null_obj, False];
+
+")
+    (##inline-host-expression
+     "g_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
+     path
+     linker-name))
+
+   (else
+    (##vector "load-object-file not implemented" linker-name))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; File I/O.
 
 (##declare (inline))
@@ -1390,77 +1440,77 @@ def g_file_info(fi, path, chase):
 
     (##inline-host-declaration "
 
-var g_CONDVAR_NAME              = 10;
+g_CONDVAR_NAME              = 10;
 
-var g_PORT_MUTEX                = 1;
-var g_PORT_RKIND                = 2;
-var g_PORT_WKIND                = 3;
-var g_PORT_NAME                 = 4;
-var g_PORT_WAIT                 = 5;
-var g_PORT_CLOSE                = 6;
-var g_PORT_ROPTIONS             = 7;
-var g_PORT_RTIMEOUT             = 8;
-var g_PORT_RTIMEOUT_THUNK       = 9;
-var g_PORT_SET_RTIMEOUT         = 10;
-var g_PORT_WOPTIONS             = 11;
-var g_PORT_WTIMEOUT             = 12;
-var g_PORT_WTIMEOUT_THUNK       = 13;
-var g_PORT_SET_WTIMEOUT         = 14;
-var g_PORT_IO_EXCEPTION_HANDLER = 15;
+g_PORT_MUTEX                = 1;
+g_PORT_RKIND                = 2;
+g_PORT_WKIND                = 3;
+g_PORT_NAME                 = 4;
+g_PORT_WAIT                 = 5;
+g_PORT_CLOSE                = 6;
+g_PORT_ROPTIONS             = 7;
+g_PORT_RTIMEOUT             = 8;
+g_PORT_RTIMEOUT_THUNK       = 9;
+g_PORT_SET_RTIMEOUT         = 10;
+g_PORT_WOPTIONS             = 11;
+g_PORT_WTIMEOUT             = 12;
+g_PORT_WTIMEOUT_THUNK       = 13;
+g_PORT_SET_WTIMEOUT         = 14;
+g_PORT_IO_EXCEPTION_HANDLER = 15;
 
-var g_PORT_OBJECT_READ_DATUM    = 16;
-var g_PORT_OBJECT_WRITE_DATUM   = 17;
-var g_PORT_OBJECT_NEWLINE       = 18;
-var g_PORT_OBJECT_FORCE_OUTPUT  = 19;
+g_PORT_OBJECT_READ_DATUM    = 16;
+g_PORT_OBJECT_WRITE_DATUM   = 17;
+g_PORT_OBJECT_NEWLINE       = 18;
+g_PORT_OBJECT_FORCE_OUTPUT  = 19;
 
-var g_PORT_OBJECT_OTHER1        = 20;
-var g_PORT_OBJECT_OTHER2        = 21;
-var g_PORT_OBJECT_OTHER3        = 22;
+g_PORT_OBJECT_OTHER1        = 20;
+g_PORT_OBJECT_OTHER2        = 21;
+g_PORT_OBJECT_OTHER3        = 22;
 
-var g_PORT_CHAR_RBUF            = 20;
-var g_PORT_CHAR_RLO             = 21;
-var g_PORT_CHAR_RHI             = 22;
-var g_PORT_CHAR_RCHARS          = 23;
-var g_PORT_CHAR_RLINES          = 24;
-var g_PORT_CHAR_RCURLINE        = 25;
-var g_PORT_CHAR_RBUF_FILL       = 26;
-var g_PORT_CHAR_PEEK_EOFP       = 27;
+g_PORT_CHAR_RBUF            = 20;
+g_PORT_CHAR_RLO             = 21;
+g_PORT_CHAR_RHI             = 22;
+g_PORT_CHAR_RCHARS          = 23;
+g_PORT_CHAR_RLINES          = 24;
+g_PORT_CHAR_RCURLINE        = 25;
+g_PORT_CHAR_RBUF_FILL       = 26;
+g_PORT_CHAR_PEEK_EOFP       = 27;
 
-var g_PORT_CHAR_WBUF            = 28;
-var g_PORT_CHAR_WLO             = 29;
-var g_PORT_CHAR_WHI             = 30;
-var g_PORT_CHAR_WCHARS          = 31;
-var g_PORT_CHAR_WLINES          = 32;
-var g_PORT_CHAR_WCURLINE        = 33;
-var g_PORT_CHAR_WBUF_DRAIN      = 34;
-var g_PORT_INPUT_READTABLE      = 35;
-var g_PORT_OUTPUT_READTABLE     = 36;
-var g_PORT_OUTPUT_WIDTH         = 37;
+g_PORT_CHAR_WBUF            = 28;
+g_PORT_CHAR_WLO             = 29;
+g_PORT_CHAR_WHI             = 30;
+g_PORT_CHAR_WCHARS          = 31;
+g_PORT_CHAR_WLINES          = 32;
+g_PORT_CHAR_WCURLINE        = 33;
+g_PORT_CHAR_WBUF_DRAIN      = 34;
+g_PORT_INPUT_READTABLE      = 35;
+g_PORT_OUTPUT_READTABLE     = 36;
+g_PORT_OUTPUT_WIDTH         = 37;
 
-var g_PORT_CHAR_OTHER1          = 38;
-var g_PORT_CHAR_OTHER2          = 39;
-var g_PORT_CHAR_OTHER3          = 40;
-var g_PORT_CHAR_OTHER4          = 41;
-var g_PORT_CHAR_OTHER5          = 42;
+g_PORT_CHAR_OTHER1          = 38;
+g_PORT_CHAR_OTHER2          = 39;
+g_PORT_CHAR_OTHER3          = 40;
+g_PORT_CHAR_OTHER4          = 41;
+g_PORT_CHAR_OTHER5          = 42;
 
-var g_PORT_BYTE_RBUF            = 38;
-var g_PORT_BYTE_RLO             = 39;
-var g_PORT_BYTE_RHI             = 40;
-var g_PORT_BYTE_RBUF_FILL       = 41;
+g_PORT_BYTE_RBUF            = 38;
+g_PORT_BYTE_RLO             = 39;
+g_PORT_BYTE_RHI             = 40;
+g_PORT_BYTE_RBUF_FILL       = 41;
 
-var g_PORT_BYTE_WBUF            = 42;
-var g_PORT_BYTE_WLO             = 43;
-var g_PORT_BYTE_WHI             = 44;
-var g_PORT_BYTE_WBUF_DRAIN      = 45;
+g_PORT_BYTE_WBUF            = 42;
+g_PORT_BYTE_WLO             = 43;
+g_PORT_BYTE_WHI             = 44;
+g_PORT_BYTE_WBUF_DRAIN      = 45;
 
-var g_PORT_BYTE_OTHER1          = 46;
-var g_PORT_BYTE_OTHER2          = 47;
+g_PORT_BYTE_OTHER1          = 46;
+g_PORT_BYTE_OTHER2          = 47;
 
-var g_PORT_RDEVICE_CONDVAR      = 46;
-var g_PORT_WDEVICE_CONDVAR      = 47;
+g_PORT_RDEVICE_COND         = 46;
+g_PORT_WDEVICE_COND         = 47;
 
-var g_PORT_DEVICE_OTHER1        = 48;
-var g_PORT_DEVICE_OTHER2        = 49;
+g_PORT_DEVICE_OTHER1        = 48;
+g_PORT_DEVICE_OTHER2        = 49;
 
 "))
 
@@ -1551,7 +1601,7 @@ g_PORT_DEVICE_OTHER2        = 49
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_close(dev_scm, direction_scm) {
+g_os_device_close = function (dev_scm, direction_scm) {
 
   var dev = dev_scm.val;
   var direction = g_scm2host(direction_scm);
@@ -1577,7 +1627,7 @@ function g_os_device_close(dev_scm, direction_scm) {
   }
 
   return g_host2scm(0) // no error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1620,7 +1670,7 @@ def g_os_device_close(dev_scm, direction_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_directory_open_path(path_scm, ignore_hidden_scm) {
+g_os_device_directory_open_path = function (path_scm, ignore_hidden_scm) {
 
   var path = g_scm2host(path_scm);
   var ignore_hidden = g_scm2host(ignore_hidden_scm);
@@ -1629,7 +1679,7 @@ function g_os_device_directory_open_path(path_scm, ignore_hidden_scm) {
     console.log('g_os_device_directory_open_path(\\''+path+'\\','+ignore_hidden+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1666,7 +1716,7 @@ def g_os_device_directory_open_path(path_scm, ignore_hidden_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_directory_read(dev_condvar_scm) {
+g_os_device_directory_read = function (dev_condvar_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
 
@@ -1674,7 +1724,7 @@ function g_os_device_directory_read(dev_condvar_scm) {
     console.log('g_os_device_directory_read('+dev.fd+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1708,7 +1758,7 @@ def g_os_device_directory_read(dev_condvar_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_event_queue_open(selector_scm) {
+g_os_device_event_queue_open = function (selector_scm) {
 
   var selector = g_scm2host(selector_scm);
 
@@ -1716,7 +1766,7 @@ function g_os_device_event_queue_open(selector_scm) {
     console.log('g_os_device_event_queue_open('+selector+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1750,7 +1800,7 @@ def g_os_device_event_queue_open(selector_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_event_queue_read(dev_condvar_scm) {
+g_os_device_event_queue_read = function (dev_condvar_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
 
@@ -1758,7 +1808,7 @@ function g_os_device_event_queue_read(dev_condvar_scm) {
     console.log('g_os_device_event_queue_read('+dev.fd+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1792,7 +1842,7 @@ def g_os_device_event_queue_read(dev_condvar_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_force_output(dev_condvar_scm, level_scm) {
+g_os_device_force_output = function (dev_condvar_scm, level_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
   var level = g_scm2host(level_scm);
@@ -1801,7 +1851,7 @@ function g_os_device_force_output(dev_condvar_scm, level_scm) {
     console.log('g_os_device_force_output('+dev.fd+','+level+')  ***not fully implemented***');
 
   return g_host2scm(0) // no error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1838,7 +1888,7 @@ def g_os_device_force_output(dev_condvar_scm, level_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_kind(dev_scm) {
+g_os_device_kind = function (dev_scm) {
 
   var dev = dev_scm.val;
 
@@ -1846,7 +1896,7 @@ function g_os_device_kind(dev_scm) {
     console.log('g_os_device_kind('+dev.fd+')  ***not fully implemented***');
 
   return g_host2scm(31); // file device
-}
+};
 
 ")
     (##inline-host-expression
@@ -1880,13 +1930,13 @@ def g_os_device_kind(dev_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_stream_open_process(path_and_args_scm, environment_scm, directory_scm, options_scm) {
+g_os_device_stream_open_process = function (path_and_args_scm, environment_scm, directory_scm, options_scm) {
 
   if (g_os_debug)
     console.log('g_os_device_stream_open_process(...)  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1924,7 +1974,7 @@ def g_os_device_stream_open_process(path_and_args_scm, environment_scm, director
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_process_pid(dev_scm) {
+g_os_device_process_pid = function (dev_scm) {
 
   var dev = dev_scm.val;
 
@@ -1932,7 +1982,7 @@ function g_os_device_process_pid(dev_scm) {
     console.log('g_os_device_process_pid('+dev.fd+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -1966,7 +2016,7 @@ def g_os_device_process_pid(dev_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_process_status(dev_scm) {
+g_os_device_process_status = function (dev_scm) {
 
   var dev = dev_scm.val;
 
@@ -1974,7 +2024,7 @@ function g_os_device_process_status(dev_scm) {
     console.log('g_os_device_process_status('+dev.fd+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -2008,7 +2058,7 @@ def g_os_device_process_status(dev_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_stream_default_options(dev_scm) {
+g_os_device_stream_default_options = function (dev_scm) {
 
   var dev = dev_scm.val;
 
@@ -2016,7 +2066,7 @@ function g_os_device_stream_default_options(dev_scm) {
     console.log('g_os_device_stream_default_options('+dev.fd+')  ***not fully implemented***');
 
   return g_host2scm(2<<9); // line buffering
-}
+};
 
 ")
     (##inline-host-expression
@@ -2050,7 +2100,7 @@ def g_os_device_stream_default_options(dev_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_stream_options_set(dev_scm, options_scm) {
+g_os_device_stream_options_set = function (dev_scm, options_scm) {
 
   var dev = dev_scm.val;
   var options = g_scm2host(options_scm);
@@ -2059,7 +2109,7 @@ function g_os_device_stream_options_set(dev_scm, options_scm) {
     console.log('g_os_device_stream_options_set('+dev.fd+','+options+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -2096,7 +2146,7 @@ def g_os_device_stream_options_set(dev_scm, options_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_stream_open_predefined(index_scm, flags_scm) {
+g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
 
   var index = g_scm2host(index_scm);
   var flags = g_scm2host(flags_scm);
@@ -2115,7 +2165,7 @@ function g_os_device_stream_open_predefined(index_scm, flags_scm) {
   }
 
   return new G_Foreign(new G_Device(fd), g_host2scm(false));
-}
+};
 
 ")
     (##inline-host-expression
@@ -2163,8 +2213,6 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
    ((js)
     (##inline-host-declaration "
 
-var g_os_translate_flags;
-
 if ((function () { return this !== this.window; })()) { // nodejs?
 
   g_os_translate_flags = function (flags) {
@@ -2204,7 +2252,7 @@ if ((function () { return this !== this.window; })()) { // nodejs?
 
 }
 
-function g_os_device_stream_open_path(path_scm, flags_scm, mode_scm) {
+g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
 
   var path = g_scm2host(path_scm);
   var flags = g_scm2host(flags_scm);
@@ -2230,7 +2278,7 @@ function g_os_device_stream_open_path(path_scm, flags_scm, mode_scm) {
   }
 
   return new G_Foreign(new G_Device(fd), g_host2scm(false));
-}
+};
 
 ")
     (##inline-host-expression
@@ -2301,7 +2349,7 @@ def g_os_device_stream_open_path(path_scm, flags_scm, mode_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
+g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
   var buffer = buffer_scm.elems;
@@ -2338,7 +2386,7 @@ function g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
     return g_host2scm(n); // number of bytes transferred
   }
-}
+};
 
 ")
     (##inline-host-expression
@@ -2388,9 +2436,9 @@ def g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
    ((js)
     (##inline-host-declaration "
 
-var g_stdout_buf = [];
+g_stdout_buf = [];
 
-function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
+g_os_device_stream_write = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
   var buffer = buffer_scm.elems;
@@ -2432,7 +2480,7 @@ function g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
   }
 
   return g_host2scm(n);
-}
+};
 
 ")
     (##inline-host-expression
@@ -2480,7 +2528,7 @@ def g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm) {
+g_os_device_stream_seek = function (dev_condvar_scm, pos_scm, whence_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
   var pos = g_scm2host(pos_scm);
@@ -2494,7 +2542,7 @@ function g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm) {
     console.log('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
 
   return g_host2scm(-1); // error
-}
+};
 
 ")
     (##inline-host-expression
@@ -2546,7 +2594,7 @@ def g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_device_stream_width(dev_condvar_scm) {
+g_os_device_stream_width = function (dev_condvar_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
 
@@ -2554,7 +2602,7 @@ function g_os_device_stream_width(dev_condvar_scm) {
     console.log('g_os_device_stream_width('+dev.fd+')  ***not fully implemented***');
 
   return g_host2scm(80);
-}
+};
 
 ")
     (##inline-host-expression
@@ -2589,7 +2637,7 @@ def g_os_device_stream_width(dev_condvar_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_port_decode_chars(port_scm, want_scm, eof_scm) {
+g_os_port_decode_chars = function (port_scm, want_scm, eof_scm) {
 
   var want = g_scm2host(want_scm);
   var eof = g_scm2host(eof_scm);
@@ -2626,7 +2674,7 @@ function g_os_port_decode_chars(port_scm, want_scm, eof_scm) {
   port_scm.slots[g_PORT_ROPTIONS] = g_host2scm(options);
 
   return g_host2scm(0) // no error
-}
+};
 
 ")
     (##inline-host-expression
@@ -2691,7 +2739,7 @@ def g_os_port_decode_chars(port_scm, want_scm, eof_scm):
    ((js)
     (##inline-host-declaration "
 
-function g_os_port_encode_chars(port_scm) {
+g_os_port_encode_chars = function (port_scm) {
 
   if (g_os_debug)
     console.log('g_os_port_encode_chars(port)  ***not fully implemented***');
@@ -2717,7 +2765,7 @@ function g_os_port_encode_chars(port_scm) {
   port_scm.slots[g_PORT_WOPTIONS] = g_host2scm(options);
 
   return g_host2scm(0) // no error
-}
+};
 
 ")
     (##inline-host-expression

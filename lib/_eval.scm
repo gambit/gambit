@@ -5262,7 +5262,7 @@
            (if (##not quiet?)
                (##repl
                 (lambda (first port)
-                  (##write-string "*** WARNING -- Could not find C function: " port)
+                  (##write-string "*** WARNING -- Could not find object file entry point " port)
                   (##write (##vector-ref result 1) port)
                   (##newline port)
                   #t)))

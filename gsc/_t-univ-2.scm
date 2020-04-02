@@ -1224,7 +1224,27 @@
               (index (^local-var 'index))
               (old (^local-var 'old)))
 
-          (define (run mod-descr)
+          (define (run-mod mod-descr)
+            (^ (^assign (gvm-state-sp-use ctx 'wr)
+                        (^int -1))
+
+               (^push (univ-end-of-cont-marker ctx))
+
+               (^assign (^rts-field-use 'r0)
+                        (^rts-jumpable-use 'underflow))
+
+               (^assign (^rts-field-use 'nargs)
+                        (^int 0))
+
+               (^expr-statement
+                (^call-prim
+                 (^rts-method-use 'trampoline)
+                 (^downupcast*
+                  'entrypt
+                  'jumpable
+                  (^vector-ref mod-descr (^int 4)))))))
+
+          (define (load-mod mod-descr)
             (^ (^assign (gvm-state-sp-use ctx 'wr)
                         (^int -1))
 
@@ -1264,9 +1284,14 @@
                                  (^rts-field-use-priv 'module_map)
                                  name))
 
-             (^if (^null? info)
+             (^assign (^rts-field-use-priv 'module_latest_registered)
+                      module_descr)
 
-                  (run module_descr)
+             (^if (^not
+                   (^parens
+                    (^or (^null? info)
+                         (^= (^rts-field-use-priv 'module_count)
+                             (^array-length (^rts-field-use-priv 'module_table))))))
 
                   (^ (^var-declaration
                       'int
@@ -1312,9 +1337,10 @@
                                                (^- (^vector-length temp)
                                                    (^int 1))))
 
-                                     (run (^array-index
-                                           (^rts-field-use-priv 'module_table)
-                                           (^int 0))))))))))))))
+                                     (run-mod
+                                      (^array-index
+                                       (^rts-field-use-priv 'module_table)
+                                       (^int 0))))))))))))))
 
     ;; ((modlinkinfo)
     ;;  (rts-class
@@ -1341,6 +1367,12 @@
      (rts-field
       'module_table
       '(array scmobj)
+      (^null)))
+
+    ((module_latest_registered)
+     (rts-field
+      'module_latest_registered
+      'scmobj
       (^null)))
 
     ((heapify_cont)
@@ -5861,6 +5893,10 @@ EOF
   ;; automatically defined global variables
   (univ-glo-use ctx '##vm-main-module-ref 'wr)
   (univ-glo-use ctx '##program-descr 'wr)
+
+  ;; in case these are needed by dynamically loaded code
+  (univ-use-rtlib ctx 'check_procedure)
+  (univ-use-rtlib ctx 'check_procedure_glo)
 
   (^expr-statement
    (^call-prim
