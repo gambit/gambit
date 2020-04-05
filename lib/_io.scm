@@ -10042,8 +10042,9 @@
                         name
                         device
                         psettings)))
-                  (if (##not (##eq? (macro-psettings-direction psettings)
-                                    (macro-direction-in)))
+                  (if (and (##fx< index 0)
+                           (##not (##eq? (macro-psettings-direction psettings)
+                                         (macro-direction-in))))
                       (##add-exit-job!
                        (lambda ()
                          (##force-output-catching-exceptions port))))
