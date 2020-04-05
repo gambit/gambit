@@ -13790,9 +13790,9 @@ the example for the procedure @code{open-tcp-client}.
 
 The procedure @code{tcp-service-register!} sets up a socket to accept
 network connection requests from clients and creates a ``service''
-thread which processes the incoming connections.  The parameter
-@var{port-number-or-address-or-settings} has the same meaning as for
-the procedure @code{open-tcp-server}.
+thread which processes the incoming connections and returns this
+thread.  The parameter @var{port-number-or-address-or-settings} has
+the same meaning as for the procedure @code{open-tcp-server}.
 
 For each connection established the service thread creates a
 ``handler'' thread which executes a call to the procedure @var{thunk}

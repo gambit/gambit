@@ -5198,7 +5198,7 @@
             (##tcp-service-update! local-address-and-local-port-number
                                    (##cons server-port new-thread))
             (##thread-start! new-thread)
-            (##void)))
+            new-thread))
         tcp-service-register!
         port-number-or-address-or-settings
         thunk
@@ -8628,7 +8628,7 @@
             (##tcp-service-update! local-address-and-local-port-number
                                    (##cons server-port new-thread))
             (##thread-start! new-thread)
-            (##void)))
+            new-thread))
         tcp-service-register!
         port-number-or-address-or-settings
         thunk
