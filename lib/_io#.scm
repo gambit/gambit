@@ -1097,7 +1097,7 @@
 ;;; Representation of readtables.
 
 (define-type readtable
-  id: bebee95d-0da2-401d-a33a-c1afc75b9e43
+  id: B1E5C9EE-B4F9-4D3C-AACD-FE12D696101F
   type-exhibitor: macro-type-readtable
   constructor: macro-make-readtable
   implementer: implement-type-readtable
@@ -1145,6 +1145,7 @@
   (here-strings-allowed?          unprintable: read-write:)
   (dot-at-head-of-list-allowed?   unprintable: read-write:)
   (comment-handler                unprintable: read-write:)
+  (foreign-write-handler-table    unprintable: read-write:)
 )
 
 (define-check-type readtable (macro-type-readtable)

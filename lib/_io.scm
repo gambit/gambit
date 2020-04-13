@@ -10114,6 +10114,12 @@
     (macro-readtable-char-sharp-handler-table-set!
      rt
      (##chartable-copy (macro-readtable-char-sharp-handler-table rt)))
+    (let ((foreign-write-handler-table
+           (macro-readtable-foreign-write-handler-table rt)))
+      (if foreign-write-handler-table
+          (macro-readtable-foreign-write-handler-table-set!
+           copy
+           (##table-copy foreign-write-handler-table))))
     copy))
 
 (define-prim (readtable-case-conversion? rt)
@@ -10591,6 +10597,23 @@
                (begin
                  (##wr-ch we #\space)
                  (##wr-no-display we name)))
+           (##wr-ch we #\>))))))
+
+(define-prim (##wr-sn* we obj type proc)
+  (case (macro-writeenv-style we)
+    ((mark)
+     (if (##wr-mark-begin we obj)
+         (begin
+           (##wr-no-display we type)
+           (##wr-mark-end we obj))))
+    (else
+     (if (##wr-stamp we obj)
+         (begin
+           (##wr-str we "#<")
+           (##wr-no-display we type)
+           (##wr-str we " #")
+           (##wr-str we (##number->string (##object->serial-number obj) 10))
+           (if proc (proc we obj))
            (##wr-ch we #\>))))))
 
 (define-prim (##wr-no-display we obj)
@@ -11362,21 +11385,43 @@
     ((mark)
      (##wr-mark we obj))
     (else
-     (##wr-str we "#<")
-     (let ((tags (##foreign-tags obj)))
-       (if (##pair? tags)
-           (##wr-no-display we (##car tags))
-           (##wr-str we "foreign")))
-     (##wr-str we " #")
-     (##wr-str we (##number->string (##object->serial-number obj) 10))
-     (##wr-str we " ")
-     (let ((addr (##foreign-address obj)))
-       (if (##number? addr)
-           (begin
-             (##wr-str we "0x")
-             (##wr-str we (##number->string (##foreign-address obj) 16)))
-           (##wr-no-display we addr)))
-     (##wr-ch we #\>))))
+     (let* ((tags
+             (##foreign-tags obj))
+            (tag
+             (if (##pair? tags) (##car tags) #f))
+            (foreign-write-handler-table
+             (macro-readtable-foreign-write-handler-table
+              (macro-writeenv-readtable we)))
+            (handler
+             (and foreign-write-handler-table
+                  (##table-ref foreign-write-handler-table tag))))
+       (if handler
+           (handler we obj)
+           (##wr-sn* we
+                     obj
+                     (or tag 'foreign)
+                     (lambda (we obj)
+                       (##wr-str we " ")
+                       (let ((addr (##foreign-address obj)))
+                         (if (##number? addr)
+                             (begin
+                               (##wr-str we "0x")
+                               (##wr-str we
+                                         (##number->string
+                                          (##foreign-address obj)
+                                          16)))
+                             (##wr-no-display we addr))))))))))
+
+(define-prim (##readtable-foreign-write-handler-register! rt tag proc)
+  (##declare (not interrupts-enabled))
+  (let ((foreign-write-handler-table
+         (or (macro-readtable-foreign-write-handler-table rt)
+             (let ((t (##make-table-aux 0 #f #f #f ##eq?)))
+               (macro-readtable-foreign-write-handler-table-set! rt t)
+               (macro-readtable-foreign-write-handler-table rt)))))
+    (if proc
+        (##table-set! foreign-write-handler-table tag proc)
+        (##table-set! foreign-write-handler-table tag))))
 
 (define-prim (##explode-object obj)
   (##vector-copy obj))
@@ -15228,6 +15273,7 @@
           'multiline         ;; here-strings-allowed?
           #t                 ;; dot-at-head-of-list-allowed?
           #f                 ;; comment-handler
+          #f                 ;; foreign-write-handler-table
           )))
 
     (##readtable-setup-for-standard-level! rt)
