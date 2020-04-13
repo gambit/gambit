@@ -2665,8 +2665,7 @@
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs banner)))
 
-     (##write-string "Mimosa " port)
-     (##write-string (##system-version-string) port)
+     (##write-string "Mimosa" port)
 
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs output)))
