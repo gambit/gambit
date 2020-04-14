@@ -3548,7 +3548,7 @@
            (##newline port))
 
           ((macro-sfun-conversion-exception? exc)
-           (##write-string
+           (##display
             (or (macro-sfun-conversion-exception-message exc)
                 (err-code->string
                  (macro-sfun-conversion-exception-code exc)))
@@ -3557,7 +3557,7 @@
            (display-call))
 
           ((macro-cfun-conversion-exception? exc)
-           (##write-string
+           (##display
             (or (macro-cfun-conversion-exception-message exc)
                 (err-code->string
                  (macro-cfun-conversion-exception-code exc)))
