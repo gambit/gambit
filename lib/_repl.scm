@@ -3535,7 +3535,7 @@
           (##write arg-num port)
           (##write-string ") " port))))
 
-  (define-prim (display-exception exc)
+  (define-prim (display-known-exception exc)
 
     (define (err-code->string code)
       (let ((x (##os-err-code->string code)))
@@ -3849,161 +3849,202 @@
            (##write exc port)
            (##newline port))))
 
-  (display-exception exc))
+  (if (##structure? exc)
+      (let* ((type (##structure-type exc))
+             (id (##type-id type))
+             (handler
+              (##table-ref (##structure-display-exception-handler-table-get)
+                           id
+                           #f)))
+        (if handler
+            (begin
+              (handler exc port)
+              (display-call))
+            (display-known-exception exc)))
+      (display-known-exception exc)))
 
 (define-prim (##exception-procedure-and-arguments exc)
-  (cond ((macro-sfun-conversion-exception? exc)
-         (##cons
-          (macro-sfun-conversion-exception-procedure exc)
-          (macro-sfun-conversion-exception-arguments exc)))
 
-        ((macro-cfun-conversion-exception? exc)
-         (##cons
-          (macro-cfun-conversion-exception-procedure exc)
-          (macro-cfun-conversion-exception-arguments exc)))
+  (define (known-exception-procedure-and-arguments exc)
+    (cond ((macro-sfun-conversion-exception? exc)
+           (##cons
+            (macro-sfun-conversion-exception-procedure exc)
+            (macro-sfun-conversion-exception-arguments exc)))
 
-        ((macro-divide-by-zero-exception? exc)
-         (##cons
-          (macro-divide-by-zero-exception-procedure exc)
-          (macro-divide-by-zero-exception-arguments exc)))
+          ((macro-cfun-conversion-exception? exc)
+           (##cons
+            (macro-cfun-conversion-exception-procedure exc)
+            (macro-cfun-conversion-exception-arguments exc)))
 
-        ((macro-fixnum-overflow-exception? exc)
-         (##cons
-          (macro-fixnum-overflow-exception-procedure exc)
-          (macro-fixnum-overflow-exception-arguments exc)))
+          ((macro-divide-by-zero-exception? exc)
+           (##cons
+            (macro-divide-by-zero-exception-procedure exc)
+            (macro-divide-by-zero-exception-arguments exc)))
 
-        ((macro-invalid-hash-number-exception? exc)
-         (##cons
-          (macro-invalid-hash-number-exception-procedure exc)
-          (macro-invalid-hash-number-exception-arguments exc)))
+          ((macro-fixnum-overflow-exception? exc)
+           (##cons
+            (macro-fixnum-overflow-exception-procedure exc)
+            (macro-fixnum-overflow-exception-arguments exc)))
 
-        ((macro-unbound-key-exception? exc)
-         (##cons
-          (macro-unbound-key-exception-procedure exc)
-          (macro-unbound-key-exception-arguments exc)))
+          ((macro-invalid-hash-number-exception? exc)
+           (##cons
+            (macro-invalid-hash-number-exception-procedure exc)
+            (macro-invalid-hash-number-exception-arguments exc)))
 
-        ((macro-unbound-serial-number-exception? exc)
-         (##cons
-          (macro-unbound-serial-number-exception-procedure exc)
-          (macro-unbound-serial-number-exception-arguments exc)))
+          ((macro-unbound-key-exception? exc)
+           (##cons
+            (macro-unbound-key-exception-procedure exc)
+            (macro-unbound-key-exception-arguments exc)))
 
-        ((macro-unbound-os-environment-variable-exception? exc)
-         (##cons
-          (macro-unbound-os-environment-variable-exception-procedure exc)
-          (macro-unbound-os-environment-variable-exception-arguments exc)))
+          ((macro-unbound-serial-number-exception? exc)
+           (##cons
+            (macro-unbound-serial-number-exception-procedure exc)
+            (macro-unbound-serial-number-exception-arguments exc)))
 
-        ((macro-unterminated-process-exception? exc)
-         (##cons
-          (macro-unterminated-process-exception-procedure exc)
-          (macro-unterminated-process-exception-arguments exc)))
+          ((macro-unbound-os-environment-variable-exception? exc)
+           (##cons
+            (macro-unbound-os-environment-variable-exception-procedure exc)
+            (macro-unbound-os-environment-variable-exception-arguments exc)))
 
-        ((macro-nonempty-input-port-character-buffer-exception? exc)
-         (##cons
-          (macro-nonempty-input-port-character-buffer-exception-procedure exc)
-          (macro-nonempty-input-port-character-buffer-exception-arguments exc)))
+          ((macro-unterminated-process-exception? exc)
+           (##cons
+            (macro-unterminated-process-exception-procedure exc)
+            (macro-unterminated-process-exception-arguments exc)))
 
-        ((macro-length-mismatch-exception? exc)
-         (##cons
-          (macro-length-mismatch-exception-procedure exc)
-          (macro-length-mismatch-exception-arguments exc)))
+          ((macro-nonempty-input-port-character-buffer-exception? exc)
+           (##cons
+            (macro-nonempty-input-port-character-buffer-exception-procedure exc)
+            (macro-nonempty-input-port-character-buffer-exception-arguments exc)))
 
-        ((macro-join-timeout-exception? exc)
-         (##cons
-          (macro-join-timeout-exception-procedure exc)
-          (macro-join-timeout-exception-arguments exc)))
+          ((macro-length-mismatch-exception? exc)
+           (##cons
+            (macro-length-mismatch-exception-procedure exc)
+            (macro-length-mismatch-exception-arguments exc)))
 
-        ((macro-mailbox-receive-timeout-exception? exc)
-         (##cons
-          (macro-mailbox-receive-timeout-exception-procedure exc)
-          (macro-mailbox-receive-timeout-exception-arguments exc)))
+          ((macro-join-timeout-exception? exc)
+           (##cons
+            (macro-join-timeout-exception-procedure exc)
+            (macro-join-timeout-exception-arguments exc)))
 
-        ((macro-rpc-remote-error-exception? exc)
-         (##cons
-          (macro-rpc-remote-error-exception-procedure exc)
-          (macro-rpc-remote-error-exception-arguments exc)))
+          ((macro-mailbox-receive-timeout-exception? exc)
+           (##cons
+            (macro-mailbox-receive-timeout-exception-procedure exc)
+            (macro-mailbox-receive-timeout-exception-arguments exc)))
 
-        ((macro-keyword-expected-exception? exc)
-         (##cons
-          (macro-keyword-expected-exception-procedure exc)
-          (macro-keyword-expected-exception-arguments exc)))
+          ((macro-rpc-remote-error-exception? exc)
+           (##cons
+            (macro-rpc-remote-error-exception-procedure exc)
+            (macro-rpc-remote-error-exception-arguments exc)))
 
-        ((macro-nonprocedure-operator-exception? exc)
-         (##cons
-          (macro-nonprocedure-operator-exception-operator exc)
-          (macro-nonprocedure-operator-exception-arguments exc)))
+          ((macro-keyword-expected-exception? exc)
+           (##cons
+            (macro-keyword-expected-exception-procedure exc)
+            (macro-keyword-expected-exception-arguments exc)))
 
-        ((macro-number-of-arguments-limit-exception? exc)
-         (##cons
-          (macro-number-of-arguments-limit-exception-procedure exc)
-          (macro-number-of-arguments-limit-exception-arguments exc)))
+          ((macro-nonprocedure-operator-exception? exc)
+           (##cons
+            (macro-nonprocedure-operator-exception-operator exc)
+            (macro-nonprocedure-operator-exception-arguments exc)))
 
-        ((macro-os-exception? exc)
-         (##cons
-          (macro-os-exception-procedure exc)
-          (macro-os-exception-arguments exc)))
+          ((macro-number-of-arguments-limit-exception? exc)
+           (##cons
+            (macro-number-of-arguments-limit-exception-procedure exc)
+            (macro-number-of-arguments-limit-exception-arguments exc)))
 
-        ((macro-no-such-file-or-directory-exception? exc)
-         (##cons
-          (macro-no-such-file-or-directory-exception-procedure exc)
-          (macro-no-such-file-or-directory-exception-arguments exc)))
+          ((macro-os-exception? exc)
+           (##cons
+            (macro-os-exception-procedure exc)
+            (macro-os-exception-arguments exc)))
 
-        ((macro-module-not-found-exception? exc)
-         (##cons
-          (macro-module-not-found-exception-procedure exc)
-          (macro-module-not-found-exception-arguments exc)))
+          ((macro-no-such-file-or-directory-exception? exc)
+           (##cons
+            (macro-no-such-file-or-directory-exception-procedure exc)
+            (macro-no-such-file-or-directory-exception-arguments exc)))
 
-        ((macro-range-exception? exc)
-         (##cons
-          (macro-range-exception-procedure exc)
-          (macro-range-exception-arguments exc)))
+          ((macro-module-not-found-exception? exc)
+           (##cons
+            (macro-module-not-found-exception-procedure exc)
+            (macro-module-not-found-exception-arguments exc)))
 
-        ((macro-initialized-thread-exception? exc)
-         (##cons
-          (macro-initialized-thread-exception-procedure exc)
-          (macro-initialized-thread-exception-arguments exc)))
+          ((macro-range-exception? exc)
+           (##cons
+            (macro-range-exception-procedure exc)
+            (macro-range-exception-arguments exc)))
 
-        ((macro-uninitialized-thread-exception? exc)
-         (##cons
-          (macro-uninitialized-thread-exception-procedure exc)
-          (macro-uninitialized-thread-exception-arguments exc)))
+          ((macro-initialized-thread-exception? exc)
+           (##cons
+            (macro-initialized-thread-exception-procedure exc)
+            (macro-initialized-thread-exception-arguments exc)))
 
-        ((macro-inactive-thread-exception? exc)
-         (##cons
-          (macro-inactive-thread-exception-procedure exc)
-          (macro-inactive-thread-exception-arguments exc)))
+          ((macro-uninitialized-thread-exception? exc)
+           (##cons
+            (macro-uninitialized-thread-exception-procedure exc)
+            (macro-uninitialized-thread-exception-arguments exc)))
 
-        ((macro-started-thread-exception? exc)
-         (##cons
-          (macro-started-thread-exception-procedure exc)
-          (macro-started-thread-exception-arguments exc)))
+          ((macro-inactive-thread-exception? exc)
+           (##cons
+            (macro-inactive-thread-exception-procedure exc)
+            (macro-inactive-thread-exception-arguments exc)))
 
-        ((macro-terminated-thread-exception? exc)
-         (##cons
-          (macro-terminated-thread-exception-procedure exc)
-          (macro-terminated-thread-exception-arguments exc)))
+          ((macro-started-thread-exception? exc)
+           (##cons
+            (macro-started-thread-exception-procedure exc)
+            (macro-started-thread-exception-arguments exc)))
 
-        ((macro-type-exception? exc)
-         (##cons
-          (macro-type-exception-procedure exc)
-          (macro-type-exception-arguments exc)))
+          ((macro-terminated-thread-exception? exc)
+           (##cons
+            (macro-terminated-thread-exception-procedure exc)
+            (macro-terminated-thread-exception-arguments exc)))
 
-        ((macro-uncaught-exception? exc)
-         (##cons
-          (macro-uncaught-exception-procedure exc)
-          (macro-uncaught-exception-arguments exc)))
+          ((macro-type-exception? exc)
+           (##cons
+            (macro-type-exception-procedure exc)
+            (macro-type-exception-arguments exc)))
 
-        ((macro-unknown-keyword-argument-exception? exc)
-         (##cons
-          (macro-unknown-keyword-argument-exception-procedure exc)
-          (macro-unknown-keyword-argument-exception-arguments exc)))
+          ((macro-uncaught-exception? exc)
+           (##cons
+            (macro-uncaught-exception-procedure exc)
+            (macro-uncaught-exception-arguments exc)))
 
-        ((macro-wrong-number-of-arguments-exception? exc)
-         (##cons
-          (macro-wrong-number-of-arguments-exception-procedure exc)
-          (macro-wrong-number-of-arguments-exception-arguments exc)))
+          ((macro-unknown-keyword-argument-exception? exc)
+           (##cons
+            (macro-unknown-keyword-argument-exception-procedure exc)
+            (macro-unknown-keyword-argument-exception-arguments exc)))
 
-        (else
-         #f)))
+          ((macro-wrong-number-of-arguments-exception? exc)
+           (##cons
+            (macro-wrong-number-of-arguments-exception-procedure exc)
+            (macro-wrong-number-of-arguments-exception-arguments exc)))
+
+          (else
+           #f)))
+
+  (if (##structure? exc)
+      (let* ((type (##structure-type exc))
+             (id (##type-id type))
+             (handler
+              (##table-ref (##structure-display-exception-handler-table-get)
+                           id
+                           #f)))
+        (if handler
+            (handler exc #f)
+            (known-exception-procedure-and-arguments exc)))
+      (known-exception-procedure-and-arguments exc)))
+
+(define ##structure-display-exception-handler-table #f)
+
+(define-prim (##structure-display-exception-handler-table-get)
+  (or ##structure-display-exception-handler-table
+      (let ((t (##make-table-aux 0 #f #f #f ##eq?)))
+        (set! ##structure-display-exception-handler-table t)
+        ##structure-display-exception-handler-table)))
+
+(define-prim (##structure-display-exception-handler-register! id proc)
+  (##declare (not interrupts-enabled))
+  (let ((handler-table (##structure-display-exception-handler-table-get)))
+    (if proc
+        (##table-set! handler-table id proc)
+        (##table-set! handler-table id))))
 
 (define ##display-exception-hook ##default-display-exception)
 
