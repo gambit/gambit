@@ -52,14 +52,21 @@ c-declare-end
     * by the C-interface when C is calling a Scheme function.
     */
 
+   ___SCMOBJ handler;
+
    ___PUSH_ARGS3(___ps->temp1, /* arg 1 = error code, integer */
-                 ___ps->temp2, /* arg 2 = error message, string or #f */
+                 ___ps->temp2, /* arg 2 = error data, #f/string/other */
                  ___FIELD(___ps->temp3,0)) /* arg 3 = procedure */
 
    ___COVER_SFUN_CONVERSION_ERROR_HANDLER;
 
-   ___JUMPPRM(___SET_NARGS(3),
-              ___PRMCELL(___G__23__23_raise_2d_sfun_2d_conversion_2d_exception.prm))
+   handler = ___ps->temp4;
+
+   if (___FALSEP(handler))
+     ___JUMPPRM(___SET_NARGS(3),
+                ___PRMCELL(___G__23__23_raise_2d_sfun_2d_conversion_2d_exception.prm))
+   else
+     ___JUMPEXTNOTSAFE(___SET_NARGS(3), handler)
 
 end-of-code
 )
@@ -76,6 +83,7 @@ end-of-code
 
    ___WORD na;
    ___WORD i;
+   ___SCMOBJ handler;
 
    na = ___ps->na;
 
@@ -89,15 +97,20 @@ end-of-code
      ___SET_STK(-i,___STK(-(i+3))) /* shift arguments up by three */
 
    ___SET_STK(-(na+2),___ps->temp1) /* arg 1 = error code, integer */
-   ___SET_STK(-(na+1),___ps->temp2) /* arg 2 = error message, string or #f */
+   ___SET_STK(-(na+1),___ps->temp2) /* arg 2 = error data, #f/string/other */
    ___SET_STK(-na,___ps->temp3) /* arg 3 = procedure */
 
    ___POP_ARGS_IN_REGS(na+3) /* load register arguments */
 
    ___COVER_CFUN_CONVERSION_ERROR_HANDLER;
 
-   ___JUMPPRM(___SET_NARGS(na+3),
-              ___PRMCELL(___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary.prm))
+   handler = ___ps->temp4;
+
+   if (___FALSEP(handler))
+     ___JUMPPRM(___SET_NARGS(na+3),
+                ___PRMCELL(___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary.prm))
+   else
+     ___JUMPEXTNOTSAFE(___SET_NARGS(na+3), handler)
 
 end-of-code
 
