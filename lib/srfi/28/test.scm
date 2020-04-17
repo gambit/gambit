@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -13,33 +13,33 @@
 
 ;;;============================================================================
 
-(check-equal? (format "Hello, ~a" "World!")
-              "Hello, World!")
+(test-equal "Hello, World!"
+            (format "Hello, ~a" "World!"))
 
-(check-equal? (format "Error, list is too short: ~s~%" '(one "two" 3))
-              "Error, list is too short: (one \"two\" 3)\n")
+(test-equal "Error, list is too short: (one \"two\" 3)\n"
+            (format "Error, list is too short: ~s~%" '(one "two" 3)))
 
-(check-equal? (format "~~a and ~~b")
-              "~a and ~b")
+(test-equal "~a and ~b"
+            (format "~~a and ~~b"))
 
-(check-tail-exn
+(test-error-tail
  type-exception?
- (lambda () (format #f)))
+ (format #f))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (format)))
+ (format))
 
-(check-tail-exn
+(test-error-tail
  error-object?
- (lambda () (format "a=~ " 123)))
+ (format "a=~ " 123))
 
-(check-tail-exn
+(test-error-tail
  error-object?
- (lambda () (format "b=~a")))
+ (format "b=~a"))
 
-(check-tail-exn
+(test-error-tail
  error-object?
- (lambda () (format "c=~s")))
+ (format "c=~s"))
 
 ;;;============================================================================

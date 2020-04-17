@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -15,8 +15,8 @@
 
 (cond-expand
   (gambit
-   (check-true #t))
+   (test-assert #t))
   (else
-   (check-true #f)))
+   (test-assert #f)))
 
 ;;;============================================================================

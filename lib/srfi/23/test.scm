@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -13,20 +13,20 @@
 
 ;;;============================================================================
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (error)))
+ (error))
 
-(check-tail-exn
+(test-error-tail
  error-object?
- (lambda () (error "panic!")))
+ (error "panic!"))
 
-(check-tail-exn
+(test-error-tail
  error-object?
- (lambda () (error "panic!" 1)))
+ (error "panic!" 1))
 
-(check-tail-exn
+(test-error-tail
  error-object?
- (lambda () (error "panic!" 1 2)))
+ (error "panic!" 1 2))
 
 ;;;============================================================================

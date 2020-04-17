@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -19,13 +19,13 @@
   (x kar set-kar!)
   (y kdr))
 
-(check-true (pare? (kons 1 2)))
-(check-false (pare? (cons 1 2)))
-(check-equal? (kar (kons 1 2)) 1)
-(check-equal? (kdr (kons 1 2)) 2)
+(test-assert (pare? (kons 1 2)))
+(test-assert (not (pare? (cons 1 2))))
+(test-equal (kar (kons 1 2)) 1)
+(test-equal (kdr (kons 1 2)) 2)
 
 (let ((k (kons 1 2)))
   (set-kar! k 3)
-  (check-equal? (kar k) 3))
+  (test-equal (kar k) 3))
 
 ;;;============================================================================
