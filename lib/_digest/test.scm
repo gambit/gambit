@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -124,7 +124,7 @@
                                0
                                (u8vector-length u8vect2))
                               (close-digest digest 'hex))))))))
-           (check-equal? md expect)
+           (test-equal expect md)
            '
            (if (not (string-ci=? md expect))
                (pp (list '***error*** algorithm md expect))))))

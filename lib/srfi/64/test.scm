@@ -6,16 +6,16 @@
 
 ;;;============================================================================
 
-(import (_test))
+;;; SRFI 64, A Scheme API for test suites
+
+(import (srfi 64))
 
 (define-syntax macro-set-current-directory-to-this-source-file-directory
   (lambda (src)
     (let ((path (##source-path src)))
       (if path (current-directory (path-directory path)))
       #f)))
-
-;; make error messages predictable
-(macro-set-current-directory-to-this-source-file-directory)
+(macro-set-current-directory-to-this-source-file-directory) ;; make error messages predictable
 
 (define (output-msg thunk) ;; for testing checks that fail
   (let ((save-test-all? _test#test-all?)
