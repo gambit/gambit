@@ -1,5 +1,6 @@
 ;; Copyright (C) 2005-2009 by Guillaume Germain, All Rights Reserved.
 ;; Copyright (C) 2005-2019 by FrédéricHamel, All Rights Reserved.
+;; Copyright (C) 2020 by Marc Feeley, All Rights Reserved.
 ;; File: ~~lib/termite/termite.scm
 (##supply-module termite)
 
@@ -57,11 +58,33 @@
   node)
 
 ;; nodes
-(define-type node
-  id: 8992144e-4f3e-4ce4-9d01-077576f98bc5
-  read-only:
-  host
-  port)
+(define (make-node host port)
+  (if (and (string? host) (number? port))
+      (string-append host ":" (number->string port))
+      (error "string and number expected:" host port)))
+
+(define (node-host node)
+
+  (define (err) (error "node expected:" node))
+
+  (if (string? node)
+      (let ((i (##string-contains node ":")))
+        (if i
+            (substring node 0 i)
+            node))
+      (err)))
+
+(define (node-port node)
+
+  (define (err) (error "node expected:" node))
+
+  (if (string? node)
+      (let ((i (##string-contains node ":")))
+        (if i
+            (or (string->number (substring node (+ i 1) (string-length node)))
+                (err))
+            0))
+      (err)))
 
 ;; tags
 (define-type tag
@@ -457,18 +480,28 @@
 
 ;; a tcp server listens on a certain port for new tcp connection
 ;; requests, and call ON-CONNECT to deal with those new connections.
-(define (start-tcp-server tcp-address tcp-port-number on-connect)
+(define (start-tcp-server node on-connect)
+  (##namespace ("" open-tcp-server tcp-server-socket-info socket-info-port-number))
   (let ((tcp-server-port
-      ((let () (##namespace ("")) open-tcp-server) (list
-               server-address: tcp-address
-               port-number: tcp-port-number
-               coalesce: #f))))
-  (spawn
-    (lambda ()
-    (let loop ()
-      (on-connect (read tcp-server-port)) ;; io override
-      (loop)))
-      name: 'termite-tcp-server)))
+         (open-tcp-server
+          (list
+           local-address:     (node-host node)
+           local-port-number: (node-port node)
+           coalesce:          #f))))
+    (spawn
+     (lambda ()
+       (let loop ()
+         (on-connect (read tcp-server-port)) ;; io override
+         (loop)))
+     name: 'termite-tcp-server)
+
+    (make-node (if (equal? "" (node-host node))
+                   "localhost"
+                   (node-host node))
+               (if (= 0 (node-port node))
+                   (socket-info-port-number
+                    (tcp-server-socket-info tcp-server-port))
+                   (node-port node)))))
 
 
 ;; MESSENGERs act as proxies for sockets to other nodes
@@ -486,9 +519,9 @@
 
         (lambda ()
           (let ((socket ((let () (##namespace ("")) open-tcp-client)
-                          (list server-address: (node-host node)
-                                port-number:    (node-port node)
-                                coalesce:       #f))))
+                          (list address:     (node-host node)
+                                port-number: (node-port node)
+                                coalesce:    #f))))
             ;; the real interesting part
             (let ((in  (start-serializing-active-input-port socket (self)))
                   (out (start-serializing-output-port socket)))
@@ -795,9 +828,9 @@
 
 (process-links-set! (self) '())
 
-(define (node-init node)
-  (start-tcp-server (node-host node) (node-port node) start-messenger)
-  (set! current-node (lambda () node))
+(define (node-init #!optional (node (make-node "" 0)))
+  (let ((actual-node (start-tcp-server node start-messenger)))
+    (set! current-node (lambda () actual-node)))
   (publish-external-services)
   'ok)
 
