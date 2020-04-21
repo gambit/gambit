@@ -1,15 +1,17 @@
 ;;;============================================================================
 
-;;; File: "64.scm"
+;;; File: "_test-expand#.scm"
 
-;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; SRFI 64, A Scheme API for test suites
+;;; Testing forms expander.
 
-(##supply-module srfi/64)
+(##namespace ("_test-expand#"
 
-(##import _test)
+test-expand
+
+))
 
 ;;;============================================================================

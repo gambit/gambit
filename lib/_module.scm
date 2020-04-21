@@ -1004,7 +1004,7 @@
                       (##path-expand (##string-append
                                       (##vector-ref mod-info 1)
                                       "#"
-                                      (##car (##vector-ref mod-info 2)))
+                                      ".scm" #;(##car (##vector-ref mod-info 2)))
                                      (##vector-ref mod-info 0))
                       #f))
                     (port

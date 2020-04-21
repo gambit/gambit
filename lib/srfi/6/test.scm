@@ -17,19 +17,19 @@
   (open-input-string "(a . (b . (c . ()))) 34"))
 
 (test-assert (input-port? p))
-(test-equal (read p) '(a b c))
-(test-equal (read p) 34)
+(test-equal '(a b c) (read p))
+(test-equal 34 (read p))
 (test-assert (eof-object? (peek-char p)))
 
 (let ((q (open-output-string))
       (x '(a b c)))
   (write (car x) q)
   (write (cdr x) q)
-  (test-equal (get-output-string q) "a(b c)"))
+  (test-equal "a(b c)" (get-output-string q)))
 
 (test-assert (input-port? (open-input-string "  (0 ; 1 \n 2 3) (4 5)")))
 
-(test-equal (read (open-input-string "  (0 ; 1 \n 2 3) (4 5)")) '(0 2 3))
+(test-equal '(0 2 3) (read (open-input-string "  (0 ; 1 \n 2 3) (4 5)")))
 
 (test-assert (eof-object? (read (open-input-string ""))))
 
@@ -39,7 +39,7 @@
   (display "a" port)
   (write "b" port)
   (display "c" port)
-  (test-equal (get-output-string port) "a\"b\"c"))
+  (test-equal "a\"b\"c" (get-output-string port)))
 
 (test-error-tail
  type-exception?

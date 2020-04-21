@@ -21,19 +21,19 @@
           test-end
           test-group
 
+          test-msg
+
           test-all?-set!
           test-quiet?-set!
           test-verbose?-set!
 
-          test-predicate-proc
-          test-relation-proc
-          test-approximate-proc
-          test-error-proc
-          test-begin-proc
-          test-end-proc
-          test-group-proc
-
-          $expand-test$)
+          %test-predicate
+          %test-relation
+          %test-approximate
+          %test-error
+          %test-begin
+          %test-end
+          %test-group)
 
   (include "_test#.scm")
   (include "_test.scm"))
