@@ -21,11 +21,11 @@
 
 (test-assert (pare? (kons 1 2)))
 (test-assert (not (pare? (cons 1 2))))
-(test-equal (kar (kons 1 2)) 1)
-(test-equal (kdr (kons 1 2)) 2)
+(test-equal 1 (kar (kons 1 2)))
+(test-equal 2 (kdr (kons 1 2)))
 
 (let ((k (kons 1 2)))
   (set-kar! k 3)
-  (test-equal (kar k) 3))
+  (test-equal 3 (kar k)))
 
 ;;;============================================================================

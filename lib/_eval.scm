@@ -824,6 +824,13 @@
 (define (##full-name? sym) ;; full name if it contains a namespace separator
   (##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
 
+(define (##namespace-split sym)
+  (let* ((str (##symbol->string sym))
+         (i (##fx+ 1 (##namespace-separator-index str))))
+    (##cons (##substring str 0 i)
+            (##string->symbol
+             (##substring str i (##string-length str))))))
+
 (define (##make-full-name prefix sym)
   (if (##fx= (##string-length prefix) 0)
       sym

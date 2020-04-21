@@ -24,7 +24,6 @@
 (define test-all? #f) ;; default is to stop at first failure
 (define test-quiet? #f) ;; default is to display summary of tests run
 (define test-verbose? #f) ;; default is to not display passed tests
-(define epsilon 0) ;; default tolerance for check-= numerical check
 
 (define nb-passed-tests 0)  ;; number of tests that passed
 (define nb-failed-tests 0)  ;; number of tests that failed
@@ -107,29 +106,6 @@
   (if (not test-all?)
       (##exit)))
 
-(define (check-exn-proc exn? thunk passed-msg failed-msg tail-exn?)
-  (##continuation-capture
-   (lambda (return)
-     (with-exception-handler
-      (lambda (e)
-        (##continuation-capture
-         (lambda (cont)
-           (##continuation-graft
-            return
-            (lambda ()
-              (let ((creator (##continuation-creator cont)))
-                (cond ((not (exn? e))
-                       (failed-test failed-msg e))
-                      ((and tail-exn?
-                            (not (eq? creator call-thunk)))
-                       (failed-test
-                        failed-msg
-                        (list 'nontail-exception-raised-in creator)))
-                      (else
-                       (passed-test passed-msg)))))))))
-      (lambda ()
-        (failed-test failed-msg (call-thunk thunk)))))))
-
 (define call-thunk
   (let ()
 
@@ -140,19 +116,12 @@
       ;; make sure continuation of thunk has call-thunk as creator
       (##first-argument (thunk)))))
 
-(define (check-=-proc n1 n2 tolerance passed-msg failed-msg)
-  (if (or (not (number? n1))
-          (not (number? n2))
-          (< tolerance (magnitude (- n1 n2))))
-      (failed-test failed-msg n2)
-      (passed-test passed-msg n2)))
-
-(define (test-predicate-proc test-name
-                             expression-thunk
-                             positive?
-                             predicate
-                             test-location
-                             test-source)
+(define (%test-predicate test-name
+                         expression-thunk
+                         positive?
+                         predicate
+                         test-location
+                         test-source)
   (##continuation-capture
    (lambda (return)
 
@@ -176,13 +145,13 @@
            (failed expression-value)
            (passed expression-value))))))
 
-(define (test-relation-proc test-name
-                            expected-thunk
-                            test-expr-thunk
-                            positive?
-                            relation
-                            test-location
-                            test-source)
+(define (%test-relation test-name
+                        expected-thunk
+                        test-expr-thunk
+                        positive?
+                        relation
+                        test-location
+                        test-source)
   (##continuation-capture
    (lambda (return)
 
@@ -211,13 +180,13 @@
            (passed test-expr-value)
            (failed test-expr-value))))))
 
-(define (test-approximate-proc test-name
-                               expected-thunk
-                               test-expr-thunk
-                               error
-                               positive?
-                               test-location
-                               test-source)
+(define (%test-approximate test-name
+                           expected-thunk
+                           test-expr-thunk
+                           error
+                           positive?
+                           test-location
+                           test-source)
   (##continuation-capture
    (lambda (return)
 
@@ -256,12 +225,12 @@
            (passed test-expr-value)
            (failed test-expr-value))))))
 
-(define (test-error-proc test-name
-                         error-type?
-                         test-expr-thunk
-                         tail?
-                         test-location
-                         test-source)
+(define (%test-error test-name
+                     error-type?
+                     test-expr-thunk
+                     tail?
+                     test-location
+                     test-source)
   (##continuation-capture
    (lambda (return)
 
@@ -295,14 +264,14 @@
       (lambda ()
         (failed (call-thunk test-expr-thunk)))))))
 
-(define (test-begin-proc suite-name count)
+(define (%test-begin suite-name count)
   (if (not test-quiet?)
       (let ((output-port (test-output-port)))
         (display (string-append (test-indent) "testing " suite-name "\n")
                  output-port)))
   (set! context (cons suite-name context)))
 
-(define (test-end-proc suite-name)
+(define (%test-end suite-name)
   (if (pair? context)
       (if (or (not suite-name) (equal? (car context) suite-name))
           (set! context (cdr context))
@@ -314,14 +283,36 @@
   (let ((n (length context)))
     (append-strings (map (lambda (x) "| ") (iota n)))))
 
-(define (test-group-proc suite-name body-thunk)
-  (test-begin-proc suite-name #f)
+(define (%test-group suite-name body-thunk)
+  (%test-begin suite-name #f)
   (body-thunk)
-  (test-end-proc suite-name))
+  (%test-end suite-name))
 
-
-
-
+(define (test-msg thunk) ;; for testing checks that fail
+  (let ((save-test-all? test-all?)
+        (save-test-quiet? test-quiet?)
+        (save-test-verbose? test-verbose?)
+        (save-nb-passed-tests nb-passed-tests)
+        (save-nb-failed-tests nb-failed-tests)
+        (save-nb-skipped-tests nb-skipped-tests)
+        (save-context context))
+    (set! test-all? #t)
+    (set! test-quiet? #f)
+    (set! test-verbose? #t)
+    (let ((msg
+           (call-with-output-string ;; capture test output messages
+             ""
+             (lambda (port)
+               (parameterize ((redirect-test-output-port port))
+                 (thunk))))))
+      (set! test-all? save-test-all?)
+      (set! test-quiet? save-test-quiet?)
+      (set! test-verbose? save-test-verbose?)
+      (set! nb-passed-tests save-nb-passed-tests)
+      (set! nb-failed-tests save-nb-failed-tests)
+      (set! nb-skipped-tests save-nb-skipped-tests)
+      (set! context save-context)
+      msg)))
 
 (define (test-all?-set! val)
   (set! test-all? val))

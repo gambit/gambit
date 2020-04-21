@@ -48,8 +48,8 @@
 
 ;;; Reflexion
 
-(test-equal (hash-table-equivalence-function (make-hash-table))
-              ##equal?)
+(test-equal ##equal?
+            (hash-table-equivalence-function (make-hash-table)))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -60,8 +60,8 @@
  (hash-table-equivalence-function (make-hash-table) 0))
 
 
-(test-equal (hash-table-hash-function (make-hash-table))
-              ##equal?-hash)
+(test-equal ##equal?-hash
+            (hash-table-hash-function (make-hash-table)))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -79,12 +79,12 @@
 ;;; hash-table-ref
 
 (test-equal
- (hash-table-ref (alist->hash-table '((0 . 0) (1 . 1))) 0)
- 0)
+ 0
+ (hash-table-ref (alist->hash-table '((0 . 0) (1 . 1))) 0))
 
 (test-equal
- (hash-table-ref (alist->hash-table '((0 . 0) (1 . 1))) 2 (lambda () #f))
- #f)
+ #f
+ (hash-table-ref (alist->hash-table '((0 . 0) (1 . 1))) 2 (lambda () #f)))
 
 (test-error-tail
  null?
@@ -108,12 +108,12 @@
 ;;; hash-table-ref/default
 
 (test-equal
- (hash-table-ref/default (alist->hash-table '((0 . 0) (1 . 1))) 0 #f)
- 0)
+ 0
+ (hash-table-ref/default (alist->hash-table '((0 . 0) (1 . 1))) 0 #f))
 
 (test-equal
- (hash-table-ref/default (alist->hash-table '((0 . 0) (1 . 1))) 2 #f)
- #f)
+ #f
+ (hash-table-ref/default (alist->hash-table '((0 . 0) (1 . 1))) 2 #f))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -128,7 +128,7 @@
 
 (let ((ht (make-hash-table)))
   (hash-table-set! ht 0 1)
-  (test-equal (hash-table-ref ht 0) 1))
+  (test-equal 1 (hash-table-ref ht 0)))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -144,7 +144,7 @@
 (let ((ht (make-hash-table)))
   (hash-table-set! ht 0 1)
   (hash-table-delete! ht 0)
-  (test-equal (hash-table-ref ht 0 (lambda () #f)) #f))
+  (test-equal #f (hash-table-ref ht 0 (lambda () #f))))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -175,7 +175,7 @@
 
 (let ((ht (alist->hash-table '((0 . 0)))))
   (hash-table-update! ht 0 (lambda (val) (+ val 1)))
-  (test-equal (hash-table-ref ht 0) 1))
+  (test-equal 1 (hash-table-ref ht 0)))
 
 (test-error-tail
  unbound-key-exception?
@@ -197,7 +197,7 @@
 
 (let ((ht (alist->hash-table '((0 . 0)))))
   (hash-table-update!/default ht 0 (lambda (val) (+ val 1)) 0)
-  (test-equal (hash-table-ref ht 0) 1))
+  (test-equal 1 (hash-table-ref ht 0)))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -214,9 +214,9 @@
 
 ;;; hash-table-size
 
-(test-equal (hash-table-size (make-hash-table)) 0)
-(test-equal (hash-table-size (alist->hash-table '((0 . 0)))) 1)
-(test-equal (hash-table-size (alist->hash-table '((0 . 0) (1 . 1)))) 2)
+(test-equal 0 (hash-table-size (make-hash-table)))
+(test-equal 1 (hash-table-size (alist->hash-table '((0 . 0)))))
+(test-equal 2 (hash-table-size (alist->hash-table '((0 . 0) (1 . 1)))))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -272,7 +272,7 @@
 
 (let ((ht (alist->hash-table '((0 . 1) (1 . 1)))))
   (hash-table-walk ht (lambda (key val) (hash-table-set! ht key 0)))
-  (test-equal (hash-table-ref ht 0) 0))
+  (test-equal 0 (hash-table-ref ht 0)))
 
 (test-error-tail
  wrong-number-of-arguments-exception?
@@ -290,9 +290,9 @@
                    (lambda (key val result)
                      (hash-table-set! ht key result)
                      (hash-table-ref ht key)) 0)
-  (test-equal (hash-table-ref ht 0) 0)
-  (test-equal (hash-table-ref ht 1) 0)
-  (test-equal (hash-table-ref ht 2) 0))
+  (test-equal 0 (hash-table-ref ht 0))
+  (test-equal 0 (hash-table-ref ht 1))
+  (test-equal 0 (hash-table-ref ht 2)))
 
 (test-error-tail
  wrong-number-of-arguments-exception?

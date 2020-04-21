@@ -1464,7 +1464,7 @@
                            (else
                             (##symbol-append prefix
                                              name
-                                             '-copy))))
+                                             '-copy)))) ;; should be a prefix
                     (predicate
                      (cond ((##assq 'predicate: flags)
                             =>
