@@ -152,6 +152,7 @@ g_os_debug = False
 
 (define ##err-code-ENOENT             -2)
 (define ##err-code-EINTR              -4)
+(define ##err-code-EACCES            -13)
 (define ##err-code-EEXIST            -17)
 (define ##err-code-EAGAIN            -35)
 (define ##err-code-unimplemented   -9999)

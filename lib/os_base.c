@@ -1274,8 +1274,11 @@ ___SCMOBJ ___err_code_from_GetLastError ___PVOID
   if (e == ERROR_FILE_NOT_FOUND || e == ERROR_PATH_NOT_FOUND)
     return ___ERR_CODE_ENOENT;
 
-  if (e == ERROR_ALREADY_EXISTS)
+  if (e == ERROR_ALREADY_EXISTS || e == ERROR_FILE_EXISTS)
     return ___ERR_CODE_EEXIST;
+
+  if (e == ERROR_ACCESS_DENIED)
+    return ___ERR_CODE_EACCES;
 
   return ___FIX(___WIN32_ERR(e));
 }
@@ -1510,6 +1513,8 @@ ___SCMOBJ err;)
     err_code = ___WIN32_ERR(ERROR_FILE_NOT_FOUND);
   else if (err == ___ERR_CODE_EEXIST)
     err_code = ___WIN32_ERR(ERROR_ALREADY_EXISTS);
+  else if (err == ___ERR_CODE_EACCES)
+    err_code = ___WIN32_ERR(ERROR_ACCESS_DENIED);
   else
 #endif
 

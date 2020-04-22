@@ -65,9 +65,14 @@
    (lambda (procedure arguments message code port)
      (##raise-io-exception
       port
-      (if (##fx= code ##err-code-ENOENT)
-          (macro-make-no-such-file-or-directory-exception procedure arguments)
-          (macro-make-os-exception procedure arguments message code))))))
+      (cond ((##fx= code ##err-code-ENOENT)
+             (macro-make-no-such-file-or-directory-exception procedure arguments))
+            ((##fx= code ##err-code-EEXIST)
+             (macro-make-file-exists-exception procedure arguments))
+            ((##fx= code ##err-code-EACCES)
+             (macro-make-permission-denied-exception procedure arguments))
+            (else
+             (macro-make-os-exception procedure arguments message code)))))))
 
 (define-prim (##raise-io-exception port exc)
   (let ((handler (macro-port-io-exception-handler port)))
