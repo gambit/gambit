@@ -81,7 +81,9 @@
         (macro-raise exc))))
 
 (define-prim (file-error? obj)
-  (macro-no-such-file-or-directory-exception? obj))
+  (or (macro-no-such-file-or-directory-exception? obj)
+      (macro-file-exists-exception? obj)
+      (macro-permission-denied-exception? obj)))
 
 ;;;----------------------------------------------------------------------------
 

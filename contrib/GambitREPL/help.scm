@@ -401,6 +401,9 @@ f64vector?
 file-attributes
 file-creation-time
 file-device
+file-exists-exception-arguments
+file-exists-exception-procedure
+file-exists-exception?
 file-exists?
 file-group
 file-info
@@ -699,6 +702,9 @@ path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
 peek-char
+permission-denied-exception-arguments
+permission-denied-exception-procedure
+permission-denied-exception?
 port-settings-set!
 port?
 pp

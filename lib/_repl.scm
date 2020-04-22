@@ -3746,6 +3746,11 @@
            (##newline port)
            (display-call))
 
+          ((macro-permission-denied-exception? exc)
+           (##write-string "Permission denied" port)
+           (##newline port)
+           (display-call))
+
           ((macro-module-not-found-exception? exc)
            (##write-string "Module not found" port)
            (##newline port)
@@ -3960,6 +3965,16 @@
            (##cons
             (macro-no-such-file-or-directory-exception-procedure exc)
             (macro-no-such-file-or-directory-exception-arguments exc)))
+
+          ((macro-file-exists-exception? exc)
+           (##cons
+            (macro-file-exists-exception-procedure exc)
+            (macro-file-exists-exception-arguments exc)))
+
+          ((macro-permission-denied-exception? exc)
+           (##cons
+            (macro-permission-denied-exception-procedure exc)
+            (macro-permission-denied-exception-arguments exc)))
 
           ((macro-module-not-found-exception? exc)
            (##cons

@@ -1694,6 +1694,21 @@ end-of-code
       (macro-make-file-exists-exception
        procedure
        arguments)))))
+
+(implement-library-type-permission-denied-exception)
+
+(define-prim (##raise-permission-denied-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-permission-denied-exception
+       procedure
+       arguments)))))
 ))
 
 (macro-case-target

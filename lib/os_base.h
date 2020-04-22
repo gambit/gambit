@@ -251,10 +251,10 @@ extern ___SCMOBJ ___err_code_from_errno ___PVOID;
 #define ___fnf_or_err_code_from_errno() \
 ___err_code_from_errno()
 
-#define ___ERR_CODE_EAGAIN ___FIX(___ERRNO_ERR(EAGAIN))
 #define ___ERR_CODE_ENOENT ___FIX(___ERRNO_ERR(ENOENT))
-#define ___ERR_CODE_EEXIST ___FIX(___ERRNO_ERR(EEXIST))
 #define ___ERR_CODE_EACCES ___FIX(___ERRNO_ERR(EACCES))
+#define ___ERR_CODE_EEXIST ___FIX(___ERRNO_ERR(EEXIST))
+#define ___ERR_CODE_EAGAIN ___FIX(___ERRNO_ERR(EAGAIN))
 
 #endif
 

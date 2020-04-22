@@ -206,6 +206,15 @@
   (arguments unprintable: read-only: no-functional-setter:)
 )
 
+(define-library-type-of-exception permission-denied-exception
+  id: db6b7b55-594c-41e2-9268-05c6977db53e
+  constructor: #f
+  opaque:
+
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+)
+
 (define-library-type-of-exception module-not-found-exception
   id: CA9CA020-600A-4516-AA78-CBE91EC8BE14
   constructor: #f

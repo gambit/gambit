@@ -588,6 +588,9 @@ path-strip-extension
 path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
+permission-denied-exception-arguments
+permission-denied-exception-procedure
+permission-denied-exception?
 port-io-exception-handler-set!
 port-settings-set!
 port?
