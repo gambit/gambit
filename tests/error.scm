@@ -225,6 +225,10 @@
                  (call
                   (file-exists-exception-procedure exc)
                   (file-exists-exception-arguments exc)))
+                ((permission-denied-exception? exc)
+                 (call
+                  (permission-denied-exception-procedure exc)
+                  (permission-denied-exception-arguments exc)))
                 (else
                  (call "???" '()))))
         thunk))))

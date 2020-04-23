@@ -417,6 +417,12 @@
      ("args" (("required" n1 n2 n3) ("optional") ("key")))("module"))
     (f32vector? ("args" (("required" obj) ("optional") ("key")))("module"))
     (f64vector? ("args" (("required" obj) ("optional") ("key")))("module"))
+    (file-exists-exception?
+     ("args" (("required" obj) ("optional") ("key")))("module"))
+    (file-exists-exception-procedure
+     ("args" (("required" exc) ("optional") ("key")))("module"))
+    (file-exists-exception-arguments
+     ("args" (("required" exc) ("optional") ("key")))("module"))
     (file-exists?
      ("args" (("required" path [chase?]) ("optional") ("key")))("module"))
     (file-info ("args" (("required" path [chase?]) ("optional") ("key")))("module"))
@@ -723,6 +729,10 @@
     (newline ("args" (("required" port) ("optional") ("key")))("module"))
     (no-such-file-or-directory-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
+    (no-such-file-or-directory-exception-procedure
+     ("args" (("required" exc) ("optional") ("key")))("module"))
+    (no-such-file-or-directory-exception-arguments
+     ("args" (("required" exc) ("optional") ("key")))("module"))
     (nonempty-input-port-character-buffer-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
     (nonprocedure-operator-exception?
@@ -786,6 +796,12 @@
     (peek-char ("args" (("required") ("optional" [port]) ("key")))("module"))
     (peek-char ("args" (("required") ("optional") ("key")))("module"))
     (peek-char ("args" (("required" port) ("optional") ("key")))("module"))
+    (permission-denied-exception?
+     ("args" (("required" obj) ("optional") ("key")))("module"))
+    (permission-denied-exception-procedure
+     ("args" (("required" exc) ("optional") ("key")))("module"))
+    (permission-denied-exception-arguments
+     ("args" (("required" exc) ("optional") ("key")))("module"))
     (port-io-exception-handler-set!
      ("args" (("required" port handler) ("optional") ("key")))("module"))
     (port-settings-set!

@@ -74,6 +74,9 @@
 ;;unimplemented;;os-exception-message
 ;;unimplemented;;os-exception-procedure
 ;;unimplemented;;os-exception?
+;;unimplemented;;permission-denied-exception-arguments
+;;unimplemented;;permission-denied-exception-procedure
+;;unimplemented;;permission-denied-exception?
 ;;unimplemented;;primordial-exception-handler
 
 (##with-exception-catcher ##list (lambda () (raise 123)))

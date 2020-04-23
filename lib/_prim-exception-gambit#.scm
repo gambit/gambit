@@ -82,6 +82,9 @@ error
 (os-exception-message os-exception-message#unimplemented)
 (os-exception-procedure os-exception-procedure#unimplemented)
 (os-exception? os-exception?#unimplemented)
+(permission-denied-exception-arguments permission-denied-exception-arguments#unimplemented)
+(permission-denied-exception-procedure permission-denied-exception-procedure#unimplemented)
+(permission-denied-exception? permission-denied-exception?#unimplemented)
 (primordial-exception-handler primordial-exception-handler#unimplemented)
 
 raise

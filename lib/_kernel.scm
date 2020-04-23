@@ -1660,6 +1660,8 @@ end-of-code
              (macro-make-no-such-file-or-directory-exception procedure arguments))
             ((##fx= code ##err-code-EEXIST)
              (macro-make-file-exists-exception procedure arguments))
+            ((##fx= code ##err-code-EACCES)
+             (macro-make-permission-denied-exception procedure arguments))
             (else
              (macro-make-os-exception procedure arguments message code)))))))
 
@@ -1690,6 +1692,21 @@ end-of-code
    (lambda (procedure arguments dummy1 dummy2 dummy3)
      (macro-raise
       (macro-make-file-exists-exception
+       procedure
+       arguments)))))
+
+(implement-library-type-permission-denied-exception)
+
+(define-prim (##raise-permission-denied-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-permission-denied-exception
        procedure
        arguments)))))
 ))
@@ -4257,17 +4274,20 @@ end-of-code
 
 ;;; Miscellaneous definitions.
 
-(define ##err-code-EAGAIN
-  (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EAGAIN));"))
-
 (define ##err-code-ENOENT
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(ENOENT));"))
 
 (define ##err-code-EINTR
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EINTR));"))
 
+(define ##err-code-EACCES
+  (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EACCES));"))
+
 (define ##err-code-EEXIST
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EEXIST));"))
+
+(define ##err-code-EAGAIN
+  (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EAGAIN));"))
 
 (define ##err-code-unimplemented
   (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
