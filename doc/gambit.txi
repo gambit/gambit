@@ -9376,6 +9376,48 @@ For example:
 
 @end deffn
 
+@deffn procedure permission-denied-exception? @var{obj}
+@deffnx procedure permission-denied-exception-procedure @var{exc}
+@deffnx procedure permission-denied-exception-arguments @var{exc}
+
+Permission-denied-exception objects are raised by procedures
+which access the filesystem (such as @code{open-file} and
+@code{open-directory}) when the access to the specified path is not
+allowed, or search permission is denied for a directory in the path prefix,
+or write access to the parent directory isn't allowed for a file that
+doesn't exist yet on the filesystem.  The parameter @var{exc} must be a
+permission-denied-exception object.
+
+The procedure @code{permission-denied-exception?} returns
+@code{#t} when @var{obj} is a permission-denied-exception
+object and @code{#f} otherwise.
+
+The procedure @code{permission-denied-exception-procedure}
+returns the procedure that raised @var{exc}.
+
+The procedure @code{permission-denied-exception-arguments}
+returns the list of arguments of the procedure that raised @var{exc}.
+
+For example:
+
+@smallexample
+> @b{(define (handler exc)
+    (if (permission-denied-exception? exc)
+        (list (permission-denied-exception-procedure exc)
+              (permission-denied-exception-arguments exc))
+        'not-permission-denied-exception))}
+> @b{(with-exception-catcher
+    handler
+    (lambda () (with-input-from-file "empty" read)))}
+#!eof
+> @b{(with-exception-catcher
+    handler
+    (lambda () (with-input-from-file "noperm" read)))}
+(#<procedure #2 with-input-from-file> ("noperm" #<procedure #3 read>))
+@end smallexample
+
+@end deffn
+
 @deffn procedure unbound-os-environment-variable-exception? @var{obj}
 @deffnx procedure unbound-os-environment-variable-exception-procedure @var{exc}
 @deffnx procedure unbound-os-environment-variable-exception-arguments @var{exc}
