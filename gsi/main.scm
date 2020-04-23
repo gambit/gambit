@@ -508,16 +508,23 @@ usage-end
                             (exit-abnormally)))
 
                       (define (do-compile-file-to-target file opts output)
-                        (handling file)
-                        (or (if output
-                                (compile-file-to-target
-                                 file
-                                 options: opts
-                                 output: output)
-                                (compile-file-to-target
-                                 file
-                                 options: opts))
-                            (exit-abnormally)))
+                        (let* ((modref (##parse-module-ref file))
+                               (opts (if (##not modref)
+                                         opts
+                                         (##cons
+                                           (##list 'module-ref
+                                                   (##string->symbol file))
+                                           opts))))
+                          (handling file)
+                          (or (if output
+                                  (compile-file-to-target
+                                   file
+                                   options: opts
+                                   output: output)
+                                  (compile-file-to-target
+                                   file
+                                   options: opts))
+                              (exit-abnormally))))
 
                       (define (do-build-executable base obj-files output-filename)
                         (or (##build-executable
