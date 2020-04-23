@@ -824,6 +824,18 @@
   (!? (remote-service 'ping-server node) 'ping timeout 'no-reply))
 
 ;; ----------------------------------------------------------------------------
+;; Enable the unknown-procedure-handler
+(##unknown-procedure-handler-set!
+  (lambda (name id)
+    (let* ((name-str (##symbol->string name))
+           (proc/ns (##reverse-string-split-at name-str #\#)))
+      (and (##pair? (##cdr proc/ns))
+           (let ((mod-name (##last proc/ns)))
+             (##load-module (##string->symbol mod-name))
+             (let ((proc (##get-subprocedure-from-name-and-id name id)))
+               proc))))))
+
+;; ----------------------------------------------------------------------------
 ;; Initialization
 
 (process-links-set! (self) '())
