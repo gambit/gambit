@@ -13226,10 +13226,10 @@ the file if it is created.  The default value of this setting is
 @code{truncate:} ( @code{#f} | @code{#t} )
 
 This setting controls whether the file will be truncated when it is
-opened.  For input-ports, the default value of this setting is
-@code{#f}.  For output-ports, the default value of this setting is
-@code{#t} when the @code{append:} setting is @code{#f}, and @code{#f}
-otherwise.
+opened.  For input-ports and bidirectional ports, the default value of
+this setting is @code{#f}.  For output-ports, the default value of
+this setting is @code{#t} when the @code{append:} setting is @code{#f},
+and @code{#f} otherwise.
 
 @end itemize
 
