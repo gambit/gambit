@@ -144,7 +144,8 @@
   (define (read-chunk-header p)
     (define (done-header val)
       (if (< 0 (string-length val))
-          (##string-split-at val #\;)
+          (reverse
+            (##reverse-string-split-at val #\;))
           (invalid-chunk-error)))
 
     (let loop ((rev-result '()))
@@ -228,7 +229,8 @@
                (string-append "Invalid url '" url "'")))
       (let* ((scheme (uri-scheme uri))
              (host+port
-               (##string-split-at (uri-authority uri) #\:))
+               (reverse
+                 (##reverse-string-split-at (uri-authority uri) #\:)))
              (tls-context (cond
                             ((string=? scheme "https")
                              (make-tls-context))
