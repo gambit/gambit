@@ -13,7 +13,7 @@
 ;; this is the main file for the Termite system
 (##namespace ("termite#"))
 
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 (##include "~~lib/_gambit#.scm")
 
 (##include "termite#.scm")

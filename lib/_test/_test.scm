@@ -8,12 +8,12 @@
 
 (##supply-module _test)
 
-(##namespace ("_test#"))         ;; in _test#
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm") ;; for macro-check-procedure,
-                                 ;; macro-absent-obj, etc
+(##namespace ("_test#"))                  ;; in _test#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-procedure,
+                                          ;; macro-absent-obj, etc
 
-(##include "_test#.scm")         ;; correctly map test ops
+(##include "_test#.scm")                  ;; correctly map test ops
 
 (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 (declare (not safe))          ;; claim code has no type errors

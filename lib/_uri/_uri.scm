@@ -3,6 +3,7 @@
 ;;; File: "_uri.scm"
 
 ;;; Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -14,7 +15,7 @@
 
 
 (##namespace ("_uri#"))
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 
 ; URI parsing.
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_zlib.scm"
 
-;;; Copyright (c) 2006-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -19,10 +19,10 @@
 
 (##supply-module _zlib)
 
-(##namespace ("_zlib#"))         ;; in _zlib#
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
-                                 ;; macro-absent-obj, etc
+(##namespace ("_zlib#"))                  ;; in _zlib#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
+                                          ;; macro-absent-obj, etc
 
 (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 (declare (not safe))          ;; claim code has no type errors

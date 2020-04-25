@@ -5,7 +5,7 @@
 (define ##x3 1.0)
 (define ##x4 2.0)
 
-(check-same-behavior ("" "##" "~~lib/_prim-flonum#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/flonum#.scm")
 
 ;; Gambit
 

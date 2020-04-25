@@ -17,7 +17,7 @@
 (##include "~~lib/gambit#.scm")
 (##include "~~lib/_gambit#.scm")
 
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 
 ;;;============================================================================
 

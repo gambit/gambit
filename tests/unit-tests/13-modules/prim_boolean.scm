@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-boolean#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/boolean#.scm")
 
 ;; R4RS
 

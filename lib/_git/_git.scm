@@ -3,7 +3,7 @@
 ;;; File: "_git.scm"
 
 ;;; Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
-;;; Copyright (c) 2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2019-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -25,7 +25,7 @@
 (##supply-module _git)
 
 (##namespace ("_git#"))
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 (##include "~~lib/_gambit#.scm")
 (##include "~~lib/_module#.scm")
 

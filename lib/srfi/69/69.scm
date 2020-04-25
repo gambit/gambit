@@ -3,7 +3,7 @@
 ;;; File: "69.scm"
 
 ;;; Copyright (c) 2018-2019 by Antoine Doucet, All Rights Reserved.
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -11,10 +11,10 @@
 
 (##supply-module srfi/69)
 
-(##namespace ("srfi/69#"))       ;; in srfi/69#
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
-                                 ;; macro-absent-obj, etc
+(##namespace ("srfi/69#"))                ;; in srfi/69#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
+                                          ;; macro-absent-obj, etc
 
 (##include "69#.scm")
 

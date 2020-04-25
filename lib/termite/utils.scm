@@ -5,7 +5,7 @@
 
 (##supply-module termite/utils)
 (##namespace ("termite/utils#"))
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 
 ;; make-uuid
 (##include "uuid.scm")

@@ -3,6 +3,7 @@
 ;;; File: "_geiser.scm"
 
 ;;; Copyright (c) 2019 by Mathieu Perron, All Rights Reserved.
+;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,10 +11,10 @@
 
 (##supply-module _geiser)
 
-(##namespace ("_geiser#"))       ;; in _geiser#
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
-                                 ;; macro-absent-obj, etc
+(##namespace ("_geiser#"))                ;; in _geiser#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
+                                          ;; macro-absent-obj, etc
 
 ;(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 ;(declare (not safe))          ;; claim code has no type errors

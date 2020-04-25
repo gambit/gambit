@@ -2,7 +2,7 @@
 
 ;;; File: "_hamt.scm"
 
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12,7 +12,7 @@
 
 (##namespace ("_hamt#"))                         ;; in _hamt#
 (##include "primitive-hamt/primitive-hamt#.scm") ;; define define-hamt macro
-(##include "~~lib/_prim#.scm")                   ;; map fx+ to ##fx+, etc
+(##include "~~lib/gambit/prim/prim#.scm")        ;; map fx+ to ##fx+, etc
 (##include "~~lib/_gambit#.scm")                 ;; for macro-check-procedure,
                                                  ;; macro-absent-obj, etc
 

@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-exception#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/exception#.scm")
 
 ;; Gambit
 
