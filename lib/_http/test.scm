@@ -185,13 +185,11 @@
   (define result-identity1 (http-get (string-append base-url "/foo bar") #f #t))
   (define result-identity2 (http-get (string-append base-url "/foo%20bar") #f #f))
 
-  (test-equal (u8vector->string
-                  (vector-ref result-identity0 1))
-                "/identity/foo bar")
+  (test-equal "/identity/foo bar"
+              (u8vector->string
+                (vector-ref result-identity0 1)))
 
-  ; "Check if encode? parameter works[1]"
   (test-equal result-identity0 result-identity1)
-  ; "Check if encode? parameter works[2]"
   (test-equal result-identity0 result-identity2))
 
 (let ((base-url (string-append "http://localhost:" port-number "/chunked")))
@@ -199,18 +197,16 @@
   (define result-chunked1 (http-get (string-append base-url "/foo bar") #f #t))
   (define result-chunked2 (http-get (string-append base-url "/foo%20bar") #f #f))
 
-  (test-equal (u8vector->string
-                  (vector-ref result-chunked0 1))
-                "/chunked/foo bar")
+  (test-equal "/chunked/foo bar"
+              (u8vector->string
+                (vector-ref result-chunked0 1)))
 
-  ; "Check if encode? parameter works[3]"
   (test-equal result-chunked0 result-chunked1)
-  ; "Check if encode? parameter works[4]"
   (test-equal result-chunked0 result-chunked2))
 
 (let ((base-url (string-append "http://localhost:" port-number "/close")))
   (define result-empty (http-get base-url))
-  (test-eqv (u8vector-length (vector-ref result-empty 1)) 0))
+  (test-eqv 0 (u8vector-length (vector-ref result-empty 1))))
 
 ;; Server terminate
 (test-assert
