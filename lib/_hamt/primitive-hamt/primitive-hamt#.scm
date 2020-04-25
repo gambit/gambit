@@ -2,7 +2,7 @@
 
 ;;; File: "primitive-hamt#.scm"
 
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -147,7 +147,7 @@
 
   (define local-declarations
     `(
-      (##include "~~lib/_prim#.scm")
+      (##include "~~lib/gambit/prim/prim#.scm")
 
       (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
       (declare (not safe))          ;; claim code has no type errors

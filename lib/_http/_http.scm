@@ -2,7 +2,8 @@
 
 ;;; File: "_http.scm"
 
-;;; Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2019-2020 by Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -14,9 +15,9 @@
   (extended-bindings))
 
 (##namespace ("_http#"))
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
 (##include "~~lib/gambit#.scm")
-(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
+(##include "~~lib/_gambit#.scm") ;; for macro-check-string
 
 (##import _tar)
 (##import _uri)

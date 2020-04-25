@@ -2,7 +2,7 @@
 
 ;;; File: "match-expand.scm"
 
-;;; Copyright (c) 2008-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2008-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,10 +10,10 @@
 
 (##supply-module _match/match-expand)
 
-(##namespace ("_match/match-expand#"))       ;; in _match/match-expand#
-(##include "~~lib/_prim#.scm")               ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm")             ;; for macro-check-procedure,
-                                             ;; macro-absent-obj, etc
+(##namespace ("_match/match-expand#"))    ;; in _match/match-expand#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-procedure,
+                                          ;; macro-absent-obj, etc
 
 (##include "match-expand#.scm")
 

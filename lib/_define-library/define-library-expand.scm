@@ -2,7 +2,7 @@
 
 ;;; File: "_define-library-expand.scm"
 
-;;; Copyright (c) 2014-2019 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2014-2020 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -16,7 +16,7 @@
 (##include "~~lib/_gambit#.scm")
 (##include "~~lib/_module#.scm")
 
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 
 ;;;============================================================================
 

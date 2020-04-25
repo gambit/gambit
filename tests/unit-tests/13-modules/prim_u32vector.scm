@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-u32vector#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/u32vector#.scm")
 
 ;; Gambit
 

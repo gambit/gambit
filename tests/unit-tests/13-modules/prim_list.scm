@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-list#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/list#.scm")
 
 ;; R4RS
 
