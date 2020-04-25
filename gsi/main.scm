@@ -460,6 +460,8 @@ usage-end
                         (if (##not (##assq 'keep-temp options))
                             (##for-each
                              (lambda (path)
+                               ;; TODO: Should also clean up module folder here, how
+                               ;;       do we detect it reliably?
                                (if (##not (##equal? path output))
                                    (##delete-file path)))
                              (##reverse rev-tmp-files))))
@@ -508,23 +510,16 @@ usage-end
                             (exit-abnormally)))
 
                       (define (do-compile-file-to-target file opts output)
-                        (let* ((modref (##parse-module-ref file))
-                               (opts (if (##not modref)
-                                         opts
-                                         (##cons
-                                           (##list 'module-ref
-                                                   (##string->symbol file))
-                                           opts))))
-                          (handling file)
-                          (or (if output
-                                  (compile-file-to-target
-                                   file
-                                   options: opts
-                                   output: output)
-                                  (compile-file-to-target
-                                   file
-                                   options: opts))
-                              (exit-abnormally))))
+                        (handling file)
+                        (or (if output
+                                (compile-file-to-target
+                                 file
+                                 options: opts
+                                 output: output)
+                                (compile-file-to-target
+                                 file
+                                 options: opts))
+                            (exit-abnormally)))
 
                       (define (do-build-executable base obj-files output-filename)
                         (or (##build-executable
@@ -539,40 +534,6 @@ usage-end
                              pkg-config-path
                              meta-info-file)
                             (exit-abnormally)))
-
-                      (define (do-build-module-or-file module-or-file opts output)
-
-                        (define (build-file)
-                          (do-compile-file module-or-file opts output))
-
-                        (let ((modref (##parse-module-ref module-or-file)))
-                          (if (##not modref)
-
-                              (build-file)
-
-                              (let ((mod-info
-                                     (##search-or-else-install-module modref)))
-                                (if mod-info
-                                    (let ((mod-dir            (##vector-ref mod-info 0))
-                                          (mod-filename-noext (##vector-ref mod-info 1))
-                                          (ext                (##vector-ref mod-info 2))
-                                          (mod-path           (##vector-ref mod-info 3))
-                                          (port               (##vector-ref mod-info 4)))
-
-                                      ;; close unused port.
-                                      (##close-input-port port)
-
-                                      (handling-module module-or-file)
-
-                                      (##build-module
-                                       mod-path
-                                       (c#target-name target)
-                                       (##cons
-                                        (##list 'module-ref
-                                                (##string->symbol module-or-file))
-                                        opts)))
-
-                                    (build-file))))))
 
                       (let loop2 ((lst arguments))
                         (if (##pair? lst)
@@ -629,7 +590,7 @@ usage-end
                                           (else
                                            (case type
                                              ((dyn)
-                                              (do-build-module-or-file
+                                              (do-compile-file
                                                file
                                                options
                                                output))
