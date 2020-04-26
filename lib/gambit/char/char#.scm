@@ -1,19 +1,26 @@
 ;;;============================================================================
 
-;;; File: "_unicode#.scm"
+;;; File: "char#.scm"
 
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;; Unicode tables are available here:
+;;; Character operations.
+
+;;;----------------------------------------------------------------------------
+
+;; The latest Unicode tables are available here:
 ;;
 ;; https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
 ;; https://www.unicode.org/Public/UCD/latest/ucd/PropList.txt
 ;; https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt
 ;;
-;; They define various character properties (used in the definition of
-;; char-alphabetic, char-lower-case?, etc), as follows:
+;; This directory contains a copy, which can be updated when new versions
+;; become available.
+;;
+;; The tables define various character properties (used in the
+;; definition of char-alphabetic, char-lower-case?, etc), as follows:
 ;;
 ;; Alphabetic = Lowercase + Uppercase + Lt + Lm + Lo + Nl + Other_Alphabetic
 ;; Lowercase  = Ll + Other_Lowercase
