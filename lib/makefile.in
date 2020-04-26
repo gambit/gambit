@@ -83,7 +83,7 @@ NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
 "_eval\#.scm" "_module\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" \
-"_repl\#.scm" "_unicode\#.scm" "_gambit\#.scm" "gambit\#.scm" \
+"_repl\#.scm" "_gambit\#.scm" "gambit\#.scm" \
 "r5rs\#.scm" "r4rs\#.scm" \
 _define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
 _syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
@@ -112,8 +112,6 @@ _module@obj@
 UNIVLIB = $(rootfromhere)/gsc/_t-univ-*.scm $(rootfromhere)/gsc/_univadt.scm
 
 LIBRARIES_SCM = $(HEADERS_SCM) syntax-case.scm
-
-UNICODEFILES = UnicodeData.txt PropList.txt CaseFolding.txt
 
 LIBRARY = $(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
 LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) _$(GAMBITLIB)@obj@
@@ -149,9 +147,9 @@ GAMBIT_LIBS = $(GAMBIT_LIB_C)
 
 GENDISTFILES = $(MODULES_C) $(GAMBIT_LIB_C)
 
-DISTFILES = $(RCFILES) $(GENDISTFILES) $(UNICODEFILES)
+DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = $(LIBRARIES_SCM) $(GAMBIT_LIBS) $(UNICODEFILES)
+INSTFILES_LIB_DATA = $(LIBRARIES_SCM) $(GAMBIT_LIBS)
 
 GAMBITDIR_INCLUDE = $(rootfromhere)/include
 GAMBITDIR_LIB = $(rootfromhere)/lib
@@ -251,10 +249,6 @@ $(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_unicode\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/UnicodeData.txt \
-$(srcdirpfx)$(rootfromhere)/lib/PropList.txt \
-$(srcdirpfx)$(rootfromhere)/lib/CaseFolding.txt \
 $(srcdirpfx)$(rootfromhere)/lib/_define-syntax.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_syntax-boot.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform-boot.scm \
@@ -278,6 +272,8 @@ _system@obj@: _system.c
 
 _num@obj@: _num.c mem.h
 	@BUILD_OBJ@ -D___LIBRARY
+
+_std.c: gambit/list/list.scm gambit/list/list\#.scm gambit/string/string.scm gambit/string/string\#.scm gambit/char/char.scm gambit/char/char\#.scm
 
 _std@obj@: _std.c os.h
 	@BUILD_OBJ@ -D___LIBRARY
@@ -344,11 +340,6 @@ os_tty@obj@: os_tty.c os.h os_setup.h os_thread.h os_base.h os_tty.h os_shell.h 
 
 os_io@obj@: os_io.c os.h os_setup.h os_base.h os_io.h os_tty.h os_shell.h os_files.h setup.h c_intf.h
 	@BUILD_OBJ_RTS@ -D___LIBRARY
-
-update-unicode:
-	wget https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt -O UnicodeData.txt
-	wget https://www.unicode.org/Public/UCD/latest/ucd/PropList.txt -O PropList.txt
-	wget https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt -O CaseFolding.txt
 
 bootstrap-pre:
 

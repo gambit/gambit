@@ -11,7 +11,7 @@
 (##namespace ("##"
 
 case-lambda
-cond-expand
+;;TODO: uncomment after next release: cond-expand
 define-record-type
 define-syntax
 delay-force

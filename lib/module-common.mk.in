@@ -82,13 +82,13 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-RCFILES = $(HEADERS_SCM) $(MODULES_SCM) $(OTHER_RCFILES)
+RCFILES = $(HEADERS_SCM) $(MODULES_SCM) $(DATA_FILES) $(OTHER_RCFILES)
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = $(HEADERS_SCM) $(MODULES_SCM)
+INSTFILES_LIB_DATA = $(HEADERS_SCM) $(MODULES_SCM) $(DATA_FILES)
 
 MDEFINES = prefix=$(prefix) exec_prefix=$(exec_prefix) \
 includedir=$(includedir) libdir=$(libdir) \
