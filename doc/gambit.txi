@@ -4708,7 +4708,7 @@ For example:
 @deffn procedure make-list @var{n} @r{[}@var{fill}@r{]}
 @end deffn
 
-@deffn procedure reverse! @var{list}
+@deffn procedure reverse! @var{list} @r{[}@var{tail}@r{]}
 @end deffn
 
 @deffn procedure xcons @var{d} @var{a}

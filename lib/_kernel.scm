@@ -1292,8 +1292,8 @@ end-of-code
               (loop (##cdr x))))
         #f)))
 
-(define-prim (##reverse! lst)
-  (let loop ((prev '()) (curr lst))
+(define-prim (##reverse! lst #!optional (tail '()))
+  (let loop ((prev tail) (curr lst))
     (if (##pair? curr)
         (let ((next (##cdr curr)))
           (##set-cdr! curr prev)
