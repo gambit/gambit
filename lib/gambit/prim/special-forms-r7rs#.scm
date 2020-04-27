@@ -8,10 +8,10 @@
 
 ;;; Special forms added by R7RS.
 
+(##namespace ("" cond-expand));;TODO: move to ## namespace after next release
 (##namespace ("##"
 
 case-lambda
-;;TODO: uncomment after next release: cond-expand
 define-record-type
 define-syntax
 delay-force
