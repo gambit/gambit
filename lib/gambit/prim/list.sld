@@ -84,8 +84,12 @@ iota
 last
 last-pair
 list-set
+list-sort
+list-sort!
 list-tabulate
 reverse!
+append-reverse
+append-reverse!
 take
 xcons
 

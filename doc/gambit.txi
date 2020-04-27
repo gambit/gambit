@@ -4711,6 +4711,10 @@ For example:
 @deffn procedure reverse! @var{list}
 @end deffn
 
+@deffn procedure append-reverse @var{list} @var{tail}
+@deffnx procedure append-reverse! @var{list} @var{tail}
+@end deffn
+
 @deffn procedure xcons @var{d} @var{a}
 @end deffn
 
@@ -4720,6 +4724,10 @@ For example:
 
 @deffn procedure last @var{pair}
 @deffnx procedure last-pair @var{pair}
+@end deffn
+
+@deffn procedure list-sort @var{proc} @var{list}
+@deffnx procedure list-sort! @var{proc} @var{list}
 @end deffn
 
 @deffn procedure finite? @var{x}

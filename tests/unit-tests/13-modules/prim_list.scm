@@ -102,8 +102,12 @@
 (last '(1 2 3 4))
 (last-pair '(1 2 3 4))
 (list-set '(1 2 3 4) 2 99)
+(let ((x (list))) (list-sort < x)) (let ((x (list 8 3 1 2 4))) (list-sort < x))
+(let ((x (list))) (list-sort! < x)) (let ((x (list 8 3 1 2 4))) (list-sort! < x))
 (list-tabulate 5 list)
 (let ((x (list 1 2 3 4))) (reverse! x))
+(let ((x (list 1 2 3 4))) (append-reverse x 5))
+(let ((x (list 1 2 3 4))) (append-reverse! x 5))
 (take '(1 2 3 4) 2)
 (xcons 1 2)
 
