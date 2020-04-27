@@ -304,6 +304,8 @@ all-bits-set?
 any-bits-set?
 append-f32vectors
 append-f64vectors
+append-reverse
+append-reverse!
 append-s16vectors
 append-s32vectors
 append-s64vectors
@@ -708,6 +710,8 @@ list->u8vector
 list-copy
 list-set
 list-set!
+list-sort
+list-sort!
 list-tabulate
 mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure

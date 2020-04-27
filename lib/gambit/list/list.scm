@@ -948,17 +948,26 @@
       (macro-check-procedure init-proc 2 (list-tabulate n init-proc)
         (##list-tabulate n init-proc)))))
 
+(define-prim (##proper-list-copy lst)
+
+  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+
+  (let loop ((lst lst) (rev-result '()))
+    (macro-force-vars (lst)
+      (if (pair? lst)
+          (loop (cdr lst) (cons (car lst) rev-result))
+          (and (null? lst)
+               (reverse! rev-result))))))
+
 (define-prim (##list-copy lst)
 
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
 
-  (define (copy lst)
+  (let loop ((lst lst) (rev-result '()))
     (macro-force-vars (lst)
       (if (pair? lst)
-          (cons (car lst) (copy (cdr lst)))
-          lst)))
-
-  (copy lst))
+          (loop (cdr lst) (cons (car lst) rev-result))
+          (append-reverse! rev-result lst)))))
 
 (define-prim (list-copy lst)
   (##list-copy lst))
@@ -1133,7 +1142,7 @@
 
   (butlast lst))
 
-;; ##reverse! defined in _kernel.scm
+;; ##reverse! and ##append-reverse! defined in _kernel.scm
 
 (define-prim (reverse! lst)
 
@@ -1147,6 +1156,41 @@
             (set-cdr! curr prev)
             (loop curr next))
           (macro-check-list curr 1 (reverse! lst)
+            prev)))))
+
+(define-prim (##append-reverse lst tail)
+
+  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+
+  (let loop ((x lst) (result tail))
+    (if (pair? x)
+        (loop (cdr x) (cons (car x) result))
+        result)))
+
+(define-prim (append-reverse lst tail)
+
+  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  (namespace ("" append-reverse)) ;; but not append-reverse to ##append-reverse
+
+  (let loop ((x lst) (result tail))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (loop (cdr x) (cons (car x) result))
+          (macro-check-list x 1 (append-reverse lst tail)
+            result)))))
+
+(define-prim (append-reverse! lst tail)
+
+  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  (namespace ("" append-reverse!)) ;; but not append-reverse! to ##append-reverse!
+
+  (let loop ((prev tail) (curr lst))
+    (macro-force-vars (curr)
+      (if (pair? curr)
+          (let ((next (cdr curr)))
+            (set-cdr! curr prev)
+            (loop curr next))
+          (macro-check-list curr 1 (append-reverse! lst tail)
             prev)))))
 
 (define-prim (##fold proc base lst)
@@ -1297,6 +1341,8 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;; Sorting.
+
 (define-prim (##list-sort! proc lst)
 
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
@@ -1345,12 +1391,42 @@
           (set-cdr! prev lst2)
           result)))
 
-  (let ((len (length lst)))
-    (if (fx= len 0)
-        '()
-        (sort lst len))))
+  (let ((len (##proper-list-length lst)))
+    (and len
+         (if (fx= len 0)
+             '()
+             (sort lst len)))))
 
 (define-prim (##list-sort proc lst)
   (##list-sort! proc (##list-copy lst)))
+
+(define-prim (list-sort proc lst)
+
+  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  (namespace ("" list-sort)) ;; but not list-sort to ##list-sort
+
+  (macro-force-vars (proc)
+    (macro-check-procedure proc 1 (list-sort proc lst)
+      (macro-if-checks
+       (let ((lst-copy (##proper-list-copy lst)))
+         (if lst-copy
+             (##list-sort! proc lst-copy)
+             (macro-fail-check-list
+              2
+              (list-sort proc lst))))
+       (##list-sort! proc (##list-copy lst))))))
+
+(define-prim (list-sort! proc lst)
+
+  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  (namespace ("" list-sort!)) ;; but not list-sort! to ##list-sort!
+
+  (macro-force-vars (proc)
+    (macro-check-procedure proc 1 (list-sort! proc lst)
+      (let ((result (##list-sort! proc lst)))
+        (or result
+            (macro-fail-check-list
+             2
+             (list-sort! proc lst)))))))
 
 ;;;============================================================================
