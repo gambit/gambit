@@ -113,8 +113,8 @@ _t-cpu-object-desc.c _t-cpu-utils.c \
 _t-cpu-backend-x86.c _t-cpu-backend-arm.c _t-cpu-backend-riscv.c \
 _t-cpu.c \
 _t-c-1.c _t-c-2.c _t-c-3.c \
-_gsclib.c \
-- nopreload keyboard.c
+_gsclib.c
+
 LIBRARY_MODULES_O = _host@obj@ _utils@obj@ _source@obj@ _parms@obj@ \
 _env@obj@ _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _back@obj@ _front@obj@ \
 _prims@obj@ _assert@obj@ _asm@obj@ _x86@obj@ _arm@obj@ _riscv@obj@ _codegen@obj@ \
@@ -256,13 +256,13 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	fi
 
 _$(GAMBITGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C) -nopreload keyboard.c
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
 _gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSCLIB).c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C) -nopreload keyboard.c
 
 _gsc@obj@: _gsc.c
 	@BUILD_OBJ@
