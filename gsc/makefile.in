@@ -256,7 +256,7 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	fi
 
 _$(GAMBITGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C) -nopreload keyboard.c
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
