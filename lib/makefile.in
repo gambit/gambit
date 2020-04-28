@@ -73,6 +73,8 @@ mandir = @mandir@
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
 
+.PHONY: $(SUBDIRS)
+
 NORMAL_C = main.c setup.c mem.c os_setup.c os_base.c os_thread.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c actlog.c
 NORMAL_CPP =
 NORMAL_H = setup.h mem.h os.h os_setup.h os_base.h os_thread.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h actlog.h dead.h
@@ -491,13 +493,10 @@ bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-
 	  done \
 	fi
 
-modules-recursive: univ-libs
-	@if test -n "$(SUBDIRS)"; then \
-	  for subdir in ""$(SUBDIRS); do \
-	    target=`echo $@ | sed 's/-recursive//'`; \
-	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
-	  done \
-	fi
+modules-recursive: univ-libs $(SUBDIRS)
+
+$(SUBDIRS):
+	@(cd $@ && $(MAKE) modules) || exit 1
 
 all: all-post
 
@@ -510,6 +509,27 @@ bootstrap: bootstrap-post
 bootstrap-post: bootstrap-recursive
 
 bootstrap-recursive: bootstrap-pre
+
+list-modules: list-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) list-modules); \
+	done
+
+list-modules-pre:
+
+test-modules-all: test-modules-all-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) $@) || exit 1; \
+	done
+
+test-modules-all-pre:
+
+test-modules: test-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) $@) || exit 1; \
+	done
+
+test-modules-pre:
 
 modules: modules-post
 

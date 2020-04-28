@@ -315,6 +315,25 @@ release: fake_target
 publish-release: fake_target
 	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
 
+
+print-make:
+	echo $(MAKE)
+
+list-modules: list-modules-pre
+	@cd lib && $(MAKE) $@
+
+list-modules-pre:
+
+test-modules-all: test-modules-all-pre
+	@cd lib && $(MAKE) $@
+
+test-modules-all-pre:
+
+test-modules: test-modules-pre
+	@cd lib && $(MAKE) $@
+
+test-modules-pre:
+
 modules _gambit.java _gambit.js _gambit.php _gambit.py _gambit.rb _gambit.go:
 	@cd lib && $(MAKE) $(MDEFINES) $@
 

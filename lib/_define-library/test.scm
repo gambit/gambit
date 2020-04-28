@@ -70,8 +70,8 @@
          "  (import (scheme write))\n"
          "  (include \"foo.scm\"))\n")))
 
-    (check-equal? (gsi (string-append "-:debug=-,search=" dir) "test1")
-                "hello!\n")
+    (test-equal "hello!\n"
+                (gsi (string-append "-:debug=-,search=" dir) "test1"))
     (delete-dir test1-dir)))
 
 (define (test2 dir lib-dir)
@@ -92,8 +92,8 @@
           "  (begin\n"
           "    (define (main)\n"
           "      (display \"[A] main\\n\"))))\n"))))
-    (check-equal? (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file)
-                  "[A] main\n")
+    (test-equal "[A] main\n"
+                (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file))
     (delete-dir root)))
 
 (define (test3 dir lib-dir)
@@ -147,8 +147,8 @@
            "      (A/C-main)\n"
            "      (display \"[A] main\\n\"))))\n")))))
 
-    (check-equal? (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file)
-                  "[A/B1] main\n[A/B2] main\n[A/C] main\n[A] main\n")
+    (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n[A] main\n"
+                (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file))
     (delete-dir root)))
 
 (define (test4 dir lib-dir)
@@ -195,8 +195,8 @@
             "      (A/B2-main)\n"
             "      (display \"[A/C] main\\n\"))))\n"))))))
 
-    (check-equal? (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file)
-                  "[A/B1] main\n[A/B2] main\n[A/C] main\n")
+    (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n"
+                (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file))
     (delete-dir root)))
 
 (let-values (((test-dir lib-dir) (create-common-files)))
