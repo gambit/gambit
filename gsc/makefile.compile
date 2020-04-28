@@ -124,7 +124,7 @@ _t-cpu-object-desc@obj@ _t-cpu-utils@obj@ \
 _t-cpu-backend-x86@obj@ _t-cpu-backend-arm@obj@ _t-cpu-backend-riscv@obj@ \
 _t-cpu@obj@ \
 _t-c-1@obj@ _t-c-2@obj@ _t-c-3@obj@ \
-_gsclib@obj@
+_gsclib@obj@ keyboard@obj@
 LIBRARY_MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
 +_env@obj@ +_ptree1@obj@ +_ptree2@obj@ +_gvm@obj@ +_back@obj@ +_front@obj@ \
 +_prims@obj@ +_assert@obj@ +_asm@obj@ +_x86@obj@ +_arm@obj@ +_riscv@obj@ +_codegen@obj@ \
@@ -134,7 +134,7 @@ LIBRARY_MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
 +_t-cpu-backend-x86@obj@ +_t-cpu-backend-arm@obj@ +_t-cpu-backend-riscv@obj@ \
 +_t-cpu@obj@ \
 +_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ \
-+_gsclib@obj@
++_gsclib@obj@ + keyboard@obj@
 LIBRARY_MODULES_O_COMMA = _host@obj@,_utils@obj@,_source@obj@,_parms@obj@,\
 _env@obj@,_ptree1@obj@,_ptree2@obj@,_gvm@obj@,_back@obj@,_front@obj@,\
 _prims@obj@,_assert@obj@,_asm@obj@,_x86@obj@,_arm@obj@,_riscv@obj@,_codegen@obj@,\
@@ -144,7 +144,7 @@ _t-cpu-object-desc@obj@,_t-cpu-utils@obj@,\
 _t-cpu-backend-x86@obj@,_t-cpu-backend-arm@obj@,_t-cpu-backend-riscv@obj@,\
 _t-cpu@obj@,\
 _t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,\
-_gsclib@obj@
+_gsclib@obj@keyboard@obj@,
 LIBRARY_MODULES_O_IN_COMPILE_ORDER = _t-univ-2@obj@ _t-univ-3@obj@ \
 _t-univ-1@obj@ _prims@obj@ _t-univ-4@obj@ _t-c-2@obj@ _front@obj@ \
 _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _t-c-1@obj@ _x86@obj@ \
@@ -153,7 +153,7 @@ _t-cpu-backend-arm@obj@ _t-cpu-backend-riscv@obj@ _arm@obj@ \
 _source@obj@ _t-cpu-primitives@obj@ _riscv@obj@ _utils@obj@ \
 _asm@obj@ _gsclib@obj@ _parms@obj@ _t-c-3@obj@ _codegen@obj@ \
 _back@obj@ _env@obj@ _host@obj@ _t-cpu-object-desc@obj@ _t-cpu@obj@ \
-_t-cpu-utils@obj@ _assert@obj@
+_t-cpu-utils@obj@ _assert@obj@ keyboard@obj@
 LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \
 $(LIBRARY_MODULES_O) _$(GAMBITGSCLIB)@obj@
 LIBRARY_OBJECTS_PLUS = $(LIBRARY_NORMAL_O_PLUS) \
@@ -262,7 +262,7 @@ $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
 _gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSCLIB).c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -nopreload keyboard.c -preload $(EXECUTABLE_MODULES_C)
 
 _gsc@obj@: _gsc.c
 	@BUILD_OBJ@
