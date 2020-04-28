@@ -18,6 +18,9 @@
     (close-port port)
     output))
 
+(define (search path)
+  (string-append "search=" path))
+
 (define (create-files-in-dir dir files)
 
   (define (create-files dir files)
@@ -45,7 +48,8 @@
      (delete-file-or-directory path #t))))
 
 (define (create-common-files)
-  (let* ((test-dir (create-temporary-directory "tests"))
+  (let* ((rootdir (path-directory (this-source-file)))
+         (test-dir (create-temporary-directory (path-expand "tests" rootdir)))
          (lib-dir (path-expand "lib" test-dir)))
     (create-files-in-dir
       lib-dir
@@ -71,7 +75,12 @@
          "  (include \"foo.scm\"))\n")))
 
     (test-equal "hello!\n"
-                (gsi (string-append "-:debug=-,search=" dir) "test1"))
+                (gsi (append-strings
+                       (list "-:debug=-,search="
+                             (search lib-dir)
+                             (search dir)
+                             (search (path-expand "~~lib")))
+                       ",") "test1"))
     (delete-dir test1-dir)))
 
 (define (test2 dir lib-dir)
@@ -93,7 +102,12 @@
           "    (define (main)\n"
           "      (display \"[A] main\\n\"))))\n"))))
     (test-equal "[A] main\n"
-                (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file))
+                (gsi (append-strings
+                       (list "-:debug=-,search="
+                             (search lib-dir)
+                             (search userlib-dir)
+                             (search (path-expand "~~lib")))
+                       ",") main-file))
     (delete-dir root)))
 
 (define (test3 dir lib-dir)
@@ -148,7 +162,13 @@
            "      (display \"[A] main\\n\"))))\n")))))
 
     (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n[A] main\n"
-                (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file))
+                (gsi (append-strings
+                       (list "-:debug=-,search="
+                             (search lib-dir)
+                             (search userlib-dir)
+                             (search (path-expand "~~lib")))
+                       ",")
+                     main-file))
     (delete-dir root)))
 
 (define (test4 dir lib-dir)
@@ -196,7 +216,12 @@
             "      (display \"[A/C] main\\n\"))))\n"))))))
 
     (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n"
-                (gsi (string-append "-:debug=-,search=" lib-dir ",search=" userlib-dir) main-file))
+                (gsi (append-strings
+                       (list "-:debug=-,search="
+                             (search lib-dir)
+                             (search userlib-dir)
+                             (search (path-expand "~~lib")))
+                       ",") main-file))
     (delete-dir root)))
 
 (let-values (((test-dir lib-dir) (create-common-files)))
