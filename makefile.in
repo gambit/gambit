@@ -324,6 +324,16 @@ list-modules: list-modules-pre
 
 list-modules-pre:
 
+test-modules-all: test-modules-all-pre
+	@cd lib && $(MAKE) $@
+
+test-modules-all-pre:
+
+test-modules: test-modules-pre
+	@cd lib && $(MAKE) $@
+
+test-modules-pre:
+
 modules _gambit.java _gambit.js _gambit.php _gambit.py _gambit.rb _gambit.go:
 	@cd lib && $(MAKE) $(MDEFINES) $@
 

@@ -517,6 +517,20 @@ list-modules: list-modules-pre
 
 list-modules-pre:
 
+test-modules-all: test-modules-all-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) $@) || exit 1; \
+	done
+
+test-modules-all-pre:
+
+test-modules: test-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) $@) || exit 1; \
+	done
+
+test-modules-pre:
+
 modules: modules-post
 
 modules-post: modules-recursive

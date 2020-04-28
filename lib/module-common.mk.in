@@ -126,6 +126,37 @@ list-modules-pre:
 	  (cd $$subdir && $(MAKE) list-modules); \
 	done
 
+test-modules-all: test-modules-all-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) test-modules-all); \
+	done
+
+test-modules-all-pre:
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	if test -r "test.scm"; then \
+	  modref="$(herefromlib)"; \
+	  echo "*** testing: $$modref"; \
+	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
+	      -f -e '(current-directory "$(rootfromhere)")' $$modref/test || \
+	      echo "*** ignoring error"; \
+	fi;
+
+test-modules: test-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) test-modules); \
+	done
+
+test-modules-pre:
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	if test -r "test.scm"; then \
+	  modref="$(herefromlib)"; \
+	  echo "*** testing: $$modref"; \
+	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
+	      -f -e '(current-directory "$(rootfromhere)")' $$modref/test; \
+	fi;
+
 modules-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
