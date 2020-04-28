@@ -134,7 +134,7 @@ LIBRARY_MODULES_O_PLUS = +_host@obj@ +_utils@obj@ +_source@obj@ +_parms@obj@ \
 +_t-cpu-backend-x86@obj@ +_t-cpu-backend-arm@obj@ +_t-cpu-backend-riscv@obj@ \
 +_t-cpu@obj@ \
 +_t-c-1@obj@ +_t-c-2@obj@ +_t-c-3@obj@ \
-+_gsclib@obj@ + keyboard@obj@
++_gsclib@obj@ +keyboard@obj@
 LIBRARY_MODULES_O_COMMA = _host@obj@,_utils@obj@,_source@obj@,_parms@obj@,\
 _env@obj@,_ptree1@obj@,_ptree2@obj@,_gvm@obj@,_back@obj@,_front@obj@,\
 _prims@obj@,_assert@obj@,_asm@obj@,_x86@obj@,_arm@obj@,_riscv@obj@,_codegen@obj@,\
@@ -144,7 +144,7 @@ _t-cpu-object-desc@obj@,_t-cpu-utils@obj@,\
 _t-cpu-backend-x86@obj@,_t-cpu-backend-arm@obj@,_t-cpu-backend-riscv@obj@,\
 _t-cpu@obj@,\
 _t-c-1@obj@,_t-c-2@obj@,_t-c-3@obj@,\
-_gsclib@obj@keyboard@obj@,
+_gsclib@obj@,keyboard@obj@
 LIBRARY_MODULES_O_IN_COMPILE_ORDER = _t-univ-2@obj@ _t-univ-3@obj@ \
 _t-univ-1@obj@ _prims@obj@ _t-univ-4@obj@ _t-c-2@obj@ _front@obj@ \
 _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _t-c-1@obj@ _x86@obj@ \
