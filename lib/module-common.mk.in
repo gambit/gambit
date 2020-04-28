@@ -82,6 +82,10 @@ mandir = @mandir@
 
 .SUFFIXES:
 
+ifneq ($(SUBDIRS),)
+.PHONY: $(SUBDIRS)
+endif
+
 RCFILES = $(HEADERS_SCM) $(MODULES_SCM) $(DATA_FILES) $(OTHER_RCFILES)
 
 GENDISTFILES =
@@ -104,6 +108,23 @@ all-post:
 bootstrap-pre:
 
 bootstrap-post:
+
+list-modules: list-modules-pre
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	for main_mod in $(MAIN_MODULES); do \
+	  if test "$$main_mod" = "$$here_suffix"; then \
+	    modref="$(herefromlib)"; \
+	  else \
+	    modref="$(herefromlib)/$$main_mod"; \
+	  fi; \
+	  echo "($$modref)"; \
+	done
+
+list-modules-pre:
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) list-modules); \
+	done
 
 modules-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
@@ -251,6 +272,9 @@ all-recursive bootstrap-recursive modules-recursive install-recursive uninstall-
 	  done \
 	fi
 
+$(SUBDIR):
+	(cd $@ && $(MAKE) modules) || exit 1
+
 all: all-post
 
 all-post: all-recursive
@@ -267,7 +291,7 @@ modules: modules-post
 
 modules-post: modules-recursive
 
-modules-recursive: modules-pre
+modules-recursive: modules-pre $(SUBDIRS)
 
 install: install-post
 
