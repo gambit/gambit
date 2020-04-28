@@ -262,7 +262,7 @@ $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
 _gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSCLIB).c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C) -nopreload keyboard.c
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -nopreload keyboard.c -preload $(EXECUTABLE_MODULES_C)
 
 _gsc@obj@: _gsc.c
 	@BUILD_OBJ@
