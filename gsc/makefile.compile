@@ -113,7 +113,7 @@ _t-cpu-object-desc.c _t-cpu-utils.c \
 _t-cpu-backend-x86.c _t-cpu-backend-arm.c _t-cpu-backend-riscv.c \
 _t-cpu.c \
 _t-c-1.c _t-c-2.c _t-c-3.c \
-_gsclib.c keyboard.c
+_gsclib.c
 
 LIBRARY_MODULES_O = _host@obj@ _utils@obj@ _source@obj@ _parms@obj@ \
 _env@obj@ _ptree1@obj@ _ptree2@obj@ _gvm@obj@ _back@obj@ _front@obj@ \
