@@ -8426,13 +8426,14 @@ int *direction;)
 
 /* Child process interrupts. */
 
-#ifdef USE_POSIX
+#ifdef USE_SIGNALS
 
 ___HIDDEN void sigchld_signal_handler
    ___P((int sig),
         (sig)
 int sig;)
 {
+#ifdef USE_POSIX
   int save_errno = errno;
 #ifdef USE_signal
   ___set_signal_handler (SIGCHLD, sigchld_signal_handler);
@@ -8486,6 +8487,7 @@ int sig;)
         }
     }
   errno = save_errno;
+#endif
 }
 
 #endif
