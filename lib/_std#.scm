@@ -15,7 +15,7 @@
 
   (procedure unprintable: read-only: no-functional-setter:)
   (arguments unprintable: read-only: no-functional-setter:)
-  (arg-num   unprintable: read-only: no-functional-setter:)
+  (arg-id    unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception invalid-utf8-encoding-exception
@@ -137,7 +137,7 @@
   ##boolean?)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(##define-macro (macro-fail-check-list arg-num form)
+(##define-macro (macro-fail-check-list arg-id form)
 
   (define (rest-param x)
     (if (pair? x)
@@ -167,9 +167,9 @@
            (nr (nonrest-params (cdr form)))
            (pk (prekey-params nr)))
       (if (and (null? k) (not (null? r)))
-        `(,name ,arg-num '() ,(car form) ,@pk ,r)
+        `(,name ,arg-id '() ,(car form) ,@pk ,r)
         `(,name
-          ,arg-num
+          ,arg-id
           ,(if (and (null? k) (null? r))
              (car form)
              `(##list ,(car form) ,@k ,@(if (null? r) '() (list r))))

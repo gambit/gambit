@@ -173,7 +173,7 @@
 
   (procedure unprintable: read-only: no-functional-setter:)
   (arguments unprintable: read-only: no-functional-setter:)
-  (arg-num   unprintable: read-only: no-functional-setter:)
+  (arg-id    unprintable: read-only: no-functional-setter:)
   (type-id   unprintable: read-only: no-functional-setter:)
 )
 

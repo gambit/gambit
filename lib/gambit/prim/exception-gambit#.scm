@@ -53,7 +53,7 @@ error
 (keyword-expected-exception-arguments keyword-expected-exception-arguments#unimplemented)
 (keyword-expected-exception-procedure keyword-expected-exception-procedure#unimplemented)
 (keyword-expected-exception? keyword-expected-exception?#unimplemented)
-(length-mismatch-exception-arg-num length-mismatch-exception-arg-num#unimplemented)
+(length-mismatch-exception-arg-id length-mismatch-exception-arg-id#unimplemented)
 (length-mismatch-exception-arguments length-mismatch-exception-arguments#unimplemented)
 (length-mismatch-exception-procedure length-mismatch-exception-procedure#unimplemented)
 (length-mismatch-exception? length-mismatch-exception?#unimplemented)
@@ -89,7 +89,7 @@ error
 
 raise
 
-(range-exception-arg-num range-exception-arg-num#unimplemented)
+(range-exception-arg-id range-exception-arg-id#unimplemented)
 (range-exception-arguments range-exception-arguments#unimplemented)
 (range-exception-procedure range-exception-procedure#unimplemented)
 (range-exception? range-exception?#unimplemented)
@@ -105,7 +105,7 @@ raise
 (sfun-conversion-exception-procedure sfun-conversion-exception-procedure#unimplemented)
 (sfun-conversion-exception? sfun-conversion-exception?#unimplemented)
 (stack-overflow-exception? stack-overflow-exception?#unimplemented)
-(type-exception-arg-num type-exception-arg-num#unimplemented)
+(type-exception-arg-id type-exception-arg-id#unimplemented)
 (type-exception-arguments type-exception-arguments#unimplemented)
 (type-exception-procedure type-exception-procedure#unimplemented)
 (type-exception-type-id type-exception-type-id#unimplemented)

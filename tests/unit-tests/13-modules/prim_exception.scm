@@ -45,7 +45,7 @@
 ;;unimplemented;;keyword-expected-exception-arguments
 ;;unimplemented;;keyword-expected-exception-procedure
 ;;unimplemented;;keyword-expected-exception?
-;;unimplemented;;length-mismatch-exception-arg-num
+;;unimplemented;;length-mismatch-exception-arg-id
 ;;unimplemented;;length-mismatch-exception-arguments
 ;;unimplemented;;length-mismatch-exception-procedure
 ;;unimplemented;;length-mismatch-exception?
@@ -81,7 +81,7 @@
 
 (##with-exception-catcher ##list (lambda () (raise 123)))
 
-;;unimplemented;;range-exception-arg-num
+;;unimplemented;;range-exception-arg-id
 ;;unimplemented;;range-exception-arguments
 ;;unimplemented;;range-exception-procedure
 ;;unimplemented;;range-exception?
@@ -97,7 +97,7 @@
 ;;unimplemented;;sfun-conversion-exception-procedure
 ;;unimplemented;;sfun-conversion-exception?
 ;;unimplemented;;stack-overflow-exception?
-;;unimplemented;;type-exception-arg-num
+;;unimplemented;;type-exception-arg-id
 ;;unimplemented;;type-exception-arguments
 ;;unimplemented;;type-exception-procedure
 ;;unimplemented;;type-exception-type-id

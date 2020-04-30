@@ -10088,7 +10088,7 @@ For example:
 @deffn procedure type-exception? @var{obj}
 @deffnx procedure type-exception-procedure @var{exc}
 @deffnx procedure type-exception-arguments @var{exc}
-@deffnx procedure type-exception-arg-num @var{exc}
+@deffnx procedure type-exception-arg-id @var{exc}
 @deffnx procedure type-exception-type-id @var{exc}
 
 Type-exception objects are raised when a primitive procedure is called
@@ -10105,8 +10105,10 @@ returns the procedure that raised @var{exc}.
 The procedure @code{type-exception-arguments}
 returns the list of arguments of the procedure that raised @var{exc}.
 
-The procedure @code{type-exception-arg-num} returns the position of the
-argument whose type is incorrect.  Position 1 is the first argument.
+The procedure @code{type-exception-arg-id} returns the identity of the
+argument whose type is incorrect, which can be an exact integer position
+(1 for the first argument) or a pair whose @code{car} is the position
+and the @code{cdr} is the parameter name as a symbol.
 
 The procedure @code{type-exception-type-id} returns an identifier of
 the type expected.  The type-id can be a symbol, such as @code{number}
@@ -10119,7 +10121,7 @@ For example:
     (if (type-exception? exc)
         (list (type-exception-procedure exc)
               (type-exception-arguments exc)
-              (type-exception-arg-num exc)
+              (type-exception-arg-id exc)
               (type-exception-type-id exc))
         'not-type-exception))}
 > @b{(with-exception-catcher
@@ -10137,7 +10139,7 @@ For example:
 @deffn procedure range-exception? @var{obj}
 @deffnx procedure range-exception-procedure @var{exc}
 @deffnx procedure range-exception-arguments @var{exc}
-@deffnx procedure range-exception-arg-num @var{exc}
+@deffnx procedure range-exception-arg-id @var{exc}
 
 Range-exception objects are raised when a numeric parameter is not in
 the allowed range.  The parameter @var{exc} must be a range-exception
@@ -10152,9 +10154,10 @@ returns the procedure that raised @var{exc}.
 The procedure @code{range-exception-arguments}
 returns the list of arguments of the procedure that raised @var{exc}.
 
-The procedure @code{range-exception-arg-num} returns the position of
-the argument which is not in the allowed range.  Position 1 is the
-first argument.
+The procedure @code{range-exception-arg-id} returns the identity of the
+argument which is not in the allowed range, which can be an exact integer position
+(1 for the first argument) or a pair whose @code{car} is the position
+and the @code{cdr} is the parameter name as a symbol.
 
 For example:
 
@@ -10163,7 +10166,7 @@ For example:
     (if (range-exception? exc)
         (list (range-exception-procedure exc)
               (range-exception-arguments exc)
-              (range-exception-arg-num exc))
+              (range-exception-arg-id exc))
         'not-range-exception))}
 > @b{(with-exception-catcher
     handler
@@ -10210,7 +10213,7 @@ For example:
 @deffn procedure improper-length-list-exception? @var{obj}
 @deffnx procedure improper-length-list-exception-procedure @var{exc}
 @deffnx procedure improper-length-list-exception-arguments @var{exc}
-@deffnx procedure improper-length-list-exception-arg-num @var{exc}
+@deffnx procedure improper-length-list-exception-arg-id @var{exc}
 
 Improper-length-list-exception objects are raised by the @code{map}
 and @code{for-each} procedures when they are called with two or more
@@ -10227,9 +10230,10 @@ returns the procedure that raised @var{exc}.
 The procedure @code{improper-length-list-exception-arguments}
 returns the list of arguments of the procedure that raised @var{exc}.
 
-The procedure @code{improper-length-list-exception-arg-num} returns
-the position of the argument whose length is the shortest.  Position 1
-is the first argument.
+The procedure @code{improper-length-list-exception-arg-id} returns the identity of the
+argument whose length is the shortest, which can be an exact integer position
+(1 for the first argument) or a pair whose @code{car} is the position
+and the @code{cdr} is the parameter name as a symbol.
 
 For example:
 
@@ -10238,7 +10242,7 @@ For example:
     (if (improper-length-list-exception? exc)
         (list (improper-length-list-exception-procedure exc)
               (improper-length-list-exception-arguments exc)
-              (improper-length-list-exception-arg-num exc))
+              (improper-length-list-exception-arg-id exc))
         'not-improper-length-list-exception))}
 > @b{(with-exception-catcher
     handler
