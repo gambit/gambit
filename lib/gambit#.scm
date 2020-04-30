@@ -457,7 +457,7 @@ keyword-hash
 keyword?
 last
 last-pair
-length-mismatch-exception-arg-num
+length-mismatch-exception-arg-id
 length-mismatch-exception-arguments
 length-mismatch-exception-procedure
 length-mismatch-exception?
@@ -628,7 +628,7 @@ random-source-state-ref
 random-source-state-set!
 random-source?
 random-u8vector
-range-exception-arg-num
+range-exception-arg-id
 range-exception-arguments
 range-exception-procedure
 range-exception?
@@ -979,7 +979,7 @@ tty-paren-balance-duration-set!
 tty-text-attributes-set!
 tty-type-set!
 tty?
-type-exception-arg-num
+type-exception-arg-id
 type-exception-arguments
 type-exception-procedure
 type-exception-type-id

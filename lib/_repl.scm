@@ -3528,12 +3528,17 @@
             (##write (##car lst) port)
             (loop (##cdr lst))))))
 
-  (define-prim (display-arg-num arg-num)
-    (if (##fx< 0 arg-num)
-        (begin
-          (##write-string "(Argument " port)
-          (##write arg-num port)
-          (##write-string ") " port))))
+  (define-prim (display-arg-id arg-id)
+    (let ((arg-num (if (##pair? arg-id) (##car arg-id) arg-id)))
+      (if (##fx< 0 arg-num)
+          (begin
+            (##write-string "(Argument " port)
+            (##write arg-num port)
+            (if (##pair? arg-id)
+                (begin
+                  (##write-string ", " port)
+                  (##write (##cdr arg-id) port)))
+            (##write-string ") " port)))))
 
   (define-prim (display-known-exception exc)
 
@@ -3668,7 +3673,7 @@
            (##newline port))
 
           ((macro-length-mismatch-exception? exc)
-           (display-arg-num (macro-length-mismatch-exception-arg-num exc))
+           (display-arg-id (macro-length-mismatch-exception-arg-id exc))
            (##write-string "Length does not match other arguments" port)
            (##newline port)
            (display-call))
@@ -3757,7 +3762,7 @@
            (display-call))
 
           ((macro-range-exception? exc)
-           (display-arg-num (macro-range-exception-arg-num exc))
+           (display-arg-id (macro-range-exception-arg-id exc))
            (##write-string "Out of range" port)
            (##newline port)
            (display-call))
@@ -3797,7 +3802,7 @@
            (display-call))
 
           ((macro-type-exception? exc)
-           (display-arg-num (macro-type-exception-arg-num exc))
+           (display-arg-id (macro-type-exception-arg-id exc))
            (let ((type-id
                   (macro-type-exception-type-id exc)))
              (if (##type? type-id)

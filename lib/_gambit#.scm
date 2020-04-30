@@ -411,7 +411,7 @@
 (macro-define-syntax macro-no-check
   (lambda (stx)
     (syntax-case stx ()
-      ((_ var arg-num form expr)
+      ((_ var arg-id form expr)
        #'expr))))
 
 (##define-macro
@@ -629,7 +629,7 @@
      (##define-macro (,macro-test-type var)
        `(,',predicate ,var ,@',arguments))
 
-     (##define-macro (,macro-check-type var arg-num form expr)
+     (##define-macro (,macro-check-type var arg-id form expr)
 
        (define (rest-param x)
          (if (pair? x)
@@ -659,9 +659,9 @@
                 (nr (nonrest-params (cdr form)))
                 (pk (prekey-params nr)))
            (if (and (null? k) (not (null? r)))
-             `(,name ,arg-num '() ,(car form) ,@pk ,r)
+             `(,name ,arg-id '() ,(car form) ,@pk ,r)
              `(,name
-               ,arg-num
+               ,arg-id
                ,(if (and (null? k) (null? r))
                   (car form)
                   `(##list ,(car form) ,@k ,@(if (null? r) '() (list r))))
@@ -682,7 +682,7 @@
 
     (define macro-check-type (sym 'macro-check- type-id))
 
-    `(##define-macro (,macro-check-type var arg-num ,@arguments form expr)
+    `(##define-macro (,macro-check-type var arg-id ,@arguments form expr)
 
        (define (rest-param x)
          (if (pair? x)
@@ -712,7 +712,7 @@
                 (nr (nonrest-params (cdr form)))
                 (pk (prekey-params nr)))
            `(,name
-             ,arg-num
+             ,arg-id
              ,(if (and (null? k) (null? r))
                 (car form)
                 `(##list ,(car form) ,@k ,@(if (null? r) '() (list r))))
@@ -737,9 +737,9 @@
 
     (define ##fail-check-type (sym '##fail-check- type-name))
 
-    `(define-prim (,##fail-check-type arg-num proc . args)
+    `(define-prim (,##fail-check-type arg-id proc . args)
        (##raise-type-exception
-        arg-num
+        arg-id
         ,(if (pair? type-id) (car type-id) `',type-name)
         proc
         args))))

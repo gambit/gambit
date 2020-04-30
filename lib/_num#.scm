@@ -2,7 +2,7 @@
 
 ;;; File: "_num#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -15,7 +15,7 @@
 
   (procedure unprintable: read-only: no-functional-setter:)
   (arguments unprintable: read-only: no-functional-setter:)
-  (arg-num   unprintable: read-only: no-functional-setter:)
+  (arg-id    unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception divide-by-zero-exception
