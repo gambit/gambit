@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -140,6 +140,376 @@
                (standard-bindings)
                (extended-bindings))
              val))))))
+
+(##define-syntax declare-safe-define-procedure
+  (lambda (src)
+
+    (define (err)
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (##source-strip (car (##source-strip src)))))
+
+    (##deconstruct-call
+     src
+     2
+     (lambda (arg-src)
+       (let ((arg (##desourcify arg-src))
+             (meta-info-tbl (vector-ref (##compilation-ctx) 2)))
+         (if arg
+             (table-set! meta-info-tbl 'safe-define-procedure arg)
+             (if (eq? (table-ref meta-info-tbl 'safe-define-procedure #f)
+                      #t)
+                 (table-set! meta-info-tbl 'safe-define-procedure))))
+       `(##begin)))))
+
+(##define-syntax primitive
+  (lambda (src)
+
+    (define (err)
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (##source-strip (car (##source-strip src)))))
+
+    (define (append-sym sym1 sym2)
+      (string->symbol
+       (string-append (symbol->string sym1)
+                      (symbol->string sym2))))
+
+    (define (prim sym)
+      (append-sym '|##| sym))
+
+    (##deconstruct-call
+     src
+     2
+     (lambda (arg-src)
+       (let ((arg (##desourcify arg-src)))
+         (cond ((symbol? arg)
+                (prim arg))
+               ((pair? arg)
+                (let ((name (##desourcify (car arg))))
+                  (if (symbol? name)
+                      (cons (prim name) (cdr arg))
+                      (err))))
+               (else
+                (err))))))))
+
+(##define-syntax define-procedure
+  (lambda (src)
+
+    (define (err)
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (##source-strip (car (##source-strip src)))))
+
+    (define (safe-define-procedure?)
+      (let* ((cc
+              (##global-var-ref
+               (##make-global-var '##compilation-ctx)))
+             (meta-info-tbl
+              (and (##not (##unbound? cc))
+                   (vector-ref (cc) 2))))
+        (and meta-info-tbl
+             (table-ref meta-info-tbl 'safe-define-procedure #f))))
+
+    (define (expand src)
+      (##deconstruct-call
+       src
+       -2
+       (lambda (pattern-src . body)
+         (let* ((pattern (##source-strip pattern-src))
+                (head (and (pair? pattern) (##source-strip (car pattern))))
+                (name (if (and (pair? head)
+                               (eq? (##source-strip (car head)) 'primitive)
+                               (pair? (cdr head)))
+                          (##source-strip (cadr head))
+                          head)))
+           (if (not (symbol? name))
+               (##raise-expression-parsing-exception
+                'ill-formed-special-form
+                src
+                (##source-strip (car (##source-strip src))))
+               (parse-parameters (not (eq? head name))
+                                 name
+                                 body
+                                 (cdr pattern)))))))
+
+    (define (parse-parameters prim? name body params)
+      (let loop ((lst params)
+                 (rev-req '())
+                 (rev-opt '()))
+        (cond ((null? lst)
+               (process-parameters prim?
+                                   name
+                                   body
+                                   (reverse rev-req)
+                                   (reverse rev-opt)
+                                   '()))
+              ((pair? lst)
+               (let* ((param-src (car lst))
+                      (param (##source-strip param-src)))
+                 (cond ((and (null? rev-opt) (symbol? param))
+                        (loop (cdr lst)
+                              (cons (vector param '(object))
+                                    rev-req)
+                              rev-opt))
+                       ((pair? param)
+                        (let ((len (##proper-length param)))
+                          (if (or (and (eqv? len 2) (null? rev-opt))
+                                  (eqv? len 3))
+                              (let* ((var-src (car param))
+                                     (var (##source-strip var-src))
+                                     (type-src (cadr param))
+                                     (type (##source-strip type-src))
+                                     (check
+                                      (cond ((symbol? type)
+                                             (list type))
+                                            ((and (pair? type)
+                                                  (symbol?
+                                                   (##source-strip (car type))))
+                                             (cons (##source-strip (car type))
+                                                   (cdr type)))
+                                            (else
+                                             #f))))
+                                (cond ((not check)
+                                       (err))
+                                      ((eqv? len 3)
+                                       (let ((default-src (caddr param)))
+                                         (loop (cdr lst)
+                                               rev-req
+                                               (cons (vector var
+                                                             check
+                                                             default-src)
+                                                     rev-opt))))
+                                      (else
+                                       (loop (cdr lst)
+                                             (cons (vector var
+                                                           check)
+                                                     rev-req)
+                                             rev-opt))))
+                              (err))))
+                       (else
+                        (err)))))
+              (else
+               (let ((rest-param (##source-strip lst)))
+                 (if (symbol? rest-param)
+                     (process-parameters prim?
+                                         name
+                                         body
+                                         (reverse rev-req)
+                                         (reverse rev-opt)
+                                         rest-param)
+                     (err)))))))
+
+    (define (var-name param)
+      (if (symbol? param)
+          param
+          (vector-ref param 0)))
+
+    (define (var-check param)
+      (vector-ref param 1))
+
+    (define (default param)
+      (vector-ref param 2))
+
+    (define (param-name param)
+      (append-sym '% (var-name param)))
+
+    (define (exception-param-name param)
+      (if (optional? param)
+          (param-name param)
+          (var-name param)))
+
+    (define (optional? param)
+      (and (vector? param)
+           (fx= 3 (vector-length param))))
+
+    (define (force? param)
+      (not (equal? (var-check param) '(object))))
+
+    (define (append-sym sym1 sym2)
+      (string->symbol
+       (string-append (symbol->string sym1)
+                      (symbol->string sym2))))
+
+    (define (prim sym)
+      (append-sym '|##| sym))
+
+    (define (process-parameters prim?
+                                name
+                                body
+                                req-params
+                                opt-params
+                                rest-param)
+      (let ((req-opt-params
+             (append req-params opt-params))
+            (proc-name
+             (if prim?
+                 (prim name)
+                 name)))
+
+        (define (gen-bind-non-opt expr)
+          (let ((params
+                 (if (null? rest-param)
+                     req-params
+                     (append req-params (list rest-param)))))
+            (if (null? params)
+                expr
+                `(##let ,(map (lambda (param)
+                                (list (var-name param) (param-name param)))
+                              params)
+                        ,expr))))
+
+        (define (gen-force expr)
+          (let ((force-params
+                 (##append-lists
+                  (map (lambda (param)
+                         (if (force? param) (list (param-name param)) '()))
+                       req-opt-params))))
+            (if (null? force-params)
+                expr
+                `(macro-force-vars ,force-params ,expr))))
+
+        (define (gen-default param expr)
+          (if (optional? param)
+              (let ((def-expr (default param)))
+                `(##let ((,(var-name param)
+                          ,(if (equal? (##desourcify def-expr)
+                                       '(macro-absent-obj))
+                               (param-name param)
+                               `(##if (##eq? ,(param-name param)
+                                             (macro-absent-obj))
+                                      ,def-expr
+                                      ,(param-name param)))))
+                        ,expr))
+              expr))
+
+        (define (gen-check param arg-num expr)
+          (let ((check (var-check param)))
+            (if (or (equal? check '(object))
+                    (equal? check '(strict-object))
+                    (and prim?
+                         (not (safe-define-procedure?))))
+                expr
+                `(,(append-sym 'macro-check- (car check))
+                  ,(var-name param)
+                  '(,arg-num . ,(var-name param))
+                  ,@(cdr check)
+                  (,proc-name
+                   ,@(append (map exception-param-name req-opt-params)
+                             (if (null? rest-param)
+                                 '()
+                                 (exception-param-name rest-param))))
+                  ,expr))))
+
+        (define (gen-defaults-and-checks params arg-num expr)
+          (if (null? params)
+              expr
+              (let ((param (car params)))
+                (gen-default param
+                             (gen-check param
+                                        arg-num
+                                        (gen-defaults-and-checks
+                                         (cdr params)
+                                         (fx+ arg-num 1)
+                                         expr))))))
+
+        (define (gen-body)
+          (if (and (null? body)
+                   (null? opt-params)
+                   (null? rest-param))
+              (if prim?
+                  `(##let ()
+                          (##declare (not safe))
+                          (,proc-name ,@(map var-name req-params)))
+                  `(primitive (,proc-name ,@(map var-name req-params))))
+              `(##let () ,@body)))
+
+        (define (gen-block expr)
+          #;
+          `(##declare-scope ;; not implemented by interpreter
+            (##begin
+             (##declare (block))
+             ,expr))
+          expr)
+
+        (let* ((param-list-tail
+                (if (null? rest-param)
+                    '()
+                    (param-name rest-param)))
+               (param-list
+                (append
+                 (map param-name req-params)
+                 (if (null? opt-params)
+                     param-list-tail
+                     (cons '#!optional
+                           (append
+                            (map (lambda (param)
+                                   `(,(param-name param)
+                                     (macro-absent-obj)))
+                                 opt-params)
+                            param-list-tail)))))
+               (expansion
+                (gen-block
+                 `(##define ,proc-name
+                    (##lambda ,param-list
+                      (##declare (extended-bindings))
+                      ,@(if (safe-define-procedure?)
+                            `((##declare (safe)))
+                            `((##declare (not safe))
+                              (##include "~~lib/gambit/prim/prim#.scm")))
+                      ,@(if prim?
+                            `()
+                            `((##namespace ("" ,proc-name))))
+                      ,(gen-force
+                        (gen-bind-non-opt
+                         (gen-defaults-and-checks
+                          req-opt-params
+                          1
+                          (gen-body)))))))))
+          ;;(pp (##desourcify expansion))
+          expansion)))
+
+    (expand src)))
+
+(##define-syntax define-primitive
+  (lambda (src)
+
+    (define (err)
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (##source-strip (car (##source-strip src)))))
+
+    (##deconstruct-call
+     src
+     -2
+     (lambda (pattern-src . body)
+       (let ((pattern (##desourcify pattern-src)))
+         (cond ((pair? pattern)
+                `(define-procedure ((primitive ,(car pattern)) ,@(cdr pattern))
+                   ,@body))
+               (else
+                (err))))))))
+
+(##define-syntax define-prim&proc
+  (lambda (src)
+
+    (define (err)
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (##source-strip (car (##source-strip src)))))
+
+    (##deconstruct-call
+     src
+     2
+     (lambda (pattern-src)
+       `(##begin
+         (define-primitive ,pattern-src)
+         (define-procedure ,pattern-src))))))
 
 ;;;----------------------------------------------------------------------------
 

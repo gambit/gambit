@@ -180,6 +180,9 @@
 (define-check-type inexact-real-list 'inexact-real-list
   ##flonum?)
 
+(define-check-type number 'number
+  ##number?)
+
 (define-check-type real 'real
   ##real?)
 
