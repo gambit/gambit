@@ -205,8 +205,14 @@
        (##source-strip (car (##source-strip src)))))
 
     (define (safe-define-procedure?)
-      (let ((meta-info-tbl (vector-ref (##compilation-ctx) 2)))
-        (table-ref meta-info-tbl 'safe-define-procedure #f)))
+      (let* ((cc
+              (##global-var-ref
+               (##make-global-var '##compilation-ctx)))
+             (meta-info-tbl
+              (and (##not (##unbound? cc))
+                   (vector-ref (cc) 2))))
+        (and meta-info-tbl
+             (table-ref meta-info-tbl 'safe-define-procedure #f))))
 
     (define (expand src)
       (##deconstruct-call
@@ -422,10 +428,12 @@
               `(##let () ,@body)))
 
         (define (gen-block expr)
-          `(##declare-scope
+          #;
+          `(##declare-scope ;; not implemented by interpreter
             (##begin
              (##declare (block))
-             ,expr)))
+             ,expr))
+          expr)
 
         (let* ((param-list-tail
                 (if (null? rest-param)
