@@ -1343,9 +1343,10 @@
 
 ;;; Sorting.
 
-(define-prim (##list-sort! proc lst)
+;;(declare-safe-define-procedure #t)
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(define-primitive (list-sort! (proc procedure)
+                              (lst  object))
 
   ;; Stable mergesort algorithm
 
@@ -1391,42 +1392,33 @@
           (set-cdr! prev lst2)
           result)))
 
-  (let ((len (##proper-list-length lst)))
+  (let ((len (primitive (proper-list-length lst))))
     (and len
          (if (fx= len 0)
              '()
              (sort lst len)))))
 
-(define-prim (##list-sort proc lst)
-  (##list-sort! proc (##list-copy lst)))
+(define-primitive (list-sort (proc procedure)
+                             (lst  object))
+  (list-sort! proc (list-copy lst)))
 
-(define-prim (list-sort proc lst)
+(define-procedure (list-sort (proc procedure)
+                             (lst  object))
+  (macro-if-checks
+   (let ((lst-copy (primitive (proper-list-copy lst))))
+     (if lst-copy
+         (list-sort! proc lst-copy)
+         (macro-fail-check-list
+          '(2 . lst)
+          (list-sort proc lst))))
+   (list-sort! proc (list-copy lst))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" list-sort)) ;; but not list-sort to ##list-sort
-
-  (macro-force-vars (proc)
-    (macro-check-procedure proc 1 (list-sort proc lst)
-      (macro-if-checks
-       (let ((lst-copy (##proper-list-copy lst)))
-         (if lst-copy
-             (##list-sort! proc lst-copy)
-             (macro-fail-check-list
-              2
-              (list-sort proc lst))))
-       (##list-sort! proc (##list-copy lst))))))
-
-(define-prim (list-sort! proc lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" list-sort!)) ;; but not list-sort! to ##list-sort!
-
-  (macro-force-vars (proc)
-    (macro-check-procedure proc 1 (list-sort! proc lst)
-      (let ((result (##list-sort! proc lst)))
-        (or result
-            (macro-fail-check-list
-             2
-             (list-sort! proc lst)))))))
+(define-procedure (list-sort! (proc procedure)
+                              (lst  object))
+  (let ((result (primitive (list-sort! proc lst))))
+    (or result
+        (macro-fail-check-list
+         '(2 . lst)
+         (list-sort! proc lst)))))
 
 ;;;============================================================================
