@@ -30,8 +30,8 @@
                (##list opt)))
          options))
 
-(define (##with-resolved-input-file file-or-module-name options callback)
-  (let* ((modref (##parse-module-ref file-or-module-name))
+(define (##with-resolved-input-file module-or-file options callback)
+  (let* ((modref (##parse-module-ref module-or-file))
          (mod-info (if modref
                        ;; REVIEW:
                        ;; 1. Should we not attempt to install a hosted module at this point?
@@ -40,7 +40,7 @@
                        #f))
          (file-path (if mod-info
                         (##vector-ref mod-info 3)
-                        file-or-module-name))
+                        module-or-file))
          (base-dir (##path-directory
                       (##path-normalize file-path)))
          (target-dir (if mod-info
@@ -54,7 +54,7 @@
                       options
                       (##cons
                          (##list 'module-ref
-                                 (##string->symbol file-or-module-name))
+                                 (##string->symbol module-or-file))
                          options))))
 
     (let ((output-file (callback file-path (or temp-dir target-dir) options)))
@@ -70,7 +70,7 @@
           output-file))))
 
 (define (compile-file-to-target
-         ;; REVIEW: Should this parameter be renamed to 'file-or-module-name'?
+         ;; REVIEW: Should this parameter be renamed to 'module-or-file'?
          filename
          #!rest other;;;;;;;;;;
          #!key
@@ -185,6 +185,7 @@
   (##string-or-string-list-join x "\n"))
 
 (define (compile-file
+         ;; REVIEW: Should this parameter be renamed to 'module-or-file'?
          filename
          #!rest other;;;;;;;;;;
          #!key
