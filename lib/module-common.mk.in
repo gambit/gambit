@@ -115,9 +115,13 @@ clean-modules: clean-modules-pre
 	done
 
 clean-modules-pre:
-	@for target in $(BUILD_TARGETS); do \
+	@major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
+	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
+	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
+	for target in $(BUILD_TARGETS); do \
 	  for main_mod in $(MAIN_MODULES); do \
-	    build_dir="$$main_mod@gambit409003@$$target"; \
+	    build_dir="$$main_mod@gambit$$version_num@$$target"; \
 	    if test -d "$$build_dir"; then \
 	      echo "removing $(herefromroot)/$$build_dir"; \
 	      rm -rf "$$build_dir"; \
