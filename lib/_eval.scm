@@ -5489,23 +5489,23 @@
 
     (define-runtime-syntax syntax-rules
       (lambda (src)
-        ((##eval '(lambda (src)
-                    (##import _define-library/define-library-expand)
-                    (syn#syntax-rules-form-transformer src)))
+        ((##eval '(##let ()
+                    (##demand-module _define-library/define-library-expand)
+                    syn#syntax-rules-form-transformer))
          src)))
 
     (define-runtime-syntax define-library
       (lambda (src)
-        ((##eval '(lambda (src)
-                    (##import _define-library/define-library-expand)
-                    (define-library-expand src)))
+        ((##eval '(##let ()
+                    (##demand-module _define-library/define-library-expand)
+                    _define-library/define-library-expand#define-library-expand))
          src)))
 
     (define-runtime-syntax import
       (lambda (src)
-        ((##eval '(lambda (src)
-                    (##import _define-library/define-library-expand)
-                    (import-expand src)))
+        ((##eval '(##let ()
+                    (##demand-module _define-library/define-library-expand)
+                    _define-library/define-library-expand#import-expand))
          src)))
 
     ##interaction-cte))
