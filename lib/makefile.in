@@ -272,6 +272,8 @@ _kernel@obj@: _kernel.c $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_setu
 _system@obj@: _system.c
 	@BUILD_OBJ@ -D___LIBRARY
 
+_num.c: gambit/random/random.scm gambit/random/random\#.scm
+
 _num@obj@: _num.c mem.h
 	@BUILD_OBJ@ -D___LIBRARY
 

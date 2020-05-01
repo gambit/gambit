@@ -2,7 +2,7 @@
 
 herefromlib = gambit
 libfromhere = ..
-SUBDIRS = prim list string char
+SUBDIRS = prim list string char random
 HEADERS_SCM = gambit\#.scm
 MODULES_SCM = gambit.scm gambit.sld
 MAIN_MODULES = gambit
