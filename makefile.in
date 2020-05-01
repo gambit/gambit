@@ -319,6 +319,11 @@ publish-release: fake_target
 print-make:
 	echo $(MAKE)
 
+clean-modules: clean-modules-pre
+	@cd lib && $(MAKE) $@
+
+clean-modules-pre:
+
 list-modules: list-modules-pre
 	@cd lib && $(MAKE) $@
 

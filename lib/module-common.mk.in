@@ -109,6 +109,23 @@ bootstrap-pre:
 
 bootstrap-post:
 
+clean-modules: clean-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) $@); \
+	done
+
+clean-modules-pre:
+	@for target in $(BUILD_TARGETS); do \
+	  for main_mod in $(MAIN_MODULES); do \
+	    build_dir="$$main_mod@gambit409003@$$target"; \
+	    if test -d "$$build_dir"; then \
+	      echo "removing $(herefromroot)/$$build_dir"; \
+	      rm -rf "$$build_dir"; \
+	    fi; \
+	  done; \
+	done
+
+
 list-modules: list-modules-pre
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
