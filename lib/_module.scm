@@ -610,8 +610,7 @@
                    `(##begin
                      (##module-search-order-set!
                       ',##module-search-order)
-                     ;; REVIEW: How do I test this?
-                     (compile-file
+                     (##build-module
                       ',path
                       ',target
                       ',options))))))
