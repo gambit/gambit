@@ -181,6 +181,10 @@ test-modules-pre:
 modules-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
+	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
+	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
 	for target in $(BUILD_TARGETS); do \
 	  for main_mod in $(MAIN_MODULES); do \
 	    if test "$$main_mod" = "$$here_suffix"; then \
@@ -189,7 +193,7 @@ modules-pre:
 	      modref="$(herefromlib)/$$main_mod"; \
 	    fi; \
 	    need_to_build_module=no; \
-	    build_dir="$$main_mod@gambit409003@$$target"; \
+	    build_dir="$$main_mod@$$version_num@$$target"; \
 	    if test ! -d "$$build_dir" \
 	         -o "$(rootfromhere)/gsc/gsc@exe@" -nt "$$build_dir" \
 	         -o -f "$$main_mod.sld" -a "$$main_mod.sld" -nt "$$build_dir" \
