@@ -510,9 +510,16 @@ bootstrap-post: bootstrap-recursive
 
 bootstrap-recursive: bootstrap-pre
 
+clean-modules: clean-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) $@); \
+	done
+
+clean-modules-pre:
+
 list-modules: list-modules-pre
 	@for subdir in $(SUBDIRS); do \
-	  (cd $$subdir && $(MAKE) list-modules); \
+	  (cd $$subdir && $(MAKE) $@); \
 	done
 
 list-modules-pre:
