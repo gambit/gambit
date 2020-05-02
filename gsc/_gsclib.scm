@@ -33,23 +33,29 @@
 (define (##with-resolved-input-file module-or-file options callback)
   (let* ((modref (##parse-module-ref module-or-file))
          (mod-info (if modref
-                       ;; REVIEW:
-                       ;; 1. Should we not attempt to install a hosted module at this point?
-                       ;; 2. Should there be a warning when the module isn't resolved?
                        (##search-or-else-install-module modref)
                        #f))
          (file-path (if mod-info
                         (##vector-ref mod-info 3)
                         module-or-file))
          (base-dir (##path-directory
-                      (##path-normalize file-path)))
+                    (##path-normalize file-path)))
          (target-dir (if mod-info
                          (##module-build-subdir-path
                           base-dir
                           (##path-strip-extension file-path)
                           (c#target-name (##extract-target options)))
                         base-dir))
-         (temp-dir (and mod-info (##create-temporary-directory target-dir)))
+         (temp-dir (and mod-info
+                        ;; Create a temporary directory under the module output
+                        ;; path with the name of '.gsc-temp-NNNN'
+                        (##create-temporary-directory
+                         (##path-expand
+                          ".gsc-temp-"
+                          ;; Create the target directory if it doesn't exist
+                          (begin
+                            (##create-directory target-dir #f)
+                            target-dir)))))
          (options (if (##not modref)
                       options
                       (##cons
@@ -57,17 +63,38 @@
                                  (##string->symbol module-or-file))
                          options))))
 
-    (let ((output-file (callback file-path (or temp-dir target-dir) options)))
+    (let* ((output-file (callback file-path (or temp-dir target-dir) options))
+           (target-file (##path-normalize
+                         (##path-expand
+                          (##path-strip-directory output-file)
+                          target-dir))))
       (and modref
            (begin
-             (##delete-file-or-directory target-dir #t #f)
-             (##rename-file temp-dir target-dir)))
+             (##rename-file-if-changed output-file target-file)
+             (##delete-file-or-directory temp-dir #t)))
 
       (if modref
-          (##path-expand
-            (##path-strip-directory output-file)
-            target-dir)
+          target-file
           output-file))))
+
+(define (##files-equal? path1 path2)
+  (##call-with-input-file
+      path1
+    (lambda (port1)
+      (##call-with-input-file
+          path2
+        (lambda (port2)
+          (let loop ()
+            (let* ((chunk1 (read-bytevector 4096 port1))
+                   (chunk2 (read-bytevector 4096 port2)))
+              (and (equal? chunk1 chunk2)
+                   (or (eof-object? chunk1)
+                       (loop))))))))))
+
+(define (##rename-file-if-changed old-path new-path)
+  (and (or (not (##file-exists? new-path))
+           (not (##files-equal? old-path new-path)))
+       (##rename-file old-path new-path)))
 
 (define (compile-file-to-target
          ;; REVIEW: Should this parameter be renamed to 'module-or-file'?
