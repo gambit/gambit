@@ -355,14 +355,17 @@
            (input-is-target-file?
             (##assoc (##path-extension filename)
                      (c#target-file-extensions target)))
+           (expanded-output
+            (##path-normalize output))
            (target-filename
             (if input-is-target-file?
                 filename
                 (##string-append
-                 (##path-strip-extension filename)
+                 (##path-expand
+                  (##path-strip-directory
+                   (##path-strip-extension filename))
+                  expanded-output)
                  (##caar (c#target-file-extensions target)))))
-           (expanded-output
-            (##path-normalize output))
            (output-directory?
             (##not (##equal? expanded-output
                              (##path-strip-trailing-directory-separator
