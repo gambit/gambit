@@ -1,0 +1,123 @@
+name: Gambit - Pull Request
+
+on:
+  pull_request:
+    branches:
+      - master
+      - github-actions
+  # TODO: Remove this before enabling on Gambit repo
+  push:
+    branches: [ github-actions ]
+
+jobs:
+  Windows-mingw:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Install MSYS2
+      uses: numworks/setup-msys2@v1
+      with:
+        update: true
+        path-type: inherit
+
+    - name: Install Dependencies
+      shell: cmd
+      run: msys2do pacman -S --noconfirm autoconf git make mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-libwinpthread-git
+
+    - name: Build
+      shell: cmd
+      run: |
+        mkdir dist
+        msys2do ./configure  --enable-debug --enable-multiple-threaded-vms --prefix=$(pwd)/dist
+        msys2do make -j4; make modules; make install
+
+    - name: Test
+      shell: cmd
+      run: msys2do make check
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-x64-mingw
+        path: dist/
+
+  Windows-msvc:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Install MSYS2
+      uses: numworks/setup-msys2@v1
+      with:
+        update: true
+        path-type: inherit
+        msystem: MSYS
+
+    - name: Install Dependencies
+      shell: cmd
+      run: msys2do pacman -S --noconfirm autoconf make patch
+
+    - name: Build
+      shell: cmd
+      run: |
+        "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
+        set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
+        mkdir dist
+        set DIST_DIR="%CD:\=/%/dist"
+        echo %DIST_DIR%
+        msys2do ./configure --enable-c-opt=-Od --enable-debug --prefix='$DIST_DIR'; make -j4; make modules; make install
+
+    - name: Test
+      shell: cmd
+      run: |
+        cd tests
+        ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
+        echo n | comp mix.c test5.ok
+        cd ..
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-x64-msvc
+        path: dist/
+
+  Linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Build and Test
+      run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    # - name: Upload Artifact
+    #   uses: actions/upload-artifact@v1
+    #   with:
+    #     name: gambit-linux-x64
+    #     path: dist/
+
+  MacOS:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Build and Test
+      run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    # - name: Upload Artifact
+    #   uses: actions/upload-artifact@v1
+    #   with:
+    #     name: gambit-macos-x64
+    #     path: dist/
