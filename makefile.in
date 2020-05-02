@@ -129,6 +129,8 @@ boot-most-recent-release-gsc-boot: fake_target
 	rm -rf boot
 	mkdir -p boot
 	$(GIT) archive tags/$(PACKAGE_VERSION) | (cd boot && tar xf -)
+	cp config.guess boot
+	cp config.sub boot
 	cd boot && \
 	./configure $(BOOTSTRAP_CONFIGURE_FLAGS) CC='$(C_COMPILER)' && \
 	$(MAKE) bootstrap
