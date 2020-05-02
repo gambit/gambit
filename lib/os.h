@@ -1893,20 +1893,16 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 
 #if defined(__CYGWIN__) || defined(__MACOSX__) || (defined(__APPLE__) && defined(__MACH__))
 /* ITIMER_VIRTUAL is broken under CYGWIN and MacOS X... use ITIMER_REAL */
-#undef ITIMER_VIRTUAL
+#undef USE_ITIMER_REAL
+#define USE_ITIMER_REAL
 #endif
 
-#ifdef ITIMER_VIRTUAL
+#if defined(ITIMER_VIRTUAL) && !defined(USE_ITIMER_REAL)
 #define HEARTBEAT_ITIMER ITIMER_VIRTUAL
 #define HEARTBEAT_SIG SIGVTALRM
 #else
-#ifdef ITIMER_REAL
 #define HEARTBEAT_ITIMER ITIMER_REAL
 #define HEARTBEAT_SIG SIGALRM
-#else
-#define HEARTBEAT_ITIMER ITIMER_VIRTUAL
-#define HEARTBEAT_SIG SIGVTALRM
-#endif
 #endif
 
 

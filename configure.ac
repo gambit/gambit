@@ -29,6 +29,16 @@ fi`)
 
 AC_CANONICAL_SYSTEM
 
+# detect WSL
+
+ON_WSL=no
+
+if test -r /proc/version; then
+  if grep -q Microsoft /proc/version; then
+    ON_WSL=yes
+  fi
+fi
+
 ###############################################################################
 #
 # Accumulate subsystems to include in runtime library.
@@ -1638,8 +1648,10 @@ else
   AC_CHECK_FUNCS(openat)
   AC_CHECK_FUNCS(readlinkat)
   AC_CHECK_FUNCS(renameat)
-  AC_CHECK_FUNCS(renameat2)
-  AC_CHECK_FUNCS(renameatx_np)
+  if test "$ON_WSL" != yes; then
+    AC_CHECK_FUNCS(renameat2)
+    AC_CHECK_FUNCS(renameatx_np)
+  fi
   AC_CHECK_FUNCS(symlinkat)
   AC_CHECK_FUNCS(unlinkat)
 
@@ -1758,21 +1770,25 @@ else
   AC_CHECK_FUNCS(ftime)
   AC_CHECK_FUNCS(time)
 
-  AC_CHECK_FUNCS(nanosleep)
   #AC_CHECK_FUNCS(Sleep)
   AC_CHECK_FUNCS(sleep)
-
-  #AC_CHECK_FUNCS(GetProcessTimes)
-  AC_CHECK_FUNCS(getrusage)
-  AC_CHECK_FUNCS(times)
-  AC_CHECK_FUNCS(clock)
-  AC_CHECK_FUNCS(DosQuerySysInfo)
+  if test "$ON_WSL" = yes; then
+    AC_DEFINE([USE_ITIMER_REAL],[],[Force using ITIMER_REAL])
+  else
+    AC_CHECK_FUNCS(nanosleep)
+  fi
 
   AC_CHECK_FUNCS(setitimer)
   AC_CHECK_FUNCS(dos_setvect)
   AC_CHECK_FUNCS(DosStartTimer)
   AC_CHECK_FUNCS(VInstall)
   #AC_CHECK_FUNCS(CreateThread)
+
+  #AC_CHECK_FUNCS(GetProcessTimes)
+  AC_CHECK_FUNCS(getrusage)
+  AC_CHECK_FUNCS(times)
+  AC_CHECK_FUNCS(clock)
+  AC_CHECK_FUNCS(DosQuerySysInfo)
 
   AC_CHECK_FUNCS(shl_load)
   #AC_CHECK_FUNCS(LoadLibrary)

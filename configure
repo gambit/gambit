@@ -3042,6 +3042,16 @@ test -n "$target_alias" &&
   program_prefix=${target_alias}-
 
 
+# detect WSL
+
+ON_WSL=no
+
+if test -r /proc/version; then
+  if grep -q Microsoft /proc/version; then
+    ON_WSL=yes
+  fi
+fi
+
 ###############################################################################
 #
 # Accumulate subsystems to include in runtime library.
@@ -8816,7 +8826,8 @@ _ACEOF
 fi
 done
 
-  for ac_func in renameat2
+  if test "$ON_WSL" != yes; then
+    for ac_func in renameat2
 do :
   ac_fn_cxx_check_func "$LINENO" "renameat2" "ac_cv_func_renameat2"
 if test "x$ac_cv_func_renameat2" = xyes; then :
@@ -8827,7 +8838,7 @@ _ACEOF
 fi
 done
 
-  for ac_func in renameatx_np
+    for ac_func in renameatx_np
 do :
   ac_fn_cxx_check_func "$LINENO" "renameatx_np" "ac_cv_func_renameatx_np"
 if test "x$ac_cv_func_renameatx_np" = xyes; then :
@@ -8838,6 +8849,7 @@ _ACEOF
 fi
 done
 
+  fi
   for ac_func in symlinkat
 do :
   ac_fn_cxx_check_func "$LINENO" "symlinkat" "ac_cv_func_symlinkat"
@@ -9148,17 +9160,6 @@ fi
 done
 
 
-  for ac_func in nanosleep
-do :
-  ac_fn_cxx_check_func "$LINENO" "nanosleep" "ac_cv_func_nanosleep"
-if test "x$ac_cv_func_nanosleep" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_NANOSLEEP 1
-_ACEOF
-
-fi
-done
-
   #AC_CHECK_FUNCS(Sleep)
   for ac_func in sleep
 do :
@@ -9171,52 +9172,23 @@ _ACEOF
 fi
 done
 
+  if test "$ON_WSL" = yes; then
 
-  #AC_CHECK_FUNCS(GetProcessTimes)
-  for ac_func in getrusage
+$as_echo "#define USE_ITIMER_REAL /**/" >>confdefs.h
+
+  else
+    for ac_func in nanosleep
 do :
-  ac_fn_cxx_check_func "$LINENO" "getrusage" "ac_cv_func_getrusage"
-if test "x$ac_cv_func_getrusage" = xyes; then :
+  ac_fn_cxx_check_func "$LINENO" "nanosleep" "ac_cv_func_nanosleep"
+if test "x$ac_cv_func_nanosleep" = xyes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_GETRUSAGE 1
+#define HAVE_NANOSLEEP 1
 _ACEOF
 
 fi
 done
 
-  for ac_func in times
-do :
-  ac_fn_cxx_check_func "$LINENO" "times" "ac_cv_func_times"
-if test "x$ac_cv_func_times" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_TIMES 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in clock
-do :
-  ac_fn_cxx_check_func "$LINENO" "clock" "ac_cv_func_clock"
-if test "x$ac_cv_func_clock" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_CLOCK 1
-_ACEOF
-
-fi
-done
-
-  for ac_func in DosQuerySysInfo
-do :
-  ac_fn_cxx_check_func "$LINENO" "DosQuerySysInfo" "ac_cv_func_DosQuerySysInfo"
-if test "x$ac_cv_func_DosQuerySysInfo" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_DOSQUERYSYSINFO 1
-_ACEOF
-
-fi
-done
-
+  fi
 
   for ac_func in setitimer
 do :
@@ -9263,6 +9235,52 @@ fi
 done
 
   #AC_CHECK_FUNCS(CreateThread)
+
+  #AC_CHECK_FUNCS(GetProcessTimes)
+  for ac_func in getrusage
+do :
+  ac_fn_cxx_check_func "$LINENO" "getrusage" "ac_cv_func_getrusage"
+if test "x$ac_cv_func_getrusage" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GETRUSAGE 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in times
+do :
+  ac_fn_cxx_check_func "$LINENO" "times" "ac_cv_func_times"
+if test "x$ac_cv_func_times" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_TIMES 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in clock
+do :
+  ac_fn_cxx_check_func "$LINENO" "clock" "ac_cv_func_clock"
+if test "x$ac_cv_func_clock" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_CLOCK 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in DosQuerySysInfo
+do :
+  ac_fn_cxx_check_func "$LINENO" "DosQuerySysInfo" "ac_cv_func_DosQuerySysInfo"
+if test "x$ac_cv_func_DosQuerySysInfo" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_DOSQUERYSYSINFO 1
+_ACEOF
+
+fi
+done
+
 
   for ac_func in shl_load
 do :
