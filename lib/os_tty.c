@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8027,7 +8027,9 @@ ___HIDDEN ___SCMOBJ ___device_tty_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int settings = ___GSTATE->setup_params.terminal_settings;
+  int settings = (___GSTATE->setup_params.terminal_settings != 0)
+                 ? ___GSTATE->setup_params.terminal_settings
+                 : ___GSTATE->setup_params.io_settings;
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
   int char_encoding = ___CHAR_ENCODING(settings);
   int eol_encoding = ___EOL_ENCODING(settings);

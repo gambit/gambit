@@ -4610,9 +4610,8 @@ ___setup_params_struct *setup_params;)
   setup_params->fatal_error         = 0;
   setup_params->standard_level      = 0;
   setup_params->debug_settings      = 0;
-  setup_params->file_settings       = 0;
+  setup_params->io_settings         = 0;
   setup_params->terminal_settings   = 0;
-  setup_params->stdio_settings      = 0;
   setup_params->gambitdir           = 0;
   setup_params->gambitdir_map       = 0;
   setup_params->module_search_order = 0;
@@ -4724,18 +4723,18 @@ int new_settings;)
 }
 
 
-___EXP_FUNC(int,___get_file_settings) ___PVOID
+___EXP_FUNC(int,___get_io_settings) ___PVOID
 {
-  return ___GSTATE->setup_params.file_settings;
+  return ___GSTATE->setup_params.io_settings;
 }
 
 
-___EXP_FUNC(void,___set_file_settings)
+___EXP_FUNC(void,___set_io_settings)
    ___P((int settings),
         (settings)
 int settings;)
 {
-  ___GSTATE->setup_params.file_settings = settings;
+  ___GSTATE->setup_params.io_settings = settings;
 }
 
 
@@ -4751,21 +4750,6 @@ ___EXP_FUNC(void,___set_terminal_settings)
 int settings;)
 {
   ___GSTATE->setup_params.terminal_settings = settings;
-}
-
-
-___EXP_FUNC(int,___get_stdio_settings) ___PVOID
-{
-  return ___GSTATE->setup_params.stdio_settings;
-}
-
-
-___EXP_FUNC(void,___set_stdio_settings)
-   ___P((int settings),
-        (settings)
-int settings;)
-{
-  ___GSTATE->setup_params.stdio_settings = settings;
 }
 
 
@@ -5697,23 +5681,17 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___set_debug_settings
     = ___set_debug_settings;
 
-  ___GSTATE->___get_file_settings
-    = ___get_file_settings;
+  ___GSTATE->___get_io_settings
+    = ___get_io_settings;
 
-  ___GSTATE->___set_file_settings
-    = ___set_file_settings;
+  ___GSTATE->___set_io_settings
+    = ___set_io_settings;
 
   ___GSTATE->___get_terminal_settings
     = ___get_terminal_settings;
 
   ___GSTATE->___set_terminal_settings
     = ___set_terminal_settings;
-
-  ___GSTATE->___get_stdio_settings
-    = ___get_stdio_settings;
-
-  ___GSTATE->___set_stdio_settings
-    = ___set_stdio_settings;
 
   ___GSTATE->___get_gambitdir
     = ___get_gambitdir;

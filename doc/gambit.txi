@@ -1936,14 +1936,11 @@ Override the @var{NAME} installation directory.
 @item @code{@b{add-arg=}}@var{ARGUMENT} or the shorthand @code{@b{+}}@var{ARGUMENT}
 Add @var{ARGUMENT} to the command line before other arguments.
 
-@item @code{@b{file-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{f}}@r{[}@var{IO}...@r{]}
-Set file I/O settings.
+@item @code{@b{io-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{i}}@r{[}@var{IO}...@r{]}
+Set I/O settings.
 
 @item @code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{t}}@r{[}@var{IO}...@r{]}
 Set terminal I/O settings.
-
-@item @code{@b{stdio-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{-}}@r{[}@var{IO}...@r{]}
-Set stdio I/O settings.
 
 @end table
 
@@ -2101,20 +2098,17 @@ directory.
 The @code{@b{add-arg=}}@var{ARGUMENT} option adds the text that
 follows to the command line before other arguments.
 
-@opindex -:file-settings=@r{[}@var{IO}...@r{]}
+@opindex -:io-settings=@r{[}@var{IO}...@r{]}
 @opindex -:terminal-settings=@r{[}@var{IO}...@r{]}
-@opindex -:stdio-settings=@r{[}@var{IO}...@r{]}
-@opindex -:f@r{[}@var{IO}...@r{]}
+@opindex -:i@r{[}@var{IO}...@r{]}
 @opindex -:t@r{[}@var{IO}...@r{]}
-@opindex -:-@r{[}@var{IO}...@r{]}
-The options @code{@b{file-settings=}}@r{[}@var{IO}...@r{]},
-@code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]}, and
-@code{@b{stdio-settings=}}@r{[}@var{IO}...@r{]} set the default I/O
-settings of the ports created for files, terminals and standard input
-and output respectively.  The default character encoding, end-of-line
-encoding and buffering can be set.  Moreover, for terminals the
-line-editing feature can be enabled or disabled.  Each @var{IO} is a
-one or two letter code as follows:
+The option @code{@b{io-settings=}}@r{[}@var{IO}...@r{]} sets the
+default I/O settings of all types of ports.  The option
+@code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]} overrides the
+default I/O settings for ports associated to terminals.  The default
+character encoding, end-of-line encoding and buffering can be set.
+Moreover, for terminals the line-editing feature can be enabled or
+disabled.  Each @var{IO} is a one or two letter code as follows:
 
 @table @code
 @item A
@@ -2139,6 +2133,10 @@ UTF character encoding with fallback to ISO-8859-1 on input if no BOM is present
 UTF character encoding with fallback to UTF-16 on input if no BOM is present.
 @item U8
 UTF character encoding with fallback to UTF-8 on input if no BOM is present.
+@item L
+If the @code{LC_ALL} or @code{LC_CTYPE} environment variables end
+with @samp{.UTF_8} or @samp{.ISO_8859_1} set the character encoding
+accordingly.
 @item c
 End-of-line is encoded as CR (carriage-return).
 @item l
@@ -5250,7 +5248,7 @@ the range 0 to #x10ffff (inclusive) but not in the range #xd800 to
 to read such source code properly @code{gsi} and @code{gsc} must be
 told which character encoding to use for reading the source code
 (i.e. ASCII, ISO-8859-1, UTF-8, etc).  This can be done by specifying
-the runtime option @samp{-:file-settings=...} when @code{gsi} and @code{gsc} are
+the runtime option @samp{-:io-settings=...} when @code{gsi} and @code{gsc} are
 started.
 
 @menu
