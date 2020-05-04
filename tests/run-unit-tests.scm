@@ -130,7 +130,7 @@
               (lambda ()
                 (print "settings set auto-confirm 1\n"
                        "command script import clean_exit.py\n"
-                       "run -:d-,flu,~~=.. -f " file "\n"
+                       "run -:debug-settings=-,io-settings=lu,~~=.. -f " file "\n"
                        "clean_exit\n"
                        "frame variable\n"
                        "thread backtrace all\n"
@@ -147,7 +147,7 @@
                 "dbg-script"
               (lambda ()
                 (print "set $_exitcode = -1\n"
-                       "run -:d-,flu,~~=.. -f " file "\n"
+                       "run -:debug-settings=-,io-settings=lu,~~=.. -f " file "\n"
                        "if $_exitcode != -1\n"
                        "  quit $_exitcode\n"
                        "end\n"
@@ -164,7 +164,7 @@
 
       (case target
         ((C)
-         (run "../gsi/gsi" "-:d-,flu,~~=.." "-f" file))
+         (run "../gsi/gsi" "-:debug-settings=-,io-settings=lu,~~=.." "-f" file))
         (else
          (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
            (run gsi "-f" file))))))
@@ -176,7 +176,7 @@
             (run-gsi-under-debugger file (eq? mode 'gsi-dbg) target))
            ((member mode '(gsc gsc-dbg))
             (let* ((filename "_test.o1")
-                   (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-f" "-o" filename file)))
+                   (result (run "../gsc/gsc" "-:debug-settings=-,io-settings=lu,~~=.." "-f" "-o" filename file)))
               (if (= 0 (car result))
                   (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg) target)))
                     (if cleanup? (delete-file filename))
@@ -184,11 +184,7 @@
                   result)))))
     (else
      (let* ((filename "_test.bat")
-            (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
-       (if (string? (cdr result))
-           (begin
-             (print (cdr result))
-             (force-output)))
+            (result (run "../gsc/gsc" "-:debug-settings=-,io-settings=lu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
        (if (= 0 (car result))
            (let ((result (run (path-expand filename))))
              (if cleanup? (delete-file filename))
@@ -214,7 +210,6 @@
             (status (car result))
             (status-hi (quotient status 256))
             (status-lo (modulo status 256)))
-
        (if (= 0 status)
            (set! nb-good (+ nb-good 1))
            (begin

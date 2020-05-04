@@ -1,6 +1,6 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit system */
 
@@ -80,11 +80,11 @@ int debug_settings;)
         "                      repl      only if a REPL is running (default)\n"
         "  add-arg=ARGUMENT   add ARGUMENT to the command line before other arguments,\n"
         "                     shorthand: +ARGUMENT\n"
-        "  file-settings=[IO...]      set file IO settings, shorthand: f[IO...]\n"
+        "  io-settings=[IO...]        set general IO settings, shorthand: i[IO...]\n"
         "  terminal-settings=[IO...]  set terminal IO settings, shorthand: t[IO...]\n"
-        "  stdio-settings=[IO...]     set stdin/out/err IO settings, shorthand: -[IO...]\n"
         "where IO is one of\n"
         "  A|1|2|4|6|8|U   character encoding (ASCII|ISO-8859-1|UCS-2/4|UTF-16/8|UTF)\n"
+        "  L               use LC_ALL and LC_CTYPE env vars to set character encoding\n"
         "  l|c|cl          end-of-line encoding (LF|CR|CR-LF)\n"
         "  u|n|f           buffering (unbuffered|newline buffered|fully buffered)\n"
         "  r|R             enable character encoding errors (on|off)\n"
@@ -291,6 +291,33 @@ char *prefix;)
 }
 
 
+___HIDDEN int ends_with
+   ___P((___UCS_2STRING start,
+         char *suffix),
+        (start,
+         suffix)
+___UCS_2STRING start;
+char *suffix;)
+{
+  int len1 = 0;
+  int len2 = 0;
+
+  while (*start != '\0') { len1++; start++; }
+  while (*suffix != '\0') { len2++; suffix++; }
+
+  if (len2 > len1)
+    return 0;
+
+  while (len2-- > 0)
+    {
+      if (*--start != *--suffix)
+        return 0;
+    }
+
+  return 1;
+}
+
+
 ___HIDDEN int option_equal
    ___P((___UCS_2STRING start,
          char *option),
@@ -306,6 +333,16 @@ char *option;)
 
   return (*option == '\0' || *option == ' ' || *option == ',');
 }
+
+
+___HIDDEN ___UCS_2 lc_ctype_env_var[] =
+{'L', 'C', '_', 'C', 'T', 'Y', 'P', 'E', '\0'};
+
+___HIDDEN ___UCS_2 lc_all_env_var[] =
+{'L', 'C', '_', 'A', 'L', 'L', '\0'};
+
+___HIDDEN ___UCS_2STRING lc_env_vars[] =
+{ lc_ctype_env_var, lc_all_env_var };
 
 
 int ___main
@@ -341,9 +378,8 @@ ___mod_or_lnk (*linker)();)
   int parallelism_level;
   int standard_level;
   int debug_settings;
-  int file_settings;
+  int io_settings;
   int terminal_settings;
-  int stdio_settings;
   ___SCMOBJ e;
   ___setup_params_struct setup_params;
 
@@ -377,9 +413,8 @@ ___mod_or_lnk (*linker)();)
 #endif
   standard_level = 0;
   debug_settings = ___DEBUG_SETTINGS_INITIAL;
-  file_settings = ___FILE_SETTINGS_INITIAL;
+  io_settings = ___IO_SETTINGS_INITIAL;
   terminal_settings = ___TERMINAL_SETTINGS_INITIAL;
-  stdio_settings = ___STDIO_SETTINGS_INITIAL;
 
   /*
    * Runtime options can come from several sources:
@@ -524,15 +559,10 @@ ___mod_or_lnk (*linker)();)
                     goto mhlp_options;
                   else if (starts_with (s, "debug"))
                     goto debug_option;
-                  else if (starts_with (s, "file-settings"))
+                  else if (starts_with (s, "io-settings"))
                     goto io_settings_options;
                   else if (starts_with (s, "terminal-settings"))
                     goto io_settings_options;
-                  else if (starts_with (s, "stdio-settings"))
-                    {
-                      s += 5; /* point to the '-' */
-                      goto io_settings_options;
-                    }
                   else if (starts_with (s, "add-arg"))
                     goto add_arg_option;
                   else if (starts_with (s, "search"))
@@ -938,23 +968,19 @@ ___mod_or_lnk (*linker)();)
                 break;
               }
 
+            case 'i':
             case 't':
-            case 'f':
-            case '-':
             io_settings_options:
               {
                 int settings = 0;
 
                 switch (*s)
                   {
-                  case 'f':
-                    settings = file_settings;
+                  case 'i':
+                    settings = io_settings;
                     break;
                   case 't':
                     settings = terminal_settings;
-                    break;
-                  case '-':
-                    settings = stdio_settings;
                     break;
                   }
 
@@ -962,6 +988,41 @@ ___mod_or_lnk (*linker)();)
                   {
                     switch (*arg++)
                       {
+                      case 'L':
+                        {
+                          ___UCS_2STRING val;
+                          int i;
+
+                          for (i=0; i<2; i++)
+                            {
+                              if ((e = ___getenv_UCS_2 (lc_env_vars[i], &val))
+                                  != ___FIX(___NO_ERR))
+                                goto after_setup;
+
+                              if (val != 0)
+                                {
+                                  if (ends_with (val, ".ISO_8859_1") ||
+                                      ends_with (val, ".iso_8859_1"))
+                                    {
+                                      settings = ___CHAR_ENCODING_MASK(settings)
+                                                 |___CHAR_ENCODING_ISO_8859_1;
+                                      i = 2;
+                                    }
+                                  else {
+                                    if (ends_with (val, ".UTF_8") ||
+                                        ends_with (val, ".utf_8"))
+                                      {
+                                        settings = ___CHAR_ENCODING_MASK(settings)
+                                                   |___CHAR_ENCODING_UTF_8;
+                                        i = 2;
+                                      }
+                                  }
+                                  ___free_UCS_2STRING (val);
+                                }
+                            }
+
+                          break;
+                        }
                       case 'A': settings = ___CHAR_ENCODING_MASK(settings)
                                            |___CHAR_ENCODING_ASCII;
                                 break;
@@ -1049,14 +1110,11 @@ ___mod_or_lnk (*linker)();)
 
                 switch (*s)
                   {
-                  case 'f':
-                    file_settings = settings;
+                  case 'i':
+                    io_settings = settings;
                     break;
                   case 't':
                     terminal_settings = settings;
-                    break;
-                  case '-':
-                    stdio_settings = settings;
                     break;
                   }
 
@@ -1108,9 +1166,8 @@ ___mod_or_lnk (*linker)();)
   setup_params.parallelism_level   = parallelism_level;
   setup_params.standard_level      = standard_level;
   setup_params.debug_settings      = debug_settings;
-  setup_params.file_settings       = file_settings;
+  setup_params.io_settings         = io_settings;
   setup_params.terminal_settings   = terminal_settings;
-  setup_params.stdio_settings      = stdio_settings;
   setup_params.gambitdir           = gambitdir;
   setup_params.gambitdir_map       = gambitdir_map;
   setup_params.module_search_order = module_search_order;

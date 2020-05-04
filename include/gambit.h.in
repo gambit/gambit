@@ -9479,9 +9479,8 @@ typedef struct ___setup_params_struct
     void (*fatal_error) ___P((char **msgs),());
     int standard_level;
     int debug_settings;
-    int file_settings;
+    int io_settings;
     int terminal_settings;
-    int stdio_settings;
     ___UCS_2STRING gambitdir;
     ___UCS_2STRING *gambitdir_map;
     ___UCS_2STRING *module_search_order;
@@ -10794,16 +10793,12 @@ typedef struct ___global_state_struct
        ___P((int mask,
              int new_settings),
             ());
-    int (*___get_file_settings) ___PVOID;
-    void (*___set_file_settings)
+    int (*___get_io_settings) ___PVOID;
+    void (*___set_io_settings)
        ___P((int settings),
             ());
     int (*___get_terminal_settings) ___PVOID;
     void (*___set_terminal_settings)
-       ___P((int settings),
-            ());
-    int (*___get_stdio_settings) ___PVOID;
-    void (*___set_stdio_settings)
        ___P((int settings),
             ());
     ___UCS_2STRING (*___get_gambitdir) ___PVOID;
@@ -11117,9 +11112,8 @@ ___KEYDECL
 #define ___TERMINAL_LINE_EDITING_ON      (1<<16)
 #define ___TERMINAL_LINE_EDITING_OFF     (2<<16)
 
-#define ___FILE_SETTINGS_INITIAL 0
+#define ___IO_SETTINGS_INITIAL 0
 #define ___TERMINAL_SETTINGS_INITIAL 0
-#define ___STDIO_SETTINGS_INITIAL 0
 
 #ifndef ___INCLUDED_FROM_C_INTF
 ___IMP_FUNC(___S64,___S64_from_SM32_fn)
@@ -12246,16 +12240,12 @@ ___IMP_FUNC(int,___set_debug_settings)
    ___P((int mask,
          int new_settings),
         ());
-___IMP_FUNC(int,___get_file_settings) ___PVOID;
-___IMP_FUNC(void,___set_file_settings)
+___IMP_FUNC(int,___get_io_settings) ___PVOID;
+___IMP_FUNC(void,___set_io_settings)
    ___P((int settings),
         ());
 ___IMP_FUNC(int,___get_terminal_settings) ___PVOID;
 ___IMP_FUNC(void,___set_terminal_settings)
-   ___P((int settings),
-        ());
-___IMP_FUNC(int,___get_stdio_settings) ___PVOID;
-___IMP_FUNC(void,___set_stdio_settings)
    ___P((int settings),
         ());
 ___IMP_FUNC(___UCS_2STRING,___get_gambitdir) ___PVOID;
