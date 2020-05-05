@@ -29,6 +29,7 @@ set LIBS= Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 if not "%1%" == "" (
 set DEFS_LIB=%DEFS_LIB% -D___GAMBITDIR=\"%1%\"
 )
+set DEFS_LIB=%DEFS_LIB% -D___GAMBITDIR_USERLIB=\"~\\.gambit_userlib\"
 
 set COMP_GEN=%C_COMPILER% %FLAGS_COMMON% -c -I..\include
 set COMP_LIB_MH=%COMP_GEN% %FLAGS_OPT% %DEFS_LIB% -D___LIBRARY
@@ -41,7 +42,8 @@ set COMP_APP=%COMP_GEN% %FLAGS_OPT% %DEFS_SH%
 rem We can't rely on sed being available so we generate gambit.h
 rem from gambit.h.in by prefixing it with the needed declarations.
 
-echo #ifndef ___VOIDSTAR_WIDTH                 > include\gambit.h
+echo #define ___DEFAULT_RUNTIME_OPTIONS {'s', 'e', 'a', 'r', 'c', 'h', '=', '~', '~', 'u', 's', 'e', 'r', 'l', 'i', 'b', ',', 's', 'e', 'a', 'r', 'c', 'h', '=', '~', '~', 'l', 'i', 'b', ',', 'w', 'h', 'i', 't', 'e', 'l', 'i', 's', 't', '=', 'g', 'i', 't', 'h', 'u', 'b', '.', 'c', 'o', 'm', '/', 'g', 'a', 'm', 'b', 'i', 't', '\0'} > include/gambit.h
+echo #ifndef ___VOIDSTAR_WIDTH                >> include\gambit.h
 echo #ifdef _WIN64                            >> include\gambit.h
 echo #define ___VOIDSTAR_WIDTH 64             >> include\gambit.h
 echo #else                                    >> include\gambit.h
@@ -117,10 +119,11 @@ cd lib
 %COMP_LIB_PR% _nonstd.c
 %COMP_LIB_PR% _thread.c
 %COMP_LIB_PR% _repl.c
+%COMP_LIB_PR% _module.c
 
 %COMP_LIB_PR% _gambit.c
 
-lib -out:libgambit.lib main.obj setup.obj mem.obj os_setup.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj actlog.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _nonstd.obj _thread.obj _repl.obj _gambit.obj
+lib -out:libgambit.lib main.obj setup.obj mem.obj os_setup.obj os_base.obj os_time.obj os_shell.obj os_files.obj os_dyn.obj os_tty.obj os_io.obj os_thread.obj c_intf.obj actlog.obj _kernel.obj _system.obj _num.obj _std.obj _eval.obj _io.obj _module.obj _nonstd.obj _thread.obj _repl.obj _gambit.obj
 
 cd ..
 
@@ -150,6 +153,8 @@ cd gsc
 %COMP_LIB% _prims.c
 %COMP_LIB% _assert.c
 %COMP_LIB% _asm.c
+%COMP_LIB% _arm.c
+%COMP_LIB% _riscv.c
 %COMP_LIB% _x86.c
 %COMP_LIB% _codegen.c
 %COMP_LIB% _t-univ-1.c
@@ -159,12 +164,20 @@ cd gsc
 %COMP_LIB% _t-c-1.c
 %COMP_LIB% _t-c-2.c
 %COMP_LIB% _t-c-3.c
+%COMP_LIB% _t-cpu-abstract-machine.c
+%COMP_LIB% _t-cpu-backend-arm.c
+%COMP_LIB% _t-cpu-backend-riscv.c
+%COMP_LIB% _t-cpu-backend-x86.c
+%COMP_LIB% _t-cpu-object-desc.c
+%COMP_LIB% _t-cpu-primitives.c
+%COMP_LIB% _t-cpu-utils.c
+%COMP_LIB% _t-cpu.c
 %COMP_LIB% _gsclib.c
 %COMP_LIB% _gambitgsc.c
 %COMP_APP% _gsc.c
 %COMP_APP% _gsc_.c
 
-%C_COMPILER% -Fegsc.exe ..\lib\libgambit.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _assert.obj _asm.obj _x86.obj _codegen.obj _t-univ-1.obj _t-univ-2.obj _t-univ-3.obj _t-univ-4.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _gsclib.obj _gambitgsc.obj _gsc.obj _gsc_.obj %LIBS% %FLAGS_LINK%
+%C_COMPILER% -Fegsc.exe ..\lib\libgambit.lib _host.obj _utils.obj _source.obj _parms.obj _env.obj _ptree1.obj _ptree2.obj _gvm.obj _back.obj _front.obj _prims.obj _assert.obj _asm.obj _arm.obj _riscv.obj _x86.obj _codegen.obj _t-univ-1.obj _t-univ-2.obj _t-univ-3.obj _t-univ-4.obj _t-c-1.obj _t-c-2.obj _t-c-3.obj _t-cpu-abstract-machine.obj _t-cpu-backend-arm.obj _t-cpu-backend-riscv.obj _t-cpu-backend-x86.obj _t-cpu-object-desc.obj _t-cpu-primitives.obj _t-cpu-utils.obj _t-cpu.obj _gsclib.obj _gambitgsc.obj _gsc.obj _gsc_.obj %LIBS% %FLAGS_LINK%
 
 cd ..
 
