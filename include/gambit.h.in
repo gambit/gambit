@@ -9304,15 +9304,15 @@ ___LABEL_HOST_LABEL_GET(lbl) = hlbl
 #define ___LABEL_ZERO_FILL
 #else
 #if ___LABEL_SIZE == 5
-#define ___LABEL_ZERO_FILL ,0
+#define ___LABEL_ZERO_FILL ,{0}
 #else
 #if ___LABEL_SIZE == 6
-#define ___LABEL_ZERO_FILL ,0,0
+#define ___LABEL_ZERO_FILL ,{0,0}
 #else
 #if ___LABEL_SIZE == 7
-#define ___LABEL_ZERO_FILL ,0,0,0
+#define ___LABEL_ZERO_FILL ,{0,0,0}
 #else
-#define ___LABEL_ZERO_FILL ,0,0,0,0
+#define ___LABEL_ZERO_FILL ,{0,0,0,0}
 #endif
 #endif
 #endif
