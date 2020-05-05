@@ -75,25 +75,15 @@
 
 ;;; Reflexion
 
-(define
-  (hash-table-equivalence-function ht)
-    (macro-force-vars (ht)
-      (macro-check-table
-          ht
-          0
-          (hash-table-equivalence-function ht)
+(define-procedure
+  (hash-table-equivalence-function (ht table))
         (or (macro-table-test ht)
-            eq?))))
+            eq?))
 
-(define 
-  (hash-table-hash-function ht)
-    (macro-force-vars (ht)
-      (macro-check-table
-          ht
-          0
-          (hash-table-hash-function ht)
+(define-procedure
+  (hash-table-hash-function (ht table))
       (or (macro-table-hash ht)
-          eq?-hash))))
+          eq?-hash))
 
 
 ;;;============================================================================
