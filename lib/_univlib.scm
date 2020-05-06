@@ -198,8 +198,6 @@ g_os_debug = False
 
 (define (##kernel-handlers) #f)
 
-(define (##os-condvar-select! devices timeout) #f)
-
 (define (##os-copy-file src-path dest-path) -5555)
 (define (##os-create-directory path permissions) -5555)
 (define (##os-create-fifo path permissions) -5555)
@@ -1139,10 +1137,10 @@ def g_normalize_dir(path):
   (macro-case-target
 
    ((js)
-    (##inline-host-statement "return null;"))
+    (##inline-host-statement "g_r0 = null;"))
 
    ((python)
-    (##inline-host-statement "return None"))
+    (##inline-host-statement "g_r0 = None"))
 
    (else
     (println "unimplemented ##exit-trampoline called"))))
@@ -1441,6 +1439,19 @@ def g_load_object_file(path, linker_name):
 
     (##inline-host-declaration "
 
+g_BTQ_DEQ_NEXT              = 2;
+g_BTQ_DEQ_PREV              = 3;
+g_BTQ_COLOR                 = 4;
+g_BTQ_PARENT                = 5;
+g_BTQ_LEFT                  = 6;
+g_BTQ_RIGHT                 = 7;
+g_BTQ_LEFTMOST              = 7;
+g_BTQ_OWNER                 = 8;
+
+g_FOR_READING               = 0;
+g_FOR_WRITING               = 1;
+g_FOR_EVENT                 = 2;
+
 g_CONDVAR_NAME              = 10;
 
 g_PORT_MUTEX                = 1;
@@ -1518,6 +1529,19 @@ g_PORT_DEVICE_OTHER2        = 49;
    ((python)
 
     (##inline-host-declaration "
+
+g_BTQ_DEQ_NEXT              = 2
+g_BTQ_DEQ_PREV              = 3
+g_BTQ_COLOR                 = 4
+g_BTQ_PARENT                = 5
+g_BTQ_LEFT                  = 6
+g_BTQ_RIGHT                 = 7
+g_BTQ_LEFTMOST              = 7
+g_BTQ_OWNER                 = 8
+
+g_FOR_READING               = 0
+g_FOR_WRITING               = 1
+g_FOR_EVENT                 = 2
 
 g_CONDVAR_NAME              = 10
 
@@ -2147,6 +2171,54 @@ def g_os_device_stream_options_set(dev_scm, options_scm):
    ((js)
     (##inline-host-declaration "
 
+if ((function () { return this !== this.window; })()) { // nodejs?
+
+  g_stdout_buf = [];
+
+} else {
+
+  g_console_output_buf = new Uint8Array(0);
+  g_console_input_buf = new Uint8Array(0);
+  g_console_input_should_sleep = true;
+  g_console_encoder = new TextEncoder();
+  g_console_decoder = new TextDecoder();
+
+  g_console_input_add = function (input) {
+
+    var len = g_console_input_buf.length;
+    var inp = g_console_encoder.encode(input);
+    g_console_output_add(inp);
+    var newbuf = new Uint8Array(len + inp.length);
+    newbuf.set(g_console_input_buf);
+    newbuf.set(inp, len);
+    g_console_input_buf = newbuf;
+
+  };
+
+  g_console_output_add = function (buffer) {
+
+    var len = g_console_output_buf.length;
+    var newbuf = new Uint8Array(len + buffer.length);
+    newbuf.set(g_console_output_buf);
+    newbuf.set(buffer, len);
+    g_console_output_buf = newbuf;
+
+    var trim = 7; // trim to last 7 lines
+    var end = newbuf.length;
+    var nl = end;
+    for (var n=0; n<trim; n++) {
+      var prev = nl-1;
+      while (prev >= 0 && newbuf[prev] !== 10) prev--; // search for newline
+      if (n > 0 && end-nl > 35*trim) break;
+      if (prev < 0) return;
+      nl = prev;
+    }
+    g_console_output_buf = newbuf.subarray(nl+1);
+
+  };
+
+}
+
 g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
 
   var index = g_scm2host(index_scm);
@@ -2155,14 +2227,15 @@ g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
   if (g_os_debug)
     console.log('g_os_device_stream_open_predefined('+index+','+flags+')  ***not fully implemented***');
 
-  var fd;
+  var fd = index;
 
   switch (index) {
     case -1: fd = 0; break; // stdin
     case -2: fd = 1; break; // stdout
     case -3: fd = 2; break; // stderr
-    case -4: fd = 1; break; // console
-    default: fd = index; break;
+    case -4: if ((function () { return this !== this.window; })()) // console
+               fd = 1;
+             break;
   }
 
   return new G_Foreign(new G_Device(fd), g_host2scm(false));
@@ -2357,10 +2430,6 @@ g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm)
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
 
-  if ((function () { return this === this.window; })()) {
-    throw Error('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
-  }
-
   if (g_os_debug)
     console.log('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
 
@@ -2368,9 +2437,39 @@ g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm)
   var have = dev.rhi-dev.rlo;
 
   if (have === 0) {
-    have = fs.readSync(dev.fd, dev.rbuf, 0, dev.rbuf.length, null);
-    dev.rlo = 0;
-    dev.rhi = have;
+
+    if ((function () { return this === this.window; })()) {
+
+      if (dev.fd === -4) { // console?
+        if (g_console_input_buf.length === 0) {
+          if (g_console_input_should_sleep) {
+            g_console_input_should_sleep = false;
+            return g_host2scm(-35); // EAGAIN
+          }
+          g_console_input_should_sleep = true;
+          var input = prompt(g_console_decoder.decode(g_console_output_buf) + '\\u258b                                                                                ');
+          if (input !== null) { // cancel button gives EOF
+            g_console_input_add(input + '\\n');
+          }
+        }
+        have = g_console_input_buf.length;
+        if (have > dev.rbuf.length) have = dev.rbuf.length;
+        dev.rbuf.set(g_console_input_buf.subarray(0, have));
+        dev.rlo = 0;
+        dev.rhi = have;
+        g_console_input_buf = g_console_input_buf.subarray(have);
+
+      } else {
+        throw Error('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
+      }
+
+    } else {
+
+      have = fs.readSync(dev.fd, dev.rbuf, 0, dev.rbuf.length, null);
+      dev.rlo = 0;
+      dev.rhi = have;
+
+    }
   }
 
   if (have === 0) {
@@ -2437,8 +2536,6 @@ def g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
    ((js)
     (##inline-host-declaration "
 
-g_stdout_buf = [];
-
 g_os_device_stream_write = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
   var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
@@ -2463,6 +2560,10 @@ g_os_device_stream_write = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm
           g_stdout_buf.push(c);
         }
       }
+    } else if (dev.fd === -4) { // console?
+      g_console_output_add(buffer.subarray(lo, hi));
+    } else {
+      throw Error('g_os_device_stream_write('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
     }
 
     n = hi-lo;
@@ -2809,6 +2910,92 @@ def g_os_port_encode_chars(port_scm):
 
    (else
     (println "unimplemented ##os-port-encode-chars! called")
+    -5555)))
+
+(define-prim (##os-condvar-select! devices timeout)
+  (##first-argument #f ##feature-port-fields)
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+g_os_condvar_select_should_sleep = true;
+
+g_os_condvar_select = function (ra, devices_scm, timeout_scm) {
+
+  if (g_os_debug)
+    console.log('g_os_condvar_select(ra, devices, timeout)  ***not fully implemented***');
+
+  var at_least_1_device = (devices_scm !== false &&
+                           devices_scm !== devices_scm.slots[g_BTQ_DEQ_NEXT]);
+
+  var timeout_ms;
+
+  if (timeout_scm === false)
+    timeout_ms = 0;
+  else if (timeout_scm === true)
+    timeout_ms = 999999;
+  else
+    timeout_ms = (timeout_scm.elems[0]-g_current_time()) * 1000;
+
+  if (!at_least_1_device || g_os_condvar_select_should_sleep) {
+
+    if (at_least_1_device)
+      timeout_ms = 10; // give browser time to refresh
+
+    g_os_condvar_select_should_sleep = false;
+
+    setTimeout(function () { g_trampoline(ra); }, // resume execution
+               Math.max(0, timeout_ms))
+
+    return null; // exit trampoline
+  }
+
+  g_os_condvar_select_should_sleep = true;
+
+  if (devices_scm !== false) {
+
+    var condvar_scm = devices_scm.slots[g_BTQ_DEQ_NEXT];
+
+    while (condvar_scm !== devices_scm) {
+      var owner = condvar_scm.slots[g_BTQ_OWNER];
+      var dev = condvar_scm.slots[g_CONDVAR_NAME].val;
+      if (dev.fd === -4) // console?
+        condvar_scm.slots[g_BTQ_OWNER] = owner | 1; // mark as 'ready'
+      else
+        condvar_scm.slots[g_BTQ_OWNER] = owner & ~1; // mark as 'not ready'
+      condvar_scm = condvar_scm.slots[g_BTQ_DEQ_NEXT];
+    }
+
+  }
+
+  return ra;
+};
+
+")
+    (##inline-host-statement
+     "g_r0 = g_os_condvar_select(g_r0,@1@,@2@)"
+     devices
+     timeout))
+
+   ((python)
+    (##inline-host-declaration "
+
+def g_os_condvar_select(devices_scm, timeout_scm):
+
+    if g_os_debug:
+        print('g_os_condvar_select(devices, timeout)  ***not fully implemented***')
+
+    return g_host2scm(0)  # no error
+
+")
+    (##inline-host-expression
+     "g_os_condvar_select(@1@,@2@)"
+     devices
+     timeout))
+
+   (else
+    (println "unimplemented ##os-condvar-select! called")
     -5555)))
 
 ;;;----------------------------------------------------------------------------
