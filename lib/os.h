@@ -348,7 +348,7 @@
  */
 
 #ifdef __CYGWIN__
-/* 
+/*
  * Cygwin's timer implementation does not support ITIMER_VIRTUAL and
  * ITIMER_REAL causes dynamic loading to fail.  Why?  I don't know!
  * Use WIN32's CreateThread instead.
@@ -367,7 +367,7 @@
 
 #ifdef USE_WIN32
 
-/* 
+/*
  * WIN32 does not support "Unix style" nonblocking I/O.  This can be
  * simulated using pumps.
  */
@@ -811,7 +811,7 @@
 
 #if 1
 
-/* 
+/*
  * We use our own curses implementation to avoid depending on the OS's
  * curses library, which is difficult to link to on some systems.
  */
@@ -1741,7 +1741,11 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 
 #ifdef INCLUDE_sys_sysctl_h
 #ifdef HAVE_SYS_SYSCTL_H
+#ifdef __linux__
+#include <linux/sysctl.h>
+#else
 #include <sys/sysctl.h>
+#endif
 #endif
 #endif
 
