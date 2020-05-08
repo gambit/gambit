@@ -171,9 +171,6 @@ g_os_debug = False
 (define ##os-system-type-string-saved "unknown-system-type")
 (define (##system-stamp) 20200101213000)
 
-(define (##os-path-gambitdir) "/usr/local/Gambit")
-(define (##os-path-gambitdir-map-lookup name) #f)
-
 (define (##os-module-install-mode) 1)
 (define (##os-module-search-order) '("~~lib" "~~userlib"))
 (define (##os-module-whitelist)    '("github.com/gambit"))
@@ -773,7 +770,7 @@ def g_host_exec(stmts):
    ((js)
     (##inline-host-declaration "
 
-g_user_info = function (ui, user) {
+g_os_user_info = function (ui, user) {
   if ((function () { return this !== this.window; })()) { // nodejs?
     try {
       var posix = require('posix');
@@ -802,12 +799,12 @@ g_user_info = function (ui, user) {
 };
 
 ")
-    (##inline-host-expression "g_user_info(@1@, g_scm2host(@2@))" ui user))
+    (##inline-host-expression "g_os_user_info(@1@, g_scm2host(@2@))" ui user))
 
    ((python)
     (##inline-host-declaration "
 
-def g_user_info(ui, user):
+def g_os_user_info(ui, user):
     try:
         pw = pwd.getpwuid(user) if isinstance(user,int) else pwd.getpwnam(user)
     except OSError as exn:
@@ -820,7 +817,7 @@ def g_user_info(ui, user):
     return ui
 
 ")
-    (##inline-host-expression "g_user_info(@1@, g_scm2host(@2@))" ui user))
+    (##inline-host-expression "g_os_user_info(@1@, g_scm2host(@2@))" ui user))
 
    (else
     (println "unimplemented ##os-user-info called with user=")
@@ -839,7 +836,7 @@ def g_user_info(ui, user):
    ((js)
     (##inline-host-declaration "
 
-g_group_info = function (gi, group) {
+g_os_group_info = function (gi, group) {
   if ((function () { return this !== this.window; })()) { // nodejs?
     try {
       var posix = require('posix');
@@ -864,12 +861,12 @@ g_group_info = function (gi, group) {
 };
 
 ")
-    (##inline-host-expression "g_group_info(@1@, g_scm2host(@2@))" gi group))
+    (##inline-host-expression "g_os_group_info(@1@, g_scm2host(@2@))" gi group))
 
    ((python)
     (##inline-host-declaration "
 
-def g_group_info(gi, group):
+def g_os_group_info(gi, group):
     try:
         gr = grp.getgrgid(group) if isinstance(group,int) else pwd.getgrnam(group)
     except OSError as exn:
@@ -880,7 +877,7 @@ def g_group_info(gi, group):
     return gi
 
 ")
-    (##inline-host-expression "g_group_info(@1@, g_scm2host(@2@))" gi group))
+    (##inline-host-expression "g_os_group_info(@1@, g_scm2host(@2@))" gi group))
 
    (else
     (println "unimplemented ##os-group-info called with group=")
@@ -949,7 +946,7 @@ def g_group_info(gi, group):
    ((js)
     (##inline-host-declaration "
 
-g_shell_command = function (cmd) {
+g_os_shell_command = function (cmd) {
   var r = child_process.spawnSync('sh',['-c',cmd]);
   var output = r.stdout.toString();
   if (output.length > 0) {
@@ -960,18 +957,18 @@ g_shell_command = function (cmd) {
 
 ")
     (##inline-host-expression
-     "g_host2scm(g_shell_command(g_scm2host(@1@)))"
+     "g_host2scm(g_os_shell_command(g_scm2host(@1@)))"
      cmd))
 
    ((python)
     (##inline-host-declaration "
 
-def g_shell_command(cmd):
+def g_os_shell_command(cmd):
     return os.system(cmd)
 
 ")
     (##inline-host-expression
-     "g_host2scm(g_shell_command(g_scm2host(@1@)))"
+     "g_host2scm(g_os_shell_command(g_scm2host(@1@)))"
      cmd))
 
    (else
@@ -1029,6 +1026,36 @@ g_executable_path = os.path.abspath(__file__)
 
 ;;;----------------------------------------------------------------------------
 
+;;; Gambit directories.
+
+(define (##os-path-gambitdir)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+g_os_path_gambitdir = function () {
+  if ((function () { return this !== this.window; })()) { // nodejs?
+    return g_host2scm('/usr/local/Gambit/')
+  } else {
+    var loc = window.location.href;
+    var root = '/' + loc.slice(0, 1+loc.lastIndexOf('/'));
+    return g_host2scm(root);
+  }
+};
+
+")
+    (##inline-host-expression "g_os_path_gambitdir()"))
+
+   (else
+    "/usr/local/Gambit/")))
+
+(define (##os-path-gambitdir-map-lookup name)
+  #f)
+
+;;;----------------------------------------------------------------------------
+
 ;;; Path normalization.
 
 (define (##os-path-normalize-directory path)
@@ -1038,7 +1065,7 @@ g_executable_path = os.path.abspath(__file__)
    ((js)
     (##inline-host-declaration "
 
-g_normalize_dir = function (path) {
+g_os_path_normalize_directory = function (path) {
   if ((function () { return this !== this.window; })()) { // nodejs?
     var old = process.cwd();
     var dir;
@@ -1065,17 +1092,23 @@ g_normalize_dir = function (path) {
       return g_host2scm(dir + '\\\\')
     }
   } else {
-    return '/';
+    var loc = window.location.href;
+    var root = '/' + loc.slice(0, 1+loc.lastIndexOf('/'));
+    if (path === false) {
+      return g_host2scm(root);
+    } else {
+      return g_host2scm(root + path.slice((path[0] === '/') ? 1 : 0));
+    }
   }
 };
 
 ")
-    (##inline-host-expression "g_normalize_dir(g_scm2host(@1@))" path))
+    (##inline-host-expression "g_os_path_normalize_directory(g_scm2host(@1@))" path))
 
    ((python)
     (##inline-host-declaration "
 
-def g_normalize_dir(path):
+def g_os_path_normalize_directory(path):
     old = os.getcwd()
     if path is False:
         dir = old
@@ -1094,7 +1127,7 @@ def g_normalize_dir(path):
         return g_host2scm(dir + '\\\\')
 
 ")
-    (##inline-host-expression "g_normalize_dir(g_scm2host(@1@))" path))
+    (##inline-host-expression "g_os_path_normalize_directory(g_scm2host(@1@))" path))
 
    (else
     (println "unimplemented ##os-path-normalize-directory called with path=")
@@ -1235,14 +1268,45 @@ if ((function () { return this !== this.window; })()) { // nodejs?
 
 ;;; File information.
 
-(define (##os-file-info fi path chase?)
-  (##declare (not interrupts-enabled))
+(define ##feature-file-input
   (macro-case-target
 
    ((js)
     (##inline-host-declaration "
 
-g_file_info = function (fi, path, chase) {
+if ((function () { return this === this.window; })()) {
+
+  g_os_get_url_async = function (method, url, done) {
+
+    var req = new XMLHttpRequest();
+
+    var onreadystatechange = function () {
+      if (req.readyState == 4) { // DONE?
+        done(req);
+      }
+    };
+
+    req.open(method, url);
+    req.responseType = 'text';
+    req.onreadystatechange = onreadystatechange;
+    req.send();
+  };
+
+}
+
+"))
+
+   (else)))
+
+(define (##os-file-info fi path chase?)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##first-argument #f ##feature-file-input)
+    (##inline-host-declaration "
+
+g_os_file_info = function (fi, path, chase) {
 
   if ((function () { return this !== this.window; })()) { // nodejs?
 
@@ -1296,13 +1360,50 @@ g_file_info = function (fi, path, chase) {
     return fi;
 
   } else {
-    return g_host2scm(-5555);
+
+    var ra = g_r0;
+    g_r0 = null; // exit trampoline
+
+    var done = function (req) {
+
+      if (req.status !== 200) { // error?
+
+        g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+
+      } else {
+
+        var size = +req.getResponseHeader('Content-Length');
+
+        fi.slots[ 1] = g_host2scm(1); // regular file
+        fi.slots[ 2] = g_host2scm(0);
+        fi.slots[ 3] = g_host2scm(0);
+        fi.slots[ 4] = g_host2scm(0);
+        fi.slots[ 5] = g_host2scm(0);
+        fi.slots[ 6] = g_host2scm(0);
+        fi.slots[ 7] = g_host2scm(0);
+        fi.slots[ 8] = g_host2scm(size);
+        fi.slots[ 9] = new G_Flonum(-Infinity);
+        fi.slots[10] = new G_Flonum(-Infinity);
+        fi.slots[11] = new G_Flonum(-Infinity);
+        fi.slots[12] = g_host2scm(0);
+        fi.slots[13] = new G_Flonum(-Infinity);
+
+        g_r1 = fi;
+
+      }
+
+      g_trampoline(ra);
+    };
+
+    g_os_get_url_async('HEAD', path.slice(1), done);
+
+    return false; // ignored
   }
 };
 
 ")
     (##inline-host-expression
-     "g_file_info(@1@, g_scm2host(@2@), g_scm2host(@3@))"
+     "g_os_file_info(@1@, g_scm2host(@2@), g_scm2host(@3@))"
      fi
      path
      chase?))
@@ -1310,7 +1411,7 @@ g_file_info = function (fi, path, chase) {
    ((python)
     (##inline-host-declaration "
 
-def g_file_info(fi, path, chase):
+def g_os_file_info(fi, path, chase):
 
     try:
         if chase:
@@ -1355,7 +1456,7 @@ def g_file_info(fi, path, chase):
 
 ")
     (##inline-host-expression
-     "g_file_info(@1@, g_scm2host(@2@), g_scm2host(@3@))"
+     "g_os_file_info(@1@, g_scm2host(@2@), g_scm2host(@3@))"
      fi
      path
      chase?))
@@ -1378,7 +1479,9 @@ def g_file_info(fi, path, chase):
    ((js)
     (##inline-host-declaration "
 
-g_load_object_file = function (path, linker_name) {
+g_os_load_object_file = function (path, linker_name) {
+
+  console.log('g_os_load_object_file path='+path);
 
   if ((function () { return this !== this.window; })()) { // nodejs?
 
@@ -1395,31 +1498,53 @@ g_load_object_file = function (path, linker_name) {
     return [[g_module_latest_registered], null, false];
 
   } else {
-    return [g_host2scm('unimplemented ##os-load-object-file'), g_host2scm(linker_name)];
+
+    var ra = g_r0;
+    g_r0 = null; // exit trampoline
+
+    var onload = function () {
+      g_r1 = [[g_module_latest_registered], null, false];
+      g_trampoline(ra);
+    };
+
+    var onerror = function () {
+      g_r1 = [g_host2scm('could not load ' + path.slice(1)),
+              g_host2scm(linker_name)];
+      g_trampoline(ra);
+    };
+
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = path.slice(1);
+    script.onload = onload;
+    script.onerror = onerror;
+    document.head.append(script);
+
+    return false; // ignored
   }
 };
 
 ")
     (##inline-host-expression
-     "g_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
+     "g_os_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
      path
      linker-name))
 
    ((python)
     (##inline-host-declaration "
 
-def g_load_object_file(path, linker_name):
+def g_os_load_object_file(path, linker_name):
 
     try:
         g_exec(open(path).read())
     except OSError as exn:
         return g_host2scm(g_os_encode_error(exn))
 
-    return [[g_module_latest_registered], g_null_obj, False];
+    return [[g_module_latest_registered], g_null_obj, False]
 
 ")
     (##inline-host-expression
-     "g_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
+     "g_os_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
      path
      linker-name))
 
@@ -1436,7 +1561,6 @@ def g_load_object_file(path, linker_name):
   (macro-case-target
 
    ((js)
-
     (##inline-host-declaration "
 
 g_BTQ_DEQ_NEXT              = 2;
@@ -1527,7 +1651,6 @@ g_PORT_DEVICE_OTHER2        = 49;
 "))
 
    ((python)
-
     (##inline-host-declaration "
 
 g_BTQ_DEQ_NEXT              = 2
@@ -1618,7 +1741,6 @@ g_PORT_DEVICE_OTHER2        = 49
 "))
 
    (else)))
-
 
 (define-prim (##os-device-close dev direction)
   (macro-case-target
@@ -2238,7 +2360,9 @@ g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
              break;
   }
 
-  return new G_Foreign(new G_Device(fd), g_host2scm(false));
+  var dev = new G_Device(fd);
+
+  return new G_Foreign(dev, g_host2scm(false));
 };
 
 ")
@@ -2269,7 +2393,9 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
     else:
         fd = index
 
-    return G_Foreign(G_Device(fd), g_host2scm(False))
+    dev = G_Device(fd)
+
+    return G_Foreign(dev, g_host2scm(False))
 
 ")
     (##inline-host-expression
@@ -2285,6 +2411,7 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
   (macro-case-target
 
    ((js)
+    (##first-argument #f ##feature-file-input)
     (##inline-host-declaration "
 
 if ((function () { return this !== this.window; })()) { // nodejs?
@@ -2332,26 +2459,63 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
   var flags = g_scm2host(flags_scm);
   var mode = g_scm2host(mode_scm);
 
-  if ((function () { return this === this.window; })()) {
-    throw Error('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not implemented***');
-  }
-
   if (g_os_debug)
     console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not fully implemented***');
 
-  var fd;
+  if ((function () { return this === this.window; })()) {
 
-  try {
-    fd = fs.openSync(path, g_os_translate_flags(flags), mode);
-  } catch (exn) {
-    if (exn instanceof Error && exn.hasOwnProperty('code')) {
-      return g_host2scm(g_os_encode_error(exn));
+    if (((flags >> 4) & 3) == 1) { // for reading?
+
+      var ra = g_r0;
+      g_r0 = null; // exit trampoline
+
+      var done = function (req) {
+
+        if (req.status !== 200) { // error?
+
+          g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+
+        } else {
+
+          var dev = new G_Device(-5);
+
+          dev.rbuf = new TextEncoder().encode(req.responseText);
+          dev.rlo = 0;
+          dev.rhi = dev.rbuf.length;
+
+          g_r1 = new G_Foreign(dev, g_host2scm(false));
+
+        }
+
+        g_trampoline(ra);
+      };
+
+      g_os_get_url_async('GET', path.slice(1), done);
+
+      return false; // ignored
+
     } else {
-      throw exn;
+      throw Error('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not implemented***');
     }
-  }
 
-  return new G_Foreign(new G_Device(fd), g_host2scm(false));
+  } else {
+
+    var fd;
+
+    try {
+      fd = fs.openSync(path, g_os_translate_flags(flags), mode);
+    } catch (exn) {
+      if (exn instanceof Error && exn.hasOwnProperty('code')) {
+        return g_host2scm(g_os_encode_error(exn));
+      } else {
+        throw exn;
+      }
+    }
+
+    var dev = new G_Device(fd);
+
+    return new G_Foreign(dev, g_host2scm(false));
+  }
 };
 
 ")
@@ -2404,7 +2568,9 @@ def g_os_device_stream_open_path(path_scm, flags_scm, mode_scm):
     except OSError as exn:
         return g_host2scm(g_os_encode_error(exn))
 
-    return G_Foreign(G_Device(fd), g_host2scm(False))
+    dev = G_Device(fd)
+
+    return G_Foreign(dev, g_host2scm(False))
 
 ")
     (##inline-host-expression
@@ -2459,7 +2625,7 @@ g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm)
         dev.rhi = have;
         g_console_input_buf = g_console_input_buf.subarray(have);
 
-      } else {
+      } else if (dev.fd !== -5) { // fetched URL?
         throw Error('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
       }
 
@@ -2636,10 +2802,6 @@ g_os_device_stream_seek = function (dev_condvar_scm, pos_scm, whence_scm) {
   var pos = g_scm2host(pos_scm);
   var whence = g_scm2host(whence_scm);
 
-  if ((function () { return this === this.window; })()) {
-    throw Error('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
-  }
-
   if (g_os_debug)
     console.log('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
 
@@ -2663,7 +2825,7 @@ def g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm):
     whence = g_scm2host(whence_scm)
 
     if g_os_debug:
-        print('g_os_device_stream_seek('+repr(dev.fd)+','+repr(pos)+','+repr(whence)+')  ***not implemented***')
+        print('g_os_device_stream_seek('+repr(dev.fd)+','+repr(pos)+','+repr(whence)+')  ***not fully implemented***')
 
     if whence == 0:
         how = os.SEEK_SET
@@ -2745,7 +2907,7 @@ g_os_port_decode_chars = function (port_scm, want_scm, eof_scm) {
   var eof = g_scm2host(eof_scm);
 
   if (g_os_debug)
-    console.log('g_os_port_decode_chars(port,'+want+','+eof+')  ***not implemented***');
+    console.log('g_os_port_decode_chars(port,'+want+','+eof+')  ***not fully implemented***');
 
   var cbuf_scm = port_scm.slots[g_PORT_CHAR_RBUF];
   var chi = g_scm2host(port_scm.slots[g_PORT_CHAR_RHI]);
@@ -2794,7 +2956,7 @@ def g_os_port_decode_chars(port_scm, want_scm, eof_scm):
     eof = g_scm2host(eof_scm)
 
     if g_os_debug:
-        print('g_os_port_decode_chars(port,'+repr(want)+','+repr(eof)+')  ***not implemented***')
+        print('g_os_port_decode_chars(port,'+repr(want)+','+repr(eof)+')  ***not fully implemented***')
 
     cbuf_scm = port_scm.slots[g_PORT_CHAR_RBUF]
     chi = g_scm2host(port_scm.slots[g_PORT_CHAR_RHI])
@@ -2921,10 +3083,10 @@ def g_os_port_encode_chars(port_scm):
 
 g_os_condvar_select_should_sleep = true;
 
-g_os_condvar_select = function (ra, devices_scm, timeout_scm) {
+g_os_condvar_select = function (devices_scm, timeout_scm) {
 
   if (g_os_debug)
-    console.log('g_os_condvar_select(ra, devices, timeout)  ***not fully implemented***');
+    console.log('g_os_condvar_select(devices, timeout)  ***not fully implemented***');
 
   var at_least_1_device = (devices_scm !== false &&
                            devices_scm !== devices_scm.slots[g_BTQ_DEQ_NEXT]);
@@ -2945,10 +3107,13 @@ g_os_condvar_select = function (ra, devices_scm, timeout_scm) {
 
     g_os_condvar_select_should_sleep = false;
 
+    var ra = g_r0;
+    g_r0 = null; // exit trampoline
+
     setTimeout(function () { g_trampoline(ra); }, // resume execution
                Math.max(0, timeout_ms))
 
-    return null; // exit trampoline
+    return g_host2scm(0);
   }
 
   g_os_condvar_select_should_sleep = true;
@@ -2969,12 +3134,12 @@ g_os_condvar_select = function (ra, devices_scm, timeout_scm) {
 
   }
 
-  return ra;
+  return g_host2scm(0);
 };
 
 ")
-    (##inline-host-statement
-     "g_r0 = g_os_condvar_select(g_r0,@1@,@2@)"
+    (##inline-host-expression
+     "g_os_condvar_select(@1@,@2@)"
      devices
      timeout))
 
