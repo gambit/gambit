@@ -1508,8 +1508,7 @@ g_os_load_object_file = function (path, linker_name) {
     };
 
     var onerror = function () {
-      g_r1 = [g_host2scm('could not load ' + path.slice(1)),
-              g_host2scm(linker_name)];
+      g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
       g_trampoline(ra);
     };
 
@@ -2293,11 +2292,9 @@ def g_os_device_stream_options_set(dev_scm, options_scm):
    ((js)
     (##inline-host-declaration "
 
-if ((function () { return this !== this.window; })()) { // nodejs?
+g_stdout_buf = [];
 
-  g_stdout_buf = [];
-
-} else {
+if ((function () { return this === this.window; })()) {
 
   g_console_output_buf = new Uint8Array(0);
   g_console_input_buf = new Uint8Array(0);
