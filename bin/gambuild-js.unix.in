@@ -39,22 +39,32 @@ case "$1" in
 
     if test "${GAMBUILD_VERBOSE}" != ""; then
       case "${BUILD_EXE_OUTPUT_FILENAME_PARAM}" in
-        *.js) echo cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "\"${BUILD_EXE_BASE_LIB}\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
-              ;;
-           *) echo "echo \"#! /usr/bin/env node\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
-              echo cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "\"${BUILD_EXE_BASE_LIB}\" >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
-              echo "chmod +x \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
-              ;;
+        *.html) echo "echo '<!doctype html>' > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                echo "echo '<html><head><meta charset=\"utf-8\"><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"></head><body><script>' >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                echo cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "\"${BUILD_EXE_BASE_LIB}\" >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                echo "'</script></body></html>' >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                ;;
+          *.js) echo cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "\"${BUILD_EXE_BASE_LIB}\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                ;;
+             *) echo "echo \"#! /usr/bin/env node\" > \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                echo cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "\"${BUILD_EXE_BASE_LIB}\" >> \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                echo "chmod +x \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}\""
+                ;;
       esac
     fi
 
     case "${BUILD_EXE_OUTPUT_FILENAME_PARAM}" in
-      *.js) cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${BUILD_EXE_BASE_LIB}" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
-            ;;
-         *) echo "#! /usr/bin/env node" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
-            cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${BUILD_EXE_BASE_LIB}" >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
-            chmod +x "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
-            ;;
+      *.html) echo '<!doctype html>' > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              echo '<html><head><meta charset="utf-8"><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body><script>' >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${BUILD_EXE_BASE_LIB}" >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              echo '</script></body></html>' >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              ;;
+        *.js) cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${BUILD_EXE_BASE_LIB}" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              ;;
+           *) echo "#! /usr/bin/env node" > "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              cat ${BUILD_EXE_INPUT_FILENAMES_PARAM} "${BUILD_EXE_BASE_LIB}" >> "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              chmod +x "${BUILD_EXE_OUTPUT_FILENAME_PARAM}"
+              ;;
     esac
     ;;
 

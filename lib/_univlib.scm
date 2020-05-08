@@ -1508,8 +1508,7 @@ g_os_load_object_file = function (path, linker_name) {
     };
 
     var onerror = function () {
-      g_r1 = [g_host2scm('could not load ' + path.slice(1)),
-              g_host2scm(linker_name)];
+      g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
       g_trampoline(ra);
     };
 
