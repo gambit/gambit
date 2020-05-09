@@ -5099,20 +5099,29 @@ end-of-code
 
 (define-prim (##system-version)
 
-  (##define-macro (result)
+  (##define-macro (comp-version)
     (c#compiler-version))
 
-  (result))
+  (comp-version))
 
 (define-prim (system-version)
   (##system-version))
 
+(define ##os-system-version-string-saved
+  (let ()
+
+    (##define-macro (comp-version-string)
+      (c#compiler-version-string))
+
+    (macro-case-target
+     ((C)
+      (or ((c-lambda () char-string "___return(___STAMP_VERSION);"))
+          (comp-version-string)))
+     (else
+      (comp-version-string)))))
+
 (define-prim (##system-version-string)
-
-  (##define-macro (result)
-    (c#compiler-version-string))
-
-  (result))
+  ##os-system-version-string-saved)
 
 (define-prim (system-version-string)
   (##system-version-string))
