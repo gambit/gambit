@@ -1,6 +1,6 @@
 # makefile for Gambit include directory.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot = include
 rootfromhere = ..
@@ -150,10 +150,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post select-gen-for-commit-post-nonrec:
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-skip-worktree stamp.h; fi
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post deselect-gen-for-commit-post-nonrec:
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --skip-worktree stamp.h; fi
 
 mostlyclean-pre:
 
@@ -287,11 +289,19 @@ dist-devel-post: dist-devel-recursive
 dist-devel-recursive: dist-devel-pre
 
 stamp:
-	rm -f stamp2.h
-	eval `date -u '+stamp_ymd=%Y%m%d stamp_hms=%H%M%S'`; \
-	sed -e "s/#define ___STAMP_YMD [0-9][0-9]*/#define ___STAMP_YMD `expr 0 + $$stamp_ymd`/" -e "s/#define ___STAMP_HMS [0-9][0-9]*/#define ___STAMP_HMS `expr 0 + $$stamp_hms`/" $(srcdirpfx)stamp.h > stamp2.h
-	mv stamp2.h stamp.h
-	$(RC) add stamp.h
+	@cp stamp.h stamp2.h; \
+	stamp_version=\"$(PACKAGE_VERSION)\"; \
+	if [ -e $(rootfromhere)/.git ]; then \
+	  stamp_version=\"`$(GIT) describe --tag --always 2> /dev/null | sed -e s/-bootstrap$$//`\"; \
+	fi; \
+	if fgrep "#define ___STAMP_VERSION $$stamp_version" stamp.h > /dev/null; then \
+	  echo "*** include/stamp.h untouched (___STAMP_VERSION did not change)"; \
+	else \
+	  echo "*** include/stamp.h updated to have ___STAMP_VERSION=$$stamp_version"; \
+	  eval `date -u '+stamp_ymd=%Y%m%d stamp_hms=%H%M%S'`; \
+	  sed -e "s/#define ___STAMP_YMD [0-9][0-9]*/#define ___STAMP_YMD `expr 0 + $$stamp_ymd`/" -e "s/#define ___STAMP_HMS [0-9][0-9]*/#define ___STAMP_HMS `expr 0 + $$stamp_hms`/" -e "s/#define ___STAMP_VERSION .*/#define ___STAMP_VERSION $$stamp_version/" $(srcdirpfx)stamp.h > stamp2.h; \
+	  mv stamp2.h stamp.h; \
+	fi
 
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status

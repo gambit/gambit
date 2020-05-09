@@ -106,6 +106,7 @@ BUILD_HOST = localhost
 all:
 
 all-pre: gsc-boot@exe@
+	$(MAKE) stamp
 
 all-post:
 	@echo "**** to compile the builtin modules you should: make modules"
@@ -197,7 +198,7 @@ xactlog@exe@: fake_target
 stamp: fake_target
 	@cd include && $(MAKE) $(MDEFINES) $@
 
-commit: stamp deselect-gen-for-commit
+commit: deselect-gen-for-commit
 	$(RC) commit
 
 diff: fake_target
