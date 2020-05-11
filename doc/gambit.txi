@@ -1937,7 +1937,22 @@ Override the @var{NAME} installation directory.
 Add @var{ARGUMENT} to the command line before other arguments.
 
 @item @code{@b{io-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{i}}@r{[}@var{IO}...@r{]}
-Set I/O settings.
+Set general I/O settings.
+
+@item @code{@b{file-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{f}}@r{[}@var{IO}...@r{]}
+Set general file I/O settings.
+
+@item @code{@b{stdio-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{-}}@r{[}@var{IO}...@r{]}
+Set general stdio settings.
+
+@item @code{@b{0}}@r{[}@var{IO}...@r{]}
+Set stdin settings.
+
+@item @code{@b{1}}@r{[}@var{IO}...@r{]}
+Set stdout settings.
+
+@item @code{@b{2}}@r{[}@var{IO}...@r{]}
+Set stderr settings.
 
 @item @code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{t}}@r{[}@var{IO}...@r{]}
 Set terminal I/O settings.
@@ -2099,11 +2114,26 @@ The @code{@b{add-arg=}}@var{ARGUMENT} option adds the text that
 follows to the command line before other arguments.
 
 @opindex -:io-settings=@r{[}@var{IO}...@r{]}
+@opindex -:file-settings=@r{[}@var{IO}...@r{]}
+@opindex -:stdio-settings=@r{[}@var{IO}...@r{]}
 @opindex -:terminal-settings=@r{[}@var{IO}...@r{]}
 @opindex -:i@r{[}@var{IO}...@r{]}
+@opindex -:f@r{[}@var{IO}...@r{]}
+@opindex -:-@r{[}@var{IO}...@r{]}
+@opindex -:0@r{[}@var{IO}...@r{]}
+@opindex -:1@r{[}@var{IO}...@r{]}
+@opindex -:2@r{[}@var{IO}...@r{]}
 @opindex -:t@r{[}@var{IO}...@r{]}
 The option @code{@b{io-settings=}}@r{[}@var{IO}...@r{]} sets the
 default I/O settings of all types of ports.  The option
+@code{@b{file-settings=}}@r{[}@var{IO}...@r{]} sets the default I/O
+settings for ports associated to files.  The option
+@code{@b{stdio-settings=}}@r{[}@var{IO}...@r{]} sets the default I/O
+settings for ports associated to stdio (but finer control is possible
+with @code{@b{0}}@r{[}@var{IO}...@r{]},
+@code{@b{1}}@r{[}@var{IO}...@r{]}, and
+@code{@b{2}}@r{[}@var{IO}...@r{]} that set the I/O settings of stdin,
+stdout, and stderr respectively).  The option
 @code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]} overrides the
 default I/O settings for ports associated to terminals.  The default
 character encoding, end-of-line encoding and buffering can be set.
@@ -2134,8 +2164,9 @@ UTF character encoding with fallback to UTF-16 on input if no BOM is present.
 @item U8
 UTF character encoding with fallback to UTF-8 on input if no BOM is present.
 @item L
-If the @code{LC_ALL} or @code{LC_CTYPE} environment variables end
-with @samp{.UTF_8} or @samp{.ISO_8859_1} set the character encoding
+If the @code{LC_ALL} or @code{LC_CTYPE} or @code{LANG} environment
+variables end with @samp{.UTF-8} or @samp{.ISO-8859-1} or
+@samp{.LATIN-1} (or a variation) set the character encoding
 accordingly.
 @item c
 End-of-line is encoded as CR (carriage-return).
@@ -5247,9 +5278,9 @@ the range 0 to #x10ffff (inclusive) but not in the range #xd800 to
 #xdfff.  Source code can also contain any Unicode character, however
 to read such source code properly @code{gsi} and @code{gsc} must be
 told which character encoding to use for reading the source code
-(i.e. ASCII, ISO-8859-1, UTF-8, etc).  This can be done by specifying
-the runtime option @samp{-:io-settings=...} when @code{gsi} and @code{gsc} are
-started.
+(i.e. ISO-8859-1, UTF-8, UTF-16, etc).  This can be done by specifying
+the runtime option @samp{-:file-settings=...} or @samp{-:io-settings=...}
+when @code{gsi} and @code{gsc} are started.
 
 @menu
 * Extensions to character procedures:: Extensions to character procedures
@@ -12347,11 +12378,11 @@ the file @code{"foo"} can be created using the call
 @end smallexample
 
 This will use default settings for the character encoding, buffering,
-etc.  If the UTF-8 character encoding is desired, then the port could
-be opened using the call
+etc.  When a specific character encoding is desired, such as UTF-16BE,
+the port can be opened using the call
 
 @smallexample
-@b{}(open-input-file (list path: "foo" char-encoding: 'UTF-8))
+@b{}(open-input-file (list path: "foo" char-encoding: 'UTF-16BE))
 @end smallexample
 
 Here the argument of the procedure @code{open-input-file} has been
@@ -12920,9 +12951,10 @@ bidirectional byte-ports, the character encoding for input and output
 is set.  To set each direction separately the keywords
 @code{input-char-encoding:} and @code{output-char-encoding:} must be
 used instead of @code{char-encoding:}.  The default value of this
-setting is operating system dependent, but this can be overridden
-through the runtime options (@pxref{Runtime options}).  The following
-encodings are supported:
+setting depends on how the runtime system was configured but typically
+UTF-8 is used.  The default can be overridden through various runtime
+options (@pxref{Runtime options}), such as @samp{-:file-settings=...}
+and @samp{-:io-settings=...}.  The following encodings are supported:
 
 @table @code
 

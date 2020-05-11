@@ -9466,6 +9466,23 @@ typedef struct ___virtual_machine_state_struct
 
 /* Setup parameters structure */
 
+#define ___IO_SETTINGS_STDIN    0
+#define ___IO_SETTINGS_STDOUT   1
+#define ___IO_SETTINGS_STDERR   2
+#define ___IO_SETTINGS_TERMINAL 3
+#define ___IO_SETTINGS_STDIO    4
+#define ___IO_SETTINGS_FILE     5
+#define ___IO_SETTINGS_GENERAL  6
+#define ___IO_SETTINGS_LAST     ___IO_SETTINGS_GENERAL
+
+#ifndef ___IO_SETTINGS_DEFAULT
+#define ___IO_SETTINGS_DEFAULT \
+(___CHAR_ENCODING_ERRORS_ON | \
+ ___CHAR_ENCODING_UTF_8 | \
+ ___EOL_ENCODING_LF | \
+ ___FULL_BUFFERING)
+#endif
+
 typedef struct ___setup_params_struct
   {
     int version;
@@ -9479,8 +9496,7 @@ typedef struct ___setup_params_struct
     void (*fatal_error) ___P((char **msgs),());
     int standard_level;
     int debug_settings;
-    int io_settings;
-    int terminal_settings;
+    int io_settings[___IO_SETTINGS_LAST+1];
     ___UCS_2STRING gambitdir;
     ___UCS_2STRING *gambitdir_map;
     ___UCS_2STRING *module_search_order;
@@ -10793,13 +10809,12 @@ typedef struct ___global_state_struct
        ___P((int mask,
              int new_settings),
             ());
-    int (*___get_io_settings) ___PVOID;
-    void (*___set_io_settings)
-       ___P((int settings),
+    int (*___get_io_settings)
+       ___P((int index),
             ());
-    int (*___get_terminal_settings) ___PVOID;
-    void (*___set_terminal_settings)
-       ___P((int settings),
+    void (*___set_io_settings)
+       ___P((int index,
+             int settings),
             ());
     ___UCS_2STRING (*___get_gambitdir) ___PVOID;
     void (*___set_gambitdir)
@@ -11111,9 +11126,6 @@ ___KEYDECL
 #define ___TERMINAL_LINE_EDITING_MASK(x) ((x)&~(3<<16))
 #define ___TERMINAL_LINE_EDITING_ON      (1<<16)
 #define ___TERMINAL_LINE_EDITING_OFF     (2<<16)
-
-#define ___IO_SETTINGS_INITIAL 0
-#define ___TERMINAL_SETTINGS_INITIAL 0
 
 #ifndef ___INCLUDED_FROM_C_INTF
 ___IMP_FUNC(___S64,___S64_from_SM32_fn)
@@ -12240,13 +12252,12 @@ ___IMP_FUNC(int,___set_debug_settings)
    ___P((int mask,
          int new_settings),
         ());
-___IMP_FUNC(int,___get_io_settings) ___PVOID;
-___IMP_FUNC(void,___set_io_settings)
-   ___P((int settings),
+___IMP_FUNC(int,___get_io_settings)
+   ___P((int index),
         ());
-___IMP_FUNC(int,___get_terminal_settings) ___PVOID;
-___IMP_FUNC(void,___set_terminal_settings)
-   ___P((int settings),
+___IMP_FUNC(void,___set_io_settings)
+   ___P((int index,
+         int settings),
         ());
 ___IMP_FUNC(___UCS_2STRING,___get_gambitdir) ___PVOID;
 ___IMP_FUNC(void,___set_gambitdir)

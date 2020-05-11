@@ -4595,6 +4595,7 @@ ___EXP_FUNC(void,___setup_params_reset)
         (setup_params)
 ___setup_params_struct *setup_params;)
 {
+  int index;
   setup_params->version             = 0;
   setup_params->argv                = setup_params->reset_argv;
   setup_params->min_heap            = 0;
@@ -4610,8 +4611,8 @@ ___setup_params_struct *setup_params;)
   setup_params->fatal_error         = 0;
   setup_params->standard_level      = 0;
   setup_params->debug_settings      = 0;
-  setup_params->io_settings         = 0;
-  setup_params->terminal_settings   = 0;
+  for (index=0; index<=___IO_SETTINGS_LAST; index++)
+    setup_params->io_settings[index] = 0;
   setup_params->gambitdir           = 0;
   setup_params->gambitdir_map       = 0;
   setup_params->module_search_order = 0;
@@ -4723,33 +4724,24 @@ int new_settings;)
 }
 
 
-___EXP_FUNC(int,___get_io_settings) ___PVOID
+___EXP_FUNC(int,___get_io_settings)
+   ___P((int index),
+        (index)
+int index;)
 {
-  return ___GSTATE->setup_params.io_settings;
+  return ___GSTATE->setup_params.io_settings[index];
 }
 
 
 ___EXP_FUNC(void,___set_io_settings)
-   ___P((int settings),
-        (settings)
+   ___P((int index,
+         int settings),
+        (index,
+         settings)
+int index;
 int settings;)
 {
-  ___GSTATE->setup_params.io_settings = settings;
-}
-
-
-___EXP_FUNC(int,___get_terminal_settings) ___PVOID
-{
-  return ___GSTATE->setup_params.terminal_settings;
-}
-
-
-___EXP_FUNC(void,___set_terminal_settings)
-   ___P((int settings),
-        (settings)
-int settings;)
-{
-  ___GSTATE->setup_params.terminal_settings = settings;
+  ___GSTATE->setup_params.io_settings[index] = settings;
 }
 
 
@@ -5686,12 +5678,6 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___set_io_settings
     = ___set_io_settings;
-
-  ___GSTATE->___get_terminal_settings
-    = ___get_terminal_settings;
-
-  ___GSTATE->___set_terminal_settings
-    = ___set_terminal_settings;
 
   ___GSTATE->___get_gambitdir
     = ___get_gambitdir;
