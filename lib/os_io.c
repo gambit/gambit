@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -762,6 +762,55 @@ ___stream_index *len_done;)
 }
 
 #endif
+
+
+/*---------------------------------------------------------------------------*/
+
+/* I/O settings. */
+
+
+int ___io_settings_merge
+   ___P((int io_settings,
+         int io_settings_to_fill_default),
+        (io_settings,
+         io_settings_to_fill_default)
+int io_settings;
+int io_settings_to_fill_default;)
+{
+  if (___CHAR_ENCODING_ERRORS(io_settings) == 0)
+    io_settings |= ___CHAR_ENCODING_ERRORS(io_settings_to_fill_default);
+
+  if (___CHAR_ENCODING(io_settings) == 0)
+    io_settings |= ___CHAR_ENCODING(io_settings_to_fill_default);
+
+  if (___EOL_ENCODING(io_settings) == 0)
+    io_settings |= ___EOL_ENCODING(io_settings_to_fill_default);
+
+  if (___BUFFERING(io_settings) == 0)
+    io_settings |= ___BUFFERING(io_settings_to_fill_default);
+
+  return io_settings;
+}
+
+
+int ___io_settings_finalize
+   ___P((int io_settings,
+         int io_settings_to_fill_default),
+        (io_settings,
+         io_settings_to_fill_default)
+int io_settings;
+int io_settings_to_fill_default;)
+{
+  io_settings = ___io_settings_merge
+                  (io_settings,
+                   ___GSTATE->setup_params.io_settings[___IO_SETTINGS_GENERAL]);
+
+  io_settings = ___io_settings_merge
+                  (io_settings,
+                   io_settings_to_fill_default);
+
+  return io_settings;
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -2401,14 +2450,17 @@ ___SCMOBJ ___device_stream_setup
    ___P((___device_stream *dev,
          ___device_group *dgroup,
          int direction,
+         int io_settings,
          int pumps_on),
         (dev,
          dgroup,
          direction,
+         io_settings,
          pumps_on)/*********************/
 ___device_stream *dev;
 ___device_group *dgroup;
 int direction;
+int io_settings;
 int pumps_on;)
 {
   dev->base.refcount = 1;
@@ -2416,6 +2468,8 @@ int pumps_on;)
   dev->base.close_direction = 0; /* prevent closing on errors */
   dev->base.read_stage = ___STAGE_CLOSED;
   dev->base.write_stage = ___STAGE_CLOSED;
+
+  dev->io_settings = io_settings;
 
 #ifdef USE_PUMPS
   dev->read_pump = NULL;
@@ -2718,10 +2772,13 @@ ___HIDDEN ___SCMOBJ ___device_serial_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-  int char_encoding = ___CHAR_ENCODING_ASCII;
-  int eol_encoding = ___EOL_ENCODING_LF;
-  int buffering = ___FULL_BUFFERING;
+  int settings = ___io_settings_finalize
+                   (self->io_settings,
+                    ___IO_SETTINGS_DEFAULT);
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
+  int char_encoding = ___CHAR_ENCODING(settings);
+  int eol_encoding = ___EOL_ENCODING(settings);
+  int buffering = ___BUFFERING(settings);
 
   return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
                                   char_encoding,
@@ -2794,15 +2851,18 @@ ___SCMOBJ ___device_serial_setup_from_handle
    ___P((___device_serial **dev,
          ___device_group *dgroup,
          HANDLE h,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          h,
-         direction)
+         direction,
+         io_settings)
 ___device_serial **dev;
 ___device_group *dgroup;
 HANDLE h;
-int direction;)
+int direction;
+int io_settings;)
 {
   ___device_serial *d;
   ___SCMOBJ e;
@@ -2853,6 +2913,7 @@ int direction;)
            (&d->base,
             dgroup,
             direction,
+            io_settings,
             ___DIRECTION_RD|___DIRECTION_WR);
 }
 
@@ -3286,14 +3347,18 @@ ___HIDDEN ___SCMOBJ ___device_pipe_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-  int char_encoding = ___CHAR_ENCODING_ASCII;
-  int eol_encoding = ___EOL_ENCODING_LF;
+  int settings = ___io_settings_finalize
+                   (self->io_settings,
 #ifdef USE_WIN32
-  int buffering = ___NO_BUFFERING;
+                    ___BUFFERING_MASK(___IO_SETTINGS_DEFAULT)|___NO_BUFFERING
 #else
-  int buffering = ___FULL_BUFFERING;
+                    ___IO_SETTINGS_DEFAULT
 #endif
+                   );
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
+  int char_encoding = ___CHAR_ENCODING(settings);
+  int eol_encoding = ___EOL_ENCODING(settings);
+  int buffering = ___BUFFERING(settings);
 
   return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
                                   char_encoding,
@@ -3349,17 +3414,20 @@ ___HIDDEN ___SCMOBJ ___device_pipe_setup_from_fd
          ___device_group *dgroup,
          int fd_rd,
          int fd_wr,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          fd_rd,
          fd_wr,
-         direction)
+         direction,
+         io_settings)
 ___device_pipe **dev;
 ___device_group *dgroup;
 int fd_rd;
 int fd_wr;
-int direction;)
+int direction;
+int io_settings;)
 {
   ___device_pipe *d;
 
@@ -3387,6 +3455,7 @@ int direction;)
            (&d->base,
             dgroup,
             direction,
+            io_settings,
             0);
 }
 
@@ -3401,18 +3470,21 @@ ___HIDDEN ___SCMOBJ ___device_pipe_setup_from_handle
          HANDLE h_rd,
          HANDLE h_wr,
          int direction,
+         int io_settings,
          int pumps_on),
         (dev,
          dgroup,
          h_rd,
          h_wr,
          direction,
+         io_settings,
          pumps_on)
 ___device_pipe **dev;
 ___device_group *dgroup;
 HANDLE h_rd;
 HANDLE h_wr;
 int direction;
+int io_settings;
 int pumps_on;)
 {
   ___device_pipe *d;
@@ -3434,6 +3506,7 @@ int pumps_on;)
            (&d->base,
             dgroup,
             direction,
+            io_settings,
             pumps_on);
 }
 
@@ -3813,6 +3886,7 @@ int direction;)
            (&d->base.base,
             dgroup,
             direction,
+            0, /* no specific io_settings */
             0);
 }
 
@@ -3863,6 +3937,7 @@ int direction;)
            (&d->base.base,
             dgroup,
             direction,
+            0, /* no specific io_settings */
             0);
 }
 
@@ -5394,10 +5469,13 @@ ___HIDDEN ___SCMOBJ ___device_tcp_client_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-  int char_encoding = ___CHAR_ENCODING_ASCII;
-  int eol_encoding = ___EOL_ENCODING_LF;
-  int buffering = ___FULL_BUFFERING;
+  int settings = ___io_settings_finalize
+                   (self->io_settings,
+                    ___IO_SETTINGS_DEFAULT);
+  int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
+  int char_encoding = ___CHAR_ENCODING(settings);
+  int eol_encoding = ___EOL_ENCODING(settings);
+  int buffering = ___BUFFERING(settings);
 
   return ___FIX(___STREAM_OPTIONS(char_encoding_errors,
                                   char_encoding,
@@ -5546,21 +5624,24 @@ ___SCMOBJ ___device_tcp_client_setup_from_socket
          struct sockaddr *addr,
          SOCKET_LEN_TYPE addrlen,
          int try_connect_again,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          s,
          addr,
          addrlen,
          try_connect_again,
-         direction)
+         direction,
+         io_settings)
 ___device_tcp_client **dev;
 ___device_group *dgroup;
 SOCKET_TYPE s;
 struct sockaddr *addr;
 SOCKET_LEN_TYPE addrlen;
 int try_connect_again;
-int direction;)
+int direction;
+int io_settings)
 {
   ___SCMOBJ e;
   ___device_tcp_client *d;
@@ -5637,6 +5718,7 @@ int direction;)
            (&d->base,
             dgroup,
             direction,
+            io_settings,
             0);
 }
 
@@ -5694,7 +5776,8 @@ char *server_name)
               addr,
               addrlen,
               1,
-              direction))
+              direction,
+              0)) /* no specific io_settings */
       != ___FIX(___NO_ERR))
     {
       CLOSE_SOCKET(s); /* ignore error */
@@ -6043,7 +6126,8 @@ ___device_tcp_client **client;)
               ___CAST(struct sockaddr*,&addr),
               addrlen,
               0,
-              ___DIRECTION_RD|___DIRECTION_WR))
+              ___DIRECTION_RD|___DIRECTION_WR,
+              0)) /* no specific io_settings */
       != ___FIX(___NO_ERR))
     {
       CLOSE_SOCKET(s); /* ignore error */
@@ -7605,39 +7689,21 @@ ___HIDDEN ___SCMOBJ ___device_file_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int settings = ___GSTATE->setup_params.io_settings;
+  int settings = ___io_settings_finalize
+                   (self->io_settings,
+#ifdef USE_WIN32
+                    (GetFileType (___CAST(___device_file*,self)->h)
+                     == FILE_TYPE_PIPE)
+                    ? ___BUFFERING_MASK(___IO_SETTINGS_DEFAULT)|___NO_BUFFERING
+                    : ___IO_SETTINGS_DEFAULT
+#else
+                    ___IO_SETTINGS_DEFAULT
+#endif
+                   );
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
   int char_encoding = ___CHAR_ENCODING(settings);
   int eol_encoding = ___EOL_ENCODING(settings);
   int buffering = ___BUFFERING(settings);
-
-  if (char_encoding_errors == 0)
-    char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-
-  if (char_encoding == 0)
-    char_encoding = ___CHAR_ENCODING_ASCII;
-
-  if (eol_encoding == 0)
-    eol_encoding = ___EOL_ENCODING_LF;
-
-#ifdef USE_WIN32
-
-  if (buffering == 0)
-    {
-      ___device_file *d = ___CAST(___device_file*,self);
-
-      if (GetFileType (d->h) == FILE_TYPE_PIPE)
-        buffering = ___NO_BUFFERING;
-      else
-        buffering = ___FULL_BUFFERING;
-    }
-
-#else
-
-  if (buffering == 0)
-    buffering = ___FULL_BUFFERING;
-
-#endif
 
 #ifdef ___DEBUG_LOG
 
@@ -7703,15 +7769,18 @@ ___HIDDEN ___SCMOBJ ___device_file_setup_from_stream
    ___P((___device_file **dev,
          ___device_group *dgroup,
          ___FILE *stream,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          stream,
-         direction)
+         direction,
+         io_settings)
 ___device_file **dev;
 ___device_group *dgroup;
 ___FILE *stream;
-int direction;)
+int direction;
+int io_settings;)
 {
   ___device_file *d;
 
@@ -7730,6 +7799,7 @@ int direction;)
            (&d->base,
             dgroup,
             direction,
+            io_settings,
             0);
 }
 
@@ -7743,15 +7813,18 @@ ___HIDDEN ___SCMOBJ ___device_file_setup_from_fd
    ___P((___device_file **dev,
          ___device_group *dgroup,
          int fd,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          fd,
-         direction)
+         direction,
+         io_settings)
 ___device_file **dev;
 ___device_group *dgroup;
 int fd;
-int direction;)
+int direction;
+int io_settings;)
 {
   ___device_file *d;
 
@@ -7777,6 +7850,7 @@ int direction;)
            (&d->base,
             dgroup,
             direction,
+            io_settings,
             0);
 }
 
@@ -7791,18 +7865,21 @@ ___HIDDEN ___SCMOBJ ___device_file_setup_from_handle
          HANDLE h,
          int flags,
          int direction,
+         int io_settings,
          int pumps_on),
         (dev,
          dgroup,
          h,
          flags,
          direction,
+         io_settings,
          pumps_on)
 ___device_file **dev;
 ___device_group *dgroup;
 HANDLE h;
 int flags;
 int direction;
+int io_settings;
 int pumps_on;)
 {
   ___device_file *d;
@@ -7823,6 +7900,7 @@ int pumps_on;)
            (&d->base,
             dgroup,
             direction,
+            io_settings,
             pumps_on);
 }
 
@@ -7839,17 +7917,20 @@ ___SCMOBJ ___device_stream_setup_from_stream
          ___device_group *dgroup,
          ___FILE *stream,
          int kind,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          ___FILE *stream,
          kind,
-         direction)
+         direction,
+         io_settings)
 ___device_stream **dev;
 ___device_group *dgroup;
 ___FILE *stream;
 int kind;
-int direction;)
+int direction;
+int io_settings;)
 {
   ___SCMOBJ e;
   ___device_file *d;
@@ -7858,7 +7939,8 @@ int direction;)
              (&d,
               dgroup,
               stream,
-              direction))
+              direction,
+              io_settings))
       == ___FIX(___NO_ERR))
     *dev = ___CAST(___device_stream*,d);
 
@@ -7983,17 +8065,20 @@ ___SCMOBJ ___device_stream_setup_from_fd
          ___device_group *dgroup,
          int fd,
          int kind,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          fd,
          kind,
-         direction)
+         direction,
+         io_settings)
 ___device_stream **dev;
 ___device_group *dgroup;
 int fd;
 int kind;
-int direction;)
+int direction;
+int io_settings;)
 {
   ___SCMOBJ e = ___FIX(___UNKNOWN_ERR);
 
@@ -8047,7 +8132,8 @@ int direction;)
                         &addr,
                         0,
                         0,
-                        direction))
+                        direction,
+                        io_settings))
                 == ___FIX(___NO_ERR))
               *dev = ___CAST(___device_stream*,d);
 
@@ -8075,7 +8161,8 @@ int direction;)
                        (&d,
                         dgroup,
                         fd,
-                        direction))
+                        direction,
+                        io_settings))
                 == ___FIX(___NO_ERR))
               *dev = ___CAST(___device_stream*,d);
 
@@ -8102,7 +8189,8 @@ int direction;)
                         dgroup,
                         fd,
                         fd,
-                        direction))
+                        direction,
+                        io_settings))
                 == ___FIX(___NO_ERR))
               *dev = ___CAST(___device_stream*,d);
 
@@ -8254,19 +8342,22 @@ ___SCMOBJ ___device_stream_setup_from_handle
          HANDLE h,
          int flags,
          int kind,
-         int direction),
+         int direction,
+         int io_settings),
         (dev,
          dgroup,
          h,
          flags,
          kind,
-         direction)
+         direction,
+         io_settings)
 ___device_stream **dev;
 ___device_group *dgroup;
 HANDLE h;
 int flags;
 int kind;
-int direction;)
+int direction;
+int io_settings)
 {
   ___SCMOBJ e = ___FIX(___UNKNOWN_ERR);
 
@@ -8301,7 +8392,8 @@ int direction;)
                    (&d,
                     dgroup,
                     h,
-                    direction))
+                    direction,
+                    io_settings))
             == ___FIX(___NO_ERR))
           *dev = ___CAST(___device_stream*,d);
         break;
@@ -8316,6 +8408,7 @@ int direction;)
                     h,
                     flags,
                     direction,
+                    io_settings,
                     0))
             == ___FIX(___NO_ERR))
           *dev = ___CAST(___device_stream*,d);
@@ -8331,6 +8424,7 @@ int direction;)
                     h,
                     h,
                     direction,
+                    io_settings,
                     0))
             == ___FIX(___NO_ERR))
           *dev = ___CAST(___device_stream*,d);
@@ -9459,7 +9553,8 @@ int mode;)
               dgroup,
               stream,
               ___NONE_KIND,
-              direction))
+              direction,
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_FILE]))
       != ___FIX(___NO_ERR))
     ___fclose (stream); /* ignore error */
 
@@ -9494,7 +9589,8 @@ int mode;)
               dgroup,
               fd,
               ___NONE_KIND,
-              direction))
+              direction,
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_FILE]))
       != ___FIX(___NO_ERR))
     ___close_no_EINTR (fd); /* ignore error */
 
@@ -9533,7 +9629,8 @@ int mode;)
               h,
               flags,
               ___NONE_KIND,
-              direction))
+              direction,
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_FILE]))
       != ___FIX(___NO_ERR))
     CloseHandle (h); /* ignore error */
 
@@ -10054,6 +10151,7 @@ ___SCMOBJ flags;)
 
   char *mode;
   int direction;
+  int io_settings = 0; /* no specific io_settings */
   ___FILE *stream;
 
   device_translate_flags (___INT(flags),
@@ -10080,18 +10178,36 @@ ___SCMOBJ flags;)
 
     default:
       {
+        int stdio_settings =
+          ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIO];
+
         switch (___INT(index))
           {
           case -1:
             stream = ___stdin;
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIN];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           case -2:
             stream = ___stdout;
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDOUT];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           case -3:
             stream = ___stderr;
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDERR];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           default:
+            if (___INT(index) >= 0 && ___INT(index) <= 2)
+              {
+                io_settings =
+                  ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIN+___INT(index)];
+                io_settings = ___io_settings_merge (io_settings, stdio_settings);
+              }
             stream = fdopen (___INT(index), mode);
             break;
           }
@@ -10101,7 +10217,8 @@ ___SCMOBJ flags;)
                     ___global_device_group (),
                     stream,
                     ___NONE_KIND,
-                    direction))
+                    direction,
+                    io_settings))
             != ___FIX(___NO_ERR))
           return e;
 
@@ -10116,6 +10233,7 @@ ___SCMOBJ flags;)
 
   int fl;
   int direction;
+  int io_settings = 0; /* no specific io_settings */
   int fd;
 
   device_translate_flags (___INT(flags),
@@ -10142,19 +10260,37 @@ ___SCMOBJ flags;)
 
     default:
       {
+        int stdio_settings =
+          ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIO];
+
         switch (___INT(index))
           {
           case -1:
             fd = STDIN_FILENO;
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIN];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           case -2:
             fd = STDOUT_FILENO;
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDOUT];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           case -3:
             fd = STDERR_FILENO;
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDERR];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           default:
             fd = ___INT(index);
+            if (fd >= 0 && fd <= 2)
+              {
+                io_settings =
+                  ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIN+fd];
+                io_settings = ___io_settings_merge (io_settings, stdio_settings);
+              }
             break;
           }
 
@@ -10163,7 +10299,8 @@ ___SCMOBJ flags;)
                     ___global_device_group (),
                     fd,
                     ___NONE_KIND,
-                    direction))
+                    direction,
+                    io_settings))
             != ___FIX(___NO_ERR))
           return e;
 
@@ -10180,6 +10317,7 @@ ___SCMOBJ flags;)
   DWORD creation_mode;
   DWORD attributes;
   int direction;
+  int io_settings = 0; /* no specific io_settings */
   HANDLE h;
 
   device_translate_flags (___INT(flags),
@@ -10210,17 +10348,29 @@ ___SCMOBJ flags;)
 
     default:
       {
+        int stdio_settings =
+          ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIO];
+
         switch (___INT(index))
           {
           default:
           case -1:
             h = GetStdHandle (STD_INPUT_HANDLE);
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDIN];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           case -2:
             h = GetStdHandle (STD_OUTPUT_HANDLE);
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDOUT];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           case -3:
             h = GetStdHandle (STD_ERROR_HANDLE);
+            io_settings =
+              ___GSTATE->setup_params.io_settings[___IO_SETTINGS_STDERR];
+            io_settings = ___io_settings_merge (io_settings, stdio_settings);
             break;
           }
 
@@ -10236,7 +10386,8 @@ ___SCMOBJ flags;)
                     h,
                     0,
                     ___NONE_KIND,
-                    direction))
+                    direction,
+                    io_settings))
             != ___FIX(___NO_ERR))
           return e;
 

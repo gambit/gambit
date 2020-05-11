@@ -2131,24 +2131,17 @@ end-of-code
    mask
    new-settings))
 
-(define-prim (##get-io-settings)
-  (##declare (not interrupts-enabled))
-  (##c-code "___RESULT = ___FIX(___get_io_settings ());"))
-
-(define-prim (##set-io-settings! settings)
+(define-prim (##get-io-settings index)
   (##declare (not interrupts-enabled))
   (##c-code
-   "___set_io_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
-   settings))
+   "___RESULT = ___FIX(___get_io_settings (___INT(___ARG1)));"
+   index))
 
-(define-prim (##get-terminal-settings)
-  (##declare (not interrupts-enabled))
-  (##c-code "___RESULT = ___FIX(___get_terminal_settings ());"))
-
-(define-prim (##set-terminal-settings! settings)
+(define-prim (##set-io-settings! index settings)
   (##declare (not interrupts-enabled))
   (##c-code
-   "___set_terminal_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   "___set_io_settings (___INT(___ARG1), ___INT(___ARG2)); ___RESULT = ___VOID;"
+   index
    settings))
 
 (define-prim ##get-gambitdir
