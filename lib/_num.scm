@@ -10839,9 +10839,13 @@ end-of-code
   (let* ((x (##gcd num den)) ;; gcd always returns nonnegative
          (num (##quotient num x))
          (den (##quotient den x)))
-    (if (##eqv? den 1)
-        num
-        (macro-ratnum-make num den))))
+    (if (##negative? den)
+        (if (##eqv? den -1)
+            (##- num)
+            (macro-ratnum-make (##- num) (##- den)))
+        (if (##eqv? den 1)
+            num
+            (macro-ratnum-make num den)))))
 
 (define-prim (##ratnum.round x #!optional (round-half-away-from-zero? #f))
   (let ((num (macro-ratnum-numerator x))
