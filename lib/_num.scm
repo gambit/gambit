@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2019 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2020 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -6157,9 +6157,9 @@ for a discussion of branch cuts.
 ;;; Bignum Operations
 ;;;------------------------------------------------------------------------------
 ;;;
-;;; The bignum operations were implemented mostly by Brad Lucier
-;;; (http://www.math.purdue.edu/~lucier) with some coding guidance from
-;;; Marc Feeley.
+;;; The bignum operations were implemented mostly by the über
+;;; numerical analyst Brad Lucier (http://www.math.purdue.edu/~lucier)
+;;; with some coding guidance from Marc Feeley.
 ;;;
 ;;; The low-level representation of bignums and the low-level operations on
 ;;; bignums are inspired by the paper
