@@ -419,9 +419,9 @@ bootstrap-post:
 	if test "@ENABLE_SHARED@" = "yes"; then \
 	  cp $(LIBRARY)$(LIB_VERSION_SUFFIX) $(rootfromhere)/$(LIBRARY)$(LIB_VERSION_SUFFIX); \
 	  if test "$(LIB_VERSION_SUFFIX)" != ""; then \
-	    cd $(rootfromhere); \
-	    $(LN_S) "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)"; \
-	    $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
+		cd $(rootfromhere); \
+		$(LN_S) "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)"; \
+		$(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	  fi \
 	fi
 
@@ -458,7 +458,7 @@ install-post: all
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES); do \
-	    (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
+		(cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
 	  done; \
 	fi
 
@@ -476,7 +476,7 @@ uninstall-post:
 	done; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY); do \
-	    rm -f "$$i_libdir/$$file"; \
+		rm -f "$$i_libdir/$$file"; \
 	  done; \
 	fi; \
 	rmdir "$$t_libdir" 2> /dev/null; \
@@ -530,7 +530,7 @@ dist-pre dist-devel-pre:
 	@for file in $(DISTFILES); do \
 	  echo "    $(herefromroot)/$$file"; \
 	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
-	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+		|| cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
 	done
 	@echo "    $(herefromroot)/guide"
 	(cd $(srcdir) ; COPYFILE_DISABLE=1 tar cf - guide) | (cd $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) ; tar xf -)
@@ -540,24 +540,24 @@ dist-post dist-devel-post:
 all-recursive:
 	@if test -n "@RTLIBSUBSYS@"; then \
 	  for subdir in ""@RTLIBSUBSYS@; do \
-	    (cd $$subdir && $(MAKE) all) || exit 1; \
+		(cd $$subdir && $(MAKE) all) || exit 1; \
 	  done \
 	fi
 
 bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
-	    target=`echo $@ | sed 's/-recursive//'`; \
-	    echo making $$target in $$subdir; \
-	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+		target=`echo $@ | sed 's/-recursive//'`; \
+		echo making $$target in $$subdir; \
+		(cd $$subdir && $(MAKE) $$target) || exit 1; \
 	  done \
 	fi
 
 modules-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
-	    target=`echo $@ | sed 's/-recursive//'`; \
-	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+		target=`echo $@ | sed 's/-recursive//'`; \
+		(cd $$subdir && $(MAKE) $$target) || exit 1; \
 	  done \
 	fi
 

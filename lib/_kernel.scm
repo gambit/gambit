@@ -5462,29 +5462,29 @@ end-of-code
 ;     (lambda (width)
 ;      `(define read-
 
-(define read-i8
+(define fetch-i8
   (c-lambda ((pointer int8) int32) int8 "___return(*(___arg1 + ___arg2));"))
 
-(define write-i8
+(define store-i8
   (c-lambda ((pointer int8) int32 int8) void "*(___arg1 + ___arg2) = ___arg3;"))
 
-(define read-i32
+(define fetch-i32
   (c-lambda ((pointer int8) int32) int32 "___return(*((int*)(___arg1 + ___arg2)));"))
 
-(define write-i32
+(define store-i32
   (c-lambda ((pointer int8) int32 int32) void "*((int*)(___arg1 + ___arg2)) = ___arg3;"))
 
-(define read-iu8
+(define fetch-u8
   (c-lambda ((pointer int8) int32) unsigned-int8 "___return(*(___arg1 + ___arg2));"))
 
-(define read-iu32
+(define fetch-u32
   (c-lambda ((pointer int8) int32) unsigned-int32 "___return(*((int*)(___arg1 + ___arg2)));"))
 
 ;;; ===========================================================================
 ;;; END FFI interface with mimosa
 ;;; ===========================================================================
 
-    
+
 (macro-case-target
  ((C)
   (##load-vm)))
