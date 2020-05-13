@@ -505,10 +505,10 @@
 
     (##deconstruct-call
      src
-     2
-     (lambda (pattern-src)
+     -2
+     (lambda (pattern-src . body)
        `(##begin
-         (define-primitive ,pattern-src)
+         (define-primitive ,pattern-src ,@body)
          (define-procedure ,pattern-src))))))
 
 ;;;----------------------------------------------------------------------------
