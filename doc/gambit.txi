@@ -4356,7 +4356,7 @@ defined in terms of @code{continuation-graft}:
 
 @smallexample
 (define (continuation-return cont . objs)
-  (continuation-graft (lambda () (apply values objs))))
+  (continuation-graft cont apply values objs))
 @end smallexample
 
 For example:
