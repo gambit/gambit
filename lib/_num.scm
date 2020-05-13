@@ -11102,6 +11102,18 @@ end-of-code
   macro-force-vars
   macro-check-flonum)
 
+(define-prim&proc (fl+* (x flonum)
+                        (y flonum)
+                        (z flonum))
+  (if (and (flfinite? x) (flfinite? y))
+      (if (flfinite? z)
+          (let ((x (exact x))
+                (y (exact y))
+                (z (exact z)))
+            (inexact (+ (* x y) z)))
+          z)
+      (fl+ (fl* x y) z)))
+
 (define-prim (##flabs x))
 
 (define-prim-flonum (flabs x)

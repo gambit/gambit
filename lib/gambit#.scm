@@ -284,6 +284,7 @@ fixnum-overflow-exception?
 fixnum?
 fl*
 fl+
+fl+*
 fl-
 fl/
 fl<
