@@ -29,6 +29,9 @@
 ;;unimplemented;;expression-parsing-exception-parameters
 ;;unimplemented;;expression-parsing-exception-source
 ;;unimplemented;;expression-parsing-exception?
+;;unimplemented;;file-exists-exception-arguments
+;;unimplemented;;file-exists-exception-procedure
+;;unimplemented;;file-exists-exception?
 ;;unimplemented;;fixnum-overflow-exception-arguments
 ;;unimplemented;;fixnum-overflow-exception-procedure
 ;;unimplemented;;fixnum-overflow-exception?

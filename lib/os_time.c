@@ -169,6 +169,7 @@ void ___time_get_current_time
         (tim)
 ___time *tim;)
 {
+#ifndef USE_emscripten_get_now
 #ifndef USE_clock_gettime_realtime
 #ifndef USE_getclock
 #ifndef USE_GetSystemTimeAsFileTime
@@ -185,6 +186,15 @@ ___time *tim;)
 #endif
 #endif
 #endif
+#endif
+#endif
+
+#ifdef USE_emscripten_get_now
+
+  /* The emscripten_get_now function is higher resolution than gettimeofday */
+
+  *tim = emscripten_get_now () / 1000.0; /* convert to seconds */
+
 #endif
 
 #ifdef USE_clock_gettime_realtime
@@ -921,7 +931,7 @@ ___HIDDEN void cleanup_process_times ___PVOID
 
 ___F64 ___get_heartbeat_interval ___PVOID
 {
-  return 0.0;
+  return ___time_mod.current_heartbeat_interval;
 }
 
 
@@ -930,6 +940,10 @@ void ___set_heartbeat_interval
         (seconds)
 ___F64 seconds;)
 {
+  if (seconds < 0.0) /* turn heartbeat off */
+    ___time_mod.current_heartbeat_interval = 0.0;
+  else
+    ___time_mod.current_heartbeat_interval = seconds;
 }
 
 

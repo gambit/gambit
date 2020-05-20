@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -190,6 +190,15 @@
 
 (define-library-type-of-exception no-such-file-or-directory-exception
   id: 299ccee1-77d2-4a6d-ab24-2ebf14297315
+  constructor: #f
+  opaque:
+
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+)
+
+(define-library-type-of-exception file-exists-exception
+  id: DD464B90-C0B2-437F-99AA-C6B411016D09
   constructor: #f
   opaque:
 

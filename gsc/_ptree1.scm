@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -535,6 +535,12 @@
 
 (define (run-time-binding? name env) ; true iff name's binding is checked at run-time
   (declaration-value run-time-bindings-sym name #t env))
+
+(define (remove-std-ext-rt-bindings env)
+  (env-declare (env-declare (env-declare env
+                                         (list standard-bindings-sym #f))
+                            (list extended-bindings-sym #f))
+               (list run-time-bindings-sym #f)))
 
 (define (safe? env) ; true iff system should prevent fatal runtime errors
   (declaration-value safe-sym #f #t env))
@@ -2708,7 +2714,7 @@
                    (space (source-code space-source)))
               (cond ((not (string? space))
                      (pt-syntax-error source "Ill-formed namespace"))
-                    ((not (valid-prefix? space))
+                    ((not (namespace-valid? space))
                      (pt-syntax-error space-source "Illegal namespace"))
                     (else
                      (let ()

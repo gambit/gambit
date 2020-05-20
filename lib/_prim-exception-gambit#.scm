@@ -2,7 +2,7 @@
 
 ;;; File: "_prim-exception-gambit#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -37,6 +37,9 @@ error
 (expression-parsing-exception-parameters expression-parsing-exception-parameters#unimplemented)
 (expression-parsing-exception-source expression-parsing-exception-source#unimplemented)
 (expression-parsing-exception? expression-parsing-exception?#unimplemented)
+(file-exists-exception-arguments file-exists-exception-arguments#unimplemented)
+(file-exists-exception-procedure file-exists-exception-procedure#unimplemented)
+(file-exists-exception? file-exists-exception?#unimplemented)
 (fixnum-overflow-exception-arguments fixnum-overflow-exception-arguments#unimplemented)
 (fixnum-overflow-exception-procedure fixnum-overflow-exception-procedure#unimplemented)
 (fixnum-overflow-exception? fixnum-overflow-exception?#unimplemented)

@@ -14,7 +14,7 @@
 
 (define (r7rs-vector-copy! vec2 start2 vec1 #!optional 
                                             (start 0) 
-                                            (end (vector-length vec2)))
+                                            (end (vector-length vec1)))
         (subvector-move! vec1 start end vec2 start2))
 
 (define (r7rs-vector-fill! vec fill #!optional (start 0) (end (length vec)))

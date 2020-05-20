@@ -2,7 +2,7 @@
 
 ;;; File: "_module.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -14,8 +14,11 @@
 
 (define ##module-search-order (##os-module-search-order))
 
+(define-prim (##module-search-order-set! search-order)
+  (set! ##module-search-order search-order))
+
 (define-prim (##module-search-order-add! dir)
-  (set! ##module-search-order (##cons dir ##module-search-order)))
+  (##module-search-order-set! (##cons dir ##module-search-order)))
 
 (define-prim (##module-search-directory? str)
   (let ((len (##string-length str)))
@@ -48,16 +51,7 @@
 
 (define (##modref->path modref full? tag?)
 
-  (define (last lst)
-    (if (pair? (cdr lst))
-      (last (cdr lst))
-      (car lst)))
-
-  (define (butlast lst)
-    (if (pair? (cdr lst))
-      (cons (car lst) (butlast (cdr lst)))
-      '()))
-
+  ;;TODO: deprecated (use ##path-join instead)
   (define (join parts dir)
     (if (pair? parts)
       (join (cdr parts)
@@ -69,8 +63,8 @@
   (let ((host (macro-modref-host modref))
         (tag (macro-modref-tag modref))
         (rpath (macro-modref-rpath modref)))
-    (let ((module-name (last rpath))
-          (rest (butlast rpath)))
+    (let ((module-name (##last rpath))
+          (rest (##butlast rpath)))
       ;; rpath contains at least one element.
       (if full?
         (join host
@@ -86,6 +80,18 @@
                   (path-expand
                     (string-append "@" (or tag ""))
                     module-name)))))))
+
+(define (##modref-hosted? modref)
+  (##pair? (macro-modref-host modref)))
+
+(define (##modref-force-not-hosted modref)
+  (let ((host (macro-modref-host modref))
+        (tag (macro-modref-tag modref))
+        (rpath (macro-modref-rpath modref)))
+    (macro-make-modref
+     #f
+     tag
+     (##append rpath (or host '())))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -283,16 +289,6 @@
 
 (define-prim (##search-module-aux modref check-mod search-order)
 
-  (define (last lst)
-    (if (##pair? (##cdr lst))
-        (last (##cdr lst))
-        (##car lst)))
-
-  (define (butlast lst)
-    (if (##pair? (##cdr lst))
-        (##cons (##car lst) (butlast (##cdr lst)))
-        '()))
-
   (define (join parts dir)
     (if (##pair? parts)
         (##path-expand (##car parts)
@@ -321,20 +317,20 @@
       (if (or host tag)
 
           (search rpath
-                  (butlast rpath)
+                  (##butlast rpath)
                   (join (##list (##string-append "@" (or tag "")))
-                        (##path-expand (last rpath)
+                        (##path-expand (##last rpath)
                                        (if host
                                            (join host dir)
                                            dir)))
                   check-mod)
 
           (let ((main-repo-path
-                 (##path-expand "@" (##path-expand (last rpath) dir))))
+                 (##path-expand "@" (##path-expand (##last rpath) dir))))
             (if (##file-exists? main-repo-path)
 
                 (search rpath
-                        (butlast rpath)
+                        (##butlast rpath)
                         main-repo-path
                         check-mod)
 
@@ -556,15 +552,13 @@
       (search-for-highest-object-file
        (##path-expand mod-filename-noext dir)))
 
-    (let ((object-file-path
-           (or (search-for-object-file
-                mod-filename-noext
-                (##module-build-subdir-path mod-dir
-                                            mod-filename-noext
-                                            (macro-target)))
-               (search-for-object-file
-                mod-filename-noext
-                mod-dir))))
+    (let* ((build-subdir-path
+            (##module-build-subdir-path mod-dir
+                                        mod-filename-noext
+                                        (macro-target)))
+           (object-file-path
+            (or (search-for-object-file mod-filename-noext build-subdir-path)
+                (search-for-object-file mod-filename-noext mod-dir))))
 
       (cond (object-file-path
              (get-from-object-file object-file-path))
@@ -573,13 +567,17 @@
               (##path-expand
                (##string-append mod-filename-noext "._must-build_")
                mod-dir))
-             (##build-mod modref)
+
+             ;; run a subprocess to build module
+             (##build-module-subprocess
+              mod-path
+              (macro-target)
+              (##list (##list 'module-ref module-ref)))
+
              (let ((object-file-path
                     (search-for-object-file
                      mod-filename-noext
-                     (##module-build-subdir-path mod-dir
-                                                 mod-filename-noext
-                                                 (macro-target)))))
+                     build-subdir-path)))
                (if object-file-path
                    (get-from-object-file object-file-path)
                    (get-from-source-file))))
@@ -587,7 +585,7 @@
             (else
              (get-from-source-file))))))
 
-(define-prim (##build-mod modref)
+(define-prim (##build-module-subprocess path target options)
 
   (define (install-dir name rest)
     (let ((dir (##os-path-gambitdir-map-lookup name)))
@@ -595,27 +593,38 @@
           (##cons (##string-append "~~" name "=" dir) rest)
           rest)))
 
-  (let ((modstr (##modref->string modref)))
-    (if ##debug-modules? (pp (##list 'build-mod modstr)))
+  (let* ((gsc-path
+          (##path-expand
+           (##string-append "gsc-script"
+                            ##os-exe-extension-string-saved)
+           (##path-normalize-directory-existing "~~bin")))
+         (arguments
+          (##list (##append-strings
+                   (##cons (##string-append "-:=" (##os-path-gambitdir))
+                           (install-dir "lib"
+                                        (install-dir "userlib"
+                                                     '())))
+                   ",")
+                  "-e"
+                  (##object->string
+                   `(##begin
+                     (##module-search-order-set!
+                      ',##module-search-order)
+                     (##build-module
+                      ',path
+                      ',target
+                      ',options))))))
 
-    (##call-with-output-process
-     (##list path: (##path-expand "gsc-script" (##path-expand "~~bin"))
-             stdin-redirection: #f
-             stdout-redirection: #f
-             stderr-redirection: #f
-             arguments:
-             (##list (##append-strings
-                      (##cons (##string-append "-:=" (##os-path-gambitdir))
-                              (install-dir "lib"
-                                           (install-dir "userlib"
-                                                        '())))
-                      ",")
-                     "-target"
-                     (##symbol->string (macro-target))
-                     modstr))
-     (lambda (pid)
-       (let ((status (##process-status pid)))
-         (##eq? status 0))))))
+    (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
+
+    (let ((status
+           (##run-subprocess
+            gsc-path
+            arguments
+            #f  ;; don't capture output
+            #f  ;; don't redirect stdin
+            #f))) ;; run in current directory
+      (##eqv? status 0))))
 
 (define-prim (##install-module modref)
 
@@ -653,21 +662,22 @@
              modstr
              " is required but is not installed.\nDownload and install (y/n)? ")))))
 
-  (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
+  (and (pair? (macro-modref-host modref)) ;; only install hosted modules
+       (begin
+         (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
+         (let ((mod-string (##modref->string modref)))
 
-  (let ((mod-string (##modref->string modref)))
-    (and (or (not (pair? (macro-modref-host modref)))
-             (##member
-              mod-string
-              (##os-module-whitelist)
-              (lambda (a b)
-                (module-prefix=? a b)))
-             ;; Ask user to install.
-             (module-install-confirm? mod-string))
+           (and (or (##member
+                     mod-string
+                     (##os-module-whitelist)
+                     (lambda (a b)
+                       (module-prefix=? a b)))
+                    ;; Ask user to install.
+                    (module-install-confirm? mod-string))
 
-         ((##eval '(let () (##import _pkg) install)) mod-string)
-         ;; Return the modref
-         modref)))
+                ((##eval '(let () (##import _pkg) install)) mod-string)
+                ;; Return the modref
+                modref)))))
 
 (define-prim (##install-module-set! x)
   (set! ##install-module x))
@@ -761,6 +771,7 @@
               root
               #!optional
               (alt-name (macro-absent-obj)))
+
   (define (try-open fn)
     (with-exception-handler
       (lambda (exn)
@@ -797,6 +808,7 @@
                 (loop (parent-directory dir))))))))))
 
 (define-prim (##extend-aliases-from-rpath rpath root)
+
   (define (read-setup-file-from-port port)
     (let ((ret (##read-all-as-a-begin-expr-from-port
                   port
@@ -806,9 +818,14 @@
       (and (##vector? ret)
            (##vector-ref ret 1))))
 
-  (let* ((result (##search-setup-file rpath root))
-         (comp-ctx (##compilation-ctx))
-         (module-aliases (macro-compilation-ctx-module-aliases comp-ctx)))
+  (let* ((result
+          (##search-setup-file rpath root))
+         (comp-ctx
+          (##compilation-ctx))
+         (module-aliases
+          (if comp-ctx
+              (macro-compilation-ctx-module-aliases comp-ctx)
+              '())))
     (if (##vector? result)
         (let* ((port (##vector-ref result 1))
                (src (read-setup-file-from-port port)))

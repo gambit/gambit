@@ -1,5 +1,8 @@
 @echo off
 
+setlocal EnableDelayedExpansion
+set "_errorlevel=0"
+
 rem The following settings are determined by the configure script.
 
 set C_COMPILER=@C_COMPILER_BAT@
@@ -35,19 +38,105 @@ set OBJ_EXTENSION=@OBJ_EXTENSION_BAT@
 set EXE_EXTENSION=@EXE_EXTENSION_BAT@
 set BAT_EXTENSION=@BAT_EXTENSION_BAT@
 
-rem Encoding of strings and paths using shell syntax
-
-set SHELL_STRING_ENCODE=if defined _arg (set ^"_arg=!_arg:=\"!^"^&set ^"_arg=!_arg:=\\!^"^&set ^"_arg=!_arg:=^^!^"^&set ^"_arg=!_arg:=^&!^"^&set ^"_arg=!_arg:=^|!^"^&set ^"_arg=!_arg:=^>!^"^&set ^"_result=!_arg:=^<!^") else (set ^"_result=^")
-
-set SHELL_PATH_ENCODE=if defined _arg (set ^"_arg=!_arg:="!^"^&set ^"_arg=!_arg:=\!^"^&set ^"_arg=!_arg:=^^!^"^&set ^"_arg=!_arg:=^&!^"^&set ^"_arg=!_arg:=^|!^"^&set ^"_arg=!_arg:=^>!^"^&set ^"_result=!_arg:=^<!^") else (set ^"_result=^")
+set ALL_BUILD_FEATURES=@ALL_BUILD_FEATURES_BAT@
+set BUILD_FEATURE_C_COMP=@BUILD_FEATURE_C_COMP_BAT@
+set BUILD_FEATURE_OS=windows
 
 goto :select_operation
 
 
-rem Scheme string syntax decoding
+rem Creation of a fresh temporary directory
 
-:scheme_string_decode
-setlocal EnableDelayedExpansion
+:create_temp_dir
+
+set /a _temp_dir_seqnum=0
+
+:create_temp_dir_loop
+set /a _temp_dir_seqnum+=1
+set "_temp_dir=!temp!\!_temp_dir_basename!_dir!_temp_dir_seqnum!"
+mkdir "!_temp_dir!" 2> nul
+if ERRORLEVEL 1 goto :create_temp_dir_loop
+
+exit /b 0
+
+
+rem Creation of a temporary batch file
+
+:create_temp_batch_file
+
+call :create_temp_dir
+
+set "_temp_batch_file=!_temp_dir!\gambuild-C-cmd.bat"
+
+echo.!_temp_batch_file_line1! > "!_temp_batch_file!"
+echo.!_temp_batch_file_line2! >> "!_temp_batch_file!"
+echo.!_temp_batch_file_line3! >> "!_temp_batch_file!"
+
+exit /b 0
+
+
+rem Evaluation of a shell command
+
+:eval_shell_command
+
+if not "!GAMBUILD_VERBOSE!" == "yes" goto not_verbose
+echo.!_shell_command!
+:not_verbose
+
+set "_temp_batch_file_line1=@echo off"
+set "_temp_batch_file_line2=!_shell_command!"
+set "_temp_batch_file_line3=exit /b %%ERRORLEVEL%%"
+
+call :create_temp_batch_file
+
+call "!_temp_batch_file!"
+
+set "_errorlevel=%ERRORLEVEL%"
+
+rmdir /s /q "!_temp_dir!"
+
+exit /b %_errorlevel%
+
+
+rem Encoding of strings and paths using shell syntax
+
+:shell_string_encode
+if defined _arg (
+  set "_arg=!_arg:=""!"
+  set "_arg=!_arg:=\!"
+  set "_arg=!_arg:=^!"
+  set "_arg=!_arg:=&!"
+  set "_arg=!_arg:=|!"
+  set "_arg=!_arg:=>!"
+  set "_arg=!_arg:=<!"
+  set "_arg=!_arg:= !"
+  set "_arg="!_arg!""
+) else (
+  set "_arg="
+)
+exit /b 0
+
+
+:simple_string_encode
+if defined _arg (
+  set "_arg=!_arg:="!"
+  set "_arg=!_arg:=\!"
+  set "_arg=!_arg:=^!"
+  set "_arg=!_arg:=&!"
+  set "_arg=!_arg:=|!"
+  set "_arg=!_arg:=>!"
+  set "_arg=!_arg:=<!"
+  set "_arg=!_arg:= !"
+) else (
+  set "_arg="
+)
+exit /b 0
+
+
+rem S-expression string syntax decoding
+
+:sexpr_string_decode
+set "_arg=!_arg: =!"
 set "_arg=!_arg:<=!"
 set "_arg=!_arg:>=!"
 set "_arg=!_arg:|=!"
@@ -55,19 +144,18 @@ set "_arg=!_arg:&=!"
 set "_arg=!_arg:^=!"
 set "_arg=!_arg:\\=!"
 set "_arg=!_arg:\"=!"
-set "_arg=!_arg:\a=!"
-set "_arg=!_arg:\t=	!"
-set "_arg=!_arg:\v=!"
-set "_arg=!_arg:\f=!"
+set "_arg=!_arg:\\a=!"
+set "_arg=!_arg:\\t=!"
+set "_arg=!_arg:\\v=!"
+set "_arg=!_arg:\\f=!"
 set "_arg=!_arg:\=!"
-endlocal & set "_result=%_arg%"
 exit /b 0
 
 
 rem Plain string decoding
 
 :plain_string_decode
-setlocal EnableDelayedExpansion
+set "_arg=!_arg: =!"
 set "_arg=!_arg:<=!"
 set "_arg=!_arg:>=!"
 set "_arg=!_arg:|=!"
@@ -75,7 +163,70 @@ set "_arg=!_arg:&=!"
 set "_arg=!_arg:^=!"
 set "_arg=!_arg:\=!"
 set "_arg=!_arg:"=!"
-endlocal & set "_result=%_arg%"
+exit /b 0
+
+
+rem Guard expression evaluation
+
+:eval_sexpr
+
+set "_sexpr_string1=!_sexpr:*"=!"
+set "_sexpr_string2=!_sexpr_string1:*"=!"
+
+if "!_sexpr_string2!" == "" goto :eval_sexpr_done
+
+if not "!_sexpr_string2!" == ")" goto :eval_sexpr_unsupported_expr
+
+set "_sexpr=)( !_sexpr:)= )!"
+
+for %%i in (%ALL_BUILD_FEATURES%) do (
+  set "_val=#f"
+  if "%%i" == "%BUILD_FEATURE_C_COMP%"  set "_val=#t"
+  if "%%i" == "%BUILD_FEATURE_OS%" set "_val=#t"
+  call :eval_sexpr_substitute_var %%i !_val!
+)
+
+:eval_sexpr_loop
+
+set "_prev=!_sexpr!"
+
+set "_sexpr=!_sexpr:(and #t =(and !"
+set "_sexpr=!_sexpr:(and #f #t =(and #f !"
+set "_sexpr=!_sexpr:(and #f #f =(and #f !"
+set "_sexpr=!_sexpr:(and #f )=#f!"
+set "_sexpr=!_sexpr:(and )=#t!"
+
+set "_sexpr=!_sexpr:(or #f =(or !"
+set "_sexpr=!_sexpr:(or #t #t =(or #t !"
+set "_sexpr=!_sexpr:(or #t #f =(or #t !"
+set "_sexpr=!_sexpr:(or #t )=#t!"
+set "_sexpr=!_sexpr:(or )=#f!"
+
+set "_sexpr=!_sexpr:(not #t )=#f!"
+set "_sexpr=!_sexpr:(not #f )=#t!"
+
+if not "!_sexpr!" == "!_prev!" goto :eval_sexpr_loop
+
+if not "!_sexpr!" == "!_sexpr:)( (when #t =!" goto :eval_sexpr_when_true
+if not "!_sexpr!" == "!_sexpr:)( (when #f =!" set "_sexpr=)( !"
+
+:eval_sexpr_unsupported_expr
+
+set "_sexpr=unsupported expression"
+
+exit /b 0
+
+:eval_sexpr_when_true
+
+set "_sexpr="!_sexpr_string1:")=!""
+
+:eval_sexpr_done
+
+exit /b 0
+
+
+:eval_sexpr_substitute_var
+set "_sexpr=!_sexpr: %1 = %2 !"
 exit /b 0
 
 
@@ -89,22 +240,49 @@ for /f "tokens=1* delims==" %%i in ('set %for_each_line_of_var_var%') do (
   goto :for_each_line_of_var_done
 )
 :for_each_line_of_var_done
-exit /b 0
+exit /b %_errorlevel%
 :for_each_line_of_var_continue
 for /f "delims= skip=1" %%i in ('set %for_each_line_of_var_var%') do (
   set "_arg=%%i"
   call %for_each_line_of_var_handle%
+  if not "!_errorlevel!" == "0" goto :for_each_line_of_var_done2
 )
-exit /b 0
+:for_each_line_of_var_done2
+exit /b %_errorlevel%
 
 
 :for_each_meta_info_of_file
-for /f "delims=# tokens=2*" %%i in ('findstr /r /c:^"^^^ ^#^|^\^*^/^\^"^\^*^/^\^"%for_each_meta_info_of_file_key%^|^#^"^" "%for_each_meta_info_of_file_file%"') do (
-  set "_arg=%%~j"
-  call :scheme_string_decode
-  call %for_each_meta_info_of_file_handle%
+for /f "delims=# tokens=2*" %%i in ('findstr /r /c:^"^^^ ^#^|^\^*^/^\^"^\^*^/^\^"%for_each_meta_info_of_file_key%^|^#^" "%for_each_meta_info_of_file_file%"') do (
+  set "_arg=%%j"
+  call :for_each_meta_info_of_file_filter
+  if not "!_errorlevel!" == "0" goto :for_each_meta_info_of_file_done
 )
-exit /b 0
+:for_each_meta_info_of_file_done
+exit /b %_errorlevel%
+
+:for_each_meta_info_of_file_filter
+
+set "_meta_info=!_arg!"
+
+call :sexpr_string_decode
+
+set "_sexpr=!_arg:= !"
+
+call :eval_sexpr
+
+if "!_sexpr!" == "" goto :for_each_meta_info_of_file_done
+
+if "!_sexpr!" == "unsupported expression" (
+  echo.*** WARNING -- unsupported meta-info is being ignored: !_meta_info!
+  goto :for_each_meta_info_of_file_done
+)
+
+set "_arg=!_sexpr: =!"
+set "_arg=!_sexpr:"=!"
+call %for_each_meta_info_of_file_handle%
+
+:for_each_meta_info_of_file_done
+exit /b %_errorlevel%
 
 
 :augment_pkg_config_path_from_files
@@ -112,13 +290,13 @@ set "for_each_meta_info_of_file_file=%_arg%"
 set "for_each_meta_info_of_file_key=pkg-config-path"
 set "for_each_meta_info_of_file_handle=:accumulate_pkg_config_path"
 call :for_each_meta_info_of_file
-exit /b 0
+exit /b %_errorlevel%
 
 
 :augment_pkg_config_path_from_var
 call :plain_string_decode
 call :accumulate_pkg_config_path
-exit /b 0
+exit /b %_errorlevel%
 
 
 :process_pkg_config_from_files
@@ -126,32 +304,39 @@ set "for_each_meta_info_of_file_file=%_arg%"
 set "for_each_meta_info_of_file_key=pkg-config"
 set "for_each_meta_info_of_file_handle=:process_pkg_config"
 call :for_each_meta_info_of_file
-exit /b 0
+exit /b %_errorlevel%
 
 
 :process_pkg_config_from_var
 call :plain_string_decode
 call :process_pkg_config
-exit /b 0
+exit /b %_errorlevel%
 
 
 :process_pkg_config
-set "pc_args=%_result%"
+set "pc_args=%_arg%"
 if defined PKG_CONFIG goto pkg_config_defined
-echo *** WARNING -- the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags %pc_args%' and 'pkg-config --libs %pc_args%'
-exit /b 1
+echo.*** WARNING -- the pkg-config program is unavailable but is needed to get C compiler options using 'pkg-config --cflags %pc_args%' and 'pkg-config --libs %pc_args%'
+exit /b 0
 :pkg_config_defined
+%PKG_CONFIG% --cflags %pc_args% > nul
+set "_errorlevel=%ERRORLEVEL%"
+if not "%_errorlevel%" == "0" goto :process_pkg_config_done
 for /f "delims=" %%i in ('%PKG_CONFIG% --cflags %pc_args%') do (
   set "_arg=%%i"
   call :plain_string_decode
   call :accumulate_cc_options
 )
+if not "%_errorlevel%" == "0" goto :process_pkg_config_done
+%PKG_CONFIG% --libs %pc_args% > nul
+set "_errorlevel=%ERRORLEVEL%"
 for /f "delims=" %%i in ('%PKG_CONFIG% --libs %pc_args%') do (
   set "_arg=%%i"
   call :plain_string_decode
   call :accumulate_ld_options
 )
-exit /b 0
+:process_pkg_config_done
+exit /b %_errorlevel%
 
 
 :process_cc_ld_options_from_files
@@ -165,65 +350,83 @@ call :for_each_meta_info_of_file
 set "for_each_meta_info_of_file_key=ld-options"
 set "for_each_meta_info_of_file_handle=:process_ld_options"
 call :for_each_meta_info_of_file
-exit /b 0
+exit /b %_errorlevel%
 
 
 :process_cc_options
 call :plain_string_decode
 call :accumulate_cc_options
-exit /b 0
+exit /b %_errorlevel%
 
 
 :process_ld_options_prelude
 call :plain_string_decode
 call :accumulate_ld_options_prelude
-exit /b 0
+exit /b %_errorlevel%
 
 
 :process_ld_options
 call :plain_string_decode
 call :accumulate_ld_options
-exit /b 0
+exit /b %_errorlevel%
 
 
 :accumulate_pkg_config_path
 if defined GAMBUILD_PKG_CONFIG_PATH (
   rem prepend path so that last path added has priority
-  set "GAMBUILD_PKG_CONFIG_PATH=%_result%;%GAMBUILD_PKG_CONFIG_PATH%"
+  set "GAMBUILD_PKG_CONFIG_PATH=!_arg!;!GAMBUILD_PKG_CONFIG_PATH!"
 ) else (
-  set "GAMBUILD_PKG_CONFIG_PATH=%_result%"
+  set "GAMBUILD_PKG_CONFIG_PATH=!_arg!"
 )
-exit /b 0
+exit /b %_errorlevel%
 
 
 :accumulate_cc_options
 if defined GAMBUILD_CC_OPTIONS (
-  set "GAMBUILD_CC_OPTIONS=%GAMBUILD_CC_OPTIONS%%_result% "
+  set "GAMBUILD_CC_OPTIONS=!GAMBUILD_CC_OPTIONS! !_arg!"
 ) else (
-  set "GAMBUILD_CC_OPTIONS=%_result%"
+  set "GAMBUILD_CC_OPTIONS=!_arg!"
 )
-exit /b 0
+exit /b %_errorlevel%
 
 
 :accumulate_ld_options_prelude
 if defined GAMBUILD_LD_OPTIONS_PRELUDE (
-  set "GAMBUILD_LD_OPTIONS_PRELUDE=%GAMBUILD_LD_OPTIONS_PRELUDE%%_result% "
+  set "GAMBUILD_LD_OPTIONS_PRELUDE=!GAMBUILD_LD_OPTIONS_PRELUDE! !_arg!"
 ) else (
-  set "GAMBUILD_LD_OPTIONS_PRELUDE=%_result%"
+  set "GAMBUILD_LD_OPTIONS_PRELUDE=!_arg!"
 )
-exit /b 0
+exit /b %_errorlevel%
 
 
 :accumulate_ld_options
 if defined GAMBUILD_LD_OPTIONS (
-  set "GAMBUILD_LD_OPTIONS=%GAMBUILD_LD_OPTIONS%%_result% "
+  set "GAMBUILD_LD_OPTIONS=!GAMBUILD_LD_OPTIONS! !_arg!"
 ) else (
-  set "GAMBUILD_LD_OPTIONS=%_result%"
+  set "GAMBUILD_LD_OPTIONS=!_arg!"
 )
-exit /b 0
+exit /b %_errorlevel%
 
 
-:extract_cc_ld_options
+:accumulate_input_filenames
+call :plain_string_decode
+call :simple_string_encode
+if defined GAMBUILD_INPUT_FILENAMES (
+  set "GAMBUILD_INPUT_FILENAMES=!GAMBUILD_INPUT_FILENAMES! "!_arg!""
+) else (
+  set "GAMBUILD_INPUT_FILENAMES="!_arg!""
+)
+exit /b %_errorlevel%
+
+
+:accumulate_output_filename
+call :plain_string_decode
+call :simple_string_encode
+set "GAMBUILD_OUTPUT_FILENAME=!_arg!"
+exit /b %_errorlevel%
+
+
+:prepare_params
 
 rem ----------------------------------------------------------------------
 rem Augment PKG_CONFIG_PATH with the meta information from files in
@@ -235,13 +438,13 @@ set "GAMBUILD_LD_OPTIONS_PRELUDE="
 set "GAMBUILD_LD_OPTIONS="
 
 if defined PKG_CONFIG_PATH (
-  set "_arg=%PKG_CONFIG_PATH%"
+  set "_arg=!PKG_CONFIG_PATH!"
   call :plain_string_decode
 ) else (
-  set "_result="
+  set "_arg="
 )
 
-set "GAMBUILD_PKG_CONFIG_PATH=%_result%"
+set "GAMBUILD_PKG_CONFIG_PATH=!_arg!"
 
 rem Process META_INFO_FILE_PARAM (actual variable name in %1)
 
@@ -257,10 +460,9 @@ call :for_each_line_of_var
 
 if not defined GAMBUILD_PKG_CONFIG_PATH goto :done_pkg_config_path
 
-setlocal EnableDelayedExpansion
 set _arg=!GAMBUILD_PKG_CONFIG_PATH!
-%SHELL_PATH_ENCODE%
-endlocal & set "PKG_CONFIG_PATH=%_result%"
+call :simple_string_encode
+set "PKG_CONFIG_PATH=!_arg!"
 
 :done_pkg_config_path
 
@@ -275,12 +477,14 @@ rem Process META_INFO_FILE_PARAM (actual variable name in %1)
 set "for_each_line_of_var_var=%1"
 set "for_each_line_of_var_handle=:process_pkg_config_from_files"
 call :for_each_line_of_var
+if not "%_errorlevel%" == "0" goto :prepare_params_done
 
 rem Process PKG_CONFIG_PARAM (actual variable name in %2)
 
 set "for_each_line_of_var_var=%2"
 set "for_each_line_of_var_handle=:process_pkg_config_from_var"
 call :for_each_line_of_var
+if not "%_errorlevel%" == "0" goto :prepare_params_done
 
 rem ----------------------------------------------------------------------
 rem Use the meta information from files in META_INFO_FILE_PARAM to
@@ -294,27 +498,49 @@ set "for_each_line_of_var_var=%1"
 set "for_each_line_of_var_handle=:process_cc_ld_options_from_files"
 call :for_each_line_of_var
 
-set "BUILD_DYN_CC_OPTIONS=%GAMBUILD_CC_OPTIONS%%BUILD_DYN_CC_OPTIONS_PARAM%"
-set "BUILD_DYN_LD_OPTIONS_PRELUDE=%GAMBUILD_LD_OPTIONS_PRELUDE%%BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM%"
-set "BUILD_DYN_LD_OPTIONS=%GAMBUILD_LD_OPTIONS%%BUILD_DYN_LD_OPTIONS_PARAM%"
+set "for_each_line_of_var_var=%4"
+set "for_each_line_of_var_handle=:process_cc_options"
+call :for_each_line_of_var
 
-setlocal EnableDelayedExpansion
+set "for_each_line_of_var_var=%5"
+set "for_each_line_of_var_handle=:process_ld_options_prelude"
+call :for_each_line_of_var
+
+set "for_each_line_of_var_var=%6"
+set "for_each_line_of_var_handle=:process_ld_options"
+call :for_each_line_of_var
+
 set "_arg=!GAMBUILD_CC_OPTIONS!"
-%SHELL_STRING_ENCODE%
-set "GAMBUILD_CC_OPTIONS=!_result!"
-set "_arg=!GAMBUILD_LD_OPTIONS_PRELUDE!"
-%SHELL_STRING_ENCODE%
-set "GAMBUILD_LD_OPTIONS_PRELUDE=!_result!"
-set "_arg=!GAMBUILD_LD_OPTIONS!"
-%SHELL_STRING_ENCODE%
-set "GAMBUILD_LD_OPTIONS=!_result!"
-endlocal & (
-  set "GAMBUILD_CC_OPTIONS=%GAMBUILD_CC_OPTIONS%"
-  set "GAMBUILD_LD_OPTIONS_PRELUDE=%GAMBUILD_LD_OPTIONS_PRELUDE%"
-  set "GAMBUILD_LD_OPTIONS=%GAMBUILD_LD_OPTIONS%"
-)
+call :simple_string_encode
+set "GAMBUILD_CC_OPTIONS=!_arg!"
 
-exit /b 0
+set "_arg=!GAMBUILD_LD_OPTIONS_PRELUDE!"
+call :simple_string_encode
+set "GAMBUILD_LD_OPTIONS_PRELUDE=!_arg!"
+
+set "_arg=!GAMBUILD_LD_OPTIONS!"
+call :simple_string_encode
+set "GAMBUILD_LD_OPTIONS=!_arg!"
+
+rem Process INPUT_FILENAMES_PARAM (actual variable name in %4)
+
+set "GAMBUILD_INPUT_FILENAMES="
+
+set "for_each_line_of_var_var=%7"
+set "for_each_line_of_var_handle=:accumulate_input_filenames"
+call :for_each_line_of_var
+
+rem Process OUTPUT_FILENAME_PARAM (actual variable name in %5)
+
+set "GAMBUILD_OUTPUT_FILENAME="
+
+set "for_each_line_of_var_var=%8"
+set "for_each_line_of_var_handle=:accumulate_output_filename"
+call :for_each_line_of_var
+
+:prepare_params_done
+
+exit /b %_errorlevel%
 
 
 :select_operation
@@ -323,19 +549,19 @@ if "%1" == "obj" goto obj
 if not "%1" == ""obj"" goto not_obj
 :obj
 
-call :extract_cc_ld_options BUILD_OBJ_META_INFO_FILE_PARAM BUILD_OBJ_PKG_CONFIG_PARAM BUILD_OBJ_PKG_CONFIG_PATH_PARAM
+set "BUILD_OBJ_LD_OPTIONS_PRELUDE_PARAM= "
+set "BUILD_OBJ_LD_OPTIONS_PARAM= "
 
-set "BUILD_OBJ_CC_OPTIONS_PARAM=%GAMBUILD_CC_OPTIONS%%BUILD_OBJ_CC_OPTIONS_PARAM%"
+call :prepare_params BUILD_OBJ_META_INFO_FILE_PARAM BUILD_OBJ_PKG_CONFIG_PARAM BUILD_OBJ_PKG_CONFIG_PATH_PARAM BUILD_OBJ_CC_OPTIONS_PARAM BUILD_OBJ_LD_OPTIONS_PRELUDE_PARAM BUILD_OBJ_LD_OPTIONS_PARAM BUILD_OBJ_INPUT_FILENAMES_PARAM BUILD_OBJ_OUTPUT_FILENAME_PARAM
+if not "%_errorlevel%" == "0" goto :end
 
-if not "%GAMBUILD_VERBOSE%" == "yes" goto not_obj_verbose
-echo.%C_COMPILER% %FLAGS_OPT% %FLAGS_OBJ% %DEFS_OBJ% -I"%GAMBITDIR_INCLUDE%" -c -o "%BUILD_OBJ_OUTPUT_FILENAME_PARAM%" %BUILD_OBJ_CC_OPTIONS_PARAM% %BUILD_OBJ_INPUT_FILENAMES_PARAM%
-:not_obj_verbose
+set "BUILD_OBJ_CC_OPTIONS_PARAM=!GAMBUILD_CC_OPTIONS!"
+set "BUILD_OBJ_INPUT_FILENAMES_PARAM=!GAMBUILD_INPUT_FILENAMES!"
+set "BUILD_OBJ_OUTPUT_FILENAME_PARAM=!GAMBUILD_OUTPUT_FILENAME!"
 
-if not "%GAMBUILD_VERBOSE%" == "yes" goto not_obj_verbose
-echo.@BUILD_OBJ_ECHO_BAT@
-:not_obj_verbose
+set "_shell_command=@BUILD_OBJ_ECHO_BAT@"
 
-@BUILD_OBJ_ECHO_BAT@
+call :eval_shell_command
 
 goto end
 :not_obj
@@ -344,17 +570,18 @@ if "%1" == "dyn" goto dyn
 if not "%1" == ""dyn"" goto not_dyn
 :dyn
 
-call :extract_cc_ld_options BUILD_DYN_META_INFO_FILE_PARAM BUILD_DYN_PKG_CONFIG_PARAM BUILD_DYN_PKG_CONFIG_PATH_PARAM
+call :prepare_params BUILD_DYN_META_INFO_FILE_PARAM BUILD_DYN_PKG_CONFIG_PARAM BUILD_DYN_PKG_CONFIG_PATH_PARAM BUILD_DYN_CC_OPTIONS_PARAM BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM BUILD_DYN_LD_OPTIONS_PARAM BUILD_DYN_INPUT_FILENAMES_PARAM BUILD_DYN_OUTPUT_FILENAME_PARAM
+if not "%_errorlevel%" == "0" goto :end
 
-set "BUILD_DYN_CC_OPTIONS_PARAM=%GAMBUILD_CC_OPTIONS%%BUILD_DYN_CC_OPTIONS_PARAM%"
-set "BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM=%GAMBUILD_LD_OPTIONS_PRELUDE%%BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM%"
-set "BUILD_DYN_LD_OPTIONS_PARAM=%GAMBUILD_LD_OPTIONS%%BUILD_DYN_LD_OPTIONS_PARAM%"
+set "BUILD_DYN_CC_OPTIONS_PARAM=!GAMBUILD_CC_OPTIONS!"
+set "BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM=!GAMBUILD_LD_OPTIONS_PRELUDE!"
+set "BUILD_DYN_LD_OPTIONS_PARAM=!GAMBUILD_LD_OPTIONS!"
+set "BUILD_DYN_INPUT_FILENAMES_PARAM=!GAMBUILD_INPUT_FILENAMES!"
+set "BUILD_DYN_OUTPUT_FILENAME_PARAM=!GAMBUILD_OUTPUT_FILENAME!"
 
-if not "%GAMBUILD_VERBOSE%" == "yes" goto not_dyn_verbose
-echo.@BUILD_DYN_ECHO_BAT@
-:not_dyn_verbose
+set "_shell_command=@BUILD_DYN_ECHO_BAT@"
 
-@BUILD_DYN_ECHO_BAT@
+call :eval_shell_command
 
 goto end
 :not_dyn
@@ -363,11 +590,9 @@ if "%1" == "lib" goto lib
 if not "%1" == ""lib"" goto not_lib
 :lib
 
-if not "%GAMBUILD_VERBOSE%" == "yes" goto not_lib_verbose
-echo.@BUILD_LIB_ECHO_BAT@
-:not_lib_verbose
+set "_shell_command=@BUILD_LIB_ECHO_BAT@"
 
-@BUILD_LIB_ECHO_BAT@
+call :eval_shell_command
 
 goto end
 :not_lib
@@ -376,17 +601,18 @@ if "%1" == "exe" goto exe
 if not "%1" == ""exe"" goto not_exe
 :exe
 
-call :extract_cc_ld_options BUILD_EXE_META_INFO_FILE_PARAM BUILD_EXE_PKG_CONFIG_PARAM BUILD_EXE_PKG_CONFIG_PATH_PARAM
+call :prepare_params BUILD_EXE_META_INFO_FILE_PARAM BUILD_EXE_PKG_CONFIG_PARAM BUILD_EXE_PKG_CONFIG_PATH_PARAM BUILD_EXE_CC_OPTIONS_PARAM BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM BUILD_EXE_LD_OPTIONS_PARAM BUILD_EXE_INPUT_FILENAMES_PARAM BUILD_EXE_OUTPUT_FILENAME_PARAM
+if not "%_errorlevel%" == "0" goto :end
 
-set "BUILD_EXE_CC_OPTIONS_PARAM=%GAMBUILD_CC_OPTIONS%%BUILD_EXE_CC_OPTIONS_PARAM%"
-set "BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM=%GAMBUILD_LD_OPTIONS_PRELUDE%%BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM%"
-set "BUILD_EXE_LD_OPTIONS_PARAM=%GAMBUILD_LD_OPTIONS%%BUILD_EXE_LD_OPTIONS_PARAM%"
+set "BUILD_EXE_CC_OPTIONS_PARAM=!GAMBUILD_CC_OPTIONS!"
+set "BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM=!GAMBUILD_LD_OPTIONS_PRELUDE!"
+set "BUILD_EXE_LD_OPTIONS_PARAM=!GAMBUILD_LD_OPTIONS!"
+set "BUILD_EXE_INPUT_FILENAMES_PARAM=!GAMBUILD_INPUT_FILENAMES!"
+set "BUILD_EXE_OUTPUT_FILENAME_PARAM=!GAMBUILD_OUTPUT_FILENAME!"
 
-if not "%GAMBUILD_VERBOSE%" == "yes" goto not_exe_verbose
-echo.@BUILD_EXE_ECHO_BAT@
-:not_exe_verbose
+set "_shell_command=@BUILD_EXE_ECHO_BAT@"
 
-@BUILD_EXE_ECHO_BAT@
+call :eval_shell_command
 
 goto end
 :not_exe

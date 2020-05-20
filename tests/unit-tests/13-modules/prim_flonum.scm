@@ -1,5 +1,10 @@
 (include "#.scm")
 
+(define ##x1 0.5)
+(define ##x2 1.5)
+(define ##x3 1.0)
+(define ##x4 2.0)
+
 (check-same-behavior ("" "##" "~~lib/_prim-flonum#.scm")
 
 ;; Gambit
@@ -18,12 +23,12 @@
 (fl>=)(fl>= 1.)(fl>= 1. 2.)(fl>= -0. 0.)(fl>= 2. 1.)(fl>= 1. 2. 3.)(fl>= 1. 1. 1.)(fl>= 3. 2. 1.)
 
 (flabs -42.) (flabs 42.) (flabs -0.) (flabs -inf.0)
-(flacos .5)
-(flacosh 1.5)
-(flasin .5)
-(flasinh .5)
-(flatan .5) (flatan 1. 2.)
-(flatanh .5)
+(flacos ##x1)
+(flacosh ##x2)
+(flasin ##x1)
+(flasinh ##x1)
+(flatan ##x1) (flatan ##x3 ##x4)
+(flatanh ##x1)
 
 (flceiling -1.5)(flceiling -1.1)(flceiling -1.)(flceiling -.9)(flceiling -.5)
 (flceiling -0.)(flceiling 0.)

@@ -1,20 +1,18 @@
 #! /bin/sh
 
 # Script parameters are passed in the following environment variables:
-#   GAMBDOC_GAMBITDIR_BIN
-#   GAMBDOC_GAMBITDIR_DOC
-#   GAMBDOC_ARG1
-#   GAMBDOC_ARG2
-#   GAMBDOC_ARG3
-#   GAMBDOC_ARG4
+#   GAMBITDIR_DOC
+#   GAMBDOC_ARG1_PARAM
+#   GAMBDOC_ARG2_PARAM
+#   GAMBDOC_ARG3_PARAM
+#   GAMBDOC_ARG4_PARAM
 #   ...
 
-# echo GAMBDOC_GAMBITDIR_BIN = "${GAMBDOC_GAMBITDIR_BIN}"
-# echo GAMBDOC_GAMBITDIR_DOC = "${GAMBDOC_GAMBITDIR_DOC}"
-# echo GAMBDOC_ARG1 = "${GAMBDOC_ARG1}"
-# echo GAMBDOC_ARG2 = "${GAMBDOC_ARG2}"
-# echo GAMBDOC_ARG3 = "${GAMBDOC_ARG3}"
-# echo GAMBDOC_ARG4 = "${GAMBDOC_ARG4}"
+# echo GAMBITDIR_DOC = "${GAMBITDIR_DOC}"
+# echo GAMBDOC_ARG1_PARAM = "${GAMBDOC_ARG1_PARAM}"
+# echo GAMBDOC_ARG2_PARAM = "${GAMBDOC_ARG2_PARAM}"
+# echo GAMBDOC_ARG3_PARAM = "${GAMBDOC_ARG3_PARAM}"
+# echo GAMBDOC_ARG4_PARAM = "${GAMBDOC_ARG4_PARAM}"
 
 find_in_path() # exe-name, sets `$exe'
 {
@@ -35,7 +33,7 @@ find_browser() # sets `$exe'
     browser_list="lynx firefox mozilla netscape osascript chrome chromium chromium-browser"
   fi
 
-  browser_list="${GAMBDOC_ARG3} $browser_list"
+  browser_list="${GAMBDOC_ARG3_PARAM} $browser_list"
 
   for b in $browser_list; do
     if find_in_path $b; then
@@ -49,7 +47,7 @@ find_browser() # sets `$exe'
 operation_help() # sets `$exe'
 {
   if find_browser; then
-    url="file://${GAMBDOC_GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG4}"
+    url="file://${GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG4_PARAM}"
     case "$browser" in
       osascript ) $exe <<EOF ;;
 tell application "Safari"
@@ -65,9 +63,9 @@ EOF
   fi
 }
 
-if [ "${GAMBDOC_ARG1}" = "help" ]; then
+if [ "${GAMBDOC_ARG1_PARAM}" = "help" ]; then
   operation_help
 else
-  echo "*** WARNING -- unsupported operation: ${GAMBDOC_ARG1}"
+  echo "*** WARNING -- unsupported operation: ${GAMBDOC_ARG1_PARAM}"
   exit 1
 fi

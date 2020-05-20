@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -84,6 +84,7 @@
 #undef HAVE_SIGNAL_H
 #undef HAVE_NETDB_H
 #undef HAVE_GRP_H
+#undef HAVE_EMSCRIPTEN_H
 #undef HAVE_WINDOWS_H
 #undef HAVE_IO_H
 #undef HAVE_TCHAR_H
@@ -126,6 +127,8 @@
 #undef HAVE_STRINGS_H
 #undef HAVE_MEMORY_H
 #undef HAVE_SYS_SYSCTL_H
+#undef HAVE_SYS_SYSCALL_H
+#undef HAVE_LINUX_FS_H
 #undef HAVE_CRT_EXTERNS_H
 #undef HAVE_WS2TCPIP_H
 #undef HAVE_TARGETCONDITIONALS_H
@@ -182,11 +185,13 @@
 #undef HAVE_TCGETSETATTR
 
 #undef HAVE_SIGACTION
+#undef HAVE_SIGNAL
 #undef HAVE_SIGEMPTYSET
 #undef HAVE_SIGADDSET
 #undef HAVE_SIGPROCMASK
-#undef HAVE_SIGNAL
 
+/* Define one of these to support timekeeping (timeouts, current-time, etc): */
+#undef HAVE_EMSCRIPTEN_GET_NOW
 #undef HAVE_CLOCK_GETTIME
 #undef HAVE_MACH_ABSOLUTE_TIME
 #undef HAVE_GETCLOCK
@@ -206,12 +211,14 @@
 #undef HAVE_CLOCK
 #undef HAVE_DOSQUERYSYSINFO
 
+/* Define one of these to support preemptive Scheme thread scheduling: */
 #undef HAVE_SETITIMER
 #undef HAVE_DOS_SETVECT
 #undef HAVE_DOSSTARTTIMER
 #undef HAVE_VINSTALL
 #undef HAVE_CREATETHREAD
 
+/* Define one of these to support dynamically loadable object files: */
 #undef HAVE_SHL_LOAD
 #undef HAVE_LOADLIBRARY
 #undef HAVE_DOSLOADMODULE
@@ -232,6 +239,7 @@
 #undef HAVE_GETPROTOBYNUMBER
 #undef HAVE_GETNETBYNAME
 
+/* Define one of these to support nonblocking I/O: */
 #undef HAVE_SELECT
 #undef HAVE_POLL
 #undef HAVE_PPOLL
@@ -257,6 +265,8 @@
 #undef HAVE_REMOVE
 #undef HAVE_RENAME
 #undef HAVE_RENAMEAT
+#undef HAVE_RENAMEAT2
+#undef HAVE_RENAMEATX_NP
 
 #undef HAVE_PTHREAD_SETAFFINITY_NP
 

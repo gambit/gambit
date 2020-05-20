@@ -39,7 +39,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit, a portable implementation of Scheme.
 
-Copyright (C) 1994-2019 Marc Feeley.
+Copyright (C) 1994-2020 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -71,7 +71,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2019 Marc Feeley.
+Copyright @copyright{} 1994-2020 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -806,7 +806,7 @@ Synopsis:
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]} @r{[}-dg@r{]}
     @r{[}-debug@r{]} @r{[}-debug-location@r{]} @r{[}-debug-source@r{]}
     @r{[}-debug-environments@r{]} @r{[}-track-scheme@r{]}
-    @r{[}-o @r{@var{output}}@r{]} @r{[}-c@r{]} @r{[}-keep-c@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @r{@var{base}}@r{]}
+    @r{[}-o @r{@var{output}}@r{]} @r{[}-c@r{]} @r{[}-keep-temp@r{]} @r{[}-link@r{]} @r{[}-flat@r{]} @r{[}-l @r{@var{base}}@r{]}
     @r{[}-module-ref @r{@var{module-ref}}@r{]} @r{[}-linker-name @r{@var{linker-name}}@r{]}
     @r{[}@r{[}-@r{]} @r{[}-e @r{@var{expressions}}@r{]} @r{[}@r{@var{file}}@r{]}@r{]}@dots{}
 @end example
@@ -939,8 +939,8 @@ files (this is the default).
 Compile Scheme source files into an executable program.
 @item -obj
 Compile Scheme source files to object files.
-@item -keep-c
-Keep any intermediate @samp{.c} files that are generated.
+@item -keep-temp
+Keep any intermediate files that are generated.
 @item -c
 Compile Scheme source files to C without generating link file.
 @item -link
@@ -1121,7 +1121,7 @@ written.
 @opindex -exe
 @opindex -obj
 @opindex -link
-@opindex -keep-c
+@opindex -keep-temp
 @flindex @var{last}_.c
 If the @samp{-link} or @samp{-exe} options appear on the command line,
 the Gambit linker is invoked to generate the link file from the set of
@@ -1138,8 +1138,8 @@ files (@samp{.o} or @samp{.obj} extensions).  If neither the
 @samp{-link}, @samp{-c}, @samp{-exe}, @samp{-obj} options appear on
 the command line, the Scheme source files are compiled to dynamically
 loadable object files (@samp{.o@var{n}} extension).  The
-@samp{-keep-c} option will prevent the deletion of any intermediate
-@samp{.c} file that is generated.  Note that in this case the
+@samp{-keep-temp} option will prevent the deletion of any intermediate
+files that are generated.  Note that in this case the
 intermediate @samp{.c} file will be generated in the same directory as
 the Scheme source file even if the @samp{-o} option is used.
 
@@ -1683,7 +1683,7 @@ Gambit @value{VERSION}
 @end smallexample
 @end deffn
 
-@deffn procedure compile-file @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{expression:} @var{expression}@r{]} @r{[}@code{cc-options:} @var{cc-options}@r{]} @r{[}@code{ld-options-prelude:} @var{ld-options-prelude}@r{]} @r{[}@code{ld-options:} @var{ld-options}@r{]}
+@deffn procedure compile-file @var{file} @r{[}@code{options:} @var{options}@r{]} @r{[}@code{output:} @var{output}@r{]} @r{[}@code{base:} @var{base}@r{]} @r{[}@code{expression:} @var{expression}@r{]} @r{[}@code{cc-options:} @var{cc-options}@r{]} @r{[}@code{ld-options-prelude:} @var{ld-options-prelude}@r{]} @r{[}@code{ld-options:} @var{ld-options}@r{]}
 @pindex gsc
 @findex load
 @cindex object file
@@ -2641,6 +2641,64 @@ For example:
 > @b{(help time)} @r{@i{; not OK because time is a special form}}
 *** ERROR IN (console)@@5.7 -- Macro name can't be used as a variable: time
 > 
+@end smallexample
+
+@end deffn
+
+@deffn procedure apropos @r{[}@var{substring} @r{[}@var{port}@r{]}@r{]}
+
+The @code{apropos} procedure writes to the port @var{port} a report of
+all the global variables whose name contains @var{substring}, a string
+or symbol.  If @var{substring} is not specified the report contains
+all the global variables.  If it is not specified, @var{port} defaults
+to the interaction channel (i.e. the output will appear at the REPL).
+The @code{apropos} procedure returns the void object.
+
+The global variables are grouped into namespaces.  The empty
+namespace, if it is relevant, is last.  This reduces the likelihood it
+will scroll off the screen if there are several global variables in
+other namespaces, which are typically less interesting.
+
+Note that with the @code{apropos} procedure it is possible to reveal
+the existence of procedures of the runtime system and modules that are
+not intended to be called by user code.  These procedures often avoid
+type checking their arguments or must be called in a specific context,
+so calling them incorrectly may crash the system.  On the other hand
+it also allows discovering the existence of certain functionalities
+that may have gone unnoticed.
+
+For example:
+
+@smallexample
+> @b{(apropos "cons")}
+"##" namespace:
+  10^-constants, cons, cons*, cons*-aux, console-port,
+  constant-expression-value, constant-expression?,
+  cprc-quasi-cons, deconstruct-call,
+  define-type-construct-constant, degen-quasi-cons,
+  gen-quasi-cons, quasi-cons, stdio/console-repl-channel,
+  void-constant?, xcons
+empty namespace:
+  cons, cons*, console-port, xcons
+> @b{(import (srfi 69))}
+> @b{(apropos "table?")}
+"##" namespace:
+  gc-hash-table?, mutable?, readtable?, table?
+"srfi/69#" namespace:
+  hash-table?
+empty namespace:
+  readtable?, table?
+> @b{(apropos "srfi/69#")}
+"srfi/69#" namespace:
+  ||, alist->hash-table, hash, hash-by-identity,
+  hash-table->alist, hash-table-copy, hash-table-delete!,
+  hash-table-equivalence-function, hash-table-exists?,
+  hash-table-fold, hash-table-hash-function,
+  hash-table-keys, hash-table-merge!, hash-table-ref,
+  hash-table-ref/default, hash-table-set!, hash-table-size,
+  hash-table-update!, hash-table-update!/default,
+  hash-table-values, hash-table-walk, hash-table?,
+  make-hash-table, string-ci-hash, string-hash
 @end smallexample
 
 @end deffn
@@ -5422,6 +5480,59 @@ For example:
 
 @end deffn
 
+@deffn procedure bitwise-andc1 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``and'' of the bitwise complement
+of the exact integer @var{n1} and the exact integer @var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-andc1 11 26)  @r{@i{; ...00001011 ...00011010}}}
+16
+> @b{(bitwise-andc1 -12 26) @r{@i{; ...11110100 ...00011010}}}
+10
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-andc2 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``and'' of the exact integer
+@var{n1} and the bitwise complement of the exact integer @var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-andc2 11 26)  @r{@i{; ...00001011 ...00011010}}}
+1
+> @b{(bitwise-andc2 11 -27) @r{@i{; ...00001011 ...11100101}}}
+10
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-eqv @var{n}@dots{}
+
+This procedure returns the bitwise complement of the bitwise
+``exclusive-or'' of the exact integers @var{n}@dots{}.  The value -1
+is returned when there are no arguments.
+
+For example:
+
+@smallexample
+> @b{(bitwise-eqv 6 12)  @r{@i{; ...00000110 ...00001100}}}
+-11
+> @b{(bitwise-eqv 6 -4)  @r{@i{; ...00000110 ...11111100}}}
+5
+> @b{(bitwise-eqv -6 -4) @r{@i{; ...11111010 ...11111100}}}
+-7
+> @b{(bitwise-eqv)}
+-1
+@end smallexample
+
+@end deffn
+
 @deffn procedure bitwise-ior @var{n}@dots{}
 
 This procedure returns the bitwise ``inclusive-or'' of the exact
@@ -5443,6 +5554,89 @@ For example:
 
 @end deffn
 
+@deffn procedure bitwise-nand @var{n1} @var{n2}
+
+This procedure returns the bitwise complement of the bitwise ``and''
+of the exact integer @var{n1} and the exact integer @var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-nand 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-11
+> @b{(bitwise-nand 11 -27) @r{@i{; ...00001011 ...11100101}}}
+-2
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-nor @var{n1} @var{n2}
+
+This procedure returns the bitwise complement of the bitwise
+``inclusive-or'' of the exact integer @var{n1} and the exact integer
+@var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-nor 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-28
+> @b{(bitwise-nor 11 -27) @r{@i{; ...00001011 ...11100101}}}
+16
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-not @var{n}
+
+This procedure returns the bitwise complement of the exact integer
+@var{n}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-not 3)  @r{@i{; ...00000011}}}
+-4
+> @b{(bitwise-not -1) @r{@i{; ...11111111}}}
+0
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-orc1 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``inclusive-or'' of the bitwise
+complement of the exact integer @var{n1} and the exact integer
+@var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-orc1 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-2
+> @b{(bitwise-orc1 -12 26) @r{@i{; ...11110100 ...00011010}}}
+27
+@end smallexample
+
+@end deffn
+
+@deffn procedure bitwise-orc2 @var{n1} @var{n2}
+
+This procedure returns the bitwise ``inclusive-or'' of the exact
+integer @var{n1} and the bitwise complement of the exact integer
+@var{n2}.
+
+For example:
+
+@smallexample
+> @b{(bitwise-orc2 11 26)  @r{@i{; ...00001011 ...00011010}}}
+-17
+> @b{(bitwise-orc2 11 -27) @r{@i{; ...00001011 ...11100101}}}
+27
+@end smallexample
+
+@end deffn
+
 @deffn procedure bitwise-xor @var{n}@dots{}
 
 This procedure returns the bitwise ``exclusive-or'' of the exact
@@ -5459,22 +5653,6 @@ For example:
 > @b{(bitwise-xor -6 -4) @r{@i{; ...11111010 ...11111100}}}
 6
 > @b{(bitwise-xor)}
-0
-@end smallexample
-
-@end deffn
-
-@deffn procedure bitwise-not @var{n}
-
-This procedure returns the bitwise complement of the exact integer
-@var{n}.
-
-For example:
-
-@smallexample
-> @b{(bitwise-not 3)  @r{@i{; ...00000011}}}
--4
-> @b{(bitwise-not -1) @r{@i{; ...11111111}}}
 0
 @end smallexample
 
@@ -5695,6 +5873,12 @@ For example:
 @deffn procedure fxand @var{n1}@dots{}
 @end deffn
 
+@deffn procedure fxandc1 @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxandc2 @var{n1} @var{n2}
+@end deffn
+
 @deffn procedure fxarithmetic-shift @var{n1} @var{n2}
 @end deffn
 
@@ -5708,6 +5892,9 @@ For example:
 @end deffn
 
 @deffn procedure fxbit-set? @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxeqv @var{n1}@dots{}
 @end deffn
 
 @deffn procedure fxeven? @var{n}
@@ -5737,10 +5924,22 @@ For example:
 @deffn procedure fxnegative? @var{n}
 @end deffn
 
+@deffn procedure fxnand @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxnor @var{n1} @var{n2}
+@end deffn
+
 @deffn procedure fxnot @var{n}
 @end deffn
 
 @deffn procedure fxodd? @var{n}
+@end deffn
+
+@deffn procedure fxorc1 @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure fxorc2 @var{n1} @var{n2}
 @end deffn
 
 @deffn procedure fxpositive? @var{n}
@@ -9137,6 +9336,46 @@ For example:
 
 @end deffn
 
+@deffn procedure file-exists-exception? @var{obj}
+@deffnx procedure file-exists-exception-procedure @var{exc}
+@deffnx procedure file-exists-exception-arguments @var{exc}
+
+File-exists-exception objects are raised by procedures
+which access the filesystem (such as @code{open-output-file} and
+@code{create-directory}) when the path specified is an existing
+file on the filesystem.  The parameter @var{exc} must be a
+file-exists-exception object.
+
+The procedure @code{file-exists-exception?} returns
+@code{#t} when @var{obj} is a file-exists-exception
+object and @code{#f} otherwise.
+
+The procedure @code{file-exists-exception-procedure}
+returns the procedure that raised @var{exc}.
+
+The procedure @code{file-exists-exception-arguments}
+returns the list of arguments of the procedure that raised @var{exc}.
+
+For example:
+
+@smallexample
+> @b{(define (handler exc)
+    (if (file-exists-exception? exc)
+        (list (file-exists-exception-procedure exc)
+              (file-exists-exception-arguments exc))
+        'not-file-exists-exception))}
+> @b{(with-exception-catcher
+    handler
+    (lambda () (with-output-to-file '(path: "foo" create: #t) newline)))}
+> @b{(with-exception-catcher
+    handler
+    (lambda () (with-output-to-file '(path: "foo" create: #t) newline)))}
+(#<procedure #2 with-output-to-file>
+ ((path: "foo" create: #t) #<procedure #3 newline>))
+@end smallexample
+
+@end deffn
+
 @deffn procedure unbound-os-environment-variable-exception? @var{obj}
 @deffnx procedure unbound-os-environment-variable-exception-procedure @var{exc}
 @deffnx procedure unbound-os-environment-variable-exception-arguments @var{exc}
@@ -10525,13 +10764,17 @@ symbolic link to create.
 
 @end deffn
 
-@deffn procedure rename-file @var{source-path} @var{destination-path}
+@deffn procedure rename-file @var{source-path} @var{destination-path} @r{[}@var{replace?}@r{]}
 
 This procedure renames the file @var{source-path} to
 @var{destination-path}.  The argument @var{source-path} must be a
 string denoting the path of an existing file.  The argument
 @var{destination-path} must be a string denoting the new path of the
-file.
+file.  If @var{replace?} is absent or true, an existing
+@var{destination-path} will be replaced by @var{source-path}.
+Otherwise, the rename operation will fail if @var{destination-path}
+exists.  Not all filesystems support atomic renaming and existence
+testing.
 
 @end deffn
 
@@ -13547,9 +13790,9 @@ the example for the procedure @code{open-tcp-client}.
 
 The procedure @code{tcp-service-register!} sets up a socket to accept
 network connection requests from clients and creates a ``service''
-thread which processes the incoming connections.  The parameter
-@var{port-number-or-address-or-settings} has the same meaning as for
-the procedure @code{open-tcp-server}.
+thread which processes the incoming connections and returns this
+thread.  The parameter @var{port-number-or-address-or-settings} has
+the same meaning as for the procedure @code{open-tcp-server}.
 
 For each connection established the service thread creates a
 ``handler'' thread which executes a call to the procedure @var{thunk}
@@ -16404,6 +16647,7 @@ c-lambda-end
 #<<c-lambda-end
    char *s = (char *)malloc (2);
    if (s != NULL) @{ s[0] = ___arg1; s[1] = 0; @}
+   ___return(s);
    #define ___AT_END if (s != NULL) free (s);
 c-lambda-end
 ))
@@ -17045,7 +17289,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit system release @value{VERSION} is Copyright @copyright{}
-1994-2019 by Marc Feeley, all rights reserved.  The Gambit system
+1994-2020 by Marc Feeley, all rights reserved.  The Gambit system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two

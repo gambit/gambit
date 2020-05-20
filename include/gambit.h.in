@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -527,7 +527,7 @@
 #endif
 #endif
 
-#ifdef EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
 #define ___LITTLE_ENDIAN
 #endif
 
@@ -1613,7 +1613,10 @@
 #define ___HAVE_GOOD_ASINH
 #define ___HAVE_GOOD_ACOSH
 #define ___HAVE_GOOD_ATANH
+
+#if _MSC_VER >= 1900
 #define ___HAVE_GOOD_HYPOT
+#endif
 
 #endif
 
@@ -1644,7 +1647,10 @@
 #define ___HAVE_GOOD_TANH
 #define ___HAVE_GOOD_POW
 #define ___HAVE_GOOD_ATAN2
+
+#ifndef __MINGW32__
 #define ___HAVE_GOOD_HYPOT
+#endif
 
 #endif
 
@@ -2835,18 +2841,45 @@ ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 ___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
+#define ___BIGAANDC1(x,i,y,j) \
+___BIGATEMP= ~___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAANDC2(x,i,y,j) \
+___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ~___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAEQV(x,i,y,j) \
+___BIGATEMP= ~(___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) ^ ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB)); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
 #define ___BIGAIOR(x,i,y,j) \
 ___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
-#define ___BIGAXOR(x,i,y,j) \
-___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) ^ ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+#define ___BIGANAND(x,i,y,j) \
+___BIGATEMP= ~(___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) & ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB)); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGANOR(x,i,y,j) \
+___BIGATEMP= ~(___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB)); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
 #define ___BIGANOT(x,i) \
 ___BIGATEMP= ~___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB); \
 ___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
+#define ___BIGAORC1(x,i,y,j) \
+___BIGATEMP= ~___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAORC2(x,i,y,j) \
+___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) | ~___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
+
+#define ___BIGAXOR(x,i,y,j) \
+___BIGATEMP= ___BIGAFETCH(___BODY_AS(x,___tSUBTYPED),(i)>>___TB) ^ ___BIGAFETCH(___BODY_AS(y,___tSUBTYPED),(j)>>___TB); \
+___BIGASTORE(___BODY_AS(x,___tSUBTYPED),(i)>>___TB,(___BIGADIGIT)___BIGATEMP);
 
 
 #define ___BIGNEGATIVEP(x) \
@@ -3138,12 +3171,19 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___FIXREM(x,y)((___WORD)((x)%(y)))/****is this ok?*******/
 #define ___FIXMOD(x,y)((___temp=___FIXREM((___ps->temp1=x),(___ps->temp2=y)))==0?___FIX(0):((___ps->temp1<0)==(___ps->temp2<0)?___temp:___FIXADD(___temp,___ps->temp2)))
-#define ___FIXNOT(x)((___WORD)((x)^~___TMASK))
 #define ___FIXAND(x,y)((___WORD)((x)&(y)))
-#define ___FIX_M1 ___FIX(-1)
+#define ___FIXANDC1(x,y)((___WORD)(~(x)&(y)))
+#define ___FIXANDC2(x,y)((___WORD)((x)&~(y)))
+#define ___FIXEQV(x,y)((___WORD)(((x)^(y))^~___TMASK))
 #define ___FIXIOR(x,y)((___WORD)((x)|(y)))
+#define ___FIXNAND(x,y)((___WORD)(((x)&(y))^~___TMASK))
+#define ___FIXNOR(x,y)((___WORD)(((x)|(y))^~___TMASK))
+#define ___FIXNOT(x)((___WORD)((x)^~___TMASK))
+#define ___FIXORC1(x,y)((___WORD)(((x)^~___TMASK)|(y)))
+#define ___FIXORC2(x,y)((___WORD)((x)|((y)^~___TMASK)))
 #define ___FIXXOR(x,y)((___WORD)((x)^(y)))
 #define ___FIXIF(x,y,z)((___WORD)(((x)&(y))|(~(x)&(z))))
+#define ___FIX_M1 ___FIX(-1)
 
 #define ___FIXWRAPABS(x)((x)<0?___FIXWRAPNEG(x):(x))
 #define ___FIXABS(x)((x)<0?___FIXNEG(x):(x))
@@ -3304,9 +3344,10 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___PORT_RDEVICE_CONDVAR      46
 #define ___PORT_WDEVICE_CONDVAR      47
+#define ___PORT_EVENT_CONDVAR        48
 
-#define ___PORT_DEVICE_OTHER1        48
-#define ___PORT_DEVICE_OTHER2        49
+#define ___PORT_DEVICE_OTHER1        49
+#define ___PORT_DEVICE_OTHER2        50
 
 #define ___DENV_INPUT_PORT  5
 #define ___DENV_OUTPUT_PORT 6
@@ -3512,7 +3553,11 @@ else \
 #define ___F64ODDP(x)(___F64INTEGERP(x) && (x)!=2.0*___F64FLOOR((x)*0.5))
 #define ___F64EVENP(x)(___F64INTEGERP(x) && (x)==2.0*___F64FLOOR((x)*0.5))
 #define ___F64FINITEP(x)___EXT(___isfinite)(x)
+#ifdef ___USE_ISINF
+#define ___F64INFINITEP(x)___EXT(___isinf)(x)
+#else
 #define ___F64INFINITEP(x)((x)!=0.0 && (x)==2.0*(x))
+#endif
 #ifdef ___USE_ISNAN
 #define ___F64NANP(x)___EXT(___isnan)(x)
 #else
@@ -7548,7 +7593,7 @@ ___HIDDEN ___SCMOBJ id \
 void *___x;) \
 { ___DELETE_TYPE(name,___x); return ___FIX(___NO_ERR); }
 
-#define ___CFUN_CONV_ERROR if ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___LBL(0);___JUMPEXTPRM(___SET_NARGS(___NARGS),___ps->handler_cfun_conv_error;)}
+#define ___CFUN_CONV_ERROR if ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___LBL(0);___ps->temp4=___errhandler;___JUMPEXTPRM(___SET_NARGS(___NARGS),___ps->handler_cfun_conv_error;)}
 
 #define ___STOC3(f,s,c,i)___err=___EXT(f)(___PSP s,c,i)
 #define ___STOC4(f,s,c,t,i)___err=___EXT(f)(___PSP s,c,t,i)
@@ -7562,22 +7607,22 @@ void *___x;) \
 #define ___BEGIN_SFUN_BODY
 #define ___END_SFUN_BODY
 
-#define ___BEGIN_SFUN_VOID(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
+#define ___BEGIN_SFUN_VOID(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___err;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
 #define ___SFUN_CALL_VOID ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_VOID /* no result to set */
-#define ___SFUN_ERROR_VOID while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
+#define ___SFUN_ERROR_VOID while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___marker;___ps->temp4=___errhandler;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
 #define ___END_SFUN_VOID } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
-#define ___BEGIN_SFUN_SCMOBJ(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___result;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
+#define ___BEGIN_SFUN_SCMOBJ(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___result;___SCMOBJ ___err;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
 #define ___SFUN_CALL_SCMOBJ ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_SCMOBJ ___result = ___SFUN_RESULT;
-#define ___SFUN_ERROR_SCMOBJ while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
+#define ___SFUN_ERROR_SCMOBJ while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___marker;___ps->temp4=___errhandler;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
 #define ___END_SFUN_SCMOBJ } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
-#define ___BEGIN_SFUN(proc,decl)___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;decl;___SCMOBJ ___err;___SCMOBJ ___errmsg=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
+#define ___BEGIN_SFUN(proc,decl)___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;decl;___SCMOBJ ___err;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
 #define ___SFUN_CALL if ((___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker))==___FIX(___NO_ERR))
 #define ___SFUN_SET_RESULT /* done in conversion function */
-#define ___SFUN_ERROR while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errmsg;___ps->temp3=___marker;if ((___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker))==___FIX(___NO_ERR))
+#define ___SFUN_ERROR while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___marker;___ps->temp4=___errhandler;if ((___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker))==___FIX(___NO_ERR))
 #define ___END_SFUN } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
 #define ___BEGIN_SFUN_ARG(i,arg)___SCMOBJ arg;
@@ -7860,19 +7905,19 @@ void *___x;) \
 #define ___BEGIN_CFUN_BODY_CLEANUP ___W_ALL ___BEGIN_TRY
 #define ___END_CFUN_BODY_CLEANUP ___AT_END ___END_TRY ___R_ALL
 
-#define ___BEGIN_CFUN_VOID ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errmsg=___FAL;
+#define ___BEGIN_CFUN_VOID ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;
 #define ___CFUN_SET_RESULT_VOID ___CFUN_RESULT = ___VOID;
 #define ___CFUN_ERROR_VOID ___CFUN_CONV_ERROR
 #define ___CFUN_ERROR_CLEANUP_VOID ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
 #define ___END_CFUN_VOID } ___R_ALL
 
-#define ___BEGIN_CFUN_SCMOBJ ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___result;___SCMOBJ ___errmsg=___FAL;
+#define ___BEGIN_CFUN_SCMOBJ ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___result;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;
 #define ___CFUN_SET_RESULT_SCMOBJ ___CFUN_RESULT = ___result;
 #define ___CFUN_ERROR_SCMOBJ ___CFUN_CONV_ERROR
 #define ___CFUN_ERROR_CLEANUP_SCMOBJ ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
 #define ___END_CFUN_SCMOBJ } ___R_ALL
 
-#define ___BEGIN_CFUN(decl)___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errmsg=___FAL;decl;
+#define ___BEGIN_CFUN(decl)___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;decl;
 #define ___CFUN_SET_RESULT /* done in conversion function */
 #define ___CFUN_ERROR ___CFUN_CONV_ERROR
 #define ___CFUN_ERROR_CLEANUP ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
@@ -9676,6 +9721,9 @@ typedef struct ___global_state_struct
     ___BOOL (*___isfinite)
        ___P((double x),
             ());
+    ___BOOL (*___isinf)
+       ___P((double x),
+            ());
     ___BOOL (*___isnan)
        ___P((double x),
             ());
@@ -10741,12 +10789,50 @@ typedef struct ___global_state_struct
     void (*___set_standard_level)
        ___P((int level),
             ());
-    void (*___set_gambitdir)
-       ___P((___UCS_2STRING gambitdir),
-            ());
+    int (*___get_debug_settings) ___PVOID;
     int (*___set_debug_settings)
        ___P((int mask,
              int new_settings),
+            ());
+    int (*___get_file_settings) ___PVOID;
+    void (*___set_file_settings)
+       ___P((int settings),
+            ());
+    int (*___get_terminal_settings) ___PVOID;
+    void (*___set_terminal_settings)
+       ___P((int settings),
+            ());
+    int (*___get_stdio_settings) ___PVOID;
+    void (*___set_stdio_settings)
+       ___P((int settings),
+            ());
+    ___UCS_2STRING (*___get_gambitdir) ___PVOID;
+    void (*___set_gambitdir)
+       ___P((___UCS_2STRING gambitdir),
+            ());
+    ___UCS_2STRING* (*___get_gambitdir_map) ___PVOID;
+    void (*___set_gambitdir_map)
+       ___P((___UCS_2STRING *gambitdir_map),
+            ());
+    ___UCS_2STRING* (*___get_module_search_order) ___PVOID;
+    void (*___set_module_search_order)
+       ___P((___UCS_2STRING *module_search_order),
+            ());
+    ___UCS_2STRING* (*___get_module_whitelist) ___PVOID;
+    void (*___set_module_whitelist)
+       ___P((___UCS_2STRING *module_whitelist),
+            ());
+    int (*___get_module_install_mode) ___PVOID;
+    void (*___set_module_install_mode)
+       ___P((int module_install_mode),
+            ());
+    ___UCS_2STRING (*___get_repl_client_addr) ___PVOID;
+    void (*___set_repl_client_addr)
+       ___P((___UCS_2STRING repl_client_addr),
+            ());
+    ___UCS_2STRING (*___get_repl_server_addr) ___PVOID;
+    void (*___set_repl_server_addr)
+       ___P((___UCS_2STRING repl_server_addr),
             ());
     ___program_startup_info_struct *(*___get_program_startup_info) ___PVOID;
     ___SCMOBJ (*___call)
@@ -12018,6 +12104,9 @@ ___IMP_FUNC(double,___copysign)
 ___IMP_FUNC(___BOOL,___isfinite)
    ___P((double x),
         ());
+___IMP_FUNC(___BOOL,___isinf)
+   ___P((double x),
+        ());
 ___IMP_FUNC(___BOOL,___isnan)
    ___P((double x),
         ());
@@ -12152,13 +12241,52 @@ ___IMP_FUNC(int,___get_standard_level) ___PVOID;
 ___IMP_FUNC(void,___set_standard_level)
    ___P((int level),
         ());
-___IMP_FUNC(void,___set_gambitdir)
-   ___P((___UCS_2STRING gambitdir),
-        ());
+___IMP_FUNC(int,___get_debug_settings) ___PVOID;
 ___IMP_FUNC(int,___set_debug_settings)
    ___P((int mask,
          int new_settings),
         ());
+___IMP_FUNC(int,___get_file_settings) ___PVOID;
+___IMP_FUNC(void,___set_file_settings)
+   ___P((int settings),
+        ());
+___IMP_FUNC(int,___get_terminal_settings) ___PVOID;
+___IMP_FUNC(void,___set_terminal_settings)
+   ___P((int settings),
+        ());
+___IMP_FUNC(int,___get_stdio_settings) ___PVOID;
+___IMP_FUNC(void,___set_stdio_settings)
+   ___P((int settings),
+        ());
+___IMP_FUNC(___UCS_2STRING,___get_gambitdir) ___PVOID;
+___IMP_FUNC(void,___set_gambitdir)
+   ___P((___UCS_2STRING gambitdir),
+        ());
+___IMP_FUNC(___UCS_2STRING*,___get_gambitdir_map) ___PVOID;
+___IMP_FUNC(void,___set_gambitdir_map)
+   ___P((___UCS_2STRING *gambitdir_map),
+        ());
+___IMP_FUNC(___UCS_2STRING*,___get_module_search_order) ___PVOID;
+___IMP_FUNC(void,___set_module_search_order)
+   ___P((___UCS_2STRING *module_search_order),
+        ());
+___IMP_FUNC(___UCS_2STRING*,___get_module_whitelist) ___PVOID;
+___IMP_FUNC(void,___set_module_whitelist)
+   ___P((___UCS_2STRING *module_whitelist),
+        ());
+___IMP_FUNC(int,___get_module_install_mode) ___PVOID;
+___IMP_FUNC(void,___set_module_install_mode)
+   ___P((int module_install_mode),
+        ());
+___IMP_FUNC(___UCS_2STRING,___get_repl_client_addr) ___PVOID;
+___IMP_FUNC(void,___set_repl_client_addr)
+   ___P((___UCS_2STRING repl_client_addr),
+        ());
+___IMP_FUNC(___UCS_2STRING,___get_repl_server_addr) ___PVOID;
+___IMP_FUNC(void,___set_repl_server_addr)
+   ___P((___UCS_2STRING repl_server_addr),
+        ());
+
 ___IMP_FUNC(___program_startup_info_struct*,___get_program_startup_info)
    ___PVOID;
 ___IMP_FUNC(___SCMOBJ,___call)

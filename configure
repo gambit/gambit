@@ -11,7 +11,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 #
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -670,6 +670,8 @@ BUILD_LIB_ECHO
 BUILD_DYN_ECHO
 BUILD_OBJ_ECHO
 BUILD_OBJ_RTS_ECHO
+BUILD_FEATURE_C_COMP_BAT
+ALL_BUILD_FEATURES_BAT
 BAT_EXTENSION_BAT
 EXE_EXTENSION_BAT
 OBJ_EXTENSION_BAT
@@ -686,6 +688,8 @@ BUILD_LIB_BAT
 BUILD_DYN_BAT
 BUILD_OBJ_BAT
 BUILD_OBJ_RTS_BAT
+BUILD_FEATURE_C_COMP_SH
+ALL_BUILD_FEATURES_SH
 BAT_EXTENSION_SH
 EXE_EXTENSION_SH
 OBJ_EXTENSION_SH
@@ -702,6 +706,8 @@ BUILD_LIB_SH
 BUILD_DYN_SH
 BUILD_OBJ_SH
 BUILD_OBJ_RTS_SH
+BUILD_FEATURE_C_COMP_MF
+ALL_BUILD_FEATURES_MF
 BAT_EXTENSION_MF
 EXE_EXTENSION_MF
 OBJ_EXTENSION_MF
@@ -718,6 +724,8 @@ BUILD_LIB_MF
 BUILD_DYN_MF
 BUILD_OBJ_MF
 BUILD_OBJ_RTS_MF
+BUILD_FEATURE_C_COMP
+ALL_BUILD_FEATURES
 BAT_EXTENSION
 EXE_EXTENSION
 OBJ_EXTENSION
@@ -818,6 +826,7 @@ DASH_fomit_frame_pointer
 DASH_ftrapv
 DASH_fwrapv
 DASH_fno_strict_aliasing
+DASH_fno_trapping_math
 DASH_fno_math_errno
 DASH_Ofast
 DASH_O3
@@ -834,14 +843,13 @@ DASH_Wno_write_strings
 DASH_Wno_unused
 DASH_W
 DASH_Wall
+DASH_no_cpp_precomp
 DASH_mpc64
 DASH_mieee_with_inexact
 DASH_mieee
 DASH_fno_keep_inline_dllexport
 DASH_fno_move_loop_invariants
-DASH_fno_trapping_math
 DASH_fschedule_insns2
-DASH_no_cpp_precomp
 CONF_HAVE_CONDITION_VARIABLE
 CONF_THREAD_LOCAL_STORAGE_CLASS
 CONF_THREAD_SYSTEM
@@ -888,6 +896,7 @@ CFLAGS
 CC
 HAVE_SPECIAL_CXX
 HAVE_SPECIAL_CC
+BOOTSTRAP_CONFIGURE_FLAGS
 target_os
 target_vendor
 target_cpu
@@ -969,9 +978,11 @@ enable_path_encoding
 enable_module_search_order
 enable_module_whitelist
 enable_default_runtime_options
+enable_targets
 enable_shared
 enable_ansi_c
 enable_symlinks
+enable_gambitdir
 enable_interpreter_name
 enable_compiler_name
 enable_multiple_versions
@@ -1688,11 +1699,14 @@ Optional Features:
                           Module whitelist (default is github.com/gambit)
   --enable-default-runtime-options=...
                           Default runtime options (default is none)
+  --enable-targets=...    Targets to build in addition to C (default is none)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
   --enable-symlinks       use symbolic links for installed files not in the
                           central installation directory (default is YES)
+  --enable-gambitdir=DIR  Path to use for the Gambit central installation
+                          directory (default is to use --prefix)
   --enable-interpreter-name=INTERP
                           Name to use for Gambit interpreter (default is gsi)
   --enable-compiler-name=COMP
@@ -1844,7 +1858,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
-Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 _ACEOF
   exit
 fi
@@ -3065,10 +3079,16 @@ fi
 
 RTLIB_COND_EXPAND_FEATURES=""
 
-BUILD_TARGETS="C"
-
 userlibdir="~/.gambit_userlib"
 instlibdir="~~userlib"
+
+###############################################################################
+#
+# To accumulate flags to propagate to bootstrap configure script.
+
+BOOTSTRAP_CONFIGURE_FLAGS=""
+
+
 
 ###############################################################################
 #
@@ -4717,6 +4737,10 @@ else
 fi
 
 
+if test "$ENABLE_DEBUG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug"
+fi
+
 # Check if a debugging log file (gambit.log) should be generated.
 
 # Check whether --enable-debug-log was given.
@@ -4726,6 +4750,10 @@ else
   ENABLE_DEBUG_LOG=no
 fi
 
+
+if test "$ENABLE_DEBUG_LOG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-log"
+fi
 
 # Check if a C backtrace should be produced when a program crashes.
 
@@ -4738,6 +4766,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_C_BACKTRACE" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-c-backtrace"
 
 $as_echo "#define ___DEBUG_C_BACKTRACE /**/" >>confdefs.h
 
@@ -4755,6 +4784,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-ctrl-flow-history"
 
 $as_echo "#define ___DEBUG_CTRL_FLOW_HISTORY /**/" >>confdefs.h
 
@@ -4773,6 +4803,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-host-changes"
 
 $as_echo "#define ___DEBUG_HOST_CHANGES /**/" >>confdefs.h
 
@@ -4791,6 +4822,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_ALLOC_MEM" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-alloc-mem"
 
 $as_echo "#define ___DEBUG_ALLOC_MEM /**/" >>confdefs.h
 
@@ -4809,6 +4841,7 @@ fi
 
 
 if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-garbage-collect"
 
 $as_echo "#define ___DEBUG_GARBAGE_COLLECT /**/" >>confdefs.h
 
@@ -5147,6 +5180,30 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
+
+###############################################################################
+#
+# Determine targets to build.
+
+# Check whether --enable-targets was given.
+if test "${enable_targets+set}" = set; then :
+  enableval=$enable_targets; ENABLE_TARGETS=$enableval
+else
+  ENABLE_TARGETS=
+fi
+
+
+BUILD_TARGETS="C"
+
+if test "$ENABLE_TARGETS" != ""; then
+  for t in `echo "$ENABLE_TARGETS" | sed -e 's/,/ /g'`; do
+    if test "$t" != "C"; then
+      BUILD_TARGETS="$BUILD_TARGETS $t"
+    fi
+  done
+fi
+
+echo BUILD_TARGETS="$BUILD_TARGETS"
 
 ###############################################################################
 #
@@ -5550,6 +5607,18 @@ if test "${enable_symlinks+set}" = set; then :
   enableval=$enable_symlinks; ENABLE_SYMLINKS=$enableval
 else
   ENABLE_SYMLINKS=no
+fi
+
+
+###############################################################################
+#
+# Determine the path of the Gambit central installation directory.
+
+# Check whether --enable-gambitdir was given.
+if test "${enable_gambitdir+set}" = set; then :
+  enableval=$enable_gambitdir; ENABLE_GAMBITDIR=$enableval
+else
+  ENABLE_GAMBITDIR=
 fi
 
 
@@ -6244,6 +6313,26 @@ $as_echo "$ac_cv_OS_WIN32" >&6; }
 OS_WIN32="$ac_cv_OS_WIN32"
 
 
+
+ALL_BUILD_FEATURES="unix windows gcc clang visualc cc"
+
+if test "$C_COMP_CLANG" = yes; then
+  BUILD_FEATURE_C_COMP="clang"
+else
+  if test "$C_COMP_GNUC" = yes; then
+    if test "$C_COMP_LLVM" = yes; then
+      BUILD_FEATURE_C_COMP="cc"
+    else
+      BUILD_FEATURE_C_COMP="gcc"
+    fi
+  else
+    if test "$C_COMP_VISUALC" = yes; then
+      BUILD_FEATURE_C_COMP="visualc"
+    else
+      BUILD_FEATURE_C_COMP="cc"
+    fi
+  fi
+fi
 
 ###############################################################################
 #
@@ -7323,6 +7412,30 @@ fi
 
 done
 
+  for ac_header in sys/syscall.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/syscall.h" "ac_cv_header_sys_syscall_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_syscall_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SYS_SYSCALL_H 1
+_ACEOF
+
+fi
+
+done
+
+  for ac_header in linux/fs.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "linux/fs.h" "ac_cv_header_linux_fs_h" "$ac_includes_default"
+if test "x$ac_cv_header_linux_fs_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LINUX_FS_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in ws2tcpip.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "ws2tcpip.h" "ac_cv_header_ws2tcpip_h" "$ac_includes_default"
@@ -7777,7 +7890,7 @@ $as_echo "#define socklen_t int" >>confdefs.h
 
   if test "$C_COMP_VISUALC" = yes; then
 
-    PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+    PATH_SEP="\\\\\\\\\\\\\\\\"
 
     LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
 
@@ -7796,7 +7909,7 @@ $as_echo "#define socklen_t int" >>confdefs.h
 
        mingw*) # add Windows libraries needed by MinGW
 
-               PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+               PATH_SEP="\\\\\\\\\\\\\\\\"
 
                LIBS="$LIBS -lws2_32"
 
@@ -8698,6 +8811,28 @@ do :
 if test "x$ac_cv_func_renameat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RENAMEAT 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in renameat2
+do :
+  ac_fn_cxx_check_func "$LINENO" "renameat2" "ac_cv_func_renameat2"
+if test "x$ac_cv_func_renameat2" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_RENAMEAT2 1
+_ACEOF
+
+fi
+done
+
+  for ac_func in renameatx_np
+do :
+  ac_fn_cxx_check_func "$LINENO" "renameatx_np" "ac_cv_func_renameatx_np"
+if test "x$ac_cv_func_renameatx_np" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_RENAMEATX_NP 1
 _ACEOF
 
 fi
@@ -9719,9 +9854,15 @@ fi
 if test "$ENABLE_OPENSSL" = yes; then
 
   case "$target_os" in
-    darwin*) # OS X ships a very old version and considers OpenSSL deprecated
-             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
-             LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+    darwin*) # macOS ships an old version of the OpenSSL library, so it should
+             # be installed with "brew install openssl"
+             OPENSSL_DIR="/usr/local/opt/openssl@1.1"
+             if test "$ENABLE_OPENSSL_STATIC_LINK" = yes; then
+               LIBS="$LIBS $OPENSSL_DIR/lib/libssl.a $OPENSSL_DIR/lib/libcrypto.a"
+             else
+               LIBS="$LIBS -L$OPENSSL_DIR/lib -lssl -lcrypto"
+             fi
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"$OPENSSL_DIR/include\""
              ;;
     mingw*) # Search in typical locations
              CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
@@ -9742,34 +9883,47 @@ fi
 # For details see the messages printed at the end of the configure script.
 
 if test "$C_COMP_GNUC" = yes; then
+
   if ac_fn_cxx_compute_int "$LINENO" "__GNUC__*100000+__GNUC_MINOR__*1000+__GNUC_PATCHLEVEL__" "C_COMP_GNUC_VERSION"        ""; then :
 
 fi
 
+
 fi
 
 if test "$C_COMP_CLANG" = yes; then
+
   if ac_fn_cxx_compute_int "$LINENO" "__clang_major__*100000+__clang_minor__*1000+__clang_patchlevel__" "C_COMP_CLANG_VERSION"        ""; then :
 
 fi
 
-fi
 
-if test "$C_COMP_LLVM" = yes -a "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -lt 405000; then
-  LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG=yes
-fi
+  if test "$C_COMP_CLANG_VERSION" -ge 1100000; then
+    OMIT_FRAME_POINTER_POSSIBLE_BUG=yes
+  fi
 
-if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_GNUC_VERSION" -lt 404000 -a "$ENABLE_SINGLE_HOST" = yes; then
-  GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
-fi
+else
+  if test "$C_COMP_GNUC" = yes; then
 
-case "$target_os" in
-  darwin*) # strangely this bug only appears on Mac OS
-    if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
-      GNU_GCC_IPA_RA_POSSIBLE_BUG=yes
+    if test "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_GNUC_VERSION" -lt 404000 -a "$ENABLE_SINGLE_HOST" = yes; then
+      GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
     fi
-    ;;
-esac
+
+    if test "$C_COMP_GNUC_VERSION" -lt 405000 -a "$C_COMP_LLVM" = yes; then
+      LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG=yes
+    fi
+
+    case "$target_os" in
+      darwin*) # strangely this bug only appears on Mac OS
+        if test "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
+          GNU_GCC_IPA_RA_POSSIBLE_BUG=yes
+        fi
+        ;;
+    esac
+
+  fi
+fi
+
 
 ###############################################################################
 #
@@ -9784,9 +9938,7 @@ if test "$C_COMP_GNUC" = yes; then
   if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
     # clang does not support these options:
-    DASH_no_cpp_precomp=""
     DASH_fschedule_insns2=""
-    DASH_fno_trapping_math=""
     DASH_fno_move_loop_invariants=""
     DASH_fno_keep_inline_dllexport=""
     #DASH_fpermissive=""
@@ -9796,51 +9948,6 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_fno_ipa_ra=""
 
   else
-
-    # preprocessor options:
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -no-cpp-precomp" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -no-cpp-precomp... " >&6; }
-if ${ac_cv_DASH_no_cpp_precomp+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-no-cpp-precomp"
-CXXFLAGS="-no-cpp-precomp"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_no_cpp_precomp=" -no-cpp-precomp"
-else
-  ac_cv_DASH_no_cpp_precomp=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_no_cpp_precomp" >&5
-$as_echo "$ac_cv_DASH_no_cpp_precomp" >&6; }
-DASH_no_cpp_precomp="$ac_cv_DASH_no_cpp_precomp"
-
-
 
     # optimization options:
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fschedule-insns2" >&5
@@ -9884,49 +9991,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fschedule_insns2" >&5
 $as_echo "$ac_cv_DASH_fschedule_insns2" >&6; }
 DASH_fschedule_insns2="$ac_cv_DASH_fschedule_insns2"
-
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-trapping-math" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -fno-trapping-math... " >&6; }
-if ${ac_cv_DASH_fno_trapping_math+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-fno-trapping-math"
-CXXFLAGS="-fno-trapping-math"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_fno_trapping_math=" -fno-trapping-math"
-else
-  ac_cv_DASH_fno_trapping_math=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_trapping_math" >&5
-$as_echo "$ac_cv_DASH_fno_trapping_math" >&6; }
-DASH_fno_trapping_math="$ac_cv_DASH_fno_trapping_math"
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-move-loop-invariants" >&5
@@ -10148,6 +10212,51 @@ DASH_mpc64="$ac_cv_DASH_mpc64"
 
 
   fi
+
+  # preprocessor options:
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -no-cpp-precomp" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -no-cpp-precomp... " >&6; }
+if ${ac_cv_DASH_no_cpp_precomp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-no-cpp-precomp"
+CXXFLAGS="-no-cpp-precomp"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_no_cpp_precomp=" -no-cpp-precomp"
+else
+  ac_cv_DASH_no_cpp_precomp=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_no_cpp_precomp" >&5
+$as_echo "$ac_cv_DASH_no_cpp_precomp" >&6; }
+DASH_no_cpp_precomp="$ac_cv_DASH_no_cpp_precomp"
+
+
 
   # debugging options:
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -Wall" >&5
@@ -10840,6 +10949,49 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_math_errno" >&5
 $as_echo "$ac_cv_DASH_fno_math_errno" >&6; }
 DASH_fno_math_errno="$ac_cv_DASH_fno_math_errno"
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-trapping-math" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fno-trapping-math... " >&6; }
+if ${ac_cv_DASH_fno_trapping_math+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fno-trapping-math"
+CXXFLAGS="-fno-trapping-math"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fno_trapping_math=" -fno-trapping-math"
+else
+  ac_cv_DASH_fno_trapping_math=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_trapping_math" >&5
+$as_echo "$ac_cv_DASH_fno_trapping_math" >&6; }
+DASH_fno_trapping_math="$ac_cv_DASH_fno_trapping_math"
 
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-strict-aliasing" >&5
@@ -11796,17 +11948,19 @@ DASH_shared="$ac_cv_DASH_shared"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
 
-  case "$target_os" in
+  if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
+    case "$target_os" in
 
-     mingw*) # MinGW's setjmp seems to need the frame pointer
-             ;;
+       mingw*) # MinGW's setjmp seems to need the frame pointer
+               ;;
 
-          *) # other systems are fine as far as I can tell
-             if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
-               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fomit_frame_pointer"
-             fi
-             ;;
-  esac
+            *) # other systems are fine as far as I can tell
+               if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
+                 FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fomit_frame_pointer"
+               fi
+               ;;
+    esac
+  fi
 
   if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
@@ -14484,14 +14638,11 @@ HG="hg"
 exe="$EXEEXT"
 obj=".$OBJEXT"
 
-case "$target_os" in
-
-   mingw*) bat=".bat"
-           ;;
-
-        *) bat=""
-           ;;
-esac
+if test "$exe" = ".exe"; then
+  bat=".bat"
+else
+  bat=""
+fi
 
 LIB_VERSION_SUFFIX=""
 LIB_MAJOR_VERSION_SUFFIX=""
@@ -14558,7 +14709,7 @@ else
 
     LIB_PREFIX="lib"
     LIB_EXTENSION=".lib"
-    MAKE_LIBRARY='lib -out:$(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS)'
+    MAKE_LIBRARY='lib.exe -out:$(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB=':'
     LINK_FOR_INSTALL=':'
@@ -14755,39 +14906,46 @@ if test "$datadir" = "\${datarootdir}"; then
   datadir="\${prefix}/share"
 fi
 
-GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+if test "$ENABLE_GAMBITDIR" != ""; then
+
+  GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$ENABLE_GAMBITDIR\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+else
+
+  GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+  if test "$ENABLE_SYMLINKS" != yes; then
+
+    if test "$bindir" != "\${prefix}/bin"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$includedir" != "\${prefix}/include"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$libdir" != "\${prefix}/lib"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$docdir" != "\${prefix}/doc"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$infodir" != "\${prefix}/info"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$datadir" != "\${prefix}/share"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+  fi
+fi
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_USERLIB=\"\\\"`echo \"$userlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INSTLIB=\"\\\"`echo \"$instlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-
-if test "$ENABLE_SYMLINKS" != yes; then
-
-  if test "$bindir" != "\${prefix}/bin"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$includedir" != "\${prefix}/include"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$libdir" != "\${prefix}/lib"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$docdir" != "\${prefix}/doc"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$infodir" != "\${prefix}/info"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$datadir" != "\${prefix}/share"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-fi
 
 emacsdir="\${datadir}/emacs/site-lisp"
 
@@ -14850,6 +15008,8 @@ LIB_EXTENSION_MF=`echo "$LIB_EXTENSION" | $ESC_MF`
 OBJ_EXTENSION_MF=`echo "$OBJ_EXTENSION" | $ESC_MF`
 EXE_EXTENSION_MF=`echo "$EXE_EXTENSION" | $ESC_MF`
 BAT_EXTENSION_MF=`echo "$BAT_EXTENSION" | $ESC_MF`
+ALL_BUILD_FEATURES_MF=`echo "$ALL_BUILD_FEATURES" | $ESC_MF`
+BUILD_FEATURE_C_COMP_MF=`echo "$BUILD_FEATURE_C_COMP" | $ESC_MF`
 
 C_COMPILER_SH=`echo "$C_COMPILER" | $ESC_SH`
 C_PREPROC_SH=`echo "$C_PREPROC" | $ESC_SH`
@@ -14885,6 +15045,8 @@ LIB_EXTENSION_SH=`echo "$LIB_EXTENSION" | $ESC_SH`
 OBJ_EXTENSION_SH=`echo "$OBJ_EXTENSION" | $ESC_SH`
 EXE_EXTENSION_SH=`echo "$EXE_EXTENSION" | $ESC_SH`
 BAT_EXTENSION_SH=`echo "$BAT_EXTENSION" | $ESC_SH`
+ALL_BUILD_FEATURES_SH=`echo "$ALL_BUILD_FEATURES" | $ESC_SH`
+BUILD_FEATURE_C_COMP_SH=`echo "$BUILD_FEATURE_C_COMP" | $ESC_SH`
 
 C_COMPILER_BAT=`echo "$C_COMPILER" | $ESC_BAT`
 C_PREPROC_BAT=`echo "$C_PREPROC" | $ESC_BAT`
@@ -14920,6 +15082,8 @@ LIB_EXTENSION_BAT=`echo "$LIB_EXTENSION" | $ESC_BAT`
 OBJ_EXTENSION_BAT=`echo "$OBJ_EXTENSION" | $ESC_BAT`
 EXE_EXTENSION_BAT=`echo "$EXE_EXTENSION" | $ESC_BAT`
 BAT_EXTENSION_BAT=`echo "$BAT_EXTENSION" | $ESC_BAT`
+ALL_BUILD_FEATURES_BAT=`echo "$ALL_BUILD_FEATURES" | $ESC_BAT`
+BUILD_FEATURE_C_COMP_BAT=`echo "$BUILD_FEATURE_C_COMP" | $ESC_BAT`
 
 BUILD_OBJ_RTS_ECHO=`echo "$BUILD_OBJ_RTS" | $ESC_ECHO`
 BUILD_OBJ_ECHO=`echo "$BUILD_OBJ" | $ESC_ECHO`
@@ -14945,6 +15109,14 @@ INSTALL='$(rootfromhere)/install-sh -c'
 INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
 INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
+
+
+
+
+
+
+
+
 
 
 
@@ -15100,7 +15272,7 @@ $as_echo "no" >&6; }
 fi
 
 
-ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/module-common.mk $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambuild-C.unix bin/gambuild-C.bat.windows bin/gambuild-js.unix bin/gambuild-js.bat.windows bin/gambuild-python.unix bin/gambuild-python.bat.windows bin/gambuild-ruby.unix bin/gambuild-ruby.bat.windows bin/gambuild-php.unix bin/gambuild-php.bat.windows bin/gambuild-java.unix bin/gambuild-java.bat.windows bin/gambuild-x86.unix bin/gambuild-x86.bat.windows bin/gambuild-x86-64.unix bin/gambuild-x86-64.bat.windows bin/gambuild-arm.unix bin/gambuild-arm.bat.windows bin/gambuild-riscv-32.unix bin/gambuild-riscv-32.bat.windows bin/gambuild-riscv-64.unix bin/gambuild-riscv-64.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
+ac_config_files="$ac_config_files makefile include/makefile include/gambit.h lib/makefile lib/module-common.mk $RTLIBMAKEFILES gsi/makefile gsc/makefile bin/makefile bin/gambvcs.unix bin/gambvcs.bat.windows bin/gambuild-C.unix bin/gambuild-C.bat.windows bin/gambuild-js.unix bin/gambuild-js.bat.windows bin/gambuild-python.unix bin/gambuild-python.bat.windows bin/gambuild-ruby.unix bin/gambuild-ruby.bat.windows bin/gambuild-php.unix bin/gambuild-php.bat.windows bin/gambuild-java.unix bin/gambuild-java.bat.windows bin/gambuild-x86.unix bin/gambuild-x86.bat.windows bin/gambuild-x86-64.unix bin/gambuild-x86-64.bat.windows bin/gambuild-arm.unix bin/gambuild-arm.bat.windows bin/gambuild-riscv-32.unix bin/gambuild-riscv-32.bat.windows bin/gambuild-riscv-64.unix bin/gambuild-riscv-64.bat.windows bin/gambdoc.unix bin/gambdoc.bat.windows misc/makefile doc/makefile tests/makefile examples/makefile examples/distr-comp/makefile examples/pi/makefile examples/ring/makefile examples/web-repl/makefile examples/web-server/makefile examples/tcltk/makefile examples/Xlib-simple/makefile examples/pthread/makefile examples/misc/makefile bench/makefile contrib/makefile contrib/GambitREPL/makefile contrib/xactlog/makefile prebuilt/makefile prebuilt/macosx/makefile prebuilt/macosx/build-phase2 prebuilt/windows/makefile prebuilt/windows/build-phase2 githooks/makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -15801,6 +15973,8 @@ do
     "gsi/makefile") CONFIG_FILES="$CONFIG_FILES gsi/makefile" ;;
     "gsc/makefile") CONFIG_FILES="$CONFIG_FILES gsc/makefile" ;;
     "bin/makefile") CONFIG_FILES="$CONFIG_FILES bin/makefile" ;;
+    "bin/gambvcs.unix") CONFIG_FILES="$CONFIG_FILES bin/gambvcs.unix" ;;
+    "bin/gambvcs.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambvcs.bat.windows" ;;
     "bin/gambuild-C.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-C.unix" ;;
     "bin/gambuild-C.bat.windows") CONFIG_FILES="$CONFIG_FILES bin/gambuild-C.bat.windows" ;;
     "bin/gambuild-js.unix") CONFIG_FILES="$CONFIG_FILES bin/gambuild-js.unix" ;;

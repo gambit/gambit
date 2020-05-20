@@ -5,8 +5,8 @@
       `'()
       `(list ,@forms)))
 
-(define-macro (^var-declaration type name #!optional (init #f))
-  `(univ-emit-var-declaration ctx ,type ,name ,init))
+(define-macro (^var-declaration type name #!optional (init #f) (global? #f))
+  `(univ-emit-var-declaration ctx ,type ,name ,init ,global?))
 
 (define-macro (^expr-statement expr)
   `(univ-emit-expr-statement ctx ,expr))
@@ -379,6 +379,9 @@
 (define-macro (^setglo name val)
   `(univ-emit-setglo ctx ,name ,val))
 
+(define-macro (^glo-var? sym)
+  `(univ-emit-glo-var? ctx ,sym))
+
 (define-macro (^glo-var-ref sym)
   `(univ-emit-glo-var-ref ctx ,sym))
 
@@ -690,6 +693,9 @@
 
 (define-macro (^float-atanh val)
   `(univ-emit-float-atanh ctx ,val))
+
+(define-macro (^float-hypot val1 val2)
+  `(univ-emit-float-hypot ctx ,val1 ,val2))
 
 (define-macro (^float-expt val1 val2)
   `(univ-emit-float-expt ctx ,val1 ,val2))

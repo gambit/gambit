@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -143,6 +143,18 @@
 #ifdef USE_openat
 #ifdef HAVE_RENAMEAT
 #define USE_renameat
+#ifdef HAVE_RENAMEAT2
+#define USE_renameat2
+#ifdef HAVE_SYS_SYSCALL_H
+#ifdef HAVE_LINUX_FS_H
+#define USE_renameat2_syscall
+#endif
+#endif
+#else
+#ifdef HAVE_RENAMEATX_NP
+#define USE_renameatx_np
+#endif
+#endif
 #endif
 #endif
 #endif
@@ -377,6 +389,7 @@
 #define USE_GetFileAttributesEx
 #define USE_GetLastError
 #define USE_MoveFile
+#define USE_MoveFileEx
 #define USE_RemoveDirectory
 #define USE_SetCurrentDirectory
 #define USE_SetEnvironmentVariable
@@ -463,6 +476,9 @@
 
 /* Determine which function for getting real time is most precise.  */
 
+#ifdef HAVE_EMSCRIPTEN_GET_NOW
+#define USE_emscripten_get_now
+#else
 #ifdef HAVE_CLOCK_GETTIME
 #define USE_clock_gettime_realtime
 #else
@@ -480,6 +496,7 @@
 #else
 #ifdef HAVE_TIME
 #define USE_time
+#endif
 #endif
 #endif
 #endif
@@ -995,6 +1012,11 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_times_h
 #endif
 
+#ifdef USE_emscripten_get_now
+#undef INCLUDE_emscripten_h
+#define INCLUDE_emscripten_h
+#endif
+
 #ifdef USE_clock_gettime_realtime
 #undef INCLUDE_time_h
 #define INCLUDE_time_h
@@ -1323,6 +1345,13 @@ ___END_C_LINKAGE
 #define INCLUDE_fcntl_h
 #endif
 
+#ifdef USE_renameat2_syscall
+#undef INCLUDE_sys_syscall_h
+#define INCLUDE_sys_syscall_h
+#undef INCLUDE_linux_fs_h
+#define INCLUDE_linux_fs_h
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -1447,6 +1476,18 @@ ___END_C_LINKAGE
 #endif
 #endif
 
+#ifdef INCLUDE_sys_syscall_h
+#ifdef HAVE_SYS_SYSCALL_H
+#include <sys/syscall.h>
+#endif
+#endif
+
+#ifdef INCLUDE_linux_fs_h
+#ifdef HAVE_LINUX_FS_H
+#include <linux/fs.h>
+#endif
+#endif
+
 #ifdef INCLUDE_syslog_h
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
@@ -1508,6 +1549,12 @@ extern int h_errno;
 #ifdef INCLUDE_grp_h
 #ifdef HAVE_GRP_H
 #include <grp.h>
+#endif
+#endif
+
+#ifdef INCLUDE_emscripten_h
+#ifdef HAVE_EMSCRIPTEN_H
+#include "emscripten.h"
 #endif
 #endif
 

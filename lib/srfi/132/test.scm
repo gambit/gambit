@@ -3,7 +3,7 @@
 ;;; File: "test.scm"
 
 ;;; Copyright (c) 2018-2019 by Antoine Doucet, All Rights Reserved.
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -18,392 +18,442 @@
 
 ;;; r7rs-vector-copy
 
-(let ((vec '#(0 1 2 3 4)))
-  (check-equal? (r7rs-vector-copy vec 0 3) '#(0 1 2))
-  (check-equal? vec '#(0 1 2 3 4)))
+(let ((vec (vector 0 1 2 3 4)))
+  (test-equal '#(1 2) (r7rs-vector-copy vec 1 3))
+  (test-equal '#(0 1 2 3 4) vec))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (r7rs-vector-copy)))
+ (r7rs-vector-copy))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (r7rs-vector-copy '#(0 1) 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (r7rs-vector-copy vec 0 0 0)))
 
 ;;; r7rs-vector-copy!
-(let ((vec1 '#(1 2 3 4))
-      (vec2 '#(0 0 0 0)))
+
+(let ((vec1 (vector 1 2 3 4))
+      (vec2 (vector 0 0 0 0)))
   (r7rs-vector-copy! vec2 0 vec1)
-  (check-equal? vec1 '#(1 2 3 4)))
+  (test-equal '#(1 2 3 4) vec1)
+  (test-equal '#(1 2 3 4) vec2))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (r7rs-vector-copy! '#(0 1) 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (r7rs-vector-copy! vec 0)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (r7rs-vector-copy! '#(0 1) 0 '#(0 1) 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (r7rs-vector-copy! vec 0 vec 0 0 0)))
 
 ;;; r7rs-vector-fill!
 
-(let ((vecfrom-r7rs-vector-fill! '#(1 2 3 4)))
-  (r7rs-vector-fill! vecfrom-r7rs-vector-fill! 0 0 2)
-  (check-equal? vecfrom-r7rs-vector-fill! '#(0 0 3 4)))
+(let ((vec (vector 1 2 3 4)))
+  (r7rs-vector-fill! vec 0 0 2)
+  (test-equal '#(0 0 3 4) vec))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (r7rs-vector-fill! '#(0 1))))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (r7rs-vector-fill! vec)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (r7rs-vector-fill! '#(0 1) 0 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (r7rs-vector-fill! vec 0 0 0 0)))
 
 ;;; list-sorted?
 
-(check-true (list-sorted? < '(0 1 2)))
-(check-false (list-sorted? < '(2 1 0)))
-(check-true (list-sorted? > '(2 1 0)))
+(test-assert (list-sorted? < '(0 1 2)))
+(test-assert (not (list-sorted? < '(2 1 0))))
+(test-assert (list-sorted? > '(2 1 0)))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-sorted? <)))
+ (list-sorted? <))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-sorted? < '(0 1) 0)))
+ (list-sorted? < '(0 1) 0))
 
 ;;; vector-sorted?
 
-(check-true (vector-sorted? < '#(0 1 2)))
-(check-false (vector-sorted? < '#(2 1 0)))
-(check-true (vector-sorted? > '#(2 1 0)))
+(test-assert (vector-sorted? < '#(0 1 2)))
+(test-assert (not (vector-sorted? < '#(2 1 0))))
+(test-assert (vector-sorted? > '#(2 1 0)))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-sorted? <)))
+ (vector-sorted? <))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-sorted? < '#(0 1) 0 0 0)))
+ (vector-sorted? < '#(0 1) 0 0 0))
 
 
 ;;; list-sort
 
 (let ((lst '(3 2 1)))
-  (check-equal? (list-sort < lst) '(1 2 3))
-  (check-equal? lst '(3 2 1)))
+  (test-equal '(1 2 3) (list-sort < lst))
+  (test-equal '(3 2 1) lst))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-sort <)))
+ (list-sort <))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-sort < '(0 1) 0)))
+ (list-sort < '(0 1) 0))
 
 
 ;;; list-stable-sort
 
-(let ((lst '((3 . 0) (1 . 0) (1 . 1) (2 . 0) ))
-      (gt (lambda (a b)
-            (if (< (car a) (car b))
-                #t
-                #f))))
-  (check-equal? (list-stable-sort gt lst)
-                '((1 . 0) (1 . 1) (2 . 0) (3 . 0)))
-  (check-equal? lst '((3 . 0) (1 . 0) (1 . 1) (2 . 0))))
+(let ((lst (list '(3 . 0) '(1 . 0) '(1 . 1) '(2 . 0)))
+      (gt (lambda (a b) (< (car a) (car b)))))
+  (test-equal '((1 . 0) (1 . 1) (2 . 0) (3 . 0))
+              (list-stable-sort gt lst))
+  (test-equal '((3 . 0) (1 . 0) (1 . 1) (2 . 0)) lst))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-stable-sort <)))
+ (list-stable-sort <))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-stable-sort < '(0 1) 0)))
+(let ((lst (list 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-stable-sort < lst 0)))
 
 
 ;;; list-sort!
 
-(check-equal? (list-sort! < '(3 2 1 4)) '(1 2 3 4))
+(let ((lst (list 3 2 1 4)))
+  (test-equal '(1 2 3 4) (list-sort! < lst)))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-sort! <)))
+ (list-sort! <))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-sort! < '(0 1) 0)))
+(let ((lst (list 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-sort! < lst 0)))
 
 
 ;;; list-stable-sort!
 
-(let ((gt (lambda (a b) (< (car a) (car b)))))
-  (check-equal? (list-stable-sort! gt '((3 . 0) (1 . 0) (2 . 0) (1 . 1)))
-                '((1 . 0) (1 . 1) (2 . 0) (3 . 0))))
+(let ((lst (list '(3 . 0) '(1 . 0) '(2 . 0) '(1 . 1)))
+      (gt (lambda (a b) (< (car a) (car b)))))
+  (test-equal '((1 . 0) (1 . 1) (2 . 0) (3 . 0))
+              (list-stable-sort! gt lst)))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-stable-sort! <)))
+ (list-stable-sort! <))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-stable-sort! < '(0 1) 0)))
+(let ((lst (list 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-stable-sort! < lst 0)))
 
 
 ;;; vector-sort
 
 (let ((vec '#(3 2 1)))
-  (check-equal? (vector-sort < vec) '#(1 2 3))
-  (check-equal? vec '#(3 2 1)))
+  (test-equal '#(1 2 3) (vector-sort < vec))
+  (test-equal '#(3 2 1) vec))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-sort <)))
+ (vector-sort <))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-sort < '(0 1) 0 0 0)))
+ (vector-sort < '(0 1) 0 0 0))
 
 ;;; vector-stable-sort
 
-(let ((vec '#((3 . 0) (1 . 0) (1 . 1) (2 . 0) ))
+(let ((vec (vector '(3 . 0) '(1 . 0) '(1 . 1) '(2 . 0)))
       (gt (lambda (a b) (< (car a) (car b)))))
-  (check-equal? (vector-stable-sort gt vec) '#((1 . 0) (1 . 1) (2 . 0) (3 . 0)))
-  (check-equal? vec '#((3 . 0) (1 . 0) (1 . 1) (2 . 0))))
+  (test-equal '#((1 . 0) (1 . 1) (2 . 0) (3 . 0)) (vector-stable-sort gt vec))
+  (test-equal '#((3 . 0) (1 . 0) (1 . 1) (2 . 0)) vec))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-stable-sort <)))
+ (vector-stable-sort <))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-stable-sort < '#(0 1) 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-stable-sort < vec 0 0 0)))
 
 
 ;;; vector-sort!
 
-(let ((vecfrom-vector-sort! '#(3 2 1)))
-  (vector-sort! < vecfrom-vector-sort!)
-  (check-equal? vecfrom-vector-sort! '#(1 2 3)))
+(let ((vec (vector 3 2 1)))
+  (vector-sort! < vec)
+  (test-equal '#(1 2 3) vec))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-stable-sort <)))
+ (vector-sort! <))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-stable-sort < '#(0 1) 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-sort! < vec 0 0 0)))
 
 ;;; vector-stable-sort!
 
-(let ((vecfrom-vector-stable-sort!  '#((3 . 0) (1 . 0) (2 . 0) (1 . 1)))
+(let ((vec (vector '(3 . 0) '(1 . 0) '(2 . 0) '(1 . 1)))
       (gt (lambda (a b) (< (car a) (car b)))))
-  (vector-stable-sort! gt vecfrom-vector-stable-sort!)
-  (check-equal? vecfrom-vector-stable-sort! '#((1 . 0) (1 . 1) (2 . 0) (3 . 0))))
+  (vector-stable-sort! gt vec)
+  (test-equal '#((1 . 0) (1 . 1) (2 . 0) (3 . 0)) vec))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-stable-sort! <)))
+ (vector-stable-sort! <))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-stable-sort! < '#(0 1) 0 0 '#(0 1) 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-stable-sort! < vec 0 0 '#(0 1) 0)))
 
 
 ;;; list-merge
 
-(let ((lst1from-list-merge '(0 1 2))
-      (lst2from-list-merge '(3 4 5)))
-  (check-equal? (list-merge < lst1from-list-merge lst2from-list-merge)
-                '(0 1 2 3 4 5))
-  (check-equal? lst1from-list-merge '(0 1 2))
-  (check-equal? lst2from-list-merge '(3 4 5)))
+(let ((lst1 '(0 1 2))
+      (lst2 '(3 4 5)))
+  (test-equal '(0 1 2 3 4 5)
+              (list-merge < lst1 lst2))
+  (test-equal '(0 1 2) lst1)
+  (test-equal '(3 4 5) lst2))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-merge < '(0 1))))
+(let ((lst '(0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-merge < lst)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-merge < '(0 1) '(0 1) 0)))
+(let ((lst '(0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-merge < lst lst 0)))
 
 
 ;;; list-merge!
 
-(check-equal? (list-merge! < '(0 1 2) '(3 4 5)) '(0 1 2 3 4 5))
+(let ((lst1 (list 0 1 2))
+      (lst2 (list 3 4 5)))
+  (test-equal '(0 1 2 3 4 5) (list-merge! < lst1 lst2)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-merge! < '(0 1))))
+(let ((lst (list 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-merge! < lst)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-merge! < '(0 1) '(0 1) 0)))
+(let ((lst (list 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-merge! < lst lst 0)))
 
 
 ;;; vector-merge
 
-(let ((vec1from-vector-merge '#(0 1 2))
-      (vec2from-vector-merge '#(3 4 5)))
-  (check-equal? (vector-merge < vec1from-vector-merge vec2from-vector-merge)
-                '#(0 1 2 3 4 5))
-  (check-equal? vec1from-vector-merge '#(0 1 2))
-  (check-equal? vec2from-vector-merge '#(3 4 5)))
+(let ((vec1 '#(0 1 2))
+      (vec2 '#(3 4 5)))
+  (test-equal '#(0 1 2 3 4 5)
+              (vector-merge < vec1 vec2))
+  (test-equal '#(0 1 2) vec1)
+  (test-equal '#(3 4 5) vec2))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-merge < '#(0 1))))
+(let ((vec (vector 0 0)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-merge < vec)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-merge < '#(0 1) '#(0 1) 0 1 0 1 0)))
+(let ((vec (vector 0 0)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-merge < vec vec 0 1 0 1 0)))
 
 
 ;;; vector-merge!
 
-(let ((vec '#(0 0 0 0 0 0)))
+(let ((vec (vector 0 0 0 0 0 0)))
   (vector-merge! < vec '#(0 1 2) '#(3 4 5))
-  (check-equal? vec '#(0 1 2 3 4 5)))
+  (test-equal '#(0 1 2 3 4 5) vec))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-merge! < '#(0 1) '#(0 1))))
+(let ((vec (vector 0 0)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-merge! < vec vec)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-merge! < '#(0 1) '#(0 1) '#(0 1) 0 0 1 0 1 0)))
+(let ((vec (vector 0 0)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-merge! < vec vec vec 0 0 1 0 1 0)))
 
 
 ;;; list-delete-neighbor-dups
 
-(let ((lstfrom-list-delete-neighbor-dups '(0 1 1 2 2 3)))
-  (check-equal? (list-delete-neighbor-dups = lstfrom-list-delete-neighbor-dups)
-                '(0 1 2 3))
-  (check-equal? lstfrom-list-delete-neighbor-dups '(0 1 1 2 2 3)))
+(let ((lst (list 0 1 1 2 2 3)))
+  (test-equal '(0 1 2 3)
+              (list-delete-neighbor-dups = lst))
+  (test-equal '(0 1 1 2 2 3) lst))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-delete-neighbor-dups =)))
+ (list-delete-neighbor-dups =))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-delete-neighbor-dups = '(0 1) 0)))
+(let ((lst (list 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-delete-neighbor-dups = lst 0)))
 
 
 ;;; list-delete-neighbor-dups!
 
-(check-equal? (list-delete-neighbor-dups! = '(0 0 1 2 3 3)) '(0 1 2 3))
+(let ((lst (list 0 0 1 2 3 3)))
+  (test-equal '(0 1 2 3)
+              (list-delete-neighbor-dups! = lst)))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (list-delete-neighbor-dups! =)))
+ (list-delete-neighbor-dups! =))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (list-delete-neighbor-dups! = '(0 1) 0)))
+(let ((lst (list 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (list-delete-neighbor-dups! = lst 0)))
 
 ;;; vector-delete-neighbor-dups
 
-(let ((vecfrom-vector-delete-neighbor-dups '#(0 1 1 2 2 3)))
-  (check-equal? (vector-delete-neighbor-dups = vecfrom-vector-delete-neighbor-dups)
-                '#(0 1 2 3))
-  (check-equal? vecfrom-vector-delete-neighbor-dups '#(0 1 1 2 2 3)))
+(let ((vec (vector 0 1 1 2 2 3)))
+  (test-equal '#(0 1 2 3)
+              (vector-delete-neighbor-dups = vec))
+  (test-equal '#(0 1 1 2 2 3) vec))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-delete-neighbor-dups =)))
+ (vector-delete-neighbor-dups =))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-delete-neighbor-dups = '#(0 1) 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-delete-neighbor-dups = vec 0 0 0)))
 
 
 ;;; vector-delete-neighbor-dups!
 
-(let ((vecfrom-vector-delete-neighbor-dups! '#(0 0 1 2 3 3)))
-  (check-equal? (vector-delete-neighbor-dups! = vecfrom-vector-delete-neighbor-dups!) 4)
-  (check-equal? vecfrom-vector-delete-neighbor-dups! '#(0 1 2 3 3 3))) ;;; final list contain only 4 space
+(let ((vec (vector 0 0 1 2 3 3)))
+  (test-equal 4 (vector-delete-neighbor-dups! = vec))
+  (test-equal '#(0 1 2 3 3 3) vec)) ;;; final list contain only 4 space
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-delete-neighbor-dups! =)))
+ (vector-delete-neighbor-dups! =))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-delete-neighbor-dups! = '#(0 1) 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-delete-neighbor-dups! = vec 0 0 0)))
 
 
 ;;; vector-find-median
 
-(let ((vecfrom-vector-find-median '#(0 3 2 1 24 26 63 61 74 72 ) ))
-  (check-equal? (vector-find-median < vecfrom-vector-find-median 0) 25)
-  (check-equal? vecfrom-vector-find-median '#(0 3 2 1 24 26 63 61 74 72 )))
+(let ((vec (vector 3 2 1 24 26 63 61 74 72)))
+  (test-equal 26 (vector-find-median < vec 0))
+  (test-equal '#(3 2 1 24 26 63 61 74 72) vec))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-find-median < '#(0 1))))
+(let ((vec (vector 0 3 2 1 24 26 63 61 74 72)))
+  (test-equal 25 (vector-find-median < vec 0))
+  (test-equal '#(0 3 2 1 24 26 63 61 74 72) vec))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-find-median < '#(0 1) 0 0 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-find-median < vec)))
+
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-find-median < vec 0 0 0)))
 
 ;;; vector-find-median!
 
-(check-equal? (vector-find-median! < '#(0 3 2 1 24 26 63 61 74 72 ) 0) 25)
-(check-equal? (vector-find-median! < '#( 3 2 24 26 74 72 ) 0) 25)
+(let ((vec (vector 3 2 1 24 26 63 61 74 72)))
+  (test-equal 26 (vector-find-median! < vec 0)))
 
+(let ((vec (vector 0 3 2 1 24 26 63 61 74 72)))
+  (test-equal 25 (vector-find-median! < vec 0)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-find-median! < '#(0 1))))
+(let ((vec (vector 2 24 26 74 72)))
+  (test-equal 26 (vector-find-median! < vec 0)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-find-median! < '#(0 1) 0 0 0)))
+(let ((vec (vector 3 2 24 26 74 72)))
+  (test-equal 25 (vector-find-median! < vec 0)))
+
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-find-median! < vec)))
+
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-find-median! < vec 0 0 0)))
 
 
 ;;; vector-select!
 
-(check-equal? (vector-select! < '#(3 4 5 0 2 5) 2) 3)
+(let ((vec (vector 3 4 5 0 2 5)))
+  (test-equal 3 (vector-select! < vec 2)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-select! < '#(0 1))))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-select! < vec)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-select! < '#(0 1) 0 0 1 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-select! < vec 0 0 1 0)))
 
 
 ;;; vector-separate!
 
-(let ((vecfrom-vector-separate! '#(5 3 1 2 5 2)))
-  (vector-separate! < vecfrom-vector-separate! 3)
-  (check-equal? vecfrom-vector-separate! '#(1 2 2 5 3 5 )))
+(let ((vec (vector 5 3 1 2 5 2)))
+  (vector-separate! < vec 3)
+  (test-equal '#(1 2 2 5 3 5) vec))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-separate! < '#(0 1))))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-separate! < vec)))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-separate! < '#(0 1) 0 0 1 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-separate! < vec 0 0 1 0)))
 
 
 ;;; Optional
 
 ;;; vector-quick-sort3
 
-(let ((vecfrom-vector-quick-sort3 '#(0 3 2 1)))
-  (check-equal? (vector-quick-sort3 - vecfrom-vector-quick-sort3) '#(0 1 2 3))
-  (check-equal? vecfrom-vector-quick-sort3 '#(0 3 2 1)))
+(let ((vec (vector 0 3 2 1)))
+  (test-equal '#(0 1 2 3) (vector-quick-sort3 - vec))
+  (test-equal '#(0 3 2 1) vec))
 
-(check-tail-exn
+(test-error-tail
  wrong-number-of-arguments-exception?
- (lambda () (vector-quick-sort3 -)))
+ (vector-quick-sort3 -))
 
-(check-tail-exn
- wrong-number-of-arguments-exception?
- (lambda () (vector-quick-sort3 - '#(0 1) 0 1 0)))
+(let ((vec (vector 0 1)))
+  (test-error-tail
+   wrong-number-of-arguments-exception?
+   (vector-quick-sort3 - vec 0 1 0)))
 
 ;;;============================================================================

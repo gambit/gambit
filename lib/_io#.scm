@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -149,7 +149,8 @@
 (##define-macro (macro-device-kind)   31) ;; can also do device operations
 
 (##define-macro (macro-file-kind)        (+ 31 32))
-(##define-macro (macro-process-kind)     (+ 31 64))
+(##define-macro (macro-pipe-kind)        (+ 31 64))
+(##define-macro (macro-process-kind)     (+ 31 64 131072))
 (##define-macro (macro-tty-kind)         (+ 31 128))
 (##define-macro (macro-serial-kind)      (+ 31 256))
 (##define-macro (macro-tcp-client-kind)  (+ 31 512))
@@ -327,6 +328,7 @@
 
   rdevice-condvar    ;; device condvar from which bytes are read
   wdevice-condvar    ;; device condvar to which bytes are written
+  event-condvar      ;; only used for process ports
   name               ;; name of device
 )
 
@@ -1095,7 +1097,7 @@
 ;;; Representation of readtables.
 
 (define-type readtable
-  id: bebee95d-0da2-401d-a33a-c1afc75b9e43
+  id: B1E5C9EE-B4F9-4D3C-AACD-FE12D696101F
   type-exhibitor: macro-type-readtable
   constructor: macro-make-readtable
   implementer: implement-type-readtable
@@ -1143,6 +1145,7 @@
   (here-strings-allowed?          unprintable: read-write:)
   (dot-at-head-of-list-allowed?   unprintable: read-write:)
   (comment-handler                unprintable: read-write:)
+  (foreign-write-handler-table    unprintable: read-write:)
 )
 
 (define-check-type readtable (macro-type-readtable)

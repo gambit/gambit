@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -192,6 +192,7 @@
 (implement-type-thread)
 (implement-type-mutex)
 (implement-type-condvar)
+(implement-type-tgroups)
 (implement-type-tgroup)
 
 (implement-library-type-thread-state-uninitialized)
@@ -218,45 +219,6 @@
   `(##void));;;;;;;;;;;*************
 
 ;;;----------------------------------------------------------------------------
-
-;;; Implementation of dynamic environments.
-
-(define ##parameter-counter 0)
-
-(define-prim (##make-parameter
-              init
-              #!optional
-              (f (macro-absent-obj)))
-  (let ((filter
-         (if (##eq? f (macro-absent-obj))
-           (lambda (x) x)
-           f)))
-    (macro-check-procedure filter 2 (make-parameter init f)
-      (let* ((val
-              (filter init))
-             (new-count
-              (##fxwrap+ ##parameter-counter 1)))
-        ;; Note: it is unimportant if the increment of
-        ;; ##parameter-counter is not atomic; it simply means a
-        ;; possible close repetition of the same hash code
-        (set! ##parameter-counter new-count)
-        (let ((descr
-               (macro-make-parameter-descr
-                val
-                (##partial-bit-reverse new-count)
-                filter)))
-          (letrec ((param
-                    (lambda (#!optional (new-val (macro-absent-obj)))
-                      (if (##eq? new-val (macro-absent-obj))
-                        (##dynamic-ref param)
-                        (##dynamic-set!
-                         param
-                         ((macro-parameter-descr-filter descr) new-val))))))
-            param))))))
-
-(define-prim (make-parameter init #!optional (f (macro-absent-obj)))
-  (macro-force-vars (f)
-    (##make-parameter init f)))
 
 (define ##current-exception-handler
   (##make-parameter
@@ -318,15 +280,18 @@
         (##exit-with-err-code current-dir)
         current-dir)))
 
+(define-prim (##path-normalize-directory-existing path)
+  (let ((normalized-dir
+         (##os-path-normalize-directory (##path-expand path))))
+    (if (##fixnum? normalized-dir)
+        (##raise-os-exception #f normalized-dir ##current-directory path)
+        normalized-dir)))
+
 (define-prim (##current-directory-filter val)
   (if (##eq? val (macro-absent-obj))
       ##initial-current-directory
       (macro-check-string val 1 (##current-directory val)
-        (let ((normalized-dir
-               (##os-path-normalize-directory (##path-expand val))))
-          (if (##fixnum? normalized-dir)
-              (##raise-os-exception #f normalized-dir ##current-directory val)
-              normalized-dir)))))
+        (##path-normalize-directory-existing val))))
 
 (define ##current-directory
   (##make-parameter
@@ -4700,6 +4665,27 @@
 (define ##initial-dynwind
   '#(0)) ;; only the "level" field is needed
 
+(define-prim (##list->values lst)
+  (let loop1 ((x lst) (n 0))
+    (if (##pair? x)
+        (loop1 (##cdr x) (##fx+ n 1))
+        (let ((vals (##make-values n)))
+          (let loop2 ((x lst) (i 0))
+            (if (and (##pair? x)  ;; double check in case another
+                     (##fx< i n)) ;; thread mutates the list
+                (let ((elem (##car x)))
+                  (##values-set! vals i elem)
+                  (loop2 (##cdr x) (##fx+ i 1)))
+                vals))))))
+
+(define-prim (##values->list vals)
+  (let ((start 0)
+        (end (##values-length vals)))
+    (let loop ((lst '()) (i (##fx- end 1)))
+      (if (##fx< i start)
+          lst
+          (loop (##cons (##values-ref vals i) lst) (##fx- i 1))))))
+
 (define-prim (##values
               #!optional
               (val1 (macro-absent-obj))
@@ -4709,16 +4695,15 @@
               others)
   (cond ((##eq? val2 (macro-absent-obj))
          (if (##eq? val1 (macro-absent-obj))
-           (##values)
-           val1))
+             (##values)
+             val1))
         ((##eq? val3 (macro-absent-obj))
          (##values val1 val2))
         ((##null? others)
          (##values val1 val2 val3))
         (else
-         (##subtype-set!
-          (##list->vector (##cons val1 (##cons val2 (##cons val3 others))))
-          (macro-subtype-boxvalues)))))
+         (##list->values
+          (##cons val1 (##cons val2 (##cons val3 others)))))))
 
 (define-prim (values
               #!optional
@@ -4736,27 +4721,26 @@
         ((##null? others)
          (##values val1 val2 val3))
         (else
-         (##subtype-set!
-          (##list->vector (##cons val1 (##cons val2 (##cons val3 others))))
-          (macro-subtype-boxvalues)))))
+         (##list->values
+          (##cons val1 (##cons val2 (##cons val3 others)))))))
 
 (define-prim (##call-with-values producer consumer)
   (let ((results ;; may get bound to a multiple-values object
          (producer)))
     (if (##not (##values? results))
-      (consumer results)
-      (let ((len (##vector-length results)))
-        (cond ((##fx= len 2)
-               (consumer (##vector-ref results 0)
-                         (##vector-ref results 1)))
-              ((##fx= len 3)
-               (consumer (##vector-ref results 0)
-                         (##vector-ref results 1)
-                         (##vector-ref results 2)))
-              ((##fx= len 0)
-               (consumer))
-              (else
-               (##apply consumer (##vector->list results))))))))
+        (consumer results)
+        (let ((len (##values-length results)))
+          (cond ((##fx= len 2)
+                 (consumer (##values-ref results 0)
+                           (##values-ref results 1)))
+                ((##fx= len 3)
+                 (consumer (##values-ref results 0)
+                           (##values-ref results 1)
+                           (##values-ref results 2)))
+                ((##fx= len 0)
+                 (consumer))
+                (else
+                 (##apply consumer (##values->list results))))))))
 
 (define-prim (call-with-values producer consumer)
   (macro-force-vars (producer consumer)
@@ -5033,13 +5017,8 @@
            ((##null? others)
             (##values val1 val2 val3))
            (else
-            (##subtype-set!
-             (##list->vector
-              (##cons val1
-                      (##cons val2
-                              (##cons val3
-                                      others))))
-             (macro-subtype-boxvalues))))))
+            (##list->values
+             (##cons val1 (##cons val2 (##cons val3 others))))))))
 
   (let* ((src
           (macro-denv-dynwind
@@ -5219,7 +5198,7 @@
             (##tcp-service-update! local-address-and-local-port-number
                                    (##cons server-port new-thread))
             (##thread-start! new-thread)
-            (##void)))
+            new-thread))
         tcp-service-register!
         port-number-or-address-or-settings
         thunk
@@ -5483,6 +5462,7 @@
 (implement-type-thread)
 (implement-type-mutex)
 (implement-type-condvar)
+(implement-type-tgroups)
 (implement-type-tgroup)
 
 (implement-library-type-thread-state-uninitialized)
@@ -5509,45 +5489,6 @@
   `(##void));;;;;;;;;;;*************
 
 ;;;----------------------------------------------------------------------------
-
-;;; Implementation of dynamic environments.
-
-(define ##parameter-counter 0)
-
-(define-prim (##make-parameter
-              init
-              #!optional
-              (f (macro-absent-obj)))
-  (let ((filter
-         (if (##eq? f (macro-absent-obj))
-           (lambda (x) x)
-           f)))
-    (macro-check-procedure filter 2 (make-parameter init f)
-      (let* ((val
-              (filter init))
-             (new-count
-              (##fx+ ##parameter-counter 1)))
-        ;; Note: it is unimportant if the increment of
-        ;; ##parameter-counter is not atomic; it simply means a
-        ;; possible close repetition of the same hash code
-        (set! ##parameter-counter new-count)
-        (let ((descr
-               (macro-make-parameter-descr
-                val
-                (##partial-bit-reverse new-count)
-                filter)))
-          (letrec ((param
-                    (lambda (#!optional (new-val (macro-absent-obj)))
-                      (if (##eq? new-val (macro-absent-obj))
-                        (##dynamic-ref param)
-                        (##dynamic-set!
-                         param
-                         ((macro-parameter-descr-filter descr) new-val))))))
-            param))))))
-
-(define-prim (make-parameter init #!optional (f (macro-absent-obj)))
-  (macro-force-vars (f)
-    (##make-parameter init f)))
 
 (define ##current-exception-handler
   (##make-parameter
@@ -5609,15 +5550,18 @@
         (##exit-with-err-code current-dir)
         current-dir)))
 
+(define-prim (##path-normalize-directory-existing path)
+  (let ((normalized-dir
+         (##os-path-normalize-directory (##path-expand path))))
+    (if (##fixnum? normalized-dir)
+        (##raise-os-exception #f normalized-dir ##current-directory path)
+        normalized-dir)))
+
 (define-prim (##current-directory-filter val)
   (if (##eq? val (macro-absent-obj))
       ##initial-current-directory
       (macro-check-string val 1 (##current-directory val)
-        (let ((normalized-dir
-               (##os-path-normalize-directory (##path-expand val))))
-          (if (##fixnum? normalized-dir)
-              (##raise-os-exception #f normalized-dir ##current-directory val)
-              normalized-dir)))))
+        (##path-normalize-directory-existing val))))
 
 (define ##current-directory
   (##make-parameter
@@ -8151,6 +8095,27 @@
 (define ##initial-dynwind
   '#(0)) ;; only the "level" field is needed
 
+(define-prim (##list->values lst)
+  (let loop1 ((x lst) (n 0))
+    (if (##pair? x)
+        (loop1 (##cdr x) (##fx+ n 1))
+        (let ((vals (##make-values n)))
+          (let loop2 ((x lst) (i 0))
+            (if (and (##pair? x)  ;; double check in case another
+                     (##fx< i n)) ;; thread mutates the list
+                (let ((elem (##car x)))
+                  (##values-set! vals i elem)
+                  (loop2 (##cdr x) (##fx+ i 1)))
+                vals))))))
+
+(define-prim (##values->list vals)
+  (let ((start 0)
+        (end (##values-length vals)))
+    (let loop ((lst '()) (i (##fx- end 1)))
+      (if (##fx< i start)
+          lst
+          (loop (##cons (##values-ref vals i) lst) (##fx- i 1))))))
+
 (define-prim (##values
               #!optional
               (val1 (macro-absent-obj))
@@ -8160,16 +8125,15 @@
               others)
   (cond ((##eq? val2 (macro-absent-obj))
          (if (##eq? val1 (macro-absent-obj))
-           (##values)
-           val1))
+             (##values)
+             val1))
         ((##eq? val3 (macro-absent-obj))
          (##values val1 val2))
         ((##null? others)
          (##values val1 val2 val3))
         (else
-         (##subtype-set!
-          (##list->vector (##cons val1 (##cons val2 (##cons val3 others))))
-          (macro-subtype-boxvalues)))))
+         (##list->values
+          (##cons val1 (##cons val2 (##cons val3 others)))))))
 
 (define-prim (values
               #!optional
@@ -8187,27 +8151,26 @@
         ((##null? others)
          (##values val1 val2 val3))
         (else
-         (##subtype-set!
-          (##list->vector (##cons val1 (##cons val2 (##cons val3 others))))
-          (macro-subtype-boxvalues)))))
+         (##list->values
+          (##cons val1 (##cons val2 (##cons val3 others)))))))
 
 (define-prim (##call-with-values producer consumer)
   (let ((results ;; may get bound to a multiple-values object
          (producer)))
     (if (##not (##values? results))
-      (consumer results)
-      (let ((len (##vector-length results)))
-        (cond ((##fx= len 2)
-               (consumer (##vector-ref results 0)
-                         (##vector-ref results 1)))
-              ((##fx= len 3)
-               (consumer (##vector-ref results 0)
-                         (##vector-ref results 1)
-                         (##vector-ref results 2)))
-              ((##fx= len 0)
-               (consumer))
-              (else
-               (##apply consumer (##vector->list results))))))))
+        (consumer results)
+        (let ((len (##values-length results)))
+          (cond ((##fx= len 2)
+                 (consumer (##values-ref results 0)
+                           (##values-ref results 1)))
+                ((##fx= len 3)
+                 (consumer (##values-ref results 0)
+                           (##values-ref results 1)
+                           (##values-ref results 2)))
+                ((##fx= len 0)
+                 (consumer))
+                (else
+                 (##apply consumer (##values->list results))))))))
 
 (define-prim (call-with-values producer consumer)
   (macro-force-vars (producer consumer)
@@ -8484,13 +8447,8 @@
            ((##null? others)
             (##values val1 val2 val3))
            (else
-            (##subtype-set!
-             (##list->vector
-              (##cons val1
-                      (##cons val2
-                              (##cons val3
-                                      others))))
-             (macro-subtype-boxvalues))))))
+            (##list->values
+             (##cons val1 (##cons val2 (##cons val3 others))))))))
 
   (let* ((src
           (macro-denv-dynwind
@@ -8670,7 +8628,7 @@
             (##tcp-service-update! local-address-and-local-port-number
                                    (##cons server-port new-thread))
             (##thread-start! new-thread)
-            (##void)))
+            new-thread))
         tcp-service-register!
         port-number-or-address-or-settings
         thunk

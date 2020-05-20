@@ -47,21 +47,38 @@ if "%1" == "exe" goto exe
 if not "%1" == ""exe"" goto not_exe
 :exe
 
+if not "%BUILD_EXE_BASE_LIBRARY_PARAM%" == "" goto not_exe_base_lib
+set "BUILD_EXE_BASE_LIB=%GAMBITDIR_LIB%\_gambit.php"
+goto exe_base_lib_done
+:not_exe_base_lib
+set "BUILD_EXE_BASE_LIB=%BUILD_EXE_BASE_LIBRARY_PARAM%.php"
+:exe_base_lib_done
+
 if not "%GAMBUILD_VERBOSE%" == "yes" goto not_exe_verbose
+if not "%BUILD_EXE_OUTPUT_FILENAME_PARAM:~-4%" == ".php" goto not_exe_src_verbose
+echo.type nul ^> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+goto exe_rest_verbose
+:not_exe_src_verbose
 echo.echo.0^^^<0# : ^^^^^>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.echo.'''^>^>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.echo.@php %%%%~f0 %%%%*^>^>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.echo.@exit /b %%%%ERRORLEVEL%%%%^>^>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.echo.'''^>^>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
-echo.for %%f in (%BUILD_EXE_INPUT_FILENAMES_PARAM% "%GAMBITDIR_LIB%\_gambit.php") do type %%f ^>^> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+:exe_rest_verbose
+echo.for %%f in (%BUILD_EXE_INPUT_FILENAMES_PARAM% "%BUILD_EXE_BASE_LIB%") do type %%f ^>^> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 :not_exe_verbose
 
+if not "%BUILD_EXE_OUTPUT_FILENAME_PARAM:~-4%" == ".php" goto not_exe_src
+type nul > "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+goto exe_rest
+:not_exe_src
 echo.0^<0# : ^^>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.'''>>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.@php %%~f0 %%*>>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.@exit /b %%ERRORLEVEL%%>>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 echo.'''>>"%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
-for %%f in (%BUILD_EXE_INPUT_FILENAMES_PARAM% "%GAMBITDIR_LIB%\_gambit.php") do type %%f >> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
+:exe_rest
+for %%f in (%BUILD_EXE_INPUT_FILENAMES_PARAM% "%BUILD_EXE_BASE_LIB%") do type %%f >> "%BUILD_EXE_OUTPUT_FILENAME_PARAM%"
 
 goto end
 :not_exe

@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2663,17 +2663,13 @@
           (make-text-attr style-normal default-color default-color))))
 
      (if (##tty? port)
-         (begin
-           (##tty-text-attributes-set! port (attrs input) (attrs banner))
-           (##write-string " " port)))
+         (##tty-text-attributes-set! port (attrs input) (attrs banner)))
 
      (##write-string "Gambit " port)
      (##write-string (##system-version-string) port)
 
      (if (##tty? port)
-         (begin
-           (##write-string " " port)
-           (##tty-text-attributes-set! port (attrs input) (attrs output))))
+         (##tty-text-attributes-set! port (attrs input) (attrs output)))
 
      (##newline port)
      (##newline port)
@@ -3539,7 +3535,7 @@
           (##write arg-num port)
           (##write-string ") " port))))
 
-  (define-prim (display-exception exc)
+  (define-prim (display-known-exception exc)
 
     (define (err-code->string code)
       (let ((x (##os-err-code->string code)))
@@ -3552,7 +3548,7 @@
            (##newline port))
 
           ((macro-sfun-conversion-exception? exc)
-           (##write-string
+           (##display
             (or (macro-sfun-conversion-exception-message exc)
                 (err-code->string
                  (macro-sfun-conversion-exception-code exc)))
@@ -3561,7 +3557,7 @@
            (display-call))
 
           ((macro-cfun-conversion-exception? exc)
-           (##write-string
+           (##display
             (or (macro-cfun-conversion-exception-message exc)
                 (err-code->string
                  (macro-cfun-conversion-exception-code exc)))
@@ -3745,6 +3741,11 @@
            (##newline port)
            (display-call))
 
+          ((macro-file-exists-exception? exc)
+           (##write-string "File exists" port)
+           (##newline port)
+           (display-call))
+
           ((macro-module-not-found-exception? exc)
            (##write-string "Module not found" port)
            (##newline port)
@@ -3848,161 +3849,202 @@
            (##write exc port)
            (##newline port))))
 
-  (display-exception exc))
+  (if (##structure? exc)
+      (let* ((type (##structure-type exc))
+             (id (##type-id type))
+             (handler
+              (##table-ref (##structure-display-exception-handler-table-get)
+                           id
+                           #f)))
+        (if handler
+            (begin
+              (handler exc port)
+              (display-call))
+            (display-known-exception exc)))
+      (display-known-exception exc)))
 
 (define-prim (##exception-procedure-and-arguments exc)
-  (cond ((macro-sfun-conversion-exception? exc)
-         (##cons
-          (macro-sfun-conversion-exception-procedure exc)
-          (macro-sfun-conversion-exception-arguments exc)))
 
-        ((macro-cfun-conversion-exception? exc)
-         (##cons
-          (macro-cfun-conversion-exception-procedure exc)
-          (macro-cfun-conversion-exception-arguments exc)))
+  (define (known-exception-procedure-and-arguments exc)
+    (cond ((macro-sfun-conversion-exception? exc)
+           (##cons
+            (macro-sfun-conversion-exception-procedure exc)
+            (macro-sfun-conversion-exception-arguments exc)))
 
-        ((macro-divide-by-zero-exception? exc)
-         (##cons
-          (macro-divide-by-zero-exception-procedure exc)
-          (macro-divide-by-zero-exception-arguments exc)))
+          ((macro-cfun-conversion-exception? exc)
+           (##cons
+            (macro-cfun-conversion-exception-procedure exc)
+            (macro-cfun-conversion-exception-arguments exc)))
 
-        ((macro-fixnum-overflow-exception? exc)
-         (##cons
-          (macro-fixnum-overflow-exception-procedure exc)
-          (macro-fixnum-overflow-exception-arguments exc)))
+          ((macro-divide-by-zero-exception? exc)
+           (##cons
+            (macro-divide-by-zero-exception-procedure exc)
+            (macro-divide-by-zero-exception-arguments exc)))
 
-        ((macro-invalid-hash-number-exception? exc)
-         (##cons
-          (macro-invalid-hash-number-exception-procedure exc)
-          (macro-invalid-hash-number-exception-arguments exc)))
+          ((macro-fixnum-overflow-exception? exc)
+           (##cons
+            (macro-fixnum-overflow-exception-procedure exc)
+            (macro-fixnum-overflow-exception-arguments exc)))
 
-        ((macro-unbound-key-exception? exc)
-         (##cons
-          (macro-unbound-key-exception-procedure exc)
-          (macro-unbound-key-exception-arguments exc)))
+          ((macro-invalid-hash-number-exception? exc)
+           (##cons
+            (macro-invalid-hash-number-exception-procedure exc)
+            (macro-invalid-hash-number-exception-arguments exc)))
 
-        ((macro-unbound-serial-number-exception? exc)
-         (##cons
-          (macro-unbound-serial-number-exception-procedure exc)
-          (macro-unbound-serial-number-exception-arguments exc)))
+          ((macro-unbound-key-exception? exc)
+           (##cons
+            (macro-unbound-key-exception-procedure exc)
+            (macro-unbound-key-exception-arguments exc)))
 
-        ((macro-unbound-os-environment-variable-exception? exc)
-         (##cons
-          (macro-unbound-os-environment-variable-exception-procedure exc)
-          (macro-unbound-os-environment-variable-exception-arguments exc)))
+          ((macro-unbound-serial-number-exception? exc)
+           (##cons
+            (macro-unbound-serial-number-exception-procedure exc)
+            (macro-unbound-serial-number-exception-arguments exc)))
 
-        ((macro-unterminated-process-exception? exc)
-         (##cons
-          (macro-unterminated-process-exception-procedure exc)
-          (macro-unterminated-process-exception-arguments exc)))
+          ((macro-unbound-os-environment-variable-exception? exc)
+           (##cons
+            (macro-unbound-os-environment-variable-exception-procedure exc)
+            (macro-unbound-os-environment-variable-exception-arguments exc)))
 
-        ((macro-nonempty-input-port-character-buffer-exception? exc)
-         (##cons
-          (macro-nonempty-input-port-character-buffer-exception-procedure exc)
-          (macro-nonempty-input-port-character-buffer-exception-arguments exc)))
+          ((macro-unterminated-process-exception? exc)
+           (##cons
+            (macro-unterminated-process-exception-procedure exc)
+            (macro-unterminated-process-exception-arguments exc)))
 
-        ((macro-length-mismatch-exception? exc)
-         (##cons
-          (macro-length-mismatch-exception-procedure exc)
-          (macro-length-mismatch-exception-arguments exc)))
+          ((macro-nonempty-input-port-character-buffer-exception? exc)
+           (##cons
+            (macro-nonempty-input-port-character-buffer-exception-procedure exc)
+            (macro-nonempty-input-port-character-buffer-exception-arguments exc)))
 
-        ((macro-join-timeout-exception? exc)
-         (##cons
-          (macro-join-timeout-exception-procedure exc)
-          (macro-join-timeout-exception-arguments exc)))
+          ((macro-length-mismatch-exception? exc)
+           (##cons
+            (macro-length-mismatch-exception-procedure exc)
+            (macro-length-mismatch-exception-arguments exc)))
 
-        ((macro-mailbox-receive-timeout-exception? exc)
-         (##cons
-          (macro-mailbox-receive-timeout-exception-procedure exc)
-          (macro-mailbox-receive-timeout-exception-arguments exc)))
+          ((macro-join-timeout-exception? exc)
+           (##cons
+            (macro-join-timeout-exception-procedure exc)
+            (macro-join-timeout-exception-arguments exc)))
 
-        ((macro-rpc-remote-error-exception? exc)
-         (##cons
-          (macro-rpc-remote-error-exception-procedure exc)
-          (macro-rpc-remote-error-exception-arguments exc)))
+          ((macro-mailbox-receive-timeout-exception? exc)
+           (##cons
+            (macro-mailbox-receive-timeout-exception-procedure exc)
+            (macro-mailbox-receive-timeout-exception-arguments exc)))
 
-        ((macro-keyword-expected-exception? exc)
-         (##cons
-          (macro-keyword-expected-exception-procedure exc)
-          (macro-keyword-expected-exception-arguments exc)))
+          ((macro-rpc-remote-error-exception? exc)
+           (##cons
+            (macro-rpc-remote-error-exception-procedure exc)
+            (macro-rpc-remote-error-exception-arguments exc)))
 
-        ((macro-nonprocedure-operator-exception? exc)
-         (##cons
-          (macro-nonprocedure-operator-exception-operator exc)
-          (macro-nonprocedure-operator-exception-arguments exc)))
+          ((macro-keyword-expected-exception? exc)
+           (##cons
+            (macro-keyword-expected-exception-procedure exc)
+            (macro-keyword-expected-exception-arguments exc)))
 
-        ((macro-number-of-arguments-limit-exception? exc)
-         (##cons
-          (macro-number-of-arguments-limit-exception-procedure exc)
-          (macro-number-of-arguments-limit-exception-arguments exc)))
+          ((macro-nonprocedure-operator-exception? exc)
+           (##cons
+            (macro-nonprocedure-operator-exception-operator exc)
+            (macro-nonprocedure-operator-exception-arguments exc)))
 
-        ((macro-os-exception? exc)
-         (##cons
-          (macro-os-exception-procedure exc)
-          (macro-os-exception-arguments exc)))
+          ((macro-number-of-arguments-limit-exception? exc)
+           (##cons
+            (macro-number-of-arguments-limit-exception-procedure exc)
+            (macro-number-of-arguments-limit-exception-arguments exc)))
 
-        ((macro-no-such-file-or-directory-exception? exc)
-         (##cons
-          (macro-no-such-file-or-directory-exception-procedure exc)
-          (macro-no-such-file-or-directory-exception-arguments exc)))
+          ((macro-os-exception? exc)
+           (##cons
+            (macro-os-exception-procedure exc)
+            (macro-os-exception-arguments exc)))
 
-        ((macro-module-not-found-exception? exc)
-         (##cons
-          (macro-module-not-found-exception-procedure exc)
-          (macro-module-not-found-exception-arguments exc)))
+          ((macro-no-such-file-or-directory-exception? exc)
+           (##cons
+            (macro-no-such-file-or-directory-exception-procedure exc)
+            (macro-no-such-file-or-directory-exception-arguments exc)))
 
-        ((macro-range-exception? exc)
-         (##cons
-          (macro-range-exception-procedure exc)
-          (macro-range-exception-arguments exc)))
+          ((macro-module-not-found-exception? exc)
+           (##cons
+            (macro-module-not-found-exception-procedure exc)
+            (macro-module-not-found-exception-arguments exc)))
 
-        ((macro-initialized-thread-exception? exc)
-         (##cons
-          (macro-initialized-thread-exception-procedure exc)
-          (macro-initialized-thread-exception-arguments exc)))
+          ((macro-range-exception? exc)
+           (##cons
+            (macro-range-exception-procedure exc)
+            (macro-range-exception-arguments exc)))
 
-        ((macro-uninitialized-thread-exception? exc)
-         (##cons
-          (macro-uninitialized-thread-exception-procedure exc)
-          (macro-uninitialized-thread-exception-arguments exc)))
+          ((macro-initialized-thread-exception? exc)
+           (##cons
+            (macro-initialized-thread-exception-procedure exc)
+            (macro-initialized-thread-exception-arguments exc)))
 
-        ((macro-inactive-thread-exception? exc)
-         (##cons
-          (macro-inactive-thread-exception-procedure exc)
-          (macro-inactive-thread-exception-arguments exc)))
+          ((macro-uninitialized-thread-exception? exc)
+           (##cons
+            (macro-uninitialized-thread-exception-procedure exc)
+            (macro-uninitialized-thread-exception-arguments exc)))
 
-        ((macro-started-thread-exception? exc)
-         (##cons
-          (macro-started-thread-exception-procedure exc)
-          (macro-started-thread-exception-arguments exc)))
+          ((macro-inactive-thread-exception? exc)
+           (##cons
+            (macro-inactive-thread-exception-procedure exc)
+            (macro-inactive-thread-exception-arguments exc)))
 
-        ((macro-terminated-thread-exception? exc)
-         (##cons
-          (macro-terminated-thread-exception-procedure exc)
-          (macro-terminated-thread-exception-arguments exc)))
+          ((macro-started-thread-exception? exc)
+           (##cons
+            (macro-started-thread-exception-procedure exc)
+            (macro-started-thread-exception-arguments exc)))
 
-        ((macro-type-exception? exc)
-         (##cons
-          (macro-type-exception-procedure exc)
-          (macro-type-exception-arguments exc)))
+          ((macro-terminated-thread-exception? exc)
+           (##cons
+            (macro-terminated-thread-exception-procedure exc)
+            (macro-terminated-thread-exception-arguments exc)))
 
-        ((macro-uncaught-exception? exc)
-         (##cons
-          (macro-uncaught-exception-procedure exc)
-          (macro-uncaught-exception-arguments exc)))
+          ((macro-type-exception? exc)
+           (##cons
+            (macro-type-exception-procedure exc)
+            (macro-type-exception-arguments exc)))
 
-        ((macro-unknown-keyword-argument-exception? exc)
-         (##cons
-          (macro-unknown-keyword-argument-exception-procedure exc)
-          (macro-unknown-keyword-argument-exception-arguments exc)))
+          ((macro-uncaught-exception? exc)
+           (##cons
+            (macro-uncaught-exception-procedure exc)
+            (macro-uncaught-exception-arguments exc)))
 
-        ((macro-wrong-number-of-arguments-exception? exc)
-         (##cons
-          (macro-wrong-number-of-arguments-exception-procedure exc)
-          (macro-wrong-number-of-arguments-exception-arguments exc)))
+          ((macro-unknown-keyword-argument-exception? exc)
+           (##cons
+            (macro-unknown-keyword-argument-exception-procedure exc)
+            (macro-unknown-keyword-argument-exception-arguments exc)))
 
-        (else
-         #f)))
+          ((macro-wrong-number-of-arguments-exception? exc)
+           (##cons
+            (macro-wrong-number-of-arguments-exception-procedure exc)
+            (macro-wrong-number-of-arguments-exception-arguments exc)))
+
+          (else
+           #f)))
+
+  (if (##structure? exc)
+      (let* ((type (##structure-type exc))
+             (id (##type-id type))
+             (handler
+              (##table-ref (##structure-display-exception-handler-table-get)
+                           id
+                           #f)))
+        (if handler
+            (handler exc #f)
+            (known-exception-procedure-and-arguments exc)))
+      (known-exception-procedure-and-arguments exc)))
+
+(define ##structure-display-exception-handler-table #f)
+
+(define-prim (##structure-display-exception-handler-table-get)
+  (or ##structure-display-exception-handler-table
+      (let ((t (##make-table-aux 0 #f #f #f ##eq?)))
+        (set! ##structure-display-exception-handler-table t)
+        ##structure-display-exception-handler-table)))
+
+(define-prim (##structure-display-exception-handler-register! id proc)
+  (##declare (not interrupts-enabled))
+  (let ((handler-table (##structure-display-exception-handler-table-get)))
+    (if proc
+        (##table-set! handler-table id proc)
+        (##table-set! handler-table id))))
 
 (define ##display-exception-hook ##default-display-exception)
 
@@ -4273,64 +4315,39 @@
 
 (define-prim (##gambdoc . args)
 
-  (define (gambdoc args)
+  (define prefix "GAMBDOC_")
 
-    (define (gen-args args i)
-      (if (##null? args)
-          '()
-          (##cons (arg (##string-append "ARG" (##number->string i 10))
-                       (##car args))
-                  (gen-args (##cdr args) (##fx+ i 1)))))
+  (let* ((path
+          (##path-expand
+           (##string-append "gambdoc"
+                            ##os-bat-extension-string-saved)
+           (##path-normalize-directory-existing "~~bin")))
+         (add-vars ;; pass arguments in shell environment variables
+          (##append
+           (##shell-var-bindings
+            (##shell-args-numbered args)
+            prefix)
+           (##shell-var-bindings
+            (##shell-install-dirs '("doc"))
+            ""
+            ""))))
 
-    (define (arg name val)
-      (##string-append "GAMBDOC_" name "=" val))
+    (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
 
-    (define (install-dir path)
-      (parameterize
-       ((##current-directory
-         (##path-expand path)))
-       (##current-directory)))
+    (let ((exit-status
+           (##run-subprocess
+            path
+            '() ;; no arguments
+            #f  ;; don't capture output
+            #f  ;; don't redirect stdin
+            #f  ;; run in current directory
+            add-vars)))
 
-    (let* ((gambitdir-bin
-            (install-dir "~~bin"))
-           (gambitdir-doc
-            (install-dir "~~doc")))
-      (##os-device-tty-mode-reset) ;; rest terminal settings
-      (##open-process-generic
-       (macro-direction-inout)
-       #t
-       (lambda (port)
-         (let ((status (##process-status port)))
-           (##close-port port)
-           status))
-       open-process
-       (##list path:
-               (##string-append gambitdir-bin
-                                "gambdoc"
-                                ##os-bat-extension-string-saved)
-               arguments:
-               '()
-               environment:
-               (##append
-                (let ((env (##os-environ)))
-                  (if (##fixnum? env) '() env))
-                (##cons (arg "GAMBITDIR_BIN"
-                             (##path-strip-trailing-directory-separator
-                              gambitdir-bin))
-                        (##cons (arg "GAMBITDIR_DOC"
-                                     (##path-strip-trailing-directory-separator
-                                      gambitdir-doc))
-                                (gen-args args 1))))
-               stdin-redirection: #f
-               stdout-redirection: #f
-               stderr-redirection: #f))))
-
-  (let ((exit-status (gambdoc args)))
-    (if (##fx= exit-status 0)
-        (##void)
-        (##raise-error-exception
-         "failed to display the document"
-         args))))
+      (if (##fx= exit-status 0)
+          (##void)
+          (##raise-error-exception
+           "failed to display the document"
+           args)))))
 
 (define-prim (##escape-link str)
   (##apply ##string-append
@@ -4386,9 +4403,122 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim (##apropos
+              #!optional
+              (substring (macro-absent-obj))
+              (port (macro-absent-obj)))
+  (let ((ns-tbl
+         (##make-table))
+        (substring
+         (cond ((##eq? substring (macro-absent-obj))
+                "")
+               ((##symbol? substring)
+                (##symbol->string substring))
+               (else
+                substring)))
+        (port
+         (if (##eq? port (macro-absent-obj))
+             (##repl-output-port)
+             port)))
+
+    (define (interesting? str)
+      (##string-contains str substring))
+
+    (define (add-interesting-symbol sym)
+      (let ((str (##symbol->string sym)))
+        (if (interesting? str)
+            (let* ((i (##fx+ 1 (##namespace-separator-index str)))
+                   (ns (##substring str 0 i))
+                   (name (##substring str i (##string-length str))))
+              (##table-set! ns-tbl
+                            ns
+                            (##cons name (##table-ref ns-tbl ns '())))))))
+
+    (define (add-interesting-global-vars)
+      (##global-var-table-foldl
+       (lambda (dummy global-var)
+         (add-interesting-symbol global-var))
+       #f))
+
+    (define (display-namespaces ns-alist)
+      (##for-each
+       (lambda (x)
+         (let* ((width (##fx- (##output-port-width port) 1))
+                (ns (##car x))
+                (names (##cdr x)))
+           (if (##string=? ns "")
+               (##write-string "empty" port)
+               (##write ns port))
+           (##write-string " namespace:" port)
+           (let loop ((lst names) (sep "") (pos width))
+             (if (##pair? lst)
+                 (let* ((repr
+                         (##object->string (##string->symbol (##car lst))))
+                        (len
+                         (##string-length repr))
+                        (new-pos
+                         (##fx+ pos (##fx+ (##string-length sep) 1 len))))
+                   (##write-string sep port)
+                   (if (##fx< new-pos width)
+                       (begin
+                         (##write-string " " port)
+                         (##write-string repr port)
+                         (loop (##cdr lst)
+                               ","
+                               new-pos))
+                       (begin
+                         (##newline port)
+                         (##write-string "  " port)
+                         (##write-string repr port)
+                         (loop (##cdr lst)
+                               ","
+                               (##fx+ 2 len)))))))
+           (##newline port)))
+       ns-alist))
+
+    (add-interesting-global-vars)
+
+    (let ((empty-ns
+           (##table-ref ns-tbl "" '())))
+      (##table-set! ns-tbl "") ;; remove empty namespace to put it last
+      (let* ((sorted-ns-alist
+              (##list-sort!
+               (lambda (x y) (##string<? (##car x) (##car y)))
+               (##table->list ns-tbl)))
+             (ns-alist
+              (##map (lambda (x)
+                       (##set-cdr! x (##list-sort! ##string<? (##cdr x))))
+                     (if (##pair? empty-ns)
+                         (##append sorted-ns-alist
+                                   (##list (##cons "" empty-ns)))
+                         sorted-ns-alist))))
+        (display-namespaces ns-alist)))))
+
+(define-prim (apropos
+              #!optional
+              (substring (macro-absent-obj))
+              (port (macro-absent-obj)))
+
+  (define (apro param)
+    (if (##eq? port (macro-absent-obj))
+        (##apropos param)
+        (macro-check-output-port port 2 (apropos substring port)
+          (##apropos param port))))
+
+  (macro-force-vars (substring port)
+    (if (##eq? substring (macro-absent-obj))
+        (##apropos)
+        (if (##symbol? substring)
+            (apro substring)
+            (macro-check-string substring 1 (apropos substring port)
+              (apro substring))))))
+
+;;;----------------------------------------------------------------------------
+
 (define-runtime-macro (time
                        expr
-                       #!optional (port (macro-absent-obj)))
+                       #!optional
+                       (port (macro-absent-obj)))
   (if (eq? port (macro-absent-obj))
       `(##time (lambda () ,expr) ',expr)
       `(##time (lambda () ,expr) ',expr ,port)))

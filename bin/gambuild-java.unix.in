@@ -31,9 +31,15 @@ case "$1" in
 
   "exe")
 
+    if test "${BUILD_EXE_BASE_LIBRARY_PARAM}" = ""; then
+      BUILD_EXE_BASE_LIB="${GAMBITDIR_LIB}/_gambit.java"
+    else
+      BUILD_EXE_BASE_LIB="${BUILD_EXE_BASE_LIBRARY_PARAM}.java"
+    fi
+
     if test "${GAMBUILD_VERBOSE}" != ""; then
       echo "mkdir \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp\""
-      echo "javac -d \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp\" $(echo $BUILD_EXE_INPUT_FILENAMES_PARAM | sed 's/\.o /.java /g; s/\.o$/.java/') \"${GAMBITDIR_LIB}/_gambit.java\""
+      echo "javac -d \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp\" $(echo $BUILD_EXE_INPUT_FILENAMES_PARAM | sed 's/\.o /.java /g; s/\.o$/.java/') \"${BUILD_EXE_BASE_LIB}\""
       echo "jar cfe \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}.jar\" $(echo ${BUILD_EXE_OUTPUT_FILENAME_PARAM} | grep -oP '[^/]*_(?=\.o)') \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp/*.class\""
       echo "rm -rf \"${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp\""
 
@@ -43,7 +49,7 @@ case "$1" in
     fi
 
     mkdir "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp"
-    javac -d "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp" $(echo $BUILD_EXE_INPUT_FILENAMES_PARAM | sed 's/\.o /.java /g; s/\.o$/.java/') "${GAMBITDIR_LIB}/_gambit.java"
+    javac -d "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp" $(echo $BUILD_EXE_INPUT_FILENAMES_PARAM | sed 's/\.o /.java /g; s/\.o$/.java/') "${BUILD_EXE_BASE_LIB}"
     jar cfe "${BUILD_EXE_OUTPUT_FILENAME_PARAM}.jar" $(echo ${BUILD_EXE_OUTPUT_FILENAME_PARAM} | grep -oP '[^/]*_(?=\.o)') "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp/*.class"
     rm -rf "${BUILD_EXE_OUTPUT_FILENAME_PARAM}_temp"
 

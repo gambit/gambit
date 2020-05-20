@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -128,57 +128,34 @@
   (or (univ-get-semantics-changing-option ctx 'repr-flonum)
       'class))
 
-(define (univ-vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-vector)
-      (case (target-name (ctx-target ctx))
-        ((php java)
-         'class)
-        (else
-         'host))))
-
 (define (univ-values-representation ctx)
   (or (univ-get-semantics-changing-option ctx 'repr-values)
       'class))
 
-(define (univ-u8vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-u8vector)
-      'class))
-
-(define (univ-u16vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-u16vector)
-      'class))
-
-(define (univ-u32vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-u32vector)
-      'class))
-
-(define (univ-u64vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-u64vector)
-      'class))
-
-(define (univ-s8vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-s8vector)
-      'class))
-
-(define (univ-s16vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-s16vector)
-      'class))
-
-(define (univ-s32vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-s32vector)
-      'class))
-
-(define (univ-s64vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-s64vector)
-      'class))
-
-(define (univ-f32vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-f32vector)
-      'class))
-
-(define (univ-f64vector-representation ctx)
-  (or (univ-get-semantics-changing-option ctx 'repr-f64vector)
-      'class))
+(define (univ-vector-representation ctx type)
+  (let ((repr
+         (univ-get-semantics-changing-option
+          ctx
+          (case type
+            ((u8)  'repr-u8vector)
+            ((u16) 'repr-u16vector)
+            ((u32) 'repr-u32vector)
+            ((u64) 'repr-u64vector)
+            ((s8)  'repr-s8vector)
+            ((s16) 'repr-s16vector)
+            ((s32) 'repr-s32vector)
+            ((s64) 'repr-s64vector)
+            ((f32) 'repr-f32vector)
+            ((f64) 'repr-f64vector)
+            (else  'repr-vector)))))
+    (or repr
+        (if (eq? type 'scmobj)
+            (case (target-name (ctx-target ctx))
+              ((php java)
+               'class)
+              (else
+               'host))
+            'class))))
 
 (define (univ-structure-representation ctx)
   'class)
@@ -241,6 +218,7 @@
         (let ((lst (string->list ns)))
           (list->string (cons (char-upcase (car lst)) (cdr lst)))))))
 
+(define univ-processor-current-thread-slot 14)
 (define univ-thread-cont-slot 23)
 (define univ-thread-denv-slot 24)
 
@@ -594,8 +572,18 @@
   #f);;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (univ-object-type targ obj)
-  ;;(pretty-print (list 'univ-object-type 'targ obj))
-  'bignum);;;;;;;;;;;;;;;;;;;;;;;;;
+  (cond ((number? obj)
+         (if (and (integer? obj)
+                  (exact? obj))
+             (let ()
+               (declare (generic))
+               (if (and (>= obj -536870912)
+                        (<= obj 536870911))
+                   'fixnum
+                   'bignum))
+             'other))
+        (else
+         'other)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -638,7 +626,7 @@
      (^ "array_map( '" fn "', " array ")"))
 
     ((python)
-     (^ "map( "fn ", " array " )"))
+     (^ "list(map( "fn ", " array " ))"))
 
     ((ruby)
      (^ array ".map { |x| " fn "(x) } " ))
@@ -672,11 +660,14 @@
      (compiler-internal-error
       "univ-emit-call-with-arg-array, unknown target"))))
 
-(define (univ-emit-var-declaration ctx type name #!optional (init #f))
+(define univ-js-define-globals-using-assignment #t) ;; for nodejs scoping rules
+
+(define (univ-emit-var-declaration ctx type name #!optional (init #f) (global? #f))
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^ "var " name (if init (^ " = " init) (^)) ";\n"))
+     (^ (if (and global? univ-js-define-globals-using-assignment) "" "var ")
+        name (if init (^ " = " init) (^)) ";\n"))
 
     ((python ruby)
      (^ name " = " (or init (^obj #f)) "\n"))
@@ -1867,7 +1858,7 @@
 
     (else
      (compiler-internal-error
-      "univ-emit-prop-index-exists?, unknown target"))))
+      "univ-emit-attribute-exists?, unknown target"))))
 
 ;; ***** DUMPING OF A COMPILATION MODULE
 
@@ -2297,7 +2288,8 @@
 (define (univ-dump-procs global-ctx procs)
 
   (let ((proc-seen (queue-empty))
-        (proc-left (queue-empty)))
+        (proc-left (queue-empty))
+        (sharing-table (make-table)))
 
     (define (scan-obj obj)
       (if (and (proc-obj? obj)
@@ -2309,15 +2301,14 @@
 
     (define (dump-proc p)
 
-      (define ctrlpts
-        (make-stretchable-vector #f))
-
-      (define ctrlpts-init
-        (list #f))
-
       (define (scan-bbs ctx bbs)
         (let* ((bb-done (make-stretchable-vector #f))
-               (bb-todo (queue-empty)))
+               (bb-todo (queue-empty))
+               (ctrlpts (make-stretchable-vector #f))
+               (ctrlpts-init (list #f))
+               (debug-info-state (make-debug-info-state))
+               (debug-info-init (list #f))
+               (debug-info-labels-rev '()))
 
           (define (todo-lbl-num! n)
             (queue-put! bb-todo (lbl-num->bb n bbs)))
@@ -2453,6 +2444,27 @@
                   ctrlpt-id
                   (cons jumpable-type lbl-num))
 
+                 (case (label-type gvm-instr)
+                   ((entry return)
+                    (let ((node
+                           (comment-get
+                            (gvm-instr-comment gvm-instr)
+                            'node))
+                          (frame
+                           (gvm-instr-frame gvm-instr)))
+
+                      (set! debug-info-labels-rev
+                        (cons ctrlpt-id
+                              debug-info-labels-rev))
+
+                      (debug-info-add!
+                       debug-info-state
+                       node
+                       (if (eq? (label-type gvm-instr) 'entry)
+                           '()
+                           (reverse (frame-slots frame)))
+                       frame))))
+
                  (univ-jumpable-declaration-defs
                   ctx
                   #t ;; global?
@@ -2530,7 +2542,7 @@
                                              '(inherited))
                                  (univ-field 'info
                                              'scmobj
-                                             (^obj #f) ;; TODO
+                                             debug-info-init
                                              '(inherited)))
                                 '())))))
 
@@ -2891,6 +2903,20 @@
                          (if (proc-obj-primitive? p)
                              (^setglo name (^obj-proc-as 'scmobj p))
                              (^)))))))
+
+            (let ((debug-info
+                   (debug-info-generate debug-info-state
+                                        sharing-table)))
+              (if debug-info
+                  (let loop ((i 0) (lst (reverse debug-info-labels-rev)))
+                    (if (pair? lst)
+                        (begin
+                          (vector-set! (vector-ref (vector-ref debug-info 0) i)
+                                       0
+                                       (car lst))
+                          (loop (+ i 1) (cdr lst))))))
+              (set-car! debug-info-init (^obj debug-info)))
+
             (univ-add-init (univ-add-init bbs-defs init1) init2))))
 
       (let ((ctx (make-ctx
@@ -2979,8 +3005,8 @@
                      (^rts-method-use 'wrong_key_args)
                      (if closed?
                          (^downcast* 'jumpable (^getreg (+ (univ-nb-arg-regs ctx) 1)))
-                         (^upcast* jumpable-type 'entrypt id)))
-                     error))))
+                         (^upcast* jumpable-type 'entrypt id))
+                     error)))))
            (else
             (^if (if rest?
                      (^not (^call-prim
@@ -3271,6 +3297,16 @@
 (define (gvm-state-glo ctx)
   (^rts-field-use 'glo))
 
+(define (gvm-state-current-vm ctx)
+  (^rts-field-use 'current_vm))
+
+(define (gvm-state-current-processor ctx)
+  (^rts-field-use 'current_processor))
+
+(define (gvm-state-current-thread ctx)
+  (^structure-ref (gvm-state-current-processor ctx)
+                  univ-processor-current-thread-slot))
+
 (define (gvm-state-pollcount-use ctx dir)
   (use-resource ctx dir 'pollcount)
   (gvm-state-pollcount ctx))
@@ -3424,6 +3460,10 @@
              (gvm-state-glo-use ctx 'rd)
              (^str (symbol->string name))
              val))
+
+(define (univ-emit-glo-var? ctx sym)
+  (^prop-index-exists? (gvm-state-glo-use ctx 'rd)
+                       (^symbol-unbox sym)))
 
 (define (univ-emit-glo-var-ref ctx sym)
   (^dict-get 'scmobj
@@ -3923,40 +3963,48 @@
          len
          '())))
 
-(define (univ-js-typed-array-constructor ctx type)
-  (case type
-    ((s8)  "Int8Array")
-    ((u8)  "Uint8Array")
-    ((s16) "Int16Array")
-    ((u16) "Uint16Array")
-    ((s32) "Int32Array")
-    ((u32) "Uint32Array")
-    ((f32) "Float32Array")
-    ((f64) "Float64Array")
-    (else  #f)))
-
-(define (univ-array-constructor ctx type)
+(define (univ-typed-array-constructor ctx type)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (or (univ-js-typed-array-constructor ctx type)
-         "Array"))
+     (case type
+       ((s8)  "Int8Array")
+       ((u8)  "Uint8Array")
+       ((s16) "Int16Array")
+       ((u16) "Uint16Array")
+       ((s32) "Int32Array")
+       ((u32) "Uint32Array")
+       ((f32) "Float32Array")
+       ((f64) "Float64Array")
+       (else  #f)))
+
+    ((python)
+     (case type
+       ((u8) "bytearray")
+       (else #f)))
 
     (else
      #f)))
 
+(define (univ-array-constructor ctx type)
+  (or (univ-typed-array-constructor ctx type)
+      (case (target-name (ctx-target ctx))
+        ((js)
+         "Array")
+        ((python)
+         "list")
+        (else
+         #f))))
+
 (define (univ-emit-array-literal ctx type elems)
   (case (target-name (ctx-target ctx))
 
-    ((js)
+    ((js python ruby)
      (let ((array (^ "[" (univ-separated-list "," elems) "]"))
-           (typed-array-constructor (univ-js-typed-array-constructor ctx type)))
+           (typed-array-constructor (univ-typed-array-constructor ctx type)))
        (if typed-array-constructor
            (^new* typed-array-constructor (list array))
            array)))
-
-    ((python ruby)
-     (^ "[" (univ-separated-list "," elems) "]"))
 
     ((php)
      (^apply "array" elems))
@@ -4048,9 +4096,8 @@
                  init))))
 
     ((python)
-     ;; TODO: add literal array constructor
      (return
-      (^* (^ "[" init "]") len)))
+      (^* (^array-literal type (list init)) len)))
 
     ((ruby)
      (return

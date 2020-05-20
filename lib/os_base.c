@@ -1,6 +1,6 @@
 /* File: "os_base.c" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
@@ -1496,12 +1496,32 @@ ___SCMOBJ err;)
 {
   ___SCMOBJ e;
   ___SCMOBJ result;
-  ___ERR_CODE err_code = ___INT(err);
-  int facility = ___ERR_CODE_FACILITY(err_code);
+  ___ERR_CODE err_code;
+  int facility;
   ___CHAR_TYPE(___ERR_CODE_CE_SELECT) buf[___ERR_MAX_LENGTH+1];
   int pos = 0;
 
   buf[0] = 0;
+
+  /* On Windows, map common error codes to Windows HRESULT */
+
+#ifdef USE_GetLastError
+  if (err == ___ERR_CODE_ENOENT)
+    err_code = ___WIN32_ERR(ERROR_FILE_NOT_FOUND);
+  else if (err == ___ERR_CODE_EEXIST)
+    err_code = ___WIN32_ERR(ERROR_ALREADY_EXISTS);
+  else
+#endif
+
+#ifdef USE_WSAGetLastError
+    if (err == ___ERR_CODE_EAGAIN)
+      err_code = ___WIN32_ERR(WSAEWOULDBLOCK);
+    else
+#endif
+
+      err_code = ___INT(err);
+
+  facility = ___ERR_CODE_FACILITY(err_code);
 
   if (facility >= ___ERR_CODE_FACILITY_SYSTEM)
     {

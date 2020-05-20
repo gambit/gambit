@@ -76,6 +76,7 @@ GSI_EXECUTABLE_INSTALLED = @ENABLE_INTERPRETER_NAME@@exe@
 GSC_EXECUTABLE_INSTALLED = @ENABLE_COMPILER_NAME@@exe@
 
 RCFILES = makefile.in \
+gambvcs.unix.in gambvcs.bat.windows.in \
 gambuild-C.unix.in gambuild-C.bat.windows.in \
 gambuild-js.unix.in gambuild-js.bat.windows.in \
 gambuild-python.unix.in gambuild-python.bat.windows.in \
@@ -93,7 +94,7 @@ GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_BIN_PROG = gambuild-C@bat@ \
+INSTFILES_BIN_PROG = gambvcs@bat@ gambuild-C@bat@ \
 gambuild-js@bat@ gambuild-python@bat@ gambuild-ruby@bat@ gambuild-php@bat@ gambuild-java@bat@ \
 gambuild-x86@bat@ gambuild-x86-64@bat@ gambuild-arm@bat@ gambuild-riscv-32@bat@ gambuild-riscv-64@bat@ \
 gambdoc@bat@
@@ -107,7 +108,16 @@ all:
 
 all-pre:
 
-all-post: gambuild-C@bat@ gambuild-js@bat@ gambuild-python@bat@ gambuild-ruby@bat@ gambuild-php@bat@ gambuild-java@bat@ gambuild-x86@bat@ gambuild-x86-64@bat@ gambuild-arm@bat@ gambuild-riscv-32@bat@ gambuild-riscv-64@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+all-post: gambvcs@bat@ gambuild-C@bat@ gambuild-js@bat@ gambuild-python@bat@ gambuild-ruby@bat@ gambuild-php@bat@ gambuild-java@bat@ gambuild-x86@bat@ gambuild-x86-64@bat@ gambuild-arm@bat@ gambuild-riscv-32@bat@ gambuild-riscv-64@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+
+gambvcs@bat@: makefile gambvcs.unix gambvcs.bat.windows
+	rm -f gambvcs@bat@
+	if test "@bat@" = ""; then \
+	  cp gambvcs.unix gambvcs@bat@; \
+	  chmod +x gambvcs@bat@; \
+	else \
+	  sed "s/\$$/\r/g" gambvcs.bat.windows > gambvcs@bat@; \
+	fi
 
 gambuild-C@bat@: makefile gambuild-C.unix gambuild-C.bat.windows
 	rm -f gambuild-C@bat@
@@ -115,7 +125,7 @@ gambuild-C@bat@: makefile gambuild-C.unix gambuild-C.bat.windows
 	  cp gambuild-C.unix gambuild-C@bat@; \
 	  chmod +x gambuild-C@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-C.bat.windows > gambuild-C@bat@; \
+	  sed "s/\$$/\r/g" gambuild-C.bat.windows > gambuild-C@bat@; \
 	fi
 
 gambuild-js@bat@: makefile gambuild-js.unix gambuild-js.bat.windows
@@ -124,7 +134,7 @@ gambuild-js@bat@: makefile gambuild-js.unix gambuild-js.bat.windows
 	  cp gambuild-js.unix gambuild-js@bat@; \
 	  chmod +x gambuild-js@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-js.bat.windows > gambuild-js@bat@; \
+	  sed "s/\$$/\r/g" gambuild-js.bat.windows > gambuild-js@bat@; \
 	fi
 
 gambuild-python@bat@: makefile gambuild-python.unix gambuild-python.bat.windows
@@ -133,7 +143,7 @@ gambuild-python@bat@: makefile gambuild-python.unix gambuild-python.bat.windows
 	  cp gambuild-python.unix gambuild-python@bat@; \
 	  chmod +x gambuild-python@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-python.bat.windows > gambuild-python@bat@; \
+	  sed "s/\$$/\r/g" gambuild-python.bat.windows > gambuild-python@bat@; \
 	fi
 
 gambuild-ruby@bat@: makefile gambuild-ruby.unix gambuild-ruby.bat.windows
@@ -142,7 +152,7 @@ gambuild-ruby@bat@: makefile gambuild-ruby.unix gambuild-ruby.bat.windows
 	  cp gambuild-ruby.unix gambuild-ruby@bat@; \
 	  chmod +x gambuild-ruby@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-ruby.bat.windows > gambuild-ruby@bat@; \
+	  sed "s/\$$/\r/g" gambuild-ruby.bat.windows > gambuild-ruby@bat@; \
 	fi
 
 gambuild-php@bat@: makefile gambuild-php.unix gambuild-php.bat.windows
@@ -151,7 +161,7 @@ gambuild-php@bat@: makefile gambuild-php.unix gambuild-php.bat.windows
 	  cp gambuild-php.unix gambuild-php@bat@; \
 	  chmod +x gambuild-php@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-php.bat.windows > gambuild-php@bat@; \
+	  sed "s/\$$/\r/g" gambuild-php.bat.windows > gambuild-php@bat@; \
 	fi
 
 gambuild-java@bat@: makefile gambuild-java.unix gambuild-java.bat.windows
@@ -160,7 +170,7 @@ gambuild-java@bat@: makefile gambuild-java.unix gambuild-java.bat.windows
 	  cp gambuild-java.unix gambuild-java@bat@; \
 	  chmod +x gambuild-java@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-java.bat.windows > gambuild-java@bat@; \
+	  sed "s/\$$/\r/g" gambuild-java.bat.windows > gambuild-java@bat@; \
 	fi
 
 gambuild-x86@bat@: makefile gambuild-x86.unix gambuild-x86.bat.windows
@@ -169,7 +179,7 @@ gambuild-x86@bat@: makefile gambuild-x86.unix gambuild-x86.bat.windows
 	  cp gambuild-x86.unix gambuild-x86@bat@; \
 	  chmod +x gambuild-x86@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-x86.bat.windows > gambuild-x86@bat@; \
+	  sed "s/\$$/\r/g" gambuild-x86.bat.windows > gambuild-x86@bat@; \
 	fi
 
 gambuild-x86-64@bat@: makefile gambuild-x86-64.unix gambuild-x86-64.bat.windows
@@ -178,7 +188,7 @@ gambuild-x86-64@bat@: makefile gambuild-x86-64.unix gambuild-x86-64.bat.windows
 	  cp gambuild-x86-64.unix gambuild-x86-64@bat@; \
 	  chmod +x gambuild-x86-64@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-x86-64.bat.windows > gambuild-x86-64@bat@; \
+	  sed "s/\$$/\r/g" gambuild-x86-64.bat.windows > gambuild-x86-64@bat@; \
 	fi
 
 gambuild-arm@bat@: makefile gambuild-arm.unix gambuild-arm.bat.windows
@@ -187,7 +197,7 @@ gambuild-arm@bat@: makefile gambuild-arm.unix gambuild-arm.bat.windows
 	  cp gambuild-arm.unix gambuild-arm@bat@; \
 	  chmod +x gambuild-arm@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-arm.bat.windows > gambuild-arm@bat@; \
+	  sed "s/\$$/\r/g" gambuild-arm.bat.windows > gambuild-arm@bat@; \
 	fi
 
 gambuild-riscv-32@bat@: makefile gambuild-riscv-32.unix gambuild-riscv-32.bat.windows
@@ -196,7 +206,7 @@ gambuild-riscv-32@bat@: makefile gambuild-riscv-32.unix gambuild-riscv-32.bat.wi
 	  cp gambuild-riscv-32.unix gambuild-riscv-32@bat@; \
 	  chmod +x gambuild-riscv-32@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-riscv-32.bat.windows > gambuild-riscv-32@bat@; \
+	  sed "s/\$$/\r/g" gambuild-riscv-32.bat.windows > gambuild-riscv-32@bat@; \
 	fi
 
 gambuild-riscv-64@bat@: makefile gambuild-riscv-64.unix gambuild-riscv-64.bat.windows
@@ -205,7 +215,7 @@ gambuild-riscv-64@bat@: makefile gambuild-riscv-64.unix gambuild-riscv-64.bat.wi
 	  cp gambuild-riscv-64.unix gambuild-riscv-64@bat@; \
 	  chmod +x gambuild-riscv-64@bat@; \
 	else \
-	  sed 's/$/\r/g' gambuild-riscv-64.bat.windows > gambuild-riscv-64@bat@; \
+	  sed "s/\$$/\r/g" gambuild-riscv-64.bat.windows > gambuild-riscv-64@bat@; \
 	fi
 
 gambdoc@bat@: makefile gambdoc.unix gambdoc.bat.windows
@@ -214,7 +224,7 @@ gambdoc@bat@: makefile gambdoc.unix gambdoc.bat.windows
 	  cp gambdoc.unix gambdoc@bat@; \
 	  chmod +x gambdoc@bat@; \
 	else \
-	  sed 's/$/\r/g' gambdoc.bat.windows > gambdoc@bat@; \
+	  sed "s/\$$/\r/g" gambdoc.bat.windows > gambdoc@bat@; \
 	fi
 
 six@exe@: makefile
@@ -222,7 +232,7 @@ six@exe@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) six@exe@; \
 	else \
-	  cp $(rootfromhere)/gsi/$(GSI_EXECUTABLE) six@exe@; \
+	  echo "@gsi %*" > six@bat@; \
 	fi
 
 gsi-script@bat@: makefile
@@ -356,19 +366,19 @@ uninstall-post:
 
 select-gen-for-commit-pre:
 
-select-gen-for-commit-post:
+select-gen-for-commit-post select-gen-for-commit-post-nonrec:
 
 deselect-gen-for-commit-pre:
 
-deselect-gen-for-commit-post:
+deselect-gen-for-commit-post deselect-gen-for-commit-post-nonrec:
 
 mostlyclean-pre:
 
-mostlyclean-post:
+mostlyclean-post mostlyclean-post-nonrec:
 
 clean-pre: mostlyclean-pre
 
-clean-post: mostlyclean-post
+clean-post clean-post-nonrec: mostlyclean-post-nonrec
 	rm -f gambuild-C@bat@ \
 	  gambuild-C.unix \
 	  gambuild-C.bat.windows \
@@ -423,15 +433,15 @@ clean-post: mostlyclean-post
 
 distclean-pre: clean-pre
 
-distclean-post: clean-post
+distclean-post distclean-post-nonrec: clean-post-nonrec
 
 bootclean-pre: distclean-pre
 
-bootclean-post: distclean-post
+bootclean-post bootclean-post-nonrec: distclean-post-nonrec
 
 realclean-pre: bootclean-pre
 
-realclean-post: bootclean-post
+realclean-post realclean-post-nonrec: bootclean-post-nonrec
 	rm -f gambuild-C.unix gambuild-C.bat.windows \
 	  gambuild-js.unix gambuild-js.bat.windows \
 	  gambuild-python.unix gambuild-python.bat.windows \
@@ -499,43 +509,43 @@ select-gen-for-commit: select-gen-for-commit-post
 
 select-gen-for-commit-post: select-gen-for-commit-recursive
 
-select-gen-for-commit-recursive: select-gen-for-commit-pre
+select-gen-for-commit-post-nonrec select-gen-for-commit-recursive: select-gen-for-commit-pre
 
 deselect-gen-for-commit: deselect-gen-for-commit-post
 
 deselect-gen-for-commit-post: deselect-gen-for-commit-recursive
 
-deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
+deselect-gen-for-commit-post-nonrec deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
 
 mostlyclean: mostlyclean-post
 
 mostlyclean-post: mostlyclean-recursive
 
-mostlyclean-recursive: mostlyclean-pre
+mostlyclean-post-nonrec mostlyclean-recursive: mostlyclean-pre
 
 clean: clean-post
 
 clean-post: clean-recursive
 
-clean-recursive: clean-pre
+clean-post-nonrec clean-recursive: clean-pre
 
 distclean: distclean-post
 
 distclean-post: distclean-recursive
 
-distclean-recursive: distclean-pre
+distclean-post-nonrec distclean-recursive: distclean-pre
 
 bootclean: bootclean-post
 
 bootclean-post: bootclean-recursive
 
-bootclean-recursive: bootclean-pre
+bootclean-post-nonrec bootclean-recursive: bootclean-pre
 
 realclean: realclean-post
 
 realclean-post: realclean-recursive
 
-realclean-recursive: realclean-pre
+realclean-post-nonrec realclean-recursive: realclean-pre
 
 rc-setup: rc-setup-post
 

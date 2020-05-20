@@ -88,7 +88,7 @@ extern void ___vm_stats
 
 extern char *___format_filepos
    ___P((char *path,
-         ___SIZE_TS filepos,
+         ___SSIZE_T filepos,
          ___BOOL pinpoint),
         ());
 
@@ -105,7 +105,8 @@ extern ___SCMOBJ ___os_file_times_set
 /* Access to file information. */
 
 extern ___SCMOBJ ___os_file_info
-   ___P((___SCMOBJ path,
+   ___P((___SCMOBJ fi,
+         ___SCMOBJ path,
          ___SCMOBJ chase),
         ());
 
@@ -113,7 +114,8 @@ extern ___SCMOBJ ___os_file_info
 /* Access to user information. */
 
 extern ___SCMOBJ ___os_user_info
-   ___P((___SCMOBJ user),
+   ___P((___SCMOBJ ui,
+         ___SCMOBJ user),
         ());
 
 extern ___SCMOBJ ___os_user_name ___PVOID;
@@ -122,7 +124,8 @@ extern ___SCMOBJ ___os_user_name ___PVOID;
 /* Access to group information. */
 
 extern ___SCMOBJ ___os_group_info
-   ___P((___SCMOBJ group),
+   ___P((___SCMOBJ gi,
+         ___SCMOBJ group),
         ());
 
 
@@ -138,7 +141,8 @@ extern ___SCMOBJ ___os_address_infos
         ());
 
 extern ___SCMOBJ ___os_host_info
-   ___P((___SCMOBJ host),
+   ___P((___SCMOBJ hi,
+         ___SCMOBJ host),
         ());
 
 extern ___SCMOBJ ___os_host_name ___PVOID;
@@ -198,7 +202,8 @@ extern ___BOOL sockaddr_equal
 /* Access to service information. */
 
 extern ___SCMOBJ ___os_service_info
-   ___P((___SCMOBJ service,
+   ___P((___SCMOBJ si,
+         ___SCMOBJ service,
          ___SCMOBJ protocol),
         ());
 
@@ -206,14 +211,16 @@ extern ___SCMOBJ ___os_service_info
 /* Access to protocol information. */
 
 extern ___SCMOBJ ___os_protocol_info
-   ___P((___SCMOBJ protocol),
+   ___P((___SCMOBJ pi,
+         ___SCMOBJ protocol),
         ());
 
 
 /* Access to network information. */
 
 extern ___SCMOBJ ___os_network_info
-   ___P((___SCMOBJ network),
+   ___P((___SCMOBJ ni,
+         ___SCMOBJ network),
         ());
 
 

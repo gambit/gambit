@@ -65,6 +65,8 @@
 (path-strip-trailing-directory-separator (current-directory))
 (path-strip-volume (path-expand "foo.bar"))
 (path-volume (path-expand "foo.bar"))
-(let ((x "test_file.txt") (y "test_file2.txt")) (##with-output-to-file x ##list) (rename-file x y) (delete-file y))
+(let ((x "test_file.txt") (y "test_file2.txt")) (##with-output-to-file x ##list) (##with-output-to-file y ##list) (rename-file x y) (delete-file y))
+(let ((x "test_file.txt") (y "test_file2.txt")) (##with-output-to-file x ##list) (##with-output-to-file y ##list) (rename-file x y #t) (delete-file y))
+(let ((x "test_file.txt") (y "test_file2.txt")) (##with-output-to-file x ##list) (rename-file x y #f) (delete-file y))
 
 )

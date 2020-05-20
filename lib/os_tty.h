@@ -298,6 +298,8 @@ typedef struct ___device_tty_struct
     ___BOOL output_raw;           /* write bytes directly to device  */
     int speed;                    /* baud rate                       */
 
+#define TERMINAL_NB_COLS_UNLIMITED (1U<<17) /* fake unlimited width */
+
 #ifdef USE_LINEEDITOR
 
     /* for terminal emulation */
@@ -307,6 +309,7 @@ typedef struct ___device_tty_struct
     int terminal_nb_cols;  /* size of terminal (number of columns)    */
     int terminal_nb_rows;  /* size of terminal (number of rows)       */
     int terminal_size;     /* size of terminal (number of characters) */
+
     ___BOOL has_auto_left_margin;
     ___BOOL has_auto_right_margin;
     ___BOOL has_eat_newline_glitch;

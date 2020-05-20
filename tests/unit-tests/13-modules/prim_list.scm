@@ -93,7 +93,7 @@
 
 ;; Gambit
 
-(circular-list 1) (circular-list 1 2) (circular-list 1 2 3)
+(list-ref (circular-list 1) 10) (list-ref (circular-list 1 2) 10) (list-ref (circular-list 1 2 3) 10)
 (cons* 1) (cons* 1 2) (cons* 1 2 3)
 (drop '(1 2 3 4) 2)
 (fold list 1 '(2 3 4 5))

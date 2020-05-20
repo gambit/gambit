@@ -1,6 +1,6 @@
 /* File: "os_io.h" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -183,12 +183,16 @@ void ___device_select_add_timeout
         ());
 
 
+#define FOR_READING 0
+#define FOR_WRITING 1
+#define FOR_EVENT   2
+
 #ifdef USE_POSIX
 
 extern void ___device_select_add_fd
    ___P((___device_select_state *state,
          int fd,
-         ___BOOL for_writing),
+         int for_op),
         ());
 
 #endif
@@ -212,12 +216,12 @@ ___CAST(___device_vtbl*,(self)->vtbl)->kind(self)
 
     int (*kind) ___P((___device *self),());
 
-#define ___device_select_virt(self,for_writing,i,pass,state) \
-___CAST(___device_vtbl*,(self)->vtbl)->select_virt(self,for_writing,i,pass,state)
+#define ___device_select_virt(self,for_op,i,pass,state) \
+___CAST(___device_vtbl*,(self)->vtbl)->select_virt(self,for_op,i,pass,state)
 
     ___SCMOBJ (*select_virt)
        ___P((___device *self,
-             ___BOOL for_writing,
+             int for_op,
              int i,
              int pass,
              ___device_select_state *state),
@@ -303,7 +307,7 @@ extern ___device_group *___global_device_group ___PVOID;
 
 /*---------------------------------------------------------------------------*/
 
-typedef int ___stream_index;
+typedef ___SSIZE_T ___stream_index;
 
 /* Nonblocking pipes */
 
@@ -486,12 +490,12 @@ typedef struct ___device_stream_vtbl_struct
   {
     ___device_vtbl base;
 
-#define ___device_stream_select_raw_virt(self,for_writing,i,pass,state) \
-___CAST(___device_stream_vtbl*,(self)->base.vtbl)->select_raw_virt(self,for_writing,i,pass,state)
+#define ___device_stream_select_raw_virt(self,for_op,i,pass,state) \
+___CAST(___device_stream_vtbl*,(self)->base.vtbl)->select_raw_virt(self,for_op,i,pass,state)
 
     ___SCMOBJ (*select_raw_virt)
        ___P((___device_stream *self,
-             ___BOOL for_writing,
+             int for_op,
              int i,
              int pass,
              ___device_select_state *state),
@@ -574,7 +578,7 @@ ___CAST(___device_stream_vtbl*,(self)->base.vtbl)->options_set(self,options)
 
 extern ___SCMOBJ ___device_stream_select_virt
    ___P((___device *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
@@ -625,6 +629,7 @@ extern ___SCMOBJ ___device_select
    ___P((___device **devs,
          int nb_read_devs,
          int nb_write_devs,
+         int nb_event_devs,
          ___time timeout),
         ());
 

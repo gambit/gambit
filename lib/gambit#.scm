@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -81,6 +81,7 @@ append-u32vectors
 append-u64vectors
 append-u8vectors
 append-vectors
+apropos
 arithmetic-shift
 asinh
 atanh
@@ -88,9 +89,16 @@ binary-port?
 bit-count
 bit-set?
 bitwise-and
+bitwise-andc1
+bitwise-andc2
+bitwise-eqv
 bitwise-ior
 bitwise-merge
+bitwise-nand
+bitwise-nor
 bitwise-not
+bitwise-orc1
+bitwise-orc2
 bitwise-xor
 boolean=?
 box
@@ -235,6 +243,9 @@ file-attributes
 file-creation-time
 file-device
 file-error?
+file-exists-exception-arguments
+file-exists-exception-procedure
+file-exists-exception?
 file-exists?
 file-group
 file-info
@@ -341,11 +352,14 @@ fx>
 fx>=
 fxabs
 fxand
+fxandc1
+fxandc2
 fxarithmetic-shift
 fxarithmetic-shift-left
 fxarithmetic-shift-right
 fxbit-count
 fxbit-set?
+fxeqv
 fxeven?
 fxfirst-bit-set
 fxif
@@ -354,9 +368,13 @@ fxlength
 fxmax
 fxmin
 fxmodulo
+fxnand
 fxnegative?
+fxnor
 fxnot
 fxodd?
+fxorc1
+fxorc2
 fxpositive?
 fxquotient
 fxremainder

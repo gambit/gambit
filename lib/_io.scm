@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1211,16 +1211,26 @@
 
 ;;; I/O condition variables.
 
-(define-prim (##make-io-condvar name for-writing?)
+(define-macro (macro-io-condvar-for-reading) 0)
+(define-macro (macro-io-condvar-for-writing) 2)
+(define-macro (macro-io-condvar-for-event)   4)
+
+(define-prim (##make-io-condvar name kind)
   (let ((cv (##make-condvar name)))
-    (macro-btq-owner-set! cv (if for-writing? 2 0))
+    (macro-btq-owner-set! cv kind)
     cv))
+
+(define-prim (##make-io-condvar-for-reading name)
+  (##make-io-condvar name (macro-io-condvar-for-reading)))
+
+(define-prim (##make-io-condvar-for-writing name)
+  (##make-io-condvar name (macro-io-condvar-for-writing)))
+
+(define-prim (##make-io-condvar-for-event name)
+  (##make-io-condvar name (macro-io-condvar-for-event)))
 
 (define-prim (##io-condvar? cv)
   (##fixnum? (macro-btq-owner cv)))
-
-(define-prim (##io-condvar-for-writing? cv)
-  (##not (##fx= 0 (##fxand 2 (macro-btq-owner cv)))))
 
 (define-prim (##io-condvar-port cv)
   (macro-condvar-specific cv))
@@ -1414,10 +1424,17 @@
           ##byte-wbuf-drain)
          (rdevice-condvar
           (and (##not (##fx= rkind (macro-none-kind)))
-               (##make-rdevice-condvar rdevice)))
+               (##make-io-condvar-for-reading rdevice)))
          (wdevice-condvar
           (and (##not (##fx= wkind (macro-none-kind)))
-               (##make-wdevice-condvar wdevice))))
+               (##make-io-condvar-for-writing wdevice)))
+         (event-condvar
+          (cond ((##fx= rkind (macro-process-kind))
+                 (##make-io-condvar-for-event rdevice))
+                ((##fx= wkind (macro-process-kind))
+                 (##make-io-condvar-for-event wdevice))
+                (else
+                 #f))))
 
     (define (name port)
 
@@ -1683,18 +1700,15 @@
             byte-wbuf-drain
             rdevice-condvar
             wdevice-condvar
+            event-condvar ;; only used for process ports
             device-name)))
       (if rdevice-condvar
           (##io-condvar-port-set! rdevice-condvar port))
       (if wdevice-condvar
           (##io-condvar-port-set! wdevice-condvar port))
+      (if event-condvar
+          (##io-condvar-port-set! event-condvar port))
       port)))
-
-(define-prim (##make-rdevice-condvar rdevice)
-  (##make-io-condvar rdevice #f))
-
-(define-prim (##make-wdevice-condvar wdevice)
-  (##make-io-condvar wdevice #t))
 
 (define-prim (##make-device-port-from-single-device
               device-name
@@ -3335,9 +3349,9 @@
          (vector-wlo
           (##fx- len vector-whi))
          (vector-rcondvar
-          (##make-io-condvar #f #f))
+          (##make-io-condvar-for-reading #f))
          (vector-wcondvar
-          (##make-io-condvar #f #t))
+          (##make-io-condvar-for-writing #f))
          (vector-buffering-limit
           #f))
 
@@ -3595,9 +3609,9 @@
          (output-readtable
           (##psettings->output-readtable psettings))
          (string-rcondvar
-          (##make-io-condvar #f #f))
+          (##make-io-condvar-for-reading #f))
          (string-wcondvar
-          (##make-io-condvar #f #t))
+          (##make-io-condvar-for-writing #f))
          (string-width
           (##psettings->output-width psettings))
          (string-buffering-limit
@@ -3809,9 +3823,9 @@
          (u8vector-wlo
           (##fx- len u8vector-whi))
          (u8vector-rcondvar
-          (##make-io-condvar #f #f))
+          (##make-io-condvar-for-reading #f))
          (u8vector-wcondvar
-          (##make-io-condvar #f #t))
+          (##make-io-condvar-for-writing #f))
          (u8vector-width
           (##psettings->output-width psettings))
          (u8vector-buffering-limit
@@ -6964,7 +6978,9 @@
                       (if raise-os-exception?
                           (##raise-os-exception
                            #f
-                           device
+                           (if (##fx= device 1) ;; couldn't set current directory?
+                               ##err-code-ENOENT ;; pretend directory does not exist
+                               device)
                            prim
                            path-or-settings
                            arg2)
@@ -7126,34 +7142,37 @@
               #!optional
               (absrel-timeout (macro-absent-obj))
               (timeout-val (macro-absent-obj)))
+
+  (define (err)
+    (##raise-unterminated-process-exception
+     port
+     process-status
+     port
+     timeout-val))
   (let ((timeout
-         (macro-time-point
-          (##timeout->time
-           (if (##eq? absrel-timeout (macro-absent-obj))
-               #f
-               absrel-timeout)))))
-    (let loop ((poll-interval 0.001))
-      (let ((result (##os-device-process-status (##port-device port))))
-        (cond ((##not result)
-               (let ((now (##current-time-point)))
-                 (if (##fl< now timeout)
-                     (begin
-                       ;; Polling is evil but fixing this would require
-                       ;; substantial changes to the I/O subsystem.  We'll
-                       ;; tackle that in a future release.
-                       (##thread-sleep! poll-interval)
-                       (loop (##flmin 0.2 (##fl* 1.2 poll-interval))))
-                     (if (##eq? timeout-val (macro-absent-obj))
-                         (##raise-unterminated-process-exception
-                          port
-                          process-status
-                          port
-                          timeout-val)
-                         timeout-val))))
-              ((##fx< result 0)
-               (##raise-os-io-exception port #f result process-status port))
-              (else
-               result))))))
+         (if (##eq? absrel-timeout (macro-absent-obj))
+             #t
+             (macro-time-point
+              (##timeout->time absrel-timeout)))))
+    (let loop ()
+      (if (##wait-for-io!
+           (macro-device-port-event-condvar port)
+           timeout)
+
+          ;; ##wait-for-io! returned before timeout
+          (let ((result (##os-device-process-status (##port-device port))))
+            (cond ((##not result)
+                   ;; the process is not yet terminated, so wait some more
+                   (loop))
+                  ((##fx< result 0)
+                   (##raise-os-io-exception port #f result process-status port))
+                  (else
+                   result)))
+
+          ;; timeout expired
+          (if (##eq? timeout-val (macro-absent-obj))
+              (err)
+              timeout-val)))))
 
 (define-prim (process-status
               port
@@ -7181,14 +7200,17 @@
 
 (implement-library-type-host-info)
 
-(define-prim (##host-info host)
-  (let ((result (##os-host-info host)))
+(define-prim (##host-info
+              host
+              #!optional
+              (raise-os-exception? #t))
+  (let* ((hi (macro-make-host-info #f #f #f))
+         (result (##os-host-info hi host)))
     (if (##fixnum? result)
-        (##raise-os-exception #f result host-info host)
-        (begin
-          (##structure-type-set! result (macro-type-host-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        (if raise-os-exception?
+            (##raise-os-exception #f result host-info host)
+            result)
+        result)))
 
 (define-prim (host-info host)
   (macro-force-vars (host)
@@ -7226,24 +7248,24 @@
               service
               #!optional
               (protocol (macro-absent-obj)))
-  (let ((result
-         (##os-service-info
-          service
-          (cond ((##string? protocol)
-                 protocol)
-                ((##fixnum? protocol)
-                 (let ((p (##protocol-info protocol)))
-                   (macro-protocol-info-name p)))
-                ((macro-protocol-info? protocol)
-                 (macro-protocol-info-name protocol))
-                (else
-                 #f)))))
+  (let* ((si
+          (macro-make-service-info #f #f #f #f))
+         (result
+          (##os-service-info
+           si
+           service
+           (cond ((##string? protocol)
+                  protocol)
+                 ((##fixnum? protocol)
+                  (let ((p (##protocol-info protocol)))
+                    (macro-protocol-info-name p)))
+                 ((macro-protocol-info? protocol)
+                  (macro-protocol-info-name protocol))
+                 (else
+                  #f)))))
     (if (##fixnum? result)
         (##raise-os-exception #f result service-info service protocol)
-        (begin
-          (##structure-type-set! result (macro-type-service-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (service-info
               service
@@ -7269,14 +7291,11 @@
 (implement-library-type-protocol-info)
 
 (define-prim (##protocol-info protocol)
-  (let ((result
-         (##os-protocol-info protocol)))
+  (let* ((pi (macro-make-protocol-info #f #f #f))
+         (result (##os-protocol-info pi protocol)))
     (if (##fixnum? result)
         (##raise-os-exception #f result protocol-info protocol)
-        (begin
-          (##structure-type-set! result (macro-type-protocol-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (protocol-info protocol)
   (macro-force-vars (protocol)
@@ -7293,14 +7312,11 @@
 (implement-library-type-network-info)
 
 (define-prim (##network-info network)
-  (let ((result
-         (##os-network-info network)))
+  (let* ((ni (macro-make-network-info #f #f #f))
+         (result (##os-network-info ni network)))
     (if (##fixnum? result)
         (##raise-os-exception #f result network-info network)
-        (begin
-          (##structure-type-set! result (macro-type-network-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (network-info network)
   (macro-force-vars (network)
@@ -7740,7 +7756,7 @@
        (let ((address-or-host
               (macro-psettings-address psettings)))
          (if (##string? address-or-host)
-             (let ((info (##os-host-info address-or-host)))
+             (let ((info (##host-info address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -7754,7 +7770,7 @@
        (let ((local-address-or-host
               (macro-psettings-local-address psettings)))
          (if (##string? local-address-or-host)
-             (let ((info (##os-host-info local-address-or-host)))
+             (let ((info (##host-info local-address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -8106,7 +8122,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (##make-rdevice-condvar rdevice)))
+         (##make-io-condvar-for-reading rdevice)))
 
     (define (server-name port)
 
@@ -8310,7 +8326,7 @@
                   (macro-psettings-address psettings) ;; for backward compatibility
                   (macro-psettings-local-address psettings))))
          (if (##string? local-address-or-host)
-             (let ((info (##os-host-info local-address-or-host)))
+             (let ((info (##host-info local-address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings arg2 arg3 arg4)
@@ -8532,10 +8548,10 @@
           #f)
          (rdevice-condvar
           (and (##not (##fx= rkind (macro-none-kind)))
-               (##make-rdevice-condvar device)))
+               (##make-io-condvar-for-reading device)))
          (wdevice-condvar
           (and (##not (##fx= wkind (macro-none-kind)))
-               (##make-wdevice-condvar device))))
+               (##make-io-condvar-for-writing device))))
 
     (define (name port)
 
@@ -8715,7 +8731,7 @@
        (let ((local-address-or-host
               (macro-psettings-local-address psettings)))
          (if (##string? local-address-or-host)
-             (let ((info (##os-host-info local-address-or-host)))
+             (let ((info (##host-info local-address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -8727,7 +8743,7 @@
        (let ((address-or-host
               (macro-psettings-address psettings)))
          (if (##string? address-or-host)
-             (let ((info (##os-host-info address-or-host)))
+             (let ((info (##host-info address-or-host #f)))
                (if (##fixnum? info)
                    (if raise-os-exception?
                        (##raise-os-exception #f info prim port-number-or-address-or-settings)
@@ -9115,7 +9131,7 @@
 
       (define (stage1)
         (if (##string? address)
-            (let ((info (##os-host-info address)))
+            (let ((info (##host-info address #f)))
               (if (##fixnum? info)
                   (##raise-os-exception #f info udp-destination-set! address port-number port)
                   (stage2 (##car (macro-host-info-addresses info)))))
@@ -9189,7 +9205,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (##make-rdevice-condvar rdevice)))
+         (##make-io-condvar-for-reading rdevice)))
 
     (define (name port)
 
@@ -9406,7 +9422,7 @@
         (wtimeout-thunk
          #f)
         (rdevice-condvar
-         (##make-rdevice-condvar rdevice)))
+         (##make-io-condvar-for-reading rdevice)))
 
     (define (name port)
 
@@ -9889,10 +9905,10 @@
          #f)
         (rdevice-condvar
          (and (##not (##fx= direction (macro-direction-out)))
-              (##make-rdevice-condvar device)))
+              (##make-io-condvar-for-reading device)))
         (wdevice-condvar
          (and (##not (##fx= direction (macro-direction-in)))
-              (##make-wdevice-condvar device))))
+              (##make-io-condvar-for-writing device))))
 
     (define (name port)
 
@@ -10026,8 +10042,9 @@
                         name
                         device
                         psettings)))
-                  (if (##not (##eq? (macro-psettings-direction psettings)
-                                    (macro-direction-in)))
+                  (if (and (##fx< index 0)
+                           (##not (##eq? (macro-psettings-direction psettings)
+                                         (macro-direction-in))))
                       (##add-exit-job!
                        (lambda ()
                          (##force-output-catching-exceptions port))))
@@ -10084,9 +10101,7 @@
     (macro-readtable? obj)))
 
 (define-prim (##readtable-copy-shallow rt)
-  (let ((copy (##vector-copy rt)))
-    (##subtype-set! copy (macro-subtype-structure))
-    copy))
+  (macro-readtable-copy rt))
 
 (define-prim (##readtable-copy rt)
   (let ((copy (##readtable-copy-shallow rt)))
@@ -10099,6 +10114,12 @@
     (macro-readtable-char-sharp-handler-table-set!
      rt
      (##chartable-copy (macro-readtable-char-sharp-handler-table rt)))
+    (let ((foreign-write-handler-table
+           (macro-readtable-foreign-write-handler-table rt)))
+      (if foreign-write-handler-table
+          (macro-readtable-foreign-write-handler-table-set!
+           copy
+           (##table-copy foreign-write-handler-table))))
     copy))
 
 (define-prim (readtable-case-conversion? rt)
@@ -10369,26 +10390,6 @@
      (macro-check-readtable val 1 (##make-readtable-parameter val)
        val))))
 
-(define main ;; predefine main procedure so scripts don't have to
-  (##first-argument
-   (lambda args 0)))
-
-(define-prim (##start-main language)
-
-  (define (call-main args)
-    (##apply-with-procedure-check main args))
-
-  (cond ((macro-language-srfi-22? language)
-         (lambda ()
-           (let ((status (call-main (##list (##cdr ##processed-command-line)))))
-             (if (##fixnum? status)
-                 (##exit status)
-                 (##exit-abruptly)))))
-        (else
-         (lambda ()
-           (call-main (##cdr ##processed-command-line))
-           (##exit)))))
-
 (##define-macro (macro-ctrl-char? c)
   `(or (##char<? ,c #\space) (##char=? ,c #\delete)))
 
@@ -10598,6 +10599,23 @@
                  (##wr-no-display we name)))
            (##wr-ch we #\>))))))
 
+(define-prim (##wr-sn* we obj type proc)
+  (case (macro-writeenv-style we)
+    ((mark)
+     (if (##wr-mark-begin we obj)
+         (begin
+           (##wr-no-display we type)
+           (##wr-mark-end we obj))))
+    (else
+     (if (##wr-stamp we obj)
+         (begin
+           (##wr-str we "#<")
+           (##wr-no-display we type)
+           (##wr-str we " #")
+           (##wr-str we (##number->string (##object->serial-number obj) 10))
+           (if proc (proc we obj))
+           (##wr-ch we #\>))))))
+
 (define-prim (##wr-no-display we obj)
   (let ((style (macro-writeenv-style we)))
     (case style
@@ -10670,11 +10688,14 @@
     (or (##fx= n 0)
         (and (##fx= n 1)
              (##char=? (##string-ref str 0) #\.))
-        (and (##char=? (##string-ref str 0) #\#)
-             (or (##fx= n 1)
-                 (let ((next (##string-ref str 1)))
-                   (and (##not (##char=? next #\#))
-                        (##not (##char=? next #\%))))))
+        (let loop ((i 0))
+          (if (and (##fx< i n)
+                   (##char=? (##string-ref str i) #\#))
+              (loop (##fx+ i 1))
+              (or (##fx= i 1)
+                  (and (macro-readtable-sharp-seq-keyword
+                        (macro-writeenv-readtable we))
+                       (##fx= i n)))))
         (##string->number str 10 #t)
         (and (##fx< 1 n)
              (let ((keywords-allowed?
@@ -11364,21 +11385,43 @@
     ((mark)
      (##wr-mark we obj))
     (else
-     (##wr-str we "#<")
-     (let ((tags (##foreign-tags obj)))
-       (if (##pair? tags)
-           (##wr-no-display we (##car tags))
-           (##wr-str we "foreign")))
-     (##wr-str we " #")
-     (##wr-str we (##number->string (##object->serial-number obj) 10))
-     (##wr-str we " ")
-     (let ((addr (##foreign-address obj)))
-       (if (##number? addr)
-           (begin
-             (##wr-str we "0x")
-             (##wr-str we (##number->string (##foreign-address obj) 16)))
-           (##wr-no-display we addr)))
-     (##wr-ch we #\>))))
+     (let* ((tags
+             (##foreign-tags obj))
+            (tag
+             (if (##pair? tags) (##car tags) #f))
+            (foreign-write-handler-table
+             (macro-readtable-foreign-write-handler-table
+              (macro-writeenv-readtable we)))
+            (handler
+             (and foreign-write-handler-table
+                  (##table-ref foreign-write-handler-table tag))))
+       (if handler
+           (handler we obj)
+           (##wr-sn* we
+                     obj
+                     (or tag 'foreign)
+                     (lambda (we obj)
+                       (##wr-str we " ")
+                       (let ((addr (##foreign-address obj)))
+                         (if (##number? addr)
+                             (begin
+                               (##wr-str we "0x")
+                               (##wr-str we
+                                         (##number->string
+                                          (##foreign-address obj)
+                                          16)))
+                             (##wr-no-display we addr))))))))))
+
+(define-prim (##readtable-foreign-write-handler-register! rt tag proc)
+  (##declare (not interrupts-enabled))
+  (let ((foreign-write-handler-table
+         (or (macro-readtable-foreign-write-handler-table rt)
+             (let ((t (##make-table-aux 0 #f #f #f ##eq?)))
+               (macro-readtable-foreign-write-handler-table-set! rt t)
+               (macro-readtable-foreign-write-handler-table rt)))))
+    (if proc
+        (##table-set! foreign-write-handler-table tag proc)
+        (##table-set! foreign-write-handler-table tag))))
 
 (define-prim (##explode-object obj)
   (##vector-copy obj))
@@ -13196,32 +13239,39 @@
 (define (##read-sharp-keyword/symbol re next start-pos)
   (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
   (let ((str (##build-delimited-string re #\# 1)))
-    (let ((n (string-length str)))
-      (let loop ((i (- n 1)))
-        (cond ((< i 0)
-               (##wrap-op1* re
-                            start-pos
-                            (macro-readtable-sharp-seq-keyword
-                             (macro-readenv-readtable re))
-                            (- n 1)))
-              ((char=? #\# (string-ref str i))
-               (loop (- i 1)))
-              (else
-               (let ((obj (##string->number/keyword/symbol re str #t)))
-                 (macro-readenv-wrap re obj))))))))
+    (let ((sharp-seq-keyword
+           (macro-readtable-sharp-seq-keyword
+            (macro-readenv-readtable re))))
+      (or (and sharp-seq-keyword
+               (let ((n (string-length str)))
+                 (let loop ((i 0))
+                   (cond ((>= i n)
+                          (##wrap-op1* re
+                                       start-pos
+                                       sharp-seq-keyword
+                                       (- n 1)))
+                         ((char=? #\# (string-ref str i))
+                          (loop (+ i 1)))
+                         (else
+                          #f)))))
+          (let ((obj (##string->number/keyword/symbol re str #t)))
+            (macro-readenv-wrap re obj))))))
 
 (define (##read-sharp-colon re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
     (macro-read-next-char-or-eof re) ;; skip char after #\#
     (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
-    (let ((c (macro-read-next-char-or-eof re)))
-      (if (char? c)
-          (let ((obj (##build-delimited-number/keyword/symbol re c #f)))
-            (macro-readenv-wrap re obj))
+    (let ((next (macro-peek-next-char-or-eof re)))
+      (if (or (not (char? next))
+              (##readtable-char-delimiter? (macro-readenv-readtable re) next))
           (begin
-            (##raise-datum-parsing-exception 'incomplete-form-eof-reached re)
+            (##raise-datum-parsing-exception 'invalid-token re)
             (macro-readenv-filepos-set! re old-pos) ;; restore pos
-            (##read-datum-or-label-or-none-or-dot re)))))) ;; skip error
+            (##read-datum-or-label-or-none-or-dot re)) ;; skip error
+          (begin
+            (macro-read-next-char-or-eof re) ;; skip char after #\:
+            (let ((obj (##build-delimited-number/keyword/symbol re next #f)))
+              (macro-readenv-wrap re obj)))))))
 
 (define (##read-sharp-semicolon re next start-pos)
   (let ((old-pos (macro-readenv-filepos re)))
@@ -13506,16 +13556,20 @@
                    (##wrap re
                            start-pos
                            (macro-absent-obj)))
-                  ((##read-string=? re s "#")
-                   (##wrap-op1* re
-                                start-pos
-                                (macro-readtable-sharp-seq-keyword
-                                 (macro-readenv-readtable re))
-                                0))
                   (else
-                   (##raise-datum-parsing-exception 'invalid-token re)
-                   (macro-readenv-filepos-set! re old-pos) ;; restore pos
-                   (##read-datum-or-label-or-none-or-dot re)))))))) ;; skip error
+                   (let ((sharp-seq-keyword
+                          (macro-readtable-sharp-seq-keyword
+                           (macro-readenv-readtable re))))
+                     (if (and sharp-seq-keyword
+                              (##read-string=? re s "#"))
+                         (##wrap-op1* re
+                                      start-pos
+                                      sharp-seq-keyword
+                                      0)
+                         (begin
+                           (##raise-datum-parsing-exception 'invalid-token re)
+                           (macro-readenv-filepos-set! re old-pos) ;; restore pos
+                           (##read-datum-or-label-or-none-or-dot re))))))))))) ;; skip error
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -15219,6 +15273,7 @@
           'multiline         ;; here-strings-allowed?
           #t                 ;; dot-at-head-of-list-allowed?
           #f                 ;; comment-handler
+          #f                 ;; foreign-write-handler-table
           )))
 
     (##readtable-setup-for-standard-level! rt)
@@ -15305,22 +15360,47 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define ##main-readtable (##make-standard-readtable))
+(define ##main-readtable
+  (let ((rt (##make-standard-readtable)))
+
+    (macro-case-target
+
+     ((C)
+      ;; Setup readtable according to program's script line.
+      (let* ((program-script-line
+              (##vector-ref ##program-descr 2))
+             (language-and-tail
+              (##extract-language-and-tail program-script-line)))
+        (if language-and-tail
+            (let ((language (##car language-and-tail)))
+              (##readtable-setup-for-language! rt language)
+              (##main-set! (##start-main language))))))
+
+     (else))
+
+    rt))
 
 (define-prim (##main-readtable-set! x)
   (set! ##main-readtable-set! x))
 
-;;;----------------------------------------------------------------------------
+(define main ;; predefine main procedure so scripts don't have to
+  (##first-argument
+   (lambda args 0)))
 
-;;; Setup readtable according to program's script line.
+(define-prim (##start-main language)
 
-(let* ((program-script-line
-        (##vector-ref ##program-descr 2))
-       (language-and-tail
-        (##extract-language-and-tail program-script-line)))
-  (if language-and-tail
-      (let ((language (##car language-and-tail)))
-        (##readtable-setup-for-language! ##main-readtable language)
-        (##main-set! (##start-main language)))))
+  (define (call-main args)
+    (##apply-with-procedure-check main args))
+
+  (cond ((macro-language-srfi-22? language)
+         (lambda ()
+           (let ((status (call-main (##list (##cdr ##processed-command-line)))))
+             (if (##fixnum? status)
+                 (##exit status)
+                 (##exit-abruptly)))))
+        (else
+         (lambda ()
+           (call-main (##cdr ##processed-command-line))
+           (##exit)))))
 
 ;;;============================================================================

@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -149,6 +149,7 @@
          #!key
          (options (macro-absent-obj))
          (output (macro-absent-obj))
+         (base (macro-absent-obj))
          (cc-options (macro-absent-obj))
          (ld-options-prelude (macro-absent-obj))
          (ld-options (macro-absent-obj))
@@ -169,6 +170,11 @@
                    (##path-normalize filename))
                   (macro-force-vars (output)
                     output)))
+             (bas
+              (if (##eq? base (macro-absent-obj))
+                  #f
+                  (macro-force-vars (base)
+                    base)))
              (cc-opts
               (if (##eq? cc-options (macro-absent-obj))
                   '()
@@ -205,8 +211,10 @@
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
                (error "list expected for options: parameter")) ;;;;;;;
-              ((##not (##string-or-string-list? out))
+              ((##not (##string? out))
                (error "string expected for output: parameter")) ;;;;;;;;;;
+              ((##not (or (##string? bas) (##eq? bas #f)))
+               (error "string or #f expected for base: parameter")) ;;;;;;;;;;
               ((##not (##string-or-string-list? cc-opts))
                (error "string or string list expected for cc-options: parameter")) ;;;;;;;;;;
               ((##not (##string-or-string-list? ld-opts-prelude))
@@ -221,6 +229,7 @@
                (##compile-file filename-or-source
                                opts
                                out
+                               bas
                                cc-opts
                                ld-opts-prelude
                                ld-opts
@@ -231,6 +240,7 @@
          filename-or-source
          options
          output
+         base
          cc-options
          ld-options-prelude
          ld-options
@@ -327,30 +337,25 @@
                (c#cf filename-or-source
                      options
                      (lambda () target-filename)))
-           (let ((exit-status
-                  (##gambuild
-                   (c#target-name target)
-                   type
-                   output-dir
-                   (##list target-filename)
-                   output-filename-no-dir
-                   (##assq 'verbose options)
-                   (##list (##cons "CC_OPTIONS"
-                                   (##multiple-args-join cc-options))
-                           (##cons "LD_OPTIONS_PRELUDE"
-                                   (##multiple-args-join ld-options-prelude))
-                           (##cons "LD_OPTIONS"
-                                   (##multiple-args-join ld-options))
-                           (##cons "PKG_CONFIG"
-                                   (##multiple-args-join pkg-config))
-                           (##cons "PKG_CONFIG_PATH"
-                                   (##multiple-args-join pkg-config-path))
-                           (##cons "META_INFO_FILE"
-                                   (##path-normalize
-                                    (##path-expand target-filename)
-                                    #t
-                                    output-dir))))))
-             (if (and (##not (##assq 'keep-c options))
+           (let* ((target-filename-relative-to-output-dir
+                   (##path-relative-to-dir target-filename output-dir))
+                  (exit-status
+                   (##gambuild
+                    (c#target-name target)
+                    type
+                    output-dir
+                    (##assq 'verbose options)
+                    (##gambuild-params
+                     (##base-library-from-base base)
+                     (##list target-filename-relative-to-output-dir)
+                     output-filename-no-dir
+                     cc-options
+                     ld-options-prelude
+                     ld-options
+                     pkg-config
+                     pkg-config-path
+                     target-filename-relative-to-output-dir))))
+             (if (and (##not (##assq 'keep-temp options))
                       (##not (##string=? filename target-filename)))
                  (##delete-file target-filename))
              (if (##fx= exit-status 0)
@@ -390,19 +395,19 @@
     (##delete-file-or-directory build-subdir #t #f)
     (##create-directory build-subdir)
 
-    (let ((target-file
-           (##compile-file-to-target
-            path
+    (let* ((opts
             (##cons (##list 'target target)
                     (##cons
-                      (##list 'linker-name module-object-filename)
-                      options))
-            build-subdir)))
+                     (##list 'linker-name module-object-filename)
+                     options)))
+           (target-file
+            (##compile-file-to-target path opts build-subdir)))
       (and target-file
            (##compile-file
             target-file
-            options
+            opts
             (##path-expand module-object-filename build-subdir)
+            #f ;; base
             cc-options
             ld-options-prelude
             ld-options
@@ -411,6 +416,7 @@
            build-subdir))))
 
 (define (##build-executable
+         base
          obj-files
          options
          output-filename
@@ -433,37 +439,79 @@
            (c#target-name target)
            'exe
            output-dir
-           obj-files
-           output-filename-no-dir
            (##assq 'verbose options)
-           (##list (##cons "CC_OPTIONS"
-                           (##multiple-args-join cc-options))
-                   (##cons "LD_OPTIONS_PRELUDE"
-                           (##multiple-args-join ld-options-prelude))
-                   (##cons "LD_OPTIONS"
-                           (##multiple-args-join ld-options))
-                   (##cons "PKG_CONFIG"
-                           (##multiple-args-join pkg-config))
-                   (##cons "PKG_CONFIG_PATH"
-                           (##multiple-args-join pkg-config-path))
-                   (##cons "META_INFO_FILE"
-                           (or meta-info-file ""))))))
+           (##gambuild-params
+            (##base-library-from-base base)
+            (##map (lambda (path) (##path-relative-to-dir path output-dir))
+                   obj-files)
+            output-filename-no-dir
+            cc-options
+            ld-options-prelude
+            ld-options
+            pkg-config
+            pkg-config-path
+            meta-info-file))))
     (if (##fx= exit-status 0)
         output-filename
         (##raise-error-exception
          "target link failed while linking"
          obj-files))))
 
+(define (##path-relative-to-dir path dir)
+  (##path-normalize (##path-expand path) #t dir))
+
+(define (##gambuild-params
+         base-library
+         input-filenames
+         output-filename
+         cc-options
+         ld-options-prelude
+         ld-options
+         pkg-config
+         pkg-config-path
+         meta-info-file)
+  (##fold-right
+   (lambda (param params)
+     (if param (##cons param params) params))
+   '()
+   (##list (and base-library
+                (##cons "BASE_LIBRARY"
+                        base-library))
+           (and input-filenames
+                (##cons "INPUT_FILENAMES"
+                        (##multiple-args-join input-filenames)))
+           (and output-filename
+                (##cons "OUTPUT_FILENAME"
+                        output-filename))
+           (and cc-options
+                (##cons "CC_OPTIONS"
+                        (##multiple-args-join cc-options)))
+           (and ld-options-prelude
+                (##cons "LD_OPTIONS_PRELUDE"
+                        (##multiple-args-join ld-options-prelude)))
+           (and ld-options
+                (##cons "LD_OPTIONS"
+                        (##multiple-args-join ld-options)))
+           (and pkg-config
+                (##cons "PKG_CONFIG"
+                        (##multiple-args-join pkg-config)))
+           (and pkg-config-path
+                (##cons "PKG_CONFIG_PATH"
+                        (##multiple-args-join pkg-config-path)))
+           (and meta-info-file
+                (##cons "META_INFO_FILE"
+                        meta-info-file)))))
+
 (define (##gambuild
          target
          op
          output-dir
-         input-filenames
-         output-filename
          verbose?
-         options)
+         params)
 
-  (define arg-prefix
+  (define prefix "GAMBUILD_")
+
+  (define param-prefix
     (case op
       ((obj) "BUILD_OBJ_")
       ((dyn) "BUILD_DYN_")
@@ -471,79 +519,37 @@
       ((exe) "BUILD_EXE_")
       (else  "BUILD_OTHER_")))
 
-  (define (arg name-val)
-    (##string-append (##car name-val) "=" (##cdr name-val)))
+  (let* ((path
+          (##path-expand
+           (##string-append "gambuild-"
+                            (##symbol->string target)
+                            ##os-bat-extension-string-saved)
+           (##path-normalize-directory-existing "~~bin")))
+         (add-vars ;; pass arguments in shell environment variables
+          (##append
+           (if verbose?
+               (##shell-var-bindings
+                (##list (##cons "VERBOSE" "yes"))
+                prefix
+                "")
+               '())
+           (##shell-var-bindings
+            params
+            param-prefix)
+           (##shell-var-bindings
+            (##shell-install-dirs '("include" "lib"))
+            ""
+            ""))))
 
-  (define (prefixed-arg name-val)
-    (arg (##cons (##string-append arg-prefix (##car name-val) "_PARAM")
-                 (##cdr name-val))))
+    (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
 
-  (define (install-dir path)
-    (parameterize
-     ((##current-directory
-       (##path-expand path)))
-     (##current-directory)))
-
-  (define (relative-to-output-dir filename)
-    (##path-normalize (##path-expand filename) #t output-dir))
-
-  (let* ((gambitdir-bin
-          (install-dir "~~bin"))
-         (gambitdir-include
-          (install-dir "~~include"))
-         (gambitdir-lib
-          (install-dir "~~lib"))
-         (input-filenames-relative
-          (##map relative-to-output-dir input-filenames)))
-    (##open-process-generic
-     (macro-direction-inout)
-     #t
-     (lambda (port)
-       (let ((status (##process-status port)))
-         (##close-port port)
-         status))
-     open-process
-     (##list path:
-             (##string-append gambitdir-bin
-                              "gambuild-"
-                              (##symbol->string target)
-                              ##os-bat-extension-string-saved)
-             arguments:
-             (##list (##symbol->string op))
-             directory:
-             output-dir
-             environment:
-             (##append
-              (##map arg
-                     (##append
-                      (if verbose?
-                          (##list (##cons "GAMBUILD_VERBOSE" "yes"))
-                          '())
-                      (##list
-                       (##cons "GAMBITDIR_BIN"
-                               (##path-strip-trailing-directory-separator
-                                gambitdir-bin))
-                       (##cons "GAMBITDIR_INCLUDE"
-                               (##path-strip-trailing-directory-separator
-                                gambitdir-include))
-                       (##cons "GAMBITDIR_LIB"
-                               (##path-strip-trailing-directory-separator
-                                gambitdir-lib)))))
-              (##append
-               (##map prefixed-arg
-                      (##append
-                       (##list
-                        (##cons "INPUT_FILENAMES"
-                                (##multiple-args-join
-                                 input-filenames-relative))
-                        (##cons "OUTPUT_FILENAME"
-                                output-filename))
-                       options))
-               (let ((env (##os-environ)))
-                 (if (##fixnum? env) '() env))))
-             stdin-redirection: #f
-             stdout-redirection: #f
-             stderr-redirection: #f))))
+    (##run-subprocess
+     path
+     (##list (##symbol->string op)) ;; single argument is operation
+     #f  ;; don't capture output
+     #f  ;; don't redirect stdin
+     output-dir  ;; run in output directory
+     add-vars)))
 
 (define (##extract-target options)
   (let ((t (##assq 'target options)))
@@ -588,14 +594,9 @@
                         #f
                         (macro-force-vars (linker-name)
                           linker-name)))
-                   (baselib
+                   (bas
                     (if (##eq? base (macro-absent-obj))
-                        (let ((gambitdir-lib
-                               (parameterize
-                                ((##current-directory
-                                  (##path-expand "~~lib")))
-                                (##current-directory))))
-                          (##string-append gambitdir-lib "_gambit"))
+                        #f
                         (macro-force-vars (base)
                           base)))
                    (warn?
@@ -607,21 +608,33 @@
                      (error "string expected for output: parameter")) ;;;;;;;;;;
                     ((##not (or (##not link-name) (##string? link-name)))
                      (error "string or #f expected for linker-name: parameter"));;;;;;;;;;
-                    ((##not (##string? baselib))
-                     (error "string expected for base: parameter")) ;;;;;;;;;;
+                    ((##not (or (##not bas) (##string? bas)))
+                     (error "string or #f expected for base: parameter"));;;;;;;;;;
                     (else
                      (##link-incremental rev-mods
                                          out
                                          link-name
-                                         baselib
+                                         bas
                                          warn?)))))))))
 
 (define (##link-incremental rev-mods output linker-name base warnings?)
   (c#link-modules #t
-                  (##cons (##list base) (##reverse rev-mods))
+                  (##cons (##list (or base (##default-base-linkfile)))
+                          (##reverse rev-mods))
                   output
                   linker-name
                   warnings?))
+
+(define (##default-base-linkfile)
+  (let ((gambitdir-lib
+         (parameterize
+             ((##current-directory
+               (##path-expand "~~lib")))
+           (##current-directory))))
+    (##string-append gambitdir-lib "_gambit")))
+
+(define (##base-library-from-base base)
+  base)
 
 (define (link-flat
          modules

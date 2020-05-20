@@ -1,6 +1,6 @@
 # makefile for Gambit library.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
@@ -229,8 +229,9 @@ GAMBIT_LIB_js = _$(GAMBITLIB).js
 GAMBIT_LIB_php = _$(GAMBITLIB).php
 GAMBIT_LIB_python = _$(GAMBITLIB).py
 GAMBIT_LIB_ruby = _$(GAMBITLIB).rb
+GAMBIT_LIB_go = _$(GAMBITLIB).go
 
-GAMBIT_LIBS_UNIV = $(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby)
+GAMBIT_LIBS_UNIV = $(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby) $(GAMBIT_LIB_go)
 
 GAMBIT_LIBS = $(GAMBIT_LIB_C)
 
@@ -255,7 +256,8 @@ all:
 
 all-pre: $(LIBRARY) $(GAMBIT_LIBS)
 
-all-post: deselect-gen-for-commit
+all-post:
+	$(MAKE) deselect-gen-for-commit-post-nonrec
 
 .scm.c:
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c @COMPILATION_OPTIONS@ $(PRELUDE_OPT) $(srcdirpfx)$*.scm
@@ -268,25 +270,49 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	  $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	fi
 
+univ-libs: $(UNIVLIB) $(MODULES_SCM)
+	@for target in $(BUILD_TARGETS); do \
+	  if test "$$target" != "C"; then \
+	    $(MAKE) GAMBIT_LIB_$$target; \
+	  fi; \
+	done
+
+GAMBIT_LIB_C: $(GAMBIT_LIB_C)
+
 $(GAMBIT_LIB_C): $(MODULES_C)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link -flat -o $@ -preload $(MODULES_C)
 
+GAMBIT_LIB_java: $(GAMBIT_LIB_java)
+
 $(GAMBIT_LIB_java): $(UNIVLIB) $(MODULES_SCM)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target java @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target java @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -c -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+
+GAMBIT_LIB_js: $(GAMBIT_LIB_js)
 
 $(GAMBIT_LIB_js): $(UNIVLIB) $(MODULES_SCM)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target js @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target js @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -c -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+
+GAMBIT_LIB_php: $(GAMBIT_LIB_php)
 
 $(GAMBIT_LIB_php): $(UNIVLIB) $(MODULES_SCM)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target php @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target php @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -c -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+
+GAMBIT_LIB_python: $(GAMBIT_LIB_python)
 
 $(GAMBIT_LIB_python): $(UNIVLIB) $(MODULES_SCM)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target python @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target python @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -c -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+
+GAMBIT_LIB_ruby: $(GAMBIT_LIB_ruby)
 
 $(GAMBIT_LIB_ruby): $(UNIVLIB) $(MODULES_SCM)
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target ruby @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target ruby @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -c -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
 
-$(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby): \
+GAMBIT_LIB_go: $(GAMBIT_LIB_go)
+
+$(GAMBIT_LIB_go): $(UNIVLIB) $(MODULES_SCM)
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -target go @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -c -o $@ $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm
+
+$(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby) $(GAMBIT_LIB_go): \
 $(srcdirpfx)$(rootfromhere)/lib/_univlib.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_kernel.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_system.scm \
@@ -299,7 +325,7 @@ $(srcdirpfx)$(rootfromhere)/lib/_nonstd.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_repl.scm
 
-$(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby) $(MODULES_C): \
+$(GAMBIT_LIB_java) $(GAMBIT_LIB_js) $(GAMBIT_LIB_php) $(GAMBIT_LIB_python) $(GAMBIT_LIB_ruby) $(GAMBIT_LIB_go) $(MODULES_C): \
 $(srcdirpfx)$(rootfromhere)/lib/header.scm \
 $(srcdirpfx)$(rootfromhere)/lib/gambit\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_gambit\#.scm \
@@ -433,7 +459,7 @@ install-pre:
 install-post-comp-sc: all
 	@echo "*** Compiling ~~lib/syntax-case.scm (this may take a while)"
 	rm -f syntax-case.o*
-	@SETDLPATH@ $(srcdirpfx)$(rootfromhere)/gsc/gsc -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -warnings syntax-case
+	@SETDLPATH@ $(srcdirpfx)$(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -warnings syntax-case
 
 install-post: all
 	c_libdir="$(DESTDIR)$(prefix)/$(herefromroot)"; \
@@ -447,6 +473,11 @@ install-post: all
 	for file in $(INSTFILES_LIB_DATA); do \
 	  $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
 	done; \
+	for file in $(GAMBIT_LIBS_UNIV); do \
+	  if test -e "$$file"; then \
+	    $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
+	  fi; \
+	done; \
 	for file in $(LIBRARIES); do \
 	  $(INSTALL_LIB) "$$file" "$$t_libdir/$$file"; \
 	  @FIXLIB@ "$$t_libdir/$$file"; \
@@ -458,6 +489,11 @@ install-post: all
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
 	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES); do \
 	    (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
+	  done; \
+	  for file in $(GAMBIT_LIBS_UNIV); do \
+	    if test -e "$$file"; then \
+	      (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
+	    fi; \
 	  done; \
 	fi
 
@@ -485,36 +521,36 @@ uninstall-post:
 
 select-gen-for-commit-pre:
 
-select-gen-for-commit-post:
+select-gen-for-commit-post select-gen-for-commit-post-nonrec:
 	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-skip-worktree $(MODULES_C) $(GAMBIT_LIB_C); fi
 
 deselect-gen-for-commit-pre:
 
-deselect-gen-for-commit-post:
+deselect-gen-for-commit-post deselect-gen-for-commit-post-nonrec:
 	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --skip-worktree $(MODULES_C) $(GAMBIT_LIB_C); fi
 
 mostlyclean-pre:
 
-mostlyclean-post:
+mostlyclean-post mostlyclean-post-nonrec:
 	rm -f $(OBJECTS) $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY)
 
 clean-pre: mostlyclean-pre
 
-clean-post: mostlyclean-post
+clean-post clean-post-nonrec: mostlyclean-post-nonrec
 	rm -f *.da *.bb *.bbg *.gcov *.gcno *.gcda $(GAMBIT_LIBS_UNIV)
 
 distclean-pre: clean-pre
 
-distclean-post: clean-post
+distclean-post distclean-post-nonrec: clean-post-nonrec
 
 bootclean-pre: distclean-pre
 
-bootclean-post: distclean-post
+bootclean-post bootclean-post-nonrec: distclean-post-nonrec
 	rm -f $(MODULES_C) $(GAMBIT_LIB_C)
 
 realclean-pre: bootclean-pre
 
-realclean-post: bootclean-post
+realclean-post realclean-post-nonrec: bootclean-post-nonrec
 	rm -f makefile
 
 rc-setup-pre:
@@ -552,7 +588,7 @@ bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-
 	  done \
 	fi
 
-modules-recursive:
+modules-recursive: univ-libs
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -594,43 +630,43 @@ select-gen-for-commit: select-gen-for-commit-post
 
 select-gen-for-commit-post: select-gen-for-commit-recursive
 
-select-gen-for-commit-recursive: select-gen-for-commit-pre
+select-gen-for-commit-post-nonrec select-gen-for-commit-recursive: select-gen-for-commit-pre
 
 deselect-gen-for-commit: deselect-gen-for-commit-post
 
 deselect-gen-for-commit-post: deselect-gen-for-commit-recursive
 
-deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
+deselect-gen-for-commit-post-nonrec deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
 
 mostlyclean: mostlyclean-post
 
 mostlyclean-post: mostlyclean-recursive
 
-mostlyclean-recursive: mostlyclean-pre
+mostlyclean-post-nonrec mostlyclean-recursive: mostlyclean-pre
 
 clean: clean-post
 
 clean-post: clean-recursive
 
-clean-recursive: clean-pre
+clean-post-nonrec clean-recursive: clean-pre
 
 distclean: distclean-post
 
 distclean-post: distclean-recursive
 
-distclean-recursive: distclean-pre
+distclean-post-nonrec distclean-recursive: distclean-pre
 
 bootclean: bootclean-post
 
 bootclean-post: bootclean-recursive
 
-bootclean-recursive: bootclean-pre
+bootclean-post-nonrec bootclean-recursive: bootclean-pre
 
 realclean: realclean-post
 
 realclean-post: realclean-recursive
 
-realclean-recursive: realclean-pre
+realclean-post-nonrec realclean-recursive: realclean-pre
 
 rc-setup: rc-setup-post
 

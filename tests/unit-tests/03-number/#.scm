@@ -125,6 +125,30 @@
 		0
 		1)))))
 
+(define (test-bitwise-not x)
+  (- -1 x))
+
+(define (test-bitwise-andc1 x y)
+  (test-bitwise-and (test-bitwise-not x) y))
+
+(define (test-bitwise-andc2 x y)
+  (test-bitwise-and x (test-bitwise-not y)))
+
+(define (test-bitwise-eqv x y)
+  (test-bitwise-not (test-bitwise-xor x y)))
+
+(define (test-bitwise-nand x y)
+  (test-bitwise-not (test-bitwise-and x y)))
+
+(define (test-bitwise-nor x y)
+  (test-bitwise-not (test-bitwise-ior x y)))
+
+(define (test-bitwise-orc1 x y)
+  (test-bitwise-ior (test-bitwise-not x) y))
+
+(define (test-bitwise-orc2 x y)
+  (test-bitwise-ior x (test-bitwise-not y)))
+
 (define (test-arithmetic-shift x n)
   (if (negative? n)
       (let* ((q (expt 2 (- n)))

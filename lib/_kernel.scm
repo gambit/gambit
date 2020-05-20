@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -52,14 +52,21 @@ c-declare-end
     * by the C-interface when C is calling a Scheme function.
     */
 
+   ___SCMOBJ handler;
+
    ___PUSH_ARGS3(___ps->temp1, /* arg 1 = error code, integer */
-                 ___ps->temp2, /* arg 2 = error message, string or #f */
+                 ___ps->temp2, /* arg 2 = error data, #f/string/other */
                  ___FIELD(___ps->temp3,0)) /* arg 3 = procedure */
 
    ___COVER_SFUN_CONVERSION_ERROR_HANDLER;
 
-   ___JUMPPRM(___SET_NARGS(3),
-              ___PRMCELL(___G__23__23_raise_2d_sfun_2d_conversion_2d_exception.prm))
+   handler = ___ps->temp4;
+
+   if (___FALSEP(handler))
+     ___JUMPPRM(___SET_NARGS(3),
+                ___PRMCELL(___G__23__23_raise_2d_sfun_2d_conversion_2d_exception.prm))
+   else
+     ___JUMPEXTNOTSAFE(___SET_NARGS(3), handler)
 
 end-of-code
 )
@@ -76,6 +83,7 @@ end-of-code
 
    ___WORD na;
    ___WORD i;
+   ___SCMOBJ handler;
 
    na = ___ps->na;
 
@@ -89,15 +97,20 @@ end-of-code
      ___SET_STK(-i,___STK(-(i+3))) /* shift arguments up by three */
 
    ___SET_STK(-(na+2),___ps->temp1) /* arg 1 = error code, integer */
-   ___SET_STK(-(na+1),___ps->temp2) /* arg 2 = error message, string or #f */
+   ___SET_STK(-(na+1),___ps->temp2) /* arg 2 = error data, #f/string/other */
    ___SET_STK(-na,___ps->temp3) /* arg 3 = procedure */
 
    ___POP_ARGS_IN_REGS(na+3) /* load register arguments */
 
    ___COVER_CFUN_CONVERSION_ERROR_HANDLER;
 
-   ___JUMPPRM(___SET_NARGS(na+3),
-              ___PRMCELL(___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary.prm))
+   handler = ___ps->temp4;
+
+   if (___FALSEP(handler))
+     ___JUMPPRM(___SET_NARGS(na+3),
+                ___PRMCELL(___G__23__23_raise_2d_cfun_2d_conversion_2d_exception_2d_nary.prm))
+   else
+     ___JUMPEXTNOTSAFE(___SET_NARGS(na+3), handler)
 
 end-of-code
 
@@ -1231,6 +1244,8 @@ end-of-code
    (let () (##declare (not warnings)) (0))) ; create a return point
 )
 
+))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##dynamic-env-bind denv thunk)
@@ -1254,8 +1269,6 @@ end-of-code
           (macro-thread-denv-cache2-set! current-thread x)
           (macro-thread-denv-cache3-set! current-thread x)
           results)))))
-
-))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1325,9 +1338,6 @@ end-of-code
 end-of-code
 ))
 
-(define ##interrupt-vector
-  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f))
-
 (define-prim (##interrupt-handler)
 
   (##declare (not interrupts-enabled))
@@ -1373,9 +1383,13 @@ end-of-code
                   (loop))
                 (handler)))))))
 
+(define ##interrupt-vector
+  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f))
+
 (define-prim (##interrupt-vector-set! code handler)
   (##declare (not interrupts-enabled))
-  (##vector-set! ##interrupt-vector code handler))
+  (##vector-set! ##interrupt-vector code handler)
+  (##void))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1388,7 +1402,7 @@ end-of-code
 ;; is used.  The procedure (##get-heartbeat-interval! u64vect i) is
 ;; used to retrieve the current heartbeat interval.
 
-(define-prim (##get-heartbeat-interval! u64vect i)
+(define-prim (##get-heartbeat-interval! floats i)
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
@@ -1400,7 +1414,7 @@ end-of-code
 
 end-of-code
 
-   u64vect
+   floats
    i))
 
 (define-prim (##set-heartbeat-interval! seconds)
@@ -1642,9 +1656,12 @@ end-of-code
    #f
    (lambda (procedure arguments message code dummy)
      (macro-raise
-      (if (##fx= code ##err-code-ENOENT)
-        (macro-make-no-such-file-or-directory-exception procedure arguments)
-        (macro-make-os-exception procedure arguments message code))))))
+      (cond ((##fx= code ##err-code-ENOENT)
+             (macro-make-no-such-file-or-directory-exception procedure arguments))
+            ((##fx= code ##err-code-EEXIST)
+             (macro-make-file-exists-exception procedure arguments))
+            (else
+             (macro-make-os-exception procedure arguments message code)))))))
 
 (implement-library-type-no-such-file-or-directory-exception)
 
@@ -1658,6 +1675,21 @@ end-of-code
    (lambda (procedure arguments dummy1 dummy2 dummy3)
      (macro-raise
       (macro-make-no-such-file-or-directory-exception
+       procedure
+       arguments)))))
+
+(implement-library-type-file-exists-exception)
+
+(define-prim (##raise-file-exists-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-file-exists-exception
        procedure
        arguments)))))
 ))
@@ -1712,6 +1744,8 @@ end-of-code
   (##declare (not interrupts-enabled))
   (macro-raise
    (macro-make-number-of-arguments-limit-exception proc args)))
+
+))
 
 ;;; Implementation of promises.
 
@@ -1774,8 +1808,6 @@ end-of-code
                  ;; avoid space leak through thunk
                  (##vector-set! state 1 #f)
                  (chase promise thunk)))))))
-
-))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2002,7 +2034,16 @@ end-of-code
   (##gc-finalize!)
   (##execute-jobs! ##gc-interrupt-jobs))
 
-(##interrupt-vector-set! 4 ##handle-gc-interrupt!) ;; ___INTR_GC
+(define-prim (##intr-gc-handler-set! handler)
+  (##interrupt-vector-set! 4 handler)) ;; ___INTR_GC
+
+(define ##feature-intr-gc
+  (##intr-gc-handler-set! ##handle-gc-interrupt!))
+
+(macro-case-target
+ ((C)
+  ##feature-intr-gc)
+ (else))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2058,11 +2099,9 @@ end-of-code
    "___set_standard_level (___INT(___ARG1)); ___RESULT = ___VOID;"
    level))
 
-(define-prim (##set-gambitdir! dir)
+(define-prim (##get-debug-settings)
   (##declare (not interrupts-enabled))
-  ((c-lambda (UCS-2-string) void
-             "___addref_string (___arg1); ___set_gambitdir (___arg1);")
-   dir))
+  (##c-code "___RESULT = ___FIX(___get_debug_settings ());"))
 
 (define-prim (##set-debug-settings! mask new-settings)
   (##declare (not interrupts-enabled))
@@ -2071,6 +2110,106 @@ end-of-code
       ___FIX(___set_debug_settings (___INT(___ARG1), ___INT(___ARG2)));"
    mask
    new-settings))
+
+(define-prim (##get-file-settings)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_file_settings ());"))
+
+(define-prim (##set-file-settings! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_file_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim (##get-terminal-settings)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_terminal_settings ());"))
+
+(define-prim (##set-terminal-settings! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_terminal_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim (##get-stdio-settings)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_stdio_settings ());"))
+
+(define-prim (##set-stdio-settings! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_stdio_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim ##get-gambitdir
+  (c-lambda ()
+            UCS-2-string
+    "___return(___get_gambitdir ());"))
+
+(define-prim ##set-gambitdir!
+  (c-lambda (UCS-2-string)
+            void
+    "___addref_string (___arg1); ___set_gambitdir (___arg1);"))
+
+(define-prim ##get-gambitdir-map
+  (c-lambda ()
+            nonnull-UCS-2-string-list
+    "___return(___get_gambitdir_map ());"))
+
+(define-prim ##set-gambitdir-map!
+  (c-lambda (nonnull-UCS-2-string-list)
+            void
+    "___addref_string_list (___arg1); ___set_gambitdir_map (___arg1);"))
+
+(define-prim ##get-module-search-order
+  (c-lambda ()
+            nonnull-UCS-2-string-list
+    "___return(___get_module_search_order ());"))
+
+(define-prim ##set-module-search-order!
+  (c-lambda (nonnull-UCS-2-string-list)
+            void
+    "___addref_string_list (___arg1); ___set_module_search_order (___arg1);"))
+
+(define-prim ##get-module-whitelist
+  (c-lambda ()
+            nonnull-UCS-2-string-list
+    "___return(___get_module_whitelist ());"))
+
+(define-prim ##set-module-whitelist!
+  (c-lambda (nonnull-UCS-2-string-list)
+            void
+    "___addref_string_list (___arg1); ___set_module_whitelist (___arg1);"))
+
+(define-prim (##get-module-install-mode)
+  (##declare (not interrupts-enabled))
+  (##c-code "___RESULT = ___FIX(___get_module_install_mode ());"))
+
+(define-prim (##set-module-install-mode! settings)
+  (##declare (not interrupts-enabled))
+  (##c-code
+   "___set_module_install_mode (___INT(___ARG1)); ___RESULT = ___VOID;"
+   settings))
+
+(define-prim ##get-repl-client-addr
+  (c-lambda ()
+            UCS-2-string
+    "___return(___get_repl_client_addr ());"))
+
+(define-prim ##set-repl-client-addr!
+  (c-lambda (UCS-2-string)
+            void
+    "___addref_string (___arg1); ___set_repl_client_addr (___arg1);"))
+
+(define-prim ##get-repl-server-addr
+  (c-lambda ()
+            UCS-2-string
+    "___return(___get_repl_server_addr ());"))
+
+(define-prim ##set-repl-server-addr!
+  (c-lambda (UCS-2-string)
+            void
+    "___addref_string (___arg1); ___set_repl_server_addr (___arg1);"))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3979,6 +4118,22 @@ end-of-code
    name
    symbol?))
 
+(define-prim (##symkey-table-foldl f base symkey-table)
+  (let loop1 ((i (##fx- (##vector-length symkey-table) 1)) ;; skip element 0 = count
+              (result base))
+    (if (##fx> i 0)
+        (let loop2 ((symkey (##vector-ref symkey-table i))
+                    (result result))
+          (if (##subtyped? symkey)
+              (loop2 (##vector-ref symkey 2) ;; next in bucket
+                     (f result symkey))
+              (loop1 (##fx- i 1)
+                     result)))
+        result)))
+
+(define-prim (##symbol-table-foldl f base)
+  (##symkey-table-foldl f base (##symbol-table)))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Global variables.
@@ -4012,6 +4167,15 @@ end-of-code
 
 (define-prim (##global-var->identifier gv)
   gv)
+
+(define-prim (##global-var-table-foldl f base)
+  (##symbol-table-foldl
+   (lambda (lst sym)
+     (if (and (##global-var? sym)
+              (##not (##unbound? (##global-var-ref sym))))
+         (f lst sym)
+         lst))
+   base))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4313,7 +4477,7 @@ end-of-code
 
 (define-prim ##format-filepos
   (c-lambda (char-string
-             size_t
+             ssize_t
              bool)
             char-string
    "___format_filepos"))
@@ -4702,12 +4866,14 @@ end-of-code
 
 (define-prim ##os-file-info
   (c-lambda (scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_file_info"))
 
 (define-prim ##os-user-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_user_info"))
 
@@ -4717,7 +4883,8 @@ end-of-code
    "___os_user_name"))
 
 (define-prim ##os-group-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_group_info"))
 
@@ -4732,7 +4899,8 @@ end-of-code
    "___os_address_infos"))
 
 (define-prim ##os-host-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_host_info"))
 
@@ -4743,17 +4911,20 @@ end-of-code
 
 (define-prim ##os-service-info
   (c-lambda (scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_service_info"))
 
 (define-prim ##os-protocol-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_protocol_info"))
 
 (define-prim ##os-network-info
-  (c-lambda (scheme-object)
+  (c-lambda (scheme-object
+             scheme-object)
             scheme-object
    "___os_network_info"))
 
@@ -4803,6 +4974,7 @@ end-of-code
 
 (define-prim ##os-rename-file
   (c-lambda (scheme-object
+             scheme-object
              scheme-object)
             scheme-object
    "___os_rename_file"))
@@ -4834,17 +5006,6 @@ end-of-code
 
 ;;; Program startup and exit.
 
-(define ##exit-jobs (##make-jobs))
-
-;;; (##add-exit-job! thunk) can be called to add a job to
-;;; do when the program exits.  (##clear-exit-jobs!) clears the jobs.
-
-(define-prim (##add-exit-job! thunk)
-  (##add-job! ##exit-jobs thunk))
-
-(define-prim (##clear-exit-jobs!)
-  (##clear-jobs! ##exit-jobs))
-
 (macro-case-target
 
  ((C)
@@ -4858,6 +5019,19 @@ end-of-code
 end-of-code
 
    err-code))
+
+))
+
+(define ##exit-jobs (##make-jobs))
+
+;;; (##add-exit-job! thunk) can be called to add a job to
+;;; do when the program exits.  (##clear-exit-jobs!) clears the jobs.
+
+(define-prim (##add-exit-job! thunk)
+  (##add-job! ##exit-jobs thunk))
+
+(define-prim (##clear-exit-jobs!)
+  (##clear-jobs! ##exit-jobs))
 
 (define ##cleaning-up? #f)
 
@@ -4882,12 +5056,16 @@ end-of-code
 (define-prim (##exit-with-exception exc)
   (##exit (macro-EXIT-CODE-SOFTWARE)))
 
-(##interrupt-vector-set! 1 ;; ___INTR_TERMINATE
-  (lambda ()
-    (##declare (not interrupts-enabled))
-    (##exit-abruptly)))
+(define-prim (##intr-terminate-handler-set! handler)
+  (##interrupt-vector-set! 1 handler)) ;; ___INTR_TERMINATE
 
-))
+(define ##feature-intr-terminate
+  (##intr-terminate-handler-set! ##exit-abruptly))
+
+(macro-case-target
+ ((C)
+  ##feature-intr-terminate)
+ (else))
 
 ;;;----------------------------------------------------------------------------
 

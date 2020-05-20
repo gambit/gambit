@@ -13,13 +13,15 @@
   (##define-macro (use-fast-bignum-algorithms) #t))
 
  ((js)
-  (##define-macro (use-fast-bignum-algorithms) #t))
+  (##define-macro (use-fast-bignum-algorithms) #f))
 
  (else
   (##define-macro (use-fast-bignum-algorithms) #f)))
 
 (define-prim (##use-fast-bignum-algorithms?)
   (use-fast-bignum-algorithms))
+
+(##declare (mostly-fixnum))
 
 ;;;============================================================================
 
@@ -1124,9 +1126,15 @@
     (##fl/ (macro-inexact-+1) x)
     (##cpxnum./ (macro-noncpxnum->cpxnum 1) x)))
 
-(##define-macro (macro-make-qr q r) `(##values ,q ,r))
-(##define-macro (macro-qr-q qr)     `(##values-ref ,qr 0))
-(##define-macro (macro-qr-r qr)     `(##values-ref ,qr 1))
+(cond-expand
+  (use-pairs-for-qr-structures
+   (##define-macro (macro-make-qr q r) `(##cons ,q ,r))
+   (##define-macro (macro-qr-q qr)     `(##car ,qr))
+   (##define-macro (macro-qr-r qr)     `(##cdr ,qr)))
+  (else
+   (##define-macro (macro-make-qr q r) `(##values ,q ,r))
+   (##define-macro (macro-qr-q qr)     `(##values-ref ,qr 0))
+   (##define-macro (macro-qr-r qr)     `(##values-ref ,qr 1))))
 
 (define-prim (##/2 x y)
 
@@ -3431,6 +3439,7 @@ for a discussion of branch cuts.
     (##make-rectangular x y)))
 
 (define-prim (##make-polar x y)
+  (##declare (mostly-flonum-fixnum))
   (cond ((##not (##real? x))
          (##fail-check-real 1 make-polar x y))
         ((##not (##real? y))
@@ -5059,6 +5068,196 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##bitwise-not x)))
 
+(define-prim (##bitwise-andc1 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-andc1 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-andc1 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-and2 (##bitwise-not x) y))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxandc1 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-andc1 x y)
+  (macro-force-vars (x y)
+    (##bitwise-andc1 x y)))
+
+(define-prim (##bitwise-andc2 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-andc2 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-andc2 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-and2 x (##bitwise-not y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxandc2 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-andc2 x y)
+  (macro-force-vars (x y)
+    (##bitwise-andc2 x y)))
+
+(define-prim (##bitwise-nand x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-nand x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-nand x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-not (##bitwise-and2 x y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxnand x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (##bitwise-eqv2 x y)
+
+  (##define-macro (type-error-on-x) `'(1))
+  (##define-macro (type-error-on-y) `'(2))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-not (##bitwise-xor2 x y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxeqv x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim-nary (##bitwise-eqv x y)
+  0
+  x
+  (##bitwise-eqv2 x y)
+  macro-no-force
+  macro-no-check)
+
+(define-prim-nary (bitwise-eqv x y)
+  0
+  (if (macro-exact-int? x) x '(1))
+  (##bitwise-eqv2 x y)
+  macro-force-vars
+  macro-no-check
+  (##pair? ##fail-check-exact-integer))
+
+(define-prim (bitwise-nand x y)
+  (macro-force-vars (x y)
+    (##bitwise-nand x y)))
+
+(define-prim (##bitwise-nor x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-nor x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-nor x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-not (##bitwise-ior2 x y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxnor x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-nor x y)
+  (macro-force-vars (x y)
+    (##bitwise-nor x y)))
+
+(define-prim (##bitwise-orc1 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-orc1 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-orc1 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-ior2 (##bitwise-not x) y))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxorc1 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-orc1 x y)
+  (macro-force-vars (x y)
+    (##bitwise-orc1 x y)))
+
+(define-prim (##bitwise-orc2 x y)
+
+  (define (type-error-on-x)
+    (##fail-check-exact-integer 1 bitwise-orc2 x y))
+
+  (define (type-error-on-y)
+    (##fail-check-exact-integer 2 bitwise-orc2 x y))
+
+  (define (bignum-case x y)
+    ;; TODO: compute using a single loop over the arguments
+    (##bitwise-ior2 x (##bitwise-not y)))
+
+  (macro-exact-int-dispatch x (type-error-on-x)
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+      (##fxorc2 x y)
+      (bignum-case x y))
+
+    (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+      (bignum-case x y)
+      (bignum-case x y))))
+
+(define-prim (bitwise-orc2 x y)
+  (macro-force-vars (x y)
+    (##bitwise-orc2 x y)))
+
 (define-prim (##arithmetic-shift x y)
 
   (define (type-error-on-x)
@@ -5741,6 +5940,56 @@ for a discussion of branch cuts.
   macro-force-vars
   macro-check-fixnum)
 
+(define-prim (##fxandc1 x y)
+  (##fxand (##fxnot x) y))
+
+(define-prim-fixnum (fxandc1 x y)
+  (##fxandc1 x y))
+
+(define-prim (##fxandc2 x y)
+  (##fxand x (##fxnot y)))
+
+(define-prim-fixnum (fxandc2 x y)
+  (##fxandc2 x y))
+
+(define-prim-nary (##fxeqv x y)
+  -1
+  x
+  (##fxeqv x y)
+  macro-no-force
+  macro-no-check)
+
+(define-prim-nary (fxeqv x y)
+  -1
+  x
+  (##fxeqv x y)
+  macro-force-vars
+  macro-check-fixnum)
+
+(define-prim (##fxnand x y)
+  (##fxnot (##fxand x y)))
+
+(define-prim-fixnum (fxnand x y)
+  (##fxnand x y))
+
+(define-prim (##fxnor x y)
+  (##fxnot (##fxior x y)))
+
+(define-prim-fixnum (fxnor x y)
+  (##fxnor x y))
+
+(define-prim (##fxorc1 x y)
+  (##fxior (##fxnot x) y))
+
+(define-prim-fixnum (fxorc1 x y)
+  (##fxorc1 x y))
+
+(define-prim (##fxorc2 x y)
+  (##fxior x (##fxnot y)))
+
+(define-prim-fixnum (fxorc2 x y)
+  (##fxorc2 x y))
+
 (define-prim (##fxif x y z))
 
 (define-prim (fxif x y z)
@@ -6159,14 +6408,35 @@ for a discussion of branch cuts.
 ;;; Sets x[i] to x[i] & y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-bitwise-and! x i y j))
 
+;;; Sets x[i] to ~x[i] & y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-andc1! x i y j))
+
+;;; Sets x[i] to x[i] & ~y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-andc2! x i y j))
+
+;;; Sets x[i] to ~(x[i] ^ y[j]) (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-eqv! x i y j))
+
 ;;; Sets x[i] to x[i] | y[j] (accessing x and y as adigits)
 (define-prim (##bignum.adigit-bitwise-ior! x i y j))
 
-;;; Sets x[i] to x[i] ^ y[j] (accessing x and y as adigits)
-(define-prim (##bignum.adigit-bitwise-xor! x i y j))
+;;; Sets x[i] to ~(x[i] & y[j]) (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-nand! x i y j))
+
+;;; Sets x[i] to ~(x[i] | y[j]) (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-nor! x i y j))
 
 ;;; Sets x[i] to !x[i] (accessing x as adigits)
 (define-prim (##bignum.adigit-bitwise-not! x i))
+
+;;; Sets x[i] to ~x[i] | y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-orc1! x i y j))
+
+;;; Sets x[i] to x[i] | ~y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-orc2! x i y j))
+
+;;; Sets x[i] to x[i] ^ y[j] (accessing x and y as adigits)
+(define-prim (##bignum.adigit-bitwise-xor! x i y j))
 
 (macro-case-target
  ((C)
@@ -6526,29 +6796,83 @@ end-of-code
       (let ((n (##fx- (##bignum.adigit-length result) 1)))
 
         (cond ((##bignum.adigit-zero? result n)
+
+               ;; result is a bignum of the form:
+               ;;   0000 abcd .... efgh (adigits in binary)
+               ;;    n   n-1        0   (adigit index)
+
+               ;; we know result represents a nonnegative integer
+               ;; must check if adigits abcd .... are also 0000
+
                (let loop1 ((i (##fx- n 1)))
                  (cond ((##fx< i 0)
+                        ;; all adigits are 0000
                         0)
                        ((##bignum.adigit-zero? result i)
+                        ;; continue skipping top adigits that are 0000
                         (loop1 (##fx- i 1)))
                        ((##bignum.adigit-negative? result i)
+                        ;; result is a bignum of the form:
+                        ;;   0000 .... 0000 1bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; so we must include adigit i+1 to avoid result
+                        ;; being interpreted as a negative integer
                         (##bignum.adigit-shrink! result (##fx+ i 2)))
                        (else
+                        ;; result is a bignum of the form:
+                        ;;   0000 .... 0000 0bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; with 0bcd != 0000, so the top 0000 adigits can
+                        ;; be removed without changing the sign of result
                         (##bignum.adigit-shrink! result (##fx+ i 1))))))
 
               ((##bignum.adigit-ones? result n)
+
+               ;; result is a bignum of the form:
+               ;;   1111 abcd .... efgh (adigits in binary)
+               ;;    n   n-1        0   (adigit index)
+
+               ;; we know result represents a negative integer
+               ;; must check if adigits abcd .... are also 1111
+
                (let loop2 ((i (##fx- n 1)))
                  (cond ((##fx< i 0)
+                        ;; all adigits are 1111
                         -1)
                        ((##bignum.adigit-ones? result i)
+                        ;; continue skipping top adigits that are 1111
                         (loop2 (##fx- i 1)))
                        ((##not (##bignum.adigit-negative? result i))
+                        ;; result is a bignum of the form:
+                        ;;   1111 .... 1111 0bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; so we must include adigit i+1 to avoid result
+                        ;; being interpreted as a nonnegative integer
                         (##bignum.adigit-shrink! result (##fx+ i 2)))
                        (else
+                        ;; result is a bignum of the form:
+                        ;;   1111 .... 1111 1bcd .... efgh (adigits in binary)
+                        ;;    n         i+1  i         0   (adigit index)
+                        ;; with 1bcd != 1111, so the top 1111 adigits can
+                        ;; be removed without changing the sign of result
                         (##bignum.adigit-shrink! result (##fx+ i 1))))))
 
               (else
                result)))))
+
+(macro-if-enable-assert-normalized-exact-int
+
+ (define-prim (##bignum.normalized? x)
+   (let ((n (##fx- (##bignum.adigit-length x) 1)))
+     (and (##fx>= n 0)
+          (cond ((##bignum.adigit-zero? x n)
+                 (and (##fx> n 0)
+                      (##bignum.adigit-negative? x (##fx- n 1))))
+                ((##bignum.adigit-ones? x n)
+                 (and (##fx> n 0)
+                      (##not (##bignum.adigit-negative? x (##fx- n 1)))))
+                (else
+                 #t))))))
 
 ;;; Bignum multiplication.
 
@@ -8596,10 +8920,10 @@ end-of-code
                                 (##f64vector-ref result (##fx+ index 1)))
                                (result-real
                                 (##fl- (##fl* multiplier-real real)
-                                            (##fl* multiplier-imag imag)))
+                                       (##fl* multiplier-imag imag)))
                                (result-imag
                                 (##fl+ (##fl* multiplier-real imag)
-                                            (##fl* multiplier-imag real)))
+                                       (##fl* multiplier-imag real)))
                                (result-index (##fx* i 2)))
                           (##f64vector-set! result result-index result-real)
                           (##f64vector-set! result (##fx+ result-index 1) result-imag)
@@ -9745,6 +10069,16 @@ end-of-code
 
 ;;; Bignum division.
 
+(cond-expand
+  (use-pairs-for-rb-structures
+   (##define-macro (macro-make-rb r b) `(##cons ,r ,b))
+   (##define-macro (macro-rb-r rb)     `(##car ,rb))
+   (##define-macro (macro-rb-b rb)     `(##cdr ,rb)))
+  (else
+   (##define-macro (macro-make-rb r b) `(##values ,r ,b))
+   (##define-macro (macro-rb-r rb)     `(##values-ref ,rb 0))
+   (##define-macro (macro-rb-b rb)     `(##values-ref ,rb 1))))
+
 (define ##reciprocal-cache (##make-table-aux 0 #f #t #f ##eq?))
 
 (define ##bignum.mdigit-width/2
@@ -9762,27 +10096,30 @@ end-of-code
   ;; u is an unnormalized bignum, v is a normalized exact-int
   ;; 0 < v <= u
 
-  (define (##exact-int.reciprocal v bits)
+  (define (reciprocal v bits)
 
-    ;; returns an approximation to the reciprocal of
+    ;; computes an approximation to the reciprocal of
     ;; .v1 v2 v3 ...
-    ;; where v1 is the highest set bit of v; result is of the form
+    ;; where v1 is the highest set bit of v; the reciprocal is of the form
     ;; xx . xxxxxxxxxxxxxxxxxxx where there are bits + 1 bits to the
-    ;; right of the binary point. The result is always <= 2.
+    ;; right of the binary point. The reciprocal is always <= 2.
     ;; See Knuth, volume 2, Algorithm R in Section 4.3.3
 
-    (let ((cached-value (##table-ref ##reciprocal-cache v #f)))
-      (if (and cached-value
-               (##not (##fx< (##cdr cached-value) bits)))
-          cached-value
+    ;; this procedure returns a rb structure containing the reciprocal
+    ;; in the r field and the number of bits in the b field
+
+    (let ((cached-rb (##table-ref ##reciprocal-cache v #f)))
+      (if (and cached-rb
+               (##not (##fx< (macro-rb-b cached-rb) bits)))
+          cached-rb
           (let ((v-length (##integer-length v)))
 
             (define (recip v bits)
-              (cond ((and cached-value
-                          (##not (##fx< (##cdr cached-value) bits)))
-                     cached-value)
+              (cond ((and cached-rb
+                          (##not (##fx< (macro-rb-b cached-rb) bits)))
+                     cached-rb)
                     ((##fx<= bits ##bignum.mdigit-width/2)
-                     (macro-make-qr
+                     (macro-make-rb
                       (##fxquotient
                        ##bignum.mdigit-base*16
                        (##arithmetic-shift
@@ -9798,8 +10135,8 @@ end-of-code
                              (recip v high-bits))
                             (z           ;; high-bits + 1 to right of point
                              (##arithmetic-shift
-                              (macro-qr-q z-bits)
-                              (##fx- high-bits (macro-qr-r z-bits))))
+                              (macro-rb-r z-bits)
+                              (##fx- high-bits (macro-rb-b z-bits))))
                             (v-bits      ;; bits + 3 to right of point
                              (##arithmetic-shift
                               v
@@ -9820,12 +10157,12 @@ end-of-code
                               temp
                               (##fx- bits-to-shift))))
                        (if (##fx< (##first-bit-set temp) bits-to-shift)
-                           (macro-make-qr (##+ shifted-temp 1) bits)
-                           (macro-make-qr shifted-temp bits))))))
+                           (macro-make-rb (##+ shifted-temp 1) bits)
+                           (macro-make-rb shifted-temp bits))))))
 
-            (let ((result (recip v bits)))
-              (##table-set! ##reciprocal-cache v result)
-              result)))))
+            (let ((rb (recip v bits)))
+              (##table-set! ##reciprocal-cache v rb)
+              rb)))))
 
   (define (naive-div u v)
 
@@ -10020,9 +10357,9 @@ end-of-code
                      (length-difference (##fx- u-length v-length)))
                 (if (##fx< length-difference ##bignum.fft-mul-min-width)
                     (naive-div u v)
-                    (let* ((z-bits (##exact-int.reciprocal v length-difference))
-                           (z (macro-qr-q z-bits))
-                           (bits (macro-qr-r z-bits)))
+                    (let* ((z-bits (reciprocal v length-difference))
+                           (z (macro-rb-r z-bits))
+                           (bits (macro-rb-b z-bits)))
                       (let ((test-quotient
                              (##bignum.arithmetic-shift
                               (##* (##bignum.arithmetic-shift
@@ -10411,113 +10748,98 @@ end-of-code
   (macro-ratnum-denominator x))
 
 (define-prim (##ratnum.= x y)
-  (##declare (mostly-fixnum)
-             (standard-bindings))
-  (and (= (macro-ratnum-numerator x)
-          (macro-ratnum-numerator y))
-       (= (macro-ratnum-denominator x)
-          (macro-ratnum-denominator y))))
+  (and (##= (macro-ratnum-numerator x)
+            (macro-ratnum-numerator y))
+       (##= (macro-ratnum-denominator x)
+            (macro-ratnum-denominator y))))
 
 (define-prim (##ratnum.< x y)
-  (##declare (mostly-fixnum)
-             (standard-bindings))
-  (< (* (macro-ratnum-numerator x)
-        (macro-ratnum-denominator y))
-     (* (macro-ratnum-denominator x)
-        (macro-ratnum-numerator y))))
+  (##< (##* (macro-ratnum-numerator x)
+            (macro-ratnum-denominator y))
+       (##* (macro-ratnum-denominator x)
+            (macro-ratnum-numerator y))))
 
 (define-prim (##ratnum.+ x y)
-  (##declare (mostly-fixnum)
-             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-numerator y))
         (s (macro-ratnum-denominator y)))
     (let ((d1 (##gcd q s)))
-      (if (eqv? d1 1)
-          (macro-ratnum-make (+ (* p s)
-                                (* r q))
-                             (* q s))
-          (let* ((s-prime (quotient s d1))
-                 (t (+ (* p s-prime)
-                       (* r (quotient q d1))))
+      (if (##eqv? d1 1)
+          (macro-ratnum-make (##+ (##* p s)
+                                  (##* r q))
+                             (##* q s))
+          (let* ((s-prime (##quotient s d1))
+                 (t (##+ (##* p s-prime)
+                         (##* r (##quotient q d1))))
                  (d2 (##gcd d1 t))
-                 (num (quotient t d2))
-                 (den (* (quotient q d2)
-                         s-prime)))
-            (if (eqv? den 1)
+                 (num (##quotient t d2))
+                 (den (##* (##quotient q d2)
+                           s-prime)))
+            (if (##eqv? den 1)
                 num
                 (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.- x y)
-  (##declare (mostly-fixnum)
-             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-numerator y))
         (s (macro-ratnum-denominator y)))
     (let ((d1 (##gcd q s)))
-      (if (eqv? d1 1)
-          (macro-ratnum-make (- (* p s)
-                                (* r q))
-                             (* q s))
-          (let* ((s-prime (quotient s d1))
-                 (t (- (* p s-prime)
-                       (* r (quotient q d1))))
+      (if (##eqv? d1 1)
+          (macro-ratnum-make (##- (##* p s)
+                                  (##* r q))
+                             (##* q s))
+          (let* ((s-prime (##quotient s d1))
+                 (t (##- (##* p s-prime)
+                         (##* r (##quotient q d1))))
                  (d2 (##gcd d1 t))
-                 (num (quotient t d2))
-                 (den (* (quotient q d2)
-                         s-prime)))
-            (if (eqv? den 1)
+                 (num (##quotient t d2))
+                 (den (##* (##quotient q d2)
+                           s-prime)))
+            (if (##eqv? den 1)
                 num
                 (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.* x y)
-  (##declare (mostly-fixnum)
-             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-numerator y))
         (s (macro-ratnum-denominator y)))
-    (if (eq? x y)
-        (macro-ratnum-make (square p) (square q))     ;; already in lowest form
+    (if (##eq? x y)
+        (macro-ratnum-make (##square p) (##square q))     ;; already in lowest form
         (let* ((gcd-ps (##gcd p s))
                (gcd-rq (##gcd r q))
-               (num (* (quotient p gcd-ps) (quotient r gcd-rq)))
-               (den (* (quotient q gcd-rq) (quotient s gcd-ps))))
-          (if (eqv? den 1)
+               (num (##* (##quotient p gcd-ps) (##quotient r gcd-rq)))
+               (den (##* (##quotient q gcd-rq) (##quotient s gcd-ps))))
+          (if (##eqv? den 1)
               num
               (macro-ratnum-make num den))))))
 
 (define-prim (##ratnum./ x y)
-  (##declare (mostly-fixnum)
-             (standard-bindings))
   (let ((p (macro-ratnum-numerator x))
         (q (macro-ratnum-denominator x))
         (r (macro-ratnum-denominator y))
         (s (macro-ratnum-numerator y)))
-    (if (eq? x y)
+    (if (##eq? x y)
         1
         (let* ((gcd-ps (##gcd p s))
                (gcd-rq (##gcd r q))
-               (num (* (quotient p gcd-ps) (quotient r gcd-rq)))
-               (den (* (quotient q gcd-rq) (quotient s gcd-ps))))
-          (if (negative? den)
-              (if (eqv? den -1)
-                  (- num)
-                  (macro-ratnum-make (- num) (- den)))
-              (if (eqv? den 1)
+               (num (##* (##quotient p gcd-ps) (##quotient r gcd-rq)))
+               (den (##* (##quotient q gcd-rq) (##quotient s gcd-ps))))
+          (if (##negative? den)
+              (if (##eqv? den -1)
+                  (##- num)
+                  (macro-ratnum-make (##- num) (##- den)))
+              (if (##eqv? den 1)
                   num
                   (macro-ratnum-make num den)))))))
 
 (define-prim (##ratnum.normalize num den)
-  (##declare (mostly-fixnum)
-             (standard-bindings))
-  (let* ((x (##gcd num den))
-         (y (if (negative? den) (- x) x))
-         (num (quotient num y))
-         (den (quotient den y)))
-    (if (eqv? den 1)
+  (let* ((x (##gcd num den)) ;; gcd always returns nonnegative
+         (num (##quotient num x))
+         (den (##quotient den x)))
+    (if (##eqv? den 1)
         num
         (macro-ratnum-make num den))))
 
@@ -11248,6 +11570,7 @@ end-of-code
   (macro-cpxnum-imag x))
 
 (define-prim (##cpxnum.= x y)
+  (##declare (mostly-fixnum-flonum))
   (and (##= (macro-cpxnum-real x) (macro-cpxnum-real y))
        (##= (macro-cpxnum-imag x) (macro-cpxnum-imag y))))
 
@@ -11257,10 +11580,7 @@ end-of-code
     (if (and (##flonum? a) (##flonum? b)
              (##flonum? c) (##flonum? d))
         (##make-rectangular (##fl+ a c) (##fl+ b d))
-        (let ()
-          (##declare (standard-bindings)
-                     (mostly-fixnum))
-          (##make-rectangular (+ a c) (+ b d))))))
+        (##make-rectangular (##+ a c) (##+ b d)))))
 
 (define-prim (##cpxnum.* x y)
   (let ((a (macro-cpxnum-real x)) (b (macro-cpxnum-imag x))
@@ -11269,24 +11589,20 @@ end-of-code
              (##flonum? c) (##flonum? d))
         (##make-rectangular (##fl- (##fl* a c) (##fl* b d))
                             (##fl+ (##fl* a d) (##fl* b c)))
-        (let ()
-          (##declare (standard-bindings)
-                     (mostly-fixnum))
-          (##make-rectangular (- (* a c) (* b d))
-                              (+ (* a d) (* b c)))))))
+        (##make-rectangular (##- (##* a c) (##* b d))
+                            (##+ (##* a d) (##* b c))))))
 (define-prim (##cpxnum.- x y)
   (let ((a (macro-cpxnum-real x)) (b (macro-cpxnum-imag x))
         (c (macro-cpxnum-real y)) (d (macro-cpxnum-imag y)))
     (if (and (##flonum? a) (##flonum? b)
              (##flonum? c) (##flonum? d))
         (##make-rectangular (##fl- a c) (##fl- b d))
-        (let ()
-          (##declare (standard-bindings)
-                     (mostly-fixnum))
-          (##make-rectangular (- a c) (- b d))))))
+        (##make-rectangular (##- a c) (##- b d)))))
 
 
 (define-prim (##cpxnum./ x y)
+
+  (##declare (mostly-fixnum-flonum))
 
   (define (basic/ a b c d q)
     (##make-rectangular (##/ (##+ (##* a c) (##* b d)) q)

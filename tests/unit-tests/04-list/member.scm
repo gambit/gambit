@@ -4,7 +4,7 @@
 (check-equal? (memq '() '(1 2)) #f)
 (check-equal? (memq '() '(1 ())) '(()))
 (check-equal? (memq '() '(1 () ())) '(() ()))
-(check-equal? (memq 100000000000000000000 '(1 100000000000000000000 3)) #f)
+(check-equal? (memq (+ 100000000000000000000 5) '(1 100000000000000000005 3)) #f)
 (check-equal? (memq (cons 1 2) '(1 (1 . 2) ())) #f)
 
 (check-tail-exn type-exception? (lambda () (memq '() #f)))
@@ -44,7 +44,7 @@
 (check-equal? (member '() '(1 2) eq?) #f)
 (check-equal? (member '() '(1 ()) eq?) '(()))
 (check-equal? (member '() '(1 () ()) eq?) '(() ()))
-(check-equal? (member 100000000000000000000 '(1 100000000000000000000 3) eq?) #f)
+(check-equal? (member (+ 100000000000000000000 5) '(1 100000000000000000005 3) eq?) #f)
 (check-equal? (member (cons 1 2) '(1 (1 . 2) ()) eq?) #f)
 
 (check-equal? (member '() '() eqv?) #f)

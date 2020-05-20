@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -222,15 +222,15 @@
                               (^array-index
                                (gvm-state-stack-use ctx 'rd)
                                (^int 0)))
-                      (^structure-ref (^rts-field-use 'current_thread)
+                      (^structure-ref (gvm-state-current-thread ctx)
                                       univ-thread-denv-slot)))
                     (result
                      (if thread-save?
-                         (^rts-field-use 'current_thread)
+                         (gvm-state-current-thread ctx)
                          cont)))
 
                (^ (if thread-save?
-                      (^structure-set! (^rts-field-use 'current_thread)
+                      (^structure-set! (gvm-state-current-thread ctx)
                                        univ-thread-cont-slot
                                        cont)
                       (^))
@@ -290,7 +290,7 @@
                           (^getstk x)))))))
 
              (if thread-restore?
-                 (^ (^assign (^rts-field-use 'current_thread)
+                 (^ (^assign (gvm-state-current-thread ctx)
                              (^local-var (^ 'arg 1)))
                     (^assign (^local-var (^ 'arg 1))
                              (^structure-ref (^local-var (^ 'arg 1))
@@ -305,7 +305,7 @@
                                (^local-var (^ 'arg 1)))
                        (^public 'frame)))
 
-             (^structure-set! (^rts-field-use 'current_thread)
+             (^structure-set! (gvm-state-current-thread ctx)
                               univ-thread-denv-slot
                               (^member (^cast* 'continuation
                                                (^local-var (^ 'arg 1)))
@@ -377,7 +377,7 @@
                (^int 0))
               (^member arg1 (^public 'frame)))
 
-             (^structure-set! (^rts-field-use 'current_thread)
+             (^structure-set! (gvm-state-current-thread ctx)
                               univ-thread-denv-slot
                               (^member arg1 (^public 'denv)))
 
@@ -572,7 +572,7 @@
                  'pair))
          (list 'is_vector
                (lambda (ctx)
-                 (if (eq? (univ-vector-representation ctx) 'class)
+                 (if (eq? (univ-vector-representation ctx 'scmobj) 'class)
                      'vector
                      '(array scmobj))))
          (list 'is_string
@@ -784,15 +784,15 @@
                               (^array-index
                                (gvm-state-stack-use ctx 'rd)
                                (^int 0)))
-                      (^structure-ref (^rts-field-use 'current_thread)
+                      (^structure-ref (gvm-state-current-thread ctx)
                                       univ-thread-denv-slot)))
                     (result
                      (if thread-save?
-                         (^rts-field-use 'current_thread)
+                         (gvm-state-current-thread ctx)
                          cont)))
 
                (^ (if thread-save?
-                      (^structure-set! (^rts-field-use 'current_thread)
+                      (^structure-set! (gvm-state-current-thread ctx)
                                        univ-thread-cont-slot
                                        cont)
                       (^))
@@ -852,7 +852,7 @@
                           (^getstk x)))))))
 
              (if thread-restore?
-                 (^ (^assign (^rts-field-use 'current_thread)
+                 (^ (^assign (gvm-state-current-thread ctx)
                              (^local-var (^ 'arg 1)))
                     (^assign (^local-var (^ 'arg 1))
                              (^structure-ref (^local-var (^ 'arg 1))
@@ -867,7 +867,7 @@
                                (^local-var (^ 'arg 1)))
                        (^public 'frame)))
 
-             (^structure-set! (^rts-field-use 'current_thread)
+             (^structure-set! (gvm-state-current-thread ctx)
                               univ-thread-denv-slot
                               (^member (^cast* 'continuation
                                                (^local-var (^ 'arg 1)))
@@ -939,7 +939,7 @@
                (^int 0))
               (^member arg1 (^public 'frame)))
 
-             (^structure-set! (^rts-field-use 'current_thread)
+             (^structure-set! (gvm-state-current-thread ctx)
                               univ-thread-denv-slot
                               (^member arg1 (^public 'denv)))
 
@@ -1052,42 +1052,101 @@
     ((inttemp2)
      (rts-field 'inttemp2 'int (^int 0) '(public)))
 
-    ((current_thread)
-     (rts-field 'current_thread
+    ((current_vm)
+     (rts-field 'current_vm
                 'scmobj
                 (^structure-box
                  (^array-literal
                   'scmobj
                   (list (^null)   ;; type descriptor (filled in later)
                         (^null)   ;; lock1
-                        (^null)   ;; btq-deq-next
-                        (^null)   ;; btq-deq-prev
+                        (^null)   ;; unused-field2
+                        (^null)   ;; unused-field3
+                        (^null)   ;; unused-field4
+                        (^null)   ;; unused-field5
+                        (^null)   ;; unused-field6
+                        (^null)   ;; unused-field7
+                        (^null)   ;; unused-field8
+                        (^null)   ;; lock2
+                        (^null)   ;; unused-field10
+                        (^null)   ;; unused-field11
+                        (^null)   ;; unused-field12
+                        (^null)   ;; unused-field13
+                        (^null)   ;; unused-field14
+                        (^null)   ;; unused-field15
+                        (^null)   ;; unused-field16
+                        (^null)   ;; processor-deq-next
+                        (^null)   ;; processor-deq-prev
+                        (^null)   ;; idle-processor-count
+                        )))
+                '(public)))
+
+    ((current_processor)
+     (rts-field 'current_processor
+                'scmobj
+                (^structure-box
+                 (^array-literal
+                  'scmobj
+                  (list (^null)   ;; type descriptor (filled in later)
+                        (^null)   ;; lock1
+                        (^null)   ;; condvar-deq-next
+                        (^null)   ;; condvar-deq-prev
                         (^null)   ;; btq-color
                         (^null)   ;; btq-parent
                         (^null)   ;; btq-left
                         (^null)   ;; btq-leftmost
-                        (^null)   ;; tgroup
+                        (^null)   ;; false
                         (^null)   ;; lock2
                         (^null)   ;; toq-color
                         (^null)   ;; toq-parent
                         (^null)   ;; toq-left
                         (^null)   ;; toq-leftmost
-                        (^null)   ;; threads-deq-next
-                        (^null)   ;; threads-deq-prev
+                        (^obj #f) ;; current-thread
+                        #;
+                        (^structure-box ;; current-thread
+                         (^array-literal
+                          'scmobj
+                          (list (^null)   ;; type descriptor (filled in later)
+                                (^null)   ;; lock1
+                                (^null)   ;; btq-deq-next
+                                (^null)   ;; btq-deq-prev
+                                (^null)   ;; btq-color
+                                (^null)   ;; btq-parent
+                                (^null)   ;; btq-left
+                                (^null)   ;; btq-leftmost
+                                (^null)   ;; tgroup
+                                (^null)   ;; lock2
+                                (^null)   ;; toq-color
+                                (^null)   ;; toq-parent
+                                (^null)   ;; toq-left
+                                (^null)   ;; toq-leftmost
+                                (^null)   ;; threads-deq-next
+                                (^null)   ;; threads-deq-prev
+                                (^null)   ;; floats
+                                (^null)   ;; btq-container
+                                (^null)   ;; toq-container
+                                (^null)   ;; name
+                                (^null)   ;; end-condvar
+                                (^null)   ;; exception?
+                                (^null)   ;; result
+                                (^null)   ;; cont
+                                (^obj '()) ;; denv
+                                (^null)   ;; denv-cache1
+                                (^null)   ;; denv-cache2
+                                (^null)   ;; denv-cache3
+                                (^null)   ;; repl-channel
+                                (^null)   ;; mailbox
+                                (^null)   ;; specific
+                                (^null)   ;; resume-thunk
+                                (^null)   ;; interrupts
+                                (^null)   ;; last-processor
+                                ;;(^null)   ;; pinned
+                                )))
+                        (^null)   ;; unused-field15
                         (^null)   ;; floats
-                        (^null)   ;; name
-                        (^null)   ;; end-condvar
-                        (^null)   ;; exception?
-                        (^null)   ;; result
-                        (^null)   ;; cont
-                        (^obj '()) ;; denv
-                        (^null)   ;; denv-cache1
-                        (^null)   ;; denv-cache2
-                        (^null)   ;; denv-cache3
-                        (^null)   ;; repl-channel
-                        (^null)   ;; mailbox
-                        (^null)   ;; specific
-                        (^null)   ;; resume-thunk
+                        (^null)   ;; processor-deq-next
+                        (^null)   ;; processor-deq-prev
+                        (^null)   ;; id
                         (^null)   ;; interrupts
                         )))
                 '(public)))
@@ -1165,7 +1224,27 @@
               (index (^local-var 'index))
               (old (^local-var 'old)))
 
-          (define (run mod-descr)
+          (define (run-mod mod-descr)
+            (^ (^assign (gvm-state-sp-use ctx 'wr)
+                        (^int -1))
+
+               (^push (univ-end-of-cont-marker ctx))
+
+               (^assign (^rts-field-use 'r0)
+                        (^rts-jumpable-use 'underflow))
+
+               (^assign (^rts-field-use 'nargs)
+                        (^int 0))
+
+               (^expr-statement
+                (^call-prim
+                 (^rts-method-use 'trampoline)
+                 (^downupcast*
+                  'entrypt
+                  'jumpable
+                  (^vector-ref mod-descr (^int 4)))))))
+
+          (define (load-mod mod-descr)
             (^ (^assign (gvm-state-sp-use ctx 'wr)
                         (^int -1))
 
@@ -1205,9 +1284,14 @@
                                  (^rts-field-use-priv 'module_map)
                                  name))
 
-             (^if (^null? info)
+             (^assign (^rts-field-use-priv 'module_latest_registered)
+                      module_descr)
 
-                  (run module_descr)
+             (^if (^not
+                   (^parens
+                    (^or (^null? info)
+                         (^= (^rts-field-use-priv 'module_count)
+                             (^array-length (^rts-field-use-priv 'module_table))))))
 
                   (^ (^var-declaration
                       'int
@@ -1253,9 +1337,10 @@
                                                (^- (^vector-length temp)
                                                    (^int 1))))
 
-                                     (run (^array-index
-                                           (^rts-field-use-priv 'module_table)
-                                           (^int 0))))))))))))))
+                                     (run-mod
+                                      (^array-index
+                                       (^rts-field-use-priv 'module_table)
+                                       (^int 0))))))))))))))
 
     ;; ((modlinkinfo)
     ;;  (rts-class
@@ -1282,6 +1367,12 @@
      (rts-field
       'module_table
       '(array scmobj)
+      (^null)))
+
+    ((module_latest_registered)
+     (rts-field
+      'module_latest_registered
+      'scmobj
       (^null)))
 
     ((heapify_cont)
@@ -3893,7 +3984,7 @@ EOF
       '() ;; class-fields
       (list (univ-field 'name 'str #f '(public)) ;; instance-fields
             (univ-field 'hash 'scmobj #f '(public))
-            (univ-field 'interned 'scmobj (^obj #f) '(public)))
+            (univ-field 'interned 'scmobj #f '(public)))
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method
@@ -4360,15 +4451,9 @@ EOF
         (let ((s (^local-var 's)))
           (case (target-name (ctx-target ctx))
             ((js)
-             (^if (^prop-index-exists?
-                   "function () {return this;}()"
-                   (^str "console"))
-                  (^expr-statement
-                   (^call-prim (^member (^global-var 'console) 'log)
-                               s))
-                  (^expr-statement
-                   (^call-prim "print"
-                               s))))
+             (^expr-statement
+              (^call-prim (^member (^global-var 'console) 'log)
+                          s)))
             ((python)
              (^expr-statement (^call-prim "print" s)))
             ((ruby php)
@@ -4429,8 +4514,14 @@ EOF
         (let ((code (^local-var 'code)))
           (case (target-name (ctx-target ctx))
             ((js)
-             (^expr-statement
-              (^call-prim (^member (^global-var 'process) 'exit) code)))
+             (^if "(function () { return this !== this.window; })()"
+                  (^expr-statement
+                   (^call-prim (^member (^global-var 'process) 'exit) code))
+                  (univ-throw ctx
+                              (^call-prim (^global-var 'Error)
+                                          (^concat
+                                           (^str "process exiting with code=")
+                                           code)))))
             ((python ruby php)
              (^expr-statement (^call-prim "exit" code)))
             ((java)
@@ -4861,11 +4952,12 @@ EOF
               (alist (^local-var 'alist))
               (key (^local-var 'key)))
 
-          (define (convert-array ctx obj type)
+          (define (try-convert-array ctx obj type)
             (let ((constructor (univ-array-constructor ctx type)))
-              (if (and (not (eq? type 'scmobj))
-                       (equal? constructor
-                               (univ-array-constructor ctx 'scmobj)))
+              (if (or (not constructor)
+                      (and (not (eq? type 'scmobj)) ;; avoid useless tests
+                           (equal? constructor
+                                   (univ-array-constructor ctx 'scmobj))))
                   (^)
                   (^if (^instanceof constructor obj)
                        (^return
@@ -4918,23 +5010,23 @@ EOF
            (^if (^str? obj)
                 (^return (^str->string obj)))
 
+           (try-convert-array ctx obj 'scmobj)
+           (try-convert-array ctx obj 'u8)
+           (try-convert-array ctx obj 'u16)
+           (try-convert-array ctx obj 'u32)
+           (try-convert-array ctx obj 'u64)
+           (try-convert-array ctx obj 's8)
+           (try-convert-array ctx obj 's16)
+           (try-convert-array ctx obj 's32)
+           (try-convert-array ctx obj 's64)
+           (try-convert-array ctx obj 'f32)
+           (try-convert-array ctx obj 'f64)
+
            ; TODO: generalise for python, java, ruby and php
            (case (target-name (ctx-target ctx))
             ((js)
              (^if (^typeof "object" obj)
-                  (^ (convert-array ctx obj 'scmobj)
-                     (convert-array ctx obj 'u8)
-                     (convert-array ctx obj 'u16)
-                     (convert-array ctx obj 'u32)
-                     (convert-array ctx obj 'u64)
-                     (convert-array ctx obj 's8)
-                     (convert-array ctx obj 's16)
-                     (convert-array ctx obj 's32)
-                     (convert-array ctx obj 's64)
-                     (convert-array ctx obj 'f32)
-                     (convert-array ctx obj 'f64)
-
-                     (^var-declaration '() alist (^null-obj))
+                  (^ (^var-declaration '() alist (^null-obj))
                      "for (var " key " in " obj ") {\n"
                      (^assign alist (^cons (^cons (^call-prim
                                                    (^rts-method-ref 'host2scm)
@@ -4945,11 +5037,8 @@ EOF
                                            alist))
                      "}\n"
                      (^return alist))))
-            ((python)
-             ;;TODO: improve!
-             (^if (^instanceof "list" obj)
-                  (^return obj)))
-            (else (^)))
+            (else
+             (^)))
 
 
            ;; Scheme object "passthrough".
@@ -5109,17 +5198,19 @@ EOF
       (lambda (ctx)
        (let ((obj (^local-var 'obj)))
 
-         (define (convert-array ctx obj type)
+         (define (try-convert-array ctx obj type)
            (let ((constructor (univ-array-constructor ctx type)))
-             (if (and (not (eq? type 'scmobj))
-                      (equal? constructor
-                              (univ-array-constructor ctx 'scmobj)))
+             (if (and constructor
+                      (and (not (eq? type 'scmobj))
+                           (equal? constructor
+                                   (univ-array-constructor ctx 'scmobj))))
                  (^)
                  (^if (^vect? type obj)
-                      (if (eq? type 'scmobj)
-                          (^return (^map (^rts-method-ref 'scm2host)
-                                         (^vect-unbox type obj)))
-                          (^return (^vect-unbox type obj)))))))
+                      (^return
+                       (if (eq? type 'scmobj)
+                           (^map (^rts-method-ref 'scm2host)
+                                 (^vect-unbox type obj))
+                           (^vect-unbox type obj)))))))
 
          (^
           (^if (^void-obj? obj)
@@ -5162,21 +5253,17 @@ EOF
                 ((host)
                  (^return obj))))
 
-          ; TODO: generalise for python, ruby, php and java
-          (case (target-name (ctx-target ctx))
-           ((js)
-            (^ (convert-array ctx obj 'scmobj)
-               (convert-array ctx obj 'u8)
-               (convert-array ctx obj 'u16)
-               (convert-array ctx obj 'u32)
-               (convert-array ctx obj 'u64)
-               (convert-array ctx obj 's8)
-               (convert-array ctx obj 's16)
-               (convert-array ctx obj 's32)
-               (convert-array ctx obj 's64)
-               (convert-array ctx obj 'f32)
-               (convert-array ctx obj 'f64)))
-           (else (^)))
+          (try-convert-array ctx obj 'scmobj)
+          (try-convert-array ctx obj 'u8)
+          (try-convert-array ctx obj 'u16)
+          (try-convert-array ctx obj 'u32)
+          (try-convert-array ctx obj 'u64)
+          (try-convert-array ctx obj 's8)
+          (try-convert-array ctx obj 's16)
+          (try-convert-array ctx obj 's32)
+          (try-convert-array ctx obj 's64)
+          (try-convert-array ctx obj 'f32)
+          (try-convert-array ctx obj 'f64)
 
           ; TODO: generalise for python, ruby, php and java
           ; Note: pair conversions are not bijective.
@@ -5807,6 +5894,10 @@ EOF
   (univ-glo-use ctx '##vm-main-module-ref 'wr)
   (univ-glo-use ctx '##program-descr 'wr)
 
+  ;; in case these are needed by dynamically loaded code
+  (univ-use-rtlib ctx 'check_procedure)
+  (univ-use-rtlib ctx 'check_procedure_glo)
+
   (^expr-statement
    (^call-prim
     (^rts-method-use-priv 'module_registry_init)
@@ -5890,14 +5981,11 @@ EOF
 (define (univ-source-file-header targ-name)
    (case targ-name
 
-     ((js java go)
+     ((js python java go)
       "")
 
      ((php)
       "<?php\n")
-
-     ((python)
-      "#! /usr/bin/python\n")
 
      ((ruby)
       "# encoding: utf-8\n")
@@ -5909,7 +5997,7 @@ EOF
 (define (univ-source-file-footer targ-name)
    (case targ-name
 
-     ((js java python ruby go)
+     ((js python java go ruby)
       "")
 
      ((php)

@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -634,7 +634,7 @@
                          (##raise-expression-parsing-exception
                           'namespace-prefix-must-be-string
                           space-src)
-                         (if (##not (##valid-prefix? space))
+                         (if (##not (##namespace-valid? space))
                              (##raise-expression-parsing-exception
                               'ill-formed-namespace-prefix
                               space-src)
@@ -813,29 +813,31 @@
 (define-prim (##namespace-separators-set! x)
   (set! ##namespace-separators x))
 
+(define (##namespace-separator-index str)
+  (let loop ((i (##fx- (##string-length str) 1)))
+    (if (##fx< i 0)
+        -1
+        (if (##memv (##string-ref str i) ##namespace-separators)
+            i
+            (loop (##fx- i 1))))))
+
 (define (##full-name? sym) ;; full name if it contains a namespace separator
-  (let ((str (##symbol->string sym)))
-    (let loop ((i (##fx- (##string-length str) 1)))
-      (if (##fx< i 0)
-          #f
-          (if (##memq (##string-ref str i) ##namespace-separators)
-              #t
-              (loop (##fx- i 1)))))))
+  (##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
 
 (define (##make-full-name prefix sym)
   (if (##fx= (##string-length prefix) 0)
       sym
       (##string->symbol (##string-append prefix (##symbol->string sym)))))
 
-(define (##valid-prefix? str)
+(define (##namespace-valid? str)
 
   ;; non-null name followed by a namespace separator at end is
   ;; valid as is the special prefix ""
 
-  (let ((l (##string-length str)))
-    (or (##fx= l 0)
-        (and (##not (##fx< l 2))
-             (##memq (##string-ref str (##fx- l 1))
+  (let ((len (##string-length str)))
+    (or (##fx= len 0)
+        (and (##not (##fx< len 2))
+             (##memq (##string-ref str (##fx- len 1))
                      ##namespace-separators)))))
 
 (define (##var-lookup cte src)
@@ -5260,7 +5262,7 @@
            (if (##not quiet?)
                (##repl
                 (lambda (first port)
-                  (##write-string "*** WARNING -- Could not find C function: " port)
+                  (##write-string "*** WARNING -- Could not find object file entry point " port)
                   (##write (##vector-ref result 1) port)
                   (##newline port)
                   #t)))

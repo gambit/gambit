@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1959,6 +1959,122 @@
         (##raise-os-exception #f code ##shell-command-blocking cmd)
         code)))
 
+(define-prim (##run-subprocess
+              path
+              #!optional
+              (arguments (macro-absent-obj))
+              (capture? (macro-absent-obj))
+              (null-stdin? (macro-absent-obj))
+              (directory (macro-absent-obj))
+              (add-vars (macro-absent-obj))
+              (raise-os-exception? (macro-absent-obj))
+              (cont (macro-absent-obj)))
+
+  ;;                subprocess stdout/stderr
+  ;; capture? = #f  not redirected (so will appear on current stdout/stderr)
+  ;; capture? = #t  captured to a string and returned in cdr of result
+  ;; capture? = ()  captured but discarded
+
+  ;; null-stdin? = #f  subprocess stdin will be the same as current stdin
+  ;; null-stdin? = #t  subprocess stdin will be empty
+
+  (##open-process-generic
+   (if (##eq? null-stdin? #t)
+       (macro-direction-in)
+       (macro-direction-inout))
+   #f
+   (lambda (port)
+     (let ((cont2 (if (##eq? cont (macro-absent-obj)) ##identity cont)))
+       (if (##fixnum? port)
+           (if (##eq? raise-os-exception? #f)
+               (cont2 port)
+               (##raise-os-exception
+                #f
+                (if (##fx= port 1) ;; couldn't set current directory?
+                    ##err-code-ENOENT ;; pretend directory does not exist
+                    port)
+                ##run-subprocess
+                path
+                arguments
+                capture?
+                null-stdin?
+                directory
+                add-vars
+                raise-os-exception?
+                cont))
+           (begin
+             (if (##not (##eq? null-stdin? #t))
+                 (##close-output-port port))
+             (if (##eq? capture? #t)
+                 (let* ((out (##read-line port #f #f ##max-fixnum))
+                        (output (if (##string? out) out "")))
+                   (##close-input-port port)
+                   (let ((status (##process-status port)))
+                     (cont2 (##cons status output))))
+                 (let loop ()
+                   (if (##char? (##read-char port))
+                       (loop)
+                       (begin
+                         (##close-input-port port)
+                         (cont2 (##process-status port))))))))))
+   open-process
+   (let ((cap (##not (or (##eq? capture? (macro-absent-obj))
+                         (##not capture?)))))
+     (##list path: path
+             arguments: (if (##eq? arguments (macro-absent-obj)) '() arguments)
+             directory: (if (##eq? directory (macro-absent-obj)) #f directory)
+             environment:
+             (##append (if (##eq? add-vars (macro-absent-obj)) '() add-vars)
+                       (let ((env (##os-environ)))
+                         (if (##fixnum? env) '() env)))
+             stdin-redirection: (##eq? null-stdin? #t)
+             stdout-redirection: cap
+             stderr-redirection: cap))))
+
+(define-prim (##shell-var-binding
+              var
+              val
+              #!optional
+              (var-prefix (macro-absent-obj))
+              (var-suffix (macro-absent-obj)))
+  (##string-append
+   (if (##eq? var-prefix (macro-absent-obj)) "" var-prefix)
+   var
+   (if (##eq? var-suffix (macro-absent-obj)) "_PARAM" var-suffix)
+   "="
+   val))
+
+(define-prim (##shell-var-bindings
+              alist
+              #!optional
+              (var-prefix (macro-absent-obj))
+              (var-suffix (macro-absent-obj)))
+  (##map (lambda (var-val)
+           (##shell-var-binding (##car var-val)
+                                (##cdr var-val)
+                                var-prefix
+                                var-suffix))
+         alist))
+
+(define-prim (##shell-args-numbered lst)
+
+  (define (gen lst i)
+    (if (##pair? lst)
+        (##cons (##cons (##string-append "ARG" (##number->string i 10))
+                        (##car lst))
+                (gen (##cdr lst) (##fx+ i 1)))
+        '()))
+
+  (gen lst 1))
+
+(define-prim (##shell-install-dirs lst)
+  (##map (lambda (str)
+           (##cons (##string-append "GAMBITDIR_" (##string-upcase str))
+                   (##path-strip-trailing-directory-separator
+                    (##path-normalize-directory-existing
+                     (##string-append "~~" str)))))
+         lst))
+
 (define ##shell-program #f)
 (define ##shell-command-fallback #t)
 
@@ -1986,48 +2102,28 @@
         sp)))
 
 (define-prim (##shell-command cmd #!optional (capture? (macro-absent-obj)))
-  (let* ((shell-prog
-          (##get-shell-program))
-         (cap
-          (if (##eq? capture? (macro-absent-obj))
-              #f
-              (and capture? #t)))
-         (path-or-settings
-          (##list path: (##car shell-prog)
-                  arguments:
-                  (##list
-                   (##cdr shell-prog)
-                   cmd)
-                  stdin-redirection: #f
-                  stdout-redirection: cap
-                  stderr-redirection: cap)))
-    (##open-process-generic
-     (macro-direction-inout)
-     #f
-     (lambda (port)
-       (if (##fixnum? port)
+  (let ((shell-prog (##get-shell-program)))
+    (##run-subprocess
+     (##car shell-prog)
+     (##list (##cdr shell-prog) cmd)
+     capture?
+     #f  ;; subprocess will receive same stdin as current stdin
+     #f  ;; use current directory
+     '() ;; no additional environment variables
+     #f  ;; don't raise OS exceptions
+     (lambda (result)
+       (if (and (##fixnum? result)
+                (##fx< result 0))
            (if (and ##shell-command-fallback
-                    (##fx= port ##err-code-unimplemented))
+                    (##fx= result ##err-code-unimplemented))
                (let ((code (##os-shell-command cmd)))
                  (if (##fx< code 0)
                      (##raise-os-exception #f code shell-command cmd capture?)
-                     (if cap
+                     (if (##eq? capture? #t)
                          (##cons code "")
                          code)))
-               (##raise-os-exception #f port shell-command cmd capture?))
-           (if cap
-               (begin
-                 (##close-output-port port)
-                 (let* ((out (##read-line port #f #f ##max-fixnum))
-                        (output (if (##string? out) out "")))
-                   (##close-input-port port)
-                   (let ((status (##process-status port)))
-                     (##cons status output))))
-               (begin
-                 (##close-port port)
-                 (##process-status port)))))
-     open-process
-     path-or-settings)))
+               (##raise-os-exception #f result shell-command cmd capture?))
+           result)))))
 
 #;
 (define-prim (##escape-string str escape-char to-escape)
@@ -2124,16 +2220,36 @@
               (chase? (macro-absent-obj)))
   (let* ((resolved-path
           (##path-resolve path))
+         (fi
+          (macro-make-file-info ;; will be initialized by ##os-file-info
+           0  ;; type
+           0  ;; device
+           0  ;; inode
+           0  ;; mode
+           0  ;; number-of-links
+           0  ;; owner
+           0  ;; group
+           0  ;; size
+           (macro-inexact--inf) ;; last-access-time
+           (macro-inexact--inf) ;; last-modification-time
+           (macro-inexact--inf) ;; last-change-time
+           0  ;; attributes
+           (macro-inexact--inf)));; creation-time
          (result
-          (##os-file-info resolved-path
+          (##os-file-info fi
+                          resolved-path
                           (if (##eq? chase? (macro-absent-obj))
                               #t
                               chase?))))
+
+    (define (convert-time t)
+      (macro-make-time t #f #f #f))
+
     (if (##fixnum? result)
         result
         (begin
           (let ((type
-                 (case (##vector-ref result 1)
+                 (case (macro-file-info-type result)
                    ((1)  'regular)
                    ((2)  'directory)
                    ((3)  'character-special)
@@ -2142,17 +2258,41 @@
                    ((6)  'symbolic-link)
                    ((7)  'socket)
                    (else 'unknown))))
-            (##vector-set! result 1 type))
-          (##vector-set! result 9
-                         (macro-make-time (##vector-ref result 9) #f #f #f))
-          (##vector-set! result 10
-                         (macro-make-time (##vector-ref result 10) #f #f #f))
-          (##vector-set! result 11
-                         (macro-make-time (##vector-ref result 11) #f #f #f))
-          (##vector-set! result 13
-                         (macro-make-time (##vector-ref result 13) #f #f #f))
-          (##structure-type-set! result (macro-type-file-info))
-          (##subtype-set! result (macro-subtype-structure))
+            (##unchecked-structure-set!
+             result
+             type
+             1
+             (macro-type-file-info)
+             #f))
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-last-access-time result))
+           9
+           (macro-type-file-info)
+           #f)
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-last-modification-time result))
+           10
+           (macro-type-file-info)
+           #f)
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-last-change-time result))
+           11
+           (macro-type-file-info)
+           #f)
+
+          (##unchecked-structure-set!
+           result
+           (convert-time (macro-file-info-creation-time result))
+           13
+           (macro-type-file-info)
+           #f)
+
           result))))
 
 (define-prim (##file-info
@@ -2335,10 +2475,8 @@
               path
               #!optional
               (chase? (macro-absent-obj)))
-  (let* ((resolved-path
-          (##path-resolve path))
-         (result
-          (##os-file-info resolved-path
+  (let ((result
+         (##file-info-aux path
                           (if (##eq? chase? (macro-absent-obj))
                               #t
                               chase?))))
@@ -2358,14 +2496,17 @@
 
 (implement-library-type-user-info)
 
-(define-prim (##user-info user)
-  (let ((result (##os-user-info user)))
+(define-prim (##user-info
+              user
+              #!optional
+              (raise-os-exception? #t))
+  (let* ((ui (macro-make-user-info #f #f #f #f #f))
+         (result (##os-user-info ui user)))
     (if (##fixnum? result)
-        (##raise-os-exception #f result user-info user)
-        (begin
-          (##structure-type-set! result (macro-type-user-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        (if raise-os-exception?
+            (##raise-os-exception #f result user-info user)
+            result)
+        result)))
 
 (define-prim (user-info user)
   (macro-force-vars (user)
@@ -2388,13 +2529,11 @@
 (implement-library-type-group-info)
 
 (define-prim (##group-info group)
-  (let ((result (##os-group-info group)))
+  (let* ((gi (macro-make-group-info #f #f #f))
+         (result (##os-group-info gi group)))
     (if (##fixnum? result)
         (##raise-os-exception #f result group-info group)
-        (begin
-          (##structure-type-set! result (macro-type-group-info))
-          (##subtype-set! result (macro-subtype-structure))
-          result))))
+        result)))
 
 (define-prim (group-info group)
   (macro-force-vars (group)
@@ -2658,11 +2797,11 @@
                       relpath
                       instdir-name)))
                   (else
-                   (let ((info (##os-user-info (##substring p 1 t-end))))
+                   (let ((info (##user-info (##substring p 1 t-end) #f)))
                      (prepend-directory
                       (if (##fixnum? info)
                           info
-                          (##vector-ref info 4)) ;; home dir
+                          (macro-user-info-home info))
                       t-end))))
 
             (let* ((vol-end
@@ -2692,6 +2831,14 @@
           (##path-expand path)
           (macro-check-string origin 2 (path-expand path origin)
             (##path-expand path origin))))))
+
+(define-prim (##path-join parts dir)
+  (let loop ((lst parts)
+             (result dir))
+    (if (##pair? lst)
+        (loop (##cdr lst)
+              (##path-expand (##car lst) result))
+        result)))
 
 (define-prim (##path-normalize
               path
@@ -2731,7 +2878,7 @@
              allow-relative?
              origin
              raise-os-exception?)
-            path)
+            p)
         (if (or (##eq? allow-relative? (macro-absent-obj))
                 (##not allow-relative?))
             p
@@ -3051,15 +3198,27 @@
                      code)
                  (##void))))))))
 
-(define-prim (##create-directory path-or-settings)
-  (##create-directory-or-fifo create-directory path-or-settings))
+(define-prim (##create-directory
+              path-or-settings
+              #!optional
+              (raise-os-exception? #t))
+  (##create-directory-or-fifo
+   create-directory
+   path-or-settings
+   raise-os-exception?))
 
 (define-prim (create-directory path-or-settings)
   (macro-force-vars (path-or-settings)
     (##create-directory path-or-settings)))
 
-(define-prim (##create-fifo path-or-settings)
-  (##create-directory-or-fifo create-fifo path-or-settings))
+(define-prim (##create-fifo
+              path-or-settings
+              #!optional
+              (raise-os-exception? #t))
+  (##create-directory-or-fifo
+   create-fifo
+   path-or-settings
+   raise-os-exception?))
 
 (define-prim (create-fifo path-or-settings)
   (macro-force-vars (path-or-settings)
@@ -3138,6 +3297,7 @@
               old-path
               new-path
               #!optional
+              (replace? (macro-absent-obj))
               (raise-os-exception? #t))
   (let* ((resolved-old-path
           (##path-resolve old-path))
@@ -3146,7 +3306,8 @@
          (code
           (##os-rename-file
            resolved-old-path
-           resolved-new-path)))
+           resolved-new-path
+           (##not (##eq? replace? #f))))) ;; default is replace? = #t
     (if (##fx< code 0)
         (if raise-os-exception?
             (##raise-os-exception
@@ -3154,15 +3315,20 @@
              code
              rename-file
              old-path
-             new-path)
+             new-path
+             replace?)
             code)
         (##void))))
 
-(define-prim (rename-file old-path new-path)
-  (macro-force-vars (old-path new-path)
-    (macro-check-string old-path 1 (rename-file old-path new-path)
-      (macro-check-string new-path 2 (rename-file old-path new-path)
-        (##rename-file old-path new-path)))))
+(define-prim (rename-file
+              old-path
+              new-path
+              #!optional
+              (replace? (macro-absent-obj)))
+  (macro-force-vars (old-path new-path replace?)
+    (macro-check-string old-path 1 (rename-file old-path new-path replace?)
+      (macro-check-string new-path 2 (rename-file old-path new-path replace?)
+        (##rename-file old-path new-path replace?)))))
 
 (define-prim (##copy-file
               old-path

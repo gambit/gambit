@@ -1,6 +1,6 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -17,7 +17,7 @@ AC_SUBST(PACKAGE_STRING)
 AC_SUBST(PACKAGE_BUGREPORT)
 AC_SUBST(PACKAGE_TARNAME)
 
-AC_COPYRIGHT([[Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.]])
+AC_COPYRIGHT([[Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.]])
 
 AC_CONFIG_SRCDIR(include/gambit.h.in)
 
@@ -66,10 +66,16 @@ fi
 
 RTLIB_COND_EXPAND_FEATURES=""
 
-BUILD_TARGETS="C"
-
 userlibdir="~/.gambit_userlib"
 instlibdir="~~userlib"
+
+###############################################################################
+#
+# To accumulate flags to propagate to bootstrap configure script.
+
+BOOTSTRAP_CONFIGURE_FLAGS=""
+
+AC_SUBST(BOOTSTRAP_CONFIGURE_FLAGS)
 
 ###############################################################################
 #
@@ -285,6 +291,10 @@ AC_ARG_ENABLE(debug,
               ENABLE_DEBUG=$enableval,
               ENABLE_DEBUG=no)
 
+if test "$ENABLE_DEBUG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug"
+fi
+
 # Check if a debugging log file (gambit.log) should be generated.
 
 AC_ARG_ENABLE(debug-log,
@@ -292,6 +302,10 @@ AC_ARG_ENABLE(debug-log,
                              [build system so that it generates a debugging log file (default is NO)]),
               ENABLE_DEBUG_LOG=$enableval,
               ENABLE_DEBUG_LOG=no)
+
+if test "$ENABLE_DEBUG_LOG" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-log"
+fi
 
 # Check if a C backtrace should be produced when a program crashes.
 
@@ -302,6 +316,7 @@ AC_ARG_ENABLE(debug-c-backtrace,
               ENABLE_DEBUG_C_BACKTRACE=no)
 
 if test "$ENABLE_DEBUG_C_BACKTRACE" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-c-backtrace"
   AC_DEFINE([___DEBUG_C_BACKTRACE],[],[Enable generation of debugging log file])
   ENABLE_DEBUG=yes
 fi
@@ -315,6 +330,7 @@ AC_ARG_ENABLE(debug-ctrl-flow-history,
               ENABLE_DEBUG_CTRL_FLOW_HISTORY=no)
 
 if test "$ENABLE_DEBUG_CTRL_FLOW_HISTORY" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-ctrl-flow-history"
   AC_DEFINE([___DEBUG_CTRL_FLOW_HISTORY],[],[Enable debugging of control flow history])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_CTRL_FLOW_HISTORY"
   ENABLE_DEBUG_LOG=yes
@@ -329,6 +345,7 @@ AC_ARG_ENABLE(debug-host-changes,
               ENABLE_DEBUG_HOST_CHANGES=no)
 
 if test "$ENABLE_DEBUG_HOST_CHANGES" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-host-changes"
   AC_DEFINE([___DEBUG_HOST_CHANGES],[],[Enable debugging of host changes])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_HOST_CHANGES"
   ENABLE_DEBUG_LOG=yes
@@ -343,6 +360,7 @@ AC_ARG_ENABLE(debug-alloc-mem,
               ENABLE_DEBUG_ALLOC_MEM=no)
 
 if test "$ENABLE_DEBUG_ALLOC_MEM" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-alloc-mem"
   AC_DEFINE([___DEBUG_ALLOC_MEM],[],[Enable debugging the memory allocations])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_ALLOC_MEM"
   ENABLE_DEBUG_LOG=yes
@@ -357,6 +375,7 @@ AC_ARG_ENABLE(debug-garbage-collect,
               ENABLE_DEBUG_GARBAGE_COLLECT=no)
 
 if test "$ENABLE_DEBUG_GARBAGE_COLLECT" = yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-debug-garbage-collect"
   AC_DEFINE([___DEBUG_GARBAGE_COLLECT],[],[Enable debugging of garbage collect])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___DEBUG_GARBAGE_COLLECT"
   ENABLE_DEBUG_LOG=yes
@@ -636,6 +655,28 @@ fi
 
 ###############################################################################
 #
+# Determine targets to build.
+
+AC_ARG_ENABLE(targets,
+              AC_HELP_STRING([--enable-targets=...],
+                             [Targets to build in addition to C (default is none)]),
+              ENABLE_TARGETS=$enableval,
+              ENABLE_TARGETS=)
+
+BUILD_TARGETS="C"
+
+if test "$ENABLE_TARGETS" != ""; then
+  for t in `echo "$ENABLE_TARGETS" | sed -e 's/,/ /g'`; do
+    if test "$t" != "C"; then
+      BUILD_TARGETS="$BUILD_TARGETS $t"
+    fi
+  done
+fi
+
+echo BUILD_TARGETS="$BUILD_TARGETS"
+
+###############################################################################
+#
 # Check the size of the type "void*".  On many systems it is the same
 # size as "long".  If this isn't the case then define
 # ___VOIDSTAR_WIDTH appropriately.
@@ -701,6 +742,16 @@ AC_ARG_ENABLE(symlinks,
                              [use symbolic links for installed files not in the central installation directory (default is YES)]),
               ENABLE_SYMLINKS=$enableval,
               ENABLE_SYMLINKS=no)
+
+###############################################################################
+#
+# Determine the path of the Gambit central installation directory.
+
+AC_ARG_ENABLE(gambitdir,
+              AC_HELP_STRING([--enable-gambitdir=DIR],
+                             [Path to use for the Gambit central installation directory (default is to use --prefix)]),
+              ENABLE_GAMBITDIR=$enableval,
+              ENABLE_GAMBITDIR=)
 
 ###############################################################################
 #
@@ -1201,6 +1252,26 @@ AC_CHECK_C_COMPILER_DEF(_MSC_VER,C_COMP_VISUALC)
 #AC_CHECK_C_COMPILER_DEF(__BORLANDC__,C_COMP_BORLANDC)
 AC_CHECK_C_COMPILER_DEF(_WIN32,OS_WIN32)
 
+ALL_BUILD_FEATURES="unix windows gcc clang visualc cc"
+
+if test "$C_COMP_CLANG" = yes; then
+  BUILD_FEATURE_C_COMP="clang"
+else
+  if test "$C_COMP_GNUC" = yes; then
+    if test "$C_COMP_LLVM" = yes; then
+      BUILD_FEATURE_C_COMP="cc"
+    else
+      BUILD_FEATURE_C_COMP="gcc"
+    fi
+  else
+    if test "$C_COMP_VISUALC" = yes; then
+      BUILD_FEATURE_C_COMP="visualc"
+    else
+      BUILD_FEATURE_C_COMP="cc"
+    fi
+  fi
+fi
+
 ###############################################################################
 #
 # Check for header files.
@@ -1417,6 +1488,8 @@ else
   AC_CHECK_HEADERS(strings.h)
   AC_CHECK_HEADERS(memory.h)
   AC_CHECK_HEADERS(sys/sysctl.h)
+  AC_CHECK_HEADERS(sys/syscall.h)
+  AC_CHECK_HEADERS(linux/fs.h)
   AC_CHECK_HEADERS(ws2tcpip.h)
   AC_CHECK_HEADERS(TargetConditionals.h)
   AC_CHECK_HEADERS(AvailabilityMacros.h)
@@ -1474,7 +1547,7 @@ else
 
   if test "$C_COMP_VISUALC" = yes; then
 
-    PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+    PATH_SEP="\\\\\\\\\\\\\\\\"
 
     LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
 
@@ -1493,7 +1566,7 @@ else
 
        mingw*) # add Windows libraries needed by MinGW
 
-               PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+               PATH_SEP="\\\\\\\\\\\\\\\\"
 
                LIBS="$LIBS -lws2_32"
 
@@ -1565,6 +1638,8 @@ else
   AC_CHECK_FUNCS(openat)
   AC_CHECK_FUNCS(readlinkat)
   AC_CHECK_FUNCS(renameat)
+  AC_CHECK_FUNCS(renameat2)
+  AC_CHECK_FUNCS(renameatx_np)
   AC_CHECK_FUNCS(symlinkat)
   AC_CHECK_FUNCS(unlinkat)
 
@@ -1943,9 +2018,15 @@ fi
 if test "$ENABLE_OPENSSL" = yes; then
 
   case "$target_os" in
-    darwin*) # OS X ships a very old version and considers OpenSSL deprecated
-             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"/usr/local/opt/openssl/include\""
-             LIBS="$LIBS -L/usr/local/opt/openssl/lib -lssl -lcrypto"
+    darwin*) # macOS ships an old version of the OpenSSL library, so it should
+             # be installed with "brew install openssl"
+             OPENSSL_DIR="/usr/local/opt/openssl@1.1"
+             if test "$ENABLE_OPENSSL_STATIC_LINK" = yes; then
+               LIBS="$LIBS $OPENSSL_DIR/lib/libssl.a $OPENSSL_DIR/lib/libcrypto.a"
+             else
+               LIBS="$LIBS -L$OPENSSL_DIR/lib -lssl -lcrypto"
+             fi
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"$OPENSSL_DIR/include\""
              ;;
     mingw*) # Search in typical locations
              CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
@@ -1966,28 +2047,41 @@ fi
 # For details see the messages printed at the end of the configure script.
 
 if test "$C_COMP_GNUC" = yes; then
+
   AC_COMPUTE_INT(C_COMP_GNUC_VERSION,[__GNUC__*100000+__GNUC_MINOR__*1000+__GNUC_PATCHLEVEL__])
+
 fi
 
 if test "$C_COMP_CLANG" = yes; then
+
   AC_COMPUTE_INT(C_COMP_CLANG_VERSION,[__clang_major__*100000+__clang_minor__*1000+__clang_patchlevel__])
-fi
 
-if test "$C_COMP_LLVM" = yes -a "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -lt 405000; then
-  LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG=yes
-fi
+  if test "$C_COMP_CLANG_VERSION" -ge 1100000; then
+    OMIT_FRAME_POINTER_POSSIBLE_BUG=yes
+  fi
 
-if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_GNUC_VERSION" -lt 404000 -a "$ENABLE_SINGLE_HOST" = yes; then
-  GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
-fi
+else
+  if test "$C_COMP_GNUC" = yes; then
 
-case "$target_os" in
-  darwin*) # strangely this bug only appears on Mac OS
-    if test "$C_COMP_CLANG" != yes -a "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
-      GNU_GCC_IPA_RA_POSSIBLE_BUG=yes
+    if test "$C_COMP_GNUC_VERSION" -ge 402000 -a "$C_COMP_GNUC_VERSION" -lt 404000 -a "$ENABLE_SINGLE_HOST" = yes; then
+      GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG=yes
     fi
-    ;;
-esac
+
+    if test "$C_COMP_GNUC_VERSION" -lt 405000 -a "$C_COMP_LLVM" = yes; then
+      LLVM_GCC_LABEL_VALUES_POSSIBLE_BUG=yes
+    fi
+
+    case "$target_os" in
+      darwin*) # strangely this bug only appears on Mac OS
+        if test "$C_COMP_GNUC_VERSION" -ge 600000 -a "$DASH_fno_ipa_ra" != "" -a "$ENABLE_SHARED" = yes -a "$ENABLE_C_OPT" != no; then
+          GNU_GCC_IPA_RA_POSSIBLE_BUG=yes
+        fi
+        ;;
+    esac
+
+  fi
+fi
+
 
 ###############################################################################
 #
@@ -2002,9 +2096,7 @@ if test "$C_COMP_GNUC" = yes; then
   if test "$C_COMP_CLANG" = yes -o "$ENABLE_GNU_GCC_SPECIFIC_OPTIONS" != yes; then
 
     # clang does not support these options:
-    DASH_no_cpp_precomp=""
     DASH_fschedule_insns2=""
-    DASH_fno_trapping_math=""
     DASH_fno_move_loop_invariants=""
     DASH_fno_keep_inline_dllexport=""
     #DASH_fpermissive=""
@@ -2015,12 +2107,8 @@ if test "$C_COMP_GNUC" = yes; then
 
   else
 
-    # preprocessor options:
-    AC_CHECK_C_COMPILER_OPT(-no-cpp-precomp,DASH_no_cpp_precomp)
-
     # optimization options:
     AC_CHECK_C_COMPILER_OPT(-fschedule-insns2,DASH_fschedule_insns2)
-    AC_CHECK_C_COMPILER_OPT(-fno-trapping-math,DASH_fno_trapping_math)
     AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
     AC_CHECK_C_COMPILER_OPT(-fno-keep-inline-dllexport,DASH_fno_keep_inline_dllexport)
     #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
@@ -2030,6 +2118,9 @@ if test "$C_COMP_GNUC" = yes; then
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
     AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
   fi
+
+  # preprocessor options:
+  AC_CHECK_C_COMPILER_OPT(-no-cpp-precomp,DASH_no_cpp_precomp)
 
   # debugging options:
   AC_CHECK_C_COMPILER_OPT(-Wall,DASH_Wall)
@@ -2052,6 +2143,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-O3,DASH_O3)
   AC_CHECK_C_COMPILER_OPT(-Ofast,DASH_Ofast)
   AC_CHECK_C_COMPILER_OPT(-fno-math-errno,DASH_fno_math_errno)
+  AC_CHECK_C_COMPILER_OPT(-fno-trapping-math,DASH_fno_trapping_math)
   AC_CHECK_C_COMPILER_OPT(-fno-strict-aliasing,DASH_fno_strict_aliasing)
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-ftrapv,DASH_ftrapv)
@@ -2208,17 +2300,19 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
 
-  case "$target_os" in
+  if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
+    case "$target_os" in
 
-     mingw*) # MinGW's setjmp seems to need the frame pointer
-             ;;
+       mingw*) # MinGW's setjmp seems to need the frame pointer
+               ;;
 
-          *) # other systems are fine as far as I can tell
-             if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
-               FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fomit_frame_pointer"
-             fi
-             ;;
-  esac
+            *) # other systems are fine as far as I can tell
+               if test "$ENABLE_DEBUG" != yes -a "$ENABLE_PROFILE" != yes; then
+                 FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fomit_frame_pointer"
+               fi
+               ;;
+    esac
+  fi
 
   if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
@@ -2619,14 +2713,11 @@ HG="hg"
 exe="$EXEEXT"
 obj=".$OBJEXT"
 
-case "$target_os" in
-
-   mingw*) bat=".bat"
-           ;;
-
-        *) bat=""
-           ;;
-esac
+if test "$exe" = ".exe"; then
+  bat=".bat"
+else
+  bat=""
+fi
 
 LIB_VERSION_SUFFIX=""
 LIB_MAJOR_VERSION_SUFFIX=""
@@ -2693,7 +2784,7 @@ else
 
     LIB_PREFIX="lib"
     LIB_EXTENSION=".lib"
-    MAKE_LIBRARY='lib -out:$(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS)'
+    MAKE_LIBRARY='lib.exe -out:$(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY_OBJECTS)'
     MAKE_LIBRARY_FOR_INSTALL=':'
     FIXLIB=':'
     LINK_FOR_INSTALL=':'
@@ -2890,39 +2981,46 @@ if test "$datadir" = "\${datarootdir}"; then
   datadir="\${prefix}/share"
 fi
 
-GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+if test "$ENABLE_GAMBITDIR" != ""; then
+
+  GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$ENABLE_GAMBITDIR\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+else
+
+  GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR=\"\\\"`echo \"$prefix\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+
+  if test "$ENABLE_SYMLINKS" != yes; then
+
+    if test "$bindir" != "\${prefix}/bin"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$includedir" != "\${prefix}/include"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$libdir" != "\${prefix}/lib"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$docdir" != "\${prefix}/doc"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$infodir" != "\${prefix}/info"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+    if test "$datadir" != "\${prefix}/share"; then
+      GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
+    fi
+
+  fi
+fi
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_USERLIB=\"\\\"`echo \"$userlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
 
 GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INSTLIB=\"\\\"`echo \"$instlibdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-
-if test "$ENABLE_SYMLINKS" != yes; then
-
-  if test "$bindir" != "\${prefix}/bin"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_BIN=\"\\\"`echo \"$bindir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$includedir" != "\${prefix}/include"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INCLUDE=\"\\\"`echo \"$includedir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$libdir" != "\${prefix}/lib"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_LIB=\"\\\"`echo \"$libdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$docdir" != "\${prefix}/doc"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_DOC=\"\\\"`echo \"$docdir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$infodir" != "\${prefix}/info"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_INFO=\"\\\"`echo \"$infodir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-  if test "$datadir" != "\${prefix}/share"; then
-    GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___GAMBITDIR_SHARE=\"\\\"`echo \"$datadir\" | sed -e \"s|/|$PATH_SEP|g\"`\\\"\""
-  fi
-
-fi
 
 emacsdir="\${datadir}/emacs/site-lisp"
 
@@ -2985,6 +3083,8 @@ LIB_EXTENSION_MF=`echo "$LIB_EXTENSION" | $ESC_MF`
 OBJ_EXTENSION_MF=`echo "$OBJ_EXTENSION" | $ESC_MF`
 EXE_EXTENSION_MF=`echo "$EXE_EXTENSION" | $ESC_MF`
 BAT_EXTENSION_MF=`echo "$BAT_EXTENSION" | $ESC_MF`
+ALL_BUILD_FEATURES_MF=`echo "$ALL_BUILD_FEATURES" | $ESC_MF`
+BUILD_FEATURE_C_COMP_MF=`echo "$BUILD_FEATURE_C_COMP" | $ESC_MF`
 
 C_COMPILER_SH=`echo "$C_COMPILER" | $ESC_SH`
 C_PREPROC_SH=`echo "$C_PREPROC" | $ESC_SH`
@@ -3020,6 +3120,8 @@ LIB_EXTENSION_SH=`echo "$LIB_EXTENSION" | $ESC_SH`
 OBJ_EXTENSION_SH=`echo "$OBJ_EXTENSION" | $ESC_SH`
 EXE_EXTENSION_SH=`echo "$EXE_EXTENSION" | $ESC_SH`
 BAT_EXTENSION_SH=`echo "$BAT_EXTENSION" | $ESC_SH`
+ALL_BUILD_FEATURES_SH=`echo "$ALL_BUILD_FEATURES" | $ESC_SH`
+BUILD_FEATURE_C_COMP_SH=`echo "$BUILD_FEATURE_C_COMP" | $ESC_SH`
 
 C_COMPILER_BAT=`echo "$C_COMPILER" | $ESC_BAT`
 C_PREPROC_BAT=`echo "$C_PREPROC" | $ESC_BAT`
@@ -3055,6 +3157,8 @@ LIB_EXTENSION_BAT=`echo "$LIB_EXTENSION" | $ESC_BAT`
 OBJ_EXTENSION_BAT=`echo "$OBJ_EXTENSION" | $ESC_BAT`
 EXE_EXTENSION_BAT=`echo "$EXE_EXTENSION" | $ESC_BAT`
 BAT_EXTENSION_BAT=`echo "$BAT_EXTENSION" | $ESC_BAT`
+ALL_BUILD_FEATURES_BAT=`echo "$ALL_BUILD_FEATURES" | $ESC_BAT`
+BUILD_FEATURE_C_COMP_BAT=`echo "$BUILD_FEATURE_C_COMP" | $ESC_BAT`
 
 BUILD_OBJ_RTS_ECHO=`echo "$BUILD_OBJ_RTS" | $ESC_ECHO`
 BUILD_OBJ_ECHO=`echo "$BUILD_OBJ" | $ESC_ECHO`
@@ -3104,6 +3208,8 @@ AC_SUBST(LIB_EXTENSION)
 AC_SUBST(OBJ_EXTENSION)
 AC_SUBST(EXE_EXTENSION)
 AC_SUBST(BAT_EXTENSION)
+AC_SUBST(ALL_BUILD_FEATURES)
+AC_SUBST(BUILD_FEATURE_C_COMP)
 
 AC_SUBST(BUILD_OBJ_RTS_MF)
 AC_SUBST(BUILD_OBJ_MF)
@@ -3121,6 +3227,8 @@ AC_SUBST(LIB_EXTENSION_MF)
 AC_SUBST(OBJ_EXTENSION_MF)
 AC_SUBST(EXE_EXTENSION_MF)
 AC_SUBST(BAT_EXTENSION_MF)
+AC_SUBST(ALL_BUILD_FEATURES_MF)
+AC_SUBST(BUILD_FEATURE_C_COMP_MF)
 
 AC_SUBST(BUILD_OBJ_RTS_SH)
 AC_SUBST(BUILD_OBJ_SH)
@@ -3138,6 +3246,8 @@ AC_SUBST(LIB_EXTENSION_SH)
 AC_SUBST(OBJ_EXTENSION_SH)
 AC_SUBST(EXE_EXTENSION_SH)
 AC_SUBST(BAT_EXTENSION_SH)
+AC_SUBST(ALL_BUILD_FEATURES_SH)
+AC_SUBST(BUILD_FEATURE_C_COMP_SH)
 
 AC_SUBST(BUILD_OBJ_RTS_BAT)
 AC_SUBST(BUILD_OBJ_BAT)
@@ -3155,6 +3265,8 @@ AC_SUBST(LIB_EXTENSION_BAT)
 AC_SUBST(OBJ_EXTENSION_BAT)
 AC_SUBST(EXE_EXTENSION_BAT)
 AC_SUBST(BAT_EXTENSION_BAT)
+AC_SUBST(ALL_BUILD_FEATURES_BAT)
+AC_SUBST(BUILD_FEATURE_C_COMP_BAT)
 
 AC_SUBST(BUILD_OBJ_RTS_ECHO)
 AC_SUBST(BUILD_OBJ_ECHO)
@@ -3215,6 +3327,8 @@ $RTLIBMAKEFILES \
 gsi/makefile \
 gsc/makefile \
 bin/makefile \
+bin/gambvcs.unix \
+bin/gambvcs.bat.windows \
 bin/gambuild-C.unix \
 bin/gambuild-C.bat.windows \
 bin/gambuild-js.unix \

@@ -234,7 +234,7 @@ ___device_tty *self;)
 {
   ___device_tty *d = self;
 
-#ifdef ___USE_POSIX
+#ifdef USE_POSIX
 
   int fd = d->fd;
 
@@ -275,7 +275,7 @@ ___device_tty *self;)
 
 #ifdef USE_fcntl
 
- if ((d->initial_flags = fcntl (fd, F_GETFL, 0)) < 0)
+  if ((d->initial_flags = fcntl (fd, F_GETFL, 0)) < 0)
     return err_code_from_errno ();
 
 #endif
@@ -324,7 +324,7 @@ ___BOOL undo;)
   ___device_tty *d = self;
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-#ifdef ___USE_POSIX
+#ifdef USE_POSIX
 
   int fd = d->fd;
 
@@ -753,17 +753,20 @@ ___device_tty *self;)
 
       if (d->fd < 0)
         {
-          size.ws_row = 24;
-          size.ws_col = 80;
+          d->terminal_nb_cols = TERMINAL_NB_COLS_UNLIMITED;
+          d->terminal_nb_rows = 24;
         }
-      else if (ioctl (d->fd, TIOCGWINSZ, &size) < 0)
-        return err_code_from_errno ();
+      else
+        {
+          if (ioctl (d->fd, TIOCGWINSZ, &size) < 0)
+            return err_code_from_errno ();
 
-      if (size.ws_col > 0)
-        d->terminal_nb_cols = size.ws_col;
+          if (size.ws_col > 0)
+            d->terminal_nb_cols = size.ws_col;
 
-      if (size.ws_row > 0)
-        d->terminal_nb_rows = size.ws_row;
+          if (size.ws_row > 0)
+            d->terminal_nb_rows = size.ws_row;
+        }
 
 #endif
 #endif
@@ -5074,7 +5077,7 @@ ___BOOL emacs_bindings;)
   /* default values appropriate for "xterm": */
 
   int rows = 24;
-  int cols = 80;
+  int cols = TERMINAL_NB_COLS_UNLIMITED;
   ___BOOL has_auto_left_margin = 0;
   ___BOOL has_auto_right_margin = 1;
   ___BOOL has_eat_newline_glitch = 1;
@@ -5245,7 +5248,7 @@ ___BOOL emacs_bindings;)
   if (rows <= 0)
     rows = 24;
   if (cols <= 0)
-    cols = 80;
+    cols = TERMINAL_NB_COLS_UNLIMITED;
 
   d->terminal_nb_cols = cols;
   d->terminal_nb_rows = rows;
@@ -5328,7 +5331,7 @@ int plain;)
 
   d->emulate_terminal = 1;
 
-  d->terminal_nb_cols = 80;
+  d->terminal_nb_cols = TERMINAL_NB_COLS_UNLIMITED;
   d->terminal_nb_rows = 24;
   d->terminal_size = d->terminal_nb_rows * d->terminal_nb_cols;
   d->has_auto_left_margin = 0;
@@ -7583,17 +7586,17 @@ int direction;)
 
 ___HIDDEN ___SCMOBJ ___device_tty_select_raw_virt
    ___P((___device_stream *self,
-         ___BOOL for_writing,
+         int for_op,
          int i,
          int pass,
          ___device_select_state *state),
         (self,
-         for_writing,
+         for_op,
          i,
          pass,
          state)
 ___device_stream *self;
-___BOOL for_writing;
+int for_op;
 int i;
 int pass;
 ___device_select_state *state;)
@@ -7604,7 +7607,9 @@ ___device_select_state *state;)
   if ((e = ___device_tty_force_open (d)) != ___FIX(___NO_ERR))
     return e;
 
-  if ((for_writing ? d->base.base.write_stage : d->base.base.read_stage)
+  if ((for_op == FOR_READING
+       ? d->base.base.read_stage
+       : d->base.base.write_stage)
       != ___STAGE_OPEN)
     return ___FIX(___CLOSED_DEVICE_ERR);
 
@@ -7620,7 +7625,7 @@ ___device_select_state *state;)
              ___time_mod.time_neg_infinity);
         }
       else
-        ___device_select_add_fd (state, d->fd, for_writing);
+        ___device_select_add_fd (state, d->fd, for_op);
 
 #endif
 
@@ -7628,10 +7633,10 @@ ___device_select_state *state;)
 
       HANDLE wait_obj;
 
-      if (for_writing)
-        wait_obj = d->hin;
-      else
+      if (for_op == FOR_READING)
         wait_obj = d->hout;
+      else
+        wait_obj = d->hin;
 
       ___device_select_add_wait_obj (state, i, wait_obj);
 
@@ -7639,7 +7644,7 @@ ___device_select_state *state;)
 
 #ifdef USE_LINEEDITOR
 
-      if (!for_writing)
+      if (for_op == FOR_READING)
         {
           if (lineeditor_read_ready (d))
             ___device_select_add_timeout
@@ -7660,31 +7665,7 @@ ___device_select_state *state;)
 
   /* pass == ___SELECT_PASS_CHECK */
 
-  if (for_writing)
-    {
-#ifndef USE_POSIX
-#ifndef USE_WIN32
-
-      state->devs[i] = NULL;
-
-#endif
-#endif
-
-#ifdef USE_POSIX
-
-      if (d->fd < 0 || ___FD_ISSET(d->fd, state->writefds))
-        state->devs[i] = NULL;
-
-#endif
-
-#ifdef USE_WIN32
-
-      if (state->devs_next[i] != -1)
-        state->devs[i] = NULL;
-
-#endif
-    }
-  else
+  if (for_op == FOR_READING)
     {
 #ifndef USE_POSIX
 #ifndef USE_WIN32
@@ -7714,6 +7695,30 @@ ___device_select_state *state;)
           (d->current.paren_balance_in_progress &&
            state->timeout_reached &&
            !___time_less (state->timeout, d->current.paren_balance_end)))
+        state->devs[i] = NULL;
+
+#endif
+    }
+  else
+    {
+#ifndef USE_POSIX
+#ifndef USE_WIN32
+
+      state->devs[i] = NULL;
+
+#endif
+#endif
+
+#ifdef USE_POSIX
+
+      if (d->fd < 0 || ___FD_ISSET(d->fd, state->writefds))
+        state->devs[i] = NULL;
+
+#endif
+
+#ifdef USE_WIN32
+
+      if (state->devs_next[i] != -1)
         state->devs[i] = NULL;
 
 #endif
@@ -8006,7 +8011,12 @@ ___device_stream *self;)
     return e;
 
   if ((e = ___device_tty_update_size (d)) == ___FIX(___NO_ERR))
-    return ___FIX(d->terminal_nb_cols);
+    {
+      if (d->terminal_nb_cols == TERMINAL_NB_COLS_UNLIMITED)
+        return ___FIX(80); /* reasonable for pretty-printing */
+      else
+        return ___FIX(d->terminal_nb_cols);
+    }
 
   return e;
 }
@@ -8684,11 +8694,13 @@ void tty_signal_handler (int sig)
       {
         ___device_tty *probe = ___tty_mod.mode_save_stack;
 
-        while (probe != NULL)
-          {
-            probe->size_needs_update = 1;
-            probe = probe->mode_save_stack_next;
-          }
+        if (probe != NULL)
+          do
+            {
+              probe->size_needs_update = 1;
+              probe = probe->mode_save_stack_next;
+            }
+          while (probe != NULL && probe != ___tty_mod.mode_save_stack);
 
         break;
       }

@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -2273,6 +2273,15 @@ double x;)
 }
 
 
+___EXP_FUNC(___BOOL,___isinf)
+   ___P((double x),
+        (x)
+double x;)
+{
+  return x != 0.0 && x == 2.0*x;
+}
+
+
 ___EXP_FUNC(___BOOL,___isnan)
    ___P((double x),
         (x)
@@ -2742,18 +2751,18 @@ double y;)
   if (x < y) {
     t = x; x = y; y = t;
   }
-  if (isinf (y))
+  if (___isinf (y))
     x = y;
   t = x - y;
-  if (!(x == INFINITY) && !(t == x)) {
+  if (!___isinf (x) && !(t == x)) {
     if (t > y) {
       s = x / y;
-      s += sqrt(1.0 + s*s);
+      s += sqrt (1.0 + s*s);
       return x + y/s;
     } else {
       s = t/y;
       t = s * (2.0 + s);
-      s = r2p1 + (s + (t2p1 + t/(r2 + sqrt(2.0 + t))));
+      s = r2p1 + (s + (t2p1 + t/(r2 + sqrt (2.0 + t))));
       return x + y/s;
     }
   }
@@ -4692,12 +4701,9 @@ int level;)
 }
 
 
-___EXP_FUNC(void,___set_gambitdir)
-   ___P((___UCS_2STRING gambitdir),
-        (gambitdir)
-___UCS_2STRING gambitdir;)
+___EXP_FUNC(int,___get_debug_settings) ___PVOID
 {
-  ___GSTATE->setup_params.gambitdir = gambitdir;
+  return ___GSTATE->setup_params.debug_settings;
 }
 
 
@@ -4715,6 +4721,156 @@ int new_settings;)
     (old_settings & ~mask) | (new_settings & mask);
 
   return old_settings;
+}
+
+
+___EXP_FUNC(int,___get_file_settings) ___PVOID
+{
+  return ___GSTATE->setup_params.file_settings;
+}
+
+
+___EXP_FUNC(void,___set_file_settings)
+   ___P((int settings),
+        (settings)
+int settings;)
+{
+  ___GSTATE->setup_params.file_settings = settings;
+}
+
+
+___EXP_FUNC(int,___get_terminal_settings) ___PVOID
+{
+  return ___GSTATE->setup_params.terminal_settings;
+}
+
+
+___EXP_FUNC(void,___set_terminal_settings)
+   ___P((int settings),
+        (settings)
+int settings;)
+{
+  ___GSTATE->setup_params.terminal_settings = settings;
+}
+
+
+___EXP_FUNC(int,___get_stdio_settings) ___PVOID
+{
+  return ___GSTATE->setup_params.stdio_settings;
+}
+
+
+___EXP_FUNC(void,___set_stdio_settings)
+   ___P((int settings),
+        (settings)
+int settings;)
+{
+  ___GSTATE->setup_params.stdio_settings = settings;
+}
+
+
+___EXP_FUNC(___UCS_2STRING,___get_gambitdir) ___PVOID
+{
+  return ___GSTATE->setup_params.gambitdir;
+}
+
+
+___EXP_FUNC(void,___set_gambitdir)
+   ___P((___UCS_2STRING gambitdir),
+        (gambitdir)
+___UCS_2STRING gambitdir;)
+{
+  ___GSTATE->setup_params.gambitdir = gambitdir;
+}
+
+
+___EXP_FUNC(___UCS_2STRING*,___get_gambitdir_map) ___PVOID
+{
+  return ___GSTATE->setup_params.gambitdir_map;
+}
+
+
+___EXP_FUNC(void,___set_gambitdir_map)
+   ___P((___UCS_2STRING *gambitdir_map),
+        (gambitdir_map)
+___UCS_2STRING *gambitdir_map;)
+{
+  ___GSTATE->setup_params.gambitdir_map = gambitdir_map;
+}
+
+
+___EXP_FUNC(___UCS_2STRING*,___get_module_search_order) ___PVOID
+{
+  return ___GSTATE->setup_params.module_search_order;
+}
+
+
+___EXP_FUNC(void,___set_module_search_order)
+   ___P((___UCS_2STRING *module_search_order),
+        (module_search_order)
+___UCS_2STRING *module_search_order;)
+{
+  ___GSTATE->setup_params.module_search_order = module_search_order;
+}
+
+
+___EXP_FUNC(___UCS_2STRING*,___get_module_whitelist) ___PVOID
+{
+  return ___GSTATE->setup_params.module_whitelist;
+}
+
+
+___EXP_FUNC(void,___set_module_whitelist)
+   ___P((___UCS_2STRING *module_whitelist),
+        (module_whitelist)
+___UCS_2STRING *module_whitelist;)
+{
+  ___GSTATE->setup_params.module_whitelist = module_whitelist;
+}
+
+
+___EXP_FUNC(int,___get_module_install_mode) ___PVOID
+{
+  return ___GSTATE->setup_params.module_install_mode;
+}
+
+
+___EXP_FUNC(void,___set_module_install_mode)
+   ___P((int module_install_mode),
+        (module_install_mode)
+int module_install_mode;)
+{
+  ___GSTATE->setup_params.module_install_mode = module_install_mode;
+}
+
+
+___EXP_FUNC(___UCS_2STRING,___get_repl_client_addr) ___PVOID
+{
+  return ___GSTATE->setup_params.repl_client_addr;
+}
+
+
+___EXP_FUNC(void,___set_repl_client_addr)
+   ___P((___UCS_2STRING repl_client_addr),
+        (repl_client_addr)
+___UCS_2STRING repl_client_addr;)
+{
+  ___GSTATE->setup_params.repl_client_addr = repl_client_addr;
+}
+
+
+___EXP_FUNC(___UCS_2STRING,___get_repl_server_addr) ___PVOID
+{
+  return ___GSTATE->setup_params.repl_server_addr;
+}
+
+
+___EXP_FUNC(void,___set_repl_server_addr)
+   ___P((___UCS_2STRING repl_server_addr),
+        (repl_server_addr)
+___UCS_2STRING repl_server_addr;)
+{
+  ___GSTATE->setup_params.repl_server_addr = repl_server_addr;
 }
 
 
@@ -4892,6 +5048,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___isfinite
     = ___isfinite;
+
+  ___GSTATE->___isinf
+    = ___isinf;
 
   ___GSTATE->___isnan
     = ___isnan;
@@ -5502,6 +5661,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___set_min_heap
     = ___set_min_heap;
 
+  ___GSTATE->___get_min_heap
+    = ___get_min_heap;
+
+  ___GSTATE->___set_min_heap
+    = ___set_min_heap;
+
   ___GSTATE->___get_max_heap
     = ___get_max_heap;
 
@@ -5526,8 +5691,71 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___set_standard_level
     = ___set_standard_level;
 
+  ___GSTATE->___get_debug_settings
+    = ___get_debug_settings;
+
   ___GSTATE->___set_debug_settings
     = ___set_debug_settings;
+
+  ___GSTATE->___get_file_settings
+    = ___get_file_settings;
+
+  ___GSTATE->___set_file_settings
+    = ___set_file_settings;
+
+  ___GSTATE->___get_terminal_settings
+    = ___get_terminal_settings;
+
+  ___GSTATE->___set_terminal_settings
+    = ___set_terminal_settings;
+
+  ___GSTATE->___get_stdio_settings
+    = ___get_stdio_settings;
+
+  ___GSTATE->___set_stdio_settings
+    = ___set_stdio_settings;
+
+  ___GSTATE->___get_gambitdir
+    = ___get_gambitdir;
+
+  ___GSTATE->___set_gambitdir
+    = ___set_gambitdir;
+
+  ___GSTATE->___get_gambitdir_map
+    = ___get_gambitdir_map;
+
+  ___GSTATE->___set_gambitdir_map
+    = ___set_gambitdir_map;
+
+  ___GSTATE->___get_module_search_order
+    = ___get_module_search_order;
+
+  ___GSTATE->___set_module_search_order
+    = ___set_module_search_order;
+
+  ___GSTATE->___get_module_whitelist
+    = ___get_module_whitelist;
+
+  ___GSTATE->___set_module_whitelist
+    = ___set_module_whitelist;
+
+  ___GSTATE->___get_module_install_mode
+    = ___get_module_install_mode;
+
+  ___GSTATE->___set_module_install_mode
+    = ___set_module_install_mode;
+
+  ___GSTATE->___get_repl_client_addr
+    = ___get_repl_client_addr;
+
+  ___GSTATE->___set_repl_client_addr
+    = ___set_repl_client_addr;
+
+  ___GSTATE->___get_repl_server_addr
+    = ___get_repl_server_addr;
+
+  ___GSTATE->___set_repl_server_addr
+    = ___set_repl_server_addr;
 
   ___GSTATE->___get_program_startup_info
     = ___get_program_startup_info;
