@@ -75,7 +75,7 @@ jobs:
     - name: Build
       shell: cmd
       run: |
-        "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
         mkdir dist
         set DIST_DIR="%CD:\=/%/dist"
@@ -84,17 +84,46 @@ jobs:
 
     - name: Test
       shell: cmd
-      run: |
-        cd tests
-        ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
-        echo n | comp mix.c test5.ok
-        cd ..
+      run: msys2do make check
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-win-x64-msvc
         path: dist/
+
+  Windows-vstudio:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
+
+    - name: Install MSYS2
+      uses: eine/setup-msys2@v0
+      with:
+        update: true
+        install: "autoconf make patch"
+        path-type: inherit
+        msystem: MSYS
+
+    - name: Install Dependencies
+      shell: cmd
+      run: msys2do pacman -S --noconfirm autoconf make patch
+
+    - name: Build
+      shell: cmd
+      run: call misc\vstudio.bat
+
+    - name: Test
+      shell: cmd
+      run: |
+        cd tests
+        ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
+        echo n | comp mix.c test5.ok
+        cd ..
 
   Linux:
     runs-on: ubuntu-latest
