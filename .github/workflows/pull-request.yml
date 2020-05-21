@@ -76,7 +76,7 @@ jobs:
         mkdir dist
         set DIST_DIR="%CD:\=/%/dist"
         echo %DIST_DIR%
-        msys2do ./configure --enable-c-opt=-Od --enable-debug --prefix='$DIST_DIR'; make -j4; make modules; make install
+        msys2do ./configure --enable-c-opt=-Od --enable-debug --prefix='$DIST_DIR' CC="cl"; make -j4; make modules; make install
 
     - name: Test
       shell: cmd
