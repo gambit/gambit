@@ -15,8 +15,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
 
     - name: Install MSYS2
       uses: numworks/setup-msys2@v1
@@ -50,8 +51,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
 
     - name: Install MSYS2
       uses: numworks/setup-msys2@v1
@@ -93,8 +95,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
 
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
@@ -110,8 +113,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0 # Clone all commits and tags
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
 
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
