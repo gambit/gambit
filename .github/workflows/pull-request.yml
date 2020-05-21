@@ -12,6 +12,13 @@ on:
 jobs:
   Windows-mingw:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - msystem: "MINGW64"
+            arch: "x86_64"
+          - msystem: "MINGW32"
+            arch: "i686"
 
     steps:
     - uses: actions/checkout@v2
@@ -23,8 +30,9 @@ jobs:
       uses: eine/setup-msys2@v0
       with:
         update: true
-        install: "autoconf git make mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-libwinpthread-git"
+        install: "autoconf git make mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
         path-type: inherit
+        msystem: ${{ matrix.msystem }}
 
     - name: Build
       shell: cmd
@@ -40,7 +48,7 @@ jobs:
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
-        name: gambit-win-x64-mingw
+        name: gambit-mingw-${{ matrix.arch }}
         path: dist/
 
   Windows-msvc:
@@ -51,13 +59,6 @@ jobs:
 
     - name: Fetch Tags
       run: git fetch --prune --unshallow
-
-    - name: Install MSYS2
-      uses: numworks/setup-msys2@v1
-      with:
-        update: true
-        path-type: inherit
-        msystem: MSYS
 
     - name: Install MSYS2
       uses: eine/setup-msys2@v0
