@@ -68,10 +68,6 @@ jobs:
         path-type: inherit
         msystem: MSYS
 
-    - name: Install Dependencies
-      shell: cmd
-      run: msys2do pacman -S --noconfirm autoconf make patch
-
     - name: Build
       shell: cmd
       run: |
@@ -101,21 +97,11 @@ jobs:
     - name: Fetch Tags
       run: git fetch --prune --unshallow
 
-    - name: Install MSYS2
-      uses: eine/setup-msys2@v0
-      with:
-        update: true
-        install: "autoconf make patch"
-        path-type: inherit
-        msystem: MSYS
-
-    - name: Install Dependencies
-      shell: cmd
-      run: msys2do pacman -S --noconfirm autoconf make patch
-
     - name: Build
       shell: cmd
-      run: call misc\vstudio.bat
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
+        call misc\vstudio.bat
 
     - name: Test
       shell: cmd
