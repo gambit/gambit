@@ -20,14 +20,11 @@ jobs:
       run: git fetch --prune --unshallow
 
     - name: Install MSYS2
-      uses: numworks/setup-msys2@v1
+      uses: eine/setup-msys2@v0
       with:
         update: true
+        install: "autoconf git make mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-libwinpthread-git"
         path-type: inherit
-
-    - name: Install Dependencies
-      shell: cmd
-      run: msys2do pacman -S --noconfirm autoconf git make mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-libwinpthread-git
 
     - name: Build
       shell: cmd
@@ -59,6 +56,14 @@ jobs:
       uses: numworks/setup-msys2@v1
       with:
         update: true
+        path-type: inherit
+        msystem: MSYS
+
+    - name: Install MSYS2
+      uses: eine/setup-msys2@v0
+      with:
+        update: true
+        install: "autoconf make patch"
         path-type: inherit
         msystem: MSYS
 
