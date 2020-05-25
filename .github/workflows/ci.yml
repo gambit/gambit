@@ -75,28 +75,14 @@ jobs:
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         msys2do make check
 
-  Windows-vstudio:
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Fetch Tags
-      run: git fetch --prune --unshallow
-
-    - name: Build
+    - name: Build vstudio.bat
       shell: cmd
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         call misc\vstudio.bat
-
-    - name: Test
-      shell: cmd
-      run: |
         cd tests
         ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
         echo n | comp mix.c test5.ok
-        cd ..
 
   Linux:
     runs-on: ubuntu-latest
