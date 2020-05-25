@@ -38,9 +38,9 @@ jobs:
       shell: cmd
       run: msys2do ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules; make install
 
-    # Only run tests for MinGW32 for now until MinGW64 segfault bug is fixed
+    # Only run tests for MinGW64 for now
     - name: Test
-      if: ${{ matrix.msystem == 'MINGW32' }}
+      if: ${{ matrix.msystem == 'MINGW64' }}
       shell: cmd
       run: |
         msys2do make check
