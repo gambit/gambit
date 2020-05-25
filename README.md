@@ -1,6 +1,6 @@
-|Linux and OS X|Windows|
-|:--:|:--:|
-|[![Build Status: Linux and OS X](https://travis-ci.org/gambit/gambit.svg?branch=master)](https://travis-ci.org/gambit/gambit)|[![Build Status: Windows](https://ci.appveyor.com/api/projects/status/github/gambit/gambit?branch=master&svg=true)](https://ci.appveyor.com/project/feeley/gambit/branch/master)|
+|**Windows, Linux, and macOS**|
+|:--:|
+|[![CI Build Status](https://github.com/gambit/gambit/workflows/Gambit%20-%20CI/badge.svg?branch=master)](https://github.com/gambit/gambit/actions?query=workflow%3A%22Gambit+-+CI%22)|
 
 [![Join the chat at https://gitter.im/gambit/gambit](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gambit/gambit?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![tip for next commit](http://prime4commit.com/projects/121.svg)](http://prime4commit.com/projects/121)
