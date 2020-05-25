@@ -107,3 +107,17 @@ jobs:
 
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+  ReportResult:
+    runs-on: ubuntu-latest
+    needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
+    if: true # Make sure this job runs even if anything failed
+
+    steps:
+    - name: Report Success to Gitter
+      run: curl --data-urlencode "message=GitHub Actions CI run [#${{ github.run_id }}](https://github.com/gambit/gambit/actions/runs/${{ github.run_id }}) passed" ${{ secrets.GITTER_URL }}
+      if: ${{ success() }}
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=GitHub Actions CI run [#${{ github.run_id }}](https://github.com/gambit/gambit/actions/runs/${{ github.run_id }}) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
