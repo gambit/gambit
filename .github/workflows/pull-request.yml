@@ -1,13 +1,13 @@
-name: Gambit - Pull Request
+name: Gambit - CI
 
 on:
   pull_request:
     branches:
       - master
-      - github-actions
-  # TODO: Remove this before enabling on Gambit repo
   push:
-    branches: [ github-actions ]
+    branches:
+      - master
+      - github-actions # TODO: Remove this before enabling on Gambit repo
 
 jobs:
   Windows-mingw:
