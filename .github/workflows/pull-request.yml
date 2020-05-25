@@ -36,19 +36,11 @@ jobs:
 
     - name: Build
       shell: cmd
-      run: |
-        mkdir dist
-        msys2do ./configure  --enable-debug --enable-multiple-threaded-vms --prefix=$(pwd)/dist;make -j4; make modules; make install
+      run: msys2do ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules; make install
 
     - name: Test
       shell: cmd
       run: msys2do make check
-
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v1
-      with:
-        name: gambit-mingw-${{ matrix.arch }}
-        path: dist/
 
   Windows-msvc:
     runs-on: windows-latest
@@ -72,22 +64,13 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        mkdir dist
-        set DIST_DIR="%CD:\=/%/dist"
-        echo %DIST_DIR%
-        msys2do ./configure --enable-c-opt=-Od --enable-debug --prefix='$DIST_DIR' CC="cl"; make -j4; make modules; make install
+        msys2do ./configure --enable-c-opt=-Od --enable-debug CC="cl"; make -j4; make modules; make install
 
     - name: Test
       shell: cmd
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         msys2do make check
-
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v1
-      with:
-        name: gambit-win-x64-msvc
-        path: dist/
 
   Windows-vstudio:
     runs-on: windows-latest
@@ -124,12 +107,6 @@ jobs:
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
-    # - name: Upload Artifact
-    #   uses: actions/upload-artifact@v1
-    #   with:
-    #     name: gambit-linux-x64
-    #     path: dist/
-
   MacOS:
     runs-on: macos-latest
 
@@ -141,9 +118,3 @@ jobs:
 
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
-
-    # - name: Upload Artifact
-    #   uses: actions/upload-artifact@v1
-    #   with:
-    #     name: gambit-macos-x64
-    #     path: dist/
