@@ -1,0 +1,137 @@
+name: Gambit - CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+      - github-actions # TODO: Remove this before enabling on Gambit repo
+
+jobs:
+  Windows-mingw:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - msystem: "MINGW64"
+            arch: "x86_64"
+          - msystem: "MINGW32"
+            arch: "i686"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
+
+    - name: Install MSYS2
+      uses: eine/setup-msys2@v0
+      with:
+        update: true
+        install: "autoconf git make mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        path-type: inherit
+        msystem: ${{ matrix.msystem }}
+
+    - name: Build
+      shell: cmd
+      run: msys2do ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules; make install
+
+    # Only run tests for MinGW64 for now
+    - name: Test
+      if: ${{ matrix.msystem == 'MINGW64' }}
+      shell: cmd
+      run: |
+        msys2do make check
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
+
+  Windows-msvc:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
+
+    - name: Install MSYS2
+      uses: eine/setup-msys2@v0
+      with:
+        update: true
+        install: "autoconf make patch"
+        path-type: inherit
+        msystem: MSYS
+
+    - name: Build
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
+        set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
+        msys2do ./configure --enable-c-opt=-Od --enable-debug CC="cl"; make -j4; make modules; make install
+
+    - name: Test
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
+        msys2do make check
+
+    - name: Build vstudio.bat
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
+        call misc\vstudio.bat
+        cd tests
+        ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
+        echo n | comp mix.c test5.ok
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
+
+  Linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
+
+    - name: Build and Test
+      run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
+
+  MacOS:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Fetch Tags
+      run: git fetch --prune --unshallow
+
+    - name: Build and Test
+      run: |
+        export CC=gcc-9
+        ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
+
+  ReportResult:
+    runs-on: ubuntu-latest
+    needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
+    if: ${{ success() }}
+
+    steps:
+    - name: Report Success to Gitter
+      run: curl --data-urlencode "message=CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) passed" ${{ secrets.GITTER_URL }}
+      if: ${{ success() }}
