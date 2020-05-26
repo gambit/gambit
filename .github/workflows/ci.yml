@@ -45,6 +45,10 @@ jobs:
       run: |
         msys2do make check
 
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
+
   Windows-msvc:
     runs-on: windows-latest
 
@@ -84,6 +88,10 @@ jobs:
         ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
         echo n | comp mix.c test5.ok
 
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
+
   Linux:
     runs-on: ubuntu-latest
 
@@ -95,6 +103,10 @@ jobs:
 
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
 
   MacOS:
     runs-on: macos-latest
@@ -108,16 +120,16 @@ jobs:
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: ${{ failure() }}
+
   ReportResult:
     runs-on: ubuntu-latest
     needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ success() }}
 
     steps:
     - name: Report Success to Gitter
-      run: curl --data-urlencode "message=GitHub Actions CI run [#${{ github.run_id }}](https://github.com/gambit/gambit/actions/runs/${{ github.run_id }}) passed" ${{ secrets.GITTER_URL }}
+      run: curl --data-urlencode "message=CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) passed" ${{ secrets.GITTER_URL }}
       if: ${{ success() }}
-
-    - name: Report Failure to Gitter
-      run: curl --data-urlencode "message=GitHub Actions CI run [#${{ github.run_id }}](https://github.com/gambit/gambit/actions/runs/${{ github.run_id }}) failed" -d level=error ${{ secrets.GITTER_URL }}
-      if: ${{ failure() }}
