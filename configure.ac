@@ -1574,7 +1574,9 @@ else
 
     case "$target_os" in
 
-       mingw*) # add Windows libraries needed by MinGW
+       mingw* | msys*)
+
+               # add Windows libraries needed by MinGW
 
                PATH_SEP="\\\\\\\\\\\\\\\\"
 
@@ -2044,7 +2046,8 @@ if test "$ENABLE_OPENSSL" = yes; then
              fi
              CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"$OPENSSL_DIR/include\""
              ;;
-    mingw*) # Search in typical locations
+    mingw* | msys*)
+             # Search in typical locations
              CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
              LIBS="$LIBS -L\"/C/OpenSSL-x64/lib\" -L\"/c/OpenSSL/lib\" -L\"/usr/local/lib/\" -lssl -lcrypto -lws2_32 -lgdi32 -lcrypt32 -mconsole"
              ;;
@@ -2223,10 +2226,8 @@ if test "$C_COMP_GNUC" = yes; then
   # code generation options:
   case "$target_os" in
 
-     mingw*) # no special code generation options needed by MinGW
-             ;;
-
-    cygwin*) # no special code generation options needed by cygwin
+     mingw* | msys* | cygwin*)
+             # no special code generation options needed by MinGW and cygwin
              ;;
 
           *) # check for code generation options for other systems
@@ -2239,19 +2240,8 @@ if test "$C_COMP_GNUC" = yes; then
   # linking options:
   case "$target_os" in
 
-     mingw*) # no special options needed by MinGW
-             AC_CHECK_C_COMPILER_OPT(-shared,DASH_shared,$DASH_fPIC$DASH_fpic)
-             ;;
-
-    cygwin*) # no special options needed by cygwin
-             AC_CHECK_C_COMPILER_OPT(-shared,DASH_shared,$DASH_fPIC$DASH_fpic)
-             ;;
-
-   solaris*) # check for options needed by Solaris
-             AC_CHECK_C_COMPILER_OPT(-shared,DASH_shared,$DASH_fPIC$DASH_fpic)
-             ;;
-
-      hpux*) # check for options needed by HP-UX
+     mingw* | msys* | cygwin* | solaris* | hpux*)
+             # check for special options needed by MinGW, cygwin, Solaris, HP-UX
              AC_CHECK_C_COMPILER_OPT(-shared,DASH_shared,$DASH_fPIC$DASH_fpic)
              ;;
 
@@ -2319,7 +2309,8 @@ if test "$C_COMP_GNUC" = yes; then
   if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
     case "$target_os" in
 
-       mingw*) # MinGW's setjmp seems to need the frame pointer
+       mingw* | msys*)
+               # MinGW's setjmp seems to need the frame pointer
                ;;
 
             *) # other systems are fine as far as I can tell
@@ -2911,10 +2902,8 @@ fi
 
 case "$target_os" in
 
-   mingw*) # empty prefix and suffix
-           ;;
-
-  cygwin*) # empty prefix and suffix
+   mingw* | msys* | cygwin*)
+           # empty prefix and suffix
            ;;
 
         *) # for other systems

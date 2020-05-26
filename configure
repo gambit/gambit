@@ -7917,7 +7917,9 @@ $as_echo "#define socklen_t int" >>confdefs.h
 
     case "$target_os" in
 
-       mingw*) # add Windows libraries needed by MinGW
+       mingw* | msys*)
+
+               # add Windows libraries needed by MinGW
 
                PATH_SEP="\\\\\\\\\\\\\\\\"
 
@@ -9882,7 +9884,8 @@ if test "$ENABLE_OPENSSL" = yes; then
              fi
              CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"$OPENSSL_DIR/include\""
              ;;
-    mingw*) # Search in typical locations
+    mingw* | msys*)
+             # Search in typical locations
              CFLAGS="$CFLAGS -I\"/C/OpenSSL-x64/include\" -I\"/c/OpenSSL/include\" -I\"/usr/local/include\""
              LIBS="$LIBS -L\"/C/OpenSSL-x64/lib\" -L\"/c/OpenSSL/lib\" -L\"/usr/local/lib/\" -lssl -lcrypto -lws2_32 -lgdi32 -lcrypt32 -mconsole"
              ;;
@@ -11369,10 +11372,8 @@ DASH_freschedule_modulo_scheduled_loops="$ac_cv_DASH_freschedule_modulo_schedule
   # code generation options:
   case "$target_os" in
 
-     mingw*) # no special code generation options needed by MinGW
-             ;;
-
-    cygwin*) # no special code generation options needed by cygwin
+     mingw* | msys* | cygwin*)
+             # no special code generation options needed by MinGW and cygwin
              ;;
 
           *) # check for code generation options for other systems
@@ -11511,145 +11512,8 @@ DASH_fno_common="$ac_cv_DASH_fno_common"
   # linking options:
   case "$target_os" in
 
-     mingw*) # no special options needed by MinGW
-             { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${ac_cv_DASH_shared+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-shared$DASH_fPIC$DASH_fpic"
-CXXFLAGS="-shared$DASH_fPIC$DASH_fpic"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_shared=" -shared"
-else
-  ac_cv_DASH_shared=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
-$as_echo "$ac_cv_DASH_shared" >&6; }
-DASH_shared="$ac_cv_DASH_shared"
-
-
-             ;;
-
-    cygwin*) # no special options needed by cygwin
-             { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${ac_cv_DASH_shared+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-shared$DASH_fPIC$DASH_fpic"
-CXXFLAGS="-shared$DASH_fPIC$DASH_fpic"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_shared=" -shared"
-else
-  ac_cv_DASH_shared=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
-$as_echo "$ac_cv_DASH_shared" >&6; }
-DASH_shared="$ac_cv_DASH_shared"
-
-
-             ;;
-
-   solaris*) # check for options needed by Solaris
-             { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
-if ${ac_cv_DASH_shared+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-shared$DASH_fPIC$DASH_fpic"
-CXXFLAGS="-shared$DASH_fPIC$DASH_fpic"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_shared=" -shared"
-else
-  ac_cv_DASH_shared=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_shared" >&5
-$as_echo "$ac_cv_DASH_shared" >&6; }
-DASH_shared="$ac_cv_DASH_shared"
-
-
-             ;;
-
-      hpux*) # check for options needed by HP-UX
+     mingw* | msys* | cygwin* | solaris* | hpux*)
+             # check for special options needed by MinGW, cygwin, Solaris, HP-UX
              { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -shared" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -shared... " >&6; }
 if ${ac_cv_DASH_shared+:} false; then :
@@ -11969,7 +11833,8 @@ DASH_shared="$ac_cv_DASH_shared"
   if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
     case "$target_os" in
 
-       mingw*) # MinGW's setjmp seems to need the frame pointer
+       mingw* | msys*)
+               # MinGW's setjmp seems to need the frame pointer
                ;;
 
             *) # other systems are fine as far as I can tell
@@ -14838,10 +14703,8 @@ fi
 
 case "$target_os" in
 
-   mingw*) # empty prefix and suffix
-           ;;
-
-  cygwin*) # empty prefix and suffix
+   mingw* | msys* | cygwin*)
+           # empty prefix and suffix
            ;;
 
         *) # for other systems
