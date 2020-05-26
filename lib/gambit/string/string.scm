@@ -41,11 +41,13 @@
                (and (char=? key (string-ref str i))
                     (loop (fx+ i 1))))))
         ((procedure? key)
-         (let loop ((true-value #t) (i start))
-           (if (fx= i end) true-value
-               (and true-value
-                    (loop (key (string-ref str i))
-                          (fx+ i 1))))))
+         (let ((last-i (- end 1)))
+           (let loop ((i start))
+             (if (fx< i last-i)
+                 (and (key (string-ref str i))
+                      (loop (fx+ i 1)))
+                 (or (fx= i end)
+                     (key (string-ref str i)))))))
         (else
          (error "type error"))))
 
