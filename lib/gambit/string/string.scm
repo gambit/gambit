@@ -66,7 +66,7 @@
         ((procedure? key)
          (let ((last-i (- end 1)))
            (let loop ((i start))
-             (if (fx< i end)
+             (if (fx< i last-i)
                  (or (key (string-ref str i))
                      (loop (fx+ i 1)))
                  (and (fx< i end)
