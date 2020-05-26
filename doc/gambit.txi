@@ -10569,6 +10569,8 @@ for example @samp{~~lib} denotes the @samp{lib} installation
 directory.  Note that the location of the installation directories may
 be overridden by using the @samp{-:~~@var{NAME}=@var{DIRECTORY}}
 runtime option or by defining the @samp{GAMBOPT} environment variable.
+Unless explicitly overridden, @samp{~~execdir} denotes the directory
+containing the current executable program.
 
 @cindex ~
 A path which starts with the character @samp{~} not followed by

@@ -2759,6 +2759,12 @@
                         (##path-expand-in-initial-current-directory dir)))
                    (expand relpath
                            expanded-dir)))
+                ((##string=? instdir-name "execdir")
+                 (let ((exec-path (##os-executable-path)))
+                   (if (##fixnum? exec-path)
+                       (err exec-path)
+                       (expand relpath
+                               (##path-directory exec-path)))))
                 (else
                  (let ((dir (##os-path-gambitdir)))
                    (if (##fixnum? dir)
