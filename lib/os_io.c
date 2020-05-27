@@ -5245,9 +5245,8 @@ ___stream_index *len_done;)
       else if (n == 0)
         {
           /* Check if the other part initiated a shutdown and we didn't reply */
-          if (SSL_get_shutdown (d->tls)
-              & SSL_RECEIVED_SHUTDOWN
-              ^ SSL_SENT_SHUTDOWN)
+          int shut = SSL_get_shutdown (d->tls);
+          if ((shut & SSL_RECEIVED_SHUTDOWN) && !(shut & SSL_SENT_SHUTDOWN))
             {
               clear_tls_error_queue();
               SSL_shutdown (d->tls);
@@ -5377,9 +5376,8 @@ ___stream_index *len_done;)
       else if (n == 0)
         {
           /* Check if the other part initiated a shutdown and we didn't reply */
-          if (SSL_get_shutdown (d->tls)
-              & SSL_RECEIVED_SHUTDOWN
-              ^ SSL_SENT_SHUTDOWN)
+          int shut = SSL_get_shutdown (d->tls);
+          if ((shut & SSL_RECEIVED_SHUTDOWN) && !(shut & SSL_SENT_SHUTDOWN))
             {
               clear_tls_error_queue();
               SSL_shutdown (d->tls);
