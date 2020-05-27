@@ -36,7 +36,7 @@ jobs:
 
     - name: Build
       shell: cmd
-      run: msys2do ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules; make install
+      run: msys2do ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules
 
     # Only run tests for MinGW64 for now
     - name: Test
@@ -44,6 +44,19 @@ jobs:
       shell: cmd
       run: |
         msys2do make check
+
+    - name: Build Gambit for Use
+      shell: msys2 {0}
+      run: |
+        mkdir dist
+        export CFLAGS="-O0" # Avoid a segfault caused by GCC optimizations
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist;make -j4; make modules; make install
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-mingw-${{ matrix.arch }}
+        path: dist/
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -71,7 +84,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2do ./configure --enable-c-opt=-Od --enable-debug CC="cl"; make -j4; make modules; make install
+        msys2do ./configure --enable-c-opt=-Od --enable-debug CC="cl"; make -j4; make modules
 
     - name: Test
       shell: cmd
@@ -88,6 +101,19 @@ jobs:
         ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
         echo n | comp mix.c test5.ok
 
+    - name: Build Gambit for Use
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
+        mkdir dist
+        msys2do ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl";make -j4; make modules; make install
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-msvc-x86_64
+        path: dist/
+
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
       if: ${{ failure() }}
@@ -103,6 +129,20 @@ jobs:
 
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    - name: Build Gambit for Use
+      run: |
+        mkdir dist
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j4 && make modules && make install
+        cd dist/
+        tar -cvzf ../gambit-linux-x86_64.tar.gz ./
+        cd ..
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-linux-x86_64
+        path: gambit-linux-x86_64.tar.gz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -121,6 +161,21 @@ jobs:
       run: |
         export CC=gcc-9
         ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    - name: Build Gambit for Use
+      run: |
+        mkdir dist
+        export CC=gcc-9
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j4 && make modules && make install
+        cd dist/
+        tar -cvzf ../gambit-macos-x86_64.tar.gz ./
+        cd ..
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-macos-x86_64
+        path: gambit-macos-x86_64.tar.gz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
