@@ -596,7 +596,7 @@
   (let* ((gsc-path
           (##path-expand
            (##string-append "gsc-script"
-                            ##os-exe-extension-string-saved)
+                            ##os-bat-extension-string-saved)
            (##path-normalize-directory-existing "~~bin")))
          (arguments
           (##list (##append-strings
