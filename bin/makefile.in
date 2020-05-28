@@ -232,7 +232,7 @@ six@exe@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) six@exe@; \
 	else \
-	  echo "@gsi %*" > six@bat@; \
+	  echo "@%~dp0gsi %*" > six@bat@; \
 	fi
 
 gsi-script@bat@: makefile
@@ -240,7 +240,7 @@ gsi-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) gsi-script@bat@; \
 	else \
-	  echo "@gsi %*" > gsi-script@bat@; \
+	  echo "@%~dp0gsi %*" > gsi-script@bat@; \
 	fi
 
 gsc-script@bat@: makefile
@@ -248,7 +248,7 @@ gsc-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsc/$(GSC_EXECUTABLE) gsc-script@bat@; \
 	else \
-	  echo "@gsc %*" > gsc-script@bat@; \
+	  echo "@%~dp0gsc %*" > gsc-script@bat@; \
 	fi
 
 six-script@bat@: makefile
@@ -256,7 +256,7 @@ six-script@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) six-script@bat@; \
 	else \
-	  echo "@gsi %*" > six-script@bat@; \
+	  echo "@%~dp0gsi %*" > six-script@bat@; \
 	fi
 
 scheme-srfi-0@bat@: makefile
@@ -264,7 +264,7 @@ scheme-srfi-0@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-srfi-0@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-srfi-0@bat@; \
+	  echo "@%~dp0gsi %*" > scheme-srfi-0@bat@; \
 	fi
 
 scheme-r5rs@bat@: makefile
@@ -272,7 +272,7 @@ scheme-r5rs@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-r5rs@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-r5rs@bat@; \
+	  echo "@%~dp0gsi %*" > scheme-r5rs@bat@; \
 	fi
 
 scheme-r4rs@bat@: makefile
@@ -280,7 +280,7 @@ scheme-r4rs@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-r4rs@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-r4rs@bat@; \
+	  echo "@%~dp0gsi %*" > scheme-r4rs@bat@; \
 	fi
 
 scheme-ieee-1178-1990@bat@: makefile
@@ -288,7 +288,7 @@ scheme-ieee-1178-1990@bat@: makefile
 	if test "@bat@" = ""; then \
 	  $(LN_S) $(rootfromhere)/gsi/$(GSI_EXECUTABLE) scheme-ieee-1178-1990@bat@; \
 	else \
-	  echo "@gsi %*" > scheme-ieee-1178-1990@bat@; \
+	  echo "@%~dp0gsi %*" > scheme-ieee-1178-1990@bat@; \
 	fi
 
 bootstrap-pre:
