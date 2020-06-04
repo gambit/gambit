@@ -1,6 +1,6 @@
 # makefile for pthread example.
 
-# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot = examples/pthread
 rootfromhere = ../..
@@ -81,15 +81,15 @@ GAMBITDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
 GAMBITDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
 GAMBITDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
 
-BUILD_OBJ_OUTPUT_FILENAME = $*@obj@
-BUILD_OBJ_CC_OPTIONS =  -I$(srcdir) $(DEFS)
-BUILD_OBJ_INPUT_FILENAMES = $(srcdirpfx)$*.c
+BUILD_OBJ_OUTPUT_FILENAME_PARAM = $*@obj@
+BUILD_OBJ_CC_OPTIONS_PARAM =  -I$(srcdir) $(DEFS)
+BUILD_OBJ_INPUT_FILENAMES_PARAM = $(srcdirpfx)$*.c
 
-BUILD_EXE_OUTPUT_FILENAME = $(EXECUTABLE)
-BUILD_EXE_CC_OPTIONS =
-BUILD_EXE_LD_OPTIONS_PRELUDE =
-BUILD_EXE_INPUT_FILENAMES = $(EXECUTABLE_OBJECTS)
-BUILD_EXE_LD_OPTIONS =
+BUILD_EXE_OUTPUT_FILENAME_PARAM = $(EXECUTABLE)
+BUILD_EXE_CC_OPTIONS_PARAM =
+BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM =
+BUILD_EXE_INPUT_FILENAMES_PARAM = $(EXECUTABLE_OBJECTS)
+BUILD_EXE_LD_OPTIONS_PARAM =
 
 all:
 
@@ -106,7 +106,7 @@ run: pthread@exe@
 	@BUILD_OBJ@ -D___LIBRARY
 
 .scm.c:
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c -check $(srcdirpfx)$*.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c $(srcdirpfx)$*.scm
 
 mylib_.c: mylib.c
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -link -o mylib_.c mylib.c
@@ -115,11 +115,11 @@ pthread@obj@: pthread.c mylib.h $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
 pthread@exe@: mylib@obj@ mylib_@obj@ pthread@obj@
 	$(MAKE) build_exe \
-	  BUILD_EXE_OUTPUT_FILENAME="pthread@exe@" \
-	  BUILD_EXE_CC_OPTIONS="" \
-	  BUILD_EXE_LD_OPTIONS_PRELUDE="" \
-	  BUILD_EXE_INPUT_FILENAMES="mylib@obj@ mylib_@obj@ pthread@obj@" \
-	  BUILD_EXE_LD_OPTIONS=""
+	  BUILD_EXE_OUTPUT_FILENAME_PARAM="pthread@exe@" \
+	  BUILD_EXE_CC_OPTIONS_PARAM="" \
+	  BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM="" \
+	  BUILD_EXE_INPUT_FILENAMES_PARAM="mylib@obj@ mylib_@obj@ pthread@obj@" \
+	  BUILD_EXE_LD_OPTIONS_PARAM=""
 
 build_exe:
 	@BUILD_EXE@
