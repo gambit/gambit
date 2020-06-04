@@ -30,7 +30,74 @@
                (##list opt)))
          options))
 
+(define (##with-resolved-input-file module-or-file options callback)
+  (let* ((modref (##parse-module-ref module-or-file))
+         (mod-info (if modref
+                       (##search-or-else-install-module modref)
+                       #f))
+         (file-path (if mod-info
+                        (##vector-ref mod-info 3)
+                        module-or-file))
+         (base-dir (##path-directory
+                    (##path-normalize file-path)))
+         (target-dir (if mod-info
+                         (##module-build-subdir-path
+                          base-dir
+                          (##path-strip-extension file-path)
+                          (c#target-name (##extract-target options)))
+                        base-dir))
+         (temp-dir (and mod-info
+                        ;; Create a temporary directory under the module output
+                        ;; path with the name of '.gsc-temp-NNNN'
+                        (##create-temporary-directory
+                         (##path-expand
+                          ".gsc-temp-"
+                          ;; Create the target directory if it doesn't exist
+                          (begin
+                            (##create-directory target-dir #f)
+                            target-dir)))))
+         (options (if (##not modref)
+                      options
+                      (##cons
+                         (##list 'module-ref
+                                 (##string->symbol module-or-file))
+                         options))))
+
+    (let* ((output-file (callback file-path (or temp-dir target-dir) options))
+           (target-file (##path-normalize
+                         (##path-expand
+                          (##path-strip-directory output-file)
+                          target-dir))))
+      (and modref
+           (begin
+             (##rename-file-if-changed output-file target-file)
+             (##delete-file-or-directory temp-dir #t)))
+
+      (if modref
+          target-file
+          output-file))))
+
+(define (##files-equal? path1 path2)
+  (##call-with-input-file
+      path1
+    (lambda (port1)
+      (##call-with-input-file
+          path2
+        (lambda (port2)
+          (let loop ()
+            (let* ((chunk1 (read-bytevector 4096 port1))
+                   (chunk2 (read-bytevector 4096 port2)))
+              (and (equal? chunk1 chunk2)
+                   (or (eof-object? chunk1)
+                       (loop))))))))))
+
+(define (##rename-file-if-changed old-path new-path)
+  (and (or (not (##file-exists? new-path))
+           (not (##files-equal? old-path new-path)))
+       (##rename-file old-path new-path)))
+
 (define (compile-file-to-target
+         ;; REVIEW: Should this parameter be renamed to 'module-or-file'?
          filename
          #!rest other;;;;;;;;;;
          #!key
@@ -39,25 +106,26 @@
          (expression (macro-absent-obj)))
   (macro-force-vars (filename)
     (macro-check-string filename 1 (compile-file-to-target filename . other) ;;;;;;
-      (let* ((opts
-              (if (##eq? options (macro-absent-obj))
-                  '()
-                  (macro-force-vars (options)
-                    options)))
-             (out
-              (if (##eq? output (macro-absent-obj))
-                  (##path-directory
-                   (##path-normalize filename))
-                  (macro-force-vars (output)
-                                    output)))
-             (filename-or-source
-              (if (##eq? expression (macro-absent-obj))
-                  filename
-                  (if (##source? expression)
-                      expression
-                      (##make-source
-                       expression
-                       (##make-locat (##path->container filename) 0))))))
+      (##with-resolved-input-file
+       filename
+       (if (##eq? options (macro-absent-obj))
+           '()
+           (macro-force-vars (options)
+             options))
+       (lambda (filename target-dir opts)
+         (let* ((out
+                  (if (##eq? output (macro-absent-obj))
+                      target-dir
+                      (macro-force-vars (output)
+                        output)))
+                (filename-or-source
+                  (if (##eq? expression (macro-absent-obj))
+                      filename
+                      (if (##source? expression)
+                          expression
+                          (##make-source
+                            expression
+                            (##make-locat (##path->container filename) 0))))))
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
                (error "list expected for options: parameter")) ;;;;;;;
@@ -66,7 +134,7 @@
               (else
                (##compile-file-to-target filename-or-source
                                          opts
-                                         out)))))))
+                                         out)))))))))
 
 (define (##compile-file-to-target filename-or-source options output)
   (let* ((options
@@ -144,6 +212,7 @@
   (##string-or-string-list-join x "\n"))
 
 (define (compile-file
+         ;; REVIEW: Should this parameter be renamed to 'module-or-file'?
          filename
          #!rest other;;;;;;;;;;
          #!key
@@ -159,82 +228,83 @@
 
   (macro-force-vars (filename)
     (macro-check-string filename 1 (compile-file filename . other) ;;;;;;
-      (let* ((opts
-              (if (##eq? options (macro-absent-obj))
-                  '()
-                  (macro-force-vars (options)
-                    options)))
-             (out
-              (if (##eq? output (macro-absent-obj))
-                  (##path-directory
-                   (##path-normalize filename))
-                  (macro-force-vars (output)
-                    output)))
-             (bas
-              (if (##eq? base (macro-absent-obj))
-                  #f
-                  (macro-force-vars (base)
-                    base)))
-             (cc-opts
-              (if (##eq? cc-options (macro-absent-obj))
-                  '()
-                  (macro-force-vars (cc-options)
-                    cc-options)))
-             (ld-opts-prelude
-              (if (##eq? ld-options-prelude (macro-absent-obj))
-                  '()
-                  (macro-force-vars (ld-options-prelude)
-                    ld-options-prelude)))
-             (ld-opts
-              (if (##eq? ld-options (macro-absent-obj))
-                  '()
-                  (macro-force-vars (ld-options)
-                    ld-options)))
-             (pkg-cfg
-              (if (##eq? pkg-config (macro-absent-obj))
-                  '()
-                  (macro-force-vars (pkg-config)
-                    pkg-config)))
-             (pkg-cfg-path
-              (if (##eq? pkg-config-path (macro-absent-obj))
-                  '()
-                  (macro-force-vars (pkg-config-path)
-                    pkg-config-path)))
-             (filename-or-source
-              (if (##eq? expression (macro-absent-obj))
-                  filename
-                  (if (##source? expression)
-                      expression
-                      (##make-source
-                       expression
-                       (##make-locat (##path->container filename) 0))))))
-        (cond ((##not (or (##null? opts)
-                          (##pair? opts)))
-               (error "list expected for options: parameter")) ;;;;;;;
-              ((##not (##string? out))
-               (error "string expected for output: parameter")) ;;;;;;;;;;
-              ((##not (or (##string? bas) (##eq? bas #f)))
-               (error "string or #f expected for base: parameter")) ;;;;;;;;;;
-              ((##not (##string-or-string-list? cc-opts))
-               (error "string or string list expected for cc-options: parameter")) ;;;;;;;;;;
-              ((##not (##string-or-string-list? ld-opts-prelude))
-               (error "string or string list expected for ld-options-prelude: parameter")) ;;;;;;;;;;
-              ((##not (##string-or-string-list? ld-opts))
-               (error "string or string list expected for ld-options: parameter")) ;;;;;;;;;;
-              ((##not (##string-or-string-list? pkg-cfg))
-               (error "string or string list expected for pkg-config: parameter")) ;;;;;;;;;;
-              ((##not (##string-or-string-list? pkg-cfg-path))
-               (error "string or string list expected for pkg-config-path: parameter")) ;;;;;;;;;;
-              (else
-               (##compile-file filename-or-source
-                               opts
-                               out
-                               bas
-                               cc-opts
-                               ld-opts-prelude
-                               ld-opts
-                               pkg-cfg
-                               pkg-cfg-path)))))))
+      (##with-resolved-input-file
+       filename
+       (if (##eq? options (macro-absent-obj))
+           '()
+           (macro-force-vars (options)
+             options))
+       (lambda (filename target-dir opts)
+         (let* ((out
+                  (if (##eq? output (macro-absent-obj))
+                      target-dir
+                      (macro-force-vars (output)
+                        output)))
+                (bas
+                  (if (##eq? base (macro-absent-obj))
+                      #f
+                      (macro-force-vars (base)
+                        base)))
+                (cc-opts
+                  (if (##eq? cc-options (macro-absent-obj))
+                      '()
+                      (macro-force-vars (cc-options)
+                        cc-options)))
+                (ld-opts-prelude
+                  (if (##eq? ld-options-prelude (macro-absent-obj))
+                      '()
+                      (macro-force-vars (ld-options-prelude)
+                        ld-options-prelude)))
+                (ld-opts
+                  (if (##eq? ld-options (macro-absent-obj))
+                      '()
+                      (macro-force-vars (ld-options)
+                        ld-options)))
+                (pkg-cfg
+                  (if (##eq? pkg-config (macro-absent-obj))
+                      '()
+                      (macro-force-vars (pkg-config)
+                        pkg-config)))
+                (pkg-cfg-path
+                  (if (##eq? pkg-config-path (macro-absent-obj))
+                      '()
+                      (macro-force-vars (pkg-config-path)
+                        pkg-config-path)))
+                (filename-or-source
+                  (if (##eq? expression (macro-absent-obj))
+                      filename
+                      (if (##source? expression)
+                          expression
+                          (##make-source
+                            expression
+                            (##make-locat (##path->container filename) 0))))))
+            (cond ((##not (or (##null? opts)
+                              (##pair? opts)))
+                   (error "list expected for options: parameter")) ;;;;;;;
+                  ((##not (##string? out))
+                   (error "string expected for output: parameter")) ;;;;;;;;;;
+                  ((##not (or (##string? bas) (##eq? bas #f)))
+                   (error "string or #f expected for base: parameter")) ;;;;;;;;;;
+                  ((##not (##string-or-string-list? cc-opts))
+                   (error "string or string list expected for cc-options: parameter")) ;;;;;;;;;;
+                  ((##not (##string-or-string-list? ld-opts-prelude))
+                   (error "string or string list expected for ld-options-prelude: parameter")) ;;;;;;;;;;
+                  ((##not (##string-or-string-list? ld-opts))
+                   (error "string or string list expected for ld-options: parameter")) ;;;;;;;;;;
+                  ((##not (##string-or-string-list? pkg-cfg))
+                   (error "string or string list expected for pkg-config: parameter")) ;;;;;;;;;;
+                  ((##not (##string-or-string-list? pkg-cfg-path))
+                   (error "string or string list expected for pkg-config-path: parameter")) ;;;;;;;;;;
+                  (else
+                   (##compile-file filename-or-source
+                                   opts
+                                   out
+                                   bas
+                                   cc-opts
+                                   ld-opts-prelude
+                                   ld-opts
+                                   pkg-cfg
+                                   pkg-cfg-path)))))))))
 
 (define (##compile-file
          filename-or-source
@@ -285,14 +355,17 @@
            (input-is-target-file?
             (##assoc (##path-extension filename)
                      (c#target-file-extensions target)))
+           (expanded-output
+            (##path-normalize output))
            (target-filename
             (if input-is-target-file?
                 filename
                 (##string-append
-                 (##path-strip-extension filename)
+                 (##path-expand
+                  (##path-strip-directory
+                   (##path-strip-extension filename))
+                  expanded-output)
                  (##caar (c#target-file-extensions target)))))
-           (expanded-output
-            (##path-normalize output))
            (output-directory?
             (##not (##equal? expanded-output
                              (##path-strip-trailing-directory-separator
@@ -364,6 +437,8 @@
                   "target compilation or link failed while compiling"
                   (##list filename))))))))
 
+;; REVIEW: Is this procedure no longer necessary now that the
+;;         compiler APIs can build modules directly?
 (define (##build-module path target options)
 
   (define (get-option key)
