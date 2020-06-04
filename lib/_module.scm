@@ -152,6 +152,9 @@
                ;; a host name component must not start or end with "-"
                (##not (or (##char=? (##string-ref str 0) #\-)
                           (##char=? (##string-ref str (##fx- len 1)) #\-))))
+           ;; a component must not start or end with "."
+           (##not (or (##char=? (##string-ref str 0) #\.)
+                      (##char=? (##string-ref str (##fx- len 1)) #\.)))
            (let loop ((i (##fx- len 1)))
              (if (##fx< i 0)
                  #t
@@ -167,7 +170,9 @@
                                   (##char=? c #\_)
                                   ;; in tag, allow "."
                                   (and (##eq? context 'tag)
-                                       (##char=? c #\.)))))
+                                       (##char=? c #\.)
+                                       ;; must not be followed by "."
+                                       (##not (##char=? (##string-ref str (##fx+ i 1)) #\.))))))
                         (loop (##fx- i 1)))))))))
 
   (define (valid-components? lst context)
