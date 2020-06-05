@@ -3194,10 +3194,7 @@ def g_os_condvar_select(devices_scm, timeout_scm):
        (let ((decl (##desourcify decl-src)))
          (if (##string? decl)
              (##host-decl-expand decl)
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##car (##desourcify src)))))))))
+             (##raise-ill-formed-special-form src)))))))
 
 (define-runtime-syntax host-decl
   (##make-alias-syntax '##host-decl))
@@ -3211,10 +3208,7 @@ def g_os_condvar_select(devices_scm, timeout_scm):
        (let ((stmts (##desourcify stmts-src)))
          (if (##string? stmts)
              (##host-exec-expand stmts args-src)
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##car (##desourcify src)))))))))
+             (##raise-ill-formed-special-form src)))))))
 
 (define-runtime-syntax host-exec
   (##make-alias-syntax '##host-exec))
@@ -3228,10 +3222,7 @@ def g_os_condvar_select(devices_scm, timeout_scm):
        (let ((stmts (##desourcify stmts-src)))
          (if (##string? stmts)
              (##host-eval-expand stmts args-src)
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##car (##desourcify src)))))))))
+             (##raise-ill-formed-special-form src)))))))
 
 (define-runtime-syntax host-eval
   (##make-alias-syntax '##host-eval))

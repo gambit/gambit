@@ -57,10 +57,7 @@
             (if (##fx< 0 size)
                 (##not (##fx= n size))
                 (##fx< n (##fx- 0 size))))
-        (##raise-expression-parsing-exception
-         'ill-formed-special-form
-         src
-         (##source-strip (##car code)))
+        (##raise-ill-formed-special-form src)
         (##apply proc (##cdr code)))))
 
 (define-prim (##expand-source-template src template)
@@ -95,11 +92,6 @@
               locat))))
 
     (expand template)))
-
-(define-prim (##source-strip x)
-  (if (##source? x)
-      (##source-code x)
-      x))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -136,10 +128,7 @@
          (if (##string? m)
              (##apply ##raise-expression-parsing-exception
                       (##cons m (##cons src (##map ##desourcify args))))
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              'syntax-error)))))))
+             (##raise-ill-formed-special-form src)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -151,10 +140,7 @@
      (let ((sym (##desourcify sym-src)))
 
        (if (##not (##symbol? sym))
-           (##raise-expression-parsing-exception
-            'ill-formed-special-form
-            src
-            (##source-strip (##car (##source-strip src)))))
+           (##raise-ill-formed-special-form src))
 
        (if supply?
            (##compilation-ctx-supply-modules-add! sym)
@@ -313,10 +299,7 @@
                     (let* ((lib-src (##cadr feature-requirement))
                            (modref (##parse-module-ref lib-src)))
                       (if (##not modref)
-                          (##raise-expression-parsing-exception
-                           'ill-formed-special-form
-                           src
-                           'cond-expand)
+                          (##raise-ill-formed-special-form src)
                           (##call-with-values
                            (lambda ()
                              (##find-mod-info src lib-src))
@@ -1547,13 +1530,12 @@
         `',(##apply ##structure
                     (##cons type (##reverse lst2))))))
 
-(define-prim (##ill-formed-special-form form-name args)
+(define-prim (##ill-formed-special-form form-name args) ;; TODO: deprecate
   (##raise-expression-parsing-exception
    'ill-formed-special-form
    (##sourcify
     (##cons form-name args)
-    (##make-source #f #f))
-   form-name))
+    (##make-source #f #f))))
 
 (define-prim (##constant-expression? expr)
   (or (##self-eval? expr)

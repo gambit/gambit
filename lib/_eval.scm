@@ -273,6 +273,11 @@
     (and locat
          (##container->path (##locat-container locat)))))
 
+(define (##source-strip x)
+  (if (##source? x)
+      (##source-code x)
+      x))
+
 (define (##desourcify src)
   (let ((visited (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?)))
 
@@ -1003,19 +1008,12 @@
 
 (define (##shape src x size)
   (if (##not (##shape? x size))
-      (##raise-expression-parsing-exception
-       'ill-formed-special-form
-       src
-       (let* ((code (##source-code src))
-              (head-src (##sourcify (##car code) src))
-              (head (##source-code head-src))
-              (name (##symbol->string head))
-              (len (##string-length name)))
-         (if (and (##fx< 2 len)
-                  (##char=? #\# (##string-ref name 0))
-                  (##char=? #\# (##string-ref name 1)))
-             (##string->symbol (##substring name 2 len))
-             (##desourcify head-src))))))
+      (##raise-ill-formed-special-form src)))
+
+(define (##raise-ill-formed-special-form src)
+  (##raise-expression-parsing-exception
+   'ill-formed-special-form
+   src))
 
 (define (##shape? x size)
   (let* ((code (##source-code x))

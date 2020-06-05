@@ -1736,25 +1736,31 @@
           (##step-on)) ;; turn on single-stepping
       (if (##vector-ref settings 1)
           (##trace-generate
-           (##make-call-form proc
-                             (##argument-list-remove-absent! args '())
-                             ##max-fixnum)
+           (##make-friendly-call-form proc
+                                      (##argument-list-remove-absent! args '())
+                                      ##max-fixnum)
            execute
            #f)
           (execute)))))
 
-(define-prim (##make-call-form proc args max-args)
+(define-prim (##make-friendly-call-form proc args max-args)
+  (##make-friendly-form (##procedure-friendly-name proc)
+                        args
+                        max-args
+                        ##inverse-eval))
 
-  (define (inverse-eval-args i lst)
+(define-prim (##make-friendly-form head args max-args transform-arg)
+
+  (define (process-args i lst)
     (if (##pair? lst)
-        (if (##fx< max-args i)
-            '(...)
-            (##cons (##inverse-eval (##car lst))
-                    (inverse-eval-args (##fx+ i 1) (##cdr lst))))
-        '()))
+        (if (##fx> i max-args)
+            (##cons '... (##cdr (##last-pair lst)))
+            (##cons (transform-arg (##car lst))
+                    (process-args (##fx+ i 1) (##cdr lst))))
+        lst))
 
-  (##cons (##procedure-friendly-name proc)
-          (inverse-eval-args 1 args)))
+  (##cons head
+          (process-args 1 args)))
 
 (define ##trace-depth (##make-parameter 0))
 
@@ -3492,33 +3498,43 @@
           (display-call* proc (##cdr proc-and-args)))))
 
   (define (display-call* proc args)
-    (let* ((call
-            (##make-call-form proc args max-displayed-args))
-           (width
+    (display-form (##make-friendly-call-form proc args max-displayed-args)))
+
+  (define (display-form form)
+    (let* ((width
             (##output-port-width port))
            (str
-            (##object->string call width port)))
-      (if (##fx< (##string-length str) width)
+            (##object->string form width port)))
+      (if (or (##not (##pair? form))
+              (##fx< (##string-length str) width))
           (begin
             (##write-string str port)
             (##newline port))
-          (let loop ((i 0) (lst call))
-            (##write-string (if (##fx= i 0) "(" " ") port)
-            (let* ((last?
-                    (##null? (##cdr lst)))
-                   (w
-                    (##fx- width 2))
-                   (s
-                    (##object->string (##car lst) w port)))
-              (##write-string s port)
-              (if last?
-                  (begin
-                    (if (##fx= (##string-length s) w) (##newline port))
-                    (##write-string ")" port)
-                    (##newline port))
-                  (begin
-                    (##newline port)
-                    (loop (##fx+ i 1) (##cdr lst)))))))))
+          (let ((w (##fx- width 2)))
+
+            (define (end s)
+              (if (##fx= (##string-length s) w) (##newline port))
+              (##write-string ")" port)
+              (##newline port))
+
+            (let loop ((i 0) (lst form))
+              (##write-string (if (##fx= i 0) "(" " ") port)
+              (let ((s (##object->string (##car lst) w port)))
+                (##write-string s port)
+                (let ((rest (##cdr lst)))
+                  (cond ((##pair? rest)
+                         (##newline port)
+                         (loop (##fx+ i 1) rest))
+                        ((##null? rest)
+                         (end s))
+                        (else
+                         (let ((s2 (##object->string rest w port)))
+                           (##newline port)
+                           (##write-string " ." port)
+                           (##newline port)
+                           (##write-string " " port)
+                           (##write-string s2 port)
+                           (end s2)))))))))))
 
   (define-prim (write-items items)
     (let loop ((lst items))
@@ -3660,13 +3676,34 @@
                          (if x
                              (##cdr x)
                              "Unknown expression parsing exception")))))
-             (##write-string name port))
-           (write-items (macro-expression-parsing-exception-parameters exc))
-           (##newline port)
-           (let* ((source (macro-expression-parsing-exception-source exc))
-                  (locat (##source-locat source)))
-             (if (##not locat)
-                 (##pretty-print (##desourcify source) port))))
+             (##write-string name port)
+             (write-items (macro-expression-parsing-exception-parameters exc))
+             (##newline port)
+             (if (##eq? kind 'ill-formed-special-form)
+                 (display-form
+                  (let* ((src (macro-expression-parsing-exception-source exc))
+                         (code (##desourcify src)))
+                    (if (##pair? code)
+                        (let* ((head
+                                (##car code))
+                               (friendly-head
+                                (if (##symbol? head)
+                                    (let* ((name (##symbol->string head))
+                                           (len (##string-length name)))
+                                      (if (and (##fx< 2 len)
+                                               (##char=? #\#
+                                                         (##string-ref name 0))
+                                               (##char=? #\#
+                                                         (##string-ref name 1)))
+                                          (##string->symbol
+                                           (##substring name 2 len))
+                                          head))
+                                    head)))
+                          (##make-friendly-form friendly-head
+                                                (##cdr code)
+                                                max-displayed-args
+                                                ##identity))
+                        code))))))
 
           ((macro-heap-overflow-exception? exc)
            (##write-string "Heap overflow" port)
@@ -4289,7 +4326,7 @@
     (variable-is-immutable            . "Variable is immutable:")
     (ill-formed-macro-transformer     . "Macro transformer must be a lambda expression")
     (reserved-used-as-variable        . "Reserved identifier can't be used as a variable:")
-    (ill-formed-special-form          . "Ill-formed special form:")
+    (ill-formed-special-form          . "Ill-formed special form")
     (module-not-found                 . "Module not found:")
     (cannot-open-file                 . "Can't open file")
     (filename-expected                . "Filename expected")
