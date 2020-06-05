@@ -38,14 +38,14 @@ jobs:
 
     - name: Build
       shell: cmd
-      run: msys2do ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules
+      run: msys2 ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules
 
     # Only run tests for MinGW64 for now
     - name: Test
       if: ${{ matrix.msystem == 'MINGW64' }}
       shell: cmd
       run: |
-        msys2do make check
+        msys2 make check
 
     - name: Build Gambit for Use
       shell: msys2 {0}
@@ -88,13 +88,13 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2do ./configure --enable-c-opt=-Od --enable-debug CC="cl"; make -j4; make modules
+        msys2 ./configure --enable-c-opt=-Od --enable-debug CC="cl"; make -j4; make modules
 
     - name: Test
       shell: cmd
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
-        msys2do make check
+        msys2 make check
 
     - name: Build vstudio.bat
       shell: cmd
@@ -110,7 +110,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         mkdir dist
-        msys2do ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl";make -j4; make modules; make install
+        msys2 ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl";make -j4; make modules; make install
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
