@@ -28,9 +28,10 @@ jobs:
       run: git fetch --prune --unshallow
 
     - name: Install MSYS2
-      uses: eine/setup-msys2@v0
+      uses: eine/setup-msys2@v1
       with:
         update: true
+        cache: true
         install: "autoconf git make mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
         path-type: inherit
         msystem: ${{ matrix.msystem }}
@@ -74,9 +75,10 @@ jobs:
       run: git fetch --prune --unshallow
 
     - name: Install MSYS2
-      uses: eine/setup-msys2@v0
+      uses: eine/setup-msys2@v1
       with:
         update: true
+        cache: true
         install: "autoconf make patch"
         path-type: inherit
         msystem: MSYS
