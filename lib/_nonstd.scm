@@ -259,6 +259,42 @@
            'unknown-location
            src)))))
 
+(define-runtime-syntax ##from-source-location
+  (lambda (src)
+
+    (define (syntax-err)
+      (##raise-ill-formed-special-form src))
+
+    (##deconstruct-call
+     src
+     3
+     (lambda (location-src expr-src)
+       (let* ((loc (##desourcify location-src))
+              (len (##proper-length loc)))
+         (if (##not (or (##eqv? len 3) (##eqv? len 4)))
+             (syntax-err)
+             (let ((path (##car loc))
+                   (line (##cadr loc))
+                   (col (##caddr loc))
+                   (deep? (if (##eqv? len 3) #f (##cadddr loc))))
+               (if (and (##string? path)
+                        (##fixnum? line)
+                        (##fixnum? col)
+                        (##fx>= line 1)
+                        (##fx>= col 1))
+                   (let* ((container
+                           (##path->container path))
+                          (filepos
+                           (##make-filepos (##fx- line 1) (##fx- col 1) 0))
+                          (locat
+                           (##make-locat container filepos)))
+                     (##make-source
+                      (if deep?
+                          (##desourcify expr-src)
+                          (##source-strip expr-src))
+                      locat))
+                   (syntax-err)))))))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define-runtime-syntax ##cond-expand
