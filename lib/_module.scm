@@ -947,10 +947,7 @@
   (let ((modref (##parse-module-ref arg-src)))
     (if (##not modref)
 
-        (##raise-expression-parsing-exception
-         'ill-formed-special-form
-         src
-         (##source-strip (##car (##source-strip src))))
+        (##raise-ill-formed-special-form src)
 
         (let* ((relative-to-path
                 (##source-path src))
