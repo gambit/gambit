@@ -1,4 +1,4 @@
-name: Gambit - CI
+name: Gambit
 
 on:
   pull_request:
@@ -11,6 +11,7 @@ on:
 
 jobs:
   Windows-mingw:
+    name: "Windows - ${{ matrix.msystem }}"
     runs-on: windows-latest
     strategy:
       matrix:
@@ -63,6 +64,7 @@ jobs:
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   Windows-msvc:
+    name: "Windows - MSVC"
     runs-on: windows-latest
 
     steps:
