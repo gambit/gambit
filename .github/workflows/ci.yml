@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - master
-      - github-actions # TODO: Remove this before enabling on Gambit repo
 
 jobs:
   Windows-mingw:
@@ -21,34 +20,33 @@ jobs:
           - msystem: "MINGW32"
             arch: "i686"
 
+    defaults:
+      run:
+        shell: msys2 {0}
+
     steps:
     - uses: actions/checkout@v2
-
-    - name: Fetch Tags
-      run: git fetch --prune --unshallow
+      with:
+        fetch-depth: 0
 
     - name: Install MSYS2
       uses: eine/setup-msys2@v1
       with:
         update: true
         cache: true
-        install: "autoconf git make mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
-        path-type: inherit
+        install: "autoconf git make texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
         msystem: ${{ matrix.msystem }}
 
     - name: Build
-      shell: cmd
-      run: msys2 ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules
+      run: ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules
 
     # Only run tests for MinGW64 for now
     - name: Test
       if: ${{ matrix.msystem == 'MINGW64' }}
       shell: cmd
-      run: |
-        msys2 make check
+      run: make check
 
     - name: Build Gambit for Use
-      shell: msys2 {0}
       run: |
         mkdir dist
         export CFLAGS="-O0" # Avoid a segfault caused by GCC optimizations
@@ -70,17 +68,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Fetch Tags
-      run: git fetch --prune --unshallow
+      with:
+        fetch-depth: 0
 
     - name: Install MSYS2
       uses: eine/setup-msys2@v1
       with:
         update: true
         cache: true
-        install: "autoconf make patch"
-        path-type: inherit
+        install: "autoconf make patch texinfo"
         msystem: MSYS
 
     - name: Build
@@ -127,9 +123,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Fetch Tags
-      run: git fetch --prune --unshallow
+      with:
+        fetch-depth: 0
 
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
@@ -157,9 +152,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Fetch Tags
-      run: git fetch --prune --unshallow
+      with:
+        fetch-depth: 0
 
     - name: Build and Test
       run: |
