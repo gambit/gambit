@@ -34,7 +34,7 @@ jobs:
       with:
         update: true
         cache: true
-        install: "autoconf git make texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
         msystem: ${{ matrix.msystem }}
 
     - name: Build
@@ -76,7 +76,7 @@ jobs:
       with:
         update: true
         cache: true
-        install: "autoconf make patch texinfo"
+        install: "autoconf make patch tar texinfo"
         msystem: MSYS
 
     - name: Build
