@@ -2362,11 +2362,7 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___REF_CNS(i)(___FIX(i)+___tMEM2)
 #define ___REF_SUB(i)(___FIX(i)+___tMEM1)
 
-#ifdef ___SUBCOUNT
 #define ___REF_PRC(i)(___FIX(___SUBCOUNT+i)+___tMEM1)
-#else
-#define ___REF_PRC(i)(___FIX(i)+___tMEM1)
-#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -6804,6 +6800,7 @@ ___LOCAL ___WORD id[]={___MAKE_HD((((n+1)>>1)<<3),___sBIGNUM,___PERM)
 #ifdef ___OFDCOUNT
 #define ___OFDTBL ___ofdtbl,sizeof(___ofdtbl)/sizeof(___WORD)
 #else
+#define ___OFDCOUNT 0
 #define ___OFDTBL 0,0
 #endif
 
@@ -6916,6 +6913,7 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #define ___GLOTBL 0,0,0,0
 #endif
 #else
+#define ___GLOCOUNT 0
 #define ___GLODECL
 #define ___GLOTBL 0,0,0,0
 #endif
@@ -6929,6 +6927,7 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #define ___SYMTBL ___symtbl,___SYMCOUNT,0
 #endif
 #else
+#define ___SYMCOUNT 0
 #define ___SYMDECL
 #define ___SYMTBL 0,0,0
 #endif
@@ -6942,6 +6941,7 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #define ___KEYTBL ___keytbl,___KEYCOUNT,0
 #endif
 #else
+#define ___KEYCOUNT 0
 #define ___KEYDECL
 #define ___KEYTBL 0,0,0
 #endif
@@ -6949,18 +6949,21 @@ fs = ___OFD_FS(descr); link = ___OFD_LINK(descr); } }
 #ifdef ___LBLCOUNT
 #define ___LBLTBL &___lp,___lbltbl,___LBLCOUNT
 #else
+#define ___LBLCOUNT 0
 #define ___LBLTBL 0,0,0
 #endif
 
 #ifdef ___CNSCOUNT
 #define ___CNSTBL ___cnstbl,___CNSCOUNT
 #else
+#define ___CNSCOUNT 0
 #define ___CNSTBL 0,0
 #endif
 
 #ifdef ___SUBCOUNT
 #define ___SUBTBL ___subtbl,___SUBCOUNT
 #else
+#define ___SUBCOUNT 0
 #define ___SUBTBL 0,0
 #endif
 
@@ -11051,7 +11054,7 @@ typedef struct ___global_state_struct
 #endif
   } ___global_state_struct;
 
-#ifdef ___LBLCOUNT
+#if ___LBLCOUNT > 0
 ___LOCAL ___WORD ___lp; /* Module's label table pointer */
 #endif
 

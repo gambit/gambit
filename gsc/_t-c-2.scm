@@ -45,6 +45,9 @@
     (set! targ-proc-lbl-tbl-ord        (queue-empty))
     (set! targ-debug-info-state        (make-debug-info-state))
 
+    (if (proc-obj-primitive? proc)
+        (targ-use-obj (string->symbol (proc-obj-name proc))))
+
 ;;    (targ-repr-begin-proc!)
 
     (let ((x (proc-obj-code proc)))
