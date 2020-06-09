@@ -1222,34 +1222,44 @@ ___SCMOBJ (*proc) ();)
 }
 
 
-___HIDDEN void fixref
+___HIDDEN void fixrefs
    ___P((___module_struct *module,
-         ___SCMOBJ *p),
+         ___SCMOBJ *p,
+         int n),
         (module,
-         p)
+         p,
+         n)
 ___module_struct *module;
-___SCMOBJ *p;)
+___SCMOBJ *p;
+int n;)
 {
-  ___SCMOBJ v = *p;
-  int n = ___INT(v);
-  switch (___TYP(v))
+  while (n > 0)
     {
-    case ___tMEM1:
-      if (n < 0)
-        *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-n];
-      else if (n < module->subcount)
-        *p = ___CAST(___SCMOBJ*,module->subtbl)[n];
-      else
-        *p = ___SUBTYPED_FROM_BODY(&module->lbltbl[n-module->subcount].entry_or_descr);
-      break;
+      ___SCMOBJ v = *p;
+      int x = ___INT(v);
+      switch (___TYP(v))
+        {
 
-    case ___tMEM2:
-      if (n < 0)
-        *p = ___CAST(___SCMOBJ*,module->symtbl)[-1-n];
-      else
-        *p = ___PAIR_FROM_START(&___CAST(___SCMOBJ*,module->cnstbl)[
-                                   n*(___PAIR_BODY+___PAIR_SIZE)]);
-      break;
+        case ___tMEM1:
+          if (x < 0)
+            *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-x];
+          else if (x < module->subcount)
+            *p = ___CAST(___SCMOBJ*,module->subtbl)[x];
+          else
+            *p = ___SUBTYPED_FROM_BODY(&module->lbltbl[x-module->subcount].entry_or_descr);
+          break;
+
+        case ___tMEM2:
+          if (x < 0)
+            *p = ___CAST(___SCMOBJ*,module->symtbl)[-1-x];
+          else
+            *p = ___PAIR_FROM_START(&___CAST(___SCMOBJ*,module->cnstbl)[
+                                     x*(___PAIR_BODY+___PAIR_SIZE)]);
+          break;
+        }
+
+      p++;
+      n--;
     }
 }
 
@@ -1469,21 +1479,14 @@ ___module_struct *module;)
 
   /* Fix reference in module's descriptor */
 
-  fixref (module, &module->moddescr);
+  fixrefs (module, &module->moddescr, 1);
 
   /* Fix references in module's pair table */
 
   for (i=cnscount-1; i>=0; i--)
-    {
-      fixref (module,
-              cnstbl
-              + i*(___PAIR_BODY+___PAIR_SIZE)
-              + (___PAIR_BODY+___PAIR_CAR));
-      fixref (module,
-              cnstbl
-              + i*(___PAIR_BODY+___PAIR_SIZE)
-              + (___PAIR_BODY+___PAIR_CDR));
-    }
+    fixrefs (module,
+             cnstbl + i*(___PAIR_BODY+___PAIR_SIZE) + ___PAIR_BODY,
+             ___PAIR_SIZE);
 
   /* Fix references in module's subtyped object table */
 
@@ -1491,21 +1494,8 @@ ___module_struct *module;)
     {
       ___SCMOBJ *p = ___SUBTYPED_TO_START(subtbl[j]);
       ___SCMOBJ head = p[0];
-      int subtype = ___HD_SUBTYPE(head);
-      int words = ___HD_WORDS(head);
-      switch (subtype)
-        {
-        case ___sSYMBOL:
-        case ___sKEYWORD:
-        case ___sVECTOR:
-        case ___sSTRUCTURE:
-        case ___sRATNUM:
-        case ___sCPXNUM:
-        case ___sBOXVALUES:
-          p += ___SUBTYPED_BODY;
-          for (i=0; i<words; i++)
-            fixref (module, p+i);
-        }
+      if (___HD_SUBTYPE(head) <= ___sKEYWORD)
+        fixrefs (module, p+___SUBTYPED_BODY, ___HD_WORDS(head));
     }
 
   /* Align module's out-of-line frame descriptor table */
@@ -1536,33 +1526,14 @@ ___module_struct *module;)
                * (##subprocedure-parent-name proc)
                */
 
-              ___UTF_8STRING name =
-                ___CAST(___UTF_8STRING, ___LABEL_NAME_GET(lbl));
-
-              if (name == 0)
-                ___LABEL_NAME_SET(lbl, ___FAL);
-              else
-                {
-                  /* TODO: the time needed to create these symbols dynamically dominates the module setup time... optimize by using the local symbol table... this may require changes to the linker */
-
-                  ___SCMOBJ sym =
-                    ___find_symkey_from_UTF_8_string (name, ___sSYMBOL);
-
-                  if (___FIXNUMP(sym))
-                    return sym;
-
-                  if (sym == ___FAL)
-                    return ___FIX(___UNKNOWN_ERR);
-
-                  ___LABEL_NAME_SET(lbl, sym);
-                }
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_NAME), 1);
 
               /*
                * Setup debugging information returned by
                * (##subprocedure-parent-info proc)
                */
 
-              fixref (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO));
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO), 1);
 
 #ifdef ___SUPPORT_LABEL_VALUES
               if (hlbl_ptr != 0)

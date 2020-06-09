@@ -5432,8 +5432,9 @@ int char_encoding;)
       {
         ___UTF_8STRING str = ___CAST(___UTF_8STRING,x);
         ___UTF_8STRING p = str;
+        ___UCS_4 c;
 
-        while (___UTF_8_get (&p) != 0) /* advance until end or error */
+        while (___UTF_8_get_var (&p, c) != 0) /* advance until end or error */
           n++;
 
         result = ___alloc_scmobj (___ps, ___sSTRING, n<<___LCS);
@@ -5447,7 +5448,7 @@ int char_encoding;)
             for (i=0; i<n; i++)
               {
                 ___UTF_8STRING start = p;
-                ___UCS_4 c = ___UTF_8_get (&p);
+                ___UTF_8_get_var (&p, c);
                 if (p == start || c > ___MAX_CHR)
                   {
                     ___release_scmobj (result);
@@ -6353,12 +6354,12 @@ int char_encoding;)
       char *p = str_char;
       int len = 0;
       int i;
-      ___UCS_2 c;
+      ___UCS_4 c;
 
       switch (char_encoding)
         {
         case ___CHAR_ENCODING_UTF_8:
-          while (___UTF_8_get (&p) != 0) /* advance until end or error */
+          while (___UTF_8_get_var (&p, c) != 0) /* advance until end or error */
             len++;
           break;
 
@@ -6381,13 +6382,13 @@ int char_encoding;)
       switch (char_encoding)
         {
         case ___CHAR_ENCODING_UTF_8:
-          while ((c = ___UTF_8_get (&p)) != 0 && i<len) /* advance until end or error */
+          while (___UTF_8_get_var (&p, c) != 0 && i<len) /* advance until end or error */
             s[i++] = c;
           break;
 
         case ___CHAR_ENCODING_ISO_8859_1:
         default:
-          while ((c = ___CAST(___UCS_2,___CAST(unsigned char,*p++))) != '\0' && i<len)
+          while ((c = ___CAST(___UCS_4,___CAST(unsigned char,*p++))) != '\0' && i<len)
             s[i++] = c;
           break;
         }

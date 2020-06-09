@@ -1834,9 +1834,9 @@
          (set! i (+ i 1))
          (targ-code* (list "DEF_LBL_INTRO"
                            host
-                           (if (proc-obj-primitive? proc)
-                             (targ-c-string name)
-                             0)
+                           (targ-heap-ref-obj
+                            (and (proc-obj-primitive? proc)
+                                 (string->symbol name)))
                            (targ-heap-ref-obj proc-info)
                            (length val-lbls)
                            (if c-name c-name 0)))

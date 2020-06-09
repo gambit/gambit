@@ -1761,7 +1761,7 @@ ___UTF_8STRING str;)
   for (;;)
     {
       ___UTF_8STRING start = p;
-      c = ___UTF_8_get (&p);
+      ___UTF_8_get_var (&p, c);
       if (p == start || c > ___MAX_CHR)
         return ___FIX(___CTOS_UTF_8STRING_ERR);
       if (c == 0)
@@ -1959,11 +1959,12 @@ unsigned int subtype;)
       ___SIZE_T i;
       ___SIZE_T n = ___INT(___STRINGLENGTH(name));
       ___UTF_8STRING p = str;
+      ___UCS_4 c;
       for (i=0; i<n; i++)
-        if (___UTF_8_get (&p) !=
+        if (___UTF_8_get_var (&p, c) !=
             ___CAST(___UCS_4,___INT(___STRINGREF(name,___FIX(i)))))
           goto next;
-      if (___UTF_8_get (&p) == 0)
+      if (___UTF_8_get_var (&p, c) == 0)
         return probe;
     next:
       probe = ___FIELD(probe,___SYMKEY_NEXT);
