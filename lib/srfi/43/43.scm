@@ -16,26 +16,30 @@
 ;;;============================================================================
 ;; make-vector
 
-(define make-vector make-vector)
+;; make-vector is predefined!
 
 ;;============================================================================
 ;; vector
 
-(define vector vector)
+;; vector is predefined!
 
 ;;============================================================================
 
 ;; vector-unfold
 
-(define-macro 
-  (macro-check-object obj arg-id callee body)
-    `,body)
+(define-macro (macro-check-object 
+               obj 
+               arg-id 
+               callee 
+               body)
 
-(define-procedure
-  (vector-unfold (f   procedure)
-                 (len (index-range-incl
-                        0 (macro-max-fixnum32)))
-                 . seeds)
+  `,body)
+
+(define-procedure (vector-unfold 
+                   (f   procedure)
+                   (len (index-range-incl
+                          0 (macro-max-fixnum32)))
+                   . seeds)
   (letrec ((tabulate! 
              (lambda (f vec i len)  ;; zero seed case
                (if (< i len)
@@ -73,12 +77,12 @@
 ;;============================================================================
 ;; vector-unfold-right
 
-(define-procedure
-  (vector-unfold-right (f   procedure)
-                       (len (index-range-incl
-                              0 (macro-max-fixnum32)))
-                       . seeds)
-    (%vector-unfold-right f len seeds))
+(define-procedure (vector-unfold-right 
+                   (f   procedure)
+                   (len (index-range-incl
+                          0 (macro-max-fixnum32)))
+                   . seeds)
+  (%vector-unfold-right f len seeds))
 
 
 (define (%vector-unfold-right f len seeds)
@@ -117,42 +121,44 @@
 ;;============================================================================
 ;; vector-copy
 
-(define-procedure 
-  (vector-copy (vec vector)
-               (start (index-range-incl
-                        0 (macro-max-fixnum32))
-                      0)
-               (end   (index-range-incl
-                        start (macro-max-fixnum32))
-                      (vector-length vec))
-               (fill object #!void))
-    (let ((new-vector (make-vector (- end start) fill))
-          (len (vector-length vec)))
-      (##vector-copy! new-vector 0 vec start
-                     (if (> end len)
-                         len
-                         end))
-      new-vector))
+(define-procedure (vector-copy 
+                   (vec vector)
+                   (start (index-range-incl
+                            0 (macro-max-fixnum32))
+                          0)
+                   (end   (index-range-incl
+                            start (macro-max-fixnum32))
+                          (vector-length vec))
+                   (fill object #!void))
+
+  (let ((new-vector (make-vector (- end start) fill))
+        (len (vector-length vec)))
+    (##vector-copy! new-vector 0 vec start
+                   (if (> end len)
+                       len
+                       end))
+    new-vector))
 
 ;;============================================================================
 ;; vector-reverse-copy
 
-(define-procedure
-  (vector-reverse-copy (vec vector)
-                       (start (index-range-incl 
-                                0 (macro-max-fixnum32))
-                              0)
-                       (end   (index-range-incl
-                                start (macro-max-fixnum32))
-                              (vector-length vec)))
-    (let ((new-vec (make-vector (- end start))))
-      (%vector-reverse-copy! new-vec 0 vec start end)
-      new-vec))
+(define-procedure (vector-reverse-copy 
+                   (vec vector)
+                   (start (index-range-incl 
+                            0 (macro-max-fixnum32))
+                          0)
+                   (end   (index-range-incl
+                            start (macro-max-fixnum32))
+                          (vector-length vec)))
+
+  (let ((new-vec (make-vector (- end start))))
+    (%vector-reverse-copy! new-vec 0 vec start end)
+    new-vec))
 
 ;;============================================================================
 ;; vector-append
 
-(define vector-append vector-append)
+;; vector-append is predefined!
 
 ;;============================================================================
 ;; vector-concatenate
@@ -165,7 +171,7 @@
 ;;============================================================================
 ;; vector?
 
-(define vector? vector?)
+;; vector? is predefined!
 
 ;;============================================================================
 ;; vector-empty?
@@ -176,24 +182,23 @@
 ;;============================================================================
 ;; vector=
 
-(define-procedure
-  (vector= (elt= procedure) . vecs)
-    (cond ((null? vecs)
-           #t)
-          ((null? (cdr vecs))
-           (macro-check-vector
-             (car vecs) 1 (vector= elt= . vecs)
-           #t))
-          (else
-            (let loop ((vecs vecs)
-                       (id   0))
-              (let ((vec (car vecs))
-                    (vec-rest (cdr vecs)))
-                (macro-check-vector
-                  (car vecs) id (vector= elt= . vecs)
-                (or (null? vec-rest)
-                    (and (binary-vector= elt= vec (car vec-rest))
-                         (loop vec-rest (+ id 1))))))))))
+(define-procedure (vector= (elt= procedure) . vecs)
+  (cond ((null? vecs)
+         #t)
+        ((null? (cdr vecs))
+         (macro-check-vector
+           (car vecs) 1 (vector= elt= . vecs)
+         #t))
+        (else
+          (let loop ((vecs vecs)
+                     (id   0))
+            (let ((vec (car vecs))
+                  (vec-rest (cdr vecs)))
+              (macro-check-vector
+                (car vecs) id (vector= elt= . vecs)
+              (or (null? vec-rest)
+                  (and (binary-vector= elt= vec (car vec-rest))
+                       (loop vec-rest (+ id 1))))))))))
 
 (define (binary-vector= elt= vec1 vec2)
   (or (eq? vec1 vec2)
@@ -217,12 +222,12 @@
 ;;============================================================================
 ;; vector-ref
 
-(define vector-ref vector-ref)
+;; vector-ref is predefined!
 
 ;;============================================================================
 ;; vector-length
 
-(define vector-length vector-length)
+;; vector-length is predefined!
 
 ;;;============================================================================
 ;;; Iteration
@@ -230,32 +235,32 @@
 ;;============================================================================
 ;; vector-fold
 
-(define-procedure
-  (vector-fold (kons procedure)
-               knil
-               (vec  vector)
-               . vecs)
-    (if (null? vecs)
-        (%vector-fold1 kons knil (vector-length vec) vec)
-        (%vector-fold2+ kons knil (%smallest-length 
-                                    vecs
-                                    (vector-length vec)
-                                    3
-                                    `(vector-fold ,kons ,knil ,vec ,vecs))
-                                  (cons vec vecs))))
+(define-procedure (vector-fold 
+                   (kons procedure)
+                   knil
+                   (vec  vector)
+                   . vecs)
+  (if (null? vecs)
+      (%vector-fold1 kons knil (vector-length vec) vec)
+      (%vector-fold2+ kons knil (%smallest-length 
+                                  vecs
+                                  (vector-length vec)
+                                  3
+                                  `(vector-fold ,kons ,knil ,vec ,vecs))
+                                (cons vec vecs))))
 
 ;;============================================================================
 ;; vector-map
 
-(define vector-map vector-map)
+;; vector-map is predefined!
 
 ;;============================================================================
 ;; vector-map!
 
-(define-procedure
-  (vector-map! (f    procedure)
-               (vec vector)
-               . vecs)
+(define-procedure (vector-map! 
+                   (f    procedure)
+                   (vec vector)
+                   . vecs)
   (letrec ((vector-map1!
              (lambda (f target vec i)
                (if (zero? i)
@@ -288,10 +293,11 @@
 ;;============================================================================
 ;; vector-for-each
 
-(define-procedure
-  (vector-for-each (f procedure)
+(define-procedure (vector-for-each 
+                   (f procedure)
                    (vec vector)
                    . vecs)
+
   (letrec ((for-each1
              (lambda (f vec i len)
                (if (< i len)
@@ -318,51 +324,53 @@
 ;;============================================================================
 ;; vector-count
 
-(define-procedure
-  (vector-count (pred? procedure)
-                (vec   vector)
-                . vecs)
-    (if (null? vecs)
-        (%vector-fold1 (lambda (index count elt)
-                         (if (pred? index elt)
-                             (+ count 1)
-                             count))
-                       0
-                       (vector-length vec)
-                       vec)
-        (%vector-fold2+ (lambda (index count . elts)
-                          (if (apply pred? index elts)
-                              (+ count 1)
-                              count))
-                        0
-                        (%smallest-length vecs
-                                          (vector-length vec)
-                                          3
-                                          `(vector-count
-                                             ,pred? ,vec . ,vecs))
-                        (cons vec vecs))))
-  
+(define-procedure (vector-count 
+                   (pred? procedure)
+                   (vec   vector)
+                   . vecs)
+
+  (if (null? vecs)
+      (%vector-fold1 (lambda (index count elt)
+                       (if (pred? index elt)
+                           (+ count 1)
+                           count))
+                     0
+                     (vector-length vec)
+                     vec)
+      (%vector-fold2+ (lambda (index count . elts)
+                        (if (apply pred? index elts)
+                            (+ count 1)
+                            count))
+                      0
+                      (%smallest-length vecs
+                                        (vector-length vec)
+                                        3
+                                        `(vector-count
+                                           ,pred? ,vec . ,vecs))
+                      (cons vec vecs))))
+
 ;;;============================================================================
 ;;; Searching
 ;;;============================================================================
 ;;============================================================================
 ;; vector-index && vector-skip
 
-(define-procedure
-  (vector-index (pred? procedure)
-                (vec   vector)
-                . vecs)
-    (vector-index/skip pred? 
-                       vec vecs 
-                      `(vector-index ,vec . ,vecs)))
+(define-procedure (vector-index 
+                   (pred? procedure)
+                   (vec   vector)
+                   . vecs)
 
-(define-procedure
-  (vector-skip (pred? procedure)
-               (vec   vector)
-               . vecs)
-    (vector-index/skip (lambda elts (not (apply pred? elts)))
-                        vec vecs
-                        `(vector-skip ,vec . ,vecs)))
+  (vector-index/skip pred? 
+                     vec vecs 
+                    `(vector-index ,vec . ,vecs)))
+
+(define-procedure (vector-skip
+                   (pred? procedure)
+                   (vec   vector)
+                   . vecs)
+  (vector-index/skip (lambda elts (not (apply pred? elts)))
+                      vec vecs
+                      `(vector-skip ,vec . ,vecs)))
 
 (define vector-index/skip
   (letrec ((loop1 (lambda (pred? vec len i)
@@ -375,7 +383,7 @@
 
            (loop2+ (lambda (pred? vecs len i)
              (cond ((= i len)    #f)
-                   ((apply pred? (vectors-ref vecs i)) i)
+                   ((apply pred? (%vectors-ref vecs i)) i)
                    (else         (loop2+ pred? vecs 
                                                len
                                                (+ i 1)))))))
@@ -393,25 +401,26 @@
 ;;============================================================================
 ;; vector-index-right && vector-skip-right
 
-(define-procedure
-  (vector-index-right (pred? procedure)
-                      (vec   vector)
-                      . vecs)
-    (vector-index/skip-right pred? 
-                             vec vecs 
-                            `(vector-index-right
-                               ,pred?
-                               ,vec . ,vecs)))
+(define-procedure (vector-index-right 
+                   (pred? procedure)
+                   (vec   vector)
+                   . vecs)
 
-(define-procedure
-  (vector-skip-right (pred? procedure) 
-                     (vec   vector)
-                     . vecs)
-    (vector-index/skip-right (lambda elts (not (apply pred? elts)))
-                             vec vecs
-                            `(vector-skip-right
-                               ,pred?
-                               ,vec . ,vecs)))
+  (vector-index/skip-right pred? 
+                           vec vecs 
+                          `(vector-index-right
+                             ,pred?
+                             ,vec . ,vecs)))
+
+(define-procedure (vector-skip-right 
+                   (pred? procedure) 
+                   (vec   vector)
+                   . vecs)
+  (vector-index/skip-right (lambda elts (not (apply pred? elts)))
+                           vec vecs
+                          `(vector-skip-right
+                             ,pred?
+                             ,vec . ,vecs)))
 
 
 (define vector-index/skip-right
@@ -423,7 +432,7 @@
           (loop2+ (lambda (pred? vecs i)
             (cond ((negative? i) 
                    #f)
-                  ((apply pred? (vectors-ref vecs i))
+                  ((apply pred? (%vectors-ref vecs i))
                    i)
                   (else 
                    (loop2+ pred? vecs (- i 1)))))))
@@ -441,37 +450,40 @@
 ;;============================================================================
 ;; vector-binary-search
 
-(define-procedure 
-  (vector-binary-search (vec vector) 
-                        value 
-                        (cmp procedure)
-                        (start (index-range-incl
-                                 0 (macro-max-fixnum32))
-                               0)
-                        (end   (index-range-incl
-                                 start (vector-length vec))
-                               (vector-length vec)))
-    (let loop ((start start) 
-               (end end) 
-               (j #f))
-      (let ((i (quotient (+ start end) 2)))
-        (if (or (= start end) 
-                (and j 
-                     (= i j)))
-            #f
-            (let ((comparison (cmp (vector-ref vec i) value)))
-              (macro-check-fixnum
-                comparison 0 (vector-binary-search vec value cmp start end)
-              (cond ((zero?     comparison) i)
-                    ((positive? comparison) (loop start i i))
-                    (else                   (loop i end i)))))))))
+(define-procedure (vector-binary-search 
+                   (vec vector) 
+                   value 
+                   (cmp procedure)
+                   (start (index-range-incl
+                            0 (macro-max-fixnum32))
+                          0)
+                   (end   (index-range-incl
+                            start (vector-length vec))
+                          (vector-length vec)))
+
+  (let loop ((start start) 
+             (end end) 
+             (j #f))
+    (let ((i (quotient (+ start end) 2)))
+      (if (or (= start end) 
+              (and j 
+                   (= i j)))
+          #f
+          (let ((comparison (cmp (vector-ref vec i) value)))
+            (macro-check-fixnum
+              comparison 0 (vector-binary-search vec value cmp start end)
+            (cond ((zero?     comparison) i)
+                  ((positive? comparison) (loop start i i))
+                  (else                   (loop i end i)))))))))
 
 ;;============================================================================
 ;; vector-any
 
-(define-procedure (vector-any (pred? procedure)
-                              (vec   vector)
-                              . vecs)
+(define-procedure (vector-any 
+                   (pred? procedure)
+                   (vec   vector)
+                   . vecs)
+
   (letrec ((loop1 (lambda (pred? vec i len len-1)
              (and (not (= i len))
                   (if (= i len-1)
@@ -482,9 +494,9 @@
            (loop2+ (lambda (pred? vecs i len len-1)
              (and (not (= i len))
                   (if (= i len-1)
-                      (apply pred? (vectors-ref vecs i))
+                      (apply pred? (%vectors-ref vecs i))
                       (or (apply pred? 
-                                 (vectors-ref vecs i))
+                                 (%vectors-ref vecs i))
                           (loop2+ pred? vecs (+ i 1)
                                              len len-1)))))))
         (if (null? vecs)
@@ -500,10 +512,10 @@
 ;;============================================================================
 ;; vector-every
 
-(define-procedure
-  (vector-every (pred? procedure)
-                (vec   vector)
-                . vecs)
+(define-procedure (vector-every 
+                   (pred? procedure)
+                   (vec   vector)
+                   . vecs)
 
   (letrec ((loop1 (lambda (pred? vec i len len-1)
              (or (= i len)
@@ -515,8 +527,8 @@
            (loop2+ (lambda (pred? vecs i len len-1)
              (or (= i len)
                  (if (= i len-1)
-                     (apply pred? (vectors-ref vecs i))
-                     (and (apply pred? (vectors-ref vecs i))
+                     (apply pred? (%vectors-ref vecs i))
+                     (and (apply pred? (%vectors-ref vecs i))
                           (loop2+ pred? vecs (+ i 1)
                                              len len-1)))))))
       (if (null? vecs)
@@ -535,75 +547,79 @@
 ;;============================================================================
 ;; vector-set!
 
-(define vector-set! vector-set!)
+;; vector-set! is predefined!
 
 ;;============================================================================
 ;; vector-swap!
 
-(define-procedure
-  (vector-swap! (vec vector)
-                (i   (index-range-incl
-                       0 (##vector-length vec)))
-                (j   (index-range-incl
-                       0 (##vector-length vec))))
-    (let ((temp (vector-ref vec i)))
-      (vector-set! vec i (vector-ref vec j))
-      (vector-set! vec j temp)))
+(define-procedure (vector-swap! 
+                   (vec vector)
+                   (i   (index-range-incl
+                          0 (##vector-length vec)))
+                   (j   (index-range-incl
+                          0 (##vector-length vec))))
+
+  (let ((temp (vector-ref vec i)))
+    (vector-set! vec i (vector-ref vec j))
+    (vector-set! vec j temp)))
 
 ;;============================================================================
 ;; vector-fill!
 
-(define-procedure
-  (vector-fill! (vec vector)
-                fill
-                (start (index-range-incl
-                         0 (vector-length vec))
-                       0)
-                (end   (index-range-incl
-                         start (vector-length vec))
-                       (vector-length vec)))
-    (subvector-fill! vec start end fill))
+(define-procedure (vector-fill!
+                   (vec vector)
+                   fill
+                   (start (index-range-incl
+                            0 (vector-length vec))
+                          0)
+                   (end   (index-range-incl
+                            start (vector-length vec))
+                          (vector-length vec)))
+
+  (subvector-fill! vec start end fill))
     
 ;;============================================================================
 ;; vector-reverse!
 
-(define-procedure
-  (vector-reverse! (vec vector)
+(define-procedure (vector-reverse! 
+                   (vec vector)
                    (start (index-range-incl
                             0     (##vector-length vec))
                           0)
                    (end   (index-range-incl
                             start (##vector-length vec))
                           (##vector-length vec)))
-    (let loop ((vec vec)
-               (i start)
-               (j (- end 1)))
-      (if (<= i j)
-          (let ((v (vector-ref vec i)))
-            (vector-set! vec i (vector-ref vec j))
-            (vector-set! vec j v)
-            (loop vec (+ i 1) (- j 1))))))
+
+  (let loop ((vec vec)
+             (i start)
+             (j (- end 1)))
+    (if (<= i j)
+        (let ((v (vector-ref vec i)))
+          (vector-set! vec i (vector-ref vec j))
+          (vector-set! vec j v)
+          (loop vec (+ i 1) (- j 1))))))
 
 ;;============================================================================
 ;; vector-copy!
 
-(define vector-copy! vector-copy!)
+;; vector-copy! is predefined!
 
 ;;============================================================================
 ;; vector-reverse-copy!
 
-(define-procedure
-  (vector-reverse-copy! (target vector)
-                        (tstart (index-range-incl
-                                  0 (vector-length target)))
-                        (source vector)
-                        (sstart (index-range-incl
-                                  0 (vector-length source))
-                                0)
-                        (send   (index-range-incl
-                                  sstart (vector-length source))
-                                (vector-length source)))
-    (%vector-reverse-copy! target tstart source sstart send))
+(define-procedure  (vector-reverse-copy!
+                    (target vector)
+                    (tstart (index-range-incl
+                              0 (vector-length target)))
+                    (source vector)
+                    (sstart (index-range-incl
+                              0 (vector-length source))
+                            0)
+                    (send   (index-range-incl
+                              sstart (vector-length source))
+                            (vector-length source)))
+
+  (%vector-reverse-copy! target tstart source sstart send))
 
 ;;;============================================================================
 ;;; Conversion
@@ -611,31 +627,31 @@
 ;;============================================================================
 ;; vector->list
 
-(define vector->list vector->list)
+;; vector->list is predefined!
 
 ;;============================================================================
 ;; reverse-vector->list
 
-(define-procedure
-  (reverse-vector->list (vec vector)
-                        (start (index-range-incl
-                                 0 (macro-max-fixnum32))
-                               0)
-                        (end   (index-range-incl
-                                 start (vector-length vec))
-                               (vector-length vec)))
+(define-procedure (reverse-vector->list 
+                   (vec vector)
+                   (start (index-range-incl
+                            0 (macro-max-fixnum32))
+                          0)
+                   (end   (index-range-incl
+                            start (vector-length vec))
+                          (vector-length vec)))
 
-   (let loop ((i   start)
-              (res '()))
-     (if (= i end)
-         res
-         (loop (+ i 1) (cons (vector-ref vec i)
-                             res)))))
+  (let loop ((i   start)
+             (res '()))
+    (if (= i end)
+        res
+        (loop (+ i 1) (cons (vector-ref vec i)
+                            res)))))
 
 ;;============================================================================
 ;; list->vector
 
-(define list->vector list->vector)
+;; list->vector is predefined!
 
 ;;============================================================================
 ;; reverse-list->vector
@@ -657,7 +673,7 @@
 ;;;============================================================================
 
 ;; %vector-reverse-copy!
-;; unchecked
+;; no type check
 
 (define %vector-reverse-copy!
   (letrec ((loop 
@@ -694,7 +710,7 @@
                        knil
                        (loop kons
                              (apply kons i knil 
-                                    (vectors-ref vecs i))
+                                    (%vectors-ref vecs i))
                              len vecs (+ i 1))))))
      (lambda (kons knil len vecs)
        (loop kons knil len vecs 0))))
@@ -718,9 +734,10 @@
                                           'vector 
                                           callee)))))
 
-;; vectors-ref
+;; %vectors-ref
+;; no type-check
 
-(define (vectors-ref vecs i)
+(define (%vectors-ref vecs i)
   (map (lambda (x)
          (vector-ref x i))
        vecs))
