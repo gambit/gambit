@@ -2,7 +2,7 @@
 
 ;;; File: "_eval#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -292,8 +292,8 @@
             (else
              (- n)))))
 
-  (let ((src `(lambda ,(cdr pattern) ,@rest)));;;;;;;; lambda --> ##lambda
-    `(##top-cte-add-macro!
+  (let ((src `(##lambda ,(cdr pattern) ,@rest)))
+    `(##top-cte-add-macro-no-dups!
       ##interaction-cte
       ',(car pattern)
       (##make-macro-descr
@@ -303,7 +303,7 @@
        #f))))
 
 (##define-macro (define-runtime-syntax name expander)
-  `(##top-cte-add-macro!
+  `(##top-cte-add-macro-no-dups!
     ##interaction-cte
     ',name
     (##make-macro-descr
