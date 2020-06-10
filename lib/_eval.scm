@@ -503,6 +503,9 @@
 (define (##cte-parent-cte cte)
   (##vector-ref cte 0))
 
+(define (##cte-parent-cte-set! cte new-cte)
+  (##vector-set! cte 0 new-cte))
+
 (define (##cte-frame parent-cte vars)
   (##vector parent-cte vars))
 
@@ -732,10 +735,25 @@
     top-cte))
 
 (define (##top-cte-add-macro! top-cte name def)
-  (let ((global-name (##cte-global-macro-name (##cte-top-cte top-cte) name)))
+  (let* ((cte (##cte-top-cte top-cte))
+         (global-name (##cte-global-macro-name cte name)))
     (##cte-mutate-top-cte!
      top-cte
      (lambda (cte) (##cte-add-macro cte global-name def)))))
+
+(define (##top-cte-add-macro-no-dups! top-cte name def)
+
+  ;; this could be implemented as (##top-cte-add-macro! top-cte name def)
+  ;; but we know that top-cte has no duplicates so just add the macro
+  ;; at the tail with a mutation thus avoiding the allocation that
+  ;; would be caused by a relinking
+
+  (let* ((cte (##cte-top-cte top-cte))
+         (global-name (##cte-global-macro-name cte name)))
+    (let loop ((prev-cte top-cte) (cte cte))
+      (if (##cte-top? cte)
+          (##cte-parent-cte-set! prev-cte (##cte-macro cte global-name def))
+          (loop cte (##cte-parent-cte cte))))))
 
 (define (##top-cte-process-declare! top-cte src)
   (##cte-mutate-top-cte!
@@ -5338,17 +5356,23 @@
 (define ##interaction-cte
   (let ((##interaction-cte (##make-top-cte)))
 
+    (define-runtime-syntax lambda
+      (##make-alias-syntax '##lambda))
+
     (define-runtime-syntax quote
       (##make-alias-syntax '##quote))
+
+    (define-runtime-syntax let
+      (##make-alias-syntax '##let))
+
+    (define-runtime-syntax define
+      (##make-alias-syntax '##define))
 
     (define-runtime-syntax quasiquote
       (##make-alias-syntax '##quasiquote))
 
     (define-runtime-syntax set!
       (##make-alias-syntax '##set!))
-
-    (define-runtime-syntax lambda
-      (##make-alias-syntax '##lambda))
 
     (define-runtime-syntax if
       (##make-alias-syntax '##if))
@@ -5364,9 +5388,6 @@
 
     (define-runtime-syntax case
       (##make-alias-syntax '##case))
-
-    (define-runtime-syntax let
-      (##make-alias-syntax '##let))
 
     (define-runtime-syntax let*
       (##make-alias-syntax '##let*))
@@ -5427,9 +5448,6 @@
 
     (define-runtime-syntax begin
       (##make-alias-syntax '##begin))
-
-    (define-runtime-syntax define
-      (##make-alias-syntax '##define))
 
     (define-runtime-syntax define-macro
       (##make-alias-syntax '##define-macro))
