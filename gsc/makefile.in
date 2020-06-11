@@ -1,6 +1,6 @@
 # makefile for Gambit compiler.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsc
 rootfromhere = ..
@@ -70,6 +70,12 @@ mandir = @mandir@
 
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
+
+GAMBIT_GSC_LIB_C = _$(GAMBITGSCLIB).c
+GAMBIT_GSC_LIB_O = _$(GAMBITGSCLIB)@obj@
+
+LINKFILE_C = _gsc_.c
+LINKFILE_O = _gsc_@obj@
 
 HEADERS_SCM = "_assert\#.scm" "_asm\#.scm" "_x86\#.scm" "_arm\#.scm" "_riscv\#.scm" "_codegen\#.scm"
 
@@ -153,14 +159,23 @@ _source@obj@ _t-cpu-primitives@obj@ _riscv@obj@ _utils@obj@ \
 _asm@obj@ _gsclib@obj@ _parms@obj@ _t-c-3@obj@ _codegen@obj@ \
 _back@obj@ _env@obj@ _host@obj@ _t-cpu-object-desc@obj@ _t-cpu@obj@ \
 _t-cpu-utils@obj@ _assert@obj@
+LIBRARY_MODULES_C_IN_COMPILE_ORDER = _t-univ-2.c _t-univ-3.c \
+_t-univ-1.c _prims.c _t-univ-4.c _t-c-2.c _front.c \
+_ptree1.c _ptree2.c _gvm.c _t-c-1.c _x86.c \
+_t-cpu-abstract-machine.c _t-cpu-backend-x86.c \
+_t-cpu-backend-arm.c _t-cpu-backend-riscv.c _arm.c \
+_source.c _t-cpu-primitives.c _riscv.c _utils.c \
+_asm.c _gsclib.c _parms.c _t-c-3.c _codegen.c \
+_back.c _env.c _host.c _t-cpu-object-desc.c _t-cpu.c \
+_t-cpu-utils.c _assert.c
 LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \
-$(LIBRARY_MODULES_O) _$(GAMBITGSCLIB)@obj@
+$(LIBRARY_MODULES_O) $(GAMBIT_GSC_LIB_O)
 LIBRARY_OBJECTS_PLUS = $(LIBRARY_NORMAL_O_PLUS) \
-$(LIBRARY_MODULES_O_PLUS) +_$(GAMBITGSCLIB)@obj@
+$(LIBRARY_MODULES_O_PLUS) +$(GAMBIT_GSC_LIB_O)
 LIBRARY_OBJECTS_COMMA = $(LIBRARY_NORMAL_O_COMMA),\
-$(LIBRARY_MODULES_O_COMMA),_$(GAMBITGSCLIB)@obj@
+$(LIBRARY_MODULES_O_COMMA),$(GAMBIT_GSC_LIB_O)
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(LIBRARY_MODULES_O_IN_COMPILE_ORDER) \
-$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _$(GAMBITGSCLIB)@obj@
+$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) $(GAMBIT_GSC_LIB_O)
 
 LIBRARIES = $(LIBRARY)$(LIB_VERSION_SUFFIX)
 
@@ -185,13 +200,13 @@ EXECUTABLE_MODULES_O_PLUS = +_gsc@obj@
 EXECUTABLE_MODULES_O_COMMA = _gsc@obj@
 EXECUTABLE_MODULES_O_IN_COMPILE_ORDER = _gsc@obj@
 EXECUTABLE_OBJECTS = $(EXECUTABLE_NORMAL_O) \
-$(EXECUTABLE_MODULES_O) _gsc_@obj@
+$(EXECUTABLE_MODULES_O) $(LINKFILE_O)
 EXECUTABLE_OBJECTS_PLUS = $(EXECUTABLE_NORMAL_O_PLUS) \
-$(EXECUTABLE_MODULES_O_PLUS) +_gsc_@obj@
+$(EXECUTABLE_MODULES_O_PLUS) +$(LINKFILE_O)
 EXECUTABLE_OBJECTS_COMMA = $(EXECUTABLE_NORMAL_O_COMMA),\
-$(EXECUTABLE_MODULES_O_COMMA),_gsc_@obj@
+$(EXECUTABLE_MODULES_O_COMMA),$(LINKFILE_O)
 EXECUTABLE_OBJECTS_IN_COMPILE_ORDER = $(EXECUTABLE_MODULES_O_IN_COMPILE_ORDER) \
-$(EXECUTABLE_NORMAL_O_IN_COMPILE_ORDER) _gsc_@obj@
+$(EXECUTABLE_NORMAL_O_IN_COMPILE_ORDER) $(LINKFILE_O)
 
 LINK_LIBS = $(LIBRARY) $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
 LINK_FOR_INSTALL_LIBS = @LINK_FOR_INSTALL_GSC_LIBS@
@@ -204,11 +219,11 @@ RCFILES = makefile.in fixnum.scm generic.scm igsc.scm $(MODULES_SCM) \
 $(LIBRARIES_SCM) _envadt.scm _gvmadt.scm _ptreeadt.scm _sourceadt.scm \
 _univadt.scm _cpuadt.scm runtests.scm _t-x86.scm _gscdebug.scm
 
-GENDISTFILES = $(MODULES_C) _$(GAMBITGSCLIB).c _gsc_.c
+GENDISTFILES = $(MODULES_C) $(GAMBIT_GSC_LIB_C) $(LINKFILE_C)
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = _$(GAMBITGSCLIB).c $(LIBRARIES_SCM)
+INSTFILES_LIB_DATA = $(GAMBIT_GSC_LIB_C) $(LIBRARIES_SCM)
 
 GAMBITDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
 GAMBITDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
@@ -238,6 +253,8 @@ BUILD_EXE_INPUT_FILENAMES_PARAM = $(EXECUTABLE_OBJECTS)
 BUILD_EXE_LD_OPTIONS_PARAM = $(LIBRARY)
 
 PRELUDE_OPT = -prelude "(\#\#namespace(\"c\#\"))(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
+### TODO: replace with this after bootstrap:
+#PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#namespace(\"c\#\"))(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
 
 all:
 
@@ -246,27 +263,35 @@ all-pre: $(LIBRARY) $(EXECUTABLE)
 all-post:
 	$(MAKE) deselect-gen-for-commit-post-nonrec
 
+phase1: $(LIBRARY_MODULES_C_IN_COMPILE_ORDER) $(EXECUTABLE_MODULES_C)
+
+phase2: $(LINKFILE_C)
+
+phase3: $(LIBRARY)
+
+phase4: all
+
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
-	rm -f $(LIBRARY)$(LIB_VERSION_SUFFIX) $(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX) $(LIBRARY)
+	rm -f "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"
 	@MAKE_LIBRARY@
 	if test "$(LIB_VERSION_SUFFIX)" != ""; then \
 	  $(LN_S) "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)"; \
 	  $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	fi
 
-_$(GAMBITGSCLIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
+$(GAMBIT_GSC_LIB_C): $(LIBRARY_MODULES_C_IN_COMPILE_ORDER) $(rootfromhere)/lib/_$(GAMBITLIB).c
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_$(GAMBITLIB) -o $@ -preload $(LIBRARY_MODULES_C)
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
-_gsc_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSCLIB).c
+$(LINKFILE_C): $(EXECUTABLE_MODULES_C) $(GAMBIT_GSC_LIB_C)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSCLIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
 
-_gsc@obj@: _gsc.c
+$(LINKFILE_O): $(LINKFILE_C)
 	@BUILD_OBJ@
 
-_gsc_@obj@: _gsc_.c
+_gsc@obj@: _gsc.c
 	@BUILD_OBJ@
 
 .c@obj@:

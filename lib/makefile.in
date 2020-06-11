@@ -75,6 +75,9 @@ mandir = @mandir@
 
 .PHONY: $(SUBDIRS)
 
+GAMBIT_LIB_C = _$(GAMBITLIB).c
+GAMBIT_LIB_O = _$(GAMBITLIB)@obj@
+
 NORMAL_C = main.c setup.c mem.c os_setup.c os_base.c os_thread.c os_time.c os_shell.c os_files.c os_dyn.c os_tty.c os_io.c c_intf.c actlog.c
 NORMAL_CPP =
 NORMAL_H = setup.h mem.h os.h os_setup.h os_base.h os_thread.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h c_intf.h actlog.h dead.h
@@ -110,17 +113,20 @@ os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
 _repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@ \
 _module@obj@
+MODULES_C_IN_COMPILE_ORDER = _io.c _num.c _std.c \
+_repl.c _eval.c _nonstd.c _kernel.c _thread.c _system.c \
+_module.c
 
 UNIVLIB = $(rootfromhere)/gsc/_t-univ-*.scm $(rootfromhere)/gsc/_univadt.scm
 
 LIBRARIES_SCM = $(HEADERS_SCM) syntax-case.scm
 
 LIBRARY = $(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
-LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) _$(GAMBITLIB)@obj@
-LIBRARY_OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +_$(GAMBITLIB)@obj@
-LIBRARY_OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),_$(GAMBITLIB)@obj@
-LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(MODULES_O_IN_COMPILE_ORDER) \
-$(NORMAL_O_IN_COMPILE_ORDER) _$(GAMBITLIB)@obj@
+LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) $(GAMBIT_LIB_O)
+LIBRARY_OBJECTS_PLUS = $(NORMAL_O_PLUS) $(MODULES_O_PLUS) +$(GAMBIT_LIB_O)
+LIBRARY_OBJECTS_COMMA = $(NORMAL_O_COMMA),$(MODULES_O_COMMA),$(GAMBIT_LIB_O)
+LIBRARY_OBJECTS_IN_COMPILE_ORDER = \
+$(MODULES_O_IN_COMPILE_ORDER) $(NORMAL_O_IN_COMPILE_ORDER) $(GAMBIT_LIB_O)
 
 LIBRARIES = $(LIBRARY)$(LIB_VERSION_SUFFIX)
 
@@ -133,8 +139,6 @@ $(LIBRARIES_SCM) $(NORMAL_SOURCES) check___P check___P.st \
 psyntax69c.pp psyntax69c.ss psyntax73.pp psyntax73.ss \
 syntax-case-build syntax-case-expand-file \
 syntax-case-postlude.scm syntax-case-prelude.scm _univlib.scm
-
-GAMBIT_LIB_C = _$(GAMBITLIB).c
 
 GAMBIT_LIB_java = _$(GAMBITLIB).java
 GAMBIT_LIB_js = _$(GAMBITLIB).js
@@ -173,6 +177,14 @@ all-post:
 
 .scm.c:
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c @COMPILATION_OPTIONS@ $(PRELUDE_OPT) $(srcdirpfx)$*.scm
+
+phase1: $(MODULES_C_IN_COMPILE_ORDER) $(GAMBIT_LIB_C)
+
+phase2:
+
+phase3: all
+
+phase4:
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"
@@ -300,7 +312,7 @@ _thread@obj@: _thread.c
 _repl@obj@: _repl.c
 	@BUILD_OBJ@ -D___LIBRARY
 
-_$(GAMBITLIB)@obj@: $(GAMBIT_LIB_C)
+$(GAMBIT_LIB_O): $(GAMBIT_LIB_C)
 	@BUILD_OBJ@ -D___LIBRARY
 
 main@obj@: main.c os.h os_setup.h os_base.h os_shell.h setup.h

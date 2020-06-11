@@ -1,6 +1,6 @@
 # makefile for Gambit bin directory.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot = bin
 rootfromhere = ..
@@ -109,6 +109,14 @@ all:
 all-pre:
 
 all-post: gambvcs@bat@ gambuild-C@bat@ gambuild-js@bat@ gambuild-python@bat@ gambuild-ruby@bat@ gambuild-php@bat@ gambuild-java@bat@ gambuild-x86@bat@ gambuild-x86-64@bat@ gambuild-arm@bat@ gambuild-riscv-32@bat@ gambuild-riscv-64@bat@ gambdoc@bat@ six@exe@ gsi-script@bat@ gsc-script@bat@ six-script@bat@ scheme-srfi-0@bat@ scheme-r5rs@bat@ scheme-r4rs@bat@ scheme-ieee-1178-1990@bat@
+
+phase1: all
+
+phase2:
+
+phase3:
+
+phase4:
 
 gambvcs@bat@: makefile gambvcs.unix gambvcs.bat.windows
 	rm -f gambvcs@bat@
