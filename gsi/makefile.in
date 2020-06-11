@@ -1,6 +1,6 @@
 # makefile for Gambit interpreter.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsi
 rootfromhere = ..
@@ -71,7 +71,15 @@ mandir = @mandir@
 .SUFFIXES:
 .SUFFIXES: .scm .c @obj@
 
-LIBRARIES_SCM =
+GAMBIT_GSI_LIB_C = _$(GAMBITGSILIB).c
+GAMBIT_GSI_LIB_O = _$(GAMBITGSILIB)@obj@
+
+LINKFILE_C = _gsi_.c
+LINKFILE_O = _gsi_@obj@
+
+HEADERS_SCM =
+
+LIBRARIES_SCM = $(HEADERS_SCM)
 
 LIBRARY = $(LIB_PREFIX)$(GAMBITGSILIB)$(LIB_EXTENSION)
 LIBRARY_NORMAL_C =
@@ -89,14 +97,15 @@ LIBRARY_MODULES_O = _gsilib@obj@
 LIBRARY_MODULES_O_PLUS = +_gsilib@obj@
 LIBRARY_MODULES_O_COMMA = _gsilib@obj@
 LIBRARY_MODULES_O_IN_COMPILE_ORDER = _gsilib@obj@
+LIBRARY_MODULES_C_IN_COMPILE_ORDER = _gsilib.c
 LIBRARY_OBJECTS = $(LIBRARY_NORMAL_O) \
-$(LIBRARY_MODULES_O) _$(GAMBITGSILIB)@obj@
+$(LIBRARY_MODULES_O) $(GAMBIT_GSI_LIB_O)
 LIBRARY_OBJECTS_PLUS = $(LIBRARY_NORMAL_O_PLUS) \
-$(LIBRARY_MODULES_O_PLUS) +_$(GAMBITGSILIB)@obj@
+$(LIBRARY_MODULES_O_PLUS) +$(GAMBIT_GSI_LIB_O)
 LIBRARY_OBJECTS_COMMA = $(LIBRARY_NORMAL_O_COMMA),\
-$(LIBRARY_MODULES_O_COMMA),_$(GAMBITGSILIB)@obj@
+$(LIBRARY_MODULES_O_COMMA),$(GAMBIT_GSI_LIB_O)
 LIBRARY_OBJECTS_IN_COMPILE_ORDER = $(LIBRARY_MODULES_O_IN_COMPILE_ORDER) \
-$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) _$(GAMBITGSILIB)@obj@
+$(LIBRARY_NORMAL_O_IN_COMPILE_ORDER) $(GAMBIT_GSI_LIB_O)
 
 LIBRARIES = $(LIBRARY)$(LIB_VERSION_SUFFIX)
 
@@ -121,13 +130,13 @@ EXECUTABLE_MODULES_O_PLUS = +_gsi@obj@
 EXECUTABLE_MODULES_O_COMMA = _gsi@obj@
 EXECUTABLE_MODULES_O_IN_COMPILE_ORDER = _gsi@obj@
 EXECUTABLE_OBJECTS = $(EXECUTABLE_NORMAL_O) \
-$(EXECUTABLE_MODULES_O) _gsi_@obj@
+$(EXECUTABLE_MODULES_O) $(LINKFILE_O)
 EXECUTABLE_OBJECTS_PLUS = $(EXECUTABLE_NORMAL_O_PLUS) \
-$(EXECUTABLE_MODULES_O_PLUS) +_gsi_@obj@
+$(EXECUTABLE_MODULES_O_PLUS) +$(LINKFILE_O)
 EXECUTABLE_OBJECTS_COMMA = $(EXECUTABLE_NORMAL_O_COMMA),\
-$(EXECUTABLE_MODULES_O_COMMA),_gsi_@obj@
+$(EXECUTABLE_MODULES_O_COMMA),$(LINKFILE_O)
 EXECUTABLE_OBJECTS_IN_COMPILE_ORDER = $(EXECUTABLE_MODULES_O_IN_COMPILE_ORDER) \
-$(EXECUTABLE_NORMAL_O_IN_COMPILE_ORDER) _gsi_@obj@
+$(EXECUTABLE_NORMAL_O_IN_COMPILE_ORDER) $(LINKFILE_O)
 
 LINK_LIBS = $(LIBRARY) $(rootfromhere)/lib/$(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
 LINK_FOR_INSTALL_LIBS = @LINK_FOR_INSTALL_GSI_LIBS@
@@ -138,11 +147,11 @@ OBJECTS = $(LIBRARY_OBJECTS) $(EXECUTABLE_OBJECTS)
 
 RCFILES = makefile.in main.scm $(MODULES_SCM)
 
-GENDISTFILES = $(MODULES_C) _$(GAMBITGSILIB).c _gsi_.c
+GENDISTFILES = $(MODULES_C) $(GAMBIT_GSI_LIB_C) $(LINKFILE_C)
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = _$(GAMBITGSILIB).c $(LIBRARIES_SCM)
+INSTFILES_LIB_DATA = $(GAMBIT_GSI_LIB_C) $(LIBRARIES_SCM)
 
 GAMBITDIR_INCLUDE = $(srcdirpfx)$(rootfromhere)/include
 GAMBITDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
@@ -168,6 +177,14 @@ all-pre: $(LIBRARY) $(EXECUTABLE)
 all-post:
 	$(MAKE) deselect-gen-for-commit-post-nonrec
 
+phase1: $(LIBRARY_MODULES_C_IN_COMPILE_ORDER) $(EXECUTABLE_MODULES_C)
+
+phase2: $(LINKFILE_C)
+
+phase3: $(LIBRARY)
+
+phase4: all
+
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"
 	@MAKE_LIBRARY@
@@ -176,19 +193,19 @@ $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	  $(LN_S) "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"; \
 	fi
 
-_$(GAMBITGSILIB).c: $(LIBRARY_MODULES_C) $(rootfromhere)/lib/_gambit.c
-	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_gambit -o $@ -preload $(LIBRARY_MODULES_C)
+$(GAMBIT_GSI_LIB_C): $(LIBRARY_MODULES_C_IN_COMPILE_ORDER) $(rootfromhere)/lib/_$(GAMBITLIB).c
+	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l $(srcdirpfx)$(rootfromhere)/lib/_$(GAMBITLIB) -o $@ -preload $(LIBRARY_MODULES_C)
 
 $(EXECUTABLE): $(EXECUTABLE_OBJECTS_IN_COMPILE_ORDER) $(LINK_LIBS)
 	@BUILD_EXE@
 
-_gsi_.c: $(EXECUTABLE_MODULES_C) _$(GAMBITGSILIB).c
+$(LINKFILE_C): $(EXECUTABLE_MODULES_C) $(GAMBIT_GSI_LIB_C)
 	@SETDLPATHBOOT@ $(rootfromhere)/gsc-boot -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f @COMPILATION_OPTIONS@ $(PRELUDE_OPT) -warnings -link -l _$(GAMBITGSILIB) -o $@ -preload $(EXECUTABLE_MODULES_C)
 
 _gsi@obj@: _gsi.c
 	@BUILD_OBJ@
 
-_gsi_@obj@: _gsi_.c
+$(LINKFILE_O): $(LINKFILE_C)
 	@BUILD_OBJ@
 
 .c@obj@:
@@ -254,8 +271,10 @@ install-post: all
 	  t_bindir="$$c_bindir"; \
 	  t_libdir="$$c_libdir"; \
 	fi; \
-	$(INSTALL_DATA) "$(srcdirpfx)_$(GAMBITGSILIB).c" "$$t_libdir/_$(GAMBITGSILIB).c"; \
 	@MAKE_LIBRARY_FOR_INSTALL@; \
+	for file in $(INSTFILES_LIB_DATA); do \
+	  $(INSTALL_DATA) "$$file" "$$t_libdir/$$file"; \
+	done; \
 	for file in $(LIBRARIES); do \
 	  $(INSTALL_LIB) "$$file" "$$t_libdir/$$file"; \
 	  @FIXLIB@ "$$t_libdir/$$file"; \
@@ -267,7 +286,7 @@ install-post: all
 	$(INSTALL_PROGRAM) "$(EXECUTABLE)" "$$t_bindir/$(EXECUTABLE_INSTALLED)"; \
 	if test "$$t_libdir" != "$$i_libdir"; then \
 	  r_libdir=`$(rootfromhere)/relpath "$$t_libdir" "$$i_libdir" @ENABLE_MULTIPLE_VERSIONS@`; \
-	  for file in _$(GAMBITGSILIB).c $(LIBRARY)$(LIB_VERSION_SUFFIX); do \
+	  for file in $(INSTFILES_LIB_DATA) $(LIBRARIES); do \
 	    (cd "$$i_libdir" && $(LN_S) "$$r_libdir$$file" "$$file"); \
 	  done; \
 	fi; \

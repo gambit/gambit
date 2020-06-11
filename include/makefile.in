@@ -92,6 +92,14 @@ all-pre:
 
 all-post: gambit.h
 
+phase1: all
+
+phase2:
+
+phase3:
+
+phase4:
+
 bootstrap-pre:
 
 bootstrap-post:

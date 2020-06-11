@@ -66,10 +66,10 @@ The system can then be tested and installed using the following commands:
   % sudo make install
 
 On a computer with multiple cores it is normally beneficial to build
-the system in parallel by adding a "-j" option to the invocation
-of make:
+the system in parallel by adding a "-jN" option to the invocation
+of make with a suitable value for N (typically the number of cores):
 
-  % make -j
+  % make -j8
 
 
 3) Recommended "configure" script options
@@ -125,8 +125,9 @@ by the compiler evolve and vary in computational complexity.  Since
 the C files are so large, the compile time is very sensitive to the
 computational complexity of the optimization algorithms.  See the
 table at the end of this file for performance information for
-different versions of GCC.  On a recent multicore computer a "make -j"
-typically takes less than 2 minutes.
+different versions of GCC.  On a recent 8 core computer a "make" takes
+about 140 seconds and a "make -j8" takes about 30 seconds (when
+starting from a "release" or a distribution .tgz produced by "make dist").
 
 Finally, in order to support installing multiple versions of Gambit,
 it is recommended to use these options:
