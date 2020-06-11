@@ -94,7 +94,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 ./configure --enable-c-opt=-Od --enable-debug CC="cl" && make -j`nproc` && make modules
+        msys2 ./configure --enable-c-opt=-Od --enable-debug CC="cl" && make -j%NUMBER_OF_PROCESSORS% && make modules
 
     - name: Test
       shell: cmd
@@ -116,7 +116,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         mkdir dist
-        msys2 ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl" && make -j`nproc` && make modules && make install
+        msys2 ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl" && make -j%NUMBER_OF_PROCESSORS% && make modules && make install
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
