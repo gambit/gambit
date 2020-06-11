@@ -267,7 +267,12 @@ phase1: $(LIBRARY_MODULES_C_IN_COMPILE_ORDER) $(EXECUTABLE_MODULES_C)
 
 phase2: $(LINKFILE_C)
 
-phase3: $(LIBRARY)
+phase3:
+	@if test "@ENABLE_SHARED@" = "yes"; then \
+	  $(MAKE) $(LIBRARY_OBJECTS_IN_COMPILE_ORDER); \
+	else \
+	  $(MAKE) $(LIBRARY); \
+	fi
 
 phase4: all
 

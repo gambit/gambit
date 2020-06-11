@@ -107,7 +107,7 @@ all:
 
 all-pre: gsc-boot@exe@
 	$(MAKE) stamp
-	if echo "MAKEFLAGS: $(MAKEFLAGS)" | fgrep -e "--jobserver-fds="; then \
+	@if echo "MAKEFLAGS: $(MAKEFLAGS)" | fgrep -e "--jobserver-fds="; then \
 	  $(MAKE) phases; \
 	fi
 
