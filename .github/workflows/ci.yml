@@ -39,7 +39,10 @@ jobs:
         msystem: ${{ matrix.msystem }}
 
     - name: Build
-      run: ./configure --enable-debug --enable-multiple-threaded-vms;make -j4; make modules
+      run: |
+        ./configure --enable-debug --enable-multiple-threaded-vms
+        make -j`nproc`
+        make modules
 
     # Only run tests for MinGW64 for now
     - name: Test
@@ -52,23 +55,17 @@ jobs:
         mkdir dist
         # Statically link libraries like libwinpthread so that
         # gsc/gsi.exe don't have to be run within MinGW
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
         export CFLAGS="-static"
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist;make -j4; make modules; make install
-
-    - name: Package Source
-      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+        make -j`nproc`
+        make modules
+        make install
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-win-mingw-${{ matrix.arch }}
         path: dist/
-
-    - name: Upload Source
-      uses: actions/upload-artifact@v1
-      with:
-        name: gambit-win-mingw-${{ matrix.arch }}-dist
-        path: gambit.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -97,7 +94,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 ./configure --enable-c-opt=-Od --enable-debug CC="cl"; make -j4; make modules
+        msys2 ./configure --enable-c-opt=-Od --enable-debug CC="cl" && make -j`nproc` && make modules
 
     - name: Test
       shell: cmd
@@ -119,23 +116,13 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         mkdir dist
-        msys2 ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl";make -j4; make modules; make install
-
-    - name: Package Source
-      shell: msys2 {0}
-      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+        msys2 ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl" && make -j`nproc` && make modules && make install
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-win-msvc-x86_64
         path: dist/
-
-    - name: Upload Source
-      uses: actions/upload-artifact@v1
-      with:
-        name: gambit-win-msvc-x86_64-dist
-        path: gambit.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -155,12 +142,14 @@ jobs:
         sudo apt-get install texinfo
 
     - name: Build and Test
-      run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+      run: |
+        export PROCS=`nproc`
+        ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       run: |
         mkdir dist
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j4 && make modules && make install
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`nproc` && make modules && make install
         cd dist/
         tar -cvzf ../gambit-linux-x86_64.tar.gz ./
         cd ..
@@ -196,32 +185,24 @@ jobs:
       run: |
         export CC=gcc-9
         export CXX=g++-9
-        ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        export PROCS=`sysctl -n hw.physicalcpu`
+        ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       run: |
         mkdir dist
         export CC=gcc-9
         export CXX=g++-9
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j4 && make modules && make install
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`sysctl -n hw.physicalcpu` && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tar.gz ./
         cd ..
-
-    - name: Package Source
-      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-macos-x86_64
         path: gambit-macos-x86_64.tar.gz
-
-    - name: Upload Source
-      uses: actions/upload-artifact@v1
-      with:
-        name: gambit-macos-x64_64-dist
-        path: gambit.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
