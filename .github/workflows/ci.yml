@@ -149,6 +149,11 @@ jobs:
       with:
         fetch-depth: 0 # Checkout history and tags
 
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install texinfo
+
     - name: Build and Test
       run: ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
