@@ -35,6 +35,7 @@ jobs:
         update: true
         cache: true
         install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        path-type: inherit
         msystem: ${{ matrix.msystem }}
 
     - name: Build
