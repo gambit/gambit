@@ -55,11 +55,20 @@ jobs:
         export CFLAGS="-static"
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist;make -j4; make modules; make install
 
+    - name: Package Source
+      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-win-mingw-${{ matrix.arch }}
         path: dist/
+
+    - name: Upload Source
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-mingw-${{ matrix.arch }}-dist
+        path: gambit.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -112,11 +121,21 @@ jobs:
         mkdir dist
         msys2 ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC="cl";make -j4; make modules; make install
 
+    - name: Package Source
+      shell: msys2 {0}
+      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-win-msvc-x86_64
         path: dist/
+
+    - name: Upload Source
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-msvc-x86_64-dist
+        path: gambit.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -141,11 +160,20 @@ jobs:
         tar -cvzf ../gambit-linux-x86_64.tar.gz ./
         cd ..
 
+    - name: Package Source
+      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-linux-x86_64
         path: gambit-linux-x86_64.tar.gz
+
+    - name: Upload Source
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-linux-x86_64-dist
+        path: gambit.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -175,11 +203,20 @@ jobs:
         tar -cvzf ../gambit-macos-x86_64.tar.gz ./
         cd ..
 
+    - name: Package Source
+      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-macos-x86_64
         path: gambit-macos-x86_64.tar.gz
+
+    - name: Upload Source
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-macos-x64_64-dist
+        path: gambit.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
