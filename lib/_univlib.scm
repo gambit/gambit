@@ -1296,7 +1296,8 @@ if ((function () { return this === this.window; })()) {
 
 "))
 
-   (else)))
+   (else
+    #f)))
 
 (define (##os-file-info fi path chase?)
   (##declare (not interrupts-enabled))
@@ -1739,7 +1740,8 @@ g_PORT_DEVICE_OTHER2        = 49
 
 "))
 
-   (else)))
+   (else
+    #f)))
 
 (define-prim (##os-device-close dev direction)
   (macro-case-target
