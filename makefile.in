@@ -466,7 +466,7 @@ rc-setup-post:
 	  $(HG) commit -m "Initial commit of $(PACKAGE_STRING)"; \
 	fi
 
-dist-pre:
+dist-pre: doc
 	rm -rf $(PACKAGE_TARNAME)
 	mkdir $(PACKAGE_TARNAME)
 	chmod 777 $(PACKAGE_TARNAME)
@@ -483,7 +483,7 @@ dist-post:
 	mv $(PACKAGE_TARNAME).tar.gz $(PACKAGE_TARNAME).tgz
 	rm -rf $(PACKAGE_TARNAME)
 
-dist-devel-pre:
+dist-devel-pre: doc
 	rm -rf $(PACKAGE_TARNAME)
 	mkdir $(PACKAGE_TARNAME)
 	chmod 777 $(PACKAGE_TARNAME)
@@ -520,6 +520,15 @@ dist-devel-post:
 	gzip -9 $(PACKAGE_TARNAME)-devel.tar
 	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
 	rm -rf $(PACKAGE_TARNAME)-devel
+
+dist-boot-post:
+	rm -rf boot-$(PACKAGE_TARNAME)
+	mkdir boot-$(PACKAGE_TARNAME)
+	chmod 777 boot-$(PACKAGE_TARNAME)
+	mv $(PACKAGE_TARNAME) boot-$(PACKAGE_TARNAME)/boot
+	(cd boot-$(PACKAGE_TARNAME) && COPYFILE_DISABLE=1 tar chof boot.tar boot && gzip -9 boot.tar) || exit 1
+	mv boot-$(PACKAGE_TARNAME)/boot.tar.gz boot.tgz
+	rm -rf boot-$(PACKAGE_TARNAME)
 
 all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
@@ -600,17 +609,21 @@ rc-setup-post: rc-setup-recursive
 
 rc-setup-recursive: rc-setup-pre
 
-dist: doc dist-post
+dist: dist-post
 
 dist-post: dist-recursive
 
 dist-recursive: dist-pre
 
-dist-devel: doc dist-devel-post
+dist-devel: dist-devel-post
 
 dist-devel-post: dist-devel-recursive
 
 dist-devel-recursive: dist-devel-pre
+
+dist-boot: dist-boot-post
+
+dist-boot-post: dist-recursive
 
 # For an explanation of the following makefile rules, see node
 # `Automatic Remaking' in GNU Autoconf documentation.

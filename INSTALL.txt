@@ -489,6 +489,9 @@ Here is a description of the most useful "make" targets:
                              the system including all the source code
                              management files.
 
+  % make dist-boot           Creates a compressed tar file of
+                             the system like "make dist" but named boot.tgz
+
   % make doc                 Builds the documentation.
 
   % make rc-setup            For initial setup of source code
