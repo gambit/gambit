@@ -151,23 +151,23 @@ jobs:
         mkdir dist
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`nproc` && make modules && make install
         cd dist/
-        tar -cvzf ../gambit-linux-x86_64.tar.gz ./
+        tar -cvzf ../gambit-linux-x86_64.tgz ./
         cd ..
 
     - name: Package Source
-      run: make dist && find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+      run: make dist && find ./ -name 'gambit-v*.tgz' -exec cp {} gambit-dist.tgz \;
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-linux-x86_64
-        path: gambit-linux-x86_64.tar.gz
+        path: gambit-linux-x86_64.tgz
 
     - name: Upload Source
       uses: actions/upload-artifact@v1
       with:
         name: gambit-dist
-        path: gambit.tgz
+        path: gambit-dist.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
@@ -195,14 +195,14 @@ jobs:
         export CXX=g++-9
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`sysctl -n hw.physicalcpu` && make modules && make install
         cd dist/
-        tar -cvzf ../gambit-macos-x86_64.tar.gz ./
+        tar -cvzf ../gambit-macos-x86_64.tgz ./
         cd ..
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-macos-x86_64
-        path: gambit-macos-x86_64.tar.gz
+        path: gambit-macos-x86_64.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
