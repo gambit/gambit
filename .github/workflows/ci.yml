@@ -155,7 +155,7 @@ jobs:
         cd ..
 
     - name: Package Source
-      run: make dist; find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
+      run: make dist && find ./ -name 'gambit-v*.tgz' -exec cp {} gambit.tgz \;
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
@@ -166,7 +166,7 @@ jobs:
     - name: Upload Source
       uses: actions/upload-artifact@v1
       with:
-        name: gambit-linux-x86_64-dist
+        name: gambit-dist
         path: gambit.tgz
 
     - name: Report Failure to Gitter
