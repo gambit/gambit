@@ -457,7 +457,8 @@
                  (def-macro?
                    (memq head '(define-macro ##define-macro)))
                  (sym
-                  (and (pair? (cdr expr))
+                  (and (pair? expr)
+                       (pair? (cdr expr))
                        (pair? (cddr expr))
                        (let ((x (##source-strip (cadr expr))))
                          (cond (def-syntax?
