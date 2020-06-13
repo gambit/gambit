@@ -40,7 +40,7 @@ jobs:
 
     - name: Build
       run: |
-        ./configure --enable-debug --enable-multiple-threaded-vms
+        ./configure --enable-debug --enable-multiple-threaded-vms --enable-thread-system=win32
         make -j`nproc`
         make modules
 
@@ -55,8 +55,8 @@ jobs:
         mkdir dist
         # Statically link libraries like libwinpthread so that
         # gsc/gsi.exe don't have to be run within MinGW
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
         export CFLAGS="-static"
+        ./configure --enable-single-host --enable-thread-system=win32 --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
         make -j`nproc`
         make modules
         make install
