@@ -154,20 +154,20 @@ jobs:
         tar -cvzf ../gambit-linux-x86_64.tgz ./
         cd ..
 
-    - name: Package Source
-      run: make dist && find ./ -name 'gambit-v*.tgz' -exec cp {} gambit-dist.tgz \;
-
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
       with:
         name: gambit-linux-x86_64
         path: gambit-linux-x86_64.tgz
 
+    - name: Package Source
+      run: make dist-boot
+
     - name: Upload Source
       uses: actions/upload-artifact@v1
       with:
-        name: gambit-dist
-        path: gambit-dist.tgz
+        name: boot
+        path: boot.tgz
 
     - name: Report Failure to Gitter
       run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
