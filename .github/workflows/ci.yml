@@ -50,9 +50,9 @@ jobs:
     - name: Build Gambit for Use
       run: |
         mkdir dist
-        # Avoid a segfault caused by GCC optimizations and statically link
-        # libwinpthread so that gsc/gsi.exe don't have to be run within MinGW
-        export CFLAGS="-O0 -static"
+        # Statically link libraries like libwinpthread so that
+        # gsc/gsi.exe don't have to be run within MinGW
+        export CFLAGS="-static"
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist;make -j4; make modules; make install
 
     - name: Upload Build Artifact
