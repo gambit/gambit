@@ -1552,7 +1552,22 @@
 
 #include <setjmp.h>
 
-#ifdef setjmp
+#if defined(__GNUC__) && ___GNUC_VERSION > 500000
+#ifndef ___DONT_USE_BUILTIN_SETJMP
+#undef ___USE_builtin_setjmp
+#define ___USE_builtin_setjmp
+#endif
+#endif
+
+#ifdef ___USE_builtin_setjmp
+#define ___SETJMP(jmpbuf)__builtin_setjmp (jmpbuf)
+#define ___LONGJMP1(jmpbuf)__builtin_longjmp (jmpbuf,1)
+#else
+#define ___SETJMP(jmpbuf)setjmp (jmpbuf)
+#define ___LONGJMP1(jmpbuf)longjmp (jmpbuf,1)
+#endif
+
+#if defined(setjmp) || defined(___USE_builtin_setjmp)
 #undef ___CAN_IMPORT_SETJMP_DYNAMICALLY
 #define ___CAN_IMPORT_SETJMP_DYNAMICALLY
 #endif
@@ -6172,8 +6187,6 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMI
 #define ___LINKFILE_KIND 1
 
 #define ___CLIBEXT(f)f
-#define ___SETJMP(jmpbuf)setjmp (jmpbuf)
-#define ___LONGJMP(jmpbuf,val)longjmp (jmpbuf,val)
 #define ___EXT(f)f
 
 #ifdef ___BIND_LATE
@@ -7550,9 +7563,10 @@ cleanup; }
 #define ___BEGIN_TRY \
 { ___jmpbuf_struct ___jbuf, *___old_catcher = ___ps->catcher; \
 ___ps->catcher = &___jbuf; ___err = ___SETJMP(___jbuf.buf); \
+if (___err!=0) ___err = ___ps->longjmp_err; \
 if (___err==___FIX(___NO_ERR)) {
 #define ___END_TRY } ___ps->catcher = ___old_catcher; }
-#define ___THROW(e)___LONGJMP(___ps->catcher->buf, e)
+#define ___THROW(e)do { ___ps->longjmp_err = e; ___LONGJMP1(___ps->catcher->buf); } while (0)
 #define ___ON_THROW(stat1,stat2) \
 ___ON_THROW_AUX(___processor_state ___ps=___PSTATE;,stat1,stat2)
 
@@ -9187,6 +9201,7 @@ typedef struct ___processor_state_struct
 
 #ifdef ___USE_SETJMP
     ___jmpbuf_struct *catcher;
+    ___SCMOBJ longjmp_err;
 #endif
 
 #ifndef ___SINGLE_THREADED_VMS
