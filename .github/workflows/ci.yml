@@ -35,6 +35,7 @@ jobs:
         update: true
         cache: true
         install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        path-type: inherit
         msystem: ${{ matrix.msystem }}
 
     - name: Build
@@ -49,7 +50,9 @@ jobs:
     - name: Build Gambit for Use
       run: |
         mkdir dist
-        export CFLAGS="-O0" # Avoid a segfault caused by GCC optimizations
+        # Statically link libraries like libwinpthread so that
+        # gsc/gsi.exe don't have to be run within MinGW
+        export CFLAGS="-static"
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist;make -j4; make modules; make install
 
     - name: Upload Build Artifact
@@ -159,12 +162,14 @@ jobs:
     - name: Build and Test
       run: |
         export CC=gcc-9
+        export CXX=g++-9
         ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j4 && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j4 && make check && make clean && ./configure --enable-ansi-c && make -j4 && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       run: |
         mkdir dist
         export CC=gcc-9
+        export CXX=g++-9
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j4 && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tar.gz ./
