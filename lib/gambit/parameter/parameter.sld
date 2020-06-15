@@ -1,11 +1,23 @@
 ;;;============================================================================
 
-;;; File: "random#.scm"
+;;; File: "parameter.sld"
 
 ;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Pseudo-random number generation.
+;;; Parameter object operations.
+
+(define-library (parameter)
+
+  (namespace "")
+
+  (export
+
+make-parameter
+
+)
+
+  (include "parameter#.scm"))
 
 ;;;============================================================================

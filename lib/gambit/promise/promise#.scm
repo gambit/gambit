@@ -1,11 +1,21 @@
 ;;;============================================================================
 
-;;; File: "random#.scm"
+;;; File: "promise#.scm"
 
 ;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Pseudo-random number generation.
+;;; Promise operations.
+
+(##namespace (""
+
+force
+make-promise
+promise?
+touch
+
+
+))
 
 ;;;============================================================================

@@ -2,7 +2,7 @@
 
 ;;; File: "char.sld"
 
-;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -14,28 +14,28 @@
 
   (export
 
-char?
-char=?
-char<?
-char>?
-char<=?
-char>=?
-char-ci=?
-char-ci<?
-char-ci>?
-char-ci<=?
-char-ci>=?
-char-alphabetic?
-char-numeric?
-char-whitespace?
-char-upper-case?
-char-lower-case?
 char->integer
-integer->char
-char-upcase
+char-alphabetic?
+char-ci<=?
+char-ci<?
+char-ci=?
+char-ci>=?
+char-ci>?
 char-downcase
 char-foldcase
+char-lower-case?
+char-numeric?
+char-upcase
+char-upper-case?
+char-whitespace?
+char<=?
+char<?
+char=?
+char>=?
+char>?
+char?
 digit-value
+integer->char
 
 )
 

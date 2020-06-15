@@ -2,7 +2,7 @@
 
 ;;; File: "list.scm"
 
-;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -11,6 +11,10 @@
 (##include "list#.scm")
 
 ;;;----------------------------------------------------------------------------
+
+(define-fail-check-type pair 'pair)
+(define-fail-check-type pair-list 'pair-list)
+(define-fail-check-type list 'list)
 
 (define-prim (##pair? obj))
 
