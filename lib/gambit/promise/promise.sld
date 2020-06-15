@@ -1,11 +1,26 @@
 ;;;============================================================================
 
-;;; File: "random#.scm"
+;;; File: "promise.sld"
 
 ;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Pseudo-random number generation.
+;;; Promise operations.
+
+(define-library (promise)
+
+  (namespace "")
+
+  (export
+
+force
+make-promise
+promise?
+touch
+
+)
+
+  (include "promise#.scm"))
 
 ;;;============================================================================

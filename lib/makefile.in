@@ -289,8 +289,7 @@ _num.c: gambit/random/random.scm gambit/random/random\#.scm
 _num@obj@: _num.c mem.h
 	@BUILD_OBJ@ -D___LIBRARY
 
-_std.c: gambit/list/list.scm gambit/list/list\#.scm gambit/string/string.scm gambit/string/string\#.scm gambit/char/char.scm gambit/char/char\#.scm
-
+_std.c: gambit/boolean/boolean.scm gambit/boolean/boolean\#.scm gambit/symkey/symkey.scm gambit/symkey/symkey\#.scm gambit/char/char.scm gambit/char/char\#.scm gambit/list/list.scm gambit/list/list\#.scm gambit/vector/vector.scm gambit/vector/vector\#.scm gambit/string/string.scm gambit/string/string\#.scm gambit/procedure/procedure.scm gambit/procedure/procedure\#.scm gambit/promise/promise.scm gambit/promise/promise\#.scm gambit/parameter/parameter.scm gambit/parameter/parameter\#.scm
 _std@obj@: _std.c os.h
 	@BUILD_OBJ@ -D___LIBRARY
 

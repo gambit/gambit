@@ -1,11 +1,23 @@
 ;;;============================================================================
 
-;;; File: "random#.scm"
+;;; File: "procedure.sld"
 
 ;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Pseudo-random number generation.
+;;; Procedure operations.
+
+(define-library (procedure)
+
+  (namespace "")
+
+  (export
+
+procedure?
+
+)
+
+  (include "procedure#.scm"))
 
 ;;;============================================================================

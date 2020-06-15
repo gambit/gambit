@@ -2,11 +2,38 @@
 
 ;;; File: "char#.scm"
 
-;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; Character operations.
+
+(##namespace (""
+
+char->integer
+char-alphabetic?
+char-ci<=?
+char-ci<?
+char-ci=?
+char-ci>=?
+char-ci>?
+char-downcase
+char-foldcase
+char-lower-case?
+char-numeric?
+char-upcase
+char-upper-case?
+char-whitespace?
+char<=?
+char<?
+char=?
+char>=?
+char>?
+char?
+digit-value
+integer->char
+
+))
 
 ;;;----------------------------------------------------------------------------
 
