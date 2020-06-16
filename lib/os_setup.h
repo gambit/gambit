@@ -1,6 +1,6 @@
 /* File: "os_setup.h" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SETUP_H
 #define ___OS_SETUP_H
@@ -28,6 +28,35 @@ extern ___SSIZE_T ___read_no_EINTR
          void *buf,
          ___SIZE_T len),
         ());
+
+#ifdef USE_open
+
+int ___open_no_EINTR
+   ___P((char *path,
+         int flags,
+         mode_t mode),
+        ());
+
+#endif
+
+#ifdef USE_openat
+
+extern int ___openat_no_EINTR
+   ___P((int fd,
+         char *path,
+         int flags,
+         mode_t mode),
+        ());
+
+#endif
+
+#ifdef USE_opendir
+
+extern DIR *___opendir_no_EINTR
+   ___P((char *path),
+        ());
+
+#endif
 
 extern int ___close_no_EINTR
    ___P((int fd),

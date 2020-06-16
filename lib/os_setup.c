@@ -122,6 +122,87 @@ ___SIZE_T len;)
 }
 
 
+#ifdef USE_open
+
+int ___open_no_EINTR
+   ___P((char *path,
+         int flags,
+         mode_t mode),
+        (path,
+         flags,
+         mode)
+char *path;
+int flags;
+mode_t mode;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = open (path, flags, mode);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+#endif
+
+
+#ifdef USE_openat
+
+int ___openat_no_EINTR
+   ___P((int fd,
+         char *path,
+         int flags,
+         mode_t mode),
+        (fd,
+         path,
+         flags,
+         mode)
+int fd;
+char *path;
+int flags;
+mode_t mode;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = openat (fd, path, flags, mode);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+#endif
+
+
+#ifdef USE_opendir
+
+DIR *___opendir_no_EINTR
+   ___P((char *path),
+        (path)
+char *path;)
+{
+  DIR *result;
+
+  for (;;)
+    {
+      result = opendir (path);
+      if (result != NULL || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+#endif
+
+
 int ___close_no_EINTR
    ___P((int fd),
         (fd)
