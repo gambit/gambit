@@ -6,6 +6,14 @@
 bin/gambcomp*
 !bin/gambcomp*.in
 
+# gambuild
+bin/gambuild*
+!bin/gambuild*.in
+
+# gamvcs
+bin/gambvcs*
+!bin/gambvcs*.in
+
 bin/gambdoc
 bin/gambdoc.unix
 bin/gambdoc.bat
@@ -149,6 +157,7 @@ lib/libgambit.a
 lib/main.o
 lib/makefile
 lib/mem.o
+lib/module-common.mk
 lib/os.o
 lib/os_base.o
 lib/os_dyn.o
@@ -161,7 +170,15 @@ lib/setup.o
 prebuilt/macosx/build-phase2
 prebuilt/windows/build-phase2
 /makefile
+bench/makefile
+contrib/GambitREPL/makefile
+contrib/makefile
+contrib/xactlog/makefile
+githooks/makefile
 misc/makefile
+prebuilt/macosx/makefile
+prebuilt/makefile
+prebuilt/windows/makefile
 tests/makefile
 autom4te.cache
 gsc-boot
