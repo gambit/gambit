@@ -11,6 +11,7 @@
 #define ___VERSION 409003
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_shell.h"
 #include "os_files.h"
@@ -512,7 +513,7 @@ int dir;)
   if (dir != AT_FDCWD)
     {
       int save = errno;
-      close (dir);
+      ___close_no_EINTR (dir); /* ignore error */
       errno = save;
     }
 }
@@ -539,7 +540,7 @@ char *path;)
         {
           int new_dir;
           *last_sep = '\0';
-          new_dir = openat (dir, start, O_DIRECTORY);
+          new_dir = ___openat_no_EINTR (dir, start, O_DIRECTORY, 0);
           at_close_dir (dir);
           *last_sep = '/';
           if (new_dir < 0)
@@ -584,7 +585,7 @@ mode_t mode;)
 
   if ((path2 = at_long_path (&dir, path)) != NULL)
     {
-      fd = openat (dir, path2, flags, mode);
+      fd = ___openat_no_EINTR (dir, path2, flags, mode);
       at_close_dir (dir);
     }
 
@@ -592,7 +593,7 @@ mode_t mode;)
 
 #else
 
-  return open (path, flags, mode);
+  return ___open_no_EINTR (path, flags, mode);
 
 #endif
 }
@@ -959,7 +960,7 @@ char *path;)
 
   if ((path2 = at_long_path (&dir, path)) != NULL)
     {
-      int fd = openat (dir, path2, O_DIRECTORY);
+      int fd = ___openat_no_EINTR (dir, path2, O_DIRECTORY, 0);
       if (fd >= 0)
         result = fdopendir (fd);
       at_close_dir (dir);
@@ -969,7 +970,7 @@ char *path;)
 
 #else
 
-  return opendir (path);
+  return ___opendir_no_EINTR (path);
 
 #endif
 }
