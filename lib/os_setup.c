@@ -181,28 +181,6 @@ mode_t mode;)
 #endif
 
 
-#ifdef USE_opendir
-
-DIR *___opendir_no_EINTR
-   ___P((char *path),
-        (path)
-char *path;)
-{
-  DIR *result;
-
-  for (;;)
-    {
-      result = opendir (path);
-      if (result != NULL || errno != EINTR)
-        break;
-    }
-
-  return result;
-}
-
-#endif
-
-
 int ___close_no_EINTR
    ___P((int fd),
         (fd)
@@ -335,6 +313,28 @@ int end;)
     }
 }
 
+
+#endif
+
+
+#ifdef USE_opendir
+
+DIR *___opendir_no_EINTR
+   ___P((char *path),
+        (path)
+char *path;)
+{
+  DIR *result;
+
+  for (;;)
+    {
+      result = opendir (path);
+      if (result != NULL || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
 
 #endif
 

@@ -50,14 +50,6 @@ extern int ___openat_no_EINTR
 
 #endif
 
-#ifdef USE_opendir
-
-extern DIR *___opendir_no_EINTR
-   ___P((char *path),
-        ());
-
-#endif
-
 extern int ___close_no_EINTR
    ___P((int fd),
         ());
@@ -83,6 +75,15 @@ extern int ___open_half_duplex_pipe
 extern void ___close_half_duplex_pipe
    ___P((___half_duplex_pipe *hdp,
          int end),
+        ());
+
+#endif
+
+
+#ifdef USE_opendir
+
+extern DIR *___opendir_no_EINTR
+   ___P((char *path),
         ());
 
 #endif
