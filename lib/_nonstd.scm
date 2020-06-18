@@ -1630,7 +1630,7 @@
               (##set-debug-settings! 0 0))
              (level
               (macro-debug-settings-level settings)))
-        (or (##fx< 1 level)
+        (or (##fx>= level 5)
             ##gc-report?))
       (let* ((stats
               (##process-statistics))

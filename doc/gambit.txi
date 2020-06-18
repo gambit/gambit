@@ -2054,9 +2054,13 @@ exit status.
 @item @var{LEVEL}
 @opindex -:debug=@var{LEVEL}
 @opindex -:d@var{LEVEL}
-The verbosity level is set to @var{LEVEL} (a digit from 0 to 9).
+The verbosity level is set to @var{LEVEL}, a digit from 0 to 9.
 At level 0 the runtime system will not display error messages
-and warnings.
+and warnings.  At level 1 and above error messages and warnings are
+displayed.  At level 2 and above a backtrace is displayed.
+At level 3 and above variable bindings are displayed in the backtrace.
+At level 5 and above garbage collection reports are displayed during
+program execution.
 
 @item @code{@b{c}}
 @opindex -:debug=c
@@ -4413,7 +4417,7 @@ error
 @deffnx procedure display-continuation-dynamic-environment @var{cont} @r{[}@var{port}@r{]}
 @end deffn
 
-@deffn procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{all-frames?} @r{[}@var{display-env?} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{depth}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
+@deffn procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{display-env?} @r{[}@var{all-frames?} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{depth}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
 
 The procedure @code{display-continuation-backtrace} displays the
 frames of the continuation corresponding to the continuation object
@@ -4421,14 +4425,14 @@ frames of the continuation corresponding to the continuation object
 defaults to the current output-port.  The frames are displayed in the
 same format as the REPL's @samp{,b} command.
 
+The parameter @var{display-env?}, which defaults to @code{#f}, controls
+if the frames are displayed with its environment (the variables
+accessible and their bindings).
+
 The parameter @var{all-frames?}, which defaults to @code{#f}, controls
 which frames are displayed.  Some frames of ancillary importance, such
 as internal frames created by the interpreter, are not displayed when
 @var{all-frames?} is @code{#f}.  Otherwise all frames are displayed.
-
-The parameter @var{display-env?}, which defaults to @code{#f}, controls
-if the frames are displayed with its environment (the variables
-accessible and their bindings).
 
 The parameters @var{max-head} and @var{max-tail}, which default to 10
 and 4 respectively, control how many frames are displayed at the head
@@ -4457,7 +4461,7 @@ For example:
 4  fib             (console)@@7:12     (fib (- n 2))
 5  (interaction)   (console)@@8:1      (fib 10)
 #f
-> @b{(display-continuation-backtrace x (current-output-port) #t)}
+> @b{(display-continuation-backtrace x (current-output-port) #f #t)}
 0  fib             (console)@@7:12     (fib (- n 2))
 1  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
 2  fib             (console)@@7:12     (fib (- n 2))
@@ -4474,7 +4478,7 @@ For example:
 15 ##repl-debug-main       
 16 ##kernel-handlers       
 #f
-> @b{(display-continuation-backtrace x (current-output-port) #f #t)}
+> @b{(display-continuation-backtrace x (current-output-port) #t #f)}
 0  fib             (console)@@7:12     (fib (- n 2))
         n = 2
 1  fib             (console)@@7:12     (fib (- n 2))
