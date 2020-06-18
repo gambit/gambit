@@ -30,7 +30,7 @@ jobs:
         fetch-depth: 0 # Checkout history and tags
 
     - name: Install MSYS2
-      uses: eine/setup-msys2@v1
+      uses: msys2/setup-msys2@v1
       with:
         update: true
         cache: true
@@ -79,7 +79,7 @@ jobs:
         fetch-depth: 0 # Checkout history and tags
 
     - name: Install MSYS2
-      uses: eine/setup-msys2@v1
+      uses: msys2/setup-msys2@v1
       with:
         update: true
         cache: true
