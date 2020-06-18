@@ -23,6 +23,20 @@
 (##define-macro (macro-module-module-descr module)
   `(##vector-ref ,module 2))
 
+(##define-macro (macro-make-module-descr
+                 supply-modules
+                 demand-modules
+                 meta-info
+                 flags
+                 thunk
+                 module-struct)
+  `(##vector ,supply-modules
+             ,demand-modules
+             ,meta-info
+             ,flags
+             ,thunk
+             ,module-struct))
+
 (##define-macro (macro-module-descr-supply-modules module-descr)
   `(##vector-ref ,module-descr 0))
 

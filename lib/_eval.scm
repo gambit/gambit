@@ -1274,13 +1274,19 @@
 ;;;----------------------------------------------------------------------------
 
 (define (##comp-top top-cte src tail?)
+  (or (##comp-top* top-cte src tail?)
+      (let ((cte (##cte-top-cte top-cte)))
+        (macro-gen ##gen-cst-no-step src
+          (##void)))))
+
+(define (##comp-top* top-cte src tail?)
   (let ((code (##source-code src))
         (cte (##cte-top-cte top-cte)))
     (if (##pair? code)
         (let* ((first-src (##sourcify (##car code) src))
                (descr (##macro-lookup cte (##source-code first-src))))
           (if (vector? descr)
-              (##comp-top top-cte (##macro-expand cte src descr) tail?)
+              (##comp-top* top-cte (##macro-expand cte src descr) tail?)
               (case descr
                 ((##begin)
                  (##comp-top-begin top-cte src tail?))
@@ -1314,19 +1320,24 @@
 (define (##comp-top-seq top-cte src tail? seq)
   (if (##pair? seq)
       (##comp-top-seq-aux top-cte src tail? seq)
-      (let ((cte (##cte-top-cte top-cte)))
-        (macro-gen ##gen-cst-no-step src
-          (##void)))))
+      #f))
 
 (define (##comp-top-seq-aux top-cte src tail? seq)
   (let ((first-src (##sourcify (##car seq) src))
         (rest (##cdr seq)))
     (if (##pair? rest)
         (let ((cte (##cte-top-cte top-cte)))
-          (macro-gen ##gen-seq first-src
-            (##comp-top top-cte first-src #f)
-            (##comp-top-seq-aux top-cte src tail? rest)))
-        (##comp-top top-cte first-src tail?))))
+          (let* ((code1 (##comp-top* top-cte first-src #f))
+                 (code2 (##comp-top-seq-aux top-cte src tail? rest)))
+            (cond ((##not code1)
+                   code2)
+                  (code2
+                   (macro-gen ##gen-seq first-src
+                     code1
+                     code2))
+                  (else
+                   code1))))
+        (##comp-top* top-cte first-src tail?))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1384,9 +1395,9 @@
 
 (define (##comp-top-include top-cte src tail?)
   (##shape src src -2)
-  (##comp-top top-cte
-              (##include-file-as-a-begin-expr src)
-              tail?))
+  (##comp-top* top-cte
+               (##include-file-as-a-begin-expr src)
+               tail?))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1404,8 +1415,7 @@
      top-cte
      (##source-code name)
      (##macro-descr val def-syntax?))
-    (macro-gen ##gen-cst-no-step src
-      (##void))))
+    #f))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1413,8 +1423,7 @@
   (##shape src src -1)
   (let ((cte (##cte-top-cte top-cte)))
     (##top-cte-process-declare! top-cte src)
-    (macro-gen ##gen-cst-no-step src
-      (##void))))
+    #f))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1422,8 +1431,7 @@
   (##shape src src -1)
   (let ((cte (##cte-top-cte top-cte)))
     (##top-cte-process-namespace! top-cte src)
-    (macro-gen ##gen-cst-no-step src
-      (##void))))
+    #f))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2357,7 +2365,7 @@
      clauses
      (lambda ()
        (macro-gen ##gen-cst-no-step src
-                  (##void))))))
+         (##void))))))
 
 (define (##comp-cond-clauses cte src tail? clauses inner)
   (if (##pair? clauses)

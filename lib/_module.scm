@@ -426,7 +426,7 @@
        (##table-set! comp-scope '##module-root module-root)
        (##table-set! comp-scope '##modref-path modref-path))
      (let ((tail? #f))
-       (##comp-top top-cte src tail?)))))
+       (##comp-top* top-cte src tail?)))))
 
 (define-prim (##get-module-from-file module-ref modref mod-info)
 
@@ -510,14 +510,15 @@
                          (##meta-info->alist
                           (macro-compilation-ctx-meta-info comp-ctx)))
                         (module-descr
-                         (##vector supply-modules
-                                   demand-modules
-                                   meta-info
-                                   0
-                                   (lambda ()
-                                     (let ((rte #f))
-                                       (macro-code-run code)))
-                                   #f)))
+                         (macro-make-module-descr
+                          supply-modules
+                          demand-modules
+                          meta-info
+                          0
+                          (lambda ()
+                            (let ((rte #f))
+                              (macro-code-run code)))
+                          #f)))
                    (macro-code-parent-set!
                     code
                     (macro-make-code-attributes
