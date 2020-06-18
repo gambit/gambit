@@ -93,6 +93,21 @@
      tag
      (##append rpath (or host '())))))
 
+(define-prim (##modref->namespace modref)
+  (##modref->string modref #t))
+
+(define-prim (##make-module-var modref sym)
+  (##make-global-var
+   (##string->symbol
+    (##string-append (##modref->namespace modref)
+                     (##symbol->string sym)))))
+
+(define (##module-var-ref modref sym)
+  (##global-var-ref (##make-module-var modref sym)))
+
+(define (##module-var-set! modref sym val)
+  (##global-var-set! (##make-module-var modref sym) val))
+
 ;;;----------------------------------------------------------------------------
 
 (define ##module-path-sep #\/)

@@ -588,7 +588,7 @@
                    (make-ctx src
                              name-src
                              library-name
-                             (##modref->string modref #t) ;; namespace
+                             (##modref->namespace modref) ;; namespace
                              (make-table test: eq?) ;; exports-tbl
                              (make-table test: eq?) ;; imports-tbl
                              (make-table test: eq?) ;; macros-tbl
