@@ -1157,8 +1157,8 @@
               cont
               #!optional
               (port (macro-absent-obj))
-              (all-frames? (macro-absent-obj))
               (display-env? (macro-absent-obj))
+              (all-frames? (macro-absent-obj))
               (max-head (macro-absent-obj))
               (max-tail (macro-absent-obj))
               (depth (macro-absent-obj)))
@@ -3354,15 +3354,26 @@
         (##repl
          (lambda (first port)
            (let ((quit? (##fx= (macro-debug-settings-error settings)
-                               (macro-debug-settings-error-quit))))
-             (if (and quit?
-                      (##fx= (macro-debug-settings-level settings) 0))
-                 (##exit-with-exception exc)
+                               (macro-debug-settings-error-quit)))
+                 (level (macro-debug-settings-level settings)))
+             (if quit?
+                 (begin
+                   (if (##fx>= level 1)
+                       (begin
+                         (##display-exception-in-context exc first port)
+                         (if (##fx>= level 2) ;; display backtrace?
+                             (##display-continuation-backtrace
+                              first ;; cont
+                              port ;; port
+                              (##fx>= level 3) ;; display-env?
+                              #f ;; all-frames?
+                              ##backtrace-default-max-head ;; max-head
+                              ##backtrace-default-max-tail ;; max-tail
+                              0)))) ;; depth
+                   (##exit-with-exception exc))
                  (begin
                    (##display-exception-in-context exc first port)
-                   (if quit?
-                       (##exit-with-exception exc)
-                       #f)))))
+                   #f))))
          exc
          #f
          #t))))
