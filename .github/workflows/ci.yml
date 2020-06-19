@@ -47,7 +47,6 @@ jobs:
     # Only run tests for MinGW64 for now
     - name: Test
       if: ${{ matrix.msystem == 'MINGW64' }}
-      shell: cmd
       run: make check
 
     - name: Build Gambit for Use
