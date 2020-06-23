@@ -4916,6 +4916,30 @@ EOF
     ;; ((apply5)
     ;;  (apply-procedure 5))
 
+    ((foreign2host)
+     (rts-method
+      'foreign2host
+      '(public)
+      'object
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((obj (^local-var 'obj)))
+         (^return (^member obj (^public 'val)))))))
+
+    ((host2foreign)
+     (rts-method
+      'host2foreign
+      '(public)
+      'object
+      (list (univ-field 'val 'object))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((val (^local-var 'val)))
+         (^return (^new-foreign val (^obj #f)))))))
+
     ((host_function2scm)
      (rts-method
       'host_function2scm
@@ -4948,6 +4972,7 @@ EOF
       "\n"
       '()
       (lambda (ctx)
+        (univ-use-rtlib ctx 'host2foreign)
         (let ((obj (^local-var 'obj))
               (alist (^local-var 'alist))
               (key (^local-var 'key)))
@@ -5143,9 +5168,9 @@ EOF
                                   (^map (^rts-method-ref 'host2scm)
                                         args))))))))
 
-    ((scm_procedure2host)
+    ((procedure2host)
      (rts-method
-      'scm_procedure2host
+      'procedure2host
       '(public)
       'object
       (list (univ-field 'obj 'scmobj))
@@ -5154,12 +5179,12 @@ EOF
       (lambda (ctx)
        (let ((obj (^local-var 'obj))
              (args  (^local-var 'args))
-             (scm_procedure (^local-var 'scm_procedure)))
+             (procedure (^local-var 'procedure)))
          (^
           ;; TODO: since prim-function-declaration is supposed to be removed
           ;; an alternative way to create a host closure should be found.
           (^prim-function-declaration
-           'scm_procedure                               ;name
+           'procedure                               ;name
            'object
            (case (target-name (ctx-target ctx))         ;argument
             ((js php) '())
@@ -5185,7 +5210,7 @@ EOF
                (^call-prim (^rts-method-ref 'host2scm_call)
                            obj
                            args))))
-            (^return scm_procedure))))))
+            (^return procedure))))))
 
     ((scm2host)
      (rts-method
@@ -5196,6 +5221,7 @@ EOF
       "\n"
       '()
       (lambda (ctx)
+       (univ-use-rtlib ctx 'foreign2host)
        (let ((obj (^local-var 'obj)))
 
          (define (try-convert-array ctx obj type)
@@ -5305,7 +5331,7 @@ EOF
            (else
             (^if (^procedure? obj)
                  (^return-call-prim
-                   (^rts-method-ref 'scm_procedure2host)
+                   (^rts-method-ref 'procedure2host)
                    obj))))
 
           (univ-throw ctx "\"scm2host error\""))))))
@@ -5557,7 +5583,7 @@ EOF
         (univ-use-rtlib ctx 'host2scm)
         (univ-use-rtlib ctx 'host2scm_call)
         (univ-use-rtlib ctx 'scm2host)
-        (univ-use-rtlib ctx 'scm_procedure2host)
+        (univ-use-rtlib ctx 'procedure2host)
         (univ-use-rtlib ctx 'scm2host_call)
         ;;deprecated:
         ;;(univ-use-rtlib ctx 'js2scm)
@@ -5570,7 +5596,7 @@ EOF
         (univ-use-rtlib ctx 'host2scm)
         (univ-use-rtlib ctx 'host2scm_call)
         (univ-use-rtlib ctx 'scm2host)
-        (univ-use-rtlib ctx 'scm_procedure2host) ;;TODO FIX
+        (univ-use-rtlib ctx 'procedure2host) ;;TODO FIX
         (univ-use-rtlib ctx 'scm2host_call))
        )
       (univ-make-empty-defs))
