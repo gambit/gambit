@@ -1751,7 +1751,7 @@ g_PORT_DEVICE_OTHER2        = 49
 
 g_os_device_close = function (dev_scm, direction_scm) {
 
-  var dev = dev_scm.val;
+  var dev = g_foreign2host(dev_scm);
   var direction = g_scm2host(direction_scm);
 
   if (g_os_debug)
@@ -1788,7 +1788,7 @@ g_os_device_close = function (dev_scm, direction_scm) {
 
 def g_os_device_close(dev_scm, direction_scm):
 
-    dev = dev_scm.val
+    dev = g_foreign2host(dev_scm)
     direction = g_scm2host(direction_scm)
 
     if g_os_debug:
@@ -1866,7 +1866,7 @@ def g_os_device_directory_open_path(path_scm, ignore_hidden_scm):
 
 g_os_device_directory_read = function (dev_condvar_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
 
   if (g_os_debug)
     console.log('g_os_device_directory_read('+dev.fd+')  ***not implemented***');
@@ -1884,7 +1884,7 @@ g_os_device_directory_read = function (dev_condvar_scm) {
 
 def g_os_device_directory_read(dev_condvar_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
 
     if g_os_debug:
         print('g_os_device_directory_read('+repr(dev.fd)+')  ***not implemented***')
@@ -1950,7 +1950,7 @@ def g_os_device_event_queue_open(selector_scm):
 
 g_os_device_event_queue_read = function (dev_condvar_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
 
   if (g_os_debug)
     console.log('g_os_device_event_queue_read('+dev.fd+')  ***not implemented***');
@@ -1968,7 +1968,7 @@ g_os_device_event_queue_read = function (dev_condvar_scm) {
 
 def g_os_device_event_queue_read(dev_condvar_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
 
     if g_os_debug:
         print('g_os_device_event_queue_read('+repr(dev.fd)+')  ***not implemented***')
@@ -1992,7 +1992,7 @@ def g_os_device_event_queue_read(dev_condvar_scm):
 
 g_os_device_force_output = function (dev_condvar_scm, level_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
   var level = g_scm2host(level_scm);
 
   if (g_os_debug)
@@ -2012,7 +2012,7 @@ g_os_device_force_output = function (dev_condvar_scm, level_scm) {
 
 def g_os_device_force_output(dev_condvar_scm, level_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
     level = g_scm2host(level_scm)
 
     if g_os_debug:
@@ -2038,7 +2038,7 @@ def g_os_device_force_output(dev_condvar_scm, level_scm):
 
 g_os_device_kind = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
     console.log('g_os_device_kind('+dev.fd+')  ***not fully implemented***');
@@ -2056,7 +2056,7 @@ g_os_device_kind = function (dev_scm) {
 
 def g_os_device_kind(dev_scm):
 
-    dev = dev_scm.val
+    dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
         print('g_os_device_kind('+repr(dev.fd)+')  ***not fully implemented***')
@@ -2124,7 +2124,7 @@ def g_os_device_stream_open_process(path_and_args_scm, environment_scm, director
 
 g_os_device_process_pid = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
     console.log('g_os_device_process_pid('+dev.fd+')  ***not implemented***');
@@ -2142,7 +2142,7 @@ g_os_device_process_pid = function (dev_scm) {
 
 def g_os_device_process_pid(dev_scm):
 
-    dev = dev_scm.val
+    dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
         print('g_os_device_process_pid('+repr(dev.fd)+')  ***not implemented***')
@@ -2166,7 +2166,7 @@ def g_os_device_process_pid(dev_scm):
 
 g_os_device_process_status = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
     console.log('g_os_device_process_status('+dev.fd+')  ***not implemented***');
@@ -2184,7 +2184,7 @@ g_os_device_process_status = function (dev_scm) {
 
 def g_os_device_process_status(dev_scm):
 
-    dev = dev_scm.val
+    dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
         print('g_os_device_process_status('+repr(dev.fd)+')  ***not implemented***')
@@ -2208,7 +2208,7 @@ def g_os_device_process_status(dev_scm):
 
 g_os_device_stream_default_options = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
     console.log('g_os_device_stream_default_options('+dev.fd+')  ***not fully implemented***');
@@ -2226,7 +2226,7 @@ g_os_device_stream_default_options = function (dev_scm) {
 
 def g_os_device_stream_default_options(dev_scm):
 
-    dev = dev_scm.val
+    dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
         print('g_os_device_stream_default_options('+repr(dev.fd)+')  ***not fully implemented***')
@@ -2250,7 +2250,7 @@ def g_os_device_stream_default_options(dev_scm):
 
 g_os_device_stream_options_set = function (dev_scm, options_scm) {
 
-  var dev = dev_scm.val;
+  var dev = g_foreign2host(dev_scm);
   var options = g_scm2host(options_scm);
 
   if (g_os_debug)
@@ -2270,7 +2270,7 @@ g_os_device_stream_options_set = function (dev_scm, options_scm) {
 
 def g_os_device_stream_options_set(dev_scm, options_scm):
 
-    dev = dev_scm.val
+    dev = g_foreign2host(dev_scm)
     options = g_scm2host(options_scm)
 
     if g_os_debug:
@@ -2361,7 +2361,7 @@ g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
 
   var dev = new G_Device(fd);
 
-  return new G_Foreign(dev, g_host2scm(false));
+  return g_host2foreign(dev);
 };
 
 ")
@@ -2394,7 +2394,7 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
 
     dev = G_Device(fd)
 
-    return G_Foreign(dev, g_host2scm(False))
+    return g_host2foreign(dev)
 
 ")
     (##inline-host-expression
@@ -2482,7 +2482,7 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
           dev.rlo = 0;
           dev.rhi = dev.rbuf.length;
 
-          g_r1 = new G_Foreign(dev, g_host2scm(false));
+          g_r1 = g_host2foreign(dev);
 
         }
 
@@ -2513,7 +2513,7 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
 
     var dev = new G_Device(fd);
 
-    return new G_Foreign(dev, g_host2scm(false));
+    return g_host2foreign(dev);
   }
 };
 
@@ -2569,7 +2569,7 @@ def g_os_device_stream_open_path(path_scm, flags_scm, mode_scm):
 
     dev = G_Device(fd)
 
-    return G_Foreign(dev, g_host2scm(False))
+    return g_host2foreign(dev)
 
 ")
     (##inline-host-expression
@@ -2590,7 +2590,7 @@ def g_os_device_stream_open_path(path_scm, flags_scm, mode_scm):
 
 g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
   var buffer = buffer_scm.elems;
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
@@ -2666,7 +2666,7 @@ g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm)
 
 def g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
     buffer = buffer_scm.elems
     lo = g_scm2host(lo_scm)
     hi = g_scm2host(hi_scm)
@@ -2703,7 +2703,7 @@ def g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
 g_os_device_stream_write = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
   var buffer = buffer_scm.elems;
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
@@ -2762,7 +2762,7 @@ g_os_device_stream_write = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm
 
 def g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
     buffer = buffer_scm.elems
     lo = g_scm2host(lo_scm)
     hi = g_scm2host(hi_scm)
@@ -2797,7 +2797,7 @@ def g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
 g_os_device_stream_seek = function (dev_condvar_scm, pos_scm, whence_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
   var pos = g_scm2host(pos_scm);
   var whence = g_scm2host(whence_scm);
 
@@ -2819,7 +2819,7 @@ g_os_device_stream_seek = function (dev_condvar_scm, pos_scm, whence_scm) {
 
 def g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
     pos = g_scm2host(pos_scm)
     whence = g_scm2host(whence_scm)
 
@@ -2859,7 +2859,7 @@ def g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm):
 
 g_os_device_stream_width = function (dev_condvar_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
 
   if (g_os_debug)
     console.log('g_os_device_stream_width('+dev.fd+')  ***not fully implemented***');
@@ -2877,7 +2877,7 @@ g_os_device_stream_width = function (dev_condvar_scm) {
 
 def g_os_device_stream_width(dev_condvar_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
 
     if g_os_debug:
         print('g_os_device_stream_width('+repr(dev.fd)+')  ***not fully implemented***')
@@ -3123,7 +3123,7 @@ g_os_condvar_select = function (devices_scm, timeout_scm) {
 
     while (condvar_scm !== devices_scm) {
       var owner = condvar_scm.slots[g_BTQ_OWNER];
-      var dev = condvar_scm.slots[g_CONDVAR_NAME].val;
+      var dev = g_foreign2host(condvar_scm.slots[g_CONDVAR_NAME]);
       if (dev.fd === -4) // console?
         condvar_scm.slots[g_BTQ_OWNER] = owner | 1; // mark as 'ready'
       else
@@ -3228,6 +3228,9 @@ def g_os_condvar_select(devices_scm, timeout_scm):
 
 (define-runtime-syntax host-eval
   (##make-alias-syntax '##host-eval))
+
+(define-prim (##foreign-address f)
+  0)
 
 ;;;----------------------------------------------------------------------------
 
