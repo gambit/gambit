@@ -135,12 +135,11 @@
   ##fleqv?)
 
 ;;----------------------------------------------------------------------------
-;; XXX indentation index-range-incl
-(define-prim&proc (vector-cas! (vect vector)
-                               (k    (index-range-incl
-                                       0 (##vector-length vect)))
-                               val
-                               oldval)
+(define-prim&proc (vector-cas! 
+                   (vect vector)
+                   (k    (index-range-incl 0 (vector-length vect)))
+                   val
+                   oldval)
   ;;TODO: remove after bootstrap
   (include "~~/lib/gambit/prim/prim#.scm")
   (declare (not interrupts-enabled))
@@ -151,9 +150,8 @@
 
 (define-procedure (vector-inc! 
                    (vect vector)
-                   (k    (index-range-incl
-                           0 (##vector-length vect)))
-                   (val fixnum 1))
+                   (k    (index-range-incl 0 (vector-length vect)))
+                   (val  fixnum 1))
   (##vector-inc! vect k val))
 
 (define-prim (##vector-inc! vect k #!optional (val 1))
@@ -176,23 +174,15 @@
 
 ;;----------------------------------------------------------------------------
 ;; %vectors-ref
-;; XXX macro seems more natural...
 (define-macro (%vectors-ref vects i)
   `(map (lambda (vect) (vector-ref vect ,i)) ,vects))
 
-
-;;; vectors-ref
-;;;
-;(define-prim&proc (vectors-ref 
-;                    vector-list
-;                    (i (index-range-incl
-;                         0 (macro-max-fixnum32))))
 
 ;; vector-empty?
 ;;
 (define-prim&proc (vector-empty? (vect vector))
   (include "~~/lib/gambit/prim/prim#.scm")
-  (declare (not interrupts-enabled)) ;XXX
+  (declare (not interrupts-enabled))
   (fx= (vector-length vect) 0))
 
 ;; vector-unfold!
@@ -241,11 +231,9 @@
 
 (define-procedure (vector-unfold!
                    (f     procedure)
-                   (vect vector)
-                   (start (index-range-incl
-                            0 (macro-max-fixnum32)))
-                   (end   (index-range-incl
-                            start (##vector-length vect)))
+                   (vect  vector)
+                   (start (index-range-incl 0 ##max-fixnum))
+                   (end   (index-range-incl start (vector-length vect)))
                    . seeds)
   (apply ##vector-unfold! f vect start end seeds))
 
@@ -258,59 +246,9 @@
 
 (define-procedure (vector-unfold 
                    (f   procedure)
-                   (len (index-range-incl
-                          0 (macro-max-fixnum32)))
+                   (len (index-range-incl 0 ##max-fixnum))
                    . seeds)
   (apply ##vector-unfold f len seeds))
-
-;(define-prim (##vector-unfold f len . seeds)
-;
-;  (define (tabulate! f vect i len)  ;; seed less case
-;    (if (fx< i len)
-;        (begin
-;          (vector-set! vect i (f i))
-;          (tabulate! f vect (fx+ i 1) len))))
-;
-;  (define (unfold1! f vect i len seeds)
-;    (if (fx< i len)
-;        (receive (elt new-seed)
-;                   (f i seeds)
-;                   (begin
-;                     (vector-set! vect i elt)
-;                     (unfold1! f 
-;                               vect 
-;                               (fx+ i 1)
-;                               len 
-;                               new-seed)))))
-;
-;  (define (unfold2+! f vect i len seeds)
-;    (if (fx< i len)
-;        (receive (elt . new-seeds)
-;                   (apply f i seeds)
-;                   (begin
-;                     (vector-set! vect i elt)
-;                     (unfold2+! f 
-;                                vect 
-;                                (fx+ i 1) 
-;                                len 
-;                                new-seeds)))))
-;
-;  (include "~~/lib/gambit/prim/prim#.scm")
-;  (let ((vect (make-vector len)))
-;    (cond ((null? seeds)
-;           (tabulate! f vect 0 len))
-;          ((null? (cdr seeds))
-;           (unfold1! f vect 0 len (car seeds)))
-;          (else
-;           (unfold2+! f vect 0 len seeds)))
-;    vect))
-;
-;(define-procedure (vector-unfold
-;                   (f procedure)
-;                   (len (index-range-incl
-;                          0 (macro-max-fixnum32)))
-;                   . seeds)
-;  (apply ##vector-unfold f len seeds))
 
 ;; vector-unfold-right!
 ;;
@@ -357,12 +295,10 @@
     vect))
 
 (define-procedure (vector-unfold-right!
-                   (f    procedure)
-                   (vect vector)
-                   (start (index-range-incl
-                            0 (macro-max-fixnum32)))
-                   (end   (index-range-incl
-                            start (##vector-length vect)))
+                   (f     procedure)
+                   (vect  vector)
+                   (start (index-range-incl 0 ##max-fixnum))
+                   (end   (index-range-incl start (vector-length vect)))
                    . seeds)
   (apply ##vector-unfold-right! f vect start end seeds))
 
@@ -374,25 +310,20 @@
 
 
 (define-procedure (vector-unfold-right
-                   (f procedure)
-                   (len (index-range-incl
-                          0 (macro-max-fixnum32)))
+                   (f   procedure)
+                   (len (index-range-incl 0 ##max-fixnum))
                    . seeds)
   (apply ##vector-unfold-right f len seeds))
 
 
 ;; vector-reverse-copy!
-;; YYY check range
 (define-procedure (vector-reverse-copy!
                    (target vector)
-                   (tstart (index-range-incl
-                             0 (vector-length target)))
+                   (tstart (index-range-incl 0 (vector-length target)))
                    (source vector)
-                   (sstart (index-range-incl
-                             0 (macro-max-fixnum32))
+                   (sstart (index-range-incl 0 ##max-fixnum) 
                            0)
-                   (send   (index-range-incl
-                             sstart (vector-length source))
+                   (send   (index-range-incl sstart (vector-length source))
                            (vector-length source)))
 
   (##vector-reverse-copy! target tstart source sstart send))
@@ -402,8 +333,9 @@
               target 
               tstart 
               source 
-              #!optional (sstart 0) 
-                         (send (##vector-length source)))
+              #!optional 
+              (sstart 0) 
+              (send (vector-length source)))
   (include "~~/lib/gambit/prim/prim#.scm")
   (let vector-reverse-copy!-loop ((i (fx- send 1))
                                   (j tstart))
@@ -416,13 +348,14 @@
 ;;
 (define-prim (##vector-reverse-copy 
               vect 
-              #!optional (start 0) 
-                         (end (##vector-length vect)))
+              #!optional 
+              (start 0) 
+              (end (vector-length vect)))
 
   (include "~~/lib/gambit/prim/prim#.scm")
 
   (let ((new-vect (make-vector (fx- end start))))
-    (vector-reverse-copy! new-vect   ;;YYY should call ##
+    (vector-reverse-copy! new-vect
                           0
                           vect
                           start
@@ -430,13 +363,11 @@
     new-vect))
 
 (define-procedure (vector-reverse-copy
-                    (vect  vector)
-                    (start (index-range-incl
-                             0 (macro-max-fixnum32))
-                           0)
-                    (end   (index-range-incl
-                             start (macro-max-fixnum32))
-                           (##vector-length vect)))
+                   (vect  vector)
+                   (start (index-range-incl 0 ##max-fixnum)
+                          0)
+                   (end   (index-range-incl start (vector-length vect))
+                          (vector-length vect)))
   (##vector-reverse-copy vect start end))
 
 
@@ -697,7 +628,7 @@
 
 (define-procedure (vector-index
                    (pred? procedure)
-                   (vect   vector)
+                   (vect  vector)
                    . vects )
   (include "~~/lib/gambit/prim/prim#.scm")
   (let ((len (vector-length vect)))
@@ -747,8 +678,8 @@
 
 (define-procedure (vector-skip
                    (pred? procedure)
-                   (vect   vector)
-                   . vects )
+                   (vect  vector)
+                   . vects)
 
   (include "~~/lib/gambit/prim/prim#.scm")
 
@@ -853,8 +784,8 @@
 
 (define-procedure (vector-skip-right
                    (pred? procedure)
-                   (vect   vector)
-                   . vects )
+                   (vect  vector)
+                   . vects)
 
   (include "~~/lib/gambit/prim/prim#.scm")
 
@@ -890,8 +821,11 @@
 (define-prim (##vector-binary-search 
               vect 
               value 
-              cmp #!optional (start 0) 
-                             (end (##vector-length vect)))
+              cmp 
+              #!optional 
+              (start 0) 
+              (end (vector-length vect)))
+
   (include "~~/lib/gambit/prim/prim#.scm")
 
   (let vector-binary-search-loop ((start start) 
@@ -916,11 +850,9 @@
                    (vect   vector) 
                    value 
                    (cmp   procedure)
-                   (start (index-range-incl
-                            0 (macro-max-fixnum32))
+                   (start (index-range-incl 0 ##max-fixnum)
                           0)
-                   (end   (index-range-incl
-                            start (vector-length vect))
+                   (end   (index-range-incl start (vector-length vect))
                           (vector-length vect)))
   (##vector-binary-search vect value cmp start end))
 
@@ -954,7 +886,7 @@
 
 (define-procedure (vector-any 
                    (pred? procedure)
-                   (vect   vector)
+                   (vect  vector)
                    . vects)
 
   (include "~~/lib/gambit/prim/prim#.scm")
@@ -1014,7 +946,7 @@
 
 (define-procedure (vector-every 
                    (pred? procedure)
-                   (vect   vector)
+                   (vect  vector)
                    . vects)
 
   ;(include "~~/lib/gambit/prim/prim#.scm")
@@ -1047,10 +979,8 @@
 ;;
 (define-prim&proc (vector-swap! 
                    (vect vector)
-                   (i   (index-range-incl
-                          0 (vector-length vect)))
-                   (j   (index-range-incl
-                          0 (vector-length vect))))
+                   (i    (index-range-incl 0 (vector-length vect)))
+                   (j    (index-range-incl 0 (vector-length vect))))
 
   (include "~~/lib/gambit/prim/prim#.scm")
   (declare (not interrupts-enabled))
@@ -1064,8 +994,9 @@
 
 (define-prim (##vector-reverse! 
               vect 
-              #!optional (start 0) 
-                         (end (##vector-length vect)))
+              #!optional 
+              (start 0) 
+              (end (vector-length vect)))
   (include "~~/lib/gambit/prim/prim#.scm")
 
   (let vector-reverse!-loop ((vect vect)
@@ -1078,12 +1009,10 @@
           (vector-reverse!-loop vect (fx+ i 1) (fx- j 1))))))
 
 (define-procedure (vector-reverse! 
-                   (vect vector)
-                   (start (index-range-incl
-                            0     (vector-length vect))
+                   (vect  vector)
+                   (start (index-range-incl 0 ##max-fixnum)
                           0)
-                   (end   (index-range-incl
-                            start (vector-length vect))
+                   (end   (index-range-incl start (vector-length vect))
                           (vector-length vect)))
   (##vector-reverse! vect start end))
 
@@ -1091,11 +1020,12 @@
 ;; vector-reverse-copy!
 ;;
 (define-prim (vector-reverse-copy! 
-               target 
-               tstart 
-               source 
-               #!optional (sstart 0)
-                          (send (##vector-length source)))
+              target 
+              tstart 
+              source 
+              #!optional 
+              (sstart 0)
+              (send (vector-length source)))
   (include "~~/lib/gambit/prim/prim#.scm")
 
   (let vector-reverse-copy!-loop ((i (- send 1))
@@ -1107,14 +1037,11 @@
 
 (define-procedure  (vector-reverse-copy!
                     (target vector)
-                    (tstart (index-range-incl
-                              0 (vector-length target)))
+                    (tstart (index-range-incl 0 (vector-length target)))
                     (source vector)
-                    (sstart (index-range-incl
-                              0 (macro-max-fixnum32))
+                    (sstart (index-range-incl 0 ##max-fixnum)
                             0)
-                    (send   (index-range-incl
-                              sstart (vector-length source))
+                    (send   (index-range-incl sstart (vector-length source))
                             (vector-length source)))
   (##vector-reverse-copy! target tstart source sstart send))
 
@@ -1124,8 +1051,9 @@
 
 (define-prim (##reverse-vector->list
               vect
-              #!optional (start 0)
-                         (end (##vector-length vect)))
+              #!optional
+              (start 0)
+              (end (vector-length vect)))
 
   (include "~~/lib/gambit/prim/prim#.scm")
   (let reverse-vector->list-loop ((i   start)
@@ -1136,18 +1064,16 @@
                                                  res)))))
 
 (define-procedure (reverse-vector->list 
-                   (vect vector)
-                   (start (index-range-incl
-                            0 (macro-max-fixnum32))
+                   (vect  vector)
+                   (start (index-range-incl 0 ##max-fixnum)
                           0)
-                   (end   (index-range-incl
-                            start (vector-length vect))
+                   (end   (index-range-incl start (vector-length vect))
                           (vector-length vect)))
   (##reverse-vector->list vect start end))
 
 
 ;; reverse-list->vector
-;; XXX 
+;;
 (define-prim (##reverse-list->vector lst)
   (let* ((len (length lst))
          (vect (make-vector len)))
@@ -1226,8 +1152,10 @@
 
 (define-prim (##vector->string 
               vect 
-              #!optional (start 0)
-                         (end (##vector-length vect)))
+              #!optional 
+              (start 0)
+              (end (vector-length vect)))
+
   (let* ((len    (vector-length vect))
          (size   (fx- end start))
          (result (make-string size)))
@@ -1241,12 +1169,10 @@
 
 (define-procedure (vector->string 
                    (vect vector)
-                   (start (index-range-incl
-                            0 (macro-max-fixnum32))
+                   (start (index-range-incl 0 ##max-fixnum)
                           0)
-                   (end   (index-range-incl
-                            start (##vector-length vect))
-                          (##vector-length vect)))
+                   (end   (index-range-incl start (vector-length vect))
+                          (vector-length vect)))
   (##vector->string vect start end))
 
 ;; string->vector
@@ -1254,8 +1180,9 @@
 
 (define-prim (##string->vector
               str
-              #!optional (start 0)
-                         (end (##string-length str)))
+              #!optional
+              (start 0)
+              (end (string-length str)))
 
   (include "~~/lib/gambit/prim/prim#.scm")
 
@@ -1272,12 +1199,10 @@
 
 (define-procedure (string->vector 
                    (str string)
-                   (start (index-range-incl
-                            0 (macro-max-fixnum32))
+                   (start (index-range-incl 0 ##max-fixnum)
                           0)
-                   (end (index-range-incl
-                          start (##string-length str))
-                        (##string-length str)))
+                   (end (index-range-incl start (string-length str))
+                        (string-length str)))
   (##string->vector str start end))
 
 
