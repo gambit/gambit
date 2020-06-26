@@ -549,6 +549,11 @@ if "%1" == "obj" goto obj
 if not "%1" == ""obj"" goto not_obj
 :obj
 
+if not defined BUILD_OBJ_CC_PARAM goto :obj_cc_done
+set "C_COMPILER=!BUILD_OBJ_CC_PARAM!"
+set "FLAGS_OBJ= "
+:obj_cc_done
+
 set "BUILD_OBJ_LD_OPTIONS_PRELUDE_PARAM= "
 set "BUILD_OBJ_LD_OPTIONS_PARAM= "
 
@@ -570,6 +575,11 @@ if "%1" == "dyn" goto dyn
 if not "%1" == ""dyn"" goto not_dyn
 :dyn
 
+if not defined BUILD_DYN_CC_PARAM goto :dyn_cc_done
+set "C_COMPILER=!BUILD_DYN_CC_PARAM!"
+set "FLAGS_DYN= "
+:dyn_cc_done
+
 call :prepare_params BUILD_DYN_META_INFO_FILE_PARAM BUILD_DYN_PKG_CONFIG_PARAM BUILD_DYN_PKG_CONFIG_PATH_PARAM BUILD_DYN_CC_OPTIONS_PARAM BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM BUILD_DYN_LD_OPTIONS_PARAM BUILD_DYN_INPUT_FILENAMES_PARAM BUILD_DYN_OUTPUT_FILENAME_PARAM
 if not "%_errorlevel%" == "0" goto :end
 
@@ -590,6 +600,11 @@ if "%1" == "lib" goto lib
 if not "%1" == ""lib"" goto not_lib
 :lib
 
+if not defined BUILD_LIB_CC_PARAM goto :lib_cc_done
+set "C_COMPILER=!BUILD_LIB_CC_PARAM!"
+set "FLAGS_LIB= "
+:lib_cc_done
+
 set "_shell_command=@BUILD_LIB_ECHO_BAT@"
 
 call :eval_shell_command
@@ -600,6 +615,11 @@ goto end
 if "%1" == "exe" goto exe
 if not "%1" == ""exe"" goto not_exe
 :exe
+
+if not defined BUILD_EXE_CC_PARAM goto :exe_cc_done
+set "C_COMPILER=!BUILD_EXE_CC_PARAM!"
+set "FLAGS_EXE= "
+:exe_cc_done
 
 call :prepare_params BUILD_EXE_META_INFO_FILE_PARAM BUILD_EXE_PKG_CONFIG_PARAM BUILD_EXE_PKG_CONFIG_PATH_PARAM BUILD_EXE_CC_OPTIONS_PARAM BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM BUILD_EXE_LD_OPTIONS_PARAM BUILD_EXE_INPUT_FILENAMES_PARAM BUILD_EXE_OUTPUT_FILENAME_PARAM
 if not "%_errorlevel%" == "0" goto :end

@@ -150,6 +150,7 @@
          (options (macro-absent-obj))
          (output (macro-absent-obj))
          (base (macro-absent-obj))
+         (cc (macro-absent-obj))
          (cc-options (macro-absent-obj))
          (ld-options-prelude (macro-absent-obj))
          (ld-options (macro-absent-obj))
@@ -175,6 +176,11 @@
                   #f
                   (macro-force-vars (base)
                     base)))
+             (c
+              (if (##eq? cc (macro-absent-obj))
+                  #f
+                  (macro-force-vars (cc)
+                    cc)))
              (cc-opts
               (if (##eq? cc-options (macro-absent-obj))
                   '()
@@ -215,6 +221,8 @@
                (error "string expected for output: parameter")) ;;;;;;;;;;
               ((##not (or (##string? bas) (##eq? bas #f)))
                (error "string or #f expected for base: parameter")) ;;;;;;;;;;
+              ((##not (or (##string? c) (##eq? c #f)))
+               (error "string or #f expected for cc: parameter")) ;;;;;;;;;;
               ((##not (##string-or-string-list? cc-opts))
                (error "string or string list expected for cc-options: parameter")) ;;;;;;;;;;
               ((##not (##string-or-string-list? ld-opts-prelude))
@@ -230,6 +238,7 @@
                                opts
                                out
                                bas
+                               c
                                cc-opts
                                ld-opts-prelude
                                ld-opts
@@ -241,6 +250,7 @@
          options
          output
          base
+         cc
          cc-options
          ld-options-prelude
          ld-options
@@ -349,6 +359,7 @@
                      (##base-library-from-base base)
                      (##list target-filename-relative-to-output-dir)
                      output-filename-no-dir
+                     cc
                      cc-options
                      ld-options-prelude
                      ld-options
@@ -366,9 +377,9 @@
 
 (define (##build-module path target options)
 
-  (define (get-option key)
+  (define (get-option key default)
     (cond ((##assq key options) => ##cdr)
-          (else '())))
+          (else default)))
 
   (let* ((module-dir
           (##path-normalize (##path-directory path)))
@@ -380,16 +391,18 @@
           (##string-append module-filename-noext ".o1"))
          (build-subdir
           (##module-build-subdir-path module-dir module-filename-noext target))
+         (cc
+          (get-option 'cc #f))
          (cc-options
-          (get-option 'cc-options))
+          (get-option 'cc-options '()))
          (ld-options-prelude
-          (get-option 'ld-options-prelude))
+          (get-option 'ld-options-prelude '()))
          (ld-options
-          (get-option 'ld-options))
+          (get-option 'ld-options '()))
          (pkg-config
-          (get-option 'pkg-config))
+          (get-option 'pkg-config '()))
          (pkg-config-path
-          (get-option 'pkg-config-path)))
+          (get-option 'pkg-config-path '())))
 
     ;; create build subdirectory (removing it first to make sure it is empty)
     (##delete-file-or-directory build-subdir #t #f)
@@ -408,6 +421,7 @@
             opts
             (##path-expand module-object-filename build-subdir)
             #f ;; base
+            cc
             cc-options
             ld-options-prelude
             ld-options
@@ -420,6 +434,7 @@
          obj-files
          options
          output-filename
+         cc
          cc-options
          ld-options-prelude
          ld-options
@@ -445,6 +460,7 @@
             (##map (lambda (path) (##path-relative-to-dir path output-dir))
                    obj-files)
             output-filename-no-dir
+            cc
             cc-options
             ld-options-prelude
             ld-options
@@ -464,6 +480,7 @@
          base-library
          input-filenames
          output-filename
+         cc
          cc-options
          ld-options-prelude
          ld-options
@@ -483,6 +500,9 @@
            (and output-filename
                 (##cons "OUTPUT_FILENAME"
                         output-filename))
+           (and cc
+                (##cons "CC"
+                        cc))
            (and cc-options
                 (##cons "CC_OPTIONS"
                         (##multiple-args-join cc-options)))

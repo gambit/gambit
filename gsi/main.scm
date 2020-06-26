@@ -51,11 +51,12 @@ Scheme compiler and linker options
     -flat                       Force a flat link file instead of incremental
 
 C compiler and linker options
-    -pkg-config library         Get compile and link flags using pkg-config
-    -pkg-config-path dir        Add directory to pkg-config search path
+    -cc compiler                Use specific C compiler (gcc, clang, tcc, ...)
     -cc-options 'option ...'    Extra command line options for C compiler
     -ld-options 'option ...'    Extra command line options for C linker
     -ld-options-prelude 'option ...'
+    -pkg-config library         Get compile and link flags using pkg-config
+    -pkg-config-path dir        Add directory to pkg-config search path
 
 Debug information options
     -debug                 Include all debug info
@@ -372,6 +373,11 @@ usage-end
                             (if x
                                 (##cadr x)
                                 #f)))
+                         (cc
+                          (let ((x (##assq 'cc options)))
+                            (if x
+                                (##cadr x)
+                                #f)))
                          (cc-options
                           (let ((x (##assq 'cc-options options)))
                             (if x
@@ -492,6 +498,7 @@ usage-end
                                  file
                                  options: opts
                                  output: output
+                                 cc: cc
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options
@@ -500,6 +507,7 @@ usage-end
                                 (compile-file
                                  file
                                  options: opts
+                                 cc: cc
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options
@@ -532,6 +540,7 @@ usage-end
                              obj-files
                              options
                              output-filename
+                             cc
                              cc-options
                              ld-options-prelude
                              ld-options
@@ -979,6 +988,7 @@ usage-end
                            (o string) (l string)
                            (module-ref symbol) (linker-name string)
                            (prelude string) (postlude string)
+                           (cc string)
                            (cc-options string)
                            (ld-options-prelude string)
                            (ld-options string)

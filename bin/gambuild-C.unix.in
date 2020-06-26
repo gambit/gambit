@@ -322,6 +322,11 @@ case "$1" in
 
   "obj")
 
+    if test ! -z "${BUILD_OBJ_CC_PARAM}"; then
+      C_COMPILER="${BUILD_OBJ_CC_PARAM}"
+      FLAGS_OBJ=""
+    fi
+
     extract_cc_ld_options "${BUILD_OBJ_META_INFO_FILE_PARAM}" "${BUILD_OBJ_PKG_CONFIG_PARAM}" "${BUILD_OBJ_PKG_CONFIG_PATH_PARAM}" "${BUILD_OBJ_CC_OPTIONS_PARAM}" "${BUILD_OBJ_LD_OPTIONS_PRELUDE_PARAM}" "${BUILD_OBJ_LD_OPTIONS_PARAM}"
 
     BUILD_OBJ_CC_OPTIONS_PARAM="${GAMBUILD_CC_OPTIONS}"
@@ -336,6 +341,11 @@ case "$1" in
     ;;
 
   "dyn")
+
+    if test ! -z "${BUILD_DYN_CC_PARAM}"; then
+      C_COMPILER="${BUILD_DYN_CC_PARAM}"
+      FLAGS_DYN=""
+    fi
 
     extract_cc_ld_options "${BUILD_DYN_META_INFO_FILE_PARAM}" "${BUILD_DYN_PKG_CONFIG_PARAM}" "${BUILD_DYN_PKG_CONFIG_PATH_PARAM}" "${BUILD_DYN_CC_OPTIONS_PARAM}" "${BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM}" "${BUILD_DYN_LD_OPTIONS_PARAM}"
 
@@ -354,6 +364,11 @@ case "$1" in
 
   "lib")
 
+    if test ! -z "${BUILD_LIB_CC_PARAM}"; then
+      C_COMPILER="${BUILD_LIB_CC_PARAM}"
+      FLAGS_LIB=""
+    fi
+
     BUILD_LIB_CMD="$BUILD_LIB"
 
     if test ! -z "${GAMBUILD_VERBOSE}"; then
@@ -364,6 +379,11 @@ case "$1" in
     ;;
 
   "exe")
+
+    if test ! -z "${BUILD_EXE_CC_PARAM}"; then
+      C_COMPILER="${BUILD_EXE_CC_PARAM}"
+      FLAGS_EXE=""
+    fi
 
     extract_cc_ld_options "${BUILD_EXE_META_INFO_FILE_PARAM}" "${BUILD_EXE_PKG_CONFIG_PARAM}" "${BUILD_EXE_PKG_CONFIG_PATH_PARAM}" "${BUILD_EXE_CC_OPTIONS_PARAM}" "${BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM}" "${BUILD_EXE_LD_OPTIONS_PARAM}"
 
