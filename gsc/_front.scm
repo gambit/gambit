@@ -125,7 +125,7 @@
                      ((c dynamic exe obj link flat
                          check force keep-temp
                          o l module-ref linker-name prelude postlude
-                         cc-options ld-options-prelude ld-options
+                         cc cc-options ld-options-prelude ld-options
                          pkg-config pkg-config-path asm)
                       #t) ;; these options are innocuous
                      (else

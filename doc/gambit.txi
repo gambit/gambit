@@ -800,7 +800,8 @@ Synopsis:
 @example
 @b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-help@r{]} @r{[}-v@r{]}
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
-    @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
+    @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]}
+    @r{[}-cc @r{@var{compiler}}@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
     @r{[}-pkg-config @r{@var{pkg-config-args}}@r{]} @r{[}-pkg-config-path @r{@var{pkg-config-path}}@r{]}
     @r{[}-warnings@r{]} @r{[}-verbose@r{]} @r{[}-report@r{]} @r{[}-expansion@r{]} @r{[}-gvm@r{]} @r{[}-cfg@r{]} @r{[}-dg@r{]}
@@ -895,6 +896,8 @@ type, and configure script options on standard output and exit.
 Add expressions to the top of the source code being compiled.
 @item -postlude @var{expressions}
 Add expressions to the bottom of the source code being compiled.
+@item -cc @var{compiler}
+Select specific C compiler.
 @item -cc-options @var{options}
 Add options to the command that invokes the C compiler.
 @item -ld-options-prelude @var{options}
@@ -983,6 +986,21 @@ will start the execution of the program.  For example:
 
 @smallexample
 $ @b{gsc -postlude "(start-bench)" bench.scm}
+@end smallexample
+
+@opindex -cc
+The @samp{-cc} option selects the specified C compiler for compiling
+the generated C code.  When this option is used, the default C
+compiler options that were determined to be needed by the configure
+script are nullified because they are very likely to be invalid for
+the specified C compiler.  Any options needed for this C compiler
+should be specified explicitly using the @samp{-cc-options},
+@samp{-ld-options-prelude}, and @samp{-ld-options} options.  For
+example:
+
+@smallexample
+$ @b{gsc -cc clang -cc-options "-O0 -bundle" bench.scm} @r{@i{# clang on macOS}}
+$ @b{gsc -cc tcc -cc-options -shared bench.scm}         @r{@i{# tcc on linux}}
 @end smallexample
 
 @opindex -cc-options
