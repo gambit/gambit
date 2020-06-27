@@ -441,7 +441,7 @@
        (##table-set! comp-scope '##module-root module-root)
        (##table-set! comp-scope '##modref-path modref-path))
      (let ((tail? #f))
-       (##comp-top* top-cte src tail?)))))
+       (##comp-top top-cte src tail?)))))
 
 (define-prim (##get-module-from-file module-ref modref mod-info)
 
