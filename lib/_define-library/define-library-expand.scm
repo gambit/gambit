@@ -821,15 +821,17 @@
 (define (debug-expansion?-set! val)
   (set! debug-expansion? val))
 
-(define (show-expansion thing srcs)
+(define (show-expansion thing src)
   (if thing
       (begin
         (display ";; expansion of ")
         (write thing)
         (newline)
-        (for-each pretty-print
-                  (cdr (##desourcify srcs)))))
-  srcs)
+        (let ((x (##desourcify src)))
+          (if (and (pair? x) (eq? (car x) '##begin))
+              (for-each pretty-print (cdr x))
+              (pretty-print x)))))
+  src)
 
 (define (define-library-expand src)
   (let* ((ld
@@ -959,7 +961,7 @@
 
                  rev-global-imports))))
 
-      (if (and (pair? forms) (null? forms))
+      (if (and (pair? forms) (null? (cdr forms)))
           (car forms)
           `(##begin ,@forms)))))))
 
