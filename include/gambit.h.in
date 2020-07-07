@@ -1408,7 +1408,9 @@
  */
 
 #ifdef ___SINGLE_THREADED_VMS
+#ifndef ___MAX_PROCESSORS
 #define ___MAX_PROCESSORS 1
+#endif
 #else
 #define ___MAX_PROCESSORS @CONF_MAX_PROCESSORS@
 #endif
@@ -6236,8 +6238,8 @@ if (___TYP((___temp=(src)))==___tSUBTYPED&&___SUBTYPE(___temp)==___FIX(___sPROMI
 
 /* Use direct access to the only pstate */
 
-#define ___GET_PSTATE() (&___GSTATE->vmstate0.aligned_pstate[0].pstate)
-#define ___SET_PSTATE(ps)
+#define ___GET_REAL_PSTATE() (&___GSTATE->vmstate0.aligned_pstate[0].pstate)
+#define ___SET_REAL_PSTATE(ps)
 
 #else
 
@@ -6302,17 +6304,34 @@ extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 
 /* Use thread local storage getter/setter */
 
-#define ___GET_PSTATE() ___CAST(___processor_state,___EXT(___get_tls_ptr) ())
-#define ___SET_PSTATE(ps) ___set_tls_ptr(___CAST(void*,ps))
+#define ___GET_REAL_PSTATE() ___CAST(___processor_state,___EXT(___get_tls_ptr) ())
+#define ___SET_REAL_PSTATE(ps) ___set_tls_ptr(___CAST(void*,ps))
 
 #else
 
 /* Use thread local storage class */
 
-#define ___GET_PSTATE() ___CAST(___processor_state,___tls_ptr)
-#define ___SET_PSTATE(ps) ___tls_ptr = ___CAST(void*,ps)
+#define ___GET_REAL_PSTATE() ___CAST(___processor_state,___tls_ptr)
+#define ___SET_REAL_PSTATE(ps) ___tls_ptr = ___CAST(void*,ps)
 
 #endif
+
+#endif
+
+#ifndef ___SUPPORT_PSTATE_BIND
+
+#define ___GET_PSTATE() ___GET_REAL_PSTATE()
+
+#else
+
+#define ___GET_PSTATE() ___GET_REAL_PSTATE()->pstate_binding
+#define ___BEGIN_PSTATE_BIND(ps) \
+do { \
+  ___processor_state ___old_pstate = ___GET_REAL_PSTATE()->pstate_binding; \
+  ___GET_REAL_PSTATE()->pstate_binding = ps
+#define ___END_PSTATE_BIND() \
+  ___GET_REAL_PSTATE()->pstate_binding = ___old_pstate; \
+} while (0)
 
 #endif
 
@@ -6335,6 +6354,7 @@ extern ___THREAD_LOCAL_STORAGE_CLASS void *___tls_ptr;
 
 #define ___PSANC(ps)
 #define ___PSA(ps)
+
 #else
 
 /*
@@ -9082,6 +9102,12 @@ ___F64 latest_gc_live_;
 ___F64 latest_gc_movable_;
 ___F64 latest_gc_still_;
 
+/*
+ * Custom msection allocator (when not NULL).
+ */
+
+___msection *(*custom_msection_alloc_) ___PVOID;
+
 } ___vmstate_mem;
 
 typedef struct ___gstate_mem_struct {
@@ -9222,6 +9248,10 @@ typedef struct ___processor_state_struct
     ___MUTEX_DECL(sync_mut)
     ___CONDVAR_DECL(sync_cv)
 
+#endif
+
+#ifdef ___SUPPORT_PSTATE_BIND
+    ___processor_state pstate_binding;
 #endif
   } ___processor_state_struct;
 
