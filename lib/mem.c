@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 409003
@@ -346,6 +346,8 @@
 #define latest_gc_live          ___VMSTATE_MEM(latest_gc_live_)
 #define latest_gc_movable       ___VMSTATE_MEM(latest_gc_movable_)
 #define latest_gc_still         ___VMSTATE_MEM(latest_gc_still_)
+
+#define custom_msection_alloc   ___VMSTATE_MEM(custom_msection_alloc_)
 
 /* words occupied by this processor by movable objects */
 
@@ -2905,6 +2907,9 @@ ___msection *ms;)
    * is called every 300 microseconds.
    */
 
+  if (custom_msection_alloc != 0)
+    return custom_msection_alloc ();
+
   if (nb_msections_assigned == 0)
     result = the_msections->head; /* start at head of free msections */
   else
@@ -4557,6 +4562,10 @@ ___virtual_machine_state ___vms;)
   latest_gc_live = 0.0;
   latest_gc_movable = 0.0;
   latest_gc_still = 0.0;
+
+  /* No custom msection allocator */
+
+  custom_msection_alloc = 0;
 
   /* Allocate msections of VM */
 
