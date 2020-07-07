@@ -450,7 +450,7 @@
      ##get-module
      module-ref))
 
-  (define (search-for-highest-object-file path-noext)
+  (define (search-for-highest-object-file path-noext stop-at-first?)
     (let loop ((version 1)
                (highest-object-file-path #f)
                (highest-object-file-info #f))
@@ -465,10 +465,15 @@
              (resolved-path-exists?
               (##not (##fixnum? resolved-info))))
         (if resolved-path-exists?
-            (loop (##fx+ version 1)
-                  resolved-path
-                  resolved-info)
-            highest-object-file-path))))
+            (if stop-at-first?
+                (##vector resolved-path
+                          resolved-info)
+                (loop (##fx+ version 1)
+                      resolved-path
+                      resolved-info))
+            (and highest-object-file-path
+                 (##vector highest-object-file-path
+                           highest-object-file-info))))))
 
 ;;  (pp `(##get-module-from-file module-ref: ,module-ref modref: ,(##vector-copy modref) mod-info: ,mod-info))
 
@@ -546,9 +551,11 @@
                    (or (##lookup-registered-module module-ref)
                        (err)))))))))
 
-    (define (get-from-object-file path)
+    (define (get-from-object-file path-and-info)
       (##close-port port)
-      (let* ((linker-name
+      (let* ((path
+              (##vector-ref path-and-info 0))
+             (linker-name
               (##path-strip-directory path))
              (_ (if ##debug-modules? (pp (list '##os-load-object-file path linker-name))));;;;;;;;;;;;;
              (result
@@ -569,20 +576,33 @@
                  (or (##lookup-registered-module module-ref)
                      (err)))))))
 
-    (define (search-for-object-file mod-filename-noext dir)
+    (define (search-for-object-file dir stop-at-first?)
       (search-for-highest-object-file
-       (##path-expand mod-filename-noext dir)))
+       (##path-expand mod-filename-noext dir)
+       stop-at-first?))
 
     (let* ((build-subdir-path
             (##module-build-subdir-path mod-dir
                                         mod-filename-noext
                                         (macro-target)))
-           (object-file-path
-            (or (search-for-object-file mod-filename-noext build-subdir-path)
-                (search-for-object-file mod-filename-noext mod-dir))))
+           (object-file-path-and-info
+            (or (search-for-object-file build-subdir-path #t)
+                (search-for-object-file mod-dir #f))))
 
-      (cond (object-file-path
-             (get-from-object-file object-file-path))
+      (cond ((and object-file-path-and-info
+                  ;; check that the object file is not older than the
+                  ;; source file
+                  (let ((mod-path-info
+                         (##file-info-aux mod-path)))
+                    (and mod-path-info ;; source file (still) exists
+                         (##not (##fl<
+                                 (macro-time-point
+                                  (macro-file-info-last-modification-time
+                                   (##vector-ref object-file-path-and-info 1)))
+                                 (macro-time-point
+                                  (macro-file-info-last-modification-time
+                                   mod-path-info)))))))
+             (get-from-object-file object-file-path-and-info))
 
             ((##file-exists?
               (##path-expand
@@ -595,12 +615,10 @@
               (macro-target)
               (##list (##list 'module-ref module-ref)))
 
-             (let ((object-file-path
-                    (search-for-object-file
-                     mod-filename-noext
-                     build-subdir-path)))
-               (if object-file-path
-                   (get-from-object-file object-file-path)
+             (let ((object-file-path-and-info
+                    (search-for-object-file build-subdir-path #t)))
+               (if object-file-path-and-info
+                   (get-from-object-file object-file-path-and-info)
                    (get-from-source-file))))
 
             (else
