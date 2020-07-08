@@ -49,7 +49,8 @@
         "abcdefghijklmno"
 
         #\x
-        #\u1234
+        ;;#\u1234
+        #\u00ff ;; in case compiled with 1 byte characters
 
         #f
         #t
