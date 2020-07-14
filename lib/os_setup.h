@@ -190,6 +190,10 @@ extern ___SCMOBJ ___in_addr_to_SCMOBJ
          int arg_num),
         ());
 
+#ifdef AF_INET6
+#define USE_IPV6
+#endif
+
 #ifdef USE_IPV6
 
 extern ___SCMOBJ ___SCMOBJ_to_in6_addr
