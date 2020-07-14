@@ -728,10 +728,6 @@ ___BOOL pinpoint;)
 
 #ifdef USE_NETWORKING
 
-#ifdef AF_INET6
-#define USE_IPV6
-#endif
-
 
 ___HIDDEN int network_family_decode
    ___P((int family),
@@ -1075,7 +1071,7 @@ int arg_num;)
       struct sockaddr_in *sa_in = ___CAST(struct sockaddr_in*,sa);
       *salen = sizeof (*sa_in);
       memset (sa_in, 0, sizeof (*sa_in));
-      sa_in->sin_family = AF_INET;
+      sa->sa_family = AF_INET;
       sa_in->sin_port = htons (port);
       result = ___SCMOBJ_to_in_addr (addr, &sa_in->sin_addr, arg_num);
     }
@@ -1085,7 +1081,7 @@ int arg_num;)
       struct sockaddr_in6 *sa_in6 = ___CAST(struct sockaddr_in6*,sa);
       *salen = sizeof (*sa_in6);
       memset (sa_in6, 0, sizeof (*sa_in6));
-      sa_in6->sin6_family = AF_INET6;
+      sa->sa_family = AF_INET6;
       sa_in6->sin6_port = htons (port);
       result = ___SCMOBJ_to_in6_addr (addr, &sa_in6->sin6_addr, arg_num);
     }
