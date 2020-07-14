@@ -5549,7 +5549,7 @@ int options;)
   int udp_flag = ___SOCK_UDP_FLAG(options);
   SOCKET_TYPE s;
 
-  if (SOCKET_CALL_ERROR2(s = socket (AF_INET,
+  if (SOCKET_CALL_ERROR2(s = socket ( local_addrlen == sizeof (struct sockaddr_in6)? AF_INET6 : AF_INET,
                                      udp_flag ? SOCK_DGRAM : SOCK_STREAM,
                                      0)))
     return ERR_CODE_FROM_SOCKET_CALL;
