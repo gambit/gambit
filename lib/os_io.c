@@ -11214,6 +11214,58 @@ ___SCMOBJ port_num;)
 }
 
 
+___SCMOBJ ___os_device_udp_socket_receive_buffer_size
+   ___P((___SCMOBJ dev),
+        (dev)
+___SCMOBJ dev;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___device_udp *d =
+    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+
+  int optVal;
+  SOCKET_LEN_TYPE optLen = sizeof(optVal);
+
+  optLen = sizeof(optVal);
+  getsockopt(d->s, SOL_SOCKET, SO_RCVBUF, (char*) &optVal, &optLen);
+
+  return ___FIX(optVal);
+
+#endif
+}
+
+
+___SCMOBJ ___os_device_udp_socket_send_buffer_size
+   ___P((___SCMOBJ dev),
+        (dev)
+___SCMOBJ dev;)
+{
+#ifndef USE_NETWORKING
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___device_udp *d =
+    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+
+  int optVal;
+  SOCKET_LEN_TYPE optLen = sizeof(optVal);
+
+  optLen = sizeof(optVal);
+  getsockopt(d->s, SOL_SOCKET, SO_SNDBUF, (char*) &optVal, &optLen);
+
+  return ___FIX(optVal);
+
+#endif
+}
+
+
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Opening and reading a directory. */
