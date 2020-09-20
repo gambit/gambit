@@ -1095,6 +1095,11 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(set! ##values-with-sn? #t)
+
+(define (##values-with-sn?-set! x)
+  (set! ##values-with-sn? x))
+
 (define ##backtrace-default-max-head 10)
 
 (define-prim (##backtrace-default-max-head-set! x)
@@ -1391,13 +1396,14 @@
   (##write var port)
   (##write-string (if mutable? " = " " == ") port)
   (##write-string
-   (##object->string
-    (if (##cte-top? cte)
-        (##inverse-eval-in-env val cte)
-        (##inverse-eval-in-env val (##cte-parent-cte cte)))
-    (##fx- (##output-port-width port)
-           (##output-port-column port))
-    port)
+   (let* ((expr
+           (if (##cte-top? cte)
+               (##inverse-eval-in-env val cte)
+               (##inverse-eval-in-env val (##cte-parent-cte cte))))
+          (max-length
+           (##fx- (##output-port-width port)
+                  (##output-port-column port))))
+     (##value->string val expr max-length port))
    port)
   (##newline port))
 
@@ -1738,25 +1744,34 @@
           (##trace-generate
            (##make-friendly-call-form proc
                                       (##argument-list-remove-absent! args '())
-                                      ##max-fixnum)
+                                      ##max-fixnum
+                                      ##inverse-eval
+                                      #f)
            execute
            #f)
           (execute)))))
 
-(define-prim (##make-friendly-call-form proc args max-args)
-  (##make-friendly-form (##procedure-friendly-name proc)
+(define-prim (##make-friendly-call-form proc args max-args transform-arg annotate?)
+  (##make-friendly-form (let ((x (##procedure-friendly-name proc)))
+                          (if annotate? (##cons proc x) x))
                         args
                         max-args
-                        ##inverse-eval))
+                        transform-arg
+                        annotate?))
 
-(define-prim (##make-friendly-form head args max-args transform-arg)
+(define-prim (##make-friendly-form head args max-args transform-arg annotate?)
+
+  (define (ann expr val)
+    (if annotate? (##cons expr val) val))
 
   (define (process-args i lst)
     (if (##pair? lst)
         (if (##fx> i max-args)
-            (##cons '... (##cdr (##last-pair lst)))
-            (##cons (transform-arg (##car lst))
-                    (process-args (##fx+ i 1) (##cdr lst))))
+            (##cons (ann '... '...) (##cdr (##last-pair lst)))
+            (let* ((obj (##car lst))
+                   (val (transform-arg obj)))
+              (##cons (ann obj val)
+                      (process-args (##fx+ i 1) (##cdr lst)))))
         lst))
 
   (##cons head
@@ -1791,7 +1806,7 @@
             (##write-string depth-str output-port)
             (##write-string "]" output-port))
           (bars w output-port))
-      w))
+      (##fx+ w 1)))
 
   (define (output-to-repl proc)
     (let ((old (##current-user-interrupt-handler)))
@@ -3509,28 +3524,41 @@
           (display-call* proc (##cdr proc-and-args)))))
 
   (define (display-call* proc args)
-    (display-form (##make-friendly-call-form proc args max-displayed-args)))
+    (display-form (##make-friendly-call-form
+                   proc
+                   args
+                   max-displayed-args
+                   ##inverse-eval
+                   #t)))
 
-  (define (display-form form)
+  (define (display-form annotated-form)
     (let* ((width
             (##output-port-width port))
+           (form
+            (##map ##cdr annotated-form))
            (str
             (##object->string form width port)))
-      (if (or (##not (##pair? form))
-              (##fx< (##string-length str) width))
+      (if (##fx< (##string-length str) width)
           (begin
             (##write-string str port)
             (##newline port))
           (let ((w (##fx- width 2)))
 
             (define (end s)
-              (if (##fx= (##string-length s) w) (##newline port))
+              (if (##not (##fx< (##string-length s) w)) (##newline port))
               (##write-string ")" port)
               (##newline port))
 
-            (let loop ((i 0) (lst form))
+            (let loop ((i 0) (lst annotated-form))
               (##write-string (if (##fx= i 0) "(" " ") port)
-              (let ((s (##object->string (##car lst) w port)))
+              (let* ((val-expr
+                      (##car lst))
+                     (val
+                      (##car val-expr))
+                     (expr
+                      (##cdr val-expr))
+                     (s
+                      (##value->string val expr w port)))
                 (##write-string s port)
                 (let ((rest (##cdr lst)))
                   (cond ((##pair? rest)
@@ -3710,10 +3738,12 @@
                                            (##substring name 2 len))
                                           head))
                                     head)))
-                          (##make-friendly-form friendly-head
+                          (##make-friendly-form (##cons friendly-head
+                                                        friendly-head)
                                                 (##cdr code)
                                                 max-displayed-args
-                                                ##identity))
+                                                ##identity
+                                                #t))
                         code))))))
 
           ((macro-heap-overflow-exception? exc)
@@ -3920,6 +3950,19 @@
               (display-call))
             (display-known-exception exc)))
       (display-known-exception exc)))
+
+(define-prim (##value->string val expr max-length char-encoding-limit)
+  (if ##values-with-sn?
+      (##object->string-with-sn
+       expr
+       max-length
+       char-encoding-limit
+       3 ;; at least "..."
+       val)
+      (##object->string
+       expr
+       max-length
+       char-encoding-limit)))
 
 (define-prim (##exception-procedure-and-arguments exc)
 

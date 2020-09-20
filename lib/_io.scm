@@ -4881,6 +4881,36 @@
     (##wr we obj)
     (##get-output-string port)))
 
+(define-prim (##object->string-with-sn
+              obj
+              max-length
+              #!optional
+              (char-encoding-limit (macro-absent-obj))
+              (min-length 0)
+              (actual-obj obj))
+  (let* ((ml
+          (##fxmax max-length min-length))
+         (str
+          (##object->string
+           obj
+           (##fx+ ml 1)
+           char-encoding-limit)))
+    (if (##fx<= (##string-length str) ml)
+        str
+        (let* ((sn
+                (##number->string
+                 (##object->serial-number actual-obj)))
+               (max-length2
+                (##fxmax
+                 (##fx- max-length
+                        (##fx+ 2
+                               (##string-length sn)))
+                 min-length)))
+          (##string-append
+           (##force-limited-string! str max-length2)
+           " #"
+           sn)))))
+
 (define-prim (##object->string
               obj
               #!optional
