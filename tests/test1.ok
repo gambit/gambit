@@ -444,7 +444,7 @@ b = 20
 c = 30
 d = 40
 1> ,s
-| | > (lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set! b...
+| | > (lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set! ...
 | | #<procedure #3>
 *** STOPPED IN test, "debug.scm"@87.13
 a = 10
@@ -1794,7 +1794,7 @@ b = 20
 c = 30
 d = 40
 1> ,s
-| | > ((lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set! ...
+| | > ((lambda (e f g h i j k l m) ((lambda (n o p q) (set! a (+ a 1)) (set!...
 *** STOPPED IN #<procedure #3>, "debug.scm"@47.7
 e = 100
 f = 200
@@ -1810,7 +1810,7 @@ b = 20
 c = 30
 d = 40
 1> ,s
-| | | > (lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1)) ...
+| | | > (lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1))...
 | | | #<procedure #6>
 *** STOPPED IN #<procedure #3>, "debug.scm"@83.8
 e = 100
@@ -2139,7 +2139,7 @@ b = 20
 c = 30
 d = 40
 1> ,s
-| | > ((lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1)) (...
+| | > ((lambda (n o p q) (set! a (+ a 1)) (set! b (+ b 1)) (set! c (+ c 1)) ...
 *** STOPPED IN #<procedure #6>, "debug.scm"@48.18
 n = 1000
 o = 2000
@@ -4028,7 +4028,7 @@ b = 21
 c = 31
 d = 41
 1> ,s
-| | | > (force (begin (set! p (+ p 1)) (set! q (+ q 1)) (delay (set! z (+ z 1...
+| | | > (force (begin (set! p (+ p 1)) (set! q (+ q 1)) (delay (set! z (+ z ...
 *** STOPPED IN #<procedure #6>, "debug.scm"@68.32
 n = 1001
 o = 2001
@@ -6729,7 +6729,7 @@ b = 21
 c = 31
 d = 41
 1> ,s
-| | > (append (case a ((11) (list a)) (else '())) (case b ((20) '()) (else (l...
+| | > (append (case a ((11) (list a)) (else '())) (case b ((20) '()) (else (...
 | | (11 21 31 41 101 201 301 401 11 21 #(31 41) 10001 16 1 5001 7000)
 | (11 21 31 41 101 201 301 401 11 21 #(31 41) 10001 16 1 5001 7000)
 *** STOPPED IN (string)@1.35
