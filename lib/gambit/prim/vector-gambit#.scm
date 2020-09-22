@@ -18,6 +18,31 @@ subvector-fill!
 subvector-move!
 vector-cas!
 vector-inc!
+vector-empty?
+vector-unfold
+vector-unfold!
+vector-unfold-right
+vector-unfold-right!
+vector-reverse-copy!
+vector-reverse-copy
+binary-vector=
+vector=
+vector-fold
+vector-map!
+vector-coutn
+vector-index
+vector-index-right
+vector-skip
+vector-skip-right
+vector-binary-search
+vector-any
+vector-every
+vector-swap!
+vector-reverse!
+reverse-vector->list
+reverse-list->vector
+vector-cumulate
+vector-partition
 
 ))
 
