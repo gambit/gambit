@@ -9876,13 +9876,14 @@ if test "$ENABLE_OPENSSL" = yes; then
   case "$target_os" in
     darwin*) # macOS ships an old version of the OpenSSL library, so it should
              # be installed with "brew install openssl"
-             OPENSSL_DIR="/usr/local/opt/openssl@1.1"
+             OPENSSL_INC_DIR="${OPENSSL_INC_DIR:-`pkg-config --cflags-only-I openssl`}"
+             OPENSSL_LIB_DIR="${OPENSSL_LIB_DIR:-`pkg-config --libs-only-L openssl`}"
              if test "$ENABLE_OPENSSL_STATIC_LINK" = yes; then
-               LIBS="$LIBS $OPENSSL_DIR/lib/libssl.a $OPENSSL_DIR/lib/libcrypto.a"
+               LIBS="$LIBS $OPENSSL_LIB_DIR/libssl.a $OPENSSL_LIB_DIR/libcrypto.a"
              else
-               LIBS="$LIBS -L$OPENSSL_DIR/lib -lssl -lcrypto"
+               LIBS="$LIBS $OPENSSL_LIB_DIR -lssl -lcrypto"
              fi
-             CFLAGS="$CFLAGS -Wno-deprecated-declarations -I\"$OPENSSL_DIR/include\""
+             CFLAGS="$CFLAGS -Wno-deprecated-declarations \"$OPENSSL_INC_DIR\""
              ;;
     mingw* | msys*)
              # Search in typical locations
