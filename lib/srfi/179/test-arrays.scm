@@ -31,7 +31,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 |#
 
-(##include "179#.scm")
+;; (##include "179#.scm")
+
+(import (srfi 179))
 
 (##namespace
  ("srfi/179#"
