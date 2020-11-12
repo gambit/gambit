@@ -64,7 +64,6 @@
    array-dimension
    mutable-array?
    array-copy
-   array-set!
    array-setter
    specialized-array-default-safe?
    specialized-array-default-mutable?
