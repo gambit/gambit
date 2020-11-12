@@ -96,6 +96,9 @@
    array->list
    list->array
    array-assign!
+   specialized-array-reshape
+   array-ref
+   array-set!
    )
   (import
    (gambit))

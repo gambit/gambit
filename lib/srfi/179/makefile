@@ -4,7 +4,7 @@ herefromlib = srfi/179
 libfromhere = ../..
 SUBDIRS =
 HEADERS_SCM = 179\#.scm
-MODULES_SCM = 179.scm 179.sld test-arrays.scm
+MODULES_SCM = 179.scm 179.sld generalized-arrays.scm test-arrays.scm
 MAIN_MODULES = 179
 OTHER_RCFILES = makefile
 
