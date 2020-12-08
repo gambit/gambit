@@ -10,15 +10,22 @@
 
 (##wr-set!
  (lambda (we obj)
-   (##default-wr
-    we
-    (cond ((not (write-abstractly))
-           obj)
-          ((c#ptree? obj)
-           (list 'PTREE: (c#parse-tree->expression obj)))
-          ((c#var? obj)
-           (list 'VAR: (c#var-name obj)))
-          (else
-           obj)))))
+
+   (if (and (write-abstractly)
+            (or (c#var? obj)
+                (c#ptree? obj)))
+
+       (let ((save-wr ##wr))
+         (##wr-set! ##default-wr)
+         (let ((result
+                (##wr we
+                      (if (c#var? obj)
+                          (list 'VAR: (c#var-name obj))
+                          (list 'PTREE: (c#parse-tree->expression obj))))))
+           (##wr-set! save-wr)
+           result))
+
+       (##default-wr we
+                     obj))))
 
 ;;;============================================================================

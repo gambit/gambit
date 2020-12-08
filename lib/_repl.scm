@@ -1738,18 +1738,22 @@
 (define-prim (##make-default-entry-hook)
   (let ((settings (##vector #f #f)))
     (lambda (proc args execute)
-      (if (##vector-ref settings 0)
-          (##step-on)) ;; turn on stepping
-      (if (##vector-ref settings 1)
-          (##trace-generate
-           (##make-friendly-call-form proc
-                                      (##argument-list-remove-absent! args '())
-                                      ##max-fixnum
-                                      ##inverse-eval
-                                      #f)
-           execute
-           #f)
-          (execute)))))
+      (let ((stepping? (##vector-ref settings 0))
+            (trace? (##vector-ref settings 1)))
+        (if trace?
+            (##trace-generate
+             (##make-friendly-call-form
+              proc
+              (##argument-list-remove-absent! args '())
+              ##max-fixnum
+              ##inverse-eval
+              #f)
+             execute
+             (and stepping? 's))
+            (begin
+              (if stepping?
+                  (##step-on)) ;; turn on stepping
+              (execute)))))))
 
 (define-prim (##make-friendly-call-form proc args max-args transform-arg annotate?)
   (##make-friendly-form (let ((x (##procedure-friendly-name proc)))
@@ -1779,7 +1783,7 @@
 
 (define ##trace-depth (##make-parameter 0))
 
-(define-prim (##trace-generate form execute leap?)
+(define-prim (##trace-generate form execute s-or-l)
 
   (define max-depth 10)
 
@@ -1805,8 +1809,7 @@
             (##write-string "[" output-port)
             (##write-string depth-str output-port)
             (##write-string "]" output-port))
-          (bars w output-port))
-      (##fx+ w 1)))
+          (bars w output-port))))
 
   (define (output-to-repl proc)
     (let ((old (##current-user-interrupt-handler)))
@@ -1818,18 +1821,24 @@
          (##current-user-interrupt-handler old)))))
 
   (define (output-to-repl-with-indent depth prompt obj)
-    (output-to-repl
-     (lambda (first port)
-       (let ((width (##fx+ (indent depth port) (##string-length prompt))))
+    (let* ((repl-port
+            (##repl-output-port))
+           (width
+            (##fx+ (bars-width depth) 1 (##string-length prompt)))
+           (obj-str
+            (##object->string
+             obj
+             (##fx- (##output-port-width repl-port) width)
+             repl-port)))
+      (output-to-repl
+       (lambda (first port)
+         (indent depth port)
          (##write-string prompt port)
-         (##write-string
-          (##object->string
-           obj
-           (##fx- (##output-port-width port) width)
-           port)
-          port)
+         (##write-string obj-str port)
          (##newline port)
          #t))))
+
+  (##step-off)
 
   (##continuation-capture
    (lambda (cont)
@@ -1848,42 +1857,44 @@
        (output-to-repl-with-indent depth " > " form) ;; show form
 
        (cond ((##eq? ##nontail-call-for-leap parent)
-              (if leap?
-                  (execute)
-                  (begin
-                    (##step-on) ;; turn on stepping before tail call (execute)
-                    (execute))))
+              (if (##eq? s-or-l 's)
+                  ;; turn on stepping before tail call (execute)
+                  (##step-on))
+              (execute))
              ((##eq? ##nontail-call-for-step parent)
-              (if leap?
+              (if (##eq? s-or-l 'l)
                   (##nontail-call-for-leap execute)
                   (begin
-                    (##step-on) ;; turn on stepping before tail call (execute)
+                    (if (##eq? s-or-l 's)
+                        ;; turn on stepping before tail call (execute)
+                        (##step-on))
                     (execute))))
              (else
               (let ((result
                      (##parameterize1
                       ##trace-depth
                       depth
-                      (if leap?
+                      (if (##eq? s-or-l 'l)
                           (lambda ()
                             (##nontail-call-for-leap execute))
                           (lambda ()
-                            (##step-on) ;; turn on stepping before nontail call (execute)
+                            (if (##eq? s-or-l 's)
+                                ;; turn on stepping before nontail call (execute)
+                                (##step-on))
                             (##nontail-call-for-step execute))))))
 
                 (let ((saved-stepper
-                       (and (##not leap?)
-                            (##vector-copy (##current-stepper)))))
+                       (##vector-copy (##current-stepper))))
                   (##step-off)
                   (output-to-repl-with-indent depth " " result) ;; show result
-                  (if leap?
-                      (##step-on)
-                      (##step-restore saved-stepper))
+                  (##step-restore saved-stepper)
                   result))))))))
 
 (define-prim (##nontail-call-for-leap execute)
   (##declare (not interrupts-enabled))
-  (##first-argument (execute)))
+  (let ((result (execute)))
+    (##step-on) ;; turn on stepping at end of a leap
+    result))
 
 (define-prim (##nontail-call-for-step execute)
   (##declare (not interrupts-enabled))
@@ -2086,10 +2097,10 @@
 
   (cond ((##eq? cmd 'c)
          (execute))
-        ((and (##eq? cmd 'l) leapable?)
-         (##trace-generate (##decomp $code) execute #t))
         ((or (##eq? cmd 'l) (##eq? cmd 's))
-         (##trace-generate (##decomp $code) execute #f)) ;; will call ##step-on
+         (##trace-generate (##decomp $code)
+                           execute
+                           (if (and (##eq? cmd 'l) leapable?) 'l 's)))
         (else
          (##vector-ref cmd 0))))
 
