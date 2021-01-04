@@ -9,9 +9,7 @@
 
 ;;; SRFI 60, Integers as Bits
 
-;(import (srfi 60))
-
-(include "60.scm")
+(import (srfi 60))
 (import (_test))
 
 ;;;============================================================================
