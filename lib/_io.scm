@@ -5755,7 +5755,31 @@
                 (loop)))))))
 
 (define-prim (##write-char2? c port)
-  #f)
+
+  (##declare (not interrupts-enabled))
+
+  (if (or (##char=? c #\newline)
+          (macro-unbuffered? (macro-port-woptions port)))
+      #f
+      (let ((char-wbuf (macro-character-port-wbuf port))
+            (char-whi+1 (##fx+ (macro-character-port-whi port) 1)))
+        (if (##not (##fx< (##string-length char-wbuf) char-whi+1))
+
+            (begin
+
+              ;; there is enough space in the character write buffer, so add
+              ;; character and increment whi
+
+              (##string-set! char-wbuf (##fx- char-whi+1 1) c)
+
+              (macro-character-port-whi-set! port char-whi+1)
+
+              #t)
+
+            ;; there is insufficient space in the character write
+            ;; buffer so bail out (this normally will call ##write-char)
+
+            #f))))
 
 (define-prim (##write-char1 c)
   (##write-char2 c (macro-current-output-port)))

@@ -1084,7 +1084,9 @@
   `(##read-char1 ,port))
 
 (##define-macro (macro-write-char c port)
-  `(##write-char2 ,c ,port))
+  `(let ((c ,c) (port ,port))
+     (or (##write-char2? c port)
+         (##write-char2 c port))))
 
 (##define-macro (macro-peek-next-char-or-eof re) ;; possibly returns end-of-file
   `(macro-peek-char (macro-readenv-port ,re)))
