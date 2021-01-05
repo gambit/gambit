@@ -892,7 +892,7 @@
                 `',type-static))
            (type-id-expression
             (if generative?
-                `(let ()
+                `(##let ()
                    (##declare (extended-bindings) (not safe))
                    (##type-id ,type-expression))
                 `',(##type-id type-static)))
@@ -933,15 +933,15 @@
                                '##direct-structure-ref)))
                       (if macros?
                           `((##define-macro (,getter-name obj)
-                              (##list '(let ()
+                              (##list '(##let ()
                                          (##declare (extended-bindings))
                                          ,getter-method)
                                       obj
                                       ,field-index
                                       ',type-expression
                                       #f)))
-                          `((define (,getter-name obj)
-                              ((let ()
+                          `((##define (,getter-name obj)
+                              ((##let ()
                                  (##declare (extended-bindings))
                                  ,getter-method)
                                obj
@@ -965,7 +965,7 @@
                                '##direct-structure-set!)))
                       (if macros?
                           `((##define-macro (,setter-name obj val)
-                              (##list '(let ()
+                              (##list '(##let ()
                                          (##declare (extended-bindings))
                                          ,setter-method)
                                       obj
@@ -973,8 +973,8 @@
                                       ,field-index
                                       ',type-expression
                                       #f)))
-                          `((define (,setter-name obj val)
-                              ((let ()
+                          `((##define (,setter-name obj val)
+                              ((##let ()
                                  (##declare (extended-bindings))
                                  ,setter-method)
                                obj
@@ -999,7 +999,7 @@
                                '##direct-structure-set)))
                       (if macros?
                           `((##define-macro (,fsetter-name obj val)
-                              (##list '(let ()
+                              (##list '(##let ()
                                          (##declare (extended-bindings))
                                          ,fsetter-method)
                                       obj
@@ -1007,8 +1007,8 @@
                                       ,field-index
                                       ',type-expression
                                       #f)))
-                          `((define (,fsetter-name obj val)
-                              ((let ()
+                          `((##define (,fsetter-name obj val)
+                              ((##let ()
                                  (##declare (extended-bindings))
                                  ,fsetter-method)
                                obj
@@ -1023,12 +1023,12 @@
                                         tail)))))
 
       (define (generate-structure-type-definition)
-        `(define ,type-expression
-           ((let ()
+        `(##define ,type-expression
+           ((##let ()
               (##declare (extended-bindings))
               ##structure)
             ##type-type
-            ((let ()
+            ((##let ()
                (##declare (extended-bindings))
                ##string->uninterned-symbol)
              ,augmented-id-str)
@@ -1042,7 +1042,7 @@
                 (if macros?
                     `((##define-macro (,type-exhibitor)
                         ',type-expression))
-                    `((define (,type-exhibitor)
+                    `((##define (,type-exhibitor)
                         ,type-expression)))
                 '())
 
@@ -1053,7 +1053,7 @@
                            constructor)))
                   (if macros?
                       `((##define-macro (,constructor-name ,@parameters)
-                          (##list '(let ()
+                          (##list '(##let ()
                                      (##declare (extended-bindings))
                                      ##structure)
                                   ',type-expression
@@ -1061,7 +1061,7 @@
                                      field-alist
                                      parameters
                                      #t))))
-                      `((define (,constructor-name ,@parameters)
+                      `((##define (,constructor-name ,@parameters)
                           (##declare (extended-bindings))
                           (##structure
                            ,type-expression
@@ -1085,11 +1085,11 @@
           ,@(if copier
                 (if macros?
                     `((##define-macro (,copier obj)
-                        (##list '(let ()
+                        (##list '(##let ()
                                    (##declare (extended-bindings))
                                    ##structure-copy)
                                 obj)))
-                    `((define (,copier obj)
+                    `((##define (,copier obj)
                         (##declare (extended-bindings))
                         (##structure-copy obj))))
                 '())
@@ -1098,22 +1098,22 @@
                 (if macros?
                     `((##define-macro (,predicate obj)
                         ,(if extender
-                             ``(let ((obj ,,'obj))
+                             ``(##let ((obj ,,'obj))
                                  (##declare (extended-bindings))
-                                 (and (##structure? obj)
-                                      (let ((t0 (##structure-type obj))
-                                            (type-id ,',type-id-expression))
-                                        (or (##eq? (##type-id t0) type-id)
-                                            (let ((t1 (##type-super t0)))
-                                              (and t1
-                                                   (or (##eq? (##type-id t1) type-id)
-                                                       (##structure-instance-of? obj type-id))))))))
-                             ``((let ()
+                                 (##and (##structure? obj)
+                                        (##let ((t0 (##structure-type obj))
+                                                (type-id ,',type-id-expression))
+                                          (##or (##eq? (##type-id t0) type-id)
+                                                (##let ((t1 (##type-super t0)))
+                                                  (##and t1
+                                                         (##or (##eq? (##type-id t1) type-id)
+                                                               (##structure-instance-of? obj type-id))))))))
+                             ``((##let ()
                                   (##declare (extended-bindings))
                                   ##structure-direct-instance-of?)
                                 ,,'obj
                                 ,',type-id-expression))))
-                    `((define (,predicate obj)
+                    `((##define (,predicate obj)
                         (##declare (extended-bindings))
                         ,(if extender
                              `(##structure-instance-of?
@@ -1137,7 +1137,7 @@
                     (generate-constructor-copier-predicate-getters-setters))
             (generate-constructor-copier-predicate-getters-setters)))
 
-      `(begin
+      `(##begin
 
          ,@(if extender
                (##list `(##define-macro (,extender . args)
@@ -1153,10 +1153,10 @@
                    (##cons `(##define-macro (,implementer)
                               ',(if generative?
                                     (generate-structure-type-definition)
-                                    '(begin)))
+                                    '(##begin)))
                            (generate-constructor-copier-predicate-getters-setters))
                    (##list `(##define-macro (,implementer)
-                              ',(##cons 'begin
+                              ',(##cons '##begin
                                         (generate-definitions)))))
                (generate-definitions)))))
 

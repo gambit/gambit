@@ -451,64 +451,79 @@
                  (expr (##source-strip expr-src))
                  (head
                   (and (pair? expr)
-                       (##source-strip (car expr))))
-                 (def-syntax?
-                   (memq head '(define-syntax ##define-syntax)))
-                 (def-macro?
-                   (memq head '(define-macro ##define-macro)))
-                 (sym
-                  (and (pair? expr)
-                       (pair? (cdr expr))
-                       (pair? (cddr expr))
-                       (let ((x (##source-strip (cadr expr))))
-                         (cond (def-syntax?
-                                 (and (null? (cdddr expr))
-                                      x))
-                               (def-macro?
-                                 (if (pair? x)
-                                     (##source-strip (car x))
-                                     x))
-                               (else
-                                #f))))))
-            (if (not (symbol? sym))
-                (loop (cdr expr-srcs)) ;; keep looking for syntax defs
-                (let* ((id
-                        (if (##full-name? sym)
-                            sym
-                            (##make-full-name (ctx-namespace ctx)
-                                              sym)))
-                       (val-src
-                        (caddr expr))
-                       (val
-                        (##source-strip val-src))
-                       (def
-                        (##make-source
-                         (if def-syntax?
-                             (if (and (pair? val)
-                                      (eq? (##source-strip (car val))
-                                           'syntax-rules))
-                                 (let ((crules
-                                        (syn#syntax-rules->crules val-src)))
-                                   `(##define-syntax ,id
-                                      (##lambda (##src)
-                                                (syn#apply-rules ',crules
-                                                                 ##src))))
-                                 `(##define-syntax ,id ,val-src))
-                             `(##define-macro ,id
-                                ,(##definition-value expr-src)))
-                         (##source-locat expr-src))))
+                       (##source-strip (car expr)))))
+            (cond ((memq head '(begin ##begin))
+                   (loop
+                    (append (cdr expr) (cdr expr-srcs))))
+                  ((memq head '(define-type ##define-type))
+                   (loop
+                    (cons
+                     (##sourcify-deep
+                      (##define-type-expand
+                        'define-type
+                        #f
+                        #f
+                        (map ##source-strip (cdr expr)))
+                      expr-src)
+                     (cdr expr-srcs))))
+                  (else
+                   (let* ((def-syntax?
+                            (memq head '(define-syntax ##define-syntax)))
+                          (def-macro?
+                            (memq head '(define-macro ##define-macro)))
+                          (sym
+                           (and (pair? expr)
+                                (pair? (cdr expr))
+                                (pair? (cddr expr))
+                                (let ((x (##source-strip (cadr expr))))
+                                  (cond (def-syntax?
+                                          (and (null? (cdddr expr))
+                                               x))
+                                        (def-macro?
+                                          (if (pair? x)
+                                              (##source-strip (car x))
+                                              x))
+                                        (else
+                                         #f))))))
+                     (if (not (symbol? sym))
+                         (loop (cdr expr-srcs)) ;; keep looking for syntax defs
+                         (let* ((id
+                                 (if (##full-name? sym)
+                                     sym
+                                     (##make-full-name (ctx-namespace ctx)
+                                                       sym)))
+                                (val-src
+                                 (caddr expr))
+                                (val
+                                 (##source-strip val-src))
+                                (def
+                                 (##make-source
+                                  (if def-syntax?
+                                      (if (and (pair? val)
+                                               (eq? (##source-strip (car val))
+                                                    'syntax-rules))
+                                          (let ((crules
+                                                 (syn#syntax-rules->crules val-src)))
+                                            `(##define-syntax ,id
+                                               (##lambda (##src)
+                                                         (syn#apply-rules ',crules
+                                                                          ##src))))
+                                          `(##define-syntax ,id ,val-src))
+                                      `(##define-macro ,id
+                                         ,(##definition-value expr-src)))
+                                  (##source-locat expr-src))))
 
-                  (if (table-ref (ctx-exports-tbl ctx) sym #f) ;;exported?
-                      (if (table-ref (ctx-macros-tbl ctx) id #f) ;; already def?
-                          (##raise-expression-parsing-exception
-                           'duplicate-exported-macro-definition
-                           expr-src)
-                          (table-set! (ctx-macros-tbl ctx) id def)))
+                           (if (table-ref (ctx-exports-tbl ctx) sym #f) ;;exported?
+                               (if (table-ref (ctx-macros-tbl ctx) id #f) ;; already def?
+                                   (##raise-expression-parsing-exception
+                                    'duplicate-exported-macro-definition
+                                    expr-src)
+                                   (table-set! (ctx-macros-tbl ctx) id def)))
 
-                  ;; replace original define-syntax by def with resolved id
-                  (set-car! expr-srcs def)
+                           ;; replace original define-syntax by def with resolved id
+                           (set-car! expr-srcs def)
 
-                  (loop (cdr expr-srcs))))))))
+                           (loop (cdr expr-srcs)))))))))))
 
   (define (parse-string-args base args-srcs err)
     (if (pair? args-srcs)
