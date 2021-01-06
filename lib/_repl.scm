@@ -1066,8 +1066,10 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##cmd-? port)
+  (##write-system-banner port)
   (##write-string
-",?   | ,help    : Summary of comma commands
+"
+,?   | ,help    : Summary of comma commands
 ,h   | ,(h X)   : Help on procedure of last error or procedure/macro named X
 ,q              : Terminate the process
 ,qt             : Terminate the current thread
@@ -2709,8 +2711,7 @@
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs banner)))
 
-     (##write-string "Gambit " port)
-     (##write-string (##system-version-string) port)
+     (##write-system-banner port)
 
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs output)))
@@ -2721,6 +2722,10 @@
    #t)
 
   (##exit))
+
+(define-prim (##write-system-banner port)
+  (##write-string "Gambit " port)
+  (##write-string (##system-version-string) port))
 
 (define-prim (##repl-context-display-continuation repl-context)
   (##repl-channel-display-continuation
@@ -4447,41 +4452,45 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##gambdoc . args)
+(define ##gambdoc
+  (lambda args
 
-  (define prefix "GAMBDOC_")
+    (define prefix "GAMBDOC_")
 
-  (let* ((path
-          (##path-expand
-           (##string-append "gambdoc"
-                            ##os-bat-extension-string-saved)
-           (##path-normalize-directory-existing "~~bin")))
-         (add-vars ;; pass arguments in shell environment variables
-          (##append
-           (##shell-var-bindings
-            (##shell-args-numbered args)
-            prefix)
-           (##shell-var-bindings
-            (##shell-install-dirs '("doc"))
-            ""
-            ""))))
+    (let* ((path
+            (##path-expand
+             (##string-append "gambdoc"
+                              ##os-bat-extension-string-saved)
+             (##path-normalize-directory-existing "~~bin")))
+           (add-vars ;; pass arguments in shell environment variables
+            (##append
+             (##shell-var-bindings
+              (##shell-args-numbered args)
+              prefix)
+             (##shell-var-bindings
+              (##shell-install-dirs '("doc"))
+              ""
+              ""))))
 
-    (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
+      (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
 
-    (let ((exit-status
-           (##run-subprocess
-            path
-            '() ;; no arguments
-            #f  ;; don't capture output
-            #f  ;; don't redirect stdin
-            #f  ;; run in current directory
-            add-vars)))
+      (let ((exit-status
+             (##run-subprocess
+              path
+              '() ;; no arguments
+              #f  ;; don't capture output
+              #f  ;; don't redirect stdin
+              #f  ;; run in current directory
+              add-vars)))
 
-      (if (##fx= exit-status 0)
-          (##void)
-          (##raise-error-exception
-           "failed to display the document"
-           args)))))
+        (if (##fx= exit-status 0)
+            (##void)
+            (##raise-error-exception
+             "failed to display the document"
+             args))))))
+
+(define (##gambdoc-set! x)
+  (set! ##gambdoc x))
 
 (define-prim (##escape-link str)
   (##apply ##string-append
