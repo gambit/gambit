@@ -1845,7 +1845,7 @@ if (g_os_web) {
     req.send();
   };
 
-  function g_os_uri_encode(uri) {
+  g_os_uri_encode = function (uri) {
 
     function encode(c) {
       switch (c) {
@@ -1855,7 +1855,7 @@ if (g_os_web) {
     }
 
     return uri.split('').map(encode).join('');
-  }
+  };
 }
 
 "))
