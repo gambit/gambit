@@ -16077,7 +16077,7 @@ this chapter describe each special form of the C-interface.
 * c-lambda::                        The @code{c-lambda} special form
 * c-define::                        The @code{c-define} special form
 * c-define-type::                   The @code{c-define-type} special form
-* continuations::                   Continuations and the C-interface
+* continuations::                   Continuations, the C-interface and threads
 @end menu
 
 @node mapping of types, c-declare, C-interface, C-interface
@@ -17316,7 +17316,7 @@ c-declare-end
 @end deffn
 
 @node continuations, , c-define-type, C-interface
-@section Continuations and the C-interface
+@section Continuations, the C-interface and threads
 @cindex continuations
 
 The C-interface allows C to Scheme calls to be nested.  This means
@@ -17363,6 +17363,17 @@ happens in a loop with no intervening return to a C function.  To avoid
 this problem make sure the C stack gets cleaned up by executing a normal
 return from a Scheme to C call.
 
+This approach to manage Scheme to C to Scheme calls may cause problems
+when used with Scheme threads because context switching is implemented
+with continuations.  If a Scheme thread T1 is in the middle of a
+Scheme to C to Scheme call and a second thread T2 does a Scheme to C
+to Scheme call and there is a Scheme thread context switch back to T1
+which completes its call, the C stack frames of T2 will get removed,
+preventing T2 (when it gets resumed) to complete its call correctly.
+This situation can be avoided by having only one Scheme thread that
+does Scheme to C to Scheme calls.  Other Scheme threads are limited to
+simple Scheme to C calls that don't call back to Scheme.
+
 @node System limitations, Copyright and license, C-interface, Top
 @chapter System limitations
 @cindex limitations
@@ -17379,13 +17390,6 @@ terminate with a floating point exception.
 On some systems floating point operations involving @samp{+nan.0}
 @samp{+inf.0}, @samp{-inf.0}, or @samp{-0.} do not return the
 value required by the IEEE 754 floating point standard.
-
-@item
-@findex define
-@findex set!
-The compiler will not properly compile files with more than one
-definition (with @code{define}) of the same procedure.  Replace all
-but the first @code{define} with assignments (@code{set!}).
 
 @item
 The maximum number of arguments that can be passed to a procedure by
