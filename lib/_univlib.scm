@@ -42,18 +42,6 @@ if (typeof g_os_fs === 'undefined') {
         throw e;
       }
       g_os_fs = BrowserFS.BFSRequire('fs');
-
-      // define missing constants
-      g_os_fs.constants = {
-        O_RDONLY: 0,
-        O_WRONLY: 1,
-        O_RDWR: 2,
-        O_APPEND: 8,
-        O_CREAT: 512,
-        O_TRUNC: 1024,
-        O_EXCL: 2048
-      };
-
     });
   }
 }
@@ -2925,37 +2913,42 @@ if (g_os_fs) {
 
   g_os_translate_flags = function (flags) {
 
-    var result;
+    var direction = (flags >> 4) & 3;
+    var append = ((flags >> 3) & 1) !== 0;
+    var creat = ((flags >> 1) & 3) !== 0;
+    var excl = ((flags >> 1) & 3) === 2;
+    var trunc = (flags & 1) !== 0;
 
-    switch ((flags >> 4) & 3)
-      {
-      default:
-      case 1:
-        result = g_os_fs.constants.O_RDONLY;
-        break;
-      case 2:
-        result = g_os_fs.constants.O_WRONLY;
-        break;
-      case 3:
-        result = g_os_fs.constants.O_RDWR;
-        break;
+    if (direction === 1) {
+      // O_RDONLY
+      return 'r';
+    } else if (direction === 2) {
+      // O_WRONLY
+      if (creat) {
+        if (trunc) {
+          return excl ? 'wx' : 'w';
+        } else if (append) {
+          return excl ? 'ax' : 'a';
+        } else {
+          return null; // unknown mode
+        }
+      } else {
+        return null; // unknown mode
       }
-
-    if ((flags & (1 << 3)) != 0)
-      result |= g_os_fs.constants.O_APPEND;
-
-    switch ((flags >> 1) & 3)
-      {
-      default:
-      case 0: break;
-      case 1: result |= g_os_fs.constants.O_CREAT; break;
-      case 2: result |= g_os_fs.constants.O_CREAT|g_os_fs.constants.O_EXCL; break;
+    } else {
+      // O_RDWR
+      if (creat) {
+        if (trunc) {
+          return excl ? 'wx+' : 'w+';
+        } else if (append) {
+          return excl ? 'ax+' : 'a+';
+        } else {
+          return null; // unknown mode
+        }
+      } else {
+        return 'r+';
       }
-
-    if ((flags & 1) != 0)
-      result |= g_os_fs.constants.O_TRUNC;
-
-    return result;
+    }
   };
 }
 
