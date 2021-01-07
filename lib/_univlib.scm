@@ -208,21 +208,27 @@ if (g_os_fs) {
       // Start an async read of the file descriptor
 
       function callback(err, bytesRead) {
+        var progress = dev.async_read_progress;
         if (err !== null) {
           dev.async_read_progress = g_os_encode_error(err);
         } else {
           dev.async_read_progress = bytesRead; // possibly 0 to signal EOF
+        }
+        if (progress === g_async_op_in_progress) {
           g_os_condvar_ready_set(dev_condvar_scm, true);
         }
       }
 
-      dev.async_read_progress = g_async_op_in_progress;
-
-      g_os_condvar_ready_set(dev_condvar_scm, false);
-
       g_os_fs.read(dev.fd, buffer, lo, hi-lo, null, callback);
 
-      return -35; // return EAGAIN to suspend Scheme thread on condvar
+      if (dev.async_read_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        return dev.async_read_progress;
+      } else {
+        g_os_condvar_ready_set(dev_condvar_scm, false);
+        dev.async_read_progress = g_async_op_in_progress;
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+      }
     }
   };
 
@@ -249,21 +255,27 @@ if (g_os_fs) {
       // Start an async write of the file descriptor
 
       function callback(err, bytesWritten) {
+        var progress = dev.async_write_progress;
         if (err !== null) {
           dev.async_write_progress = g_os_encode_error(err);
         } else {
           dev.async_write_progress = bytesWritten;
+        }
+        if (progress === g_async_op_in_progress) {
           g_os_condvar_ready_set(dev_condvar_scm, true);
         }
       }
 
-      dev.async_write_progress = g_async_op_in_progress;
-
-      g_os_condvar_ready_set(dev_condvar_scm, false);
-
       g_os_fs.write(dev.fd, buffer, lo, hi-lo, null, callback);
 
-      return -35; // return EAGAIN to suspend Scheme thread on condvar
+      if (dev.async_write_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        return dev.async_write_progress;
+      } else {
+        g_os_condvar_ready_set(dev_condvar_scm, false);
+        dev.async_write_progress = g_async_op_in_progress;
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+      }
     }
   };
 
@@ -309,21 +321,32 @@ if (g_os_fs) {
 
       // Start an async close of the file descriptor
 
+      var async_progress = g_async_op_done; // close not yet started
       var ra = g_r0;
-      g_r0 = null; // exit trampoline
 
       function callback(err) {
+        var progress = async_progress;
         if (err !== null) {
-          g_r1 = g_host2scm(g_os_encode_error(err));
+          async_progress = g_os_encode_error(err);
         } else {
-          g_r1 = g_host2scm(0); // no error
+          async_progress = 0; // no error
         }
-        g_trampoline(ra);
+        if (progress === g_async_op_in_progress) {
+          g_r1 = g_host2scm(async_progress);
+          g_trampoline(ra);
+        }
       }
 
       g_os_fs.close(dev.fd, callback);
 
-      return 0; // ignored
+      if (async_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        return async_progress;
+      } else {
+        async_progress = g_async_op_in_progress;
+        g_r0 = null; // exit trampoline
+        return 0; // ignored
+      }
     }
 
     return 0; // no error
@@ -3091,23 +3114,32 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
 
     // Start an async open of the file
 
+    var async_progress = g_async_op_done; // open not yet started
     var ra = g_r0;
-    g_r0 = null; // exit trampoline
 
     function callback(err, fd) {
+      var progress = async_progress;
       if (err !== null) {
-        g_r1 = g_host2scm(g_os_encode_error(err));
+        async_progress = g_host2scm(g_os_encode_error(err));
       } else {
-        var dev = g_os_device_from_fd(fd);
-        g_r1 = g_host2foreign(dev);
+        async_progress = g_host2foreign(g_os_device_from_fd(fd));
       }
-      g_trampoline(ra);
+      if (progress === g_async_op_in_progress) {
+        g_r1 = async_progress;
+        g_trampoline(ra);
+      }
     }
 
     g_os_fs.open(path, g_os_translate_flags(flags), mode, callback);
 
-    return 0; // ignored
-
+    if (async_progress !== g_async_op_done) {
+      // handle synchronous execution of callback
+      return async_progress;
+    } else {
+      async_progress = g_async_op_in_progress;
+      g_r0 = null; // exit trampoline
+      return 0; // ignored
+    }
   } else {
     return g_host2scm(-1); // EPERM (operation not permitted)
   }
