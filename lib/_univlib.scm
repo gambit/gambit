@@ -1587,7 +1587,7 @@ g_os_path_gambitdir = function () {
     return g_host2scm('/usr/local/Gambit/');
   } else if (g_os_web) {
     var loc = window.location.href;
-    var root = '/' + loc.slice(0, 1+loc.lastIndexOf('/'));
+    var root = loc.slice(0, 1+loc.lastIndexOf('/'));
     return g_host2scm(root);
   } else {
     return g_host2scm(-1); // EPERM (operation not permitted)
@@ -1642,7 +1642,7 @@ g_os_path_normalize_directory = function (path) {
     }
   } else if (g_os_web) {
     var loc = window.location.href;
-    var root = '/' + loc.slice(0, 1+loc.lastIndexOf('/'));
+    var root = loc.slice(0, 1+loc.lastIndexOf('/'));
     if (path === false) {
       return g_host2scm(root);
     } else if (path[0] === '/') {
@@ -1960,7 +1960,7 @@ g_os_file_info = function (fi, path, chase) {
       g_trampoline(ra);
     }
 
-    g_os_get_url_async('HEAD', g_os_uri_encode(path.slice(1)), callback);
+    g_os_get_url_async('HEAD', g_os_uri_encode(path), callback);
 
     return 0; // ignored
 
@@ -3036,9 +3036,9 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
     console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')');
 
   if (g_os_web &&
-      (path.slice(0,8) === '/file://' ||
-       path.slice(0,8) === '/http://' ||
-       path.slice(0,9) === '/https://')) {
+      (path.slice(0,7) === 'file://' ||
+       path.slice(0,7) === 'http://' ||
+       path.slice(0,8) === 'https://')) {
 
     if (((flags >> 4) & 3) == 1) { // for reading?
 
@@ -3059,7 +3059,7 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
         g_trampoline(ra);
       }
 
-      g_os_get_url_async('GET', g_os_uri_encode(path.slice(1)), callback);
+      g_os_get_url_async('GET', g_os_uri_encode(path), callback);
 
       return 0; // ignored
     } else {
