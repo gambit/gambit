@@ -2080,7 +2080,7 @@ g_os_load_object_file = function (path, linker_name) {
 
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = path.slice(1);
+    script.src = path;
     script.onload = onload;
     script.onerror = onerror;
     document.head.append(script);
