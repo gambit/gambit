@@ -42,6 +42,18 @@ if (typeof g_os_fs === 'undefined') {
         throw e;
       }
       g_os_fs = BrowserFS.BFSRequire('fs');
+
+      // define missing constants
+      g_os_fs.constants = {
+        O_RDONLY: 0,
+        O_WRONLY: 1,
+        O_RDWR: 2,
+        O_APPEND: 8,
+        O_CREAT: 512,
+        O_TRUNC: 1024,
+        O_EXCL: 2048
+      };
+
     });
   }
 }
