@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -11,8 +11,10 @@
  ((js)
   (##inline-host-declaration "
 
+// Autodetect when running in a web browser (as opposed to nodejs).
 g_os_web = (function () { return this === this.window; })();
 
+// Autodetect availability of nodejs features.
 if (typeof g_os_nodejs === 'undefined') {
   g_os_nodejs = !g_os_web;
 }
@@ -28,8 +30,25 @@ if (g_os_nodejs) {
 }
 
 if (typeof g_os_fs === 'undefined') {
+
   g_os_fs = null;
+
+  // Autodetect BrowserFS and use it if available for local filesystem.
+  if (typeof BrowserFS !== 'undefined') {
+    BrowserFS.configure({
+      fs: 'LocalStorage'
+    }, function (e) {
+      if (e) {
+        throw e;
+      }
+      g_os_fs = BrowserFS.BFSRequire('fs');
+    });
+  }
 }
+
+g_os_uri_scheme_prefixed = function (path) {
+  return path.match(/^[a-zA-Z][-+.a-zA-Z0-9]*:\\/\\//);
+};
 
 g_os_encode_error = function (exn) {
   switch (exn.code) {
@@ -1645,8 +1664,8 @@ g_os_path_normalize_directory = function (path) {
     var root = loc.slice(0, 1+loc.lastIndexOf('/'));
     if (path === false) {
       return g_host2scm(root);
-    } else if (path[0] === '/') {
-      return g_host2scm(path);
+    } else if (path.slice(0,1) === '/' || g_os_uri_scheme_prefixed(path)) {
+      return g_host2scm(path + (path.slice(-1) === '/' ? '' : '/'));
     } else {
       return g_host2scm(root + path);
     }
@@ -3035,10 +3054,7 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
   if (g_os_debug)
     console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')');
 
-  if (g_os_web &&
-      (path.slice(0,7) === 'file://' ||
-       path.slice(0,7) === 'http://' ||
-       path.slice(0,8) === 'https://')) {
+  if (g_os_web && g_os_uri_scheme_prefixed(path)) {
 
     if (((flags >> 4) & 3) == 1) { // for reading?
 
