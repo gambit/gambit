@@ -26,13 +26,9 @@ if (g_os_nodejs) {
   child_process = require('child_process')
   if (typeof g_os_fs === 'undefined') {
     g_os_fs = require('fs');
+    g_os_buffer = require('buffer');
   }
 }
-
-// NodeJS fs err is null but in BrowserFS it's undefined
-g_os_is_error = function(err) {
-  return err !== null && typeof err !== 'undefined';
-};
 
 if (typeof g_os_fs === 'undefined') {
 
@@ -40,14 +36,13 @@ if (typeof g_os_fs === 'undefined') {
 
   // Autodetect BrowserFS and use it if available for local filesystem.
   if (typeof BrowserFS !== 'undefined') {
-    BrowserFS.install(window);
     BrowserFS.configure({
       fs: 'LocalStorage'
-    }, function (e) {
-      if (e) {
-        throw e;
+    }, function (err) {
+      if (!err) {
+        g_os_fs = BrowserFS.BFSRequire('fs');
+        g_os_buffer = BrowserFS.BFSRequire('buffer');
       }
-      g_os_fs = BrowserFS.BFSRequire('fs');
     });
   }
 }
@@ -215,7 +210,7 @@ if (g_os_fs) {
 
       function callback(err, bytesRead) {
         var progress = dev.async_read_progress;
-        if (g_os_is_error(err)) {
+        if (err) {
           dev.async_read_progress = g_os_encode_error(err);
         } else {
           dev.async_read_progress = bytesRead; // possibly 0 to signal EOF
@@ -225,11 +220,13 @@ if (g_os_fs) {
         }
       }
 
-      g_os_fs.read(dev.fd, buffer, lo, hi-lo, null, callback);
+      g_os_fs.read(dev.fd, g_os_buffer.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
 
       if (dev.async_read_progress !== g_async_op_done) {
         // handle synchronous execution of callback
-        return dev.async_read_progress;
+        var progress = dev.async_read_progress;
+        dev.async_read_progress = g_async_op_done;
+        return progress;
       } else {
         g_os_condvar_ready_set(dev_condvar_scm, false);
         dev.async_read_progress = g_async_op_in_progress;
@@ -262,7 +259,7 @@ if (g_os_fs) {
 
       function callback(err, bytesWritten) {
         var progress = dev.async_write_progress;
-        if (g_os_is_error(err)) {
+        if (err) {
           dev.async_write_progress = g_os_encode_error(err);
         } else {
           dev.async_write_progress = bytesWritten;
@@ -272,11 +269,13 @@ if (g_os_fs) {
         }
       }
 
-      g_os_fs.write(dev.fd, buffer, lo, hi-lo, null, callback);
+      g_os_fs.write(dev.fd, g_os_buffer.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
 
       if (dev.async_write_progress !== g_async_op_done) {
         // handle synchronous execution of callback
-        return dev.async_write_progress;
+        var progress = dev.async_write_progress;
+        dev.async_write_progress = g_async_op_done;
+        return progress;
       } else {
         g_os_condvar_ready_set(dev_condvar_scm, false);
         dev.async_write_progress = g_async_op_in_progress;
@@ -332,14 +331,15 @@ if (g_os_fs) {
 
       function callback(err) {
         var progress = async_progress;
-        if (g_os_is_error(err)) {
+        if (err) {
           async_progress = g_os_encode_error(err);
         } else {
           async_progress = 0; // no error
         }
         if (progress === g_async_op_in_progress) {
           g_r1 = g_host2scm(async_progress);
-          g_trampoline(ra);
+          g_r0 = ra;
+          g_trampoline(g_r0);
         }
       }
 
@@ -387,8 +387,8 @@ if (g_os_web) {
 
   G_Device_console = function () {
     var dev = this;
-    dev.wbuf = Buffer.from(new Uint8Array(0));
-    dev.rbuf = Buffer.from(new Uint8Array(1));
+    dev.wbuf = new Uint8Array(0);
+    dev.rbuf = new Uint8Array(1);
     dev.rlo = 1;
     dev.encoder = new TextEncoder();
     dev.decoder = new TextDecoder();
@@ -405,7 +405,7 @@ if (g_os_web) {
     var newbuf = new Uint8Array(len + inp.length);
     newbuf.set(newbuf.subarray(dev.rlo, dev.rlo+len));
     newbuf.set(inp, len);
-    dev.rbuf = Buffer.from(newbuf);
+    dev.rbuf = newbuf;
     dev.rlo = 0;
   };
 
@@ -422,7 +422,7 @@ if (g_os_web) {
     var newbuf = new Uint8Array(len + buffer.length);
     newbuf.set(dev.wbuf);
     newbuf.set(buffer, len);
-    dev.wbuf = Buffer.from(newbuf);
+    dev.wbuf = newbuf;
 
     if (!dev.use_async_output()) {
       // heuristic trimming of output so that it fits in the 'prompt' dialog
@@ -2005,7 +2005,8 @@ g_os_file_info = function (fi, path, chase) {
 
       }
 
-      g_trampoline(ra);
+      g_r0 = ra;
+      g_trampoline(g_r0);
     }
 
     g_os_get_url_async('HEAD', g_os_uri_encode(path), callback);
@@ -2118,12 +2119,14 @@ g_os_load_object_file = function (path, linker_name) {
 
     function onload() {
       g_r1 = [[g_module_latest_registered], null, false];
-      g_trampoline(ra);
+      g_r0 = ra;
+      g_trampoline(g_r0);
     }
 
     function onerror() {
       g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
-      g_trampoline(ra);
+      g_r0 = ra;
+      g_trampoline(g_r0);
     }
 
     var script = document.createElement('script');
@@ -3106,7 +3109,8 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
           g_r1 = g_host2foreign(dev);
         }
 
-        g_trampoline(ra);
+        g_r0 = ra;
+        g_trampoline(g_r0);
       }
 
       g_os_get_url_async('GET', g_os_uri_encode(path), callback);
@@ -3125,14 +3129,15 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
 
     function callback(err, fd) {
       var progress = async_progress;
-      if (g_os_is_error(err)) {
+      if (err) {
         async_progress = g_host2scm(g_os_encode_error(err));
       } else {
         async_progress = g_host2foreign(g_os_device_from_fd(fd));
       }
       if (progress === g_async_op_in_progress) {
         g_r1 = async_progress;
-        g_trampoline(ra);
+        g_r0 = ra;
+        g_trampoline(g_r0);
       }
     }
 
@@ -3599,8 +3604,10 @@ g_os_condvar_select_resume = function () {
   // execute continuation if there is one
   var cont = g_os_condvar_select_resume_ra;
   g_os_condvar_select_resume_ra = null;
-  if (cont !== null) g_trampoline(cont);
-
+  if (cont !== null) {
+    g_r0 = cont;
+    g_trampoline(g_r0);
+  }
 };
 
 g_os_condvar_select_resume_cancel = function () {
