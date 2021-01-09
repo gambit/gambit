@@ -47,8 +47,8 @@ if (typeof g_os_fs === 'undefined') {
   }
 }
 
-g_os_uri_scheme_prefixed = function (path) {
-  return path.match(/^[a-zA-Z][-+.a-zA-Z0-9]*:\\/\\//);
+g_os_uri_scheme_prefixed = function (string) {
+  return string.match(/^[a-zA-Z][-+.a-zA-Z0-9]*:\\/\\//);
 };
 
 g_os_encode_error = function (exn) {
@@ -1634,9 +1634,7 @@ g_os_path_gambitdir = function () {
   if (g_os_nodejs) {
     return g_host2scm('/usr/local/Gambit/');
   } else if (g_os_web) {
-    var loc = window.location.href;
-    var root = loc.slice(0, 1+loc.lastIndexOf('/'));
-    return g_host2scm(root);
+    return g_host2scm(g_os_web_origin);
   } else {
     return g_host2scm(-1); // EPERM (operation not permitted)
   }
@@ -1689,14 +1687,12 @@ g_os_path_normalize_directory = function (path) {
       return g_host2scm(dir + '\\\\');
     }
   } else if (g_os_web) {
-    var loc = window.location.href;
-    var root = loc.slice(0, 1+loc.lastIndexOf('/'));
     if (path === false) {
-      return g_host2scm(root);
+      return g_host2scm(g_os_web_origin);
     } else if (path.slice(0,1) === '/' || g_os_uri_scheme_prefixed(path)) {
       return g_host2scm(path + (path.slice(-1) === '/' ? '' : '/'));
     } else {
-      return g_host2scm(root + path);
+      return g_host2scm(g_os_web_origin + path);
     }
   } else {
     return g_host2scm(-1); // EPERM (operation not permitted)
@@ -1877,6 +1873,37 @@ if (g_os_nodejs) {
 
 if (g_os_web) {
 
+  g_os_whitelist = [];
+
+  g_os_whitelist_add = function (url) {
+    if (g_os_uri_scheme_prefixed(url) &&
+        g_os_whitelist.indexOf(url) === -1) {
+      g_os_whitelist.push(url);
+    }
+  };
+
+  g_os_remove_after_last_slash = function (string) {
+    return string.slice(0, 1+string.lastIndexOf('/'));
+  };
+
+  g_os_trusted_url = function (url) {
+    for (var i=0; i<g_os_whitelist.length; i++) {
+      var w = g_os_whitelist[i];
+      if (w.slice(-1) === '/' // if ends with slash
+          ? url.indexOf(w) === 0 // then it must be a prefix
+          : url === w) { // otherwise it must be an exact match
+        return true;
+      }
+    }
+    return false;
+  };
+
+  g_os_web_origin = g_os_remove_after_last_slash(window.location.href);
+
+  if (g_os_web_origin.indexOf('https://') === 0) {
+    g_os_whitelist_add(g_os_web_origin); // only trust https origin
+  }
+
   g_os_get_url_async = function (method, url, callback) {
 
     var req = new XMLHttpRequest();
@@ -1921,100 +1948,107 @@ if (g_os_web) {
 
 g_os_file_info = function (fi, path, chase) {
 
-  if (g_os_nodejs) {
+  if (g_os_uri_scheme_prefixed(path)) { // accessing a URL?
 
-    var st;
+    if (!(g_os_web && g_os_trusted_url(path))) { // accessing an untrusted URL?
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
 
-    try {
-      if (chase) {
-        st = g_os_fs.statSync(path);
-      } else {
-        st = g_os_fs.lstatSync(path);
+      var ra = g_r0;
+      g_r0 = null; // exit trampoline
+
+      function callback(req) {
+
+        if (req.status === 404) {
+          g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+        } else if (req.status !== 200) {
+          g_r1 = g_host2scm(-1); // EPERM (operation not permitted)
+        } else {
+
+          var size = +req.getResponseHeader('Content-Length');
+
+          fi.slots[ 1] = g_host2scm(1); // regular file
+          fi.slots[ 2] = g_host2scm(0);
+          fi.slots[ 3] = g_host2scm(0);
+          fi.slots[ 4] = g_host2scm(0);
+          fi.slots[ 5] = g_host2scm(0);
+          fi.slots[ 6] = g_host2scm(0);
+          fi.slots[ 7] = g_host2scm(0);
+          fi.slots[ 8] = g_host2scm(size);
+          fi.slots[ 9] = new G_Flonum(-Infinity);
+          fi.slots[10] = new G_Flonum(-Infinity);
+          fi.slots[11] = new G_Flonum(-Infinity);
+          fi.slots[12] = g_host2scm(0);
+          fi.slots[13] = new G_Flonum(-Infinity);
+
+          g_r1 = fi;
+        }
+
+        g_r0 = ra;
+        g_trampoline(g_r0);
       }
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
-      } else {
-        throw exn;
-      }
+
+      g_os_get_url_async('HEAD', g_os_uri_encode(path), callback);
+
+      return 0; // ignored
     }
-
-    if (st.isFile())
-      typ = 1;
-    else if (st.isDirectory())
-      typ = 2;
-    else if (st.isCharacterDevice())
-      typ = 3;
-    else if (st.isBlockDevice())
-      typ = 4;
-    else if (st.isFIFO())
-      typ = 5;
-    else if (st.isSymbolicLink())
-      typ = 6;
-    else if (st.isSocket())
-      typ = 7;
-    else
-      typ = 0;
-
-    fi.slots[ 1] = g_host2scm(typ);
-    fi.slots[ 2] = g_host2scm(st.dev);
-    fi.slots[ 3] = g_host2scm(st.ino);
-    fi.slots[ 4] = g_host2scm(st.mode);
-    fi.slots[ 5] = g_host2scm(st.nlink);
-    fi.slots[ 6] = g_host2scm(st.uid);
-    fi.slots[ 7] = g_host2scm(st.gid);
-    fi.slots[ 8] = g_host2scm(st.size);
-    fi.slots[ 9] = new G_Flonum(-Infinity);
-    fi.slots[10] = new G_Flonum(-Infinity);
-    fi.slots[11] = new G_Flonum(-Infinity);
-    fi.slots[12] = g_host2scm(0);
-    fi.slots[13] = new G_Flonum(-Infinity);
-
-    return fi;
-
-  } else if (g_os_web) {
-
-    var ra = g_r0;
-    g_r0 = null; // exit trampoline
-
-    function callback(req) {
-
-      if (req.status === 404) {
-        g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
-      } else if (req.status !== 200) {
-        g_r1 = g_host2scm(-1); // EPERM (operation not permitted)
-      } else {
-
-        var size = +req.getResponseHeader('Content-Length');
-
-        fi.slots[ 1] = g_host2scm(1); // regular file
-        fi.slots[ 2] = g_host2scm(0);
-        fi.slots[ 3] = g_host2scm(0);
-        fi.slots[ 4] = g_host2scm(0);
-        fi.slots[ 5] = g_host2scm(0);
-        fi.slots[ 6] = g_host2scm(0);
-        fi.slots[ 7] = g_host2scm(0);
-        fi.slots[ 8] = g_host2scm(size);
-        fi.slots[ 9] = new G_Flonum(-Infinity);
-        fi.slots[10] = new G_Flonum(-Infinity);
-        fi.slots[11] = new G_Flonum(-Infinity);
-        fi.slots[12] = g_host2scm(0);
-        fi.slots[13] = new G_Flonum(-Infinity);
-
-        g_r1 = fi;
-
-      }
-
-      g_r0 = ra;
-      g_trampoline(g_r0);
-    }
-
-    g_os_get_url_async('HEAD', g_os_uri_encode(path), callback);
-
-    return 0; // ignored
 
   } else {
-    return g_host2scm(-1); // EPERM (operation not permitted)
+
+    if (!g_os_fs) {
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
+
+      var st;
+
+      try {
+        if (chase) {
+          st = g_os_fs.statSync(path);
+        } else {
+          st = g_os_fs.lstatSync(path);
+        }
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return g_host2scm(g_os_encode_error(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      if (st.isFile())
+        typ = 1;
+      else if (st.isDirectory())
+        typ = 2;
+      else if (st.isCharacterDevice())
+        typ = 3;
+      else if (st.isBlockDevice())
+        typ = 4;
+      else if (st.isFIFO())
+        typ = 5;
+      else if (st.isSymbolicLink())
+        typ = 6;
+      else if (st.isSocket())
+        typ = 7;
+      else
+        typ = 0;
+
+      fi.slots[ 1] = g_host2scm(typ);
+      fi.slots[ 2] = g_host2scm(st.dev);
+      fi.slots[ 3] = g_host2scm(st.ino);
+      fi.slots[ 4] = g_host2scm(st.mode);
+      fi.slots[ 5] = g_host2scm(st.nlink);
+      fi.slots[ 6] = g_host2scm(st.uid);
+      fi.slots[ 7] = g_host2scm(st.gid);
+      fi.slots[ 8] = g_host2scm(st.size);
+      fi.slots[ 9] = new G_Flonum(-Infinity);
+      fi.slots[10] = new G_Flonum(-Infinity);
+      fi.slots[11] = new G_Flonum(-Infinity);
+      fi.slots[12] = g_host2scm(0);
+      fi.slots[13] = new G_Flonum(-Infinity);
+
+      return fi;
+
+    }
   }
 };
 
@@ -3091,68 +3125,76 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
   if (g_os_debug)
     console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')');
 
-  if (g_os_web && g_os_uri_scheme_prefixed(path)) {
+  if (g_os_uri_scheme_prefixed(path)) { // accessing a URL?
 
-    if (((flags >> 4) & 3) == 1) { // for reading?
+    if (!(g_os_web && g_os_trusted_url(path))) { // accessing an untrusted URL?
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
 
-      var ra = g_r0;
-      g_r0 = null; // exit trampoline
+      if (((flags >> 4) & 3) === 1) { // for reading?
 
-      function callback(req) {
+        var ra = g_r0;
+        g_r0 = null; // exit trampoline
 
-        if (req.status === 404) {
-          g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
-        } else if (req.status !== 200) {
-          g_r1 = g_host2scm(-1); // EPERM (operation not permitted)
-        } else {
-          var dev = g_os_device_from_blob(new TextEncoder().encode(req.responseText));
-          g_r1 = g_host2foreign(dev);
+        function callback(req) {
+
+          if (req.status === 404) {
+            g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+          } else if (req.status !== 200) {
+            g_r1 = g_host2scm(-1); // EPERM (operation not permitted)
+          } else {
+            var dev = g_os_device_from_blob(new TextEncoder().encode(req.responseText));
+            g_r1 = g_host2foreign(dev);
+          }
+
+          g_r0 = ra;
+          g_trampoline(g_r0);
         }
 
-        g_r0 = ra;
-        g_trampoline(g_r0);
-      }
+        g_os_get_url_async('GET', g_os_uri_encode(path), callback);
 
-      g_os_get_url_async('GET', g_os_uri_encode(path), callback);
-
-      return 0; // ignored
-    } else {
-      return g_host2scm(-1); // EPERM (operation not permitted)
-    }
-
-  } else if (g_os_fs) {
-
-    // Start an async open of the file
-
-    var async_progress = g_async_op_done; // open not yet started
-    var ra = g_r0;
-
-    function callback(err, fd) {
-      var progress = async_progress;
-      if (err) {
-        async_progress = g_host2scm(g_os_encode_error(err));
+        return 0; // ignored
       } else {
-        async_progress = g_host2foreign(g_os_device_from_fd(fd));
-      }
-      if (progress === g_async_op_in_progress) {
-        g_r1 = async_progress;
-        g_r0 = ra;
-        g_trampoline(g_r0);
+        return g_host2scm(-1); // EPERM (operation not permitted)
       }
     }
 
-    g_os_fs.open(path, g_os_translate_flags(flags), mode, callback);
-
-    if (async_progress !== g_async_op_done) {
-      // handle synchronous execution of callback
-      return async_progress;
-    } else {
-      async_progress = g_async_op_in_progress;
-      g_r0 = null; // exit trampoline
-      return 0; // ignored
-    }
   } else {
-    return g_host2scm(-1); // EPERM (operation not permitted)
+
+    if (!g_os_fs) {
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
+
+      // Start an async open of the file
+
+      var async_progress = g_async_op_done; // open not yet started
+      var ra = g_r0;
+
+      function callback(err, fd) {
+        var progress = async_progress;
+        if (err) {
+          async_progress = g_host2scm(g_os_encode_error(err));
+        } else {
+          async_progress = g_host2foreign(g_os_device_from_fd(fd));
+        }
+        if (progress === g_async_op_in_progress) {
+          g_r1 = async_progress;
+          g_r0 = ra;
+          g_trampoline(g_r0);
+        }
+      }
+
+      g_os_fs.open(path, g_os_translate_flags(flags), mode, callback);
+
+      if (async_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        return async_progress;
+      } else {
+        async_progress = g_async_op_in_progress;
+        g_r0 = null; // exit trampoline
+        return 0; // ignored
+      }
+    }
   }
 };
 
