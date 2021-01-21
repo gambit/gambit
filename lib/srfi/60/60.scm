@@ -169,13 +169,13 @@
 ;;---------------------------------------------------------------------------
 ;; bit-field
 
+
 (define-procedure (bit-field (n     fixnum)
                              (start (index-range-incl
                                       0 (macro-max-fixnum32)))
                              (end   (index-range-incl
                                       start (macro-max-fixnum32))))
-  (##bitwise-and (##bitwise-not (##arithmetic-shift -1 (- end start)))
-          (##arithmetic-shift n (- start))))
+  (##extract-bit-field (- end start) start n))
 
 ;;---------------------------------------------------------------------------
 ;; copy-bit-field
