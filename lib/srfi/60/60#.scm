@@ -10,19 +10,20 @@
 ;;; SRFI 60, Integers as Bits
 
 (##namespace ("srfi/60#"
-    bitwise-and
-    bitwise-ior 
-    bitwise-xor
-    bitwise-not 
+    bitwise-and       ; built-in
+    bitwise-ior       ; built-in
+    bitwise-xor       ; built-in
+    bitwise-not       ; built-in
     bitwise-merge
-    any-bits-set?
-    bit-count
-    integer-length
-    first-set-bit
-    bit-set? 
+    any-bits-set?     ; built-in
+    bit-count         ; built-in
+    integer-length    ; built-in
+    first-set-bit     ; built-in (first-bit-set)
+    bit-set?          ; built-in
     copy-bit
     bit-field
-    copy-bit-field
+    copy-bit-field    
+    arithmetic-shift  ; built-in
     rotate-bit-field
     reverse-bit-field
     integer->list
