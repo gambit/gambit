@@ -5529,11 +5529,9 @@ for a discussion of branch cuts.
 (define-prim (extract-bit-field size position n)
   (macro-force-vars
     (size position n)
-    (cond ((##not (and (macro-exact-int? size)
-                       (##not (##negative? size))))
+    (cond ((##not (macro-nonnegative-exact-int? size))
            (##fail-check-nonnegative-exact-integer 1 extract-bit-field size position n))
-          ((##not (and (macro-exact-int? position)
-                       (##not (##negative? position))))
+          ((##not (macro-nonnegative-exact-int? position))
            (##fail-check-nonnegative-exact-integer 2 extract-bit-field size position n))
           ((##not (macro-exact-int? n))
            (##fail-check-exact-integer             3 extract-bit-field size position n))
