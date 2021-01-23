@@ -5519,11 +5519,7 @@ for a discussion of branch cuts.
         ;; The next bit is a bit tricky, since it still has to work
         ;; if size and/or position are bignums.
         (cond ((##< size ##fixnum-width)
-               ;; We make the mask without fixnum overflow
-               (let* ((half-mask (##fx- (##fxarithmetic-shift-left 1 (##fx- size 1)) 1))
-                      (full-mask (##fx+ half-mask half-mask 1)))
-                 (##fxand full-mask
-                          (##arithmetic-shift n (##- position)))))
+               (##fxand (##bit-mask size) (##arithmetic-shift n (##- position))))
               ((##fxnegative? n)
                (general-fixnum-case))
               (else
