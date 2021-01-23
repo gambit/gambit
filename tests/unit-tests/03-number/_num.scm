@@ -1066,7 +1066,7 @@
 			  ns))
 	      '(extract-bit-field test-bit-field? clear-bit-field))
     ))
-	      
+
 (check-eqv? (extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
             (test-extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
 (check-eqv? (extract-bit-field 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
@@ -1139,6 +1139,30 @@
 (check-eqv? (clear-bit-field 79 13 -608462309321751311) (test-clear-bit-field 79 13 -608462309321751311))
 (check-eqv? (clear-bit-field 4 109 -608462309321751311) (test-clear-bit-field 4 109 -608462309321751311))
 (check-eqv? (clear-bit-field 4 13 -608462309321751311) (test-clear-bit-field 4 13 -608462309321751311))
+
+;; Now some ad-hoc tests with size and position bignums
+
+(check-eqv? (extract-bit-field 4 (expt 2 100) -1) 15)
+(check-eqv? (extract-bit-field (expt 2 100) 0 15) 15)
+(check-eqv? (extract-bit-field (expt 2 100) (expt 3 100) 15) 0)
+;; (extract-bit-field (expt 2 100) (expt 2 100) -1) ;; => Heap overflow exception, but I don't know how to test it.
+
+#|
+The first one gives
+
+*** FAILED 03-number/_num.scm WITH EXIT CODE HI=70 LO=0
+*** ERROR IN "unit-tests/03-number/_num.scm"@1150.33 -- (Argument 1) Nonnegative exact INTEGER expected
+(extract-bit-field -1 1 1)
+
+I don't know why check-tail-exn doesn't catch this error.
+
+(check-tail-exn type-exception? (extract-bit-field -1 1 1))
+(check-tail-exn type-exception? (extract-bit-field 1 -1 1))
+(check-tail-exn type-exception? (extract-bit-field 'a 1 1))
+(check-tail-exn type-exception? (extract-bit-field 1 'a 1))
+(check-tail-exn type-exception? (extract-bit-field 1 1 'a))
+|#
+
 
 #;(let ()
 

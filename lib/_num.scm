@@ -69,6 +69,7 @@
 ;;;----------------------------------------------------------------------------
 
 ;;; Define type checking procedures.
+;;; If you add another, update the list in _repl.scm.
 
 (define-fail-check-type exact-signed-int8 'exact-signed-int8)
 (define-fail-check-type exact-signed-int8-list 'exact-signed-int8-list)
@@ -94,6 +95,7 @@
 (define-fail-check-type rational 'rational)
 (define-fail-check-type integer 'integer)
 (define-fail-check-type exact-integer 'exact-integer)
+(define-fail-check-type nonnegative-exact-integer 'nonnegative-exact-integer)
 (define-fail-check-type fixnum 'fixnum)
 (define-fail-check-type flonum 'flonum)
 
@@ -5467,21 +5469,24 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##first-bit-set x)))
 
-(define-prim (##extract-bit-field size position n)
-
-  ;; I've decided to be brutally simple and not optimize
-  ;; for special cases, fixnums, etc.
-
-  (let* ((result-length
-          (##fxceiling-ratio (##fx+ 1 size) ##bignum.adigit-width))  ;;  top bit is always 0
-         (bignum-n
-          (if (##bignum? n) n (##fixnum->bignum n)))
+(define-prim (##bignum.extract-bit-field size position n)
+  
+  ;; n is a (possibly unnormalized) nonzero bignum, size and position are nonnegative exact integers
+  
+  (let* ((result-bit-length
+          (cond ((##positive? n)
+                 (##fx+ 1 (##min size (##max 0 (##- (##integer-length n) position)))))
+                ((##not (and (##fixnum? size)
+                             (##fx< size ##max-fixnum)))
+                 (##raise-heap-overflow-exception))
+                (else
+                 (##fx+ 1 size))))
+         (result-word-length
+          (##fxceiling-ratio result-bit-length ##bignum.adigit-width))
          (result
           (##bignum.arithmetic-shift-into!
-           bignum-n (##fx- position) (##bignum.make result-length #f #f))))
-
+           n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
     ;; zero top bits of result and normalize
-
     (let ((size-words (##fxquotient  size ##bignum.mdigit-width))
           (size-bits  (##fxremainder size ##bignum.mdigit-width)))
       (##declare (not interrupts-enabled))
@@ -5497,19 +5502,47 @@ for a discussion of branch cuts.
               (##fxnot (##fxarithmetic-shift-left -1 size-bits)))))
         (##bignum.normalize! result)))))
 
+(define-prim (##extract-bit-field size position n)
+  
+  (define (fixnum-overflow)
+    (##raise-fixnum-overflow-exception extract-bit-field size position n))
+  
+  (define (general-fixnum-case)
+    (macro-if-bignum
+     (##bignum.extract-bit-field size position (##fixnum->bignum n))
+     (fixnum-overflow)))
+
+  (if (##eqv? size 0)
+      0
+      (macro-exact-int-dispatch-no-error
+        n
+        ;; The next bit is a bit tricky, since it still has to work
+        ;; if size and/or position are bignums.
+        (cond ((##< size ##fixnum-width)
+               ;; We make the mask without fixnum overflow
+               (let* ((half-mask (##fx- (##fxarithmetic-shift-left 1 (##fx- size 1)) 1))
+                      (full-mask (##fx+ half-mask half-mask 1)))
+                 (##fxand full-mask
+                          (##arithmetic-shift n (##- position)))))
+              ((##fxnegative? n)
+               (general-fixnum-case))
+              (else
+               (##arithmetic-shift n (##- position))))
+        (##bignum.extract-bit-field size position n))))
+
 (define-prim (extract-bit-field size position n)
-  (macro-force-vars (size position n)
-    (macro-check-index
-      size
-      1
-      (extract-bit-field size position n)
-      (macro-check-index
-        position
-        2
-        (extract-bit-field size position n)
-        (if (##not (macro-exact-int? n))
-            (##fail-check-exact-integer 3 extract-bit-field size position n)
-            (##extract-bit-field size position n))))))
+  (macro-force-vars
+    (size position n)
+    (cond ((##not (and (macro-exact-int? size)
+                       (##not (##negative? size))))
+           (##fail-check-nonnegative-exact-integer 1 extract-bit-field size position n))
+          ((##not (and (macro-exact-int? position)
+                       (##not (##negative? position))))
+           (##fail-check-nonnegative-exact-integer 2 extract-bit-field size position n))
+          ((##not (macro-exact-int? n))
+           (##fail-check-exact-integer             3 extract-bit-field size position n))
+          (else
+           (##extract-bit-field size position n)))))
 
 (define-prim (##test-bit-field? size position n)
   (##not (##eqv? (##extract-bit-field size position n)

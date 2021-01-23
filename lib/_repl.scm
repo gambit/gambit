@@ -4294,6 +4294,7 @@
     (rational                     . "RATIONAL")
     (integer                      . "INTEGER")
     (exact-integer                . "Exact INTEGER")
+    (nonnegative-exact-integer    . "Nonnegative exact INTEGER")
     (fixnum                       . "FIXNUM")
     (flonum                       . "FLONUM")
     (random-source-state          . "RANDOM-SOURCE state")
