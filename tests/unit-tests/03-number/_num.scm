@@ -1140,28 +1140,21 @@
 (check-eqv? (clear-bit-field 4 109 -608462309321751311) (test-clear-bit-field 4 109 -608462309321751311))
 (check-eqv? (clear-bit-field 4 13 -608462309321751311) (test-clear-bit-field 4 13 -608462309321751311))
 
-;; Now some ad-hoc tests with size and position bignums
+;;; Now some ad-hoc tests with size and position bignums
 
 (check-eqv? (extract-bit-field 4 (expt 2 100) -1) 15)
 (check-eqv? (extract-bit-field (expt 2 100) 0 15) 15)
 (check-eqv? (extract-bit-field (expt 2 100) (expt 3 100) 15) 0)
-;; (extract-bit-field (expt 2 100) (expt 2 100) -1) ;; => Heap overflow exception, but I don't know how to test it.
 
-#|
-The first one gives
+;;; Some error tests.
 
-*** FAILED 03-number/_num.scm WITH EXIT CODE HI=70 LO=0
-*** ERROR IN "unit-tests/03-number/_num.scm"@1150.33 -- (Argument 1) Nonnegative exact INTEGER expected
-(extract-bit-field -1 1 1)
+(check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
 
-I don't know why check-tail-exn doesn't catch this error.
-
-(check-tail-exn type-exception? (extract-bit-field -1 1 1))
-(check-tail-exn type-exception? (extract-bit-field 1 -1 1))
-(check-tail-exn type-exception? (extract-bit-field 'a 1 1))
-(check-tail-exn type-exception? (extract-bit-field 1 'a 1))
-(check-tail-exn type-exception? (extract-bit-field 1 1 'a))
-|#
+(check-tail-exn type-exception? (lambda () (extract-bit-field -1 1 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 1 -1 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 'a 1 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 1 'a 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 1 1 'a)))
 
 
 #;(let ()
