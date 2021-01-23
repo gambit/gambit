@@ -5539,22 +5539,34 @@ for a discussion of branch cuts.
            (##extract-bit-field size position n)))))
 
 (define-prim (##test-bit-field? size position n)
-  (##not (##eqv? (##extract-bit-field size position n)
-                 0)))
+  
+  (define (general-case)
+    (##not (##eqv? 0 (##extract-bit-field size position n))))
+  
+  (cond ((or (##eqv? size 0)
+             (##eqv? n 0))
+         #f)
+        ;; We use knowledge of the top bits of n to
+        ;; get quick answers where possible.
+        ((##negative? n)
+         (or (##< (##- (##integer-length n) size) ;; a fixnum, if size is a fixnum
+                  position)
+             (general-case)))
+        (else ;; (##positive n)
+         (and (##< position (##integer-length n))
+              (general-case)))))
 
 (define-prim (test-bit-field? size position n)
-  (macro-force-vars (size position n)
-    (macro-check-index
-      size
-      1
-      (test-bit-field? size position n)
-      (macro-check-index
-        position
-        2
-        (test-bit-field? size position n)
-        (if (##not (macro-exact-int? n))
-            (##fail-check-exact-integer 3 test-bit-field? size position n)
-            (##test-bit-field? size position n))))))
+  (macro-force-vars
+    (size position n)
+    (cond ((##not (macro-nonnegative-exact-int? size))
+           (##fail-check-nonnegative-exact-integer 1 test-bit-field? size position n))
+          ((##not (macro-nonnegative-exact-int? position))
+           (##fail-check-nonnegative-exact-integer 2 test-bit-field? size position n))
+          ((##not (macro-exact-int? n))
+           (##fail-check-exact-integer             3 test-bit-field? size position n))
+          (else
+           (##test-bit-field? size position n)))))
 
 (define-prim (##clear-bit-field size position n)
   (##replace-bit-field size position 0 n))
