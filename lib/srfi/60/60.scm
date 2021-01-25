@@ -405,9 +405,9 @@
 ;;---------------------------------------------------------------------------
 ;; reverse-bit-field
 
-(define-prim (##reverse-bit-field n start end)
+(define-prim (reverse-bit-field n start end)
 
-  (define (bit-reverse k n)
+  (define (fixnum-bit-reverse k n)
     (let reverse-loop ((m (if (##fxnegative? n)
                               (##bitwise-not n)
                               n))
@@ -423,15 +423,22 @@
                           (##arithmetic-shift rvs-acc 1)
                           (##bitwise-and 1 m))))))
 
-  (let* ((width (##fx- end start))
-         (mask  (##bitwise-not (##arithmetic-shift -1 width)))
-         (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
-    (##bitwise-ior 
-      (##arithmetic-shift (bit-reverse width zn) start)
-      (##bitwise-and 
-        (##bitwise-not (##arithmetic-shift mask start)) n))))
- 
-(define-prim (reverse-bit-field n start end)
+  (define (bignum-bit-reverse k n)
+    (let reverse-loop ((m (if (##bignum.negative? n)
+                              (##bitwise-not n)
+                              n))
+                       (k (##fx- k 1))
+                       (rvs-acc 0))
+      (if (##fxnegative? k)
+          (if (##bignum.negative? n)
+              (##bitwise-not rvs-acc)
+              rvs-acc)
+          (reverse-loop (##arithmetic-shift m -1)
+                        (##fx- k 1)
+                        (##bitwise-ior 
+                          (##arithmetic-shift rvs-acc 1)
+                          (##bitwise-and 1 m))))))
+
   (macro-force-vars (n start end)
     (macro-check-index
       start
@@ -442,16 +449,19 @@
         3
         start ##max-fixnum
         (reverse-bit-field n start end)
-        (if (##not (macro-exact-int? n))
-            (##fail-check-exact-integer 
-              1
-              reverse-bit-field 
-              n 
-              start 
-              end)
-            (##reverse-bit-field n start end))))))
-            
-
+        (let* ((width (##fx- end start))
+               (mask  (##bitwise-not (##arithmetic-shift -1 width)))
+               (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
+          
+          (##bitwise-ior 
+            (let ((reversed-bit 
+                    (macro-exact-int-dispatch n (type-error)
+                      (fixmum-bit-reverse width zn)
+                      (bignum-bit-reverse width zn))))
+              (##arithmetic-shift reversed-bit start))
+            (##bitwise-and 
+              (##bitwise-not (##arithmetic-shift mask start)) n)))))))
+       
 ;;===========================================================================
 ;;===========================================================================
 ;; 
@@ -680,8 +690,6 @@
                          (##fx+ int2 bool-val))))
                   (else
                     (macro-if-bignum
-                      ; we skip one fixnum/bignum check by tail-calling to this loop
-                      ; (no need to dispatch on the `int` accumulator)
                       (let ((int (##fixnum->bignum int)))
                         (let bignum-loop ((bools (##cdr bools))
                                           (index (##fx+ index 1))

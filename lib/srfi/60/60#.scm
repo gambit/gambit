@@ -52,7 +52,6 @@
    ;##rotate-bit-field
     rotate-bit-field
 
-   ;##reverse-bit-field
     reverse-bit-field
 
     integer->list
